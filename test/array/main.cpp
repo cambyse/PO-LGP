@@ -100,7 +100,7 @@ void testBinaryIO(){
   ifstream fin("z.ascii") ,bin("z.bin",ios::binary);
 
   MT::timerStart();
-  a.write(fout," ","\n",true,false);
+  a.write(fout," ","\n","[]",true,false);
   cout <<"ascii save time: " <<MT::timerRead() <<"sec" <<endl;
   fout.close();
 
@@ -112,7 +112,7 @@ void testBinaryIO(){
   //CHECK(a==b) would fail because ascii numbers are not exact!
 
   MT::timerStart();
-  a.write(bout,NULL,NULL,true,true);
+  a.write(bout,NULL,NULL,NULL,true,true);
   cout <<"binary save time: " <<MT::timerRead() <<"sec" <<endl;
   bout.close();
 

@@ -5,7 +5,7 @@
 .PRECIOUS: %_wrap.cxx
 
 BASE := $(shell cd $(BASE);pwd -P)
-LIBPATH = $(shell cd $(BASE)/..;pwd -P)/lib
+LIBPATH = $(BASE)/extern
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
@@ -97,7 +97,7 @@ CXX	= g++
 CC	= gcc
 endif
 LINK	= $(CXX)
-CPATH	:= $(BASE)/include:$(CPATH)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
 LinuxLibs += -lrt #-lpthread -lncurses
 SEP	= :
@@ -259,8 +259,6 @@ endif
 
 ifdef SWIFT
 CXXFLAGS  += -DMT_SWIFT
-CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
-LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LinuxLibs += -lSWIFT++
 QHULL := 1
 endif
