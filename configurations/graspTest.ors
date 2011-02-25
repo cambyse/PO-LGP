@@ -1,0 +1,29 @@
+# kinematic graph
+
+
+body stem { X=<t(-.7 0 .15)> type=0 mass=.5 size=[0.1 0.1 .3 .05] fixed }
+
+body arm1 { type=0 mass=1 size=[0.1 0.1 .3 .05] contact }
+body arm2 { type=0 mass=1 size=[0.1 0.1 .3 .05] contact }
+body effector { type=0 mass=1 size=[0.1 0.1 .3 .05] contact }
+
+joint (stem arm1)     { A=<t(0 0 .15) d(90 0 1 0)> Q=<d( 20 1 0 0)> B=< t(0 0 .15) > }
+joint (arm1 arm2)     { A=<t(0 0 .15)>             Q=<d(-90 1 0 0)> B=< t(0 0 .15) > }
+joint (arm2 effector) { A=<t(0 0 .15)>             Q=<d(-40 1 0 0)> B=< t(0 0 .15) > }
+
+body finga1 { type=0 mass=1 size=[0.1 0.03 .1 .05] }
+body finga2 { type=0 mass=1 size=[0.1 0.03 .1 .05] contact }
+body fingb1 { type=0 mass=1 size=[0.1 0.03 .1 .05] }
+body fingb2 { type=0 mass=1 size=[0.1 0.03 .1 .05] contact }
+
+joint (effector finga1) { A=<t(0 0 .15)> Q=<d(-31 1 0 0)> B=< t(0 0 .05) > }
+joint (effector fingb1) { A=<t(0 0 .15)> Q=<d( 30 1 0 0)> B=< t(0 0 .05) > }
+joint (finga1 finga2)   { A=<t(0 0 .05)> Q=<d( 30 1 0 0)> B=< t(0 0 .05) > }
+joint (fingb1 fingb2)   { A=<t(0 0 .05)> Q=<d(-31 1 0 0)> B=< t(0 0 .05) > }
+
+
+body target { X=<t(.0 .0 .3)>  type=2 mass=.001 size=[0 0 .6 .05] color=[.8 0 0] fixed contact }
+
+
+
+

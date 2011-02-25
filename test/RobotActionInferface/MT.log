@@ -1,5 +1,5 @@
-Compiled at:     Feb 25 2011 13:09:32
-Execution start: Fri Feb 25 13:16:30 2011
+Compiled at:     Feb 25 2011 16:20:48
+Execution start: Fri Feb 25 16:22:12 2011
 Program call:    './x.exe '
                 mode = opening config file 'MT.cfg'
 1 [i]
@@ -20,43 +20,4 @@ Program call:    './x.exe '
          loadPlanned =     0 [b] (default!)
           plan_speed =     1 [d] (default!)
           plan_scale =     0 [d] (default!)
-             orsFile = opening input file `schunk.ors'
-opening input file `schunk.ors.qlin'
-opening input file `schunk_3d/3385031017_fus_120_x.tri'
-opening input file `schunk_3d/schunk_0306925_prl_12010_x.tri'
-opening input file `schunk_3d/schunk_0306925_prl_12010_x.tri'
-opening input file `schunk_3d/schunk_0306920_prl_10010_x.tri'
-opening input file `schunk_3d/schunk_0306920_prl_10010_x.tri'
-opening input file `schunk_3d/schunk_0306915_prl_8010_x.tri'
-opening input file `schunk_3d/schunk_0306915_prl_8010_x.tri'
-opening input file `schunk_3d/schunk_0306910_prl_6010_x.tri'
-opening input file `schunk_3d/3385031117_vbe_1212_x.tri'
-opening input file `schunk_3d/3385038117_vbe_1210_x.tri'
-opening input file `schunk_3d/3385031317_vbe_1010_x.tri'
-opening input file `schunk_3d/3385038417_vbe_1008_x.tri'
-opening input file `schunk_3d/3385031517_vbe_0808_x.tri'
-opening input file `schunk_3d/3385038717_vbe_0806_x.tri'
-opening input file `schunk_3d/3385031717_vbe_0606_x.tri'
-opening input file `schunk_3d/SDH_Gehaeuse_x.tri'
-opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
-opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
-opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
-opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
-opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
-opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
-               Hcost = 0.001 [d] (default!)
-               Wcost =  0.01 [d] (default!)
-              Qnoise = 1e-10 [d] (default!)
-          TV_x_yprec =  1000 [d] (default!)
-          TV_x_vprec =     1 [d] (default!)
-        TV_rot_vprec =   0.1 [d] (default!)
-          TV_q_vprec =   0.1 [d] (default!)
-        TV_col_yprec =   0.1 [d] (default!)
-        TV_lim_yprec =  1000 [d] (default!)
-       TV_skin_yprec =  1000 [d] (default!)
-       guiThreadNice =    20 [i] (default!)
-opening output file `LOG.threads'
-Execution stop:      Fri Feb 25 13:16:50 2011
-Ellapsed real time:  20.237sec
-Process  user time:   11.620sec
-Process system time: 2.79sec
+             orsFile = 

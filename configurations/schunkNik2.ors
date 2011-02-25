@@ -1,0 +1,134 @@
+
+# kinematic graph
+
+###########
+## base
+###########
+
+body base { X=<t(0 0 .25)> }
+
+shape platte (base) { contact, type=0, size=[.7 .8 .03 .01], color=[.9 .15 .8] }
+
+shape wheelR  (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<t(.35 -.3 -.15) d(90 0 1 0)> }
+shape wheelL  (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<t(-.35 -.3 -.15) d(90 0 1 0)> }
+shape wheelB1 (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<t(.0 .37 -.15) d(90 0 1 0)> }
+
+
+###########
+## schunk arm
+###########
+
+body m3 {}
+body m4 {}
+body m5 {}
+body m6 {}
+body m7 {}
+body m8 {}
+body m9 {}
+
+joint (base m3) { A=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(0 0 .85) d(180 0 0 1) t(0 0 0.120) d(90 0 1 0)> }
+joint (m3 m4)   { A=<d( 90 0 1 0)  t(-0.175 0 0)   d(-110 1 0 0)> }
+joint (m4 m5)   { A=<t(-0.175 0 0) d(-90 0 1 0)    d(  90 1 0 0)> }
+joint (m5 m6)   { A=<d( 90 0 1 0)  t(-0.1515 0 0)   d( -45 1 0 0)> }
+joint (m6 m7)   { A=<t(-0.1515 0 0) d(-90 0 1 0)    d( -90 1 0 0)> }
+joint (m7 m8)   { A=<d(-90 0 1 0)  t(-0.12575 0 0)   d(  90 1 0 0)> }
+joint (m8 m9)   { A=<t(-0.12575 0 0) d( 90 0 1 0)> }
+
+body knuck1 {}
+body knuck2 {}
+body knuck3 {}
+body fing1  {}
+body fing2  {}
+body fing3  {}
+body tip1   {}
+body tip2   {}
+body tip3   {}
+
+
+joint (m9 knuck1) { A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t(-.038105    0   .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+joint (m9 knuck2) { A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525  .033 .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+joint (m9 knuck3) { A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525 -.033 .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+
+joint (knuck1 fing1) { A=<t(0 0 .017) d( 90 0 0 1)> }
+joint (knuck2 fing2) { A=<t(0 0 .017) d(-90 0 0 1)> }
+joint (knuck3 fing3) { A=<t(0 0 .017) d(-90 0 0 1)> }
+
+joint (fing1 tip1) { A=<t(0 0 .0865)> }
+joint (fing2 tip2) { A=<t(0 0 .0865)> }
+joint (fing3 tip3) { A=<t(0 0 .0865)> }
+
+
+# mesh shapes
+#shape (base){ rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(0 0 .85) d(180 0 0 1)>, type=3, meshfile='schunk_3d/3385031017_fus_120_x.tri' }
+#shape (m3){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306925_prl_12010_x.tri' }
+#shape (m4){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306925_prl_12010_x.tri' }
+#shape (m5){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306920_prl_10010_x.tri' }
+#shape (m6){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306920_prl_10010_x.tri' }
+#shape (m7){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306915_prl_8010_x.tri' }
+#shape (m8){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306915_prl_8010_x.tri' }
+#shape (m9){ rel=<d(90 0 0 1)>, type=3, meshfile='schunk_3d/schunk_0306910_prl_6010_x.tri' }
+
+#shape wrist  (m9) { rel=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1)>, type=3, meshfile='schunk_3d/SDH_Gehaeuse_x.tri'  }
+
+#shape (knuck1) { type=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='schunk_3d/SDH_Gelenk_Finger1_x.tri' }
+#shape (knuck2) { type=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='schunk_3d/SDH_Gelenk_Finger1_x.tri' }
+#shape (knuck3) { type=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='schunk_3d/SDH_Gelenk_Finger1_x.tri' }
+#shape (fing1)  { type=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Mittelteil_Finger1_x.tri' }
+#shape (fing2)  { type=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Mittelteil_Finger1_x.tri' }
+#shape (fing3)  { type=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Mittelteil_Finger1_x.tri' }
+#shape (tip1)   { type=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Kuppe_Finger1_x.tri' }
+#shape (tip2)   { type=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Kuppe_Finger1_x.tri' }
+#shape (tip3)   { type=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='schunk_3d/SDH_Kuppe_Finger1_x.tri' }
+
+
+#basic shapes
+shape (base){ contact, rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(0 0 .85) d(180 0 0 1) t(0 0 .025) >, type=4, size=[0 0 .05 .10] , color=[1. .5 .5]}
+shape (m3){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .16 .08], color=[1. .52 .5] }
+shape (m4){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .25 .08], color=[1. .55 .52] }
+shape (m5){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .14 .07] , color=[9. .59 .5]}
+shape (m6){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .20 .07] , color=[1. .65 .52]}
+shape (m7){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .12 .06] , color=[9. .69 .5]}
+shape (m8){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .16 .06] , color=[1. .75 .52]}
+shape (m9){ contact, rel=<d(90 0 1 0)>, type=4, size=[0 0 .10 .05] , color=[9. .80 .5]}
+
+shape lasershape (m8){ contact, rel=<d(90 0 0 1) d(180 0 1 0) t(.0 .12 .08)>, type=0, size=[.05 .05 .05 .06] color=[1 0 0]}
+
+shape wrist  (m9) { contact, rel=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1)>, type=4, size=[0 0 .03 .05] }
+
+shape (knuck1) { rel=<d(90 1 0 0)>, type=4, size=[.03 .02 .06 .02] }
+shape (knuck2) { rel=<d(90 1 0 0)>, type=4, size=[.03 .02 .06 .02] }
+shape (knuck3) { rel=<d(90 1 0 0)>, type=4, size=[.03 .02 .06 .02] }
+shape (fing1)  { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02] }
+shape (fing2)  { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02] }
+shape (fing3)  { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02] }
+shape (tip1)   { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02] }
+shape (tip2)   { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02]}
+shape (tip3)   { contact, rel=<t(0 0 .05)>, type=0, size=[.03 .02 .06 .02] }
+
+
+###########
+## poles
+###########
+
+shape pole1 (base){ contact, type=0, size=[.04 .04 .60 .03], rel=<t(.30 -.25 0) d(25 0 0 1) d(-40 1 0 0) t(0 .0 .3)> ,color=[0. .0 .1]}
+shape pole2 (base){ contact, type=0, size=[.04 .04 .7 .03], rel=<t(-.30 -.25 0) d(-45 0 0 1) d(-43 1 0 0) t(0 .0 .35)> ,color=[0. .0 .1]}
+
+shape back1 (base) { contact, type=0, size=[.04 .04 .85 .04], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(-.0565  .0565 0) t(0 0 .425)> ,color=[0. .0 .1]}
+shape back2 (base) { contact, type=0, size=[.04 .04 .85 .04], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(-.0565 -.0565 0) t(0 0 .425)> ,color=[0. .0 .1]}
+shape back3 (base) { contact, type=0, size=[.04 .04 .85 .04], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t( .0565 -.0565 0) t(0 0 .425)> ,color=[0. .0 .1]}
+shape back4 (base) { contact, type=0, size=[.04 .04 .85 .04], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t( .0565  .0565 0) t(0 0 .425)>,color=[0. .0 .1] }
+
+
+
+#body querm1 { type=0, size=[.04 .04 .073 .04], color=[1. .5 .5] }
+#body querm2 { type=0, size=[.04 .04 .073 .04], color=[1. .5 .5] }
+#body querm3 { type=0, size=[.04 .04 .073 .04], color=[1. .5 .5] }
+#body querm4 { type=0, size=[.04 .04 .073 .04], color=[1. .5 .5] }
+#joint (back1 querm1) { A=<t(0 0 .1) d(90 0 1 0) t(0 .0 .0565)> }
+#joint (back2 querm2) { A=<t(0 0 .1) d(90 0 1 0) t(0 .0 .0565)> }
+#joint (back3 querm3) { A=<t(0 0 .1) d(-90 1 0 0) t(0 .0 .0565)> }
+#joint (back1 querm4) { A=<t(0 0 .1) d(90 1 0 0) t(0 .0 .0565)> }
+
+
+
+#}

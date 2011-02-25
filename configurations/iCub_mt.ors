@@ -1,0 +1,93 @@
+
+
+# kinematic graph
+
+###########
+## base
+###########
+
+body base { X=<t(0 0 0.25) d(-90 0 1 0)> }
+
+
+###########
+## iCub left arm 
+###########
+
+body t1 {}
+body t2 {}
+body t3 {}
+body s4 {}
+body s5 {}
+body e6 {}
+body e7 {}
+body w8 {}
+body w9 {}
+body w10 {}
+
+
+shape sbase (base){type=0,  size=[.2 .4 .4 .01], color=[1 0 1], rel=<t (-0.25 0 0)> }
+shape st1 (t1) {type=4, size=[0 0 0.2 .2], color=[.7 .7 .7], rel=<d(90 0 1 0) t(-00 0 -0.75)>}
+shape st2 (t2) {type=0, size=[0.1 0.1 .2 .1], color=[0 1 0], rel=<t(0 0 -0.1) d(0 0 1 0)> }
+shape (t2){ type=1 size=[0 0 0 .06] rel=<t(0 0 -.27)> }
+shape st3 (t3) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<d(90 0 1 0)> }
+shape st4 (s4) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<d(0 0 1 0)> }
+shape st5 (s5){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<d(90 0 1 0) t(0 0 0.08)> }
+shape se6 (e6){type=1, size=[0 0 .2 .015], color=[1 1 1] }
+shape se7 (e7){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<d(90 0 1 0) t(0 0 0.065)> }
+shape sw8 (w8){ type=1, size=[0 0 .10 .015], color=[0.5 .5 .5] }
+shape sw10 (w10){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<t(0 0 -0.02)> }
+#shape sw10 (w10){ type=1, size=[0 0 .10 .01], color=[1 .5 1] }
+
+
+joint (base t1)  { A = <t(1 0 0)>}
+joint (t1 t2)   { A = < d(-90 0 1 0)>  }
+joint (t2 t3)   { A = <t(0 0 -0.1433)>  }
+joint (t3 s4)   { A = <d(-90 0 0 1) t(0 -0.10774 0)> }
+joint (s4 s5)   { A = <d(-90 0 1 0)> }
+joint (s5 e6)   { A = <d(90 0 0 1 ) t(0 -0.15228 0)> }
+joint (e6 e7)   { A = <d(-90 0 0 1)>}
+joint (e7 w8)   { A = <d(-90 0 1 0) t(0 0 -0.1373)> }
+joint (w8 w9)   { A = <d(90 0 0 1)> }
+joint (w9 w10)  { A = <t(0 0 -0.016)> }
+
+
+###########
+## iCub right arm 
+###########
+
+
+body t3r {}
+body s4r {}
+body s5r {}
+body e6r {}
+body e7r {}
+body w8r {}
+body w9r {}
+body w10r {}
+
+
+shape st3r (t3r) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<d(90 0 1 0)> }
+shape st4r (s4r) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<d(0 0 1 0)> }
+shape st5r (s5r){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<d(90 0 1 0) t(0 0 0.08)> }
+shape se6r (e6r){type=1, size=[0 0 .2 .015], color=[1 1 1] }
+shape se7r (e7r){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<d(90 0 1 0) t(0 0 0.065)> }
+shape sw8r (w8r){ type=1, size=[0 0 .10 .015], color=[0.5 .5 .5] }
+shape sw10r (w10r){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<t(0 0 -0.02)> }
+#shape sw10r (w10r){ type=1, size=[0 0 .10 .01], color=[1 .5 1] }
+
+
+joint (t2 t3r)   { A = <t(0 0 -0.1433)>  }
+joint (t3r s4r)   { A = <d(-90 0 0 1) t(0 0.10774 0)> }
+joint (s4r s5r)   { A = <d(-90 0 1 0)> }
+joint (s5r e6r)   { A = <d(90 0 0 1 ) t(0 -0.15228 0)> }
+joint (e6r e7r)   { A = <d(-90 0 0 1)>}
+joint (e7r w8r)   { A = <d(-90 0 1 0) t(0 0 -0.1373)> }
+joint (w8r w9r)   { A = <d(90 0 0 1)> }
+joint (w9r w10r)  { A = <t(0 0 -0.016)> }
+
+
+
+
+
+
+

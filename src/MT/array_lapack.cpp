@@ -25,13 +25,13 @@ extern "C"{
 
 #include "cblas.h"
 #ifdef MT_MSVC
-#  include "blaswrap.h"
+#  include <lapack/blaswrap.h>
 #endif
 #define real floatreal
 #include "f2c.h"
 #undef small
 #undef large
-#include "clapack.h"
+#include <lapack/clapack.h>
 #undef real
 #undef max
 #undef min

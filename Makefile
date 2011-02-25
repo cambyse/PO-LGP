@@ -1,6 +1,10 @@
 PACKAGE = libORS
 
-all: lib/extern/SWIFT++_1.2/src lib/extern/ANN_1.1/src lib/src/MT/ lib/src/NP lib/src/Lewiner 
+all: 	lib/extern/SWIFT++_1.2/src \
+	lib/extern/ANN_1.1/src \
+	lib/extern/libcolorseg/src \
+	lib/src/MT/ \
+	lib/src/NP lib/src/Lewiner 
 
 cleanAll: clean/extern/SWIFT++_1.2/src clean/extern/ANN_1.1/src clean/src/MT/ clean/src/NP clean/src/Lewiner cleanProjects
 

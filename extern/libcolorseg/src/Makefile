@@ -1,5 +1,5 @@
-OUTPUT    = ../lib/libSWIFT++.a
-CXXFLAGS += -O3 -fPIC -I../include -DNO_CYCLE_DETECTION #-Wall -Wno-deprecated
+OUTPUT    = ../lib/libcolorseg.a
+CXXFLAGS += -O3 -fPIC -I../include -Wno-deprecated
 OBJS      = $(shell find . \( -name '*.cpp' \) )
 OBJS     := $(OBJS:%.cpp=%.o)
 
