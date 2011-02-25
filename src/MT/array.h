@@ -16,7 +16,7 @@
 
 /*! \file array.h
     \brief defines the MT::Array class */
-
+//TEST
 #ifndef MT_array_h
 #define MT_array_h
 
