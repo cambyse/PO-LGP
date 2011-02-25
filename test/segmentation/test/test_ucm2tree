@@ -1,0 +1,30 @@
+#! /usr/bin/python
+
+# test script for the generation of UCM tree data structures
+import os
+
+Files = ["2007_000032",
+         "2007_000033",
+         "2007_000039",
+         "2007_000042",
+         "2007_000061",
+         "2007_000063",
+         "2007_000068",
+         "2007_000121",
+         "2007_000123",
+         "2007_000129",
+         "2007_000170",
+         "2007_000175",
+         "2007_000187",
+         "2007_000241",
+         "2007_000243",
+         "2007_000250",
+         "2007_000256",
+         "2007_000323",
+         "2007_000332",
+         "2007_000333"]
+
+for file_cur in Files:
+  cmd = "../src/ucm2tree.exe -i ../data/%s.ucm2.bmp -o ../data/%s.tree.array" % (file_cur, file_cur)
+  os.system(cmd)
+  print "done"

@@ -1,0 +1,155 @@
+/*  
+    Copyright 2009   Tobias Lang
+    
+    Homepage:  cs.tu-berlin.de/~lang/
+    E-mail:    lang@cs.tu-berlin.de
+    
+    This file is part of libPRADA.
+
+    libPRADA is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libPRADA is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+#ifndef STD_TL
+#define STD_TL
+
+#include <limits.h>
+#include <float.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <MT/array.h>
+#include <MT/util.h>
+#include <cmath>
+
+#define PRINT(x) cout << #x << "=" << x << endl;
+#define PRINT2(x,y) y << #x << "=" << x << endl;
+#define PRINT1(x) cout << #x << "=" << endl << x << endl;
+
+#define TL_MAX(a,b) (a > b ? a : b)
+#define TL_MIN(a,b) (a < b ? a : b)
+
+// A macro to disallow the copy constructor and operator= functions
+// This should be used in the private: declarations for a class
+// taken from Google, 19.03.09
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&);               \
+  void operator=(const TypeName&)
+
+
+
+namespace TL {
+const uint UINT_NIL = UINT_MAX;
+
+const double TL_DOUBLE_NIL = -98765.43211234589;
+const double TL_DOUBLE_MIN = DBL_MAX * (-1.);
+const double TL_INFINITY = INFINITY;
+
+inline int signOf(int a) { return (a == 0) ? 0 : (a<0 ? -1 : 1); }
+inline double signOf(double a) { return a<0 ? -1 : 1; }
+inline bool isZero(double a) {return fabs(a) < 0.000000000001;}
+inline bool areEqual(double a, double b) {return isZero(a-b);}
+
+void allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty);
+void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, uint length);
+void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
+
+bool containsAllElements(const uintA& superlist, const uintA& list);
+
+uint basic_sample(const arr& weights);
+
+// some ALGOS
+
+// descending
+void sort_desc(uintA& values);
+void sort_desc(uintA& sorted, const uintA& unsorted);
+void sort_desc(uintA& sorted, uintA& sortedIndices, const uintA& unsorted);
+void sort_desc(arr& sorted, uintA& sortedIndices, const arr& unsorted);
+void sort_desc_keys(uintA& sortedIndices, const uintA& unsorted);
+void sort_desc_keys(uintA& sortedIndices, const arr& unsorted);
+// ascending
+void sort_asc(uintA& values);
+void sort_asc(uintA& sorted, const uintA& unsorted);
+void sort_asc(uintA& sorted, uintA& sortedIndices, const uintA& unsorted);
+void sort_asc(arr& sorted, uintA& sortedIndices, const arr& unsorted);
+void sort_asc_keys(uintA& sortedIndices, const uintA& unsorted);
+void sort_asc_keys(uintA& sortedIndices, const arr& unsorted);
+
+// check for cycles
+bool isAcyclic(boolA adjMatrix);
+
+
+
+double getcputime();
+
+
+// Reference Managing
+
+template<class T> void del(T* p) {
+	p->numRefs--;
+  CHECK(p->numRefs>=0, "Negative #references");
+	if (p->numRefs == 0) {
+//     PRINT(p->numRefs);
+		delete p;
+  }
+}
+
+template<class T> T* getRef(T* p) {
+	p->numRefs++;
+	return p;
+}
+
+}
+
+// for my ors simulator
+double REPLACE_SIZE(double val);
+
+
+
+
+
+
+
+
+
+//===========================================================================
+//
+// Rprop (taken from Marc Toussaint)
+//
+
+/*! Rprop, a fast gradient-based minimization */
+class Rprop{
+public:
+  double incr;
+  double decr;
+  double dMax;
+  double dMin;
+  double rMax;
+  double delta0;
+
+  arr lastGrad; // last error gradient
+  arr stepSize; // last update
+
+  Rprop();
+
+  void init(double _delta0);
+  void step(arr& x,const arr& grad,uint *singleI=NULL);
+  void step(double& x,const double& grad);
+  bool done();
+};
+
+
+
+
+
+#endif

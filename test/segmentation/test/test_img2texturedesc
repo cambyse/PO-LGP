@@ -1,0 +1,45 @@
+#! /usr/bin/python
+
+# test script for the generation of texture descriptors
+
+import os
+
+#files = ["2007_000032",
+#         "2007_000033",
+#         "2007_000039",
+#         "2007_000042",
+#         "2007_000061",
+#         "2007_000063",
+#         "2007_000068",
+#         "2007_000121",
+#         "2007_000123",
+#         "2007_000129",
+#         "2007_000170",
+#         "2007_000175",
+#         "2007_000187",
+#         "2007_000241",
+#         "2007_000243",
+#         "2007_000250",
+#         "2007_000256",
+#         "2007_000323",
+#         "2007_000332",
+#         "2007_000333"]
+
+#for file_cur in files:
+#  cmd = "../src/img2texturedesc.exe -i ../data/%s.jpg -o ../data/%s.surf.array -w %s" % (file_cur, file_cur, "9,15,21,27")
+#  os.system(cmd)
+#  print cmd
+
+filename = "../data/nan.list"
+f = open(filename, "r")
+files = f.readlines()
+f.close()
+count = 0
+for file_cur in files:
+  path,filename = os.path.split(file_cur)
+  filename,ext = os.path.splitext(filename)
+  cmd = " ../src/img2texturedesc.exe -i %s -o /home/mlr/data/voc2009/array/%s.surf.array -w %s" % (file_cur.strip(), filename, "9,15,21,27")
+  os.system(cmd)
+  print str(count) + cmd
+  count = count + 1
+

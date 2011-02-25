@@ -1,0 +1,87 @@
+
+
+###########
+## iCub base & torso
+###########
+
+body base { X=<t(0 0 0.75)> }
+body t1 {}
+body t2 {}
+body t3 {}
+
+shape hangup(base) { type=0, size=[.2 .3 .05 .01], color=[0 0 0], rel=<t (0 .15 0)> contact }
+shape legL  (base) { type=2, size=[0 0 .35 .03] rel=<t( .05 0 -.2)> contact }
+shape legR  (base) { type=2, size=[0 0 .35 .03] rel=<t(-.05 0 -.2)> contact }
+shape hip   (base) { type=2, size=[0 0 .1 .045] rel=<d(90 0 1 0)> contact }
+shape belly    (t3){ type=0, size=[0.07 0.07 .1 .0], color=[0 1 0] rel=<t(0 0 0.05)> } #contact
+shape shoulders(t3){ type=2, size=[0 0 .1 .045] rel=<t(0 0 .14) d(90 0 1 0)> }
+shape head     (t3){ type=1, size=[0 0 .1 .06]  rel=<t(0 0 .25)> }
+
+joint (base t1) { A = <> }
+joint (t1 t2)   { A = <d(90 0 0 1)>  }
+joint (t2 t3)   { A = <d(-90 0 1 0) d(180 0 1 0)> B=<d(180 0 1 0) d(90 0 1 0) d(-90 0 0 1)> }
+
+
+###########
+## iCub left arm 
+###########
+
+body s4L {}
+body s5L {}
+body e6L {}
+body e7L {}
+body w8L {}
+body w9L {}
+body endeff {}
+
+shape (s4L){ type=1, size=[0 0 .13 .02],  color=[1 0 0], rel=<d(90 0 1 0) t(0 0 0.0)> }
+shape (s5L){ type=4, size=[0 0 .13 .015],  color=[1 1 0], rel=<d(90 1 0  0) t(0 0 0.08)> }
+shape (e7L){ type=1, size=[0 0 .12 .015], color=[0 0 0] }
+shape (w8L){ type=4, size=[0 0 .10 .015],  color=[0.5 .5 .5], rel=<d(90 0 1 0) t(0 0 0.06)> contact }
+shape (w9L){ type=1, size=[0 0 0 .01],  color=[0.5 1 1] }
+shape (endeff){ type=0, size=[0.01 0.05  .03 .01], color=[1 .5 1],rel=<t(0 .01 0)> contact }
+
+joint (t3  s4L)    { A = <t(0.10774 0 0.1433) d(-15 0 0 1) d(90 1 0 0)> }
+joint (s4L s5L)    { A = <d(-90 0 1 0) d(5 1 0 0)> Q=<d(20 1 0 0)> B=<d(180 0 1 0)>}
+joint (s5L e6L)    { A = <d(-90 0 0 1) d(180 0 1 0)> B=<d(180 0 1 0)> }
+joint (e6L e7L)    { A = <d(-90 0 1 0) t(0 0 -0.15228) d(180 0 1 0)> Q=<d(90 1 0 0)> B=<d(180 0 1 0)>}
+joint (e7L w8L)    { A = <d( 90 0 1 0) >}
+joint (w8L w9L)    { A = <d(-90 0 0 1) t(0 0.1373 0)d(180 0 1 0)> B=<d(180 0 1 0)> }
+joint (w9L endeff) { A = <d( 90 0 1 0) d(180 0 1 0)> B=<d(180 0 1 0)> }
+
+
+###########
+## iCub right arm 
+###########
+
+body s4R {}
+body s5R {}
+body e6R {}
+body e7R {}
+body w8R {}
+body w9R {}
+body endeffR {}
+
+shape (s4R){ type=1, size=[0 0 .13 .02],  color=[1 0 0], rel=<d(90 0 1 0) t(0 0 0.0)> }
+shape (s5R){ type=4, size=[0 0 .13 .015],  color=[1 1 0], rel=<d(90 1 0  0) t(0 0 0.08)> }
+shape (e7R){ type=1, size=[0 0 .12 .015], color=[0 0 0] }
+shape (w8R){ type=4, size=[0 0 .1 .015],  color=[0.5 .5 .5], rel=<d(90 0 1 0) t(0 0 0.06) > contact }
+shape (w9R){ type=1, size=[0 0 0 .01],  color=[0.5 1 1] }
+shape (endeffR){ type=0, size=[0.01 0.05  .03 .01], color=[1 .5 1], rel=<t(0 .01 0)> contact }
+
+joint (t3  s4R)    { A = <t(-0.10774 0 0.1433) d(15 0 0 1) d(90 1 0 0)> }
+joint (s4R s5R)    { A = <d(-90 0 1 0) d(180 0 1 0) d(5 1 0 0)> Q=<d(20 1 0 0)> }
+joint (s5R e6R)    { A = <d(-90 0 0 1)> }
+joint (e6R e7R)    { A = <d(-90 0 1 0) t(0 0 -0.15228) d(180 0 1 0)> Q=<d(90 1 0 0)> B=<d(180 0 1 0)>}
+joint (e7R w8R)    { A = <d( 90 0 1 0) d(180 0 1 0)> B=<d(180 0 1 0)>}
+joint (w8R w9R)    { A = <d(-90 0 0 1) t(0 0.1373 0)> }
+joint (w9R endeffR){ A = <d( 90 0 1 0) d(180 0 1 0)> B=<d(180 0 1 0)> }
+
+
+###########
+## target and some obstacle 
+###########
+
+body target { X=<t(.32 -.05 .75)>   type=1 size=[.1 .1 .1 .01] color=[0 .5 0] fixed }
+body ball2  { X=<t(.25 -.1 .72)> type=1 size=[.1 .1 .1 .03] color=[1 0 0]  fixed contact }
+

@@ -1,0 +1,9 @@
+Compiled at:     Feb 22 2011 16:21:45
+Execution start: Tue Feb 22 16:21:56 2011
+Program call:    './x.exe '
+                seed = opening config file 'MT.cfg' - failed
+0 [j] (default!)
+Execution stop:      Tue Feb 22 16:22:27 2011
+Ellapsed real time:  30.759sec
+Process  user time:   3.540sec
+Process system time: 0.98sec

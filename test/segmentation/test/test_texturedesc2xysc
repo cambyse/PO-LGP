@@ -1,0 +1,35 @@
+#! /usr/bin/python
+
+# test script for the generation of texture descriptors
+
+import os
+
+files = ["2007_000032",
+         "2007_000033",
+         "2007_000039",
+         "2007_000042",
+         "2007_000061",
+         "2007_000063",
+         "2007_000068",
+         "2007_000121",
+         "2007_000123",
+         "2007_000129",
+         "2007_000170",
+         "2007_000175",
+         "2007_000187",
+         "2007_000241",
+         "2007_000243",
+         "2007_000250",
+         "2007_000256",
+         "2007_000323",
+         "2007_000332",
+         "2007_000333"]
+
+#codebook = "/home/nils/uni/code/projects/libseg/bin/data/0250_04357_20100106185944.codebook.array"
+codebook = "../data/0250_06658_20100107174646.codebook.array"
+
+for file_cur in files:
+  cmd = "../src/texturedesc2xysc.exe -i ../data/%s.surf.array -o ../data/%s.xysc.array -c %s" % (file_cur, file_cur, codebook)
+  os.system(cmd)
+  print "done"
+
