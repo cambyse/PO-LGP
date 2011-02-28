@@ -14,7 +14,7 @@ OBJS         = \
 
 OUTPUT       = libtl.so
 
-ODE = 1
+#ODE = 1
 QHULL = 1
 SWIFT	= 1
 
