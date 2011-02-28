@@ -1,0 +1,10 @@
+*.o
+*.a
+*.so
+*.exe
+
+*~
+
+%% special:
+extern/ODE_0.11/download
+extern/ODE_0.11/ode-0.11/
