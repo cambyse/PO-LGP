@@ -62,7 +62,6 @@ void RobotActionInterface::homing(){
   s->defaultTask.controlMode = stopCM;
 }
 
-#if 1
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
   TaskAbstraction *task = &s->defaultTask;
 
@@ -87,14 +86,36 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
   s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
   s->defaultTask.controlMode = stopCM;
 }
-#else
+
+void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
+  NIY;
+}
+
+void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
+  ors::Graph *ors = s->master.ctrl.sys.ors;
+  ors::Shape *shape = ors->getShapeByName(shapeName);
+  shape->mesh = mesh;
+  shape->type = BMESH;
+  if(s->master.openGui){
+    s->master.gui.ors->copyShapesAndJoints(*ors);
+    s->master.gui.ors2->copyShapesAndJoints(*ors);
+  }
+}
+
+
+//===========================================================================
+//
+// obsolete implementations
+//
+
+/*
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
   struct MyUpdater:public TaskGoalUpdater{
     arr posGoal; double maxVel;
     double dist;
     TaskVariable *TV;
-    ControllerModule *ctrl;
-    MyUpdater(ControllerModule *_ctrl,const char* shapeName,const arr& _posGoal,double _maxVel){
+    ControllerProcess *ctrl;
+    MyUpdater(ControllerProcess *_ctrl,const char* shapeName,const arr& _posGoal,double _maxVel){
       ctrl=_ctrl;  posGoal=_posGoal;  maxVel=_maxVel;  dist=1e10;
       TV = new TaskVariable("reach",*ctrl->sys.ors,posTVT,shapeName,NULL,0);
       TV->targetType=directTT; 
@@ -104,7 +125,7 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
       ctrl->sys.setTaskVariables(ctrl->task->TVall);
       delete TV;
     }
-    void operator()(TaskAbstraction *task,ControllerModule *ctrl){
+    void operator()(TaskAbstraction *task,ControllerProcess *ctrl){
       arr d=posGoal-TV->y;
       dist=norm(d);
       if(dist>maxVel) d *= maxVel/dist;
@@ -124,15 +145,14 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
   }
   s->defaultTask.controlMode = stopCM;
 }
-#endif
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
   struct MyUpdater:public TaskGoalUpdater{
     arr posGoal,vecGoal; double maxVel;
     double dist;
     TaskVariable *TVp,*TVv;
-    ControllerModule *ctrl;
-    MyUpdater(ControllerModule *_ctrl,const char* shapeName,const arr& _posGoal,const arr& _vecGoal,double _maxVel){
+    ControllerProcess *ctrl;
+    MyUpdater(ControllerProcess *_ctrl,const char* shapeName,const arr& _posGoal,const arr& _vecGoal,double _maxVel){
       ctrl=_ctrl;  posGoal=_posGoal;  vecGoal=_vecGoal;  maxVel=_maxVel;  dist=1e10;
       TVp = new TaskVariable("reach",*ctrl->sys.ors,posTVT,shapeName,NULL,0);
       TVp->targetType=directTT; 
@@ -145,7 +165,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
       delete TVp;
       delete TVv;
     }
-    void operator()(TaskAbstraction *task,ControllerModule *ctrl){
+    void operator()(TaskAbstraction *task,ControllerProcess *ctrl){
       arr d=posGoal-TVp->y;
       dist=norm(d);
       if(dist>maxVel) d *= maxVel/dist;
@@ -163,3 +183,4 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   }
   s->defaultTask.controlMode = stopCM;
 }
+*/

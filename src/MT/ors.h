@@ -26,7 +26,7 @@
 
 //===========================================================================
 
-// body types
+// body types //RENAME THESE DEFINES - MAKE THEM ENUM!
 #define BNONE -1
 #define BBOX 0
 #define BSPHERE 1

@@ -431,6 +431,7 @@ endif
 ifdef MTLIB
 LPATH += $(LPATH):$(BASE)/src/MT
 LinuxLibs += -lmt
+DEPEND += dependLib_MT
 endif
 
 ################################################################################

@@ -15,7 +15,7 @@
 #include <MT/earlyVisionModule.h>
 #include <MT/guiModule.h>
 
-struct ControllerModule;
+struct ControllerProcess;
 //struct RobotActionInterfaceWS;
 struct RevelInterface;
 enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM };
@@ -56,8 +56,8 @@ struct TaskAbstraction{
 
   TaskAbstraction();
 
-  virtual void initTaskVariables(ControllerModule*);
-  virtual void updateTaskVariables(ControllerModule*);
+  virtual void initTaskVariables(ControllerProcess*);
+  virtual void updateTaskVariables(ControllerProcess*);
 };
 
 
@@ -67,7 +67,7 @@ struct TaskAbstraction{
 //
 
 /*! given a task (=TaskVariable configuration) computed the desired next joint state of the robot */
-struct ControllerModule{ //--non-threaded!!
+struct ControllerProcess{ //--non-threaded!!
   //INPUT
   TaskAbstraction *task;
   bool useBwdMsg,forceColLimTVs;
@@ -86,7 +86,7 @@ struct ControllerModule{ //--non-threaded!!
   soc::SocSystem_Ors sys;
   CycleTimer timer;
   
-  ControllerModule();
+  ControllerProcess();
 
   //main routines
   void open();
@@ -105,7 +105,7 @@ struct ControllerModule{ //--non-threaded!!
 struct RobotModuleGroup{
   //modules
   bool openArm,openHand,openSkin,openJoystick,openLaser,openBumble,openEarlyVision,openGui,openThreadInfoWin;
-  ControllerModule ctrl;
+  ControllerProcess ctrl;
   SchunkArmModule arm;
   SchunkHandModule hand;
   SchunkSkinModule skin;
@@ -119,7 +119,7 @@ struct RobotModuleGroup{
   Metronome ticcer;
   CycleTimer timer;
   
-  //internal: communication ControllerModule <-> Schunk
+  //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors
   
   //IMPORTANT: call signal(SIGINT,RobotModuleGroup::signalStopCallback); in main.cpp

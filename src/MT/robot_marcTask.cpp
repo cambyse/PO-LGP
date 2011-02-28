@@ -11,7 +11,7 @@ TrivialBwdMsgTask::TrivialBwdMsgTask():TaskAbstraction(){
   planVar = NULL;
 };
 
-void TrivialBwdMsgTask::updateTaskVariables(ControllerModule *ctrl){
+void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
   activateAll(TVall,false); //deactivate all variables
 
   TV_col->active=true;

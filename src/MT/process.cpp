@@ -18,7 +18,7 @@ static ProcessL  globalProcesses;
 
 struct sVariable{
   Variable *p;
-  ofstream os;
+  //ofstream os;
   Lock lock;
   ConditionVariable cond;
 
@@ -28,13 +28,13 @@ struct sVariable{
 Variable::Variable(const char *_name){
   s = new sVariable(this);
   name = _name;
-  s->os.open(STRING("var-"<<name<<".log"));
+  //s->os.open(STRING("var-"<<name<<".log"));
   globalVariables.memMove=true;
   globalVariables.append(this);
 };
 
 Variable::~Variable(){
-  s->os.close();
+  //s->os.close();
   delete s;
   globalVariables.removeValue(this);
 };

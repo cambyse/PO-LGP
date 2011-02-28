@@ -37,7 +37,7 @@ void q_hand_home(arr &q){
 // Robot Controller Module
 //
 
-ControllerModule::ControllerModule():Process("ControllerProcess"),timer("RobController"){
+ControllerProcess::ControllerProcess():Process("ControllerProcess"),timer("RobController"){
   maxJointStep = MT::Parameter<double>("maxJointStep",.01);
   q_referenceVar=NULL;
   proxiesVar=NULL;
@@ -48,7 +48,7 @@ ControllerModule::ControllerModule():Process("ControllerProcess"),timer("RobCont
   fixFingers=false;
 }
 
-void ControllerModule::open(){
+void ControllerProcess::open(){
   
   //-- ors
   if(MT::checkParameter<MT::String>("orsFile")){
@@ -94,11 +94,11 @@ void ControllerModule::open(){
   timer.reset();
 }
 
-void ControllerModule::close(){
+void ControllerProcess::close(){
   listDelete(sys.vars);
 }
 
-void ControllerModule::step(){
+void ControllerProcess::step(){
   timer.cycleStart();
   
   if(skinVar){ //access real state of skin
@@ -350,7 +350,7 @@ TaskAbstraction::TaskAbstraction(){
 
 }
 
-void TaskAbstraction::initTaskVariables(ControllerModule* ctrl){
+void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   ors::Graph &ors=ctrl->ors;
   
   //define explicit control variables
@@ -415,7 +415,7 @@ void TaskAbstraction::initTaskVariables(ControllerModule* ctrl){
   TV_up2->active=false;
 }
 
-void TaskAbstraction::updateTaskVariables(ControllerModule* ctrl){
+void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
   if(joyVar){
     joyVar->readAccess(ctrl);
     joyState = joyVar->state;

@@ -12,7 +12,7 @@ struct TrivialBwdMsgTask:public TaskAbstraction{
   FutureMotionPlan *planVar;
   
   TrivialBwdMsgTask();
-  virtual void updateTaskVariables(ControllerModule*); //overloading the virtual
+  virtual void updateTaskVariables(ControllerProcess*); //overloading the virtual
 };
 
 

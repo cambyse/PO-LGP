@@ -487,7 +487,7 @@ void* StepThread::staticThreadMain(void *_this){
 #if 0
 struct ThreadInfoWin:public StepThread,Fl_Window{
   bool isOpen;
-  ofstream log;
+  //ofstream log;
   char outputbuf[200];
 
   ThreadInfoWin():StepThread("ThreadInfoX"),Fl_Window(0,0,600,300,"processes"){
@@ -496,7 +496,7 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
   ~ThreadInfoWin(){  }
   
   void open(){
-    MT::open(log,"LOG.threads");
+    //MT::open(log,"LOG.threads");
     show();
     Fl::check();
     isOpen=true;
@@ -565,9 +565,9 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
     //XFlush(display);
 
     //-- log file
-    for_list(i,th,globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-    for_list(i,ct,globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
-    log <<endl;
+    //for_list(i,th,globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i,ct,globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //log <<endl;
   }
 
 };
@@ -580,7 +580,7 @@ struct sThreadInfoWin{
   Window window;
   GC gc;
   //CycleTimer timer;
-  ofstream log;
+  //ofstream log;
   char outputbuf[200];
 };
 
@@ -594,29 +594,29 @@ ThreadInfoWin::~ThreadInfoWin(){
 }
 
 void ThreadInfoWin::open(){
-    MT::open(s->log,"LOG.threads");
-    s->display = XOpenDisplay(NULL);
-    if(!s->display) HALT("Cannot open display");
-    s->window = XCreateSimpleWindow(s->display, DefaultRootWindow(s->display),
-                                 10, 10, 600, 300, 1,
-                                 0xffffff, 0x000000);
-    XMapWindow(s->display, s->window);
-    s->gc = XCreateGC(s->display, s->window, 0, NULL);
-    XSetFont(s->display, s->gc,  XLoadFont(s->display,"-*-helvetica-*-r-*-*-*-*-*-*-*-*-*-*"));
-    //-adobe-courier-medium-r-*-*-*-80-*-*-*-*-*-*"));
-    XSetBackground(s->display, s->gc, 0x000000);
-    XSetForeground(s->display, s->gc, 0xffffff);
-    XWindowChanges change={1500, 700,  600, 300,  10, NULL, 0};
-    XConfigureWindow(s->display, s->window, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &change);
-    XFlush(s->display);
-    //timer.reset();
-    s->isOpen=true;
-  }
+  //MT::open(s->log,"LOG.threads");
+  s->display = XOpenDisplay(NULL);
+  if(!s->display) HALT("Cannot open display");
+  s->window = XCreateSimpleWindow(s->display, DefaultRootWindow(s->display),
+				  10, 10, 600, 300, 1,
+				  0xffffff, 0x000000);
+  XMapWindow(s->display, s->window);
+  s->gc = XCreateGC(s->display, s->window, 0, NULL);
+  XSetFont(s->display, s->gc,  XLoadFont(s->display,"-*-helvetica-*-r-*-*-*-*-*-*-*-*-*-*"));
+  //-adobe-courier-medium-r-*-*-*-80-*-*-*-*-*-*"));
+  XSetBackground(s->display, s->gc, 0x000000);
+  XSetForeground(s->display, s->gc, 0xffffff);
+  XWindowChanges change={1500, 700,  600, 300,  10, NULL, 0};
+  XConfigureWindow(s->display, s->window, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &change);
+  XFlush(s->display);
+  //timer.reset();
+  s->isOpen=true;
+}
 
   void ThreadInfoWin::close(){
     if(!s->isOpen) return;
     XCloseDisplay(s->display);
-    s->log.close();
+    //s->log.close();
     s->isOpen=false;
   }
   
@@ -672,9 +672,9 @@ void ThreadInfoWin::open(){
     XFlush(s->display);
 
     //-- log file
-    for_list(i,th,globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-    for_list(i,ct,globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
-    s->log <<endl;
+    //for_list(i,th,globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i,ct,globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //s->log <<endl;
 
     //timer.cycleDone();
   }

@@ -18,14 +18,14 @@
 #include "guiModule.h"
 #include "process.h"
 
-struct ControllerModule; //RENAME: ControllerProcess
+struct ControllerProcess; //RENAME: ControllerProcess
 //struct RobotActionInterfaceWS;
 struct RevelInterface;
 struct TaskAbstraction;
 enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
 
 struct TaskGoalUpdater{
-  virtual void operator()(TaskAbstraction*,ControllerModule*) = 0;
+  virtual void operator()(TaskAbstraction*,ControllerProcess*) = 0;
 };
 
 //===========================================================================
@@ -71,8 +71,8 @@ struct TaskAbstraction{
   
   TaskAbstraction();
 
-  virtual void initTaskVariables(ControllerModule*);
-  virtual void updateTaskVariables(ControllerModule*); //RENAME  updateTaskGoals
+  virtual void initTaskVariables(ControllerProcess*);
+  virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
 };
 
 
@@ -82,7 +82,7 @@ struct TaskAbstraction{
 //
 
 /*! given a task (=TaskVariable configuration) computed the desired next joint state of the robot */
-struct ControllerModule:public Process{ //--non-threaded!!
+struct ControllerProcess:public Process{ //--non-threaded!!
   q_currentReferenceVar *q_referenceVar;
   currentProxiesVar *proxiesVar;
   SchunkSkinModule *skinVar;
@@ -105,7 +105,7 @@ struct ControllerModule:public Process{ //--non-threaded!!
   soc::SocSystem_Ors sys;
   CycleTimer timer;
   
-  ControllerModule();
+  ControllerProcess();
 
   //main routines
   void open();
@@ -128,7 +128,7 @@ struct RobotModuleGroup{
 
   //Processes
   bool openArm,openHand,openSkin,openJoystick,openLaser,openBumble,openEarlyVision,openGui,openThreadInfoWin;
-  ControllerModule ctrl;
+  ControllerProcess ctrl;
   SchunkArmModule arm;
   SchunkHandModule hand;
   SchunkSkinModule skin;
@@ -144,7 +144,7 @@ struct RobotModuleGroup{
   Metronome ticcer;
   CycleTimer timer;
   
-  //internal: communication ControllerModule <-> Schunk
+  //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors
   
   //IMPORTANT: call signal(SIGINT,RobotModuleGroup::signalStopCallback); in main.cpp
