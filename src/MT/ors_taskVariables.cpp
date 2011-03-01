@@ -97,24 +97,24 @@ void TaskVariable::set(
     ors::Transformation().setText(reltext));
 }*/
 
-void TaskVariable::setGains(real _a,real _b){
-  targetType=pdgainTT;
+void TaskVariable::setGains(real pgain,real dgain,bool onReal){
+  if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
-  Pgain=_a;
-  Dgain=_b;
+  Pgain=pgain;
+  Dgain=dgain;
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsNatural(real oscPeriod,real dampingRatio){
-  targetType=pdgainTT;
+void TaskVariable::setGainsAsNatural(real oscPeriod,real dampingRatio,bool onReal){
+  if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Pgain = MT::sqr(MT_PI/oscPeriod);
   Dgain = 4.*dampingRatio*sqrt(Pgain);
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsAttractor(real decaySteps,real oscillations){
-  targetType=pdgainTT;
+void TaskVariable::setGainsAsAttractor(real decaySteps,real oscillations,bool onReal){
+  if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Dgain=2./decaySteps;
   Pgain=Dgain*Dgain*(MT_PI*MT_PI*oscillations*oscillations + .25);
@@ -431,7 +431,7 @@ void TaskVariable::getHessian(arr& H){
   }
 }
 
-void TaskVariable::updateChange(int t,double tau){
+void TaskVariable::updateChange(int t){
   CHECK(y.N,"variable needs to be updated before!");
   arr yt,vt;
   if(t!=-1){
@@ -451,10 +451,19 @@ void TaskVariable::updateChange(int t,double tau){
     v_ref = vt;
     break;
   }
-  case pdgainTT:{
+  case pdGainOnRealTT:{
     v_ref = v + Pgain*(yt - y) + Dgain*(vt - v);
     y_ref = y + v_ref; //``Euler integration''
-    v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in real time
+    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in real time
+    break;
+  }
+  case pdGainOnReferenceTT:{
+    if(y_ref.N!=y.N){ y_ref=y; v_ref=v; }
+    v_ref = v_ref + Pgain*(yt - y_ref) + Dgain*(vt - v_ref);
+    y_ref = y_ref + v_ref; //``Euler integration''
+    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in real time
+    static ofstream fil("refs");
+    fil <<y_ref <<v_ref <<yt <<vt <<y <<v <<' ' <<Pgain <<' ' <<Dgain <<endl;
     break;
   }
   default:

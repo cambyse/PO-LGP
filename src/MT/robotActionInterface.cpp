@@ -67,10 +67,10 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
   s->defaultTask.controlMode = prefixedCM;
-  TV.setGainsAsNatural(100.,1.);
+  TV.setGainsAsNatural(400.,1.,false);
   TV.active = true;
-  TV.y_prec = 0.; //1e2;
-  TV.v_prec = 1e2;
+  TV.y_prec = 1e2;
+  TV.v_prec = 1e0;
   TV.v_target = ARR(0.,0.,0.);
   TV.y_target = posGoal;
   task->TV_col->active=task->TV_lim->active=true;

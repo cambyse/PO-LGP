@@ -583,7 +583,7 @@ enum TVtype {
   userTVT      //!< fully user defined: derive from TaskVariable and overload userUpdate(...)
 };
 
-enum TargetType{ noneTT, directTT, pdgainTT, trajectoryTT };
+enum TargetType{ noneTT, directTT, pdGainOnRealTT, pdGainOnReferenceTT, trajectoryTT };
 
 /*!\brief basic task variable */
 struct TaskVariable{
@@ -605,6 +605,8 @@ struct TaskVariable{
 
   arr y_ref,v_ref;                           //!< immediate (next step) desired target reference
   real Pgain,Dgain;                          //!< parameters of the PD controller or attractor dynamics
+
+	//a bit obsolete
   real err,derr;
   int state;                                 //!< discrete indicate state of this variable (e.g., convergence)
   real state_tol;
@@ -637,9 +639,9 @@ struct TaskVariable{
   //void set(const char* _name,ors::Graph& _sl,TVtype _type,const char *iname,const char *jname,const char *reltext);
 
   //!@name online target parameters
-  void setGains(real _a,real _b);
-  void setGainsAsNatural(real decaySteps,real dampingRatio);
-  void setGainsAsAttractor(real decaySteps,real oscillations=.2);
+  void setGains(real Pgain,real Dgain,bool onReal=true);
+  void setGainsAsNatural(real decaySteps,real dampingRatio,bool onReal=true);
+  void setGainsAsAttractor(real decaySteps,real oscillations=.2,bool onReal=true);
   
   //!@name trajectory target parameters
   void setConstantTargetTrajectory(uint T);
@@ -658,7 +660,7 @@ struct TaskVariable{
   //!@name updates
   void updateState();
   void updateJacobian();
-  void updateChange(int t=-1,double tau=0.01);
+  void updateChange(int t=-1);
   void getHessian(arr& H);
 
   //!@name virtual user update

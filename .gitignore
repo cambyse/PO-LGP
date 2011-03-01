@@ -3,6 +3,8 @@
 *.so
 *.exe
 
+*.kdev4
+
 *~
 
 %% special:
