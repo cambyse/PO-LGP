@@ -24,14 +24,14 @@
 struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction{
   uint T;
   arr x0,x1,x,W;
-  real prec;
+  double prec;
   arr obstacles;
 
   SocSystem_Analytical(){}
   virtual ~SocSystem_Analytical(){}
 
   //initialization methods
-  void initKinematic(uint dim,uint trajectory_length, real w, real endPrec){
+  void initKinematic(uint dim,uint trajectory_length, double w, double endPrec){
     x0.resize(dim); x0.setZero();
     x1=x0; x1(0)=1.;
     x=x0;
@@ -44,7 +44,7 @@ struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction{
     dynamic=false;
     //os = &cout;
   }
-  void initDynamic(uint dim,real trajectory_time,uint trajectory_steps, arr*H=NULL){
+  void initDynamic(uint dim,double trajectory_time,uint trajectory_steps, arr*H=NULL){
     NIY;
     dynamic=true;
   }
@@ -81,7 +81,7 @@ struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction{
   }
     
   void getProcess(arr& A,arr& a,arr& B);
-  real getCosts(arr& R,arr& r,uint t,const arr& qt);
+  double getCosts(arr& R,arr& r,uint t,const arr& qt);
   void getConstraints(arr& c,arr& coff,uint t,const arr& qt);
   
   void displayState(const arr& q,const arr *Qinv,const char *text=NULL);
@@ -95,28 +95,28 @@ void SocSystem_Analytical::getProcess(arr& A,arr& a,arr& B){
   a.resize(N); a.setZero();
 }
   
-real SocSystem_Analytical::getCosts(arr& R,arr& r,uint t,const arr& qt){
+double SocSystem_Analytical::getCosts(arr& R,arr& r,uint t,const arr& qt){
   uint N=x.N;
   R.resize(N,N); R.setZero();
   r.resize(N);   r.setZero();
-  real C=0.;
+  double C=0.;
   
 #ifndef USE_TRUNCATION //potentials for collision cost
   arr J(1,qt.N),phiHatQ(1);
   J.setZero();
   phiHatQ.setZero();
   for(uint i=0;i<obstacles.d0;i++){
-    real margin = .1;
-    real d = (1.-norm(x-obstacles[i])/margin);
+    double margin = .1;
+    double d = (1.-norm(x-obstacles[i])/margin);
     if(d<0) continue;
     phiHatQ(0) += d*d;
-    J += ((real)2.*d/margin)*(obstacles[i]-x)/norm(x-obstacles[i]);
+    J += ((double)2.*d/margin)*(obstacles[i]-x)/norm(x-obstacles[i]);
   }
   J.reshape(1,J.N);
   arr tJ,target(1);
-  target=(real)0.;
+  target=(double)0.;
   transpose(tJ,J);
-  real colprec = (real)5e2;
+  double colprec = (double)5e2;
   C += colprec*sqrDistance(target,phiHatQ);
   R += colprec*tJ*J;
   r += colprec*tJ*(target - phiHatQ + J*qt);
@@ -150,7 +150,7 @@ void SocSystem_Analytical::getConstraints(arr& cdir,arr& coff,uint t,const arr& 
 #elif 1 //assume that the task vector is a list of scalars, each constrained >0
   arr J,y;
   for(i=0;i<M;i++){
-    real haty = norm(x-obstacles[i]);
+    double haty = norm(x-obstacles[i]);
     if(haty>.5) continue; //that's good enough -> don't add the constraint
     J = (x-obstacles[i])/norm(x-obstacles[i]);
     coff.append(-haty + scalarProduct(J,x));
@@ -164,8 +164,8 @@ void SocSystem_Analytical::getConstraints(arr& cdir,arr& coff,uint t,const arr& 
   J.setZero();
   phiHatQ.setZero();
   for(i=0;i<obstacles.d0;i++){
-    real margin = .25;
-    real d = 1.-norm(x-obstacles[i])/margin;
+    double margin = .25;
+    double d = 1.-norm(x-obstacles[i])/margin;
     //if(d<0) continue;
     //phiHatQ(0) += d*d;
     //J += (2.*d/margin)*(obstacles[i]-x)/norm(x-obstacles[i]);

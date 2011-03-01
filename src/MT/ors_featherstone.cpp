@@ -39,10 +39,10 @@
 */
 namespace Featherstone{
   //! returns a cross-product matrix X such that \f$v \times y = X y\f$
-  void skew(arr& X,const real *v);
+  void skew(arr& X,const double *v);
   
   //! as above
-  arr skew(const real *v);
+  arr skew(const double *v);
   
   /*!\brief MM6 coordinate transform from X-axis rotation.  Xrotx(h)
     calculates the MM6 coordinate transform matrix (for motion
@@ -50,7 +50,7 @@ namespace Featherstone{
     radians).  Positive rotation is anticlockwise: +Y axis rotates
     towards +Z axis.
   */
-  void Xrotx(arr& X, real h);
+  void Xrotx(arr& X, double h);
   
   /*!\brief MM6 coordinate transform from Y-axis rotation.  Xroty(h)
     calculates the MM6 coordinate transform matrix (for motion
@@ -58,7 +58,7 @@ namespace Featherstone{
     radians).  Positive rotation is anticlockwise: +Z axis rotates
     towards +X axis.
   */
-  void Xroty(arr& X, real h);
+  void Xroty(arr& X, double h);
   
   /*!\brief MM6 coordinate transform from Z-axis rotation.  Xrotz(h)
     calculates the MM6 coordinate transform matrix (for motion
@@ -66,7 +66,7 @@ namespace Featherstone{
     radians).  Positive rotation is anticlockwise: +X axis rotates
     towards +Y axis.
   */
-  void Xrotz(arr& X, real h);
+  void Xrotz(arr& X, double h);
   
   
   /*!\brief MM6 coordinate transform from 3D translation vector.
@@ -75,7 +75,7 @@ namespace Featherstone{
     vector r, which contains the x, y and z coordinates of the new
     location of the origin relative to the old.
   */
-  void Xtrans(arr& X, real* r);
+  void Xtrans(arr& X, double* r);
   
   
   /*!\brief Calculate RBI from mass, CoM and rotational inertia.
@@ -83,7 +83,7 @@ namespace Featherstone{
     with mass m, centre of mass at c, and (3x3) rotational inertia
     about CoM of I.
   */
-  void RBmci(arr& rbi, real m, real *c, const ors::Matrix& I);
+  void RBmci(arr& rbi, double m, double *c, const ors::Matrix& I);
   
   /*!\brief MM6 cross-product tensor from M6 vector.  crossM(v)
     calculates the MM6 cross-product tensor of motion vector v such
@@ -150,7 +150,7 @@ const arr Featherstone::Robot::S(uint i) const{
     r = C->nodes(i)->inLinks(0)->X.r;
     r.invert();
     r.getMatrix(R.m);
-    memmove(S.p,R.m,9*sizeof(real));
+    memmove(S.p,R.m,9*sizeof(double));
     break;
   case 4:
     S.resize(6,4); S.setZero();
@@ -201,7 +201,7 @@ const arr Featherstone::Robot::Xlink(uint i) const{
 const arr Featherstone::Robot::Ilink(uint i) const{
   //taken from slide 27
   ors::Joint *e=C->nodes(i)->firstIn;
-  real m=C->nodes(i)->mass;
+  double m=C->nodes(i)->mass;
   ors::Vector com;
   if(e) com = e->B.p; else com = C->nodes(i)->X.p;
   //arr Ic(3,3);  Ic.setDiag(.1*m);
@@ -230,14 +230,14 @@ const arr Featherstone::Robot::force(uint i) const{
 
 #endif
 
-void Featherstone::skew(arr& X,const real *v){
+void Featherstone::skew(arr& X,const double *v){
   X.resize(3,3);  X.setZero();
   X(0,1) = -v[2];  X(1,0) = v[2];
   X(1,2) = -v[0];  X(2,1) = v[0];
   X(2,0) = -v[1];  X(0,2) = v[1];
 }
 
-arr Featherstone::skew(const real *v){ arr X; skew(X,v); return X; }
+arr Featherstone::skew(const double *v){ arr X; skew(X,v); return X; }
 
 void FrameToMatrix(arr &X,const ors::Transformation& f){
   arr z(3,3);  z.setZero();
@@ -362,14 +362,14 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
 /*
 ----------- Xrotx.m ----------------------------------------------------------
 */
-void Featherstone::Xrotx(arr& X, real h){
+void Featherstone::Xrotx(arr& X, double h){
 /*
 % Xrotx  MM6 coordinate transform from X-axis rotation.
 % Xrotx(h) calculates the MM6 coordinate transform matrix (for motion
 % vectors) induced by a rotation about the +X axis by an angle h (in radians).
 % Positive rotation is anticlockwise: +Y axis rotates towards +Z axis.
 */
-  real c = cos(h), s = sin(h);
+  double c = cos(h), s = sin(h);
   X.resize(6,6); X.setZero();
   X(0,0)= X(3,3)= 1.;
   X(1,1)= X(2,2)= X(4,4)= X(5,5)= c;
@@ -388,14 +388,14 @@ void Featherstone::Xrotx(arr& X, real h){
 /*
 ----------- Xroty.m ----------------------------------------------------------
 */
-void Featherstone::Xroty(arr& X, real h){
+void Featherstone::Xroty(arr& X, double h){
 /*
 % Xroty  MM6 coordinate transform from Y-axis rotation.
 % Xroty(h) calculates the MM6 coordinate transform matrix (for motion
 % vectors) induced by a rotation about the +Y axis by an angle h (in radians).
 % Positive rotation is anticlockwise: +Z axis rotates towards +X axis.
 */
-  real c = cos(h), s = sin(h);
+  double c = cos(h), s = sin(h);
   X.resize(6,6);  X.setZero();
   X(1,1)= X(4,4)= 1.;
   X(0,0)= X(2,2)= X(3,3)= X(5,5)= c;
@@ -414,14 +414,14 @@ void Featherstone::Xroty(arr& X, real h){
 /*
 ----------- Xrotz.m ----------------------------------------------------------
 */
-void Featherstone::Xrotz(arr& X, real h){
+void Featherstone::Xrotz(arr& X, double h){
 /*
 % Xrotz  MM6 coordinate transform from Z-axis rotation.
 % Xrotz(h) calculates the MM6 coordinate transform matrix (for motion
 % vectors) induced by a rotation about the +Z axis by an angle h (in radians).
 % Positive rotation is anticlockwise: +X axis rotates towards +Y axis.
 */
-  real c = cos(h), s = sin(h);
+  double c = cos(h), s = sin(h);
   X.resize(6,6);  X.setZero();
   X(2,2)= X(5,5)= 1.;
   X(0,0)= X(1,1)= X(3,3)= X(4,4)= c;
@@ -440,7 +440,7 @@ void Featherstone::Xrotz(arr& X, real h){
 /*
 ----------- Xtrans.m ---------------------------------------------------------
 */
-void Featherstone::Xtrans(arr& X, real* r){
+void Featherstone::Xtrans(arr& X, double* r){
 /*
 % Xtrans  MM6 coordinate transform from 3D translation vector.
 % Xtrans(r) calculates the MM6 coordinate transform matrix (for motion
@@ -463,7 +463,7 @@ void Featherstone::Xtrans(arr& X, real* r){
 /*
 ----------- RBmci.m ----------------------------------------------------------
 */
-void Featherstone::RBmci(arr& rbi, real m, real *c, const ors::Matrix& I){
+void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I){
 /*
 % RBmci  Calculate RBI from mass, CoM and rotational inertia.
 % RBmci(m,c,I) calculate MF6 rigid-body inertia tensor for a body with
@@ -492,7 +492,7 @@ void Featherstone::crossF(arr& vcross,const arr& v){
 */
   crossM(vcross,v);
   transpose(vcross);
-  vcross *= (real)-1.;
+  vcross *= (double)-1.;
   //vcross = -crossM(v)';
 }
 
@@ -999,7 +999,7 @@ void ors::equationOfMotion(arr& H, arr& C,
     }
   }
 
-  C *= (real)-1.;
+  C *= (double)-1.;
 }
 
 //===========================================================================

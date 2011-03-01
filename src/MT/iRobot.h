@@ -77,7 +77,7 @@ struct ControllerProcess{ //--non-threaded!!
   arr skinState;
 
   //OUTPUT
-  arr q_reference,v_reference; //,q_orsInit;  //the SIMULATION state (the modules buffer real states, simulation is synchronized with modules in the loop)
+  arr q_reference,v_reference; //,q_orsInit;  //the SIMULATION state (the modules buffer double states, simulation is synchronized with modules in the loop)
   arr q_home; //posture as loaded from the ors file
   
   //INTERNAL

@@ -70,11 +70,6 @@
 #define MT_LnSqrt2Pi -0.9189385332046727417803296 
 #define MT_SQRT2 1.414213562373095049
 #define MT_SQRTPI 1.772453850905516027
-#ifdef MT_SINGLE
-typedef float real;
-#else
-typedef double real;
-#endif
 typedef unsigned char byte;            //!< byte
 typedef unsigned short int uint16;     //!< 2 bytes
 typedef unsigned int uint;             //!< unsigned integer
@@ -132,35 +127,35 @@ namespace MT{
   byte bit(byte *str,uint i);
   void flip(byte& b,uint i);
   void flip(int& b,uint i);
-  real modMetric(real x,real y,real mod);
-  real sign(real x);
-  real linsig(real x);
-  void   constrain(real& x,real a,real b);
-  real phi(real dx,real dy);
-  real dphi(real x,real y,real dx,real dy);
-  real DIV(real x,real y,bool force=false);
-  real sigmoid11(real x);
-  real sigmoid(real x);
-  real dsigmoid(real x);
-  real approxExp(real x);
-  real Log(real x);
+  double modMetric(double x,double y,double mod);
+  double sign(double x);
+  double linsig(double x);
+  void   constrain(double& x,double a,double b);
+  double phi(double dx,double dy);
+  double dphi(double x,double y,double dx,double dy);
+  double DIV(double x,double y,bool force=false);
+  double sigmoid11(double x);
+  double sigmoid(double x);
+  double dsigmoid(double x);
+  double approxExp(double x);
+  double Log(double x);
   uint   Log2(uint n);
-  real sqr(real x);
-  real sinc(real x);
-  real cosc(real x);
+  double sqr(double x);
+  double sinc(double x);
+  double cosc(double x);
   template<class T> T MIN(T a,T b){ return a<b?a:b; }
   template<class T> T MAX(T a,T b){ return a>b?a:b; }
-  real erf(real x);
-  real gaussInt(real x);
-  real gaussIntExpectation(real x);
+  double erf(double x);
+  double gaussInt(double x);
+  double gaussIntExpectation(double x);
 
   //----- time access
-  real realTime();
-  real cpuTime();
-  real sysTime();
-  real totalTime();
+  double realTime();
+  double cpuTime();
+  double sysTime();
+  double totalTime();
   char *date();
-  void wait(real sec);
+  void wait(double sec);
   bool wait();
 
   //----- memory
@@ -168,9 +163,9 @@ namespace MT{
 
   //----- timer functions
   void   timerStart(bool useRealTime=false);
-  real timerRead(bool reset=false);
-  real timerRead(bool reset,real startTime);
-  real timerPause();
+  double timerRead(bool reset=false);
+  double timerRead(bool reset,double startTime);
+  double timerPause();
   void   timerResume();
 
   //----- command line handling
@@ -521,15 +516,15 @@ namespace MT{
     uint32_t operator ()(uint32_t i){ return num(i); }
     uint32_t operator ()(int32_t lo, int32_t hi){ return num(lo,hi); }
     //! a random variable uniformly distributed in [0,1]
-    real uni(){ return ((real)num(1<<22))/(1<<22); }
+    double uni(){ return ((double)num(1<<22))/(1<<22); }
     //! a random variable uniformly distributed in [\c low, \c high]
-    real uni(real low,real high){ return low+uni()*(high-low); }
+    double uni(double low,double high){ return low+uni()*(high-low); }
     //! a gaussian random variable with mean zero
-    real gauss();
+    double gauss();
     /*!\brief a positive integer drawn from a poisson distribution with given
       \c mean; is case \c mean>100, a (positive) gauss number
       \c floor(mean+gauss(sqrt(mean))+.5) is returned */
-    uint32_t poisson(real mean);
+    uint32_t poisson(double mean);
     // @}
 
 

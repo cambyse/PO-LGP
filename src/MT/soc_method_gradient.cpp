@@ -21,7 +21,7 @@
 #  include "hslModule.h"
 #endif
 
-real attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const ors::Spline& spline,const arr& via,bool costOnly){ NIY; }
+double attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const ors::Spline& spline,const arr& via,bool costOnly){ NIY; }
 
 //===========================================================================
 
@@ -55,12 +55,12 @@ struct SocProblem:public OptimizationProblem{
   }
 
   /*
-  real f_att(const arr &x,void *data){
+  double f_att(const arr &x,void *data){
     arr q0;
     ((soc::SocSystemAbstraction*)data)->getq0(q0);
     ((soc::SocSystemAbstraction*)data)->setq(q0);
     ((soc::SocSystemAbstraction*)data)->getPhi(x[0](),0);
-    real C;
+    double C;
     static arr dummy;
     soc::SocSystemAbstraction& soci=*((soc::SocSystemAbstraction*)data);
     if(os) (*os) <<std::setw(3) <<count++ <<"  time " <<MT::timerRead();
@@ -93,7 +93,7 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
                                 uint maxIterations,
                                 uint spline_points,
                                 uint spline_degree,
-                                real stoppingTolerance,
+                                double stoppingTolerance,
                                 bool checkGradient,
                                 uint display){
 
@@ -125,13 +125,13 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
       spline.points[0]() = q[0];
       spline.points[K]() = q[T];
       for(uint k=1;k<K;k++)
-        spline.points[k]() = q[(uint)((real)k*T/K)];
+        spline.points[k]() = q[(uint)((double)k*T/K)];
     }else{
       spline.points.resize(K+1,soci.yDim(0));
       soci.setq(q[0]); soci.getPhi(spline.points[0](),0);
       soci.setq(q[T]); soci.getPhi(spline.points[K](),0);
       for(uint k=1;k<K;k++){
-        soci.setq(q[(uint)((real)k*T/K)]); soci.getPhi(spline.points[k](),0);
+        soci.setq(q[(uint)((double)k*T/K)]); soci.getPhi(spline.points[k](),0);
       }
     }
   }

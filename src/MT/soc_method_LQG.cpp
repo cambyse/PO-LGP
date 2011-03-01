@@ -50,7 +50,7 @@ void soc::LQG::shiftSolution(int offset){
     A=B=1 (simple additive control) with control cost H=W
     (corresponding directly to the q-space metric). The quadratic cost
     terms are computed from the tast constraints */
-real soc::LQG::stepKinematic(){
+double soc::LQG::stepKinematic(){
   uint t,T=sys->nTime(),n=sys->qDim();
 
   //arr Vbar(T+1,n,n),vbar(T+1,n);
@@ -65,7 +65,7 @@ real soc::LQG::stepKinematic(){
   if(q.nd==2 && q.d0==(T>>1)+1){ //upscale...
     q.resize(T+1,q.d1);
     for(t=0;t<=T;t+=2){
-      q[t] = q_old[t>>1];  if(t<T){ q[t+1] = (real).5*(q_old[t>>1] + q_old[(t>>1)+1]); }
+      q[t] = q_old[t>>1];  if(t<T){ q[t+1] = (double).5*(q_old[t>>1] + q_old[(t>>1)+1]); }
     }
     q_old=q;
   }
@@ -121,10 +121,10 @@ real soc::LQG::stepKinematic(){
   sys->getq0(q[0]());
   for(t=1;t<=T;t++){
     if(convergenceRate==1.){
-      q[t]() = q[t-1] - HVinv[t]*((real).5*vbar[t] + Vbar[t]*q[t-1]);
+      q[t]() = q[t-1] - HVinv[t]*((double).5*vbar[t] + Vbar[t]*q[t-1]);
     }else{
-      q[t]() = ((real)1.-convergenceRate)*q[t]
-	+ convergenceRate*(q[t-1] - HVinv[t]*((real).5*vbar[t] + Vbar[t]*q[t-1]));
+      q[t]() = ((double)1.-convergenceRate)*q[t]
+	+ convergenceRate*(q[t-1] - HVinv[t]*((double).5*vbar[t] + Vbar[t]*q[t-1]));
     }
   }
 
@@ -152,7 +152,7 @@ real soc::LQG::stepKinematic(){
 
 /*! \brief iterated LQG (linear quadratic Gaussian) for the general
     Stochastic Optimal Control case */
-real soc::LQG::stepGeneral(){
+double soc::LQG::stepGeneral(){
   CHECK(sys->dynamic,"assumed dynamic SOC abstraction");
   uint t,T=sys->nTime(),n=sys->qDim(),n2;
 
@@ -161,7 +161,7 @@ real soc::LQG::stepGeneral(){
   arr At,Bt,VA,HVinv,BIG,u; //helpers
   arr H;
 
-  real tau=sys->getTau();
+  double tau=sys->getTau();
 
   //remember the old trajectory
   arr q_old(q);
@@ -170,7 +170,7 @@ real soc::LQG::stepGeneral(){
   if(q.nd==2 && q.d0==(T>>1)+1){ //upscale...
     q.resize(T+1,q.d1);
     for(t=0;t<=T;t+=2){
-      q[t] = q_old[t>>1];  if(t<T){ q[t+1] = (real).5*(q_old[t>>1] + q_old[(t>>1)+1]); }
+      q[t] = q_old[t>>1];  if(t<T){ q[t+1] = (double).5*(q_old[t>>1] + q_old[(t>>1)+1]); }
     }
     q_old=q;
     sweep=0;
@@ -212,7 +212,7 @@ real soc::LQG::stepGeneral(){
 
   //fwd with optimal control
   //we assume that q_phase[0] is fine and fixed!    (from getPhaseTrajectory)
-  real ctrlC=0;
+  double ctrlC=0;
   for(t=0;t<T;t++){
     countSetq++;
     sys->setqv(q_phase[t]);
@@ -232,7 +232,7 @@ real soc::LQG::stepGeneral(){
     }else{
       q_phase.reshape(T+1,2,n);
       q_phase.subDim(t+1,1)
-        = ((real)1.-convergenceRate)*q_phase.subDim(t+1,1)
+        = ((double)1.-convergenceRate)*q_phase.subDim(t+1,1)
         + convergenceRate*(q_phase.subDim(t,1) + a[t].sub(n,-1) + B[t].sub(n,-1,0,-1)*u);
       q_phase.subDim(t+1,0) = q_phase.subDim(t,0) + tau*q_phase.subDim(t+1,1);
       q_phase.reshape(T+1,2*n);

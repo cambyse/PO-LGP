@@ -53,7 +53,7 @@ void ANN::calculate(){
   s->done = X.d0;
 }
 
-void ANN::getNN(arr& dists,intA& idx,const arr& x,uint k,real eps,bool verbose){
+void ANN::getNN(arr& dists,intA& idx,const arr& x,uint k,double eps,bool verbose){
   CHECK(X.d0>=k,"data has less ("<<X.d0<<") than k="<<k<<" points");
   CHECK(x.N==X.d1,"query point has wrong dimension");
 
@@ -105,19 +105,19 @@ void ANN::getNN(arr& dists,intA& idx,const arr& x,uint k,real eps,bool verbose){
   }
 }
 
-uint ANN::getNN(const arr& x,real eps,bool verbose){
+uint ANN::getNN(const arr& x,double eps,bool verbose){
   intA idx(1);
   arr dists(1);
   getNN(dists,idx,x,1,eps,verbose);
   return idx(0);  
 }
 
-void ANN::getNN(intA& idx           ,const arr& x,uint k,real eps,bool verbose){
+void ANN::getNN(intA& idx           ,const arr& x,uint k,double eps,bool verbose){
   arr dists(k);
   getNN(dists,idx,x,k,eps,verbose);
 }
 
-void ANN::getNN(arr& xx             ,const arr& x,uint k,real eps,bool verbose){
+void ANN::getNN(arr& xx             ,const arr& x,uint k,double eps,bool verbose){
   intA idx(k);
   arr dists(k);
   getNN(dists,idx,x,k,eps,verbose);
@@ -138,7 +138,7 @@ void ANN::map(arr& y,const arr& x,const arr& Y){
   uint i;
   for(i=0;i<k;i++) S.learn(X[idx(i)]-x);
   //S.computeZeroMean();
-  real d=.1*S.variance(),w;
+  double d=.1*S.variance(),w;
   if(!d) d=1.;
   //pls.S.forget();
   S.forget();

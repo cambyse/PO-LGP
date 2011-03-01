@@ -22,17 +22,17 @@ typedef void fdd(arr& xdd, const arr& x);
 
 void MT::rk4(arr& x1,const arr& x0,
 	 void (*df)(arr& xd,const arr& x),
-	 real dt){
+	 double dt){
   uint n=x0.N;
   arr k1(n),k2(n),k3(n),k4(n);
 
   df(k1,x0);
-  df(k2,x0+(real).5*dt*k1);
-  df(k3,x0+(real).5*dt*k2);
+  df(k2,x0+(double).5*dt*k1);
+  df(k3,x0+(double).5*dt*k2);
   df(k4,x0+   dt*k3);
 
   x1 = x0;
-  x1 += (dt/(real)6.)*(k1 + (real)2.*k2 + (real)2.*k3 + k4);
+  x1 += (dt/(double)6.)*(k1 + (double)2.*k2 + (double)2.*k3 + k4);
 }
 
 void (*global_ddf)(arr& xdd,const arr& x,const arr& v);
@@ -56,7 +56,7 @@ void rk_sf(arr& s,const arr& x){
 
 void MT::rk4dd(arr& x1,arr& v1,const arr& x0,const arr& v0,
 	 void (*ddf)(arr& xdd,const arr& x,const arr& v),
-	 real dt){
+	 double dt){
   
   global_ddf = ddf;
 
@@ -78,7 +78,7 @@ void MT::rk4dd(arr& x1,arr& v1,const arr& x0,const arr& v0,
 bool MT::rk4_switch(arr& x1,arr& s1,const arr& x0,const arr& s0,
 	 void (*df)(arr& xd,const arr& x),
 	 void (*sf)(arr& s,const arr& x),
-	 real& dt,real tol){
+	 double& dt,double tol){
   uint i,sn;
   arr sa=s0,sb,sm,xa=x0,xb,xm; //states at times a,m,t
   rk4(xb,x0,df,dt);
@@ -93,8 +93,8 @@ bool MT::rk4_switch(arr& x1,arr& s1,const arr& x0,const arr& s0,
   if(!change){ x1=xb; s1=sb; return false; }//no problems: no switch
 
   //we have a switch - so we must find it precisely!
-  real a=0.,b=dt; //time interval [a,b]
-  real m,min_m;   //where to cut the interval (determined by linear interpolation)
+  double a=0.,b=dt; //time interval [a,b]
+  double m,min_m;   //where to cut the interval (determined by linear interpolation)
 
   cout <<"entering zero-crossing detection loop" <<endl;
   for(;fabs(b-a)>tol;){
@@ -138,7 +138,7 @@ bool MT::rk4_switch(arr& x1,arr& s1,const arr& x0,const arr& s0,
 bool MT::rk4dd_switch(arr& x1,arr& v1,arr& s1,const arr& x0,const arr& v0,const arr& s0,
 	 void (*ddf)(arr& xdd,const arr& x,const arr& v),
 	 void (*sf)(arr& s,const arr& x,const arr& v),
-	 real& dt,real tol){
+	 double& dt,double tol){
   
   global_ddf = ddf;
   global_sf  = sf;

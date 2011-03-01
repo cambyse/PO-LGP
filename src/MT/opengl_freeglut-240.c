@@ -942,7 +942,7 @@ struct GXKeyList gxKeyList;
  * there is a joystick callback.  We have a short-circuit early
  * return if we find any joystick handler registered.
  *
- * The real way to do this is to make use of the glutTimer() API
+ * The double way to do this is to make use of the glutTimer() API
  * to more cleanly re-implement the joystick API.  Then, this code
  * and all other "joystick timer" code can be yanked.
  *

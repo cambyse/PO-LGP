@@ -484,7 +484,7 @@ void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects){
     if( obj->shapeType == 2){//box
       type = 0;
       //  ors::Vector diag(obj->diagDiff(0),obj->diagDiff(1),obj->diagDiff(2)*0);//z is the smallest entry, but still not 0
-      //real phi=acos(diag(0)/diag.length());//arccos btw 100 and diag
+      //double phi=acos(diag(0)/diag.length());//arccos btw 100 and diag
       // ors::Quaternion q;
       //q.setDiff(ors::Vector(1,0,0),diag);
       //q.setRad(phi,ors::Vector(0,0,1));

@@ -49,14 +49,14 @@ uint GaussNewton(arr& x,double tolerance,GaussNewtonCostFunction& f,uint maxEval
 }
 
 void checkGradient(OptimizationProblem &p,
-                   const arr& x, real tolerance)
+                   const arr& x, double tolerance)
 {
   arr J,dx,JJ;
-  real y,dy;
+  double y,dy;
   y=p.f(&J,x);
   
   JJ.resize(x.N);
-  real eps=CHECK_EPS;
+  double eps=CHECK_EPS;
   uint i;
   for(i=0;i<x.N;i++){
     dx=x;
@@ -66,7 +66,7 @@ void checkGradient(OptimizationProblem &p,
     JJ(i)=dy;
   }
   JJ.reshapeAs(J);
-  real md=maxDiff(J,JJ,0);
+  double md=maxDiff(J,JJ,0);
 //   MT::save(J,"z.J");
 //   MT::save(JJ,"z.JJ");
   if(md>tolerance){
@@ -81,13 +81,13 @@ void checkGradient(OptimizationProblem &p,
 }
 
 void checkGradient_vec(OptimizationProblem &p,
-                       const arr& x,real tolerance)
+                       const arr& x,double tolerance)
 {
   arr y,J,dx,dy,JJ;
   p.F(y,&J,x);
   
   JJ.resize(y.N,x.N);
-  real eps=CHECK_EPS;
+  double eps=CHECK_EPS;
   uint i,k;
   for(i=0;i<x.N;i++){
     dx=x;
@@ -97,7 +97,7 @@ void checkGradient_vec(OptimizationProblem &p,
     for(k=0;k<y.N;k++) JJ(k,i)=dy.elem(k);
   }
   JJ.reshapeAs(J);
-  real md=maxDiff(J,JJ,&i);
+  double md=maxDiff(J,JJ,&i);
 //   MT::save(J,"z.J");
 //   MT::save(JJ,"z.JJ");
   if(md>tolerance){
@@ -117,9 +117,9 @@ void checkGradient_vec(OptimizationProblem &p,
 // Rprop
 //
 
-int _sgn(real x){ if (x > 0) return 1; if (x < 0) return -1; return 0; }
-real _mymin(real x,real y){ return x < y ? x : y; }
-real _mymax(real x,real y){ return x > y ? x : y; }
+int _sgn(double x){ if (x > 0) return 1; if (x < 0) return -1; return 0; }
+double _mymin(double x,double y){ return x < y ? x : y; }
+double _mymax(double x,double y){ return x > y ? x : y; }
 
 
 Rprop::Rprop(){
@@ -131,18 +131,18 @@ Rprop::Rprop(){
   delta0 = 1.;
 }
 
-void Rprop::init(real _delta0){
+void Rprop::init(double _delta0){
   stepSize.resize(0);
   lastGrad.resize(0);
   delta0 = _delta0;
 }
 
 bool Rprop::done(){
-  real maxStep = stepSize(stepSize.maxIndex());
+  double maxStep = stepSize(stepSize.maxIndex());
   return maxStep < incr*dMin;
 }
 
-void Rprop::step(real& w,const real& grad){
+void Rprop::step(double& w,const double& grad){
   static arr W,GRAD;
   W.referTo(&w,1); GRAD.referTo(&grad,1);
   step(W,GRAD);
@@ -186,12 +186,12 @@ void Rprop::step(arr& x,OptimizationProblem& p){
 //----- the rprop wrapped with stopping criteria
 int Rprop::loop(arr& _x,
                 OptimizationProblem& p,
-                real *fmin_return,
-                real stoppingTolerance,
+                double *fmin_return,
+                double stoppingTolerance,
                 uint maxIterations)
 {
   arr x,J(_x.N),xmin;
-  real y,ymin=0;
+  double y,ymin=0;
   uint lost_steps=0,small_steps=0;
   x=_x;
   
@@ -208,8 +208,8 @@ int Rprop::loop(arr& _x,
     }else{
       lost_steps++;
       if(lost_steps>10){
-        stepSize*=(real).1;
-        lastGrad=(real)0.;
+        stepSize*=(double).1;
+        lastGrad=(double)0.;
         x=xmin;
         lost_steps=0;
       }

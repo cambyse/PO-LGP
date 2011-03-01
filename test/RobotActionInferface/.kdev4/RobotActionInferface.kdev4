@@ -16,5 +16,5 @@ Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
 Executable=./x.exe
-Working Directory=file:///home/mtoussai/share/test/RobotActionInferface
+Working Directory=file:///home/olie/orsgit/share/test/RobotActionInferface
 isExecutable=true

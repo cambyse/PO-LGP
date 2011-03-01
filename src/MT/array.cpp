@@ -17,7 +17,7 @@
 #include "array.h"
 #include "util.h"
 
-static real MT_SIGN_SVD(real a,real b){ return b>0 ? ::fabs(a) : -::fabs(a); }
+static double MT_SIGN_SVD(double a,double b){ return b>0 ? ::fabs(a) : -::fabs(a); }
 #define MT_max_SVD(a,b) ( (a)>(b) ? (a) : (b) )
 #define MT_SVD_MINVALUE .0 //1e-10
 #ifndef MT_NOCHECK
@@ -71,7 +71,7 @@ arr Zeros(uint n){
   return z;
 }
 
-arr Diag(real d,uint n){
+arr Diag(double d,uint n){
   arr z;
   z.setDiag(d,n);
   return z;
@@ -88,7 +88,7 @@ void makeSymmetric(arr& A){
 void transpose(arr& A){
   CHECK(A.nd==2 && A.d0==A.d1,"not symmetric");
   uint n=A.d0,i,j;
-  real z;
+  double z;
   for(i=1;i<n;i++) for(j=0;j<i;j++){ z=A(j,i); A(j,i)=A(i,j); A(i,j)=z; }
 }
 
@@ -133,7 +133,7 @@ uint svd(arr& U,arr& d,arr& V,const arr& A,bool sort){
 #ifdef MT_CHECK_SVD
   bool uselapack=MT::useLapack;
   MT::useLapack=false;
-  real err;
+  double err;
   arr dD,I;
   setDiagonal(dD,d);
   //cout <<U <<dD <<Vt;
@@ -175,7 +175,7 @@ void check_inverse(const arr& Ainv,const arr& A){
   arr D,_D; D.setId(A.d0);
   uint me;
   _D=A*Ainv;
-  real err=maxDiff(_D,D,&me);
+  double err=maxDiff(_D,D,&me);
   cout <<"inverse is correct: " <<err <<endl;
   if(A.d0<10){
     CHECK(err<MT_CHECK_INVERSE ,"inverting failed, error="<<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me) <<"\nA="<<A <<"\nAinv=" <<Ainv <<"\nA*Ainv=" <<_D);
@@ -220,11 +220,11 @@ uint inverse_SVD(arr& Ainv,const arr& A){
   setDiagonal(W,winv);
   Ainv = V * W * ~U;
 #else
-  real *Ainvij=&Ainv(0,0);
+  double *Ainvij=&Ainv(0,0);
   for(i=0;i<n;i++) for(j=0;j<m;j++){
-    real* vi = &V(i,0);
-    real* uj = &U(j,0);
-    real  t  = 0.;
+    double* vi = &V(i,0);
+    double* uj = &U(j,0);
+    double  t  = 0.;
     for(k=0;k<w.N;k++) t += vi[k] * winv.p[k] * uj[k];
     *Ainvij = t;
     Ainvij++;
@@ -277,7 +277,7 @@ void inverse_SymPosDef(arr& Ainv,const arr& A){
 #endif
 }
 
-void pseudoInverse(arr& Ainv,const arr& A,const arr& Winv,real eps){
+void pseudoInverse(arr& Ainv,const arr& A,const arr& Winv,double eps){
   arr tA,E,AWAinv;
   transpose(tA,A);
   if(!eps){
@@ -290,18 +290,18 @@ void pseudoInverse(arr& Ainv,const arr& A,const arr& Winv,real eps){
 }
 
 //! the determinant of a 2D squared matrix
-real determinant(const arr& A);
+double determinant(const arr& A);
 
 /*!\brief the cofactor is the determinant of a 2D squared matrix after removing
   the ith row and the jth column */
-real cofactor(const arr& A,uint i,uint j);
+double cofactor(const arr& A,uint i,uint j);
 
 void gaussFromData(arr& a,arr& A,const arr& X){
   CHECK(X.nd==2,"");
   uint N=X.d0,n=X.d1;
   arr ones(N); ones=1.;
-  a = ones*X/(real)N; a.reshape(n);
-  A = (~X*X)/(real)N - (a^a);
+  a = ones*X/(double)N; a.reshape(n);
+  A = (~X*X)/(double)N - (a^a);
 }
 
 /* compute a rotation matrix that rotates a onto v in arbitrary dimensions */
@@ -316,12 +316,12 @@ void rotationFromAtoB(arr& R,const arr& a,const arr& v){
   b = v - a*scalarProduct(a,v);
   b /= norm(b);
   //-- compute rotation coefficients within the (a,b) plane, namely, R_2D=(v_a  -v_b ;  v_b  v_a)
-  real v_a,v_b;
+  double v_a,v_b;
   v_a=scalarProduct(v,a);     //component along a
   v_b=scalarProduct(v,b);     //component along b
   //-- compute columns of R:
   arr x(n),x_res;
-  real x_a,x_b;
+  double x_a,x_b;
   for(i=0;i<n;i++){
     x.setZero(); x(i)=1.;       //x=i-th unit vector
     x_a=scalarProduct(x,a);     //component along a
@@ -384,19 +384,19 @@ uint own_SVD(
 			    arr& V,
           const arr& A,
 			    bool sort){
-  //MT::Array<real*> Apointers,Upointers,Vpointers;
+  //MT::Array<double*> Apointers,Upointers,Vpointers;
   unsigned m = A.d0; /* rows */
   unsigned n = A.d1; /* cols */
   U.resize(m,n);
   V.resize(n,n);
   w.resize(n);
-  real **a = A.getCarray(); //Pointers(Apointers); /* input matrix */
-  real **u = U.getCarray(); //Pointers(Upointers); /* left vectors */
-  real **v = V.getCarray(); //Pointers(Vpointers); /* right vectors */
+  double **a = A.getCarray(); //Pointers(Apointers); /* input matrix */
+  double **u = U.getCarray(); //Pointers(Upointers); /* left vectors */
+  double **v = V.getCarray(); //Pointers(Vpointers); /* right vectors */
 
   int flag;
   unsigned i,its,j,jj,k,l,nm(0),r;
-  real anorm,c,f,g,h,s,scale,x,y,z,t;
+  double anorm,c,f,g,h,s,scale,x,y,z,t;
 
   arr rv1(n);
 
@@ -644,7 +644,7 @@ uint own_SVD(
   //sorting:
   if(sort){
     unsigned i,j,k;
-    real   p;
+    double   p;
 
     for(i=0;i<n-1;i++){
       p = w(k=i);
@@ -682,12 +682,12 @@ uint own_SVD(
   return r;
 }
 
-real _determinant(real **A,uint n){
+double _determinant(double **A,uint n){
   if(n==1) return A[0][0];
   if(n==2) return A[0][0]*A[1][1]-A[0][1]*A[1][0];
   uint i,j;
-  real d=0;
-  real **B=new real*[n-1];
+  double d=0;
+  double **B=new double*[n-1];
   for(i=0;i<n;i++){
     for(j=0;j<n;j++){
       if(j<i) B[j]=&A[j][1];
@@ -699,14 +699,14 @@ real _determinant(real **A,uint n){
   return d;
 }
 
-real determinant(const arr& A){
+double determinant(const arr& A){
   CHECK(A.nd==2 && A.d0==A.d1,"determinants require a squared 2D matrix");
-  //MT::Array<real*> B;
+  //MT::Array<double*> B;
   A.getCarray(); //Pointers(B);
   return _determinant(A.pp,A.d0);
 }
 
-real cofactor(const arr& A,uint i,uint j){
+double cofactor(const arr& A,uint i,uint j){
   CHECK(A.nd==2 && A.d0==A.d1,"determinants require a squared 2D matrix");
   arr B=A;
   B.delRow(i);
@@ -720,7 +720,7 @@ real cofactor(const arr& A,uint i,uint j){
 void SUS(const arr& p,uint n,uintA& s){
   //following T. Baeck "EA in Theo. and Prac." p120
   s.resize(n);
-  real sum=0,ptr=MT::rnd.uni();
+  double sum=0,ptr=MT::rnd.uni();
   uint i,j=0;
   for(i=0;i<p.N;i++){
     sum+=p(i)*n;
@@ -731,7 +731,7 @@ void SUS(const arr& p,uint n,uintA& s){
 }
 
 uint SUS(const arr& p){
-  real sum=0,ptr=MT::rnd.uni();
+  double sum=0,ptr=MT::rnd.uni();
   uint i;
   for(i=0;i<p.N;i++){
     sum+=p(i);
@@ -941,8 +941,8 @@ void assign(arr& x,const arr& a){
     arr *A=(arr*)e.A;
     if(A->ex) assign(*A);
     if(!e.trans && e.mul==1 && e.add==0 ){ x=*A; return; }
-    if(!e.trans && e.mul==1 ){ scalarPlus(x,*A,*((real*)&e.add)); return; }
-    if(!e.trans && e.add==0 ){ scalarMultiplication(x,*A,*((real*)&e.mul)); return; }
+    if(!e.trans && e.mul==1 ){ scalarPlus(x,*A,*((double*)&e.add)); return; }
+    if(!e.trans && e.add==0 ){ scalarMultiplication(x,*A,*((double*)&e.mul)); return; }
     if(e.mul==1 && e.add==0 ){ transpose(x,*A); return; }
     HALT("");
   }else{
@@ -950,7 +950,7 @@ void assign(arr& x,const arr& a){
     if(A->ex) assign(*A);
     if(B->ex) assign(*B);
     //bool at,bt;
-    //real ac,bc,ap,bp;
+    //double ac,bc,ap,bp;
     switch(e.op){
     case MT::PROD:
       if(!A->ex && !B->ex){ innerProduct(x,*A,*B); return; }
@@ -1007,11 +1007,11 @@ void getIndexTuple(uintA &I,uint i,const uintA &d){
   }
 }
 
-void lognormScale(arr& P,real& logP,bool force){
+void lognormScale(arr& P,double& logP,bool force){
 #ifdef MT_NoLognormScale
   return;
 #endif
-  real Z=0.;
+  double Z=0.;
   for(uint i=0;i<P.N;i++) Z += fabs(P.elem(i));
   if(!force && Z>1e-3 && Z<1e3) return;
   if(fabs(Z-1.)<1e-10) return;
@@ -1034,7 +1034,7 @@ void sparseProduct(arr& y,arr& A,const arr& x){
   if(A.sparse && !x.sparse){
     uint i,j,*k,*kstop;
     y.resize(A.d0); y.setZero();
-    real *Ap=A.p;
+    double *Ap=A.p;
     uintA *elems=A.sparse;
     for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++){
       i=*k; k++;
@@ -1046,7 +1046,7 @@ void sparseProduct(arr& y,arr& A,const arr& x){
   if(A.sparse && x.sparse){
     uint i,j,n,*k,*kstop,*l,*lstop;
     y.clear(); y.nd=1; y.d0=A.d0; y.sparse=new uintA [2]; y.sparse[1].resize(y.d0); y.sparse[1]=(uint)-1;
-    real *xp=x.p;
+    double *xp=x.p;
     uintA *elems,*col;
     elems=x.sparse;
     uint *slot;
@@ -1072,7 +1072,7 @@ void sparseProduct(arr& y,arr& A,const arr& x){
   if(!A.sparse && x.sparse){
     uint i,j,*k,*kstop,d1=A.d1;
     y.resize(A.d0); y.setZero();
-    real *xp=x.p;
+    double *xp=x.p;
     uintA *elems;
     elems=x.sparse;
     for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++){
@@ -1107,7 +1107,7 @@ void scanArrFile(const char* name){
 void anyListRead(AnyList& ats,std::istream& is){
   char c,delim;
   MT::String tag,str;
-  real d;
+  double d;
   arr reals;
   MT::Array<MT::String> strings;
   
@@ -1150,9 +1150,9 @@ void anyListRead(AnyList& ats,std::istream& is){
           if(!is.good()) HALT("ERROR");
         }
         if(reals.N==1){ //not nice - one should clearly distinguish between a vector and scalar...
-          ats.append(anyNew<real>(tag,reals(0)));
+          ats.append(anyNew<double>(tag,reals(0)));
         }else{
-          ats.append(anyNew<real>(tag,reals.p,reals.N,delim));
+          ats.append(anyNew<double>(tag,reals.p,reals.N,delim));
         }
       }break;
       case '\'':{ //string
@@ -1167,13 +1167,13 @@ void anyListRead(AnyList& ats,std::istream& is){
         str.read(is,"",">",true);
         ats.append(anyNew<MT::String>(tag,str));
       }break;
-      default:{ //single real or nothing
+      default:{ //single double or nothing
         is.putback(c);
-        if(MT::contains(".0123456789",c)){ //single real
+        if(MT::contains(".0123456789",c)){ //single double
           is >>d;
-          ats.append(anyNew<real>(tag,d));
+          ats.append(anyNew<double>(tag,d));
         }else{ //bool
-          ats.append(anyNew<real>(tag,(real*)0,0,0));
+          ats.append(anyNew<double>(tag,(double*)0,0,0));
         }
       }break;
     }

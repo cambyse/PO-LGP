@@ -27,30 +27,30 @@ namespace MT{
   //----- spline stuff
   void makeSpline(arr& X,arr& P,uint intersteps);
   void makeSpline(arr& X,arr& V,arr& P,uint intersteps);
-  void randomSpline(arr& X,uint dim,uint points,uint intersteps=100,real lo=-1.,real hi=1.,uint cycles=1);
-  void randomSpline(arr& X,arr& dX,uint dim,uint points,uint intersteps=100,real lo=-1.,real hi=1.,uint cycles=1);
+  void randomSpline(arr& X,uint dim,uint points,uint intersteps=100,double lo=-1.,double hi=1.,uint cycles=1);
+  void randomSpline(arr& X,arr& dX,uint dim,uint points,uint intersteps=100,double lo=-1.,double hi=1.,uint cycles=1);
 
   //----- gradient optimization
   void checkGradient(void (*f)(arr&,const arr&,void*),
 		     void (*df)(arr&,const arr&,void*),
 		     void *data,
-		     const arr& x,real tolerance);
-  void checkGradient(real (*f)(const arr&,void*),
+		     const arr& x,double tolerance);
+  void checkGradient(double (*f)(const arr&,void*),
 		     void (*df)(arr&,const arr&,void*),
 		     void *data,
-		     const arr& x,real tolerance);
-  int minimize(real (*f)(const arr&,void*),
+		     const arr& x,double tolerance);
+  int minimize(double (*f)(const arr&,void*),
                void (*df)(arr&,const arr&,void*),
                void *data,
                arr& x,
-               real *fmin_return,
+               double *fmin_return,
                int method,
                uint maxIterations,
-               real stoppingTolerance,
+               double stoppingTolerance,
                bool chkGrad);
 
   //----- LU decomposition
-  real determinant_LU(const arr& X);
+  double determinant_LU(const arr& X);
   void inverse_LU(arr& Xinv,const arr& X);
   void LU_decomposition(arr& L,arr& U,const arr& X);
 
@@ -58,14 +58,14 @@ namespace MT{
   //! standard Runge-Kutta 4
   void rk4(arr& x1,const arr& x0,
 	   void (*df)(arr& xd,const arr& x),
-	   real dt);
+	   double dt);
   //! same for second order diff equation
   void rk4dd(arr& x1,arr& v1,const arr& x0,const arr& v0,
     void (*ddf)(arr& xdd,const arr& x,const arr& v),
-    real dt);
+    double dt);
   /*! RK with discrete event localization (zero-crossing detection):
       the function sf computes some
-      real-valued indicators. If one of these indicators crosses zero this is interpreted
+      double-valued indicators. If one of these indicators crosses zero this is interpreted
       as a discontinuity in the dynamics. The algorithm iteratively tries to find the
       zero-crossing point up to a tolerance tol (measured in time). The routine returns
       false for no-switching and true and the executed time step dt in the case of
@@ -73,22 +73,22 @@ namespace MT{
   bool rk4_switch(arr& x1,arr& s1,const arr& x0,const arr& s0,
     void (*df)(arr& xd,const arr& x),
     void (*sf)(arr& s,const arr& x),
-    real& dt,real tol);
+    double& dt,double tol);
   //! same for 2nd order DEs  
   bool rk4dd_switch(arr& x1,arr& v1,arr& s1,const arr& x0,const arr& v0,const arr& s0,
     void (*ddf)(arr& xdd,const arr& x,const arr& v),
     void (*sf)(arr& s,const arr& x,const arr& v),
-    real& dt,real tol);
+    double& dt,double tol);
 
   //bandpass filtering
-  void convolution(arr &y,const arr &x,real (*h)(real),real scale=1.);
-  void bandpassFilter(arr &y,const arr &x,real loWavelength,real hiWavelength);
-  void bandpassEnergy(arr &y,const arr &x,real loWavelength,real hiWavelength);
+  void convolution(arr &y,const arr &x,double (*h)(double),double scale=1.);
+  void bandpassFilter(arr &y,const arr &x,double loWavelength,double hiWavelength);
+  void bandpassEnergy(arr &y,const arr &x,double loWavelength,double hiWavelength);
 
   //----- comparing connectivity matrices
-  real matdistance(intA& fix,intA& fox,uintA& p,bool sub);
-  real matdistance(intA& A,intA& B,bool sub);
-  real matannealing(intA& fix,intA& fox,uintA& p,bool sub,real annealingRepetitions,real annealingCooling);
+  double matdistance(intA& fix,intA& fox,uintA& p,bool sub);
+  double matdistance(intA& A,intA& B,bool sub);
+  double matannealing(intA& fix,intA& fox,uintA& p,bool sub,double annealingRepetitions,double annealingCooling);
 }
 
 
@@ -100,11 +100,11 @@ namespace MT{
 /*! a trivial solver for monotonic unimodal 1D functions */
 class MonSolver{
 public:
-  real min,max;
+  double min,max;
   int phase;
   MonSolver();
-  void init(real& par,real wide=2.);
-  void solve(real& par,const real& err);
+  void init(double& par,double wide=2.);
+  void solve(double& par,const double& err);
 };
 
 
@@ -120,28 +120,28 @@ public:
     regression */
 class LinearStatistics{
 public:
-  real accum;  //!< the accumulation norm (=number of collected data points if not weighted)
+  double accum;  //!< the accumulation norm (=number of collected data points if not weighted)
   arr meanX,meanY,varX,covXY; //<! these are not normalized or centered bufferes
   arr MeanX; //!< X mean
   arr MeanY; //!< Y mean
   arr VarX;  //!< X variance
   arr CovXY; //!< XY covariance
-  real lambda; //!< forgetting rate [default=0]
+  double lambda; //!< forgetting rate [default=0]
   bool computed; //!< internal indicator whether recomputation is needed
 
   LinearStatistics();
 
   //feed data
-  void learn(const arr& x,const arr& y,real weight=1.);
-  void learn(const arr& x,real y,real weight);
+  void learn(const arr& x,const arr& y,double weight=1.);
+  void learn(const arr& x,double y,double weight);
   void learn(const arr& x);
-  void learn(const arr& x,real weight);
+  void learn(const arr& x,double weight);
   void clear();
-  void forget(real lambda=1.);
+  void forget(double lambda=1.);
 
   //get information
   uint inDim();
-  real variance();
+  double variance();
   void correlationX(arr& corr,bool clearDiag=false);
   void correlationXY(arr& corr,bool clearDiag=false);
   void mahalanobisMetric(arr& metric);
@@ -188,7 +188,7 @@ class Kalman{
     C, //linear observation matrix
     R; //covariance of observation: y = C*x + \NN(0,R)
   
-  void setTransitions(uint d,real varT,real varO);
+  void setTransitions(uint d,double varT,double varO);
   void filter(arr& Y,arr& X,arr& V,arr *Rt=0);
   void smooth(arr& Y,arr& X,arr& V,arr *Vxx=0,arr *Rt=0);
   void EMupdate(arr& Y,arr *Rt=0);
@@ -203,7 +203,7 @@ class Kalman{
 
 class XSpline{
 public:
-  real DELTA;     // Distance between each
+  double DELTA;     // Distance between each
   
   arr V; //vertices
   arr W; //weights associated to each vertex
@@ -211,12 +211,12 @@ public:
   XSpline();
   ~XSpline();
   
-  void setWeights(real w);
-  void type(bool hit,real smooth);
+  void setWeights(double w);
+  void type(bool hit,double smooth);
   void referTo(arr& P);
-  arr eval(real t);
-  void eval(real t,arr& x,arr* v=0);
-  void eval(real t,arr& x,arr& v);
+  arr eval(double t);
+  void eval(double t,arr& x,arr* v=0);
+  void eval(double t,arr& x,arr& v);
 };
 
 
@@ -243,14 +243,14 @@ public:
   PartialLeastSquares():maxProj("PLSmaxProjections",0){ }
 
   //feed data
-  void learn(const arr& x,const arr& y,real weight=1.);
-  void learn(const arr& x,real y,real weight=1.);
+  void learn(const arr& x,const arr& y,double weight=1.);
+  void learn(const arr& x,double y,double weight=1.);
   void clear();
 
   //access 
   void map(const arr& x,arr& y);
-  void map(const arr& x,real& y);
-  real map(const arr& x);
+  void map(const arr& x,double& y);
+  double map(const arr& x);
   arr projection(uint k);
   uint inDim();
   uint outDim();
@@ -268,9 +268,9 @@ public:
 // helpers to include foreign code
 //
 
-real *vector(uint i,uint j);
+double *vector(uint i,uint j);
 void nrerror(const char* msg);
-void free_vector(real* p,uint i,uint j);
+void free_vector(double* p,uint i,uint j);
 
 
 //===========================================================================

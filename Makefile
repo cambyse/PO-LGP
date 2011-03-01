@@ -6,7 +6,7 @@ all: 	lib/extern/SWIFT++_1.2/src \
 	lib/src/MT/ \
 	lib/src/NP lib/src/Lewiner 
 
-cleanAll: clean/extern/SWIFT++_1.2/src clean/extern/ANN_1.1/src clean/src/MT/ clean/src/NP clean/src/Lewiner cleanProjects
+cleanAll: clean/extern/SWIFT++_1.2/src clean/extern/ANN_1.1/src clean/src/MT/ clean/src/TL clean/src/NJ clean/src/NP clean/src/Lewiner cleanProjects
 
 tests::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;

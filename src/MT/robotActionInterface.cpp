@@ -67,14 +67,20 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
   s->defaultTask.controlMode = prefixedCM;
-  TV.setGainsAsNatural(100.,1.);
+  TV.setGainsAsNatural(300.,.5);
   TV.active = true;
   TV.y_prec = 0.; //1e2;
   TV.v_prec = 1e2;
   TV.v_target = ARR(0.,0.,0.);
   TV.y_target = posGoal;
   task->TV_col->active=task->TV_lim->active=true;
-  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim));
+  task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;   
+  task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=task->TV_q_vprec;
+  task->TV_q->v_target.setZero(); //damping on joint velocities
+
+  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim,task->TV_q));
 
   for(;!schunkShutdown;){
     MT::wait(.2);
@@ -88,7 +94,45 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
 }
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
-  NIY;
+  TaskAbstraction *task = &s->defaultTask;
+  s->defaultTask.controlMode = prefixedCM;
+
+  TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
+  TV.setGainsAsNatural(300.,1.);
+  TV.active = true;
+  TV.y_prec = 0.; //1e2;
+  TV.v_prec = 1e2;
+  TV.v_target = ARR(0.,0.,0.);
+  TV.y_target = posGoal;
+  
+  TaskVariable TValign("reach",*s->master.ctrl.sys.ors,zalignTVT,shapeName,NULL,0);
+  ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
+  TValign.jrel.rot.setDiff(VEC_z,vecGoalOrs);
+  TValign.setGainsAsNatural(300.,1.);
+  TValign.active = true;
+  TValign.y_prec = 0; //1e2; //1e2;
+  TValign.v_prec = 1e2;
+  TValign.v_target = ARR(0.);
+  TValign.y_target = ARR(1.);
+
+  task->TV_col->active=task->TV_lim->active=true;
+  task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;   
+  task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=1e-2; //task->TV_q_vprec;
+  task->TV_q->v_target.setZero(); //damping on joint velocities
+
+  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
+
+  for(;!schunkShutdown;){
+    MT::wait(.2);
+    cout <<"\rdist = " <<TV.err <<std::flush;
+    if(TV.err<1e-2) break;
+    if(s->master.joy.state(0)&0x30) break;
+  }
+  
+  s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
+  s->defaultTask.controlMode = stopCM;
 }
 
 void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){

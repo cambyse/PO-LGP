@@ -27,12 +27,11 @@ extern "C"{
 #ifdef MT_MSVC
 #  include <lapack/blaswrap.h>
 #endif
-#define real floatreal
 #include "f2c.h"
 #undef small
 #undef large
 #include <lapack/clapack.h>
-#undef real
+#undef double
 #undef max
 #undef min
 #undef abs
@@ -229,10 +228,10 @@ void lapack_inverseSymPosDef(arr& Ainv,const arr& A){
   for(i=0;i<(uint)n;i++) for(j=0;j<i;j++) Ainv(i,j)=Ainv(j,i);
 }
 
-real lapack_determinantSymPosDef(const arr& A){
+double lapack_determinantSymPosDef(const arr& A){
   arr C;
   lapack_cholesky(C,A);
-  real det=1.;
+  double det=1.;
   for(uint i=0;i<C.d0;i++) det *= C(i,i)*C(i,i);
   return det;
 }
@@ -264,5 +263,5 @@ void lapack_Ainv_b_sym(arr& x,const arr& A, const arr& b){
   inverse(invA,A);
   x = invA*b;
 };
-real lapack_determinantSymPosDef(const arr& A){NICO};
+double lapack_determinantSymPosDef(const arr& A){NICO};
 #endif

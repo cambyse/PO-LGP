@@ -253,10 +253,10 @@ template<class T> uint MT::Array<T>::dim(uint k) const{
 //***** sparse arrays
 
 //! return fraction of non-zeros in the array
-template<class T> real MT::Array<T>::sparsity(){
+template<class T> double MT::Array<T>::sparsity(){
   uint i,m=0;
   for(i=0;i<N;i++) if(elem(i)) m++;
-  return ((real)m)/N;
+  return ((double)m)/N;
 }
 
 //! make sparse: create the \ref sparse index
@@ -299,7 +299,7 @@ template<class T> void MT::Array<T>::makeSparse(){
 //! allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n,bool copy){
   if(n==N) return;
-  CHECK(!reference,"real resize of subarray is not allowed! (only a resize without changing memory size)");
+  CHECK(!reference,"double resize of subarray is not allowed! (only a resize without changing memory size)");
   uint i;
   T *pold=p;
   uint Mold=M;
@@ -1488,7 +1488,7 @@ template<class T> void MT::Array<T>::writeWithIndex(std::ostream& os) const{
     }
 }
 
-//***** generic data files of real arrays
+//***** generic data files of double arrays
 
 template<class T> void MT::Array<T>::writeTagged(std::ostream& os,const char* tag,bool binary) const{
   os <<tag <<' ';
@@ -1586,8 +1586,8 @@ template<class T> void makeConditional(MT::Array<T>& P){
 //inline uintA TUP(uint i,uint j,uint k,uint l){                      uintA z(4); z(0)=i; z(1)=j; z(2)=k; z(3)=l; return z; }
 
 //! check whether this is a distribution over the first index w.r.t. the later indices
-template<class T> void checkNormalization(MT::Array<T>& v,real tol){
-  real p;
+template<class T> void checkNormalization(MT::Array<T>& v,double tol){
+  double p;
   uint i,j,k,l;
   switch(v.nd){
   case 1:
@@ -1824,7 +1824,7 @@ void innerProduct(MT::Array<T>& x,const MT::Array<T>& y, const MT::Array<T>& z){
   if(y.nd==2 && z.nd==1){ //matrix x vector -> vector
     CHECK(y.d1==z.d0,"wrong dimensions for inner product");
 #ifdef MT_LAPACK
-    if(MT::useLapack && typeid(T)==typeid(real)){ blas_Mv(x,y,z); return; }
+    if(MT::useLapack && typeid(T)==typeid(double)){ blas_Mv(x,y,z); return; }
 #endif
     uint i,d0=y.d0,dk=y.d1;
     T *a,*astop,*b,*c;
@@ -1842,7 +1842,7 @@ void innerProduct(MT::Array<T>& x,const MT::Array<T>& y, const MT::Array<T>& z){
   if(y.nd==2 && z.nd==2){ //plain matrix multiplication
     CHECK(y.d1==z.d0,"wrong dimensions for inner product");
 #ifdef MT_LAPACK
-    if(MT::useLapack && typeid(T)==typeid(real)){ blas_MM(x,y,z); return; }
+    if(MT::useLapack && typeid(T)==typeid(double)){ blas_MM(x,y,z); return; }
 #endif
     uint i,j,d0=y.d0,d1=z.d1,dk=y.d1;
 #if 0
@@ -2059,7 +2059,7 @@ template<class T> void tensorCond11Rule(MT::Array<T>& X,uint left,double rate){
 
 /*! makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
-template<class T> void tensorCondSoftMax(MT::Array<T>& X,uint left,real beta){
+template<class T> void tensorCondSoftMax(MT::Array<T>& X,uint left,double beta){
   uint i;
   for(i=0;i<X.N;i++) X.p[i] = (T)::exp(beta*X.p[i]);
   tensorCondNormalize(X,left);
@@ -2067,9 +2067,9 @@ template<class T> void tensorCondSoftMax(MT::Array<T>& X,uint left,real beta){
 
 /*!\brief checks whether X is a normalized distribution over the left leftmost-indexed
   variables */
-template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X,uint left,real tol){
+template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X,uint left,double tol){
   uint i,j,dl=1,dr;
-  real sum;
+  double sum;
   for(j=0;j<left;j++) dl*=X.dim(j);
   dr=X.N/dl;
   CHECK(dl*dr==X.N,"");
@@ -2080,9 +2080,9 @@ template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X,uint l
   }
 }
 
-template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>& X,uint left, real logP, real tol){
+template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>& X,uint left, double logP, double tol){
   uint i,j,dl=1,dr;
-  real sum, coeff=::exp(logP);
+  double sum, coeff=::exp(logP);
   for(j=0;j<left;j++) dl*=X.dim(j);
   dr=X.N/dl;
   CHECK(dl*dr==X.N,"");
@@ -2512,7 +2512,7 @@ template<class T> void rndNegLogUniform(MT::Array<T>& a,double low,double high,b
     want the multivariate Gaussian to have a given standard deviation!
     If add is true, the Gaussian noise is added to the existing
     value */
-template<class T> void rndGauss(MT::Array<T>& x,real stdDev,bool add){
+template<class T> void rndGauss(MT::Array<T>& x,double stdDev,bool add){
   if(!add) for(uint i=0;i<x.N;i++) x.p[i] =(T)(stdDev*rnd.gauss());
   else     for(uint i=0;i<x.N;i++) x.p[i]+=(T)(stdDev*rnd.gauss());
 }
@@ -2525,7 +2525,7 @@ template<class T> void rndGauss(MT::Array<T>& x,real stdDev,bool add){
   }*/
 
 //! returns an array with \c dim Gaussian noise elements
-/*template<class T> MT::Array<T>& rndGauss(real stdDev,uint dim){
+/*template<class T> MT::Array<T>& rndGauss(double stdDev,uint dim){
   static MT::Array<T> z;
   stdDev/=::sqrt(dim);
   z.resize(dim);
@@ -2536,8 +2536,8 @@ template<class T> void rndGauss(MT::Array<T>& x,real stdDev,bool add){
 /*!\brief from a vector of numbers, calculates the softmax distribution
   soft(i) = exp(beta*a(i)), and returns a random sample from
   this distribution (an index in {0,..,a.N-1}) */
-template<class T> uint softMax(const MT::Array<T>& a,arr& soft,real beta){
-  real norm=0.,r;
+template<class T> uint softMax(const MT::Array<T>& a,arr& soft,double beta){
+  double norm=0.,r;
   uint i; int sel=-1;
   resizeAs(soft,a);
   for(i=0;i<a.N;i++){
@@ -2987,7 +2987,7 @@ template<class vert,class edge> edge* graphGetEdge(vert *from, vert *to){
   return NULL;
 }
 
-template<class vert,class edge> void graphRandomUndirected(MT::Array<vert*>& V,MT::Array<edge*>& E,uint N,real connectivity){
+template<class vert,class edge> void graphRandomUndirected(MT::Array<vert*>& V,MT::Array<edge*>& E,uint N,double connectivity){
   uint i,j;
   for(i=0;i<N;i++) V.append(new vert);
   for(i=0;i<N;i++) for(j=i+1;j<N;j++){
@@ -3023,7 +3023,7 @@ void graphMaximumSpanningTree(MT::Array<vert*>& V,MT::Array<edge*>& E,const arr&
   addedNodes.append(i); done(i)=true;
   
   uint j,k;
-  real Wmax;
+  double Wmax;
   uintA m;
   while(addedNodes.N<V.N){
     m.clear();

@@ -73,7 +73,7 @@ struct SocSystemAbstraction{
   virtual void getv0 (arr& v) = 0;     ///< start joint velocity
   virtual void getqv0(arr& q_);        ///< start joint configuration and velocity
   virtual void getqv0(arr& q,arr& qd); ///< start joint configuration and velocity
-  virtual real getTau(bool scaled=true);    ///< time step size (for dynamic problems)
+  virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
 
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
@@ -103,9 +103,9 @@ struct SocSystemAbstraction{
   virtual void getJJt(arr& J_i,arr& Jt_i,uint i){ throw("NIY"); }
   virtual void getJqd(arr& Jqd_i,uint i);
   virtual void getHessian(arr& H_i,uint i);
-  virtual void getTarget (arr& y_i,real& prec,uint i,uint t){ throw("NIY"); }
-  virtual void getTargetV(arr& v_i,real& prec,uint i,uint t);
-  //virtual void getLinearConstraint(arr& c,real& coff,uint i,uint t); ///< defines a cost 1 iff [[c^T y_i + coff>0]]
+  virtual void getTarget (arr& y_i,double& prec,uint i,uint t){ throw("NIY"); }
+  virtual void getTargetV(arr& v_i,double& prec,uint i,uint t);
+  //virtual void getLinearConstraint(arr& c,double& coff,uint i,uint t); ///< defines a cost 1 iff [[c^T y_i + coff>0]]
 
 
 
@@ -116,19 +116,19 @@ struct SocSystemAbstraction{
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
   virtual void getProcess(arr& A,arr& a,arr& B,uint t);
   virtual void getProcess(arr& A,arr& tA,arr& Ainv,arr& invtA,arr& a,arr& B,arr& tB,uint t);
-  virtual real getCosts(arr& R,arr& r,const arr& qt,uint t);
+  virtual double getCosts(arr& R,arr& r,const arr& qt,uint t);
   virtual void getConstraints(arr& c,arr& coff,const arr& qt,uint t);
 
   // cost info
-  real taskCost (arr* grad,int t,int i);
-  real totalCost(arr *grad,const arr& q,bool plot=false);
+  double taskCost (arr* grad,int t,int i);
+  double totalCost(arr *grad,const arr& q,bool plot=false);
   
   virtual void displayState(const arr& q,const arr *Qinv,const char *text);
   virtual void displayTrajectory(const arr& q,const arr *Qinv,int steps,const char *tag);
 
   //-- convenience (prelim...)
   void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
-  real analyzeTrajectory(const arr& q,bool plot);
+  double analyzeTrajectory(const arr& q,bool plot);
   void constantTrajectory(arr& q);
   void passiveDynamicTrajectory(arr& q);
   void controlledDynamicTrajectory(arr& q,const arr& u);
@@ -160,10 +160,10 @@ struct SocSolver{
 ///@name     trivial helpers
 // @{
 
-void getVelocity(arr& vt,const arr& q,uint t,real tau);
-void getPhaseTrajectory(arr& _q,const arr& q,real tau);
+void getVelocity(arr& vt,const arr& q,uint t,double tau);
+void getPhaseTrajectory(arr& _q,const arr& q,double tau);
 void getPositionTrajectory(arr& q,const arr& _q);
-void interpolateTrajectory(arr& qNew,const arr& _q,real step);
+void interpolateTrajectory(arr& qNew,const arr& _q,double step);
 
 //only for the first task so far!
 void getJointFromTaskTrajectory(SocSystemAbstraction& soci,arr& q,const arr& x);
@@ -177,11 +177,11 @@ void straightTaskTrajectory(SocSystemAbstraction& soci,arr& q,uint taskid);
 // @{
 
 void bayesianIKControl(SocSystemAbstraction& soci, arr& dq, uint t);
-void pseudoIKControl(SocSystemAbstraction& soci, arr& dq, uint t,real regularization=1e-8);
-void hierarchicalIKControl(SocSystemAbstraction& soci, arr& dq, uint t,real regularization=1e-8);
+void pseudoIKControl(SocSystemAbstraction& soci, arr& dq, uint t,double regularization=1e-8);
+void hierarchicalIKControl(SocSystemAbstraction& soci, arr& dq, uint t,double regularization=1e-8);
 void bayesianIterateIKControl(SocSystemAbstraction& soci,
-                              arr& qt,const arr& qt_1,uint t,real eps,uint maxIter);
-void bayesianIKTrajectory  (SocSystemAbstraction& soci, arr& q, real eps=-1);
+                              arr& qt,const arr& qt_1,uint t,double eps,uint maxIter);
+void bayesianIKTrajectory  (SocSystemAbstraction& soci, arr& q, double eps=-1);
 void bayesianDynamicControl(SocSystemAbstraction& soci, arr& qv, const arr& qv_1, uint t, arr *v=NULL, arr *Vinv=NULL);
 void bayesianIKControl2    (SocSystemAbstraction& soci, arr& q , const arr& q_1 , uint t, arr *v=NULL, arr *Vinv=NULL);
 
@@ -198,7 +198,7 @@ void gradientOptimization(SocSystemAbstraction& soci,
                                 uint maxIterations,
                                 uint spline_points,
                                 uint spline_degree,
-                                real stoppingTolerance,
+                                double stoppingTolerance,
                                 bool checkGradient,
                                 uint display);
 
@@ -208,7 +208,7 @@ void gradientTaskOptimization(SocSystemAbstraction& soci,
                                 uint spline_degree,
                                 int gradient_method,
                                 uint maxIterations,
-                                real stoppingTolerance,
+                                double stoppingTolerance,
                                 bool checkGradient,
                                 uint display);
 
@@ -218,7 +218,7 @@ void gradientAttractorTaskOptimization(SocSystemAbstraction& soci,
                                 uint spline_degree,
                                 int gradient_method,
                                 uint maxIterations,
-                                real stoppingTolerance,
+                                double stoppingTolerance,
                                 bool checkGradient,
                                 uint display);
 
@@ -236,12 +236,12 @@ void SQPOptimization(SocSystemAbstraction& soci,
 struct LQG{
   //parameters
   SocSystemAbstraction *sys;
-  real convergenceRate;
+  double convergenceRate;
   uint display;
   //messages & state info
   arr q,q_phase;                  //!< current trajectory in position and phase space
   arr vbar,Vbar,r,R,Vinv,v;       //!< bwd, and task messages
-  real cost;                      //!< cost of MAP trajectory
+  double cost;                      //!< cost of MAP trajectory
   uint sweep;                     //!< #sweeps so far
   uint scale;                     //!< scale of this LQG in a multi-scale approach
   
@@ -253,19 +253,19 @@ struct LQG{
   void initMessages();
   void shiftSolution(int offset);
 
-  real stepGeneral();
-  real stepKinematic();
+  double stepGeneral();
+  double stepKinematic();
 };
 
 LQG* LQG_solve(SocSystemAbstraction& sys,
                  arr& q,double tolerance,
-                 real convergenceRate,
+                 double convergenceRate,
                  uint display);
 
 LQG* LQG_multiScaleSolver(SocSystemAbstraction& sys,
                             arr& q,
                             double tolerance,
-                            real convergenceRate,
+                            double convergenceRate,
                             uint display,
                             uint scalePowers);
 
@@ -278,8 +278,8 @@ LQG* LQG_multiScaleSolver(SocSystemAbstraction& sys,
 struct AICO{
   //parameters (INPUT)
   SocSystemAbstraction *sys;
-  real convergenceRate,repeatThreshold,recomputeTaskThreshold,maxStep;
-  real damping;
+  double convergenceRate,repeatThreshold,recomputeTaskThreshold,maxStep;
+  double damping;
   uint display;
   bool useBwdMsg;
   arr bwdMsg_v,bwdMsg_Vinv;
@@ -291,7 +291,7 @@ struct AICO{
   arr b,Binv;                     //!< beliefs
   arr q,qhat;                     //!< trajectory (MAP), and point of linearization
   arr dampingReference;
-  real cost;                      //!< cost of MAP trajectory
+  double cost;                      //!< cost of MAP trajectory
 
   // INTERNAL
   bool useFwdMessageAsQhat;
@@ -306,11 +306,11 @@ struct AICO{
             uint _display, uint _scale);
   void initMessages();
   void shiftSolution(int offset);
-  real stepDynamic  ();
-  real stepKinematic();
-  real stepDynamicIlqg();
-  real stepGaussNewton();
-  real stepMinSum();
+  double stepDynamic  ();
+  double stepKinematic();
+  double stepDynamicIlqg();
+  double stepGaussNewton();
+  double stepMinSum();
 
   //internal helpers
   void initMessagesWithReferenceQ(arr& qref);
@@ -321,13 +321,13 @@ struct AICO{
 
 soc::AICO* AICO_solver(SocSystemAbstraction& soci,
                        arr& q,double tolerance,
-                       real convergenceRate,real repeatThreshold, real recomputeTaskThreshold,
+                       double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                        uint display);
 
 void AICO_multiScaleSolver(SocSystemAbstraction& sys,
                            arr& q,
                            double tolerance,
-                           real convergenceRate,real repeatThreshold, real recomputeTaskThreshold,
+                           double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                            uint display,
                            uint scalePowers);
 
@@ -394,13 +394,13 @@ inline void getControlledTrajectory(arr& q,const soc::AICO& aico){
 class SocSystem_Ors;
 class SocSystem_Toy;
 
-real getDynamicCostMeassure_obsolete(SocSystemAbstraction& soci,arr& q,real& cost1,real& cost2,std::ostream *os=0);
-real getFilterCostMeassure_obsolete(SocSystemAbstraction& soci,arr& q,real& cost1,real& cost2,std::ostream *os=0);
+double getDynamicCostMeassure_obsolete(SocSystemAbstraction& soci,arr& q,double& cost1,double& cost2,std::ostream *os=0);
+double getFilterCostMeassure_obsolete(SocSystemAbstraction& soci,arr& q,double& cost1,double& cost2,std::ostream *os=0);
 void setupOpenGL_obsolete(SocSystem_Ors &soci);
 
 void createDynamicProblem(SocSystem_Ors &soci,
                           const char *ors_file,
-                          real trajectory_time,
+                          double trajectory_time,
                           uint trajectory_steps);
 
 void setupOpenGL(SocSystem_Toy &soci);
@@ -420,7 +420,7 @@ void createEndeffectorReachProblem(SocSystem_Toy &soci,
 
 void createDynamicProblem(SocSystem_Toy &soci,
                           const char *ors_file,
-                          real trajectory_time,
+                          double trajectory_time,
                           uint trajectory_steps);
 #endif
 
@@ -445,8 +445,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
   
   //initialization methods
   void initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
-		  uint trajectory_steps, real trajectory_time, bool _dynamic, arr *W);
-  void setTimeInterval(real trajectory_time,uint trajectory_steps);
+		  uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
+  void setTimeInterval(double trajectory_time,uint trajectory_steps);
   void setTaskVariables(const TaskVariableList& CVlist);
 
   //--exemplary problem setups: read specifications from MT.cfg
@@ -485,11 +485,11 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
   void getJJt(arr& J_i,arr& Jt_i,uint i);
   void getHessian(arr& H_i,uint i);
   void getJqd(arr& Jqd_i,uint i);
-  void getTarget (arr& y_i,real& prec,uint i,uint t);
-  void getTargetV(arr& v_i,real& prec,uint i,uint t);
+  void getTarget (arr& y_i,double& prec,uint i,uint t);
+  void getTargetV(arr& v_i,double& prec,uint i,uint t);
   //void getC   (arr& C_i,uint i,uint t);
   //void getCV  (arr& D_i,uint i,uint t);
-  real getTau(bool scaled=true);
+  double getTau(bool scaled=true);
   void getMF(arr& M,arr& F,uint t);
   void getMinvF(arr& Minv,arr& F,uint t);
 
@@ -542,9 +542,9 @@ struct SocSystem_Toy: public virtual SocSystemAbstraction{
   void getTargetV(arr& v_i,uint i,uint t);
   void getC   (arr& C_i,uint i,uint t);
   void getCV  (arr& D_i,uint i,uint t);
-  void getPrecision (real& prec,uint i,uint t);
-  void getPrecisionV(real& prec,uint i,uint t);
-  real getTau(bool scaled=true);
+  void getPrecision (double& prec,uint i,uint t);
+  void getPrecisionV(double& prec,uint i,uint t);
+  double getTau(bool scaled=true);
   void getMF(arr& M,arr& F);
   void getMinvF(arr& Minv,arr& F);
 };

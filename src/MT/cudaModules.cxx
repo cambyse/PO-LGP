@@ -26,7 +26,7 @@ void CudaInterface::initMapping(){
 
 void CudaInterface::resizeMapping(arr& X,int N){
   // allocate mapped arrays
-  real *p;
+  double *p;
   cudaHostAlloc((void **)&p, N*sizeof(float), cudaHostAllocMapped);
   checkCUDAError("cudaHostAllocMapped");
   X.referTo(p,N);
