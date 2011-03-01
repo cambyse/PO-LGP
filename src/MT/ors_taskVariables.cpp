@@ -122,23 +122,23 @@ void TaskVariable::setGainsAsAttractor(real decaySteps,real oscillations,bool on
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setTrajectory(uint T,real funnelsdv,real funnelvsdv){
+void TaskVariable::setTrajectory(uint T,double funnelsdv,double funnelvsdv){
   OPS;
   targetType=trajectoryTT;
   active=true;
   uint t;
-  real a;
+  double a;
   y_trajectory.resize(T,y.N);
   y_prec_trajectory.resize(T);
   v_trajectory.resize(T,y.N);
   v_prec_trajectory.resize(T);
   for(t=0;t<T;t++){
-    a = (real)t/(T-1);
-    y_trajectory[t]()  = ((real)1.-a)*y + a*y_target;
-    y_prec_trajectory(t) = (real)1./MT::sqr(sqrt((real)1./y_prec) + ((real)1.-a)*funnelsdv);
+    a = (double)t/(T-1);
+    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
+    y_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./y_prec) + ((double)1.-a)*funnelsdv);
 
-    v_trajectory[t]()  = ((real)1.-a)*v + a*v_target;
-    v_prec_trajectory(t) = (real)1./MT::sqr(sqrt((real)1./v_prec) + ((real)1.-a)*funnelvsdv);
+    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
+    v_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./v_prec) + ((double)1.-a)*funnelvsdv);
   }
 }
 
@@ -162,27 +162,27 @@ void TaskVariable::setInterpolatedTargetTrajectory(uint T){
   targetType=trajectoryTT;
   active=true;
   uint t;
-  real a;
+  double a;
   y_trajectory.resize(T,y.N);
   v_trajectory.resize(T,y.N);
   for(t=0;t<T;t++){
-    a = (real)t/(T-1);
-    y_trajectory[t]()  = ((real)1.-a)*y + a*y_target;
-    v_trajectory[t]()  = ((real)1.-a)*v + a*v_target;
+    a = (double)t/(T-1);
+    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
+    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
   }
 }
 
-void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T,real inter_y_prec,real end_y_prec,real inter_v_prec,real end_v_prec){
+void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T,double inter_y_prec,double end_y_prec,double inter_v_prec,double end_v_prec){
   targetType=trajectoryTT;
   active=true;
   uint t;
-  real a;
+  double a;
   y_trajectory.resize(T+1,y.N);   y_prec_trajectory.resize(T+1);
   v_trajectory.resize(T+1,y.N);   v_prec_trajectory.resize(T+1);
   for(t=0;t<=T;t++){
-    a = (real)t/T;
-    y_trajectory[t]()  = ((real)1.-a)*y + a*y_target;
-    v_trajectory[t]()  = ((real)1.-a)*v + a*v_target;
+    a = (double)t/T;
+    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
+    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
   }
   for(t=0;t<T;t++){
      y_prec_trajectory(t) = inter_y_prec;
@@ -192,17 +192,17 @@ void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T,real inter_y_prec,
   v_prec_trajectory(T) = end_v_prec;
 }
 
-void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T,real y_prec,real v_prec){
+void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T,double y_prec,double v_prec){
   targetType=trajectoryTT;
   active=true;
   uint t;
-  real a;
+  double a;
   y_trajectory.resize(T+1,y.N);    y_prec_trajectory.resize(T+1);
   v_trajectory.resize(T+1,y.N);   v_prec_trajectory.resize(T+1);
   for(t=0;t<=T;t++){
-    a = (real)t/T;
-    y_trajectory[t]()  = ((real)1.-a)*y + a*y_target;
-    v_trajectory[t]()  = ((real)1.-a)*v + a*v_target;
+    a = (double)t/T;
+    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
+    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
   }
   for(t=0;t<=T;t++){
     y_prec_trajectory(t) = y_prec;
@@ -211,7 +211,7 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T,real y_prec,real
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionTrajectoryFinal(uint T,real intermediate_prec,real final_prec){
+void TaskVariable::setPrecisionTrajectoryFinal(uint T,double intermediate_prec,double final_prec){
   OPS;
   active=true;
   uint t;
@@ -221,14 +221,14 @@ void TaskVariable::setPrecisionTrajectoryFinal(uint T,real intermediate_prec,rea
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionTrajectoryConstant(uint T,real const_prec){
+void TaskVariable::setPrecisionTrajectoryConstant(uint T,double const_prec){
   OPS;
   active=true;
   y_prec_trajectory.resize(T);
   y_prec_trajectory = const_prec;
 }
 
-void TaskVariable::setPrecisionVTrajectoryFinal(uint T,real intermediate_v_prec,real final_v_prec){
+void TaskVariable::setPrecisionVTrajectoryFinal(uint T,double intermediate_v_prec,double final_v_prec){
   OPS;
   active=true;
   uint t;
@@ -238,7 +238,7 @@ void TaskVariable::setPrecisionVTrajectoryFinal(uint T,real intermediate_v_prec,
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionVTrajectoryConstant(uint T,real const_prec){
+void TaskVariable::setPrecisionVTrajectoryConstant(uint T,double const_prec){
   OPS;
   active=true;
   v_prec_trajectory.resize(T);
@@ -376,7 +376,7 @@ void TaskVariable::updateJacobian(){
   case qSquaredTVT:
     ors->getJointState(q,qv);
     J = params * q;
-    J *= (real)2.;
+    J *= (double)2.;
     J.reshape(1,q.N);
     break;
   case qSingleTVT:
@@ -559,7 +559,7 @@ void reportState (TaskVariableList& CS,ostream& os,bool onlyActives){;
 
 void reportErrors(TaskVariableList& CS,ostream& os,bool onlyActives,int t){
   uint i;
-  real e,E=0.;
+  double e,E=0.;
   for(i=0;i<CS.N;i++) if(!onlyActives || CS(i)->active){
     if(t!=-1)
       if(t) e=norm(CS(i)->y - CS(i)->y_trajectory[t-1]);
@@ -637,9 +637,9 @@ void bayesianControl_obsolete(TaskVariableList& CS,arr& dq,const arr& W){
   y_change.reshape(y_change.N);
 }
 
-real getCost_obsolete(TaskVariableList& CS,const arr& W,int t){
+double getCost_obsolete(TaskVariableList& CS,const arr& W,int t){
   uint i;
-  real e,C=0.;
+  double e,C=0.;
   for(i=0;i<CS.N;i++) if(CS(i)->active){
     if(t!=-1){
       e=sumOfSqr(CS(i)->y - CS(i)->y_trajectory[t]);
@@ -664,7 +664,7 @@ void getCostGradient_obsolete(TaskVariableList& CS,arr& dCdq,const arr& W,int t)
     }else{
       e=CS(i)->y - CS(i)->y_target;
     }
-    dCdq += CS(i)->Jt * (e*((real)2.*CS(i)->y_prec));
+    dCdq += CS(i)->Jt * (e*((double)2.*CS(i)->y_prec));
   }
 }
 
@@ -687,7 +687,7 @@ void hierarchicalControl_obsolete(TaskVariableList& CS,arr& dq,const arr& W){
 }
 
 void bayesianIterateControl_obsolete(TaskVariableList& CS,
-                            arr& qt,const arr& qt_1,const arr& W,real eps,uint maxIter){
+                            arr& qt,const arr& qt_1,const arr& W,double eps,uint maxIter){
   uint j;
   qt=qt_1;
   arr dq;
@@ -716,7 +716,7 @@ void additiveControl_obsolete(TaskVariableList& CS,arr& dq,const arr& W){
     dq += Jinv * CS(i)->y_change;
     n++;
   }
-  dq/=(real)n;
+  dq/=(double)n;
 }
 */
 /*OLD
@@ -813,7 +813,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors,TaskVariableList& CS,SwiftModule *
 
       if(repeat){
         //meassure offset
-        real off=sqrDistance(W,b[t],hatq[t]);
+        double off=sqrDistance(W,b[t],hatq[t]);
         //cout <<"off = " <<off <<endl;
         if(false && k>0 && off>.05){
           //cout <<t <<" REPEAT: off = " <<off <<endl;
@@ -826,7 +826,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors,TaskVariableList& CS,SwiftModule *
     //evaluate trajectory
     //cout <<"variances over time = ";
     //for(t=0;t<T;t++) cout <<' ' <<trace(B[t]);
-    real cost_t,cost1=.0,cost2=.0,length=0.;
+    double cost_t,cost1=.0,cost2=.0,length=0.;
     for(t=0;t<T;t++){
       ors->setJointState(b[t]);
       ors->calcNodeFramesFromEdges();

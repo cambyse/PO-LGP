@@ -55,35 +55,35 @@ namespace ors{
   }*/
 
   //! copy operator
-  /*Vector& Vector::operator=(const real* b){
+  /*Vector& Vector::operator=(const double* b){
     v[0]=b[0]; v[1]=b[1]; v[2]=b[2]; return *this;
   }*/
 
   //! set all entries to same value
-  /*Vector& Vector::operator=(real b){
+  /*Vector& Vector::operator=(double b){
     v[0]=v[1]=v[2]=b; return *this;
   }*/
 
 
 //{ access
   //! lhs reference
-  real& Vector::operator()(int i){ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return p[i]; }
-  const real& Vector::operator()(int i) const{ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return p[i]; }
-  //real& Vector::operator[](int i){ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return v[i]; }
+  double& Vector::operator()(int i){ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return p[i]; }
+  const double& Vector::operator()(int i) const{ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return p[i]; }
+  //double& Vector::operator[](int i){ CHECK(i>=0 && i<3,"ors::Vector access - out of range"); return v[i]; }
 
 #ifdef MT_MSVC
-  //! real-pointer access
-  //Vector::operator real*(){ return v; }
+  //! double-pointer access
+  //Vector::operator double*(){ return v; }
 #endif
 
-  //! real-pointer access
-  //Vector::operator const real*() const{ return v; }
+  //! double-pointer access
+  //Vector::operator const double*() const{ return v; }
 
   //! set the vector
-  void Vector::set(real x,real y,real z){ p[0]=x; p[1]=y; p[2]=z; }
+  void Vector::set(double x,double y,double z){ p[0]=x; p[1]=y; p[2]=z; }
 
   //! set the vector
-  void Vector::set(real* x){ p[0]=x[0]; p[1]=x[1]; p[2]=x[2]; }
+  void Vector::set(double* x){ p[0]=x[0]; p[1]=x[1]; p[2]=x[2]; }
 
   //! set the vector
   void Vector::setZero(){ p[0]=p[1]=p[2]=0.; }
@@ -94,32 +94,32 @@ namespace ors{
 //{ vector operations
 
   /*
-  void Vector::multiply(real c){
+  void Vector::multiply(double c){
     v[0]*=c; v[1]*=c; v[2]*=c;
   }
 
-  void Vector::divide(real c){
+  void Vector::divide(double c){
     v[0]/=c; v[1]/=c; v[2]/=c;
   }*/
 
   //! this=this+b
-  void Vector::add(real x,real y,real z){ p[0]+=x; p[1]+=y; p[2]+=z; }
+  void Vector::add(double x,double y,double z){ p[0]+=x; p[1]+=y; p[2]+=z; }
 
   //! this=this-b
-  void Vector::subtract(real x,real y,real z){ p[0]-=x; p[1]-=y; p[2]-=z; }
+  void Vector::subtract(double x,double y,double z){ p[0]-=x; p[1]-=y; p[2]-=z; }
 
   //! this=this/length(this)
   void Vector::normalize(){ (*this)/=length(); }
 
   //! this=this*l/length(this)
-  void Vector::setLength(real l){
+  void Vector::setLength(double l){
     if(isZero()) MT_MSG("can't change length of null vector");
     (*this)*=l/length();
   }
 
   //! this=component of this normal to \c b, (unnormalized!)
   void Vector::makeNormal(const Vector& b){
-    real l=b.length(),s=p[0]*b.p[0]+p[1]*b.p[1]+p[2]*b.p[2];
+    double l=b.length(),s=p[0]*b.p[0]+p[1]*b.p[1]+p[2]*b.p[2];
     s/=l*l;
     p[0]-=s*b.p[0]; p[1]-=s*b.p[1]; p[2]-=s*b.p[2];
   }
@@ -127,7 +127,7 @@ namespace ors{
   //! this=component of this colinear to \c b, (unnormalized!)
   void Vector::makeColinear(const Vector& b){
     // *this = ((*this)*b)/b.length()) * (*this);
-    real l=b.length(),s=p[0]*b.p[0]+p[1]*b.p[1]+p[2]*b.p[2];
+    double l=b.length(),s=p[0]*b.p[0]+p[1]*b.p[1]+p[2]*b.p[2];
     s/=l*l;
     p[0]=s*b.p[0]; p[1]=s*b.p[1]; p[2]=s*b.p[2];
   }
@@ -141,14 +141,14 @@ namespace ors{
   bool Vector::isNormalized() const{ return fabs(lengthSqr()-1.)<1e-6; }
 
   //! returns the length of this
-  real Vector::length() const{ return ::sqrt(lengthSqr()); }
+  double Vector::length() const{ return ::sqrt(lengthSqr()); }
 
   //! returns the square of length |a|^2
-  real Vector::lengthSqr() const{ return p[0]*p[0] + p[1]*p[1] + p[2]*p[2]; }
+  double Vector::lengthSqr() const{ return p[0]*p[0] + p[1]*p[1] + p[2]*p[2]; }
 
   //! angle in [0..pi] between this and b
-  real Vector::angle(const Vector& b) const{
-    real x=((*this)*b)/(length()*b.length());
+  double Vector::angle(const Vector& b) const{
+    double x=((*this)*b)/(length()*b.length());
     if(x<-1.) x=-1.;
     if(x>1.) x=1.;
     return ::acos(x);
@@ -156,8 +156,8 @@ namespace ors{
 
   /*!\brief if \c this and \c b are colinear, it returns the factor c such
       that this=c*b; otherwise it returns zero */
-  real Vector::isColinear(const Vector& b) const{
-    real c=p[0]/b.p[0];
+  double Vector::isColinear(const Vector& b) const{
+    double c=p[0]/b.p[0];
     if(p[1]==c*b.p[1] && p[2]==c*b.p[2]) return c;
     return 0.;
   }
@@ -166,16 +166,16 @@ namespace ors{
 //{ sphere coordinates
 
   //! the radius in the x/y-plane
-  real Vector::radius() const{ return ::sqrt(p[0]*p[0]+p[1]*p[1]); }
+  double Vector::radius() const{ return ::sqrt(p[0]*p[0]+p[1]*p[1]); }
   //! the angle in the x/y-plane in [-pi, pi]
-  real Vector::phi() const{
-    real ph;
+  double Vector::phi() const{
+    double ph;
     if(p[0]==0. || ::fabs(p[0])<1e-10) ph=MT_PI/2.; else ph=::atan(p[1]/p[0]);
     if(p[0]<0.){ if(p[1]<0.) ph-=MT_PI; else ph+=MT_PI; }
     return ph;
   }
   //! the angle from the x/y-plane
-  real Vector::theta() const{ return ::atan(p[2]/radius())+MT_PI/2.; }
+  double Vector::theta() const{ return ::atan(p[2]/radius())+MT_PI/2.; }
 
 
 //{ I/O
@@ -190,7 +190,7 @@ namespace ors{
   //}
 
   //! scalar product (inner product)
-  real operator*(const Vector& a,const Vector& b){
+  double operator*(const Vector& a,const Vector& b){
     return a.p[0]*b.p[0]+a.p[1]*b.p[1]+a.p[2]*b.p[2];
   }
 
@@ -222,7 +222,7 @@ namespace ors{
   }
 
   //! multiplication with a scalar
-  Vector operator*(real b,const Vector& c){
+  Vector operator*(double b,const Vector& c){
     Vector a;
     a.p[0]=b*c.p[0];
     a.p[1]=b*c.p[1];
@@ -231,18 +231,18 @@ namespace ors{
   }
 
   //! multiplication with a scalar
-  Vector operator*(const Vector& b,real c){ return c*b; }
+  Vector operator*(const Vector& b,double c){ return c*b; }
 
   //! division by a scalar
-  Vector operator/(const Vector& b,real c){ return (1./c)*b; }
+  Vector operator/(const Vector& b,double c){ return (1./c)*b; }
 
   //! multiplication with a scalar
-  Vector& operator*=(Vector& a,real c){
+  Vector& operator*=(Vector& a,double c){
     a.p[0]*=c; a.p[1]*=c; a.p[2]*=c;
     return a;
   }
   //! divide by a scalar
-  Vector& operator/=(Vector& a,real c){
+  Vector& operator/=(Vector& a,double c){
     a.p[0]/=c; a.p[1]/=c; a.p[2]/=c;
     return a;
   }
@@ -264,13 +264,13 @@ namespace ors{
   }
 
   //! const access via two row and column indices
-  const real& Matrix::operator()(int i,int j) const{ return p[i*3+j]; }
+  const double& Matrix::operator()(int i,int j) const{ return p[i*3+j]; }
   //! LHS access via two row and column indices
-  real& Matrix::operator()(int i,int j){ return p[i*3+j]; }
+  double& Matrix::operator()(int i,int j){ return p[i*3+j]; }
 
   //! copy operator
   /*Matrix& Matrix::operator=(const Matrix& b){
-    memmove(m,b.m,9*sizeof(real)); return *this;
+    memmove(m,b.m,9*sizeof(double)); return *this;
   }*/
 
   //! reset to zero
@@ -300,7 +300,7 @@ namespace ors{
   }
 
   //! assign the matrix to a rotation around the X-axis with angle a (in rad units)
-  void Matrix::setXrot(real a){
+  void Matrix::setXrot(double a){
     p[0]=1.; p[1]=0.;     p[2]=0.;
     p[3]=0.; p[4]=cos(a); p[5]=-sin(a);
     p[6]=0.; p[7]=sin(a); p[8]= cos(a);
@@ -314,14 +314,14 @@ namespace ors{
 
   void Matrix::setExponential(const Vector& a){
     Matrix S;
-    real phi=a.length();
+    double phi=a.length();
     if(phi<1e-10){ setId(); return; }
     S.setSkew(a/phi);
     *this = sin(phi)*S + (1.-cos(phi))*S*S;
     p[0]+=1.; p[4]+=1.; p[8]+=1.;
   }
 
-  void Matrix::setOdeMatrix(real* o){
+  void Matrix::setOdeMatrix(double* o){
     p[0]=o[0]; p[1]=o[1]; p[2]=o[2];
     p[3]=o[4]; p[4]=o[5]; p[5]=o[6];
     p[6]=o[8]; p[7]=o[9]; p[8]=o[10];
@@ -377,14 +377,14 @@ namespace ors{
     return a;
   }
   //! multiplication with a scalar
-  Matrix& operator*=(Matrix& a,real c){
+  Matrix& operator*=(Matrix& a,double c){
     a.p[0]*=c; a.p[1]*=c; a.p[2]*=c;
     a.p[3]*=c; a.p[4]*=c; a.p[5]*=c;
     a.p[6]*=c; a.p[7]*=c; a.p[8]*=c;
     return a;
   }
   //! multiplication with scalar
-  Matrix operator*(real b,const Matrix& c){
+  Matrix operator*(double b,const Matrix& c){
     Matrix a;
     a=c;
     a*=b;
@@ -407,9 +407,9 @@ namespace ors{
   void Quaternion::invert(){ p[0]=-p[0]; }
 
   //! multiplies the rotation by a factor f (i.e., makes f-times the rotation)
-  void Quaternion::multiply(real f){
+  void Quaternion::multiply(double f){
     if(p[0]==1. || f==1.) return;
-    real phi=acos(p[0]);
+    double phi=acos(p[0]);
     phi*=f;
     p[0]=cos(phi);
     f=sin(phi)/sqrt(p[1]*p[1] + p[2]*p[2] + p[3]*p[3]);
@@ -417,12 +417,12 @@ namespace ors{
   }
 
   bool Quaternion::isNormalized() const{
-    real n=p[0]*p[0] + p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
+    double n=p[0]*p[0] + p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
     return fabs(n-1.)<1e-6;
   }
 
   void Quaternion::normalize(){
-    real n=p[0]*p[0] + p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
+    double n=p[0]*p[0] + p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
     n=sqrt(n);
     p[0]/=n; p[1]/=n; p[2]/=n; p[3]/=n;
   }
@@ -432,7 +432,7 @@ namespace ors{
       the rotation axis (given by q[1],q[2],q[3] of the quaternion)
       with v and re-normalizes afterwards. */
   void Quaternion::alignWith(const Vector& v){
-    real s=p[1]*v(0) + p[2]*v(1) + p[3]*v(2);
+    double s=p[1]*v(0) + p[2]*v(1) + p[3]*v(2);
     if(!s){ setZero(); return; }// are orthogonal
     s/=v*v;
     p[1]=s*v(0); p[2]=s*v(1); p[3]=s*v(2);
@@ -441,14 +441,14 @@ namespace ors{
 
 
   //! set the quad
-  void Quaternion::set(real* x){ p[0]=x[0]; p[1]=x[1]; p[2]=x[2]; p[3]=x[3]; }
+  void Quaternion::set(double* x){ p[0]=x[0]; p[1]=x[1]; p[2]=x[2]; p[3]=x[3]; }
   //! set the quad
-  void Quaternion::set(real q0,real x,real y,real z){ p[0]=q0; p[1]=x; p[2]=y; p[3]=z; }
+  void Quaternion::set(double q0,double x,double y,double z){ p[0]=q0; p[1]=x; p[2]=y; p[3]=z; }
   //! reset the rotation to identity
   void Quaternion::setZero(){ p[0]=1; p[1]=p[2]=p[3]=0; }
   //! samples the rotation uniformly from the whole SO(3)
   void Quaternion::setRandom(){
-    real s,s1,s2,t1,t2;
+    double s,s1,s2,t1,t2;
     s=rnd.uni();
     s1=sqrt(1-s);
     s2=sqrt(s);
@@ -461,8 +461,8 @@ namespace ors{
   }
 
   //! sets this to a smooth interpolation between two rotations
-  void Quaternion::setInterpolate(real t,const Quaternion& a,const Quaternion b){
-    real sign=1.;
+  void Quaternion::setInterpolate(double t,const Quaternion& a,const Quaternion b){
+    double sign=1.;
     if(scalarProduct(a,b)<0) sign=-1.;
     p[0]=a.p[0]+t*(sign*b.p[0]-a.p[0]);
     p[1]=a.p[1]+t*(sign*b.p[1]-a.p[1]);
@@ -472,11 +472,11 @@ namespace ors{
   }
 
   //! assigns the rotation to \c a DEGREES around the vector (x,y,z)
-  void Quaternion::setDeg(real degree,real x,real y,real z){ setRad(degree*MT_PI/180.,x,y,z); }
-  void Quaternion::setDeg(real degree,const Vector& vec){ setRad(degree*MT_PI/180.,vec(0),vec(1),vec(2)); }
+  void Quaternion::setDeg(double degree,double x,double y,double z){ setRad(degree*MT_PI/180.,x,y,z); }
+  void Quaternion::setDeg(double degree,const Vector& vec){ setRad(degree*MT_PI/180.,vec(0),vec(1),vec(2)); }
   //! assigns the rotation to \c a RADIANTS (2*PI-units) around the vector (x,y,z)
-  void Quaternion::setRad(real angle,real x,real y,real z){
-    real l = x*x + y*y + z*z;
+  void Quaternion::setRad(double angle,double x,double y,double z){
+    double l = x*x + y*y + z*z;
     if(l<1e-15){ setZero(); return; }
     angle/=2.;
     l=sin(angle)/sqrt(l);
@@ -486,12 +486,12 @@ namespace ors{
     p[3]=z*l;
   }
   //! ..
-  void Quaternion::setRad(real angle,const Vector &axis){
+  void Quaternion::setRad(double angle,const Vector &axis){
     setRad(angle,axis(0),axis(1),axis(2));
   }
   //! assigns the rotation to \c a RADIANTS (2*PI-units) around the current axis
-  void Quaternion::setRad(real angle){
-    real l = p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
+  void Quaternion::setRad(double angle){
+    double l = p[1]*p[1] + p[2]*p[2] + p[3]*p[3];
     if(l<1e-15){ setZero(); return; }
     angle/=2.;
     l=sin(angle)/sqrt(l);
@@ -501,14 +501,14 @@ namespace ors{
     p[3]*=l;
   }
   //! rotation around X-axis by given radiants
-  void Quaternion::setRadX(real angle){
+  void Quaternion::setRadX(double angle){
     angle/=2.;
     p[0]=cos(angle);
     p[1]=sin(angle);
     p[2]=p[3]=0.;
   }
   //! rotation around X-axis by given radiants
-  void Quaternion::setRadY(real angle){
+  void Quaternion::setRadY(double angle){
     angle/=2.;
     p[0]=cos(angle);
     p[2]=sin(angle);
@@ -516,12 +516,12 @@ namespace ors{
   }
   //! rotation around the given vector with angle (in rad) equal to norm of the vector
   void Quaternion::setVec(Vector w){
-    real phi=w.length();
+    double phi=w.length();
     setRad(phi,w(0),w(1),w(2));
   }
   //! rotation that will rotate 'from' to 'to' on direct path
   void Quaternion::setDiff(const Vector& from,const Vector& to){
-    real phi=acos(from*to/(from.length()*to.length()));
+    double phi=acos(from*to/(from.length()*to.length()));
     if(!phi) return;
     Vector axis(from^to);
     if(axis.isZero()) axis=Vector(0,0,1)^to;
@@ -532,39 +532,39 @@ namespace ors{
   bool Quaternion::isZero() const{ return p[0]==1.; }
 
 #ifdef MT_MSVC
-  //! real-pointer access
-  //Quaternion::operator real*(){ return q; }
+  //! double-pointer access
+  //Quaternion::operator double*(){ return q; }
 #endif
 
-  //! real-pointer access
-  //Quaternion::operator const real*() const{ return q; }
+  //! double-pointer access
+  //Quaternion::operator const double*() const{ return q; }
 
   //! gets rotation angle (in rad [0,2pi])
-  real Quaternion::getRad() const{
+  double Quaternion::getRad() const{
     if(p[0]>=1. || p[0]<=-1. || (p[1]==0. && p[2]==0. && p[3]==0.)) return 0;
     return 2.*acos(p[0]);
   }
 
   //! gets rotation angle (in degree [0,360])
-  real Quaternion::getDeg() const{
+  double Quaternion::getDeg() const{
     if(p[0]>=1. || p[0]<=-1. || (p[1]==0. && p[2]==0. && p[3]==0.)) return 0;
     return 360./MT_PI*acos(p[0]);
   }
 
   //! gets rotation angle (in degree [0,360]) and vector
-  void Quaternion::getDeg(real& degree,Vector& vec) const{
+  void Quaternion::getDeg(double& degree,Vector& vec) const{
     if(p[0]>=1. || p[0]<=-1. || (p[1]==0. && p[2]==0. && p[3]==0.)){ degree=0.; vec.set(0.,0.,1.); return; }
     degree=acos(p[0]);
-    real s=sin(degree);
+    double s=sin(degree);
     degree*=360./MT_PI;
     vec(0)=p[1]/s; vec(1)=p[2]/s; vec(2)=p[3]/s;
   }
 
   //! gets rotation angle (in rad [0,2pi]) and vector
-  void Quaternion::getRad(real& angle,Vector& vec) const{
+  void Quaternion::getRad(double& angle,Vector& vec) const{
     if(p[0]>=1. || p[0]<=-1. || (p[1]==0. && p[2]==0. && p[3]==0.)){ angle=0.; vec.set(0.,0.,1.); return; }
     angle=acos(p[0]);
-    real s=sin(angle);
+    double s=sin(angle);
     angle*=2;
     vec(0)=p[1]/s; vec(1)=p[2]/s; vec(2)=p[3]/s;
     CHECK(angle>=0. && angle<=MT_2PI,"");
@@ -573,19 +573,19 @@ namespace ors{
   //! gets the axis rotation vector with length equal to the rotation angle in rad
   Vector& Quaternion::getVec(Vector& v) const{
     if(p[0]>=1. || p[0]<=-1. || (p[1]==0. && p[2]==0. && p[3]==0.)){ v.setZero(); return v; }
-    real phi=acos(p[0]);
-    real s=2.*phi/sin(phi);
+    double phi=acos(p[0]);
+    double s=2.*phi/sin(phi);
     v(0)=s*p[1]; v(1)=s*p[2]; v(2)=s*p[3];
     return v;
   }
 
   Vector& Quaternion::getX(Vector& Rx) const{
-    real q22 = 2.*p[2]*p[2];
-    real q33 = 2.*p[3]*p[3];
-    real q12 = 2.*p[1]*p[2];
-    real q13 = 2.*p[1]*p[3];
-    real q02 = 2.*p[0]*p[2];
-    real q03 = 2.*p[0]*p[3];
+    double q22 = 2.*p[2]*p[2];
+    double q33 = 2.*p[3]*p[3];
+    double q12 = 2.*p[1]*p[2];
+    double q13 = 2.*p[1]*p[3];
+    double q02 = 2.*p[0]*p[2];
+    double q03 = 2.*p[0]*p[3];
     Rx.p[0]=1-q22-q33;
     Rx.p[1]=q12+q03;
     Rx.p[2]=q13-q02;
@@ -594,7 +594,7 @@ namespace ors{
   Vector& Quaternion::getY(Vector& Ry) const{ Ry = (*this)*Vector(0,1,0);  return Ry; }
   Vector& Quaternion::getZ(Vector& Rz) const{ Rz = (*this)*Vector(0,0,1);  return Rz; }
 
-  void Quaternion::setMatrix(real* m){
+  void Quaternion::setMatrix(double* m){
     p[0] = .5*sqrt(1.+m[0]+m[4]+m[8]); //sqrt(1.-(3.-(m[0]+m[4]+m[8]))/4.);
     p[3] = (m[3]-m[1])/(4.*p[0]);
     p[2] = (m[2]-m[6])/(4.*p[0]);
@@ -603,54 +603,54 @@ namespace ors{
     //CHECK(normalized(),"failed :-(");
   }
 
-  //! exports the rotation to a real[9] matrix, row-by-row
-  real* Quaternion::getMatrix(real* m) const{
-    real P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
-    real q11 = p[1]*P1;
-    real q22 = p[2]*P2;
-    real q33 = p[3]*P3;
-    real q12 = p[1]*P2;
-    real q13 = p[1]*P3;
-    real q23 = p[2]*P3;
-    real q01 = p[0]*P1;
-    real q02 = p[0]*P2;
-    real q03 = p[0]*P3;
+  //! exports the rotation to a double[9] matrix, row-by-row
+  double* Quaternion::getMatrix(double* m) const{
+    double P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
+    double q11 = p[1]*P1;
+    double q22 = p[2]*P2;
+    double q33 = p[3]*P3;
+    double q12 = p[1]*P2;
+    double q13 = p[1]*P3;
+    double q23 = p[2]*P3;
+    double q01 = p[0]*P1;
+    double q02 = p[0]*P2;
+    double q03 = p[0]*P3;
     m[0]=1.-q22-q33; m[1]=q12-q03;    m[2]=q13+q02;
     m[3]=q12+q03;   m[4]=1.-q11-q33;  m[5]=q23-q01;
     m[6]=q13-q02;   m[7]=q23+q01;    m[8]=1.-q11-q22;
     return m;
   }
 
-  //! exports the rotation to an ODE format matrix of type real[12]
-  real* Quaternion::getMatrixOde(real* m) const{
-    real P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
-    real q11 = p[1]*P1;
-    real q22 = p[2]*P2;
-    real q33 = p[3]*P3;
-    real q12 = p[1]*P2;
-    real q13 = p[1]*P3;
-    real q23 = p[2]*P3;
-    real q01 = p[0]*P1;
-    real q02 = p[0]*P2;
-    real q03 = p[0]*P3;
+  //! exports the rotation to an ODE format matrix of type double[12]
+  double* Quaternion::getMatrixOde(double* m) const{
+    double P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
+    double q11 = p[1]*P1;
+    double q22 = p[2]*P2;
+    double q33 = p[3]*P3;
+    double q12 = p[1]*P2;
+    double q13 = p[1]*P3;
+    double q23 = p[2]*P3;
+    double q01 = p[0]*P1;
+    double q02 = p[0]*P2;
+    double q03 = p[0]*P3;
     m[0]=1.-q22-q33; m[1]=q12-q03;   m[2] =q13+q02;
     m[4]=q12+q03;   m[5]=1.-q11-q33; m[6] =q23-q01;
     m[8]=q13-q02;   m[9]=q23+q01;   m[10]=1.-q11-q22;
     m[3]=m[7]=m[11]=0.;
     return m;
   }
-  //! exports the rotation to an OpenGL format matrix of type real[16]
-  real* Quaternion::getMatrixGL(real* m) const{
-    real P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
-    real q11 = p[1]*P1;
-    real q22 = p[2]*P2;
-    real q33 = p[3]*P3;
-    real q12 = p[1]*P2;
-    real q13 = p[1]*P3;
-    real q23 = p[2]*P3;
-    real q01 = p[0]*P1;
-    real q02 = p[0]*P2;
-    real q03 = p[0]*P3;
+  //! exports the rotation to an OpenGL format matrix of type double[16]
+  double* Quaternion::getMatrixGL(double* m) const{
+    double P1=2.*p[1], P2=2.*p[2], P3=2.*p[3];
+    double q11 = p[1]*P1;
+    double q22 = p[2]*P2;
+    double q33 = p[3]*P3;
+    double q12 = p[1]*P2;
+    double q13 = p[1]*P3;
+    double q23 = p[2]*P3;
+    double q01 = p[0]*P1;
+    double q02 = p[0]*P2;
+    double q03 = p[0]*P3;
     m[0]=1.-q22-q33; m[4]=q12-q03;  m[8] =q13+q02;
     m[1]=q12+q03;   m[5]=1.-q11-q33; m[9] =q23-q01;
     m[2]=q13-q02;   m[6]=q23+q01;  m[10]=1.-q11-q22;
@@ -689,7 +689,7 @@ namespace ors{
 
   //! transform of a vector by a rotation
   Vector operator*(const Quaternion& b,const Vector& c){
-    real m[9];
+    double m[9];
     b.getMatrix(m);
     Vector a;
     a.p[0]=m[0]*c.p[0]+m[1]*c.p[1]+m[2]*c.p[2];
@@ -700,7 +700,7 @@ namespace ors{
   
   //! inverse transform of a vector by a rotation
   Vector operator/(const Quaternion& b,const Vector& c){
-    real m[9];
+    double m[9];
     b.getMatrix(m);
     Vector a;
     a.p[0]=m[0]*c.p[0]+m[3]*c.p[1]+m[6]*c.p[2];
@@ -753,7 +753,7 @@ namespace ors{
   /*!\brief moves the frame according to the current velocities \c v and \c w
       and the time span \c time (if time is given in seconds, v has
       dimension units/sec, and w has dimension rad/sec) */
-  /*void Transformation::step(real time){
+  /*void Transformation::step(double time){
     Quaternion W;
     W.setVec(w);
     W.multiply(time);
@@ -762,11 +762,11 @@ namespace ors{
   }*/
 
   //! multiply the current scale by f
-  /*void Transformation::scale(real f){
+  /*void Transformation::scale(double f){
     s*=f;
   }*/
   //! move the turtle by the vector (x,z,y) WITH RESPECT TO the current orientation/scale
-  void Transformation::addRelativeTranslation(real x,real y,real z){
+  void Transformation::addRelativeTranslation(double x,double y,double z){
     Vector X(x,y,z);
     //X=r*(s*X); //in global coords
     X=rot*X; //in global coords
@@ -774,42 +774,42 @@ namespace ors{
     vel+=angvel^X;
   }
   //! add a velocity to the turtle's inertial frame
-  void Transformation::addRelativeVelocity(real x,real y,real z){
+  void Transformation::addRelativeVelocity(double x,double y,double z){
     Vector X(x,y,z);
     //v+=r*(s*X);
     vel+=rot*X;
   }
   //! add an angular velocity to the turtle inertial frame
-  void Transformation::addRelativeAngVelocityDeg(real degree,real x,real y,real z){
+  void Transformation::addRelativeAngVelocityDeg(double degree,double x,double y,double z){
     Vector W(x,y,z); W.normalize();
     W*=degree*MT_PI/180.;
     angvel+=rot*W;
   }
   //! add an angular velocity to the turtle inertial frame
-  void Transformation::addRelativeAngVelocityRad(real rad,real x,real y,real z){
+  void Transformation::addRelativeAngVelocityRad(double rad,double x,double y,double z){
     Vector W(x,y,z); W.normalize();
     W*=rad;
     angvel+=rot*W;
   }
   //! add an angular velocity to the turtle inertial frame
-  void Transformation::addRelativeAngVelocityRad(real wx,real wy,real wz){
+  void Transformation::addRelativeAngVelocityRad(double wx,double wy,double wz){
     Vector W(wx,wy,wz);
     angvel+=rot*W;
   }
   //! rotate the turtle orientation by an angle (given in DEGREE) around the vector (x,y,z) (given relative to the current orientation)
-  void Transformation::addRelativeRotationDeg(real degree,real x,real y,real z){
+  void Transformation::addRelativeRotationDeg(double degree,double x,double y,double z){
     Quaternion R;
     R.setDeg(degree,x,y,z);
     rot=rot*R;
   }
   //! rotate the turtle orientation by an angle (given in radiants) around the vector (x,y,z) (given relative to the current orientation)
-  void Transformation::addRelativeRotationRad(real rad,real x,real y,real z){
+  void Transformation::addRelativeRotationRad(double rad,double x,double y,double z){
     Quaternion R;
     R.setRad(rad,x,y,z);
     rot=rot*R;
   }
   //! rotate the turtle orientation as given by a quaternion
-  void Transformation::addRelativeRotationQuat(real s,real x,real y,real z){
+  void Transformation::addRelativeRotationQuat(double s,double x,double y,double z){
     Quaternion R;
     R.p[0]=s; R.p[1]=x; R.p[2]=y; R.p[3]=z;
     rot=rot*R;
@@ -871,9 +871,9 @@ namespace ors{
   //! this = f^{-1}
   void Transformation::setInverse(const Transformation& f){ setZero(); appendInvTransformation(f); }
 
-  //! set real[4*4] to Transformation. Matrix needs to be orthogonal
-  void Transformation::setAffineMatrix(const real *m){
-    real M[9];
+  //! set double[4*4] to Transformation. Matrix needs to be orthogonal
+  void Transformation::setAffineMatrix(const double *m){
+    double M[9];
     uint i,j;
     for(i=0; i<3; ++i) 
       for(j=0; j<3; ++j) 
@@ -895,9 +895,9 @@ namespace ors{
     pos = from.rot/(to.pos-from.pos);
   }
 
-  //! get the current position/orientation/scale in an OpenGL format matrix (of type real[16])
-  real* Transformation::getAffineMatrix(real *m) const{
-    real M[9]; rot.getMatrix(M);
+  //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
+  double* Transformation::getAffineMatrix(double *m) const{
+    double M[9]; rot.getMatrix(M);
     m[0] =M[0]; m[1] =M[1]; m[2] =M[2]; m[3] =pos(0);
     m[4] =M[3]; m[5] =M[4]; m[6] =M[5]; m[7] =pos(1);
     m[8] =M[6]; m[9] =M[7]; m[10]=M[8]; m[11]=pos(2);
@@ -905,9 +905,9 @@ namespace ors{
     return m;
   }
 
-  //! get inverse OpenGL matrix for this frame (of type real[16])
-  real* Transformation::getInverseAffineMatrix(real *m) const{
-    real M[9]; rot.getMatrix(M);
+  //! get inverse OpenGL matrix for this frame (of type double[16])
+  double* Transformation::getInverseAffineMatrix(double *m) const{
+    double M[9]; rot.getMatrix(M);
     Vector pinv; pinv=rot/pos;
     m[0] =M[0]; m[1] =M[3]; m[2] =M[6]; m[3] =-pinv(0);
     m[4] =M[1]; m[5] =M[4]; m[6] =M[7]; m[7] =-pinv(1);
@@ -916,9 +916,9 @@ namespace ors{
     return m;
   }
 
-  //! get the current position/orientation/scale in an OpenGL format matrix (of type real[16])
-  real* Transformation::getAffineMatrixGL(real *m) const{
-    real M[9]; rot.getMatrix(M);
+  //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
+  double* Transformation::getAffineMatrixGL(double *m) const{
+    double M[9]; rot.getMatrix(M);
     m[0]=M[0]; m[4]=M[1]; m[8] =M[2]; m[12]=pos(0);
     m[1]=M[3]; m[5]=M[4]; m[9] =M[5]; m[13]=pos(1);
     m[2]=M[6]; m[6]=M[7]; m[10]=M[8]; m[14]=pos(2);
@@ -926,9 +926,9 @@ namespace ors{
     return m;
   }
 
-  //! get inverse OpenGL matrix for this frame (of type real[16]) */
-  real* Transformation::getInverseAffineMatrixGL(real *m) const{
-    real M[9]; rot.getMatrix(M);
+  //! get inverse OpenGL matrix for this frame (of type double[16]) */
+  double* Transformation::getInverseAffineMatrixGL(double *m) const{
+    double M[9]; rot.getMatrix(M);
     Vector pinv; pinv=rot/pos;
     m[0]=M[0]; m[4]=M[3]; m[8] =M[6]; m[12]=-pinv(0);
     m[1]=M[1]; m[5]=M[4]; m[9] =M[7]; m[13]=-pinv(1);
@@ -952,7 +952,7 @@ namespace ors{
   void Transformation::read(std::istream& is){
     setZero();
     char c;
-    real x[4];
+    double x[4];
     MT::skip(is," \n\r\t<");
     for(;;){
       is >>c;
@@ -1008,7 +1008,7 @@ namespace ors{
 }
 
 //! use as similarity measure (distance = 1 - |scalarprod|)
-real scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b){
+double scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b){
   return a.p[0]*b.p[0]+a.p[1]*b.p[1]+a.p[2]*b.p[2]+a.p[3]*b.p[3];
 }
 
@@ -1032,7 +1032,7 @@ void ors::Mesh::clear(){
 }
 
 void ors::Mesh::setBox(){
-  real verts[24] = {
+  double verts[24] = {
     -.5, -.5, -.5 ,
     +.5, -.5, -.5 ,
     +.5, +.5, -.5 ,
@@ -1056,8 +1056,8 @@ void ors::Mesh::setBox(){
 }
 
 void ors::Mesh::setTetrahedron(){
-  real s2=MT_SQRT2/3.,s6=sqrt(6.)/3.;
-  real verts[12] = { 0., 0., 1. , 2.*s2, 0., -1./3., -s2, s6, -1./3., -s2, -s6, -1./3. };
+  double s2=MT_SQRT2/3.,s6=sqrt(6.)/3.;
+  double verts[12] = { 0., 0., 1. , 2.*s2, 0., -1./3., -s2, s6, -1./3., -s2, -s6, -1./3. };
   uint   tris [12] = { 0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2 };
   V.setCarray(verts,12);
   T.setCarray(tris ,12);
@@ -1067,7 +1067,7 @@ void ors::Mesh::setTetrahedron(){
 }
 
 void ors::Mesh::setOctahedron(){
-  real verts[18] = {
+  double verts[18] = {
     1, 0, 0,
    -1, 0, 0,
     0, 1, 0,
@@ -1087,8 +1087,8 @@ void ors::Mesh::setOctahedron(){
 }
 
 void ors::Mesh::setDodecahedron(){
-  real a = 1/sqrt(3.), b = sqrt((3.-sqrt(5.))/6.), c=sqrt((3.+sqrt(5.))/6.);
-  real verts[60] = {
+  double a = 1/sqrt(3.), b = sqrt((3.-sqrt(5.))/6.), c=sqrt((3.+sqrt(5.))/6.);
+  double verts[60] = {
     a, a, a,
       a, a,-a,
       a,-a, a,
@@ -1142,12 +1142,12 @@ void ors::Mesh::setHalfSphere(uint fineness){
   }
 }
 
-void ors::Mesh::setCylinder(real r,real l,uint fineness){
+void ors::Mesh::setCylinder(double r,double l,uint fineness){
   uint div = 4 * (1<<fineness);
   V.resize(2*div+2,3);
   T.resize(4*div,3);
   uint i,j;
-  real phi;
+  double phi;
   for(i=0;i<div;i++){ //vertices
     phi=MT_2PI*i/div;
     V(i,0)=r*::cos(phi);
@@ -1179,7 +1179,7 @@ void ors::Mesh::setCylinder(real r,real l,uint fineness){
   }
 }
 
-void ors::Mesh::setCappedCylinder(real r,real l,uint fineness){
+void ors::Mesh::setCappedCylinder(double r,double l,uint fineness){
 #if 0
   setCylinder(m,r,l,fineness);
   ors::Mesh cap;
@@ -1224,9 +1224,9 @@ void ors::Mesh::subDevide(){
   uint a,b,c,i,k,l;
   for(i=0,k=v,l=0;i<t;i++){
     a=T(i,0); b=T(i,1); c=T(i,2);
-    V[k+0]() = (real).5*(V[a] + V[b]);
-    V[k+1]() = (real).5*(V[b] + V[c]);
-    V[k+2]() = (real).5*(V[c] + V[a]);
+    V[k+0]() = (double).5*(V[a] + V[b]);
+    V[k+1]() = (double).5*(V[b] + V[c]);
+    V[k+2]() = (double).5*(V[c] + V[a]);
     newT(l,0)=a;   newT(l,1)=k+0; newT(l,2)=k+2; l++;
     newT(l,0)=k+0; newT(l,1)=b;   newT(l,2)=k+1; l++;
     newT(l,0)=k+0; newT(l,1)=k+1; newT(l,2)=k+2; l++;
@@ -1236,14 +1236,14 @@ void ors::Mesh::subDevide(){
   T = newT;
 }
 
-void ors::Mesh::scale(real f){  V *= f; }
+void ors::Mesh::scale(double f){  V *= f; }
 
-void ors::Mesh::scale(real sx,real sy,real sz){
+void ors::Mesh::scale(double sx,double sy,double sz){
   uint i;
   for(i=0;i<V.d0;i++){  V(i,0)*=sx;  V(i,1)*=sy;  V(i,2)*=sz;  }
 }
 
-void ors::Mesh::translate(real dx,real dy,real dz){
+void ors::Mesh::translate(double dx,double dy,double dz){
   uint i;
   for(i=0;i<V.d0;i++){  V(i,0)+=dx;  V(i,1)+=dy;  V(i,2)+=dz;  }
 }
@@ -1253,12 +1253,12 @@ void ors::Mesh::center(){
   mean.setZero();
   uint i;
   for(i=0;i<V.d0;i++) mean += V[i];
-  mean /= (real)V.d0;
+  mean /= (double)V.d0;
   for(i=0;i<V.d0;i++) V[i]() -= mean;
 }
 
 void ors::Mesh::box(){
-  real x,X,y,Y,z,Z,m;
+  double x,X,y,Y,z,Z,m;
   x=X=V(0,0);
   y=Y=V(0,1);
   z=Z=V(0,2);
@@ -1450,7 +1450,7 @@ bool COMP(uint i,uint j){
 
 /*!\brief delete all void triangles (with vertex indices (0,0,0)) and void
   vertices (not used for triangles or strips) */
-void ors::Mesh::fuseNearVertices(real tol){
+void ors::Mesh::fuseNearVertices(double tol){
   if(!V.N) return;
   uintA p;
   uint i,j;
@@ -1524,7 +1524,7 @@ void ors::Mesh::flipFaces(){
 void ors::Mesh::clean(){
   uint i,j,idist=0;
   Vector a,b,c,m;
-  real mdist=0.;
+  double mdist=0.;
   arr Tc(T.d0,3); //tri centers
   arr Tn(T.d0,3); //tri normals
   uintA Vt(V.d0);
@@ -1601,7 +1601,7 @@ void ors::Mesh::clean(){
 #if 0
       //compute their rotation
       if(neighbors.N>1){
-        real phi,phimax;
+        double phi,phimax;
         int jmax=-1;
         Vector ni, nj;
         for(l=0;l<neighbors.N;l++){
@@ -1738,7 +1738,7 @@ void ors::Mesh::skin(uint start){
   added(start)=true;
   uint t,tt,r,i,k;
   int m;
-  real p,mp=0;
+  double p,mp=0;
   for(k=0;k<goodTris.N;k++){
     t=goodTris(k);
     for(r=0;r<3;r++){
@@ -1835,7 +1835,7 @@ void ors::Mesh::readPlyFile(const char* filename){
   is >>"property list uint8 int32 vertex_indices" >>"end_header";
   V.resize(nVertices,3);
   T.resize(nFaces   ,3);
-  real nx,ny,nz;
+  double nx,ny,nz;
   for(i=0;i<V.d0;i++){
     is >>V(i,0) >>V(i,1) >>V(i,2) >>nx >>ny >>nz;
   }
@@ -1851,7 +1851,7 @@ void ors::Mesh::readStlFile(const char* filename){
   MT::String name;
   is >>"solid" >>name;
   uint i,k=0,k0;
-  real x,y,z;
+  double x,y,z;
   cout <<"reading STL file '"<<filename<<"' object name '"<<name <<"'..."<<endl;
   V.resize(10000);
   //1st pass
@@ -2124,8 +2124,8 @@ void ors::Mesh::readObjFile(const char* filename){
 
 
 
-void inertiaSphere(real *I, real& mass, real density, real radius){
-  real r2=radius*radius;
+void inertiaSphere(double *I, double& mass, double density, double radius){
+  double r2=radius*radius;
   if(density) mass=density*4./3.*MT_PI*r2*radius;
   I[1]=I[2]=I[3]=I[5]=I[6]=I[7]=0.;
   I[0]=.4*mass*r2;
@@ -2133,17 +2133,17 @@ void inertiaSphere(real *I, real& mass, real density, real radius){
   I[8]=.4*mass*r2;
 }
 
-void inertiaBox(real *I, real& mass, real density, real dx,real dy,real dz){
+void inertiaBox(double *I, double& mass, double density, double dx,double dy,double dz){
   if(density) mass=density*dx*dy*dz;
   I[1]=I[2]=I[3]=I[5]=I[6]=I[7]=0.;
-  real x2=dx*dx,y2=dy*dy,z2=dz*dz;
+  double x2=dx*dx,y2=dy*dy,z2=dz*dz;
   I[0]=mass/12.*(y2+z2);
   I[4]=mass/12.*(x2+z2);
   I[8]=mass/12.*(x2+y2);
 }
 
-void inertiaCylinder(real *I, real& mass, real density, real height,real radius){
-  real r2=radius*radius, h2=height*height;
+void inertiaCylinder(double *I, double& mass, double density, double height,double radius){
+  double r2=radius*radius, h2=height*height;
   if(density) mass=density*MT_PI*r2*height;
   I[1]=I[2]=I[3]=I[5]=I[6]=I[7]=0.;
   I[0]=mass/12.*(3.*r2+h2);
@@ -2171,13 +2171,13 @@ void ors::Spline::plotBasis(){
 
 void ors::Spline::setBasis(){
   uint i,t,p;
-  real time,x,y;
+  double time,x,y;
   CHECK(times.N-1==K+1+degree,"wrong number of time knots");
   arr b(K+1,T+1),b_0(K+1,T+1);
   for(p=0;p<=degree;p++){
     if(p>0) b_0=b;
     for(i=0;i<=K;i++) for(t=0;t<=T;t++){
-      time = (real)t/(real)T;
+      time = (double)t/(double)T;
       if(!p){
 	b(i,t) = 0.;
 	if(times(i)<=time && time<times(i+1)) b(i,t)=1.;
@@ -2198,13 +2198,13 @@ void ors::Spline::setBasis(){
 
 void ors::Spline::setBasisAndTimeGradient(){
   uint i,j,t,p,m=times.N-1;
-  real time,x,xx,y,yy;
+  double time,x,xx,y,yy;
   CHECK(m==K+1+degree,"wrong number of time knots");
   arr b(K+1,T+1),b_0(K+1,T+1),dbt(m+1,K+1,T+1),dbt_0(m+1,K+1,T+1);
   for(p=0;p<=degree;p++){
     if(p>0){ b_0=b; dbt_0=dbt; }
     for(i=0;i<=K;i++) for(t=0;t<=T;t++){
-      time = (real)t/(real)T;
+      time = (double)t/(double)T;
       if(!p){
 	b(i,t) = 0.;
 	if(times(i)<=time && time<times(i+1)) b(i,t)=1.;
@@ -2246,7 +2246,7 @@ void ors::Spline::setUniformNonperiodicBasis(uint _T,uint _K,uint _degree){
   for(i=0;i<=m;i++){
     if(i<=degree) times(i)=.0;
     else if(i>=m-degree) times(i)=1.;
-    else times(i) = real(i-degree)/real(m-2*degree);
+    else times(i) = double(i-degree)/double(m-2*degree);
   }
   //setBasis(T,K,degree);
   setBasisAndTimeGradient();
@@ -2340,25 +2340,25 @@ void ors::Body::read(std::istream& is){
   if(!is.good()) HALT("body '"<<name<<"' read error: in ");
   
   //interpret some of the attributes
-  real *dval;
+  double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats,"X",1);    if(sval) X.setText(*sval);
 
   //shape declared in body attributes..
-  dval=anyListGet<real>(ats,"type",1);     if(dval){
+  dval=anyListGet<double>(ats,"type",1);     if(dval){
     if(!shapes.N) shapes.append(new Shape());
     shapes(0)->body=this;
     shapes(0)->ibody=index;
     shapes(0)->type=(int)(*dval);
   }
-  dval=anyListGet<real>(ats,"size",4);     if(dval) memmove(shapes(0)->size,dval,4*sizeof(real));
-  dval=anyListGet<real>(ats,"color",3);    if(dval) memmove(shapes(0)->color,dval,3*sizeof(real));
+  dval=anyListGet<double>(ats,"size",4);     if(dval) memmove(shapes(0)->size,dval,4*sizeof(double));
+  dval=anyListGet<double>(ats,"color",3);    if(dval) memmove(shapes(0)->color,dval,3*sizeof(double));
   sval=anyListGet<MT::String>(ats,"rel",1);  if(sval) shapes(0)->rel.setText(*sval);
   sval=anyListGet<MT::String>(ats,"mesh",1); if(sval) shapes(0)->mesh.readFile(*sval);
-  if(anyListGet<real>(ats,"contact",0))    shapes(0)->cont=true;
+  if(anyListGet<double>(ats,"contact",0))    shapes(0)->cont=true;
 
   //mass properties
-  dval=anyListGet<real>(ats,"mass",1);     if(dval){
+  dval=anyListGet<double>(ats,"mass",1);     if(dval){
     mass=*dval;
 #if 1
     inertia.setId();
@@ -2376,7 +2376,7 @@ void ors::Body::read(std::istream& is){
   }
 
 
-  if(anyListGet<real>(ats,"fixed",0))  fixed=true; else fixed=false;
+  if(anyListGet<double>(ats,"fixed",0))  fixed=true; else fixed=false;
 
 }
 
@@ -2392,15 +2392,15 @@ void ors::Shape::read(std::istream& is){
   if(!is.good()) HALT("shape read error");
   //listWrite(ats,cout); cout <<endl;
   
-  real *dval;
+  double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats,"rel",1);  if(sval) rel.setText(*sval);
-  dval=anyListGet<real>(ats,"color",3);    if(dval) memmove(color,dval,3*sizeof(real));
-  dval=anyListGet<real>(ats,"size",4);     if(dval) memmove(size,dval,4*sizeof(real));
-  dval=anyListGet<real>(ats,"type",1);     if(dval) type=(int)(*dval);
+  dval=anyListGet<double>(ats,"color",3);    if(dval) memmove(color,dval,3*sizeof(double));
+  dval=anyListGet<double>(ats,"size",4);     if(dval) memmove(size,dval,4*sizeof(double));
+  dval=anyListGet<double>(ats,"type",1);     if(dval) type=(int)(*dval);
 
   sval=anyListGet<MT::String>(ats,"mesh",1); if(sval) mesh.readFile(*sval);
-  if(anyListGet<real>(ats,"contact",0))    cont=true;
+  if(anyListGet<double>(ats,"contact",0))    cont=true;
 }
 
 void ors::Shape::write(std::ostream& os) const{
@@ -2443,12 +2443,12 @@ void ors::Joint::read(std::istream& is){
   if(!is.good()) HALT("joint ("<<from->name<<' '<<to->name<<") read read error");
 
   //interpret some of the attributes
-  real *dval;
+  double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats,"A",1);  if(sval) A.setText(*sval);
   sval=anyListGet<MT::String>(ats,"B",1);  if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats,"Q",1);  if(sval) Q.setText(*sval);
-  dval=anyListGet<real>(ats,"type",1);   if(dval) type=(int)(*dval); else type=JHINGE;
+  dval=anyListGet<double>(ats,"type",1);   if(dval) type=(int)(*dval); else type=JHINGE;
 }
 
 
@@ -2720,7 +2720,7 @@ void ors::Graph::getFullState(arr& x){
   ors::Vector rot;
   for_list(j,n,bodies){
     if(!n->inLinks.N && !n->fixed){
-      memmove(&x(i),&(n->X),13*sizeof(real));
+      memmove(&x(i),&(n->X),13*sizeof(double));
       i+=13;
     }
     e=n->inLinks(0);
@@ -2809,11 +2809,11 @@ void ors::Graph::setFullState(const arr& x,bool clearJointErrors){
   
   for_list(j,n,bodies){
     if(!n->inLinks.N && !n->fixed){
-      memmove(&(n->X),&x(i),13*sizeof(real));
+      memmove(&(n->X),&x(i),13*sizeof(double));
       if(!n->X.rot.isNormalized()){
 	MT_MSG("normalizing quaternion of input state");
 	n->X.rot.normalize();
-	memmove((void*)&x(i),&(n->X),13*sizeof(real));
+	memmove((void*)&x(i),&(n->X),13*sizeof(double));
       }
       i+=13;
     }
@@ -3224,7 +3224,7 @@ void ors::Graph::inertia(arr& M){
   ors::Transformation Xa,Xi,Xj;
   Joint *ei,*ej;
   ors::Vector vi,vj,ti,tj;
-  real tmp;
+  double tmp;
 
   if(!jd) jd = getJointStateDimension(true);
 
@@ -3508,9 +3508,9 @@ void ors::Graph::jacobianAll(arr& J){
 #endif
 
   //! [prelim] some heuristic measure for the joint errors
-real ors::Graph::getJointErrors(){
+double ors::Graph::getJointErrors(){
   Joint *e;
-  real err=0.0;
+  double err=0.0;
   uint i;
 
   for_list(i,e,joints) err+=e->Q.pos.lengthSqr();
@@ -3752,8 +3752,8 @@ void ors::Graph::reportGlue(std::ostream *os){
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=anyListGet<real>(a->ats,"glue",0);
-    bg=anyListGet<real>(b->ats,"glue",0);
+    ag=anyListGet<double>(a->ats,"glue",0);
+    bg=anyListGet<double>(b->ats,"glue",0);
 
     if(ag || bg){
       (*os)
@@ -3791,8 +3791,8 @@ void ors::Graph::glueTouchingBodies(){
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=anyListGet<real>(a->ats,"glue",0);
-    bg=anyListGet<real>(b->ats,"glue",0);
+    ag=anyListGet<double>(a->ats,"glue",0);
+    bg=anyListGet<double>(b->ats,"glue",0);
 
     if(ag || bg){
       //if(a->index > b->index){ c=a; a=b; b=c; } //order them topolgically
@@ -3820,12 +3820,12 @@ void ors::Graph::addForce(ors::Vector force,Body *n,ors::Vector pos){
   //n->torque += (pos - n->X.p) ^ force;
 }
 
-void ors::Graph::frictionToForces(real coeff){
+void ors::Graph::frictionToForces(double coeff){
   HALT("never do this: add it directly in the equations...");
   Joint *e;
   ors::Vector a;
   ors::Transformation X;
-  real v;
+  double v;
   uint i;
   for_list(i,e,joints){
     X = e->from->X;
@@ -3848,9 +3848,9 @@ void ors::Graph::gravityToForces(){
 }
 
   //! compute forces from the current contacts
-void ors::Graph::contactsToForces(real hook,real damp){
+void ors::Graph::contactsToForces(double hook,double damp){
   ors::Vector trans,transvel,force;
-  real d;
+  double d;
   uint i;
   int a,b;
   for(i=0;i<proxies.N;i++) if(!proxies(i)->age && proxies(i)->d<0.){
@@ -3873,12 +3873,12 @@ void ors::Graph::contactsToForces(real hook,real damp){
 }
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::Graph::getContactMeasure(arr &x,real margin,bool linear){
+void ors::Graph::getContactMeasure(arr &x,double margin,bool linear){
   x.resize(1);
   x=0.;
   uint i;
   Shape *a,*b;
-  real d,discount;
+  double d,discount;
   for(i=0;i<proxies.N;i++) if(!proxies(i)->age && proxies(i)->d<margin){
     a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
     d=1.-proxies(i)->d/margin;
@@ -3887,15 +3887,15 @@ void ors::Graph::getContactMeasure(arr &x,real margin,bool linear){
     if(!a->contactOrientation.isZero()){ //object has an 'allowed contact orientation'
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos( proxies(i)->normal*a->contactOrientation);
-      real theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos( proxies(i)->normal*a->contactOrientation);
+      double theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
     if(!b->contactOrientation.isZero()){
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos(-proxies(i)->normal*b->contactOrientation);
-      real theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos(-proxies(i)->normal*b->contactOrientation);
+      double theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
     if(!linear) x(0) += discount*d*d;
@@ -3904,12 +3904,12 @@ void ors::Graph::getContactMeasure(arr &x,real margin,bool linear){
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
-real ors::Graph::getContactGradient(arr &grad,real margin,bool linear){
+double ors::Graph::getContactGradient(arr &grad,double margin,bool linear){
   ors::Vector normal;
   uint i;
   Shape *a,*b;
-  real d,discount;
-  real cost=0.;
+  double d,discount;
+  double cost=0.;
   arr J,dnormal;
   grad.resize(1,getJointStateDimension(false));
   grad.setZero();
@@ -3921,15 +3921,15 @@ real ors::Graph::getContactGradient(arr &grad,real margin,bool linear){
     if(!a->contactOrientation.isZero()){ //object has an 'allowed contact orientation'
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos( proxies(i)->normal*a->contactOrientation);
-      real theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos( proxies(i)->normal*a->contactOrientation);
+      double theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
     if(!b->contactOrientation.isZero()){
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos(-proxies(i)->normal*b->contactOrientation);
-      real theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos(-proxies(i)->normal*b->contactOrientation);
+      double theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
     if(!linear) cost += discount*d*d;
@@ -3943,8 +3943,8 @@ real ors::Graph::getContactGradient(arr &grad,real margin,bool linear){
     CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p,3); dnormal.reshape(1,3);
     if(!linear){
-      jacobian(J,a->body->index,&arel); grad -= ((real)2.*discount*d)/margin*(dnormal*J);
-      jacobian(J,b->body->index,&brel); grad += ((real)2.*discount*d)/margin*(dnormal*J);
+      jacobian(J,a->body->index,&arel); grad -= ((double)2.*discount*d)/margin*(dnormal*J);
+      jacobian(J,b->body->index,&brel); grad += ((double)2.*discount*d)/margin*(dnormal*J);
     }else{
       jacobian(J,a->body->index,&arel); grad -= discount/margin*(dnormal*J);
       jacobian(J,b->body->index,&brel); grad += discount/margin*(dnormal*J);
@@ -3990,12 +3990,12 @@ void ors::Graph::getContactConstraintsGradient(arr &dydq){
 
 
 #if 0 //alternative implementation : cost=1 -> contact, other discounting...
-real ors::Graph::getContactGradient(arr &grad,real margin){
+double ors::Graph::getContactGradient(arr &grad,double margin){
   ors::Vector normal;
   uint i;
   Shape *a,*b;
-  real d,discount;
-  real cost=0.;
+  double d,discount;
+  double cost=0.;
   arr J,dnormal;
   grad.resize(1,jd);
   grad.setZero();
@@ -4006,18 +4006,18 @@ real ors::Graph::getContactGradient(arr &grad,real margin){
     if(!a->contactOrientation.isZero()){ //object has an 'allowed contact orientation'
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos( proxies(i)->normal*a->contactOrientation);
-      real theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos( proxies(i)->normal*a->contactOrientation);
+      double theta = .5*( proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
     if(!b->contactOrientation.isZero()){
       CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
       CHECK(a->contactOrientation.isNormalized(),"contact orientation is not normalized");
-      //real theta = ::acos(-proxies(i)->normal*b->contactOrientation);
-      real theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
+      //double theta = ::acos(-proxies(i)->normal*b->contactOrientation);
+      double theta = .5*(-proxies(i)->normal*a->contactOrientation-1.);
       discount *= theta*theta;
     }
-    real marg=(discount+.1)*margin;
+    double marg=(discount+.1)*margin;
     d=1.-proxies(i)->d/marg;
     if(d<0.) continue;
     cost += d*d;
@@ -4035,14 +4035,14 @@ real ors::Graph::getContactGradient(arr &grad,real margin){
 }
 #endif
                                                   
-void ors::Graph::getLimitsMeasure(arr &x,const arr& limits,real margin){
+void ors::Graph::getLimitsMeasure(arr &x,const arr& limits,double margin){
   CHECK(limits.d0==jd && limits.d1==2,"joint limits parameter size mismatch");
   x.resize(1);
   x=0.;
   arr q;
   getJointState(q);
   uint i;
-  real d;
+  double d;
   for(i=0;i<q.N;i++){
     d = q(i) - limits(i,0);
     if(d<margin){  d-=margin;  x(0) += d*d;  }
@@ -4051,11 +4051,11 @@ void ors::Graph::getLimitsMeasure(arr &x,const arr& limits,real margin){
   }
 }
 
-real ors::Graph::getLimitsGradient(arr &grad,const arr& limits,real margin){
+double ors::Graph::getLimitsGradient(arr &grad,const arr& limits,double margin){
   CHECK(limits.d0==jd && limits.d1==2,"");
   uint i;
-  real d;
-  real cost=0.;
+  double d;
+  double cost=0.;
   arr J;
   grad.resize(1,getJointStateDimension(false));
   grad.setZero();
@@ -4071,8 +4071,8 @@ real ors::Graph::getLimitsGradient(arr &grad,const arr& limits,real margin){
 }
 
 //! center of mass of the whole configuration (3 vector)
-real ors::Graph::getCenterOfMass(arr& x_){
-  real M=0.;
+double ors::Graph::getCenterOfMass(arr& x_){
+  double M=0.;
   Body *n;
   uint j;
   ors::Vector x;
@@ -4088,7 +4088,7 @@ real ors::Graph::getCenterOfMass(arr& x_){
 
 //! gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
 void ors::Graph::getComGradient(arr &grad){
-  real M=0.;
+  double M=0.;
   Body *n;
   uint j;
   arr J(3,getJointStateDimension(true));
@@ -4129,8 +4129,8 @@ void ors::Graph::getGripState(arr& grip,uint j){
   ors::Vector d,p;
   ors::Vector sumOfD; sumOfD.setZero();
   ors::Vector torque; torque.setZero();
-  real sumOfAbsD = 0.;
-  real varOfD = 0.;
+  double sumOfAbsD = 0.;
+  double varOfD = 0.;
 
   p.setZero();
   uint i,n=0;
@@ -4159,8 +4159,8 @@ void ors::Graph::getGripState(arr& grip,uint j){
   grip.resize(8);
   grip(0)=sumOfAbsD;
   grip(1)=varOfD;
-  memmove(grip.p+2,sumOfD.p,3*sizeof(real));
-  memmove(grip.p+5,torque.p,3*sizeof(real));
+  memmove(grip.p+2,sumOfD.p,3*sizeof(double));
+  memmove(grip.p+5,torque.p,3*sizeof(double));
 }
 
 #if 0 //OBSOLETE
@@ -4170,7 +4170,7 @@ uint ors::Graph::getTouchDimension(){
   uint i=0,j;
 
   // count touchsensors
-  for_list(j,n,bodies) if(anyListGet<real>(n->ats,"touchsensor",0)) i++;
+  for_list(j,n,bodies) if(anyListGet<double>(n->ats,"touchsensor",0)) i++;
 
   td=i;
   return i;
@@ -4184,7 +4184,7 @@ void ors::Graph::getTouchState(arr& touch){
   Body *n;
   uint i=0,j;
   for_list(j,n,bodies){
-    if(anyListGet<real>(n->ats,"touchsensor",0)){
+    if(anyListGet<double>(n->ats,"touchsensor",0)){
       touch(i)=pen(n->index);
       i++;
     }
@@ -4194,10 +4194,10 @@ void ors::Graph::getTouchState(arr& touch){
 #endif
 
   /*!\brief */
-real ors::Graph::getEnergy(){
+double ors::Graph::getEnergy(){
   Body *n;
   uint j;
-  real m,v,E;
+  double m,v,E;
   ors::Matrix I;
   ors::Vector w;
 
@@ -4230,7 +4230,7 @@ real ors::Graph::getEnergy(){
 void ors::Graph::getTotals(ors::Vector& c,ors::Vector& v,ors::Vector& l,ors::Quaternion& ori){
   Body *n;
   uint j;
-  real m,M;
+  double m,M;
   
   //dMass mass;
   ors::Matrix ID;

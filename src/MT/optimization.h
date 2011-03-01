@@ -31,8 +31,8 @@ struct OptimizationProblem{
   OptimizationProblem(){ N=0; }
 };
 
-void checkGradient    (OptimizationProblem &p, const arr& x, real tolerance);
-void checkGradient_vec(OptimizationProblem &p, const arr& x, real tolerance);
+void checkGradient    (OptimizationProblem &p, const arr& x, double tolerance);
+void checkGradient_vec(OptimizationProblem &p, const arr& x, double tolerance);
 
 struct DecideSign{
   double sumX,sumXX;
@@ -145,23 +145,23 @@ inline void   ModelStaticDL(arr& grad,const arr& w,void* p){ ((OptimizationProbl
 /*! Rprop, a fast gradient-based minimization */
 class Rprop{
   public:
-    real incr;
-    real decr;
-    real dMax;
-    real dMin;
-    real rMax;
-    real delta0;
+    double incr;
+    double decr;
+    double dMax;
+    double dMin;
+    double rMax;
+    double delta0;
 
     arr lastGrad; // last error gradient
     arr stepSize; // last update
 
     Rprop();
 
-    void init(real _delta0);
+    void init(double _delta0);
     void step(arr& x,const arr& grad,uint *singleI=NULL);
-    void step(real& x,const real& grad);
+    void step(double& x,const double& grad);
     void step(arr& x,OptimizationProblem& p);
-    int loop(arr& x, OptimizationProblem& p, real *fmin_return=NULL, real stoppingTolerance=1e-2, uint maxIterations=1000);
+    int loop(arr& x, OptimizationProblem& p, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxIterations=1000);
     bool done();
 };
 

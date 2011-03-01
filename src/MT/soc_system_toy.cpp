@@ -25,13 +25,13 @@
 
 // mass on a spring
 struct soc::SocSystem_Toy_Workspace{
-  real m, d; //mass and spring constant
-  real x,v;  //current position and velocity
-  real x0,v0;//initial position and velocity
+  double m, d; //mass and spring constant
+  double x,v;  //current position and velocity
+  double x0,v0;//initial position and velocity
 
   arr W,H,Q;
   uint T;
-  real tau;
+  double tau;
 };
 
 soc::SocSystem_Toy::SocSystem_Toy(){
@@ -42,8 +42,8 @@ soc::SocSystem_Toy::SocSystem_Toy(){
   WS->v0=0.;
 
   WS->W.setId(1);
-  static MT::Parameter<real> hc("Hcost");
-  static MT::Parameter<real> qn("Qnoise");
+  static MT::Parameter<double> hc("Hcost");
+  static MT::Parameter<double> qn("Qnoise");
   WS->H.setDiag(hc,1);
   WS->Q.setDiag(qn,2);
   WS->Q.setZero();
@@ -58,7 +58,7 @@ uint soc::SocSystem_Toy::nTasks(){ return 1; }
 uint soc::SocSystem_Toy::qDim(){   return 1; }
 uint soc::SocSystem_Toy::uDim(){   return 1; }
 uint soc::SocSystem_Toy::yDim(uint i){ return 1; }
-real soc::SocSystem_Toy::getTau(bool scaled){  return WS->tau; }
+double soc::SocSystem_Toy::getTau(bool scaled){  return WS->tau; }
 
 void soc::SocSystem_Toy::getq0 (arr& q) { q.resize(1); q(0)=WS->x0; }
 void soc::SocSystem_Toy::getqv0(arr& q_){ q_.resize(2); q_(0)=WS->x0; q_(1)=WS->v0; }
@@ -137,15 +137,15 @@ void soc::SocSystem_Toy::getTargetV(arr& v_i,uint i,uint t){
   v_i=0; //3.;
 }
 
-void soc::SocSystem_Toy::getPrecision(real& prec,uint i,uint t){
-  static MT::Parameter<real> ep("endPrec");
+void soc::SocSystem_Toy::getPrecision(double& prec,uint i,uint t){
+  static MT::Parameter<double> ep("endPrec");
   if(t==WS->T-1) prec=ep;
   else prec=0.;
   //prec=0.;
 }
 
-void soc::SocSystem_Toy::getPrecisionV(real& prec,uint i,uint t){
-  static MT::Parameter<real> ep("endPrec");
+void soc::SocSystem_Toy::getPrecisionV(double& prec,uint i,uint t){
+  static MT::Parameter<double> ep("endPrec");
   if(t==WS->T-1) prec=ep;
   else prec=0.;
   //prec=0.;
@@ -179,7 +179,7 @@ void soc::setupOpenGL(SocSystem_Toy &soci){
 
 void soc::createDynamicProblem(SocSystem_Toy &soci,
                           const char *ors_file,
-                          real trajectory_time,
+                          double trajectory_time,
                           uint trajectory_steps){
   MT_MSG("*** TOY problem");
   soci.WS->T=trajectory_steps;

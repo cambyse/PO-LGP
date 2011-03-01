@@ -24,8 +24,7 @@ struct Gaussian;
 namespace MT{  template<class T> class Array;  }
 
 typedef unsigned int uint;
-typedef double real;
-typedef MT::Array<real> arr;
+typedef MT::Array<double> arr;
 typedef MT::Array<uint> uintA;
 typedef MT::Array<Gaussian> GaussianA;
 typedef MT::Array<Gaussian*> GaussianL;
@@ -51,18 +50,18 @@ extern PlotModule plotModule;
 
 void plotGnuplot();
 void plotOpengl();
-void plotOpengl(bool threeD,real xl,real xh,real yl=-1.,real yh=1.,real zl=-1.,real zh=1.);
+void plotOpengl(bool threeD,double xl,double xh,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.);
 
 void plot(bool wait=true);
 void plotClear();
-void plotFunction(const arr& f,real x0=0.,real x1=0.);
-void plotFunctionPoints(const arr& f,real x0=0.,real x1=0.);
-void plotFunctions(const arr& f,real x0=0.,real x1=0.);
+void plotFunction(const arr& f,double x0=0.,double x1=0.);
+void plotFunctionPoints(const arr& f,double x0=0.,double x1=0.);
+void plotFunctions(const arr& f,double x0=0.,double x1=0.);
 void plotFunction(const arr& x,const arr& f);
 void plotFunctionPrecision(const arr& x,const arr& f, const arr& h, const arr& l );
 void plotSurface(const arr& X);
 void plotArray(const arr& X);
-void plotPoint(real x,real y,real z);
+void plotPoint(double x,double y,double z);
 void plotPoint(const arr& x);
 void plotPoints(const arr& X);
 void plotClearPoints();
@@ -72,7 +71,7 @@ void writeGnuplotFiles();
 void plotCovariance(const arr& mean,const arr& cov);
 void plotVectorField(const arr& X,const arr& dX);
 void plotVectorField(arr& dX);
-void plotMatrixFlow(uintA& M,real len);
+void plotMatrixFlow(uintA& M,double len);
 void plotGaussians(const GaussianA& G);
 void plotGaussians(const GaussianL& G);
 

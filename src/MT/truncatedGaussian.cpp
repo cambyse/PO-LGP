@@ -20,15 +20,15 @@
 /*!\brief input z: determines the heavyside function [[x>z]], output: mean
    and variances of the remaining probability mass when everything
    left of z is cut off */
-void TruncatedStandardGaussian(real& mean,real& var,real z){
-  real norm = ::sqrt(MT_PI/2.) * (1.-::erf(z/::sqrt(2.)));
+void TruncatedStandardGaussian(double& mean,double& var,double z){
+  double norm = ::sqrt(MT_PI/2.) * (1.-::erf(z/::sqrt(2.)));
   //cout <<"truncating with z=" <<z <<" (norm=" <<norm <<")" <<endl;
   if(norm<1e-2) cout <<"likelihood of that truncation is very low:" <<norm <<endl;
   mean = ::exp(-z*z/2.)/norm;
   var  = 1. + z*mean - mean*mean;
 }
 
-void TruncateGaussian(arr& a,arr& A,const arr& c,real d){
+void TruncateGaussian(arr& a,arr& A,const arr& c,double d){
 
   //cout <<"A=" <<A <<" a=" <<a <<" c=" <<c <<" d=" <<d <<endl;
 
@@ -38,11 +38,11 @@ void TruncateGaussian(arr& a,arr& A,const arr& c,real d){
   //cout <<"M=" <<M <<endl <<~M*M <<endl <<"A=" <<A <<endl;
 
   //-- transform and rescale the constraint 
-  real z=scalarProduct(c,a)-d;
+  double z=scalarProduct(c,a)-d;
   //cout <<"a=" <<a <<"\nc*a=" <<scalarProduct(c,a) <<"\nd=" <<d <<endl;
   arr v;
   v=M*c;
-  real norm_v=norm(v);
+  double norm_v=norm(v);
   CHECK(norm_v>1e-10,"no gradient for Gaussian trunctation!");
   z/=norm_v;
   v/=norm_v;
@@ -57,7 +57,7 @@ void TruncateGaussian(arr& a,arr& A,const arr& c,real d){
   //cout <<"R=" <<R <<~R <<inverse(R) <<v <<endl <<R*e_1 <<endl;
 
   //-- get mean and variance along x-axis
-  real mean,var;
+  double mean,var;
   TruncatedStandardGaussian(mean,var,-z);
   arr B(n,n),b(n);
   b.setZero();  b(0)=mean;
@@ -71,7 +71,7 @@ void TruncateGaussian(arr& a,arr& A,const arr& c,real d){
   checkNan(A);
 }
 
-void TruncateGaussianBySampling(arr& a,arr& A,const arr& c,real d,uint N,arr *data){
+void TruncateGaussianBySampling(arr& a,arr& A,const arr& c,double d,uint N,arr *data){
   uint i,j,n=a.N;
   //-- generate samples from the Gaussian
   arr M,x(n),X;

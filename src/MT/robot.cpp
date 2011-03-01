@@ -101,13 +101,13 @@ void ControllerProcess::close(){
 void ControllerProcess::step(){
   timer.cycleStart();
   
-  if(skinVar){ //access real state of skin
+  if(skinVar){ //access double state of skin
     skinVar->readAccess(this);
     skinState = skinVar->y_real;
     skinVar->deAccess(this);
   }
   
-  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access real position of hand
+  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access double position of hand
     q_referenceVar->readAccess(this);
     for(uint m=0;m<7;m++) q_reference(q_referenceVar->handMotorIndices(m)) = q_referenceVar->q_real(q_referenceVar->handMotorIndices(m));
     q_referenceVar->deAccess(this);
@@ -608,7 +608,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       TV_q->active=true;
       TV_q->y_prec=0.;   TV_q->v_prec=10.*TV_q_vprec;
       TV_q->v_target = ctrl->q_home - TV_q->y;
-      double vmax=.5,v=norm(TV_q->v_target);
+      double vmax=.3,v=norm(TV_q->v_target);
       if(v>vmax) TV_q->v_target*=vmax/v;
       break;
     }

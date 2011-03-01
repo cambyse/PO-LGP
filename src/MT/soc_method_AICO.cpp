@@ -31,15 +31,15 @@
 // helpers - fwd declarations
 //
 
-void setBlockVec(arr& X, real a0,real a1, const arr& x);
+void setBlockVec(arr& X, double a0,double a1, const arr& x);
 void setBlockVec(arr& X,const arr& x1,const arr& x2);
 void setBlockDiagMat(arr& X,const arr& A,const arr& B);
-void setBlockMat(arr& X, real a00,real a01,real a10,real a11, const arr& x);
-void blockTimesVec(arr& Y, real a00,real a01,real a10,real a11, const arr& X);
-void bl_ockTimesMat(arr& Y, real a00,real a01,real a10,real a11, const arr& X);
-void blockTransMat(arr& Y, real a,real b,real c,real d, const arr& X);
-real getDynamicCostMeassure(soc::SocSystemAbstraction& sys,arr& q,real& cost1,real& cost2,std::ostream *os);
-real getTransitionLogLikelihood(soc::SocSystemAbstraction& sys,arr& b0,arr& b1);
+void setBlockMat(arr& X, double a00,double a01,double a10,double a11, const arr& x);
+void blockTimesVec(arr& Y, double a00,double a01,double a10,double a11, const arr& X);
+void bl_ockTimesMat(arr& Y, double a00,double a01,double a10,double a11, const arr& X);
+void blockTransMat(arr& Y, double a,double b,double c,double d, const arr& X);
+double getDynamicCostMeassure(soc::SocSystemAbstraction& sys,arr& q,double& cost1,double& cost2,std::ostream *os);
+double getTransitionLogLikelihood(soc::SocSystemAbstraction& sys,arr& b0,arr& b1);
 
 void computeEPmessage(arr& a,arr &Ainv,const arr& b_from,const arr& Binv_from,const arr& b_to,const arr& Binv_to){
   Ainv = Binv_to - Binv_from;
@@ -61,7 +61,7 @@ void soc::bayesianIKControl(SocSystemAbstraction& sys,
   dq.setZero();
   arr a(n),A(n,n),Ainv(n,n);
   arr target,actual,J,Jt;
-  real prec;
+  double prec;
   sys.getW(A,t);
   a.setZero();
   //arr w(3);
@@ -133,13 +133,13 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 /*! \brief standard IK -- follows the first (active) task variable
     exactly, but fails if more than one task variable is
     active. regularization=make it singularity robust*/
-void soc::pseudoIKControl(SocSystemAbstraction& sys, arr& dq, uint t,real regularization){
+void soc::pseudoIKControl(SocSystemAbstraction& sys, arr& dq, uint t,double regularization){
   uint n=sys.qDim(),m=sys.nTasks();
   dq.resize(n);
   dq.setZero();
   arr Jinv,W,Winv;
   arr target,actual,J,Jt;
-  real prec;
+  double prec;
   sys.getW(W,t);
   inverse_SymPosDef(Winv,W);
   uint k=0;
@@ -157,13 +157,13 @@ void soc::pseudoIKControl(SocSystemAbstraction& sys, arr& dq, uint t,real regula
 /*! \brief hierarchical IK: follows the 1st task variable exactly, the
     2nd exactly up to the 1st, etc.., might be come
     brittle. regularization=make it singularity robust */
-void soc::hierarchicalIKControl(SocSystemAbstraction& sys,arr& dq,uint t,real regularization){
+void soc::hierarchicalIKControl(SocSystemAbstraction& sys,arr& dq,uint t,double regularization){
   uint n=sys.qDim(),m=sys.nTasks();
   dq.resize(n);
   dq.setZero();
   arr Jhat,HinvatJ,N,W,Winv;
   arr target,actual,J,Jt;
-  real prec;
+  double prec;
   N.setId(n);
   sys.getW(W,t);
   inverse_SymPosDef(Winv,W);
@@ -185,7 +185,7 @@ void soc::hierarchicalIKControl(SocSystemAbstraction& sys,arr& dq,uint t,real re
     for eps>0 the IK step is repeated until convergence up to
     tolerance eps. qt=output, qt_1=state at time t-1. */
 void soc::bayesianIterateIKControl(SocSystemAbstraction& sys,
-                                   arr& qt,const arr& qt_1,uint t,real eps,uint maxIter){
+                                   arr& qt,const arr& qt_1,uint t,double eps,uint maxIter){
   uint j;
   if(&qt!=&qt_1) qt=qt_1;
   arr dq;
@@ -194,7 +194,7 @@ void soc::bayesianIterateIKControl(SocSystemAbstraction& sys,
     bayesianIKControl(sys,dq,t);
     if(j<3) qt+=dq;
     //else if(j<20) qt+=.8*dq;
-    else qt+=(real).8*dq;
+    else qt+=(double).8*dq;
     if(dq.absMax()<eps) break;
     //cout <<"IK iteration " <<j <<" dq=" <<dq <<endl;
   }
@@ -263,7 +263,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
     bayesianIK forward). If eps=0, no IK step is repeated, for eps>0
     IK steps are repeated until they converge up to tolerance eps (see
     \ref bayesianIterateIKControl) */
-void soc::bayesianIKTrajectory(SocSystemAbstraction& sys,arr& q,real eps){
+void soc::bayesianIKTrajectory(SocSystemAbstraction& sys,arr& q,double eps){
   uint t,T=sys.nTime(),n=sys.qDim();
   q.resize(T+1,n);
   arr dq;
@@ -280,7 +280,7 @@ void soc::bayesianIKTrajectory(SocSystemAbstraction& sys,arr& q,real eps){
 }
 
 /*
-void bayesianIterateIKTrajectory(SocSystemAbstraction& sys,arr& q,real eps,uint maxIter){
+void bayesianIterateIKTrajectory(SocSystemAbstraction& sys,arr& q,double eps,uint maxIter){
   uint t,T=sys.nTime(),n=sys.qDim();
   q.resize(T,n);
   arr dq;
@@ -373,7 +373,7 @@ void soc::AICO::shiftSolution(int offset){
 
 soc::AICO* soc::AICO_solver(SocSystemAbstraction& sys,
                       arr& q,double tolerance,
-                      real convergenceRate,real repeatThreshold, real recomputeTaskThreshold,
+                      double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                       uint display){
   soc::AICO *aico=new soc::AICO;
   aico->init(sys,convergenceRate,repeatThreshold,recomputeTaskThreshold,display,0);
@@ -401,7 +401,7 @@ soc::AICO* soc::AICO_solver(SocSystemAbstraction& sys,
 void soc::AICO_multiScaleSolver(SocSystemAbstraction& sys,
                                 arr& q,
                                 double tolerance,
-                                real convergenceRate,real repeatThreshold, real recomputeTaskThreshold,
+                                double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                                 uint display,
                                 uint scalePowers){
   MT::Array<soc::AICO> aicos(scalePowers);
@@ -425,8 +425,8 @@ void soc::AICO_multiScaleSolver(SocSystemAbstraction& sys,
 }
 
 /*void soc::AICO_kinematicTol(SocSystemAbstraction& sys,
-                            arr& q,real tolerance,
-                            real convergenceRate,real repeatThreshold,
+                            arr& q,double tolerance,
+                            double convergenceRate,double repeatThreshold,
                             uint display,
                             uint scalePower){
   soc::AICO aico;
@@ -434,14 +434,14 @@ void soc::AICO_multiScaleSolver(SocSystemAbstraction& sys,
   aico.q=q;
   aico.sys=&sys;
   for(uint k=0;;k++){
-    real d=aico.stepKinematic(convergenceRate,repeatThreshold,display);
+    double d=aico.stepKinematic(convergenceRate,repeatThreshold,display);
     q=aico.q;
     if(k && d<tolerance) break;
   }
 }*/
     
 //! Approximate Inference Control (AICO) in the kinematic case
-real soc::AICO::stepKinematic(){
+double soc::AICO::stepKinematic(){
   CHECK(!sys->dynamic,"assumed dynamic SOC abstraction");
   uint n=sys->qDim();
   uint T=sys->nTime();
@@ -479,7 +479,7 @@ real soc::AICO::stepKinematic(){
         //s[t] = A->s[t>>1]; Sinv[t] = A->Sinv[t>>1];   if(t<T){ s[t+1]=s[t]; Sinv[t+1]=Sinv[t]; }  //don't need to copy fwd messages
         v[t] = A->v[t>>1]; Vinv[t] = A->Vinv[t>>1];  if(t<T){ v[t+1]=A->v[(t>>1)+1]; Vinv[t+1]=A->Vinv[(t>>1)+1]; }
 //      if(t<T){ v[t+1]=.5*(A->v[t>>1] + A->v[(t>>1)+1]); Vinv[t+1]=.5*(A->Vinv[t>>1] + A->Vinv[(t>>1)+1]); }
-        qhat[t] = A->qhat[t>>1];  if(t<T){ qhat[t+1] = (real).5*(A->qhat[t>>1] + A->qhat[(t>>1)+1]); }
+        qhat[t] = A->qhat[t>>1];  if(t<T){ qhat[t+1] = (double).5*(A->qhat[t>>1] + A->qhat[(t>>1)+1]); }
         //b   [t] = A->b   [t>>1];   if(t<T) b   [t+1] = .5*(A->b   [t>>1] + A->b   [(t>>1)+1]);    //don't need to copy the belief
       }
       useFwdMessageAsInitialQhat=false;
@@ -626,21 +626,21 @@ real soc::AICO::stepKinematic(){
           double a=.01/maxdiff;
           qhat[t]()=(1.-a)*qhat[t] + a*b[t];
         }else{
-          if(convergenceRate) qhat[t]()=((real)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
+          if(convergenceRate) qhat[t]()=((double)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
           else qhat[t]()=b[t];
         }
       }
 #else
       //update qhat
       if(dt==1){
-        if(convergenceRate) qhat[t]()=((real)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
+        if(convergenceRate) qhat[t]()=((double)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
         else qhat[t]()=b[t];
       }
 #endif
 
       //decide whether to repeat this time slice
       if(sweep && repeatThreshold && t!=T){
-        real off=sqrDistance(b[t],qhat[t]);  //sqrDistance(W,b[t],qhat[t]);
+        double off=sqrDistance(b[t],qhat[t]);  //sqrDistance(W,b[t],qhat[t]);
         if(off>repeatThreshold){
           //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
           if(repeatCount<20){
@@ -712,8 +712,8 @@ void soc::AICO::initMessagesFromScaleParent(AICO *A){
     s[t] = A->s[t>>1]; Sinv[t] = A->Sinv[t>>1];  if(t<T){ s[t+1]=A->s[t>>1];     Sinv[t+1]=A->Sinv[t>>1];     }
     v[t] = A->v[t>>1]; Vinv[t] = A->Vinv[t>>1];  if(t<T){ v[t+1]=A->v[(t>>1)+1]; Vinv[t+1]=A->Vinv[(t>>1)+1]; }
     //if(t<T){ v[t+1]=.5*(A->v[t>>1] + A->v[(t>>1)+1]); Vinv[t+1]=.5*(A->Vinv[t>>1] + A->Vinv[(t>>1)+1]); }
-    qhat[t] = A->qhat[t>>1];  if(t<T){ qhat[t+1] = (real).5*(A->qhat[t>>1] + A->qhat[(t>>1)+1]); }
-    b   [t] = A->b   [t>>1];  if(t<T){ b   [t+1] = (real).5*(A->b   [t>>1] + A->b   [(t>>1)+1]); }
+    qhat[t] = A->qhat[t>>1];  if(t<T){ qhat[t+1] = (double).5*(A->qhat[t>>1] + A->qhat[(t>>1)+1]); }
+    b   [t] = A->b   [t>>1];  if(t<T){ b   [t+1] = (double).5*(A->b   [t>>1] + A->b   [(t>>1)+1]); }
   }
   //smooth using accelerations on odd times
   double tau=sys->getTau();
@@ -798,7 +798,7 @@ void soc::AICO::updateBwdMessage(uint t){
 
 
 //! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
-real soc::AICO::stepDynamic(){
+double soc::AICO::stepDynamic(){
   //CHECK(sys->dynamic,"assumed dynamic SOC abstraction");
   uint T=sys->nTime();
   uint t;
@@ -880,7 +880,7 @@ real soc::AICO::stepDynamic(){
     //decide on a new \hat q
     if(!useFwdMessageAsQhat){
 #if 0
-      if(convergenceRate) qhat[t]()=((real)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
+      if(convergenceRate) qhat[t]()=((double)1.-convergenceRate)*qhat[t] + convergenceRate*b[t];
       else qhat[t]()=b[t];
 #else
       if(maxStep){
@@ -896,8 +896,8 @@ real soc::AICO::stepDynamic(){
 
     //decide whether to repeat this time slice
     if(repeatThreshold && t!=T){ //&& sweep
-      //real off=sqrDistance(Q,b[t],qhat[t]);
-      real off=sqrDistance(b[t],qhat[t]);
+      //double off=sqrDistance(Q,b[t],qhat[t]);
+      double off=sqrDistance(b[t],qhat[t]);
       if(off>repeatThreshold){
         //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
         if(repeatCount<20){
@@ -963,7 +963,7 @@ real soc::AICO::stepDynamic(){
 
 //==============================================================================
 
-real soc::AICO::stepGaussNewton(){
+double soc::AICO::stepGaussNewton(){
   uint T=sys->nTime();
   uint t;
   int dt;
@@ -1131,7 +1131,7 @@ real soc::AICO::stepGaussNewton(){
 }
 
 
-real soc::AICO::stepMinSum(){
+double soc::AICO::stepMinSum(){
   if(sys->os){
     *sys->os <<"AICOgn("<<sys->nTime()<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(q,display>0);
@@ -1238,7 +1238,7 @@ real soc::AICO::stepMinSum(){
 
 #if 0 //don't check for task discounting
       arr Dinv,d;
-      real like;
+      double like;
       do{
         //cout <<"b\n" <<b[t] <<endl <<Binv[t] <<endl;
         
@@ -1263,7 +1263,7 @@ real soc::AICO::stepMinSum(){
 #endif
 
 #if 0
-                     void soc::AICO::getMultiScaleMessages(arr& s_,arr& S_,arr& v_,arr& V_,uint t,real upMixS,real selfMixS,real dnMixS,real upMixV,real selfMixV,real dnMixV){
+                     void soc::AICO::getMultiScaleMessages(arr& s_,arr& S_,arr& v_,arr& V_,uint t,double upMixS,double selfMixS,double dnMixS,double upMixV,double selfMixV,double dnMixV){
                      CHECK(multiScales(scale)==this,"");
                      arr s,S,v,V;
                      s.resize(b.d1);      s.setZero();
@@ -1271,7 +1271,7 @@ real soc::AICO::stepMinSum(){
                      v.resize(b.d1);      v.setZero();
                      V.resize(b.d1,b.d1); V.setZero();
                      AICO *A;
-                     real pS,pSsum=0.,pV,pVsum=0.;;
+                     double pS,pSsum=0.,pV,pVsum=0.;;
                      uint i,t_;
                      for_list(i,A,multiScales){
                      CHECK(i==A->scale,"");
@@ -1298,10 +1298,10 @@ real soc::AICO::stepMinSum(){
                      v_=v;  V_=V;
 }
 
-                     void soc::AICO::getMultiScaleMessages(arr& s_,arr& S_,arr& v_,arr& V_,uint t,real upMixS,real selfMixS,real dnMixS,real upMixV,real selfMixV,real dnMixV){
+                     void soc::AICO::getMultiScaleMessages(arr& s_,arr& S_,arr& v_,arr& V_,uint t,double upMixS,double selfMixS,double dnMixS,double upMixV,double selfMixV,double dnMixV){
       //get parallel messages in multi-scale case
                      if(multiScales.N){
-                     real mix=::pow(.8,sweep);
+                     double mix=::pow(.8,sweep);
                      if(sweep<2) mix=1.; else{ if(sweep<4) mix=.5; else mix=0.; }
                      if(scale+1<multiScales.N){
                      AICO *A = multiScales(scale+1);

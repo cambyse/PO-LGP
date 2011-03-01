@@ -17,7 +17,7 @@ void ors::Mesh::setImplicitSurface(double(*fct)(double,double,double,void*),void
       y = lo+j*(hi-lo)/res;
       for(i=0;i<res;i++){
         x = lo+i*(hi-lo)/res;
-        mc.set_data((real)fct(x,y,z,p),i,j,k ) ;
+        mc.set_data((double)fct(x,y,z,p),i,j,k ) ;
       }
     }
   }
@@ -42,7 +42,7 @@ void ors::Mesh::setImplicitSurface(double(*fct)(double,double,double,void*),void
 }
 
 #else
-void ors::Mesh::setImplicitSurface(real(*fct)(real,real,real,void*),void *p,real lo,real hi,uint res){
+void ors::Mesh::setImplicitSurface(double(*fct)(double,double,double,void*),void *p,double lo,double hi,uint res){
   NIY;
 }
 #endif

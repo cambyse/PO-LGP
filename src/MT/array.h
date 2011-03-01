@@ -37,11 +37,6 @@
 #define for_list_(e,X) for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
 #define for_list_rev_(e,X) for(uint LIST_COUNT_REV=X.N;LIST_COUNT_REV-- && ((e=X(LIST_COUNT_REV)) || true);)
 
-#ifdef MT_SINGLE
-typedef float real;
-#else
-typedef double real;
-#endif
 typedef unsigned char byte;
 typedef unsigned int uint;
 
@@ -261,7 +256,7 @@ namespace MT{
     void shift(int offset,bool wrapAround=true);
 
     //!@name sparse matrices [to be moved outside]
-    real sparsity();
+    double sparsity();
     void makeSparse();
 
     //!@name I/O
@@ -290,7 +285,7 @@ namespace MT{
 //!@name standard types
 // @{
 
-typedef MT::Array<real>   arr;
+typedef MT::Array<double>   arr;
 typedef MT::Array<double> doubleA;
 typedef MT::Array<float>  floatA;
 typedef MT::Array<uint>   uintA;
@@ -312,7 +307,7 @@ typedef MT::Array<arr*>   arrL;
 arr Identity(uint n);
 arr Ones(uint n);
 arr Zeros(uint n);
-arr Diag(real d,uint n);
+arr Diag(double d,uint n);
 void makeSymmetric(arr& A);
 void transpose(arr& A);
 void SUS(const arr& p,uint n,uintA& s);
@@ -331,15 +326,15 @@ arr  inverse(const arr& A);
 uint inverse_SVD(arr& inverse,const arr& A);
 void inverse_LU(arr& Xinv,const arr& X);
 void inverse_SymPosDef(arr& Ainv,const arr& A);
-void pseudoInverse(arr& Ainv,const arr& A,const arr& Winv,real robustnessEps);
+void pseudoInverse(arr& Ainv,const arr& A,const arr& Winv,double robustnessEps);
 void gaussFromData(arr& a,arr& A,const arr& X);
 void rotationFromAtoB(arr& R,const arr& a,const arr& v);
 
-real determinant(const arr& A);
-real cofactor(const arr& A,uint i,uint j);
+double determinant(const arr& A);
+double cofactor(const arr& A,uint i,uint j);
 
 //void getIndexTuple(uintA &I,uint i,const uintA &d);  //? that also exists inside of array!
-void lognormScale(arr& P,real& logP,bool force=true);
+void lognormScale(arr& P,double& logP,bool force=true);
 
 void gnuplot(const arr& X);
 //void save(const MT::Array<const arr*>&, const char *filename, const char *comments);
@@ -371,7 +366,7 @@ template<class T> void inverse2d(MT::Array<T>& Ainv,const MT::Array<T>& A);
 template<class T> T entropy(const MT::Array<T>& v);
 template<class T> T normalizeDist(MT::Array<T>& v);
 template<class T> void makeConditional(MT::Array<T>& P);
-template<class T> void checkNormalization(MT::Array<T>& v,real tol);
+template<class T> void checkNormalization(MT::Array<T>& v,double tol);
 template<class T> void checkNormalization(MT::Array<T>& v){ checkNormalization(v,1e-10); }
 template<class T> void eliminate(MT::Array<T>& x,const MT::Array<T>& y,uint d);
 template<class T> void eliminate(MT::Array<T>& x,const MT::Array<T>& y,uint d,uint e);
@@ -405,9 +400,9 @@ template<class T> T scalarProduct(const MT::Array<T>& g,const MT::Array<T>& v, c
     //tensor operations [to be moved out of class declaration]
 template<class T> void tensorCondNormalize(MT::Array<T> &X,int left);
 template<class T> void tensorCondMax      (MT::Array<T> &X,uint left);
-template<class T> void tensorCondSoftMax  (MT::Array<T> &X,uint left,real beta);
-template<class T> void tensorCheckCondNormalization          (const MT::Array<T> &X,uint left,real tol=1e-10);
-template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T> &X,uint left, real logP, real tol=1e-10);
+template<class T> void tensorCondSoftMax  (MT::Array<T> &X,uint left,double beta);
+template<class T> void tensorCheckCondNormalization          (const MT::Array<T> &X,uint left,double tol=1e-10);
+template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T> &X,uint left, double logP, double tol=1e-10);
 
 template<class T> void tensorEquation    (MT::Array<T> &X,const MT::Array<T> &A,const uintA &pickA,const MT::Array<T> &B,const uintA &pickB,uint sum=0);
 template<class T> void tensorPermutation (MT::Array<T> &Y,const MT::Array<T> &X,const uintA &Yid);
@@ -436,8 +431,8 @@ template<class T> void rndUniform(MT::Array<T>& a,double low=0.,double high=1.,b
 template<class T> void rndNegLogUniform(MT::Array<T>& a,double low=0.,double high=1.,bool add=false);
 template<class T> void rndGauss(MT::Array<T>& a,double stdDev=1.,bool add=false);
 //template<class T> void rndGauss(MT::Array<T>& a,bool add=false);
-//template<class T> MT::Array<T>& rndGauss(real stdDev,uint dim);
-template<class T> uint softMax(const MT::Array<T>& a,arr& soft,real beta);
+//template<class T> MT::Array<T>& rndGauss(double stdDev,uint dim);
+template<class T> uint softMax(const MT::Array<T>& a,arr& soft,double beta);
 template<class T> MT::Array<T> sqr(const MT::Array<T>& y){ MT::Array<T> x; x.resizeAs(y); for(uint i=0;i<x.N;i++) x.elem(i)=y.elem(i)*y.elem(i); return x; }
 
 
@@ -458,7 +453,7 @@ template<class T> MT::Array<T> TUPLE(const T& i,const T& j,const T& k,const T& l
 template<class T> MT::Array<T> TUPLE(const T& i,const T& j,const T& k,const T& l,const T& m,const T& n,const T& o,const T& p,const T& q){ MT::Array<T> z(9); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; z(7)=p; z(8)=q; return z; }
 
 #define TUP TUPLE<uint>
-#define ARR TUPLE<real>
+#define ARR TUPLE<double>
 
 template<class T> MT::Array<T*> LIST(){                                    MT::Array<T*> z(0); return z; }
 template<class T> MT::Array<T*> LIST(const T& i){                                    MT::Array<T*> z(1); z(0)=(T*)&i; return z; }
@@ -610,7 +605,7 @@ void lapack_RQ(arr& R, arr& Q, const arr& A);
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs);
 bool lapack_isPositiveSemiDefinite(const arr& symmA);
 void lapack_inverseSymPosDef(arr& Ainv,const arr& A);
-real lapack_determinantSymPosDef(const arr& A);
+double lapack_determinantSymPosDef(const arr& A);
 void lapack_Ainv_b_sym(arr& x,const arr& A, const arr& b);
 
 
@@ -651,7 +646,7 @@ template<class T> MT::Array<T> get(const AnyList& L,const char* tag);
 
 template<class vert,class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert,class edge> void graphMakeLists(MT::Array<vert*>& V,MT::Array<edge*>& E);
-template<class vert,class edge> void graphRandomUndirected(MT::Array<vert*>& V,MT::Array<edge*>& E,uint N,real connectivity);
+template<class vert,class edge> void graphRandomUndirected(MT::Array<vert*>& V,MT::Array<edge*>& E,uint N,double connectivity);
 template<class vert,class edge> void graphRandomFixedDegree(MT::Array<vert*>& V,MT::Array<edge*>& E,uint N,uint degree);
 template<class vert,class edge> void graphConnectUndirected(MT::Array<vert*>& V,MT::Array<edge*>& E);
 template<class vert,class edge> void graphLayered(MT::Array<vert*>& V,MT::Array<edge*>& E,const uintA& layers,bool interConnections);

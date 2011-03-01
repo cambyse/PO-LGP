@@ -48,57 +48,57 @@
 namespace ors{
 
   //===========================================================================
-  //! a 3D vector (real[3])
+  //! a 3D vector (double[3])
   struct Vector{
-    real p[3];
+    double p[3];
     
     Vector(){}
-    Vector(real x,real y,real z){ set(x,y,z); }
-    real& operator()(int);
-    const real& operator()(int) const;
+    Vector(double x,double y,double z){ set(x,y,z); }
+    double& operator()(int);
+    const double& operator()(int) const;
     
-    void set(real,real,real);
-    void set(real*);
+    void set(double,double,double);
+    void set(double*);
     void setZero();
     void setRandom();
-    void add     (real,real,real);
-    void subtract(real,real,real);
+    void add     (double,double,double);
+    void subtract(double,double,double);
     void normalize();
-    void setLength(real);
+    void setLength(double);
     void makeNormal  (const Vector&);
     void makeColinear(const Vector&);
     
     bool isZero() const;
     bool isNormalized() const;
-    real isColinear(const Vector&) const;
-    real length() const;
-    real lengthSqr() const;
-    real angle(const Vector&) const;
-    real radius() const;
-    real phi() const;
-    real theta() const;
+    double isColinear(const Vector&) const;
+    double length() const;
+    double lengthSqr() const;
+    double angle(const Vector&) const;
+    double radius() const;
+    double phi() const;
+    double theta() const;
     
     void write(std::ostream&) const;
     void read (std::istream&);
   };
   
   //===========================================================================
-  //! a matrix in 3D (real[9])
+  //! a matrix in 3D (double[9])
   struct Matrix{
-    real p[9];
+    double p[9];
 
     Matrix(){};
-    real& operator()(int,int);
-    const real& operator()(int,int) const;
+    double& operator()(int,int);
+    const double& operator()(int,int) const;
     
     void setZero();
     void setId();
     void setFrame   (Vector&,Vector&,Vector&);
     void setInvFrame(Vector&,Vector&,Vector&);
-    void setXrot(real);
+    void setXrot(double);
     void setSkew(const Vector&);
     void setExponential(const Vector&);
-    void setOdeMatrix(real*);
+    void setOdeMatrix(double*);
     void setTensorProduct(const Vector&,const Vector&);
 
     void write(std::ostream&) const;
@@ -106,46 +106,46 @@ namespace ors{
   };
   
   //===========================================================================
-  //! a quaterion (real[4])
+  //! a quaterion (double[4])
   struct Quaternion{
-    real p[4];
+    double p[4];
     
     Quaternion();
     
-    void set(real q0,real x,real y,real z);
-    void set(real* q);
+    void set(double q0,double x,double y,double z);
+    void set(double* q);
     void setZero();
     void setRandom();
-    void setDeg(real degree ,real axis0,real axis1,real axis2);
-    void setDeg(real degree ,const Vector& axis);
-    void setRad(real radians,real axis0,real axis1,real axis2);
-    void setRad(real radians,const Vector& axis);
-    void setRad(real angle);
-    void setRadX(real angle);
-    void setRadY(real angle);
-    void setQuat(real s,real x,real y,real z);
+    void setDeg(double degree ,double axis0,double axis1,double axis2);
+    void setDeg(double degree ,const Vector& axis);
+    void setRad(double radians,double axis0,double axis1,double axis2);
+    void setRad(double radians,const Vector& axis);
+    void setRad(double angle);
+    void setRadX(double angle);
+    void setRadY(double angle);
+    void setQuat(double s,double x,double y,double z);
     void setVec(Vector w);
-    void setMatrix(real* m);
+    void setMatrix(double* m);
     void setDiff(const Vector& from,const Vector& to);
-    void setInterpolate(real t,const Quaternion& a,const Quaternion b);
+    void setInterpolate(double t,const Quaternion& a,const Quaternion b);
     void invert();
     void normalize();
-    void multiply(real f);
+    void multiply(double f);
     void alignWith(const Vector& v);
     
     bool isZero() const;
     bool isNormalized() const;
-    real getDeg() const;
-    real getRad() const;
-    void getDeg(real& degree,Vector& axis) const;
-    void getRad(real& angle ,Vector& axis) const;
+    double getDeg() const;
+    double getRad() const;
+    void getDeg(double& degree,Vector& axis) const;
+    void getRad(double& angle ,Vector& axis) const;
     Vector& getVec(Vector& v) const;
     Vector& getX  (Vector& Rx) const;
     Vector& getY  (Vector& Ry) const;
     Vector& getZ  (Vector& Rz) const;
-    real* getMatrix(real* m) const;
-    real* getMatrixOde(real* m) const; //in Ode foramt: 3x4 memory storae
-    real* getMatrixGL(real* m) const; //in OpenGL format: transposed 4x4 memory storage
+    double* getMatrix(double* m) const;
+    double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
+    double* getMatrixGL(double* m) const; //in OpenGL format: transposed 4x4 memory storage
     
     void writeNice(std::ostream& os) const;
     void write(std::ostream& os) const;
@@ -167,26 +167,26 @@ namespace ors{
     void setRandom();
     void setInverse(const Transformation& f);
     void setDifference(const Transformation& from,const Transformation& to);
-    void setAffineMatrix(const real *m);
+    void setAffineMatrix(const double *m);
     
-    void addRelativeTranslation   (real x,real y,real z);
-    void addRelativeVelocity      (real x,real y,real z);
-    void addRelativeAngVelocityDeg(real degree,real x,real y,real z);
-    void addRelativeAngVelocityRad(real rad,real x,real y,real z);
-    void addRelativeAngVelocityRad(real wx,real wy,real wz);
-    void addRelativeRotationDeg   (real degree,real x,real y,real z);
-    void addRelativeRotationRad   (real rad,real x,real y,real z);
-    void addRelativeRotationQuat  (real s,real x,real y,real z);
+    void addRelativeTranslation   (double x,double y,double z);
+    void addRelativeVelocity      (double x,double y,double z);
+    void addRelativeAngVelocityDeg(double degree,double x,double y,double z);
+    void addRelativeAngVelocityRad(double rad,double x,double y,double z);
+    void addRelativeAngVelocityRad(double wx,double wy,double wz);
+    void addRelativeRotationDeg   (double degree,double x,double y,double z);
+    void addRelativeRotationRad   (double rad,double x,double y,double z);
+    void addRelativeRotationQuat  (double s,double x,double y,double z);
     
     void appendTransformation(const Transformation& f);     // this = this * f
     void appendInvTransformation(const Transformation& f);     // this = this * f^{-1}
     void prependTransformation(const Transformation& f);         // this = f * this
     void prependInvTransformation(const Transformation& f);    // this = f^{-1} * this
     
-    real* getAffineMatrix(real *m) const;         // 4x4 matrix with 3x3=rotation and right-column=translation
-    real* getInverseAffineMatrix(real *m) const;  // 4x4 matrix with 3x3=R^{-1}   and bottom-row=R^{-1}*translation
-    real* getAffineMatrixGL(real *m) const;       // in OpenGL format (transposed memory storage!!)
-    real* getInverseAffineMatrixGL(real *m) const;// in OpenGL format (transposed memory storage!!)
+    double* getAffineMatrix(double *m) const;         // 4x4 matrix with 3x3=rotation and right-column=translation
+    double* getInverseAffineMatrix(double *m) const;  // 4x4 matrix with 3x3=R^{-1}   and bottom-row=R^{-1}*translation
+    double* getAffineMatrixGL(double *m) const;       // in OpenGL format (transposed memory storage!!)
+    double* getInverseAffineMatrixGL(double *m) const;// in OpenGL format (transposed memory storage!!)
     
     void write(std::ostream& os) const;
     void read(std::istream& is);
@@ -216,16 +216,16 @@ namespace ors{
     void setDodecahedron();
     void setSphere(uint fineness=4);
     void setHalfSphere(uint fineness=4);
-    void setCylinder(real r,real l,uint fineness=4);
-    void setCappedCylinder(real r,real l,uint fineness=4);
+    void setCylinder(double r,double l,uint fineness=4);
+    void setCappedCylinder(double r,double l,uint fineness=4);
     void setGrid(uint X,uint Y);
-    void setImplicitSurface(real(*fct)(real,real,real,void*),void *p,real lo,real hi,uint res);
+    void setImplicitSurface(double(*fct)(double,double,double,void*),void *p,double lo,double hi,uint res);
 
     //transform and modify
     void subDevide();
-    void scale(real f);
-    void scale(real sx,real sy,real sz);
-    void translate(real dx,real dy,real dz);
+    void scale(double f);
+    void scale(double sx,double sy,double sz);
+    void translate(double dx,double dy,double dz);
     void center();
     void box();
     void addMesh(const ors::Mesh& mesh2);
@@ -233,7 +233,7 @@ namespace ors{
     //internal computations & cleanup
     void computeNormals();
     void deleteUnusedVertices();
-    void fuseNearVertices(real tol=1e-5);
+    void fuseNearVertices(double tol=1e-5);
     void clean();
     void flipFaces();
     void makeVerticesRelativeToGroup();
@@ -288,7 +288,7 @@ namespace ors{
 
     //dynamic properties
     bool fixed;          //!< is globally fixed?
-    real mass;           //!< its mass
+    double mass;           //!< its mass
     Matrix inertia;      //!< its inertia tensor
     Vector com;          //!< its center of gravity
     Vector force,torque; //!< current forces applying on the body
@@ -356,8 +356,8 @@ namespace ors{
     Transformation X;
     Transformation rel;      //!< relative translation/rotation of the bodies geometry
     int type;
-    real size[4];
-    real color[3];
+    double size[4];
+    double color[3];
     Mesh mesh;
     bool cont;      //!< are contacts registered (or filtered in the callback)
     Vector contactOrientation;
@@ -382,7 +382,7 @@ namespace ors{
     ~Shape(){ reset(); }
     void operator=(const Shape& s){
       index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
-      memmove(size,s.size,4*sizeof(real)); memmove(color,s.color,3*sizeof(real));
+      memmove(size,s.size,4*sizeof(double)); memmove(color,s.color,3*sizeof(double));
       mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
       listClone(ats,s.ats); }
     void reset();
@@ -398,7 +398,7 @@ namespace ors{
     Vector posA,velA;   //!< contact or closest point position on surface of shape A (in world coordinates)
     Vector posB,velB;   //!< contact or closest point position on surface of shape B (in world coordinates)
     Vector normal;      //!< contact normal, pointing from A to B
-    real d;             //!< distance (positive) or penetration (negative) between A and B
+    double d;             //!< distance (positive) or penetration (negative) between A and B
     Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
     uint age;
   };
@@ -462,16 +462,16 @@ namespace ors{
     void getFullState(arr& x,arr& v);
     void getContactConstraints(arr& y);
     void getContactConstraintsGradient(arr &dydq);
-    void getContactMeasure(arr &x,real margin=.02,bool linear=false);
-    real getContactGradient(arr &grad,real margin=.02,bool linear=false);
-    void getLimitsMeasure(arr &x,const arr& limits,real margin=.1);
-    real getLimitsGradient(arr &grad,const arr& limits,real margin=.1);
+    void getContactMeasure(arr &x,double margin=.02,bool linear=false);
+    double getContactGradient(arr &grad,double margin=.02,bool linear=false);
+    void getLimitsMeasure(arr &x,const arr& limits,double margin=.1);
+    double getLimitsGradient(arr &grad,const arr& limits,double margin=.1);
     void getComGradient(arr &grad);
     void getTotals(ors::Vector& c,ors::Vector& v,ors::Vector& l,ors::Quaternion& ori);
     void getGyroscope(ors::Vector& up);
-    real getEnergy();
-    real getCenterOfMass(arr& com);
-    real getJointErrors();
+    double getEnergy();
+    double getCenterOfMass(arr& com);
+    double getJointErrors();
     void getPenetrationState(arr &vec);
     void getGripState(arr& grip,uint j);
     ors::Proxy* getContact(uint a,uint b);
@@ -486,9 +486,9 @@ namespace ors{
     //!@name forces and gravity
     void clearForces();
     void addForce(ors::Vector force,Body *n,ors::Vector pos);
-    void contactsToForces(real hook=.01,real damp=.0003);
+    void contactsToForces(double hook=.01,double damp=.0003);
     void gravityToForces();
-    void frictionToForces(real coeff);
+    void frictionToForces(double coeff);
 
     //!@name I/O
     void reportProxies(std::ostream *os=&std::cout);
@@ -509,15 +509,15 @@ namespace ors{
 
 
 namespace ors{
-  real  operator*(const Vector&,const Vector&);
+  double  operator*(const Vector&,const Vector&);
   Vector  operator^(const Vector&,const Vector&);
   Vector  operator+(const Vector&,const Vector&);
   Vector  operator-(const Vector&,const Vector&);
-  Vector  operator*(real,const Vector&);
-  Vector  operator*(const Vector&,real);
-  Vector  operator/(const Vector&,real);
-  Vector& operator*=(Vector&,real);
-  Vector& operator/=(Vector&,real);
+  Vector  operator*(double,const Vector&);
+  Vector  operator*(const Vector&,double);
+  Vector  operator/(const Vector&,double);
+  Vector& operator*=(Vector&,double);
+  Vector& operator/=(Vector&,double);
   Vector& operator+=(Vector&,const Vector&);
   Vector& operator-=(Vector&,const Vector&);
   Vector  operator-(const Vector&);
@@ -525,8 +525,8 @@ namespace ors{
   Matrix  operator*(const Matrix& b,const Matrix& c);
   Matrix  operator+(const Matrix& b,const Matrix& c);
   Vector  operator*(const Matrix& b,const Vector& c);
-  Matrix& operator*=(Matrix& a,real c);
-  Matrix  operator*(real b,const Matrix& c);
+  Matrix& operator*=(Matrix& a,double c);
+  Matrix  operator*(double b,const Matrix& c);
   Matrix& operator+=(Matrix& a,const Matrix& b);
 
   Quaternion operator*(const Quaternion& b,const Quaternion& c);
@@ -552,7 +552,7 @@ std::ostream& operator<<(std::ostream&,const ors::Joint&);
 std::ostream& operator<<(std::ostream&,const ors::Proxy&);
 stdPipes(ors::Graph);
 
-real scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b);
+double scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b);
 
 
 
@@ -599,17 +599,17 @@ struct TaskVariable{
 
   arr y,y_old,v,v_old,y_target,v_target;     //!< current state and final target of this variable
   arr J,Jt;                                  //!< current Jacobian and its transpose
-  real y_prec,v_prec;                        //!< precision (=1/variance) associated with this variable
+  double y_prec,v_prec;                        //!< precision (=1/variance) associated with this variable
   arr y_trajectory,y_prec_trajectory;        //!< target & precision over a whole trajectory
   arr v_trajectory,v_prec_trajectory;        //!< target & precision over a whole trajectory
 
   arr y_ref,v_ref;                           //!< immediate (next step) desired target reference
   real Pgain,Dgain;                          //!< parameters of the PD controller or attractor dynamics
 
-	//a bit obsolete
+  //a bit obsolete
   real err,derr;
   int state;                                 //!< discrete indicate state of this variable (e.g., convergence)
-  real state_tol;
+  double state_tol;
 
   //!@name initialization
   TaskVariable();
@@ -646,14 +646,14 @@ struct TaskVariable{
   //!@name trajectory target parameters
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
-  void setPrecisionTrajectoryFinal(uint T,real intermediate_prec,real final_prec);
-  void setPrecisionTrajectoryConstant(uint T,real constant_prec);
-  void setPrecisionVTrajectoryFinal(uint T,real intermediate_prec,real final_prec);
-  void setPrecisionVTrajectoryConstant(uint T,real constant_prec);
-  void setTrajectory(uint T,real funnelsdv=0.,real funnelvsdv=0.); //OBSOLETE
+  void setPrecisionTrajectoryFinal(uint T,double intermediate_prec,double final_prec);
+  void setPrecisionTrajectoryConstant(uint T,double constant_prec);
+  void setPrecisionVTrajectoryFinal(uint T,double intermediate_prec,double final_prec);
+  void setPrecisionVTrajectoryConstant(uint T,double constant_prec);
+  void setTrajectory(uint T,double funnelsdv=0.,double funnelvsdv=0.); //OBSOLETE
   
-  void setInterpolatedTargetsEndPrecisions(uint T,real inter_yprec,real end_yprec,real inter_vprec,real end_vprec);
-  void setInterpolatedTargetsConstPrecisions(uint T,real yprec,real vprec);
+  void setInterpolatedTargetsEndPrecisions(uint T,double inter_yprec,double end_yprec,double inter_vprec,double end_vprec);
+  void setInterpolatedTargetsConstPrecisions(uint T,double yprec,double vprec);
 
   void shiftTargets(int offset);
   
@@ -699,9 +699,9 @@ void bayesianControl_obsolete(TaskVariableList& CS,arr& dq,const arr& W);
 // C-style functions
 //
 
-void inertiaSphere  (real *Inertia, real& mass, real density, real radius);
-void inertiaBox     (real *Inertia, real& mass, real density, real dx, real dy, real dz);
-void inertiaCylinder(real *Inertia, real& mass, real density, real height, real radius);
+void inertiaSphere  (double *Inertia, double& mass, double density, double radius);
+void inertiaBox     (double *Inertia, double& mass, double density, double dx, double dy, double dz);
+void inertiaCylinder(double *Inertia, double& mass, double density, double height, double radius);
 
 
 
@@ -919,7 +919,7 @@ namespace ors{
     ors::Transformation
  X,A,Q;
     ors::Vector com,force,torque;
-    real mass;
+    double mass;
     ors::Matrix inertia;
     uint dof(){ if(type==JHINGE) return 1; else return 0; }
 

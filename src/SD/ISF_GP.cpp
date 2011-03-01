@@ -6,7 +6,7 @@
 
 /** scale parameters by iven factor in X, Y or both */
 void
-scale_gp_params(GaussianProcess &gp, const real sc, const SD_scale_t sct){
+scale_gp_params(GaussianProcess &gp, const double sc, const SD_scale_t sct){
 
   CHECK(sc > 0 , "Really want to have non-positive scaling "<<sc<<" ?!");
   SD_DBG3("Scaling x by "  << (sct & scX? sc: 1.)<<"; "
@@ -23,10 +23,10 @@ scale_gp_params(GaussianProcess &gp, const real sc, const SD_scale_t sct){
 
 /** scale input by given factor in X, Y or both*/
 void
-scale_gp_input(GaussianProcess &gp, const real sc, const SD_scale_t sct){
-  real sf_x = (sct&scX? sc: 1);
-  real sf_y = (sct&scY? sc: 1);
-  real sf_dydx = sf_y / sf_x;
+scale_gp_input(GaussianProcess &gp, const double sc, const SD_scale_t sct){
+  double sf_x = (sct&scX? sc: 1);
+  double sf_y = (sct&scY? sc: 1);
+  double sf_dydx = sf_y / sf_x;
 
   gp.X  *= sf_x;
   gp.dX *= sf_x;
@@ -37,7 +37,7 @@ scale_gp_input(GaussianProcess &gp, const real sc, const SD_scale_t sct){
 
 /** come up with the "right" parameters for given detail size */
 void
-gp4d(GaussianProcess &gp, const real dsize){
+gp4d(GaussianProcess &gp, const double dsize){
   CHECK(dsize > 0, "It is a bad idea to have non-positive detail size.");
 
   GaussKernelParams *p = (GaussKernelParams*)gp.kernelP;
@@ -63,20 +63,20 @@ isf_gp_t::isf_gp_t(){
 }
 
 /** create a GP parametrized to the detail size and using the given bias */
-isf_gp_t::isf_gp_t(const real dsize, const real bias){
+isf_gp_t::isf_gp_t(const double dsize, const double bias){
   gp.setGaussKernelGP(&p, bias); // TODO come up with mu-policy dependent on dsize
   set_size(dsize);
 }
 
 /** scale the GP sc times according to the scale type given*/
 void
-isf_gp_t::scale_gp_params(const real sc, const SD_scale_t sct){
+isf_gp_t::scale_gp_params(const double sc, const SD_scale_t sct){
   ::scale_gp_params(gp, sc, sct);
 }
 
 /** scale the input sc times according to the scale type given*/
 void
-isf_gp_t::scale_gp_input(const real sc, const SD_scale_t sct){
+isf_gp_t::scale_gp_input(const double sc, const SD_scale_t sct){
   ::scale_gp_input(gp, sc, sct);
 }
 
@@ -96,7 +96,7 @@ isf_gp_t::translate_gp_input(const arr &t){
 
 /** select proper parameters for the detail size given*/
 void
-isf_gp_t::set_size(const real dsize){
+isf_gp_t::set_size(const double dsize){
   d = dsize;
   ::gp4d(gp,d);
 }

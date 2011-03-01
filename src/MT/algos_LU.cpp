@@ -19,25 +19,25 @@
 
 #define TINY 1.0e-20
 
-void ludcmp(real **a, int n, int *indx, real *d);
-void lubksb(real **a, int n, int *indx, real b[]);
+void ludcmp(double **a, int n, int *indx, double *d);
+void lubksb(double **a, int n, int *indx, double b[]);
 
 namespace MT{
-  real determinant_LU(const arr& X){
+  double determinant_LU(const arr& X){
     CHECK(X.nd==2 && X.d0==X.d1,"");
     uint n=X.d0,i;
     arr LU;
     LU=X;
     int *idx=new int[n];
-    real *d=new real[n];
+    double *d=new double[n];
     LU.getCarray();
     ludcmp(LU.pp,n,idx,d);
-    real det=1.;
+    double det=1.;
     for(i=0;i<n;i++) det *= LU(i,i);
     delete[] idx;
     delete[] d;
 
-    //real ddet=determinant(X); CHECK(det==ddet,"");
+    //double ddet=determinant(X); CHECK(det==ddet,"");
     return det;
   }
 
@@ -52,7 +52,7 @@ namespace MT{
     LU=X;
     LU.getCarray();
     int *idx=new int[n];
-    real *d=new real[n];
+    double *d=new double[n];
     ludcmp(LU.pp,n,idx,d);
     //--
     arr col(n);
@@ -70,7 +70,7 @@ namespace MT{
     arr D,_D; D.setId(n);
     uint me;
     _D=X*Xinv;
-    real err=maxDiff(_D,D,&me);
+    double err=maxDiff(_D,D,&me);
     CHECK(err<MT_CHECK_INVERSE ,"inverting failed, error="<<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me));
 #endif
   }
@@ -98,10 +98,10 @@ namespace MT{
 }
 
 
-void ludcmp(real **a, int n, int *indx, real *d){
+void ludcmp(double **a, int n, int *indx, double *d){
   int i,imax=0,j,k;
-  real big,dum,sum,temp;
-  real *vv;
+  double big,dum,sum,temp;
+  double *vv;
   vv=vector(1,n);
   *d=1.0; 
   for (i=0;i<n;i++) {
@@ -149,9 +149,9 @@ void ludcmp(real **a, int n, int *indx, real *d){
 }
 
 
-void lubksb(real **a, int n, int *indx, real b[]){
+void lubksb(double **a, int n, int *indx, double b[]){
   int i,ii=0,ip,j;
-  real sum;
+  double sum;
   for (i=0;i<n;i++) {
     ip=indx[i];
     sum=b[ip];

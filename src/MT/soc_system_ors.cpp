@@ -29,7 +29,7 @@ struct soc::SocSystem_Ors_Workspace{
   arr q_external;
   
   uint T;
-  real tau;
+  double tau;
   bool pseudoDynamic;
   bool newedOrs;
 
@@ -94,9 +94,9 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const{
 }
 
 void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
-				    uint trajectory_steps, real trajectory_time, bool _dynamic, arr *W){
+				    uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W){
   if(_ors)   ors   = _ors;   else{ ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
-  if(_swift) swift = _swift; else{ swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<real>("swiftCutoff",0.11)); }
+  if(_swift) swift = _swift; else{ swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff",0.11)); }
   gl    = _gl;
   if(gl && !_ors){
     gl->add(glStandardScene);
@@ -119,9 +119,9 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     cout <<"automatic W initialization =" <<WS->W <<endl;
 //     graphWriteDirected(cout,ors->bodies,ors->joints);
   }
-  static MT::Parameter<real> wc("Wcost",1e-2);
-  static MT::Parameter<real> hc("Hcost",1e-3);
-  static MT::Parameter<real> qn("Qnoise",1e-10);
+  static MT::Parameter<double> wc("Wcost",1e-2);
+  static MT::Parameter<double> hc("Hcost",1e-3);
+  static MT::Parameter<double> qn("Qnoise",1e-10);
   WS->H = hc()*WS->W;     //u-metric for torque control
   WS->W = wc()*WS->W;
   if(!_dynamic){
@@ -157,11 +157,11 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed,uint T,bool _dy
   //standard task variables and problem definition
   
   MT::String endeffShapeName= MT::getParameter<MT::String>("endeffShapeName");
-  real endPrec=MT::getParameter<real>("endPrec");
-  real midPrec=MT::getParameter<real>("midPrec");
-  real colPrec=MT::getParameter<real>("colPrec");
-  real balPrec=MT::getParameter<real>("balPrec");
-  real margin =MT::getParameter<real>("margin");
+  double endPrec=MT::getParameter<double>("endPrec");
+  double midPrec=MT::getParameter<double>("midPrec");
+  double colPrec=MT::getParameter<double>("colPrec");
+  double balPrec=MT::getParameter<double>("balPrec");
+  double margin =MT::getParameter<double>("margin");
    //-- setup the control variables (problem definition)
   TaskVariable *pos = new TaskVariable("position" , *ors, posTVT, endeffShapeName, 0, ARR());
   TaskVariable *col;
@@ -188,7 +188,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   uint K = MT::getParameter<uint>("segments");
   uint T = MT::getParameter<uint>("trajectoryLength");
   dynamic = MT::getParameter<bool>("isDynamic");
-  real margin = MT::getParameter<real>("margin");
+  double margin = MT::getParameter<double>("margin");
   bool useTruncation = MT::getParameter<bool>("useTruncation");
 
   //generate the configuration
@@ -246,9 +246,9 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   initBasics(ors,NULL,NULL,T,3.,MT::getParameter<bool>("isDynamic"),NULL);
   os=&std::cout;
   
-  real endPrec=MT::getParameter<real>("endPrec");
-  real midPrec=MT::getParameter<real>("midPrec");
-  real colPrec=MT::getParameter<real>("colPrec");
+  double endPrec=MT::getParameter<double>("endPrec");
+  double midPrec=MT::getParameter<double>("midPrec");
+  double colPrec=MT::getParameter<double>("colPrec");
    //-- setup the control variables (problem definition)
   TaskVariable *pos = new TaskVariable("position" , *ors, posTVT, endeff->name, STRING("<t(0 0 "<<.5/K<<")>"),0,0, ARR());
   TaskVariable *col;
@@ -309,7 +309,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   //reportAll(globalSpace,cout);
 
 
-  real midPrec,endPrec,balPrec,colPrec;
+  double midPrec,endPrec,balPrec,colPrec;
   MT::getParameter(midPrec,"midPrec");
   MT::getParameter(endPrec,"endPrec");
   MT::getParameter(balPrec,"balPrec");
@@ -334,7 +334,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
 }
 */
     
-void soc::SocSystem_Ors::setTimeInterval(real trajectory_time,  uint trajectory_steps){
+void soc::SocSystem_Ors::setTimeInterval(double trajectory_time,  uint trajectory_steps){
   WS->T=trajectory_steps;
   WS->tau=trajectory_time/trajectory_steps;
   stepScale.resize(WS->T+1);  stepScale.setZero();
@@ -385,8 +385,8 @@ uint soc::SocSystem_Ors::nTasks(){ return vars.N; }
 uint soc::SocSystem_Ors::qDim(){   return WS->q0.N; }
 uint soc::SocSystem_Ors::uDim(){   return qDim(); }
 uint soc::SocSystem_Ors::yDim(uint i){ return vars(i)->y.N; }
-real soc::SocSystem_Ors::getTau(bool scaled){
-  real tau=WS->tau;
+double soc::SocSystem_Ors::getTau(bool scaled){
+  double tau=WS->tau;
   if(scaled) for(uint i=0;i<scalePower;i++) tau *=2.;
   return tau;
 }
@@ -526,7 +526,7 @@ void soc::SocSystem_Ors::getHessian(arr& H_i,uint i){
   vars(i)->getHessian(H_i);
 }
 
-void soc::SocSystem_Ors::getTarget(arr& y_i,real& y_prec,uint i,uint t){
+void soc::SocSystem_Ors::getTarget(arr& y_i,double& y_prec,uint i,uint t){
   TaskVariable *v=vars(i);
   //cout <<"getting y_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
@@ -540,7 +540,7 @@ void soc::SocSystem_Ors::getTarget(arr& y_i,real& y_prec,uint i,uint t){
   y_prec = v->y_prec_trajectory(t);
 }
 
-void soc::SocSystem_Ors::getTargetV(arr& v_i,real& v_prec,uint i,uint t){
+void soc::SocSystem_Ors::getTargetV(arr& v_i,double& v_prec,uint i,uint t){
   TaskVariable *v=vars(i);
   //cout <<"getting v_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
@@ -576,7 +576,7 @@ void drawOrsSocEnv(void*){
 
 void soc::createDynamicProblem(SocSystem_Ors &sys,
                           const char *ors_file,
-                          real trajectory_time,
+                          double trajectory_time,
                           uint trajectory_steps){
 
   //setup the workspace
@@ -589,8 +589,8 @@ void soc::createDynamicProblem(SocSystem_Ors &sys,
   sys.WS->T=trajectory_steps;
   sys.WS->tau=trajectory_time/trajectory_steps;
   sys.WS->W.setDiag(1e-6,n);  //q-metric for inverse kinematics (initialization)
-  static MT::Parameter<real> hc("Hcost");
-  static MT::Parameter<real> qn("Qnoise");
+  static MT::Parameter<double> hc("Hcost");
+  static MT::Parameter<double> qn("Qnoise");
   sys.WS->H.setDiag(hc,n);  //u-metric for torque control
   sys.WS->Q.setDiag(qn,2*n);  //covariance \dot q-update
 
@@ -602,7 +602,7 @@ void soc::createDynamicProblem(SocSystem_Ors &sys,
   updateState(sys.vars);
   //reportAll(globalSpace,cout);
 
-  real midPrec,endPrec;
+  double midPrec,endPrec;
   MT::getParameter(midPrec,"midPrec");
   MT::getParameter(endPrec,"endPrec");
 

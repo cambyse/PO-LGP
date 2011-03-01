@@ -1,9 +1,0 @@
-Compiled at:     Dec 14 2010 10:58:19
-Execution start: Tue Dec 14 10:58:25 2010
-Program call:    './x.exe '
-                   q = opening config file 'MT.cfg' - failed
-10 [d] (default!)
-Execution stop:      Tue Dec 14 10:58:25 2010
-Ellapsed real time:  0.003sec
-Process  user time:   0.000sec
-Process system time: 0sec

@@ -263,7 +263,7 @@ void plotGnuplot(){ plotModule.mode=gnupl; }
 #ifdef MT_GL
 void plotOpengl(){ plotModule.mode=opengl; }
 
-void plotOpengl(bool threeD,real xl,real xh,real yl,real yh,real zl,real zh){
+void plotOpengl(bool threeD,double xl,double xh,double yl,double yh,double zl,double zh){
   plotModule.mode=opengl;
   plotInitGL();
   if(!threeD){
@@ -285,7 +285,7 @@ void plotOpengl(){ MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!
 
 void plotImage(const arr& x){ plotModule.WS->images.append(x); }
 
-void plotFunction(const arr& f,real x0,real x1){
+void plotFunction(const arr& f,double x0,double x1){
   arr X;
   uint i,j;
   if(f.nd==2){
@@ -308,7 +308,7 @@ void plotFunction(const arr& f,real x0,real x1){
   plotModule.WS->lines.append(X);
 }
 
-void plotFunctions(const arr& F,real x0,real x1){
+void plotFunctions(const arr& F,double x0,double x1){
   CHECK(F.nd==2,"");
   arr tF;
   transpose(tF,F);
@@ -365,7 +365,7 @@ void plotSurface(const arr& X){
 #endif
 }
 
-void plotPoint(real x,real y,real z){
+void plotPoint(double x,double y,double z){
   arr p(1,3); p(0,0)=x; p(0,1)=y; p(0,2)=z;
   plotModule.WS->points.append(p);
 }
@@ -424,11 +424,11 @@ void plotCovariance(const arr& mean,const arr& cov){
   }
   if(d==2){
     arr d(101,2),Cov,U,V,w;
-    real phi;
+    double phi;
     uint i;
     if(cov.d0>2){ Cov=cov.sub(0,1,0,1); }else{ Cov.referTo(cov); }
     for(i=0;i<d.d0;i++){ //standard circle
-      phi=MT_2PI*((real)i)/(d.d0-1);
+      phi=MT_2PI*((double)i)/(d.d0-1);
       d(i,0)=cos(phi); d(i,1)=sin(phi);
     }
     svd(U,w,V,Cov);
@@ -440,18 +440,18 @@ void plotCovariance(const arr& mean,const arr& cov){
   if(d==3){
 #if 1
     arr d(303,3),Cov,U,V,w;
-    real phi;
+    double phi;
     uint i;
     for(i=0;i<101;i++){ //standard sphere
-      phi=MT_2PI*((real)i)/(101-1);
+      phi=MT_2PI*((double)i)/(101-1);
       d(i,0)=cos(phi); d(i,1)=sin(phi); d(i,2)=0.;
     }
     for(i=0;i<101;i++){
-      phi=MT_2PI*((real)i)/(101-1);
+      phi=MT_2PI*((double)i)/(101-1);
       d(101+i,0)=cos(phi); d(101+i,1)=0.; d(101+i,2)=sin(phi);
     }
     for(i=0;i<101;i++){
-      phi=MT_2PI*((real)i)/(101-1);
+      phi=MT_2PI*((double)i)/(101-1);
       d(202+i,0)=0.; d(202+i,1)=cos(phi); d(202+i,2)=sin(phi);
     }
     CHECK(cov.d0==3,"");
@@ -465,12 +465,12 @@ void plotCovariance(const arr& mean,const arr& cov){
     plotModule.WS->lines.append(d[2]);
 #else
     arr d(101,2),dd(101,3),Cov,U,V,w;
-    real phi;
+    double phi;
     uint i;
     //x-y
     Cov=cov.sub(0,1,0,1);
     for(i=0;i<d.d0;i++){ //standard circle
-      phi=MT_2PI*((real)i)/(d.d0-1);
+      phi=MT_2PI*((double)i)/(d.d0-1);
       d(i,0)=cos(phi); d(i,1)=sin(phi);
     }
     svd(U,w,V,Cov);
@@ -481,7 +481,7 @@ void plotCovariance(const arr& mean,const arr& cov){
     //y-z
     Cov=cov.sub(1,2,1,2);
     for(i=0;i<d.d0;i++){ //standard circle
-      phi=MT_2PI*((real)i)/(d.d0-1);
+      phi=MT_2PI*((double)i)/(d.d0-1);
       d(i,0)=cos(phi); d(i,1)=sin(phi);
     }
     svd(U,w,V,Cov);
@@ -492,7 +492,7 @@ void plotCovariance(const arr& mean,const arr& cov){
     //x-z
     Cov(0,0)=cov(0,0); Cov(1,0)=cov(2,0); Cov(0,1)=cov(0,2); Cov(1,1)=cov(2,2); 
     for(i=0;i<d.d0;i++){ //standard circle
-      phi=MT_2PI*((real)i)/(d.d0-1);
+      phi=MT_2PI*((double)i)/(d.d0-1);
       d(i,0)=cos(phi); d(i,1)=sin(phi);
     }
     svd(U,w,V,Cov);
@@ -515,7 +515,7 @@ void plotVectorField(const arr& X,const arr& dX){
   }
 }
 
-void plotMatrixFlow(uintA& M,real len){
+void plotMatrixFlow(uintA& M,double len){
   CHECK(M.nd==2,"");
   uint i,j;
   arr X,dX;
@@ -555,7 +555,7 @@ void plotDrawOpenGL(void *_data){
 
   MT::Color c;
   
-  real x=0.,y=0.,z=0.;
+  double x=0.,y=0.,z=0.;
   
   //light?
   if(plotModule.light) glStandardLight(NULL);
@@ -629,8 +629,8 @@ void plotDrawOpenGL(void *_data){
         c.whiten(.5);
         CHECK(Y*X==data.mesh.V.d0,"you must recall display(data.array) when dimensions changed");
         for(j=0;j<Y;j++) for(i=0;i<X;i++){
-          x= 2.*(real)i/(X-1.)-1.;
-          y= 2.*(real)j/(Y-1.)-1.;
+          x= 2.*(double)i/(X-1.)-1.;
+          y= 2.*(double)j/(Y-1.)-1.;
           z=data.array(a)(j,i);
           c.setTemp2(z);
           data.mesh.V(j*X+i,0)=x;    data.mesh.V(j*X+i,1)=y;    data.mesh.V(j*X+i,2)=z;
@@ -645,8 +645,8 @@ void plotDrawOpenGL(void *_data){
         for(j=0;j<Y;j++){ //along the x-axis
           glBegin(GL_LINE_STRIP);
           for(i=0;i<X;i++){
-            x= 2.*(real)i/(X-1.)-1.;
-            y=-2.*(real)j/(Y-1.)+1.;
+            x= 2.*(double)i/(X-1.)-1.;
+            y=-2.*(double)j/(Y-1.)+1.;
             z=data.array(a)(j,i);
             //c.setTemp2(z);
             glColor3f(c.r,c.g,c.b);
@@ -658,8 +658,8 @@ void plotDrawOpenGL(void *_data){
         for(i=0;i<X;i++){ //along the y-axis
           glBegin(GL_LINE_STRIP);
           for(j=0;j<Y;j++){
-            x= 2.*(real)i/(X-1.)-1.;
-            y=-2.*(real)j/(Y-1.)+1.;
+            x= 2.*(double)i/(X-1.)-1.;
+            y=-2.*(double)j/(Y-1.)+1.;
             z=data.array(a)(j,i);
             //c.setTemp2(z);
             glColor3f(c.r,c.g,c.b);
@@ -680,7 +680,7 @@ void plotDrawOpenGL(void *_data){
     if(plotModule.drawDots) glBegin(GL_POINTS);
     if(data.points(i).nd==2){
       for(j=0;j<data.points(i).d0;j++){
-        if(data.points(i).d1==1){ x=(real)j; y=data.points(i)(j,0); z=0.; }
+        if(data.points(i).d1==1){ x=(double)j; y=data.points(i)(j,0); z=0.; }
         if(data.points(i).d1==2){ x=data.points(i)(j,0); y=data.points(i)(j,1); z=1.; }
         if(data.points(i).d1>=3){ x=data.points(i)(j,0); y=data.points(i)(j,1); z=data.points(i)(j,2); }
 	if(!plotModule.drawDots){
@@ -719,7 +719,7 @@ void plotDrawOpenGL(void *_data){
     
     glBegin(GL_LINE_STRIP);
     for(j=0;j<data.lines(i).d0;j++){
-      if(data.lines(i).d1==1) glVertex3d((real)j,data.lines(i)(j,0),0.);
+      if(data.lines(i).d1==1) glVertex3d((double)j,data.lines(i)(j,0),0.);
       if(data.lines(i).d1==2) glVertex3d(data.lines(i)(j,0),data.lines(i)(j,1),1.);
       if(data.lines(i).d1>=3) glVertex3d(data.lines(i)(j,0),data.lines(i)(j,1),data.lines(i)(j,2));
     }
@@ -800,7 +800,7 @@ void plotDrawGnuplot(void *_data){
   for(i=0;i<data.array.N;i++){
     uint j,k,X=data.array(i).d1,Y=data.array(i).d0;
     for(j=0;j<Y;j++) for(k=0;k<X;k++){
-      gnuplotdata <<2.*(real)k/(X-1.)-1. <<' ' <<-2.*(real)j/(Y-1.)+1. <<' ' <<data.array(i)(j,k) <<std::endl;
+      gnuplotdata <<2.*(double)k/(X-1.)-1. <<' ' <<-2.*(double)j/(Y-1.)+1. <<' ' <<data.array(i)(j,k) <<std::endl;
     }
     gnuplotdata <<std::endl;
     if(i && block) gnuplotcmd <<",\\\n";
@@ -822,18 +822,18 @@ void plotDrawGnuplot(void *_data){
 
 
 /*
-real lo[3],hi[3];
+double lo[3],hi[3];
 PlotModuleWorkspace(){
 lo[0]=lo[1]=lo[2]= 0.;
 hi[0]=hi[1]=hi[2]= 1.;
 }
-void setRange(real xl,real xh,real yl=-1.,real yh=1.,real zl=-1.,real zh=1.){
+void setRange(double xl,double xh,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.){
 lo[0]=xl; hi[0]=xh;
 lo[1]=yl; hi[1]=yh;
 lo[2]=zl; hi[2]=zh;
 }
 
- void transBackPoint(real &x,real &y){
+ void transBackPoint(double &x,double &y){
  x=(hi[0]-lo[0])*(x+1.)/2. + lo[0];
  y=(hi[1]-lo[1])*(y+1.)/2. + lo[1];
  }

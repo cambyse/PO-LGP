@@ -24,10 +24,10 @@ struct ANN{
   void append(const arr& x); //append to X
   void calculate();          //compute a tree for all of X
 
-  uint getNN(const arr& x,real eps=.0,bool verbose=false);
-  void getNN(intA& idx           ,const arr& x,uint k,real eps=.0,bool verbose=false);
-  void getNN(arr& dists,intA& idx,const arr& x,uint k,real eps=.0,bool verbose=false);
-  void getNN(arr& xx             ,const arr& x,uint k,real eps=.0,bool verbose=false);
+  uint getNN(const arr& x,double eps=.0,bool verbose=false);
+  void getNN(intA& idx           ,const arr& x,uint k,double eps=.0,bool verbose=false);
+  void getNN(arr& dists,intA& idx,const arr& x,uint k,double eps=.0,bool verbose=false);
+  void getNN(arr& xx             ,const arr& x,uint k,double eps=.0,bool verbose=false);
 
   void map(arr& y,const arr& x,const arr& Y); //given a data set Y of outputs for each X, do a NN regression to predict y at x
 };
