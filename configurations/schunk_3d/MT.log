@@ -1,0 +1,8 @@
+Compiled at:     May  4 2010 12:14:41
+Execution start: Tue May  4 12:24:45 2010
+Program call:    'ors_fileConverter SDH_Mittelteil_Finger1_x.tri -view '
+opening input file `SDH_Mittelteil_Finger1_x.tri'
+Execution stop:      Tue May  4 12:31:26 2010
+Ellapsed real time:  401.275sec
+Process  user time:   0.170sec
+Process system time: 0.21sec

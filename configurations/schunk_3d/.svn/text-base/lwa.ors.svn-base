@@ -1,0 +1,43 @@
+# kinematic graph
+
+body base { X=<t(0 -.1 .5)>, o=3 meshfile='3385031017_fus_120_x.tri' }
+body m3 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306925_prl_12010_x.tri' }
+body m4 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306925_prl_12010_x.tri' }
+body m5 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306920_prl_10010_x.tri' }
+body m6 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306920_prl_10010_x.tri' }
+body m7 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306915_prl_8010_x.tri' }
+body m8 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306915_prl_8010_x.tri' }
+body m9 { rel=<d(90 0 0 1)>, o=3, meshfile='schunk_0306910_prl_6010_x.tri' }
+
+joint (base m3) { A=<t(0 0 0.120) d(-90 0 1 0)> }
+joint (m3 m4)   { A=<d(90 0 1 0)  t(0.175 0 0)> }
+joint (m4 m5)   { A=<t(0.175 0 0) d(-90 0 1 0)> }
+joint (m5 m6)   { A=<d(90 0 1 0)  t(0.1515 0 0)> }
+joint (m6 m7)   { A=<t(0.1515 0 0) d(-90 0 1 0)> }
+joint (m7 m8)   { A=<d(90 0 1 0)  t(0.12575 0 0)> }
+joint (m8 m9)   { A=<t(0.12575 0 0) d(-90 0 1 0)> }
+
+body wrist  { rel=<t(0 0 0)>, o=3, meshfile='SDH_Gehaeuse_x.tri' }
+body knuck1 { o=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='SDH_Gelenk_Finger1_x.tri'}
+body knuck2 { o=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='SDH_Gelenk_Finger1_x.tri'}
+body knuck3 { o=3, rel=<d(90 1 0 0) d(90 0 1 0)>, meshfile='SDH_Gelenk_Finger1_x.tri'}
+body fing1  { o=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Mittelteil_Finger1_x.tri'}
+body fing2  { o=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Mittelteil_Finger1_x.tri'}
+body fing3  { o=3, rel=<t(0 0  -.017) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Mittelteil_Finger1_x.tri'}
+body tip1   { o=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Kuppe_Finger1_x.tri'}
+body tip2   { o=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Kuppe_Finger1_x.tri'}
+body tip3   { o=3, rel=<t(0 0 -.1035) d(90 1 0 0) d(180 0 1 0)>, meshfile='SDH_Kuppe_Finger1_x.tri'}
+
+joint (m9 wrist) { A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1)> }
+
+joint (wrist knuck1) { A=<t(-.038105    0   .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+joint (wrist knuck2) { A=<t( .0190525  .033 .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+joint (wrist knuck3) { A=<t( .0190525 -.033 .025) d(-90 0 1 0)>, B=<d(90 0 1 0)> }
+
+joint (knuck1 fing1) { A=<t(0 0 .017) d( 90 0 0 1)> }
+joint (knuck2 fing2) { A=<t(0 0 .017) d(-90 0 0 1)> }
+joint (knuck3 fing3) { A=<t(0 0 .017) d(-90 0 0 1)> }
+
+joint (fing1 tip1) { A=<t(0 0 .0865)> }
+joint (fing2 tip2) { A=<t(0 0 .0865)> }
+joint (fing3 tip3) { A=<t(0 0 .0865)> }
