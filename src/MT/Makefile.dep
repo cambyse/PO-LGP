@@ -1,160 +1,144 @@
-process.o: process.cpp process.h array.h util.h threads.h
-BinaryBP.o: BinaryBP.cpp BinaryBP.h array.h util.h
-ors.o: ors.cpp ors.h array.h util.h
-functions.o: functions.cpp functions.h array.h algos.h util.h
-hypergraph.o: hypergraph.cpp hypergraph.h util.h array.h ors.h
-algos_rk.o: algos_rk.cpp algos.h array.h util.h
-revelModule.o: revelModule.cpp revelModule.h util.h
-mdp.o: mdp.cpp mdp.h array.h infer.h util.h
-ors_swift.o: ors_swift.cpp ors.h array.h util.h
-mdp_pomdpEM_generic.o: mdp_pomdpEM_generic.cpp mdp.h array.h mstep.h \
- infer.h util.h
-mdp_opengl.o: mdp_opengl.cpp mdp.h array.h
-soc_method_AICO.o: soc_method_AICO.cpp soc.h array.h util.h \
- truncatedGaussian.h optimization.h MinSumGaussNewton.h \
- /home/mtoussai/git/share/src/MT/array.h
-truncatedGaussian.o: truncatedGaussian.cpp array.h util.h
-robot_marcTask.o: robot_marcTask.cpp robot_marcTask.h robot.h opengl.h \
- util.h array.h robot_variables.h process.h ors.h joystick.h soc.h \
- /home/mtoussai/git/share/src/NJ/UrgModule.h \
- /home/mtoussai/git/share/src/MT/threads.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/util.h \
- /home/mtoussai/git/share/src/NP/camera.h \
- /home/mtoussai/git/share/src/MT/process.h \
- /home/mtoussai/git/share/src/NP/uvccamera.h schunk.h vision.h threads.h \
- earlyVisionModule.h guiModule.h specialTaskVariables.h \
- /home/mtoussai/git/share/src/SD/ISF_GP.h \
- /home/mtoussai/git/share/src/MT/gaussianProcess.h \
- /home/mtoussai/git/share/src/MT/plot.h graspObjects.h
-mdp_pomdpEM_structured.o: mdp_pomdpEM_structured.cpp mdp.h array.h \
- mstep.h infer.h util.h
-ors_taskVariables.o: ors_taskVariables.cpp ors.h array.h util.h
-gauss.o: gauss.cpp gauss.h array.h functions.h
-algos_LU.o: algos_LU.cpp array.h algos.h util.h
-array.o: array.cpp array.h util.h
-optimization.o: optimization.cpp optimization.h array.h util.h
-motionPlannerModule.o: motionPlannerModule.cpp motionPlannerModule.h \
- process.h array.h util.h robot_variables.h soc.h \
- /home/mtoussai/git/share/src/MT/specialTaskVariables.h \
- /home/mtoussai/git/share/src/MT/ors.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/util.h \
- /home/mtoussai/git/share/src/MT/soc.h \
- /home/mtoussai/git/share/src/SD/ISF_GP.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/gaussianProcess.h \
- /home/mtoussai/git/share/src/MT/plot.h \
- /home/mtoussai/git/share/src/MT/graspObjects.h
-specialTaskVariables.o: specialTaskVariables.cpp specialTaskVariables.h \
- ors.h array.h util.h soc.h /home/mtoussai/git/share/src/SD/ISF_GP.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/gaussianProcess.h \
- /home/mtoussai/git/share/src/MT/plot.h graspObjects.h
-data.o: data.cpp opengl.h util.h array.h data.h
-gaussianProcess.o: gaussianProcess.cpp gaussianProcess.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/plot.h
-calibration.o: calibration.cpp calibration.h array.h
-MinSumGaussNewton.o: MinSumGaussNewton.cpp MinSumGaussNewton.h \
- /home/mtoussai/git/share/src/MT/array.h
-opengl.o: opengl.cpp opengl.h util.h array.h ors.h
-ors_blender.o: ors_blender.cpp ors.h array.h util.h
-mdp_tony.o: mdp_tony.cpp mdp.h array.h
-soc_system_toy.o: soc_system_toy.cpp soc.h array.h opengl.h util.h ors.h
-ors_featherstone.o: ors_featherstone.cpp ors.h array.h util.h
-ann.o: ann.cpp ann.h /home/mtoussai/git/share/src/MT/array.h algos.h \
- array.h util.h
-mdp_pomdpEM_lev2.o: mdp_pomdpEM_lev2.cpp mdp.h array.h mstep.h infer.h \
- util.h
-algos.o: algos.cpp algos.h array.h util.h
-ors_opengl.o: ors_opengl.cpp ors.h array.h util.h opengl.h
-schunk.o: schunk.cpp schunk.h array.h process.h util.h robot_variables.h
-robotActionInterface.o: robotActionInterface.cpp robotActionInterface.h \
- ors.h array.h util.h robot_marcTask.h robot.h opengl.h robot_variables.h \
- process.h joystick.h soc.h /home/mtoussai/git/share/src/NJ/UrgModule.h \
- /home/mtoussai/git/share/src/MT/threads.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/util.h \
- /home/mtoussai/git/share/src/NP/camera.h \
- /home/mtoussai/git/share/src/MT/process.h \
- /home/mtoussai/git/share/src/NP/uvccamera.h schunk.h vision.h threads.h \
- earlyVisionModule.h guiModule.h specialTaskVariables.h \
- /home/mtoussai/git/share/src/SD/ISF_GP.h \
- /home/mtoussai/git/share/src/MT/gaussianProcess.h \
- /home/mtoussai/git/share/src/MT/plot.h graspObjects.h
-array_lapack.o: array_lapack.cpp array.h util.h
-roboticsCourse.o: roboticsCourse.cpp roboticsCourse.h \
- /home/mtoussai/git/share/src/MT/ors.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/util.h \
- /home/mtoussai/git/share/src/MT/array.h ors.h algos.h array.h util.h \
- opengl.h plot.h
-soc_method_gradient.o: soc_method_gradient.cpp soc.h array.h ors.h util.h \
- optimization.h
-vision.o: vision.cpp vision.h array.h threads.h vision_cuda.h BinaryBP.h
-soc_system_ors.o: soc_system_ors.cpp ors.h array.h util.h opengl.h soc.h \
- plot.h
 perceptionModule.o: perceptionModule.cpp perceptionModule.h vision.h \
  array.h threads.h ors.h util.h process.h robot_variables.h \
  optimization.h \
- /home/mtoussai/git/share/include/../src/NJ/VisionTrackRoutines.h \
- /home/mtoussai/git/share/src/MT/ors.h calibration.h
-libmt.o: libmt.cpp util.h
-infer.o: infer.cpp infer.h array.h util.h
-ors_qhull.o: ors_qhull.cpp
-soc_method_LQG.o: soc_method_LQG.cpp soc.h array.h util.h
-guiModule.o: guiModule.cpp guiModule.h array.h process.h util.h \
- robot_variables.h ors.h perceptionModule.h vision.h threads.h plot.h \
- opengl.h /home/mtoussai/git/share/src/NP/camera.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/process.h \
- /home/mtoussai/git/share/src/NP/uvccamera.h
-BinaryBPModel.o: BinaryBPModel.cpp BinaryBPModel.h BinaryBP.h array.h \
- data.h optimization.h util.h
-ors_lewiner.o: ors_lewiner.cpp ors.h array.h util.h
-mdp_solvers.o: mdp_solvers.cpp mdp.h array.h mstep.h
-util.o: util.cpp util.h
-joystick.o: joystick.cpp joystick.h array.h process.h util.h
+ /home/mtoussai/git/include/../src/NJ/VisionTrackRoutines.h \
+ /home/mtoussai/git/src/MT/ors.h calibration.h
+mexmagic.o: mexmagic.cpp
+robotActionInterface.o: robotActionInterface.cpp robotActionInterface.h \
+ ors.h array.h util.h robot_marcTask.h robot.h opengl.h robot_variables.h \
+ process.h joystick.h soc.h /home/mtoussai/git/src/NJ/UrgModule.h \
+ /home/mtoussai/git/src/MT/threads.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/util.h /home/mtoussai/git/src/NP/camera.h \
+ /home/mtoussai/git/src/MT/process.h \
+ /home/mtoussai/git/src/NP/uvccamera.h schunk.h vision.h threads.h \
+ earlyVisionModule.h guiModule.h specialTaskVariables.h \
+ /home/mtoussai/git/src/SD/ISF_GP.h \
+ /home/mtoussai/git/src/MT/gaussianProcess.h \
+ /home/mtoussai/git/src/MT/plot.h graspObjects.h
+mdp_EMSolver.o: mdp_EMSolver.cpp mdp_EMSolver.h mdp.h array.h
+process.o: process.cpp process.h array.h util.h threads.h
 mstep.o: mstep.cpp mstep.h array.h
-soc.o: soc.cpp soc.h array.h opengl.h util.h plot.h
-robot.o: robot.cpp robot.h opengl.h util.h array.h robot_variables.h \
- process.h ors.h joystick.h soc.h \
- /home/mtoussai/git/share/src/NJ/UrgModule.h \
- /home/mtoussai/git/share/src/MT/threads.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/util.h \
- /home/mtoussai/git/share/src/NP/camera.h \
- /home/mtoussai/git/share/src/MT/process.h \
- /home/mtoussai/git/share/src/NP/uvccamera.h schunk.h vision.h threads.h \
- earlyVisionModule.h guiModule.h revelModule.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/Device.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/Message.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/GlobalDefines.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/../Util/Config.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/../Util/Boolean.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/../Util/Config.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/../Util/Values.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/InlineFunctions.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../Util/Math.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../ComDef/DeviceErrors.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../ComDef/ModuleErrors.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/../ComDef/IOErrors.h \
- /home/mtoussai/git/share/extern/schunkLWA/include/lwa/Device/ProtocolCommands.h
-ors_ode.o: ors_ode.cpp ors.h array.h util.h
-earlyVisionModule.o: earlyVisionModule.cpp earlyVisionModule.h vision.h \
- array.h threads.h robot_variables.h process.h util.h vision_cuda.h \
- /home/mtoussai/git/share/src/NP/camera.h \
- /home/mtoussai/git/share/src/MT/array.h \
- /home/mtoussai/git/share/src/MT/process.h \
- /home/mtoussai/git/share/src/NP/uvccamera.h
+soc_system_ors.o: soc_system_ors.cpp ors.h array.h util.h opengl.h soc.h \
+ plot.h
+mdp_pomdpEM_structured.o: mdp_pomdpEM_structured.cpp mdp.h array.h \
+ mstep.h infer.h util.h
+ann.o: ann.cpp ann.h /home/mtoussai/git/src/MT/array.h algos.h array.h \
+ util.h
 mdp_pomdpEM_lev1.o: mdp_pomdpEM_lev1.cpp mdp.h array.h mstep.h infer.h \
  util.h
-mexmagic.o: mexmagic.cpp
-ors_actionInterface.o: ors_actionInterface.cpp opengl.h util.h array.h \
- plot.h ors.h ors_actionInterface.h \
- /home/mtoussai/git/share/src/MT/array.h
-soc_system_analytical.o: soc_system_analytical.cpp soc.h array.h plot.h
-mdp_EMSolver.o: mdp_EMSolver.cpp mdp_EMSolver.h mdp.h array.h
-plot.o: plot.cpp plot.h array.h ors.h util.h
+schunk.o: schunk.cpp schunk.h array.h process.h util.h robot_variables.h
+util.o: util.cpp util.h
+soc.o: soc.cpp soc.h array.h opengl.h util.h plot.h
+data.o: data.cpp opengl.h util.h array.h data.h
 threads.o: threads.cpp threads.h process.h array.h util.h
+ors.o: ors.cpp ors.h array.h util.h
+array.o: array.cpp array.h util.h
+algos_LU.o: algos_LU.cpp array.h algos.h util.h
+specialTaskVariables.o: specialTaskVariables.cpp specialTaskVariables.h \
+ ors.h array.h util.h soc.h /home/mtoussai/git/src/SD/ISF_GP.h \
+ /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/gaussianProcess.h \
+ /home/mtoussai/git/src/MT/plot.h graspObjects.h
+mdp.o: mdp.cpp mdp.h array.h infer.h util.h
+gauss.o: gauss.cpp gauss.h array.h functions.h
+vision.o: vision.cpp vision.h array.h threads.h vision_cuda.h BinaryBP.h
+robot_marcTask.o: robot_marcTask.cpp robot_marcTask.h robot.h opengl.h \
+ util.h array.h robot_variables.h process.h ors.h joystick.h soc.h \
+ /home/mtoussai/git/src/NJ/UrgModule.h \
+ /home/mtoussai/git/src/MT/threads.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/util.h /home/mtoussai/git/src/NP/camera.h \
+ /home/mtoussai/git/src/MT/process.h \
+ /home/mtoussai/git/src/NP/uvccamera.h schunk.h vision.h threads.h \
+ earlyVisionModule.h guiModule.h specialTaskVariables.h \
+ /home/mtoussai/git/src/SD/ISF_GP.h \
+ /home/mtoussai/git/src/MT/gaussianProcess.h \
+ /home/mtoussai/git/src/MT/plot.h graspObjects.h
+array_lapack.o: array_lapack.cpp array.h util.h
+motionPlannerModule.o: motionPlannerModule.cpp motionPlannerModule.h \
+ process.h array.h util.h robot_variables.h soc.h \
+ /home/mtoussai/git/src/MT/specialTaskVariables.h \
+ /home/mtoussai/git/src/MT/ors.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/util.h /home/mtoussai/git/src/MT/soc.h \
+ /home/mtoussai/git/src/SD/ISF_GP.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/gaussianProcess.h \
+ /home/mtoussai/git/src/MT/plot.h \
+ /home/mtoussai/git/src/MT/graspObjects.h
+ors_lewiner.o: ors_lewiner.cpp ors.h array.h util.h
+BinaryBPModel.o: BinaryBPModel.cpp BinaryBPModel.h BinaryBP.h array.h \
+ data.h optimization.h util.h
+soc_method_LQG.o: soc_method_LQG.cpp soc.h array.h util.h
+ors_blender.o: ors_blender.cpp ors.h array.h util.h
+truncatedGaussian.o: truncatedGaussian.cpp array.h util.h
+algos.o: algos.cpp algos.h array.h util.h
+functions.o: functions.cpp functions.h array.h algos.h util.h
+earlyVisionModule.o: earlyVisionModule.cpp earlyVisionModule.h vision.h \
+ array.h threads.h robot_variables.h process.h util.h vision_cuda.h \
+ /home/mtoussai/git/src/NP/camera.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/process.h \
+ /home/mtoussai/git/src/NP/uvccamera.h
+robot.o: robot.cpp robot.h opengl.h util.h array.h robot_variables.h \
+ process.h ors.h joystick.h soc.h /home/mtoussai/git/src/NJ/UrgModule.h \
+ /home/mtoussai/git/src/MT/threads.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/util.h /home/mtoussai/git/src/NP/camera.h \
+ /home/mtoussai/git/src/MT/process.h \
+ /home/mtoussai/git/src/NP/uvccamera.h schunk.h vision.h threads.h \
+ earlyVisionModule.h guiModule.h revelModule.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/Device.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/Message.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/GlobalDefines.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/../Util/Config.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/../Util/Boolean.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/../Util/Config.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/../Util/Values.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/InlineFunctions.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../Util/Math.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../ComDef/DeviceErrors.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../ComDef/ModuleErrors.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/../ComDef/IOErrors.h \
+ /home/mtoussai/git/extern/schunkLWA/include/lwa/Device/ProtocolCommands.h
+calibration.o: calibration.cpp calibration.h array.h
+opengl.o: opengl.cpp opengl.h util.h array.h ors.h
+ors_actionInterface.o: ors_actionInterface.cpp opengl.h util.h array.h \
+ plot.h ors.h ors_actionInterface.h /home/mtoussai/git/src/MT/array.h
+joystick.o: joystick.cpp joystick.h array.h process.h util.h
+gaussianProcess.o: gaussianProcess.cpp gaussianProcess.h \
+ /home/mtoussai/git/src/MT/array.h /home/mtoussai/git/src/MT/plot.h
+ors_featherstone.o: ors_featherstone.cpp ors.h array.h util.h
+revelModule.o: revelModule.cpp revelModule.h util.h
+ors_taskVariables.o: ors_taskVariables.cpp ors.h array.h util.h
+mdp_solvers.o: mdp_solvers.cpp mdp.h array.h mstep.h
+BinaryBP.o: BinaryBP.cpp BinaryBP.h array.h util.h
+ors_opengl.o: ors_opengl.cpp ors.h array.h util.h opengl.h
+MinSumGaussNewton.o: MinSumGaussNewton.cpp MinSumGaussNewton.h \
+ /home/mtoussai/git/src/MT/array.h
+libmt.o: libmt.cpp util.h
+soc_method_AICO.o: soc_method_AICO.cpp soc.h array.h util.h \
+ truncatedGaussian.h optimization.h MinSumGaussNewton.h \
+ /home/mtoussai/git/src/MT/array.h
+mdp_pomdpEM_lev2.o: mdp_pomdpEM_lev2.cpp mdp.h array.h mstep.h infer.h \
+ util.h
+hypergraph.o: hypergraph.cpp hypergraph.h util.h array.h ors.h
+guiModule.o: guiModule.cpp guiModule.h array.h process.h util.h \
+ robot_variables.h ors.h perceptionModule.h vision.h threads.h plot.h \
+ opengl.h /home/mtoussai/git/src/NP/camera.h \
+ /home/mtoussai/git/src/MT/array.h /home/mtoussai/git/src/MT/process.h \
+ /home/mtoussai/git/src/NP/uvccamera.h
+soc_system_toy.o: soc_system_toy.cpp soc.h array.h opengl.h util.h ors.h
+ors_qhull.o: ors_qhull.cpp
+infer.o: infer.cpp infer.h array.h util.h
+soc_method_gradient.o: soc_method_gradient.cpp soc.h array.h ors.h util.h \
+ optimization.h
+optimization.o: optimization.cpp optimization.h array.h util.h
+roboticsCourse.o: roboticsCourse.cpp roboticsCourse.h \
+ /home/mtoussai/git/src/MT/ors.h /home/mtoussai/git/src/MT/array.h \
+ /home/mtoussai/git/src/MT/util.h /home/mtoussai/git/src/MT/array.h ors.h \
+ algos.h array.h util.h opengl.h plot.h
+ors_ode.o: ors_ode.cpp ors.h array.h util.h
+algos_rk.o: algos_rk.cpp algos.h array.h util.h
+mdp_opengl.o: mdp_opengl.cpp mdp.h array.h
+mdp_pomdpEM_generic.o: mdp_pomdpEM_generic.cpp mdp.h array.h mstep.h \
+ infer.h util.h
+plot.o: plot.cpp plot.h array.h ors.h util.h
+mdp_tony.o: mdp_tony.cpp mdp.h array.h
+ors_swift.o: ors_swift.cpp ors.h array.h util.h
+soc_system_analytical.o: soc_system_analytical.cpp soc.h array.h plot.h
