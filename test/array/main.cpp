@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+//#define MT_IMPLEMENTATION
 
 #include<algorithm>
 #include<MT/array.h>

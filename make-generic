@@ -90,7 +90,7 @@ CXX	= g++
 CC	= gcc
 endif
 LINK	= $(CXX)
-CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
+CPATH	:= $(BASE)/src:$(BASE)/include:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
 LinuxLibs += -lrt #-lpthread -lncurses
 SEP	= :
