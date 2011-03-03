@@ -751,9 +751,9 @@ void ActionInterface::calcTargetPositionForDrop(double& x, double& y, uint obj_d
     }
   }
   // Below = Block
-  else if (obj_below_type == BBOX) {
+  else if (obj_below_type == ors::boxST) {
     // (1) Dropping block
-    if (obj_dropped_type == BBOX) {
+    if (obj_dropped_type == ors::boxST) {
       // (1a) on small block
       if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
@@ -768,7 +768,7 @@ void ActionInterface::calcTargetPositionForDrop(double& x, double& y, uint obj_d
       else {NIY;}
     }
     // (2) Dropping ball
-    else if (obj_dropped_type == BSPHERE) {
+    else if (obj_dropped_type == ors::sphereST) {
       // (2a) on small block
       if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK;
@@ -788,7 +788,7 @@ void ActionInterface::calcTargetPositionForDrop(double& x, double& y, uint obj_d
 //     PRINT(std_dev_noise);
   }
   // Below = Ball
-  else if (obj_below_type == BSPHERE) {
+  else if (obj_below_type == ors::sphereST) {
     x_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
     y_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
   }
@@ -1082,7 +1082,7 @@ void ActionInterface::getBlocks(uintA& blocks) {
     ss << "o" << i;
     ors::Body *n = C->getBodyByName(ss.str().c_str());
     if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == BBOX)
+      if (n->shapes(0)->type == ors::boxST)
         blocks.append(n->index);
     }
   }
@@ -1098,7 +1098,7 @@ void ActionInterface::getBalls(uintA& balls) {
     ss << "o" << i;
     ors::Body *n = C->getBodyByName(ss.str().c_str());
     if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == BSPHERE)
+      if (n->shapes(0)->type == ors::sphereST)
         balls.append(n->index);
     }
   }
@@ -1181,7 +1181,7 @@ double* ActionInterface::getPosition(uint id) {
 void ActionInterface::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
   
-  if (getOrsType(id) == BSPHERE) {
+  if (getOrsType(id) == ors::sphereST) {
     orientation.setUni(0.);
     return;
   }
@@ -1238,7 +1238,7 @@ void ActionInterface::getOrientation(arr& orientation, uint id) {
 
 bool ActionInterface::isUpright(uint id) {
   // balls are always upright
-  if (getOrsType(id) == BSPHERE)
+  if (getOrsType(id) == ors::sphereST)
     return true;
   
   double TOLERANCE = 0.05; // in radians

@@ -201,7 +201,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
     b->name = STRING("body"<<k);
     if(!k) b->fixed=true;
     s=new ors::Shape(ors->shapes,b);
-    s->type=2;
+    s->type=ors::cappedCylinderST;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=1./K; s->size[3]=.2/K;
     s->rel.setText(STRING("<t(0 0 "<<.5/K<<")>"));
     if(k&1){ s->color[0]=.5; s->color[1]=.2; s->color[2]=.2; }
@@ -209,7 +209,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
     s->cont=true;
     if(k){
       j=new ors::Joint(ors->joints,ors->bodies(k-1),ors->bodies(k));
-      j->type = JHINGE;
+      j->type = ors::hingeJT;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 "<<1./K<<") d(-90 0 1 0)>"));

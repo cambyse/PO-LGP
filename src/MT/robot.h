@@ -18,8 +18,7 @@
 #include "guiModule.h"
 #include "process.h"
 
-struct ControllerProcess; //RENAME: ControllerProcess
-//struct RobotActionInterfaceWS;
+struct ControllerProcess;
 struct RevelInterface;
 struct TaskAbstraction;
 enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
@@ -54,7 +53,7 @@ struct TaskAbstraction{
   double TV_x_yprec,TV_x_vprec,TV_rot_vprec,TV_q_vprec;
   
   //control options
-  uint controlMode; //RENAME taskMode
+  uint controlMode;
   
   //-- options/parameters
   double joyRate;      //joystick speed
@@ -72,7 +71,7 @@ struct TaskAbstraction{
   TaskAbstraction();
 
   virtual void initTaskVariables(ControllerProcess*);
-  virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
+  virtual void updateTaskVariables(ControllerProcess*);
 };
 
 

@@ -128,7 +128,7 @@ void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
   ors::Graph *ors = s->master.ctrl.sys.ors;
   ors::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
-  shape->type = BMESH;
+  shape->type = ors::meshST;
   if(s->master.openGui){
     s->master.gui.ors->copyShapesAndJoints(*ors);
     s->master.gui.ors2->copyShapesAndJoints(*ors);

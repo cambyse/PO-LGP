@@ -2349,7 +2349,7 @@ void ors::Body::read(std::istream& is){
     if(!shapes.N) shapes.append(new Shape());
     shapes(0)->body=this;
     shapes(0)->ibody=index;
-    shapes(0)->type=(int)(*dval);
+    shapes(0)->type=(ShapeType)(*dval);
   }
   dval=anyListGet<double>(ats,"size",4);     if(dval) memmove(shapes(0)->size,dval,4*sizeof(double));
   dval=anyListGet<double>(ats,"color",3);    if(dval) memmove(shapes(0)->color,dval,3*sizeof(double));
@@ -2365,11 +2365,11 @@ void ors::Body::read(std::istream& is){
     inertia *= .2*(*dval);
 #else
     switch(shapes(0)->type){
-    case BSPHERE:   inertiaSphere  ( inertia.m, mass, 1000., shapes(0)->size[3]);  break;
-    case BBOX:      inertiaBox     ( inertia.m, mass, 1000., shapes(0)->size[0], shapes(0)->size[1], shapes(0)->size[2]);  break;
-    case BCCYLINDER:
-    case BCYLINDER: inertiaCylinder( inertia.m, mass, 1000., shapes(0)->size[2], shapes(0)->size[3]);  break;
-    case BNONE:
+    case sphereST:   inertiaSphere  ( inertia.m, mass, 1000., shapes(0)->size[3]);  break;
+    case boxST:      inertiaBox     ( inertia.m, mass, 1000., shapes(0)->size[0], shapes(0)->size[1], shapes(0)->size[2]);  break;
+    case cappedCylinderST:
+    case cylinderST: inertiaCylinder( inertia.m, mass, 1000., shapes(0)->size[2], shapes(0)->size[3]);  break;
+    case noneST:
     default: HALT("can't set inertia tensor for this type");
     }
 #endif
@@ -2397,7 +2397,7 @@ void ors::Shape::read(std::istream& is){
   sval=anyListGet<MT::String>(ats,"rel",1);  if(sval) rel.setText(*sval);
   dval=anyListGet<double>(ats,"color",3);    if(dval) memmove(color,dval,3*sizeof(double));
   dval=anyListGet<double>(ats,"size",4);     if(dval) memmove(size,dval,4*sizeof(double));
-  dval=anyListGet<double>(ats,"type",1);     if(dval) type=(int)(*dval);
+  dval=anyListGet<double>(ats,"type",1);     if(dval) type=(ShapeType)(*dval);
 
   sval=anyListGet<MT::String>(ats,"mesh",1); if(sval) mesh.readFile(*sval);
   if(anyListGet<double>(ats,"contact",0))    cont=true;
@@ -2408,7 +2408,7 @@ void ors::Shape::write(std::ostream& os) const{
 }
 
 void ors::Shape::reset(){
-  type=BNONE;
+  type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
   contactOrientation.setZero();
@@ -2448,7 +2448,7 @@ void ors::Joint::read(std::istream& is){
   sval=anyListGet<MT::String>(ats,"A",1);  if(sval) A.setText(*sval);
   sval=anyListGet<MT::String>(ats,"B",1);  if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats,"Q",1);  if(sval) Q.setText(*sval);
-  dval=anyListGet<double>(ats,"type",1);   if(dval) type=(int)(*dval); else type=JHINGE;
+  dval=anyListGet<double>(ats,"type",1);   if(dval) type=(JointType)(*dval); else type=hingeJT;
 }
 
 
@@ -2669,12 +2669,11 @@ uint ors::Graph::getFullStateDimension(){
     if(!n->inLinks.N && !n->fixed) i+=6;
     else if(n->inLinks.N){
       switch(n->inLinks(0)->type){
-      case 0: i+=1; break;
-#ifndef Qstate
-      case 4: i+=3; break;
-#else
-      case 4: i+=4; break;
-#endif
+      case hingeJT: case sliderJT: n++;  break;
+      case glueJT:  case fixedJT:        break;
+      case universalJT:  n+=2; break;
+      case ballJT:       n+=3;  break;
+      default: NIY;
       }
     }
   }
@@ -2691,10 +2690,10 @@ uint ors::Graph::getJointStateDimension(bool internal) const{
     uint n=0;
     for_list(i,e,joints){
       switch(e->type){
-        case JHINGE: case JSLIDER: n++;  break;
-        case JGLUE:  case JFIXED:        break;
-        case JUNIVERSAL:           n+=2; break;
-        default: NIY; break;
+        case hingeJT: case sliderJT: n++;  break;
+        case glueJT:  case fixedJT:        break;
+        case universalJT:           n+=2; break;
+        default: NIY;
       }
     }
     ((Graph*)this)->jd = n; //hack to work around const declaration
@@ -2726,7 +2725,7 @@ void ors::Graph::getFullState(arr& x){
     e=n->inLinks(0);
     if(e){
       switch(e->type){
-      case 0:
+      case hingeJT:
         e->Q.rot.getRad(x(i),rot);
         if(x(i)>MT_PI) x(i)-=MT_2PI;
         if(rot*VEC_x<0.) x(i)=-x(i); //MT_2PI-x(i);
@@ -2735,7 +2734,7 @@ void ors::Graph::getFullState(arr& x){
         if(e->Q.angvel*VEC_x<0.) x(i)=-x(i);
         i+=1;
         break;
-      case 4: NIY; break;
+      default: NIY;
       }
     }
   }
@@ -2765,7 +2764,7 @@ void ors::Graph::getFullState(arr& x,arr& v){
     }else{
       e=n->inLinks(0);
       switch(e->type){
-      case 0:
+      case hingeJT:
         e->Q.rot.getRad(x(i),rot);
         if(x(i)>MT_PI) x(i)-=MT_2PI;
         if(rot*VEC_x<0.) x(i)=-x(i); //MT_2PI-x(i);
@@ -2773,6 +2772,7 @@ void ors::Graph::getFullState(arr& x,arr& v){
         if(e->Q.angvel*VEC_x<0.) v(i)=-v(i);
         i+=1;
         break;
+	/*
 #ifndef Qstate
       case 4:
         e->Q.r.getVec(rot);
@@ -2789,6 +2789,8 @@ void ors::Graph::getFullState(arr& x,arr& v){
         i+=4;
 	break;
 #endif
+	*/
+      default: NIY;
       }
     }
   }
@@ -2820,7 +2822,7 @@ void ors::Graph::setFullState(const arr& x,bool clearJointErrors){
     e=n->inLinks(0);
     if(e){
       switch(e->type){
-      case 0:
+      case hingeJT:
         e->Q.rot.setRadX(x(i)); 
         i+=1;
         if(e->Q.angvel.isZero()) e->Q.angvel=VEC_x;
@@ -2832,10 +2834,7 @@ void ors::Graph::setFullState(const arr& x,bool clearJointErrors){
         }
         i+=1;
         break;
-      case 4:
-        NIY;
-        i+=1;
-        break;
+      default: NIY;
       }
     }
   }
@@ -2866,7 +2865,7 @@ void ors::Graph::setFullState(const arr& x,const arr& v,bool clearJointErrors){
     e=n->inLinks(0);
     if(e){
       switch(e->type){
-      case 0:
+      case hingeJT:
 	e->Q.rot.setRadX(x(i)); 
 	if(e->Q.angvel.isZero()) e->Q.angvel=VEC_x;
 	if(e->Q.angvel*VEC_x<0.) e->Q.angvel.setLength(-v(i)); else e->Q.angvel.setLength(v(i));
@@ -2877,6 +2876,7 @@ void ors::Graph::setFullState(const arr& x,const arr& v,bool clearJointErrors){
 	}
 	i+=1;
 	break;
+	/*
 #ifndef Qstate
       case 4:
 	memmove(&(rot)   ,&x(i),3*x.sizeT);
@@ -2897,6 +2897,8 @@ void ors::Graph::setFullState(const arr& x,const arr& v,bool clearJointErrors){
 	i+=4;
 	break;
 #endif
+	*/
+      default: NIY;
       }
     }
   }
@@ -2940,7 +2942,7 @@ void ors::Graph::getJointState(arr& x,arr& v){
 
   for_list(i,e,joints){
     switch(e->type){
-    case JHINGE: 
+    case hingeJT: 
       //angle
       e->Q.rot.getRad(x(n),rotv);
       if(x(n)>MT_PI) x(n)-=MT_2PI;
@@ -2950,7 +2952,7 @@ void ors::Graph::getJointState(arr& x,arr& v){
       if(e->Q.angvel*VEC_x<0.) v(n)=-v(n);
       n++;
       break;   
-    case JUNIVERSAL:
+    case universalJT:
       //angle
       rot = e->Q.rot;
       if(fabs(rot.p[0])>1e-15) {
@@ -2965,15 +2967,15 @@ void ors::Graph::getJointState(arr& x,arr& v){
 	
       n+=2; 
       break;
-    case JSLIDER:
+    case sliderJT:
       x(n)=(e->Q.pos)(0); 
       v(n)=(e->Q.vel)(0);
       n++;
       break;
-    case JGLUE:
-    case JFIXED:
+    case glueJT:
+    case fixedJT:
       break;
-      default: NIY; break;
+    default: NIY;
     }
   }
 
@@ -3004,7 +3006,7 @@ void ors::Graph::setJointState(const arr& _x,const arr& _v,bool clearJointErrors
   
   for_list(i,e,joints){
     switch(e->type){
-    case JHINGE: 
+    case hingeJT: 
       //angle
       e->Q.rot.setRadX(q(n));
       
@@ -3033,7 +3035,7 @@ void ors::Graph::setJointState(const arr& _x,const arr& _v,bool clearJointErrors
       n++;
       break;
       
-    case JUNIVERSAL:
+    case universalJT:
       //angle
       rot1.setRadX(q(n));
       rot2.setRadY(q(n+1));
@@ -3064,7 +3066,7 @@ void ors::Graph::setJointState(const arr& _x,const arr& _v,bool clearJointErrors
       }
       n+=2; 
       break;
-    case JSLIDER:	
+    case sliderJT:	
       e->Q.pos = q(n)*VEC_x;
       
       // check boundaries
@@ -3085,11 +3087,11 @@ void ors::Graph::setJointState(const arr& _x,const arr& _v,bool clearJointErrors
       e->Q.angvel.setZero();
       n++;
       break;	
-    case JGLUE:
-    case JFIXED:
+    case glueJT:
+    case fixedJT:
       e->Q.setZero();
       break;
-    default:  NIY;  break;
+    default: NIY;
     }
   }
 }
@@ -3142,12 +3144,12 @@ void ors::Graph::jacobian(arr& J,uint a,ors::Transformation *rel){
   while(ei){
     i=ei->index;
     if(ei->index>=jd){
-      CHECK(ei->type==JGLUE || ei->type==JFIXED,"");
+      CHECK(ei->type==glueJT || ei->type==fixedJT,"");
       if(!ei->from->inLinks.N) break;
       ei=ei->from->inLinks(0);
       continue;
     }
-    CHECK(ei->type!=JGLUE && ei->type!=JFIXED,"resort joints so that fixed and glued are last");
+    CHECK(ei->type!=glueJT && ei->type!=fixedJT,"resort joints so that fixed and glued are last");
 
 #if 0
     Xi = ei->from->X;
@@ -3357,12 +3359,12 @@ void ors::Graph::jacobianZ(arr& J,uint a,ors::Transformation *rel){
   while(ei){
     i=ei->index;
     if(ei->index>=jd){
-      CHECK(ei->type==JGLUE || ei->type==JFIXED,"");
+      CHECK(ei->type==glueJT || ei->type==fixedJT,"");
       if(!ei->from->inLinks.N) break;
       ei=ei->from->inLinks(0);
       continue;
     }
-    CHECK(ei->type!=JGLUE && ei->type!=JFIXED,"resort joints so that fixed and glued are last");
+    CHECK(ei->type!=glueJT && ei->type!=fixedJT,"resort joints so that fixed and glued are last");
 
     Xi = ei->Xworld;
     Xi.rot.getX(ti);
@@ -3404,12 +3406,12 @@ void ors::Graph::jacobianR(arr& J,uint a){
   while(ei){
     i=ei->index;
     if(ei->index>=jd){
-      CHECK(ei->type==JGLUE || ei->type==JFIXED,"");
+      CHECK(ei->type==glueJT || ei->type==fixedJT,"");
       if(!ei->from->inLinks.N) break;
       ei=ei->from->inLinks(0);
       continue;
     }
-    CHECK(ei->type!=JGLUE && ei->type!=JFIXED,"resort joints so that fixed and glued are last");
+    CHECK(ei->type!=glueJT && ei->type!=fixedJT,"resort joints so that fixed and glued are last");
 
     Xi = ei->Xworld;
     Xi.rot.getX(ti);
@@ -3776,7 +3778,7 @@ void ors::Graph::glueBodies(Body *f,Body *t){
   e->A.setDifference(f->X,t->X);
   e->A.vel.setZero();
   e->A.angvel.setZero();
-  e->type=JGLUE;
+  e->type=glueJT;
   e->Q.setZero();
   e->B.setZero();
 }

@@ -478,11 +478,11 @@ void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects){
     if(!obj->found) continue;
     ors::Body *o = ors.bodies(i+indFirst);
     ors::Shape *s = o->shapes(0);
-    int type=-1;//SSD: getting rid of a warning. ok?
-    if( obj->shapeType == 0) type=1;
-    if( obj->shapeType == 1) type=4;
+    ors::ShapeType type=ors::noneST;//SSD: getting rid of a warning. ok?
+    if( obj->shapeType == 0) type=ors::sphereST;
+    if( obj->shapeType == 1) type=ors::cylinderST;
     if( obj->shapeType == 2){//box
-      type = 0;
+      type = ors::boxST;
       //  ors::Vector diag(obj->diagDiff(0),obj->diagDiff(1),obj->diagDiff(2)*0);//z is the smallest entry, but still not 0
       //double phi=acos(diag(0)/diag.length());//arccos btw 100 and diag
       // ors::Quaternion q;

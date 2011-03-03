@@ -207,28 +207,28 @@ void glDrawShape(ors::Shape *s,const ors::Transformation& X){
     glDrawSphere(.1*scale);
   }
   if(orsDrawShapes) switch(s->type){
-    case BNONE: break;
-    case BBOX:
+    case ors::noneST: break;
+    case ors::boxST:
       if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
       else glDrawBox(s->size[0],s->size[1],s->size[2]);
       break;
-    case BSPHERE:
+    case ors::sphereST:
       if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
       else glDrawSphere(s->size[3]);
       break;
-    case BCYLINDER:
+    case ors::cylinderST:
       if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
       else glDrawCylinder(s->size[3],s->size[2]);
       break;
-    case BCCYLINDER:
+    case ors::cappedCylinderST:
       if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
       else glDrawCappedCylinder(s->size[3],s->size[2]);
       break;
-    case BMARKER:
+    case ors::markerST:
       if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
       else glDrawAxes(s->size[0]);
       break;
-    case BMESH:
+    case ors::meshST:
       CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
       ors::glDraw(s->mesh);
       break;

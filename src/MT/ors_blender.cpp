@@ -134,7 +134,7 @@ void readBlender(const char* filename,ors::Mesh& mesh,ors::Graph& bl){
 #endif
     n->X.rot = f.rot;
 
-    s->type=0;
+    s->type=ors::boxST;
     l=(t-h).length();
     v[0]=v[1]=v[3]=l/20.; v[2]=l;
     memmove(s->size,v,4*sizeof(double));

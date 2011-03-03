@@ -251,7 +251,7 @@ ors::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
       ors::Shape *s = new ors::Shape;
       chessboard->shapes.append(s);
       s->body=chessboard;
-      s->type = BBOX;
+      s->type = boxST;
       s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
@@ -302,7 +302,7 @@ void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, u
       ors::Shape *s = new ors::Shape;
       chessboard->shapes.append(s);
       s->body=chessboard;
-      s->type = BBOX;
+      s->type = boxST;
       s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
@@ -318,7 +318,7 @@ void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, u
         std::cout << oss.str() << std::endl;
         c->body=chessboard;
         c->name=oss.str().c_str();
-        c->type = BSPHERE;
+        c->type = sphereST;
 #ifndef NP_DEBUG_CHESSBOARD
         c->size[0]=.001; c->size[1]=.001; c->size[2]=.001; c->size[3]=.001;
 #else

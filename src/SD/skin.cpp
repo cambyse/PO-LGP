@@ -60,7 +60,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
     s1->reset();
     a = new MT::String("a"); *a<<i<<" "<<j;
     s1->name = a->p;
-    s1->type=BBOX;
+    s1->type=boxST;
     s1->rel.setText(s.p);
     SD_SIZE(s1->size, .0034, .0034, .001, .0034);
     SD_COL(s1->color, .8, .1, .1 );
@@ -70,7 +70,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
     s2->reset();
     n = new MT::String("n"); *a<<i<<" "<<j;
     s2->name = n->p;
-    s2->type=BCYLINDER;
+    s2->type=cylinderST;
     s2->rel.setText(s.p);
     SD_SIZE(s2->size, .0034, .0034, .02, .00003);
     SD_COL(s2->color, .1, .8, .1  );

@@ -23,29 +23,12 @@
 #include "array.h"
 #include "util.h"
 
-
-//===========================================================================
-
-// body types //RENAME THESE DEFINES - MAKE THEM ENUM!
-#define BNONE -1
-#define BBOX 0
-#define BSPHERE 1
-#define BCCYLINDER 2
-#define BMESH 3
-#define BCYLINDER 4
-#define BMARKER 5
-
-// joint types
-#define JHINGE 0
-#define JUNIVERSAL 1
-#define JFIXED 2
-#define JSLIDER 3
-#define JBALL 4
-#define JGLUE 5
-
-
-
 namespace ors{
+
+  //===========================================================================
+  //! shape and joint type enums
+  enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST };
+  enum JointType { hingeJT=0, universalJT, fixedJT, sliderJT, ballJT, glueJT };
 
   //===========================================================================
   //! a 3D vector (double[3])
@@ -318,7 +301,7 @@ namespace ors{
     int ifrom,ito;       //!< indices of from and to bodies
     Body *from,*to;      //!< pointers to from and to bodies
 
-    int type;            //!< joint type
+    JointType type;               //!< joint type
     Transformation A;             //!< transformation from parent body to joint (attachment, usually static)
     Transformation Q;             //!< transformation within the joint (usually dynamic)
     Transformation B;             //!< transformation from joint to child body (attachment, usually static)
@@ -339,7 +322,7 @@ namespace ors{
       index=j.index; ifrom=j.ifrom; ito=j.ito;
       type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
       listClone(ats,j.ats); }
-    void reset(){ listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=JHINGE; }
+    void reset(){ listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
     void write(std::ostream& os) const;
     void read(std::istream& is);
     Joint &data(){ return *this; }
@@ -355,7 +338,7 @@ namespace ors{
     MT::String name;     //!< name
     Transformation X;
     Transformation rel;      //!< relative translation/rotation of the bodies geometry
-    int type;
+    ShapeType type;
     double size[4];
     double color[3];
     Mesh mesh;
@@ -368,7 +351,7 @@ namespace ors{
     explicit Shape(const Shape& s){ body=NULL; *this=s; }
     Shape(MT::Array<Shape*>& shapes,Body *b){
       reset();
-      type=BNONE;
+      type=noneST;
       cont=false;
       size[0]=size[1]=size[2]=size[3]=1.;
       color[0]=color[1]=color[2]=.8;
@@ -921,7 +904,7 @@ namespace ors{
     ors::Vector com,force,torque;
     double mass;
     ors::Matrix inertia;
-    uint dof(){ if(type==JHINGE) return 1; else return 0; }
+    uint dof(){ if(type==hingeJT) return 1; else return 0; }
 
     arr _h,_A,_Q,_I,_f; //featherstone types
     void setFeatherstones();
