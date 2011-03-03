@@ -606,9 +606,9 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       TV_col->active=true;
       TV_lim->active=true;
       TV_q->active=true;
-      TV_q->y_prec=0.;   TV_q->v_prec=10.*TV_q_vprec;
+      TV_q->y_prec=0.;  TV_q->v_prec=10.*TV_q_vprec;
       TV_q->v_target = ctrl->q_home - TV_q->y;
-      double vmax=.3,v=norm(TV_q->v_target);
+      double vmax=.3, v=norm(TV_q->v_target);
       if(v>vmax) TV_q->v_target*=vmax/v;
       break;
     }

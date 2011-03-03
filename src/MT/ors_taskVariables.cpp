@@ -97,7 +97,7 @@ void TaskVariable::set(
     ors::Transformation().setText(reltext));
 }*/
 
-void TaskVariable::setGains(real pgain,real dgain,bool onReal){
+void TaskVariable::setGains(double pgain,double dgain,bool onReal){
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Pgain=pgain;
@@ -105,7 +105,7 @@ void TaskVariable::setGains(real pgain,real dgain,bool onReal){
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsNatural(real oscPeriod,real dampingRatio,bool onReal){
+void TaskVariable::setGainsAsNatural(double oscPeriod,double dampingRatio,bool onReal){
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Pgain = MT::sqr(MT_PI/oscPeriod);
@@ -113,7 +113,7 @@ void TaskVariable::setGainsAsNatural(real oscPeriod,real dampingRatio,bool onRea
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsAttractor(real decaySteps,real oscillations,bool onReal){
+void TaskVariable::setGainsAsAttractor(double decaySteps,double oscillations,bool onReal){
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Dgain=2./decaySteps;
@@ -259,7 +259,7 @@ void TaskVariable::shiftTargets(int offset){
 #endif
 }
 
-void TaskVariable::updateState(){
+void TaskVariable::updateState(double tau){
   arr p;
   arr q,qv;
   ors::Vector pi,pj,c;
@@ -328,7 +328,7 @@ void TaskVariable::updateState(){
   }
 
   //v = .5*v + .5*(y - y_old);
-  v = y - y_old;
+  v = (y - y_old)/tau;
 
   if(y_target.N==y.N){
     err=norm(y - y_target);
@@ -431,7 +431,7 @@ void TaskVariable::getHessian(arr& H){
   }
 }
 
-void TaskVariable::updateChange(int t){
+void TaskVariable::updateChange(int t,double tau){
   CHECK(y.N,"variable needs to be updated before!");
   arr yt,vt;
   if(t!=-1){
@@ -452,16 +452,16 @@ void TaskVariable::updateChange(int t){
     break;
   }
   case pdGainOnRealTT:{
-    v_ref = v + Pgain*(yt - y) + Dgain*(vt - v);
-    y_ref = y + v_ref; //``Euler integration''
-    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in real time
+    v_ref = v + tau*(Pgain*(yt - y) + Dgain*(vt - v));
+    y_ref = y + tau*v_ref; //``Euler integration''
+    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in double time
     break;
   }
   case pdGainOnReferenceTT:{
     if(y_ref.N!=y.N){ y_ref=y; v_ref=v; }
-    v_ref = v_ref + Pgain*(yt - y_ref) + Dgain*(vt - v_ref);
-    y_ref = y_ref + v_ref; //``Euler integration''
-    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in real time
+    v_ref = v_ref + tau*(Pgain*(yt - y_ref) + Dgain*(vt - v_ref));
+    y_ref = y_ref + tau*v_ref; //``Euler integration''
+    //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in double time
     static ofstream fil("refs");
     fil <<y_ref <<v_ref <<yt <<vt <<y <<v <<' ' <<Pgain <<' ' <<Dgain <<endl;
     break;

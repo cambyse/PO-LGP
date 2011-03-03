@@ -604,10 +604,10 @@ struct TaskVariable{
   arr v_trajectory,v_prec_trajectory;        //!< target & precision over a whole trajectory
 
   arr y_ref,v_ref;                           //!< immediate (next step) desired target reference
-  real Pgain,Dgain;                          //!< parameters of the PD controller or attractor dynamics
+  double Pgain,Dgain;                          //!< parameters of the PD controller or attractor dynamics
 
   //a bit obsolete
-  real err,derr;
+  double err,derr;
   int state;                                 //!< discrete indicate state of this variable (e.g., convergence)
   double state_tol;
 
@@ -639,9 +639,9 @@ struct TaskVariable{
   //void set(const char* _name,ors::Graph& _sl,TVtype _type,const char *iname,const char *jname,const char *reltext);
 
   //!@name online target parameters
-  void setGains(real Pgain,real Dgain,bool onReal=true);
-  void setGainsAsNatural(real decaySteps,real dampingRatio,bool onReal=true);
-  void setGainsAsAttractor(real decaySteps,real oscillations=.2,bool onReal=true);
+  void setGains(double Pgain,double Dgain,bool onReal=true);
+  void setGainsAsNatural(double decaySteps,double dampingRatio,bool onReal=true);
+  void setGainsAsAttractor(double decaySteps,double oscillations=.2,bool onReal=true);
   
   //!@name trajectory target parameters
   void setConstantTargetTrajectory(uint T);
@@ -658,9 +658,9 @@ struct TaskVariable{
   void shiftTargets(int offset);
   
   //!@name updates
-  void updateState();
+  void updateState(double tau=.01);
   void updateJacobian();
-  void updateChange(int t=-1);
+  void updateChange(int t=-1,double tau=.01);
   void getHessian(arr& H);
 
   //!@name virtual user update

@@ -497,11 +497,9 @@ info: force
 
 %.so: $(PREOBJS) $(OBJS) $(DEPEND)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs) $(SHAREFLAG)
-	chmod a+rx $@
 
 %.lib: $(PREOBJS) $(OBJS) $(DEPEND)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs) -static ### $(SHAREFLAG)
-	chmod a+rx $@
 
 %.a: $(PREOBJS) $(OBJS) $(DEPEND)
 	ar -crvs $@ $(OBJS)
@@ -549,5 +547,8 @@ info: force
 
 dependLib_%: force
 	make -C $(BASE)/src/$*
+
+#%.dep: %.cpp
+#        $(CXX) -M $(CPPFLAGS) $< | sed '\"s/$*.o/& $@/g'\" > make
 
 force:	;

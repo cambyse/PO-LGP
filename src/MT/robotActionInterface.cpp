@@ -64,23 +64,19 @@ void RobotActionInterface::homing(){
 
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
   TaskAbstraction *task = &s->defaultTask;
+  s->defaultTask.controlMode = prefixedCM;
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
-  s->defaultTask.controlMode = prefixedCM;
-  TV.setGainsAsNatural(400.,1.,false);
-  TV.active = true;
-  TV.y_prec = 1e2;
-  TV.v_prec = 1e0;
-  TV.v_target = ARR(0.,0.,0.);
-  TV.y_target = posGoal;
-  task->TV_col->active=task->TV_lim->active=true;
-  task->TV_q->active=true;
-  task->TV_q->y_prec=1e-2;   
-  task->TV_q->y_target.setZero(); //potential on home position
-  task->TV_q->v_prec=task->TV_q_vprec;
-  task->TV_q->v_target.setZero(); //damping on joint velocities
+  TV.setGainsAsNatural(3.,1.,false);
+  TV.y_prec = 1e2;  TV.y_target = posGoal;
+  TV.v_prec = 0.;   TV.v_target = ARR(0.,0.,0.);
+  TV.updateState(); //non-thread state -- ors actually needs a lock
+  
+  task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
-  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim,task->TV_q));
+  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim,task->TV_q)); //non-thread safe: task variable list needs a lock
 
   for(;!schunkShutdown;){
     MT::wait(.2);
@@ -98,29 +94,22 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   s->defaultTask.controlMode = prefixedCM;
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
-  TV.setGainsAsNatural(300.,1.);
-  TV.active = true;
-  TV.y_prec = 0.; //1e2;
-  TV.v_prec = 1e2;
-  TV.v_target = ARR(0.,0.,0.);
-  TV.y_target = posGoal;
+  TV.setGainsAsNatural(3.,1.,false);
+  TV.y_prec = 1e2;  TV.y_target = posGoal;
+  TV.v_prec = 0.;   TV.v_target = ARR(0.,0.,0.);
+  TV.updateState();
   
-  TaskVariable TValign("reach",*s->master.ctrl.sys.ors,zalignTVT,shapeName,NULL,0);
+  TaskVariable TValign("align",*s->master.ctrl.sys.ors,zalignTVT,shapeName,NULL,0);
   ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
   TValign.jrel.rot.setDiff(VEC_z,vecGoalOrs);
-  TValign.setGainsAsNatural(300.,1.);
-  TValign.active = true;
-  TValign.y_prec = 0; //1e2; //1e2;
-  TValign.v_prec = 1e2;
-  TValign.v_target = ARR(0.);
-  TValign.y_target = ARR(1.);
-
-  task->TV_col->active=task->TV_lim->active=true;
-  task->TV_q->active=true;
-  task->TV_q->y_prec=1e-2;   
-  task->TV_q->y_target.setZero(); //potential on home position
-  task->TV_q->v_prec=1e-2; //task->TV_q_vprec;
-  task->TV_q->v_target.setZero(); //damping on joint velocities
+  TValign.setGainsAsNatural(2.,1.,false);
+  TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
+  TValign.v_prec = 0.;   TValign.v_target = ARR(0.);
+  TValign.updateState();
+  
+  task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
   s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
 

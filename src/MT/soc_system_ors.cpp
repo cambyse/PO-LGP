@@ -530,7 +530,7 @@ void soc::SocSystem_Ors::getTarget(arr& y_i,double& y_prec,uint i,uint t){
   TaskVariable *v=vars(i);
   //cout <<"getting y_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
-    v->updateChange(-1);
+    v->updateChange(-1,WS->tau);
     y_i    = v->y_ref;
     y_prec = v->y_prec;
     return;
@@ -544,8 +544,8 @@ void soc::SocSystem_Ors::getTargetV(arr& v_i,double& v_prec,uint i,uint t){
   TaskVariable *v=vars(i);
   //cout <<"getting v_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
-    v->updateChange(-1);
-    v_i    = v->v_ref/WS->tau;
+    v->updateChange(-1,WS->tau);
+    v_i    = v->v_ref;
     v_prec = v->v_prec;
     return;
   }

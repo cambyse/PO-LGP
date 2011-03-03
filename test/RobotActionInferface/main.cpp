@@ -18,8 +18,10 @@ void testActions(){
   //mesh.readOffFile("m494.off");
   //R.setMesh("world",mesh);
   //MT::wait();
+  
   //R.reach("tipNormal1", ARR(0.,-1.,1.), .1);
-  R.reachAndAlign("tipNormal1", ARR(0.,-1.,1.), ARR(0,0,1), .1);
+  //R.homing();
+  R.reachAndAlign("tipNormal1", ARR(0.,-1.,1.), ARR(0,-1,0), .1);
   R.homing();
   R.reach("tipNormal1", ARR(0.,-1.,1.), .1);
   R.homing();
