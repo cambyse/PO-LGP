@@ -171,7 +171,7 @@ ifdef CUDA_EMU #emulation mode!!
 NXXFLAGS = -g -deviceemu
 LinuxLibs += -lcudart -lcublasemu -lcutil
 else
-NXXFLAGS = -O0
+NXXFLAGS = -O0 -Xcompiler -fPIC
 LinuxLibs += -lcudart -lcublas -lcutil
 endif
 endif
@@ -555,7 +555,7 @@ rm_Makefile.dep: force
 	rm Makefile.dep
 		 
 %.dep: %.cpp
-	$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
+	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
 #        $(CXX) -M $(CPPFLAGS) $< | sed '\"s/$*.o/& $@/g'\" > make
 
 force:	;
