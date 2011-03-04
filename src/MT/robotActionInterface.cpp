@@ -39,6 +39,17 @@ void RobotActionInterface::close(){
   s->master.close();
 }
 
+void RobotActionInterface::wait(double sec){
+  s->defaultTask.controlMode = stopCM;
+  double time=MT::realTime();
+  for(;!schunkShutdown;){
+    s->master.step();
+    if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
+    if(sec>0 && MT::realTime()-time>sec) break;
+  }
+  //while(s->master.joy.state(0)!=0) s->master.step();
+}
+
 void RobotActionInterface::joystick(){
   s->defaultTask.controlMode = joystickCM;
   for(;!schunkShutdown;){
@@ -47,7 +58,7 @@ void RobotActionInterface::joystick(){
   }
   s->defaultTask.controlMode = stopCM;
   for(uint t=0;t<10;t++) s->master.step();
-  while(s->master.joy.state(0)!=0) s->master.step();
+  //while(s->master.joy.state(0)!=0) s->master.step();
 }
 
 void RobotActionInterface::homing(){
