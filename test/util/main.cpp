@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+//#define MT_IMPLEMENTATION
 
 #include<MT/util.h>
 
@@ -104,6 +104,11 @@ void testTimer(){
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
+
+  int a = 0;
+  a += 1, 2, 3;
+  cout <<a;
+
 
   cout <<"double size: " <<sizeof(double) <<"\nlong int size: " <<sizeof(long) <<endl;
   

@@ -62,6 +62,7 @@ using std::cerr;
 #include <SWIFT_pair.h>
 #include <SWIFT_fileio.h>
 
+SWIFT_Scene *global_scene=NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 // File Reading Objects
@@ -137,6 +138,7 @@ static bool Is_Identity( const SWIFT_Orientation& orient,
 SWIFT_Scene::SWIFT_Scene( bool broad_phase, bool global_sort )
 {
     WS = new SWIFT_SceneWorkspace;
+    global_scene=this;
     
     // Create the lists
     objects.Create( OBJECT_SEGMENT_SIZE );
@@ -1709,5 +1711,7 @@ void SWIFT_Scene::Sort_Local( int oid )
     }
 }
 
-
+SWIFT_File_Read_Dispatcher *SWIFT_Scene::get_File_Read_Dispatcher() const{
+  return &WS->file_dispatcher;
+}
 

@@ -118,7 +118,10 @@ class SWIFT_Object;
 class SWIFT_Box_Node;
 class SWIFT_Pair;
 class SWIFT_File_Reader;
+class SWIFT_File_Read_Dispatcher;
 struct SWIFT_SceneWorkspace;
+class SWIFT_Scene;
+extern SWIFT_Scene *global_scene;
 
 //////////////////////////////////////////////////////////////////////////////
 // SWIFT_Scene
@@ -386,6 +389,8 @@ class SWIFT_Scene {
     // indicates success.
     bool Register_File_Reader( const char* magic_number,
                                SWIFT_File_Reader* file_reader ) const;
+
+    SWIFT_File_Read_Dispatcher *get_File_Read_Dispatcher() const;
 
 
   private:

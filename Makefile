@@ -1,23 +1,25 @@
 PACKAGE = libORS
 
-all: 	lib/extern/SWIFT++_1.2/src \
-	lib/extern/ANN_1.1/src \
-	lib/extern/libcolorseg/src \
-	lib/src/MT/ \
-	lib/src/NP lib/src/Lewiner 
+ALL =	extern/SWIFT++_1.2/src \
+	extern/ANN_1.1/src \
+	extern/libcolorseg/src \
+	src/MT \
+	src/NP \
+	src/Lewiner 
 
-cleanAll: clean/extern/SWIFT++_1.2/src clean/extern/ANN_1.1/src clean/src/MT/ clean/src/TL clean/src/NJ clean/src/NP clean/src/Lewiner cleanProjects
+makeAll: $(ALL:%=make/%)
+
+cleanAll: $(ALL:%=clean/%)
+
+make/%::
+	make -C $*
+
+clean/%::
+	make clean -C $*
 
 tests::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;
 	-@find . -name 'roboticsCourse*' -maxdepth 1 -type d -exec make -C {} \;
-
-lib/%::
-	make -C $*
-
-
-clean/%::
-	make clean -C $*
 
 cleanProjects::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} clean \;
