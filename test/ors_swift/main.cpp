@@ -9,8 +9,11 @@ void drawInit(void*){
 
 void testSwift(){
   ors::Graph C;
-  MT::load(C,"swift_test.ors");
-  C.calcBodyFramesFromJoints();
+  C.init("swift_test.ors");
+
+  SwiftInterface swift;
+  swift.init(C,2.);
+  swift.computeProxies(C);
 
   OpenGL gl;
   gl.reportEvents=true;
@@ -18,9 +21,6 @@ void testSwift(){
   gl.add(drawInit,0);
   gl.add(ors::glDrawGraph,&C);
   gl.watch();
-
-  SwiftInterface swift;
-  swift.init(C,2.);
 
   uint t;
   for(t=0;t<50;t++){

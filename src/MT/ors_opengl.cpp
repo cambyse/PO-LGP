@@ -326,7 +326,9 @@ void ors::glDraw(Graph& C){
     f.rot.setDiff(ors::Vector(0,0,1),proxy->posA-proxy->posB);
     f.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
+    glDisable(GL_CULL_FACE);
     glDrawDisk(.02);
+    glEnable(GL_CULL_FACE);
 
     f.pos=proxy->posB;
     f.getAffineMatrixGL(GLmatrix);

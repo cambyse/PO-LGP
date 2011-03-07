@@ -1,9 +1,9 @@
 
-body obj1 { type=3 mesh='m494.off' swiftfile='m494.dcp' contact }
+body obj1 { type=3 mesh='m494_x.off' swiftfile='m494_x.dcp' contact }
 
-body obj2 { X=<t(0 .7 2) d(90 1 0 0)>  type=3 mesh='m494.off' swiftfile='m494.dcp' contact }
+body obj2 { X=<t(0 .7 2) d(90 1 0 0)>  type=3 mesh='m494_x.off' swiftfile='m494_x.dcp' contact }
 
 body cyl1  { X=<t(-1 0 0)>  type=2 size=[.1 .1 1. .2] contact }
 
-body cyl2  { X=<t(0 0 -1) d(90 1 0 0)>  type=1 size=[.1 .1 1. .2] contact }
+body ball  { X=<t(.2 .2 .7)>  type=1 size=[.1 .1 1. .02] color=[0 .5 0] contact }
 
