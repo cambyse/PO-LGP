@@ -1,6 +1,6 @@
 BASE     = $(shell pwd)/../..
 OBJS     = main.o
-LIBS += -lSWIFTdecomp -lRAPID
+LIBS += -lSWIFTdecomp
 
 #LAPACK   = 1
 #FREEGLUT = 1

@@ -1,7 +1,6 @@
 PACKAGE = libORS
 
 ALL = 	SWIFT++_1.2/src \
-	SWIFT++_1.2/decomposer/RAPID \
 	SWIFT++_1.2/decomposer/src \
 	ANN_1.1/src \
 	libcolorseg/src

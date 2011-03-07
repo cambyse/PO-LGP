@@ -1,17 +1,21 @@
-#OUTPUT    = ../../bin/decomposer.exe
-CXXFLAGS += -DSWIFT_DECOMP -g -fPIC -Wno-deprecated -I../RAPID -I../include -I../../include
+.PRECIOUS: %.o
+
+OUTPUT    = ../../bin/decomposer.exe ../../lib/libSWIFTdecomp.a
+CXXFLAGS += -DSWIFT_DECOMP -O3 -fPIC -Wno-deprecated -IRAPID -I../include -I../../include
 OBJS      = $(shell find . \( -name '*.cpp' \) )
 OBJS     := $(OBJS:%.cpp=%.o)
-LIBS	= -L../RAPID -L../../lib -lRAPID -lSWIFT++ -lqhull -lm
+LIBS	= -L../../lib -lSWIFT++ -lqhull -lm
 
-#$(OUTPUT): $(OBJS)
-#	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+default: $(OUTPUT)
 
-OUTPUT    = ../../lib/libSWIFTdecomp.a
-OBJS      = $(shell find . \( -name '*.cpp' -not -name 'main.cpp' \) )
-OBJS     := $(OBJS:%.cpp=%.o)
-$(OUTPUT): $(OBJS)
-	ar ruvs $(OUTPUT) $(OBJS)
+%.exe: $(OBJS) main.o
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) main.o $(LIBS)
+
+%.a: $(OBJS)
+	ar ruvs $@ $(OBJS)
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean::
-	rm -f *.o $(OUTPUT)
+	rm -f *.o $(OBJS) $(OUTPUT)
