@@ -1,6 +1,8 @@
 PACKAGE = libORS
 
 ALL =	extern/SWIFT++_1.2/src \
+	extern/SWIFT++_1.2/decomposer/RAPID \
+	extern/SWIFT++_1.2/decomposer/src \
 	extern/ANN_1.1/src \
 	extern/libcolorseg/src \
 	src/MT \

@@ -252,6 +252,8 @@ endif
 
 ifdef SWIFT
 CXXFLAGS  += -DMT_SWIFT
+CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
+LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LinuxLibs += -lSWIFT++
 QHULL := 1
 endif

@@ -85,7 +85,7 @@ bool w = false;
 bool one_piece = false;
 char* decomp_filename = NULL;
 
-bool hierarchy = false;
+extern bool hierarchy;
 char* hier_filename = NULL;
 SPLIT_TYPE split = MIDPOINT;
 

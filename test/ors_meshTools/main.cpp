@@ -1,15 +1,17 @@
-#define MT_IMPLEMENTATION
+//#define MT_IMPLEMENTATION
 
 #include <stdlib.h>
 
 #include <MT/ors.h>
 #include <MT/opengl.h>
 
+#include "swift_decomposer.cpp"
+
 const char *USAGE=
 "\n\
-Usage:  ors_fileConverter file.[tri|obj|off|ply|stl] <tags...>\n\
+Usage:  ors_meshTools file.[tri|obj|off|ply|stl] <tags...>\n\
 \n\
-Tags can be -view, -box, -fuse, -clean, -center, -scale, -swift, -save, -qhull, -flip\n";
+Tags can be -view, -box, -fuse, -clean, -center, -scale, -swift, -save, -qhull, -flip, -decomp\n";
 
 
 void drawInit(void*){
@@ -103,6 +105,10 @@ int main(int argn, char** argv){
     cout <<"saving..." <<endl;
     mesh.writeTriFile(STRING(file<<"_x.tri"));
     mesh.writeOffFile(STRING(file<<"_x.off"));
+  }
+  if(MT::checkCmdLineTag("decomp")){
+    cout <<"decomposing..." <<endl;
+    decompose(mesh,STRING(file<<"_x.dcp"));
   }
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;

@@ -19,7 +19,7 @@ using std::setprecision;
 #include <SWIFT_fileio.h>
 
 extern bool machine_is_big_endian;
-extern bool hierarchy;
+bool hierarchy = false;
 
 bool Load_File( const char* filename, SWIFT_Tri_Mesh*& mesh,
                 SPLIT_TYPE split, bool& already_decomp, bool& already_hier,
