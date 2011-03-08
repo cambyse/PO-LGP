@@ -15,6 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 #include "ors.h"
+#include "ann.h"
 
 #ifdef MT_SWIFT
 
@@ -30,6 +31,8 @@
 void exportStateToSwift(const ors::Graph& C,SwiftInterface& swift);
 void importProxiesFromSwift(ors::Graph& C,SwiftInterface& swift,bool dumpReport=false);
 void swiftQueryExactDistance(SwiftInterface& swift);
+ANN *global_ANN=NULL;
+ors::Shape *global_ANN_shape;
 
 SwiftInterface::~SwiftInterface(){
   close();
@@ -43,6 +46,7 @@ SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const{
 
 void SwiftInterface::close(){
   if(scene) delete scene;
+  if(global_ANN) delete global_ANN;
   scene=NULL;
   cout <<" -- SwiftInterface closed" <<endl;
   isOpen=false;
@@ -90,6 +94,15 @@ void SwiftInterface::init(const ors::Graph& C,double _cutoff){
         r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
         if(!r) HALT("--failed!");
       }
+      break;
+    case ors::pointCloudST:
+      //for now, assume there is only ONE pointCloudObject!
+      CHECK(s->mesh.V.N,"");
+      global_ANN=new ANN;
+      global_ANN_shape=s;
+      global_ANN->setX(s->mesh.V);
+      global_ANN->calculate();
+      add=false;
       break;
     case ors::markerST:
       add=false; // ignore (no collisions)
@@ -279,6 +292,7 @@ void importProxiesFromSwift(ors::Graph& C,SwiftInterface& swift,bool dumpReport)
       else if(b!=-1) proxy->rel = C.shapes(b)->X;
       else           proxy->rel.setZero();
     }
+
     //penetrating pair of objects
     if(num_contacts[i]==-1){
       proxy=C.proxies(Nold+k);
@@ -301,6 +315,48 @@ void importProxiesFromSwift(ors::Graph& C,SwiftInterface& swift,bool dumpReport)
     }
   }
   CHECK(k+Nold == C.proxies.N,"");
+
+  //add pointClound stuff to list
+  if(global_ANN){
+    ors::Shape *s;
+    uint i,k, _i;
+    arr R(3,3),t(3);
+    arr v, dists, _dists;
+    intA idx, _idx;
+    for_list(k,s,C.shapes){
+      if(!s->cont || s==global_ANN_shape) continue;
+      
+      //relative rotation and translation of shapes
+      ors::Transformation rel;
+      rel.setDifference(global_ANN_shape->X,s->X);
+      rel.rot.getMatrix(R.p);
+      t.setCarray(rel.pos.p,3);
+
+      //check for each vertex
+      for(i=0;i<s->mesh.V.d0;i++){
+        v = s->mesh.V[i];
+        v = R*v + t;
+        global_ANN->getNN(dists, idx, v, 1);
+        if(!i || dists(0)<_dists(0)){
+          _i=i;  _dists=dists;  _idx=idx;
+        }
+      }
+      if(_dists(0)>swift.cutoff) continue;
+
+      proxy = new ors::Proxy;
+      C.proxies.append(proxy);
+      proxy->a=global_ANN_shape->index;
+      proxy->b=s->index;
+      proxy->age=0;
+      proxy->d = _dists(0);
+      proxy->posA.set(&global_ANN_shape->mesh.V(_idx(0),0));  proxy->posA = global_ANN_shape->X * proxy->posA;
+      proxy->posB.set(&s->mesh.V(_i,0));                      proxy->posB = s->X * proxy->posB;
+      proxy->normal = proxy->posA - proxy->posB;
+      proxy->normal.normalize();
+      proxy->velA.setZero();
+      proxy->velB.setZero();
+    }
+  }
 
   C.sortProxies();
 }

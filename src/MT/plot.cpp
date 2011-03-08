@@ -683,26 +683,26 @@ void plotDrawOpenGL(void *_data){
         if(data.points(i).d1==1){ x=(double)j; y=data.points(i)(j,0); z=0.; }
         if(data.points(i).d1==2){ x=data.points(i)(j,0); y=data.points(i)(j,1); z=1.; }
         if(data.points(i).d1>=3){ x=data.points(i)(j,0); y=data.points(i)(j,1); z=data.points(i)(j,2); }
-	if(!plotModule.drawDots){
-	  glPushMatrix();
-	  glTranslatef(x,y,z);
-	  glDrawDiamond(.01,.01,.01);
-	  glPopMatrix();
-	}else{
-	  glVertex3d(x,y,z);
-	}
+        if(!plotModule.drawDots){
+          glPushMatrix();
+          glTranslatef(x,y,z);
+          glDrawDiamond(.01,.01,.01);
+          glPopMatrix();
+        }else{
+          glVertex3d(x,y,z);
+        }
       }
     }else{
       if(data.points(i).d0==1){ x=data.points(i)(0); y=0.; z=0.; }
       if(data.points(i).d0==2){ x=data.points(i)(0); y=data.points(i)(1); z=0.; }
       if(data.points(i).d0>=3){ x=data.points(i)(0); y=data.points(i)(1); z=data.points(i)(2); }
       if(!plotModule.drawDots){
-	glPushMatrix();
-	glTranslatef(x,y,z);
-	glDrawDiamond(.02,.02,.02);
-	glPopMatrix();
+        glPushMatrix();
+        glTranslatef(x,y,z);
+        glDrawDiamond(.02,.02,.02);
+        glPopMatrix();
       }else{
-	glVertex3d(x,y,z);
+        glVertex3d(x,y,z);
       }
     }
     if(plotModule.drawDots) glEnd();

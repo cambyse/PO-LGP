@@ -8,9 +8,9 @@ void decompose(ors::Mesh& mesh,const char* filename){
   SWIFT_Scene swift;
   SWIFT_Tri_Mesh smesh;
   smesh.Create(mesh.V.p, (int*)mesh.T.p,
-	       mesh.V.d0, mesh.T.d0,
-	       DEFAULT_ORIENTATION,
-	       DEFAULT_TRANSLATION,
+               mesh.V.d0, mesh.T.d0,
+               DEFAULT_ORIENTATION,
+               DEFAULT_TRANSLATION,
                1.);
 
   SWIFT_Array<bool> edge_convexities;
@@ -30,6 +30,6 @@ void decompose(ors::Mesh& mesh,const char* filename){
   Decompose_Cresting_BFS(&smesh, piece_ids, model_faces, virtual_faces );
 
   Save_Decomposition_File( filename, &smesh, piece_ids,
-			   model_faces, virtual_faces );
+                           model_faces, virtual_faces );
 
 }

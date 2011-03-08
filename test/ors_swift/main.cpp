@@ -11,10 +11,6 @@ void testSwift(){
   ors::Graph C;
   C.init("swift_test.ors");
 
-  SwiftInterface swift;
-  swift.init(C,2.);
-  swift.computeProxies(C);
-
   OpenGL gl;
   gl.reportEvents=true;
   gl.drawFocus=true;
@@ -22,6 +18,12 @@ void testSwift(){
   gl.add(ors::glDrawGraph,&C);
   gl.watch();
 
+  SwiftInterface swift;
+  swift.init(C,2.);
+  swift.computeProxies(C);
+
+  gl.watch();
+  
   uint t;
   for(t=0;t<50;t++){
     C.bodies(0)->X.addRelativeTranslation(0,0,-.01);

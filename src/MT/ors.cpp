@@ -3937,10 +3937,8 @@ double ors::Graph::getContactGradient(arr &grad,double margin,bool linear){
     if(!linear) cost += discount*d*d;
     else        cost += discount*d;
     
-    arel.setZero();  arel.pos=a->X.rot
-/(proxies(i)->posA-a->X.pos);
-    brel.setZero();  brel.pos=b->X.rot
-/(proxies(i)->posB-b->X.pos);
+    arel.setZero();  arel.pos=a->X.rot/(proxies(i)->posA-a->X.pos);
+    brel.setZero();  brel.pos=b->X.rot/(proxies(i)->posB-b->X.pos);
     
     CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p,3); dnormal.reshape(1,3);

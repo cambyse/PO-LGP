@@ -1103,9 +1103,17 @@ void glDrawDots(void *dots){ glDrawDots(*(arr*)dots); }
 
 void glDrawDots(arr& dots){
   CHECK(dots.nd==2 && dots.d1==3,"wrong dimension");
+#if 0
   glBegin(GL_POINTS);
   for(uint i=0;i<dots.d0;i++) glVertex3dv(&dots(i,0));
   glEnd();
+#else
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_DOUBLE, 0, dots.p );
+  //if(mesh.C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+  //if(mesh.C.N) glColorPointer (3,GL_DOUBLE,0,mesh.C.p );
+  glDrawArrays(GL_POINTS, 0, dots.d0);
+#endif
 }
 #endif
 

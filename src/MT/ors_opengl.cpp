@@ -232,6 +232,10 @@ void glDrawShape(ors::Shape *s,const ors::Transformation& X){
       CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
       ors::glDraw(s->mesh);
       break;
+    case ors::pointCloudST:
+      CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
+      glDrawDots(s->mesh.V);
+      break;
     default: HALT("can't draw that geom yet");
   }
   if(!s->contactOrientation.isZero()){
