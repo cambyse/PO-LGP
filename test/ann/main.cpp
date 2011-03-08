@@ -1,6 +1,7 @@
-#define MT_IMPLEMENTATION
+//#define MT_IMPLEMENTATION
 
-#include<MT/algos.h>
+#include<MT/util.h>
+#include<MT/ann.h>
 
 void testANN(){
   uint N=1000,dim=2;
@@ -22,11 +23,11 @@ void testANN(){
   MT::save(x,"z.query");
   MT::save(Y,"z.neighbors");
   gnuplot("set size square; set data style points; plot 'z.data','z.query','z.neighbors'");
-  //MT::wait();
+  MT::wait();
 }
 
 void testANNIncremental(){
-  uint N=100,dim=2;
+  uint N=1000,dim=2;
 
   ANN ann;
   ann.buffer=20;
@@ -38,8 +39,8 @@ void testANNIncremental(){
     rndUniform(x,0.,1.,false);
     ann.append(x);
     if(i>10){
-      ann.getNN(Q, q, 10, .0, true);
-      //MT::wait();
+      ann.getNN(Q,q,10,.0, true);
+      MT::wait();
     }
   }
 }

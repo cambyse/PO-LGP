@@ -7,6 +7,7 @@ CXXFLAGS += -fPIC
 #OPTIM  = fast_debug
 OPTIM  = debug
 
+ANN = 1
 #TONY = 1
 OPENCV = 1
 SCHUNK = 1

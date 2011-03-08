@@ -242,10 +242,10 @@ endif
 
 ifdef ANN
 CXXFLAGS  += -DMT_ANN
-CPATH	  := $(CPATH):$(LIBPATH)/ann-1.1/include
-LPATH	  := $(LPATH):$(LIBPATH)/ann-1.1/lib
-INCLUDE	  := $(INCLUDE);$(LIBPATH)/ann-1.1/include
-LinuxLibs += -lann11_$(ARCH)
+CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
+LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
+INCLUDE	  := $(INCLUDE);$(LIBPATH)/ANN_1.1/include
+LinuxLibs += -lANN
 CygwinLibs+= -lANN
 MSVCLibs  += ann.lib
 endif
