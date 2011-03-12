@@ -1,0 +1,35 @@
+#!/bin/sh 
+
+
+#!/bin/sh
+
+USAGE="
+NAME
+	`basename $0` -- create sym links to the externals in the
+	appropriate location
+	
+
+DESCRIPTION
+	`basename $0` <location of external>
+	
+	Delete symlinks if they exist and then create symlinks to the
+	dir provided on the command line.
+	
+"
+
+externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-09-05-19 plib-1.8.5/"
+
+[ -z "$1" ] && { echo "$USAGE"; exit 1; } 
+[ -d "$1" ] || { echo "$USAGE"; exit 1; }
+
+dir="$1"
+
+for f in $externals; do
+	#[ -d "$1" ] || echo "$dir/$f" does not exist; 
+	ln -s -f "$dir/$f" $f
+done
+
+#ANN_1.1
+#libcolorseg
+#ODE_0.11
+#SWIFT++_1.2
