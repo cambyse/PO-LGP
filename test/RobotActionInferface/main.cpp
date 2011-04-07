@@ -3,6 +3,25 @@
 #include <MT/robotActionInterface.h>
 #include <signal.h>
 
+void testPattern() 
+{
+	RobotActionInterface R;
+	R.open();
+
+	while (true) {
+		arr worldCoord = ARR(0.20, -0.40, 0.55);
+		int maxX = 10;
+		int maxY = 5;
+
+		for(int x=0; x<maxX; x++) {
+			for(int y=0; y<maxY; y++) {
+				arr offWorld = worldCoord + ARR(x*0.05, 0, y*0.05);
+				R.reachAndAlign("tipNormal1", offWorld, ARR(0,-1,0), .1);
+			}
+		}
+	}
+	R.close();
+}
 
 void testJoy(){
   RobotActionInterface R;
@@ -37,6 +56,7 @@ int main(int argn,char** argv){
   switch(MT::getParameter<int>("mode")){
     case 0:  testJoy();  break;
     case 1:  testActions();  break;
+    case 2: testPattern(); break;
   }
    
   cout <<" *** bye bye" <<endl;
