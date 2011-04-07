@@ -1,5 +1,5 @@
 #include "robotActionInterface.h"
-#include "robot_marcTask.h"
+#include "robot.h"
 #include "specialTaskVariables.h"
 
 
@@ -9,14 +9,6 @@ struct sRobotActionInterface{
   TaskAbstraction defaultTask;
 };
 
-//helpers
-void switchTask(TaskAbstraction&  task,TaskGoalUpdater& updater){
-  task.taskGoalUpdaterLock.writeLock();
-  task.taskGoalUpdater=&updater;
-  task.taskGoalUpdaterLock.unlock();
-  task.controlMode=functionCM;
-}
-
 //===========================================================================
 //
 // Marc's Robot Task
@@ -24,8 +16,10 @@ void switchTask(TaskAbstraction&  task,TaskGoalUpdater& updater){
 
 RobotActionInterface::RobotActionInterface(){
   s=new sRobotActionInterface;
+  s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.task = &s->defaultTask;
   s->defaultTask.joyVar = &s->master.joy;
+  s->master.ctrl.taskLock.unlock();
 }
 
 RobotActionInterface::~RobotActionInterface(){
@@ -40,7 +34,9 @@ void RobotActionInterface::close(){
 }
 
 void RobotActionInterface::wait(double sec){
+  s->master.ctrl.taskLock.writeLock();
   s->defaultTask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
   double time=MT::realTime();
   for(;!schunkShutdown;){
     s->master.step();
@@ -51,18 +47,24 @@ void RobotActionInterface::wait(double sec){
 }
 
 void RobotActionInterface::joystick(){
+  s->master.ctrl.taskLock.writeLock();
   s->defaultTask.controlMode = joystickCM;
+  s->master.ctrl.taskLock.unlock();
   for(;!schunkShutdown;){
     s->master.step();
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
   }
+  s->master.ctrl.taskLock.writeLock();
   s->defaultTask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
   for(uint t=0;t<10;t++) s->master.step();
   //while(s->master.joy.state(0)!=0) s->master.step();
 }
 
 void RobotActionInterface::homing(){
+  s->master.ctrl.taskLock.writeLock();
   s->defaultTask.controlMode = homingCM;
+  s->master.ctrl.taskLock.unlock();
   for(;!schunkShutdown;){
     MT::wait(.2);
     double dist=norm(s->master.ctrl.q_reference);
@@ -70,10 +72,13 @@ void RobotActionInterface::homing(){
     if(dist<1e-1) break;
     if(s->master.joy.state(0)&0x30) break;
   }
+  s->master.ctrl.taskLock.writeLock();
   s->defaultTask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
 }
 
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
+  s->master.ctrl.taskLock.writeLock();
   TaskAbstraction *task = &s->defaultTask;
   s->defaultTask.controlMode = prefixedCM;
 
@@ -88,6 +93,7 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
   s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim,task->TV_q)); //non-thread safe: task variable list needs a lock
+  s->master.ctrl.taskLock.unlock();
 
   for(;!schunkShutdown;){
     MT::wait(.2);
@@ -96,11 +102,14 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
     if(s->master.joy.state(0)&0x30) break;
   }
   
+  s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
   s->defaultTask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
 }
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
+  s->master.ctrl.taskLock.writeLock();
   TaskAbstraction *task = &s->defaultTask;
   s->defaultTask.controlMode = prefixedCM;
 
@@ -123,6 +132,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
   s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
+  s->master.ctrl.taskLock.unlock();
 
   for(;!schunkShutdown;){
     MT::wait(.2);
@@ -131,8 +141,10 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
     if(s->master.joy.state(0)&0x30) break;
   }
   
+  s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
   s->defaultTask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
 }
 
 void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){

@@ -65,9 +65,6 @@ struct TaskAbstraction{
   uint plan_scale;
   arr plan_v,plan_b,plan_Vinv;
 
-  TaskGoalUpdater *taskGoalUpdater;
-  Lock taskGoalUpdaterLock;
-  
   TaskAbstraction();
 
   virtual void initTaskVariables(ControllerProcess*);

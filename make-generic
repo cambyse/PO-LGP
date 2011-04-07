@@ -13,9 +13,10 @@ $(info *** make-generic: BASE=$(BASE) ***)
 
 ################################################################################
 #
-# flags for this specific distribution (optional include)
+# optional user configuration
 #
 ################################################################################
+
 -include $(BASE)/make-config
 
 
@@ -34,7 +35,7 @@ endif
 
 ################################################################################
 #
-# various compiler options (debug, release, etc)
+# standard compiler options (debug, release, etc)
 #
 ################################################################################
 # (a tag like `OPTIM=fast' in the local Makefiles changes default debug mode)
@@ -558,6 +559,5 @@ rm_Makefile.dep: force
 		 
 %.dep: %.cpp
 	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
-#        $(CXX) -M $(CPPFLAGS) $< | sed '\"s/$*.o/& $@/g'\" > make
 
 force:	;

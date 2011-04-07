@@ -209,10 +209,10 @@ void SchunkArmModule::reportParameters(ostream& os){
     if(delta>maxStep){
       MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<delta);
     }else if(isOpen && sendMotion){
-#if 1
+#if 1 //don't read real positions from robot
       for(m=0;m<7;m++){ pDev->moveStep(m+3, q_reference(m), stepHorizon); }
       q_real=q_reference;
-#else
+#else //read real positions from robot
       unsigned long uiState;
       unsigned char uiDio;
       for(m=0;m<7;m++){

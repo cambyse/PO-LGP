@@ -1059,8 +1059,7 @@ void PartialLeastSquares::write(std::ostream& os) const{ os <<S; }
 // the minimize routine
 //
 
-//typedef long int longinteger;
-typedef int longinteger;
+typedef long int longinteger;
 
 //----- a workspace with static functions suited to pass to the subroutines
 namespace minimizeStatic{

@@ -334,7 +334,6 @@ TaskAbstraction::TaskAbstraction(){
   plan_count=0.;
   joyVar = NULL;
   planVar= NULL;
-  taskGoalUpdater=NULL;
   joyRate = MT::Parameter<double>("joyRate",.2);
   //-- planned trajectory
   if(MT::getParameter<bool>("loadPlanned",false)){
@@ -612,12 +611,13 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       if(v>vmax) TV_q->v_target*=vmax/v;
       break;
     }
+    /*
     case functionCM:{
       taskGoalUpdaterLock.writeLock();
       (*taskGoalUpdater)(this,ctrl);
       taskGoalUpdaterLock.unlock();
       break;
-    }
+    }*/
     case prefixedCM:{
       break;
     }
