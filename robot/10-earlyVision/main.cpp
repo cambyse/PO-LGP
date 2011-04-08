@@ -31,10 +31,10 @@ int main(int argn,char** argv){
   evis.input=&dummyImages;
 #endif
   
-  cam .threadOpen();
+  //cam .threadOpen();
   evis.threadOpen();
 
-  cam .threadLoop();
+  //cam .threadLoop();
   evis.threadLoop();
   
   for(uint i=0;!STOP && i<10000;i++){
