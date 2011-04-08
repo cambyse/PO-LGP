@@ -114,10 +114,10 @@ void ControllerProcess::step(){
   }
   
   //syncronize the ors/soc system with the true state q_ors and v_ors
+  taskLock.writeLock();
   sys.setqv(q_reference,v_reference);
 
   //update the setting (targets etc) of the task variables -- might be set externally
-  taskLock.writeLock();
   task->updateTaskVariables(this);
 
   //=== compute motion from the task variables
@@ -147,6 +147,7 @@ void ControllerProcess::step(){
   double step=euclideanDistance(q_reference,q_old);
   if(step>maxJointStep){
     MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<step);
+    HALT("");
     q_reference=q_old;
     v_reference.setZero();
   }
@@ -454,7 +455,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       TV_lim->active=true;
       
       TV_q->active=true;
-      TV_q  ->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero(); //damping on joint velocities
+      TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero(); //damping on joint velocities
       
       switch(joyState(0)){
         case 1:{ //(1) homing
