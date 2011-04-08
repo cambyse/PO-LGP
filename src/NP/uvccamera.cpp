@@ -116,7 +116,7 @@ camera::UVCCameraWorkspace::~UVCCameraWorkspace()
 //                                                                    UVCCamera
 // -----------------------------------------------------------------------------
 camera::UVCCamera::UVCCamera():
-  Process("UVCCameraProcess"),Variable("UVCCameraVariable"),workspace_(NULL){
+  Process("UVCCameraProcess"),workspace_(NULL){
   device_name = "/dev/video0";
 
    workspace_ = new UVCCameraWorkspace();
@@ -400,13 +400,13 @@ void camera::UVCCamera::step()
    buf.memory = V4L2_MEMORY_MMAP;
    ret = ioctl(workspace_->device_file_desc_, VIDIOC_DQBUF, &buf);     // dequeue buffer
    
-   writeAccess(this);
+   output.writeAccess(this);
    // check size of output memory
-   if (rgbL.N != workspace_->width_ * workspace_->height_ * 3)
-     rgbL.resize(workspace_->height_, workspace_->width_, 3);
-   yuyv2rgb(rgbL, workspace_->buffers_.p[buf.index], *workspace_);   // convert + copy to output
-   rgbR=rgbL;
-   deAccess(this);
+   if (output.rgbL.N != workspace_->width_ * workspace_->height_ * 3)
+     output.rgbL.resize(workspace_->height_, workspace_->width_, 3);
+   yuyv2rgb(output.rgbL, workspace_->buffers_.p[buf.index], *workspace_);   // convert + copy to output
+   output.rgbR=output.rgbL;
+   output.deAccess(this);
    
    if (ioctl(workspace_->device_file_desc_, VIDIOC_QBUF, &buf) == -1)
      ERROR("cannot queue buffer");

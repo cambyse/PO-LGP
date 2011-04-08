@@ -25,6 +25,12 @@ struct currentProxiesVar:public Variable{
   currentProxiesVar():Variable("currentProxies"){}
 };
 
+struct CameraImages:public Variable{
+  byteA rgbL, rgbR;
+  CameraImages():Variable("CameraImages"){}
+  void loadDummyImages(){ read_ppm(rgbL,"left.ppm");  read_ppm(rgbR,"right.ppm"); }
+};
+
 struct EarlyVisionOutput:public Variable{
   floatA hsvThetaL, hsvThetaR;
   

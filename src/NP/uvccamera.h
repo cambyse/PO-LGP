@@ -3,6 +3,7 @@
 
 #include <MT/array.h>
 #include <MT/process.h>
+#include <MT/robot_variables.h>
 
 namespace camera {
 struct UVCCameraWorkspace;
@@ -10,8 +11,8 @@ struct UVCCameraWorkspace;
 // -----------------------------------------------------------------------------
 //                            wrapper for V4L2 routines + frame post processing
 // -----------------------------------------------------------------------------
-struct UVCCamera:public Process,Variable{
-  byteA rgbL,rgbR;
+struct UVCCamera:public Process{
+  CameraImages output;
   const char* device_name;
       
   UVCCamera();

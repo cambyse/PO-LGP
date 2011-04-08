@@ -424,7 +424,7 @@ bool np::Bumblebee2::is_stereo()
 #endif
 
 #ifdef MT_BUMBLE
-BumblebeeModule::BumblebeeModule():Process("BumblebeeProcess"),Variable("BumblebeeVariable")
+BumblebeeModule::BumblebeeModule():Process("BumblebeeProcess")
 {};
 
 void BumblebeeModule::open(){
@@ -439,10 +439,10 @@ void BumblebeeModule::step(){
   byteA tmpL,tmpR;
   camera->grab(tmpL, tmpR);
   calib.rectifyImages(tmpL, tmpR);
-  writeAccess(this);
-  rgbL=tmpL;
-  rgbR=tmpR;
-  deAccess(this);
+  output.writeAccess(this);
+  output.rgbL=tmpL;
+  output.rgbR=tmpR;
+  output.deAccess(this);
 };
 
 void BumblebeeModule::close(){

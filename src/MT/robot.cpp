@@ -236,7 +236,7 @@ void RobotModuleGroup::open(){
   if(openGui){
     gui.q_referenceVar = &q_currentReference;
     gui.proxiesVar = &currentProxies;
-    if(openBumble) gui.cameraVar = &bumble;
+    if(openBumble) gui.cameraVar = &bumble.output;
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
@@ -256,7 +256,7 @@ void RobotModuleGroup::open(){
   }
 
   if(openEarlyVision){
-    evis.input=&bumble;
+    evis.input=&bumble.output;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice",0));
     evis.threadLoop();
   }

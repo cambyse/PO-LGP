@@ -16,7 +16,7 @@ struct GuiModule:public Process{
   q_currentReferenceVar *q_referenceVar;
   currentProxiesVar *proxiesVar;
   PerceptionOutput *perceptionOutputVar;
-  BumblebeeModule *cameraVar;
+  CameraImages *cameraVar;
   FutureMotionPlan *planVar;
   
   byteA img[6]; // 6 images for the view ports

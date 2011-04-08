@@ -17,6 +17,7 @@
 #include "earlyVisionModule.h"
 #include "guiModule.h"
 #include "process.h"
+#include "../NP/uvccamera.h"
 
 struct ControllerProcess;
 struct RevelInterface;
@@ -121,7 +122,7 @@ struct RobotModuleGroup{
   //Variables
   q_currentReferenceVar q_currentReference;
   currentProxiesVar currentProxies;
-
+  
   //Processes
   bool openArm,openHand,openSkin,openJoystick,openLaser,openBumble,openEarlyVision,openGui,openThreadInfoWin;
   ControllerProcess ctrl;

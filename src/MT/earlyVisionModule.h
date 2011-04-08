@@ -3,11 +3,10 @@
 
 #include "vision.h"
 #include "robot_variables.h"
-struct BumblebeeModule;
 
 struct EarlyVisionModule:public Process{
   EarlyVisionOutput output;
-  BumblebeeModule *input;
+  CameraImages *input;
   
   //INPUTS:
   //byteA cameraL,cameraR;

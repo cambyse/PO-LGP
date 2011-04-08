@@ -116,8 +116,8 @@ void cvDrawPoints(byteA& img,const arr& points ){
   }
 }
 #else
-CvMat* CVMAT(const byteA& img){ NIY; return NULL; }
-CvMat* CVMAT(const floatA& img){ NIY; return NULL; }
+CvMat* arr2cvmat(CvMat *mat,const byteA& img){ NIY; return NULL; }
+CvMat* arr2cvmat(CvMat *mat,const floatA& img){ NIY; return NULL; }
 char cvShow(const byteA& img,const char *window){ NIY; return 0; }
 char cvShow(const floatA& img,const char *window){ NIY; return 0; }
 char cvShowEvidence(const floatA& phi,const char *window){ NIY; return 0; }

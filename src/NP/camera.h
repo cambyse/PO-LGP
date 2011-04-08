@@ -22,6 +22,7 @@
 
 #include <MT/array.h>
 #include <MT/process.h>
+#include <MT/robot_variables.h>
 
 #ifdef MT_BUMBLE
 #define MyCamera BumblebeeModule
@@ -124,8 +125,8 @@ protected:
 }; // namespace np
 
 #ifdef MT_BUMBLE
-struct BumblebeeModule:public Process,Variable{
-  byteA rgbL, rgbR;
+struct BumblebeeModule:public Process{
+  CameraImages output;
 
   np::Bumblebee2 *camera;
   CalibrationParameters calib;
@@ -136,11 +137,11 @@ struct BumblebeeModule:public Process,Variable{
   void close();
 };
 #else
-struct BumblebeeModule:public Process,Variable{
-  byteA rgbL, rgbR;
-  byteA& frame(){ return rgbL; }
+struct BumblebeeModule:public Process{
+  CameraImages output;
+  byteA& frame(){ return output.rgbL; }
 
-  BumblebeeModule():Process("BumblebeeProcess"),Variable("BumblebeeVariable"){}
+  BumblebeeModule():Process("BumblebeeProcess"){}
   void open(){ throw("NIY"); }
   void step(){ throw("NIY"); }
   void close(){ throw("NIY"); }
