@@ -15,7 +15,7 @@ body base { X=<t(0 0 .25)> }
 
 #shape world (base) { contact, type=0, size=[.1 .1 .1 .1], color=[1 0 0], rel=<t(0 0 -.25)> }
 #shape checkerBoard (base) { type=0, color=[0 1 0], rel=<t(
-shape world (base) { contact, type=6, color=[0 .4 0], mesh='../ors_swift/m494_x.off', swiftfile='../ors_swift/m494_x.dcp', rel=<t(-.2 -1.65 .8) d(-90 1 0 0)> }
+#shape world (base) { contact, type=6, color=[0 .4 0], mesh='../ors_swift/m494_x.off', swiftfile='../ors_swift/m494_x.dcp', rel=<t(-.2 -1.65 .8) d(-90 1 0 0)> }
 
 
 shape platte (base) { contact, type=0, size=[.7 .8 .03 .01], color=[.9 .85 .8] }

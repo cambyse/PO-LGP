@@ -1,0 +1,10 @@
+-- Make a Variable out of the TaskVariableList!! 
+
+-- All variables should have setters and getters of the format
+
+arr& get_qreal(Process*);
+void set_qreal(Process*,const arr&);
+
+These throw errors if called from a process that hasn't locked the variable!
+
+

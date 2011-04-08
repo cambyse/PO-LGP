@@ -206,6 +206,12 @@ void SchunkArmModule::reportParameters(ostream& os){
     }else MT_MSG("Variable pointer not set");
     
     double delta= maxDiff(q_real,q_reference);
+#if 0
+    static ofstream logfil;
+    static bool logfilOpen=false;
+    if(!logfilOpen){ logfil.open("schunk.log"); logfilOpen=true; }
+    logfil <<delta <<endl;
+#endif
     if(delta>maxStep){
       MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<delta);
     }else if(isOpen && sendMotion){

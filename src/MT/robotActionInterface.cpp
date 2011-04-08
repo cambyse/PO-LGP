@@ -39,7 +39,7 @@ void RobotActionInterface::wait(double sec){
   s->master.ctrl.taskLock.unlock();
   double time=MT::realTime();
   for(;!schunkShutdown;){
-    s->master.step();
+    MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
     if(sec>0 && MT::realTime()-time>sec) break;
   }
@@ -51,7 +51,7 @@ void RobotActionInterface::joystick(){
   s->defaultTask.controlMode = joystickCM;
   s->master.ctrl.taskLock.unlock();
   for(;!schunkShutdown;){
-    s->master.step();
+    MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
   }
   s->master.ctrl.taskLock.writeLock();

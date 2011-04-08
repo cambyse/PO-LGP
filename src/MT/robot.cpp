@@ -119,7 +119,6 @@ void ControllerProcess::step(){
   //update the setting (targets etc) of the task variables -- might be set externally
   taskLock.writeLock();
   task->updateTaskVariables(this);
-  taskLock.unlock();
 
   //=== compute motion from the task variables
   //-- compute the motion step
@@ -142,13 +141,21 @@ void ControllerProcess::step(){
   v_reference = qv.sub(v_reference.N,-1);
 
   if(fixFingers) for(uint j=7;j<14;j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
+  taskLock.unlock();
   
   //SAFTY CHECK: too large steps?
-  if(maxDiff(q_reference,q_old,NULL)>maxJointStep){
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<maxDiff(q_reference,q_old,NULL));
+  double step=euclideanDistance(q_reference,q_old);
+  if(step>maxJointStep){
+    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<step);
     q_reference=q_old;
     v_reference.setZero();
   }
+#if 1
+    static ofstream logfil;
+    static bool logfilOpen=false;
+    if(!logfilOpen){ logfil.open("control.log"); logfilOpen=true; }
+    logfil <<step <<endl;
+#endif
   
   if(q_referenceVar){
     q_referenceVar->writeAccess(this);
