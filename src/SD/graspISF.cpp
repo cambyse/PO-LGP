@@ -58,7 +58,7 @@ GraspISFTask::initTaskVariables(ControllerModule *ctrl){
 
   // palm orientation
   /*
-  TV_palmAlign = new PotentialFieldAlignTaskVariable(STRING("fings z align "<<s->name),ctrl->ors, TUPLE(), *graspobj);
+  TV_palmAlign = new PotentialFieldAlignTaskVariable(STRING("fings z align "<<s->name),ctrl->ors, ARRAY(), *graspobj);
   TV_palm_z->setGains(ori_gain,0);
   TV_palm_z->y_prec = 50;
   TVs_all.append(TV_palm_z);

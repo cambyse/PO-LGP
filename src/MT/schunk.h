@@ -48,7 +48,7 @@ struct SchunkArmModule:public Process{
   bool sendMotion,readPositions;
   uintA motorIndex;
   
-  //essential StepThread routines!
+  //essential Process routines!
   SchunkArmModule(q_currentReferenceVar *_var=NULL);
   void open();
   void step();
@@ -79,7 +79,7 @@ struct SchunkHandModule:public Process{
   bool sendMotion;
   uintA motorIndex;
   
-  //essential StepThread routines!
+  //essential Process routines!
   SchunkHandModule();
   void open();
   void step();

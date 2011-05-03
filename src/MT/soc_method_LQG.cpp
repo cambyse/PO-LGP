@@ -137,7 +137,7 @@ double soc::LQG::stepKinematic(){
   MT::timerPause();
   if(sys->os){
     *sys->os <<"LQGk("<<sys->scalePower<<") " <<std::setw(3) <<sweep << " time " <<MT::timerRead(false) <<" diff " <<diff;
-    sys->analyzeTrajectory(q,display>0);
+   cost= sys->analyzeTrajectory(q,display>0);
     //sys->computeTotalCost(q);
   }
   if(display){

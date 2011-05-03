@@ -13,10 +13,9 @@ $(info *** make-generic: BASE=$(BASE) ***)
 
 ################################################################################
 #
-# optional user configuration
+# flags for this specific distribution (optional include)
 #
 ################################################################################
-
 -include $(BASE)/make-config
 
 
@@ -91,7 +90,7 @@ CXX	= g++
 CC	= gcc
 endif
 LINK	= $(CXX)
-CPATH	:= $(BASE)/src:$(BASE)/include:$(CPATH)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
 LinuxLibs += -lrt #-lpthread -lncurses
 SEP	= :
@@ -241,22 +240,13 @@ CygwinLibs+= -lode
 MSVCLibs  += ode.lib
 endif
 
-ifdef ANN
-CXXFLAGS  += -DMT_ANN
-CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
-LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
-INCLUDE	  := $(INCLUDE);$(LIBPATH)/ANN_1.1/include
-LinuxLibs += -lANN
-CygwinLibs+= -lANN
-MSVCLibs  += ann.lib
-endif
-
 ifdef SWIFT
 CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
 LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LinuxLibs += -lSWIFT++
 QHULL := 1
+ANN := 1
 endif
 
 ifdef SOLID
@@ -264,6 +254,14 @@ CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
 LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
 LinuxLibs += -lFreeSOLID
+endif
+
+ifdef ANN
+CXXFLAGS  += -DMT_ANN
+#CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
+#LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
+#INCLUDE	  := $(INCLUDE);$(LIBPATH)/ANN_1.1/include
+LinuxLibs += -lann
 endif
 
 ifdef QHULL
@@ -449,7 +447,7 @@ export LIB
 #
 ################################################################################
 
-default: $(OUTPUT)
+default: 	$(OUTPUT)
 
 clean:
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)

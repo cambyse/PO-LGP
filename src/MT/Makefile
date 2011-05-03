@@ -1,8 +1,8 @@
 NAME   = mt
 BASE   = ../..
-
-OUTPUT = lib$(NAME).so
+OUTPUT = $(BASE)/lib/lib$(NAME).so
 CXXFLAGS += -fPIC
+LIBS   += -lrt
 
 #OPTIM  = fast_debug
 OPTIM  = debug

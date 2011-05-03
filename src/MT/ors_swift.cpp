@@ -153,8 +153,8 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   for_list(j,b,C.bodies) deactivate(b->shapes);
   //deactivate along edges...
   for_list(j,e,C.joints){
-    //cout <<"deactivating edge pair"; listWriteNames(TUPLE(e->from,e->to),cout); cout <<endl;
-    deactivate(TUPLE(e->from,e->to));
+    //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from,e->to),cout); cout <<endl;
+    deactivate(ARRAY(e->from,e->to));
   }
   //deactivate along trees...
   for_list(k,b,C.bodies){
@@ -234,7 +234,7 @@ void importProxiesFromSwift(ors::Graph& C,SwiftInterface& swift,bool dumpReport)
     cout <<"... catching error '"<<msg <<"' -- SWIFT failed! .. no proxies for this posture!!..." <<endl;
     return;
   }
-  
+
   if(dumpReport){
     cout << "contacts: np=" <<np <<endl;
     for(k=0,i=0;i<np;i++){

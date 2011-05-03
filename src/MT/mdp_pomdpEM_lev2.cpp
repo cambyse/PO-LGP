@@ -54,36 +54,36 @@ double mdp::pomdpEM_lev2(
   Variable n1_(d1 ,"node1(t+1)");
   Variable n0_(d0 ,"node0(t+1)");
   //start
-  Factor Fx  (TUPLE(&x)        ,mdp.Px);
-  Factor F1  (TUPLE(&n1)       ,fsc.P1);
-  Factor F0  (TUPLE(&n0)       ,fsc.P0);
+  Factor Fx  (ARRAY(&x)        ,mdp.Px);
+  Factor F1  (ARRAY(&n1)       ,fsc.P1);
+  Factor F0  (ARRAY(&n0)       ,fsc.P0);
   //transition
-  Factor Fa0  (TUPLE(&a,&n0)         ,fsc.Pa0);
-  Factor Fxax (TUPLE(&x_,&a,&x)       ,mdp.Pxax);
-  Factor Fyxa (TUPLE(&y_,&x_,&a)      ,mdp.Pyxa);
-  Factor F1y01(TUPLE(&n1_,&y_ ,&n0,&n1),fsc.P1y01);
-  Factor F01y0(TUPLE(&n0_,&n1_,&y_,&n0),fsc.P01y0);
+  Factor Fa0  (ARRAY(&a,&n0)         ,fsc.Pa0);
+  Factor Fxax (ARRAY(&x_,&a,&x)       ,mdp.Pxax);
+  Factor Fyxa (ARRAY(&y_,&x_,&a)      ,mdp.Pyxa);
+  Factor F1y01(ARRAY(&n1_,&y_ ,&n0,&n1),fsc.P1y01);
+  Factor F01y0(ARRAY(&n0_,&n1_,&y_,&n0),fsc.P01y0);
   //reward
-  Factor FRax(TUPLE(&a,&x)      ,mdp_Rax);
+  Factor FRax(ARRAY(&a,&x)      ,mdp_Rax);
   
-  Factor Falpha(TUPLE(&n0 ,&n1 ,&x ));
-  Factor Fbeta (TUPLE(&n0_,&n1_,&x_));
+  Factor Falpha(ARRAY(&n0 ,&n1 ,&x ));
+  Factor Fbeta (ARRAY(&n0_,&n1_,&x_));
   arr PT;
   double PR,ET;
   if(!structuredEstep){
     //----- collapse to unstructured model for generic inference
     //get transition matrix
     Factor F01x01x;
-    eliminationAlgorithm(F01x01x, TUPLE(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0), TUPLE(&n0_,&n1_,&x_,&n0,&n1,&x));
+    eliminationAlgorithm(F01x01x, ARRAY(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0), ARRAY(&n0_,&n1_,&x_,&n0,&n1,&x));
     F01x01x.P.reshape(d0*d1*dx,d0*d1*dx);
     //get reward vector
     Factor FR01x;
-    Factor tmp(TUPLE(&n1)); tmp.setOne();
-    eliminationAlgorithm(FR01x, TUPLE(&tmp,&Fa0,&FRax), TUPLE(&n0,&n1,&x));
+    Factor tmp(ARRAY(&n1)); tmp.setOne();
+    eliminationAlgorithm(FR01x, ARRAY(&tmp,&Fa0,&FRax), ARRAY(&n0,&n1,&x));
     FR01x.P.reshape(d0*d1*dx);
     //get start vector
     Factor F01x;
-    eliminationAlgorithm(F01x, TUPLE(&F0,&F1,&Fx), TUPLE(&n0,&n1,&x));
+    eliminationAlgorithm(F01x, ARRAY(&F0,&F1,&Fx), ARRAY(&n0,&n1,&x));
     F01x.P.reshape(d0*d1*dx);
     
     //----- E-STEP
@@ -94,18 +94,18 @@ double mdp::pomdpEM_lev2(
     Fbeta .setP(beta);
   }else{
     //----- use factor lists for generic inference
-    FacL trans = TUPLE(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0);
+    FacL trans = ARRAY(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0);
     FacL newed;
     eliminateVariable(trans,newed,&a);
     //eliminateVariable(trans,newed,y_);
   
-    Factor tmp(TUPLE(&n1)); tmp.setOne();
-    FacL rewards = TUPLE(&FRax, &Fa0, &tmp);
+    Factor tmp(ARRAY(&n1)); tmp.setOne();
+    FacL rewards = ARRAY(&FRax, &Fa0, &tmp);
     eliminateVariable(rewards,newed,&a);
   
     inferMixLengthStructured(Falpha,Fbeta,PT,PR,ET,
-                            TUPLE(&n0 ,&n1, &x ),TUPLE(&n0_,&n1_, &x_),
-                            TUPLE(&F0,&F1,&Fx),
+                            ARRAY(&n0 ,&n1, &x ),ARRAY(&n0_,&n1_, &x_),
+                            ARRAY(&F0,&F1,&Fx),
                             rewards,
                             trans,
                             mdp.gamma,T);
@@ -117,24 +117,24 @@ double mdp::pomdpEM_lev2(
   
   //----- M-STEP
   //consider the 2nd term (alpha*P_(x'|x)*beta)
-  FacL twotimeslice = TUPLE(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &Fbeta);
+  FacL twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &Fbeta);
   
   Factor X1y01_term2;
-  eliminationAlgorithm(X1y01_term2,twotimeslice,TUPLE(&n1_,&y_ ,&n0,&n1));
+  eliminationAlgorithm(X1y01_term2,twotimeslice,ARRAY(&n1_,&y_ ,&n0,&n1));
   Factor X01y0_term2;
-  eliminationAlgorithm(X01y0_term2,twotimeslice,TUPLE(&n0_,&n1_,&y_,&n0));
+  eliminationAlgorithm(X01y0_term2,twotimeslice,ARRAY(&n0_,&n1_,&y_,&n0));
   Factor Xa0_term2;
-  eliminationAlgorithm(Xa0_term2,twotimeslice,TUPLE(&a,&n0));
+  eliminationAlgorithm(Xa0_term2,twotimeslice,ARRAY(&a,&n0));
   
   //consider the 1st term (alpha*R_x)
-  FacL immediateR   = TUPLE(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &FRax);
+  FacL immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &FRax);
 
   Factor X1y01_term1;
-  eliminationAlgorithm(X1y01_term1 ,immediateR,TUPLE(&n1_,&y_ ,&n0,&n1));
+  eliminationAlgorithm(X1y01_term1 ,immediateR,ARRAY(&n1_,&y_ ,&n0,&n1));
   Factor X01y0_term1;
-  eliminationAlgorithm(X01y0_term1 ,immediateR,TUPLE(&n0_,&n1_,&y_,&n0));
+  eliminationAlgorithm(X01y0_term1 ,immediateR,ARRAY(&n0_,&n1_,&y_,&n0));
   Factor Xa0_term1;
-  eliminationAlgorithm(Xa0_term1,immediateR,TUPLE(&a,&n0));
+  eliminationAlgorithm(Xa0_term1,immediateR,ARRAY(&a,&n0));
     
   arr X1y01;
   X1y01 = X1y01_term2.P*::exp(X1y01_term2.logP);

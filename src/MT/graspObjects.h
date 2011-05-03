@@ -44,8 +44,10 @@ struct GraspObject : public PotentialField
 {
   virtual double distanceToSurface(arr *grad,const arr& x) { NIY; }
   virtual double psi(arr* grad,const arr& x);
-  virtual double phi(arr *grad,const arr& x);
+  virtual double phi(arr *grad,double *var,const arr& x);
   void getNormGrad(arr& grad,const arr& x) ;
+  virtual double max_var(){return 0;}
+  virtual arr center(){return ARR(0,0,0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
 
 };
 
@@ -60,6 +62,7 @@ struct GraspObject_InfCylinder:public GraspObject{
   double distanceToSurface(arr *grad,const arr& x);
   GraspObject_InfCylinder();
   GraspObject_InfCylinder(arr,arr,double,double);
+  arr center(){return c;};
 };
 
 struct GraspObject_Cylinder1:public GraspObject{ // poor man's cylinder 
@@ -72,6 +75,7 @@ struct GraspObject_Cylinder1:public GraspObject{ // poor man's cylinder
   double distanceToSurface(arr *grad,const arr& x);
   GraspObject_Cylinder1();
   GraspObject_Cylinder1(arr,arr,double,double,double);
+  arr center(){return c;};
 };
 
 struct GraspObject_Sphere:public GraspObject{
@@ -81,6 +85,7 @@ struct GraspObject_Sphere:public GraspObject{
   
   double distanceToSurface(arr *grad,const arr& x);
   GraspObject_Sphere();
+  arr center(){return c;};
 };
 
 struct GraspObject_GP:public GraspObject{
@@ -89,10 +94,12 @@ struct GraspObject_GP:public GraspObject{
   double d;
   isf_gp_t isf_gp;
   
-  double phi(arr *grad,const arr& x);
+  double phi(arr *grad,double *var,const arr& x);
   
   GraspObject_GP();
   GraspObject_GP(const arr&,const double);
+  double max_var();
+  arr center(){return c;};
 };
 
 struct GraspObject_GPblob:public GraspObject_GP{ // blub demo

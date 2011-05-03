@@ -481,8 +481,8 @@ void infer::MessagePair::init(Variable *_v1,Variable *_v2,Factor *_v_to_v_fac){
   v2 = _v2;
   v_to_v_fac=_v_to_v_fac;
   variables.clear();
-  initFactor(m12,TUPLE(v2));  m12.setOne();
-  initFactor(m21,TUPLE(v1));  m21.setOne();
+  initFactor(m12,ARRAY(v2));  m12.setOne();
+  initFactor(m21,ARRAY(v1));  m21.setOne();
   v1->messages.append(this);
   v2->messages.append(this);
 }
@@ -493,7 +493,7 @@ void infer::MessagePair::init(Factor *_f1,Variable *_v2){
   v1 = NULL;
   v2 = _v2;
   v_to_v_fac = NULL;
-  variables=TUPLE(v2);
+  variables=ARRAY(v2);
   initFactor(m12,variables);  m12.setOne();
   initFactor(m21,variables);  m21.setOne();
   f1->messages.append(this);
@@ -893,7 +893,7 @@ void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& 
   fg.B_v.clear();
   Factor* f;
   FOR1D(fg.V, i){
-    f = new Factor(TUPLE(fg.V(i)));
+    f = new Factor(ARRAY(fg.V(i)));
     f->setOne();
     fg.F_v.append(f);
     FOR1D(fg.F, k){
@@ -907,7 +907,7 @@ void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& 
       }
     }
     // beliefs
-    f = new Factor(TUPLE(fg.V(i)));
+    f = new Factor(ARRAY(fg.V(i)));
     f->setOne();
     fg.B_v.append(f);
   }
@@ -945,7 +945,7 @@ void infer::collectBelief(Factor& belief,const Factor& f,const infer::MessagePai
 void infer::collectBelief(Factor& belief,Variable *v,const MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
-  initFactor(belief,TUPLE(v));
+  initFactor(belief,ARRAY(v));
   belief.setOne();
   for_list(i,s,v->messages){
     if(s==exclude) continue;
@@ -968,7 +968,7 @@ void infer::recomputeMessage_12(MessagePair& sep){
     tensorMarginal(sep.m12,belief,sep.variables);
   }else if(sep.v1 && sep.v2){ //variable-to-variable
     collectBelief(belief,sep.v1,&sep);
-    tensorProductMarginal(sep.m12, *sep.v_to_v_fac, belief, TUPLE(sep.v1));
+    tensorProductMarginal(sep.m12, *sep.v_to_v_fac, belief, ARRAY(sep.v1));
   }else if(sep.v1 && sep.f2){ //variable-to-factor
     collectBelief(sep.m12,sep.v1,&sep);
   }else{ NIY; }
@@ -984,7 +984,7 @@ void infer::recomputeMessage_21(MessagePair& sep){
     tensorMarginal(sep.m21,belief,sep.variables);
   }else if(sep.v2 && sep.v1){ //variable-to-variable
     collectBelief(belief,sep.v2,&sep);
-    tensorProductMarginal(sep.m21, *sep.v_to_v_fac, belief, TUPLE(sep.v2));
+    tensorProductMarginal(sep.m21, *sep.v_to_v_fac, belief, ARRAY(sep.v2));
   }else if(sep.v2 && sep.f1){ //variable-to-factor
     collectBelief(sep.m21,sep.v2,&sep);
   }else{ NIY; }
@@ -1218,7 +1218,7 @@ void infer::getVariableBeliefs(MT::Array<arr>& post,const VarL& vars){
     if(!vars(i)->factors.N){ post(i).resize(vars(i)->dim); post(i) = 1.; continue; }
     f=vars(i)->factors.last(); //simply take last factor in factor list!
     collectBelief(belief,*f,NULL);
-    tensorMarginal(marg,belief,TUPLE(vars(i)));
+    tensorMarginal(marg,belief,ARRAY(vars(i)));
     post(i) = marg.P;
   }
 }
@@ -2578,8 +2578,8 @@ void tree2FactorGraph(infer::FactorGraph& fg,const MT::Array<TreeNode>& tree){
     fg.V(i) = new infer::Variable(tree(i).dim, STRING("tree_node_"<<std::setfill('0')<<std::setw(3)<<i), i);
   }
   for(i=0;i<N;i++){    //factors
-    if(tree(i).parent<0) fg.F(i) = new infer::Factor(TUPLE(fg.V(i)));
-    else                 fg.F(i) = new infer::Factor(TUPLE(fg.V(i),fg.V(tree(i).parent)));
+    if(tree(i).parent<0) fg.F(i) = new infer::Factor(ARRAY(fg.V(i)));
+    else                 fg.F(i) = new infer::Factor(ARRAY(fg.V(i),fg.V(tree(i).parent)));
     fg.F(i)->setP(tree(i).P);
   }
   for(i=0;i<N;i++){    //messages

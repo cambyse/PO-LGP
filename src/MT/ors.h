@@ -257,6 +257,7 @@ namespace ors{
     void partial(arr& dCdx,arr& dCdt,const arr& dCdf,bool constrain=true) const;
   };
 
+#ifndef MT_ORS_ONLY_BASICS
   struct Joint;
   struct Shape;
   //===========================================================================
@@ -488,8 +489,14 @@ namespace ors{
     void write(std::ostream& os) const;
     void read(std::istream& is);
   };
+#endif
 }
 
+
+//===========================================================================
+//
+// operators
+//
 
 namespace ors{
   double  operator*(const Vector&,const Vector&);
@@ -523,20 +530,47 @@ std::istream& operator>>(std::istream&,ors::Vector&);
 std::istream& operator>>(std::istream&,ors::Matrix&);
 std::istream& operator>>(std::istream&,ors::Quaternion&);
 std::istream& operator>>(std::istream&,ors::Transformation&);
-std::istream& operator>>(std::istream&,ors::Body&);
-std::istream& operator>>(std::istream&,ors::Joint&);
-std::istream& operator>>(std::istream&,ors::Proxy&);
 std::ostream& operator<<(std::ostream&,const ors::Vector&);
 std::ostream& operator<<(std::ostream&,const ors::Matrix&);
 std::ostream& operator<<(std::ostream&,const ors::Quaternion&);
 std::ostream& operator<<(std::ostream&,const ors::Transformation&);
+
+#ifndef MT_ORS_ONLY_BASICS
+std::istream& operator>>(std::istream&,ors::Body&);
+std::istream& operator>>(std::istream&,ors::Joint&);
+std::istream& operator>>(std::istream&,ors::Proxy&);
 std::ostream& operator<<(std::ostream&,const ors::Body&);
 std::ostream& operator<<(std::ostream&,const ors::Joint&);
 std::ostream& operator<<(std::ostream&,const ors::Proxy&);
 stdPipes(ors::Graph);
+#endif
 
 double scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b);
 
+
+//===========================================================================
+//
+// constants
+//
+
+extern const ors::Vector VEC_x;
+extern const ors::Vector VEC_y;
+extern const ors::Vector VEC_z;
+
+
+//===========================================================================
+//
+// OpenGL static draw functions
+//
+
+namespace ors{
+  void glDraw(Mesh& mesh);
+  void glDrawMesh(void *classP);
+#ifndef MT_ORS_ONLY_BASICS
+  void glDraw(Graph& graph);
+  void glDrawGraph(void *classP);
+#endif
+}
 
 
 //===========================================================================
@@ -544,6 +578,7 @@ double scalarProduct(const ors::Quaternion& a,const ors::Quaternion& b);
 // task variables
 //
 
+#ifndef MT_ORS_ONLY_BASICS
 struct TaskVariable;
 
 /*!\brief different types of task variables: refer to different ways to
@@ -566,7 +601,7 @@ enum TVtype {
   userTVT      //!< fully user defined: derive from TaskVariable and overload userUpdate(...)
 };
 
-enum TargetType{ noneTT, directTT, pdGainOnRealTT, pdGainOnReferenceTT, trajectoryTT };
+enum TargetType{ noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnReferenceTT, trajectoryTT };
 
 /*!\brief basic task variable */
 struct TaskVariable{
@@ -633,6 +668,7 @@ struct TaskVariable{
   void setPrecisionTrajectoryConstant(uint T,double constant_prec);
   void setPrecisionVTrajectoryFinal(uint T,double intermediate_prec,double final_prec);
   void setPrecisionVTrajectoryConstant(uint T,double constant_prec);
+  void setIntervalPrecisions(uint T,arr& y_precs, arr& v_precs);
   void setTrajectory(uint T,double funnelsdv=0.,double funnelvsdv=0.); //OBSOLETE
   
   void setInterpolatedTargetsEndPrecisions(uint T,double inter_yprec,double end_yprec,double inter_vprec,double end_vprec);
@@ -687,17 +723,6 @@ void inertiaBox     (double *Inertia, double& mass, double density, double dx, d
 void inertiaCylinder(double *Inertia, double& mass, double density, double height, double radius);
 
 
-
-//===========================================================================
-//
-// constants
-//
-
-extern const ors::Vector VEC_x;
-extern const ors::Vector VEC_y;
-extern const ors::Vector VEC_z;
-
-
 //===========================================================================
 //===========================================================================
 // routines using external interfaces...
@@ -715,14 +740,6 @@ class OpenGL;
 //-- global draw options
 extern bool orsDrawJoints,orsDrawBodies,orsDrawGeoms,orsDrawProxies,orsDrawMeshes;
 extern uint orsDrawLimit;
-
-//-- static gl draw functions
-namespace ors{
-  void glDraw(Graph& graph);
-  void glDrawGraph(void *classP);
-  void glDraw(Mesh& mesh);
-  void glDrawMesh(void *classP);
-}
 
 void editConfiguration(const char* dcFile,ors::Graph& C,OpenGL& gl);
 void animateConfiguration(ors::Graph& C,OpenGL& gl);
@@ -938,6 +955,7 @@ void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C);
 //
 
 void readBlender(const char* filename,ors::Mesh& mesh,ors::Graph& bl);
+#endif
 
 
 #ifdef MT_IMPLEMENTATION

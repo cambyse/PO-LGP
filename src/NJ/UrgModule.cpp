@@ -205,7 +205,7 @@ void UrgModule::close(){
  
 #else
 void UrgModule::scanLine(arr & line){HALT("URG dummy");}
-UrgModule::UrgModule():StepThread("Urg"){}
+UrgModule::UrgModule():Process("Urg"){}
 UrgModule::~UrgModule(){}
 void UrgModule::open(){HALT("URG dummy");}
 void UrgModule::close(){HALT("URG dummy");}

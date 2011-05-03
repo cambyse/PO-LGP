@@ -678,7 +678,7 @@ double soc::AICO::stepKinematic(){
 #else
     *sys->os <<"AICOk("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
 #endif
-    sys->analyzeTrajectory(q,display>0);
+   cost = sys->analyzeTrajectory(q,display>0);
   }
   
   if(display){

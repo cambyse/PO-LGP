@@ -41,22 +41,22 @@ double mdp::pomdpEM_structured(
   for(i=0;i<fsc.vars.N;i++) if(fsc.vars(i)->name=="state(t+1)"){       x_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0;i<fsc.vars.N;i++) if(fsc.vars(i)->name=="observation(t+1)"){ y_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
 
-  VarL mdp_leftVars=TUPLE(x);
-  VarL mdp_rightVars=TUPLE(x_);
+  VarL mdp_leftVars=ARRAY(x);
+  VarL mdp_rightVars=ARRAY(x_);
 
   //----- define factors for the mdp components
   //start
-  Factor Fx  (TUPLE(x));       Fx.setP(mdp.Px);
-  Factor Fy  (TUPLE(y));       Fy.setUniform();
+  Factor Fx  (ARRAY(x));       Fx.setP(mdp.Px);
+  Factor Fy  (ARRAY(y));       Fy.setUniform();
   //transition
-  Factor Fxax(TUPLE(x_,a,x));  Fxax.setP(mdp.Pxax);
-  Factor Fyxa(TUPLE(y_,x_,a)); Fyxa.setP(mdp.Pyxa);
+  Factor Fxax(ARRAY(x_,a,x));  Fxax.setP(mdp.Pxax);
+  Factor Fyxa(ARRAY(y_,x_,a)); Fyxa.setP(mdp.Pyxa);
   //reward
-  Factor FRax(TUPLE(a,x));     FRax.setP(mdp_Rax);
+  Factor FRax(ARRAY(a,x));     FRax.setP(mdp_Rax);
   
-  FacL mdp_transitions = TUPLE(&Fyxa, &Fxax);
-  FacL mdp_inits       = TUPLE(&Fy, &Fx);
-  FacL mdp_rewards     = TUPLE(&FRax);
+  FacL mdp_transitions = ARRAY(&Fyxa, &Fxax);
+  FacL mdp_inits       = ARRAY(&Fy, &Fx);
+  FacL mdp_rewards     = ARRAY(&FRax);
 
   VarL leftVars=cat(fsc.leftVars,mdp_leftVars);
   VarL rightVars=cat(fsc.rightVars,mdp_rightVars);
@@ -137,10 +137,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FacL twotimeslice = cat(TUPLE(&Fbeta),fsc.transFacs,mdp_transitions,TUPLE(&Falpha));
+  FacL twotimeslice = cat(ARRAY(&Fbeta),fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
 
   //term1: derived from the immediate reward model
-  FacL immediateR = cat(mdp_rewards,fsc.transFacs,mdp_transitions,TUPLE(&Falpha));
+  FacL immediateR = cat(mdp_rewards,fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
 
   //loop through all transition factors of the controller
   for(i=0;i<fsc.transFacs.N;i++){

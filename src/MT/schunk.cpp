@@ -663,15 +663,16 @@ void SchunkSkinModule::step(){
 
 #else //ndef MT_SCHUNK
 #include "schunk.h"
-SchunkArmModule::SchunkArmModule(){}
+bool schunkShutdown=false;
+SchunkArmModule::SchunkArmModule(q_currentReferenceVar *_var):Process("SchunkArmProcess"){}
 void SchunkArmModule::open(){}
 void SchunkArmModule::close(){}
 void SchunkArmModule::step(){}
-SchunkHandModule::SchunkHandModule(){}
+SchunkHandModule::SchunkHandModule():Process("SchunkHandProcess"){}
 void SchunkHandModule::open(){}
 void SchunkHandModule::close(){}
 void SchunkHandModule::step(){}
-SchunkSkinModule::SchunkSkinModule(){}
+SchunkSkinModule::SchunkSkinModule():Process("SchunkSkinProcess"),Variable("SchunkSkinVariable"){}
 void SchunkSkinModule::open(){}
 void SchunkSkinModule::close(){}
 void SchunkSkinModule::step(){}

@@ -12,13 +12,13 @@
 //
 //
 
-#include <MT/threads.h>
+#include <MT/process.h>
 #include <MT/array.h>
 #include <MT/util.h>
 
 struct UrgWorkspace;
 
-struct UrgModule:public StepThread{
+struct UrgModule:public Process{
   UrgWorkspace *WS;
 
   arr scanline;

@@ -64,7 +64,7 @@ void stereoTriangulation(arr& X, const arr& xL,const arr& xR, const arr& PL, con
   B = skew(xL)*PL;
   B.append(skew(xR)*PR);
   B.reshape(6,4);
-  B.delRow(2);  B.delRow(4);  B.reshape(4,4);
+  B.delRows(2);  B.delRows(4);  B.reshape(4,4);
   //now we need to find p that minimizes |Ap| (subject to |p|=1 because the scaling doesn't matter)
   arr U,w,V;
   svd(U,w,V,~B*B); //Singular Value Decomposition of A^T A

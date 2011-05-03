@@ -1,5 +1,5 @@
-Compiled at:     Dec 14 2010 11:46:55
-Execution start: Tue Dec 14 11:50:09 2010
+Compiled at:     Apr 13 2011 15:41:52
+Execution start: Wed Apr 13 19:17:34 2011
 Program call:    './x.exe '
              orsfile = opening config file 'MT.cfg'
 test.ors [N2MT6StringE] (default!)
@@ -8,3 +8,4 @@ opening input file `test.ors'
                Hcost = 0.0005 [d]
                Wcost =     1 [d]
               Qnoise = 1e-10 [d] (default!)
+         aicoDamping = 

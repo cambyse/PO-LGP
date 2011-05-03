@@ -22,8 +22,8 @@ void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   TaskVariable *TV_f3   = new TaskVariable("pos3",*sys.ors,posTVT,"tip3","<t(-.033 -.09 .0)>",0,0,0);
   TaskVariable *TV_qhand= new TaskVariable("qhand", *sys.ors, qLinearTVT,0,0,0,0,I2);
   TaskVariableList TVs;
-  TVs.append(TUPLE(TV_eff,TV_q,TV_rot,TV_col,TV_lim)); //TV_skin
-  TVs.append(TUPLE(TV_up,TV_up2,TV_z1,TV_z2,TV_f1,TV_f2,TV_f3,TV_qhand));
+  TVs.append(ARRAY(TV_eff,TV_q,TV_rot,TV_col,TV_lim)); //TV_skin
+  TVs.append(ARRAY(TV_up,TV_up2,TV_z1,TV_z2,TV_f1,TV_f2,TV_f3,TV_qhand));
   sys.setTaskVariables(TVs);
 }
 
@@ -188,8 +188,6 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
                                          midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
 }
 
-#if 0
-
 PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
                               ors::Graph& _ors,
                               ShapeList& _refs,
@@ -204,14 +202,12 @@ void PotentialValuesTaskVariable::userUpdate(){
   ors::Shape *s;
   arr xi,Ji,grad;
   y.resize(refs.N);
-  //y_target.resize(refs.N);
   J.resize(refs.N,ors->getJointStateDimension());
   for_list(i,s,refs){
     ors->kinematics(xi,s->body->index,&s->rel);
     ors->jacobian  (Ji,s->body->index,&s->rel);
     y(i) = f->psi(&grad,xi);
     J[i]() = grad*Ji;
-    //y_target(i) = -y(i);
   }
   transpose(Jt,J);
 }
@@ -287,4 +283,3 @@ void zFocusTargetTaskVariable::userUpdate(){
     //return |offset|^2;
 }
 
-#endif

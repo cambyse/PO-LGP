@@ -169,7 +169,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed,uint T,bool _dy
        col = new TaskVariable("collision", *ors, collTVT,0,0,0,0,ARR(margin));
   else col = new TaskVariable("collision", *ors, colConTVT,0,0,0,0,ARR(margin));
   TaskVariable *com = new TaskVariable("balance", *ors, comTVT,0,0,0,0,ARR());
-  setTaskVariables(TUPLE(pos,col,com));
+  setTaskVariables(ARRAY(pos,col,com));
       
   pos->y_target = arr(ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,10*endPrec);
@@ -254,7 +254,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   TaskVariable *col;
   if(!useTruncation) col = new TaskVariable("collision", *ors, collTVT,0,0,0,0,ARR(margin));
   else               col = new TaskVariable("collision", *ors, colConTVT,0,0,0,0,ARR(margin));
-  setTaskVariables(TUPLE(pos,col));
+  setTaskVariables(ARRAY(pos,col));
       
   pos->y_target = arr(ors->getBodyByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,10*endPrec);
@@ -303,7 +303,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   x0 = new TaskVariable("finger-tip",*sys.ors,posTVT ,"effector",0,0,0,0);
   x1 = new TaskVariable("COM",       *sys.ors,comTVT ,0,0,0,0,0);
   x2 = new TaskVariable("collision", *sys.ors,collTVT,0,0,0,0,ARR(.02));
-  sys.vars = TUPLE(x0,x1,x2);
+  sys.vars = ARRAY(x0,x1,x2);
 
   updateState(globalSpace);
   //reportAll(globalSpace,cout);
@@ -597,7 +597,7 @@ void soc::createDynamicProblem(SocSystem_Ors &sys,
   //set task variables
   TaskVariable *x0;
   x0 = new TaskVariable("finger-tip",*sys.ors,posTVT ,"eff","t(0 0 .15)",0,0,0);
-  sys.vars = TUPLE(x0);
+  sys.vars = ARRAY(x0);
 
   updateState(sys.vars);
   //reportAll(globalSpace,cout);
@@ -637,7 +637,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
   TaskVariable *x0,*x1;
   x0 = new TaskVariable("finger-tip",*sys.ors,posTVT ,endeffector_name,"",0,0,0);
   x1 = new TaskVariable("collision", *sys.ors,collTVT,0,0,0,0,0);
-  sys.vars = TUPLE(x0,x1);
+  sys.vars = ARRAY(x0,x1);
 
   updateState(sys.vars);
   //reportAll(globalSpace,cout);

@@ -2283,6 +2283,7 @@ void ors::Spline::partial(arr& dCdx,arr& dCdt,const arr& dCdf,bool constrain) co
 
 #define LEN .2
 
+#ifndef MT_ORS_ONLY_BASICS
 
 //===========================================================================
 //
@@ -4263,7 +4264,7 @@ void ors::Graph::getTotals(ors::Vector& c,ors::Vector& v,ors::Vector& l,ors::Qua
   ori.setVec(o);
 }
 
-
+#endif
 
 #undef LEN
 

@@ -34,8 +34,10 @@ template MT::Array<T> MT::operator+(const Array<T>& y,const Array<T>& z);
 template MT::Array<T> MT::operator+(T,const Array<T>& z);
 template MT::Array<T>& MT::operator+=(Array<T>& y,T);
 template MT::Array<T>& MT::operator+=(Array<T>& y,const Array<T>& z);
+template MT::Array<T>& MT::operator-=(Array<T>& y,T);
+template MT::Array<T>& MT::operator-=(Array<T>& y,const Array<T>& z);
 template MT::Array<T>& MT::operator*=(Array<T>& y,T);
-template MT::Array<T>& MT::operator/=(Array<T>&, T);
+template MT::Array<T>& MT::operator/=(Array<T>& y, T);
 template bool operator==(const MT::Array<T>& v,const MT::Array<T>& w);
 template bool operator==(const MT::Array<T>& v,const T *w);
 template std::istream& operator>>(std::istream& is,MT::Array<T>& x);
@@ -65,6 +67,7 @@ template T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w);
 template T metricDistance(const MT::Array<T>& g,const MT::Array<T>& v, const MT::Array<T>& w);
 
 template T sum(const MT::Array<T>& v);
+template MT::Array<T> sum(const MT::Array<T>& v,uint d);
 template T sumOfAbs(const MT::Array<T>& v);
 template T sumOfSqr(const MT::Array<T>& v);
 template T norm(const MT::Array<T>& v);
@@ -74,6 +77,7 @@ template T var(const MT::Array<T>& v);
 template T trace(const MT::Array<T>& v);
 
 template MT::Array<T> log(const MT::Array<T>& v);
+template MT::Array<T> exp(const MT::Array<T>& v);
 
 template T minDiag(const MT::Array<T>& v);
 
@@ -84,6 +88,8 @@ template void innerProduct(MT::Array<T>& x,const MT::Array<T>& y, const MT::Arra
 template void outerProduct(MT::Array<T>& x,const MT::Array<T>& y, const MT::Array<T>& z);
 template T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w);
 template T scalarProduct(const MT::Array<T>& g,const MT::Array<T>& v, const MT::Array<T>& w);
+
+template MT::Array<T> catCol(const MT::Array<MT::Array<T>* >& X);
 
 
 template void tensorEquation    (MT::Array<T> &X,const MT::Array<T> &A,const uintA &pickA,const MT::Array<T> &B,const uintA &pickB,uint sum=0);

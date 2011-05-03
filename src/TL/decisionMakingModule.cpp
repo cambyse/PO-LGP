@@ -47,7 +47,7 @@ double PRADA_threshold_goal_achieved = 0.1;
 double discountFactor = 0.95;
   
   
-DecisionMakingModule::DecisionMakingModule():StepThread("DecisionMaking") {
+DecisionMakingModule::DecisionMakingModule():Process("DecisionMaking") {
   le = NULL;
   prada = NULL;
   reward = NULL;

@@ -81,6 +81,7 @@ struct GaussianProcess{
   void appendGradientObservation(const arr& x,const arr& dydx);
   void evaluate(const arr& x,double& y,double& sig);   //!< evaluate the GP at some point - returns y and sig (=standard deviation)
   void evaluate(const arr& X,arr& Y,arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
+  double max_var(); // the variance when no data present
   void gradient(arr& grad,const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
 
   void push(const arr& x,double y){ ig2=Ginv; appendObservation(x,y); recompute(); }
@@ -102,7 +103,7 @@ struct GaussKernelParams{
 //! you can also pass a double[3] as parameters
 inline double GaussKernel(void *P,const arr& x1,const arr& x2){
   GaussKernelParams& K = *((GaussKernelParams*)P);
-  if(&x1==&x2) return K.priorVar+K.obsVar;
+  if( (&x1==&x2) || operator==(x1,x2)) return K.priorVar+K.obsVar;
   double d;
   if(x1.N!=1) d=sqrDistance(x1,x2); else{ d=x2(0)-x1(0); d=d*d; }
   return K.priorVar*::exp(-.5 * d/K.widthVar);

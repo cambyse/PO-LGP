@@ -141,7 +141,7 @@ void mdp::prioritizedSweeping(arr& V,const MDP& mdp,double VerrThreshold){
   x=Rx.maxIndex();
   Vnew(x)=Rx(x);
   ERR(x) =Vnew(x)-V(x);
-  queue.insertSorted(x,PQcompare);
+  queue.insertInSorted(x,PQcompare);
   inQueue(x)=true;
   
   uint t;
@@ -159,7 +159,7 @@ void mdp::prioritizedSweeping(arr& V,const MDP& mdp,double VerrThreshold){
       }
       if(inQueue(y)){ queue.removeValueInSorted(y,PQcompare); inQueue(y)=false; }
       ERR(y) = Vnew(y)-V(y);
-      if(ERR(y) > VerrThreshold){ queue.insertSorted(y,PQcompare); inQueue(y)=true; }
+      if(ERR(y) > VerrThreshold){ queue.insertInSorted(y,PQcompare); inQueue(y)=true; }
     }
     //if(!(t%X)) glDisplayRedBlue(V,global_maze.d0,global_maze.d1,false);
   }

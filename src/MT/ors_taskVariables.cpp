@@ -144,13 +144,13 @@ void TaskVariable::setTrajectory(uint T,double funnelsdv,double funnelvsdv){
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setConstantTargetTrajectory(uint T){
-  OPS;
+  //OPS;
   targetType=trajectoryTT;
   active=true;
   uint t;
-  y_trajectory.resize(T,y.N);
-  v_trajectory.resize(T,y.N);
-  for(t=0;t<T;t++){
+  y_trajectory.resize(T+1,y.N);
+  v_trajectory.resize(T+1,y.N);
+  for(t=0;t<=T;t++){
     y_trajectory[t]()  = y_target;
     v_trajectory[t]()  = v_target;
   }
@@ -243,6 +243,25 @@ void TaskVariable::setPrecisionVTrajectoryConstant(uint T,double const_prec){
   active=true;
   v_prec_trajectory.resize(T);
   v_prec_trajectory = const_prec;
+}
+
+//set velocity and position precisions splitting the T-step-trajectory into as
+//much intervals as y_precs given.
+void TaskVariable::setIntervalPrecisions(uint T,arr& y_precs, arr& v_precs){
+  CHECK(y_precs.nd==1 && v_precs.nd==1 && y_precs.N>0 && v_precs.N>0
+      && y_precs.N<=T+1 && y_precs.N<=T+1,
+      "number of intervals needs to be in [1,T+1]." );
+
+  uint t;
+  active=true;
+
+  v_prec_trajectory.resize(T+1);
+  y_prec_trajectory.resize(T+1);
+
+  for(t=0;t<=T;++t){
+    y_prec_trajectory(t) = y_precs(t * y_precs.N/(T+1));
+    v_prec_trajectory(t) = v_precs(t * v_precs.N/(T+1));
+  }
 }
 
 void TaskVariable::shiftTargets(int offset){
@@ -449,6 +468,11 @@ void TaskVariable::updateChange(int t,double tau){
   case directTT:{
     y_ref = yt;
     v_ref = vt;
+    break;
+  }
+  case positionGainsTT:{
+    y_ref = y + Pgain*(yt - y) + Dgain*(vt - v);
+    v_ref = v;
     break;
   }
   case pdGainOnRealTT:{

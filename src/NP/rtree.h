@@ -17,11 +17,12 @@
 /*! \file rtree.h
     \brief OpenCV Random Trees */
 
-
 #ifndef _RTREE_H
 #define _RTREE_H
 
 #include <MT/array.h>
+
+// TODO mv all OpenCV-wrapping methods to directory wrappers/opencv{.h/.cpp}
 
 class CvRTrees;                                        // defined in opencv/ml.h
 

@@ -151,7 +151,7 @@ void ControllerProcess::step(){
     q_reference=q_old;
     v_reference.setZero();
   }
-#if 1
+#if 0
     static ofstream logfil;
     static bool logfilOpen=false;
     if(!logfilOpen){ logfil.open("control.log"); logfilOpen=true; }
@@ -209,9 +209,6 @@ RobotModuleGroup::~RobotModuleGroup(){
 }
 
 void RobotModuleGroup::open(){
-  uint m;
-  float f;
-  
   //setRRscheduling(MT::getParameter<int>("masterNice")); //requires SUDO
   //if(!setNice(MT::getParameter<int>("masterNice",-19)) && openHand) HALT("opening Schunk hand only with SUDO (for nice...)");
 
@@ -229,7 +226,7 @@ void RobotModuleGroup::open(){
   motorIndex(4) = ctrl.ors.getBodyByName("m7")->inLinks(0)->index;
   motorIndex(5) = ctrl.ors.getBodyByName("m8")->inLinks(0)->index;
   motorIndex(6) = ctrl.ors.getBodyByName("m9")->inLinks(0)->index;
-//   swift.deactivate(TUPLE(
+//   swift.deactivate(ARRAY(
 //                    ors.getBodyByName("fing1"),ors.getBodyByName("fing2"),ors.getBodyByName("fing3"),
 //                    ors.getBodyByName("tip1"),ors.getBodyByName("tip2"),ors.getBodyByName("tip3")));
 
@@ -276,6 +273,7 @@ void RobotModuleGroup::open(){
     arm.threadOpen(MT::getParameter<int>("armThreadNice",-10));
     arm.threadWait();
 #ifdef MT_SCHUNK
+    uint m;  float f;
     for(m=3;m<=9;m++){ arm.pDev->setMaxVel(m, .1); }
     for(m=3;m<=9;m++){ arm.pDev->setMaxAcc(m, .1); }
     for(m=3;m<=9;m++){ arm.pDev->getPos(m,&f); ctrl.q_reference(motorIndex(m-3))=(double)f; } //IMPORTANT: READ IN THE CURRENT ARM POSTURE
@@ -393,8 +391,8 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   //arr I2(7,14); I2.setDiag(1.);
   //TaskVariable *TV_qhand= new TaskVariable("qhand", ors, qLinearTVT,0,0,0,0,I2);
 
-  TVall.append(TUPLE(TV_eff,TV_q,TV_rot,TV_col,TV_lim,TV_skin));
-  TVall.append(TUPLE(TV_up,TV_up2,TV_z1,TV_z2,TV_f1,TV_f2,TV_f3));
+  TVall.append(ARRAY(TV_eff,TV_q,TV_rot,TV_col,TV_lim,TV_skin));
+  TVall.append(ARRAY(TV_up,TV_up2,TV_z1,TV_z2,TV_f1,TV_f2,TV_f3));
   ctrl->sys.setTaskVariables(TVall);
   
   TV_x_yprec  = MT::Parameter<double>("TV_x_yprec",1e3);

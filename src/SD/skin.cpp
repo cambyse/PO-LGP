@@ -85,12 +85,12 @@ grobi_skin_t::grobi_skin_t(ors::Graph &ors){
 
   /* 3 fingers */
   fingers.resize(3);
-  fingers(0).tip.init(ors, "tip1",   TUPLE<int>(1,  13, 7,  12), tactile_arr_t::TIP);
-  fingers(0).link.init(ors, "fing1", TUPLE<int>(15, -1, 7,  12), tactile_arr_t::LINK);
-  fingers(1).tip.init(ors, "tip2",   TUPLE<int>(1,  13, 14, -1), tactile_arr_t::TIP);
-  fingers(1).link.init(ors, "fing2", TUPLE<int>(15, -1, 14, -1), tactile_arr_t::LINK);
-  fingers(2).tip.init(ors, "tip3",   TUPLE<int>(1,  13, 0,  5), tactile_arr_t::TIP);
-  fingers(2).link.init(ors, "fing3", TUPLE<int>(15, -1, 0,  5), tactile_arr_t::LINK);
+  fingers(0).tip.init(ors, "tip1",   ARRAY<int>(1,  13, 7,  12), tactile_arr_t::TIP);
+  fingers(0).link.init(ors, "fing1", ARRAY<int>(15, -1, 7,  12), tactile_arr_t::LINK);
+  fingers(1).tip.init(ors, "tip2",   ARRAY<int>(1,  13, 14, -1), tactile_arr_t::TIP);
+  fingers(1).link.init(ors, "fing2", ARRAY<int>(15, -1, 14, -1), tactile_arr_t::LINK);
+  fingers(2).tip.init(ors, "tip3",   ARRAY<int>(1,  13, 0,  5), tactile_arr_t::TIP);
+  fingers(2).link.init(ors, "fing3", ARRAY<int>(15, -1, 0,  5), tactile_arr_t::LINK);
 
   /* read frames and add to ors */
   FOR1D(fingers,i){

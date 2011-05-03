@@ -254,7 +254,7 @@ double Metronome::getTimeSinceTic(){
 
 //===========================================================================
 //
-// StepThread
+// CycleTimer
 //
 
 CycleTimer::CycleTimer(const char* _name){

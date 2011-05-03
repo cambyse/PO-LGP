@@ -1,16 +1,17 @@
-PACKAGE = libORS
+PACKAGE = share
 
 ALL =	extern/SWIFT++_1.2/src \
 	extern/SWIFT++_1.2/decomposer/src \
-	extern/ANN_1.1/src \
 	extern/libcolorseg/src \
+	src/NJ \
+	src/TL \
 	src/MT \
 	src/NP \
 	src/Lewiner 
 
 makeAll: $(ALL:%=make/%)
 
-cleanAll: $(ALL:%=clean/%)
+cleanAll: $(ALL:%=clean/%) cleanProjects
 
 make/%::
 	make -C $*
@@ -20,14 +21,13 @@ clean/%::
 
 tests::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;
-	-@find . -name 'roboticsCourse*' -maxdepth 1 -type d -exec make -C {} \;
 
 cleanProjects::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} clean \;
-	-@find .    -maxdepth 1 -type d -name 'roboticsCourse*' -exec make -C {} clean \;
+	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} clean \;
 
 doc::
 	make -C doc guide doxy
 
 zip::
-	cd ..;  rm -f $(PACKAGE).tgz;  tar cvzf $(PACKAGE).tgz $(PACKAGE) --exclude "*.svn" --exclude "*solution*" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*"
+	cd ..;  rm -f $(PACKAGE).tgz;  tar cvzf $(PACKAGE).tgz $(PACKAGE) --exclude "*.svn" --exclude ".git" --exclude "*solution*" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"

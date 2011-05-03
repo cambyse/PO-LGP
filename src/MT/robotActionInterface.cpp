@@ -92,7 +92,7 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
-  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,task->TV_col,task->TV_lim,task->TV_q)); //non-thread safe: task variable list needs a lock
+  s->master.ctrl.sys.setTaskVariables(ARRAY(&TV,task->TV_col,task->TV_lim,task->TV_q)); //non-thread safe: task variable list needs a lock
   s->master.ctrl.taskLock.unlock();
 
   for(;!schunkShutdown;){
@@ -131,7 +131,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
   task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
 
-  s->master.ctrl.sys.setTaskVariables(TUPLE(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
+  s->master.ctrl.sys.setTaskVariables(ARRAY(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
   s->master.ctrl.taskLock.unlock();
 
   for(;!schunkShutdown;){
@@ -175,7 +175,7 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
       ctrl=_ctrl;  posGoal=_posGoal;  maxVel=_maxVel;  dist=1e10;
       TV = new TaskVariable("reach",*ctrl->sys.ors,posTVT,shapeName,NULL,0);
       TV->targetType=directTT; 
-      ctrl->sys.setTaskVariables(TUPLE(TV));
+      ctrl->sys.setTaskVariables(ARRAY(TV));
     }
     ~MyUpdater(){
       ctrl->sys.setTaskVariables(ctrl->task->TVall);
@@ -214,7 +214,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
       TVp->targetType=directTT; 
       TVv = new TaskVariable("reach",*ctrl->sys.ors,zalignTVT,shapeName,NULL,0);
       TVv->targetType=directTT; 
-      ctrl->sys.setTaskVariables(TUPLE(TVp,TVv));
+      ctrl->sys.setTaskVariables(ARRAY(TVp,TVv));
     }
     ~MyUpdater(){
       ctrl->sys.setTaskVariables(ctrl->task->TVall);

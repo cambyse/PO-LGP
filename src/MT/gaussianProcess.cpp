@@ -136,6 +136,10 @@ void GaussianProcess::appendGradientObservation(const arr& x,const arr& nabla) {
     for(uint i=0;i<nabla.N;i++) appendDerivativeObservation(x,nabla(i),i);
 }
 
+double GaussianProcess::max_var(){
+    return kernelF(kernelP,ARR(0),ARR(0));
+}
+
 void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
   uint i,N=Y.N,dN=dY.N;
   static arr k,xi,Ginvk;

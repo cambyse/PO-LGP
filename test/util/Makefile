@@ -1,4 +1,4 @@
-BASE = $(shell pwd)/../..
+BASE = ../..
 
 MTLIB = 1
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES

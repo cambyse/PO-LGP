@@ -22,7 +22,7 @@ offset_f(double x,double y,double z,void *_p){
 
 double
 static_mu(const arr &x, const void *p){
-  return ((GraspObject*)p)->phi(NULL,x);
+  return ((GraspObject*)p)->phi(NULL,NULL,x);
 }
 
 MeshObject::MeshObject(char *meshfile, const arr& c, const double sc){
@@ -90,39 +90,46 @@ PotentialField::buildMesh(){
   m.translate(off(0),off(1),off(2));
 
 
-  getEnclCube(lo,hi);
-  MT_MSG("new: hi="<<hi<<", lo="<<lo);
-  X.setGrid(3,lo,hi,40);
-  dX.resizeAs(X);
-  for(i=0;i<X.d0;i++){
-    X[i]()+=c;
-    psi(&dX[i](),X[i]);
+  if(MT::getParameter<uint>("plotPotentialField", 0)){
+    getEnclCube(lo,hi);
+    MT_MSG("new: hi="<<hi<<", lo="<<lo);
+    X.setGrid(3,lo,hi,50);
+    dX.resizeAs(X);
+    for(i=0;i<X.d0;i++){
+      X[i]()+=c;
+      psi(&dX[i](),X[i]);
+    }
+    dX *= .005;
+    plotVectorField(X,dX); // plot gradient
   }
-  dX *= .001;
- // plotVectorField(X,dX); // plot gradient
 }
 
 
 double
-GraspObject::phi(arr *grad,const arr& x) { //generic phi, based only on (scaled) distance to surface
+GraspObject::phi(arr *grad,double *var,const arr& x) { //generic phi, based only on (scaled) distance to surface
   // see gnuplot:  plot[-1:4] 1.-exp(-.5*(x+1)*(x+1))/exp(-.5)
   double d=distanceToSurface(grad,x);
   if(d<-1.) d=-1.; 
+#if 0
   double phi=1.-exp(-.5*(d+1.)*(d+1.))/exp(-.5);
   if(grad){
     (*grad) = (-exp(-.5*(d+1.)*(d+1.))/exp(-.5)) * (-(d+1.)) * (*grad);
   }
+#else
+  double phi=d;
+#endif
+  if(var) *var = 0; //default variance is 0 (analytic shapes)
   return phi;
 } 
 
 double
 GraspObject::psi(arr* grad,const arr& x)  {
-  return phi(grad,x);
+  return phi(grad,NULL,x);
 };
 
 void
 GraspObject::getNormGrad(arr& grad,const arr& x) {
-  phi(&grad,x);
+  phi(&grad,NULL,x);
   double d=norm(grad);
   if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
 }
@@ -208,13 +215,15 @@ GraspObject_Sphere::GraspObject_Sphere(){
 /* =============== ISF GP ================ */
 
 double
-GraspObject_GP::phi(arr *grad,const arr& x){
+GraspObject_GP::phi(arr *grad, double *var, const arr& x){
   double y, sig;
   //arr x = xx - c;
 
   isf_gp.gp.evaluate(x,y,sig); 
 
   if (grad) isf_gp.gp.gradient(*grad, x);
+
+  if (var) *var = sig ;
 
   //SD_DBG("x="<<x<<"; y="<<y<<" sig="<<sig<<" gradient="<<((grad)?*grad:0));
 
@@ -226,7 +235,6 @@ GraspObject_GP::GraspObject_GP(const arr &cc,const double dd){
   d = dd;
 
   isf_gp.set_size(d);
-  //SD_DBG(*isf_gp);
 }
 
 GraspObject_GP::GraspObject_GP(){
@@ -234,7 +242,11 @@ GraspObject_GP::GraspObject_GP(){
   d = MT::getParameter<double>("objsize");
 
   isf_gp.set_size(d);
-  //SD_DBG(*isf_gp);
+}
+
+double
+GraspObject_GP::max_var(){
+  return isf_gp.gp.max_var();
 }
 
 /* =============== ISF GP random  ================ */
@@ -258,7 +270,9 @@ GraspObject_GP_analytical_prior::GraspObject_GP_analytical_prior(GraspObject *_p
   // generate object around prior
   isf_gp.set_shape_prior(static_mu, prior);
   rnd.seed(MT::getParameter<uint>("seed", 1));
-  randomGP_on_random_points(isf_gp.gp, c); // NOTE: c == prior.c
+  randomGP_on_random_points(isf_gp.gp, c,
+      MT::Parameter<double>("objsize"),
+      2); // NOTE: c == prior.c
   isf_gp.gp.recompute();
 }
 

@@ -1,5 +1,3 @@
-#define MT_IMPLEMENTATION
-
 #include <MT/soc.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
@@ -41,13 +39,13 @@ int main(int argn,char **argv){
   col->y_prec=1e-0;
   col->y_target = ARR(0.);
 
-  soc.setTaskVariables(TUPLE(pos,col));
+  soc.setTaskVariables(ARRAY(pos,col));
   
   //-- feedback control (kinematic or dynamic) to reach the targets
   arr q,dq,qv;
   soc.getq0(q);
   soc.getqv0(qv);
-  for(uint t=0;t<100;t++){
+  for(uint t=0;t<T;t++){
     //soc::bayesianIKControl(soc,dq,0);
     //q += dq;
     if(!soc.dynamic){
@@ -62,8 +60,7 @@ int main(int argn,char **argv){
     //gl.watch();
   }
   gl.watch("<press ENTER>");
-  //return 0;
-
+  
   //-- planning (AICO) to generate an optimal (kinematic) trajectory
   soc.getq0(q);
   soc.setq(q);

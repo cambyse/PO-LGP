@@ -58,25 +58,25 @@ double mdp::pomdpEM_lev1(
   Variable y_ (dy ,"observation(t+1)");
   Variable n0_(d0 ,"node0(t+1)"    );
   //start
-  Factor Fx  (TUPLE(&x)        ,mdp.Px);
-  Factor Fy  (TUPLE(&y));      Fy.setUniform();
-  Factor F0  (TUPLE(&n0)       ,fsc.P0);
+  Factor Fx  (ARRAY(&x)        ,mdp.Px);
+  Factor Fy  (ARRAY(&y));      Fy.setUniform();
+  Factor F0  (ARRAY(&n0)       ,fsc.P0);
   //transition
-  Factor Fa0 (TUPLE(&a,&n0)     ,fsc.Pa0);
-  Factor Fxax(TUPLE(&x_,&a,&x)   ,mdp.Pxax);
-  Factor Fyxa(TUPLE(&y_,&x_,&a)  ,mdp.Pyxa);
-  Factor F0y0(TUPLE(&n0_,&y_,&n0),fsc.P0y0);
+  Factor Fa0 (ARRAY(&a,&n0)     ,fsc.Pa0);
+  Factor Fxax(ARRAY(&x_,&a,&x)   ,mdp.Pxax);
+  Factor Fyxa(ARRAY(&y_,&x_,&a)  ,mdp.Pyxa);
+  Factor F0y0(ARRAY(&n0_,&y_,&n0),fsc.P0y0);
   //reward
-  Factor FRax(TUPLE(&a,&x)      ,mdp_Rax);  
+  Factor FRax(ARRAY(&a,&x)      ,mdp_Rax);  
   
-  VarL leftVars=TUPLE(&n0 ,&x );
-  VarL rightVars=TUPLE(&n0_,&x_);
+  VarL leftVars=ARRAY(&n0 ,&x );
+  VarL rightVars=ARRAY(&n0_,&x_);
   VarL tail_headVars=cat(rightVars,leftVars);
   
-  //FacL allTransitions=TUPLE(&Fa0, &Fxax, &Fyxa, &F0y0);
-  FacL allTransitions = TUPLE(&F0y0, &Fyxa, &Fxax, &Fa0);
-  FacL allRewards = TUPLE(&FRax, &Fa0);
-  FacL allInits = TUPLE(&F0,&Fx,&Fy);
+  //FacL allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
+  FacL allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
+  FacL allRewards = ARRAY(&FRax, &Fa0);
+  FacL allInits = ARRAY(&F0,&Fx,&Fy);
 
   Factor Falpha(leftVars);
   Factor Fbeta (rightVars);
@@ -149,20 +149,20 @@ double mdp::pomdpEM_lev1(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FacL twotimeslice = TUPLE(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
+  FacL twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
   
   Factor X0y0_term2;
-  eliminationAlgorithm(X0y0_term2,twotimeslice,TUPLE(&n0_,&y_,&n0));
+  eliminationAlgorithm(X0y0_term2,twotimeslice,ARRAY(&n0_,&y_,&n0));
   Factor Xa0_term2;
-  eliminationAlgorithm(Xa0_term2,twotimeslice,TUPLE(&a,&n0));
+  eliminationAlgorithm(Xa0_term2,twotimeslice,ARRAY(&a,&n0));
   
   //consider the 1st term (alpha*R_x)
-  FacL immediateR   = TUPLE(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
+  FacL immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
 
   Factor X0y0_term1;
-  eliminationAlgorithm(X0y0_term1 ,immediateR,TUPLE(&n0_,&y_,&n0));
+  eliminationAlgorithm(X0y0_term1 ,immediateR,ARRAY(&n0_,&y_,&n0));
   Factor Xa0_term1;
-  eliminationAlgorithm(Xa0_term1,immediateR,TUPLE(&a,&n0));
+  eliminationAlgorithm(Xa0_term1,immediateR,ARRAY(&a,&n0));
     
   arr X0y0;
 #if 0 //this parameter does not depend on immediate reward (only term2 is relevant)

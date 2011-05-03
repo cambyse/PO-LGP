@@ -441,7 +441,7 @@ void getHsvCenter(arr& cen, byteA &img,uint iter,const floatA& hsvTarget,const f
 
   byte2float(rgb,img);
   rgb2hsv(hsv,rgb);
-  getHsvEvidences(bp.phi,hsv,hsvTarget,hsvTol); //TUPLE<float>(.0,1.,1.),TUPLE<float>(.2,.5,.5));
+  getHsvEvidences(bp.phi,hsv,hsvTarget,hsvTol); //ARRAY<float>(.0,1.,1.),ARRAY<float>(.2,.5,.5));
 
   byteA tmp;
   resizeAs(tmp,bp.phi);
@@ -813,7 +813,7 @@ void compute_hueMap(byteA& hue,const floatA& alphaV){
   for(x=0;x<X;x++){
     h=(uint)((MT::phi(mean(x,0),mean(x,1))+MT_PI)*180./MT_PI);
     s = norm(mean[x]) * 100; if(s>255) s=255;
-    hsv2rgb(hue[x](),TUPLE<int>(h,(byte)s, 255));
+    hsv2rgb(hue[x](),ARRAY<int>(h,(byte)s, 255));
   }
   hue.reshape(I,J,3);
 }
@@ -844,7 +844,7 @@ void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
 	       cvScalar(threshold), cvScalar(threshold),
 	       &component, CV_FLOODFILL_FIXED_RANGE|CV_FLOODFILL_MASK_ONLY, CVMAT(mask) );
 
-  box=TUPLE<uint>(component.rect.x, component.rect.y,
+  box=ARRAY<uint>(component.rect.x, component.rect.y,
 		  component.rect.x+component.rect.width, component.rect.y+component.rect.height);
 
   //if(box(2)-box(0)>theta.d0*0.95 || box(3)-box(1)>theta.d0*0.95) return;

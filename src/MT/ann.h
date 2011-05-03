@@ -32,4 +32,8 @@ struct ANN{
   void map(arr& y,const arr& x,const arr& Y); //given a data set Y of outputs for each X, do a NN regression to predict y at x
 };
 
+#ifdef MT_IMPLEMENTATION
+#include "ann.cpp"
+#endif
+
 #endif

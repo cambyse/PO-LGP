@@ -931,46 +931,29 @@ static FILE *MT_gp=NULL;
 void gnuplotClose(){
   if(MT_gp){ fflush(MT_gp); fclose(MT_gp); }
 }
-void gnuplot(const char *command,const char *EPSfile){
+void gnuplot(const char *command,const char *PDFfile,bool persist){
   if(!MT_gp){
-    MT_gp=popen("env gnuplot -noraise","w"); // -persist
+    if(!persist) MT_gp=popen("env gnuplot -noraise","w");
+    else         MT_gp=popen("env gnuplot -noraise -persist","w");
     CHECK(MT_gp,"could not open gnuplot pipe");
-    fprintf(MT_gp,"set data style lines\n");
+    fprintf(MT_gp,"set style data lines\n");
   }
+  // run standard files
+  if(!access("~/gnuplot.cfg",R_OK)) fputs("load '~/gnuplot.cfg'\n",MT_gp);
+  if(!access("gnuplot.cfg",R_OK)) fputs("load 'gnuplot.cfg'\n",MT_gp);
   MT::String cmd;
-  if(EPSfile){
-    cmd <<"set terminal postscript 24 dl 5; set key samplen 2\n"
-        <<"set output '" <<EPSfile <<"'\n"
-        <<"set data style lines\n"
-        <<command <<std::endl;
-  }else{
-    cmd <<"set terminal pop\n"
-        <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
+
+  cmd <<"set terminal pop\n"
+      <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
+      <<command <<std::endl;
+
+  if(PDFfile){
+    cmd <<"set terminal pdfcairo\n"
+        <<"set output '" <<PDFfile <<"'\n"
         <<command <<std::endl;
   }
   fputs(cmd.p,MT_gp);
   fflush(MT_gp) ;
-#if 0 //old!
-  std::ofstream os("z.plt");
-#ifndef MT_MSVC
-  os
-    <<"set terminal x11\n" //persist noraise\n"
-    <<"set data style lines\n"
-    <<command <<std::endl
-    <<"pause mouse" <<std::endl;
-  os.close();
-  if(system("gnuplot z.plt &"))
-    MT_MSG("attempt to call gnuplot on via `gnuplot z.plt' failed");
-#else
-  os
-    <<"set data style lines\n"
-    <<command <<std::endl
-    <<"pause mouse" <<std::endl;
-  os.close();
-  if(system("wgnuplot z.plt &"))
-    MT_MSG("attempt to call gnuplot on windows via `wgnuplot z.plt' failed (probably not installed)");
-#endif
-#endif
 }
 
 

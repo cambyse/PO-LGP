@@ -17,7 +17,7 @@
 #include "earlyVisionModule.h"
 #include "guiModule.h"
 #include "process.h"
-#include "../NP/uvccamera.h"
+#include <NP/uvccamera.h>
 
 struct ControllerProcess;
 struct RevelInterface;
@@ -54,7 +54,7 @@ struct TaskAbstraction{
   double TV_x_yprec,TV_x_vprec,TV_rot_vprec,TV_q_vprec;
   
   //control options
-  uint controlMode;
+  uint controlMode; //RENAME taskMode
   
   //-- options/parameters
   double joyRate;      //joystick speed
@@ -69,7 +69,7 @@ struct TaskAbstraction{
   TaskAbstraction();
 
   virtual void initTaskVariables(ControllerProcess*);
-  virtual void updateTaskVariables(ControllerProcess*);
+  virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
 };
 
 
@@ -122,7 +122,7 @@ struct RobotModuleGroup{
   //Variables
   q_currentReferenceVar q_currentReference;
   currentProxiesVar currentProxies;
-  
+
   //Processes
   bool openArm,openHand,openSkin,openJoystick,openLaser,openBumble,openEarlyVision,openGui,openThreadInfoWin;
   ControllerProcess ctrl;

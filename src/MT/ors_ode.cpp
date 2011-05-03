@@ -341,21 +341,21 @@ void OdeInterface::exportStateToOde(ors::Graph &C){
     CP3(b->avel,n->X.angvel.p);
     //n->copyFrameToOde();
 #ifndef MT_ode_nojoints
-    for_list(j,e,n->inLinks) if(e->type!=glueJT){
+    for_list(j,e,n->inLinks) if(e->type!=ors::glueJT){
       dxJointHinge* hj=(dxJointHinge*)joints(e->index);
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
       dxJointSlider* sj=(dxJointSlider*)joints(e->index);
       switch (e->type){ //16. Mar 06 (hh)
-      case fixedJT: 
+      case ors::fixedJT: 
         break;
-      case hingeJT: 
+      case ors::hingeJT: 
         CP4(hj->qrel,(e->A.rot*e->B.rot).p);
         CP3(hj->anchor1,(e->A.pos).p);
         CP3(hj->anchor2,(-(e->B.rot/e->B.pos)).p);
         CP3(hj->axis1,(e->A.rot*ors::Vector(1,0,0)).p);
         CP3(hj->axis2,(e->B.rot/ors::Vector(1,0,0)).p);
         break;
-      case universalJT: 
+      case ors::universalJT: 
         CP4(uj->qrel1,(e->A.rot).p);
         CP4(uj->qrel2,(e->B.rot).p);
         CP3(uj->anchor1,(e->A.pos).p);
@@ -363,12 +363,13 @@ void OdeInterface::exportStateToOde(ors::Graph &C){
         CP3(uj->axis1,(e->A.rot*ors::Vector(1,0,0)).p);
         CP3(uj->axis2,(e->B.rot/ors::Vector(1,0,0)).p);
         break;	
-      case sliderJT:
+      case ors::sliderJT:
         CP4(sj->qrel,(e->A.rot*e->B.rot).p);
         CP3(sj->offset,(e->Q.pos).p);
         //printf("offset: (%lf; %lf; %lf)\n",(e->X.pos)[0],(e->X.pos)[1],(e->X.pos)[2]);
         CP3(sj->axis1,(e->A.rot*ors::Vector(1,0,0)).p);  
         break;
+      default: HALT("");
       }
     }
 #endif
@@ -406,15 +407,15 @@ void OdeInterface::importStateFromOde(ors::Graph &C){
 void OdeInterface::addJointForce(ors::Graph& C,ors::Joint *e, double f1, double f2){
   switch (e->type){
     default:
-    case hingeJT:
+    case ors::hingeJT:
       dJointAddHingeTorque(joints(e->index),-f1);
       break;
-    case fixedJT: // no torque 
+    case ors::fixedJT: // no torque 
       break;
-    case universalJT:
+    case ors::universalJT:
       dJointAddUniversalTorques(joints(e->index), -f1, -f2);
       break;
-    case sliderJT:
+    case ors::sliderJT:
       dJointAddSliderForce(joints(e->index), -f1);
       break;
   }
@@ -427,17 +428,17 @@ void OdeInterface::addJointForce(ors::Graph& C,doubleA& x){
   for_list(i,e,C.joints){ // loop over edges, 16. Mar 06 (hh)
     switch (e->type){ //  3. Apr 06 (hh) 
       default:
-      case hingeJT:
+      case ors::hingeJT:
         dJointAddHingeTorque(joints(e->index),-x(n));
         n++;
         break;
-      case fixedJT: // no torque 
+      case ors::fixedJT: // no torque 
         break;
-      case universalJT:
+      case ors::universalJT:
         dJointAddUniversalTorques(joints(e->index), -x(n), -x(n+1));
         n+=2;
         break;
-      case sliderJT:
+      case ors::sliderJT:
         dJointAddSliderForce(joints(e->index), -x(n));
         n++;
         break;
@@ -453,17 +454,17 @@ void OdeInterface::setMotorVel(ors::Graph& C,const arr& qdot,double maxF){
   for_list(i,e,C.joints){
     switch (e->type){
     default:
-    case hingeJT:
+    case ors::hingeJT:
       dJointSetAMotorParam(motors(e->index),dParamVel,-qdot(i));
       dJointSetAMotorParam(motors(e->index),dParamFMax,maxF);
       n++;
       break;
-    case fixedJT:
+    case ors::fixedJT:
       break;
-    case universalJT:
+    case ors::universalJT:
       n+=2;
       break;
-    case sliderJT:
+    case ors::sliderJT:
       n++;
       break;
     }
@@ -477,7 +478,7 @@ uint OdeInterface::getJointMotorDimension(ors::Graph& C){
   uint i=0,j,k;
   for_list(k,n,C.bodies){
     for_list(j,e,n->inLinks){ // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
-      if (e->type==universalJT) i+=2;
+      if (e->type==ors::universalJT) i+=2;
       else i++;
     }
   }
@@ -653,28 +654,28 @@ void OdeInterface::createOde(ors::Graph &C){
       }
 
       switch(s->type){ 
-        default: case boxST: // box
+        default: case ors::boxST: // box
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b,&odeMass);
           geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
           break;
-          case sphereST: // sphere
+          case ors::sphereST: // sphere
             dMassSetSphere(&odeMass, n->mass, s->size[3]);
             dBodySetMass(b,&odeMass);
             geom=dCreateSphere(myspace,s->size[3]);
             break;
-            case cylinderST: // capped cylinder, 6. Mar 06 (hh)
+            case ors::cylinderST: // capped cylinder, 6. Mar 06 (hh)
               dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
               dBodySetMass(b,&odeMass);
               geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
               break;
-              case cappedCylinderST: // capped cylinder, 6. Mar 06 (hh)
+              case ors::cappedCylinderST: // capped cylinder, 6. Mar 06 (hh)
                 dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
 //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
                 dBodySetMass(b,&odeMass);
                 geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
                 break;
-                case meshST: // trimesh loaded from file, 12. Jun 06 (hh & dm)
+                case ors::meshST: // trimesh loaded from file, 12. Jun 06 (hh & dm)
                   NIY;
                   s->mesh.computeNormals();
                   // get inertia tensor and REAL mass (careful no density)
@@ -759,14 +760,14 @@ void OdeInterface::createOde(ors::Graph &C){
   for_list(j,n,C.bodies){
     for_list(i,e,n->inLinks){
       switch (e->type){
-      case fixedJT:
+      case ors::fixedJT:
 	jointF=(dxJointFixed*)dJointCreateFixed(world,0);
 	dJointAttach(jointF,bodies(e->from->index),bodies(e->to->index));
 	dJointSetFixed(jointF);
 	joints(e->index)=jointF;
 	// 	  e->fixed=true;
 	break;
-      case hingeJT:
+      case ors::hingeJT:
 	jointH=(dxJointHinge*)dJointCreateHinge(world,0);
 	/*if(e->p[1]!=e->p[0]){
 	  dJointSetHingeParam(jointH,dParamLoStop,e->p[0]);
@@ -778,20 +779,21 @@ void OdeInterface::createOde(ors::Graph &C){
 	joints(e->index)=jointH;
 	//e->copyFramesToOdeHinge();
 	break;
-      case universalJT:
+      case ors::universalJT:
 	jointU=(dxJointUniversal*)dJointCreateUniversal(world,0);
 	dJointAttach(jointU,bodies(e->from->index),bodies(e->to->index));
 	joints(e->index)=jointU;
 	//e->copyFramesToOdeUniversal();
 	break;
-      case sliderJT:
+      case ors::sliderJT:
 	jointS=(dxJointSlider*)dJointCreateSlider(world,0);
 	dJointAttach(jointS,bodies(e->from->index),bodies(e->to->index));
 	joints(e->index)=jointS;
 	//e->copyFramesToOdeSlider();
 	break;
+      default: HALT("");
       }
-      if(e->type==hingeJT){
+      if(e->type==ors::hingeJT){
 	jointM = (dxJointAMotor*)dJointCreateAMotor(world,0);
 	dJointSetAMotorNumAxes(jointM,1);
 	dJointAttach(jointM,bodies(e->from->index),bodies(e->to->index));

@@ -27,6 +27,11 @@ static double MT_SIGN_SVD(double a,double b){ return b>0 ? ::fabs(a) : -::fabs(a
 
 namespace MT{
   bool useLapack=true;
+#ifdef MT_LAPACK
+  const bool lapackSupported=true;
+#else
+  const bool lapackSupported=false;
+#endif
   uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
   bool globalMemoryStrict=false;
 }
@@ -52,24 +57,22 @@ I've put the clapack.h directly into the MT directory - one only has to link to 
 //!@name matrix operations
 //
 
-//! returns the identity matrix
-arr Identity(uint n){
+
+arr repmat(const arr& A, uint m, uint n){
+  CHECK(A.nd==1 || A.nd==2,"");
+  arr B;
+  B.referTo(A);
+  if(B.nd==1) B.reshape(B.N,1);
   arr z;
-  z.setId(n);
+  z.resize(B.d0*m,B.d1*n);
+  for(uint i=0;i<m;i++)
+    for(uint j=0;j<n;j++)
+      z.setMatrixBlock(B,i*B.d0,j*B.d1);
   return z;
 }
+arr rand (const uintA& d){  arr z;  z.resize(d);  rndUniform(z,false); return z;  }
+arr randn(const uintA& d){  arr z;  z.resize(d);  rndGauss(z,1.,false);  return z;  }
 
-arr Ones(uint n){
-  arr z(n);
-  z=1.;
-  return z;
-}
-
-arr Zeros(uint n){
-  arr z(n);
-  z.setZero();
-  return z;
-}
 
 arr Diag(double d,uint n){
   arr z;
@@ -682,7 +685,7 @@ uint own_SVD(
   return r;
 }
 
-double _determinant(double **A,uint n){
+double determinantSubroutine(double **A,uint n){
   if(n==1) return A[0][0];
   if(n==2) return A[0][0]*A[1][1]-A[0][1]*A[1][0];
   uint i,j;
@@ -693,7 +696,7 @@ double _determinant(double **A,uint n){
       if(j<i) B[j]=&A[j][1];
       if(j>i) B[j-1]=&A[j][1];
     }
-    d+=((i&1)?-1.:1.) * A[i][0] * _determinant(B,n-1);
+    d+=((i&1)?-1.:1.) * A[i][0] * determinantSubroutine(B,n-1);
   }
   delete[] B;
   return d;
@@ -703,13 +706,13 @@ double determinant(const arr& A){
   CHECK(A.nd==2 && A.d0==A.d1,"determinants require a squared 2D matrix");
   //MT::Array<double*> B;
   A.getCarray(); //Pointers(B);
-  return _determinant(A.pp,A.d0);
+  return determinantSubroutine(A.pp,A.d0);
 }
 
 double cofactor(const arr& A,uint i,uint j){
   CHECK(A.nd==2 && A.d0==A.d1,"determinants require a squared 2D matrix");
   arr B=A;
-  B.delRow(i);
+  B.delRows(i);
   B.delColumns(j,1);
   return ((i&1)^(j&1)?-1.:1) * determinant(B);
 }
@@ -766,6 +769,12 @@ void gnuplot(const arr& X){
     MT::IOraw=false;
     return;
   }
+}
+
+void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS,bool dimTag,bool binary){
+  std::ofstream fil(filename);
+  catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
+  fil.close();
 }
 
 void write(const arr& X,const arr& Y,const char* name){

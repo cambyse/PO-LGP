@@ -1,5 +1,3 @@
-#define MT_IMPLEMENTATION
-
 #include <MT/ors.h>
 #include <MT/opengl.h>
 

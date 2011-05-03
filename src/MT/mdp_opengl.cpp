@@ -41,8 +41,8 @@ void mdp::showAB(const arr& alpha,const arr& beta){
   }
   img.reshape(alpha.N,3);
   double aM=alpha.max(),bM=beta.max();
-  for(x=0;x<alpha.N;x++) if(alpha(x)) mix(img[x](),TUPLE<byte>(0,0,255), alpha(x)/aM);
-  for(x=0;x<alpha.N;x++) if(beta (x)) mix(img[x](),TUPLE<byte>(255,0,0), beta (x)/bM);
+  for(x=0;x<alpha.N;x++) if(alpha(x)) mix(img[x](),ARRAY<byte>(0,0,255), alpha(x)/aM);
+  for(x=0;x<alpha.N;x++) if(beta (x)) mix(img[x](),ARRAY<byte>(255,0,0), beta (x)/bM);
   img.reshape(maze.d0,maze.d1,3);
   static OpenGL *gl=NULL;
   if(!gl) gl=new OpenGL;

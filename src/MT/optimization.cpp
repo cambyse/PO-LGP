@@ -1,6 +1,8 @@
 #include "optimization.h"
 
-#define CHECK_EPS 1e-8
+#ifndef CHECK_EPS
+#  define CHECK_EPS 1e-8
+#endif
 
 uint GaussNewton(arr& x,double tolerance,GaussNewtonCostFunction& f,uint maxEvals){
   double a=1.;

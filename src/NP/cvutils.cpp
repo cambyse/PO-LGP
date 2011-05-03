@@ -711,7 +711,7 @@ bool np::track_RGB_balls
 
 #ifdef USE_MARCS_TRACKER
     doubleA cT;
-    getHsvCenter(cT,left,2,TUPLE<float>(.0,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,left,2,ARRAY<float>(.0,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);
@@ -728,7 +728,7 @@ bool np::track_RGB_balls
     }
 
 #ifdef USE_MARCS_TRACKER
-    getHsvCenter(cT,left,2,TUPLE<float>(1./3.,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,left,2,ARRAY<float>(1./3.,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);
@@ -745,7 +745,7 @@ bool np::track_RGB_balls
     }
 
 #ifdef USE_MARCS_TRACKER
-    getHsvCenter(cT,left,2,TUPLE<float>(2./3.,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,left,2,ARRAY<float>(2./3.,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);
@@ -763,7 +763,7 @@ bool np::track_RGB_balls
 
     // right side
 #ifdef USE_MARCS_TRACKER
-    getHsvCenter(cT,right,2,TUPLE<float>(.0,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,right,2,ARRAY<float>(.0,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);
@@ -780,7 +780,7 @@ bool np::track_RGB_balls
     }
 
 #ifdef USE_MARCS_TRACKER
-    getHsvCenter(cT,right,2,TUPLE<float>(1./3.,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,right,2,ARRAY<float>(1./3.,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);
@@ -796,7 +796,7 @@ bool np::track_RGB_balls
       num_balls_found+=centers_temp.d0;
     }
 #ifdef USE_MARCS_TRACKER
-    getHsvCenter(cT,right,2,TUPLE<float>(2./3.,1.,1.),TUPLE<float>(.2,.5,.5));
+    getHsvCenter(cT,right,2,ARRAY<float>(2./3.,1.,1.),ARRAY<float>(.2,.5,.5));
     cT.reshape(cT.N/2,2);
     array2array(centers_temp, cT);
     rad_temp.resize(cT.d0);

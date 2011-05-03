@@ -114,7 +114,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){
     resize(left, left, 0.5);
     resize(right, right, 0.5);
     
-    vision::detect(D, left, right, TUPLE(obj), t_det, t_outlier, t_nn, num_nn, camera_calibration);
+    vision::detect(D, left, right, ARRAY(obj), t_det, t_outlier, t_nn, num_nn, camera_calibration);
 
     if (D.N > 0)
     {
@@ -169,7 +169,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){NIY;}
 //   ors::Vector pos;
 //   for(uint k=0;k<3 && !signalStop;k++){
 //     bumble.capture(left,right);
-//     localizeHsv(objectPosition, left, right, TUPLE<float>(.0,1.,1.),TUPLE<float>(.2,.5,.5), 3);
+//     localizeHsv(objectPosition, left, right, ARRAY<float>(.0,1.,1.),ARRAY<float>(.2,.5,.5), 3);
 //     pos.set(objectPosition.p);
 //     cout <<pos <<endl;
 //     pos = ors.getShapeByName("camera")->X*pos;

@@ -16,8 +16,10 @@
 
 #include "opengl.h"
 #include "ors.h"
-#include <X11/Xlib.h>
 
+#ifdef MT_FREEGLUT
+#include <X11/Xlib.h>
+#endif
 
 //===========================================================================
 //
@@ -1351,7 +1353,7 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   //cout <<"OpenGL's glP=" <<P <<"\nK=" <<Kview <<endl;
   //double sca=P.elem(0);
   P = ~P;      //OpenGL uses transposed matrix storage convention
-  P.delRow(2); //We're not interested in OpenGL's ``z-culling-coordinate'', only in the perspective coordinate (divisor) w
+  P.delRows(2); //We're not interested in OpenGL's ``z-culling-coordinate'', only in the perspective coordinate (divisor) w
   //P[2]() *=-1.;
   //the full camera projection matrix:
   P = Kview*P;
@@ -1366,7 +1368,7 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   Frust(2,3) = 2.*zf*zn/(zn-zf);
   cout <<"OpenGL P=" <<P <<"K=" <<Kview <<"znear=" <<camera.zNear <<"zfar=" <<camera.zFar <<endl;
   cout <<"Frust=" <<Frust <<endl;;
-  Frust.delRow(2); //We're not interested in OpenGL's ``z-coordinate'', only in the perspective coordinate (divisor) w
+  Frust.delRows(2); //We're not interested in OpenGL's ``z-coordinate'', only in the perspective coordinate (divisor) w
   cout <<"K=" <<Kview*Frust <<endl;
   */
 

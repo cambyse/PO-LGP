@@ -408,7 +408,7 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
   TaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
-  TVs = TUPLE(&x);
+  TVs = ARRAY(&x);
   uint t;
   arr q,dq;
   C->getJointState(q);
@@ -593,7 +593,7 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
   arr q,dq;
   C->getJointState(q);
 
-  TVs = TUPLE(&o,&z,&r,&c);
+  TVs = ARRAY(&o,&z,&r,&c);
   
   
   // Calculate (noisy) target position
@@ -832,7 +832,7 @@ void ActionInterface::relaxPosition(const char* message){
   x.y_prec=1000.;
   x.y_target=q0; 
   x.state_tol=.2;
-  TVs = TUPLE(&x);
+  TVs = ARRAY(&x);
 
   uint t;
   for(t=0;t<Tabort;t++){
@@ -889,7 +889,7 @@ void ActionInterface::openBox(uint id, const char* message) {
   TaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
-  TVs = TUPLE(&x);
+  TVs = ARRAY(&x);
 
   uint t;
   arr q,dq;
@@ -932,7 +932,7 @@ void ActionInterface::closeBox(uint id, const char* message) {
   TaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
-  TVs = TUPLE(&x);
+  TVs = ARRAY(&x);
 
   uint t;
   arr q,dq;

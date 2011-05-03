@@ -373,7 +373,7 @@ void getDelaunayEdges(uintA& E, const arr& V){
       FOREACHvertex_(facet->vertices) face[i++]=qh_pointid(vertex->point);//vertex->id;
       CHECK(i==dim+1,"strange number of vertices of a facet!");
       for(j=0;j<dim+1;j++) for(k=j+1;k<dim+1;k++){
-        E.append(TUPLE<uint>(face[j],face[k]));
+        E.append(ARRAY<uint>(face[j],face[k]));
       }
     }
   }

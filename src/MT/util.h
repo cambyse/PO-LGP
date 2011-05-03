@@ -573,7 +573,7 @@ template<class T> Any* anyNew(const char* tag,const T *x,uint n,char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command,const char* EPSfile=NULL);
+void gnuplot(const char *command,const char* EPSfile=NULL,bool persist=false);
 void gnuplotClose();
 
 

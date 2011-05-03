@@ -180,6 +180,7 @@ void ors::glDraw(ors::Mesh& mesh){
 #endif
 }
 
+#ifndef MT_ORS_ONLY_BASICS
 //! static GL routine to draw a ors::Graph
 void ors::glDrawGraph(void *classP){
   ors::glDraw(*((ors::Graph*)classP));
@@ -526,7 +527,7 @@ bool infoHoverCall(void *p,OpenGL *gl){
 }
 
 void editConfiguration(const char* filename,ors::Graph& C,OpenGL& gl){
-  gl.exitkeys="1234567890";
+  gl.exitkeys="1234567890hjklias,";
   gl.selectOnHover=true;
   gl.addHoverCall(infoHoverCall,&C);
   for(;;){
@@ -550,6 +551,23 @@ void editConfiguration(const char* filename,ors::Graph& C,OpenGL& gl){
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
       case '7':  gl.selectOnHover^=1;  break;
+      case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0,0,.1);  break;
+      case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0,0,.1);  break;
+      case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0,.1,0);  break;
+      case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0,.1,0);  break;
+      case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1,.0,0);  break;
+      case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1,0,0);  break;
+      case 'a':  gl.camera.focus( //TODO
+                     ( gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
+                     ^ gl.camera.X->rot*ors::Vector(1,0,0)) * .001
+                     + *gl.camera.foc );
+                     break;
+      case 's':  gl.camera.X->pos += //TODO
+                     (
+                      gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
+                      ^ ( gl.camera.X->rot * ors::Vector(1.,0,0) )
+                     ) * .01;
+                 break;
       }
       gl.watch();
     }
@@ -576,12 +594,15 @@ void testSim(const char* filename,ors::Graph *C,Ode *ode,OpenGL *gl){
   }
 }
 #endif
-                         
+#endif
+
 #else //!MT_GL
-  void ors::glDraw(Graph& graph){ NICO; }
-  void ors::glDrawGraph(void *classP){ NICO; }
-  void ors::glDraw(Mesh& mesh){ NICO; }
+  void ors::glDraw(ors::Mesh& mesh){ NICO; }
   void ors::glDrawMesh(void *classP){ NICO; }
+#ifndef MT_ORS_ONLY_BASICS
+  void ors::glDraw(ors::Graph& graph){ NICO; }
+  void ors::glDrawGraph(void *classP){ NICO; }
   void editConfiguration(const char* filename,ors::Graph *C,OpenGL *gl){ NICO; }
   void animateConfiguration(ors::Graph *C,OpenGL *gl){}
+#endif
 #endif
