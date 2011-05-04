@@ -1,0 +1,1 @@
+SHARE/soc_method_GaussNewton.cxx

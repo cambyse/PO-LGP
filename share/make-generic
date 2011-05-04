@@ -4,7 +4,7 @@
 .PRECIOUS: %.o
 .PRECIOUS: %_wrap.cxx
 
-BASE := $(shell cd $(BASE);pwd -P)
+BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
