@@ -8,5 +8,5 @@
 *~
 
 %% special:
-extern/ODE_0.11/download
-extern/ODE_0.11/ode-0.11/
+share/extern/ODE_0.11/download
+share/extern/ODE_0.11/ode-0.11/
