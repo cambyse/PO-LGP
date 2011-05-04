@@ -2,6 +2,7 @@
 #include <MT/ors.h>
 #include <MT/opengl.h>
 #include <MT/util.h>
+#include <MT/aico.h>
 
 const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
 
@@ -32,10 +33,12 @@ int main(int argn,char **argv){
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new TaskVariable("position",ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
   pos->setGainsAsNatural(20,.2);
+  pos->targetType=positionGainsTT;
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);
   
   TaskVariable *col = new TaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
   col->setGains(.5,.0);
+  col->targetType=positionGainsTT;
   col->y_prec=1e-0;
   col->y_target = ARR(0.);
 
@@ -45,7 +48,7 @@ int main(int argn,char **argv){
   arr q,dq,qv;
   soc.getq0(q);
   soc.getqv0(qv);
-  for(uint t=0;t<T;t++){
+  for(uint t=0;t<10;t++){
     //soc::bayesianIKControl(soc,dq,0);
     //q += dq;
     if(!soc.dynamic){
@@ -68,7 +71,13 @@ int main(int argn,char **argv){
   col->setInterpolatedTargetsConstPrecisions(T,1e-2,0.);
   
   q.clear();
+#if 0
   AICO_solver(soc,q,1e-2,.7,.01,0,0);
+#else
+  AICO_clean aico(soc);
+  aico.iterate_to_convergence();
+  q = aico.q;
+#endif
   ofstream os("z.traj"); q.writeRaw(os); os.close();
   for(;;) soc.displayTrajectory(q,NULL,1,"AICO (planned trajectory)");
   

@@ -21,6 +21,7 @@
 #define MT_soc_h
 
 #include "array.h"
+#include "util.h"
 
 //-- fwd declarations
 class OpenGL;

@@ -677,9 +677,9 @@ struct TaskVariable{
   void shiftTargets(int offset);
   
   //!@name updates
-  void updateState(double tau=.01);
+  void updateState(double tau=1.);
   void updateJacobian();
-  void updateChange(int t=-1,double tau=.01);
+  void updateChange(int t=-1,double tau=1.);
   void getHessian(arr& H);
 
   //!@name virtual user update

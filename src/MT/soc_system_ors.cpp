@@ -104,7 +104,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.setPosition(5,-10,10);
     gl->camera.focus(0,0,1);
   }
-  if(!_dynamic){  WS->T = trajectory_steps;  WS->tau=.01;  }
+  if(!_dynamic){  WS->T = trajectory_steps;  WS->tau=1.;  }
   else setTimeInterval(trajectory_time, trajectory_steps);
   setq0AsCurrent();
   //swift->computeProxies(*ors,false); if(gl) gl->watch();
