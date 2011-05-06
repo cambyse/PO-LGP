@@ -3,8 +3,11 @@
 
 #include "ors.h"
 #include "soc.h"
+
+#if 0
 #include "SD/ISF_GP.h"
 #include "graspObjects.h"
+#endif
 
 //===========================================================================
 //
@@ -24,6 +27,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape);
 void setPlaceGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowFromShape,const char* belowToShape);
 void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowToShape);
 
+#if 0
 //===========================================================================
 //
 // novel, more complex task variables
@@ -61,7 +65,7 @@ struct zFocusTargetTaskVariable:public TaskVariable{
   virtual void userUpdate();
 };
 
-
+#endif
 
 #ifdef MT_IMPLEMENTATION
 #include "specialTaskVariables.cpp"
