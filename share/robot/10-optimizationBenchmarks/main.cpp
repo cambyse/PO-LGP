@@ -2,6 +2,7 @@
 #include <MT/util.h>
 #include <MT/specialTaskVariables.h>
 #include <MT/opengl.h>
+#include <MT/aico.h>
 
 //===========================================================================
 
@@ -89,6 +90,7 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
+#if 1
   soc::SocSolver solver;
   solver.init();
 
@@ -97,6 +99,12 @@ void problem3(){
   solver.q.clear();  solver.method=soc::SocSolver::LQG_straightInit;   solver.go(sys);
   solver.q.clear();  solver.method=soc::SocSolver::AICO_ms;            solver.go(sys);
   solver.q.clear();  solver.method=soc::SocSolver::gradient;           solver.go(sys);
+#else
+  sys.os = &cout;
+  AICO_clean aico(sys);
+  aico.iterate_to_convergence();
+#endif
+
 }
 
 //===========================================================================

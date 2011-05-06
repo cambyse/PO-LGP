@@ -50,7 +50,8 @@ void AICO_clean::init(soc::SocSystemAbstraction& _sys){
     cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
-    if(MT::checkParameter<int>("aico_verbose")) os = &cout;  else  os = NULL;
+    os = &cout;
+    //if(MT::checkParameter<int>("aico_verbose")) os = &cout;  else  os = NULL;
   }
 
   sweep=0;

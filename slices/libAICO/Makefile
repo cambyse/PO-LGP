@@ -1,8 +1,8 @@
 PACKAGE = share
 
 ALL =	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
 	src/MT
+#	extern/SWIFT++_1.2/decomposer/src \
 
 makeAll: $(ALL:%=make/%)
 
