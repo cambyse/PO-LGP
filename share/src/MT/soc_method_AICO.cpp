@@ -1120,7 +1120,7 @@ double soc::AICO::stepGaussNewton(){
   if(sys->os){
     *sys->os <<"AICOgn("<<T<<"," <<damping <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     sys->analyzeTrajectory(q,display>0);
-    sys->costChecks(b);
+    //sys->costChecks(b);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_GaussNewton - iteration "<<sweep));
