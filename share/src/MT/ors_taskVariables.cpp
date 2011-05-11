@@ -415,7 +415,7 @@ void TaskVariable::updateJacobian(){
       ors->bodies(l)->X.rot.getY(vi);
       vi *= -1.;
       zi.setCarray(vi.p,3);
-      J.append(zi*Ji);
+      J.append(~zi*Ji);
     }
     J.reshape(params.N,J.N/params.N);
     break;

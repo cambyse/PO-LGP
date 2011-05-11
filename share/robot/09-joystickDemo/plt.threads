@@ -1,0 +1,20 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+
+set ylabel 'msec'
+set xlabel 'time (sec)'
+plot \
+ 'LOG.threads' us 0:2 title 'arm',\
+ 'LOG.threads' us 0:5 title 'hand',\
+ 'LOG.threads' us 0:8 title 'skin',\
+ 'LOG.threads' us 0:11 title 'urg',\
+ 'LOG.threads' us 0:14 title 'evis',\
+ 'LOG.threads' us 0:17 title 'bumble',\
+ 'LOG.threads' us 0:20 title 'gui',\
+ 'LOG.threads' us 0:23 title 'win',\
+ 'LOG.threads' us 0:26 title 'ctrl',\
+ 'LOG.threads' us 0:29 title 'busy',\
+ 'LOG.threads' us 0:30 title 'cycl'
+
+ 
