@@ -37,6 +37,7 @@ void Lapack_A_Binv_A_sym(arr& X,const arr& A,const arr& B){
 void AICO_clean::init(soc::SocSystemAbstraction& _sys){
   sys = &_sys;
   
+  MT::getParameter(method,"aico_method");
   MT::getParameter(convergenceRate,"aico_convergenceRate");
   MT::getParameter(max_iterations,"aico_max_iterations");
   MT::getParameter(tolerance,"aico_tolerance");
@@ -63,20 +64,7 @@ void AICO_clean::iterate_to_convergence(const arr* q_initialization){
   if(q_initialization) initMessagesWithReferenceQ(*q_initialization);
 
   for(uint k=0;k<max_iterations;k++){
-    double d;
-#if 1
-    if(!sys->dynamic) d=stepClean(); //stepKinematic();
-    else              d=stepClean(); //Dynamic(); //GaussNewton();
-#elif 1
-    if(!sys->dynamic) d=stepGaussNewton(); //stepKinematic();
-    else              d=stepGaussNewton(); //Dynamic(); //GaussNewton();
-#elif 1
-    if(!sys->dynamic) d=stepDynamic(); //Kinematic();
-    else              d=stepDynamic();
-#else
-    if(!sys->dynamic) d=stepMinSum(); //stepKinematic();
-    else              d=stepMinSum(); //Dynamic(); //GaussNewton();
-#endif
+    double d=step();
     if(k && d<tolerance) break;
   }
 }
