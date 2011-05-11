@@ -131,7 +131,7 @@ void soc::partialJointFromTaskTrajectory(SocSystemAbstraction& soci,arr& dCdx,co
 
 soc::SocSystemAbstraction::SocSystemAbstraction(){
   gl=NULL;
-  os=NULL;
+  os=&cout;
   scalePower=0;
 }
 

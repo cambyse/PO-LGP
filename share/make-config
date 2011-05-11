@@ -1,1 +1,3 @@
-#CXXFLAGS += -DMT_IMPLEMENTATION
+ifneq ($(NAME),mt)
+  MTLIB = 1
+endif

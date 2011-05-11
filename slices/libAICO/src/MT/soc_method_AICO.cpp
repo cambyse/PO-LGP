@@ -1,1 +1,0 @@
-SHARE/soc_method_AICO.cpp

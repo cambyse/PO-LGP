@@ -76,6 +76,8 @@ struct AICO_clean{
       case smIlqg:        return stepIlqg();
       case smGaussNewton: return stepGaussNewton();
     }
+    HALT("");
+    return 0.;
   }
   double stepClean();
   double stepDynamic();

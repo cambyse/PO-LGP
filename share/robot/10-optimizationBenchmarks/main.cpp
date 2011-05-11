@@ -12,7 +12,7 @@ void problem1(){
   //setup the system
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  uint T=MT::getParameter<uint>("trajectoryLength");
+  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);
   
   //setup the task
@@ -22,15 +22,6 @@ void problem1(){
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
   AICO_clean solver;
-
-#if 1
-  cout <<"\n== first test: 1 step planning ==\n" <<endl;
-  sys.setTimeInterval(3.,1);
-  sys.setToq0();
-  pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,10*1e4);
-  solver.init(sys);
-  solver.iterate_to_convergence();
-#endif
 
   cout <<"\n== second test: T step planning ==\n" <<endl;
   T=MT::getParameter<uint>("reachPlanTrajectoryLength");
@@ -82,7 +73,6 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
-  sys.os = &cout;
   AICO_clean solver(sys);
   solver.iterate_to_convergence();
 }
