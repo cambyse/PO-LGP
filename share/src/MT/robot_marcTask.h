@@ -18,6 +18,14 @@ struct TrivialBwdMsgTask:public TaskAbstraction{
 
 //===========================================================================
 //
+// helper
+//
+
+void reattachShape(ors::Graph& ors,SwiftInterface *swift,const char* objShape,const char* toBody,const char* belowShape);
+
+
+//===========================================================================
+//
 // Marc's Robot Task
 //
 
