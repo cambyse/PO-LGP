@@ -1,12 +1,12 @@
 BASE = ../..
 OBJS = main.o
 
-LIBS += -lAICO
+#LIBS += -lAICO
 
 #CXXFLAGS += -DMT_algos_extern
 #CXXFLAGS += -DMT_Lewiner
 
-#MTLIB = 1
+MTLIB = 1
 
 include $(BASE)/make-generic
 

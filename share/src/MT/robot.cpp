@@ -2,6 +2,7 @@
 #include "vision.h"
 #include "revelModule.h"
 #include "guiModule.h"
+#include "soc_inverseKinematics.h"
 
 #include <lwa/Device/Device.h>
 #ifdef MT_NILS

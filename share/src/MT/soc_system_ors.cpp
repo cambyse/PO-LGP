@@ -16,7 +16,7 @@
 
 #include "ors.h"
 #include "opengl.h"
-#include "soc.h"
+#include "socSystem_ors.h"
 #include "plot.h"
 
 //===========================================================================
@@ -574,7 +574,7 @@ void drawOrsSocEnv(void*){
 }*/
 
 
-void soc::createDynamicProblem(SocSystem_Ors &sys,
+/*void soc::createDynamicProblem(SocSystem_Ors &sys,
                           const char *ors_file,
                           double trajectory_time,
                           uint trajectory_steps){
@@ -652,7 +652,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
 
   sys.WS=&WS;
   sys.dynamic=false;
-}
+}*/
 
 #if 0
  //old code to give system relative to a linear transform

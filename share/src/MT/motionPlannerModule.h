@@ -3,13 +3,14 @@
 
 #include "process.h"
 #include "robot_variables.h"
-#include "soc.h"
+#include "socSystem_ors.h"
+#include "aico.h"
 
 struct ReceedingHorizonProcess:public Process{
   FutureMotionPlan *planVar;
   FutureMotionGoal *goalVar;
 
-  soc::AICO planner;
+  AICO_clean planner;
   //soc::iLQG planner;
   soc::SocSystem_Ors *sys,*sys_parent;
   

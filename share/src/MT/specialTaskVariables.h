@@ -3,6 +3,7 @@
 
 #include "ors.h"
 #include "soc.h"
+#include "socSystem_ors.h"
 
 #if 0
 #include "SD/ISF_GP.h"

@@ -202,6 +202,8 @@ void MarcsRobotTask::positionObjectRandomlyInSimulation(){
 }
 
 void MarcsRobotTask::planGraspTrajectory(const char* objShape){
+  NIY;
+  #if 0
   if(signalStop) return;
 
   //create your own system
@@ -234,6 +236,7 @@ void MarcsRobotTask::planGraspTrajectory(const char* objShape){
   plan_b.writeTagged(fil,"b");
 
   if(gui.gl) gui.gl->drawers.popLast();
+  #endif
 }
   
 void transferBetweenDifferentQlin(arr& xTo,const arr& xFrom,soc::SocSystem_Ors& sysFrom,soc::SocSystem_Ors& sysTo){
@@ -267,6 +270,8 @@ void transferBetweenDifferentQlin(arr& xTo,const arr& xFrom,soc::SocSystem_Ors& 
 }
 
 void MarcsRobotTask::planPlaceTrajectory(const char* objShape,const char* belowFromShape, const char* belowToShape){
+  NIY;
+  #if 0
   if(signalStop) return;
 
   //create your own system
@@ -316,6 +321,7 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape,const char* belowF
 
   planSys->gl=NULL;
   if(gui.gl) gui.gl->drawers.popLast();
+  #endif
 }
 
 void MarcsRobotTask::loadTrajectory(const char* filename){
