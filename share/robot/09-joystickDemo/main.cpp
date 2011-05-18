@@ -1,5 +1,6 @@
 #include <MT/robot.h>
 #include <MT/robot_marcTask.h>
+#include <MT/robotActionInterface.h>
 #include <signal.h>
 
 const char* joyUsage="\n\
@@ -19,7 +20,8 @@ top bottons = STOP\n\
 
 void testJoy(){
   cout <<"\n=== joystick demo ===\n" <<joyUsage <<endl;
-  MarcsRobotTask R;
+  //MarcsRobotTask R;
+  RobotActionInterface R;
   R.open();
   R.joystick();
   R.close();

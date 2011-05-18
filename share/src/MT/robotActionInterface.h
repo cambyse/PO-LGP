@@ -10,6 +10,8 @@
 
 //private space:
 struct sRobotActionInterface;
+struct TaskAbstraction;
+struct RobotModuleGroup;
 
 struct RobotActionInterface{
   sRobotActionInterface *s;
@@ -26,6 +28,9 @@ struct RobotActionInterface{
   void reach(const char* shapeName,const arr& posGoal,double maxVel=.1);
   void reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel=.1);
   void setMesh(const char* shapeName,const ors::Mesh& mesh);
+
+  RobotModuleGroup* getProcessGroup();
+  TaskAbstraction* getTask();
 };
 
 #ifdef MT_IMPLEMENTATION

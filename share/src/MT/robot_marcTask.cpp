@@ -46,8 +46,10 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
 //
 
 MarcsRobotTask::MarcsRobotTask(){
+  ctrl.taskLock.writeLock();
   ctrl.task = this;
   this->joyVar = &joy;
+  ctrl.taskLock.unlock();
 }
 
 MarcsRobotTask::~MarcsRobotTask(){

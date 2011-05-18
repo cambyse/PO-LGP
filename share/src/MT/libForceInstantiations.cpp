@@ -84,3 +84,6 @@ template MT::Array<Any*>::~Array();
 template MT::Array<char const*>::Array();
 template MT::Array<char const*>::Array(uint);
 template MT::Array<char const*>::~Array();
+
+template MT::Array<glUI::Button>::Array();
+template MT::Array<glUI::Button>::~Array();

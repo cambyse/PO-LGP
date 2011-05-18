@@ -2,6 +2,7 @@
 #include <MT/perceptionModule.h>
 #include <MT/motionPlannerModule.h>
 #include <MT/robot_marcTask.h>
+#include <MT/robotActionInterface.h>
 #include <TL/decisionMakingModule.h>
 #include <signal.h>
 
@@ -9,18 +10,21 @@ int main(int argn,char** argv) {
   MT::initCmdLine(argn,argv);
   signal(SIGINT,RobotModuleGroup::signalStopCallback);
 
+  RobotActionInterface R;
+  R.open();
+
   //********** launch all modules
-  RobotModuleGroup master;
+  RobotModuleGroup &master = *R.getProcessGroup();
   PerceptionModule perc;  perc.input=&master.evis.output;
   //MotionPlannerModuleGroup motion;
   //DecisionMakingModule brain;
   master.gui.perceptionOutputVar=&perc.output;
 
-  TaskAbstraction task;
-  master.ctrl.task=&task;
+  TaskAbstraction& task = *R.getTask();
+  //master.ctrl.task=&task;
 
   //robot group
-  master.open();
+  //master.open();
   
   //perc
   perc.threadOpen();

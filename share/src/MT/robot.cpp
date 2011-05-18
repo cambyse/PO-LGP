@@ -237,7 +237,7 @@ void RobotModuleGroup::open(){
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
-    gui.threadOpen(MT::getParameter<int>("guiThreadNice",20));
+    //gui.threadOpen(MT::getParameter<int>("guiThreadNice",20));
     gui.threadLoop();
   }
   

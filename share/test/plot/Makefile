@@ -1,6 +1,6 @@
 BASE = $(shell pwd)/../..
 
-FREEGLUT = 1
+MTLIB = 1
 
 include $(BASE)/make-generic
 

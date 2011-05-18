@@ -1,15 +1,13 @@
-#define MT_IMPLEMENTATION
-
 //--- usually, one of the following should be defined
 // on the compiler level - not here - but it's esasier to switch
 // for now
 //#define MT_FREEGLUT
 //#define MT_QT
 
-#include<MT/plot.h>
-#include<MT/opengl.h>
-#include<MT/ors.h>
-
+#include <MT/plot.h>
+#include <MT/opengl.h>
+#include <MT/ors.h>
+#include <GL/glut.h>
 
 using namespace std;
 
