@@ -6,7 +6,7 @@
 //private space:
 struct sRobotActionInterface{
   RobotModuleGroup master;
-  TaskAbstraction defaultTask;
+  TaskAbstraction mytask;
 };
 
 //===========================================================================
@@ -17,12 +17,20 @@ struct sRobotActionInterface{
 RobotActionInterface::RobotActionInterface(){
   s=new sRobotActionInterface;
   s->master.ctrl.taskLock.writeLock();
-  s->master.ctrl.task = &s->defaultTask;
-  s->defaultTask.joyVar = &s->master.joy;
+  s->master.ctrl.task = &s->mytask;
+  s->mytask.joyVar = &s->master.joy;
   s->master.ctrl.taskLock.unlock();
 }
 
 RobotActionInterface::~RobotActionInterface(){
+}
+
+RobotModuleGroup* RobotActionInterface::getProcessGroup(){
+  return &s->master;
+}
+
+TaskAbstraction* RobotActionInterface::getTask(){
+  return &s->mytask;
 }
 
 void RobotActionInterface::open(){
@@ -35,7 +43,7 @@ void RobotActionInterface::close(){
 
 void RobotActionInterface::wait(double sec){
   s->master.ctrl.taskLock.writeLock();
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
   s->master.ctrl.taskLock.unlock();
   double time=MT::realTime();
   for(;!schunkShutdown;){
@@ -48,14 +56,14 @@ void RobotActionInterface::wait(double sec){
 
 void RobotActionInterface::joystick(){
   s->master.ctrl.taskLock.writeLock();
-  s->defaultTask.controlMode = joystickCM;
+  s->mytask.controlMode = joystickCM;
   s->master.ctrl.taskLock.unlock();
   for(;!schunkShutdown;){
     MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
   }
   s->master.ctrl.taskLock.writeLock();
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
   s->master.ctrl.taskLock.unlock();
   for(uint t=0;t<10;t++) s->master.step();
   //while(s->master.joy.state(0)!=0) s->master.step();
@@ -63,7 +71,7 @@ void RobotActionInterface::joystick(){
 
 void RobotActionInterface::homing(){
   s->master.ctrl.taskLock.writeLock();
-  s->defaultTask.controlMode = homingCM;
+  s->mytask.controlMode = homingCM;
   s->master.ctrl.taskLock.unlock();
   for(;!schunkShutdown;){
     MT::wait(.2);
@@ -73,14 +81,14 @@ void RobotActionInterface::homing(){
     if(s->master.joy.state(0)&0x30) break;
   }
   s->master.ctrl.taskLock.writeLock();
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
   s->master.ctrl.taskLock.unlock();
 }
 
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
   s->master.ctrl.taskLock.writeLock();
-  TaskAbstraction *task = &s->defaultTask;
-  s->defaultTask.controlMode = prefixedCM;
+  TaskAbstraction *task = &s->mytask;
+  s->mytask.controlMode = prefixedCM;
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
   TV.setGainsAsNatural(3.,1.,false);
@@ -104,14 +112,14 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
   
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
   s->master.ctrl.taskLock.unlock();
 }
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
   s->master.ctrl.taskLock.writeLock();
-  TaskAbstraction *task = &s->defaultTask;
-  s->defaultTask.controlMode = prefixedCM;
+  TaskAbstraction *task = &s->mytask;
+  s->mytask.controlMode = prefixedCM;
 
   TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
   TV.setGainsAsNatural(3.,1.,false);
@@ -143,7 +151,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
   s->master.ctrl.taskLock.unlock();
 }
 
@@ -192,14 +200,14 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
     }
   } updater(&s->master.ctrl,shapeName,posGoal,maxVel);
 
-  switchTask(s->defaultTask,updater);
+  switchTask(s->mytask,updater);
   for(;!schunkShutdown;){
     MT::wait(.2);
     cout <<"\rdist = " <<updater.dist <<std::flush;
     if(updater.dist<1e-2) break;
     if(s->master.joy.state(0)&0x30) break;
   }
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
 }
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
@@ -230,13 +238,13 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
     }
   } updater(&s->master.ctrl,shapeName,posGoal,vecGoal,maxVel);
 
-  switchTask(s->defaultTask,updater);
+  switchTask(s->mytask,updater);
   for(;!schunkShutdown;){
     MT::wait(.2);
     cout <<"\rdist = " <<updater.dist <<std::flush;
     if(updater.dist<1e-2) break;
     if(s->master.joy.state(0)&0x30) break;
   }
-  s->defaultTask.controlMode = stopCM;
+  s->mytask.controlMode = stopCM;
 }
 */

@@ -1,12 +1,7 @@
-BASE   = $(shell pwd)/../..
+BASE   = ../..
 OBJS   = main.o
-OUTPUT = x.exe
 
-FREEGLUT = 1
-ODE = 1
-SWIFT = 1
-QHULL = 1
-LAPACK = 1
+MTLIB = 1
 
 CXXFLAGS += -DORS_NO_DYNAMICS_IN_FRAMES
 

@@ -1,9 +1,8 @@
-#define MT_IMPLEMENTATION
-
 #include<MT/ors.h>
 #include<MT/algos.h>
 #include<MT/opengl.h>
 #include<MT/plot.h>
+#include <GL/gl.h>
 
 void drawEnv(void*){  glStandardLight(NULL); }
 
