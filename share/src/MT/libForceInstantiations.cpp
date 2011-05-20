@@ -19,11 +19,11 @@
 
 //the above two flags cause the following headers to
 //include their implementations...
-#include <MT/ors.h>
+//#include <MT/ors.h>
 #include <MT/util.h>
-#include <MT/opengl.h>
+//#include <MT/opengl.h>
 #include <MT/array.h>
-#include <MT/algos.h>
+//#include <MT/algos.h>
 //explicit template instantiations
 
 //-- from util.h
@@ -67,8 +67,8 @@ template void MT::Parameter<int>::initialize();
 #undef NOFLOAT
 
 //-- from ors.h
-template MT::Array<ors::Transformation*>::Array();
-template MT::Array<ors::Transformation*>::~Array();
+//template MT::Array<ors::Transformation*>::Array();
+//template MT::Array<ors::Transformation*>::~Array();
 
 template MT::Array<MT::String>::Array();
 
@@ -85,5 +85,5 @@ template MT::Array<char const*>::Array();
 template MT::Array<char const*>::Array(uint);
 template MT::Array<char const*>::~Array();
 
-template MT::Array<glUI::Button>::Array();
-template MT::Array<glUI::Button>::~Array();
+//template MT::Array<glUI::Button>::Array();
+//template MT::Array<glUI::Button>::~Array();
