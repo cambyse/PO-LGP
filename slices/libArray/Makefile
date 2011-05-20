@@ -1,8 +1,6 @@
-PACKAGE = share
+NAME   = $(shell basename $(PWD))
 
-ALL =	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
-	src/MT
+ALL =	src/MT
 
 makeAll: $(ALL:%=make/%)
 
@@ -25,4 +23,4 @@ doc::
 	make -C doc guide doxy
 
 zip::
-	cd ..;  rm -f $(PACKAGE).tgz;  tar cvzf $(PACKAGE).tgz $(PACKAGE) --exclude "*.svn" --exclude ".git" --exclude "*solution*" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude "*.svn" --exclude ".git" --exclude "cudaSDK/*" --exclude "opencv-2.1/*" --exclude "cuda/*"
