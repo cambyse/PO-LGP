@@ -192,7 +192,7 @@ shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.25 .2 .055)>, size=[.0 .0 .108 
 
 
 
-body  o1{ X=<t(-.4 -.8 .8)> }
+body  o1{ X=<t(-.4 -.8 .8)> } ##are these really used ?? or remove?  Nikolay: used in gui module realize objects
 shape S1(o1){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
 
 body  o2{ X=<t(-.4 -.8 .8)> }
@@ -206,7 +206,6 @@ shape S3(o3){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
 ## marker
 ###########
 
-shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-
-shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+##shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+##shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+##shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }

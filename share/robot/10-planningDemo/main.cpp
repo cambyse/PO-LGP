@@ -14,7 +14,7 @@ int main(int argn,char** argv) {
   R.open();
 
   //********** launch all modules
-  RobotModuleGroup &master = *R.getProcessGroup();
+  RobotModuleGroup &master = *R.getProcessGroup(); //bugged ????
   PerceptionModule perc;  perc.input=&master.evis.output;
   //MotionPlannerModuleGroup motion;
   //DecisionMakingModule brain;
@@ -71,7 +71,10 @@ int main(int argn,char** argv) {
           s=master.ctrl.ors.getShapeByName("cyl2");
           s->rel.pos.set(perc.output.objects(1).center3d.p);
           s->rel.pos -= s->body->X.pos;
-          master.gui.ors->copyShapesAndJoints(master.ctrl.ors);
+
+         // ors::Shape *sG=master.gui.ors->getShapeByName("cyl1");
+         // sG->rel.pos = s->rel.pos;
+          master.gui.ors->copyShapesAndJoints(master.ctrl.ors);//stranege bugg here !!!
           master.gui.ors2->copyShapesAndJoints(master.ctrl.ors);
           STATE ++;
         }

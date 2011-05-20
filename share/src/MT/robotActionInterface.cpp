@@ -1,18 +1,17 @@
+
+//===========================================================================
+//
+// Marc's Robot Task
+//
 #include "robotActionInterface.h"
 #include "robot.h"
 #include "specialTaskVariables.h"
-
 
 //private space:
 struct sRobotActionInterface{
   RobotModuleGroup master;
   TaskAbstraction mytask;
 };
-
-//===========================================================================
-//
-// Marc's Robot Task
-//
 
 RobotActionInterface::RobotActionInterface(){
   s=new sRobotActionInterface;
@@ -26,7 +25,7 @@ RobotActionInterface::~RobotActionInterface(){
 }
 
 RobotModuleGroup* RobotActionInterface::getProcessGroup(){
-  return &s->master;
+  return  &s->master;
 }
 
 TaskAbstraction* RobotActionInterface::getTask(){

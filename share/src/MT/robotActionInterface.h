@@ -3,19 +3,20 @@
 
 #include "ors.h"
 
+
 //===========================================================================
 //
 // Robot Action Inferface
 //
 
-//private space:
-struct sRobotActionInterface;
 struct TaskAbstraction;
 struct RobotModuleGroup;
 
+//private space:
+struct sRobotActionInterface;
+
 struct RobotActionInterface{
   sRobotActionInterface *s;
-
   RobotActionInterface();
   ~RobotActionInterface();
 
