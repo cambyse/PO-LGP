@@ -37,12 +37,13 @@ void Lapack_A_Binv_A_sym(arr& X,const arr& A,const arr& B){
 void AICO_clean::init(soc::SocSystemAbstraction& _sys){
   sys = &_sys;
   
-  MT::getParameter(convergenceRate,"aico_convergenceRate");
+  MT::getParameter(method,"aico_method");
+  MT::getParameter(convergenceRate,"aico_convergenceRate",1.);
   MT::getParameter(max_iterations,"aico_max_iterations");
   MT::getParameter(tolerance,"aico_tolerance");
   MT::getParameter(display,"aico_display");
   MT::getParameter(repeatThreshold,"aico_repeatThreshold");
-  MT::getParameter(recomputeTaskThreshold,"aico_recomputeTaskThreshold");
+  MT::getParameter(recomputeTaskThreshold,"aico_recomputeTaskThreshold",0.);
   MT::getParameter(damping,"aico_damping");
 
   if(MT::checkParameter<MT::String>("aico_filename")){
@@ -50,7 +51,7 @@ void AICO_clean::init(soc::SocSystemAbstraction& _sys){
     cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
-    if(MT::checkParameter<int>("aico_verbose")) os = &cout;  else  os = NULL;
+    os = &cout;
   }
 
   sweep=0;
@@ -62,20 +63,7 @@ void AICO_clean::iterate_to_convergence(const arr* q_initialization){
   if(q_initialization) initMessagesWithReferenceQ(*q_initialization);
 
   for(uint k=0;k<max_iterations;k++){
-    double d;
-#if 1
-    if(!sys->dynamic) d=stepClean(); //stepKinematic();
-    else              d=stepClean(); //Dynamic(); //GaussNewton();
-#elif 1
-    if(!sys->dynamic) d=stepGaussNewton(); //stepKinematic();
-    else              d=stepGaussNewton(); //Dynamic(); //GaussNewton();
-#elif 1
-    if(!sys->dynamic) d=stepDynamic(); //Kinematic();
-    else              d=stepDynamic();
-#else
-    if(!sys->dynamic) d=stepMinSum(); //stepKinematic();
-    else              d=stepMinSum(); //Dynamic(); //GaussNewton();
-#endif
+    double d=step();
     if(k && d<tolerance) break;
   }
 }
@@ -132,6 +120,8 @@ void AICO_clean::init_messages(){
   phiBar.resize(T+1);  JBar.resize(T+1);
   Psi   .resize(T+1,n);  Psi.setZero();
 
+  dampingReference.clear();
+  
   useFwdMessageAsQhat=true;
 }
 
@@ -639,7 +629,7 @@ double AICO_clean::stepClean(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=b_old;
-      cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+      //cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -648,7 +638,7 @@ double AICO_clean::stepClean(){
     }else{
       damping /= 5.;
       dampingReference=b;
-      cout <<" AICOd ACCEPT" <<endl;
+      //cout <<" AICOd ACCEPT" <<endl;
     }
   }else{
     dampingReference=b;
@@ -657,8 +647,8 @@ double AICO_clean::stepClean(){
   //-- display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os <<"AICOc("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
-    sys->analyzeTrajectory(q,display>0);
+    *sys->os <<"AICOclean("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
+    //sys->analyzeTrajectory(q,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_clean - iteration "<<sweep));
@@ -806,7 +796,7 @@ double AICO_clean::stepDynamic(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=b_old;
-      cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+      //cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -815,7 +805,7 @@ double AICO_clean::stepDynamic(){
     }else{
       damping /= 5.;
       dampingReference=b;
-      cout <<" AICOd ACCEPT" <<endl;
+      //cout <<" AICOd ACCEPT" <<endl;
     }
   }else{
     dampingReference=b;
@@ -824,8 +814,8 @@ double AICO_clean::stepDynamic(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os <<"AICOd("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
-    sys->analyzeTrajectory(q,display>0);
+    *sys->os <<"AICOd("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
+    //sys->analyzeTrajectory(q,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_dynamic - iteration "<<sweep));
@@ -929,8 +919,9 @@ double AICO_clean::stepGaussNewton(){
     }else{
       f.sys=sys;  f.aico=this;  f.t=t;  f.reuseOldCostTerms=true;   f.noBwdMsg=false;
       //if(!sweep)
-        f.reuseOldCostTerms=false;
-      GaussNewton(qhat[t](),1e-2,f,5);
+      f.reuseOldCostTerms=false;
+      if(!repeatThreshold) HALT("need to set repeatThreshold for AICO_gaussNewton")
+      GaussNewton(qhat[t](),repeatThreshold,f,5);
     }
     
     //compute system matrices
@@ -974,7 +965,7 @@ double AICO_clean::stepGaussNewton(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=qhat_old;
-      cout <<" AICOgn REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+      //cout <<" AICOgn REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -983,7 +974,7 @@ double AICO_clean::stepGaussNewton(){
     }else{
       damping /= 5.;
       dampingReference=qhat;
-      cout <<" AICOgn ACCEPT" <<endl;
+      //cout <<" AICOgn ACCEPT" <<endl;
     }
   }else{
     dampingReference=qhat;
@@ -992,9 +983,9 @@ double AICO_clean::stepGaussNewton(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os <<"AICOgn("<<T<<"," <<damping <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
-    sys->analyzeTrajectory(q,display>0);
-    sys->costChecks(b);
+    *sys->os <<"AICOgn("<<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff <<" damp " <<damping;
+    //sys->analyzeTrajectory(q,display>0);
+    //sys->costChecks(b);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_GaussNewton - iteration "<<sweep));

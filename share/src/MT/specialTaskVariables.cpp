@@ -188,6 +188,8 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
                                          midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
 }
 
+#ifdef STANIO
+
 PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
                               ors::Graph& _ors,
                               ShapeList& _refs,
@@ -283,3 +285,4 @@ void zFocusTargetTaskVariable::userUpdate(){
     //return |offset|^2;
 }
 
+#endif

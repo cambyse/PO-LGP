@@ -9,7 +9,7 @@
 
 #include "ors.h"
 #include "joystick.h"
-#include "soc.h"
+#include "socSystem_ors.h"
 #include <NJ/UrgModule.h>
 #include <NP/camera.h>
 #include "schunk.h"

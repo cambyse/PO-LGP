@@ -33,6 +33,9 @@ struct AICO_clean{
   bool useBwdMsg;
   arr bwdMsg_v,bwdMsg_Vinv;
 
+  enum StepMethod{ smClean=0, smDynamic, smKinematic, smGaussNewton, smIlqg  };
+  int method;
+
   MT::String filename;
   std::ostream *os;
 
@@ -51,7 +54,7 @@ struct AICO_clean{
   uint sweep;                     //!< #sweeps so far
   uint scale;                     //!< scale of this AICO in a multi-scale approach
 
-  AICO_clean(){ sweep=0; scale=0; maxStep=.1; }
+  AICO_clean(){ sweep=0; scale=0; maxStep=.1; method=smClean; }
   AICO_clean(soc::SocSystemAbstraction &sys){ sweep=0; scale=0; maxStep=.1; init(sys); }
 
   //-- high level access
@@ -65,10 +68,21 @@ struct AICO_clean{
   void init_messages();
   void shift_solution(int offset);
 
+  double step(){
+    switch(method){
+      case smClean:       return stepClean();
+      case smDynamic:     return stepDynamic();
+      case smKinematic:   return stepKinematic();
+      case smIlqg:        return stepIlqg();
+      case smGaussNewton: return stepGaussNewton();
+    }
+    HALT("");
+    return 0.;
+  }
   double stepClean();
   double stepDynamic();
   double stepKinematic();
-  double stepDynamicIlqg();
+  double stepIlqg(){NIY;};
   double stepGaussNewton();
   double stepMinSum();
 

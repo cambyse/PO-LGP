@@ -461,6 +461,7 @@ info: force
 	@echo "  SYS =" "$(SYS)"
 	@echo "  PWD =" "$(PWD)"
 	@echo "  BASE =" "$(BASE)"
+	@echo "  NAME =" "$(NAME)"
 	@echo "  LIBPATH =" "$(LIBPATH)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"

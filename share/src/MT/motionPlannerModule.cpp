@@ -9,24 +9,10 @@ ReceedingHorizonProcess::ReceedingHorizonProcess():Process("ReceedingHorizon"){
 
 void ReceedingHorizonProcess::open(){
   CHECK(sys_parent,"please set sys_parent before launching a ReceedingHorizonProcess");
-  
-  //analogous to SocSolver:
-  MT::getParameter(scalePowers,"scalePowers");
-  MT::getParameter(convergenceRate,"convergenceRate");
-  MT::getParameter(tolerance,"tolerance");
-  MT::getParameter(repeatThreshold,"repeatThreshold");
-  MT::getParameter(recomputeTaskThreshold,"recomputeTaskThreshold");
-  MT::getParameter(display,"display");
-  //uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  //MT::getParameter(planHcost,"reachPlanHcost");
-  
-      sys=sys_parent->newClone(true);
-      sys->os = &cout;
-      planner.init(*sys,convergenceRate,repeatThreshold,recomputeTaskThreshold,display,0);
-      sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
 
-  planner.damping = 1e-0;
-  //time_shift=0;
+  sys->os = &cout;
+  sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
+  planner.init(*sys);
 }
 
 void ReceedingHorizonProcess::step(){

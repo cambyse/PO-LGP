@@ -29,6 +29,7 @@
 //-- from util.h
 template void MT::getParameter(double&,const char*);
 template void MT::getParameter(uint&,const char*);
+template int MT::getParameter<int>(const char*);
 template void MT::getParameter(int&,const char*);
 template void MT::getParameter(int&,const char*,const int&);
 template void MT::getParameter(bool&,const char*,const bool&);

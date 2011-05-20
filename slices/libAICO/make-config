@@ -1,1 +1,3 @@
-#CXXFLAGS += -DMT_IMPLEMENTATION
+ifneq ($(NAME),libAICO)
+  LIBS += -lAICO
+endif
