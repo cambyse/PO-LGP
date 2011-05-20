@@ -23,8 +23,8 @@
 #include <fstream>
 #include <dc1394/dc1394.h>
 
-#include "pgr/pgr_registers.h"
-#include "pgr/pgr_stereocam.h"
+#include "pgr_registers.h"
+#include "pgr_stereocam.h"
 
 #endif
 

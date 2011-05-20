@@ -1,6 +1,6 @@
 #include "perceptionModule.h"
 #include "optimization.h"
-#include "../src/NJ/VisionTrackRoutines.h"
+//#include "../src/NJ/VisionTrackRoutines.h"
 #include "calibration.h"
 
 //===========================================================================
@@ -195,7 +195,7 @@ struct ShapeFitProblem:public OptimizationProblem{
     if(grad){
       dfdpoints.reshape(dfdpoints.N);
       grad->reshape(dfdpoints.N,x.N);
-      (*grad) = dfdpoints*(*grad);
+      (*grad) = ~dfdpoints*(*grad);
     }
     if(display){
       byteA img;
@@ -398,8 +398,7 @@ void PerceptionModule::step(){
 
       //-- Object's ors params (height, radius, length, etc)
       uint n=obj->shapePoints3d.d0;
-      arr ones(obj->shapePoints3d.d0); ones=1./n;
-      obj->center3d = ones * obj->shapePoints3d;
+      obj->center3d = (1./n)*sum(obj->shapePoints3d,0);
 
       if(obj->shapeType == 1){//cylinder
         double h=

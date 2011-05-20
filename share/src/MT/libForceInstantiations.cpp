@@ -23,7 +23,7 @@
 #include <MT/util.h>
 #include <MT/opengl.h>
 #include <MT/array.h>
-#include <MT/algos.h>
+//#include <MT/algos.h>
 //explicit template instantiations
 
 //-- from util.h
