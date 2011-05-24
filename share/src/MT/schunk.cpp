@@ -300,7 +300,7 @@ void SchunkHandModule::open(){
   //hand->SetVelocityProfile(SDH::cSDHBase::eVP_SIN_SQUARE);
   //hand->SetVelocityProfile(SDH::cSDHBase::eVP_RAMP);
 
-  for(uint m=0;m<=6;m++) hand->SetAxisEnable( m, true );
+  hand->SetAxisEnable( hand->All, true );
 
   getPos(q_real);
   
@@ -344,7 +344,7 @@ void SchunkHandModule::moveAll(const arr& q,bool wait,double v){
 void SchunkHandModule::setVelocity(uint i,double v,double a){
   //sdh.hand->SetAxisEnable( axis_index, true );
   CHECK(a>0.,"always assume positive acceleration");
-  if(v < hand->GetAxisReferenceVelocity(i)) a*=-1.;
+  //if(v < hand->GetAxisReferenceVelocity(i)) a*=-1.;
   hand->SetAxisTargetAcceleration(i, a);
   hand->SetAxisTargetVelocity(    i, v);
 }
@@ -355,7 +355,7 @@ void SchunkHandModule::setVelocities(const arr& v,double a){
   uint i;
   std::vector<double> v_reference = hand->GetAxisReferenceVelocity( fingers );
   std::vector<double> vel(7);  for(i=0;i<7;i++) vel[i]=v(i)/MT_PI*180.;
-  std::vector<double> acc(7);  for(i=0;i<7;i++){ if(vel[i]<v_reference[i]) acc[i]=-a; else acc[i]=a; }
+  std::vector<double> acc(7);  for(i=0;i<7;i++) acc[i]=a; 
   try{
     hand->SetAxisTargetAcceleration(fingers, acc);
     hand->SetAxisTargetVelocity    (fingers, vel);

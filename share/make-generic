@@ -178,9 +178,9 @@ endif
 
 ifdef SCHUNK
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-09-05-19/include:$(LIBPATH)/schunkLWA/include
+CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-09-05-19/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
+LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
 LinuxLibs += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -553,7 +553,7 @@ externalMake_src/%:
 	make -C $(BASE)/src/$*
 
 rm_Makefile.dep: force
-	rm Makefile.dep
+	-rm Makefile.dep
 		 
 %.dep: %.cpp
 	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep

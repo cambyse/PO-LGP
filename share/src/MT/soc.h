@@ -20,8 +20,8 @@
 #ifndef MT_soc_h
 #define MT_soc_h
 
-#include "array.h"
 #include "util.h"
+#include "array.h"
 
 //-- fwd declarations
 class OpenGL;

@@ -146,10 +146,12 @@ void ControllerProcess::step(){
   //SAFTY CHECK: too large steps?
   double step=euclideanDistance(q_reference,q_old);
   if(step>maxJointStep){
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<step);
-    HALT("");
-    q_reference=q_old;
-    v_reference.setZero();
+    MT_MSG(" *** WARNING *** too large step -> step |dq|="<<step);
+    q_reference=q_old + (q_reference-q_old)*maxJointStep/step;
+    v_reference *= .5*maxJointStep/step;
+    step=euclideanDistance(q_reference,q_old);
+    MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|="<<step);
+    //v_reference.setZero(); SD: making too large step warnig  use max allowed step
   }
 #if 0
     static ofstream logfil;
@@ -237,7 +239,6 @@ void RobotModuleGroup::open(){
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
-    //gui.threadOpen(MT::getParameter<int>("guiThreadNice",20));
     gui.threadLoop();
   }
   

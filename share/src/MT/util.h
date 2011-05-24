@@ -258,6 +258,10 @@ namespace MT{
       //!@name equality
       bool operator==(const char *s);
       bool operator==(const String& s);
+      bool operator!=(const String& s);
+      
+      //!@name misc
+      bool contains(const String& substring);
 
       //!@name I/O
       void write(std::ostream& os) const;
