@@ -17,7 +17,7 @@ DESCRIPTION
 	
 "
 
-externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-09-05-19 plib-1.8.5/"
+externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-11-05-11 libcolorseg plib-1.8.5 SWIFT++_1.2 ntcan"
 
 [ -z "$1" ] && { echo "$USAGE"; exit 1; } 
 [ -d "$1" ] || { echo "$USAGE"; exit 1; }
