@@ -35,11 +35,12 @@ int main(int argn,char** argv){
 #endif
   PerceptionModule perc;  perc.input=&evis.output;
 
+  q_currentReferenceVar q_var;
+  G.getJointState(q_var.q_reference);
+  
   GuiModule gui;  gui.cameraVar=evis.input;  gui.perceptionOutputVar=&perc.output;
+  gui.q_referenceVar = &q_var;
   gui.createOrsClones(&G);
-  /*G.getJointState(gui.q_reference);
-  gui.ors2->setJointState(gui.q_reference);
-  gui.ors2->calcBodyFramesFromJoints();*/
 
 #ifdef REALCAMERA
   cam .threadLoop();
@@ -47,9 +48,9 @@ int main(int argn,char** argv){
   evis.threadLoop();
   perc.threadLoop();
   gui .threadLoop();
-  
+  bool bSave = MT::Parameter<bool>("saveImage");
   for(uint i=0;!STOP && i<1000;i++){
-	  if(MT::Parameter<bool>("saveImage") == 1){
+	  if(bSave == 1){
 	  evis.output.readAccess(NULL);
 	   //   if(evis.output.hsvThetaL.N){
 	    //    write_ppm(cam.output.rgbL,"hsvTheta.ppm");

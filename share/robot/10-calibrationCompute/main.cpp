@@ -1,6 +1,6 @@
 #define MT_IMPLEMENTATION
 #include <MT/ors.h>
-#include "../../../../share/src/MT/optimization.h"
+#include <MT/optimization.h>
 #include <MT/calibration.h>
 
 
@@ -50,10 +50,11 @@ struct MyOptimizationProblem:public OptimizationProblem{
     gl.add(glStandardScene,&C);
     gl.add(ors::glDrawGraph,&C);
     gl.watch();
-    q_offset = Zeros(14);
+    q_offset = arr(14);
+    q_offset = 0;
 
     //rest: q offset
-    loadCalibData(viewData,qData,C.getJointStateDimension(),"../onlineCalib/calib.data");
+    loadCalibData(viewData,qData,C.getJointStateDimension(),"../10-calibrationCaptureData/calib.data");
 
     processData();
   }
