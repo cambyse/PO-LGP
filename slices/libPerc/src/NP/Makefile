@@ -6,9 +6,15 @@ CXXFLAGS += -fPIC
 #OPTIM  = fast_debug
 OPTIM  = debug
 
-CXXFLAGS += -O3 -Wall -DNP_DC1394 
-CXXFLAGS += -DMT_Linux -DMT_IMPLEMENT_TEMPLATES -DMT_BUMBLE -DMT_NO_GLOBALMEM
-CXXFLAGS += -DNP_IMPLEMENT_TEMPLATES
+ANN = 1
+QHULL = 1
+FREEGLUT = 1
+LAPACK = 1
+CUDA = 1
+OPENCV = 1
+BUMBLE = 1
+
+CXXFLAGS += -DNP_IMPLEMENT_TEMPLATES -DMT_IMPLEMENT_TEMPLATES -DNP_DC1394 
 
 ifndef OBJS
 OBJS  = $(shell find . \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )

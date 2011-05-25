@@ -352,7 +352,6 @@ LinuxLibs += -lc_urg -lc_connection
 endif
 
 ifdef BUMBLE
-NILS  = 1
 CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
