@@ -173,12 +173,12 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape table(OBJECTS){ type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
-shape S1(OBJECTS){ type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape S2(OBJECTS){ type=4, rel=<t(-.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape S3(OBJECTS){ type=4, rel=<t( .25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-shape S4(OBJECTS){ type=4, rel=<t(-.25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-shape S0(OBJECTS){ type=4, rel=<t(-.0  .2 .04) >, size=[.0 .0 .08 .04], color=[.9 .3 .1] }
+shape table(OBJECTS){ contact, type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
+##shape S1(OBJECTS){ type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+##shape S2(OBJECTS){ type=4, rel=<t(-.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+##shape S3(OBJECTS){ type=4, rel=<t( .25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
+##shape S4(OBJECTS){ type=4, rel=<t(-.25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
+##shape S0(OBJECTS){ type=4, rel=<t(-.0  .2 .04) >, size=[.0 .0 .08 .04], color=[.9 .3 .1] }
 
 ###########
 ## objects
@@ -214,11 +214,4 @@ shape S0(OBJECTS){ type=4, rel=<t(-.0  .2 .04) >, size=[.0 .0 .08 .04], color=[.
 # shape target(TARO){ type=1, size=[.01 .01 .108 .0375], color=[.1 .5 .5] }
 
 
-###########
-## marker
-###########
 
-shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-
-shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }

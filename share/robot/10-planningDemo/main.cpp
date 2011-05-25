@@ -63,7 +63,7 @@ int main(int argn,char** argv) {
 
     switch(STATE){
     case -1:{ //wait for perception to find at least 3 objects
-        perc.output.readAccess(NULL);
+       /* perc.output.readAccess(NULL);
         if(perc.output.objects.N>=3 && perc.output.objects(0).found>3 && perc.output.objects(1).found>3 && perc.output.objects(2).found>3){
           ors::Shape *s=master.ctrl.ors.getShapeByName("cyl1");
           s->rel.pos.set(perc.output.objects(0).center3d.p);
@@ -71,13 +71,10 @@ int main(int argn,char** argv) {
           s=master.ctrl.ors.getShapeByName("cyl2");
           s->rel.pos.set(perc.output.objects(1).center3d.p);
           s->rel.pos -= s->body->X.pos;
-
-         // ors::Shape *sG=master.gui.ors->getShapeByName("cyl1");
-         // sG->rel.pos = s->rel.pos;
           master.gui.ors->copyShapesAndJoints(master.ctrl.ors);//stranege bugg here !!!
           master.gui.ors2->copyShapesAndJoints(master.ctrl.ors);
-          STATE ++;
-        }
+    	   STATE ++;
+        	}
 #if 0 //hard-set an object independent of perception - for debugging
         static uint count=0; count++;
         if(count==10){
@@ -89,10 +86,12 @@ int main(int argn,char** argv) {
           STATE ++;
         }
 #endif
-        perc.output.deAccess(NULL);
+        perc.output.deAccess(NULL);*/
+        if(R.perceiveObjects(perc))
+          		  STATE++;
       } break;
       case 0:{ //grasp plan and execute
-        goalVar.goalType=graspGoalT;
+      /*  goalVar.goalType=graspGoalT;
         goalVar.graspShape="cyl1";
         if(planVar.converged){
           task.controlMode=followTrajCM;
@@ -101,17 +100,21 @@ int main(int argn,char** argv) {
           task.controlMode=stopCM;
           goalVar.goalType=noGoalT;
           STATE++;
-        }
+        }*/
+    	  if(R.reachGrasp(planner,"cyl1"))
+    		  STATE++;
       } break;
       case 1:{ //stop and reattach object
-        task.controlMode=stopCM;
+       /* task.controlMode=stopCM;
         static int count=0;  count++;
         if(count>50){
           reattachShape(master.ctrl.ors, &master.ctrl.swift, "cyl1", "m9", "table");
           reattachShape(*master.gui.ors, NULL, "cyl1", "m9", NULL);
           reattachShape(*master.gui.ors2, NULL, "cyl1", "m9", NULL);
           STATE++;
-        }
+        }*/
+    	  if(R.reattach("cyl1"))
+    	  STATE++;
       } break;
       case 2:{ //close hand
         task.controlMode=closeHandCM;
