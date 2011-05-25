@@ -1,0 +1,20 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+
+plot \
+ 'data.pred' us 0:1 title 'xL_pred',\
+ 'data.pred' us 0:2 title 'yL_pred',\
+ 'data.pred' us 0:4 title 'xL_data',\
+ 'data.pred' us 0:5 title 'yL_data',\
+ 'data.pred' us 0:7 title 'xR_pred',\
+ 'data.pred' us 0:8 title 'yR_pred',\
+ 'data.pred' us 0:10 title 'xR_data',\
+ 'data.pred' us 0:11 title 'yR_data',\
+ 'data.pred' us 0:13 title 'X1_pred',\
+ 'data.pred' us 0:14 title 'X2_pred',\
+ 'data.pred' us 0:15 title 'X3_pred',\
+ 'data.pred' us 0:17 title 'X1_data',\
+ 'data.pred' us 0:18 title 'X2_data',\
+ 'data.pred' us 0:19 title 'X3_data'
+

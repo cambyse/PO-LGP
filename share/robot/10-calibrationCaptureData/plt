@@ -1,0 +1,17 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+
+set ylabel 'msec'
+set xlabel 'time (sec)'
+plot \
+ 'LOG' us 2:4 title 'cycl',\
+ 'LOG' us 2:6 title 'busy',\
+ 'LOG' us 2:8 title 'ctrl',\
+ 'LOG' us 2:10 title 'arm',\
+ 'LOG' us 2:12 title 'hand',\
+ 'LOG' us 2:14 title 'skin',\
+ 'LOG' us 2:16 title 'cam' ,\
+ 'LOG' us 2:18 title 'evis' ,\
+ 'LOG' us 2:20 title 'gui'
+ 
