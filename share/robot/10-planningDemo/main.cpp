@@ -102,7 +102,7 @@ int main(int argn,char** argv) {
           STATE++;
         }*/
     	  if(R.reachGrasp(planner,"cyl1"))
-    		  STATE++;
+          STATE++;
       } break;
       case 1:{ //stop and reattach object
        /* task.controlMode=stopCM;
@@ -114,9 +114,10 @@ int main(int argn,char** argv) {
           STATE++;
         }*/
     	  if(R.reattach("cyl1"))
-    	  STATE++;
+          STATE++;
       } break;
       case 2:{ //close hand
+        /*
         task.controlMode=closeHandCM;
         master.ctrl.forceColLimTVs=false;
         static int count=0;  count++;
@@ -125,17 +126,24 @@ int main(int argn,char** argv) {
           task.controlMode=stopCM;
           STATE++;
         }
+        */
+    	  if(R.closeHandAndAttach())
+          STATE++;
+
       } break;
       case 3:{ //wait until planner is ready with current step, then reset the planner
+        /*
         task.controlMode=stopCM;
         if(planner.threadIsIdle()){
           planVar.converged=false;
           planVar.executed=false;
           planVar.ctrlTime=0.;
           STATE++;
-        }
+        } */
+        if(R.wait4PlannerAndReset(planner))
+          STATE++;
       } break;
-      case 4:{ //place plan and execute
+      case 4:{ /* //place plan and execute
         goalVar.goalType=placeGoalT;
         goalVar.graspShape="cyl1";
         goalVar.belowFromShape="table";
@@ -150,15 +158,21 @@ int main(int argn,char** argv) {
           goalVar.goalType=noGoalT;
           STATE++;
         }
+        */
+    	  if(R.place(planner, "cyl1", "table", "cyl2"))
+          STATE++;
       } break;
-      case 5:{ //stop motion
+      case 5:{ /*//stop motion
         task.controlMode=stopCM;
         static int count=0;  count++;
         if(count>50){
           STATE++;
         }
+        */
+    	  if(R.stopMotion())
+          STATE++;
       } break;
-      case 6:{ //openHand
+      case 6:{ /*//openHand
         task.controlMode=openHandCM;
         master.ctrl.forceColLimTVs=false;
         static int count=0;  count++;
@@ -170,8 +184,11 @@ int main(int argn,char** argv) {
           reattachShape(*master.gui.ors2, NULL, "cyl1", "OBJECTS", NULL);
           STATE++;
         }
+        */
+        if(R.openHandReattach("cyl1","cyl2"))
+          STATE++;
       } break;
-      case 7:{ //wait until planner is ready with current step
+      case 7:{/* //wait until planner is ready with current step
         task.controlMode=stopCM;
         if(planner.threadIsIdle()){
           planVar.converged=false;
@@ -179,8 +196,11 @@ int main(int argn,char** argv) {
           planVar.ctrlTime=0.;
           STATE++;
         }
+        */
+        if(R.wait4PlannerAndReset(planner))
+          STATE++;
       } break;
-      case 8:{ //plan a homing trajectory and execute
+      case 8:{/* //plan a homing trajectory and execute
         goalVar.goalType=homingGoalT;
         goalVar.graspShape="cyl1"; //do we need this?
         goalVar.belowToShape="cyl2"; //do we need this?
@@ -192,8 +212,11 @@ int main(int argn,char** argv) {
           goalVar.goalType=noGoalT;
           STATE++;
         }
+        */
+        if(R.homing(planner, "cyl1", "cyl2"))
+          STATE++;
       } break;
-      case 9:{ //wait until planner is ready; reset; and start from -1 again...
+      case 9:{/* //wait until planner is ready; reset; and start from -1 again...
         task.controlMode=stopCM;
         static int count=0;  count++;
         if(planner.threadIsIdle() && count>500){
@@ -207,6 +230,15 @@ int main(int argn,char** argv) {
           if(!master.openBumble) STATE=0;
           STATE=20;
         }
+        */
+        if(R.wait4PlannerAndReset(planner)){
+          if(perc.output.objects.N>=3){
+            perc.output.objects(0).found=perc.output.objects(1).found=perc.output.objects(2).found=0;
+          }
+          STATE=-1;
+          if(!master.openBumble) STATE=0;
+          STATE=20;
+          }
       }
       case 20:{
         task.controlMode=stopCM;

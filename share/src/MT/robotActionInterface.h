@@ -34,6 +34,12 @@ struct RobotActionInterface{
   bool perceiveObjects( PerceptionModule & perc);
   bool reachGrasp(ReceedingHorizonProcess & planner, char * name);
   bool reattach(char * name);
+  bool closeHandAndAttach();
+  bool wait4PlannerAndReset(ReceedingHorizonProcess &);
+  bool place(ReceedingHorizonProcess & planner, const char *, const char*, const char *);
+  bool stopMotion();
+  bool openHandReattach(const char *, const char *);
+  bool homing(ReceedingHorizonProcess&,const char *, const char *);
   RobotModuleGroup* getProcessGroup();
   TaskAbstraction* getTask();
 };

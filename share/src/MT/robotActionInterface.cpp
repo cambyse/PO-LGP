@@ -217,6 +217,93 @@ bool RobotActionInterface::reattach(char * name){
 	return bAns;
 }
 
+bool RobotActionInterface::closeHandAndAttach(){
+  s->mytask.controlMode=closeHandCM;
+  s->master.ctrl.forceColLimTVs=false;
+	static int count=0;  count++;
+	bool bAns = false;
+  if(count>300){
+    s->master.ctrl.forceColLimTVs=true;
+    s->mytask.controlMode=stopCM;
+    bAns = true;
+  }
+	return bAns;
+}
+
+bool RobotActionInterface::wait4PlannerAndReset(ReceedingHorizonProcess& planner){
+  s->mytask.controlMode=stopCM;
+  bool bAns = false;
+  if(planner.threadIsIdle()){
+    planner.planVar->converged=false;
+    planner.planVar->executed=false;
+    planner.planVar->ctrlTime=0.;
+    bAns = true;
+  }
+  return bAns;
+}
+
+bool RobotActionInterface::place(
+    ReceedingHorizonProcess& planner, const char * sh1, const char * sh_fr, const char * sh_to ){
+  planner.goalVar->goalType=placeGoalT;
+  planner.goalVar->graspShape=sh1;
+  planner.goalVar->belowFromShape=sh_fr;
+  planner.goalVar->belowToShape=sh_to;
+	bool bAns = false;
+  if(planner.planVar->converged){
+    s->master.ctrl.fixFingers=true;
+    s->mytask.controlMode=followTrajCM;
+  }
+  if(planner.planVar->executed){
+    s->mytask.controlMode=stopCM;
+    s->master.ctrl.fixFingers=false;
+    planner.goalVar->goalType=noGoalT;
+    bAns = true; //SD: FIX: not a binary success ...
+  }
+  return bAns; 
+}
+
+bool RobotActionInterface::stopMotion(){
+  bool bAns = false;
+  s->mytask.controlMode=stopCM;
+  static int count=0;  count++;
+  if(count>50){
+    bAns = true;
+  }
+  return bAns; 
+}
+
+bool RobotActionInterface::openHandReattach(const char * sh1, const char *sh2){
+  bool bAns = false;
+  s->mytask.controlMode=openHandCM;
+  s->master.ctrl.forceColLimTVs=false;
+  static int count=0;  count++;
+  if(count>300){
+    s->master.ctrl.forceColLimTVs=true;
+    s->mytask.controlMode=stopCM;
+    reattachShape(s->master.ctrl.ors, &s->master.ctrl.swift, sh1, "OBJECTS", sh2);
+    reattachShape(*s->master.gui.ors, NULL, sh1, "OBJECTS", NULL);
+    reattachShape(*s->master.gui.ors2, NULL, sh1, "OBJECTS", NULL);
+    bAns = true;
+  }
+  return bAns; 
+}
+
+bool RobotActionInterface::homing(ReceedingHorizonProcess& planner,
+    const char * sh1, const char *sh2){
+  bool bAns = false;
+  planner.goalVar->goalType=homingGoalT;
+  planner.goalVar->graspShape=sh1;
+  planner.goalVar->belowToShape=sh2;
+  if(planner.planVar->converged){
+    s->mytask.controlMode=followTrajCM;
+  }
+  if(planner.planVar->executed){
+    s->mytask.controlMode=stopCM;
+    planner.goalVar->goalType=noGoalT;
+    bAns = true;
+  }
+  return bAns; 
+}
 
 	//===========================================================================
 	//
