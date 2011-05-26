@@ -242,10 +242,11 @@ bool RobotActionInterface::closeHandAndAttach(){
 	return bAns;
 }
 
-bool RobotActionInterface::wait4PlannerAndReset(ReceedingHorizonProcess& planner){
+bool RobotActionInterface::wait4PlannerAndReset(ReceedingHorizonProcess& planner, int nWait){
   s->mytask.controlMode=stopCM;
   bool bAns = false;
-  if(planner.threadIsIdle()){
+  static int count=0;  count++;
+  if(planner.threadIsIdle() && count > nWait){
     planner.planVar->converged=false;
     planner.planVar->executed=false;
     planner.planVar->ctrlTime=0.;

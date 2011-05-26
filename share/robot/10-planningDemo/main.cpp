@@ -232,17 +232,23 @@ int main(int argn,char** argv) {
           STATE=20;
         }
         */
-        if(R.wait4PlannerAndReset(planner)){
-          if(perc.output.objects.N>=3){
-            perc.output.objects(0).found=perc.output.objects(1).found=perc.output.objects(2).found=0;
-          }
+        if(R.wait4PlannerAndReset(planner,50)){
+          for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
           STATE=-1;
           if(!master.openBumble) STATE=0;
           STATE=20;
           }
-      }
+      }break;
       case 20:{
         task.controlMode=stopCM;
+        planVar.deAccess(NULL);
+        goalVar.deAccess(NULL);
+        planner.threadClose();
+        planner.threadOpen();
+        planVar.readAccess(NULL);
+        goalVar.writeAccess(NULL);
+        STATE = -1;
+        if(!master.openBumble) STATE=0;
       } break;
       case 21:{
         task.controlMode=homingCM;

@@ -35,7 +35,7 @@ struct RobotActionInterface{
   bool reachGrasp(ReceedingHorizonProcess & planner, char * name);
   bool reattach(char * name);
   bool closeHandAndAttach();
-  bool wait4PlannerAndReset(ReceedingHorizonProcess &);
+  bool wait4PlannerAndReset(ReceedingHorizonProcess &, int nWait = 0);
   bool place(ReceedingHorizonProcess & planner, const char *, const char*, const char *);
   bool stopMotion();
   bool openHandReattach(const char *, const char *);
