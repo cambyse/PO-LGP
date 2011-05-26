@@ -382,6 +382,9 @@ void PerceptionModule::step(){
       if(obj->found){
         obj->shapePointsL*=.2;  obj->shapePointsL+=.8*oldshapePointsL;
         obj->shapePointsR*=.2;  obj->shapePointsR+=.8*oldshapePointsR;
+        if(maxDiff(oldshapePointsL,obj->shapePointsL) > 3 ||
+            maxDiff(oldshapePointsR,obj->shapePointsR) > 3
+          ){ obj->found=0; }
       }
       
       //-- 3D projection

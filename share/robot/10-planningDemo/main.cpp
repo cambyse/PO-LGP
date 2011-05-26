@@ -62,8 +62,8 @@ int main(int argn,char** argv) {
     planVar.readAccess(NULL);
 
     switch(STATE){
-    case -1:{ //wait for perception to find at least 3 objects
-       /* perc.output.readAccess(NULL);
+    case -1:{ /* //wait for perception to find at least 3 objects
+        perc.output.readAccess(NULL);
         if(perc.output.objects.N>=3 && perc.output.objects(0).found>3 && perc.output.objects(1).found>3 && perc.output.objects(2).found>3){
           ors::Shape *s=master.ctrl.ors.getShapeByName("cyl1");
           s->rel.pos.set(perc.output.objects(0).center3d.p);
@@ -86,7 +86,8 @@ int main(int argn,char** argv) {
           STATE ++;
         }
 #endif
-        perc.output.deAccess(NULL);*/
+        perc.output.deAccess(NULL);
+        */
         if(R.perceiveObjects(perc))
           		  STATE++;
       } break;

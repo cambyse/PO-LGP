@@ -169,21 +169,29 @@ void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
 
 bool RobotActionInterface::perceiveObjects( PerceptionModule & perc){
 	perc.output.readAccess(NULL);
-	bool bPerceive = true;
+	bool bPerceive = false;
 	for(uint i = 0; i < perc.output.objects.N; i++)
-		bPerceive = bPerceive && (perc.output.objects(i).found>3);
-	if(bPerceive && perc.output.objects.N >=3 ){//so all perceived
-		//perc.output.readAccess(NULL);
-		ors::Shape *sh=s->master.ctrl.ors.getShapeByName("cyl1");//harc coded shape names !!!!
-		sh->rel.pos.set(perc.output.objects(0).center3d.p);
-		sh->rel.pos -= sh->body->X.pos;
-		sh=s->master.ctrl.ors.getShapeByName("cyl2");
-		sh->rel.pos.set(perc.output.objects(1).center3d.p);
-		sh->rel.pos -= sh->body->X.pos;
+    if(perc.output.objects.N>=3 ){
+      if(perc.output.objects(0).found>5 &&
+          perc.output.objects(1).found>5 && perc.output.objects(2).found>5){
+        ors::Shape *sh=s->master.ctrl.ors.getShapeByName("cyl1");
+        sh->rel.pos.set(perc.output.objects(0).center3d.p);
+        sh->rel.pos -= sh->body->X.pos;
+        sh=s->master.ctrl.ors.getShapeByName("cyl2");
+        sh->rel.pos.set(perc.output.objects(1).center3d.p);
+        sh->rel.pos -= sh->body->X.pos;
 
-		s->master.gui.ors->copyShapesAndJoints(s->master.ctrl.ors);//stranege bugg here !!!
-		s->master.gui.ors2->copyShapesAndJoints(s->master.ctrl.ors);
-	}
+        s->master.gui.ors->copyShapesAndJoints(s->master.ctrl.ors);
+        s->master.gui.ors2->copyShapesAndJoints(s->master.ctrl.ors);
+        bPerceive = true;
+        MT_MSG("objs found");
+      }else 
+        MT_MSG("looking at objects"
+            <<perc.output.objects(0).found<<","
+            <<perc.output.objects(0).found<<","
+            <<perc.output.objects(0).found
+            );
+    }
 	perc.output.deAccess(NULL);
 	return bPerceive;
 }
