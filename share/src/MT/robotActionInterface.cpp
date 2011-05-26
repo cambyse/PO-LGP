@@ -181,8 +181,10 @@ bool RobotActionInterface::perceiveObjects( PerceptionModule & perc){
         sh->rel.pos.set(perc.output.objects(1).center3d.p);
         sh->rel.pos -= sh->body->X.pos;
 
+        s->master.gui.processLock.writeLock();
         s->master.gui.ors->copyShapesAndJoints(s->master.ctrl.ors);
         s->master.gui.ors2->copyShapesAndJoints(s->master.ctrl.ors);
+        s->master.gui.processLock.unlock();
         bPerceive = true;
         MT_MSG("objs found");
       }else 
@@ -217,9 +219,11 @@ bool RobotActionInterface::reattach(char * name){
 	static int count=0;  count++;
 	bool bAns = false;
 	if(count>50){
+		s->master.ctrl.taskLock.writeLock();
 	   reattachShape((s->master.ctrl.ors), &s->master.ctrl.swift, name, "m9", "table");
 	   reattachShape(*(s->master.gui.ors), NULL, name, "m9", NULL);
 	   reattachShape(*(s->master.gui.ors2), NULL, name, "m9", NULL);
+	   s->master.ctrl.taskLock.unlock();
 	   bAns = true;
 	}
 	return bAns;
@@ -288,9 +292,11 @@ bool RobotActionInterface::openHandReattach(const char * sh1, const char *sh2){
   if(count>300){
     s->master.ctrl.forceColLimTVs=true;
     s->mytask.controlMode=stopCM;
+    s->master.ctrl.taskLock.writeLock();
     reattachShape(s->master.ctrl.ors, &s->master.ctrl.swift, sh1, "OBJECTS", sh2);
     reattachShape(*s->master.gui.ors, NULL, sh1, "OBJECTS", NULL);
     reattachShape(*s->master.gui.ors2, NULL, sh1, "OBJECTS", NULL);
+    s->master.ctrl.taskLock.unlock();
     bAns = true;
   }
   return bAns; 

@@ -3,6 +3,7 @@
 
 #include "array.h"
 #include "process.h"
+#include "threads.h"
 #include "robot_variables.h"
 
 struct OpenGL;
@@ -26,6 +27,7 @@ struct GuiModule:public Process{
   MT::Array<arr> linesToDisplay;
 
   //OUTPUT (none)
+  Lock processLock;
 
   //INTERNAL
 #ifdef MT_QT

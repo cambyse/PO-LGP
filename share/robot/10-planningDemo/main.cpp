@@ -53,7 +53,7 @@ int main(int argn,char** argv) {
   
   //********** main loop
   for (;!master.signalStop && master.joy.state(0)!=16 && master.joy.state(0)!=32;) {
-
+    cout << "  STATE " << STATE << " ";
     //brain -> motion
     /*if(brain.actionIsReady && brain.action!=DecisionMakingModule::SYMBOLIC_ACTION__NO_ACTION_FOUND){
       motion.graspTargetBodyId = brain.actionArgument;
