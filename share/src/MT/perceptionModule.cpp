@@ -380,11 +380,13 @@ void PerceptionModule::step(){
 
       //-- smooth!
       if(obj->found){
-        obj->shapePointsL*=.2;  obj->shapePointsL+=.8*oldshapePointsL;
-        obj->shapePointsR*=.2;  obj->shapePointsR+=.8*oldshapePointsR;
-        if(maxDiff(oldshapePointsL,obj->shapePointsL) > 3 ||
-            maxDiff(oldshapePointsR,obj->shapePointsR) > 3
-          ){ obj->found=0; }
+        if(maxDiff(oldshapePointsL,obj->shapePointsL) > 15 ||
+	   maxDiff(oldshapePointsR,obj->shapePointsR) > 15){
+	  obj->found=0;
+	}else{ //smooth
+	  obj->shapePointsL*=.2;  obj->shapePointsL+=.8*oldshapePointsL;
+	  obj->shapePointsR*=.2;  obj->shapePointsR+=.8*oldshapePointsR;
+	}
       }
       
       //-- 3D projection
