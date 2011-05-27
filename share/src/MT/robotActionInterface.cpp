@@ -219,6 +219,7 @@ bool RobotActionInterface::reattach(char * name){
 	static int count=0;  count++;
 	bool bAns = false;
 	if(count>50){
+	  count = 0;
 		s->master.ctrl.taskLock.writeLock();
 	   reattachShape((s->master.ctrl.ors), &s->master.ctrl.swift, name, "m9", "table");
 	   reattachShape(*(s->master.gui.ors), NULL, name, "m9", NULL);
@@ -235,6 +236,7 @@ bool RobotActionInterface::closeHandAndAttach(){
 	static int count=0;  count++;
 	bool bAns = false;
   if(count>300){
+    count = 0;
     s->master.ctrl.forceColLimTVs=true;
     s->mytask.controlMode=stopCM;
     bAns = true;
@@ -247,6 +249,7 @@ bool RobotActionInterface::wait4PlannerAndReset(ReceedingHorizonProcess& planner
   bool bAns = false;
   static int count=0;  count++;
   if(planner.threadIsIdle() && count > nWait){
+    count = 0;
     planner.planVar->converged=false;
     planner.planVar->executed=false;
     planner.planVar->ctrlTime=0.;
@@ -280,6 +283,7 @@ bool RobotActionInterface::stopMotion(){
   s->mytask.controlMode=stopCM;
   static int count=0;  count++;
   if(count>50){
+    count = 0;
     bAns = true;
   }
   return bAns; 
@@ -291,6 +295,7 @@ bool RobotActionInterface::openHandReattach(const char * sh1, const char *sh2){
   s->master.ctrl.forceColLimTVs=false;
   static int count=0;  count++;
   if(count>300){
+    count = 0;
     s->master.ctrl.forceColLimTVs=true;
     s->mytask.controlMode=stopCM;
     s->master.ctrl.taskLock.writeLock();

@@ -168,7 +168,7 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
 
   ors::Shape *obj  = sys.ors->getShapeByName(objShape);
   ors::Shape *onto = sys.ors->getShapeByName(belowToShape);
-  obj->cont=false;
+  obj->cont=true;//NIKOLAY: HACKPOINT collide or not...
   onto->cont=true;
   sys.swift->initActivations(*sys.ors);
 

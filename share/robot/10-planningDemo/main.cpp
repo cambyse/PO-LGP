@@ -6,6 +6,20 @@
 #include <TL/decisionMakingModule.h>
 #include <signal.h>
 
+
+bool breakCondition(RobotModuleGroup & master){
+  return master.signalStop || master.joy.state(0)==16 || master.joy.state(0)==32;
+}
+
+void resetPlanner(ReceedingHorizonProcess & planner){
+  planner.planVar->deAccess(NULL);
+  planner.goalVar->deAccess(NULL);
+  planner.threadClose();
+  planner.threadOpen();
+  planner.planVar->readAccess(NULL);
+  planner.goalVar->writeAccess(NULL);
+}
+
 int main(int argn,char** argv) {
   MT::initCmdLine(argn,argv);
   signal(SIGINT,RobotModuleGroup::signalStopCallback);
@@ -25,7 +39,7 @@ int main(int argn,char** argv) {
 
   //robot group
   //master.open();
-  
+
   //perc
   perc.threadOpen();
 
@@ -40,7 +54,7 @@ int main(int argn,char** argv) {
   master.gui.planVar  = &planVar;
   task.planVar = &planVar;
   task.joyVar  = &master.joy;
-  
+
   planner.threadOpen();
 
   //brain
@@ -50,7 +64,64 @@ int main(int argn,char** argv) {
   task.controlMode=stopCM;
   int STATE=-1;
   if(!master.openBumble) STATE=0;
-  
+
+
+
+#if 0
+  planner.threadLoop();
+  perc.threadLoop();
+  while(!breakCondition(master)){
+    while(!R.perceiveObjects(perc) && !breakCondition(master))
+    {
+      master.step();
+    }
+    while(!R.reachGrasp(planner,"cyl1") && !breakCondition(master)){
+      master.step();
+    }
+    while(!R.closeHandAndAttach() && !breakCondition(master)){
+      master.step();
+    }
+
+    while(!R.wait4PlannerAndReset(planner)  && !breakCondition(master)){
+      //master.step();
+    }
+
+    while(!R.place(planner, "cyl1", "table", "cyl2")  && !breakCondition(master)){
+      master.step();
+    }
+    while(!R.stopMotion()  && !breakCondition(master)){
+      master.step();
+    }
+
+    while(!R.openHandReattach("cyl1","cyl2")  && !breakCondition(master)){
+      master.step();
+    }
+
+    while(!R.wait4PlannerAndReset(planner)  && !breakCondition(master)){
+      //	master.step();
+    }
+
+    while(!R.homing(planner, "cyl1", "cyl2")  && !breakCondition(master)){
+      master.step();
+    }
+
+
+    while(!R.wait4PlannerAndReset(planner,50)  && !breakCondition(master)){
+      master.step();
+    }
+    for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
+
+    task.controlMode=stopCM;
+    planVar.deAccess(NULL);
+    goalVar.deAccess(NULL);
+    planner.threadClose();
+    planner.threadOpen();
+    planVar.readAccess(NULL);
+    goalVar.writeAccess(NULL);
+
+  }
+
+#else
   //********** main loop
   for (;!master.signalStop && master.joy.state(0)!=16 && master.joy.state(0)!=32;) {
     cout << "  STATE " << STATE << " ";
@@ -62,217 +133,91 @@ int main(int argn,char** argv) {
     planVar.readAccess(NULL);
 
     switch(STATE){
-    case -1:{ /* //wait for perception to find at least 3 objects
-        perc.output.readAccess(NULL);
-        if(perc.output.objects.N>=3 && perc.output.objects(0).found>3 && perc.output.objects(1).found>3 && perc.output.objects(2).found>3){
-          ors::Shape *s=master.ctrl.ors.getShapeByName("cyl1");
-          s->rel.pos.set(perc.output.objects(0).center3d.p);
-          s->rel.pos -= s->body->X.pos;
-          s=master.ctrl.ors.getShapeByName("cyl2");
-          s->rel.pos.set(perc.output.objects(1).center3d.p);
-          s->rel.pos -= s->body->X.pos;
-          master.gui.ors->copyShapesAndJoints(master.ctrl.ors);//stranege bugg here !!!
-          master.gui.ors2->copyShapesAndJoints(master.ctrl.ors);
-    	   STATE ++;
-        	}
-#if 0 //hard-set an object independent of perception - for debugging
-        static uint count=0; count++;
-        if(count==10){
-          ors::Shape *s=master.ctrl.ors.getShapeByName("cyl1");
-          s->rel.pos.set(ARR(0,-1,1).p);
-          s->rel.pos -= s->body->X.pos;
-          master.gui.ors->copyShapesAndJoints(master.ctrl.ors);
-          master.gui.ors2->copyShapesAndJoints(master.ctrl.ors);
-          STATE ++;
-        }
-#endif
-        perc.output.deAccess(NULL);
-        */
-        if(R.perceiveObjects(perc))
-          		  STATE++;
-      } break;
-      case 0:{ //grasp plan and execute
-      /*  goalVar.goalType=graspGoalT;
-        goalVar.graspShape="cyl1";
-        if(planVar.converged){
-          task.controlMode=followTrajCM;
-        }
-        if(planVar.executed){
-          task.controlMode=stopCM;
-          goalVar.goalType=noGoalT;
-          STATE++;
-        }*/
-    	  if(R.reachGrasp(planner,"cyl1"))
-          STATE++;
-      } break;
-      case 1:{ //stop and reattach object
-       /* task.controlMode=stopCM;
-        static int count=0;  count++;
-        if(count>50){
-          reattachShape(master.ctrl.ors, &master.ctrl.swift, "cyl1", "m9", "table");
-          reattachShape(*master.gui.ors, NULL, "cyl1", "m9", NULL);
-          reattachShape(*master.gui.ors2, NULL, "cyl1", "m9", NULL);
-          STATE++;
-        }*/
-    	  if(R.reattach("cyl1"))
-          STATE++;
-      } break;
-      case 2:{ //close hand
-        /*
-        task.controlMode=closeHandCM;
-        master.ctrl.forceColLimTVs=false;
-        static int count=0;  count++;
-        if(count>300){
-          master.ctrl.forceColLimTVs=true;
-          task.controlMode=stopCM;
-          STATE++;
-        }
-        */
-    	  if(R.closeHandAndAttach())
-          STATE++;
-
-      } break;
-      case 3:{ //wait until planner is ready with current step, then reset the planner
-        /*
-        task.controlMode=stopCM;
-        if(planner.threadIsIdle()){
-          planVar.converged=false;
-          planVar.executed=false;
-          planVar.ctrlTime=0.;
-          STATE++;
-        } */
-        if(R.wait4PlannerAndReset(planner))
-          STATE++;
-      } break;
-      case 4:{ /* //place plan and execute
-        goalVar.goalType=placeGoalT;
-        goalVar.graspShape="cyl1";
-        goalVar.belowFromShape="table";
-        goalVar.belowToShape="cyl2";
-        if(planVar.converged){
-          master.ctrl.fixFingers=true;
-          task.controlMode=followTrajCM;
-        }
-        if(planVar.executed){
-          task.controlMode=stopCM;
-          master.ctrl.fixFingers=false;
-          goalVar.goalType=noGoalT;
-          STATE++;
-        }
-        */
-    	  if(R.place(planner, "cyl1", "table", "cyl2"))
-          STATE++;
-      } break;
-      case 5:{ /*//stop motion
-        task.controlMode=stopCM;
-        static int count=0;  count++;
-        if(count>50){
-          STATE++;
-        }
-        */
-    	  if(R.stopMotion())
-          STATE++;
-      } break;
-      case 6:{ /*//openHand
-        task.controlMode=openHandCM;
-        master.ctrl.forceColLimTVs=false;
-        static int count=0;  count++;
-        if(count>300){
-          master.ctrl.forceColLimTVs=true;
-          task.controlMode=stopCM;
-          reattachShape(master.ctrl.ors, &master.ctrl.swift, "cyl1", "OBJECTS", "cyl2");
-          reattachShape(*master.gui.ors, NULL, "cyl1", "OBJECTS", NULL);
-          reattachShape(*master.gui.ors2, NULL, "cyl1", "OBJECTS", NULL);
-          STATE++;
-        }
-        */
-        if(R.openHandReattach("cyl1","cyl2"))
-          STATE++;
-      } break;
-      case 7:{/* //wait until planner is ready with current step
-        task.controlMode=stopCM;
-        if(planner.threadIsIdle()){
-          planVar.converged=false;
-          planVar.executed=false;
-          planVar.ctrlTime=0.;
-          STATE++;
-        }
-        */
-        if(R.wait4PlannerAndReset(planner))
-          STATE++;
-      } break;
-      case 8:{/* //plan a homing trajectory and execute
-        goalVar.goalType=homingGoalT;
-        goalVar.graspShape="cyl1"; //do we need this?
-        goalVar.belowToShape="cyl2"; //do we need this?
-        if(planVar.converged){
-          task.controlMode=followTrajCM;
-        }
-        if(planVar.executed){
-          task.controlMode=stopCM;
-          goalVar.goalType=noGoalT;
-          STATE++;
-        }
-        */
-        if(R.homing(planner, "cyl1", "cyl2"))
-          STATE++;
-      } break;
-      case 9:{/* //wait until planner is ready; reset; and start from -1 again...
-        task.controlMode=stopCM;
-        static int count=0;  count++;
-        if(planner.threadIsIdle() && count>500){
-          planVar.converged=false;
-          planVar.executed=false;
-          planVar.ctrlTime=0.;
-          if(perc.output.objects.N>=3){
-            perc.output.objects(0).found=perc.output.objects(1).found=perc.output.objects(2).found=0;
-          }
-          STATE=-1;
-          if(!master.openBumble) STATE=0;
-          STATE=20;
-        }
-        */
-        if(R.wait4PlannerAndReset(planner,50)){
-          for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
-          STATE=-1;
-          if(!master.openBumble) STATE=0;
-          STATE=20;
-          }
-      }break;
-      case 20:{
-        task.controlMode=stopCM;
-        planVar.deAccess(NULL);
+    case -1:{
+      if(R.perceiveObjects(perc))
+        STATE++;
+    } break;
+    case 0:{ //grasp
+      if(R.reachGrasp(planner,"cyl1"))
+        STATE++;
+    } break;
+    case 1:{ //stop and reattach object
+      if(R.reattach("cyl1"))
+        STATE++;
+    } break;
+    case 2:{ //close hand
+      if(R.closeHandAndAttach())
+        STATE++;
+    } break;
+    case 3:{ //wait until planner is ready with current step, then reset the planner
+      if(R.wait4PlannerAndReset(planner)){
+        resetPlanner(planner);
+        /* planVar.deAccess(NULL);
         goalVar.deAccess(NULL);
         planner.threadClose();
         planner.threadOpen();
         planVar.readAccess(NULL);
-        goalVar.writeAccess(NULL);
-        STATE = -1;
+        goalVar.writeAccess(NULL);*/
+        STATE++;
+      }
+    } break;
+    case 4:{  //place plan and execute
+      if(R.place(planner, "cyl1", "table", "cyl2"))
+        STATE++;
+    } break;
+    case 5:{
+      if(R.stopMotion())
+        STATE++;
+    } break;
+    case 6:{
+      if(R.openHandReattach("cyl1","cyl2"))
+        STATE++;
+    } break;
+    case 7:{
+      if(R.wait4PlannerAndReset(planner)){
+        resetPlanner(planner);
+        STATE++;
+      }
+    } break;
+    case 8:{
+      if(R.homing(planner, "cyl1", "cyl2"))
+        STATE++;
+    } break;
+    case 9:{
+      if(R.wait4PlannerAndReset(planner,50)){
+        for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
+        STATE=-1;
         if(!master.openBumble) STATE=0;
-      } break;
-      case 21:{
-        task.controlMode=homingCM;
-      } break;
-      default: HALT("");        
+        STATE=20;
+      }
+    }break;
+    case 20:{
+      task.controlMode=stopCM;
+      resetPlanner(planner);
+      STATE = -1;
+      if(!master.openBumble) STATE=0;
+    } break;
+    case 21:{
+      task.controlMode=homingCM;
+    } break;
+    default: HALT("");
     }
- 
-    
+
     cout <<'\r';
     planVar.write(cout);
     cout <<" controlMode= " <<task.controlMode <<flush;
-    
+
     goalVar.deAccess(NULL);
     planVar.deAccess(NULL);
-    
+
     //------------STEPPING
     master.step();
     planner.threadStepOrSkip(0);
     perc.threadStepOrSkip(0);
     //brain.threadStepOrSkip(0);
-
     //reportGlobalProcessGraph();
   }
-
+#endif
 
   //brain.threadClose();
   planner.threadClose();

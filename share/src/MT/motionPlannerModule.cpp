@@ -25,7 +25,7 @@ void ReceedingHorizonProcess::open(){
       planner.init(*sys,convergenceRate,repeatThreshold,recomputeTaskThreshold,display,0);
       sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
 
-  planner.damping = 1e-0;
+  planner.damping = MT::getParameter<double>("damping");//1e-0
   //time_shift=0;
 }
 
@@ -75,6 +75,7 @@ void ReceedingHorizonProcess::step(){
     time_shift=0;
   }*/
   double d=planner.stepGaussNewton();
+  //double d=planner.stepDynamic();
   //if(planner.cost<1.) planAvailable=true; else planAvailable=false;
 
   
@@ -91,7 +92,7 @@ void ReceedingHorizonProcess::step(){
     planVar->cost = planner.cost;
     planVar->tau  = sys->getTau();
     planVar->totalTime = planVar->tau*sys->nTime();
-    if(d<tolerance) planVar->converged=true;
+    if(d<tolerance) planVar->converged=true;// NIKOLAY : enssure reasonable plans
     planVar->deAccess(this);
   }
 }
