@@ -180,10 +180,17 @@ int main(int argn,char** argv) {
       }
     } break;
     case 8:{
+     /* if(planVar.converged && planVar.cost > 40){
+        task.controlMode=stopCM;
+        resetPlanner(planner);
+        planVar.converged=false;
+        break;
+      }*/
       if(R.homing(planner, "cyl1", "cyl2"))
         STATE++;
     } break;
     case 9:{
+      cout << endl << " planner homed " << master.ctrl.q_reference << endl << endl;
       if(R.wait4PlannerAndReset(planner,50)){
         for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
         STATE=-1;

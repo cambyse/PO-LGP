@@ -574,7 +574,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       TV_q->active=true;
 
       TV_q->y_prec=0.;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
-      TV_skin->y_target=ARR(.02,0,.02,0,.02,0);
+      TV_skin->y_target=ARR(.03,0,.03,0,.03,0);//NIKOLAY : tune point, how strong to grasp
 
       //if(log) (*log) <<"\r CLOSE HAND " <<TV_skin->y <<flush;
       break;

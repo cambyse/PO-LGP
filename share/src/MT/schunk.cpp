@@ -462,7 +462,7 @@ void SchunkSkinModule::open(){
   catch(...){
     cerr << "\ncaught unknown exception, giving up\n";
   }
-  ts->SetFramerate( 30, true );
+  ts->SetFramerate( 30, true );//NIKOLAY: RLE or not RLE
   cout <<" done" <<endl;
   isOpen=true;
 }
@@ -484,7 +484,7 @@ void SchunkSkinModule::report(){
   }
 }
 
-void SchunkSkinModule::setFramerate(uint framerate){ if (isEmulation) { return; } ts->SetFramerate( framerate, true ); }
+void SchunkSkinModule::setFramerate(uint framerate){ if (isEmulation) { return; } ts->SetFramerate( framerate,true ); }//NIKOLAY: RLE flag???
 
 void SchunkSkinModule::close(){
   cout <<" -- SchunkSkinModule close .." <<std::flush;
@@ -504,7 +504,8 @@ void SchunkSkinModule::getFrame(MT::Array<uint16>& x){
     try{
       f = ts->UpdateFrame().texel;
     }catch(SDH::cSDHLibraryException* e){
-      HALT("schunk exception: " << e->what());
+      //HALT("schunk exception: " << e->what());
+      MT_MSG("* * * schunk exception: " << e->what());
       delete e;
       return;
     }
