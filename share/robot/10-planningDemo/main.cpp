@@ -134,8 +134,10 @@ int main(int argn,char** argv) {
 
     switch(STATE){
     case -1:{
-      if(R.perceiveObjects(perc))
-        STATE++;
+      if(R.perceiveObjects(perc)){
+	STATE++;
+	cout <<'\7';
+      }
     } break;
     case 0:{ //grasp
       if(R.reachGrasp(planner,"cyl1"))
@@ -195,6 +197,13 @@ int main(int argn,char** argv) {
         for(uint i=0;i<perc.output.objects.N;i++) perc.output.objects(i).found=0;
         STATE=-1;
         if(!master.openBumble) STATE=0;
+        STATE=10;
+      }
+    }break;
+    case 10:{
+      static int count=0;  count++;
+      if(count>300){
+	count = 0;
         STATE=20;
       }
     }break;

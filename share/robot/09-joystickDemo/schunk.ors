@@ -45,7 +45,7 @@ joint (m3 m4)   { A=<d( 90 0 1 0)  t(-0.175 0 0)   d(-105 1 0 0)> }
 joint (m4 m5)   { A=<t(-0.175 0 0) d(-90 0 1 0)    d(  90 1 0 0)> }
 joint (m5 m6)   { A=<d( 90 0 1 0)  t(-0.1515 0 0)  d( -90 1 0 0)> }# Q=<d(45 1 0 0)> }
 joint (m6 m7)   { A=<t(-0.1515 0 0) d(-90 0 1 0)   d( -90 1 0 0)> }
-joint (m7 m8)   { A=<d(-90 0 1 0)  t(-0.12575 0 0) d(  90 1 0 0)> }# Q=<d(-120 1 0 0)> }
+joint (m7 m8)   { A=<d(-90 0 1 0)  t(-0.12575 0 0) d( -90 1 0 0)> }# Q=<d(-120 1 0 0)> }
 joint (m8 m9)   { A=<t(-0.12575 0 0) d( 90 0 1 0)> }
 
 body knuck1 {}
@@ -150,7 +150,7 @@ shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
-shape palmCenter(m9)     { rel=<t(0 0 -.3)>, type=1, size=[.0 .0 .0 .005] color = [1 0 0] }
+shape palmCenter(m9)     { rel=<t(0 0 -.3)>, type=5, size=[.0 .0 .0 .005] color = [1 0 0] }
 
 
 

@@ -233,15 +233,15 @@ bool RobotActionInterface::reattach(char * name){
 bool RobotActionInterface::closeHandAndAttach(){
   s->mytask.controlMode=closeHandCM;
   s->master.ctrl.forceColLimTVs=false;
-	static int count=0;  count++;
-	bool bAns = false;
+  static int count=0;  count++;
+  bool bAns = false;
   if(count>300){
     count = 0;
     s->master.ctrl.forceColLimTVs=true;
     s->mytask.controlMode=stopCM;
     bAns = true;
   }
-	return bAns;
+  return bAns;
 }
 
 bool RobotActionInterface::wait4PlannerAndReset(ReceedingHorizonProcess& planner, int nWait){
