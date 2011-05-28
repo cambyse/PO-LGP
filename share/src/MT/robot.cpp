@@ -466,7 +466,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
         case 2:{ //(2) CRAZY tactile guiding
           TV_skin->active=true;
           TV_skin->y_target=ARR(.00,0,.00,0,.00,0); 
-	  TV_skin->y_prec = 3e1;
+	  TV_skin->y_prec = 5e1;
 	  //ON SIMULATION: since it is set to (.01,.01,.01) this will always give a repelling force!
           break;
         }
