@@ -1,6 +1,5 @@
-#define MT_IMPLEMENTATION
-
 #include <MT/process.h>
+#include <MT/process_internal.h>
 #include <MT/util.h>
 
 struct TestThread:public Process{
