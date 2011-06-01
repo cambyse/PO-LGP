@@ -31,15 +31,13 @@ struct RobotActionInterface{
   void reach(const char* shapeName,const arr& posGoal,double maxVel=.1);
   void reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel=.1);
   void setMesh(const char* shapeName,const ors::Mesh& mesh);
-  bool perceiveObjects( PerceptionModule & perc);
-  bool reachGrasp(ReceedingHorizonProcess & planner, char * name);
-  bool reattach(char * name);
-  bool closeHandAndAttach();
-  bool wait4PlannerAndReset(ReceedingHorizonProcess &, int nWait = 0);
-  bool place(ReceedingHorizonProcess & planner, const char *, const char*, const char *);
-  bool stopMotion();
-  bool openHandReattach(const char *, const char *);
-  bool homing(ReceedingHorizonProcess&,const char *, const char *);
+
+  // -- planned motions
+  void perceiveObjects(PerceptionModule& perc);
+  void pickObject(ReceedingHorizonProcess& planner, const char* objShape);
+  void placeObject(ReceedingHorizonProcess& planner, const char* objShape,const char* belowFromShape,const char* belowToShape);
+  void plannedHoming(ReceedingHorizonProcess& planner,const char* objShape,const char* belowToShape);
+  
   RobotModuleGroup* getProcessGroup();
   TaskAbstraction* getTask();
 };

@@ -186,9 +186,9 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape cyl1(OBJECTS) { contact, type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape cyl1(OBJECTS) { contact, type=4, rel=<t( .2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 shape table(OBJECTS){ contact, type=0, rel=<t(0 0 -.02)>, size=[.52 .52 .04 .5], color=[.0 .0 .0] }
-shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
 
 
