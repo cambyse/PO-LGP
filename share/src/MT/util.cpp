@@ -798,6 +798,14 @@ std::istream& operator>>(std::istream& is,char *str){
       bool MT::String::operator==(const char *s){ return !strcmp(p,s); }
     //! shorthand for the !strcmp command
       bool MT::String::operator==(const String& s){ return !strcmp(p,s.p); }
+      bool MT::String::operator!=(const String& s){ return !(operator==(s)); }
+
+      bool MT::String::contains(const String& substring) {
+        char* p = strstr(this->p, substring.p);
+        return p != NULL;
+      }
+
+
 
     //! deletes all memory and resets all stream flags
       MT::String& MT::String::clr(){ resize(0,false); return *this; }

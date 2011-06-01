@@ -1,0 +1,9 @@
+set style data line
+
+plot \
+ 'calib.data' us 0:2,\
+ 'calib.data' us 0:3,\
+ 'calib.data' us 0:4,\
+ 'calib.data' us 0:6,\
+ 'calib.data' us 0:7,\
+ 'calib.data' us 0:8

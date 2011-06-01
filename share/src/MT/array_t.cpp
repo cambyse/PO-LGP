@@ -1974,7 +1974,11 @@ void innerProduct(MT::Array<T>& x,const MT::Array<T>& y, const MT::Array<T>& z){
     return;
   }
   if(y.nd==1 && z.nd==2){ //vector^T x matrix -> vector^T
-    HALT("This is a stupid old inconsistent case of matrix multiplication!! Never use this convention!");
+	arr zt;
+	transpose(zt,z);
+	  x = zt*y;
+	  return;
+   // HALT("This is a stupid old inconsistent case of matrix multiplication!! Never use this convention!");
     /*
     CHECK(y.d0==z.d0,"wrong dimensions for inner product");
     uint i,k,d0=z.d1,dk=y.d0;

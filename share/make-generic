@@ -181,9 +181,9 @@ endif
 
 ifdef SCHUNK
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-09-05-19/include:$(LIBPATH)/schunkLWA/include
+CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-09-05-19/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
+LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
 LinuxLibs += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -397,25 +397,25 @@ LinuxLibs += -lpthread -lX11
 endif
 
 ifdef NILS
-LPATH += $(LPATH):$(BASE)/src/NP
+LPATH := $(LPATH):$(BASE)/src/NP
 LinuxLibs += -lnp -ldc1394
 DEPEND += externalMake_src/NP
 endif
 
 ifdef NIKOLAY
-LPATH += $(LPATH):$(BASE)/src/NJ
+LPATH := $(LPATH):$(BASE)/src/NJ
 LinuxLibs += -lnj
 DEPEND += externalMake_src/NJ
 endif
 
 ifdef TOBIAS
-LPATH += $(LPATH):$(BASE)/src/TL
+LPATH := $(LPATH):$(BASE)/src/TL
 LinuxLibs += -ltl
 DEPEND += externalMake_src/TL
 endif
 
 ifdef LEWINER
-LPATH += $(LPATH):$(BASE)/src/Lewiner
+LPATH := $(LPATH):$(BASE)/src/Lewiner
 LinuxLibs += -llewiner
 DEPEND += externalMake_src/Lewiner
 endif
@@ -425,7 +425,7 @@ LinuxLibs += -lvoc2009_$(ARCH)
 endif
 
 ifdef MTLIB
-LPATH += $(LPATH):$(BASE)/src/MT
+LPATH := $(LPATH):$(BASE)/src/MT
 LinuxLibs += -lmt
 DEPEND += externalMake_src/MT
 endif
@@ -553,7 +553,7 @@ info: force
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
 externalMake_src/%:
-	make -C $(BASE)/src/$*
+	$(MAKE) -C $(BASE)/src/$*
 
 rm_Makefile.dep: force
 	-rm Makefile.dep

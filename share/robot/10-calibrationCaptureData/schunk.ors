@@ -45,7 +45,7 @@ joint (m3 m4)   { A=<d( 90 0 1 0)  t(-0.175 0 0)   d(-105 1 0 0)> }
 joint (m4 m5)   { A=<t(-0.175 0 0) d(-90 0 1 0)    d(  90 1 0 0)> }
 joint (m5 m6)   { A=<d( 90 0 1 0)  t(-0.1515 0 0)  d( -90 1 0 0)> }# Q=<d(45 1 0 0)> }
 joint (m6 m7)   { A=<t(-0.1515 0 0) d(-90 0 1 0)   d( -90 1 0 0)> }
-joint (m7 m8)   { A=<d(-90 0 1 0)  t(-0.12575 0 0) d( -90 1 0 0)> }# Q=<d(-120 1 0 0)> }
+joint (m7 m8)   { A=<d(-90 0 1 0)  t(-0.12575 0 0) d(  90 1 0 0)> }# Q=<d(-120 1 0 0)> }
 joint (m8 m9)   { A=<t(-0.12575 0 0) d( 90 0 1 0)> }
 
 body knuck1 {}
@@ -150,7 +150,7 @@ shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
-shape palmCenter(m9)     { rel=<t(0 0 -.3)>, type=5, size=[.0 .0 .0 .005] color = [1 0 0] }
+shape palmCenter(m9)     { rel=<t(0 0 -.3)>, type=1, size=[.0 .0 .0 .005] color = [1 0 0] }
 
 
 
@@ -173,7 +173,7 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape table(OBJECTS){ contact, type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
+#shape table(OBJECTS){ contact, type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
 ##shape S1(OBJECTS){ type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 ##shape S2(OBJECTS){ type=4, rel=<t(-.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 ##shape S3(OBJECTS){ type=4, rel=<t( .25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }

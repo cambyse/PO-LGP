@@ -70,6 +70,8 @@ void GuiModule::step(){
   arr q_reference;  // joint state of current robot
   arr q_trajectory; // a trajectory to display
   
+  processLock.writeLock();
+
   if(q_referenceVar){
     q_referenceVar->readAccess(this);
     q_reference = q_referenceVar->q_reference;
@@ -147,6 +149,9 @@ void GuiModule::step(){
 
   gl->update();
   // gl->watch();
+
+  processLock.unlock();
+
   /*if(plotData && !(loopCounter%20)){
     write(history_time,history_q_target,history_q_real,history_v_real,history_c_real,"z.plotData");
     gnuplot("plot 'z.plotData' us 1:2 notitle ,\

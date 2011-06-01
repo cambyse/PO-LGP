@@ -147,10 +147,12 @@ void ControllerProcess::step(){
   //SAFTY CHECK: too large steps?
   double step=euclideanDistance(q_reference,q_old);
   if(step>maxJointStep){
-    MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|="<<step);
-    HALT("");
-    q_reference=q_old;
-    v_reference.setZero();
+    MT_MSG(" *** WARNING *** too large step -> step |dq|="<<step);
+    q_reference=q_old + (q_reference-q_old)*maxJointStep/step;
+    v_reference *= .5*maxJointStep/step;
+    step=euclideanDistance(q_reference,q_old);
+    MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|="<<step);
+    //v_reference.setZero(); SD: making too large step warnig  use max allowed step
   }
 #if 0
     static ofstream logfil;
@@ -239,7 +241,6 @@ void RobotModuleGroup::open(){
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
-    //gui.threadOpen(MT::getParameter<int>("guiThreadNice",20));
     gui.threadLoop();
   }
   
@@ -466,13 +467,15 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
         }
         case 2:{ //(2) CRAZY tactile guiding
           TV_skin->active=true;
-          TV_skin->y_target=ARR(.00,0,.00,0,.00,0);
-          //ON SIMULATION: since it is set to (.01,.01,.01) this will always give a repelling force!
+          TV_skin->y_target=ARR(.00,0,.00,0,.00,0); 
+	  TV_skin->y_prec = 5e1;
+	  //ON SIMULATION: since it is set to (.01,.01,.01) this will always give a repelling force!
           break;
         }
         case 256:{ //(select)close hand
           TV_skin->active=true;
-          TV_skin->y_target=ARR(.02,0,.02,0,.02,0);
+          TV_skin->y_target=ARR(.03,0,.03,0,.03,0);
+	  TV_skin->y_prec = 1e3;
           break;
         }
         case 512:{ //(start)open hand
@@ -485,6 +488,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
 #else
           TV_skin->active=true;
           TV_skin->y_target.setZero();
+	  TV_skin->y_prec = 1e3;
 #endif
           break;
         }
@@ -545,10 +549,18 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
         planVar->writeAccess(ctrl);
         if(planVar->converged){
           uint t=planVar->ctrlTime/planVar->tau;
-          ctrl->bwdMsg_v    = planVar->bwdMsg_v   [t];
-          ctrl->bwdMsg_Vinv = planVar->bwdMsg_Vinv[t];
-          TV_q->y_target    = planVar->q[t];
-          TV_q->v_target    = planVar->x[t].sub(14,-1);
+	  double inter = planVar->ctrlTime/planVar->tau - (double)t;
+	  if(t+1<planVar->bwdMsg_v.d0){
+	    ctrl->bwdMsg_v    = (1.-inter)*planVar->bwdMsg_v   [t]+inter*planVar->bwdMsg_v   [t+1];
+	    ctrl->bwdMsg_Vinv = (1.-inter)*planVar->bwdMsg_Vinv[t]+inter*planVar->bwdMsg_Vinv[t+1];
+	    TV_q->y_target    =  (1.-inter)*planVar->q[t]+inter*planVar->q[t+1];
+	    TV_q->v_target    = ((1.-inter)*planVar->x[t]+inter*planVar->x[t+1]).sub(14,-1);
+	  }else{
+	    ctrl->bwdMsg_v    = planVar->bwdMsg_v   [t];
+	    ctrl->bwdMsg_Vinv = planVar->bwdMsg_Vinv[t];
+	    TV_q->y_target    = planVar->q[t];
+	    TV_q->v_target    = planVar->x[t].sub(14,-1);
+	  }
           planVar->ctrlTime+=0.01;
           if(planVar->ctrlTime>planVar->totalTime){
             planVar->ctrlTime = planVar->totalTime;
@@ -575,7 +587,7 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
       TV_q->active=true;
 
       TV_q->y_prec=0.;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
-      TV_skin->y_target=ARR(.02,0,.02,0,.02,0);
+      TV_skin->y_target=ARR(.03,0,.03,0,.03,0);//NIKOLAY : tune point, how strong to grasp
 
       //if(log) (*log) <<"\r CLOSE HAND " <<TV_skin->y <<flush;
       break;

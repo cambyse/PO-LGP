@@ -179,6 +179,22 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
   MT::getParameter(midPrec,"homingPlanMidPrec");
   MT::getParameter(endPrec,"homingPlanEndPrec");
 
+  //endeff
+  V=listGetByName(sys.vars,"endeffector");
+  //V->irel = obj->rel;
+  V->updateState();
+  V->setInterpolatedTargetsEndPrecisions(T,0,0,0.,0.);
+  //special: condition effector velocities: move above object
+  uint t,M=T/8;
+  for(t=0;t<M;t++){
+    V -> v_trajectory[t]() = (1./M*t)*ARR(0.,0.,.2);
+    V -> v_prec_trajectory(t) = 1e1;
+  }
+  //for(t=M;t<T;t++){
+  //  V -> v_trajectory[t]() = 0;
+  //  V -> v_prec_trajectory(t) = 0;
+  //}
+
   //col lim and relax
   V=listGetByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
   V=listGetByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);

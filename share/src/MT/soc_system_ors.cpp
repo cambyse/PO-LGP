@@ -466,6 +466,7 @@ void soc::SocSystem_Ors::setqv(const arr& q_,uint t){
 }
 void soc::SocSystem_Ors::setq0AsCurrent(){
   ors->getJointState(WS->q0,WS->v0);
+  WS->v0.setZero(); MT_MSG("evil speed v0=0 hack");
 }
 
 

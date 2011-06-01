@@ -1,13 +1,13 @@
 PACKAGE = share
 
 ALL =	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
 	extern/libcolorseg/src \
 	src/NJ \
 	src/TL \
 	src/MT \
 	src/NP \
 	src/Lewiner 
+#	extern/SWIFT++_1.2/decomposer/src \
 
 makeAll: $(ALL:%=make/%)
 

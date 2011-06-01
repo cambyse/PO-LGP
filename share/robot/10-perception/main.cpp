@@ -1,6 +1,7 @@
 //#define MT_IMPLEMENTATION
-
+#define MT_BUMBLE
 #include <signal.h>
+#define REALCAMERA
 
 #include <NP/camera.h>
 #include <MT/earlyVisionModule.h>
@@ -25,7 +26,7 @@ int main(int argn,char** argv){
 
   MyCamera cam;
   EarlyVisionModule evis;
-#if 0
+#ifdef REALCAMERA
   evis.input=&cam.output;
 #else
   CameraImages dummyImages;
@@ -34,18 +35,41 @@ int main(int argn,char** argv){
 #endif
   PerceptionModule perc;  perc.input=&evis.output;
 
+  q_currentReferenceVar q_var;
+  G.getJointState(q_var.q_reference);
+  
   GuiModule gui;  gui.cameraVar=evis.input;  gui.perceptionOutputVar=&perc.output;
+  gui.q_referenceVar = &q_var;
   gui.createOrsClones(&G);
-  /*G.getJointState(gui.q_reference);
-  gui.ors2->setJointState(gui.q_reference);
-  gui.ors2->calcBodyFramesFromJoints();*/
 
-  //cam .threadLoop();
+#ifdef REALCAMERA
+  cam .threadLoop();
+#endif
   evis.threadLoop();
   perc.threadLoop();
   gui .threadLoop();
-  
+  bool bSave = MT::Parameter<bool>("saveImage");
   for(uint i=0;!STOP && i<1000;i++){
+	  if(bSave == 1){
+	  evis.output.readAccess(NULL);
+	   //   if(evis.output.hsvThetaL.N){
+	    //    write_ppm(cam.output.rgbL,"hsvTheta.ppm");
+	    //  }
+
+		  //save the hsv image
+		     floatA hsvL;// hsvL.resizeAs(cam.output.rgbL);
+		     floatA tmpImg;
+		     byte2float(tmpImg,cam.output.rgbL);
+		     rgb2hsv(hsvL , tmpImg);
+		      byteA hsvInt(hsvL.d0,hsvL.d1,hsvL.d2);
+		      for(uint x = 0; x < hsvL.d0; x++)
+		    	  for(uint y = 0; y < hsvL.d1; y++)
+		    		  for(uint z = 0; z < hsvL.d2; z++)
+		    			  hsvInt(x,y,z) = hsvL(x,y,z)*256;
+
+		       write_ppm(hsvInt,"hsvTheta.ppm");
+		       evis.output.deAccess(NULL);
+	  }
     MT::wait(.1);
     cout <<"\r" <<i <<flush;
   }
