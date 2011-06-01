@@ -216,7 +216,7 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
 void RobotActionInterface::pickObject(ReceedingHorizonProcess & planner, const char* objShape){
   //trigger the planner to start planning
   planner.goalVar->writeAccess(NULL);
-  planner.goalVar->goalType=graspGoalT;
+  planner.goalVar->goalType=FutureMotionGoal::graspGoalT;
   planner.goalVar->graspShape=objShape;
   planner.goalVar->deAccess(NULL);
 
@@ -243,7 +243,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess & planner, const c
       s->mytask.controlMode=stopCM;
       s->master.ctrl.taskLock.unlock();
       planner.goalVar->writeAccess(NULL);
-      planner.goalVar->goalType=noGoalT;
+      planner.goalVar->goalType=FutureMotionGoal::noGoalT;
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }
@@ -278,7 +278,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess & planner, const c
 
 void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const char* objShape,const char* belowFromShape,const char* belowToShape){
   planner.goalVar->writeAccess(NULL);
-  planner.goalVar->goalType=placeGoalT;
+  planner.goalVar->goalType=FutureMotionGoal::placeGoalT;
   planner.goalVar->graspShape=objShape;
   planner.goalVar->belowFromShape=belowFromShape;
   planner.goalVar->belowToShape=belowToShape;
@@ -308,7 +308,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
       s->master.ctrl.fixFingers=false;
       s->master.ctrl.taskLock.unlock();
       planner.goalVar->writeAccess(NULL);
-      planner.goalVar->goalType=noGoalT;
+      planner.goalVar->goalType=FutureMotionGoal::noGoalT;
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }
@@ -343,7 +343,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
 void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const char* objShape,const char* belowToShape){
   
   planner.goalVar->writeAccess(NULL);
-  planner.goalVar->goalType=homingGoalT;
+  planner.goalVar->goalType=FutureMotionGoal::homingGoalT;
   planner.goalVar->graspShape=objShape;
   planner.goalVar->belowToShape=belowToShape;
   planner.goalVar->deAccess(NULL);
@@ -370,7 +370,7 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
       s->mytask.controlMode=stopCM;
       s->master.ctrl.taskLock.unlock();
       planner.goalVar->writeAccess(NULL);
-      planner.goalVar->goalType=noGoalT;
+      planner.goalVar->goalType=FutureMotionGoal::noGoalT;
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }

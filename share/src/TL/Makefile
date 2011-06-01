@@ -1,4 +1,6 @@
-BASE         = ../..
+BASE   = ../..
+NAME   = libtl
+OUTPUT = $(BASE)/lib/$(NAME).so
 
 OBJS         = \
 	relationalLogic.o \
@@ -11,8 +13,6 @@ OBJS         = \
         prada.o \
 	bwLanguage.o \
 	decisionMakingModule.o
-
-OUTPUT       = libtl.so
 
 #ODE = 1
 QHULL = 1

@@ -3,7 +3,7 @@
 
 #include "array.h"
 #include "process.h"
-#include "threads.h"
+#include "process_internal.h"
 #include "robot_variables.h"
 
 struct OpenGL;

@@ -10,6 +10,7 @@ ReceedingHorizonProcess::ReceedingHorizonProcess():Process("ReceedingHorizon"){
 void ReceedingHorizonProcess::open(){
   CHECK(sys_parent,"please set sys_parent before launching a ReceedingHorizonProcess");
 
+  sys=sys_parent->newClone(true);
   sys->os = &cout;
   sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
   planner.init(*sys);
@@ -78,7 +79,7 @@ void ReceedingHorizonProcess::step(){
     planVar->cost = planner.cost;
     planVar->tau  = sys->getTau();
     planVar->totalTime = planVar->tau*sys->nTime();
-    if(d<tolerance) planVar->converged=true;// NIKOLAY : enssure reasonable plans
+    if(d<planner.tolerance) planVar->converged=true;// NIKOLAY : enssure reasonable plans
     planVar->deAccess(this);
   }
 }

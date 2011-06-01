@@ -26,8 +26,8 @@ struct ReceedingHorizonProcess:public Process{
   //arr q0,v0;
   //uint time_shift;
 
-  int scalePowers,display;
-  double convergenceRate,repeatThreshold,recomputeTaskThreshold,tolerance;
+  //int scalePowers,display;
+  //double convergenceRate,repeatThreshold,recomputeTaskThreshold,tolerance;
 
   ReceedingHorizonProcess();
   void open();

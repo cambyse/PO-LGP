@@ -1,17 +1,19 @@
-BASE         = ../..
+BASE   = ../..
+NAME   = libnp
+OUTPUT = $(BASE)/lib/$(NAME).so
 
 OBJS         = \
 	bumblebee2.o \
 	uvccamera.o \
 	camera.o \
-	pgr/pgr_conversions.o \
-	pgr/pgr_registers.o \
-	pgr/pgr_stereocam.o \
+	pgr_conversions.o \
+	pgr_registers.o \
+	pgr_stereocam.o \
 	calibrationimage.o \
 	cvwindow.o \
 	cvutils.o \
 	libcolorseg.o \
-	../MT/threads.o
+	../MT/process.o
 #	cameracalibrator.o \
 #	camera.o \
 #	desc.o \
@@ -23,7 +25,6 @@ OBJS         = \
 #	rtree.o \
 #	ucm.o \
 
-OUTPUT       = libnp.so
 
 OPENCV=1
 FELZ = 1

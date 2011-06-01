@@ -1,7 +1,6 @@
 BASE = ../..
 OBJS = main.o
 
-MTLIB = 1
 ANN = 1
 #TONY = 1
 OPENCV = 1
