@@ -3,7 +3,7 @@
 
 #include <signal.h>
 
-#include <MT/threads.h>
+#include <MT/process_internal.h>
 #include <NP/camera.h>
 #include <NP/uvccamera.h>
 

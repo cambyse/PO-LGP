@@ -19,21 +19,21 @@ void ReceedingHorizonProcess::step(){
   if(!goalVar) return;
   if(!active){ //then become active now!
     goalVar->readAccess(this);
-    if(goalVar->goalType==graspGoalT){
+    if(goalVar->goalType==FutureMotionGoal::graspGoalT){
       sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setGraspGoals(*sys, sys->nTime(), goalVar->graspShape);
       arr q;
       soc::straightTaskTrajectory(*sys,q,0);
       planner.initMessagesWithReferenceQ(q);
       active=true;
-    }else if(goalVar->goalType==placeGoalT){
+    }else if(goalVar->goalType==FutureMotionGoal::placeGoalT){
       sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setPlaceGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
       arr q;
       soc::straightTaskTrajectory(*sys,q,0);
       planner.initMessagesWithReferenceQ(q);
       active=true;
-    }else if(goalVar->goalType==homingGoalT){
+    }else if(goalVar->goalType==FutureMotionGoal::homingGoalT){
       sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
       arr q;
@@ -48,7 +48,7 @@ void ReceedingHorizonProcess::step(){
   }
   if(active){ //perhaps become inactive
     goalVar->readAccess(this);
-    if(goalVar->goalType==noGoalT){
+    if(goalVar->goalType==FutureMotionGoal::noGoalT){
       active=false;
     }
     goalVar->deAccess(this);
@@ -65,7 +65,7 @@ void ReceedingHorizonProcess::step(){
 
   
   goalVar->readAccess(this);
-  if(goalVar->goalType==noGoalT){  goalVar->deAccess(this);  return;  }
+  if(goalVar->goalType==FutureMotionGoal::noGoalT){  goalVar->deAccess(this);  return;  }
   goalVar->deAccess(this);
 
   if(planVar){

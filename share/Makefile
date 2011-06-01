@@ -22,6 +22,9 @@ clean/%::
 tests::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;
 
+robots::
+	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} \;
+
 cleanProjects::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} clean \;
 	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} clean \;

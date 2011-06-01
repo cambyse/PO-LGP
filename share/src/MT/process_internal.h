@@ -2,7 +2,6 @@
 #define MT_process_internal_h
 
 #include <pthread.h>
-//#include <iostream>
 
 typedef unsigned int uint;
 
@@ -47,7 +46,7 @@ struct ConditionVariable{
   void waitUntil(double absTime);
 };
 
-//! a simple struct to realized a strict tic tac timing (call step() once in a loop)
+//! a simple struct to realize a strict tic tac timing (call step() once in a loop)
 struct Metronome{
   long targetDt;
   timespec ticTime,lastTime;

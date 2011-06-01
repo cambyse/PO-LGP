@@ -11,6 +11,7 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H>
 
 #include "util.h"
 #include "array.h"
@@ -638,92 +639,100 @@ void reportGlobalProcessGraph(){
 
 #if 0 //use fltk window
 
-struct ThreadInfoWin:public StepThread,Fl_Window{
+struct sThreadInfoWin:public Fl_Double_Window{
   bool isOpen;
   //ofstream log;
   char outputbuf[200];
-
-  ThreadInfoWin():StepThread("ThreadInfoX"),Fl_Window(0,0,600,300,"processes"){
-    //clear_border();
+  sThreadInfoWin():Fl_Double_Window(0,0,600,300,"processes"){
   }
-  ~ThreadInfoWin(){  }
+  void draw();
+};
+
+ThreadInfoWin::ThreadInfoWin():Process("ThreadInfoX"){
+  s=new sThreadInfoWin;
+  s->isOpen=false;
+}
+
+ThreadInfoWin::~ThreadInfoWin(){
+  if(s->isOpen) close();
+  delete s;
+}
   
-  void open(){
-    //MT::open(log,"LOG.threads");
-    show();
-    Fl::check();
-    isOpen=true;
-  }
+void ThreadInfoWin::open(){
+  //MT::open(log,"LOG.threads");
+  Fl::visual(FL_DOUBLE|FL_INDEX);
+  s->show();
+  Fl::check();
+  s->isOpen=true;
+}
 
-  void close(){
-  }
+void ThreadInfoWin::close(){
+  if(!s->isOpen) return;
+  //XCloseDisplay(s->display);
+  //s->log.close();
+  s->isOpen=false;
+}
   
-  void step(){
-    if(!isOpen) open();
-    redraw();
-    Fl::wait(.1);
-  }
+void ThreadInfoWin::step(){
+  if(!s->isOpen) open();
+  s->redraw();
+  Fl::wait(.1);
+}
 
-  void draw(){
-    //timer.cycleStart();
-    StepThread *th;
-    //Metronome *met;
-    CycleTimer *ct;
+void sThreadInfoWin::draw(){
+  //timer.cycleStart();
+  Process *proc;
+  sProcess *th;
+  //Metronome *met;
+  CycleTimer *ct;
     
-    //-- graphical display
-    uint i,y=20,x,len;
-    //XClearWindow(fl_display,fl_window);
-    fl_draw_box(FL_FLAT_BOX, 0, 0, w(), h(), FL_FOREGROUND_COLOR);
-    fl_color(FL_BACKGROUND2_COLOR);
-    fl_font(1,10);
+  //-- graphical display
+  uint i,y=20,x,len;
+  //XClearWindow(fl_display,fl_window);
+  fl_draw_box(FL_FLAT_BOX, 0, 0, w(), h(), FL_FOREGROUND_COLOR);
+  fl_color(FL_BACKGROUND2_COLOR);
+  fl_font(1,10);
 #define TEXT0(txt) \
-    fl_draw(txt, x, y);
+  fl_draw(txt, x, y);
 #define TEXT(form,val) \
-    if((len=sprintf(outputbuf,form,val))){ fl_draw(outputbuf, x, y); }
+  if((len=sprintf(outputbuf,form,val))){ fl_draw(outputbuf, x, y); }
 #define TEXTTIME(dt) \
-    if((len=sprintf(outputbuf,"%5.2f|%5.2f|%5.2f",dt,dt##Mean,dt##Max))){ fl_draw(outputbuf, x, y); }
-    for_list(i,th,globalThreads){
-      int state=th->threadCondition.state;
-      x=5;
-      TEXT("%4i",th->tid); x+=30;
-      TEXT("%3i",th->threadPriority); x+=25;
-      TEXT("%s",th->threadName); x+=100;
-      TEXT("%4i",th->timer.steps);  x+=30;
-      if(state>0){ TEXT("%4i",state); }
-      else switch(state){
-        case StepThread::tsOPEN:    TEXT0("open");   break;
-        case StepThread::tsCLOSE:   TEXT0("close");  break;
-        case StepThread::tsLOOPING: TEXT0("loop");   break;
-        case StepThread::tsBEATING: TEXT0("beat");   break;
-        case StepThread::tsSYNCLOOPING: TEXT0("sync");   break;
-        case StepThread::tsIDLE:    TEXT0("idle");   break;
-        default: TEXT0("undefined:");
+  if((len=sprintf(outputbuf,"%5.2f|%5.2f|%5.2f",dt,dt##Mean,dt##Max))){ fl_draw(outputbuf, x, y); }
+  for_list(i,proc,globalProcesses){
+    th = proc->s;
+    int state=th->threadCondition.state;
+    x=5;
+    TEXT("%4i",th->tid); x+=30;
+    TEXT("%3i",th->threadPriority); x+=25;
+    TEXT("%s",proc->name); x+=100;
+    TEXT("%4i",th->timer.steps);  x+=30;
+    if(state>0){ TEXT("%4i",state); }
+    else switch(state){
+      case tsOPEN:    TEXT0("open");   break;
+      case tsCLOSE:   TEXT0("close");  break;
+      case tsLOOPING: TEXT0("loop");   break;
+      case tsBEATING: TEXT0("beat");   break;
+      case tsSYNCLOOPING: TEXT0("sync");   break;
+      case tsIDLE:    TEXT0("idle");   break;
+      default: TEXT0("undefined:");
       } x+=50;
-      TEXTTIME(th->timer.cyclDt); x+=130;
-      TEXTTIME(th->timer.busyDt); x+=130;
-      y+=20;
-    }
-    y+=10;
-    for_list(i,ct,globalCycleTimers){
-      x=5;
-      TEXT("%2i",i); x+=25;
-      TEXT("%s",ct->name); x+=100;
-      TEXT("%4i",ct->steps); x+=30;
-      TEXTTIME(ct->cyclDt); x+=130;
-      TEXTTIME(ct->busyDt); x+=130;
-      y+=20;
-    }
+    TEXTTIME(th->timer.cyclDt); x+=130;
+    TEXTTIME(th->timer.busyDt); x+=130;
+    y+=20;
+  }
+  y+=10;
+  for_list(i,ct,globalCycleTimers){
+    x=5;
+    TEXT("%2i",i); x+=25;
+    TEXT("%s",ct->name); x+=100;
+    TEXT("%4i",ct->steps); x+=30;
+    TEXTTIME(ct->cyclDt); x+=130;
+    TEXTTIME(ct->busyDt); x+=130;
+    y+=20;
+  }
 #undef TEXT
 #undef TEXTTIME
-    //XFlush(display);
-
-    //-- log file
-    //for_list(i,th,globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-    //for_list(i,ct,globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
-    //log <<endl;
-  }
-
-};
+}
 
 #else //use X directly
 
@@ -744,6 +753,7 @@ ThreadInfoWin::ThreadInfoWin():Process("ThreadInfoX"){
 
 ThreadInfoWin::~ThreadInfoWin(){
   if(s->isOpen) close();
+  delete s;
 }
 
 void ThreadInfoWin::open(){
@@ -766,12 +776,12 @@ void ThreadInfoWin::open(){
   s->isOpen=true;
 }
 
-  void ThreadInfoWin::close(){
-    if(!s->isOpen) return;
-    XCloseDisplay(s->display);
-    //s->log.close();
-    s->isOpen=false;
-  }
+void ThreadInfoWin::close(){
+  if(!s->isOpen) return;
+  XCloseDisplay(s->display);
+  //s->log.close();
+  s->isOpen=false;
+}
   
   void ThreadInfoWin::step(){
     if(!s->isOpen) open();

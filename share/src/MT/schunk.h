@@ -104,12 +104,10 @@ struct SchunkHandModule:public Process{
 };
 
 //===========================================================================
-struct SchunkSkinModule:public Process,Variable{
-  //INTPUT (none)
-  MT::Array<uint16> emul_data;
+struct SchunkSkinModule:public Process{
+  SkinPressureVar *var;
 
-  //OUTPUT
-  arr y_real; //6D sensor reading
+  MT::Array<uint16> emul_data;
 
   //INTERNAL
   SDH::cDSA* ts;
