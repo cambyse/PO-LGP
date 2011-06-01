@@ -9,7 +9,10 @@ LIBPATH = $(BASE)/extern
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
-$(info *** make-generic: BASE=$(BASE) ***)
+$(info ------------------------------------------------------------)
+$(info make $(shell pwd -L) )
+$(info BASE=$(BASE) )
+$(info ------------------------------------------------------------)
 
 ################################################################################
 #
@@ -553,7 +556,7 @@ externalMake_src/%:
 	make -C $(BASE)/src/$*
 
 rm_Makefile.dep: force
-	rm Makefile.dep
+	-rm Makefile.dep
 		 
 %.dep: %.cpp
 	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep

@@ -42,7 +42,7 @@ ControllerProcess::ControllerProcess():Process("ControllerProcess"),timer("RobCo
   maxJointStep = MT::Parameter<double>("maxJointStep",.01);
   q_referenceVar=NULL;
   proxiesVar=NULL;
-  skinVar=NULL;
+  skinPressureVar=NULL;
   task=NULL;
   useBwdMsg=false;
   forceColLimTVs=true;
@@ -102,10 +102,10 @@ void ControllerProcess::close(){
 void ControllerProcess::step(){
   timer.cycleStart();
   
-  if(skinVar){ //access double state of skin
-    skinVar->readAccess(this);
-    skinState = skinVar->y_real;
-    skinVar->deAccess(this);
+  if(skinPressureVar){ //access double state of skin
+    skinPressureVar->readAccess(this);
+    skinState = skinPressureVar->y_real;
+    skinPressureVar->deAccess(this);
   }
   
   if(q_referenceVar && q_referenceVar->readHandFromReal){ //access double position of hand
@@ -216,6 +216,7 @@ void RobotModuleGroup::open(){
   //-- controller
   if(!openArm) ctrl.forceColLimTVs=false;
   ctrl.q_referenceVar = &q_currentReference;
+  ctrl.skinPressureVar = &skinPressureVar;
   ctrl.proxiesVar = &currentProxies;
   ctrl.threadOpen();
   ctrl.threadWait();
@@ -284,9 +285,9 @@ void RobotModuleGroup::open(){
   }
 
   if(openSkin){
+    skin.var = &skinPressureVar;
     skin.threadOpen(MT::getParameter<int>("skinThreadNice",-5));
     skin.threadLoop();
-    ctrl.skinVar = &skin;
   }
 
   if(openLaser){

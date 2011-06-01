@@ -21,11 +21,20 @@
 #include <X11/Xlib.h>
 #endif
 
+
+//===========================================================================
+//
+// force instantiations
+//
+
+template MT::Array<glUI::Button>::Array();
+template MT::Array<glUI::Button>::~Array();
+
+
 //===========================================================================
 //
 // camera class
 //
-
 
 /*!\brief constructor; specify a frame if the camera is to be attached
    to an existing frame. Otherwise the camera creates its own

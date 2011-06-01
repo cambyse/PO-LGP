@@ -1,8 +1,4 @@
-BASE   = $(shell pwd)/../..
-OBJS   = main.o
-OUTPUT = x.exe
-LIBS   = -lsoc
-
-CPATH = $(BASE)/src
+BASE = ../..
+OBJS = main.o
 
 include $(BASE)/make-generic

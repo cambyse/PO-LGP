@@ -17,6 +17,7 @@
 #include "earlyVisionModule.h"
 #include "guiModule.h"
 #include "process.h"
+#include "process_internal.h"
 #include <NP/uvccamera.h>
 
 struct ControllerProcess;
@@ -81,8 +82,8 @@ struct TaskAbstraction{
 /*! given a task (=TaskVariable configuration) computed the desired next joint state of the robot */
 struct ControllerProcess:public Process{ //--non-threaded!!
   q_currentReferenceVar *q_referenceVar;
+  SkinPressureVar *skinPressureVar;
   currentProxiesVar *proxiesVar;
-  SchunkSkinModule *skinVar;
   
   //INPUT
   TaskAbstraction *task;
@@ -121,6 +122,7 @@ struct ControllerProcess:public Process{ //--non-threaded!!
 struct RobotModuleGroup{
   //Variables
   q_currentReferenceVar q_currentReference;
+  SkinPressureVar skinPressureVar;
   currentProxiesVar currentProxies;
 
   //Processes

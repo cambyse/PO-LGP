@@ -484,7 +484,8 @@ void* StepThread::staticThreadMain(void *_this){
 // global monitor routines
 //
 
-#if 0
+#if 0 //use fltk window
+
 struct ThreadInfoWin:public StepThread,Fl_Window{
   bool isOpen;
   //ofstream log;
@@ -572,7 +573,7 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
 
 };
 
-#else
+#else //use X directly
 
 struct sThreadInfoWin{
   bool isOpen;

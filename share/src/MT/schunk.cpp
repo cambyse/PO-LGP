@@ -412,12 +412,10 @@ void SchunkHandModule::step(){
 // DSA module
 //
 
-SchunkSkinModule::SchunkSkinModule():Process("SchunkSkinProcess"),Variable("SchunkSkinVariable"){
+SchunkSkinModule::SchunkSkinModule():Process("SchunkSkinProcess"){
   ts=NULL;
   isOpen=false;
   isEmulation=false;
-  y_real.resize(6);
-  y_real.setZero();
 }
 
 void SchunkSkinModule::open(){
@@ -551,13 +549,15 @@ void SchunkSkinModule::getIntegrals(arr& y){
 void SchunkSkinModule::step(){
   arr y_tmp;
   getIntegrals(y_tmp);
-  writeAccess(this);
-  y_real = y_tmp;
-  deAccess(this);
+  if(var){
+    var->writeAccess(this);
+    var->y_real = y_tmp;
+    var->deAccess(this);
+  }else MT_MSG("Variable pointer not set");
 }
 
 
-  //===========================================================================
+//===========================================================================
 
 
   

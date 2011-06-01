@@ -91,14 +91,14 @@ int main(int argn,char** argv) {
             perc.output.deAccess(NULL);
         } break;
         case 0: { //grasp plan and execute
-            goalVar.goalType=graspGoalT;
+	  goalVar.goalType=FutureMotionGoal::graspGoalT;
             goalVar.graspShape="cyl1";
             if (planVar.converged) {
                 task.controlMode=followTrajCM;
             }
             if (planVar.executed) {
                 task.controlMode=stopCM;
-                goalVar.goalType=noGoalT;
+                goalVar.goalType=FutureMotionGoal::noGoalT;
                 STATE++;
             }
         } break;
@@ -134,7 +134,7 @@ int main(int argn,char** argv) {
             }
         } break;
         case 4: { //place plan and execute
-            goalVar.goalType=placeGoalT;
+            goalVar.goalType=FutureMotionGoal::placeGoalT;
             goalVar.graspShape="cyl1";
             goalVar.belowFromShape="table";
             goalVar.belowToShape="cyl2";
@@ -145,7 +145,7 @@ int main(int argn,char** argv) {
             if (planVar.executed) {
                 task.controlMode=stopCM;
                 master.ctrl.fixFingers=false;
-                goalVar.goalType=noGoalT;
+                goalVar.goalType=FutureMotionGoal::noGoalT;
                 STATE++;
             }
         } break;
@@ -181,7 +181,7 @@ int main(int argn,char** argv) {
             }
         } break;
         case 8: { //plan a homing trajectory and execute
-            goalVar.goalType=homingGoalT;
+            goalVar.goalType=FutureMotionGoal::homingGoalT;
             goalVar.graspShape="cyl1"; //do we need this?
             goalVar.belowToShape="cyl2"; //do we need this?
             if (planVar.converged) {
@@ -189,7 +189,7 @@ int main(int argn,char** argv) {
             }
             if (planVar.executed) {
                 task.controlMode=stopCM;
-                goalVar.goalType=noGoalT;
+                goalVar.goalType=FutureMotionGoal::noGoalT;
                 STATE++;
             }
         } break;

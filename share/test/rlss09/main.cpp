@@ -2,6 +2,8 @@
 
 #include <MT/ors.h>
 #include <MT/soc.h>
+#include <MT/socSystem_ors.h>
+#include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
 
 int main(int argn,char **argv){

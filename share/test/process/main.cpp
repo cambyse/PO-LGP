@@ -1,6 +1,5 @@
-#define MT_IMPLEMENTATION
-
 #include <MT/process.h>
+#include <MT/process_internal.h>
 #include <MT/util.h>
 
 struct TestThread:public Process{
@@ -37,6 +36,7 @@ int main(int argc, char *argv[]){
   E.threadLoopSyncWithDone(B);
 
   Metronome ticcer("ticcer (self=.1)",100);
+
   for(uint t=0;t<20;t++){
     //C.threadStep();
     //D.threadStep();
@@ -50,6 +50,9 @@ int main(int argc, char *argv[]){
   C.threadClose();
   D.threadClose();
   E.threadClose();
+
+  MT::wait(1.);
+
   win.threadClose();
   
   return 0;
