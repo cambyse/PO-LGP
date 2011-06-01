@@ -213,7 +213,7 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
 
 //TODO: make goalVar, & planner & perception part of RobotActionInterface
 
-void RobotActionInterface::pickObject(ReceedingHorizonProcess & planner, const char* objShape){
+void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const char* objShape){
   //trigger the planner to start planning
   planner.goalVar->writeAccess(NULL);
   planner.goalVar->goalType=FutureMotionGoal::graspGoalT;

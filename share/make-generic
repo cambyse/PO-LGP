@@ -1,8 +1,7 @@
 # this is a generic make file
 # supposed to be called from test and projects paths
 
-.PRECIOUS: %.o
-.PRECIOUS: %_wrap.cxx
+.SECONDARY:
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
@@ -516,10 +515,6 @@ info: force
 
 %_cuda.o: %_cuda.cpp
 	if test ! -L $*_cuda.cu; then ln -s -f $*_cuda.cpp $*_cuda.cu; fi;
-	$(NXX) $(NXXFLAGS) -o $@ -c $*_cuda.cu
-
-%_cuda.o: %_cuda.cxx
-	if test ! -L $*_cuda.cu; then ln -s -f $*_cuda.cxx $*_cuda.cu; fi;
 	$(NXX) $(NXXFLAGS) -o $@ -c $*_cuda.cu
 
 %.o: %.cpp
