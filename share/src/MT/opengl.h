@@ -20,25 +20,21 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#undef MT_GL
-#if defined MT_QTGLUT || defined MT_FREEGLUT
-#  include <GL/gl.h>
-#  include <GL/glu.h>
+#ifdef MT_FREEGLUT
+#  define FREEGLUT_STATIC
+#  include <GL/freeglut.h>
+#  define MT_GLUT
 #  define MT_GL
-#  ifdef MT_QTGLUT
-#    undef MT_FREEGLUT
-#  endif
-#  ifdef MT_MSVC
-#    include<windows.h>
-#    undef min //I hate it that windows defines these macros!
-#    undef max
-#  endif
+#endif
+
+#ifdef MT_FLTK
+#  include <FL/glut.H>
+#  define MT_GLUT
+#  define MT_GL
 #endif
 
 #ifdef MT_QTGLUT
-//#  if !defined MT_Cygwin 
-#    include <GL/glut.h>
-//#  endif
+#  include <GL/glut.h>
 #  undef scroll
 #  undef border
 // #  define QT3_SUPPORT
@@ -56,12 +52,17 @@
 #    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
 #  endif
+#  define MT_GLUT
 #endif
 
-#ifdef MT_FREEGLUT
-#  define FREEGLUT_STATIC
-#  include <GL/freeglut.h>
-//#  include <FL/glut.H>
+#ifdef MT_GLUT
+#  include <GL/gl.h>
+#  include <GL/glu.h>
+#  ifdef MT_MSVC
+#    include<windows.h>
+#    undef min //I hate it that windows defines these macros!
+#    undef max
+#  endif
 #endif
 
 #ifdef MT_GL2PS
@@ -183,17 +184,29 @@ namespace ors{
   
 struct OpenGLWorkspace;
 
-#ifndef MT_QTGLUT
-class QGLWidget{};
+#ifdef MT_FREEGLUT
+class OpenGLBaseDummy{};
+#define BASECLASS OpenGLBaseDummy
 #undef  Q_OBJECT
 #define Q_OBJECT
+#endif
+
+#ifdef MT_FLTK
+#define BASECLASS Fl_Gl_Window
+#undef  Q_OBJECT
+#define Q_OBJECT
+#endif
+
+
+#ifdef MT_QTGLUT
+#define BASECLASS QGLWidget
 #endif
 
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
-class OpenGL:public QGLWidget{
+class OpenGL:public BASECLASS{
   Q_OBJECT
 public:
   //!@name little structs to store objects and callbacks
@@ -237,6 +250,9 @@ public:
 #ifdef MT_FREEGLUT
   OpenGL(const char* title="MT::OpenGL(Freeglut)",int w=400,int h=400,int posx=-1,int posy=-1);
 #endif
+#ifdef MT_FLTK
+  OpenGL(const char* title="MT::OpenGL(fltk)",int w=400,int h=400,int posx=-1,int posy=-1);
+#endif
 #ifdef MT_QT
   OpenGL(const char* title="MT::OpenGL(Qt)",int w=400,int h=400,int posx=-1,int posy=-1);
   OpenGL(QWidget *parent,const char* title,int width=400,int height=400,int posx=-1,int posy=-1);
@@ -264,6 +280,10 @@ public:
   void Draw(int w,int h,ors::Camera *cam=NULL);
   void Select();  
 
+#ifdef MT_FLTK
+  void draw();
+#endif
+  
   //!@name showing, updating, and watching
   bool update(const char *text=NULL);
   int  watch(const char *text=NULL);
@@ -382,6 +402,12 @@ bool glClickUI(void *p,OpenGL *gl);
 
 #ifdef MT_IMPLEMENTATION
 #  include "opengl.cpp"
+#  ifdef MT_FREEGLUT
+#    include "opengl_freeglut.cpp"
+#  endif
+#  ifdef MT_FLTK
+#    include "opengl_fltk.cpp"
+#  endif
 #endif
 
 #endif

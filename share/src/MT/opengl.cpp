@@ -30,6 +30,9 @@
 template MT::Array<glUI::Button>::Array();
 template MT::Array<glUI::Button>::~Array();
 
+void MTprocessEvents();
+void MTenterLoop();
+void MTexitLoop();
 
 //===========================================================================
 //
@@ -197,76 +200,6 @@ OpenGL *staticgl [10]; //ten pointers to be potentially used as display windows
 uint nrWins=0;
 uint OpenGL::selectionBuffer[1000];
 MT::Array<OpenGL*> OpenGL::glwins;
-
-
-//===========================================================================
-//
-// basic gui routines - wrapped for compatibility
-//
-
-#ifdef MT_FREEGLUT
-extern "C"{
-  void fgDeinitialize( void );
-}
-struct SFG_Display_dummy{
-    _XDisplay*        Display;            /* The display we are being run in.  */
-};
-extern SFG_Display_dummy fgDisplay;
-
-static void sleepForEvents( void ){
-#ifdef MT_Linux
-    /*
-     * Possibly due to aggressive use of XFlush() and friends,
-     * it is possible to have our socket drained but still have
-     * unprocessed events.  (Or, this may just be normal with
-     * X, anyway?)  We do non-trivial processing of X events
-     * after the event-reading loop, in any case, so we
-     * need to allow that we may have an empty socket but non-
-     * empty event queue.
-     */
-    if( ! XPending( fgDisplay.Display ) ){
-        fd_set fdset;
-        int err;
-        int socket;
-        struct timeval wait;
-
-        socket = ConnectionNumber( fgDisplay.Display );
-        FD_ZERO( &fdset );
-        FD_SET( socket, &fdset );
-        wait.tv_sec = 10000 / 1000;
-        wait.tv_usec = (10000 % 1000) * 1000;
-        err = select( socket+1, &fdset, NULL, NULL, &wait );
-
-#if HAVE_ERRNO
-        if( ( -1 == err ) && ( errno != EINTR ) )
-            fgWarning ( "freeglut select() error: %d", errno );
-#endif
-    }
-#elif defined MT_MSVC
-    MsgWaitForMultipleObjects( 0, NULL, FALSE, msec, QS_ALLINPUT );
-#endif
-}
-
-bool loopExit;
-void MTprocessEvents(){ glutMainLoopEvent(); }
-void MTenterLoop(){     loopExit=false; while(!loopExit){ glutMainLoopEvent(); sleepForEvents(); } }
-void MTexitLoop(){      loopExit=true; }
-#if 0
-void MTprocessEvents(){ Fl::wait(0); }
-void MTenterLoop(){     loopExit=false; while(!loopExit){ Fl::wait(); } }
-void MTexitLoop(){      loopExit=true; }
-#endif
-#endif
-#ifdef MT_QTGLUT
-void MTprocessEvents(){ qApp->processEvents(); }
-void MTenterLoop(){     qApp->exec(); }
-void MTexitLoop(){      qApp->exit(); }
-#endif
-#ifndef MT_GL
-void MTprocessEvents(){ }
-void MTenterLoop(){     }
-void MTexitLoop(){      }
-#endif
 
 
 //===========================================================================
@@ -1133,92 +1066,6 @@ void glDrawDots(arr& dots){
 // OpenGL implementations
 //
 
-#ifdef MT_FREEGLUT
-  //! constructor
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
-  init();
-
-  if(!nrWins){
-    int argc=1;
-    char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
-  }
-  nrWins++;
-
-  glutInitWindowSize(w,h);
-  glutInitWindowPosition(posx,posy);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-
-  windowID = glutCreateWindow(title);
-
-  //OpenGL initialization
-  //two optional thins:
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_CULL_FACE); glFrontFace(GL_CCW);
-  //glDisable(GL_CULL_FACE);
-  glDepthFunc(GL_LESS);
-  glShadeModel(GL_SMOOTH);
-  glShadeModel(GL_FLAT);
-      
-  if(glwins.N<(uint)windowID+1) glwins.resizeCopy(windowID+1);
-  glwins(windowID) = this;
-
-  glutDisplayFunc( _Draw );
-  glutKeyboardFunc( _Key );
-  glutMouseFunc ( _Mouse ) ;
-  glutMotionFunc ( _Motion ) ;
-  glutPassiveMotionFunc ( _PassiveMotion ) ;
-  glutCloseFunc ( _Close ) ;
-  glutReshapeFunc( _Reshape );
-  glutSpecialFunc( _Special );
-  glutMouseWheelFunc ( _MouseWheel ) ;
-
-  //  glutVisibilityFunc( Visibility );
-  //  glutKeyboardUpFunc( KeyUp );
-  //  glutSpecialUpFunc( SpecialUp );
-  //  glutJoystickFunc( Joystick, 100 );
-  //  glutEntryFunc ( Entry ) ;
-}
-// freeglut destructor
-OpenGL::~OpenGL(){
-  glutDestroyWindow(windowID);
-  glwins(windowID)=0;
-  nrWins--;
-  if(!nrWins) fgDeinitialize();
-  delete WS;
-}
-#endif
-
-
-#ifdef MT_QTGLUT
-OpenGL::OpenGL(const char* title,int width,int height,int posx,int posy)
-  :QGLWidget(QGLFormat(GLformat)){
-  QGLWidget::move(posx,posy);
-  QGLWidget::resize(width,height);
-  QWidget::setMouseTracking(true);
-  QWidget::setWindowTitle(title);
-  init();
-  windowID=(int)winId();
-}
-  //! Qt constructor when window is parent of another window
-OpenGL::OpenGL(QWidget *parent,const char* title,int width,int height,int posx,int posy)
-  :QGLWidget(QGLFormat(GLformat),parent){
-  QGLWidget::move(posx,posy);
-  QGLWidget::resize(width,height);
-  QWidget::setMouseTracking(true);
-  QWidget::setWindowTitle(title);
-  init();
-  windowID=(int)winId();
-}
-  //! destructor
-OpenGL::~OpenGL(){
-  if(osContext) delete osContext;
-  if(osPixmap) delete osPixmap;
-  delete WS; 
-};
-#endif
 
 OpenGL* OpenGL::newClone() const{
   OpenGL* gl=new OpenGL;
@@ -1496,22 +1343,6 @@ void OpenGL::Select(){
 }
 #endif
 
-  //! update the view (in Qt: also starts displaying the window)
-bool OpenGL::update(const char *txt){
-  pressedkey=0;
-  if(txt) text.clr() <<txt;
-#ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
-  glutPostRedisplay();
-#endif
-#ifdef MT_QTGLUT
-  show();
-  QGLWidget::update();
-#endif
-  MTprocessEvents();
-  return !pressedkey;
-}
-
   /*!\brief watch in interactive mode and wait for an exiting event
     (key pressed or right mouse) */
 int OpenGL::watch(const char *txt){
@@ -1537,17 +1368,6 @@ int OpenGL::timedupdate(double sec){
   killTimer(i);
   return update();
 #endif
-}
-
-  //! resize the window
-void OpenGL::resize(int w,int h){
-#ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
-  glutReshapeWindow(w,h);
-#elif defined MT_QTGLUT
-  QGLWidget::resize(w,h);
-#endif
-  MTprocessEvents();
 }
 
   //! set the four clear colors
@@ -1688,21 +1508,6 @@ void OpenGL::reportSelection(){
       <<endl;
   }
 }
-
-#ifdef MT_FREEGLUT
-int OpenGL::width(){  glutSetWindow(windowID); return glutGet(GLUT_WINDOW_WIDTH); }
-int OpenGL::height(){ glutSetWindow(windowID); return glutGet(GLUT_WINDOW_HEIGHT); }
-#endif
-#ifdef MT_QTGLUT
-int OpenGL::width(){  return QGLWidget::width(); }
-int OpenGL::height(){ return QGLWidget::height(); }
-#endif
-#ifndef MT_GL
-  //! get width
-int OpenGL::width(){ return 0; }
-  //! get height
-int OpenGL::height(){ return 0; }
-#endif
 
 #ifdef MT_GL2PS
   /*!\brief generates a ps from the current OpenGL display, using gl2ps */
@@ -2021,16 +1826,4 @@ bool glUI::checkMouse(int _x,int _y){
 #elif defined MT_Cygwin
 #  include"opengl_Cygwin.moccpp"
 #endif
-#endif
-
-
-#ifndef MT_GL
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
-  MT_MSG("WARNING - creating dummy OpenGL");
-  init();
-}
-OpenGL::~OpenGL(){ delete WS; }
-void OpenGL::Draw(int w,int h, ors::Camera*){}
-void OpenGL::Select(){}
-void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){}
 #endif
