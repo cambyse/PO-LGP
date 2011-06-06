@@ -9,7 +9,7 @@
 #include <MT/opengl.h>
 
   void draw1(void*){
-    //glStandardLight(NULL);
+    glStandardLight(NULL);
     glColor3f(1,0,0);
     glutSolidTeapot(1.);
   }
@@ -46,6 +46,7 @@ struct Img:public Fl_Window{
 
 int main(int argc, char **argv){
   OpenGL gl("bla");
+  gl.reportEvents=true;
   gl.add(draw1);
   gl.watch();
 

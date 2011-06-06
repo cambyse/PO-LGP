@@ -22,13 +22,13 @@
 
 #ifdef MT_FREEGLUT
 #  define FREEGLUT_STATIC
-#  include <GL/freeglut.h>
+//#  include <GL/freeglut.h>
 #  define MT_GLUT
 #  define MT_GL
 #endif
 
 #ifdef MT_FLTK
-#  include <FL/glut.H>
+//#  include <FL/glut.H>
 #  define MT_GLUT
 #  define MT_GL
 #endif
@@ -55,14 +55,12 @@
 #  define MT_GLUT
 #endif
 
-#ifdef MT_GLUT
-#  include <GL/gl.h>
-#  include <GL/glu.h>
-#  ifdef MT_MSVC
-#    include<windows.h>
-#    undef min //I hate it that windows defines these macros!
-#    undef max
-#  endif
+#include <GL/gl.h>
+#include <GL/glu.h>
+#ifdef MT_MSVC
+#  include<windows.h>
+#  undef min //I hate it that windows defines these macros!
+#  undef max
 #endif
 
 #ifdef MT_GL2PS
@@ -129,18 +127,7 @@ void glDrawDots(void *dots);
 
 //===========================================================================
 //
-// basic gui routines - wrapped for compatibility
-//
-
-void MTEvents();
-void MTenterLoop();
-void MTexitLoop();
-
-
-
-//===========================================================================
-//
-// OpenGL class
+// Camera class
 //
 
 namespace ors{
@@ -181,34 +168,21 @@ namespace ors{
   };
 }
 
-  
-struct OpenGLWorkspace;
 
-#ifdef MT_FREEGLUT
-class OpenGLBaseDummy{};
-#define BASECLASS OpenGLBaseDummy
-#undef  Q_OBJECT
-#define Q_OBJECT
-#endif
+//===========================================================================
+//
+// OpenGL class
+//
 
-#ifdef MT_FLTK
-#define BASECLASS Fl_Gl_Window
-#undef  Q_OBJECT
-#define Q_OBJECT
-#endif
-
-
-#ifdef MT_QTGLUT
-#define BASECLASS QGLWidget
-#endif
+struct sOpenGL;
 
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
-class OpenGL:public BASECLASS{
-  Q_OBJECT
-public:
+struct OpenGL{
+  sOpenGL *s;
+
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
   struct GLInitCall { void *classP; bool (*call)(void*,OpenGL*); };
@@ -219,9 +193,8 @@ public:
   struct GLView     { double le,ri,bo,to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
     
   //!@name data fields
-  OpenGLWorkspace *WS;               //!< ..
-  static MT::Array<OpenGL*> glwins;  //!< global window list
-  int windowID;                      //!< id of this window in the global glwins list
+  static MT::Array<OpenGL*> glwins;    //!< global window list
+  int windowID;                        //!< id of this window in the global glwins list
   MT::Array<GLView> views;             //!< list of draw routines
   MT::Array<GLDrawer> drawers;         //!< list of draw routines
   MT::Array<GLInitCall> initCalls;     //!< list of initialization routines
@@ -261,7 +234,7 @@ public:
   OpenGL(const char* title="MT::OpenGL(NONE)",int w=400,int h=400,int posx=-1,int posy=-1);
 #endif
   
-  OpenGL *newClone() const;
+  //OpenGL *newClone() const;
   ~OpenGL();
 
   //!@name adding drawing routines and callbacks
@@ -280,10 +253,6 @@ public:
   void Draw(int w,int h,ors::Camera *cam=NULL);
   void Select();  
 
-#ifdef MT_FLTK
-  void draw();
-#endif
-  
   //!@name showing, updating, and watching
   bool update(const char *text=NULL);
   int  watch(const char *text=NULL);
@@ -319,7 +288,14 @@ private:
   void setOffscreen(int width,int height);
 #endif
 
-  private:
+  protected: //driver dependent methods
+    bool loopExit;
+    void redrawEvent();
+    void processEvents();
+    void enterEventLoop();
+    void exitEventLoop();
+
+protected:
     GLEvent lastEvent;
     static uint selectionBuffer[1000];
 #ifdef MT_QTGLUT
@@ -351,6 +327,7 @@ private:
     static void _Special(int key, int x, int y){ glwins(glutGetWindow())->Special(key,x,y); }
     static void _MouseWheel(int wheel, int direction, int x, int y){ glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); }
 #endif
+
 #ifdef MT_QTGLUT
   //hooks for Qt (overloading virtuals)
     void paintGL(){ Draw(width(),height()); }
@@ -373,6 +350,8 @@ private:
     }
 #endif
 
+  friend struct sOpenGL;
+  friend bool glClickUI(void *p,OpenGL *gl);
 };
 
 
@@ -402,12 +381,6 @@ bool glClickUI(void *p,OpenGL *gl);
 
 #ifdef MT_IMPLEMENTATION
 #  include "opengl.cpp"
-#  ifdef MT_FREEGLUT
-#    include "opengl_freeglut.cpp"
-#  endif
-#  ifdef MT_FLTK
-#    include "opengl_fltk.cpp"
-#  endif
 #endif
 
 #endif

@@ -18,8 +18,13 @@
 #include "ors.h"
 
 #ifdef MT_FREEGLUT
-#include <X11/Xlib.h>
+#  include "opengl_freeglut.cpp"
 #endif
+
+#ifdef MT_FLTK
+#  include "opengl_fltk.cpp"
+#endif
+
 
 
 //===========================================================================
@@ -29,10 +34,6 @@
 
 template MT::Array<glUI::Button>::Array();
 template MT::Array<glUI::Button>::~Array();
-
-void MTprocessEvents();
-void MTenterLoop();
-void MTexitLoop();
 
 //===========================================================================
 //
@@ -185,10 +186,6 @@ void ors::Camera::glConvertToLinearDepth(double &d){
 }
 
 
-struct OpenGLWorkspace{
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
-};
 
 
 //===========================================================================
@@ -1016,7 +1013,7 @@ bool glClickUI(void *p,OpenGL *gl){
   int t=((glUI*)p)->top;
   if(t!=-1){
     cout <<"CLICK! on button #" <<t <<endl;
-    MTexitLoop(); //glutLeaveMainLoop();
+    gl->exitEventLoop();
     return false;
   }
   return true;
@@ -1067,17 +1064,7 @@ void glDrawDots(arr& dots){
 //
 
 
-OpenGL* OpenGL::newClone() const{
-  OpenGL* gl=new OpenGL;
-  *(gl->WS) = *WS;
-  gl->drawers = drawers;
-  gl->camera = camera;
-  return gl;
-}
-
 void OpenGL::init(){
-  WS = new OpenGLWorkspace;
-
   camera.setPosition(0.,0.,10.);
   camera.focus(0,0,0);
   camera.setZRange(.1,1000.);
@@ -1181,7 +1168,16 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   }
 
   //OpenGL initialization
-  //two optional things:
+  //two optional thins:
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_CULL_FACE); glFrontFace(GL_CCW);
+  //glDisable(GL_CULL_FACE);
+  glDepthFunc(GL_LESS);
+  glShadeModel(GL_SMOOTH);
+  glShadeModel(GL_FLAT);
+
   glEnable(GL_DEPTH_TEST);
   //glEnable(GL_CULL_FACE); glFrontFace(GL_CCW); //CCW is default!
   glDepthFunc(GL_LESS);
@@ -1347,10 +1343,20 @@ void OpenGL::Select(){
     (key pressed or right mouse) */
 int OpenGL::watch(const char *txt){
   update(txt);
-  MTenterLoop();
-  MTprocessEvents();
+  enterEventLoop();
+  processEvents();
   return pressedkey;
 }
+
+//! update the view (in Qt: also starts displaying the window)
+bool OpenGL::update(const char *txt){
+  pressedkey=0;
+  if(txt) text.clr() <<txt;
+  redrawEvent();
+  processEvents();
+  return !pressedkey;
+}
+
 
   //! waits some msecons before updating
 int OpenGL::timedupdate(double sec){
@@ -1364,7 +1370,7 @@ int OpenGL::timedupdate(double sec){
   int i;
   quitLoopOnTimer=true;
   i=startTimer(msec);
-  MTenterLoop();
+  enterEventLoop();
   killTimer(i);
   return update();
 #endif
@@ -1607,8 +1613,8 @@ void OpenGL::Key(unsigned char key, int _x, int _y){
   _y = height()-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", windowID, key, (char)key, _x, _y ));
   pressedkey=key;
-  if(key==13 || key==32 || key==27) MTexitLoop();
-  if(MT::contains(exitkeys,key)) MTexitLoop();
+  if(key==13 || key==32 || key==27) exitEventLoop();
+  if(MT::contains(exitkeys,key)) exitEventLoop();
 }
 
 void OpenGL::Mouse(int button, int updown, int _x, int _y){
@@ -1646,10 +1652,10 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
     drawFocus=false;
   }
   //store where you've clicked
-  WS->downVec=vec;
-  WS->downRot=cam->X->rot;
-  WS->downPos=cam->X->pos;
-  WS->downFoc=*cam->foc;
+  s->downVec=vec;
+  s->downRot=cam->X->rot;
+  s->downPos=cam->X->pos;
+  s->downFoc=*cam->foc;
 
   //check object clicked on
   if(!updown){
@@ -1661,8 +1667,8 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
     for(uint i=0;i<clickCalls.N;i++) cont=cont && (*clickCalls(i).call)(clickCalls(i).classP,this);
   }
 
-  if(mouse_button==4 && !updown) cam->X->pos += WS->downRot*ors::Vector(0,0,1) * (.2 * WS->downPos.length());
-  if(mouse_button==5 && !updown) cam->X->pos -= WS->downRot*ors::Vector(0,0,1) * (.2 * WS->downPos.length());
+  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*ors::Vector(0,0,1) * (.2 * s->downPos.length());
+  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*ors::Vector(0,0,1) * (.2 * s->downPos.length());
   
   update();
 }
@@ -1683,7 +1689,7 @@ void OpenGL::Motion(int _x, int _y){
     getSphereVector(vec,_x,_y,views(mouseView).le*w,views(mouseView).ri*w,views(mouseView).bo*h,views(mouseView).to*h);
   }
   CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
-  lastEvent.set(mouse_button,-1,_x,_y,vec(0)-WS->downVec(0),vec(1)-WS->downVec(1));
+  lastEvent.set(mouse_button,-1,_x,_y,vec(0)-s->downVec(0),vec(1)-s->downVec(1));
 #ifndef MT_Linux
   int modifiers=glutGetModifiers();
 #else
@@ -1693,31 +1699,31 @@ void OpenGL::Motion(int _x, int _y){
   //CHECK(mouseIsDown,"I thought the mouse is down...");
   if(mouse_button==1){ // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
-    if(WS->downVec(2)<.1){
-      rot.setDiff(vec,WS->downVec);  //consider imagined sphere rotation of mouse-move
+    if(s->downVec(2)<.1){
+      rot.setDiff(vec,s->downVec);  //consider imagined sphere rotation of mouse-move
     }else{
-      rot.setVec((vec-WS->downVec) ^ ors::Vector(0,0,1)); //consider only xy-mouse-move
+      rot.setVec((vec-s->downVec) ^ ors::Vector(0,0,1)); //consider only xy-mouse-move
     }
-    cam->X->rot = WS->downRot * rot;   //rotate camera's direction
-    rot = WS->downRot * rot / WS->downRot; //interpret rotation relative to current viewing
-    cam->X->pos = rot * WS->downPos;   //rotate camera's position
-    //cam->X->rot = rot * WS->downRot;   //rotate camera's direction
-    //cam->X->pos = WS->downFoc + (cam->X->rot/WS->downRot)* (WS->downPos - WS->downFoc);   //rotate camera's position
+    cam->X->rot = s->downRot * rot;   //rotate camera's direction
+    rot = s->downRot * rot / s->downRot; //interpret rotation relative to current viewing
+    cam->X->pos = rot * s->downPos;   //rotate camera's position
+    //cam->X->rot = rot * s->downRot;   //rotate camera's direction
+    //cam->X->pos = s->downFoc + (cam->X->rot/s->downRot)* (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
     update();
-    if(immediateExitLoop) MTexitLoop();
+    if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3){ // || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
-    ors::Vector trans = WS->downVec - vec;
+    ors::Vector trans = s->downVec - vec;
     trans(2)=0.;
-    trans = WS->downRot*trans;
-    cam->X->pos = WS->downPos + trans;
+    trans = s->downRot*trans;
+    cam->X->pos = s->downPos + trans;
     update();
   }
   if(mouse_button==2){ // || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
-    double dy = WS->downVec(1) - vec(1);
+    double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
-    cam->X->pos = WS->downPos + WS->downRot*ors::Vector(0,0,1) * dy * WS->downPos.length();
+    cam->X->pos = s->downPos + s->downRot*ors::Vector(0,0,1) * dy * s->downPos.length();
     update();
   }
 #else
