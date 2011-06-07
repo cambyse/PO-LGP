@@ -23,7 +23,7 @@ struct MyGL:public Fl_Gl_Window{
     glColor3f(1,0,0);
     glutSolidTeapot(1.);
   }
-  int handle(int){};
+  int handle(int){ return 0; };
 };
 
 byteA img;

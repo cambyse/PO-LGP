@@ -194,9 +194,7 @@ void ors::Camera::glConvertToLinearDepth(double &d){
 //
 
 OpenGL *staticgl [10]; //ten pointers to be potentially used as display windows
-uint nrWins=0;
 uint OpenGL::selectionBuffer[1000];
-MT::Array<OpenGL*> OpenGL::glwins;
 
 
 //===========================================================================
@@ -923,24 +921,10 @@ void OpenGL::watchImage(const floatA &_img,bool wait,float _zoom){
 }
 
 void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){
-#ifdef MT_FREEGLUT
   img=(byteA*)&_img;
   zoom=_zoom;
-  
-  /*
-  int w=(int)(zoom*img->d1+10),h=(int)(zoom*img->d0+10);
-  //set projection
-  glutSetWindow(windowID);
-  glutReshapeWindow(w,h);
-  glViewport(0,0,w,h);
-  */
- 
-  //open window
   if(wait) watch(); else update();
   img=NULL;
-#else
-  NICO
-#endif
 }
 
 /*void glWatchImage(const floatA &x,bool wait,float zoom){
@@ -961,7 +945,7 @@ void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){
 void OpenGL::displayGrey(const arr &x,uint d0,uint d1,bool wait,uint win){
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   double ma=x.max();
   text.clr() <<"display"<<win<<" max="<<ma<<endl;
   byteA img;
@@ -978,7 +962,7 @@ void OpenGL::displayGrey(const arr &x,uint d0,uint d1,bool wait,uint win){
 void OpenGL::displayRedBlue(const arr &x,uint d0,uint d1,bool wait,uint win){
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   double mi=x.min(),ma=x.max();
   text.clr() <<"display"<<win<<" max="<<ma<<"min="<<mi<<endl;
   cout <<"\rdisplay"<<win<<" max="<<ma<<"min="<<mi;
@@ -1022,7 +1006,7 @@ bool glClickUI(void *p,OpenGL *gl){
 #ifdef MT_FREEGLUT
 void glSelectWin(uint win){
   if(!staticgl[win]) staticgl[win]=new OpenGL;
-  glutSetWindow(staticgl[win]->windowID);
+  glutSetWindow(staticgl[win]->s->windowID);
 }
 #endif
 
@@ -1407,9 +1391,9 @@ void OpenGL::unproject(double &x,double &y,double &z){
 
 void OpenGL::capture(byteA &img,int w,int h,ors::Camera *cam){
 #ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   glutPostRedisplay();
-  MTprocessEvents();
+  processEvents();
   Draw(w,h,cam);
   img.resize(h,w,3);
   glGrabImage(img);
@@ -1418,9 +1402,9 @@ void OpenGL::capture(byteA &img,int w,int h,ors::Camera *cam){
 
 void OpenGL::captureStereo(byteA &imgL,byteA &imgR,int w,int h,ors::Camera *cam,double baseline){
 #ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   glutPostRedisplay();
-  MTprocessEvents();
+  processEvents();
   Draw(w,h,cam);
   imgR.resize(h,w,3);
   glGrabImage(imgR);
@@ -1603,7 +1587,7 @@ void getSphereVector(ors::Vector& vec,int _x,int _y,int le,int ri,int bo,int to)
 }
 
 void OpenGL::Reshape(int width, int height){
-  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", windowID, width, height ));
+  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height ));
   camera.setWHRatio((double)width/height);
   for(uint v=0;v<views.N;v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
   //update();
@@ -1611,7 +1595,7 @@ void OpenGL::Reshape(int width, int height){
 
 void OpenGL::Key(unsigned char key, int _x, int _y){
   _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", windowID, key, (char)key, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y ));
   pressedkey=key;
   if(key==13 || key==32 || key==27) exitEventLoop();
   if(MT::contains(exitkeys,key)) exitEventLoop();
@@ -1620,7 +1604,7 @@ void OpenGL::Key(unsigned char key, int _x, int _y){
 void OpenGL::Mouse(int button, int updown, int _x, int _y){
   int w=width(),h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", windowID, button, updown, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, updown, _x, _y ));
   mouse_button=1+button;
   if(updown) mouse_button=-1-mouse_button;
   mouseposx=_x; mouseposy=_y;
@@ -1677,7 +1661,7 @@ void OpenGL::Motion(int _x, int _y){
 #ifdef MT_GL
   int w=width(),h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", windowID, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", 0, _x, _y ));
   mouseposx=_x; mouseposy=_y;
   ors::Camera *cam;
   ors::Vector vec;
@@ -1733,7 +1717,7 @@ void OpenGL::Motion(int _x, int _y){
 
 void OpenGL::PassiveMotion(int _x, int _y){
   _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", windowID, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", 0, _x, _y ));
   static int calls=0;
   if(calls) return;
   calls++;
