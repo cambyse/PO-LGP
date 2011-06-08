@@ -1219,13 +1219,17 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   glColor(.3,.3,.5);
 
   //draw objects
+  GLint s;
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+    glGetIntegerv(GL_MODELVIEW_STACK_DEPTH,&s);
+  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
+  CHECK(s<=1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
+
   //if(!drawers.N){ MT_MSG("OpenGL: nothing to be drawn -- add draw routines!"); if(!text.N()) text <<"<nothing to draw>"; }
   for(uint i=0;i<drawers.N;i++) (*drawers(i).call)(drawers(i).classP);
 
   //draw text
-  GLint s;
   glGetIntegerv(GL_RENDER_MODE,&s);
   if(text.N() && s!=GL_SELECT){
     glMatrixMode(GL_MODELVIEW);
@@ -1269,7 +1273,8 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   
   //check matrix stack
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH,&s);
-  if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
+  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
+  CHECK(s<=1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
 }
 
 void OpenGL::Select(){
