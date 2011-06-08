@@ -26,6 +26,19 @@
 #  include <GL/glu.h>
 #endif
 
+#ifdef MT_FLTK
+#  include <FL/glut.H>
+#endif
+
+#ifdef MT_FREEGLUT
+#  define FREEGLUT_STATIC
+#  include <GL/freeglut.h>
+#endif
+
+#ifdef MT_QTGLUT
+#  include <GL/glut.h>
+#endif
+
 #ifdef MT_GL2PS
 #  include<gl2ps.h>
 #endif
@@ -184,7 +197,7 @@ struct OpenGL{
   OpenGL(const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
   OpenGL(void *parent,const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
   
-  //OpenGL *newClone() const;
+  OpenGL *newClone() const;
   ~OpenGL();
 
   //!@name adding drawing routines and callbacks
@@ -288,7 +301,7 @@ bool glHoverUI(void *p,OpenGL *gl);
 bool glClickUI(void *p,OpenGL *gl);
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "opengl.cpp"
 #endif
 

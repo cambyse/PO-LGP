@@ -5,7 +5,7 @@
 #ifndef MT_ors_actionInterface_h
 #define MT_ors_actionInterface_h
 
-#include <MT/array.h>
+#include "array.h"
 
 //(``private'') space used by the implementation but hidden from this header
 struct sOrsTutorial;
@@ -95,7 +95,7 @@ public:
   void indicateFailure();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "ors_actionInterface.cpp"
 #endif
 

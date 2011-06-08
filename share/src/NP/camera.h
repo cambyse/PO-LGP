@@ -24,12 +24,6 @@
 #include <MT/process.h>
 #include <MT/robot_variables.h>
 
-#ifdef MT_BUMBLE
-#define MyCamera BumblebeeModule
-#else
-#include <NP/uvccamera.h>
-#define MyCamera camera::UVCCamera
-#endif
 
 //===========================================================================
 //
@@ -49,6 +43,20 @@ struct CalibrationParameters{
   void stereo2world(floatA& world,const floatA& stereo);
   void write(std::ostream& os) const;
   void read(std::istream& is);
+};
+
+struct sCameraModule;
+
+struct CameraModule:public Process{
+  CameraImages output;
+
+  sCameraModule *s;
+  CalibrationParameters calib;
+
+  CameraModule();
+  void open();
+  void step();
+  void close();
 };
 
 
@@ -99,8 +107,8 @@ public:
 };
 
 struct Bumblebee2WS;
-class Bumblebee2 : public Camera
-{
+
+class Bumblebee2 : public Camera {
 public:
   Bumblebee2();
   ~Bumblebee2();
@@ -123,29 +131,5 @@ protected:
 };
 
 }; // namespace np
-
-#ifdef MT_BUMBLE
-struct BumblebeeModule:public Process{
-  CameraImages output;
-
-  np::Bumblebee2 *camera;
-  CalibrationParameters calib;
-
-  BumblebeeModule();
-  void open();
-  void step();
-  void close();
-};
-#else
-struct BumblebeeModule:public Process{
-  CameraImages output;
-  byteA& frame(){ return output.rgbL; }
-
-  BumblebeeModule():Process("BumblebeeProcess"){}
-  void open(){ throw("NIY"); }
-  void step(){ throw("NIY"); }
-  void close(){ throw("NIY"); }
-};
-#endif
 
 #endif

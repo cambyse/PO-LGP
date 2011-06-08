@@ -77,8 +77,8 @@ void plotGaussians(const GaussianL& G);
 
 void glDrawPlot(void *module);
 
-#ifdef MT_IMPLEMENTATION
-#  include"plot.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "plot.cpp"
 #endif
 
 #endif

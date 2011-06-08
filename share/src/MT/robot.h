@@ -1,8 +1,6 @@
 #ifndef MT_robot_h
 #define MT_robot_h
 
-//#undef _FORTIFY_SOURCE
-//#include <cstdlib>
 #include "opengl.h"
 
 #include "robot_variables.h"
@@ -135,7 +133,7 @@ struct RobotModuleGroup{
   JoystickInterface joy;
   UrgModule urg;
   EarlyVisionModule evis;
-  BumblebeeModule bumble;
+  CameraModule bumble;
   GuiModule gui;
   ThreadInfoWin threadWin;
 
@@ -167,7 +165,7 @@ struct RobotModuleGroup{
 };
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "robot.cpp"
 #endif
 

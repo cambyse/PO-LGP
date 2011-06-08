@@ -58,7 +58,7 @@ struct MarcsRobotTask:public RobotModuleGroup,public TaskAbstraction{ //one coul
   void positionObjectRandomlyInSimulation();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "robot_marcTask.cpp"
 #endif
 

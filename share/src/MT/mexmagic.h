@@ -106,7 +106,7 @@ template<class T> MT::Array<T>& newLhsReference(uint i,const uintA& dims){
   return newLhsReference<T>(i,dims.N,dims.p);
 }
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "mexmagic.cpp"
 #endif
 

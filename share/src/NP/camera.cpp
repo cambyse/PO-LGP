@@ -14,10 +14,65 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#include "camera.h"
-//#include "nputils.h"
-//#include "cvutils.h"
+#ifdef MT_OPENCV
+#undef COUNT
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
+#undef MIN
+#undef MAX
+#endif
+
 #include <MT/vision.h>
+
+#include "camera.h"
+#include "uvccamera.h"
+
+
+
+
+struct sCameraModule{
+#ifdef MT_BUMBLE
+  np::Bumblebee2 *cam;
+#else
+  void *cam;
+#endif
+};
+
+
+#ifdef MT_BUMBLE
+CameraModule::CameraModule():Process("BumblebeeProcess"){
+  s = new sCameraModule;
+};
+
+void CameraModule::open(){
+  s->cam = new np::Bumblebee2();
+  ifstream fil;
+  MT::open(fil,"../../configurations/camera.cfg");
+  calib.read(fil);
+  step();
+};
+
+void CameraModule::step(){
+  byteA tmpL,tmpR;
+  s->cam->grab(tmpL, tmpR);
+  calib.rectifyImages(tmpL, tmpR);
+  output.writeAccess(this);
+  output.rgbL=tmpL;
+  output.rgbR=tmpR;
+  output.deAccess(this);
+};
+
+void CameraModule::close(){
+  s->cam->stop_capturing();
+  s->cam->deinit();
+  delete s->cam;
+};
+#else
+CameraModule::CameraModule():Process("BumblebeeProcess"){}
+void CameraModule::open(){ NIY; }
+void CameraModule::step(){ NIY; }
+void CameraModule::close(){ NIY; }
+#endif
 
 //void np::create_distortion_maps_fov(
 //                                    doubleA& mapd,
@@ -164,9 +219,3 @@ void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
   cvPerspectiveTransform(CVMAT(stereo), CVMAT(world), CVMAT(Q));
 }
 
-
-#ifndef MT_BUMBLE
-void BumblebeeModule::open(){ NIY; }
-void BumblebeeModule::step(){ NIY; }
-void BumblebeeModule::close(){ NIY; }
-#endif

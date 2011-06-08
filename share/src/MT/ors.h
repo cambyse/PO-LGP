@@ -958,7 +958,7 @@ void readBlender(const char* filename,ors::Mesh& mesh,ors::Graph& bl);
 #endif
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #include "ors.cpp"
 #include "ors_taskVariables.cpp"
 #include "ors_opengl.cpp"

@@ -140,7 +140,7 @@ struct BinaryBPGrid{
   void discount(float gamma=.8);
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "BinaryBP.cpp"
 #endif
 

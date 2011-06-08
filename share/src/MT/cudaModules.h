@@ -14,6 +14,6 @@ struct CudaInterface{
 
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "cudaModules.cpp"
 #endif

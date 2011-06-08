@@ -1,7 +1,7 @@
 #ifndef MT_robot_processes_h
 #define MT_robot_processes_h
 
-#include <MT/vision.h>
+#include "vision.h"
 #include <NP/camera.h>
 
 struct LEDtracker:public Process,Variable{

@@ -235,7 +235,7 @@ struct OnlineRprop{
 #undef UP
 #undef DOWN
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "optimization.cpp"
 #endif
 

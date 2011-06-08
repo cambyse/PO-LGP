@@ -1,7 +1,8 @@
-#define MT_IMPLEMENTATION
-#define MT_algos_extern
+//#define MT_IMPLEMENTATION
+//#define MT_algos_extern
 
 #include<MT/ors.h>
+#include<MT/opengl.h>
 
 void compareModules(){
   ors::Graph ors;

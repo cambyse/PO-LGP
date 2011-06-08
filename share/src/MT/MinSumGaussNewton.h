@@ -1,7 +1,7 @@
 #ifndef MT_MinSumGaussNewton_h
 #define MT_MinSumGaussNewton_h
 
-#include <MT/array.h>
+#include "array.h"
 
 struct Fij{ arr A,B,C,a,b; double hata; };
 struct Mu { arr M,m;       double hatm; };
@@ -30,7 +30,7 @@ struct MinSumGaussNewton{
   void step(uint steps);
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "MinSumGaussNewton.cpp"
 #endif
 

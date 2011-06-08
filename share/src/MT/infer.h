@@ -482,8 +482,8 @@ be used in case of loopy BP (for efficiency reasons) */
 // coda
 //
 
-#ifdef MT_IMPLEMENTATION
-#  include"infer.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "infer.cpp"
 #endif
 
 #endif

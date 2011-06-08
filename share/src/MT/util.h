@@ -36,15 +36,15 @@
 #include <cmath>
 #include <stdint.h>
 #if defined MT_Linux || defined MT_Cygwin
-#  include<stdint.h>
-#  include<sys/time.h>
-#  include<sys/times.h>
-#  include<sys/resource.h>
+#  include <stdint.h>
+#  include <sys/time.h>
+#  include <sys/times.h>
+#  include <sys/resource.h>
 #endif
 #if defined MT_MSVC
-#  include<time.h>
-#  include<sys/timeb.h> 
-#  include<windows.h>
+#  include <time.h>
+#  include <sys/timeb.h> 
+#  include <windows.h>
 #  undef min
 #  undef max
 #  define MT_TIMEB
@@ -56,9 +56,9 @@
 #  pragma warning(disable: 4305 4244 4250 4355 4786 4996)
 #endif
 #if defined MT_MinGW
-#  include<unistd.h>
-#  include<sys/time.h>
-#  include<sys/timeb.h>
+#  include <unistd.h>
+#  include <sys/time.h>
+#  include <sys/timeb.h>
 #  define MT_TIMEB
 #endif
 
@@ -590,7 +590,7 @@ void gnuplotClose();
 #  include "util_t.cpp"
 #endif
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "util.cpp"
 #endif
 

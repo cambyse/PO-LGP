@@ -1,7 +1,4 @@
-BASE   = ../..
-OBJS   = main.o
-
-MTLIB = 1
+BASE = ../..
 
 CXXFLAGS += -DORS_NO_DYNAMICS_IN_FRAMES
 

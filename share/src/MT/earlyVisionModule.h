@@ -45,7 +45,7 @@ struct EarlyVisionModule:public Process{
   void close();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "earlyVisionModule.cpp"
 #endif
 

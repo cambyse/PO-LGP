@@ -1,8 +1,8 @@
 #ifndef MT_roboticsCourse_h
 #define MT_roboticsCourse_h
 
-#include <MT/ors.h>
-#include <MT/array.h>
+#include "ors.h"
+#include "array.h"
 
 struct sSimulator; //forward declaration
 

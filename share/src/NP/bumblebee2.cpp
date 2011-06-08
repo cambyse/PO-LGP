@@ -422,32 +422,3 @@ void np::Bumblebee2::rectify(bool r)
 bool np::Bumblebee2::is_stereo()
 {msg_missing_implementation(HERE, msg); return false;};
 #endif
-
-#ifdef MT_BUMBLE
-BumblebeeModule::BumblebeeModule():Process("BumblebeeProcess")
-{};
-
-void BumblebeeModule::open(){
-  camera = new np::Bumblebee2();
-  ifstream fil;
-  MT::open(fil,"../../configurations/camera.cfg");
-  calib.read(fil);
-  step();
-};
-
-void BumblebeeModule::step(){
-  byteA tmpL,tmpR;
-  camera->grab(tmpL, tmpR);
-  calib.rectifyImages(tmpL, tmpR);
-  output.writeAccess(this);
-  output.rgbL=tmpL;
-  output.rgbR=tmpR;
-  output.deAccess(this);
-};
-
-void BumblebeeModule::close(){
-  camera->stop_capturing();
-  camera->deinit();
-  delete camera;
-};
-#endif

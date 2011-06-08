@@ -143,7 +143,7 @@ struct RobotModuleGroup{
 };
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "robot.cpp"
 #endif
 

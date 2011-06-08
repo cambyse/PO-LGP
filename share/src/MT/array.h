@@ -719,7 +719,7 @@ template<class vert,class edge> void graphDelete(MT::Array<vert*>& V,MT::Array<e
 #  include "array_t.cpp"
 #endif
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "array.cpp"
 #  include "array_lapack.cpp"
 #endif

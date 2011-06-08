@@ -18,11 +18,15 @@
 #include "ors.h"
 
 #ifdef MT_FREEGLUT
-#  include "opengl_freeglut.cpp"
+#  include "opengl_freeglut.cxx"
 #endif
 
 #ifdef MT_FLTK
-#  include "opengl_fltk.cpp"
+#  include "opengl_fltk.cxx"
+#endif
+
+#ifdef MT_QTGLUT
+#  include "opengl_qt.cxx"
 #endif
 
 
@@ -1047,6 +1051,13 @@ void glDrawDots(arr& dots){
 // OpenGL implementations
 //
 
+OpenGL* OpenGL::newClone() const{
+  OpenGL* gl=new OpenGL;
+  //*(gl->s) = *s; //don't clone internal stuff!
+  gl->drawers = drawers;
+  gl->camera = camera;
+  return gl;
+}
 
 void OpenGL::init(){
   camera.setPosition(0.,0.,10.);

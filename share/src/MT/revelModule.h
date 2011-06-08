@@ -13,7 +13,7 @@ struct RevelInterface{
   void close();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "revelModule.cpp"
 #endif
 

@@ -47,7 +47,7 @@ struct ReceedingHorizonProcess:public Process{
   void close();
   };*/
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "motionPlannerModule.cpp"
 #endif
 

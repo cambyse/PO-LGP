@@ -558,7 +558,7 @@ struct SocSystem_Toy: public virtual SocSystemAbstraction{
 // implementations
 //
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "soc.cpp"
 #  include "soc_method_AICO.cpp"
 #  include "soc_method_LQG.cpp"

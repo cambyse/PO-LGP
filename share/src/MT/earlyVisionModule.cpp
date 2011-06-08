@@ -1,8 +1,55 @@
+#ifdef MT_OPENCV
+#undef COUNT
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
+#undef MIN
+#undef MAX
+#endif
+
 #include "earlyVisionModule.h"
 #include "vision_cuda.h"
 #include <NP/camera.h>
 
 #ifdef MT_CUDA
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cutil.h>
+
+
+//===========================================================================
+//
+// CUDA HELPERS
+//
+
+inline void cuda_init(){ CUT_DEVICE_INIT(1,"x.exe"); }
+template<class T> void cuda_alloc(MT::Array<T>& X){
+  cudaMalloc((void **) &X.p_device, X.N*X.sizeT);
+}
+inline void cuda_error(const char *msg){
+  cudaError_t err = cudaGetLastError();
+  if(err!=cudaSuccess){
+    fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString( err) );
+    exit(EXIT_FAILURE);
+  }
+}
+
+template<class T> void cuda_upload(const MT::Array<T>& X){
+  cudaMemcpy(X.p_device, X.p, X.N*X.sizeT, cudaMemcpyHostToDevice);
+}
+template<class T> void cuda_download(MT::Array<T>& X){
+  cudaMemcpy(X.p, X.p_device, X.N*X.sizeT, cudaMemcpyDeviceToHost);
+}
+template<class T> void cuda_free(MT::Array<T>& X){
+  cudaFree(X.p_device);
+  X.p_device=NULL;
+}
+
+
+//===========================================================================
+//
+// EARLY VISION
+//
 
 void EarlyVisionModule::step(){
   byteA img2,img3;

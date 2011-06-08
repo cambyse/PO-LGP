@@ -1,10 +1,17 @@
+#ifdef MT_OPENCV
+#undef COUNT
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
+#undef MIN
+#undef MAX
+#endif
+
 #include "vision.h"
 #include "vision_cuda.h"
 #include "BinaryBP.h"
 #ifdef MT_NILS
 #  include <NP/transformations.h>
 #endif
-
 
 arr camera_calibration;
 

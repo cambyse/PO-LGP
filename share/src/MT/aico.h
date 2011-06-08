@@ -162,7 +162,7 @@ inline void getControlledTrajectory(arr& q,const soc::AICO_clean& aico){
 // implementations
 //
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "aico.cpp"
 #endif
 

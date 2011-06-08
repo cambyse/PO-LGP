@@ -282,7 +282,7 @@ void glDisplayRedBlue(const arr& x,uint d0,uint d1,bool wait,uint win);
 
 }//end of namespace mdp
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "mdp.cpp"
 #  include "mdp_solvers.cpp"
 #  include "mdp_opengl.cpp"
