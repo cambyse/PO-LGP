@@ -1269,7 +1269,7 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   
   //check matrix stack
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH,&s);
-  CHECK(s==1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
+  if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
 }
 
 void OpenGL::Select(){
