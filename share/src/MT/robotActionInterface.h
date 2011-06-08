@@ -3,7 +3,7 @@
 
 #include "ors.h"
 #include "perceptionModule.h"
-#include <MT/motionPlannerModule.h>
+#include "motionPlannerModule.h"
 
 
 //===========================================================================
@@ -42,7 +42,7 @@ struct RobotActionInterface{
   TaskAbstraction* getTask();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "robotActionInterface.cpp"
 #endif
 

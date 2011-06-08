@@ -16,7 +16,7 @@ struct JoystickInterface:public Process,public Variable{
   void close();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "joystick.cpp"
 #endif
                           

@@ -160,7 +160,7 @@ void straightTaskTrajectory(SocSystemAbstraction& soci,arr& q,uint taskid);
 // implementations
 //
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "soc.cpp"
 #endif
 

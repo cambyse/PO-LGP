@@ -1,5 +1,4 @@
 BASE     = ../..
-OBJS     = main.o
 
 LAPACK   = 1
 FREEGLUT = 1

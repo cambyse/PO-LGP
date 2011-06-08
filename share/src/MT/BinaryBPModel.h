@@ -33,6 +33,6 @@ struct BinaryBPNetModel:virtual public OptimizationProblem{
   virtual double totalLoss(const arr& w,arr *grad,double *err){   return totalLoss(w,*data,grad,err); }
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "BinaryBPModel.cpp"
 #endif

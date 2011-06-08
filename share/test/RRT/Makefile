@@ -1,6 +1,3 @@
-BASE = $(shell pwd)/../..
-
-ANN = 1
-FREEGLUT = 1
+BASE = ../..
 
 include $(BASE)/make-generic

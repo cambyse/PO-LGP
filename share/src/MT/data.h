@@ -48,7 +48,7 @@ struct Data{
   void splitTest(Data &test);
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "data.cpp"
 #endif
 

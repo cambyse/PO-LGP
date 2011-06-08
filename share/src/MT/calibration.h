@@ -12,7 +12,7 @@ void stereoTriangulation(arr& X, const arr& xL,const arr& xR, const arr& PL, con
 void stereoTriangulation_nonhom(arr& X_3d, const arr& x_4d, const arr&PL, const arr& PR);
 void stereoTriangulation_nonhom(arr& X, const arr& x);
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "calibration.cpp"
 #endif
 

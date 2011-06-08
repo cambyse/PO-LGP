@@ -54,7 +54,7 @@ struct GuiModule:public Process{
 };
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "guiModule.cpp"
 #endif
 

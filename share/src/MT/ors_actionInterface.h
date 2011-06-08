@@ -5,7 +5,7 @@
 #ifndef MT_ors_actionInterface_h
 #define MT_ors_actionInterface_h
 
-#include <MT/array.h>
+#include "array.h"
 
 
 // huepfen der bloecke, falls sie zb runterfallen
@@ -113,7 +113,7 @@ public:
   void indicateFailure();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "ors_actionInterface.cpp"
 #endif
 

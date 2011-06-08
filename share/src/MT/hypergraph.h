@@ -64,7 +64,7 @@ void writeDot(ElementL G){
   fil.close();
 }
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "hypergraph.cpp"
 #endif
 

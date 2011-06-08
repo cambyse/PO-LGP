@@ -6,6 +6,7 @@ typedef unsigned char byte;
 #undef W
 #undef N
 
+
 struct CudaWorkspace{
   int N,W;
   byte *rgb,*rgbLast,*rgbRight;

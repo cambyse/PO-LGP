@@ -278,15 +278,15 @@ void free_vector(double* p,uint i,uint j);
 // implementations
 //
 
-#ifdef MT_IMPLEMENTATION
-#  include"algos.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "algos.cpp"
 #ifdef MT_algos_extern
-#  include"algos_LU.cpp"
-#  include"algos_CG.cpp"
-//#  include"algos_LM.c"
-#  include"algos_rk.cpp"
+#  include "algos_LU.cpp"
+#  include "algos_CG.cpp"
+//#  include "algos_LM.c"
+#  include "algos_rk.cpp"
 #endif
-#include"algos_rk.cpp"
+#include "algos_rk.cpp"
 #endif
 
 #endif

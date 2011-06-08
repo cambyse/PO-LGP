@@ -200,7 +200,7 @@ void write(const GaussianA& x,const char* name);
 
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "gauss.cpp"
 #endif
 

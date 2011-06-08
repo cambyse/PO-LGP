@@ -1,10 +1,10 @@
 #ifndef MT_gaussianProcess_h
 #define MT_gaussianProcess_h
 
-#include<MT/array.h>
+#include "array.h"
 
 #define MT_GP_DEBUG 0
-#include<MT/plot.h>
+#include "plot.h"
 
 //===========================================================================
 //
@@ -266,8 +266,8 @@ inline void randomFunction(GaussianProcess& gp,arr& Xbase,bool illustrate,bool f
 
 
 
-#ifdef MT_IMPLEMENTATION
-#  include"gaussianProcess.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "gaussianProcess.cpp"
 #endif
 
 #endif

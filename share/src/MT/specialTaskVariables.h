@@ -68,7 +68,7 @@ struct zFocusTargetTaskVariable:public TaskVariable{
 
 #endif
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #include "specialTaskVariables.cpp"
 #endif
 

@@ -1,3 +1,11 @@
+#ifdef MT_OPENCV
+#undef COUNT
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
+#undef MIN
+#undef MAX
+#endif
+
 #include "perceptionModule.h"
 #include "optimization.h"
 //#include "../src/NJ/VisionTrackRoutines.h"

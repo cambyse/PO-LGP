@@ -380,7 +380,7 @@ bool glClickUI(void *p,OpenGL *gl);
 //--------- implementation
 
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "opengl.cpp"
 #endif
 

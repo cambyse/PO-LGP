@@ -22,7 +22,6 @@
 #include "array.h"
 #include "process.h"
 #include "robot_variables.h"
-#include <vector>
 
 //fwd declarations
 class CDevice;
@@ -98,7 +97,7 @@ struct SchunkHandModule:public Process{
 
   //-- things to hide..
   SDH::cSDH* hand;
-  std::vector<int> fingers;
+  //std::vector<int> fingers;
   static SchunkHandModule *global_this;
   static void signalStop(int);
 };
@@ -129,7 +128,7 @@ struct SchunkSkinModule:public Process{
 void testPerformance(SchunkArmModule &schunk, int iMod );
 void testCube(SchunkArmModule &schunk, int iMod );
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "schunk.cpp"
 #endif
 

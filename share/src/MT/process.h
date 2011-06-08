@@ -132,7 +132,7 @@ struct ThreadInfoWin:public Process{
   void step();
 };
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "process.cpp"
 #endif
 

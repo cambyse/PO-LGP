@@ -4,7 +4,6 @@
 #include "vision.h"
 #include "ors.h"
 #include "process.h"
-//#include <NJ/VisionTrackRoutines.h>
 
 #include "robot_variables.h"
 
@@ -32,7 +31,7 @@ void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects);
 //void copyShapeInfos(ors::Graph& A,const ors::Graph& B);
 void copyBodyInfos(ors::Graph& A,const ors::Graph& B);
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "perceptionModule.cpp"
 #endif
 

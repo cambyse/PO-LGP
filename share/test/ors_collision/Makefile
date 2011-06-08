@@ -1,11 +1,4 @@
-BASE = $(shell pwd)/../..
-
-OBJ = \
-main.o
-
-FREEGLUT = 1
-SWIFT = 1
-#QHULL = 1
+BASE = ../..
 
 include $(BASE)/make-generic
 

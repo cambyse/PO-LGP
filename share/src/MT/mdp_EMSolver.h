@@ -57,7 +57,7 @@ namespace mdp{
 
 }//end of namespace mdp
 
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #include "mdp_EMSolver.cpp"
 #endif
 

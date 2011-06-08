@@ -1,19 +1,6 @@
 #ifndef MT_vision_h
 #define MT_vision_h
 
-#ifdef MT_CUDA
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cutil.h>
-#endif
-
-#ifdef MT_OPENCV
-#undef COUNT
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
-#undef MIN
-#undef MAX
-#endif
 
 #include "array.h"
 //#include "threads.h"
@@ -92,45 +79,9 @@ void compute_mu_VV(floatA& mu_VV,const floatA& alphaV);
 
 
 
-//===========================================================================
-//
-// EARLY VISION
-//
 
 
-//===========================================================================
-//
-// CUDA HELPERS
-//
-
-#ifdef MT_CUDA
-inline void cuda_init(){ CUT_DEVICE_INIT(1,"x.exe"); }
-template<class T> void cuda_alloc(MT::Array<T>& X){
-  cudaMalloc((void **) &X.p_device, X.N*X.sizeT);
-}
-inline void cuda_error(const char *msg){
-  cudaError_t err = cudaGetLastError();
-  if(err!=cudaSuccess){
-    fprintf(stderr, "Cuda error: %s: %s.\n", msg, cudaGetErrorString( err) );
-    exit(EXIT_FAILURE);
-  }
-}
-
-template<class T> void cuda_upload(const MT::Array<T>& X){
-  cudaMemcpy(X.p_device, X.p, X.N*X.sizeT, cudaMemcpyHostToDevice);
-}
-template<class T> void cuda_download(MT::Array<T>& X){
-  cudaMemcpy(X.p, X.p_device, X.N*X.sizeT, cudaMemcpyDeviceToHost);
-}
-template<class T> void cuda_free(MT::Array<T>& X){
-  cudaFree(X.p_device);
-  X.p_device=NULL;
-}
-#endif
-
-
-
-#ifdef MT_IMPLEMENTATION
+#ifdef  MT_IMPLEMENTATION
 #  include "vision.cpp"
 #endif
 
