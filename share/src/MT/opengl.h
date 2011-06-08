@@ -20,48 +20,23 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#undef MT_GL
-#if defined MT_QTGLUT || defined MT_FREEGLUT
+#if defined MT_FREEGLUT || defined MT_FLTK || defined MT_QTGLUT
+#  define MT_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
-#  define MT_GL
-#  ifdef MT_QTGLUT
-#    undef MT_FREEGLUT
-#  endif
-#  ifdef MT_MSVC
-#    include<windows.h>
-#    undef min //I hate it that windows defines these macros!
-#    undef max
-#  endif
 #endif
 
-#ifdef MT_QTGLUT
-//#  if !defined MT_Cygwin 
-#    include <GL/glut.h>
-//#  endif
-#  undef scroll
-#  undef border
-// #  define QT3_SUPPORT
-// #  include <Qt/Qt3Support>
-// #  include <Qt/qtimer.h>
-#  include <QtGui/QApplication>
-#  include <QtOpenGL/QGLWidget>
-// #  include <Qt/qobject.h>
-// #  include <Qt/qevent.h>
-#  include <QtOpenGL/QtOpenGL>
-#  if defined MT_Cygwin //|| defined MT_Linux
-#    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#  else
-#    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#  endif
+#ifdef MT_FLTK
+#  include <FL/glut.H>
 #endif
 
 #ifdef MT_FREEGLUT
 #  define FREEGLUT_STATIC
 #  include <GL/freeglut.h>
-//#  include <FL/glut.H>
+#endif
+
+#ifdef MT_QTGLUT
+#  include <GL/glut.h>
 #endif
 
 #ifdef MT_GL2PS
@@ -108,9 +83,9 @@ void glMakeTorus(int num);
 void glDrawRobotArm(float a,float b,float c,float d,float e,float f);
 uint glImageTexture(const byteA &img);
 void glDrawTexQuad(uint texture,
-		   float x1,float y1,float z1,float x2,float y2,float z2,
-	           float x3,float y3,float z3,float x4,float y4,float z4,
-		   float mulX=1.,float mulY=1.);
+                   float x1,float y1,float z1,float x2,float y2,float z2,
+                   float x3,float y3,float z3,float x4,float y4,float z4,
+                   float mulX=1.,float mulY=1.);
 void glGrabImage(byteA& img);
 void glGrabDepth(byteA& depth);
 void glGrabDepth(floatA& depth);
@@ -128,18 +103,7 @@ void glDrawDots(void *dots);
 
 //===========================================================================
 //
-// basic gui routines - wrapped for compatibility
-//
-
-void MTEvents();
-void MTenterLoop();
-void MTexitLoop();
-
-
-
-//===========================================================================
-//
-// OpenGL class
+// Camera class
 //
 
 namespace ors{
@@ -180,22 +144,21 @@ namespace ors{
   };
 }
 
-  
-struct OpenGLWorkspace;
 
-#ifndef MT_QTGLUT
-class QGLWidget{};
-#undef  Q_OBJECT
-#define Q_OBJECT
-#endif
+//===========================================================================
+//
+// OpenGL class
+//
+
+struct sOpenGL;
 
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
-class OpenGL:public QGLWidget{
-  Q_OBJECT
-public:
+struct OpenGL{
+  sOpenGL *s;
+
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
   struct GLInitCall { void *classP; bool (*call)(void*,OpenGL*); };
@@ -206,9 +169,6 @@ public:
   struct GLView     { double le,ri,bo,to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
     
   //!@name data fields
-  OpenGLWorkspace *WS;               //!< ..
-  static MT::Array<OpenGL*> glwins;  //!< global window list
-  int windowID;                      //!< id of this window in the global glwins list
   MT::Array<GLView> views;             //!< list of draw routines
   MT::Array<GLDrawer> drawers;         //!< list of draw routines
   MT::Array<GLInitCall> initCalls;     //!< list of initialization routines
@@ -234,16 +194,8 @@ public:
   arr P; //camera projection matrix
   
   //!@name constructors & destructors
-#ifdef MT_FREEGLUT
-  OpenGL(const char* title="MT::OpenGL(Freeglut)",int w=400,int h=400,int posx=-1,int posy=-1);
-#endif
-#ifdef MT_QT
-  OpenGL(const char* title="MT::OpenGL(Qt)",int w=400,int h=400,int posx=-1,int posy=-1);
-  OpenGL(QWidget *parent,const char* title,int width=400,int height=400,int posx=-1,int posy=-1);
-#endif
-#ifndef MT_GL
-  OpenGL(const char* title="MT::OpenGL(NONE)",int w=400,int h=400,int posx=-1,int posy=-1);
-#endif
+  OpenGL(const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
+  OpenGL(void *parent,const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
   
   OpenGL *newClone() const;
   ~OpenGL();
@@ -299,60 +251,30 @@ private:
   void setOffscreen(int width,int height);
 #endif
 
-  private:
-    GLEvent lastEvent;
-    static uint selectionBuffer[1000];
-#ifdef MT_QTGLUT
-    bool quitLoopOnTimer;
-    QPixmap *osPixmap;      // the paint device for off-screen rendering
-    QGLContext *osContext;  //the GL context for off-screen rendering
-#endif
+protected: //driver dependent methods
+  bool loopExit;
+  void redrawEvent();
+  void processEvents();
+  void enterEventLoop();
+  void exitEventLoop();
 
-    void init(); //initializes camera etc
+protected:
+  GLEvent lastEvent;
+  static uint selectionBuffer[1000];
+
+  void init(); //initializes camera etc
   //general callbacks (used by QT & Freeglut)
-    void Key(unsigned char key, int x, int y);
-    void Mouse(int button, int updown, int x, int y);
-    void Motion(int x, int y);
-    void PassiveMotion(int x, int y);
-    void Close(){ }
-    void Reshape(int w,int h);
-    void Special(int key, int x, int y);
-    void MouseWheel(int wheel, int direction, int x, int y);
-#ifdef MT_FREEGLUT
-  //hooks for FREEGLUT (static callbacks)
-    static void _Void(){ }
-    static void _Draw(){ OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); }
-    static void _Key(unsigned char key, int x, int y){ glwins(glutGetWindow())->Key(key,x,y); }
-    static void _Mouse(int button, int updown, int x, int y){ glwins(glutGetWindow())->Mouse(button,updown,x,y); }
-    static void _Motion(int x, int y){ glwins(glutGetWindow())->Motion(x,y); }
-    static void _PassiveMotion(int x, int y){ glwins(glutGetWindow())->PassiveMotion(x,y); }
-    static void _Close(){ glwins(glutGetWindow())->Close(); }
-    static void _Reshape(int w,int h){ glwins(glutGetWindow())->Reshape(w,h); }
-    static void _Special(int key, int x, int y){ glwins(glutGetWindow())->Special(key,x,y); }
-    static void _MouseWheel(int wheel, int direction, int x, int y){ glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); }
-#endif
-#ifdef MT_QTGLUT
-  //hooks for Qt (overloading virtuals)
-    void paintGL(){ Draw(width(),height()); }
-    void initializeGL(){ }
-    void resizeGL(int w,int h){ Reshape(w,h); }
-    void keyPressEvent(QKeyEvent *e){ pressedkey=e->text().toAscii()[0]; Key(pressedkey,mouseposx,mouseposy); }
-    void timerEvent(QTimerEvent*){ if(quitLoopOnTimer) MTexitLoop(); }
-    void mouseMoveEvent(QMouseEvent* e){
-      if(!mouseIsDown) PassiveMotion(e->x(),e->y()); else Motion(e->x(),e->y());
-    }
-    void mousePressEvent(QMouseEvent* e){
-      if(e->button()==Qt::LeftButton) { Mouse(0,0,e->x(),e->y()); }
-      if(e->button()==Qt::MidButton)  { Mouse(1,0,e->x(),e->y()); }
-      if(e->button()==Qt::RightButton){ Mouse(2,0,e->x(),e->y()); }
-    }
-    void mouseReleaseEvent(QMouseEvent* e){
-      if(e->button()==Qt::LeftButton) { Mouse(0,1,e->x(),e->y()); }
-      if(e->button()==Qt::MidButton)  { Mouse(1,1,e->x(),e->y()); }
-      if(e->button()==Qt::RightButton){ Mouse(2,1,e->x(),e->y()); }
-    }
-#endif
+  void Key(unsigned char key, int x, int y);
+  void Mouse(int button, int updown, int x, int y);
+  void Motion(int x, int y);
+  void PassiveMotion(int x, int y);
+  void Close(){ }
+  void Reshape(int w,int h);
+  void Special(int key, int x, int y);
+  void MouseWheel(int wheel, int direction, int x, int y);
 
+  friend struct sOpenGL;
+  friend bool glClickUI(void *p,OpenGL *gl);
 };
 
 
@@ -377,7 +299,6 @@ public:
 void glDrawUI(void *p);
 bool glHoverUI(void *p,OpenGL *gl);
 bool glClickUI(void *p,OpenGL *gl);
-//--------- implementation
 
 
 #ifdef  MT_IMPLEMENTATION

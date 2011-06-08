@@ -1,0 +1,41 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0110 
+header_name {.h} 
+code_name {.cxx}
+Function {make_window()} {open
+} {
+  Fl_Window {} {open
+    xywh {71 83 860 355} type Double visible
+  } {
+    Fl_Adjuster {} {
+      label bla
+      xywh {160 125 170 45}
+    }
+    Fl_Choice {} {
+      label {a;b;c} open
+      tooltip bla xywh {350 30 200 80} down_box BORDER_BOX
+    } {}
+    Fl_Pack {} {open
+      xywh {15 155 860 105}
+    } {
+      Fl_Roller {} {
+        label roll
+        xywh {80 155 795 65} type Horizontal align 0
+      }
+      Fl_Dial {} {
+        xywh {15 155 50 105} type Line
+      }
+    }
+    Fl_Tile {} {open selected
+      xywh {615 125 200 185}
+    } {
+      Fl_Value_Slider {} {
+        xywh {785 200 30 110} type {Vert Knob}
+      }
+      Fl_Button {} {
+        label OK
+        xywh {615 125 25 25}
+      }
+    }
+  }
+} 

@@ -1,6 +1,16 @@
-#include <MT/plot.h>
-#include <MT/opengl.h>
-#include <MT/ors.h>
+#define MT_IMPLEMENTATION
+
+//--- usually, one of the following should be defined
+// on the compiler level - not here - but it's esasier to switch
+// for now
+//#define MT_FREEGLUT
+//#define MT_QT
+
+#include<MT/plot.h>
+#include<MT/opengl.h>
+#include<MT/ors.h>
+
+
 
 using namespace std;
 
@@ -154,18 +164,18 @@ void testMenu(){
   int submenu1, submenu2;
 
   submenu1 = glutCreateMenu(menuCallback1);
-  glutAddMenuEntry((char*)"abc", 1);
-  glutAddMenuEntry((char*)"ABC", 2);
+  glutAddMenuEntry("abc", 1);
+  glutAddMenuEntry("ABC", 2);
   submenu2 = glutCreateMenu(menuCallback2);
-  glutAddMenuEntry((char*)"Green", 1);
-  glutAddMenuEntry((char*)"Red", 2);
-  glutAddMenuEntry((char*)"White", 3);
+  glutAddMenuEntry("Green", 1);
+  glutAddMenuEntry("Red", 2);
+  glutAddMenuEntry("White", 3);
   glutCreateMenu(menuCallback3);
-  glutAddMenuEntry((char*)"9 by 15", 0);
-  glutAddMenuEntry((char*)"Times Roman 10", 1);
-  glutAddMenuEntry((char*)"Times Roman 24", 2);
-  glutAddSubMenu((char*)"Messages", submenu1);
-  glutAddSubMenu((char*)"Color", submenu2);
+  glutAddMenuEntry("9 by 15", 0);
+  glutAddMenuEntry("Times Roman 10", 1);
+  glutAddMenuEntry("Times Roman 24", 2);
+  glutAddSubMenu("Messages", submenu1);
+  glutAddSubMenu("Color", submenu2);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   gl.watch();

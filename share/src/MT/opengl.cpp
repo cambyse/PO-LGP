@@ -18,8 +18,17 @@
 #include "ors.h"
 
 #ifdef MT_FREEGLUT
-#include <X11/Xlib.h>
+#  include "opengl_freeglut.cxx"
 #endif
+
+#ifdef MT_FLTK
+#  include "opengl_fltk.cxx"
+#endif
+
+#ifdef MT_QTGLUT
+#  include "opengl_qt.cxx"
+#endif
+
 
 
 //===========================================================================
@@ -29,7 +38,6 @@
 
 template MT::Array<glUI::Button>::Array();
 template MT::Array<glUI::Button>::~Array();
-
 
 //===========================================================================
 //
@@ -182,10 +190,6 @@ void ors::Camera::glConvertToLinearDepth(double &d){
 }
 
 
-struct OpenGLWorkspace{
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
-};
 
 
 //===========================================================================
@@ -194,79 +198,7 @@ struct OpenGLWorkspace{
 //
 
 OpenGL *staticgl [10]; //ten pointers to be potentially used as display windows
-uint nrWins=0;
 uint OpenGL::selectionBuffer[1000];
-MT::Array<OpenGL*> OpenGL::glwins;
-
-
-//===========================================================================
-//
-// basic gui routines - wrapped for compatibility
-//
-
-#ifdef MT_FREEGLUT
-extern "C"{
-  void fgDeinitialize( void );
-}
-struct SFG_Display_dummy{
-    _XDisplay*        Display;            /* The display we are being run in.  */
-};
-extern SFG_Display_dummy fgDisplay;
-
-static void sleepForEvents( void ){
-#ifdef MT_Linux
-    /*
-     * Possibly due to aggressive use of XFlush() and friends,
-     * it is possible to have our socket drained but still have
-     * unprocessed events.  (Or, this may just be normal with
-     * X, anyway?)  We do non-trivial processing of X events
-     * after the event-reading loop, in any case, so we
-     * need to allow that we may have an empty socket but non-
-     * empty event queue.
-     */
-    if( ! XPending( fgDisplay.Display ) ){
-        fd_set fdset;
-        int err;
-        int socket;
-        struct timeval wait;
-
-        socket = ConnectionNumber( fgDisplay.Display );
-        FD_ZERO( &fdset );
-        FD_SET( socket, &fdset );
-        wait.tv_sec = 10000 / 1000;
-        wait.tv_usec = (10000 % 1000) * 1000;
-        err = select( socket+1, &fdset, NULL, NULL, &wait );
-
-#if HAVE_ERRNO
-        if( ( -1 == err ) && ( errno != EINTR ) )
-            fgWarning ( "freeglut select() error: %d", errno );
-#endif
-    }
-#elif defined MT_MSVC
-    MsgWaitForMultipleObjects( 0, NULL, FALSE, msec, QS_ALLINPUT );
-#endif
-}
-
-bool loopExit;
-void MTprocessEvents(){ glutMainLoopEvent(); }
-void MTenterLoop(){     loopExit=false; while(!loopExit){ glutMainLoopEvent(); sleepForEvents(); } }
-void MTexitLoop(){      loopExit=true; }
-#if 0
-void MTprocessEvents(){ Fl::wait(0); }
-void MTenterLoop(){     loopExit=false; while(!loopExit){ Fl::wait(); } }
-void MTexitLoop(){      loopExit=true; }
-#endif
-#endif
-#ifdef MT_QTGLUT
-void MTprocessEvents(){ qApp->processEvents(); }
-void MTenterLoop(){     qApp->exec(); }
-void MTexitLoop(){      qApp->exit(); }
-#endif
-#ifndef MT_GL
-void MTprocessEvents(){ }
-void MTenterLoop(){     }
-void MTexitLoop(){      }
-#endif
 
 
 //===========================================================================
@@ -993,24 +925,10 @@ void OpenGL::watchImage(const floatA &_img,bool wait,float _zoom){
 }
 
 void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){
-#ifdef MT_FREEGLUT
   img=(byteA*)&_img;
   zoom=_zoom;
-  
-  /*
-  int w=(int)(zoom*img->d1+10),h=(int)(zoom*img->d0+10);
-  //set projection
-  glutSetWindow(windowID);
-  glutReshapeWindow(w,h);
-  glViewport(0,0,w,h);
-  */
- 
-  //open window
   if(wait) watch(); else update();
   img=NULL;
-#else
-  NICO
-#endif
 }
 
 /*void glWatchImage(const floatA &x,bool wait,float zoom){
@@ -1031,7 +949,7 @@ void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){
 void OpenGL::displayGrey(const arr &x,uint d0,uint d1,bool wait,uint win){
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   double ma=x.max();
   text.clr() <<"display"<<win<<" max="<<ma<<endl;
   byteA img;
@@ -1048,7 +966,7 @@ void OpenGL::displayGrey(const arr &x,uint d0,uint d1,bool wait,uint win){
 void OpenGL::displayRedBlue(const arr &x,uint d0,uint d1,bool wait,uint win){
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   double mi=x.min(),ma=x.max();
   text.clr() <<"display"<<win<<" max="<<ma<<"min="<<mi<<endl;
   cout <<"\rdisplay"<<win<<" max="<<ma<<"min="<<mi;
@@ -1083,7 +1001,7 @@ bool glClickUI(void *p,OpenGL *gl){
   int t=((glUI*)p)->top;
   if(t!=-1){
     cout <<"CLICK! on button #" <<t <<endl;
-    MTexitLoop(); //glutLeaveMainLoop();
+    gl->exitEventLoop();
     return false;
   }
   return true;
@@ -1092,7 +1010,7 @@ bool glClickUI(void *p,OpenGL *gl){
 #ifdef MT_FREEGLUT
 void glSelectWin(uint win){
   if(!staticgl[win]) staticgl[win]=new OpenGL;
-  glutSetWindow(staticgl[win]->windowID);
+  glutSetWindow(staticgl[win]->s->windowID);
 }
 #endif
 
@@ -1133,104 +1051,15 @@ void glDrawDots(arr& dots){
 // OpenGL implementations
 //
 
-#ifdef MT_FREEGLUT
-  //! constructor
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
-  init();
-
-  if(!nrWins){
-    int argc=1;
-    char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
-  }
-  nrWins++;
-
-  glutInitWindowSize(w,h);
-  glutInitWindowPosition(posx,posy);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-
-  windowID = glutCreateWindow(title);
-
-  //OpenGL initialization
-  //two optional thins:
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_CULL_FACE); glFrontFace(GL_CCW);
-  //glDisable(GL_CULL_FACE);
-  glDepthFunc(GL_LESS);
-  glShadeModel(GL_SMOOTH);
-  glShadeModel(GL_FLAT);
-      
-  if(glwins.N<(uint)windowID+1) glwins.resizeCopy(windowID+1);
-  glwins(windowID) = this;
-
-  glutDisplayFunc( _Draw );
-  glutKeyboardFunc( _Key );
-  glutMouseFunc ( _Mouse ) ;
-  glutMotionFunc ( _Motion ) ;
-  glutPassiveMotionFunc ( _PassiveMotion ) ;
-  glutCloseFunc ( _Close ) ;
-  glutReshapeFunc( _Reshape );
-  glutSpecialFunc( _Special );
-  glutMouseWheelFunc ( _MouseWheel ) ;
-
-  //  glutVisibilityFunc( Visibility );
-  //  glutKeyboardUpFunc( KeyUp );
-  //  glutSpecialUpFunc( SpecialUp );
-  //  glutJoystickFunc( Joystick, 100 );
-  //  glutEntryFunc ( Entry ) ;
-}
-// freeglut destructor
-OpenGL::~OpenGL(){
-  glutDestroyWindow(windowID);
-  glwins(windowID)=0;
-  nrWins--;
-  if(!nrWins) fgDeinitialize();
-  delete WS;
-}
-#endif
-
-
-#ifdef MT_QTGLUT
-OpenGL::OpenGL(const char* title,int width,int height,int posx,int posy)
-  :QGLWidget(QGLFormat(GLformat)){
-  QGLWidget::move(posx,posy);
-  QGLWidget::resize(width,height);
-  QWidget::setMouseTracking(true);
-  QWidget::setWindowTitle(title);
-  init();
-  windowID=(int)winId();
-}
-  //! Qt constructor when window is parent of another window
-OpenGL::OpenGL(QWidget *parent,const char* title,int width,int height,int posx,int posy)
-  :QGLWidget(QGLFormat(GLformat),parent){
-  QGLWidget::move(posx,posy);
-  QGLWidget::resize(width,height);
-  QWidget::setMouseTracking(true);
-  QWidget::setWindowTitle(title);
-  init();
-  windowID=(int)winId();
-}
-  //! destructor
-OpenGL::~OpenGL(){
-  if(osContext) delete osContext;
-  if(osPixmap) delete osPixmap;
-  delete WS; 
-};
-#endif
-
 OpenGL* OpenGL::newClone() const{
   OpenGL* gl=new OpenGL;
-  *(gl->WS) = *WS;
+  //*(gl->s) = *s; //don't clone internal stuff!
   gl->drawers = drawers;
   gl->camera = camera;
   return gl;
 }
 
 void OpenGL::init(){
-  WS = new OpenGLWorkspace;
-
   camera.setPosition(0.,0.,10.);
   camera.focus(0,0,0);
   camera.setZRange(.1,1000.);
@@ -1334,7 +1163,16 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   }
 
   //OpenGL initialization
-  //two optional things:
+  //two optional thins:
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_CULL_FACE); glFrontFace(GL_CCW);
+  //glDisable(GL_CULL_FACE);
+  glDepthFunc(GL_LESS);
+  glShadeModel(GL_SMOOTH);
+  glShadeModel(GL_FLAT);
+
   glEnable(GL_DEPTH_TEST);
   //glEnable(GL_CULL_FACE); glFrontFace(GL_CCW); //CCW is default!
   glDepthFunc(GL_LESS);
@@ -1392,13 +1230,17 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   glColor(.3,.3,.5);
 
   //draw objects
+  GLint s;
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+    glGetIntegerv(GL_MODELVIEW_STACK_DEPTH,&s);
+  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
+  CHECK(s<=1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
+
   //if(!drawers.N){ MT_MSG("OpenGL: nothing to be drawn -- add draw routines!"); if(!text.N()) text <<"<nothing to draw>"; }
   for(uint i=0;i<drawers.N;i++) (*drawers(i).call)(drawers(i).classP);
 
   //draw text
-  GLint s;
   glGetIntegerv(GL_RENDER_MODE,&s);
   if(text.N() && s!=GL_SELECT){
     glMatrixMode(GL_MODELVIEW);
@@ -1442,7 +1284,8 @@ void OpenGL::Draw(int w,int h,ors::Camera *cam){
   
   //check matrix stack
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH,&s);
-  CHECK(s==1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
+  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
+  CHECK(s<=1,"OpenGL matrix stack has not depth 1 (pushs>pops)");
 }
 
 void OpenGL::Select(){
@@ -1496,30 +1339,24 @@ void OpenGL::Select(){
 }
 #endif
 
-  //! update the view (in Qt: also starts displaying the window)
-bool OpenGL::update(const char *txt){
-  pressedkey=0;
-  if(txt) text.clr() <<txt;
-#ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
-  glutPostRedisplay();
-#endif
-#ifdef MT_QTGLUT
-  show();
-  QGLWidget::update();
-#endif
-  MTprocessEvents();
-  return !pressedkey;
-}
-
   /*!\brief watch in interactive mode and wait for an exiting event
     (key pressed or right mouse) */
 int OpenGL::watch(const char *txt){
   update(txt);
-  MTenterLoop();
-  MTprocessEvents();
+  enterEventLoop();
+  processEvents();
   return pressedkey;
 }
+
+//! update the view (in Qt: also starts displaying the window)
+bool OpenGL::update(const char *txt){
+  pressedkey=0;
+  if(txt) text.clr() <<txt;
+  redrawEvent();
+  processEvents();
+  return !pressedkey;
+}
+
 
   //! waits some msecons before updating
 int OpenGL::timedupdate(double sec){
@@ -1533,21 +1370,10 @@ int OpenGL::timedupdate(double sec){
   int i;
   quitLoopOnTimer=true;
   i=startTimer(msec);
-  MTenterLoop();
+  enterEventLoop();
   killTimer(i);
   return update();
 #endif
-}
-
-  //! resize the window
-void OpenGL::resize(int w,int h){
-#ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
-  glutReshapeWindow(w,h);
-#elif defined MT_QTGLUT
-  QGLWidget::resize(w,h);
-#endif
-  MTprocessEvents();
 }
 
   //! set the four clear colors
@@ -1581,9 +1407,9 @@ void OpenGL::unproject(double &x,double &y,double &z){
 
 void OpenGL::capture(byteA &img,int w,int h,ors::Camera *cam){
 #ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   glutPostRedisplay();
-  MTprocessEvents();
+  processEvents();
   Draw(w,h,cam);
   img.resize(h,w,3);
   glGrabImage(img);
@@ -1592,9 +1418,9 @@ void OpenGL::capture(byteA &img,int w,int h,ors::Camera *cam){
 
 void OpenGL::captureStereo(byteA &imgL,byteA &imgR,int w,int h,ors::Camera *cam,double baseline){
 #ifdef MT_FREEGLUT
-  glutSetWindow(windowID);
+  glutSetWindow(s->windowID);
   glutPostRedisplay();
-  MTprocessEvents();
+  processEvents();
   Draw(w,h,cam);
   imgR.resize(h,w,3);
   glGrabImage(imgR);
@@ -1689,21 +1515,6 @@ void OpenGL::reportSelection(){
   }
 }
 
-#ifdef MT_FREEGLUT
-int OpenGL::width(){  glutSetWindow(windowID); return glutGet(GLUT_WINDOW_WIDTH); }
-int OpenGL::height(){ glutSetWindow(windowID); return glutGet(GLUT_WINDOW_HEIGHT); }
-#endif
-#ifdef MT_QTGLUT
-int OpenGL::width(){  return QGLWidget::width(); }
-int OpenGL::height(){ return QGLWidget::height(); }
-#endif
-#ifndef MT_GL
-  //! get width
-int OpenGL::width(){ return 0; }
-  //! get height
-int OpenGL::height(){ return 0; }
-#endif
-
 #ifdef MT_GL2PS
   /*!\brief generates a ps from the current OpenGL display, using gl2ps */
 void OpenGL::saveEPS(const char *filename){
@@ -1792,7 +1603,7 @@ void getSphereVector(ors::Vector& vec,int _x,int _y,int le,int ri,int bo,int to)
 }
 
 void OpenGL::Reshape(int width, int height){
-  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", windowID, width, height ));
+  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height ));
   camera.setWHRatio((double)width/height);
   for(uint v=0;v<views.N;v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
   //update();
@@ -1800,16 +1611,16 @@ void OpenGL::Reshape(int width, int height){
 
 void OpenGL::Key(unsigned char key, int _x, int _y){
   _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", windowID, key, (char)key, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y ));
   pressedkey=key;
-  if(key==13 || key==32 || key==27) MTexitLoop();
-  if(MT::contains(exitkeys,key)) MTexitLoop();
+  if(key==13 || key==32 || key==27) exitEventLoop();
+  if(MT::contains(exitkeys,key)) exitEventLoop();
 }
 
 void OpenGL::Mouse(int button, int updown, int _x, int _y){
   int w=width(),h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", windowID, button, updown, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, updown, _x, _y ));
   mouse_button=1+button;
   if(updown) mouse_button=-1-mouse_button;
   mouseposx=_x; mouseposy=_y;
@@ -1841,10 +1652,10 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
     drawFocus=false;
   }
   //store where you've clicked
-  WS->downVec=vec;
-  WS->downRot=cam->X->rot;
-  WS->downPos=cam->X->pos;
-  WS->downFoc=*cam->foc;
+  s->downVec=vec;
+  s->downRot=cam->X->rot;
+  s->downPos=cam->X->pos;
+  s->downFoc=*cam->foc;
 
   //check object clicked on
   if(!updown){
@@ -1856,8 +1667,8 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
     for(uint i=0;i<clickCalls.N;i++) cont=cont && (*clickCalls(i).call)(clickCalls(i).classP,this);
   }
 
-  if(mouse_button==4 && !updown) cam->X->pos += WS->downRot*ors::Vector(0,0,1) * (.2 * WS->downPos.length());
-  if(mouse_button==5 && !updown) cam->X->pos -= WS->downRot*ors::Vector(0,0,1) * (.2 * WS->downPos.length());
+  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*ors::Vector(0,0,1) * (.2 * s->downPos.length());
+  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*ors::Vector(0,0,1) * (.2 * s->downPos.length());
   
   update();
 }
@@ -1866,7 +1677,7 @@ void OpenGL::Motion(int _x, int _y){
 #ifdef MT_GL
   int w=width(),h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", windowID, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", 0, _x, _y ));
   mouseposx=_x; mouseposy=_y;
   ors::Camera *cam;
   ors::Vector vec;
@@ -1878,7 +1689,7 @@ void OpenGL::Motion(int _x, int _y){
     getSphereVector(vec,_x,_y,views(mouseView).le*w,views(mouseView).ri*w,views(mouseView).bo*h,views(mouseView).to*h);
   }
   CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
-  lastEvent.set(mouse_button,-1,_x,_y,vec(0)-WS->downVec(0),vec(1)-WS->downVec(1));
+  lastEvent.set(mouse_button,-1,_x,_y,vec(0)-s->downVec(0),vec(1)-s->downVec(1));
 #ifndef MT_Linux
   int modifiers=glutGetModifiers();
 #else
@@ -1888,31 +1699,31 @@ void OpenGL::Motion(int _x, int _y){
   //CHECK(mouseIsDown,"I thought the mouse is down...");
   if(mouse_button==1){ // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
-    if(WS->downVec(2)<.1){
-      rot.setDiff(vec,WS->downVec);  //consider imagined sphere rotation of mouse-move
+    if(s->downVec(2)<.1){
+      rot.setDiff(vec,s->downVec);  //consider imagined sphere rotation of mouse-move
     }else{
-      rot.setVec((vec-WS->downVec) ^ ors::Vector(0,0,1)); //consider only xy-mouse-move
+      rot.setVec((vec-s->downVec) ^ ors::Vector(0,0,1)); //consider only xy-mouse-move
     }
-    cam->X->rot = WS->downRot * rot;   //rotate camera's direction
-    rot = WS->downRot * rot / WS->downRot; //interpret rotation relative to current viewing
-    cam->X->pos = rot * WS->downPos;   //rotate camera's position
-    //cam->X->rot = rot * WS->downRot;   //rotate camera's direction
-    //cam->X->pos = WS->downFoc + (cam->X->rot/WS->downRot)* (WS->downPos - WS->downFoc);   //rotate camera's position
+    cam->X->rot = s->downRot * rot;   //rotate camera's direction
+    rot = s->downRot * rot / s->downRot; //interpret rotation relative to current viewing
+    cam->X->pos = rot * s->downPos;   //rotate camera's position
+    //cam->X->rot = rot * s->downRot;   //rotate camera's direction
+    //cam->X->pos = s->downFoc + (cam->X->rot/s->downRot)* (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
     update();
-    if(immediateExitLoop) MTexitLoop();
+    if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3){ // || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
-    ors::Vector trans = WS->downVec - vec;
+    ors::Vector trans = s->downVec - vec;
     trans(2)=0.;
-    trans = WS->downRot*trans;
-    cam->X->pos = WS->downPos + trans;
+    trans = s->downRot*trans;
+    cam->X->pos = s->downPos + trans;
     update();
   }
   if(mouse_button==2){ // || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
-    double dy = WS->downVec(1) - vec(1);
+    double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
-    cam->X->pos = WS->downPos + WS->downRot*ors::Vector(0,0,1) * dy * WS->downPos.length();
+    cam->X->pos = s->downPos + s->downRot*ors::Vector(0,0,1) * dy * s->downPos.length();
     update();
   }
 #else
@@ -1922,7 +1733,7 @@ void OpenGL::Motion(int _x, int _y){
 
 void OpenGL::PassiveMotion(int _x, int _y){
   _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", windowID, _x, _y ));
+  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", 0, _x, _y ));
   static int calls=0;
   if(calls) return;
   calls++;
@@ -2021,16 +1832,4 @@ bool glUI::checkMouse(int _x,int _y){
 #elif defined MT_Cygwin
 #  include"opengl_Cygwin.moccpp"
 #endif
-#endif
-
-
-#ifndef MT_GL
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
-  MT_MSG("WARNING - creating dummy OpenGL");
-  init();
-}
-OpenGL::~OpenGL(){ delete WS; }
-void OpenGL::Draw(int w,int h, ors::Camera*){}
-void OpenGL::Select(){}
-void OpenGL::watchImage(const byteA &_img,bool wait,float _zoom){}
 #endif
