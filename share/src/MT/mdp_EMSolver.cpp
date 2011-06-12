@@ -15,9 +15,9 @@ void mdp::EMSolver::getParameters(){
   MT::getParameter(mstepRate,"mstepRate",.3);
   MT::getParameter(mstepNoise,"mstepNoise",1e-5);
   
-  MT::getParameter(estepIncremental,"estepIncremental",true);
-  MT::getParameter(estepStructured,"estepStructured",true);
   MT::getParameter(estepHorizon,"estepHorizon",(uint)200);
+  MT::getParameter(estepStructured,"estepStructured",true);
+  MT::getParameter(estepIncremental,"estepIncremental",true);
 
   MT::getParameter(obsolete_forceLevel1,"forceLevel1",false);;
 }

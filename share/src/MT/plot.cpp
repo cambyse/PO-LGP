@@ -48,6 +48,7 @@ PlotModule::PlotModule(){
   colors=true;
   drawBox=false;
   drawDots=false;
+  perspective=false;
   thickLines=0;
 }
 
@@ -215,14 +216,21 @@ stdPipes(MT::Color);
 //
 
 #ifdef MT_GL
-void plotInitGL(const char* name=0,uint width=600,uint height=600,int posx=0,int posy=0){
+void plotInitGL(double xl=-1.,double xh=1.,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.,const char* name=0,uint width=600,uint height=600,int posx=0,int posy=0){
   if(!plotModule.gl){
-    //MT::initQt();
     plotModule.gl=new OpenGL(name,width,height,posx,posy);
     plotModule.gl->add(glDrawPlot,&plotModule);
     plotModule.gl->setClearColors(1.,1.,1.,1.);
-    //plotModule.gl->camera.setHeightAbs(2.1);
   }
+  plotModule.gl->camera.setPosition(.5*(xh+xl),.5*(yh+yl),5.);
+  plotModule.gl->camera.focus      (.5*(xh+xl),.5*(yh+yl),.0);
+  plotModule.gl->camera.setWHRatio((xh-xl)/(yh-yl));
+  if(plotModule.perspective){
+    plotModule.gl->camera.setHeightAngle(45.);
+  }else{
+    plotModule.gl->camera.setHeightAbs(1.2*(yh-yl));
+  }
+  plotModule.gl->update();
 }
 #endif
 
@@ -235,7 +243,6 @@ void plot(bool wait){
 #ifdef MT_GL
   case opengl:
     plotInitGL();
-    plotModule.gl->update();
     if(wait) plotModule.gl->watch();
     break;
 #else
@@ -261,23 +268,12 @@ void plotClear(){
 void plotGnuplot(){ plotModule.mode=gnupl; }
 
 #ifdef MT_GL
-void plotOpengl(){ plotModule.mode=opengl; }
+void plotOpengl(){ plotModule.mode=opengl; plotInitGL(); }
 
-void plotOpengl(bool threeD,double xl,double xh,double yl,double yh,double zl,double zh){
+void plotOpengl(bool perspective,double xl,double xh,double yl,double yh,double zl,double zh){
   plotModule.mode=opengl;
-  plotInitGL();
-  if(!threeD){
-    plotModule.gl->camera.setPosition(.5*(xh+xl),.5*(yh+yl),5.);
-    plotModule.gl->camera.focus      (.5*(xh+xl),.5*(yh+yl),.0);
-    plotModule.gl->camera.setHeightAbs(1.2*(yh-yl));
-    plotModule.gl->camera.setWHRatio((xh-xl)/(yh-yl));
-    plotModule.gl->update();
-    plotModule.gl->setClearColors(1.,1.,1.,1.);
-  }else{
-    //plotModule.gl->WS->camera.setHeightAbs(2.);
-    //plotModule.gl->WS->camera.setWHRatio(1.);
-    //plotModule.WS->setRange(xl,xh,yl,yh,zl,zh);
-  }
+  plotModule.perspective=perspective;
+  plotInitGL(xl,xh,yl,yh,zl,zh);
 }
 #else
 void plotOpengl(){ MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!"); }
@@ -522,7 +518,7 @@ void plotMatrixFlow(uintA& M,double len){
   X.resize(M.d0,M.d1,2);
   for(i=0;i<X.d0;i++) for(j=0;j<X.d1;j++){
     X(i,j,0)=-1.+(2.*j+1.)/X.d1;
-    X(i,j,1)= 1.-(2.*i+1.)/X.d0;
+    X(i,j,1)=-1.+(2.*i+1.)/X.d0;
   }
   X.reshape(M.d0*M.d1,2);
   dX.resize(M.d0*M.d1,2);

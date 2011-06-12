@@ -1,6 +1,6 @@
 #ifdef MT_TONY
 
-#include <mdp/mdp.h>
+#include <tony_mdp/mdp.h>
 #include "array.h"
 #include "mdp.h"
 

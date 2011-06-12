@@ -447,6 +447,7 @@ void mdp::reportMDP(const MDP& mdp){
 void mdp::readImageMaze(MDP& mdp, const char* filename){
   byteA img;
   read_ppm(img,filename);
+  flip_image(img);
   byteA maze(img.d0,img.d1);
   uint x,y,dx=maze.d1,dy=maze.d0;
   for(x=0;x<dx;x++) for(y=0;y<dy;y++){

@@ -82,7 +82,7 @@ struct FSC_structured{
 void clearMDP(MDP_structured& mdp);
 
 void writeMDP_arr(const MDP& mdp, const char* arr_file, bool binary=false);
-void writeMDP_fg(const MDP_structured& mdp, ostream& os, bool brief=false);
+void writeMDP_fg(const MDP_structured& mdp, std::ostream& os, bool brief=false);
 void readMDP (      MDP_structured& mdp, const char* filename);
 void readMDP_arr (      MDP& mdp, const char* filename, bool binary=false);
 void readMDP_POMDP (      MDP& mdp, const char* filename);
@@ -224,7 +224,7 @@ double pomdpEM_lev1(const MDP& mdp,
                     double mstepNoise,
                     bool adaptP0,
                     arr* alpha,arr* beta,
-                    ostream *os);
+                    std::ostream *os);
 double pomdpEM_lev2(const MDP& mdp, FSC_lev2& fsm,
                     uint T, bool structuredEstep, bool maxMstep,
                     bool adaptP0, std::ostream *os=NULL);
@@ -238,7 +238,7 @@ double pomdpEM_structured(const MDP& mdp,
                           double mstepNoise,
                           bool adaptP0,
                           arr* alpha,arr* beta,
-                          ostream *os);
+                          std::ostream *os);
 double pomdpEM_structured(const MDP_structured& mdp,
                           FSC_structured& fsc,
                           uint estepHorizon,
@@ -249,7 +249,7 @@ double pomdpEM_structured(const MDP_structured& mdp,
                           double mstepNoise,
                           bool adaptP0,
                           arr* alpha,arr* beta,
-                          ostream *os);
+                          std::ostream *os);
 
 
 //===========================================================================

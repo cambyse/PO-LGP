@@ -4,6 +4,8 @@
 #  include "opengl.h"
 #  include "plot.h"
 
+OpenGL *globalGL=NULL;
+
 void mdp::showMaze(){
   byteA &maze=global_maze;
   byteA img(maze.d0,maze.d1,3);
@@ -16,8 +18,10 @@ void mdp::showMaze(){
     else if(maze(y,x)==4){ img(y,x,0)=0;   img(y,x,1)=0;   img(y,x,2)=255; }
     else HALT("strange global maze");
   }
-  OpenGL gl;
-  gl.watchImage(img,true,10);
+  flip_image(img);
+  static OpenGL *gl=NULL;
+  if(!gl) gl=new OpenGL;
+  gl->watchImage(img,true,10);
 }
 
 void mix(byteA& A,const byteA& B,float f=.5){
@@ -44,13 +48,14 @@ void mdp::showAB(const arr& alpha,const arr& beta){
   for(x=0;x<alpha.N;x++) if(alpha(x)) mix(img[x](),ARRAY<byte>(0,0,255), alpha(x)/aM);
   for(x=0;x<alpha.N;x++) if(beta (x)) mix(img[x](),ARRAY<byte>(255,0,0), beta (x)/bM);
   img.reshape(maze.d0,maze.d1,3);
+  flip_image(img);
   static OpenGL *gl=NULL;
   if(!gl) gl=new OpenGL;
   gl->watchImage(img,false,10);
 }
 
 void mdp::plotPolicyAndValue(const arr& pi,const arr& V,const MDP& mdp,bool wait){
-  plotOpengl();
+  plotOpengl(false);
   plotModule.colors=false;
   //plotModule.grid=true;
   

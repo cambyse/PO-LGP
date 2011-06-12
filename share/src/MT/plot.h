@@ -39,7 +39,7 @@ struct PlotModule{
   PlotModuleWorkspace *WS;
   PlotMode mode;
   OpenGL *gl;
-  bool light,grid,colors,drawBox,drawDots;
+  bool light,grid,colors,drawBox,drawDots,perspective;
   uint thickLines;//display options
   PlotModule();
   ~PlotModule();
@@ -50,7 +50,7 @@ extern PlotModule plotModule;
 
 void plotGnuplot();
 void plotOpengl();
-void plotOpengl(bool threeD,double xl,double xh,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.);
+void plotOpengl(bool perspective,double xl=-1.,double xh=1.,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.);
 
 void plot(bool wait=true);
 void plotClear();
