@@ -1,5 +1,9 @@
 #include "specialTaskVariables.h"
 
+#ifdef STANIO
+#include "graspObjects.h"
+#endif
+
 void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \

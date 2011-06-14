@@ -109,5 +109,14 @@ struct FutureMotionGoal:public Variable{
   //graspGoalAvailable=placeGoalAvailable=false; }
 };
 
+struct GraspObject;
+struct GraspObjectVar:public Variable{
+  GraspObject *o;
+  GraspObject *prior;//?remove
+
+  GraspObjectVar():Variable("grasp object"){
+  }
+};
+
 
 #endif

@@ -1,5 +1,23 @@
 #include "graspISF.h"
 #include<MT/plot.h>
+#include<MT/util.h>
+
+void
+configure_GraspISF(GraspISFTask* t){
+
+  t->tv_palm_prec_m =             MT::getParameter<double>("grasp_tv_palm_prec_m", 1e3);
+  t->tv_palm_trgt_m =             MT::getParameter<double>("grasp_tv_palm_trgt_m", .05);
+  t->tv_oppose_prec =             MT::getParameter<double>("grasp_tv_oppose_prec", 1e1);
+  t->tv_zeroLevel_prec_m =        MT::getParameter<double>("grasp_tv_zeroLevel_prec_m", 4e2);
+  t->tv_fingAlign_prec_m =        MT::getParameter<double>("grasp_tv_fingAlign_prec_m", 1e3);
+  t->tv_tipAlign_prec_m =         MT::getParameter<double>("grasp_tv_tipAlign_prec_m", 1e3);
+  t->tv_q_v_prec =                MT::getParameter<double>("grasp_tv_q_v_prec", 2e-1);
+  t->tv_q_y_prec =                MT::getParameter<double>("grasp_tv_q_y_prec", 1e-1);
+
+  t->tv_skin_trgt =               MT::getParameter<double>("grasp_tv_skin_trgt", .02);
+  t->tv_skin_fake =               MT::getParameter<double>("grasp_tv_skin_fake", .01);
+  t->tv_skin_prec_thr_zeroLevel = MT::getParameter<double>("grasp_tv_skin_prec_thr_zeroLevel", .5);
+}
 
 GraspISFTask::GraspISFTask(){
   grip = false;
@@ -11,19 +29,23 @@ GraspISFTask::GraspISFTask(){
   TV_palm = NULL;
   TV_oppose = NULL;
   TV_zeroLevel = NULL;
+
+  configure_GraspISF(this);
 }
 
 double
-GraspISFTask::phiAtFrame(ors::Transformation& X, arr &grad){
+GraspISFTask::phiAtFrame(ors::Transformation& X, arr &grad,double *sig){
   arr x;
+  double _sig;
   x.setCarray(X.pos.p,3);
-  double phi = graspobj->psi(NULL,x);
+  double phi = graspobj->phi(NULL,&_sig,x);
   graspobj->getNormGrad(grad,x);
+  if (sig)  *sig = _sig;
   return phi;
 }
 
 void
-GraspISFTask::initTaskVariables(ControllerModule *ctrl){
+GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   TaskAbstraction::initTaskVariables(ctrl);
   
   // finger tip endeffector
@@ -58,7 +80,7 @@ GraspISFTask::initTaskVariables(ControllerModule *ctrl){
 
   // palm orientation
   /*
-  TV_palmAlign = new PotentialFieldAlignTaskVariable(STRING("fings z align "<<s->name),ctrl->ors, ARRAY(), *graspobj);
+  TV_palmAlign = new PotentialFieldAlignTaskVariable(STRING("fings z align "<<s->name),ctrl->ors, TUPLE(), *graspobj);
   TV_palm_z->setGains(ori_gain,0);
   TV_palm_z->y_prec = 50;
   TVs_all.append(TV_palm_z);
@@ -78,13 +100,14 @@ GraspISFTask::initTaskVariables(ControllerModule *ctrl){
 
   TV_zeroLevel = new PotentialValuesTaskVariable("zeroLevel", ctrl->ors, tipsN, *graspobj);
   TV_zeroLevel->setGains(.1,.0);
+  TV_zeroLevel->y_target = ARR(0,0,0); 
   TVs_all.append(TV_zeroLevel);
 
   TV_skin = new TaskVariable("skin", ctrl->ors, skinTVT,0,0,0,0,skins);
   //TV_skin->targetType=gainsTT;
   TV_skin->targetType=directTT;
   TV_skin->v_prec=0;
-  TV_skin->y_target=ARR(.02,.02,.02);
+  TV_skin->y_target=ARR(tv_skin_trgt,tv_skin_trgt,tv_skin_trgt);
   TVs_all.append(TV_skin);
 
   
@@ -96,7 +119,7 @@ GraspISFTask::initTaskVariables(ControllerModule *ctrl){
 }
 
 void
-GraspISFTask::updateTaskVariables(ControllerModule *ctrl){
+GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   //activateAll(TVall,false); //THIS IS THE WRONG LIST!!! deactivate all variables
   activateAll(TVs_all,false); //deactivate all variables
   ctrl->useBwdMsg=false;             //deactivate use of bwd messages (from planning)
@@ -114,47 +137,77 @@ GraspISFTask::updateTaskVariables(ControllerModule *ctrl){
   }
   cout <<"*******************" <<endl;
 
-  arr nabla_fx_t, x_t;
-  double phi;
+  arr nabla_fx_t, tip_nabla_fx_t, fing_nabla_fx_t,
+      tip_sig_a(3), tip_var_a(3),
+      rel_tip_var_a(3), var_m(3);
+  double phi,phi_tip, phi_fing;
   uint i;
   
-  phi = phiAtFrame(palm->X, nabla_fx_t);
+  phi = phiAtFrame(palm->X, nabla_fx_t,NULL);
 
   // palm position
   TV_palm->active   = true;
-  TV_palm->y_target = TV_palm->y - nabla_fx_t * .2;
-  TV_palm->y_prec   = 1e3 * (phi>0.?phi:0.); //care only away from surface
+  TV_palm->y_target = TV_palm->y - nabla_fx_t * tv_palm_trgt_m;
+  TV_palm->y_prec   = tv_palm_prec_m * (phi>0.?phi:0.); //care only away from surface
 
   // oppose fingers
   TV_oppose->active  = true;
   TV_oppose->y_target = 0;
-  TV_oppose->y_prec = 1e1; // * (phi>0.?phi:0.); //care only away from surface;
+  TV_oppose->y_prec = tv_oppose_prec; // * (phi>0.?phi:0.); //care only away from surface;
 
-  // position to surface (phi=0)
+  phi_tip = ( phiAtFrame(tipsN(0)->X, tip_nabla_fx_t,tip_sig_a.p+0) 
+      + phiAtFrame(tipsN(1)->X, tip_nabla_fx_t,tip_sig_a.p+1)
+      + phiAtFrame(tipsN(2)->X, tip_nabla_fx_t,tip_sig_a.p+2)
+      )/3;
+  phi_fing = ( phiAtFrame(fingsN(0)->X, fing_nabla_fx_t, NULL)
+      +phiAtFrame(fingsN(1)->X, fing_nabla_fx_t, NULL)
+      +phiAtFrame(fingsN(2)->X, fing_nabla_fx_t, NULL)
+      )/3;
+
+  mult(tip_var_a, tip_sig_a, tip_sig_a);
+  if(graspobj->max_var() > 0 )
+    rel_tip_var_a = tip_var_a / graspobj->max_var();
+  else
+    rel_tip_var_a.setZero();
+  var_m.setZero(); var_m +=1.; var_m -= rel_tip_var_a;
+  SD_DBG("max var: "<<graspobj->max_var()<<
+      " tips' std deviation: " << tip_sig_a <<
+      " tips' var: " << tip_var_a <<
+      " variance fraction: "<<rel_tip_var_a <<
+      " variance multiplier: "<<var_m);
+
+  // position to surface (phi_tip=0)
   TV_zeroLevel->active  = true;
-  TV_zeroLevel->y_target = -phi;
-  TV_zeroLevel->y_prec = 2e1  * (phi>0?(1.-phi):0); //care only at surface
+  /* set targetdependent on variance (large vaeiance-->less
+   * confidence--> target near current; i.e. instead of precision we
+   * alter targets)
+   */
+  mult(TV_zeroLevel->y_target, TV_zeroLevel->y, var_m); 
+  //TV_zeroLevel->y_target = ARR(0,0,0);
+  TV_zeroLevel->y_prec =
+    tv_zeroLevel_prec_m  * (phi_tip>0?(1.-phi_tip):0); //care only at surface
 
-  // TODO: phi for ifnger is not phi for palm!!!!!!
   TV_fingAlign->active  = true;
   TV_fingAlign->y_target = -1.;
-  //TV_fingAlign->y_prec = 1e3 * (phi>0.?phi:0.); //care only if palm is away from surface;
-  TV_fingAlign->y_prec = SD_MAX(1e3 * sin(phi*3.), 0); //care in the middle
-  //TV_fingAlign->y_prec = SD_MAX(1e3 * sin(phi*MT_PI), 0); //care in the middle
-  //TV_fingAlign->y_prec = SD_MAX(1e3 * sin(phi*2.5), 0); //care in the middle
+  //TV_fingAlign->y_prec = 1e3 * (phi_fing>0.?phi_fing:0.); //care only if palm is away from surface;
+  //TV_fingAlign->y_prec = SD_MAX(5e3 * sin(phi_fing*3.), 0); //care in the middle
+  TV_fingAlign->y_prec =
+    SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*MT_PI), 0); //care in the middle
+  //TV_fingAlign->y_prec = SD_MAX(1e3 * sin(phi_fing*2.5), 0); //care in the middle
 
   // align tipsN with gradient
   TV_tipAlign->active  = true;
   TV_tipAlign->y_target = -1.;
-  TV_tipAlign->y_prec = 1e3 * (1.-phi); //care only at surface
+  TV_tipAlign->y_prec =
+    tv_tipAlign_prec_m * (phi_tip>0?(1.-phi_tip):0); //care only at surface
 
 
   // direct q control (hony pot & comfortable)
   TV_q->active            = true;
   TV_q->v_target.setZero();
-  TV_q->v_prec=2e-1;
+  TV_q->v_prec=tv_q_v_prec;
   q_hand_home(TV_q->y_target);
-  TV_q->y_prec=1e-1;
+  TV_q->y_prec=tv_q_y_prec;
 
 
   TV_skin->active = true;
@@ -162,9 +215,9 @@ GraspISFTask::updateTaskVariables(ControllerModule *ctrl){
     TV_skin->y = skin_state;
     // trimm to target value to avoid oxilation
     for(uint i=0;i<TV_skin->y.N;i++)
-      if(TV_skin->y(i)>.02) TV_skin->y(i)=.02;
+      if(TV_skin->y(i)>tv_skin_trgt) TV_skin->y(i)=tv_skin_trgt;
   }else{
-    TV_skin->y=ARR(.01,.01,.01);
+    TV_skin->y=ARR(tv_skin_fake,tv_skin_fake,tv_skin_fake);
   }
   // remove impact of arm joints. only fingers
   for(uint i=0;i<TV_skin->J.d0;i++) for(uint j=0;j<8;j++) TV_skin->J(i,j)=0.;
@@ -174,7 +227,7 @@ GraspISFTask::updateTaskVariables(ControllerModule *ctrl){
   SD_DBG("sum of  zerolevel"<<sum(TV_zeroLevel->y));
   //TV_skin->y_prec = skin_prec;
   
-  if (open_skin && sum(TV_skin->y)>.02) grip = true;// start lift
+  if (open_skin && sum(TV_skin->y)>tv_skin_trgt) grip = true;// start lift
 
   TV_lim->active            = true;
   TV_col->active            = true;
@@ -193,20 +246,20 @@ GraspISFTask::updateTaskVariables(ControllerModule *ctrl){
 
 /** collect data to plot. */
 void
-GraspISFTask::plot_append_data(ControllerModule *ctrl){
+GraspISFTask::plot_append_data(ControllerProcess *ctrl){
   uint i;
   arr nabla_fx_t;
   double d;
 
-  d = phiAtFrame(palm->X, nabla_fx_t);
+  d = phiAtFrame(palm->X, nabla_fx_t, NULL);
 
   plot_data.append(d); // 0
 
   FORStringList(i, tipsN){
-    d=phiAtFrame(tipsN(i)->X, nabla_fx_t);
+    d=phiAtFrame(tipsN(i)->X, nabla_fx_t,NULL);
     plot_data.append(d);//1, 8,15
 
-    d=phiAtFrame(fingsN(i)->X, nabla_fx_t);
+    d=phiAtFrame(fingsN(i)->X, nabla_fx_t,NULL);
     plot_data.append(d);//2, 9,16
 
     plot_data.append(TV_fingAlign->y_target(i) - TV_fingAlign->y(i) );//3,10,17

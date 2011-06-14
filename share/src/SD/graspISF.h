@@ -1,17 +1,20 @@
 #ifndef SD_graspISF_h
 #define SD_graspISF_h
 
+#define STANIO
+
 #include <MT/array.h>
 #include <MT/robot.h>
 #include<MT/specialTaskVariables.h>
 
-#include "utils.h"
+struct GraspObject;
+struct ControllerProcess;
 
 struct GraspISFTask:public TaskAbstraction{
-  PotentialField *graspobj;
+  GraspObject *graspobj;
   GraspISFTask();
-  double phiAtFrame(ors::Transformation& X, arr &grad);
-  void plot_append_data(ControllerModule*);
+  double phiAtFrame(ors::Transformation& X, arr &grad, double *sig);
+  void plot_append_data(ControllerProcess*);
   void plot_all();
 
   MT::Array<ors::Shape*> tipsN;
@@ -40,9 +43,24 @@ struct GraspISFTask:public TaskAbstraction{
 
   /* ------ TAsk Abstraction ----- */
 
-  virtual void updateTaskVariables(ControllerModule*); //overloading the virtual
-  virtual void initTaskVariables(ControllerModule*);
+  virtual void updateTaskVariables(ControllerProcess*); //overloading the virtual
+  virtual void initTaskVariables(ControllerProcess*);
+
+  /* configuration */
+  double tv_palm_prec_m,
+         tv_palm_trgt_m,
+         tv_oppose_prec,
+         tv_zeroLevel_prec_m,
+         tv_fingAlign_prec_m,
+         tv_tipAlign_prec_m,
+         tv_q_v_prec,
+         tv_q_y_prec,
+
+         tv_skin_trgt,
+         tv_skin_fake,
+         tv_skin_prec_thr_zeroLevel;
 };
+
 
 
 #include "graspISF.cpp"

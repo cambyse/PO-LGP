@@ -383,3 +383,78 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
 
   MT::wait(.5); //make the robot really stop...
 }
+
+void RobotActionInterface::graspISF(){
+
+  /*
+  GraspISFProces p;
+
+  p.open();
+  p.threadLoop();
+
+  
+  //trigger the planner to start planning
+  planner.goalVar->writeAccess(NULL);
+  planner.goalVar->goalType=FutureMotionGoal::graspGoalT;
+  planner.goalVar->graspShape=objShape;
+  planner.goalVar->deAccess(NULL);
+
+  // the robot halts
+  s->master.ctrl.taskLock.writeLock();
+  s->mytask.controlMode = stopCM;
+  s->master.ctrl.taskLock.unlock();
+
+  bool bPlanDone = false;
+  bool converged,executed;
+  for(;!schunkShutdown;){
+    planner.planVar->readAccess(NULL);
+    converged=planner.planVar->converged;
+    executed =planner.planVar->executed;
+    planner.planVar->deAccess(NULL);
+    if(converged){
+      s->master.ctrl.taskLock.writeLock();
+      s->mytask.controlMode=followTrajCM;
+      s->master.ctrl.taskLock.unlock();
+    }
+    //WE COULD SPLIT THIS
+    if(executed){
+      s->master.ctrl.taskLock.writeLock();
+      s->mytask.controlMode=stopCM;
+      s->master.ctrl.taskLock.unlock();
+      planner.goalVar->writeAccess(NULL);
+      planner.goalVar->goalType=FutureMotionGoal::noGoalT;
+      planner.goalVar->deAccess(NULL);
+      bPlanDone=true;
+    }
+      
+    if(bPlanDone)  break;
+
+    MT::wait(.2);
+    if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) return;
+  }
+
+  MT::wait(.5); //make the robot really stop...
+
+  s->master.ctrl.taskLock.writeLock();
+  reattachShape((s->master.ctrl.ors), &s->master.ctrl.swift, objShape, "m9", "table");
+  reattachShape(*(s->master.gui.ors), NULL, objShape, "m9", NULL);
+  reattachShape(*(s->master.gui.ors2), NULL, objShape, "m9", NULL);
+  s->master.ctrl.taskLock.unlock();
+
+  s->master.ctrl.taskLock.writeLock();
+  s->mytask.controlMode=closeHandCM;
+  s->master.ctrl.forceColLimTVs=false;
+  s->master.ctrl.taskLock.unlock();
+
+  MT::wait(3.);
+
+  s->master.ctrl.taskLock.writeLock();
+  s->master.ctrl.forceColLimTVs=true;
+  s->mytask.controlMode=stopCM;
+  s->master.ctrl.taskLock.unlock();
+
+  p.close();
+
+  */
+}
+

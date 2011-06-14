@@ -10,6 +10,8 @@
 #include "graspObjects.h"
 #endif
 
+struct PotentialField;
+
 //===========================================================================
 //
 // types
@@ -28,7 +30,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape);
 void setPlaceGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowFromShape,const char* belowToShape);
 void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowToShape);
 
-#if 0
+#ifdef STANIO
 //===========================================================================
 //
 // novel, more complex task variables

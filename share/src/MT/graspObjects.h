@@ -121,9 +121,7 @@ struct offset_param_t {
   offset_param_t(arr _off,void *_p ){p=_p;off=_off;};
 };
 
-#ifdef  MT_IMPLEMENTATION
 #include "graspObjects.cxx"
-#endif
 
 #endif
 
