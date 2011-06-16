@@ -1,0 +1,52 @@
+Description
+-----------
+
+Reach and grasp an object with giiven coordinates and shape using implicit
+surface representation and a reactive controller.
+
+General instructions
+--------------------
+
+- Most parameters have reasonable defaults in the MT.cfg
+- Specific parameters are
+
+  - shape: 0 = sphere, 2 = cylinder, ... see the code
+  - center [c1, c2, c3] is the center of the synthetic potential function
+    (object)
+  - radius is the imaginary radius of the obj
+  - sigma is the parameter of the RBF exp(- s * dist*dist) used as potential
+    function
+  - sudo is needed only if you want the gui to be niced leaving more time for
+    the hardware control NOTE: then, any created by x.exe files are owned by
+    root. In particular, if you start again without sudo, you typically will
+    not be able to write to the plot files!!!
+
+- start with something like 
+
+    make && sudo ./x.exe -shape 2 \
+      -center "[ -.5 -.6 1.3 ]" -sigma 2 -radius .06   && ./plot.sh
+
+  This one brings Grobi to grasp an object in front of the camera
+
+    make && ./x.exe -center "[.6 -.4 1.1 ]" -sigma 10 -radius .002 
+    make && ./x.exe -center "[.0 -.9 .8 ]" \
+      -shape 2 -height .15  -sigma 5 -radius .04  && ./plot.sh
+
+
+Issues
+------
+
+- correction of calibration error  (radius and shift)
+- too short trajectories seem to not allow for precise reach and opening the
+  fingers?
+- ...  
+
+Notes
+-----
+
+working with skin:
+
+take care of
+- skin pressure threshold (search for 'lift')
+- threshold to activate skin  
+- vision biased center of object +some mm  
