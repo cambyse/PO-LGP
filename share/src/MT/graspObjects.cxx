@@ -65,7 +65,7 @@ void
 PotentialField::buildMesh(){
   uint i;
   arr mins, maxs;
-  arr c = MT::getParameter<arr>("center");
+  arr ce = center();
   double lo, hi;
   const uint resol = 100;
   const double range = 1.5;
@@ -96,7 +96,7 @@ PotentialField::buildMesh(){
     X.setGrid(3,lo,hi,50);
     dX.resizeAs(X);
     for(i=0;i<X.d0;i++){
-      X[i]()+=c;
+      X[i]()+=ce;
       psi(&dX[i](),X[i]);
     }
     dX *= .005;

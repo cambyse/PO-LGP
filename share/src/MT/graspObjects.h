@@ -37,6 +37,7 @@ struct PotentialField : public MeshObject
     if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
   }
   void buildMesh();
+  virtual arr center(){return ARR(0,0,0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
 
 };
 
@@ -47,7 +48,6 @@ struct GraspObject : public PotentialField
   virtual double phi(arr *grad,double *var,const arr& x);
   void getNormGrad(arr& grad,const arr& x) ;
   virtual double max_var(){return 0;}
-  virtual arr center(){return ARR(0,0,0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
 
 };
 
