@@ -26,6 +26,9 @@ Percept_ISF_process::get_percept_obj(GraspObject **obj) {/*get object once*/
 
   SD_INF("getting object from perception ...");
 
+  double h,r;
+  arr ce;
+
   MT::Array<Object> *percobjs=&perc_out->objects;
   bool found=false;
   while(!found){
@@ -36,21 +39,17 @@ Percept_ISF_process::get_percept_obj(GraspObject **obj) {/*get object once*/
   
   perc_out->readAccess(this);
 
-  GraspObject_Sphere *os;
-  GraspObject_Cylinder1 *oc;
+  ce = percobjs->p[0].center3d+ARR(-.02,.0,.005);
+  r = percobjs->p[0].orsShapeParams(3)+.03;
+  h = percobjs->p[0].orsShapeParams(2);
+  //above additions are hack to avoid systematic error
   switch (shape) {
-    case 2: *obj = new GraspObject_Cylinder1(); 
-              oc = ((GraspObject_Cylinder1*)*obj);
-              oc->h = percobjs->p[0].orsShapeParams(2);
-              oc->r = percobjs->p[0].orsShapeParams(3)+.03;
-              oc->c = percobjs->p[0].center3d+ARR(-.02,.0,.005);
-              //above additions are hack to avoid systematic error
-            break;
-    case 0: *obj = new GraspObject_Sphere(); 
-              os = ((GraspObject_Sphere*)*obj);
-              os->r = percobjs->p[0].orsShapeParams(3)+.03;
-              os->c = percobjs->p[0].center3d+ARR(-.02,.0,.005);
-            break;
+    case 2:
+      *obj = new GraspObject_Cylinder1(ce, zorientation, r, sigma, h);
+      break;
+    case 0:
+      *obj = new GraspObject_Sphere(ce,r,sigma); 
+      break;
     default:  HALT("Provide proper shape!");
   }
 
@@ -69,17 +68,17 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject **obj, GraspObject **prior){
   /* create the correct prior (only if
    * GraspObject_GP_analytical_prior) */
   switch (shapeprior) {
-    case 3: *prior = new GraspObject_InfCylinder(); break;
-    case 2: *prior = new GraspObject_Cylinder1(); break;
-    case 1: *prior = new GraspObject_Sphere(); break;
+    case 0: *prior = new GraspObject_Sphere(center, radius, sigma); break;
+    case 1: *prior = new GraspObject_InfCylinder(center, zorientation, radius, sigma); break;
+    case 2: *prior = new GraspObject_Cylinder1(center, zorientation, radius, sigma, height); break;
     default:*prior = NULL;
   }
 
   /* create the right object type */
   switch (shape) {
+    case 0: *obj = new GraspObject_Sphere(center, radius, sigma); break;
     case 1: *obj = new GraspObject_InfCylinder(center, zorientation, radius, sigma); break;
     case 2: *obj = new GraspObject_Cylinder1(center, zorientation, radius, sigma, height); break;
-    case 0: *obj = new GraspObject_Sphere(center, radius, sigma); break;
     case 3: *obj = new GraspObject_GPblob(); break;
     case 4: /* analytical prior */
             if (!prior) HALT("Provide meaningful -shapeprior!");
@@ -88,8 +87,8 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject **obj, GraspObject **prior){
               plotPoints(((GraspObject_GP*)*obj)->isf_gp.gp.X);
             break;
     case 5: 
-            // *obj = new GraspObject_Cylinder1();
-            *obj = new GraspObject_Sphere();
+            // *obj = new GraspObject_Cylinder1(center, zorientation, radius, sigma, height);
+            *obj = new GraspObject_Sphere(center, radius, sigma);
             break;
     case 6: /* sample GP object */
             *obj = new GraspObject_GP();
@@ -148,6 +147,7 @@ void Percept_ISF_process::step(){
   if(prior) prior->buildMesh();
   */
   
+  MT::wait(.01);
 }
 
 void Percept_ISF_process::close(){

@@ -18,15 +18,8 @@ struct Percept_ISF_process:public Process{
   void get_grasp_obj(GraspObject **, GraspObject **);
 
   /* configuration */
-  uint obj_comes_from,
-       shape,
-       shapeprior,
-       radius,
-       sigma,
-       height,
-       plotObservs,
-       observs,
-       seed;
+  uint obj_comes_from, shape, shapeprior, plotObservs, observs, seed;
+  double radius, sigma, height;
   arr center, zorientation;
 
 };
