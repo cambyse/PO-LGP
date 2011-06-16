@@ -36,20 +36,21 @@ get_joy_state(RobotModuleGroup& robot){
 }
 
 void
-get_skin_state(GraspISFTask& task, RobotModuleGroup& robot ){
+get_skin_state(RobotModuleGroup& robot ){
 
     SkinPressureVar *skin = &robot.skinPressureVar;
+    GraspISFTask *task = (GraspISFTask*)robot.ctrl.task;
 
-    if(task.open_skin){
+    if(task->open_skin){
       skin->readAccess(NULL);
-      task.skin_state =
+      task->skin_state =
         ARR( skin->y_real(0), skin->y_real(2),skin->y_real(4));
       skin->deAccess(NULL);
       /* trimm to target value to avoid oscilation */
-      for(uint i=0;i<task.TV_skin->y.N;i++)
-        if(task.TV_skin->y(i)>task.tv_skin_trgt) task.TV_skin->y(i)=task.tv_skin_trgt;
+      for(uint i=0;i<task->TV_skin->y.N;i++)
+        if(task->TV_skin->y(i)>task->tv_skin_trgt) task->TV_skin->y(i)=task->tv_skin_trgt;
     }else{ /* simulate */
-      task.TV_skin->y=ARR(task.tv_skin_fake,task.tv_skin_fake,task.tv_skin_fake);
+      task->TV_skin->y=ARR(task->tv_skin_fake,task->tv_skin_fake,task->tv_skin_fake);
     }
 }
 
@@ -105,12 +106,12 @@ main(int argn,char** argv){
 
   //plot_belief_slices(*(GraspObject_GP*)graspobj);
 
-  Percept_ISF_process perceive;
 
-  PerceptionModule perc; 
   GraspISFTask task;
-  MT::wait(2);//DBG: why is MT.cfg locked. give time to constructors to read all that stuff
+  DummyTask dummy;
 
+  Percept_ISF_process perceive;
+  PerceptionModule perc; 
   RobotModuleGroup robot;
   RevelInterface revel;
 
@@ -119,28 +120,29 @@ main(int argn,char** argv){
   robot.gui.perceptionOutputVar=&perc.output;
   perceive.perc_out = &perc.output;
 
-  DummyTask dummy;
-  robot.ctrl.task=&dummy;
-
-
-  perceive.threadLoop();
-
-  // TODO wait until perceive got obj.
-  MT::wait(2);
+  /* set task to do nothing */
+  robot.ctrl.task = &dummy;
 
   robot.open();
   perc.threadOpen();
+  perceive.threadLoop();
 
-  robot.ctrl.task=&task;
+  /* wait until perceive got obj. */
+  while(!graspobj.o) MT::wait(.01); 
   task.graspobj = graspobj.o;
+
+  /* change task to grasping */
+  robot.ctrl.change_task(&task);
 
   // skin -> graspISFtask
   task.open_skin = robot.openSkin;
-  get_skin_state(task,robot);
+  get_skin_state(robot);
 
-  graspobj.readAccess(NULL);
+  graspobj.writeAccess(NULL);
   SD_INF("Building mesh, patience...");
   graspobj.o->buildMesh();
+  graspobj.deAccess(NULL);
+  graspobj.readAccess(NULL);
   robot.gui.gl->addView(0,glDrawMeshObject,graspobj.o);
   robot.gui.gl->addView(1,glDrawMeshObject,graspobj.o);
   if(graspobj.prior){
@@ -164,7 +166,7 @@ main(int argn,char** argv){
   for(;!robot.signalStop;){ //catches the ^C key
 
     // skin -> graspISFtask
-    get_skin_state(task,robot);
+    get_skin_state(robot);
 
     robot.step();
     if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
@@ -183,6 +185,7 @@ main(int argn,char** argv){
   revel.close();
   robot.close();
   perc.threadClose();
+  perceive.threadClose();
 
   plotClear();
   task.plot_all();
