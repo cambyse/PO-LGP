@@ -13,17 +13,21 @@ struct Percept_ISF_process:public Process{
   void step();
   void close();
 
-  void get_percept_obj(GraspObject *);
-  void get_cmd_line_obj(GraspObject *, GraspObject *);
-  void get_grasp_obj(GraspObject *, GraspObject *);
+  void get_percept_obj(GraspObject **);
+  void get_cmd_line_obj(GraspObject **, GraspObject **);
+  void get_grasp_obj(GraspObject **, GraspObject **);
 
   /* configuration */
   uint obj_comes_from,
        shape,
        shapeprior,
+       radius,
+       sigma,
+       height,
        plotObservs,
        observs,
        seed;
+  arr center, zorientation;
 
 };
 

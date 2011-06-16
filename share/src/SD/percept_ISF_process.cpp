@@ -3,17 +3,26 @@
 Percept_ISF_process::Percept_ISF_process():Process("percept ISF"){
   graspobj=NULL;
   perc_out=NULL;
+  /* perception vs cmd line */
   obj_comes_from = MT::getParameter<uint>("obj_comes_from");
+  /* shape params */
   shape = MT::getParameter<uint>("shape");
   shapeprior = MT::getParameter<uint>("shapeprior",0);
+  center = MT::getParameter<arr>("center");
+  radius = MT::getParameter<double>("radius");
+  sigma = MT::getParameter<double>("sigma");
+  height = MT::getParameter<double>("height");
+  zorientation  = MT::getParameter<arr>("orientation");
+  /* plot  params */
   plotObservs = MT::getParameter<uint>("plotObservs", 1);
   observs = MT::getParameter<uint>("observs", 1);
+  /* random */
   seed = MT::getParameter<uint>("seed", 1);
 
 };
 
 void
-Percept_ISF_process::get_percept_obj(GraspObject *obj) {/*get object once*/
+Percept_ISF_process::get_percept_obj(GraspObject **obj) {/*get object once*/
 
   SD_INF("getting object from perception ...");
 
@@ -30,15 +39,15 @@ Percept_ISF_process::get_percept_obj(GraspObject *obj) {/*get object once*/
   GraspObject_Sphere *os;
   GraspObject_Cylinder1 *oc;
   switch (shape) {
-    case 2: obj = new GraspObject_Cylinder1(); 
-              oc = ((GraspObject_Cylinder1*)obj);
+    case 2: *obj = new GraspObject_Cylinder1(); 
+              oc = ((GraspObject_Cylinder1*)*obj);
               oc->h = percobjs->p[0].orsShapeParams(2);
               oc->r = percobjs->p[0].orsShapeParams(3)+.03;
               oc->c = percobjs->p[0].center3d+ARR(-.02,.0,.005);
               //above additions are hack to avoid systematic error
             break;
-    case 0: obj = new GraspObject_Sphere(); 
-              os = ((GraspObject_Sphere*)obj);
+    case 0: *obj = new GraspObject_Sphere(); 
+              os = ((GraspObject_Sphere*)*obj);
               os->r = percobjs->p[0].orsShapeParams(3)+.03;
               os->c = percobjs->p[0].center3d+ARR(-.02,.0,.005);
             break;
@@ -51,7 +60,7 @@ Percept_ISF_process::get_percept_obj(GraspObject *obj) {/*get object once*/
 }
 
 void
-Percept_ISF_process::get_cmd_line_obj(GraspObject *obj, GraspObject *prior){
+Percept_ISF_process::get_cmd_line_obj(GraspObject **obj, GraspObject **prior){
 
   arr pts,grads;
   uint i;
@@ -60,34 +69,34 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject *obj, GraspObject *prior){
   /* create the correct prior (only if
    * GraspObject_GP_analytical_prior) */
   switch (shapeprior) {
-    case 3: prior = new GraspObject_InfCylinder(); break;
-    case 2: prior = new GraspObject_Cylinder1(); break;
-    case 1: prior = new GraspObject_Sphere(); break;
-    default:  prior = NULL;
+    case 3: *prior = new GraspObject_InfCylinder(); break;
+    case 2: *prior = new GraspObject_Cylinder1(); break;
+    case 1: *prior = new GraspObject_Sphere(); break;
+    default:*prior = NULL;
   }
 
   /* create the right object type */
   switch (shape) {
-    case 1: obj = new GraspObject_InfCylinder(); break;
-    case 2: obj = new GraspObject_Cylinder1(); break;
-    case 0: obj = new GraspObject_Sphere(); break;
-    case 3: obj = new GraspObject_GPblob(); break;
+    case 1: *obj = new GraspObject_InfCylinder(center, zorientation, radius, sigma); break;
+    case 2: *obj = new GraspObject_Cylinder1(center, zorientation, radius, sigma, height); break;
+    case 0: *obj = new GraspObject_Sphere(center, radius, sigma); break;
+    case 3: *obj = new GraspObject_GPblob(); break;
     case 4: /* analytical prior */
             if (!prior) HALT("Provide meaningful -shapeprior!");
-            obj = new GraspObject_GP_analytical_prior(prior);
+            *obj = new GraspObject_GP_analytical_prior(*prior);
             if (plotObservs)
-              plotPoints(((GraspObject_GP*)obj)->isf_gp.gp.X);
+              plotPoints(((GraspObject_GP*)*obj)->isf_gp.gp.X);
             break;
     case 5: 
-            // obj = new GraspObject_Cylinder1();
-            obj = new GraspObject_Sphere();
+            // *obj = new GraspObject_Cylinder1();
+            *obj = new GraspObject_Sphere();
             break;
     case 6: /* sample GP object */
-            obj = new GraspObject_GP();
-            o = (GraspObject_GP*)obj;
+            *obj = new GraspObject_GP();
+            o = (GraspObject_GP*)*obj;
             if (!prior) HALT("Provide meaningful -shapeprior!");
             MT::rnd.seed(seed);
-            get_observs_gradwalk(pts, grads, prior,
+            get_observs_gradwalk(pts, grads, *prior,
                 ARR(-2,-2,0), ARR(2,0,2),
                 observs);
             FOR1D(pts, i){
@@ -105,7 +114,7 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject *obj, GraspObject *prior){
 }
 
 void
-Percept_ISF_process::get_grasp_obj(GraspObject *obj, GraspObject *prior){
+Percept_ISF_process::get_grasp_obj(GraspObject **obj, GraspObject **prior){
 
 
   switch (obj_comes_from) {
@@ -126,7 +135,7 @@ void Percept_ISF_process::step(){
 
   GraspObject *obj=NULL, *prior=NULL;
 
-  get_grasp_obj(obj, prior);
+  get_grasp_obj(&obj, &prior);
 
   graspobj->writeAccess(this);
   graspobj->o=obj;
