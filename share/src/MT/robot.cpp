@@ -177,6 +177,19 @@ void ControllerProcess::step(){
   timer.cycleDone();
 }
 
+TaskAbstraction *
+ControllerProcess::change_task(TaskAbstraction *_task){
+
+  TaskAbstraction *old_task;
+
+  taskLock.writeLock();
+  old_task = task;
+  task = _task;
+  _task->initTaskVariables(this);
+  taskLock.unlock();
+  return old_task;
+}
+
 //===========================================================================
 //
 // Robot Module Master

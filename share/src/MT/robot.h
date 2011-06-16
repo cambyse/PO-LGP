@@ -107,6 +107,8 @@ struct ControllerProcess:public Process{ //--non-threaded!!
   void open();
   void step();
   void close();
+
+  TaskAbstraction *change_task(TaskAbstraction *task);
 };
 
 //===========================================================================
