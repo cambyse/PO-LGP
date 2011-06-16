@@ -85,6 +85,7 @@ struct GraspObject_Sphere:public GraspObject{
   
   double distanceToSurface(arr *grad,const arr& x);
   GraspObject_Sphere();
+  GraspObject_Sphere(arr&, double, double);
   arr center(){return c;};
 };
 

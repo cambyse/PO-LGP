@@ -212,6 +212,12 @@ GraspObject_Sphere::GraspObject_Sphere(){
   s = MT::getParameter<double>("sigma");
 }
 
+GraspObject_Sphere::GraspObject_Sphere(arr &c1, double r1, double s1){
+  c = c1;
+  r = r1;
+  s = s1;
+}
+
 /* =============== ISF GP ================ */
 
 double

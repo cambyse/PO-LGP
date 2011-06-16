@@ -114,8 +114,7 @@ struct GraspObjectVar:public Variable{
   GraspObject *o;
   GraspObject *prior;//?remove
 
-  GraspObjectVar():Variable("grasp object"){
-  }
+  GraspObjectVar():Variable("grasp object"){};
 };
 
 
