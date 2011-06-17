@@ -7,6 +7,7 @@
 #include<SD/utils.h>
 #include<SD/surface_helpers.h>
 #include<SD/percept_ISF_process.h>
+#include<SD/build_mesh_process.h>
 
 #include <MT/earlyVisionModule.h>
 #include <MT/perceptionModule.h>
@@ -111,10 +112,12 @@ main(int argn,char** argv){
   DummyTask dummy;
 
   Percept_ISF_process perceive;
+  Build_mesh_process buildmesh;
   PerceptionModule perc; 
   RobotModuleGroup robot;
   RevelInterface revel;
 
+  buildmesh.obj=&graspobj;
   perceive.graspobj=&graspobj;
   perc.input=&robot.evis.output;
   robot.gui.perceptionOutputVar=&perc.output;
@@ -126,8 +129,9 @@ main(int argn,char** argv){
   robot.open();
   perc.threadOpen();
   perceive.threadLoop();
+  buildmesh.threadLoop();
 
-  /* wait until perceive got obj. */
+  /* wait until perceive got obj. TODO: condition correct?*/
   while(!graspobj.o) MT::wait(.01); 
   task.graspobj = graspobj.o;
 
@@ -138,10 +142,6 @@ main(int argn,char** argv){
   task.open_skin = robot.openSkin;
   get_skin_state(robot);
 
-  graspobj.writeAccess(NULL);
-  SD_INF("Building mesh, patience...");
-  graspobj.o->buildMesh();
-  graspobj.deAccess(NULL);
   graspobj.readAccess(NULL);
   robot.gui.gl->addView(0,glDrawMeshObject,graspobj.o);
   robot.gui.gl->addView(1,glDrawMeshObject,graspobj.o);
@@ -170,22 +170,12 @@ main(int argn,char** argv){
 
     robot.step();
     if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
-
-    //MT::wait(.02);
-
-    /*
-       robot.gui.readAccess(NULL);
-       robot.gui.gl->update();
-       revel.addFrameFromOpengl();
-       robot.gui.deAccess(NULL);
-     */
-
-    // for reactive: try get_perc_obj() here but switch off buildMesh for performance
   }
   revel.close();
   robot.close();
   perc.threadClose();
   perceive.threadClose();
+  buildmesh.threadClose();
 
   plotClear();
   task.plot_all();
