@@ -141,12 +141,6 @@ void Percept_ISF_process::step(){
   graspobj->prior=prior;
   graspobj->deAccess(this);
 
-  /* // TODO move this to a place it doesn't slow execution
-  SD_INF("Building mesh, patience...");
-  obj->buildMesh();
-  if(prior) prior->buildMesh();
-  */
-  
   MT::wait(.01);
 }
 
