@@ -69,6 +69,9 @@ struct TaskAbstraction{
 
   virtual void initTaskVariables(ControllerProcess*);
   virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
+
+  // helper
+  void prepare_skin(ControllerProcess*,bool);
 };
 
 
@@ -166,6 +169,26 @@ struct RobotModuleGroup{
   void close();
 };
 
+#define _BasicRobotTask(BasicRobotTaskName)   \
+ \
+struct BasicRobotTaskName:public TaskAbstraction{ \
+  virtual void initTaskVariables(ControllerProcess *ctrl){ \
+    TaskAbstraction::initTaskVariables(ctrl); \
+  }; \
+  virtual void updateTaskVariables(ControllerProcess*); \
+  static BasicRobotTaskName *p; \
+  static BasicRobotTaskName *a(){if (!p) p=new BasicRobotTaskName(); return p;}; \
+};
+// end template
+
+_BasicRobotTask(DoNothing)
+_BasicRobotTask(Stop)
+_BasicRobotTask(Homing)
+_BasicRobotTask(OpenHand)
+_BasicRobotTask(CloseHand)
+_BasicRobotTask(Reach)
+_BasicRobotTask(FollowTrajectory)
+_BasicRobotTask(Joystick)
 
 #ifdef  MT_IMPLEMENTATION
 #  include "robot.cpp"

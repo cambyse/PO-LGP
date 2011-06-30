@@ -43,9 +43,7 @@ void RobotActionInterface::close(){
 }
 
 void RobotActionInterface::wait(double sec){
-	s->master.ctrl.taskLock.writeLock();
-	s->mytask.controlMode = stopCM;
-	s->master.ctrl.taskLock.unlock();
+    s->master.ctrl.change_task(Stop::a());
 	double time=MT::realTime();
 	for(;!schunkShutdown;){
 		MT::wait(.2);
@@ -56,24 +54,18 @@ void RobotActionInterface::wait(double sec){
 }
 
 void RobotActionInterface::joystick(){
-	s->master.ctrl.taskLock.writeLock();
-	s->mytask.controlMode = joystickCM;
-	s->master.ctrl.taskLock.unlock();
-	for(;!schunkShutdown;){
-		MT::wait(.2);
-		if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
-	}
-	s->master.ctrl.taskLock.writeLock();
-	s->mytask.controlMode = stopCM;
-	s->master.ctrl.taskLock.unlock();
-	for(uint t=0;t<10;t++) s->master.step();
-	//while(s->master.joy.state(0)!=0) s->master.step();
+  s->master.ctrl.change_task(Joystick::a());
+  for(;!schunkShutdown;){
+    MT::wait(.2);
+    if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
+  }
+  s->master.ctrl.change_task(Stop::a());
+  for(uint t=0;t<10;t++) s->master.step();
+  //while(s->master.joy.state(0)!=0) s->master.step();
 }
 
 void RobotActionInterface::homing(){
-	s->master.ctrl.taskLock.writeLock();
-	s->mytask.controlMode = homingCM;
-	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Homing::a());
 	for(;!schunkShutdown;){
 		MT::wait(.2);
 		double dist=norm(s->master.ctrl.q_reference);
@@ -81,15 +73,13 @@ void RobotActionInterface::homing(){
 		if(dist<1e-1) break;
 		if(s->master.joy.state(0)&0x30) break;
 	}
-	s->master.ctrl.taskLock.writeLock();
-	s->mytask.controlMode = stopCM;
-	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 }
 
 void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
+  s->master.ctrl.change_task(DoNothing::a());
 	s->master.ctrl.taskLock.writeLock();
 	TaskAbstraction *task = &s->mytask;
-	s->mytask.controlMode = prefixedCM;
 
 	TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
 	TV.setGainsAsNatural(3.,1.,false);
@@ -113,14 +103,14 @@ void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double
 
 	s->master.ctrl.taskLock.writeLock();
 	s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-	s->mytask.controlMode = stopCM;
 	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 }
 
 void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
+  s->master.ctrl.change_task(DoNothing::a());
 	s->master.ctrl.taskLock.writeLock();
 	TaskAbstraction *task = &s->mytask;
-	s->mytask.controlMode = prefixedCM;
 
 	TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
 	TV.setGainsAsNatural(3.,1.,false);
@@ -152,8 +142,8 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
 
 	s->master.ctrl.taskLock.writeLock();
 	s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-	s->mytask.controlMode = stopCM;
 	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 }
 
 void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
@@ -168,9 +158,7 @@ void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
 }
 
 void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode = stopCM;
-  s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
   for(;!schunkShutdown;){
     perc.output.readAccess(NULL);
     bool bPerceive = false;
@@ -221,9 +209,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   planner.goalVar->deAccess(NULL);
 
   // the robot halts
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode = stopCM;
-  s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
   bool converged,executed;
@@ -233,15 +219,11 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
     executed =planner.planVar->executed;
     planner.planVar->deAccess(NULL);
     if(converged){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=followTrajCM;
-      s->master.ctrl.taskLock.unlock();
+      s->master.ctrl.change_task(FollowTrajectory::a());
     }
     //WE COULD SPLIT THIS
     if(executed){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=stopCM;
-      s->master.ctrl.taskLock.unlock();
+      s->master.ctrl.change_task(Stop::a());
       planner.goalVar->writeAccess(NULL);
       planner.goalVar->goalType=FutureMotionGoal::noGoalT;
       planner.goalVar->deAccess(NULL);
@@ -262,8 +244,8 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   reattachShape(*(s->master.gui.ors2), NULL, objShape, "m9", NULL);
   s->master.ctrl.taskLock.unlock();
 
+  s->master.ctrl.change_task(CloseHand::a());
   s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode=closeHandCM;
   s->master.ctrl.forceColLimTVs=false;
   s->master.ctrl.taskLock.unlock();
 
@@ -271,8 +253,8 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
 
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=true;
-  s->mytask.controlMode=stopCM;
   s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 
 }
 
@@ -284,9 +266,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   planner.goalVar->belowToShape=belowToShape;
   planner.goalVar->deAccess(NULL);
 
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode = stopCM;
-  s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
   bool converged,executed;
@@ -298,13 +278,13 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
     if(converged){
       s->master.ctrl.taskLock.writeLock();
       s->master.ctrl.fixFingers=true;
-      s->mytask.controlMode=followTrajCM;
       s->master.ctrl.taskLock.unlock();
+      s->master.ctrl.change_task(FollowTrajectory::a());
     }
     //WE COULD SPLIT THIS
     if(executed){
+      s->master.ctrl.change_task(Stop::a());
       s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=stopCM;
       s->master.ctrl.fixFingers=false;
       s->master.ctrl.taskLock.unlock();
       planner.goalVar->writeAccess(NULL);
@@ -327,8 +307,8 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   reattachShape(*s->master.gui.ors2, NULL, objShape, "OBJECTS", NULL);
   s->master.ctrl.taskLock.unlock();
 
+  s->master.ctrl.change_task(OpenHand::a());
   s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode=openHandCM;
   s->master.ctrl.forceColLimTVs=false;
   s->master.ctrl.taskLock.unlock();
 
@@ -336,8 +316,8 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
 
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=true;
-  s->mytask.controlMode=stopCM;
   s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 }
 
 void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const char* objShape,const char* belowToShape){
@@ -348,9 +328,7 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
   planner.goalVar->belowToShape=belowToShape;
   planner.goalVar->deAccess(NULL);
 
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode = stopCM;
-  s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
   bool converged,executed;
@@ -360,15 +338,11 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
     executed =planner.planVar->executed;
     planner.planVar->deAccess(NULL);
     if(converged){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=followTrajCM;
-      s->master.ctrl.taskLock.unlock();
+      s->master.ctrl.change_task(FollowTrajectory::a());
     }
     //WE COULD SPLIT THIS
     if(executed){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=stopCM;
-      s->master.ctrl.taskLock.unlock();
+      s->master.ctrl.change_task(Stop::a());
       planner.goalVar->writeAccess(NULL);
       planner.goalVar->goalType=FutureMotionGoal::noGoalT;
       planner.goalVar->deAccess(NULL);
@@ -387,74 +361,15 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
 void RobotActionInterface::graspISF(){
 
   /*
-  GraspISFProces p;
+  Percept_ISF_process perceive;
+  GraspObjectVar graspobj;
+  perceive.perc_out = &s->perc....
+  &graspobj.o = perceive.graspobj;
 
-  p.open();
-  p.threadLoop();
+  perceive.threadOpen();
+  s->master.ctrl.change_task(GraspISF::a());
 
-  
-  //trigger the planner to start planning
-  planner.goalVar->writeAccess(NULL);
-  planner.goalVar->goalType=FutureMotionGoal::graspGoalT;
-  planner.goalVar->graspShape=objShape;
-  planner.goalVar->deAccess(NULL);
-
-  // the robot halts
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode = stopCM;
-  s->master.ctrl.taskLock.unlock();
-
-  bool bPlanDone = false;
-  bool converged,executed;
-  for(;!schunkShutdown;){
-    planner.planVar->readAccess(NULL);
-    converged=planner.planVar->converged;
-    executed =planner.planVar->executed;
-    planner.planVar->deAccess(NULL);
-    if(converged){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=followTrajCM;
-      s->master.ctrl.taskLock.unlock();
-    }
-    //WE COULD SPLIT THIS
-    if(executed){
-      s->master.ctrl.taskLock.writeLock();
-      s->mytask.controlMode=stopCM;
-      s->master.ctrl.taskLock.unlock();
-      planner.goalVar->writeAccess(NULL);
-      planner.goalVar->goalType=FutureMotionGoal::noGoalT;
-      planner.goalVar->deAccess(NULL);
-      bPlanDone=true;
-    }
-      
-    if(bPlanDone)  break;
-
-    MT::wait(.2);
-    if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) return;
-  }
-
-  MT::wait(.5); //make the robot really stop...
-
-  s->master.ctrl.taskLock.writeLock();
-  reattachShape((s->master.ctrl.ors), &s->master.ctrl.swift, objShape, "m9", "table");
-  reattachShape(*(s->master.gui.ors), NULL, objShape, "m9", NULL);
-  reattachShape(*(s->master.gui.ors2), NULL, objShape, "m9", NULL);
-  s->master.ctrl.taskLock.unlock();
-
-  s->master.ctrl.taskLock.writeLock();
-  s->mytask.controlMode=closeHandCM;
-  s->master.ctrl.forceColLimTVs=false;
-  s->master.ctrl.taskLock.unlock();
-
-  MT::wait(3.);
-
-  s->master.ctrl.taskLock.writeLock();
-  s->master.ctrl.forceColLimTVs=true;
-  s->mytask.controlMode=stopCM;
-  s->master.ctrl.taskLock.unlock();
-
-  p.close();
-
+  perceive.threadClose();
   */
 }
 
