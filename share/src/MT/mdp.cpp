@@ -615,7 +615,7 @@ void mdp::neutralSplit(arr& P0y0,arr& Pa0,uint i,double eps){
 }
 
 //! .
-void generateStandardProblem(mdp::MDPProblem problem,arr& Pxax,arr& Pyxa,arr& Px,arr& Rax){
+void generateStandardProblem(mdp::MDPProblem problem,arr& Px,arr& Pxax,arr& Pyxa,arr& Rax){
   byteA maze;
   switch(problem){
     case mdp::tinyMaze:
@@ -624,10 +624,24 @@ void generateStandardProblem(mdp::MDPProblem problem,arr& Pxax,arr& Pyxa,arr& Px
           0 3]";
       maze-=(byte)'0';
   
-      mazeToP(maze,Pxax,Pyxa,Px,Rax,true);
+      mazeToP(maze,Px,Pxax,Pyxa,Rax,false);
       mdp::tunnel(Pxax,-1,1);
   
       //addActionNoise(Pxax,.1);
+      break;
+    case mdp::miniMaze:
+      maze <<"[\
+          0 0 0;\
+          0 1 0;\
+          2 1 3]";
+      maze-=(byte)'0';
+  
+      mazeToP(maze,Px,Pxax,Pyxa,Rax,false);
+      mdp::tunnelRaxToPx(Pxax,Rax,Px);
+      mdp::addActionNoise(Pxax,MT::getParameter<double>("mazeNoise"));
+      mdp::showMaze();
+  
+      //mdp::addActionNoise(Pxax,.1);
       break;
     case mdp::simpleMaze:
       maze <<"[\
@@ -645,7 +659,7 @@ void generateStandardProblem(mdp::MDPProblem problem,arr& Pxax,arr& Pyxa,arr& Px
          1 1 1 1 1 1 1]";*/
       maze-=(byte)'0';
   
-      mazeToP(maze,Pxax,Pyxa,Px,Rax,true);
+      mazeToP(maze,Px,Pxax,Pyxa,Rax,false);
       mdp::tunnel(Pxax,-1,-2);
   
       //addActionNoise(Pxax,.1);
@@ -657,7 +671,7 @@ void generateStandardProblem(mdp::MDPProblem problem,arr& Pxax,arr& Pyxa,arr& Px
           0 0 1 1 1 0 0 ]";
       maze-=(byte)'0';
   
-      mazeToP(maze,Pxax,Pyxa,Px,Rax,true);
+      mazeToP(maze,Px,Pxax,Pyxa,Rax,false);
       mdp::tunnel(Pxax,0,7);
       mdp::tunnel(Pxax,6,13);
   

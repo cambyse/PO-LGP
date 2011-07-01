@@ -120,7 +120,7 @@ void SetAMPLPolicy(arr& P0y0, arr& Pa0);
 //
 
 extern byteA global_maze;
-enum MDPProblem{ tinyMaze, simpleMaze, heavenAndHell };
+ enum MDPProblem{ tinyMaze, miniMaze, simpleMaze, heavenAndHell };
 void generateStandardProblem(MDP& mdp,MDPProblem problem);
 void mazeToMDP(MDP& mdp, const byteA& maze);
 void addActionNoise(arr& Pxax,double eps);

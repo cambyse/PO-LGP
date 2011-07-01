@@ -47,7 +47,7 @@ void loadProblem(mdp::MDP& mdp,const char* problem){
   uint n=strlen(problem);
   if(!strcmp(problem,"simpleMaze")){
     cout <<"loading standard problem: simpleMaze" <<endl;
-    mdp::generateStandardProblem(mdp,mdp::simpleMaze); //tinyMaze //heavenAndHell
+    mdp::generateStandardProblem(mdp,mdp::miniMaze); //tinyMaze //heavenAndHell
     mdp.gamma=PARAMS.gamma;
     mdp::createNeighorList(mdp);
   }else if(!strcmp(problem+n-3,"ppm")){
@@ -186,7 +186,7 @@ void testSolvers(uint method,const mdp::MDP& mdp){
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
-  if(argn<2){
+  if(!MT::checkParameter<uint>("mode")){
     char buf[256];
     ifstream is;
     MT::open(is,"README");
@@ -220,6 +220,7 @@ int main(int argn,char** argv){
   case 2: scanArrFile(PARAMS.problem); break;
   case 3:
     loadProblem(mdp,PARAMS.problem);
+    writeMDP_arr(mdp,"z.mdp");
     testSolvers(PARAMS.method,mdp);
     break;
   default:

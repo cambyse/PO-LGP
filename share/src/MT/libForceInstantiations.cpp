@@ -40,6 +40,7 @@ template double MT::getParameter(const char*,const double&);
 template MT::String MT::getParameter(const char*);
 template MT::String MT::getParameter(const char*,const MT::String&);
 template void MT::save<uintA>(const uintA&,const char*);
+template bool MT::checkParameter<uint>(const char*);
 
 template void MT::Parameter<MT::String>::initialize();
 template void MT::Parameter<bool>::initialize();
