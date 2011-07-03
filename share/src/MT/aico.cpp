@@ -38,6 +38,7 @@ void AICO_clean::init(soc::SocSystemAbstraction& _sys){
   sys = &_sys;
   
   MT::getParameter(method,"aico_method");
+  MT::getParameter(sweepMethod,"aico_sweepMethod");
   MT::getParameter(convergenceRate,"aico_convergenceRate",1.);
   MT::getParameter(max_iterations,"aico_max_iterations");
   MT::getParameter(tolerance,"aico_tolerance");
@@ -185,7 +186,7 @@ double AICO_clean::stepKinematic(){
   sys->getq0(q0);
   Winv.resize(T+1,n,n);
   sys->setq(q0,0);
-  sys->getWinv(Winv[0](),0);
+  if(!sys->dynamic) sys->getWinv(Winv[0](),0);
   
   //temporary variables
   arr Vt,St,barS,barV,K,K2;
@@ -224,7 +225,7 @@ double AICO_clean::stepKinematic(){
     if(q.N){
       if(sys->os){//type initial value
         *sys->os <<"AICO_k("<<scale<<") " <<std::setw(3) <<-1 <<" time " <<MT::timerRead(false) <<" diff -1";
-        sys->analyzeTrajectory(q,display>0);
+        sys->analyzeTrajectory(b,display>0);
       }
       if(sys->gl){
         sys->displayTrajectory(q,NULL,display,STRING("AICO_kinematic - iteration - INITIALIZATION"));
@@ -312,7 +313,7 @@ double AICO_clean::stepKinematic(){
       //else cout <<"skip." <<flush;
 
       //compute system matrices
-      sys->getWinv(Winv[t](),t);
+      if(!sys->dynamic) sys->getWinv(Winv[t](),t);
 
       //compute (b,B);
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
@@ -410,7 +411,7 @@ double AICO_clean::stepKinematic(){
 #else
     *sys->os <<"AICOk("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
 #endif
-   cost = sys->analyzeTrajectory(q,display>0);
+   cost = sys->analyzeTrajectory(b,display>0);
   }
   
   if(display){
@@ -430,7 +431,7 @@ void AICO_clean::initMessagesWithReferenceQ(const arr& qref){
   v=qhat;  for(uint t=0;t<=T;t++){ Vinv[t].setDiag(1e6);  }
   if(sys->os){
     *sys->os <<"AICOInit("<<T<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
-    cost = sys->analyzeTrajectory(q,display>0);
+    cost = sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO q init - iteration "<<sweep));
@@ -457,7 +458,7 @@ void AICO_clean::initMessagesFromScaleParent(AICO_clean *A){
   if(sys->dynamic)  soc::getPositionTrajectory(q,b);  else  q=b;
   if(sys->os){
     *sys->os <<"AICOscaleInit("<<T<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
-    cost = sys->analyzeTrajectory(q,display>0);
+    cost = sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO scale init - iteration "<<sweep));
@@ -616,7 +617,7 @@ void AICO_clean::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBw
   
   sys->getQ(Q[t](),t);
   sys->getHinv(Hinv[t](),t);
-  sys->getWinv(Winv[t](),t);
+  if(!sys->dynamic) sys->getWinv(Winv[t](),t);
   sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
   //R and r should be up-to-date!
   
@@ -703,13 +704,25 @@ double AICO_clean::stepSweeps(){
 
   rememberOldState();
 
-#if 1
-  for(t=1;t<=T;t++) updateTimeStep(t, true, false, 2, tolerance,false); //RELOCATE UP TO 10 TIMES
-  for(t=T+1;t--;) updateTimeStep(t, false, true, 2, tolerance,false); //DON'T RELOCATE ON BWD PASS!
-#else
-  for(t=1;t<=T;t++) updateTimeStepGaussNewton(t, true, false, 5, tolerance); //RELOCATE UP TO 10 TIMES
-  for(t=T+1;t--;) updateTimeStep(t, false, true, 5, tolerance); //DON'T RELOCATE ON BWD PASS!
-#endif
+  switch(sweepMethod){
+    case smForwardly:
+      for(t=1;t<=T;t++) updateTimeStep(t, true, false, 1, tolerance,true); //relocate once on fwd sweep
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, 0, tolerance,false); //...not on bwd sweep
+      break;
+    case smSymmetric:
+      for(t=1;t<=T;t++) updateTimeStep(t, true, false, 1, tolerance,false); //relocate once on fwd & bwd sweep
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, 1, tolerance,false);
+      break;
+    case smLocalAgressiv:
+      for(t=1;t<=T;t++) updateTimeStep(t, true, false, 5, tolerance,false); //relocate iteratively on
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, 5, tolerance,false); //...fwd & bwd sweep
+      break;
+    case smLocalGaussNewton:
+      for(t=1;t<=T;t++) updateTimeStepGaussNewton(t, true, false, 5, tolerance); //GaussNewton in fwd & bwd sweep
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, 5, tolerance, false); 
+      break;
+    default: HALT("wrong sweep method");
+  }
   
   b_step=maxDiff(b_old,b);
   dampingReference=b;
@@ -720,7 +733,7 @@ double AICO_clean::stepSweeps(){
   //decide whether the relocation was a good choice -- and potentially
   //retract it -> that's based on the location
   cost = sys->analyzeTrajectory(b,display>0);
-  //sys->costChecks(b);
+  sys->costChecks(b);
   //sys->costChecks(qhat);
   cost = evaluateTrajectory(b);
   
@@ -750,7 +763,7 @@ double AICO_clean::stepClean(){
   sys->setx(q0);
   sys->getQ(Q[0](),0);
   sys->getHinv(Hinv[0](),0);
-  sys->getWinv(Winv[0](),0);
+  if(!sys->dynamic) sys->getWinv(Winv[0](),0);
   sys->getProcess(A[0](),tA[0](),Ainv[0](),invtA[0](),a[0](),B[0](),tB[0](),0);
 
   //OPTIONAL: take account of optional externally given bwd messages
@@ -791,7 +804,7 @@ double AICO_clean::stepClean(){
       //compute system matrices
       sys->getQ(Q[t](),t);
       sys->getHinv(Hinv[t](),t);
-      sys->getWinv(Winv[t](),t);
+      if(!sys->dynamic) sys->getWinv(Winv[t](),t);
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
@@ -828,7 +841,7 @@ double AICO_clean::stepClean(){
 
   double diff = -1;
   if(q_old.N==q.N) diff=maxDiff(q_old,q);
-  cost = sys->analyzeTrajectory(q,display>0);
+  cost = sys->analyzeTrajectory(b,display>0);
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(sweep>3 && damping){
@@ -854,7 +867,7 @@ double AICO_clean::stepClean(){
   MT::timerPause();
   if(sys->os){
     *sys->os <<"AICOclean("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
-    //sys->analyzeTrajectory(q,display>0);
+    //sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_clean - iteration "<<sweep));
@@ -888,7 +901,7 @@ double AICO_clean::stepDynamic(){
   sys->setx(q0);
   sys->getQ(Q[0](),0);
   sys->getHinv(Hinv[0](),0);
-  sys->getWinv(Winv[0](),0);
+  if(!sys->dynamic) sys->getWinv(Winv[0](),0);
   sys->getProcess(A[0](),tA[0](),Ainv[0](),invtA[0](),a[0](),B[0](),tB[0](),0);
 
   //OPTIONAL: take account of optional externally given bwd messages
@@ -928,7 +941,7 @@ double AICO_clean::stepDynamic(){
       //compute system matrices
       sys->getQ(Q[t](),t);
       sys->getHinv(Hinv[t](),t);
-      sys->getWinv(Winv[t](),t);
+      if(!sys->dynamic) sys->getWinv(Winv[t](),t);
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
@@ -995,7 +1008,7 @@ double AICO_clean::stepDynamic(){
 
   double diff = -1;
   if(q_old.N==q.N) diff=maxDiff(q_old,q);
-  cost = sys->analyzeTrajectory(q,display>0);
+  cost = sys->analyzeTrajectory(b,display>0);
   //damping = 1e1;
   if(sweep>3 && damping){
     if(cost>cost_old){
@@ -1020,7 +1033,7 @@ double AICO_clean::stepDynamic(){
   MT::timerPause();
   if(sys->os){
     *sys->os <<"AICOd("<<scale<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
-    //sys->analyzeTrajectory(q,display>0);
+    //sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_dynamic - iteration "<<sweep));
@@ -1045,7 +1058,7 @@ double AICO_clean::stepGaussNewton(){
   qhat[0]=q0;
   if(sys->dynamic) sys->setqv(q0); else sys->setq(q0);
   sys->getQ(Q[0](),0);
-  sys->getWinv(Winv[0](),0);
+  if(!sys->dynamic) sys->getWinv(Winv[0](),0);
   sys->getHinv(Hinv[0](),0);
   sys->getProcess(A[0](),tA[0](),Ainv[0](),invtA[0](),a[0](),B[0](),tB[0](),0);
 
@@ -1131,7 +1144,7 @@ double AICO_clean::stepGaussNewton(){
     
     //compute system matrices
     sys->getQ(Q[t](),t);
-    sys->getWinv(Winv[t](),t);
+    if(!sys->dynamic) sys->getWinv(Winv[t](),t);
     sys->getHinv(Hinv[t](),t);
     sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
     //if(t<T){
@@ -1163,7 +1176,7 @@ double AICO_clean::stepGaussNewton(){
   
   double diff = -1;
   if(q_old.N==q.N) diff = maxDiff(q_old,q);
-  cost = sys->analyzeTrajectory(q,display>0);
+  cost = sys->analyzeTrajectory(b,display>0);
   //double tc=0.; for(uint k=0;k<phiBar.N;k++) tc+=sumOfSqr(phiBar(k));
   ///cout <<"internal cost: taskC= " <<tc <<" ctrlC= " <<sumOfSqr(Psi) <<endl;
   if(sweep>3 && damping){
@@ -1189,7 +1202,7 @@ double AICO_clean::stepGaussNewton(){
   MT::timerPause();
   if(sys->os){
     *sys->os <<"AICOgn("<<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff <<" damp " <<damping;
-    //sys->analyzeTrajectory(q,display>0);
+    //sys->analyzeTrajectory(b,display>0);
     //sys->costChecks(b);
   }
   if(sys->gl){
@@ -1204,7 +1217,7 @@ double AICO_clean::stepGaussNewton(){
 double AICO_clean::stepMinSum(){
   if(sys->os){
     *sys->os <<"AICOgn("<<sys->nTime()<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
-    cost = sys->analyzeTrajectory(q,display>0);
+    cost = sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_GaussNewton - iteration "<<sweep));
@@ -1294,7 +1307,7 @@ double AICO_clean::stepMinSum(){
   MT::timerPause();
   if(sys->os){
     *sys->os <<"AICOgn("<<sys->nTime()<<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
-    cost = sys->analyzeTrajectory(q,display>0);
+    cost = sys->analyzeTrajectory(b,display>0);
   }
   if(sys->gl){
     sys->displayTrajectory(q,NULL,display,STRING("AICO_GaussNewton - iteration "<<sweep));

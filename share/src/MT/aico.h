@@ -34,7 +34,8 @@ struct AICO_clean{
   arr bwdMsg_v,bwdMsg_Vinv;
 
   enum StepMethod{ smClean=0, smDynamic, smKinematic, smGaussNewton, smIlqg  };
-  int method;
+  enum SweepMethod{ smForwardly=0, smSymmetric, smLocalAgressiv, smLocalGaussNewton };
+  int method,sweepMethod;
 
   MT::String filename;
   std::ostream *os;

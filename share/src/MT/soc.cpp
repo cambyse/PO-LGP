@@ -195,7 +195,7 @@ void soc::SocSystemAbstraction::getProcess(arr& A,arr& a,arr& B,uint t,arr* Winv
     arr Q,Hinv;
     getQ(Q,t);
     getHinv(Hinv,t);
-    (*Winv) = Q+(B*Hinv*~B);
+    (*Winv) = Q+(B*Hinv*(~B));
   }
 }
 
@@ -577,6 +577,8 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
   arr R,r;
   double c1,c2,c3;
   double taskCsum=0., ctrlCsum=0.;
+  arr q,qdd;
+  soc::getPositionTrajectory(q,x);
   for(t=0;t<=T;t++){
     setx(x[t]);
     getTaskCostTerms(Phi, PhiJ, x[t],t);
@@ -604,20 +606,25 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         getH(H,t);
         getMF(M,F,t);
         if(t>0){
-          uint n=qDim();
-          arr qt_1=x.sub(t-1,t-1,0,n-1),qt=x.sub(t,t,0,n-1),qt1=x.sub(t+1,t+1,0,n-1);
-          qt_1.reshape(n);  qt.reshape(n);  qt1.reshape(n);
-          c2 = sqrDistance(H,tau_2*M*(qt1+qt_1-(double)2.*qt),F);
+          qdd = tau_2*(q[t+1]+q[t-1]-(double)2.*q[t]);
+          c2 = sqrDistance(H,M*qdd,F);
         }else{
-          uint n=qDim();
-          arr qt=x.sub(t,t,0,n-1),qt1=x.sub(t+1,t+1,0,n-1);
-          qt.reshape(n);  qt1.reshape(n);
-          c2 = sqrDistance(H,tau_2*M*(qt1-qt),F);
+          qdd = tau_2*(q[t+1]-q[t]);
+          c2 = sqrDistance(H,M*qdd,F);
         }
-
+        
+        uint n = q.d1;
         arr A,a,B,Winv;
         getProcess(A,a,B,t,&Winv);
-        c3 = sqrDistance(Winv, x[t+1], A*x[t] + a);
+        arr W(2*n,2*n); W.setZero(); W.setMatrixBlock(tau_2*(~M)*H*M,n,n);
+        inverse_SymPosDef(W,Winv);
+        c3 = sqrDistance(W, x[t+1], A*x[t] + a);
+        
+        //compare the accelerations:
+        //cout << qdd <<endl << tau_1*(x.sub(t+1,t+1,n,-1) - x.sub(t,t,n,-1)) <<endl;
+
+        //c3 = sqrDistance(tmp,x[t+1],A*x[t]+a);
+        //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
       //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
       //if(t==0)
