@@ -156,13 +156,14 @@ bool soc::SocSystemAbstraction::isConstrained(uint i,uint t){ NIY; return false;
 void soc::SocSystemAbstraction::getMF(arr& M,arr& F,uint t){ NIY; }
 void soc::SocSystemAbstraction::getMinvF(arr& Minv,arr& F,uint t){ NIY; }
 
-void soc::SocSystemAbstraction::getProcess(arr& A,arr& a,arr& B,uint t){
+void soc::SocSystemAbstraction::getProcess(arr& A,arr& a,arr& B,uint t,arr* Winv){
   uint n=qDim();
   if(!dynamic){
     A.setId(n);
     B.setId(n);
     a.resize(n);
     a.setZero();
+    if(Winv) getWinv(*Winv,t);
   }else{
     double tau=getTau(false);
     arr I,Z,Minv,F;
@@ -189,6 +190,12 @@ void soc::SocSystemAbstraction::getProcess(arr& A,arr& a,arr& B,uint t){
     a = A*a + a;
     B = A*B + B;
     A = A*A;
+  }
+  if(Winv && dynamic){
+    arr Q,Hinv;
+    getQ(Q,t);
+    getHinv(Hinv,t);
+    (*Winv) = Q+(B*Hinv*~B);
   }
 }
 
@@ -313,24 +320,24 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   }
 }
 
-void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t){
+void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt, const arr& xt1, uint t){
   if(!dynamic){
     arr W,M;
-    getW(W,t-1);
-    Psi = xt - xt_1;
+    getW(W,t);
+    Psi = xt1 - xt;
     lapack_cholesky(M,W);
     Psi = M*Psi;
     PsiI = M;
     PsiJ = -M;
   }else{
     arr Hinv,A,a,B,Q,W,Winv,M;
-    getHinv(Hinv,t-1);
-    getProcess(A,a,B,t-1);
-    getQ(Q,t-1);
-    Psi = xt - (A*xt_1+a);
+    getHinv(Hinv,t);
+    getProcess(A,a,B,t);
+    getQ(Q,t);
+    Psi = xt1 - (A*xt+a);
     Winv = B*Hinv*~B + Q;
-    inverse_SymPosDef(W,Winv);
-    lapack_cholesky(M,W);
+    //inverse_SymPosDef(W,Winv);
+    lapack_cholesky(M,Winv);
     Psi = M*Psi;
     PsiI = M;
     PsiJ = -M*A;
@@ -578,32 +585,42 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
-    if(t){
-      //getProcess(arr& A,arr& a,arr& B,uint t);
-      getTransitionCostTerms(Psi, PsiI, PsiJ, x[t-1], x[t], t);
+    if(t<T){
+      getTransitionCostTerms(Psi, PsiI, PsiJ, x[t], x[t+1], t);
       c1=sumOfSqr(Psi);
       c2=0.;
+      c3=0.;
       if(!dynamic){
         arr W;
         getW(W,t);
-        if(t>0) c2 = sqrDistance(W,x[t-1],x[t]);
+        c2 = sqrDistance(W,x[t+1],x[t]);
+        c3=c2;
       }else{
         arr H,M,F;
         double tau=getTau();
         double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
         getH(H,t);
         getMF(M,F,t);
-        if(t>1){
+        if(t>0){
           uint n=qDim();
-          arr qt_2=x.sub(t-2,t-2,0,n-1),qt_1=x.sub(t-1,t-1,0,n-1),qt=x.sub(t,t,0,n-1);
-          qt_2.reshape(n);  qt_1.reshape(n);  qt.reshape(n);
-          c2 = sqrDistance(H,tau_2*M*(qt_2+qt-(double)2.*qt_1),F);
+          arr qt_1=x.sub(t-1,t-1,0,n-1),qt=x.sub(t,t,0,n-1),qt1=x.sub(t+1,t+1,0,n-1);
+          qt_1.reshape(n);  qt.reshape(n);  qt1.reshape(n);
+          c2 = sqrDistance(H,tau_2*M*(qt1+qt_1-(double)2.*qt),F);
+        }else{
+          uint n=qDim();
+          arr qt=x.sub(t,t,0,n-1),qt1=x.sub(t+1,t+1,0,n-1);
+          qt.reshape(n);  qt1.reshape(n);
+          c2 = sqrDistance(H,tau_2*M*(qt1-qt),F);
         }
+
+        arr A,a,B,Winv;
+        getProcess(A,a,B,t,&Winv);
+        c3 = sqrDistance(Winv, x[t+1], A*x[t] + a);
       }
-      //cout <<c1 <<' ' <<c2 <<' ' <<endl;
+      //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
       //if(t==0)
         //ctrlC(t) = sqrDistance(H,tau_2*M*(q[t+1]-q[t]),F);
-      ctrlCsum+=c2;
+      ctrlCsum+=c3;
     }
   }
   cout <<"costChecks: "

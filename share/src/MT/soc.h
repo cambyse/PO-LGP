@@ -115,7 +115,7 @@ struct SocSystemAbstraction{
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
-  virtual void getProcess(arr& A,arr& a,arr& B,uint t);
+  virtual void getProcess(arr& A,arr& a,arr& B,uint t,arr* Winv=NULL);
   virtual void getProcess(arr& A,arr& tA,arr& Ainv,arr& invtA,arr& a,arr& B,arr& tB,uint t);
   virtual double getCosts(arr& R,arr& r,const arr& qt,uint t);
   virtual void getConstraints(arr& c,arr& coff,const arr& qt,uint t);

@@ -86,20 +86,18 @@ void AICO_clean::init(soc::SocSystemAbstraction& _sys,
 }
                      
 void AICO_clean::init_messages(){
-  uint n=sys->qDim();
   uint T=sys->nTime();
   arr q0;
-  if(!sys->dynamic){
-    sys->getq0(q0);
-  }else{
-    sys->getqv0(q0);
-    n*=2;
-  }
-  s.resize(T+1,n);  Sinv.resize(T+1,n,n);  s[0]=q0;      Sinv[0].setDiag(1e10);
-  v.resize(T+1,n);  Vinv.resize(T+1,n,n);  v.setZero();  Vinv.setZero();
-  b.resize(T+1,n);  Binv.resize(T+1,n,n);  b[0]=q0;      Binv[0].setDiag(1e10);
-  r.resize(T+1,n);  R.resize(T+1,n,n);     r[0]=0.;      R[0]=0.;
-  qhat.resize(T+1,n);                      qhat[0]=q0;
+  sys->getx0(q0);
+  uint n=q0.N;
+  s.resize(T+1,n);  Sinv.resize(T+1,n,n);  s.setZero();  Sinv.setZero();  s[0]=q0;  Sinv[0].setDiag(1e10);
+  v.resize(T+1,n);  Vinv.resize(T+1,n,n);  v.setZero();  Vinv.setZero();  if(useBwdMsg){ v[T] = bwdMsg_v;  Vinv[T] = bwdMsg_Vinv; }
+  b.resize(T+1,n);  Binv.resize(T+1,n,n);  b.setZero();  Binv.setZero();  b[0]=q0;  Binv[0].setDiag(1e10);
+  r.resize(T+1,n);  R.resize(T+1,n,n);     r.setZero();  R   .setZero();  r[0]=0.;  R[0]=0.;
+  rhat.resize(T+1);    rhat.setZero();
+  qhat.resize(T+1,n);  qhat.setZero();  qhat[0]=q0;
+  q = qhat;
+  dampingReference = qhat;
 
   //resize system matrices
   A.resize(T+1,n,n);  tA.resize(T+1,n,n);  Ainv.resize(T+1,n,n);  invtA.resize(T+1,n,n);
@@ -115,13 +113,18 @@ void AICO_clean::init_messages(){
   }
   Q.resize(T+1,n,n);
 
+  //initialize system matrices at time 0
+  sys->setx(q0);
+  sys->getQ(Q[0](),0);
+  sys->getHinv(Hinv[0](),0);
+  if(!sys->dynamic) sys->getWinv(Winv[0](),0);
+  sys->getProcess(A[0](),tA[0](),Ainv[0](),invtA[0](),a[0](),B[0](),tB[0](),0);
+
   //delete all task cost terms
   //for(uint i=0;i<phiBar.N;i++){ listDelete(phiBar(i));  listDelete(JBar(i));  }
-  phiBar.resize(T+1);  JBar.resize(T+1);
+  phiBar.resize(T+1);    JBar.resize(T+1);
   Psi   .resize(T+1,n);  Psi.setZero();
 
-  dampingReference.clear();
-  
   useFwdMessageAsQhat=true;
 }
 
@@ -463,6 +466,8 @@ void AICO_clean::initMessagesFromScaleParent(AICO_clean *A){
 }
 
 
+//--- basic helpers for inference in one time step
+
 void AICO_clean::updateFwdMessage(uint t){
   arr barS,St;
   if(sys->dynamic){
@@ -524,6 +529,198 @@ void AICO_clean::updateBwdMessage(uint t){
   }
 }
 
+void AICO_clean::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation){
+  if(updateFwd) updateFwdMessage(t);
+  if(updateBwd) updateBwdMessage(t);
+
+  Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+  lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+
+  for(uint k=0;k<maxRelocationIterations;k++){
+    if((!k && forceRelocation) || maxDiff(b[t],qhat[t])<tolerance) break;
+    
+    qhat[t]() = b[t];
+    countSetq++;
+    sys->setx(qhat[t]);
+    
+    //get system matrices
+    sys->getQ(Q[t](),t);
+    sys->getHinv(Hinv[t](),t);
+    if(!sys->dynamic) sys->getWinv(Winv[t](),t);
+    sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
+    rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+    //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
+    
+    //optional reupdate fwd or bwd message (if the dynamics might have changed...)
+    //if(updateFwd) updateFwdMessage(t);
+    //if(updateBwd) updateBwdMessage(t);
+    
+    Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+  }
+}
+
+void AICO_clean::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance){
+  if(updateFwd) updateFwdMessage(t);
+  if(updateBwd) updateBwdMessage(t);
+
+  struct LocalCostFunction:public GaussNewtonCostFunction{
+    uint t;
+    soc::SocSystemAbstraction* sys;
+    AICO_clean* aico;
+    bool reuseOldCostTerms;
+    
+    void calcTermsAt(const arr &x){
+      //all terms related to task costs
+      if(reuseOldCostTerms){
+        phi = aico->phiBar(t);  J = aico->JBar(t);
+        reuseOldCostTerms=false;
+      }else{
+        countSetq++;
+        if(sys->dynamic) sys->setqv(x); else sys->setq(x);
+        sys->getTaskCostTerms(phi,J,x,t);
+        aico->phiBar(t) = phi;  aico->JBar(t) = J;
+      }
+      
+      //store cost terms also as R,r matrices
+      aico->R[t] =   ~(aico->JBar(t)) * (aico->JBar(t));
+      aico->r[t] = - ~(aico->JBar(t)) * (aico->phiBar(t));
+      aico->r[t]() += aico->R[t] * x;
+      
+      //add the damping
+      if(aico->damping && aico->dampingReference.N){
+        J.append(   Diag(aico->damping,x.N) );
+        phi.append( aico->damping*(x-aico->dampingReference[t]) );
+      }
+      
+      arr M;
+
+      //add the forward message
+      lapack_cholesky(M,aico->Sinv[t]); //ensures Sinv = ~M*M
+      phi.append( M*(x-aico->s[t]) );
+      J  .append( M );
+      
+      if(!aico->sweep) return;
+      //add the mackward message
+      lapack_cholesky(M,aico->Vinv[t]);
+      phi.append( M*(x-aico->v[t]) );
+      J  .append( M );
+    }
+  } f;
+
+  f.sys=sys;  f.aico=this;  f.t=t;
+  f.reuseOldCostTerms=true;
+  f.reuseOldCostTerms=false;
+  if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
+  GaussNewton(qhat[t](),tolerance,f,maxRelocationIterations);
+  
+  sys->getQ(Q[t](),t);
+  sys->getHinv(Hinv[t](),t);
+  sys->getWinv(Winv[t](),t);
+  sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
+  //R and r should be up-to-date!
+  
+  Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+  lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+}
+
+double AICO_clean::evaluateTimeStep(uint t,bool includeDamping){
+  double C=0.;
+  //C += scalarProduct(R[t],b[t],b[t]) - 2.*scalarProduct(r[t],b[t]) + rhat(t);
+  C += rhat(t);
+  C += sqrDistance(Sinv[t],b[t],s[t]);
+  C += sqrDistance(Vinv[t],b[t],v[t]);
+  if(includeDamping)
+    C += damping * sqrDistance(b[t],dampingReference[t]);
+  return C;
+}
+
+//--- helpers for inference over time series
+
+//log-likelihood of a trajectory (assuming the current local approximations)
+double AICO_clean::evaluateTrajectory(const arr& x){
+  uint t,T=sys->nTime();
+  double tau=sys->getTau();
+  double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
+
+  arr Ctask(T+1), Cctrl(T+1);
+  for(t=0;t<=T;t++){
+    //Ctask(t) = scalarProduct(R[t],x[t],x[t]) - 2.*scalarProduct(r[t],x[t]) + rhat(t);
+    Ctask(t) = rhat(t);
+    if(t<T)
+      Cctrl(t) = sqrDistance(Q[t]+B[t]*Hinv[t]*tB[t], x[t+1], A[t]*x[t] + a[t]);
+  }
+  Cctrl(T)=0.;
+  Cctrl *= tau_2;
+  write(LIST(Cctrl,Ctask),"z.eval");
+  double Ct=sum(Ctask), Cc=sum(Cctrl);
+  cout <<"evaluate Trajectory: task=" <<Ct <<" ctrl=" <<Cc <<" total=" <<Ct+Cc <<endl;
+  return Ct+Cc;
+}
+
+void AICO_clean::rememberOldState(){
+  cost_old=cost;
+  b_old=b;  q_old=q;  qhat_old=qhat;
+  s_old=s; Sinv_old=Sinv;  v_old=v; Vinv_old=Vinv;  r_old=r; R_old=R;
+}
+
+void AICO_clean::perhapsUndoStep(){
+  if(cost>cost_old){
+    //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+    damping *= 10.;
+    dampingReference = b_old;
+    cost = cost_old;  b = b_old;  q = q_old;  qhat = qhat_old;
+    s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
+  }else{
+    //cout <<" AICO ACCEPT" <<endl;
+    damping /= 5.;
+  }
+}
+
+void AICO_clean::displayCurrentSolution(){
+  MT::timerPause();
+  if(sys->os){
+    *sys->os <<"AICO("<<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping;
+  }
+  if(sys->gl){
+    sys->displayTrajectory(q,NULL,display,STRING("AICO_clean - iteration "<<sweep));
+  }
+  MT::timerResume();
+}
+
+double AICO_clean::stepSweeps(){
+  uint t,T=sys->nTime();
+
+  rememberOldState();
+
+#if 1
+  for(t=1;t<=T;t++) updateTimeStep(t, true, false, 2, tolerance,false); //RELOCATE UP TO 10 TIMES
+  for(t=T+1;t--;) updateTimeStep(t, false, true, 2, tolerance,false); //DON'T RELOCATE ON BWD PASS!
+#else
+  for(t=1;t<=T;t++) updateTimeStepGaussNewton(t, true, false, 5, tolerance); //RELOCATE UP TO 10 TIMES
+  for(t=T+1;t--;) updateTimeStep(t, false, true, 5, tolerance); //DON'T RELOCATE ON BWD PASS!
+#endif
+  
+  b_step=maxDiff(b_old,b);
+  dampingReference=b;
+
+  //TODO: evaluation should be made based on current localization
+  //Why test the location instead of belief? Because we want to 
+  //decide whether the relocation was a good choice -- and potentially
+  //retract it -> that's based on the location
+  if(sys->dynamic) soc::getPositionTrajectory(q,b); else q=b;
+  cost = sys->analyzeTrajectory(q,display>0);
+  //sys->costChecks(b);
+  //sys->costChecks(qhat);
+  //cost = evaluateTrajectory(qhat);
+  
+  //-- analyze whether to reject the step and increase damping (to guarantee convergence)
+  if(sweep && damping) perhapsUndoStep();
+  
+  sweep++;
+  displayCurrentSolution();
+  return b_step;
+}
 
 //! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double AICO_clean::stepClean(){
@@ -588,9 +785,8 @@ double AICO_clean::stepClean(){
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
-      arr Rt,rt;
-      sys->getCosts(Rt,rt,qhat[t].sub(0,sys->qDim()-1),t);
-      R[t] = Rt; r[t] = rt;
+      rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+      //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
     }
     
     //compute (b,B);
@@ -726,9 +922,8 @@ double AICO_clean::stepDynamic(){
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
-      arr Rt,rt;
-      sys->getCosts(Rt,rt,qhat[t].sub(0,sys->qDim()-1),t);
-      R[t] = Rt; r[t] = rt;
+      rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+      //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
     }
     
     //compute (b,B);

@@ -116,8 +116,8 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     }else NIY;
   }else{
     ors->computeNaturalQmetric(WS->W);
-    cout <<"automatic W initialization =" <<WS->W <<endl;
-//     graphWriteDirected(cout,ors->bodies,ors->joints);
+    //cout <<"automatic W initialization =" <<WS->W <<endl;
+    //graphWriteDirected(cout,ors->bodies,ors->joints);
   }
   static MT::Parameter<double> wc("Wcost",1e-2);
   static MT::Parameter<double> hc("Hcost",1e-3);
@@ -407,10 +407,14 @@ void soc::SocSystem_Ors::getW  (arr& W,uint t) {
   }
 }
 void soc::SocSystem_Ors::getWinv(arr& Winv,uint t) {
-  arr W;
-  W=WS->W;
-  inverse_SymPosDef(Winv,W);
-  for(uint i=0;i<stepScale(t);i++) Winv = Winv+Winv;
+  if(dynamic){
+    HALT("use getProcess");
+  }else{
+    arr W;
+    W=WS->W;
+    inverse_SymPosDef(Winv,W);
+    for(uint i=0;i<stepScale(t);i++) Winv = Winv+Winv;
+  }
 }
 void soc::SocSystem_Ors::getH  (arr& H,uint t) {
   H=WS->H;  //*getTau(); 

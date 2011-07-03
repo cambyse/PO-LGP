@@ -39,15 +39,19 @@ struct AICO_clean{
   MT::String filename;
   std::ostream *os;
 
+  //TODO: rename q->x (not position trajectory!)
   //messages
-  arr s,Sinv,v,Vinv,r,R;          //!< fwd, bwd, and task messages
+  arr s,Sinv,v,Vinv,r,R,rhat;     //!< fwd, bwd, and task messages
+  arr s_old,Sinv_old,v_old,Vinv_old,r_old,R_old,rhat_old;     //!< fwd, bwd, and task messages
   MT::Array<arr> phiBar,JBar;     //!< all task cost terms
   arr Psi;                        //!< all transition cost terms
   arr b,Binv;                     //!< beliefs
   arr q,qhat;                     //!< trajectory (MAP), and point of linearization
+  arr b_old,Binv_old,q_old,qhat_old;
   arr dampingReference;
-  double cost;                      //!< cost of MAP trajectory
-
+  double cost,cost_old;                      //!< cost of MAP trajectory
+  double b_step;
+  
   // INTERNAL
   bool useFwdMessageAsQhat;
   arr A,tA,Ainv,invtA,a,B,tB,Winv,Hinv,Q; //!< processes...
@@ -70,7 +74,7 @@ struct AICO_clean{
 
   double step(){
     switch(method){
-      case smClean:       return stepClean();
+      case smClean:       return stepSweeps(); //stepClean();
       case smDynamic:     return stepDynamic();
       case smKinematic:   return stepKinematic();
       case smIlqg:        return stepIlqg();
@@ -85,12 +89,23 @@ struct AICO_clean{
   double stepIlqg(){NIY;};
   double stepGaussNewton();
   double stepMinSum();
+  double stepSweeps();
 
   //internal helpers
   void initMessagesWithReferenceQ(const arr& qref); //use to initialize damping reference!!!
   void initMessagesFromScaleParent(AICO_clean *parent);
   void updateFwdMessage(uint t);
   void updateBwdMessage(uint t);
+
+  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation);
+  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance);
+  double evaluateTimeStep(uint t,bool includeDamping);
+  double evaluateTrajectory(const arr& x);
+
+  void displayCurrentSolution();
+  void rememberOldState();
+  void perhapsUndoStep();
+
 };
 
 void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
