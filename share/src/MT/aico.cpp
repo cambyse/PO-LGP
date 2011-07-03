@@ -548,7 +548,7 @@ void AICO_clean::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint max
     sys->getHinv(Hinv[t](),t);
     if(!sys->dynamic) sys->getWinv(Winv[t](),t);
     sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
-    rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+    sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t,&rhat(t));
     //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
     
     //optional reupdate fwd or bwd message (if the dynamics might have changed...)
@@ -642,19 +642,29 @@ double AICO_clean::evaluateTrajectory(const arr& x){
   uint t,T=sys->nTime();
   double tau=sys->getTau();
   double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
-
+  arr q;
+  soc::getPositionTrajectory(q,x);
+  
   arr Ctask(T+1), Cctrl(T+1);
   for(t=0;t<=T;t++){
-    //Ctask(t) = scalarProduct(R[t],x[t],x[t]) - 2.*scalarProduct(r[t],x[t]) + rhat(t);
-    Ctask(t) = rhat(t);
+    Ctask(t) = scalarProduct(R[t],x[t],x[t]) - 2.*scalarProduct(r[t],x[t]) + rhat(t);
+    //Ctask(t) = rhat(t);
+#if 0
     if(t<T)
       Cctrl(t) = sqrDistance(Q[t]+B[t]*Hinv[t]*tB[t], x[t+1], A[t]*x[t] + a[t]);
+#else
+    arr H,M,F;
+    sys->getH(H,t);
+    sys->getMF(M,F,t);
+
+    if(t<T && t>0) Cctrl(t) = sqrDistance(H,tau_2*M*(q[t+1]+q[t-1]-(double)2.*q[t]),F);
+    if(t==0)       Cctrl(t) = sqrDistance(H,tau_2*M*(q[t+1]-q[t]),F);
+#endif
   }
   Cctrl(T)=0.;
-  Cctrl *= tau_2;
-  write(LIST(Cctrl,Ctask),"z.eval");
+  //write(LIST(Cctrl,Ctask),"z.eval");
   double Ct=sum(Ctask), Cc=sum(Cctrl);
-  cout <<"evaluate Trajectory: task=" <<Ct <<" ctrl=" <<Cc <<" total=" <<Ct+Cc <<endl;
+  cout <<" task " <<Ct <<" ctrl " <<Cc <<" total " <<Ct+Cc <<endl;
   return Ct+Cc;
 }
 
@@ -703,16 +713,16 @@ double AICO_clean::stepSweeps(){
   
   b_step=maxDiff(b_old,b);
   dampingReference=b;
+  if(sys->dynamic) soc::getPositionTrajectory(q,b); else q=b;
 
   //TODO: evaluation should be made based on current localization
   //Why test the location instead of belief? Because we want to 
   //decide whether the relocation was a good choice -- and potentially
   //retract it -> that's based on the location
-  if(sys->dynamic) soc::getPositionTrajectory(q,b); else q=b;
-  cost = sys->analyzeTrajectory(q,display>0);
+  cost = sys->analyzeTrajectory(b,display>0);
   //sys->costChecks(b);
   //sys->costChecks(qhat);
-  //cost = evaluateTrajectory(qhat);
+  cost = evaluateTrajectory(b);
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(sweep && damping) perhapsUndoStep();
@@ -785,7 +795,7 @@ double AICO_clean::stepClean(){
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
-      rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+      sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t,&rhat(t));
       //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
     }
     
@@ -922,7 +932,7 @@ double AICO_clean::stepDynamic(){
       sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
       
       //compute (r,R)
-      rhat(t) = sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t);
+      sys->getCosts(R[t](),r[t](),qhat[t].sub(0,sys->qDim()-1),t,&rhat(t));
       //rhat(t) -= scalarProduct(R[t],qhat[t],qhat[t]) - 2.*scalarProduct(r[t],qhat[t]);
     }
     

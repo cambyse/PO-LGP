@@ -117,7 +117,7 @@ struct SocSystemAbstraction{
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
   virtual void getProcess(arr& A,arr& a,arr& B,uint t,arr* Winv=NULL);
   virtual void getProcess(arr& A,arr& tA,arr& Ainv,arr& invtA,arr& a,arr& B,arr& tB,uint t);
-  virtual double getCosts(arr& R,arr& r,const arr& qt,uint t);
+  virtual double getCosts(arr& R,arr& r,const arr& qt,uint t,double* rhat=NULL);
   virtual void getConstraints(arr& c,arr& coff,const arr& qt,uint t);
 
   // cost info
