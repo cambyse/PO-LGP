@@ -236,6 +236,7 @@ double soc::SocSystemAbstraction::getCosts(arr& R,arr& r,const arr& xt,uint t,do
     double prec;
     R.resize(n,n); R.setZero();
     r.resize(n);   r.setZero();
+    if(rhat) (*rhat)=0.;
     for(i=0;i<m;i++) if(isConditioned(i,t<<scalePower)){
       getPhi      (phi_qhat,i);
       getTarget   (x,prec,i,t<<scalePower);
@@ -243,6 +244,7 @@ double soc::SocSystemAbstraction::getCosts(arr& R,arr& r,const arr& xt,uint t,do
       getJJt      (J,Jt,i);
       R += prec*Jt*J;
       r += prec*Jt*(x - phi_qhat + J*xt);
+      if(rhat) (*rhat) += prec*sumOfSqr(x - phi_qhat + J*xt);
     }
   }else{
     uint n2=2*n;

@@ -76,7 +76,7 @@ int main(int argn,char **argv){
 #if 0
   AICO_solver(soc,q,1e-2,.7,.01,0,0);
 #else
-  AICO_clean aico(soc);
+  AICO aico(soc);
   aico.iterate_to_convergence();
   q = aico.q;
 #endif

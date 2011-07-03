@@ -61,8 +61,7 @@ void ReceedingHorizonProcess::step(){
     planner.shiftSolution(-time_shift); //shift everything 10 steps forward...
     time_shift=0;
   }*/
-  double d=planner.stepGaussNewton();
-  //double d=planner.stepDynamic();
+  double d=planner.step();
   //if(planner.cost<1.) planAvailable=true; else planAvailable=false;
 
   
