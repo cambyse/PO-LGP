@@ -678,7 +678,11 @@ TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
 }
 
 void
-TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){NIY;}
+//TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){NIY;}
+/* TODO properly make the finction NIY and make sure the program never comes
+  into this function. Objects should use their own overriden functions)
+ */
+TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){} 
       
 bool RobotModuleGroup::signalStop=false;
 void RobotModuleGroup::signalStopCallback(int){
