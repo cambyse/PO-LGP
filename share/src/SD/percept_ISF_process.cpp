@@ -1,4 +1,7 @@
 #include "percept_ISF_process.h"
+#include "utils.h"
+#include "surface_helpers.h"
+#include <MT/util.h>
 
 Percept_ISF_process::Percept_ISF_process():Process("percept ISF"){
   graspobj=NULL;

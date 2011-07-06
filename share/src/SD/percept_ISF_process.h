@@ -3,6 +3,8 @@
 #define SD_percept_ISF_Process_h
 
 #include "MT/process.h"
+#include "MT/robot_variables.h"
+#include "graspObjects.h"
 
 struct Percept_ISF_process:public Process{
   PerceptionOutput *perc_out;
@@ -24,6 +26,8 @@ struct Percept_ISF_process:public Process{
 
 };
 
+#ifdef  MT_IMPLEMENTATION
 #  include "percept_ISF_process.cpp"
+#endif
 
 #endif

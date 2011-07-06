@@ -1,11 +1,10 @@
 #ifndef SD_graspISF_h
 #define SD_graspISF_h
 
-#define STANIO
-
 #include <MT/array.h>
 #include <MT/robot.h>
-#include<MT/specialTaskVariables.h>
+#include "potentialTaskVariables.h"
+#include "miscTaskVariables.h"
 
 struct GraspObject;
 struct ControllerProcess;
@@ -63,7 +62,9 @@ struct GraspISFTask:public TaskAbstraction{
 
 
 
-#include "graspISF.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "graspISF.cpp"
+#endif
 
 
 #endif// header ifdef

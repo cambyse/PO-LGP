@@ -1,6 +1,8 @@
 #include "graspISF.h"
-#include<MT/plot.h>
-#include<MT/util.h>
+#include <MT/plot.h>
+#include <MT/util.h>
+#include "SD/utils.h"
+#include "graspObjects.h"
 
 void
 configure_GraspISF(GraspISFTask* t){

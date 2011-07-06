@@ -1,4 +1,5 @@
 #include "build_mesh_process.h"
+#include "graspObjects.h"
 
 Build_mesh_process::Build_mesh_process():Process("build mesh"){
   obj=NULL;
@@ -9,8 +10,10 @@ Build_mesh_process::open(){}
 
 void
 Build_mesh_process::step(){
+  /*
   GraspObject *old;
   GraspObject *copy;
+  */
 
    if (!obj || !obj->o) return;
 

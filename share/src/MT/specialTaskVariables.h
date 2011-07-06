@@ -5,13 +5,6 @@
 #include "soc.h"
 #include "socSystem_ors.h"
 
-#if 0
-#include "SD/ISF_GP.h"
-#include "graspObjects.h"
-#endif
-
-struct PotentialField;
-
 //===========================================================================
 //
 // types
@@ -30,45 +23,6 @@ void setGraspGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape);
 void setPlaceGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowFromShape,const char* belowToShape);
 void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowToShape);
 
-#ifdef STANIO
-//===========================================================================
-//
-// novel, more complex task variables
-//
-
-/* for n shapes describes the n-dim vector of values of a potential */
-struct PotentialValuesTaskVariable:public TaskVariable{
-  PotentialField *f;
-  ShapeList refs;
-  
-  PotentialValuesTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs, PotentialField& _f);
-  virtual void userUpdate();
-};
-
-struct PotentialFieldAlignTaskVariable:public TaskVariable{
-  PotentialField *f;
-  ShapeList refs;
-
-  PotentialFieldAlignTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs, PotentialField& _f);
-  virtual void userUpdate();
-};
-
-struct zOpposeTaskVariable:public TaskVariable{
-  ShapeList refs;
-
-  zOpposeTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs);
-  virtual void userUpdate();
-};
-
-struct zFocusTargetTaskVariable:public TaskVariable{
-  ShapeList refs;
-  arr target;
-
-  zFocusTargetTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs);
-  virtual void userUpdate();
-};
-
-#endif
 
 #ifdef  MT_IMPLEMENTATION
 #include "specialTaskVariables.cpp"

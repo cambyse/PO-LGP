@@ -33,7 +33,7 @@ unsigned long lgp2(unsigned long a);
 unsigned long lgep2(unsigned long a);
 
 #ifdef MT_IMPLEMENTATION
-#include "utils.cpp"
+# include "utils.cpp"
 #endif
 
 

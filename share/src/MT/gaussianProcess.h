@@ -2,6 +2,7 @@
 #define MT_gaussianProcess_h
 
 #include "array.h"
+#include "MT/util.h"
 
 #define MT_GP_DEBUG 0
 #include "plot.h"

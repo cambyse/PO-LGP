@@ -1,5 +1,3 @@
-#define MT_IMPLEMENTATION
-
 #include <MT/robot.h>
 #include <signal.h>
 #include<SD/ISF_GP.h>

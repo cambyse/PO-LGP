@@ -1,8 +1,8 @@
 #include <MT/ors.h>
-#include <SD/ISF_GP.h>
-#include <SD/utils.h>
-#include <SD/surface_helpers.h>
-#include <MT/graspObjects.h>
+#include "ISF_GP.h"
+#include "utils.h"
+#include "surface_helpers.h"
+#include "graspObjects.h"
 
 /**
  * if triangle and line have an intersection point return 1.

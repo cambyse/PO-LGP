@@ -2,8 +2,8 @@
 #ifndef MT_graspObjects_h
 #define MT_graspObjects_h
 
-#include "ors.h"
-#include "SD/ISF_GP.h"
+#include "MT/ors.h"
+#include "ISF_GP.h"
 
 //MT: move this to cpp file
 double staticPhi(double x,double y,double z, void *p);
@@ -122,7 +122,9 @@ struct offset_param_t {
   offset_param_t(arr _off,void *_p ){p=_p;off=_off;};
 };
 
-#include "graspObjects.cxx"
+#ifdef  MT_IMPLEMENTATION
+#  include "graspObjects.cpp"
+#endif
 
 #endif
 

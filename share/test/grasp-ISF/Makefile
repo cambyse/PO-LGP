@@ -9,9 +9,10 @@ PLIB = 1  #for the Joystick
 VISION = 1
 OPENCV = 1
 NILS = 1
-STANIO = 1
+STANIMIR = 1
 BUMBLE = 1
 CUDA = 1
+LEWINER = 1
 #REVEL = 1
 
 CXXFLAGS += -DMT_Lewiner
