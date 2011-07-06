@@ -418,6 +418,12 @@ LinuxLibs += -ltl
 DEPEND += externalMake_src/TL
 endif
 
+ifdef STANIMIR
+LPATH := $(LPATH):$(BASE)/src/SD
+LinuxLibs += -lsd
+DEPEND += externalMake_src/SD
+endif
+
 ifdef LEWINER
 LPATH := $(LPATH):$(BASE)/src/Lewiner
 LinuxLibs += -llewiner
