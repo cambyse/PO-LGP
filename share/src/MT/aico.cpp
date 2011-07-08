@@ -475,6 +475,7 @@ double AICO::step(){
   rememberOldState();
 
   switch(sweepMode){
+    //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
     case smForwardly:
       for(t=1;t<=T;t++) updateTimeStep(t, true, false, 1, tolerance,!sweep);  //relocate once on fwd sweep
       for(t=T+1;t--;)   updateTimeStep(t, false, true, 0, tolerance,false); //...not on bwd sweep
