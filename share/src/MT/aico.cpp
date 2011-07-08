@@ -91,7 +91,8 @@ void AICO::init_messages(){
   rhat.resize(T+1);    rhat.setZero();
   qhat.resize(T+1,n);  qhat.setZero();  qhat[0]=q0;
   q = qhat;
-  dampingReference = qhat;
+  //dampingReference = qhat;
+  dampingReference.clear();
 
   //resize system matrices
   A.resize(T+1,n,n);  tA.resize(T+1,n,n);  Ainv.resize(T+1,n,n);  invtA.resize(T+1,n,n);
@@ -278,9 +279,14 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
 
-  Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-  lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
-
+  if(damping && dampingReference.N){
+    Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+  }else{
+    Binv[t] = Sinv[t] + Vinv[t] + R[t];
+    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+  }
+   
   for(uint k=0;k<maxRelocationIterations;k++){
     if(! ((!k && forceRelocation) || maxDiff(b[t],qhat[t])>tolerance) ) break;
     
@@ -300,8 +306,13 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
     //if(updateFwd) updateFwdMessage(t);
     //if(updateBwd) updateBwdMessage(t);
     
-    Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+    if(damping && dampingReference.N){
+      Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+    }else{
+      Binv[t] = Sinv[t] + Vinv[t] + R[t];
+      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+    }
   }
 }
 
@@ -366,8 +377,13 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   sys->getProcess(A[t](),tA[t](),Ainv[t](),invtA[t](),a[t](),B[t](),tB[t](),t);
   //R and r should be up-to-date!
   
-  Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-  lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+  if(damping && dampingReference.N){
+    Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
+    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+  }else{
+    Binv[t] = Sinv[t] + Vinv[t] + R[t];
+    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+  }
 }
 
 double AICO::evaluateTimeStep(uint t,bool includeDamping){
@@ -465,15 +481,15 @@ double AICO::step(){
       break;
     case smSymmetric:
       for(t=1;t<=T;t++) updateTimeStep(t, true, false, 1, tolerance,!sweep); //relocate once on fwd & bwd sweep
-      for(t=T+1;t--;)   updateTimeStep(t, false, true, 1, tolerance,false);
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, (sweep?1:0), tolerance,false);
       break;
     case smLocalGaussNewton:
-      for(t=1;t<=T;t++) updateTimeStep(t, true, false, 5, tolerance,!sweep); //relocate iteratively on
-      for(t=T+1;t--;)   updateTimeStep(t, false, true, 5, tolerance,false); //...fwd & bwd sweep
+      for(t=1;t<=T;t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance,!sweep); //relocate iteratively on
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance,false); //...fwd & bwd sweep
       break;
     case smLocalGaussNewtonDamped:
-      for(t=1;t<=T;t++) updateTimeStepGaussNewton(t, true, false, 5, tolerance); //GaussNewton in fwd & bwd sweep
-      for(t=T+1;t--;)   updateTimeStep(t, false, true, 5, tolerance, false); 
+      for(t=1;t<=T;t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance); //GaussNewton in fwd & bwd sweep
+      for(t=T+1;t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance, false); 
       break;
     default: HALT("non-existing sweep mode");
   }
@@ -482,9 +498,9 @@ double AICO::step(){
   dampingReference=b;
   if(sys->dynamic) soc::getPositionTrajectory(q,b); else q=b;
 
-  //cost = sys->analyzeTrajectory(b,display>0); //this routine calles the simulator again for each time step
+  cost = sys->analyzeTrajectory(b,display>0); //this routine calles the simulator again for each time step
   //sys->costChecks(b);
-  cost = evaluateTrajectory(b,display>0); //this routine takes the current R,r matrices to compute costs
+  //cost = evaluateTrajectory(b,display>0); //this routine takes the current R,r matrices to compute costs
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(sweep && sweepMode!=smForwardly && damping) perhapsUndoStep();
