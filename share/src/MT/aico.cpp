@@ -389,7 +389,7 @@ double AICO::evaluateTrajectory(const arr& x,bool plot){
   double tau=sys->getTau();
   double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
   arr q;
-  soc::getPositionTrajectory(q,x);
+  if(sys->dynamic) soc::getPositionTrajectory(q,x); else q=x;
   
   arr Ctask(T+1), Cctrl(T+1);
   for(t=0;t<=T;t++){

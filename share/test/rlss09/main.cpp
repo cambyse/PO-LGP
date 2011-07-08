@@ -5,6 +5,8 @@
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
+#include <MT/aico.h>
+
 
 int main(int argn,char **argv){
   MT::initCmdLine(argn,argv);
@@ -66,11 +68,11 @@ int main(int argn,char **argv){
   col->setGains(.5,.0);   col->y_prec=1e-0;  //choose gains and precision
   //handup->setGainsAsAttractor(20,.2);    //choose an attractor dynamics
   
-  arr q,dq;
+  arr q,qnew;
   soc.getq0(q); //get the current state (array of joint angles)
   for(uint t=0;t<T;t++){
-    soc::bayesianIKControl(soc,dq,0); //compute an IK step
-    q += dq;                          //add the step to the state
+    soc::bayesianIKControl2(soc,qnew,q,0); //compute an IK step
+    q = qnew;                          //add the step to the state
     soc.setq(q);                      //set the new state
     //soc.reportOnState(cout);        //->would generate detailed ouput on the state of all variables...
     gl.update(STRING("bayesian Inverse Kinematics: iteration "<<t)); //display with OpenGL
@@ -104,7 +106,10 @@ int main(int argn,char **argv){
 
   //do the planning!
   q.clear();
-  AICO_solver(soc,q,40,.7,.01,0,0);
+  //AICO_solver(soc,q,40,.7,.01,0,0);
+  AICO aico(soc);
+  aico.iterate_to_convergence();
+  q = aico.q;
   
   //write the trajectory in a file
   ofstream os("z.traj");
