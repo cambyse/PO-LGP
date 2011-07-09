@@ -26,9 +26,8 @@
 struct AICO{
   //parameters
   soc::SocSystemAbstraction *sys;
-  double convergenceRate,repeatThreshold,recomputeTaskThreshold,maxStep;
   double damping,tolerance;
-  uint max_iterations,seed;
+  uint max_iterations;
   uint display;
   bool useBwdMsg;
   arr bwdMsg_v,bwdMsg_Vinv;
@@ -39,62 +38,51 @@ struct AICO{
   MT::String filename;
   std::ostream *os;
 
-  //TODO: rename q->x (not position trajectory!)
   //messages
   arr s,Sinv,v,Vinv,r,R,rhat;     //!< fwd, bwd, and task messages
-  arr s_old,Sinv_old,v_old,Vinv_old,r_old,R_old,rhat_old;     //!< fwd, bwd, and task messages
   MT::Array<arr> phiBar,JBar;     //!< all task cost terms
   arr Psi;                        //!< all transition cost terms
   arr b,Binv;                     //!< beliefs
-  arr q,qhat;                     //!< trajectory (MAP), and point of linearization
-  arr b_old,Binv_old,q_old,qhat_old;
+  arr q,xhat;                     //!< q-trajectory (MAP), and point of linearization
+  arr s_old,Sinv_old,v_old,Vinv_old,r_old,R_old,rhat_old,b_old,Binv_old,q_old,qhat_old;
   arr dampingReference;
   double cost,cost_old;                      //!< cost of MAP trajectory
   double b_step;
-  
-  // INTERNAL
-  bool useFwdMessageAsQhat;
   arr A,tA,Ainv,invtA,a,B,tB,Winv,Hinv,Q; //!< processes...
   uint sweep;                     //!< #sweeps so far
   uint scale;                     //!< scale of this AICO in a multi-scale approach
 
-  AICO(){ sweep=0; scale=0; maxStep=.1; sweepMode=smLocalGaussNewton; }
-  AICO(soc::SocSystemAbstraction &sys){ sweep=0; scale=0; maxStep=.1; init(sys); }
+  AICO(){ sweep=0; scale=0; sweepMode=smLocalGaussNewton; }
+  AICO(soc::SocSystemAbstraction& sys){ sweep=0; scale=0; init(sys); }
 
-  //-- high level access
-  void init(soc::SocSystemAbstraction &sys);
-  void iterate_to_convergence(const arr* q_initialization=NULL);
-
-  void init(soc::SocSystemAbstraction& _sys,
-            double _convergenceRate,double _repeatThreshold,
-	    double _recomputeTaskThreshold,
-            uint _display, uint _scale);
+  void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
+  void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
+  void init_trajectory(const arr& q_init,double _damping=10.);
   void shift_solution(int offset);
 
   double step();
+  void iterate_to_convergence(const arr* q_init=NULL);
 
-  //internal helpers
-  void initMessagesWithReferenceQ(const arr& qref); //use to initialize damping reference!!!
+  //old:
   void initMessagesFromScaleParent(AICO *parent);
 
+private:
   void updateFwdMessage(uint t);
   void updateBwdMessage(uint t);
+  void updateTaskMessage(uint t,const arr& qhat_t,double tolerance);
   void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation);
   void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance);
   double evaluateTimeStep(uint t,bool includeDamping);
   double evaluateTrajectory(const arr& x,bool plot);
   void rememberOldState();
   void perhapsUndoStep();
-
   void displayCurrentSolution();
-
 };
 
 void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
                            arr& q,
                            double tolerance,
-                           double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                            uint display,
                            uint scalePowers);
 

@@ -286,21 +286,21 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   uint i,m=nTasks();
   phiBar.clear();
   JBar.clear();
-  arr phi_q,phi_v,Jac,JacT,x,v;
+  arr phi_q,phi_v,Jac,JacT,y,v;
   double prec,precv;
   if(!dynamic){ //kinematic
     for(i=0;i<m;i++) if(isConditioned(i,t<<scalePower)){
       getPhi      (phi_q,i);
-      getTarget   (x,prec,i,t<<scalePower);
+      getTarget   (y,prec,i,t<<scalePower);
       getJJt      (Jac,JacT,i);
-      phiBar.append(sqrt(prec)*(phi_q - x));
+      phiBar.append(sqrt(prec)*(phi_q - y));
       JBar  .append(sqrt(prec)*Jac);
     }
   }else{
     for(i=0;i<m;i++) if(isConditioned(i,t<<scalePower)){
       getPhi       (phi_q,i);
       //getJqd       (phi_v,i);
-      getTarget    (x,prec ,i,t<<scalePower);
+      getTarget    (y,prec ,i,t<<scalePower);
       getTargetV   (v,precv,i,t<<scalePower);
       getJJt       (Jac,JacT,i);
       CHECK(xt.N==2*Jac.d1,""); //x is a dynamic state
@@ -308,7 +308,7 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
       uint n=phi_q.N;
 
       arr tmp;
-      tmp.setBlockVector(sqrt(prec)*(phi_q - x), sqrt(precv)*(phi_v - v));
+      tmp.setBlockVector(sqrt(prec)*(phi_q - y), sqrt(precv)*(phi_v - v));
       phiBar.append(tmp);
 
       tmp.resize(2*n,2*Jac.d1);  tmp.setZero();

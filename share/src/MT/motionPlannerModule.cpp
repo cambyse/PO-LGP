@@ -20,26 +20,25 @@ void ReceedingHorizonProcess::step(){
   if(!goalVar) return;
   if(!active){ //then become active now!
     goalVar->readAccess(this);
+    sys->ors->copyShapesAndJoints(*sys_parent->ors);
+    planner.init_messages();
     if(goalVar->goalType==FutureMotionGoal::graspGoalT){
-      sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setGraspGoals(*sys, sys->nTime(), goalVar->graspShape);
-      arr q;
-      soc::straightTaskTrajectory(*sys,q,0);
-      planner.initMessagesWithReferenceQ(q);
+      //arr q;
+      //soc::straightTaskTrajectory(*sys,q,0);
+      //planner.init_trajectory(q);
       active=true;
     }else if(goalVar->goalType==FutureMotionGoal::placeGoalT){
-      sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setPlaceGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
-      arr q;
-      soc::straightTaskTrajectory(*sys,q,0);
-      planner.initMessagesWithReferenceQ(q);
+      //arr q;
+      //soc::straightTaskTrajectory(*sys,q,0);
+      //planner.init_trajectory(q);
       active=true;
     }else if(goalVar->goalType==FutureMotionGoal::homingGoalT){
-      sys->ors->copyShapesAndJoints(*sys_parent->ors);
       setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
-      arr q;
-      soc::straightTaskTrajectory(*sys,q,1); //task id is q!!!
-      planner.initMessagesWithReferenceQ(q);
+      //arr q;
+      //soc::straightTaskTrajectory(*sys,q,1); //task id is q!!!
+      //planner.init_trajectory(q);
       active=true;
     }
     goalVar->deAccess(this);
@@ -71,11 +70,11 @@ void ReceedingHorizonProcess::step(){
 
   if(planVar){
     planVar->writeAccess(this);
-    planVar->bwdMsg_v   =planner.v;
-    planVar->bwdMsg_Vinv=planner.Vinv;
-    planVar->q    = planner.q;
-    planVar->x    = planner.b;
-    planVar->cost = planner.cost;
+    planVar->bwdMsg_v   =planner.v_old;    //the old versions are those guaranteed to be best-so-far
+    planVar->bwdMsg_Vinv=planner.Vinv_old;
+    planVar->q    = planner.q_old;
+    planVar->x    = planner.b_old;
+    planVar->cost = planner.cost_old;
     planVar->tau  = sys->getTau();
     planVar->totalTime = planVar->tau*sys->nTime();
     if(d<planner.tolerance) planVar->converged=true;// NIKOLAY : enssure reasonable plans
