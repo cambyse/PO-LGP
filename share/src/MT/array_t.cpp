@@ -2413,8 +2413,8 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y,const MT::Array<T> &X,c
   uint Ydim[maxRank],Yinc[maxRank],Ydec[maxRank];
   getMultiDimIncrement(X.getDim(),Yid,Ydim,Yinc,Ydec);
   Y.resize(Yid.N,Ydim);
-  Y.setZero();
-  HALT("WRONG IMPLEMENTATION! - zero doens't guarantee max...");
+  Y=-1e10;
+  //HALT("WRONG IMPLEMENTATION! - zero don't guarantee max...");
 
   //loop
   for(Xcount=0,Ycount=0;Xcount<X.N;Xcount++){
