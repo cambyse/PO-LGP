@@ -17,6 +17,55 @@ struct GaussNewtonCostFunction{
 
 uint GaussNewton(arr& x,double tolerance,GaussNewtonCostFunction& f,uint maxEvals=1000);
 
+/*struct GaussNewtonStepper{
+  double lambda;
+  arr Delta,y;
+  arr R,r;
+
+  void init(uint n){
+    evals=0;
+    r.resize(n); R.resize(n,n);
+  }
+
+  //compute initial costs
+  f.calcTermsAt(x);  evals++;
+  lx = sumOfSqr(f.phi);
+  VERBOSE(2,cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a="<< a <<endl);
+
+  for(;;){
+    //compute Delta
+    arr tmp;
+    innerProduct(R, ~f.J, f.J  );  R.reshape(x.N,x.N);
+    innerProduct(r, ~f.J, f.phi);
+
+    lapack_Ainv_b_sym(Delta, R, -r);  
+
+    for(;;){
+      y = x + a*Delta;
+      f.calcTermsAt(y);  evals++;
+      ly = sumOfSqr(f.phi);
+      VERBOSE(2,cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta="<< a);
+      CHECK(ly==ly,"cost seems to be NAN: ly=" <<ly);
+      if(ly <= lx) break;
+      if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      //decrease stepsize
+      a = .5*a;
+      VERBOSE(2,cout <<" - reject" <<endl);
+    }
+    VERBOSE(2,cout <<" - ACCEPT" <<endl);
+    
+    //adopt new point and adapt stepsize
+    x = y;
+    lx = ly;
+    a = pow(a,0.7);
+
+    //stopping criterion
+    if(norm(Delta)<tolerance || evals>maxEvals) break;
+  }
+  //cout <<lx <<' ' <<flush;
+  return evals;
+
+}*/
 
 struct OptimizationProblem{
   bool isVectorValued;
