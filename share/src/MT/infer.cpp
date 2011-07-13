@@ -238,16 +238,16 @@ void infer::Factor::relinkTo(const VarL& vars){
   for(uint i=0;i<vars.N;i++) CHECK(dim(i)==variables(i)->dim,"relinking to variables with different dimension!");
 }
 
-void initFactor(infer::Factor &f,const VarL& vars){
-  disconnectFactor(f);
+void infer::Factor::init(const VarL& vars){
+  disconnectFactor(*this);
   uint i;
   infer::Variable *v;
-  f.variables=vars;
-  f.varIds.resize(vars.N);
-  f.dim.resize(vars.N);
-  for(uint i=0;i<vars.N;i++) f.varIds(i)=vars(i)->id;
-  for(uint i=0;i<vars.N;i++) f.dim(i)   =vars(i)->dim;
-  for_list(i,v,f.variables) v->factors.append(&f);
+  variables=vars;
+  varIds.resize(vars.N);
+  dim.resize(vars.N);
+  for(uint i=0;i<vars.N;i++) varIds(i)=vars(i)->id;
+  for(uint i=0;i<vars.N;i++) dim(i)   =vars(i)->dim;
+  for_list(i,v,variables) v->factors.append(this);
 }
 
 void infer::checkConsistent(const Factor &f){
@@ -278,32 +278,32 @@ infer::Factor::~Factor(){
 }
 
 infer::Factor::Factor(const VarL& variables,const char *_name){
-  initFactor(*this,variables);
+  init(variables);
   setOne();
   if(_name) name=_name;
 }
 
 infer::Factor::Factor(const VarL& variables,const arr& q){
-  initFactor(*this,variables);
+  init(variables);
   setP(q);
 }
 
 /*infer::Factor::Factor(const uintA& vars){
   messages.memMove=true;
-  initFactor(*this,vars);
+  init(vars);
   setOne();
 }
 
 infer::Factor::Factor(const uintA& vars,const char* text){
   messages.memMove=true;
-  initFactor(*this,vars);
+  init(vars);
   setText(text);
 }
 
 */
 
 void infer::Factor::operator=(const Factor& q){
-  initFactor(*this,q.variables);
+  init(q.variables);
   P=q.P; logP=q.logP;
 }
 
@@ -469,8 +469,8 @@ void infer::MessagePair::init(Factor *_f1,Factor *_f2){
   v1 = v2 = NULL;
   v_to_v_fac = NULL;
   setSection(variables, f1->variables, f2->variables);
-  initFactor(m12,variables);  m12.setOne();
-  initFactor(m21,variables);  m21.setOne();
+  m12.init(variables);  m12.setOne();
+  m21.init(variables);  m21.setOne();
   f1->messages.append(this);
   f2->messages.append(this);
 }
@@ -481,8 +481,8 @@ void infer::MessagePair::init(Variable *_v1,Variable *_v2,Factor *_v_to_v_fac){
   v2 = _v2;
   v_to_v_fac=_v_to_v_fac;
   variables.clear();
-  initFactor(m12,ARRAY(v2));  m12.setOne();
-  initFactor(m21,ARRAY(v1));  m21.setOne();
+  m12.init(ARRAY(v2));  m12.setOne();
+  m21.init(ARRAY(v1));  m21.setOne();
   v1->messages.append(this);
   v2->messages.append(this);
 }
@@ -494,8 +494,8 @@ void infer::MessagePair::init(Factor *_f1,Variable *_v2){
   v2 = _v2;
   v_to_v_fac = NULL;
   variables=ARRAY(v2);
-  initFactor(m12,variables);  m12.setOne();
-  initFactor(m21,variables);  m21.setOne();
+  m12.init(variables);  m12.setOne();
+  m21.init(variables);  m21.setOne();
   f1->messages.append(this);
   v2->messages.append(this);
 }
@@ -945,7 +945,7 @@ void infer::collectBelief(Factor& belief,const Factor& f,const infer::MessagePai
 void infer::collectBelief(Factor& belief,Variable *v,const MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
-  initFactor(belief,ARRAY(v));
+  belief.init(ARRAY(v));
   belief.setOne();
   for_list(i,s,v->messages){
     if(s==exclude) continue;
@@ -1272,7 +1272,7 @@ void getPick(uintA& pick,const VarL& base_vars,const VarL& multiplier_vars){
 void infer::tensorProduct(Factor& f, const Factor& a, const Factor& b){
   VarL fvars;
   setUnion(fvars,a.variables,b.variables);
-  initFactor(f,fvars);
+  f.init(fvars);
   f.P.resize(f.dim);
   uintA pickA,pickB;
   getPick(pickA,f.variables,a.variables);
@@ -1286,7 +1286,7 @@ void infer::tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, c
   VarL fvars;
   setUnion(fvars,a.variables,b.variables);
   setMinus(fvars,s);
-  initFactor(f,fvars);
+  f.init(fvars);
   f.P.resize(f.dim);
   uintA pickA,pickB;
   VarL all;
@@ -1300,7 +1300,7 @@ void infer::tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, c
 }
 
 void infer::tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
-  initFactor(m,marginalVars);
+  m.init(marginalVars);
   uintA pick;
   getPick(pick,f.variables,m.variables);
   ::tensorMarginal(m.P,f.P,pick);
@@ -1309,7 +1309,7 @@ void infer::tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
 }
 
 void infer::tensorMaxMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
-  initFactor(m,marginalVars);
+  m.init(marginalVars);
   uintA pick;
   getPick(pick,f.variables,m.variables);
   ::tensorMaxMarginal(m.P,f.P,pick);
@@ -1406,7 +1406,7 @@ void infer::getJoint(Factor& joint,const FacL& factors){
   for(i=0;i<factors.N;i++) jointVars.setAppend(factors(i)->variables);
   DEBUG_INFER(2,cout <<"  jointVars=" <<jointVars <<endl);
   //compute joint
-  initFactor(joint,jointVars);
+  joint.init(jointVars);
   joint.setOne();
   for(i=0;i<factors.N;i++) tensorMultiply(joint, *(factors(i)));
 }
@@ -1551,7 +1551,7 @@ void infer::eliminationAlgorithm(Factor& posterior,const FacL& factors, const Va
   for(i=0;i<elimOrder.N;i++) eliminateVariable(factors_copy, newedFactors, elimOrder(i));
 
   // calculate posterior
-  initFactor(posterior,remaining_vars);
+  posterior.init(remaining_vars);
   posterior.setOne();
   /*if (remaining_vars.N==0){ //DON'T HANDLE SCALAR OUTPUT SPECIAL...
     for(i=0;i<factors_copy.N;i++){
@@ -2408,7 +2408,7 @@ void check_atLeastOneConditional(VarL& vars, FacL& facs){
 //  Loopy BP - other approach (MT)
 //
 
-void connectThemUp(VarL& V,FactorList& F){
+void infer::connectThemUp(VarL& V,FactorList& F){
   MT_MSG("you shouldn't use this anymore!!");
   infer::Factor *f;
   uint i;
@@ -2426,6 +2426,12 @@ void connectThemUp(VarL& V,FactorList& F){
     f->variables.append(v);
   }
 #endif
+}
+
+void infer::LoopyBP::clear(){
+  vars.clear();
+  facs.clear();
+  listDelete(msgs);
 }
 
 void infer::LoopyBP::initBipartite(const VarL& _vars,const FactorList& _facs){
@@ -2448,19 +2454,24 @@ void infer::LoopyBP::initPairwise(const VarL& _vars,const FactorList& _facs){
   uint i;
   Factor *f;
   for_list(i,f,facs){
-    CHECK(f->variables.N==2,"only for pair-wise networks!");
-    msgs.append( new MessagePair(f->variables(0), f->variables(1),f) );
+    CHECK(f->variables.N<=2,"only for pair-wise networks!");
+    if(f->variables.N==1) msgs.append( new MessagePair(f, f->variables(0)) );
+    if(f->variables.N==2) msgs.append( new MessagePair(f->variables(0), f->variables(1),f) );
   }
 }
 
-void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs){
+void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs,bool normalized){
   uint i;
   beliefs.resize(vars.N);
-  for(i=0;i<vars.N;i++) collectBelief(beliefs(i),vars(i),NULL);
+  for(i=0;i<vars.N;i++){
+    collectBelief(beliefs(i),vars(i),NULL);
+    if(normalized) beliefs(i).normalize();
+  }
 }
 
-void infer::LoopyBP::getVarBelief(Factor& belief,Variable *v){
+void infer::LoopyBP::getVarBelief(Factor& belief,Variable *v,bool normalized){
   collectBelief(belief,v,NULL);
+  if(normalized) belief.normalize();
 }
 
 void infer::LoopyBP::step(){

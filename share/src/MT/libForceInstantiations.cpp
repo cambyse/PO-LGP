@@ -20,9 +20,9 @@
 //the above two flags cause the following headers to
 //include their implementations...
 //#include <MT/ors.h>
-#include <MT/util.h>
+#include "util.h"
 //#include <MT/opengl.h>
-#include <MT/array.h>
+#include "array.h"
 //#include <MT/algos.h>
 //explicit template instantiations
 
@@ -53,17 +53,17 @@ template void MT::Parameter<int>::initialize();
 //template class MT::Array<MT::Array<uint> >;
 //full classes & numerical routines
 #define T double
-#  include <MT/array_instantiate.cpp>
+#  include "array_instantiate.cpp"
 #undef T
 #define NOFLOAT
 #define T uint
-#  include <MT/array_instantiate.cpp>
+#  include "array_instantiate.cpp"
 #undef T
 #define T int
-#  include <MT/array_instantiate.cpp>
+#  include "array_instantiate.cpp"
 #undef T
 #define T byte
-#  include <MT/array_instantiate.cpp>
+#  include "array_instantiate.cpp"
 #undef T
 #undef NOFLOAT
 
