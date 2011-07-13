@@ -78,7 +78,7 @@ void AICO::init_messages(){
   r.resize(T+1,n);  R.resize(T+1,n,n);     r.setZero();  R   .setZero();  r[0]=0.;  R[0]=0.;
   rhat.resize(T+1);    rhat.setZero();
   xhat.resize(T+1,n);  xhat.setZero();  xhat[0]=x0;
-  q = xhat;
+  if(sys->dynamic) soc::getPositionTrajectory(q,b); else q=b;
   //dampingReference = qhat;
   dampingReference.clear();
 

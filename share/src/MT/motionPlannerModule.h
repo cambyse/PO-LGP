@@ -35,18 +35,6 @@ struct ReceedingHorizonProcess:public Process{
   void close();
 };
 
-/*struct MotionPlannerModuleGroup{
-  soc::SocSystem_Ors *sys_parent;
-  ReceedingHorizonProcess recho;
-  const char *graspShapeName;
-  
-  MotionPlannerModuleGroup();
-  
-  void open();
-  void step();
-  void close();
-  };*/
-
 #ifdef  MT_IMPLEMENTATION
 #  include "motionPlannerModule.cpp"
 #endif
