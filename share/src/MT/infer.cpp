@@ -2460,18 +2460,18 @@ void infer::LoopyBP::initPairwise(const VarL& _vars,const FactorList& _facs){
   }
 }
 
-void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs){
+void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs,bool normalized){
   uint i;
   beliefs.resize(vars.N);
   for(i=0;i<vars.N;i++){
     collectBelief(beliefs(i),vars(i),NULL);
-    beliefs(i).normalize();
+    if(normalized) beliefs(i).normalize();
   }
 }
 
-void infer::LoopyBP::getVarBelief(Factor& belief,Variable *v){
+void infer::LoopyBP::getVarBelief(Factor& belief,Variable *v,bool normalized){
   collectBelief(belief,v,NULL);
-  belief.normalize();
+  if(normalized) belief.normalize();
 }
 
 void infer::LoopyBP::step(){

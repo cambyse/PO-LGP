@@ -3,7 +3,9 @@
 #include <iostream>
 #include <map>
 #include <MT/infer.h>
-#include <MT/daiModule.h>
+#ifdef MT_DAI
+#  include <MT/daiModule.h>
+#endif
 #include <stdlib.h>
 
 #define CALC_JT 1
@@ -160,7 +162,7 @@ void testBurglary() {
   infer::LoopyBP lbp;
   lbp.initBipartite(variables,factors);
   for(uint t=0;t<10;t++) lbp.step();
-  lbp.getVarBelief(post_bl,&bl);
+  lbp.getVarBelief(post_bl,&bl,false);
   cout <<"BP bl posterior = " <<post_bl <<endl;
   post_bl.getP(p5);
 

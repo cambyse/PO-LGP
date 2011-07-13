@@ -190,8 +190,8 @@ struct LoopyBP{
   void clear();
   void initBipartite(const VariableList& vars,const FactorList& facs);
   void initPairwise(const VariableList& vars,const FactorList& facs);
-  void getVarBeliefs(MT::Array<Factor>& beliefs);
-  void getVarBelief(Factor& belief,Variable *v);
+  void getVarBeliefs(MT::Array<Factor>& beliefs,bool normalized=true);
+  void getVarBelief(Factor& belief,Variable *v,bool normalized=true);
   void step();
   void step_meanfield();
   //void loopyBP_pairwise(const VariableList& vars,const FactorList& facs);
