@@ -48,8 +48,8 @@ int main(int argn,char** argv) {
   planner.sys_parent = &R.getProcessGroup()->ctrl.sys;
 
   R.getProcessGroup()->gui.planVar  = &planVar;
-  R.getTask()->planVar = &planVar;
-  R.getTask()->joyVar  = &R.getProcessGroup()->joy;
+  R.getProcessGroup()->ctrl.planVar  = &planVar;
+  R.getProcessGroup()->ctrl.joyVar  = &R.getProcessGroup()->joy;
 
   if(R.getProcessGroup()->openBumble) perc.threadLoop();
   planner.threadLoop();

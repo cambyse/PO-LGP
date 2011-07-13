@@ -85,6 +85,8 @@ struct ControllerProcess:public Process{ //--non-threaded!!
   q_currentReferenceVar *q_referenceVar;
   SkinPressureVar *skinPressureVar;
   currentProxiesVar *proxiesVar;
+  FutureMotionPlan *planVar;
+  JoystickInterface *joyVar;
   
   //INPUT
   TaskAbstraction *task;

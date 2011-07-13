@@ -44,6 +44,8 @@ ControllerProcess::ControllerProcess():Process("ControllerProcess"),timer("RobCo
   proxiesVar=NULL;
   skinPressureVar=NULL;
   task=NULL;
+  planVar= NULL;
+  joyVar= NULL;
   useBwdMsg=false;
   forceColLimTVs=true;
   fixFingers=false;
@@ -374,6 +376,10 @@ TaskAbstraction::TaskAbstraction(){
 void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   ors::Graph &ors=ctrl->ors;
   
+  // get refs to joystick and plan from controller (SSD)
+  planVar = ctrl->planVar;
+  joyVar  = ctrl->joyVar;
+
   //define explicit control variables
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
