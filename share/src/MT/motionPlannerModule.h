@@ -18,17 +18,6 @@ struct ReceedingHorizonProcess:public Process{
   const char *graspShapeName;
 
 
-  //OUTPUT
-  //bool planAvailable;
-  //arr bwdMsg_v,bwdMsg_Vinv;
-  
-  //INPUT
-  //arr q0,v0;
-  //uint time_shift;
-
-  //int scalePowers,display;
-  //double convergenceRate,repeatThreshold,recomputeTaskThreshold,tolerance;
-
   ReceedingHorizonProcess();
   void open();
   void step();

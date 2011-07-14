@@ -27,20 +27,18 @@ void ReceedingHorizonProcess::step(){
       //arr q;
       //soc::straightTaskTrajectory(*sys,q,0);
       //planner.init_trajectory(q);
-      active=true;
     }else if(goalVar->goalType==FutureMotionGoal::placeGoalT){
       setPlaceGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys,q,0);
       //planner.init_trajectory(q);
-      active=true;
     }else if(goalVar->goalType==FutureMotionGoal::homingGoalT){
       setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys,q,1); //task id is q!!!
       //planner.init_trajectory(q);
-      active=true;
     }
+    active=true;
     goalVar->deAccess(this);
     planVar->writeAccess(this);
     planVar->converged=false;
