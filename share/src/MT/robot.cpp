@@ -568,12 +568,11 @@ void TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){
             TV_q->active=true;
             TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
           }else{
-            //ctrl->useBwdMsg=true;
-            TV_q->active=true;  TV_q->y_prec=1e3;  TV_q->v_prec=1e1;  //control directly on q-level (including velocities)
+            ctrl->useBwdMsg=true;
+            TV_q->active=true;  TV_q->y_prec=1e1;  TV_q->v_prec=0.;  //control directly on q-level (including velocities)
           }
         }
         planVar->deAccess(ctrl);
-        //if (motion.recho.planner.cost < 1.) if (counter<motion.recho.sys->nTime()-1) counter++;
       }else{
         TV_q->active=true;
         TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
