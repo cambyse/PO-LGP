@@ -28,6 +28,7 @@ struct GaussianProcess{
   void (*dkernelF) (arr& grad,void *P,const arr& x,const arr& y);
   double (*kernelD1)(uint i,void *P,const arr& x,const arr& y);
   double (*kernelD2)(uint i,uint j,void *P,const arr& x,const arr& y);
+  double (*kernelD3)(uint i,uint j, uint k, void *P,const arr& x,const arr& y);
   void *kernelP;                      //!< pointer to parameters (a struct or so) passed to the kernel function
 
   GaussianProcess();
@@ -65,12 +66,14 @@ struct GaussianProcess{
       void (*_dkernelF)(arr& grad,void *P,const arr& x,const arr& y),
       double (*_kernelD1)(uint i,void *P,const arr& x,const arr& y),
       double (*_kernelD2)(uint i,uint j,void *P,const arr& x,const arr& y),
+      double (*_kernelD3)(uint i,uint j,void *P,const arr& x,const arr& y),
       void *_kernelP){
     kernelP=_kernelP;
     kernelF=_kernelF;
     dkernelF=_dkernelF;
     kernelD1=_kernelD1;
     kernelD2=_kernelD2;
+    kernelD3=_kernelD3;
   }
   void setGaussKernelGP( void *_kernelP, double (*_mu)(const arr&, const void*), void*);
   void setGaussKernelGP( void *_kernelP, double _mu);
@@ -111,17 +114,17 @@ inline double GaussKernel(void *P,const arr& x1,const arr& x2){
 }
 
 /*! \brief return gradient, i.e.
-  for i \in {vector dimensions}: \frac { \parital k(x1, x2) }{ \partial x_i  }
+  for i \in {vector dimensions}: \frac { \parital k(x, x2) }{ \partial x_i  }
   you can also pass a double[3] as parameters */
 inline void dGaussKernel(arr& grad,void *P,const arr& x1,const arr& x2){
   GaussKernelParams& K = *((GaussKernelParams*)P);
   if(&x1==&x2){ grad.resizeAs(x1); grad.setZero(); return; }
   double gauss=GaussKernel(P,x1,x2), gamma=1./K.widthVar;
-  grad = gamma * (x2-x1) * gauss;
+  grad = gamma * (x2-x1) * gauss; // SD: Note the (x2 - x1) swap cancles the leading minus 
   //MT_MSG("gamma="<<gamma<<"; x2-x1"<<x2 -x1<<"; gauss="<<gauss<<"; grad="<<grad);
 }
 
-/*! \brief \frac { \parital k(x_point, x_deriv) }{ \partial x_deriv  }
+/*! \brief \frac { \parital k(x_p, x) }{ \partial x_i  }
   you can also pass a double[3] as parameters */
 inline double GaussKernelD1(uint i,void *P,const arr& x_point,const arr& x_deriv){
   GaussKernelParams& K = *((GaussKernelParams*)P);
@@ -131,7 +134,7 @@ inline double GaussKernelD1(uint i,void *P,const arr& x_point,const arr& x_deriv
   return gamma * di * gauss;
 }
 
-/*! \brief \frac { \parital^2 k(x1, x2) }{ \partial x_{1i} \partial x_{2j}  }
+/*! \brief \frac { \parital^2 k(x, x2) }{ \partial x_i \partial x_j  }
   you can also pass a double[3] as parameters */
 inline double GaussKernelD2(uint i,uint j,void *P,const arr& x1,const arr& x2){
   GaussKernelParams& K = *((GaussKernelParams*)P);
@@ -139,6 +142,38 @@ inline double GaussKernelD2(uint i,uint j,void *P,const arr& x1,const arr& x2){
   double gauss=GaussKernel(P,x1,x2), gamma=1./K.widthVar;
   double di=x1(i)-x2(i), dj=x1(j)-x2(j);
   return gamma * ((i==j?1.:0.) - gamma*di*dj) * gauss;
+}
+
+/*! \brief \( \frac { \partial^3 k(\vec{x}, \vec{x2}) }{ \partial x_i \partial x_j \partial x_k  } \)
+  you can also pass a double[3] as parameters */
+inline double GaussKernelD3(uint i,uint j, uint k, void *P,const arr& x1,const arr& x2){
+  uint i2,j2,k2,oplus,ind;
+  double d;
+  GaussKernelParams& K = *((GaussKernelParams*)P);
+  if(&x1==&x2) return K.priorVar/K.widthVar + K.derivVar; //TODO: kerneld3(x,x)
+  double gauss=GaussKernel(P,x1,x2), gamma=1./K.widthVar;
+  double di=x2(i)-x1(i), dj=x2(j)-x1(j), dk=x2(k)-x1(k); 
+  /*
+  if (i!=j  && i!=k && j!=k ) 
+    return gamma*gamma*gamma*di*dj*dk*gauss; //TODO check signs here and below
+  else if (i!=j  && j==k ) 
+    return gamma*gamma*(di - gamma*di*dj*dk) * gauss;
+  else if (i!=j  && i==k ) 
+    return gamma*gamma*(dj - gamma*di*dj*dk) * gauss;
+  else if (i==j && i!=k)
+    return gamma*gamma*(dk - gamma*di*dj*dk) * gauss;
+  else if (i==j && i==k)
+    return gamma*gamma*(3*dk - gamma*di*dj*dk) * gauss;
+  */
+  
+  i2=1<<i; j2=1<<j; k2=1<<k;
+  if ( i2&j2&k2 ) // nonzero => all the same
+    return gamma*gamma*(3*dk - gamma*di*dj*dk) * gauss;  //TODO check signs here and below
+  else if ( (i2|j2|k2) == 7 ) // all different
+    return gamma*gamma*gamma*di*dj*dk*gauss; 
+  else
+    return gamma*gamma*( i==j?dk:(i==k?dj:di) - gamma*di*dj*dk) * gauss;
+
 }
 
 inline double maximizeGP(GaussianProcess& gp,arr& x){

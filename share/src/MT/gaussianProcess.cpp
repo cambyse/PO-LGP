@@ -11,7 +11,6 @@ GaussianProcess::GaussianProcess(){
 
 /*! set Gauss cov function, its parameters, and GP prior
  */
-
 void GaussianProcess::setGaussKernelGP(
     void *_kernelP,
     double _mu){
@@ -23,6 +22,7 @@ void GaussianProcess::setGaussKernelGP(
   dkernelF=dGaussKernel;
   kernelD1=GaussKernelD1;
   kernelD2=GaussKernelD2;
+  kernelD3=GaussKernelD3;
 }
 
 /*! set Gauss cov function, its parameters, and GP prior
@@ -39,6 +39,7 @@ void GaussianProcess::setGaussKernelGP(
   dkernelF=dGaussKernel;
   kernelD1=GaussKernelD1;
   kernelD2=GaussKernelD2;
+  kernelD3=GaussKernelD3;
 }
 
 
@@ -159,22 +160,51 @@ void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
   if(sig<0) sig=0.; else sig = ::sqrt(sig);
 }
 
-/* \nabla f(x) (i) =  \frac{
- *      \partial (  k *  K^{-1} * Y_all ) }{
- *      \partial x_i }
- *    
- * where k is a vector 1..N+dN with k(j)
- * j \in {1...N}            % function value observations
- *  \frac{
- *    \partial k(x,xj) }{
- *    \partial x_i }
- * j \in {N...dN}           % derivative observations
- *  \frac{
- *    \partial^2 k(x,xj) }{
- *    \partial x_i  \partial x_l }
- *    where x_l is the the same argument in which the derivative in xj has been
- *    observed 
- */
+/*****
+ *
+\[
+\nabla f(x) (i) =  \frac{
+     \partial (  \vec{k}  K^{-1} Y_{all} ) }{
+     \partial x_i }
+\]
+
+which translates to 
+\[
+ \frac{
+   \partial k(x,\vec{X_j}) }{
+   \partial x_i }
+   K^{-1} Y_{all},
+    for j \in {1...N}            % function value observations
+\]
+and
+\[
+ \frac{
+   \partial^2 k(x,\vec{X_j}) }{
+   \partial x_i  \partial x_l }
+   K^{-1} Y_{all},
+   j \in {N...dN}           % derivative observations
+\]
+
+where
+<li>
+\(k\) is the covariance function,
+<li>
+\(k\) is a vector \(1..N+dN\) with \(\vec{k}_j=k(x,\vec{X}j)\),
+<li>
+\(K\) is the Gram matrix \((\vec{X^TX}-\sigma^2\vec{I})^{-1}\)(augmented with noise),
+<li>
+\(Y_{all}\) is the vector of all observed responses,
+<li>
+\(\vec{X_j}\) is the vector of coordinates of the j-th data point,
+<li>
+\(x_l\) is the the same component in which the derivative in \(X_j\) has been
+   observed 
+<li>
+\(K^{-1} Y_{all}\) is a column vector; 
+<li>
+the resulting \(\nabla f(x) \) is vector of the dimensionality of the GP
+*
+*/
 void GaussianProcess::gradient(arr& grad,const arr& x){
   CHECK(X.N || dX.N ,"can't recompute gradient without data");
   CHECK((X.N && x.N==X.d1) || (dX.N && x.N==dX.d1),"dimensions don't match!");
@@ -191,13 +221,110 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
     grad += GinvY(i) * dk;
   }
   // derivative observations
-  for(i=0;i<dN;i++){//FIXME!!!!
+  for(i=0;i<dN;i++){
     dxi.referToSubDim(dX,i);
     dk.setZero();
     for(d=0; d<dim; ++d){
       dk(d) = kernelD2(d,dI(i),kernelP,x,dxi);
     }
     grad += GinvY(i+N) * dk;
+  }
+}
+
+/*****
+ * The hessian (of the posterior mean \(f\) ) is a \(d\times d\) matrix of
+\[
+\frac {
+\partial^2 f(\vec{x}) }{ 
+\partial x_i, x_j, x_k} = 
+\partial^2 ( \vec{k}  K^{-1} Y_{all} ) }{ 
+\partial x_i, x_j, x_k} = 
+\]
+
+and translates to 
+\[
+ \frac{
+   \partial^2 k(x,\vec{X_n}) }{
+   \partial x_i, x_j }
+   K^{-1} Y_{all},
+    n \in {1...N}            % function value observations
+\]
+and
+\[
+ \frac{
+   \partial^3 k(x,\vec{X_n}) }{
+   \partial x_l \partial x_i \partial x_j }
+   K^{-1} Y_{all},
+   n \in {N...dN}           % derivative observations
+\]
+
+where
+<li>
+\(k\) is the covariance function,
+<li>
+\(k\) is a vector \(1..N+dN\) with \(\vec{k}_j=k(x,\vec{X}j)\),
+<li>
+\(K\) is the Gram matrix \((\vec{X^TX}-\sigma^2\vec{I})^{-1}\)(augmented with noise),
+<li>
+\(Y_{all}\) is the vector of all observed responses,
+<li>
+\(\vec{X_n}\) is the vector of coordinates of the n-th data point,
+<li>
+\(x_l\) is the the same component in which the derivative in \(X_n\) has been
+   observed 
+<li>
+\(K^{-1} Y_{all}\) is a column vector; 
+<li>
+the resulting \(\nabla f(x) \) is vector of the dimensionality of the GP
+
+see also gradient()
+
+pseudocode:
+H:=H(3x3xd)
+d:=GP dimension
+for n \in \{1..N\}
+  for i,j \in \{ 1..d\}
+    H_{i,j,n} = kernelD2(i,j,...,\vec{x},\vec{X_n})
+  end
+end
+for n \in \{N+1..N+dN\}
+  for i,j \in \{ 1..d\}
+    H_{i,j,n} = kernelD3(i,j,dI(n),...,\vec{x},\vec{X_n})
+  end
+end
+*
+*/
+void GaussianProcess::hessian(arr& hess,const arr& x){
+  CHECK(X.N || dX.N ,"can't recompute Hessian without data");
+  CHECK((X.N && x.N==X.d1) || (dX.N && x.N==dX.d1),"dimensions don't match!");
+  uint i,j,n, N=Y.N, dN=dY.N, dim;
+  dim = X.d1?X.d1:dX.d1;
+  arr d2k(dim,dim,N+dN);
+  static arr xn,dxn; 
+  d2k.setZero();
+  hess.resize(dim,dim);
+  hess.setZero();
+  // function value observations
+  for(n=0;n<N;n++){
+    xn.referToSubDim(X,n);
+    for(i=0;i<dim;i++){
+      for(j=0;j<dim;j++){
+          d2k(i,j,n)=kernelD2(i,j,kernelP,x,xi);
+      }
+    }
+    //TODO: add inv gram
+    hess += GinvY(n) * d2k;
+  }
+  // derivative observations
+  for(n=0;n<dN;n++){
+    dxn.referToSubDim(dX,n);
+    for(i=0;i<dim;i++){
+      for(j=0;j<dim;j++){
+          d2k(i,j,n)=kernelD3(i,j,dI(n), kernelP,x,dxn);
+      }
+    }
+    //TODO: add inv gram
+    hess += GinvY(n+N) * d2k;
   }
 }
 
