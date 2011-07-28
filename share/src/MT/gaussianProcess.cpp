@@ -309,7 +309,7 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
     xn.referToSubDim(X,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=kernelD2(i,j,kernelP,x,xi);
+          d2k(i,j,n)=kernelD2(i,j,kernelP,x,xn);
       }
     }
     //TODO: add inv gram

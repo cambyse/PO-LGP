@@ -66,7 +66,7 @@ struct GaussianProcess{
       void (*_dkernelF)(arr& grad,void *P,const arr& x,const arr& y),
       double (*_kernelD1)(uint i,void *P,const arr& x,const arr& y),
       double (*_kernelD2)(uint i,uint j,void *P,const arr& x,const arr& y),
-      double (*_kernelD3)(uint i,uint j,void *P,const arr& x,const arr& y),
+      double (*_kernelD3)(uint i,uint j, uint k, void *P,const arr& x,const arr& y),
       void *_kernelP){
     kernelP=_kernelP;
     kernelF=_kernelF;
@@ -87,6 +87,7 @@ struct GaussianProcess{
   void evaluate(const arr& X,arr& Y,arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
   double max_var(); // the variance when no data present
   void gradient(arr& grad,const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
+  void hessian(arr& hess,const arr& x);           //!< evaluate the hessian dy/dx1dx2 of the mean at some point
 
   void push(const arr& x,double y){ ig2=Ginv; appendObservation(x,y); recompute(); }
   void pop(){ Ginv=ig2; X.resizeCopy(X.d0-1,X.d1); Y.resizeCopy(Y.N-1); }
@@ -147,8 +148,7 @@ inline double GaussKernelD2(uint i,uint j,void *P,const arr& x1,const arr& x2){
 /*! \brief \( \frac { \partial^3 k(\vec{x}, \vec{x2}) }{ \partial x_i \partial x_j \partial x_k  } \)
   you can also pass a double[3] as parameters */
 inline double GaussKernelD3(uint i,uint j, uint k, void *P,const arr& x1,const arr& x2){
-  uint i2,j2,k2,oplus,ind;
-  double d;
+  uint i2,j2,k2;
   GaussKernelParams& K = *((GaussKernelParams*)P);
   if(&x1==&x2) return K.priorVar/K.widthVar + K.derivVar; //TODO: kerneld3(x,x)
   double gauss=GaussKernel(P,x1,x2), gamma=1./K.widthVar;
