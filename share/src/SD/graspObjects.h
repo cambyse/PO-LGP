@@ -9,6 +9,7 @@
 double staticPhi(double x,double y,double z, void *p);
 double staticPhi(const arr&, const void *);
 double staticPhi(arr*, const arr&, void *);
+double staticPhi(arr*,arr*, const arr&, void *);
 
 //===========================================================================
 //
@@ -30,7 +31,7 @@ struct PotentialField : public MeshObject
 {
   arr X,dX; //vector fields for plotting
 
-  virtual double psi(arr* grad,const arr& x)=0;
+  virtual double psi(arr* grad,arr *hess,const arr& x)=0;
   void getNormGrad(arr& grad,const arr& x){
     psi(&grad,x);
     double d=norm(grad);
@@ -43,9 +44,9 @@ struct PotentialField : public MeshObject
 
 struct GraspObject : public PotentialField
 {
-  virtual double distanceToSurface(arr *grad,const arr& x) { NIY; }
-  virtual double psi(arr* grad,const arr& x);
-  virtual double phi(arr *grad,double *var,const arr& x);
+  virtual double distanceToSurface(arr *grad, arr *hess, const arr& x) { NIY; }
+  virtual double psi(arr* grad, arr *hess, const arr& x);
+  virtual double phi(arr *grad, arr *hess, double *var,const arr& x);
   void getNormGrad(arr& grad,const arr& x) ;
   virtual double max_var(){return 0;}
 
@@ -59,7 +60,7 @@ struct GraspObject_InfCylinder:public GraspObject{
   double r; //radius
   double s; //kernel parameter
   
-  double distanceToSurface(arr *grad,const arr& x);
+  double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_InfCylinder();
   GraspObject_InfCylinder(arr,arr,double,double);
   arr center(){return c;};
@@ -72,7 +73,7 @@ struct GraspObject_Cylinder1:public GraspObject{ // poor man's cylinder
   double h; //height = 2 * (center to plane)
   double s; //kernel parameter
   
-  double distanceToSurface(arr *grad,const arr& x);
+  double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Cylinder1();
   GraspObject_Cylinder1(arr,arr,double,double,double);
   arr center(){return c;};
@@ -83,7 +84,7 @@ struct GraspObject_Sphere:public GraspObject{
   double r; //radius
   double s; //kernel parameter
   
-  double distanceToSurface(arr *grad,const arr& x);
+  double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Sphere();
   GraspObject_Sphere(arr&, double, double);
   arr center(){return c;};
@@ -95,7 +96,7 @@ struct GraspObject_GP:public GraspObject{
   double d;
   isf_gp_t isf_gp;
   
-  double phi(arr *grad,double *var,const arr& x);
+  double phi(arr *grad,arr *hess,double *var,const arr& x);
   
   GraspObject_GP();
   GraspObject_GP(const arr&,const double);

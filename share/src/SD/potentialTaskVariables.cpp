@@ -37,7 +37,7 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
 void PotentialFieldAlignTaskVariable::userUpdate(){
   uint i;
   ors::Shape *s;
-  arr xi,zi,Ji,grad;
+  arr xi,zi,Ji,grad,hess;
   y.resize(refs.N);
   J.resize(refs.N,ors->getJointStateDimension());
   for_list(i,s,refs){
@@ -45,10 +45,10 @@ void PotentialFieldAlignTaskVariable::userUpdate(){
     ors->kinematicsZ(zi,s->body->index,&s->rel);
     ors->jacobianZ  (Ji,s->body->index,&s->rel);
     f->psi(&grad,xi);
+    //f->hessian(&hess,xi);
     grad /= norm(grad);
-      //zi /= norm(zi); -- kinematicsZ is always normalized (mt)
     y(i) = scalarProduct(zi,grad);
-    J[i]() = ~grad * Ji; // + ~zi * Jgrad; actually we would need the Hessian!
+    J[i]() = ~grad * Ji ; //+ ~zi * hess;
   }
   transpose(Jt,J);
 }

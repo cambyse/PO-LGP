@@ -3,12 +3,16 @@
 #include <MT/util.h>
 
 double
+staticPhi(arr *grad, arr *hess, const arr &x, void *p){
+  return ((PotentialField*)p)->psi(grad,hess,x);
+}
+double
 staticPhi(arr *grad, const arr &x, void *p){
-  return ((PotentialField*)p)->psi(grad,x);
+  return ((PotentialField*)p)->psi(grad,NULL,x);
 }
 double
 staticPhi(const arr &x,const void *p){
-  return ((PotentialField*)p)->psi(NULL,x);
+  return ((PotentialField*)p)->psi(NULL,NULL,x);
 }
 double
 staticPhi(double x,double y,double z,void *p){
@@ -106,18 +110,37 @@ PotentialField::buildMesh(){
   }
 }
 
-
+/** Value and gradient (and TODO hessian to come) and variance of the potential
+ * field. 
+ *
+ * Variance doesn't make much sense when not a Gaussian Process or another
+ * probabilistic method: here variance is zero indicating to the invoker that
+ * vaiance doesn't play a role.
+ *
+ * ACHTUNG: nonNULL hess implies nonNULL grad
+ * look at mlr/stanio/concepts/note-analytic-impl-shapes-hessian in the
+ * repository for more details
+ */
 double
-GraspObject::phi(arr *grad,double *var,const arr& x) { //generic phi, based only on (scaled) distance to surface
+GraspObject::phi(arr *grad,arr *hess,double *var,const arr& x) { //generic phi, based only on (scaled) distance to surface
   // see gnuplot:  plot[-1:4] 1.-exp(-.5*(x+1)*(x+1))/exp(-.5)
-  double d=distanceToSurface(grad,x);
+  double d = distanceToSurface(grad,hess,x);
+  double e = exp(-.5*(d+1.)*(d+1.))*exp(.5);
   if(d<-1.) d=-1.; 
-#if 0
-  double phi=1.-exp(-.5*(d+1.)*(d+1.))/exp(-.5);
+#if 1
+  double phi=1.-e;
   if(grad){
-    (*grad) = (-exp(-.5*(d+1.)*(d+1.))/exp(-.5)) * (-(d+1.)) * (*grad);
+    *grad = e * (d+1.) * (*grad);
+  }
+  if(hess){
+    CHECK(grad!=NULL,"need to store gradient.");
+    /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
+    *hess = - e*d*(d+2.) * (*grad) * (~grad)
+              + e*(d+1.) * (*hess);
   }
 #else
+  /* this was Marc's try to circumvent underflow of gradient far away from
+   * surface */
   double phi=d;
 #endif
   if(var) *var = 0; //default variance is 0 (analytic shapes)
@@ -125,34 +148,50 @@ GraspObject::phi(arr *grad,double *var,const arr& x) { //generic phi, based only
 } 
 
 double
-GraspObject::psi(arr* grad,const arr& x)  {
-  return phi(grad,NULL,x);
+GraspObject::psi(arr* grad,arr* hess,const arr& x)  {
+  return phi(grad,hess,NULL,x);
 };
 
 void
 GraspObject::getNormGrad(arr& grad,const arr& x) {
-  phi(&grad,NULL,x);
+  phi(&grad,NULL,NULL,x);
   double d=norm(grad);
   if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
 }
 
 /* =============== Inf cyllinder ================ */
 
+/** distance to surface, distance gradient, and hessian for this shape
+ *
+ * Details in inf cylinder section of 
+ * mlr/stanio/concepts/note-analytic-impl-shapes-hessian
+ */
 double
-GraspObject_InfCylinder::distanceToSurface(arr *grad,const arr& x){
+GraspObject_InfCylinder::distanceToSurface(arr *grad,arr *hess,const arr& x){
   z = z / norm(z);
-  arr d_vec = (x-c) - scalarProduct((x-c), z) * z;
-  double d = norm(d_vec);
-  if(grad) *grad = s*d_vec/d;
-  return s*(d-r);
+  arr a = (x-c) - scalarProduct((x-c), z) * z;
+  arr I(x.d1,x.d1);
+  uint i;
+  double na = norm(a);
+
+  if(grad) *grad = s*a/na;
+  if(hess){
+    I.setZero();
+    for(i=0;i<x.d1;++i) I(i,i)=1;
+    *hess = s/na * (I - z*(~z) - 1/(na*na) * a*(~a))
+  }
+  return s*(na-r);
 }
 
+/* construct from center, ori, rad, sigma */
 GraspObject_InfCylinder::GraspObject_InfCylinder(arr c1,arr z1, double r1, double s1){
   c = c1;
   z = z1;
   r = r1;
   s = s1;
 }
+
+/* construct from cmd line params */
 GraspObject_InfCylinder::GraspObject_InfCylinder(){
   c = MT::getParameter<arr>("center");
   z = MT::getParameter<arr>("orientation");
@@ -165,25 +204,45 @@ GraspObject_InfCylinder::GraspObject_InfCylinder(){
 double
 GraspObject_Cylinder1::distanceToSurface(arr *grad,const arr& x){
   z = z / norm(z);
-  arr hx_vec = scalarProduct((x-c), z) * z;
-  arr d_vec = (x-c) - hx_vec;
-  double d = norm(d_vec);
-  double hx = norm(hx_vec);
-  if ( hx < h/2. ){ // x projection on z is inside cyl
-    if(grad) *grad = s*d_vec/d;
-    return s*(d-r);
+  arr b = scalarProduct((x-c), z) * z;
+  arr a = (x-c) - b;
+  arr I(x.d1,x.d1);
+  uint i;
+  double na = norm(a);
+  double nb = norm(b);
+  double aaTovasq = 1/(na*na) * a*(~a);
+  double zzT = z*(~z);
+
+  if ( nb < h/2. ){ // x projection on z is inside cyl
+    if(grad) *grad = s*a/na;
+    if(hess){
+      I.setZero();
+      for(i=0;i<x.d1;++i) I(i,i)=1;
+      *hess = s/na * (I - zzT - aaTovasq)
+    }
+    return s*(na-r);
   }else{// x projection on z is outside cylinder
-    if ( d < r ){// inside the infinite cylinder
-      if(grad) *grad = s*hx_vec/hx;
-      return s*(hx-h/2.);
+    if ( na < r ){// inside the infinite cylinder
+      if(grad) *grad = s*norm(z)*z;//yes, times. see notes.
+      if(hess){ hess = I.setZero(); }
+      return s*(nb-h/2.);
     }else{ // outside the infinite cyl
-      arr vec =  hx_vec * hx / (hx+h/2.) + d_vec * d / (d+r);
-      if(grad) *grad = s* vec / norm(vec); 
-      return s* norm(vec);
+      arr v =  b/nb * (nb-h/2.)  + a/na * (na-r);
+      nv=norm(v);
+      if(grad) *grad = s* v/nv; 
+      if(hess){
+      I.setZero();
+      for(i=0;i<x.d1;++i) I(i,i)=1;
+      arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
+                 + aaTovasq + zzT;
+      *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
+      }
+      return s* nv;
     }
   }
 }
 
+/* construct from config */
 GraspObject_Cylinder1::GraspObject_Cylinder1(){
   c = MT::getParameter<arr>("center");
   z = MT::getParameter<arr>("orientation");
@@ -191,6 +250,8 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(){
   s = MT::getParameter<double>("sigma");
   h = MT::getParameter<double>("height");
 }
+
+/* construct from center, ori, radius,sigma, height */
 GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1, double h1){
   c = c1;
   z = z1;
@@ -236,6 +297,12 @@ GraspObject_GP::phi(arr *grad, double *var, const arr& x){
   //SD_DBG("x="<<x<<"; y="<<y<<" sig="<<sig<<" gradient="<<((grad)?*grad:0));
 
   return y;
+}
+
+void
+GraspObject_GP::hessian(arr *hess, const arr& x){
+
+  isf_gp.gp.hessian(*hess, x);
 }
 
 GraspObject_GP::GraspObject_GP(const arr &cc,const double dd){
