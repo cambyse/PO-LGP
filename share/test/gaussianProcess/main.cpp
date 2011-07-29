@@ -39,8 +39,8 @@ void testDerivativeObservations(){
   GaussianProcess gp;
   GaussKernelParams gpp(.05, 10., .3, .05);
   gp.setKernel(GaussKernel,&gpp);
-  gp.kernelD1 = GaussKernelD1;
-  gp.kernelD2 = GaussKernelD2;
+  gp.covF_D = GaussKernelF_D;
+  gp.covD_D = GaussKernelD_D;
 
   plotKernel1D(gp,-3.,3.);
 

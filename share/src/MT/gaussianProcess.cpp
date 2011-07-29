@@ -18,11 +18,12 @@ void GaussianProcess::setGaussKernelGP(
   mu_func = const_0;
   priorP = NULL;
   kernelP=_kernelP;
-  kernelF=GaussKernel;
-  dkernelF=dGaussKernel;
-  kernelD1=GaussKernelD1;
-  kernelD2=GaussKernelD2;
-  kernelD3=GaussKernelD3;
+  cov=GaussKernel;
+  dcov=dGaussKernel;
+  covF_D=GaussKernelF_D;
+  covD_D=GaussKernelD_D;
+  covDD_F=GaussKernelDD_F;
+  covDD_D=GaussKernelDD_D;
 }
 
 /*! set Gauss cov function, its parameters, and GP prior
@@ -35,11 +36,12 @@ void GaussianProcess::setGaussKernelGP(
   priorP = _priorP;
   mu = 0;
   kernelP=_kernelP;
-  kernelF=GaussKernel;
-  dkernelF=dGaussKernel;
-  kernelD1=GaussKernelD1;
-  kernelD2=GaussKernelD2;
-  kernelD3=GaussKernelD3;
+  cov=GaussKernel;
+  dcov=dGaussKernel;
+  covF_D=GaussKernelF_D;
+  covD_D=GaussKernelD_D;
+  covDD_F=GaussKernelDD_F;
+  covDD_D=GaussKernelDD_D;
 }
 
 
@@ -56,27 +58,27 @@ void GaussianProcess::recompute(){
   if(!gram.N) return;
   for(i=0;i<N;i++){
     xi.referToSubDim(X,i);
-    gram(i,i) = kernelF(kernelP,xi,xi);
+    gram(i,i) = cov(kernelP,xi,xi);
     Mu_func.append(mu_func(xi, priorP));
   }
   for(i=1;i<N;i++){
     xi.referToSubDim(X,i);
     for(j=0;j<i;j++){
       xj.referToSubDim(X,j);
-      gram(i,j) = gram(j,i) = kernelF(kernelP,xi,xj);
+      gram(i,j) = gram(j,i) = cov(kernelP,xi,xj);
     }
   }
   if(dN){ //derivative observations
-    for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); gram(N+i,N+i) = kernelD2(dI(i),dI(i),kernelP,xi,xi); }
+    for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); gram(N+i,N+i) = covD_D(dI(i),dI(i),kernelP,xi,xi); }
     for(i=0;i<dN;i++){
       xi.referToSubDim(dX,i);
       for(j=0;j<N;j++){
         xj.referToSubDim(X,j);
-        gram(N+i,j) = gram(j,N+i) = kernelD1(dI(i),kernelP,xj,xi);
+        gram(N+i,j) = gram(j,N+i) = covF_D(dI(i),kernelP,xj,xi);
       }
       for(j=0;j<i;j++){
         xj.referToSubDim(dX,j);
-        gram(N+i,N+j) = gram(N+j,N+i) = kernelD2(dI(i),dI(j),kernelP,xi,xj);
+        gram(N+i,N+j) = gram(N+j,N+i) = covD_D(dI(i),dI(j),kernelP,xi,xj);
       }
     }
   }
@@ -98,9 +100,9 @@ void GaussianProcess::appendObservation(const arr& x,double y){
   if(false & N){
     double mu;
     k.resize(N); m.resize(N); M.resize(N,N); xi.referToSubDim(X,0);
-    for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=kernelF(kernelP,x,xi); }
+    for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=cov(kernelP,x,xi); }
     innerProduct(m,Ginv,k);
-    mu=1./( kernelF(kernelP,x,x) - scalarProduct(k,m) );
+    mu=1./( cov(kernelP,x,x) - scalarProduct(k,m) );
     m *= -mu;
     M = Ginv;
     M += (1./mu) * m^m;
@@ -138,7 +140,7 @@ void GaussianProcess::appendGradientObservation(const arr& x,const arr& nabla) {
 }
 
 double GaussianProcess::max_var(){
-    return kernelF(kernelP,ARR(0),ARR(0));
+    return cov(kernelP,ARR(0),ARR(0));
 }
 
 void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
@@ -146,17 +148,17 @@ void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
   static arr k,xi,Ginvk;
   if(N+dN==0){ //no data
     y = mu_func(x, priorP) + mu;
-    sig=::sqrt(kernelF(kernelP,x,x));
+    sig=::sqrt(cov(kernelP,x,x));
     return;
   }
   if(k.N!=N+dN) k.resize(N+dN);
-  for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=kernelF(kernelP,x,xi); }
+  for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=cov(kernelP,x,xi); }
   //derivative observations
-  for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); k(N+i)=kernelD1(dI(i),kernelP,x,xi); }
+  for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); k(N+i)=covF_D(dI(i),kernelP,x,xi); }
 
   y = scalarProduct(k,GinvY) + mu_func(x, priorP) + mu;
   innerProduct(Ginvk,Ginv,k);
-  sig = kernelF(kernelP,x,x) - scalarProduct(k,Ginvk);
+  sig = cov(kernelP,x,x) - scalarProduct(k,Ginvk);
   if(sig<0) sig=0.; else sig = ::sqrt(sig);
 }
 
@@ -217,7 +219,7 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
   // take the gradient in the function valu observations
   for(i=0;i<N;i++){
     xi.referToSubDim(X,i);
-    dkernelF(dk,kernelP,x,xi);
+    dcov(dk,kernelP,x,xi);
     grad += GinvY(i) * dk;
   }
   // derivative observations
@@ -225,7 +227,7 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
     dxi.referToSubDim(dX,i);
     dk.setZero();
     for(d=0; d<dim; ++d){
-      dk(d) = kernelD2(d,dI(i),kernelP,x,dxi);
+      dk(d) = covD_D(d,dI(i),kernelP,x,dxi);
     }
     grad += GinvY(i+N) * dk;
   }
@@ -284,12 +286,12 @@ H:=H(3x3xd)
 d:=GP dimension
 for n \in \{1..N\}
   for i,j \in \{ 1..d\}
-    H_{i,j,n} = kernelD2(i,j,...,\vec{x},\vec{X_n})
+    H_{i,j,n} = covD_D(i,j,...,\vec{x},\vec{X_n})
   end
 end
 for n \in \{N+1..N+dN\}
   for i,j \in \{ 1..d\}
-    H_{i,j,n} = kernelD3(i,j,dI(n),...,\vec{x},\vec{X_n})
+    H_{i,j,n} = covDD_D(i,j,dI(n),...,\vec{x},\vec{X_n})
   end
 end
 *
@@ -309,7 +311,7 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
     xn.referToSubDim(X,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=kernelD2(i,j,kernelP,x,xn);
+          d2k(i,j,n)=covD_D(i,j,kernelP,x,xn);
       }
     }
     //TODO: add inv gram
@@ -320,7 +322,7 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
     dxn.referToSubDim(dX,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=kernelD3(i,j,dI(n), kernelP,x,dxn);
+          d2k(i,j,n)=covDD_D(i,j,dI(n), kernelP,x,dxn);
       }
     }
     //TODO: add inv gram
