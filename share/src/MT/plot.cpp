@@ -749,9 +749,12 @@ void plotDrawOpenGL(void *_data){
 // gnuplot draw routine
 //
 
+#define PLOTEVERY(block, with)  gnuplotcmd \
+  <<"'z.plotdata' every :::"<<(block)<<"::"<<(block)<<(with);
+
 void plotDrawGnuplot(void *_data){
   PlotModuleWorkspace& data=(*((PlotModuleWorkspace*)_data));
-  uint i,j;
+  uint i,j,k;
 
   //openfiles
   MT::String gnuplotcmd;
@@ -773,24 +776,32 @@ void plotDrawGnuplot(void *_data){
   MT::IOraw=true;
   //lines
   for(i=0;i<data.lines.N;i++){
-    for(j=0;j<data.lines(i).d0;j++) gnuplotdata <<data.lines(i)[j] <<std::endl;
+    FOR1D(data.lines(i),j){
+      FOR1D(data.lines(i)[j],k) gnuplotdata <<data.lines(i)[j](k) <<" ";
+      gnuplotdata<<std::endl;
+    }
     gnuplotdata <<std::endl;
     if(block) gnuplotcmd <<",\\\n";
     if(data.lines(i).d1!=4){
-      gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" with l notitle";
+      PLOTEVERY(block," with l notitle");
     }else{ //with filled error curves
-      gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" using 1:2:3 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ";
-      gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" using 1:2:4 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ";
-      gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" using 1:2 with l lc rgb 'green' notitle";
+      PLOTEVERY(block,
+          " using 1:2:3 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ");
+      PLOTEVERY(block,
+          " using 1:2:4 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ");
+      PLOTEVERY(block," using 1:2 with l lc rgb 'green' notitle");
     }
     block++;
   }
   //points
   for(i=0;i<data.points.N;i++){
-    for(j=0;j<data.points(i).d0;j++) gnuplotdata <<data.points(i)[j] <<std::endl;
+    FOR1D(data.points(i),j){
+      FOR1D(data.points(i)[j],k) gnuplotdata <<data.points(i)[j](k) <<" ";
+      gnuplotdata<<std::endl;
+    }
     gnuplotdata <<std::endl;
     if(block) gnuplotcmd <<",\\\n";
-    gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" with p notitle";
+    PLOTEVERY(block," with p notitle");
     block++;
   }
 
@@ -804,7 +815,7 @@ void plotDrawGnuplot(void *_data){
     }
     gnuplotdata <<std::endl;
     if(i && block) gnuplotcmd <<",\\\n";
-    gnuplotcmd <<"'z.plotdata' every :::"<<block<<"::"<<block<<" with l notitle";
+    PLOTEVERY(block," with l notitle");
     block++;
   }
   MT::IOraw=ior;
