@@ -93,30 +93,13 @@ void GaussianProcess::recompute(){
 }
 
 void GaussianProcess::appendObservation(const arr& x,double y){
-  uint i,N=X.d0;
+  uint N=X.d0;
 
   static arr k,m,M,xi;
-  //update of inverse Gram matrix:
-  if(false & N){
-    double mu;
-    k.resize(N); m.resize(N); M.resize(N,N); xi.referToSubDim(X,0);
-    for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=cov(kernelP,x,xi); }
-    innerProduct(m,Ginv,k);
-    mu=1./( cov(kernelP,x,x) - scalarProduct(k,m) );
-    m *= -mu;
-    M = Ginv;
-    M += (1./mu) * m^m;
-    
-    Ginv.setBlockMatrix(M, m, m, ARR(mu));
-    
-    X.append(x); //append it to the data
-    Y.append(y);
-  }else{
-    X.reshape(N,x.N);
-    Y.reshape(N);
-    X.append(x); //append it to the data
-    Y.append(y);
-  }
+  X.append(x); //append it to the data
+  Y.append(y);
+  X.reshape(N+1,x.N);
+  Y.reshape(N+1);
 #if MT_GP_DEBUG
   arr iG=Ginv;
   recompute();
@@ -127,12 +110,12 @@ void GaussianProcess::appendObservation(const arr& x,double y){
 
 void GaussianProcess::appendDerivativeObservation(const arr& x,double y,uint i){
   uint N=dX.d0;
-  dX.reshape(N,x.N);
-  dY.reshape(N);
-  dI.reshape(N);
   dX.append(x); //append it to the data
   dY.append(y);
   dI.append(i);
+  dX.reshape(N+1,x.N);
+  dY.reshape(N+1);
+  dI.reshape(N+1);
 }
 
 void GaussianProcess::appendGradientObservation(const arr& x,const arr& nabla) {

@@ -256,7 +256,7 @@ inline void plotKernel1D(GaussianProcess& gp,double lo,double hi){
   for(uint i=0;i<X.d0;i++){
     K(i) = gp.cov(gp.kernelP,null,X[i]);
     KD1(i) = gp.covF_D(0,gp.kernelP,null,X[i]);
-    KD2(i) = gp.covD_D(0,0,gp.kernelP,null,X[i]);
+    KD2(i) = gp.covDD_F(0,0,gp.kernelP,X[i],null);
   }
   plotClear();
   plotFunction(X,K);
