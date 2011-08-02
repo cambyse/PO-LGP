@@ -19,7 +19,7 @@ void PotentialValuesTaskVariable::userUpdate(){
   for_list(i,s,refs){
     ors->kinematics(xi,s->body->index,&s->rel);
     ors->jacobian  (Ji,s->body->index,&s->rel);
-    y(i) = f->psi(&grad,xi);
+    y(i) = f->psi(&grad,NULL,xi);
     J[i]() = grad*Ji;
   }
   transpose(Jt,J);
@@ -44,7 +44,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(){
     ors->kinematics (xi,s->body->index,&s->rel);
     ors->kinematicsZ(zi,s->body->index,&s->rel);
     ors->jacobianZ  (Ji,s->body->index,&s->rel);
-    f->psi(&grad,xi);
+    f->psi(&grad,NULL,xi);
     //f->hessian(&hess,xi);
     grad /= norm(grad);
     y(i) = scalarProduct(zi,grad);

@@ -28,7 +28,7 @@ offset_f(double x,double y,double z,void *_p){
 
 double
 static_mu(const arr &x, const void *p){
-  return ((GraspObject*)p)->phi(NULL,NULL,x);
+  return ((GraspObject*)p)->phi(NULL,NULL,NULL,x);
 }
 
 MeshObject::MeshObject(char *meshfile, const arr& c, const double sc){
@@ -103,7 +103,7 @@ PotentialField::buildMesh(){
     dX.resizeAs(X);
     for(i=0;i<X.d0;i++){
       X[i]()+=ce;
-      psi(&dX[i](),X[i]);
+      psi(&dX[i](),NULL,X[i]);
     }
     dX *= .005;
     plotVectorField(X,dX); // plot gradient
@@ -135,7 +135,7 @@ GraspObject::phi(arr *grad,arr *hess,double *var,const arr& x) { //generic phi, 
   if(hess){
     CHECK(grad!=NULL,"need to store gradient.");
     /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
-    *hess = - e*d*(d+2.) * (*grad) * (~grad)
+    *hess = - e*d*(d+2.) * (*grad) * (~*grad)
               + e*(d+1.) * (*hess);
   }
 #else
@@ -178,7 +178,7 @@ GraspObject_InfCylinder::distanceToSurface(arr *grad,arr *hess,const arr& x){
   if(hess){
     I.setZero();
     for(i=0;i<x.d1;++i) I(i,i)=1;
-    *hess = s/na * (I - z*(~z) - 1/(na*na) * a*(~a))
+    *hess = s/na * (I - z*(~z) - 1/(na*na) * a*(~a));
   }
   return s*(na-r);
 }
@@ -202,7 +202,7 @@ GraspObject_InfCylinder::GraspObject_InfCylinder(){
 /* =============== Cut cyllinder ================ */
 
 double
-GraspObject_Cylinder1::distanceToSurface(arr *grad,const arr& x){
+GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
   z = z / norm(z);
   arr b = scalarProduct((x-c), z) * z;
   arr a = (x-c) - b;
@@ -210,25 +210,25 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,const arr& x){
   uint i;
   double na = norm(a);
   double nb = norm(b);
-  double aaTovasq = 1/(na*na) * a*(~a);
-  double zzT = z*(~z);
+  arr aaTovasq = 1/(na*na) * a*(~a);
+  arr zzT = z*(~z);
 
   if ( nb < h/2. ){ // x projection on z is inside cyl
     if(grad) *grad = s*a/na;
     if(hess){
       I.setZero();
       for(i=0;i<x.d1;++i) I(i,i)=1;
-      *hess = s/na * (I - zzT - aaTovasq)
+      *hess = s/na * (I - zzT - aaTovasq);
     }
     return s*(na-r);
   }else{// x projection on z is outside cylinder
     if ( na < r ){// inside the infinite cylinder
       if(grad) *grad = s*norm(z)*z;//yes, times. see notes.
-      if(hess){ hess = I.setZero(); }
+      if(hess) { I.setZero(); *hess=I; }
       return s*(nb-h/2.);
     }else{ // outside the infinite cyl
       arr v =  b/nb * (nb-h/2.)  + a/na * (na-r);
-      nv=norm(v);
+      double nv=norm(v);
       if(grad) *grad = s* v/nv; 
       if(hess){
       I.setZero();
@@ -263,7 +263,7 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
 /* =============== Sphere ================ */
 
 double
-GraspObject_Sphere::distanceToSurface(arr *grad,const arr& x){
+GraspObject_Sphere::distanceToSurface(arr *grad,arr *hess,const arr& x){
   double d = norm(x-c);
   if(grad) *grad = s*(x-c)/d;
   return s*(d-r);
@@ -284,7 +284,7 @@ GraspObject_Sphere::GraspObject_Sphere(arr &c1, double r1, double s1){
 /* =============== ISF GP ================ */
 
 double
-GraspObject_GP::phi(arr *grad, double *var, const arr& x){
+GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
   double y, sig;
   //arr x = xx - c;
 
@@ -292,17 +292,13 @@ GraspObject_GP::phi(arr *grad, double *var, const arr& x){
 
   if (grad) isf_gp.gp.gradient(*grad, x);
 
+  if (grad) isf_gp.gp.hessian(*hess, x);
+
   if (var) *var = sig ;
 
   //SD_DBG("x="<<x<<"; y="<<y<<" sig="<<sig<<" gradient="<<((grad)?*grad:0));
 
   return y;
-}
-
-void
-GraspObject_GP::hessian(arr *hess, const arr& x){
-
-  isf_gp.gp.hessian(*hess, x);
 }
 
 GraspObject_GP::GraspObject_GP(const arr &cc,const double dd){

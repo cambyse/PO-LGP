@@ -1,7 +1,7 @@
 #include "graspISF.h"
 #include <MT/plot.h>
 #include <MT/util.h>
-#include "SD/utils.h"
+#include "utils.h"
 #include "graspObjects.h"
 
 void
@@ -40,7 +40,7 @@ GraspISFTask::phiAtFrame(ors::Transformation& X, arr &grad,double *sig){
   arr x;
   double _sig;
   x.setCarray(X.pos.p,3);
-  double phi = graspobj->phi(NULL,&_sig,x);
+  double phi = graspobj->phi(NULL,NULL,&_sig,x);
   graspobj->getNormGrad(grad,x);
   if (sig)  *sig = _sig;
   return phi;
@@ -122,9 +122,8 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
 
 void
 GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
-  //activateAll(TVall,false); //THIS IS THE WRONG LIST!!! deactivate all variables
   activateAll(TVs_all,false); //deactivate all variables
-  ctrl->useBwdMsg=false;             //deactivate use of bwd messages (from planning)
+  ctrl->useBwdMsg=false;      //deactivate use of bwd messages (from planning)
 
   if (grip) {
     TV_palm->active   = true;
@@ -172,7 +171,7 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   else
     rel_tip_var_a.setZero();
   var_m.setZero(); var_m +=1.; var_m -= rel_tip_var_a;
-  SD_DBG("max var: "<<graspobj->max_var()<<
+  SD_DBG1("max var: "<<graspobj->max_var()<<
       " tips' std deviation: " << tip_sig_a <<
       " tips' var: " << tip_var_a <<
       " variance fraction: "<<rel_tip_var_a <<
@@ -224,9 +223,9 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   // remove impact of arm joints. only fingers
   for(uint i=0;i<TV_skin->J.d0;i++) for(uint j=0;j<8;j++) TV_skin->J(i,j)=0.;
   transpose(TV_skin->Jt,TV_skin->J);
-  SD_DBG(TV_skin->J);
+  SD_DBG1(TV_skin->J);
   TV_skin->y_prec = (((sum(TV_zeroLevel->y)) < .5 )? skin_prec : 0);
-  SD_DBG("sum of  zerolevel"<<sum(TV_zeroLevel->y));
+  SD_DBG1("sum of  zerolevel"<<sum(TV_zeroLevel->y));
   //TV_skin->y_prec = skin_prec;
   
   if (open_skin && sum(TV_skin->y)>tv_skin_trgt) grip = true;// start lift
@@ -234,6 +233,23 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   TV_lim->active            = true;
   TV_col->active            = true;
 
+  /* ------- debug by activating TVs  ------------ */
+  activateAll(TVs_all,false); //deactivate all variables
+
+  TV_q->active            = true;
+  TV_lim->active            = true;
+  TV_col->active            = true;
+  /*
+
+  TV_oppose->active  = true;
+  */
+  TV_palm->active   = true;
+  /*
+  TV_zeroLevel->active  = true;
+  TV_tipAlign->active  = true;
+  */
+  TV_fingAlign->active  = true;
+  /* ------- end debug   ------------------------- */
 
   // output all active variables
   TaskVariable *v;
