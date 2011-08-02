@@ -66,7 +66,7 @@ plot_belief_slice(GraspObject_GP &obj, double x1){
   Y2.resize(X.d0);
 
   FOR1D(X,i){
-    Y1(i) = obj.phi(NULL, &Y2(i), ARR(x1, X[i](0), X[i](1)) );
+    Y1(i) = obj.phi(NULL, NULL, &Y2(i), ARR(x1, X[i](0), X[i](1)) );
   }
 
   plotClear();
