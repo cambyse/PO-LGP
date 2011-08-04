@@ -225,6 +225,8 @@ void problem4(){
   GraspObject *o = new GraspObject_Sphere();
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
+  o->buildMesh();
+  gl.add(glDrawMeshObject, o);
   
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);

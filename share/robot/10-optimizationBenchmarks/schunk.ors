@@ -150,7 +150,7 @@ shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
-shape palmCenter(m9)     { rel=<t(0 0 -.25)>, type=1, size=[.0 .0 .0 .005] color = [1 0 0] }
+shape palmCenter(m9)     { rel=<t(0 0 -.22)>, type=1, size=[.0 .0 .0 .005] color = [1 0 0] }
 
 
 
