@@ -37,18 +37,18 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
 void PotentialFieldAlignTaskVariable::userUpdate(){
   uint i;
   ors::Shape *s;
-  arr xi,zi,Ji,grad,hess;
+  arr xi,zi,Jzi,Jxi,grad,hess;
   y.resize(refs.N);
   J.resize(refs.N,ors->getJointStateDimension());
   for_list(i,s,refs){
     ors->kinematics (xi,s->body->index,&s->rel);
     ors->kinematicsZ(zi,s->body->index,&s->rel);
-    ors->jacobianZ  (Ji,s->body->index,&s->rel);
-    f->psi(&grad,NULL,xi);
-    //f->hessian(&hess,xi);
+    ors->jacobianZ  (Jzi,s->body->index,&s->rel);
+    ors->jacobian   (Jxi,s->body->index,&s->rel);
+    f->psi(&grad,&hess,xi);
     grad /= norm(grad);
-    y(i) = scalarProduct(zi,grad);
-    J[i]() = ~grad * Ji ; //+ ~zi * hess;
+    y(i) = scalarProduct(grad,zi);
+    J[i]() = (~Jxi * ~hess) * zi  + ~grad * Jzi ;
   }
   transpose(Jt,J);
 }
