@@ -170,14 +170,14 @@ double
 GraspObject_InfCylinder::distanceToSurface(arr *grad,arr *hess,const arr& x){
   z = z / norm(z);
   arr a = (x-c) - scalarProduct((x-c), z) * z;
-  arr I(x.d1,x.d1);
+  arr I(x.d0,x.d0);
   uint i;
   double na = norm(a);
 
   if(grad) *grad = s*a/na;
   if(hess){
     I.setZero();
-    for(i=0;i<x.d1;++i) I(i,i)=1;
+    for(i=0;i<x.d0;++i) I(i,i)=1;
     *hess = s/na * (I - z*(~z) - 1/(na*na) * a*(~a));
   }
   return s*(na-r);
@@ -206,7 +206,7 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
   z = z / norm(z);
   arr b = scalarProduct((x-c), z) * z;
   arr a = (x-c) - b;
-  arr I(x.d1,x.d1);
+  arr I(x.d0,x.d0);
   uint i;
   double na = norm(a);
   double nb = norm(b);
@@ -217,7 +217,7 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
     if(grad) *grad = s*a/na;
     if(hess){
       I.setZero();
-      for(i=0;i<x.d1;++i) I(i,i)=1;
+      for(i=0;i<x.d0;++i) I(i,i)=1;
       *hess = s/na * (I - zzT - aaTovasq);
     }
     return s*(na-r);
@@ -232,7 +232,7 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
       if(grad) *grad = s* v/nv; 
       if(hess){
       I.setZero();
-      for(i=0;i<x.d1;++i) I(i,i)=1;
+      for(i=0;i<x.d0;++i) I(i,i)=1;
       arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
                  + aaTovasq + zzT;
       *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
@@ -264,9 +264,18 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
 
 double
 GraspObject_Sphere::distanceToSurface(arr *grad,arr *hess,const arr& x){
-  double d = norm(x-c);
-  if(grad) *grad = s*(x-c)/d;
-  return s*(d-r);
+  arr d = x-c;
+  double nd = norm(d);
+  arr I(x.d0,x.d0);
+  uint i;
+
+  if(grad) *grad = s*d/nd;
+  if(hess){
+    I.setZero();
+    for(i=0;i<x.d0;++i) I(i,i)=1;
+    *hess = s/nd * (I - 1/(nd*nd) * d*(~d));
+  }
+  return s*(nd-r);
 }
 
 GraspObject_Sphere::GraspObject_Sphere(){
