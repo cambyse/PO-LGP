@@ -111,10 +111,14 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
       *sys.ors, tipsN, *graspobj);
   /* position of the palm center marker */
+  /* TODO: need this? or make zeroLeel? 
   TV_palm = new TaskVariable();
-  /* TODO: need this? or make zeroLeel? */
   TV_palm->set("palm pos",*sys.ors, posTVT,
 	       palm->body->index,palm->rel, -1, ors::Transformation(),ARR());
+   */
+  MT::Array<ors::Shape*> palmL; palmL.append(palm);
+  TV_palm = new PotentialValuesTaskVariable("palm pos",
+      *sys.ors, palmL, *graspobj);
    /* */
   /* opposing fingers: heuristic for a good grasp (sort of weak closure
    * argument) */
@@ -183,9 +187,12 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V=listGetByName(sys.vars,"palm pos");
   V->setGains(.1,.0);
   V->updateState();
-  // TODO: set target here
+  /*  target and prec for stock position var
   V->y_target = graspobj->center();
-  // TODO: set interpolate
+  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
+  */
+  /*  target and prec for zeroLevel var */
+  V->y_target = ARR(0);
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
   /* */
 
