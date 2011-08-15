@@ -180,7 +180,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V=listGetByName(sys.vars,"tips z align");
   V->setGains(.01,.0);
   V->updateState();
-  V->y_target = -1.;
+  V->y_target = ARR(-1.,-1.,-1.);
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_tipAlign_prec_m,0.,0.);
 
   /* */
@@ -234,12 +234,17 @@ void problem4(){
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   o->buildMesh();
   gl.add(glDrawMeshObject, o);
+  gl.add(glDrawPlot,&plotModule); // eurika! we plot field
   
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
 
   AICO_clean solver(sys);
-  solver.iterate_to_convergence();
+  //solver.iterate_to_convergence();
+  for(uint k=0;k<solver.max_iterations;k++){
+    double d=solver.step();
+    if(k && d<solver.tolerance) break;
+  }
 }
 
 //===========================================================================
