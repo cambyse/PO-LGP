@@ -67,6 +67,16 @@ MeshObject::getEnclCube(double &lo, double &hi){
 
 void glDrawMeshObject(void*p){ ((MeshObject*)p)->glDraw(); }
 
+double plot_field() {
+  static double value;
+  static bool read=true;
+  if(read){
+    read=false;
+    value = MT::getParameter<double>("plotPotentialField");
+  }
+  return value;
+}
+
 void
 PotentialField::buildMesh(){
   uint i;
@@ -96,7 +106,7 @@ PotentialField::buildMesh(){
   m.translate(off(0),off(1),off(2));
 
 
-  if(MT::getParameter<uint>("plotPotentialField", 0)){
+  if(0!=plot_field()){
     getEnclCube(lo,hi);
     MT_MSG("new: hi="<<hi<<", lo="<<lo);
     X.setGrid(3,lo,hi,50);
@@ -105,7 +115,7 @@ PotentialField::buildMesh(){
       X[i]()+=ce;
       psi(&dX[i](),NULL,X[i]);
     }
-    dX *= .005;
+    dX *= plot_field();
     plotVectorField(X,dX); // plot gradient
   }
 }

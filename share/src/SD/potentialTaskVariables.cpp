@@ -34,6 +34,9 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
       set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
 }
 
+/** Compute current value and jacobian of the TV.
+ * (compare  to mlr/stanio/notes/Jacobian_of_field_align_TV.tex)
+ */
 void PotentialFieldAlignTaskVariable::userUpdate(){
   uint i;
   ors::Shape *s;
@@ -48,7 +51,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(){
     f->psi(&grad,&hess,xi);
     grad /= norm(grad);
     y(i) = scalarProduct(grad,zi);
-    J[i]() = (~Jxi * ~hess) * zi  + ~grad * Jzi ;
+    J[i]() = (~Jxi * hess) * zi  + ~grad * Jzi ;
   }
   transpose(Jt,J);
 }
