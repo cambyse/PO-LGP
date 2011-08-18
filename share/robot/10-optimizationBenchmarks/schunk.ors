@@ -24,7 +24,7 @@ shape wheelB1 (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<t(.0 
 ## camera
 ###########
 
-shape camera(base){ contact, rel=<t(.40 .10 .95) d(90 1 0 0) d(165 0 1 0) d(-35 1 0 0)>, type=0, size=[.157 .035 .056 .01], color=[1 0 0] }
+#shape camera(base){ contact, rel=<t(.40 .10 .95) d(90 1 0 0) d(165 0 1 0) d(-35 1 0 0)>, type=0, size=[.157 .035 .056 .01], color=[1 0 0] }
 
 
 
@@ -185,10 +185,10 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  graspobject { }
 
-body  OBJECTS{ X=<t(.0 -.8 .69)> }
+#body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
 #shape table(OBJECTS){ type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
-shape cyl1(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape cyl1(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 #shape S2(OBJECTS){ type=4, rel=<t(-.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 #shape S3(OBJECTS){ type=4, rel=<t( .25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
 #shape S4(OBJECTS){ type=4, rel=<t(-.25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
@@ -200,7 +200,7 @@ shape cyl1(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0
 
 #shape S3(OBJECTS){ type=4, rel=<t( .0 .0 .055)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
 
-shape target(OBJECTS){ type=1, rel=<t(-.25 .2 .055)>, size=[.0 .0 .0 .01], color=[1. .5 .5] }
+#shape target(OBJECTS){ type=1, rel=<t(-.25 .2 .055)>, size=[.0 .0 .0 .01], color=[1. .5 .5] }
 
 
 ###########

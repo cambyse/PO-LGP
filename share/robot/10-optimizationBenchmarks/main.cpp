@@ -6,6 +6,7 @@
 #include "SD/potentialTaskVariables.h"
 #include "SD/miscTaskVariables.h"
 #include "SD/graspObjects.h"
+#include "DZ/aico_key_frames.h"
 
 //===========================================================================
 
@@ -231,10 +232,11 @@ void problem4(){
   OpenGL gl;
   GraspObject *o = new GraspObject_Sphere();
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
+  double t=MT::getParameter<double>("reachPlanTrajectoryTime");
+  sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
   o->buildMesh();
   gl.add(glDrawMeshObject, o);
-  gl.add(glDrawPlot,&plotModule); // eurika! we plot field
+  gl.add(glDrawPlot,&plotModule); // eureka! we plot field
   
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
@@ -245,6 +247,57 @@ void problem4(){
     double d=solver.step();
     if(k && d<solver.tolerance) break;
   }
+}
+
+
+//===========================================================================
+
+void problem5(){
+  cout <<"\n= grasping with impl. surf. potentials and time optimization =\n" <<endl;
+
+  //setup the problem
+  soc::SocSystem_Ors sys;
+  OpenGL gl;
+  GraspObject *o = new GraspObject_Sphere();
+  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
+  double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
+  double alpha=MT::getParameter<double>("alpha");
+  double tm;
+
+  sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
+  o->buildMesh();
+  gl.add(glDrawMeshObject, o);
+  gl.add(glDrawPlot,&plotModule); // eureka! we plot field
+  
+  createISPTaskVariables(sys,o);
+  setISPGraspGoals(sys,T,o);
+
+  arr b,b0,B;
+  OneStepDynamicFull(b,B,sys,t,alpha); // The function
+  //GetOptimalDynamicTime(tm,sys,alpha,0.01); // The function
+  MT_MSG( "Post belief:" << b);
+
+  b0.setCarray(b.p,14);
+  sys.setq(b0,0);
+  gl.watch("helo");
+
+  arr Binv;
+  inverse_SymPosDef(Binv,B);
+
+  AICO_clean solver(sys);
+  solver.useBwdMsg=true;
+  solver.bwdMsg_v = b;
+  solver.bwdMsg_Vinv=Binv;
+  //solver.iterate_to_convergence();
+  for(uint k=0;k<solver.max_iterations;k++){
+    double d=solver.step();
+    if(k && d<solver.tolerance) break;
+  }
+  arr r,R;
+  sys.getCosts(R,r,solver.q[T],T);
+  MT_MSG( "last q:"<< solver.q[T]);
+
+
 }
 
 //===========================================================================
@@ -258,6 +311,7 @@ int main(int argn,char **argv){
   case 2:  problem2();  break;
   case 3:  problem3();  break;
   case 4:  problem4();  break;
+  case 5:  problem5();  break;
   default: NIY;
   }
   return 0;

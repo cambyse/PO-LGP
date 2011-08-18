@@ -424,6 +424,12 @@ LinuxLibs += -lsd
 DEPEND += externalMake_src/SD
 endif
 
+ifdef DMITRY
+LPATH := $(LPATH):$(BASE)/src/DZ
+LinuxLibs += -ldz
+DEPEND += externalMake_src/DZ
+endif
+
 ifdef LEWINER
 LPATH := $(LPATH):$(BASE)/src/Lewiner
 LinuxLibs += -llewiner
