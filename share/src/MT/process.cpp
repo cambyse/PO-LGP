@@ -19,11 +19,11 @@
 
 //===========================================================================
 //
-// Global Static information
+// Global information
 //
 
-static VariableL globalVariables;
-static ProcessL  globalProcesses;
+VariableL globalVariables;
+ProcessL  globalProcesses;
 
 
 //===========================================================================
@@ -31,8 +31,8 @@ static ProcessL  globalProcesses;
 // helpers
 //
 
-static MT::Array<Metronome *> globalMetronomes;
-static MT::Array<CycleTimer*> globalCycleTimers;
+MT::Array<Metronome *> globalMetronomes;
+MT::Array<CycleTimer*> globalCycleTimers;
 
 void reportNice(){
   pid_t tid = syscall(SYS_gettid);
