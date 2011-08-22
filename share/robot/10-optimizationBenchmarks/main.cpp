@@ -287,9 +287,13 @@ void problem5(){
   setISPGraspGoals(sys,T,o);
 
   arr b,b0,B;
-  OneStepDynamicFull(b,B,sys,t,alpha); // The function
-  //GetOptimalDynamicTime(tm,sys,alpha,0.01); // The function
+  GetOptimalDynamicTime(tm,sys,alpha,0.001); 
+  b0.setCarray(b.p,14);
+  sys.setq(b0,0);
+  OneStepDynamicFull(b,B,sys,tm/*use opt time*/,alpha); 
+  //OneStepDynamicFull(b,B,sys,t,alpha); 
   MT_MSG( "Post belief:" << b);
+  MT_MSG( "time:" << tm);
 
   b0.setCarray(b.p,14);
   sys.setq(b0,0);
