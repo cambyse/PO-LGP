@@ -87,14 +87,15 @@ void
 createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   createStandardRobotTaskVariables(sys);
   
-  MT::Array<ors::Shape*> tipsN;
+  MT::Array<ors::Shape*> tipsN, fingN;
   ors::Shape *palm; // palm center wrt wrist body
 
   /* ------- Task Vars -------- */
   TaskVariableList TVs_all; 
   TaskVariable *TV_tipAlign;
   TaskVariable *TV_palm;
-  TaskVariable *TV_oppose;
+  TaskVariable *TV_opp_tip;
+  TaskVariable *TV_opp_fng;
   TaskVariable *TV_zeroLevel;
   TaskVariable *TV_col, *TV_q,   *TV_lim ;
 
@@ -103,6 +104,9 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   tipsN.append(sys.ors->getShapeByName("tipNormal1"));
   tipsN.append(sys.ors->getShapeByName("tipNormal2"));
   tipsN.append(sys.ors->getShapeByName("tipNormal3"));
+  fingN.append(sys.ors->getShapeByName("fingNormal1"));
+  fingN.append(sys.ors->getShapeByName("fingNormal2"));
+  fingN.append(sys.ors->getShapeByName("fingNormal3"));
 
   /* misleading name -- this is the name of the red ball marker 10cm in
    * front of the palm surface. see schunk.ors in graspISF directory */
@@ -123,7 +127,8 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
    /* */
   /* opposing fingers: heuristic for a good grasp (sort of weak closure
    * argument) */
-  TV_oppose = new zOpposeTaskVariable("oppose",*sys.ors, tipsN);
+  TV_opp_tip = new zOpposeTaskVariable("oppose tip",*sys.ors, tipsN);
+  TV_opp_fng = new zOpposeTaskVariable("oppose fng",*sys.ors, fingN);
   /* the value of the potential field should be 0 at fingertips */
   TV_zeroLevel = new PotentialValuesTaskVariable("zeroLevel",
       *sys.ors, tipsN, *graspobj);
@@ -133,7 +138,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_q    = listGetByName(sys.vars,"qitself"); 
   TV_lim  = listGetByName(sys.vars,"limits"); 
 
-  TVs_all.append(ARRAY( TV_zeroLevel, TV_oppose, TV_palm, TV_tipAlign,
+  TVs_all.append(ARRAY( TV_zeroLevel, TV_opp_fng, TV_opp_tip, TV_palm, TV_tipAlign,
         TV_col, TV_lim, TV_q));
 
   sys.setTaskVariables(TVs_all);
@@ -148,7 +153,8 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   /* configuration */
   static bool firstTime=true;
   static double tv_palm_prec_m,
-                tv_oppose_prec,
+                tv_opp_fng_prec,
+                tv_opp_tip_prec,
                 tv_zeroLevel_prec_m,
                 tv_tipAlign_prec_m,
                 comfPrec,
@@ -160,7 +166,8 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   if(firstTime){
     firstTime=false;
     tv_palm_prec_m =      SD_PAR_R("grasp_tv_palm_prec_m");
-    tv_oppose_prec =      SD_PAR_R("grasp_tv_oppose_prec");
+    tv_opp_tip_prec =      SD_PAR_R("grasp_tv_opp_tip_prec");
+    tv_opp_fng_prec =      SD_PAR_R("grasp_tv_opp_fng_prec");
     tv_zeroLevel_prec_m = SD_PAR_R("grasp_tv_zeroLevel_prec_m");
     tv_tipAlign_prec_m =  SD_PAR_R("grasp_tv_tipAlign_prec_m");
     colPrec =	            SD_PAR_R("reachPlanColPrec");
@@ -197,11 +204,17 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
   /* */
 
-  V=listGetByName(sys.vars,"oppose");
+  V=listGetByName(sys.vars,"oppose tip");
   V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_oppose_prec,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_opp_tip_prec,0.,0.);
+
+  V=listGetByName(sys.vars,"oppose fng");
+  V->setGains(.1,.0);
+  V->updateState();
+  V->y_target = 0;
+  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_opp_fng_prec,0.,0.);
 
   V=listGetByName(sys.vars,"zeroLevel");
   V->setGains(.1,.0);
@@ -262,6 +275,7 @@ void problem5(){
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
   double alpha=MT::getParameter<double>("alpha");
+  double BinvFactor=MT::getParameter<double>("BinvFactor");
   double tm;
 
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
@@ -287,7 +301,8 @@ void problem5(){
   AICO_clean solver(sys);
   solver.useBwdMsg=true;
   solver.bwdMsg_v = b;
-  solver.bwdMsg_Vinv=Binv;
+  solver.bwdMsg_Vinv=BinvFactor*Binv;
+  MT_MSG("Vinv="<<solver.bwdMsg_Vinv);
   //solver.iterate_to_convergence();
   for(uint k=0;k<solver.max_iterations;k++){
     double d=solver.step();

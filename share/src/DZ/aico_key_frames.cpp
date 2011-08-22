@@ -288,7 +288,7 @@ void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double 
   inverse_SymPosDef(sumAinv,sumA);
   suma= AT*qv0;
 
-  for (int k=0;k<20;k++){
+  for (int k=0;k<1000;k++){
     q_old = b;
     bq=q0;bv=q0;
     for (int i=0; i< 14;i++){ bq(i)=b(i); bv(i)=b(i+14);} // can not set joint state q and v in one variable
@@ -310,7 +310,7 @@ void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double 
     cout << old_r << endl;
 //    if (fabs(dr)<1e0) break;
     sys.setq(bq,0);
-    sys.gl->watch("DZ");
+    if (! (k%10)) sys.gl->watch("DZ");
   }
   cout << D << endl;
 }
