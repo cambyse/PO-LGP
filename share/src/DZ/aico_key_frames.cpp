@@ -69,7 +69,7 @@ void OneStepDynamic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,uint T,doub
   transpose(tAi,Ai);
   cout <<Hinv;
   //cout <<Ai*W*tAi;
-  for (int i=1;i<T+1;i++) {
+  for (uint i=1;i<T+1;i++) {
     sumA += Ai*W*tAi;
     suma += Ai*a;
     Ai*=A;
@@ -318,7 +318,8 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
   cout << D << endl;
 }
 
-void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double time,double alpha)
+void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction&
+sys,double time,double alpha)
 {
   arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr q0,q_old,tp,qv0,v0,bq,bv;
@@ -330,13 +331,13 @@ void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double 
   b=qv0;
   bq=q0;bv=q0; // defines size
 
-  double old_r,dr=1e6;
+  double old_r;
 
   int dim=14;
   arr I,Z,AT,Zv;
   I.setId(dim);
-  Z.resize(dim,dim); Z.setZero();  
-  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T 
+  Z.resize(dim,dim); Z.setZero();
+  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T
   sys.getHinv(Hinv,1);
   H1=Hinv;
   sys.getQ(Q,T);
@@ -355,49 +356,35 @@ void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double 
   sigma3 = sigma2;
   sigma4 = S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);
 
-  double D =tau;
-
-  sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4); 
+  sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
 
   inverse_SymPosDef(sumAinv,sumA);
   suma= AT*qv0;
 
-  // one run with very small alpha
+  arr b_old = qv0;  arr b_best = qv0;
   old_r = sys.taskCost(NULL,T,-1);
-
-  arr b_old=qv0;
-  arr b_best=qv0;
-  for (uint i=0; i< 14;i++){ bq(i)=b(i); bv(i)=b(i+14);} // can not set joint state q and v in one variable
-  sys.setqv(bq,bv);
-  sys.getCosts(R,r,b,T); // costs at the current position
-
-  Binv = sumAinv+ R;
-  lapack_Ainv_b_sym(b, Binv,  sumAinv*suma  + r);
-  b = b_old + alpha*(b-b_old);
   bool restore;
 
-  for (uint k=0;k<100;k++){
+  for (uint k=0;k<1000;k++){
 
     for (uint i=0; i< 14;i++){ bq(i)=b(i); bv(i)=b(i+14);} // can not set joint state q and v in one variable
     sys.setqv(bq,bv);
-    sys.getCosts(R,r,b,T); // costs at the current position
 
-    if(  sys.taskCost(NULL,T,-1)>old_r) {alpha=alpha*alpha; b=b_best; restore=true;}
-    else  
+    if ((sys.taskCost(NULL,T,-1)>old_r)&&(!restore)) {alpha=alpha*0.5; b=b_best; restore=true;}
+    else
     {
-      if (!restore) alpha=pow(alpha,0.5); 
+      if (!restore) alpha=pow(alpha,0.5);
+      sys.getCosts(R,r,b,T); // costs at the current position
       Binv = sumAinv+ R;
-      b_best = b;
-      b_old = b;
+      b_best = b; b_old = b;
       lapack_Ainv_b_sym(b, Binv,  sumAinv*suma  + r);
       b = b_old + alpha*(b-b_old);
 
 
-      dr = old_r;
+      cout <<old_r<<endl;
+      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-3)||( (old_r - sys.taskCost(NULL,T,-1))<1e-3)  ) ) break;
+
       old_r = sys.taskCost(NULL,T,-1);
-      dr -= old_r; 
-      if (!restore) cout << old_r << endl;
-      if ((!restore) && fabs(dr)<1e0) break;
       restore = false;
 
       //sys.gl->watch("dd");
@@ -494,7 +481,7 @@ void GetOptimalDynamicTime(double& time,soc::SocSystemAbstraction& sys,double al
   sys.getqv0(q0,v0);
   arr b0=cat(q0,v0); 
 
-  for (uint k=0;k<20;k++){
+  for (uint k=0;k<50;k++){
     sys.setqv(b0);
     OneStepDynamicFull(b,Binv,sys,old_time,alpha); // final posture estimation
     sys.setqv(b);

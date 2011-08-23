@@ -235,6 +235,15 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,midPrec,endVelPrec);
 }
 
+void
+setzeroprec(soc::SocSystem_Ors &sys, uint T){
+  uint i;
+
+  FOR1D(sys.vars, i){
+    sys.vars(i)->setInterpolatedTargetsConstPrecisions(T,0,0);
+  }
+}
+
 //===========================================================================
 
 void problem4(){
@@ -277,6 +286,8 @@ void problem5(){
   double alpha=MT::getParameter<double>("alpha");
   double BinvFactor=MT::getParameter<double>("BinvFactor");
   double tm;
+  arr q0, b,b0,B, Binv, r,R;
+  arr zero14(14);zero14.setZero();
 
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
   o->buildMesh();
@@ -286,36 +297,43 @@ void problem5(){
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
 
-  arr b,b0,B;
-  GetOptimalDynamicTime(tm,sys,alpha,0.001); 
-  b0.setCarray(b.p,14);
-  sys.setq(b0,0);
-  OneStepDynamicFull(b,B,sys,tm/*use opt time*/,alpha); 
-  //OneStepDynamicFull(b,B,sys,t,alpha); 
-  MT_MSG( "Post belief:" << b);
-  MT_MSG( "time:" << tm);
+  /* get initial pose */
+  sys.getq0(q0);
 
+  /* optimal time is tm */
+  GetOptimalDynamicTime(tm,sys,alpha,0.006); 
+
+  /* with optimal time, get posterior pose */
+  sys.setq(q0,0);
+  OneStepDynamicFull(b,B,sys,tm/*=tuse opt time*/,alpha); 
+  MT_MSG( "Post belief:" << b); MT_MSG( "time:" << tm);
+
+  /* see bwdMsg */
   b0.setCarray(b.p,14);
   sys.setq(b0,0);
   gl.watch("helo");
 
-  arr Binv;
-  inverse_SymPosDef(Binv,B);
 
-  AICO_clean solver(sys);
+  /* start aico with bwdMsg */
+  soc::SocSystem_Ors sys2;
+  sys2.initBasics(NULL,NULL,&gl,T,tm,true,NULL);
+  createISPTaskVariables(sys2,o);
+  setISPGraspGoals(sys2,T,o);
+
+  //setzeroprec(sys2, T);
+  AICO_clean solver(sys2);
   solver.useBwdMsg=true;
-  solver.bwdMsg_v = b;
+  solver.bwdMsg_v = cat(b0,zero14);
+  inverse(Binv,B);
   solver.bwdMsg_Vinv=BinvFactor*Binv;
   MT_MSG("Vinv="<<solver.bwdMsg_Vinv);
-  //solver.iterate_to_convergence();
+  //solver.iterate_to_convergence(); //roll out cycle
   for(uint k=0;k<solver.max_iterations;k++){
     double d=solver.step();
     if(k && d<solver.tolerance) break;
   }
-  arr r,R;
-  sys.getCosts(R,r,solver.q[T],T);
+  sys2.getCosts(R,r,solver.q[T],T);
   MT_MSG( "last q:"<< solver.q[T]);
-
 
 }
 
