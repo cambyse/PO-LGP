@@ -10,7 +10,7 @@ namespace soc{
 ///@name     inverse kinematics control
 // @{
 
-void bayesianIKControl(SocSystemAbstraction& soci, arr& dq, uint t);
+//void bayesianIKControl(SocSystemAbstraction& soci, arr& dq, uint t);
 void pseudoIKControl(SocSystemAbstraction& soci, arr& dq, uint t,double regularization=1e-8);
 void hierarchicalIKControl(SocSystemAbstraction& soci, arr& dq, uint t,double regularization=1e-8);
 void bayesianIterateIKControl(SocSystemAbstraction& soci,

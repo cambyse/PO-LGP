@@ -1,5 +1,5 @@
 BASE   = ../..
-NAME   = libnp
+NAME   = libnj
 OUTPUT = $(BASE)/lib/$(NAME).so
 
 CXXFLAGS += -fPIC

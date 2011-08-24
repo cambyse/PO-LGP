@@ -85,7 +85,8 @@ struct Factor{
   Factor();
   ~Factor();
   Factor(const VariableList& variables,const char *_name=NULL);
-  Factor(const VarL& variables,const arr& q);
+  Factor(const VarL& variables,const arr& q); 
+  void init(const VarL& variables);
   void relinkTo(const VarL& variables);
   void operator=(const Factor& q);
   void setP(const arr& q);           //!< f(x) = q(x)
@@ -96,6 +97,7 @@ struct Factor{
   void setEvidence(uint e);          //!< f(e) = 1,  f(x!=e) = 0
   bool operator==(Factor& q);        //!< check if f==q (also checks for logP)
   void getP(arr& p) const;           //!< p = exp(logP)*P
+  void normalize(){ lognormScale(P,logP); logP=0.; }
   void write(std::ostream& os = std::cout,bool brief=false) const;
   void writeNice(std::ostream& os = std::cout) const;
   void writeExtremelyNice(std::ostream& os = std::cout) const;
@@ -185,10 +187,11 @@ struct LoopyBP{
   MessagePairList msgs;
   VariableList    vars;
   FactorList      facs;
+  void clear();
   void initBipartite(const VariableList& vars,const FactorList& facs);
   void initPairwise(const VariableList& vars,const FactorList& facs);
-  void getVarBeliefs(MT::Array<Factor>& beliefs);
-  void getVarBelief(Factor& belief,Variable *v);
+  void getVarBeliefs(MT::Array<Factor>& beliefs,bool normalized=true);
+  void getVarBelief(Factor& belief,Variable *v,bool normalized=true);
   void step();
   void step_meanfield();
   //void loopyBP_pairwise(const VariableList& vars,const FactorList& facs);
@@ -324,6 +327,7 @@ inline ostream& operator<<(ostream& os,const infer::FactorGraph& fg){ fg.write(o
 
 // calculates marginal for given variables
 void getMarginal(infer::Factor& marginal, const uintA& marginalVars, infer::FactorGraph& fg);
+void getMarginal(infer::Factor& marginal, const VariableList& marginalVars, infer::FactorGraph& fg);
 
 
 

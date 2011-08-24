@@ -10,7 +10,7 @@ struct ReceedingHorizonProcess:public Process{
   FutureMotionPlan *planVar;
   FutureMotionGoal *goalVar;
 
-  AICO_clean planner;
+  AICO planner;
   //soc::iLQG planner;
   soc::SocSystem_Ors *sys,*sys_parent;
   

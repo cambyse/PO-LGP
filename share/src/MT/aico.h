@@ -23,86 +23,72 @@
 #include "soc.h"
 
 /** \brief Apprioximate Inference Control */
-struct AICO_clean{
+struct AICO{
   //parameters
   soc::SocSystemAbstraction *sys;
-  double convergenceRate,repeatThreshold,recomputeTaskThreshold,maxStep;
   double damping,tolerance;
-  uint max_iterations,seed;
+  uint max_iterations;
   uint display;
   bool useBwdMsg;
   arr bwdMsg_v,bwdMsg_Vinv;
 
-  enum StepMethod{ smClean=0, smDynamic, smKinematic, smGaussNewton, smIlqg  };
-  int method;
+  enum SweepMode{ smForwardly=0, smSymmetric, smLocalGaussNewton, smLocalGaussNewtonDamped };
+  int sweepMode;
 
   MT::String filename;
   std::ostream *os;
 
   //messages
-  arr s,Sinv,v,Vinv,r,R;          //!< fwd, bwd, and task messages
+  arr s,Sinv,v,Vinv,r,R,rhat;     //!< fwd, bwd, and task messages
   MT::Array<arr> phiBar,JBar;     //!< all task cost terms
   arr Psi;                        //!< all transition cost terms
   arr b,Binv;                     //!< beliefs
-  arr q,qhat;                     //!< trajectory (MAP), and point of linearization
+  arr q,xhat;                     //!< q-trajectory (MAP), and point of linearization
+  arr s_old,Sinv_old,v_old,Vinv_old,r_old,R_old,rhat_old,b_old,Binv_old,q_old,qhat_old;
   arr dampingReference;
-  double cost;                      //!< cost of MAP trajectory
-
-  // INTERNAL
-  bool useFwdMessageAsQhat;
+  double cost,cost_old;                      //!< cost of MAP trajectory
+  double b_step;
   arr A,tA,Ainv,invtA,a,B,tB,Winv,Hinv,Q; //!< processes...
   uint sweep;                     //!< #sweeps so far
   uint scale;                     //!< scale of this AICO in a multi-scale approach
 
-  AICO_clean(){ sweep=0; scale=0; maxStep=.1; method=smClean; }
-  AICO_clean(soc::SocSystemAbstraction &sys){ sweep=0; scale=0; maxStep=.1; init(sys); }
+  AICO(){ sweep=0; scale=0; sweepMode=smLocalGaussNewton; }
+  AICO(soc::SocSystemAbstraction& sys){ sweep=0; scale=0; init(sys); }
 
-  //-- high level access
-  void init(soc::SocSystemAbstraction &sys);
-  void iterate_to_convergence(const arr* q_initialization=NULL);
-
-  void init(soc::SocSystemAbstraction& _sys,
-            double _convergenceRate,double _repeatThreshold,
-	    double _recomputeTaskThreshold,
-            uint _display, uint _scale);
+  void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
+  void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
+  void init_trajectory(const arr& q_init,double _damping=10.);
   void shift_solution(int offset);
 
-  double step(){
-    switch(method){
-      case smClean:       return stepClean();
-      case smDynamic:     return stepDynamic();
-      case smKinematic:   return stepKinematic();
-      case smIlqg:        return stepIlqg();
-      case smGaussNewton: return stepGaussNewton();
-    }
-    HALT("");
-    return 0.;
-  }
-  double stepClean();
-  double stepDynamic();
-  double stepKinematic();
-  double stepIlqg(){NIY;};
-  double stepGaussNewton();
-  double stepMinSum();
+  double step();
+  void iterate_to_convergence(const arr* q_init=NULL);
 
-  //internal helpers
-  void initMessagesWithReferenceQ(const arr& qref); //use to initialize damping reference!!!
-  void initMessagesFromScaleParent(AICO_clean *parent);
+  //old:
+  void initMessagesFromScaleParent(AICO *parent);
+
+private:
   void updateFwdMessage(uint t);
   void updateBwdMessage(uint t);
+  void updateTaskMessage(uint t,const arr& qhat_t,double tolerance);
+  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation);
+  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance);
+  double evaluateTimeStep(uint t,bool includeDamping);
+  double evaluateTrajectory(const arr& x,bool plot);
+  void rememberOldState();
+  void perhapsUndoStep();
+  void displayCurrentSolution();
 };
 
 void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
                            arr& q,
                            double tolerance,
-                           double convergenceRate,double repeatThreshold, double recomputeTaskThreshold,
                            uint display,
                            uint scalePowers);
 
 #if 0
 
-inline void getController(arr& G,arr& g,const AICO_clean& aico){
+inline void getController(arr& G,arr& g,const AICO& aico){
   //we can only compute a controller for time steps 0 to T-1 (based on V_{t+1})
   uint T=aico.s.d0-1;
   uint n=aico.s.d1;
@@ -134,7 +120,7 @@ inline void getController(arr& G,arr& g,const AICO_clean& aico){
   }
 }
 
-inline void forwardSimulateTrajectory(arr& q,const arr& G,const arr& g,soc::SocSystemAbstraction& sys,const soc::AICO_clean& aico){
+inline void forwardSimulateTrajectory(arr& q,const arr& G,const arr& g,soc::SocSystemAbstraction& sys,const soc::AICO& aico){
   uint t,T=sys.nTime(),n=sys.qDim();
   if(!aico.sys->dynamic){
     q.resize(T+1,n);
@@ -150,7 +136,7 @@ inline void forwardSimulateTrajectory(arr& q,const arr& G,const arr& g,soc::SocS
   }
 }
 
-inline void getControlledTrajectory(arr& q,const soc::AICO_clean& aico){
+inline void getControlledTrajectory(arr& q,const soc::AICO& aico){
   arr G,g;
   getController(G,g,aico);
   forwardSimulateTrajectory(q,G,g,*aico.sys,aico);
