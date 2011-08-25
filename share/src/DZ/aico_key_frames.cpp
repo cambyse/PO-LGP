@@ -382,7 +382,7 @@ sys,double time,double alpha)
 
 
       cout <<old_r<<endl;
-      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-3)||( (old_r - sys.taskCost(NULL,T,-1))<1e-3)  ) ) break;
+      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-4)||( (old_r - sys.taskCost(NULL,T,-1))<1e-3)  ) ) break;
 
       old_r = sys.taskCost(NULL,T,-1);
       restore = false;
@@ -390,6 +390,7 @@ sys,double time,double alpha)
       //sys.gl->watch("dd");
     }
   }
+  b=b_best;
 }
 
 void OneStepDynamicGradientFull(double& grad,soc::SocSystemAbstraction& sys,arr& R,arr& r,double time)
@@ -471,6 +472,7 @@ void OneStepDynamicGradientFull(double& grad,soc::SocSystemAbstraction& sys,arr&
   grad = sum(gradient);
 }
 
+/*
 void GetOptimalDynamicTime(double& time,soc::SocSystemAbstraction& sys,double alpha,double step)
 {
   arr  R,r,b,Binv,q0,v0;
@@ -479,13 +481,20 @@ void GetOptimalDynamicTime(double& time,soc::SocSystemAbstraction& sys,double al
   double gr,new_time;
   old_time*=T;
   sys.getqv0(q0,v0);
-  arr b0=cat(q0,v0); 
-
+  arr b0=cat(q0,v0);
+  arr b_old=b0; double old_r = 1e6;
   for (uint k=0;k<50;k++){
     sys.setqv(b0);
     OneStepDynamicFull(b,Binv,sys,old_time,alpha); // final posture estimation
+
     sys.setqv(b);
-    sys.getCosts(R,r,b,T);
+    if (sys.taskCost(NULL,T,-1)<old_r) {
+      sys.getCosts(R,r,b,T);
+      b_old=b;
+      old_r = sys.taskCost(NULL,T,-1);
+    } else
+      sys.getCosts(R,r,b_old,T);
+
     OneStepDynamicGradientFull(gr,sys,R,r,old_time); // gradient of likelihood for a given time
     old_time = old_time + gr*step;
     cout << old_time;
@@ -493,6 +502,40 @@ void GetOptimalDynamicTime(double& time,soc::SocSystemAbstraction& sys,double al
 
   time = old_time;
 }
+*/
+
+void GetOptimalDynamicTime(double& time,arr& b,arr& Binv,soc::SocSystemAbstraction& sys,double alpha,double step){
+  arr  R,r,q0,v0;
+  double old_time=sys.getTau(false);//+1e-1;
+  double T = sys.nTime();
+  double gr=1e10;
+  old_time*=T;
+  sys.getqv0(q0,v0);
+  arr b0=cat(q0,v0);
+  arr b_old=b0; double old_r = 1e6;
+  while (gr>0) {
+    sys.setqv(b0);
+    OneStepDynamicFull(b,Binv,sys,old_time,alpha); // final posture estimation
+
+    sys.setqv(b);
+    if (sys.taskCost(NULL,T,-1)<old_r) {
+      sys.getCosts(R,r,b,T);
+      b_old=b;
+      old_r = sys.taskCost(NULL,T,-1);
+    }
+    else
+      sys.getCosts(R,r,b_old,T);
+
+    OneStepDynamicGradientFull(gr,sys,R,r,old_time); // gradient of likelihood for a given time
+    old_time = old_time + step;   
+    cout << "old_time="<<old_time<<endl;;
+  }
+  b=b_old;
+  cout << "R of best b:"<<old_r<<endl;;
+
+  time = old_time;
+}
+
 /////////////////////////////
 
 void TwoStepDynamicGradient(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,arr& R,arr& r,double alpha)
@@ -577,7 +620,6 @@ void TwoStepDynamicGradient(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,arr
 
 
 }
-
 
 void SimpleGradient(soc::SocSystemAbstraction& sys,arr& R,arr& r)
 {
@@ -741,7 +783,7 @@ void OneStepKinematicT(arr& b,arr& Binv,double& duration, soc::SocSystemAbstract
   inverse_SymPosDef(Winv,W);
   inverse_SymPosDef(Winv0,W);
   double D = 0.27405;//0.15;//2.0; //0.25;
-  double  tr,dL,step,dist;
+  double  dL,dist;
   int k; 
   for (k=0;k<100;k++){
     q_old = b;

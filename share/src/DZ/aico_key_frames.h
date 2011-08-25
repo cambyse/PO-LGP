@@ -19,4 +19,4 @@ void OneStepDynamicGradientFull(double& grad,soc::SocSystemAbstraction& sys,arr&
 
 
 /** Returns optimal Time */
-void GetOptimalDynamicTime(double& time,soc::SocSystemAbstraction& sys,double alpha,double step);
+void GetOptimalDynamicTime(double& time,arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double step);

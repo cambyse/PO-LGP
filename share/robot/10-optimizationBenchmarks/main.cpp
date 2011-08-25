@@ -189,7 +189,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setGains(.01,.0);
   V->updateState();
   V->y_target = ARR(-1.,-1.,-1.);
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_tipAlign_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec_m,0.,0.);
 
   /* */
   V=listGetByName(sys.vars,"palm pos");
@@ -201,26 +201,26 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   */
   /*  target and prec for zeroLevel var */
   V->y_target = ARR(0);
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec_m,0.,0.);
   /* */
 
   V=listGetByName(sys.vars,"oppose tip");
   V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_opp_tip_prec,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_tip_prec,0.,0.);
 
   V=listGetByName(sys.vars,"oppose fng");
   V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_opp_fng_prec,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_fng_prec,0.,0.);
 
   V=listGetByName(sys.vars,"zeroLevel");
   V->setGains(.1,.0);
   V->updateState();
   V->y_target = ARR(0,0,0); 
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_zeroLevel_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec_m,0.,0.);
 
   /*
   */
@@ -232,7 +232,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
   V=listGetByName(sys.vars,"qitself");
   V->y=0.; V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
-  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,midPrec,endVelPrec);
+  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,0,endVelPrec);
 }
 
 void
@@ -240,7 +240,7 @@ setzeroprec(soc::SocSystem_Ors &sys, uint T){
   uint i;
 
   FOR1D(sys.vars, i){
-    sys.vars(i)->setInterpolatedTargetsConstPrecisions(T,0,0);
+    sys.vars(i)->setInterpolatedTargetsConstPrecisions(T,0.,0.);
   }
 }
 
@@ -252,7 +252,7 @@ void problem4(){
   //setup the problem
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  GraspObject *o = new GraspObject_Sphere();
+  GraspObject *o = new GraspObject_InfCylinder();
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime");
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
@@ -280,7 +280,12 @@ void problem5(){
   //setup the problem
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  GraspObject *o = new GraspObject_Sphere();
+  GraspObject *o;
+  switch (MT::getParameter<uint>("shape")){
+    case 0: o = new GraspObject_Sphere();break;
+    case 1: o = new GraspObject_InfCylinder();break;
+    case 2: o = new GraspObject_Cylinder1();break;
+  }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
   double alpha=MT::getParameter<double>("alpha");
@@ -301,11 +306,12 @@ void problem5(){
   sys.getq0(q0);
 
   /* optimal time is tm */
-  GetOptimalDynamicTime(tm,sys,alpha,0.006); 
+  GetOptimalDynamicTime(tm,b,B,sys,alpha,0.06); 
 
-  /* with optimal time, get posterior pose */
+  /* with optimal time, get posterior pose
   sys.setq(q0,0);
-  OneStepDynamicFull(b,B,sys,tm/*=tuse opt time*/,alpha); 
+  OneStepDynamicFull(b,B,sys,tm/*=tuse opt time*//*,alpha); 
+  */
   MT_MSG( "Post belief:" << b); MT_MSG( "time:" << tm);
 
   /* see bwdMsg */
@@ -316,21 +322,24 @@ void problem5(){
 
   /* start aico with bwdMsg */
   soc::SocSystem_Ors sys2;
-  sys2.initBasics(NULL,NULL,&gl,T,tm,true,NULL);
+  sys2.initBasics(NULL,NULL,&gl,T,/*0.6**/tm,true,NULL);
   createISPTaskVariables(sys2,o);
   setISPGraspGoals(sys2,T,o);
-
   //setzeroprec(sys2, T);
+
   AICO_clean solver(sys2);
   solver.useBwdMsg=true;
   solver.bwdMsg_v = cat(b0,zero14);
   inverse(Binv,B);
-  solver.bwdMsg_Vinv=BinvFactor*Binv;
+  solver.bwdMsg_Vinv.setDiag(BinvFactor,28); //=BinvFactor*Binv;
   MT_MSG("Vinv="<<solver.bwdMsg_Vinv);
   //solver.iterate_to_convergence(); //roll out cycle
   for(uint k=0;k<solver.max_iterations;k++){
     double d=solver.step();
     if(k && d<solver.tolerance) break;
+
+    BinvFactor *= .8;
+    solver.bwdMsg_Vinv.setDiag(BinvFactor,28);
   }
   sys2.getCosts(R,r,solver.q[T],T);
   MT_MSG( "last q:"<< solver.q[T]);
