@@ -67,6 +67,15 @@ MeshObject::getEnclCube(double &lo, double &hi){
 
 void glDrawMeshObject(void*p){ ((MeshObject*)p)->glDraw(); }
 
+uint plot_field_dens() {
+  static uint value;
+  static bool read=true;
+  if(read){
+    read=false;
+    value = MT::getParameter<uint>("plotPotentialFieldDensity",50);
+  }
+  return value;
+}
 double plot_field() {
   static double value;
   static bool read=true;
@@ -109,7 +118,7 @@ PotentialField::buildMesh(){
   if(0!=plot_field()){
     getEnclCube(lo,hi);
     MT_MSG("new: hi="<<hi<<", lo="<<lo);
-    X.setGrid(3,lo,hi,50);
+    X.setGrid(3,lo,hi,plot_field_dens());
     dX.resizeAs(X);
     for(i=0;i<X.d0;i++){
       X[i]()+=ce;
@@ -120,15 +129,14 @@ PotentialField::buildMesh(){
   }
 }
 
-/** Value and gradient (and TODO hessian to come) and variance of the potential
- * field. 
+/** Value and gradient and hessian and variance of the potential field. 
  *
  * Variance doesn't make much sense when not a Gaussian Process or another
  * probabilistic method: here variance is zero indicating to the invoker that
  * vaiance doesn't play a role.
  *
  * ACHTUNG: nonNULL hess implies nonNULL grad
- * look at mlr/stanio/concepts/note-analytic-impl-shapes-hessian in the
+ * look at mlr/stanio/concepts/note_analytic_impl_shapes_hessian.tex in the
  * repository for more details
  */
 double
