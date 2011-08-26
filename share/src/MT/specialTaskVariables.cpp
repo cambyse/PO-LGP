@@ -62,32 +62,32 @@ void setGraspGoals(soc::SocSystem_Ors& sys,uint T,uint shapeId){
   xtarget(2) += .02; //grasp it 2cm above center
     
   //endeff
-  V=listGetByName(sys.vars,"endeffector");
+  V=listFindByName(sys.vars,"endeffector");
   V->irel.setText("<t(0 0 -.26)>");
   V->updateState();
   V->y_target = xtarget;
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,palmPrec,0.,0.);
     
   //up
-  V=listGetByName(sys.vars,"up1");
+  V=listFindByName(sys.vars,"up1");
   V->irel.setText("<d(90 1 0 0)>");
   V->updateState();
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
 
   //finger tips
-  V=listGetByName(sys.vars,"pos1");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
-  V=listGetByName(sys.vars,"pos2");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
-  V=listGetByName(sys.vars,"pos3");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
+  V=listFindByName(sys.vars,"pos1");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
+  V=listFindByName(sys.vars,"pos2");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
+  V=listFindByName(sys.vars,"pos3");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
     
   //opposing fingers
-  V=listGetByName(sys.vars,"oppose12");  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
-  V=listGetByName(sys.vars,"oppose13");  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
+  V=listFindByName(sys.vars,"oppose12");  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
+  V=listFindByName(sys.vars,"oppose13");  V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
 
   //col lim and relax
-  V=listGetByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
-  V=listGetByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
-  V=listGetByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T,MT::getParameter<double>("reachPlanHomeComfort"),0.,midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
+  V=listFindByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
+  V=listFindByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T,MT::getParameter<double>("reachPlanHomeComfort"),0.,midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
 }
 
 void setGraspGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape){
@@ -121,7 +121,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const cha
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
 
   //endeff
-  V=listGetByName(sys.vars,"endeffector");
+  V=listFindByName(sys.vars,"endeffector");
   V->irel = obj->rel;
   V->updateState();
   V->y_target = xtarget;
@@ -138,26 +138,26 @@ void setPlaceGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const cha
   }
 
   //up1
-  V=listGetByName(sys.vars,"up1");
+  V=listFindByName(sys.vars,"up1");
   V->irel = obj->rel;  V -> irel.addRelativeRotationDeg(90,1,0,0);
   V->updateState();
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
 
   //up2
-  V=listGetByName(sys.vars,"up2");
+  V=listFindByName(sys.vars,"up2");
   V->irel = obj->rel;  V-> irel.addRelativeRotationDeg(90,0,1,0);
   V->updateState();
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T,midPrec,endPrec,0.,0.);
 
   //col lim and relax
-  V=listGetByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
-  V=listGetByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
-  V=listGetByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T,MT::getParameter<double>("reachPlanHomeComfort"),0.,midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
+  V=listFindByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
+  V=listFindByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
+  V=listFindByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T,MT::getParameter<double>("reachPlanHomeComfort"),0.,midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));
 
   //keep hand fixed
-  //V=listGetByName(sys.vars,"qhand");      V->y_target=V->y; V->setInterpolatedTargetsConstPrecisions(T,1e1,0.);
+  //V=listFindByName(sys.vars,"qhand");      V->y_target=V->y; V->setInterpolatedTargetsConstPrecisions(T,1e1,0.);
 }
 
 void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const char* belowToShape){
@@ -180,7 +180,7 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
   MT::getParameter(endPrec,"homingPlanEndPrec");
 
   //endeff
-  V=listGetByName(sys.vars,"endeffector");
+  V=listFindByName(sys.vars,"endeffector");
   //V->irel = obj->rel;
   V->updateState();
   V->setInterpolatedTargetsEndPrecisions(T,0,0,0.,0.);
@@ -196,9 +196,9 @@ void setHomingGoals(soc::SocSystem_Ors& sys,uint T,const char* objShape,const ch
   //}
 
   //col lim and relax
-  V=listGetByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
-  V=listGetByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
-  V=listGetByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
+  V=listFindByName(sys.vars,"collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
+  V=listFindByName(sys.vars,"limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
+  V=listFindByName(sys.vars,"qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
   V->setInterpolatedTargetsEndPrecisions(T,
                                          midPrec,endPrec,
                                          midPrec,MT::getParameter<double>("reachPlanEndVelPrec"));

@@ -674,12 +674,12 @@ template<class T> MT::Array<T*> getList(const MT::Array<T>& A){
     
 template<class T> void listWrite(const MT::Array<T*>& L,std::ostream& os,const char *ELEMSEP=" ",const char *delim=NULL);
 template<class T> void listWriteNames(const MT::Array<T*>& L,std::ostream& os);
-/*template<class T> void listRead(MT::Array<T*>& L,std::istream& is);*/
+template<class T> void listRead(MT::Array<T*>& L,std::istream& is,const char *delim=NULL);
 template<class T> void listClone(MT::Array<T*>& L,const MT::Array<T*>& M);
 template<class T> void listCopy(MT::Array<T*>& L,const MT::Array<T*>& M);
 template<class T> void listDelete(MT::Array<T*>& L);
-template<class T> T* listGetByName(const MT::Array<T*>& L,const char* name);
-template<class T> T* listFindType(const MT::Array<T*>& L,const char* type);
+template<class T> T* listFindByName(const MT::Array<T*>& L,const char* name); //->listFindByName
+template<class T> T* listFindByType(const MT::Array<T*>& L,const char* type); //->listFindByType
 
 template<class T> T* new_elem(MT::Array<T*>& L){ T *e=new T; e->index=L.N; L.append(e); return e; }
 template<class T,class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);

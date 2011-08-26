@@ -136,7 +136,7 @@ template<class T> void namesToSublist(MT::Array<T*>& sub,const MT::Array<MT::Str
   T *v;
   sub.clear();
   for(i=0;i<strings.N;i++){
-    v=listGetByName(list,strings(i));
+    v=listFindByName(list,strings(i));
     CHECK(v,"variable '"<<strings(i)<<"' is unkown");
     sub.append(v);
   }
@@ -239,26 +239,26 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
       mdp.facs.last()->name = e->name;
   }
   //cout <<"\nread factors:" <<endl;  listWrite(mdp.facs,cout,"\n  ");
-  e=listFindType(H.T,"mdp");
+  e=listFindByType(H.T,"mdp");
   mdp.gamma = get<double>(e->ats,"discount")(0);
   //cout <<"\ngamma = " <<mdp.gamma <<endl;
   MT::Array<MT::String> S;
   S = get<MT::String>(e->ats,"initializationFacs");
-  for(uint i=0;i<S.N;i++) mdp.initFacs.append(listGetByName(mdp.facs,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.initFacs.append(listFindByName(mdp.facs,S(i)));
   S = get<MT::String>(e->ats,"transitionFacs");
-  for(uint i=0;i<S.N;i++) mdp.transFacs.append(listGetByName(mdp.facs,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.transFacs.append(listFindByName(mdp.facs,S(i)));
   S = get<MT::String>(e->ats,"rewardFacs");
-  for(uint i=0;i<S.N;i++) mdp.rewardFacs.append(listGetByName(mdp.facs,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.rewardFacs.append(listFindByName(mdp.facs,S(i)));
   S = get<MT::String>(e->ats,"observationFacs");
-  for(uint i=0;i<S.N;i++) mdp.obsFacs.append(listGetByName(mdp.facs,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.obsFacs.append(listFindByName(mdp.facs,S(i)));
   S = get<MT::String>(e->ats,"leftVars");
-  for(uint i=0;i<S.N;i++) mdp.leftVars.append(listGetByName(mdp.vars,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.leftVars.append(listFindByName(mdp.vars,S(i)));
   S = get<MT::String>(e->ats,"rightVars");
-  for(uint i=0;i<S.N;i++) mdp.rightVars.append(listGetByName(mdp.vars,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.rightVars.append(listFindByName(mdp.vars,S(i)));
   S = get<MT::String>(e->ats,"observationVars");
-  for(uint i=0;i<S.N;i++) mdp.obsVars.append(listGetByName(mdp.vars,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.obsVars.append(listFindByName(mdp.vars,S(i)));
   S = get<MT::String>(e->ats,"controlVars");
-  for(uint i=0;i<S.N;i++) mdp.ctrlVars.append(listGetByName(mdp.vars,S(i)));
+  for(uint i=0;i<S.N;i++) mdp.ctrlVars.append(listFindByName(mdp.vars,S(i)));
 
   //Factor *f;
   //for_list(i,f,mdp.transFacs) tensorCheckCondNormalization(f->P,1);
@@ -321,11 +321,11 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     if(tag=="horizon"){      CHECK(insidePomdp,"");  double z; is >>"(" >>z >>")";  continue; }
     //a CPT declaration:
     name.read(is," \t\n\r(",")",true);
-    v=listGetByName(mdp.vars,tag);  CHECK(v,"");
-    f=listGetByName(mdp.facs,name); CHECK(f,"");
+    v=listFindByName(mdp.vars,tag);  CHECK(v,"");
+    f=listFindByName(mdp.facs,name); CHECK(f,"");
     if(tag(tag.N()-1)!='\''){
       mdp.initFacs.append(f);
-      mdp.leftVars.append(listGetByName(mdp.vars,tag));
+      mdp.leftVars.append(listFindByName(mdp.vars,tag));
     }
     else if(mdp.obsVars.findValue(v)!=-1) mdp.obsFacs.append(f);
     else if(rewardVars.findValue(v)!=-1) mdp.rewardFacs.append(f);
@@ -998,11 +998,11 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc,const MDP_struct
   Variable *v;
   
   //----- find the variable ids for the mdp world:
-  //Variable *x  = listGetByName(mdp.vars,"state0");
-  //Variable *y  = listGetByName(mdp.vars,"observation0");
-  //Variable *a  = listGetByName(mdp.vars,"action");
-  //Variable *x_ = listGetByName(mdp.vars,"state1");
-  //Variable *y_ = listGetByName(mdp.vars,"observation1");
+  //Variable *x  = listFindByName(mdp.vars,"state0");
+  //Variable *y  = listFindByName(mdp.vars,"observation0");
+  //Variable *a  = listFindByName(mdp.vars,"action");
+  //Variable *x_ = listFindByName(mdp.vars,"state1");
+  //Variable *y_ = listFindByName(mdp.vars,"observation1");
   
   uint adim=1;
   for_list(i,v,mdp.ctrlVars) adim*=v->dim;

@@ -30,7 +30,7 @@ void Element::read(std::istream& is,ElementL& list){
     for(j=0;;j++){
       link.read(is," ,"," ,)",false);
       if(!link.N()) break;
-      e=listGetByName(list,link);
+      e=listFindByName(list,link);
       if(e){ //sucessfully found
         links.append(e);
         linksIds.append(e->id);
@@ -101,7 +101,7 @@ void HyperGraph::del(Element *e){
   delete e;
 }
 
-Element *HyperGraph::get(const char* name){ return listGetByName(T,name); }
+Element *HyperGraph::get(const char* name){ return listFindByName(T,name); }
 
 void HyperGraph::write(std::ostream &os) const{
   listWrite(T,os,"\n");

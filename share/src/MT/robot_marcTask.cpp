@@ -35,7 +35,7 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
     //if (motion.recho.planner.cost < 1.) if (counter<motion.recho.sys->nTime()-1) counter++;
   }
   
-  //TaskVariable * t = listGetByName(recho.sys->vars,"endeffector");
+  //TaskVariable * t = listFindByName(recho.sys->vars,"endeffector");
   //cout << " clone " << t->y << " target" << t->y_trajectory[t->y_trajectory.d0-1] << " prec " << t->y_prec_trajectory(t->y_trajectory.d0-1)<< endl;
 }
 

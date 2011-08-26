@@ -3008,7 +3008,7 @@ BinaryFunction( fmod );
 template<class T> void listWrite(const MT::Array<T*>& L,std::ostream& os,const char *ELEMSEP=" ",const char *delim=NULL){
   uint i;
   if(delim) os <<delim[0];
-  for(i=0;i<L.N;i++){ if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
+  for(i=0;i<L.N;i++){ if(i) os <<ELEMSEP;  if(L.elem(i)) L.elem(i)->write(os); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
                
@@ -3019,17 +3019,19 @@ template<class T> void listWriteNames(const MT::Array<T*>& L,std::ostream& os){
   os <<')' <<std::flush;
 }
 
-/*template<class T> void listRead(MT::Array<T*>& L,std::istream& is){
-                 CHECK(!L.N,"delete the list before reading!");
-                 MT::parse(is,"{");
-                 char c;
-                 for(;;){
-                 c=MT::peerNextChar(is);
-                 if(c=='}') break;
-                 L.append(new T());
-                 is >>*L.last();
+template<class T> void listRead(MT::Array<T*>& L,std::istream& is,const char *delim){
+  CHECK(!L.N,"delete the list before reading!");
+  CHECK(delim,"automatic list reading requires delimiters");
+  char c;
+  if(delim){ MT::skip(is); is.get(c); CHECK(c==delim[0],"couldn't parse opening list delimiter"); }
+  for(;;){
+    c=MT::peerNextChar(is);
+    if(c==delim[1]){ is.get(c); break; }
+    if(!is.good()) break;
+    L.append(new T());
+    L.last()->read(is);
+  }
 }
-}*/
 
 template<class T> void listClone(MT::Array<T*>& L,const MT::Array<T*>& M){
   listDelete(L);
@@ -3058,7 +3060,7 @@ template<class T> void listDelete(MT::Array<T*>& L){
   L.clear();
 }
 
-template<class T> T* listGetByName(const MT::Array<T*>& L,const char* name){
+template<class T> T* listFindByName(const MT::Array<T*>& L,const char* name){
   uint i;
   T *e;
   for_list(i,e,L) if(!strcmp(e->name,name)) return e;
@@ -3066,7 +3068,7 @@ template<class T> T* listGetByName(const MT::Array<T*>& L,const char* name){
   return NULL;
 }
 
-template<class T> T* listFindType(const MT::Array<T*>& L,const char* type){
+template<class T> T* listFindByType(const MT::Array<T*>& L,const char* type){
   uint i;
   T *e;
   for_list(i,e,L) if(!strcmp(e->type,type)) return e;

@@ -57,7 +57,7 @@ struct Variable{
   Variable(uint _dim,const char *_name);
   Variable(uint _dim,const char *_name,uint _id);
   ~Variable();
-  operator uint() const { return id; }
+  operator uint() const { return id; } //TODO: REMOVE
   void write(ostream& os = std::cout) const;
 };
 }

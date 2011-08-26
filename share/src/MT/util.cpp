@@ -190,6 +190,7 @@ namespace MT{
     char c;
     skip(is,skipchars,skipCommentLines);
     is.get(c);
+    if(!is.good()) return 0;
     is.putback(c);
     return c;
   }
