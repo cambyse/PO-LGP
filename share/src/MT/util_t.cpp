@@ -156,11 +156,12 @@ namespace MT{
 //
 // generic any container
 //
-  
-template<class T> struct ANY:public Any{
-  virtual ~ANY(){ free(); };
-  ANY(const char* _tag,const T &x){          tag=NULL; p=NULL; set(_tag,&x,0,0);  }
-  ANY(const char* _tag,const T *_p,uint _n,char _delim){ tag=NULL; p=NULL; set(_tag,_p,_n,_delim); }
+
+//this is a typed instance of the general Any struct
+template<class T> struct TypedAny:public Any{
+  virtual ~TypedAny(){ free(); };
+  TypedAny(const char* _tag,const T &x){                      tag=NULL; p=NULL; set(_tag,&x,0,0);  }
+  TypedAny(const char* _tag,const T *_p,uint _n,char _delim){ tag=NULL; p=NULL; set(_tag,_p,_n,_delim); }
   virtual void write(std::ostream &os) const{
     if(!p){ os <<tag; return; } //boolean
     os <<tag <<"="; //<<"[" <<type <<"] = ";
@@ -201,96 +202,11 @@ template<class T> struct ANY:public Any{
       for(uint i=0;i<n;i++) t[i]=_p[i];
     }
   }
-  virtual Any* newClone(){ return new ANY<T>(tag,(T*)p,n,delim); }
+  virtual Any* newClone(){ return new TypedAny<T>(tag,(T*)p,n,delim); }
 };
 
-template<class T> Any* anyNew(const char* tag,const T &x){        return new ANY<T>(tag,x); }
-template<class T> Any* anyNew(const char* tag,const T *x,uint n,char delim){ return new ANY<T>(tag,x,n,delim); }
-
-#if 0 //don't need the bag anymore, use an any list instead!
-namespace MT{
-  class BagItem{
-  public:
-    BagItem *next; 
-    void *value;
-    int type;
-    BagItem(){ next=0; value=0; type=-1; }
-    void operator=(const BagItem&){ NIY; }
-    virtual ~BagItem(){}
-    virtual void write(std::ostream &os) = 0;
-    virtual void free() = 0;
-    virtual void set(void *x) = 0;
-    virtual BagItem *newClone() = 0;
-    //virtual get(void *x) = 0;
-  };
-  
-
-  struct BagItemType{ char *tag; const char *typeidname; uint n; };
-  extern Mem<BagItemType> BagItemTypes;
-
-  template<class T> class BagTypedItem:public BagItem{
-  public:
-    virtual void write(std::ostream &os){
-      if(!value) return;
-      if(!BagItemTypes(type).n){
-        os <<*((T*)value);
-      }else{
-        T *t=(T*)value;
-        uint n=BagItemTypes(type).n;
-        for(uint i=0;i<n;i++,t++) os <<' ' <<*t;
-      }
-    }
-    virtual void free(){
-      if(!value) return;
-      if(!BagItemTypes(type).n){
-        delete ((T*)value);
-      }else{
-        delete[] ((T*)value);
-      }
-      value=0;
-    }
-    virtual void set(void *_x){
-      if(!_x){ value=0; return; }
-      uint n=BagItemTypes(type).n;
-      T *t=(T*)value;
-      T *x=(T*)_x;
-      if(value) free();
-      if(!n){
-        value = new T;
-        t=(T*)value;
-        *t=*x;
-      }else{
-        value = new T[n];
-        t=(T*)value;
-        for(uint i=0;i<n;i++) t[i]=x[i];
-      }
-    }
-    virtual BagItem *newClone(){ return new BagTypedItem; }
-  };
-
-#ifndef MT_MSVC
-  //! add an arbitrary-type item to the bag
-  template<class T> void Bag::add(const char *tag,T *x,uint n){
-    BagItem *a=new BagTypedItem<T>;
-    a->type=getType(tag,typeid(T).name(),n);
-    if(a->type==-1){ delete a; return; }
-    a->set(x);
-    a->next=first;
-    first=a;
-  }
-  
-  //! get the item with tag from the bag
-  template<class T> BagItem* Bag::get(const char *tag,T *&x,uint n){
-    int i;
-    BagItem *a;
-    i=getType(tag,typeid(T).name(),n);
-    for(a=first;a;a=a->next) if(a->type==i) break;
-    if(a) x=(T*)a->value; else x=NULL;
-    return a;
-  }
-#endif
-}
-#endif
+template<class T> Any* anyNew(const char* tag,const T &x){        return new TypedAny<T>(tag,x); }
+template<class T> Any* anyNew(const char* tag,const T *x,uint n,char delim){ return new TypedAny<T>(tag,x,n,delim); }
 
 template<class T> T* MT::SHM::newBlock(const char* objName,uint *_i){
   if(!opened) open("shmPageName",1000);

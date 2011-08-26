@@ -40,13 +40,13 @@ double mdp::pomdpEM_structured(
   Rax->setP(mdp_Rax);
 #endif
 
-  VarL leftVars=cat(fsc.leftVars,mdp.leftVars);
-  VarL rightVars=cat(fsc.rightVars,mdp.rightVars);
-  VarL tail_headVars=cat(rightVars,leftVars);
+  VariableList leftVars=cat(fsc.leftVars,mdp.leftVars);
+  VariableList rightVars=cat(fsc.rightVars,mdp.rightVars);
+  VariableList tail_headVars=cat(rightVars,leftVars);
   
-  FacL allTransitions = cat(fsc.transFacs,mdp.obsFacs,mdp.transFacs);
-  FacL allRewards = cat(mdp.rewardFacs,allTransitions);
-  FacL allInits = cat(fsc.initFacs,mdp.initFacs);
+  FactorList allTransitions = cat(fsc.transFacs,mdp.obsFacs,mdp.transFacs);
+  FactorList allRewards = cat(mdp.rewardFacs,allTransitions);
+  FactorList allInits = cat(fsc.initFacs,mdp.initFacs);
 
   Factor Falpha(leftVars);
   Factor Fbeta (rightVars);
@@ -91,7 +91,7 @@ double mdp::pomdpEM_structured(
     }
   }else{
     //----- use factor lists for generic inference
-    FacL temporary;
+    FactorList temporary;
     //eliminateVariable(allTransitions,temporary,a);
     //eliminateVariable(allTransitions,temporary,y_);
     //eliminateVariable(allRewards,temporary,a);
@@ -119,10 +119,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FacL twotimeslice = cat(ARRAY(&Fbeta),fsc.transFacs,mdp.obsFacs,mdp.transFacs,ARRAY(&Falpha));
+  FactorList twotimeslice = cat(ARRAY(&Fbeta),fsc.transFacs,mdp.obsFacs,mdp.transFacs,ARRAY(&Falpha));
 
   //term1: derived from the immediate reward model
-  FacL immediateR = cat(mdp.rewardFacs,fsc.transFacs,mdp.obsFacs,mdp.transFacs,ARRAY(&Falpha));
+  FactorList immediateR = cat(mdp.rewardFacs,fsc.transFacs,mdp.obsFacs,mdp.transFacs,ARRAY(&Falpha));
 
   //loop through all transition factors of the controller
   for(i=0;i<fsc.transFacs.N;i++){

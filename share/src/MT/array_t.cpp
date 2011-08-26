@@ -3064,7 +3064,7 @@ template<class T> T* listFindByName(const MT::Array<T*>& L,const char* name){
   uint i;
   T *e;
   for_list(i,e,L) if(!strcmp(e->name,name)) return e;
-  std::cerr <<"\n*** name '"<<name<<"' not in this list!" <<std::endl;
+  //std::cerr <<"\n*** name '"<<name<<"' not in this list!" <<std::endl;
   return NULL;
 }
 
@@ -3072,7 +3072,7 @@ template<class T> T* listFindByType(const MT::Array<T*>& L,const char* type){
   uint i;
   T *e;
   for_list(i,e,L) if(!strcmp(e->type,type)) return e;
-  std::cerr <<"type '"<<type<<"' not in this list!" <<std::endl;
+  //std::cerr <<"type '"<<type<<"' not in this list!" <<std::endl;
   return NULL;
 }
 
@@ -3433,16 +3433,14 @@ void maximumSpanningTree(MT::Array<vert*>& V,MT::Array<edge*>& E,const CompareOp
   graphMakeLists(V,E);
 }
     
-    
-template<class T> MT::Array<T> get(const AnyList& L,const char* tag){
+/*template<class T> MT::Array<T> get(const AnyList& L,const char* tag){
   uint i;
   Any *a;
   for_list(i,a,L) if(!strcmp(a->tag,tag)) break;
   if(i==L.N) HALT("tag '"<<tag<<"' is not in this AnyList");
   if(!a->n) return MT::Array<T>((T*)a->p,1);
   return MT::Array<T>((T*)a->p,a->n);
-}
-
+}*/
 
 template<class T> T* anyListGet(const AnyList& L,const char *tag,uint n){
   uint i;

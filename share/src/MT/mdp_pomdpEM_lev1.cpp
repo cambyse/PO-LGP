@@ -69,14 +69,14 @@ double mdp::pomdpEM_lev1(
   //reward
   Factor FRax(ARRAY(&a,&x)      ,mdp_Rax);  
   
-  VarL leftVars=ARRAY(&n0 ,&x );
-  VarL rightVars=ARRAY(&n0_,&x_);
-  VarL tail_headVars=cat(rightVars,leftVars);
+  VariableList leftVars=ARRAY(&n0 ,&x );
+  VariableList rightVars=ARRAY(&n0_,&x_);
+  VariableList tail_headVars=cat(rightVars,leftVars);
   
-  //FacL allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
-  FacL allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
-  FacL allRewards = ARRAY(&FRax, &Fa0);
-  FacL allInits = ARRAY(&F0,&Fx,&Fy);
+  //FactorList allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
+  FactorList allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
+  FactorList allRewards = ARRAY(&FRax, &Fa0);
+  FactorList allInits = ARRAY(&F0,&Fx,&Fy);
 
   Factor Falpha(leftVars);
   Factor Fbeta (rightVars);
@@ -121,7 +121,7 @@ double mdp::pomdpEM_lev1(
     }
   }else{
     //----- use factor lists for generic inference
-    FacL temporary;
+    FactorList temporary;
     //eliminateVariable(allTransitions,temporary,a);
     //eliminateVariable(allTransitions,temporary,y_);
     //eliminateVariable(allRewards,temporary,a);
@@ -149,7 +149,7 @@ double mdp::pomdpEM_lev1(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FacL twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
+  FactorList twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
   
   Factor X0y0_term2;
   eliminationAlgorithm(X0y0_term2,twotimeslice,ARRAY(&n0_,&y_,&n0));
@@ -157,7 +157,7 @@ double mdp::pomdpEM_lev1(
   eliminationAlgorithm(Xa0_term2,twotimeslice,ARRAY(&a,&n0));
   
   //consider the 1st term (alpha*R_x)
-  FacL immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
+  FactorList immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
 
   Factor X0y0_term1;
   eliminationAlgorithm(X0y0_term1 ,immediateR,ARRAY(&n0_,&y_,&n0));

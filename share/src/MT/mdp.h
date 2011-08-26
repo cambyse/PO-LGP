@@ -11,9 +11,10 @@
 namespace infer{
 struct Variable;
 struct Factor;
+
+typedef MT::Array<Variable*> VariableList;
+typedef MT::Array<Factor*>   FactorList;
 }
-typedef MT::Array<infer::Variable*> VariableList;
-typedef MT::Array<infer::Factor*>   FactorList;
 
 
 namespace mdp{
@@ -35,11 +36,11 @@ struct MDP{
 
 //! struct to store a generic structured MDP or POMDP
 struct MDP_structured{
-  VariableList vars;
-  VariableList leftVars,rightVars;
-  VariableList obsVars,ctrlVars;
-  FactorList facs;
-  FactorList transFacs,initFacs,rewardFacs,obsFacs;
+  infer::VariableList vars;
+  infer::VariableList leftVars,rightVars;
+  infer::VariableList obsVars,ctrlVars;
+  infer::FactorList facs;
+  infer::FactorList transFacs,initFacs,rewardFacs,obsFacs;
   double gamma;
   ~MDP_structured();
 };
@@ -68,8 +69,8 @@ struct FSC_lev2{
 };
 
 struct FSC_structured{
-  VariableList vars,leftVars,rightVars;
-  FactorList   facs,initFacs,transFacs;
+  infer::VariableList vars,leftVars,rightVars;
+  infer::FactorList   facs,initFacs,transFacs;
   ~FSC_structured();
 };
 

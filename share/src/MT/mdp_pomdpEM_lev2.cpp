@@ -94,13 +94,13 @@ double mdp::pomdpEM_lev2(
     Fbeta .setP(beta);
   }else{
     //----- use factor lists for generic inference
-    FacL trans = ARRAY(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0);
-    FacL newed;
+    FactorList trans = ARRAY(&Fa0, &Fxax, &Fyxa, &F1y01, &F01y0);
+    FactorList newed;
     eliminateVariable(trans,newed,&a);
     //eliminateVariable(trans,newed,y_);
   
     Factor tmp(ARRAY(&n1)); tmp.setOne();
-    FacL rewards = ARRAY(&FRax, &Fa0, &tmp);
+    FactorList rewards = ARRAY(&FRax, &Fa0, &tmp);
     eliminateVariable(rewards,newed,&a);
   
     inferMixLengthStructured(Falpha,Fbeta,PT,PR,ET,
@@ -117,7 +117,7 @@ double mdp::pomdpEM_lev2(
   
   //----- M-STEP
   //consider the 2nd term (alpha*P_(x'|x)*beta)
-  FacL twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &Fbeta);
+  FactorList twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &Fbeta);
   
   Factor X1y01_term2;
   eliminationAlgorithm(X1y01_term2,twotimeslice,ARRAY(&n1_,&y_ ,&n0,&n1));
@@ -127,7 +127,7 @@ double mdp::pomdpEM_lev2(
   eliminationAlgorithm(Xa0_term2,twotimeslice,ARRAY(&a,&n0));
   
   //consider the 1st term (alpha*R_x)
-  FacL immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &FRax);
+  FactorList immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F1y01, &F01y0, &FRax);
 
   Factor X1y01_term1;
   eliminationAlgorithm(X1y01_term1 ,immediateR,ARRAY(&n1_,&y_ ,&n0,&n1));

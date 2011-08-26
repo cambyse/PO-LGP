@@ -41,8 +41,8 @@ double mdp::pomdpEM_structured(
   for(i=0;i<fsc.vars.N;i++) if(fsc.vars(i)->name=="state(t+1)"){       x_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0;i<fsc.vars.N;i++) if(fsc.vars(i)->name=="observation(t+1)"){ y_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
 
-  VarL mdp_leftVars=ARRAY(x);
-  VarL mdp_rightVars=ARRAY(x_);
+  VariableList mdp_leftVars=ARRAY(x);
+  VariableList mdp_rightVars=ARRAY(x_);
 
   //----- define factors for the mdp components
   //start
@@ -54,17 +54,17 @@ double mdp::pomdpEM_structured(
   //reward
   Factor FRax(ARRAY(a,x));     FRax.setP(mdp_Rax);
   
-  FacL mdp_transitions = ARRAY(&Fyxa, &Fxax);
-  FacL mdp_inits       = ARRAY(&Fy, &Fx);
-  FacL mdp_rewards     = ARRAY(&FRax);
+  FactorList mdp_transitions = ARRAY(&Fyxa, &Fxax);
+  FactorList mdp_inits       = ARRAY(&Fy, &Fx);
+  FactorList mdp_rewards     = ARRAY(&FRax);
 
-  VarL leftVars=cat(fsc.leftVars,mdp_leftVars);
-  VarL rightVars=cat(fsc.rightVars,mdp_rightVars);
-  VarL tail_headVars=cat(rightVars,leftVars);
+  VariableList leftVars=cat(fsc.leftVars,mdp_leftVars);
+  VariableList rightVars=cat(fsc.rightVars,mdp_rightVars);
+  VariableList tail_headVars=cat(rightVars,leftVars);
   
-  FacL allTransitions = cat(fsc.transFacs,mdp_transitions);
-  FacL allRewards = cat(mdp_rewards,allTransitions);
-  FacL allInits = cat(fsc.initFacs,mdp_inits);
+  FactorList allTransitions = cat(fsc.transFacs,mdp_transitions);
+  FactorList allRewards = cat(mdp_rewards,allTransitions);
+  FactorList allInits = cat(fsc.initFacs,mdp_inits);
 
   Factor Falpha(leftVars);
   Factor Fbeta (rightVars);
@@ -109,7 +109,7 @@ double mdp::pomdpEM_structured(
     }
   }else{
     //----- use factor lists for generic inference
-    FacL temporary;
+    FactorList temporary;
     //eliminateVariable(allTransitions,temporary,a);
     //eliminateVariable(allTransitions,temporary,y_);
     //eliminateVariable(allRewards,temporary,a);
@@ -137,10 +137,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FacL twotimeslice = cat(ARRAY(&Fbeta),fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
+  FactorList twotimeslice = cat(ARRAY(&Fbeta),fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
 
   //term1: derived from the immediate reward model
-  FacL immediateR = cat(mdp_rewards,fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
+  FactorList immediateR = cat(mdp_rewards,fsc.transFacs,mdp_transitions,ARRAY(&Falpha));
 
   //loop through all transition factors of the controller
   for(i=0;i<fsc.transFacs.N;i++){

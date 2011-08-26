@@ -28,18 +28,14 @@ namespace infer{
 struct Variable;
 struct Factor;
 struct MessagePair;
-}
 
 //simple ``list'' types
-typedef MT::Array<infer::Variable*> VariableList;
-typedef MT::Array<infer::Factor*>   FactorList;
-typedef MT::Array<infer::MessagePair*> MessagePairList;
-
-#define VarL VariableList
-#define FacL FactorList
-#define MsgPairL MessagePairList
+typedef MT::Array<Variable*> VariableList;
+typedef MT::Array<Factor*>   FactorList;
+typedef MT::Array<MessagePair*> MessagePairList;
 
 extern uint VarCount;
+}
 
 namespace infer{
 /*! a discrete random variable */
@@ -85,9 +81,9 @@ struct Factor{
   Factor();
   ~Factor();
   Factor(const VariableList& variables,const char *_name=NULL);
-  Factor(const VarL& variables,const arr& q); 
-  void init(const VarL& variables);
-  void relinkTo(const VarL& variables);
+  Factor(const VariableList& variables,const arr& q); 
+  void init(const VariableList& variables);
+  void relinkTo(const VariableList& variables);
   void operator=(const Factor& q);
   void setP(const arr& q);           //!< f(x) = q(x)
   void setText(const char* text);    //!< f(x) = q(x)
@@ -121,7 +117,7 @@ struct MessagePair{
   Factor   *f1, *f2;    //!< the first and second factor it is attached to (if at all..)
   Variable *v1, *v2;    //!< the first and second variable it is attached to (if at all..)
   Factor   *v_to_v_fac; //!< in case of variable-to-variable message: the factor it is one-to-one associated with
-  VarL variables;       //!< the variables the messages are defined over
+  VariableList variables;       //!< the variables the messages are defined over
   
   MessagePair();
   MessagePair(Factor *_f1,Factor *_f2);  //factor-to-factor message (e.g., separate in JTA)
@@ -147,9 +143,9 @@ namespace infer{
 //-- operations on factors
 void tensorProduct(Factor& c, const Factor& a, const Factor& b);
 //[[specify remainingVars and guarantee that the output has right order!]]
-void tensorProductMarginal(Factor& c, const Factor& a, const Factor& b, const VarL& eliminateVars);
-void tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars);    //marginalVars==remaining Vars
-void tensorMaxMarginal(Factor& m,const Factor& f, const VarL& marginalVars);
+void tensorProductMarginal(Factor& c, const Factor& a, const Factor& b, const VariableList& eliminateVars);
+void tensorMarginal(Factor& m,const Factor& f, const VariableList& marginalVars);    //marginalVars==remaining Vars
+void tensorMaxMarginal(Factor& m,const Factor& f, const VariableList& marginalVars);
 void tensorMultiply(Factor& f,const Factor& m);
 void tensorDivide(Factor& f,const Factor& m);
 void tensorAdd(Factor& f,const Factor& m);
@@ -158,14 +154,14 @@ void tensorWeightedAdd(Factor& f,double w,const Factor& m);
 void checkConsistent(const Factor &f);
 
 //-- helpers for variables lists
-inline uintA ids(const VarL& vars){ uintA id(vars.N); for(uint i=0;i<id.N;i++) id(i)=vars(i)->id; return id; }
+inline uintA ids(const VariableList& vars){ uintA id(vars.N); for(uint i=0;i<id.N;i++) id(i)=vars(i)->id; return id; }
 
 //-- operations on pure factor lists
-void getJoint(Factor& joint,const FacL& factors);
-void computeEliminationOrder(VarL& elimOrder, const FacL& factors, const VarL& elimVars);
-void eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var);
-void eliminationAlgorithm(Factor& post,const FacL& factors, const VarL& remaining_vars);
-void checkConsistent(const FacL& F);
+void getJoint(Factor& joint,const FactorList& factors);
+void computeEliminationOrder(VariableList& elimOrder, const FactorList& factors, const VariableList& elimVars);
+void eliminateVariable(FactorList& factors, FactorList& newed_factors,Variable *var);
+void eliminationAlgorithm(Factor& post,const FactorList& factors, const VariableList& remaining_vars);
+void checkConsistent(const FactorList& F);
 
 //-- operations on single messages
 void collectBelief(Factor& belief,const Factor& f,const MessagePair *exclude);
@@ -175,7 +171,7 @@ void recomputeMessage_21(MessagePair& sep);
 void recomputeBatchOfMessages(MessagePairList& msgs,bool invert_order=false);
 void recomputeBatchOfMessages(MessagePairList &msgs,const boolA &msgFlips,bool invert_order);
 bool checkConsistency(const MessagePair& sep);
-bool checkConsistencyBatch(const MsgPairL& msgs);
+bool checkConsistencyBatch(const MessagePairList& msgs);
 
 //-- operations on structures (after factors have been linked to messages)
  void constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, const Factor *root);
@@ -198,7 +194,7 @@ struct LoopyBP{
   //void loopyBP_bipartite(const VariableList& vars,const FactorList& facs);
 };
 void connectThemUp(VariableList& V,FactorList& F);
-void getVariableBeliefs(MT::Array<arr>& post,const VarL& vars);
+void getVariableBeliefs(MT::Array<arr>& post,const VariableList& vars);
 }
 
 //-- pipes
@@ -206,15 +202,16 @@ void getVariableBeliefs(MT::Array<arr>& post,const VarL& vars);
 inline ostream& operator<<(ostream& os,const infer::Variable& v)    { v.write(os); return os; }
 inline ostream& operator<<(ostream& os,const infer::Factor& f)      { f.write(os); return os; }
 inline ostream& operator<<(ostream& os,const infer::MessagePair& s) { s.write(os); return os; }
-inline ostream& operator<<(ostream& os,const VarL& list)     { listWrite(list,os,"\n"); return os; }
-inline ostream& operator<<(ostream& os,const FacL& list)     { listWrite(list,os,"\n"); return os; }
-inline ostream& operator<<(ostream& os,const MsgPairL& list) { listWrite(list,os,"\n"); return os; }
+inline ostream& operator<<(ostream& os,const infer::VariableList& list)   { listWrite(list,os,"\n"); return os; }
+inline ostream& operator<<(ostream& os,const infer::FactorList& list)     { listWrite(list,os,"\n"); return os; }
+inline ostream& operator<<(ostream& os,const infer::MessagePairList& list){ listWrite(list,os,"\n"); return os; }
 
 // =======================================================================
 //
 //  inference for mixture length DBNs
 //
 
+namespace infer{
 void inferMixLengthUnstructured(
     arr& alpha, arr& beta, arr& PT, double& PR, double& ET,
     const arr& S, const arr& R, const arr& P, double gamma, uint Tmax,
@@ -222,10 +219,10 @@ void inferMixLengthUnstructured(
 
 void inferMixLengthStructured(
     infer::Factor& alpha, infer::Factor& beta, arr& PT, double& PR, double& ET,
-    const VarL& headVars, const VarL& tailVars,
-    const FacL& S, const FacL& R, const FacL& P, double gamma, uint Tmax,
+    const VariableList& headVars, const VariableList& tailVars,
+    const FactorList& S, const FactorList& R, const FactorList& P, double gamma, uint Tmax,
     bool updateMode=false);
-
+}
 
 
 //=======================================================================
@@ -249,16 +246,16 @@ std::ostream& operator<<(std::ostream& os,const TreeNode& t);
 
 //===========================================================================
 //
-// Factor Graph (obsolete!!)
+// Factor Graph (obsolete!!) (the new way is simply a list of variables and factors! (see LoopyBP example above))
 //
 namespace infer{
 struct FactorGraph {
-  VarL V;
-  FacL F;   // original factors (over cliques; kept constant)
-  FacL F_v; // dummies for variable factors; only used in case of true factor graph; all 1
+  VariableList V;
+  FactorList F;   // original factors (over cliques; kept constant)
+  FactorList F_v; // dummies for variable factors; only used in case of true factor graph; all 1
   MessagePairList messages;  // point to F / F_v
-  FacL B_c; // beliefs over clique factors (only for saving; optional)
-  FacL B_v; // beliefs over variable factors (only for saving; optional)
+  FactorList B_c; // beliefs over clique factors (only for saving; optional)
+  FactorList B_v; // beliefs over variable factors (only for saving; optional)
   
   ~FactorGraph(){ deleteAll(); }
   FactorGraph& operator=(const FactorGraph& M){
@@ -274,7 +271,7 @@ struct FactorGraph {
   // deletes beliefs and message pairs
   void deleteAll();
 
-  void setCliqueBeliefs(const FacL& fs_orig);
+  void setCliqueBeliefs(const FactorList& fs_orig);
   void resetCliqueBeliefs() {setCliqueBeliefs(F);}  // B_c
   void resetMessages();  // msg_pairs
   void resetVariableFactors();  // F_v
@@ -303,7 +300,7 @@ struct FactorGraph {
   void addF2Bmap(Factor* f, Factor* b);
   
   // factors where variable is first (i.e., the conditioned variable)
-  std::map<uint, FacL > V2F;
+  std::map<uint, FactorList > V2F;
   std::map<uint, Factor*> V2Fv;
   void setV2F();
   void addV2Fmap(Factor* f);
@@ -317,17 +314,17 @@ struct FactorGraph {
 // some helper functions
 //
 
-void write(const FacL& facs, ostream& os = cout);
-void writeNice(const VarL& vars);
-void writeNice(const FacL& individual_factors);
-void writeEdges(const FacL& individual_factors, bool withProbs = false);
-void writeExtremelyNice(const FacL& facs);
+void write(const infer::FactorList& facs, ostream& os = cout);
+void writeNice(const infer::VariableList& vars);
+void writeNice(const infer::FactorList& individual_factors);
+void writeEdges(const infer::FactorList& individual_factors, bool withProbs = false);
+void writeExtremelyNice(const infer::FactorList& facs);
 
 inline ostream& operator<<(ostream& os,const infer::FactorGraph& fg){ fg.write(os); return os; }
 
 // calculates marginal for given variables
 void getMarginal(infer::Factor& marginal, const uintA& marginalVars, infer::FactorGraph& fg);
-void getMarginal(infer::Factor& marginal, const VariableList& marginalVars, infer::FactorGraph& fg);
+void getMarginal(infer::Factor& marginal, const infer::VariableList& marginalVars, infer::FactorGraph& fg);
 
 
 
@@ -340,20 +337,20 @@ namespace infer{
 namespace JunctionTree {
   /*! triangulates graph based on factors; ensures that resulting factors are max cliques;
   corresponds to UNDIRECTED_GRAPH_ELIMINATE Jordan, Chapter 3, p. 13 */
-  void buildTriangulatedCliques(const FacL& factors, FacL& triangulatedCliques);
+  void buildTriangulatedCliques(const FactorList& factors, FactorList& triangulatedCliques);
   
   /*! Builds max spanning tree (weights of edges according to size of set of MessagePair variables */
-  void buildMaxSpanningTree(FacL& factors, const VarL& vars, FactorGraph& cliqueTree);
+  void buildMaxSpanningTree(FactorList& factors, const VariableList& vars, FactorGraph& cliqueTree);
   
   // main method
   /*! Constructs a junction tree: triangulates original graph, builds max spanning tree
   and updates probabilities &*/
-  void constructJunctionTree(FactorGraph& junctionTree, const FacL& factors, const VarL& vars);
+  void constructJunctionTree(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars);
   
   /*! Update prob dist on graph by passing messages */
   void collectAndDistributeInference(FactorGraph& junctionTree);
 
-  void junctionTreeInference(FactorGraph& junctionTree, const FacL& factors, const VarL& vars);
+  void junctionTreeInference(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars);
 
   void checkJunctionTreeProperty(FactorGraph& junctionTree);
   
@@ -374,7 +371,7 @@ namespace infer{
 namespace LoopyBP_obsolete{
 
   // with variable factors
-  void constructBipartiteFactorGraph(FactorGraph& fg, const FacL& factors);
+  void constructBipartiteFactorGraph(FactorGraph& fg, const FactorList& factors);
 
   enum PassType{ PARALLEL };
   
@@ -384,7 +381,7 @@ namespace LoopyBP_obsolete{
   void shoutMessages(Factor& f, MsgCalc calcMsgType = NO_DIV);
   
   // main method
-  void loopy_belief_propagation(FactorGraph& fg, const FacL& factors);
+  void loopy_belief_propagation(FactorGraph& fg, const FactorList& factors);
 }
 }
 
@@ -428,13 +425,13 @@ void uniformCertainNodes(infer::FactorGraph& G,intA seq,uint T,uint Mod);
 //////////////////////////////////////////////
 
 // For each var there is exactly one factor with the variable as first var.
-void check_exactlyOneConditional(VarL& vars, FacL& facs);
-void check_atLeastOneConditional(VarL& vars, FacL& facs);
+void check_exactlyOneConditional(infer::VariableList& vars, infer::FactorList& facs);
+void check_atLeastOneConditional(infer::VariableList& vars, infer::FactorList& facs);
 
 void write(const MT::Array< infer::Variable* > vars, ostream& os = cout);
 
 //[mt] only checks the registries - not the factors 
-void checkMessagePairConsistency(MsgPairL msg_pairs);
+void checkMessagePairConsistency(infer::MessagePairList msg_pairs);
 infer::MessagePair* getMessagePair(const infer::Factor* f1, const infer::Factor* f2);
 infer::Factor* getMessage(const infer::Factor* f_from, const infer::Factor* f_to);
 void writeMessage(const infer::Factor* f_from, const infer::Factor* f_to, ostream& os = cout);
@@ -442,7 +439,7 @@ void sample(infer::Factor& f,uintA& samples);//!< sample (s=discrete, x=continuo
 
 // Accessing global objects [mt] shouldn't be visible anymore
 //iSpace* get_global_space();
-void get_global_vars(VarL& vars);
+void get_global_vars(infer::VariableList& vars);
 void print_global_vars(uintA ids);
 
 
@@ -477,7 +474,7 @@ be used in case of loopy BP (for efficiency reasons) */
 // double distributeMessages(FactorGraph& fg, Factor& f, MsgCalc calcMsgType = NO_DIV);
 
 /*! Calculates posterior over the variables given in "post" using the elimination algorithm. */
-//void posteriorByElimination(FacL& factors, Factor& post);
+//void posteriorByElimination(FactorList& factors, Factor& post);
 }
 #endif
 

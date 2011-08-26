@@ -665,30 +665,34 @@ void lapack_Ainv_b_sym(arr& x,const arr& A, const arr& b);
 //!@name lists
 // @{
 
-template<class T> MT::Array<T*> getList(const MT::Array<T>& A){
-   MT::Array<T*> L;
-   resizeAs(L,A);
-   for(uint i=0;i<A.N;i++) L.elem(i) = &A.elem(i);
-   return L;
-}
-    
+/*  TODO: realize list simpler: let the Array class have a 'listMode' flag. When this flag is true, the read, write, resize, find etc routines
+will simply be behave differently */
+
 template<class T> void listWrite(const MT::Array<T*>& L,std::ostream& os,const char *ELEMSEP=" ",const char *delim=NULL);
 template<class T> void listWriteNames(const MT::Array<T*>& L,std::ostream& os);
 template<class T> void listRead(MT::Array<T*>& L,std::istream& is,const char *delim=NULL);
-template<class T> void listClone(MT::Array<T*>& L,const MT::Array<T*>& M);
-template<class T> void listCopy(MT::Array<T*>& L,const MT::Array<T*>& M);
+template<class T> void listCopy(MT::Array<T*>& L,const MT::Array<T*>& M);  //copy a list by calling the copy constructor for each element
+template<class T> void listClone(MT::Array<T*>& L,const MT::Array<T*>& M); //copy a list by calling the 'newClone' method of each element (works for virtual types)
 template<class T> void listDelete(MT::Array<T*>& L);
-template<class T> T* listFindByName(const MT::Array<T*>& L,const char* name); //->listFindByName
-template<class T> T* listFindByType(const MT::Array<T*>& L,const char* type); //->listFindByType
-
-template<class T> T* new_elem(MT::Array<T*>& L){ T *e=new T; e->index=L.N; L.append(e); return e; }
+template<class T> T* listFindValue(const MT::Array<T*>& L,const T& x);
+template<class T> T* listFindByName(const MT::Array<T*>& L,const char* name); //each element needs a 'name' (usually MT::String) 
+template<class T> T* listFindByType(const MT::Array<T*>& L,const char* type); //each element needs a 'type' (usually MT::String) 
 template<class T,class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);
 
+//TODO obsolete?
+template<class T> MT::Array<T*> getList(const MT::Array<T>& A){
+  MT::Array<T*> L;
+  resizeAs(L,A);
+  for(uint i=0;i<A.N;i++) L.elem(i) = &A.elem(i);
+  return L;
+}
+template<class T> T* new_elem(MT::Array<T*>& L){ T *e=new T; e->index=L.N; L.append(e); return e; }
 
-// -- AnyLists
+
+//-- AnyLists
 void anyListRead(AnyList& ats,std::istream& is);
 template<class T> T* anyListGet(const AnyList& L,const char *tag,uint n);
-template<class T> MT::Array<T> get(const AnyList& L,const char* tag);
+//template<class T> MT::Array<T> get(const AnyList& L,const char* tag); //TODO obsolete?
 
 //===========================================================================
 // @}

@@ -176,7 +176,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   MT::open(is,filename);
   String tag,name;
   MT::Array<MT::String> strings;
-  VarL vars;
+  VariableList vars;
   arr P;
   uint d;
   bool insidePomdp=false;
@@ -273,7 +273,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   String tag,name;
   MT::Array<MT::String> strings;
   MT::Array<MT::Array<MT::String> > values;
-  VarL vars,rewardVars;
+  VariableList vars,rewardVars;
   Variable *v;
   Factor *f;
   arr P;
@@ -344,7 +344,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   //treat the reward facs special!!
   uint j;
   Factor tmp;
-  VarL tmpVars;
+  VariableList tmpVars;
   for_list(i,v,rewardVars){
     arr val(v->dim);
     strings=values(v->id);
@@ -708,7 +708,7 @@ void mdp::createNeighorList(MDP& mdp){
 
 double mdp::checkNormalization(const MDP_structured& mdp){
   Factor post;
-  eliminationAlgorithm(post,cat(mdp.transFacs,mdp.initFacs), VarL());
+  eliminationAlgorithm(post,cat(mdp.transFacs,mdp.initFacs), VariableList());
   arr P;
   post.getP(P);
   return P.scalar();
@@ -716,7 +716,7 @@ double mdp::checkNormalization(const MDP_structured& mdp){
     
 void mdp::checkJointNormalization(const MDP_structured& mdp,const FSC_structured& fsc){
   Factor post;
-  eliminationAlgorithm(post,cat(fsc.transFacs,mdp.obsFacs,mdp.transFacs,fsc.initFacs,mdp.initFacs), VarL());
+  eliminationAlgorithm(post,cat(fsc.transFacs,mdp.obsFacs,mdp.transFacs,fsc.initFacs,mdp.initFacs), VariableList());
   arr P;
   post.getP(P);
   //cout <<post <<endl;
@@ -734,7 +734,7 @@ void mdp::collapseToFlat(MDP& mdpUn,const MDP_structured& mdp){
   post.getP(mdpUn.Pxax);
   mdpUn.Pxax.reshape(dx,da,dx);
   
-  VarL obsvars=cat(mdp.obsVars,mdp.rightVars,mdp.ctrlVars);
+  VariableList obsvars=cat(mdp.obsVars,mdp.rightVars,mdp.ctrlVars);
   Factor dummy(obsvars);
   eliminationAlgorithm(post, cat(ARRAY(&dummy),mdp.obsFacs), obsvars);
   post.getP(mdpUn.Pyxa);
@@ -744,7 +744,7 @@ void mdp::collapseToFlat(MDP& mdpUn,const MDP_structured& mdp){
   post.getP(mdpUn.Px);
   mdpUn.Px.reshape(dx);
   
-  VarL rewardvars=cat(mdp.ctrlVars,mdp.leftVars);
+  VariableList rewardvars=cat(mdp.ctrlVars,mdp.leftVars);
   Factor dummy2(rewardvars);
   eliminationAlgorithm(post, cat(ARRAY(&dummy2),mdp.rewardFacs), rewardvars);
   //eliminationAlgorithm(post, mdp.rewardFacs, ids(cat(mdp.ctrlVars,mdp.leftVars)));
@@ -957,7 +957,7 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc,const MDP& mdp,c
   uint dx=mdp.Pxax.d0, da=mdp.Pxax.d1, dy=mdp.Pyxa.d0;
   uint i,m=levels.N;
   if(da>levels(0)) MT_MSG("#actions "<<da<<" > #node0-states "<<levels(0)<<" -- that's not going to work well!");
-  VarL nodes(m),nodes_(m);
+  VariableList nodes(m),nodes_(m);
   Variable *x  = new Variable(dx ,"state(t)");
   Variable *y  = new Variable(dy ,"observation(t)");
   for(i=m;i--;) nodes(i) = new Variable(levels(i) ,STRING("node"<<i<<"(t)"));
@@ -969,7 +969,7 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc,const MDP& mdp,c
   fsc.leftVars = nodes ;
   fsc.rightVars= nodes_;
 
-  FacL Finit(m),Ftran(m);
+  FactorList Finit(m),Ftran(m);
   for(i=m;i--;) Finit(i) = new Factor(ARRAY(nodes(i)));
   Factor *Fa0  = new Factor(ARRAY(a,nodes(0)));
   if(m==1){
@@ -1008,14 +1008,14 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc,const MDP_struct
   for_list(i,v,mdp.ctrlVars) adim*=v->dim;
   
   if(adim>levels(0)) MT_MSG("#actions "<<adim<<" > #node0-states "<<levels(0)<<" -- that's not going to work well!");
-  VarL nodes(m),nodes_(m);
+  VariableList nodes(m),nodes_(m);
   for(i=m;i--;) nodes (i) = new Variable(levels(i) ,STRING("node"<<i));
   for(i=m;i--;) nodes_(i) = new Variable(levels(i) ,STRING("node"<<i<<"'"));
   fsc.vars     = cat(nodes_, nodes);
   fsc.leftVars = nodes ;
   fsc.rightVars= nodes_;
 
-  FacL Finit(m),Ftran(m);
+  FactorList Finit(m),Ftran(m);
   for(i=m;i--;) Finit(i) = new Factor(ARRAY(nodes(i)), STRING("Finit"<<i));
   Factor *Fa0  = new Factor(cat(mdp.ctrlVars,ARRAY(nodes(0))), STRING("Faction"));
   if(m==1){
