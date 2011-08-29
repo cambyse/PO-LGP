@@ -145,6 +145,34 @@ void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
   if(sig<0) sig=0.; else sig = ::sqrt(sig);
 }
 
+/** vector of covariances between test point and N+dN observation points */
+void GaussianProcess::k_star(const arr& x, arr& k){
+  uint i,N=Y.N,dN=dY.N;
+  arr xi;
+
+  if(k.N!=N+dN) k.resize(N+dN);
+  for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=cov(kernelP,x,xi); }
+  for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); k(N+i)=covF_D(dI(i),kernelP,x,xi); }
+}
+
+/** vector of covariances between test point and N+dN  observation points */
+void GaussianProcess::dk_star(const arr& x, arr& k){
+  uint i,j,N=Y.N,dN=dY.N,d=x.N;
+  arr xi;
+
+  if(k.N!=N+dN) k.resize(N+dN,d);
+  for(j=0;j<d;++j){
+    for(i=0;i<N;i++){
+      xi.referToSubDim(X,i);
+      k(i,j)=covD_F(j,kernelP,x,xi);
+    }
+    for(i=0;i<dN;i++){
+      xi.referToSubDim(dX,i);
+      k(N+i,j)=covD_D(j,dI(i),kernelP,x,xi);
+    }
+  }
+}
+
 /*****
  *
 \[

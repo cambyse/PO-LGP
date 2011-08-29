@@ -107,6 +107,8 @@ struct GaussianProcess{
   double max_var(); // the variance when no data present
   void gradient(arr& grad,const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
   void hessian(arr& hess,const arr& x);           //!< evaluate the hessian dy/dx1dx2 of the mean at some point
+  void k_star(const arr& x, arr& k);
+  void dk_star(const arr& x, arr& k);
 
   void push(const arr& x,double y){ ig2=Ginv; appendObservation(x,y); recompute(); }
   void pop(){ Ginv=ig2; X.resizeCopy(X.d0-1,X.d1); Y.resizeCopy(Y.N-1); }

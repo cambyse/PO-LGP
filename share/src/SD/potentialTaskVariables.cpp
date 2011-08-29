@@ -55,3 +55,35 @@ void PotentialFieldAlignTaskVariable::userUpdate(){
   }
   transpose(Jt,J);
 }
+
+GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
+                              ors::Graph& _ors,
+                              ShapeList& _refs,
+                              GraspObject_GP& _f){
+  refs=_refs;
+  f=&_f;
+  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+}
+
+/** $ \dfdx{\vec y_i}{\vec q} =  2 (\vec{G^{-1}}\vec\kappa) \vec\kappa'\vec Ji $
+ * need: inverse Gram, kappa, and derivative of kappa
+ */
+void GPVarianceTaskVariable::userUpdate(){
+  uint i;
+  ors::Shape *s;
+  arr xi,Ji,ki,dki,*Ginv;
+
+  y.resize(refs.N);
+  J.resize(refs.N,ors->getJointStateDimension());
+  Ginv = &f->isf_gp.gp.Ginv;
+  for_list(i,s,refs){
+    ors->kinematics(xi,s->body->index,&s->rel);
+    ors->jacobian  (Ji,s->body->index,&s->rel);
+    f->isf_gp.gp.k_star(xi,ki);
+    f->isf_gp.gp.dk_star(xi,dki);
+    f->phi(NULL,NULL,&y(i),xi);
+    J[i]() = 2. * ( ( (*Ginv) * ki ) * dki) * Ji ;/* TODO */ 
+  }
+  transpose(Jt,J);
+}
+
