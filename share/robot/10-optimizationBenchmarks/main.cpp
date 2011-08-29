@@ -226,7 +226,13 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   //V->setGains(.1,.0);
   V->updateState();
   V->y_target = ARR(1.,1.,1.); 
-  V->setInterpolatedTargetsEndPrecisions(T,tv_ISF_col_prec,0,0.,0.);
+  V->v_target = ARR(-.1,-.1,-.1); 
+  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,0.,0.);
+  uint t,M=1/4;
+  for(t=T-M;t<T;t++){
+    //V->y_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
+    V->v_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
+  } 
 
   V=listGetByName(sys.vars,"zeroLevel");
   //V->setGains(.1,.0);
@@ -234,8 +240,8 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->y_target = ARR(0,0,0); 
   //V->v_target = ARR(-1.,-1.,-1.); 
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec,0.,0.);
-  uint t,M=1/8;
 #if 0
+  uint t,M=1/8;
   for(t=T-M;t<T;t++){
     V->y_trajectory[t]() = (1./M*(T-t))*ARR(.1,.1,.1);
     V->y_prec_trajectory(t) = tv_ISF_col_prec;

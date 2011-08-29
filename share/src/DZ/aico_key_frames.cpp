@@ -381,7 +381,7 @@ sys,double time,double alpha)
       b = b_old + alpha*(b-b_old);
 
 
-      cout <<old_r<<endl;
+      //cout <<old_r<<endl;
       if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-4)||( (old_r - sys.taskCost(NULL,T,-1))<1e-3)  ) ) break;
 
       old_r = sys.taskCost(NULL,T,-1);
