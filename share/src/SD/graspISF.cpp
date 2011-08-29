@@ -12,6 +12,7 @@ configure_GraspISF(GraspISFTask* t){
   t->tv_oppose_prec =             MT::getParameter<double>("grasp_tv_oppose_prec", 1e1);
   t->tv_zeroLevel_prec_m =        MT::getParameter<double>("grasp_tv_zeroLevel_prec_m", 4e2);
   t->tv_fingAlign_prec_m =        MT::getParameter<double>("grasp_tv_fingAlign_prec_m", 1e3);
+  t->tv_fingAlign_sin_m =         MT::getParameter<double>("grasp_tv_fingAlign_sin_m", 3.1415);
   t->tv_tipAlign_prec_m =         MT::getParameter<double>("grasp_tv_tipAlign_prec_m", 1e3);
   t->tv_q_v_prec =                MT::getParameter<double>("grasp_tv_q_v_prec", 2e-1);
   t->tv_q_y_prec =                MT::getParameter<double>("grasp_tv_q_y_prec", 1e-1);
@@ -72,7 +73,7 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   // finger tipsN orientation (aligned with gradient)
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",ctrl->ors, tipsN, *graspobj);
   TV_tipAlign->y_prec = 50;
-  TV_tipAlign->setGains(.01,.0);
+  TV_tipAlign->setGains(.1,.0);
   TVs_all.append(TV_tipAlign);
 
   TV_fingAlign = new PotentialFieldAlignTaskVariable("fings z align",ctrl->ors, fingsN, *graspobj);
@@ -136,7 +137,6 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
 
     return;
   }
-  cout <<"*******************" <<endl;
 
   arr nabla_fx_t, tip_nabla_fx_t, fing_nabla_fx_t,
       tip_sig_a(3), tip_var_a(3),
@@ -189,16 +189,17 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
     tv_zeroLevel_prec_m  * (phi_tip>0?(1.-phi_tip):0); //care only at surface
 
   TV_fingAlign->active  = true;
-  TV_fingAlign->y_target = -1.;
-  //TV_fingAlign->y_prec = 1e3 * (phi_fing>0.?phi_fing:0.); //care only if palm is away from surface;
+  TV_fingAlign->y_target = ARR(-1.,-1.,-1.);
+  //TV_fingAlign->y_prec = tv_fingAlign_prec_m * (phi_fing>0.?phi_fing:0.); //care only if palm is away from surface;
   //TV_fingAlign->y_prec = SD_MAX(5e3 * sin(phi_fing*3.), 0); //care in the middle
+  //TV_fingAlign->y_prec = SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*MT_PI), 0); //care in the middle
   TV_fingAlign->y_prec =
-    SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*MT_PI), 0); //care in the middle
-  //TV_fingAlign->y_prec = SD_MAX(1e3 * sin(phi_fing*2.5), 0); //care in the middle
+    SD_MAX(tv_fingAlign_prec_m * sin(phi_fing*tv_fingAlign_sin_m), 0); //care in the middle
+  //TV_fingAlign->y_prec = SD_MAX(tv_fingAlign_prec_m  * sin(phi_fing*2.5), 0); //care in the middle
 
   // align tipsN with gradient
   TV_tipAlign->active  = true;
-  TV_tipAlign->y_target = -1.;
+  TV_tipAlign->y_target = ARR(-1.,-1.,-1.);
   TV_tipAlign->y_prec =
     tv_tipAlign_prec_m * (phi_tip>0?(1.-phi_tip):0); //care only at surface
 
@@ -240,24 +241,26 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
   TV_lim->active            = true;
   TV_col->active            = true;
   /*
-
-  TV_oppose->active  = true;
   */
+
   TV_palm->active   = true;
-  /*
+  TV_oppose->active  = true;
+  TV_fingAlign->active  = true;
   TV_zeroLevel->active  = true;
   TV_tipAlign->active  = true;
+  /*
   */
-  TV_fingAlign->active  = true;
   /* ------- end debug   ------------------------- */
 
   // output all active variables
+#if 0
   TaskVariable *v;
   cout <<"*******************" <<endl;
   for_list(i,v,TVs_all) if(v->active){
     if(v->y_prec) cout <<"TV '" <<v->name<<"' y=" <<v->y <<" y_target=" <<v->y_target <<" y_prec=" <<v->y_prec <<" y_err=" <<v->err <<endl;
     if(v->v_prec) cout <<"TV '" <<v->name<<"' v=" <<v->v <<" v_target=" <<v->v_target <<" v_prec=" <<v->v_prec <<endl;
   }
+#endif
   
   plot_append_data(ctrl);
 }

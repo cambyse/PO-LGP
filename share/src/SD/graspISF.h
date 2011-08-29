@@ -51,6 +51,7 @@ struct GraspISFTask:public TaskAbstraction{
          tv_oppose_prec,
          tv_zeroLevel_prec_m,
          tv_fingAlign_prec_m,
+         tv_fingAlign_sin_m,
          tv_tipAlign_prec_m,
          tv_q_v_prec,
          tv_q_y_prec,
