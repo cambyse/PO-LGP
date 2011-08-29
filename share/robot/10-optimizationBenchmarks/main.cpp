@@ -97,6 +97,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TaskVariable *TV_opp_tip;
   TaskVariable *TV_opp_fng;
   TaskVariable *TV_zeroLevel;
+  TaskVariable *TV_ISFcol;
   TaskVariable *TV_col, *TV_q,   *TV_lim ;
 
   /* finger tip markers.  Need to be defined in the ors file. see
@@ -133,12 +134,15 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_zeroLevel = new PotentialValuesTaskVariable("zeroLevel",
       *sys.ors, tipsN, *graspobj);
 
+  TV_ISFcol = new PotentialValuesTaskVariable("isf col",
+      *sys.ors, tipsN, *graspobj);
+
   /* feasibility and smoothness costs constraints */
   TV_col  = listGetByName(sys.vars,"collision"); 
   TV_q    = listGetByName(sys.vars,"qitself"); 
   TV_lim  = listGetByName(sys.vars,"limits"); 
 
-  TVs_all.append(ARRAY( TV_zeroLevel, TV_opp_fng, TV_opp_tip, TV_palm, TV_tipAlign,
+  TVs_all.append(ARRAY( TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm, TV_tipAlign,
         TV_col, TV_lim, TV_q));
 
   sys.setTaskVariables(TVs_all);
@@ -152,11 +156,12 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   /* configuration */
   static bool firstTime=true;
-  static double tv_palm_prec_m,
+  static double tv_palm_prec,
                 tv_opp_fng_prec,
                 tv_opp_tip_prec,
-                tv_zeroLevel_prec_m,
-                tv_tipAlign_prec_m,
+                tv_zeroLevel_prec,
+                tv_ISF_col_prec,
+                tv_tipAlign_prec,
                 comfPrec,
                 endVelPrec,
                 midPrec,
@@ -165,11 +170,12 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   if(firstTime){
     firstTime=false;
-    tv_palm_prec_m =      SD_PAR_R("grasp_tv_palm_prec_m");
-    tv_opp_tip_prec =      SD_PAR_R("grasp_tv_opp_tip_prec");
-    tv_opp_fng_prec =      SD_PAR_R("grasp_tv_opp_fng_prec");
-    tv_zeroLevel_prec_m = SD_PAR_R("grasp_tv_zeroLevel_prec_m");
-    tv_tipAlign_prec_m =  SD_PAR_R("grasp_tv_tipAlign_prec_m");
+    tv_palm_prec =        SD_PAR_R("grasp_tv_palm_prec");
+    tv_opp_tip_prec =     SD_PAR_R("grasp_tv_opp_tip_prec");
+    tv_opp_fng_prec =     SD_PAR_R("grasp_tv_opp_fng_prec");
+    tv_zeroLevel_prec =   SD_PAR_R("grasp_tv_zeroLevel_prec");
+    tv_ISF_col_prec =  SD_PAR_R("grasp_tv_ISF_col_prec");
+    tv_tipAlign_prec =    SD_PAR_R("grasp_tv_tipAlign_prec");
     colPrec =	            SD_PAR_R("reachPlanColPrec");
     comfPrec =          	SD_PAR_R("reachPlanHomeComfort");
     endVelPrec =          SD_PAR_R("reachPlanEndVelPrec");
@@ -186,44 +192,62 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   TaskVariable *V;
 
   V=listGetByName(sys.vars,"tips z align");
-  V->setGains(.01,.0);
+  //V->setGains(.01,.0);
   V->updateState();
   V->y_target = ARR(-1.,-1.,-1.);
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec,0.,0.);
 
   /* */
   V=listGetByName(sys.vars,"palm pos");
-  V->setGains(.1,.0);
+  //V->setGains(.1,.0);
   V->updateState();
   /*  target and prec for stock position var
   V->y_target = graspobj->center();
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec,0.,0.);
   */
   /*  target and prec for zeroLevel var */
   V->y_target = ARR(0);
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec,0.,0.);
   /* */
 
   V=listGetByName(sys.vars,"oppose tip");
-  V->setGains(.1,.0);
+  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_tip_prec,0.,0.);
 
   V=listGetByName(sys.vars,"oppose fng");
-  V->setGains(.1,.0);
+  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_fng_prec,0.,0.);
 
+  V=listGetByName(sys.vars,"isf col");
+  //V->setGains(.1,.0);
+  V->updateState();
+  V->y_target = ARR(1.,1.,1.); 
+  V->setInterpolatedTargetsEndPrecisions(T,tv_ISF_col_prec,0,0.,0.);
+
   V=listGetByName(sys.vars,"zeroLevel");
-  V->setGains(.1,.0);
+  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = ARR(0,0,0); 
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec_m,0.,0.);
-
-  /*
-  */
+  //V->v_target = ARR(-1.,-1.,-1.); 
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec,0.,0.);
+  uint t,M=1/8;
+#if 0
+  for(t=T-M;t<T;t++){
+    V->y_trajectory[t]() = (1./M*(T-t))*ARR(.1,.1,.1);
+    V->y_prec_trajectory(t) = tv_ISF_col_prec;
+  } 
+#endif
+#if 0
+  for(t=T-M;t<T;t++){
+    V->v_trajectory[t]() = (1./M*(T-t))*V->v_target;
+    V->v_prec_trajectory(t) = 1e5; tv_ISF_col_prec;
+  } 
+  V->v_prec_trajectory(T) = 0;//to not confuse posterior estimation
+#endif
     
   //col lim and relax
   V=listGetByName(sys.vars,"collision"); V->y=0.;  V->y_target=0.;
@@ -252,7 +276,12 @@ void problem4(){
   //setup the problem
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  GraspObject *o = new GraspObject_InfCylinder();
+  GraspObject *o;
+  switch (MT::getParameter<uint>("shape")){
+    case 0: o = new GraspObject_Sphere();break;
+    case 1: o = new GraspObject_InfCylinder();break;
+    case 2: o = new GraspObject_Cylinder1();break;
+  }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime");
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
@@ -338,7 +367,7 @@ void problem5(){
     double d=solver.step();
     if(k && d<solver.tolerance) break;
 
-    BinvFactor *= .8;
+    BinvFactor *= .75;
     solver.bwdMsg_Vinv.setDiag(BinvFactor,28);
   }
   sys2.getCosts(R,r,solver.q[T],T);
