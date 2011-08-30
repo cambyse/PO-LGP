@@ -1,4 +1,5 @@
 #include <MT/soc.h>
+#include <MT/array.h>
 #include <MT/util.h>
 #include <MT/specialTaskVariables.h>
 #include <MT/opengl.h>
@@ -6,6 +7,7 @@
 #include "SD/potentialTaskVariables.h"
 #include "SD/miscTaskVariables.h"
 #include "SD/graspObjects.h"
+#include "SD/surface_helpers.h"
 #include "DZ/aico_key_frames.h"
 
 //===========================================================================
@@ -235,6 +237,40 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,0,endVelPrec);
 }
 
+GraspObject_GP *
+random_obj(){
+
+  double gp_size=MT::Parameter<double>("gp_size");
+  arr pts, grads, mins, maxs, c;
+  uint i;      
+
+  c=MT::Parameter<arr>("center");
+
+  /* GP for random object generation and for learning */
+  GraspObject_GP *ot = new GraspObject_GP( c, gp_size);
+  GraspObject_GP *oe = new GraspObject_GP( c, gp_size);
+
+  /* generate object using sampling from GP */
+  rnd.seed(MT::Parameter<uint>("rnd_srfc_seed"));
+  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 20);
+  ot->isf_gp.gp.recompute();
+  ot->buildMesh();
+
+  /* estimate generated object by other GP */
+  ot->getEnclRect(mins,maxs);
+  get_observs_gradwalk(pts,grads, ot, mins, maxs, 20);
+  FOR1D(pts,i){
+    oe->isf_gp.gp.appendGradientObservation(pts[i], grads[i]);
+    oe->isf_gp.gp.appendObservation(pts[i], 0);
+  }
+  oe->isf_gp.gp.recompute();
+
+  /* get estimation quality */
+  SD_DBG("(V_common - V(false) / V_true = "<<ISF_common_volume(ot,oe));
+
+  return oe;
+}
+
 void
 setzeroprec(soc::SocSystem_Ors &sys, uint T){
   uint i;
@@ -257,6 +293,7 @@ void problem4(){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 3: o = random_obj(); break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime");
@@ -264,6 +301,7 @@ void problem4(){
   o->buildMesh();
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
+  gl.watch("The object");
   
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
@@ -290,6 +328,7 @@ void problem5(){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 3: o = random_obj(); break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
