@@ -152,15 +152,16 @@ void
 test_random_object_learning(uint obs=30){
   double s;
   uint i;
+  arr c=cfgenv(arr,"center");
 
   /* GP for random object generation and for learning */
-  GraspObject_GP ot( ARR(0,0,0), cfgenv(double,"gp_size"));
-  GraspObject_GP oe( ARR(0,0,0), cfgenv(double,"gp_size"));
+  GraspObject_GP ot( c, cfgenv(double,"gp_size"));
+  GraspObject_GP oe( c, cfgenv(double,"gp_size"));
   o_tru=&ot; o_est=&oe;
  
   /* generate object */
   rnd.seed(cfgenv(uint,"rnd_srfc_seed"));
-  randomGP_on_random_points(ot.isf_gp.gp, ARR(0,0,0), 1, 20);
+  randomGP_on_random_points(ot.isf_gp.gp, c, 1, 20);
   ot.buildMesh();
   show(&ot,0);
 
