@@ -155,11 +155,11 @@ test_random_object_learning(uint obs=30){
 
   /* GP for random object generation and for learning */
   GraspObject_GP ot( ARR(0,0,0), cfgenv(double,"gp_size"));
-  GraspObject_GP oe( ARR(0,0,0), MT::getParameter<double>("gp_size"));
+  GraspObject_GP oe( ARR(0,0,0), cfgenv(double,"gp_size"));
   o_tru=&ot; o_est=&oe;
  
   /* generate object */
-  rnd.seed(MT::Parameter<uint>("rnd_srfc_seed", 1));
+  rnd.seed(cfgenv(uint,"rnd_srfc_seed"));
   randomGP_on_random_points(ot.isf_gp.gp, ARR(0,0,0), 1, 20);
   ot.buildMesh();
   show(&ot,0);
@@ -253,7 +253,7 @@ test_random_object_as_mesh_with_random_vertex_observations_scale(uint obs=30){
   o_tru=&ot; o_est=&oe;
 
   /* generate object */
-  rnd.seed(MT::Parameter<uint>("rnd_srfc_seed", 1));
+  rnd.seed(cfgenv(uint,"rnd_srfc_seed"));
   randomGP_on_random_points(ot.isf_gp.gp, ARR(0,0,0), 1, 20);
   ot.isf_gp.scale_gp_params(RNDM_FUNC_SCALE, scXY);
   ot.isf_gp.scale_gp_input(RNDM_FUNC_SCALE, scXY);
@@ -335,7 +335,7 @@ init_gl_globals(){
 void
 usage(char *argv0){
 
-SD_INF(argv0<<"-- Usage:");
+SD_INF(argv0<<" -- Usage:");
 SD_INF(argv0<<" [params]");
 SD_INF("params are:\n\
 \t  with_GL \\in {0,1} use or not GL windows. Say 0 for noninteractive(simulation).,\n\
