@@ -252,7 +252,12 @@ void problem4(){
   //setup the problem
   soc::SocSystem_Ors sys;
   OpenGL gl;
-  GraspObject *o = new GraspObject_InfCylinder();
+  GraspObject *o;
+  switch (MT::getParameter<uint>("shape")){
+    case 0: o = new GraspObject_Sphere();break;
+    case 1: o = new GraspObject_InfCylinder();break;
+    case 2: o = new GraspObject_Cylinder1();break;
+  }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime");
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
