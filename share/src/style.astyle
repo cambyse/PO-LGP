@@ -1,0 +1,13 @@
+--indent=spaces=2
+--indent-switches
+--indent-preprocessor
+
+--fill-empty-lines
+--convert-tabs
+
+--style=attach
+
+--unpad-paren
+
+--keep-one-line-statements
+--keep-one-line-blocks

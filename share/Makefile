@@ -13,6 +13,9 @@ makeAll: $(ALL:%=make/%)
 
 cleanAll: $(ALL:%=clean/%) cleanProjects
 
+reformatSources:
+	astyle --options=src/astylerc "src/*/*.h" "src/*/*.cpp"
+
 make/%::
 	make -C $*
 
