@@ -312,7 +312,7 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
   CHECK((X.N && x.N==X.d1) || (dX.N && x.N==dX.d1),"dimensions don't match!");
   uint i,j,n, N=Y.N, dN=dY.N, dim;
   dim = X.d1?X.d1:dX.d1;
-  arr d2k(dim,dim,N+dN);
+  arr d2k(N+dN,dim,dim);
   static arr xn,dxn; 
   d2k.setZero();
   hess.resize(dim,dim);
@@ -322,22 +322,22 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
     xn.referToSubDim(X,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=covD_D(i,j,kernelP,x,xn);
+          d2k(n,i,j)=covD_D(i,j,kernelP,x,xn);
       }
     }
     //TODO: add inv gram
-    hess += GinvY(n) * d2k;
+    hess += GinvY(n) * d2k[n];
   }
   // derivative observations
   for(n=0;n<dN;n++){
     dxn.referToSubDim(dX,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=covDD_D(i,j,dI(n), kernelP,x,dxn);
+          d2k(n,i,j)=covDD_D(i,j,dI(n), kernelP,x,dxn);
       }
     }
     //TODO: add inv gram
-    hess += GinvY(n+N) * d2k;
+    hess += GinvY(n+N) * d2k[n];
   }
 }
 
