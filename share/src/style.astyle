@@ -1,3 +1,5 @@
+--suffix=none #no backup file
+
 --indent=spaces=2
 --indent-switches
 --indent-preprocessor
@@ -5,7 +7,7 @@
 --fill-empty-lines
 --convert-tabs
 
---style=attach
+--brackets=attach
 
 --unpad-paren
 
