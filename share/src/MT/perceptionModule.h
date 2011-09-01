@@ -7,20 +7,20 @@
 
 #include "robot_variables.h"
 
-struct PerceptionModule:public Process{
+struct PerceptionModule:public Process {
   EarlyVisionOutput *input;
   PerceptionOutput output;
   
   //INPUT
   arr objectType;
-
+  
   //PARAMETERS for camera projection 3d<->2d
-  arr Pl,Pr;
+  arr Pl, Pr;
   //AverageTrack avTrack;
   MT::Array<Object> objs;
-
+  
   PerceptionModule():Process("PerceptionModule"){ input=NULL; }
-
+  
   void open();
   void step();
   void close(){};
@@ -28,8 +28,8 @@ struct PerceptionModule:public Process{
 
 void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects);
 
-//void copyShapeInfos(ors::Graph& A,const ors::Graph& B);
-void copyBodyInfos(ors::Graph& A,const ors::Graph& B);
+//void copyShapeInfos(ors::Graph& A, const ors::Graph& B);
+void copyBodyInfos(ors::Graph& A, const ors::Graph& B);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "perceptionModule.cpp"

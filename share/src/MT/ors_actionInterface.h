@@ -24,14 +24,14 @@
 
 
 typedef unsigned int uint;
-namespace ors{
-  struct Graph;
+namespace ors {
+struct Graph;
 }
 class OdeModule;
 struct SwiftInterface;
 class OpenGL;
 
-class ActionInterface{
+class ActionInterface {
 public:
   ActionInterface();
   ~ActionInterface();
@@ -52,16 +52,16 @@ public:
   
   //posture control
   void relaxPosition();   //!< move into a relaxed position
-  void moveTo(const char *man_id,const arr& target);      //!< move into a relaxed position
+  void moveTo(const char *man_id, const arr& target);      //!< move into a relaxed position
   
   //object manipulation
-  //void catchObject(const char *man_id,const char *obj_id);  //!< catch obj_id with the body part man_id
+  //void catchObject(const char *man_id, const char *obj_id);  //!< catch obj_id with the body part man_id
   //void catchObject(const char *obj_id); //!< catch obj with finger of right hand
   //void catchObject(uint obj_id); //!< catch obj with finger of right hand
-  void dropObjectAbove(const char *obj_id,const char *rel_id);    //!< drop the body part obj_id above the object rel_id
+  void dropObjectAbove(const char *obj_id, const char *rel_id);    //!< drop the body part obj_id above the object rel_id
   void dropObjectAbove(uint obj_id, uint rel_id);
   void dropObjectAbove(uint rel_id); //!< drop obj hold in finger of right hand above the object rel_id
-  void grab(const char *man_id,const char *obj_id);
+  void grab(const char *man_id, const char *obj_id);
   void grab(uint ID);
   void grab(const char* obj);
   
@@ -73,14 +73,14 @@ public:
   void getObjects(uintA& objects); //!< return list all objects
   void getManipulableObjects(uintA& objects); //!< return list of manipulable objects
   void getObservableObjects(uintA& objs); //!< objects which are not on the bottom
-  void getObjectsAbove(uintA& list,const char *obj_id); //!< return list of objects above and in contact with id
-  void getObjectsAbove(uintA& list,const uint obj_id);
-  // 	void getObjectsBelow(uintA& list,const char *obj_id); //!< return list of objects below and in contact with id
-  // 	void getObjectsBelow(uintA& list,const uint obj_id);
+  void getObjectsAbove(uintA& list, const char *obj_id); //!< return list of objects above and in contact with id
+  void getObjectsAbove(uintA& list, const uint obj_id);
+  //  void getObjectsBelow(uintA& list, const char *obj_id); //!< return list of objects below and in contact with id
+  //  void getObjectsBelow(uintA& list, const uint obj_id);
 #endif
   bool onBottom(uint id);
   uint getTableID();
-  bool inContact(uint a,uint b);  //!< check if a and b are in contact
+  bool inContact(uint a, uint b);  //!< check if a and b are in contact
   void writeAllContacts(uint id);
   bool isUpright(uint id);        //!< check if id is upright
   uint convertObjectName2ID(const char* name); //!< returns the graph-index of the object named "name"
@@ -95,10 +95,10 @@ public:
   double* getShape(uint id);
   double* getColor(uint id);
   double* getPosition(uint id);
-	
+  
   //void printAboveBelowInfos();
-	void printObjectInfo();
-
+  void printObjectInfo();
+  
   OpenGL *gl;
 //private:
   ors::Graph *C;

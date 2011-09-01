@@ -21,13 +21,13 @@
 #  include "hslModule.h"
 #endif
 
-double attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const ors::Spline& spline,const arr& via,bool costOnly){ NIY; }
+double attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const ors::Spline& spline, const arr& via, bool costOnly){ NIY; }
 
 //===========================================================================
 
 struct SocProblem:public OptimizationProblem{
   uint count;
-  arr q,dq;
+  arr q, dq;
   soc::SocSystemAbstraction *sys;
   ostream *os;
   OpenGL *gl;
@@ -36,50 +36,50 @@ struct SocProblem:public OptimizationProblem{
 
   SocProblem(){ count=0; }
       
-  double f(arr *grad,const arr& x,int i=-1){
+  double f(arr *grad, const arr& x, int i=-1){
     sys->getq0(x[0]());
     if(!spline) q=x; else q=spline->basis*x;
-    //if(display) sys->displayTrajectory(q,NULL,display,STRING("gradient optimization -- iteration "<<-1));
-    if(os) (*os) <<std::setw(3) <<count++ <<"  time " <<MT::timerRead();
-    if(os!=&cout) cout <<'.' <<std::flush;
+    //if(display) sys->displayTrajectory(q, NULL, display, STRING("gradient optimization -- iteration " <<-1));
+    if(os) (*os)  <<std::setw(3)  <<count++  <<"  time "  <<MT::timerRead();
+    if(os!=&cout) cout  <<'.'  <<std::flush;
     double C;
     if(!grad){
-      C=sys->totalCost(NULL,q);
+      C=sys->totalCost(NULL, q);
     }else{
-      C=sys->totalCost(&dq,q);
+      C=sys->totalCost(&dq, q);
       if(!spline) *grad=dq; else *grad=spline->basis_trans*dq;
       (*grad)[0]()=0.;
     }
-    //if(display) sys->analyzeTrajectory(q,display>0);
+    //if(display) sys->analyzeTrajectory(q, display>0);
     return C;
   }
 
   /*
-  double f_att(const arr &x,void *data){
+  double f_att(const arr &x, void *data){
     arr q0;
     ((soc::SocSystemAbstraction*)data)->getq0(q0);
     ((soc::SocSystemAbstraction*)data)->setq(q0);
-    ((soc::SocSystemAbstraction*)data)->getPhi(x[0](),0);
+    ((soc::SocSystemAbstraction*)data)->getPhi(x[0](), 0);
     double C;
     static arr dummy;
     soc::SocSystemAbstraction& soci=*((soc::SocSystemAbstraction*)data);
-    if(os) (*os) <<std::setw(3) <<count++ <<"  time " <<MT::timerRead();
-    C=attractorCostAndGradient(soci,dummy,q,*spline,x,true);
+    if(os) (*os)  <<std::setw(3)  <<count++  <<"  time "  <<MT::timerRead();
+    C=attractorCostAndGradient(soci, dummy, q, *spline, x, true);
     if(gl){
       *plotClear();
       plotPoints(x);
       plotLine(x);*
       NIY;
-      ((soc::SocSystemAbstraction*)data)->displayTrajectory(q,NULL,display,STRING("gradient optimization -- iteration "<<-1));
+      ((soc::SocSystemAbstraction*)data)->displayTrajectory(q, NULL, display, STRING("gradient optimization -- iteration " <<-1));
     }
     //return ((soc::SocSystemAbstraction*)data)->computeTotalCost(q);
     return C;
   }
 
-  void df_att(arr &dx,const arr &x,void *data){
+  void df_att(arr &dx, const arr &x, void *data){
     //((soc::SocSystemAbstraction*)data)->getq0(x[0]());
     soc::SocSystemAbstraction& soci=*((soc::SocSystemAbstraction*)data);
-    attractorCostAndGradient(soci,dx,q,*spline,x,false);
+    attractorCostAndGradient(soci, dx, q, *spline, x, false);
     dx[0]()=0.;
   }
   */
@@ -102,15 +102,15 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
   MT::timerStart();
   
   //initialize trajectory
-  CHECK(q.nd==2 && q.d0==T+1 && q.d1==soci.qDim(),"please initialize trajectory!");
+  CHECK(q.nd==2 && q.d0==T+1 && q.d1==soci.qDim(), "please initialize trajectory!");
   
   if(soci.os){
-    *soci.os <<std::setw(3) <<-1 <<"  time " <<MT::timerRead(false);
+    *soci.os  <<std::setw(3)  <<-1  <<"  time "  <<MT::timerRead(false);
     //soci.computeTotalCost(q);
-    soci.analyzeTrajectory(q,display>0);
+    soci.analyzeTrajectory(q, display>0);
   }
   if(soci.gl){
-    soci.displayTrajectory(q,NULL,display,STRING("gradient optimization -- iteration "<<-1));
+    soci.displayTrajectory(q, NULL, display, STRING("gradient optimization -- iteration " <<-1));
   }
   
   bool task_spline=false;
@@ -119,19 +119,19 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
   ::ors::Spline spline;
   if(spline_points){
     uint K=spline_points;
-    spline.setUniformNonperiodicBasis(T,K,spline_degree);
+    spline.setUniformNonperiodicBasis(T, K, spline_degree);
     if(!task_spline){
-      spline.points.resize(K+1,soci.qDim());
+      spline.points.resize(K+1, soci.qDim());
       spline.points[0]() = q[0];
       spline.points[K]() = q[T];
       for(uint k=1;k<K;k++)
         spline.points[k]() = q[(uint)((double)k*T/K)];
     }else{
-      spline.points.resize(K+1,soci.yDim(0));
-      soci.setq(q[0]); soci.getPhi(spline.points[0](),0);
-      soci.setq(q[T]); soci.getPhi(spline.points[K](),0);
+      spline.points.resize(K+1, soci.yDim(0));
+      soci.setq(q[0]); soci.getPhi(spline.points[0](), 0);
+      soci.setq(q[T]); soci.getPhi(spline.points[K](), 0);
       for(uint k=1;k<K;k++){
-        soci.setq(q[(uint)((double)k*T/K)]); soci.getPhi(spline.points[k](),0);
+        soci.setq(q[(uint)((double)k*T/K)]); soci.getPhi(spline.points[k](), 0);
       }
     }
   }
@@ -154,7 +154,7 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
   double fmin;
   ::Rprop rprop;
   rprop.init(1e-2);
-  rprop.loop(x,problem,&fmin,stoppingTolerance,maxIterations);
+  rprop.loop(x, problem, &fmin, stoppingTolerance, maxIterations);
 
   if(spline_points) q = spline.basis*x; else q=x;
 }

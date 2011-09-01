@@ -26,10 +26,10 @@
 // mass on a spring
 struct soc::SocSystem_Toy_Workspace{
   double m, d; //mass and spring constant
-  double x,v;  //current position and velocity
-  double x0,v0;//initial position and velocity
+  double x, v;  //current position and velocity
+  double x0, v0;//initial position and velocity
 
-  arr W,H,Q;
+  arr W, H, Q;
   uint T;
   double tau;
 };
@@ -44,8 +44,8 @@ soc::SocSystem_Toy::SocSystem_Toy(){
   WS->W.setId(1);
   static MT::Parameter<double> hc("Hcost");
   static MT::Parameter<double> qn("Qnoise");
-  WS->H.setDiag(hc,1);
-  WS->Q.setDiag(qn,2);
+  WS->H.setDiag(hc, 1);
+  WS->Q.setDiag(qn, 2);
   WS->Q.setZero();
 }
 
@@ -60,27 +60,27 @@ uint soc::SocSystem_Toy::uDim(){   return 1; }
 uint soc::SocSystem_Toy::yDim(uint i){ return 1; }
 double soc::SocSystem_Toy::getTau(bool scaled){  return WS->tau; }
 
-void soc::SocSystem_Toy::getq0 (arr& q) { q.resize(1); q(0)=WS->x0; }
+void soc::SocSystem_Toy::getq0 (arr& q){ q.resize(1); q(0)=WS->x0; }
 void soc::SocSystem_Toy::getqv0(arr& q_){ q_.resize(2); q_(0)=WS->x0; q_(1)=WS->v0; }
-void soc::SocSystem_Toy::getqv0(arr& q,arr& qd){ q.resize(1); q(0)=WS->x0; qd.resize(1); qd(0)=WS->v0; }
-void soc::SocSystem_Toy::getW  (arr& W) { W=WS->W; }
-void soc::SocSystem_Toy::getH  (arr& H) { H=WS->H; }
-void soc::SocSystem_Toy::getQ  (arr& Q) { Q=WS->Q; }
+void soc::SocSystem_Toy::getqv0(arr& q, arr& qd){ q.resize(1); q(0)=WS->x0; qd.resize(1); qd(0)=WS->v0; }
+void soc::SocSystem_Toy::getW  (arr& W){ W=WS->W; }
+void soc::SocSystem_Toy::getH  (arr& H){ H=WS->H; }
+void soc::SocSystem_Toy::getQ  (arr& Q){ Q=WS->Q; }
 
-void soc::SocSystem_Toy::setq(const arr& q,uint t){
-  CHECK(q.N==1,"");
+void soc::SocSystem_Toy::setq(const arr& q, uint t){
+  CHECK(q.N==1, "");
   WS->x=q(0);
   WS->v=0.;
 }
 
-void soc::SocSystem_Toy::setqv(const arr& q_,uint t){
-  CHECK(q_.N==2,"");
+void soc::SocSystem_Toy::setqv(const arr& q_, uint t){
+  CHECK(q_.N==2, "");
   WS->x=q_(0);
   WS->v=q_(1);
 }
 
-void soc::SocSystem_Toy::setqv(const arr& q,const arr& qd,uint t){
-  CHECK(q.N==1 && qd.N==1,"");
+void soc::SocSystem_Toy::setqv(const arr& q, const arr& qd, uint t){
+  CHECK(q.N==1 && qd.N==1, "");
   WS->x=q(0);
   WS->v=qd(0);
 }
@@ -90,61 +90,61 @@ void soc::SocSystem_Toy::setq0AsCurrent(){
   WS->v0=WS->v;
 }
 
-void soc::SocSystem_Toy::getMF(arr& M,arr& F){
-  M.resize(1,1);
-  M(0,0)=WS->m;
+void soc::SocSystem_Toy::getMF(arr& M, arr& F){
+  M.resize(1, 1);
+  M(0, 0)=WS->m;
   F.resize(1);
   F(0)=-WS->d*WS->x;
 }
 
-void soc::SocSystem_Toy::getMinvF(arr& Minv,arr& F){
-  Minv.resize(1,1);
-  Minv(0,0)=1./WS->m;
+void soc::SocSystem_Toy::getMinvF(arr& Minv, arr& F){
+  Minv.resize(1, 1);
+  Minv(0, 0)=1./WS->m;
   F.resize(1);
   F(0)=-WS->d*WS->x;
 }
 
-bool soc::SocSystem_Toy::isConditioned(uint i,uint t){
-  CHECK(i==0,"");
+bool soc::SocSystem_Toy::isConditioned(uint i, uint t){
+  CHECK(i==0, "");
   return true;
 }
 
-void soc::SocSystem_Toy::getPhi(arr& phiq_i,uint i){
-  CHECK(i==0,"");
+void soc::SocSystem_Toy::getPhi(arr& phiq_i, uint i){
+  CHECK(i==0, "");
   phiq_i.resize(1);
   phiq_i(0)=WS->x;
 }
 
-void soc::SocSystem_Toy::getJqd(arr& jqd_i,uint i){
-  CHECK(i==0,"");
+void soc::SocSystem_Toy::getJqd(arr& jqd_i, uint i){
+  CHECK(i==0, "");
   jqd_i.resize(1);
   jqd_i(0)=WS->v;
 }
 
-void soc::SocSystem_Toy::getJJt(arr& J_i,arr& tJ_i,uint i){
-  CHECK(i==0,"");
-  J_i .resize(1,1); J_i (0,0)=1.;
-  tJ_i.resize(1,1); tJ_i(0,0)=1.;
+void soc::SocSystem_Toy::getJJt(arr& J_i, arr& tJ_i, uint i){
+  CHECK(i==0, "");
+  J_i .resize(1, 1); J_i (0, 0)=1.;
+  tJ_i.resize(1, 1); tJ_i(0, 0)=1.;
 }
 
-void soc::SocSystem_Toy::getTarget(arr& y_i,uint i,uint t){
+void soc::SocSystem_Toy::getTarget(arr& y_i, uint i, uint t){
   y_i.resize(1);
   y_i=0; //-1.;
 }
 
-void soc::SocSystem_Toy::getTargetV(arr& v_i,uint i,uint t){
+void soc::SocSystem_Toy::getTargetV(arr& v_i, uint i, uint t){
   v_i.resize(1);
   v_i=0; //3.;
 }
 
-void soc::SocSystem_Toy::getPrecision(double& prec,uint i,uint t){
+void soc::SocSystem_Toy::getPrecision(double& prec, uint i, uint t){
   static MT::Parameter<double> ep("endPrec");
   if(t==WS->T-1) prec=ep;
   else prec=0.;
   //prec=0.;
 }
 
-void soc::SocSystem_Toy::getPrecisionV(double& prec,uint i,uint t){
+void soc::SocSystem_Toy::getPrecisionV(double& prec, uint i, uint t){
   static MT::Parameter<double> ep("endPrec");
   if(t==WS->T-1) prec=ep;
   else prec=0.;
@@ -163,7 +163,7 @@ void toyDrawEnv(void *p){
   soc::SocSystem_Toy_Workspace *WS = (soc::SocSystem_Toy_Workspace*)p;
   glStandardLight(NULL);
   glDrawAxes(1.);
-  glTranslatef(0,0,WS->x);
+  glTranslatef(0, 0, WS->x);
   glDrawSphere(.1);
 #else
   NIY;
@@ -172,8 +172,8 @@ void toyDrawEnv(void *p){
 
 void soc::setupOpenGL(SocSystem_Toy &soci){
   if(!soci.gl) soci.gl=new OpenGL;
-  soci.gl->add(toyDrawEnv,soci.WS);
-  soci.gl->camera.focus(0,0,.8);
+  soci.gl->add(toyDrawEnv, soci.WS);
+  soci.gl->camera.focus(0, 0, .8);
 }
 
 

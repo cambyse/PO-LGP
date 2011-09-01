@@ -19,9 +19,9 @@
 
 #include "array.h"
 
-void TruncatedStandardGaussian(double& mean,double& var,double z);
-void TruncateGaussian(arr& a,arr& A,const arr& c,double d);
-void TruncateGaussianBySampling(arr& a,arr& A,const arr& c,const arr& coff,uint N,arr *data=NULL);
+void TruncatedStandardGaussian(double& mean, double& var, double z);
+void TruncateGaussian(arr& a, arr& A, const arr& c, double d);
+void TruncateGaussianBySampling(arr& a, arr& A, const arr& c, const arr& coff, uint N, arr *data=NULL);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "truncatedGaussian.cpp"

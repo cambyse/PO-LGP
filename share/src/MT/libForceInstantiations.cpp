@@ -27,19 +27,19 @@
 //explicit template instantiations
 
 //-- from util.h
-template void MT::getParameter(double&,const char*);
-template void MT::getParameter(uint&,const char*);
+template void MT::getParameter(double&, const char*);
+template void MT::getParameter(uint&, const char*);
 template int MT::getParameter<int>(const char*);
-template void MT::getParameter(int&,const char*);
-template void MT::getParameter(int&,const char*,const int&);
-template void MT::getParameter(bool&,const char*,const bool&);
-template int  MT::getParameter(const char*,const int&);
-template uint MT::getParameter(const char*,const uint&);
-template bool MT::getParameter(const char*,const bool&);
-template double MT::getParameter(const char*,const double&);
+template void MT::getParameter(int&, const char*);
+template void MT::getParameter(int&, const char*, const int&);
+template void MT::getParameter(bool&, const char*, const bool&);
+template int  MT::getParameter(const char*, const int&);
+template uint MT::getParameter(const char*, const uint&);
+template bool MT::getParameter(const char*, const bool&);
+template double MT::getParameter(const char*, const double&);
 template MT::String MT::getParameter(const char*);
-template MT::String MT::getParameter(const char*,const MT::String&);
-template void MT::save<uintA>(const uintA&,const char*);
+template MT::String MT::getParameter(const char*, const MT::String&);
+template void MT::save<uintA>(const uintA&, const char*);
 template bool MT::checkParameter<uint>(const char*);
 
 template void MT::Parameter<MT::String>::initialize();
