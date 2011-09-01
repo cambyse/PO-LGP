@@ -343,11 +343,21 @@ void problem5(){
   soc::SocSystem_Ors sys;
   OpenGL gl;
   GraspObject *o;
+  arr c=MT::Parameter<arr>("center");
+  double gp_size=MT::Parameter<double>("gp_size");
   switch (MT::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
     case 3: o = random_obj(); break;
+    case 4: o = new GraspObject_GP(c,gp_size);
+            std::ifstream f_gp;
+            MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+            ((GraspObject_GP*)o)->isf_gp.read(f_gp);
+            f_gp.close();
+            ((GraspObject_GP*)o)->isf_gp.gp.recompute();
+            o->m.readFile("a.tri");
+            break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
@@ -358,7 +368,7 @@ void problem5(){
   arr zero14(14);zero14.setZero();
 
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
-  o->buildMesh();
+  if (!o->m.V.N)  o->buildMesh();
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
   
