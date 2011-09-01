@@ -317,7 +317,7 @@ GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
 
   isf_gp.gp.evaluate(x,y,sig); 
 
-  if (grad) isf_gp.gp.gradient(*grad, x);
+  if (grad) {isf_gp.gp.gradient(*grad, x); *grad /= norm(*grad);}
 
   if (hess) isf_gp.gp.hessian(*hess, x);
 
