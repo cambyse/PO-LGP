@@ -142,7 +142,7 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
       tip_sig_a(3), tip_var_a(3),
       rel_tip_var_a(3), var_m(3);
   double phi,phi_tip, phi_fing;
-  uint i;
+  //uint i;
   
   phi = phiAtFrame(palm->X, nabla_fx_t,NULL);
 

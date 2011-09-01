@@ -129,7 +129,7 @@ grobi_skin_t::sense(SchunkSkinModule *skin,const byteA *const img, const byteA *
       fingers(i).tip.senseimg(*img);
       fingers(i).link.senseimg(*img);
     }else if (map){
-      NIY("Don't use this.");
+      NIY; //"Don't use this.");
       //compiler warning here due to else if() HALT() else HALT();
       //It thinks we can save one HALT, I guess. Never mind.
       /*

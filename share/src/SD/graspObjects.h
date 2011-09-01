@@ -27,7 +27,6 @@ struct MeshObject {
   virtual void glDraw(){ if(m.V.N) ors::glDraw(m); };
 };
 
-<<<<<<< HEAD:share/src/SD/graspObjects.h
 struct PotentialField : public MeshObject
 {
   arr X,dX; //vector fields for plotting
@@ -35,19 +34,10 @@ struct PotentialField : public MeshObject
   virtual double psi(arr* grad,arr *hess,const arr& x)=0;
   void getNormGrad(arr& grad,const arr& x){
     psi(&grad,NULL,x);
-=======
-struct PotentialField : public MeshObject {
-  arr X, dX; //vector fields for plotting
-  
-  virtual double psi(arr* grad, const arr& x)=0;
-  void getNormGrad(arr& grad, const arr& x){
-    psi(&grad, x);
->>>>>>> master:share/src/MT/graspObjects.h
     double d=norm(grad);
     if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
   }
   void buildMesh();
-<<<<<<< HEAD:share/src/SD/graspObjects.h
   virtual arr center(){return ARR(0,0,0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
 
 };
@@ -60,19 +50,6 @@ struct GraspObject : public PotentialField
   void getNormGrad(arr& grad,const arr& x) ;
   virtual double max_var(){return 0;}
 
-=======
-  
-};
-
-struct GraspObject : public PotentialField {
-  virtual double distanceToSurface(arr *grad, const arr& x){ NIY; }
-  virtual double psi(arr* grad, const arr& x);
-  virtual double phi(arr *grad, double *var, const arr& x);
-  void getNormGrad(arr& grad, const arr& x) ;
-  virtual double max_var(){return 0;}
-  virtual arr center(){return ARR(0, 0, 0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
-  
->>>>>>> master:share/src/MT/graspObjects.h
 };
 
 void glDrawMeshObject(void*p);
@@ -83,11 +60,7 @@ struct GraspObject_InfCylinder:public GraspObject {
   double r; //radius
   double s; //kernel parameter
   
-<<<<<<< HEAD:share/src/SD/graspObjects.h
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
-=======
-  double distanceToSurface(arr *grad, const arr& x);
->>>>>>> master:share/src/MT/graspObjects.h
   GraspObject_InfCylinder();
   GraspObject_InfCylinder(arr, arr, double, double);
   arr center(){return c;};
@@ -100,11 +73,7 @@ struct GraspObject_Cylinder1:public GraspObject { // poor man's cylinder
   double h; //height = 2 * (center to plane)
   double s; //kernel parameter
   
-<<<<<<< HEAD:share/src/SD/graspObjects.h
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
-=======
-  double distanceToSurface(arr *grad, const arr& x);
->>>>>>> master:share/src/MT/graspObjects.h
   GraspObject_Cylinder1();
   GraspObject_Cylinder1(arr, arr, double, double, double);
   arr center(){return c;};
@@ -115,11 +84,7 @@ struct GraspObject_Sphere:public GraspObject {
   double r; //radius
   double s; //kernel parameter
   
-<<<<<<< HEAD:share/src/SD/graspObjects.h
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
-=======
-  double distanceToSurface(arr *grad, const arr& x);
->>>>>>> master:share/src/MT/graspObjects.h
   GraspObject_Sphere();
   GraspObject_Sphere(arr&, double, double);
   arr center(){return c;};
@@ -131,11 +96,7 @@ struct GraspObject_GP:public GraspObject {
   double d;
   isf_gp_t isf_gp;
   
-<<<<<<< HEAD:share/src/SD/graspObjects.h
   double phi(arr *grad,arr *hess,double *var,const arr& x);
-=======
-  double phi(arr *grad, double *var, const arr& x);
->>>>>>> master:share/src/MT/graspObjects.h
   
   GraspObject_GP();
   GraspObject_GP(const arr&, const double);
