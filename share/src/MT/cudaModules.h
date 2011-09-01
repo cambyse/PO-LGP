@@ -1,9 +1,9 @@
 
 #include "array.h"
 
-struct CudaInterface{
+struct CudaInterface {
   void initMapping();
-  void resizeMapping(arr& X,int N);
+  void resizeMapping(arr& X, int N);
   
   void alloc(arr& X);
   void upload(const arr& X);

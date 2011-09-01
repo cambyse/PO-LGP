@@ -11,9 +11,9 @@ struct RobotModuleGroup;
 struct Object;
 struct PerceptionOutput;
 struct BumblebeeModule;
-namespace ors{ struct Graph; }
+namespace ors { struct Graph; }
 
-struct GuiModule:public Process{
+struct GuiModule:public Process {
   q_currentReferenceVar *q_referenceVar;
   currentProxiesVar *proxiesVar;
   PerceptionOutput *perceptionOutputVar;
@@ -25,20 +25,20 @@ struct GuiModule:public Process{
   //bool dispTrajectory;
   //int dispSteps;
   MT::Array<arr> linesToDisplay;
-
+  
   //OUTPUT (none)
   Lock processLock;
-
+  
   //INTERNAL
 #ifdef MT_QT
   QApplication *app;
 #endif
-  bool useOpengl,logData,plotData;
+  bool useOpengl, logData, plotData;
   OpenGL *gl;
-  ors::Graph *ors,*ors2;
+  ors::Graph *ors, *ors2;
   RobotModuleGroup  *ctrl;
   bool isOpen;
- 
+  
 #ifdef MT_QT
   Ui_SchunkMonitor *ui;
 #endif

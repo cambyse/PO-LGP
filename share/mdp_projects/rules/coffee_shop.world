@@ -1,0 +1,20 @@
+Variables {
+  Location
+  Coffee
+  Umbrella
+  Rain
+  HasCoffee
+  Wet
+  Reward
+  Action [buyCoffee detachCoffee takeUmbrella go]
+}
+
+Rules{
+  buyCoffee Location > Coffee
+  detachCoffee Coffee -Location > HasCoffee
+  takeUmbrella -Location > Umbrella
+  go -Umbrella Rain > Wet
+  go Location > -Location
+  go -Location > Location
+  HasCoffee -Wet > Reward
+}

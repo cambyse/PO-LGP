@@ -27,7 +27,7 @@ void problem1(){
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
-  AICO_clean solver;
+  AICO solver;
 
   cout <<"\n== second test: T step planning ==\n" <<endl;
   T=MT::getParameter<uint>("reachPlanTrajectoryLength");
@@ -59,7 +59,7 @@ void problem2(){
                                            0.,
                                            MT::getParameter<double>("reachPlanEndVelPrec"));
 
-  AICO_clean solver;
+  AICO solver;
   solver.init(sys);
   solver.iterate_to_convergence();
 }
@@ -79,7 +79,7 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
-  AICO_clean solver(sys);
+  AICO solver(sys);
   solver.iterate_to_convergence();
 }
 

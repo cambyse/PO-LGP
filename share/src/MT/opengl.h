@@ -54,42 +54,42 @@
 
 void glStandardLight(void*);
 void glStandardScene(void*);
-void glColor(float r, float g, float b,float a=1.f);
+void glColor(float r, float g, float b, float a=1.f);
 void glColor(int col);
-void glDrawText(const char* txt,float x,float y,float z);
+void glDrawText(const char* txt, float x, float y, float z);
 //void glShadowTransform();
-void glTransform (const double pos[3], const double R[12]);
-void glDrawRect(float x1,float y1,float z1,float x2,float y2,float z2,
-		float x3,float y3,float z3,float x4,float y4,float z4,
-		float r,float g,float b);
-void glDrawRect(float x1,float y1,float z1,float x2,float y2,float z2,
-		float x3,float y3,float z3,float x4,float y4,float z4);
-void glDrawRect(float x,float y,float z,float rad);
-void glDrawFloor(float x,float r,float g,float b);
-void glDrawBox(float x,float y,float z);
-void glDrawDiamond(float dx,float dy,float dz);
-void glDrawDiamond(float x,float y,float z,float dx,float dy,float dz);
+void glTransform(const double pos[3], const double R[12]);
+void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
+                float x3, float y3, float z3, float x4, float y4, float z4,
+                float r, float g, float b);
+void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
+                float x3, float y3, float z3, float x4, float y4, float z4);
+void glDrawRect(float x, float y, float z, float rad);
+void glDrawFloor(float x, float r, float g, float b);
+void glDrawBox(float x, float y, float z);
+void glDrawDiamond(float dx, float dy, float dz);
+void glDrawDiamond(float x, float y, float z, float dx, float dy, float dz);
 void glDrawSphere(float radius);
 void glDrawDisk(float radius);
-void glDrawCylinder(float radius, float length,bool closed=true);
+void glDrawCylinder(float radius, float length, bool closed=true);
 void glDrawCappedCylinder(float radius, float length);
 void glDrawAxes(double scale);
 void glDrawGridBox(float x);
-void glDrawGridBox(float x1,float y1,float z1,float x2,float y2,float z2);
+void glDrawGridBox(float x1, float y1, float z1, float x2, float y2, float z2);
 void glDrawKhepera();
 void glMakeSquare(int num);
 void glMakeStdSimplex(int num);
 void glMakeTorus(int num);
-void glDrawRobotArm(float a,float b,float c,float d,float e,float f);
+void glDrawRobotArm(float a, float b, float c, float d, float e, float f);
 uint glImageTexture(const byteA &img);
 void glDrawTexQuad(uint texture,
-                   float x1,float y1,float z1,float x2,float y2,float z2,
-                   float x3,float y3,float z3,float x4,float y4,float z4,
-                   float mulX=1.,float mulY=1.);
+                   float x1, float y1, float z1, float x2, float y2, float z2,
+                   float x3, float y3, float z3, float x4, float y4, float z4,
+                   float mulX=1., float mulY=1.);
 void glGrabImage(byteA& img);
 void glGrabDepth(byteA& depth);
 void glGrabDepth(floatA& depth);
-void glRasterImage(float x,float y,byteA &img,float zoom=1.);
+void glRasterImage(float x, float y, byteA &img, float zoom=1.);
 
 
 //===========================================================================
@@ -106,42 +106,42 @@ void glDrawDots(void *dots);
 // Camera class
 //
 
-namespace ors{
-  struct Transformation;
-  struct Vector;
-  struct Camera{
-    Transformation *X; // X.p is camera's position
-    Vector *foc;
-    
-    float heightAbs;
-    float heightAngle;
-    float whRatio;
-    float zNear,zFar;
-    arr fixedProjectionMatrix;
-
-    Camera();
-    Camera(const Camera& c){ *this=c; }
-    ~Camera();
-    Camera& operator=(const Camera& c);
-    
-    void setZero();
-    void setHeightAngle(float a);
-    void setHeightAbs(float h);
-    void setZRange(float znear,float zfar);
-    void setWHRatio(float ratio);
-    void setPosition(float x,float y,float z);
-    void setOffset(float x,float y,float z);
-    void setCameraProjectionMatrix(const arr& P); //P is in standard convention -> computes fixedProjectionMatrix in OpenGL convention from this
-    void focusOrigin();
-    void focus(float x,float y,float z);
-    void focus(const Vector& v);
-    void focus();
-    void watchDirection(float x,float y,float z);
-    void upright();
-    void glSetProjectionMatrix();
-    void glConvertToTrueDepth(double &d);
-    void glConvertToLinearDepth(double &d);
-  };
+namespace ors {
+struct Transformation;
+struct Vector;
+struct Camera {
+  Transformation *X; // X.p is camera's position
+  Vector *foc;
+  
+  float heightAbs;
+  float heightAngle;
+  float whRatio;
+  float zNear, zFar;
+  arr fixedProjectionMatrix;
+  
+  Camera();
+  Camera(const Camera& c){ *this=c; }
+  ~Camera();
+  Camera& operator=(const Camera& c);
+  
+  void setZero();
+  void setHeightAngle(float a);
+  void setHeightAbs(float h);
+  void setZRange(float znear, float zfar);
+  void setWHRatio(float ratio);
+  void setPosition(float x, float y, float z);
+  void setOffset(float x, float y, float z);
+  void setCameraProjectionMatrix(const arr& P); //P is in standard convention -> computes fixedProjectionMatrix in OpenGL convention from this
+  void focusOrigin();
+  void focus(float x, float y, float z);
+  void focus(const Vector& v);
+  void focus();
+  void watchDirection(float x, float y, float z);
+  void upright();
+  void glSetProjectionMatrix();
+  void glConvertToTrueDepth(double &d);
+  void glConvertToLinearDepth(double &d);
+};
 }
 
 
@@ -156,18 +156,18 @@ struct sOpenGL;
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
-struct OpenGL{
+struct OpenGL {
   sOpenGL *s;
-
+  
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
-  struct GLInitCall { void *classP; bool (*call)(void*,OpenGL*); };
-  struct GLHoverCall{ void *classP; bool (*call)(void*,OpenGL*); };
-  struct GLClickCall{ void *classP; bool (*call)(void*,OpenGL*); };
-  struct GLEvent    { int button,key,x,y; float dx,dy; void set(int b,int k,int _x,int _y,float _dx,float _dy){ button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
-  struct GLSelect   { int name; double dmin,dmax; };
-  struct GLView     { double le,ri,bo,to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
-    
+  struct GLInitCall { void *classP; bool (*call)(void*, OpenGL*); };
+  struct GLHoverCall { void *classP; bool (*call)(void*, OpenGL*); };
+  struct GLClickCall { void *classP; bool (*call)(void*, OpenGL*); };
+  struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy){ button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
+  struct GLSelect   { int name; double dmin, dmax; };
+  struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
+  
   //!@name data fields
   MT::Array<GLView> views;             //!< list of draw routines
   MT::Array<GLDrawer> drawers;         //!< list of draw routines
@@ -176,13 +176,13 @@ struct OpenGL{
   MT::Array<GLClickCall> clickCalls;   //!< list of click callbacks
   ors::Camera camera; //!< the camera used for projection
   String text;        //!< the text to be drawn as title within the opengl frame
-  float clearR,clearG,clearB,clearA;  //!< colors of the beackground (called in glClearColor(...))
-  bool reportEvents,reportSelects;    //!< flags for verbosity
+  float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
+  bool reportEvents, reportSelects;    //!< flags for verbosity
   bool selectOnHover;
   int pressedkey;           //!< stores the key pressed
   const char *exitkeys;     //!< additional keys to exit watch mode
   int mouse_button;         //!< stores which button was pressed
-  int mouseposx,mouseposy;  //!< current x- and y-position of mouse
+  int mouseposx, mouseposy;  //!< current x- and y-position of mouse
   int mouseView;
   bool mouseIsDown;
   MT::Array<GLSelect> selection; //!< list of all selected objects
@@ -194,74 +194,74 @@ struct OpenGL{
   arr P; //camera projection matrix
   
   //!@name constructors & destructors
-  OpenGL(const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
-  OpenGL(void *parent,const char* title="MT::OpenGL",int w=400,int h=400,int posx=-1,int posy=-1);
+  OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
   
   OpenGL *newClone() const;
   ~OpenGL();
-
+  
   //!@name adding drawing routines and callbacks
-  void add(void (*call)(void*),const void* classP=0);
-  void remove(void (*call)(void*),const void* classP=0);
-  template<class T> void add(const T& x){ add(x.staticDraw,&x); } //!< add a class or struct with a staticDraw routine
+  void add(void (*call)(void*), const void* classP=0);
+  void remove(void (*call)(void*), const void* classP=0);
+  template<class T> void add(const T& x){ add(x.staticDraw, &x); } //!< add a class or struct with a staticDraw routine
   void clear();
-  void addHoverCall(bool (*call)(void*,OpenGL*),const void* classP=0);
+  void addHoverCall(bool (*call)(void*, OpenGL*), const void* classP=0);
   void clearHoverCalls();
-  void addClickCall(bool (*call)(void*,OpenGL*),const void* classP=0);
+  void addClickCall(bool (*call)(void*, OpenGL*), const void* classP=0);
   void clearClickCalls();
-  void addView(uint view,void (*call)(void*),const void* classP=0);
-  void setViewPort(uint view,double l,double r,double b,double t);
-
+  void addView(uint view, void (*call)(void*), const void* classP=0);
+  void setViewPort(uint view, double l, double r, double b, double t);
+  
   //!@name the core draw routines (actually only for internal use)
-  void Draw(int w,int h,ors::Camera *cam=NULL);
-  void Select();  
-
+  void Draw(int w, int h, ors::Camera *cam=NULL);
+  void Select();
+  
   //!@name showing, updating, and watching
   bool update(const char *text=NULL);
   int  watch(const char *text=NULL);
   int  timedupdate(double sec);
-  void resize(int w,int h);
-  void setClearColors(float r,float g,float b,float a);
-  void unproject(double &x,double &y,double &z);
-
+  void resize(int w, int h);
+  void setClearColors(float r, float g, float b, float a);
+  void unproject(double &x, double &y, double &z);
+  
   //!@name info & I/O
   void reportSelection();
   int width();
   int height();
   void saveEPS(const char *filename);
   void about(std::ostream& os=std::cout);
-
+  
   //!@name to display image data (kind of misuse)
-  void watchImage(const byteA &img,bool wait,float zoom);
-  void watchImage(const floatA &img,bool wait,float zoom);
-  void displayGrey(const arr &x,uint d0,uint d1,bool wait,uint win);
-  void displayRedBlue(const arr &x,uint d0,uint d1,bool wait,uint win);
-
+  void watchImage(const byteA &img, bool wait, float zoom);
+  void watchImage(const floatA &img, bool wait, float zoom);
+  void displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win);
+  void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
+  
   //!@name capture routines
-  void capture(byteA &img,int w,int h,ors::Camera *cam);
-  void captureStereo(byteA &imgL,byteA &imgR,int w,int h,ors::Camera *cam,double baseline);
-
+  void capture(byteA &img, int w, int h, ors::Camera *cam);
+  void captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline);
+  
 #ifdef MT_QTGLUT
-  void createOffscreen(int width,int height);
+  void createOffscreen(int width, int height);
   void offscreenGrab(byteA& image);
-  void offscreenGrab(byteA& image,byteA& depth);
+  void offscreenGrab(byteA& image, byteA& depth);
   void offscreenGrabDepth(byteA& depth);
   void offscreenGrabDepth(floatA& depth);
 private:
-  void setOffscreen(int width,int height);
+  void setOffscreen(int width, int height);
 #endif
-
+  
 protected: //driver dependent methods
   bool loopExit;
   void redrawEvent();
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();
-
+  
 protected:
   GLEvent lastEvent;
   static uint selectionBuffer[1000];
-
+  
   void init(); //initializes camera etc
   //general callbacks (used by QT & Freeglut)
   void Key(unsigned char key, int x, int y);
@@ -269,12 +269,12 @@ protected:
   void Motion(int x, int y);
   void PassiveMotion(int x, int y);
   void Close(){ }
-  void Reshape(int w,int h);
+  void Reshape(int w, int h);
   void Special(int key, int x, int y);
   void MouseWheel(int wheel, int direction, int x, int y);
-
+  
   friend struct sOpenGL;
-  friend bool glClickUI(void *p,OpenGL *gl);
+  friend bool glClickUI(void *p, OpenGL *gl);
 };
 
 
@@ -283,22 +283,22 @@ protected:
 // simplest UI
 //
 
-class glUI{
+class glUI {
 public:
   int top;
-  struct Button{ byteA img1,img2; bool hover; uint x,y,w,h; const char* name; };
+  struct Button { byteA img1, img2; bool hover; uint x, y, w, h; const char* name; };
   MT::Array<Button> buttons;
-
+  
   glUI(){ top=-1; }
-
-  void addButton(uint x,uint y,const char *name,const char *img1=0,const char *img2=0);
+  
+  void addButton(uint x, uint y, const char *name, const char *img1=0, const char *img2=0);
   void glDraw();
-  bool checkMouse(int _x,int _y);
+  bool checkMouse(int _x, int _y);
 };
 
 void glDrawUI(void *p);
-bool glHoverUI(void *p,OpenGL *gl);
-bool glClickUI(void *p,OpenGL *gl);
+bool glHoverUI(void *p, OpenGL *gl);
+bool glClickUI(void *p, OpenGL *gl);
 
 
 #ifdef  MT_IMPLEMENTATION

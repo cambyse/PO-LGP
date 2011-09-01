@@ -9,12 +9,12 @@ using namespace infer;
 
 #define LOG_NORM_SCALE
 int DEBUG_INFER_LEVEL=0;
-#define DEBUG_INFER(l,x) if(l<=DEBUG_INFER_LEVEL){ x; }
-uint VarCount=0;
+#define DEBUG_INFER(l, x) if(l<=DEBUG_INFER_LEVEL){ x; }
+uint infer::VarCount=0;
 
 //dummy to encorde pre-main initialization
-struct infer_Init{
-  infer_Init(){ VarL::memMoveInit=1; FacL::memMoveInit=1; MsgPairL::memMoveInit=1; }
+struct infer_Init {
+  infer_Init(){ VariableList::memMoveInit=1; FactorList::memMoveInit=1; MessagePairList::memMoveInit=1; }
 } infer_init;
 
 
@@ -24,8 +24,8 @@ struct infer_Init{
 //
 
 
-//void get_vars(VarL& V, const FacL& factors);
-void getNeighbors(infer::Factor* f, FacL& neighbors);
+//void get_vars(VariableList& V, const FactorList& factors);
+void getNeighbors(infer::Factor* f, FactorList& neighbors);
 void convert_id2config(uintA& config, uint id, const uintA& varDimensions);
 uint convert_config2id(uintA& config, const uintA& varDimensions);
 uint convert_config2id(boolA truths);
@@ -33,7 +33,7 @@ int get_list_index(infer::FactorGraph& fg, infer::Factor* f);
 uint get_list_index_unsigned(infer::FactorGraph& fg, infer::Factor* f);
 
 
-void get_vars(VarL& V, const FacL& factors){
+void get_vars(VariableList& V, const FactorList& factors){
   V.clear();
   uint i, k;
   FOR1D(factors, i){
@@ -43,7 +43,7 @@ void get_vars(VarL& V, const FacL& factors){
   }
 }
 
-void getNeighbors(infer::Factor* f, FacL& neighbors){
+void getNeighbors(infer::Factor* f, FactorList& neighbors){
   neighbors.clear();
   uint i;
   FOR1D(f->messages, i){
@@ -73,7 +73,7 @@ infer::Factor* getMessage(const infer::Factor* f_from, const infer::Factor* f_to
 }
 
 void writeMessage(const infer::Factor* f_from, const infer::Factor* f_to, ostream& os){
-  os <<*getMessage(f_from, f_to);
+  os  <<*getMessage(f_from, f_to);
 }
 
 
@@ -88,7 +88,7 @@ uint get_list_index_unsigned__orig(infer::FactorGraph& fg, infer::Factor* f_orig
       break;
     i++;
   }
-  CHECK(i<fg.F.N, "Factor over " <<f_orig->varIds <<" not found in infer::FactorGraph!" <<endl);
+  CHECK(i<fg.F.N, "Factor over "  <<f_orig->varIds  <<" not found in infer::FactorGraph!"  <<endl);
   return i;
 }
 
@@ -101,26 +101,26 @@ void checkSpaceRegistry(iSpace *S){
   if(!S) S=&globalInferSpace;
   infer::Variable *v;
   infer::Factor *f;
-  uint i,j,k;
+  uint i, j, k;
   for(i=0;i<S->variables.N;i++){
     v=S->variables(i);
-    CHECK(v->space==S,"variale points to another space");
-    CHECK(v->id==i,"variable id is not the position globalVariableList registry");
+    CHECK(v->space==S, "variale points to another space");
+    CHECK(v->id==i, "variable id is not the position globalVariableList registry");
     for(j=0;j<v->factors.N;j++){
       f=v->factors(j);
       k=f->varIds.findValue(i);
-      CHECK(k<f->varIds.N,"variable's factor doesn't include the variable's id");
-      CHECK(v->dim==f->dim(k),"variable's factor thinks variable has different dim");
+      CHECK(k<f->varIds.N, "variable's factor doesn't include the variable's id");
+      CHECK(v->dim==f->dim(k), "variable's factor thinks variable has different dim");
     }
   }
   for(i=0;i<S->factors.N;i++){
     f=S->factors(i);
-    CHECK(f->space==S,"factor points to another space");
+    CHECK(f->space==S, "factor points to another space");
     for(j=0;j<f->varIds.N;j++){
       v=S->variables(f->varIds(j));
       k=v->factors.findValue(f);
-      //CHECK(k<v->factors.N,"factor's variable doesn't include the factor in its list"); [[REDO!]]
-      CHECK(f->dim(j)==v->dim,"factor's variable thinks it is of different dim");
+      //CHECK(k<v->factors.N, "factor's variable doesn't include the factor in its list"); [[REDO!]]
+      CHECK(f->dim(j)==v->dim, "factor's variable thinks it is of different dim");
     }
   }
 }
@@ -136,36 +136,36 @@ void iSpace::deleteAll(){
 }
 
 void iSpace::write(std::ostream& os) const{
-  os <<"<iSpace>"
-    <<" #variable="   <<variables.N <<endl;
-  //<<" #msg_pairs=" <<g.messages.N <<endl;
-  uint i,j;
+  os  <<"<iSpace>"
+     <<" #variable="    <<variables.N  <<endl;
+  // <<" #msg_pairs="  <<g.messages.N  <<endl;
+  uint i, j;
   for(i=0;i<variables.N;i++){
-    os <<'[' <<i <<"] " <<variables(i)->name <<' ' <<variables(i)->dim;
-    for(j=0;j<variables(i)->factors.N;j++) os <<',' <<variables(i)->factors(j)->varIds;
-    os <<endl;
-    CHECK(variables(i)->id==i,"");
+    os  <<'['  <<i  <<"] "  <<variables(i)->name  <<' '  <<variables(i)->dim;
+    for(j=0;j<variables(i)->factors.N;j++) os  <<','  <<variables(i)->factors(j)->varIds;
+    os  <<endl;
+    CHECK(variables(i)->id==i, "");
   }
-  os <<" #factors="    <<factors.N <<endl;
+  os  <<" #factors="     <<factors.N  <<endl;
   for(i=0;i<factors.N;i++){
-    os <<'[' <<i <<"] " <<*factors(i);
-    //for(j=0;j<factors(i)->varIds.N;j++) os <<',' <<variables(factors(i)->varIds(j))->name;
-    os <<endl;
+    os  <<'['  <<i  <<"] "  <<*factors(i);
+    //for(j=0;j<factors(i)->varIds.N;j++) os  <<','  <<variables(factors(i)->varIds(j))->name;
+    os  <<endl;
   }
-  os <<endl;
+  os  <<endl;
   / *
   for(i=0;i<g.messages.N;i++){
-  os <<'[' <<g.messages(i).from <<'-' <<g.messages(i).to <<"] " <<g.messages.elem(i) <<endl;
+  os  <<'['  <<g.messages(i).from  <<'-'  <<g.messages(i).to  <<"] "  <<g.messages.elem(i)  <<endl;
   }
   * /
-  os <<"\n</iSpace>" <<endl;
+  os  <<"\n</iSpace>"  <<endl;
 }
 
 
 void iSpace::writeVariables(std::ostream& os) const {
   uint i;
   for(i=0; i<variables.N; i++){
-    os <<"[" <<variables(i)->id <<"]  " <<variables(i)->name <<endl;
+    os  <<"["  <<variables(i)->id  <<"]  "  <<variables(i)->name  <<endl;
   }
 }
 
@@ -180,21 +180,21 @@ void iSpace::writeVariables(std::ostream& os) const {
 //
 
 infer::Variable::Variable(){
-  VarL::memMoveInit=1;
-  FacL::memMoveInit=1;
-  MsgPairL::memMoveInit=1;
+  VariableList::memMoveInit=1;
+  FactorList::memMoveInit=1;
+  MessagePairList::memMoveInit=1;
   factors.memMove=true;
   messages.memMove=true;
   id=-1;
 }
 
-infer::Variable::Variable(uint _dim,const char *_name){
+infer::Variable::Variable(uint _dim, const char *_name){
   id=VarCount++;
   dim=_dim;
   name=_name;
 }
 
-infer::Variable::Variable(uint _dim,const char *_name,uint _id){
+infer::Variable::Variable(uint _dim, const char *_name, uint _id){
   id=_id;
   dim=_dim;
   name=_name;
@@ -204,8 +204,8 @@ infer::Variable::~Variable(){
   if(factors.N) MT_MSG("you shouldn't destroy variables that are still linked to factors");
 }
 
-void infer::Variable::write(ostream& os) const{
-  os <<"variable " <<name <<" <" <<dim <<">";
+void infer::Variable::write(ostream& os) const {
+  os  <<"variable "  <<name  <<" <"  <<dim  <<">";
 }
 
 
@@ -222,51 +222,51 @@ void infer::Variable::write(ostream& os) const{
 void disconnectFactor(infer::Factor &f){
   uint i;
   infer::Variable *v;
-  for_list(i,v,f.variables) v->factors.removeValue(&f);
+  for_list(i, v, f.variables) v->factors.removeValue(&f);
   f.variables.clear();
   f.varIds.clear();
   f.dim.clear();
 }
 
-void infer::Factor::relinkTo(const VarL& vars){
+void infer::Factor::relinkTo(const VariableList& vars){
   uint i;
   infer::Variable *v;
-  for_list(i,v,variables) v->factors.removeValue(this);
+  for_list(i, v, variables) v->factors.removeValue(this);
   variables=vars;
-  for_list(i,v,variables) v->factors.append(this);
-  for(uint i=0;i<vars.N;i++) varIds(i)=variables(i)->id;
-  for(uint i=0;i<vars.N;i++) CHECK(dim(i)==variables(i)->dim,"relinking to variables with different dimension!");
+  for_list(i, v, variables) v->factors.append(this);
+  for(uint i=0; i<vars.N; i++) varIds(i)=variables(i)->id;
+  for(uint i=0; i<vars.N; i++) CHECK(dim(i)==variables(i)->dim, "relinking to variables with different dimension!");
 }
 
-void initFactor(infer::Factor &f,const VarL& vars){
-  disconnectFactor(f);
+void infer::Factor::init(const VariableList& vars){
+  disconnectFactor(*this);
   uint i;
   infer::Variable *v;
-  f.variables=vars;
-  f.varIds.resize(vars.N);
-  f.dim.resize(vars.N);
-  for(uint i=0;i<vars.N;i++) f.varIds(i)=vars(i)->id;
-  for(uint i=0;i<vars.N;i++) f.dim(i)   =vars(i)->dim;
-  for_list(i,v,f.variables) v->factors.append(&f);
+  variables=vars;
+  varIds.resize(vars.N);
+  dim.resize(vars.N);
+  for(uint i=0; i<vars.N; i++) varIds(i)=vars(i)->id;
+  for(uint i=0; i<vars.N; i++) dim(i)   =vars(i)->dim;
+  for_list(i, v, variables) v->factors.append(this);
 }
 
 void infer::checkConsistent(const Factor &f){
   uint i;
   infer::Variable *v;
-  CHECK(f.variables.N==f.varIds.N,"");
-  CHECK(f.variables.N==f.dim.N,"");
-  for_list(i,v,f.variables){
-    CHECK(v->id ==f.varIds(i),"");
-    CHECK(v->dim==f.dim(i),"");
+  CHECK(f.variables.N==f.varIds.N, "");
+  CHECK(f.variables.N==f.dim.N, "");
+  for_list(i, v, f.variables){
+    CHECK(v->id ==f.varIds(i), "");
+    CHECK(v->dim==f.dim(i), "");
   }
 }
 
-void infer::checkConsistent(const FacL& F){
+void infer::checkConsistent(const FactorList& F){
   uint i;
   infer::Factor *f;
-  for_list(i,f,F) checkConsistent(*f);
+  for_list(i, f, F) checkConsistent(*f);
 }
-  
+
 
 infer::Factor::Factor(){
   messages.memMove=true;
@@ -277,53 +277,53 @@ infer::Factor::~Factor(){
   disconnectFactor(*this);
 }
 
-infer::Factor::Factor(const VarL& variables,const char *_name){
-  initFactor(*this,variables);
+infer::Factor::Factor(const VariableList& variables, const char *_name){
+  init(variables);
   setOne();
   if(_name) name=_name;
 }
 
-infer::Factor::Factor(const VarL& variables,const arr& q){
-  initFactor(*this,variables);
+infer::Factor::Factor(const VariableList& variables, const arr& q){
+  init(variables);
   setP(q);
 }
 
 /*infer::Factor::Factor(const uintA& vars){
   messages.memMove=true;
-  initFactor(*this,vars);
+  init(vars);
   setOne();
 }
 
-infer::Factor::Factor(const uintA& vars,const char* text){
+infer::Factor::Factor(const uintA& vars, const char* text){
   messages.memMove=true;
-  initFactor(*this,vars);
+  init(vars);
   setText(text);
 }
 
 */
 
 void infer::Factor::operator=(const Factor& q){
-  initFactor(*this,q.variables);
+  init(q.variables);
   P=q.P; logP=q.logP;
 }
 
 void infer::Factor::setP(const arr& p){
   P = p;
-  CHECK(P.N==product(dim),"Factor set with ill-dimensioned array");
+  CHECK(P.N==product(dim), "Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;
 #ifdef LOG_NORM_SCALE
-  lognormScale(P,logP);
+  lognormScale(P, logP);
 #endif
 }
 
 void infer::Factor::setText(const char* str){
   P.setText(str);
-  CHECK(P.N==product(dim),"Factor set with ill-dimensioned array");
+  CHECK(P.N==product(dim), "Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;
 #ifdef LOG_NORM_SCALE
-  lognormScale(P,logP);
+  lognormScale(P, logP);
 #endif
 }
 
@@ -332,7 +332,7 @@ void infer::Factor::setOne(){
   P.setUni(1.);
   logP=0.;
 #ifdef LOG_NORM_SCALE
-  lognormScale(P,logP);
+  lognormScale(P, logP);
 #endif
 }
 
@@ -344,16 +344,16 @@ void infer::Factor::setUniform(){
   P.setUni(normalizedValue);
   logP=0.;
 #ifdef LOG_NORM_SCALE
-  lognormScale(P,logP);
+  lognormScale(P, logP);
   CHECK(logP == 0., "Normalizing in lognormScale failed.");
 #endif
 }
 
 void infer::Factor::setRandom(){
-  rndUniform(P,.1,1.,false);
+  rndUniform(P, .1, 1., false);
   logP=rnd.uni();
 #ifdef LOG_NORM_SCALE
-  lognormScale(P,logP);
+  lognormScale(P, logP);
 #endif
 }
 
@@ -366,68 +366,68 @@ void infer::Factor::setEvidence(uint e){
 bool infer::Factor::operator==(Factor& q){
   //uint i=P.maxIndex();
   //double ratio=P(i)/q.P(i);
-  lognormScale(P,logP,true);
-  lognormScale(q.P,q.logP,true);
+  lognormScale(P, logP, true);
+  lognormScale(q.P, q.logP, true);
   bool c1 = varIds==q.varIds;
   bool c2 = dim==q.dim;
-  bool c3 = maxDiff(P,q.P,0)<1e-10;
+  bool c3 = maxDiff(P, q.P, 0)<1e-10;
   bool c4 = fabs(logP-q.logP)/(1+fabs(logP)+fabs(q.logP))<1e-10;
   bool r = c1  &&  c2  &&  c3  &&  c4;
   //if(!r){
-    //MT_MSG("unequal table factors: " <<id <<q.id <<dim <<q.dim <<maxDiff(P,q.P) <<' ' <<logP <<' ' <<q.logP);
+  //MT_MSG("unequal table factors: "  <<id  <<q.id  <<dim  <<q.dim  <<maxDiff(P, q.P)  <<' '  <<logP  <<' '  <<q.logP);
   //}
   return r;
 }
 
-void infer::Factor::getP(arr& p) const{
+void infer::Factor::getP(arr& p) const {
   p = ::exp(logP)*P;
 }
 
-void infer::Factor::write(std::ostream& os,bool brief) const{
-  os <<"factor " <<name <<" (";
-  for(uint v=0;v<variables.N;v++){ if(v) os <<' ';  os <<variables(v)->name; }
-  os <<")";
+void infer::Factor::write(std::ostream& os, bool brief) const {
+  os  <<"factor "  <<name  <<" (";
+  for(uint v=0; v<variables.N; v++){ if(v) os  <<' ';  os  <<variables(v)->name; }
+  os  <<")";
   if(!brief){
     arr p;
     getP(p);
-    if(p.nd<=1) os <<' '; else os <<std::endl;
-    //p.write(os," ","\n     ",false);
-    p.write(os," ","\n     ","[]",true);
-    //os <<'*' <<::exp(logP) <<"=exp(" <<logP <<") ";
+    if(p.nd<=1) os  <<' '; else os  <<std::endl;
+    //p.write(os, " ", "\n     ", false);
+    p.write(os, " ", "\n     ", "[]", true);
+    //os  <<'*'  <<::exp(logP)  <<"=exp("  <<logP  <<") ";
   }
 }
 
-void infer::Factor::writeNice(std::ostream& os) const{
+void infer::Factor::writeNice(std::ostream& os) const {
   uint i;
-  os <<"[ ";
+  os  <<"[ ";
   FOR1D(variables, i)
-    os<<variables(i)->name<<"  ";
-  os <<"]";
+  os<<variables(i)->name <<"  ";
+  os  <<"]";
 }
 
 void infer::Factor::writeExtremelyNice(std::ostream& os) const {
-  writeNice(os);os<<endl;
+  writeNice(os); os<<endl;
   uint i, k;
-  for(i=0;i<P.N;i++){
-    os<<i<<": "<<P.elem(i)<<" (*"<<exp(logP)<<")     ";
+  for(i=0; i<P.N; i++){
+    os<<i <<": " <<P.elem(i) <<" (*" <<exp(logP) <<")     ";
     uintA config;
     P.getIndexTuple(config, i);
     FOR1D(variables, k){
-      os<<variables(k)->name<<"="<<config(k)<<"   ";
+      os<<variables(k)->name <<"=" <<config(k) <<"   ";
     }
     os<<endl;
   }
 }
 
-void infer::Factor::checkCondNormalization(uint left,double tol){
-  tensorCheckCondNormalization_with_logP(P,left, logP, tol);
+void infer::Factor::checkCondNormalization(uint left, double tol){
+  tensorCheckCondNormalization_with_logP(P, left, logP, tol);
 }
 
-uint infer::Factor::numberNonZeroEntries() {
+uint infer::Factor::numberNonZeroEntries(){
   uint num = 0;
   uint i;
-  FOR_ALL(P, i) {
-    if (fabs(P.elem(i) > 10e-10))
+  FOR_ALL(P, i){
+    if(fabs(P.elem(i) > 10e-10))
       num++;
   }
   return num;
@@ -444,16 +444,16 @@ infer::MessagePair::MessagePair(){
   f1=f2=NULL;
 }
 
-infer::MessagePair::MessagePair(Factor *_f1,Factor *_f2){
-  init(_f1,_f2);
+infer::MessagePair::MessagePair(Factor *_f1, Factor *_f2){
+  init(_f1, _f2);
 }
 
-infer::MessagePair::MessagePair(Variable *_v1,Variable *_v2,Factor *_v_to_v_fac){
-  init(_v1,_v2,_v_to_v_fac);
+infer::MessagePair::MessagePair(Variable *_v1, Variable *_v2, Factor *_v_to_v_fac){
+  init(_v1, _v2, _v_to_v_fac);
 }
 
-infer::MessagePair::MessagePair(Factor *_f1,Variable *_v2){
-  init(_f1,_v2);
+infer::MessagePair::MessagePair(Factor *_f1, Variable *_v2){
+  init(_f1, _v2);
 }
 
 infer::MessagePair::~MessagePair(){
@@ -463,55 +463,55 @@ infer::MessagePair::~MessagePair(){
   if(v2) v2->messages.removeValue(this);
 }
 
-void infer::MessagePair::init(Factor *_f1,Factor *_f2){
+void infer::MessagePair::init(Factor *_f1, Factor *_f2){
   f1 = _f1;
   f2 = _f2;
   v1 = v2 = NULL;
   v_to_v_fac = NULL;
   setSection(variables, f1->variables, f2->variables);
-  initFactor(m12,variables);  m12.setOne();
-  initFactor(m21,variables);  m21.setOne();
+  m12.init(variables);  m12.setOne();
+  m21.init(variables);  m21.setOne();
   f1->messages.append(this);
   f2->messages.append(this);
 }
 
-void infer::MessagePair::init(Variable *_v1,Variable *_v2,Factor *_v_to_v_fac){
+void infer::MessagePair::init(Variable *_v1, Variable *_v2, Factor *_v_to_v_fac){
   f1 = f2 = NULL;
   v1 = _v1;
   v2 = _v2;
   v_to_v_fac=_v_to_v_fac;
   variables.clear();
-  initFactor(m12,ARRAY(v2));  m12.setOne();
-  initFactor(m21,ARRAY(v1));  m21.setOne();
+  m12.init(ARRAY(v2));  m12.setOne();
+  m21.init(ARRAY(v1));  m21.setOne();
   v1->messages.append(this);
   v2->messages.append(this);
 }
-  
-void infer::MessagePair::init(Factor *_f1,Variable *_v2){
+
+void infer::MessagePair::init(Factor *_f1, Variable *_v2){
   f1 = _f1;
   f2 = NULL;
   v1 = NULL;
   v2 = _v2;
   v_to_v_fac = NULL;
   variables=ARRAY(v2);
-  initFactor(m12,variables);  m12.setOne();
-  initFactor(m21,variables);  m21.setOne();
+  m12.init(variables);  m12.setOne();
+  m21.init(variables);  m21.setOne();
   f1->messages.append(this);
   v2->messages.append(this);
 }
 
-void infer::MessagePair::write(ostream& os) const{
-  os <<"MessagePair ";
-  if(f1) os <<" fac1 " <<f1->varIds;
-  if(v1) os <<" var1 [ " <<v1->id <<" ]";
-  if(f2) os <<" fac2 " <<f2->varIds;
-  if(v2) os <<" var2 [ " <<v2->id <<" ]";
+void infer::MessagePair::write(ostream& os) const {
+  os  <<"MessagePair ";
+  if(f1) os  <<" fac1 "  <<f1->varIds;
+  if(v1) os  <<" var1 [ "  <<v1->id  <<" ]";
+  if(f2) os  <<" fac2 "  <<f2->varIds;
+  if(v2) os  <<" var2 [ "  <<v2->id  <<" ]";
 }
 
-void infer::MessagePair::writeIds(ostream& os) const{
+void infer::MessagePair::writeIds(ostream& os) const {
   NIY;
   //MT::IOraw=true;
-  //os <<"[" <<f1->varIds <<" |" <<f2->varIds <<" ]";
+  //os  <<"["  <<f1->varIds  <<" |"  <<f2->varIds  <<" ]";
   //MT::IOraw=false;
 }
 
@@ -543,65 +543,65 @@ void checkMessagePairConsistency(MT::Array<infer::MessagePair*> messages){
 //
 
 
-void infer::FactorGraph::write(std::ostream& os, bool writeBeliefs, bool writeMessages) const{
+void infer::FactorGraph::write(std::ostream& os, bool writeBeliefs, bool writeMessages) const {
   uint i;
-  os <<"<infer::FactorGraph>"<<endl;
-  //<<" #variable="   <<g.variables.dims.N
-  //        <<" #factors="    <<this->factors.N
-  //             <<" B_v="    <<this->B_v.N
-  //        <<" #msg_pairs=" <<this->messages.N <<endl;
-  //os <<g.variables <<endl;
-  os <<"Original factors (" <<this->F.N <<"):" <<endl;
-  for(i=0;i<this->F.N;i++){
-    os <<"[" <<i <<"] " <<this->F(i)->varIds<<"  "<<this->F(i)<<endl;
-//     os <<*F(i);
+  os  <<"<infer::FactorGraph>" <<endl;
+  // <<" #variable="    <<g.variables.dims.N
+  //         <<" #factors="     <<this->factors.N
+  //              <<" B_v="     <<this->B_v.N
+  //         <<" #msg_pairs="  <<this->messages.N  <<endl;
+  //os  <<g.variables  <<endl;
+  os  <<"Original factors ("  <<this->F.N  <<"):"  <<endl;
+  for(i=0; i<this->F.N; i++){
+    os  <<"["  <<i  <<"] "  <<this->F(i)->varIds<<"  " <<this->F(i) <<endl;
+//     os  <<*F(i);
     F(i)->writeExtremelyNice(os);
-//     os <<"msg: "<<F(i)->messages <<endl;
+//     os  <<"msg: " <<F(i)->messages  <<endl;
   }
-  os <<endl;
+  os  <<endl;
   if(writeBeliefs){
-    os <<"Beliefs-cliques (" <<this->B_c.N <<"):" <<endl;
-    for(i=0;i<this->B_c.N;i++){
-      os <<"[" <<i <<"] " <<this->B_c(i)->varIds <<endl;
-      os <<*B_c(i);
+    os  <<"Beliefs-cliques ("  <<this->B_c.N  <<"):"  <<endl;
+    for(i=0; i<this->B_c.N; i++){
+      os  <<"["  <<i  <<"] "  <<this->B_c(i)->varIds  <<endl;
+      os  <<*B_c(i);
     }
-    os <<endl;
-    os <<"Beliefs-vars (" <<this->B_v.N <<"):" <<endl;
-    for(i=0;i<this->B_v.N;i++){
-      os <<"[" <<i <<"] " <<this->B_v(i)->varIds <<endl;
-      os <<*B_v(i);
+    os  <<endl;
+    os  <<"Beliefs-vars ("  <<this->B_v.N  <<"):"  <<endl;
+    for(i=0; i<this->B_v.N; i++){
+      os  <<"["  <<i  <<"] "  <<this->B_v(i)->varIds  <<endl;
+      os  <<*B_v(i);
     }
-    os <<endl;
+    os  <<endl;
   }
   if(writeMessages){
-    os <<"messages (" <<this->messages.N <<"):" <<endl;
+    os  <<"messages ("  <<this->messages.N  <<"):"  <<endl;
     //     uint i1, i2;
-    for(i=0;i<this->messages.N;i++){
-      os <<"[" <<i <<"] " <<this->messages(i)<<"  ";
+    for(i=0; i<this->messages.N; i++){
+      os  <<"["  <<i  <<"] "  <<this->messages(i) <<"  ";
       //       FOR1D(factors, i1){
       //           if(factors(i1)==messages(i)->f1) break;
       //       }
       //       FOR1D(factors, i2){
       //           if(factors(i2)==messages(i)->f2) break;
       //       }
-      //       os<<i1<<"-"<<i2<<"  ";
-      os<<this->messages(i)->variables  <<" [ " <<this->messages(i)->f1->varIds <<"---" <<this->messages(i)->f2->varIds <<"]  " <<messages(i)->f1<<"  "<<messages(i)->f2 <<endl;
-      os<<"m12  "<<messages(i)->m12;
-      os<<"m21  "<<messages(i)->m21;
+      //       os<<i1 <<"-" <<i2 <<"  ";
+      os<<this->messages(i)->variables   <<" [ "  <<this->messages(i)->f1->varIds  <<"---"  <<this->messages(i)->f2->varIds  <<"]  "  <<messages(i)->f1 <<"  " <<messages(i)->f2  <<endl;
+      os<<"m12  " <<messages(i)->m12;
+      os<<"m21  " <<messages(i)->m21;
     }
   }
-  os <<"</infer::FactorGraph>" <<endl;
+  os  <<"</infer::FactorGraph>"  <<endl;
 }
 
 
 void infer::FactorGraph::writeNice(std::ostream& os) const {
   uint i, j;
-  os <<"Factors (specified by their vars):" <<endl;
-  for(i=0;i<this->B_c.N;i++){
-    os <<"[" <<i <<"] "<<endl;
-    os<<this->B_c(i)->varIds.N<<"  ";
-    os <<this->B_c(i)->varIds <<endl;
-    FOR1D(B_c(i)->variables, j){os <<B_c(i)->variables(j)->name<<"  ";}
+  os  <<"Factors (specified by their vars):"  <<endl;
+  for(i=0; i<this->B_c.N; i++){
+    os  <<"["  <<i  <<"] " <<endl;
+    os<<this->B_c(i)->varIds.N <<"  ";
+    os  <<this->B_c(i)->varIds  <<endl;
+    FOR1D(B_c(i)->variables, j){os  <<B_c(i)->variables(j)->name <<"  ";}
     os<<endl;
   }
 }
@@ -610,16 +610,16 @@ void infer::FactorGraph::writeNice(std::ostream& os) const {
 void infer::FactorGraph::writeMessagePairs(std::ostream& os) const {
   uint s;
   FOR1D(this->messages, s){
-    os <<*this->messages(s);
+    os  <<*this->messages(s);
   }
 }
 
 
-void infer::FactorGraph::writeVariableBeliefs(std::ostream& os) const{
+void infer::FactorGraph::writeVariableBeliefs(std::ostream& os) const {
   uint i;
-  os <<"Variable beliefs:"<<endl;
+  os  <<"Variable beliefs:" <<endl;
   FOR1D(B_v, i){
-    os <<*B_v(i)<<endl;
+    os  <<*B_v(i) <<endl;
   }
 }
 
@@ -627,12 +627,12 @@ void infer::FactorGraph::writeVariableBeliefs(std::ostream& os) const{
 void infer::FactorGraph::checkCondNormalization_B_c(double tol){
   uint i;
   FOR1D(B_c, i){
-    B_c(i)->checkCondNormalization(1,tol);
+    B_c(i)->checkCondNormalization(1, tol);
   }
 }
 
 
-void infer::FactorGraph::setCliqueBeliefs(const FacL& fs_orig){
+void infer::FactorGraph::setCliqueBeliefs(const FactorList& fs_orig){
   uint i;
   // build belief factors if needed
   Factor* b;
@@ -712,7 +712,7 @@ infer::Factor* infer::FactorGraph::getBelief(Factor* f_orig){
     return B_c(idx);
   else {
     idx = F_v.findValue(f_orig);
-    CHECK(idx>=0, "unknown factor "<<f_orig);
+    CHECK(idx>=0, "unknown factor " <<f_orig);
     return B_v(idx);
   }
 }
@@ -749,7 +749,7 @@ void infer::FactorGraph::setV2F(){
   if(!V2F.empty()) V2F.clear();
   uint i, k;
   FOR1D(V, i){
-    FacL dummy;
+    FactorList dummy;
     V2F[V(i)->id] = dummy;
     FOR1D(F, k){
       if(F(k)->varIds(0)==V(i)->id){
@@ -766,63 +766,63 @@ void infer::FactorGraph::addV2Fmap(Factor* f){
 
 // void infer::FactorGraph::checkFaithfulness(){
 //   uint DEBUG=0;
-//   if(DEBUG>0){cout<<"checkFaithfulness [START]"<<endl;}
+//   if(DEBUG>0){cout <<"checkFaithfulness [START]" <<endl;}
 //   uint i, k;
 //   // for clique factors
-//   if(DEBUG>0){cout<<"Checking normal factors:"<<endl;}
+//   if(DEBUG>0){cout <<"Checking normal factors:" <<endl;}
 //   FOR1D(B_c, i){
-//     if(DEBUG>0){cout<<"Belief is:"<<endl<<*B_c(i);}
+//     if(DEBUG>0){cout <<"Belief is:" <<endl <<*B_c(i);}
 //     Factor product(B_c(i)->varIds);
 //     product.setOne();
-//     if(DEBUG>0){cout<<"Multiplying:"<<endl;}
-//     if(DEBUG>0){cout<<"* orig factor:"<<endl<<*F(i);}
+//     if(DEBUG>0){cout <<"Multiplying:" <<endl;}
+//     if(DEBUG>0){cout <<"* orig factor:" <<endl <<*F(i);}
 //     tensorMultiply(product, *F(i));
 //     FOR1D(B_c(i)->messages, k){
 //       if(B_c(i)->messages(k)->f1 == B_c(i)){
-//         if(DEBUG>0){cout<<"* msg:"<<endl<<B_c(i)->messages(k)->m21;}
+//         if(DEBUG>0){cout <<"* msg:" <<endl <<B_c(i)->messages(k)->m21;}
 //         tensorMultiply(product, B_c(i)->messages(k)->m21);
 //       }
 //       else if(B_c(i)->messages(k)->f2 == B_c(i)){
-//         if(DEBUG>0){cout<<"* msg:"<<endl<<B_c(i)->messages(k)->m12;}
+//         if(DEBUG>0){cout <<"* msg:" <<endl <<B_c(i)->messages(k)->m12;}
 //         tensorMultiply(product, B_c(i)->messages(k)->m12);
 //       }
 //       else HALT("Impossible!");
 //     }
-//     if(DEBUG>0){cout<<"Product is:"<<endl<<product;}
+//     if(DEBUG>0){cout <<"Product is:" <<endl <<product;}
 //     if(!(product == *B_c(i))){
-//       cerr<<"Product:"<<endl<<product<<endl;
-//       cerr<<"*B_c(i):"<<endl<<*B_c(i)<<endl;
-//       CHECK(product == *B_c(i), "Faithfulness failed for factor over "<<B_c(i)->varIds);
+//       cerr <<"Product:" <<endl <<product <<endl;
+//       cerr <<"*B_c(i):" <<endl <<*B_c(i) <<endl;
+//       CHECK(product == *B_c(i), "Faithfulness failed for factor over " <<B_c(i)->varIds);
 //     }
 //   }
-//   if(DEBUG>0){cout<<"Checking variable factors:"<<endl;}
+//   if(DEBUG>0){cout <<"Checking variable factors:" <<endl;}
 //   // for variable factors
 //   FOR1D(B_v, i){
-//     if(DEBUG>0){cout<<"Belief is:"<<endl<<*B_v(i);}
+//     if(DEBUG>0){cout <<"Belief is:" <<endl <<*B_v(i);}
 //     Factor product(B_v(i)->varIds);
 //     product.setOne();
-//     if(DEBUG>0){cout<<"Multiplying:"<<endl;}
+//     if(DEBUG>0){cout <<"Multiplying:" <<endl;}
 //     FOR1D(B_v(i)->messages, k){
 //       if(B_v(i)->messages(k)->f1 == B_v(i)){
-//         if(DEBUG>0){cout<<"* msg:"<<endl<<B_v(i)->messages(k)->m21;}
+//         if(DEBUG>0){cout <<"* msg:" <<endl <<B_v(i)->messages(k)->m21;}
 //         tensorMultiply(product, B_v(i)->messages(k)->m21);
 //       }
 //       else if(B_v(i)->messages(k)->f2 == B_v(i)){
-//         if(DEBUG>0){cout<<"* msg:"<<endl<<B_v(i)->messages(k)->m12;}
+//         if(DEBUG>0){cout <<"* msg:" <<endl <<B_v(i)->messages(k)->m12;}
 //         tensorMultiply(product, B_v(i)->messages(k)->m12);
 //       }
 //       else HALT("Impossible!");
 //     }
-//     if(DEBUG>0){cout<<"Product is:"<<endl<<product;}
+//     if(DEBUG>0){cout <<"Product is:" <<endl <<product;}
 //     if(!(product == *B_v(i))){
-//       cerr<<"Product:"<<endl<<product<<endl;
-//       FOR1D(product.P, k){cout<<product.P.elem(k)<<endl;}
-//       cerr<<"*B_v(i):"<<endl<<*B_v(i)<<endl;
-//       FOR1D(B_v(i)->P, k){cout<<B_v(i)->P.elem(k)<<endl;}
-//       CHECK(product == *B_v(i), "Faithfulness failed for factor over "<<B_v(i)->varIds);
+//       cerr <<"Product:" <<endl <<product <<endl;
+//       FOR1D(product.P, k){cout <<product.P.elem(k) <<endl;}
+//       cerr <<"*B_v(i):" <<endl <<*B_v(i) <<endl;
+//       FOR1D(B_v(i)->P, k){cout <<B_v(i)->P.elem(k) <<endl;}
+//       CHECK(product == *B_v(i), "Faithfulness failed for factor over " <<B_v(i)->varIds);
 //     }
 //   }
-//   if(DEBUG>0){cout<<"checkFaithfulness [END]"<<endl;}
+//   if(DEBUG>0){cout <<"checkFaithfulness [END]" <<endl;}
 // }
 
 
@@ -838,8 +838,8 @@ void get_vars(infer::FactorGraph& fg, uintA& varIds){
 // cf-->vf  iff  variable in vf is the one that is conditioned on in cf (the first one there)
 // cf<--vf  otherwise
 #if 0
-void infer::LoopyBP::constructBipartiteinfer::FactorGraph(infer::FactorGraph& fg, const FacL& factors){
-  uint i,j;
+void infer::LoopyBP::constructBipartiteinfer::FactorGraph(infer::FactorGraph& fg, const FactorList& factors){
+  uint i, j;
   //copy factors
   fg.F = factors;
   //generate new variable factors
@@ -871,14 +871,14 @@ void infer::LoopyBP::constructBipartiteinfer::FactorGraph(infer::FactorGraph& fg
     f->setOne();
     fg.B_v.append(f);
   }
-
+  
   fg.resetMessages();
   fg.setF2Bmap();
   fg.setV2F();
   fg.setV2Fv();
 }
 #else
-void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& fg, const FacL& factors){
+void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& fg, const FactorList& factors){
   uint i, k;
   // (1) variables
   get_vars(fg.V, factors);
@@ -926,91 +926,91 @@ void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& 
 
 
 //! collects a belief at a factor, optionally exluding one incoming message
-void infer::collectBelief(Factor& belief,const Factor& f,const infer::MessagePair *exclude){
+void infer::collectBelief(Factor& belief, const Factor& f, const infer::MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
   belief = f;
-  for_list(i,s,f.messages){
+  for_list(i, s, f.messages){
     if(s==exclude) continue;
     if(s->f1==&f){
-      tensorMultiply(belief,s->m21);
+      tensorMultiply(belief, s->m21);
     }else{
-      CHECK(s->f2==&f,"");
-      tensorMultiply(belief,s->m12);
+      CHECK(s->f2==&f, "");
+      tensorMultiply(belief, s->m12);
     }
   }
 }
 
 //! collects a belief at a factor, optionally exluding one incoming message
-void infer::collectBelief(Factor& belief,Variable *v,const MessagePair *exclude){
+void infer::collectBelief(Factor& belief, Variable *v, const MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
-  initFactor(belief,ARRAY(v));
+  belief.init(ARRAY(v));
   belief.setOne();
-  for_list(i,s,v->messages){
+  for_list(i, s, v->messages){
     if(s==exclude) continue;
     if(s->v1==v){
-      tensorMultiply(belief,s->m21);
+      tensorMultiply(belief, s->m21);
     }else{
-      CHECK(s->v2==v,"");
-      tensorMultiply(belief,s->m12);
+      CHECK(s->v2==v, "");
+      tensorMultiply(belief, s->m12);
     }
   }
 }
 
 //! collects a belief at f1 and assigned m12 to its marginal
 void infer::recomputeMessage_12(MessagePair& sep){
-  CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1),"");
-  CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2),"");
+  CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1), "");
+  CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2), "");
   Factor belief;
   if(sep.f1){ //factor-to-variable or factor-to-factor
-    collectBelief(belief,*sep.f1,&sep);
-    tensorMarginal(sep.m12,belief,sep.variables);
-  }else if(sep.v1 && sep.v2){ //variable-to-variable
-    collectBelief(belief,sep.v1,&sep);
+    collectBelief(belief, *sep.f1, &sep);
+    tensorMarginal(sep.m12, belief, sep.variables);
+  } else if(sep.v1 && sep.v2){ //variable-to-variable
+    collectBelief(belief, sep.v1, &sep);
     tensorProductMarginal(sep.m12, *sep.v_to_v_fac, belief, ARRAY(sep.v1));
-  }else if(sep.v1 && sep.f2){ //variable-to-factor
-    collectBelief(sep.m12,sep.v1,&sep);
+  } else if(sep.v1 && sep.f2){ //variable-to-factor
+    collectBelief(sep.m12, sep.v1, &sep);
   }else{ NIY; }
 }
 
 //! collects a belief at f2 and assigned m21 to its marginal
 void infer::recomputeMessage_21(MessagePair& sep){
-  CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1),"");
-  CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2),"");
+  CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1), "");
+  CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2), "");
   Factor belief;
   if(sep.f2){ //factor-to-variable or factor-to-factor
-    collectBelief(belief,*sep.f2,&sep);
-    tensorMarginal(sep.m21,belief,sep.variables);
-  }else if(sep.v2 && sep.v1){ //variable-to-variable
-    collectBelief(belief,sep.v2,&sep);
+    collectBelief(belief, *sep.f2, &sep);
+    tensorMarginal(sep.m21, belief, sep.variables);
+  } else if(sep.v2 && sep.v1){ //variable-to-variable
+    collectBelief(belief, sep.v2, &sep);
     tensorProductMarginal(sep.m21, *sep.v_to_v_fac, belief, ARRAY(sep.v2));
-  }else if(sep.v2 && sep.f1){ //variable-to-factor
-    collectBelief(sep.m21,sep.v2,&sep);
+  } else if(sep.v2 && sep.f1){ //variable-to-factor
+    collectBelief(sep.m21, sep.v2, &sep);
   }else{ NIY; }
 }
 
 //! checks that marginals of connected factors are equal and the same as m12*m21
 bool infer::checkConsistency(const MessagePair& sep){
-  Factor fmu1,fmu2,f1_marg,f2_marg,m12_m21;
-
-  collectBelief(fmu1,*sep.f1,0);
+  Factor fmu1, fmu2, f1_marg, f2_marg, m12_m21;
+  
+  collectBelief(fmu1, *sep.f1, 0);
   tensorMarginal(f1_marg, fmu1, sep.variables);
-
-  collectBelief(fmu2,*sep.f2,0);
+  
+  collectBelief(fmu2, *sep.f2, 0);
   tensorMarginal(f2_marg, fmu2, sep.variables);
-
+  
   m12_m21=sep.m12;
-  tensorMultiply(m12_m21,sep.m21);
-
-  CHECK(f1_marg==f2_marg,"marginals inconsistent");
-  CHECK(f1_marg==m12_m21,"marginals inconsistent");
-  CHECK(m12_m21==f2_marg,"marginals inconsistent");
+  tensorMultiply(m12_m21, sep.m21);
+  
+  CHECK(f1_marg==f2_marg, "marginals inconsistent");
+  CHECK(f1_marg==m12_m21, "marginals inconsistent");
+  CHECK(m12_m21==f2_marg, "marginals inconsistent");
   return true;
 }
 
 //! checks a whole list of messages
-bool infer::checkConsistencyBatch(const MsgPairL& msgs){
+bool infer::checkConsistencyBatch(const MessagePairList& msgs){
   uint i;
   FOR1D(msgs, i) checkConsistency(*msgs(i));
   return true;
@@ -1021,101 +1021,100 @@ bool infer::checkConsistencyBatch(const MsgPairL& msgs){
 // Marc's eq (5) and (7)
 void infer::computeMessage_noDiv(Factor& f_from, Factor& f_to){
   uint DEBUG = 0;
-  if(DEBUG>0){cout<<"computeMessage_noDivision [START]"<<endl;}
+  if(DEBUG>0){cout <<"computeMessage_noDivision [START]" <<endl;}
   uint i;
   FOR1D(f_from.messages, i){
     if(f_from.messages(i)->f1 == &f_to){
       recomputeMessage_21(*f_from.messages(i));
       break;
-    }
-    else if(f_from.messages(i)->f2 == &f_to){
+    } else if(f_from.messages(i)->f2 == &f_to){
       recomputeMessage_12(*f_from.messages(i));
       break;
     }
   }
   CHECK(f_from.messages.N > i, "Factors don't have a MessagePair!");
-  if(DEBUG>0){cout<<"computeMessage_noDivision [END]"<<endl;}
+  if(DEBUG>0){cout <<"computeMessage_noDivision [END]" <<endl;}
 }
 
 
 void infer::computeMessage_withDiv(Factor& f_from, Factor& f_to){
   uint DEBUG = 0;
-  if(DEBUG>0){cout<<"calcMessage [START]"<<endl;}
+  if(DEBUG>0){cout <<"calcMessage [START]" <<endl;}
   // find MessagePair
   infer::MessagePair* s = getMessagePair(&f_from, &f_to);
   if(&f_from == s->f2){
-    if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s->f1->varIds<<endl;}
+    if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s->f1->varIds<<endl;}
     if(DEBUG > 2){
-      cout <<"Message 2 --> 1"<<endl;
-      cout <<"f_from: " <<endl <<f_from;
+      cout  <<"Message 2 --> 1" <<endl;
+      cout  <<"f_from: "  <<endl  <<f_from;
     }
     Factor belief;
     collectBelief(belief, f_from, 0);
     tensorMarginal(s->m21, belief, s->variables);
     if(DEBUG>2){
-      cout <<"Belief over f_from: " <<endl <<belief;
-      cout <<"Old msg in other direction (m12): " <<endl <<s->m12;
+      cout  <<"Belief over f_from: "  <<endl  <<belief;
+      cout  <<"Old msg in other direction (m12): "  <<endl  <<s->m12;
     }
     tensorDivide(s->m21, s->m12);
-    if(DEBUG > 1) cout <<"New msg (m21): " <<endl <<s->m21;
+    if(DEBUG > 1) cout  <<"New msg (m21): "  <<endl  <<s->m21;
   }
   // message m12
   else {
-    if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s->f2->varIds<<endl;}
+    if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s->f2->varIds<<endl;}
     if(DEBUG > 2){
-      cout <<"Message 1 --> 2"<<endl;
-      cout <<"f_from: " <<endl <<f_from <<endl;
+      cout  <<"Message 1 --> 2" <<endl;
+      cout  <<"f_from: "  <<endl  <<f_from  <<endl;
     }
     Factor belief;
     collectBelief(belief, f_from, 0);
     tensorMarginal(s->m12, belief, s->variables);
     if(DEBUG>2){
-      cout <<"Belief over f_from: " <<endl <<belief;
-      cout <<"Old msg in other direction (m21): " <<endl <<s->m21;
+      cout  <<"Belief over f_from: "  <<endl  <<belief;
+      cout  <<"Old msg in other direction (m21): "  <<endl  <<s->m21;
     }
     tensorDivide(s->m12, s->m21);
-    if(DEBUG > 1) cout <<"New msg (m12): " <<endl <<s->m12;
+    if(DEBUG > 1) cout  <<"New msg (m12): "  <<endl  <<s->m12;
   }
-  if(DEBUG>0){cout<<"lbp_calcMessage [END]"<<endl;}
+  if(DEBUG>0){cout <<"lbp_calcMessage [END]" <<endl;}
 }
 
 
 void infer::computeMessage_noDiv(Factor& f_from, Factor& b_from, Factor& f_to){
   HALT("this is actually with div...");
   uint DEBUG = 0;
-  if(DEBUG>0){cout<<"calcMessage [START]"<<endl;}
+  if(DEBUG>0){cout <<"calcMessage [START]" <<endl;}
   // find MessagePair
   infer::MessagePair* s = getMessagePair(&f_from, &f_to);
   if(&f_from == s->f2){
-    if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s->f1->varIds<<endl;}
+    if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s->f1->varIds<<endl;}
     if(DEBUG > 2){
-      cout <<"Message 2 --> 1"<<endl;
-      cout <<"f_from: " <<endl <<f_from;
+      cout  <<"Message 2 --> 1" <<endl;
+      cout  <<"f_from: "  <<endl  <<f_from;
     }
     tensorMarginal(s->m21, b_from, s->variables);
     if(DEBUG>2){
-      cout <<"Marginalised f_from: " <<endl <<s->m21;
-      cout <<"Old msg in other direction (m12): " <<endl <<s->m12;
+      cout  <<"Marginalised f_from: "  <<endl  <<s->m21;
+      cout  <<"Old msg in other direction (m12): "  <<endl  <<s->m12;
     }
     tensorDivide(s->m21, s->m12);
-    if(DEBUG > 1) cout <<"New msg (m21): " <<endl <<s->m21;
+    if(DEBUG > 1) cout  <<"New msg (m21): "  <<endl  <<s->m21;
   }
   // message m12
   else {
-    if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s->f2->varIds<<endl;}
+    if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s->f2->varIds<<endl;}
     if(DEBUG > 2){
-      cout <<"Message 1 --> 2"<<endl;
-      cout <<"f_from: " <<endl <<f_from <<endl;
+      cout  <<"Message 1 --> 2" <<endl;
+      cout  <<"f_from: "  <<endl  <<f_from  <<endl;
     }
     tensorMarginal(s->m12, b_from, s->variables);
     if(DEBUG>2){
-      cout <<"Marginalised f_from: " <<endl <<s->m12;
-      cout <<"Old msg in other direction (m21): " <<endl <<s->m21;
+      cout  <<"Marginalised f_from: "  <<endl  <<s->m12;
+      cout  <<"Old msg in other direction (m21): "  <<endl  <<s->m21;
     }
     tensorDivide(s->m12, s->m21);
-    if(DEBUG > 1) cout <<"New msg (m12): " <<endl <<s->m12;
+    if(DEBUG > 1) cout  <<"New msg (m12): "  <<endl  <<s->m12;
   }
-  if(DEBUG>0){cout<<"lbp_calcMessage [END]"<<endl;}
+  if(DEBUG>0){cout <<"lbp_calcMessage [END]" <<endl;}
 }
 
 
@@ -1129,13 +1128,13 @@ double infer::passMessage(Factor& f_from, Factor& f_to, Factor& b_to, MsgCalc ca
   // store old
   // delete this later (for efficiency reasons)
   Factor belief_to_old;
-  collectBelief(belief_to_old, f_to, 0); 
+  collectBelief(belief_to_old, f_to, 0);
   arr p_old = belief_to_old.P;
   
   if(DEBUG>0){
-    cout<<"passMessage: "<<endl;
-    cout<<"f_from: "<<f_from<<endl;
-    cout<<"f_to: "<<f_to<<endl;
+    cout <<"passMessage: " <<endl;
+    cout <<"f_from: " <<f_from <<endl;
+    cout <<"f_to: " <<f_to <<endl;
   }
   
   // (1) calc new message
@@ -1148,10 +1147,10 @@ double infer::passMessage(Factor& f_from, Factor& f_to, Factor& b_to, MsgCalc ca
   
   
   if(DEBUG>0){
-    cout<<"Message:"<<endl;
-    writeMessage(&f_from, &f_to, cout);cout<<endl;
-    cout<<"Updated b_to:"<<endl<<b_to<<endl;
-    cout<<" --> "<<(b_to.P - p_old).absMax()<<endl;
+    cout <<"Message:" <<endl;
+    writeMessage(&f_from, &f_to, cout); cout <<endl;
+    cout <<"Updated b_to:" <<endl <<b_to <<endl;
+    cout <<" --> " <<(b_to.P - p_old).absMax() <<endl;
   }
   
   // calc change (and ignore log_P !)
@@ -1164,31 +1163,31 @@ double infer::passMessage(Factor& f_from, Factor& f_to, Factor& b_to, MsgCalc ca
 //   uint DEBUG = 0;
 //   uint i, index;
 //   double change, max_change=0.0;
-//   if(DEBUG>0){cout<<"Distributing messages from factor over "<<f.varIds<<endl;}
-//   if(DEBUG>1){cout<<f<<endl;}
+//   if(DEBUG>0){cout <<"Distributing messages from factor over " <<f.varIds<<endl;}
+//   if(DEBUG>1){cout <<f <<endl;}
 //   FOR1D(f.messages, i){
 //     Factor* neighbor;
 //     Factor* neighbor_belief;
 //     if(f.messages(i)->f1 == &f){
 //       index = get_list_index_unsigned(fg, f.messages(i)->f2);
 //       neighbor = fg.
-//       if(DEBUG>1){cout<<"to (before) "; f.messages(i)->f2->writeExtremelyNice(cout);cout<<endl;}
+//       if(DEBUG>1){cout <<"to (before) "; f.messages(i)->f2->writeExtremelyNice(cout);cout <<endl;}
 //       change = passMessage_1(f, *f.messages(i)->f2, calcMsgType); // based on Marc's eq (2) / (3)
 //       if(max_change<change) max_change=change;
-//       if(DEBUG>1){cout<<"to (after) "; f.messages(i)->f2->writeExtremelyNice(cout);cout<<endl;}
+//       if(DEBUG>1){cout <<"to (after) "; f.messages(i)->f2->writeExtremelyNice(cout);cout <<endl;}
 //     }
 //     else {
-//       if(DEBUG>1){cout<<"to (before) "; f.messages(i)->f1->writeExtremelyNice(cout);cout<<endl;}
+//       if(DEBUG>1){cout <<"to (before) "; f.messages(i)->f1->writeExtremelyNice(cout);cout <<endl;}
 //       change = fg.passMessage_1(f, *f.messages(i)->f1, calcMsgType); // based on Marc's eq (2) / (3)
 //       if(max_change<change) max_change=change;
-//       if(DEBUG>1){cout<<"to (after) "; f.messages(i)->f1->writeExtremelyNice(cout);cout<<endl;}
+//       if(DEBUG>1){cout <<"to (after) "; f.messages(i)->f1->writeExtremelyNice(cout);cout <<endl;}
 //     }
 //   }
 //   return max_change;
 // }
 
 
-void getMarginal(infer::Factor& marginal, const VarL& marginalVars, infer::FactorGraph& fg){
+void getMarginal(infer::Factor& marginal, const VariableList& marginalVars, infer::FactorGraph& fg){
   // search for factors containing marginalVars
   uint f, v;
   FOR1D(fg.B_c, f){
@@ -1203,22 +1202,22 @@ void getMarginal(infer::Factor& marginal, const VarL& marginalVars, infer::Facto
       return;
     }
   }
-  HALT("No factor with all marginalVars " <<marginalVars <<" -- " );//getvar(marginalVars(0))->name);
+  HALT("No factor with all marginalVars "  <<marginalVars  <<" -- "); //getvar(marginalVars(0))->name);
 }
 
 
 /* return a list of posteriors for each variable.
   We step through all variables, get the (last) factor over
   this variable, collect a belief for it, and marginalize it */
-void infer::getVariableBeliefs(MT::Array<arr>& post,const VarL& vars){
-  uint i,N=vars.N;
+void infer::getVariableBeliefs(MT::Array<arr>& post, const VariableList& vars){
+  uint i, N=vars.N;
   post.resize(N);
-  infer::Factor *f,belief,marg;
-  for(i=0;i<N;i++){
+  infer::Factor *f, belief, marg;
+  for(i=0; i<N; i++){
     if(!vars(i)->factors.N){ post(i).resize(vars(i)->dim); post(i) = 1.; continue; }
     f=vars(i)->factors.last(); //simply take last factor in factor list!
-    collectBelief(belief,*f,NULL);
-    tensorMarginal(marg,belief,ARRAY(vars(i)));
+    collectBelief(belief, *f, NULL);
+    tensorMarginal(marg, belief, ARRAY(vars(i)));
     post(i) = marg.P;
   }
 }
@@ -1228,12 +1227,12 @@ void infer::getVariableBeliefs(MT::Array<arr>& post,const VarL& vars){
 
 
 
-void printFactorArrayViaVariableSets(FacL factors){
+void printFactorArrayViaVariableSets(FactorList factors){
   uint i;
   FOR1D(factors, i){
-    cout <<factors(i)->varIds <<" ";
+    cout  <<factors(i)->varIds  <<" ";
   }
-  cout <<endl;
+  cout  <<endl;
 }
 
 
@@ -1243,14 +1242,14 @@ void printFactorArrayViaVariableSets(FacL factors){
 
 
 //===========================================================================
-//  
+//
 //  Factor Algebra
 
-double robustDivide(double a,double b){
+double robustDivide(double a, double b){
   if(!a){ if(!b) return 1.; else return 0.; }
   //if(a==b) return 1.;
   if(b) return a/b;
-  HALT("division by zero: " <<a <<"/" <<b);
+  HALT("division by zero: "  <<a  <<"/"  <<b);
   return 0;
 }
 
@@ -1258,137 +1257,137 @@ double robustDivide(double a,double b){
 then pick will contain l indices, shouting which slot of id corresponds to each slot of mid. For instance
 if we have a product of two sensors \f$A_{ijklm} B_{kli}\f$ then pick will be <2 3 0> shouting that
 the 0th slot of B is the 2nd of A, that the 1st slot of B is the 3rd of A, and that the 3rd slot of B is the 0th of A. */
-void getPick(uintA& pick,const VarL& base_vars,const VarL& multiplier_vars){
-  uint i=0,k=0;
+void getPick(uintA& pick, const VariableList& base_vars, const VariableList& multiplier_vars){
+  uint i=0, k=0;
   pick.resize(multiplier_vars.N);
-  for(k=0;k<multiplier_vars.N;k++){
-    for(i=0;i<base_vars.N;i++) if(base_vars(i)==multiplier_vars(k)) break;
-    CHECK(i<base_vars.N,"getPick error: base_vars="<<base_vars <<" multiplier_vars=" <<multiplier_vars);
+  for(k=0; k<multiplier_vars.N; k++){
+    for(i=0; i<base_vars.N; i++) if(base_vars(i)==multiplier_vars(k)) break;
+    CHECK(i<base_vars.N, "getPick error: base_vars=" <<base_vars  <<" multiplier_vars="  <<multiplier_vars);
     pick(k)=i;
   }
-  DEBUG_INFER(3,cout <<"** getPick: base_vars=" <<base_vars <<" multiplier_vars=" <<multiplier_vars <<" pick=" <<pick <<endl);
+  DEBUG_INFER(3, cout  <<"** getPick: base_vars="  <<base_vars  <<" multiplier_vars="  <<multiplier_vars  <<" pick="  <<pick  <<endl);
 }
 
 void infer::tensorProduct(Factor& f, const Factor& a, const Factor& b){
-  VarL fvars;
-  setUnion(fvars,a.variables,b.variables);
-  initFactor(f,fvars);
+  VariableList fvars;
+  setUnion(fvars, a.variables, b.variables);
+  f.init(fvars);
   f.P.resize(f.dim);
-  uintA pickA,pickB;
-  getPick(pickA,f.variables,a.variables);
-  getPick(pickB,f.variables,b.variables);
-  tensorEquation(f.P, a.P, pickA, b.P, pickB,0);
+  uintA pickA, pickB;
+  getPick(pickA, f.variables, a.variables);
+  getPick(pickB, f.variables, b.variables);
+  tensorEquation(f.P, a.P, pickA, b.P, pickB, 0);
   f.logP = a.logP + b.logP;
-  lognormScale(f.P,f.logP);
+  lognormScale(f.P, f.logP);
 }
 
-void infer::tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, const VarL& s){
-  VarL fvars;
-  setUnion(fvars,a.variables,b.variables);
-  setMinus(fvars,s);
-  initFactor(f,fvars);
+void infer::tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, const VariableList& s){
+  VariableList fvars;
+  setUnion(fvars, a.variables, b.variables);
+  setMinus(fvars, s);
+  f.init(fvars);
   f.P.resize(f.dim);
-  uintA pickA,pickB;
-  VarL all;
+  uintA pickA, pickB;
+  VariableList all;
   all=f.variables;
-  for(uint i=0;i<s.N;i++) all.append(s(i)); //all.append(s);
-  getPick(pickA,all,a.variables);
-  getPick(pickB,all,b.variables);
+  for(uint i=0; i<s.N; i++) all.append(s(i)); //all.append(s);
+  getPick(pickA, all, a.variables);
+  getPick(pickB, all, b.variables);
   tensorEquation(f.P, a.P, pickA, b.P, pickB, s.N);
   f.logP = a.logP + b.logP;
-  lognormScale(f.P,f.logP);
+  lognormScale(f.P, f.logP);
 }
 
-void infer::tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
-  initFactor(m,marginalVars);
+void infer::tensorMarginal(Factor& m, const Factor& f, const VariableList& marginalVars){
+  m.init(marginalVars);
   uintA pick;
-  getPick(pick,f.variables,m.variables);
-  ::tensorMarginal(m.P,f.P,pick);
+  getPick(pick, f.variables, m.variables);
+  ::tensorMarginal(m.P, f.P, pick);
   m.logP=f.logP;
-  lognormScale(m.P,m.logP);
+  lognormScale(m.P, m.logP);
 }
 
-void infer::tensorMaxMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
-  initFactor(m,marginalVars);
+void infer::tensorMaxMarginal(Factor& m, const Factor& f, const VariableList& marginalVars){
+  m.init(marginalVars);
   uintA pick;
-  getPick(pick,f.variables,m.variables);
-  ::tensorMaxMarginal(m.P,f.P,pick);
+  getPick(pick, f.variables, m.variables);
+  ::tensorMaxMarginal(m.P, f.P, pick);
   //do we need to normalize in the max-marginal case?
   //normalizeDist(Y);
   m.logP=f.logP;
-  lognormScale(m.P,m.logP);
+  lognormScale(m.P, m.logP);
 }
 
-void infer::tensorMultiply(Factor& f,const Factor& m){
+void infer::tensorMultiply(Factor& f, const Factor& m){
   if(m.variables==f.variables){
-    mult(f.P,f.P,m.P);
+    mult(f.P, f.P, m.P);
   }else{
     uintA pick;
-    getPick(pick,f.variables,m.variables);
-    ::tensorMultiply(f.P,m.P,pick);
+    getPick(pick, f.variables, m.variables);
+    ::tensorMultiply(f.P, m.P, pick);
   }
   f.logP += m.logP;
-  lognormScale(f.P,f.logP);
+  lognormScale(f.P, f.logP);
 }
 
-void infer::tensorDivide(Factor& f,const Factor& m){
+void infer::tensorDivide(Factor& f, const Factor& m){
   if(m.variables==f.variables){
-    div(f.P,f.P,m.P);
+    div(f.P, f.P, m.P);
   }else{
     uintA pick;
-    getPick(pick,f.variables,m.variables);
-    ::tensorDivide(f.P,m.P,pick);
+    getPick(pick, f.variables, m.variables);
+    ::tensorDivide(f.P, m.P, pick);
   }
   f.logP -= m.logP;
-  //   cout <<"infer.cpp.tensorDivide vormScalen: " <<f.P <<endl;
-  lognormScale(f.P,f.logP);
-  //   cout <<"infer.cpp.tensorDivide nachmScalen: " <<f.P <<endl;
+  //   cout  <<"infer.cpp.tensorDivide vormScalen: "  <<f.P  <<endl;
+  lognormScale(f.P, f.logP);
+  //   cout  <<"infer.cpp.tensorDivide nachmScalen: "  <<f.P  <<endl;
 }
 
-void infer::tensorAdd(Factor& f,const Factor& m){
+void infer::tensorAdd(Factor& f, const Factor& m){
   arr mP=m.P;
   mP *= ::exp(m.logP-f.logP); //get m.P on the same log scale as f!
   if(m.variables==f.variables){
-    plusA(f.P,f.P,mP);
+    plusA(f.P, f.P, mP);
   }else{
     uintA pick;
-    getPick(pick,f.variables,m.variables);
-    ::tensorAdd(f.P,mP,pick);
+    getPick(pick, f.variables, m.variables);
+    ::tensorAdd(f.P, mP, pick);
   }
-  lognormScale(f.P,f.logP);
+  lognormScale(f.P, f.logP);
 }
 
-void infer::tensorInvertMultiply(Factor& f,const Factor& m){
-  CHECK(m.variables==f.variables,"Factor invMultiply needs identical variables");
-  for(uint i=0;i<f.P.N;i++) f.P.elem(i)=robustDivide(m.P.elem(i),f.P.elem(i));
+void infer::tensorInvertMultiply(Factor& f, const Factor& m){
+  CHECK(m.variables==f.variables, "Factor invMultiply needs identical variables");
+  for(uint i=0; i<f.P.N; i++) f.P.elem(i)=robustDivide(m.P.elem(i), f.P.elem(i));
   f.logP = -f.logP + m.logP;
-  lognormScale(f.P,f.logP);
+  lognormScale(f.P, f.logP);
 }
 
-void infer::tensorWeightedAdd(Factor& f,double w,const Factor& m){
-  CHECK(m.variables==f.variables,"Factor weightedAdd needs identical variables");
+void infer::tensorWeightedAdd(Factor& f, double w, const Factor& m){
+  CHECK(m.variables==f.variables, "Factor weightedAdd needs identical variables");
   w *= ::exp(m.logP-f.logP);
-  for(uint i=0;i<f.P.N;i++) f.P.elem(i) = f.P.elem(i) + w*m.P.elem(i);
-  lognormScale(f.P,f.logP);
+  for(uint i=0; i<f.P.N; i++) f.P.elem(i) = f.P.elem(i) + w*m.P.elem(i);
+  lognormScale(f.P, f.logP);
 }
 
-/*void writeInfo(ostream& os,const Factor& f){
+/*void writeInfo(ostream& os, const Factor& f){
   uint i;
-  os <<"vars=(";
+  os  <<"vars=(";
   for(i=0;i<f.varIds.N;i++){
-    if(i) os <<' ';
-    os <<f.varIds(i) <<'.' <<globalVariableList(f.varIds(i))->name;
-    CHECK(f.varIds(i)==globalVariableList(f.varIds(i))->id,"identity mismatch!!");
+    if(i) os  <<' ';
+    os  <<f.varIds(i)  <<'.'  <<globalVariableList(f.varIds(i))->name;
+    CHECK(f.varIds(i)==globalVariableList(f.varIds(i))->id, "identity mismatch!!");
   }
-  os <<") dims=<";
+  os  <<") dims=<";
   for(i=0;i<f.varIds.N;i++){
-    if(i) os <<' ';
-    os <<f.dim(i);
-    CHECK(f.dim(i)==globalVariableList(f.varIds(i))->dim,"dimensionality mismatch!!");
+    if(i) os  <<' ';
+    os  <<f.dim(i);
+    CHECK(f.dim(i)==globalVariableList(f.varIds(i))->dim, "dimensionality mismatch!!");
   }
-  os <<"> P.dims=";
+  os  <<"> P.dims=";
   f.P.writeDim(os);
-  os <<endl;
+  os  <<endl;
 }*/
 
 
@@ -1398,69 +1397,69 @@ void infer::tensorWeightedAdd(Factor& f,double w,const Factor& m){
 //
 // ELIMINATION ALGORITHM methods
 //
-void infer::getJoint(Factor& joint,const FacL& factors){
-  DEBUG_INFER(1,cout <<MT_HERE <<endl);
+void infer::getJoint(Factor& joint, const FactorList& factors){
+  DEBUG_INFER(1, cout  <<MT_HERE  <<endl);
   uint i;
   //get tuple of vars
-  VarL jointVars;
-  for(i=0;i<factors.N;i++) jointVars.setAppend(factors(i)->variables);
-  DEBUG_INFER(2,cout <<"  jointVars=" <<jointVars <<endl);
+  VariableList jointVars;
+  for(i=0; i<factors.N; i++) jointVars.setAppend(factors(i)->variables);
+  DEBUG_INFER(2, cout  <<"  jointVars="  <<jointVars  <<endl);
   //compute joint
-  initFactor(joint,jointVars);
+  joint.init(jointVars);
   joint.setOne();
-  for(i=0;i<factors.N;i++) tensorMultiply(joint, *(factors(i)));
+  for(i=0; i<factors.N; i++) tensorMultiply(joint, *(factors(i)));
 }
 
 /*! Computes an order for the elimination of variables.
-The order is such that in each iteration among all variables that have not been eliminated yet 
+The order is such that in each iteration among all variables that have not been eliminated yet
 the one which has the fewest links to other not-deleted variables is chosen.
 This is equivalent to saying that per iteration the variable chosen for elimination is the one
 that would create the smallest clique if all factors that involve this variable were multiplied.
 */
-void infer::computeEliminationOrder(VarL& elimOrder, const FacL& factors, const VarL& elimVars){
+void infer::computeEliminationOrder(VariableList& elimOrder, const FactorList& factors, const VariableList& elimVars){
   int DEBUG_INFER_LEVEL = 0;
-  DEBUG_INFER(1,cout <<MT_HERE <<endl);
-  DEBUG_INFER(2,cout <<"  input factors=\n" <<factors <<endl);
-  DEBUG_INFER(1,cout <<"variables to eliminate=" <<elimVars <<endl);
+  DEBUG_INFER(1, cout  <<MT_HERE  <<endl);
+  DEBUG_INFER(2, cout  <<"  input factors=\n"  <<factors  <<endl);
+  DEBUG_INFER(1, cout  <<"variables to eliminate="  <<elimVars  <<endl);
   
-  VarL vars;
-  get_vars(vars,factors);
+  VariableList vars;
+  get_vars(vars, factors);
   
   elimOrder.resize(elimVars.N);
   uint f, v, e;
   
   // Determine for each variable the set of variables it is linked to.
-  MT::Array<VarL> connectedVarSets(elimVars.N);
+  MT::Array<VariableList> connectedVarSets(elimVars.N);
   for(v=0; v<elimVars.N; v++){
     for(f=0; f<factors.N; f++){
       if(factors(f)->variables.findValue(elimVars(v))>-1){
         connectedVarSets(v).setAppend(factors(f)->variables);
       }
     }
-    DEBUG_INFER(2,cout <<"  neighbors of v"<<elimVars(v) <<"=" <<connectedVarSets(v) <<endl);
+    DEBUG_INFER(2, cout  <<"  neighbors of v" <<elimVars(v)  <<"="  <<connectedVarSets(v)  <<endl);
   }
   // Calculate elimination order
   boolA used(elimOrder.N);
   used=false;
-  DEBUG_INFER(1,cout <<"calculation of elimination order: " <<endl);
+  DEBUG_INFER(1, cout  <<"calculation of elimination order: "  <<endl);
   uint cost, minCost=-1;
   int minIndex;
   for(e=0; e<elimOrder.N; e++){
-    DEBUG_INFER(2, cout <<"  (" <<e <<")" <<endl);
+    DEBUG_INFER(2, cout  <<"  ("  <<e  <<")"  <<endl);
     // Determine variable with smallest set of connected remaining variables
     minIndex=-1;
     for(v=0; v<elimVars.N; v++){
-      if(used(v)) continue;  //don't consider already used vars
+      if(used(v)) continue; //don't consider already used vars
 #if 1
       //determine cost as the #variables in the generated clique
       cost=connectedVarSets(v).N;
 #else
       //determine cost as the size (=size of probability table) of the generated clique
       cost=1;
-      for(uint i=0;i<connectedVarSets(v).N;i++)
+      for(uint i=0; i<connectedVarSets(v).N; i++)
         if(connectedVarSets(v)(i)!=v)  cost*=globalVariableList(connectedVarSets(v)(i))->dim;
-#endif      
-      DEBUG_INFER(2, cout <<"  testing v" <<elimVars(v) <<": cost=" <<cost <<endl);
+#endif
+      DEBUG_INFER(2, cout  <<"  testing v"  <<elimVars(v)  <<": cost="  <<cost  <<endl);
       if(minIndex==-1 || minCost>cost){
         minCost = cost;
         minIndex = v;
@@ -1468,41 +1467,41 @@ void infer::computeEliminationOrder(VarL& elimOrder, const FacL& factors, const 
     }
     elimOrder(e) = elimVars(minIndex);
     used(minIndex) = true;
-    DEBUG_INFER(1, cout <<"eliminating v" <<elimOrder(e) <<" '" <<elimOrder(e)->name <<"' (cost=" <<minCost<<")" <<endl);
+    DEBUG_INFER(1, cout  <<"eliminating v"  <<elimOrder(e)  <<" '"  <<elimOrder(e)->name  <<"' (cost="  <<minCost <<")"  <<endl);
     // Delete eliminated variable out of sets of connected variables of other vars
     for(v=0; v<elimVars.N; v++){
       connectedVarSets(v).removeValueSafe(elimOrder(e));
-      DEBUG_INFER(2, cout <<"  neighbors of v" <<elimVars(v) <<"=" <<connectedVarSets(v) <<endl);
+      DEBUG_INFER(2, cout  <<"  neighbors of v"  <<elimVars(v)  <<"="  <<connectedVarSets(v)  <<endl);
     }
   }
-  DEBUG_INFER(1, cout <<"elimination order: " <<elimOrder <<endl);
+  DEBUG_INFER(1, cout  <<"elimination order: "  <<elimOrder  <<endl);
 }
 
 /*! eliminates a single variable from the factor list.
 
 At input, factors describes the full model; at output, factors contains the reduced model which include unchanged old factors and some newed factors.
 The newed factors are additionally appended to the newed_factors (to allow for external cleanup) */
-void infer::eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var){
+void infer::eliminateVariable(FactorList& factors, FactorList& newed_factors, Variable *var){
   uint f;
-  FacL referencedFactors;
+  FactorList referencedFactors;
   factors.memMove=true;
   referencedFactors.memMove=true;
   //collect referenced factors
-  for(f=0;f<factors.N;f++)
+  for(f=0; f<factors.N; f++)
     if(factors(f)->variables.findValue(var)!=-1) referencedFactors.append(factors(f));
-
+    
   //compute joint variable tuple
-  VarL jointVars;
-  for(f=0;f<referencedFactors.N;f++)
+  VariableList jointVars;
+  for(f=0; f<referencedFactors.N; f++)
     jointVars.setAppend(referencedFactors(f)->variables);
-    //setUnion(jointVars,jointVars,referencedFactors(f)->varIds);//[mt]
-
+  //setUnion(jointVars, jointVars, referencedFactors(f)->varIds);//[mt]
+  
   checkConsistent(factors);
-
+  
   //compute joint clique and remove! the used factors from the list
   Factor jointFactor(jointVars);
   //jointFactor.setOne(); is done in the constructor
-  for(f=0;f<referencedFactors.d0; f++){
+  for(f=0; f<referencedFactors.d0; f++){
     tensorMultiply(jointFactor, *(referencedFactors(f)));
     factors.removeValue(referencedFactors(f));
   }
@@ -1511,68 +1510,68 @@ void infer::eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var){
   //eliminate the single variable from the joint factor
   jointVars.removeValue(var);
   Factor *newFactor = new Factor(jointVars);
-  tensorMarginal(*newFactor,jointFactor, jointVars);
+  tensorMarginal(*newFactor, jointFactor, jointVars);
   factors.append(newFactor);
   newed_factors.append(newFactor);
   checkConsistent(*newFactor);
   
-  //DEBUG_INFER(1,checkSpaceRegistry());
+  //DEBUG_INFER(1, checkSpaceRegistry());
 }
 
 /*! marginalizes a factor list over all variables except the "remaining_vars". The output is a
 single factor over the remaining_vars with the marginal. The factors list remains unchanged. */
-void infer::eliminationAlgorithm(Factor& posterior,const FacL& factors, const VarL& remaining_vars){
-  DEBUG_INFER(1,cout <<MT_HERE <<endl);
-  uint i,f;
+void infer::eliminationAlgorithm(Factor& posterior, const FactorList& factors, const VariableList& remaining_vars){
+  DEBUG_INFER(1, cout  <<MT_HERE  <<endl);
+  uint i, f;
   checkConsistent(factors);
-
-  // determine which variables need to be eliminated: ALL \ post_vars
-  VarL facVars;
-  for(f=0;f<factors.N;f++) facVars.setAppend(factors(f)->variables);
-
-  DEBUG_INFER(3,cout <<"  all facs=" <<factors <<endl);
-  DEBUG_INFER(2,cout <<"  factor vars=" <<facVars <<"\n  remaining vars=" <<remaining_vars <<endl);
   
-  VarL elimVars=facVars; elimVars.memMove=true;
+  // determine which variables need to be eliminated: ALL \ post_vars
+  VariableList facVars;
+  for(f=0; f<factors.N; f++) facVars.setAppend(factors(f)->variables);
+  
+  DEBUG_INFER(3, cout  <<"  all facs="  <<factors  <<endl);
+  DEBUG_INFER(2, cout  <<"  factor vars="  <<facVars  <<"\n  remaining vars="  <<remaining_vars  <<endl);
+  
+  VariableList elimVars=facVars; elimVars.memMove=true;
   elimVars.setAppend(remaining_vars); //in case the posterior wants more variables that the factors are defined over
-  for(i=0;i<remaining_vars.N;i++) elimVars.removeValue(remaining_vars(i));
-
-  DEBUG_INFER(2,cout <<"  elim vars=" <<elimVars <<endl);
+  for(i=0; i<remaining_vars.N; i++) elimVars.removeValue(remaining_vars(i));
+  
+  DEBUG_INFER(2, cout  <<"  elim vars="  <<elimVars  <<endl);
   
   // determine order in which variables are eliminated.
-  VarL elimOrder;
+  VariableList elimOrder;
   computeEliminationOrder(elimOrder, factors, elimVars);
-
-  DEBUG_INFER(2,cout <<"  elimination order=" <<elimOrder <<endl);
+  
+  DEBUG_INFER(2, cout  <<"  elimination order="  <<elimOrder  <<endl);
   
   // eliminate in this order
-  FacL factors_copy(factors);
-  FacL newedFactors;
-  for(i=0;i<elimOrder.N;i++) eliminateVariable(factors_copy, newedFactors, elimOrder(i));
-
+  FactorList factors_copy(factors);
+  FactorList newedFactors;
+  for(i=0; i<elimOrder.N; i++) eliminateVariable(factors_copy, newedFactors, elimOrder(i));
+  
   // calculate posterior
-  initFactor(posterior,remaining_vars);
+  posterior.init(remaining_vars);
   posterior.setOne();
-  /*if (remaining_vars.N==0){ //DON'T HANDLE SCALAR OUTPUT SPECIAL...
+  /*if(remaining_vars.N==0){ //DON'T HANDLE SCALAR OUTPUT SPECIAL...
     for(i=0;i<factors_copy.N;i++){
       CHECK(factors_copy.N == 1, "too many factors created");
     posterior.P.scalar()=sum(factors_copy(0)->P) * exp(factors_copy(0)->logP);
   }else{*/
-    for(i=0;i<factors_copy.N;i++){
-      DEBUG_INFER(3,cout <<"  remaining factor " <<i<<"=" <<*factors_copy(i) <<endl);
-      CHECK(&posterior!=factors_copy(i),"one of the input factors is also the output factor of the elimination algorithm - that doesn't work!!");
-      tensorMultiply(posterior,*factors_copy(i));
-    }
+  for(i=0; i<factors_copy.N; i++){
+    DEBUG_INFER(3, cout  <<"  remaining factor "  <<i <<"="  <<*factors_copy(i)  <<endl);
+    CHECK(&posterior!=factors_copy(i), "one of the input factors is also the output factor of the elimination algorithm - that doesn't work!!");
+    tensorMultiply(posterior, *factors_copy(i));
+  }
   //}
   
-  DEBUG_INFER(3,cout <<"  posterior=" <<posterior <<endl);
-
+  DEBUG_INFER(3, cout  <<"  posterior="  <<posterior  <<endl);
+  
   //cleanup newed factores
-  for(i=0;i<newedFactors.N;i++) delete newedFactors(i);
+  for(i=0; i<newedFactors.N; i++) delete newedFactors(i);
 }
 
 
-void moralize(FacL& factorsOfDirectedGraph, FacL& factorsOfMoralizedGraph){
+void moralize(FactorList& factorsOfDirectedGraph, FactorList& factorsOfMoralizedGraph){
   // first variable is child, remaining variables are parents
   NIY;
 }
@@ -1604,47 +1603,46 @@ void checkJunctionTreeProperty_dfs(infer::Factor* node, infer::Factor* parent, i
   int DEBUG = 0;
   uint i;
   containsId(get_list_index_unsigned__orig(junctionTree, node)) = 0;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   FOR1D(neighbors, i){
     if(neighbors(i) == parent)
       continue;
     if(DEBUG > 0)
-      cout <<"Checking direction " <<node->varIds <<" --> " <<neighbors(i)->varIds <<endl;
+      cout  <<"Checking direction "  <<node->varIds  <<" --> "  <<neighbors(i)->varIds  <<endl;
     // check whether neighbor contains varible
     if(neighbors(i)->variables.findValue(id) != -1){
       if(DEBUG > 0)
-        cout <<"   --> going on that way" <<endl;
+        cout  <<"   --> going on that way"  <<endl;
       // check that variable contained in MessagePair
 #ifndef MT_NOCHECK
       infer::MessagePair* s = getMessagePair(node, neighbors(i));
 #endif
-      CHECK(s->variables.findValue(id) != -1, "Variable " <<id <<" is not contained in MessagePair " <<s->variables <<" for factors over " <<node->varIds <<" and " <<neighbors(i)->varIds <<"!" <<endl);
+      CHECK(s->variables.findValue(id) != -1, "Variable "  <<id  <<" is not contained in MessagePair "  <<s->variables  <<" for factors over "  <<node->varIds  <<" and "  <<neighbors(i)->varIds  <<"!"  <<endl);
       // continue dfs here
       checkJunctionTreeProperty_dfs(neighbors(i), node, junctionTree, containsId, id);
-    }
-    else {
+    }else{
       if(DEBUG > 0)
-        cout <<"   --> dead end!" <<endl;
+        cout  <<"   --> dead end!"  <<endl;
       continue;
     }
   }
 }
 
-// Jordan, Chapter 17, p.22: For every pair of cliques V and W, all cliques on (unique) path between V and W contain section(V,W).
+// Jordan, Chapter 17, p.22: For every pair of cliques V and W, all cliques on (unique) path between V and W contain section(V, W).
 // --> checks that each variable induces a single subtree in junction tree
 void infer::JunctionTree::checkJunctionTreeProperty(FactorGraph& junctionTree){
   int DEBUG = 0;
   if(DEBUG > 0)
-    cout <<"checkJunctionTreeProperty [START]" <<endl;
-  
+    cout  <<"checkJunctionTreeProperty [START]"  <<endl;
+    
   uint v, f;
   Variable *id;
   boolA containsId(junctionTree.B_c.N);
   FOR1D(junctionTree.V, v){
     id = junctionTree.V(v);
     if(DEBUG > 0)
-      cout <<" id=" <<id <<endl;
+      cout  <<" id="  <<id  <<endl;
     FOR1D(junctionTree.B_c, f){
       if(junctionTree.B_c(f)->variables.findValue(id) != -1)
         containsId(f) = 1;
@@ -1652,26 +1650,26 @@ void infer::JunctionTree::checkJunctionTreeProperty(FactorGraph& junctionTree){
         containsId(f) = 0;
     }
     if(DEBUG > 0)
-      cout <<" containsId_before=" <<containsId <<endl;
+      cout  <<" containsId_before="  <<containsId  <<endl;
     f=0;
     while(f<junctionTree.B_c.N && !containsId(f))
       f++;
-    CHECK(f<junctionTree.B_c.N, " Variable ID " <<id <<" has not been found in graph." <<endl);
+    CHECK(f<junctionTree.B_c.N, " Variable ID "  <<id  <<" has not been found in graph."  <<endl);
     checkJunctionTreeProperty_dfs(junctionTree.B_c(f), 0, junctionTree, containsId, id);
     if(DEBUG > 0)
-      cout <<" containsId_after=" <<containsId <<endl;
+      cout  <<" containsId_after="  <<containsId  <<endl;
     FOR1D(containsId, f)
-      CHECK(containsId(f) == 0, " junction tree property violated for variable " <<id <<endl);
+    CHECK(containsId(f) == 0, " junction tree property violated for variable "  <<id  <<endl);
   }
   if(DEBUG > 0)
-    cout <<"checkJunctionTreeProperty [END]" <<endl;
+    cout  <<"checkJunctionTreeProperty [END]"  <<endl;
 }
 
 
 
 void infer::JunctionTree::addEvidence(FactorGraph& junctionTree, Factor& evid){
   uint f;
-  VarL varSection;
+  VariableList varSection;
   FOR1D(junctionTree.F, f){
     setSection(varSection, evid.variables, junctionTree.F(f)->variables);
     if(varSection.N > 0){
@@ -1690,65 +1688,65 @@ void infer::JunctionTree::addEvidence(FactorGraph& junctionTree, Factor& evid){
 
 
 
-void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangulatedCliques){
+void infer::JunctionTree::buildTriangulatedCliques(const FactorList& factors, FactorList& triangulatedCliques){
   bool DEBUG = false;
   bool DEBUG_VERBOSE = false;
   
-  uint v, v2, v3, f; 
-  FacL intermediateFactors = factors;
+  uint v, v2, v3, f;
+  FactorList intermediateFactors = factors;
   boolA intermediateFactors_removed(intermediateFactors.N);
   FOR1D(intermediateFactors_removed, v)
-    intermediateFactors_removed(v) = 0;
+  intermediateFactors_removed(v) = 0;
   
   // determine existing variables
-  VarL vars;
+  VariableList vars;
   for(f=0; f < factors.N; f++){
     setUnion(vars, vars, factors(f)->variables);
   }
   std::sort(vars.p, vars.p + vars.N);
   if(DEBUG)
-    cout <<"Existing vars: " <<vars <<endl;
-  
-  
+    cout  <<"Existing vars: "  <<vars  <<endl;
+    
+    
   // map varID -> order over participating vars
-  std::map<Variable*,uint> var_id2order;
+  std::map<Variable*, uint> var_id2order;
   FOR1D(vars, v){
     var_id2order[vars(v)] = v;
   }
   if(DEBUG){
     std::map<Variable*, uint>::iterator itVars;
-    for( itVars = var_id2order.begin() ; itVars != var_id2order.end(); itVars++ ){
-      cout <<"var_id2order[" <<itVars->first <<"] = " <<itVars->second <<endl;
+    for(itVars = var_id2order.begin() ; itVars != var_id2order.end(); itVars++){
+      cout  <<"var_id2order["  <<itVars->first  <<"] = "  <<itVars->second  <<endl;
     }
   }
   
   // determine elimination ordering
-  // 	uintA elimOrder(6);
-  // 	for(v=0; v<6; v++){
-  // 		elimOrder(v) = 5-v;
-  // 	}
-  VarL elimOrder;
+  //  uintA elimOrder(6);
+  //  for(v=0; v<6; v++){
+  //    elimOrder(v) = 5-v;
+  //  }
+  VariableList elimOrder;
   computeEliminationOrder(elimOrder, intermediateFactors, vars);
-  //     elimOrder <<"[   9   14   7   8   10   11   12   13   0    1    2    15   16   3   4   5   6]";
-  //     elimOrder <<"[   12   17   10   11   13   14   15   16  7   0   1   2   8   9   3   4   5   6 ]";
-  //     elimOrder <<"[   19   29   16   17   18   20   21   22   23   24   25   26   27   28   0   12   1   2   13   14   15   3   4   5   6   7   8   9   10   11]";
+  //     elimOrder  <<"[   9   14   7   8   10   11   12   13   0    1    2    15   16   3   4   5   6]";
+  //     elimOrder  <<"[   12   17   10   11   13   14   15   16  7   0   1   2   8   9   3   4   5   6 ]";
+  //     elimOrder  <<"[   19   29   16   17   18   20   21   22   23   24   25   26   27   28   0   12   1   2   13   14   15   3   4   5   6   7   8   9   10   11]";
   //     elimOrder = global_elimOrder;
   
   if(DEBUG){
-    cout <<"Elimination order: " <<elimOrder <<endl;
+    cout  <<"Elimination order: "  <<elimOrder  <<endl;
     if(DEBUG_VERBOSE){
       FOR1D(elimOrder, v){
-        cout<<elimOrder(v)->name<<"  ";
+        cout <<elimOrder(v)->name <<"  ";
       }
-      cout<<endl;
+      cout <<endl;
     }
   }
   
   // edges matrix
   // indexed by var ids
   MT::Array<bool> edges(elimOrder.N, elimOrder.N);
-  FOR2D(edges,v,v2){
-    edges(v,v2) = 0;
+  FOR2D(edges, v, v2){
+    edges(v, v2) = 0;
   }
   // init edges matrix with existing edges in original graph
   FOR1D(intermediateFactors, f){
@@ -1759,27 +1757,27 @@ void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& tr
       }
     }
   }
-  // 	if(DEBUG)
-  // 		cout <<"Edges matrix:" <<endl <<edges <<endl;
+  //  if(DEBUG)
+  //    cout  <<"Edges matrix:"  <<endl  <<edges  <<endl;
   
   
   // UNDIRECTED_GRAPH_ELIMINATE
   
   FOR1D(elimOrder, v){
     if(DEBUG){
-      cout <<"--------------------------------------------------" <<endl;
-      cout <<"(" <<v <<")" <<" Eliminating " <<elimOrder(v) <<endl;
-      if(DEBUG_VERBOSE){cout <<"(" <<v <<")" <<" Eliminating " <<elimOrder(v)->name <<endl;}
+      cout  <<"--------------------------------------------------"  <<endl;
+      cout  <<"("  <<v  <<")"  <<" Eliminating "  <<elimOrder(v)  <<endl;
+      if(DEBUG_VERBOSE){cout  <<"("  <<v  <<")"  <<" Eliminating "  <<elimOrder(v)->name  <<endl;}
     }
     // determine remaining neighbors
-    VarL remainingNeighbors;
+    VariableList remainingNeighbors;
     FOR1D(edges, v2){
       if(edges(var_id2order[elimOrder(v)], var_id2order[elimOrder(v2)]))
         remainingNeighbors.append(elimOrder(v2));
     }
     if(DEBUG){
-      cout <<"Remaining neighbors:" <<remainingNeighbors <<endl;
-      //if(DEBUG_VERBOSE){cout <<"Remaining neighbors: "; printvars(remainingNeighbors); cout<<endl;}
+      cout  <<"Remaining neighbors:"  <<remainingNeighbors  <<endl;
+      //if(DEBUG_VERBOSE){cout  <<"Remaining neighbors: "; printvars(remainingNeighbors); cout <<endl;}
     }
     
     // connect remaining neighbors
@@ -1789,18 +1787,18 @@ void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& tr
         edges(var_id2order[remainingNeighbors(v3)], var_id2order[remainingNeighbors(v2)]) = 1;
       }
     }
-    // 		if(DEBUG)
-    // 			cout <<"Edges matrix (remaining neighbors connected):" <<endl <<edges <<endl;
+    //    if(DEBUG)
+    //      cout  <<"Edges matrix (remaining neighbors connected):"  <<endl  <<edges  <<endl;
     
     // set up new factor with all neighbors
     if(DEBUG)
-      cout <<"Setting up new factor [START]" <<endl;
-    VarL vars;
+      cout  <<"Setting up new factor [START]"  <<endl;
+    VariableList vars;
     vars.append(elimOrder(v));
     setUnion(vars, vars, remainingNeighbors);
     if(DEBUG)
-      cout <<"Variables ["<<vars.N<<"]: " <<vars <<endl;
-    //if(DEBUG_VERBOSE){cout <<"Variables: "; printvars(vars);cout<<endl;}
+      cout  <<"Variables [" <<vars.N <<"]: "  <<vars  <<endl;
+    //if(DEBUG_VERBOSE){cout  <<"Variables: "; printvars(vars);cout <<endl;}
     // check whether "vars" of new factors are subset of existing factor f
     bool containedInOtherFactor = 0;
     FOR1D(triangulatedCliques, f){
@@ -1814,13 +1812,13 @@ void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& tr
     if(containedInOtherFactor){
       newFactor = triangulatedCliques(f);
       if(DEBUG)
-        cout <<"--> included in " <<newFactor->varIds <<endl;
-      //if(DEBUG_VERBOSE){cout <<"--> included in "; printvars(newFactor->varIds);cout<<endl;}
+        cout  <<"--> included in "  <<newFactor->varIds  <<endl;
+      //if(DEBUG_VERBOSE){cout  <<"--> included in "; printvars(newFactor->varIds);cout <<endl;}
     }
     // else construct new factor
     else {
       if(DEBUG)
-        cout <<"Spaeter: Variables ["<<vars.N<<"]: " <<vars <<endl;
+        cout  <<"Spaeter: Variables [" <<vars.N <<"]: "  <<vars  <<endl;
       // TODO weg
       //             if(vars.N == 28) continue;
       
@@ -1829,34 +1827,34 @@ void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& tr
       // add new factor to triangulated set
       triangulatedCliques.append(newFactor);
       if(DEBUG)
-        cout <<"--> true new factor" <<endl;
+        cout  <<"--> true new factor"  <<endl;
     }
     
     if(DEBUG)
-      cout <<"Calculating new potential:" <<endl;
+      cout  <<"Calculating new potential:"  <<endl;
     // calc new potential
     for(f=0; f < intermediateFactors.N; f++){
       if(intermediateFactors_removed(f) != 1
-    				&& intermediateFactors(f)->variables.findValue(elimOrder(v)) > -1){
+          && intermediateFactors(f)->variables.findValue(elimOrder(v)) > -1){
         if(DEBUG)
-          cout <<" ** Using factor: " <<*intermediateFactors(f);
+          cout  <<" ** Using factor: "  <<*intermediateFactors(f);
         tensorMultiply(*newFactor, *(intermediateFactors(f)));
         if(DEBUG)
-          cout <<"  --> updated newFactor: " <<*newFactor;
+          cout  <<"  --> updated newFactor: "  <<*newFactor;
         intermediateFactors_removed(f) = 1;
       }
       if(DEBUG){
-        cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
-        cout<<"All factors thus far:"<<endl;
-        FOR1D(triangulatedCliques,v2){
-          cout<<v2<<":  "<<triangulatedCliques(v2)->varIds.N<<endl;
+        cout <<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" <<endl;
+        cout <<"All factors thus far:" <<endl;
+        FOR1D(triangulatedCliques, v2){
+          cout <<v2 <<":  " <<triangulatedCliques(v2)->varIds.N <<endl;
         }
       }
     }
     if(DEBUG){
-      cout <<"Final newFactor: " <<endl <<*newFactor;
-      //if(DEBUG_VERBOSE){cout <<" over vars "; printvars(newFactor->varIds);cout<<endl;}
-      cout <<"Setting up new factor [END]" <<endl;
+      cout  <<"Final newFactor: "  <<endl  <<*newFactor;
+      //if(DEBUG_VERBOSE){cout  <<" over vars "; printvars(newFactor->varIds);cout <<endl;}
+      cout  <<"Setting up new factor [END]"  <<endl;
     }
     
     // remove node from graph
@@ -1866,33 +1864,33 @@ void infer::JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& tr
     }
     
     if(DEBUG){
-      // 			cout <<"Edges matrix (node removed):" <<endl <<edges <<endl;
-      cout <<"Removed factors: " <<intermediateFactors_removed <<endl;
+      //      cout  <<"Edges matrix (node removed):"  <<endl  <<edges  <<endl;
+      cout  <<"Removed factors: "  <<intermediateFactors_removed  <<endl;
     }
-        }
+  }
 }
 
 
 // Kruskal algorithm
-void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, FactorGraph& cliqueTree){
+void infer::JunctionTree::buildMaxSpanningTree(FactorList& factors, const VariableList& vars, FactorGraph& cliqueTree){
   uint DEBUG = 0;
   if(DEBUG >= 1){
-    cout <<"========================================" <<endl;
-    cout <<"buildMaxSpanningTree" <<endl;
-    cout <<"--------------------" <<endl;
+    cout  <<"========================================"  <<endl;
+    cout  <<"buildMaxSpanningTree"  <<endl;
+    cout  <<"--------------------"  <<endl;
   }
   
   uint f, f2, maxId;
   uint max;
   Factor *fac1, *fac2;
-  VarL tempA;
+  VariableList tempA;
   
   if(DEBUG >= 1){
-    cout <<"input factors [START]" <<endl;
+    cout  <<"input factors [START]"  <<endl;
     FOR1D(factors, f){
-      cout <<"(" <<f <<") " <<factors(f)->varIds <<endl;
+      cout  <<"("  <<f  <<") "  <<factors(f)->varIds  <<endl;
     }
-    cout <<"input factors [END]" <<endl;
+    cout  <<"input factors [END]"  <<endl;
   }
   
   // check that each factor has a non-empty MessagePair for some other factor
@@ -1900,7 +1898,7 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
   // = not disconnected from tree
   boolA sharesVariables(factors.N);
   FOR1D(sharesVariables, f)
-    sharesVariables(f) = false;
+  sharesVariables(f) = false;
   FOR1D(factors, f){
     if(sharesVariables(f))
       continue;
@@ -1924,7 +1922,7 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
         sharesVariables(f) = true;
     }
     if(!sharesVariables(f))
-      HALT("While building max spanning tree: factor node over " <<factors(f)->varIds <<" is disconnected from junction tree!");
+      HALT("While building max spanning tree: factor node over "  <<factors(f)->varIds  <<" is disconnected from junction tree!");
   }
   
   
@@ -1942,11 +1940,11 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
   }
   
   if(DEBUG >= 1){
-    cout <<"candidate_msg_pairs [START]" <<endl;
+    cout  <<"candidate_msg_pairs [START]"  <<endl;
     FOR1D(candidate_msg_pairs, f){
-      cout <<*(candidate_msg_pairs(f)) <<endl;
+      cout  <<*(candidate_msg_pairs(f))  <<endl;
     }
-    cout <<"candidate_msg_pairs [END]" <<endl;
+    cout  <<"candidate_msg_pairs [END]"  <<endl;
   }
   
   // define elementary clusters
@@ -1954,24 +1952,24 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
   MT::Array< uintA > clusters(factors.N);
   FOR1D(factors, f){clusters(f).append(f);}
   if(DEBUG >= 1){
-    cout <<"Elementary clusters [START]" <<endl;
+    cout  <<"Elementary clusters [START]"  <<endl;
     FOR1D(factors, f){
-      cout <<"(" <<f <<") Factor over " <<factors(f)->varIds <<" connected to:" <<endl;
+      cout  <<"("  <<f  <<") Factor over "  <<factors(f)->varIds  <<" connected to:"  <<endl;
       FOR1D(clusters(f), f2){
-        cout <<factors((clusters(f))(f2))->varIds <<"  ";
+        cout  <<factors((clusters(f))(f2))->varIds  <<"  ";
       }
-      cout<<endl;
+      cout <<endl;
       // ids only:
-      cout<<"In ids: #"<<f<<" -> "<<clusters(f)<<endl;
+      cout <<"In ids: #" <<f <<" -> " <<clusters(f) <<endl;
     }
-    cout <<"Elementary clusters [END]" <<endl;
+    cout  <<"Elementary clusters [END]"  <<endl;
   }
   
   // THE ALGORITHM
-  // big loop	
+  // big loop
   if(DEBUG >= 1){
-    cout <<endl <<"---------------------------------------" <<endl;
-    cout <<"THE ALGORITHM [START]" <<endl <<endl;
+    cout  <<endl  <<"---------------------------------------"  <<endl;
+    cout  <<"THE ALGORITHM [START]"  <<endl  <<endl;
   }
   while(cliqueTree.messages.N < factors.N -1){
     // determine S with max weight
@@ -1979,7 +1977,7 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
     max = 0;
     FOR1D(candidate_msg_pairs, f){
       if(candidate_msg_pairs_contained(f)
-        && candidate_msg_pairs(f)->variables.N > max){
+          && candidate_msg_pairs(f)->variables.N > max){
         maxId = f;
         max = candidate_msg_pairs(f)->variables.N;
       }
@@ -1989,9 +1987,9 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
     }
     
     if(DEBUG >= 1){
-      cout <<"++++++++++++++" <<endl;
-      cout <<"Next MessagePair candidate:" <<endl;
-      cout <<*(candidate_msg_pairs(maxId));
+      cout  <<"++++++++++++++"  <<endl;
+      cout  <<"Next MessagePair candidate:"  <<endl;
+      cout  <<*(candidate_msg_pairs(maxId));
     }
     fac1 = candidate_msg_pairs(maxId)->f1;
     fac2 = candidate_msg_pairs(maxId)->f2;
@@ -2002,40 +2000,39 @@ void infer::JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, 
     // Combine both trees
     if(numberSharedElements(clusters(f), clusters(f2)) == 0){
       if(DEBUG >= 1)
-        cout <<" --> included" <<endl;
+        cout  <<" --> included"  <<endl;
       cliqueTree.messages.append(candidate_msg_pairs(maxId));
       uint k;
       FOR1D(clusters(f), k){clusters(clusters(f)(k)).setAppend(clusters(f2));}
       FOR1D(clusters(f2), k){clusters(clusters(f2)(k)).setAppend(clusters(f));}
-    }
-    else {
+    }else{
       // delete if not needed
       delete candidate_msg_pairs(maxId);
       
       if(DEBUG >= 1)
-        cout <<" --> discarded" <<endl;
+        cout  <<" --> discarded"  <<endl;
     }
     
     if(DEBUG >= 1){
-      cout <<"Elementary clusters [START]" <<endl;
+      cout  <<"Elementary clusters [START]"  <<endl;
       FOR1D(factors, f){
-        cout <<"(" <<f <<") Factor over " <<factors(f)->varIds <<" connected to:" <<endl;
+        cout  <<"("  <<f  <<") Factor over "  <<factors(f)->varIds  <<" connected to:"  <<endl;
         FOR1D(clusters(f), f2){
-          cout <<factors((clusters(f))(f2))->varIds <<"  ";
+          cout  <<factors((clusters(f))(f2))->varIds  <<"  ";
         }
-        cout <<endl;
+        cout  <<endl;
         // ids only:
-        cout<<"In ids: #"<<f<<" -> "<<clusters(f)<<endl;
+        cout <<"In ids: #" <<f <<" -> " <<clusters(f) <<endl;
       }
-      cout <<"Elementary clusters [END]" <<endl;
+      cout  <<"Elementary clusters [END]"  <<endl;
     }
     
     candidate_msg_pairs_contained(maxId) = false;
   }
   
   if(DEBUG >= 1)
-    cout <<"THE ALGORITHM [END]" <<endl <<endl;
-  
+    cout  <<"THE ALGORITHM [END]"  <<endl  <<endl;
+    
   // delete remaining (unused) messages
   FOR1D(candidate_msg_pairs, f){
     if(candidate_msg_pairs_contained(f)){
@@ -2058,38 +2055,38 @@ Jordan, Chap. 17, p.22: "In a junction tree, local consistency implies global co
 // bool JunctionTree::checkLocalConsistency(MessagePair& s, bool crashIfInconsistent){
 //   uint DEBUG = 1;
 //   if(DEBUG > 0)
-//     cout <<"Consistency between " <<s.f1->varIds <<" and " <<s.f2->varIds <<" with MessagePair " <<s.varIds;
+//     cout  <<"Consistency between "  <<s.f1->varIds  <<" and "  <<s.f2->varIds  <<" with MessagePair "  <<s.varIds;
 //   // test marginals over MessagePair variables on both factors
 //   Factor f1_marg(s.varIds), f2_marg(s.varIds);
 //   tensorMarginal( f1_marg, *(s.f1), s.varIds);
 //   tensorMarginal( f2_marg, *(s.f2), s.varIds);
 //   if(DEBUG > 0){
-//     cout <<endl <<"f1_marg:" <<endl <<f1_marg;
-//     cout <<"f2_marg:" <<endl <<f2_marg;
+//     cout  <<endl  <<"f1_marg:"  <<endl  <<f1_marg;
+//     cout  <<"f2_marg:"  <<endl  <<f2_marg;
 //   }
 //   if(f1_marg == f2_marg){
 //     if(DEBUG > 0)
-//       cout <<" -> consistent" <<endl;
+//       cout  <<" -> consistent"  <<endl;
 //     // test that messages product is also the same
 //     Factor messagesProduct;
 //     tensorProduct( messagesProduct, s.m12, s.m21);
 //     if(f1_marg == messagesProduct){
 //       if(DEBUG > 0)
-//         cout <<" Also consistent with m12*m21 = " <<messagesProduct <<"." <<endl;
+//         cout  <<" Also consistent with m12*m21 = "  <<messagesProduct  <<"."  <<endl;
 //       return true;
 //     }
 //     else {
 //       if(DEBUG > 0)
-//         cout <<" INCONSISTENT with m12*m21 = " <<messagesProduct <<"." <<endl;
-//       HALT("Local inconsistency for "  <<s.f1->varIds <<" and " <<s.f2->varIds);
+//         cout  <<" INCONSISTENT with m12*m21 = "  <<messagesProduct  <<"."  <<endl;
+//       HALT("Local inconsistency for "   <<s.f1->varIds  <<" and "  <<s.f2->varIds);
 //       return false;
 //     }
 //   }
 //   else {
 //     if(DEBUG > 0)
-//       cout <<" -> INCONSISTENT !!!" <<endl;
+//       cout  <<" -> INCONSISTENT !!!"  <<endl;
 //     if(crashIfInconsistent){
-//       HALT("Local inconsistency for "  <<s.f1->varIds <<" and " <<s.f2->varIds);
+//       HALT("Local inconsistency for "   <<s.f1->varIds  <<" and "  <<s.f2->varIds);
 //     }
 //     return false;
 //   }
@@ -2100,50 +2097,50 @@ Jordan, Chap. 17, p.22: "In a junction tree, local consistency implies global co
 
 // uses Marc's eq (12)
 // void JunctionTree::jt_passMessage(MessagePair& s, Factor& f_from, FactorGraph& jt){
-// 	uint DEBUG = 0;
+//  uint DEBUG = 0;
 //     if(DEBUG > 0){
-//         cout <<"Pass message [START]" <<endl;
-//         cout<<&s<<endl;
+//         cout  <<"Pass message [START]"  <<endl;
+//         cout <<&s<<endl;
 //     }
-//     
-// 	// message m21
-// 	if(&f_from == s.f2){
-//         if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s.f1->varIds<<endl;}
-// 		if(DEBUG > 2){
-// 			cout <<"f_from: " <<endl <<f_from;
-//             cout <<"f_to_old: " <<endl <<*s.f1;
-//             cout <<"Message 2 --> 1"<<endl;
-// 		}
-//         
+//
+//  // message m21
+//  if(&f_from == s.f2){
+//         if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s.f1->varIds<<endl;}
+//    if(DEBUG > 2){
+//      cout  <<"f_from: "  <<endl  <<f_from;
+//             cout  <<"f_to_old: "  <<endl  <<*s.f1;
+//             cout  <<"Message 2 --> 1" <<endl;
+//    }
+//
 //         // Calculate new msg
 //         jt.calcMessage_withDivision(f_from, *s.f1);
-// 		// Update target potential (~ incorporate message ~ rescaling)
-// 		tensorMultiply(*s.f1, s.m21);
-//         
-//         if(DEBUG > 1) cout <<"New msg (m21): " <<endl <<s.m21;
-//         if(DEBUG > 2) cout <<"f_to: " <<endl <<*s.f1;
-// 	}
-// 	// message m12
-// 	else {
-//         if(DEBUG > 0){cout <<f_from.varIds <<" --> " <<s.f2->varIds<<endl;}
-// 		if(DEBUG > 2){
-//             cout <<"f_from: " <<endl <<f_from <<endl;
-//             cout <<"f_to_old: " <<endl <<*s.f2 <<endl;
-//             cout <<"Message 1 --> 2"<<endl;
-// 		}
-// 		
+//    // Update target potential (~ incorporate message ~ rescaling)
+//    tensorMultiply(*s.f1, s.m21);
+//
+//         if(DEBUG > 1) cout  <<"New msg (m21): "  <<endl  <<s.m21;
+//         if(DEBUG > 2) cout  <<"f_to: "  <<endl  <<*s.f1;
+//  }
+//  // message m12
+//  else {
+//         if(DEBUG > 0){cout  <<f_from.varIds  <<" --> "  <<s.f2->varIds<<endl;}
+//    if(DEBUG > 2){
+//             cout  <<"f_from: "  <<endl  <<f_from  <<endl;
+//             cout  <<"f_to_old: "  <<endl  <<*s.f2  <<endl;
+//             cout  <<"Message 1 --> 2" <<endl;
+//    }
+//
 //         // Calculate new msg
 //         jt.calcMessage_withDivision(f_from, *s.f2);
-// 		// Update target potential (~ incorporate message ~ rescaling)
+//    // Update target potential (~ incorporate message ~ rescaling)
 //         tensorMultiply(*s.f2, s.m12);
-// 		
-//         if(DEBUG > 1) cout <<"New msg (m12): " <<endl <<s.m12;
-//         if(DEBUG > 2) cout <<"f_to: " <<endl <<*s.f2;
-// 	}
-// 	
-// 	if(DEBUG > 0){
-// 		cout <<"Pass message [END]" <<endl;
-// 	}
+//
+//         if(DEBUG > 1) cout  <<"New msg (m12): "  <<endl  <<s.m12;
+//         if(DEBUG > 2) cout  <<"f_to: "  <<endl  <<*s.f2;
+//  }
+//
+//  if(DEBUG > 0){
+//    cout  <<"Pass message [END]"  <<endl;
+//  }
 // }
 
 
@@ -2152,37 +2149,37 @@ Jordan, Chap. 17, p.22: "In a junction tree, local consistency implies global co
 void recursiveCollectEvidence(infer::Factor* node, infer::Factor* parent, infer::FactorGraph& junctionTree){
   uint DEBUG = 0;
   if(DEBUG > 0)
-    cout <<"Collect evidence for " <<node->varIds <<" [START]" <<endl;
+    cout  <<"Collect evidence for "  <<node->varIds  <<" [START]"  <<endl;
   uint i;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   if(DEBUG > 0){
-    cout <<" Neighbors: ";
+    cout  <<" Neighbors: ";
     printFactorArrayViaVariableSets(neighbors);
   }
-  //   cout<<junctionTree<<endl;
+  //   cout <<junctionTree <<endl;
   FOR1D(neighbors, i){
     if(neighbors(i) == parent)
       continue;
     recursiveCollectEvidence(neighbors(i), node, junctionTree);
     // update with respect to this direction
     infer::MessagePair* s = getMessagePair(node, neighbors(i));
-    // 		cout <<"got MessagePair: " <<std::flush <<s <<endl;
+    //    cout  <<"got MessagePair: "  <<std::flush  <<s  <<endl;
     // message m21
     if(node == s->f1){
-      if(DEBUG > 0) cout <<"Pass message " <<s->f2->varIds <<" --> " <<node->varIds <<endl;
+      if(DEBUG > 0) cout  <<"Pass message "  <<s->f2->varIds  <<" --> "  <<node->varIds  <<endl;
       infer::Factor* b_to = junctionTree.B_c(get_list_index_unsigned__orig(junctionTree, s->f1));
       infer::passMessage(*(s->f2), *(s->f1), *b_to, NO_DIV);
     }
     // message 12
     else {
-      if(DEBUG > 0) cout <<"Pass message " <<s->f1->varIds <<" --> " <<node->varIds <<endl;
+      if(DEBUG > 0) cout  <<"Pass message "  <<s->f1->varIds  <<" --> "  <<node->varIds  <<endl;
       infer::Factor* b_to = junctionTree.B_c(get_list_index_unsigned__orig(junctionTree, s->f2));
       infer::passMessage(*(s->f1), *(s->f2), *b_to, NO_DIV);
     }
   }
   if(DEBUG > 0)
-    cout <<"Collect evidence for " <<node->varIds <<" [END]" <<endl;
+    cout  <<"Collect evidence for "  <<node->varIds  <<" [END]"  <<endl;
 }
 
 
@@ -2190,9 +2187,9 @@ void recursiveCollectEvidence(infer::Factor* node, infer::Factor* parent, infer:
 void recursiveDistributeEvidence(infer::Factor* node, infer::Factor* parent, infer::FactorGraph& junctionTree){
   uint DEBUG = 0;
   if(DEBUG > 0)
-    cout <<"Distribute evidence for " <<node->varIds <<" [START]" <<endl;
+    cout  <<"Distribute evidence for "  <<node->varIds  <<" [START]"  <<endl;
   uint i;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   FOR1D(neighbors, i){
     if(neighbors(i) == parent)
@@ -2202,21 +2199,21 @@ void recursiveDistributeEvidence(infer::Factor* node, infer::Factor* parent, inf
     // message m12
     if(node == s->f1){
       // neighbors(i) == s->f2
-      if(DEBUG > 0) cout <<"Pass message " <<node->varIds <<" --> " <<s->f2->varIds <<endl;
+      if(DEBUG > 0) cout  <<"Pass message "  <<node->varIds  <<" --> "  <<s->f2->varIds  <<endl;
       infer::Factor* b_to = junctionTree.B_c(get_list_index_unsigned__orig(junctionTree, s->f2));
       passMessage(*(s->f1), *(s->f2), *b_to, NO_DIV);
     }
     // message 21
     else {
       // neighbors(i) == s->f1
-      if(DEBUG > 0) cout <<"Pass message " <<node->varIds <<" --> " <<s->f1->varIds <<endl;
+      if(DEBUG > 0) cout  <<"Pass message "  <<node->varIds  <<" --> "  <<s->f1->varIds  <<endl;
       infer::Factor* b_to = junctionTree.B_c(get_list_index_unsigned__orig(junctionTree, s->f1));
       infer::passMessage(*(s->f2), *(s->f1), *b_to, NO_DIV);
     }
     recursiveDistributeEvidence(neighbors(i), node, junctionTree);
   }
   if(DEBUG > 0)
-    cout <<"Distribute evidence for " <<node->varIds <<" [END]" <<endl;
+    cout  <<"Distribute evidence for "  <<node->varIds  <<" [END]"  <<endl;
 }
 
 
@@ -2228,24 +2225,24 @@ void infer::JunctionTree::collectAndDistributeInference(FactorGraph& junctionTre
   
   uint DEBUG = 0;
   if(DEBUG > 0){
-    cout <<"---------------------------" <<endl;
-    cout <<"Propagating probabilities:" <<endl;
+    cout  <<"---------------------------"  <<endl;
+    cout  <<"Propagating probabilities:"  <<endl;
   }
-  // determine root	
+  // determine root
   Factor* p_root = junctionTree.F(0);
   if(DEBUG > 0){
-    cout <<"Root: " <<p_root->varIds <<endl;
+    cout  <<"Root: "  <<p_root->varIds  <<endl;
   }
   // collect evidence
   if(DEBUG > 0){
-    cout <<"\n\n*******************************\n******************************\n**********************\n";
-    cout <<"Collecting evidence:" <<endl;
+    cout  <<"\n\n*******************************\n******************************\n**********************\n";
+    cout  <<"Collecting evidence:"  <<endl;
   }
   recursiveCollectEvidence(p_root, 0, junctionTree);
   // distribute evidence
   if(DEBUG > 0){
-    cout <<"\n\n*******************************\n******************************\n**********************\n";
-    cout <<"Distributing evidence:" <<endl;
+    cout  <<"\n\n*******************************\n******************************\n**********************\n";
+    cout  <<"Distributing evidence:"  <<endl;
   }
   recursiveDistributeEvidence(p_root, 0, junctionTree);
   
@@ -2256,54 +2253,54 @@ void infer::JunctionTree::collectAndDistributeInference(FactorGraph& junctionTre
 }
 
 
-void infer::JunctionTree::constructJunctionTree(FactorGraph& junctionTree, const FacL& factors, const VarL& vars){
+void infer::JunctionTree::constructJunctionTree(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars){
   uint DEBUG = 0;
-  if(DEBUG>0){cout<<"constructJunctionTree [START]"<<endl;}
+  if(DEBUG>0){cout <<"constructJunctionTree [START]" <<endl;}
   
   //construct cliques of triangulated tree
-  FacL triangulatedCliques;
+  FactorList triangulatedCliques;
   buildTriangulatedCliques(factors, triangulatedCliques);
   
   if(DEBUG > 0){
-    cout <<"Input factors:" <<endl;
-    listWrite(factors,cout);
+    cout  <<"Input factors:"  <<endl;
+    listWrite(factors, cout);
     uint f;
-    cout <<"Factors built from triangulated graph:" <<endl;
+    cout  <<"Factors built from triangulated graph:"  <<endl;
     FOR1D(triangulatedCliques, f){
-      cout <<"(" <<f <<") " <<triangulatedCliques(f)->varIds <<endl;
+      cout  <<"("  <<f  <<") "  <<triangulatedCliques(f)->varIds  <<endl;
     }
-    cout <<endl;
+    cout  <<endl;
   }
   
   //build junction tree
   buildMaxSpanningTree(triangulatedCliques, vars, junctionTree);
   checkMessagePairConsistency(junctionTree.messages);
-  if(DEBUG>0){cout<<"Message pairs consistent."<<endl;}
+  if(DEBUG>0){cout <<"Message pairs consistent." <<endl;}
   if(DEBUG>0) junctionTree.write(cout);
   junctionTree.resetMessages();
   if(DEBUG > 0){
-    cout <<"Junction tree before probability propagation:" <<endl;
-    cout <<junctionTree <<endl;
+    cout  <<"Junction tree before probability propagation:"  <<endl;
+    cout  <<junctionTree  <<endl;
     if(DEBUG > 1)
-      junctionTree.writeMessagePairs( cout );
+      junctionTree.writeMessagePairs(cout);
   }
   checkJunctionTreeProperty(junctionTree);
 }
 
 
-void infer::JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const FacL& factors, const VarL& vars){
+void infer::JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars){
   constructJunctionTree(junctionTree, factors, vars);
   collectAndDistributeInference(junctionTree);
   
   uint DEBUG = 0;
   
   if(DEBUG > 0){
-    cout <<"Junction tree after probability propagation:" <<endl;
-    cout <<junctionTree <<endl;
+    cout  <<"Junction tree after probability propagation:"  <<endl;
+    cout  <<junctionTree  <<endl;
     if(DEBUG > 1)
-      junctionTree.writeMessagePairs( cout );
+      junctionTree.writeMessagePairs(cout);
   }
-  if(DEBUG>0){cout<<"constructJunctionTree [END]"<<endl;}
+  if(DEBUG>0){cout <<"constructJunctionTree [END]" <<endl;}
 }
 
 
@@ -2318,7 +2315,7 @@ void infer::JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const
 //     Loopy BP methods
 //
 
-void infer::LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const FacL& factors){
+void infer::LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const FactorList& factors){
   uint DEBUG = 0;
   constructBipartiteFactorGraph(fg, factors);
   uint MAX_STEPS = 20;
@@ -2326,7 +2323,7 @@ void infer::LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const Fa
   double STOP_TOL = 0.001;
   uint i;
   for(i=0; i<MAX_STEPS; i++){
-    if(DEBUG>0){cout<<"+++ Round "<<(i+1)<<" +++"<<endl;}
+    if(DEBUG>0){cout <<"+++ Round " <<(i+1) <<" +++" <<endl;}
     change = passAllEdges(fg, PARALLEL);
     if(change < STOP_TOL) break;
     if(DEBUG>0){fg.writeVariableBeliefs();}
@@ -2338,8 +2335,7 @@ void infer::LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const Fa
 double infer::LoopyBP_obsolete::passAllEdges(FactorGraph& fg, PassType type){
   if(type == PARALLEL){
     return passAllEdges_parallel(fg);
-  }
-  else
+  } else
     NIY;
   return 0;
 }
@@ -2349,17 +2345,17 @@ double infer::LoopyBP_obsolete::passAllEdges_parallel(FactorGraph& fg){
   uint DEBUG =0;
   // (1) cliques --> vars
   uint i;
-  if(DEBUG>0){cout<<"***** Propagating forth (factor -> variable) *****"<<endl;}
+  if(DEBUG>0){cout <<"***** Propagating forth (factor -> variable) *****" <<endl;}
   FOR1D(fg.F, i){
     shoutMessages(*fg.F(i), NO_DIV);
   }
-  if(DEBUG>0){cout<<"***** Propagating back (variable -> factor) *****"<<endl;}
+  if(DEBUG>0){cout <<"***** Propagating back (variable -> factor) *****" <<endl;}
   // (2) vars --> cliques
   FOR1D(fg.F_v, i){
     shoutMessages(*fg.F_v(i), NO_DIV);
   }
   double maxChange = fg.computeBeliefs();
-  if(DEBUG>0){cout<<"Belief change:  maxChange="<<maxChange<<endl;}
+  if(DEBUG>0){cout <<"Belief change:  maxChange=" <<maxChange <<endl;}
   return maxChange;
 }
 
@@ -2380,24 +2376,24 @@ void infer::LoopyBP_obsolete::shoutMessages(Factor& f, MsgCalc calcMsgType){
 
 
 
-void check_exactlyOneConditional(VarL& vars, FacL& facs){
+void check_exactlyOneConditional(VariableList& vars, FactorList& facs){
   uint i, k;
   CHECK(vars.N==facs.N, "#vars != #facs");
   FOR1D(vars, i){
     FOR1D(facs, k){
       if(facs(k)->variables(0) == vars(i)) break;
     }
-    CHECK(k<facs.N, "No factor for variable "<<vars(i)->id);
+    CHECK(k<facs.N, "No factor for variable " <<vars(i)->id);
   }
 }
 
-void check_atLeastOneConditional(VarL& vars, FacL& facs){
+void check_atLeastOneConditional(VariableList& vars, FactorList& facs){
   uint i, k;
   FOR1D(vars, i){
     FOR1D(facs, k){
       if(facs(k)->variables(0) == vars(i)) break;
     }
-    CHECK(k<facs.N, "No factor for variable "<<vars(i)->id);
+    CHECK(k<facs.N, "No factor for variable " <<vars(i)->id);
   }
 }
 
@@ -2408,19 +2404,19 @@ void check_atLeastOneConditional(VarL& vars, FacL& facs){
 //  Loopy BP - other approach (MT)
 //
 
-void connectThemUp(VarL& V,FactorList& F){
+void infer::connectThemUp(VariableList& V, FactorList& F){
   MT_MSG("you shouldn't use this anymore!!");
   infer::Factor *f;
   uint i;
-  for_list(i,f,F) checkConsistent(*f);
+  for_list(i, f, F) checkConsistent(*f);
 #if 0
   NIY;
   infer::Variable *v;
   infer::Factor *f;
-  uint i,j;
-  for_list(i,v,V) v->factors.clear();
-  for_list(i,f,F) f->variables.clear();
-  for_list(i,f,F) for(j=0;j<f->varIds.N;j++){
+  uint i, j;
+  for_list(i, v, V) v->factors.clear();
+  for_list(i, f, F) f->variables.clear();
+  for_list(i, f, F) for(j=0; j<f->varIds.N; j++){
     v=V(f->varIds(j));
     v->factors.append(f);
     f->variables.append(v);
@@ -2428,72 +2424,83 @@ void connectThemUp(VarL& V,FactorList& F){
 #endif
 }
 
-void infer::LoopyBP::initBipartite(const VarL& _vars,const FactorList& _facs){
-  CHECK(!msgs.N,"delete list before");
+void infer::LoopyBP::clear(){
+  vars.clear();
+  facs.clear();
+  listDelete(msgs);
+}
+
+void infer::LoopyBP::initBipartite(const VariableList& _vars, const FactorList& _facs){
+  CHECK(!msgs.N, "delete list before");
   vars=_vars;
   facs=_facs;
-  uint i,j;
+  uint i, j;
   Factor *f;
-  for_list(i,f,facs){
-    for(j=0;j<f->variables.N;j++){
-      msgs.append( new MessagePair(f,f->variables(j)) );
+  for_list(i, f, facs){
+    for(j=0; j<f->variables.N; j++){
+      msgs.append(new MessagePair(f, f->variables(j)));
     }
   }
 }
 
-void infer::LoopyBP::initPairwise(const VarL& _vars,const FactorList& _facs){
-  CHECK(!msgs.N,"delete list before");
+void infer::LoopyBP::initPairwise(const VariableList& _vars, const FactorList& _facs){
+  CHECK(!msgs.N, "delete list before");
   vars=_vars;
   facs=_facs;
   uint i;
   Factor *f;
-  for_list(i,f,facs){
-    CHECK(f->variables.N==2,"only for pair-wise networks!");
-    msgs.append( new MessagePair(f->variables(0), f->variables(1),f) );
+  for_list(i, f, facs){
+    CHECK(f->variables.N<=2, "only for pair-wise networks!");
+    if(f->variables.N==1) msgs.append(new MessagePair(f, f->variables(0)));
+    if(f->variables.N==2) msgs.append(new MessagePair(f->variables(0), f->variables(1), f));
   }
 }
 
-void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs){
+void infer::LoopyBP::getVarBeliefs(MT::Array<Factor>& beliefs, bool normalized){
   uint i;
   beliefs.resize(vars.N);
-  for(i=0;i<vars.N;i++) collectBelief(beliefs(i),vars(i),NULL);
+  for(i=0; i<vars.N; i++){
+    collectBelief(beliefs(i), vars(i), NULL);
+    if(normalized) beliefs(i).normalize();
+  }
 }
 
-void infer::LoopyBP::getVarBelief(Factor& belief,Variable *v){
-  collectBelief(belief,v,NULL);
+void infer::LoopyBP::getVarBelief(Factor& belief, Variable *v, bool normalized){
+  collectBelief(belief, v, NULL);
+  if(normalized) belief.normalize();
 }
 
 void infer::LoopyBP::step(){
-  recomputeBatchOfMessages(msgs,false);
-  recomputeBatchOfMessages(msgs,true);
+  recomputeBatchOfMessages(msgs, false);
+  recomputeBatchOfMessages(msgs, true);
 }
 
 infer::LoopyBP::~LoopyBP(){
   listDelete(msgs);
 }
 
-void loopyBP_bipartite(const VarL& vars,const FactorList& facs,uint T){
+void loopyBP_bipartite(const VariableList& vars, const FactorList& facs, uint T){
   infer::LoopyBP lbp;
-  lbp.initBipartite(vars,facs);
-
+  lbp.initBipartite(vars, facs);
+  
   MT::Array<infer::Factor> beliefs(vars.N);
   uint t;
-  for(t=0;t<T;t++){
+  for(t=0; t<T; t++){
     lbp.getVarBeliefs(beliefs);
-    beliefs.write(cout,"\n");
+    beliefs.write(cout, "\n");
     lbp.step();
   }
 }
 
-void loopyBP_pairwise(const VarL& vars,const FactorList& facs,uint T){
+void loopyBP_pairwise(const VariableList& vars, const FactorList& facs, uint T){
   infer::LoopyBP lbp;
-  lbp.initPairwise(vars,facs);
-
+  lbp.initPairwise(vars, facs);
+  
   MT::Array<infer::Factor> beliefs(vars.N);
   uint t;
-  for(t=0;t<T;t++){
+  for(t=0; t<T; t++){
     lbp.getVarBeliefs(beliefs);
-    beliefs.write(cout,"\n");
+    beliefs.write(cout, "\n");
     lbp.step();
   }
 }
@@ -2503,7 +2510,7 @@ void loopyBP_pairwise(const VarL& vars,const FactorList& facs,uint T){
 //  mean field
 //
 
-void meanField_collectBeliefs(arr& beliefs,const VarL& vars){
+void meanField_collectBeliefs(arr& beliefs, const VariableList& vars){
   HALT("that's broke");
 #if 0
   if(beliefs.N!= vars.N){
@@ -2511,13 +2518,13 @@ void meanField_collectBeliefs(arr& beliefs,const VarL& vars){
     beliefs = .5;
   }
   
-  uint i,j;
+  uint i, j;
   Variable *v;
   Factor *f;
   arr b(2);
-  for_list(i,v,vars){
+  for_list(i, v, vars){
     b.setZero();
-    for_list(j,f,v->factors){
+    for_list(j, f, v->factors){
       if(f->variables(0)==v){
         b += f->P * ARR(1.-beliefs(f->variables(1)), beliefs(f->variables(1)));
       }else{
@@ -2531,8 +2538,8 @@ void meanField_collectBeliefs(arr& beliefs,const VarL& vars){
 
 void infer::LoopyBP::step_meanfield(){
   arr beliefs;
-  meanField_collectBeliefs(beliefs,vars);
-  cout <<beliefs <<endl;
+  meanField_collectBeliefs(beliefs, vars);
+  cout  <<beliefs  <<endl;
 }
 
 //=======================================================================
@@ -2540,25 +2547,25 @@ void infer::LoopyBP::step_meanfield(){
 //  inference on trees
 //
 
-std::ostream& operator<<(std::ostream& os,const TreeNode& t){
-  return os <<"par=" <<t.parent <<" dim=" <<t.dim <<" P=" <<t.P <<endl;
+std::ostream& operator <<(std::ostream& os, const TreeNode& t){
+  return os  <<"par="  <<t.parent  <<" dim="  <<t.dim  <<" P="  <<t.P  <<endl;
 }
 
 void randomTree(Tree& tree, uint N, uint K, uint roots){
   tree.resize(N);
   uint n;
-  for(n=0;n<N;n++){
+  for(n=0; n<N; n++){
     tree(n).dim=K;                 //K-dim variable
     if(n<roots) tree(n).parent=-1;
     else        tree(n).parent=rnd(n);  //random parent
-    if(n<roots) tree(n).P.resize(K);    //K-times-K joint factor (this,parent)
-    else        tree(n).P.resize(K,K);
+    if(n<roots) tree(n).P.resize(K);   //K-times-K joint factor (this, parent)
+    else        tree(n).P.resize(K, K);
     MT_MSG("fully random roots!");
-    /*if(n<roots) { // deterministic roots for testing purposes
+    /*if(n<roots){ // deterministic roots for testing purposes
       tree(n).P(0) = 0.0;
       tree(n).P(1) = 1.0;
     } else*/
-    rndUniform(tree(n).P,.1,1.,false);
+    rndUniform(tree(n).P, .1, 1., false);
   }
 }
 
@@ -2570,28 +2577,28 @@ void randomTree(Tree& tree, uint N, uint K, uint roots){
 
 everything is ordered precisely */
 
-void tree2FactorGraph(infer::FactorGraph& fg,const MT::Array<TreeNode>& tree){
-  uint i,N=tree.N;
+void tree2FactorGraph(infer::FactorGraph& fg, const MT::Array<TreeNode>& tree){
+  uint i, N=tree.N;
   fg.V.resize(N);
   fg.F.resize(N);
-  for(i=0;i<N;i++){    //variables
-    fg.V(i) = new infer::Variable(tree(i).dim, STRING("tree_node_"<<std::setfill('0')<<std::setw(3)<<i), i);
+  for(i=0; i<N; i++){    //variables
+    fg.V(i) = new infer::Variable(tree(i).dim, STRING("tree_node_" <<std::setfill('0') <<std::setw(3) <<i), i);
   }
-  for(i=0;i<N;i++){    //factors
+  for(i=0; i<N; i++){    //factors
     if(tree(i).parent<0) fg.F(i) = new infer::Factor(ARRAY(fg.V(i)));
-    else                 fg.F(i) = new infer::Factor(ARRAY(fg.V(i),fg.V(tree(i).parent)));
+    else                 fg.F(i) = new infer::Factor(ARRAY(fg.V(i), fg.V(tree(i).parent)));
     fg.F(i)->setP(tree(i).P);
   }
-  for(i=0;i<N;i++){    //messages
-    if(tree(i).parent>=0) fg.messages.append(new infer::MessagePair(fg.F(i),fg.F(tree(i).parent)));
+  for(i=0; i<N; i++){    //messages
+    if(tree(i).parent>=0) fg.messages.append(new infer::MessagePair(fg.F(i), fg.F(tree(i).parent)));
   }
   fg.resetMessages();
   fg.resetCliqueBeliefs();
 }
 
-// void getPosteriors(MT::Array<arr>& posteriors, FactorGraph& model) {
+// void getPosteriors(MT::Array<arr>& posteriors, FactorGraph& model){
 //   uint i;
-//   FOR1D(model.V, i) {
+//   FOR1D(model.V, i){
 //     uintA var_ids;
 //     var_ids.append(model.V(i)->id);
 //     Factor marginal;
@@ -2602,16 +2609,16 @@ void tree2FactorGraph(infer::FactorGraph& fg,const MT::Array<TreeNode>& tree){
 
 void treeInference(MT::Array<arr>& posteriors, const Tree& tree){
   FactorGraph model;
-  tree2FactorGraph(model,tree);
-  treeInference(model.F(0),true);
+  tree2FactorGraph(model, tree);
+  treeInference(model.F(0), true);
   infer::getVariableBeliefs(posteriors, model.V);
 }
 
-void treeInference(MT::Array<arr>& posteriors,const Tree& forest,uintA& roots){
+void treeInference(MT::Array<arr>& posteriors, const Tree& forest, uintA& roots){
   FactorGraph model;
-  tree2FactorGraph(model,forest);
-  for(uint i=0;i<roots.N;i++){
-    treeInference(model.F(roots(i)),true);
+  tree2FactorGraph(model, forest);
+  for(uint i=0; i<roots.N; i++){
+    treeInference(model.F(roots(i)), true);
   }
 //   model.write(cout, true, true);
 //   model.writeMessagePairs(cout);
@@ -2619,13 +2626,13 @@ void treeInference(MT::Array<arr>& posteriors,const Tree& forest,uintA& roots){
 }
 
 
-void write(Tree& tree) {
+void write(Tree& tree){
   uint i;
-  cout<<"tree: ";
-  FOR1D(tree, i) {
-    cout<<tree(i).parent<<" ";
+  cout <<"tree: ";
+  FOR1D(tree, i){
+    cout <<tree(i).parent <<" ";
   }
-  cout<<endl;
+  cout <<endl;
 }
 
 
@@ -2637,47 +2644,47 @@ void write(Tree& tree) {
 /* message orders allows us to compute a series of messages
    in a specified order and direction. A message order is stored
    as a list of messages and a directionality with each of them. */
-   
+
 
 //! compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
-void infer::recomputeBatchOfMessages(MessagePairList &msgs,bool invert_order){
-  uint i,N=msgs.N;
-  if(!invert_order) for(i=0;i<N;i++) recomputeMessage_12(*msgs(i));
-  else              for(i=N;i--;)    recomputeMessage_21(*msgs(i));
+void infer::recomputeBatchOfMessages(MessagePairList &msgs, bool invert_order){
+  uint i, N=msgs.N;
+  if(!invert_order) for(i=0; i<N; i++) recomputeMessage_12(*msgs(i));
+  else              for(i=N; i--;)    recomputeMessage_21(*msgs(i));
 }
 
 //! compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
-void infer::recomputeBatchOfMessages(MessagePairList &msgs,const boolA &msgFlips,bool invert_order){
-  uint i,N=msgs.N;
-  if(!invert_order) for(i=0;i<N;i++){
-    if(!msgFlips(i)) recomputeMessage_12(*msgs(i));
-    else             recomputeMessage_21(*msgs(i));
-  }else for(i=N;i--;){
-    if(!msgFlips(i)) recomputeMessage_21(*msgs(i));
-    else             recomputeMessage_12(*msgs(i));
-  }
+void infer::recomputeBatchOfMessages(MessagePairList &msgs, const boolA &msgFlips, bool invert_order){
+  uint i, N=msgs.N;
+  if(!invert_order) for(i=0; i<N; i++){
+      if(!msgFlips(i)) recomputeMessage_12(*msgs(i));
+      else             recomputeMessage_21(*msgs(i));
+    } else for(i=N; i--;){
+      if(!msgFlips(i)) recomputeMessage_21(*msgs(i));
+      else             recomputeMessage_12(*msgs(i));
+    }
 }
 
 //! for inference in a tree, we first construct an ordering descending from the root
 void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, const Factor *root){
-  uint i,j;
+  uint i, j;
   Factor *f;
   MessagePair *m;
-
+  
   //--- construct a tree oder
   //first ad all neighbor links of root to the order
-  for(j=0;j<root->messages.N;j++){
+  for(j=0; j<root->messages.N; j++){
     m=root->messages(j);
     msgs.append(m);
     if(m->f1==root) msgFlips.append(false);
     else            msgFlips.append(true);
   }
   //step through the existing links and append sublinks dynamically
-  for(i=0;i<msgs.N;i++){
+  for(i=0; i<msgs.N; i++){
     if(!msgFlips(i)) f=msgs(i)->f2; else f=msgs(i)->f1; //f is the sub-factor of order(i).m
-    for(j=0;j<f->messages.N;j++){
+    for(j=0; j<f->messages.N; j++){
       m=f->messages(j);                                     //m is one sub-message of f
-      if(m==msgs(i)) continue;                           //discard it when it is going up
+      if(m==msgs(i)) continue;                          //discard it when it is going up
       msgs.append(m);
       if(m->f1==f) msgFlips.append(false);
       else         msgFlips.append(true);
@@ -2688,19 +2695,19 @@ void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, co
 //! inference on a tree is then trivial: compute a descending-from-root order,
 //! pass all messages backward (collecting towards the root)
 //! pass all messages forward  (distributing from the root)
-void infer::treeInference(const Factor *root,bool check_consitency){
+void infer::treeInference(const Factor *root, bool check_consitency){
   MessagePairList msgs;
   boolA msgFlips;
   
-  constructTreeMessageOrder(msgs,msgFlips,root);
-
-  //cout <<order <<endl;
-
-  recomputeBatchOfMessages(msgs,msgFlips,true);
-  recomputeBatchOfMessages(msgs,msgFlips,false);
-
+  constructTreeMessageOrder(msgs, msgFlips, root);
+  
+  //cout  <<order  <<endl;
+  
+  recomputeBatchOfMessages(msgs, msgFlips, true);
+  recomputeBatchOfMessages(msgs, msgFlips, false);
+  
   if(check_consitency){
-    for(uint i=0;i<msgs.N;i++) checkConsistency(*msgs(i));
+    for(uint i=0; i<msgs.N; i++) checkConsistency(*msgs(i));
   }
   //MT_MSG("everything consistent :-)");
 }
@@ -2711,29 +2718,29 @@ void infer::treeInference(const Factor *root,bool check_consitency){
 //  inference for mixture length DBNs
 //
 
-void inferMixLengthUnstructured(
-    arr& alpha, arr& beta, arr& PT, double& PR, double& ET,
-    const arr& S, const arr& R, const arr& P, double gamma, uint Tmax,
-    bool updateMode){
-  DEBUG_INFER(1,cout <<MT_HERE <<endl);
-  arr a,b;
-  double gt,gSum;
+void infer::inferMixLengthUnstructured(
+  arr& alpha, arr& beta, arr& PT, double& PR, double& ET,
+  const arr& S, const arr& R, const arr& P, double gamma, uint Tmax,
+  bool updateMode){
+  DEBUG_INFER(1, cout  <<MT_HERE  <<endl);
+  arr a, b;
+  double gt, gSum;
   uint t;
-  CHECK(S.nd==1 && R.nd==1 && P.nd==2 && S.N==R.N && S.N==P.d0 && S.N==P.d1,"");
-  CHECK(gamma>0. && gamma<=1.,"");
+  CHECK(S.nd==1 && R.nd==1 && P.nd==2 && S.N==R.N && S.N==P.d0 && S.N==P.d1, "");
+  CHECK(gamma>0. && gamma<=1., "");
   if(!updateMode){
     a = S;
     b = R;
     alpha = a;
     beta  = b * gamma;
     PT.resize(2*Tmax+1);
-    PT(0) = scalarProduct(a,b);
+    PT(0) = scalarProduct(a, b);
     gt = gamma;
-    for(t=1;t<=Tmax;t++){
+    for(t=1; t<=Tmax; t++){
       a = P*a;
-      PT(2*t-1) = scalarProduct(a,b);
+      PT(2*t-1) = scalarProduct(a, b);
       b = b*P;
-      PT(2*t) = scalarProduct(a,b);
+      PT(2*t) = scalarProduct(a, b);
       alpha += gt*a;
       gt *= gamma;
       beta += gt*b;
@@ -2742,7 +2749,7 @@ void inferMixLengthUnstructured(
     ET = 0.;
     gt = 1.;
     gSum=0.;
-    for(t=0;t<=2*Tmax;t++){
+    for(t=0; t<=2*Tmax; t++){
       PT(t) *= gt;
       ET += t*PT(t);
       PR += PT(t);
@@ -2753,73 +2760,73 @@ void inferMixLengthUnstructured(
     ET /= PR;
 #ifndef MT_NOCHECK
     //if the iteration above is only to Tmax instead of 2.*Tmax, the following check is true:
-    //CHECK(fabs(scalarProduct(alpha,R)-PR)<1e-3,"");
-    double dummy1 = scalarProduct(S,beta);
-    double dummy2 = scalarProduct(alpha,R);
-    CHECK(fabs(dummy1-gamma*dummy2)<1e-6,"");
+    //CHECK(fabs(scalarProduct(alpha, R)-PR)<1e-3, "");
+    double dummy1 = scalarProduct(S, beta);
+    double dummy2 = scalarProduct(alpha, R);
+    CHECK(fabs(dummy1-gamma*dummy2)<1e-6, "");
 #endif
   }else{
-    CHECK(alpha.nd==1 && beta.nd==1 && alpha.N==S.N && beta.N==R.N,"");
+    CHECK(alpha.nd==1 && beta.nd==1 && alpha.N==S.N && beta.N==R.N, "");
     //alpha /= (1.-gamma); //inverse of operation on last return
-    for(t=0;t<=Tmax;t++){
+    for(t=0; t<=Tmax; t++){
       alpha *= gamma;  alpha = P*alpha;  alpha += S;
-      beta  = beta*P;  beta += R;        beta  *= gamma;  
+      beta  = beta*P;  beta += R;        beta  *= gamma;
     }
     PT.resize(0);
     ET=-1;
-    PR = scalarProduct(alpha,R);
+    PR = scalarProduct(alpha, R);
     /*
-    double dummy1 = scalarProduct(S,beta);
-    double dummy2 = scalarProduct(alpha,R);
-    CHECK(fabs(dummy1-gamma*dummy2)<1e-3,""); //check holds only approx, because old alpha & beta are w.r.t old params!!
+    double dummy1 = scalarProduct(S, beta);
+    double dummy2 = scalarProduct(alpha, R);
+    CHECK(fabs(dummy1-gamma*dummy2)<1e-3, ""); //check holds only approx, because old alpha & beta are w.r.t old params!!
     */
   }
   //alpha *= (1.-gamma);
   PR    *= (1.-gamma);
 }
 
-void inferMixLengthStructured(
-    Factor& alpha, Factor& beta, arr& PT, double& PR, double& ET,
-    const VarL& headVars, const VarL& tailVars,
-    const FacL& S, const FacL& R, const FacL& P, double gamma, uint Tmax,
-    bool updateMode){
-
-  DEBUG_INFER(1,cout <<MT_HERE <<endl);
-  Factor a,b,Shead,Rtail;
-  double gt,gSum;
+void infer::inferMixLengthStructured(
+  Factor& alpha, Factor& beta, arr& PT, double& PR, double& ET,
+  const VariableList& headVars, const VariableList& tailVars,
+  const FactorList& S, const FactorList& R, const FactorList& P, double gamma, uint Tmax,
+  bool updateMode){
+  
+  DEBUG_INFER(1, cout  <<MT_HERE  <<endl);
+  Factor a, b, Shead, Rtail;
+  double gt, gSum;
   uint t;
-  DEBUG_INFER(2,cout <<"  headVars=" <<headVars <<"  tailVars=" <<tailVars <<endl);
-  CHECK(headVars.N==tailVars.N,""); //actually should also check that their dims are equal...
-  CHECK(gamma>0. && gamma<=1.,"");
+  DEBUG_INFER(2, cout  <<"  headVars="  <<headVars  <<"  tailVars="  <<tailVars  <<endl);
+  CHECK(headVars.N==tailVars.N, ""); //actually should also check that their dims are equal...
+  CHECK(gamma>0. && gamma<=1., "");
   if(!updateMode){
     //get initial a and b:
-    eliminationAlgorithm(a,S,headVars);
-    //FacL tmp = P;  tmp.append(R);
-    eliminationAlgorithm(b,R,headVars);  b.relinkTo(tailVars); //b.variables=tailVars;
+    eliminationAlgorithm(a, S, headVars);
+    //FactorList tmp = P;  tmp.append(R);
+    eliminationAlgorithm(b, R, headVars);  b.relinkTo(tailVars); //b.variables=tailVars;
     //above, we reassociate the factor to the tail variables although it
     //was initially defined over the head variables
     //we do this same ``trick'' (or hack) also below
     alpha = a;
     beta  = b;  beta.P *= gamma;
     PT.resize(2*Tmax+1);
-    PT(0) = scalarProduct(a.P,b.P)*::exp(a.logP+b.logP);
+    PT(0) = scalarProduct(a.P, b.P)*::exp(a.logP+b.logP);
     gt = gamma;
-    FacL fwdList = P;  fwdList.append(&a);
-    FacL bwdList;      bwdList.append(&b);  bwdList.append(P);
-    for(t=1;t<=Tmax;t++){
-      eliminationAlgorithm(a,fwdList,tailVars);  a.relinkTo(headVars); //a.variables=headVars;
-      PT(2*t-1) = scalarProduct(a.P,b.P)*::exp(a.logP+b.logP);
-      eliminationAlgorithm(b,bwdList,headVars);  b.relinkTo(tailVars); //b.variables=tailVars;
-      PT(2*t)   = scalarProduct(a.P,b.P)*::exp(a.logP+b.logP);
-      tensorWeightedAdd(alpha,gt,a);
+    FactorList fwdList = P;  fwdList.append(&a);
+    FactorList bwdList;      bwdList.append(&b);  bwdList.append(P);
+    for(t=1; t<=Tmax; t++){
+      eliminationAlgorithm(a, fwdList, tailVars);  a.relinkTo(headVars); //a.variables=headVars;
+      PT(2*t-1) = scalarProduct(a.P, b.P)*::exp(a.logP+b.logP);
+      eliminationAlgorithm(b, bwdList, headVars);  b.relinkTo(tailVars); //b.variables=tailVars;
+      PT(2*t)   = scalarProduct(a.P, b.P)*::exp(a.logP+b.logP);
+      tensorWeightedAdd(alpha, gt, a);
       gt *= gamma;
-      tensorWeightedAdd(beta ,gt,b);
+      tensorWeightedAdd(beta , gt, b);
     }
     PR = 0.;
     ET = 0.;
     gt = 1.;
     gSum=0.;
-    for(t=0;t<=2*Tmax;t++){
+    for(t=0; t<=2*Tmax; t++){
       PT(t) *= gt;
       ET += t*PT(t);
       PR += PT(t);
@@ -2829,26 +2836,26 @@ void inferMixLengthStructured(
     PT /= PR;
     ET /= PR;
   }else{
-    CHECK(alpha.variables==headVars && beta.variables==tailVars,"");
-    eliminationAlgorithm(Shead,S,headVars);
-    eliminationAlgorithm(Rtail,R,headVars);  Rtail.relinkTo(tailVars);  //Rtail.variables=tailVars;
-    FacL fwdList = P;  fwdList.append(&alpha);
-    FacL bwdList;      bwdList.append(&beta);   bwdList.append(P);
-    for(t=0;t<=Tmax;t++){
+    CHECK(alpha.variables==headVars && beta.variables==tailVars, "");
+    eliminationAlgorithm(Shead, S, headVars);
+    eliminationAlgorithm(Rtail, R, headVars);  Rtail.relinkTo(tailVars);  //Rtail.variables=tailVars;
+    FactorList fwdList = P;  fwdList.append(&alpha);
+    FactorList bwdList;      bwdList.append(&beta);   bwdList.append(P);
+    for(t=0; t<=Tmax; t++){
       alpha.P *= gamma;
       //MT_MSG("does that work??");
-      eliminationAlgorithm(alpha,fwdList,tailVars);  alpha.relinkTo(headVars); //alpha.variables=headVars;
-      tensorWeightedAdd(alpha,1.,Shead);
-
-      eliminationAlgorithm(beta,bwdList,headVars);   beta.relinkTo(tailVars);  //beta.variables=tailVars;
-      tensorWeightedAdd(beta,1.,Rtail);
-      beta.P *= gamma;  
+      eliminationAlgorithm(alpha, fwdList, tailVars);  alpha.relinkTo(headVars); //alpha.variables=headVars;
+      tensorWeightedAdd(alpha, 1., Shead);
+      
+      eliminationAlgorithm(beta, bwdList, headVars);   beta.relinkTo(tailVars);  //beta.variables=tailVars;
+      tensorWeightedAdd(beta, 1., Rtail);
+      beta.P *= gamma;
     }
     PT.resize(0);
     ET=-1;
-    PR = scalarProduct(alpha.P,Rtail.P)*::exp(alpha.logP+Rtail.logP);
+    PR = scalarProduct(alpha.P, Rtail.P)*::exp(alpha.logP+Rtail.logP);
   }
   //alpha.logP += ::log(1.-gamma);
   PR    *= (1.-gamma);
 }
-    
+

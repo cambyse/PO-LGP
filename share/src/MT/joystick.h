@@ -6,7 +6,7 @@
 
 class jsJoystick;
 
-struct JoystickInterface:public Process,public Variable{
+struct JoystickInterface:public Process, public Variable {
   jsJoystick *joy;
   intA state;
   uint n;
@@ -19,5 +19,5 @@ struct JoystickInterface:public Process,public Variable{
 #ifdef  MT_IMPLEMENTATION
 #  include "joystick.cpp"
 #endif
-                          
+
 #endif
