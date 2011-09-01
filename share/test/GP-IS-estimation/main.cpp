@@ -150,18 +150,18 @@ append_observs_ray(GaussianProcess &gp, ors::Mesh &m, const uint obs_N=30){
 
 void
 test_random_object_learning(uint obs=30){
-  double s;
+  double s, gp_size=cfgenv(double,"gp_size");
   uint i;
   arr c=cfgenv(arr,"center");
 
   /* GP for random object generation and for learning */
-  GraspObject_GP ot( c, cfgenv(double,"gp_size"));
-  GraspObject_GP oe( c, cfgenv(double,"gp_size"));
+  GraspObject_GP ot( c, gp_size);
+  GraspObject_GP oe( c, gp_size);
   o_tru=&ot; o_est=&oe;
  
   /* generate object */
   rnd.seed(cfgenv(uint,"rnd_srfc_seed"));
-  randomGP_on_random_points(ot.isf_gp.gp, c, 1, 20);
+  randomGP_on_random_points(ot.isf_gp.gp, c, gp_size, 20);
   ot.buildMesh();
   show(&ot,0);
 

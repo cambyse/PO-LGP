@@ -227,7 +227,7 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
   static arr xi, dxi;
   grad.resize(x.N);
   grad.setZero();
-  // take the gradient in the function valu observations
+  // take the gradient in the function value observations
   for(i=0;i<N;i++){
     xi.referToSubDim(X,i);
     dcov(dk,kernelP,x,xi);
