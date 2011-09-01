@@ -1,0 +1,6 @@
+each output variable requires a 'change' node
+
+rules have AND factors as input
+
+all influencing rules connect via OR to the change node of an output
+
