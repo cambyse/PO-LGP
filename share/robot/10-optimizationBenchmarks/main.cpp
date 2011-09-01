@@ -1,4 +1,5 @@
 #include <MT/soc.h>
+#include <MT/array.h>
 #include <MT/util.h>
 #include <MT/specialTaskVariables.h>
 #include <MT/opengl.h>
@@ -6,6 +7,7 @@
 #include "SD/potentialTaskVariables.h"
 #include "SD/miscTaskVariables.h"
 #include "SD/graspObjects.h"
+#include "SD/surface_helpers.h"
 #include "DZ/aico_key_frames.h"
 
 //===========================================================================
@@ -174,7 +176,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
     tv_opp_tip_prec =     SD_PAR_R("grasp_tv_opp_tip_prec");
     tv_opp_fng_prec =     SD_PAR_R("grasp_tv_opp_fng_prec");
     tv_zeroLevel_prec =   SD_PAR_R("grasp_tv_zeroLevel_prec");
-    tv_ISF_col_prec =  SD_PAR_R("grasp_tv_ISF_col_prec");
+    tv_ISF_col_prec =     SD_PAR_R("grasp_tv_ISF_col_prec");
     tv_tipAlign_prec =    SD_PAR_R("grasp_tv_tipAlign_prec");
     colPrec =	            SD_PAR_R("reachPlanColPrec");
     comfPrec =          	SD_PAR_R("reachPlanHomeComfort");
@@ -192,14 +194,12 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   TaskVariable *V;
 
   V=listGetByName(sys.vars,"tips z align");
-  //V->setGains(.01,.0);
   V->updateState();
   V->y_target = ARR(-1.,-1.,-1.);
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec,0.,0.);
 
   /* */
   V=listGetByName(sys.vars,"palm pos");
-  //V->setGains(.1,.0);
   V->updateState();
   /*  target and prec for stock position var
   V->y_target = graspobj->center();
@@ -211,31 +211,27 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   /* */
 
   V=listGetByName(sys.vars,"oppose tip");
-  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_tip_prec,0.,0.);
 
   V=listGetByName(sys.vars,"oppose fng");
-  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_fng_prec,0.,0.);
 
   V=listGetByName(sys.vars,"isf col");
-  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = ARR(1.,1.,1.); 
   V->v_target = ARR(-.1,-.1,-.1); 
-  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,tv_ISF_col_prec,0.,0.,0.);
   uint t,M=1/4;
   for(t=T-M;t<T;t++){
-    //V->y_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
-    V->v_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
+    V->y_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
+    //V->v_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
   } 
 
   V=listGetByName(sys.vars,"zeroLevel");
-  //V->setGains(.1,.0);
   V->updateState();
   V->y_target = ARR(0,0,0); 
   //V->v_target = ARR(-1.,-1.,-1.); 
@@ -265,6 +261,49 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,0,endVelPrec);
 }
 
+GraspObject_GP *
+random_obj(){
+
+  double gp_size=MT::Parameter<double>("gp_size");
+  arr pts, grads, mins, maxs, c;
+  uint i;      
+
+  c=MT::Parameter<arr>("center");
+
+  /* GP for random object generation and for learning */
+  GraspObject_GP *ot = new GraspObject_GP( c, gp_size);
+  GraspObject_GP *oe = new GraspObject_GP( c, gp_size);
+
+  /* generate object using sampling from GP */
+  rnd.seed(MT::Parameter<uint>("rnd_srfc_seed"));
+  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 20);
+  ot->isf_gp.gp.recompute();
+  /* too expensive: ot->buildMesh();
+  ot->getEnclRect(mins,maxs);*/
+  mins = c-.3; maxs = c+.3;
+
+  /* estimate generated object by other GP */
+  get_observs_gradwalk(pts,grads, ot, mins, maxs, 20);
+  FOR1D(pts,i){
+    oe->isf_gp.gp.appendGradientObservation(pts[i], grads[i]);
+    oe->isf_gp.gp.appendObservation(pts[i], 0);
+  }
+  oe->isf_gp.gp.recompute();
+
+  /* get estimation quality */
+  SD_DBG("(V_common - V_false) / V_true = "<<ISF_common_volume(ot,oe));
+
+  SD_DBG("saving estimated object to file...");
+  std::ofstream f_gp;
+  MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+  oe->isf_gp.write(f_gp);
+  f_gp.close();
+  oe->buildMesh();
+  oe->m.writeTriFile("a.tri");
+
+  return oe;
+}
+
 void
 setzeroprec(soc::SocSystem_Ors &sys, uint T){
   uint i;
@@ -283,17 +322,29 @@ void problem4(){
   soc::SocSystem_Ors sys;
   OpenGL gl;
   GraspObject *o;
+  arr c=MT::Parameter<arr>("center");
+  double gp_size=MT::Parameter<double>("gp_size");
   switch (MT::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 3: o = random_obj(); break;
+    case 4: o = new GraspObject_GP(c,gp_size);
+            std::ifstream f_gp;
+            MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+            ((GraspObject_GP*)o)->isf_gp.read(f_gp);
+            f_gp.close();
+            ((GraspObject_GP*)o)->isf_gp.gp.recompute();
+            o->m.readFile("a.tri");
+            break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("reachPlanTrajectoryTime");
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
-  o->buildMesh();
+  if (!o->m.V.N)  o->buildMesh();
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
+  gl.watch("The object");
   
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
@@ -316,13 +367,24 @@ void problem5(){
   soc::SocSystem_Ors sys;
   OpenGL gl;
   GraspObject *o;
+  arr c=MT::Parameter<arr>("center");
+  double gp_size=MT::Parameter<double>("gp_size");
   switch (MT::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 3: o = random_obj(); break;
+    case 4: o = new GraspObject_GP(c,gp_size);
+            std::ifstream f_gp;
+            MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
+            ((GraspObject_GP*)o)->isf_gp.read(f_gp);
+            f_gp.close();
+            ((GraspObject_GP*)o)->isf_gp.gp.recompute();
+            o->m.readFile("a.tri");
+            break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
+  double t=MT::getParameter<double>("optTimeMin"); 
   double alpha=MT::getParameter<double>("alpha");
   double BinvFactor=MT::getParameter<double>("BinvFactor");
   double tm;
@@ -330,7 +392,7 @@ void problem5(){
   arr zero14(14);zero14.setZero();
 
   sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
-  o->buildMesh();
+  if (!o->m.V.N)  o->buildMesh();
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
   

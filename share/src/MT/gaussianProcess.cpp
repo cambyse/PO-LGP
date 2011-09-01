@@ -145,6 +145,34 @@ void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
   if(sig<0) sig=0.; else sig = ::sqrt(sig);
 }
 
+/** vector of covariances between test point and N+dN observation points */
+void GaussianProcess::k_star(const arr& x, arr& k){
+  uint i,N=Y.N,dN=dY.N;
+  arr xi;
+
+  if(k.N!=N+dN) k.resize(N+dN);
+  for(i=0;i<N;i++){ xi.referToSubDim(X,i); k(i)=cov(kernelP,x,xi); }
+  for(i=0;i<dN;i++){ xi.referToSubDim(dX,i); k(N+i)=covF_D(dI(i),kernelP,x,xi); }
+}
+
+/** vector of covariances between test point and N+dN  observation points */
+void GaussianProcess::dk_star(const arr& x, arr& k){
+  uint i,j,N=Y.N,dN=dY.N,d=x.N;
+  arr xi;
+
+  if(k.N!=N+dN) k.resize(N+dN,d);
+  for(j=0;j<d;++j){
+    for(i=0;i<N;i++){
+      xi.referToSubDim(X,i);
+      k(i,j)=covD_F(j,kernelP,x,xi);
+    }
+    for(i=0;i<dN;i++){
+      xi.referToSubDim(dX,i);
+      k(N+i,j)=covD_D(j,dI(i),kernelP,x,xi);
+    }
+  }
+}
+
 /*****
  *
 \[
@@ -199,7 +227,7 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
   static arr xi,dxi; 
   grad.resize(x.N);
   grad.setZero();
-  // take the gradient in the function valu observations
+  // take the gradient in the function value observations
   for(i=0;i<N;i++){
     xi.referToSubDim(X,i);
     dcov(dk,kernelP,x,xi);
@@ -284,7 +312,7 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
   CHECK((X.N && x.N==X.d1) || (dX.N && x.N==dX.d1),"dimensions don't match!");
   uint i,j,n, N=Y.N, dN=dY.N, dim;
   dim = X.d1?X.d1:dX.d1;
-  arr d2k(dim,dim,N+dN);
+  arr d2k(N+dN,dim,dim);
   static arr xn,dxn; 
   d2k.setZero();
   hess.resize(dim,dim);
@@ -294,22 +322,22 @@ void GaussianProcess::hessian(arr& hess,const arr& x){
     xn.referToSubDim(X,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=covD_D(i,j,kernelP,x,xn);
+          d2k(n,i,j)=covD_D(i,j,kernelP,x,xn);
       }
     }
     //TODO: add inv gram
-    hess += GinvY(n) * d2k;
+    hess += GinvY(n) * d2k[n];
   }
   // derivative observations
   for(n=0;n<dN;n++){
     dxn.referToSubDim(dX,n);
     for(i=0;i<dim;i++){
       for(j=0;j<dim;j++){
-          d2k(i,j,n)=covDD_D(i,j,dI(n), kernelP,x,dxn);
+          d2k(n,i,j)=covDD_D(i,j,dI(n), kernelP,x,dxn);
       }
     }
     //TODO: add inv gram
-    hess += GinvY(n+N) * d2k;
+    hess += GinvY(n+N) * d2k[n];
   }
 }
 

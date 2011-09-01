@@ -22,9 +22,9 @@ plot \
 EOF
 
 gnuplot -persist - <<EOF
-set title "orientation-TVs' error weighted by precision"; \
+set title "orientation-TVs' nominal error"; \
 set xlabel "time step"; \
-set ylabel "prec*(target-cur)"; \
+set ylabel "(target-cur)"; \
 plot \
 'z.plotdata' every :::3::3 with l title "loss(fg1)",\
 'z.plotdata' every :::4::4 with l title "loss(tip1)",\

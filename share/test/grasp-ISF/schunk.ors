@@ -166,19 +166,6 @@ shape back2 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 shape back3 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t( .0565 -.0565 0) t(0 0 .425)> }
 shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t( .0565  .0565 0) t(0 0 .425)> }
 
-
-
-#body querm1 { type=0, size=[.05 .05 .073 .05], color=[1. .5 .5] }
-#body querm2 { type=0, size=[.05 .05 .073 .05], color=[1. .5 .5] }
-#body querm3 { type=0, size=[.05 .05 .073 .05], color=[1. .5 .5] }
-#body querm4 { type=0, size=[.05 .05 .073 .05], color=[1. .5 .5] }
-#joint (back1 querm1) { A=<t(0 0 .1) d(90 0 1 0) t(0 .0 .0565)> }
-#joint (back2 querm2) { A=<t(0 0 .1) d(90 0 1 0) t(0 .0 .0565)> }
-#joint (back3 querm3) { A=<t(0 0 .1) d(-90 1 0 0) t(0 .0 .0565)> }
-#joint (back1 querm4) { A=<t(0 0 .1) d(90 1 0 0) t(0 .0 .0565)> }
-
-#}
-
 ###########
 ## objects
 ###########
@@ -187,15 +174,6 @@ body table{ contact, type=0, rel=<t(.2 -.9 .70)>, size=[1.1 .5 .04 .0], color=[.
 
 body  o1{ X=<t(-.4 -.8 .8)> }
 shape S1(o1){ contact, type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
-
-
-
-#shape camera(OBJECTS){ contact, rel=<t(.0 +.83 -.67) t(0.296 -0.211 0.824) d(90 1 0 0) d(147 0 1 0)>, type=0, size=[.157 .035 .046 .01] color=[1 0 0]}
-
-
-#shape S3(OBJECTS){ type=4, rel=<t( .0 .0 .055)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-#body  TARO{ X=<t(10 -.8 .69)> }
-#shape target(TARO){ type=1, size=[.01 .01 .108 .0375], color=[.1 .5 .5] }
 
 
 ###########

@@ -110,16 +110,43 @@ isf_gp_t::set_shape_prior( double (*_mu)(const arr&, const void*), void *priorP)
       priorP);
 }
 
+
+inline std::istream&
+operator>>(std::istream& is,isf_gp_t& x){ x.read(is); return is; }
+void
+isf_gp_t::read(std::istream& is) {
+  char c=' ';
+  GaussKernelParams *gkp=(GaussKernelParams*)gp.kernelP;
+  is >>
+    gkp->obsVar>>c>>
+    gkp->priorVar>>c>>
+    gkp->widthVar>>c>>
+    gkp->derivVar>>c>>
+    gp.X>>c>>
+    gp.Y>>c>>
+    gp.dX>>c>>
+    gp.dY>>c>>
+    gp.dI>>c>>
+    gp.mu>>c
+    ;
+}
 inline std::ostream&
 operator<<(std::ostream& os,const isf_gp_t& x){ x.write(os); return os; }
 void
 isf_gp_t::write(std::ostream& os) const{
+  char c=' ';
+  GaussKernelParams *gkp=(GaussKernelParams*)gp.kernelP;
   os <<
-    "obs Var:   "<<((GaussKernelParams*)gp.kernelP)->obsVar<<"; "<<
-    "prior Var: "<<((GaussKernelParams*)gp.kernelP)->priorVar<<"; "<<
-    "width Var: "<<((GaussKernelParams*)gp.kernelP)->widthVar<<"; "<<
-    "deriv Var: "<<((GaussKernelParams*)gp.kernelP)->derivVar<<"; "
-    "mu: "<<gp.mu<<"; "
+    gkp->obsVar<<c<<
+    gkp->priorVar<<c<<
+    gkp->widthVar<<c<<
+    gkp->derivVar<<c<<
+    gp.X<<c<<
+    gp.Y<<c<<
+    gp.dX<<c<<
+    gp.dY<<c<<
+    gp.dI<<c<<
+    gp.mu<<c
     ;
 }
 
