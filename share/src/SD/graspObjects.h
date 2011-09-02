@@ -38,14 +38,19 @@ struct PotentialField : public MeshObject
     if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
   }
   void buildMesh();
+  void saveMesh(const char *filename);
+  void loadMesh(const char *filename);
   virtual arr center(){return ARR(0,0,0);}//FIX: ugly. maybe 'out' parameter by reference rather than 'return'.
 
 };
 
 struct GraspObject : public PotentialField
 {
+  bool distanceMode;
+  GraspObject(){ distanceMode = false; }
+  
   virtual double distanceToSurface(arr *grad, arr *hess, const arr& x) { NIY; }
-  virtual double psi(arr* grad, arr *hess, const arr& x);
+  virtual double psi(arr* grad, arr *hess, const arr& x); //MT: what is the difference between psi and phi?
   virtual double phi(arr *grad, arr *hess, double *var,const arr& x);
   void getNormGrad(arr& grad,const arr& x) ;
   virtual double max_var(){return 0;}
@@ -62,7 +67,7 @@ struct GraspObject_InfCylinder:public GraspObject {
   
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_InfCylinder();
-  GraspObject_InfCylinder(arr, arr, double, double);
+  GraspObject_InfCylinder(arr c1,arr z1, double r1, double s1);
   arr center(){return c;};
 };
 

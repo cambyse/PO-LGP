@@ -614,18 +614,18 @@ struct TaskVariable {
   TargetType targetType;//!< what target type
   MT::String name;      //!< its name
   ors::Graph *ors;      //!< pointer to the data structure (from which it gets the kinematics)
-  int i, j;              //!< which body(-ies) does it refer to?
+  int i, j;             //!< which body(-ies) does it refer to?
   ors::Transformation irel, jrel; //!< relative position to the body
   arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
   
-  arr y, y_old, v, v_old, y_target, v_target;     //!< current state and final target of this variable
+  arr y, y_old, v, v_old, y_target, v_target; //!< current state and final target of this variable
   arr J, Jt;                                  //!< current Jacobian and its transpose
-  double y_prec, v_prec;                        //!< precision (=1/variance) associated with this variable
+  double y_prec, v_prec;                      //!< precision (=1/variance) associated with this variable
   arr y_trajectory, y_prec_trajectory;        //!< target & precision over a whole trajectory
   arr v_trajectory, v_prec_trajectory;        //!< target & precision over a whole trajectory
   
   arr y_ref, v_ref;                           //!< immediate (next step) desired target reference
-  double Pgain, Dgain;                          //!< parameters of the PD controller or attractor dynamics
+  double Pgain, Dgain;                        //!< parameters of the PD controller or attractor dynamics
   
   //a bit obsolete
   double err, derr;
@@ -665,17 +665,21 @@ struct TaskVariable {
   void setGainsAsAttractor(double decaySteps, double oscillations=.2, bool onReal=true);
   
   //!@name trajectory target parameters
+  //TODO: REMOVE ALL of the following options:
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
-  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
+  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec); 
   void setPrecisionTrajectoryConstant(uint T, double constant_prec);
   void setPrecisionVTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
   void setPrecisionVTrajectoryConstant(uint T, double constant_prec);
   void setIntervalPrecisions(uint T, arr& y_precs, arr& v_precs);
   void setTrajectory(uint T, double funnelsdv=0., double funnelvsdv=0.); //OBSOLETE
   
-  void setInterpolatedTargetsEndPrecisions(uint T, double inter_yprec, double end_yprec, double inter_vprec, double end_vprec);
-  void setInterpolatedTargetsConstPrecisions(uint T, double yprec, double vprec);
+  //only keep those:
+  void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
+  void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+  void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
+  void setInterpolatedTargetsConstPrecisions(uint T);
   
   void shiftTargets(int offset);
   

@@ -17,6 +17,7 @@
 #include "soc.h"
 #include "opengl.h"
 #include "plot.h"
+#include "ors.h"
 
 uint countMsg=0, countSetq=0;
 
@@ -459,37 +460,44 @@ void soc::SocSystemAbstraction::getControlFromTrajectory(arr& u, const arr& q){
   }
 }
 
-double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int i){
+double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int whichTask, bool verbose){
   double C=0.;
   if(grad){
     (*grad).resize(qDim());
     (*grad).setZero();
   }
-  arr phi_qhat, Jqd, x, v, J, Jt;
-  double prec, precv;
-  int iMin, iMax;
-  if(i==-1){  iMin=0; iMax=nTasks()-1; }else{ iMin=iMax=i; }
-  for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)){///added NIKOLAY
+  uint i, m=nTasks();
+  arr phi_qhat, Jqd, y, v, J, Jt;
+  double dy, dv, y_prec, v_prec;
+  arr taskCi(m); taskCi.setZero();
+  uint iMin, iMax;
+  if(whichTask==-1){  iMin=0; iMax=m-1; }else{ iMin=iMax=whichTask; }
+  for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)){
       getPhi(phi_qhat, i);
-      getTarget(x, prec, i, t);
-      C += prec*sqrDistance(x, phi_qhat);
+      getTarget(y, y_prec, i, t);
+      dy = sqrDistance(y, phi_qhat);
+      taskCi(i) = y_prec*dy;
+      C += y_prec*dy;
       if(grad){
         getJJt(J, Jt, i);
-        (*grad) += Jt * ((phi_qhat-x)*((double)2.*prec));
+        (*grad) += Jt * ((phi_qhat- y)*((double)2.*y_prec));
       }
       if(dynamic){
         getJqd(Jqd, i);
-        getTargetV(v, precv, i, t);
-        C += precv*sqrDistance(v, Jqd);
+        getTargetV(v, v_prec, i, t);
+        dv = sqrDistance(v, Jqd);
+        taskCi(i) += v_prec*dv;
+        C += v_prec*dv;
         if(grad){
-          (*grad) += Jt * ((v - Jqd)*((double)2.*precv));
-          /*if(t>0){ //old version
-          dCdq[t  ]() += ((double)2.*precv*tau_1)*(Jt * (J*(tau_1*(q[t]-q[t-1])) - v));
-          dCdq[t-1]() -= ((double)2.*precv*tau_1)*(Jt * (J*(tau_1*(q[t]-q[t-1])) - v));
-          }*/
+          (*grad) += Jt * ((v - Jqd)*((double)2.*v_prec));
         }
       }
     }
+  if(verbose){
+    cout <<MT_HERE <<" total=" <<C;
+    for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout  <<" \t" <<taskName(i) <<'=' <<taskCi(i);
+    cout <<endl;
+  }
   return C;
 }
 
@@ -642,12 +650,11 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 
 
 //! play the trajectory using OpenGL
-void soc::SocSystemAbstraction::displayState(const arr& q, const arr *Qinv, const char *text){
+void soc::SocSystemAbstraction::displayState(const arr *q, const arr *Qinv, const char *text, bool reportVariables){
   if(gl){
-    setq(q);
+    if(q) setq(*q);
     if(text) gl->text.clr()  <<text;
     gl->update();
-    //gl->timedupdate(getTau()*(T-1)/(display-1));
   }else{
   }
 }
@@ -659,8 +666,8 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0; k<=(uint)num; k++){
     t = k*T/num;
-    if(Qinv) displayState(q[t], &(*Qinv)[t](), STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
-    else     displayState(q[t], NULL         , STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
+    if(Qinv) displayState(&q[t], &(*Qinv)[t](), STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
+    else     displayState(&q[t], NULL         , STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
     if(steps==-1) gl->watch();
   }
   if(steps==1) gl->watch();

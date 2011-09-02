@@ -140,13 +140,18 @@ shape t3(tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>
 ## grasp references
 ###########
 
-shape tipNormal1(tip1)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
-shape tipNormal2(tip2)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
-shape tipNormal3(tip3)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipNormal3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
 shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
 shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
+shape tipHook1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipHook2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipHook3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 

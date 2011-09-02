@@ -1779,16 +1779,15 @@ void ors::Mesh::readFile(const char* filename){
 }
 
 void ors::Mesh::writeTriFile(const char* filename){
-  bool tmp=MT::IOraw;
-  MT::IOraw=true;
   ofstream os;
   MT::open(os, filename);
   os  <<"TRI"  <<endl  <<endl
-   <<V.d0  <<endl
-   <<T.d0  <<endl  <<endl
-   <<V  <<endl  <<endl
-   <<T  <<endl;
-  MT::IOraw=tmp;
+      <<V.d0  <<endl
+      <<T.d0  <<endl  <<endl;
+
+  V.write(os, " ", "\n ", "  ");
+  os <<endl <<endl;
+  T.write(os, " ", "\n ", "  ");
 }
 
 void ors::Mesh::readTriFile(const char* filename){

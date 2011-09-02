@@ -73,7 +73,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
   V=listFindByName(sys.vars, "up1");
   V->irel.setText("<d(90 1 0 0)>");
   V->updateState();
-  V->y_target = 0.;
+  V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
   //finger tips

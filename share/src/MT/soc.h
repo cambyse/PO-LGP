@@ -121,10 +121,10 @@ struct SocSystemAbstraction {
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
   
   // cost info
-  double taskCost(arr* grad, int t, int i);
+  double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
   double totalCost(arr *grad, const arr& q, bool plot=false);
   
-  virtual void displayState(const arr& q, const arr *Qinv, const char *text);
+  virtual void displayState(const arr *q, const arr *Qinv, const char *text=NULL, bool reportVariables=false);
   virtual void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag);
   
   //-- convenience (prelim...)

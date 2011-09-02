@@ -313,13 +313,14 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
     //if (k>0) alpha = 0.005*fabs(dr); // !!
     cout << old_r << endl;
     if (fabs(dr)<1e0) break;
-    sys.gl->watch("dd");
+    sys.gl->watch("OneStepOptimizer");
   }
   cout << D << endl;
 }
 
-void OneStepDynamicFull(arr& b,arr& Binv, soc::SocSystemAbstraction&
-sys,double time,double alpha)
+void OneStepDynamicFull(arr& b,arr& Binv,
+                        soc::SocSystemAbstraction& sys,
+                        double time,double alpha, bool verbose)
 {
   arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr q0,q_old,tp,qv0,v0,bq,bv;
@@ -370,7 +371,7 @@ sys,double time,double alpha)
     for (uint i=0; i< 14;i++){ bq(i)=b(i); bv(i)=b(i+14);} // can not set joint state q and v in one variable
     sys.setqv(bq,bv);
 
-    if ((sys.taskCost(NULL,T,-1)>old_r)&&(!restore)) {alpha=alpha*0.5; b=b_best; restore=true;}
+    if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)) {alpha=alpha*0.5; b=b_best; restore=true;}
     else
     {
       if (!restore) alpha=pow(alpha,0.5);
@@ -382,12 +383,15 @@ sys,double time,double alpha)
 
 
       cout <<old_r<<endl;
-      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-4)||( (old_r - sys.taskCost(NULL,T,-1))<1e-3)  ) ) break;
+      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-4)||( (old_r - sys.taskCost(NULL, T, -1))<1e-3)  ) ) break;
 
-      old_r = sys.taskCost(NULL,T,-1);
+      old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
 
-      //sys.gl->watch("dd");
+      if(verbose>0){
+        sys.displayState(NULL, NULL, "posture estimate", true);
+        sys.gl->watch();
+      }
     }
   }
   b=b_best;
@@ -515,7 +519,7 @@ void GetOptimalDynamicTime(double& time,arr& b,arr& Binv,soc::SocSystemAbstracti
   arr b_old=b0; double old_r = 1e6;
   while (gr>0) {
     sys.setqv(b0);
-    OneStepDynamicFull(b,Binv,sys,old_time,alpha); // final posture estimation
+    OneStepDynamicFull(b,Binv,sys,old_time,alpha, false); // final posture estimation
 
     sys.setqv(b);
     if (sys.taskCost(NULL,T,-1)<old_r) {

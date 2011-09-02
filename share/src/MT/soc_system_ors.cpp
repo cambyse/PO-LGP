@@ -352,8 +352,8 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 }
 
 //overload the display method to include variances
-void soc::SocSystem_Ors::displayState(const arr& q, const arr *Qinv, const char *text){
-  setq(q);
+void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char *text, bool reportVariables){
+  if(x) if(x->N==qDim()) setq(*x); else setx(*x);
   if(text) gl->text.clr()  <<text;
   if(Qinv){
     arr Q;
@@ -375,6 +375,9 @@ void soc::SocSystem_Ors::displayState(const arr& q, const arr *Qinv, const char 
   //gl->watch();
   //gl->timedupdate(getTau()*(T-1)/(display-1));
   //if(Qinv) gl->drawers.popLast();
+  if(reportVariables){
+    reportAll(vars, cout);
+  }
 }
 
 
@@ -526,31 +529,31 @@ void soc::SocSystem_Ors::getHessian(arr& H_i, uint i){
   vars(i)->getHessian(H_i);
 }
 
-void soc::SocSystem_Ors::getTarget(arr& y_i, double& y_prec, uint i, uint t){
+void soc::SocSystem_Ors::getTarget(arr& y_target, double& y_prec, uint i, uint t){
   TaskVariable *v=vars(i);
   //cout  <<"getting y_target for TV "  <<v->name  <<endl;
   if(!t && v->targetType!=trajectoryTT){
     v->updateChange(-1, WS->tau);
-    y_i    = v->y_ref;
-    y_prec = v->y_prec;
+    y_target = v->y_ref;
+    y_prec   = v->y_prec;
     return;
   }
   CHECK(v->y_trajectory.d0>t, "task target trajectory for variable '"  <<v->name <<"' not specified");
-  y_i    = v->y_trajectory[t];
-  y_prec = v->y_prec_trajectory(t);
+  y_target = v->y_trajectory[t];
+  y_prec   = v->y_prec_trajectory(t);
 }
 
-void soc::SocSystem_Ors::getTargetV(arr& v_i, double& v_prec, uint i, uint t){
+void soc::SocSystem_Ors::getTargetV(arr& v_target, double& v_prec, uint i, uint t){
   TaskVariable *v=vars(i);
   //cout  <<"getting v_target for TV "  <<v->name  <<endl;
   if(!t && v->targetType!=trajectoryTT){
     v->updateChange(-1, WS->tau);
-    v_i    = v->v_ref;
-    v_prec = v->v_prec;
+    v_target = v->v_ref;
+    v_prec   = v->v_prec;
     return;
   }
-  v_i    = v->v_trajectory[t];
-  v_prec = v->v_prec_trajectory(t);
+  v_target = v->v_trajectory[t];
+  v_prec   = v->v_prec_trajectory(t);
 }
 
 

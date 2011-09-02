@@ -86,6 +86,14 @@ double plot_field() {
   return value;
 }
 
+void PotentialField::saveMesh(const char *filename){
+  m.writeTriFile(filename);
+}
+
+void PotentialField::loadMesh(const char *filename){
+  m.readFile(filename);
+}
+
 void
 PotentialField::buildMesh(){
   uint i;
@@ -144,23 +152,24 @@ GraspObject::phi(arr *grad,arr *hess,double *var,const arr& x) { //generic phi, 
   // see gnuplot:  plot[-1:4] 1.-exp(-.5*(x+1)*(x+1))/exp(-.5)
   double d = distanceToSurface(grad,hess,x);
   double e = exp(-.5*(d+1.)*(d+1.))*exp(.5);
-  if(d<-1.) d=-1.; 
-#if 1
-  double phi=1.-e;
-  if(grad){
-    *grad = e * (d+1.) * (*grad);
+  if(d<-1.) d=-1.;
+  double phi;
+  if(!distanceMode){
+    phi=1.-e;
+    if(grad){
+      *grad = e * (d+1.) * (*grad);
+    }
+    if(hess){
+      CHECK(grad!=NULL,"need to store gradient.");
+      /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
+      *hess = - e*d*(d+2.) * (*grad) * (~*grad)
+      + e*(d+1.) * (*hess);
+    }
+  }else{
+    //take directly the distance as task variable
+    //hessian and gradient are correctly returned from distanceToSurface
+    phi=d;
   }
-  if(hess){
-    CHECK(grad!=NULL,"need to store gradient.");
-    /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
-    *hess = - e*d*(d+2.) * (*grad) * (~*grad)
-              + e*(d+1.) * (*hess);
-  }
-#else
-  /* this was Marc's try to circumvent underflow of gradient far away from
-   * surface */
-  double phi=d;
-#endif
   if(var) *var = 0; //default variance is 0 (analytic shapes)
   return phi;
 } 

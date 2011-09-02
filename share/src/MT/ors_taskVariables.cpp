@@ -172,7 +172,7 @@ void TaskVariable::setInterpolatedTargetTrajectory(uint T){
   }
 }
 
-void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double inter_y_prec, double end_y_prec, double inter_v_prec, double end_v_prec){
+void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec){
   targetType=trajectoryTT;
   active=true;
   uint t;
@@ -185,11 +185,11 @@ void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double inter_y_pr
     v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
   }
   for(t=0; t<T; t++){
-    y_prec_trajectory(t) = inter_y_prec;
-    v_prec_trajectory(t) = inter_v_prec;
+    y_prec_trajectory(t) = mid_y_prec;
+    v_prec_trajectory(t) = mid_v_prec;
   }
-  y_prec_trajectory(T) = end_y_prec;
-  v_prec_trajectory(T) = end_v_prec;
+  y_prec_trajectory(T) = final_y_prec;
+  v_prec_trajectory(T) = final_v_prec;
 }
 
 void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec){
@@ -209,6 +209,15 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, 
     v_prec_trajectory(t) = v_prec;
   }
 }
+
+void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec){
+  setInterpolatedTargetsEndPrecisions(T, mid_y_prec, y_prec, mid_v_prec, v_prec);
+}
+
+void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T){
+  setInterpolatedTargetsConstPrecisions(T, y_prec, v_prec);
+}
+
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec){
@@ -510,7 +519,7 @@ void TaskVariable::updateChange(int t, double tau){
     */
 
 void TaskVariable::write(ostream &os) const {
-  os  <<"CV `"  <<name;
+  os  <<"CV '"  <<name <<'\'';
   switch(type){
     case posTVT:     os  <<"  (pos "  <<ors->bodies(i)->name  <<")"; break;
       //case relPosTVT:  os  <<"  (relPos "  <<ors->bodies(i)->name  <<'-'  <<ors->bodies(j)->name  <<")"; break;
@@ -522,6 +531,7 @@ void TaskVariable::write(ostream &os) const {
     case qSquaredTVT:os  <<"  (qSquared "  <<sum(params)  <<")"; break;
     case qSingleTVT: os  <<"  (qSingle "  <<ors->joints(-i)->from->name  <<'-'  <<ors->joints(-i)->to->name  <<")"; break;
     case qLimitsTVT: os  <<"  (qLimitsTVT "  <<sum(params)  <<")"; break;
+    case qItselfTVT: os  <<"  (qItselfTVT)"; break;
     case comTVT:     os  <<"  (COM)"; break;
     case collTVT:    os  <<"  (COLL)"; break;
     case colConTVT:  os  <<"  (colCon)"; break;
@@ -531,15 +541,18 @@ void TaskVariable::write(ostream &os) const {
   }
   os
    <<"\n  y="  <<y
-   <<"\n  v="  <<v
+   <<"\t  v="  <<v
    <<"\n  y_target="  <<y_target
-   <<"\n  v_target="  <<v_target
-   <<"\n  y_ref"   <<y_ref
-   <<"\n  v_ref="  <<v_ref
+   <<"\t  v_target="  <<v_target
+   <<"\n  y_ref="   <<y_ref
+   <<"\t  v_ref="  <<v_ref
    <<"\n  y_prec="  <<y_prec
-   <<"\n  v_prec="  <<v_prec
-   <<"\n  Pgain="  <<Pgain  <<"  Dgain="  <<Dgain
-   <<"\n  state="  <<state
+   <<"\t  v_prec="  <<v_prec
+   <<"\n  Pgain="  <<Pgain
+   <<"\t  Dgain="  <<Dgain
+   <<"\n  y_error=" <<sqrDistance(y,y_target)
+   <<"\t  v_error=" <<sqrDistance(v,v_target)
+   <<"\t  error="   <<y_prec*sqrDistance(y,y_target)+v_prec*sqrDistance(v,v_target)
    <<endl;
 }
 

@@ -227,7 +227,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         break;
       case ors::markerST:
         if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
-        else glDrawAxes(s->size[0]);
+        else{ glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5.,s->size[0]/5.,s->size[0]/5.); }
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
