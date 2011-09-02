@@ -224,11 +224,17 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->updateState();
   V->y_target = ARR(1.,1.,1.); 
   V->v_target = ARR(-.1,-.1,-.1); 
-  V->setInterpolatedTargetsEndPrecisions(T,tv_ISF_col_prec,0.,0.,0.);
-  uint t,M=1/4;
+  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,0.,0.);
+  uint t,M=T/4;
+  /*
   for(t=T-M;t<T;t++){
-    V->y_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
-    //V->v_prec_trajectory(t) = (T*M/(T-t))*tv_ISF_col_prec;
+    V->y_prec_trajectory(t) = tv_ISF_col_prec;
+  } 
+  */
+  M=T/4;
+  for(t=T-M;t<T;t++){
+    //V->y_prec_trajectory(t) = (1- (M-(T-t))/M)*tv_ISF_col_prec;
+    V->v_prec_trajectory(t) = tv_ISF_col_prec;
   } 
 
   V=listGetByName(sys.vars,"zeroLevel");
@@ -258,7 +264,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
   V=listGetByName(sys.vars,"qitself");
   V->y=0.; V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
-  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,0,endVelPrec);
+  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,comfPrec,0,endVelPrec);
 }
 
 GraspObject_GP *
@@ -302,6 +308,22 @@ random_obj(){
   oe->m.writeTriFile("a.tri");
 
   return oe;
+}
+
+void
+active_var(soc::SocSystem_Ors &sys){
+  activateAll(sys.vars,false);
+  listGetByName(sys.vars,"isf col")->active=true; 
+  listGetByName(sys.vars,"palm pos")->active=true; 
+  listGetByName(sys.vars,"tips z align")->active=true; 
+  listGetByName(sys.vars,"collision")->active=true; 
+  listGetByName(sys.vars,"qitself")->active=true; 
+  listGetByName(sys.vars,"limits")->active=true; 
+  listGetByName(sys.vars,"oppose tip")->active=true; 
+  listGetByName(sys.vars,"oppose fng")->active=true; 
+  listGetByName(sys.vars,"zeroLevel")->active=true; 
+  /*
+  */
 }
 
 void
@@ -365,6 +387,7 @@ void problem5(){
 
   //setup the problem
   soc::SocSystem_Ors sys;
+  ors::Graph ors;
   OpenGL gl;
   GraspObject *o;
   arr c=MT::Parameter<arr>("center");
@@ -391,11 +414,19 @@ void problem5(){
   arr q0, b,b0,B, Binv, r,R;
   arr zero14(14);zero14.setZero();
 
-  sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
   if (!o->m.V.N)  o->buildMesh();
+  ors.init(MT::getParameter<MT::String>("orsFile"));
+  ors::Shape *pc = new ors::Shape(ors.shapes, ors.getBodyByName("OBJECTS"));
+  pc->mesh = o->m; /* add point cloud to ors */
+  pc->type = ors::pointCloudST; 
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
-  
+  gl.add(glStandardScene);
+  gl.add(ors::glDrawGraph, &ors);
+  gl.camera.setPosition(5,-10,10);
+  gl.camera.focus(0,0,1);
+  sys.initBasics(&ors,NULL,&gl,T,t,true,NULL);
+
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
 
@@ -403,7 +434,7 @@ void problem5(){
   sys.getq0(q0);
 
   /* optimal time is tm */
-  GetOptimalDynamicTime(tm,b,B,sys,alpha,0.06); 
+  GetOptimalDynamicTime(tm,b,B,sys,alpha,0.04); 
 
   /* with optimal time, get posterior pose
   sys.setq(q0,0);
@@ -419,10 +450,11 @@ void problem5(){
 
   /* start aico with bwdMsg */
   soc::SocSystem_Ors sys2;
-  sys2.initBasics(NULL,NULL,&gl,T,/*0.6**/tm,true,NULL);
+  sys2.initBasics(&ors,NULL,&gl,T,/*0.6**/tm,true,NULL);
   createISPTaskVariables(sys2,o);
   setISPGraspGoals(sys2,T,o);
   //setzeroprec(sys2, T);
+  active_var(sys2);
 
   AICO_clean solver(sys2);
   solver.useBwdMsg=true;
