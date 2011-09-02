@@ -1,3 +1,4 @@
+#define MT_IMPLEMENT_TEMPLATES
 #include "graspObjects.h"
 #include <MT/array.h>
 #include <MT/util.h>
@@ -292,6 +293,50 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
   r = r1;
   s = s1;
   h = h1;
+}
+
+/* =============== Box ================ */
+
+double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
+  arr a = x-c;
+  //box dimensions:
+
+  arr a_rel = axes*a;
+
+  double d;
+  arr closest(3);
+  arr del = fabs(a_rel)-dim;
+  if(del.max()<0.){ //inside
+    closest.setZero();
+    uint side=del.maxIndex(); //which side are we closest to?
+    if(a_rel(side)>0) closest(side) = dim(side);  else  closest(side)=-dim(side); //in positive or neg direction?
+    d = -norm(a_rel - closest);
+  }else{ //outside
+    closest = a_rel;
+    closest = MT::MAX(-dim,closest);
+    closest = MT::MIN(dim,closest);
+    d = norm(a_rel - closest);
+  }
+  
+  if(grad) *grad = (~axes)*(a_rel - closest)/d; //transpose(R) rotates the gradient back to world coordinates
+  if(hess) NIY;
+  return d;
+}
+
+GraspObject_Box::GraspObject_Box(){ NIY }
+
+GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_){
+  //assumes box is axis aligned
+  c=center;
+  dim = ARR(dx_,dy_,dz_);
+  axes = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
+             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+             0,0,1);
+  axes = ARR(1,0,0,
+             0,1,0,
+             0,0,1);
+  axes.reshape(3,3);
+  s=1.;
 }
 
 /* =============== Sphere ================ */

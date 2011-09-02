@@ -127,6 +127,8 @@ bool skipUntil(std::istream& is, const char *tag);
 byte bit(byte *str, uint i);
 void flip(byte& b, uint i);
 void flip(int& b, uint i);
+double MIN(double a, double b);
+double MAX(double a, double b);
 double modMetric(double x, double y, double mod);
 double sign(double x);
 double linsig(double x);
@@ -143,8 +145,6 @@ uint   Log2(uint n);
 double sqr(double x);
 double sinc(double x);
 double cosc(double x);
-template<class T> T MIN(T a, T b){ return a<b?a:b; }
-template<class T> T MAX(T a, T b){ return a>b?a:b; }
 double erf(double x);
 double gaussInt(double x);
 double gaussIntExpectation(double x);

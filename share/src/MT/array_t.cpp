@@ -2965,6 +2965,8 @@ UnaryFunction(floor);
 BinaryFunction(atan2);
 BinaryFunction(pow);
 BinaryFunction(fmod);
+BinaryFunction(MT::MIN);
+BinaryFunction(MT::MAX);
 #undef BinaryFunction
 
 #ifndef MT_doxy // exclude these macros when generating the documentation

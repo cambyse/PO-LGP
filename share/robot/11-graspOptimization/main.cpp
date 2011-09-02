@@ -75,13 +75,14 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
   hooksN.append(sys.ors->getShapeByName("tipHook2"));
   hooksN.append(sys.ors->getShapeByName("tipHook3"));
   
-  GraspObject *graspobj = new GraspObject_Cylinder1(xtarget, ARR(0,0,1), .04, 1., .12);
+  //GraspObject *graspobj = new GraspObject_Cylinder1(xtarget, ARR(0,0,1), .04, 1., .2);
+  GraspObject *graspobj = new GraspObject_Box(xtarget, .03,.03,.1);
   graspobj->distanceMode = true;
   
   V = new PotentialValuesTaskVariable("hooksInsideLevel", *sys.ors, hooksN, *graspobj);
   //V=listGetByName(sys.vars,"zeroLevel");
   V->updateState();
-  V->y_target = ARR(-.02,-.02,-.02);
+  V->y_target = ARR(-.01,-.01,-.01);
   V->y_prec = 1e4;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
   sys.vars.append(V);
@@ -89,14 +90,14 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
   V = new PotentialValuesTaskVariable("tipsOnZeroLevel", *sys.ors, tipsN, *graspobj);
   //V=listGetByName(sys.vars,"zeroLevel");
   V->updateState();
-  V->y_target = ARR(.02,.02,.02); 
+  V->y_target = ARR(.03,.03,.03); 
   V->y_prec = 1e4;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
   sys.vars.append(V);
   
-  //if (!graspobj->m.V.N)  graspobj->buildMesh();
-  //graspobj->saveMesh("grasp_mesh.tri");
-  graspobj->loadMesh("grasp_mesh.tri");
+  if (!graspobj->m.V.N)  graspobj->buildMesh();
+  graspobj->saveMesh("grasp_mesh.tri");
+  //graspobj->loadMesh("grasp_mesh.tri");
   sys.gl->add(glDrawMeshObject, graspobj);
 #endif
 

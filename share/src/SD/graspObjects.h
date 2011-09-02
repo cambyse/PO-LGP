@@ -84,6 +84,18 @@ struct GraspObject_Cylinder1:public GraspObject { // poor man's cylinder
   arr center(){return c;};
 };
 
+struct GraspObject_Box:public GraspObject {
+  arr c;    //center
+  arr dim,axes;
+  double s; //kernel parameter
+  
+  double distanceToSurface(arr *grad,arr *hess,const arr& x);
+  GraspObject_Box();
+  GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_); //assumes box is axis aligned
+  arr center(){ return c; };
+};
+
+
 struct GraspObject_Sphere:public GraspObject {
   arr c;    //center
   double r; //radius
