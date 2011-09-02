@@ -665,7 +665,7 @@ struct TaskVariable {
   void setGainsAsAttractor(double decaySteps, double oscillations=.2, bool onReal=true);
   
   //!@name trajectory target parameters
-  //TODO: REMOVE ALL of the following options:
+  //MT TODO: REMOVE ALL of the following options:
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
   void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec); 
@@ -684,7 +684,7 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   //!@name updates
-  void updateState(double tau=1.);
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
   void updateJacobian();
   void updateChange(int t=-1, double tau=1.);
   void getHessian(arr& H);

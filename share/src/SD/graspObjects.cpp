@@ -241,20 +241,26 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
   arr zzT = z*(~z);
 
   if ( nb < h/2. ){ // x projection on z is inside cyl
-    if(grad) *grad = s*a/na;
-    if(hess){
-      I.setZero();
-      for(i=0;i<x.d0;++i) I(i,i)=1;
-      *hess = s/na * (I - zzT - aaTovasq);
+    if(na<r && (h/2.-nb)<(r-na)){ // x is INSIDE the cyl and closer to the lid than the wall
+      if(grad) *grad = s*z;
+      if(hess) { I.setZero(); *hess=I; }
+      return s*(nb-h/2.);
+    }else{
+      if(grad) *grad = s*a/na;
+      if(hess){
+        I.setZero();
+        for(i=0;i<x.d0;++i) I(i,i)=1;
+        *hess = s/na * (I - zzT - aaTovasq);
+      }
+      return s*(na-r);
     }
-    return s*(na-r);
   }else{// x projection on z is outside cylinder
     if ( na < r ){// inside the infinite cylinder
-      if(grad) *grad = s*norm(z)*z;//yes, times. see notes.
+      if(grad) *grad = s*z;
       if(hess) { I.setZero(); *hess=I; }
       return s*(nb-h/2.);
     }else{ // outside the infinite cyl
-      arr v =  b/nb * (nb-h/2.)  + a/na * (na-r);
+      arr v =  b/nb * (nb-h/2.)  + a/na * (na-r); //MT: good! (note: b/nb is the same as z)
       double nv=norm(v);
       if(grad) *grad = s* v/nv; 
       if(hess){
@@ -267,6 +273,7 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
       return s* nv;
     }
   }
+  HALT("You shouldn't be here!");
 }
 
 /* construct from config */

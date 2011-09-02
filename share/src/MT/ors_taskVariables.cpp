@@ -355,7 +355,7 @@ void TaskVariable::updateState(double tau){
   }
   
   //v = .5*v + .5*(y - y_old);
-  v = (y - y_old)/tau;
+  v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
   
   if(y_target.N==y.N){
     err=norm(y - y_target);
