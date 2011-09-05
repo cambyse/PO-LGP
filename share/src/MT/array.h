@@ -172,14 +172,11 @@ public:
   void referToSubRange(const Array<T>& a, uint i, int I);
   void referToSubDim(const Array<T>& a, uint dim);
   void referToSubDim(const Array<T>& a, uint i, uint j);
-  //void redirect(const Array<T>& a, uint i); //? remove; hardly more efficient than referToSubDim
   void takeOver(Array<T>& a);                   //a becomes a reference on its previously owned memory!
   void setGrid(uint dim, T lo, T hi, uint steps);
   void setText(const char* str);
   
-  //!@name access
-  uint dim(uint k) const;
-  Array<uint> getDim() const;
+  //!@name access by reference (direct memory access)
   T& elem(uint i) const;
   T& scalar() const;
   T& last() const;
@@ -188,9 +185,14 @@ public:
   T& operator()(uint i, uint j) const;
   T& operator()(uint i, uint j, uint k) const;
   T& operator()(const Array<uint> &I) const;
-  Array<T> operator[](uint i) const;
-  Array<T> subDim(uint i, uint j) const;
+  Array<T> operator[](uint i) const;     // calls referToSubDim(*this,i)
+  Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this,i,j)
+  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this,i,I)
   Array<T>& operator()();
+  
+  //!@name access by copy
+  uint dim(uint k) const;
+  Array<uint> getDim() const;
   Array<T> sub(uint i, int I) const;
   Array<T> sub(uint i, int I, uint j, int J) const;
   Array<T> sub(uint i, int I, uint j, int J, uint k, int K) const;

@@ -679,6 +679,10 @@ template<class T> MT::Array<T> MT::Array<T>::operator[](uint i) const { MT::Arra
 //! get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
 template<class T> MT::Array<T> MT::Array<T>::subDim(uint i, uint j) const { MT::Array<T> z;  z.referToSubDim(*this, i, j);  return z; }
 
+//! get a subarray (e.g., row of a rank-3 tensor); use in conjuction with operator()() to get a reference
+template<class T> MT::Array<T> MT::Array<T>::subRange(uint i, int I) const { MT::Array<T> z;  z.referToSubRange(*this, i, I);  return z; }
+
+
 //! convert a subarray into a reference (e.g. a[3]()+=.123)
 template<class T> MT::Array<T>& MT::Array<T>::operator()(){ return (*this); }
 
@@ -1197,14 +1201,6 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
     NIY;
   }
 }
-
-/*
-//! redirects a reference (previously constructed) to a new sub dim of a
-template<class T> void MT::Array<T>::redirect(const MT::Array<T>& a, uint i){
-  CHECK(reference && a.nd==2, "can only do that hack with references");
-  p=a.p+i*a.d1;
-}
-*/
 
 /*!\brief takes over the memory buffer from a; afterwards, this is a
   proper array with own memory and a is only a reference on the

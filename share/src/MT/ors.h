@@ -37,6 +37,7 @@ struct Vector {
   
   Vector(){}
   Vector(double x, double y, double z){ set(x, y, z); }
+  Vector(const arr& x){ CHECK(x.N==3,"");  set(x.p); }
   double& operator()(int);
   const double& operator()(int) const;
   
@@ -71,9 +72,11 @@ struct Matrix {
   double p[9];
   
   Matrix(){};
+  Matrix(const arr& m){ CHECK(m.N==9,"");  set(m.p); };
   double& operator()(int, int);
   const double& operator()(int, int) const;
   
+  void set(double* m);
   void setZero();
   void setId();
   void setFrame(Vector&, Vector&, Vector&);
@@ -94,6 +97,7 @@ struct Quaternion {
   double p[4];
   
   Quaternion();
+  Quaternion(const arr& q){ CHECK(q.N==4,"");  set(q.p); };
   
   void set(double q0, double x, double y, double z);
   void set(double* q);
@@ -128,7 +132,7 @@ struct Quaternion {
   Vector& getZ(Vector& Rz) const;
   double* getMatrix(double* m) const;
   double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
-  double* getMatrixGL(double* m) const; //in OpenGL format: transposed 4x4 memory storage
+  double* getMatrixGL(double* m) const;  //in OpenGL format: transposed 4x4 memory storage
   
   void writeNice(std::ostream& os) const;
   void write(std::ostream& os) const;
@@ -550,6 +554,15 @@ stdPipes(ors::Graph);
 
 double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 
+
+//===========================================================================
+//
+// conversions to arr
+//
+
+inline arr ARRAY(const ors::Vector& v){     return arr(v.p, 3); }
+inline arr ARRAY(const ors::Quaternion& q){ return arr(q.p, 4); }
+inline arr ARRAY(const ors::Matrix& m){     return arr(m.p, 9); }
 
 //===========================================================================
 //
