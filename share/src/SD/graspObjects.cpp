@@ -1,4 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
 #include "graspObjects.h"
 #include <MT/array.h>
 #include <MT/util.h>
@@ -313,8 +312,8 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
     d = -norm(a_rel - closest);
   }else{ //outside
     closest = a_rel;
-    closest = MT::MAX(-dim,closest);
-    closest = MT::MIN(dim,closest);
+    closest = elemWiseMax(-dim,closest);
+    closest = elemWiseMin(dim,closest);
     d = norm(a_rel - closest);
   }
   
