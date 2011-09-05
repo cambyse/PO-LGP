@@ -3,7 +3,7 @@
 
 PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
                               ors::Graph& _ors,
-                              ShapeList& _refs,
+                              const ShapeList& _refs,
                               PotentialField& _f){
   refs=_refs;
   f=&_f;
@@ -27,7 +27,7 @@ void PotentialValuesTaskVariable::userUpdate(){
 
 PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _name,
     ors::Graph& _ors,
-    ShapeList& _refs,
+    const ShapeList& _refs,
     PotentialField& _f){
       refs=_refs;
       f=&_f;
@@ -58,7 +58,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(){
 
 GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
                               ors::Graph& _ors,
-                              ShapeList& _refs,
+                              const ShapeList& _refs,
                               GraspObject_GP& _f){
   refs=_refs;
   f=&_f;

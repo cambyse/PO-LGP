@@ -320,17 +320,16 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
 
 void OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, bool verbose)
+                        double time,double alpha, bool verbose, bool b_is_initialized)
 {
   arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
-  arr q0,q_old,tp,qv0,v0,bq,bv;
+  arr x0; //,bq,bv;
   double tau=sys.getTau(false);// we need this tau only to get pure Q1 and Q2
   double T = sys.nTime();
   //initial state
-  sys.getqv0(q0,v0);
-  qv0=cat(q0,v0);  //q0 with velocity!!!!!!
-  b=qv0;
-  bq=q0;bv=q0; // defines size
+  sys.getx0(x0);
+  if(!b_is_initialized) b=x0;
+  //bq=q0;bv=q0; // defines size
 
   double old_r;
 
@@ -360,21 +359,24 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
 
   inverse_SymPosDef(sumAinv,sumA);
-  suma= AT*qv0;
+  suma= AT*x0;
 
-  arr b_old = qv0;  arr b_best = qv0;
+  arr b_old = x0;  arr b_best = x0;
   old_r = sys.taskCost(NULL,T,-1);
   bool restore;
 
   for (uint k=0;k<1000;k++){
 
-    for (uint i=0; i< 14;i++){ bq(i)=b(i); bv(i)=b(i+14);} // can not set joint state q and v in one variable
-    sys.setqv(bq,bv);
+    //for (uint i=0; i< 14;i++){ bq(i)=b(i);  bv(i)=b(i+14); } // can not set joint state q and v in one variable //MT: Yes you can: setx
+    //sys.setqv(bq,bv);
+    sys.setx(b);
 
-    if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)) {alpha=alpha*0.5; b=b_best; restore=true;}
-    else
-    {
-      if (!restore) alpha=pow(alpha,0.5);
+    if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)){
+      alpha=alpha*0.5; //failure
+      b=b_best;
+      restore=true;
+    }else{
+      if (!restore) alpha=pow(alpha,0.5); //success
       sys.getCosts(R,r,b,T); // costs at the current position
       Binv = sumAinv+ R;
       b_best = b; b_old = b;
@@ -382,15 +384,15 @@ void OneStepDynamicFull(arr& b,arr& Binv,
       b = b_old + alpha*(b-b_old);
 
 
-      cout <<old_r<<endl;
-      if ( (!restore)&&(k>1)&& ((fabs(alpha)<1e-4)||( (old_r - sys.taskCost(NULL, T, -1))<1e-3)  ) ) break;
+      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
+      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<1e-4))) break;
 
       old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
 
       if(verbose>0){
         sys.displayState(NULL, NULL, "posture estimate", true);
-        sys.gl->watch();
+        //sys.gl->watch();
       }
     }
   }

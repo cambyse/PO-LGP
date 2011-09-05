@@ -264,11 +264,11 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
       double nv=norm(v);
       if(grad) *grad = s* v/nv; 
       if(hess){
-      I.setZero();
-      for(i=0;i<x.d0;++i) I(i,i)=1;
-      arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
-                 + aaTovasq + zzT;
-      *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
+        I.setZero();
+        for(i=0;i<x.d0;++i) I(i,i)=1;
+        arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
+                   + aaTovasq + zzT;
+        *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
       }
       return s* nv;
     }
@@ -294,13 +294,22 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
   h = h1;
 }
 
+GraspObject_Cylinder1::GraspObject_Cylinder1(const ors::Shape* s){
+  ors::Vector tmp;
+  c = ARRAY(s->X.pos);
+  z = ARRAY(s->X.rot.getZ(tmp));
+  r = s->size[3];
+  h = s->size[2];
+  this->s = 1.;
+}
+
 /* =============== Box ================ */
 
 double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
   arr a = x-c;
   //box dimensions:
 
-  arr a_rel = axes*a;
+  arr a_rel = (~rot)*a;
 
   double d;
   arr closest(3);
@@ -316,9 +325,18 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
     closest = elemWiseMin(dim,closest);
     d = norm(a_rel - closest);
   }
-  
-  if(grad) *grad = (~axes)*(a_rel - closest)/d; //transpose(R) rotates the gradient back to world coordinates
-  if(hess) NIY;
+
+  del=a_rel-closest;
+  if(grad) *grad = rot*del/d; //transpose(R) rotates the gradient back to world coordinates
+  if(hess){
+      if(del.max()>0.){ //outside on all 3 axis
+        *hess = 1./d * (eye(3,3) - (del^del)/(d*d));
+        *hess = rot*(*hess)*(~rot);
+      }else{
+        (*hess).resize(3,3);
+        hess->setZero();
+      }
+  }
   return d;
 }
 
@@ -328,14 +346,21 @@ GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, dou
   //assumes box is axis aligned
   c=center;
   dim = ARR(dx_,dy_,dz_);
-  axes = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
+  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
              -MT_SQRT2/2.,MT_SQRT2/2.,0,
              0,0,1);
-  axes = ARR(1,0,0,
+             /*axes = ARR(1,0,0,
              0,1,0,
-             0,0,1);
-  axes.reshape(3,3);
+             0,0,1);*/
+  rot.reshape(3,3);
   s=1.;
+}
+
+GraspObject_Box::GraspObject_Box(const ors::Shape* s){
+  c = ARRAY(s->X.pos);
+  dim = .5*arr(s->size, 3);
+  rot.resize(3,3);  s->X.rot.getMatrix(rot.p);
+  this->s = 1.;
 }
 
 /* =============== Sphere ================ */

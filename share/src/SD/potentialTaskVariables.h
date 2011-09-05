@@ -12,7 +12,7 @@ struct PotentialValuesTaskVariable:public TaskVariable{
   PotentialField *f;
   ShapeList refs;
   
-  PotentialValuesTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs, PotentialField& _f);
+  PotentialValuesTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual void userUpdate();
 };
 
@@ -20,7 +20,7 @@ struct PotentialFieldAlignTaskVariable:public TaskVariable{
   PotentialField *f;
   ShapeList refs;
 
-  PotentialFieldAlignTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs, PotentialField& _f);
+  PotentialFieldAlignTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual void userUpdate();
 };
 
@@ -28,7 +28,7 @@ struct GPVarianceTaskVariable:public TaskVariable{
   GraspObject_GP *f;
   ShapeList refs;
 
-  GPVarianceTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs, GraspObject_GP& _f);
+  GPVarianceTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, GraspObject_GP& _f);
   virtual void userUpdate();
 };
 

@@ -3143,7 +3143,7 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Transformation *rel){
   Xa = bodies(a)->X;
   if(rel) Xa.appendTransformation(*rel);
   
-  if(!bodies(a)->inLinks.N){ if(Qlin.N) J=J*Qlin; return; }
+  if(!bodies(a)->inLinks.N){ if(Qlin.N) J=J*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei){
     i=ei->index;
@@ -3193,7 +3193,7 @@ void ors::Graph::hessian(arr& H, uint a, ors::Transformation *rel){
   Xa = bodies(a)->X;
   if(rel) Xa.appendTransformation(*rel);
   
-  if(!bodies(a)->inLinks.N) return;
+  if(!bodies(a)->inLinks.N){ HALT("Qlin needs to be implemented (as in jacobian(..))");  return; }
   ei=bodies(a)->inLinks(0);
   while(ei){
     i=ei->index;
@@ -3358,7 +3358,7 @@ void ors::Graph::jacobianZ(arr& J, uint a, ors::Transformation *rel){
   if(rel) Xa.appendTransformation(*rel);
   Xa.rot.getZ(ta);
   
-  if(!bodies(a)->inLinks.N) return;
+  if(!bodies(a)->inLinks.N){ if(Qlin.N) J=J*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei){
     i=ei->index;
@@ -4270,4 +4270,9 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 #endif
 
 #undef LEN
+
+//-- template instantiations
+
+#include "array_t.cpp"
+template MT::Array<ors::Shape*>::Array(uint);
 

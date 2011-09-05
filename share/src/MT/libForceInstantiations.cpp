@@ -19,10 +19,10 @@
 
 //the above two flags cause the following headers to
 //include their implementations...
-//#include <MT/ors.h>
 #include "util.h"
 //#include <MT/opengl.h>
 #include "array.h"
+//#include "ors.h"
 //#include <MT/algos.h>
 //explicit template instantiations
 

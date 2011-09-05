@@ -81,17 +81,19 @@ struct GraspObject_Cylinder1:public GraspObject { // poor man's cylinder
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Cylinder1();
   GraspObject_Cylinder1(arr, arr, double, double, double);
+  GraspObject_Cylinder1(const ors::Shape* s);
   arr center(){return c;};
 };
 
 struct GraspObject_Box:public GraspObject {
   arr c;    //center
-  arr dim,axes;
+  arr dim,rot;
   double s; //kernel parameter
   
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Box();
   GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_); //assumes box is axis aligned
+  GraspObject_Box(const ors::Shape* s);
   arr center(){ return c; };
 };
 
