@@ -4,7 +4,7 @@
 #include "array.h"
 #include "util.h"
 
-struct Monotonizer{
+/*struct Monotonizer{
   enum { LevenbergMarquard=0, StepSize };
   int mode;
   double lambda;
@@ -26,9 +26,8 @@ struct Monotonizer{
       dampingReference=b;
       //cout <<" AICOd ACCEPT" <<endl;
     }
-
-  
-}
+  }
+  };*/
 
 struct GaussNewtonCostFunction {
   //provides a list of cost terms:

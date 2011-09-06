@@ -258,6 +258,7 @@ ANN := 1
 endif
 
 ifdef LEWINER
+CXXFLAGS += -DMT_Lewiner
 #LPATH := $(LPATH):$(BASE)/src/Lewiner
 LinuxLibs += -llewiner
 endif
