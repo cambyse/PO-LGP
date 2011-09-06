@@ -191,7 +191,8 @@ CXXFLAGS  += -DMT_FREEGLUT
 CPATH	  := $(CPATH):$(LIBPATH)/freeglut-2.4.0/include
 INCLUDE	  := $(INCLUDE):$(LIBPATH)/freeglut/include
 LIB	  := $(LIB):$(LIBPATH)/freeglut/DebugStatic
-LinuxLibs += -lglut -lGLU -lGL -lX11
+LinuxLibs += -lglut -lGLU 
+#-lGL -lX11
 CygwinLibs+=  -lglut -lGLU -lGL
 MSVCLibs  += opengl32.lib glu32.lib vfw32.lib
 endif
@@ -529,9 +530,14 @@ info: force
 %.mexglx: $(PREOBJS) $(OBJS)
 	mex -cxx $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs)
 
+ifdef CUDA
 %_cuda.o: %_cuda.cpp
 	if test ! -L $*_cuda.cu; then ln -s -f $*_cuda.cpp $*_cuda.cu; fi;
 	$(NXX) $(NXXFLAGS) -o $@ -c $*_cuda.cu
+else
+%_cuda.o: %_cuda.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $*_empty.cxx
+endif
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
