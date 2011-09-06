@@ -458,6 +458,9 @@ template<class T> T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> MT::Array<T> diagProduct(const MT::Array<T>& v, const MT::Array<T>& w);
 
+template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w);
+template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w);
+
 //===========================================================================
 // @}
 //!@name concatenating arrays together
@@ -596,11 +599,6 @@ UnaryFunction(fabs);
 UnaryFunction(floor);
 #undef UnaryFunction
 
-namespace MT{
-template<class T> T MIN(T a, T b);
-template<class T> T MAX(T a, T b);
-}
-
 #define BinaryFunction( func )            \
   template<class T> MT::Array<T> func(const MT::Array<T>& y, const MT::Array<T>& z); \
   template<class T> MT::Array<T> func(const MT::Array<T>& y, T z); \
@@ -608,10 +606,6 @@ template<class T> T MAX(T a, T b);
 BinaryFunction(atan2);
 BinaryFunction(pow);
 BinaryFunction(fmod);
-namespace MT{
-BinaryFunction(MIN);
-BinaryFunction(MAX);
-}
 #undef BinaryFunction
 
 template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x);
