@@ -1,6 +1,6 @@
-Compiled at:     Aug  1 2011 22:34:27
-Execution start: Mon Aug  1 22:35:21 2011
-Program call:    '/home/stanio/git/share/share/test/gaussianProcess/x.exe '
+Compiled at:     Sep  6 2011 15:46:47
+Execution start: Tue Sep  6 16:04:45 2011
+Program call:    './x.exe '
                 seed = opening config file 'MT.cfg' - failed
 0 [j] (default!)
 opening output file `z.plotdata'
@@ -10,7 +10,27 @@ opening output file `z.plotdata'
 opening output file `z.plotdata'
 opening output file `z.plotdata'
 opening output file `z.plotdata'
-Execution stop:      Mon Aug  1 22:35:32 2011
-Ellapsed double time:  11.249sec
-Process  user time:   0.030sec
-Process system time: 0.06sec
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'
+opening output file `z.plotdata'

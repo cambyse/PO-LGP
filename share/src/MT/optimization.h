@@ -4,6 +4,32 @@
 #include "array.h"
 #include "util.h"
 
+struct Monotonizer{
+  enum { LevenbergMarquard=0, StepSize };
+  int mode;
+  double lambda;
+
+  Monotonizer(){ mode = LevenbergMarquard; lambda=1.; }
+
+  double check(double f_new, double f_old, double& lambda){
+    if(cost>cost_old){
+      damping *= 10.;
+      dampingReference=b_old;
+      //cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+      b = b_old;
+      q = q_old;
+      qhat = qhat_old;
+      cost = cost_old;
+      s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
+    }else{
+      damping /= 5.;
+      dampingReference=b;
+      //cout <<" AICOd ACCEPT" <<endl;
+    }
+
+  
+}
+
 struct GaussNewtonCostFunction {
   //provides a list of cost terms:
   //  the total cost is   cost(x) = \sum_i phi_i(x)^T C_i phi_i(x)
