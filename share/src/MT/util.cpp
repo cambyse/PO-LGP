@@ -243,6 +243,7 @@ void flip(int& b, uint i){ b ^= 1  <<(7-(i&7)); }
 
 double MIN(double a, double b){ return a<b?a:b; }
 double MAX(double a, double b){ return a>b?a:b; }
+uint MAX(uint a, uint b){ return a>b?a:b; }
 
 /*!\brief the distance between x and y w.r.t.\ a circular topology
     (e.g. modMetric(1, 8, 10)=3) */
