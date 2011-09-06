@@ -2,11 +2,13 @@ PACKAGE = share
 
 ALL =	extern/SWIFT++_1.2/src \
 	extern/libcolorseg/src \
+	extern/Lewiner \
 	src/NJ \
 	src/TL \
-	src/MT \
 	src/NP \
-	src/Lewiner 
+	src/SD \
+	src/DZ \
+	src/MT \
 #	extern/SWIFT++_1.2/decomposer/src \
 
 makeAll: $(ALL:%=make/%)
@@ -26,12 +28,12 @@ clean/%::
 tests::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;
 
-robots::
-	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} \;
+projects::
+	-@find proj_* -maxdepth 1 -type d -not -name 'robot' -exec make -C {} \;
 
 cleanProjects::
 	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} clean \;
-	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} clean \;
+	-@find proj_* -maxdepth 1 -type d -not -name 'robot' -exec make -C {} clean \;
 
 doc::
 	make -C doc guide doxy

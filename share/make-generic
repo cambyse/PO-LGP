@@ -256,6 +256,11 @@ QHULL := 1
 ANN := 1
 endif
 
+ifdef LEWINER
+#LPATH := $(LPATH):$(BASE)/src/Lewiner
+LinuxLibs += -llewiner
+endif
+
 ifdef SOLID
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
@@ -428,12 +433,6 @@ ifdef DMITRY
 LPATH := $(LPATH):$(BASE)/src/DZ
 LinuxLibs += -ldz
 DEPEND += externalMake_src/DZ
-endif
-
-ifdef LEWINER
-LPATH := $(LPATH):$(BASE)/src/Lewiner
-LinuxLibs += -llewiner
-DEPEND += externalMake_src/Lewiner
 endif
 
 ifdef LIBVOC2009
