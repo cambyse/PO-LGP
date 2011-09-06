@@ -1,7 +1,6 @@
-#define MT_IMPLEMENTATION
-
-#include<MT/algos.h>
-#include<MT/plot.h>
+#include <MT/algos.h>
+#include <MT/plot.h>
+#include <MT/ann.h>
 
 void testRRT(){
   uint dim=2;

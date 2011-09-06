@@ -1,4 +1,4 @@
-//#define MT_IMPLEMENTATION
+//
 
 #include <MT/ors.h>
 #include <MT/soc.h>

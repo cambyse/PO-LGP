@@ -1,8 +1,9 @@
 #include<MT/util.h>
 #include<MT/algos.h>
 #include<MT/functions.h>
-#include<MT/dynamics.h>
-#include<MT/plot.h>
+//#include<MT/dynamics.h>
+#include <MT/optimization.h>
+#include <MT/plot.h>
 
 using namespace std;
 
@@ -233,11 +234,12 @@ void testLUdecomposition(){
   arr A(6,6),L,U;
   rndGauss(A,1.,false);
 
-  lapack_LU(L, U, A);
+  /*lapack_LU(L, U, A);
   cout <<A <<endl
     <<L <<endl
     <<U <<endl
     <<L*U <<endl;
+  */
 
 }
 
@@ -256,7 +258,7 @@ int main(int argn,char** argv){
   testFilter();
   testRK();
   testRKswitch();
-  testLUdecomposition();
+  //testLUdecomposition();
 
   //plan();
   

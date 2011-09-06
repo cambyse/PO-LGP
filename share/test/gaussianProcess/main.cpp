@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+#define MT_IMPLEMENT_TEMPLATES
 
 #include<MT/array.h>
 #include<MT/plot.h>

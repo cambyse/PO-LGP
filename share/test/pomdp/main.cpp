@@ -18,7 +18,7 @@
     02110-1301 USA
 */
 
-#define MT_IMPLEMENTATION
+
 #define MT_NoLognormScale
 
 #ifdef MT_QT

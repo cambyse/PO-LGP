@@ -1,4 +1,4 @@
-//#define MT_IMPLEMENTATION
+//
 
 #include <MT/robotActionInterface.h>
 #include <signal.h>
