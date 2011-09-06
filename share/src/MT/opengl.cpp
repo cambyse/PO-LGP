@@ -29,6 +29,15 @@
 #  include "opengl_qt.cxx"
 #endif
 
+#if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
+struct sOpenGL{
+  sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
+    MT_MSG("creating dummy OpenGL object");
+  }
+  ors::Vector downVec,downPos,downFoc;
+  ors::Quaternion downRot;
+};
+#endif
 
 
 //===========================================================================
