@@ -23,37 +23,37 @@ void mdp::EMSolver::getParameters(){
 }
 
 void mdp::EMSolver::reportParameters(std::ostream& os){
-  cout  <<"\n *** EMSolver parameter setting"
-        <<"\ngeneral:"
-        <<"\n  problemFile  = "  <<problemFile
-        <<"\n  fscFile      = "  <<fscFile
-        <<"\n  outputPrefix = "  <<outputPrefix
-        <<"\n  seed         = "  <<seed
-        <<"\n  EMiterations = "  <<EMiterations
-        <<"\n  evaluationCheckHorizon = "  <<evaluationCheckHorizon
-        <<"\ncontroller parameters:"
-        <<"\n  fscType = "  <<fscType
-        <<"\n  levels  = "  <<levels
-        <<"\nM-step parameters:"
-        <<"\n  mstepType  = "  <<mstepType
-        <<"\n  mstepRate  = "  <<mstepRate
-        <<"\n  mstepNoise = "  <<mstepNoise
-        <<"\nE-step parameters:"
-        <<"\n  estepIncremental = "  <<estepIncremental
-        <<"\n  estepStructured  = "  <<estepStructured
-        <<"\n  estepHorizon     = "  <<estepHorizon
-        <<"\nobseolete:"
-        <<"\n  forceLevel1 = "  <<obsolete_forceLevel1
-        <<endl;
+  cout <<"\n *** EMSolver parameter setting"
+       <<"\ngeneral:"
+       <<"\n  problemFile  = " <<problemFile
+       <<"\n  fscFile      = " <<fscFile
+       <<"\n  outputPrefix = " <<outputPrefix
+       <<"\n  seed         = " <<seed
+       <<"\n  EMiterations = " <<EMiterations
+       <<"\n  evaluationCheckHorizon = " <<evaluationCheckHorizon
+       <<"\ncontroller parameters:"
+       <<"\n  fscType = " <<fscType
+       <<"\n  levels  = " <<levels
+       <<"\nM-step parameters:"
+       <<"\n  mstepType  = " <<mstepType
+       <<"\n  mstepRate  = " <<mstepRate
+       <<"\n  mstepNoise = " <<mstepNoise
+       <<"\nE-step parameters:"
+       <<"\n  estepIncremental = " <<estepIncremental
+       <<"\n  estepStructured  = " <<estepStructured
+       <<"\n  estepHorizon     = " <<estepHorizon
+       <<"\nobseolete:"
+       <<"\n  forceLevel1 = " <<obsolete_forceLevel1
+       <<endl;
 }
 
 void mdp::EMSolver::initProblem(){
-  outfilename.clr()  <<outputPrefix;
+  outfilename.clr() <<outputPrefix;
   //MT::IOraw=true;
   //levels.write(outfilename, "-");
   //MT::IOraw=false;
-  outfilename  <<"."  <<seed;
-  cout  <<"output filename = "  <<outfilename  <<endl;
+  outfilename <<"." <<seed;
+  cout <<"output filename = " <<outfilename <<endl;
   outfile.close();
   MT::open(outfile, outfilename);
   
@@ -80,7 +80,7 @@ void mdp::EMSolver::initFsc(){
   //writeFSC_fg(fsc, z, false);
   alpha.clear();
   beta.clear();
-  outfile  <<endl;
+  outfile <<endl;
   k=0;
 }
 
@@ -89,14 +89,14 @@ void mdp::EMSolver::resetTimer(){
 }
 
 void mdp::EMSolver::step(){
-  cout  <<k  <<' ';
-  cout  <<std::setprecision(8);
+  cout <<k <<' ';
+  cout <<std::setprecision(8);
   double R;
   R=pomdpEM_structured(mdps, fsc,
                        estepHorizon, estepStructured, alpha.N>0 && estepIncremental,
                        mstepType, mstepRate, mstepNoise,
                        false, &alpha, &beta, &cout);
-  outfile  <<k  <<' '  <<MT::timerRead(false, tic)  <<' '  <<R  <<endl;
+  outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
   if(false && evaluationCheckHorizon){ //NIY...
     uint horizon=evaluationCheckHorizon;
     if(horizon==1) horizon=2*estepHorizon;
@@ -104,7 +104,7 @@ void mdp::EMSolver::step(){
     MDP mdp;
     collapseFSC(fsc1, fsc);
     collapseToFlat(mdp, mdps);
-    cout  <<"evaluation = "  <<evaluateFsc1(fsc1, mdp, horizon)  <<endl;
+    cout <<"evaluation = " <<evaluateFsc1(fsc1, mdp, horizon) <<endl;
   }
   k++;
 }
@@ -112,15 +112,15 @@ void mdp::EMSolver::step(){
 void mdp::EMSolver::loop(){
   tic=MT::cpuTime();
   for(; k<EMiterations;) step();
-  //cout  <<"final R = "  <<R  <<"\ntotal time = "  <<MT::timerRead(false, tic)  <<endl;
-  cout  <<"total time = "  <<MT::timerRead(false, tic)  <<endl;
+  //cout <<"final R = " <<R <<"\ntotal time = " <<MT::timerRead(false, tic) <<endl;
+  cout <<"total time = " <<MT::timerRead(false, tic) <<endl;
 }
 
 void mdp::EMSolver::gnuplot(bool byTime){
   MT::String cmd;
-  if(byTime) cmd  <<"plot '"  <<outfilename  <<"' us 2:3";
-  else       cmd  <<"plot '"  <<outfilename  <<"' us 1:3";
-  cout  <<"gnuplot command: "  <<cmd  <<endl;
+  if(byTime) cmd <<"plot '" <<outfilename <<"' us 2:3";
+  else       cmd <<"plot '" <<outfilename <<"' us 1:3";
+  cout <<"gnuplot command: " <<cmd <<endl;
   ::gnuplot(cmd.p);
 }
 
@@ -151,14 +151,14 @@ void mdp::EMSolver::obsolete_loop_lev12(){
       if(evaluationCheckHorizon){
         uint horizon=evaluationCheckHorizon;
         if(horizon==1) horizon=2*estepHorizon;
-        cout  <<"evaluation = "  <<evaluateFsc1(fsc1, mdp, horizon)  <<endl;
+        cout <<"evaluation = " <<evaluateFsc1(fsc1, mdp, horizon) <<endl;
       }
-      cout  <<k  <<' ';
-      //cout  <<std::setprecision(8);
+      cout <<k <<' ';
+      //cout <<std::setprecision(8);
       R=pomdpEM_lev1(mdp, fsc1, estepHorizon, estepStructured, alpha.N>0 && estepIncremental,
                      (MstepType)mstepType, mstepRate, mstepNoise,
                      false, &alpha, &beta, &cout);
-      outfile  <<k  <<' '  <<MT::timerRead(false, tic)  <<' '  <<R  <<endl;
+      outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
     }
   }else{
     for(uint k=0; k<EMiterations; k++){
@@ -166,12 +166,12 @@ void mdp::EMSolver::obsolete_loop_lev12(){
         uint horizon=evaluationCheckHorizon;
         if(horizon==1) horizon=2*estepHorizon;
         collapse2levelFSC(fsc1, fsc2);
-        cout  <<"evaluation = "  <<evaluateFsc1(fsc1, mdp, horizon)  <<endl;
+        cout <<"evaluation = " <<evaluateFsc1(fsc1, mdp, horizon) <<endl;
       }
-      cout  <<k  <<' ';
+      cout <<k <<' ';
       R=pomdpEM_lev2(mdp, fsc2, estepHorizon, estepStructured, (MstepType)mstepType, false, &cout);
-      outfile  <<k  <<' '  <<MT::timerRead(false, tic)  <<' '  <<R  <<endl;
+      outfile <<k <<' ' <<MT::timerRead(false, tic) <<' ' <<R <<endl;
     }
   }
-  cout  <<"final R = "  <<R  <<"\ntotal time = "  <<MT::timerRead(false, tic)  <<endl;
+  cout <<"final R = " <<R <<"\ntotal time = " <<MT::timerRead(false, tic) <<endl;
 }

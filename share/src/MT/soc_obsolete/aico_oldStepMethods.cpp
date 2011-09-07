@@ -66,7 +66,7 @@ double AICO_clean::stepKinematic(){
     //-- perhaps display the initialization
     if(q.N){
       if(sys->os){//type initial value
-        *sys->os  <<"AICO_k(" <<scale <<") "  <<std::setw(3)  <<-1  <<" time "  <<MT::timerRead(false)  <<" diff -1";
+        *sys->os <<"AICO_k(" <<scale <<") " <<std::setw(3) <<-1 <<" time " <<MT::timerRead(false) <<" diff -1";
         sys->analyzeTrajectory(b, display>0);
       }
       if(sys->gl){
@@ -103,7 +103,7 @@ double AICO_clean::stepKinematic(){
         St = Winv[t-1];
         inverse_SymPosDef(Sinv[t](), St);
 #endif
-        //cout  <<"s\n"  <<s[t]  <<endl  <<Sinv[t]  <<endl;
+        //cout <<"s\n" <<s[t] <<endl <<Sinv[t] <<endl;
       }
 
       //compute (v, V)
@@ -124,7 +124,7 @@ double AICO_clean::stepKinematic(){
           Vinv[t].setDiag(1e-1); //regularization, makes eq (*) above robust
 #endif
         }
-      //  cout  <<"v\n"  <<v[t]  <<endl  <<Vinv[t]  <<endl;
+      //  cout <<"v\n" <<v[t] <<endl <<Vinv[t] <<endl;
       }
         
       //first sweep and no initialization: set qhat equal to fwd message
@@ -150,9 +150,9 @@ double AICO_clean::stepKinematic(){
 #endif
         
         qhat_of_R[t]() = qhat[t];
-        //cout  <<"r\n"  <<r[t]  <<endl  <<R[t]  <<endl;
+        //cout <<"r\n" <<r[t] <<endl <<R[t] <<endl;
       }
-      //else cout  <<"skip."  <<flush;
+      //else cout <<"skip." <<flush;
 
       //compute system matrices
       if(!sys->dynamic) sys->getWinv(Winv[t](), t);
@@ -160,7 +160,7 @@ double AICO_clean::stepKinematic(){
       //compute (b, B);
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
       lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-      //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+      //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
 #if USE_TRUNCATION //PRELIMINARY - hard constraints handled with truncating Gaussians
       //sys->displayState(b[t], &Binv[t], STRING("AICO kinematic (online) t=" <<t));
@@ -170,7 +170,7 @@ double AICO_clean::stepKinematic(){
       //sys->gl->watch(STRING("time " <<t));
       sys->getConstraints(cdir, coff, t <<scale, b[t]);
       if(cdir.d0){
-        //cout  <<"t="  <<t  <<' ';
+        //cout <<"t=" <<t <<' ';
         arr __b, __B, __Binv;
         inverse_SymPosDef(__B, Binv[t]);
         __b=b[t];
@@ -187,7 +187,7 @@ double AICO_clean::stepKinematic(){
         //recompute (b, B);
         Binv[t] = Sinv[t] + Vinv[t] + R[t];
         Lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-        //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+        //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
         //sys->displayState(b[t], &Binv[t], STRING("AICO kinematic (after truncation) t=" <<t));
       }
@@ -217,12 +217,12 @@ double AICO_clean::stepKinematic(){
       if(sweep && repeatThreshold && t!=T){
         double off=sqrDistance(b[t], qhat[t]);  //sqrDistance(W, b[t], qhat[t]);
         if(off>repeatThreshold){
-          //cout  <<t  <<" REPEAT: off="  <<off  <<" (repeatCount="  <<repeatCount  <<")"  <<endl;
+          //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
           if(repeatCount<20){
             t-=dt;
             repeatCount++;
           }else{
-            cout  <<" ** no convergence! ** (skipping repeat) at t="  <<t  <<endl;
+            cout <<" ** no convergence! ** (skipping repeat) at t=" <<t <<endl;
             repeatCount=0;
           }
         }else{
@@ -249,9 +249,9 @@ double AICO_clean::stepKinematic(){
   MT::timerPause();
   if(sys->os){
 #ifdef NIKOLAY
-    *sys->os  <<std::setw(3)  <<sweep  <<"  "  <<MT::timerRead(false);
+    *sys->os <<std::setw(3) <<sweep <<"  " <<MT::timerRead(false);
 #else
-    *sys->os  <<"AICOk(" <<scale <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff;
+    *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
 #endif
    cost = sys->analyzeTrajectory(b, display>0);
   }
@@ -339,7 +339,7 @@ double AICO_clean::stepClean(){
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
       lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
-    //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+    //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
     //decide on a new \hat q
     if(!useFwdMessageAsQhat){
@@ -367,7 +367,7 @@ double AICO_clean::stepClean(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=b_old;
-      //cout  <<" AICOd REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+      //cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -376,7 +376,7 @@ double AICO_clean::stepClean(){
     }else{
       damping /= 5.;
       dampingReference=b;
-      //cout  <<" AICOd ACCEPT"  <<endl;
+      //cout <<" AICOd ACCEPT" <<endl;
     }
   }else{
     dampingReference=b;
@@ -385,7 +385,7 @@ double AICO_clean::stepClean(){
   //-- display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOclean(" <<scale <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff  <<" damp "  <<damping;
+    *sys->os <<"AICOclean(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
     //sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -476,7 +476,7 @@ double AICO_clean::stepDynamic(){
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
       lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
-    //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+    //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
     //decide on a new \hat q
     if(!useFwdMessageAsQhat){
@@ -500,12 +500,12 @@ double AICO_clean::stepDynamic(){
       //double off=sqrDistance(Q, b[t], qhat[t]);
       double off=sqrDistance(b[t], qhat[t]);
       if(off>repeatThreshold){
-        //cout  <<t  <<" REPEAT: off="  <<off  <<" (repeatCount="  <<repeatCount  <<")"  <<endl;
+        //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
         if(repeatCount<20){
           t-=dt;
           repeatCount++;
         }else{
-          cout  <<" ** no convergence! ** (skipping repeat) at t="  <<t  <<endl;
+          cout <<" ** no convergence! ** (skipping repeat) at t=" <<t <<endl;
           repeatCount=0;
         }
       }else{
@@ -533,7 +533,7 @@ double AICO_clean::stepDynamic(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=b_old;
-      //cout  <<" AICOd REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+      //cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -542,7 +542,7 @@ double AICO_clean::stepDynamic(){
     }else{
       damping /= 5.;
       dampingReference=b;
-      //cout  <<" AICOd ACCEPT"  <<endl;
+      //cout <<" AICOd ACCEPT" <<endl;
     }
   }else{
     dampingReference=b;
@@ -551,7 +551,7 @@ double AICO_clean::stepDynamic(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOd(" <<scale <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff  <<" damp "  <<damping;
+    *sys->os <<"AICOd(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff <<" damp " <<damping;
     //sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -697,12 +697,12 @@ double AICO_clean::stepGaussNewton(){
   if(q_old.N==q.N) diff = maxDiff(q_old, q);
   cost = sys->analyzeTrajectory(b, display>0);
   //double tc=0.; for(uint k=0;k<phiBar.N;k++) tc+=sumOfSqr(phiBar(k));
-  ///cout  <<"internal cost: taskC= "  <<tc  <<" ctrlC= "  <<sumOfSqr(Psi)  <<endl;
+  ///cout <<"internal cost: taskC= " <<tc <<" ctrlC= " <<sumOfSqr(Psi) <<endl;
   if(sweep>3 && damping){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=qhat_old;
-      //cout  <<" AICOgn REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+      //cout <<" AICOgn REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -711,7 +711,7 @@ double AICO_clean::stepGaussNewton(){
     }else{
       damping /= 5.;
       dampingReference=qhat;
-      //cout  <<" AICOgn ACCEPT"  <<endl;
+      //cout <<" AICOgn ACCEPT" <<endl;
     }
   }else{
     dampingReference=qhat;
@@ -720,7 +720,7 @@ double AICO_clean::stepGaussNewton(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<T  <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<diff  <<" damp "  <<damping;
+    *sys->os <<"AICOgn(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff <<" damp " <<damping;
     //sys->analyzeTrajectory(b, display>0);
     //sys->costChecks(b);
   }
@@ -735,7 +735,7 @@ double AICO_clean::stepGaussNewton(){
 
 double AICO_clean::stepMinSum(){
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<sys->nTime() <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" before";
+    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -759,7 +759,7 @@ double AICO_clean::stepMinSum(){
       E.reshape(E.N/2, 2);
       del.resize(T+1);
       for(i=0;i<E.d0;i++) del(E(i, 1)).append(i);
-      cout  <<"E="  <<E  <<"del="  <<del  <<endl;
+      cout <<"E=" <<E <<"del=" <<del <<endl;
       
       clamped.resize(T+1);
       clamped=false;
@@ -825,7 +825,7 @@ double AICO_clean::stepMinSum(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<sys->nTime() <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<diff;
+    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){

@@ -40,8 +40,8 @@ struct SocProblem:public OptimizationProblem{
     sys->getq0(x[0]());
     if(!spline) q=x; else q=spline->basis*x;
     //if(display) sys->displayTrajectory(q, NULL, display, STRING("gradient optimization -- iteration " <<-1));
-    if(os) (*os)  <<std::setw(3)  <<count++  <<"  time "  <<MT::timerRead();
-    if(os!=&cout) cout  <<'.'  <<std::flush;
+    if(os) (*os) <<std::setw(3) <<count++ <<"  time " <<MT::timerRead();
+    if(os!=&cout) cout <<'.' <<std::flush;
     double C;
     if(!grad){
       C=sys->totalCost(NULL, q);
@@ -63,7 +63,7 @@ struct SocProblem:public OptimizationProblem{
     double C;
     static arr dummy;
     soc::SocSystemAbstraction& soci=*((soc::SocSystemAbstraction*)data);
-    if(os) (*os)  <<std::setw(3)  <<count++  <<"  time "  <<MT::timerRead();
+    if(os) (*os) <<std::setw(3) <<count++ <<"  time " <<MT::timerRead();
     C=attractorCostAndGradient(soci, dummy, q, *spline, x, true);
     if(gl){
       *plotClear();
@@ -105,7 +105,7 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
   CHECK(q.nd==2 && q.d0==T+1 && q.d1==soci.qDim(), "please initialize trajectory!");
   
   if(soci.os){
-    *soci.os  <<std::setw(3)  <<-1  <<"  time "  <<MT::timerRead(false);
+    *soci.os <<std::setw(3) <<-1 <<"  time " <<MT::timerRead(false);
     //soci.computeTotalCost(q);
     soci.analyzeTrajectory(q, display>0);
   }

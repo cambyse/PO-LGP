@@ -58,7 +58,7 @@ void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool ve
   
   if(X.d0-s->done>buffer){
     calculate();
-    if(verbose) std::cout  <<"ANN recomputing: X.d0="  <<X.d0  <<" done="  <<s->done  <<std::endl;
+    if(verbose) std::cout <<"ANN recomputing: X.d0=" <<X.d0 <<" done=" <<s->done <<std::endl;
   }
   uint restStartsAt;
   if(s->done>=k){
@@ -91,15 +91,15 @@ void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool ve
   if(verbose){
     std::cout
      <<"ANN query:"
-     <<"\n data size = "  <<X.d0  <<"  data dim = "  <<X.d1  <<"  done = "  <<s->done
+     <<"\n data size = " <<X.d0 <<"  data dim = " <<X.d1 <<"  done = " <<s->done
      <<"\n query point " <<x
      <<"\n found neighbors:\n";
     for(uint i=0; i<idx.N; i++){
-      std::cout  <<' '
-                 <<i  <<' '
-                 <<idx(i)  <<'\t'
-                 <<sqrt(dists(i))  <<'\t'
-                 <<X[idx(i)]  <<std::endl;
+      std::cout <<' '
+                <<i <<' '
+                <<idx(i) <<'\t'
+                <<sqrt(dists(i)) <<'\t'
+                <<X[idx(i)] <<std::endl;
     }
   }
 }

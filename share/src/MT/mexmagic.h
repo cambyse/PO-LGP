@@ -5,7 +5,7 @@
 #include "util.h"
 extern MT::String mout;
 #undef MT_MSG
-#define MT_MSG(msg){ mout  <<MT_HERE  <<msg  <<endl; }
+#define MT_MSG(msg){ mout <<MT_HERE <<msg <<endl; }
 #include "array.h"
 
 
@@ -93,7 +93,7 @@ template<class T> MT::Array<T>& newLhsReference(int i, uint nd, const uint *dims
   _plhs[i]=NULL;
   if(typeid(T)==typeid(double)) _plhs[i] = mxCreateNumericArray(mxnd, mxDims, mxDOUBLE_CLASS, mxREAL);
   if(typeid(T)==typeid(uint))   _plhs[i] = mxCreateNumericArray(mxnd, mxDims, mxUINT32_CLASS, mxREAL);
-  if(!_plhs[i]){ HALT("type "  <<typeid(T).name()  <<" not implemented yet!"  <<endl); return x[i]; }
+  if(!_plhs[i]){ HALT("type " <<typeid(T).name() <<" not implemented yet!" <<endl); return x[i]; }
   
   //get a reference to this data as an MT::Array
   x[i].referTo((T*)mxGetData(_plhs[i]), (uint)mxGetNumberOfElements(_plhs[i]));

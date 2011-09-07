@@ -30,24 +30,24 @@ static MT::Array<CycleTimer*> globalCycleTimers;
 void reportNice(){
   pid_t tid = syscall(SYS_gettid);
   int priority = getpriority(PRIO_PROCESS, tid);
-  std::cout  <<"tid="  <<tid  <<" nice="  <<priority  <<std::endl;
+  std::cout <<"tid=" <<tid <<" nice=" <<priority <<std::endl;
 }
 
 bool setNice(int nice){
   pid_t tid = syscall(SYS_gettid);
   //int old_nice = getpriority(PRIO_PROCESS, tid);
   int ret = setpriority(PRIO_PROCESS, tid, nice);
-  if(ret) MT_MSG("cannot set nice to " <<nice  <<" (might require sudo), error="  <<ret  <<' '  <<strerror(ret));
-  //std::cout  <<"tid="  <<tid  <<" old nice="  <<old_nice  <<" wanted nice="  <<nice  <<std::flush;
+  if(ret) MT_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
+  //std::cout <<"tid=" <<tid <<" old nice=" <<old_nice <<" wanted nice=" <<nice <<std::flush;
   //nice = getpriority(PRIO_PROCESS, tid);
-  //std::cout  <<" new nice="  <<nice  <<std::endl;
+  //std::cout <<" new nice=" <<nice <<std::endl;
   if(ret) return false;
   return true;
 }
 
 void setRRscheduling(int priority){
   pid_t tid = syscall(SYS_gettid);
-  MT_MSG(" tid="  <<tid  <<" old sched="  <<sched_getscheduler(tid));
+  MT_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
   sched_param sp; sp.sched_priority=priority;
   int rc = sched_setscheduler(tid, SCHED_RR, &sp);
   if(rc) switch(errno){
@@ -62,10 +62,10 @@ void setRRscheduling(int priority){
   }
   timespec interval;
   rc=sched_rr_get_interval(tid, &interval);
-  std::cout  <<"RR scheduling interval = " <<interval.tv_sec  <<"sec "  <<1e-6*interval.tv_nsec  <<"msec"  <<std::endl;
-  CHECK(!rc, "sched_rr_get_interval failed:"  <<errno <<strerror(errno));
+  std::cout <<"RR scheduling interval = " <<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
+  CHECK(!rc, "sched_rr_get_interval failed:" <<errno <<strerror(errno));
   MT_MSG("Scheduling policy changed: new sched="
-		   <<sched_getscheduler(tid)  <<" new priority="  <<priority);
+		  <<sched_getscheduler(tid) <<" new priority=" <<priority);
 }
 
 void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const timespec& now, const timespec& last, uint step){
@@ -106,7 +106,7 @@ void Lock::readLock(const char* _msg){
 }
   
 void Lock::writeLock(const char* _msg){
-  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc  <<" '"  <<strerror(rc)  <<"'");
+  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
   //CHECK(!state, "");
   state=-1;
@@ -239,7 +239,7 @@ void Metronome::waitForTic(){
     int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
     if(rc){
       if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal") }
-      else{ MT_MSG("clock_nanosleep() failed "  <<rc); }
+      else{ MT_MSG("clock_nanosleep() failed " <<rc); }
     }
   //}
   
@@ -319,18 +319,18 @@ void StepThread::threadOpen(int priority){
   pthread_attr_t atts;
   rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc);
   /*if(priority){ //doesn't work - but setpriority does work!!
-    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc  <<strerror(rc));
+    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
     sched_param  param;
     rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc);
-    std::cout  <<"standard priority = "  <<param.sched_priority  <<std::endl;
+    std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
     param.sched_priority += priority;
-    std::cout  <<"modified priority = "  <<param.sched_priority  <<std::endl;
-    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc  <<strerror(rc));
+    std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
+    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
   rc = pthread_create(&thread, &atts, staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc);
   threadCondition.waitForStateEq(tsIDLE);
 #else
-  std::cout  <<" +++ opening 'thread' in SERIAL mode '"  <<threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ opening 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
   open();
 #endif
 }
@@ -346,7 +346,7 @@ void StepThread::threadClose(){
   thread=NULL;
 #else
   close();
-  std::cout  <<" +++ closing 'thread' in SERIAL mode '"  <<threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ closing 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
 #endif
 }
 
@@ -402,7 +402,7 @@ bool StepThread::threadIsReady(){
 void StepThread::threadLoop(){
 #ifndef MT_NO_THREADS
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName  <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -413,7 +413,7 @@ void StepThread::threadLoopWithBeat(double sec){
 #ifndef MT_NO_THREADS
   metronome=new Metronome("threadTiccer", 1000.*sec);
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName  <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsBEATING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -425,7 +425,7 @@ void StepThread::threadLoopSyncWithDone(StepThread& thread){
   thread.broadCastDone=true;
   syncCondition = &thread.threadCondition;
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName  <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsSYNCLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -443,7 +443,7 @@ void StepThread::threadLoopStop(){
 
 void* StepThread::staticThreadMain(void *_this){
   StepThread *self=(StepThread*)_this;
-  std::cout  <<" +++ entering staticThreadMain of '"  <<self->threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ entering staticThreadMain of '" <<self->threadName <<'\'' <<std::endl;
 
   self->tid = syscall(SYS_gettid);
   
@@ -473,7 +473,7 @@ void* StepThread::staticThreadMain(void *_this){
     if(state<0 || self->broadCastDone) self->threadCondition.signal();
   };
   self->close();
-  std::cout  <<" +++ exiting staticThreadMain of '"  <<self->threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ exiting staticThreadMain of '" <<self->threadName <<'\'' <<std::endl;
   return NULL;
 }
 
@@ -566,9 +566,9 @@ struct ThreadInfoWin:public StepThread, Fl_Window{
     //XFlush(display);
 
     //-- log file
-    //for_list(i, th, globalThreads)     log  <<th->threadName  <<' '  <<th->timer.busyDt  <<' '  <<th->timer.cyclDt  <<' ';
-    //for_list(i, ct, globalCycleTimers) log  <<ct->name  <<' '  <<ct->busyDt  <<' '  <<ct->cyclDt  <<' ';
-    //log  <<endl;
+    //for_list(i, th, globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i, ct, globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //log <<endl;
   }
 
 };
@@ -673,9 +673,9 @@ void ThreadInfoWin::open(){
     XFlush(s->display);
 
     //-- log file
-    //for_list(i, th, globalThreads)     s->log  <<th->threadName  <<' '  <<th->timer.busyDt  <<' '  <<th->timer.cyclDt  <<' ';
-    //for_list(i, ct, globalCycleTimers) s->log  <<ct->name  <<' '  <<ct->busyDt  <<' '  <<ct->cyclDt  <<' ';
-    //s->log  <<endl;
+    //for_list(i, th, globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i, ct, globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //s->log <<endl;
 
     //timer.cycleDone();
   }
@@ -775,22 +775,22 @@ void initBlockDescription(BlockDescription *b, const RobotShmStructure& shm){
 
 void writeBlock(std::ostream& os, int blockName){
   BlockDescription& b=blockDescription[blockName];
-  os  <<b.name  <<'=';
-  if(b.n!=1) std::cout  <<'[';
+  os <<b.name <<'=';
+  if(b.n!=1) std::cout <<'[';
   for(int i=0;i<b.n;i++){
     switch(b.type){
-    case byteT:    std::cout  <<(int)((byte*)b.p)[i];  break;
-    case charT:    std::cout  <<((char*)b.p)[i];       break;
-    case uintT:    std::cout  <<((uint*)b.p)[i];       break;
-    case intT:     std::cout  <<((int*)b.p)[i];        break;
-    case doubleT:  std::cout  <<((double*)b.p)[i];     break;
-    case floatT:   std::cout  <<((float*)b.p)[i];      break;
-    case boolT:    std::cout  <<((bool*)b.p)[i];       break;
+    case byteT:    std::cout <<(int)((byte*)b.p)[i];  break;
+    case charT:    std::cout <<((char*)b.p)[i];       break;
+    case uintT:    std::cout <<((uint*)b.p)[i];       break;
+    case intT:     std::cout <<((int*)b.p)[i];        break;
+    case doubleT:  std::cout <<((double*)b.p)[i];     break;
+    case floatT:   std::cout <<((float*)b.p)[i];      break;
+    case boolT:    std::cout <<((bool*)b.p)[i];       break;
     default: HALT("");
     }
-    if(i<b.n-1) std::cout  <<' ';
+    if(i<b.n-1) std::cout <<' ';
   }
-  if(b.n!=1) std::cout  <<']';
+  if(b.n!=1) std::cout <<']';
 }
 
 void openRobotSharedMemory(){

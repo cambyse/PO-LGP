@@ -246,7 +246,7 @@ template<class T> void MT::Array<T>::getIndexTuple(Array<uint> &I, uint i) const
 
 //! return the k-th dimensionality
 template<class T> uint MT::Array<T>::dim(uint k) const {
-  CHECK(k<nd, "dimensionality range check error: "  <<k  <<"!<"  <<nd);
+  CHECK(k<nd, "dimensionality range check error: " <<k <<"!<" <<nd);
   if(!d && k<3) return (&d0)[k]; else return d[k];
 }
 
@@ -351,7 +351,7 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy){
       p=0;
     }
     CHECK((pold && Mold) || (!pold && !Mold), "");
-    if(Mold) delete[] pold;   //if(Mold) free(pold);
+    if(Mold) delete[] pold;  //if(Mold) free(pold);
   }
   N=n;
   pstop=p+N;
@@ -600,7 +600,7 @@ template<class T> void MT::Array<T>::resizeDim(uint k, uint dk){
     if(i>=k) R*=dim(i);
     if(i>k) subR*=dim(i);
   }
-  //cout  <<oldDim  <<" L="  <<L  <<" R="  <<R  <<" subR="  <<subR  <<endl;
+  //cout <<oldDim <<" L=" <<L <<" R=" <<R <<" subR=" <<subR <<endl;
   reshape(L, R);
   if(dk>oldDim(k)){ //need to increase dim
     i=dk-oldDim(k);
@@ -1345,48 +1345,48 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
   
   if(binary){
     writeDim(os);
-    os  <<std::endl;
+    os <<std::endl;
     os.put(0);
     os.write((char*)p, sizeT*N);
     os.put(0);
-    os  <<std::endl;
+    os <<std::endl;
   }else{
-    if(dimTag){ writeDim(os); if(nd>=2) os  <<'\n'; else os  <<' '; }
-    os  <<BRACKETS[0];
-    if(nd==0 && N==0){ os  <<']'; return; }
-    if(nd==0 && N==1){ os  <<scalar() <<']'; return; }
+    if(dimTag){ writeDim(os); if(nd>=2) os <<'\n'; else os <<' '; }
+    os <<BRACKETS[0];
+    if(nd==0 && N==0){ os <<']'; return; }
+    if(nd==0 && N==1){ os <<scalar() <<']'; return; }
     if(nd==1){
-      //os  <<' ';
-      for(i=0; i<N; i++) os  <<ELEMSEP   <<operator()(i);
+      //os <<' ';
+      for(i=0; i<N; i++) os <<ELEMSEP  <<operator()(i);
     }
     if(nd==2) for(j=0; j<d0; j++){
-        if(j) os  <<LINESEP;
-        for(i=0; i<d1; i++) os  <<ELEMSEP  <<operator()(j, i);
+        if(j) os <<LINESEP;
+        for(i=0; i<d1; i++) os <<ELEMSEP <<operator()(j, i);
       }
     if(nd==3) for(k=0; k<d0; k++){
-        if(k) os  <<LINESEP;
+        if(k) os <<LINESEP;
         for(j=0; j<d1; j++){
-          for(i=0; i<d2; i++) os  <<ELEMSEP  <<operator()(k, j, i);
-          os  <<LINESEP;
+          for(i=0; i<d2; i++) os <<ELEMSEP <<operator()(k, j, i);
+          os <<LINESEP;
         }
       }
     if(nd>3){
       CHECK(d && d!=&d0, "");
       //Array<uint> I;
       for(i=0; i<N; i++){
-        if(i && !(i%d[nd-1])) os  <<LINESEP;
+        if(i && !(i%d[nd-1])) os <<LINESEP;
         if(nd>1 && !(i%(d[nd-2]*d[nd-1]))){
           /*getIndexTuple(I, i);
-          os  <<LINESEP  <<'<'  <<I(0);
-          for(j=1;j<nd;j++) os  <<' '  <<I(j);
-          os  <<':'  <<i  <<'>'  <<LINESEP;
+          os <<LINESEP <<'<' <<I(0);
+          for(j=1;j<nd;j++) os <<' ' <<I(j);
+          os <<':' <<i <<'>' <<LINESEP;
           */
-          os  <<LINESEP;
+          os <<LINESEP;
         }
-        os  <<ELEMSEP  <<elem(i);
+        os <<ELEMSEP <<elem(i);
       }
     }
-    os  <<ELEMSEP  <<BRACKETS[1];
+    os <<ELEMSEP <<BRACKETS[1];
   }
 }
 
@@ -1491,10 +1491,10 @@ template<class T> void MT::Array<T>::readOld(std::istream& is){
 //! write a dimensionality tag of format <d0 d1 d2 ...>
 template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
   uint i;
-  os  <<'<';
-  if(nd) os  <<dim(0); else os  <<0;
-  for(i=1; i<nd; i++) os  <<' '  <<dim(i);
-  os  <<'>';
+  os <<'<';
+  if(nd) os <<dim(0); else os <<0;
+  for(i=1; i<nd; i++) os <<' ' <<dim(i);
+  os <<'>';
 }
 
 //! read a dimensionality tag of format <d0 d1 d2 ...> and resize this array accordingly
@@ -1543,7 +1543,7 @@ template<class T> void MT::Array<T>::writeWithIndex(std::ostream& os) const {
 
 //! write data with a name tag (convenient to write multiple data arrays into one file)
 template<class T> void MT::Array<T>::writeTagged(std::ostream& os, const char* tag, bool binary) const {
-  os  <<tag  <<' ';
+  os <<tag <<' ';
   write(os, " ", "\n ", "[]", true, binary);
 }
 
@@ -1677,7 +1677,7 @@ template<class T> void checkNormalization(MT::Array<T>& v, double tol){
       for(j=0; j<v.d1; j++) for(k=0; k<v.d2; k++){
           for(l=0; l<v.N/(v.d0*v.d1*v.d2); l++){
             for(p=0, i=0; i<v.d0; i++) p+=v(TUP(i, j, k, l));
-            CHECK(fabs(1.-p)<tol, "distribution is not normalized: " <<v  <<" "  <<p);
+            CHECK(fabs(1.-p)<tol, "distribution is not normalized: " <<v <<" " <<p);
           }
         }
       break;
@@ -2026,7 +2026,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     x.p[0]=s;
     return;
   }
-  HALT("inner product - not yet implemented for these dimensions: " <<y.nd  <<" " <<z.nd);
+  HALT("inner product - not yet implemented for these dimensions: " <<y.nd <<" " <<z.nd);
 }
 
 /*!\brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
@@ -2231,37 +2231,37 @@ template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>
   becomes a 3rd rank instead of 5th rank tensor */
 template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum){
   CHECK(&X!=&A && &X!=&B, "output tensor must be different from input tensors");
-  CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: "  <<A.nd  <<"!="  <<pickA.N  <<" "  <<B.nd  <<"!="  <<pickB.N);
+  CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: " <<A.nd <<"!=" <<pickA.N <<" " <<B.nd <<"!=" <<pickB.N);
   
   uint n=1+MT::MAX(pickA.max(), pickB.max());
   uint i, j, r, s, N, res;
   intA a(n), b(n);
   uintA d(n), dx(n-sum), I, Ia(A.nd), Ib(B.nd);
   
-  DEBUG_TENSOR(cout  <<"pickA="  <<pickA  <<" pickB="  <<pickB  <<endl;);
+  DEBUG_TENSOR(cout <<"pickA=" <<pickA <<" pickB=" <<pickB <<endl;);
   
   // permutation for A
   a=-1;
   for(i=0; i<A.nd; i++) a(pickA(i))=i;
   //j=A.nd;
   //for(i=0;i<n;i++) if(a(i)==-1){ a(i)=j; j++;  }
-  DEBUG_TENSOR(cout  <<"permutation for A: "  <<a  <<endl;);
+  DEBUG_TENSOR(cout <<"permutation for A: " <<a <<endl;);
   
   //permutation for B
   b=-1;
   for(i=0; i<B.nd; i++) b(pickB(i))=i;
   //j=B.nd;
   //for(i=0;i<n;i++) if(b(i)==-1){ b(i)=j; j++; }
-  DEBUG_TENSOR(cout  <<"permutation for B: "  <<b  <<endl;);
+  DEBUG_TENSOR(cout <<"permutation for B: " <<b <<endl;);
   
   //dimensionalities
   for(i=0; i<n; i++){
     if(a(i)!=-1) r=A.dim(a(i)); else r=0;
     if(b(i)!=-1) s=B.dim(b(i)); else s=0;
-    CHECK(!r || !s || r==s, "inconsistent sharing dimensionalities: "  <<r  <<"!="  <<s);
+    CHECK(!r || !s || r==s, "inconsistent sharing dimensionalities: " <<r <<"!=" <<s);
     d(i)=MT::MAX(r, s);
   }
-  DEBUG_TENSOR(cout  <<"full dimensionality d="  <<d  <<endl;);
+  DEBUG_TENSOR(cout <<"full dimensionality d=" <<d <<endl;);
   
   //total elements:
   N=product(d);
@@ -2278,7 +2278,7 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
     CHECK(dx==X.d, "for security, please set size before");
   }
   CHECK(N==X.N*res, "");
-  DEBUG_TENSOR(cout  <<"dx="  <<dx  <<" res="  <<res  <<endl;);
+  DEBUG_TENSOR(cout <<"dx=" <<dx <<" res=" <<res <<endl;);
   
   //here the copying and multiplying takes place...
   X.setZero();
@@ -2286,7 +2286,7 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
     getIndexTuple(I, i, d);
     for(j=0; j<A.nd; j++) Ia(j)=I(pickA(j));
     for(j=0; j<B.nd; j++) Ib(j)=I(pickB(j));
-    //DEBUG_TENSOR(cout  <<"i=" <<i  <<" I=" <<I  <<" i/res=" <<i/res  <<" Ia=" <<Ia  <<" Ib=" <<Ib  <<endl;)
+    //DEBUG_TENSOR(cout <<"i=" <<i <<" I=" <<I <<" i/res=" <<i/res <<" Ia=" <<Ia <<" Ib=" <<Ib <<endl;)
     if(!sum){
       X.elem(i) = A(Ia) * B(Ib);
     }else{
@@ -2296,18 +2296,18 @@ template<class T> void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, co
 }
 
 template<class T> void tensorEquation_doesntWorkLikeThat(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum){
-  CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: "  <<A.nd  <<"!="  <<pickA.N  <<" "  <<B.nd  <<"!="  <<pickB.N);
+  CHECK(A.nd==pickA.N && B.nd==pickB.N, "miss-sized tensor references: " <<A.nd <<"!=" <<pickA.N <<" " <<B.nd <<"!=" <<pickB.N);
   
   uint n=1+MT::MAX(pickA.max(), pickB.max());
   uint i, j;
   uintA a(n), b(n);
   
-  DEBUG_TENSOR(cout  <<"pickA="  <<pickA  <<" pickB="  <<pickB  <<endl;);
+  DEBUG_TENSOR(cout <<"pickA=" <<pickA <<" pickB=" <<pickB <<endl;);
   
   // permutations for A & B
   a=-1;  for(i=0; i<A.nd; i++) a(pickA(i))=i;
   b=-1;  for(i=0; i<B.nd; i++) b(pickB(i))=i;
-  DEBUG_TENSOR(cout  <<"permutation for A: "  <<a  <<"\npermutation for B: "  <<b  <<endl;);
+  DEBUG_TENSOR(cout <<"permutation for A: " <<a <<"\npermutation for B: " <<b <<endl;);
   
   //permute tensors
   arr Aperm, Bperm;
@@ -2319,7 +2319,7 @@ template<class T> void tensorEquation_doesntWorkLikeThat(MT::Array<T> &X, const 
   for(i=0; i<Aperm.nd-sum; i++){ ldim *= Aperm.d[i]; }
   for(i=0; i<sum; i++){ j = Aperm.d[sum+i]; CHECK(j==Bperm.d[i], ""); sdim*=j; }
   for(i=0; i<Bperm.nd-sum; i++){ rdim *= Bperm.d[sum+i]; }
-  DEBUG_TENSOR(cout  <<"ldim="  <<ldim  <<" sdim="  <<sdim  <<" rdim="  <<rdim  <<endl;)
+  DEBUG_TENSOR(cout <<"ldim=" <<ldim <<" sdim=" <<sdim <<" rdim=" <<rdim <<endl;)
   
   //reshape to matrices
   Aperm.reshape(ldim, sdim);
@@ -2354,7 +2354,7 @@ inline void getMultiDimIncrement(const uintA& Xdim, const uintA &Yid, uint* Ydim
   memset(Ydim, 0, sizeof(uint)*maxRank);  for(i=0; i<Xdim.N; i++) if(i<Yid.N) Ydim[i]=Xdim(Yid.p[i]);  //dimension of Y
   memset(Yinc, 0, sizeof(uint)*maxRank);  Yinc[Yid.p[Yid.N-1]]=1;  for(i=Yid.N-1; i--;) Yinc[Yid.p[i]] = Ydim[i+1] * Yinc[Yid.p[i+1]]; //stride of Y
   for(i=Xdim.N; i--;) Ydec[i] = Xdim(i)*Yinc[i];
-  //cout  <<"Xdim="  <<Xdim  <<"\nYid ="  <<Yid  <<"\nYdim="  <<uintA(Ydim, Yid.N)  <<"\nYinc="  <<uintA(Yinc, Xdim.N)  <<"\nYdec="  <<uintA(Ydec, Xdim.N)  <<endl;
+  //cout <<"Xdim=" <<Xdim <<"\nYid =" <<Yid <<"\nYdim=" <<uintA(Ydim, Yid.N) <<"\nYinc=" <<uintA(Yinc, Xdim.N) <<"\nYdec=" <<uintA(Ydec, Xdim.N) <<endl;
 }
 
 /*! \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
@@ -2376,7 +2376,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++){
 #if 0 //use this to check looping -- all routines below don't have this check anymore!
-    cout  <<"current globalIndex="  <<Xcount  <<' '  <<Ycount  <<' '  <<uintA(I, X.nd)  <<endl;
+    cout <<"current globalIndex=" <<Xcount <<' ' <<Ycount <<' ' <<uintA(I, X.nd) <<endl;
     //check if incrementing Y worked out
     uint k, jj=0;
     for(k=0; k<Yid.N; k++){ jj*=Ydim[k]; jj+=I[Yid(k)]; }
@@ -2384,7 +2384,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
     //check if incrementing I worked out
     uintA II;
     getIndexTuple(II, Xcount, uintA(X.d, X.nd));
-    CHECK(II==I, "not equal: " <<II  <<uintA(I, X.nd));
+    CHECK(II==I, "not equal: " <<II <<uintA(I, X.nd));
 #endif
     Y.p[Ycount] += X.p[Xcount];
     multiDimIncrement(Ycount, I, X.d, Yinc, Ydec, X.nd);
@@ -2470,7 +2470,7 @@ template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x
     //compute j
     for(j=0, k=0; k<ids.N; k++){ j*=yd(k); j+=xt(ids(k)); }
     //uintA yt(ids.N); for(k=ids.N;k--;){ yt(k)=xt(ids(k)); }
-    //cout  <<"i="  <<i  <<" j="  <<j  <<" yt="  <<yt  <<" xt="  <<xt  <<endl;
+    //cout <<"i=" <<i <<" j=" <<j <<" yt=" <<yt <<" xt=" <<xt <<endl;
     y(j)+=x.elem(i);
     //increment xt
     for(k=xt.N; k--;){ xt(k)++; if(xt(k)<xd(k)) break; else xt(k)=0; }
@@ -2751,7 +2751,7 @@ CompoundAssignmentOperator(%=)
 //! calls MT::Array<T>::read
 template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x){ x.read(is); return is; }
 
-//! allows a notation such as x  <<"[0 1; 2 3]"; to initialize an array x
+//! allows a notation such as x <<"[0 1; 2 3]"; to initialize an array x
 template<class T> MT::Array<T>& operator <<(MT::Array<T>& x, const char* str){ std::istringstream ss(str); ss >>x; return x; }
 
 //! calls MT::Array<T>::write
@@ -2762,8 +2762,8 @@ template<class T> std::ostream& operator <<(std::ostream& os, const MT::Array<T>
 //! check for Nans in the array (checks x.elem(i)==x.elem(i) for all elements)
 template<class T> void checkNan(const MT::Array<T>& x){
   for(uint i=0; i<x.N; i++){
-    //CHECK(x.elem(i)!=NAN, "found a NaN"  <<x.elem(i)  <<'['  <<i  <<']');
-    CHECK(x.elem(i)==x.elem(i), "inconsistent number: "  <<x.elem(i)  <<'['  <<i  <<']');
+    //CHECK(x.elem(i)!=NAN, "found a NaN" <<x.elem(i) <<'[' <<i <<']');
+    CHECK(x.elem(i)==x.elem(i), "inconsistent number: " <<x.elem(i) <<'[' <<i <<']');
   }
 }
 
@@ -3016,16 +3016,16 @@ template class MT::Array<bool>;
 
 template<class T> void listWrite(const MT::Array<T*>& L, std::ostream& os, const char *ELEMSEP=" ", const char *delim=NULL){
   uint i;
-  if(delim) os  <<delim[0];
-  for(i=0; i<L.N; i++){ if(i) os  <<ELEMSEP;  if(L.elem(i)) L.elem(i)->write(os); else os  <<"<NULL>"; }
-  if(delim) os  <<delim[1]  <<std::flush;
+  if(delim) os <<delim[0];
+  for(i=0; i<L.N; i++){ if(i) os <<ELEMSEP;  if(L.elem(i)) L.elem(i)->write(os); else os <<"<NULL>"; }
+  if(delim) os <<delim[1] <<std::flush;
 }
 
 template<class T> void listWriteNames(const MT::Array<T*>& L, std::ostream& os){
   uint i;
-  os  <<'(';
-  for(i=0; i<L.N; i++){ if(i) os  <<' ';  if(L.elem(i)) os  <<L.elem(i)->name; else os  <<"<NULL>"; }
-  os  <<')'  <<std::flush;
+  os <<'(';
+  for(i=0; i<L.N; i++){ if(i) os <<' ';  if(L.elem(i)) os <<L.elem(i)->name; else os <<"<NULL>"; }
+  os <<')' <<std::flush;
 }
 
 template<class T> void listRead(MT::Array<T*>& L, std::istream& is, const char *delim){
@@ -3073,7 +3073,7 @@ template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name){
   uint i;
   T *e;
   for_list(i, e, L) if(!strcmp(e->name, name)) return e;
-  //std::cerr  <<"\n*** name '" <<name <<"' not in this list!"  <<std::endl;
+  //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
@@ -3081,7 +3081,7 @@ template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type){
   uint i;
   T *e;
   for_list(i, e, L) if(!strcmp(e->type, type)) return e;
-  //std::cerr  <<"type '" <<type <<"' not in this list!"  <<std::endl;
+  //std::cerr <<"type '" <<type <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
@@ -3089,7 +3089,7 @@ template<class T> T* listFindValue(const MT::Array<T*>& L, const T& x){
   uint i;
   T *e;
   for_list(i, e, L) if(*e==x) return e;
-  //std::cerr  <<"value '" <<x <<"' not in this list!"  <<std::endl;
+  //std::cerr <<"value '" <<x <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
@@ -3179,7 +3179,7 @@ void graphMaximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const ar
   }
   for(i=0;i<I.N;i++) I(i)=i/degree; //a list, where each node appears degree-times
   I.permuteRandomly();
-  cout  <<I  <<endl;
+  cout <<I <<endl;
   for(i=0;i<I.N;i+=2) newEdge(I(i), I(i+1), E);
   graphConnectUndirected(V, E);
   graphWriteUndirected(cout, V, E);
@@ -3270,7 +3270,7 @@ template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Arra
       if(l && interConnections) for(j=0; j<i; j++) newEdge(a+j, a+i, E);
     }
     a+=layers(l);             //a is the offset of current layer
-    if(l) b+=layers(l-1);  //b is the offset of previous layer
+    if(l) b+=layers(l-1); //b is the offset of previous layer
   }
 }
 
@@ -3339,14 +3339,14 @@ template<class vert, class edge> void graphWriteDirected(std::ostream& os, const
   edge *e;
   uint i, j;
   for_list(j, v, V){
-    for_list(i, e, v->inLinks) os  <<e->ifrom  <<' ';
-    os  <<"-> ";
-    os  <<j  <<" -> ";
-    for_list(i, e, v->outLinks) os  <<e->ito  <<' ';
-    os  <<'\n';
+    for_list(i, e, v->inLinks) os <<e->ifrom <<' ';
+    os <<"-> ";
+    os <<j <<" -> ";
+    for_list(i, e, v->outLinks) os <<e->ito <<' ';
+    os <<'\n';
   }
-  for_list(j, e, E) os  <<e->ifrom  <<"->" <<e->ito  <<'\n';
-  //for_list(j, e, E) os  <<e->from->name  <<"->" <<e->to->name  <<'\n';
+  for_list(j, e, E) os <<e->ifrom <<"->" <<e->ito <<'\n';
+  //for_list(j, e, E) os <<e->from->name <<"->" <<e->to->name <<'\n';
 }
 
 template<class vert, class edge> void graphWriteUndirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E){
@@ -3354,11 +3354,11 @@ template<class vert, class edge> void graphWriteUndirected(std::ostream& os, con
   edge *e;
   uint i, j;
   for_list(i, v, V){
-    os  <<i  <<": ";
-    for_list(j, e, v->edges) if(e->ifrom==i) os  <<e->ito  <<' '; else os  <<e->ifrom  <<' ';
-    os  <<'\n';
+    os <<i <<": ";
+    for_list(j, e, v->edges) if(e->ifrom==i) os <<e->ito <<' '; else os <<e->ifrom <<' ';
+    os <<'\n';
   }
-  for_list(j, e, E) os  <<e->ifrom  <<"-" <<e->ito  <<'\n';
+  for_list(j, e, E) os <<e->ifrom <<"-" <<e->ito <<'\n';
 }
 
 template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Array<edge*>& E){

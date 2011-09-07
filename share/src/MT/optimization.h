@@ -55,7 +55,7 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
   //compute initial costs
   f.calcTermsAt(x);  evals++;
   lx = sumOfSqr(f.phi);
-  VERBOSE(2, cout  <<"starting point x="  <<x  <<" l(x)="  <<lx  <<" a=" <<a  <<endl);
+  VERBOSE(2, cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a=" <<a <<endl);
 
   for(;;){
     //compute Delta
@@ -69,15 +69,15 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
       y = x + a*Delta;
       f.calcTermsAt(y);  evals++;
       ly = sumOfSqr(f.phi);
-      VERBOSE(2, cout  <<evals  <<" \tprobing y="  <<y  <<" \tl(y)="  <<ly  <<" \t|Delta|="  <<norm(Delta)  <<" \ta=" <<a);
-      CHECK(ly==ly, "cost seems to be NAN: ly="  <<ly);
+      VERBOSE(2, cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a);
+      CHECK(ly==ly, "cost seems to be NAN: ly=" <<ly);
       if(ly <= lx) break;
       if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
       //decrease stepsize
       a = .5*a;
-      VERBOSE(2, cout  <<" - reject"  <<endl);
+      VERBOSE(2, cout <<" - reject" <<endl);
     }
-    VERBOSE(2, cout  <<" - ACCEPT"  <<endl);
+    VERBOSE(2, cout <<" - ACCEPT" <<endl);
 
     //adopt new point and adapt stepsize
     x = y;
@@ -87,7 +87,7 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
     //stopping criterion
     if(norm(Delta)<tolerance || evals>maxEvals) break;
   }
-  //cout  <<lx  <<' '  <<flush;
+  //cout <<lx <<' ' <<flush;
   return evals;
 
 }*/
@@ -100,7 +100,7 @@ struct OptimizationProblem {
   virtual double loss(const arr& x, uint i, arr *grad, double *err){NIY;} //!< loss and gradient for i-th datum and parameters x
   virtual double totalLoss(const arr& x, arr *grad, double *err){NIY;} //!< loss and gradient for i-th datum and parameters x
   
-  virtual double f(arr *grad, const arr& x, int i=-1){NIY;}       //!< scalar valued function
+  virtual double f(arr *grad, const arr& x, int i=-1){NIY;}      //!< scalar valued function
   virtual void   F(arr& F, arr *grad, const arr& x, int i=-1){NIY;} //!< vector valued function
   OptimizationProblem(){ N=0; }
 };
@@ -147,18 +147,18 @@ struct SGD {
     arr grad;
     double err;
     l1 += m->loss(w1, perm(t%N), &grad, &err);   w1 -= a1 * grad;   e1+=err;
-    log  <<t
-   <<" time= "  <<MT::timerRead()
-   <<" loss1= "  <<l1/(t%BATCH+1)
-   <<" err1= "   <<e1/(t%BATCH+1)
-   <<" rate1= "  <<a1
+    log <<t
+   <<" time= " <<MT::timerRead()
+   <<" loss1= " <<l1/(t%BATCH+1)
+   <<" err1= "  <<e1/(t%BATCH+1)
+   <<" rate1= " <<a1
    <<endl;
-    cout  <<t
-          <<" time= "  <<MT::timerRead()
-          <<" loss1= "  <<l1/(t%BATCH+1)
-          <<" err1= "   <<e1/(t%BATCH+1)
-          <<" rate1= "  <<a1
-          <<endl;
+    cout <<t
+         <<" time= " <<MT::timerRead()
+         <<" loss1= " <<l1/(t%BATCH+1)
+         <<" err1= "  <<e1/(t%BATCH+1)
+         <<" rate1= " <<a1
+         <<endl;
     t++;
     if(!(t%N)) perm.setRandomPerm(N);
     if(!(t%BATCH)){
@@ -172,18 +172,18 @@ struct SGD {
     double err;
     l1 += m->loss(w1, perm(t%N), &grad, &err);   w1 -= a1 * grad;   e1+=err;
     l2 += m->loss(w2, perm(t%N), &grad, &err);   w2 -= a2 * grad;   e2+=err;
-    log  <<t
-   <<" time= "  <<MT::timerRead()
-   <<" loss1= "  <<l1/(t%BATCH+1)  <<" loss2= "  <<l2/(t%BATCH+1)
-   <<" err1= "   <<e1/(t%BATCH+1)  <<" err2= "   <<e2/(t%BATCH+1)
-   <<" rate1= "  <<a1  <<" rate2= "  <<a2
+    log <<t
+   <<" time= " <<MT::timerRead()
+   <<" loss1= " <<l1/(t%BATCH+1) <<" loss2= " <<l2/(t%BATCH+1)
+   <<" err1= "  <<e1/(t%BATCH+1) <<" err2= "  <<e2/(t%BATCH+1)
+   <<" rate1= " <<a1 <<" rate2= " <<a2
    <<endl;
-    cout  <<t
-          <<" time= "  <<MT::timerRead()
-          <<" loss1= "  <<l1/(t%BATCH+1)  <<" loss2= "  <<l2/(t%BATCH+1)
-          <<" err1= "   <<e1/(t%BATCH+1)  <<" err2= "   <<e2/(t%BATCH+1)
-          <<" rate1= "  <<a1  <<" rate2= "  <<a2
-          <<endl;
+    cout <<t
+         <<" time= " <<MT::timerRead()
+         <<" loss1= " <<l1/(t%BATCH+1) <<" loss2= " <<l2/(t%BATCH+1)
+         <<" err1= "  <<e1/(t%BATCH+1) <<" err2= "  <<e2/(t%BATCH+1)
+         <<" rate1= " <<a1 <<" rate2= " <<a2
+         <<endl;
     t++;
     if(!(t%N)) perm.setRandomPerm(N);
     if(!(t%BATCH)){
@@ -278,24 +278,24 @@ struct OnlineRprop {
         grad(i) = signer(i).sign(); //hard assign the gradient to +1 or -1
         rprop.step(w, grad, &i);      //make an rprop step only in this dimension
         signer(i).init();
-        //cout  <<"making step in "  <<i  <<endl;
+        //cout <<"making step in " <<i <<endl;
       } else if(signer(i).N>1000){
         grad(i) = 0.;
         rprop.step(w, grad, &i);      //make an rprop step only in this dimension
         signer(i).init();
-        //cout  <<"assuming 0 grad in "  <<i  <<endl;
+        //cout <<"assuming 0 grad in " <<i <<endl;
       }
     }
-    log  <<t
-   <<" time= "  <<MT::timerRead()
-   <<" loss= "  <<l/(t%BATCH+1)
-   <<" err= "   <<e/(t%BATCH+1)
+    log <<t
+   <<" time= " <<MT::timerRead()
+   <<" loss= " <<l/(t%BATCH+1)
+   <<" err= "  <<e/(t%BATCH+1)
    <<endl;
-    cout  <<t
-          <<" time= "  <<MT::timerRead()
-          <<" loss= "  <<l/(t%BATCH+1)
-          <<" err= "   <<e/(t%BATCH+1)
-          <<endl;
+    cout <<t
+         <<" time= " <<MT::timerRead()
+         <<" loss= " <<l/(t%BATCH+1)
+         <<" err= "  <<e/(t%BATCH+1)
+         <<endl;
     t++;
     if(!(t%N)) perm.setRandomPerm(N);
     if(!(t%BATCH)){

@@ -196,10 +196,10 @@ void soc::bayesianIterateIKControl(SocSystemAbstraction& sys,
     //else if(j<20) qt+=.8*dq;
     else qt+=(double).8*dq;
     if(dq.absMax()<eps) break;
-    //cout  <<"IK iteration "  <<j  <<" dq="  <<dq  <<endl;
+    //cout <<"IK iteration " <<j <<" dq=" <<dq <<endl;
   }
   if(j==maxIter) HALT("warning: IK didn't converge (|last step|=" <<dq.absMax() <<")")
-  else cout  <<"IK converged after steps="  <<j  <<endl;
+  else cout <<"IK converged after steps=" <<j <<endl;
 }
 
 //===========================================================================
@@ -491,7 +491,7 @@ double soc::AICO::stepKinematic(){
     //-- perhaps display the initialization
     if(q.N){
       if(sys->os){//type initial value
-        *sys->os  <<"AICOk(" <<scale <<") "  <<std::setw(3)  <<-1  <<" time "  <<MT::timerRead(false)  <<" diff -1";
+        *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<-1 <<" time " <<MT::timerRead(false) <<" diff -1";
         sys->analyzeTrajectory(q, display>0);
       }
       if(sys->gl){
@@ -528,7 +528,7 @@ double soc::AICO::stepKinematic(){
         St = Winv[t-1];
         inverse_SymPosDef(Sinv[t](), St);
 #endif
-        //cout  <<"s\n"  <<s[t]  <<endl  <<Sinv[t]  <<endl;
+        //cout <<"s\n" <<s[t] <<endl <<Sinv[t] <<endl;
       }
 
       //compute (v, V)
@@ -549,7 +549,7 @@ double soc::AICO::stepKinematic(){
           Vinv[t].setDiag(1e-1); //regularization, makes eq (*) above robust
 #endif
         }
-      //  cout  <<"v\n"  <<v[t]  <<endl  <<Vinv[t]  <<endl;
+      //  cout <<"v\n" <<v[t] <<endl <<Vinv[t] <<endl;
       }
         
       //first sweep and no initialization: set qhat equal to fwd message
@@ -575,9 +575,9 @@ double soc::AICO::stepKinematic(){
 #endif
         
         qhat_of_R[t]() = qhat[t];
-        //cout  <<"r\n"  <<r[t]  <<endl  <<R[t]  <<endl;
+        //cout <<"r\n" <<r[t] <<endl <<R[t] <<endl;
       }
-      //else cout  <<"skip."  <<flush;
+      //else cout <<"skip." <<flush;
 
       //compute system matrices
       sys->getWinv(Winv[t](), t);
@@ -585,7 +585,7 @@ double soc::AICO::stepKinematic(){
       //compute (b, B);
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
       lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-      //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+      //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
 #if USE_TRUNCATION //PRELIMINARY - hard constraints handled with truncating Gaussians
       //sys->displayState(b[t], &Binv[t], STRING("AICO kinematic (online) t=" <<t));
@@ -595,7 +595,7 @@ double soc::AICO::stepKinematic(){
       //sys->gl->watch(STRING("time " <<t));
       sys->getConstraints(cdir, coff, t <<scale, b[t]);
       if(cdir.d0){
-        //cout  <<"t="  <<t  <<' ';
+        //cout <<"t=" <<t <<' ';
         arr __b, __B, __Binv;
         inverse_SymPosDef(__B, Binv[t]);
         __b=b[t];
@@ -612,7 +612,7 @@ double soc::AICO::stepKinematic(){
         //recompute (b, B);
         Binv[t] = Sinv[t] + Vinv[t] + R[t];
         lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-        //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+        //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
         //sys->displayState(b[t], &Binv[t], STRING("AICO kinematic (after truncation) t=" <<t));
       }
@@ -642,12 +642,12 @@ double soc::AICO::stepKinematic(){
       if(sweep && repeatThreshold && t!=T){
         double off=sqrDistance(b[t], qhat[t]);  //sqrDistance(W, b[t], qhat[t]);
         if(off>repeatThreshold){
-          //cout  <<t  <<" REPEAT: off="  <<off  <<" (repeatCount="  <<repeatCount  <<")"  <<endl;
+          //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
           if(repeatCount<20){
             t-=dt;
             repeatCount++;
           }else{
-            cout  <<" ** no convergence! ** (skipping repeat) at t="  <<t  <<endl;
+            cout <<" ** no convergence! ** (skipping repeat) at t=" <<t <<endl;
             repeatCount=0;
           }
         }else{
@@ -674,9 +674,9 @@ double soc::AICO::stepKinematic(){
   MT::timerPause();
   if(sys->os){
 #ifdef NIKOLAY
-    *sys->os  <<std::setw(3)  <<sweep  <<"  "  <<MT::timerRead(false);
+    *sys->os <<std::setw(3) <<sweep <<"  " <<MT::timerRead(false);
 #else
-    *sys->os  <<"AICOk(" <<scale <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff;
+    *sys->os <<"AICOk(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
 #endif
    cost = sys->analyzeTrajectory(q, display>0);
   }
@@ -697,7 +697,7 @@ void soc::AICO::initMessagesWithReferenceQ(arr& qref){
   b=qhat;
   v=qhat;  for(uint t=0;t<=T;t++){ Vinv[t].setDiag(1e6);  }
   if(sys->os){
-    *sys->os  <<"AICOInit(" <<T <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<-1.;
+    *sys->os <<"AICOInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -724,7 +724,7 @@ void soc::AICO::initMessagesFromScaleParent(AICO *A){
   }
   if(sys->dynamic)  getPositionTrajectory(q, b);  else  q=b;
   if(sys->os){
-    *sys->os  <<"AICOscaleInit(" <<T <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<-1.;
+    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -741,10 +741,10 @@ void soc::AICO::updateFwdMessage(uint t){
     inverse_SymPosDef(barS, Sinv[t-1] + R[t-1]);
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
-    St += A[t-1]*barS*tA[t-1];//cout  <<endl  <<endl  <<t  <<endl;
+    St += A[t-1]*barS*tA[t-1];//cout <<endl <<endl <<t <<endl;
     s[t] = a[t-1] + A[t-1]*(barS*(Sinv[t-1]*s[t-1] + r[t-1]));
     inverse_SymPosDef(Sinv[t](), St);
-    //cout  <<"s\n"  <<s[t]  <<endl  <<Sinv[t]  <<endl;
+    //cout <<"s\n" <<s[t] <<endl <<Sinv[t] <<endl;
 #else
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
@@ -765,7 +765,7 @@ void soc::AICO::updateBwdMessage(uint t){
   if(sys->dynamic){
     if(t<T){
       inverse_SymPosDef(barV, Vinv[t+1] + R[t+1]);
-      //cout  <<"R[t+1]="  <<R[t+1]  <<"Vinv[t+1]="  <<Vinv[t+1]  <<"barV="  <<barV  <<endl;
+      //cout <<"R[t+1]=" <<R[t+1] <<"Vinv[t+1]=" <<Vinv[t+1] <<"barV=" <<barV <<endl;
       Vt = Q[t];
       Vt += B[t]*Hinv[t]*tB[t];
       Vt += barV;
@@ -875,7 +875,7 @@ double soc::AICO::stepDynamic(){
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
       lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
-    //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+    //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
     //decide on a new \hat q
     if(!useFwdMessageAsQhat){
@@ -899,12 +899,12 @@ double soc::AICO::stepDynamic(){
       //double off=sqrDistance(Q, b[t], qhat[t]);
       double off=sqrDistance(b[t], qhat[t]);
       if(off>repeatThreshold){
-        //cout  <<t  <<" REPEAT: off="  <<off  <<" (repeatCount="  <<repeatCount  <<")"  <<endl;
+        //cout <<t <<" REPEAT: off=" <<off <<" (repeatCount=" <<repeatCount <<")" <<endl;
         if(repeatCount<20){
           t-=dt;
           repeatCount++;
         }else{
-          cout  <<" ** no convergence! ** (skipping repeat) at t="  <<t  <<endl;
+          cout <<" ** no convergence! ** (skipping repeat) at t=" <<t <<endl;
           repeatCount=0;
         }
       }else{
@@ -932,7 +932,7 @@ double soc::AICO::stepDynamic(){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=b_old;
-      cout  <<" AICOd REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+      cout <<" AICOd REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -941,7 +941,7 @@ double soc::AICO::stepDynamic(){
     }else{
       damping /= 5.;
       dampingReference=b;
-      cout  <<" AICOd ACCEPT"  <<endl;
+      cout <<" AICOd ACCEPT" <<endl;
     }
   }else{
     dampingReference=b;
@@ -950,7 +950,7 @@ double soc::AICO::stepDynamic(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOd(" <<scale <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff;
+    *sys->os <<"AICOd(" <<scale <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
     sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -1095,12 +1095,12 @@ double soc::AICO::stepGaussNewton(){
   if(q_old.N==q.N) diff = maxDiff(q_old, q);
   cost = sys->analyzeTrajectory(q, display>0);
   //double tc=0.; for(uint k=0;k<phiBar.N;k++) tc+=sumOfSqr(phiBar(k));
-  ///cout  <<"internal cost: taskC= "  <<tc  <<" ctrlC= "  <<sumOfSqr(Psi)  <<endl;
+  ///cout <<"internal cost: taskC= " <<tc <<" ctrlC= " <<sumOfSqr(Psi) <<endl;
   if(sweep>3 && damping){
     if(cost>cost_old){
       damping *= 10.;
       dampingReference=qhat_old;
-      cout  <<" AICOgn REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+      cout <<" AICOgn REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
       b = b_old;
       q = q_old;
       qhat = qhat_old;
@@ -1109,7 +1109,7 @@ double soc::AICO::stepGaussNewton(){
     }else{
       damping /= 5.;
       dampingReference=qhat;
-      cout  <<" AICOgn ACCEPT"  <<endl;
+      cout <<" AICOgn ACCEPT" <<endl;
     }
   }else{
     dampingReference=qhat;
@@ -1118,7 +1118,7 @@ double soc::AICO::stepGaussNewton(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<T <<", "  <<damping  <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<diff;
+    *sys->os <<"AICOgn(" <<T <<", " <<damping <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     sys->analyzeTrajectory(q, display>0);
     //sys->costChecks(b);
   }
@@ -1133,7 +1133,7 @@ double soc::AICO::stepGaussNewton(){
 
 double soc::AICO::stepMinSum(){
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<sys->nTime() <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" before";
+    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -1157,7 +1157,7 @@ double soc::AICO::stepMinSum(){
       E.reshape(E.N/2, 2);
       del.resize(T+1);
       for(i=0;i<E.d0;i++) del(E(i, 1)).append(i);
-      cout  <<"E="  <<E  <<"del="  <<del  <<endl;
+      cout <<"E=" <<E <<"del=" <<del <<endl;
       
       clamped.resize(T+1);
       clamped=false;
@@ -1223,7 +1223,7 @@ double soc::AICO::stepMinSum(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICOgn(" <<sys->nTime() <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<diff;
+    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -1240,19 +1240,19 @@ double soc::AICO::stepMinSum(){
       arr Dinv, d;
       double like;
       do{
-        //cout  <<"b\n"  <<b[t]  <<endl  <<Binv[t]  <<endl;
+        //cout <<"b\n" <<b[t] <<endl <<Binv[t] <<endl;
         
         //compute likelihood
         Dinv = Sinv[t] + Vinv[t];
         lapack_Ainv_b_sym(d, Dinv, Sinv[t]*s[t] + Vinv[t]*v[t]);
         like=metricDistance(Dinv, d, b[t]);
-        /*cout  <<t
-           <<" - fwd like="  <<metricDistance(Sinv[t], s[t], b[t])
-           <<" - bwd like="  <<metricDistance(Vinv[t], v[t], b[t])
-           <<" - r like="  <<like
-           <<endl;*/
+        /*cout <<t
+          <<" - fwd like=" <<metricDistance(Sinv[t], s[t], b[t])
+          <<" - bwd like=" <<metricDistance(Vinv[t], v[t], b[t])
+          <<" - r like=" <<like
+          <<endl;*/
         if(like>100.){
-          cout  <<" REDUCING task precision"  <<endl;
+          cout <<" REDUCING task precision" <<endl;
                      R[t]() *= .1;
                      r[t]() *= .1;
 }
@@ -1312,13 +1312,13 @@ double soc::AICO::stepMinSum(){
 { A->locks(tLeft) .readLock(); s_left =A->s[tLeft ]; Sinv_left =A->Sinv[tLeft ]; qhat_left =A->qhat[tLeft ]; A->locks(tLeft ).unlock(); }
 { A->locks(tRight).readLock(); v_right=A->v[tRight]; Vinv_right=A->Vinv[tRight]; qhat_right=A->qhat[tRight]; A->locks(tRight).unlock(); }
             /*if(t>0 && dt==-1){
-                     locks(t-1).writeLock(STRING("-1 scale=" <<scale  <<" sweep="  <<sweep  <<" t="  <<t));
+                     locks(t-1).writeLock(STRING("-1 scale=" <<scale <<" sweep=" <<sweep <<" t=" <<t));
                      s   [t-1] = (1.-mix)*s   [t-1] + mix*   s_left;
                      Sinv[t-1] = (1.-mix)*Sinv[t-1] + mix*Sinv_left;
                      locks(t-1).unlock();
 }
                      if(t<T && dt==+1){
-                     locks(t+1).writeLock(STRING("+1 scale=" <<scale  <<" sweep="  <<sweep  <<" t="  <<t));
+                     locks(t+1).writeLock(STRING("+1 scale=" <<scale <<" sweep=" <<sweep <<" t=" <<t));
                      v   [t+1] = (1.-mix)*v   [t+1] + mix*   v_right;
                      Vinv[t+1] = (1.-mix)*Vinv[t+1] + mix*Vinv_right;
                      locks(t+1).unlock();
@@ -1332,13 +1332,13 @@ double soc::AICO::stepMinSum(){
                      A->locks(tMid)  .readLock(); s_mid=A->s[tMid]; Sinv_mid=A->Sinv[tMid]; v_mid=A->v[tMid]; Vinv_mid=A->Vinv[tMid]; qhat_mid=A->qhat[tMid]; A->locks(tMid).unlock();
                      if(t<T && dt==+1){ A->locks(tRight).readLock(); v_right=A->v[tRight]; Vinv_right=A->Vinv[tRight]; qhat_right=A->qhat[tRight]; A->locks(tRight).unlock(); }
             /*if(t>1 && dt==-1){
-                     locks(t-1).writeLock(STRING("-1 scale=" <<scale  <<" sweep="  <<sweep  <<" t="  <<t));
+                     locks(t-1).writeLock(STRING("-1 scale=" <<scale <<" sweep=" <<sweep <<" t=" <<t));
                      s   [t-1] = (1.-mix)*s   [t-1] + mix*.5*(s_mid+s_left);
                      Sinv[t-1] = (1.-mix)*Sinv[t-1] + mix*.5*(Sinv_mid+Sinv_left);
                      locks(t-1).unlock();
 }
                      if(t<T && dt==+1){
-                     locks(t+1).writeLock(STRING("+1 scale=" <<scale  <<" sweep="  <<sweep  <<" t="  <<t));
+                     locks(t+1).writeLock(STRING("+1 scale=" <<scale <<" sweep=" <<sweep <<" t=" <<t));
                      v   [t+1] = (1.-mix)*v   [t+1] + mix*.5*(v_mid+v_right);
                      Vinv[t+1] = (1.-mix)*Vinv[t+1] + mix*.5*(Vinv_mid+Vinv_right);
                      locks(t+1).unlock();

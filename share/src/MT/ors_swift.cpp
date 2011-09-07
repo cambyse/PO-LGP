@@ -48,7 +48,7 @@ void SwiftInterface::close(){
   if(scene) delete scene;
   if(global_ANN) delete global_ANN;
   scene=NULL;
-  cout  <<" -- SwiftInterface closed"  <<endl;
+  cout <<" -- SwiftInterface closed" <<endl;
   isOpen=false;
 }
 
@@ -64,9 +64,9 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
   INDEXswift2shape.resize(C.shapes.N);  INDEXswift2shape=-1;
   INDEXshape2swift.resize(C.shapes.N);  INDEXshape2swift=-1;
   
-  cout  <<" -- SwiftInterface init";
+  cout <<" -- SwiftInterface init";
   for_list(k, s, C.shapes){
-    cout  <<'.'  <<flush;
+    cout <<'.' <<flush;
     add=true;
     switch(s->type){
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
@@ -125,7 +125,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
   initActivations(C);
   
   exportStateToSwift(C, *this);
-  cout  <<"...done"  <<endl;
+  cout <<"...done" <<endl;
   isOpen=true;
 }
 
@@ -142,8 +142,8 @@ void SwiftInterface::initActivations(const ors::Graph& C){
     -- no collisions between objects liked via the tree via 3 links
   */
   
-  //cout  <<"collision active shapes: ";
-  //for_list(k, s, C.shapes) if(s->cont) cout  <<s->name  <<' ';
+  //cout <<"collision active shapes: ";
+  //for_list(k, s, C.shapes) if(s->cont) cout <<s->name <<' ';
   
   for_list(k, s, C.shapes){
     if(!s->cont){ if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index)); } else        { if(INDEXshape2swift(s->index)!=-1) scene->Activate(INDEXshape2swift(s->index)); }
@@ -152,7 +152,7 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   for_list(j, b, C.bodies) deactivate(b->shapes);
   //deactivate along edges...
   for_list(j, e, C.joints){
-    //cout  <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout  <<endl;
+    //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
     deactivate(ARRAY(e->from, e->to));
   }
   //deactivate along trees...
@@ -176,7 +176,7 @@ void SwiftInterface::initActivations(const ors::Graph& C){
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){
-  //cout  <<"deactivating body group "; listWriteNames(bodies, cout); cout  <<endl;
+  //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
   uint i1, i2, k1, k2;
   ors::Shape *s1, *s2;
   ors::Body *b1, *b2;
@@ -230,20 +230,20 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       &nearest_pts,
       &normals);
   } catch (const char *msg){
-    cout  <<"... catching error '" <<msg  <<"' -- SWIFT failed! .. no proxies for this posture!!..."  <<endl;
+    cout <<"... catching error '" <<msg <<"' -- SWIFT failed! .. no proxies for this posture!!..." <<endl;
     return;
   }
   
   if(dumpReport){
-    cout  <<"contacts: np="  <<np  <<endl;
+    cout <<"contacts: np=" <<np <<endl;
     for(k=0, i=0; i<np; i++){
-      cout  <<"* Object "  <<C.shapes(oids[i <<1])->name  <<" vs. Object "  <<C.shapes(oids[(i <<1)+1])->name  <<endl;
-      cout  <<"  #contacts = "  <<num_contacts[i]  <<endl;
+      cout <<"* Object " <<C.shapes(oids[i <<1])->name <<" vs. Object " <<C.shapes(oids[(i <<1)+1])->name <<endl;
+      cout <<"  #contacts = " <<num_contacts[i] <<endl;
       for(j=0; j<num_contacts[i]; j++, k++){
-        cout  <<"  - contact "  <<j  <<endl;
-        cout  <<"    distance= "  <<dists[k]  <<endl;
-        cout  <<"    points  = "  <<nearest_pts[6*k+0]  <<' ' <<nearest_pts[6*k+1]  <<' ' <<nearest_pts[6*k+2]  <<' ' <<nearest_pts[6*k+3]  <<' ' <<nearest_pts[6*k+4]  <<' ' <<nearest_pts[6*k+5]  <<endl;
-        cout  <<"    normals = "  <<normals[3*k+0]  <<' '  <<normals[3*k+1]  <<' '  <<normals[3*k+2]  <<endl;
+        cout <<"  - contact " <<j <<endl;
+        cout <<"    distance= " <<dists[k] <<endl;
+        cout <<"    points  = " <<nearest_pts[6*k+0] <<' ' <<nearest_pts[6*k+1] <<' ' <<nearest_pts[6*k+2] <<' ' <<nearest_pts[6*k+3] <<' ' <<nearest_pts[6*k+4] <<' ' <<nearest_pts[6*k+5] <<endl;
+        cout <<"    normals = " <<normals[3*k+0] <<' ' <<normals[3*k+1] <<' ' <<normals[3*k+2] <<endl;
       }
     }
   }
@@ -309,7 +309,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       //proxy->posB += .5*proxy->normal;
       //CHECK(fabs(fabs(proxy->d+.1)-(proxy->posA-proxy->posB).length())<1e-10, "")
       k++;
-//       cout  <<".";
+//       cout <<".";
       //MT_MSG("WARNING - swift penetration!!!");
     }
   }
@@ -372,10 +372,10 @@ void swiftQueryExactDistance(SwiftInterface& swift){
   
   swift.scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
   
-  cout  <<"exact distances: np="  <<np  <<endl;
+  cout <<"exact distances: np=" <<np <<endl;
   for(i=0; i<np; i++){
-    cout  <<"    Object "  <<oids[i <<1]  <<" vs. Object "
-          <<oids[(i <<1)+1]  <<" = "  <<dists[i]  <<endl;
+    cout <<"    Object " <<oids[i <<1] <<" vs. Object "
+         <<oids[(i <<1)+1] <<" = " <<dists[i] <<endl;
   }
 }
 

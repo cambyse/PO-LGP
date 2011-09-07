@@ -205,8 +205,8 @@ public:
     b=A.b<B.b?A.b:B.b;
   }
   
-  //! prototype for operator  <<
-  void write(std::ostream& os) const { os  <<"("  <<r  <<":"  <<g  <<":"  <<b  <<")"; }
+  //! prototype for operator <<
+  void write(std::ostream& os) const { os <<"(" <<r <<":" <<g <<":" <<b <<")"; }
   
   //! prototype for operator >>
   void read(std::istream& is){ is >>"(" >>r >>":" >>g >>":" >>b >>")"; }
@@ -764,12 +764,12 @@ void plotDrawGnuplot(void *_data){
   
   // include custom definition file if exists
   FILE *incf = fopen("z.plotcmd.inc", "r");
-  if(incf){ fclose(incf);  gnuplotcmd  <<"load 'z.plotcmd.inc'\n";}
+  if(incf){ fclose(incf);  gnuplotcmd <<"load 'z.plotcmd.inc'\n";}
   
-  //gnuplotcmd  <<"set size square\n";
+  //gnuplotcmd <<"set size square\n";
   //if(wait) gnuplotcmd <<"set title 'CLICK LEFT TO CONTINUE'\n";
   
-  if(data.lines.N+data.points.N) gnuplotcmd  <<"\nplot \\\n";
+  if(data.lines.N+data.points.N) gnuplotcmd <<"\nplot \\\n";
   
   //pipe data
   bool ior=MT::IOraw;
@@ -805,7 +805,7 @@ void plotDrawGnuplot(void *_data){
     block++;
   }
   
-  if(data.array.N) gnuplotcmd  <<"\n\npause mouse\nset dgrid3d\n\nsplot \\\n";
+  if(data.array.N) gnuplotcmd <<"\n\npause mouse\nset dgrid3d\n\nsplot \\\n";
   
   //surfaces
   for(i=0; i<data.array.N; i++){
@@ -819,14 +819,14 @@ void plotDrawGnuplot(void *_data){
     block++;
   }
   MT::IOraw=ior;
-  gnuplotcmd  <<endl;
+  gnuplotcmd <<endl;
   
   //close files
   gnuplotdata.close();
   
   //call gnuplot
-  //if(wait) gnuplotcmd <<"\npause mouse"  <<std::endl;
-  ofstream gcmd("z.plotcmd"); gcmd  <<gnuplotcmd; gcmd.close(); //for debugging...
+  //if(wait) gnuplotcmd <<"\npause mouse" <<std::endl;
+  ofstream gcmd("z.plotcmd"); gcmd <<gnuplotcmd; gcmd.close(); //for debugging...
   gnuplot(gnuplotcmd);
 }
 

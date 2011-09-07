@@ -58,7 +58,7 @@ void SchunkArmModule::open(){
   sendMotion=MT::Parameter<bool>("schunkSendArmMotion", true);
   readPositions=MT::Parameter<bool>("schunkReadArmPositions", false);
   
-  cout  <<" -- SchunkArmModule init .."  <<std::flush;
+  cout <<" -- SchunkArmModule init .." <<std::flush;
   addShutdown(this, shutdownLWA);
   if(access("/dev/can0", R_OK|W_OK)==-1 || access("/dev/can1", R_OK|W_OK)==-1){
     HALT("the devices /dev/can0 or /dev/can1 do not exist -- call `mountHardware' on console first");
@@ -67,7 +67,7 @@ void SchunkArmModule::open(){
   pDev=newDevice(acInitString);
   if(!pDev) HALT("Device unknown");
   int iRetVal = pDev->init(acInitString);
-  if(iRetVal!=0) HALT("Device init returned error "  <<iRetVal);
+  if(iRetVal!=0) HALT("Device init returned error " <<iRetVal);
   pDev->resetAll();
   uint m;
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
@@ -93,11 +93,11 @@ void SchunkArmModule::open(){
   } else MT_MSG("Variable pointer not set");
   
   isOpen=true;
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
 }
 
 void SchunkArmModule::close(){
-  cout  <<" -- SchunkArmModule close .."  <<std::flush;
+  cout <<" -- SchunkArmModule close .." <<std::flush;
   //for(uint m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
   if(isOpen){
     pDev->haltAll();
@@ -107,7 +107,7 @@ void SchunkArmModule::close(){
     pDev=NULL;
     isOpen=false;
   }
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
 }
 
 void SchunkArmModule::reportParameters(ostream& os){
@@ -118,45 +118,45 @@ void SchunkArmModule::reportParameters(ostream& os){
   os
  <<"*** Schunk LWA parameters:"
  <<"\n -- device:"
- <<"\n    name="  <<pDev->getName()
- <<"\n    init string="  <<pDev->getInitString()
-  // <<"\n    baud rate="  <<pDev->getBaudRate()
- <<"\n    module count="  <<pDev->getModuleCount();
+ <<"\n    name=" <<pDev->getName()
+ <<"\n    init string=" <<pDev->getInitString()
+  // <<"\n    baud rate=" <<pDev->getBaudRate()
+ <<"\n    module count=" <<pDev->getModuleCount();
   for(uint m=3; m<=9; m++){
     os<<"\n -- motor " <<m
-   <<"\n    getHomeOffset="  <<(pDev->getHomeOffset(m, &f)?-1:f)
-   <<"\n    getDefHomeOffset="  <<(pDev->getDefHomeOffset(m, &f)?-1:f)
-   <<"\n    getHomeOffsetInc="  <<(pDev->getHomeOffsetInc(m, &l)?-1:l)
-   <<"\n    getIncRatio="  <<(pDev->getIncRatio(m, &f)?-1:f)
-   <<"\n    getDioData="  <<(pDev->getDioData(m, &u)?-1:u)
-   <<"\n    getC    (P-gain)="  <<(pDev->getC0(m, &s)?-1:s)
-   <<"\n    getDamp (I-gain)="  <<(pDev->getDamp(m, &s)?-1:s)
-   <<"\n    getA    (D-gain)="  <<(pDev->getA0(m, &s)?-1:s)
-   <<"\n    getPos="  <<(pDev->getPos(m, &f)?-1:f)
-   <<"\n    getVel="  <<(pDev->getVel(m, &f)?-1:f)
-   <<"\n    getCur="  <<(pDev->getCur(m, &f)?-1:f)
-   <<"\n    getMinPos="  <<(pDev->getMinPos(m, &f)?-1:f)
-   <<"\n    getMaxPos="  <<(pDev->getMaxPos(m, &f)?-1:f)
-   <<"\n    getMaxVel="  <<(pDev->getMaxVel(m, &f)?-1:f)
-   <<"\n    getMaxAcc="  <<(pDev->getMaxAcc(m, &f)?-1:f)
-   <<"\n    getMaxCur="  <<(pDev->getMaxCur(m, &f)?-1:f)
-   <<"\n    getDeltaPos="  <<(pDev->getDeltaPos(m, &f)?-1:f)
-   <<"\n    getMaxDeltaPos="  <<(pDev->getMaxDeltaPos(m, &f)?-1:f)
-   <<"\n    getSavePos="  <<(pDev->getSavePos(m, &f)?-1:f)
-   <<"\n    getIPolVel="  <<(pDev->getIPolVel(m, &f)?-1:f)
-   <<"\n    getPosCountInc="  <<(pDev->getPosCountInc(m, &l)?-1:l)
-   <<"\n    getPosInc="  <<(pDev->getPosInc(m, &l)?-1:l)
-   <<"\n    getVelInc="  <<(pDev->getVelInc(m, &l)?-1:l)
-   <<"\n    getCurInc="  <<(pDev->getCurInc(m, &s)?-1:s)
-   <<"\n    getMinPosInc="  <<(pDev->getMinPosInc(m, &l)?-1:l)
-   <<"\n    getMaxPosInc="  <<(pDev->getMaxPosInc(m, &l)?-1:l)
-   <<"\n    getMaxVelInc="  <<(pDev->getMaxVelInc(m, &l)?-1:l)
-   <<"\n    getMaxAccInc="  <<(pDev->getMaxAccInc(m, &l)?-1:l)
-   <<"\n    getDeltaPosInc="  <<(pDev->getDeltaPosInc(m, &l)?-1:l)
-   <<"\n    getMaxDeltaPosInc="  <<(pDev->getMaxDeltaPosInc(m, &l)?-1:l)
-   <<"\n    getSavedPos="  <<(pDev->getSavedPos(m, &f)?-1:f)
-   <<"\n    getHomeVel="  <<(pDev->getHomeVel(m, &f)?-1:f)
-   <<"\n    getHomeVelInc="  <<(pDev->getHomeVelInc(m, &l)?-1:l)
+   <<"\n    getHomeOffset=" <<(pDev->getHomeOffset(m, &f)?-1:f)
+   <<"\n    getDefHomeOffset=" <<(pDev->getDefHomeOffset(m, &f)?-1:f)
+   <<"\n    getHomeOffsetInc=" <<(pDev->getHomeOffsetInc(m, &l)?-1:l)
+   <<"\n    getIncRatio=" <<(pDev->getIncRatio(m, &f)?-1:f)
+   <<"\n    getDioData=" <<(pDev->getDioData(m, &u)?-1:u)
+   <<"\n    getC    (P-gain)=" <<(pDev->getC0(m, &s)?-1:s)
+   <<"\n    getDamp (I-gain)=" <<(pDev->getDamp(m, &s)?-1:s)
+   <<"\n    getA    (D-gain)=" <<(pDev->getA0(m, &s)?-1:s)
+   <<"\n    getPos=" <<(pDev->getPos(m, &f)?-1:f)
+   <<"\n    getVel=" <<(pDev->getVel(m, &f)?-1:f)
+   <<"\n    getCur=" <<(pDev->getCur(m, &f)?-1:f)
+   <<"\n    getMinPos=" <<(pDev->getMinPos(m, &f)?-1:f)
+   <<"\n    getMaxPos=" <<(pDev->getMaxPos(m, &f)?-1:f)
+   <<"\n    getMaxVel=" <<(pDev->getMaxVel(m, &f)?-1:f)
+   <<"\n    getMaxAcc=" <<(pDev->getMaxAcc(m, &f)?-1:f)
+   <<"\n    getMaxCur=" <<(pDev->getMaxCur(m, &f)?-1:f)
+   <<"\n    getDeltaPos=" <<(pDev->getDeltaPos(m, &f)?-1:f)
+   <<"\n    getMaxDeltaPos=" <<(pDev->getMaxDeltaPos(m, &f)?-1:f)
+   <<"\n    getSavePos=" <<(pDev->getSavePos(m, &f)?-1:f)
+   <<"\n    getIPolVel=" <<(pDev->getIPolVel(m, &f)?-1:f)
+   <<"\n    getPosCountInc=" <<(pDev->getPosCountInc(m, &l)?-1:l)
+   <<"\n    getPosInc=" <<(pDev->getPosInc(m, &l)?-1:l)
+   <<"\n    getVelInc=" <<(pDev->getVelInc(m, &l)?-1:l)
+   <<"\n    getCurInc=" <<(pDev->getCurInc(m, &s)?-1:s)
+   <<"\n    getMinPosInc=" <<(pDev->getMinPosInc(m, &l)?-1:l)
+   <<"\n    getMaxPosInc=" <<(pDev->getMaxPosInc(m, &l)?-1:l)
+   <<"\n    getMaxVelInc=" <<(pDev->getMaxVelInc(m, &l)?-1:l)
+   <<"\n    getMaxAccInc=" <<(pDev->getMaxAccInc(m, &l)?-1:l)
+   <<"\n    getDeltaPosInc=" <<(pDev->getDeltaPosInc(m, &l)?-1:l)
+   <<"\n    getMaxDeltaPosInc=" <<(pDev->getMaxDeltaPosInc(m, &l)?-1:l)
+   <<"\n    getSavedPos=" <<(pDev->getSavedPos(m, &f)?-1:f)
+   <<"\n    getHomeVel=" <<(pDev->getHomeVel(m, &f)?-1:f)
+   <<"\n    getHomeVelInc=" <<(pDev->getHomeVelInc(m, &l)?-1:l)
    <<std::flush;
   }
 }
@@ -178,7 +178,7 @@ int SchunkArmModule::waitForEnd(int iMod){
 
 void SchunkArmModule::setVel(uint motor, float vel){
   if(motor==9) pDev->moveVel(motor, vel);
-  cout  <<"setVel "  <<motor  <<' '  <<vel  <<endl;
+  cout <<"setVel " <<motor <<' ' <<vel <<endl;
 }
 
 void SchunkArmModule::zeroCurAll(){
@@ -210,7 +210,7 @@ void SchunkArmModule::step(){
   static ofstream logfil;
   static bool logfilOpen=false;
   if(!logfilOpen){ logfil.open("schunk.log"); logfilOpen=true; }
-  logfil  <<delta  <<endl;
+  logfil <<delta <<endl;
 #endif
   if(delta>maxStep){
     MT_MSG(" *** WARNING *** too large step -> making no step,  |dq|=" <<delta);
@@ -270,7 +270,7 @@ void SchunkHandModule::open(){
   //read parameters
   sendMotion=MT::Parameter<bool>("schunkSendHandMotion", true);
   
-  cout  <<" -- SchunkHandModule init .."  <<std::flush;
+  cout <<" -- SchunkHandModule init .." <<std::flush;
   addShutdown(this, shutdownSDH);
   hand=new SDH::cSDH(false, false, -1);
   
@@ -312,16 +312,16 @@ void SchunkHandModule::open(){
   } else MT_MSG("Variable pointer not set");
   
   isOpen=true;
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
 }
 
 void SchunkHandModule::close(){
-  cout  <<" -- SchunkHandModule close .."  <<std::flush;
+  cout <<" -- SchunkHandModule close .." <<std::flush;
   if(isOpen){
     hand->Close();
     isOpen=false;
   }
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
 }
 
 void SchunkHandModule::stop(){ hand->Stop(); }
@@ -360,10 +360,10 @@ void SchunkHandModule::setVelocities(const arr& v, double a){
     hand->SetAxisTargetAcceleration(fingers, acc);
     hand->SetAxisTargetVelocity(fingers, vel);
   } catch (SDH::cSDHLibraryException* e){
-    cerr  <<"\ndemo-dsa main(): Caught exception from SDHLibrary: "  <<e->what()  <<". Giving up!\n";
+    cerr <<"\ndemo-dsa main(): Caught exception from SDHLibrary: " <<e->what() <<". Giving up!\n";
     delete e;
   } catch (...){
-    cerr  <<"\ncaught unknown exception, giving up\n";
+    cerr <<"\ncaught unknown exception, giving up\n";
   }
 #else
   for(uint i=0; i<7; i++) setVelocity(i, v(i)/MT_PI*180., a);
@@ -427,7 +427,7 @@ void SchunkSkinModule::open(){
   
   // below: with hardware
   
-  cout  <<" -- SchunkSkinModule init .."  <<std::flush;
+  cout <<" -- SchunkSkinModule init .." <<std::flush;
   addShutdown(this, shutdownDSA);
   //SDH_ASSERT_TYPESIZES();
   
@@ -452,42 +452,42 @@ void SchunkSkinModule::open(){
   try {
     ts = new SDH::cDSA(debug_level, rs232_dsaport);
   } catch (SDH::cSDHLibraryException* e){
-    cerr  <<"\ndemo-dsa main(): Caught exception from SDHLibrary: "  <<e->what()  <<". Giving up!\n";
+    cerr <<"\ndemo-dsa main(): Caught exception from SDHLibrary: " <<e->what() <<". Giving up!\n";
     delete e;
   } catch (...){
-    cerr  <<"\ncaught unknown exception, giving up\n";
+    cerr <<"\ncaught unknown exception, giving up\n";
   }
   ts->SetFramerate(30, true);  //NIKOLAY: RLE or not RLE
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
   isOpen=true;
 }
 
 void SchunkSkinModule::report(){
   if(isEmulation){
-    cout  <<"Skin feedback is emulated!" <<endl;
+    cout <<"Skin feedback is emulated!" <<endl;
     return;
   }
   
-  cout  <<ts->GetControllerInfo()  <<endl;
+  cout <<ts->GetControllerInfo() <<endl;
   
   const SDH::cDSA::sSensorInfo &sinfo=ts->GetSensorInfo();
-  cout  <<sinfo  <<endl;
+  cout <<sinfo <<endl;
   uint M=sinfo.nb_matrices;
   for(uint m=0; m<M; m++){
     const SDH::cDSA::sMatrixInfo &minfo=ts->GetMatrixInfo(m);
-    cout  <<"Matrix "  <<m  <<"   "  <<minfo  <<endl;
+    cout <<"Matrix " <<m <<"   " <<minfo <<endl;
   }
 }
 
 void SchunkSkinModule::setFramerate(uint framerate){ if(isEmulation){ return; } ts->SetFramerate(framerate, true); } //NIKOLAY: RLE flag???
 
 void SchunkSkinModule::close(){
-  cout  <<" -- SchunkSkinModule close .."  <<std::flush;
+  cout <<" -- SchunkSkinModule close .." <<std::flush;
   if(isOpen){
     ts->Close();
     isOpen=false;
   }
-  cout  <<" done"  <<endl;
+  cout <<" done" <<endl;
 }
 
 void SchunkSkinModule::getFrame(MT::Array<uint16>& x){
@@ -499,8 +499,8 @@ void SchunkSkinModule::getFrame(MT::Array<uint16>& x){
     try {
       f = ts->UpdateFrame().texel;
     } catch (SDH::cSDHLibraryException* e){
-      //HALT("schunk exception: "  <<e->what());
-      MT_MSG("* * * schunk exception: "  <<e->what());
+      //HALT("schunk exception: " <<e->what());
+      MT_MSG("* * * schunk exception: " <<e->what());
       delete e;
       return;
     }
@@ -566,7 +566,7 @@ void testPerformance(SchunkArmModule &schunk, int iMod){
   //float fPos2;
   int iRetVal = 0;
   
-  cout  <<"\n Performing 1000 getPos & moveStep..."  <<endl;
+  cout <<"\n Performing 1000 getPos & moveStep..." <<endl;
   double time=MT::realTime();
   uint i;
   iRetVal = schunk.pDev->getPos(iMod, &fPos);
@@ -581,7 +581,7 @@ void testPerformance(SchunkArmModule &schunk, int iMod){
 //       iRetVal = schunk.pDev->moveStepExtended(iMod, fPos, 100., &uiState, &uiDio, &fPos2 );
 //       if( iRetVal != 0 ) printf( "Error move step: %d\n", iRetVal );
   }
-  cout  <<"-> state+pos time = "  <<(MT::realTime()-time)/i  <<"sec (typical=0.0011..sec)"  <<endl;
+  cout <<"-> state+pos time = " <<(MT::realTime()-time)/i <<"sec (typical=0.0011..sec)" <<endl;
 }
 
 void testCube(SchunkArmModule &schunk, int iMod){

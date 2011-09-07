@@ -36,7 +36,7 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
   }
   
   //TaskVariable * t = listFindByName(recho.sys->vars, "endeffector");
-  //cout  <<" clone "  <<t->y  <<" target"  <<t->y_trajectory[t->y_trajectory.d0-1]  <<" prec "  <<t->y_prec_trajectory(t->y_trajectory.d0-1) <<endl;
+  //cout <<" clone " <<t->y <<" target" <<t->y_trajectory[t->y_trajectory.d0-1] <<" prec " <<t->y_prec_trajectory(t->y_trajectory.d0-1) <<endl;
 }
 
 
@@ -136,22 +136,22 @@ void MarcsRobotTask::localizeObject(const char* identifier){
   
 //   if(!D.N) return;
   if(avg_c3d_counter < 3)
-    std::cout  <<"avg_c3d_counter < 3"  <<std::endl;
+    std::cout <<"avg_c3d_counter < 3" <<std::endl;
     
   ors::Vector pos;
   avg_c3d/=(double)avg_c3d_counter;
   pos.set(avg_c3d.p);
-  cout  <<pos  <<endl;
+  cout <<pos <<endl;
   //adding dosen radius
   pos(2) += .02;
   pos = ors.getShapeByName("camera")->X*pos;
-  cout  <<pos  <<endl;
+  cout <<pos <<endl;
   objectPosition.setCarray(pos.v, 3);
   
   ors::Shape *s = ors.getShapeByName(D(0)->identifier.c_str());
   s->X.p=pos;
   s->rel.setDifference(s->body->X, s->X);
-  cout  <<"localized relative position = "  <<s->rel.p  <<endl;
+  cout <<"localized relative position = " <<s->rel.p <<endl;
   if(gui){
     s = gui.ors.getShapeByName(D(0)->identifier.c_str());
     s->X.p=pos;
@@ -168,9 +168,9 @@ void MarcsRobotTask::localizeObject(const char* identifier){NIY;}
 //     bumble.capture(left, right);
 //     localizeHsv(objectPosition, left, right, ARRAY<float>(.0, 1., 1.), ARRAY<float>(.2, .5, .5), 3);
 //     pos.set(objectPosition.p);
-//     cout  <<pos  <<endl;
+//     cout <<pos <<endl;
 //     pos = ors.getShapeByName("camera")->X*pos;
-//     cout  <<pos  <<endl;
+//     cout <<pos <<endl;
 //     objectPosition.setCarray(pos.v, 3);
 //   }
 //   ors.getBodyByName("target")->X.p=pos;
@@ -286,12 +286,12 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape, const char* below
   for(uint i=0; i<7; i++) planSys->ors->Qoff(i)=0.; //do not change offset for arm joints
   planSys->ors->Qlin.resize(16, 7); planSys->ors->Qlin.setDiag(1.);
   planSys->ors->Qinv.resize(7, 16); planSys->ors->Qinv.setDiag(1.);
-  //cout  <<planSys->ors->Qlin  <<planSys->ors->Qinv  <<planSys->ors->Qoff  <<endl;
+  //cout <<planSys->ors->Qlin <<planSys->ors->Qinv <<planSys->ors->Qoff <<endl;
   
   // reinit the system
   uint T=384>>plan_scale;
   arr W;
-  W  <<"[.1 .1 .2 .2 .2 1 1]";
+  W <<"[.1 .1 .2 .2 .2 1 1]";
   planSys->initBasics(planSys->ors, planSys->swift, planSys->gl, T, 4., true, &W);
   updateState(planSys->vars);
   
@@ -356,7 +356,7 @@ void MarcsRobotTask::joystick(){
   controlMode = joystickCM;
   for(; !signalStop;){
     step();
-    //cout  <<"tip3 inlink frame = "  <<ors.getBodyByName("tip3")->inLinks(0)->Xworld.p  <<endl;
+    //cout <<"tip3 inlink frame = " <<ors.getBodyByName("tip3")->inLinks(0)->Xworld.p <<endl;
     if(joy.state(0)==16 || joy.state(0)==32) break;
   }
   controlMode = stopCM;

@@ -3,7 +3,7 @@
 
 void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   arr limits;
-  limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   arr I2(7, 14); I2.setDiag(1.);
   //arr skinIdx; copy(skinIdx, ctrl->skinIndex);

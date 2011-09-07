@@ -116,7 +116,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     } else NIY;
   }else{
     ors->computeNaturalQmetric(W_rate);
-    //cout  <<"automatic W initialization ="  <<WS->W  <<endl;
+    //cout <<"automatic W initialization =" <<WS->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
   static MT::Parameter<double> wc("Wcost", 1e-2);
@@ -291,8 +291,8 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   arr Wdiag(sys.WS->q0.N);
   Wdiag=1.;
   MT_MSG("Warning - need to change this");
-  Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
-  //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
+  Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
+  //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
   CHECK(Wdiag.N==sys.WS->q0.N, "wrong W matrix!");
   sys.WS->W.setDiag(Wdiag);
   sys.WS->H = sys.WS->W;
@@ -345,17 +345,17 @@ void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
 
 //! report on some
 void soc::SocSystem_Ors::reportOnState(ostream& os){
-  os  <<"OrsSocImplementat - state report:\n";
-  os  <<"** control variables:"  <<endl;
+  os <<"OrsSocImplementat - state report:\n";
+  os <<"** control variables:" <<endl;
   reportAll(vars, os);
-  os  <<"** proxies:"  <<endl;
+  os <<"** proxies:" <<endl;
   ors->reportProxies(&os);
 }
 
 //overload the display method to include variances
 void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char *text, bool reportVariables){
   if(x){ if(x->N==qDim()) setq(*x); else setx(*x); }
-  if(text) gl->text.clr()  <<text;
+  if(text) gl->text.clr() <<text;
   if(Qinv){
     arr Q;
     inverse_SymPosDef(Q, *Qinv);
@@ -424,7 +424,7 @@ void soc::SocSystem_Ors::getH(arr& H, uint t){
 }
 void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   arr H;
-  getH(H, t); //cout  <<"H="  <<H  <<endl;
+  getH(H, t); //cout <<"H=" <<H <<endl;
   inverse_SymPosDef(Hinv, H);
 }
 void soc::SocSystem_Ors::getQ(arr& Q, uint t){
@@ -532,21 +532,21 @@ void soc::SocSystem_Ors::getHessian(arr& H_i, uint i){
 
 void soc::SocSystem_Ors::getTarget(arr& y_target, double& y_prec, uint i, uint t){
   TaskVariable *v=vars(i);
-  //cout  <<"getting y_target for TV "  <<v->name  <<endl;
+  //cout <<"getting y_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
     v->updateChange(-1, WS->tau);
     y_target = v->y_ref;
     y_prec   = v->y_prec;
     return;
   }
-  CHECK(v->y_trajectory.d0>t, "task target trajectory for variable '"  <<v->name <<"' not specified");
+  CHECK(v->y_trajectory.d0>t, "task target trajectory for variable '" <<v->name <<"' not specified");
   y_target = v->y_trajectory[t];
   y_prec   = v->y_prec_trajectory(t);
 }
 
 void soc::SocSystem_Ors::getTargetV(arr& v_target, double& v_prec, uint i, uint t){
   TaskVariable *v=vars(i);
-  //cout  <<"getting v_target for TV "  <<v->name  <<endl;
+  //cout <<"getting v_target for TV " <<v->name <<endl;
   if(!t && v->targetType!=trajectoryTT){
     v->updateChange(-1, WS->tau);
     v_target = v->v_ref;
@@ -611,7 +611,7 @@ void drawOrsSocEnv(void*){
   MT::getParameter(endPrec, "endPrec");
 
   x0->y_target.setCarray(sys.ors->getBodyByName("target")->X.pos.p, 3);
-  x0->v_target  <<"[2 0 0]";
+  x0->v_target <<"[2 0 0]";
   x0->setInterpolatedTargetTrajectory(sys.WS->T);
   x0->setPrecisionTrajectoryFinal (sys.WS->T, midPrec, endPrec);
   x0->setPrecisionVTrajectoryFinal(sys.WS->T, 0., endPrec);
@@ -685,7 +685,7 @@ void transformSystemMatricesWithQlin(){
   arr Qbig;
   Qbig.resize(2*Qlin.d0, 2*Qlin.d1); Qbig.setZero();
   Qbig.setMatrixBlock(Qlin, 0, 0); Qbig.setMatrixBlock(Qlin, Qlin.d0, Qlin.d1);
-  //cout  <<Qbig  <<endl;
+  //cout <<Qbig <<endl;
   Q = ~Qbig*WS->Q*Qbig;
 }
 #endif

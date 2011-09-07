@@ -495,7 +495,7 @@ void TaskVariable::updateChange(int t, double tau){
       y_ref = y_ref + tau*v_ref; //``Euler integration''
       //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in double time
       static ofstream fil("refs");
-      fil  <<y_ref  <<v_ref  <<yt  <<vt  <<y  <<v  <<' '  <<Pgain  <<' '  <<Dgain  <<endl;
+      fil <<y_ref <<v_ref <<yt <<vt <<y <<v <<' ' <<Pgain <<' ' <<Dgain <<endl;
       break;
     }
     default:
@@ -519,40 +519,40 @@ void TaskVariable::updateChange(int t, double tau){
     */
 
 void TaskVariable::write(ostream &os) const {
-  os  <<"CV '"  <<name <<'\'';
+  os <<"CV '" <<name <<'\'';
   switch(type){
-    case posTVT:     os  <<"  (pos "  <<ors->bodies(i)->name  <<")"; break;
-      //case relPosTVT:  os  <<"  (relPos "  <<ors->bodies(i)->name  <<'-'  <<ors->bodies(j)->name  <<")"; break;
-    case zoriTVT:    os  <<"  (zori "  <<ors->bodies(i)->name  <<")"; break;
-    case rotTVT:     os  <<"  (rot "  <<ors->bodies(i)->name  <<")"; break;
-    case contactTVT: os  <<"  (contact "  <<ors->bodies(i)->name  <<' ' <<params(0)  <<")"; break;
-    case gripTVT:    os  <<"  (grip "  <<ors->bodies(i)->name  <<")"; break;
-    case qLinearTVT: os  <<"  (qLinear "  <<sum(params)  <<")"; break;
-    case qSquaredTVT:os  <<"  (qSquared "  <<sum(params)  <<")"; break;
-    case qSingleTVT: os  <<"  (qSingle "  <<ors->joints(-i)->from->name  <<'-'  <<ors->joints(-i)->to->name  <<")"; break;
-    case qLimitsTVT: os  <<"  (qLimitsTVT "  <<sum(params)  <<")"; break;
-    case qItselfTVT: os  <<"  (qItselfTVT)"; break;
-    case comTVT:     os  <<"  (COM)"; break;
-    case collTVT:    os  <<"  (COLL)"; break;
-    case colConTVT:  os  <<"  (colCon)"; break;
-    case zalignTVT:  os  <<"  (zalign "  <<ors->bodies(i)->name  <<'-'  <<(j==-1?"-1":STRING("" <<ors->bodies(j)->name))  <<"); params:" <<params; break;
-    case userTVT:    os  <<"  (userTVT)"; break;
+    case posTVT:     os <<"  (pos " <<ors->bodies(i)->name <<")"; break;
+      //case relPosTVT:  os <<"  (relPos " <<ors->bodies(i)->name <<'-' <<ors->bodies(j)->name <<")"; break;
+    case zoriTVT:    os <<"  (zori " <<ors->bodies(i)->name <<")"; break;
+    case rotTVT:     os <<"  (rot " <<ors->bodies(i)->name <<")"; break;
+    case contactTVT: os <<"  (contact " <<ors->bodies(i)->name <<' ' <<params(0) <<")"; break;
+    case gripTVT:    os <<"  (grip " <<ors->bodies(i)->name <<")"; break;
+    case qLinearTVT: os <<"  (qLinear " <<sum(params) <<")"; break;
+    case qSquaredTVT:os <<"  (qSquared " <<sum(params) <<")"; break;
+    case qSingleTVT: os <<"  (qSingle " <<ors->joints(-i)->from->name <<'-' <<ors->joints(-i)->to->name <<")"; break;
+    case qLimitsTVT: os <<"  (qLimitsTVT " <<sum(params) <<")"; break;
+    case qItselfTVT: os <<"  (qItselfTVT)"; break;
+    case comTVT:     os <<"  (COM)"; break;
+    case collTVT:    os <<"  (COLL)"; break;
+    case colConTVT:  os <<"  (colCon)"; break;
+    case zalignTVT:  os <<"  (zalign " <<ors->bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors->bodies(j)->name)) <<"); params:" <<params; break;
+    case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }
   os
- <<"\n  y="  <<y
- <<"\t  v="  <<v
- <<"\n  y_target="  <<y_target
- <<"\t  v_target="  <<v_target
- <<"\n  y_ref="   <<y_ref
- <<"\t  v_ref="  <<v_ref
- <<"\n  y_prec="  <<y_prec
- <<"\t  v_prec="  <<v_prec
- <<"\n  Pgain="  <<Pgain
- <<"\t  Dgain="  <<Dgain
+ <<"\n  y=" <<y
+ <<"\t  v=" <<v
+ <<"\n  y_target=" <<y_target
+ <<"\t  v_target=" <<v_target
+ <<"\n  y_ref="  <<y_ref
+ <<"\t  v_ref=" <<v_ref
+ <<"\n  y_prec=" <<y_prec
+ <<"\t  v_prec=" <<v_prec
+ <<"\n  Pgain=" <<Pgain
+ <<"\t  Dgain=" <<Dgain
  <<"\n  y_error=" <<sqrDistance(y, y_target)
  <<"\t  v_error=" <<sqrDistance(v, v_target)
- <<"\t  error="   <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
+ <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
  <<endl;
 }
 
@@ -568,20 +568,20 @@ void TaskVariable::write(ostream &os) const {
 
 void reportAll(TaskVariableList& CS, ostream& os, bool onlyActives){
   for(uint i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
-      os  <<'['  <<i  <<"] "  <<*CS(i);
+      os <<'[' <<i <<"] " <<*CS(i);
     }
 }
 
 void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives){
   uint i, j, n=1;
-  os  <<"CVnames = {";
+  os <<"CVnames = {";
   for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
       for(j=0; j<CS(i)->y.N; j++){
-        os  <<"'"  <<n  <<'-'  <<CS(i)->name  <<j  <<"' ";
+        os <<"'" <<n <<'-' <<CS(i)->name <<j <<"' ";
         n++;
       }
     }
-  os  <<"};"  <<endl;
+  os <<"};" <<endl;
 }
 
 void reportState(TaskVariableList& CS, ostream& os, bool onlyActives){
@@ -589,9 +589,9 @@ void reportState(TaskVariableList& CS, ostream& os, bool onlyActives){
   uint i;
   MT::IOraw=true;
   for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
-      os  <<CS(i)->y;
+      os <<CS(i)->y;
     }
-  os  <<endl;
+  os <<endl;
 }
 
 void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t){
@@ -603,10 +603,10 @@ void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t){
         else  e=0.;
       else
         e=norm(CS(i)->y - CS(i)->y_target);
-      os  <<e  <<' ';
+      os <<e <<' ';
       E += e; //*CS(i)->y_prec;
     }
-  os  <<E  <<endl;
+  os <<E <<endl;
 }
 
 void activateAll(TaskVariableList& CS, bool active){
@@ -684,7 +684,7 @@ double getCost_obsolete(TaskVariableList& CS, const arr& W, int t){
       e=sumOfSqr(CS(i)->y - CS(i)->y_target);
     }
     C += e*CS(i)->y_prec;
-    //cout  <<"cost("  <<CS(i)->name  <<") = "  <<e  <<", "  <<e*CS(i)->y_prec  <<endl;
+    //cout <<"cost(" <<CS(i)->name <<") = " <<e <<", " <<e*CS(i)->y_prec <<endl;
   }
   return C;
 }
@@ -737,7 +737,7 @@ void bayesianIterateControl_obsolete(TaskVariableList& CS,
     if(dq.absMax()<eps) break;
   }
   if(j==maxIter) HALT("warning: IK didn't converge (|last step|=" <<dq.absMax() <<")");
-  else cout  <<"IK converged after steps="  <<j  <<endl;
+  else cout <<"IK converged after steps=" <<j <<endl;
 }
 
 void additiveControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
@@ -797,7 +797,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule
       a[t] = tmp * (Ainv[t-1]*a[t-1] + r[t-1]);
       inverse_SymPosDef(Ainv[t](), Winv + tmp);
 
-      //cout  <<"a\n"  <<a[t]  <<endl  <<Ainv[t]  <<endl;
+      //cout <<"a\n" <<a[t] <<endl <<Ainv[t] <<endl;
 
       //compute (z, Z)
       if(k && t<T-1){
@@ -810,7 +810,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule
         Zinv[t].setDiag(1e10); //fixes the end posture!, use 1e-5 otherwise
       }
 
-      //cout  <<"z\n"  <<z[t]  <<endl  <<Zinv[t]  <<endl;
+      //cout <<"z\n" <<z[t] <<endl <<Zinv[t] <<endl;
 
       //compute (r, R)
       //if(k) hatq[t]()=.2*b[t]+.8*hatq[t]; else hatq[t]()=a[t];
@@ -830,30 +830,30 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule
       }
       r[t]() += R[t] * hatq[t];
 
-      //cout  <<"r\n"  <<r[t]  <<endl  <<R[t]  <<endl;
+      //cout <<"r\n" <<r[t] <<endl <<R[t] <<endl;
 
       //compute (b, B);
       Binv[t] = Ainv[t] + Zinv[t] + R[t];
-      //cout  <<"Binv\n"  <<Binv[t]  <<endl;
+      //cout <<"Binv\n" <<Binv[t] <<endl;
       inverse_SymPosDef(B[t](), Binv[t]);
       b[t] = B[t] * (Ainv[t]*a[t] + Zinv[t]*z[t] + r[t]);
 
-      //cout  <<"b\n"  <<b[t]  <<endl  <<B[t]  <<endl;
+      //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
       //display
       if(display>0){
         ors->setJointState(b[t]);
         ors->calcNodeFramesFromEdges();
-        //if(t==1 || !(t%display)){ gl->text.clr()  <<k  <<':'  <<t; gl->update(); }
-        //glGrabImage(img); write_ppm(img, STRING("imgs/plan_" <<std::setfill('0')  <<std::setw(3)  <<k <<std::setfill('0')  <<std::setw(3)  <<((k&1)?T-t:t) <<".ppm"), true);
+        //if(t==1 || !(t%display)){ gl->text.clr() <<k <<':' <<t; gl->update(); }
+        //glGrabImage(img); write_ppm(img, STRING("imgs/plan_" <<std::setfill('0') <<std::setw(3) <<k <<std::setfill('0') <<std::setw(3) <<((k&1)?T-t:t) <<".ppm"), true);
       }
 
       if(repeat){
         //meassure offset
         double off=sqrDistance(W, b[t], hatq[t]);
-        //cout  <<"off = "  <<off  <<endl;
+        //cout <<"off = " <<off <<endl;
         if(false && k>0 && off>.05){
-          //cout  <<t  <<" REPEAT: off = "  <<off  <<endl;
+          //cout <<t <<" REPEAT: off = " <<off <<endl;
           t-=dt;
         }
       }
@@ -861,8 +861,8 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule
 
 
     //evaluate trajectory
-    //cout  <<"variances over time = ";
-    //for(t=0;t<T;t++) cout  <<' '  <<trace(B[t]);
+    //cout <<"variances over time = ";
+    //for(t=0;t<T;t++) cout <<' ' <<trace(B[t]);
     double cost_t, cost1=.0, cost2=.0, length=0.;
     for(t=0;t<T;t++){
       ors->setJointState(b[t]);
@@ -872,14 +872,14 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule
       updateState(CS);
       if(t>0) cost2 += sqrDistance(W, b[t-1], b[t]);
       if(t>0) length += metricDistance(W, b[t-1], b[t]);
-      cost1 += cost_t = getCost(CS, W, t);  //cout  <<"cost = "  <<cost_t  <<endl;
+      cost1 += cost_t = getCost(CS, W, t);  //cout <<"cost = " <<cost_t <<endl;
     }
-    *os  <<std::setw(3)  <<k
-         <<"  time "  <<MT::timerRead(false)
-         <<"  cost1 "  <<cost1
-         <<"  cost2 "  <<cost2
-         <<"  length "  <<length
-         <<"  total-cost "  <<cost1+cost2  <<endl;
+    *os <<std::setw(3) <<k
+        <<"  time " <<MT::timerRead(false)
+        <<"  cost1 " <<cost1
+        <<"  cost2 " <<cost2
+        <<"  length " <<length
+        <<"  total-cost " <<cost1+cost2 <<endl;
   }
 
   q = b;

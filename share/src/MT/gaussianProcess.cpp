@@ -89,7 +89,7 @@ void GaussianProcess::recompute(){
     arr Yfull; Yfull.append(Y-Mu_func-mu); Yfull.append(dY);
     GinvY = Ginv * Yfull;
   }
-  //cout  <<"gram="  <<gram  <<" Ginv="  <<Ginv  <<endl;
+  //cout <<"gram=" <<gram <<" Ginv=" <<Ginv <<endl;
 }
 
 void GaussianProcess::appendObservation(const arr& x, double y){
@@ -104,7 +104,7 @@ void GaussianProcess::appendObservation(const arr& x, double y){
   arr iG=Ginv;
   recompute();
   double err=maxDiff(iG, Ginv);
-  CHECK(err<1e-6, "mis-updated inverse Gram matrix"  <<err  <<endl  <<iG  <<Ginv);
+  CHECK(err<1e-6, "mis-updated inverse Gram matrix" <<err <<endl <<iG <<Ginv);
 #endif
 }
 

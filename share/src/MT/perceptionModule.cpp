@@ -209,8 +209,8 @@ struct ShapeFitProblem:public OptimizationProblem {
       byteA img;
       copy(img, 10.f*distImage);
       cvDrawPoints(img, points);
-      //cout  <<x  <<endl;
-      //if(grad) cout  <<*grad  <<endl;
+      //cout <<x <<endl;
+      //if(grad) cout <<*grad <<endl;
       cvShow(img, "shape optimization", true);
     }
     return cost;
@@ -310,7 +310,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     rprop.dMax = 5.;
     rprop.init(3.);
     rprop.loop(params, problem, &cost, 1.e-1, 100);
-    // cout  <<"*** cost="  <<cost  <<" params="  <<params  <<" time="  <<MT::timerRead()  <<endl;
+    // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
     problem.f(NULL, params);
     byteA img; copy(img, 10.f*problem.distImage);
@@ -322,7 +322,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     }
   }
   
-  //cout  <<"best cost="  <<bestCost  <<" params="  <<bestParams  <<endl;
+  //cout <<"best cost=" <<bestCost <<" params=" <<bestParams <<endl;
   //type=2;
   params=bestParams;
   points=problem.points;
@@ -435,7 +435,7 @@ void PerceptionModule::step(){
               
         obj->diagDiff = obj->shapePoints3d[3*n/6] - obj->shapePoints3d[4*n/6];
         //for(uint d = 0; d < 6; d++)
-        //  cout  <<obj->shapePoints3d[d*n/6]  <<endl;
+        //  cout <<obj->shapePoints3d[d*n/6] <<endl;
         obj->orsShapeParams=ARR(x, y, h, 0);
       }
       if(obj->shapeType == 0){//sphere
@@ -507,7 +507,7 @@ void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects){
     // s->rel.p = -o->X.p + ors::Vector(obj->center3d(0), obj->center3d(1), obj->center3d(2));
     o->X.pos =  ors::Vector(obj->center3d(0), obj->center3d(1), obj->center3d(2));
     memmove(s->size, obj->orsShapeParams.p, 4*sizeof(double));
-    //cout  <<" object "  <<o->name  <<" pos "  <<o->X.p  <<" "  <<obj->center3d  <<endl;
+    //cout <<" object " <<o->name <<" pos " <<o->X.p <<" " <<obj->center3d <<endl;
   }
 }
 
@@ -536,6 +536,6 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
       sa->mesh.clear();
     }
     ba->X= b->X;
-    memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout  <<" pos "  <<ba->name  <<" "  <<ba->X.p  <<endl;
+    memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout <<" pos " <<ba->name <<" " <<ba->X.p <<endl;
   }
 }

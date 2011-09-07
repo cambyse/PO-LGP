@@ -22,7 +22,7 @@ void Data::loadToyData(const char *filename, uint labels){
   uint s=XY.d1-labels;
   X = XY.sub(0, -1, 0, s-1);
   Y = XY.sub(0, -1, s, -1);
-  cout  <<MT_HERE  <<"read #data="  <<X.d0  <<" #features="  <<X.d1  <<" #classes="  <<Y.d1  <<endl;
+  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
@@ -46,18 +46,18 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
     X.append(features);
     X.reshape(i+1, features.N);
   }
-  //cout  <<MYtrain  <<X  <<endl;
+  //cout <<MYtrain <<X <<endl;
   CHECK(L.N==X.d0, "");
   Y.resize(X.d0, max+1); Y.setZero();
   uint j;
   for(i=0; i<X.d0; i++) for(j=0; j<L(i).N; j++)  Y(i, L(i)(j))=1.;
-  cout  <<MT_HERE  <<"read #data="  <<X.d0  <<" #features="  <<X.d1  <<" #classes="  <<Y.d1  <<endl;
+  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 #if 0
 arr X;
 MT::load(X, "/home/mtoussai/share/data/USPS-handwritten-digits/usps-ascii.arr");
-cout  <<X.getDim()  <<endl;
+cout <<X.getDim() <<endl;
 
 byteA tmp;
 copy(tmp, X);
@@ -85,11 +85,11 @@ void Data::loadUSPS(const char *filename, bool inSharePath){
   for(i=0; i<Y.d0; i++) for(j=0; j<dY; j++)  Y(i, j, j)=1.;
   X.reshape(data.d0*dY, dX);
   Y.reshape(data.d0*dY, dY);
-  cout  <<MT_HERE  <<"read #data="  <<X.d0  <<" #features="  <<X.d1  <<" #classes="  <<Y.d1  <<endl;
+  cout <<MT_HERE <<"read #data=" <<X.d0 <<" #features=" <<X.d1 <<" #classes=" <<Y.d1 <<endl;
 }
 
 void Data::displayInput(uint i, uint height){
-  cout  <<"input="  <<X[i]  <<" output="  <<Y[i]  <<endl;
+  cout <<"input=" <<X[i] <<" output=" <<Y[i] <<endl;
   byteA img(X.d1);
   for(uint j=0; j<X.d1; j++) img(j) = (byte)(255.*X(i, j));
   img.reshape(height, img.N/height);

@@ -95,7 +95,7 @@ struct FutureMotionPlan:public Variable {
   double tau, totalTime, cost, ctrlTime;
   
   FutureMotionPlan():Variable("FutureMotionPlan"){ converged=executed=false; ctrlTime=0.; }
-  void write(ostream& os){ os  <<"FutureMotionPlan converged= "  <<converged  <<" cost= "  <<cost  <<" ctrlTime= "  <<ctrlTime; }
+  void write(ostream& os){ os <<"FutureMotionPlan converged= " <<converged <<" cost= " <<cost <<" ctrlTime= " <<ctrlTime; }
 };
 
 /*! The definition of the motion problem */

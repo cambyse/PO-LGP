@@ -181,8 +181,8 @@ double Vector::theta() const { return ::atan(p[2]/radius())+MT_PI/2.; }
 
 //{ I/O
 void Vector::write(std::ostream& os) const {
-  if(!MT::IOraw) os  <<'('  <<p[0]  <<' '  <<p[1]  <<' '  <<p[2]  <<')';
-  else os  <<' '  <<p[0]  <<' '  <<p[1]  <<' '  <<p[2];
+  if(!MT::IOraw) os <<'(' <<p[0] <<' ' <<p[1] <<' ' <<p[2] <<')';
+  else os <<' ' <<p[0] <<' ' <<p[1] <<' ' <<p[2];
 }
 void Vector::read(std::istream& is){
   if(!MT::IOraw) is >>"(" >>p[0] >>p[1] >>p[2] >>")";
@@ -335,10 +335,10 @@ void Matrix::setTensorProduct(const Vector& b, const Vector& c){
 }
 
 void Matrix::write(std::ostream& os) const {
-  os  <<"\n "  <<p[0]  <<' '  <<p[1]  <<' '  <<p[2];
-  os  <<"\n "  <<p[3]  <<' '  <<p[4]  <<' '  <<p[5];
-  os  <<"\n "  <<p[6]  <<' '  <<p[7]  <<' '  <<p[8];
-  os  <<endl;
+  os <<"\n " <<p[0] <<' ' <<p[1] <<' ' <<p[2];
+  os <<"\n " <<p[3] <<' ' <<p[4] <<' ' <<p[5];
+  os <<"\n " <<p[6] <<' ' <<p[7] <<' ' <<p[8];
+  os <<endl;
 }
 void Matrix::read(std::istream& is){
   NIY;
@@ -660,10 +660,10 @@ double* Quaternion::getMatrixGL(double* m) const {
   return m;
 }
 
-void Quaternion::writeNice(std::ostream& os) const { Vector v; os  <<"Quaternion: "  <<getDeg()  <<" around "  <<getVec(v)  <<"\n"; }
+void Quaternion::writeNice(std::ostream& os) const { Vector v; os <<"Quaternion: " <<getDeg() <<" around " <<getVec(v) <<"\n"; }
 void Quaternion::write(std::ostream& os) const {
-  if(!MT::IOraw) os  <<'('  <<p[0]  <<' '  <<p[1]  <<' '  <<p[2]  <<' '  <<p[3]  <<')';
-  else os  <<' '  <<p[0]  <<' '  <<p[1]  <<' '  <<p[2]  <<' '  <<p[3];
+  if(!MT::IOraw) os <<'(' <<p[0] <<' ' <<p[1] <<' ' <<p[2] <<' ' <<p[3] <<')';
+  else os <<' ' <<p[0] <<' ' <<p[1] <<' ' <<p[2] <<' ' <<p[3];
 }
 void Quaternion::read(std::istream& is){ is >>"(" >>p[0] >>p[1] >>p[2]  >>p[3] >>")"; normalize();}
 //}
@@ -943,13 +943,13 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
 //! operator <<
 void Transformation::write(std::ostream& os) const {
   bool space=false;
-  os  <<"<";
-  if(!pos.isZero()){ os  <<"t"  <<pos;  space=true; }
-  if(!vel.isZero()){ if(space) os  <<' ';  os  <<"v"  <<vel;  space=true; }
-  if(!angvel.isZero()){ if(space) os  <<' ';  os  <<"w"  <<angvel;  space=true; }
-  if(!rot.isZero()){ if(space) os  <<' ';  os  <<"q"  <<rot;  space=true; }
-  //if(s!=1.) os  <<" s("  <<s  <<") ";
-  os  <<">";
+  os <<"<";
+  if(!pos.isZero()){ os <<"t" <<pos;  space=true; }
+  if(!vel.isZero()){ if(space) os <<' ';  os <<"v" <<vel;  space=true; }
+  if(!angvel.isZero()){ if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
+  if(!rot.isZero()){ if(space) os <<' ';  os <<"q" <<rot;  space=true; }
+  //if(s!=1.) os <<" s(" <<s <<") ";
+  os <<">";
 }
 //! operator>>
 void Transformation::read(std::istream& is){
@@ -973,7 +973,7 @@ void Transformation::read(std::istream& is){
         //case 's': is>>"(">>x[0]>>")";                   scale(x[0]); break;
       case '|': is.putback('<'); return;
       case '>': return; //those symbols finish the reading without error
-      default: MT_MSG("unknown Transformation read tag: "  <<c  <<"abort reading this frame"); is.putback(c); return;
+      default: MT_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
     }
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");
   }
@@ -1057,7 +1057,7 @@ void ors::Mesh::setBox(){
   T.setCarray(tris , 36);
   V.reshape(8, 3);
   T.reshape(12, 3);
-  //cout  <<V  <<endl;  for(uint i=0;i<4;i++) cout  <<norm(V[i])  <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
 }
 
 void ors::Mesh::setTetrahedron(){
@@ -1068,7 +1068,7 @@ void ors::Mesh::setTetrahedron(){
   T.setCarray(tris , 12);
   V.reshape(4, 3);
   T.reshape(4, 3);
-  //cout  <<V  <<endl;  for(uint i=0;i<4;i++) cout  <<norm(V[i])  <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
 }
 
 void ors::Mesh::setOctahedron(){
@@ -1088,7 +1088,7 @@ void ors::Mesh::setOctahedron(){
   T.setCarray(tris , 24);
   V.reshape(6, 3);
   T.reshape(8, 3);
-  //cout  <<V  <<endl;  for(uint i=0;i<4;i++) cout  <<norm(V[i])  <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
 }
 
 void ors::Mesh::setDodecahedron(){
@@ -1460,23 +1460,23 @@ void ors::Mesh::fuseNearVertices(double tol){
   uintA p;
   uint i, j;
   
-  cout  <<"fusing vertices: #V="  <<V.d0  <<", sorting.."  <<std::flush;
-  //cout  <<V  <<endl;
+  cout <<"fusing vertices: #V=" <<V.d0 <<", sorting.." <<std::flush;
+  //cout <<V <<endl;
   //sort vertices lexically
   p.setStraightPerm(V.d0);
   COMP_V=&V;
   std::sort(p.p, p.pstop, COMP);
   permuteVertices(*this, p);
   
-  cout  <<"permuting.."  <<std::flush;
-  //cout  <<V  <<endl;
+  cout <<"permuting.." <<std::flush;
+  //cout <<V <<endl;
   p.setStraightPerm(V.d0);
   for(i=0; i<V.d0; i++){
     if(p(i)!=i) continue; //i has already been fused with p(i), and p(i) has already been checked...
     for(j=i+1; j<V.d0; j++){
       if(V(j, 0)-V(i, 0)>tol) break;
       if(MT::sqr(V(j, 0)-V(i, 0))+MT::sqr(V(j, 1)-V(i, 1))+MT::sqr(V(j, 2)-V(i, 2))<tol*tol){
-        //cout  <<"fusing "  <<i  <<" "  <<j  <<" "  <<V[i]  <<" "  <<V[j]  <<endl;
+        //cout <<"fusing " <<i <<" " <<j <<" " <<V[i] <<" " <<V[j] <<endl;
         p(j)=i;
       }
     }
@@ -1486,13 +1486,13 @@ void ors::Mesh::fuseNearVertices(double tol){
   for(i=0; i<T.d0; i++){ y(i, 0)=p(T(i, 0)); y(i, 1)=p(T(i, 1)); y(i, 2)=p(T(i, 2)); }
   T=y;
   
-  cout  <<"deleting tris.."  <<std::flush;
+  cout <<"deleting tris.." <<std::flush;
   deleteZeroTriangles(*this);
   
-  cout  <<"deleting verts.."  <<std::flush;
+  cout <<"deleting verts.." <<std::flush;
   deleteUnusedVertices();
   
-  cout  <<"#V="  <<V.d0  <<", done"  <<endl;
+  cout <<"#V=" <<V.d0 <<", done" <<endl;
 }
 
 void getVertexNeighorsList(const ors::Mesh& m, intA& Vt, intA& VT){
@@ -1577,9 +1577,9 @@ void ors::Mesh::clean(){
       //check all triangles that share A & B
       setSection(neighbors, VT[A], VT[B]);
       neighbors.removeAllValues(-1);
-      if(neighbors.N>2) MT_MSG("edge shared by more than 2 triangles "  <<neighbors);
+      if(neighbors.N>2) MT_MSG("edge shared by more than 2 triangles " <<neighbors);
       neighbors.removeValue(i);
-      //if(!neighbors.N) cout  <<"mesh.clean warning: edge has only one triangle that shares it"  <<endl;
+      //if(!neighbors.N) cout <<"mesh.clean warning: edge has only one triangle that shares it" <<endl;
       
       //orient them correctly
       for(l=0; l<neighbors.N; l++){
@@ -1643,8 +1643,8 @@ void ors::Mesh::clean(){
     }
   }
   if(k<T.d0){
-    cout  <<"mesh.clean warning: not all triangles connected: " <<k  <<"<"  <<T.d0  <<endl;
-    cout  <<"WARNING: cutting of all non-connected triangles!!"  <<endl;
+    cout <<"mesh.clean warning: not all triangles connected: " <<k <<"<" <<T.d0 <<endl;
+    cout <<"WARNING: cutting of all non-connected triangles!!" <<endl;
     Tnew.resizeCopy(k, 3);
     T=Tnew;
     deleteUnusedVertices();
@@ -1697,10 +1697,10 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET){
   ET.resizeCopy(k, 10);
   Et.resizeCopy(k);
   
-  cout  <<"\n#edges="  <<k
-        <<"\nedge=\n"  <<EV
-        <<"\n@neighs=\n"  <<Et
-        <<"\nneighs=\n"  <<ET  <<endl;
+  cout <<"\n#edges=" <<k
+       <<"\nedge=\n" <<EV
+       <<"\n@neighs=\n" <<Et
+       <<"\nneighs=\n" <<ET <<endl;
 }
 
 void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT){
@@ -1726,7 +1726,7 @@ void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT){
     }
   }
   
-  //cout  <<Tt  <<TT  <<endl;
+  //cout <<Tt <<TT <<endl;
 }
 
 void ors::Mesh::skin(uint start){
@@ -1764,13 +1764,13 @@ void ors::Mesh::skin(uint start){
     Tnew(k, 0)=T(t, 0); Tnew(k, 1)=T(t, 1); Tnew(k, 2)=T(t, 2);
   }
   T=Tnew;
-  cout  <<T  <<endl;
+  cout <<T <<endl;
 }
 
 void ors::Mesh::readFile(const char* filename){
   bool loaded=false;
   const char *type = filename+(strlen(filename)-3);
-  //cout  <<"reading mesh file '"  <<filename  <<"' of type '"  <<type <<"'"  <<endl;
+  //cout <<"reading mesh file '" <<filename <<"' of type '" <<type <<"'" <<endl;
   if(!strcmp(type, "obj")){ readObjFile(filename); loaded=true; }
   if(!strcmp(type, "off")){ readOffFile(filename); loaded=true; }
   if(!strcmp(type, "ply")){ readPlyFile(filename); loaded=true; }
@@ -1782,9 +1782,9 @@ void ors::Mesh::readFile(const char* filename){
 void ors::Mesh::writeTriFile(const char* filename){
   ofstream os;
   MT::open(os, filename);
-  os  <<"TRI"  <<endl  <<endl
- <<V.d0  <<endl
- <<T.d0  <<endl  <<endl;
+  os <<"TRI" <<endl <<endl
+ <<V.d0 <<endl
+ <<T.d0 <<endl <<endl;
   
   V.write(os, " ", "\n ", "  ");
   os <<endl <<endl;
@@ -1806,9 +1806,9 @@ void ors::Mesh::writeOffFile(const char* filename){
   ofstream os;
   MT::open(os, filename);
   uint i;
-  os  <<"OFF\n"  <<V.d0  <<' '  <<T.d0  <<' '  <<0  <<endl;
-  for(i=0; i<V.d0; i++) os  <<V(i, 0)  <<' '  <<V(i, 1)  <<' '  <<V(i, 2)  <<endl;
-  for(i=0; i<T.d0; i++) os  <<3  <<' '  <<T(i, 0)  <<' '  <<T(i, 1)  <<' '  <<T(i, 2)  <<endl;
+  os <<"OFF\n" <<V.d0 <<' ' <<T.d0 <<' ' <<0 <<endl;
+  for(i=0; i<V.d0; i++) os <<V(i, 0) <<' ' <<V(i, 1) <<' ' <<V(i, 2) <<endl;
+  for(i=0; i<T.d0; i++) os <<3 <<' ' <<T(i, 0) <<' ' <<T(i, 1) <<' ' <<T(i, 2) <<endl;
 }
 
 void ors::Mesh::readOffFile(const char* filename){
@@ -1856,13 +1856,13 @@ void ors::Mesh::readStlFile(const char* filename){
   is >>"solid" >>name;
   uint i, k=0, k0;
   double x, y, z;
-  cout  <<"reading STL file '" <<filename <<"' object name '" <<name  <<"'..." <<endl;
+  cout <<"reading STL file '" <<filename <<"' object name '" <<name <<"'..." <<endl;
   V.resize(10000);
   //1st pass
   for(i=0, k=0;; i++){
     k0=k;
     if(k>V.N-10) V.resizeCopy(2*V.N);
-    if(!(i%100)) cout  <<"\r"  <<i  <<' '  <<i*7;
+    if(!(i%100)) cout <<"\r" <<i <<' ' <<i*7;
     if(MT::peerNextChar(is)!='f') break;
     is >>(const char*)"facet";
     is >>(const char*)"normal" >>x >>y >>z;  MT::skip(is);
@@ -1875,15 +1875,15 @@ void ors::Mesh::readStlFile(const char* filename){
     if(!is.good()){
       MT_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
       is.clear();
-      cout  <<1  <<endl;
+      cout <<1 <<endl;
       MT::skipUntil(is, "endfacet");
-      cout  <<2  <<endl;
+      cout <<2 <<endl;
       k=k0;
     }
   }
   is >>"endsolid";
-  if(!is.good()) MT_MSG("couldn't read STL end tag (line"  <<i*7+2);
-  cout  <<"... STL file read: #tris="  <<i  <<" #lines="  <<i*7+2  <<endl;
+  if(!is.good()) MT_MSG("couldn't read STL end tag (line" <<i*7+2);
+  cout <<"... STL file read: #tris=" <<i <<" #lines=" <<i*7+2 <<endl;
   CHECK(!(k%9), "not mod 9..");
   V.resizeCopy(k/3, 3);
   T.resize(k/9, 3);
@@ -2326,11 +2326,11 @@ void ors::Body::reset(){
 }
 
 void ors::Body::write(std::ostream& os) const {
-  os  <<"X="  <<X  <<" ";
+  os <<"X=" <<X <<" ";
   listWrite(ats, os);
 }
 
-#define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): "  <<x); is.clear(); return; }
+#define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
 
 void ors::Body::read(std::istream& is){
   reset();
@@ -2395,7 +2395,7 @@ void ors::Shape::read(std::istream& is){
   reset();
   anyListRead(ats, is);
   if(!is.good()) HALT("shape read error");
-  //listWrite(ats, cout); cout  <<endl;
+  //listWrite(ats, cout); cout <<endl;
   
   double *dval;
   MT::String *sval;
@@ -2430,7 +2430,7 @@ void ors::Shape::reset(){
 //
 
 void ors::Joint::write(std::ostream& os) const {
-  os  <<"A="  <<A  <<" Q="  <<Q  <<" B="  <<B  <<' ';
+  os <<"A=" <<A <<" Q=" <<Q <<" B=" <<B <<' ';
   listWrite(ats, os);
 }
 
@@ -2623,7 +2623,7 @@ void ors::Graph::computeNaturalQmetric(arr& W){
 /*!\brief revert the topological orientation of a joint (edge),
    e.g., when choosing another body as root of a tree */
 void ors::Graph::revertJoint(ors::Joint *e){
-  cout  <<"reverting edge ("  <<e->from->name  <<' '  <<e->to->name  <<")"  <<endl;
+  cout <<"reverting edge (" <<e->from->name <<' ' <<e->to->name <<")" <<endl;
   //revert
   uint i=e->ifrom;  e->ifrom=e->ito;  e->ito=i;
   graphMakeLists(bodies, joints);
@@ -3020,10 +3020,10 @@ void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErro
         tempAngleDeg = q(n); //dm *180.0/MT_PI;
         if(tempAngleDeg <= e->p[0]){ // joint angle is smaller than lower bound (e->p[0])--> clip it
         e->Q.r.setDeg(e->p[0], VEC_x);
-        //  cout <<"lower clipping " <<tempAngleDeg  <<endl;
+        //  cout <<"lower clipping " <<tempAngleDeg <<endl;
         }else if(tempAngleDeg >= e->p[1]){ // joint angle is larger than upper bound (e->p[1])--> clip it
         e->Q.r.setDeg(e->p[1], VEC_x);
-        //  cout <<"upper clipping " <<tempAngleDeg  <<endl;
+        //  cout <<"upper clipping " <<tempAngleDeg <<endl;
         }
         }*/
         
@@ -3053,11 +3053,11 @@ void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErro
         if(tempAngleDeg <= e->p[0]){ // joint angle is smaller than lower bound (e->p[0])--> clip it
         rot1.setRadX(e->p[0]);
         rot2.setRadY(e->p[0]);
-        //  cout <<"lower clipping " <<tempAngleDeg  <<endl;
+        //  cout <<"lower clipping " <<tempAngleDeg <<endl;
         }else if(tempAngleDeg >= e->p[1]){ // joint angle is larger than upper bound (e->p[1])--> clip it
         rot1.setRadX(e->p[1]);
         rot2.setRadY(e->p[1]);
-        //  cout <<"upper clipping " <<tempAngleDeg  <<endl;
+        //  cout <<"upper clipping " <<tempAngleDeg <<endl;
         }
         }*/
         
@@ -3079,10 +3079,10 @@ void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErro
         tempDeflection = q(n);
         if(tempDeflection <= e->p[0]){ // joint angle is smaller than lower bound (e->p[0])--> clip it
         e->Q.p = e->p[0]*VEC_x;
-        cout <<"lower clipping " <<tempDeflection  <<endl;
+        cout <<"lower clipping " <<tempDeflection <<endl;
         }else if(tempDeflection >= e->p[1]){ // joint angle is larger than upper bound (e->p[1])--> clip it
         e->Q.p = e->p[1]*VEC_x;
-        cout <<"upper clipping " <<tempDeflection  <<endl;
+        cout <<"upper clipping " <<tempDeflection <<endl;
         }
         }*/
         
@@ -3299,7 +3299,7 @@ void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau){
   static ors::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
-  //cout  <<tree  <<endl;
+  //cout <<tree <<endl;
   //ors::fwdDynamics_aba_1D(qdd, tree, qd, tau);
   //ors::fwdDynamics_aba_nD(qdd, tree, qd, tau);
   ors::fwdDynamics_MF(qdd, tree, qd, tau);
@@ -3582,20 +3582,20 @@ void ors::Graph::write(std::ostream& os) const {
   Shape *s;
   uint i, j;
   for_list(j, n, bodies){
-    os  <<"body "  <<n->name  <<" { ";
-    n->write(os);  os  <<" }\n";
+    os <<"body " <<n->name <<" { ";
+    n->write(os);  os <<" }\n";
   }
-  os  <<std::endl;
+  os <<std::endl;
   for_list(i, s, shapes){
-    os  <<"shape ("  <<s->body->name  <<"){ ";
-    s->write(os);  os  <<" }\n";
+    os <<"shape (" <<s->body->name <<"){ ";
+    s->write(os);  os <<" }\n";
   }
-  os  <<std::endl;
+  os <<std::endl;
   for_list(i, e, joints){
-    os  <<"joint ("  <<e->from->name  <<' '  <<e->to->name  <<"){ ";
-    e->write(os);  os  <<" }\n";
+    os <<"joint (" <<e->from->name <<' ' <<e->to->name <<"){ ";
+    e->write(os);  os <<" }\n";
   }
-//   os  <<"</slGraph>"  <<std::endl;
+//   os <<"</slGraph>" <<std::endl;
 }
 
 #define DEBUG(x) //x
@@ -3614,18 +3614,18 @@ void ors::Graph::read(std::istream& is){
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
     if(!tag.N()) break; //end of file
-    DEBUG(cout  <<"tag="  <<tag  <<endl);
+    DEBUG(cout <<"tag=" <<tag <<endl);
     if(tag=="body"){ //node
       name.read(is, " \t\n\r", " \t\n\r({", false);
-      DEBUG(cout  <<"name="  <<name  <<endl);
+      DEBUG(cout <<"name=" <<name <<endl);
       n=new Body(bodies);
       n->name = name;
       if(MT::peerNextChar(is)=='('){ MT::parse(is, "("); MT::parse(is, ")"); }
       MT::parse(is, "{");
-      if(is.fail()) RERR("can't read opening brace for body (" <<n->name  <<")");
-      try { n->read(is); } catch (...) RERR("error in parsing body (" <<n->name  <<")");
+      if(is.fail()) RERR("can't read opening brace for body (" <<n->name <<")");
+      try { n->read(is); } catch (...) RERR("error in parsing body (" <<n->name <<")");
       MT::parse(is, "}");
-      if(is.fail()) RERR("can't read closing brace for body (" <<n->name  <<")");
+      if(is.fail()) RERR("can't read closing brace for body (" <<n->name <<")");
       if(n->shapes.N==1){ //parsing has implicitly added a shape...
         s=n->shapes(0);
         s->index=shapes.N;
@@ -3635,15 +3635,15 @@ void ors::Graph::read(std::istream& is){
     }
     if(tag=="joint"){ //edge
       name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
-      DEBUG(cout  <<"name="  <<name  <<endl);
+      DEBUG(cout <<"name=" <<name <<endl);
       t=f=NULL;
       MT::parse(is, "(");
       node1.read(is, " ", " , )", true);
-      DEBUG(cout  <<"node1="  <<node1  <<endl);
+      DEBUG(cout <<"node1=" <<node1 <<endl);
       for_list(j, n, bodies) if(n->name==node1){ f=n; break; }
       if(!f) RERR("reading edge: don't know from-name " <<node1);
       node2.read(is, " ", " , )", true);
-      DEBUG(cout  <<"node2="  <<node2 <<endl);
+      DEBUG(cout <<"node2=" <<node2 <<endl);
       for_list(j, n, bodies) if(n->name==node2){ t=n; break; }
       if(!t) RERR("reading edge: don't know to-name " <<node2);
       e=new Joint(joints, f, t);
@@ -3656,11 +3656,11 @@ void ors::Graph::read(std::istream& is){
     }
     if(tag=="shape"){ //edge
       name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
-      DEBUG(cout  <<"name="  <<name  <<endl);
+      DEBUG(cout <<"name=" <<name <<endl);
       f=NULL;
       MT::parse(is, "(");
       node1.read(is, " ", " )", true);
-      DEBUG(cout  <<"node1="  <<node1  <<endl);
+      DEBUG(cout <<"node1=" <<node1 <<endl);
       for_list(j, n, bodies) if(n->name==node1){ f=n; break; }
       if(!f) RERR("reading shape: don't know from-name " <<node1);
       s=new Shape(shapes, f);
@@ -3678,7 +3678,7 @@ void ors::Graph::read(std::istream& is){
       Qlin.readTagged(qlinfile, "Qlin");
       Qoff.readTagged(qlinfile, "Qoff");
       Qinv.readTagged(qlinfile, "Qinv");
-      //cout  <<Qlin  <<Qoff  <<Qinv  <<endl;
+      //cout <<Qlin <<Qoff <<Qinv <<endl;
       continue;
     }
     RERR("can't parse element of type '" <<tag <<"'");
@@ -3692,19 +3692,19 @@ void ors::Graph::read(std::istream& is){
 void ors::Graph::reportProxies(std::ostream *os){
   uint i;
   int a, b;
-  (*os)  <<"Proximity report: #"  <<proxies.N  <<endl;
+  (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for(i=0; i<proxies.N; i++){
     a=proxies(i)->a;
     b=proxies(i)->b;
     (*os)
-   <<i  <<" ("
-   <<a  <<':'  <<(a!=-1?shapes(a)->body->name.p:"earth")  <<")-("
-   <<b  <<':'  <<(b!=-1?shapes(b)->body->name.p:"earth")
-   <<") ["  <<proxies(i)->age
-   <<"] d="  <<proxies(i)->d
-    // <<" posA="  <<proxies(i)->posA
-    // <<" posB="  <<proxies(i)->posB
-    // <<" norm="  <<proxies(i)->posB-proxies(i)->posA
+   <<i <<" ("
+   <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
+   <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
+   <<") [" <<proxies(i)->age
+   <<"] d=" <<proxies(i)->d
+    // <<" posA=" <<proxies(i)->posA
+    // <<" posB=" <<proxies(i)->posB
+    // <<" norm=" <<proxies(i)->posB-proxies(i)->posA
    <<endl;
   }
 }
@@ -3754,7 +3754,7 @@ void ors::Graph::reportGlue(std::ostream *os){
   uint i, A, B;
   Body *a, *b;
   bool ag, bg;
-  (*os)  <<"Glue report: "  <<endl;
+  (*os) <<"Glue report: " <<endl;
   for(i=0; i<proxies.N; i++){
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
@@ -3764,13 +3764,13 @@ void ors::Graph::reportGlue(std::ostream *os){
     
     if(ag || bg){
       (*os)
-     <<i  <<' '
-     <<a->index  <<','  <<a->name  <<'-'
-     <<b->index  <<','  <<b->name
-     <<" d="  <<proxies(i)->d
-      // <<" posA="  <<proxies(i)->posA
-      // <<" posB="  <<proxies(i)->posB
-     <<" norm="  <<proxies(i)->posB-proxies(i)->posA
+     <<i <<' '
+     <<a->index <<',' <<a->name <<'-'
+     <<b->index <<',' <<b->name
+     <<" d=" <<proxies(i)->d
+      // <<" posA=" <<proxies(i)->posA
+      // <<" posB=" <<proxies(i)->posB
+     <<" norm=" <<proxies(i)->posB-proxies(i)->posA
      <<endl;
     }
   }
@@ -3872,7 +3872,7 @@ void ors::Graph::contactsToForces(double hook, double damp){
       force.setZero();
       force += (hook) * trans; //*(1.+ hook*hook*d*d)
       force += damp * transvel;
-      SL_DEBUG(1, cout  <<"applying force: ["  <<a  <<':'  <<b  <<"] "  <<force  <<endl);
+      SL_DEBUG(1, cout <<"applying force: [" <<a <<':' <<b <<"] " <<force <<endl);
       
       if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
       if(b!=-1) addForce(-force, shapes(b)->body, proxies(i)->posB);

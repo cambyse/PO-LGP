@@ -947,10 +947,10 @@ struct Link {
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
-    os  <<"*type="  <<type  <<" index="  <<index  <<" parent="  <<parent  <<endl
-   <<" XAQ="  <<X  <<A  <<Q  <<endl
-   <<" cft="  <<com  <<force  <<torque  <<endl
-   <<" mass="  <<mass  <<inertia  <<endl;
+    os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
+   <<" XAQ=" <<X <<A <<Q <<endl
+   <<" cft=" <<com <<force <<torque <<endl
+   <<" mass=" <<mass <<inertia <<endl;
   }
 };
 

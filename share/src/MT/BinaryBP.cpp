@@ -8,11 +8,11 @@
 //
 
 /*double ATANH(double x){
-  //if(fabs(x)>.999) cout  <<"high atanh(x), x="  <<x ;
+  //if(fabs(x)>.999) cout <<"high atanh(x), x=" <<x ;
   return atanh(x);
 }
 double TANH(double x){
-  //if(fabs(x)>10.) cout  <<"high tanh(x), x="  <<x ;
+  //if(fabs(x)>10.) cout <<"high tanh(x), x=" <<x ;
   return tanh(x);
 }*/
 #define TANH tanh
@@ -20,7 +20,7 @@ double TANH(double x){
 double RATIO(double a, double b){
   double c=(1.-MT::sqr(TANH(a)));
   double d=(1.-MT::sqr(TANH(b)));
-  //if(fabs(d)<1e-5) cout  <<"low quotient! 1/x, x="  <<d;
+  //if(fabs(d)<1e-5) cout <<"low quotient! 1/x, x=" <<d;
   return c/d;
 }
 double LOG(double x){ //return log(x);
@@ -77,17 +77,17 @@ double KLD_pair_probVsFactor(double J, double a, double b, double thi, double th
   pairExp_to_Table(F, J, thi, thj);
   double D=0.;
   for(uint x=0; x<2; x++) for(uint y=0; y<2; y++)  D += B(x, y) * log(B(x, y)/F(x, y));
-  cout  <<"D1="  <<D;
+  cout <<"D1=" <<D;
   D=0.;
   for(uint x=0; x<2; x++) for(uint y=0; y<2; y++)  D += B(x, y) * ((2.*x-1.)*(a-thi)+ (2.*y-1.)*(b-thj));
   D -= log(sumB);
-  cout  <<" D3="  <<D;
+  cout <<" D3=" <<D;
   D = (B(1, 0)+B(1, 1)-B(0, 0)-B(0, 1))*(a-thi)
       + (B(0, 1)+B(1, 1)-B(0, 0)-B(1, 0))*(b-thj)
       - log(sumB);
-  cout  <<" D2="  <<D;
+  cout <<" D2=" <<D;
   D = -log(4.*(cJ*ca*cb*down)) + (a-thi)*(ta+tJ*tb)/down + (b-thj)*(tb+tJ*ta)/down;
-  cout  <<" D4="  <<D  <<endl;
+  cout <<" D4=" <<D <<endl;
   return D;
 #endif
 }
@@ -118,7 +118,7 @@ double KLD(const BinaryPairFG &B, const BinaryPairFG &F){
 //
 
 void BinaryPairFG::write(ostream& os){
-  os  <<"logZ="  <<logZ  <<"\nedges=\n"  <<edges  <<"\nf_ij=\n"  <<f_ij  <<"\nf_i=\n"  <<f_i  <<endl;
+  os <<"logZ=" <<logZ <<"\nedges=\n" <<edges <<"\nf_ij=\n" <<f_ij <<"\nf_i=\n" <<f_i <<endl;
 }
 
 //===========================================================================
@@ -657,11 +657,11 @@ void BinaryBPNet::report(ostream &os){
     M(e->ifrom, e->ito) = e->mf;
     M(e->ito, e->ifrom) = e->mb;
   }
-  cout  <<"** BinaryBPNet:"
-        <<"\n  theta=  "  <<theta
-        <<"\n  beliefs="  <<b
-        <<"\n  J=\n"  <<J
-        <<"\n  messages=\n"  <<M  <<endl;
+  cout <<"** BinaryBPNet:"
+       <<"\n  theta=  " <<theta
+       <<"\n  beliefs=" <<b
+       <<"\n  J=\n" <<J
+       <<"\n  messages=\n" <<M <<endl;
 }
 
 void BinaryBPNet::getSamples(uintA &samples, uint S){
@@ -674,10 +674,10 @@ void BinaryBPNet::getSamples(uintA &samples, uint S){
     for_list(i, n, nodes) n->theta=phi(i); //reset all evidences
     zeroMessages();                                 //reset all messages
     for_list(i, n, nodes){
-      for(t=0; t<100; t++) stepBP();     //do inference for some time
+      for(t=0; t<100; t++) stepBP();    //do inference for some time
       //get the belief at node i
       //translate to a probability
-      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, i)=1;    //sample a state of node i
+      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, i)=1;   //sample a state of node i
       if(samples(s, i)) n->theta=1000.; else n->theta=-1000.; //set hard evidence at node i
     }
   }
@@ -715,7 +715,7 @@ void BinaryBPGrid::step(uint iter){
 
   uint k, y, x, i, j;
   for(k=0; k<iter; k++){
-    //cout  <<'.'  <<std::flush;
+    //cout <<'.' <<std::flush;
     //recompute all messages
     for(y=0; y<Y; y++){
       for(x=0; x<X; x++) MOD { i=y*X+x; ud(i)=phi(i)+u(i)+d(i); }
@@ -728,7 +728,7 @@ void BinaryBPGrid::step(uint iter){
           for(y=Y-1; y--;)  MOD { i=y*X+x; j=i+X;  msg_eq(u(i), u(j)+lr(j));  }
           }
   }
-  //cout  <<"done"  <<endl;
+  //cout <<"done" <<endl;
   
   //-- posterior beliefs
   b.resize(Y*X);

@@ -153,7 +153,7 @@ void ors::Camera::upright(){
 
 void ors::Camera::setCameraProjectionMatrix(const arr& P){
   //P is in standard convention -> computes fixedProjectionMatrix in OpenGL convention from this
-  cout  <<"desired P="  <<P  <<endl;
+  cout <<"desired P=" <<P <<endl;
   arr Kview=ARR(200, 0, 200, 0, 200, 200, 0, 0, 1); //OpenGL's calibration matrix
   Kview.reshape(3, 3);
   //arr glP=inverse(Kview)*P;
@@ -163,7 +163,7 @@ void ors::Camera::setCameraProjectionMatrix(const arr& P){
   glP[2]()*=.99; glP(2, 2)*=1.02; //some hack to invent a culling coordinate (usually determined via near and far...)
   glP = ~glP;
   glP *= 1./glP(3, 3);
-  cout  <<"glP="  <<glP  <<endl;
+  cout <<"glP=" <<glP <<endl;
   //glLoadMatrixd(glP.p);
   fixedProjectionMatrix = glP;
 }
@@ -946,7 +946,7 @@ void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom){
 /*void glWatchImage(const floatA &x, bool wait, float zoom){
   double ma=x.max();
   double mi=x.min();
-  if(wait) cout  <<"watched image min/max = "  <<mi  <<' '  <<ma  <<endl;
+  if(wait) cout <<"watched image min/max = " <<mi <<' ' <<ma <<endl;
   byteA img;
   img.resize(x.d0*x.d1);
   img.setZero();
@@ -963,7 +963,7 @@ void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){
   if(!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double ma=x.max();
-  text.clr()  <<"display" <<win <<" max=" <<ma <<endl;
+  text.clr() <<"display" <<win <<" max=" <<ma <<endl;
   byteA img;
   img.resize(d0*d1);
   img.setZero();
@@ -980,8 +980,8 @@ void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win)
   if(!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double mi=x.min(), ma=x.max();
-  text.clr()  <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
-  cout  <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
+  text.clr() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
+  cout <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
   byteA img;
   img.resize(d0*d1, 4);
   img.setZero();
@@ -1012,7 +1012,7 @@ bool glClickUI(void *p, OpenGL *gl){
   if(b) gl->update();
   int t=((glUI*)p)->top;
   if(t!=-1){
-    cout  <<"CLICK! on button #"  <<t  <<endl;
+    cout <<"CLICK! on button #" <<t <<endl;
     gl->exitEventLoop();
     return false;
   }
@@ -1209,14 +1209,14 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //the projection matrix (without viewport-calibration) from OpenGL:
   P.resize(4, 4);
   glGetDoublev(GL_PROJECTION_MATRIX, P.p);
-  //cout  <<"OpenGL's glP="  <<P  <<"\nK="  <<Kview  <<endl;
+  //cout <<"OpenGL's glP=" <<P <<"\nK=" <<Kview <<endl;
   //double sca=P.elem(0);
   P = ~P;      //OpenGL uses transposed matrix storage convention
   P.delRows(2); //We're not interested in OpenGL's ``z-culling-coordinate'', only in the perspective coordinate (divisor) w
   //P[2]() *=-1.;
   //the full camera projection matrix:
   P = Kview*P;
-  //cout  <<"OpenGL's P="  <<P  <<endl;
+  //cout <<"OpenGL's P=" <<P <<endl;
   
   /*
   double zn=camera.zNear, zf=camera.zFar, f=1./tan(MT_PI/180.*camera.heightAngle/2.);
@@ -1225,10 +1225,10 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   Frust(2, 2) = (zf+zn)/(zn-zf);
   Frust(3, 2) = -1.;
   Frust(2, 3) = 2.*zf*zn/(zn-zf);
-  cout  <<"OpenGL P="  <<P  <<"K="  <<Kview  <<"znear="  <<camera.zNear  <<"zfar="  <<camera.zFar  <<endl;
-  cout  <<"Frust="  <<Frust  <<endl;;
+  cout <<"OpenGL P=" <<P <<"K=" <<Kview <<"znear=" <<camera.zNear <<"zfar=" <<camera.zFar <<endl;
+  cout <<"Frust=" <<Frust <<endl;;
   Frust.delRows(2); //We're not interested in OpenGL's ``z-coordinate'', only in the perspective coordinate (divisor) w
-  cout  <<"K="  <<Kview*Frust  <<endl;
+  cout <<"K=" <<Kview*Frust <<endl;
   */
   
   //draw focus?
@@ -1249,7 +1249,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
   CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
   
-  //if(!drawers.N){ MT_MSG("OpenGL: nothing to be drawn -- add draw routines!"); if(!text.N()) text  <<"<nothing to draw>"; }
+  //if(!drawers.N){ MT_MSG("OpenGL: nothing to be drawn -- add draw routines!"); if(!text.N()) text <<"<nothing to draw>"; }
   for(uint i=0; i<drawers.N; i++)(*drawers(i).call)(drawers(i).classP);
   
   //draw text
@@ -1363,7 +1363,7 @@ int OpenGL::watch(const char *txt){
 //! update the view (in Qt: also starts displaying the window)
 bool OpenGL::update(const char *txt){
   pressedkey=0;
-  if(txt) text.clr()  <<txt;
+  if(txt) text.clr() <<txt;
   redrawEvent();
   processEvents();
   return !pressedkey;
@@ -1515,12 +1515,12 @@ void OpenGL::setOffscreen(int width, int height){
 //! print some info on the selection buffer
 void OpenGL::reportSelection(){
   uint i;
-  std::cout  <<"selection report: mouse="  <<mouseposx  <<" "  <<mouseposy  <<" -> #selections="  <<selection.N  <<std::endl;
+  std::cout <<"selection report: mouse=" <<mouseposx <<" " <<mouseposy <<" -> #selections=" <<selection.N <<std::endl;
   for(i=0; i<selection.N; i++){
-    if(topSelection == &selection(i)) std::cout  <<"  TOP: "; else std::cout  <<"       ";
+    if(topSelection == &selection(i)) std::cout <<"  TOP: "; else std::cout <<"       ";
     std::cout
-     <<"name = 0x"  <<std::hex  <<selection(i).name  <<std::dec
-     <<" min-depth:"  <<selection(i).dmin  <<" max-depth:"  <<selection(i).dmax
+     <<"name = 0x" <<std::hex <<selection(i).name <<std::dec
+     <<" min-depth:" <<selection(i).dmin <<" max-depth:" <<selection(i).dmax
      <<endl;
   }
 }
@@ -1553,34 +1553,34 @@ void OpenGL::saveEPS(const char*){
 
 #ifdef MT_QTGLUT
 void OpenGL::about(std::ostream& os){
-  os  <<"Widget's OpenGL capabilities:\n";
+  os <<"Widget's OpenGL capabilities:\n";
   QGLFormat f=format();
-  os  <<"direct rendering: "  <<f.directRendering()  <<"\n"
- <<"double buffering: "  <<f.doubleBuffer()   <<"\n"
- <<"depth:            "  <<f.depth()  <<"\n"
- <<"rgba:             "  <<f.rgba()  <<"\n"
- <<"alpha:            "  <<f.alpha()  <<"\n"
- <<"accum:            "  <<f.accum()  <<"\n"
- <<"stencil:          "  <<f.stencil()  <<"\n"
- <<"stereo:           "  <<f.stereo()  <<"\n"
- <<"overlay:          "  <<f.hasOverlay()  <<"\n"
- <<"plane:            "  <<f.plane()  <<std::endl;
+  os <<"direct rendering: " <<f.directRendering() <<"\n"
+ <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+ <<"depth:            " <<f.depth() <<"\n"
+ <<"rgba:             " <<f.rgba() <<"\n"
+ <<"alpha:            " <<f.alpha() <<"\n"
+ <<"accum:            " <<f.accum() <<"\n"
+ <<"stencil:          " <<f.stencil() <<"\n"
+ <<"stereo:           " <<f.stereo() <<"\n"
+ <<"overlay:          " <<f.hasOverlay() <<"\n"
+ <<"plane:            " <<f.plane() <<std::endl;
   
   if(!osContext){
-    os  <<"no off-screen context created yet"  <<std::endl;
+    os <<"no off-screen context created yet" <<std::endl;
   }else{
-    os  <<"Off-screen pixmaps's OpenGL capabilities:\n";
+    os <<"Off-screen pixmaps's OpenGL capabilities:\n";
     f=osContext->format();
-    os  <<"direct rendering: "  <<f.directRendering()  <<"\n"
-   <<"double buffering: "  <<f.doubleBuffer()   <<"\n"
-   <<"depth:            "  <<f.depth()  <<"\n"
-   <<"rgba:             "  <<f.rgba()  <<"\n"
-   <<"alpha:            "  <<f.alpha()  <<"\n"
-   <<"accum:            "  <<f.accum()  <<"\n"
-   <<"stencil:          "  <<f.stencil()  <<"\n"
-   <<"stereo:           "  <<f.stereo()  <<"\n"
-   <<"overlay:          "  <<f.hasOverlay()  <<"\n"
-   <<"plane:            "  <<f.plane()  <<std::endl;
+    os <<"direct rendering: " <<f.directRendering() <<"\n"
+   <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+   <<"depth:            " <<f.depth() <<"\n"
+   <<"rgba:             " <<f.rgba() <<"\n"
+   <<"alpha:            " <<f.alpha() <<"\n"
+   <<"accum:            " <<f.accum() <<"\n"
+   <<"stencil:          " <<f.stencil() <<"\n"
+   <<"stereo:           " <<f.stereo() <<"\n"
+   <<"overlay:          " <<f.hasOverlay() <<"\n"
+   <<"plane:            " <<f.plane() <<std::endl;
   }
 }
 #else
@@ -1648,7 +1648,7 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
     }
   }
   if(mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
-  CALLBACK_DEBUG(cout  <<"associated to view "  <<mouseView  <<" x="  <<vec(0)  <<" y="  <<vec(1)  <<endl);
+  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
   
   if(!updown){ //down press
     if(mouseIsDown) return; //the button is already down (another button was pressed...)
@@ -1698,7 +1698,7 @@ void OpenGL::Motion(int _x, int _y){
     cam=&views(mouseView).camera;
     getSphereVector(vec, _x, _y, views(mouseView).le*w, views(mouseView).ri*w, views(mouseView).bo*h, views(mouseView).to*h);
   }
-  CALLBACK_DEBUG(cout  <<"associated to view "  <<mouseView  <<" x="  <<vec(0)  <<" y="  <<vec(1)  <<endl);
+  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
   lastEvent.set(mouse_button, -1, _x, _y, vec(0)-s->downVec(0), vec(1)-s->downVec(1));
 #ifndef MT_Linux
   int modifiers=glutGetModifiers();

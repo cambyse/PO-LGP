@@ -184,7 +184,7 @@ void SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, const ar
 }
 
 void SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const char *text){
-  cout  <<"gnuplot state display "  <<text  <<endl;
+  cout <<"gnuplot state display " <<text <<endl;
   plotGnuplot();
   plotClear();
   plotPoints(obstacles);
@@ -196,7 +196,7 @@ void SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const cha
 }
 
 void SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag){
-  cout  <<"gnuplot trajectory display "  <<tag  <<endl;
+  cout <<"gnuplot trajectory display " <<tag <<endl;
   plotGnuplot();
   plotClear();
   plotPoints(obstacles);

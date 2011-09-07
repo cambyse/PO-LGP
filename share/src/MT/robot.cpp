@@ -68,8 +68,8 @@ void ControllerProcess::open(){
   
   // SOC interface
   arr W;
-  W  <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
-  //W  <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .2 .2 .1 .1]";
+  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
+  //W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .2 .2 .1 .1]";
   //sys.initPseudoDynamic(&ors, &swift, NULL, 2., 200, &W);
   sys.initBasics(&ors, &swift, NULL, 400, 4., true, &W);
   taskLock.writeLock();
@@ -166,7 +166,7 @@ void ControllerProcess::step(){
   static ofstream logfil;
   static bool logfilOpen=false;
   if(!logfilOpen){ logfil.open("control.log"); logfilOpen=true; }
-  logfil  <<step  <<endl;
+  logfil <<step <<endl;
 #endif
   
   if(q_referenceVar){
@@ -389,9 +389,9 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   
   //define explicit control variables
   arr limits;
-  limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  //limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -2. 2.; -2. 2.;
+  //limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -2. 2.; -2. 2.;
   //    -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0 ]";
   
   arr skinIndex(6);

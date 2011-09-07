@@ -20,12 +20,12 @@
 
 namespace MT {
 /*!\brief a standard method to save an object into a file. The same as
-  std::ofstream file; MT::open(file, filename); file  <<x;
+  std::ofstream file; MT::open(file, filename); file <<x;
   file.close(); */
 template<class T> void save(const T& x, const char *filename){
   std::ofstream file;
   open(file, filename);
-  file  <<x;
+  file <<x;
   file.close();
 }
 
@@ -60,7 +60,7 @@ bool getFromCmdLine(T& x, const char *tag){
   if(!opt) return false;
   std::istringstream s(opt);
   s >>x;
-  if(s.fail()) HALT("error when reading parameter from command line: "  <<tag);
+  if(s.fail()) HALT("error when reading parameter from command line: " <<tag);
   return true;
 }
 
@@ -89,38 +89,38 @@ bool getFromCfgFile(T& x, const char *tag){
   skip(cfgFile, " :=\n\r\t");
   cfgFile >>x;
   
-  if(cfgFile.fail()) HALT("error when reading parameter "  <<tag);
+  if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
   cfgLock=false;
   return true;
 }
 
 template<class T>
 bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default){
-  log()  <<std::setw(20)  <<tag  <<" = "  <<std::setw(5);
+  log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
   log().flush();
   
   if(getFromCmdLine(x, tag)){
-    log()  <<x  <<" ["  <<typeid(x).name()  <<"] (cmd line!)"  <<std::endl;
+    log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
     return true;
   }
   
   if(getFromCfgFile(x, tag)){
-    log()  <<x  <<" ["  <<typeid(x).name()  <<"]"  <<std::endl;
+    log() <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
     return true;
   }
   
   if(hasDefault){
     if(Default){
       x=*Default;
-      log()  <<x  <<" ["  <<typeid(x).name()  <<"] (default!)" <<std::endl;
+      log() <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
     }
     return false;
   }
   
-  HALT("could not initialize parameter `"  <<tag
+  HALT("could not initialize parameter `" <<tag
       <<"': parameter has no default;\n     either use command option `-"
-      <<tag  <<" ...' or specify `"
-      <<tag  <<"= ...' in the config file (which might be `MT.cfg')");
+      <<tag <<" ...' or specify `"
+      <<tag <<"= ...' in the config file (which might be `MT.cfg')");
 }
 
 template<class T> T getParameter(const char *tag){
@@ -163,19 +163,19 @@ template<class T> struct TypedAny:public Any {
   TypedAny(const char* _tag, const T &x){                      tag=NULL; p=NULL; set(_tag, &x, 0, 0);  }
   TypedAny(const char* _tag, const T *_p, uint _n, char _delim){ tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
   virtual void write(std::ostream &os) const {
-    if(!p){ os  <<tag; return; } //boolean
-    os  <<tag  <<"="; // <<"["  <<type  <<"] = ";
+    if(!p){ os <<tag; return; } //boolean
+    os <<tag <<"="; // <<"[" <<type <<"] = ";
     if(!n){
-      if(typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os  <<'\''  <<*((T*)p)  <<'\'';
-      else os  <<*((T*)p);
+      if(typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os <<'\'' <<*((T*)p) <<'\'';
+      else os <<*((T*)p);
     }else{
       T *t=(T*)p;
-      os  <<delim  <<t[0];
-      for(uint i=1; i<n; i++) os  <<' '  <<t[i];
-      if(delim=='(') os  <<')';
-      else if(delim=='[') os  <<']';
-      else if(delim=='{') os  <<'}';
-      else os  <<delim;
+      os <<delim <<t[0];
+      for(uint i=1; i<n; i++) os <<' ' <<t[i];
+      if(delim=='(') os <<')';
+      else if(delim=='[') os <<']';
+      else if(delim=='{') os <<'}';
+      else os <<delim;
     }
   }
   virtual void free(){

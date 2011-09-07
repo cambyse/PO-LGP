@@ -2,20 +2,20 @@
 
 void Element::write(std::ostream& os) const {
   uint i;  Element *e;
-  if(type.N()) os  <<type  <<' ';
-  if(name.N()) os  <<name  <<' '; else os  <<id  <<' ';
+  if(type.N()) os <<type <<' ';
+  if(name.N()) os <<name <<' '; else os <<id <<' ';
   if(links.N){
-    os  <<" (";
+    os <<" (";
     for_list(i, e, links){
-      if(i) os  <<' ';
-      if(e->name.N()) os  <<e->name; else os  <<e->id;
+      if(i) os <<' ';
+      if(e->name.N()) os <<e->name; else os <<e->id;
     }
-    os  <<") ";
+    os <<") ";
   }
   if(ats.N){
-    os  <<"{ ";
+    os <<"{ ";
     listWrite(ats, os, ", ");
-    os  <<" }";
+    os <<" }";
   }
 }
 
@@ -36,7 +36,7 @@ void Element::read(std::istream& is, ElementL& list){
         linksIds.append(e->id);
         e->elemof[j].append(this);
       }else{//this element is not known!!
-        HALT("line:"  <<MT::lineCount  <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
+        HALT("line:" <<MT::lineCount <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
         //check if this is a derived element (notationally: new_name = old_name+'one_char')
         MT::String sublink;
         sublink.set(link.p, link.N()-1);
@@ -90,7 +90,7 @@ void HyperGraph::del(Element *e){
   uint i;
   for(i=0; i<maxDegree; i++){
     if(e->elemof[i].N){
-      HALT("can't delete element "  <<e->id <<" - it is containted in others:\n");
+      HALT("can't delete element " <<e->id <<" - it is containted in others:\n");
       e->write(cerr);
     }
   }

@@ -10,7 +10,7 @@ double MinSumGaussNewton::f(uint i, uint j, const arr& x_i, const arr& x_j){
 void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
   uint k, m, j;
   arr psi, psiI, psiJ;
-  VERBOSE(2, cout  <<"reapproximating potentials at node " <<i  <<" at "  <<x_i  <<endl);
+  VERBOSE(2, cout <<"reapproximating potentials at node " <<i <<" at " <<x_i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
     CHECK(E(m, 1)==i, "");
@@ -20,9 +20,9 @@ void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
       fij(m).A=~psiI * psiI;
       fij(m).a=~psiI * (psiI*x_i - psi);
       fij(m).hata=sumOfSqr(psiI*x_i - psi);
-      //cout  <<fij(m).A  <<fij(m).a  <<fij(m).hata  <<endl;
-      //cout  <<sumOfSqr(psi)  <<endl;
-      //cout  <<(~x_i * fij(m).A * x_i - 2.*~(fij(m).a)*x_i)(0) + fij(m).hata  <<endl;
+      //cout <<fij(m).A <<fij(m).a <<fij(m).hata <<endl;
+      //cout <<sumOfSqr(psi) <<endl;
+      //cout <<(~x_i * fij(m).A * x_i - 2.*~(fij(m).a)*x_i)(0) + fij(m).hata <<endl;
       fij(m).B.clear();  fij(m).C.clear();  fij(m).b.clear();
     }else{ //pair potential
       if(j<i) Psi(psi, psiI, psiJ, i, j, x_i, x[j]);
@@ -34,10 +34,10 @@ void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
       fij(m).a=~psiI*(psiI*x_i + psiJ*x[j] - psi);
       fij(m).b=~psiJ*(psiI*x_i + psiJ*x[j] - psi);
       fij(m).hata=sumOfSqr(psiI*x_i + psiJ*x[j] - psi);
-      //cout  <<fij(m).A  <<endl;
-      /*cout  <<sumOfSqr(psi)  <<endl;
-      cout  <<(~x[i] * fij(m).A * x[i] + ~x[j] * fij(m).B * x[j] + 2. * ~x[i] * fij(m).C * x[j]
-      - 2. * ~(fij(m).a)*x[i] - 2.*~(fij(m).b)*x[j])(0) + fij(m).hata  <<endl;
+      //cout <<fij(m).A <<endl;
+      /*cout <<sumOfSqr(psi) <<endl;
+      cout <<(~x[i] * fij(m).A * x[i] + ~x[j] * fij(m).B * x[j] + 2. * ~x[i] * fij(m).C * x[j]
+      - 2. * ~(fij(m).a)*x[i] - 2.*~(fij(m).b)*x[j])(0) + fij(m).hata <<endl;
       */
     }
   }
@@ -48,7 +48,7 @@ void MinSumGaussNewton::updateMessage(uint m){
   n=x.d1;
   j=E(m, 0);
   i=E(m, 1);
-  VERBOSE(3, cout  <<"  updating message " <<m  <<":"  <<j  <<"->"  <<i  <<endl);
+  VERBOSE(3, cout <<"  updating message " <<m <<":" <<j <<"->" <<i <<endl);
   if(j==i){ //node potential
     mu(m).M   =fij(m).A;
     mu(m).m   =fij(m).a;
@@ -64,7 +64,7 @@ void MinSumGaussNewton::updateMessage(uint m){
         mm=del(j)(k);
         CHECK(E(mm, 1)==j, "");
         if(E(mm, 0)==i) continue; //(exclude i->j)
-        VERBOSE(3, cout  <<"    collecting message " <<mm  <<":"  <<E(mm, 0)  <<"->"  <<j  <<endl);
+        VERBOSE(3, cout <<"    collecting message " <<mm <<":" <<E(mm, 0) <<"->" <<j <<endl);
         Abar    += mu(mm).M;
         abar    += mu(mm).m;
         hatabar += mu(mm).hatm;
@@ -97,14 +97,14 @@ void MinSumGaussNewton::updateMessage(uint m){
     mu(m).M =  fij(m).B - tmp * (fij(m).C);
   }
 #endif
-  VERBOSE(4, cout  <<"  Abar="  <<Abar  <<"abar="  <<abar  <<"hatabar="  <<hatabar  <<endl);
+  VERBOSE(4, cout <<"  Abar=" <<Abar <<"abar=" <<abar <<"hatabar=" <<hatabar <<endl);
 }
-VERBOSE(4, cout  <<"  new message = "  <<mu(m).M  <<mu(m).m  <<mu(m).hatm  <<endl);
+VERBOSE(4, cout <<"  new message = " <<mu(m).M <<mu(m).m <<mu(m).hatm <<endl);
 }
 
 void MinSumGaussNewton::updateMessagesToNode(uint i){
   uint k, m;
-  VERBOSE(2, cout  <<"updating all messages to node " <<i  <<endl);
+  VERBOSE(2, cout <<"updating all messages to node " <<i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
     CHECK(E(m, 1)==i, "");
@@ -119,7 +119,7 @@ double MinSumGaussNewton::totalCost(bool verbose){
     i=E(m, 0);  j=E(m, 1);
     if(j==i) Fnode += f(i, j, x[i], x[j]);
     if(j< i) Fpair += f(i, j, x[i], x[j]);
-    //cout  <<"i"  <<i  <<" j"  <<j  <<" f="  <<f(i, j, x[i], x[j])  <<endl;
+    //cout <<"i" <<i <<" j" <<j <<" f=" <<f(i, j, x[i], x[j]) <<endl;
     //the case i>j is excluded to not count couplings twice
   }
   double F2=0.;
@@ -132,8 +132,8 @@ double MinSumGaussNewton::totalCost(bool verbose){
              - 2. * ~(fij(m).a)*x[i] - 2.*~(fij(m).b)*x[j])(0) + fij(m).hata;
     }
   }
-  //CHECK(fabs((F-F2)/(F+F2+1.))<1e-10, F  <<"!="  <<F2);
-  VERBOSE(1, cout  <<"costs: nodes="  <<Fnode  <<" pairs="  <<Fpair  <<" total="  <<Fnode+Fpair  <<endl);
+  //CHECK(fabs((F-F2)/(F+F2+1.))<1e-10, F <<"!=" <<F2);
+  VERBOSE(1, cout <<"costs: nodes=" <<Fnode <<" pairs=" <<Fpair <<" total=" <<Fnode+Fpair <<endl);
   return Fnode+Fpair;
 }
 
@@ -175,14 +175,14 @@ void MinSumGaussNewton::step(uint steps){
   for(uint sweep=0; sweep<2*steps; sweep++){ //iterate over nodes
     fwd ^= true;
     double cost = totalCost();
-    cout  <<"** Sweep "  <<sweep  <<" before-cost="  <<cost  <<" fwd="  <<fwd  <<endl;
+    cout <<"** Sweep " <<sweep <<" before-cost=" <<cost <<" fwd=" <<fwd <<endl;
     if(N<2) fwd=true;
     for(i=fwd?0:N-2; fwd?i<N:i>0; i+=fwd?1:-1){
       if(clamped.N && clamped(i)) continue;
       //double cost=0.; //= totalCost();
-      fil  <<sweep  <<' '  <<i  <<' '  <<totalCost()  <<' ';
+      fil <<sweep <<' ' <<i <<' ' <<totalCost() <<' ';
       x.write(fil, " ", "", " \n");
-      //cout  <<"* node "  <<i  <<" F="  <<cost  <<endl;
+      //cout <<"* node " <<i <<" F=" <<cost <<endl;
       
       for(;;){ //iterate optimizing at node i
         reapproxPotentials(i, x[i]);
@@ -198,9 +198,9 @@ void MinSumGaussNewton::step(uint steps){
         }
         lapack_Ainv_b_sym(Delta, A, a);
         Delta -= x[i];
-        VERBOSE(1, cout  <<"optimizing over node " <<i  <<": x="  <<x[i]  <<" f(x)="  <<fx  <<" Delta="  <<Delta  <<endl);
+        VERBOSE(1, cout <<"optimizing over node " <<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
         
-        //x[i]() += Delta;  break;   VERBOSE(2, cout  <<" - FORCE"  <<endl);
+        //x[i]() += Delta;  break;   VERBOSE(2, cout <<" - FORCE" <<endl);
         double len=norm(Delta);
         if(len>maxStep) Delta*=maxStep/len;
         
@@ -216,30 +216,30 @@ void MinSumGaussNewton::step(uint steps){
             m=del(i)(k);
             fy += mu(m).hatm + (~y*mu(m).M*y -2.*~mu(m).m*y)(0);
           }
-          VERBOSE(1, cout /* <<evals*/  <<" \tprobing y="  <<y  <<" \tf(y)="  <<fy  <<" \t|Delta|="  <<norm(Delta)  <<" \talpha=" <<alpha  <<std::flush);
-          CHECK(fy==fy, "cost seems to be NAN: f(y)="  <<fy);
+          VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \talpha=" <<alpha <<std::flush);
+          CHECK(fy==fy, "cost seems to be NAN: f(y)=" <<fy);
           if(fy <= fx) break;
           //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
           //decrease stepsize
           if(alpha<1e-10) break;
           alpha = .5*alpha;
-          VERBOSE(1, cout  <<" - reject and revise"  <<endl);
+          VERBOSE(1, cout <<" - reject and revise" <<endl);
         }
         if(fy<=fx){
-          VERBOSE(1, cout  <<" - ACCEPT"  <<endl);
+          VERBOSE(1, cout <<" - ACCEPT" <<endl);
           //adopt new point and adapt stepsize
           x[i] = y;
           fx = fy;
           alpha  = pow(alpha, 0.5);
         }else{
-          VERBOSE(1, cout  <<" - FINAL REJECT"  <<endl);
+          VERBOSE(1, cout <<" - FINAL REJECT" <<endl);
           break;
         }
       }
       
-      cout  <<" * node "  <<i  <<" fx="  <<fx  <<endl;
+      cout <<" * node " <<i <<" fx=" <<fx <<endl;
       
     }
-    cout  <<"** Sweep "  <<sweep  <<" after-cost="  <<totalCost()  <<" fwd="  <<fwd  <<endl;
+    cout <<"** Sweep " <<sweep <<" after-cost=" <<totalCost() <<" fwd=" <<fwd <<endl;
   }
 }

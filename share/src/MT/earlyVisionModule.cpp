@@ -89,7 +89,7 @@ void EarlyVisionModule::step(){
   
   //== call to cuda
   MT::timerStart(true);
-  //cout  <<"cuda times:"  <<flush;
+  //cout <<"cuda times:" <<flush;
   
   //-- create memory
   if(!imgL.p_device){
@@ -109,7 +109,7 @@ void EarlyVisionModule::step(){
     cuda_alloc(motionTheta);
     cuda_alloc(hsvBP);
     cuda_alloc(hsvBPmsg);
-    //cout  <<" alloc="  <<MT::timerRead(true)  <<flush;
+    //cout <<" alloc=" <<MT::timerRead(true) <<flush;
     cuda_upload(hsvBP);
     cuda_upload(hsvBPmsg);
     cuda_upload(lastImg);
@@ -119,7 +119,7 @@ void EarlyVisionModule::step(){
   cuda_upload(imgL);
   cuda_upload(imgR);
   cuda_upload(hsvTargets);
-  //cout  <<" up="  <<MT::timerRead(true)  <<flush;
+  //cout <<" up=" <<MT::timerRead(true) <<flush;
   
   //-- call to cuda
   CudaWorkspace WS = {imgL.d0*imgL.d1, imgL.d1,
@@ -134,7 +134,7 @@ void EarlyVisionModule::step(){
   
   //-- download stuff
   output.writeAccess(this);
-  //cout  <<" process="  <<MT::timerRead(true)  <<flush;
+  //cout <<" process=" <<MT::timerRead(true) <<flush;
   //cuda_download(gray);
   //cuda_download(hsv);
   cuda_download(output.hsvThetaL);
@@ -142,7 +142,7 @@ void EarlyVisionModule::step(){
   //cuda_download(motionTheta);
   //cuda_download(integTheta);
   //cuda_download(hsvBP);
-  //cout  <<" cudatime="  <<MT::timerRead(true)  <<flush;
+  //cout <<" cudatime=" <<MT::timerRead(true) <<flush;
   
   //smooth thetas
   for(uint nc=0; nc< hsvColors; nc++){
@@ -182,7 +182,7 @@ void EarlyVisionModule::step(){
     axisEnd(2+nc*4) = axisEndsR(0);
     axisEnd(3+nc*4) = axisEndsR(1);
   }
-  //cout  <<" posttime="  <<MT::timerRead(true)  <<flush;
+  //cout <<" posttime=" <<MT::timerRead(true) <<flush;
   lock.writeLock();
   hsvCenters = hsvCenters_intern;
   lock.unlock();
@@ -204,7 +204,7 @@ void EarlyVisionModule::step(){
     disp.reshape(disp.N/(tmp.d1*3), tmp.d1, 3);
     cvShow(disp, "earlyVision");
     output.deAccess(this);
-    //cout  <<" displaytime="  <<MT::timerRead(true)  <<endl;
+    //cout <<" displaytime=" <<MT::timerRead(true) <<endl;
   }
   
 }

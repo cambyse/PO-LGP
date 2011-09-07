@@ -370,11 +370,11 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
         getJJt(J, Jt, i);
         cdir.append(-J);
         *if(phi_qhat(0)>1.){
-          cout  <<"constraint violated: " <<phi_qhat  <<" -> making it more graceful.."  <<endl;
+          cout <<"constraint violated: " <<phi_qhat <<" -> making it more graceful.." <<endl;
           phi_qhat=1.;
         }*
         coff.append(phi_qhat-J*qt-5.);
-        //cout  <<"qt= "  <<qt  <<"\nJ*qt="   <<J*qt  <<"\nphi_qhat= "  <<phi_qhat  <<endl;
+        //cout <<"qt= " <<qt <<"\nJ*qt="  <<J*qt <<"\nphi_qhat= " <<phi_qhat <<endl;
         con++;
       }
       */
@@ -429,7 +429,7 @@ void soc::SocSystemAbstraction::controlledDynamicTrajectory(arr& q, const arr& u
     x.setBlockVector(q[t], qd[t]);
     getProcessDynamic(A, a, B);
     xx = A*x + a + B*u[t];
-    cout  <<"xx = "  <<xx  <<"\nq="  <<q[t+1]  <<qd[t+1]  <<endl;
+    cout <<"xx = " <<xx <<"\nq=" <<q[t+1] <<qd[t+1] <<endl;
 #endif
   }
 }
@@ -495,7 +495,7 @@ double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int whichTask, bool
     }
   if(verbose){
     cout <<MT_HERE <<" total=" <<C;
-    for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout  <<" \t" <<taskName(i) <<'=' <<taskCi(i);
+    for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout <<" \t" <<taskName(i) <<'=' <<taskCi(i);
     cout <<endl;
   }
   return C;
@@ -556,11 +556,11 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     MT::open(fil, "z.trana");
     for(t=0; t<T; t++){
       fil
-     <<"time "  <<t
-     <<"  ctrlC "  <<ctrlC(t)
-     <<"  taskC "  <<taskC(t)
-     <<"  totC "   <<ctrlC(t)+taskC(t)
-     <<"  q "  <<q[t]
+     <<"time " <<t
+     <<"  ctrlC " <<ctrlC(t)
+     <<"  taskC " <<taskC(t)
+     <<"  totC "  <<ctrlC(t)+taskC(t)
+     <<"  q " <<q[t]
      <<endl;
     }
     gnuplot("plot 'z.trana' us 0:4 title 'ctrl costs','z.trana' us 0:6 title 'task costs','z.trana' us 0:8 title 'tot costs'");
@@ -568,14 +568,14 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
   
 #ifdef NIKOLAY
   if(os) *os
-   <<" "  <<taskCsum
-   <<" "  <<ctrlCsum
-   <<" "  <<taskCsum+ctrlCsum  <<endl;
+   <<" " <<taskCsum
+   <<" " <<ctrlCsum
+   <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-   <<"  task-cost "  <<taskCsum
-   <<"  control-cost "  <<ctrlCsum
-   <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+   <<"  task-cost " <<taskCsum
+   <<"  control-cost " <<ctrlCsum
+   <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
     
   return taskCsum+ctrlCsum;
@@ -595,8 +595,8 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     c1=sumOfSqr(Phi);
     c3=getCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
-    //cout  <<c1  <<' '  <<c2  <<' '  <<c3  <<endl;
-    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"   <<c1  <<' '  <<c2  <<' '  <<c3);
+    //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
+    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
     if(t<T){
@@ -631,21 +631,21 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         c3 = sqrDistance(W, x[t+1], A*x[t] + a);
         
         //compare the accelerations:
-        //cout  <<qdd  <<endl  <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1))  <<endl;
+        //cout <<qdd <<endl <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1)) <<endl;
         
         //c3 = sqrDistance(tmp, x[t+1], A*x[t]+a);
-        //cout  <<W  <<endl  <<inverse(B*inverse(H)*(~B))  <<endl;
+        //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
-      //cout  <<c1  <<' '  <<c2  <<' '  <<c3  <<' '  <<endl;
+      //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
       //if(t==0)
       //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
       ctrlCsum+=c3;
     }
   }
-  cout  <<"costChecks: "
-        <<"  task-cost "  <<taskCsum
-        <<"  control-cost "  <<ctrlCsum
-        <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+  cout <<"costChecks: "
+       <<"  task-cost " <<taskCsum
+       <<"  control-cost " <<ctrlCsum
+       <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 }
 
 
@@ -653,7 +653,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 void soc::SocSystemAbstraction::displayState(const arr *q, const arr *Qinv, const char *text, bool reportVariables){
   if(gl){
     if(q) setq(*q);
-    if(text) gl->text.clr()  <<text;
+    if(text) gl->text.clr() <<text;
     gl->update();
   }else{
   }
@@ -666,8 +666,8 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0; k<=(uint)num; k++){
     t = k*T/num;
-    if(Qinv) displayState(&q[t], &(*Qinv)[t](), STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
-    else     displayState(&q[t], NULL         , STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
+    if(Qinv) displayState(&q[t], &(*Qinv)[t](), STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
+    else     displayState(&q[t], NULL         , STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
     if(steps==-1) gl->watch();
   }
   if(steps==1) gl->watch();
@@ -751,31 +751,31 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
     std::ofstream fil;
     MT::open(fil, "z.trana");
     for(t=0; t<=T; t++){
-      fil  <<"time "  <<t*tau
-     <<"  ctrlC "  <<ctrlC(t)
-     <<"  taskC "  <<taskC(t);
-      fil  <<"  taskCi "; taskCi[t].writeRaw(fil);
-      fil  <<"  taskDx "; taskDx[t].writeRaw(fil);
-      fil  <<"  taskDv "; taskDv[t].writeRaw(fil);
-      fil  <<"  q "; q[t].writeRaw(fil);
-      fil  <<endl;
+      fil <<"time " <<t*tau
+     <<"  ctrlC " <<ctrlC(t)
+     <<"  taskC " <<taskC(t);
+      fil <<"  taskCi "; taskCi[t].writeRaw(fil);
+      fil <<"  taskDx "; taskDx[t].writeRaw(fil);
+      fil <<"  taskDv "; taskDv[t].writeRaw(fil);
+      fil <<"  q "; q[t].writeRaw(fil);
+      fil <<endl;
     }
     MT::String cmd;
     cmd <<"set style data linespoints\n";
     cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
-    for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd  <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
+    for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
     gnuplot(cmd);
   }
 #ifdef NIKOLAY
   if(os) *os
-   <<" "  <<taskCsum
-   <<" "  <<ctrlCsum
-   <<" "  <<taskCsum+ctrlCsum  <<endl;
+   <<" " <<taskCsum
+   <<" " <<ctrlCsum
+   <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-   <<"  task-cost "  <<taskCsum
-   <<"  control-cost "  <<ctrlCsum
-   <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+   <<"  task-cost " <<taskCsum
+   <<"  control-cost " <<ctrlCsum
+   <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
   return taskCsum+ctrlCsum;
 }

@@ -39,7 +39,7 @@ void AICO::init(soc::SocSystemAbstraction& _sys){
   
   if(MT::checkParameter<MT::String>("aico_filename")){
     MT::getParameter(filename, "aico_filename");
-    cout  <<"** output filename = '"  <<filename  <<"'"  <<endl;
+    cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
     os = &cout;
@@ -191,7 +191,7 @@ void AICO::initMessagesFromScaleParent(AICO *A){
   }
   if(sys->dynamic)  soc::getPositionTrajectory(q, b);  else  q=b;
   if(sys->os){
-    *sys->os  <<"AICOscaleInit(" <<T <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<-1.;
+    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -209,10 +209,10 @@ void AICO::updateFwdMessage(uint t){
     inverse_SymPosDef(barS, Sinv[t-1] + R[t-1]);
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
-    St += A[t-1]*barS*tA[t-1];//cout  <<endl  <<endl  <<t  <<endl;
+    St += A[t-1]*barS*tA[t-1];//cout <<endl <<endl <<t <<endl;
     s[t] = a[t-1] + A[t-1]*(barS*(Sinv[t-1]*s[t-1] + r[t-1]));
     inverse_SymPosDef(Sinv[t](), St);
-    //cout  <<"s\n"  <<s[t]  <<endl  <<Sinv[t]  <<endl;
+    //cout <<"s\n" <<s[t] <<endl <<Sinv[t] <<endl;
 #else
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
@@ -233,7 +233,7 @@ void AICO::updateBwdMessage(uint t){
   if(sys->dynamic){
     if(t<T){
       inverse_SymPosDef(barV, Vinv[t+1] + R[t+1]);
-      //cout  <<"R[t+1]="  <<R[t+1]  <<"Vinv[t+1]="  <<Vinv[t+1]  <<"barV="  <<barV  <<endl;
+      //cout <<"R[t+1]=" <<R[t+1] <<"Vinv[t+1]=" <<Vinv[t+1] <<"barV=" <<barV <<endl;
       Vt = Q[t];
       Vt += B[t]*Hinv[t]*tB[t];
       Vt += barV;
@@ -435,7 +435,7 @@ double AICO::evaluateTrajectory(const arr& x, bool plot){
   }
   Cctrl(T)=0.;
   double Ct=sum(Ctask), Cc=sum(Cctrl);
-  if(sys->os) *sys->os  <<" task "  <<Ct  <<" ctrl "  <<Cc  <<" total "  <<Ct+Cc  <<endl;
+  if(sys->os) *sys->os <<" task " <<Ct <<" ctrl " <<Cc <<" total " <<Ct+Cc <<endl;
   if(plot){
     write(LIST(Cctrl, Ctask), "z.eval");
     gnuplot("plot 'z.eval' us 0:1 title 'control costs','z.eval' us 0:2 title 'task costs'");
@@ -451,13 +451,13 @@ void AICO::rememberOldState(){
 
 void AICO::perhapsUndoStep(){
   if(cost>cost_old){
-    //cout  <<" AICO REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+    //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
     damping *= 10.;
     dampingReference = b_old;
     cost = cost_old;  b = b_old;  q = q_old;  xhat = qhat_old;
     s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
   }else{
-    //cout  <<" AICO ACCEPT"  <<endl;
+    //cout <<" AICO ACCEPT" <<endl;
     damping /= 5.;
   }
 }
@@ -465,7 +465,7 @@ void AICO::perhapsUndoStep(){
 void AICO::displayCurrentSolution(){
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICO(" <<sys->nTime()  <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<b_step  <<" damp "  <<damping;
+    *sys->os <<"AICO(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping;
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO - iteration " <<sweep));
