@@ -90,10 +90,10 @@ void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool ve
   
   if(verbose){
     std::cout
-       <<"ANN query:"
-       <<"\n data size = "  <<X.d0  <<"  data dim = "  <<X.d1  <<"  done = "  <<s->done
-       <<"\n query point " <<x
-       <<"\n found neighbors:\n";
+     <<"ANN query:"
+     <<"\n data size = "  <<X.d0  <<"  data dim = "  <<X.d1  <<"  done = "  <<s->done
+     <<"\n query point " <<x
+     <<"\n found neighbors:\n";
     for(uint i=0; i<idx.N; i++){
       std::cout  <<' '
                  <<i  <<' '

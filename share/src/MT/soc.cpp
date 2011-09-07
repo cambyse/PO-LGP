@@ -556,26 +556,26 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     MT::open(fil, "z.trana");
     for(t=0; t<T; t++){
       fil
-       <<"time "  <<t
-       <<"  ctrlC "  <<ctrlC(t)
-       <<"  taskC "  <<taskC(t)
-       <<"  totC "   <<ctrlC(t)+taskC(t)
-       <<"  q "  <<q[t]
-       <<endl;
+     <<"time "  <<t
+     <<"  ctrlC "  <<ctrlC(t)
+     <<"  taskC "  <<taskC(t)
+     <<"  totC "   <<ctrlC(t)+taskC(t)
+     <<"  q "  <<q[t]
+     <<endl;
     }
     gnuplot("plot 'z.trana' us 0:4 title 'ctrl costs','z.trana' us 0:6 title 'task costs','z.trana' us 0:8 title 'tot costs'");
   }
   
 #ifdef NIKOLAY
   if(os) *os
-     <<" "  <<taskCsum
-     <<" "  <<ctrlCsum
-     <<" "  <<taskCsum+ctrlCsum  <<endl;
+   <<" "  <<taskCsum
+   <<" "  <<ctrlCsum
+   <<" "  <<taskCsum+ctrlCsum  <<endl;
 #else
   if(os) *os
-     <<"  task-cost "  <<taskCsum
-     <<"  control-cost "  <<ctrlCsum
-     <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+   <<"  task-cost "  <<taskCsum
+   <<"  control-cost "  <<ctrlCsum
+   <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
 #endif
     
   return taskCsum+ctrlCsum;
@@ -752,8 +752,8 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
     MT::open(fil, "z.trana");
     for(t=0; t<=T; t++){
       fil  <<"time "  <<t*tau
-       <<"  ctrlC "  <<ctrlC(t)
-       <<"  taskC "  <<taskC(t);
+     <<"  ctrlC "  <<ctrlC(t)
+     <<"  taskC "  <<taskC(t);
       fil  <<"  taskCi "; taskCi[t].writeRaw(fil);
       fil  <<"  taskDx "; taskDx[t].writeRaw(fil);
       fil  <<"  taskDv "; taskDv[t].writeRaw(fil);
@@ -768,14 +768,14 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
   }
 #ifdef NIKOLAY
   if(os) *os
-     <<" "  <<taskCsum
-     <<" "  <<ctrlCsum
-     <<" "  <<taskCsum+ctrlCsum  <<endl;
+   <<" "  <<taskCsum
+   <<" "  <<ctrlCsum
+   <<" "  <<taskCsum+ctrlCsum  <<endl;
 #else
   if(os) *os
-     <<"  task-cost "  <<taskCsum
-     <<"  control-cost "  <<ctrlCsum
-     <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+   <<"  task-cost "  <<taskCsum
+   <<"  control-cost "  <<ctrlCsum
+   <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
 #endif
   return taskCsum+ctrlCsum;
 }

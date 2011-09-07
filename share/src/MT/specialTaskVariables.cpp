@@ -29,7 +29,7 @@ void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 }
 
 void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //load parameters only once!
   static bool firstTime=true;
@@ -96,7 +96,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape){
 }
 
 void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowFromShape, const char* belowToShape){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -162,7 +162,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
 }
 
 void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowToShape){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //deactivate all variables
   activateAll(sys.vars, false);

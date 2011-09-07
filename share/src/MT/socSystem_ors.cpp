@@ -25,7 +25,7 @@
 //
 
 struct soc::SocSystem_Ors_Workspace {
-  arr q0, v0, W, H, Q, v_act;
+  arr q0, v0, W, H_rate, Q, v_act;
   arr q_external;
   
   uint T;
@@ -84,7 +84,7 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   sys->WS->q0 = WS->q0;
   sys->WS->v0 = WS->v0;
   sys->WS->W = WS->W;
-  sys->WS->H = WS->H;
+  sys->WS->H_rate = WS->H_rate;
   sys->WS->Q = WS->Q;
   sys->WS->v_act = WS->v_act;
   sys->WS->T = WS->T;
@@ -107,22 +107,23 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
   if(!_dynamic){  WS->T = trajectory_steps;  WS->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
   setx0AsCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
+  arr W_rate;
   if(W){
     if(W->nd==1){
       if(W->N > WS->q0.N){ W->resizeCopy(WS->q0.N); MT_MSG("truncating W diagonal..."); }
       CHECK(W->N==WS->q0.N, "");
-      WS->W.setDiag(*W);
+      W_rate.setDiag(*W);
     } else NIY;
   }else{
-    ors->computeNaturalQmetric(WS->W);
+    ors->computeNaturalQmetric(W_rate);
     //cout  <<"automatic W initialization ="  <<WS->W  <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
   static MT::Parameter<double> wc("Wcost", 1e-2);
   static MT::Parameter<double> hc("Hcost", 1e-3);
   static MT::Parameter<double> qn("Qnoise", 1e-10);
-  WS->H = hc()*WS->W;     //u-metric for torque control
-  WS->W = wc()*WS->W;
+  WS->H_rate = hc()*W_rate;     //u-metric for torque control
+  WS->W = wc()*W_rate;
   if(!_dynamic){
     dynamic=false;
     WS->Q.setDiag(qn, WS->q0.N);  //covariance \dot q-update
@@ -418,8 +419,8 @@ void soc::SocSystem_Ors::getWinv(arr& Winv, uint t){
   }
 }
 void soc::SocSystem_Ors::getH(arr& H, uint t){
-  H=WS->H;  //*getTau();
-  if(stepScale(t)) H *= double(1 <<stepScale(t));
+  H=WS->H_rate; //*getTau();
+  //if(stepScale(t)) H *= double(1 <<stepScale(t));
 }
 void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   arr H;

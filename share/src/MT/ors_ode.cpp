@@ -216,11 +216,11 @@ void OdeInterface::reportContacts(){
     ors::Body *db1 = b1?(ors::Body*)b1->userdata:0;
     ors::Body *db2 = b2?(ors::Body*)b2->userdata:0;
     std::cout
-       <<i  <<": "  <<(b1?db1->name.p:"GROUND")  <<'-'  <<(b2?db2->name.p:"GROUND")
-       <<"\nposition="  <<OUTv(c->pos)
-       <<"\nnormal="  <<OUTv(c->normal)
-       <<"\npenetration depth="  <<OUTs(c->depth)
-       <<std::endl;
+     <<i  <<": "  <<(b1?db1->name.p:"GROUND")  <<'-'  <<(b2?db2->name.p:"GROUND")
+     <<"\nposition="  <<OUTv(c->pos)
+     <<"\nnormal="  <<OUTv(c->normal)
+     <<"\npenetration depth="  <<OUTs(c->depth)
+     <<std::endl;
   }
 }
 

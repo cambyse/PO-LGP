@@ -448,9 +448,9 @@ void mdp::readImageMaze(MDP& mdp, const char* filename){
   uint x, y, dx=maze.d1, dy=maze.d0;
   for(x=0; x<dx; x++) for(y=0; y<dy; y++){
       if(img(y, x, 0)==255 && img(y, x, 1)==255 && img(y, x, 2)==255) maze(y, x)=0; //white -> free
-      else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=1;  //black -> wall
-      else if(img(y, x, 0)==255 && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=2;  //red   -> start
-      else if(img(y, x, 0)==0   && img(y, x, 1)==255 && img(y, x, 2)==0) maze(y, x)=3;  //green -> goal
+      else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=1; //black -> wall
+      else if(img(y, x, 0)==255 && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=2; //red   -> start
+      else if(img(y, x, 0)==0   && img(y, x, 1)==255 && img(y, x, 2)==0) maze(y, x)=3; //green -> goal
       else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==255) maze(y, x)=4; //blue  -> avoid
       else HALT("maze image file (ppm) needs to be black/white/red/green/blue");
     }
@@ -1140,7 +1140,7 @@ void mdp::initHierarchical(uint exits, FSC_lev2& fsc){
   uint d0=fsc.P01y0.d0, d1=fsc.P1y01.d0, dy=fsc.P1y01.d1;
   cout  <<"building hierarchical controller: d0="  <<d0  <<" d1="  <<d1  <<" dy="  <<dy
         <<" -- assuming the last " <<exits<<" level-0-nodes to be exits"  <<endl;
-       
+         
   fsc.hierarchical=true;
   
   fsc.Pe0.resize(2, d0);         //P(e|n0)  is fixed!
@@ -1266,13 +1266,13 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
   // Output graph
   ofstream out(filename);
   out  <<"digraph "  <<"ML_Controller_"  <<Pa0.d1  <<"_"  <<PE_1y1.d0  <<" {\n"
-   <<"\trankdir=TB;\n";
+ <<"\trankdir=TB;\n";
   
   // Level-0
   out  <<"\tsubgraph cluster_0 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
-   <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;";
+ <<"\t\tstyle=filled;\n"
+ <<"\t\tcolor=lightgrey;\n"
+ <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;";
   for(i=0; i<Pa0.d1; ++i){
     // check if it's an exit state
     // if so, output it as a diamond....
@@ -1280,29 +1280,29 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
       out  <<"N0_"  <<a0[i]  <<"; ";
   }
   out  <<"};\n"
-   <<"\t\tlabel=\"Level 0\"\n";
+ <<"\t\tlabel=\"Level 0\"\n";
   // Level-Exits
   out  <<"\tsubgraph cluster_2 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
-   <<"\t\tnode [style=filled, color=white, shape=diamond];";
+ <<"\t\tstyle=filled;\n"
+ <<"\t\tcolor=lightgrey;\n"
+ <<"\t\tnode [style=filled, color=white, shape=diamond];";
   for(i=0; i<Pa0.d1; ++i){ if(Pe0(1, i)>0.99) out  <<"E_"  <<a0[i]  <<" ";}
   out  <<";\n"
-   <<"\t\tlabel=\"Exit\"\n"
-   <<"\t}\n"
-   <<"\n\t}\n";
+ <<"\t\tlabel=\"Exit\"\n"
+ <<"\t}\n"
+ <<"\n\t}\n";
   
   // Level-1
   out  <<"\tsubgraph cluster_1 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
+ <<"\t\tstyle=filled;\n"
+ <<"\t\tcolor=lightgrey;\n"
   // This is correct but the rank=same makes dot crash once in a while, this
   // is a dot bug.
-   <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;"; for(i=0; i<PE_01.d1; ++i){out  <<"N1_"  <<i  <<"; ";}
+ <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;"; for(i=0; i<PE_01.d1; ++i){out  <<"N1_"  <<i  <<"; ";}
   // <<"\t\tnode [style=filled, color=white]; "; for(i=0;i<PE_01.d1;++i){out  <<"N1_"  <<i  <<"; ";}
   out  <<"};\n"
-   <<"\t\tlabel=\"Level 1\"\n"
-   <<"\t}\n";
+ <<"\t\tlabel=\"Level 1\"\n"
+ <<"\t}\n";
   
   
   // P_E_0y0; E is false
@@ -1319,7 +1319,7 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
             }
             if(P_E_0y0(i, j, k) < 0.99){
               out  <<""  <<o[j]  <<":"  <<std::setprecision(2)
-               <<P_E_0y0(i, j, k)  <<", ";
+             <<P_E_0y0(i, j, k)  <<", ";
             }
           }
         }
@@ -1339,7 +1339,7 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
           }
           if(PE_1y1(i, j, k) < 0.99){
             out  <<""  <<o[j]  <<":"  <<std::setprecision(2)
-             <<PE_1y1(i, j, k)  <<", ";
+           <<PE_1y1(i, j, k)  <<", ";
           }
         }
       }
@@ -1353,7 +1353,7 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
         if(value > 0.99)
           out  <<"\tN1_"  <<j  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
         else
-          out  <<"\tN1_"  <<j  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [label=\""  <<std::setprecision(2)  <<value  << "\", style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
+          out  <<"\tN1_"  <<j  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [label=\""  <<std::setprecision(2)  <<value  <<"\", style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
       }
     }
     
@@ -1374,11 +1374,11 @@ void mdp::OutputDot(const char* filename, const char* problem, arr& Pa0, arr& P0
   // Output graph
   ofstream out(filename);
   out  <<"digraph "  <<"ML_Controller_"  <<Pa0.d1  <<"_"  <<0  <<" {\n"
-   <<"\trankdir=LR;\n"
-   <<"\tsize=\"8, 5\"\n"
-   <<"\tnode [shape = circle];"; for(i=0; i<P0y0.d0; ++i){out  <<"N_"  <<a0[i]  <<" ";}
+ <<"\trankdir=LR;\n"
+ <<"\tsize=\"8, 5\"\n"
+ <<"\tnode [shape = circle];"; for(i=0; i<P0y0.d0; ++i){out  <<"N_"  <<a0[i]  <<" ";}
   out  <<";\n"
-   <<"\tnode [shape = circle];\n";
+ <<"\tnode [shape = circle];\n";
   for(i=0; i<P0y0.d0; ++i) // incoming node is i
     for(uint k=0; k<P0y0.d2; ++k){ // outgoing node is k
       bool obs = false;

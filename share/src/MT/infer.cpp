@@ -2558,7 +2558,7 @@ void randomTree(Tree& tree, uint N, uint K, uint roots){
     tree(n).dim=K;                 //K-dim variable
     if(n<roots) tree(n).parent=-1;
     else        tree(n).parent=rnd(n);  //random parent
-    if(n<roots) tree(n).P.resize(K);   //K-times-K joint factor (this, parent)
+    if(n<roots) tree(n).P.resize(K); //K-times-K joint factor (this, parent)
     else        tree(n).P.resize(K, K);
     MT_MSG("fully random roots!");
     /*if(n<roots){ // deterministic roots for testing purposes
@@ -2581,15 +2581,15 @@ void tree2FactorGraph(infer::FactorGraph& fg, const MT::Array<TreeNode>& tree){
   uint i, N=tree.N;
   fg.V.resize(N);
   fg.F.resize(N);
-  for(i=0; i<N; i++){    //variables
+  for(i=0; i<N; i++){  //variables
     fg.V(i) = new infer::Variable(tree(i).dim, STRING("tree_node_" <<std::setfill('0') <<std::setw(3) <<i), i);
   }
-  for(i=0; i<N; i++){    //factors
+  for(i=0; i<N; i++){  //factors
     if(tree(i).parent<0) fg.F(i) = new infer::Factor(ARRAY(fg.V(i)));
     else                 fg.F(i) = new infer::Factor(ARRAY(fg.V(i), fg.V(tree(i).parent)));
     fg.F(i)->setP(tree(i).P);
   }
-  for(i=0; i<N; i++){    //messages
+  for(i=0; i<N; i++){  //messages
     if(tree(i).parent>=0) fg.messages.append(new infer::MessagePair(fg.F(i), fg.F(tree(i).parent)));
   }
   fg.resetMessages();
@@ -2684,7 +2684,7 @@ void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, co
     if(!msgFlips(i)) f=msgs(i)->f2; else f=msgs(i)->f1; //f is the sub-factor of order(i).m
     for(j=0; j<f->messages.N; j++){
       m=f->messages(j);                                     //m is one sub-message of f
-      if(m==msgs(i)) continue;                          //discard it when it is going up
+      if(m==msgs(i)) continue;                        //discard it when it is going up
       msgs.append(m);
       if(m->f1==f) msgFlips.append(false);
       else         msgFlips.append(true);

@@ -227,7 +227,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         break;
       case ors::markerST:
         if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
-        else{ glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5.,s->size[0]/5.,s->size[0]/5.); }
+        else { glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); }
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -513,13 +513,13 @@ bool infoHoverCall(void *p, OpenGL *gl){
   if((i&3)==2) j=C->joints(i>>2);
   if(s){
     gl->text.clr()
-     <<"shape selection: body="  <<s->body->name  <<" X="  <<s->body->X  <<" ats="  <<endl;
+   <<"shape selection: body="  <<s->body->name  <<" X="  <<s->body->X  <<" ats="  <<endl;
     listWrite(s->ats, gl->text, "\n");
   }
   if(j){
     gl->text.clr()
-     <<"edge selection: "  <<j->from->name  <<' '  <<j->to->name
-     <<"\nA="  <<j->A  <<"\nQ="  <<j->Q  <<"\nB="  <<j->B  <<endl;
+   <<"edge selection: "  <<j->from->name  <<' '  <<j->to->name
+   <<"\nA="  <<j->A  <<"\nQ="  <<j->Q  <<"\nB="  <<j->B  <<endl;
     listWrite(j->ats, gl->text, "\n");
   }
   if(!j && !s) gl->text.clr();

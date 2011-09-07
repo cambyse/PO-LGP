@@ -351,7 +351,7 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy){
       p=0;
     }
     CHECK((pold && Mold) || (!pold && !Mold), "");
-    if(Mold) delete[] pold;     //if(Mold) free(pold);
+    if(Mold) delete[] pold;   //if(Mold) free(pold);
   }
   N=n;
   pstop=p+N;
@@ -2092,13 +2092,13 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z){
 
 template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w){
   MT::Array<T> z(v.N);
-  for(uint i=0;i<v.N;i++) z(i) = v(i)<w(i)?v(i):w(i);
+  for(uint i=0; i<v.N; i++) z(i) = v(i)<w(i)?v(i):w(i);
   return z;
 }
 
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w){
   MT::Array<T> z(v.N);
-  for(uint i=0;i<v.N;i++) z(i) = v(i)>w(i)?v(i):w(i);
+  for(uint i=0; i<v.N; i++) z(i) = v(i)>w(i)?v(i):w(i);
   return z;
 }
 
@@ -2352,7 +2352,7 @@ inline void multiDimIncrement(uint& Ycount, uint* index, uint* limit, uint* Yinc
 inline void getMultiDimIncrement(const uintA& Xdim, const uintA &Yid, uint* Ydim, uint* Yinc, uint* Ydec){
   uint i;
   memset(Ydim, 0, sizeof(uint)*maxRank);  for(i=0; i<Xdim.N; i++) if(i<Yid.N) Ydim[i]=Xdim(Yid.p[i]);  //dimension of Y
-  memset(Yinc, 0, sizeof(uint)*maxRank);  Yinc[Yid.p[Yid.N-1]]=1;  for(i=Yid.N-1; i--;) Yinc[Yid.p[i]] = Ydim[i+1] * Yinc[Yid.p[i+1]];  //stride of Y
+  memset(Yinc, 0, sizeof(uint)*maxRank);  Yinc[Yid.p[Yid.N-1]]=1;  for(i=Yid.N-1; i--;) Yinc[Yid.p[i]] = Ydim[i+1] * Yinc[Yid.p[i+1]]; //stride of Y
   for(i=Xdim.N; i--;) Ydec[i] = Xdim(i)*Yinc[i];
   //cout  <<"Xdim="  <<Xdim  <<"\nYid ="  <<Yid  <<"\nYdim="  <<uintA(Ydim, Yid.N)  <<"\nYinc="  <<uintA(Yinc, Xdim.N)  <<"\nYdec="  <<uintA(Ydec, Xdim.N)  <<endl;
 }
@@ -3270,7 +3270,7 @@ template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Arra
       if(l && interConnections) for(j=0; j<i; j++) newEdge(a+j, a+i, E);
     }
     a+=layers(l);             //a is the offset of current layer
-    if(l) b+=layers(l-1);    //b is the offset of previous layer
+    if(l) b+=layers(l-1);  //b is the offset of previous layer
   }
 }
 

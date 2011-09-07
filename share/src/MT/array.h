@@ -185,9 +185,9 @@ public:
   T& operator()(uint i, uint j) const;
   T& operator()(uint i, uint j, uint k) const;
   T& operator()(const Array<uint> &I) const;
-  Array<T> operator[](uint i) const;     // calls referToSubDim(*this,i)
-  Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this,i,j)
-  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this,i,I)
+  Array<T> operator[](uint i) const;     // calls referToSubDim(*this, i)
+  Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
+  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
   
   //!@name access by copy

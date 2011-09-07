@@ -475,16 +475,16 @@ void LinearStatistics::predict(const arr& x, arr& y){
 //! prototype for operator <<
 void LinearStatistics::write(std::ostream& os) const {
   os
-   <<"<LinearStatistics>"
-   <<"\ndim X="  <<MeanX.N
-   <<", dim Y="  <<MeanY.N
-   <<", accum="  <<accum
-   <<"\nmean X="  <<MeanX.ioraw()
-   <<"\nmean Y="  <<MeanY
-   <<"\nvariance X=" <<VarX
-   <<"\ncovariance XY="  <<CovXY
-   <<"\n</LinearStatistics>"
-   <<std::endl;
+ <<"<LinearStatistics>"
+ <<"\ndim X="  <<MeanX.N
+ <<", dim Y="  <<MeanY.N
+ <<", accum="  <<accum
+ <<"\nmean X="  <<MeanX.ioraw()
+ <<"\nmean Y="  <<MeanY
+ <<"\nvariance X=" <<VarX
+ <<"\ncovariance XY="  <<CovXY
+ <<"\n</LinearStatistics>"
+ <<std::endl;
 }
 
 

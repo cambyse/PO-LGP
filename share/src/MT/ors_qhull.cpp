@@ -227,7 +227,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     dXdCn.setZero();
   }*/
   
-  for(i=0; i<C.d0; i++){             //each contact point contributes a friction cone
+  for(i=0; i<C.d0; i++){         //each contact point contributes a friction cone
     c.set(&C(i, 0));                    //contact point
     n.set(&Cn(i, 0));                   //contact normal
     c -= center;
@@ -235,7 +235,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     ors::Quaternion r;
     r.setDiff(ors::Vector(0, 0, 1), n);//rotate cone's z-axis into contact normal n
     
-    for(j=0; j<S; j++){              //each sample, equidistant on a circle
+    for(j=0; j<S; j++){          //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;
       f(0) = cos(angle)*mu;            //force point sampled from cone
       f(1) = sin(angle)*mu;

@@ -72,7 +72,7 @@ void setRRscheduling(int priority){
   std::cout  <<"RR scheduling interval = " <<interval.tv_sec  <<"sec "  <<1e-6*interval.tv_nsec  <<"msec"  <<std::endl;
   CHECK(!rc, "sched_rr_get_interval failed:"  <<errno <<strerror(errno));
   MT_MSG("Scheduling policy changed: new sched="
-          <<sched_getscheduler(tid)  <<" new priority="  <<priority);
+        <<sched_getscheduler(tid)  <<" new priority="  <<priority);
 }
 
 void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const timespec& now, const timespec& last, uint step){

@@ -167,9 +167,9 @@ double mdp::pomdpEM_lev2(
   //report
   if(os)(*os)  <<MT::timerRead()  <<"sec, "  <<std::flush;
   if(os)(*os)  <<" P(r=1)="  <<PR
-     <<", Exp(T)="  <<ET  <<"/" <<::log(PR)/::log(mdp.gamma)
-     <<", Exp(R)="  <<(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma)
-     <<endl;
+   <<", Exp(T)="  <<ET  <<"/" <<::log(PR)/::log(mdp.gamma)
+   <<", Exp(R)="  <<(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma)
+   <<endl;
     
   return (PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma);
 }

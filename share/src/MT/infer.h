@@ -272,7 +272,7 @@ struct FactorGraph {
   void deleteAll();
   
   void setCliqueBeliefs(const FactorList& fs_orig);
-  void resetCliqueBeliefs(){setCliqueBeliefs(F);}  // B_c
+  void resetCliqueBeliefs(){setCliqueBeliefs(F);} // B_c
   void resetMessages();  // msg_pairs
   void resetVariableFactors();  // F_v
   void resetVariableBeliefs();  // B_v

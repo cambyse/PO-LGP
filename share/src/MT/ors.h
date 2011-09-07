@@ -37,7 +37,7 @@ struct Vector {
   
   Vector(){}
   Vector(double x, double y, double z){ set(x, y, z); }
-  Vector(const arr& x){ CHECK(x.N==3,"");  set(x.p); }
+  Vector(const arr& x){ CHECK(x.N==3, "");  set(x.p); }
   double& operator()(int);
   const double& operator()(int) const;
   
@@ -72,7 +72,7 @@ struct Matrix {
   double p[9];
   
   Matrix(){};
-  Matrix(const arr& m){ CHECK(m.N==9,"");  set(m.p); };
+  Matrix(const arr& m){ CHECK(m.N==9, "");  set(m.p); };
   double& operator()(int, int);
   const double& operator()(int, int) const;
   
@@ -97,7 +97,7 @@ struct Quaternion {
   double p[4];
   
   Quaternion();
-  Quaternion(const arr& q){ CHECK(q.N==4,"");  set(q.p); };
+  Quaternion(const arr& q){ CHECK(q.N==4, "");  set(q.p); };
   
   void set(double q0, double x, double y, double z);
   void set(double* q);
@@ -681,7 +681,7 @@ struct TaskVariable {
   //MT TODO: REMOVE ALL of the following options:
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
-  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec); 
+  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
   void setPrecisionTrajectoryConstant(uint T, double constant_prec);
   void setPrecisionVTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
   void setPrecisionVTrajectoryConstant(uint T, double constant_prec);
@@ -948,9 +948,9 @@ struct Link {
   void updateFeatherstones();
   void write(ostream& os) const {
     os  <<"*type="  <<type  <<" index="  <<index  <<" parent="  <<parent  <<endl
-     <<" XAQ="  <<X  <<A  <<Q  <<endl
-     <<" cft="  <<com  <<force  <<torque  <<endl
-     <<" mass="  <<mass  <<inertia  <<endl;
+   <<" XAQ="  <<X  <<A  <<Q  <<endl
+   <<" cft="  <<com  <<force  <<torque  <<endl
+   <<" mass="  <<mass  <<inertia  <<endl;
   }
 };
 

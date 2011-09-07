@@ -750,12 +750,12 @@ void plotDrawOpenGL(void *_data){
 //
 
 #define PLOTEVERY(block, with)  gnuplotcmd \
-  <<"'z.plotdata' every :::"<<(block)<<"::"<<(block)<<(with);
+ <<"'z.plotdata' every :::" <<(block) <<"::" <<(block) <<(with);
 
 void plotDrawGnuplot(void *_data){
   PlotModuleWorkspace& data=(*((PlotModuleWorkspace*)_data));
-  uint i,j,k;
-
+  uint i, j, k;
+  
   //openfiles
   MT::String gnuplotcmd;
   std::ofstream gnuplotdata;
@@ -775,47 +775,47 @@ void plotDrawGnuplot(void *_data){
   bool ior=MT::IOraw;
   MT::IOraw=true;
   //lines
-  for(i=0;i<data.lines.N;i++){
-    FOR1D(data.lines(i),j){
-      FOR1D(data.lines(i)[j],k) gnuplotdata <<data.lines(i)[j](k) <<" ";
-      gnuplotdata<<std::endl;
+  for(i=0; i<data.lines.N; i++){
+    FOR1D(data.lines(i), j){
+      FOR1D(data.lines(i)[j], k) gnuplotdata <<data.lines(i)[j](k) <<" ";
+      gnuplotdata <<std::endl;
     }
     gnuplotdata <<std::endl;
-    if(block) gnuplotcmd <<",\\\n";
+    if(block) gnuplotcmd <<", \\\n";
     if(data.lines(i).d1!=4){
-      PLOTEVERY(block," with l notitle");
+      PLOTEVERY(block, " with l notitle");
     }else{ //with filled error curves
       PLOTEVERY(block,
-          " using 1:2:3 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ");
+                " using 1:2:3 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle, \\\n ");
       PLOTEVERY(block,
-          " using 1:2:4 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle,\\\n ");
-      PLOTEVERY(block," using 1:2 with l lc rgb 'green' notitle");
+                " using 1:2:4 with filledcurves fill solid 0.4 lc rgb 'yellow' notitle, \\\n ");
+      PLOTEVERY(block, " using 1:2 with l lc rgb 'green' notitle");
     }
     block++;
   }
   //points
-  for(i=0;i<data.points.N;i++){
-    FOR1D(data.points(i),j){
-      FOR1D(data.points(i)[j],k) gnuplotdata <<data.points(i)[j](k) <<" ";
-      gnuplotdata<<std::endl;
+  for(i=0; i<data.points.N; i++){
+    FOR1D(data.points(i), j){
+      FOR1D(data.points(i)[j], k) gnuplotdata <<data.points(i)[j](k) <<" ";
+      gnuplotdata <<std::endl;
     }
     gnuplotdata <<std::endl;
-    if(block) gnuplotcmd <<",\\\n";
-    PLOTEVERY(block," with p notitle");
+    if(block) gnuplotcmd <<", \\\n";
+    PLOTEVERY(block, " with p notitle");
     block++;
   }
   
   if(data.array.N) gnuplotcmd  <<"\n\npause mouse\nset dgrid3d\n\nsplot \\\n";
   
   //surfaces
-  for(i=0;i<data.array.N;i++){
-    uint j,k,X=data.array(i).d1,Y=data.array(i).d0;
-    for(j=0;j<Y;j++) for(k=0;k<X;k++){
-      gnuplotdata <<2.*(double)k/(X-1.)-1. <<' ' <<-2.*(double)j/(Y-1.)+1. <<' ' <<data.array(i)(j,k) <<std::endl;
-    }
+  for(i=0; i<data.array.N; i++){
+    uint j, k, X=data.array(i).d1, Y=data.array(i).d0;
+    for(j=0; j<Y; j++) for(k=0; k<X; k++){
+        gnuplotdata <<2.*(double)k/(X-1.)-1. <<' ' <<-2.*(double)j/(Y-1.)+1. <<' ' <<data.array(i)(j, k) <<std::endl;
+      }
     gnuplotdata <<std::endl;
-    if(i && block) gnuplotcmd <<",\\\n";
-    PLOTEVERY(block," with l notitle");
+    if(i && block) gnuplotcmd <<", \\\n";
+    PLOTEVERY(block, " with l notitle");
     block++;
   }
   MT::IOraw=ior;

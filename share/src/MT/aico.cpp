@@ -78,8 +78,7 @@ void AICO::init_messages(){
   r.resize(T+1, n);  R.resize(T+1, n, n);     r.setZero();  R   .setZero();  r[0]=0.;  R[0]=0.;
   rhat.resize(T+1);    rhat.setZero();
   xhat.resize(T+1, n);  xhat.setZero();  xhat[0]=x0;
-  q = xhat;
-  if(sys->dynamic) soc::getPositionTrajectory(q, xhat); else q=xhat;
+  if(sys->dynamic) soc::getPositionTrajectory(q, b); else q=b;
   //dampingReference = qhat;
   dampingReference.clear();
   
@@ -482,7 +481,7 @@ double AICO::step(){
   switch(sweepMode){
       //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
     case smForwardly:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep);  //relocate once on fwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd sweep
       for(t=T+1; t--;)   updateTimeStep(t, false, true, 0, tolerance, false); //...not on bwd sweep
       break;
     case smSymmetric:

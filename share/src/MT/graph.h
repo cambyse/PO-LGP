@@ -14,7 +14,7 @@ void EdgesToNeighbors(MT::Array<uintA>& del, uint N, const uintA& E){
 void writeToDotFile(const char* filename, uint N, const uintA& E){
   ofstream fil(filename);
   fil  <<"digraph "  <<"N_"  <<N  <<"_"  <<E.d0  <<" {\n"
-   <<"\trankdir=TB;\n";
+ <<"\trankdir=TB;\n";
   
   for(uint i=0; i<E.d0; ++i){
     fil  <<E(i, 0)  <<'-'  <<E(i, 1)  <<endl;

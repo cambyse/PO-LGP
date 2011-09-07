@@ -110,10 +110,10 @@ struct FutureMotionGoal:public Variable {
 };
 
 struct GraspObject;
-struct GraspObjectVar:public Variable{
+struct GraspObjectVar:public Variable {
   GraspObject *o;
   GraspObject *prior;//?remove
-
+  
   GraspObjectVar():Variable("grasp object"){ o=NULL; prior=NULL;};
 };
 

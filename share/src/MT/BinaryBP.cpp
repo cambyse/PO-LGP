@@ -674,10 +674,10 @@ void BinaryBPNet::getSamples(uintA &samples, uint S){
     for_list(i, n, nodes) n->theta=phi(i); //reset all evidences
     zeroMessages();                                 //reset all messages
     for_list(i, n, nodes){
-      for(t=0; t<100; t++) stepBP();       //do inference for some time
+      for(t=0; t<100; t++) stepBP();     //do inference for some time
       //get the belief at node i
       //translate to a probability
-      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, i)=1;      //sample a state of node i
+      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, i)=1;    //sample a state of node i
       if(samples(s, i)) n->theta=1000.; else n->theta=-1000.; //set hard evidence at node i
     }
   }

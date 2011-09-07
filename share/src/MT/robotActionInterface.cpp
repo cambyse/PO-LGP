@@ -43,106 +43,106 @@ void RobotActionInterface::close(){
 }
 
 void RobotActionInterface::wait(double sec){
-    s->master.ctrl.change_task(Stop::a());
-	double time=MT::realTime();
-	for(;!schunkShutdown;){
-		MT::wait(.2);
-		if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
-		if(sec>0 && MT::realTime()-time>sec) break;
-	}
-	//while(s->master.joy.state(0)!=0) s->master.step();
+  s->master.ctrl.change_task(Stop::a());
+  double time=MT::realTime();
+  for(; !schunkShutdown;){
+    MT::wait(.2);
+    if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
+    if(sec>0 && MT::realTime()-time>sec) break;
+  }
+  //while(s->master.joy.state(0)!=0) s->master.step();
 }
 
 void RobotActionInterface::joystick(){
   s->master.ctrl.change_task(Joystick::a());
-  for(;!schunkShutdown;){
+  for(; !schunkShutdown;){
     MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) break;
   }
   s->master.ctrl.change_task(Stop::a());
-  for(uint t=0;t<10;t++) s->master.step();
+  for(uint t=0; t<10; t++) s->master.step();
   //while(s->master.joy.state(0)!=0) s->master.step();
 }
 
 void RobotActionInterface::homing(){
   s->master.ctrl.change_task(Homing::a());
-	for(;!schunkShutdown;){
-		MT::wait(.2);
-		double dist=norm(s->master.ctrl.q_reference);
-		cout <<"\rhoming dist = " <<dist <<std::flush;
-		if(dist<1e-1) break;
-		if(s->master.joy.state(0)&0x30) break;
-	}
+  for(; !schunkShutdown;){
+    MT::wait(.2);
+    double dist=norm(s->master.ctrl.q_reference);
+    cout <<"\rhoming dist = " <<dist <<std::flush;
+    if(dist<1e-1) break;
+    if(s->master.joy.state(0)&0x30) break;
+  }
   s->master.ctrl.change_task(Stop::a());
 }
 
-void RobotActionInterface::reach(const char* shapeName,const arr& posGoal,double maxVel){
+void RobotActionInterface::reach(const char* shapeName, const arr& posGoal, double maxVel){
   s->master.ctrl.change_task(DoNothing::a());
-	s->master.ctrl.taskLock.writeLock();
-	TaskAbstraction *task = &s->mytask;
-
-	TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
-	TV.setGainsAsNatural(3.,1.,false);
-	TV.y_prec = 1e2;  TV.y_target = posGoal;
-	TV.v_prec = 0.;   TV.v_target = ARR(0.,0.,0.);
-	TV.updateState(); //non-thread state -- ors actually needs a lock
-
-	task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
-	task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
-	task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
-
-	s->master.ctrl.sys.setTaskVariables(ARRAY(&TV,task->TV_col,task->TV_lim,task->TV_q)); //non-thread safe: task variable list needs a lock
-	s->master.ctrl.taskLock.unlock();
-
-	for(;!schunkShutdown;){
-		MT::wait(.2);
-		cout <<"\rdist = " <<TV.err <<std::flush;
-		if(TV.err<1e-2) break;
-		if(s->master.joy.state(0)&0x30) break;
-	}
-
-	s->master.ctrl.taskLock.writeLock();
-	s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.taskLock.writeLock();
+  TaskAbstraction *task = &s->mytask;
+  
+  TaskVariable TV("reach", *s->master.ctrl.sys.ors, posTVT, shapeName, NULL, 0);
+  TV.setGainsAsNatural(3., 1., false);
+  TV.y_prec = 1e2;  TV.y_target = posGoal;
+  TV.v_prec = 0.;   TV.v_target = ARR(0., 0., 0.);
+  TV.updateState(); //non-thread state -- ors actually needs a lock
+  
+  task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
+  
+  s->master.ctrl.sys.setTaskVariables(ARRAY(&TV, task->TV_col, task->TV_lim, task->TV_q)); //non-thread safe: task variable list needs a lock
+  s->master.ctrl.taskLock.unlock();
+  
+  for(; !schunkShutdown;){
+    MT::wait(.2);
+    cout <<"\rdist = " <<TV.err <<std::flush;
+    if(TV.err<1e-2) break;
+    if(s->master.joy.state(0)&0x30) break;
+  }
+  
+  s->master.ctrl.taskLock.writeLock();
+  s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
+  s->master.ctrl.taskLock.unlock();
   s->master.ctrl.change_task(Stop::a());
 }
 
-void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoal,const arr& vecGoal,double maxVel){
+void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal, double maxVel){
   s->master.ctrl.change_task(DoNothing::a());
-	s->master.ctrl.taskLock.writeLock();
-	TaskAbstraction *task = &s->mytask;
-
-	TaskVariable TV("reach",*s->master.ctrl.sys.ors,posTVT,shapeName,NULL,0);
-	TV.setGainsAsNatural(3.,1.,false);
-	TV.y_prec = 1e2;  TV.y_target = posGoal;
-	TV.v_prec = 0.;   TV.v_target = ARR(0.,0.,0.);
-	TV.updateState();
-
-	TaskVariable TValign("align",*s->master.ctrl.sys.ors,zalignTVT,shapeName,NULL,0);
-	ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
-	TValign.jrel.rot.setDiff(VEC_z,vecGoalOrs);
-	TValign.setGainsAsNatural(2.,1.,false);
-	TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
-	TValign.v_prec = 0.;   TValign.v_target = ARR(0.);
-	TValign.updateState();
-
-	task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
-	task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
-	task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
-
-	s->master.ctrl.sys.setTaskVariables(ARRAY(&TV,&TValign,task->TV_col,task->TV_lim,task->TV_q));
-	s->master.ctrl.taskLock.unlock();
-
-	for(;!schunkShutdown;){
-		MT::wait(.2);
-		cout <<"\rdist = " <<TV.err <<std::flush;
-		if(TV.err<1e-2) break;
-		if(s->master.joy.state(0)&0x30) break;
-	}
-
-	s->master.ctrl.taskLock.writeLock();
-	s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
-	s->master.ctrl.taskLock.unlock();
+  s->master.ctrl.taskLock.writeLock();
+  TaskAbstraction *task = &s->mytask;
+  
+  TaskVariable TV("reach", *s->master.ctrl.sys.ors, posTVT, shapeName, NULL, 0);
+  TV.setGainsAsNatural(3., 1., false);
+  TV.y_prec = 1e2;  TV.y_target = posGoal;
+  TV.v_prec = 0.;   TV.v_target = ARR(0., 0., 0.);
+  TV.updateState();
+  
+  TaskVariable TValign("align", *s->master.ctrl.sys.ors, zalignTVT, shapeName, NULL, 0);
+  ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
+  TValign.jrel.rot.setDiff(VEC_z, vecGoalOrs);
+  TValign.setGainsAsNatural(2., 1., false);
+  TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
+  TValign.v_prec = 0.;   TValign.v_target = ARR(0.);
+  TValign.updateState();
+  
+  task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
+  task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
+  task->TV_q->v_prec=task->TV_q_vprec;  task->TV_q->v_target.setZero(); //damping on joint velocities
+  
+  s->master.ctrl.sys.setTaskVariables(ARRAY(&TV, &TValign, task->TV_col, task->TV_lim, task->TV_q));
+  s->master.ctrl.taskLock.unlock();
+  
+  for(; !schunkShutdown;){
+    MT::wait(.2);
+    cout <<"\rdist = " <<TV.err <<std::flush;
+    if(TV.err<1e-2) break;
+    if(s->master.joy.state(0)&0x30) break;
+  }
+  
+  s->master.ctrl.taskLock.writeLock();
+  s->master.ctrl.sys.setTaskVariables(s->master.ctrl.task->TVall);
+  s->master.ctrl.taskLock.unlock();
   s->master.ctrl.change_task(Stop::a());
 }
 
@@ -159,7 +159,7 @@ void RobotActionInterface::setMesh(const char* shapeName, const ors::Mesh& mesh)
 
 void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
   s->master.ctrl.change_task(Stop::a());
-  for(;!schunkShutdown;){
+  for(; !schunkShutdown;){
     perc.output.readAccess(NULL);
     bool bPerceive = false;
     for(uint i=0; i<perc.output.objects.N; i++){
@@ -182,9 +182,9 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
           MT_MSG("objs found");
         }else{
           MT_MSG("looking at objects"
-                  <<perc.output.objects(0).found <<", "
-                  <<perc.output.objects(1).found <<", "
-                  <<perc.output.objects(2).found
+                <<perc.output.objects(0).found <<", "
+                <<perc.output.objects(1).found <<", "
+                <<perc.output.objects(2).found
                 );
         }
       }
@@ -209,7 +209,7 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   
   // the robot halts
   s->master.ctrl.change_task(Stop::a());
-
+  
   bool bPlanDone = false;
   bool converged, executed;
   for(; !schunkShutdown;){
@@ -242,9 +242,9 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   reattachShape(*(s->master.gui.ors), NULL, objShape, "m9", NULL);
   reattachShape(*(s->master.gui.ors2), NULL, objShape, "m9", NULL);
   s->master.ctrl.taskLock.unlock();
-
+  
   s->master.ctrl.change_task(CloseHand::a());
-
+  
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=false;
   s->master.ctrl.taskLock.unlock();
@@ -254,9 +254,9 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=true;
   s->master.ctrl.taskLock.unlock();
-
+  
   s->master.ctrl.change_task(Stop::a());
-
+  
 }
 
 void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const char* objShape, const char* belowFromShape, const char* belowToShape){
@@ -266,9 +266,9 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   planner.goalVar->belowFromShape=belowFromShape;
   planner.goalVar->belowToShape=belowToShape;
   planner.goalVar->deAccess(NULL);
-
+  
   s->master.ctrl.change_task(Stop::a());
-
+  
   bool bPlanDone = false;
   bool converged, executed;
   for(; !schunkShutdown;){
@@ -307,7 +307,7 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   reattachShape(*s->master.gui.ors, NULL, objShape, "OBJECTS", NULL);
   reattachShape(*s->master.gui.ors2, NULL, objShape, "OBJECTS", NULL);
   s->master.ctrl.taskLock.unlock();
-
+  
   s->master.ctrl.change_task(OpenHand::a());
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=false;
@@ -328,9 +328,9 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner, const
   planner.goalVar->graspShape=objShape;
   planner.goalVar->belowToShape=belowToShape;
   planner.goalVar->deAccess(NULL);
-
+  
   s->master.ctrl.change_task(Stop::a());
-
+  
   bool bPlanDone = false;
   bool converged, executed;
   for(; !schunkShutdown;){
@@ -366,10 +366,10 @@ void RobotActionInterface::graspISF(){
   GraspObjectVar graspobj;
   perceive.perc_out = &s->perc....
   &graspobj.o = perceive.graspobj;
-
+  
   perceive.threadOpen();
   s->master.ctrl.change_task(GraspISF::a());
-
+  
   perceive.threadClose();
   */
 }

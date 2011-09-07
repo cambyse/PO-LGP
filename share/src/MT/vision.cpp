@@ -769,7 +769,7 @@ void compute_mu_IV(floatA& mu_IV, const byteA& img0, const byteA& img1, float pi
   }
   float *mu_IVp=mu_IV.p, *mu_IVstop=mu_IVp+mu_IV.N;
   //for(;mu_IVp!=mu_IVstop;mu_IVp++){ (*mu_IVp) = ::exp(-.5*(*mu_IVp)); }       //gauss
-  for(; mu_IVp!=mu_IVstop; mu_IVp++){(*mu_IVp) = student3(*mu_IVp); }    //gauss
+  for(; mu_IVp!=mu_IVstop; mu_IVp++){(*mu_IVp) = student3(*mu_IVp); }  //gauss
   mu_IV = ~mu_IV;
 }
 

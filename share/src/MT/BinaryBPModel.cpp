@@ -23,7 +23,7 @@ void BinaryBPNetModel::randomInit(){
   uint N=MT::getParameter<uint>("N");
   uint D=MT::getParameter<uint>("D");
   if(D==0) graphRandomUndirected(net.nodes, net.edges, N, -1.); //unconnected!
-  if(D==1) graphRandomLinear(net.nodes, net.edges, N);          //just a chain!
+  if(D==1) graphRandomLinear(net.nodes, net.edges, N);        //just a chain!
   //graphRandomTree(net.nodes, net.edges, N, 1);
   if(D>1)  graphRandomFixedDegree(net.nodes, net.edges, N, D);
   net.randomizeWeightsUniform(1., 1., MT::getParameter<bool>("positive"));
