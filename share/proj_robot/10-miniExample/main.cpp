@@ -19,24 +19,10 @@ void MyTask::updateTaskVariables(ControllerProcess *ctrl){
   }
 }
 
-void oldVersion(){
+void basicLoop(){
   MyTask task;
-  RobotModuleGroup robot;
-  robot.ctrl.task=&task;
-  robot.ctrl.forceColLimTVs=false; //!!!!WARNING!!!!
-  
-  robot.open();
-  for(;!robot.signalStop;){ //catches the ^C key
-    robot.step();
-    if(task.TV_eff->y(2)>1.) break;
-    if(robot.joy.state(0)==16 || robot.joy.state(0)==32) break;
-    //cout <<task.TV_eff->y <<endl;
-  }
-  robot.close();
-}
 
-void newVersion(){
-  MyTask task;
+  bool openArm = MT::Parameter<bool>("openArm",false);
 
   //Variables
   q_currentReferenceVar q;
@@ -52,32 +38,45 @@ void newVersion(){
   ctrl.task=&task;
   ctrl.forceColLimTVs=false; //!!!!WARNING!!!!
 
-  threadWin.threadLoopWithBeat(.01);
-  joy.threadLoopWithBeat(.01);
+  //open processes
   ctrl.threadOpen();
   ctrl.threadWait(); //wait until open() finished
-  arm.threadOpen();
-  arm.threadWait();
+  if(openArm){
+    arm.threadOpen();
+    arm.threadWait();
+  }
   ctrl.q_reference = q.q_real;
-  
   gui.createOrsClones(&ctrl.ors);
-  gui.threadLoop();
 
-  Metronome ticcer("MasterTiccer",MT::getParameter<long>("tenMilliSeconds"));
-  for(uint t=0;t<10000 && !schunkShutdown;t++){ //catches the ^C key
-    ticcer.waitForTic();
-    arm.threadStep();
-    ctrl.threadStep();
-    if(joy.state(0)==16 || joy.state(0)==32) break;
+  //start looping
+  gui.threadLoop();
+  threadWin.threadLoopWithBeat(.01);
+  joy.threadLoopWithBeat(.01);
+  if(openArm){
+    arm.threadLoopWithBeat(0.01);
+    ctrl.threadLoopSyncWithDone(arm);
+  }else{
+    ctrl.threadLoopWithBeat(0.01);
   }
 
+  //wait for stop
+  for(uint t=0;t<10000 && !schunkShutdown;t++){ //catches the ^C key
+    MT::wait(.1);
+    if(joy.state(0)==16 || joy.state(0)==32) break;
+  }
+  
+  if(openArm) arm.threadClose();
+  ctrl.threadClose();
+  joy.threadClose();
+  gui.threadClose();
+  threadWin.threadClose();
 }
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
   signal(SIGINT,schunkEmergencyShutdown);
 
-  newVersion();
+  basicLoop();
   
   return 0;
 }

@@ -58,7 +58,7 @@ void ControllerProcess::open(){
     MT::String sfile;
     MT::getParameter<MT::String>(sfile, "orsFile");
     MT::load(ors, sfile, true);
-  } else MT::load(ors, "../../configurations/schunk.ors", true);
+  } else MT::load(ors, STRING(getenv("MLR")<<"/configurations/schunk_clean.ors"), true);
   
   ors.calcBodyFramesFromJoints();
   ors.getJointState(q_reference, v_reference);
@@ -114,6 +114,12 @@ void ControllerProcess::step(){
     q_referenceVar->readAccess(this);
     for(uint m=0; m<7; m++) q_reference(q_referenceVar->handMotorIndices(m)) = q_referenceVar->q_real(q_referenceVar->handMotorIndices(m));
     q_referenceVar->deAccess(this);
+  }
+  
+  if(joyVar){
+    joyVar->readAccess(this);
+    task->joyState = joyVar->state;
+    joyVar->deAccess(this);
   }
   
   //syncronize the ors/soc system with the true state q_ors and v_ors
@@ -208,8 +214,8 @@ RobotModuleGroup::RobotModuleGroup():ticcer("MasterTiccer", MT::getParameter<lon
   openLaser=MT::Parameter<bool>("openLaser", false);
   openBumble=MT::Parameter<bool>("openBumble", false);
   openEarlyVision=MT::Parameter<bool>("openEarlyVision", false);
-  openGui=MT::Parameter<bool>("openGui", false);
-  openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", false);
+  openGui=MT::Parameter<bool>("openGui", true);
+  openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", true);
   if(MT::checkParameter<MT::String>("logFile")){
     log = new ofstream;
     MT::open(*(ofstream*)log, MT::getParameter<MT::String>("logFile").p);
@@ -235,6 +241,7 @@ void RobotModuleGroup::open(){
   ctrl.q_referenceVar = &q_currentReference;
   ctrl.skinPressureVar = &skinPressureVar;
   ctrl.proxiesVar = &currentProxies;
+  ctrl.joyVar = &joy;
   ctrl.threadOpen();
   ctrl.threadWait();
   motorIndex.resize(7);
@@ -358,7 +365,7 @@ TaskAbstraction::TaskAbstraction(){
   plan_count=0.;
   joyVar = NULL;
   planVar= NULL;
-  joyRate = MT::Parameter<double>("joyRate", .2);
+  joyRate = MT::Parameter<double>("joyRate", .1);
   //-- planned trajectory
   if(MT::getParameter<bool>("loadPlanned", false)){
     ifstream fil;
@@ -428,7 +435,7 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
 #endif
   TV_rot->active=true;  TV_rot->targetType=directTT;  TV_rot->y_prec=0;     TV_rot->v_prec=TV_rot_vprec;
-  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e-1); TV_col->v_prec=0;
+  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;
   TV_lim->active=true;  TV_lim->targetType=directTT;  TV_lim->y_prec=MT::Parameter<double>("TV_lim_yprec", 1e3); TV_lim->v_prec=0;
   TV_q  ->active=true;  TV_q->targetType=directTT;    TV_q  ->y_prec=0;     TV_q->v_prec=TV_q_vprec;
   TV_skin->active=true; TV_skin->targetType=directTT; TV_skin->y_prec=MT::Parameter<double>("TV_skin_yprec", 1e3); TV_skin->v_prec=0;
@@ -578,7 +585,7 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
 }
 void
 Joystick::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,!(joyState(0)==2));
+  prepare_skin(ctrl,joyState(0)!=2);
   activateAll(TVall,false);
   ctrl->useBwdMsg=false;
 
@@ -662,12 +669,6 @@ Joystick::updateTaskVariables(ControllerProcess *ctrl){
 
 void
 TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
-  if(joyVar){
-    joyVar->readAccess(ctrl);
-    joyState = joyVar->state;
-    joyVar->deAccess(ctrl);
-  } else MT_MSG("Variable pointer not set");
-  
   if(ctrl->skinState.N){
     TV_skin->y = ctrl->skinState;
   }else{

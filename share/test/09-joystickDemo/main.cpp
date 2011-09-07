@@ -143,7 +143,7 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
   //signal(SIGINT,RobotModuleGroup::signalStopCallback);
 
-  switch(MT::getParameter<int>("mode")){
+  switch(MT::getParameter<int>("mode",0)){
     case 0:  testJoy();  break;
     case 1:  testActions();  break;
     case 2:  testReachPlanning();  break;
