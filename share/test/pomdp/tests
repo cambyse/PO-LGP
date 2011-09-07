@@ -1,0 +1,26 @@
+# these should all lead to identical outputs (except for time!):
+
+./x.exe -mode 3 -levels [10]   -estepHorizon 100 -estepIncremental 0 -estepStructured 0                 > z.1
+./x.exe -mode 3 -levels [10,1] -estepHorizon 100 -estepIncremental 0 -estepStructured 0 -forceLevel1 1  > z.2
+#./x.exe -mode 3 -levels [10,1] -estepHorizon 100 -estepIncremental 0 -estepStructured 0 -forceLevel1 0  > z.3
+#./x.exe -mode 3 -levels [10,1] -estepHorizon 100 -estepIncremental 0 -estepStructured 1                 > z.4
+./x.exe -mode 4 -levels [10,1] -estepHorizon 100 -estepIncremental 0 -estepStructured 0                 > z.5
+./x.exe -mode 4 -levels [10,1] -estepHorizon 100 -estepIncremental 0 -estepStructured 1                 > z.6
+
+
+# these should all lead to identical outputs (except for time!):
+
+./x.exe -mode 3 -levels [10,3] -estepHorizon 100 -estepIncremental 0 -estepStructured 0 -forceLevel1 1  > z.1
+./x.exe -mode 4 -levels [10,3] -estepHorizon 100 -estepIncremental 0 -estepStructured 0                 > z.2
+./x.exe -mode 4 -levels [10,3] -estepHorizon 100 -estepIncremental 0 -estepStructured 1                 > z.3
+
+./x.exe -mode 3 -levels [10,3] -estepStructured 0 -forceLevel1 1  > z.1
+./x.exe -mode 4 -levels [10,3] -estepStructured 0  > z.2
+./x.exe -mode 4 -levels [10,3] -estepStructured 1  > z.3
+./x.exe -mode 4 -levels [10,3,1] -estepStructured 0  > z.4
+./x.exe -mode 4 -levels [10,3,1] -estepStructured 1  > z.5
+
+# these should all lead to identical outputs (except for time!):
+
+./x.exe -mode 4 -levels [10,3,3] -mdpType 0 -problemFile pomdp/paint.95.POMDP.arr > z.1
+./x.exe -mode 4 -levels [10,3,3] -mdpType 1 -problemFile pomdp/paint.95.mdp > z.2

@@ -12,7 +12,7 @@ uint VarCount=0;
 
 //dummy to encorde pre-main initialization
 struct infer_Init{
-  infer_Init(){ VarL::memMoveInit=1; FacL::memMoveInit=1; MsgPairL::memMoveInit=1; }
+  infer_Init(){ VariableList::memMoveInit=1; FactorList::memMoveInit=1; MessagePairList::memMoveInit=1; }
 } infer_init;
 
 //===========================================================================
@@ -21,8 +21,8 @@ struct infer_Init{
 //
 
 
-//void get_vars(VarL& V, const FacL& factors);
-void getNeighbors(Factor* f, FacL& neighbors);
+//void get_vars(VariableList& V, const FactorList& factors);
+void getNeighbors(Factor* f, FactorList& neighbors);
 void convert_id2config(uintA& config, uint id, const uintA& varDimensions);
 uint convert_config2id(uintA& config, const uintA& varDimensions);
 uint convert_config2id(boolA truths);
@@ -30,7 +30,7 @@ int get_list_index(FactorGraph& fg, Factor* f);
 uint get_list_index_unsigned(FactorGraph& fg, Factor* f);
 
 
-void get_vars(VarL& V, const FacL& factors){
+void get_vars(VariableList& V, const FactorList& factors){
   V.clear();
   uint i, k;
   FOR1D(factors, i){
@@ -40,7 +40,7 @@ void get_vars(VarL& V, const FacL& factors){
   }
 }
 
-void getNeighbors(Factor* f, FacL& neighbors){
+void getNeighbors(Factor* f, FactorList& neighbors){
   neighbors.clear();
   uint i;
   FOR1D(f->messages, i){
@@ -177,9 +177,9 @@ void iSpace::writeVariables(std::ostream& os) const {
 //
 
 Variable::Variable(){
-  VarL::memMoveInit=1;
-  FacL::memMoveInit=1;
-  MsgPairL::memMoveInit=1;
+  VariableList::memMoveInit=1;
+  FactorList::memMoveInit=1;
+  MessagePairList::memMoveInit=1;
   factors.memMove=true;
   messages.memMove=true;
   id=-1;
@@ -225,7 +225,7 @@ void disconnectFactor(Factor &f){
   f.dim.clear();
 }
 
-void Factor::relinkTo(const VarL& vars){
+void Factor::relinkTo(const VariableList& vars){
   uint i;
   Variable *v;
   for_list(i,v,variables) v->factors.removeValue(this);
@@ -235,7 +235,7 @@ void Factor::relinkTo(const VarL& vars){
   for(uint i=0;i<vars.N;i++) CHECK(dim(i)==variables(i)->dim,"relinking to variables with different dimension!");
 }
 
-void initFactor(Factor &f,const VarL& vars){
+void initFactor(Factor &f,const VariableList& vars){
   disconnectFactor(f);
   uint i;
   Variable *v;
@@ -258,7 +258,7 @@ void checkConsistent(const Factor &f){
   }
 }
 
-void checkConsistent(const FacL& F){
+void checkConsistent(const FactorList& F){
   uint i;
   Factor *f;
   for_list(i,f,F) checkConsistent(*f);
@@ -274,13 +274,13 @@ Factor::~Factor(){
   disconnectFactor(*this);
 }
 
-Factor::Factor(const VarL& variables,const char *_name){
+Factor::Factor(const VariableList& variables,const char *_name){
   initFactor(*this,variables);
   setOne();
   if(_name) name=_name;
 }
 
-Factor::Factor(const VarL& variables,const arr& q){
+Factor::Factor(const VariableList& variables,const arr& q){
   initFactor(*this,variables);
   setP(q);
 }
@@ -629,7 +629,7 @@ void FactorGraph::checkCondNormalization_B_c(double tol){
 }
 
 
-void FactorGraph::setCliqueBeliefs(const FacL& fs_orig){
+void FactorGraph::setCliqueBeliefs(const FactorList& fs_orig){
   uint i;
   // build belief factors if needed
   Factor* b;
@@ -746,7 +746,7 @@ void FactorGraph::setV2F(){
   if(!V2F.empty()) V2F.clear();
   uint i, k;
   FOR1D(V, i){
-    FacL dummy;
+    FactorList dummy;
     V2F[V(i)->id] = dummy;
     FOR1D(F, k){
       if(F(k)->varIds(0)==V(i)->id){
@@ -835,7 +835,7 @@ void get_vars(FactorGraph& fg, uintA& varIds){
 // cf-->vf  iff  variable in vf is the one that is conditioned on in cf (the first one there)
 // cf<--vf  otherwise
 #if 0
-void LoopyBP::constructBipartiteFactorGraph(FactorGraph& fg, const FacL& factors){
+void LoopyBP::constructBipartiteFactorGraph(FactorGraph& fg, const FactorList& factors){
   uint i,j;
   //copy factors
   fg.F = factors;
@@ -875,7 +875,7 @@ void LoopyBP::constructBipartiteFactorGraph(FactorGraph& fg, const FacL& factors
   fg.setV2Fv();
 }
 #else
-void LoopyBP_obsolete::constructBipartiteFactorGraph(FactorGraph& fg, const FacL& factors){
+void LoopyBP_obsolete::constructBipartiteFactorGraph(FactorGraph& fg, const FactorList& factors){
   uint i, k;
   // (1) variables
   get_vars(fg.V, factors);
@@ -1007,7 +1007,7 @@ bool checkConsistency(const MessagePair& sep){
 }
 
 //! checks a whole list of messages
-bool checkConsistencyBatch(const MsgPairL& msgs){
+bool checkConsistencyBatch(const MessagePairList& msgs){
   uint i;
   FOR1D(msgs, i) checkConsistency(*msgs(i));
   return true;
@@ -1184,7 +1184,7 @@ double passMessage(Factor& f_from, Factor& f_to, Factor& b_to, MsgCalc calcMsgTy
 // }
 
 
-void getMarginal(Factor& marginal, const VarL& marginalVars, FactorGraph& fg){
+void getMarginal(Factor& marginal, const VariableList& marginalVars, FactorGraph& fg){
   // search for factors containing marginalVars
   uint f, v;
   FOR1D(fg.B_c, f){
@@ -1206,7 +1206,7 @@ void getMarginal(Factor& marginal, const VarL& marginalVars, FactorGraph& fg){
 /* return a list of posteriors for each variable.
   We step through all variables, get the (last) factor over
   this variable, collect a belief for it, and marginalize it */
-void getVariableBeliefs(MT::Array<arr>& post,const VarL& vars){
+void getVariableBeliefs(MT::Array<arr>& post,const VariableList& vars){
   uint i,N=vars.N;
   post.resize(N);
   Factor *f,belief,marg;
@@ -1224,7 +1224,7 @@ void getVariableBeliefs(MT::Array<arr>& post,const VarL& vars){
 
 
 
-void printFactorArrayViaVariableSets(FacL factors){
+void printFactorArrayViaVariableSets(FactorList factors){
   uint i;
   FOR1D(factors, i){
     cout <<factors(i)->varIds <<" ";
@@ -1254,7 +1254,7 @@ double robustDivide(double a,double b){
 then pick will contain l indices, shouting which slot of id corresponds to each slot of mid. For instance
 if we have a product of two sensors \f$A_{ijklm} B_{kli}\f$ then pick will be <2 3 0> shouting that
 the 0th slot of B is the 2nd of A, that the 1st slot of B is the 3rd of A, and that the 3rd slot of B is the 0th of A. */
-void getPick(uintA& pick,const VarL& base_vars,const VarL& multiplier_vars){
+void getPick(uintA& pick,const VariableList& base_vars,const VariableList& multiplier_vars){
   uint i=0,k=0;
   pick.resize(multiplier_vars.N);
   for(k=0;k<multiplier_vars.N;k++){
@@ -1266,7 +1266,7 @@ void getPick(uintA& pick,const VarL& base_vars,const VarL& multiplier_vars){
 }
 
 void tensorProduct(Factor& f, const Factor& a, const Factor& b){
-  VarL fvars;
+  VariableList fvars;
   setUnion(fvars,a.variables,b.variables);
   initFactor(f,fvars);
   f.P.resize(f.dim);
@@ -1278,14 +1278,14 @@ void tensorProduct(Factor& f, const Factor& a, const Factor& b){
   lognormScale(f.P,f.logP);
 }
 
-void tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, const VarL& s){
-  VarL fvars;
+void tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, const VariableList& s){
+  VariableList fvars;
   setUnion(fvars,a.variables,b.variables);
   setMinus(fvars,s);
   initFactor(f,fvars);
   f.P.resize(f.dim);
   uintA pickA,pickB;
-  VarL all;
+  VariableList all;
   all=f.variables;
   for(uint i=0;i<s.N;i++) all.append(s(i)); //all.append(s);
   getPick(pickA,all,a.variables);
@@ -1295,7 +1295,7 @@ void tensorProductMarginal(Factor& f, const Factor& a, const Factor& b, const Va
   lognormScale(f.P,f.logP);
 }
 
-void tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
+void tensorMarginal(Factor& m,const Factor& f, const VariableList& marginalVars){
   initFactor(m,marginalVars);
   uintA pick;
   getPick(pick,f.variables,m.variables);
@@ -1304,7 +1304,7 @@ void tensorMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
   lognormScale(m.P,m.logP);
 }
 
-void tensorMaxMarginal(Factor& m,const Factor& f, const VarL& marginalVars){
+void tensorMaxMarginal(Factor& m,const Factor& f, const VariableList& marginalVars){
   initFactor(m,marginalVars);
   uintA pick;
   getPick(pick,f.variables,m.variables);
@@ -1394,11 +1394,11 @@ void tensorWeightedAdd(Factor& f,double w,const Factor& m){
 //
 // ELIMINATION ALGORITHM methods
 //
-void getJoint(Factor& joint,const FacL& factors){
+void getJoint(Factor& joint,const FactorList& factors){
   DEBUG_INFER(1,cout <<MT_HERE <<endl);
   uint i;
   //get tuple of vars
-  VarL jointVars;
+  VariableList jointVars;
   for(i=0;i<factors.N;i++) jointVars.setAppend(factors(i)->variables);
   DEBUG_INFER(2,cout <<"  jointVars=" <<jointVars <<endl);
   //compute joint
@@ -1413,20 +1413,20 @@ the one which has the fewest links to other not-deleted variables is chosen.
 This is equivalent to saying that per iteration the variable chosen for elimination is the one
 that would create the smallest clique if all factors that involve this variable were multiplied.
 */
-void computeEliminationOrder(VarL& elimOrder, const FacL& factors, const VarL& elimVars){
+void computeEliminationOrder(VariableList& elimOrder, const FactorList& factors, const VariableList& elimVars){
   int DEBUG_INFER_LEVEL = 0;
   DEBUG_INFER(1,cout <<MT_HERE <<endl);
   DEBUG_INFER(2,cout <<"  input factors=\n" <<factors <<endl);
   DEBUG_INFER(1,cout <<"variables to eliminate=" <<elimVars <<endl);
   
-  VarL vars;
+  VariableList vars;
   get_vars(vars,factors);
   
   elimOrder.resize(elimVars.N);
   uint f, v, e;
   
   // Determine for each variable the set of variables it is linked to.
-  MT::Array<VarL> connectedVarSets(elimVars.N);
+  MT::Array<VariableList> connectedVarSets(elimVars.N);
   for(v=0; v<elimVars.N; v++){
     for(f=0; f<factors.N; f++){
       if(factors(f)->variables.findValue(elimVars(v))>-1){
@@ -1478,9 +1478,9 @@ void computeEliminationOrder(VarL& elimOrder, const FacL& factors, const VarL& e
 
 At input, factors describes the full model; at output, factors contains the reduced model which include unchanged old factors and some newed factors.
 The newed factors are additionally appended to the newed_factors (to allow for external cleanup) */
-void eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var){
+void eliminateVariable(FactorList& factors, FactorList& newed_factors,Variable *var){
   uint f;
-  FacL referencedFactors;
+  FactorList referencedFactors;
   factors.memMove=true;
   referencedFactors.memMove=true;
   //collect referenced factors
@@ -1488,7 +1488,7 @@ void eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var){
     if(factors(f)->variables.findValue(var)!=-1) referencedFactors.append(factors(f));
 
   //compute joint variable tuple
-  VarL jointVars;
+  VariableList jointVars;
   for(f=0;f<referencedFactors.N;f++)
     jointVars.setAppend(referencedFactors(f)->variables);
     //setUnion(jointVars,jointVars,referencedFactors(f)->varIds);//[mt]
@@ -1517,33 +1517,33 @@ void eliminateVariable(FacL& factors, FacL& newed_factors,Variable *var){
 
 /*! marginalizes a factor list over all variables except the "remaining_vars". The output is a
 single factor over the remaining_vars with the marginal. The factors list remains unchanged. */
-void eliminationAlgorithm(Factor& posterior,const FacL& factors, const VarL& remaining_vars){
+void eliminationAlgorithm(Factor& posterior,const FactorList& factors, const VariableList& remaining_vars){
   DEBUG_INFER(1,cout <<MT_HERE <<endl);
   uint i,f;
   checkConsistent(factors);
 
   // determine which variables need to be eliminated: ALL \ post_vars
-  VarL facVars;
+  VariableList facVars;
   for(f=0;f<factors.N;f++) facVars.setAppend(factors(f)->variables);
 
   DEBUG_INFER(3,cout <<"  all facs=" <<factors <<endl);
   DEBUG_INFER(2,cout <<"  factor vars=" <<facVars <<"\n  remaining vars=" <<remaining_vars <<endl);
   
-  VarL elimVars=facVars; elimVars.memMove=true;
+  VariableList elimVars=facVars; elimVars.memMove=true;
   elimVars.setAppend(remaining_vars); //in case the posterior wants more variables that the factors are defined over
   for(i=0;i<remaining_vars.N;i++) elimVars.removeValue(remaining_vars(i));
 
   DEBUG_INFER(2,cout <<"  elim vars=" <<elimVars <<endl);
   
   // determine order in which variables are eliminated.
-  VarL elimOrder;
+  VariableList elimOrder;
   computeEliminationOrder(elimOrder, factors, elimVars);
 
   DEBUG_INFER(2,cout <<"  elimination order=" <<elimOrder <<endl);
   
   // eliminate in this order
-  FacL factors_copy(factors);
-  FacL newedFactors;
+  FactorList factors_copy(factors);
+  FactorList newedFactors;
   for(i=0;i<elimOrder.N;i++) eliminateVariable(factors_copy, newedFactors, elimOrder(i));
 
   // calculate posterior
@@ -1568,7 +1568,7 @@ void eliminationAlgorithm(Factor& posterior,const FacL& factors, const VarL& rem
 }
 
 
-void moralize(FacL& factorsOfDirectedGraph, FacL& factorsOfMoralizedGraph){
+void moralize(FactorList& factorsOfDirectedGraph, FactorList& factorsOfMoralizedGraph){
   // first variable is child, remaining variables are parents
   NIY;
 }
@@ -1600,7 +1600,7 @@ void checkJunctionTreeProperty_dfs(Factor* node, Factor* parent, FactorGraph& ju
   int DEBUG = 0;
   uint i;
   containsId(get_list_index_unsigned__orig(junctionTree, node)) = 0;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   FOR1D(neighbors, i){
     if(neighbors(i) == parent)
@@ -1667,7 +1667,7 @@ void JunctionTree::checkJunctionTreeProperty(FactorGraph& junctionTree){
 
 void JunctionTree::addEvidence(FactorGraph& junctionTree, Factor& evid){
   uint f;
-  VarL varSection;
+  VariableList varSection;
   FOR1D(junctionTree.F, f){
     setSection(varSection, evid.variables, junctionTree.F(f)->variables);
     if(varSection.N > 0){
@@ -1686,18 +1686,18 @@ void JunctionTree::addEvidence(FactorGraph& junctionTree, Factor& evid){
 
 
 
-void JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangulatedCliques){
+void JunctionTree::buildTriangulatedCliques(const FactorList& factors, FactorList& triangulatedCliques){
   bool DEBUG = false;
   bool DEBUG_VERBOSE = false;
   
   uint v, v2, v3, f; 
-  FacL intermediateFactors = factors;
+  FactorList intermediateFactors = factors;
   boolA intermediateFactors_removed(intermediateFactors.N);
   FOR1D(intermediateFactors_removed, v)
     intermediateFactors_removed(v) = 0;
   
   // determine existing variables
-  VarL vars;
+  VariableList vars;
   for(f=0; f < factors.N; f++){
     setUnion(vars, vars, factors(f)->variables);
   }
@@ -1723,7 +1723,7 @@ void JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangula
   // 	for(v=0; v<6; v++){
   // 		elimOrder(v) = 5-v;
   // 	}
-  VarL elimOrder;
+  VariableList elimOrder;
   computeEliminationOrder(elimOrder, intermediateFactors, vars);
   //     elimOrder <<"[   9   14   7   8   10   11   12   13   0    1    2    15   16   3   4   5   6]";
   //     elimOrder <<"[   12   17   10   11   13   14   15   16  7   0   1   2   8   9   3   4   5   6 ]";
@@ -1768,7 +1768,7 @@ void JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangula
       if(DEBUG_VERBOSE){cout <<"(" <<v <<")" <<" Eliminating " <<elimOrder(v)->name <<endl;}
     }
     // determine remaining neighbors
-    VarL remainingNeighbors;
+    VariableList remainingNeighbors;
     FOR1D(edges, v2){
       if(edges(var_id2order[elimOrder(v)], var_id2order[elimOrder(v2)]))
         remainingNeighbors.append(elimOrder(v2));
@@ -1791,7 +1791,7 @@ void JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangula
     // set up new factor with all neighbors
     if(DEBUG)
       cout <<"Setting up new factor [START]" <<endl;
-    VarL vars;
+    VariableList vars;
     vars.append(elimOrder(v));
     setUnion(vars, vars, remainingNeighbors);
     if(DEBUG)
@@ -1870,7 +1870,7 @@ void JunctionTree::buildTriangulatedCliques(const FacL& factors, FacL& triangula
 
 
 // Kruskal algorithm
-void JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, FactorGraph& cliqueTree){
+void JunctionTree::buildMaxSpanningTree(FactorList& factors, const VariableList& vars, FactorGraph& cliqueTree){
   uint DEBUG = 0;
   if(DEBUG >= 1){
     cout <<"========================================" <<endl;
@@ -1881,7 +1881,7 @@ void JunctionTree::buildMaxSpanningTree(FacL& factors, const VarL& vars, FactorG
   uint f, f2, maxId;
   uint max;
   Factor *fac1, *fac2;
-  VarL tempA;
+  VariableList tempA;
   
   if(DEBUG >= 1){
     cout <<"input factors [START]" <<endl;
@@ -2150,7 +2150,7 @@ void recursiveCollectEvidence(Factor* node, Factor* parent, FactorGraph& junctio
   if(DEBUG > 0)
     cout <<"Collect evidence for " <<node->varIds <<" [START]" <<endl;
   uint i;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   if(DEBUG > 0){
     cout <<" Neighbors: ";
@@ -2188,7 +2188,7 @@ void recursiveDistributeEvidence(Factor* node, Factor* parent, FactorGraph& junc
   if(DEBUG > 0)
     cout <<"Distribute evidence for " <<node->varIds <<" [START]" <<endl;
   uint i;
-  FacL neighbors;
+  FactorList neighbors;
   getNeighbors(node, neighbors);
   FOR1D(neighbors, i){
     if(neighbors(i) == parent)
@@ -2252,12 +2252,12 @@ void JunctionTree::collectAndDistributeInference(FactorGraph& junctionTree){
 }
 
 
-void JunctionTree::constructJunctionTree(FactorGraph& junctionTree, const FacL& factors, const VarL& vars){
+void JunctionTree::constructJunctionTree(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars){
   uint DEBUG = 0;
   if(DEBUG>0){cout<<"constructJunctionTree [START]"<<endl;}
   
   //construct cliques of triangulated tree
-  FacL triangulatedCliques;
+  FactorList triangulatedCliques;
   buildTriangulatedCliques(factors, triangulatedCliques);
   
   if(DEBUG > 0){
@@ -2287,7 +2287,7 @@ void JunctionTree::constructJunctionTree(FactorGraph& junctionTree, const FacL& 
 }
 
 
-void JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const FacL& factors, const VarL& vars){
+void JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const FactorList& factors, const VariableList& vars){
   constructJunctionTree(junctionTree, factors, vars);
   collectAndDistributeInference(junctionTree);
   
@@ -2314,7 +2314,7 @@ void JunctionTree::junctionTreeInference(FactorGraph& junctionTree, const FacL& 
 //     Loopy BP methods
 //
 
-void LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const FacL& factors){
+void LoopyBP_obsolete::loopy_belief_propagation(FactorGraph& fg, const FactorList& factors){
   uint DEBUG = 0;
   constructBipartiteFactorGraph(fg, factors);
   uint MAX_STEPS = 20;
@@ -2376,7 +2376,7 @@ void LoopyBP_obsolete::shoutMessages(Factor& f, MsgCalc calcMsgType){
 
 
 
-void check_exactlyOneConditional(VarL& vars, FacL& facs){
+void check_exactlyOneConditional(VariableList& vars, FactorList& facs){
   uint i, k;
   CHECK(vars.N==facs.N, "#vars != #facs");
   FOR1D(vars, i){
@@ -2387,7 +2387,7 @@ void check_exactlyOneConditional(VarL& vars, FacL& facs){
   }
 }
 
-void check_atLeastOneConditional(VarL& vars, FacL& facs){
+void check_atLeastOneConditional(VariableList& vars, FactorList& facs){
   uint i, k;
   FOR1D(vars, i){
     FOR1D(facs, k){
@@ -2404,7 +2404,7 @@ void check_atLeastOneConditional(VarL& vars, FacL& facs){
 //  Loopy BP - other approach (MT)
 //
 
-void connectThemUp(VarL& V,FactorList& F){
+void connectThemUp(VariableList& V,FactorList& F){
   MT_MSG("you shouldn't use this anymore!!");
   Factor *f;
   uint i;
@@ -2424,7 +2424,7 @@ void connectThemUp(VarL& V,FactorList& F){
 #endif
 }
 
-void LoopyBP::initBipartite(const VarL& _vars,const FactorList& _facs){
+void LoopyBP::initBipartite(const VariableList& _vars,const FactorList& _facs){
   CHECK(!msgs.N,"delete list before");
   vars=_vars;
   facs=_facs;
@@ -2437,7 +2437,7 @@ void LoopyBP::initBipartite(const VarL& _vars,const FactorList& _facs){
   }
 }
 
-void LoopyBP::initPairwise(const VarL& _vars,const FactorList& _facs){
+void LoopyBP::initPairwise(const VariableList& _vars,const FactorList& _facs){
   CHECK(!msgs.N,"delete list before");
   vars=_vars;
   facs=_facs;
@@ -2468,7 +2468,7 @@ LoopyBP::~LoopyBP(){
   listDelete(msgs);
 }
 
-void loopyBP_bipartite(const VarL& vars,const FactorList& facs,uint T){
+void loopyBP_bipartite(const VariableList& vars,const FactorList& facs,uint T){
   LoopyBP lbp;
   lbp.initBipartite(vars,facs);
 
@@ -2481,7 +2481,7 @@ void loopyBP_bipartite(const VarL& vars,const FactorList& facs,uint T){
   }
 }
 
-void loopyBP_pairwise(const VarL& vars,const FactorList& facs,uint T){
+void loopyBP_pairwise(const VariableList& vars,const FactorList& facs,uint T){
   LoopyBP lbp;
   lbp.initPairwise(vars,facs);
 
@@ -2499,7 +2499,7 @@ void loopyBP_pairwise(const VarL& vars,const FactorList& facs,uint T){
 //  mean field
 //
 
-void meanField_collectBeliefs(arr& beliefs,const VarL& vars){
+void meanField_collectBeliefs(arr& beliefs,const VariableList& vars){
   HALT("that's broke");
 #if 0
   if(beliefs.N!= vars.N){
@@ -2776,8 +2776,8 @@ void inferMixLengthUnstructured(
 
 void inferMixLengthStructured(
     Factor& alpha, Factor& beta, arr& PT, double& PR, double& ET,
-    const VarL& headVars, const VarL& tailVars,
-    const FacL& S, const FacL& R, const FacL& P, double gamma, uint Tmax,
+    const VariableList& headVars, const VariableList& tailVars,
+    const FactorList& S, const FactorList& R, const FactorList& P, double gamma, uint Tmax,
     bool updateMode){
 
   DEBUG_INFER(1,cout <<MT_HERE <<endl);
@@ -2790,7 +2790,7 @@ void inferMixLengthStructured(
   if(!updateMode){
     //get initial a and b:
     eliminationAlgorithm(a,S,headVars);
-    //FacL tmp = P;  tmp.append(R);
+    //FactorList tmp = P;  tmp.append(R);
     eliminationAlgorithm(b,R,headVars);  b.relinkTo(tailVars); //b.variables=tailVars;
     //above, we reassociate the factor to the tail variables although it
     //was initially defined over the head variables
@@ -2800,8 +2800,8 @@ void inferMixLengthStructured(
     PT.resize(2*Tmax+1);
     PT(0) = scalarProduct(a.P,b.P)*::exp(a.logP+b.logP);
     gt = gamma;
-    FacL fwdList = P;  fwdList.append(&a);
-    FacL bwdList;      bwdList.append(&b);  bwdList.append(P);
+    FactorList fwdList = P;  fwdList.append(&a);
+    FactorList bwdList;      bwdList.append(&b);  bwdList.append(P);
     for(t=1;t<=Tmax;t++){
       eliminationAlgorithm(a,fwdList,tailVars);  a.relinkTo(headVars); //a.variables=headVars;
       PT(2*t-1) = scalarProduct(a.P,b.P)*::exp(a.logP+b.logP);
@@ -2828,8 +2828,8 @@ void inferMixLengthStructured(
     CHECK(alpha.variables==headVars && beta.variables==tailVars,"");
     eliminationAlgorithm(Shead,S,headVars);
     eliminationAlgorithm(Rtail,R,headVars);  Rtail.relinkTo(tailVars);  //Rtail.variables=tailVars;
-    FacL fwdList = P;  fwdList.append(&alpha);
-    FacL bwdList;      bwdList.append(&beta);   bwdList.append(P);
+    FactorList fwdList = P;  fwdList.append(&alpha);
+    FactorList bwdList;      bwdList.append(&beta);   bwdList.append(P);
     for(t=0;t<=Tmax;t++){
       alpha.P *= gamma;
       //MT_MSG("does that work??");

@@ -12,8 +12,8 @@ GaussianProcess::GaussianProcess(){
 /*! set Gauss cov function, its parameters, and GP prior
  */
 void GaussianProcess::setGaussKernelGP(
-    void *_kernelP,
-    double _mu){
+  void *_kernelP,
+  double _mu){
   mu = _mu;
   mu_func = const_0;
   priorP = NULL;
@@ -29,9 +29,9 @@ void GaussianProcess::setGaussKernelGP(
 /*! set Gauss cov function, its parameters, and GP prior
  */
 void GaussianProcess::setGaussKernelGP(
-    void *_kernelP,
-    double (*_mu)(const arr&, const void*),
-    void *_priorP){
+  void *_kernelP,
+  double(*_mu)(const arr&, const void*),
+  void *_priorP){
   mu_func = _mu;
   priorP = _priorP;
   mu = 0;
@@ -45,16 +45,16 @@ void GaussianProcess::setGaussKernelGP(
 }
 
 
-void GaussianProcess::recompute(const arr& _XX,const arr& _YY){
+void GaussianProcess::recompute(const arr& _XX, const arr& _YY){
   X.referTo(_XX);
   Y.referTo(_YY);
   recompute();
 }
 
 void GaussianProcess::recompute(){
-  uint i,j,N=Y.N,dN=dY.N;
-  arr gram,xi,xj, Mu_func;
-  gram.resize(N+dN,N+dN);
+  uint i, j, N=Y.N, dN=dY.N;
+  arr gram, xi, xj, Mu_func;
+  gram.resize(N+dN, N+dN);
   if(!gram.N) return;
   for(i=0;i<N;i++){
     xi.referToSubDim(X,i);
@@ -82,14 +82,14 @@ void GaussianProcess::recompute(){
       }
     }
   }
-  inverse_SymPosDef(Ginv,gram);
+  inverse_SymPosDef(Ginv, gram);
   if(!dN){
     if(N) GinvY = Ginv * (Y-Mu_func-mu); else GinvY.clear();
   }else{
     arr Yfull; Yfull.append(Y-Mu_func-mu); Yfull.append(dY);
     GinvY = Ginv * Yfull;
   }
-  //cout <<"gram=" <<gram <<" Ginv=" <<Ginv <<endl;
+  //cout  <<"gram="  <<gram  <<" Ginv="  <<Ginv  <<endl;
 }
 
 void GaussianProcess::appendObservation(const arr& x,double y){
@@ -103,12 +103,12 @@ void GaussianProcess::appendObservation(const arr& x,double y){
 #if MT_GP_DEBUG
   arr iG=Ginv;
   recompute();
-  double err=maxDiff(iG,Ginv);
-  CHECK(err<1e-6,"mis-updated inverse Gram matrix" <<err <<endl <<iG <<Ginv);
+  double err=maxDiff(iG, Ginv);
+  CHECK(err<1e-6, "mis-updated inverse Gram matrix"  <<err  <<endl  <<iG  <<Ginv);
 #endif
 }
 
-void GaussianProcess::appendDerivativeObservation(const arr& x,double y,uint i){
+void GaussianProcess::appendDerivativeObservation(const arr& x, double y, uint i){
   uint N=dX.d0;
   dX.append(x); //append it to the data
   dY.append(y);
@@ -118,17 +118,17 @@ void GaussianProcess::appendDerivativeObservation(const arr& x,double y,uint i){
   dI.reshape(N+1);
 }
 
-void GaussianProcess::appendGradientObservation(const arr& x,const arr& nabla) {
-    for(uint i=0;i<nabla.N;i++) appendDerivativeObservation(x,nabla(i),i);
+void GaussianProcess::appendGradientObservation(const arr& x, const arr& nabla){
+  for(uint i=0; i<nabla.N; i++) appendDerivativeObservation(x, nabla(i), i);
 }
 
 double GaussianProcess::max_var(){
     return cov(kernelP,ARR(0),ARR(0));
 }
 
-void GaussianProcess::evaluate(const arr& x,double& y,double& sig){
-  uint i,N=Y.N,dN=dY.N;
-  static arr k,xi,Ginvk;
+void GaussianProcess::evaluate(const arr& x, double& y, double& sig){
+  uint i, N=Y.N, dN=dY.N;
+  static arr k, xi, Ginvk;
   if(N+dN==0){ //no data
     y = mu_func(x, priorP) + mu;
     sig=::sqrt(cov(kernelP,x,x));
@@ -224,7 +224,7 @@ void GaussianProcess::gradient(arr& grad,const arr& x){
   uint i,d, N=Y.N, dN=dY.N, dim;
   dim = X.d1?X.d1:dX.d1;
   arr dk(dim);
-  static arr xi,dxi; 
+  static arr xi, dxi;
   grad.resize(x.N);
   grad.setZero();
   // take the gradient in the function value observations
@@ -345,5 +345,5 @@ void GaussianProcess::evaluate(const arr& X,arr& Y,arr& S){
   uint i;
   static arr xi;
   Y.resize(X.d0); S.resize(X.d0);
-  for(i=0;i<X.d0;i++){ xi.referToSubDim(X,i); evaluate(xi,Y(i),S(i)); }
+  for(i=0; i<X.d0; i++){ xi.referToSubDim(X, i); evaluate(xi, Y(i), S(i)); }
 }

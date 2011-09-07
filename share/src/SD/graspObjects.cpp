@@ -86,6 +86,14 @@ double plot_field() {
   return value;
 }
 
+void PotentialField::saveMesh(const char *filename){
+  m.writeTriFile(filename);
+}
+
+void PotentialField::loadMesh(const char *filename){
+  m.readFile(filename);
+}
+
 void
 PotentialField::buildMesh(){
   uint i;
@@ -144,23 +152,24 @@ GraspObject::phi(arr *grad,arr *hess,double *var,const arr& x) { //generic phi, 
   // see gnuplot:  plot[-1:4] 1.-exp(-.5*(x+1)*(x+1))/exp(-.5)
   double d = distanceToSurface(grad,hess,x);
   double e = exp(-.5*(d+1.)*(d+1.))*exp(.5);
-  if(d<-1.) d=-1.; 
-#if 1
-  double phi=1.-e;
-  if(grad){
-    *grad = e * (d+1.) * (*grad);
+  if(d<-1.) d=-1.;
+  double phi;
+  if(!distanceMode){
+    phi=1.-e;
+    if(grad){
+      *grad = e * (d+1.) * (*grad);
+    }
+    if(hess){
+      CHECK(grad!=NULL,"need to store gradient.");
+      /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
+      *hess = - e*d*(d+2.) * (*grad) * (~*grad)
+      + e*(d+1.) * (*hess);
+    }
+  }else{
+    //take directly the distance as task variable
+    //hessian and gradient are correctly returned from distanceToSurface
+    phi=d;
   }
-  if(hess){
-    CHECK(grad!=NULL,"need to store gradient.");
-    /* ed(d+2)\nabla\nabla^T + e*(d+1)*H  */
-    *hess = - e*d*(d+2.) * (*grad) * (~*grad)
-              + e*(d+1.) * (*hess);
-  }
-#else
-  /* this was Marc's try to circumvent underflow of gradient far away from
-   * surface */
-  double phi=d;
-#endif
   if(var) *var = 0; //default variance is 0 (analytic shapes)
   return phi;
 } 
@@ -232,32 +241,39 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
   arr zzT = z*(~z);
 
   if ( nb < h/2. ){ // x projection on z is inside cyl
-    if(grad) *grad = s*a/na;
-    if(hess){
-      I.setZero();
-      for(i=0;i<x.d0;++i) I(i,i)=1;
-      *hess = s/na * (I - zzT - aaTovasq);
+    if(na<r && (h/2.-nb)<(r-na)){ // x is INSIDE the cyl and closer to the lid than the wall
+      if(grad) *grad = s*z;
+      if(hess) { I.setZero(); *hess=I; }
+      return s*(nb-h/2.);
+    }else{
+      if(grad) *grad = s*a/na;
+      if(hess){
+        I.setZero();
+        for(i=0;i<x.d0;++i) I(i,i)=1;
+        *hess = s/na * (I - zzT - aaTovasq);
+      }
+      return s*(na-r);
     }
-    return s*(na-r);
   }else{// x projection on z is outside cylinder
     if ( na < r ){// inside the infinite cylinder
-      if(grad) *grad = s*norm(z)*z;//yes, times. see notes.
+      if(grad) *grad = s*z;
       if(hess) { I.setZero(); *hess=I; }
       return s*(nb-h/2.);
     }else{ // outside the infinite cyl
-      arr v =  b/nb * (nb-h/2.)  + a/na * (na-r);
+      arr v =  b/nb * (nb-h/2.)  + a/na * (na-r); //MT: good! (note: b/nb is the same as z)
       double nv=norm(v);
       if(grad) *grad = s* v/nv; 
       if(hess){
-      I.setZero();
-      for(i=0;i<x.d0;++i) I(i,i)=1;
-      arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
-                 + aaTovasq + zzT;
-      *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
+        I.setZero();
+        for(i=0;i<x.d0;++i) I(i,i)=1;
+        arr dvdx = (na-r)/na*( I - zzT - aaTovasq ) 
+                   + aaTovasq + zzT;
+        *hess = s/nv* (dvdx - 1/nv/nv * v * (~v) * (~dvdx) );
       }
       return s* nv;
     }
   }
+  HALT("You shouldn't be here!");
 }
 
 /* construct from config */
@@ -276,6 +292,75 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
   r = r1;
   s = s1;
   h = h1;
+}
+
+GraspObject_Cylinder1::GraspObject_Cylinder1(const ors::Shape* s){
+  ors::Vector tmp;
+  c = ARRAY(s->X.pos);
+  z = ARRAY(s->X.rot.getZ(tmp));
+  r = s->size[3];
+  h = s->size[2];
+  this->s = 1.;
+}
+
+/* =============== Box ================ */
+
+double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
+  arr a = x-c;
+  //box dimensions:
+
+  arr a_rel = (~rot)*a;
+
+  double d;
+  arr closest(3);
+  arr del = fabs(a_rel)-dim;
+  if(del.max()<0.){ //inside
+    closest.setZero();
+    uint side=del.maxIndex(); //which side are we closest to?
+    if(a_rel(side)>0) closest(side) = dim(side);  else  closest(side)=-dim(side); //in positive or neg direction?
+    d = -norm(a_rel - closest);
+  }else{ //outside
+    closest = a_rel;
+    closest = elemWiseMax(-dim,closest);
+    closest = elemWiseMin(dim,closest);
+    d = norm(a_rel - closest);
+  }
+
+  del=a_rel-closest;
+  if(grad) *grad = rot*del/d; //transpose(R) rotates the gradient back to world coordinates
+  if(hess){
+      if(del.max()>0.){ //outside on all 3 axis
+        *hess = 1./d * (eye(3,3) - (del^del)/(d*d));
+        *hess = rot*(*hess)*(~rot);
+      }else{
+        (*hess).resize(3,3);
+        hess->setZero();
+      }
+  }
+  return d;
+}
+
+GraspObject_Box::GraspObject_Box(){ NIY }
+
+GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_){
+  //assumes box is axis aligned
+  c=center;
+  dim = ARR(dx_,dy_,dz_);
+  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
+             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+             0,0,1);
+             /*axes = ARR(1,0,0,
+             0,1,0,
+             0,0,1);*/
+  rot.reshape(3,3);
+  s=1.;
+}
+
+GraspObject_Box::GraspObject_Box(const ors::Shape* s){
+  c = ARRAY(s->X.pos);
+  dim = .5*arr(s->size, 3);
+  rot.resize(3,3);  s->X.rot.getMatrix(rot.p);
+  this->s = 1.;
 }
 
 /* =============== Sphere ================ */

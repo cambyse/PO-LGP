@@ -7,6 +7,7 @@ LIBS   += -lrt
 #OPTIM  = fast_debug
 OPTIM  = debug
 
+#TONY = 1
 ANN = 1
 #TONY = 1
 OPENCV = 1

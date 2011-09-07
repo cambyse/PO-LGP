@@ -6,29 +6,29 @@
 #include "socSystem_ors.h"
 #include "aico.h"
 
-struct ReceedingHorizonProcess:public Process{
+struct ReceedingHorizonProcess:public Process {
   FutureMotionPlan *planVar;
   FutureMotionGoal *goalVar;
-
-  AICO_clean planner;
+  
+  AICO planner;
   //soc::iLQG planner;
-  soc::SocSystem_Ors *sys,*sys_parent;
+  soc::SocSystem_Ors *sys, *sys_parent;
   
   bool active;
   const char *graspShapeName;
-
-
+  
+  
   //OUTPUT
   //bool planAvailable;
-  //arr bwdMsg_v,bwdMsg_Vinv;
+  //arr bwdMsg_v, bwdMsg_Vinv;
   
   //INPUT
-  //arr q0,v0;
+  //arr q0, v0;
   //uint time_shift;
-
-  //int scalePowers,display;
-  //double convergenceRate,repeatThreshold,recomputeTaskThreshold,tolerance;
-
+  
+  //int scalePowers, display;
+  //double convergenceRate, repeatThreshold, recomputeTaskThreshold, tolerance;
+  
   ReceedingHorizonProcess();
   void open();
   void step();
@@ -39,9 +39,9 @@ struct ReceedingHorizonProcess:public Process{
   soc::SocSystem_Ors *sys_parent;
   ReceedingHorizonProcess recho;
   const char *graspShapeName;
-  
+
   MotionPlannerModuleGroup();
-  
+
   void open();
   void step();
   void close();

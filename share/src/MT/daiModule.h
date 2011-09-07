@@ -13,75 +13,75 @@
 
 
 
-struct DaiInterface{
+struct DaiInterface {
   dai::FactorGraph fg;
 };
 
-void createDai(DaiInterface& dai,const VariableList& vars,const FactorList& facs){
-  uint i,j;
+void createDai(DaiInterface& dai, const VariableList& vars, const FactorList& facs){
+  uint i, j;
   Factor *f;
   std::vector<dai::Factor> dai_facs;
-  for_list(i,f,facs){
+  for_list(i, f, facs){
     uint nr_members = f->varIds.N;
-
+    
     std::vector<long> labels(nr_members);
-    for(j=0;j<nr_members;j++) labels[j]=f->varIds(j);
-
+    for(j=0; j<nr_members; j++) labels[j]=f->varIds(j);
+    
     std::vector<size_t> dims(nr_members);
-    for(j=0;j<nr_members;j++) dims[j]=f->dim(j);
-
+    for(j=0; j<nr_members; j++) dims[j]=f->dim(j);
+    
     dai::VarSet I_vars;
-    for(j=0;j<nr_members;j++) I_vars |= dai::Var(f->varIds(j), f->dim(j));
-    dai_facs.push_back( dai::Factor( I_vars, 0.0 ) );
-            
+    for(j=0; j<nr_members; j++) I_vars |= dai::Var(f->varIds(j), f->dim(j));
+    dai_facs.push_back(dai::Factor(I_vars, 0.0));
+    
     // calculate permutation sigma (internally, members are sorted)
     std::vector<size_t> sigma(nr_members);
     dai::VarSet::iterator v = I_vars.begin();
-    for(j=0;j<nr_members;j++,v++ ) {
+    for(j=0; j<nr_members; j++, v++){
       long search_for = v->label();
-      std::vector<long>::iterator j_loc = find(labels.begin(),labels.end(),search_for);
+      std::vector<long>::iterator j_loc = find(labels.begin(), labels.end(), search_for);
       sigma[j] = j_loc - labels.begin();
     }
-    dai::Permute permindex( dims, sigma );
-
+    dai::Permute permindex(dims, sigma);
+    
     //copy permuted array
-    for(j=0;j<f->P.N;j++) dai_facs.back()[permindex.convert_linear_index(j)] = f->P.elem(j);
+    for(j=0; j<f->P.N; j++) dai_facs.back()[permindex.convert_linear_index(j)] = f->P.elem(j);
   }
-
+  
   dai.fg = dai::FactorGraph(dai_facs);
 }
 
-#define test(METH,x,OPT) \
+#define test(METH, x, OPT) \
   dai::METH x( dai.fg, opts OPT ); \
   x.init(); \
   x.run(); \
-  cout << #METH <<" node marginals:" << endl; \
+  cout  <<#METH  <<" node marginals:"  <<endl; \
   for( size_t i = 0; i < dai.fg.nrVars(); i++ ) \
-    cout << x.belief(dai.fg.var(i)) << endl; \
-  cout << "Exact log partition sum: " << x.logZ() << endl;
-  
-/*cout << #METH <<" factor marginals:" << endl; \
+    cout  <<x.belief(dai.fg.var(i))  <<endl; \
+  cout  <<"Exact log partition sum: "  <<x.logZ()  <<endl;
+
+/*cout  <<#METH  <<" factor marginals:"  <<endl; \
   for( size_t I = 0; I < dai.fg.nrFactors(); I++ ) \
-    cout << x.belief(dai.fg.factor(I).vars()) << endl; \
+    cout  <<x.belief(dai.fg.factor(I).vars())  <<endl; \
     */
 
 void inference(DaiInterface& dai){
   size_t  maxiter = 10000;
   double  tol = 1e-9;
   size_t  verb = 1;
-
+  
   dai::PropertySet opts;
-  opts.Set("maxiter",maxiter);
-  opts.Set("tol",tol);
-  opts.Set("verbose",verb);
-
-  test(JTree,jt,("updates",std::string("HUGIN")));
-  test(BP,bp,("updates",std::string("SEQFIX"))("logdomain",false));
-  test(MF,mf,("tol",std::string("0.01"))("maxiter",std::string("100")));
-  //test(HAK,hak,("tol",std::string("0.01"))("maxiter",std::string("100"))("maxiter",std::string("100"))("maxiter",std::string("100")));
-  //test(LC,lc,("tol",std::string("0.01"))("maxiter",std::string("100")));
-  //test(TreeEP,treeep,("tol",std::string("0.01"))("maxiter",std::string("100")));
-  //test(MR,mr,("tol",std::string("0.01"))("maxiter",std::string("100")));
-
+  opts.Set("maxiter", maxiter);
+  opts.Set("tol", tol);
+  opts.Set("verbose", verb);
+  
+  test(JTree, jt, ("updates", std::string("HUGIN")));
+  test(BP, bp, ("updates", std::string("SEQFIX"))("logdomain", false));
+  test(MF, mf, ("tol", std::string("0.01"))("maxiter", std::string("100")));
+  //test(HAK, hak, ("tol", std::string("0.01"))("maxiter", std::string("100"))("maxiter", std::string("100"))("maxiter", std::string("100")));
+  //test(LC, lc, ("tol", std::string("0.01"))("maxiter", std::string("100")));
+  //test(TreeEP, treeep, ("tol", std::string("0.01"))("maxiter", std::string("100")));
+  //test(MR, mr, ("tol", std::string("0.01"))("maxiter", std::string("100")));
+  
 }
 #endif

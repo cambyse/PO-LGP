@@ -3,12 +3,12 @@
 
 #include "array.h"
 
-struct Fij{ arr A,B,C,a,b; double hata; };
-struct Mu { arr M,m;       double hatm; };
+struct Fij { arr A, B, C, a, b; double hata; };
+struct Mu { arr M, m;       double hatm; };
 
-struct MinSumGaussNewton{
+struct MinSumGaussNewton {
   arr x;
-  double tolerance,maxStep;
+  double tolerance, maxStep;
   
   uintA E; //edges
   MT::Array<uintA> del; //in-neighbors
@@ -20,9 +20,9 @@ struct MinSumGaussNewton{
   //indirect GaussNewton type problem interface:
   virtual void Psi(arr& psi, arr& psiI, arr& psiJ, uint i, uint j, const arr& x_i, const arr& x_j){ throw("NIY"); }
   //direct factor type proble interface:
-  virtual double f(uint i,uint j,const arr& x_i,const arr& x_j);
-  virtual void reapproxPotentials(uint i,const arr& hat_x_i);
-
+  virtual double f(uint i, uint j, const arr& x_i, const arr& x_j);
+  virtual void reapproxPotentials(uint i, const arr& hat_x_i);
+  
   void updateMessage(uint m);
   void updateMessagesToNode(uint i);
   double totalCost(bool verbose=false);

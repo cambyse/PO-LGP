@@ -1,6 +1,6 @@
 # Makefile: Felzenszwalb's graph-based image segmentation
 
-BASE  := $(shell cd ../../share; pwd;)
+BASE  := ../../..
 
 LIBNAME = lib/libcolorseg.a
 

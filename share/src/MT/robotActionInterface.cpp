@@ -10,36 +10,36 @@
 #include <MT/robot_marcTask.h>
 
 //private space:
-struct sRobotActionInterface{
-	RobotModuleGroup master;
-	TaskAbstraction mytask;
+struct sRobotActionInterface {
+  RobotModuleGroup master;
+  TaskAbstraction mytask;
 };
 
 RobotActionInterface::RobotActionInterface(){
-	s=new sRobotActionInterface;
-	s->master.ctrl.taskLock.writeLock();
-	s->master.ctrl.task = &s->mytask;
-	s->mytask.joyVar = &s->master.joy;
-	s->master.ctrl.taskLock.unlock();
+  s=new sRobotActionInterface;
+  s->master.ctrl.taskLock.writeLock();
+  s->master.ctrl.task = &s->mytask;
+  s->mytask.joyVar = &s->master.joy;
+  s->master.ctrl.taskLock.unlock();
 }
 
 RobotActionInterface::~RobotActionInterface(){
 }
 
 RobotModuleGroup* RobotActionInterface::getProcessGroup(){
-	return  &s->master;
+  return  &s->master;
 }
 
 TaskAbstraction* RobotActionInterface::getTask(){
-	return &s->mytask;
+  return &s->mytask;
 }
 
 void RobotActionInterface::open(){
-	s->master.open();
+  s->master.open();
 }
 
 void RobotActionInterface::close(){
-	s->master.close();
+  s->master.close();
 }
 
 void RobotActionInterface::wait(double sec){
@@ -146,15 +146,15 @@ void RobotActionInterface::reachAndAlign(const char* shapeName,const arr& posGoa
   s->master.ctrl.change_task(Stop::a());
 }
 
-void RobotActionInterface::setMesh(const char* shapeName,const ors::Mesh& mesh){
-	ors::Graph *ors = s->master.ctrl.sys.ors;
-	ors::Shape *shape = ors->getShapeByName(shapeName);
-	shape->mesh = mesh;
-	shape->type = ors::meshST;
-	if(s->master.openGui){
-		s->master.gui.ors->copyShapesAndJoints(*ors);
-		s->master.gui.ors2->copyShapesAndJoints(*ors);
-	}
+void RobotActionInterface::setMesh(const char* shapeName, const ors::Mesh& mesh){
+  ors::Graph *ors = s->master.ctrl.sys.ors;
+  ors::Shape *shape = ors->getShapeByName(shapeName);
+  shape->mesh = mesh;
+  shape->type = ors::meshST;
+  if(s->master.openGui){
+    s->master.gui.ors->copyShapesAndJoints(*ors);
+    s->master.gui.ors2->copyShapesAndJoints(*ors);
+  }
 }
 
 void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
@@ -165,16 +165,15 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
     for(uint i=0; i<perc.output.objects.N; i++){
       if(perc.output.objects.N>=3){
         if(perc.output.objects(0).found>5 &&
-           perc.output.objects(1).found>5 &&
-           perc.output.objects(2).found>5)
-        {
+            perc.output.objects(1).found>5 &&
+            perc.output.objects(2).found>5){
           ors::Shape *sh=s->master.ctrl.ors.getShapeByName("cyl1");
           sh->rel.pos.set(perc.output.objects(0).center3d.p);
           sh->rel.pos -= sh->body->X.pos;
           sh=s->master.ctrl.ors.getShapeByName("cyl2");
           sh->rel.pos.set(perc.output.objects(1).center3d.p);
           sh->rel.pos -= sh->body->X.pos;
-
+          
           s->master.gui.processLock.writeLock();
           s->master.gui.ors->copyShapesAndJoints(s->master.ctrl.ors);
           s->master.gui.ors2->copyShapesAndJoints(s->master.ctrl.ors);
@@ -183,10 +182,10 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
           MT_MSG("objs found");
         }else{
           MT_MSG("looking at objects"
-          <<perc.output.objects(0).found<<","
-          <<perc.output.objects(1).found<<","
-          <<perc.output.objects(2).found
-          );
+                  <<perc.output.objects(0).found <<", "
+                  <<perc.output.objects(1).found <<", "
+                  <<perc.output.objects(2).found
+                );
         }
       }
     }
@@ -207,13 +206,13 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   planner.goalVar->goalType=FutureMotionGoal::graspGoalT;
   planner.goalVar->graspShape=objShape;
   planner.goalVar->deAccess(NULL);
-
+  
   // the robot halts
   s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
-  bool converged,executed;
-  for(;!schunkShutdown;){
+  bool converged, executed;
+  for(; !schunkShutdown;){
     planner.planVar->readAccess(NULL);
     converged=planner.planVar->converged;
     executed =planner.planVar->executed;
@@ -229,15 +228,15 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }
-      
+    
     if(bPlanDone)  break;
-
+    
     MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) return;
   }
-
+  
   MT::wait(.5); //make the robot really stop...
-
+  
   s->master.ctrl.taskLock.writeLock();
   reattachShape((s->master.ctrl.ors), &s->master.ctrl.swift, objShape, "m9", "table");
   reattachShape(*(s->master.gui.ors), NULL, objShape, "m9", NULL);
@@ -245,20 +244,22 @@ void RobotActionInterface::pickObject(ReceedingHorizonProcess& planner, const ch
   s->master.ctrl.taskLock.unlock();
 
   s->master.ctrl.change_task(CloseHand::a());
+
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=false;
   s->master.ctrl.taskLock.unlock();
-
+  
   MT::wait(3.);
-
+  
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=true;
   s->master.ctrl.taskLock.unlock();
+
   s->master.ctrl.change_task(Stop::a());
 
 }
 
-void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const char* objShape,const char* belowFromShape,const char* belowToShape){
+void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const char* objShape, const char* belowFromShape, const char* belowToShape){
   planner.goalVar->writeAccess(NULL);
   planner.goalVar->goalType=FutureMotionGoal::placeGoalT;
   planner.goalVar->graspShape=objShape;
@@ -269,8 +270,8 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
-  bool converged,executed;
-  for(;!schunkShutdown;){
+  bool converged, executed;
+  for(; !schunkShutdown;){
     planner.planVar->readAccess(NULL);
     converged=planner.planVar->converged;
     executed =planner.planVar->executed;
@@ -292,9 +293,9 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }
-      
+    
     if(bPlanDone)  break;
-
+    
     MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) return;
   }
@@ -311,17 +312,17 @@ void RobotActionInterface::placeObject(ReceedingHorizonProcess& planner, const c
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=false;
   s->master.ctrl.taskLock.unlock();
-
+  
   MT::wait(3.);
-
+  
   s->master.ctrl.taskLock.writeLock();
   s->master.ctrl.forceColLimTVs=true;
   s->master.ctrl.taskLock.unlock();
   s->master.ctrl.change_task(Stop::a());
 }
 
-void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const char* objShape,const char* belowToShape){
-  
+void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner, const char* objShape, const char* belowToShape){
+
   planner.goalVar->writeAccess(NULL);
   planner.goalVar->goalType=FutureMotionGoal::homingGoalT;
   planner.goalVar->graspShape=objShape;
@@ -331,8 +332,8 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
   s->master.ctrl.change_task(Stop::a());
 
   bool bPlanDone = false;
-  bool converged,executed;
-  for(;!schunkShutdown;){
+  bool converged, executed;
+  for(; !schunkShutdown;){
     planner.planVar->readAccess(NULL);
     converged=planner.planVar->converged;
     executed =planner.planVar->executed;
@@ -348,13 +349,13 @@ void RobotActionInterface::plannedHoming(ReceedingHorizonProcess& planner,const 
       planner.goalVar->deAccess(NULL);
       bPlanDone=true;
     }
-      
+    
     if(bPlanDone)  break;
-
+    
     MT::wait(.2);
     if(s->master.joy.state(0)==16 || s->master.joy.state(0)==32) return;
   }
-
+  
   MT::wait(.5); //make the robot really stop...
 }
 

@@ -12,15 +12,15 @@
 //!@name Gaussian Process code
 //
 
-struct GaussianProcess{
-  arr X,Y;   //!< data
-  arr dX,dY; //!< derivative data
+struct GaussianProcess {
+  arr X, Y;   //!< data
+  arr dX, dY; //!< derivative data
   uintA dI;  //!< derivative data (derivative indexes)
-  arr Ginv,GinvY,ig2;  //!< inverse gram matrix (and a second buffer for push/pop)
-
+  arr Ginv, GinvY, ig2;  //!< inverse gram matrix (and a second buffer for push/pop)
+  
   //--prior function
   double mu; //!< const bias of the GP
-  double (*mu_func)(const arr &x, const void *param); //!< prior of the GP (variable bias)
+  double(*mu_func)(const arr &x, const void *param);  //!< prior of the GP (variable bias)
   void *priorP;
   
   //-- new covariance function naming
@@ -45,11 +45,11 @@ struct GaussianProcess{
   double (*covDD_D)(uint e,uint l, uint s, void *P,const arr& a,const arr& b);
 
   void *kernelP;                      //!< pointer to parameters (a struct or so) passed to the kernel function
-
+  
   GaussianProcess();
-      
+  
   void clear(){ X.clear(); Y.clear(); dX.clear(); dY.clear(); dI.clear(); Ginv.clear(); GinvY.clear(); ig2.clear(); }
-
+  
   void copyFrom(GaussianProcess &f){
   X=f.X;Y=f.Y;dX=f.dX;dY=f.dY; dI=f.dI;
   Ginv=f.Ginv;GinvY=f.GinvY;ig2=f.ig2;
@@ -94,16 +94,16 @@ struct GaussianProcess{
     covDD_F=_covDD_F;
     covDD_D=_covDD_D;
   }
-  void setGaussKernelGP( void *_kernelP, double (*_mu)(const arr&, const void*), void*);
-  void setGaussKernelGP( void *_kernelP, double _mu);
-
-  void recompute(const arr& X,const arr&Y);              //!< calculates the inv Gram matrix for the given data
+  void setGaussKernelGP(void *_kernelP, double(*_mu)(const arr&, const void*), void*);
+  void setGaussKernelGP(void *_kernelP, double _mu);
+  
+  void recompute(const arr& X, const arr&Y);              //!< calculates the inv Gram matrix for the given data
   void recompute();                                      //!< recalculates the inv Gram matrix for the current data
-  void appendObservation(const arr& x,double y);     //!< add a new datum to the data and updates the inv Gram matrix
-  void appendDerivativeObservation(const arr& x,double dy,uint i);
-  void appendGradientObservation(const arr& x,const arr& dydx);
-  void evaluate(const arr& x,double& y,double& sig);   //!< evaluate the GP at some point - returns y and sig (=standard deviation)
-  void evaluate(const arr& X,arr& Y,arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
+  void appendObservation(const arr& x, double y);     //!< add a new datum to the data and updates the inv Gram matrix
+  void appendDerivativeObservation(const arr& x, double dy, uint i);
+  void appendGradientObservation(const arr& x, const arr& dydx);
+  void evaluate(const arr& x, double& y, double& sig);   //!< evaluate the GP at some point - returns y and sig (=standard deviation)
+  void evaluate(const arr& X, arr& Y, arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
   double max_var(); // the variance when no data present
   void gradient(arr& grad,const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
   void hessian(arr& hess,const arr& x);           //!< evaluate the hessian dy/dx1dx2 of the mean at some point
@@ -121,10 +121,10 @@ struct GaussianProcess{
 //!@name standard Gaussian covariance function
 //
 
-struct GaussKernelParams{
-  double obsVar,priorVar,widthVar,derivVar;
+struct GaussKernelParams {
+  double obsVar, priorVar, widthVar, derivVar;
   GaussKernelParams(){ obsVar=.01; priorVar=.01; widthVar=.04; derivVar=.01; }
-  GaussKernelParams(double _noiseSDV,double _priorSDV,double _widthSDV,double _derivSDV){ obsVar=_noiseSDV*_noiseSDV; priorVar=_priorSDV*_priorSDV; widthVar=_widthSDV*_widthSDV; derivVar=_derivSDV*_derivSDV;}
+  GaussKernelParams(double _noiseSDV, double _priorSDV, double _widthSDV, double _derivSDV){ obsVar=_noiseSDV*_noiseSDV; priorVar=_priorSDV*_priorSDV; widthVar=_widthSDV*_widthSDV; derivVar=_derivSDV*_derivSDV;}
 };
 
 //! you can also pass a double[3] as parameters
@@ -192,7 +192,7 @@ inline double GaussKernelDD_D(uint e,uint l, uint s, void *P,const arr& a,const 
           )*gauss;
 }
 
-inline double maximizeGP(GaussianProcess& gp,arr& x){
+inline double maximizeGP(GaussianProcess& gp, arr& x){
   NIY;
   /*
      CHECK(gp.Y.N,"");
@@ -215,42 +215,42 @@ inline double maximizeGP(GaussianProcess& gp,arr& x){
    */
 }
 
-inline void plotBelief(GaussianProcess& gp,double lo,double hi, bool pause=true){
-  arr X,Y,Z,S;
+inline void plotBelief(GaussianProcess& gp, double lo, double hi, bool pause=true){
+  arr X, Y, Z, S;
   uint dim;
   //there should be at least 1 observation to guess the dimensionality from
   dim = gp.X.d1 ? gp.X.d1 : gp.dX.d1;
   CHECK(dim > 0, "still no data here. I have no clue about dimensionality!?!");
-
-  X.setGrid(dim,lo,hi,100);
-  gp.evaluate(X,Y,S);
+  
+  X.setGrid(dim, lo, hi, 100);
+  gp.evaluate(X, Y, S);
   plotClear();
-  switch (dim){
-  case 1:
-    plotFunctionPrecision(X,Y,Y+S,Y-S);
-    //plotFunction(X,Y);
-    //plotFunction(X,Y+S);
-    //plotFunction(X,Y-S);
-    plotPoints(gp.X,gp.Y);
-    plotPoints(gp.dX,gp.dY);
-    break;
-  case 2:
-    plotFunction(X,Y );
-    plotFunction(X,Y+S );
-    plotFunction(X,Y-S );
-    plotPoints(gp.X,gp.Y);
-    plotPoints(gp.dX,gp.dY);
-    break;
-  default :
-    HALT("Space is either 0- or higher than 3-dimensional. Tell me how to plot that!")
-    break;
+  switch(dim){
+    case 1:
+      plotFunctionPrecision(X, Y, Y+S, Y-S);
+      //plotFunction(X, Y);
+      //plotFunction(X, Y+S);
+      //plotFunction(X, Y-S);
+      plotPoints(gp.X, gp.Y);
+      plotPoints(gp.dX, gp.dY);
+      break;
+    case 2:
+      plotFunction(X, Y);
+      plotFunction(X, Y+S);
+      plotFunction(X, Y-S);
+      plotPoints(gp.X, gp.Y);
+      plotPoints(gp.dX, gp.dY);
+      break;
+    default :
+      HALT("Space is either 0- or higher than 3-dimensional. Tell me how to plot that!")
+      break;
   }
   plot(pause);
 }
 
-inline void plotKernel1D(GaussianProcess& gp,double lo,double hi){
-  arr X,K,KD1,KD2;
-  X.setGrid(1,lo,hi,1000);
+inline void plotKernel1D(GaussianProcess& gp, double lo, double hi){
+  arr X, K, KD1, KD2;
+  X.setGrid(1, lo, hi, 1000);
   K.resize(X.d0);
   KD1.resize(X.d0);
   KD2.resize(X.d0);
@@ -261,18 +261,18 @@ inline void plotKernel1D(GaussianProcess& gp,double lo,double hi){
     KD2(i) = gp.covDD_F(0,0,gp.kernelP,X[i],null);
   }
   plotClear();
-  plotFunction(X,K);
-  plotFunction(X,KD1);
-  plotFunction(X,KD2);
+  plotFunction(X, K);
+  plotFunction(X, KD1);
+  plotFunction(X, KD2);
   plot(true);
 }
 
-inline void plotKernel2D(GaussianProcess& gp,double lo,double hi){
-  arr X,K,KD1,KD2;
-  X.setGrid(2,lo,hi,1000);
-  K.resize(X.d0,X.d1);
-  KD1.resize(X.d0,X.d1);
-  KD2.resize(X.d0,X.d1);
+inline void plotKernel2D(GaussianProcess& gp, double lo, double hi){
+  arr X, K, KD1, KD2;
+  X.setGrid(2, lo, hi, 1000);
+  K.resize(X.d0, X.d1);
+  KD1.resize(X.d0, X.d1);
+  KD2.resize(X.d0, X.d1);
   arr null=ARR(0);
   for(uint i=0;i<X.d0;i++){
     for(uint j=0;j<X.d1;j++){
@@ -288,31 +288,31 @@ inline void plotKernel2D(GaussianProcess& gp,double lo,double hi){
   plot(true);
 }
 
-inline void randomFunction(GaussianProcess& gp,arr& Xbase,bool illustrate,bool fromPosterior=false){
+inline void randomFunction(GaussianProcess& gp, arr& Xbase, bool illustrate, bool fromPosterior=false){
   GaussKernelParams& K = *((GaussKernelParams*)gp.kernelP);
   double orgObsVar=K.obsVar;
   K.obsVar=1e-6;
-
+  
   arr x;
-  double y,sig;
+  double y, sig;
   uint i;
-  //gp.setKernel(&stdKernel,GaussKernel);
+  //gp.setKernel(&stdKernel, GaussKernel);
   if(!fromPosterior) gp.clear();
-
+  
 //  Xbase.randomPermute();
-  //gp.X.resize(0,1); gp.Y.resize(0); //clear current data
-  for(i=0;i<Xbase.d0;i++){
+  //gp.X.resize(0, 1); gp.Y.resize(0); //clear current data
+  for(i=0; i<Xbase.d0; i++){
     if(illustrate && i>0 && !(i%10)){ //display
-      plotBelief(gp,Xbase.min(),Xbase.max());
+      plotBelief(gp, Xbase.min(), Xbase.max());
     }
-      
+    
     x.referToSubDim(Xbase, i); //get next input point
-    gp.evaluate(x,y,sig);      //sample it from the GP itself
+    gp.evaluate(x, y, sig);      //sample it from the GP itself
     y+=sig*rnd.gauss();        //with standard deviation..
-    gp.appendObservation(x,y);
+    gp.appendObservation(x, y);
     gp.recompute();
   }
-
+  
   K.obsVar=orgObsVar;
 }
 

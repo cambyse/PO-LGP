@@ -27,7 +27,7 @@ void problem1(){
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
-  AICO_clean solver;
+  AICO solver;
 
   cout <<"\n== second test: T step planning ==\n" <<endl;
   T=MT::getParameter<uint>("reachPlanTrajectoryLength");
@@ -59,7 +59,7 @@ void problem2(){
                                            0.,
                                            MT::getParameter<double>("reachPlanEndVelPrec"));
 
-  AICO_clean solver;
+  AICO solver;
   solver.init(sys);
   solver.iterate_to_convergence();
 }
@@ -79,7 +79,7 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
-  AICO_clean solver(sys);
+  AICO solver(sys);
   solver.iterate_to_convergence();
 }
 
@@ -140,9 +140,9 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
       *sys.ors, tipsN, *graspobj);
 
   /* feasibility and smoothness costs constraints */
-  TV_col  = listGetByName(sys.vars,"collision"); 
-  TV_q    = listGetByName(sys.vars,"qitself"); 
-  TV_lim  = listGetByName(sys.vars,"limits"); 
+  TV_col  = listFindByName(sys.vars,"collision"); 
+  TV_q    = listFindByName(sys.vars,"qitself"); 
+  TV_lim  = listFindByName(sys.vars,"limits"); 
 
   TVs_all.append(ARRAY( TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm, TV_tipAlign,
         TV_col, TV_lim, TV_q));
@@ -193,13 +193,13 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   TaskVariable *V;
 
-  V=listGetByName(sys.vars,"tips z align");
+  V=listFindByName(sys.vars,"tips z align");
   V->updateState();
   V->y_target = ARR(-1.,-1.,-1.);
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec,0.,0.);
 
   /* */
-  V=listGetByName(sys.vars,"palm pos");
+  V=listFindByName(sys.vars,"palm pos");
   V->updateState();
   /*  target and prec for stock position var
   V->y_target = graspobj->center();
@@ -210,17 +210,17 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec,0.,0.);
   /* */
 
-  V=listGetByName(sys.vars,"oppose tip");
+  V=listFindByName(sys.vars,"oppose tip");
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_tip_prec,0.,0.);
 
-  V=listGetByName(sys.vars,"oppose fng");
+  V=listFindByName(sys.vars,"oppose fng");
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_fng_prec,0.,0.);
 
-  V=listGetByName(sys.vars,"isf col");
+  V=listFindByName(sys.vars,"zeroLevel");
   V->updateState();
   V->y_target = ARR(1.,1.,1.); 
   V->v_target = ARR(-.1,-.1,-.1); 
@@ -237,7 +237,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
     V->v_prec_trajectory(t) = tv_ISF_col_prec;
   } 
 
-  V=listGetByName(sys.vars,"zeroLevel");
+  V=listFindByName(sys.vars,"zeroLevel");
   V->updateState();
   V->y_target = ARR(0,0,0); 
   //V->v_target = ARR(-1.,-1.,-1.); 
@@ -258,11 +258,11 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 #endif
     
   //col lim and relax
-  V=listGetByName(sys.vars,"collision"); V->y=0.;  V->y_target=0.;
+  V=listFindByName(sys.vars,"collision"); V->y=0.;  V->y_target=0.;
   V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
-  V=listGetByName(sys.vars,"limits"); V->y=0.; V->y_target=0.; 
+  V=listFindByName(sys.vars,"limits"); V->y=0.; V->y_target=0.; 
   V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
-  V=listGetByName(sys.vars,"qitself");
+  V=listFindByName(sys.vars,"qitself");
   V->y=0.; V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
   V->setInterpolatedTargetsEndPrecisions(T,comfPrec,comfPrec,0,endVelPrec);
 }
@@ -313,15 +313,15 @@ random_obj(){
 void
 active_var(soc::SocSystem_Ors &sys){
   activateAll(sys.vars,false);
-  listGetByName(sys.vars,"isf col")->active=true; 
-  listGetByName(sys.vars,"palm pos")->active=true; 
-  listGetByName(sys.vars,"tips z align")->active=true; 
-  listGetByName(sys.vars,"collision")->active=true; 
-  listGetByName(sys.vars,"qitself")->active=true; 
-  listGetByName(sys.vars,"limits")->active=true; 
-  listGetByName(sys.vars,"oppose tip")->active=true; 
-  listGetByName(sys.vars,"oppose fng")->active=true; 
-  listGetByName(sys.vars,"zeroLevel")->active=true; 
+  listFindByName(sys.vars,"isf col")->active=true; 
+  listFindByName(sys.vars,"palm pos")->active=true; 
+  listFindByName(sys.vars,"tips z align")->active=true; 
+  listFindByName(sys.vars,"collision")->active=true; 
+  listFindByName(sys.vars,"qitself")->active=true; 
+  listFindByName(sys.vars,"limits")->active=true; 
+  listFindByName(sys.vars,"oppose tip")->active=true; 
+  listFindByName(sys.vars,"oppose fng")->active=true; 
+  listFindByName(sys.vars,"zeroLevel")->active=true; 
   /*
   */
 }
@@ -371,7 +371,7 @@ void problem4(){
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
 
-  AICO_clean solver(sys);
+  AICO solver(sys);
   //solver.iterate_to_convergence();
   for(uint k=0;k<solver.max_iterations;k++){
     double d=solver.step();
@@ -456,7 +456,7 @@ void problem5(){
   //setzeroprec(sys2, T);
   active_var(sys2);
 
-  AICO_clean solver(sys2);
+  AICO solver(sys2);
   solver.useBwdMsg=true;
   solver.bwdMsg_v = cat(b0,zero14);
   inverse(Binv,B);

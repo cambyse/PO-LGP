@@ -1,0 +1,47 @@
+Variable L { dim = 2; }
+Variable C { dim = 2; }
+Variable H { dim = 2; }
+Variable U { dim = 2; }
+Variable W { dim = 2; }
+Variable R { dim = 2; }
+
+Variable reward { dim = 2; }
+
+Variable action { dim = 6; }
+
+Factor . (L) { P=[1 0] }
+Factor . (C) { P=[1 0] }
+Factor . (H) { P=[1 0] }
+Factor . (U) { P=[1 0] }
+Factor . (W) { P=[1 0] }
+Factor . (R) { P=[.5 .5] }
+
+Factor . (W' W R U a){
+}
+
+Factor . (U' U a){
+}
+
+Factor . (L' L a){
+}
+
+
+}
+dc
+bc
+tu
+go
+go
+dc
+
+mdp . {
+  leftVars   (state)
+  rightVars  (state')
+  obsVars    (obs')
+  ctrlVars   (action)
+  initFacs   (Finit)
+  transFacs  (Ftrans)
+  obsFacs    (Fobs)
+  rewardFacs (Freward)
+  gamma      [0.95]
+}
