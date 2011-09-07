@@ -9,6 +9,8 @@
 
 *.tgz
 
+*_doc
+
 MT.log
 Makefile.dep
 
