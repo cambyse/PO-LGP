@@ -1,0 +1,8 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+set log y
+set ylabel 'cost'
+set xlabel 'iters'
+plot \
+ 'costP.dat' us 1:2 title 'planner'\

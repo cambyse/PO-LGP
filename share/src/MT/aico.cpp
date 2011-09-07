@@ -136,7 +136,7 @@ void AICO::shift_solution(int offset){
   if(sys->dynamic) n*=2;
 #else //take x0 to be the one specified by hatq[offset]!
   x0=xhat[offset];
-  sys->setq0AsCurrent();
+  sys->setx0AsCurrent();
   sys->setx(x0);
   if(sys->dynamic) n*=2;
 #endif
@@ -505,9 +505,9 @@ double AICO::step(){
   
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8); //relocate once on fwd & bwd sweep
   
-  //cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
+  cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
   //sys->costChecks(b);
-  cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
+  //cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(sweep && damping) perhapsUndoStep();

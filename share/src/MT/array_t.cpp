@@ -1971,7 +1971,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     return;
   }
   if(y.nd==1 && z.nd==2){ //vector^T x matrix -> vector^T
-    arr zt;
+    MT::Array<T> zt;
     transpose(zt, z);
     x = zt*y;
     return;

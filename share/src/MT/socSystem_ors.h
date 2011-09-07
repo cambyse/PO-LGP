@@ -52,7 +52,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void setq(const arr& q, uint t=0);
   void setqv(const arr& q_, uint t=0);
   void setqv(const arr& q, const arr& qd, uint t=0);
-  void setq0AsCurrent();
+  void setx0AsCurrent();
   //void geth  (arr& h);
   void getW(arr& W, uint t);
   void getWinv(arr& Winv, uint t);

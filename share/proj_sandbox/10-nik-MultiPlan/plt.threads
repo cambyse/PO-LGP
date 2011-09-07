@@ -1,0 +1,25 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+
+set ylabel 'msec'
+set xlabel 'time (sec)'
+plot \
+ 'LOG.threads' us 0:5 title 'arm',\
+ 'LOG.threads' us 0:8 title 'hand',\
+ 'LOG.threads' us 0:11 title 'skin',\
+ 'LOG.threads' us 0:14 title 'urg',\
+ 'LOG.threads' us 0:17 title 'evis',\
+ 'LOG.threads' us 0:20 title 'bumble',\
+ 'LOG.threads' us 0:23 title 'gui',\
+ 'LOG.threads' us 0:26 title 'dynamic planner',\
+ 'LOG.threads' us 0:29 title 'perception',\
+ 'LOG.threads' us 0:32 title 'kp0',\
+ 'LOG.threads' us 0:35 title 'kp1',\
+ 'LOG.threads' us 0:38 title 'kp2',\
+ 'LOG.threads' us 0:41 title 'kp3',\
+ 'LOG.threads' us 0:44 title 'kp4',\
+ 'LOG.threads' us 0:48 title 'RobotController',\
+ 'LOG.threads' us 0:50 title 'MasterTimer'
+
+ 

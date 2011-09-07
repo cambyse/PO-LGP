@@ -361,7 +361,8 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   inverse_SymPosDef(sumAinv,sumA);
   suma= AT*x0;
 
-  arr b_old = x0;  arr b_best = x0;
+  arr b_old = b;  arr b_best = b;
+  sys.setx(b_old); //MT: you can't be sure that sys is in the b state..
   old_r = sys.taskCost(NULL,T,-1);
   bool restore;
 

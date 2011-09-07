@@ -78,12 +78,12 @@ struct SocSystemAbstraction {
   void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
+  void setx(const arr& x){ if(dynamic) setqv(x); else setq(x); }
+  virtual void setx0AsCurrent() = 0;
+  virtual void setTox0(){ arr q; getx0(q); setx(q); }
   virtual void setq(const arr& q, uint t=0) = 0;
   virtual void setqv(const arr& q_, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
-  void setx(const arr& x){ if(dynamic) setqv(x); else setq(x); }
-  virtual void setq0AsCurrent() = 0;
-  virtual void setToq0(){ arr q; getq0(q); setq(q); }
   
   //motion prior, or control cost  [t indicates the step]
   virtual void getW(arr& W, uint t) = 0;          ///< kinematic step cost metric: cost = dq^T W dq

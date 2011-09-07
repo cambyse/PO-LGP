@@ -37,6 +37,7 @@ template int  MT::getParameter(const char*, const int&);
 template uint MT::getParameter(const char*, const uint&);
 template bool MT::getParameter(const char*, const bool&);
 template double MT::getParameter(const char*, const double&);
+template long MT::getParameter(const char*);
 template MT::String MT::getParameter(const char*);
 template MT::String MT::getParameter(const char*, const MT::String&);
 template void MT::save<uintA>(const uintA&, const char*);
@@ -57,7 +58,13 @@ template void MT::Parameter<int>::initialize();
 #  include "array_instantiate.cpp"
 #undef T
 #define NOFLOAT
+#define T float
+#  include "array_instantiate.cpp"
+#undef T
 #define T uint
+#  include "array_instantiate.cpp"
+#undef T
+#define T uint16
 #  include "array_instantiate.cpp"
 #undef T
 #define T int

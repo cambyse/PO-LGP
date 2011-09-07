@@ -761,7 +761,8 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
       fil  <<endl;
     }
     MT::String cmd;
-    cmd  <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
+    cmd <<"set style data linespoints\n";
+    cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
     for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd  <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
     gnuplot(cmd);
   }

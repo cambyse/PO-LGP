@@ -1,0 +1,18 @@
+
+Tactile sensor arrays and facilities to simulate input, vizualize in ors,
+and relate input to coordinate frames. 
+
+
+- use link-array.sh and tip-array.sh to generate the frames for the shapes
+  relative to the finger (fingertip) body frame, e.g. 
+   
+  	./link-array.sh > fing_sensor_frames.cfg
+	./tip-array.sh > tip_sensor_frames.cfg
+  
+  NOTE: This is usually done. 
+
+- the .cfg files are read once by tactile_array_t SD/skin.h: at runtime to
+  draw the sensor shapes.
+
+- enjoy.
+

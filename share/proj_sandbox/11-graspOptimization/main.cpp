@@ -6,10 +6,11 @@
 #include <DZ/aico_key_frames.h>
 #include <SD/graspObjects.h>
 #include "SD/potentialTaskVariables.h"
+#include "../../src/MT/ors.h"
 
 
-void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint phase=1){
-  sys.setq0AsCurrent();
+void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase){
+  sys.setTox0();
   
   //load parameters only once!
   static bool firstTime=true;
@@ -84,10 +85,10 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint phase=
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
     case ors::boxST:{
-      rnd.clockSeed();
+      /*rnd.clockSeed();
       static int side=-1;
       if(side==-1) side=rnd(3);
-      cout <<"*** side = " <<side <<endl;
+      cout <<"*** side = " <<side <<endl;*/
       V->jrel=obj->X;
       if(side==1) V->jrel.addRelativeRotationDeg(90,1,0,0);
       if(side==2) V->jrel.addRelativeRotationDeg(90,0,1,0);
@@ -122,21 +123,23 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint phase=
   hooksN.append(sys.ors->getShapeByName("tipHook2"));
   hooksN.append(sys.ors->getShapeByName("tipHook3"));
 
-  
+  /* inside gradients just don't work :-(
   V = new PotentialValuesTaskVariable("hooksInsideLevel", *sys.ors, hooksN, *graspobj);
   //V=listGetByName(sys.vars,"zeroLevel");
   V->updateState();
   V->y_target = ARR(-.01,-.01,-.01);
   V->y_prec = 1e4;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
-  //sys.vars.append(V);
+  //sys.vars.append(V); */
   
   V = new PotentialValuesTaskVariable("tipsOnZeroLevel", *sys.ors, tipsN, *graspobj);
-  //V=listGetByName(sys.vars,"zeroLevel");
   V->updateState();
   V->y_target = ARR(.005,.005,.005); 
+  V->v_target = ARR(-1.,-1.,-1.); 
   V->y_prec = 1e3;
-  V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,1e2,0.);
+  //for(uint t=0;t<T;t++) V->y_trajectory[t]()=.2;  V->y_trajectory[T]=V->y_target;
+  //V->v_trajectory.setZero();  V->v_trajectory[T]=V->v_target;
   sys.vars.append(V);
   
   V = new PotentialFieldAlignTaskVariable("tips z align", *sys.ors, tipsN, *graspobj);
@@ -179,7 +182,7 @@ void problem1(){
 #if 1
   arr b,Binv;
   //OneStepDynamic(b, Binv, sys, T, 1e-1);
-  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 0);
+  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 2, 0);
   OneStepDynamicFull(b, Binv, sys, 4., 1e-1, true);
   sys.displayState(&b, NULL, "posture estimate");
   sys.gl->watch();
@@ -188,12 +191,18 @@ void problem1(){
   sys.setx(b);
   sys.gl->watch();
   
-  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 1);
+  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 2, 1);
   OneStepDynamicFull(b, Binv, sys, 4., 1e-1, true, true);
   sys.displayState(&b, NULL, "posture estimate");
   sys.gl->watch();
+
+  AICO solver(sys);
+  solver.useBwdMsg=true;
+  solver.bwdMsg_v = b;
+  solver.bwdMsg_Vinv = Binv + Diag(1e1,b.N);
+  solver.iterate_to_convergence();
 #else
-  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 0);
+  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 2, 1);
   AICO solver(sys);
   solver.iterate_to_convergence();
 #endif

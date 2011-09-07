@@ -1,0 +1,9 @@
+#!/usr/bin/gnuplot -persist
+
+set style data lines
+
+set ylabel 'step'
+set xlabel 'time (sec)'
+plot \
+ 'LOG' us 0:1 title 'arm'
+ 
