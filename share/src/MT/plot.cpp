@@ -750,7 +750,7 @@ void plotDrawOpenGL(void *_data){
 //
 
 #define PLOTEVERY(block, with)  gnuplotcmd \
- <<"'z.plotdata' every :::" <<(block) <<"::" <<(block) <<(with);
+  <<"'z.plotdata' every :::" <<(block) <<"::" <<(block) <<(with);
 
 void plotDrawGnuplot(void *_data){
   PlotModuleWorkspace& data=(*((PlotModuleWorkspace*)_data));

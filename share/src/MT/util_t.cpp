@@ -118,9 +118,9 @@ bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default){
   }
   
   HALT("could not initialize parameter `" <<tag
-      <<"': parameter has no default;\n     either use command option `-"
-      <<tag <<" ...' or specify `"
-      <<tag <<"= ...' in the config file (which might be `MT.cfg')");
+       <<"': parameter has no default;\n     either use command option `-"
+       <<tag <<" ...' or specify `"
+       <<tag <<"= ...' in the config file (which might be `MT.cfg')");
 }
 
 template<class T> T getParameter(const char *tag){

@@ -1783,8 +1783,8 @@ void ors::Mesh::writeTriFile(const char* filename){
   ofstream os;
   MT::open(os, filename);
   os <<"TRI" <<endl <<endl
- <<V.d0 <<endl
- <<T.d0 <<endl <<endl;
+  <<V.d0 <<endl
+  <<T.d0 <<endl <<endl;
   
   V.write(os, " ", "\n ", "  ");
   os <<endl <<endl;
@@ -3697,15 +3697,15 @@ void ors::Graph::reportProxies(std::ostream *os){
     a=proxies(i)->a;
     b=proxies(i)->b;
     (*os)
-   <<i <<" ("
-   <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
-   <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
-   <<") [" <<proxies(i)->age
-   <<"] d=" <<proxies(i)->d
+    <<i <<" ("
+    <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
+    <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
+    <<") [" <<proxies(i)->age
+    <<"] d=" <<proxies(i)->d
     // <<" posA=" <<proxies(i)->posA
     // <<" posB=" <<proxies(i)->posB
     // <<" norm=" <<proxies(i)->posB-proxies(i)->posA
-   <<endl;
+    <<endl;
   }
 }
 
@@ -3764,14 +3764,14 @@ void ors::Graph::reportGlue(std::ostream *os){
     
     if(ag || bg){
       (*os)
-     <<i <<' '
-     <<a->index <<',' <<a->name <<'-'
-     <<b->index <<',' <<b->name
-     <<" d=" <<proxies(i)->d
+      <<i <<' '
+      <<a->index <<',' <<a->name <<'-'
+      <<b->index <<',' <<b->name
+      <<" d=" <<proxies(i)->d
       // <<" posA=" <<proxies(i)->posA
       // <<" posB=" <<proxies(i)->posB
-     <<" norm=" <<proxies(i)->posB-proxies(i)->posA
-     <<endl;
+      <<" norm=" <<proxies(i)->posB-proxies(i)->posA
+      <<endl;
     }
   }
 }

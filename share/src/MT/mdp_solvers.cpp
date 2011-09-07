@@ -366,7 +366,7 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
        <<", Exp(T)=" <<Texp <<"/" <<::log(Ltot*PtNorm)/::log(mdp.gamma)
        <<", Exp(R)=" <<(Ltot*(Rmax-Rmin)+Rmin)*PtNorm
        <<endl;
-        
+       
   //glDisplayRedBlue(hat_beta, global_maze.d0, global_maze.d1, true);
   //glDisplayRedBlue(hat_alpha, global_maze.d0, global_maze.d1, true);
 }

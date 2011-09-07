@@ -540,20 +540,20 @@ void TaskVariable::write(ostream &os) const {
     default: HALT("CV::write - no such TVT");
   }
   os
- <<"\n  y=" <<y
- <<"\t  v=" <<v
- <<"\n  y_target=" <<y_target
- <<"\t  v_target=" <<v_target
- <<"\n  y_ref="  <<y_ref
- <<"\t  v_ref=" <<v_ref
- <<"\n  y_prec=" <<y_prec
- <<"\t  v_prec=" <<v_prec
- <<"\n  Pgain=" <<Pgain
- <<"\t  Dgain=" <<Dgain
- <<"\n  y_error=" <<sqrDistance(y, y_target)
- <<"\t  v_error=" <<sqrDistance(v, v_target)
- <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
- <<endl;
+  <<"\n  y=" <<y
+  <<"\t  v=" <<v
+  <<"\n  y_target=" <<y_target
+  <<"\t  v_target=" <<v_target
+  <<"\n  y_ref="  <<y_ref
+  <<"\t  v_ref=" <<v_ref
+  <<"\n  y_prec=" <<y_prec
+  <<"\t  v_prec=" <<v_prec
+  <<"\n  Pgain=" <<Pgain
+  <<"\t  Dgain=" <<Dgain
+  <<"\n  y_error=" <<sqrDistance(y, y_target)
+  <<"\t  v_error=" <<sqrDistance(v, v_target)
+  <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
+  <<endl;
 }
 
 //===========================================================================

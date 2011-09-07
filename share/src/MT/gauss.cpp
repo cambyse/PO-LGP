@@ -413,7 +413,7 @@ void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f){
   std::cout <<"unscent transform : "
             <<a <<b <<A <<B
             <<"error : " <<sqrDistance(a, b) <<' ' <<sqrDistance(A, B) <<std::endl;
-             
+            
   plotCovariance(a, A);
   plotPoints(X);
   plotFlush();

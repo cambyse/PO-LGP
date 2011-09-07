@@ -192,9 +192,9 @@ double mdp::pomdpEM_structured(
   if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
   if(os)
     (*os) <<" P(r=1)=" <<PR
-   <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)
-   <<", Exp(R)=" <<expR
-   <<endl;
+    <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)
+    <<", Exp(R)=" <<expR
+    <<endl;
     
   return expR;
 }

@@ -513,13 +513,13 @@ bool infoHoverCall(void *p, OpenGL *gl){
   if((i&3)==2) j=C->joints(i>>2);
   if(s){
     gl->text.clr()
-   <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
+    <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
     listWrite(s->ats, gl->text, "\n");
   }
   if(j){
     gl->text.clr()
-   <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-   <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+    <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+    <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
     listWrite(j->ats, gl->text, "\n");
   }
   if(!j && !s) gl->text.clr();

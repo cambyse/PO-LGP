@@ -182,9 +182,9 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
           MT_MSG("objs found");
         }else{
           MT_MSG("looking at objects"
-                <<perc.output.objects(0).found <<", "
-                <<perc.output.objects(1).found <<", "
-                <<perc.output.objects(2).found
+                 <<perc.output.objects(0).found <<", "
+                 <<perc.output.objects(1).found <<", "
+                 <<perc.output.objects(2).found
                 );
         }
       }

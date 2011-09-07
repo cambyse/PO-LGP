@@ -1505,7 +1505,7 @@ void OpenGL::setOffscreen(int width, int height){
   createOffscreen(width, height);
   CHECK(width<=osPixmap->width() && height<=osPixmap->height(),
         "width (" <<width <<") or height (" <<height
-       <<") too large for the created pixmap - create and set size earlier!");
+        <<") too large for the created pixmap - create and set size earlier!");
   osContext->makeCurrent();
   //if(initRoutine) (*initRoutine)();
 }
@@ -1519,9 +1519,9 @@ void OpenGL::reportSelection(){
   for(i=0; i<selection.N; i++){
     if(topSelection == &selection(i)) std::cout <<"  TOP: "; else std::cout <<"       ";
     std::cout
-     <<"name = 0x" <<std::hex <<selection(i).name <<std::dec
-     <<" min-depth:" <<selection(i).dmin <<" max-depth:" <<selection(i).dmax
-     <<endl;
+      <<"name = 0x" <<std::hex <<selection(i).name <<std::dec
+      <<" min-depth:" <<selection(i).dmin <<" max-depth:" <<selection(i).dmax
+      <<endl;
   }
 }
 
@@ -1556,15 +1556,15 @@ void OpenGL::about(std::ostream& os){
   os <<"Widget's OpenGL capabilities:\n";
   QGLFormat f=format();
   os <<"direct rendering: " <<f.directRendering() <<"\n"
- <<"double buffering: " <<f.doubleBuffer()  <<"\n"
- <<"depth:            " <<f.depth() <<"\n"
- <<"rgba:             " <<f.rgba() <<"\n"
- <<"alpha:            " <<f.alpha() <<"\n"
- <<"accum:            " <<f.accum() <<"\n"
- <<"stencil:          " <<f.stencil() <<"\n"
- <<"stereo:           " <<f.stereo() <<"\n"
- <<"overlay:          " <<f.hasOverlay() <<"\n"
- <<"plane:            " <<f.plane() <<std::endl;
+  <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+  <<"depth:            " <<f.depth() <<"\n"
+  <<"rgba:             " <<f.rgba() <<"\n"
+  <<"alpha:            " <<f.alpha() <<"\n"
+  <<"accum:            " <<f.accum() <<"\n"
+  <<"stencil:          " <<f.stencil() <<"\n"
+  <<"stereo:           " <<f.stereo() <<"\n"
+  <<"overlay:          " <<f.hasOverlay() <<"\n"
+  <<"plane:            " <<f.plane() <<std::endl;
   
   if(!osContext){
     os <<"no off-screen context created yet" <<std::endl;
@@ -1572,15 +1572,15 @@ void OpenGL::about(std::ostream& os){
     os <<"Off-screen pixmaps's OpenGL capabilities:\n";
     f=osContext->format();
     os <<"direct rendering: " <<f.directRendering() <<"\n"
-   <<"double buffering: " <<f.doubleBuffer()  <<"\n"
-   <<"depth:            " <<f.depth() <<"\n"
-   <<"rgba:             " <<f.rgba() <<"\n"
-   <<"alpha:            " <<f.alpha() <<"\n"
-   <<"accum:            " <<f.accum() <<"\n"
-   <<"stencil:          " <<f.stencil() <<"\n"
-   <<"stereo:           " <<f.stereo() <<"\n"
-   <<"overlay:          " <<f.hasOverlay() <<"\n"
-   <<"plane:            " <<f.plane() <<std::endl;
+    <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+    <<"depth:            " <<f.depth() <<"\n"
+    <<"rgba:             " <<f.rgba() <<"\n"
+    <<"alpha:            " <<f.alpha() <<"\n"
+    <<"accum:            " <<f.accum() <<"\n"
+    <<"stencil:          " <<f.stencil() <<"\n"
+    <<"stereo:           " <<f.stereo() <<"\n"
+    <<"overlay:          " <<f.hasOverlay() <<"\n"
+    <<"plane:            " <<f.plane() <<std::endl;
   }
 }
 #else

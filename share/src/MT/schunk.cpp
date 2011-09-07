@@ -116,48 +116,48 @@ void SchunkArmModule::reportParameters(ostream& os){
   unsigned long u;
   short s;
   os
- <<"*** Schunk LWA parameters:"
- <<"\n -- device:"
- <<"\n    name=" <<pDev->getName()
- <<"\n    init string=" <<pDev->getInitString()
+  <<"*** Schunk LWA parameters:"
+  <<"\n -- device:"
+  <<"\n    name=" <<pDev->getName()
+  <<"\n    init string=" <<pDev->getInitString()
   // <<"\n    baud rate=" <<pDev->getBaudRate()
- <<"\n    module count=" <<pDev->getModuleCount();
+  <<"\n    module count=" <<pDev->getModuleCount();
   for(uint m=3; m<=9; m++){
     os<<"\n -- motor " <<m
-   <<"\n    getHomeOffset=" <<(pDev->getHomeOffset(m, &f)?-1:f)
-   <<"\n    getDefHomeOffset=" <<(pDev->getDefHomeOffset(m, &f)?-1:f)
-   <<"\n    getHomeOffsetInc=" <<(pDev->getHomeOffsetInc(m, &l)?-1:l)
-   <<"\n    getIncRatio=" <<(pDev->getIncRatio(m, &f)?-1:f)
-   <<"\n    getDioData=" <<(pDev->getDioData(m, &u)?-1:u)
-   <<"\n    getC    (P-gain)=" <<(pDev->getC0(m, &s)?-1:s)
-   <<"\n    getDamp (I-gain)=" <<(pDev->getDamp(m, &s)?-1:s)
-   <<"\n    getA    (D-gain)=" <<(pDev->getA0(m, &s)?-1:s)
-   <<"\n    getPos=" <<(pDev->getPos(m, &f)?-1:f)
-   <<"\n    getVel=" <<(pDev->getVel(m, &f)?-1:f)
-   <<"\n    getCur=" <<(pDev->getCur(m, &f)?-1:f)
-   <<"\n    getMinPos=" <<(pDev->getMinPos(m, &f)?-1:f)
-   <<"\n    getMaxPos=" <<(pDev->getMaxPos(m, &f)?-1:f)
-   <<"\n    getMaxVel=" <<(pDev->getMaxVel(m, &f)?-1:f)
-   <<"\n    getMaxAcc=" <<(pDev->getMaxAcc(m, &f)?-1:f)
-   <<"\n    getMaxCur=" <<(pDev->getMaxCur(m, &f)?-1:f)
-   <<"\n    getDeltaPos=" <<(pDev->getDeltaPos(m, &f)?-1:f)
-   <<"\n    getMaxDeltaPos=" <<(pDev->getMaxDeltaPos(m, &f)?-1:f)
-   <<"\n    getSavePos=" <<(pDev->getSavePos(m, &f)?-1:f)
-   <<"\n    getIPolVel=" <<(pDev->getIPolVel(m, &f)?-1:f)
-   <<"\n    getPosCountInc=" <<(pDev->getPosCountInc(m, &l)?-1:l)
-   <<"\n    getPosInc=" <<(pDev->getPosInc(m, &l)?-1:l)
-   <<"\n    getVelInc=" <<(pDev->getVelInc(m, &l)?-1:l)
-   <<"\n    getCurInc=" <<(pDev->getCurInc(m, &s)?-1:s)
-   <<"\n    getMinPosInc=" <<(pDev->getMinPosInc(m, &l)?-1:l)
-   <<"\n    getMaxPosInc=" <<(pDev->getMaxPosInc(m, &l)?-1:l)
-   <<"\n    getMaxVelInc=" <<(pDev->getMaxVelInc(m, &l)?-1:l)
-   <<"\n    getMaxAccInc=" <<(pDev->getMaxAccInc(m, &l)?-1:l)
-   <<"\n    getDeltaPosInc=" <<(pDev->getDeltaPosInc(m, &l)?-1:l)
-   <<"\n    getMaxDeltaPosInc=" <<(pDev->getMaxDeltaPosInc(m, &l)?-1:l)
-   <<"\n    getSavedPos=" <<(pDev->getSavedPos(m, &f)?-1:f)
-   <<"\n    getHomeVel=" <<(pDev->getHomeVel(m, &f)?-1:f)
-   <<"\n    getHomeVelInc=" <<(pDev->getHomeVelInc(m, &l)?-1:l)
-   <<std::flush;
+    <<"\n    getHomeOffset=" <<(pDev->getHomeOffset(m, &f)?-1:f)
+    <<"\n    getDefHomeOffset=" <<(pDev->getDefHomeOffset(m, &f)?-1:f)
+    <<"\n    getHomeOffsetInc=" <<(pDev->getHomeOffsetInc(m, &l)?-1:l)
+    <<"\n    getIncRatio=" <<(pDev->getIncRatio(m, &f)?-1:f)
+    <<"\n    getDioData=" <<(pDev->getDioData(m, &u)?-1:u)
+    <<"\n    getC    (P-gain)=" <<(pDev->getC0(m, &s)?-1:s)
+    <<"\n    getDamp (I-gain)=" <<(pDev->getDamp(m, &s)?-1:s)
+    <<"\n    getA    (D-gain)=" <<(pDev->getA0(m, &s)?-1:s)
+    <<"\n    getPos=" <<(pDev->getPos(m, &f)?-1:f)
+    <<"\n    getVel=" <<(pDev->getVel(m, &f)?-1:f)
+    <<"\n    getCur=" <<(pDev->getCur(m, &f)?-1:f)
+    <<"\n    getMinPos=" <<(pDev->getMinPos(m, &f)?-1:f)
+    <<"\n    getMaxPos=" <<(pDev->getMaxPos(m, &f)?-1:f)
+    <<"\n    getMaxVel=" <<(pDev->getMaxVel(m, &f)?-1:f)
+    <<"\n    getMaxAcc=" <<(pDev->getMaxAcc(m, &f)?-1:f)
+    <<"\n    getMaxCur=" <<(pDev->getMaxCur(m, &f)?-1:f)
+    <<"\n    getDeltaPos=" <<(pDev->getDeltaPos(m, &f)?-1:f)
+    <<"\n    getMaxDeltaPos=" <<(pDev->getMaxDeltaPos(m, &f)?-1:f)
+    <<"\n    getSavePos=" <<(pDev->getSavePos(m, &f)?-1:f)
+    <<"\n    getIPolVel=" <<(pDev->getIPolVel(m, &f)?-1:f)
+    <<"\n    getPosCountInc=" <<(pDev->getPosCountInc(m, &l)?-1:l)
+    <<"\n    getPosInc=" <<(pDev->getPosInc(m, &l)?-1:l)
+    <<"\n    getVelInc=" <<(pDev->getVelInc(m, &l)?-1:l)
+    <<"\n    getCurInc=" <<(pDev->getCurInc(m, &s)?-1:s)
+    <<"\n    getMinPosInc=" <<(pDev->getMinPosInc(m, &l)?-1:l)
+    <<"\n    getMaxPosInc=" <<(pDev->getMaxPosInc(m, &l)?-1:l)
+    <<"\n    getMaxVelInc=" <<(pDev->getMaxVelInc(m, &l)?-1:l)
+    <<"\n    getMaxAccInc=" <<(pDev->getMaxAccInc(m, &l)?-1:l)
+    <<"\n    getDeltaPosInc=" <<(pDev->getDeltaPosInc(m, &l)?-1:l)
+    <<"\n    getMaxDeltaPosInc=" <<(pDev->getMaxDeltaPosInc(m, &l)?-1:l)
+    <<"\n    getSavedPos=" <<(pDev->getSavedPos(m, &f)?-1:f)
+    <<"\n    getHomeVel=" <<(pDev->getHomeVel(m, &f)?-1:f)
+    <<"\n    getHomeVelInc=" <<(pDev->getHomeVelInc(m, &l)?-1:l)
+    <<std::flush;
   }
 }
 

@@ -94,7 +94,7 @@ public:
       char times[200];
       sprintf(times, "Ellapsed double time:  %.3lfsec\nProcess  user time:   %.3lfsec", realTime(), cpuTime());
       MT::log() <<"Execution stop:      " <<date()
-     <<times <<std::endl;
+      <<times <<std::endl;
       //"Ellapsed double time:  " <<::dtoa(realTime()) <<"sec\n"
       // <<"Process  user time:   " <<::dtoa(cpuTime()) <<"sec" <<std::endl;
 #ifndef MT_TIMEB
@@ -222,7 +222,7 @@ void parse(std::istream& is, const char *str){
     for(i=n; i--;) is.putback(buf[i]);
     is.setstate(std::ios::failbit);
     MT_MSG("(LINE=" <<MT::lineCount <<") parsing of constant string `" <<str
-          <<"' failed! (read instead: `" <<buf <<"')");
+           <<"' failed! (read instead: `" <<buf <<"')");
   }
   delete[] buf;
 }
@@ -601,18 +601,18 @@ void SHM::report(){
   if(!opened){ std::cout <<" -- not open" <<std::endl; return; }
   uint i;
   std::cout
-   <<"\n  pagename=" <<info->pagename
-   <<"\n  size=" <<info->size
-   <<"\n  used=" <<info->used
-   <<"\n  guests=" <<info->guests
-   <<"\n  guestPids=";
+    <<"\n  pagename=" <<info->pagename
+    <<"\n  size=" <<info->size
+    <<"\n  used=" <<info->used
+    <<"\n  guests=" <<info->guests
+    <<"\n  guestPids=";
   for(i=0; i<maxShmGuests; i++) std::cout <<' ' <<info->guestPids[i];
   std::cout
-   <<"\n  local guestId=" <<guestId
-   <<"\n  local systemId=" <<systemId
-   <<"\n  local p=" <<(void*)p
-   <<"\n  locally created=" <<created
-   <<"\n  allocated blocks:";
+    <<"\n  local guestId=" <<guestId
+    <<"\n  local systemId=" <<systemId
+    <<"\n  local p=" <<(void*)p
+    <<"\n  locally created=" <<created
+    <<"\n  allocated blocks:";
   for(i=0; i<shmMaxBlocks; i++) if(info->blockOffsets[i]) std::cout <<"\n    " <<i <<": name=" <<info->blockNames[i] <<" offset=" <<info->blockOffsets[i];
   std::cout <<std::endl;
 }
@@ -954,13 +954,13 @@ void gnuplot(const char *command, const char *PDFfile, bool persist){
   MT::String cmd;
   
   cmd <<"set terminal pop\n"
- <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
- <<command <<std::endl;
+  <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
+  <<command <<std::endl;
   
   if(PDFfile){
     cmd <<"set terminal pdfcairo\n"
-   <<"set output '" <<PDFfile <<"'\n"
-   <<command <<std::endl;
+    <<"set output '" <<PDFfile <<"'\n"
+    <<command <<std::endl;
   }
   fputs(cmd.p, MT_gp);
   fflush(MT_gp) ;

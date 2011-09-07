@@ -351,7 +351,7 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy){
       p=0;
     }
     CHECK((pold && Mold) || (!pold && !Mold), "");
-    if(Mold) delete[] pold;  //if(Mold) free(pold);
+    if(Mold) delete[] pold; //if(Mold) free(pold);
   }
   N=n;
   pstop=p+N;
