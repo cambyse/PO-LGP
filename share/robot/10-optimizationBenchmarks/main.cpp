@@ -119,11 +119,6 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
       *sys.ors, tipsN, *graspobj);
   /* position of the palm center marker */
-  /* TODO: need this? or make zeroLeel? 
-  TV_palm = new TaskVariable();
-  TV_palm->set("palm pos",*sys.ors, posTVT,
-	       palm->body->index,palm->rel, -1, ors::Transformation(),ARR());
-   */
   MT::Array<ors::Shape*> palmL; palmL.append(palm);
   TV_palm = new PotentialValuesTaskVariable("palm pos",
       *sys.ors, palmL, *graspobj);
@@ -198,17 +193,10 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->y_target = ARR(-1.,-1.,-1.);
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec,0.,0.);
 
-  /* */
   V=listFindByName(sys.vars,"palm pos");
   V->updateState();
-  /*  target and prec for stock position var
-  V->y_target = graspobj->center();
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec,0.,0.);
-  */
-  /*  target and prec for zeroLevel var */
   V->y_target = ARR(0);
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec,0.,0.);
-  /* */
 
   V=listFindByName(sys.vars,"oppose tip");
   V->updateState();
@@ -222,41 +210,15 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   V=listFindByName(sys.vars,"zeroLevel");
   V->updateState();
-  V->y_target = ARR(1.,1.,1.); 
+  V->y_target = ARR(0.,0.,0.); 
   V->v_target = ARR(-.1,-.1,-.1); 
-  V->setInterpolatedTargetsEndPrecisions(T,0.,0.,0.,0.);
-  uint t,M=T/4;
-  /*
+  V->setInterpolatedTargetsEndPrecisions(T,0.,tv_zeroLevel_prec,0.,0.);
+  /* set approaching velocity  for last steps*/
+  uint t,M=T/8;
   for(t=T-M;t<T;t++){
-    V->y_prec_trajectory(t) = tv_ISF_col_prec;
-  } 
-  */
-  M=T/4;
-  for(t=T-M;t<T;t++){
-    //V->y_prec_trajectory(t) = (1- (M-(T-t))/M)*tv_ISF_col_prec;
     V->v_prec_trajectory(t) = tv_ISF_col_prec;
   } 
 
-  V=listFindByName(sys.vars,"zeroLevel");
-  V->updateState();
-  V->y_target = ARR(0,0,0); 
-  //V->v_target = ARR(-1.,-1.,-1.); 
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec,0.,0.);
-#if 0
-  uint t,M=1/8;
-  for(t=T-M;t<T;t++){
-    V->y_trajectory[t]() = (1./M*(T-t))*ARR(.1,.1,.1);
-    V->y_prec_trajectory(t) = tv_ISF_col_prec;
-  } 
-#endif
-#if 0
-  for(t=T-M;t<T;t++){
-    V->v_trajectory[t]() = (1./M*(T-t))*V->v_target;
-    V->v_prec_trajectory(t) = 1e5; tv_ISF_col_prec;
-  } 
-  V->v_prec_trajectory(T) = 0;//to not confuse posterior estimation
-#endif
-    
   //col lim and relax
   V=listFindByName(sys.vars,"collision"); V->y=0.;  V->y_target=0.;
   V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
@@ -311,9 +273,24 @@ random_obj(){
 }
 
 void
-active_var(soc::SocSystem_Ors &sys){
+activateVars_1step(soc::SocSystem_Ors &sys){
   activateAll(sys.vars,false);
+  listFindByName(sys.vars,"palm pos")->active=true; 
+  /*
   listFindByName(sys.vars,"isf col")->active=true; 
+  listFindByName(sys.vars,"tips z align")->active=true; 
+  listFindByName(sys.vars,"collision")->active=true; 
+  listFindByName(sys.vars,"qitself")->active=true; 
+  listFindByName(sys.vars,"limits")->active=true; 
+  listFindByName(sys.vars,"oppose tip")->active=true; 
+  listFindByName(sys.vars,"oppose fng")->active=true; 
+  listFindByName(sys.vars,"zeroLevel")->active=true; 
+  */
+}
+
+void
+activateVars_2step(soc::SocSystem_Ors &sys){
+  activateAll(sys.vars,false);
   listFindByName(sys.vars,"palm pos")->active=true; 
   listFindByName(sys.vars,"tips z align")->active=true; 
   listFindByName(sys.vars,"collision")->active=true; 
@@ -323,6 +300,7 @@ active_var(soc::SocSystem_Ors &sys){
   listFindByName(sys.vars,"oppose fng")->active=true; 
   listFindByName(sys.vars,"zeroLevel")->active=true; 
   /*
+  listFindByName(sys.vars,"isf col")->active=true; 
   */
 }
 
@@ -433,28 +411,39 @@ void problem5(){
   /* get initial pose */
   sys.getq0(q0);
 
-  /* optimal time is tm */
+  /* optimal time is tm 
   GetOptimalDynamicTime(tm,b,B,sys,alpha,0.04); 
-
-  /* with optimal time, get posterior pose
-  sys.setq(q0,0);
-  OneStepDynamicFull(b,B,sys,tm/*=tuse opt time*//*,alpha); 
   */
-  MT_MSG( "Post belief:" << b); MT_MSG( "time:" << tm);
+
+  /* with optimal time, get posterior pose */
+  sys.setq(q0,0);
+  activateVars_1step(sys);
+  OneStepDynamicFull(b,B,sys,3. /*tm=t use opt time*/,alpha,1,false); 
+  /* open fingers */
+  b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
+  sys.setx(b);
+  sys.gl->watch("Belief after 1st phase, with open fings");
+  MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
+
+  activateVars_2step(sys);
+  OneStepDynamicFull(b,B,sys,3. /*tm=t use opt time*/,alpha,1,true); 
+  MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
 
   /* see bwdMsg */
   b0.setCarray(b.p,14);
   sys.setq(b0,0);
-  gl.watch("helo");
+  gl.watch("Enjoy the backward message");
 
 
   /* start aico with bwdMsg */
   soc::SocSystem_Ors sys2;
-  sys2.initBasics(&ors,NULL,&gl,T,/*0.6**/tm,true,NULL);
+  sys2.initBasics(&ors,NULL,&gl,T,/*0.6*tm*/3.,true,NULL);
   createISPTaskVariables(sys2,o);
   setISPGraspGoals(sys2,T,o);
-  //setzeroprec(sys2, T);
-  active_var(sys2);
+  /* use full set of TVs */
+  activateVars_2step(sys2);
+  /* set start position 0; */
+  sys2.setq(q0); sys2.setq0AsCurrent();
 
   AICO solver(sys2);
   solver.useBwdMsg=true;
