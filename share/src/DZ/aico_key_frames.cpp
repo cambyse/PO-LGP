@@ -320,7 +320,7 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
 
 void OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, bool verbose, bool b_is_initialized)
+                        double time,double alpha, uint verbose, bool b_is_initialized)
 {
   arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; //,bq,bv;
@@ -392,7 +392,9 @@ void OneStepDynamicFull(arr& b,arr& Binv,
 
       if(verbose>0){
         sys.displayState(NULL, NULL, "posture estimate", true);
-        //sys.gl->watch();
+      }
+      if(verbose>1){
+        sys.gl->watch();
       }
     }
   }
