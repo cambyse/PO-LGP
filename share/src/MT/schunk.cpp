@@ -73,9 +73,9 @@ void SchunkArmModule::open(){
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|0);
   //for(m=3;m<=9;m++) pDev->setConfig(m, CONFIGID_MOD_SYNC_MOTION|1);
   //MY DEFAULT 64 2 4
-  for(m=3; m<=9; m++) pDev->setC0(m, MT::getParameter<uint>("C0-Pgain", 32)); //P-gain (range 12..64, only even values)
+  for(m=3; m<=9; m++) pDev->setC0(m, MT::getParameter<uint>("C0-Pgain", 64)); //P-gain (range 12..64, only even values) (previously: 32)
   for(m=3; m<=9; m++) pDev->setDamp(m, MT::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
-  for(m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 4)); //D-gain (range 1..12)
+  for(m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 3)); //D-gain (range 1..12) (previously: 3)
   for(m=3; m<=9; m++) pDev->recalcPIDParams(m);
   //for(m=3;m<=9;m++){ schunk.pDev->moveRamp(m, q_desired(m-3), .1, .1); //.3, 3.);
   ofstream zconf("z.mconfig");
