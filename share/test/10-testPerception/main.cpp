@@ -24,7 +24,7 @@ int main(int argn,char** argv){
   //ors::Body * o = G.getBodyByName("OBJECTS");
   //o->X.p(0) = 100;
 
-  MyCamera cam;
+  CameraModule cam;
   EarlyVisionModule evis;
 #ifdef REALCAMERA
   evis.input=&cam.output;

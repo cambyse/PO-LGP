@@ -22,7 +22,7 @@ int main(int argn,char** argv){
   signal(SIGINT,shutdown);
 
   EarlyVisionModule evis;
-  MyCamera cam;
+  CameraModule cam;
 #if 0
   evis.input=&cam.output;
 #else

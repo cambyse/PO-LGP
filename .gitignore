@@ -9,12 +9,20 @@
 
 *.tgz
 
+z.*
+
 *_doc
+
+*_moc.cpp
+*_ui.h
 
 MT.log
 Makefile.dep
 
+
+
 %% special:
+share/extern/tony_mdp/parser.tab.cpp
 share/extern/ODE_0.11/download
 share/extern/ODE_0.11/ode-0.11
 
