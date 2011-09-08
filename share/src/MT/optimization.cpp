@@ -170,7 +170,7 @@ void Rprop::step(arr& w, const arr& grad, uint *singleI){
       stepSize(i) = _mymax(dMin, decr * stepSize(i)); //decrease step size
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
       lastGrad(i) = 0;                               //memorize to continue below next time
-    }else{                                //after change of direcion
+    }else{                               //after change of direcion
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
       lastGrad(i) = grad.elem(i);                    //memorize gradient
     }

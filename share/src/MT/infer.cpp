@@ -2684,7 +2684,7 @@ void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, co
     if(!msgFlips(i)) f=msgs(i)->f2; else f=msgs(i)->f1; //f is the sub-factor of order(i).m
     for(j=0; j<f->messages.N; j++){
       m=f->messages(j);                                     //m is one sub-message of f
-      if(m==msgs(i)) continue;                      //discard it when it is going up
+      if(m==msgs(i)) continue;                     //discard it when it is going up
       msgs.append(m);
       if(m->f1==f) msgFlips.append(false);
       else         msgFlips.append(true);
