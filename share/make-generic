@@ -233,9 +233,9 @@ MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
 endif
 
 ifdef WX
-CXXFLAGS  += -DMT_WX
-CPATH   := $(CPATH):/usr/include/wx-2.8
-#LinuxLibs += -lQtCore -lQtGui -lQtOpenGL
+CXXFLAGS  += -DMT_WX -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXGTK__ -pthread
+CPATH := $(CPATH):/usr/lib/wx/include/gtk2-unicode-release-2.8:/usr/include/wx-2.8
+LinuxLibs += -pthread -Wl,-Bsymbolic-functions  -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8 
 endif
 
 ifdef ODE
