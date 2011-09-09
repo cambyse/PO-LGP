@@ -211,8 +211,9 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V=listFindByName(sys.vars,"zeroLevel");
   V->updateState();
   V->y_target = ARR(0.,0.,0.); 
-  V->v_target = ARR(-.1,-.1,-.1); 
+  V->v_target = ARR(-.05,-.05,-.05); 
   V->setInterpolatedTargetsEndPrecisions(T,0.,tv_zeroLevel_prec,0.,0.);
+  V->setConstantTargetTrajectory(T);
   /* set approaching velocity  for last steps*/
   uint t,M=T/8;
   for(t=T-M;t<T;t++){
@@ -386,6 +387,7 @@ void problem5(){
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   double t=MT::getParameter<double>("optTimeMin"); 
+  double t_min=MT::getParameter<double>("optTimeMin"); 
   double alpha=MT::getParameter<double>("alpha");
   double BinvFactor=MT::getParameter<double>("BinvFactor");
   double tm;
@@ -403,7 +405,7 @@ void problem5(){
   gl.add(ors::glDrawGraph, &ors);
   gl.camera.setPosition(5,-10,10);
   gl.camera.focus(0,0,1);
-  sys.initBasics(&ors,NULL,&gl,T,t,true,NULL);
+  sys.initBasics(&ors,NULL,&gl,T,/*t,t_min*/t,true,NULL);
 
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
@@ -418,7 +420,7 @@ void problem5(){
   /* with optimal time, get posterior pose */
   sys.setq(q0,0);
   activateVars_1step(sys);
-  OneStepDynamicFull(b,B,sys,3. /*tm=t use opt time*/,alpha,1,false); 
+  OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,1,false); 
   /* open fingers */
   b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
   sys.setx(b);
@@ -426,7 +428,7 @@ void problem5(){
   MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
 
   activateVars_2step(sys);
-  OneStepDynamicFull(b,B,sys,3. /*tm=t use opt time*/,alpha,1,true); 
+  OneStepDynamicFull(b,B,sys, t,alpha,1,true); 
   MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
 
   /* see bwdMsg */
@@ -437,7 +439,7 @@ void problem5(){
 
   /* start aico with bwdMsg */
   soc::SocSystem_Ors sys2;
-  sys2.initBasics(&ors,NULL,&gl,T,/*0.6*tm*/3.,true,NULL);
+  sys2.initBasics(&ors,NULL,&gl,T,/*0.6*tm*/t,true,NULL);
   createISPTaskVariables(sys2,o);
   setISPGraspGoals(sys2,T,o);
   /* use full set of TVs */
