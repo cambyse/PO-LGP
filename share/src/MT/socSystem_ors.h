@@ -59,7 +59,9 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void getWinv(arr& Winv, uint t);
   void getH(arr& H, uint t);
   void getHinv(arr& Hinv, uint t);
+  void getTotalHinv(arr& Hinv); //new
   void getQ(arr& Q, uint t);
+  void getTotalQ(arr& Q);//new
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);

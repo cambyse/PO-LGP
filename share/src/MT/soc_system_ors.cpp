@@ -419,8 +419,11 @@ void soc::SocSystem_Ors::getWinv(arr& Winv, uint t){
   }
 }
 void soc::SocSystem_Ors::getH(arr& H, uint t){
-  H=WS->H;  //*getTau();
+  H=WS->H*getTau(); // control cost rate
   if(stepScale(t)) H *= double(1 <<stepScale(t));
+}
+void soc::SocSystem_Ors::getTotalHinv(arr& Hinv){
+   inverse_SymPosDef(Hinv, WS->H); // returns the inverse of total H
 }
 void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   arr H;
@@ -428,7 +431,10 @@ void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   inverse_SymPosDef(Hinv, H);
 }
 void soc::SocSystem_Ors::getQ(arr& Q, uint t){
-  Q=WS->Q*sqrt(getTau());
+  Q=WS->Q*getTau();// cost rate
+}
+void soc::SocSystem_Ors::getTotalQ(arr& Q, uint t){
+  Q=WS->Q;//total cost
 }
 
 void soc::SocSystem_Ors::setq(const arr& q, uint t){
