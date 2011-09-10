@@ -591,7 +591,7 @@ void glDrawGraph(void *classP);
 
 //===========================================================================
 //
-// task variables
+// The task variable abstraction
 //
 
 #ifndef MT_ORS_ONLY_BASICS
@@ -623,54 +623,28 @@ enum TargetType { noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnRef
 struct TaskVariable {
   //!@name data fields
   bool active;          //!< active?
-  TVtype type;          //!< which type has this variable
+  TVtype type;          //!< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
   TargetType targetType;//!< what target type
   MT::String name;      //!< its name
   ors::Graph *ors;      //!< pointer to the data structure (from which it gets the kinematics)
-  int i, j;             //!< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; //!< relative position to the body
-  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
   
   arr y, y_old, v, v_old, y_target, v_target; //!< current state and final target of this variable
   arr J, Jt;                                  //!< current Jacobian and its transpose
   double y_prec, v_prec;                      //!< precision (=1/variance) associated with this variable
   arr y_trajectory, y_prec_trajectory;        //!< target & precision over a whole trajectory
   arr v_trajectory, v_prec_trajectory;        //!< target & precision over a whole trajectory
-  
+
+  //used for feedback control:
   arr y_ref, v_ref;                           //!< immediate (next step) desired target reference
   double Pgain, Dgain;                        //!< parameters of the PD controller or attractor dynamics
   
   //a bit obsolete
   double err, derr;
-  int state;                                 //!< discrete indicate state of this variable (e.g., convergence)
-  double state_tol;
   
   //!@name initialization
   TaskVariable();
-  TaskVariable(
-    const char* _name,
-    ors::Graph& _sl,
-    TVtype _type,
-    const char *iBodyName, const char *iframe,
-    const char *jBodyName, const char *jframe,
-    const arr& _params);
-  TaskVariable(
-    const char* _name,
-    ors::Graph& _sl,
-    TVtype _type,
-    const char *iShapeName,
-    const char *jShapeName,
-    const arr& _params);
-  ~TaskVariable();
-  
-  void set(
-    const char* _name,
-    ors::Graph &_sl,
-    TVtype _type,
-    int _i, const ors::Transformation& _irel,
-    int _j, const ors::Transformation& _jrel,
-    const arr& _params);
-  //void set(const char* _name, ors::Graph& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  virtual ~TaskVariable() = 0;
+  virtual TaskVariable* newClone() = 0;
   
   //!@name online target parameters
   void setGains(double Pgain, double Dgain, bool onReal=true);
@@ -697,9 +671,61 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   //!@name updates
+  virtual void updateState(double tau=1.) = 0; //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  virtual void updateJacobian() = 0;
+  void updateChange(int t=-1, double tau=1.);
+  virtual void getHessian(arr& H) = 0;
+  
+  //!@name I/O
+  virtual void write(ostream& os) const = 0;
+};
+stdOutPipe(TaskVariable);
+
+
+//===========================================================================
+//
+// The default implementation of standard task variables
+//
+
+
+/*!\brief basic task variable */
+struct DefaultTaskVariable:public TaskVariable {
+  //!@name data fields
+  int i, j;             //!< which body(-ies) does it refer to?
+  ors::Transformation irel, jrel; //!< relative position to the body
+  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
+  
+  //!@name initialization
+  DefaultTaskVariable();
+  DefaultTaskVariable(
+    const char* _name,
+    ors::Graph& _sl,
+    TVtype _type,
+    const char *iBodyName, const char *iframe,
+    const char *jBodyName, const char *jframe,
+    const arr& _params);
+  DefaultTaskVariable(
+    const char* _name,
+    ors::Graph& _sl,
+    TVtype _type,
+    const char *iShapeName,
+    const char *jShapeName,
+    const arr& _params);
+  ~DefaultTaskVariable();
+  TaskVariable* newClone(){ return new DefaultTaskVariable(*this); }
+  
+  void set(
+    const char* _name,
+    ors::Graph &_sl,
+    TVtype _type,
+    int _i, const ors::Transformation& _irel,
+    int _j, const ors::Transformation& _jrel,
+    const arr& _params);
+  //void set(const char* _name, ors::Graph& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  
+  //!@name updates
   void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
   void updateJacobian();
-  void updateChange(int t=-1, double tau=1.);
   void getHessian(arr& H);
   
   //!@name virtual user update
@@ -709,7 +735,7 @@ struct TaskVariable {
   //!@name I/O
   void write(ostream& os) const;
 };
-stdOutPipe(TaskVariable);
+stdOutPipe(DefaultTaskVariable);
 
 
 //===========================================================================
@@ -752,7 +778,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 
 //===========================================================================
 //
-// OPENGL module
+// OPENGL interface
 //
 
 class OpenGL;
@@ -767,7 +793,7 @@ void animateConfiguration(ors::Graph& C, OpenGL& gl);
 
 //===========================================================================
 //
-// SWIFT module
+// SWIFT interface
 //
 
 class SWIFT_Scene;
@@ -894,7 +920,7 @@ public:
 
 //===========================================================================
 //
-// QHULL module
+// QHULL interface
 //
 
 void plotQhullState(uint D);
@@ -928,7 +954,7 @@ void getDelaunayEdges(uintA& E, const arr& V);
 
 //===========================================================================
 //
-// FEATHERSTONE module
+// FEATHERSTONE interface
 //
 
 namespace ors {
@@ -971,7 +997,7 @@ void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C);
 
 //===========================================================================
 //
-// BLENDER import
+// BLENDER interface
 //
 
 void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);

@@ -3,15 +3,12 @@
 
 #include "array.h"
 #include "process.h"
+#include "ors.h"
 
 //===========================================================================
 //
 // basic data structures and forward declarations
 //
-
-//fwd declarations
-
-namespace ors {  struct Proxy;  }
 
 struct Object {
   uint found;
@@ -48,6 +45,12 @@ struct q_currentReferenceVar:public Variable {
   bool readHandFromReal;
   
   q_currentReferenceVar():Variable("q_state"){ readHandFromReal=false; }
+};
+
+struct CurrentSceneInformation:public Variable {
+  ors::Graph ors;
+
+  CurrentSceneInformation():Variable("current scnene information"){}
 };
 
 struct SkinPressureVar:public Variable {

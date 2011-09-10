@@ -620,7 +620,7 @@ double AICO_clean::stepGaussNewton(){
       
       //add the damping
       if(aico->damping && aico->dampingReference.N){
-        J.append(   Diag(aico->damping, x.N) );
+        J.append(   diag(aico->damping, x.N) );
         phi.append( aico->damping*(x-aico->dampingReference[t]) );
       }
       

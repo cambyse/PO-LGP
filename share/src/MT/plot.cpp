@@ -40,7 +40,7 @@ struct PlotModuleWorkspace {
 };
 
 PlotModule::PlotModule(){
-  WS = new PlotModuleWorkspace;
+  s = new PlotModuleWorkspace;
   mode=gnupl;
   gl=0;
   light=false;
@@ -56,12 +56,12 @@ PlotModule::~PlotModule(){
 #ifdef MT_GL
   if(gl) delete gl;
 #endif
-  delete WS;
+  delete s;
 }
 
 void plotDrawOpenGL(void* data);
 void plotDrawGnuplot(void* data);
-void glDrawPlot(void *module){ plotDrawOpenGL(((PlotModule*)module)->WS); }
+void glDrawPlot(void *module){ plotDrawOpenGL(((PlotModule*)module)->s); }
 
 //===========================================================================
 //
@@ -241,7 +241,7 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 void plot(bool wait){
   switch(plotModule.mode){
     case gnupl:
-      plotDrawGnuplot(plotModule.WS);
+      plotDrawGnuplot(plotModule.s);
       if(wait) MT::wait();
       break;
 #ifdef MT_GL
@@ -261,11 +261,11 @@ void plot(bool wait){
 }
 
 void plotClear(){
-  plotModule.WS->array.clear();
-  plotModule.WS->points.clear();
-  plotModule.WS->lines.clear();
+  plotModule.s->array.clear();
+  plotModule.s->points.clear();
+  plotModule.s->lines.clear();
 #ifdef MT_ors_h
-  plotModule.WS->planes.clear();
+  plotModule.s->planes.clear();
 #endif
 }
 
@@ -283,7 +283,7 @@ void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, do
 void plotOpengl(){ MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!"); }
 #endif
 
-void plotImage(const arr& x){ plotModule.WS->images.append(x); }
+void plotImage(const arr& x){ plotModule.s->images.append(x); }
 
 void plotFunction(const arr& f, double x0, double x1){
   arr X;
@@ -305,7 +305,7 @@ void plotFunction(const arr& f, double x0, double x1){
       X.reshape(X.N, 1);
     }
   }
-  plotModule.WS->lines.append(X);
+  plotModule.s->lines.append(X);
 }
 
 void plotFunctions(const arr& F, double x0, double x1){
@@ -323,7 +323,7 @@ void plotFunctionPoints(const arr& x, const arr& f){
     for(j=0; j<x.d1; j++) X(i, j)=x(i, j);
     X(i, j)=f(i);
   }
-  plotModule.WS->points.append(X);
+  plotModule.s->points.append(X);
 }
 
 void plotFunction(const arr& x, const arr& f){
@@ -336,7 +336,7 @@ void plotFunction(const arr& x, const arr& f){
     for(j=0; j<x.d1; j++) X(i, j)=x(i, j);
     X(i, j)=f(i);
   }
-  plotModule.WS->lines.append(X);
+  plotModule.s->lines.append(X);
 }
 
 void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& l){
@@ -351,40 +351,40 @@ void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& 
     X(i, j+1)=l(i);
     X(i, j+2)=h(i);
   }
-  plotModule.WS->lines.append(X);
+  plotModule.s->lines.append(X);
 }
 
 void plotSurface(const arr& X){
-  plotModule.WS->array.append(X);
+  plotModule.s->array.append(X);
 #ifdef MT_ors_h
-  plotModule.WS->mesh.clear();
-  plotModule.WS->mesh.V.resize(X.N, 3);
-  plotModule.WS->mesh.C.resize(X.N, 3);
-  plotModule.WS->mesh.setGrid(X.d1, X.d0);
-  //plotModule.WS->mesh.gridToStrips(X.d1, X.d0);
+  plotModule.s->mesh.clear();
+  plotModule.s->mesh.V.resize(X.N, 3);
+  plotModule.s->mesh.C.resize(X.N, 3);
+  plotModule.s->mesh.setGrid(X.d1, X.d0);
+  //plotModule.s->mesh.gridToStrips(X.d1, X.d0);
 #endif
 }
 
 void plotPoint(double x, double y, double z){
   arr p(1, 3); p(0, 0)=x; p(0, 1)=y; p(0, 2)=z;
-  plotModule.WS->points.append(p);
+  plotModule.s->points.append(p);
 }
 
 void plotPoint(const arr& x){
   arr p; p.referTo(x); p.reshape(1, p.N);
-  plotModule.WS->points.append(p);
+  plotModule.s->points.append(p);
 }
 
 void plotPoints(const arr& X){
-  plotModule.WS->points.append(X);
+  plotModule.s->points.append(X);
 }
 
 void plotClearPoints(){
-  plotModule.WS->points.clear();
+  plotModule.s->points.clear();
 }
 
 void plotLine(const arr& X){
-  plotModule.WS->lines.append(X);
+  plotModule.s->lines.append(X);
 }
 
 void plotPoints(const arr& X, const arr& Y){
@@ -400,7 +400,7 @@ void plotPoints(const arr& X, const arr& Y){
     P.resize(X.d0, 2);
     for(i=0; i<P.d0; i++){ P(i, 0)=X(i); P(i, 1)=Y(i); }
   }
-  plotModule.WS->points.append(P);
+  plotModule.s->points.append(P);
 }
 
 void plotCovariance(const arr& mean, const arr& cov){
@@ -435,7 +435,7 @@ void plotCovariance(const arr& mean, const arr& cov){
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
     for(i=0; i<d.d0; i++){ mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
     
-    plotModule.WS->lines.append(d);
+    plotModule.s->lines.append(d);
   }
   if(d==3){
 #if 1
@@ -460,9 +460,9 @@ void plotCovariance(const arr& mean, const arr& cov){
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
     for(i=0; i<d.d0; i++){ mult(d[i](), d[i], w); d[i]=V*d[i]; d[i]()+=mean; }
     d.reshape(3, 101, 3);
-    plotModule.WS->lines.append(d[0]);
-    plotModule.WS->lines.append(d[1]);
-    plotModule.WS->lines.append(d[2]);
+    plotModule.s->lines.append(d[0]);
+    plotModule.s->lines.append(d[1]);
+    plotModule.s->lines.append(d[2]);
 #else
     arr d(101, 2), dd(101, 3), Cov, U, V, w;
     double phi;
@@ -477,7 +477,7 @@ void plotCovariance(const arr& mean, const arr& cov){
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
     for(i=0; i<d.d0; i++){ mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
     for(i=0; i<d.d0; i++){ dd(i, 0)=d(i, 0); dd(i, 1)=d(i, 1); dd(i, 2)=mean(2); }
-    plotModule.WS->lines.append(dd);
+    plotModule.s->lines.append(dd);
     //y-z
     Cov=cov.sub(1, 2, 1, 2);
     for(i=0; i<d.d0; i++){ //standard circle
@@ -488,7 +488,7 @@ void plotCovariance(const arr& mean, const arr& cov){
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
     for(i=0; i<d.d0; i++){ mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(1); d(i, 1)+=mean(2); }
     for(i=0; i<d.d0; i++){ dd(i, 0)=mean(0); dd(i, 1)=d(i, 0); dd(i, 2)=d(i, 1); }
-    plotModule.WS->lines.append(dd);
+    plotModule.s->lines.append(dd);
     //x-z
     Cov(0, 0)=cov(0, 0); Cov(1, 0)=cov(2, 0); Cov(0, 1)=cov(0, 2); Cov(1, 1)=cov(2, 2);
     for(i=0; i<d.d0; i++){ //standard circle
@@ -499,7 +499,7 @@ void plotCovariance(const arr& mean, const arr& cov){
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
     for(i=0; i<d.d0; i++){ mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(2); }
     for(i=0; i<d.d0; i++){ dd(i, 0)=d(i, 0); dd(i, 1)=mean(1); dd(i, 2)=d(i, 1); }
-    plotModule.WS->lines.append(dd);
+    plotModule.s->lines.append(dd);
 #endif
   }
 }
@@ -511,7 +511,7 @@ void plotVectorField(const arr& X, const arr& dX){
   for(i=0; i<X.d0; i++){
     l[0]() = X[i];
     l[1]() = X[i]+dX[i];
-    plotModule.WS->lines.append(l);
+    plotModule.s->lines.append(l);
   }
 }
 

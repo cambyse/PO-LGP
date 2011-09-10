@@ -51,7 +51,7 @@ void testActions(){
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
-  //signal(SIGINT,RobotModuleGroup::signalStopCallback);
+  //signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   switch(MT::getParameter<int>("mode")){
     case 0:  testJoy();  break;

@@ -14,19 +14,19 @@ struct MyDemo:public TaskAbstraction {
   ors::Body * target;
   bool started_track;
   arr Pl,Pr;
-  RobotModuleGroup *master;
+  RobotProcessGroup *robotProcesses;
   PerceptionModule * perc;
   AverageTrack Kal1;
   uint visStep;
   void findTarget();
   virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
   virtual void initTaskVariables(ControllerModule *ctrl);
-  void init(RobotModuleGroup *_master);
+  void init(RobotProcessGroup *_master);
 };
 
 
-void MyDemo::init(RobotModuleGroup *_master){
-  master=_master;
+void MyDemo::init(RobotProcessGroup *_master){
+  robotProcesses=_master;
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
 
@@ -39,19 +39,19 @@ void MyDemo::init(RobotModuleGroup *_master){
   Pr = p2.sub(3,5,0,3);
   Kal1.Init();
 
-  master->gui.gl->camera.setPosition(-0.5,-7,1);
-  master->gui.gl->camera.focus(0., -0.5, 1.);
+  robotProcesses->gui.gl->camera.setPosition(-0.5,-7,1);
+  robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);
 
   //find camera location
-      ors::Body * b = new ors::Body(master->gui.ors->bodies);
-      ors::Shape * s=new ors::Shape(master->gui.ors->shapes,b);
+      ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
+      ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
       s->type=1;
       s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
       s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
       b->X.p = CameraLocation(Pl);
 
-      ors::Body * br = new ors::Body(master->gui.ors->bodies);
-      ors::Shape * sr=new ors::Shape(master->gui.ors->shapes,br);
+      ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
+      ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
       sr->type=1;
       sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
       sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -66,13 +66,13 @@ void MyDemo::init(RobotModuleGroup *_master){
       ors::Vector z; ors::Quaternion q2;
       q.getZ(z);q2.setRad(PI,z);
       q = q2*q;
-      master->gui.gl->camera.X->r = q;
-      master->gui.gl->camera.X->p = b->X.p;
-      master->gui.gl->camera.setHeightAngle(50);
-      master->gui.gl->camera.setZRange(.05,10.);
-      //master->gui.gl->camera.fixedProjectionMatrix=Pr;master->gui.gl->camera.fixedProjectionMatrix.append(ARR(0,0,0,1.));
-      master->gui.ors->getBodyByName("camera")->X.p = (b->X.p+br->X.p)/2;
-      master->gui.ors->getBodyByName("camera")->X.r = q;
+      robotProcesses->gui.gl->camera.X->r = q;
+      robotProcesses->gui.gl->camera.X->p = b->X.p;
+      robotProcesses->gui.gl->camera.setHeightAngle(50);
+      robotProcesses->gui.gl->camera.setZRange(.05,10.);
+      //robotProcesses->gui.gl->camera.fixedProjectionMatrix=Pr;robotProcesses->gui.gl->camera.fixedProjectionMatrix.append(ARR(0,0,0,1.));
+      robotProcesses->gui.ors->getBodyByName("camera")->X.p = (b->X.p+br->X.p)/2;
+      robotProcesses->gui.ors->getBodyByName("camera")->X.r = q;
 }
 
 void MyDemo::initTaskVariables(ControllerModule *ctrl){
@@ -91,16 +91,16 @@ void MyDemo::initTaskVariables(ControllerModule *ctrl){
 
 void MyDemo::findTarget(){
   double time = MT::realTime();
-  if(visStep != master->evis.timer.steps &&perc->objects.N > 0 && perc->objects(0)->visionCenter.N == 4){//should manuallz remove 0 observations vision.min = 0
-    visStep = master->evis.timer.steps;
+  if(visStep != robotProcesses->evis.timer.steps &&perc->objects.N > 0 && perc->objects(0)->visionCenter.N == 4){//should manuallz remove 0 observations vision.min = 0
+    visStep = robotProcesses->evis.timer.steps;
     arr vision1 =  perc->objects(0)->visionCenter;
-   // master->evis.hsvCenters = master->evis.hsvCenters*(float)pow(2.0,master->evis.downScale);
+   // robotProcesses->evis.hsvCenters = robotProcesses->evis.hsvCenters*(float)pow(2.0,robotProcesses->evis.downScale);
    // for(uint i = 0; i < 4; i++)if(i < 2)
    //   vision1(i) = perc->objects(0)->shapePointsL(0,i);
    // else
    //   vision1(i) = perc->objects(0)->shapePointsR(0,i-2);
 
-    vision1  = vision1*pow(2.0,master->evis.downScale);
+    vision1  = vision1*pow(2.0,robotProcesses->evis.downScale);
 
     Kal1.addSample(vision1,Pl,Pr,time);
     //arr val1a =   Find3dPoint(Pl,Pr,vision);ors::Vector val(val1a(0),val1a(1),val1a(2));
@@ -110,7 +110,7 @@ void MyDemo::findTarget(){
    // pos_file << Kal1.v.length() << " " << lastTarget << endl;
    pos_file << val << " " << Kal1.v << " " << vision1 << endl;
     pos_file.flush();
-    master->gui.ors->getBodyByName("target")->X.p = val;
+    robotProcesses->gui.ors->getBodyByName("target")->X.p = val;
   }
   else if(perc->objects.N == 0 || perc->objects(0)->visionCenter.N != 4)
     cout << "no vision" << endl << endl;
@@ -144,7 +144,7 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
   if (started_track) {
     findTarget();//call later if it is too slow, or in some intervals
     arr x = arr(target->X.p.v,3) - TV_fNew->y;
-    master->gui.gl->text.clr() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
+    robotProcesses->gui.gl->text.clr() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
     double speedM = 0.04;
     if(norm(x) > speedM) x = x*speedM/norm(x);
 
@@ -176,38 +176,38 @@ int main(int argn,char** argv){
   //sudo chmod a+rw /dev/video1394/0
   MT::IOraw = true;
   MT::initCmdLine(argn,argv);
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
-  RobotModuleGroup master;
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
+  RobotProcessGroup robotProcesses;
   MyDemo demo;
-  master.ctrl.task=&demo;
+  robotProcesses.ctrl.task=&demo;
   PerceptionModule perc;
   demo.perc = &perc;
 
-  master.open();
+  robotProcesses.open();
   perc.threadOpen();
-  master.gui.ors->getBodyByName("obstacle")->X.p(2) = 100;
-  demo.target = new ors::Body(master.gui.ors->bodies);   ///master.ors only for control, gui.ors for visualization
-  ors::Shape * s=new ors::Shape(master.gui.ors->shapes,demo.target);
+  robotProcesses.gui.ors->getBodyByName("obstacle")->X.p(2) = 100;
+  demo.target = new ors::Body(robotProcesses.gui.ors->bodies);   ///robotProcesses.ors only for control, gui.ors for visualization
+  ors::Shape * s=new ors::Shape(robotProcesses.gui.ors->shapes,demo.target);
   s->type=1;
   s->size[0]=.0; s->size[1]=.0; s->size[2]=0; s->size[3]=.02;
   s->color[0]=.5; s->color[1]=.2; s->color[2]=.2;
 
   demo.target->X.p = ors::Vector(0,0,0);
-  demo.init(&master);
-  //cout << "tennis " << master.gui.ors->getShapeByName("tennisBall")->X.p << endl;
+  demo.init(&robotProcesses);
+  //cout << "tennis " << robotProcesses.gui.ors->getShapeByName("tennisBall")->X.p << endl;
 
-  for(;!master.signalStop;){ //catches the ^C key
-    master.evis.lock.readLock();  perc.lock.writeLock();
-      perc.hsvChannelsL = master.evis.hsvThetaL;
-      perc.hsvChannelsR = master.evis.hsvThetaR;
-      master.evis.lock.unlock();    perc.lock.unlock();
-      master.step();
+  for(;!robotProcesses.signalStop;){ //catches the ^C key
+    robotProcesses.evis.lock.readLock();  perc.lock.writeLock();
+      perc.hsvChannelsL = robotProcesses.evis.hsvThetaL;
+      perc.hsvChannelsR = robotProcesses.evis.hsvThetaR;
+      robotProcesses.evis.lock.unlock();    perc.lock.unlock();
+      robotProcesses.step();
       perc.threadStepOrSkip(0);
-    //  master.gui.gl->watch();
-    if(master.joy.state(0)==16 || master.joy.state(0)==32) break;
+    //  robotProcesses.gui.gl->watch();
+    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
     //cout <<task.TV_eff->y <<endl;
   }
-  master.close();
+  robotProcesses.close();
   return 0;
 }
 

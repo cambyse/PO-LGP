@@ -5,7 +5,7 @@
 #include <NP/camera.h>
 
 struct LEDtracker:public Process, Variable {
-  MyCamera *var;
+  CameraModule *var;
   
   //OUTPUT
   floatA center;

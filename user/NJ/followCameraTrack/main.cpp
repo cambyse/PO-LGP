@@ -16,22 +16,22 @@ struct MyDemo:public TaskAbstraction {
 
 
   virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
-  void init(RobotModuleGroup *master);
+  void init(RobotProcessGroup *robotProcesses);
 
   void loadPlainTrajectory(const char* filename);
-  void followTrajectory(RobotModuleGroup *master);
+  void followTrajectory(RobotProcessGroup *robotProcesses);
 };
 
 
 
 
-void MyDemo::init(RobotModuleGroup *master){
+void MyDemo::init(RobotProcessGroup *robotProcesses){
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
   MT::IOraw = true;
-  //if(master->gui){
-  master->gui.gl->camera.setPosition(3.5,-8.,2.8);  // position of camera
-  master->gui.gl->camera.focus(0., -0.5, 1.);  // rotate the frame to focus the point (x,y,z)
+  //if(robotProcesses->gui){
+  robotProcesses->gui.gl->camera.setPosition(3.5,-8.,2.8);  // position of camera
+  robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);  // rotate the frame to focus the point (x,y,z)
   //}
   started_trajectory = false;
 }
@@ -68,30 +68,30 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
 }
 
 
-void MyDemo::followTrajectory(RobotModuleGroup *master){
+void MyDemo::followTrajectory(RobotProcessGroup *robotProcesses){
   MT::String s6 = String("caliData");
   ofstream f6(s6);
   PerceptionModule perc;
   perc.threadOpen();
 
-  for(;!master->signalStop || (q_index == q.d0);){
-    if (q_index%100 == 1 && q_ind2 == 0) {cout<< endl << endl << endl << q_index << "  of " << q.d0 << "err " << norm(master->ctrl.q_reference-TV_q->y_target) << endl;}
+  for(;!robotProcesses->signalStop || (q_index == q.d0);){
+    if (q_index%100 == 1 && q_ind2 == 0) {cout<< endl << endl << endl << q_index << "  of " << q.d0 << "err " << norm(robotProcesses->ctrl.q_reference-TV_q->y_target) << endl;}
     positions_file <<TV_eff->y <<endl;
-    master->evis.lock.readLock();  perc.lock.writeLock();
-    perc.hsvChannelsL = master->evis.hsvThetaL;
-    perc.hsvChannelsR = master->evis.hsvThetaR;
-    master->evis.lock.unlock();    perc.lock.unlock();
-    master->step();//calls the update task variables
+    robotProcesses->evis.lock.readLock();  perc.lock.writeLock();
+    perc.hsvChannelsL = robotProcesses->evis.hsvThetaL;
+    perc.hsvChannelsR = robotProcesses->evis.hsvThetaR;
+    robotProcesses->evis.lock.unlock();    perc.lock.unlock();
+    robotProcesses->step();//calls the update task variables
     perc.threadStepOrSkip(0);
 
     //evis, perc -> gui
-    master->gui.lock.writeLock();  perc.lock.readLock();
-    master->gui.img[1] = master->evis.cameraL;
-    master->gui.img[3] = perc.disp;
-    listCopy(master->gui.objects, perc.objects);
-    //realizeObjectListInOrs(*master->gui.ors, perc.objects);
-    //copyBodyInfos(*master->gui.ors2, *master->gui.ors);
-    master->gui.lock.unlock();  perc.lock.unlock();
+    robotProcesses->gui.lock.writeLock();  perc.lock.readLock();
+    robotProcesses->gui.img[1] = robotProcesses->evis.cameraL;
+    robotProcesses->gui.img[3] = perc.disp;
+    listCopy(robotProcesses->gui.objects, perc.objects);
+    //realizeObjectListInOrs(*robotProcesses->gui.ors, perc.objects);
+    //copyBodyInfos(*robotProcesses->gui.ors2, *robotProcesses->gui.ors);
+    robotProcesses->gui.lock.unlock();  perc.lock.unlock();
 
     if(perc.objects.N > 0){
       perc.lock.readLock();
@@ -103,9 +103,9 @@ void MyDemo::followTrajectory(RobotModuleGroup *master){
       perc.lock.unlock();
 
       MT::IOraw=true;
-      f6 <<  vision << " " << master->ctrl.q_reference << " " <<   master->ctrl.ors.getShapeByName("tennisBall")->X.pos << ' ' <<master->stepCounter <<' ' <<MT::realTime() <<endl;
+      f6 <<  vision << " " << robotProcesses->ctrl.q_reference << " " <<   robotProcesses->ctrl.ors.getShapeByName("tennisBall")->X.pos << ' ' <<robotProcesses->stepCounter <<' ' <<MT::realTime() <<endl;
     }
-    if(master->joy.state(0)==16 || master->joy.state(0)==32) break;
+    if(robotProcesses->joy.state(0)==16 || robotProcesses->joy.state(0)==32) break;
     if (q_index == q.d0-2) {
       break;
       started_trajectory = false;
@@ -132,19 +132,19 @@ void MyDemo::loadPlainTrajectory(const char* filename){
 int main(int argn,char** argv){
   MT::IOraw = true;
   MT::initCmdLine(argn,argv);
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
-  RobotModuleGroup master;
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
+  RobotProcessGroup robotProcesses;
   MyDemo demo;
-  master.ctrl.task=&demo;
-  master.open();
-  master.ctrl.ors.getBodyByName("obstacle")->X.pos(0) = 100;
-  master.gui.ors->getBodyByName("obstacle")->X.pos(0) = 100;
-  master.gui.ors2->getBodyByName("obstacle")->X.pos(0) = 100;
+  robotProcesses.ctrl.task=&demo;
+  robotProcesses.open();
+  robotProcesses.ctrl.ors.getBodyByName("obstacle")->X.pos(0) = 100;
+  robotProcesses.gui.ors->getBodyByName("obstacle")->X.pos(0) = 100;
+  robotProcesses.gui.ors2->getBodyByName("obstacle")->X.pos(0) = 100;
   demo.loadPlainTrajectory("Q.txt");
-  demo.init(&master);
+  demo.init(&robotProcesses);
   cout << "switch evis display off to get correct timings !!!!!!!!" << endl << endl;
-  demo.followTrajectory(&master);
-  master.close();
+  demo.followTrajectory(&robotProcesses);
+  robotProcesses.close();
   return 0;
 }
 

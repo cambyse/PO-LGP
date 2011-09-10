@@ -199,7 +199,7 @@ void problem1(){
   AICO solver(sys);
   solver.useBwdMsg=true;
   solver.bwdMsg_v = b;
-  solver.bwdMsg_Vinv = Binv + Diag(1e1,b.N);
+  solver.bwdMsg_Vinv = Binv + diag(1e1,b.N);
   solver.iterate_to_convergence();
 #else
   setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 2, 1);

@@ -90,9 +90,9 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   */
   
   // palm position
-  TV_palm = new TaskVariable();
-  TV_palm->set("palm pos",ctrl->ors, posTVT,
-	       palm->body->index,palm->rel, -1, ors::Transformation(),ARR());
+  TV_palm = new DefaultTaskVariable();
+  ((DefaultTaskVariable*)TV_palm)->set("palm pos",ctrl->ors, posTVT,
+                                       palm->body->index,palm->rel, -1, ors::Transformation(),ARR());
   TV_palm->y_prec = 50;
   TV_palm->setGains(.1,.0);
   TVs_all.append(TV_palm);
@@ -106,7 +106,7 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   TV_zeroLevel->y_target = ARR(0,0,0); 
   TVs_all.append(TV_zeroLevel);
 
-  TV_skin = new TaskVariable("skin", ctrl->ors, skinTVT,0,0,0,0,skins);
+  TV_skin = new DefaultTaskVariable("skin", ctrl->ors, skinTVT,0,0,0,0,skins);
   //TV_skin->targetType=gainsTT;
   TV_skin->targetType=directTT;
   TV_skin->v_prec=0;

@@ -1,5 +1,5 @@
-#ifndef NJ_UrgModule_h
-#define NJ_UrgModule_h
+#ifndef NJ_UrgInterface_h
+#define NJ_UrgInterface_h
 //
 // C++ Interface: LaserWrapper
 //
@@ -18,13 +18,13 @@
 
 struct UrgWorkspace;
 
-struct UrgModule:public Process{
-  UrgWorkspace *WS;
+struct UrgInterface:public Process{
+  UrgWorkspace *s;
 
   arr scanline;
   
-  UrgModule();
-  ~UrgModule();
+  UrgInterface();
+  ~UrgInterface();
   
   void open();
   void scanLine(arr& line);
@@ -33,7 +33,7 @@ struct UrgModule:public Process{
 };
 
 #ifdef MT_IMPLEMENTATION
-#  include "UrgModule.cpp"
+#  include "UrgInterface.cpp"
 #endif
 
 #endif

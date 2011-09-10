@@ -45,7 +45,7 @@ void setTargetAndQ(const arr & qhome,const ors::Vector target){
 void setKReachGoals(const arr & clust = NULL)
 {
 	sys.setq0AsCurrent();
-	arr q0 = sys.WS->q0;
+	arr q0 = sys.s->q0;
 	activateAll(sys.vars, false);
 	TaskVariable *V;
 	arr xtarget;

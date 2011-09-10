@@ -18,11 +18,11 @@ void testTracking(){
   gl.add(glStandardScene,0);
   gl.add(glDrawSlGraph,&ors);
   //gl->setClearColors(1.,1.,1.,1.);
-  gl.WS->camera.setPosition(7.,-0.,2.);
-  gl.WS->camera.focus(0,0,.8);
+  gl.s->camera.setPosition(7.,-0.,2.);
+  gl.s->camera.focus(0,0,.8);
   gl.watch();
 
-  SwiftModule swift;
+  SwiftInterface swift;
   swift.init(ors);
   
   mop::OrsMopInterface mop;
@@ -35,16 +35,16 @@ void testTracking(){
   ControlVariable x("endeffector",ors,posCVT,"m9",0,0,0,0);
   x.updateState();
   x.y_target=ARR(.4,.1,1.);
-  x.setInterpolatedTargetTrajectory(mop.WS->T);
-  x.setPrecisionTrajectoryFinal(mop.WS->T,midPrec,endPrec);
-  x.setPrecisionVTrajectoryConstant(mop.WS->T,0.);
+  x.setInterpolatedTargetTrajectory(mop.s->T);
+  x.setPrecisionTrajectoryFinal(mop.s->T,midPrec,endPrec);
+  x.setPrecisionVTrajectoryConstant(mop.s->T,0.);
 
   ControlVariable c("collision", ors,collCVT,0,0,0,0,0);
   c.updateState();
   c.y_target = 0.;
-  c.setInterpolatedTargetTrajectory(mop.WS->T);
-  c.setPrecisionTrajectoryConstant(mop.WS->T,colPrec);
-  c.setPrecisionVTrajectoryConstant(mop.WS->T,0.);
+  c.setInterpolatedTargetTrajectory(mop.s->T);
+  c.setPrecisionTrajectoryConstant(mop.s->T,colPrec);
+  c.setPrecisionVTrajectoryConstant(mop.s->T,0.);
   if(!colPrec) c.active=false;
 
   arr limits;
@@ -54,9 +54,9 @@ void testTracking(){
   ControlVariable lim("limits", ors, qLimitsCVT,0,0,0,0,&limits);
   lim.updateState();
   lim.y_target = 0.;
-  lim.setInterpolatedTargetTrajectory(mop.WS->T);
-  lim.setPrecisionTrajectoryConstant(mop.WS->T,limPrec);
-  lim.setPrecisionVTrajectoryConstant(mop.WS->T,0.);
+  lim.setInterpolatedTargetTrajectory(mop.s->T);
+  lim.setPrecisionTrajectoryConstant(mop.s->T,limPrec);
+  lim.setPrecisionVTrajectoryConstant(mop.s->T,0.);
   if(!limPrec) lim.active=false;
 
   arr I; I.setId(ors.getJointStateDimension());
@@ -64,9 +64,9 @@ void testTracking(){
   qc.updateState();
   qc.y_target = 0.;
   qc.v_target = 0.;
-  qc.setInterpolatedTargetTrajectory(mop.WS->T);
-  qc.setPrecisionTrajectoryConstant(mop.WS->T,0.);
-  qc.setPrecisionVTrajectoryConstant(mop.WS->T,0.);
+  qc.setInterpolatedTargetTrajectory(mop.s->T);
+  qc.setPrecisionTrajectoryConstant(mop.s->T,0.);
+  qc.setPrecisionVTrajectoryConstant(mop.s->T,0.);
   qc.vprec_trajectory(0)=endPrec;
   qc.vprec_trajectory(100)=endPrec;
   qc.vprec_trajectory(T-1)=endPrec;
@@ -144,8 +144,8 @@ void loadOrsFile(ors::Graph& C, OpenGL& gl,const char *file="../../../share/conf
   gl.add(drawBase,0);
   gl.add(glDrawSlGraph,&C);
   //gl->setClearColors(1.,1.,1.,1.);
-  gl.WS->camera.setPosition(7.,-0.,2.);
-  gl.WS->camera.focus(0,0,.8);
+  gl.s->camera.setPosition(7.,-0.,2.);
+  gl.s->camera.focus(0,0,.8);
 
   MT::load(C,name);
   C.calcNodeFramesFromEdges();

@@ -20,10 +20,16 @@ TaskVariable::TaskVariable(){
   active=false;
   type=noneTVT;
   targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.; state=-1; state_tol=.05; err=derr=0.;
+  y_prec=0.; v_prec=0.; Pgain=Dgain=0.; err=derr=0.;
 }
 
-TaskVariable::TaskVariable(
+DefaultTaskVariable::DefaultTaskVariable():TaskVariable(){
+}
+
+DefaultTaskVariable::~DefaultTaskVariable(){
+}
+
+DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
   ors::Graph& _sl,
   TVtype _type,
@@ -33,7 +39,7 @@ TaskVariable::TaskVariable(
   active=false;
   type=noneTVT;
   targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.; state=-1; state_tol=.05;
+  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   set(
     _name, _sl, _type,
     iname  ? (int)_sl.getBodyByName(iname)->index      : -1,
@@ -43,7 +49,7 @@ TaskVariable::TaskVariable(
     _params);
 }
 
-TaskVariable::TaskVariable(
+DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
   ors::Graph& _sl,
   TVtype _type,
@@ -53,7 +59,7 @@ TaskVariable::TaskVariable(
   active=false;
   type=noneTVT;
   targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.; state=-1; state_tol=.05;
+  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   ors::Shape *a = iShapeName ? _sl.getShapeByName(iShapeName):NULL;
   ors::Shape *b = jShapeName ? _sl.getShapeByName(jShapeName):NULL;
   set(
@@ -68,7 +74,7 @@ TaskVariable::TaskVariable(
 TaskVariable::~TaskVariable(){
 }
 
-void TaskVariable::set(
+void DefaultTaskVariable::set(
   const char* _name,
   ors::Graph &_ors,
   TVtype _type,
@@ -287,7 +293,7 @@ void TaskVariable::shiftTargets(int offset){
 #endif
 }
 
-void TaskVariable::updateState(double tau){
+void DefaultTaskVariable::updateState(double tau){
   arr p;
   arr q, qv;
   ors::Vector pi, pj, c;
@@ -360,15 +366,10 @@ void TaskVariable::updateState(double tau){
   if(y_target.N==y.N){
     err=norm(y - y_target);
     derr=err - norm(y_old - y_target);
-    if(err < state_tol && fabs(derr) < state_tol){
-      state = 1;
-    }else{
-      state = 0;
-    }
   }
 }
 
-void TaskVariable::updateJacobian(){
+void DefaultTaskVariable::updateJacobian(){
   arr q, qv;
   ors::Vector normal, d, vi, vj, r, jk, pi, pj, p_i, z_i;
   arr zi, zj, Ji, Jj, JRj, sum_z, sum_J, ti, centr;
@@ -450,7 +451,7 @@ void TaskVariable::updateJacobian(){
   transpose(Jt, J);
 }
 
-void TaskVariable::getHessian(arr& H){
+void DefaultTaskVariable::getHessian(arr& H){
   switch(type){
     case posTVT:
       if(j==-1){ ors->hessian(H, i, &irel); break; }
@@ -518,7 +519,7 @@ void TaskVariable::updateChange(int t, double tau){
   }
     */
 
-void TaskVariable::write(ostream &os) const {
+void DefaultTaskVariable::write(ostream &os) const {
   os <<"CV '" <<name <<'\'';
   switch(type){
     case posTVT:     os <<"  (pos " <<ors->bodies(i)->name <<")"; break;
@@ -757,7 +758,7 @@ void additiveControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
 }
 */
 /*OLD
-void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftModule *swift, OpenGL *gl,
+void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftInterface *swift, OpenGL *gl,
                      arr& q, uint T, const arr& W, uint iterations,
                      std::ostream* os, int display, bool repeat){
   //FOR THE OLD VERSION, SEE SMAC.CPP IN THE DEPOSIT

@@ -203,10 +203,9 @@ ControllerProcess::change_task(TaskAbstraction *_task){
 // Robot Module Master
 //
 
-RobotModuleGroup::RobotModuleGroup():ticcer("MasterTiccer", MT::getParameter<long>("tenMilliSeconds", 10l)), timer("MasterTimer"){
+RobotProcessGroup::RobotProcessGroup(){
   //history=1000;
   //horizon=20;
-  stepCounter=0;
   openArm=MT::Parameter<bool>("openArm", false);
   openHand=MT::Parameter<bool>("openHand", false);
   openSkin=MT::Parameter<bool>("openSkin", false);
@@ -216,23 +215,12 @@ RobotModuleGroup::RobotModuleGroup():ticcer("MasterTiccer", MT::getParameter<lon
   openEarlyVision=MT::Parameter<bool>("openEarlyVision", false);
   openGui=MT::Parameter<bool>("openGui", true);
   openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", true);
-  if(MT::checkParameter<MT::String>("logFile")){
-    log = new ofstream;
-    MT::open(*(ofstream*)log, MT::getParameter<MT::String>("logFile").p);
-  } else log=NULL;
-  if(MT::checkParameter<MT::String>("revelFile")){
-    revel=new RevelInterface;
-    revel->open(400, 400, MT::getParameter<MT::String>("revelFile"));
-  }
 }
 
-RobotModuleGroup::~RobotModuleGroup(){
-  if(MT::checkParameter<MT::String>("logFile")){
-    ((ofstream*)log)->close();
-  }
+RobotProcessGroup::~RobotProcessGroup(){
 }
 
-void RobotModuleGroup::open(){
+void RobotProcessGroup::open(){
   //setRRscheduling(MT::getParameter<int>("masterNice")); //requires SUDO
   //if(!setNice(MT::getParameter<int>("masterNice", -19)) && openHand) HALT("opening Schunk hand only with SUDO (for nice...)");
   
@@ -299,9 +287,8 @@ void RobotModuleGroup::open(){
     arm.threadWait();
 #ifdef MT_SCHUNK
     uint m;  float f;
-    for(m=3; m<=9; m++){ arm.pDev->setMaxVel(m, .1); }
-    for(m=3; m<=9; m++){ arm.pDev->setMaxAcc(m, .1); }
     for(m=3; m<=9; m++){ arm.pDev->getPos(m, &f); ctrl.q_reference(motorIndex(m-3))=(double)f; } //IMPORTANT: READ IN THE CURRENT ARM POSTURE
+    MT_MSG("TODO: at this point, check whether the q_currentReference has the correct q_real -> and copy to ctrl.q_reference (this also read in the hand, right?)");
 #endif
     ctrl.v_reference.setZero();
     ctrl.sys.setqv(ctrl.q_reference, ctrl.v_reference);
@@ -328,15 +315,10 @@ void RobotModuleGroup::open(){
   }else{
     ctrl.threadLoopWithBeat(0.01);
   }
-  
-  //-- time initializations
-  ticcer.reset();
-  timer.reset();
 }
 
-void RobotModuleGroup::close(){
+void RobotProcessGroup::close(){
   if(openThreadInfoWin) threadWin.threadClose();
-  if(revel) revel->close();
   if(openLaser){  urg.threadClose(); /*laserfile.close();*/  }
   if(openBumble) bumble.threadClose();
   if(openArm)    arm .threadClose();
@@ -346,13 +328,6 @@ void RobotModuleGroup::close(){
   if(openJoystick) joy.threadClose();
   ctrl.threadClose();
   if(openGui) gui.threadClose();
-}
-
-void RobotModuleGroup::step(){
-  stepCounter++;
-  ticcer.waitForTic();
-  timer.cycleStart();
-  timer.cycleDone();
 }
 
 
@@ -403,19 +378,19 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   skinIndex(5) = ors.getBodyByName("fing2")->index;
   
   
-  TV_eff  = new TaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
-  TV_q    = new TaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TV_rot  = new TaskVariable("endeffector rotation", ors, rotTVT, "m9", 0, 0, 0, 0);
-  TV_col  = new TaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
-  TV_lim  = new TaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TV_skin = new TaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TV_up   = new TaskVariable("up1", ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
-  TV_up2  = new TaskVariable("up2", ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
-  TV_z1   = new TaskVariable("oppose12", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
-  TV_z2   = new TaskVariable("oppose13", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
-  TV_f1   = new TaskVariable("pos1", ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
-  TV_f2   = new TaskVariable("pos2", ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
-  TV_f3   = new TaskVariable("pos3", ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
+  TV_eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
+  TV_q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
+  TV_rot  = new DefaultTaskVariable("endeffector rotation", ors, rotTVT, "m9", 0, 0, 0, 0);
+  TV_col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
+  TV_lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  TV_skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
+  TV_up   = new DefaultTaskVariable("up1", ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
+  TV_up2  = new DefaultTaskVariable("up2", ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
+  TV_z1   = new DefaultTaskVariable("oppose12", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
+  TV_z2   = new DefaultTaskVariable("oppose13", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+  TV_f1   = new DefaultTaskVariable("pos1", ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
+  TV_f2   = new DefaultTaskVariable("pos2", ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
+  TV_f3   = new DefaultTaskVariable("pos3", ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
   
   //arr I2(7, 14); I2.setDiag(1.);
   //TaskVariable *TV_qhand= new TaskVariable("qhand", ors, qLinearTVT, 0, 0, 0, 0, I2);
@@ -691,8 +666,9 @@ void
  */
 TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){}
 
-bool RobotModuleGroup::signalStop=false;
-void RobotModuleGroup::signalStopCallback(int){
+bool RobotProcessGroup::signalStop=false;
+void RobotProcessGroup::signalStopCallback(int s){
+  schunkEmergencyShutdown(s);
   signalStop=true;
 }
 

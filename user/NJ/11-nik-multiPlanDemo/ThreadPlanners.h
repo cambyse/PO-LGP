@@ -224,9 +224,9 @@ struct SecKinPlanner:public StepThread{
 
 	void SetQ0Stuff()  {
 		file << " q0 stuff " << q0 << endl;
-		sys->WS->q0 = q0;
-		sys->WS->v0 = v0; //here or in everz case ??
-		sys->setqv(q0,v0); //only in conjunction with set targets ??, otherwise WS->q is enough, aico reads it
+		sys->s->q0 = q0;
+		sys->s->v0 = v0; //here or in everz case ??
+		sys->setqv(q0,v0); //only in conjunction with set targets ??, otherwise s->q is enough, aico reads it
 		sys->ors->setJointState(q0,v0);
 		sys->ors->calcBodyFramesFromJoints();
 	}
@@ -484,7 +484,7 @@ struct SecKinPlanner:public StepThread{
 			for(uint j = 0;j < 3;j++)
 				state(i, j + 1) = b->X.pos(j) + b->X.vel(j) * 4.0 * i / (double)((T + 1));//estimated position, this planner stands for 4s in t steps
 		}
-		sys->WS->q_external = state;
+		sys->s->q_external = state;
 	}
 
 

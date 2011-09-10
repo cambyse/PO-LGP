@@ -16,8 +16,8 @@ makeAll: $(ALL:%=make/%)
 cleanAll: $(ALL:%=clean/%) cleanProjects
 
 reformatSources:
-	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp"
-	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" \) -exec ./style.sed.sh {} \;
+	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
+	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 make/%::
 	make -C $*

@@ -183,11 +183,11 @@ void MarcsRobotTask::reachObject(){
   //TV_eff->setGainsAsAttractor(10, .2);
   reachPoint = objectPosition;
   for(; !signalStop;){
-    step();
+    NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
   }
   controlMode = stopCM;
-  for(uint t=0; t<10; t++) step();
+  for(uint t=0; t<10; t++) NIY; //();
   //TV_eff->targetType=directTT;
 }
 
@@ -355,12 +355,12 @@ void MarcsRobotTask::loadPlainTrajectory(const char* filename){
 void MarcsRobotTask::joystick(){
   controlMode = joystickCM;
   for(; !signalStop;){
-    step();
+    NIY; //();
     //cout <<"tip3 inlink frame = " <<ors.getBodyByName("tip3")->inLinks(0)->Xworld.p <<endl;
     if(joy.state(0)==16 || joy.state(0)==32) break;
   }
   controlMode = stopCM;
-  for(uint t=0; t<10; t++) step();
+  for(uint t=0; t<10; t++) NIY; //();
   waitJoyClean();
 }
 
@@ -377,24 +377,11 @@ void MarcsRobotTask::followTrajectory(){
   plan_count=0.;
   for(; !signalStop;){
     if((uint)plan_count >= plan_v.d0) break;
-    step();
+    NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
   }
   controlMode = stopCM;
-  for(uint t=0; t<10; t++) step();
-}
-
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
-  ors::Shape *obj  = ors.getShapeByName(objShape);
-  obj->body->shapes.removeValue(obj);
-  obj->body = ors.getBodyByName(toBody);
-  obj->ibody = obj->body->index;
-  obj->body->shapes.append(obj);
-  obj->rel.setDifference(obj->body->X, obj->X);
-  if(swift && belowShape){
-    swift->initActivations(ors);
-    swift->deactivate(obj, ors.getShapeByName(belowShape));
-  }
+  for(uint t=0; t<10; t++) NIY; //();
 }
 
 void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
@@ -405,16 +392,16 @@ void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
   below->cont=false;
   ctrl.swift.initActivations(ctrl.ors);
   
-  stepCounter=0;
+  uint stepCounter=0;
   controlMode = closeHandCM;
   for(; !signalStop;){
-    step();
+    NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
     if(norm(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>400) break; //early stop!!
   }
   controlMode = stopCM;
-  for(uint t=0; t<10; t++) step();
+  for(uint t=0; t<10; t++) NIY; //();
   
   //attach shape to hand
   obj->body->shapes.removeValue(obj);
@@ -426,7 +413,7 @@ void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
   below->cont=false;  //below remains turned off!!
   ctrl.swift.initActivations(ctrl.ors);
   
-  for(uint t=0; t<10; t++) step(); //reiterate stepping to get out of collision...
+  for(uint t=0; t<10; t++) NIY; //(); //reiterate stepping to get out of collision...
   
   if(gui.ors){
     obj=gui.ors->getShapeByName(objShape);
@@ -439,17 +426,17 @@ void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
 }
 
 void MarcsRobotTask::openHand(const char* objShape){
-  stepCounter=0;
+  uint stepCounter=0;
   controlMode = openHandCM;
   for(; !signalStop;){
-    step();
+    NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
     //if(stepCounter>200 && norm(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>300) break; //early stop!!
     
   }
   controlMode = stopCM;
-  for(uint t=0; t<10; t++) step();
+  for(uint t=0; t<10; t++) NIY; //();
   
   //attach shape to back to target-body
   ors::Shape *obj=ctrl.ors.getShapeByName(objShape);
@@ -470,7 +457,7 @@ void MarcsRobotTask::openHand(const char* objShape){
     obj->rel.setDifference(obj->body->X, obj->X);
   }
   
-  for(uint t=0; t<50; t++) step(); //reiterate stepping to get out of collision...
+  for(uint t=0; t<50; t++) NIY; //(); //reiterate stepping to get out of collision...
 }
 
 void MarcsRobotTask::reactivateCollisions(const MT::Array<const char*>& shapes){
@@ -498,6 +485,6 @@ void MarcsRobotTask::reactivateCollisions(const MT::Array<ors::Shape*>& shapes){
 /*bool MarcsRobotTask::signalStop=false;
 void MarcsRobotTask::signalStopCallback(int){
   signalStop=true;
-  RobotModuleGroup::signalStop=true;
+  RobotProcessGroup::signalStop=true;
 }*/
 

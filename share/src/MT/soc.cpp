@@ -666,8 +666,8 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0; k<=(uint)num; k++){
     t = k*T/num;
-    if(Qinv) displayState(&q[t], &(*Qinv)[t](), STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
-    else     displayState(&q[t], NULL         , STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
+    if(Qinv) displayState(&q[t](), &(*Qinv)[t](), STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
+    else     displayState(&q[t](), NULL         , STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
     if(steps==-1) gl->watch();
   }
   if(steps==1) gl->watch();

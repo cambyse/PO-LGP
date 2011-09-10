@@ -1,5 +1,5 @@
 //
-// C++ Implementation: UrgModule
+// C++ Implementation: UrgInterface
 //
 // Description: 
 //
@@ -10,7 +10,7 @@
 //
 //
 
-#include "UrgModule.h"
+#include "UrgInterface.h"
 #ifdef URGLASER
 
 extern "C" {
@@ -22,7 +22,7 @@ extern "C" {
 #include <math.h>
 }
 
-void shutdownURG(void* p){ MT_MSG("...");  UrgModule *urg=(UrgModule*)p;  urg->close();  }
+void shutdownURG(void* p){ MT_MSG("...");  UrgInterface *urg=(UrgInterface*)p;  urg->close();  }
 
 struct UrgWorkspace{
   MT::Array<long> data;
@@ -143,70 +143,70 @@ arr  laserConvertCartesian(urg_t urg, MT::Array<long>& data,uint n){
  }
 #endif
  
-void UrgModule::scanLine(arr & line){
-  //urg_setCaptureTimes(WS->urg,1);
-  //int ret = urg_requestData(WS->urg, URG_MD, URG_FIRST, URG_LAST);
-   int ret = urg_requestData(WS->urg, URG_GD, URG_FIRST, URG_LAST);                        
+void UrgInterface::scanLine(arr & line){
+  //urg_setCaptureTimes(s->urg,1);
+  //int ret = urg_requestData(s->urg, URG_MD, URG_FIRST, URG_LAST);
+   int ret = urg_requestData(s->urg, URG_GD, URG_FIRST, URG_LAST);                        
   if (ret < 0) {
     printf("error");
-   // urg_exit(&WS->urg, "urg_requestData()");
+   // urg_exit(&s->urg, "urg_requestData()");
   }
-  //delay(WS->scan_msec);
-  int n = urg_receiveData(WS->urg, WS->data.p, WS->data.N);
+  //delay(s->scan_msec);
+  int n = urg_receiveData(s->urg, s->data.p, s->data.N);
    
-  //int timestamp = urg_getRecentTimestamp(WS->urg);  // Display front distance data with time stamp
-  //printf("%d: %ld [mm], %d [msec]\n", 0, WS->data(WS->parameter->area_front_), timestamp);
-  line = laserConvertCartesian(*WS->urg,WS->data,n);
+  //int timestamp = urg_getRecentTimestamp(s->urg);  // Display front distance data with time stamp
+  //printf("%d: %ld [mm], %d [msec]\n", 0, s->data(s->parameter->area_front_), timestamp);
+  line = laserConvertCartesian(*s->urg,s->data,n);
 }
  
-UrgModule::UrgModule(){
-  WS = new UrgWorkspace;
-  WS->urg = new urg_t();
-  WS->parameter = new urg_parameter_t();
-  WS->isOpen = false;
+UrgInterface::UrgInterface(){
+  s = new UrgWorkspace;
+  s->urg = new urg_t();
+  s->parameter = new urg_parameter_t();
+  s->isOpen = false;
   //cout <<"URG constructor" <<endl ;
 }
  
-UrgModule::~UrgModule(){
-  if(WS->isOpen) close();
+UrgInterface::~UrgInterface(){
+  if(s->isOpen) close();
   //cout <<"URG destructor" <<endl;
-  delete WS->parameter;
-  delete WS->urg;
-  delete WS;
+  delete s->parameter;
+  delete s->urg;
+  delete s;
 }
  
-void UrgModule::open(){
-  cout <<" -- UrgModule init .." <<std::flush;
+void UrgInterface::open(){
+  cout <<" -- UrgInterface init .." <<std::flush;
   const char device[] = "/dev/ttyURG";//link with sudo ln -s with real device name, e.g. ttyACM0
-  int ret = urg_connect(WS->urg, device, 115200);//115200
+  int ret = urg_connect(s->urg, device, 115200);//115200
   if (ret < 0) {
     cout << "bad error - have you created a symbolic link /dev/ttyURG?? share/bin/mountHardware!" << endl;
-    printf("urg_connect: %s\n", urg_getError(WS->urg));
+    printf("urg_connect: %s\n", urg_getError(s->urg));
     exit(1);
   }
   /* Reserve the Receive data buffer */
-  uint data_max = urg_getDataMax(WS->urg);
-  WS->data.resize(data_max);
-  urg_getParameters(WS->urg, WS->parameter);
-  WS->scan_msec = urg_getScanMsec(WS->urg);
+  uint data_max = urg_getDataMax(s->urg);
+  s->data.resize(data_max);
+  urg_getParameters(s->urg, s->parameter);
+  s->scan_msec = urg_getScanMsec(s->urg);
   
-  urg_setCaptureTimes(WS->urg,100000);//should give latest data automatically
+  urg_setCaptureTimes(s->urg,100000);//should give latest data automatically
   cout <<" done" <<endl;
-  WS->isOpen=true;
+  s->isOpen=true;
 }
  
-void UrgModule::close(){
-  CHECK(WS->isOpen,"laser module was not open!");
-  cout <<" -- UrgModule close .." <<std::flush;
-  urg_laserOff  (WS->urg);//important or not ??
-  urg_disconnect(WS->urg);
+void UrgInterface::close(){
+  CHECK(s->isOpen,"laser module was not open!");
+  cout <<" -- UrgInterface close .." <<std::flush;
+  urg_laserOff  (s->urg);//important or not ??
+  urg_disconnect(s->urg);
   cout <<" done" <<endl;
 }
  
 #else
-void UrgModule::scanLine(arr & line){HALT("URG dummy");}
-UrgModule::UrgModule():Process("Urg"){}
-UrgModule::~UrgModule(){}
-void UrgModule::open(){HALT("URG dummy");}
-void UrgModule::close(){HALT("URG dummy");}
+void UrgInterface::scanLine(arr & line){HALT("URG dummy");}
+UrgInterface::UrgInterface():Process("Urg"){}
+UrgInterface::~UrgInterface(){}
+void UrgInterface::open(){HALT("URG dummy");}
+void UrgInterface::close(){HALT("URG dummy");}
 #endif

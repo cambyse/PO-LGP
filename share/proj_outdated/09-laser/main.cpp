@@ -9,7 +9,7 @@
 //#include <MT/top_orsImplementation.cpp>
 //#include <MT/top_interface.h>
 
-#include <NJ/UrgModule.h>
+#include <NJ/UrgInterface.h>
 
 OpenGL gl;
  
@@ -76,7 +76,7 @@ OpenGL gl;
  
  
  void LaserSession(){
-   UrgModule ur;
+   UrgInterface ur;
    ur.init();
      
    for(int i = 0; i < 100; i++){

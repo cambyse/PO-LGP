@@ -365,7 +365,7 @@ arr logspace(double base, double limit, uint n);
 //!@name non-template functions //? needs most cleaning
 // @{
 
-arr Diag(double d, uint n);
+arr diag(double d, uint n);
 void makeSymmetric(arr& A);
 void transpose(arr& A);
 void SUS(const arr& p, uint n, uintA& s);

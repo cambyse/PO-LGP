@@ -77,6 +77,8 @@ void SchunkArmModule::open(){
   for(m=3; m<=9; m++) pDev->setDamp(m, MT::getParameter<uint>("D-Igain" , 4)); //I-gain (range 1..4)
   for(m=3; m<=9; m++) pDev->setA0(m, MT::getParameter<uint>("A0-Dgain", 4)); //D-gain (range 1..12)
   for(m=3; m<=9; m++) pDev->recalcPIDParams(m);
+  for(m=3; m<=9; m++) pDev->setMaxVel(m, .1);
+  for(m=3; m<=9; m++) pDev->setMaxAcc(m, .1);
   //for(m=3;m<=9;m++){ schunk.pDev->moveRamp(m, q_desired(m-3), .1, .1); //.3, 3.);
   ofstream zconf("z.mconfig");
   reportParameters(zconf);

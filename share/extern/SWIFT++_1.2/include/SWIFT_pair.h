@@ -62,8 +62,8 @@
 
 class SWIFT_Object;
 struct SWIFT_PairWorkspace;
-void new_PairWorkspace(SWIFT_PairWorkspace*& WS);   //called by scene creator
-void delete_PairWorkspace(SWIFT_PairWorkspace*& WS);
+void new_PairWorkspace(SWIFT_PairWorkspace*& s);   //called by scene creator
+void delete_PairWorkspace(SWIFT_PairWorkspace*& s);
 
 //////////////////////////////////////////////////////////////////////////////
 // SWIFT_Pair
@@ -75,10 +75,10 @@ class SWIFT_Pair {
   public:
     SWIFT_Pair( )
     {
-      WS = NULL;
+      s = NULL;
       /* (mt) Creating an own workspace for each pair would be too much.
          We create a single PairWorkspace on creation of a SWIFT_Scene
-         and take care that the WS pointer is being set to this space. */
+         and take care that the s pointer is being set to this space. */
          //new SWIFT_PairWorkspace;
 #ifdef SWIFT_PIECE_CACHING
         cache_bv0 = cache_bv1 = NULL;
@@ -205,7 +205,7 @@ class SWIFT_Pair {
     void Contact_Normals( SWIFT_Array<SWIFT_Real>& normals );
 
 
-    SWIFT_PairWorkspace *WS; //set by SWIFT_Scene on creation of a new scene
+    SWIFT_PairWorkspace *s; //set by SWIFT_Scene on creation of a new scene
   private:
     inline void Report_Edge0( int i, SWIFT_Array<int>& fids );
     inline void Report_Edge1( int i, SWIFT_Array<int>& fids );

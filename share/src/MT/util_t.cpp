@@ -208,19 +208,3 @@ template<class T> struct TypedAny:public Any {
 template<class T> Any* anyNew(const char* tag, const T &x){        return new TypedAny<T>(tag, x); }
 template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim){ return new TypedAny<T>(tag, x, n, delim); }
 
-template<class T> T* MT::SHM::newBlock(const char* objName, uint *_i){
-  if(!opened) open("shmPageName", 1000);
-  uint i;
-  for(i=0; i<shmMaxBlocks; i++) if(!strcmp(objName, info->blockNames[i])) break;
-  if(i==shmMaxBlocks){ //allocate new
-    for(i=0; i<shmMaxBlocks; i++) if(!info->blockOffsets[i]) break;
-    if(i==shmMaxBlocks) HALT("exceeded number of shm blocks");
-    strcpy(info->blockNames[i], objName);
-    info->blockOffsets[i] = info->used;
-    info->used += sizeof(T);
-    if(info->used>info->size) HALT("not enough space in shared memory");
-  }
-  T *x=(T*)(p+info->blockOffsets[i]);
-  if(_i) *_i=i;
-  return x;
-}

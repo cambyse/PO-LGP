@@ -259,7 +259,7 @@ double DLPml(const arr & feat, const arr & lastF, arr & grad){
 	return ans;
 }
 
-void PrintJointsNoise(RobotModuleGroup & robot, const arr& joints, arr & lastJoint){
+void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJoint){
 	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " noise creation " << endl;
 	uint noi = 60;
@@ -326,7 +326,7 @@ void PrintJointsNoise(RobotModuleGroup & robot, const arr& joints, arr & lastJoi
 }
 
 //move by collision free sampling
-void SampleTrajectory(RobotModuleGroup & robot){
+void SampleTrajectory(RobotProcessGroup & robot){
 	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
 	int nSa = MT::getParameter<int>("iterations");
@@ -394,7 +394,7 @@ void SampleTrajectory(RobotModuleGroup & robot){
 		}
 }
 
-void GradTrajectory(RobotModuleGroup & robot){
+void GradTrajectory(RobotProcessGroup & robot){
 	MT::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
 	int nSa = MT::getParameter<int>("iterations");
