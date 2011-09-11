@@ -33,12 +33,12 @@ int main(int argn,char **argv){
   soc.os=&std::cout;
 
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new TaskVariable("position",ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position",ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
   pos->setGainsAsNatural(20,.2);
   pos->targetType=positionGainsTT;
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);
   
-  TaskVariable *col = new TaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
   col->setGains(.5,.0);
   col->targetType=positionGainsTT;
   col->y_prec=1e-0;

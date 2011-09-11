@@ -2457,6 +2457,10 @@ void ors::Joint::read(std::istream& is){
 }
 
 
+ors::Proxy::Proxy(){
+  colorCode = 0;
+}
+
 //===========================================================================
 //
 // Graph implementations
@@ -3120,7 +3124,7 @@ void ors::Graph::setJointState(const arr& x, bool clearJointErrors){
 // Roy Featherstone, David Orin: "Robot Dynamics: Equations and Algorithms"
 
 /*!\brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
-void ors::Graph::kinematics(arr& y, uint a, ors::Transformation *rel){
+void ors::Graph::kinematics(arr& y, uint a, ors::Transformation *rel) const{
   ors::Transformation f=bodies(a)->X;
   if(rel) f.appendTransformation(*rel);
   y.setCarray(f.pos.p, 3);
@@ -3128,13 +3132,13 @@ void ors::Graph::kinematics(arr& y, uint a, ors::Transformation *rel){
 
 /*!\brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
-void ors::Graph::jacobian(arr& J, uint a, ors::Transformation *rel){
+void ors::Graph::jacobian(arr& J, uint a, ors::Transformation *rel) const{
   uint i;
   ors::Transformation Xa, Xi;
   Joint *ei;
   ors::Vector tmp, ti;
   
-  if(!jd) jd = getJointStateDimension(true);
+  if(!jd) ((ors::Graph*)this)->jd = getJointStateDimension(true);
   
   //initialize Jacobian
   J.resize(3, jd);
@@ -3178,13 +3182,13 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Transformation *rel){
 
 /*!\brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
-void ors::Graph::hessian(arr& H, uint a, ors::Transformation *rel){
+void ors::Graph::hessian(arr& H, uint a, ors::Transformation *rel) const{
   uint i, j;
   ors::Transformation Xa, Xi, Xj;
   Joint *ei, *ej;
   ors::Vector r, ti, tj;
   
-  if(!jd) jd = getJointStateDimension(true);
+  if(!jd) ((ors::Graph*)this)->jd = getJointStateDimension(true);
   
   //initialize Jacobian
   H.resize(3, jd, jd);
@@ -3331,7 +3335,7 @@ void ors::Graph::inverseDynamics(arr& tau, const arr& qd, const arr& qdd){
 }*/
 
 //! kinematis of the i-th body's z-orientation vector
-void ors::Graph::kinematicsZ(arr& y, uint a, ors::Transformation *rel){
+void ors::Graph::kinematicsZ(arr& y, uint a, ors::Transformation *rel) const{
   ors::Transformation f=bodies(a)->X;
   if(rel) f.appendTransformation(*rel);
   ors::Vector v;
@@ -3342,13 +3346,13 @@ void ors::Graph::kinematicsZ(arr& y, uint a, ors::Transformation *rel){
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 //! Jacobian of the i-th body's z-orientation vector
-void ors::Graph::jacobianZ(arr& J, uint a, ors::Transformation *rel){
+void ors::Graph::jacobianZ(arr& J, uint a, ors::Transformation *rel) const{
   uint i;
   ors::Transformation Xa, Xi;
   Joint *ei;
   ors::Vector r, ta, ti;
   
-  if(!jd) jd = getJointStateDimension(true);
+  if(!jd) ((ors::Graph*)this)->jd = getJointStateDimension(true);
   
   //initialize Jacobian
   J.resize(3, jd);

@@ -102,7 +102,7 @@ void testControl(){
   sys.setq(q);
   gl.watch("configuration read out from schunk arm");
 
-  TaskVariable TV_eff("endeffector", *sys.ors, posTVT,"m9","<t(0 0 -.24)>",0,0,0);
+  DefaultTaskVariable TV_eff("endeffector", *sys.ors, posTVT,"m9","<t(0 0 -.24)>",0,0,0);
   TV_eff.setGainsAsAttractor(20,.2);
   TV_eff.y_prec=1000.;
   sys.setTaskVariables(LIST(TV_eff));

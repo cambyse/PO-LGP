@@ -213,6 +213,7 @@ public:
   void maxIndex(uint& i, uint& j, uint& k) const;
   int findValue(const T& x) const;
   void findValues(MT::Array<uint>& indices, const T& x) const;
+  bool contains(const T& x) const{ return findValue(x)!=-1; }
   bool containsDoubles() const;
   uint getMemsize() const;
   void getIndexTuple(Array<uint> &I, uint i) const;

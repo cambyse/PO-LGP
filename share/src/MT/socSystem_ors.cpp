@@ -441,10 +441,7 @@ void soc::SocSystem_Ors::setq(const arr& q, uint t){
   s->v_act.setZero();
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars) if(v->active){
-    v->updateState();
-    v->updateJacobian();
-  }
+  for_list(i, v, vars)  if(v->active)  v->updateState();
 }
 
 void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
@@ -456,10 +453,7 @@ void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   s->v_act=qd;
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars) if(v->active){
-    v->updateState();
-    v->updateJacobian();
-  }
+  for_list(i, v, vars)  if(v->active)  v->updateState();
 }
 
 void soc::SocSystem_Ors::setqv(const arr& q_, uint t){

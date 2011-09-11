@@ -384,14 +384,15 @@ struct Shape {
 //===========================================================================
 //! proximity information (when two shapes become close)
 struct Proxy {
-  int a;              //!< index of shape A
+  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ?
   int b;              //!< index of shape B
   Vector posA, velA;   //!< contact or closest point position on surface of shape A (in world coordinates)
   Vector posB, velB;   //!< contact or closest point position on surface of shape B (in world coordinates)
   Vector normal;      //!< contact normal, pointing from A to B
   double d;             //!< distance (positive) or penetration (negative) between A and B
   Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
-  uint age;
+  uint age,colorCode;
+  Proxy();
 };
 
 //===========================================================================
@@ -433,11 +434,11 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Transformation *rel=0);
-  void jacobian(arr& J, uint i, ors::Transformation *rel=0);
-  void hessian(arr& H, uint i, ors::Transformation *rel=0);
-  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0);
-  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0);
+  void kinematics(arr& x, uint i, ors::Transformation *rel=0) const;
+  void jacobian(arr& J, uint i, ors::Transformation *rel=0) const;
+  void hessian(arr& H, uint i, ors::Transformation *rel=0) const;
+  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0) const;
+  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0) const;
   void jacobianR(arr& J, uint a);
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -672,12 +673,11 @@ struct TaskVariable {
   
   //!@name updates
   virtual void updateState(double tau=1.) = 0; //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
-  virtual void updateJacobian() = 0;
   void updateChange(int t=-1, double tau=1.);
-  virtual void getHessian(arr& H) = 0;
+  virtual void getHessian(arr& H){ NIY; }
   
   //!@name I/O
-  virtual void write(ostream& os) const = 0;
+  virtual void write(ostream& os) const{}
 };
 stdOutPipe(TaskVariable);
 
@@ -686,7 +686,6 @@ stdOutPipe(TaskVariable);
 //
 // The default implementation of standard task variables
 //
-
 
 /*!\brief basic task variable */
 struct DefaultTaskVariable:public TaskVariable {
@@ -699,14 +698,14 @@ struct DefaultTaskVariable:public TaskVariable {
   DefaultTaskVariable();
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& _sl,
+    ors::Graph& _ors,
     TVtype _type,
     const char *iBodyName, const char *iframe,
     const char *jBodyName, const char *jframe,
     const arr& _params);
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& _sl,
+    ors::Graph& _ors,
     TVtype _type,
     const char *iShapeName,
     const char *jShapeName,
@@ -716,16 +715,15 @@ struct DefaultTaskVariable:public TaskVariable {
   
   void set(
     const char* _name,
-    ors::Graph &_sl,
+    ors::Graph &_ors,
     TVtype _type,
     int _i, const ors::Transformation& _irel,
     int _j, const ors::Transformation& _jrel,
     const arr& _params);
-  //void set(const char* _name, ors::Graph& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
   
   //!@name updates
   void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
-  void updateJacobian();
   void getHessian(arr& H);
   
   //!@name virtual user update
@@ -736,6 +734,66 @@ struct DefaultTaskVariable:public TaskVariable {
   void write(ostream& os) const;
 };
 stdOutPipe(DefaultTaskVariable);
+
+
+//===========================================================================
+//
+// Collision Task Variable
+//
+
+enum CTVtype {
+  allCTVT,       //!< undefined
+  allListedCTVT,       //!< undefined
+  allExceptListedCTVT,       //!< undefined
+  bipartiteCTVT, //!< 3D position of reference, can have 2nd reference, no param
+  pairsCTVT,     //!< 3D z-axis orientation, no 2nd reference, no param
+  vectorCTVT     //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+};
+
+/*!\brief basic task variable */
+struct ProxyTaskVariable:public TaskVariable {
+  //!@name data fields
+  CTVtype type;
+  uintA shapes,shapes2;
+  double margin;
+  bool linear;
+  
+  //!@name initialization
+  ProxyTaskVariable();
+  ProxyTaskVariable(const char* _name,
+                    ors::Graph& _ors,
+                    CTVtype _type,
+                    uintA _shapes,
+                    double _margin=3.,
+                    bool _linear=true);
+  TaskVariable* newClone(){ return new ProxyTaskVariable(*this); }
+  
+  //!@name updates
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+};
+
+/*!\brief basic task variable */
+struct ProxyAlignTaskVariable:public TaskVariable {
+  //!@name data fields
+  CTVtype type;
+  uintA shapes,shapes2;
+  double margin;
+  bool linear;
+  
+  //!@name initialization
+  ProxyAlignTaskVariable();
+  ProxyAlignTaskVariable(const char* _name,
+                         ors::Graph& _ors,
+                         CTVtype _type,
+                         uintA _shapes,
+                         double _margin=3.,
+                         bool _linear=true);
+  TaskVariable* newClone(){ return new ProxyAlignTaskVariable(*this); }
+  
+  //!@name updates
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+};
+
 
 
 //===========================================================================
@@ -751,7 +809,6 @@ void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives=true, int 
 void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void activateAll(TaskVariableList& CS, bool active);
 void updateState(TaskVariableList& CS);
-void updateJacobian(TaskVariableList& CS);
 void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);

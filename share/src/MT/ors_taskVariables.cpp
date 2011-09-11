@@ -90,7 +90,6 @@ void DefaultTaskVariable::set(
   jrel=_jrel;
   params=_params;
   updateState();
-  updateJacobian();
   y_target=y;
   v_target=v;
 }
@@ -294,12 +293,12 @@ void TaskVariable::shiftTargets(int offset){
 }
 
 void DefaultTaskVariable::updateState(double tau){
-  arr p;
-  arr q, qv;
+  arr q, qv, p;
   ors::Vector pi, pj, c;
-  arr zi, zj, ti, sum_z, centr;
+  arr zi, zj, Ji, Jj, JRj;
   ors::Transformation f, fi, fj;
-  ors::Vector v_i, z_i, p_i;
+  ors::Vector vi, vj, r, jk;
+  uint k,l;
   
   v_old=v;
   y_old=y;
@@ -307,81 +306,15 @@ void DefaultTaskVariable::updateState(double tau){
   //get state
   switch(type){
     case posTVT:
-      if(j==-1){ ors->kinematics(y, i, &irel); break; }
+      if(j==-1){
+        ors->kinematics(y, i, &irel);
+        ors->jacobian(J, i, &irel); 
+        break;
+      }
       pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
       pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
       c = ors->bodies(j)->X.rot / (pi-pj);
       y.resize(3); y.setCarray(c.p, 3);
-      break;
-    case zoriTVT:
-      if(j==-1){ ors->kinematicsZ(y, i, &irel); break; }
-      //relative
-      MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
-      fi = ors->bodies(i)->X; fi.appendTransformation(irel);
-      fj = ors->bodies(j)->X; fj.appendTransformation(jrel);
-      f.setDifference(fi, fj);
-      f.rot.getZ(c);
-      y.setCarray(c.p, 3);
-      break;
-    case rotTVT:       y.resize(3); y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
-    case contactTVT:   ors->getPenetrationState(p); y.resize(1);  y(0) = p(i);  break;
-    case gripTVT:      ors->getGripState(y, i);      break;
-    case qItselfTVT:   ors->getJointState(q, qv);    y = q;   break;
-    case qLinearTVT:   ors->getJointState(q, qv);    y = params * q;   break;
-    case qSquaredTVT:  ors->getJointState(q, qv);    y.resize(1);  y(0) = scalarProduct(params, q, q);  break;
-    case qSingleTVT:   ors->getJointState(q, qv);    y.resize(1);  y(0)=q(-i);  break;
-    case qLimitsTVT:   ors->getLimitsMeasure(y, params);    break;
-    case comTVT:       ors->getCenterOfMass(y);     y.resizeCopy(2);  break;
-    case collTVT:      ors->getContactMeasure(y, params(0));   break;
-    case colConTVT:    ors->getContactConstraints(y);  break;
-    case skinTVT:
-      y.resize(params.N);
-      y.setZero();
-      break;
-    case zalignTVT:
-      ors->kinematicsZ(zi, i, &irel);
-      if(j==-1){
-        ors::Vector world_z;
-        if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
-        zj.setCarray((jrel*world_z).p, 3);
-      } else ors->kinematicsZ(zj, j, &jrel);
-      y.resize(1);
-      y(0) = scalarProduct(zi, zj);
-      break;
-    case userTVT:
-      userUpdate();
-      break;
-    default:  HALT("no such TVT");
-  }
-  
-  if(y_old.N!=y.N){
-    y_old=y;
-    v.resizeAs(y); v.setZero();
-    v_old=v;
-  }
-  
-  //v = .5*v + .5*(y - y_old);
-  v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
-  
-  if(y_target.N==y.N){
-    err=norm(y - y_target);
-    derr=err - norm(y_old - y_target);
-  }
-}
-
-void DefaultTaskVariable::updateJacobian(){
-  arr q, qv;
-  ors::Vector normal, d, vi, vj, r, jk, pi, pj, p_i, z_i;
-  arr zi, zj, Ji, Jj, JRj, sum_z, sum_J, ti, centr;
-  uint l, k;
-  ors::Vector v_i;
-  ors::Transformation fi;
-  
-  switch(type){
-    case posTVT:
-      if(j==-1){ ors->jacobian(J, i, &irel); break; }
-      pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
-      pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
       ors->jacobian(Ji, i, &irel);
       ors->jacobian(Jj, j, &jrel);
       ors->jacobianR(JRj, j);
@@ -394,29 +327,49 @@ void DefaultTaskVariable::updateJacobian(){
         jk -= ors->bodies(j)->X.rot / (r ^(pi - pj));
         J(0, k)=jk(0); J(1, k)=jk(1); J(2, k)=jk(2);
       }
+
       break;
-    case zoriTVT:  ors->jacobianZ(J, i, &irel);   break;
-    case rotTVT:   ors->jacobianR(J, i);   break;
-    case contactTVT:  NIY;  break;
-    case gripTVT:  NIY;  break;
-    case qItselfTVT:  J.setId(ors->getJointStateDimension());   break;
-    case qLinearTVT:  J = params;   break;
+    case zoriTVT:
+      if(j==-1){
+        ors->kinematicsZ(y, i, &irel);
+        ors->jacobianZ(J, i, &irel);
+        break;
+      }
+      //relative
+      MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
+      fi = ors->bodies(i)->X; fi.appendTransformation(irel);
+      fj = ors->bodies(j)->X; fj.appendTransformation(jrel);
+      f.setDifference(fi, fj);
+      f.rot.getZ(c);
+      y.setCarray(c.p, 3);
+      NIY; //TODO: Jacobian?
+      break;
+    case rotTVT:       y.resize(3);  ors->jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
+    case contactTVT:   ors->getPenetrationState(p); y.resize(1);  y(0) = p(i);  NIY;  break;
+    case gripTVT:      ors->getGripState(y, i);      NIY;  break;
+    case qItselfTVT:   ors->getJointState(q, qv);    y = q;   J.setId(q.N);  break;
+    case qLinearTVT:   ors->getJointState(q, qv);    y = params * q;   J=params;  break;
     case qSquaredTVT:
       ors->getJointState(q, qv);
+      y.resize(1);  y(0) = scalarProduct(params, q, q);
       J = params * q;
       J *= (double)2.;
       J.reshape(1, q.N);
       break;
     case qSingleTVT:
+      ors->getJointState(q, qv);
+      y.resize(1);  y(0)=q(-i);
       J.resize(1, ors->getJointStateDimension());
       J.setZero();
       J(0, -i) = 1.;
       break;
-    case qLimitsTVT:  ors->getLimitsGradient(J, params);  break;
-    case comTVT:      ors->getComGradient(J);  J.resizeCopy(2, J.d1);  break;
-    case collTVT:     ors->getContactGradient(J, params(0));  break;
-    case colConTVT:   ors->getContactConstraintsGradient(J);  break;
+    case qLimitsTVT:   ors->getLimitsMeasure(y, params);  ors->getLimitsGradient(J, params);   break;
+    case comTVT:       ors->getCenterOfMass(y);     y.resizeCopy(2); ors->getComGradient(J);  J.resizeCopy(2, J.d1);  break;
+    case collTVT:      ors->getContactMeasure(y, params(0)); ors->getContactGradient(J, params(0));  break;
+    case colConTVT:    ors->getContactConstraints(y);  ors->getContactConstraintsGradient(J); break;
     case skinTVT:
+      y.resize(params.N);
+      y.setZero();
       J.clear();
       for(k=0; k<params.N; k++){
         l=(uint)params(k);
@@ -441,14 +394,31 @@ void DefaultTaskVariable::updateJacobian(){
         ors->kinematicsZ(zj, j, &jrel);
         ors->jacobianZ(Jj, j, &jrel);
       }
+      y.resize(1);
+      y(0) = scalarProduct(zi, zj);
       J = ~zj * Ji + ~zi * Jj;
       J.reshape(1, ors->getJointStateDimension());
       break;
     case userTVT:
+      userUpdate();
       break;
-    default:  NIY;
+    default:  HALT("no such TVT");
   }
   transpose(Jt, J);
+
+  if(y_old.N!=y.N){
+    y_old=y;
+    v.resizeAs(y); v.setZero();
+    v_old=v;
+  }
+  
+  //v = .5*v + .5*(y - y_old);
+  v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
+  
+  if(y_target.N==y.N){
+    err=norm(y - y_target);
+    derr=err - norm(y_old - y_target);
+  }
 }
 
 void DefaultTaskVariable::getHessian(arr& H){
@@ -557,15 +527,128 @@ void DefaultTaskVariable::write(ostream &os) const {
   <<endl;
 }
 
+
+
+ProxyTaskVariable::ProxyTaskVariable(const char* _name,
+                                     ors::Graph& _ors,
+                                     CTVtype _type,
+                                     uintA _shapes,
+                                     double _margin,
+                                     bool _linear){
+  type=_type;
+  name=_name;
+  ors=&_ors;
+  shapes=_shapes;
+  margin=_margin;
+  linear=_linear;
+}
+
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
+  double d;
+  ors::Shape *a, *b;
+  ors::Transformation arel, brel;
+  arr Ja, Jb, dnormal;
+
+  a=ors->shapes(p->a); b=ors->shapes(p->b);
+  d=1.-p->d/margin;
+
+  if(!linear) y += d*d;
+  else        y += d;
+  
+  arel.setZero();  arel.pos=a->X.rot/(p->posA-a->X.pos);
+  brel.setZero();  brel.pos=b->X.rot/(p->posB-b->X.pos);
+          
+  CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
+  dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);
+  if(!linear){
+    ors->jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
+    ors->jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
+  }else{
+    ors->jacobian(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
+    ors->jacobian(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
+  }
+}
+                 
+void ProxyTaskVariable::updateState(double tau){
+  v_old=v;
+  y_old=y;
+
+  uint i;
+  ors::Proxy *p;
+
+  y.resize(1);  y.setZero();
+  J.resize(1, ors->getJointStateDimension(false));  J.setZero();
+
+  switch(type){
+    case allCTVT:
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        addAContact(y(0), J, p, ors, margin, linear);
+        p->colorCode = 1;
+      }
+      break;
+    case allListedCTVT:
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        if(shapes.contains(p->a) && shapes.contains(p->b)){
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 2;
+        }
+      }
+    case allExceptListedCTVT:
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        if(!shapes.contains(p->a) && !shapes.contains(p->b)){
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 3;
+        }
+      }
+      break;
+    case bipartiteCTVT:
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
+          (shapes.contains(p->b) && shapes2.contains(p->a))){
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 4;
+        }
+      }
+    case pairsCTVT:{
+      NIY;
+      // only explicit paris in 2D array shapes
+    } break;
+    case vectorCTVT:{
+      //outputs a vector of collision meassures, with entry for each explicit pair
+      y.resize(shapes.d0);  y.setZero();
+      J.resize(shapes.d0,J.d1);  J.setZero();
+      int a,b;
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        a=shapes.findValue(p->a);
+        b=shapes.findValue(p->b);
+        if(a!=-1 && b!=-1 && a/2==b/2){
+          addAContact(y(a/2), J[a/2](), p, ors, margin, linear);
+          p->colorCode = 5;
+        }
+      }
+    } break;
+    default: NIY;
+  }
+
+
+  if(y_old.N!=y.N){
+    y_old=y;
+    v.resizeAs(y); v.setZero();
+    v_old=v;
+  }
+  v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
+  
+  if(y_target.N==y.N){
+    err=norm(y - y_target);
+    derr=err - norm(y_old - y_target);
+  }
+}
+
+
 //===========================================================================
 //
 // TaskVariableList functions
 //
-
-
-
-
-
 
 void reportAll(TaskVariableList& CS, ostream& os, bool onlyActives){
   for(uint i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
@@ -624,12 +707,6 @@ void updateState(TaskVariableList& CS){
   }
 }
 
-void updateJacobian(TaskVariableList& CS){
-  for(uint i=0; i<CS.N; i++){
-    CS(i)->updateJacobian();
-  }
-}
-
 void updateChanges(TaskVariableList& CS, int t){
   for(uint i=0; i<CS.N; i++) if(CS(i)->active){
       CS(i)->updateChange(t);
@@ -640,7 +717,8 @@ void getJointJacobian(TaskVariableList& CS, arr& J){
   uint i, n=0;
   J.clear();
   for(i=0; i<CS.N; i++) if(CS(i)->active){
-      CS(i)->updateJacobian();
+      NIY; //TODO: do I have to do updateState?
+      //CS(i)->updateJacobian();
       J.append(CS(i)->J);
       n=CS(i)->J.d1;
     }
@@ -658,7 +736,8 @@ void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
   a.setZero();
   arr w(3);
   for(i=0; i<CS.N; i++) if(CS(i)->active){
-      CS(i)->updateJacobian();
+      NIY; //TODO: do I have to make updateState?
+      //CS(i)->updateJacobian();
       a += CS(i)->y_prec * CS(i)->Jt * (CS(i)->y_ref-CS(i)->y);
       A += CS(i)->y_prec * CS(i)->Jt * CS(i)->J;
     }

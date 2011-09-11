@@ -321,7 +321,8 @@ void ors::glDraw(Graph& C){
   if(orsDrawProxies) for(i=0; i<C.proxies.N; i++) if(!C.proxies(i)->age){
         proxy = C.proxies(i);
         glLoadIdentity();
-        glColor(1, 0, 0);
+        if(!proxy->colorCode) glColor(.5,.5,.5);
+        else glColor(proxy->colorCode);
         glBegin(GL_LINES);
         glVertex3dv(proxy->posA.p);
         glVertex3dv(proxy->posB.p);
