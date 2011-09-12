@@ -384,7 +384,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
       b = b_old + alpha*(b-b_old);
 
 
-      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
+      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha /*<<" r= " <<  r<<" R= " <<  R  */<<endl;
       if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<1e-4))) break;
 
       old_r = sys.taskCost(NULL, T, -1, verbose);
