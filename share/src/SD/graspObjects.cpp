@@ -397,12 +397,18 @@ GraspObject_Sphere::GraspObject_Sphere(arr &c1, double r1, double s1){
 
 double
 GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
-  double y, sig;
+  double y, sig,am;
   //arr x = xx - c;
 
   isf_gp.gp.evaluate(x,y,sig); 
 
-  if (grad) {isf_gp.gp.gradient(*grad, x); *grad /= norm(*grad);}
+  if (grad) {
+    isf_gp.gp.gradient(*grad, x);
+    /* SD: too small gradients render GP Grammian uninvertible -- presumably
+     * due to underflow and coseq. low rank */
+    if ( grad->absMin() < 1e-155) *grad /=  1e-155;
+    *grad /= norm(*grad);
+  }
 
   if (hess) isf_gp.gp.hessian(*hess, x);
 
