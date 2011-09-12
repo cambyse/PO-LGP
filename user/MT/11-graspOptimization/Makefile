@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../../share
 OBJS = main.o
 
 STANIMIR = 1

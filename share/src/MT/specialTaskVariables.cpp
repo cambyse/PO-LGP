@@ -18,9 +18,15 @@ void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   TaskVariable *TV_up2  = new DefaultTaskVariable("up2", *sys.ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
   TaskVariable *TV_z1   = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
   TaskVariable *TV_z2   = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+#if 1
+  TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tipHook1", 0, 0);
+  TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tipHook2", 0, 0);
+  TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tipHook3", 0, 0);
+#else
   TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
   TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
   TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
+#endif
   TaskVariable *TV_qhand= new DefaultTaskVariable("qhand", *sys.ors, qLinearTVT, 0, 0, 0, 0, I2);
   TaskVariableList TVs;
   TVs.append(ARRAY(TV_eff, TV_q, TV_rot, TV_col, TV_lim)); //TV_skin

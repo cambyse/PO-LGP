@@ -677,7 +677,7 @@ struct TaskVariable {
   virtual void getHessian(arr& H){ NIY; }
   
   //!@name I/O
-  virtual void write(ostream& os) const{}
+  virtual void write(ostream& os) const;
 };
 stdOutPipe(TaskVariable);
 
@@ -764,8 +764,8 @@ struct ProxyTaskVariable:public TaskVariable {
                     ors::Graph& _ors,
                     CTVtype _type,
                     uintA _shapes,
-                    double _margin=3.,
-                    bool _linear=true);
+                    double _margin=.02,
+                    bool _linear=false);
   TaskVariable* newClone(){ return new ProxyTaskVariable(*this); }
   
   //!@name updates

@@ -182,12 +182,12 @@ void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec
   active=true;
   uint t;
   double a;
-  y_trajectory.resize(T+1, y.N);   y_prec_trajectory.resize(T+1);
-  v_trajectory.resize(T+1, y.N);   v_prec_trajectory.resize(T+1);
+  y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
+  v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
   for(t=0; t<=T; t++){
     a = (double)t/T;
-    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
-    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
+    y_trajectory[t]() = ((double)1.-a)*y + a*y_target;
+    v_trajectory[t]() = ((double)1.-a)*v + a*v_target;
   }
   for(t=0; t<T; t++){
     y_prec_trajectory(t) = mid_y_prec;
@@ -202,12 +202,12 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, 
   active=true;
   uint t;
   double a;
-  y_trajectory.resize(T+1, y.N);    y_prec_trajectory.resize(T+1);
-  v_trajectory.resize(T+1, y.N);   v_prec_trajectory.resize(T+1);
+  y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
+  v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
   for(t=0; t<=T; t++){
     a = (double)t/T;
-    y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
-    v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
+    y_trajectory[t]() = ((double)1.-a)*y + a*y_target;
+    v_trajectory[t]() = ((double)1.-a)*v + a*v_target;
   }
   for(t=0; t<=T; t++){
     y_prec_trajectory(t) = y_prec;
@@ -489,8 +489,28 @@ void TaskVariable::updateChange(int t, double tau){
   }
     */
 
+void TaskVariable::write(ostream &os) const {
+  os <<"TaskVariable '" <<name <<'\'';
+  os
+  <<"\n  y=" <<y
+  <<"\t  v=" <<v
+  <<"\n  y_target=" <<y_target
+  <<"\t  v_target=" <<v_target
+  <<"\n  y_ref="  <<y_ref
+  <<"\t  v_ref=" <<v_ref
+  <<"\n  y_prec=" <<y_prec
+  <<"\t  v_prec=" <<v_prec
+  <<"\n  Pgain=" <<Pgain
+  <<"\t  Dgain=" <<Dgain
+  <<"\n  y_error=" <<sqrDistance(y, y_target)
+  <<"\t  v_error=" <<sqrDistance(v, v_target)
+  <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
+  <<endl;
+}
+
 void DefaultTaskVariable::write(ostream &os) const {
-  os <<"CV '" <<name <<'\'';
+  TaskVariable::write(os);
+  return;
   switch(type){
     case posTVT:     os <<"  (pos " <<ors->bodies(i)->name <<")"; break;
       //case relPosTVT:  os <<"  (relPos " <<ors->bodies(i)->name <<'-' <<ors->bodies(j)->name <<")"; break;
@@ -510,23 +530,7 @@ void DefaultTaskVariable::write(ostream &os) const {
     case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }
-  os
-  <<"\n  y=" <<y
-  <<"\t  v=" <<v
-  <<"\n  y_target=" <<y_target
-  <<"\t  v_target=" <<v_target
-  <<"\n  y_ref="  <<y_ref
-  <<"\t  v_ref=" <<v_ref
-  <<"\n  y_prec=" <<y_prec
-  <<"\t  v_prec=" <<v_prec
-  <<"\n  Pgain=" <<Pgain
-  <<"\t  Dgain=" <<Dgain
-  <<"\n  y_error=" <<sqrDistance(y, y_target)
-  <<"\t  v_error=" <<sqrDistance(v, v_target)
-  <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
-  <<endl;
 }
-
 
 
 ProxyTaskVariable::ProxyTaskVariable(const char* _name,
@@ -615,8 +619,8 @@ void ProxyTaskVariable::updateState(double tau){
     } break;
     case vectorCTVT:{
       //outputs a vector of collision meassures, with entry for each explicit pair
-      y.resize(shapes.d0);  y.setZero();
-      J.resize(shapes.d0,J.d1);  J.setZero();
+      y.resize(shapes.d0/2);  y.setZero();
+      J.resize(shapes.d0/2,J.d1);  J.setZero();
       int a,b;
       for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
         a=shapes.findValue(p->a);
@@ -629,7 +633,7 @@ void ProxyTaskVariable::updateState(double tau){
     } break;
     default: NIY;
   }
-
+  transpose(Jt, J);
 
   if(y_old.N!=y.N){
     y_old=y;
