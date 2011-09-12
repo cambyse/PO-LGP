@@ -401,6 +401,9 @@ GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
   //arr x = xx - c;
 
   isf_gp.gp.evaluate(x,y,sig); 
+  /* normalize field magnitude to [0,1] */
+  y /= isf_gp.gp.mu + isf_gp.gp.mu_func(x,&isf_gp.p);
+
 
   if (grad) {
     isf_gp.gp.gradient(*grad, x);
