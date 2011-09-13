@@ -1,5 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <MT/soc.h>
 #include <MT/util.h>
 #include <MT/specialTaskVariables.h>
@@ -117,9 +115,9 @@ void setOldGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   s = listFindByName(sys.ors->shapes, "tip3Shape");  shapes.append(s->index);
   s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
   //shapes.append(shapeId);
-  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .02, true);
+  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
   V->updateState();
-  V->y_target = ARR(.0,0,0);  V->v_target = ARR(.0,0,0);
+  V->y_target = ARR(.0,.0,.0);  V->v_target = ARR(.0,.0,.0);
   V->y_prec = colPrec;
   V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
   sys.vars.append(V);
@@ -260,7 +258,7 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   V->setInterpolatedTargetsEndPrecisions(T,1e2,0.);
   //for(uint t=0;t<T;t++) V->y_trajectory[t]()=.2;  V->y_trajectory[T]=V->y_target;
   //V->v_trajectory.setZero();  V->v_trajectory[T]=V->v_target;
-  sys.vars.append(V);
+  //sys.vars.append(V);
   
   V = new PotentialFieldAlignTaskVariable("tips z align", *sys.ors, tipsN, *graspobj);
   V->updateState();
@@ -271,6 +269,21 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
 
 #endif
 
+  uintA shapes;  ors::Shape *s;
+  s = listFindByName(sys.ors->shapes, "tip1Shape");  shapes.append(s->index);
+  s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
+  s = listFindByName(sys.ors->shapes, "tip2Shape");  shapes.append(s->index);
+  s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
+  s = listFindByName(sys.ors->shapes, "tip3Shape");  shapes.append(s->index);
+  s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
+  //shapes.append(shapeId);
+  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
+  V->updateState();
+  V->y_target = ARR(.0,.0,.0);  V->v_target = ARR(.0,.0,.0);
+  V->y_prec = colPrec;
+  V->setInterpolatedTargetsEndPrecisions(T,colPrec,1e1,0.,0.);
+  sys.vars.append(V);
+  
   //opposing fingers
   V=listFindByName(sys.vars, "oppose12");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
@@ -299,7 +312,7 @@ void problem1(){
   createStandardRobotTaskVariables(sys);
 
 
-#if 0
+#if 1
   arr b,Binv;
   //OneStepDynamic(b, Binv, sys, T, 1e-1);
   setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, 2, 0);

@@ -109,8 +109,8 @@ shape (fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>,
 shape (fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 shape (fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 
-shape tip1Shape(tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
-shape tip2Shape(tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape tip1Shape(tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5]}
+shape tip2Shape(tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5]}
 shape tip3Shape(tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
 
 

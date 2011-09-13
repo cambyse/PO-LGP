@@ -4280,4 +4280,4 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 #include "array_t.cpp"
 template MT::Array<ors::Shape*>::Array(uint);
-
+template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
