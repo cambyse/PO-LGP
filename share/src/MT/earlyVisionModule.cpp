@@ -10,7 +10,9 @@
 #include "vision_cuda.h"
 #include <NP/camera.h>
 
-#ifdef MT_CUDA
+
+#ifdef MT_CUDA //without CUDA no early vision
+
 
 #include <cuda.h>
 #include <cuda_runtime.h>

@@ -29,7 +29,7 @@ void init(ors::Graph& ors,OpenGL& gl,const char *filename){
 
 void testPlan(){
   ors::Graph ors;
-  SwiftModule swift;
+  SwiftInterface swift;
   OpenGL gl;
   nShape = MT::getParameter<int>("nShape");
   if(!nShape)

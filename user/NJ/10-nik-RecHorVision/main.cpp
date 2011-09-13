@@ -162,15 +162,15 @@ struct ReceedingHorizon:public StepThread{
 
 	void step(){
 		if(bwdMsg_count>10){
-			sys->WS->q0=q0;
-			sys->WS->v0=v0;
+			sys->s->q0=q0;
+			sys->s->v0=v0;
 			aico.shiftMessages(-bwdMsg_count); //shift everything 10 steps forward...
 			shiftTargets(sys->vars,-bwdMsg_count);
 			bwdMsg_count-=bwdMsg_count; //grep messages starting from 1 again...
 		}else
 		{
-			sys->WS->q0=q0;
-			sys->WS->v0=v0;
+			sys->s->q0=q0;
+			sys->s->v0=v0;
 		}
 		aico.stepDynamic();
 		bwdMsg_v=aico.v;
@@ -217,7 +217,7 @@ struct RHV:public TaskAbstraction {
 	void findObstacle(ControllerModule *ctrl);
 	virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
 	virtual void initTaskVariables(ControllerModule *ctrl);
-	void init(RobotModuleGroup *robot);
+	void init(RobotProcessGroup *robot);
 	ors::Vector CameraLocation(const arr & p);
 	ReceedingHorizon recho;
 };
@@ -249,7 +249,7 @@ ors::Vector RHV::CameraLocation(const arr & p){
 	return ans;
 }
 
-void RHV::init(RobotModuleGroup *robot){
+void RHV::init(RobotProcessGroup *robot){
 	cout << "init TV_q = "<<TV_q->y << endl;
 	cout << "init TV_x->x="<<TV_eff->y << endl;
 	MT::IOraw = true;
@@ -307,7 +307,7 @@ void RHV::initTaskVariables(ControllerModule *ctrl){
 	TV_col->params=ARR(.15); //change the margin for the collision variable
 }
 
-void RHV::findObstacle(RobotModuleGroup *robot){
+void RHV::findObstacle(RobotProcessGroup *robot){
 	double time = MT::realTime();
 	if(visStep != robot->evis.steps && robot->evis.hsvCenters.N){//should manuallz remove 0 observations vision.min = 0
 		visStep = robot->evis.steps;
@@ -390,8 +390,8 @@ void RHV::updateTaskVariables(ControllerModule *ctrl){
 int main(int argn,char** argv){
 	MT::IOraw = true;
 	MT::initCmdLine(argn,argv);
-	signal(SIGINT,RobotModuleGroup::signalStopCallback);
-	RobotModuleGroup robot;
+	signal(SIGINT,RobotProcessGroup::signalStopCallback);
+	RobotProcessGroup robot;
 	RHV demo;
 	demo.recho.init(robot.ctrl.sys,&demo);
 	robot.ctrl.task=&demo;

@@ -297,8 +297,8 @@ bool Distance_LC( RESULT_TYPE start_state,
   inline void Extract_Features( RESULT_TYPE state, void*& feat0, void*& feat1 );
 };
 
-void new_PairWorkspace(SWIFT_PairWorkspace*& WS){ WS = new SWIFT_PairWorkspace; }
-void delete_PairWorkspace(SWIFT_PairWorkspace*& WS){ delete WS; WS=NULL; };
+void new_PairWorkspace(SWIFT_PairWorkspace*& s){ s = new SWIFT_PairWorkspace; }
+void delete_PairWorkspace(SWIFT_PairWorkspace*& s){ delete s; s=NULL; };
 
 //////////////////////////////////////////////////////////////////////////////
 // Initialization functions
@@ -2689,7 +2689,7 @@ bool SWIFT_Pair::Tolerance( SWIFT_Object* o0, SWIFT_Object* o1,
 
     // Setup the pair specific query stuff
     result = false;
-    WS->Setup_Pair_Query( o0, o1,
+    s->Setup_Pair_Query( o0, o1,
                       false );
 
 #ifdef SWIFT_PIECE_CACHING
@@ -2737,18 +2737,18 @@ bool SWIFT_Pair::Tolerance( SWIFT_Object* o0, SWIFT_Object* o1,
         Setup_BV_Query( start_state, leaf->Feature0(), leaf->Feature1() );
 #else
     // Setup the bv specific query stuff
-    WS->bv0 = o0->Mesh()->Root(); WS->bv1 = o1->Mesh()->Root();
+    s->bv0 = o0->Mesh()->Root(); s->bv1 = o1->Mesh()->Root();
 #endif
 #ifndef SWIFT_FRONT_TRACKING
     start_state = State();
-    WS->Setup_BV_Query( start_state, feat0, feat1 );
+    s->Setup_BV_Query( start_state, feat0, feat1 );
 #endif
 
 // ------------------------- Start tolerance call -------------------------
 #ifdef SWIFT_FRONT_TRACKING
-    result = WS->Tolerance_LC( start_state, tolerance, leaf, leaf );
+    result = s->Tolerance_LC( start_state, tolerance, leaf, leaf );
 #else
-    result = WS->Tolerance_LC( start_state, tolerance );
+    result = s->Tolerance_LC( start_state, tolerance );
 #endif
 // ------------------------- End tolerance call -------------------------
 
@@ -2972,7 +2972,7 @@ bool SWIFT_Pair::Distance( SWIFT_Object* o0, SWIFT_Object* o1,
     distance = SWIFT_INFINITY;
     result = false;
     rel_error += 1.0;
-    WS->Setup_Pair_Query( o0, o1,
+    s->Setup_Pair_Query( o0, o1,
                       false );
 
 #ifdef SWIFT_PIECE_CACHING
@@ -3443,23 +3443,23 @@ cerr << "Full Queue when processing queue" << endl;
         Setup_BV_Query( start_state, leaf->Feature0(), leaf->Feature1() );
 #else
     // Setup the bv specific query stuff
-    WS->bv0 = o0->Mesh()->Root(); WS->bv1 = o1->Mesh()->Root();
+    s->bv0 = o0->Mesh()->Root(); s->bv1 = o1->Mesh()->Root();
 #endif
 #endif
 #ifndef SWIFT_FRONT_TRACKING
 #ifndef SWIFT_PRIORITY_DIRECTION
     start_state = State();
-    WS->Setup_BV_Query( start_state, feat0, feat1 );
+    s->Setup_BV_Query( start_state, feat0, feat1 );
 #endif
 #endif
 
 #ifndef SWIFT_PRIORITY_DIRECTION
 // ------------------------- Start dist call -------------------------
 #ifdef SWIFT_FRONT_TRACKING
-    result = WS->Distance_LC( start_state, tolerance,
+    result = s->Distance_LC( start_state, tolerance,
                           abs_error, rel_error, distance, leaf, leaf );
 #else
-    result = WS->Distance_LC( start_state, tolerance,
+    result = s->Distance_LC( start_state, tolerance,
                           abs_error, rel_error, distance );
 #endif
 // ------------------------- End dist call -------------------------
@@ -3505,7 +3505,7 @@ bool SWIFT_Pair::Contacts( SWIFT_Object* o0, SWIFT_Object* o1,
 
     // Setup the pair specific query stuff
     distance = SWIFT_INFINITY;
-    WS->Setup_Pair_Query( o0, o1,
+    s->Setup_Pair_Query( o0, o1,
                       true );
 
 #ifdef SWIFT_FRONT_TRACKING
@@ -3526,19 +3526,19 @@ bool SWIFT_Pair::Contacts( SWIFT_Object* o0, SWIFT_Object* o1,
         Setup_BV_Query( start_state, leaf->Feature0(), leaf->Feature1() );
 #else
     // Setup the bv specific query stuff
-    WS->bv0 = o0->Mesh()->Root(); WS->bv1 = o1->Mesh()->Root();
+    s->bv0 = o0->Mesh()->Root(); s->bv1 = o1->Mesh()->Root();
 #endif
 #ifndef SWIFT_FRONT_TRACKING
     start_state = State();
-    WS->Setup_BV_Query( start_state, feat0, feat1 );
+    s->Setup_BV_Query( start_state, feat0, feat1 );
 #endif
 
 // ------------------------- Start contacts call -------------------------
 #ifdef SWIFT_FRONT_TRACKING
-    result = WS->Distance_LC( start_state, tolerance, 0.0, 1.0, distance,
+    result = s->Distance_LC( start_state, tolerance, 0.0, 1.0, distance,
                                                        leaf, leaf, true );
 #else
-    result = WS->Distance_LC( start_state, tolerance, 0.0, 1.0, distance, true );
+    result = s->Distance_LC( start_state, tolerance, 0.0, 1.0, distance, true );
 #endif
 // ------------------------- End contacts call -------------------------
 
@@ -3567,7 +3567,7 @@ bool SWIFT_Pair::Contacts( SWIFT_Object* o0, SWIFT_Object* o1,
     Save_State();
 #endif
 
-    num_contacts = WS->contact_listd.Length();
+    num_contacts = s->contact_listd.Length();
 
     return result;
 }
@@ -3580,8 +3580,8 @@ bool SWIFT_Pair::Contacts( SWIFT_Object* o0, SWIFT_Object* o1,
 void SWIFT_Pair::Distances( SWIFT_Array<SWIFT_Real>& dists )
 {
     int i;
-    for( i = 0; i < WS->contact_listd.Length(); i++ ) {
-      dists.Add( WS->contact_listd[i] );
+    for( i = 0; i < s->contact_listd.Length(); i++ ) {
+      dists.Add( s->contact_listd[i] );
     }
 }
 
@@ -3593,43 +3593,43 @@ void SWIFT_Pair::Contact_Features( SWIFT_Array<int>& ftypes,
 {
     int i;
 
-    for( i = 0; i < WS->contact_listt.Length(); i++ ) {
-    switch( WS->contact_listt[i] ) {
+    for( i = 0; i < s->contact_listt.Length(); i++ ) {
+    switch( s->contact_listt[i] ) {
         case CONTINUE_VV:
             ftypes.Add( VERTEX );
             ftypes.Add( VERTEX );
-            fids.Add( WS->obj0->Mesh()->Map_Vertex_Id(
-                      ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin() ) );
-            fids.Add( WS->obj1->Mesh()->Map_Vertex_Id(
-                      ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin() ) );
+            fids.Add( s->obj0->Mesh()->Map_Vertex_Id(
+                      ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin() ) );
+            fids.Add( s->obj1->Mesh()->Map_Vertex_Id(
+                      ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin() ) );
             break;
         case CONTINUE_VE:
             ftypes.Add( VERTEX );
             ftypes.Add( EDGE );
-            fids.Add( WS->obj0->Mesh()->Map_Vertex_Id(
-                            ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin() ) );
+            fids.Add( s->obj0->Mesh()->Map_Vertex_Id(
+                            ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin() ) );
             Report_Edge1( i, fids );
             break;
         case CONTINUE_EV:
             ftypes.Add( EDGE );
             ftypes.Add( VERTEX );
             Report_Edge0( i, fids );
-            fids.Add( WS->obj1->Mesh()->Map_Vertex_Id(
-                            ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin() ) );
+            fids.Add( s->obj1->Mesh()->Map_Vertex_Id(
+                            ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin() ) );
             break;
         case CONTINUE_VF:
             ftypes.Add( VERTEX );
             ftypes.Add( FACE );
-            fids.Add( WS->obj0->Mesh()->Map_Vertex_Id(
-                            ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin() ) );
+            fids.Add( s->obj0->Mesh()->Map_Vertex_Id(
+                            ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin() ) );
 #ifdef SWIFT_ALLOW_BOUNDARY
-            fids.Add( ((SWIFT_Tri_Face*)WS->contact_list1[i])->Classification()
-                        != CLASS_ORIGINAL ? -1 : WS->obj1->Mesh()->Map_Face_Id(
-                            ((SWIFT_Tri_Face*)WS->contact_list1[i])->Edge1().
+            fids.Add( ((SWIFT_Tri_Face*)s->contact_list1[i])->Classification()
+                        != CLASS_ORIGINAL ? -1 : s->obj1->Mesh()->Map_Face_Id(
+                            ((SWIFT_Tri_Face*)s->contact_list1[i])->Edge1().
                                             Twin()->Twin()->Adj_Face() ) );
 #else
-            fids.Add( WS->obj1->Mesh()->Map_Face_Id(
-                            ((SWIFT_Tri_Face*)WS->contact_list1[i])->Edge1().
+            fids.Add( s->obj1->Mesh()->Map_Face_Id(
+                            ((SWIFT_Tri_Face*)s->contact_list1[i])->Edge1().
                                             Twin()->Twin()->Adj_Face() ) );
 #endif
             break;
@@ -3637,17 +3637,17 @@ void SWIFT_Pair::Contact_Features( SWIFT_Array<int>& ftypes,
             ftypes.Add( FACE );
             ftypes.Add( VERTEX );
 #ifdef SWIFT_ALLOW_BOUNDARY
-            fids.Add( ((SWIFT_Tri_Face*)WS->contact_list0[i])->Classification()
-                        != CLASS_ORIGINAL ? -1 : WS->obj0->Mesh()->Map_Face_Id(
-                            ((SWIFT_Tri_Face*)WS->contact_list0[i])->Edge1().
+            fids.Add( ((SWIFT_Tri_Face*)s->contact_list0[i])->Classification()
+                        != CLASS_ORIGINAL ? -1 : s->obj0->Mesh()->Map_Face_Id(
+                            ((SWIFT_Tri_Face*)s->contact_list0[i])->Edge1().
                                             Twin()->Twin()->Adj_Face() ) );
 #else
-            fids.Add( WS->obj0->Mesh()->Map_Face_Id(
-                            ((SWIFT_Tri_Face*)WS->contact_list0[i])->Edge1().
+            fids.Add( s->obj0->Mesh()->Map_Face_Id(
+                            ((SWIFT_Tri_Face*)s->contact_list0[i])->Edge1().
                                             Twin()->Twin()->Adj_Face() ) );
 #endif
-            fids.Add( WS->obj1->Mesh()->Map_Vertex_Id(
-                            ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin() ) );
+            fids.Add( s->obj1->Mesh()->Map_Vertex_Id(
+                            ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin() ) );
             break;
         case CONTINUE_EE:
             ftypes.Add( EDGE );
@@ -3667,55 +3667,55 @@ void SWIFT_Pair::Contact_Points( SWIFT_Array<SWIFT_Real>& points )
     SWIFT_Triple tri;
     SWIFT_Real* points_ptr = points.Data() + points.Length();
 
-    for( i = 0; i < WS->contact_listt.Length(); i++, points_ptr += 6 ) {
-      switch( WS->contact_listt[i] ) {
+    for( i = 0; i < s->contact_listt.Length(); i++, points_ptr += 6 ) {
+      switch( s->contact_listt[i] ) {
         case CONTINUE_VV:
-          ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin()->Coords().
+          ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin()->Coords().
                                                     Get_Value( points_ptr );
-          ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin()->Coords().
+          ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin()->Coords().
                                                     Get_Value( points_ptr+3 );
             break;
         case CONTINUE_VE:
-          { const SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list1[i]);
+          { const SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list1[i]);
             const SWIFT_Tri_Vertex* v =
-                                ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin();
+                                ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin();
             v->Coords().Get_Value( points_ptr );
-            tri = e->Origin()->Coords() + ((WS->trans01 * v->Coords() -
+            tri = e->Origin()->Coords() + ((s->trans01 * v->Coords() -
                   e->Origin()->Coords()) * e->Direction()) * e->Direction();
             tri.Get_Value( points_ptr+3 );
           } break;
         case CONTINUE_EV:
-          { const SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list0[i]);
+          { const SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list0[i]);
             const SWIFT_Tri_Vertex* v =
-                                ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin();
-            tri = e->Origin()->Coords() + ((WS->trans10 * v->Coords() -
+                                ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin();
+            tri = e->Origin()->Coords() + ((s->trans10 * v->Coords() -
                   e->Origin()->Coords()) * e->Direction()) * e->Direction();
             tri.Get_Value( points_ptr );
             v->Coords().Get_Value( points_ptr+3 );
           } break;
         case CONTINUE_VF:
-          { const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)WS->contact_list1[i]);
+          { const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)s->contact_list1[i]);
             const SWIFT_Tri_Vertex* v =
-                                ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin();
+                                ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin();
             v->Coords().Get_Value( points_ptr );
-            tri = WS->trans01 * v->Coords();
+            tri = s->trans01 * v->Coords();
             tri -= ((tri - f->Coords1()) * f->Normal()) * f->Normal();
             tri.Get_Value( points_ptr+3 );
           } break;
         case CONTINUE_FV:
-          { const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)WS->contact_list0[i]);
+          { const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)s->contact_list0[i]);
             const SWIFT_Tri_Vertex* v =
-                                ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin();
-            tri = WS->trans10 * v->Coords();
+                                ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin();
+            tri = s->trans10 * v->Coords();
             tri -= ((tri - f->Coords1()) * f->Normal()) * f->Normal();
             tri.Get_Value( points_ptr );
             v->Coords().Get_Value( points_ptr+3 );
           } break;
         case CONTINUE_EE:
-          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list0[i]);
-            SWIFT_Tri_Edge* ee = ((SWIFT_Tri_Edge*)WS->contact_list1[i]);
+          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list0[i]);
+            SWIFT_Tri_Edge* ee = ((SWIFT_Tri_Edge*)s->contact_list1[i]);
             SWIFT_Triple tri2;
-            Compute_Closest_Points_Edge_Edge( e, ee, tri, tri2, WS->trans01 );
+            Compute_Closest_Points_Edge_Edge( e, ee, tri, tri2, s->trans01 );
             tri.Get_Value( points_ptr );
             tri2.Get_Value( points_ptr+3 );
           } break;
@@ -3725,7 +3725,7 @@ void SWIFT_Pair::Contact_Points( SWIFT_Array<SWIFT_Real>& points )
     }
 
     // Fix up the length of the points array
-    points.Set_Length( points.Length() + 6*WS->contact_listt.Length() );
+    points.Set_Length( points.Length() + 6*s->contact_listt.Length() );
 }
 
 void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
@@ -3734,14 +3734,14 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
     SWIFT_Triple tri;
     SWIFT_Real* normals_ptr = normals.Data() + normals.Length();
 
-    for( i = 0; i < WS->contact_listt.Length(); i++, normals_ptr += 3 ) {
-      switch( WS->contact_listt[i] ) {
+    for( i = 0; i < s->contact_listt.Length(); i++, normals_ptr += 3 ) {
+      switch( s->contact_listt[i] ) {
         case CONTINUE_VV:
-          tri = (WS->obj1->Transformation() &
-              ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin()->
+          tri = (s->obj1->Transformation() &
+              ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin()->
                                                         Gathered_Normal()) -
-              (WS->obj0->Transformation() &
-              ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin()->
+              (s->obj0->Transformation() &
+              ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin()->
                                                         Gathered_Normal());
 #ifdef SWIFT_USE_FLOAT
             if( tri.Length_Sq() < EPSILON7 ) {
@@ -3749,21 +3749,21 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
             if( tri.Length_Sq() < EPSILON13 ) {
 #endif
                 // Use the edge method
-              tri = (WS->obj0->Transformation() &
-                       ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin()->
+              tri = (s->obj0->Transformation() &
+                       ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin()->
                                                         Gathered_Direction()) -
-                  (WS->obj1->Transformation() &
-                       ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin()->
+                  (s->obj1->Transformation() &
+                       ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin()->
                                                         Gathered_Direction());
             }
             tri.Normalize();
             break;
         case CONTINUE_VE:
-          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list1[i]);
+          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list1[i]);
 #ifdef SWIFT_USE_FLOAT
-            if( WS->contact_listd[i] < EPSILON7 ) {
+            if( s->contact_listd[i] < EPSILON7 ) {
 #else
-            if( WS->contact_listd[i] < EPSILON13 ) {
+            if( s->contact_listd[i] < EPSILON13 ) {
 #endif
                 // Just take the average of the face normals
                 e = e->Origin()->Adj_Edge( e->Next()->Origin() );
@@ -3778,21 +3778,21 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
                 }
             } else {
                 // Compute weighted combination of vertex' angle about the edge
-              tri = WS->trans01 *
-                      ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin()->Coords();
+              tri = s->trans01 *
+                      ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin()->Coords();
                 tri -= e->Origin()->Coords() +
                         (((tri - e->Origin()->Coords()) * e->Direction()) *
                          e->Direction());
             }
             tri.Normalize();
-            tri &= WS->obj1->Transformation();
+            tri &= s->obj1->Transformation();
           } break;
         case CONTINUE_EV:
-          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list0[i]);
+          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list0[i]);
 #ifdef SWIFT_USE_FLOAT
-            if( WS->contact_listd[i] < EPSILON7 ) {
+            if( s->contact_listd[i] < EPSILON7 ) {
 #else
-            if( WS->contact_listd[i] < EPSILON13 ) {
+            if( s->contact_listd[i] < EPSILON13 ) {
 #endif
                 // Just take the average of the face normals
                 e = e->Origin()->Adj_Edge( e->Next()->Origin() );
@@ -3807,31 +3807,31 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
                 }
             } else {
                 // Compute weighted combination of vertex' angle about the edge
-                tri = WS->trans10 *
-                      ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin()->Coords();
+                tri = s->trans10 *
+                      ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin()->Coords();
                 tri -= e->Origin()->Coords() +
                         (((tri - e->Origin()->Coords()) * e->Direction()) *
                          e->Direction());
                 tri.Negate();
             }
             tri.Normalize();
-            tri &= WS->obj0->Transformation();
+            tri &= s->obj0->Transformation();
           } break;
         case CONTINUE_VF:
           { // Transform the face normal to world coordinates
-            const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)WS->contact_list1[i]);
-            tri = WS->obj1->Transformation() & f->Normal();
+            const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)s->contact_list1[i]);
+            tri = s->obj1->Transformation() & f->Normal();
           } break;
         case CONTINUE_FV:
           { // Transform the face normal to world coordinates
-            const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)WS->contact_list0[i]);
-            tri = -(WS->obj0->Transformation() & f->Normal());
+            const SWIFT_Tri_Face* f = ((SWIFT_Tri_Face*)s->contact_list0[i]);
+            tri = -(s->obj0->Transformation() & f->Normal());
           } break;
         case CONTINUE_EE:
-          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)WS->contact_list0[i]);
-            SWIFT_Tri_Edge* ee = ((SWIFT_Tri_Edge*)WS->contact_list1[i]);
+          { SWIFT_Tri_Edge* e = ((SWIFT_Tri_Edge*)s->contact_list0[i]);
+            SWIFT_Tri_Edge* ee = ((SWIFT_Tri_Edge*)s->contact_list1[i]);
             // Compute the cross product of the two edge directions
-            tri = e->Direction() % (WS->trans10 & ee->Direction());
+            tri = e->Direction() % (s->trans10 & ee->Direction());
 #ifdef SWIFT_USE_FLOAT
             if( tri.Length_Sq() < EPSILON7 ) {
 #else
@@ -3840,9 +3840,9 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
                 // Handle nearly parallel edges by averaging face normals
                 e = e->Origin()->Adj_Edge( e->Next()->Origin() );
                 ee = ee->Origin()->Adj_Edge( ee->Next()->Origin() );
-                tri = - (WS->obj0->Transformation() & (e->Adj_Face()->Normal() +
+                tri = - (s->obj0->Transformation() & (e->Adj_Face()->Normal() +
                                             e->Twin()->Adj_Face()->Normal()))
-                    + (WS->obj1->Transformation() & (ee->Adj_Face()->Normal() +
+                    + (s->obj1->Transformation() & (ee->Adj_Face()->Normal() +
                                             ee->Twin()->Adj_Face()->Normal()));
 #ifdef SWIFT_USE_FLOAT
                 if( tri.Length_Sq() < EPSILON7 ) {
@@ -3851,16 +3851,16 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
 #endif
                     // Use the cross product method
                     tri = ee->Twin()->Adj_Face()->Normal() % ee->Direction();
-                    tri &= WS->obj1->Transformation();
+                    tri &= s->obj1->Transformation();
                 }
             } else {
                 // Determine which way the vector should point
-                if( (WS->contact_listbv0[i]->Center_Of_Mass() -
+                if( (s->contact_listbv0[i]->Center_Of_Mass() -
                         e->Origin()->Coords()) * tri < 0.0
                 ) {
                     tri.Negate();
                 }
-                tri &= WS->obj0->Transformation();
+                tri &= s->obj0->Transformation();
             }
             tri.Normalize();
           } break;
@@ -3871,7 +3871,7 @@ void SWIFT_Pair::Contact_Normals( SWIFT_Array<SWIFT_Real>& normals )
     }
 
     // Fix up the length of the normals array
-    normals.Set_Length( normals.Length() + 3*WS->contact_listt.Length() );
+    normals.Set_Length( normals.Length() + 3*s->contact_listt.Length() );
 }
 
 
@@ -3896,86 +3896,86 @@ inline void SWIFT_Pair::Save_To_Cache_State( )
 inline void SWIFT_Pair::Report_Edge0( int i, SWIFT_Array<int>& fids )
 {
 #ifdef SWIFT_REPORT_EDGE_IDS
-    SWIFT_Tri_Face* f = ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Adj_Face();
+    SWIFT_Tri_Face* f = ((SWIFT_Tri_Edge*)s->contact_list0[i])->Adj_Face();
     if( f->Classification() == CLASS_ORIGINAL ) {
         // We use the twin edge here to ensure that we end up on the
         // main mesh which will yield the correct ids.
-        f = ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin()->Adj_Face();
-        fids.Add( WS->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin() ) );
+        f = ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin()->Adj_Face();
+        fids.Add( s->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin() ) );
     } else { // Must be CONTAINED
 #ifdef SWIFT_ALLOW_BOUNDARY
         // Check to see if the neighboring face is also CONTAINED
-        f = ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin(
+        f = ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin(
                             contact_listbv0[i]->Level() )->Adj_Face();
         if( f->Classification() == CLASS_CONTAINED ) {
             // Both faces are contained -- report -1
             fids.Add( -1 );
         } else {
             // Simply use the twin
-            f = ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin(
+            f = ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin(
                     contact_listbv0[i]->Level() )->Twin()->Adj_Face();
-            fids.Add( WS->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin(
+            fids.Add( s->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin(
                             contact_listbv0[i]->Level() )->Twin() ) );
         }
 #else
         // Simply use the twin
-        f = ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin(
+        f = ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin(
                     contact_listbv0[i]->Level() )->Twin()->Adj_Face();
-        fids.Add( WS->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Twin(
+        fids.Add( s->obj0->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list0[i])->Twin(
                             contact_listbv0[i]->Level() )->Twin() ) );
 #endif
     }
 #else
-    fids.Add( WS->obj0->Mesh()->Map_Vertex_Id(
-              ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Origin() ) );
-    fids.Add( WS->obj0->Mesh()->Map_Vertex_Id(
-              ((SWIFT_Tri_Edge*)WS->contact_list0[i])->Next()->Origin() ) );
+    fids.Add( s->obj0->Mesh()->Map_Vertex_Id(
+              ((SWIFT_Tri_Edge*)s->contact_list0[i])->Origin() ) );
+    fids.Add( s->obj0->Mesh()->Map_Vertex_Id(
+              ((SWIFT_Tri_Edge*)s->contact_list0[i])->Next()->Origin() ) );
 #endif
 }
 
 inline void SWIFT_Pair::Report_Edge1( int i, SWIFT_Array<int>& fids )
 {
 #ifdef SWIFT_REPORT_EDGE_IDS
-    SWIFT_Tri_Face* f = ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Adj_Face();
+    SWIFT_Tri_Face* f = ((SWIFT_Tri_Edge*)s->contact_list1[i])->Adj_Face();
     if( f->Classification() == CLASS_ORIGINAL ) {
         // We use the twin edge here to ensure that we end up on the
         // main mesh which will yield the correct ids.
-        f = ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin()->Adj_Face();
-        fids.Add( WS->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin() ) );
+        f = ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin()->Adj_Face();
+        fids.Add( s->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin() ) );
     } else { // Must be CONTAINED
 #ifdef SWIFT_ALLOW_BOUNDARY
         // Check to see if the neighboring face is also CONTAINED
-        f = ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin(
+        f = ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin(
                             contact_listbv1[i]->Level() )->Adj_Face();
         if( f->Classification() == CLASS_CONTAINED ) {
             // Both faces are contained -- report -1
             fids.Add( -1 );
         } else {
             // Simply use the twin
-            f = ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin(
+            f = ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin(
                     contact_listbv1[i]->Level() )->Twin()->Adj_Face();
-            fids.Add( WS->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin(
+            fids.Add( s->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin(
                             contact_listbv1[i]->Level() )->Twin() ) );
         }
 #else
         // Simply use the twin
-        f = ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin(
+        f = ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin(
                     contact_listbv1[i]->Level() )->Twin()->Adj_Face();
-        fids.Add( WS->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
-                    ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Twin(
+        fids.Add( s->obj1->Mesh()->Face_Id( f )*3 + f->Edge_Id(
+                    ((SWIFT_Tri_Edge*)s->contact_list1[i])->Twin(
                             contact_listbv1[i]->Level() )->Twin() ) );
 #endif
     }
 #else
-    fids.Add( WS->obj1->Mesh()->Map_Vertex_Id(
-              ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Origin() ) );
-    fids.Add( WS->obj1->Mesh()->Map_Vertex_Id(
-              ((SWIFT_Tri_Edge*)WS->contact_list1[i])->Next()->Origin() ) );
+    fids.Add( s->obj1->Mesh()->Map_Vertex_Id(
+              ((SWIFT_Tri_Edge*)s->contact_list1[i])->Origin() ) );
+    fids.Add( s->obj1->Mesh()->Map_Vertex_Id(
+              ((SWIFT_Tri_Edge*)s->contact_list1[i])->Next()->Origin() ) );
 #endif
 }
 
@@ -3986,37 +3986,37 @@ inline void SWIFT_Pair::Report_Edge1( int i, SWIFT_Array<int>& fids )
 inline void SWIFT_Pair::Save_State( )
 {
     // Save the features
-  switch( WS->save_state ) {
+  switch( s->save_state ) {
     case CONTINUE_VV:
-      feat0 = (void*) WS->save_ve1;
-      feat1 = (void*) WS->save_ve2;
+      feat0 = (void*) s->save_ve1;
+      feat1 = (void*) s->save_ve2;
         break;
     case CONTINUE_VE:
-      feat0 = (void*) WS->save_ve1;
-      feat1 = (void*) WS->save_e2;
+      feat0 = (void*) s->save_ve1;
+      feat1 = (void*) s->save_e2;
         break;
     case CONTINUE_EV:
-      feat0 = (void*) WS->save_e1;
-      feat1 = (void*) WS->save_ve2;
+      feat0 = (void*) s->save_e1;
+      feat1 = (void*) s->save_ve2;
         break;
     case CONTINUE_VF:
-      feat0 = (void*) WS->save_ve1;
-      feat1 = (void*) WS->save_f2;
+      feat0 = (void*) s->save_ve1;
+      feat1 = (void*) s->save_f2;
         break;
     case CONTINUE_FV:
-      feat0 = (void*) WS->save_f1;
-      feat1 = (void*) WS->save_ve2;
+      feat0 = (void*) s->save_f1;
+      feat1 = (void*) s->save_ve2;
         break;
     case CONTINUE_EE:
-      feat0 = (void*) WS->save_e1;
-      feat1 = (void*) WS->save_e2;
+      feat0 = (void*) s->save_e1;
+      feat1 = (void*) s->save_e2;
     default:
         break;
     }
 
 
     // Save the state id
-    Set_State( WS->save_state );
+    Set_State( s->save_state );
 }
 #endif
 

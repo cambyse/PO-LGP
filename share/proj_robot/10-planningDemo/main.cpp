@@ -7,8 +7,8 @@
 #include <signal.h>
 
 
-bool breakCondition(RobotModuleGroup & master){
-  return master.signalStop || master.joy.state(0)==16 || master.joy.state(0)==32;
+bool breakCondition(RobotProcessGroup & robotProcesses){
+  return robotProcesses.signalStop || robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32;
 }
 
 void resetPlanner(ReceedingHorizonProcess & planner){
@@ -27,7 +27,7 @@ void resetPlanner(ReceedingHorizonProcess & planner){
 
 int main(int argn,char** argv) {
   MT::initCmdLine(argn,argv);
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
   RobotActionInterface R;
   R.open();
@@ -55,7 +55,7 @@ int main(int argn,char** argv) {
   planner.threadLoop();
 
   //brain
-  //brain.ors = master.ctrl.sys.ors;
+  //brain.ors = robotProcesses.ctrl.sys.ors;
   //brain.threadOpen();
 
   //-- loop pick and place

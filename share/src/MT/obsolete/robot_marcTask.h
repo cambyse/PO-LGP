@@ -29,7 +29,7 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
 // Marc's Robot Task
 //
 
-struct MarcsRobotTask:public RobotModuleGroup, public TaskAbstraction { //one could argue if this should be private...
+struct MarcsRobotTask:public RobotProcessGroup, public TaskAbstraction { //one could argue if this should be private...
   MarcsRobotTask();
   ~MarcsRobotTask();
   

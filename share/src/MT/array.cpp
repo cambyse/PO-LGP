@@ -74,7 +74,7 @@ arr rand(const uintA& d){  arr z;  z.resize(d);  rndUniform(z, false); return z;
 arr randn(const uintA& d){  arr z;  z.resize(d);  rndGauss(z, 1., false);  return z;  }
 
 
-arr Diag(double d, uint n){
+arr diag(double d, uint n){
   arr z;
   z.setDiag(d, n);
   return z;

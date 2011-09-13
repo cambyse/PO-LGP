@@ -22,8 +22,8 @@ arr computeTotalCost( soc::SocSystem_Ors  & top,const arr& q, bool bSlow){
   for(t=0;t<T;t++){
     top.setq(q[t]);
         //cout << endl << t << endl;
-    if(bSlow&& false)top.WS->ors->reportProxies();
-    if(bSlow && useDisplay) cout << norm(top.WS->vars(0)->x -top.WS->vars(0)->x_trajectory[t]) << " and coll " <<norm(top.WS->vars(1)->x ) <<   " and limit " <<norm(top.WS->vars(2)->x -top.WS->vars(2)->x_trajectory[t]);
+    if(bSlow&& false)top.s->ors->reportProxies();
+    if(bSlow && useDisplay) cout << norm(top.s->vars(0)->x -top.s->vars(0)->x_trajectory[t]) << " and coll " <<norm(top.s->vars(1)->x ) <<   " and limit " <<norm(top.s->vars(2)->x -top.s->vars(2)->x_trajectory[t]);
     cost1 += cost_t = getTaskCost(top,t);  
     if(bSlow && useDisplay)  cout <<" cost for " << t << " = " <<cost_t <<endl;
     if(t>0) {cost_s = sqrDistance(W,q[t-1],q[t]);cost2 += cost_s;}
@@ -73,12 +73,12 @@ void PlanGrasp(OrsSocImplementation & soci){
 void SetRelTarget(OrsSocImplementation & soci){
   int T = 300;
   arr target;
-  target.setCarray(soci.WS->ors->getName("target")->X.p.v,3);
+  target.setCarray(soci.s->ors->getName("target")->X.p.v,3);
  
-  ControlVariable *CV_x  = soci.WS->vars(0);
-  ControlVariable *p1  = soci.WS->vars(2);
-  ControlVariable *p2  = soci.WS->vars(3);
-  ControlVariable *p3  = soci.WS->vars(4);
+  ControlVariable *CV_x  = soci.s->vars(0);
+  ControlVariable *p1  = soci.s->vars(2);
+  ControlVariable *p2  = soci.s->vars(3);
+  ControlVariable *p3  = soci.s->vars(4);
       
   double midPrec,endPrec,balPrec,colPrec;
   MT::getParameter(midPrec,"midPrec");
@@ -110,7 +110,7 @@ void SetRelTarget(OrsSocImplementation & soci){
   
 }
 
-void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftModule & swift, OpenGL & gl){
+void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftInterface & swift, OpenGL & gl){
   uint T=300;
   arr W;
   W <<"[.1 .1 .2 .2 1 1 5    1 1 1 1 1 1 1 1 1]";
@@ -182,9 +182,9 @@ void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftModule & swift,
   CV_col->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanColPrec"),0.);
   CV_lim->setInterpolatedTargetsConstPrecisions(T,MT::getParameter<double>("reachPlanLimPrec"),0.);
 
-  //for(int i = soci.WS->vars.N-2; i < soci.WS->vars.N-1; i++)
+  //for(int i = soci.s->vars.N-2; i < soci.s->vars.N-1; i++)
   //  for(int t = 0; t < T; t++)
-  //  cout << soci.WS->vars(i)->x_trajectory[t];
+  //  cout << soci.s->vars(i)->x_trajectory[t];
   
   //CV_x->active=false;
   //CV_>up->active=false;
@@ -197,7 +197,7 @@ void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftModule & swift,
   //CV_lim->active=false; 
 }
 
-void PlanGraspM( ors::Graph & ors, SwiftModule & swift, OpenGL & gl){
+void PlanGraspM( ors::Graph & ors, SwiftInterface & swift, OpenGL & gl){
   uint nTry=MT::getParameter<uint>("nTry");
   uint nStartTry=MT::getParameter<uint>("nStartTry");
   double eps=MT::getParameter<double>("reachPlanEps");
@@ -240,6 +240,6 @@ void PlanGraspM( ors::Graph & ors, SwiftModule & swift, OpenGL & gl){
     }
     else if(useDisplay)gl.watch();
     
-    listDelete(soci.WS->vars);
+    listDelete(soci.s->vars);
   }
 }

@@ -36,7 +36,7 @@ typedef enum { opengl, xfig, gnupl } PlotMode;
 
 struct PlotModuleWorkspace;
 struct PlotModule {
-  PlotModuleWorkspace *WS;
+  PlotModuleWorkspace *s;
   PlotMode mode;
   OpenGL *gl;
   bool light, grid, colors, drawBox, drawDots, perspective;

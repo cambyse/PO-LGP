@@ -32,13 +32,13 @@ struct MultiPlan:public TaskAbstraction {
   double goodCost, colPrec;
   double lastDistance;
   arr Pl,Pr;
-  RobotModuleGroup *master;
+  RobotProcessGroup *robotProcesses;
   PerceptionModule * perc;
   bool findTarget();
   void Change();
   virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
   virtual void initTaskVariables(ControllerModule *ctrl);
-  void init(RobotModuleGroup *_master);
+  void init(RobotProcessGroup *_master);
   ThreadPlanner recho;
   uint nMod;//dynamic target or obstacle..
   int ChangeMagnitude();
@@ -48,28 +48,28 @@ struct MultiPlan:public TaskAbstraction {
   double PrecPlan, vPrecPlan;
 };
 
-void MultiPlan::init(RobotModuleGroup *_master){
-  master=_master;
+void MultiPlan::init(RobotProcessGroup *_master){
+  robotProcesses=_master;
   cout << "init TV_q = "<<TV_q->y << endl;
   cout << "init TV_x->x="<<TV_eff->y << endl;
   MT::IOraw = true;
   started_track = false;
   bFirstSense = false;
   Pl = perc->Pl/ perc->Pl(2,3);Pr = perc->Pr/perc->Pr(2,3);
-  if(master->openGui){
-    master->gui.gl->views(0).camera.setPosition(-0.1,-1.2,7.);//-0.5,-7,1);
-    master->gui.gl->views(0).camera.focus(-0.1, -0.6, 0);
+  if(robotProcesses->openGui){
+    robotProcesses->gui.gl->views(0).camera.setPosition(-0.1,-1.2,7.);//-0.5,-7,1);
+    robotProcesses->gui.gl->views(0).camera.focus(-0.1, -0.6, 0);
     //find camera location
     if(false){
-    ors::Body * b = new ors::Body(master->gui.ors->bodies);
-    ors::Shape * s=new ors::Shape(master->gui.ors->shapes,b);
+    ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
+    ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
     s->type=1;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
     s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
     b->X.pos = CameraLocation(Pl);
 
-    ors::Body * br = new ors::Body(master->gui.ors->bodies);
-    ors::Shape * sr=new ors::Shape(master->gui.ors->shapes,br);
+    ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
+    ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
     sr->type=1;
     sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
     sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -116,29 +116,29 @@ bool MultiPlan::findTarget(){
      // if(true){
       ors::Vector val = Kal.p;
       target->X.pos = val; recho.UpdateExtState(target);
-      master->gui.ors->getBodyByName("target")->X.pos = val;
-      master->gui.ors2->getBodyByName("target")->X.pos = val;
+      robotProcesses->gui.ors->getBodyByName("target")->X.pos = val;
+      robotProcesses->gui.ors2->getBodyByName("target")->X.pos = val;
       recho.UpdateExtState(target);//no influence without setGoals !!, can be ignored for now...
       bGoodVision = true;
-      master->gui.ors2->getBodyByName("VisMarker")->X.pos(2) = -1.8; master->gui.ors2->getBodyByName("VisMarker")->X.pos(1) = -10.8;
+      robotProcesses->gui.ors2->getBodyByName("VisMarker")->X.pos(2) = -1.8; robotProcesses->gui.ors2->getBodyByName("VisMarker")->X.pos(1) = -10.8;
     }
   }
   else
     cam_file << " -1 -1 -1 -1" << endl;
   if(! bGoodVision){
     cout << "no vision" << endl << endl;
-    master->gui.ors2->getBodyByName("VisMarker")->X.pos(2) = 0.8; master->gui.ors2->getBodyByName("VisMarker")->X.pos(1) = -.6;
+    robotProcesses->gui.ors2->getBodyByName("VisMarker")->X.pos(2) = 0.8; robotProcesses->gui.ors2->getBodyByName("VisMarker")->X.pos(1) = -.6;
   }
   return bGoodVision;
 }
 
 void MultiPlan::Change(){
   //recho.UpdateExtState(target);
-  //recho.SetQV0(master->ctrl.q_reference,master->ctrl.v_reference*1.0);//ctrl->q_reference equals TV_q->y ??
+  //recho.SetQV0(robotProcesses->ctrl.q_reference,robotProcesses->ctrl.v_reference*1.0);//ctrl->q_reference equals TV_q->y ??
   recho.bUnsetInit = true;
   //TV_q->active = false;//y_target =  TV_q->y;
-  master->gui.dispSteps = 2;
-  master->gui.q_trajectory = NULL;//to reset shown trajec
+  robotProcesses->gui.dispSteps = 2;
+  robotProcesses->gui.q_trajectory = NULL;//to reset shown trajec
 }
 
 int MultiPlan::ChangeMagnitude(){
@@ -184,9 +184,9 @@ void MultiPlan::CustomJump(){
     if(OnTarget) {val =  ors::Vector(val(0)- 0.08*rnd.uni() - 0.04,-0.9,0.95);lastTargetMa(0) = 6666;}//to force init change
   }
   target->X.pos = val;recho.UpdateExtState(target);
-  if(master->openGui){
-    master->gui.ors->getBodyByName("target")->X.pos = val;
-    master->gui.ors2->getBodyByName("target")->X.pos = val;
+  if(robotProcesses->openGui){
+    robotProcesses->gui.ors->getBodyByName("target")->X.pos = val;
+    robotProcesses->gui.ors2->getBodyByName("target")->X.pos = val;
   }
   int nBigChange = ChangeMagnitude();
   if(!bFirstSense)
@@ -199,7 +199,7 @@ void MultiPlan::CustomJump(){
     pos_file << " init " << endl;
   }
   else if(nBigChange == 2){
-    //recho.SetQV0(master->ctrl.q_reference,master->ctrl.v_reference*1.0);//1 or 0 ?
+    //recho.SetQV0(robotProcesses->ctrl.q_reference,robotProcesses->ctrl.v_reference*1.0);//1 or 0 ?
     recho.bShiftAll = true;
     pos_file << " shift " << endl;
     lastTargetMi = target->X.pos;
@@ -289,7 +289,7 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
     }
     else{ //stop
       cout << " stopping " << recho.bwdMsg_count << " " << recho.lastCost  << " " << recho.bwdMsg_v.d1 <<
-          " semaphors " << recho.bUnsetInit << recho.bShiftAll << endl;      //master->gui.gl->text.clr() << "msg# " <<recho.bwdMsg_count << endl;
+          " semaphors " << recho.bUnsetInit << recho.bShiftAll << endl;      //robotProcesses->gui.gl->text.clr() << "msg# " <<recho.bwdMsg_count << endl;
       TV_q-> v_prec = 1e2;
       TV_q->v_target = TV_q->y*0.0;
         TV_q->y_prec = 1e1;TV_q->y_target = TV_q->y;
@@ -310,24 +310,24 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
 int main(int argn,char** argv){
   MT::IOraw = true;
   MT::initCmdLine(argn,argv);
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
-  RobotModuleGroup master;
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
+  RobotProcessGroup robotProcesses;
   MultiPlan demo;
 
   PerceptionModule perc;
-  // perc.input=&master.evis.output;
+  // perc.input=&robotProcesses.evis.output;
   MyCamera cam;
   EarlyVisionModule evis; evis.input=&cam;
  perc.input=&evis.output;
 
-  //master.gui.perceptionOutputVar=&perc.output;
-  master.gui.cameraVar=&cam;
+  //robotProcesses.gui.perceptionOutputVar=&perc.output;
+  robotProcesses.gui.cameraVar=&cam;
 
   demo.perc = &perc;
 
-  master.ctrl.task=&demo;//before master open() !!
- // master.evis.downScale = 1;//2 times smaller resolution
-  master.open();
+  robotProcesses.ctrl.task=&demo;//before robotProcesses open() !!
+ // robotProcesses.evis.downScale = 1;//2 times smaller resolution
+  robotProcesses.open();
 
   cam .threadLoop();
   evis.threadLoop();
@@ -336,53 +336,53 @@ int main(int argn,char** argv){
  //   MT::wait(0.1);
 
   //perc.threadOpen();
-  globalGL = master.gui.gl;
-  demo.init(&master);
+  globalGL = robotProcesses.gui.gl;
+  demo.init(&robotProcesses);
 
-  demo.obst = master.ctrl.ors.getBodyByName("obstacle");
+  demo.obst = robotProcesses.ctrl.ors.getBodyByName("obstacle");
   if(demo.nMod >= 3 || demo.nMod == 1){//dummy obstacle first, ease up
     ors::Shape * s = demo.obst->shapes(0);
     arr size = ARR(0,0,0.53,0.08);//if(demo.nMod == 1){size(2) = 0.72; size(3) = 0.06;demo.obst->X.pos(2) += 0.1;demo.obst->X.pos(1) -= 0.16;}
     memmove(s->size, size.p, 4*sizeof(double));    //demo.obst->X.pos = ors::Vector(0.0,-0.7,0.98);
-    if(master.openGui){
-      copyBodyInfos(*master.gui.ors,master.ctrl.ors);
-      copyBodyInfos(*master.gui.ors2,master.ctrl.ors);
+    if(robotProcesses.openGui){
+      copyBodyInfos(*robotProcesses.gui.ors,robotProcesses.ctrl.ors);
+      copyBodyInfos(*robotProcesses.gui.ors2,robotProcesses.ctrl.ors);
     }
   }
   arr atarget; MT::getParameter(atarget,"target");
   ors::Vector itarget =  ors::Vector(atarget(0),atarget(1),atarget(2));
-  master.ctrl.ors.getBodyByName("target")->X.pos = itarget;//planner thread uses this actually, not GL body !!!
-  master.ctrl.ors.calcBodyFramesFromJoints();///stupid bugg, otherwise target has other values.... yess now fixed
-  if(master.openGui){
-    master.gui.ors->getBodyByName("target")->X.pos = master.ctrl.ors.getBodyByName("target")->X.pos;
-    master.gui.ors2->getBodyByName("target")->X.pos = master.ctrl.ors.getBodyByName("target")->X.pos;//even worse design - 2 guis with their ors graphs
+  robotProcesses.ctrl.ors.getBodyByName("target")->X.pos = itarget;//planner thread uses this actually, not GL body !!!
+  robotProcesses.ctrl.ors.calcBodyFramesFromJoints();///stupid bugg, otherwise target has other values.... yess now fixed
+  if(robotProcesses.openGui){
+    robotProcesses.gui.ors->getBodyByName("target")->X.pos = robotProcesses.ctrl.ors.getBodyByName("target")->X.pos;
+    robotProcesses.gui.ors2->getBodyByName("target")->X.pos = robotProcesses.ctrl.ors.getBodyByName("target")->X.pos;//even worse design - 2 guis with their ors graphs
   }
-  demo.target = master.ctrl.ors.getBodyByName("target");
-  demo.recho.init(master.ctrl.sys,&demo,"ST1",1,MT::getParameter<int>("Tplan"));//after objects on correct place !!
+  demo.target = robotProcesses.ctrl.ors.getBodyByName("target");
+  demo.recho.init(robotProcesses.ctrl.sys,&demo,"ST1",1,MT::getParameter<int>("Tplan"));//after objects on correct place !!
   demo.recho.threadOpen();
   demo.recho.UpdateExtState(demo.target);//critical, otherwise inited badly !!!
   dispcounter = 0;
-  for(;!master.signalStop;){
-    master.step();
+  for(;!robotProcesses.signalStop;){
+    robotProcesses.step();
     //perc.threadStepOrSkip(0);
     if(demo.bFirstSense && demo.started_track &&demo.recho.bReady){//
       demo.recho.threadStepOrSkip(200);//why, what is the meaning....max skips, ignore			//   demo.recho.threadWait();
     }
-    if(master.joy.state(0)==16 || master.joy.state(0)==32) break;
-    if( master.gui.q_trajectory.N == 0 && demo.recho.bwdMsg_v.N > 0 && !demo.recho.bUnsetInit &&!demo.recho.bShiftAll && demo.recho.bReady && demo.recho.lastCost < 1)
+    if(robotProcesses.joy.state(0)==16 || robotProcesses.joy.state(0)==32) break;
+    if( robotProcesses.gui.q_trajectory.N == 0 && demo.recho.bwdMsg_v.N > 0 && !demo.recho.bUnsetInit &&!demo.recho.bShiftAll && demo.recho.bReady && demo.recho.lastCost < 1)
     {
-      master.gui.dispSteps = -1;
-      //master.gui.q_trajectory = demo.recho.helpers(dispcounter)->QDisplayGL2;//aico.q.sub(0,demo.recho.helpers(dispcounter)->aico.q.d0-1,0,6);
-      master.gui.q_trajectory = demo.recho.bwdMsg_v;
+      robotProcesses.gui.dispSteps = -1;
+      //robotProcesses.gui.q_trajectory = demo.recho.helpers(dispcounter)->QDisplayGL2;//aico.q.sub(0,demo.recho.helpers(dispcounter)->aico.q.d0-1,0,6);
+      robotProcesses.gui.q_trajectory = demo.recho.bwdMsg_v;
       if(demo.nMod == 3 && false){
-      master.gui.linesToDisplay.clear();
+      robotProcesses.gui.linesToDisplay.clear();
       for(uint i = 0; i < demo.recho.helpers.N; i++)
-        master.gui.linesToDisplay.append( 1.0*demo.recho.helpers(i)->XDisplayGL2 );
+        robotProcesses.gui.linesToDisplay.append( 1.0*demo.recho.helpers(i)->XDisplayGL2 );
       }
      // dispcounter = (dispcounter+1)%demo.recho.nPlan;
     }
   }
-  master.close();
+  robotProcesses.close();
   return 0;
 }
 

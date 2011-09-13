@@ -7,7 +7,7 @@
 #include "robot_variables.h"
 
 struct OpenGL;
-struct RobotModuleGroup;
+struct RobotProcessGroup;
 struct Object;
 struct PerceptionOutput;
 struct BumblebeeModule;
@@ -19,6 +19,7 @@ struct GuiModule:public Process {
   PerceptionOutput *perceptionOutputVar;
   CameraImages *cameraVar;
   FutureMotionPlan *planVar;
+  CurrentSceneInformation *sceneInfo;
   
   byteA img[6]; // 6 images for the view ports
   //arr q_trajectory, q_external; // a trajectory to display
@@ -36,7 +37,7 @@ struct GuiModule:public Process {
   bool useOpengl, logData, plotData;
   OpenGL *gl;
   ors::Graph *ors, *ors2;
-  RobotModuleGroup  *ctrl;
+  RobotProcessGroup  *ctrl;
   bool isOpen;
   
 #ifdef MT_QT

@@ -109,9 +109,9 @@ shape (fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>,
 shape (fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 shape (fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 
-shape (tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
-shape (tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
-shape (tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
+shape tip1Shape(tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5]}
+shape tip2Shape(tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5]}
+shape tip3Shape(tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
 
 
 #basic shapes
@@ -151,9 +151,13 @@ shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
 shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
-shape tipHook1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
-shape tipHook2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
-shape tipHook3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipHook1(tip1)   { rel=<t( .0   -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipHook2(tip2)   { rel=<t( .033 -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipHook3(tip3)   { rel=<t(-.033 -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
+shape atipHook1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape atipHook2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape atipHook3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .07)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
@@ -181,8 +185,8 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-#shape target(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape target(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } #
+shape target(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape target(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
 
 
 

@@ -68,7 +68,7 @@ void testSoc(){
 
 /*struct soc::OrsSocWorkspace{
   ors::Graph *ors;
-  SwiftModule *swift;
+  SwiftInterface *swift;
   ControlVariableList CVlist;
   
   uint T;

@@ -29,7 +29,7 @@ struct ImitateTaskVariable:public TaskVariable{
 };
 
 
-void PlanTrajectory(ors::Graph * ors,RobotModuleGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
+void PlanTrajectory(ors::Graph * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
 	soc::SocSystem_Ors sys;
 
 	uint T=MT::getParameter<uint>("T");

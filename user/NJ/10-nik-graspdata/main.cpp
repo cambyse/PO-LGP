@@ -25,7 +25,7 @@ struct DummyTask:public TaskAbstraction{//do nothing
 
 
 int
-get_joy_state(RobotModuleGroup& robot){
+get_joy_state(RobotProcessGroup& robot){
 	if (!robot.openJoystick) return 0;
 	return robot.joy.state(0);
 }
@@ -107,7 +107,7 @@ obj_pot_field(){
 
 
 void
-get_skin_state(GraspISFTask& task, RobotModuleGroup& robot ){
+get_skin_state(GraspISFTask& task, RobotProcessGroup& robot ){
 	if(task.open_skin){
 		//robot.skin.lock.readLock();
 		task.skin_state =
@@ -197,7 +197,7 @@ double JointLength(const arr & q){
 	return ans;
 }
 
-double Validate(RobotModuleGroup & robotOld,RobotModuleGroup & robot2,const arr & c, int nMode, const arr & joints){
+double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const arr & c, int nMode, const arr & joints){
 	bHack = 0;
 	GraspISFTask task2;
 	task2.graspobj = obj_pot_field();
@@ -267,9 +267,9 @@ int main(int argn,char** argv){
 	InitLoadedData(nMode);
 	arr c = MT::getParameter<arr>("center");lastCenter = c;
 
-	signal(SIGINT,RobotModuleGroup::signalStopCallback);
+	signal(SIGINT,RobotProcessGroup::signalStopCallback);
 	GraspISFTask task;
-	RobotModuleGroup robot;
+	RobotProcessGroup robot;
 	task.graspobj = obj_pot_field();// NJ: Assign object to task., in which place???
 
 	if (nMode == 0){
@@ -332,7 +332,7 @@ int main(int argn,char** argv){
 	}
 	if (nMode  == 11){
 		GradTrajectory(robot);
-		RobotModuleGroup robot2;
+		RobotProcessGroup robot2;
 		cout << endl << Validate(robot,robot2,c,nMode,arr(1,1)) << endl;
 		return 0;
 	}
@@ -382,7 +382,7 @@ int main(int argn,char** argv){
 
 	if(nMode == 5 || nMode == 2 || nMode == 0){//validate Stanio costs
 		cout << endl << " start validate" << endl << endl;
-		RobotModuleGroup robot2;
+		RobotProcessGroup robot2;
 		cout << endl << Validate(robot,robot2,c,nMode,joints) << endl;
 		robot2.close();
 	}

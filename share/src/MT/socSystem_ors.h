@@ -18,7 +18,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *WS;
+  SocSystem_Ors_Workspace *s;
   
   SocSystem_Ors();
   virtual ~SocSystem_Ors();

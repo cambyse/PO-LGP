@@ -11,10 +11,10 @@ struct MyDemo:public TaskAbstraction {
   
 	
   virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
-	void init(RobotModuleGroup *robot);
+	void init(RobotProcessGroup *robot);
 	
 	void loadPlainTrajectory(const char* filename);
-	void followTrajectory(RobotModuleGroup *robot);
+	void followTrajectory(RobotProcessGroup *robot);
 };
 
 /* DANGER: when we all start defining different task
@@ -30,7 +30,7 @@ void MyDemo::initTaskVariables(){
 ofstream positions_file("positions.dat");
 
 
-void MyDemo::init(RobotModuleGroup *robot){
+void MyDemo::init(RobotProcessGroup *robot){
 	cout << "init TV_q = "<<TV_q->y << endl;
 	cout << "init TV_x->x="<<TV_eff->y << endl;
 	
@@ -77,7 +77,7 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
 	}
 }
 
-void MyDemo::followTrajectory(RobotModuleGroup *robot){
+void MyDemo::followTrajectory(RobotProcessGroup *robot){
   std::ostringstream filenameL, filenameR;
   for(;!robot->signalStop || (q_index == q.d0);){
 		if (q_index%100 == 1) {cout<<q_index << "  of " << q.d0 << endl;}
@@ -104,8 +104,8 @@ void MyDemo::loadPlainTrajectory(const char* filename){
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
-  RobotModuleGroup robot;
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
+  RobotProcessGroup robot;
 
   MyDemo demo;
   robot.ctrl.task=&demo;
