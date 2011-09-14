@@ -245,7 +245,7 @@ random_obj(){
 
   /* generate object using sampling from GP */
   rnd.seed(MT::Parameter<uint>("rnd_srfc_seed"));
-  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 20);
+  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 5);
   ot->isf_gp.gp.recompute();
   /* too expensive: ot->buildMesh();
   ot->getEnclRect(mins,maxs);*/
