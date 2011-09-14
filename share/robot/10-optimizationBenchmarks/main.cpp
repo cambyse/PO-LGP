@@ -417,10 +417,11 @@ void problem5(){
   GetOptimalDynamicTime(tm,b,B,sys,alpha,0.04); 
   */
 
+  double task_eps = MT::getParameter<double>("oneStep_tascCost_eps");
   /* with optimal time, get posterior pose */
   sys.setq(q0,0);
   activateVars_1step(sys);
-  OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,1,false); 
+  OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,1,false); 
   /* open fingers */
   b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
   sys.setx(b);
@@ -428,7 +429,7 @@ void problem5(){
   MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
 
   activateVars_2step(sys);
-  OneStepDynamicFull(b,B,sys, t,alpha,1,true); 
+  OneStepDynamicFull(b,B,sys, t,alpha,task_eps,1,true); 
   MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
 
   /* see bwdMsg */

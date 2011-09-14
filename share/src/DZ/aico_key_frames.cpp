@@ -320,7 +320,7 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
 
 void OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, uint verbose, bool b_is_initialized)
+                        double time,double alpha, double task_eps, uint verbose, bool b_is_initialized)
 {
   arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; //,bq,bv;
@@ -385,7 +385,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
 
 
       cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha /*<<" r= " <<  r<<" R= " <<  R  */<<endl;
-      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<1e-4))) break;
+      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<task_eps))) break;
 
       old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
@@ -523,7 +523,7 @@ void GetOptimalDynamicTime(double& time,arr& b,arr& Binv,soc::SocSystemAbstracti
   arr b_old=b0; double old_r = 1e6;
   while (gr>0) {
     sys.setqv(b0);
-    OneStepDynamicFull(b,Binv,sys,old_time,alpha, false); // final posture estimation
+    OneStepDynamicFull(b,Binv,sys,old_time,alpha,1e-4, false); // final posture estimation
 
     sys.setqv(b);
     if (sys.taskCost(NULL,T,-1)<old_r) {
