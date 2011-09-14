@@ -2423,6 +2423,16 @@ void ors::Shape::reset(){
   cont=false;
 }
 
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes){
+  uintA I(names.N);
+  for(uint i=0;i<names.N;i++){
+    ors::Shape *s = listFindByName(shapes, names(i));
+    if(!s) HALT("shape name doesn't exist");
+    I(i) = s->index;
+  }
+  return I;
+}
+
 
 //===========================================================================
 //

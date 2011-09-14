@@ -666,8 +666,11 @@ struct TaskVariable {
   //only keep those:
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
   void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+  void setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
+  void appendConstTargetsAndPrecs(uint T);
   
   void shiftTargets(int offset);
   
@@ -815,6 +818,7 @@ void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
 void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
 
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
