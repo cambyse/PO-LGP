@@ -92,8 +92,9 @@ struct SocSystemAbstraction {
   virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: cost = u^T H u
   virtual void getHinv(arr& H, uint t);           ///< dynamic control cost metric: cost = u^T H u
   virtual void getQ(arr& Q, uint t);              ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
-  virtual void getTotalHinv(arr& H); 
-  virtual void getTotalQ(arr& Q);  
+  virtual void getHrateInv(arr& HrateInv);      ///< dynamic control cost metric: cost = u^T H u
+  virtual void getQrate(arr& Qrate);      ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
+  
   // dynamic model
   virtual void getMF(arr& M, arr& F, uint t);
   virtual void getMinvF(arr& Minv, arr& F, uint t);

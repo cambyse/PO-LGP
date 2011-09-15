@@ -18,7 +18,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *WS;
+  SocSystem_Ors_Workspace *s;
   
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
@@ -59,9 +59,9 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void getWinv(arr& Winv, uint t);
   void getH(arr& H, uint t);
   void getHinv(arr& Hinv, uint t);
-  void getTotalHinv(arr& Hinv); //new
   void getQ(arr& Q, uint t);
-  void getTotalQ(arr& Q);//new
+  void getHrateInv(arr& HrateInv);
+  void getQrate(arr& Qrate);      
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);
