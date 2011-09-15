@@ -79,6 +79,7 @@ struct SocSystemAbstraction {
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setq(const arr& q, uint t=0) = 0;
+  virtual void setq0(const arr& q);
   virtual void setqv(const arr& q_, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
   void setx(const arr& x){ if(dynamic) setqv(x); else setq(x); }
@@ -91,7 +92,8 @@ struct SocSystemAbstraction {
   virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: cost = u^T H u
   virtual void getHinv(arr& H, uint t);           ///< dynamic control cost metric: cost = u^T H u
   virtual void getQ(arr& Q, uint t);              ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
-  
+  virtual void getTotalHinv(arr& H); 
+  virtual void getTotalQ(arr& Q);  
   // dynamic model
   virtual void getMF(arr& M, arr& F, uint t);
   virtual void getMinvF(arr& Minv, arr& F, uint t);

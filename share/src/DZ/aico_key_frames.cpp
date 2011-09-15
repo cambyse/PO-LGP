@@ -322,15 +322,12 @@ void OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha, bool verbose, bool b_is_initialized)
 {
-  arr H1,R,r,Hinv,Q,B,sumA,Q1,Q2,sumAinv,suma;
-  arr x0; //,bq,bv;
-  double tau=sys.getTau(false);// we need this tau only to get pure Q1 and Q2
+  arr H1,R,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
+  arr x0; 
   double T = sys.nTime();
   //initial state
   sys.getx0(x0);
   if(!b_is_initialized) b=x0;
-  //bq=q0;bv=q0; // defines size
-
   double old_r;
 
   int dim=14;
@@ -338,24 +335,32 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   I.setId(dim);
   Z.resize(dim,dim); Z.setZero();
   AT.setBlockMatrix(I,I,Z,I);  // A to the power of T
-  sys.getHinv(Hinv,1);
-  H1=Hinv;
-  sys.getQ(Q,T);
-  Q = Q/sqrt(tau); // Pure Q.
+  sys.getTotalHinv(H1);
+  sys.getTotalQ(Q);
   decomposeMatrix(Q1,Q2,Q);
-  tau = time;//tau*T; // tau is basically = time
-
-
+  double tau = time;// tau is basically = time
   double tau2=tau*tau;
-  double rtau=sqrt(tau); // terms come from the definition of Q
-  double rT = sqrt(T);
+   
+  //
   double S0 = SumOfRow(T,0);double S1 = SumOfRow(T-1,1);double S2 = SumOfRow(T-1,2);  // sums of geometric series
   arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
-  sigma1 = tau2*tau2*H1*(S0+2.0*S1 + S2)/pow(T,4) + S2*tau2*rtau*Q2/pow(T,2.5)+ S0*Q1*rtau/rT;
-  sigma2 = tau2*tau*H1*(S0+S1)/pow(T,3) + S1*tau*rtau*Q2/pow(T,1.5);
+  sigma1 = tau2*tau*H1*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
+  sigma2 = tau2*H1*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
   sigma3 = sigma2;
-  sigma4 = S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);
+  sigma4 = tau*S0*(H1 + Q2)/T;
+/*
+  sigma1 = tau2*tau2*H1*(S0+2.0*S1 + S2)/pow(T,4) + tau2*tau2*Q2*S2/pow(T,4)+ tau2*S0*Q1/(T*T);
+  sigma2 = tau*tau2*H1*(S0+S1)/pow(T,3) + tau*tau2*S1*Q2/pow(T,3);
+  sigma3 = sigma2;
+  sigma4 = tau2*S0*(H1 + Q2)/(T*T); */
 
+//    double rtau=sqrt(tau); // terms come from the definition of Q
+//   double rT = sqrt(T);
+//   sigma1 = tau2*tau2*H1*(S0+2.0*S1 + S2)/pow(T,4) + S2*tau2*rtau*Q2/pow(T,2.5)+ S0*Q1*rtau/rT;
+//   sigma2 = tau2*tau*H1*(S0+S1)/pow(T,3) + S1*tau*rtau*Q2/pow(T,1.5);
+//   sigma3 = sigma2;
+//   sigma4 = S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);
+//   
   sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
 
   inverse_SymPosDef(sumAinv,sumA);
@@ -366,11 +371,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   bool restore;
 
   for (uint k=0;k<1000;k++){
-
-    //for (uint i=0; i< 14;i++){ bq(i)=b(i);  bv(i)=b(i+14); } // can not set joint state q and v in one variable //MT: Yes you can: setx
-    //sys.setqv(bq,bv);
     sys.setx(b);
-
     if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)){
       alpha=alpha*0.5; //failure
       b=b_best;
@@ -385,7 +386,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
 
 
       cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
-      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<1e-4))) break;
+      if ((!restore) && (k>1) && ((fabs(alpha)<1e-2) || ((old_r - sys.taskCost(NULL, T, -1))<1e0))) break;
 
       old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
@@ -401,66 +402,57 @@ void OneStepDynamicFull(arr& b,arr& Binv,
 
 void OneStepDynamicGradientFull(double& grad,soc::SocSystemAbstraction& sys,arr& R,arr& r,double time)
 {
-  arr Hinv,Rinv,Q,Winv,W,A,B,sumA,sumAinv,suma;
-  arr q0,q_old,tp,qv0,v0,bq,bv;
+  arr Rinv,Q,Winv,W,A,B,sumA,sumAinv,suma;
+  arr x0,q0,q_old,tp,qv0,v0,bq,bv;
 
   arr H1,Q1,Q2;
-
-  double tau=sys.getTau(false);
   double T = sys.nTime();
-  sys.getQ(Q,T);
-  Q = Q/sqrt(tau);
-  tau = time; // tau is basically = time
-
+  sys.getTotalQ(Q);
+  double tau = time; // tau is basically = time
   double tau2=tau*tau;
-  double rtau=sqrt(tau); // terms come from definition of Q
-  double rT = sqrt(T);
   int dim =14;
+  sys.getx0(x0);
   sys.getqv0(q0,v0);
-  qv0=cat(q0,v0);  //q0 with velocity!!!!!!
-
-  sys.getHinv(Hinv,1);
-
-  H1=Hinv;
+ 
+  sys.getTotalHinv(H1);
   decomposeMatrix(Q1,Q2,Q);
 
   arr I,Z,AT,Zv;
   I.setId(dim);
   Z.resize(dim,dim); Z.setZero();    Zv.resize(dim); Zv.setZero(); 
+  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T 
 
   arr Lx,La,LA; //parameters of Gaussian - Likelihood;
 
-  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T 
-
-  Lx= AT*qv0 ;
+  Lx= AT*x0 ;
   arr dLx; 
   dLx = cat(1.0*T*I*v0,Zv);
 
   arr sigma1,sigma2,sigma3,sigma4;
   double S0 = SumOfRow(T-1,0);double S1 = SumOfRow(T-1,1);double S2 = SumOfRow(T-1,2);
   // decouple TIME and T
-  sigma1 = tau2*tau2*H1*(S0+2.0*S1 + S2)/pow(T,4) + S2*tau2*rtau*Q2/pow(T,2.5)+ S0*Q1*rtau/rT;
-  sigma2 = tau2*tau*H1*(S0+S1)/pow(T,3) + S1*tau*rtau*Q2/pow(T,1.5);
+  sigma1 = tau2*tau*H1*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
+  sigma2 = tau2*H1*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
   sigma3 = sigma2;
-  sigma4 = S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);
-
-  /*
-     sigma1 = tau2*tau2*H1*( 2.0*S0+2.0*S1 + S2)/pow(T,4) + S2*tau2*rtau*Q2/pow(T,2.5)+ 2.0*S0*Q1*rtau/rT;
-     sigma2 = tau2*tau*H1*(2.0*S0+S1)/pow(T,3) + S1*tau*rtau*Q2/pow(T,1.5);
-     sigma3 = sigma2;
-     sigma4 = 2.0*S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);*/
+  sigma4 = tau*S0*(H1 + Q2)/T;
+//    double rtau=sqrt(tau); // terms come from the definition of Q
+//   double rT = sqrt(T);
+//   sigma1 = tau2*tau2*H1*(S0+2.0*S1 + S2)/pow(T,4) + S2*tau2*rtau*Q2/pow(T,2.5)+ S0*Q1*rtau/rT;
+//   sigma2 = tau2*tau*H1*(S0+S1)/pow(T,3) + S1*tau*rtau*Q2/pow(T,1.5);
+//   sigma3 = sigma2;
+//   sigma4 = S0*(tau2*H1/pow(T,2.0) + Q2*rtau/rT);
 
   arr Dsigma1,Dsigma2,Dsigma3,Dsigma4;
 
-  Dsigma1 = 4.0*tau*tau2*H1*(S0 + 2.0*S1 +S2)/pow(T,4) + 2.5*tau*rtau*S2*Q2/pow(T,2.5)     + 0.5*S0*Q1/(rtau*rT) ;
-  Dsigma2 = 3.0*tau2*H1*(S0+ S1)/pow(T,3) +S1*rtau*Q2/pow(T,1.5);
+  Dsigma1 = 3.0*tau2*H1*(S0 + 2.0*S1 +S2)/pow(T,3) + 3*tau2*S2*Q2/pow(T,3)     + S0*Q1/T ;
+  Dsigma2 = 2.0*tau*H1*(S0+ S1)/pow(T,2) +2.0*S1*Q2/pow(T,2);
   Dsigma3 = Dsigma2;
-  Dsigma4 = 2.0*tau*S0*H1/pow(T,2.0)         + 0.5*S0*Q2/(rtau*rT);
-
-  // Dsigma1 = 4.0*tau*tau2*H1*(2.0*S0 + 2.0*S1 +S2)/pow(T,4) + 2.5*tau*rtau*S2*Q2/pow(T,2.5)     + Q1/(rtau*rT) ;
-  // Dsigma2 = 3.0*tau2*H1*(2.0*S0+ S1)/pow(T,3) +S1*rtau*Q2/pow(T,1.5);
-  // Dsigma3 = Dsigma2;
-  // Dsigma4 = 4.0*tau*S0*H1/pow(T,2.0)         +Q2/(rtau*rT);
+  Dsigma4 = S0*(H1 + Q2)/T;
+  
+//   Dsigma1 = 4.0*tau*tau2*H1*(S0 + 2.0*S1 +S2)/pow(T,4) + 2.5*tau*rtau*S2*Q2/pow(T,2.5)     + 0.5*S0*Q1/(rtau*rT) ;
+//   Dsigma2 = 3.0*tau2*H1*(S0+ S1)/pow(T,3) +S1*rtau*Q2/pow(T,1.5);
+//   Dsigma3 = Dsigma2;
+//   Dsigma4 = 2.0*tau*S0*H1/pow(T,2.0)         + 0.5*S0*Q2/(rtau*rT);
 
   LA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4); 
 

@@ -393,7 +393,7 @@ double soc::SocSystem_Ors::getTau(bool scaled){
 }
 
 void soc::SocSystem_Ors::getq0(arr& q){ q=WS->q0; }
-void soc::SocSystem_Ors::setq0(arr& q){ WS->q0=q; }
+void soc::SocSystem_Ors::setq0(const arr& q){ WS->q0=q; }
 void soc::SocSystem_Ors::getv0(arr& v){ v=WS->v0; }
 void soc::SocSystem_Ors::getqv0(arr& q_){
   q_.setBlockVector(WS->q0, WS->v0);
@@ -433,7 +433,7 @@ void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
 void soc::SocSystem_Ors::getQ(arr& Q, uint t){
   Q=WS->Q*getTau();// cost rate
 }
-void soc::SocSystem_Ors::getTotalQ(arr& Q, uint t){
+void soc::SocSystem_Ors::getTotalQ(arr& Q){
   Q=WS->Q;//total cost
 }
 
