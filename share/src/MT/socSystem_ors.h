@@ -36,7 +36,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   
   //info
   void reportOnState(std::ostream& os);
-  void displayState(const arr *x, const arr *Q, const char *text=NULL, bool reportVariables=false);
+  void displayState(const arr *x, const arr *Q=NULL, const char *text=NULL, bool reportVariables=false);
   
   //implementations of virtual methods
   uint nTime();

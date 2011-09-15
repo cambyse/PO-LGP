@@ -215,6 +215,35 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, 
   }
 }
 
+void TaskVariable::setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec){
+  targetType=trajectoryTT;
+  active=true;
+  uint t;
+  y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
+  v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
+  for(t=0; t<=T; t++){
+    y_trajectory[t]() = y_target;
+    v_trajectory[t]() = v_target;
+    y_prec_trajectory(t) = y_prec;
+    v_prec_trajectory(t) = v_prec;
+  }
+}
+
+void TaskVariable::appendConstTargetsAndPrecs(uint T){
+  targetType=trajectoryTT;
+  active=true;
+  uint t,t0=y_trajectory.d0;
+  CHECK(t0,"");
+  y_trajectory.resizeCopy(T+1, y.N);  y_prec_trajectory.resizeCopy(T+1);
+  v_trajectory.resizeCopy(T+1, y.N);  v_prec_trajectory.resizeCopy(T+1);
+  for(t=t0; t<=T; t++){
+    y_trajectory[t]() = y_trajectory[t0-1];
+    v_trajectory[t]() = v_trajectory[t0-1];
+    y_prec_trajectory(t) = y_prec_trajectory(t0-1);
+    v_prec_trajectory(t) = v_prec_trajectory(t0-1);
+  }
+}
+
 void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec){
   setInterpolatedTargetsEndPrecisions(T, mid_y_prec, y_prec, mid_v_prec, v_prec);
 }
@@ -223,7 +252,9 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T){
   setInterpolatedTargetsConstPrecisions(T, y_prec, v_prec);
 }
 
-
+void TaskVariable::setConstTargetsConstPrecisions(uint T){
+  setConstTargetsConstPrecisions(T, y_prec, v_prec);
+}
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec){
   OPS;
@@ -545,6 +576,9 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
   shapes=_shapes;
   margin=_margin;
   linear=_linear;
+  updateState();
+  y_target=y;
+  v_target=v;
 }
 
 void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
@@ -614,19 +648,33 @@ void ProxyTaskVariable::updateState(double tau){
         }
       }
     case pairsCTVT:{
-      NIY;
+      shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
+      uint j;
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        for(j=0;j<shapes.d0;j++){
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j<shapes.d0){
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 5;
+        }
+      }
     } break;
     case vectorCTVT:{
       //outputs a vector of collision meassures, with entry for each explicit pair
-      y.resize(shapes.d0/2);  y.setZero();
-      J.resize(shapes.d0/2,J.d1);  J.setZero();
-      int a,b;
+      shapes.reshape(shapes.N/2,2);
+      y.resize(shapes.d0);  y.setZero();
+      J.resize(shapes.d0,J.d1);  J.setZero();
+      uint j;
       for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
-        a=shapes.findValue(p->a);
-        b=shapes.findValue(p->b);
-        if(a!=-1 && b!=-1 && a/2==b/2){
-          addAContact(y(a/2), J[a/2](), p, ors, margin, linear);
+        for(j=0;j<shapes.d0;j++){
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j<shapes.d0){
+          addAContact(y(j), J[j](), p, ors, margin, linear);
           p->colorCode = 5;
         }
       }

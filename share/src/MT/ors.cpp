@@ -90,7 +90,7 @@ void Vector::set(double* x){ p[0]=x[0]; p[1]=x[1]; p[2]=x[2]; }
 void Vector::setZero(){ p[0]=p[1]=p[2]=0.; }
 
 //! a random vector in [-1, 1]^3
-void Vector::setRandom(){ p[0]=rnd.uni(-1, 1); p[1]=rnd.uni(-1, 1); p[2]=rnd.uni(-1, 1); }
+void Vector::setRandom(double range){ p[0]=rnd.uni(-range, range); p[1]=rnd.uni(-range, range); p[2]=rnd.uni(-range, range); }
 
 //{ vector operations
 
@@ -2421,6 +2421,16 @@ void ors::Shape::reset(){
   rel.setZero();
   mesh.V.clear();
   cont=false;
+}
+
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes){
+  uintA I(names.N);
+  for(uint i=0;i<names.N;i++){
+    ors::Shape *s = listFindByName(shapes, names(i));
+    if(!s) HALT("shape name doesn't exist");
+    I(i) = s->index;
+  }
+  return I;
 }
 
 

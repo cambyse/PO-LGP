@@ -4,7 +4,7 @@
 #  define CHECK_EPS 1e-8
 #endif
 
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals){
+uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals, double maxStepSize){
   double a=1.;
   double lx, ly;
   arr Delta, y;
@@ -23,6 +23,8 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
     innerProduct(r, ~f.J, f.phi);
     
     lapack_Ainv_b_sym(Delta, R, -r);
+    if(maxStepSize>0. && norm(Delta)>maxStepSize)
+      Delta *= maxStepSize/norm(Delta);
     
     for(;;){
       y = x + a*Delta;

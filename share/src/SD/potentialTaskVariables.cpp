@@ -29,9 +29,9 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
     ors::Graph& _ors,
     const ShapeList& _refs,
     PotentialField& _f){
-      refs=_refs;
-      f=&_f;
-      set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+  refs=_refs;
+  f=&_f;
+  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
 }
 
 /** Compute current value and jacobian of the TV.
