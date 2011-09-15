@@ -63,7 +63,7 @@ void AICO::iterate_to_convergence(const arr* q_init){
   
   for(uint k=0; k<max_iterations; k++){
     double d=step();
-    if(k && d<tolerance) break;
+    if(k && d<tolerance) break; //d*(1.+damping)
   }
 }
 
@@ -273,10 +273,16 @@ void AICO::updateBwdMessage(uint t){
   }
 }
 
-void AICO::updateTaskMessage(uint t, const arr& qhat_t, double tolerance){
-  if(maxDiff(xhat[t], qhat_t)<tolerance) return;
+void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance, double maxStepSize){
+  if(maxDiff(xhat[t], xhat_t)<tolerance) return;
   
-  xhat[t]() = qhat_t;
+  if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
+    arr Delta = xhat_t-xhat[t];
+    Delta *= maxStepSize/norm(Delta);
+    xhat[t]() += Delta;
+  }else{
+    xhat[t]() = xhat_t;
+  }
   countSetq++;
   sys->setx(xhat[t]);
   
@@ -289,7 +295,7 @@ void AICO::updateTaskMessage(uint t, const arr& qhat_t, double tolerance){
   //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
 }
 
-void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation){
+void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation, double maxStepSize){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
@@ -304,7 +310,7 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   for(uint k=0; k<maxRelocationIterations; k++){
     if(!((!k && forceRelocation) || maxDiff(b[t], xhat[t])>tolerance)) break;
     
-    updateTaskMessage(t, b[t], 0.);
+    updateTaskMessage(t, b[t], 0., maxStepSize);
     
     //optional reupdate fwd or bwd message (if the dynamics might have changed...)
     //if(updateFwd) updateFwdMessage(t);
@@ -320,7 +326,7 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   }
 }
 
-void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance){
+void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, double maxStepSize){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
@@ -373,7 +379,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   f.reuseOldCostTerms=true;
   f.reuseOldCostTerms=false;
   if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
-  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations);
+  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations, maxStepSize);
   
   sys->getQ(Q[t](), t);
   sys->getHinv(Hinv[t](), t);
@@ -481,20 +487,20 @@ double AICO::step(){
   switch(sweepMode){
       //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
     case smForwardly:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, 0, tolerance, false); //...not on bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep, 1.); //relocate once on fwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, 0, tolerance, false, 1.); //...not on bwd sweep
       break;
     case smSymmetric:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd & bwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?1:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep, 1.); //relocate once on fwd & bwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?1:0), tolerance, false, 1.);
       break;
     case smLocalGaussNewton:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance, !sweep); //relocate iteratively on
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance, false); //...fwd & bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance, !sweep, 1.); //relocate iteratively on
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false, 1.); //...fwd & bwd sweep
       break;
     case smLocalGaussNewtonDamped:
-      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance); //GaussNewton in fwd & bwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance, 1.); //GaussNewton in fwd & bwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false, 1.);
       break;
     default: HALT("non-existing sweep mode");
   }

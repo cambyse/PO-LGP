@@ -44,7 +44,7 @@ struct Vector {
   void set(double, double, double);
   void set(double*);
   void setZero();
-  void setRandom();
+  void setRandom(double range=1.);
   void add(double, double, double);
   void subtract(double, double, double);
   void normalize();
@@ -666,8 +666,12 @@ struct TaskVariable {
   //only keep those:
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
   void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+  void setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
+  void setConstTargetsConstPrecisions(uint T);
+  void appendConstTargetsAndPrecs(uint T);
   
   void shiftTargets(int offset);
   
@@ -815,6 +819,7 @@ void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
 void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
 
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -865,13 +870,14 @@ struct SwiftInterface {
   ~SwiftInterface();
   SwiftInterface* newClone(const ors::Graph& G) const;
   
-  void init(const ors::Graph& C, double _cutoff=.1);
+  void init(const ors::Graph& ors, double _cutoff=.1);
+  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& C);
-  void computeProxies(ors::Graph& C, bool dumpReport=false);
+  void initActivations(const ors::Graph& ors);
+  void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 
 

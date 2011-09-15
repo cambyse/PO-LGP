@@ -318,7 +318,7 @@ void OneStepDynamicFull_old(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,dou
   cout << D << endl;
 }
 
-void OneStepDynamicFull(arr& b,arr& Binv,
+double OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha, bool verbose, bool b_is_initialized)
 {
@@ -398,6 +398,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
     }
   }
   b=b_best;
+  return old_r;
 }
 
 void OneStepDynamicGradientFull(double& grad,soc::SocSystemAbstraction& sys,arr& R,arr& r,double time)

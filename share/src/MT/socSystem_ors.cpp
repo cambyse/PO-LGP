@@ -533,7 +533,7 @@ void soc::SocSystem_Ors::getTarget(arr& y_target, double& y_prec, uint i, uint t
     y_prec   = v->y_prec;
     return;
   }
-  CHECK(v->y_trajectory.d0>t, "task target trajectory for variable '" <<v->name <<"' not specified");
+  CHECK(t<v->y_trajectory.d0, "task target trajectory for variable '" <<v->name <<"' not specified");
   y_target = v->y_trajectory[t];
   y_prec   = v->y_prec_trajectory(t);
 }
