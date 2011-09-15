@@ -44,7 +44,7 @@ struct Vector {
   void set(double, double, double);
   void set(double*);
   void setZero();
-  void setRandom();
+  void setRandom(double range=1.);
   void add(double, double, double);
   void subtract(double, double, double);
   void normalize();
@@ -670,6 +670,7 @@ struct TaskVariable {
 
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
+  void setConstTargetsConstPrecisions(uint T);
   void appendConstTargetsAndPrecs(uint T);
   
   void shiftTargets(int offset);

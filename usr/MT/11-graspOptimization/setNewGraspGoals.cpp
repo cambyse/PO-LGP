@@ -59,7 +59,9 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   if(V->y(0)<0.) ((DefaultTaskVariable*)V)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
   V->updateState();
   V->y_prec = 1e3; //endPrec;
-  V->setInterpolatedTargetsEndPrecisions(T, midPrec, 0.);
+  //V->setInterpolatedTargetsEndPrecisions(T, midPrec, 0.);
+  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, 0.);
+  V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
 
   if(phase==0) return;
@@ -78,8 +80,6 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
     if(5*t<4*T) V->y_trajectory[t]()=0.;
     else V->y_trajectory[t]() = (grip*double(5*t-4*T))/T;
   }
-  //for(uint t=0;t<T;t++) V->y_trajectory[t]()=0.;
-  //V->y_trajectory[T]()=grip;
   sys.vars.append(V);
   
   //opposing fingers
@@ -87,7 +87,7 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   
   //col lim and relax
-  V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setInterpolatedTargetsConstPrecisions(T);
+  V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
   V=listFindByName(sys.vars, "qitself");
   V->y_prec=MT::getParameter<double>("reachPlanHomeComfort");
   V->v_prec=MT::getParameter<double>("reachPlanEndVelPrec");

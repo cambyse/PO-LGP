@@ -40,7 +40,7 @@ struct GaussNewtonCostFunction {
   virtual void calcTermsAt(const arr& x) = 0;
 };
 
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals=1000);
+uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals=1000, double maxStepSize=-1.);
 
 /*struct GaussNewtonStepper{
   double lambda;

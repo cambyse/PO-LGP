@@ -252,7 +252,9 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T){
   setInterpolatedTargetsConstPrecisions(T, y_prec, v_prec);
 }
 
-
+void TaskVariable::setConstTargetsConstPrecisions(uint T){
+  setConstTargetsConstPrecisions(T, y_prec, v_prec);
+}
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec){
   OPS;
