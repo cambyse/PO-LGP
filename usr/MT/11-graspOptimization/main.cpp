@@ -75,6 +75,9 @@ void problem1(){
     ors::Shape *s = sys.ors->getShapeByName("target");
     s->rel.pos.setRandom(.3);
     s->rel.rot.setRandom();
+    for(uint l=0;l<4;l++) s->size[l] = rnd.uni(.05,.15);
+    s->mesh.clear();
+    sys.swift->init(*sys.ors, sys.swift->cutoff); //reinitShape(*sys.ors, s);
   }
   
 }

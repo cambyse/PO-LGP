@@ -870,13 +870,14 @@ struct SwiftInterface {
   ~SwiftInterface();
   SwiftInterface* newClone(const ors::Graph& G) const;
   
-  void init(const ors::Graph& C, double _cutoff=.1);
+  void init(const ors::Graph& ors, double _cutoff=.1);
+  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& C);
-  void computeProxies(ors::Graph& C, bool dumpReport=false);
+  void initActivations(const ors::Graph& ors);
+  void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 
 

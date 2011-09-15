@@ -132,6 +132,23 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
   isOpen=true;
 }
 
+void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s){
+  int sw = INDEXshape2swift(s->index);
+  scene->Delete_Object(sw);
+  INDEXswift2shape(sw) = -1;
+  
+  bool r=scene->Add_Convex_Object(s->mesh.V.p, (int*)s->mesh.T.p,
+                                  s->mesh.V.d0, s->mesh.T.d0, sw, false,
+                                  DEFAULT_ORIENTATION, DEFAULT_TRANSLATION, DEFAULT_SCALE,
+                                  DEFAULT_BOX_SETTING, DEFAULT_BOX_ENLARGE_REL, cutoff);
+  if(!r) HALT("--failed!");
+
+  INDEXshape2swift(s->index) = sw;
+  INDEXswift2shape(sw) = s->index;
+
+  if(s->cont) scene->Activate(sw);
+}
+
 void SwiftInterface::initActivations(const ors::Graph& C){
   ors::Shape *s;
   ors::Body *b, *b2;
@@ -149,7 +166,11 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   //for_list(k, s, C.shapes) if(s->cont) cout <<s->name <<' ';
   
   for_list(k, s, C.shapes){
-    if(!s->cont){ if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index)); } else        { if(INDEXshape2swift(s->index)!=-1) scene->Activate(INDEXshape2swift(s->index)); }
+    if(!s->cont){
+      if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index));
+    } else {
+      if(INDEXshape2swift(s->index)!=-1) scene->Activate(INDEXshape2swift(s->index));
+    }
   }
   //shapes within a body
   for_list(j, b, C.bodies) deactivate(b->shapes);
