@@ -12,27 +12,33 @@
 #include "setNewGraspGoals_explorative.cpp"
 #include "setOldGraspGoals.cpp"
 
-void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, double seconds){
+void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, double seconds){
   arr b,x0,b1,Binv;
   sys.getx0(x0);
   arr cost(3),bs(3,x0.N);
-  uint side;
-  for(side=0;side<3;side++){
-    setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, side, 0);
-    cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false);
-    sys.displayState(&b, NULL, "posture estimate");
+  uint side=0;
+  if(sys.ors->shapes(shapeId)->type==ors::boxST){
+    for(side=0;side<3;side++){
+      setNewGraspGoals(sys,T,shapeId, side, 0);
+      cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false);
+      sys.displayState(&b, NULL, "posture estimate");
+      sys.gl->watch();
+      bs[side]() = b;
+    }
+    side=cost.minIndex();
+    b = bs[side];
+  }else{
+    setNewGraspGoals(sys,T,shapeId, side, 0);
+    OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false);
     sys.gl->watch();
-    bs[side]() = b;
   }
-  side=cost.minIndex();
-  b = bs[side];
 
   b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
   b1=b;
   sys.setx(b);
   sys.gl->watch();
   
-  setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, side, 1);
+  setNewGraspGoals(sys,T,shapeId, side, 1);
   OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false, true);
   sys.displayState(&b, NULL, "posture estimate");
   sys.gl->watch();
@@ -62,22 +68,29 @@ void problem1(){
   uint side=rnd(3);
   side = 2;
 
+  ors::Shape *s = sys.ors->getShapeByName("target1");
   for(uint k=0;k<10;k++){
+
 #if 1
-    threeStepGraspHeuristic(sys, T, seconds);
+    threeStepGraspHeuristic(sys, T, s->index, seconds);
 #else
-    setNewGraspGoals(sys,T,sys.ors->getShapeByName("target")->index, side, 1);
+    setNewGraspGoals(sys,T,s->index, side, 1);
     AICO solver(sys);
     solver.iterate_to_convergence();
     for(;;) sys.displayTrajectory(solver.q,NULL,1,"solution");
 #endif
 
-    ors::Shape *s = sys.ors->getShapeByName("target");
+    if(k%2) s=sys.ors->getShapeByName("target1");
+    else  s=sys.ors->getShapeByName("target2");
     s->rel.pos.setRandom(.3);
     s->rel.rot.setRandom();
-    for(uint l=0;l<4;l++) s->size[l] = rnd.uni(.05,.15);
+    for(uint l=0;l<3;l++) s->size[l] = rnd.uni(.05,.15);
+    s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
     sys.swift->init(*sys.ors, sys.swift->cutoff); //reinitShape(*sys.ors, s);
+
+    sys.setx0AsCurrent();
+    sys.gl->watch();
   }
   
 }
