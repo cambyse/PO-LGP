@@ -119,8 +119,8 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     //cout <<"automatic W initialization =" <<s->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
-  static MT::Parameter<double> wr("Wrate", 1e-2);
-  static MT::Parameter<double> hr("Hrate", 1e-3);
+  static MT::Parameter<double> wr("Wrate");
+  static MT::Parameter<double> hr("Hrate");
   static MT::Parameter<double> qr("Qrate", 1e-10);
   s->H_rate = hr()*W_rate;     //u-metric for torque control
   s->W = wr()*W_rate;

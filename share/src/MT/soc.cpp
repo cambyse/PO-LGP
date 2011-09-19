@@ -149,9 +149,9 @@ void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
 void soc::SocSystemAbstraction::setqv(const arr& q, const arr& qd, uint t){ NIY; }
 void soc::SocSystemAbstraction::getH(arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getHinv(arr& H, uint t){ NIY; }
-void soc::SocSystemAbstraction::getTotalHinv(arr& H){ NIY; }//new
 void soc::SocSystemAbstraction::getQ(arr& Q, uint t){ NIY; }
-void soc::SocSystemAbstraction::getTotalQ(arr& Q){ NIY; }//new
+void soc::SocSystemAbstraction::getQrate(arr& Qrate){ NIY; } // new
+void soc::SocSystemAbstraction::getHrateInv(arr& HrateInv){ NIY; }
 void soc::SocSystemAbstraction::getJqd(arr& Jqd_i, uint i){ NIY; }
 void soc::SocSystemAbstraction::getHessian(arr& H_i, uint i){ NIY; }
 void soc::SocSystemAbstraction::getTargetV(arr& v_i, double& prec, uint i, uint t){ NIY; }

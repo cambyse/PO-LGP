@@ -66,8 +66,9 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   if(!b_is_initialized) b=x0;
   double old_r;
 
-  sys.getTotalHinv(H1);
-  sys.getTotalQ(Q);
+  sys.getHrateInv(H1);
+  sys.getQrate(Q);
+
   decomposeMatrix(Q1,Q2,Q);
   double tau = time;// tau is basically = time
   double tau2=tau*tau;
@@ -83,16 +84,15 @@ void OneStepDynamicFull(arr& b,arr& Binv,
   sigma2 = tau2*H1*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
   sigma3 = sigma2;
   sigma4 = tau*S0*(H1 + Q2)/T;
-
+  
   sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
-
   inverse_SymPosDef(sumAinv,sumA);
   suma= AT*x0;//?????
 
   arr b_old = x0;  arr b_best = x0;
   old_r = sys.taskCost(NULL,T,-1);
   bool restore;
-
+     
   for (uint k=0;k<1000;k++){
     sys.setx(b);
     if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)){
@@ -102,6 +102,7 @@ void OneStepDynamicFull(arr& b,arr& Binv,
     }else{
       if (!restore) alpha=pow(alpha,0.5); //success
       sys.getCosts(R,r,b,T); // costs at the current position
+	
       double eps=1e-10; arr id; id.setId(28);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
       b_best = b; b_old = b;
@@ -130,10 +131,11 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
 
   arr H1,Q1,Q2;
   double T = sys.nTime();
-  sys.getTotalQ(Q);
   double tau = time; // tau is basically = time
   double tau2=tau*tau;
-  sys.getTotalHinv(H1);
+  sys.getHrateInv(H1);
+  sys.getQrate(Q);
+  
   decomposeMatrix(Q1,Q2,Q);
   
   int dim =sqrt(Q.N)/2;;
@@ -206,7 +208,7 @@ void GetOptimalDynamicTime(double& time,
     }
     else
       sys.getCosts(R,r,b_old,T);
-
+ 
     OneStepDynamicGradientFull(gr,llk,sys,R,r,old_time); // gradient of likelihood for a given time and costs
     old_time = old_time + step*gr/fabs(gr);
     if (llk>old_llk){
