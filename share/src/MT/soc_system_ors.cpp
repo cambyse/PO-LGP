@@ -25,7 +25,7 @@
 //
 
 struct soc::SocSystem_Ors_Workspace {
-  arr q0, v0, W, H, Q, v_act;
+  arr q0, v0, W, H_rate, Q_rate, v_act;
   arr q_external;
   
   uint T;
@@ -37,22 +37,22 @@ struct soc::SocSystem_Ors_Workspace {
 };
 
 soc::SocSystem_Ors::SocSystem_Ors():SocSystemAbstraction::SocSystemAbstraction(){
-  WS = new SocSystem_Ors_Workspace;
+  s = new SocSystem_Ors_Workspace;
   ors   = NULL;
   swift = NULL;
   vars = NULL;
-  WS->pseudoDynamic=false;
-  WS->newedOrs=false;
+  s->pseudoDynamic=false;
+  s->newedOrs=false;
 }
 
 soc::SocSystem_Ors::~SocSystem_Ors(){
-  if(WS->newedOrs){
+  if(s->newedOrs){
     listDelete(vars);
     delete swift;
     delete gl;
     delete ors;
   }
-  delete WS;
+  delete s;
 }
 
 soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
@@ -65,7 +65,7 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
     sys->ors   = ors;
     sys->swift = swift;
     sys->gl    = gl;
-    sys->WS->newedOrs = false;
+    sys->s->newedOrs = false;
   }else{
     sys->ors  =ors->newClone();
     sys->swift=swift->newClone(*sys->ors);
@@ -74,22 +74,22 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
       sys->gl->remove(ors::glDrawGraph, ors);
       sys->gl->add(ors::glDrawGraph, sys->ors);
     }
-    sys->WS->newedOrs = true;
+    sys->s->newedOrs = true;
   }
   
   listCopy(sys->vars, vars); //deep copy the task variables!
   uint i;  TaskVariable *y;
   for_list(i, y, sys->vars) y->ors=sys->ors; //reassociate them to the local ors
   
-  sys->WS->q0 = WS->q0;
-  sys->WS->v0 = WS->v0;
-  sys->WS->W = WS->W;
-  sys->WS->H = WS->H;
-  sys->WS->Q = WS->Q;
-  sys->WS->v_act = WS->v_act;
-  sys->WS->T = WS->T;
-  sys->WS->tau = WS->tau;
-  sys->WS->pseudoDynamic = WS->pseudoDynamic;
+  sys->s->q0 = s->q0;
+  sys->s->v0 = s->v0;
+  sys->s->W = s->W;
+  sys->s->H_rate = s->H_rate;
+  sys->s->Q_rate = s->Q_rate;
+  sys->s->v_act = s->v_act;
+  sys->s->T = s->T;
+  sys->s->tau = s->tau;
+  sys->s->pseudoDynamic = s->pseudoDynamic;
   return sys;
 }
 
@@ -104,34 +104,35 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
   }
-  if(!_dynamic){  WS->T = trajectory_steps;  WS->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
+  if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
   setq0AsCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
+  arr W_rate;
   if(W){
     if(W->nd==1){
-      if(W->N > WS->q0.N){ W->resizeCopy(WS->q0.N); MT_MSG("truncating W diagonal..."); }
-      CHECK(W->N==WS->q0.N, "");
-      WS->W.setDiag(*W);
+      if(W->N > s->q0.N){ W->resizeCopy(s->q0.N); MT_MSG("truncating W diagonal..."); }
+      CHECK(W->N==s->q0.N, "");
+      W_rate.setDiag(*W);
     } else NIY;
   }else{
-    ors->computeNaturalQmetric(WS->W);
-    //cout  <<"automatic W initialization ="  <<WS->W  <<endl;
+    ors->computeNaturalQmetric(W_rate);
+    //cout <<"automatic W initialization =" <<s->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
-  static MT::Parameter<double> wc("Wcost", 1e-2);
-  static MT::Parameter<double> hc("Hcost", 1e-3);
-  static MT::Parameter<double> qn("Qnoise", 1e-10);
-  WS->H = hc()*WS->W;     //u-metric for torque control
-  WS->W = wc()*WS->W;
+  static MT::Parameter<double> wr("Wrate", 1e-2);
+  static MT::Parameter<double> hr("Hrate", 1e-3);
+  static MT::Parameter<double> qr("Qrate", 1e-10);
+  s->H_rate = hr()*W_rate;     //u-metric for torque control
+  s->W = wr()*W_rate;
   if(!_dynamic){
     dynamic=false;
-    WS->Q.setDiag(qn, WS->q0.N);  //covariance \dot q-update
+    s->Q_rate.setDiag(qr, s->q0.N);  //covariance \dot q-update
   }else{
     dynamic=true;
-    WS->pseudoDynamic=true;
-    WS->Q.setDiag(qn, 2*WS->q0.N);  //covariance \dot q-update
+    s->pseudoDynamic=true;
+    s->Q_rate.setDiag(qr, 2*s->q0.N);  //covariance \dot q-update
   }
-  stepScale.resize(WS->T+1);  stepScale.setZero();
+  stepScale.resize(s->T+1);  stepScale.setZero();
 }
 
 void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
@@ -281,20 +282,20 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   }
   sys.ors->calcNodeFramesFromEdges();
   sys.ors->reconfigureRoot(sys.ors->getBodyByName("rfoot"));
-  sys.ors->getJointState(sys.WS->q0, sys.WS->v0);
+  sys.ors->getJointState(sys.s->q0, sys.s->v0);
   sys.swift->init(*sys.ors);
 
 
-  sys.WS->T=trajectory_length;
-  sys.WS->tau=.01;
-  arr Wdiag(sys.WS->q0.N);
+  sys.s->T=trajectory_length;
+  sys.s->tau=.01;
+  arr Wdiag(sys.s->q0.N);
   Wdiag=1.;
   MT_MSG("Warning - need to change this");
   Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
   //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
-  CHECK(Wdiag.N==sys.WS->q0.N, "wrong W matrix!");
-  sys.WS->W.setDiag(Wdiag);
-  sys.WS->H = sys.WS->W;
+  CHECK(Wdiag.N==sys.s->q0.N, "wrong W matrix!");
+  sys.s->W.setDiag(Wdiag);
+  sys.s->H_rate = sys.s->W;
 
   //set task variables
   TaskVariable *x0, *x1, *x2;
@@ -314,18 +315,18 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   MT::getParameter(colPrec, "colPrec");
 
   x0->y_target.setCarray(sys.ors->getBodyByName("target")->X.p.v, 3);
-  x0->setInterpolatedTargetTrajectory(sys.WS->T);
-  x0->setPrecisionTrajectoryFinal(sys.WS->T, midPrec, endPrec);
+  x0->setInterpolatedTargetTrajectory(sys.s->T);
+  x0->setPrecisionTrajectoryFinal(sys.s->T, midPrec, endPrec);
 
   x1->y_target(0)=0.;
   x1->y_target(1)=-.02;
-  x1->setInterpolatedTargetTrajectory(sys.WS->T);
-  x1->setPrecisionTrajectoryConstant(sys.WS->T, balPrec);
+  x1->setInterpolatedTargetTrajectory(sys.s->T);
+  x1->setPrecisionTrajectoryConstant(sys.s->T, balPrec);
   if(!balPrec) x1->active=false;
 
   x2->y_target = 0.;
-  x2->setInterpolatedTargetTrajectory(sys.WS->T);
-  x2->setPrecisionTrajectoryConstant(sys.WS->T, colPrec);
+  x2->setInterpolatedTargetTrajectory(sys.s->T);
+  x2->setPrecisionTrajectoryConstant(sys.s->T, colPrec);
   if(!colPrec) x2->active=false;
 
   sys.dynamic=false;
@@ -333,9 +334,9 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
 */
 
 void soc::SocSystem_Ors::setTimeInterval(double trajectory_time,  uint trajectory_steps){
-  WS->T=trajectory_steps;
-  WS->tau=trajectory_time/trajectory_steps;
-  stepScale.resize(WS->T+1);  stepScale.setZero();
+  s->T=trajectory_steps;
+  s->tau=trajectory_time/trajectory_steps;
+  stepScale.resize(s->T+1);  stepScale.setZero();
 }
 
 void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
@@ -381,26 +382,26 @@ void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char 
 }
 
 
-uint soc::SocSystem_Ors::nTime(){  return WS->T>>scalePower; }
+uint soc::SocSystem_Ors::nTime(){  return s->T>>scalePower; }
 uint soc::SocSystem_Ors::nTasks(){ return vars.N; }
-uint soc::SocSystem_Ors::qDim(){   return WS->q0.N; }
+uint soc::SocSystem_Ors::qDim(){   return s->q0.N; }
 uint soc::SocSystem_Ors::uDim(){   return qDim(); }
 uint soc::SocSystem_Ors::yDim(uint i){ return vars(i)->y.N; }
 double soc::SocSystem_Ors::getTau(bool scaled){
-  double tau=WS->tau;
+  double tau=s->tau;
   if(scaled) for(uint i=0; i<scalePower; i++) tau *=2.;
   return tau;
 }
 
-void soc::SocSystem_Ors::getq0(arr& q){ q=WS->q0; }
-void soc::SocSystem_Ors::setq0(const arr& q){ WS->q0=q; }
-void soc::SocSystem_Ors::getv0(arr& v){ v=WS->v0; }
+void soc::SocSystem_Ors::getq0(arr& q){ q=s->q0; }
+void soc::SocSystem_Ors::setq0(const arr& q){ s->q0=q; }
+void soc::SocSystem_Ors::getv0(arr& v){ v=s->v0; }
 void soc::SocSystem_Ors::getqv0(arr& q_){
-  q_.setBlockVector(WS->q0, WS->v0);
+  q_.setBlockVector(s->q0, s->v0);
 }
 void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ getq0(q); getv0(qd); }
 void soc::SocSystem_Ors::getW(arr& W, uint t){
-  W=WS->W;
+  W=s->W;
   if(stepScale(t)){
     arr Winv;
     inverse_SymPosDef(Winv, W);
@@ -413,17 +414,17 @@ void soc::SocSystem_Ors::getWinv(arr& Winv, uint t){
     HALT("use getProcess");
   }else{
     arr W;
-    W=WS->W;
+    W=s->W;
     inverse_SymPosDef(Winv, W);
     for(uint i=0; i<stepScale(t); i++) Winv = Winv+Winv;
   }
 }
 void soc::SocSystem_Ors::getH(arr& H, uint t){
-  H=WS->H*getTau(); // control cost rate
+  H=s->H_rate*getTau(); // control cost rate
   if(stepScale(t)) H *= double(1 <<stepScale(t));
 }
-void soc::SocSystem_Ors::getTotalHinv(arr& Hinv){
-   inverse_SymPosDef(Hinv, WS->H); // returns the inverse of total H
+void soc::SocSystem_Ors::getHrateInv(arr& HrateInv){
+   inverse_SymPosDef(HrateInv, s->H_rate);
 }
 void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   arr H;
@@ -431,20 +432,20 @@ void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   inverse_SymPosDef(Hinv, H);
 }
 void soc::SocSystem_Ors::getQ(arr& Q, uint t){
-  Q=WS->Q*getTau();// cost rate
+  Q=s->Q_rate*getTau();// cost rate
 }
-void soc::SocSystem_Ors::getTotalQ(arr& Q){
-  Q=WS->Q;//total cost
+void soc::SocSystem_Ors::getQrate(arr& Qrate){
+  Qrate=s->Q_rate;
 }
 
 void soc::SocSystem_Ors::setq(const arr& q, uint t){
   ors->setJointState(q);
-  if(WS->q_external.N)
-    ors->setExternalState(WS->q_external[t]);
+  if(s->q_external.N)
+    ors->setExternalState(s->q_external[t]);
   ors->calcBodyFramesFromJoints();
   swift->computeProxies(*ors, false);
-  WS->v_act.resizeAs(q);
-  WS->v_act.setZero();
+  s->v_act.resizeAs(q);
+  s->v_act.setZero();
   uint i;
   TaskVariable *v;
   for_list(i, v, vars) if(v->active){
@@ -455,11 +456,11 @@ void soc::SocSystem_Ors::setq(const arr& q, uint t){
 
 void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   ors->setJointState(q, qd);
-  if(WS->q_external.N)
-    ors->setExternalState(WS->q_external[t]);
+  if(s->q_external.N)
+    ors->setExternalState(s->q_external[t]);
   ors->calcBodyFramesFromJoints();
   swift->computeProxies(*ors, false);
-  WS->v_act=qd;
+  s->v_act=qd;
   uint i;
   TaskVariable *v;
   for_list(i, v, vars) if(v->active){
@@ -477,17 +478,17 @@ void soc::SocSystem_Ors::setqv(const arr& q_, uint t){
   setqv(q, v);
 }
 void soc::SocSystem_Ors::setq0AsCurrent(){
-  ors->getJointState(WS->q0, WS->v0);
-  WS->v0.setZero(); MT_MSG("evil speed v0=0 hack");
+  ors->getJointState(s->q0, s->v0);
+  s->v0.setZero(); MT_MSG("evil speed v0=0 hack");
 }
 
 
 void soc::SocSystem_Ors::getMF(arr& M, arr& F, uint t){
-  if(!WS->pseudoDynamic){
+  if(!s->pseudoDynamic){
     ors->clearForces();
     ors->gravityToForces();
     //ors->frictionToForces(1.1);
-    ors->equationOfMotion(M, F, WS->v_act);
+    ors->equationOfMotion(M, F, s->v_act);
     //M.setId();  F = .1;
     //Minv *= .2;//1e-1;
   }else{
@@ -540,7 +541,7 @@ void soc::SocSystem_Ors::getTarget(arr& y_target, double& y_prec, uint i, uint t
   TaskVariable *v=vars(i);
   //cout  <<"getting y_target for TV "  <<v->name  <<endl;
   if(!t && v->targetType!=trajectoryTT){
-    v->updateChange(-1, WS->tau);
+    v->updateChange(-1, s->tau);
     y_target = v->y_ref;
     y_prec   = v->y_prec;
     return;
@@ -554,7 +555,7 @@ void soc::SocSystem_Ors::getTargetV(arr& v_target, double& v_prec, uint i, uint 
   TaskVariable *v=vars(i);
   //cout  <<"getting v_target for TV "  <<v->name  <<endl;
   if(!t && v->targetType!=trajectoryTT){
-    v->updateChange(-1, WS->tau);
+    v->updateChange(-1, s->tau);
     v_target = v->v_ref;
     v_prec   = v->v_prec;
     return;
@@ -592,17 +593,17 @@ void drawOrsSocEnv(void*){
   //setup the workspace
   MT::load(*sys.ors, ors_file);
   sys.ors->calcBodyFramesFromJoints();
-  sys.ors->getJointState(sys.WS->q0, sys.WS->v0);
+  sys.ors->getJointState(sys.s->q0, sys.s->v0);
   sys.swift->init(*sys.ors);
 
-  uint n=sys.WS->q0.N;
-  sys.WS->T=trajectory_steps;
-  sys.WS->tau=trajectory_time/trajectory_steps;
-  sys.WS->W.setDiag(1e-6, n);  //q-metric for inverse kinematics (initialization)
+  uint n=sys.s->q0.N;
+  sys.s->T=trajectory_steps;
+  sys.s->tau=trajectory_time/trajectory_steps;
+  sys.s->W.setDiag(1e-6, n);  //q-metric for inverse kinematics (initialization)
   static MT::Parameter<double> hc("Hcost");
   static MT::Parameter<double> qn("Qnoise");
-  sys.WS->H.setDiag(hc, n);  //u-metric for torque control
-  sys.WS->Q.setDiag(qn, 2*n);  //covariance \dot q-update
+  sys.s->H.setDiag(hc, n);  //u-metric for torque control
+  sys.s->Q.setDiag(qn, 2*n);  //covariance \dot q-update
 
   //set task variables
   TaskVariable *x0;
@@ -618,9 +619,9 @@ void drawOrsSocEnv(void*){
 
   x0->y_target.setCarray(sys.ors->getBodyByName("target")->X.pos.p, 3);
   x0->v_target  <<"[2 0 0]";
-  x0->setInterpolatedTargetTrajectory(sys.WS->T);
-  x0->setPrecisionTrajectoryFinal (sys.WS->T, midPrec, endPrec);
-  x0->setPrecisionVTrajectoryFinal(sys.WS->T, 0., endPrec);
+  x0->setInterpolatedTargetTrajectory(sys.s->T);
+  x0->setPrecisionTrajectoryFinal (sys.s->T, midPrec, endPrec);
+  x0->setPrecisionVTrajectoryFinal(sys.s->T, 0., endPrec);
 
 
   sys.dynamic=true;
@@ -633,14 +634,14 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
                                    const arr& endeffector_target,
                                    const char* endeffector_name,
                                    const arr& W){
-  static soc::SocSystem_Ors_Workspace WS;
+  static soc::SocSystem_Ors_Workspace s;
 
   //setup the workspace
-  //WS.vars = globalSpace;
+  //s.vars = globalSpace;
   sys.ors=&_ors;
-  sys.ors->getJointState(WS.q0, WS.v0);
-  WS.T=trajectory_length;
-  WS.W=W;
+  sys.ors->getJointState(s.q0, s.v0);
+  s.T=trajectory_length;
+  s.W=W;
   sys.swift=&_swift;
 
   //set task variables
@@ -653,14 +654,14 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
   //reportAll(globalSpace, cout);
 
   x0->y_prec=1e3;  x0->setGainsAsAttractor(30.);  x0->y_target = endeffector_target;
-  x0->setTrajectory(WS.T, 0, 1e10);
-  x0->setPrecisionTrajectoryFinal(WS.T, 1e1, 1e4);
+  x0->setTrajectory(s.T, 0, 1e10);
+  x0->setPrecisionTrajectoryFinal(s.T, 1e1, 1e4);
 
   x1->y_prec=1e6;  x1->setGainsAsAttractor(30.);  x1->y_target = 0.;
-  x1->setTrajectory(WS.T, 0);
-  x1->setPrecisionTrajectoryConstant(WS.T, 1e5);
+  x1->setTrajectory(s.T, 0);
+  x1->setPrecisionTrajectoryConstant(s.T, 1e5);
 
-  sys.WS=&WS;
+  sys.s=&s;
   sys.dynamic=false;
 }*/
 
@@ -674,8 +675,8 @@ void transformSystemMatricesWithQlin(){
   sys->Qinv = Qinv;
   
   //get q & v
-  q=Qinv*(WS->q0-Qoff);
-  v=Qinv*WS->v0;
+  q=Qinv*(s->q0-Qoff);
+  v=Qinv*s->v0;
   
   //set q
   q = Qlin*_q + Qoff;  qd = Qlin*_qd;
@@ -684,14 +685,14 @@ void transformSystemMatricesWithQlin(){
   J_i=vars(i)->J*Qlin;
   
   //get W & H
-  W = ~Qlin*WS->W*Qlin;
-  H = ~Qlin*WS->H*Qlin;
+  W = ~Qlin*s->W*Qlin;
+  H = ~Qlin*s->H*Qlin;
   
   //get Q (noise matrix)
   arr Qbig;
   Qbig.resize(2*Qlin.d0, 2*Qlin.d1); Qbig.setZero();
   Qbig.setMatrixBlock(Qlin, 0, 0); Qbig.setMatrixBlock(Qlin, Qlin.d0, Qlin.d1);
   //cout  <<Qbig  <<endl;
-  Q = ~Qbig*WS->Q*Qbig;
+  Q = ~Qbig*s->Q*Qbig;
 }
 #endif
