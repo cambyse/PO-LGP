@@ -43,6 +43,10 @@ void testBasics(){
   ints = ARRAY<int>(0, -1, -2, -3, -4);
   cout <<"set by hand:\n" <<ints <<endl;
 
+  //TRY DEBUGGING with GDB:
+  //set a breakpoint here
+  //in gdb (or a watch console of your IDE) type 'print gdb(a)' and 'print gdb(ints)'
+  
   //randomization
   rndUniform(a,-1.,1,false); //same as   forall(i,a) *i=rnd.uni(-1,1);
   cout <<"\nrandom double array:\n" <<a <<endl;
@@ -409,6 +413,21 @@ void testTensor(){
 }
 
 //--------------------------------------------------------------------------------
+
+char* gdb(MT::Array<double>& a){
+  static MT::String buf;
+  buf.clr();
+  a.writeDim(buf);
+  a.writeRaw(buf);
+  return buf.p;
+}
+char* gdb(MT::Array<int>& a){
+  static MT::String buf;
+  buf.clr();
+  a.writeDim(buf);
+  a.writeRaw(buf);
+  return buf.p;
+}
 
 int main(int argc, char *argv[]){
   
