@@ -96,7 +96,8 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TaskVariableList TVs_all; 
   TaskVariable *TV_tipAlign;
   TaskVariable *TV_palm;
-  TaskVariable *TV_palmAlign;
+  TaskVariable *TV_palmAlignDir;
+  TaskVariable *TV_palmAlignField;
   TaskVariable *TV_opp_tip;
   TaskVariable *TV_opp_fng;
   TaskVariable *TV_zeroLevel;
@@ -123,8 +124,10 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   MT::Array<ors::Shape*> palmL; palmL.append(palm);
   TV_palm = new PotentialValuesTaskVariable("palm pos",
       *sys.ors, palmL, *graspobj);
+  TV_palmAlignField = new PotentialFieldAlignTaskVariable("palm ori",
+      *sys.ors, palmL, *graspobj);
   /* use this to generate different approach directions */
-  TV_palmAlign = new TaskVariable("appr dir",
+  TV_palmAlignDir = new TaskVariable("appr dir",
       *sys.ors, zalignTVT, "m9", "<d(0 0 0 1)>", 0, 0, 0);
    /* */
   /* opposing fingers: heuristic for a good grasp (sort of weak closure
@@ -144,7 +147,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_lim  = listFindByName(sys.vars,"limits"); 
 
   TVs_all.append(ARRAY( TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm ));
-  TVs_all.append(ARRAY( TV_palmAlign, TV_tipAlign, TV_col, TV_lim, TV_q));
+  TVs_all.append(ARRAY( TV_palmAlignDir, TV_palmAlignField, TV_tipAlign, TV_col, TV_lim, TV_q));
 
   sys.setTaskVariables(TVs_all);
 
@@ -158,6 +161,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   /* configuration */
   static bool firstTime=true;
   static double tv_palm_prec,
+                tv_palmAlign_prec,
                 tv_appr_dir_prec,
                 tv_opp_fng_prec,
                 tv_opp_tip_prec,
@@ -173,6 +177,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   if(firstTime){
     firstTime=false;
     tv_palm_prec =        SD_PAR_R("grasp_tv_palm_prec");
+    tv_palmAlign_prec =   SD_PAR_R("grasp_palmAlign_prec");
     tv_appr_dir_prec =    SD_PAR_R("grasp_tv_appr_dir_prec");
     tv_opp_tip_prec =     SD_PAR_R("grasp_tv_opp_tip_prec");
     tv_opp_fng_prec =     SD_PAR_R("grasp_tv_opp_fng_prec");
@@ -201,8 +206,13 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   V=listFindByName(sys.vars,"palm pos");
   V->updateState();
-  V->y_target = ARR(0);
+  V->y_target = ARR(-.01);
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec,0.,0.);
+
+  V=listFindByName(sys.vars,"palm ori");
+  V->updateState();
+  V->y_target = ARR(-1.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palmAlign_prec,0.,0.);
 
   V=listFindByName(sys.vars,"appr dir");
   V->updateState();
@@ -289,6 +299,7 @@ activateVars_1step(soc::SocSystem_Ors &sys){
   activateAll(sys.vars,false);
   listFindByName(sys.vars,"palm pos")->active=true; 
   listFindByName(sys.vars,"appr dir")->active=true; 
+  listFindByName(sys.vars,"palm ori")->active=true; 
   /*
   listFindByName(sys.vars,"isf col")->active=true; 
   listFindByName(sys.vars,"tips z align")->active=true; 
@@ -305,7 +316,6 @@ void
 activateVars_2step(soc::SocSystem_Ors &sys){
   activateAll(sys.vars,false);
   listFindByName(sys.vars,"palm pos")->active=true; 
-  listFindByName(sys.vars,"appr dir")->active=true; 
   listFindByName(sys.vars,"tips z align")->active=true; 
   listFindByName(sys.vars,"collision")->active=true; 
   listFindByName(sys.vars,"qitself")->active=true; 
@@ -314,6 +324,8 @@ activateVars_2step(soc::SocSystem_Ors &sys){
   listFindByName(sys.vars,"oppose fng")->active=true; 
   listFindByName(sys.vars,"zeroLevel")->active=true; 
   /*
+  listFindByName(sys.vars,"palm ori")->active=true; 
+  listFindByName(sys.vars,"appr dir")->active=true; 
   listFindByName(sys.vars,"isf col")->active=true; 
   */
 }
@@ -389,6 +401,7 @@ void problem5(){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 5: o = new GraspObject_Box();break;
     case 3: o = random_obj(); break;
     case 4: o = new GraspObject_GP(c,gp_size);
             std::ifstream f_gp;
@@ -446,15 +459,15 @@ void problem5(){
 
     listFindByName(sys.vars,"appr dir")->jrel.setText(ax(i)) ;
     activateVars_1step(sys);
-    OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,0,false); 
+    OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,1,false); 
     /* open fingers */
-    b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
+    b.subRange(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
     sys.setx(b);
     sys.gl->watch("Belief after 1st phase, with open fings");
     MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
 
     activateVars_2step(sys);
-    OneStepDynamicFull(b,B,sys, t,alpha,task_eps,0,true); 
+    OneStepDynamicFull(b,B,sys, t,alpha,task_eps,1,true); 
     MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
 
     /* see bwdMsg */
