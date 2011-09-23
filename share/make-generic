@@ -30,7 +30,7 @@ ifndef OBJS
 OBJS	= main.o
 endif
 ifndef OUTPUT
-OUTPUT  = x.exe
+OUTPUT  = xexe
 endif
 
 
@@ -501,6 +501,7 @@ info: force
 	@echo "  DEPEND =" "$(DEPEND)"
 	@echo
 
+all: default
 
 ################################################################################
 #
