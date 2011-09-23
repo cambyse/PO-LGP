@@ -115,7 +115,7 @@ bool MT::checkGradient(void (*f)(arr&, arr*, const arr&, void*),
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
     cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
-    //HALT("checkGradient -- FAILURE -- \n measured grad=" <<JJ <<"\ncomputed grad=" <<J <<"\nmax diff=" <<md);
+    //HALT("");
     return false;
   }else{
     cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;

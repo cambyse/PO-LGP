@@ -18,7 +18,6 @@ int main(int argn,char **argv){
   soc::SocSystem_Ors sys;
   sys.initBasics(NULL, NULL, &gl, T, 3., MT::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
-  sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
  
 
   //-- setup the control variables (problem definition)
@@ -63,6 +62,7 @@ int main(int argn,char **argv){
 #if 0
   AICO_solver(soc,q,1e-2,.7,.01,0,0);
 #else
+  //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
   AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
   aico.init_trajectory(q);
