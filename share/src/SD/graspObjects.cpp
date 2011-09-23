@@ -340,7 +340,19 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
   return d;
 }
 
-GraspObject_Box::GraspObject_Box(){ NIY }
+GraspObject_Box::GraspObject_Box(){
+ 
+  c = MT::getParameter<arr>("center");
+  s = MT::getParameter<double>("sigma");
+  dim = ARR(.08,2*MT::getParameter<double>("radius"),MT::getParameter<double>("height"));
+  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
+             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+             0,0,1);
+             /*axes = ARR(1,0,0,
+             0,1,0,
+             0,0,1);*/
+  rot.reshape(3,3);
+}
 
 GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_){
   //assumes box is axis aligned
