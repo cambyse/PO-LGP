@@ -390,12 +390,9 @@ void OneStepDynamicFull(arr& b,arr& Binv,
       old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
 
-      if(verbose>0){
-        sys.displayState(NULL, NULL, "posture estimate", true);
-      }
-      if(verbose>1){
-        sys.gl->watch();
-      }
+      if(verbose>0) sys.gl->update();
+      if(verbose>1) sys.displayState(NULL, NULL, "posture estimate", true);
+      if(verbose>2) sys.gl->watch();
     }
   }
   b=b_best;
