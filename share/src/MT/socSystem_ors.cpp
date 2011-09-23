@@ -25,7 +25,7 @@
 //
 
 struct soc::SocSystem_Ors_Workspace {
-  arr q0, v0, W, H_rate, Q, v_act;
+  arr q0, v0, W, H_rate, Q_rate, v_act;
   arr q_external;
   
   uint T;
@@ -85,7 +85,7 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   sys->s->v0 = s->v0;
   sys->s->W = s->W;
   sys->s->H_rate = s->H_rate;
-  sys->s->Q = s->Q;
+  sys->s->Q_rate = s->Q_rate;
   sys->s->v_act = s->v_act;
   sys->s->T = s->T;
   sys->s->tau = s->tau;
@@ -119,18 +119,18 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     //cout <<"automatic W initialization =" <<s->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
-  static MT::Parameter<double> wc("Wcost", 1e-2);
-  static MT::Parameter<double> hc("Hcost", 1e-3);
-  static MT::Parameter<double> qn("Qnoise", 1e-10);
-  s->H_rate = hc()*W_rate;     //u-metric for torque control
-  s->W = wc()*W_rate;
+  static MT::Parameter<double> wr("Wrate");
+  static MT::Parameter<double> hr("Hrate");
+  static MT::Parameter<double> qr("Qrate", 1e-10);
+  s->H_rate = hr()*W_rate;     //u-metric for torque control
+  s->W = wr()*W_rate;
   if(!_dynamic){
     dynamic=false;
-    s->Q.setDiag(qn, s->q0.N);  //covariance \dot q-update
+    s->Q_rate.setDiag(qr, s->q0.N);  //covariance \dot q-update
   }else{
     dynamic=true;
     s->pseudoDynamic=true;
-    s->Q.setDiag(qn, 2*s->q0.N);  //covariance \dot q-update
+    s->Q_rate.setDiag(qr, 2*s->q0.N);  //covariance \dot q-update
   }
   stepScale.resize(s->T+1);  stepScale.setZero();
 }
@@ -291,11 +291,11 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   arr Wdiag(sys.s->q0.N);
   Wdiag=1.;
   MT_MSG("Warning - need to change this");
-  Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
-  //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
+  Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
+  //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 20 20 10 10 10 10 10 10 ]";
   CHECK(Wdiag.N==sys.s->q0.N, "wrong W matrix!");
   sys.s->W.setDiag(Wdiag);
-  sys.s->H = sys.s->W;
+  sys.s->H_rate = sys.s->W;
 
   //set task variables
   TaskVariable *x0, *x1, *x2;
@@ -394,6 +394,7 @@ double soc::SocSystem_Ors::getTau(bool scaled){
 }
 
 void soc::SocSystem_Ors::getq0(arr& q){ q=s->q0; }
+void soc::SocSystem_Ors::setq0(const arr& q){ s->q0=q; }
 void soc::SocSystem_Ors::getv0(arr& v){ v=s->v0; }
 void soc::SocSystem_Ors::getqv0(arr& q_){
   q_.setBlockVector(s->q0, s->v0);
@@ -419,8 +420,11 @@ void soc::SocSystem_Ors::getWinv(arr& Winv, uint t){
   }
 }
 void soc::SocSystem_Ors::getH(arr& H, uint t){
-  H=s->H_rate; //*getTau();
-  //if(stepScale(t)) H *= double(1 <<stepScale(t));
+  H=s->H_rate*getTau(); // control cost rate
+  if(stepScale(t)) H *= double(1 <<stepScale(t));
+}
+void soc::SocSystem_Ors::getHrateInv(arr& HrateInv){
+   inverse_SymPosDef(HrateInv, s->H_rate);
 }
 void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   arr H;
@@ -428,7 +432,10 @@ void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
   inverse_SymPosDef(Hinv, H);
 }
 void soc::SocSystem_Ors::getQ(arr& Q, uint t){
-  Q=s->Q*sqrt(getTau());
+  Q=s->Q_rate*getTau();// cost rate
+}
+void soc::SocSystem_Ors::getQrate(arr& Qrate){
+  Qrate=s->Q_rate;
 }
 
 void soc::SocSystem_Ors::setq(const arr& q, uint t){
@@ -464,11 +471,10 @@ void soc::SocSystem_Ors::setqv(const arr& q_, uint t){
   v.referToSubRange(q_, n, 2*n-1);
   setqv(q, v);
 }
+
 void soc::SocSystem_Ors::setx0AsCurrent(){
   ors->getJointState(s->q0, s->v0);
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
-}
-
 
 void soc::SocSystem_Ors::getMF(arr& M, arr& F, uint t){
   if(!s->pseudoDynamic){

@@ -15,11 +15,14 @@ clean/%::
 	make clean -C $*
 
 tests::
-	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} \;
+	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
+
+projects::
+	-@find proj_* -maxdepth 1 -follow -type d -not -name 'proj_*' -not -name 'SHARE' -exec make -C {} \;
 
 cleanProjects::
-	-@find test -maxdepth 1 -type d -not -name 'test' -exec make -C {} clean \;
-	-@find robot -maxdepth 1 -type d -not -name 'robot' -exec make -C {} clean \;
+	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
+	-@find proj_* -maxdepth 1 -follow -type d -not -name 'robot' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::
 	make -C doc guide doxy
