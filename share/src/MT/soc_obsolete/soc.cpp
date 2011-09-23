@@ -221,7 +221,7 @@ void soc::SocSystemAbstraction::getProcess(arr& A, arr& tA, arr& Ainv, arr& invt
   }
 }*/
 
-double soc::SocSystemAbstraction::getCosts(arr& R, arr& r, const arr& xt, uint t){
+double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, uint t){
   uint i, m=nTasks(), n=qDim();
   double C=0.;
   if(!dynamic){ //kinematic
@@ -572,7 +572,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     setx(x[t]);
     getTaskCostTerms(Phi, PhiJ, x[t], t);
     c1=sumOfSqr(Phi);
-    c3=getCosts(R, r, x[t], t);
+    c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
     //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
     if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);

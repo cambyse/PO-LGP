@@ -3208,7 +3208,7 @@ void ors::Graph::hessian(arr& H, uint a, ors::Transformation *rel) const{
   Xa = bodies(a)->X;
   if(rel) Xa.appendTransformation(*rel);
   
-  if(!bodies(a)->inLinks.N){ HALT("Qlin needs to be implemented (as in jacobian(..))");  return; }
+  if(!bodies(a)->inLinks.N){ if(Qlin.N) H=~Qlin*H*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei){
     i=ei->index;
@@ -3237,6 +3237,7 @@ void ors::Graph::hessian(arr& H, uint a, ors::Transformation *rel) const{
     if(!ei->from->inLinks.N) break;
     ei=ei->from->inLinks(0);
   }
+  if(Qlin.N) H=~Qlin*H*Qlin;
 }
 
 /*!\brief return the configuration's inertia tensor $M$ (n x n tensor)*/

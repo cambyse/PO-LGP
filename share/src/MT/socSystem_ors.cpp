@@ -512,6 +512,10 @@ const char* soc::SocSystem_Ors::taskName(uint i){
   return vars(i)->name.p;
 }
 
+uint soc::SocSystem_Ors::taskDim(uint i){
+  return vars(i)->y.N;
+}
+
 void soc::SocSystem_Ors::getPhi(arr& phiq_i, uint i){
   phiq_i=vars(i)->y;
 }

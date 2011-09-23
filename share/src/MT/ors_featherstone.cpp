@@ -893,7 +893,7 @@ void ors::invDynamics(arr& tau,
     par = tree(i).parent;
     if(par == -1){
       v[i] = h(i) * qd_i(i);
-      a[i] = h(i)*qdd_i(i);
+      a[i] = h(i) * qdd_i(i);
     }else{
       v[i] = Xup[i] * v[par] + h(i) * qd_i(i);
       a[i] = Xup[i] * a[par] + h(i) * qdd_i(i) + Featherstone::crossM(v[i]) * h(i) * qd_i(i);

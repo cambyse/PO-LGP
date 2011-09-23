@@ -92,13 +92,11 @@ void MT::randomSpline(arr& X, arr& dX, uint dim, uint points, uint intersteps, d
   makeSpline(X, dX, P, intersteps);
 }
 
-void MT::checkGradient(void (*f)(arr&, const arr&, void*),
-                       void (*df)(arr&, const arr&, void*),
+bool MT::checkGradient(void (*f)(arr&, arr*, const arr&, void*),
                        void *data,
                        const arr& x, double tolerance){
   arr y, J, dx, dy, JJ;
-  f(y, x, data);
-  df(J, x, data);
+  f(y, &J, x, data);
   
   JJ.resize(y.N, x.N);
   double eps=CHECK_EPS;
@@ -106,7 +104,7 @@ void MT::checkGradient(void (*f)(arr&, const arr&, void*),
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    f(dy, dx, data);
+    f(dy, NULL, dx, data);
     dy = (dy-y)/eps;
     for(k=0; k<y.N; k++) JJ(k, i)=dy.elem(k);
   }
@@ -118,19 +116,19 @@ void MT::checkGradient(void (*f)(arr&, const arr&, void*),
     MT::save(JJ, "z.JJ");
     cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("checkGradient -- FAILURE -- \n measured grad=" <<JJ <<"\ncomputed grad=" <<J <<"\nmax diff=" <<md);
+    return false;
   }else{
     cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
-void MT::checkGradient(double(*f)(const arr&, void*),
-                       void (*df)(arr&, const arr&, void*),
+bool MT::checkGradient(double(*f)(arr*, const arr&, void*),
                        void *data,
                        const arr& x, double tolerance){
   arr J, dx, JJ;
   double y, dy;
-  y=f(x, data);
-  df(J, x, data);
+  y=f(&J, x, data);
   
   JJ.resize(x.N);
   double eps=CHECK_EPS;
@@ -138,7 +136,7 @@ void MT::checkGradient(double(*f)(const arr&, void*),
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    dy = f(dx, data);
+    dy = f(NULL, dx, data);
     dy = (dy-y)/eps;
     JJ(i)=dy;
   }
@@ -150,9 +148,11 @@ void MT::checkGradient(double(*f)(const arr&, void*),
     MT::save(JJ, "z.JJ");
     cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
+    return false;
   }else{
     cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
 void MT::convolution(arr &y, const arr &x, double(*h)(double), double scale){
@@ -1068,15 +1068,14 @@ uint n;
 uint fc=0, dfc=0; //evaluation counters
 double y;
 
-double(*f)(const arr &x, void *data);
-void (*df)(arr &dx, const arr &x, void *data);
+double(*f)(arr *grad, const arr &x, void *data);
 
 //conjugate gradient minimizer and wrappers
 double CG_f(double x[], void *data){
   //printf("[CGf]");
   fc++;
   xref.referTo(x, n); xref.reshapeAs(*startx);
-  y=f(xref, data);
+  y=f(NULL, xref, data);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   return y;
 }
@@ -1084,7 +1083,7 @@ void CG_df(double x[], double dx[], void *data){
   //printf("[CGd]");
   dfc++;
   xref.referTo(x, n); xref.reshapeAs(*startx);
-  df(arr(dx, n)(), xref, data);
+  f(&arr(dx, n)(), xref, data);
 }
 
 //LM optimizer and wrappers
@@ -1092,7 +1091,7 @@ void LM_f(double *p, double *hx, longinteger m, longinteger n, void *adata){
   //printf("%li %li", n, m);
   fc++;
   xref.referTo(p, n); xref.reshapeAs(*startx);
-  y = f(xref, adata);
+  y = f(NULL, xref, adata);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   int i;
   for(i=0; i<n; i++) hx[i]=y;
@@ -1101,7 +1100,7 @@ void LM_df(double *p, double *J, longinteger m, longinteger n, void *adata){
   //printf("%li %li", n, m);
   dfc++;
   xref.referTo(p, n); xref.reshapeAs(*startx);
-  df(arr(J, n)(), xref, adata);
+  f(&arr(J, n)(), xref, adata);
   int i, j;
   for(i=1; i<n; i++) for(j=0; j<n; j++) J[i*n+j]=J[j];
 }
@@ -1110,14 +1109,14 @@ void LM_df(double *p, double *J, longinteger m, longinteger n, void *adata){
 double RP_f(const arr& x, void *data){
   //printf("[RPf]");
   fc++;
-  y=f(x, data);
+  y=f(NULL, x, data);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   return y;
 }
 void RP_df(arr& dx, const arr& x, void *data){
   //printf("[RPd]");
   dfc++;
-  df(dx, x, data);
+  f(&dx, x, data);
 }
 }
 
@@ -1145,8 +1144,7 @@ void frprmn(double p[], int n, double ftol, int *iter, int maxIterations, double
                   double stoppingTolerance);*/
 
 //--- the minimize routine itself
-int MT::minimize(double(*f)(const arr&, void*),
-                 void (*df)(arr&, const arr&, void*),
+int MT::minimize(double(*f)(arr*, const arr&, void*),
                  void *data,
                  arr& x,
                  double *fmin_return,
@@ -1156,7 +1154,6 @@ int MT::minimize(double(*f)(const arr&, void*),
                  bool testGrad){
                  
   minimizeStatic::f=f;
-  minimizeStatic::df=df;
   minimizeStatic::n=x.N;
   minimizeStatic::fc=0;
   minimizeStatic::dfc=0;
@@ -1168,7 +1165,7 @@ int MT::minimize(double(*f)(const arr&, void*),
   
   arr LM_target(x.N); LM_target.setZero();
   
-  if(testGrad) checkGradient(f, df, data, x, stoppingTolerance);
+  if(testGrad) checkGradient(f, data, x, stoppingTolerance);
   
   switch(method){
     case 2: //Rprop
@@ -1209,7 +1206,7 @@ int MT::minimize(double(*f)(const arr&, void*),
          \n  df-counts=%i\
          \n  f(x_min)=%g\n", method, i, minimizeStatic::fc, minimizeStatic::dfc, *fminp);
 
-  if(testGrad) checkGradient(f, df, data, x, stoppingTolerance);
+  if(testGrad) checkGradient(f, data, x, stoppingTolerance);
   
   return i;
 }

@@ -18,6 +18,8 @@ int main(int argn,char **argv){
   soc::SocSystem_Ors sys;
   sys.initBasics(NULL, NULL, &gl, T, 3., MT::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
+  sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
+ 
 
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position", *sys.ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());

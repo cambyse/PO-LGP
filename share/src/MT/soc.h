@@ -55,7 +55,8 @@ struct SocSystemAbstraction {
   bool dynamic;     ///< determines whether this problem is dynamic or not
   uint scalePower;  ///< if non-zero, all routines assume an horizon T=T/2^scalePower
   
-  uintA stepScale;    ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
+  uintA stepScale;   ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
+  float checkGrad;   ///<the probability by which the gradients are checked in each call of getTaskCost[Terms]
   
   ///@name initialization
   SocSystemAbstraction();
@@ -103,6 +104,7 @@ struct SocSystemAbstraction {
   virtual bool isConditioned(uint i, uint t) = 0;
   virtual bool isConstrained(uint i, uint t);
   virtual const char* taskName(uint i){ return NULL; };
+  virtual uint taskDim(uint i){ return 0; };
   virtual void getPhi(arr& phiq_i, uint i){ throw("NIY"); }
   virtual void getJJt(arr& J_i, arr& Jt_i, uint i){ throw("NIY"); }
   virtual void getJqd(arr& Jqd_i, uint i);
@@ -120,8 +122,9 @@ struct SocSystemAbstraction {
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
   virtual void getProcess(arr& A, arr& a, arr& B, uint t, arr* Winv=NULL);
   virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
-  virtual double getCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
+  virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
+  void getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t);
   
   // cost info
   double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
@@ -131,6 +134,7 @@ struct SocSystemAbstraction {
   virtual void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag);
   
   //-- convenience (prelim...)
+  void testGradientsInCurrentState(const arr& xt, uint t);
   void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
   double analyzeTrajectory(const arr& q, bool plot);
   void constantTrajectory(arr& q);

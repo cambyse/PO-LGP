@@ -65,6 +65,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);
+  uint taskDim(uint i);
   void getPhi(arr& phiq_i, uint i);
   void getJJt(arr& J_i, arr& Jt_i, uint i);
   void getHessian(arr& H_i, uint i);

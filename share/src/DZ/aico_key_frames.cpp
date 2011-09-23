@@ -102,7 +102,7 @@ double OneStepDynamicFull(arr& b,arr& Binv,
       restore=true;
     }else{
       if (!restore) alpha=pow(alpha,0.5); //success
-      sys.getCosts(R,r,b,T); // costs at the current position
+      sys.getTaskCosts(R,r,b,T); // costs at the current position
 	
       double eps=1e-10; arr id; id.setId(28);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
@@ -204,12 +204,12 @@ void GetOptimalDynamicTime(double& time,
     
     sys.setqv(b);
     if (sys.taskCost(NULL,T,-1)<old_r) { // in case best costs do not coincide with the best time
-      sys.getCosts(R,r,b,T);
+      sys.getTaskCosts(R,r,b,T);
       b_old=b;
       old_r = sys.taskCost(NULL,T,-1);
     }
     else
-      sys.getCosts(R,r,b_old,T);
+      sys.getTaskCosts(R,r,b_old,T);
  
     OneStepDynamicGradientFull(gr,llk,sys,R,r,old_time); // gradient of likelihood for a given time and costs
     old_time = old_time + step*gr/fabs(gr);

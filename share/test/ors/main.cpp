@@ -28,11 +28,9 @@ namespace T1{
   ors::Graph *G;
   ors::Transformation rel;
   ors::Vector axis;
-  static void f  (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematics(y,i,&rel); }
-  static void df (arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobian(J,i,&rel); }
-  static void ddf(arr &H,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->hessian(H,i,&rel); }
-  static void f2 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsZ(y,i,&rel); }
-  static void df2(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianZ(J,i,&rel); }
+  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematics(y,i,&rel);  if(J) G->jacobian(*J,i,&rel); }
+  static void f1 (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobian(J,i,&rel);    if(H) G->hessian(*H,i,&rel); }
+  static void f2 (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsZ(y,i,&rel); if(J) G->jacobianZ(*J,i,&rel); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
@@ -51,9 +49,9 @@ void testKinematics(){
     rndUniform(x,-.5,.5,false);
     gl.text.clr() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //gl.update();
-    MT::checkGradient(T1::f ,T1::df ,NULL,x,1e-5);
-    MT::checkGradient(T1::df,T1::ddf,NULL,x,1e-5);
-    MT::checkGradient(T1::f2,T1::df2,NULL,x,1e-5);
+    MT::checkGradient(T1::f ,NULL,x,1e-5);
+    MT::checkGradient(T1::f1,NULL,x,1e-5);
+    MT::checkGradient(T1::f2,NULL,x,1e-5);
     //MT::checkGradient(T1::f3,T1::df3,NULL,x,1e-5);
   }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
@@ -67,8 +65,13 @@ void testKinematics(){
 namespace Ctest{
   SwiftInterface *swift;
   ors::Graph *G;
-  void f(arr& c,const arr &x,void*){     G->setJointState(x); G->calcBodyFramesFromJoints();  swift->computeProxies(*G,false); G->sortProxies(true); G->getContactMeasure(c,.1); }
-  void df(arr& dfdx,const arr &x,void*){ G->setJointState(x); G->calcBodyFramesFromJoints();  swift->computeProxies(*G,false); G->sortProxies(true); G->getContactGradient(dfdx,.1); }
+  void f(arr& c, arr *dfdx, const arr &x,void*){
+    G->setJointState(x); G->calcBodyFramesFromJoints();
+    swift->computeProxies(*G,false);
+    G->sortProxies(true);
+    G->getContactMeasure(c,.1);
+    if(dfdx) G->getContactGradient(*dfdx,.1);
+  }
 }
 
 void testContacts(){
@@ -104,7 +107,7 @@ void testContacts(){
     //x += inverse(grad)*(-.1*c);
     x -= 1e-4*grad; //.1 * (invJ * grad);
 
-    MT::checkGradient(Ctest::f,Ctest::df,NULL,x,1e10);
+    MT::checkGradient(Ctest::f,NULL,x,1e10);
   }
 }
 
@@ -264,7 +267,7 @@ void testDynamics(){
   init(G,gl,"arm7.ors");
   T2::G=&G;
   
-  uint t,T=1200,n=G.getJointStateDimension();
+  uint t,T=720,n=G.getJointStateDimension();
   arr q,qd,qdd(n),qdd_(n);
   G.getJointState(q,qd);
   qdd.setZero();
@@ -282,7 +285,7 @@ void testDynamics(){
       G.calcBodyFramesFromJoints();
       G.getJointState(q,qd);
     }
-    if(t>=1000){ //hold steady
+    if(t>=500){ //hold steady
       qdd_ = -1. * qd;
       G.inverseDynamics(T2::tau,qd,qdd_);
       //tau.resize(n); tau.setZero();
@@ -302,7 +305,7 @@ void testDynamics(){
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
       MT::rk4dd(q,qd,q,qd,ddf_joints,dt);
-      if(t>500){
+      if(t>300){
         T2::friction=true;
         gl.text.clr() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
       }else{
@@ -408,8 +411,6 @@ void testBlenderImport(){
 }
 
 int main(int argc,char **argv){
-
-  testBlenderImport();
 
   testPlayStateSequence();
   testKinematics();
