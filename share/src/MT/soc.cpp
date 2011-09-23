@@ -101,21 +101,21 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
 /*! \brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
-void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid){
-  uint t, T=soci.nTime(), n=soci.qDim();
-  arr phiq, xt, J, Jt, Jinv, W, Winv;
+void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
+  uint t, T= sys.nTime(), n= sys.qDim();
+  arr phiq, yt, J, Jt, Jinv, W, Winv;
   double prec;
   q.resize(T+1, n);
-  soci.getq0(q[0]());
+  sys.getq0(q[0]());
   for(t=1; t<=T; t++){
-    soci.getW(W, t);
+    sys.getW(W, t);
     inverse_SymPosDef(Winv, W);
-    soci.setq(q[t-1]);
-    soci.getPhi(phiq, taskid);
-    soci.getJJt(J, Jt, taskid);
-    soci.getTarget(xt, prec, taskid, t);
-    pseudoInverse(Jinv, J, Winv, 1e-5);
-    q[t]() = q[t-1] + Jinv*(xt-phiq);
+    sys.setq(q[t-1]);
+    sys.getPhi(phiq, taskid);
+    sys.getJJt(J, Jt, taskid);
+    sys.getTarget(yt, prec, taskid, t);
+    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
+    q[t]() = q[t-1] + Jinv*(yt-phiq);
   }
   
 }

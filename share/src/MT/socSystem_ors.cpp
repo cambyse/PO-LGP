@@ -475,6 +475,7 @@ void soc::SocSystem_Ors::setqv(const arr& q_, uint t){
 void soc::SocSystem_Ors::setx0AsCurrent(){
   ors->getJointState(s->q0, s->v0);
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
+}
 
 void soc::SocSystem_Ors::getMF(arr& M, arr& F, uint t){
   if(!s->pseudoDynamic){
