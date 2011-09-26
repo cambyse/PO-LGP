@@ -434,11 +434,11 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Transformation *rel=0) const;
-  void jacobian(arr& J, uint i, ors::Transformation *rel=0) const;
-  void hessian(arr& H, uint i, ors::Transformation *rel=0) const;
-  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0) const;
-  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0) const;
+  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a);
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
