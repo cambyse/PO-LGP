@@ -362,8 +362,8 @@ void DefaultTaskVariable::updateState(double tau){
       break;
     case zoriTVT:
       if(j==-1){
-        ors->kinematicsVec(y, i, &irel.getZ());
-        ors->jacobianVec(J, i, &irel.getZ());
+        ors->kinematicsVec(y, i, &irel.rot.getZ(vi));
+        ors->jacobianVec(J, i, &irel.rot.getZ(vi));
         break;
       }
       //relative
@@ -413,8 +413,8 @@ void DefaultTaskVariable::updateState(double tau){
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors->kinematicsVec(zi, i, &irel.getZ());
-      ors->jacobianVec(Ji, i, &irel.getZ());
+      ors->kinematicsVec(zi, i, &irel.rot.getZ(vi));
+      ors->jacobianVec(Ji, i, &irel.rot.getZ(vi));
       if(j==-1){
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
@@ -422,8 +422,8 @@ void DefaultTaskVariable::updateState(double tau){
         Jj.resizeAs(Ji);
         Jj.setZero();
       }else{
-        ors->kinematicsVec(zj, j, &jrel.getZ());
-        ors->jacobianVec(Jj, j, &jrel.getZ());
+        ors->kinematicsVec(zj, j, &jrel.rot.getZ(vj));
+        ors->jacobianVec(Jj, j, &jrel.rot.getZ(vj));
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -584,7 +584,7 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
 void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
   double d;
   ors::Shape *a, *b;
-  ors::Transformation arel, brel;
+  ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
 
   a=ors->shapes(p->a); b=ors->shapes(p->b);
@@ -593,8 +593,8 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, 
   if(!linear) y += d*d;
   else        y += d;
   
-  arel.setZero();  arel.pos=a->X.rot/(p->posA-a->X.pos);
-  brel.setZero();  brel.pos=b->X.rot/(p->posB-b->X.pos);
+  arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
+  brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
           
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);

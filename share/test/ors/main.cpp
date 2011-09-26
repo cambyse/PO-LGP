@@ -26,11 +26,11 @@ void init(ors::Graph& G,OpenGL& gl,const char* orsFile){
 namespace T1{
   uint i,j;
   ors::Graph *G;
-  ors::Transformation rel;
+  ors::Vector rel;
   ors::Vector axis;
   static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematics(y,i,&rel);  if(J) G->jacobian(*J,i,&rel); }
   static void f1 (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobian(J,i,&rel);    if(H) G->hessian(*H,i,&rel); }
-  static void f2 (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsZ(y,i,&rel); if(J) G->jacobianZ(*J,i,&rel); }
+  static void f2 (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis); if(J) G->jacobianVec(*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
@@ -198,8 +198,7 @@ void testFollowRedundantSequence(){
   uint t,T,n=G.getJointStateDimension();
   arr x(n),v,z,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  ors::Transformation rel;
-  rel.pos.set(0,0,.3); //this frame describes the relative position of the endeffector wrt. 7th body
+  ors::Vector rel(0,0,.3); //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories

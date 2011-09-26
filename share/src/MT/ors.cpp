@@ -3134,7 +3134,7 @@ void ors::Graph::setJointState(const arr& x, bool clearJointErrors){
 // Roy Featherstone, David Orin: "Robot Dynamics: Equations and Algorithms"
 
 /*!\brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
-void ors::Graph::kinematics(arr& y, uint a, ors::Vector *rel){
+void ors::Graph::kinematics(arr& y, uint a, ors::Vector *rel) const{
   ors::Vector pos=bodies(a)->X.pos;
   if(rel) pos += bodies(a)->X.rot*(*rel);
   y.setCarray(pos.p, 3);
@@ -3192,7 +3192,7 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Vector *rel) const{
 
 /*!\brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
-void ors::Graph::hessian(arr& H, uint a, ors::Vector *rel){
+void ors::Graph::hessian(arr& H, uint a, ors::Vector *rel) const{
   uint i, j;
   ors::Transformation Xi, Xj;
   Joint *ei, *ej;
