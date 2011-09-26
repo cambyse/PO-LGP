@@ -273,14 +273,14 @@ void TaskVariable::updateState(){
   //get state
   switch(type){
   case posTVT:
-    if(j==-1){ ors->kinematics(y,i,&irel); break; }
+    if(j==-1){ ors->kinematics(y,i,&irel.pos); break; }
     pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
     pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
     c = ors->bodies(j)->X.rot / (pi-pj);
     y.resize(3); y.setCarray(c.p,3);
     break;
   case zoriTVT:
-    if(j==-1){ ors->kinematicsZ(y,i,&irel); break; }
+    if(j==-1){ ors->kinematicsVec(y,i,&irel.pos); break; }
     //relative
     MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
     fi = ors->bodies(i)->X; fi.appendTransformation(irel);
@@ -305,13 +305,13 @@ void TaskVariable::updateState(){
     y.setZero();
     break;
   case zalignTVT:
-    ors->kinematicsZ(zi,i,&irel);
+    ors->kinematicsVec(zi,i,&irel.pos);
     if(j==-1){
       ors::Vector world_z;
       if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
       zj.setCarray((jrel*world_z).p,3);
     }
-    else ors->kinematicsZ(zj,j,&jrel);
+    else ors->kinematicsVec(zj,j,&jrel.pos);
     y.resize(1);
     y(0) = scalarProduct(zi,zj);
     break;
@@ -351,11 +351,11 @@ void TaskVariable::updateJacobian(){
 
   switch(type){
   case posTVT:
-    if(j==-1){ ors->jacobian(J,i,&irel); break; }
+    if(j==-1){ ors->jacobian(J,i,&irel.pos); break; }
     pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
     pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
-    ors->jacobian(Ji,i,&irel);
-    ors->jacobian(Jj,j,&jrel);
+    ors->jacobian(Ji,i,&irel.pos);
+    ors->jacobian(Jj,j,&jrel.pos);
     ors->jacobianR(JRj,j);
     J.resize(3,Jj.d1);
     for(k=0;k<Jj.d1;k++){
@@ -367,7 +367,7 @@ void TaskVariable::updateJacobian(){
       J(0,k)=jk(0); J(1,k)=jk(1); J(2,k)=jk(2); 
     }
     break;
-  case zoriTVT:  ors->jacobianZ(J,i,&irel);   break;
+  case zoriTVT:  ors->jacobianVec(J,i,&irel.pos);   break;
   case rotTVT:   ors->jacobianR(J,i);   break;
   case contactTVT:  NIY;  break;
   case gripTVT:  NIY;  break;
@@ -401,8 +401,8 @@ void TaskVariable::updateJacobian(){
     J.reshape(params.N,J.N/params.N);
     break;
   case zalignTVT:
-    ors->kinematicsZ(zi,i,&irel);
-    ors->jacobianZ(Ji,i,&irel);
+    ors->kinematicsVec(zi,i,&irel.pos);
+    ors->jacobianVec(Ji,i,&irel.pos);
     if(j==-1){
       ors::Vector world_z;
       if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
@@ -410,8 +410,8 @@ void TaskVariable::updateJacobian(){
       Jj.resizeAs(Ji);
       Jj.setZero();
     }else{
-      ors->kinematicsZ(zj,j,&jrel);
-      ors->jacobianZ(Jj,j,&jrel);
+      ors->kinematicsVec(zj,j,&jrel.pos);
+      ors->jacobianVec(Jj,j,&jrel.pos);
     }
     J = ~zj * Ji + ~zi * Jj;
     J.reshape(1,ors->getJointStateDimension());
@@ -426,7 +426,7 @@ void TaskVariable::updateJacobian(){
 void TaskVariable::getHessian(arr& H){
   switch(type){
   case posTVT:
-    if(j==-1){ ors->hessian(H,i,&irel); break; }
+    if(j==-1){ ors->hessian(H,i,&irel.pos); break; }
   default:  NIY;
   }
 }

@@ -3113,17 +3113,17 @@ void ors::Graph::setJointState(const arr& x,bool clearJointErrors){
 // Roy Featherstone, David Orin: "Robot Dynamics: Equations and Algorithms"
 
   /*!\brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
-void ors::Graph::kinematics(arr& y,uint a,ors::Transformation *rel){
-  ors::Transformation f=bodies(a)->X;
-  if(rel) f.appendTransformation(*rel);
-  y.setCarray(f.pos.p,3);
+void ors::Graph::kinematics(arr& y,uint a,ors::Vector *rel){
+  ors::Vector pos=bodies(a)->X.pos; 
+  if(rel) pos += bodies(a)->X.rot*(*rel);
+  y.setCarray(pos.p,3);
 }
 
   /*!\brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
     of the i-th body (3 x n tensor)*/
-void ors::Graph::jacobian(arr& J,uint a,ors::Transformation *rel){
+void ors::Graph::jacobian(arr& J,uint a,ors::Vector *rel){
   uint i;
-  ors::Transformation Xa,Xi;
+  ors::Transformation Xi;
   Joint *ei;
   ors::Vector tmp,ti;
 
@@ -3134,8 +3134,8 @@ void ors::Graph::jacobian(arr& J,uint a,ors::Transformation *rel){
   J.setZero();
 
   //get reference frame
-  Xa = bodies(a)->X;
-  if(rel) Xa.appendTransformation(*rel);
+  ors::Vector pos = bodies(a)->X.pos;
+  if(rel) pos += bodies(a)->X.rot*(*rel);
 
   if(!bodies(a)->inLinks.N){ if(Qlin.N) J=J*Qlin; return; }
   ei=bodies(a)->inLinks(0);
@@ -3157,7 +3157,7 @@ void ors::Graph::jacobian(arr& J,uint a,ors::Transformation *rel){
 #endif
     Xi.rot.getX(ti);
 
-    tmp = ti ^ (Xa.pos-Xi.pos);
+    tmp = ti ^ (pos-Xi.pos);
 
     J(0,i) = tmp.p[0];
     J(1,i) = tmp.p[1];
@@ -3171,9 +3171,9 @@ void ors::Graph::jacobian(arr& J,uint a,ors::Transformation *rel){
 
   /*!\brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
     of the i-th body (3 x n x n tensor) */
-void ors::Graph::hessian(arr& H,uint a,ors::Transformation *rel){
+void ors::Graph::hessian(arr& H,uint a,ors::Vector *rel){
   uint i,j;
-  ors::Transformation Xa,Xi,Xj;
+  ors::Transformation Xi,Xj;
   Joint *ei,*ej;
   ors::Vector r,ti,tj;
 
@@ -3184,8 +3184,8 @@ void ors::Graph::hessian(arr& H,uint a,ors::Transformation *rel){
   H.setZero();
 
   //get reference frame
-  Xa = bodies(a)->X;
-  if(rel) Xa.appendTransformation(*rel);
+  ors::Vector pos = bodies(a)->X.pos;
+  if(rel) pos += bodies(a)->X.rot*(*rel);
 
   if(!bodies(a)->inLinks.N) return;
   ei=bodies(a)->inLinks(0);
@@ -3204,7 +3204,7 @@ void ors::Graph::hessian(arr& H,uint a,ors::Transformation *rel){
       Xj.appendTransformation(ej->A);
       Xj.rot.getX(tj);
 
-      r = tj ^ (ti ^ (Xa.pos-Xi.pos));
+      r = tj ^ (ti ^ (pos-Xi.pos));
 
       H(0,i,j) = H(0,j,i) = r.p[0];
       H(1,i,j) = H(1,j,i) = r.p[1];
@@ -3324,18 +3324,17 @@ void ors::Graph::inverseDynamics(arr& tau,const arr& qd,const arr& qdd){
 }*/
 
   //! kinematis of the i-th body's z-orientation vector
-void ors::Graph::kinematicsZ(arr& y,uint a,ors::Transformation *rel){
+void ors::Graph::kinematicsVec(arr& y,uint a,ors::Vector *vec){
   ors::Transformation f=bodies(a)->X;
-  if(rel) f.appendTransformation(*rel);
   ors::Vector v;
-  f.rot.getZ(v);
+  if(vec) v=f.rot*(*vec); else f.rot.getZ(v);
   y.setCarray(v.p,3);
 }
 
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
   //! Jacobian of the i-th body's z-orientation vector
-void ors::Graph::jacobianZ(arr& J,uint a,ors::Transformation *rel){
+void ors::Graph::jacobianVec(arr& J,uint a,ors::Vector *vec){
   uint i;
   ors::Transformation Xa,Xi;
   Joint *ei;
@@ -3349,8 +3348,8 @@ void ors::Graph::jacobianZ(arr& J,uint a,ors::Transformation *rel){
 
   //get reference frame
   Xa = bodies(a)->X;
-  if(rel) Xa.appendTransformation(*rel);
-  Xa.rot.getZ(ta);
+  if(vec) ta = Xa.rot*(*vec);
+  else    Xa.rot.getZ(ta);
 
   if(!bodies(a)->inLinks.N) return;
   ei=bodies(a)->inLinks(0);
@@ -3913,7 +3912,7 @@ real ors::Graph::getContactGradient(arr &grad,real margin,bool linear){
   arr J,dnormal;
   grad.resize(1,getJointStateDimension(false));
   grad.setZero();
-  ors::Transformation arel,brel;
+  ors::Vector arel,brel;
   for(i=0;i<proxies.N;i++) if(!proxies(i)->age && proxies(i)->d<margin){
     a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
     d=1.-proxies(i)->d/margin;
@@ -3935,10 +3934,8 @@ real ors::Graph::getContactGradient(arr &grad,real margin,bool linear){
     if(!linear) cost += discount*d*d;
     else        cost += discount*d;
     
-    arel.setZero();  arel.pos=a->X.rot
-/(proxies(i)->posA-a->X.pos);
-    brel.setZero();  brel.pos=b->X.rot
-/(proxies(i)->posB-b->X.pos);
+    arel.setZero();  arel=a->X.rot/(proxies(i)->posA-a->X.pos);
+    brel.setZero();  brel=b->X.rot/(proxies(i)->posB-b->X.pos);
     
     CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p,3); dnormal.reshape(1,3);
@@ -3970,12 +3967,12 @@ void ors::Graph::getContactConstraintsGradient(arr &dydq){
   uint i,con=0;
   Shape *a,*b;
   arr J,dnormal,grad(1,jd);
-  ors::Transformation arel,brel;
+  ors::Vector arel,brel;
   for(i=0;i<proxies.N;i++) if(!proxies(i)->age){
     a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
     
-    arel.setZero();  arel.pos=a->X.rot/(proxies(i)->posA-a->X.pos);
-    brel.setZero();  brel.pos=b->X.rot/(proxies(i)->posB-b->X.pos);
+    arel.setZero();  arel=a->X.rot/(proxies(i)->posA-a->X.pos);
+    brel.setZero();  brel=b->X.rot/(proxies(i)->posB-b->X.pos);
     
     CHECK(proxies(i)->normal.isNormalized(),"proxy normal is not normalized");
     dnormal.referTo(proxies(i)->normal.p,3); dnormal.reshape(1,3);

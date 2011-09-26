@@ -1108,4 +1108,5 @@ void OdeInterface::unsetJointMotors(ors::Graph &C){}
 void OdeInterface::exportStateToOde(ors::Graph &C){}
 void OdeInterface::importStateFromOde(ors::Graph &C){}
 void OdeInterface::importProxiesFromOde(ors::Graph &C){}
+void OdeInterface::addJointForce(ors::Graph &C,arr& f){}
 #endif
