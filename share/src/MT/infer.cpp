@@ -205,7 +205,7 @@ infer::Variable::~Variable(){
 }
 
 void infer::Variable::write(ostream& os) const {
-  os <<"variable " <<name <<" <" <<dim <<">";
+  os <<"variable " <<name <<" { dim=" <<dim <<" }";
 }
 
 
@@ -390,10 +390,11 @@ void infer::Factor::write(std::ostream& os, bool brief) const {
   if(!brief){
     arr p;
     getP(p);
-    if(p.nd<=1) os <<' '; else os <<std::endl;
+    if(p.nd<=1) os <<"{ P="; else os <<"{\nP=" <<std::endl;
     //p.write(os, " ", "\n     ", false);
-    p.write(os, " ", "\n     ", "[]", true);
+    p.write(os, " ", "\n  ", "[]", false);
     //os <<'*' <<::exp(logP) <<"=exp(" <<logP <<") ";
+    if(p.nd<=1) os <<" }"; else os <<"\n}" <<std::endl;
   }
 }
 

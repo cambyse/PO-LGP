@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../../share
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
