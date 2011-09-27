@@ -166,7 +166,9 @@ main(int argn,char** argv){
     // skin -> graspISFtask
     get_skin_state(robot);
 
-    robot.step();
+    //robot.step();
+    MT_MSG("Note: robot does not have a step routine anymore - are you properly looping? add a MT::wait(.01) or so");
+
     if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
   }
   revel.close();
