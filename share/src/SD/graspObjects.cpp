@@ -340,7 +340,19 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
   return d;
 }
 
-GraspObject_Box::GraspObject_Box(){ NIY }
+GraspObject_Box::GraspObject_Box(){
+ 
+  c = MT::getParameter<arr>("center");
+  s = MT::getParameter<double>("sigma");
+  dim = ARR(.08,2*MT::getParameter<double>("radius"),MT::getParameter<double>("height"));
+  rot = ARR(MT_SQRT2/2.,MT_SQRT2/2.,0,
+             -MT_SQRT2/2.,MT_SQRT2/2.,0,
+             0,0,1);
+             /*axes = ARR(1,0,0,
+             0,1,0,
+             0,0,1);*/
+  rot.reshape(3,3);
+}
 
 GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_){
   //assumes box is axis aligned
@@ -397,12 +409,21 @@ GraspObject_Sphere::GraspObject_Sphere(arr &c1, double r1, double s1){
 
 double
 GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
-  double y, sig;
+  double y, sig,am;
   //arr x = xx - c;
 
   isf_gp.gp.evaluate(x,y,sig); 
+  /* normalize field magnitude to [0,1] */
+  y /= isf_gp.gp.mu + isf_gp.gp.mu_func(x,&isf_gp.p);
 
-  if (grad) {isf_gp.gp.gradient(*grad, x); *grad /= norm(*grad);}
+
+  if (grad) {
+    isf_gp.gp.gradient(*grad, x);
+    /* SD: too small gradients render GP Grammian uninvertible -- presumably
+     * due to underflow and coseq. low rank */
+    if ( grad->absMin() < 1e-155) *grad /=  1e-155;
+    *grad /= norm(*grad);
+  }
 
   if (hess) isf_gp.gp.hessian(*hess, x);
 

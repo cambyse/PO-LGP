@@ -205,6 +205,7 @@ public:
   T& min() const;
   T& max() const;
   T absMax() const;
+  T absMin() const;
   void minmax(T& minVal, T& maxVal) const;
   uint minIndex() const;
   uint maxIndex() const;

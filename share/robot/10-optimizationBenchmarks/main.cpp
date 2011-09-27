@@ -96,9 +96,12 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TaskVariableList TVs_all; 
   TaskVariable *TV_tipAlign;
   TaskVariable *TV_palm;
+  TaskVariable *TV_palmAlignDir;
+  TaskVariable *TV_palmAlignField;
   TaskVariable *TV_opp_tip;
   TaskVariable *TV_opp_fng;
   TaskVariable *TV_zeroLevel;
+  TaskVariable *TV_ISFcol;
   TaskVariable *TV_col, *TV_q,   *TV_lim ;
 
   /* finger tip markers.  Need to be defined in the ors file. see
@@ -118,14 +121,14 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
       *sys.ors, tipsN, *graspobj);
   /* position of the palm center marker */
-  /* TODO: need this? or make zeroLeel? 
-  TV_palm = new TaskVariable();
-  TV_palm->set("palm pos",*sys.ors, posTVT,
-	       palm->body->index,palm->rel, -1, ors::Transformation(),ARR());
-   */
   MT::Array<ors::Shape*> palmL; palmL.append(palm);
   TV_palm = new PotentialValuesTaskVariable("palm pos",
       *sys.ors, palmL, *graspobj);
+  TV_palmAlignField = new PotentialFieldAlignTaskVariable("palm ori",
+      *sys.ors, palmL, *graspobj);
+  /* use this to generate different approach directions */
+  TV_palmAlignDir = new TaskVariable("appr dir",
+      *sys.ors, zalignTVT, "m9", "<d(0 0 0 1)>", 0, 0, 0);
    /* */
   /* opposing fingers: heuristic for a good grasp (sort of weak closure
    * argument) */
@@ -135,13 +138,16 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_zeroLevel = new PotentialValuesTaskVariable("zeroLevel",
       *sys.ors, tipsN, *graspobj);
 
+  TV_ISFcol = new PotentialValuesTaskVariable("isf col",
+      *sys.ors, tipsN, *graspobj);
+
   /* feasibility and smoothness costs constraints */
   TV_col  = listFindByName(sys.vars,"collision"); 
   TV_q    = listFindByName(sys.vars,"qitself"); 
   TV_lim  = listFindByName(sys.vars,"limits"); 
 
-  TVs_all.append(ARRAY( TV_zeroLevel, TV_opp_fng, TV_opp_tip, TV_palm, TV_tipAlign,
-        TV_col, TV_lim, TV_q));
+  TVs_all.append(ARRAY( TV_zeroLevel, TV_ISFcol,  TV_opp_fng, TV_opp_tip, TV_palm ));
+  TVs_all.append(ARRAY( TV_palmAlignDir, TV_palmAlignField, TV_tipAlign, TV_col, TV_lim, TV_q));
 
   sys.setTaskVariables(TVs_all);
 
@@ -154,11 +160,14 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   /* configuration */
   static bool firstTime=true;
-  static double tv_palm_prec_m,
+  static double tv_palm_prec,
+                tv_palmAlign_prec,
+                tv_appr_dir_prec,
                 tv_opp_fng_prec,
                 tv_opp_tip_prec,
-                tv_zeroLevel_prec_m,
-                tv_tipAlign_prec_m,
+                tv_zeroLevel_prec,
+                tv_ISF_col_prec,
+                tv_tipAlign_prec,
                 comfPrec,
                 endVelPrec,
                 midPrec,
@@ -167,11 +176,14 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
 
   if(firstTime){
     firstTime=false;
-    tv_palm_prec_m =      SD_PAR_R("grasp_tv_palm_prec_m");
-    tv_opp_tip_prec =      SD_PAR_R("grasp_tv_opp_tip_prec");
-    tv_opp_fng_prec =      SD_PAR_R("grasp_tv_opp_fng_prec");
-    tv_zeroLevel_prec_m = SD_PAR_R("grasp_tv_zeroLevel_prec_m");
-    tv_tipAlign_prec_m =  SD_PAR_R("grasp_tv_tipAlign_prec_m");
+    tv_palm_prec =        SD_PAR_R("grasp_tv_palm_prec");
+    tv_palmAlign_prec =   SD_PAR_R("grasp_palmAlign_prec");
+    tv_appr_dir_prec =    SD_PAR_R("grasp_tv_appr_dir_prec");
+    tv_opp_tip_prec =     SD_PAR_R("grasp_tv_opp_tip_prec");
+    tv_opp_fng_prec =     SD_PAR_R("grasp_tv_opp_fng_prec");
+    tv_zeroLevel_prec =   SD_PAR_R("grasp_tv_zeroLevel_prec");
+    tv_ISF_col_prec =     SD_PAR_R("grasp_tv_ISF_col_prec");
+    tv_tipAlign_prec =    SD_PAR_R("grasp_tv_tipAlign_prec");
     colPrec =	            SD_PAR_R("reachPlanColPrec");
     comfPrec =          	SD_PAR_R("reachPlanHomeComfort");
     endVelPrec =          SD_PAR_R("reachPlanEndVelPrec");
@@ -188,45 +200,47 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   TaskVariable *V;
 
   V=listFindByName(sys.vars,"tips z align");
-  V->setGains(.01,.0);
   V->updateState();
   V->y_target = ARR(-1.,-1.,-1.);
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec_m,0.,0.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_tipAlign_prec,0.,0.);
 
-  /* */
   V=listFindByName(sys.vars,"palm pos");
-  V->setGains(.1,.0);
   V->updateState();
-  /*  target and prec for stock position var
-  V->y_target = graspobj->center();
-  V->setInterpolatedTargetsEndPrecisions(T,midPrec,tv_palm_prec_m,0.,0.);
-  */
-  /*  target and prec for zeroLevel var */
-  V->y_target = ARR(0);
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec_m,0.,0.);
-  /* */
+  V->y_target = ARR(-.01);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palm_prec,0.,0.);
+
+  V=listFindByName(sys.vars,"palm ori");
+  V->updateState();
+  V->y_target = ARR(-1.);
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_palmAlign_prec,0.,0.);
+
+  V=listFindByName(sys.vars,"appr dir");
+  V->updateState();
+  V->y_target = 0;
+  V->setInterpolatedTargetsEndPrecisions(T,0,tv_appr_dir_prec,0.,0.);
 
   V=listFindByName(sys.vars,"oppose tip");
-  V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_tip_prec,0.,0.);
 
   V=listFindByName(sys.vars,"oppose fng");
-  V->setGains(.1,.0);
   V->updateState();
   V->y_target = 0;
   V->setInterpolatedTargetsEndPrecisions(T,0,tv_opp_fng_prec,0.,0.);
 
   V=listFindByName(sys.vars,"zeroLevel");
-  V->setGains(.1,.0);
   V->updateState();
-  V->y_target = ARR(0,0,0); 
-  V->setInterpolatedTargetsEndPrecisions(T,0,tv_zeroLevel_prec_m,0.,0.);
+  V->y_target = ARR(0.,0.,0.); 
+  V->v_target = ARR(-.05,-.05,-.05); 
+  V->setInterpolatedTargetsEndPrecisions(T,0.,tv_zeroLevel_prec,0.,0.);
+  V->setConstantTargetTrajectory(T);
+  /* set approaching velocity  for last steps*/
+  uint t,M=T/8;
+  for(t=T-M;t<T;t++){
+    V->v_prec_trajectory(t) = tv_ISF_col_prec;
+  } 
 
-  /*
-  */
-    
   //col lim and relax
   V=listFindByName(sys.vars,"collision"); V->y=0.;  V->y_target=0.;
   V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
@@ -234,7 +248,7 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->setInterpolatedTargetsConstPrecisions(T,limPrec,0.);
   V=listFindByName(sys.vars,"qitself");
   V->y=0.; V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
-  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,0.,0,endVelPrec);
+  V->setInterpolatedTargetsEndPrecisions(T,comfPrec,comfPrec,0,endVelPrec);
 }
 
 GraspObject_GP *
@@ -252,7 +266,7 @@ random_obj(){
 
   /* generate object using sampling from GP */
   rnd.seed(MT::Parameter<uint>("rnd_srfc_seed"));
-  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 20);
+  randomGP_on_random_points(ot->isf_gp.gp, c, gp_size, 5);
   ot->isf_gp.gp.recompute();
   /* too expensive: ot->buildMesh();
   ot->getEnclRect(mins,maxs);*/
@@ -278,6 +292,42 @@ random_obj(){
   oe->m.writeTriFile("a.tri");
 
   return oe;
+}
+
+void
+activateVars_1step(soc::SocSystem_Ors &sys){
+  activateAll(sys.vars,false);
+  listFindByName(sys.vars,"palm pos")->active=true; 
+  listFindByName(sys.vars,"appr dir")->active=true; 
+  listFindByName(sys.vars,"palm ori")->active=true; 
+  /*
+  listFindByName(sys.vars,"isf col")->active=true; 
+  listFindByName(sys.vars,"tips z align")->active=true; 
+  listFindByName(sys.vars,"collision")->active=true; 
+  listFindByName(sys.vars,"qitself")->active=true; 
+  listFindByName(sys.vars,"limits")->active=true; 
+  listFindByName(sys.vars,"oppose tip")->active=true; 
+  listFindByName(sys.vars,"oppose fng")->active=true; 
+  listFindByName(sys.vars,"zeroLevel")->active=true; 
+  */
+}
+
+void
+activateVars_2step(soc::SocSystem_Ors &sys){
+  activateAll(sys.vars,false);
+  listFindByName(sys.vars,"palm pos")->active=true; 
+  listFindByName(sys.vars,"tips z align")->active=true; 
+  listFindByName(sys.vars,"collision")->active=true; 
+  listFindByName(sys.vars,"qitself")->active=true; 
+  listFindByName(sys.vars,"limits")->active=true; 
+  listFindByName(sys.vars,"oppose tip")->active=true; 
+  listFindByName(sys.vars,"oppose fng")->active=true; 
+  listFindByName(sys.vars,"zeroLevel")->active=true; 
+  /*
+  listFindByName(sys.vars,"palm ori")->active=true; 
+  listFindByName(sys.vars,"appr dir")->active=true; 
+  listFindByName(sys.vars,"isf col")->active=true; 
+  */
 }
 
 void
@@ -340,69 +390,116 @@ void problem5(){
   cout <<"\n= grasping with impl. surf. potentials and time optimization =\n" <<endl;
 
   //setup the problem
-  soc::SocSystem_Ors sys;
+  soc::SocSystem_Ors sys,sys2;
+  ors::Graph ors;
   OpenGL gl;
   GraspObject *o;
   arr c=MT::Parameter<arr>("center");
+  arr tr=MT::Parameter<arr>("translation");
   double gp_size=MT::Parameter<double>("gp_size");
   switch (MT::getParameter<uint>("shape")){
     case 0: o = new GraspObject_Sphere();break;
     case 1: o = new GraspObject_InfCylinder();break;
     case 2: o = new GraspObject_Cylinder1();break;
+    case 5: o = new GraspObject_Box();break;
     case 3: o = random_obj(); break;
     case 4: o = new GraspObject_GP(c,gp_size);
             std::ifstream f_gp;
             MT::open(f_gp,MT::getParameter<MT::String>("gp_file"));
             ((GraspObject_GP*)o)->isf_gp.read(f_gp);
             f_gp.close();
+            ((GraspObject_GP*)o)->isf_gp.translate_gp_input(tr);
             ((GraspObject_GP*)o)->isf_gp.gp.recompute();
             o->m.readFile("a.tri");
+            o->m.translate(tr(0),tr(1),tr(2));
             break;
   }
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  double t=MT::getParameter<double>("reachPlanTrajectoryTime"); // initial time
+  double t=MT::getParameter<double>("optTimeMin"); 
+  double t_min=MT::getParameter<double>("optTimeMin"); 
   double alpha=MT::getParameter<double>("alpha");
   double BinvFactor=MT::getParameter<double>("BinvFactor");
   double tm;
   arr q0, b,b0,B, Binv, r,R;
   arr zero14(14);zero14.setZero();
 
-  sys.initBasics(NULL,NULL,&gl,T,t,true,NULL);
   if (!o->m.V.N)  o->buildMesh();
+  ors.init(MT::getParameter<MT::String>("orsFile"));
+  ors::Shape *pc = new ors::Shape(ors.shapes, ors.getBodyByName("OBJECTS"));
+  pc->mesh = o->m; /* add point cloud to ors */
+  pc->type = ors::pointCloudST; 
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
-  
+  gl.add(glStandardScene);
+  gl.add(ors::glDrawGraph, &ors);
+  gl.camera.setPosition(5,-10,10);
+  gl.camera.focus(0,0,1);
+  sys.initBasics(&ors,NULL,&gl,T,/*t,t_min*/t,true,NULL);
+
   createISPTaskVariables(sys,o);
   setISPGraspGoals(sys,T,o);
 
   /* get initial pose */
   sys.getq0(q0);
 
-  /* optimal time is tm */
-  GetOptimalDynamicTime(tm,b,B,sys,alpha,0.06); 
-
-  /* with optimal time, get posterior pose
-  sys.setq(q0,0);
-  OneStepDynamicFull(b,B,sys,tm/*=tuse opt time*//*,alpha); 
+  /* optimal time is tm 
+  GetOptimalDynamicTime(tm,b,B,sys,alpha,0.04); 
   */
-  MT_MSG( "Post belief:" << b); MT_MSG( "time:" << tm);
 
-  /* see bwdMsg */
-  b0.setCarray(b.p,14);
-  sys.setq(b0,0);
-  gl.watch("helo");
+  double task_eps = MT::getParameter<double>("oneStep_tascCost_eps");
 
+/* try 3 diferent approach vectors (ortogonal to) */
+  MT::Array<char*> ax; ax.append("<d(90 0 0 1)>"); ax.append("<d(90 1 0 0)>"); ax.append("<d(90 0 1 0)>"); 
+  double task_cost, best_task_cost = 1e100;
+  arr best_b0 = NULL;
+  for(uint i=0; i<3; ++i){ 
+
+
+    sys.setq(q0,0);
+
+    listFindByName(sys.vars,"appr dir")->jrel.setText(ax(i)) ;
+    activateVars_1step(sys);
+    OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,1,false); 
+    /* open fingers */
+    b.subRange(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
+    sys.setx(b);
+    sys.gl->watch("Belief after 1st phase, with open fings");
+    MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
+
+    activateVars_2step(sys);
+    OneStepDynamicFull(b,B,sys, t,alpha,task_eps,1,true); 
+    MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
+
+    /* see bwdMsg */
+    b0.setCarray(b.p,14);
+    sys.setq(b0,0);
+    sys.gl->watch("Belief after 2nd phase.");
+
+
+    task_cost = sys.taskCost(NULL, T, -1, 0);
+    MT_MSG( "task_cost:" << task_cost);
+    if ( task_cost <  best_task_cost ){
+      best_task_cost = task_cost;
+      best_b0 = b0;
+    }
+  }
+
+  /* see best bwdMsg */
+  sys.setq(best_b0,0);
+  gl.watch("best bwdMsg in terms of task Cost");
 
   /* start aico with bwdMsg */
-  soc::SocSystem_Ors sys2;
-  sys2.initBasics(NULL,NULL,&gl,T,/*0.6**/tm,true,NULL);
+  sys2.initBasics(&ors,NULL,&gl,T,/*0.6*tm*/t,true,NULL);
   createISPTaskVariables(sys2,o);
   setISPGraspGoals(sys2,T,o);
-  //setzeroprec(sys2, T);
+  /* use full set of TVs */
+  activateVars_2step(sys2);
+  /* set start position 0; */
+  sys2.setq(q0); sys2.setq0AsCurrent();
 
   AICO solver(sys2);
   solver.useBwdMsg=true;
-  solver.bwdMsg_v = cat(b0,zero14);
+  solver.bwdMsg_v = cat(best_b0,zero14);
   inverse(Binv,B);
   solver.bwdMsg_Vinv.setDiag(BinvFactor,28); //=BinvFactor*Binv;
   MT_MSG("Vinv="<<solver.bwdMsg_Vinv);
@@ -411,7 +508,7 @@ void problem5(){
     double d=solver.step();
     if(k && d<solver.tolerance) break;
 
-    BinvFactor *= .8;
+    BinvFactor *= .75;
     solver.bwdMsg_Vinv.setDiag(BinvFactor,28);
   }
   sys2.getCosts(R,r,solver.q[T],T);
