@@ -1,0 +1,5 @@
+#CXXFLAGS += -DMT_IMPLEMENTATION
+
+ifndef NAME
+LIBS += -lInfer
+endif
