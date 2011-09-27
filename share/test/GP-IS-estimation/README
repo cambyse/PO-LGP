@@ -1,0 +1,62 @@
+
+Object estimation
+=================
+
+Diefferent demos related to object estimation with Gaussian Process Implicit
+Surface in several scenarios. All evidence is simulated.
+
+Scenarios include learning from ground truth given as
+  - ISF, 
+    - produced by a GP at randrom
+    - produced from a analitical body, e.g. cylinder
+  - mesh 
+Observations are generated
+  - from gradient walk (ISF)
+  - from random rays crossing a mesh (ISF,mesh)
+  - from sampling vertices frrom the mesh (ISF,mesh)
+
+Furthermore there are several altertaivees for measuring estimation quality
+(distance between ground truth and estimate)
+  - common volume to true volume ratio (penalized by the falsely estimated
+    volume) (applicable to ISF)  (V_com-V_out) / V_true   
+  - similar view (sample rays, compare intersection points with true and est.
+    mesh) (applic. mesh)
+
+Usage
+-----
+
+./x.exe
+-with_GL 1          # show true and estimate in GL windows
+-gl_auto 1          # auto advance vs. press Enter
+-showeveryith 10    # show state after every 10th observation
+-showuntil 5        # show state for every observation until 5th
+-objsize 1          # approx. obj size (for random objs) (Var of unif. distr.)
+-center "[ 0,0,0 ]" # center of unif distr for sampling functions
+-height .25         # height (of a predefined primitive body (cylinder))
+-radius .25         # height (of a predefined primitive body (cylinder))
+-meshfile foo.tri   # file to get mesh from (for learning from mesh)
+-gp_size .2         # size of GP used for estimation
+-demo 4             # show predefined demo 4 (see source, end of file)
+-rnd_srfc_seed 41   # seed for random obj geneartaion
+-observations 120   # number of total observations to make
+-finalbelieffile belief.tri     # where to save the final belief
+
+
+Automated experiments
+---------------------
+
+Look into  ./exp1.sh  (assumes Sun Grid Engine in the very inner line)
+
+Misc
+----
+
+Use
+  # ors_file_converter belief.tri -view
+to inspect a mesh. 
+
+Examples
+--------
+
+- animation of nontrivial obj estimation
+
+./x.exe -demo 1 -gl_auto 0 -with_GL 1 -gp_size 1 -center '[0, 0, 0]'  -rnd_srfc_seed 41 -showeveryith 10 -showuntil 6
