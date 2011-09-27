@@ -29,7 +29,7 @@ tests::
 	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
 
 projects::
-	-@find proj_* -maxdepth 1 -follow -type d -not -name 'proj_*' -not -name 'SHARE'  -exec make -C {} \;
+	-@find proj_* -maxdepth 1 -follow -type d -not -name 'proj_*' -not -name 'SHARE' -exec make -C {} \;
 
 cleanProjects::
 	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
@@ -39,4 +39,4 @@ doc::
 	make -C doc guide doxy
 
 zip::
-	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude "*.svn" --exclude ".git" --exclude "*solution*" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".git" --exclude "*kdev4" --exclude "*solution*" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"

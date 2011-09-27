@@ -94,8 +94,7 @@ endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
-LinuxLibs += -lrt #-lpthread -lncurses
-SEP	= :
+LIBS    += -lrt
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -109,7 +108,6 @@ LINK	= g++
 CPATH	:= $(CPATH):../../include:$(LIBPATH)/include:/usr/X11R6/include
 LPATH	:= $(LPATH):$(LIBPATH)/lib_$(SYS):$(LIBPATH)/lib:/usr/X11R6/lib
 QTDIR 	= /usr/lib/qt3
-SEP	= :
 LDFLAGS	+= -o $(OUTPUT)
 SHAREFLAG = -shared
 endif
@@ -119,7 +117,6 @@ CXX	= "$(MINGDIR)/bin/g++"
 LINK	= "$(MINGDIR)/bin/g++"
 CPATH	:= $(CPATH);../../include;$(LIBPATH)/include;$(MINGDIR)/include
 LPATH	:= $(LPATH);$(LIBPATH)/lib_$(SYS);$(LIBPATH)/lib_Cygwin;$(LIBPATH)/lib;$(MINGDIR)/lib
-SEP	= ;
 LDFLAGS	+= -o $(OUTPUT)
 SHAREFLAG = -shared
 ifdef QT
@@ -133,8 +130,8 @@ CXX	= "$(MSDEVDIR)/../../VC98/bin/cl"
 LINK	= "$(MSDEVDIR)/../../VC98/bin/link"
 HOME	= C:/home
 QTDIR	= C:/Programme/Qt-2.3.0
-INCLUDE := $(INCLUDE);../../include;$(LIBPATH)/include;$(LIBPATH)/stl/stlport;$(MSDEVDIR)/../../VC98/include;$(MSDEVDIR)/../../VC98/alt/include;$(MSDEVDIR)/../../VC98/mfc/include
-LIB     := $(LIB);$(MSDEVDIR)/../../VC98/mfc/lib;$(MSDEVDIR)/../../VC98/Lib;$(LIBPATH)/lib_MSVC;$(LIBPATH)/lib_Cygwin
+MSVC_CPATH := $(MSVC_CPATH);../../include;$(LIBPATH)/include;$(LIBPATH)/stl/stlport;$(MSDEVDIR)/../../VC98/include;$(MSDEVDIR)/../../VC98/alt/include;$(MSDEVDIR)/../../VC98/mfc/include
+MSVC_LPATH := $(MSVC_LPATH);$(MSDEVDIR)/../../VC98/mfc/lib;$(MSDEVDIR)/../../VC98/Lib;$(LIBPATH)/lib_MSVC;$(LIBPATH)/lib_Cygwin
 CXXFLAGS  += -nologo -c -W3 -GR -GX -Zm500
 #	-D"_MSC_VER 1300" -DNOUNICODE -D_GDI32_ -D_MBCS -DQT_DLL -DQT_THREAD_SUPPORT
 CXXFLAGSD+= -MLd -Od -Zi
@@ -188,12 +185,10 @@ endif
 
 ifdef FREEGLUT
 CXXFLAGS  += -DMT_FREEGLUT
-CPATH	  := $(CPATH):$(LIBPATH)/freeglut-2.4.0/include
-INCLUDE	  := $(INCLUDE):$(LIBPATH)/freeglut/include
-LIB	  := $(LIB):$(LIBPATH)/freeglut/DebugStatic
-LinuxLibs += -lglut -lGLU 
-#-lGL -lX11
-CygwinLibs+=  -lglut -lGLU -lGL
+MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/freeglut/include
+MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/freeglut/DebugStatic
+LinuxLibs += -lglut -lGLU# -lGL -lX11
+CygwinLibs+= -lglut -lGLU -lGL
 MSVCLibs  += opengl32.lib glu32.lib vfw32.lib
 endif
 
@@ -206,27 +201,26 @@ ifdef REVEL
 CXXFLAGS  += -DMT_REVEL
 CPATH	  := $(CPATH):$(LIBPATH)/revel-1.1.0/include
 LPATH	  := $(LPATH):$(LIBPATH)/revel-1.1.0/lib:$(LIBPATH)/xvidcore-1.1.3/lib
-INCLUDE	  := $(INCLUDE):$(LIBPATH)/revel-1.1.0/include
-LIB	  := $(LIB):$(LIBPATH)/revel-1.1.0/lib
+MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/revel-1.1.0/include
+MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/revel-1.1.0/lib
 LinuxLibs += -lrevel -lxvidcore
 CygwinLibs+=
 MSVCLibs  +=
 endif
 
 ifdef QTGLUT
-CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL # -DNOUNICODE
+CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL# -DNOUNICODE
 LinuxLibs += -lglut -lGLU -lGL -lX11
 QT := 1
 endif
 
 ifdef QT
-CXXFLAGS  += -DMT_QT -DQT_DLL # -DNOUNICODE
+CXXFLAGS  += -DMT_QT -DQT_DLL# -DNOUNICODE
 CPATH   := $(CPATH):/usr/include/qt4
 LPATH   := $(LPATH):/usr/lib
-INCLUDE	  := $(INCLUDE):C:/Programme/Qt-2.3.0/include
-LIB	  := $(LIB):$(QTDIR)/lib
-LinuxLibs += -lQtCore -lQtGui -lQtOpenGL
-# -lglut -lGLU -lGL -lX11
+MSVC_CPATH := $(MSVC_CPATH);C:/Programme/Qt-2.3.0/include
+MSVC_LPATH := $(MSVC_LPATH);$(QTDIR)/lib
+LinuxLibs += -lQtCore -lQtGui -lQtOpenGL# -lglut -lGLU -lGL -lX11
 MinGWLibs += -lqtmain -lQtCore4 -lQtGui4 -lQtOpenGL4 -lopengl32 -lglu32
 CygwinLibs+= -lqt -lGLU -lGL
 MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
@@ -242,7 +236,7 @@ ifdef ODE
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
 CPATH	  := $(CPATH):$(LIBPATH)/ode-0.11/include
 LPATH	  := $(LPATH):$(LIBPATH)/ode-0.11/lib
-INCLUDE	  := $(INCLUDE);$(LIBPATH)/ode-0.11/include
+MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/ode-0.11/include
 LinuxLibs += -lode
 CygwinLibs+= -lode
 MSVCLibs  += ode.lib
@@ -274,26 +268,19 @@ ifdef ANN
 CXXFLAGS  += -DMT_ANN
 #CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
 #LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
-#INCLUDE	  := $(INCLUDE);$(LIBPATH)/ANN_1.1/include
+#MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/ANN_1.1/include
 LinuxLibs += -lann
 endif
 
 ifdef QHULL
-### WARNING: on Linux, don't include 2003.1 but link to the system-wide qhull!
 CXXFLAGS  += -DMT_QHULL
-#CPATH	  := $(CPATH):$(LIBPATH)/qhull-2003.1/include
-#LPATH	  := $(LPATH):$(LIBPATH)/qhull-2003.1/lib
-#INCLUDE	  := $(INCLUDE);$(LIBPATH)/GLUT-3.7/INCLUDE
-LinuxLibs += -lqhull
-#20031-debr
-#CygwinLibs+= -lqhull
-#MSVCLibs  += qhull.lib
+LIBS      += -lqhull
 endif
 
 ifdef OpenML
 CXXFLAGS  += -DMT_OpenML
-MSVCIpaths+=;$(OpenML)/include
-MSVCLpaths+=;$(OpenML)/lib
+MSVC_CPATH := $(MSVC_CPATH);$(OpenML)/include
+MSVC_LPATH := $(MSVC_LPATH);$(OpenML)/lib
 MSVCLibs  += ML10.lib MLU10.lib
 endif
 
@@ -317,17 +304,22 @@ endif
 
 ifdef GSL
 CXXFLAGS  += -DMT_GSL
-LinuxLibs += -lgsl
+LIBS      += -lgsl
+endif
+
+ifdef OPENCV #assuming ubuntu libopencv2.3-dev package
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.3.1`
+LIBS	  += `pkg-config --libs opencv-2.3.1`
 endif
 
 ifdef LAPACK
 CXXFLAGS  += -DMT_LAPACK
 CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
-INCLUDE	  := $(LIBPATH)/lapack/include;$(INCLUDE)
+MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
 CygwinLibs+= -lcblas -latlas -lclapack -lcblaswr -lI77 -lF77
 LinuxLibs += -llapack -lblas
 MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
-#MSVCLibs+= libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
+#MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
 endif
 
 ifdef HSL
@@ -339,8 +331,6 @@ endif
 
 ifdef PLIB
 CXXFLAGS  += -DMT_PLIB
-#USE DEBIAN INSTALLED VERSION!
-#CPATH   := $(CPATH):$(LIBPATH)/plib-1.8.5/include
 LinuxLibs += -lplibjs -lplibul
 endif
 
@@ -372,14 +362,6 @@ CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
 #LinuxLibs += -ldc1394 # -lpgrlibdcstereo
 endif
 
-ifdef OPENCV
-CXXFLAGS  += -DMT_OPENCV
-## DON'T USE THE UBUNTU VERSION!!
-CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
-LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
-LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
-endif
-
 ifdef FELZ
 CXXFLAGS  += -DMT_FELZ
 CPATH     := $(CPATH):$(LIBPATH)/libcolorseg/include
@@ -400,39 +382,34 @@ LPATH     := $(LPATH):$(LIBPATH)/opensurf/
 LinuxLibs += -lopensurf_$(ARCH)
 endif
 
-#von NILS: -lcxcore -lcv -lcvaux -lhighgui -lml -Wl,-rpath,/home/mtoussai/svn/mlr/nils/libs/opencv/lib/ -lpgrlibdcstereo -ldc1394 -lraw1394 -pthread-lopensurf_i686 -lann11-debr
-
 ifdef PTHREAD
 CXXFLAGS  += -DMT_PTHREAD
 LinuxLibs += -lpthread -lX11
 endif
 
+#von NILS: -lcxcore -lcv -lcvaux -lhighgui -lml -Wl,-rpath,/home/mtoussai/svn/mlr/nils/libs/opencv/lib/ -lpgrlibdcstereo -ldc1394 -lraw1394 -pthread-lopensurf_i686 -lann11-debr
+
 ifdef NILS
-LPATH := $(LPATH):$(BASE)/src/NP
 LinuxLibs += -lnp -ldc1394
 DEPEND += externalMake_src/NP
 endif
 
 ifdef NIKOLAY
-LPATH := $(LPATH):$(BASE)/src/NJ
 LinuxLibs += -lnj
 DEPEND += externalMake_src/NJ
 endif
 
 ifdef TOBIAS
-LPATH := $(LPATH):$(BASE)/src/TL
 LinuxLibs += -ltl
 DEPEND += externalMake_src/TL
 endif
 
 ifdef STANIMIR
-LPATH := $(LPATH):$(BASE)/src/SD
 LinuxLibs += -lsd
 DEPEND += externalMake_src/SD
 endif
 
 ifdef DMITRY
-LPATH := $(LPATH):$(BASE)/src/DZ
 LinuxLibs += -ldz
 DEPEND += externalMake_src/DZ
 endif
@@ -442,7 +419,6 @@ LinuxLibs += -lvoc2009_$(ARCH)
 endif
 
 ifdef MTLIB
-LPATH := $(LPATH):$(BASE)/src/MT
 LinuxLibs += -lmt
 DEPEND += externalMake_src/MT
 endif
@@ -456,8 +432,8 @@ LD_RUN_PATH += $(LPATH)
 export CPATH
 export LPATH
 export LD_RUN_PATH
-export INCLUDE
-export LIB
+export MSVC_CPATH
+export MSVC_LPATH
 
 
 ################################################################################
@@ -466,7 +442,7 @@ export LIB
 #
 ################################################################################
 
-default: 	$(OUTPUT)
+default: $(OUTPUT)
 
 clean:
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
@@ -487,14 +463,11 @@ info: force
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"
 	@echo "  LINK =" "$(LINK)"
 	@echo "  LDFLAGS =" "$(LDFLAGS)"
-	@echo "  SEP =" "$(SEP)"
 	@echo "  CPATH =" "$(CPATH)"
-	@echo "  CPLUS_INCLUDE_PATH =" "$(CPLUS_INCLUDE_PATH)"
-	@echo "  STDINC =" "$(STDINC)"
 	@echo "  LPATH =" "$(LPATH)"
 	@echo "  LD_RUN_PATH =" "$(LD_RUN_PATH)"
-	@echo "  INCLUDE =" "$(INCLUDE)"
-	@echo "  LIB =" "$(LIB)"
+	@echo "  MSVC_CPATH =" "$(MSVC_CPATH)"
+	@echo "  MSVC_LPATH =" "$(MSVC_LPATH)"
 	@echo "  OBJS =" "$(OBJS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
 	@echo "  OUTPUT =" "$(OUTPUT)"
