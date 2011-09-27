@@ -4,17 +4,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <errno.h>
-#include <pty.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <pty.h>
-#include <utmp.h>
-#include <ctype.h>
-#include <errno.h>
-  #include <sys/select.h>
 
 extern VariableL globalVariables;
 
@@ -22,9 +11,10 @@ static int global = 42;
 static double* addr;
 
 struct GDB:public Process{
-  int fil;
+  FILE *fil;
+  FILE *out;
   int main_pid;
-  char buf[256];
+  char buf[6];
 
   GDB():Process("GDB"){
     fil=NULL;
@@ -32,20 +22,16 @@ struct GDB:public Process{
 
   void grapOutput(){
     cout <<"gdbOUT: " <<std::flush;
-    for(;;){
-      fd_set readFds;
-      timeval tv; tv.tv_sec=1; tv.tv_usec = 0;
-      FD_ZERO (&readFds);
-      FD_SET (fil, &readFds);
-      select(fil+1,&readFds, NULL, NULL, &tv);
-      if(!FD_ISSET(fil, &readFds)) break;
-      int ret=read(fil, buf, 255);
-      if(!ret) break; //nothing was read
-      if(ret==-1) HALT("reading from gdb output failed: " <<strerror(errno) <<'(' <<errno <<')');
-      buf[ret] = '\0';
-      puts(buf);
-      if(!strcmp("(gdb) \r\n",buf+ret-8)) break;
+    int c;
+    out=fopen("z.gdbout","r");
+    while ((c = fgetc(out)) != EOF){
+      putchar (c);
+      memmove(buf,buf+1,4);
+      buf[4]=c; buf[5]=0;
+      if(!strcmp(buf,"(gdb)")){ cout <<":-)" <<endl; break; }
+      if(!strcmp(buf,"nning")){ cout <<":-)" <<endl; break; }
     }
+    fclose(out);
   }
 
 //     int pos=ftell(out);
@@ -62,21 +48,18 @@ struct GDB:public Process{
 
   void sendCommand(const char* cmd){
     cout <<"gdbIN : " <<cmd;
-    write(fil, cmd, strlen(cmd));
-    //fflush(fil);
+    fprintf(fil,cmd);
+    fflush(fil);
     //int r=fread(buffer,1,1000,out);
     //<<buffer <<endl;
     grapOutput();
   }
-  
   void open(){
 
     static const char gdbInitialize[] =
-      "-gdb-set pagination off\n"
-      "-gdb-set non-stop on\n"
-      "-gdb-set target-async on\n"
-      "-list-target-features\n"
-      ;
+      "set pagination off\n"
+      "set target-async on\n"
+      "set non-stop on\n";
 
 //      "set prompt\n"
 //       "set verbose off\n"
@@ -85,33 +68,14 @@ struct GDB:public Process{
 //       "set print static-members off\n"
 // 	"set unwindonsignal on\n"
 
-    int pid=forkpty(&fil, NULL, NULL, NULL);
-    if(pid==-1) HALT("forking the gdb into a PTY failed!");
+    
+    openpty(&fil, NULL, NULL, NULL);
 
-    if(!pid){
-      //inside the child process: start gdb, execlp will not return until gdb quits
-      //--switch off terminal echo
-      struct termios orig_termios;
-      if (tcgetattr (STDIN_FILENO, &orig_termios) < 0) {
-        perror ("ERROR getting current terminal's attributes");
-        return;
-      }
-      orig_termios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-      orig_termios.c_oflag &= ~(ONLCR);
-      if (tcsetattr (STDIN_FILENO, TCSANOW, &orig_termios) < 0) {
-        perror ("ERROR setting current terminal's attributes");
-        return;
-      }
-      system("gdb --interpreter=mi2");
-      exit(0);
-    }
-
-    cout <<"GDB pid = " <<pid <<endl;
-    //(outside the child process):
+    mkfifo("z.gdbout",S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    fil=popen("gdb --interpreter=mi2","w");
     grapOutput();
     sendCommand(gdbInitialize);
-    sendCommand(STRING("-target-attach " <<main_pid <<"&\n"));
-    sendCommand("-list-target-features\n");
+    sendCommand(STRING("attach " <<main_pid <<"\n"));
   }
 
   void step(){
@@ -136,7 +100,7 @@ struct GDB:public Process{
   }
 
   void close(){
-    sendCommand("-target-detatch");
+    sendCommand("interrupt\n detatch");
     //MT::wait();
   }
   
@@ -161,34 +125,25 @@ int main(int argc, char *argv[]){
 
   q_currentReferenceVar q;
 
-#if 0
-  if(argc==1){
-    cout <<"this pid = " <<getpid() <<endl;
-    for(uint t=0;t<100;t++){
-      cout <<t <<endl;
-      MT::wait(1.);
-    }
-    return 0;
-  }
-#endif
-
   GDB gdb;
   gdb.main_pid = getpid();
-  if(argc>1) gdb.main_pid = atoi(argv[1]);
-  
   cout <<"main pid = " << gdb.main_pid <<endl;
-  gdb.threadOpen();
+  gdb.open();
+  cout <<"HERE" <<endl;
+  gdb.close();
+  cout <<"HERE2" <<endl;
+  return 0;
+  //gdb.threadOpen();
   
-  for(uint t=0;t<10;t++){  MT::wait(1);    cout <<t <<endl;  }
-  gdb.threadStep();
-  for(uint t=0;t<10;t++){  MT::wait(1);    cout <<t <<endl;  }
+  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  //gdb.threadStep();
+  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
 
-  cout <<"wait" <<endl;
-  MT::wait(5.);
-  
-  gdb.threadClose();
-  
+  //gdb.threadClose();
+
   cout <<"still here :-) " <<endl;
+  
+  MT::wait(100.);
   
   return 0;
 }

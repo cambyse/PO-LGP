@@ -72,11 +72,9 @@ struct GDB:public Process{
   void open(){
 
     static const char gdbInitialize[] =
-      "-gdb-set pagination off\n"
-      "-gdb-set non-stop on\n"
-      "-gdb-set target-async on\n"
-      "-list-target-features\n"
-      ;
+      "set pagination off\n"
+      "set target-async on\n"
+      "set non-stop on\n";
 
 //      "set prompt\n"
 //       "set verbose off\n"
@@ -90,18 +88,6 @@ struct GDB:public Process{
 
     if(!pid){
       //inside the child process: start gdb, execlp will not return until gdb quits
-      //--switch off terminal echo
-      struct termios orig_termios;
-      if (tcgetattr (STDIN_FILENO, &orig_termios) < 0) {
-        perror ("ERROR getting current terminal's attributes");
-        return;
-      }
-      orig_termios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-      orig_termios.c_oflag &= ~(ONLCR);
-      if (tcsetattr (STDIN_FILENO, TCSANOW, &orig_termios) < 0) {
-        perror ("ERROR setting current terminal's attributes");
-        return;
-      }
       system("gdb --interpreter=mi2");
       exit(0);
     }
@@ -110,8 +96,7 @@ struct GDB:public Process{
     //(outside the child process):
     grapOutput();
     sendCommand(gdbInitialize);
-    sendCommand(STRING("-target-attach " <<main_pid <<"&\n"));
-    sendCommand("-list-target-features\n");
+    sendCommand(STRING("attach " <<main_pid <<"\n"));
   }
 
   void step(){
@@ -136,7 +121,7 @@ struct GDB:public Process{
   }
 
   void close(){
-    sendCommand("-target-detatch");
+    sendCommand("interrupt\n detatch");
     //MT::wait();
   }
   
@@ -161,34 +146,25 @@ int main(int argc, char *argv[]){
 
   q_currentReferenceVar q;
 
-#if 0
-  if(argc==1){
-    cout <<"this pid = " <<getpid() <<endl;
-    for(uint t=0;t<100;t++){
-      cout <<t <<endl;
-      MT::wait(1.);
-    }
-    return 0;
-  }
-#endif
-
   GDB gdb;
   gdb.main_pid = getpid();
-  if(argc>1) gdb.main_pid = atoi(argv[1]);
-  
   cout <<"main pid = " << gdb.main_pid <<endl;
-  gdb.threadOpen();
+  gdb.open();
+  cout <<"HERE" <<endl;
+  gdb.close();
+  cout <<"HERE2" <<endl;
+  return 0;
+  //gdb.threadOpen();
   
-  for(uint t=0;t<10;t++){  MT::wait(1);    cout <<t <<endl;  }
-  gdb.threadStep();
-  for(uint t=0;t<10;t++){  MT::wait(1);    cout <<t <<endl;  }
+  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
+  //gdb.threadStep();
+  //for(uint t=0;t<10;t++){  MT::wait(.1);    cout <<t <<endl;  }
 
-  cout <<"wait" <<endl;
-  MT::wait(5.);
-  
-  gdb.threadClose();
-  
+  //gdb.threadClose();
+
   cout <<"still here :-) " <<endl;
+  
+  MT::wait(100.);
   
   return 0;
 }
