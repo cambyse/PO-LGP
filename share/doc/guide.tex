@@ -69,13 +69,13 @@ schunkSDH-11-05-11@
 \end{verbatim}
 \end{code}
 
-These are symbolic-linked in the git/share/extern directory. Call the
+These are symbolic-linked in the \verb+git/share/extern+ directory. Call the
   \verb+./LINK ~\lib+ script to generate the relevant links.
 
 \item TODO: In the future all external libs should be handled like
   ODE\_0.11: minimal GET/BUILD script and .gitignore
 
-\item Try 'make' in the git/share directory. If problems occur, try to
+\item Try 'make' in the \verb+git/share+ directory. If problems occur, try to
 comment the following lines in the src/MT/Makefile:
 \begin{code}
 \begin{verbatim}
@@ -87,7 +87,7 @@ comment the following lines in the src/MT/Makefile:
 
 This reduces functionality of the code, but should at least compile.
 
-\item Generally, the git/share/make-config allows to set compile
+\item Generally, the \verb+git/share/make-config+ allows to set compile
 options for all projects, the local Makefiles trigger these options by
 defining 'ANN=1' or alike.
 
@@ -201,8 +201,8 @@ conventions) and perhaps the lecture which introduces task variables
 (and their Jacobians)
 
 \item Have a look at ALL ors\_* test projects in the git repository --
-they're really basic. Understand them all. The ``ors\_editor'' is useful to
-edit the ors-file describing geometries. Play with the test.ors file
+they're really basic. Understand them all. The \verb+ors_editor+ is useful to
+edit the ors-file describing geometries. Play with the \verb+test.ors+ file
 while watching the effect in the window.
 
 \item The ors doxygen.
@@ -412,6 +412,23 @@ LINK to my notes on the CV system
 
 \subsection{git workflow}\label{secGit}
 
+Most likely (I would wonder if not) the git man pages are installed
+together with the git binaries in your distribution. The fastest way to
+check the syntax or parameters of a git subcommand are the man pages. 
+
+As a preliminary to using git, please take an hour to read the two
+tutorials on git provided in the man pages. In your terminal write
+\verb+man gittutorial+. When done with it read on with %
+%
+\verb+man gittutorial-2+. Depending on your background and experience
+with other revision control systems there might be better approaches to
+introduce git, but at any rate, these two tutorials give basic
+insight into git's concepts. For deeper understanding %
+%
+\verb+man gitcore-tutorial+ is your friend.
+
+Usually, \verb+git foo help+ is synonim for \verb+man git foo+.
+
 \begin{code}
 \begin{verbatim}
 git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
@@ -446,8 +463,101 @@ with a git-diff.sh file (in your local bin)
 \end{verbatim}
 \end{code}
 
+Some other contribution to the git cheat sheet:
 
-\subsubsection{svn workflow}
+
+\begin{itemize}
+
+
+\item{init} 
+
+- \verb`git init`  just inits the \verb`$PWD`, nothing added, nothing
+
+- create central repo for current development\begin{enumerate}
+	
+	\item at home, \verb`cd ~/dev/mpcdzen`, \verb`git init`
+	\item \verb`git add mpcdzen.sh mpcdzen.conf`  
+	\item \verb`git commit -m initial`
+	\item \verb`ssh my.server.there` go to where my 'central' repos are.
+	\item \verb`cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen`
+	\item everywhere: \verb`git clone ssh://my.home.here/home/me/dev/mpcdzen` \end{enumerate}
+
+- when cloning on the same machine:
+  %
+  \verb`git clone --bare --no-hardlinks -l ~/dev/mpcdzen`  can be helpful
+
+
+
+\item{commit}
+
+- \verb`git add -u ../path/` : add all *tracked* files under path
+
+- \verb`git add ../path/` : add *all* files under path to staging area
+
+- \verb`git commit -a ` : add all modified tracked files from the *whole
+  working copy* and commit
+  	
+
+\item{diff}
+  	
+- \verb`git diff` : how current files and HEAD differ
+
+- \verb`git diff --cached ` : diff staged files against HEAD
+
+
+\item{status}
+
+- \verb`git status` : list staged, modified tracked, untracked files
+
+- if \verb`file` is not tracked you can use .gitignore or .git/info/exclude
+  to tell git not to take care of it. If it is already tracked, this is
+  the way to say the same: \verb`git update-index --assume-unchanged ../file`  
+
+\item{remote}
+
+- \verb`git add remote mhmgr ssh://my.homemachine/git/repo` kinda introduces
+  my home machine's repo to this one. Then, \verb`git fetch mhmgr` and I'm
+  set to go for comparing, merging etc.
+
+\item{refs' naming}
+
+- \verb`HEAD^` addresses the parent of \verb`HEAD`, e.g., assuming I've
+  merged 2 branches and committed 3 times on the current branch, 
+  %
+  \verb`git show HEAD^^^2` shows the second branch before merging. In
+  other words, direct after merge and commit, the parents of HEAD are
+  \verb`HEAD^1`  and \verb`HEAD^2`  
+   
+   illustration from man git-rev-parse:
+   
+   \begin{code} \begin{verbatim}
+           G   H   I   J
+            \ /     \ /
+             D   E   F
+              \  |  / \
+               \ | /   |
+                \|/    |
+                 B     C
+                  \   /
+                   \ /
+                    A
+
+           A =      = A^0
+           B = A^   = A^1     = A~1
+           C = A^2  = A^2
+           D = A^^  = A^1^1   = A~2
+           E = B^2  = A^^2
+           F = B^3  = A^^3
+           G = A^^^ = A^1^1^1 = A~3
+           H = D^2  = B^^2    = A^^^2  = A~2^2
+           I = F^   = B^3^    = A^^3^
+           J = F^2  = B^3^2   = A^^3^2
+
+\end{verbatim} \end{code}
+
+\end{itemize}
+
+\subsection{svn workflow}
 
 \begin{code}
 \begin{verbatim}
