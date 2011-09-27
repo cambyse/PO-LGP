@@ -27,6 +27,8 @@
 #include <TL/utilTL.h>
 #include <map>
 
+//MT: make defines enums and included in the namespace (avoid global objects)
+
 #define TL_TERM_TYPE_SIMPLE 0
 #define TL_TERM_TYPE_DISJUNCTION 1
 
@@ -62,6 +64,12 @@
 #define FOR1D_(x,i)   for(i=0;i<x.num();i++)
 #define FOR1D_DOWN_(x,i)  for(i=x.num();i--;)
 
+
+//MT: (general remarks)
+//tabs to 2 spaces
+//``only public''-classes could be made structs
+//why does it make such a difference between derived and primitive predicates?
+//prehaps rename 'clone' to 'newClone' (to remind that 'new' is being called)
 
 namespace TL {
 
@@ -295,6 +303,10 @@ class RewardFunction : public Function {
 //  Derived predicates
 
 
+//MT: Is the constructor and the virtual clone function the only reason for
+//defining the derived class? (Perhaps instead move the virtual clone to
+//'Predicate' and define the 'category' in each derived class explicitly
+
 class DerivedPredicate : public Predicate {
   public:
     DerivedPredicate() {
@@ -394,7 +406,8 @@ struct FunctionInstance {
   void writeNice(ostream& os = cout) const;
 };
 
-
+//MT: Why do you define a 'FunctionValue' separately, instead of giving a
+//virtual function 'value()' to the 'FunctionInstance'?
 
 class FunctionValue {
 	public:
@@ -411,12 +424,11 @@ class FunctionValue {
 };
 
 
-
 class PredicateInstance {
 	public:
 		Predicate* pred;
 		uintA args;
-		bool positive;
+		bool positive; //MT: Q: is this the actual value of the instantiated predicate? Could one rename it to 'value'?
 		bool operator==(PredicateInstance& pt) const;
 		bool operator!=(PredicateInstance& pt) const;
 		virtual ~PredicateInstance() {}
@@ -459,6 +471,8 @@ class ComparisonPredicateInstance : public PredicateInstance {
 /****************************************
      RULE
  ***************************************/
+
+//MT: No functions in rules?
 
 struct Rule {
 	MT::Array< TL::PredicateInstance* > context;
@@ -607,6 +621,8 @@ class SubstitutionSet {
  ***************************************/
 
 struct State {
+  //MT: Is it necessary (or just convenient) to have different lists for the
+  //different primitive/function types? (Each primitive knows its type)
 	MT::Array<PredicateInstance*> pi_prim;
 	MT::Array<PredicateInstance*> pi_derived;
   MT::Array<PredicateInstance*> pi_comp;
@@ -632,6 +648,7 @@ struct Trial {
 	MT::Array<PredicateInstance*> actions;
   
   // potential non-logical additional info [start]
+  //MT: is this used so far?
   MT::Array< arr > positions; // index=time, inner array has 2 dims: 0=constant, 1=positions
   MT::Array< arr > angles; // index=time, inner array has 2 dims: 0=constant, 1=angles
   // potential non-logical additional info [end]
@@ -646,7 +663,7 @@ struct Trial {
 
 
 struct Experience {
-  TL::State* pre, *post;
+  TL::State *pre, *post; //MT: why are these pointers?
   TL::PredicateInstance* action;
   
   MT::Array< TL::PredicateInstance* > del, add;
@@ -667,6 +684,7 @@ typedef MT::Array< Experience* > ExperienceA;
 
 }
 
+//MT: since these are lists (=array of pointers), rename to PredL, FuncL, etc
 
 typedef MT::Array< TL::Predicate* > PredA;
 typedef MT::Array< TL::Function* > FuncA;

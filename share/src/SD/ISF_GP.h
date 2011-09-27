@@ -27,6 +27,7 @@ struct isf_gp_t{
   void set_shape_prior( double (*_mu)(const arr&, const void*), void *priorP);
 
   void write(std::ostream& os) const;
+  void read(std::istream& is);
   
 };
 

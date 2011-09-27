@@ -1,27 +1,23 @@
 #ifndef SD_skin_h
 #define SD_skin_h
 
-
 #include <MT/array.h>
 #include <MT/ors.h>
 #include <MT/schunk.h>
 
-typedef MT::Array<ors::Transformation> transfA ;
-typedef MT::Array<ors::Shape *> shapeL;
-
 struct tactile_arr_t {
   enum type {LINK=0, TIP=1};
   ors::Body *b;
-  transfA tr;
-  shapeL sh_s,sh_n; 
-  intA mapp;
+  MT::Array<ors::Transformation> tr;
+  MT::Array<ors::Shape *>  sh_s,sh_n; 
+  uintA mapp;
   byteA map;
   type t;
 
   tactile_arr_t(){};
-  tactile_arr_t(ors::Graph &G, const char *name, intA mapparam, type t1){
+  tactile_arr_t(ors::Graph &G, const char *name, uintA mapparam, type t1){
     init(G,name,mapparam,t1); }
-  void init(ors::Graph &G, const char *name, intA mapparam, type t1){
+  void init(ors::Graph &G, const char *name, uintA mapparam, type t1){
     b = G.getBodyByName(name);
     mapp = mapparam;
     t = t1;
@@ -50,6 +46,8 @@ struct grobi_skin_t {
   void update_shapes();
 };
 
+#ifdef  MT_IMPLEMENTATION
 #include "skin.cpp"
+#endif
 
 #endif// header ifdef

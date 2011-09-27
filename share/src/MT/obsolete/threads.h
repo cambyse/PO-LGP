@@ -50,11 +50,11 @@ struct ConditionVariable{
 //! a simple struct to realized a strict tic tac timing (call step() once in a loop)
 struct Metronome{
   long targetDt;
-  timespec ticTime,lastTime;
+  timespec ticTime, lastTime;
   uint tics;
   const char* name;                   ///< name
 
-  Metronome(const char* name,long _targetDt); //!< set tic tac time in milli seconds
+  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
   ~Metronome();
 
   void reset();
@@ -65,9 +65,9 @@ struct Metronome{
 //! a really simple thing to meassure cycle and busy times
 struct CycleTimer{
   uint steps;
-  double cyclDt,cyclDtMean,cyclDtMax;  ///< internal variables to measure step time
-  double busyDt,busyDtMean,busyDtMax;  ///< internal variables to measure step time
-  timespec now,lastTime;
+  double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
+  double busyDt, busyDtMean, busyDtMax;  ///< internal variables to measure step time
+  timespec now, lastTime;
   const char* name;                    ///< name
   CycleTimer(const char *_name=NULL);
   ~CycleTimer();

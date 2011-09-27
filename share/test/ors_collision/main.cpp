@@ -1,4 +1,4 @@
-//#define MT_IMPLEMENTATION
+//
 //#define MT_algos_extern
 
 #include<MT/ors.h>

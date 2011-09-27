@@ -6,18 +6,17 @@
 #include "socSystem_ors.h"
 #include "aico.h"
 
-struct ReceedingHorizonProcess:public Process{
+struct ReceedingHorizonProcess:public Process {
   FutureMotionPlan *planVar;
   FutureMotionGoal *goalVar;
-
+  
   AICO planner;
   //soc::iLQG planner;
-  soc::SocSystem_Ors *sys,*sys_parent;
+  soc::SocSystem_Ors *sys, *sys_parent;
   
   bool active;
   const char *graspShapeName;
-
-
+  
   ReceedingHorizonProcess();
   void open();
   void step();

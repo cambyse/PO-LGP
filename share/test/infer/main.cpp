@@ -95,7 +95,7 @@ void testBurglary() {
     ma(2, "maryCalls"),
     jo(2, "johnCalls");
   
-  VariableList variables = LIST(bl,eq,al,ma,jo);
+  infer::VariableList variables = LIST(bl,eq,al,ma,jo);
 
   infer::Factor
     p_bl(LIST(bl), ARR( .999, .001)),
@@ -133,7 +133,7 @@ void testBurglary() {
   post_bl.getP(p1);
 
   //-- list of all factors for the remaining algorithms
-  FactorList factors=LIST(p_bl, p_eq, p_al, p_ma, p_jo, evid);
+  infer::FactorList factors=LIST(p_bl, p_eq, p_al, p_ma, p_jo, evid);
 
   //*** elimination
   eliminationAlgorithm(post_bl,factors,LIST(bl));
@@ -175,7 +175,7 @@ void testBurglary() {
 
 
 // creates HMM
-void createHMM(FactorList& factors, VariableList& states, VariableList& obs, uint timesteps) {
+void createHMM(infer::FactorList& factors, infer::VariableList& states, infer::VariableList& obs, uint timesteps) {
   factors.clear();
   states.clear();
   obs.clear();
@@ -207,12 +207,12 @@ void createHMM(FactorList& factors, VariableList& states, VariableList& obs, uin
 
 // Test JunctionTree or BeliefPropagation on MarkovModel oder HiddenMarkovModel.
 void testHMMInference(uint T) {
-  FactorList factors;
-  VariableList states;
-  VariableList obs;
+  infer::FactorList factors;
+  infer::VariableList states;
+  infer::VariableList obs;
   createHMM(factors, states, obs, T);
 
-  VariableList vars;
+  infer::VariableList vars;
   vars.append(states);
   vars.append(obs);
   
@@ -250,7 +250,7 @@ void testLoop(){
   infer::Variable A(2, "A");
   infer::Variable B(2, "B");
   infer::Variable C(2, "C");
-  VariableList vars = LIST(A,B,C);
+  infer::VariableList vars = LIST(A,B,C);
   
   arr coupling;
   coupling.setText("[ .75 .25 ; .25 .75]");
@@ -259,7 +259,7 @@ void testLoop(){
   infer::Factor f_ab(LIST(A,B), coupling);
   infer::Factor f_bc(LIST(B,C), coupling);
   infer::Factor f_ca(LIST(C,A), coupling);
-  FactorList facs = LIST(f_ab, f_bc, f_ca);
+  infer::FactorList facs = LIST(f_ab, f_bc, f_ca);
   
   arr p_evid;
   p_evid.setText("[.2 .8]"); 
@@ -327,8 +327,8 @@ void testRndNetBP(){
 }
 
 void testPairBP(){
-  FactorList facs;
-  VariableList vars;
+  infer::FactorList facs;
+  infer::VariableList vars;
   randomPairNet(vars,facs,3,2,1);
   listWrite(vars,cout,"\n  ");  cout <<endl;
   listWrite(facs,cout,"\n  ");  cout <<endl;
@@ -345,8 +345,8 @@ void testPairBP(){
 
 #ifdef MT_DAI
 void testDai(){
-  FactorList facs;
-  VariableList vars;
+  infer::FactorList facs;
+  infer::VariableList vars;
   randomPairNet(vars,facs,10,2,1);
   listWrite(vars,cout,"\n  ");  cout <<endl;
   listWrite(facs,cout,"\n  ");  cout <<endl;

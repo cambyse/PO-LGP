@@ -5,8 +5,8 @@
 
 #define MT_IMPLEMENT_TEMPLATES
 
-#include<MT/array.h>
-#include<MT/util.h>
+#include "array.h"
+#include "util.h"
 
 #define T double
 #include <MT/array_instantiate.cpp>

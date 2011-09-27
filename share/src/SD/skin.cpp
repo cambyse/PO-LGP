@@ -1,4 +1,4 @@
-#include <SD/skin.h>
+#include "skin.h"
 #include <MT/array.h>
 #include <MT/ors.h>
 #include <MT/schunk.h>
@@ -60,7 +60,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
     s1->reset();
     a = new MT::String("a"); *a<<i<<" "<<j;
     s1->name = a->p;
-    s1->type=boxST;
+    s1->type=ors::boxST;
     s1->rel.setText(s.p);
     SD_SIZE(s1->size, .0034, .0034, .001, .0034);
     SD_COL(s1->color, .8, .1, .1 );
@@ -70,7 +70,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
     s2->reset();
     n = new MT::String("n"); *a<<i<<" "<<j;
     s2->name = n->p;
-    s2->type=cylinderST;
+    s2->type=ors::cylinderST;
     s2->rel.setText(s.p);
     SD_SIZE(s2->size, .0034, .0034, .02, .00003);
     SD_COL(s2->color, .1, .8, .1  );
@@ -85,12 +85,12 @@ grobi_skin_t::grobi_skin_t(ors::Graph &ors){
 
   /* 3 fingers */
   fingers.resize(3);
-  fingers(0).tip.init(ors, "tip1",   ARRAY<int>(1,  13, 7,  12), tactile_arr_t::TIP);
-  fingers(0).link.init(ors, "fing1", ARRAY<int>(15, -1, 7,  12), tactile_arr_t::LINK);
-  fingers(1).tip.init(ors, "tip2",   ARRAY<int>(1,  13, 14, -1), tactile_arr_t::TIP);
-  fingers(1).link.init(ors, "fing2", ARRAY<int>(15, -1, 14, -1), tactile_arr_t::LINK);
-  fingers(2).tip.init(ors, "tip3",   ARRAY<int>(1,  13, 0,  5), tactile_arr_t::TIP);
-  fingers(2).link.init(ors, "fing3", ARRAY<int>(15, -1, 0,  5), tactile_arr_t::LINK);
+  fingers(0).tip.init(ors, "tip1",   TUP(1,  13, 7,  12), tactile_arr_t::TIP);
+  fingers(0).link.init(ors, "fing1", TUP(15, -1, 7,  12), tactile_arr_t::LINK);
+  fingers(1).tip.init(ors, "tip2",   TUP(1,  13, 14, -1), tactile_arr_t::TIP);
+  fingers(1).link.init(ors, "fing2", TUP(15, -1, 14, -1), tactile_arr_t::LINK);
+  fingers(2).tip.init(ors, "tip3",   TUP(1,  13, 0,  5), tactile_arr_t::TIP);
+  fingers(2).link.init(ors, "fing3", TUP(15, -1, 0,  5), tactile_arr_t::LINK);
 
   /* read frames and add to ors */
   FOR1D(fingers,i){
@@ -129,7 +129,9 @@ grobi_skin_t::sense(SchunkSkinModule *skin,const byteA *const img, const byteA *
       fingers(i).tip.senseimg(*img);
       fingers(i).link.senseimg(*img);
     }else if (map){
-      NIY("Don't use this.");
+      NIY; //"Don't use this.");
+      //compiler warning here due to else if() HALT() else HALT();
+      //It thinks we can save one HALT, I guess. Never mind.
       /*
       fingers(i).tip.sensebypass(*map);
       fingers(i).link.sensebypass(*map);

@@ -1,6 +1,6 @@
 
  
-void randomPairNet(VariableList& vars,FactorList &facs,uint N,uint n,double connectivity){
+void randomPairNet(infer::VariableList& vars,infer::FactorList &facs,uint N,uint n,double connectivity){
   uint i,j;
   
   //-- generate RVs
@@ -38,11 +38,11 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
   uint i,j,k,l,ll;
   
   //-- generate RVs
-  VariableList V(N);
+  infer::VariableList V(N);
   for(i=0;i<N;i++) V(i) = new infer::Variable(n, STRING("var("<<i<<")"));
 
   //-- generate coupling factors
-  FactorList F(N,N);  F.memMove=true;  F.setZero();
+  infer::FactorList F(N,N);  F.memMove=true;  F.setZero();
   for(i=0;i<N;i++) for(j=i+1;j<N;j++){
     if(rnd.uni()<connectivity){
       F(i,j) = new infer::Factor(ARRAY(V(i), V(j)));
@@ -53,7 +53,7 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
   }
 
   //-- generate evidence factors
-  FactorList E(N);  E.memMove=true;  E.setZero();
+  infer::FactorList E(N);  E.memMove=true;  E.setZero();
   for(i=0;i<N;i++){
     if(!i) E(i) = new infer::Factor(ARRAY(V(i)),"[.2 .8]");
     else   E(i) = new infer::Factor(ARRAY(V(i)));
@@ -63,7 +63,7 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
 
   //-- exact solution
   infer::Factor f,f_elim,f_diff;
-  FactorList facs;
+  infer::FactorList facs;
   for(i=0;i<F.N;i++) if(F.elem(i)) facs.append(F.elem(i));
   for(i=0;i<E.N;i++) if(E.elem(i)) facs.append(E.elem(i));
   arr ex_post(N),post(N);
@@ -76,12 +76,12 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
   for(i=0;i<N;i++) for(j=i+1;j<N;j++) F(j,i) = F(i,j);
   
   //-- generate messages
-  FactorList M(N,N);
+  infer::FactorList M(N,N);
   for(i=0;i<N;i++) for(j=i+1;j<N;j++) if(F(i,j)){
     M(i,j) = new infer::Factor(ARRAY(V(j)));
     M(j,i) = new infer::Factor(ARRAY(V(i)));
   }
-  FactorList M1(N,N,N),M2; M2.resize(ARRAY(N,N,N,N));
+  infer::FactorList M1(N,N,N),M2; M2.resize(ARRAY(N,N,N,N));
   for(i=0;i<N;i++) for(j=i+1;j<N;j++) if(F(i,j)){
     for(l=0;l<N;l++){
       M1(i,j,l) = new infer::Factor(ARRAY(V(j)));

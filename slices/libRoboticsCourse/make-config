@@ -1,0 +1,3 @@
+ifneq ($(NAME),libRoboticsCourse)
+  LIBS += -lRoboticsCourse
+endif

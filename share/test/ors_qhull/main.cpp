@@ -1,4 +1,4 @@
-#define MT_IMPLEMENTATION
+
 
 #include<MT/ors.h>
 #include<MT/opengl.h>
@@ -14,8 +14,11 @@
 
 namespace Qtest{
   arr origin;
-  double f(const arr& X,void*){ return distanceToConvexHull(X,origin,0,0,true); }
-  void df(arr& dfdX,const arr& X,void*){ distanceToConvexHullGradient(dfdX,X,origin,true); }
+  double f(arr *grad,const arr& X,void*){
+    double d=distanceToConvexHull(X,origin,0,0,true);
+    if(grad) distanceToConvexHullGradient(*grad,X,origin,true);
+    return d;
+  }
 }
 
 void testConvexHull(){
@@ -57,7 +60,7 @@ void testConvexHull(){
   for(uint k=0;k<20;k++){
     rndUniform(Qtest::origin,-1.2,1.2,false);
     rndUniform(X,-1.,1.,false);
-    MT::checkGradient(Qtest::f,Qtest::df,NULL,X,1e-4);
+    MT::checkGradient(Qtest::f,NULL,X,1e-4);
   }
 }
 
@@ -69,8 +72,9 @@ void testConvexHull(){
 namespace FCtest{
   ors::Vector center;
   arr Xn;
-  double f(const arr& X,void*){ return forceClosure(X,Xn,center,.5,10.,0); }
-  void df(arr& dfdX,const arr& X,void*){ forceClosure(X,Xn,center,.5,10.,&dfdX); }
+  double f(arr *grad,const arr& X,void*){
+    return forceClosure(X,Xn,center,.5,10.,grad);
+  }
 }
 
 void testForceClosure(){
@@ -110,7 +114,7 @@ void testForceClosure(){
 
     FCtest::center=center;
     FCtest::Xn=Xn;
-    MT::checkGradient(FCtest::f,FCtest::df,NULL,X,1e-4);
+    MT::checkGradient(FCtest::f,NULL,X,1e-4);
   }
 }
 

@@ -137,7 +137,7 @@ static bool Is_Identity( const SWIFT_Orientation& orient,
 
 SWIFT_Scene::SWIFT_Scene( bool broad_phase, bool global_sort )
 {
-    WS = new SWIFT_SceneWorkspace;
+    s = new SWIFT_SceneWorkspace;
     global_scene=this;
     
     // Create the lists
@@ -152,8 +152,8 @@ SWIFT_Scene::SWIFT_Scene( bool broad_phase, bool global_sort )
     overlapping_pairs = NULL;
 
     // Register the file readers
-    WS->basic_file_reader.Register_Yourself( WS->file_dispatcher );
-    WS->obj_file_reader.Register_Yourself( WS->file_dispatcher );
+    s->basic_file_reader.Register_Yourself( s->file_dispatcher );
+    s->obj_file_reader.Register_Yourself( s->file_dispatcher );
 
     bp = broad_phase;
     gs = global_sort;
@@ -199,7 +199,7 @@ SWIFT_Scene::~SWIFT_Scene( )
         delete objects[i];
     }
 
-    delete WS;
+    delete s;
 }
 
 
@@ -290,7 +290,7 @@ bool SWIFT_Scene::Add_General_Object(
         int vn, fn;
         int* fv = NULL;
 
-        if( !WS->file_dispatcher.Read( f, vs, fs, vn, fn, fv ) ) {
+        if( !s->file_dispatcher.Read( f, vs, fs, vn, fn, fv ) ) {
             // Delete everything
             delete vs; delete fs; delete fv;
 
@@ -1472,7 +1472,7 @@ bool SWIFT_Scene::Query_Contact_Determination(
 bool SWIFT_Scene::Register_File_Reader( const char* magic_number,
                                         SWIFT_File_Reader* file_reader ) const
 {
-  return WS->file_dispatcher.Register( magic_number, file_reader );
+  return s->file_dispatcher.Register( magic_number, file_reader );
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1520,7 +1520,7 @@ void SWIFT_Scene::Initialize_Object_In_Scene( SWIFT_Object* cobj, int& id )
     }
     total_pairs += j;
     cobj->Pairs().Create( j );
-    for(i=0; i<cobj->Pairs().Length(); i++) cobj->Pairs()[i].WS = WS->PairWS;
+    for(i=0; i<cobj->Pairs().Length(); i++) cobj->Pairs()[i].s = s->PairWS;
       
     // Set up the pairs for this object
     for( i = 0, l = 0; i < objects.Length()-1; i++ ) {
@@ -1712,6 +1712,6 @@ void SWIFT_Scene::Sort_Local( int oid )
 }
 
 SWIFT_File_Read_Dispatcher *SWIFT_Scene::get_File_Read_Dispatcher() const{
-  return &WS->file_dispatcher;
+  return &s->file_dispatcher;
 }
 

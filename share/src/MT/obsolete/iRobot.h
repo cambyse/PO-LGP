@@ -8,7 +8,7 @@
 #include <MT/ors.h>
 #include <MT/joystick.h>
 #include <MT/soc.h>
-#include <NJ/UrgModule.h>
+#include <NJ/UrgInterface.h>
 #include <NP/camera.h>
 #include <MT/schunk.h>
 #include <MT/vision.h>
@@ -38,9 +38,9 @@ void q_hand_home(arr &);
 struct TaskAbstraction{
   TaskVariableList TVall;
   
-  TaskVariable *TV_eff,*TV_rot,*TV_col,*TV_lim,*TV_q,*TV_skin; //vars for control
-  TaskVariable *TV_up ,*TV_up2,*TV_z1,*TV_z2,*TV_f1,*TV_f2,*TV_f3;    //vars for grasping
-  double TV_x_yprec,TV_x_vprec,TV_rot_vprec,TV_q_vprec;
+  TaskVariable *TV_eff, *TV_rot, *TV_col, *TV_lim, *TV_q, *TV_skin; //vars for control
+  TaskVariable *TV_up , *TV_up2, *TV_z1, *TV_z2, *TV_f1, *TV_f2, *TV_f3;    //vars for grasping
+  double TV_x_yprec, TV_x_vprec, TV_rot_vprec, TV_q_vprec;
   
   //control options
   uint controlMode;
@@ -50,9 +50,9 @@ struct TaskAbstraction{
   arr reachPoint;      //defines the 3D reach point in reachCM
 
   //trajectory messages - output buffers for planners
-  double plan_count,plan_speed;
+  double plan_count, plan_speed;
   uint plan_scale;
-  arr plan_v,plan_b,plan_Vinv;
+  arr plan_v, plan_b, plan_Vinv;
 
   TaskAbstraction();
 
@@ -70,14 +70,14 @@ struct TaskAbstraction{
 struct ControllerProcess{ //--non-threaded!!
   //INPUT
   TaskAbstraction *task;
-  bool useBwdMsg,forceColLimTVs;
-  arr bwdMsg_v,bwdMsg_Vinv; //optional: backward messages from a planner
+  bool useBwdMsg, forceColLimTVs;
+  arr bwdMsg_v, bwdMsg_Vinv; //optional: backward messages from a planner
   double maxJointStep; //computeMotionFromTaskVariables will generate a null-step if this limit is exceeded
   intA joyState;
   arr skinState;
 
   //OUTPUT
-  arr q_reference,v_reference; //,q_orsInit;  //the SIMULATION state (the modules buffer double states, simulation is synchronized with modules in the loop)
+  arr q_reference, v_reference; //, q_orsInit;  //the SIMULATION state (the modules buffer double states, simulation is synchronized with modules in the loop)
   arr q_home; //posture as loaded from the ors file
   
   //INTERNAL
@@ -102,15 +102,15 @@ struct ControllerProcess{ //--non-threaded!!
 /*! simply a collection of standard robot modules: open() opens them all,
     close() closes them all, step() communicates between them and steps them all */
        
-struct RobotModuleGroup{
+struct RobotProcessGroup{
   //modules
-  bool openArm,openHand,openSkin,openJoystick,openLaser,openBumble,openEarlyVision,openGui,openThreadInfoWin;
+  bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;
   SchunkArmModule arm;
   SchunkHandModule hand;
   SchunkSkinModule skin;
   JoystickInterface joy;
-  UrgModule urg;
+  UrgInterface urg;
   EarlyVisionModule evis;
   BumblebeeModule bumble;
   GuiModule gui;
@@ -122,7 +122,7 @@ struct RobotModuleGroup{
   //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors
   
-  //IMPORTANT: call signal(SIGINT,RobotModuleGroup::signalStopCallback); in main.cpp
+  //IMPORTANT: call signal(SIGINT, RobotProcessGroup::signalStopCallback); in main.cpp
   static bool signalStop;
   static void signalStopCallback(int);
   
@@ -133,8 +133,8 @@ struct RobotModuleGroup{
   RevelInterface *revel;
   ostream *log;
 
-  RobotModuleGroup();
-  ~RobotModuleGroup();
+  RobotProcessGroup();
+  ~RobotProcessGroup();
 
   //main routines
   void open();

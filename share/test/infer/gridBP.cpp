@@ -19,15 +19,15 @@ void gridBP(arr& post, const arr& evid, const arr& coupling){
   MT::wait();
 
   //-- generate RVs
-  VariableList V(h,w);
+  infer::VariableList V(h,w);
   for(i=0;i<h;i++) for(j=0;j<w;j++){
       V(i,j) = new infer::Variable(n, STRING("var("<<i<<","<<j<<")"));
   }
 
   //-- generate factors:
   /*
-  FactorList Fhori(h,w-1); //horizontal factors
-  FactorList Fvert(h-1,w); //vertical factors
+  infer::FactorList Fhori(h,w-1); //horizontal factors
+  infer::FactorList Fvert(h-1,w); //vertical factors
   for(i=0;i<h;i++) for(j=0;j<w;j++){
     if(j<w-1) Fhori(i,j) = new infer::Factor(ARRAY(V(i,j), V(i,j+1)), coupling);
     if(i<h-1) Fvert(i,j) = new infer::Factor(ARRAY(V(i,j), V(i+1,j)), coupling);
@@ -35,8 +35,8 @@ void gridBP(arr& post, const arr& evid, const arr& coupling){
   infer::Factor Fcoupling(ARRAY(V(0,0), V(0,1)), coupling);
   
   //-- generate messages:
-  FactorList MhoriRight(h,w-1),MhoriLeft(h,w-1); //horizontal factors
-  FactorList MvertDown(h-1,w),MvertUp(h-1,w); //vertical factors
+  infer::FactorList MhoriRight(h,w-1),MhoriLeft(h,w-1); //horizontal factors
+  infer::FactorList MvertDown(h-1,w),MvertUp(h-1,w); //vertical factors
   for(i=0;i<h;i++) for(j=0;j<w;j++){
     if(j<w-1) MhoriRight(i,j) = new infer::Factor(ARRAY(V(i  ,j+1)));
     if(j<w-1) MhoriLeft(i,j)  = new infer::Factor(ARRAY(V(i  ,j  )));

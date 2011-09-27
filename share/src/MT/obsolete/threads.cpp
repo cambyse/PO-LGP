@@ -37,7 +37,7 @@ bool setNice(int nice){
   pid_t tid = syscall(SYS_gettid);
   //int old_nice = getpriority(PRIO_PROCESS, tid);
   int ret = setpriority(PRIO_PROCESS, tid, nice);
-  if(ret) MT_MSG("cannot set nice to "<<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
+  if(ret) MT_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
   //std::cout <<"tid=" <<tid <<" old nice=" <<old_nice <<" wanted nice=" <<nice <<std::flush;
   //nice = getpriority(PRIO_PROCESS, tid);
   //std::cout <<" new nice=" <<nice <<std::endl;
@@ -50,25 +50,25 @@ void setRRscheduling(int priority){
   MT_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
   sched_param sp; sp.sched_priority=priority;
   int rc = sched_setscheduler(tid, SCHED_RR, &sp);
-  if (rc) switch(errno){
+  if(rc) switch(errno){
     case ESRCH:
-      HALT("The process whose ID is"<<tid<<"could not be found.");
+      HALT("The process whose ID is" <<tid <<"could not be found.");
       break;
     case EPERM:
       MT_MSG("ERROR: Not enough privileges! Priority unchanged! Run with sudo to use this feature!");
       break;
     case EINVAL:
-    default: HALT(errno<<strerror(errno));
+    default: HALT(errno <<strerror(errno));
   }
   timespec interval;
   rc=sched_rr_get_interval(tid, &interval);
-  std::cout <<"RR scheduling interval = "<<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
-  CHECK(!rc,"sched_rr_get_interval failed:" <<errno<<strerror(errno));
+  std::cout <<"RR scheduling interval = " <<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
+  CHECK(!rc, "sched_rr_get_interval failed:" <<errno <<strerror(errno));
   MT_MSG("Scheduling policy changed: new sched="
 		  <<sched_getscheduler(tid) <<" new priority=" <<priority);
 }
 
-void updateTimeIndicators(double& dt,double& dtMean,double& dtMax,const timespec& now,const timespec& last,uint step){
+void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const timespec& now, const timespec& last, uint step){
   dt=double(now.tv_sec-last.tv_sec-1)*1000. +
      double(1000000000l+now.tv_nsec-last.tv_nsec)/1000000.;
   if(dt<0.) dt=0.;
@@ -86,36 +86,36 @@ void updateTimeIndicators(double& dt,double& dtMean,double& dtMax,const timespec
 Lock::Lock(){
 //   pthread_rwlockattr_t   att;
   int rc;
-//   rc = pthread_rwlockattr_init(&att);  if(rc) HALT("pthread failed with err "<<rc);
-//   rc = pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED);  if(rc) HALT("pthread failed with err "<<rc);
-//   rc = pthread_rwlock_init(&lock, &att);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err "<<rc);
+//   rc = pthread_rwlockattr_init(&att);  if(rc) HALT("pthread failed with err " <<rc);
+//   rc = pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED);  if(rc) HALT("pthread failed with err " <<rc);
+//   rc = pthread_rwlock_init(&lock, &att);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc);
   state=0;
 }
 
 Lock::~Lock(){
-  CHECK(!state,"");
-  int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err "<<rc);
+  CHECK(!state, "");
+  int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc);
 }
   
 void Lock::readLock(const char* _msg){
-  int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err "<<rc);
+  int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
   if(_msg) msg=_msg; else msg=NULL;
-  //CHECK(state>=0,"");
+  //CHECK(state>=0, "");
   state++;
 }
   
 void Lock::writeLock(const char* _msg){
-  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err "<<rc <<" '" <<strerror(rc) <<"'");
+  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
-  //CHECK(!state,"");
+  //CHECK(!state, "");
   state=-1;
 }
   
 void Lock::unlock(){
-  int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err "<<rc);
+  int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
   msg=NULL;
-  //CHECK(state,"");
+  //CHECK(state, "");
   if(state>0) state--; else state=0;
 }
 
@@ -128,62 +128,62 @@ void Lock::unlock(){
 ConditionVariable::ConditionVariable(){
   state=0;
   int rc;
-  rc = pthread_mutex_init(&mutex,NULL);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_cond_init(&cond,NULL);    if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_init(&mutex, NULL);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc);
 }
 
 ConditionVariable::~ConditionVariable(){
   int rc;
-  rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
 int ConditionVariable::getState(){
-  int rc,i;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err "<<rc);
+  int rc, i;
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
   i=state;
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
   return i;
 }
 
 void ConditionVariable::setState(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
   state=i;
-  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
 }
 
 void ConditionVariable::signal(){
   int rc;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
 }
 
 void ConditionVariable::waitForSignal(){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
 void ConditionVariable::waitForStateEq(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   while(state!=i){
-    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err "<<rc);
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
   }
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
 void ConditionVariable::waitForStateNotEq(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   while(state==i){
-    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err "<<rc);
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
   }
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
   
 void ConditionVariable::waitUntil(double absTime){
@@ -194,9 +194,9 @@ void ConditionVariable::waitUntil(double absTime){
   ts.tv_nsec = tp.tv_usec * 1000;
   ts.tv_sec += WAIT_TIME_SECONDS;
 
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err "<<rc);
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   */
 }
 
@@ -206,7 +206,7 @@ void ConditionVariable::waitUntil(double absTime){
 // Metronome
 //
 
-Metronome::Metronome(const char* _name,long _targetDt){
+Metronome::Metronome(const char* _name, long _targetDt){
   globalMetronomes.memMove=true;
   globalMetronomes.append(this);
   name=_name;
@@ -219,7 +219,7 @@ Metronome::~Metronome(){
 }
 
 void Metronome::reset(){
-  clock_gettime(CLOCK_MONOTONIC,&ticTime);
+  clock_gettime(CLOCK_MONOTONIC, &ticTime);
   lastTime=ticTime;
   tics=0;
 }
@@ -236,7 +236,7 @@ void Metronome::waitForTic(){
     ticTime=now;
   }else{*/
     //wait for target time
-    int rc = clock_nanosleep(CLOCK_MONOTONIC,TIMER_ABSTIME,&ticTime,NULL);
+    int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
     if(rc){
       if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal") }
       else{ MT_MSG("clock_nanosleep() failed " <<rc); }
@@ -248,7 +248,7 @@ void Metronome::waitForTic(){
   
 double Metronome::getTimeSinceTic(){
   timespec now;
-  clock_gettime(CLOCK_MONOTONIC,&now);
+  clock_gettime(CLOCK_MONOTONIC, &now);
   return double(now.tv_sec-ticTime.tv_sec) + 1e-9*(now.tv_nsec-ticTime.tv_nsec);
 }
 
@@ -272,18 +272,18 @@ void CycleTimer::reset(){
   steps=0;
   busyDt=busyDtMean=busyDtMax=1.;
   cyclDt=cyclDtMean=cyclDtMax=1.;
-  clock_gettime(CLOCK_MONOTONIC,&lastTime);
+  clock_gettime(CLOCK_MONOTONIC, &lastTime);
 }
 
 void CycleTimer::cycleStart(){
-  clock_gettime(CLOCK_MONOTONIC,&now);
-  updateTimeIndicators(cyclDt,cyclDtMean,cyclDtMax,now,lastTime,steps);
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  updateTimeIndicators(cyclDt, cyclDtMean, cyclDtMax, now, lastTime, steps);
   lastTime=now;
 }
 
 void CycleTimer::cycleDone(){
-  clock_gettime(CLOCK_MONOTONIC,&now);
-  updateTimeIndicators(busyDt,busyDtMean,busyDtMax,now,lastTime,steps);
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  updateTimeIndicators(busyDt, busyDtMean, busyDtMax, now, lastTime, steps);
   steps++;
 }
 
@@ -312,22 +312,22 @@ StepThread::~StepThread(){
 
 void StepThread::threadOpen(int priority){
 #ifndef MT_NO_THREADS
-  CHECK(threadCondition.state==tsCLOSE,"never open while not closed!");
+  CHECK(threadCondition.state==tsCLOSE, "never open while not closed!");
   threadCondition.setState(tsOPEN);
   threadPriority = priority;
   int rc;
   pthread_attr_t atts;
-  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc);
   /*if(priority){ //doesn't work - but setpriority does work!!
-    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err "<<rc <<strerror(rc));
+    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
     sched_param  param;
-    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err "<<rc);
+    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc);
     std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
     param.sched_priority += priority;
     std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
-    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err "<<rc <<strerror(rc));
+    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
-  rc = pthread_create(&thread, &atts, staticThreadMain, this);  if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_create(&thread, &atts, staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc);
   threadCondition.waitForStateEq(tsIDLE);
 #else
   std::cout <<" +++ opening 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
@@ -342,7 +342,7 @@ void StepThread::threadClose(){
   if(threadCondition.state<=tsLOOPING) threadLoopStop();
   threadCondition.waitForStateEq(tsIDLE);
   threadCondition.setState(tsCLOSE);
-  rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err "<<rc);
+  rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc);
   thread=NULL;
 #else
   close();
@@ -353,7 +353,7 @@ void StepThread::threadClose(){
 void StepThread::threadStep(bool wait){
 #ifndef MT_NO_THREADS
   if(wait) threadWait();
-  CHECK(threadCondition.state==tsIDLE,"never step while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "never step while thread is busy!");
   threadCondition.setState(1);
 #else
   step();
@@ -364,8 +364,8 @@ void StepThread::threadStepOrSkip(uint maxSkips){
 #ifndef MT_NO_THREADS
   if(threadCondition.state!=tsIDLE){
     skips++;
-    //if(skips>maxSkips) HALT("skips>maxSkips: "<<skips<<'<'<<maxSkips);
-    if(maxSkips && skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips="<<skips);
+    //if(skips>maxSkips) HALT("skips>maxSkips: " <<skips<<'<' <<maxSkips);
+    if(maxSkips && skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips=" <<skips);
     return;
   }
   skips=0;
@@ -377,7 +377,7 @@ void StepThread::threadStepOrSkip(uint maxSkips){
 
 void StepThread::threadSteps(uint steps){
 #ifndef MT_NO_THREADS
-  CHECK(threadCondition.state==tsIDLE,"never step while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "never step while thread is busy!");
   threadCondition.setState(steps);
 #else
   for(uint k=0;k<steps;k++) step();
@@ -402,7 +402,7 @@ bool StepThread::threadIsReady(){
 void StepThread::threadLoop(){
 #ifndef MT_NO_THREADS
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE,"thread '"<<threadName <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -411,9 +411,9 @@ void StepThread::threadLoop(){
 
 void StepThread::threadLoopWithBeat(double sec){
 #ifndef MT_NO_THREADS
-  metronome=new Metronome("threadTiccer",1000.*sec);
+  metronome=new Metronome("threadTiccer", 1000.*sec);
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE,"thread '"<<threadName <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsBEATING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -425,7 +425,7 @@ void StepThread::threadLoopSyncWithDone(StepThread& thread){
   thread.broadCastDone=true;
   syncCondition = &thread.threadCondition;
   if(threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(threadCondition.state==tsIDLE,"thread '"<<threadName <<"': never start loop while thread is busy!");
+  CHECK(threadCondition.state==tsIDLE, "thread '" <<threadName <<"': never start loop while thread is busy!");
   threadCondition.setState(tsSYNCLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -434,7 +434,7 @@ void StepThread::threadLoopSyncWithDone(StepThread& thread){
 
 void StepThread::threadLoopStop(){
 #ifndef MT_NO_THREADS
-  CHECK(threadCondition.state<=tsLOOPING,"called stop loop although not looping!");
+  CHECK(threadCondition.state<=tsLOOPING, "called stop loop although not looping!");
   int state=threadCondition.state;
   threadCondition.setState(tsIDLE);
   if(state==tsSYNCLOOPING) syncCondition->signal(); //force a signal that wakes up the sync-thread-loop
@@ -459,7 +459,7 @@ void* StepThread::staticThreadMain(void *_this){
     int state=self->threadCondition.state;
     if(state==tsCLOSE) break;
     //the state is either positive (steps to go) or looping
-    CHECK(state>0 || state<=-3,"at this point, the thread condition should be positive (steps to do) or looping!");
+    CHECK(state>0 || state<=-3, "at this point, the thread condition should be positive (steps to do) or looping!");
 
     if(state==tsBEATING) self->metronome->waitForTic();
     if(state==tsSYNCLOOPING) self->syncCondition->waitForSignal(); //self is a slave and waits for condition signal
@@ -486,18 +486,18 @@ void* StepThread::staticThreadMain(void *_this){
 
 #if 0 //use fltk window
 
-struct ThreadInfoWin:public StepThread,Fl_Window{
+struct ThreadInfoWin:public StepThread, Fl_Window{
   bool isOpen;
   //ofstream log;
   char outputbuf[200];
 
-  ThreadInfoWin():StepThread("ThreadInfoX"),Fl_Window(0,0,600,300,"processes"){
+  ThreadInfoWin():StepThread("ThreadInfoX"), Fl_Window(0, 0, 600, 300, "processes"){
     //clear_border();
   }
   ~ThreadInfoWin(){  }
   
   void open(){
-    //MT::open(log,"LOG.threads");
+    //MT::open(log, "LOG.threads");
     show();
     Fl::check();
     isOpen=true;
@@ -519,25 +519,25 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
     CycleTimer *ct;
     
     //-- graphical display
-    uint i,y=20,x,len;
-    //XClearWindow(fl_display,fl_window);
+    uint i, y=20, x, len;
+    //XClearWindow(fl_display, fl_window);
     fl_draw_box(FL_FLAT_BOX, 0, 0, w(), h(), FL_FOREGROUND_COLOR);
     fl_color(FL_BACKGROUND2_COLOR);
-    fl_font(1,10);
+    fl_font(1, 10);
 #define TEXT0(txt) \
     fl_draw(txt, x, y);
-#define TEXT(form,val) \
-    if((len=sprintf(outputbuf,form,val))){ fl_draw(outputbuf, x, y); }
+#define TEXT(form, val) \
+    if((len=sprintf(outputbuf, form, val))){ fl_draw(outputbuf, x, y); }
 #define TEXTTIME(dt) \
-    if((len=sprintf(outputbuf,"%5.2f|%5.2f|%5.2f",dt,dt##Mean,dt##Max))){ fl_draw(outputbuf, x, y); }
-    for_list(i,th,globalThreads){
+    if((len=sprintf(outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ fl_draw(outputbuf, x, y); }
+    for_list(i, th, globalThreads){
       int state=th->threadCondition.state;
       x=5;
-      TEXT("%4i",th->tid); x+=30;
-      TEXT("%3i",th->threadPriority); x+=25;
-      TEXT("%s",th->threadName); x+=100;
-      TEXT("%4i",th->timer.steps);  x+=30;
-      if(state>0){ TEXT("%4i",state); }
+      TEXT("%4i", th->tid); x+=30;
+      TEXT("%3i", th->threadPriority); x+=25;
+      TEXT("%s", th->threadName); x+=100;
+      TEXT("%4i", th->timer.steps);  x+=30;
+      if(state>0){ TEXT("%4i", state); }
       else switch(state){
         case StepThread::tsOPEN:    TEXT0("open");   break;
         case StepThread::tsCLOSE:   TEXT0("close");  break;
@@ -552,11 +552,11 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
       y+=20;
     }
     y+=10;
-    for_list(i,ct,globalCycleTimers){
+    for_list(i, ct, globalCycleTimers){
       x=5;
-      TEXT("%2i",i); x+=25;
-      TEXT("%s",ct->name); x+=100;
-      TEXT("%4i",ct->steps); x+=30;
+      TEXT("%2i", i); x+=25;
+      TEXT("%s", ct->name); x+=100;
+      TEXT("%4i", ct->steps); x+=30;
       TEXTTIME(ct->cyclDt); x+=130;
       TEXTTIME(ct->busyDt); x+=130;
       y+=20;
@@ -566,8 +566,8 @@ struct ThreadInfoWin:public StepThread,Fl_Window{
     //XFlush(display);
 
     //-- log file
-    //for_list(i,th,globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-    //for_list(i,ct,globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //for_list(i, th, globalThreads)     log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i, ct, globalCycleTimers) log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
     //log <<endl;
   }
 
@@ -595,7 +595,7 @@ ThreadInfoWin::~ThreadInfoWin(){
 }
 
 void ThreadInfoWin::open(){
-  //MT::open(s->log,"LOG.threads");
+  //MT::open(s->log, "LOG.threads");
   s->display = XOpenDisplay(NULL);
   if(!s->display) HALT("Cannot open display");
   s->window = XCreateSimpleWindow(s->display, DefaultRootWindow(s->display),
@@ -603,7 +603,7 @@ void ThreadInfoWin::open(){
 				  0xffffff, 0x000000);
   XMapWindow(s->display, s->window);
   s->gc = XCreateGC(s->display, s->window, 0, NULL);
-  XSetFont(s->display, s->gc,  XLoadFont(s->display,"-*-helvetica-*-r-*-*-*-*-*-*-*-*-*-*"));
+  XSetFont(s->display, s->gc,  XLoadFont(s->display, "-*-helvetica-*-r-*-*-*-*-*-*-*-*-*-*"));
   //-adobe-courier-medium-r-*-*-*-80-*-*-*-*-*-*"));
   XSetBackground(s->display, s->gc, 0x000000);
   XSetForeground(s->display, s->gc, 0xffffff);
@@ -629,22 +629,22 @@ void ThreadInfoWin::open(){
     CycleTimer *ct;
     
     //-- graphical display
-    uint i,y=20,x,len;
-    XClearWindow(s->display,s->window);
+    uint i, y=20, x, len;
+    XClearWindow(s->display, s->window);
 #define TEXT0(txt) \
     if((len=strlen(txt))){ XDrawString(s->display, s->window, s->gc, x, y, txt, len); }
-#define TEXT(form,val) \
-    if((len=sprintf(s->outputbuf,form,val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
+#define TEXT(form, val) \
+    if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
-    if((len=sprintf(s->outputbuf,"%5.2f|%5.2f|%5.2f",dt,dt##Mean,dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-    for_list(i,th,globalThreads){
+    if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
+    for_list(i, th, globalThreads){
       int state=th->threadCondition.state;
       x=5;
-      TEXT("%4i",th->tid); x+=25;
-      TEXT("%3i",th->threadPriority); x+=25;
-      TEXT("%s",th->threadName); x+=100;
-      TEXT("%4i",th->timer.steps);  x+=30;
-      if(state>0){ TEXT("%4i",state); }
+      TEXT("%4i", th->tid); x+=25;
+      TEXT("%3i", th->threadPriority); x+=25;
+      TEXT("%s", th->threadName); x+=100;
+      TEXT("%4i", th->timer.steps);  x+=30;
+      if(state>0){ TEXT("%4i", state); }
       else switch(state){
         case StepThread::tsOPEN:    TEXT0("open");   break;
         case StepThread::tsCLOSE:   TEXT0("close");  break;
@@ -659,11 +659,11 @@ void ThreadInfoWin::open(){
       y+=20;
     }
     y+=10;
-    for_list(i,ct,globalCycleTimers){
+    for_list(i, ct, globalCycleTimers){
       x=5;
-      TEXT("%2i",i); x+=25;
-      TEXT("%s",ct->name); x+=100;
-      TEXT("%4i",ct->steps); x+=30;
+      TEXT("%2i", i); x+=25;
+      TEXT("%s", ct->name); x+=100;
+      TEXT("%4i", ct->steps); x+=30;
       TEXTTIME(ct->cyclDt); x+=130;
       TEXTTIME(ct->busyDt); x+=130;
       y+=20;
@@ -673,8 +673,8 @@ void ThreadInfoWin::open(){
     XFlush(s->display);
 
     //-- log file
-    //for_list(i,th,globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-    //for_list(i,ct,globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+    //for_list(i, th, globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+    //for_list(i, ct, globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
     //s->log <<endl;
 
     //timer.cycleDone();
@@ -692,7 +692,7 @@ void ThreadInfoWin::open(){
   }
   MT::String txt;
   threadReportAll(txt);
-  mvprintw(0,0,txt.p);
+  mvprintw(0, 0, txt.p);
   refresh();
 }*/
 
@@ -711,30 +711,30 @@ void func(int x){
   //printf("received signal!\n");
 }
 void waitForSignal(){
-  signal(SIGUSR1,func);
+  signal(SIGUSR1, func);
   pause();
 }
 void sendSignal(){
-  signal(SIGUSR1,func);
+  signal(SIGUSR1, func);
   uint i;
   int r;
   for(i=0;i<maxClients;i++) if(shm->pids[i]!=-1 && shm->pids[i]!=getpid()){
-    r=kill(shm->pids[i],SIGUSR1);
-    if(r) MT_MSG("warning: couldn't send signal to pid "<<shm->pids[i]);
+    r=kill(shm->pids[i], SIGUSR1);
+    if(r) MT_MSG("warning: couldn't send signal to pid " <<shm->pids[i]);
   }
 }
 #else
 void waitForSignal(){
   HANDLE hEvent = CreateEvent ( NULL, TRUE, FALSE, "EventName");
-  CHECK(hEvent,"failed to open event");
+  CHECK(hEvent, "failed to open event");
   DWORD dwResult = WaitForSingleObject(hEvent, INFINITE);
   CloseHandle(hEvent);
 }
 void sendSignal(){
   //HANDLE hEvent = OpenEvent ( EVENT_ALL_ACCESS, FALSE, "EventName");
-  //CHECK(hEvent,"failed to open event - nobody's waiting?");
+  //CHECK(hEvent, "failed to open event - nobody's waiting?");
   HANDLE hEvent = CreateEvent ( NULL, TRUE, FALSE, "EventName");
-  CHECK(hEvent,"failed to open event");
+  CHECK(hEvent, "failed to open event");
   PulseEvent( hEvent );
   CloseHandle(hEvent);
 }
@@ -765,7 +765,7 @@ BlockDescription blockDescription[nBlocks]={
   {"joystick"     , intT, 9, 0},
 };
 
-void initBlockDescription(BlockDescription *b,const RobotShmStructure& shm){
+void initBlockDescription(BlockDescription *b, const RobotShmStructure& shm){
   b[0].p=(void*)&shm.shm_size;
   b[1].p=(void*) shm.pids;
   b[2].p=(void*) shm.changed;
@@ -773,7 +773,7 @@ void initBlockDescription(BlockDescription *b,const RobotShmStructure& shm){
   b[4].p=(void*) shm.joystick;
 }
 
-void writeBlock(std::ostream& os,int blockName){
+void writeBlock(std::ostream& os, int blockName){
   BlockDescription& b=blockDescription[blockName];
   os <<b.name <<'=';
   if(b.n!=1) std::cout <<'[';
@@ -797,9 +797,9 @@ void openRobotSharedMemory(){
   initTypes();
 
   uint S=sizeof(RobotShmStructure);
-  global_shm.open("myspace",S);
+  global_shm.open("myspace", S);
   shm = (RobotShmStructure*)global_shm.p;
-  initBlockDescription(blockDescription,*shm);
+  initBlockDescription(blockDescription, *shm);
 
   uint i;
   if(global_shm.created)
@@ -808,7 +808,7 @@ void openRobotSharedMemory(){
   for(i=0;i<maxClients;i++) if(shm->pids[i]==-1) break;
 
   if(i==maxClients)
-    HALT("exceeded max number of clients "<<maxClients);
+    HALT("exceeded max number of clients " <<maxClients);
   pidIndex=i;
 
 #ifndef MT_MSVC
@@ -828,7 +828,7 @@ void closeRobotSharedMemory(){
 }
 
 void destroyRobotSharedMemory(){
-  if(!global_shm.opened) global_shm.open("myspace",sizeof(RobotShmStructure));
+  if(!global_shm.opened) global_shm.open("myspace", sizeof(RobotShmStructure));
   global_shm.destroy();
 }
 

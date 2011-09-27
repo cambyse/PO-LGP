@@ -3,7 +3,7 @@
 
 #include <MT/ors.h>
 #include <SD/utils.h>
-#include <MT/graspObjects.h>
+#include "graspObjects.h"
 
 /* These obbjects are used in the commented out code for debug
 struct dbg_obj_t{ // for visual debugging of points and frames
@@ -119,6 +119,8 @@ void get_observs_vrtx(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
 void get_observs_ray(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
 
 
-#include "surface_helpers.cpp"
+#ifdef  MT_IMPLEMENTATION
+#  include "surface_helpers.cpp"
+#endif
 
 #endif // ifundef

@@ -1,0 +1,13 @@
+
+#set dgrid3d 10,10
+#set isosample 10
+set contour base
+set cntrparam linear
+set cntrparam levels discrete -1,0,1
+unset surface
+set table 'z.contour.dat'
+splot [-2:3][-2:3] 'z.model' matrix us ($1/20-2):($2/20-2):3 #,f1(x,y),f2(x,y),f3(x,y)
+unset table
+
+
+plot [-2:3][-2:3] 'z.train' us 1:2:3 with points pt 2 lc variable title 'z.train','./z.contour.dat' us 1:2:(abs($3)*2) with lines lc variable title 'decision boundary'

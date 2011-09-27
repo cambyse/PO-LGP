@@ -21,24 +21,24 @@
 
 #define EXP ::exp //MT::approxExp
 
-double NNsdv(const double& a,const double& b,double sdv);
-double NNsdv(double x,double sdv);
-double NNinv(const doubleA& a,const doubleA& b,const doubleA& Cinv);
-double logNNprec(const arr& a,const arr& b,double prec);
-double logNNinv(const doubleA& a,const doubleA& b,const doubleA& Cinv);
-double NN(const doubleA& a,const doubleA& b,const doubleA& C);
-double logNN(const doubleA& a,const doubleA& b,const doubleA& C);
+double NNsdv(const double& a, const double& b, double sdv);
+double NNsdv(double x, double sdv);
+double NNinv(const doubleA& a, const doubleA& b, const doubleA& Cinv);
+double logNNprec(const arr& a, const arr& b, double prec);
+double logNNinv(const doubleA& a, const doubleA& b, const doubleA& Cinv);
+double NN(const doubleA& a, const doubleA& b, const doubleA& C);
+double logNN(const doubleA& a, const doubleA& b, const doubleA& C);
 
 //! non-normalized!! Gaussian function (f(0)=1)
-double NNNNinv(const doubleA& a,const doubleA& b,const doubleA& Cinv);
-double NNNN(const doubleA& a,const doubleA& b,const doubleA& C);
-double NNzeroinv(const doubleA& x,const doubleA& Cinv);
+double NNNNinv(const doubleA& a, const doubleA& b, const doubleA& Cinv);
+double NNNN(const doubleA& a, const doubleA& b, const doubleA& C);
+double NNzeroinv(const doubleA& x, const doubleA& Cinv);
 //! gradient of a Gaussian
-double dNNinv(const doubleA& x,const doubleA& a,const doubleA& Ainv,doubleA& grad);
+double dNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA& grad);
 //! gradient of a non-normalized Gaussian
-double dNNNNinv(const doubleA& x,const doubleA& a,const doubleA& Ainv,doubleA& grad);
-double NNsdv(const doubleA& a,const doubleA& b,double sdv);
-double NNzerosdv(const doubleA& x,double sdv);
+double dNNNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA& grad);
+double NNsdv(const doubleA& a, const doubleA& b, double sdv);
+double NNzerosdv(const doubleA& x, double sdv);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "functions.cpp"

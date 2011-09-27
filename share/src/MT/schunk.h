@@ -25,26 +25,26 @@
 
 //fwd declarations
 class CDevice;
-namespace SDH{ class cSDH; class cDSA; }
+namespace SDH { class cSDH; class cDSA; }
 struct q_currentReferenceVar;
 
 void schunkEmergencyShutdown(int);
 extern bool schunkShutdown;
 
 //===========================================================================
-struct SchunkArmModule:public Process{
+struct SchunkArmModule:public Process {
   q_currentReferenceVar *var;
-
+  
   //INPUT
   floatA q_reference;
   //OUTPUT
   floatA q_real;
-
+  
   //INTERAL
   CDevice* pDev;
   bool isOpen;
-  float stepHorizon,maxStep;
-  bool sendMotion,readPositions;
+  float stepHorizon, maxStep;
+  bool sendMotion, readPositions;
   uintA motorIndex;
   
   //essential Process routines!
@@ -55,24 +55,24 @@ struct SchunkArmModule:public Process{
   
   void reportParameters(std::ostream& os);
   int waitForEnd(int iMod);
-  void setVel(uint motor,float vel);
+  void setVel(uint motor, float vel);
   void zeroCurAll();
   void zeroVelAll();
   void stopAll();
   void getPos(floatA& q);
   void getOff(floatA& off);
-  void getState(floatA& q,floatA& v,floatA& c);
+  void getState(floatA& q, floatA& v, floatA& c);
 };
 
 //===========================================================================
-struct SchunkHandModule:public Process{
+struct SchunkHandModule:public Process {
   q_currentReferenceVar *var;
-
+  
   //INPUT
   arr v_reference;
   //OUTPUT
   arr q_real;
-
+  
   //INTERNAL
   bool isOpen;
   bool sendMotion;
@@ -84,17 +84,17 @@ struct SchunkHandModule:public Process{
   void step();
   void close();
   
-  void setVelocities(const arr& v,double a);
+  void setVelocities(const arr& v, double a);
   void setZeroVelocities(double a);
   void getPos(arr &q);
-
+  
   //obsolete...
   void stop();
-  void move(uint i,double x,bool wait,double v=20.);
-  void moveAll(const arr& q,bool wait,double v=20.);
-  void setVelocity(uint i,double v,double a);
-  void movePinch(double x){  moveAll(ARR(90,x,-.2*x,.5*x,-.1*x,x,-.2*x),true); }
-
+  void move(uint i, double x, bool wait, double v=20.);
+  void moveAll(const arr& q, bool wait, double v=20.);
+  void setVelocity(uint i, double v, double a);
+  void movePinch(double x){  moveAll(ARR(90, x, -.2*x, .5*x, -.1*x, x, -.2*x), true); }
+  
   //-- things to hide..
   SDH::cSDH* hand;
   //std::vector<int> fingers;
@@ -103,16 +103,16 @@ struct SchunkHandModule:public Process{
 };
 
 //===========================================================================
-struct SchunkSkinModule:public Process{
+struct SchunkSkinModule:public Process {
   SkinPressureVar *var;
-
+  
   MT::Array<uint16> emul_data;
-
+  
   //INTERNAL
   SDH::cDSA* ts;
   bool isOpen;
   bool isEmulation;
-   
+  
   SchunkSkinModule();
   void open();
   void step();
@@ -125,8 +125,8 @@ struct SchunkSkinModule:public Process{
   void getIntegrals(arr& y);
 };
 
-void testPerformance(SchunkArmModule &schunk, int iMod );
-void testCube(SchunkArmModule &schunk, int iMod );
+void testPerformance(SchunkArmModule &schunk, int iMod);
+void testCube(SchunkArmModule &schunk, int iMod);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "schunk.cpp"

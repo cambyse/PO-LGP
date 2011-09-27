@@ -7,38 +7,39 @@
 #include "robot_variables.h"
 
 struct OpenGL;
-struct RobotModuleGroup;
+struct RobotProcessGroup;
 struct Object;
 struct PerceptionOutput;
 struct BumblebeeModule;
-namespace ors{ struct Graph; }
+namespace ors { struct Graph; }
 
-struct GuiModule:public Process{
+struct GuiModule:public Process {
   q_currentReferenceVar *q_referenceVar;
   currentProxiesVar *proxiesVar;
   PerceptionOutput *perceptionOutputVar;
   CameraImages *cameraVar;
   FutureMotionPlan *planVar;
+  CurrentSceneInformation *sceneInfo;
   
   byteA img[6]; // 6 images for the view ports
   //arr q_trajectory, q_external; // a trajectory to display
   //bool dispTrajectory;
   //int dispSteps;
   MT::Array<arr> linesToDisplay;
-
+  
   //OUTPUT (none)
   Lock processLock;
-
+  
   //INTERNAL
 #ifdef MT_QT
   QApplication *app;
 #endif
-  bool useOpengl,logData,plotData;
+  bool useOpengl, logData, plotData;
   OpenGL *gl;
-  ors::Graph *ors,*ors2;
-  RobotModuleGroup  *ctrl;
+  ors::Graph *ors, *ors2;
+  RobotProcessGroup  *ctrl;
   bool isOpen;
- 
+  
 #ifdef MT_QT
   Ui_SchunkMonitor *ui;
 #endif

@@ -21,7 +21,7 @@
 
 class OpenGL;
 struct Gaussian;
-namespace MT{  template<class T> class Array;  }
+namespace MT {  template<class T> class Array;  }
 
 typedef unsigned int uint;
 typedef MT::Array<double> arr;
@@ -32,14 +32,14 @@ typedef MT::Array<Gaussian*> GaussianL;
 
 //===========================================================================
 
-typedef enum{ opengl, xfig, gnupl } PlotMode;
+typedef enum { opengl, xfig, gnupl } PlotMode;
 
 struct PlotModuleWorkspace;
-struct PlotModule{
-  PlotModuleWorkspace *WS;
+struct PlotModule {
+  PlotModuleWorkspace *s;
   PlotMode mode;
   OpenGL *gl;
-  bool light,grid,colors,drawBox,drawDots;
+  bool light, grid, colors, drawBox, drawDots, perspective;
   uint thickLines;//display options
   PlotModule();
   ~PlotModule();
@@ -50,28 +50,28 @@ extern PlotModule plotModule;
 
 void plotGnuplot();
 void plotOpengl();
-void plotOpengl(bool threeD,double xl,double xh,double yl=-1.,double yh=1.,double zl=-1.,double zh=1.);
+void plotOpengl(bool perspective, double xl=-1., double xh=1., double yl=-1., double yh=1., double zl=-1., double zh=1.);
 
 void plot(bool wait=true);
 void plotClear();
-void plotFunction(const arr& f,double x0=0.,double x1=0.);
-void plotFunctionPoints(const arr& f,double x0=0.,double x1=0.);
-void plotFunctions(const arr& f,double x0=0.,double x1=0.);
-void plotFunction(const arr& x,const arr& f);
-void plotFunctionPrecision(const arr& x,const arr& f, const arr& h, const arr& l );
+void plotFunction(const arr& f, double x0=0., double x1=0.);
+void plotFunctionPoints(const arr& f, double x0=0., double x1=0.);
+void plotFunctions(const arr& f, double x0=0., double x1=0.);
+void plotFunction(const arr& x, const arr& f);
+void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& l);
 void plotSurface(const arr& X);
 void plotArray(const arr& X);
-void plotPoint(double x,double y,double z);
+void plotPoint(double x, double y, double z);
 void plotPoint(const arr& x);
 void plotPoints(const arr& X);
 void plotClearPoints();
 void plotLine(const arr& X);
-void plotPoints(const arr& X,const arr& Y);
+void plotPoints(const arr& X, const arr& Y);
 void writeGnuplotFiles();
-void plotCovariance(const arr& mean,const arr& cov);
-void plotVectorField(const arr& X,const arr& dX);
+void plotCovariance(const arr& mean, const arr& cov);
+void plotVectorField(const arr& X, const arr& dX);
 void plotVectorField(arr& dX);
-void plotMatrixFlow(uintA& M,double len);
+void plotMatrixFlow(uintA& M, double len);
 void plotGaussians(const GaussianA& G);
 void plotGaussians(const GaussianL& G);
 

@@ -1,8 +1,8 @@
 #include <MT/ors.h>
-#include <SD/ISF_GP.h>
-#include <SD/utils.h>
-#include <SD/surface_helpers.h>
-#include <MT/graspObjects.h>
+#include "ISF_GP.h"
+#include "utils.h"
+#include "surface_helpers.h"
+#include "graspObjects.h"
 
 /**
  * if triangle and line have an intersection point return 1.
@@ -193,8 +193,8 @@ ISF_common_volume(PotentialField *ot, PotentialField *oe, const arr lo, const ar
           (b&4)/4 //
           );
       corner=pt + step*corner;
-      in_tru = in_tru || ot->psi(NULL,corner) < 0;
-      in_est = in_est || oe->psi(NULL,corner) < 0; 
+      in_tru = in_tru || ot->psi(NULL,NULL,corner) < 0;
+      in_est = in_est || oe->psi(NULL,NULL,corner) < 0; 
       if (in_tru && in_est) break;
 
     }
@@ -244,8 +244,8 @@ ISF_common_volume_rec(double& vol_tru, double& vol_com,PotentialField *ot, Poten
         (i&4)/4 //
         );
     corner=lo + hi*corner;
-    c_in_tru = ot->psi(NULL,corner) < 0;
-    c_in_est = oe->psi(NULL,corner) < 0;
+    c_in_tru = ot->psi(NULL,NULL,corner) < 0;
+    c_in_est = oe->psi(NULL,NULL,corner) < 0;
     part_in_tru  = part_in_tru || c_in_tru;// one corner inside is enough(max)
     part_in_est  = part_in_est || c_in_est;
     whol_in_tru  = whol_in_tru && c_in_tru;// one corner outside is enough (min)
@@ -358,7 +358,7 @@ get_observs_gradwalk(arr& pts, arr& grads, PotentialField *ot , const arr &mins,
       j=1000;
       // walk along gradient
       do{
-        y = ot->psi(&grad, o);
+        y = ot->psi(&grad,NULL, o);
         o = o - (y>0?1:-1)*eps*grad/norm(grad);
         --j;
         
