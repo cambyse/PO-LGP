@@ -2548,7 +2548,7 @@ void infer::LoopyBP::step_meanfield(){
 //  inference on trees
 //
 
-std::ostream& operator <<(std::ostream& os, const TreeNode& t){
+std::ostream& operator<<(std::ostream& os, const TreeNode& t){
   return os <<"par=" <<t.parent <<" dim=" <<t.dim <<" P=" <<t.P <<endl;
 }
 

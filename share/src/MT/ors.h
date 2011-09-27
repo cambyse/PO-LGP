@@ -538,18 +538,18 @@ std::istream& operator>>(std::istream&, ors::Vector&);
 std::istream& operator>>(std::istream&, ors::Matrix&);
 std::istream& operator>>(std::istream&, ors::Quaternion&);
 std::istream& operator>>(std::istream&, ors::Transformation&);
-std::ostream& operator <<(std::ostream&, const ors::Vector&);
-std::ostream& operator <<(std::ostream&, const ors::Matrix&);
-std::ostream& operator <<(std::ostream&, const ors::Quaternion&);
-std::ostream& operator <<(std::ostream&, const ors::Transformation&);
+std::ostream& operator<<(std::ostream&, const ors::Vector&);
+std::ostream& operator<<(std::ostream&, const ors::Matrix&);
+std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
+std::ostream& operator<<(std::ostream&, const ors::Transformation&);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);
 std::istream& operator>>(std::istream&, ors::Joint&);
 std::istream& operator>>(std::istream&, ors::Proxy&);
-std::ostream& operator <<(std::ostream&, const ors::Body&);
-std::ostream& operator <<(std::ostream&, const ors::Joint&);
-std::ostream& operator <<(std::ostream&, const ors::Proxy&);
+std::ostream& operator<<(std::ostream&, const ors::Body&);
+std::ostream& operator<<(std::ostream&, const ors::Joint&);
+std::ostream& operator<<(std::ostream&, const ors::Proxy&);
 stdPipes(ors::Graph);
 #endif
 

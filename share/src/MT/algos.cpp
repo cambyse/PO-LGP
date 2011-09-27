@@ -472,7 +472,7 @@ void LinearStatistics::predict(const arr& x, arr& y){
 }
 
 
-//! prototype for operator <<
+//! prototype for operator<<
 void LinearStatistics::write(std::ostream& os) const {
   os
   <<"<LinearStatistics>"

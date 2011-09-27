@@ -940,7 +940,7 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
   return m;
 }
 
-//! operator <<
+//! operator<<
 void Transformation::write(std::ostream& os) const {
   bool space=false;
   os <<"<";
@@ -1019,10 +1019,10 @@ std::istream& operator>>(std::istream& is, ors::Vector& x)    { x.read(is); retu
 std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Quaternion& x){ x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
-std::ostream& operator <<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
-std::ostream& operator <<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
-std::ostream& operator <<(std::ostream& os, const ors::Quaternion& x){ x.write(os); return os; }
-std::ostream& operator <<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x){ x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
 
 
 //================================================================================
@@ -4288,6 +4288,8 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 //-- template instantiations
 
-#include "array_t.cpp"
+#ifndef  MT_ORS_ONLY_BASICS
+#  include "array_t.cpp"
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
+#endif

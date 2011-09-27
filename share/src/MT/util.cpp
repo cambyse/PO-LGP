@@ -159,7 +159,7 @@ bool contains(const char *s, char c){
   return false;
 }
 
-//! skips the chars (typically white characters) when parsing from the istream
+//! skips the chars (typically white characters) when parsing from the istream, returns first non-skipped char
 char skip(std::istream& is, const char *skipchars, bool skipCommentLines){
   char c;
   for(;;){
