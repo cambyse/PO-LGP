@@ -3,64 +3,58 @@
 #include<MT/ors.h>
 
 
-double cost(const arr& f,void*){
+double cost(arr *grad,const arr& f,void*){
   uint t;
   double C=0.;
-  for(t=0;t<f.d0;t++){
-    C += f(t,1)*.001; //gravity
-  }
   //obstacle
   /*  for(t=0;t<f.d0;t++){
     if(f(t,0)<1. && f(t,1)>0.){
-      dCdf(t,0) += .01*(f(t,0)-1.);
-      dCdf(t,1) += .01*f(t,1);
+      (*grad)(t,0) += .01*(f(t,0)-1.);
+      (*grad)(t,1) += .01*f(t,1);
     }
   }*/
 
-  for(t=1;t<f.d0;t++){ //tension
+  //gravity
+  for(t=0;t<f.d0;t++){
+    C += f(t,1)*.001;
+  }
+  //tension
+  for(t=1;t<f.d0;t++){
     C += sumOfSqr(f[t]-f[t-1]);
   }
-  //goals:
-  for(t=0;t<f.d0/2;t++)      C += .1*sumOfSqr(f[t]-0.);
+  //goals
+  for(t=0;t<f.d0/2;t++) C += .1*sumOfSqr(f[t]-0.);
   t=0;       C += sumOfSqr(f[t]-0.);
   t=f.d0-1;  C += sumOfSqr(f[t]-1.);
+
+  if(grad){
+    (*grad).resizeAs(f);
+    (*grad).setZero();
+    //gravity
+    for(t=0;t<f.d0;t++){
+      (*grad)(t,1) += .001;
+    }
+    //tension
+    for(t=0;t<f.d0;t++){
+      if(t>0)      (*grad)[t]() += 2.*(f[t]-f[t-1]);
+      if(t+1<f.d0) (*grad)[t]() -= 2.*(f[t+1]-f[t]);
+    }
+    //goals
+    for(t=0;t<f.d0/2;t++)      (*grad)[t]() += .2*(f[t]-0.);
+    t=0;       (*grad)[t]() += 2.*(f[t]-0.);
+    t=f.d0-1;  (*grad)[t]() += 2.*(f[t]-1.);
+  }
 
   return C;
 }
 
-void dcost(arr& dCdf,const arr& f,void*){
-  uint t;
-  dCdf.resizeAs(f);
-  dCdf.setZero();
-  for(t=0;t<f.d0;t++){
-    dCdf(t,1) += .001; //gravity
-  }
-  //obstacle
-  /*  for(t=0;t<f.d0;t++){
-    if(f(t,0)<1. && f(t,1)>0.){
-      dCdf(t,0) += .01*(f(t,0)-1.);
-      dCdf(t,1) += .01*f(t,1);
-    }
-  }*/
-
-  for(t=0;t<f.d0;t++){ //tension
-    if(t>0)      dCdf[t]() += 2.*(f[t]-f[t-1]);
-    if(t+1<f.d0) dCdf[t]() -= 2.*(f[t+1]-f[t]);
-  }
-  //goals:
-  for(t=0;t<f.d0/2;t++)      dCdf[t]() += .2*(f[t]-0.);
-  t=0;       dCdf[t]() += 2.*(f[t]-0.);
-  t=f.d0-1;  dCdf[t]() += 2.*(f[t]-1.);
-}
-
 ors::Spline *SS;
-double f(const arr& x,void*){
-  return cost(SS->basis*x,NULL);
-}
-void df(arr& dCdx,const arr& x,void*){
-  arr dCdy;
-  dcost(dCdy,SS->basis*x,NULL);
-  dCdx = SS->basis_trans*dCdy;
+double f(arr *grad,const arr& x,void*){
+  double c=cost(grad, SS->basis*x, NULL);
+  if(grad){
+    (*grad) = SS->basis_trans * (*grad);
+  }
+  return c;
 }
 
 void testBSpline(){
@@ -86,9 +80,9 @@ void testBSpline(){
 
   arr dCdf,dCdx,dCdt;
   for(uint i=0;i<100;i++){
-    MT::checkGradient(::cost,::dcost,NULL,f,1e-5);
-    MT::checkGradient(::f,::df,NULL,S.points,1e-5);
-    dcost(dCdf,f,NULL);
+    MT::checkGradient(::cost,NULL,f,1e-5);
+    MT::checkGradient(::f,NULL,S.points,1e-5);
+    cost(&dCdf,f,NULL);
     //S.partial(dCdx,dCdt,dCdf,true);
     S.partial(dCdx,dCdf);
     S.points -= .3 * dCdx;
@@ -97,7 +91,7 @@ void testBSpline(){
       //S.setBasisAndTimeGradient();
     }
     S.evalF(f);
-    cout <<cost(f,NULL) <<endl;
+    cout <<cost(NULL, f, NULL) <<endl;
 
     plotClear();
     plotFunction(f);

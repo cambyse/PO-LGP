@@ -138,14 +138,13 @@ void testExp(){
 
 
 static arr F;
-void f(arr& y,const arr& x,void*){ y=F*x; }
-void df(arr& J,const arr& x,void*){ J=F; }
+void f(arr& y, arr *grad, const arr& x,void*){ y=F*x; if(grad) *grad=F; }
 void testCheckGradient(){
   F.resize(4,3);
   rndUniform(F,0.,1.,false);
   arr x(3);
   rndUniform(x,0.,1.,false);
-  MT::checkGradient(f,df,NULL,x,1e-5);
+  MT::checkGradient(f, NULL, x, 1e-5);
 }
 
 

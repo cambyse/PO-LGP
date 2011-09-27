@@ -1,0 +1,8 @@
+set style data lines
+
+plot [:][-.1:1.1] \
+  'z.y' with points title 'data',\
+  'z.x' title 'true state' lw 4,\
+  'z.post' us 2 title 'posterior' lw 2
+
+

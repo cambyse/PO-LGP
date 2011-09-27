@@ -41,7 +41,7 @@ template MT::Array<T>& MT::operator/=(Array<T>& y, T);
 template bool operator==(const MT::Array<T>& v, const MT::Array<T>& w);
 template bool operator==(const MT::Array<T>& v, const T *w);
 template std::istream& operator>>(std::istream& is, MT::Array<T>& x);
-template std::ostream& operator <<(std::ostream& os, const MT::Array<T>& x);
+template std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 
 //BinaryOperation
 template MT::Array<T>& mult(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);

@@ -17,7 +17,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   
   //task message
   arr R, r;
-  sys.getCosts(R, r, q_1, t);
+  sys.getTaskCosts(R, r, q_1, t);
   
   //v, Vinv are optional bwd messages!
   
@@ -58,7 +58,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 
 /*! \brief compute a single control step from current state to target of time t.
     qv=output, qv_1=state at time t-1 */
-void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& qv_1, uint t, arr *v, arr *Vinv){
+void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x_1, uint t, arr *v, arr *Vinv){
   CHECK(sys.dynamic, "assumed dynamic SOC abstraction");
   uint n=sys.qDim();
   
@@ -76,13 +76,13 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
   arr s(2*n), S(2*n, 2*n), Sinv(2*n, 2*n);
   S = Q;
   S += B*Hinv*tB;
-  s = a + A*qv_1;
+  s = a + A* x_1;
   inverse_SymPosDef(Sinv, S);
   
   //task message
-  arr R, r, q_1;
-  q_1.referToSubRange(qv_1, 0, n-1);
-  sys.getCosts(R, r, q_1, t);
+  arr R, r;
+  //q_1.referToSubRange(qv_1, 0, n-1);
+  sys.getTaskCosts(R, r, x_1, t);
   
   //v, Vinv are optional bwd messages!
   
@@ -92,7 +92,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
     Binv = Sinv + R;
     lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
   }else{
-    if(v->N==qv.N){ //bwd msg given as fully dynamic
+    if(v->N== x.N){ //bwd msg given as fully dynamic
       Binv = Sinv + (*Vinv) + R;
       lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
     }else{
@@ -104,5 +104,5 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
     }
   }
   
-  qv=b;
+  x=b;
 }

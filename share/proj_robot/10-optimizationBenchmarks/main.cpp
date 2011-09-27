@@ -414,7 +414,7 @@ void problem5(){
     BinvFactor *= .8;
     solver.bwdMsg_Vinv.setDiag(BinvFactor,28);
   }
-  sys2.getCosts(R,r,solver.q[T],T);
+  sys2.getTaskCosts(R,r,solver.q[T],T);
   MT_MSG( "last q:"<< solver.q[T]);
 
 }

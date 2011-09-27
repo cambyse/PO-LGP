@@ -44,7 +44,7 @@ struct Vector {
   void set(double, double, double);
   void set(double*);
   void setZero();
-  void setRandom();
+  void setRandom(double range=1.);
   void add(double, double, double);
   void subtract(double, double, double);
   void normalize();
@@ -434,11 +434,11 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Transformation *rel=0) const;
-  void jacobian(arr& J, uint i, ors::Transformation *rel=0) const;
-  void hessian(arr& H, uint i, ors::Transformation *rel=0) const;
-  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0) const;
-  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0) const;
+  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a);
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -538,18 +538,18 @@ std::istream& operator>>(std::istream&, ors::Vector&);
 std::istream& operator>>(std::istream&, ors::Matrix&);
 std::istream& operator>>(std::istream&, ors::Quaternion&);
 std::istream& operator>>(std::istream&, ors::Transformation&);
-std::ostream& operator <<(std::ostream&, const ors::Vector&);
-std::ostream& operator <<(std::ostream&, const ors::Matrix&);
-std::ostream& operator <<(std::ostream&, const ors::Quaternion&);
-std::ostream& operator <<(std::ostream&, const ors::Transformation&);
+std::ostream& operator<<(std::ostream&, const ors::Vector&);
+std::ostream& operator<<(std::ostream&, const ors::Matrix&);
+std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
+std::ostream& operator<<(std::ostream&, const ors::Transformation&);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);
 std::istream& operator>>(std::istream&, ors::Joint&);
 std::istream& operator>>(std::istream&, ors::Proxy&);
-std::ostream& operator <<(std::ostream&, const ors::Body&);
-std::ostream& operator <<(std::ostream&, const ors::Joint&);
-std::ostream& operator <<(std::ostream&, const ors::Proxy&);
+std::ostream& operator<<(std::ostream&, const ors::Body&);
+std::ostream& operator<<(std::ostream&, const ors::Joint&);
+std::ostream& operator<<(std::ostream&, const ors::Proxy&);
 stdPipes(ors::Graph);
 #endif
 
@@ -666,8 +666,12 @@ struct TaskVariable {
   //only keep those:
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
   void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+  void setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
+  void setConstTargetsConstPrecisions(uint T);
+  void appendConstTargetsAndPrecs(uint T);
   
   void shiftTargets(int offset);
   
@@ -815,6 +819,7 @@ void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
 void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
 
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -865,13 +870,14 @@ struct SwiftInterface {
   ~SwiftInterface();
   SwiftInterface* newClone(const ors::Graph& G) const;
   
-  void init(const ors::Graph& C, double _cutoff=.1);
+  void init(const ors::Graph& ors, double _cutoff=.1);
+  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& C);
-  void computeProxies(ors::Graph& C, bool dumpReport=false);
+  void initActivations(const ors::Graph& ors);
+  void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 
 

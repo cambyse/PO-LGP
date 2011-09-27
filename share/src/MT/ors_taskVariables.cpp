@@ -149,7 +149,7 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv){
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setConstantTargetTrajectory(uint T){
-  //OPS;
+  OPS;
   targetType=trajectoryTT;
   active=true;
   uint t;
@@ -215,6 +215,35 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, 
   }
 }
 
+void TaskVariable::setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec){
+  targetType=trajectoryTT;
+  active=true;
+  uint t;
+  y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
+  v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
+  for(t=0; t<=T; t++){
+    y_trajectory[t]() = y_target;
+    v_trajectory[t]() = v_target;
+    y_prec_trajectory(t) = y_prec;
+    v_prec_trajectory(t) = v_prec;
+  }
+}
+
+void TaskVariable::appendConstTargetsAndPrecs(uint T){
+  targetType=trajectoryTT;
+  active=true;
+  uint t,t0=y_trajectory.d0;
+  CHECK(t0,"");
+  y_trajectory.resizeCopy(T+1, y.N);  y_prec_trajectory.resizeCopy(T+1);
+  v_trajectory.resizeCopy(T+1, y.N);  v_prec_trajectory.resizeCopy(T+1);
+  for(t=t0; t<=T; t++){
+    y_trajectory[t]() = y_trajectory[t0-1];
+    v_trajectory[t]() = v_trajectory[t0-1];
+    y_prec_trajectory(t) = y_prec_trajectory(t0-1);
+    v_prec_trajectory(t) = v_prec_trajectory(t0-1);
+  }
+}
+
 void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec){
   setInterpolatedTargetsEndPrecisions(T, mid_y_prec, y_prec, mid_v_prec, v_prec);
 }
@@ -223,7 +252,9 @@ void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T){
   setInterpolatedTargetsConstPrecisions(T, y_prec, v_prec);
 }
 
-
+void TaskVariable::setConstTargetsConstPrecisions(uint T){
+  setConstTargetsConstPrecisions(T, y_prec, v_prec);
+}
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec){
   OPS;
@@ -307,16 +338,16 @@ void DefaultTaskVariable::updateState(double tau){
   switch(type){
     case posTVT:
       if(j==-1){
-        ors->kinematics(y, i, &irel);
-        ors->jacobian(J, i, &irel); 
+        ors->kinematics(y, i, &irel.pos);
+        ors->jacobian(J, i, &irel.pos); 
         break;
       }
       pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
       pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
       c = ors->bodies(j)->X.rot / (pi-pj);
       y.resize(3); y.setCarray(c.p, 3);
-      ors->jacobian(Ji, i, &irel);
-      ors->jacobian(Jj, j, &jrel);
+      ors->jacobian(Ji, i, &irel.pos);
+      ors->jacobian(Jj, j, &jrel.pos);
       ors->jacobianR(JRj, j);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++){
@@ -331,8 +362,8 @@ void DefaultTaskVariable::updateState(double tau){
       break;
     case zoriTVT:
       if(j==-1){
-        ors->kinematicsZ(y, i, &irel);
-        ors->jacobianZ(J, i, &irel);
+        ors->kinematicsVec(y, i, &irel.rot.getZ(vi));
+        ors->jacobianVec(J, i, &irel.rot.getZ(vi));
         break;
       }
       //relative
@@ -382,8 +413,8 @@ void DefaultTaskVariable::updateState(double tau){
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors->kinematicsZ(zi, i, &irel);
-      ors->jacobianZ(Ji, i, &irel);
+      ors->kinematicsVec(zi, i, &irel.rot.getZ(vi));
+      ors->jacobianVec(Ji, i, &irel.rot.getZ(vi));
       if(j==-1){
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
@@ -391,8 +422,8 @@ void DefaultTaskVariable::updateState(double tau){
         Jj.resizeAs(Ji);
         Jj.setZero();
       }else{
-        ors->kinematicsZ(zj, j, &jrel);
-        ors->jacobianZ(Jj, j, &jrel);
+        ors->kinematicsVec(zj, j, &jrel.rot.getZ(vj));
+        ors->jacobianVec(Jj, j, &jrel.rot.getZ(vj));
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -424,7 +455,7 @@ void DefaultTaskVariable::updateState(double tau){
 void DefaultTaskVariable::getHessian(arr& H){
   switch(type){
     case posTVT:
-      if(j==-1){ ors->hessian(H, i, &irel); break; }
+      if(j==-1){ ors->hessian(H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -545,12 +576,15 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
   shapes=_shapes;
   margin=_margin;
   linear=_linear;
+  updateState();
+  y_target=y;
+  v_target=v;
 }
 
 void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
   double d;
   ors::Shape *a, *b;
-  ors::Transformation arel, brel;
+  ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
 
   a=ors->shapes(p->a); b=ors->shapes(p->b);
@@ -559,8 +593,8 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, 
   if(!linear) y += d*d;
   else        y += d;
   
-  arel.setZero();  arel.pos=a->X.rot/(p->posA-a->X.pos);
-  brel.setZero();  brel.pos=b->X.rot/(p->posB-b->X.pos);
+  arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
+  brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
           
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);
@@ -614,19 +648,33 @@ void ProxyTaskVariable::updateState(double tau){
         }
       }
     case pairsCTVT:{
-      NIY;
+      shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
+      uint j;
+      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+        for(j=0;j<shapes.d0;j++){
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j<shapes.d0){
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 5;
+        }
+      }
     } break;
     case vectorCTVT:{
       //outputs a vector of collision meassures, with entry for each explicit pair
-      y.resize(shapes.d0/2);  y.setZero();
-      J.resize(shapes.d0/2,J.d1);  J.setZero();
-      int a,b;
+      shapes.reshape(shapes.N/2,2);
+      y.resize(shapes.d0);  y.setZero();
+      J.resize(shapes.d0,J.d1);  J.setZero();
+      uint j;
       for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
-        a=shapes.findValue(p->a);
-        b=shapes.findValue(p->b);
-        if(a!=-1 && b!=-1 && a/2==b/2){
-          addAContact(y(a/2), J[a/2](), p, ors, margin, linear);
+        for(j=0;j<shapes.d0;j++){
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j<shapes.d0){
+          addAContact(y(j), J[j](), p, ors, margin, linear);
           p->colorCode = 5;
         }
       }

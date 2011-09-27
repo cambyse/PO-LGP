@@ -135,7 +135,7 @@ double AICO_clean::stepKinematic(){
         countSetq++;
         sys->setq(qhat[t], t);
         arr Rt, rt;
-        sys->getCosts(Rt, rt, qhat[t], t);
+        sys->getTaskCosts(Rt, rt, qhat[t], t);
 #if 1
         R[t] = Rt; r[t] = rt;
 #else
@@ -327,7 +327,7 @@ double AICO_clean::stepClean(){
       sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
       
       //compute (r, R)
-      sys->getCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
+      sys->getTaskCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
       //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
     }
     
@@ -464,7 +464,7 @@ double AICO_clean::stepDynamic(){
       sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
       
       //compute (r, R)
-      sys->getCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
+      sys->getTaskCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
       //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
     }
     
@@ -674,7 +674,7 @@ double AICO_clean::stepGaussNewton(){
     //*
     //compute (r, R) -- is done in LocalCostFunction
     //arr Rt, rt;
-    //sys->getCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
+    //sys->getTaskCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
     //R[t] = Rt; r[t] = rt;
     
     //compute (b, B);

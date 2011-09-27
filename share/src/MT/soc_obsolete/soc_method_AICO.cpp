@@ -92,7 +92,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   
   //task message
   arr R, r;
-  sys.getCosts(R, r, q_1, t);
+  sys.getTaskCosts(R, r, q_1, t);
   
   //v, Vinv are optional bwd messages!
 
@@ -231,7 +231,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
   //task message
   arr R, r, q_1;
   q_1.referToSubRange(qv_1, 0, n-1);
-  sys.getCosts(R, r, q_1, t);
+  sys.getTaskCosts(R, r, q_1, t);
 
   //v, Vinv are optional bwd messages!
   
@@ -560,7 +560,7 @@ double soc::AICO::stepKinematic(){
         countSetq++;
         sys->setq(qhat[t], t);
         arr Rt, rt;
-        sys->getCosts(Rt, rt, qhat[t], t);
+        sys->getTaskCosts(Rt, rt, qhat[t], t);
 #if 1
         R[t] = Rt; r[t] = rt;
 #else
@@ -863,7 +863,7 @@ double soc::AICO::stepDynamic(){
       
       //compute (r, R)
       arr Rt, rt;
-      sys->getCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
+      sys->getTaskCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
       R[t] = Rt; r[t] = rt;
     }
     
@@ -1072,7 +1072,7 @@ double soc::AICO::stepGaussNewton(){
     //*
     //compute (r, R) -- is done in LocalCostFunction
     //arr Rt, rt;
-    //sys->getCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
+    //sys->getTaskCosts(Rt, rt, qhat[t].sub(0, sys->qDim()-1), t);
     //R[t] = Rt; r[t] = rt;
     
     //compute (b, B);

@@ -193,10 +193,10 @@ public:
   //!@name access by copy
   uint dim(uint k) const;
   Array<uint> getDim() const;
-  Array<T> sub(uint i, int I) const;
-  Array<T> sub(uint i, int I, uint j, int J) const;
-  Array<T> sub(uint i, int I, uint j, int J, uint k, int K) const;
-  Array<T> sub(uint i, int I, Array<uint> cols) const;
+  Array<T> sub(int i, int I) const;
+  Array<T> sub(int i, int I, int j, int J) const;
+  Array<T> sub(int i, int I, int j, int J, int k, int K) const;
+  Array<T> sub(int i, int I, Array<uint> cols) const;
   void getMatrixBlock(Array<T>& B, uint lo0, uint lo1) const;
   void getVectorBlock(Array<T>& B, uint lo) const;
   T** getCarray() const;
@@ -250,6 +250,7 @@ public:
   void permute(uint i, uint j);
   void permute(const Array<uint>& permutation);
   void permuteInv(const Array<uint>& permutation);
+  void permuteRows(const Array<uint>& permutation);
   void permuteRandomly();
   void shift(int offset, bool wrapAround=true);
   
@@ -356,6 +357,11 @@ inline arr rand(uint d0, uint d1){ return rand(TUP(d0, d1)); }
 arr randn(const uintA& d);
 inline arr randn(uint n){ return randn(TUP(n, n)); }
 inline arr randn(uint d0, uint d1){ return randn(TUP(d0, d1)); }
+
+inline double max(const arr& x){ return x.max(); }
+inline double min(const arr& x){ return x.max(); }
+inline uint argmax(const arr& x){ return x.maxIndex(); }
+inline uint argmin(const arr& x){ return x.minIndex(); }
 
 inline uintA randperm(uint n){  uintA z;  z.setRandomPerm(n);  return z; }
 inline arr linspace(double base, double limit, uint n){  arr z;  z.setGrid(1, base, limit, n);  return z;  }
@@ -610,8 +616,8 @@ BinaryFunction(fmod);
 #undef BinaryFunction
 
 template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x);
-template<class T> MT::Array<T>& operator <<(MT::Array<T>& x, const char* str);
-template<class T> std::ostream& operator <<(std::ostream& os, const MT::Array<T>& x);
+template<class T> MT::Array<T>& operator<<(MT::Array<T>& x, const char* str);
+template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 template<class T> void checkNan(const MT::Array<T>& x);
 template<class T> bool operator==(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> bool operator==(const MT::Array<T>& v, const T *w);
