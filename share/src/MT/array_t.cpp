@@ -827,7 +827,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
-  CHECK(i>0 && I>0 && i<=I, "lower limit higher than upper!");
+  CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1);
   int k;
   for(k=i; k<=I; k++) x(k-i)=operator()(k);
