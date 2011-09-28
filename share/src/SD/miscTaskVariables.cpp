@@ -24,7 +24,7 @@ void zOpposeTaskVariable::userUpdate(){
   }
   y.resize(1);
   y(0)=sumOfSqr(sum_z);
-  J = 2.*sum_z*sum_J;
+  J = 2.*~sum_z*sum_J;
   J.reshape(1,ors->getJointStateDimension());
   transpose(Jt,J);
 }
