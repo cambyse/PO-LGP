@@ -81,10 +81,10 @@ double soc::LQG::stepKinematic(){
   if(!sweep){
     if(sys->os){
 #ifdef NIKOLAY
-      *sys->os  <<std::setw(3)  <<-1  <<" "  <<MT::timerRead(false);
+      *sys->os <<std::setw(3) <<-1 <<" " <<MT::timerRead(false);
       sys->totalCost(NULL, q, false);
 #else
-      *sys->os  <<"LQG "  <<std::setw(3)  <<-1  <<"  time "  <<MT::timerRead(false);
+      *sys->os <<"LQG " <<std::setw(3) <<-1 <<"  time " <<MT::timerRead(false);
       sys->analyzeTrajectory(q, display>0);
       //sys->computeTotalCost(q);
 #endif
@@ -102,7 +102,7 @@ double soc::LQG::stepKinematic(){
     countSetq++;
     sys->setq(q[t]);
     //sys->getQuadraticTaskCost(R[t](), r[t](), q[t], t);
-    sys->getCosts(R[t](), r[t](), q[t], t);
+    sys->getTaskCosts(R[t](), r[t](), q[t], t);
     r[t]() *= -2.;
   }
 
@@ -136,7 +136,7 @@ double soc::LQG::stepKinematic(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"LQGk(" <<sys->scalePower <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff;
+    *sys->os <<"LQGk(" <<sys->scalePower <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
    cost= sys->analyzeTrajectory(q, display>0);
     //sys->computeTotalCost(q);
   }
@@ -191,8 +191,8 @@ double soc::LQG::stepGeneral(){
     sys->setqv(q_phase[t]);
     sys->getCosts  (R[t](), r[t](), q[t], t);
     sys->getProcess(A[t](), a[t](), B[t](), t);
-    //cout  <<"t="  <<t  <<" A="  <<A[t]  <<" a="  <<a[t]  <<" B="  <<B[t]  <<endl;
-    //cout  <<"t="  <<t  <<" R="  <<R[t]  <<" r="  <<r[t]  <<endl;
+    //cout <<"t=" <<t <<" A=" <<A[t] <<" a=" <<a[t] <<" B=" <<B[t] <<endl;
+    //cout <<"t=" <<t <<" R=" <<R[t] <<" r=" <<r[t] <<endl;
   }
 
   //bwd Ricatti equations
@@ -207,7 +207,7 @@ double soc::LQG::stepGeneral(){
     BIG = (~VA)*B[t]*HVinv*Bt;
     Vbar[t]() = R[t] + (At-BIG)*VA;
     vbar[t]() = r[t] + (At-BIG)*(vbar[t+1]-Vbar[t+1]*a[t]);
-    //if(t==0) cout  <<"\nt="  <<t  <<"\nV="  <<Vbar[t]  <<"\nv="  <<vbar[t]  <<endl;
+    //if(t==0) cout <<"\nt=" <<t <<"\nV=" <<Vbar[t] <<"\nv=" <<vbar[t] <<endl;
   }
 
   //fwd with optimal control
@@ -218,14 +218,14 @@ double soc::LQG::stepGeneral(){
     sys->setqv(q_phase[t]);
     sys->getH(H, t);
     sys->getProcess(A[t](), a[t](), B[t](), t);
-    //if(t>T-10) cout  <<"t="  <<t  <<"\nqhat="  <<q_phase[t]  <<endl;
+    //if(t>T-10) cout <<"t=" <<t <<"\nqhat=" <<q_phase[t] <<endl;
 
     transpose(Bt, B[t]);
     inverse_SymPosDef(HVinv, H+Bt*Vbar[t+1]*B[t]);
     u = - HVinv*Bt*(Vbar[t+1]*(A[t]*q_phase[t]+a[t]) - vbar[t+1]);
     ctrlC += scalarProduct(H, u, u);
-    //cout  <<"ilqg time " <<t <<" u="  <<u  <<" q="  <<q_phase[t]  <<endl;
-    //if(t>T-10) cout  <<"t="  <<t+1  <<"\nb="  <<A[t]*q_phase[t] + a[t] + B[t]*u  <<endl;
+    //cout <<"ilqg time " <<t <<" u=" <<u <<" q=" <<q_phase[t] <<endl;
+    //if(t>T-10) cout <<"t=" <<t+1 <<"\nb=" <<A[t]*q_phase[t] + a[t] + B[t]*u <<endl;
       
     if(convergenceRate==1.){
       q_phase[t+1]() = A[t]*q_phase[t] + a[t] + B[t]*u;
@@ -262,19 +262,19 @@ double soc::LQG::stepGeneral(){
     CHECK(cost!=-1, "");
     if(cost>cost_old){
       convergenceRate *= .8;
-      cout  <<" LQG REJECT"  <<endl;
+      cout <<" LQG REJECT" <<endl;
       q = q_old;
       cost = cost_old;
     }else{
       convergenceRate = pow(convergenceRate, .7);
-      cout  <<" LQG ACCEPT"  <<endl;
+      cout <<" LQG ACCEPT" <<endl;
     }
   }    
 
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"LQGd(" <<sys->scalePower <<", " <<convergenceRate  <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" diff "  <<diff;
+    *sys->os <<"LQGd(" <<sys->scalePower <<", " <<convergenceRate <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" diff " <<diff;
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("LQG optimization -- iteration "));

@@ -227,7 +227,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         break;
       case ors::markerST:
         if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
-        else{ glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5.,s->size[0]/5.,s->size[0]/5.); }
+        else { glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); }
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -321,7 +321,8 @@ void ors::glDraw(Graph& C){
   if(orsDrawProxies) for(i=0; i<C.proxies.N; i++) if(!C.proxies(i)->age){
         proxy = C.proxies(i);
         glLoadIdentity();
-        glColor(1, 0, 0);
+        if(!proxy->colorCode) glColor(.75,.75,.75);
+        else glColor(proxy->colorCode);
         glBegin(GL_LINES);
         glVertex3dv(proxy->posA.p);
         glVertex3dv(proxy->posB.p);
@@ -508,18 +509,18 @@ bool infoHoverCall(void *p, OpenGL *gl){
   OpenGL::GLSelect *top=gl->topSelection;
   if(!top) return false;
   uint i=top->name;
-  //cout  <<"HOVER call: id = 0x"  <<std::hex  <<gl->topSelection->name  <<endl;
+  //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
   if((i&3)==1) s=C->shapes(i>>2);
   if((i&3)==2) j=C->joints(i>>2);
   if(s){
     gl->text.clr()
-     <<"shape selection: body="  <<s->body->name  <<" X="  <<s->body->X  <<" ats="  <<endl;
+    <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
     listWrite(s->ats, gl->text, "\n");
   }
   if(j){
     gl->text.clr()
-     <<"edge selection: "  <<j->from->name  <<' '  <<j->to->name
-     <<"\nA="  <<j->A  <<"\nQ="  <<j->Q  <<"\nB="  <<j->B  <<endl;
+    <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+    <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
     listWrite(j->ats, gl->text, "\n");
   }
   if(!j && !s) gl->text.clr();
@@ -531,12 +532,12 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
   gl.selectOnHover=true;
   gl.addHoverCall(infoHoverCall, &C);
   for(;;){
-    cout  <<"reloading `"  <<filename  <<"' ... "  <<std::endl;
+    cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
       MT::load(C, filename);
     } catch (const char* msg){
-      cout  <<"line "  <<MT::lineCount  <<": "  <<msg  <<" -- please check the file and press ENTER"  <<endl;
+      cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       gl.watch();
       continue;
     }
@@ -589,7 +590,7 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
     C->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl->text.clr()  <<"time "  <<t;
+    gl->text.clr() <<"time " <<t;
     gl->timedupdate(10);
   }
 }

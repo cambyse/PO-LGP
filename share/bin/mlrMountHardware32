@@ -1,0 +1,6 @@
+sudo mknod --mode=a+rw /dev/can0 c 50 0
+sudo mknod --mode=a+rw /dev/can1 c 50 1
+sudo insmod ~/grobi/lib/esdcan-usb331-linux-2.6.x-x86-3.8.3/src/esdcan-usb331.ko
+sudo ln -s /dev/ttyUSB0 /dev/ttyS9
+sudo ln -s /dev/ttyACM0 /dev/ttyURG
+sudo chmod a+rw /dev/video1394/0 /dev/raw1394

@@ -1,4 +1,4 @@
-//#define MT_IMPLEMENTATION
+//
 
 #include <MT/ors.h>
 #include <MT/soc.h>
@@ -44,11 +44,11 @@ int main(int argn,char **argv){
   //                array of parameters);
   
   // the endeffector task variable (3D)
-  TaskVariable *pos = new TaskVariable("position",ors,posTVT, "endeff","<t(0 .04 0)>", 0,0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position",ors,posTVT, "endeff","<t(0 .04 0)>", 0,0, ARR());
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);  //set its final target equal to the current position of "target"
   
   // the collision task variable (1D)
-  TaskVariable *col = new TaskVariable("collision",ors,collTVT, 0,0, 0,0, ARR(.05)); //collision margin=5cm
+  TaskVariable *col = new DefaultTaskVariable("collision",ors,collTVT, 0,0, 0,0, ARR(.05)); //collision margin=5cm
   col->y_target = ARR(0.);   //set the target equal to ZERO collision
 
   // a 3D variable representing the `palm normal' of the endeffector (to control its orientation)

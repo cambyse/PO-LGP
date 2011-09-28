@@ -221,7 +221,7 @@ void soc::SocSystemAbstraction::getProcess(arr& A, arr& tA, arr& Ainv, arr& invt
   }
 }*/
 
-double soc::SocSystemAbstraction::getCosts(arr& R, arr& r, const arr& xt, uint t){
+double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, uint t){
   uint i, m=nTasks(), n=qDim();
   double C=0.;
   if(!dynamic){ //kinematic
@@ -358,11 +358,11 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
       getJJt(J, Jt, i);
       cdir.append(-J);
       *if(phi_qhat(0)>1.){
-        cout  <<"constraint violated: " <<phi_qhat  <<" -> making it more graceful.."  <<endl;
+        cout <<"constraint violated: " <<phi_qhat <<" -> making it more graceful.." <<endl;
         phi_qhat=1.;
       }*
       coff.append(phi_qhat-J*qt-5.);
-      //cout  <<"qt= "  <<qt  <<"\nJ*qt="   <<J*qt  <<"\nphi_qhat= "  <<phi_qhat  <<endl;
+      //cout <<"qt= " <<qt <<"\nJ*qt="  <<J*qt <<"\nphi_qhat= " <<phi_qhat <<endl;
       con++;
     }
     */
@@ -417,7 +417,7 @@ void soc::SocSystemAbstraction::controlledDynamicTrajectory(arr& q, const arr& u
     x.setBlockVector(q[t], qd[t]);
     getProcessDynamic(A, a, B);
     xx = A*x + a + B*u[t];
-    cout  <<"xx = "  <<xx  <<"\nq="  <<q[t+1]  <<qd[t+1]  <<endl;
+    cout <<"xx = " <<xx <<"\nq=" <<q[t+1] <<qd[t+1] <<endl;
 #endif
   }
 }
@@ -537,26 +537,26 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     MT::open(fil, "z.trana");
     for(t=0;t<T;t++){
       fil
-           <<"time "  <<t
-           <<"  ctrlC "  <<ctrlC(t)
-           <<"  taskC "  <<taskC(t)
-           <<"  totC "   <<ctrlC(t)+taskC(t)
-           <<"  q "  <<q[t]
-           <<endl;
+          <<"time " <<t
+          <<"  ctrlC " <<ctrlC(t)
+          <<"  taskC " <<taskC(t)
+          <<"  totC "  <<ctrlC(t)+taskC(t)
+          <<"  q " <<q[t]
+          <<endl;
     }
     gnuplot("plot 'z.trana' us 0:4 title 'ctrl costs','z.trana' us 0:6 title 'task costs','z.trana' us 0:8 title 'tot costs'");
   }
   
 #ifdef NIKOLAY
   if(os) *os
-         <<" "  <<taskCsum
-         <<" "  <<ctrlCsum
-         <<" "  <<taskCsum+ctrlCsum  <<endl;
+        <<" " <<taskCsum
+        <<" " <<ctrlCsum
+        <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-         <<"  task-cost "  <<taskCsum
-         <<"  control-cost "  <<ctrlCsum
-         <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+        <<"  task-cost " <<taskCsum
+        <<"  control-cost " <<ctrlCsum
+        <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
  
   return taskCsum+ctrlCsum;
@@ -572,10 +572,10 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     setx(x[t]);
     getTaskCostTerms(Phi, PhiJ, x[t], t);
     c1=sumOfSqr(Phi);
-    c3=getCosts(R, r, x[t], t);
+    c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
-    //cout  <<c1  <<' '  <<c2  <<' '  <<c3  <<endl;
-    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"   <<c1  <<' '  <<c2  <<' '  <<c3);
+    //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
+    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
     if(t){
@@ -600,16 +600,16 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
           c2 = sqrDistance(H, tau_2*M*(qt_2+qt-(double)2.*qt_1), F);
         }
       }
-      //cout  <<c1  <<' '  <<c2  <<' '  <<endl;
+      //cout <<c1 <<' ' <<c2 <<' ' <<endl;
       //if(t==0)
         //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
       ctrlCsum+=c2;
     }
   }
-  cout  <<"costChecks: "
-        <<"  task-cost "  <<taskCsum
-        <<"  control-cost "  <<ctrlCsum
-        <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+  cout <<"costChecks: "
+       <<"  task-cost " <<taskCsum
+       <<"  control-cost " <<ctrlCsum
+       <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 }
 
 
@@ -617,7 +617,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 void soc::SocSystemAbstraction::displayState(const arr& q, const arr *Qinv, const char *text){
   if(gl){
     setq(q);
-    if(text) gl->text.clr()  <<text;
+    if(text) gl->text.clr() <<text;
     gl->update();
     //gl->timedupdate(getTau()*(T-1)/(display-1));
   }else{
@@ -631,8 +631,8 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0;k<=(uint)num;k++){
     t = k*T/num;
-    if(Qinv) displayState(q[t], &(*Qinv)[t](), STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
-    else     displayState(q[t], NULL         , STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
+    if(Qinv) displayState(q[t], &(*Qinv)[t](), STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
+    else     displayState(q[t], NULL         , STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
     if(steps==-1) gl->watch();
   }
   if(steps==1) gl->watch();
@@ -715,30 +715,30 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& q, bool plot){
     std::ofstream fil;
     MT::open(fil, "z.trana");
     for(t=0;t<=T;t++){
-      fil  <<"time "  <<t*tau
-           <<"  ctrlC "  <<ctrlC(t)
-           <<"  taskC "  <<taskC(t);
-      fil  <<"  taskCi "; taskCi[t].writeRaw(fil);
-      fil  <<"  taskDx "; taskDx[t].writeRaw(fil);
-      fil  <<"  taskDv "; taskDv[t].writeRaw(fil);
-      fil  <<"  q "; q[t].writeRaw(fil);
-      fil  <<endl;
+      fil <<"time " <<t*tau
+          <<"  ctrlC " <<ctrlC(t)
+          <<"  taskC " <<taskC(t);
+      fil <<"  taskCi "; taskCi[t].writeRaw(fil);
+      fil <<"  taskDx "; taskDx[t].writeRaw(fil);
+      fil <<"  taskDv "; taskDv[t].writeRaw(fil);
+      fil <<"  q "; q[t].writeRaw(fil);
+      fil <<endl;
     }
     MT::String cmd;
-    cmd  <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
-    for(i=0;i<m;i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd  <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
+    cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
+    for(i=0;i<m;i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
     gnuplot(cmd);
   }
 #ifdef NIKOLAY
   if(os) *os
-     <<" "  <<taskCsum
-     <<" "  <<ctrlCsum
-     <<" "  <<taskCsum+ctrlCsum  <<endl;
+    <<" " <<taskCsum
+    <<" " <<ctrlCsum
+    <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-     <<"  task-cost "  <<taskCsum
-     <<"  control-cost "  <<ctrlCsum
-     <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+    <<"  task-cost " <<taskCsum
+    <<"  control-cost " <<ctrlCsum
+    <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
   return taskCsum+ctrlCsum;
 }
@@ -797,12 +797,12 @@ double getFilterCostMeassure(soc::SocSystemAbstraction& soci, arr& q, double& co
     cost1 += cost_t = taskCost(soci, t);
   }
   if(os){
-    *os  <<std::setw(3)  <<0
-         <<"  time "  <<MT::timerRead(false)
-         <<"  cost1 "  <<cost1
-         <<"  cost2 "  <<cost2
-         <<"  length "  <<length
-         <<"  total-cost "  <<cost1+cost2  <<endl;
+    *os <<std::setw(3) <<0
+        <<"  time " <<MT::timerRead(false)
+        <<"  cost1 " <<cost1
+        <<"  cost2 " <<cost2
+        <<"  length " <<length
+        <<"  total-cost " <<cost1+cost2 <<endl;
   }
   return cost1+cost2;
 }
@@ -868,7 +868,7 @@ void soc::SocSolver::init(){
     
   if(MT::getParameter<int>("file")){
     MT::getParameter(filename, "filename");
-    cout  <<"** output filename = '"  <<filename  <<"'"  <<endl;
+    cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
     if(MT::getParameter<int>("solverCout")) os = &cout;  else  os = NULL;
@@ -882,12 +882,12 @@ void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
   MT::Array<soc::AICO> aicos(scalePowers);
   switch(method){
     case AICO:
-      cout  <<"\n** AICO optimization (convergenceRate="  <<convergenceRate  <<", repeatThreshold=" <<repeatThreshold  <<")"  <<endl;
+      cout <<"\n** AICO optimization (convergenceRate=" <<convergenceRate <<", repeatThreshold=" <<repeatThreshold <<")" <<endl;
       //soc::straightTaskTrajectory(sys, q, 0);
       AICO_solver(sys, q, tolerance, convergenceRate, repeatThreshold, recomputeTaskThreshold, display);
       break;
     case AICO_ms:
-      cout  <<"\n** AICO_ms optimization (convergenceRate="  <<convergenceRate  <<", repeatThreshold=" <<repeatThreshold  <<")"  <<endl;
+      cout <<"\n** AICO_ms optimization (convergenceRate=" <<convergenceRate <<", repeatThreshold=" <<repeatThreshold <<")" <<endl;
       for(uint i=0;i<aicos.N;i++){
         sys.scalePower=i;
         sys.stepScale=i;
@@ -911,24 +911,24 @@ void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
       //AICO_multiScaleSolver(sys, q, tolerance, convergenceRate, repeatThreshold, recomputeTaskThreshold, display, scalePowers);
       break;
     case LQG_straightInit:
-      cout  <<"\n** DDP optimization with straight initialization (convergenceRate="  <<convergenceRate  <<")"  <<endl;
+      cout <<"\n** DDP optimization with straight initialization (convergenceRate=" <<convergenceRate <<")" <<endl;
       soc::straightTaskTrajectory(sys, q, 0);
       LQG_solve(sys, q, tolerance, convergenceRate, display);
       break;
     case LQG_IKinit:
-      cout  <<"\n** DDP optimization with IK initialization (convergenceRate="  <<convergenceRate  <<")"  <<endl;
+      cout <<"\n** DDP optimization with IK initialization (convergenceRate=" <<convergenceRate <<")" <<endl;
       soc::bayesianIKTrajectory(sys, q);
       LQG_solve(sys, q, tolerance, convergenceRate, display);
       break;
     case LQG_ms:
-      cout  <<"\n** DDP optimization with straight initialization (convergenceRate="  <<convergenceRate  <<")"  <<endl;
+      cout <<"\n** DDP optimization with straight initialization (convergenceRate=" <<convergenceRate <<")" <<endl;
       sys.scalePower=scalePowers-1;
       //soc::bayesianIKTrajectory(sys, q);
       soc::straightTaskTrajectory(sys, q, 0);
       LQG_multiScaleSolver(sys, q, tolerance, convergenceRate, display, scalePowers);
       break;
     case gradient:
-      cout  <<"\n** gradient optimization (splinePoints="  <<splinePoints  <<", splineDegree="  <<splineDegree  <<")"  <<endl;
+      cout <<"\n** gradient optimization (splinePoints=" <<splinePoints <<", splineDegree=" <<splineDegree <<")" <<endl;
       soc::straightTaskTrajectory(sys, q, 0);
         //soc::bayesianIKTrajectory(sys, q);
       gradientOptimization(sys, q, iterations, splinePoints, splineDegree, tolerance, false, display);
@@ -946,7 +946,7 @@ void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
     sys.os=&cout;
   }
     
-  (*sys.os)  <<filename  <<" totalTime= "  <<MT::timerRead()  <<" #setq= "  <<countSetq  <<" #msg= "  <<countMsg  <<endl;
+  (*sys.os) <<filename <<" totalTime= " <<MT::timerRead() <<" #setq= " <<countSetq <<" #msg= " <<countMsg <<endl;
   sys.analyzeTrajectory(q, display>0);
   //if(display) for(;;) sys.displayTrajectory(q, NULL, 1, "final");
   if(display) sys.displayTrajectory(q, NULL, 1, "final");

@@ -29,11 +29,6 @@
 #  define MT_LogFileName "MT.log"
 #endif
 
-#ifndef MT_MSVC
-#  include <sys/ipc.h>
-#  include <sys/shm.h>
-#endif
-
 
 //===========================================================================
 //
@@ -93,12 +88,12 @@ public:
     if(logstat){ //don't open a log file anymore in the destructor
       char times[200];
       sprintf(times, "Ellapsed double time:  %.3lfsec\nProcess  user time:   %.3lfsec", realTime(), cpuTime());
-      MT::log()  <<"Execution stop:      "  <<date()
-       <<times  <<std::endl;
-      //"Ellapsed double time:  "  <<::dtoa(realTime())  <<"sec\n"
-      // <<"Process  user time:   " <<::dtoa(cpuTime())  <<"sec"  <<std::endl;
+      MT::log() <<"Execution stop:      " <<date()
+      <<times <<std::endl;
+      //"Ellapsed double time:  " <<::dtoa(realTime()) <<"sec\n"
+      // <<"Process  user time:   " <<::dtoa(cpuTime()) <<"sec" <<std::endl;
 #ifndef MT_TIMEB
-      MT::log()  <<"Process system time: "  <<sysTime()  <<"sec"  <<std::endl;
+      MT::log() <<"Process system time: " <<sysTime() <<"sec" <<std::endl;
 #endif
       MT::log().close();
     }
@@ -128,16 +123,16 @@ std::ofstream& log(const char *name){ return demon.log(name); }
 void open(std::ofstream& fs, const char *name, const char *errmsg){
   fs.clear();
   fs.open(name);
-  log()  <<"opening output file `"  <<name  <<"'"  <<std::endl;
-  if(!fs.good()) MT_MSG("could not open file `"  <<name  <<"' for output" <<errmsg);
+  log() <<"opening output file `" <<name <<"'" <<std::endl;
+  if(!fs.good()) MT_MSG("could not open file `" <<name <<"' for output" <<errmsg);
 }
 
 //! open an input-file with name '\c name'
 void open(std::ifstream& fs, const char *name, const char *errmsg){
   fs.clear();
   fs.open(name);
-  log()  <<"opening input file `"  <<name  <<"'"  <<std::endl;
-  if(!fs.good()) HALT("could not open file `"  <<name  <<"' for input" <<errmsg);
+  log() <<"opening input file `" <<name <<"'" <<std::endl;
+  if(!fs.good()) HALT("could not open file `" <<name <<"' for input" <<errmsg);
 }
 
 //! change to the directory of the given filename
@@ -164,7 +159,7 @@ bool contains(const char *s, char c){
   return false;
 }
 
-//! skips the chars (typically white characters) when parsing from the istream
+//! skips the chars (typically white characters) when parsing from the istream, returns first non-skipped char
 char skip(std::istream& is, const char *skipchars, bool skipCommentLines){
   char c;
   for(;;){
@@ -213,7 +208,7 @@ bool skipUntil(std::istream& is, const char *tag){
 
 //! a global operator to scan (parse) strings from a stream
 void parse(std::istream& is, const char *str){
-  if(!is.good()){ MT_MSG("bad stream tag when scanning for `"  <<str  <<"'"); return; }//is.clear(); }
+  if(!is.good()){ MT_MSG("bad stream tag when scanning for `" <<str <<"'"); return; }//is.clear(); }
   uint i, n=strlen(str);
   char *buf=new char [n+1]; buf[n]=0;
   MT::skip(is, " \n\r\t");
@@ -221,8 +216,8 @@ void parse(std::istream& is, const char *str){
   if(!is.good() || strcmp(str, buf)){
     for(i=n; i--;) is.putback(buf[i]);
     is.setstate(std::ios::failbit);
-    MT_MSG("(LINE=" <<MT::lineCount <<") parsing of constant string `"  <<str
-            <<"' failed! (read instead: `"  <<buf  <<"')");
+    MT_MSG("(LINE=" <<MT::lineCount <<") parsing of constant string `" <<str
+           <<"' failed! (read instead: `" <<buf <<"')");
   }
   delete[] buf;
 }
@@ -231,15 +226,15 @@ void parse(std::istream& is, const char *str){
 //! returns the i-th of str
 byte bit(byte *str, uint i){ return (str[i>>3] >>(7-(i&7))) & 1; }
 //byte bit(byte b, uint i){ return (b >>(7-(i&7))) & 1; }
-//void set(byte *state, uint i){ state[i>>3] |= 1  <<(7-(i&7)); }
-//void del(byte *state, uint i){ state[i>>3] &= (byte)~(1  <<(7-(i&7))); }
-//void flip(byte *str, uint i){ str[i>>3] ^= 1  <<(7-(i&7)); }
+//void set(byte *state, uint i){ state[i>>3] |= 1 <<(7-(i&7)); }
+//void del(byte *state, uint i){ state[i>>3] &= (byte)~(1 <<(7-(i&7))); }
+//void flip(byte *str, uint i){ str[i>>3] ^= 1 <<(7-(i&7)); }
 
 //! flips the i-th bit of b
-void flip(byte& b, uint i){ b ^= 1  <<(7-(i&7)); }
+void flip(byte& b, uint i){ b ^= 1 <<(7-(i&7)); }
 
 //! filps the i-th bit of b
-void flip(int& b, uint i){ b ^= 1  <<(7-(i&7)); }
+void flip(int& b, uint i){ b ^= 1 <<(7-(i&7)); }
 
 double MIN(double a, double b){ return a<b?a:b; }
 double MAX(double a, double b){ return a>b?a:b; }
@@ -414,7 +409,7 @@ void wait(double sec){
   ts.tv_nsec = (long)(floor(1000000000. * sec));
   int rc = clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
   if(rc){
-    if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal"); } else MT_MSG("clock_nanosleep() failed "  <<rc);
+    if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal"); } else MT_MSG("clock_nanosleep() failed " <<rc);
   }
   
 #if 0
@@ -442,10 +437,10 @@ void wait(double sec){
 //! wait for an ENTER at the console
 bool wait(){
   char c[10];
-  std::cout  <<" -- hit a key to continue..."  <<std::flush;
+  std::cout <<" -- hit a key to continue..." <<std::flush;
   //cbreak(); getch();
   std::cin.getline(c, 10);
-  std::cout  <<"\r"  <<std::flush;
+  std::cout <<"\r" <<std::flush;
   if(c[0]==' ') return true;
   else return false;
   return true;
@@ -463,162 +458,6 @@ long mem(){
 #endif
 }
 
-#ifdef MT_MSVC
-struct SHM {
-  HANDLE systemId;
-  void *p;
-  bool created, opened;
-  SHM(){ created=opened=false; p=NULL; systemId=NULL; }
-};
-
-void *openSharedMemory(SHM& shm, const char *name, uint size){
-  CHECK(!created && !opened, "shm object already in use");
-  
-  systemId = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name);
-  if(systemId == NULL){
-    systemId = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, name);
-    std::cout  <<"** creating new shared memory `"  <<name <<"' with systemId "  <<systemId  <<std::endl;
-    if(systemId==NULL)
-      HALT("can't create shared memory `" <<name <<"'. CreateFileMapping error code " <<GetLastError());
-    created=true;
-  }else{
-    std::cout  <<"** opening existing shared memory `"  <<name <<"' with systemId "  <<systemId  <<std::endl;
-  }
-  
-  p = MapViewOfFile(systemId, FILE_MAP_ALL_ACCESS, 0, 0, size);
-  if(p==NULL)
-    HALT("Could not map view of file. MapViewOfFile error code " <<GetLastError());
-    
-  opened=true;
-  return p;
-}
-
-void closeSharedMemory(SHM& shm){
-  CHECK(opened, "can't close what's not open");
-  UnmapViewOfFile(p);
-  CloseHandle(systemId);
-  systemId=NULL;
-  p=NULL;
-  created=opened=false;
-}
-
-void destroySharedMemory(SHM& shm){
-  std::cout  <<"** destroying shared memory with systemId " <<systemId  <<" -- not supported under MSVC"  <<std::endl;
-}
-
-#else
-#ifdef MT_PTHREAD
-void SHM::open(const char *name, uint size, bool directDestroy){
-  key_t key=ftok(name, 0);
-  systemId=shmget(key, size, 0666);
-  if(systemId==-1){
-    systemId=shmget(key, size, IPC_CREAT|0666);
-    std::cout  <<"** creating new shared memory `"  <<name <<"' with systemId "  <<systemId  <<std::endl;
-    if(systemId==-1)
-      HALT("can't create shared memory `" <<name);
-    created=true;
-  }else{
-    std::cout  <<"** opening existing shared memory `"  <<name <<"' with systemId "  <<systemId  <<std::endl;
-  }
-  opened=true;
-
-  if(directDestroy){ destroy(); return; }
-
-  p=(byte*)shmat(systemId, NULL, 0);
-  if(p==(byte*) -1)
-    HALT("can't access memory of shared memory `" <<name);
-
-  info=(SHMinfoBlock*)p;
-  uint i;
-  if(created){
-    if(size<=sizeof(SHMinfoBlock)) HALT("need to allocate larger SHM to hold info block!");
-    strcpy((char*)info->pagename, name);
-    info->size=size;
-    info->used=sizeof(SHMinfoBlock);
-    info->guests=1;
-    guestId=0;
-    for(i=0; i<maxShmGuests; i++) info->guestPids[i]=-1;
-    info->guestPids[guestId]=getpid();
-    for(i=0; i<shmMaxBlocks; i++) info->blockNames[i][0]=0;
-    for(i=0; i<shmMaxBlocks; i++) info->blockOffsets[i]=0;
-    //create mutexes for all (potential) blockes:
-    pthread_rwlockattr_t   att;
-    int r;
-    r=pthread_rwlockattr_init(&att); CHECK(!r, "");
-    r=pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED); CHECK(!r, "");
-    for(i=0; i<shmMaxBlocks; i++){
-      r=pthread_rwlock_init(&info->blockLocks[i], &att);
-      CHECK(!r, "");
-    }
-  }else{
-    //CHECK(!strcmp(name, info->pagename), "requested shm has different name");
-    //CHECK(size==info->size, "requested shm has different size");
-    info->guests++;
-    for(i=0; i<maxShmGuests; i++) if(info->guestPids[i]==-1) break;
-    if(i==maxShmGuests) HALT("exceeded max number of clients " <<maxShmGuests);
-    guestId=i;
-    info->guestPids[guestId]=getpid();
-  }
-  opened=true;
-
-  report();
-}
-
-void SHM::close(){
-  CHECK(opened, "can't close what's not open");
-  info->guests--;
-  info->guestPids[guestId]=-1;
-  shmdt(p);
-  created=opened=false; p=NULL; systemId=NULL; info=NULL; guestId=-1;
-}
-
-void SHM::destroy(){
-  std::cout  <<"** destroying shared memory with systemId " <<systemId  <<std::endl;
-  shmid_ds buf;
-  if(shmctl(systemId, IPC_RMID, &buf)<0){
-    HALT("failed destroying the shm");
-  }
-  created=opened=false; p=NULL; systemId=NULL; info=NULL; guestId=-1;
-}
-
-//documentation: http://cs.pub.ro/~apc/2003/resources/pthreads/uguide/document.htm
-void SHM::readLock(uint i){
-  int r=pthread_rwlock_rdlock(&info->blockLocks[i]);
-  if(r) HALT("");
-}
-
-void SHM::writeLock(uint i){
-  int r=pthread_rwlock_wrlock(&info->blockLocks[i]);
-  if(r) HALT("");
-}
-
-void SHM::unlock(uint i){
-  int r=pthread_rwlock_unlock(&info->blockLocks[i]);
-  if(r) HALT("");
-}
-
-void SHM::report(){
-  std::cout  <<"** SHM report:";
-  if(!opened){ std::cout  <<" -- not open"  <<std::endl; return; }
-  uint i;
-  std::cout
-     <<"\n  pagename="  <<info->pagename
-     <<"\n  size="  <<info->size
-     <<"\n  used="  <<info->used
-     <<"\n  guests="  <<info->guests
-     <<"\n  guestPids=";
-  for(i=0; i<maxShmGuests; i++) std::cout  <<' '  <<info->guestPids[i];
-  std::cout
-     <<"\n  local guestId="  <<guestId
-     <<"\n  local systemId="  <<systemId
-     <<"\n  local p="  <<(void*)p
-     <<"\n  locally created="  <<created
-     <<"\n  allocated blocks:";
-  for(i=0; i<shmMaxBlocks; i++) if(info->blockOffsets[i]) std::cout  <<"\n    "  <<i  <<": name="  <<info->blockNames[i] <<" offset="  <<info->blockOffsets[i];
-  std::cout  <<std::endl;
-}
-#endif //PTHREAD
-#endif
 
 
 //! start and reset the timer (user CPU time)
@@ -665,10 +504,10 @@ void initCmdLine(int _argc, char *_argv[]){
   if(!name) name=MT_LogFileName;
   log(name);
   if(!log().good()) MT_MSG(" -- use `-nolog' or `-log' option to specify the log file");
-  log()  <<"Compiled at:     "  <<__DATE__  <<" " <<__TIME__  <<"\n";
-  log()  <<"Execution start: "  <<ctime(&t);
-  log()  <<"Program call:    '"; for(int i=0; i<argc; i++) log()  <<argv[i]  <<" ";
-  log()  <<"\b'"  <<std::endl;
+  log() <<"Compiled at:     " <<__DATE__ <<" " <<__TIME__ <<"\n";
+  log() <<"Execution start: " <<ctime(&t);
+  log() <<"Program call:    '"; for(int i=0; i<argc; i++) log() <<argv[i] <<" ";
+  log() <<"\b'" <<std::endl;
 }
 
 //! returns true if the tag was found on command line
@@ -693,21 +532,21 @@ char *getCmdLineArgument(const char *tag){
   \c name is not specified, it searches for a command line-option
   '-cfg' and, if not found, it assumes \c name=MT.cfg */
 void openConfigFile(const char *name){
-  log()  <<"opening config file ";
+  log() <<"opening config file ";
   if(!name) name=getCmdLineArgument("cfg");
   if(!name) name=MT_ConfigFileName;
   if(cfgOpenFlag){
-    cfgFile.close(); log()  <<"(old config file closed) ";
+    cfgFile.close(); log() <<"(old config file closed) ";
   }
-  log()  <<"'"  <<name  <<"'";
+  log() <<"'" <<name <<"'";
   cfgFile.clear();
   cfgFile.open(name);
   cfgOpenFlag=true;
   if(!cfgFile.good()){
     //MT_MSG("couldn't open config file " <<name);
-    log()  <<" - failed";
+    log() <<" - failed";
   }
-  log()  <<std::endl;
+  log() <<std::endl;
 }
 
 uint getVerboseLevel(){
@@ -826,7 +665,7 @@ MT::String& MT::String::resetI(){ buffer.setIpos(p); clear(); return *this; }
 uint MT::String::N() const { return memN; }
 
 //! writes the string into some ostream
-void MT::String::write(std::ostream& os) const { os  <<p; }
+void MT::String::write(std::ostream& os) const { os <<p; }
 /*!\brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */
 void MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol){
@@ -874,7 +713,7 @@ uint32_t MT::Rnd::clockSeed(){
 #else
   _timeb t; _ftime(&t); s=1000L*t.time+t.millitm;
 #endif
-  log()  <<"random clock seed: "  <<s  <<std::endl;
+  log() <<"random clock seed: " <<s <<std::endl;
   return seed(s);
 }
 
@@ -913,7 +752,7 @@ void  MT::Rnd::seed250(int32_t seed){
   
   if(seed<=0) seed=1;
   
-  for(i=0; i<250; ++i){       // Schleife ueber Zufallsfeld
+  for(i=0; i<250; ++i){ // Schleife ueber Zufallsfeld
     k = seed / 127773;          // Modulozufallszahlengenerator
     seed = 16807 * (seed - k*127773) - 2836 * k;
     if(seed<0) seed += 0x7FFFFFFF;
@@ -954,14 +793,14 @@ void gnuplot(const char *command, const char *PDFfile, bool persist){
   if(!access("gnuplot.cfg", R_OK)) fputs("load 'gnuplot.cfg'\n", MT_gp);
   MT::String cmd;
   
-  cmd  <<"set terminal pop\n"
-   <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
-   <<command  <<std::endl;
+  cmd <<"set terminal pop\n"
+  <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
+  <<command <<std::endl;
   
   if(PDFfile){
-    cmd  <<"set terminal pdfcairo\n"
-     <<"set output '"  <<PDFfile  <<"'\n"
-     <<command  <<std::endl;
+    cmd <<"set terminal pdfcairo\n"
+    <<"set output '" <<PDFfile <<"'\n"
+    <<command <<std::endl;
   }
   fputs(cmd.p, MT_gp);
   fflush(MT_gp) ;

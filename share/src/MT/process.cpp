@@ -37,24 +37,24 @@ static MT::Array<CycleTimer*> globalCycleTimers;
 void reportNice(){
   pid_t tid = syscall(SYS_gettid);
   int priority = getpriority(PRIO_PROCESS, tid);
-  std::cout  <<"tid="  <<tid  <<" nice="  <<priority  <<std::endl;
+  std::cout <<"tid=" <<tid <<" nice=" <<priority <<std::endl;
 }
 
 bool setNice(int nice){
   pid_t tid = syscall(SYS_gettid);
   //int old_nice = getpriority(PRIO_PROCESS, tid);
   int ret = setpriority(PRIO_PROCESS, tid, nice);
-  if(ret) MT_MSG("cannot set nice to " <<nice  <<" (might require sudo), error="  <<ret  <<' '  <<strerror(ret));
-  //std::cout  <<"tid="  <<tid  <<" old nice="  <<old_nice  <<" wanted nice="  <<nice  <<std::flush;
+  if(ret) MT_MSG("cannot set nice to " <<nice <<" (might require sudo), error=" <<ret <<' ' <<strerror(ret));
+  //std::cout <<"tid=" <<tid <<" old nice=" <<old_nice <<" wanted nice=" <<nice <<std::flush;
   //nice = getpriority(PRIO_PROCESS, tid);
-  //std::cout  <<" new nice="  <<nice  <<std::endl;
+  //std::cout <<" new nice=" <<nice <<std::endl;
   if(ret) return false;
   return true;
 }
 
 void setRRscheduling(int priority){
   pid_t tid = syscall(SYS_gettid);
-  MT_MSG(" tid="  <<tid  <<" old sched="  <<sched_getscheduler(tid));
+  MT_MSG(" tid=" <<tid <<" old sched=" <<sched_getscheduler(tid));
   sched_param sp; sp.sched_priority=priority;
   int rc = sched_setscheduler(tid, SCHED_RR, &sp);
   if(rc) switch(errno){
@@ -69,10 +69,10 @@ void setRRscheduling(int priority){
     }
   timespec interval;
   rc=sched_rr_get_interval(tid, &interval);
-  std::cout  <<"RR scheduling interval = " <<interval.tv_sec  <<"sec "  <<1e-6*interval.tv_nsec  <<"msec"  <<std::endl;
-  CHECK(!rc, "sched_rr_get_interval failed:"  <<errno <<strerror(errno));
+  std::cout <<"RR scheduling interval = " <<interval.tv_sec <<"sec " <<1e-6*interval.tv_nsec <<"msec" <<std::endl;
+  CHECK(!rc, "sched_rr_get_interval failed:" <<errno <<strerror(errno));
   MT_MSG("Scheduling policy changed: new sched="
-          <<sched_getscheduler(tid)  <<" new priority="  <<priority);
+         <<sched_getscheduler(tid) <<" new priority=" <<priority);
 }
 
 void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const timespec& now, const timespec& last, uint step){
@@ -113,7 +113,7 @@ void Lock::readLock(const char* _msg){
 }
 
 void Lock::writeLock(const char* _msg){
-  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc  <<" '"  <<strerror(rc)  <<"'");
+  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
   //CHECK(!state, "");
   state=-1;
@@ -245,7 +245,7 @@ void Metronome::waitForTic(){
   //wait for target time
   int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
   if(rc){
-    if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal") }else{ MT_MSG("clock_nanosleep() failed "  <<rc); }
+    if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal") }else{ MT_MSG("clock_nanosleep() failed " <<rc); }
   }
   //}
   
@@ -325,24 +325,24 @@ Variable::~Variable(){
 
 void Variable::readAccess(Process *p){
   if(p) p->V.setAppend(this);
-  //cout  <<(p?p->name:"NULL")  <<" reads  "  <<name  <<" state=";
+  //cout <<(p?p->name:"NULL") <<" reads  " <<name <<" state=";
   s->lock.readLock();
   //_write(cout);
-  //cout  <<endl;
+  //cout <<endl;
 }
 
 void Variable::writeAccess(Process *p){
   if(p) p->V.setAppend(this);
-  //cout  <<(p?p->name:"NULL")  <<" writes "  <<name  <<" state=";
+  //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
   s->lock.writeLock();
-  //_write(cout);  cout  <<endl;
-  //_write(s->os);  s->os  <<endl;
+  //_write(cout);  cout <<endl;
+  //_write(s->os);  s->os <<endl;
 }
 
 void Variable::deAccess(Process *p){
-  //cout  <<(p?p->name:"NULL")  <<" frees  "  <<name  <<" state=";
+  //cout <<(p?p->name:"NULL") <<" frees  " <<name <<" state=";
   //_write(cout);
-  //cout  <<endl;
+  //cout <<endl;
   s->lock.unlock();
 }
 
@@ -420,18 +420,18 @@ void Process::threadOpen(int priority){
   pthread_attr_t atts;
   rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc);
   /*if(priority){ //doesn't work - but setpriority does work!!
-    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc  <<strerror(rc));
+    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
     sched_param  param;
     rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc);
-    std::cout  <<"standard priority = "  <<param.sched_priority  <<std::endl;
+    std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
     param.sched_priority += priority;
-    std::cout  <<"modified priority = "  <<param.sched_priority  <<std::endl;
-    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc  <<strerror(rc));
+    std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
+    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
   rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc);
   s->threadCondition.waitForStateEq(tsIDLE);
 #else
-  std::cout  <<" +++ opening 'thread' in SERIAL mode '"  <<threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ opening 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
   open();
 #endif
 }
@@ -447,7 +447,7 @@ void Process::threadClose(){
   s->thread=NULL;
 #else
   close();
-  std::cout  <<" +++ closing 'thread' in SERIAL mode '"  <<threadName  <<'\''  <<std::endl;
+  std::cout <<" +++ closing 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
 #endif
 }
 
@@ -503,7 +503,7 @@ void Process::threadWait(){
 void Process::threadLoop(){
 #ifndef MT_NO_THREADS
   if(s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name  <<"': never start loop while thread is busy!");
+  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -514,7 +514,7 @@ void Process::threadLoopWithBeat(double sec){
 #ifndef MT_NO_THREADS
   s->metronome=new Metronome("threadTiccer", 1000.*sec);
   if(s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name  <<"': never start loop while thread is busy!");
+  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsBEATING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -526,7 +526,7 @@ void Process::threadLoopSyncWithDone(Process& proc){
   proc.s->broadcastDone=true;
   s->syncCondition = &proc.s->threadCondition;
   if(s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name  <<"': never start loop while thread is busy!");
+  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsSYNCLOOPING);
 #else
   HALT("can't loop in no-threads mode!");
@@ -545,7 +545,7 @@ void Process::threadStop(){
 void* sProcess::staticThreadMain(void *_self){
   Process  *proc=(Process*)_self;
   sProcess *s   =proc->s;
-  std::cout  <<" +++ entering staticThreadMain of '"  <<proc->name  <<'\''  <<std::endl;
+  std::cout <<" +++ entering staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   
   s->tid = syscall(SYS_gettid);
   
@@ -575,7 +575,7 @@ void* sProcess::staticThreadMain(void *_self){
     if(state<0 || s->broadcastDone) s->threadCondition.signal();
   };
   proc->close();
-  std::cout  <<" +++ exiting staticThreadMain of '"  <<proc->name  <<'\''  <<std::endl;
+  std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   return NULL;
 }
 
@@ -616,16 +616,16 @@ void reportGlobalProcessGraph(){
   Variable *v;
   Process *p;
   for_list(i, v, globalVariables){
-    fil  <<"Variable "  <<v->name  <<endl;
+    fil <<"Variable " <<v->name <<endl;
   }
-  fil  <<endl;
+  fil <<endl;
   for_list(i, p, globalProcesses){
-    fil  <<"Process "  <<p->name  <<" (";
+    fil <<"Process " <<p->name <<" (";
     for_list(j, v, p->V){
-      if(j) fil  <<',';
-      fil  <<v->name;
+      if(j) fil <<',';
+      fil <<v->name;
     }
-    fil  <<")"  <<endl;
+    fil <<")" <<endl;
   }
   fil.close();
 }
@@ -834,9 +834,9 @@ void ThreadInfoWin::step(){
   XFlush(s->display);
 
   //-- log file
-  //for_list(i, th, globalThreads)     s->log  <<th->threadName  <<' '  <<th->timer.busyDt  <<' '  <<th->timer.cyclDt  <<' ';
-  //for_list(i, ct, globalCycleTimers) s->log  <<ct->name  <<' '  <<ct->busyDt  <<' '  <<ct->cyclDt  <<' ';
-  //s->log  <<endl;
+  //for_list(i, th, globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+  //for_list(i, ct, globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+  //s->log <<endl;
 
   //timer.cycleDone();
 }

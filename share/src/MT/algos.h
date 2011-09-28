@@ -31,16 +31,22 @@ void randomSpline(arr& X, uint dim, uint points, uint intersteps=100, double lo=
 void randomSpline(arr& X, arr& dX, uint dim, uint points, uint intersteps=100, double lo=-1., double hi=1., uint cycles=1);
 
 //----- gradient optimization
-void checkGradient(void (*f)(arr&, const arr&, void*),
+bool checkGradient(double (*f)(arr*, const arr&, void*), //double valued with optional gradient
+                   void *data,
+                   const arr& x, double tolerance);
+bool checkGradient(void (*f)(arr&, arr*, const arr&, void*), //vector valued with optional gradient
+                   void *data,
+                   const arr& x, double tolerance);
+//obsolete:
+/*void checkGradient(void (*f)(arr&, const arr&, void*),
                    void (*df)(arr&, const arr&, void*),
                    void *data,
                    const arr& x, double tolerance);
 void checkGradient(double(*f)(const arr&, void*),
                    void (*df)(arr&, const arr&, void*),
                    void *data,
-                   const arr& x, double tolerance);
-int minimize(double(*f)(const arr&, void*),
-             void (*df)(arr&, const arr&, void*),
+                   const arr& x, double tolerance);*/
+int minimize(double(*f)(arr*, const arr&, void*),
              void *data,
              arr& x,
              double *fmin_return,

@@ -8,7 +8,7 @@
 #include "ors.h"
 #include "joystick.h"
 #include "socSystem_ors.h"
-#include <NJ/UrgModule.h>
+#include <NJ/UrgInterface.h>
 #include <NP/camera.h>
 #include "schunk.h"
 #include "vision.h"
@@ -69,9 +69,9 @@ struct TaskAbstraction {
   
   virtual void initTaskVariables(ControllerProcess*);
   virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
-
+  
   // helper
-  void prepare_skin(ControllerProcess*,bool);
+  void prepare_skin(ControllerProcess*, bool);
 };
 
 
@@ -112,7 +112,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
   void open();
   void step();
   void close();
-
+  
   TaskAbstraction *change_task(TaskAbstraction *task);
 };
 
@@ -124,7 +124,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
 /*! simply a collection of standard robot processes: open() opens them all,
     close() closes them all, step() communicates between them and steps them all */
 
-struct RobotModuleGroup {
+struct RobotProcessGroup {
   //Variables
   q_currentReferenceVar q_currentReference;
   SkinPressureVar skinPressureVar;
@@ -138,49 +138,40 @@ struct RobotModuleGroup {
   SchunkSkinModule skin;
   
   JoystickInterface joy;
-  UrgModule urg;
+  UrgInterface urg;
   EarlyVisionModule evis;
   CameraModule bumble;
   GuiModule gui;
   ThreadInfoWin threadWin;
   
-  //ticcer -- for strictly timed stepping
-  Metronome ticcer;
-  CycleTimer timer;
-  
   //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors
   
-  //IMPORTANT: call signal(SIGINT, RobotModuleGroup::signalStopCallback); in main.cpp
+  //IMPORTANT: call signal(SIGINT, RobotProcessGroup::signalStopCallback); in main.cpp
   static bool signalStop;
   static void signalStopCallback(int);
   
   //step/loop information
-  uint stepCounter;
+  //uint stepCounter;
   
-  //logFile and stuff [mostly obsolete so far]
-  RevelInterface *revel;
-  ostream *log;
-  
-  RobotModuleGroup();
-  ~RobotModuleGroup();
+  RobotProcessGroup();
+  ~RobotProcessGroup();
   
   //main routines
   void open();
-  void step();
   void close();
 };
 
 #define _BasicRobotTask(BasicRobotTaskName)   \
- \
-struct BasicRobotTaskName:public TaskAbstraction{ \
-  virtual void initTaskVariables(ControllerProcess *ctrl){ \
-    TaskAbstraction::initTaskVariables(ctrl); \
-  }; \
-  virtual void updateTaskVariables(ControllerProcess*); \
-  static BasicRobotTaskName *p; \
-  static BasicRobotTaskName *a(){if (!p) p=new BasicRobotTaskName(); return p;}; \
-};
+  \
+  struct BasicRobotTaskName:public TaskAbstraction{ \
+    virtual void initTaskVariables(ControllerProcess *ctrl){ \
+      TaskAbstraction::initTaskVariables(ctrl); \
+    }; \
+    virtual void updateTaskVariables(ControllerProcess*); \
+    static BasicRobotTaskName *p; \
+    static BasicRobotTaskName *a(){if(!p) p=new BasicRobotTaskName(); return p;}; \
+  };
 // end template
 
 _BasicRobotTask(DoNothing)

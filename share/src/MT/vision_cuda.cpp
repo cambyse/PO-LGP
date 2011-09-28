@@ -153,7 +153,7 @@ inline void cuda_error(const char *msg){
 
 void earlyVision(CudaWorkspace WS, int N, int threads_per_block){
   int nBlocks = N/threads_per_block + (N%threads_per_block > 0?1:0);
-  earlyVisionKernel  <<<nBlocks, threads_per_block >>>(WS);
+  earlyVisionKernel <<<nBlocks, threads_per_block >>>(WS);
   cuda_error("earlyVisionKernel");
   cudaThreadSynchronize();
   cuda_error("cudaThreadSynchronize");

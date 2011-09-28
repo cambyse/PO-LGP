@@ -182,7 +182,7 @@ void mrf_BP(BP_data& msg, void (*conv)(arr&, const arr&), uint iter, byteA *max)
   
   uint k, y, x, i, j;
   for(k=0; k<iter; k++){
-    cout  <<'.'  <<std::flush;
+    cout <<'.' <<std::flush;
     //recompute all messages
     for(y=0; y<Y; y++){
       for(x=0; x<X; x++) MOD { i=y*X+x;  ud[i]()=msg.phi[i]%msg.u[i]%msg.d[i]; }
@@ -195,7 +195,7 @@ void mrf_BP(BP_data& msg, void (*conv)(arr&, const arr&), uint iter, byteA *max)
           for(y=Y-1; y--;)  MOD { i=y*X+x; j=i+X;  conv(msg.u[i](), msg.u[j]%lr[j]);  }
           }
   }
-  cout  <<"done"  <<endl;
+  cout <<"done" <<endl;
   
   //-- posterior beliefs
   msg.b.resize(Y*X, K);
@@ -385,11 +385,11 @@ void gnuplotHistogram(floatA &data, float min, float max, uint bins){
     }
   hist/=(double)N;
   ofstream z("z.hist");
-  for(i=0; i<bins; i++){ z  <<min+(max-min)*i/(bins-1)  <<' '; for(k=0; k<K; k++) z  <<hist(k, i)  <<' '; z <<endl; }
+  for(i=0; i<bins; i++){ z <<min+(max-min)*i/(bins-1) <<' '; for(k=0; k<K; k++) z <<hist(k, i) <<' '; z <<endl; }
   z.close();
   MT::String cmd("plot 'z.hist' us 1:2");
-  for(k=1; k<K; k++) cmd  <<", 'z.hist' us 1:"  <<k+2;
-  cout  <<"plotting "  <<cmd  <<endl;
+  for(k=1; k<K; k++) cmd <<", 'z.hist' us 1:" <<k+2;
+  cout <<"plotting " <<cmd <<endl;
   gnuplot(cmd);
   if(H){
     data.reshape(H, W, 3);
@@ -480,7 +480,7 @@ void imagePointPair2WorldPoint(arr& worldPoint, const arr& left, const arr& righ
   worldPoint(0) *= -1.;
   worldPoint    *= .01;
   worldPoint(0) += .06;
-  cout  <<"localized Point = "  <<worldPoint  <<endl;
+  cout <<"localized Point = " <<worldPoint <<endl;
 }
 
 /*
@@ -499,7 +499,7 @@ void imagePointPair2WorldPoint(arr& worldPoint, const arr& left, const arr& righ
   cvShow(left, "left");
   cvShow(right, "right");
 
-  //cout  <<"disparity = "  <<cenL(0)-cenR(0)  <<endl;
+  //cout <<"disparity = " <<cenL(0)-cenR(0) <<endl;
 
   if(smaller!=1){
   cenL*=(double)smaller;
@@ -590,7 +590,7 @@ void compute_basics(){
         //I_student(r, c, d) = ::exp(-.5 * (c-d)*(c-d)/var);
         I_student(r, c, d) = student3((c-d)*(c-d)/var);
   }
-  //cout  <<"I_student=\n"  <<I_student  <<endl;
+  //cout <<"I_student=\n" <<I_student <<endl;
   
   //V-noise
   sig_V = .1;
@@ -603,7 +603,7 @@ void compute_basics(){
       V_student(v, w) = student3(d/var);
     }
   tensorCondNormalize(V_student, 1);
-  //cout  <<"V_student=\n"  <<V_student  <<endl;
+  //cout <<"V_student=\n" <<V_student <<endl;
   
   //V-range
   rho_V = 2.5;
@@ -613,20 +613,20 @@ void compute_basics(){
     dy = Rdi[r];
     V_range(r) = ::exp(-.5 * (dx*dx+dy*dy)/(rho_V*rho_V));
   }
-  cout  <<"V_range=\n"  <<V_range  <<endl;
+  cout <<"V_range=\n" <<V_range <<endl;
   
   //range filters
   w_ell.resize(W);
   for(d=-W/2; d<=W/2; d++)
     w_ell(d+W/2) = ::exp(-.5 * (d*d)/(rho_I*rho_I));
   w_ell /= sum(w_ell);
-  cout  <<"w_ell=\n"  <<w_ell  <<endl; // <<w_ell * ~w_ell  <<endl;
+  cout <<"w_ell=\n" <<w_ell <<endl; // <<w_ell * ~w_ell <<endl;
   
   w_V.resize(W);
   for(d=-W/2; d<=W/2; d++)
     w_V(d+W/2) = ::exp(-.5 * (d*d)/(rho_V*rho_V));
   w_V /= sum(w_V);
-  cout  <<"w_V=\n"  <<w_V  <<endl; // <<w_V * ~w_V  <<endl;
+  cout <<"w_V=\n" <<w_V <<endl; // <<w_V * ~w_V <<endl;
   
   //S-noise
   nu_S = .1;
@@ -635,7 +635,7 @@ void compute_basics(){
       S_noise(s, t) = s==t?1.-nu_S*(S-1):nu_S;
     }
   checkNormalization(S_noise, 1e-6);
-  cout  <<"S_noise=\n"  <<S_noise  <<endl;
+  cout <<"S_noise=\n" <<S_noise <<endl;
   
   //initialize A_q aned t_q
   A_q.resize(S, 2, 2);
@@ -643,7 +643,7 @@ void compute_basics(){
   t_q.resize(S, 2);
   t_q.setZero();
   for(s=0; s<S; s++) t_q(s, 0) = 4.*s/(S-1) - 2.;
-  cout  <<"A_q=\n"  <<A_q  <<"\nt_q=\n"  <<t_q  <<endl;
+  cout <<"A_q=\n" <<A_q <<"\nt_q=\n" <<t_q <<endl;
   
   //discretized mean segmentation displacement
   Qdx.resize(X, S);
@@ -769,7 +769,7 @@ void compute_mu_IV(floatA& mu_IV, const byteA& img0, const byteA& img1, float pi
   }
   float *mu_IVp=mu_IV.p, *mu_IVstop=mu_IVp+mu_IV.N;
   //for(;mu_IVp!=mu_IVstop;mu_IVp++){ (*mu_IVp) = ::exp(-.5*(*mu_IVp)); }       //gauss
-  for(; mu_IVp!=mu_IVstop; mu_IVp++){(*mu_IVp) = student3(*mu_IVp); }    //gauss
+  for(; mu_IVp!=mu_IVstop; mu_IVp++){(*mu_IVp) = student3(*mu_IVp); }  //gauss
   mu_IV = ~mu_IV;
 }
 
@@ -810,7 +810,7 @@ void compute_meanV(arr& mean, const floatA& alphaV){
 void compute_hueMap(byteA& hue, const floatA& alphaV){
   arr mean;
   compute_meanV(mean, alphaV);
-  //cout  <<mean.sub(0, 500, 0, -1)  <<endl;
+  //cout <<mean.sub(0, 500, 0, -1) <<endl;
   //MT::wait();
   hue.resize(X, 3);
   MT::Color col;

@@ -29,7 +29,7 @@ struct VertGroup {
 
 void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   ifstream is(filename, std::ios::binary);
-  CHECK(is.good(), "couldn't open file "  <<filename);
+  CHECK(is.good(), "couldn't open file " <<filename);
   
   arr vertices, normals, frames, tailsHeads;
   uintA faces;
@@ -46,7 +46,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   String::readEatStopSymbol = true;
   
   for(;;){
-    CHECK(is.good(), "error in scanning the file (previous tag = `"  <<tag  <<"'");
+    CHECK(is.good(), "error in scanning the file (previous tag = `" <<tag <<"'");
     String::readStopSymbols="\n\r\t ";  //space terminates tags
     is >>tag;
     String::readStopSymbols="\n\r\t\"";       //quotes terminate names
@@ -80,7 +80,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
       continue;
     }
     if(tag=="quit"){ CHECK(is.good(), "not perfect import..."); break; }
-    HALT("unknown tag `"  <<tag  <<"'");
+    HALT("unknown tag `" <<tag <<"'");
   }
   
   ors::Vector *w;
@@ -97,7 +97,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   for(i=0; i<G.N; i++){
     for(b=0; b<names.N; b++){ if(G(i).name==names(b)) break; }
     if(b==names.N){
-      cout  <<"unknown body: "  <<G(i).name  <<endl;
+      cout <<"unknown body: " <<G(i).name <<endl;
     }else{
       for(j=0; j<G(i).verts.N; j++) mesh.G(G(i).verts(j))=b;
     }

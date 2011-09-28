@@ -8,9 +8,10 @@
 
  */
 
-#define MT_IMPLEMENTATION
+
 #include <MT/ors.h>
 #include <MT/gaussianProcess.h>
+#include <MT/opengl.h>
 #include <SD/ISF_GP.h>
 #include <SD/utils.h>
 #include <SD/surface_helpers.h>
@@ -44,7 +45,7 @@ show(MeshObject *o, uint win=0, const char * msg=""){
     gl[win] = new OpenGL;
     gl[win]->add(drawBase,NULL);
     gl[win]->add(glDrawMeshObject, o);
-    gl[win]->add(plotDrawOpenGL,plotModule.WS);
+    gl[win]->add(glDrawPlot, &plotModule);
   }
 
   if (!with_GL) return; // non interactive

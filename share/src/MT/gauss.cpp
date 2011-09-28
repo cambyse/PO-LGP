@@ -45,7 +45,7 @@ void Gaussian::makeU() const { //the const is actually not true -- but oh well..
 void Gaussian::makeC() const { //the const is actually not true -- but oh well..
   if(okC) return;
   CHECK(okU, "can't make canonical rep without normal rep");
-  //CHECK(minDiag(U)>=1e-10, "inverting zero precision matrix:"  <<U);
+  //CHECK(minDiag(U)>=1e-10, "inverting zero precision matrix:" <<U);
   for(uint i=0; i<U.d0; i++){ if(U(i, i)<1e-10) U(i, i)=1e-10; }
   Gaussian *g=(Gaussian*)this; //get a non-const pointer (hack :-()
   inverse(g->C, U);
@@ -108,13 +108,13 @@ void Gaussian::setConditional(const arr& f, const arr& F, const arr& Q){
 void Gaussian::write(std::ostream& os) const {
   if(!okU) MT_MSG("warning: Gaussian not in U form!");
   makeU();
-  //os  <<"uU="  <<u  <<U;
-  if(trace(U)<1e-10) os  <<"{<uniform Gaussian>}";
+  //os <<"uU=" <<u <<U;
+  if(trace(U)<1e-10) os <<"{<uniform Gaussian>}";
   else {
     makeC();
-    os  <<"{ "  <<c  <<"\n  ";
+    os <<"{ " <<c <<"\n  ";
     C.write(os, " ", "\n   ");
-    os  <<" }";
+    os <<" }";
   }
   return;
 }
@@ -260,7 +260,7 @@ void product(Gaussian& x, const Gaussian& a, const Gaussian& b, double *logNorm)
     arr X, AX, BX;
     inverse(X, a.C + b.C);
     if(logNorm){
-      //cout  <<"computing norm:\na="  <<a.c  <<"b="  <<b.c  <<"\nX="  <<inverse(X)  <<endl;
+      //cout <<"computing norm:\na=" <<a.c <<"b=" <<b.c <<"\nX=" <<inverse(X) <<endl;
       *logNorm = logNNinv(a.c, b.c, X);
     }
     AX = a.C*X;
@@ -274,7 +274,7 @@ void product(Gaussian& x, const Gaussian& a, const Gaussian& b, double *logNorm)
     if(logNorm){
       a.makeC();
       b.makeC();
-      //cout  <<"computing norm:\na="  <<a.c  <<"b="  <<b.c  <<"\nX="  <<inverse(X)  <<endl;
+      //cout <<"computing norm:\na=" <<a.c <<"b=" <<b.c <<"\nX=" <<inverse(X) <<endl;
       *logNorm = logNNinv(a.c, b.c, inverse(a.C + b.C));
     }
     x.u = a.u + b.u;
@@ -341,7 +341,7 @@ void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double upd
     svd(U, w, V, F);
     double scale=norm(w);
     transpose(Vt, V);
-    //cout  <<U  <<w  <<V;
+    //cout <<U <<w <<V;
     for(uint k=F.d0; k<w.N; k++){ //eigen vectors with zero eigen value
       CHECK(w(k)<1e-10*scale, "eigen value should be zero!");
       vk.referToSubDim(Vt, k);
@@ -410,9 +410,9 @@ void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f){
   for(i=0; i<2*n; i++) b.C += Wmc * (X(i)-b.c)^(X(i)-b.c);
   
 #if 0
-  std::cout  <<"unscent transform : "
-             <<a  <<b  <<A  <<B
-             <<"error : "  <<sqrDistance(a, b)  <<' '  <<sqrDistance(A, B)  <<std::endl;
+  std::cout <<"unscent transform : "
+            <<a <<b <<A <<B
+            <<"error : " <<sqrDistance(a, b) <<' ' <<sqrDistance(A, B) <<std::endl;
             
   plotCovariance(a, A);
   plotPoints(X);
@@ -672,7 +672,7 @@ bool sameGaussian(const Gaussian &a, const Gaussian &b, double eps){
   }
 #else
   double d=KLDsym(a, b);
-  //DEBUGINF(cout  <<"KLD = "  <<d  <<endl;);
+  //DEBUGINF(cout <<"KLD = " <<d <<endl;);
   return d<1.;
 #endif
 }
@@ -702,9 +702,9 @@ void write(GaussianA& x, const char* name){
   MT::IOraw=true;
   for(uint i=0; i<x.N; i++){
     x(i).makeC();
-    os  <<x(i).c  <<" \t ";
+    os <<x(i).c <<" \t ";
     x(i).C.write(os, " ", " \t ");
-    os  <<endl;
+    os <<endl;
   }
 }
 
@@ -726,7 +726,7 @@ double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linea
   g.resize(m);
   uintA pi(n), pi_old;
   
-  cout  <<"** Gaussian reduction "  <<flush;
+  cout <<"** Gaussian reduction " <<flush;
   //randomly initialize pi
   uintA perm;
   arr D(n, m);
@@ -734,15 +734,15 @@ double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linea
     perm.setRandomPerm(n);
     perm.resizeCopy(m);
     for(j=0; j<m; j++) g(j).c=f(perm(j)).c; //randomly pick m centers
-    //cout  <<perm  <<endl;
+    //cout <<perm <<endl;
     //REGROUP
     for(i=0; i<n; i++) for(j=0; j<m; j++) D(i, j)=sqrDistance(f(i).c, g(j).c);
-    //cout  <<D  <<endl;
+    //cout <<D <<endl;
     for(i=0; i<n; i++) pi(i) = D[i].minIndex();
-    //cout  <<pi  <<endl;
+    //cout <<pi <<endl;
   }else{
     for(i=0; i<n; i++) pi(i) = (i*m)/(n+1);
-    //cout  <<pi  <<endl;
+    //cout <<pi <<endl;
   }
   
   double score;
@@ -755,7 +755,7 @@ double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linea
     MT::Array<uintA> groupI(m);
     for(j=0; j<m; j++){ group(j).clear(); groupP(j).clear(); groupI(j).clear(); }
     for(i=0; i<n; i++){ j=pi(i); group(j).append(&f(i)); groupP(j).append(P(i)); groupI(j).append(i); }
-    //cout  <<groupI  <<endl;
+    //cout <<groupI <<endl;
     for(j=0; j<m; j++){
       if(!groupP(j).N) return -1.;
       collapseMoG(g(j), groupP(j), group(j));
@@ -763,18 +763,18 @@ double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linea
     
     //REGROUP
     for(i=0; i<n; i++) for(j=0; j<m; j++) D(i, j)=KLD(f(i), g(j));
-    //cout  <<D  <<endl;
+    //cout <<D <<endl;
     for(i=0; i<n; i++) pi(i) = D[i].minIndex();
-    //cout  <<pi  <<endl;
+    //cout <<pi <<endl;
     
-    cout  <<'.'  <<flush;
+    cout <<'.' <<flush;
     
     score=0.;
     for(i=0; i<n; i++) score += P(i) * D(i, pi(i));
-    //cout  <<score  <<"  "  <<flush;
+    //cout <<score <<"  " <<flush;
     if(pi==pi_old) break;
   }
-  cout  <<" -> iterations="  <<k  <<" score="  <<score  <<endl;
+  cout <<" -> iterations=" <<k <<" score=" <<score <<endl;
   /*plotGnuplot();
   plotClear();
   plotGaussians(f);
@@ -794,8 +794,8 @@ double reduceIterated(GaussianA& g, uint m, const GaussianA& f, const arr& P, ui
     if(s!=-1.) if(best==-1. || s<best){ best=s; g=gk; }
   }
   std::sort(S.p, S.pstop);
-  cout  <<"scores = "  <<S  <<endl;
-  cout  <<"best   = "  <<best  <<endl;
+  cout <<"scores = " <<S <<endl;
+  cout <<"best   = " <<best <<endl;
   return best;
 }
 

@@ -405,10 +405,10 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
   }
   
 
-  TaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
-  TVs = ARRAY(&x);
+  TVs = ARRAY((TaskVariable*)&x);
   uint t;
   arr q,dq;
   C->getJointState(q);
@@ -425,7 +425,7 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
   //     controlledStep(q,W,send_msg);
       controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-      if(x.state==1 || C->getContact(x.i,obj->index)) break;
+      if(x.err<.05 || C->getContact(x.i,obj->index)) break;
     }
     if(C->bodies(id_grabbed)->inLinks.N){
       ors::Joint *e=C->bodies(id_grabbed)->inLinks(0);
@@ -442,7 +442,7 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.err<.05 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
     
@@ -462,7 +462,6 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
     s->cont = false;
   }
   
-  x.state_tol=.05;
   for(t=0;t<Tabort;t++){
     x.y_target.setCarray(obj->X.pos.p,3);
     if (x.y_target(2) < neutralHeight)
@@ -473,7 +472,7 @@ void ActionInterface::grab_final(const char *manipulator,const char *obj_grabbed
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.state==1) break;
+    if(x.err<.05) break;
     
     // might drop object
     if (t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
@@ -553,8 +552,8 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
     obj_below_id = getTableID();
   }
   
-  TaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,0);
-  TaskVariable z;
+  DefaultTaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,0);
+  DefaultTaskVariable z;
   //
   ors::Quaternion rot;
   rot = C->bodies(obj_dropped1_index)->X.rot;
@@ -569,8 +568,8 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
   f.rot.setDiff(VEC_z, upvec);
   z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,f,-1,ors::Transformation(),0);
   //
-  TaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
-  TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
+  DefaultTaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
+  DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
   
   r.setGainsAsAttractor(50,.1);
   r.y_prec=1.;
@@ -578,22 +577,19 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
   r.active=false;
   o.setGainsAsAttractor(20,.2);
   o.y_prec=1000.;
-  o.state_tol=.005;
   z.setGainsAsAttractor(20,.2);
   z.y_prec=1000.;
   z.y_target.resize(1);  z.y_target = 1.;
-  z.state_tol=.005;
   
   c.setGainsAsAttractor(20,.1);
   c.y_prec=10000.;
-  c.state_tol=.005;
   if(!swift) c.active=false;
   
   uint t;
   arr q,dq;
   C->getJointState(q);
 
-  TVs = ARRAY(&o,&z,&r,&c);
+  TVs = ARRAY<TaskVariable*>(&o,&z,&r,&c);
   
   
   // Calculate (noisy) target position
@@ -613,7 +609,6 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
   // Phase 1: up
   updateState(TVs);
   o.y_target(2) += .3;
-  o.state_tol=.05;
   for(t=0;t<Tabort;t++){
     if (o.y_target(2) < neutralHeight)
       o.y_target(2) += 0.05;
@@ -621,14 +616,13 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1) break;
+    if(o.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
   
   
   // Phase 2: above object
-  o.state_tol=.05;
   o.y_target(0) = x_target;
   o.y_target(1) = y_target;
   // WHERE TO GO ABOVE
@@ -638,7 +632,7 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1) break;
+    if(o.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
 
@@ -648,7 +642,6 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
   
   
   // Phase 3: down
-  o.state_tol=.002;
   // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
   double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .05;
   if (getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
@@ -674,7 +667,7 @@ void ActionInterface::dropObjectAbove_final(const char *obj_dropped, const char 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1 && z.state==1) break;
+    if(o.err<.002 && z.err<.005) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -827,12 +820,11 @@ void ActionInterface::relaxPosition(const char* message){
   
   arr I(q.N,q.N); I.setId();
   
-  TaskVariable x("full state",*C,qLinearTVT,0,0,0,0,I);
+  DefaultTaskVariable x("full state",*C,qLinearTVT,0,0,0,0,I);
   x.setGainsAsAttractor(20,.1);
   x.y_prec=1000.;
   x.y_target=q0; 
-  x.state_tol=.2;
-  TVs = ARRAY(&x);
+  TVs = ARRAY<TaskVariable*>(&x);
 
   uint t;
   for(t=0;t<Tabort;t++){
@@ -840,7 +832,7 @@ void ActionInterface::relaxPosition(const char* message){
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1) break;
+    if(x.err<.2) break;
   }
   
   // simplification: set on contacts for inhand-object
@@ -901,7 +893,7 @@ void ActionInterface::openBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.err<.05 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
@@ -944,7 +936,7 @@ void ActionInterface::closeBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.err<.05 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);

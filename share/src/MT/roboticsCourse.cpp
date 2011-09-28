@@ -106,8 +106,8 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
 
 void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
   if(rel){
-    ors::Transformation f;  f.pos.set(rel->p);
-    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(rel->p);
+    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, &v);
   }else{
     s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, NULL);
   }
@@ -115,18 +115,17 @@ void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
 
 void Simulator::kinematicsVec(arr& y, const char* bodyName, const arr* vec){
   if(vec){
-    ors::Vector v; v.set(vec->p);
-    ors::Transformation f;  f.rot.setDiff(v, VEC_z);
-    s->G.kinematicsZ(y, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(vec->p);
+    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.kinematicsZ(y, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
 void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
   if(rel){
-    ors::Transformation f;  f.pos.set(rel->p);
-    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(rel->p);
+    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, &v);
   }else{
     s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, NULL);
   }
@@ -134,11 +133,10 @@ void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
 
 void Simulator::jacobianVec(arr& J, const char* bodyName, const arr* vec){
   if(vec){
-    ors::Vector v; v.set(vec->p);
-    ors::Transformation f;  f.rot.setDiff(v, VEC_z);
-    s->G.jacobianZ(J, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(vec->p);
+    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.jacobianZ(J, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
@@ -186,8 +184,8 @@ void Simulator::stepOde(const arr& qdot, bool updateDisplay){
   s->ode.setMotorVel(s->G, qdot, 100.);
   s->ode.step(0.01);
   s->ode.importStateFromOde(s->G);
-  if(updateDisplay) s->gl.update();
 #endif
+  if(updateDisplay) s->gl.update();
 }
 
 struct sVisionSimulator {
@@ -247,9 +245,9 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   glGetDoublev(GL_MODELVIEW_MATRIX, Mmodel.p);
   glGetDoublev(GL_PROJECTION_MATRIX, Mproj.p);
   glGetIntegerv(GL_VIEWPORT, Mview.p);
-  //cout  <<Mview  <<endl;
-  //cout  <<Mmodel  <<endl;
-  //cout  <<Mproj  <<s->P  <<endl;
+  //cout <<Mview <<endl;
+  //cout <<Mmodel <<endl;
+  //cout <<Mproj <<s->P <<endl;
   //*/
   intA view(4);
   glGetIntegerv(GL_VIEWPORT, view.p);
@@ -257,16 +255,16 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   //project the points using the OpenGL matrix
   s->P = s->gl.P;
   s->P /= s->P(0, 0);
-  cout  <<"VisionSimulator:"
-        <<"\n  projection matrix used: "  <<s->P
-        <<"\n  camera position and quaternion: "  <<s->gl.camera.X->pos  <<"  "  <<s->gl.camera.X->rot
-        <<"\n  camera f="  <<.5*view(2)  <<" x0="  <<view(0)+.5*view(2)  <<" y0="  <<view(1)+.5*view(2)
-        <<endl;
+  cout <<"VisionSimulator:"
+       <<"\n  projection matrix used: " <<s->P
+       <<"\n  camera position and quaternion: " <<s->gl.camera.X->pos <<"  " <<s->gl.camera.X->rot
+       <<"\n  camera f=" <<.5*view(2) <<" x0=" <<view(0)+.5*view(2) <<" y0=" <<view(1)+.5*view(2)
+       <<endl;
   for(uint i=0; i<N; i++){
     x[i] = s->P*X[i];
     x[i]() /= x(i, 2);
     //gluProject(X(i, 0), X(i, 1), X(i, 2), Mmodel.p, Mproj.p, Mview.p, &y(0), &y(1), &y(2));
-    //cout  <<"y=" <<y  <<" x="  <<x[i]  <<endl;
+    //cout <<"y=" <<y <<" x=" <<x[i] <<endl;
   }
   rndGauss(x, noiseInPixel, true); //add Gaussian noise
   for(uint i=0; i<N; i++) x(i, 2)=1.;

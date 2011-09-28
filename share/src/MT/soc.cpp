@@ -18,6 +18,7 @@
 #include "opengl.h"
 #include "plot.h"
 #include "ors.h"
+#include "algos.h"
 
 uint countMsg=0, countSetq=0;
 
@@ -101,21 +102,21 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
 /*! \brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
-void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid){
-  uint t, T=soci.nTime(), n=soci.qDim();
-  arr phiq, xt, J, Jt, Jinv, W, Winv;
+void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
+  uint t, T= sys.nTime(), n= sys.qDim();
+  arr phiq, yt, J, Jt, Jinv, W, Winv;
   double prec;
   q.resize(T+1, n);
-  soci.getq0(q[0]());
+  sys.getq0(q[0]());
   for(t=1; t<=T; t++){
-    soci.getW(W, t);
+    sys.getW(W, t);
     inverse_SymPosDef(Winv, W);
-    soci.setq(q[t-1]);
-    soci.getPhi(phiq, taskid);
-    soci.getJJt(J, Jt, taskid);
-    soci.getTarget(xt, prec, taskid, t);
-    pseudoInverse(Jinv, J, Winv, 1e-5);
-    q[t]() = q[t-1] + Jinv*(xt-phiq);
+    sys.setq(q[t-1]);
+    sys.getPhi(phiq, taskid);
+    sys.getJJt(J, Jt, taskid);
+    sys.getTarget(yt, prec, taskid, t);
+    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
+    q[t]() = q[t-1] + Jinv*(yt-phiq);
   }
   
 }
@@ -134,6 +135,7 @@ soc::SocSystemAbstraction::SocSystemAbstraction(){
   gl=NULL;
   os=&cout;
   scalePower=0;
+  checkGrad=0.;
 }
 
 soc::SocSystemAbstraction::~SocSystemAbstraction(){
@@ -145,10 +147,13 @@ void soc::SocSystemAbstraction::getqv0(arr& q_){ NIY; }
 void soc::SocSystemAbstraction::getqv0(arr& q, arr& qd){ NIY; }
 double soc::SocSystemAbstraction::getTau(bool scaled){ NIY; }
 void soc::SocSystemAbstraction::setqv(const arr& q_, uint t){ NIY; }
+void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
 void soc::SocSystemAbstraction::setqv(const arr& q, const arr& qd, uint t){ NIY; }
 void soc::SocSystemAbstraction::getH(arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getHinv(arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getQ(arr& Q, uint t){ NIY; }
+void soc::SocSystemAbstraction::getQrate(arr& Qrate){ NIY; } // new
+void soc::SocSystemAbstraction::getHrateInv(arr& HrateInv){ NIY; }
 void soc::SocSystemAbstraction::getJqd(arr& Jqd_i, uint i){ NIY; }
 void soc::SocSystemAbstraction::getHessian(arr& H_i, uint i){ NIY; }
 void soc::SocSystemAbstraction::getTargetV(arr& v_i, double& prec, uint i, uint t){ NIY; }
@@ -213,63 +218,48 @@ void soc::SocSystemAbstraction::getProcess(arr& A, arr& tA, arr& Ainv, arr& invt
   transpose(invtA, Ainv);
 }
 
-/*void soc::SocSystemAbstraction::getQuadraticTaskCost(arr& R, arr& r, const arr& qt, uint t){
-  uint m=nTasks(), n=qDim();
-  uint i;
-  arr phi_qhat, J, Jt, x;
-  double prec;
-  R.resize(n, n); R.setZero();
-  r.resize(n);   r.setZero();
-  for(i=0;i<m;i++) if(isConditioned(i, t <<scalePower)){
-    getPhi      (phi_qhat, i);
-    getTarget   (x, prec, i, t <<scalePower);
-    getJJt      (J, Jt, i);
-    R += prec*Jt*J;
-    r -= (double)2.*prec*Jt*(x - phi_qhat + J*qt);
-  }
-}*/
-
-double soc::SocSystemAbstraction::getCosts(arr& R, arr& r, const arr& xt, uint t, double* rhat){
+double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, uint t, double* rhat){
   uint i, m=nTasks(), n=qDim();
   double C=0.;
   if(!dynamic){ //kinematic
-    arr phi_qhat, J, Jt, x;
+    arr phi_qhat, J, Jt, y;
     double prec;
     R.resize(n, n); R.setZero();
-    r.resize(n);   r.setZero();
+    r.resize(n);    r.setZero();
     if(rhat)(*rhat)=0.;
     for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
         getPhi(phi_qhat, i);
-        getTarget(x, prec, i, t <<scalePower);
-        C += prec*sqrDistance(x, phi_qhat);
+        getTarget(y, prec, i, t <<scalePower);
+        C += prec*sqrDistance(y, phi_qhat);
         getJJt(J, Jt, i);
         R += prec*Jt*J;
-        r += prec*Jt*(x - phi_qhat + J*xt);
-        if(rhat)(*rhat) += prec*sumOfSqr(x - phi_qhat + J*xt);
+        r += prec*Jt*(y - phi_qhat + J*xt);
+        if(rhat)(*rhat) += prec*sumOfSqr(y - phi_qhat + J*xt);
       }
   }else{
     uint n2=2*n;
-    arr phi_qhat, Jqd, J, Jt, x, v, Ri, ri, qt;
-    if(xt.N==n) qt=xt; else qt=xt.sub(0, n-1);
+    CHECK(xt.N==n2,"");
+    arr phi_qhat, Jqd, J, Jt, y, v, Ri, ri, qt;
+    qt=xt.sub(0, n-1);
     double prec, precv;
-    R.resize(n2, n2); R.setZero();
-    r.resize(n2);    r.setZero();
+    R.resize(n2, n2);  R.setZero();
+    r.resize(n2);      r.setZero();
     Ri.resize(n2, n2); Ri.setZero();
-    ri.resize(n2);    ri.setZero();
+    ri.resize(n2);     ri.setZero();
     if(rhat)(*rhat)=0.;
     for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
         getPhi(phi_qhat, i);
-        getTarget(x, prec, i, t <<scalePower);
-        C += prec*sqrDistance(x, phi_qhat);
+        getTarget(y, prec, i, t <<scalePower);
+        C += prec*sqrDistance(y, phi_qhat);
         getJqd(Jqd, i);
         getTargetV(v, precv, i, t <<scalePower);
         C += precv*sqrDistance(v, Jqd);
         getJJt(J, Jt, i);
         Ri.setMatrixBlock(prec*Jt*J, 0, 0);
         Ri.setMatrixBlock(precv*Jt*J, n, n);
-        ri.setVectorBlock(prec*Jt*(x - phi_qhat + J*qt), 0);
+        ri.setVectorBlock(prec*Jt*(y - phi_qhat + J*qt), 0);
         ri.setVectorBlock(precv*Jt*v, n);
-        if(rhat)(*rhat) += prec*sumOfSqr(x - phi_qhat + J*qt) + precv*sumOfSqr(v);
+        if(rhat)(*rhat) += prec*sumOfSqr(y - phi_qhat + J*qt) + precv*sumOfSqr(v);
         R += Ri;
         r += ri;
       }
@@ -280,6 +270,8 @@ double soc::SocSystemAbstraction::getCosts(arr& R, arr& r, const arr& xt, uint t
       R *= 2.;
     }
   }*/
+  
+  if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
   return C;
 }
 
@@ -289,39 +281,73 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   JBar.clear();
   arr phi_q, phi_v, Jac, JacT, y, v;
   double prec, precv;
-  if(!dynamic){ //kinematic
-    for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
-        getPhi(phi_q, i);
-        getTarget(y, prec, i, t <<scalePower);
-        getJJt(Jac, JacT, i);
-        phiBar.append(sqrt(prec)*(phi_q - y));
-        JBar  .append(sqrt(prec)*Jac);
-      }
-  }else{
-    for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
-        getPhi(phi_q, i);
-        //getJqd       (phi_v, i);
-        getTarget(y, prec , i, t <<scalePower);
-        getTargetV(v, precv, i, t <<scalePower);
-        getJJt(Jac, JacT, i);
-        CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
-        phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
-        uint n=phi_q.N;
-        
-        arr tmp;
-        tmp.setBlockVector(sqrt(prec)*(phi_q - y), sqrt(precv)*(phi_v - v));
-        phiBar.append(tmp);
-        
-        tmp.resize(2*n, 2*Jac.d1);  tmp.setZero();
-        tmp.setMatrixBlock(sqrt(prec)*Jac, 0, 0);
-        tmp.setMatrixBlock(sqrt(precv)*Jac, n, Jac.d1);
-        JBar.append(tmp);
-      }
+  for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
+    getPhi(phi_q, i);
+    getTarget(y, prec, i, t <<scalePower);
+    getJJt(Jac, JacT, i);
+    phiBar.append(sqrt(prec)*(phi_q - y));
+    if(dynamic){
+      getTargetV(v, precv, i, t <<scalePower);
+      getJJt(Jac, JacT, i);
+      CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
+      phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
+      phiBar.append(sqrt(precv)*(phi_v - v));
+      
+      arr tmp;
+      tmp.resize(2*y.N, 2*Jac.d1);  tmp.setZero();
+      tmp.setMatrixBlock(sqrt(prec)*Jac, 0, 0);
+      tmp.setMatrixBlock(sqrt(precv)*Jac, y.N, Jac.d1);
+      JBar.append(tmp);
+    }else{
+      JBar.append(sqrt(prec)*Jac);
+    }
   }
   JBar.reshape(phiBar.N, xt.N);
   if(t!=nTime()){ //don't multiply task costs for the final time slice!!
     phiBar *= sqrt(double(1 <<scalePower));
     JBar   *= sqrt(double(1 <<scalePower));
+  }
+
+  if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
+}
+
+
+void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint t){
+  double checkGrad_old = checkGrad;
+  checkGrad=0.;
+  
+  struct GradientFunction{
+    soc::SocSystemAbstraction *sys;
+    uint t;
+ 
+    static void staticf(arr& y, arr *grad, const arr& x, void *_gf){
+      GradientFunction *gf= (GradientFunction*)_gf;
+      gf->sys->setx(x);
+      arr JBar;
+      gf->sys->getTaskCostTerms(y, JBar, x, gf->t);
+      if(grad) *grad=JBar;
+    }
+  } gf = { this, t};
+
+  if(!checkGradient(gf.staticf, &gf, xt, 1e-6)){
+    cout <<"Task dimension infos:";
+    MT::Array<const char*> names;
+    uintA dims;
+    getTaskInfo(names, dims, t);
+    cout <<names <<dims <<endl;
+  }
+  
+  setx(xt);
+  checkGrad = checkGrad_old;
+}
+
+void soc::SocSystemAbstraction::getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t){
+  uint i, m=nTasks();
+  listDelete(names);
+  dims.clear();
+  for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
+    names.append(taskName(i));
+    dims.append(taskDim(i));
   }
 }
 
@@ -370,11 +396,11 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
         getJJt(J, Jt, i);
         cdir.append(-J);
         *if(phi_qhat(0)>1.){
-          cout  <<"constraint violated: " <<phi_qhat  <<" -> making it more graceful.."  <<endl;
+          cout <<"constraint violated: " <<phi_qhat <<" -> making it more graceful.." <<endl;
           phi_qhat=1.;
         }*
         coff.append(phi_qhat-J*qt-5.);
-        //cout  <<"qt= "  <<qt  <<"\nJ*qt="   <<J*qt  <<"\nphi_qhat= "  <<phi_qhat  <<endl;
+        //cout <<"qt= " <<qt <<"\nJ*qt="  <<J*qt <<"\nphi_qhat= " <<phi_qhat <<endl;
         con++;
       }
       */
@@ -429,7 +455,7 @@ void soc::SocSystemAbstraction::controlledDynamicTrajectory(arr& q, const arr& u
     x.setBlockVector(q[t], qd[t]);
     getProcessDynamic(A, a, B);
     xx = A*x + a + B*u[t];
-    cout  <<"xx = "  <<xx  <<"\nq="  <<q[t+1]  <<qd[t+1]  <<endl;
+    cout <<"xx = " <<xx <<"\nq=" <<q[t+1] <<qd[t+1] <<endl;
 #endif
   }
 }
@@ -495,7 +521,7 @@ double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int whichTask, bool
     }
   if(verbose){
     cout <<MT_HERE <<" total=" <<C;
-    for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout  <<" \t" <<taskName(i) <<'=' <<taskCi(i);
+    for(i=iMin; i<=iMax; i++) if(isConditioned(i, t)) cout <<" \t" <<taskName(i) <<'=' <<taskCi(i);
     cout <<endl;
   }
   return C;
@@ -556,26 +582,26 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     MT::open(fil, "z.trana");
     for(t=0; t<T; t++){
       fil
-       <<"time "  <<t
-       <<"  ctrlC "  <<ctrlC(t)
-       <<"  taskC "  <<taskC(t)
-       <<"  totC "   <<ctrlC(t)+taskC(t)
-       <<"  q "  <<q[t]
-       <<endl;
+      <<"time " <<t
+      <<"  ctrlC " <<ctrlC(t)
+      <<"  taskC " <<taskC(t)
+      <<"  totC "  <<ctrlC(t)+taskC(t)
+      <<"  q " <<q[t]
+      <<endl;
     }
     gnuplot("plot 'z.trana' us 0:4 title 'ctrl costs','z.trana' us 0:6 title 'task costs','z.trana' us 0:8 title 'tot costs'");
   }
   
 #ifdef NIKOLAY
   if(os) *os
-     <<" "  <<taskCsum
-     <<" "  <<ctrlCsum
-     <<" "  <<taskCsum+ctrlCsum  <<endl;
+    <<" " <<taskCsum
+    <<" " <<ctrlCsum
+    <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-     <<"  task-cost "  <<taskCsum
-     <<"  control-cost "  <<ctrlCsum
-     <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+    <<"  task-cost " <<taskCsum
+    <<"  control-cost " <<ctrlCsum
+    <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
     
   return taskCsum+ctrlCsum;
@@ -593,10 +619,10 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     setx(x[t]);
     getTaskCostTerms(Phi, PhiJ, x[t], t);
     c1=sumOfSqr(Phi);
-    c3=getCosts(R, r, x[t], t);
+    c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
-    //cout  <<c1  <<' '  <<c2  <<' '  <<c3  <<endl;
-    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"   <<c1  <<' '  <<c2  <<' '  <<c3);
+    //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
+    if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
     if(t<T){
@@ -631,21 +657,21 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         c3 = sqrDistance(W, x[t+1], A*x[t] + a);
         
         //compare the accelerations:
-        //cout  <<qdd  <<endl  <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1))  <<endl;
+        //cout <<qdd <<endl <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1)) <<endl;
         
         //c3 = sqrDistance(tmp, x[t+1], A*x[t]+a);
-        //cout  <<W  <<endl  <<inverse(B*inverse(H)*(~B))  <<endl;
+        //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
-      //cout  <<c1  <<' '  <<c2  <<' '  <<c3  <<' '  <<endl;
+      //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
       //if(t==0)
       //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
       ctrlCsum+=c3;
     }
   }
-  cout  <<"costChecks: "
-        <<"  task-cost "  <<taskCsum
-        <<"  control-cost "  <<ctrlCsum
-        <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+  cout <<"costChecks: "
+       <<"  task-cost " <<taskCsum
+       <<"  control-cost " <<ctrlCsum
+       <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 }
 
 
@@ -653,7 +679,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 void soc::SocSystemAbstraction::displayState(const arr *q, const arr *Qinv, const char *text, bool reportVariables){
   if(gl){
     if(q) setq(*q);
-    if(text) gl->text.clr()  <<text;
+    if(text) gl->text.clr() <<text;
     gl->update();
   }else{
   }
@@ -666,8 +692,8 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0; k<=(uint)num; k++){
     t = k*T/num;
-    if(Qinv) displayState(&q[t], &(*Qinv)[t](), STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
-    else     displayState(&q[t], NULL         , STRING(tag  <<" (time "  <<std::setw(3)  <<t  <<'/'  <<T  <<')'));
+    if(Qinv) displayState(&q[t](), &(*Qinv)[t](), STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
+    else     displayState(&q[t](), NULL         , STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')'));
     if(steps==-1) gl->watch();
   }
   if(steps==1) gl->watch();
@@ -751,30 +777,31 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
     std::ofstream fil;
     MT::open(fil, "z.trana");
     for(t=0; t<=T; t++){
-      fil  <<"time "  <<t*tau
-       <<"  ctrlC "  <<ctrlC(t)
-       <<"  taskC "  <<taskC(t);
-      fil  <<"  taskCi "; taskCi[t].writeRaw(fil);
-      fil  <<"  taskDx "; taskDx[t].writeRaw(fil);
-      fil  <<"  taskDv "; taskDv[t].writeRaw(fil);
-      fil  <<"  q "; q[t].writeRaw(fil);
-      fil  <<endl;
+      fil <<"time " <<t*tau
+      <<"  ctrlC " <<ctrlC(t)
+      <<"  taskC " <<taskC(t);
+      fil <<"  taskCi "; taskCi[t].writeRaw(fil);
+      fil <<"  taskDx "; taskDx[t].writeRaw(fil);
+      fil <<"  taskDv "; taskDv[t].writeRaw(fil);
+      fil <<"  q "; q[t].writeRaw(fil);
+      fil <<endl;
     }
     MT::String cmd;
-    cmd  <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
-    for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd  <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
+    cmd <<"set style data linespoints\n";
+    cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
+    for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
     gnuplot(cmd);
   }
 #ifdef NIKOLAY
   if(os) *os
-     <<" "  <<taskCsum
-     <<" "  <<ctrlCsum
-     <<" "  <<taskCsum+ctrlCsum  <<endl;
+    <<" " <<taskCsum
+    <<" " <<ctrlCsum
+    <<" " <<taskCsum+ctrlCsum <<endl;
 #else
   if(os) *os
-     <<"  task-cost "  <<taskCsum
-     <<"  control-cost "  <<ctrlCsum
-     <<"  total-cost "  <<taskCsum+ctrlCsum  <<endl;
+    <<"  task-cost " <<taskCsum
+    <<"  control-cost " <<ctrlCsum
+    <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
   return taskCsum+ctrlCsum;
 }

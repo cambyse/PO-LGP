@@ -71,7 +71,7 @@ void inverse_LU(arr& Xinv, const arr& X){
   uint me;
   _D=X*Xinv;
   double err=maxDiff(_D, D, &me);
-  CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err  <<" "  <<_D.elem(me)  <<"!="  <<D.elem(me));
+  CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me));
 #endif
 }
 
@@ -93,7 +93,7 @@ void LU_decomposition(arr& L, arr& U, const arr& X){
     L(i, i)=1.;
     for(; j<n; j++)     U(i, j) = LU(i, j);
   }
-  cout  <<X  <<endl  <<L*U  <<endl  <<idx  <<endl  <<d  <<endl;
+  cout <<X <<endl <<L*U <<endl <<idx <<endl <<d <<endl;
 }
 }
 

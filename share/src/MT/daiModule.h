@@ -55,14 +55,14 @@ void createDai(DaiInterface& dai, const VariableList& vars, const FactorList& fa
   dai::METH x( dai.fg, opts OPT ); \
   x.init(); \
   x.run(); \
-  cout  <<#METH  <<" node marginals:"  <<endl; \
+  cout <<#METH <<" node marginals:" <<endl; \
   for( size_t i = 0; i < dai.fg.nrVars(); i++ ) \
-    cout  <<x.belief(dai.fg.var(i))  <<endl; \
-  cout  <<"Exact log partition sum: "  <<x.logZ()  <<endl;
+    cout <<x.belief(dai.fg.var(i)) <<endl; \
+  cout <<"Exact log partition sum: " <<x.logZ() <<endl;
 
-/*cout  <<#METH  <<" factor marginals:"  <<endl; \
+/*cout <<#METH <<" factor marginals:" <<endl; \
   for( size_t I = 0; I < dai.fg.nrFactors(); I++ ) \
-    cout  <<x.belief(dai.fg.factor(I).vars())  <<endl; \
+    cout <<x.belief(dai.fg.factor(I).vars()) <<endl; \
     */
 
 void inference(DaiInterface& dai){

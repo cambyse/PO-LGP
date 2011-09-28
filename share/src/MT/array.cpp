@@ -32,7 +32,7 @@ const bool lapackSupported=true;
 #else
 const bool lapackSupported=false;
 #endif
-uint64_t globalMemoryTotal=0, globalMemoryBound=1ull <<30; //this is 1GB
+uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
 bool globalMemoryStrict=false;
 }
 //int ARRAYOLDREAD=0;
@@ -74,7 +74,7 @@ arr rand(const uintA& d){  arr z;  z.resize(d);  rndUniform(z, false); return z;
 arr randn(const uintA& d){  arr z;  z.resize(d);  rndGauss(z, 1., false);  return z;  }
 
 
-arr Diag(double d, uint n){
+arr diag(double d, uint n){
   arr z;
   z.setDiag(d, n);
   return z;
@@ -139,22 +139,22 @@ uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort){
   double err;
   arr dD, I;
   setDiagonal(dD, d);
-  //cout  <<U  <<dD  <<Vt;
+  //cout <<U <<dD <<Vt;
   //Atmp = V * D * U;
   arr Atmp;
   Atmp = U * dD * ~V;
-  //cout  <<"\nA="  <<A  <<"\nAtmp="  <<Atmp  <<"U="  <<U  <<"W="  <<dD  <<"~V="  <<~V  <<endl;
-  std::cout  <<"SVD is correct:  "  <<(err=maxDiff(Atmp, A))  <<' '  <<endl;    CHECK(err<MT_CHECK_SVD, "");
+  //cout <<"\nA=" <<A <<"\nAtmp=" <<Atmp <<"U=" <<U <<"W=" <<dD <<"~V=" <<~V <<endl;
+  std::cout <<"SVD is correct:  " <<(err=maxDiff(Atmp, A)) <<' ' <<endl;    CHECK(err<MT_CHECK_SVD, "");
   if(A.d0<=A.d1){
     I.setId(U.d0);
-    std::cout  <<"U is orthogonal: "  <<(err=maxDiff(U * ~U, I))  <<' '  <<endl;  CHECK(err<MT_CHECK_SVD, "");
+    std::cout <<"U is orthogonal: " <<(err=maxDiff(U * ~U, I)) <<' ' <<endl;  CHECK(err<MT_CHECK_SVD, "");
     I.setId(V.d1);
-    std::cout  <<"V is orthogonal: "  <<(err=maxDiff(~V * V, I))  <<endl;        CHECK(err<MT_CHECK_SVD, "");
+    std::cout <<"V is orthogonal: " <<(err=maxDiff(~V * V, I)) <<endl;        CHECK(err<MT_CHECK_SVD, "");
   }else{
     I.setId(U.d1);
-    std::cout  <<"U is orthogonal: "  <<(err=maxDiff(~U * U, I))  <<' '  <<endl;  CHECK(err<MT_CHECK_SVD, "");
+    std::cout <<"U is orthogonal: " <<(err=maxDiff(~U * U, I)) <<' ' <<endl;  CHECK(err<MT_CHECK_SVD, "");
     I.setId(V.d0);
-    std::cout  <<"V is orthogonal: "  <<(err=sqrDistance(V * ~V, I))  <<endl;        CHECK(err<1e-5, "");
+    std::cout <<"V is orthogonal: " <<(err=sqrDistance(V * ~V, I)) <<endl;        CHECK(err<1e-5, "");
   }
   MT::useLapack=uselapack;
 #endif
@@ -179,11 +179,11 @@ void check_inverse(const arr& Ainv, const arr& A){
   uint me;
   _D=A*Ainv;
   double err=maxDiff(_D, D, &me);
-  cout  <<"inverse is correct: "  <<err  <<endl;
+  cout <<"inverse is correct: " <<err <<endl;
   if(A.d0<10){
-    CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err  <<" "  <<_D.elem(me)  <<"!="  <<D.elem(me)  <<"\nA=" <<A  <<"\nAinv="  <<Ainv  <<"\nA*Ainv="  <<_D);
+    CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me) <<"\nA=" <<A <<"\nAinv=" <<Ainv <<"\nA*Ainv=" <<_D);
   }else{
-    CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err  <<" "  <<_D.elem(me)  <<"!="  <<D.elem(me));
+    CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me));
   }
 #endif
 }
@@ -740,7 +740,7 @@ uint SUS(const arr& p){
     sum+=p(i);
     if(sum>ptr) return i;
   }
-  HALT("error in rnd::SUS(p) -> p not normalized? "  <<p);
+  HALT("error in rnd::SUS(p) -> p not normalized? " <<p);
   return 0;
 }
 
@@ -783,13 +783,13 @@ void write(const arr& X, const arr& Y, const char* name){
   MT::IOraw=true;
   uint i, j;
   if(X.nd==1){
-    for(i=0; i<X.N; i++) os  <<X(i)  <<' '  <<Y(i)  <<std::endl;
+    for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<std::endl;
   }
   if(X.nd==2){
     for(i=0; i<X.d0; i++){
-      for(j=0; j<X[i].N; j++) os  <<X[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Y[i].elem(j)  <<' ';
-      os  <<std::endl;
+      for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
+      os <<std::endl;
     }
   }
 }
@@ -800,14 +800,14 @@ void write(const arr& X, const arr& Y, const arr& Z, const char* name){
   MT::IOraw=true;
   uint i, j;
   if(X.nd==1){
-    for(i=0; i<X.N; i++) os  <<X(i)  <<' '  <<Y(i)  <<' '  <<Z(i)  <<std::endl;
+    for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<std::endl;
   }
   if(X.nd==2){
     for(i=0; i<X.d0; i++){
-      for(j=0; j<X[i].N; j++) os  <<X[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Y[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Z[i].elem(j)  <<' ';
-      os  <<std::endl;
+      for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
+      os <<std::endl;
     }
   }
 }
@@ -818,15 +818,15 @@ void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const char* n
   MT::IOraw=true;
   uint i, j;
   if(X.nd==1){
-    for(i=0; i<X.N; i++) os  <<X(i)  <<' '  <<Y(i)  <<' '  <<Z(i)  <<' '  <<A(i)  <<std::endl;
+    for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<' ' <<A(i) <<std::endl;
   }
   if(X.nd==2){
     for(i=0; i<X.d0; i++){
-      for(j=0; j<X[i].N; j++) os  <<X[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Y[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Z[i].elem(j)  <<' ';
-      for(j=0; j<A[i].N; j++) os  <<A[i].elem(j)  <<' ';
-      os  <<std::endl;
+      for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
+      for(j=0; j<A[i].N; j++) os <<A[i].elem(j) <<' ';
+      os <<std::endl;
     }
   }
 }
@@ -837,16 +837,16 @@ void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const arr& B,
   MT::IOraw=true;
   uint i, j;
   if(X.nd==1){
-    for(i=0; i<X.N; i++) os  <<X(i)  <<' '  <<Y(i)  <<' '  <<Z(i)  <<' '  <<A(i)  <<' '  <<B(i)  <<std::endl;
+    for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<' ' <<A(i) <<' ' <<B(i) <<std::endl;
   }
   if(X.nd==2){
     for(i=0; i<X.d0; i++){
-      for(j=0; j<X[i].N; j++) os  <<X[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Y[i].elem(j)  <<' ';
-      for(j=0; j<Y[i].N; j++) os  <<Z[i].elem(j)  <<' ';
-      for(j=0; j<A[i].N; j++) os  <<A[i].elem(j)  <<' ';
-      for(j=0; j<B[i].N; j++) os  <<B[i].elem(j)  <<' ';
-      os  <<std::endl;
+      for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
+      for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
+      for(j=0; j<A[i].N; j++) os <<A[i].elem(j) <<' ';
+      for(j=0; j<B[i].N; j++) os <<B[i].elem(j) <<' ';
+      os <<std::endl;
     }
   }
 }
@@ -855,10 +855,10 @@ void write_ppm(const byteA &img, const char *file_name, bool swap_rows){
   CHECK(img.nd==2 || (img.nd==3 && img.d2==3), "only rgb or gray images to ppm");
   ofstream os;
   os.open(file_name, std::ios::out | std::ios::binary);
-  if(!os.good()) HALT("could not open file `"  <<file_name  <<"' for output");
+  if(!os.good()) HALT("could not open file `" <<file_name <<"' for output");
   switch(img.d2){
-    case 0:  os  <<"P5 " <<img.d1  <<' '  <<img.d0  <<" 255\n";  break; //PGM
-    case 3:  os  <<"P6 " <<img.d1  <<' '  <<img.d0  <<" 255\n";  break; //PPM
+    case 0:  os <<"P5 " <<img.d1 <<' ' <<img.d0 <<" 255\n";  break; //PGM
+    case 3:  os <<"P6 " <<img.d1 <<' ' <<img.d0 <<" 255\n";  break; //PPM
   }
   if(!swap_rows){
     os.write((char*)img.p, img.N);
@@ -871,8 +871,8 @@ void read_ppm(byteA &img, const char *file_name, bool swap_rows){
   uint mode, width, height, max;
   ifstream is;
   is.open(file_name, std::ios::in | std::ios::binary);
-  if(!is.good()) HALT("could not open file `"  <<file_name  <<"' for input");
-  if(is.get()!='P') HALT("NO PPM FILE:"  <<file_name);
+  if(!is.good()) HALT("could not open file `" <<file_name <<"' for input");
+  if(is.get()!='P') HALT("NO PPM FILE:" <<file_name);
   is >>mode;
   if(MT::peerNextChar(is)=='#') MT::skipLine(is);
   is >>width >>height >>max;
@@ -1096,14 +1096,14 @@ void sparseProduct(arr& y, arr& A, const arr& x){
 
 void scanArrFile(const char* name){
   ifstream is(name, std::ios::binary);
-  CHECK(is.good(), "couldn't open file "  <<name);
+  CHECK(is.good(), "couldn't open file " <<name);
   arr x;
   String tag;
   for(;;){
     tag.read(is, " \n\r\t", " \n\r\t");
     if(!is.good() || tag.N()==0) return;
     x.readTagged(is, NULL);
-    x.writeTagged(cout, tag);  cout  <<endl;
+    x.writeTagged(cout, tag);  cout <<endl;
     if(!is.good()) return;
   }
 }

@@ -1,0 +1,244 @@
+{{toc}}
+
+
+h1. Demo ``pseudo code''
+
+* camera loops: -> cameraL, cameraR
+
+* early vision steps: cameraL, cameraR -> hsvL, hsvR
+
+* perception: hsvL, hsvR -> object list, & ors??
+
+* decision making: ors -> next action
+
+* motion planning: next action + q0 -> v & Vinv trajectory
+
+* controller: v & Vinv -> next q
+
+* master: next q -> schunkHand, schunkArm
+
+
+h1. HowTos
+
+h2. Preparation: Controlling the Schunk Robot
+
+h3. Installing software
+
+* Get @mlr/share/@, @mlr/robot/@, @mlr/lib/@
+* Compile @esd@-libs in @mlr/lib/@ directory:
+** 32-bit: run @mlr/lib/esdcan-usb331-linux-2.6.x-x86-3.8.3>./BUILD@
+          ~and copy it to local folder: @sudo cp 
+          /lib/esdcan-usb331-linux-2.6.x-x86-3.8.3/lib32/libntcan.a
+          /usr/local/lib/@
+** 64-bit: run
+          @mlr/lib/esdcan-usb331-linux-2.6.x-x86\_64-3.8.3>./BUILD@~
+          and get the pre-compiled @libntcan.a@ from @achtauge@:
+          @scp achtauge:
+          "~mtoussai/lib/esdcan-usb331-linux-2.6.x-x86\_64-3.8.3/lib64/*"
+          mlr/lib/esdcan-usb331-linux-2.6.x-x86\_64-3.8.3/lib64/@ and
+          then copy it to @/usr/lib/local/@
+* Compile Schunk libraries: @schunkLWA@ and
+@schunkSDH-09-05-19/@
+* Get Joystick libraries: @sudo aptitude install libplib-dev@
+* You may want to define @MT\_IMPLEMENTATION@ in
+@share/make-config/@ : @CXXFLAGS += -DMT\_IMPLEMENTATION@ (create the
+file if it does not exist yet)
+* Specify path for @lib@-directory in @share/bin/mountHardware/@
+
+
+h3. Preparing session
+
+* Plug in 3 USB cables: arm, joystick, laser. Don't connect the hand yet (or
+it can mess up usb connections order)
+* go to application directory @cd mlr/robot/test/actions@
+* run driver setup script @share/bin/mountHardware@
+* open @MT.cfg@: set openHand, openSkin, openArm to 0 (specifies not
+to set up connections to hardware for Grobi safety)
+* make
+* (in case of SVN update:  Specify path for @lib@-directory in
+@share/bin/mountHardware/@)
+
+
+h2. Control in different hardware configurations
+
+* The joystick is used for all these modes.
+* @Joystick@: to turn it on, press small button on the back; note
+that after some time, it automatically turns off, so that you may want to turn
+it on again
+* Exectuable is usually: x..exe
+* Stop programs with Ctrl-C for all demos
+* Button 1 of Joystick commands Grobi to go back to standard position
+* After turning on Grobi, you have to wait for 10sec, before you can start;
+if he is making too much noise at beginning, then make a small move
+somewhere.
+* In case of problems with USB, check with dmesg. You might need a special
+USB adapter for connecting to Grobi's devices.
+
+
+
+h3. Simulation only
+
+* run x.exe
+* Play around in a simulated window
+* close with ctrl-c
+
+
+h3. Arm only
+
+Do not worry if you get a segmentation error, or if the terminal hangs up. Just
+close it and start a new one.
+
+* Set useThreads, openArm, schunkSendArmMotion to 1
+* Turn arm power ON
+* run x.exe
+* Now we control the arm with the joystick(see controls later)
+* close with ctrl-c
+
+h3. Arm and hand
+
+* Plug the USB of the hand
+*  Set openSDH = 1
+* run x.exe
+* Now we control both the arm and the hand gripper
+* close with ctrl-c
+
+h3. Arm and laser
+
+* Make sure laser usb plugged
+*  Set openLaser = 1 and openSDH = 0
+* Power laser on
+* run x.exe
+* Now the laser is scanning automatically and saving in z.laser 
+* Run for a short time (10 seconds) and close with ctrl-c
+* z.laser can be analyzed with {{{ /mlr/share/test/laser_image/x.exe }}}
+
+
+h3. Joystick commands
+
+For general movements, use the two analog sticks. They will move a virtual point on the top of the robot arm in 3d coordinates relative to the ground support world frame.
+
+* right stick left/right - move left/right
+* right stick top/down - move front/back
+* left stick top/down - move top/down
+
+h4. Special keys
+
+* Button 1 - move back to home position of robot, press continuously
+* Button 2 - hand control. Pressing and holding it activates the hand grip control: the cross-formed far left controller can open and close the gripper fingers
+* Button 3 - press and hold, now the right analog stick can rotate the arm top orientation.
+
+h2. Camera Calibration for 2D -> 3D mapping
+
+h3. Running robot to gather data (20min)
+* start {{{share/robot/followCameraTrack/x.exe}}}
+* need arm and camera on
+* needs orange ball glued on robot on top of blue blinking light
+* dont wear orange clothes :-)
+
+h3. Stop hardware calibration
+* usually enough when counter shows 4000 steps (the counter is the first output on the line. It gets updated every other 100 steps like 1,101,...)
+* copy file  {{{caliData}}} to {{{mlr/nikolay/code/RegressCalibrate/robot}}}
+
+h3. Preparation to extract parameters (few seconds)
+* change to {{{mlr/nikolay/code/RegressCalibrate/robot}}}
+* run MATLAB file {{{FilterRealTimings.m}}}
+* optionally look at plot and if it is noisy repeat hardware calibration
+(ideally you'll be able to see 4 smooth curves describing the eef position projected on particular dimension aginst timestep )
+
+h3. Calculating parameters (takes hours (literally))
+* run {{{x.exe}}} from {{{RegressCalibrate}}} directory to create {{{regparams}}} in {{{./robot}}}
+* copy file {{{regparams}}} to {{{src/NJ}}}; 
+* optionally -- for aligning the GL camera view to the bumblebee view
+  ** run {{{CameraLocation.m}}} in MATLAB
+  ** copy the projection matrices, and file {{{RotationMatrix}}}, the camera orientation matrices, to {{{src/NJ}}}
+
+h3. Using the projection matrices:
+* use functions in {{{NJ/VisionTrackRoutines.h}}}
+* see {{{10-nik-MultiPlan}}} for an example how to use them
+
+h2. Closing the system
+
+* Set openSchunk, openLaser, schunkSendMotion, openSDH to 0
+* Turn arm power off.
+* Cover robot with plastic bag
+* Turn joystick off, unplug all cables
+
+
+h1. Code Discussion
+
+h2. Questions
+
+* Is it a problem, that the Bumble is on forever?
+
+h2. holes in the code
+
+* If dofs are coupled (like the two finger): this should be handled with a general linear transform of the q vector. Isn't really done yet. I think this should be moved to SocOrs -- not SocAbstraction!
+* object movements are not copied from controller_ors to gui_ors
+* in EarlyVisionModule: the display (bounding box) of the segmentation should not modify the image (imgR and imgL)!!
+
+h2. potential simplifications
+
+* TaskVariables:
+** don't distinguish between update and update Jacobian - always update both
+** remove obsolete types
+** simplify constructor
+
+* ors::Graph has so many methods (from the old days, where I used it directly instead of wraped as a SocAbstraction). Remove?
+
+* AICO::stepKinematic: if ever non-robust, simply constrain the step size; or test if cost increased, then decrease step size and repeat at sample place
+
+* SocSystem: replace q by x! That is setx==setq for kinematic and setx=setqv for dynamic! This whole q stuff for (q,v) is irritating!!
+** same with the task variables: kinematic: y=phi, dynamic: y=(phi,Jdq)!!
+** define a routine to return the (weighted) "task-residual" sqrt(prec)*(phi-y_target) !!! define this to be psi!! The respective Jacobian is sqrt(prec)*J. This can be used everywhere much simpler!
+
+
+h2. feature wish list
+
+* OpenGL: multiple windows
+* ThreadClass: include runtime info, register each thread in a global list, have a routine that outputs information on all currently running threads
+* Lock (in thread.h): output a BIG warning if a read or write lock blocks the code for longer than a 1msec!!
+
+h2. What would be the optimal 'ROS' library?
+
+* 2 types of nodes: Information, Computation (in graphical models: Variable and Factor; in ROS: Topic and Node)
+* A Computation is a thread, can loop, step by external trigger, step with fixed metronome
+* An Information only contains data fields, has two methods for get and set which call lockRead and lockWrites and //copy// the information! No reference passing because not thread safe
+* There is global lists for all existing Informations and Computations
+* Perhaps there might be a mechanism to trigger a computation step when information changes (as with typical publisher-subscribe mdoels) - but that's perhaps not even necessary
+
+That's basic all! In comparison to ROS:
+* This is basically a simply publisher subscribe model; Information corresponds to ROS Topics; Computation corresponds to ROS Node
+* This setup could be implemented on top of ROS
+* However, in the simplest implementation everything is organized in threads on a single machine with a single memory space - this targets at current machines with many cores and one big shared memory.
+** Difference: the information is not passed via typed messages or TPC/IP or UDP, as for ROS topics; instead Informations can be arbitrary C++ structs - they are accessed directly via shared memory between threads.
+
+What's the point of defining another layer on top of ROS?
+* Limiting yourself to a more constraint set of conventions - don't use the full richness of topics, messages, services, etc
+* Could be implemented in a tiny two file C++ lib
+* Keep it concise
+* Easier to debug when everything would be implemented as threads of a single process
+
+
+h1. Documentation
+
+* sequence diagram of typical RobotController appication (kind of) (work in progress): 
+{{diag.jpg|img}}
+img:[[attachment:diag.jpg]]
+src:[[attachment:diag.tex]] (depends on Til Tantau's TikZ)
+
+
+h2. Coding conventions
+
+A **Module** is derived from ~StepThread; communication is via its public fields, perhaps thread-safe via using the //lock//.
+
+An **Inferface** (Swift, Joystick, DAI) interfaces to an external library without including headers of that library in its own header -- the interfacing is hidden in the cpp file.
+
+h2. Modules
+
+* EarlyVisionModule
+* GuiModule
+* PerceptionModule
+* GuiModule
+* SchunkArmModule
+* SchunkHandModule
+* SchunkSkinModule

@@ -18,7 +18,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *WS;
+  SocSystem_Ors_Workspace *s;
   
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
@@ -36,7 +36,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   
   //info
   void reportOnState(std::ostream& os);
-  void displayState(const arr *x, const arr *Q, const char *text=NULL, bool reportVariables=false);
+  void displayState(const arr *x, const arr *Q=NULL, const char *text=NULL, bool reportVariables=false);
   
   //implementations of virtual methods
   uint nTime();
@@ -45,6 +45,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   uint uDim();
   uint yDim(uint i);
   void getq0(arr& q);
+  void setq0(const arr& q);
   void getv0(arr& v);
   void getqv0(arr& q_);
   void getqv0(arr& q, arr& qd);
@@ -52,16 +53,19 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void setq(const arr& q, uint t=0);
   void setqv(const arr& q_, uint t=0);
   void setqv(const arr& q, const arr& qd, uint t=0);
-  void setq0AsCurrent();
+  void setx0AsCurrent();
   //void geth  (arr& h);
   void getW(arr& W, uint t);
   void getWinv(arr& Winv, uint t);
   void getH(arr& H, uint t);
   void getHinv(arr& Hinv, uint t);
   void getQ(arr& Q, uint t);
+  void getHrateInv(arr& HrateInv);
+  void getQrate(arr& Qrate);      
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);
+  uint taskDim(uint i);
   void getPhi(arr& phiq_i, uint i);
   void getJJt(arr& J_i, arr& Jt_i, uint i);
   void getHessian(arr& H_i, uint i);

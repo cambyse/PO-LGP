@@ -39,7 +39,7 @@ void AICO::init(soc::SocSystemAbstraction& _sys){
   
   if(MT::checkParameter<MT::String>("aico_filename")){
     MT::getParameter(filename, "aico_filename");
-    cout  <<"** output filename = '"  <<filename  <<"'"  <<endl;
+    cout <<"** output filename = '" <<filename <<"'" <<endl;
     os=new std::ofstream(filename);
   }else{
     os = &cout;
@@ -63,7 +63,7 @@ void AICO::iterate_to_convergence(const arr* q_init){
   
   for(uint k=0; k<max_iterations; k++){
     double d=step();
-    if(k && d<tolerance) break;
+    if(k && d<tolerance) break; //d*(1.+damping)
   }
 }
 
@@ -78,7 +78,7 @@ void AICO::init_messages(){
   r.resize(T+1, n);  R.resize(T+1, n, n);     r.setZero();  R   .setZero();  r[0]=0.;  R[0]=0.;
   rhat.resize(T+1);    rhat.setZero();
   xhat.resize(T+1, n);  xhat.setZero();  xhat[0]=x0;
-  q = xhat;
+  if(sys->dynamic) soc::getPositionTrajectory(q, b); else q=b;
   //dampingReference = qhat;
   dampingReference.clear();
   
@@ -111,16 +111,17 @@ void AICO::init_messages(){
   rememberOldState();
 }
 
-void AICO::init_trajectory(const arr& q_init, double _damping){
+void AICO::init_trajectory(const arr& q_init){
   init_messages();
   uint t, T=sys->nTime();
   CHECK(q_init.nd==2 && q_init.d0==T+1 && q_init.d1==sys->qDim(), "initial trajectory was wrong dimensionality");
-  soc::getPhaseTrajectory(b, q_init, sys->getTau());
-  damping = _damping;
+  if(sys->dynamic) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  sys->getx0(b[0]()); //overwrite with x0
   q=q_init;
   xhat = b;
-  s=b;  for(uint t=0; t<=T; t++){ Sinv[t].setDiag(damping);  }
+  s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }
   v=b;  for(uint t=0; t<=T; t++){ Vinv[t].setDiag(damping);  }
+    
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1.); //compute task message at reference!
   cost = evaluateTrajectory(b, display>0);
@@ -136,7 +137,7 @@ void AICO::shift_solution(int offset){
   if(sys->dynamic) n*=2;
 #else //take x0 to be the one specified by hatq[offset]!
   x0=xhat[offset];
-  sys->setq0AsCurrent();
+  sys->setx0AsCurrent();
   sys->setx(x0);
   if(sys->dynamic) n*=2;
 #endif
@@ -191,7 +192,7 @@ void AICO::initMessagesFromScaleParent(AICO *A){
   }
   if(sys->dynamic)  soc::getPositionTrajectory(q, b);  else  q=b;
   if(sys->os){
-    *sys->os  <<"AICOscaleInit(" <<T <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<-1.;
+    *sys->os <<"AICOscaleInit(" <<T <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<-1.;
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -209,10 +210,10 @@ void AICO::updateFwdMessage(uint t){
     inverse_SymPosDef(barS, Sinv[t-1] + R[t-1]);
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
-    St += A[t-1]*barS*tA[t-1];//cout  <<endl  <<endl  <<t  <<endl;
+    St += A[t-1]*barS*tA[t-1];//cout <<endl <<endl <<t <<endl;
     s[t] = a[t-1] + A[t-1]*(barS*(Sinv[t-1]*s[t-1] + r[t-1]));
     inverse_SymPosDef(Sinv[t](), St);
-    //cout  <<"s\n"  <<s[t]  <<endl  <<Sinv[t]  <<endl;
+    //cout <<"s\n" <<s[t] <<endl <<Sinv[t] <<endl;
 #else
     St = Q[t-1];
     St += B[t-1]*Hinv[t-1]*tB[t-1];
@@ -233,7 +234,7 @@ void AICO::updateBwdMessage(uint t){
   if(sys->dynamic){
     if(t<T){
       inverse_SymPosDef(barV, Vinv[t+1] + R[t+1]);
-      //cout  <<"R[t+1]="  <<R[t+1]  <<"Vinv[t+1]="  <<Vinv[t+1]  <<"barV="  <<barV  <<endl;
+      //cout <<"R[t+1]=" <<R[t+1] <<"Vinv[t+1]=" <<Vinv[t+1] <<"barV=" <<barV <<endl;
       Vt = Q[t];
       Vt += B[t]*Hinv[t]*tB[t];
       Vt += barV;
@@ -273,10 +274,16 @@ void AICO::updateBwdMessage(uint t){
   }
 }
 
-void AICO::updateTaskMessage(uint t, const arr& qhat_t, double tolerance){
-  if(maxDiff(xhat[t], qhat_t)<tolerance) return;
+void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance, double maxStepSize){
+  if(maxDiff(xhat[t], xhat_t)<tolerance) return;
   
-  xhat[t]() = qhat_t;
+  if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
+    arr Delta = xhat_t-xhat[t];
+    Delta *= maxStepSize/norm(Delta);
+    xhat[t]() += Delta;
+  }else{
+    xhat[t]() = xhat_t;
+  }
   countSetq++;
   sys->setx(xhat[t]);
   
@@ -285,11 +292,11 @@ void AICO::updateTaskMessage(uint t, const arr& qhat_t, double tolerance){
   sys->getHinv(Hinv[t](), t);
   if(!sys->dynamic) sys->getWinv(Winv[t](), t);
   sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
-  sys->getCosts(R[t](), r[t](), xhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
+  sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
   //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
 }
 
-void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation){
+void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation, double maxStepSize){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
@@ -304,7 +311,7 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   for(uint k=0; k<maxRelocationIterations; k++){
     if(!((!k && forceRelocation) || maxDiff(b[t], xhat[t])>tolerance)) break;
     
-    updateTaskMessage(t, b[t], 0.);
+    updateTaskMessage(t, b[t], 0., maxStepSize);
     
     //optional reupdate fwd or bwd message (if the dynamics might have changed...)
     //if(updateFwd) updateFwdMessage(t);
@@ -320,7 +327,7 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   }
 }
 
-void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance){
+void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, double maxStepSize){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
@@ -350,7 +357,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
       
       //add the damping
       if(aico->damping && aico->dampingReference.N){
-        J.append(Diag(aico->damping, x.N));
+        J.append(diag(aico->damping, x.N));
         phi.append(aico->damping*(x-aico->dampingReference[t]));
       }
       
@@ -373,7 +380,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   f.reuseOldCostTerms=true;
   f.reuseOldCostTerms=false;
   if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
-  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations);
+  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations, maxStepSize);
   
   sys->getQ(Q[t](), t);
   sys->getHinv(Hinv[t](), t);
@@ -435,7 +442,7 @@ double AICO::evaluateTrajectory(const arr& x, bool plot){
   }
   Cctrl(T)=0.;
   double Ct=sum(Ctask), Cc=sum(Cctrl);
-  if(sys->os) *sys->os  <<" task "  <<Ct  <<" ctrl "  <<Cc  <<" total "  <<Ct+Cc  <<endl;
+  if(sys->os) *sys->os <<" task " <<Ct <<" ctrl " <<Cc <<" total " <<Ct+Cc <<endl;
   if(plot){
     write(LIST(Cctrl, Ctask), "z.eval");
     gnuplot("plot 'z.eval' us 0:1 title 'control costs','z.eval' us 0:2 title 'task costs'");
@@ -451,13 +458,13 @@ void AICO::rememberOldState(){
 
 void AICO::perhapsUndoStep(){
   if(cost>cost_old){
-    //cout  <<" AICO REJECT: cost="  <<cost  <<" cost_old="  <<cost_old  <<endl;
+    //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
     damping *= 10.;
     dampingReference = b_old;
     cost = cost_old;  b = b_old;  q = q_old;  xhat = qhat_old;
     s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
   }else{
-    //cout  <<" AICO ACCEPT"  <<endl;
+    //cout <<" AICO ACCEPT" <<endl;
     damping /= 5.;
   }
 }
@@ -465,7 +472,7 @@ void AICO::perhapsUndoStep(){
 void AICO::displayCurrentSolution(){
   MT::timerPause();
   if(sys->os){
-    *sys->os  <<"AICO(" <<sys->nTime()  <<") "  <<std::setw(3)  <<sweep  <<" time "  <<MT::timerRead(false)  <<" setq "  <<countSetq  <<" diff "  <<b_step  <<" damp "  <<damping;
+    *sys->os <<"AICO(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping;
   }
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO - iteration " <<sweep));
@@ -481,20 +488,20 @@ double AICO::step(){
   switch(sweepMode){
       //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
     case smForwardly:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep);  //relocate once on fwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, 0, tolerance, false); //...not on bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep, 1.); //relocate once on fwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, 0, tolerance, false, 1.); //...not on bwd sweep
       break;
     case smSymmetric:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd & bwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?1:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep, 1.); //relocate once on fwd & bwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?1:0), tolerance, false, 1.);
       break;
     case smLocalGaussNewton:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance, !sweep); //relocate iteratively on
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance, false); //...fwd & bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance, !sweep, 1.); //relocate iteratively on
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false, 1.); //...fwd & bwd sweep
       break;
     case smLocalGaussNewtonDamped:
-      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance); //GaussNewton in fwd & bwd sweep
-      for(t=T+1; t--;)   updateTimeStep(t, false, true, (sweep?5:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance, 1.); //GaussNewton in fwd & bwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false, 1.);
       break;
     default: HALT("non-existing sweep mode");
   }
@@ -503,11 +510,11 @@ double AICO::step(){
   dampingReference=b;
   if(sys->dynamic) soc::getPositionTrajectory(q, b); else q=b;
   
-  for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8); //relocate once on fwd & bwd sweep
+  //for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8, 1.); //relocate once on fwd & bwd sweep
   
-  //cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
+  cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
   //sys->costChecks(b);
-  cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
+  //cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(sweep && damping) perhapsUndoStep();

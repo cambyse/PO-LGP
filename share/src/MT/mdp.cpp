@@ -27,51 +27,51 @@ void mdp::writeMDP_arr(const MDP& mdp, const char *filename, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
   else os.open(filename);
-  if(!os.good()) MT_MSG("could not open file `"  <<filename  <<"' for output");
-  mdp.Pxax.writeTagged(os, "Pxax", binary); os  <<endl;
-  mdp.Pyxa.writeTagged(os, "Pyxa", binary); os  <<endl;
-  mdp.Px  .writeTagged(os, "Px", binary);   os  <<endl;
-  mdp.Rax .writeTagged(os, "Rax", binary);  os  <<endl;
-  arr(&mdp.gamma, 1).writeTagged(os, "gamma", binary);  os  <<endl;
+  if(!os.good()) MT_MSG("could not open file `" <<filename <<"' for output");
+  mdp.Pxax.writeTagged(os, "Pxax", binary); os <<endl;
+  mdp.Pyxa.writeTagged(os, "Pyxa", binary); os <<endl;
+  mdp.Px  .writeTagged(os, "Px", binary);   os <<endl;
+  mdp.Rax .writeTagged(os, "Rax", binary);  os <<endl;
+  arr(&mdp.gamma, 1).writeTagged(os, "gamma", binary);  os <<endl;
 }
 
 void mdp::writeMDP_fg(const MDP_structured& mdp, std::ostream& os, bool brief){
-  os  <<mdp.vars  <<'\n'  <<endl;
+  os <<mdp.vars <<'\n' <<endl;
   if(!brief){
-    os  <<mdp.facs  <<endl;
+    os <<mdp.facs <<endl;
   }else{
     uint i; Factor *f;
-    for_list(i, f, mdp.facs){ if(i) os  <<"\n"; f->write(os, true); }
-    os  <<endl;
+    for_list(i, f, mdp.facs){ if(i) os <<"\n"; f->write(os, true); }
+    os <<endl;
   }
-  os  <<"\nmdp . {";
-  os  <<"\n  leftVars   "; listWriteNames(mdp.leftVars, os);
-  os  <<"\n  rightVars  "; listWriteNames(mdp.rightVars, os);
-  os  <<"\n  obsVars    "; listWriteNames(mdp.obsVars, os);
-  os  <<"\n  ctrlVars   "; listWriteNames(mdp.ctrlVars, os);
-  os  <<"\n  initFacs   "; listWriteNames(mdp.initFacs, os);
-  os  <<"\n  transFacs  "; listWriteNames(mdp.transFacs, os);
-  os  <<"\n  obsFacs    "; listWriteNames(mdp.obsFacs, os);
-  os  <<"\n  rewardFacs "; listWriteNames(mdp.rewardFacs, os);
-  os  <<"\n  gamma      ["  <<mdp.gamma  <<"]";
-  os  <<"\n}"  <<endl;
+  os <<"\nmdp . {";
+  os <<"\n  leftVars   "; listWriteNames(mdp.leftVars, os);
+  os <<"\n  rightVars  "; listWriteNames(mdp.rightVars, os);
+  os <<"\n  obsVars    "; listWriteNames(mdp.obsVars, os);
+  os <<"\n  ctrlVars   "; listWriteNames(mdp.ctrlVars, os);
+  os <<"\n  initFacs   "; listWriteNames(mdp.initFacs, os);
+  os <<"\n  transFacs  "; listWriteNames(mdp.transFacs, os);
+  os <<"\n  obsFacs    "; listWriteNames(mdp.obsFacs, os);
+  os <<"\n  rewardFacs "; listWriteNames(mdp.rewardFacs, os);
+  os <<"\n  gamma      [" <<mdp.gamma <<"]";
+  os <<"\n}" <<endl;
 }
 
 void mdp::writeFSC_fg(const FSC_structured& fsc, std::ostream& os, bool brief){
-  os  <<fsc.vars  <<'\n'  <<endl;
+  os <<fsc.vars <<'\n' <<endl;
   if(!brief){
-    os  <<fsc.facs  <<endl;
+    os <<fsc.facs <<endl;
   }else{
     uint i; Factor *f;
-    for_list(i, f, fsc.facs){ if(i) os  <<"\n"; f->write(os, true); }
-    os  <<endl;
+    for_list(i, f, fsc.facs){ if(i) os <<"\n"; f->write(os, true); }
+    os <<endl;
   }
-  os  <<"\nfsc . {";
-  os  <<"\n  leftVars  "; listWriteNames(fsc.leftVars, os);
-  os  <<"\n  rightVars "; listWriteNames(fsc.rightVars, os);
-  os  <<"\n  initFacs  "; listWriteNames(fsc.initFacs, os);
-  os  <<"\n  transFacs "; listWriteNames(fsc.transFacs, os);
-  os  <<"\n}"  <<endl;
+  os <<"\nfsc . {";
+  os <<"\n  leftVars  "; listWriteNames(fsc.leftVars, os);
+  os <<"\n  rightVars "; listWriteNames(fsc.rightVars, os);
+  os <<"\n  initFacs  "; listWriteNames(fsc.initFacs, os);
+  os <<"\n  transFacs "; listWriteNames(fsc.transFacs, os);
+  os <<"\n}" <<endl;
 }
 
 void mdp::readMDP(MDP_structured& mdp, const char *filename){
@@ -86,7 +86,7 @@ void mdp::readMDP_arr(MDP& mdp, const char *filename, bool binary){
   ifstream is;
   if(binary) is.open(filename, std::ios::binary);
   else is.open(filename);
-  if(!is.good()) MT_MSG("could not open file `"  <<filename  <<"' for input");
+  if(!is.good()) MT_MSG("could not open file `" <<filename <<"' for input");
   mdp.Pxax.readTagged(is, "Pxax");
   mdp.Pyxa.readTagged(is, "Pyxa");
   mdp.Px  .readTagged(is, "Px");
@@ -223,7 +223,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   clearMDP(mdp);
   HyperGraph H;
   MT::load(H, filename);
-  //cout  <<"read hypergraph: "  <<H  <<endl;
+  //cout <<"read hypergraph: " <<H <<endl;
   Element *e;
   uint i, d;
   //variables
@@ -231,15 +231,15 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
     d=get<MT::String>(e->ats, "values").N;
     mdp.vars.append(new Variable(d, e->name));
   }
-  //cout  <<"read variables:"  <<endl;  listWrite(mdp.vars, cout, "\n  ");
+  //cout <<"read variables:" <<endl;  listWrite(mdp.vars, cout, "\n  ");
   for_list(i, e, H.T) if(e->type=="factor"){
     mdp.facs.append(new Factor(e->containsIds, get<double>(e->ats, "P")));
     mdp.facs.last()->name = e->name;
   }
-  //cout  <<"\nread factors:"  <<endl;  listWrite(mdp.facs, cout, "\n  ");
+  //cout <<"\nread factors:" <<endl;  listWrite(mdp.facs, cout, "\n  ");
   e=listFindByType(H.T, "mdp");
   mdp.gamma = get<double>(e->ats, "discount")(0);
-  //cout  <<"\ngamma = "  <<mdp.gamma  <<endl;
+  //cout <<"\ngamma = " <<mdp.gamma <<endl;
   MT::Array<MT::String> S;
   S = get<MT::String>(e->ats, "initializationFacs");
   for(uint i=0; i<S.N; i++) mdp.initFacs.append(listFindByName(mdp.facs, S(i)));
@@ -286,7 +286,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
       v=new Variable(strings.N, name);
       mdp.vars.append(v);
       if(v->id>=values.N) values.resizeCopy(v->id+1);      values(v->id)=strings;
-      name  <<'\'';
+      name <<'\'';
       v=new Variable(strings.N, name);
       mdp.vars.append(v);
       if(v->id>=values.N) values.resizeCopy(v->id+1);      values(v->id)=strings;
@@ -310,10 +310,10 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
       break;
     }
     if(!insidePomdp) continue;
-    if(tag=="observable"){   CHECK(insidePomdp, "");  readStringList(strings, is);  for(i=0; i<strings.N; i++) strings(i)  <<'\''; /*APPEND A PRIME!*/ namesToSublist(mdp.obsVars, strings, mdp.vars); continue; }
+    if(tag=="observable"){   CHECK(insidePomdp, "");  readStringList(strings, is);  for(i=0; i<strings.N; i++) strings(i) <<'\''; /*APPEND A PRIME!*/ namesToSublist(mdp.obsVars, strings, mdp.vars); continue; }
     if(tag=="hidden"){       CHECK(insidePomdp, "");  readStringList(strings, is);  continue; }
     if(tag=="controllable"){ CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.ctrlVars, strings, mdp.vars); continue; }
-    if(tag=="utility"){      CHECK(insidePomdp, "");  readStringList(strings, is);  for(i=0; i<strings.N; i++) strings(i)  <<'\''; /*APPEND A PRIME!*/ namesToSublist(rewardVars, strings, mdp.vars); continue; }
+    if(tag=="utility"){      CHECK(insidePomdp, "");  readStringList(strings, is);  for(i=0; i<strings.N; i++) strings(i) <<'\''; /*APPEND A PRIME!*/ namesToSublist(rewardVars, strings, mdp.vars); continue; }
     //if(tag=="separators"){   CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.leftVars, strings, mdp.vars); continue; }
     if(tag=="discount"){     CHECK(insidePomdp, "");  is >>"(" >>mdp.gamma >>")";  continue; }
     if(tag=="horizon"){      CHECK(insidePomdp, "");  double z; is >>"(" >>z >>")";  continue; }
@@ -346,17 +346,17 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     strings=values(v->id);
     CHECK(strings.N==v->dim, "");
     for(j=0; j<strings.N; j++) strings(j).resetI() >>val(j);
-    //cout  <<"reward values = "  <<strings  <<' '  <<val  <<endl;
+    //cout <<"reward values = " <<strings <<' ' <<val <<endl;
     Factor R(ARRAY(v));
     R.setP(val);
     for_list(j, f, mdp.rewardFacs) if(f->variables.findValue(v)!=-1){
-      //cout  <<*f  <<endl;
+      //cout <<*f <<endl;
       tensorMultiply(*f, R);
       tmpVars=f->variables;
       tmpVars.removeValue(v);
       tensorMarginal(tmp, *f, tmpVars);
       *f = tmp;
-      //cout  <<*f  <<endl;
+      //cout <<*f <<endl;
     }
   }
   if(mdp.rewardFacs.N>1){ // multiple reward functions -> add them to a single factor
@@ -365,11 +365,11 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     Factor *ff=new Factor(tmpVars);
     ff->name="REWARD_AUTO";
     ff->P.setZero();
-    //cout  <<*ff  <<endl;
+    //cout <<*ff <<endl;
     for_list(i, f, mdp.rewardFacs){
-      //cout  <<*f  <<endl;
+      //cout <<*f <<endl;
       tensorAdd(*ff, *f);
-      //cout  <<*ff  <<endl;
+      //cout <<*ff <<endl;
     }
     for_list(i, f, mdp.rewardFacs) mdp.facs.removeValue(f);
     listDelete(mdp.rewardFacs);
@@ -383,9 +383,9 @@ void mdp::writeFSC_lev1(const char *filename, FSC_lev1& fsc, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
   else os.open(filename);
-  fsc.P0  .writeTagged(os, "P0", binary);    os  <<endl;
-  fsc.Pa0 .writeTagged(os, "Pa0", binary);   os  <<endl;
-  fsc.P0y0.writeTagged(os, "P0y0", binary);  os  <<endl;
+  fsc.P0  .writeTagged(os, "P0", binary);    os <<endl;
+  fsc.Pa0 .writeTagged(os, "Pa0", binary);   os <<endl;
+  fsc.P0y0.writeTagged(os, "P0y0", binary);  os <<endl;
 }
 
 //! .
@@ -393,11 +393,11 @@ void mdp::writeFSC_lev2(const char *filename, FSC_lev2& fsc, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
   else os.open(filename);
-  fsc.P0   .writeTagged(os, "P0", binary);    os  <<endl;
-  fsc.P1   .writeTagged(os, "P1", binary);    os  <<endl;
-  fsc.Pa0  .writeTagged(os, "Pa0", binary);   os  <<endl;
-  fsc.P01y0.writeTagged(os, "P01y0", binary); os  <<endl;
-  fsc.P1y01.writeTagged(os, "P1y01", binary); os  <<endl;
+  fsc.P0   .writeTagged(os, "P0", binary);    os <<endl;
+  fsc.P1   .writeTagged(os, "P1", binary);    os <<endl;
+  fsc.Pa0  .writeTagged(os, "Pa0", binary);   os <<endl;
+  fsc.P01y0.writeTagged(os, "P01y0", binary); os <<endl;
+  fsc.P1y01.writeTagged(os, "P1y01", binary); os <<endl;
 }
 
 //! .
@@ -427,7 +427,7 @@ void mdp::reportMDP(const MDP& mdp){
     for(x=0; x<mdp.Pxax.d0; x++) for(xx=0; xx<mdp.Pxax.d2; xx++)
         if(mdp.Pxax(xx, a, x)>mdp.Pxax(xm(x), a, x)) xm(x)=xx;
     xm.reshape(global_maze.d0, global_maze.d1);
-    cout  <<"\nmax transitions for a="  <<a  <<"\n"  <<xm;
+    cout <<"\nmax transitions for a=" <<a <<"\n" <<xm;
   }
   
   //
@@ -436,7 +436,7 @@ void mdp::reportMDP(const MDP& mdp){
     for(x=0; x<mdp.Pyxa.d1; x++)
       for(a=0; a<mdp.Pyxa.d2; a++) if(mdp.Pyxa(y, x, a)>mdp.Pyxa(ym(x), x, a)) ym(x)=y;
   ym.reshape(global_maze.d0, global_maze.d1);
-  cout  <<"\nmax observations =\n"  <<ym;
+  cout <<"\nmax observations =\n" <<ym;
 }
 
 //! .
@@ -448,9 +448,9 @@ void mdp::readImageMaze(MDP& mdp, const char* filename){
   uint x, y, dx=maze.d1, dy=maze.d0;
   for(x=0; x<dx; x++) for(y=0; y<dy; y++){
       if(img(y, x, 0)==255 && img(y, x, 1)==255 && img(y, x, 2)==255) maze(y, x)=0; //white -> free
-      else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=1;  //black -> wall
-      else if(img(y, x, 0)==255 && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=2;  //red   -> start
-      else if(img(y, x, 0)==0   && img(y, x, 1)==255 && img(y, x, 2)==0) maze(y, x)=3;  //green -> goal
+      else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=1; //black -> wall
+      else if(img(y, x, 0)==255 && img(y, x, 1)==0   && img(y, x, 2)==0) maze(y, x)=2; //red   -> start
+      else if(img(y, x, 0)==0   && img(y, x, 1)==255 && img(y, x, 2)==0) maze(y, x)=3; //green -> goal
       else if(img(y, x, 0)==0   && img(y, x, 1)==0   && img(y, x, 2)==255) maze(y, x)=4; //blue  -> avoid
       else HALT("maze image file (ppm) needs to be black/white/red/green/blue");
     }
@@ -615,7 +615,7 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
   byteA maze;
   switch(problem){
     case mdp::tinyMaze:
-      maze  <<"[\
+      maze <<"[\
           2 1;\
           0 3]";
       maze-=(byte)'0';
@@ -626,7 +626,7 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //addActionNoise(Pxax, .1);
       break;
     case mdp::miniMaze:
-      maze  <<"[\
+      maze <<"[\
           0 0 0;\
           0 1 0;\
           2 1 3]";
@@ -640,14 +640,14 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //mdp::addActionNoise(Pxax, .1);
       break;
     case mdp::simpleMaze:
-      maze  <<"[\
+      maze <<"[\
           2 1 0 0 0 1 0 0 0;\
           0 1 0 1 0 1 0 1 0;\
           0 1 0 1 0 1 0 1 0;\
           0 1 0 1 0 1 0 1 0;\
           0 0 0 1 0 0 0 1 3]";
 
-      /*maze  <<"[\
+      /*maze <<"[\
       1 1 1 1 1 1 1;\
       1 3 0 0 0 0 1;\
       1 1 1 1 1 0 1;\
@@ -661,7 +661,7 @@ void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& P
       //addActionNoise(Pxax, .1);
       break;
     case mdp::heavenAndHell:
-      maze  <<"[\
+      maze <<"[\
           3 0 4 1 4 0 3 ;\
           1 2 1 1 1 2 1 ;\
           0 0 1 1 1 0 0 ]";
@@ -715,7 +715,7 @@ void mdp::checkJointNormalization(const MDP_structured& mdp, const FSC_structure
   eliminationAlgorithm(post, cat(fsc.transFacs, mdp.obsFacs, mdp.transFacs, fsc.initFacs, mdp.initFacs), VariableList());
   arr P;
   post.getP(P);
-  //cout  <<post  <<endl;
+  //cout <<post <<endl;
   CHECK(fabs(P.scalar()-1.)<1e-10, "MDP & FSC are not jointly normalized: Z=" <<P.scalar());
 }
 
@@ -1032,9 +1032,9 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP_struc
     zeroNodeStart(Finit(i)->P, levels(i));
   }
   
-  //cout  <<"\nfsc initFacs:"  <<endl;  listWrite(fsc.initFacs, cout, "\n  ");
-  //cout  <<"\nfsc transFacs:"  <<endl;  listWrite(fsc.transFacs, cout, "\n  ");
-  //cout  <<"\nfsc facs:"  <<endl;  listWrite(fsc.facs, cout, "\n  ");
+  //cout <<"\nfsc initFacs:" <<endl;  listWrite(fsc.initFacs, cout, "\n  ");
+  //cout <<"\nfsc transFacs:" <<endl;  listWrite(fsc.transFacs, cout, "\n  ");
+  //cout <<"\nfsc facs:" <<endl;  listWrite(fsc.facs, cout, "\n  ");
 }
 
 void mdp::oneNodeOneAction(arr& Pa0, uint da, uint d0, double uni, double noise, double det){
@@ -1138,8 +1138,8 @@ void mdp::generalNode1Transition(arr& P1y01,
 void mdp::initHierarchical(uint exits, FSC_lev2& fsc){
   uint i;
   uint d0=fsc.P01y0.d0, d1=fsc.P1y01.d0, dy=fsc.P1y01.d1;
-  cout  <<"building hierarchical controller: d0="  <<d0  <<" d1="  <<d1  <<" dy="  <<dy
-        <<" -- assuming the last " <<exits<<" level-0-nodes to be exits"  <<endl;
+  cout <<"building hierarchical controller: d0=" <<d0 <<" d1=" <<d1 <<" dy=" <<dy
+       <<" -- assuming the last " <<exits<<" level-0-nodes to be exits" <<endl;
        
   fsc.hierarchical=true;
   
@@ -1201,7 +1201,7 @@ void OutputAoDot(arr& Pa0, uint numObs, const char* problem, std::vector<std::st
                  std::vector<std::string>& o,
                  std::map<int, std::string>& a0){
   uint i, j;
-  cout  <<problem  <<endl;
+  cout <<problem <<endl;
   if(!strcmp(problem, "chainOfChains3.POMDP.arr")){
     a.push_back("doNothing"); a.push_back("wetHands"); a.push_back("dryHands");
     a.push_back("soapyHands"); a.push_back("rinseHands"); a.push_back("waterOn");
@@ -1228,12 +1228,12 @@ void OutputAoDot(arr& Pa0, uint numObs, const char* problem, std::vector<std::st
   }else{ // Simply put placeholders
     for(i=0; i<Pa0.d0; ++i){
       std::stringstream s;
-      s  <<i;
+      s <<i;
       a.push_back(s.str());
     }
     for(i=0; i<numObs; ++i){
       std::stringstream s;
-      s  <<i;
+      s <<i;
       o.push_back(s.str());
     }
   }
@@ -1262,47 +1262,47 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
   std::map<int, std::string> a0;
   OutputAoDot(Pa0, P_E_0y0.d1, problem, a, o, a0);
   
-  cout  <<"Outputing graph: "  <<filename  <<endl;
+  cout <<"Outputing graph: " <<filename <<endl;
   // Output graph
   ofstream out(filename);
-  out  <<"digraph "  <<"ML_Controller_"  <<Pa0.d1  <<"_"  <<PE_1y1.d0  <<" {\n"
-   <<"\trankdir=TB;\n";
+  out <<"digraph " <<"ML_Controller_" <<Pa0.d1 <<"_" <<PE_1y1.d0 <<" {\n"
+  <<"\trankdir=TB;\n";
   
   // Level-0
-  out  <<"\tsubgraph cluster_0 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
-   <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;";
+  out <<"\tsubgraph cluster_0 {\n"
+  <<"\t\tstyle=filled;\n"
+  <<"\t\tcolor=lightgrey;\n"
+  <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;";
   for(i=0; i<Pa0.d1; ++i){
     // check if it's an exit state
     // if so, output it as a diamond....
     if(Pe0(1, i)<0.01)
-      out  <<"N0_"  <<a0[i]  <<"; ";
+      out <<"N0_" <<a0[i] <<"; ";
   }
-  out  <<"};\n"
-   <<"\t\tlabel=\"Level 0\"\n";
+  out <<"};\n"
+  <<"\t\tlabel=\"Level 0\"\n";
   // Level-Exits
-  out  <<"\tsubgraph cluster_2 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
-   <<"\t\tnode [style=filled, color=white, shape=diamond];";
-  for(i=0; i<Pa0.d1; ++i){ if(Pe0(1, i)>0.99) out  <<"E_"  <<a0[i]  <<" ";}
-  out  <<";\n"
-   <<"\t\tlabel=\"Exit\"\n"
-   <<"\t}\n"
-   <<"\n\t}\n";
+  out <<"\tsubgraph cluster_2 {\n"
+  <<"\t\tstyle=filled;\n"
+  <<"\t\tcolor=lightgrey;\n"
+  <<"\t\tnode [style=filled, color=white, shape=diamond];";
+  for(i=0; i<Pa0.d1; ++i){ if(Pe0(1, i)>0.99) out <<"E_" <<a0[i] <<" ";}
+  out <<";\n"
+  <<"\t\tlabel=\"Exit\"\n"
+  <<"\t}\n"
+  <<"\n\t}\n";
   
   // Level-1
-  out  <<"\tsubgraph cluster_1 {\n"
-   <<"\t\tstyle=filled;\n"
-   <<"\t\tcolor=lightgrey;\n"
+  out <<"\tsubgraph cluster_1 {\n"
+  <<"\t\tstyle=filled;\n"
+  <<"\t\tcolor=lightgrey;\n"
   // This is correct but the rank=same makes dot crash once in a while, this
   // is a dot bug.
-   <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;"; for(i=0; i<PE_01.d1; ++i){out  <<"N1_"  <<i  <<"; ";}
-  // <<"\t\tnode [style=filled, color=white]; "; for(i=0;i<PE_01.d1;++i){out  <<"N1_"  <<i  <<"; ";}
-  out  <<"};\n"
-   <<"\t\tlabel=\"Level 1\"\n"
-   <<"\t}\n";
+  <<"\t\tnode [style=filled, color=white];\n\t\t{rank = same;"; for(i=0; i<PE_01.d1; ++i){out <<"N1_" <<i <<"; ";}
+  // <<"\t\tnode [style=filled, color=white]; "; for(i=0;i<PE_01.d1;++i){out <<"N1_" <<i <<"; ";}
+  out <<"};\n"
+  <<"\t\tlabel=\"Level 1\"\n"
+  <<"\t}\n";
   
   
   // P_E_0y0; E is false
@@ -1314,16 +1314,16 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
           // Merge observations
           if(P_E_0y0(i, j, k) > 0.01){
             if(!obs){
-              out  <<"\tN0_"  <<a0[k]  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [label=\"";
+              out <<"\tN0_" <<a0[k] <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_") <<a0[i] <<" [label=\"";
               obs=true;
             }
             if(P_E_0y0(i, j, k) < 0.99){
-              out  <<""  <<o[j]  <<":"  <<std::setprecision(2)
-               <<P_E_0y0(i, j, k)  <<", ";
+              out <<"" <<o[j] <<":" <<std::setprecision(2)
+              <<P_E_0y0(i, j, k) <<", ";
             }
           }
         }
-      if(obs) out  <<"\", arrowsize=0.3, labelfontsize=9.0, penwidth=0.5];\n";
+      if(obs) out <<"\", arrowsize=0.3, labelfontsize=9.0, penwidth=0.5];\n";
     }
     
   // PE_1y1; E is true
@@ -1334,16 +1334,16 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
         // Merge observations
         if(PE_1y1(i, j, k) > 0.01){
           if(!obs){
-            out  <<"\tN1_"  <<k  <<"-> N1_"  <<i  <<" [label = \"";
+            out <<"\tN1_" <<k <<"-> N1_" <<i <<" [label = \"";
             obs=true;
           }
           if(PE_1y1(i, j, k) < 0.99){
-            out  <<""  <<o[j]  <<":"  <<std::setprecision(2)
-             <<PE_1y1(i, j, k)  <<", ";
+            out <<"" <<o[j] <<":" <<std::setprecision(2)
+            <<PE_1y1(i, j, k) <<", ";
           }
         }
       }
-      if(obs) out  <<"\", weight=50, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
+      if(obs) out <<"\", weight=50, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
     }
   // PE_01; E is true
   for(i=0; i<PE_01.d0; ++i) // incoming node is i
@@ -1351,15 +1351,15 @@ void mdp::OutputDotH(const char* filename, const char* problem, arr& Pa0, arr& P
       double value=PE_01(i, j);
       if(value > 0.01){
         if(value > 0.99)
-          out  <<"\tN1_"  <<j  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
+          out <<"\tN1_" <<j <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_") <<a0[i] <<" [style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
         else
-          out  <<"\tN1_"  <<j  <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_")  <<a0[i]  <<" [label=\""  <<std::setprecision(2)  <<value  << "\", style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
+          out <<"\tN1_" <<j <<((Pe0(1, i)>0.99)? "-> E_":"-> N0_") <<a0[i] <<" [label=\"" <<std::setprecision(2) <<value <<"\", style=dashed, arrowsize=0.3, labelfontsize=5.0, penwidth=0.5];\n";
       }
     }
     
-  out  <<"}\n";
+  out <<"}\n";
   out.close();
-  cout  <<"Done"  <<endl;
+  cout <<"Done" <<endl;
 }
 
 
@@ -1373,12 +1373,12 @@ void mdp::OutputDot(const char* filename, const char* problem, arr& Pa0, arr& P0
   uint i, j;
   // Output graph
   ofstream out(filename);
-  out  <<"digraph "  <<"ML_Controller_"  <<Pa0.d1  <<"_"  <<0  <<" {\n"
-   <<"\trankdir=LR;\n"
-   <<"\tsize=\"8, 5\"\n"
-   <<"\tnode [shape = circle];"; for(i=0; i<P0y0.d0; ++i){out  <<"N_"  <<a0[i]  <<" ";}
-  out  <<";\n"
-   <<"\tnode [shape = circle];\n";
+  out <<"digraph " <<"ML_Controller_" <<Pa0.d1 <<"_" <<0 <<" {\n"
+  <<"\trankdir=LR;\n"
+  <<"\tsize=\"8, 5\"\n"
+  <<"\tnode [shape = circle];"; for(i=0; i<P0y0.d0; ++i){out <<"N_" <<a0[i] <<" ";}
+  out <<";\n"
+  <<"\tnode [shape = circle];\n";
   for(i=0; i<P0y0.d0; ++i) // incoming node is i
     for(uint k=0; k<P0y0.d2; ++k){ // outgoing node is k
       bool obs = false;
@@ -1386,17 +1386,17 @@ void mdp::OutputDot(const char* filename, const char* problem, arr& Pa0, arr& P0
         // Merge observations
         if(P0y0(i, j, k) > 0.01){
           if(!obs){
-            out  <<"\tN_"  <<a0[k]  <<"-> N_"  <<a0[i]  <<"[ label = \"";
+            out <<"\tN_" <<a0[k] <<"-> N_" <<a0[i] <<"[ label = \"";
             obs=true;
           }
-          if(P0y0(i, j, k) > 0.99) out  <<""  <<o[j]  <<", ";
-          else {out  <<""  <<o[j]  <<":"  <<std::setprecision(2)  <<P0y0(i, j, k)  <<", ";}
+          if(P0y0(i, j, k) > 0.99) out <<"" <<o[j] <<", ";
+          else {out <<"" <<o[j] <<":" <<std::setprecision(2) <<P0y0(i, j, k) <<", ";}
         }
       }
-      if(obs) out  <<"\"];\n";
+      if(obs) out <<"\"];\n";
     }
     
-  out  <<"}\n";
+  out <<"}\n";
   out.close();
 }
 
@@ -1407,9 +1407,9 @@ void mdp::SetAMPLPolicy(arr& P0y0, arr& Pa0){
   uint i;
   
   // re-set the number of variables (to be independent of the .data file)
-  cout  <<"set Nodes :=";
-  for(i=0; i < P0y0.d0; i++){ cout  <<" "  <<i; }
-  cout  <<";\n";
+  cout <<"set Nodes :=";
+  for(i=0; i < P0y0.d0; i++){ cout <<" " <<i; }
+  cout <<";\n";
   
   arr P0ay0;
   P0ay0.resize(TUP(P0y0.d0, Pa0.d0, P0y0.d1, P0y0.d2));
@@ -1420,13 +1420,13 @@ void mdp::SetAMPLPolicy(arr& P0y0, arr& Pa0){
     for(uint j=0; j < P0ay0.d1; j++){
       for(uint l=0; l < P0y0.d2; l++){ // switch the order of l and k since
         for(uint k=0; k < P0ay0.d2; k++){ // the AMPL input is actually P0a0y
-          cout  <<"\nlet x["  <<i  <<", "  <<j  <<", "  <<l  <<", "  <<k
-                <<"] := "     <<P0ay0(TUP(i, j, k, l))/*return4DNumber(P0ay0, i, j, k, l)*/  <<";";
+          cout <<"\nlet x[" <<i <<", " <<j <<", " <<l <<", " <<k
+               <<"] := "    <<P0ay0(TUP(i, j, k, l))/*return4DNumber(P0ay0, i, j, k, l)*/ <<";";
         }
       }
     }
   }
-  cout  <<endl;
+  cout <<endl;
 }
 
 

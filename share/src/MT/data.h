@@ -34,7 +34,7 @@ struct Data {
   }
   void dump(){
     for(uint i=0; i<N(); i++){
-      cout  <<" x="  <<X[i]  <<"\n y="  <<Y[i]  <<"\n z="  <<Z[i]  <<endl;
+      cout <<" x=" <<X[i] <<"\n y=" <<Y[i] <<"\n z=" <<Z[i] <<endl;
     }
   }
   void loadSpecific(bool test);

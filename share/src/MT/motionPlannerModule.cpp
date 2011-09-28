@@ -27,20 +27,18 @@ void ReceedingHorizonProcess::step(){
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
-      active=true;
     } else if(goalVar->goalType==FutureMotionGoal::placeGoalT){
       setPlaceGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
-      active=true;
     } else if(goalVar->goalType==FutureMotionGoal::homingGoalT){
       setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 1); //task id is q!!!
       //planner.init_trajectory(q);
-      active=true;
     }
+    active=true;
     goalVar->deAccess(this);
     planVar->writeAccess(this);
     planVar->converged=false;
@@ -70,14 +68,14 @@ void ReceedingHorizonProcess::step(){
   
   if(planVar){
     planVar->writeAccess(this);
-    planVar->bwdMsg_v   =planner.v_old;    //the old versions are those guaranteed to be best-so-far
-    planVar->bwdMsg_Vinv=planner.Vinv_old;
-    planVar->q    = planner.q_old;
-    planVar->x    = planner.b_old;
-    planVar->cost = planner.cost_old;
+    planVar->bwdMsg_v   =planner.v;
+    planVar->bwdMsg_Vinv=planner.Vinv;
+    planVar->q    = planner.q;
+    planVar->x    = planner.b;
+    planVar->cost = planner.cost;
     planVar->tau  = sys->getTau();
     planVar->totalTime = planVar->tau*sys->nTime();
-    if(d<planner.tolerance) planVar->converged=true;// NIKOLAY : enssure reasonable plans
+    planVar->converged=(d<planner.tolerance);// NIKOLAY : enssure reasonable plans
     planVar->deAccess(this);
   }
 }
@@ -101,7 +99,7 @@ void MotionPlannerModuleGroup::step(){
   static bool first=true;
   if(recho.threadIsIdle() && first){
     //ors::Shape *s = recho.sys->ors->bodies(graspTargetBodyId)->shapes(0);
-    cout  <<"*** triggering motion planning to shape "  <<graspShapeName  <<endl;
+    cout <<"*** triggering motion planning to shape " <<graspShapeName <<endl;
     setGraspGoals(*recho.sys, recho.sys->nTime(), graspShapeName); ///HERE IS THE LINK TO THE BRAIN!
     arr q;
     soc::straightTaskTrajectory(*recho.sys, q, 0);

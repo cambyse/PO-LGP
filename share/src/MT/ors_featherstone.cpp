@@ -245,7 +245,7 @@ void FrameToMatrix(arr &X, const ors::Transformation& f){
   arr R(3, 3);  f.rot.getMatrix(R.p);
   transpose(R);
   X.resize(6, 6);  X.setBlockMatrix(R, z, R*~r, R); //[[unklar!!]]
-  //cout  <<"\nz="  <<z  <<"\nr="  <<r  <<"\nR="  <<R  <<"\nX="  <<X  <<endl;
+  //cout <<"\nz=" <<z <<"\nr=" <<r <<"\nR=" <<R <<"\nX=" <<X <<endl;
 }
 
 void ors::Link::setFeatherstones(){
@@ -594,8 +594,8 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
       arr vi(6);  vi.setVectorBlock(arr((f.r/f.w).v, 3), 0);  vi.setVectorBlock(arr((f.r/f.v).v, 3), 3);
       arr ai(6);  ai.setVectorBlock(arr((f.r/f.b).v, 3), 0);  ai.setVectorBlock(arr((f.r/f.a).v, 3), 3);
       
-      cout  <<"\ni="  <<i  <<"\nv_i="  <<v[i]  <<"\nf.(w, v)="  <<vi  <<endl;
-      cout  <<"\na_i="  <<a[i]  <<"\nf.(b, a)="  <<ai  <<endl;
+      cout <<"\ni=" <<i <<"\nv_i=" <<v[i] <<"\nf.(w, v)=" <<vi <<endl;
+      cout <<"\na_i=" <<a[i] <<"\nf.(b, a)=" <<ai <<endl;
       CHECK(maxDiff(vi, v[i])<1e-4, "");
     }
 #endif
@@ -893,7 +893,7 @@ void ors::invDynamics(arr& tau,
     par = tree(i).parent;
     if(par == -1){
       v[i] = h(i) * qd_i(i);
-      a[i] = h(i)*qdd_i(i);
+      a[i] = h(i) * qdd_i(i);
     }else{
       v[i] = Xup[i] * v[par] + h(i) * qd_i(i);
       a[i] = Xup[i] * a[par] + h(i) * qdd_i(i) + Featherstone::crossM(v[i]) * h(i) * qd_i(i);

@@ -41,26 +41,26 @@ void plotQhullState(uint D){
   plotOpengl();
   plotClear();
   
-  cout  <<"\n** points:";
+  cout <<"\n** points:";
   FORALLpoints {
     x.setCarray(point, D);
-    cout  <<"\n  "  <<x;
+    cout <<"\n  " <<x;
     plotPoints(x);
   }
   
-  cout  <<"\n** vertices:";
+  cout <<"\n** vertices:";
   FORALLvertices {
     x.setCarray(vertex->point, D);
     i = (vertex->point - (qh first_point))/D;
-    cout  <<"\n  "  <<vertex->id  <<"("  <<i  <<")"  <<":"  <<x;
+    cout <<"\n  " <<vertex->id <<"(" <<i <<")" <<":" <<x;
   }
   
-  cout  <<"\n** facets:";
+  cout <<"\n** facets:";
   FORALLfacets {
-    cout  <<"\n  "  <<facet->id  <<":";
+    cout <<"\n  " <<facet->id <<":";
     line.clear();
     FOREACHvertex_(facet->vertices){
-      cout  <<' '  <<vertex->id;
+      cout <<' ' <<vertex->id;
       x.setCarray(vertex->point, D);
       line.append(x);
     }
@@ -69,7 +69,7 @@ void plotQhullState(uint D){
     line.reshape(line.N/D, D);
     plotLine(line);
   }
-  cout  <<endl;
+  cout <<endl;
 }
 
 //===========================================================================
@@ -79,7 +79,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
   //static const char* cmd = "qhull Tv i p";
   static char* cmd = (char*) "qhull ";
   exitcode = qh_new_qhull(X.d1, X.d0, X.p, false, cmd, NULL, stderr);
-  if(exitcode) HALT("qh_new_qhull error - exitcode "  <<exitcode);
+  if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
   
   uint i;
   facetT *bestfacet;
@@ -131,8 +131,8 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
     }
     plot();
     
-    //cout  <<"**best facet: "  <<bestfacet->id  <<endl;
-    //FOREACHvertex_(facet->vertices) cout  <<vertex->id  <<' ';
+    //cout <<"**best facet: " <<bestfacet->id <<endl;
+    //FOREACHvertex_(facet->vertices) cout <<vertex->id <<' ';
   }
   
   if(freeqhull){
@@ -227,7 +227,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     dXdCn.setZero();
   }*/
   
-  for(i=0; i<C.d0; i++){             //each contact point contributes a friction cone
+  for(i=0; i<C.d0; i++){   //each contact point contributes a friction cone
     c.set(&C(i, 0));                    //contact point
     n.set(&Cn(i, 0));                   //contact normal
     c -= center;
@@ -235,7 +235,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     ors::Quaternion r;
     r.setDiff(ors::Vector(0, 0, 1), n);//rotate cone's z-axis into contact normal n
     
-    for(j=0; j<S; j++){              //each sample, equidistant on a circle
+    for(j=0; j<S; j++){    //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;
       f(0) = cos(angle)*mu;            //force point sampled from cone
       f(1) = sin(angle)*mu;
@@ -315,7 +315,7 @@ void getTriangulatedHull(uintA& T, arr& V){
   int exitcode;
   static char* cmd = (char*) "qhull Qt ";
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
-  if(exitcode) HALT("qh_new_qhull error - exitcode "  <<exitcode);
+  if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
   qh_triangulate();
   
   facetT *facet;
@@ -335,7 +335,7 @@ void getTriangulatedHull(uintA& T, arr& V){
   FORALLfacets {
     i=0;
     FOREACHvertex_(facet->vertices){
-      if(i<3) T(f, i)=vertex->id; else MT_MSG("face "  <<f  <<" has "  <<i  <<" vertices"  <<endl);
+      if(i<3) T(f, i)=vertex->id; else MT_MSG("face " <<f <<" has " <<i <<" vertices" <<endl);
       i++;
     }
     if(facet->toporient){
@@ -359,7 +359,7 @@ void getDelaunayEdges(uintA& E, const arr& V){
   int exitcode;
   static char* cmd = (char*) "qhull d Qbb Qt ";
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
-  if(exitcode) HALT("qh_new_qhull error - exitcode "  <<exitcode);
+  if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
   
   facetT *facet;
   vertexT *vertex, **vertexp;

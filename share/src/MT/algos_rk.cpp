@@ -96,7 +96,7 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
   double a=0., b=dt; //time interval [a, b]
   double m, min_m;   //where to cut the interval (determined by linear interpolation)
   
-  cout  <<"entering zero-crossing detection loop"  <<endl;
+  cout <<"entering zero-crossing detection loop" <<endl;
   for(; fabs(b-a)>tol;){
     //compute new m
     min_m=m=b;
@@ -114,8 +114,8 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
     sn=s0.N<sm.N?s0.N:sm.N;
     for(i=0; i<sn; i++) if(s0(i)*sm(i)<0.){ change=true; break; }
     
-    //cout  <<"a="  <<a  <<" b="  <<b  <<" m="  <<m  <<" sa="  <<sa  <<" sb="  <<sb  <<" sm="  <<sm  <<endl;
-    cout  <<" sm="  <<sm  <<endl;
+    //cout <<"a=" <<a <<" b=" <<b <<" m=" <<m <<" sa=" <<sa <<" sb=" <<sb <<" sm=" <<sm <<endl;
+    cout <<" sm=" <<sm <<endl;
     if(!change){
       a=m;
       sa=sm;
@@ -131,7 +131,7 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
   dt=b;
   x1=xb;
   s1=sb;
-  cout  <<"DONE"  <<endl  <<"dt="  <<dt  <<" s1="  <<s1  <<endl;
+  cout <<"DONE" <<endl <<"dt=" <<dt <<" s1=" <<s1 <<endl;
   return true;
 }
 

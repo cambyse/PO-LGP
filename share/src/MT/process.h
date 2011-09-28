@@ -40,7 +40,7 @@ struct Variable {
   ~Variable();
   
   //-- to be overloaded by the specific implementation
-  virtual void write(ostream& os){ os  <<name; }
+  virtual void write(ostream& os){ os <<name; }
   virtual void read(istream& is){ }
   
   //-- access control, to be called by a processes before access

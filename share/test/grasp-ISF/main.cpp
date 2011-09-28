@@ -24,7 +24,7 @@ struct DummyTask:public TaskAbstraction{//do nothing
 };
 
 int
-get_joy_state(RobotModuleGroup& robot){
+get_joy_state(RobotProcessGroup& robot){
     int r = 0;
     if (robot.openJoystick){
       robot.joy.readAccess(NULL);
@@ -35,7 +35,7 @@ get_joy_state(RobotModuleGroup& robot){
 }
 
 void
-get_skin_state(RobotModuleGroup& robot ){
+get_skin_state(RobotProcessGroup& robot ){
 
     SkinPressureVar *skin = &robot.skinPressureVar;
     GraspISFTask *task = (GraspISFTask*)robot.ctrl.task;
@@ -98,7 +98,7 @@ int
 main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
-  signal(SIGINT,RobotModuleGroup::signalStopCallback);
+  signal(SIGINT,RobotProcessGroup::signalStopCallback);
 
 
   GraspObjectVar graspobj;
@@ -112,7 +112,7 @@ main(int argn,char** argv){
   Percept_ISF_process perceive;
   Build_mesh_process buildmesh;
   PerceptionModule perc; 
-  RobotModuleGroup robot;
+  RobotProcessGroup robot;
   RevelInterface revel;
 
   buildmesh.obj=&graspobj;
@@ -166,7 +166,9 @@ main(int argn,char** argv){
     // skin -> graspISFtask
     get_skin_state(robot);
 
-    robot.step();
+    //robot.step();
+    MT_MSG("Note: robot does not have a step routine anymore - are you properly looping? add a MT::wait(.01) or so");
+
     if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
   }
   revel.close();

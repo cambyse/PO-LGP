@@ -17,13 +17,13 @@ double mdp::pomdpEM_lev1(
   arr* alpha, arr* beta,
   ostream *os){
   
-//   cout  <<"estepHorizon="  <<estepHorizon  <<endl;
-//   cout  <<"estepStructured="  <<estepStructured  <<endl;
-//   cout  <<"estepIncremental="  <<estepIncremental <<endl;
-//   cout  <<"mstepType="  <<mstepType <<endl;
-//   cout  <<"mstepRate="  <<mstepRate <<endl;
-//   cout  <<"mstepNoise="  <<mstepNoise <<endl;
-//   cout  <<"adaptP0="  <<adaptP0 <<endl;
+//   cout <<"estepHorizon=" <<estepHorizon <<endl;
+//   cout <<"estepStructured=" <<estepStructured <<endl;
+//   cout <<"estepIncremental=" <<estepIncremental <<endl;
+//   cout <<"mstepType=" <<mstepType <<endl;
+//   cout <<"mstepRate=" <<mstepRate <<endl;
+//   cout <<"mstepNoise=" <<mstepNoise <<endl;
+//   cout <<"adaptP0=" <<adaptP0 <<endl;
 
   MT::timerStart();
   
@@ -145,7 +145,7 @@ double mdp::pomdpEM_lev1(
     for(uint i=0; i<temporary.N; i++) delete temporary(i);
   }
   
-  if(os)(*os)  <<"E: "  <<MT::timerRead(true)  <<"sec, M: "  <<std::flush;
+  if(os)(*os) <<"E: " <<MT::timerRead(true) <<"sec, M: " <<std::flush;
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
@@ -222,12 +222,12 @@ double mdp::pomdpEM_lev1(
   
   //----- rest is cosmetics
   //report
-  if(os)(*os)  <<MT::timerRead()  <<"sec, "  <<std::flush;
+  if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
   if(os)
-    (*os)  <<" P(r=1)="  <<PR
-     <<", Exp(T)="  <<ET  <<"/" <<::log(PR)/::log(mdp.gamma)
-     <<", Exp(R)="  <<expR
-     <<endl;
+    (*os) <<" P(r=1)=" <<PR
+    <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)
+    <<", Exp(R)=" <<expR
+    <<endl;
     
   return expR;
 }

@@ -3,15 +3,12 @@
 
 #include "array.h"
 #include "process.h"
+#include "ors.h"
 
 //===========================================================================
 //
 // basic data structures and forward declarations
 //
-
-//fwd declarations
-
-namespace ors {  struct Proxy;  }
 
 struct Object {
   uint found;
@@ -48,6 +45,12 @@ struct q_currentReferenceVar:public Variable {
   bool readHandFromReal;
   
   q_currentReferenceVar():Variable("q_state"){ readHandFromReal=false; }
+};
+
+struct CurrentSceneInformation:public Variable {
+  ors::Graph ors;
+
+  CurrentSceneInformation():Variable("current scnene information"){}
 };
 
 struct SkinPressureVar:public Variable {
@@ -95,7 +98,7 @@ struct FutureMotionPlan:public Variable {
   double tau, totalTime, cost, ctrlTime;
   
   FutureMotionPlan():Variable("FutureMotionPlan"){ converged=executed=false; ctrlTime=0.; }
-  void write(ostream& os){ os  <<"FutureMotionPlan converged= "  <<converged  <<" cost= "  <<cost  <<" ctrlTime= "  <<ctrlTime; }
+  void write(ostream& os){ os <<"FutureMotionPlan converged= " <<converged <<" cost= " <<cost <<" ctrlTime= " <<ctrlTime; }
 };
 
 /*! The definition of the motion problem */
@@ -110,10 +113,10 @@ struct FutureMotionGoal:public Variable {
 };
 
 struct GraspObject;
-struct GraspObjectVar:public Variable{
+struct GraspObjectVar:public Variable {
   GraspObject *o;
   GraspObject *prior;//?remove
-
+  
   GraspObjectVar():Variable("grasp object"){ o=NULL; prior=NULL;};
 };
 

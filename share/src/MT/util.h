@@ -74,21 +74,21 @@ typedef unsigned char byte;            //!< byte
 typedef unsigned short int uint16;     //!< 2 bytes
 typedef unsigned int uint;             //!< unsigned integer
 
-//----- macros to define the standard  <<and >>operatos for most my classes:
+//----- macros to define the standard <<and >>operatos for most my classes:
 #define stdInPipe(type)\
   inline std::istream& operator>>(std::istream& is, type& x){ x.read(is);return is; }
 #define stdOutPipe(type)\
-  inline std::ostream& operator <<(std::ostream& os, const type& x){ x.write(os); return os; }
+  inline std::ostream& operator<<(std::ostream& os, const type& x){ x.write(os); return os; }
 #define stdPipes(type)\
   inline std::istream& operator>>(std::istream& is, type& x){ x.read(is);return is; }\
-  inline std::ostream& operator <<(std::ostream& os, const type& x){ x.write(os); return os; }
+  inline std::ostream& operator<<(std::ostream& os, const type& x){ x.write(os); return os; }
 #define inPipe(type)\
-  inline type& operator <<(type& x, const char* str){ std::istringstream ss(str); ss >>x; return x; }
+  inline type& operator<<(type& x, const char* str){ std::istringstream ss(str); ss >>x; return x; }
 
 
 
 //----- macros for piping doubles EXACTLY (without rounding errors) in hex coding:
-#define OUTHEX(y) "0x"  <<std::hex  <<*((unsigned long*)&y)  <<std::dec
+#define OUTHEX(y) "0x" <<std::hex <<*((unsigned long*)&y) <<std::dec
 #define INHEX(y)  std::hex >>*((unsigned long*)&y) >>std::dec
 
 
@@ -249,8 +249,8 @@ public:
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
-  template<class T> String operator+(const T& v) const { String news(*this); news  <<v; return news; }
-  template<class T> String prepend(const T& v) const { String news; news  <<v  <<*this; return news; }
+  template<class T> String operator+(const T& v) const { String news(*this); news <<v; return news; }
+  template<class T> String prepend(const T& v) const { String news; news <<v <<*this; return news; }
   
   //!@name resetting
   String& clr();
@@ -296,10 +296,10 @@ inline void breakPoint(){
 #  define MT_HERE "@" <<(strrchr(__FILE__, '/')?strrchr(__FILE__, '/')+1:__FILE__) <<':' <<__LINE__ <<':' <<__FUNCTION__ <<": "
 #endif
 #ifndef MT_MSG
-#  define MT_MSG(msg){ std::cerr  <<MT_HERE  <<msg  <<std::endl; MT::breakPoint(); }
+#  define MT_MSG(msg){ std::cerr <<MT_HERE <<msg <<std::endl; MT::breakPoint(); }
 #endif
 #ifndef HALT
-#  define HALT(msg)  { MT::errString.clr()  <<MT_HERE  <<msg  <<" --- HALT"; std::cerr  <<MT::errString  <<std::endl; MT::breakPoint(); throw MT::errString.p; }
+#  define HALT(msg)  { MT::errString.clr() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
 #  define NIY HALT("not implemented yet")
 #  define NICO HALT("not implemented with this compiler options: usually this means that the implementation needs an external library and a corresponding compiler option - see the source code")
 #  define OPS HALT("obsolete")
@@ -323,83 +323,6 @@ inline void breakPoint(){
 //----- other macros:
 #define MEM_COPY_OPERATOR(x) memmove(this, &x, sizeof(this));
 
-//===========================================================================
-//
-// a shared memory
-//
-
-namespace MT {
-
-#define maxShmGuests 20
-#define shmMaxBlocks 20
-struct SHMinfoBlock {
-  const char pagename[20];
-  uint size, used;
-  uint guests;
-  int guestPids[maxShmGuests];
-  char blockNames[shmMaxBlocks][20];
-  uint blockOffsets[shmMaxBlocks];
-  pthread_rwlock_t blockLocks[shmMaxBlocks];
-};
-
-struct Lock {
-  //documentation: http://cs.pub.ro/~apc/2003/resources/pthreads/uguide/document.htm
-  pthread_rwlock_t lock;
-  void init(bool process_shared=true){
-    pthread_rwlockattr_t   att;
-    int r;
-    r=pthread_rwlockattr_init(&att); if(r) HALT("");
-    if(process_shared){
-      r=pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED); if(r) HALT("");
-    }
-    r=pthread_rwlock_init(&lock, &att); if(r) HALT("");
-  }
-  void read(){
-    int r=pthread_rwlock_rdlock(&lock);
-    if(r) HALT("");
-  }
-  
-  void write(){
-    int r=pthread_rwlock_wrlock(&lock);
-    if(r) HALT("");
-  }
-  
-  void unlock(){
-    int r=pthread_rwlock_unlock(&lock);
-    if(r) HALT("");
-  }
-};
-
-struct SHM {
-  int systemId;
-  uint guestId;
-  byte *p;
-  bool created, opened;
-  SHMinfoBlock *info;
-  SHM(){ created=opened=false; p=NULL; systemId=NULL; info=NULL; guestId=(uint)-1; }
-  void open(const char *pagename, uint size, bool directDestroy=false);
-  void close();
-  void destroy();
-  void readLock(uint i);
-  void writeLock(uint i);
-  void unlock(uint i);
-  void report();
-  template<class T> T* newBlock(const char* objName, uint *i=NULL);
-};
-
-template<class T> struct Shared {
-  uint blockId;
-  T *p;
-  SHM *shm;
-  Shared(SHM& _shm, const char* name){ shm=&_shm; p=shm->newBlock<T>(name, &blockId); }
-  void readLock(){ shm->readLock(blockId); }
-  void writeLock(){ shm->writeLock(blockId); }
-  void unlock()   { shm->unlock(blockId); }
-  void set(const T& x){ writeLock(); *p=x; unlock(); }
-  void get(T& x)      { readLock();  x=*p; unlock(); }
-  T& operator()(){ return *p; }
-};
-}
 
 //===========================================================================
 //

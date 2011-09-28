@@ -92,13 +92,11 @@ void MT::randomSpline(arr& X, arr& dX, uint dim, uint points, uint intersteps, d
   makeSpline(X, dX, P, intersteps);
 }
 
-void MT::checkGradient(void (*f)(arr&, const arr&, void*),
-                       void (*df)(arr&, const arr&, void*),
+bool MT::checkGradient(void (*f)(arr&, arr*, const arr&, void*),
                        void *data,
                        const arr& x, double tolerance){
   arr y, J, dx, dy, JJ;
-  f(y, x, data);
-  df(J, x, data);
+  f(y, &J, x, data);
   
   JJ.resize(y.N, x.N);
   double eps=CHECK_EPS;
@@ -106,31 +104,31 @@ void MT::checkGradient(void (*f)(arr&, const arr&, void*),
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    f(dy, dx, data);
+    f(dy, NULL, dx, data);
     dy = (dy-y)/eps;
     for(k=0; k<y.N; k++) JJ(k, i)=dy.elem(k);
   }
   JJ.reshapeAs(J);
   double md=maxDiff(J, JJ, &i);
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- \nmax diff="  <<md  <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient -- FAILURE -- \nmax diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
-    cout  <<"\nmeasured grad="  <<JJ  <<"\ncomputed grad="  <<J  <<endl;
-    //HALT("checkGradient -- FAILURE -- \n measured grad="  <<JJ  <<"\ncomputed grad="  <<J  <<"\nmax diff="  <<md);
+    cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
+    //HALT("");
+    return false;
   }else{
-    cout  <<"checkGradient -- SUCCESS (max diff error="  <<md  <<")"  <<endl;
+    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
-void MT::checkGradient(double(*f)(const arr&, void*),
-                       void (*df)(arr&, const arr&, void*),
+bool MT::checkGradient(double(*f)(arr*, const arr&, void*),
                        void *data,
                        const arr& x, double tolerance){
   arr J, dx, JJ;
   double y, dy;
-  y=f(x, data);
-  df(J, x, data);
+  y=f(&J, x, data);
   
   JJ.resize(x.N);
   double eps=CHECK_EPS;
@@ -138,21 +136,23 @@ void MT::checkGradient(double(*f)(const arr&, void*),
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    dy = f(dx, data);
+    dy = f(NULL, dx, data);
     dy = (dy-y)/eps;
     JJ(i)=dy;
   }
   JJ.reshapeAs(J);
   double md=maxDiff(J, JJ, 0);
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- \nmax diff="  <<md  <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient -- FAILURE -- \nmax diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
-    cout  <<"\nmeasured grad="  <<JJ  <<"\ncomputed grad="  <<J  <<endl;
+    cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
+    return false;
   }else{
-    cout  <<"checkGradient -- SUCCESS (max diff error="  <<md  <<")"  <<endl;
+    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
 void MT::convolution(arr &y, const arr &x, double(*h)(double), double scale){
@@ -200,7 +200,7 @@ double MT::matdistance(intA& fix, intA& fox, uintA& p, bool sub){
   if(fix.d0<=fox.d0){ Nmin=fix.d0; Nmax=fox.d0; }else{ Nmin=fox.d0; Nmax=fix.d0; }
   for(i=0; i<Nmin; i++) for(j=0; j<Nmin; j++) if(fix(i, j)!=fox(p(i), p(j))) n++;
   if(!sub) n+=(Nmax-Nmin)*(Nmax+Nmin);
-  //std::cout  <<fix  <<fox  <<n;
+  //std::cout <<fix <<fox <<n;
   return ((double)n)/Nmax/Nmax;
 }
 
@@ -472,19 +472,19 @@ void LinearStatistics::predict(const arr& x, arr& y){
 }
 
 
-//! prototype for operator <<
+//! prototype for operator<<
 void LinearStatistics::write(std::ostream& os) const {
   os
-   <<"<LinearStatistics>"
-   <<"\ndim X="  <<MeanX.N
-   <<", dim Y="  <<MeanY.N
-   <<", accum="  <<accum
-   <<"\nmean X="  <<MeanX.ioraw()
-   <<"\nmean Y="  <<MeanY
-   <<"\nvariance X=" <<VarX
-   <<"\ncovariance XY="  <<CovXY
-   <<"\n</LinearStatistics>"
-   <<std::endl;
+  <<"<LinearStatistics>"
+  <<"\ndim X=" <<MeanX.N
+  <<", dim Y=" <<MeanY.N
+  <<", accum=" <<accum
+  <<"\nmean X=" <<MeanX.ioraw()
+  <<"\nmean Y=" <<MeanY
+  <<"\nvariance X=" <<VarX
+  <<"\ncovariance XY=" <<CovXY
+  <<"\n</LinearStatistics>"
+  <<std::endl;
 }
 
 
@@ -525,7 +525,7 @@ uint TupleIndex::index(uintA i){
     CHECK(i(u)>i(u-1) && i(u) < n, "wrong symmetic index!");
     a+=tri(n-i(u-1)-1, k-u)-tri(n-i(u), k-u);
   }
-  std::cout  <<a  <<std::endl;
+  std::cout <<a <<std::endl;
   return a;
 }
 
@@ -643,7 +643,7 @@ void Kalman::EMupdate(arr& Y, arr *Rt){
   //xx/=n-1.;
   //vv/=n-1.;
   
-  std::cout  <<"EM-xx="  <<xx  <<vv  <<xx * inverse(vv);
+  std::cout <<"EM-xx=" <<xx <<vv <<xx * inverse(vv);
 #endif
   
   LinearStatistics S;
@@ -655,7 +655,7 @@ void Kalman::EMupdate(arr& Y, arr *Rt){
   //for(t=0;t<n-1;t++) S.learn(X[t], Y[t]);
   //S.regressor(C);
   
-  std::cout  <<"EM-update: A, a="  <<A  <<a  <<std::endl; //S.CovXY  <<S.VarX  <<std::endl;
+  std::cout <<"EM-update: A, a=" <<A <<a <<std::endl; //S.CovXY <<S.VarX <<std::endl;
 }
 
 void Kalman::fb(arr& y, arr& f, arr& F, arr& g, arr& G, arr& p, arr& P, arr *Rt){
@@ -730,7 +730,7 @@ void Kalman::fb(arr& y, arr& f, arr& F, arr& g, arr& G, arr& p, arr& P, arr *Rt)
   
   // EM-update:
   arr up(d, d), dn(d, d);
-  std::cout  <<"EM-update: before:\nA="  <<A  <<" B="  <<B  <<" covH="  <<CovH  <<" covV="  <<CovV  <<std::endl;
+  std::cout <<"EM-update: before:\nA=" <<A <<" B=" <<B <<" covH=" <<CovH <<" covV=" <<CovV <<std::endl;
   
   for(t=0, up=0., dn=0.; t<T-1; t++){ up += h1h[t]; dn += hh[t]; }
   A = up * inverse(dn);
@@ -744,7 +744,7 @@ void Kalman::fb(arr& y, arr& f, arr& F, arr& g, arr& G, arr& p, arr& P, arr *Rt)
   for(t=0, up=0., dn=0.; t<T-1; t++){ up += hh[t+1] - (double)2.*A*hh1[t] + A*hh[t]*~A; }
   CovH = up/(T-(double)1.);
   
-  std::cout  <<"after:\nA="  <<A  <<" B="  <<B  <<" covH="  <<CovH  <<" covV="  <<CovV  <<std::endl;
+  std::cout <<"after:\nA=" <<A <<" B=" <<B <<" covH=" <<CovH <<" covV=" <<CovV <<std::endl;
   
   // log-likelihood:
   double LL=0., l;
@@ -757,7 +757,7 @@ void Kalman::fb(arr& y, arr& f, arr& F, arr& g, arr& G, arr& p, arr& P, arr *Rt)
     LL += l;
   }
   LL/=T;
-  std::cout  <<"log-likelihood="  <<LL  <<std::endl;
+  std::cout <<"log-likelihood=" <<LL <<std::endl;
 }
 
 //===========================================================================
@@ -988,7 +988,7 @@ void PartialLeastSquares::SIMPLS(){
   resErr.resize(K); resErr=0.;
   for(uint k=0; k<K; k++){
     //step 0: check non-zero residuals:
-    //std::cout  <<sumOfSqr(A)  <<std::endl;
+    //std::cout <<sumOfSqr(A) <<std::endl;
     if(sumOfSqr(A)<1e-10) break;
     //step 1
     AA=~A*A;
@@ -1016,7 +1016,7 @@ void PartialLeastSquares::SIMPLS(){
     //step 7
     A=C*A;
   }
-  //std::cout  <<sumOfSqr(A)  <<std::endl;
+  //std::cout <<sumOfSqr(A) <<std::endl;
   B=~Q*W;
 }
 
@@ -1050,7 +1050,7 @@ arr PartialLeastSquares::projection(uint k){
 uint PartialLeastSquares::inDim(){ return S.meanX.N; }
 uint PartialLeastSquares::outDim(){ return S.meanY.N; }
 
-void PartialLeastSquares::write(std::ostream& os) const { os  <<S; }
+void PartialLeastSquares::write(std::ostream& os) const { os <<S; }
 
 
 //===========================================================================
@@ -1068,15 +1068,14 @@ uint n;
 uint fc=0, dfc=0; //evaluation counters
 double y;
 
-double(*f)(const arr &x, void *data);
-void (*df)(arr &dx, const arr &x, void *data);
+double(*f)(arr *grad, const arr &x, void *data);
 
 //conjugate gradient minimizer and wrappers
 double CG_f(double x[], void *data){
   //printf("[CGf]");
   fc++;
   xref.referTo(x, n); xref.reshapeAs(*startx);
-  y=f(xref, data);
+  y=f(NULL, xref, data);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   return y;
 }
@@ -1084,7 +1083,7 @@ void CG_df(double x[], double dx[], void *data){
   //printf("[CGd]");
   dfc++;
   xref.referTo(x, n); xref.reshapeAs(*startx);
-  df(arr(dx, n)(), xref, data);
+  f(&arr(dx, n)(), xref, data);
 }
 
 //LM optimizer and wrappers
@@ -1092,7 +1091,7 @@ void LM_f(double *p, double *hx, longinteger m, longinteger n, void *adata){
   //printf("%li %li", n, m);
   fc++;
   xref.referTo(p, n); xref.reshapeAs(*startx);
-  y = f(xref, adata);
+  y = f(NULL, xref, adata);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   int i;
   for(i=0; i<n; i++) hx[i]=y;
@@ -1101,7 +1100,7 @@ void LM_df(double *p, double *J, longinteger m, longinteger n, void *adata){
   //printf("%li %li", n, m);
   dfc++;
   xref.referTo(p, n); xref.reshapeAs(*startx);
-  df(arr(J, n)(), xref, adata);
+  f(&arr(J, n)(), xref, adata);
   int i, j;
   for(i=1; i<n; i++) for(j=0; j<n; j++) J[i*n+j]=J[j];
 }
@@ -1110,14 +1109,14 @@ void LM_df(double *p, double *J, longinteger m, longinteger n, void *adata){
 double RP_f(const arr& x, void *data){
   //printf("[RPf]");
   fc++;
-  y=f(x, data);
+  y=f(NULL, x, data);
   //printf("minimization (#f=%3i #df=%3i): current f-value = %g  \n", fc, dfc, y);
   return y;
 }
 void RP_df(arr& dx, const arr& x, void *data){
   //printf("[RPd]");
   dfc++;
-  df(dx, x, data);
+  f(&dx, x, data);
 }
 }
 
@@ -1145,8 +1144,7 @@ void frprmn(double p[], int n, double ftol, int *iter, int maxIterations, double
                   double stoppingTolerance);*/
 
 //--- the minimize routine itself
-int MT::minimize(double(*f)(const arr&, void*),
-                 void (*df)(arr&, const arr&, void*),
+int MT::minimize(double(*f)(arr*, const arr&, void*),
                  void *data,
                  arr& x,
                  double *fmin_return,
@@ -1156,7 +1154,6 @@ int MT::minimize(double(*f)(const arr&, void*),
                  bool testGrad){
                  
   minimizeStatic::f=f;
-  minimizeStatic::df=df;
   minimizeStatic::n=x.N;
   minimizeStatic::fc=0;
   minimizeStatic::dfc=0;
@@ -1168,7 +1165,7 @@ int MT::minimize(double(*f)(const arr&, void*),
   
   arr LM_target(x.N); LM_target.setZero();
   
-  if(testGrad) checkGradient(f, df, data, x, stoppingTolerance);
+  if(testGrad) checkGradient(f, data, x, stoppingTolerance);
   
   switch(method){
     case 2: //Rprop
@@ -1209,7 +1206,7 @@ int MT::minimize(double(*f)(const arr&, void*),
          \n  df-counts=%i\
          \n  f(x_min)=%g\n", method, i, minimizeStatic::fc, minimizeStatic::dfc, *fminp);
 
-  if(testGrad) checkGradient(f, df, data, x, stoppingTolerance);
+  if(testGrad) checkGradient(f, data, x, stoppingTolerance);
   
   return i;
 }

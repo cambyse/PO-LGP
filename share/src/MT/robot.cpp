@@ -58,7 +58,7 @@ void ControllerProcess::open(){
     MT::String sfile;
     MT::getParameter<MT::String>(sfile, "orsFile");
     MT::load(ors, sfile, true);
-  } else MT::load(ors, "../../configurations/schunk.ors", true);
+  } else MT::load(ors, STRING(getenv("MLR") <<"/configurations/schunk_clean.ors"), true);
   
   ors.calcBodyFramesFromJoints();
   ors.getJointState(q_reference, v_reference);
@@ -68,8 +68,8 @@ void ControllerProcess::open(){
   
   // SOC interface
   arr W;
-  W  <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
-  //W  <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .2 .2 .1 .1]";
+  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
+  //W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .2 .2 .1 .1]";
   //sys.initPseudoDynamic(&ors, &swift, NULL, 2., 200, &W);
   sys.initBasics(&ors, &swift, NULL, 400, 4., true, &W);
   taskLock.writeLock();
@@ -116,6 +116,12 @@ void ControllerProcess::step(){
     q_referenceVar->deAccess(this);
   }
   
+  if(joyVar){
+    joyVar->readAccess(this);
+    task->joyState = joyVar->state;
+    joyVar->deAccess(this);
+  }
+  
   //syncronize the ors/soc system with the true state q_ors and v_ors
   taskLock.writeLock();
   sys.setqv(q_reference, v_reference);
@@ -160,7 +166,7 @@ void ControllerProcess::step(){
   static ofstream logfil;
   static bool logfilOpen=false;
   if(!logfilOpen){ logfil.open("control.log"); logfilOpen=true; }
-  logfil  <<step  <<endl;
+  logfil <<step <<endl;
 #endif
   
   if(q_referenceVar){
@@ -183,7 +189,7 @@ TaskAbstraction *
 ControllerProcess::change_task(TaskAbstraction *_task){
 
   TaskAbstraction *old_task;
-
+  
   taskLock.writeLock();
   old_task = task;
   task = _task;
@@ -197,10 +203,9 @@ ControllerProcess::change_task(TaskAbstraction *_task){
 // Robot Module Master
 //
 
-RobotModuleGroup::RobotModuleGroup():ticcer("MasterTiccer", MT::getParameter<long>("tenMilliSeconds", 10l)), timer("MasterTimer"){
+RobotProcessGroup::RobotProcessGroup(){
   //history=1000;
   //horizon=20;
-  stepCounter=0;
   openArm=MT::Parameter<bool>("openArm", false);
   openHand=MT::Parameter<bool>("openHand", false);
   openSkin=MT::Parameter<bool>("openSkin", false);
@@ -208,25 +213,14 @@ RobotModuleGroup::RobotModuleGroup():ticcer("MasterTiccer", MT::getParameter<lon
   openLaser=MT::Parameter<bool>("openLaser", false);
   openBumble=MT::Parameter<bool>("openBumble", false);
   openEarlyVision=MT::Parameter<bool>("openEarlyVision", false);
-  openGui=MT::Parameter<bool>("openGui", false);
-  openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", false);
-  if(MT::checkParameter<MT::String>("logFile")){
-    log = new ofstream;
-    MT::open(*(ofstream*)log, MT::getParameter<MT::String>("logFile").p);
-  } else log=NULL;
-  if(MT::checkParameter<MT::String>("revelFile")){
-    revel=new RevelInterface;
-    revel->open(400, 400, MT::getParameter<MT::String>("revelFile"));
-  }
+  openGui=MT::Parameter<bool>("openGui", true);
+  openThreadInfoWin=MT::Parameter<bool>("openThreadInfoWin", true);
 }
 
-RobotModuleGroup::~RobotModuleGroup(){
-  if(MT::checkParameter<MT::String>("logFile")){
-    ((ofstream*)log)->close();
-  }
+RobotProcessGroup::~RobotProcessGroup(){
 }
 
-void RobotModuleGroup::open(){
+void RobotProcessGroup::open(){
   //setRRscheduling(MT::getParameter<int>("masterNice")); //requires SUDO
   //if(!setNice(MT::getParameter<int>("masterNice", -19)) && openHand) HALT("opening Schunk hand only with SUDO (for nice...)");
   
@@ -235,6 +229,7 @@ void RobotModuleGroup::open(){
   ctrl.q_referenceVar = &q_currentReference;
   ctrl.skinPressureVar = &skinPressureVar;
   ctrl.proxiesVar = &currentProxies;
+  ctrl.joyVar = &joy;
   ctrl.threadOpen();
   ctrl.threadWait();
   motorIndex.resize(7);
@@ -292,9 +287,8 @@ void RobotModuleGroup::open(){
     arm.threadWait();
 #ifdef MT_SCHUNK
     uint m;  float f;
-    for(m=3; m<=9; m++){ arm.pDev->setMaxVel(m, .1); }
-    for(m=3; m<=9; m++){ arm.pDev->setMaxAcc(m, .1); }
     for(m=3; m<=9; m++){ arm.pDev->getPos(m, &f); ctrl.q_reference(motorIndex(m-3))=(double)f; } //IMPORTANT: READ IN THE CURRENT ARM POSTURE
+    MT_MSG("TODO: at this point, check whether the q_currentReference has the correct q_real -> and copy to ctrl.q_reference (this also read in the hand, right?)");
 #endif
     ctrl.v_reference.setZero();
     ctrl.sys.setqv(ctrl.q_reference, ctrl.v_reference);
@@ -321,15 +315,10 @@ void RobotModuleGroup::open(){
   }else{
     ctrl.threadLoopWithBeat(0.01);
   }
-  
-  //-- time initializations
-  ticcer.reset();
-  timer.reset();
 }
 
-void RobotModuleGroup::close(){
+void RobotProcessGroup::close(){
   if(openThreadInfoWin) threadWin.threadClose();
-  if(revel) revel->close();
   if(openLaser){  urg.threadClose(); /*laserfile.close();*/  }
   if(openBumble) bumble.threadClose();
   if(openArm)    arm .threadClose();
@@ -339,13 +328,6 @@ void RobotModuleGroup::close(){
   if(openJoystick) joy.threadClose();
   ctrl.threadClose();
   if(openGui) gui.threadClose();
-}
-
-void RobotModuleGroup::step(){
-  stepCounter++;
-  ticcer.waitForTic();
-  timer.cycleStart();
-  timer.cycleDone();
 }
 
 
@@ -358,7 +340,7 @@ TaskAbstraction::TaskAbstraction(){
   plan_count=0.;
   joyVar = NULL;
   planVar= NULL;
-  joyRate = MT::Parameter<double>("joyRate", .2);
+  joyRate = MT::Parameter<double>("joyRate", .1);
   //-- planned trajectory
   if(MT::getParameter<bool>("loadPlanned", false)){
     ifstream fil;
@@ -379,12 +361,12 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   // get refs to joystick and plan from controller (SSD)
   planVar = ctrl->planVar;
   joyVar  = ctrl->joyVar;
-
+  
   //define explicit control variables
   arr limits;
-  limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  //limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -2. 2.; -2. 2.;
+  //limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -2. 2.; -2. 2.;
   //    -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0; -1.0 1.0 ]";
   
   arr skinIndex(6);
@@ -396,19 +378,19 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   skinIndex(5) = ors.getBodyByName("fing2")->index;
   
   
-  TV_eff  = new TaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
-  TV_q    = new TaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TV_rot  = new TaskVariable("endeffector rotation", ors, rotTVT, "m9", 0, 0, 0, 0);
-  TV_col  = new TaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
-  TV_lim  = new TaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  TV_skin = new TaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
-  TV_up   = new TaskVariable("up1", ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
-  TV_up2  = new TaskVariable("up2", ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
-  TV_z1   = new TaskVariable("oppose12", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
-  TV_z2   = new TaskVariable("oppose13", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
-  TV_f1   = new TaskVariable("pos1", ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
-  TV_f2   = new TaskVariable("pos2", ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
-  TV_f3   = new TaskVariable("pos3", ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
+  TV_eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
+  TV_q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
+  TV_rot  = new DefaultTaskVariable("endeffector rotation", ors, rotTVT, "m9", 0, 0, 0, 0);
+  TV_col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
+  TV_lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  TV_skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
+  TV_up   = new DefaultTaskVariable("up1", ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
+  TV_up2  = new DefaultTaskVariable("up2", ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
+  TV_z1   = new DefaultTaskVariable("oppose12", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
+  TV_z2   = new DefaultTaskVariable("oppose13", ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+  TV_f1   = new DefaultTaskVariable("pos1", ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
+  TV_f2   = new DefaultTaskVariable("pos2", ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
+  TV_f3   = new DefaultTaskVariable("pos3", ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
   
   //arr I2(7, 14); I2.setDiag(1.);
   //TaskVariable *TV_qhand= new TaskVariable("qhand", ors, qLinearTVT, 0, 0, 0, 0, I2);
@@ -428,7 +410,7 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
 #endif
   TV_rot->active=true;  TV_rot->targetType=directTT;  TV_rot->y_prec=0;     TV_rot->v_prec=TV_rot_vprec;
-  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e-1); TV_col->v_prec=0;
+  TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;
   TV_lim->active=true;  TV_lim->targetType=directTT;  TV_lim->y_prec=MT::Parameter<double>("TV_lim_yprec", 1e3); TV_lim->v_prec=0;
   TV_q  ->active=true;  TV_q->targetType=directTT;    TV_q  ->y_prec=0;     TV_q->v_prec=TV_q_vprec;
   TV_skin->active=true; TV_skin->targetType=directTT; TV_skin->y_prec=MT::Parameter<double>("TV_skin_yprec", 1e3); TV_skin->v_prec=0;
@@ -453,14 +435,14 @@ Reach *Reach::p=NULL;
 
 void
 DoNothing::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
 }
 void
 Stop::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   TV_col->active=true;
   TV_lim->active=true;
@@ -469,8 +451,8 @@ Stop::updateTaskVariables(ControllerProcess *ctrl){
 }
 void
 Homing::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   TV_col->active=true;
   TV_lim->active=true;
@@ -482,51 +464,51 @@ Homing::updateTaskVariables(ControllerProcess *ctrl){
 }
 void
 OpenHand::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   //TV_col->active=true;
   //TV_lim->active=true;
   //TV_skin->active=true;
   TV_q->active=true;
-
+  
   TV_q->y_prec=1e1;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
   TV_q->y_target = TV_q->y;
-  TV_q->y_target( 8)=TV_q->y_target(10)=TV_q->y_target(12)=-.8;
-  TV_q->y_target( 9)=TV_q->y_target(11)=TV_q->y_target(13)= .6;
+  TV_q->y_target(8)=TV_q->y_target(10)=TV_q->y_target(12)=-.8;
+  TV_q->y_target(9)=TV_q->y_target(11)=TV_q->y_target(13)= .6;
   //TV_skin->y_target.setZero();
 }
 void
 CloseHand::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   //TV_col->active=true;
   //TV_lim->active=true;
   TV_skin->active=true;
   TV_q->active=true;
-
+  
   TV_q->y_prec=0.;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
-  TV_skin->y_target=ARR(.03,0,.03,0,.03,0);//NIKOLAY : tune point, how strong to grasp
-
+  TV_skin->y_target=ARR(.03, 0, .03, 0, .03, 0);//NIKOLAY : tune point, how strong to grasp
+  
   //if(log) (*log) <<"\r CLOSE HAND " <<TV_skin->y <<flush;
 }
 void
 Reach::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
-  CHECK(reachPoint.N==3,"");
+  CHECK(reachPoint.N==3, "");
   TV_eff->active = true;
   TV_eff->y_prec=0.;  TV_eff->v_prec=1e-1;
   TV_eff->v_target=reachPoint - TV_eff->y;
-  double vmax=.2,v=norm(TV_eff->v_target);
+  double vmax=.2, v=norm(TV_eff->v_target);
   if(v>vmax) TV_eff->v_target*=vmax/v;
 }
 void
 FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,true);
-  activateAll(TVall,false);
+  prepare_skin(ctrl, true);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
   /*cout <<"\r plan_count=" <<plan_count <<flush;
     if((uint)plan_count>=plan_v.d0){ cout <<"trajectory following done..." <<endl;  break; }*/
@@ -534,14 +516,14 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
   TV_col->active=true;
   TV_lim->active=true;
   ctrl->useBwdMsg=false;
-
-  /*ctrl->bwdMsg_v   .referToSubDim(plan_v,(uint)plan_count);
-    ctrl->bwdMsg_Vinv.referToSubDim(plan_Vinv,(uint)plan_count);
-  //if(!(COUNTER%(1<<plan_scale)))
+  
+  /*ctrl->bwdMsg_v   .referToSubDim(plan_v, (uint)plan_count);
+    ctrl->bwdMsg_Vinv.referToSubDim(plan_Vinv, (uint)plan_count);
+  //if(!(COUNTER%(1 <<plan_scale)))
   plan_count+=plan_speed;
   ctrl->useBwdMsg=true;
   break;*/
-
+  
   if(planVar){
     planVar->writeAccess(ctrl);
     if(planVar->converged){
@@ -550,13 +532,13 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
       if(t+1<planVar->bwdMsg_v.d0){
         ctrl->bwdMsg_v    = (1.-inter)*planVar->bwdMsg_v   [t]+inter*planVar->bwdMsg_v   [t+1];
         ctrl->bwdMsg_Vinv = (1.-inter)*planVar->bwdMsg_Vinv[t]+inter*planVar->bwdMsg_Vinv[t+1];
-        TV_q->y_target    =  (1.-inter)*planVar->q[t]+inter*planVar->q[t+1];
-        TV_q->v_target    = ((1.-inter)*planVar->x[t]+inter*planVar->x[t+1]).sub(14,-1);
+        TV_q->y_target    = ((1.-inter)*planVar->x[t]+inter*planVar->x[t+1]).sub(0, 13);
+        TV_q->v_target    = ((1.-inter)*planVar->x[t]+inter*planVar->x[t+1]).sub(14, -1);
       }else{
         ctrl->bwdMsg_v    = planVar->bwdMsg_v   [t];
         ctrl->bwdMsg_Vinv = planVar->bwdMsg_Vinv[t];
-        TV_q->y_target    = planVar->q[t];
-        TV_q->v_target    = planVar->x[t].sub(14,-1);
+        TV_q->y_target    = planVar->x[t].sub(0, 13);
+        TV_q->v_target    = planVar->x[t].sub(14, -1);
       }
       planVar->ctrlTime+=0.01;
       if(planVar->ctrlTime>planVar->totalTime){
@@ -565,12 +547,11 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
         TV_q->active=true;
         TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
       }else{
-        //ctrl->useBwdMsg=true;
-        TV_q->active=true;  TV_q->y_prec=1e2;  TV_q->v_prec=1e2;  //control directly on q-level (including velocities)
+        ctrl->useBwdMsg=true;
+        TV_q->active=true;  TV_q->y_prec=1e1;  TV_q->v_prec=0.;  //control directly on q-level (including velocities)
       }
     }
     planVar->deAccess(ctrl);
-    //if (motion.recho.planner.cost < 1.) if (counter<motion.recho.sys->nTime()-1) counter++;
   }else{
     TV_q->active=true;
     TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
@@ -578,102 +559,96 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
 }
 void
 Joystick::updateTaskVariables(ControllerProcess *ctrl){
-  prepare_skin(ctrl,!(joyState(0)==2));
-  activateAll(TVall,false);
+  prepare_skin(ctrl, joyState(0)!=2);
+  activateAll(TVall, false);
   ctrl->useBwdMsg=false;
-
+  
   TV_col->active=true;
   TV_lim->active=true;
-
+  
   TV_q->active=true;
   TV_q->y_prec=0.;   TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero(); //damping on joint velocities
-
+  
   switch(joyState(0)){
-    case 1:{ //(1) homing
-             TV_q->v_target = ctrl->q_home - TV_q->y;
-             double vmax=.5,v=norm(TV_q->v_target);
-             if(v>vmax) TV_q->v_target*=vmax/v;
-             break;
-           }
-    case 2:{ //(2) CRAZY tactile guiding
-             TV_skin->active=true;
-             TV_skin->y_target=ARR(.00,0,.00,0,.00,0); 
-             TV_skin->y_prec = 5e1;
-             //ON SIMULATION: since it is set to (.01,.01,.01) this will always give a repelling force!
-             break;
-           }
-    case 256:{ //(select)close hand
-               TV_skin->active=true;
-               TV_skin->y_target=ARR(.03,0,.03,0,.03,0);
-               TV_skin->y_prec = 1e3;
-               break;
-             }
-    case 512:{ //(start)open hand
+    case 1: { //(1) homing
+      TV_q->v_target = ctrl->q_home - TV_q->y;
+      double vmax=.5, v=norm(TV_q->v_target);
+      if(v>vmax) TV_q->v_target*=vmax/v;
+      break;
+    }
+    case 2: { //(2) CRAZY tactile guiding
+      TV_skin->active=true;
+      TV_skin->y_target=ARR(.00, 0, .00, 0, .00, 0);
+      TV_skin->y_prec = 5e1;
+      //ON SIMULATION: since it is set to (.01, .01, .01) this will always give a repelling force!
+      break;
+    }
+    case 256: { //(select)close hand
+      TV_skin->active=true;
+      TV_skin->y_target=ARR(.03, 0, .03, 0, .03, 0);
+      TV_skin->y_prec = 1e3;
+      break;
+    }
+    case 512: { //(start)open hand
 #if 1
-               TV_q->active=true;
-               TV_q->y_prec=1e1;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
-               TV_q->y_target = TV_q->y;
-               TV_q->y_target( 8)=TV_q->y_target(10)=TV_q->y_target(12)=-.8;
-               TV_q->y_target( 9)=TV_q->y_target(11)=TV_q->y_target(13)= .6;
+      TV_q->active=true;
+      TV_q->y_prec=1e1;  TV_q->v_prec=TV_q_vprec;  TV_q->v_target.setZero();
+      TV_q->y_target = TV_q->y;
+      TV_q->y_target(8)=TV_q->y_target(10)=TV_q->y_target(12)=-.8;
+      TV_q->y_target(9)=TV_q->y_target(11)=TV_q->y_target(13)= .6;
 #else
-               TV_skin->active=true;
-               TV_skin->y_target.setZero();
-               TV_skin->y_prec = 1e3;
+      TV_skin->active=true;
+      TV_skin->y_target.setZero();
+      TV_skin->y_prec = 1e3;
 #endif
-               break;
-             }
-    case 8:{ //(4) motion rate without rotation
-             TV_rot->active=true;
-             TV_rot->y_prec=0.;  TV_rot->v_prec=TV_rot_vprec;
-             TV_rot->v_target.setZero();
-           }
-    case 0:{ //(NIL) motion rate control
-             TV_eff ->active=true;
-             TV_eff->y_target = TV_eff->y;
-             TV_eff->y_prec=0.;  TV_eff->v_prec=TV_x_vprec;
-             TV_eff->v_target(0) = -joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-             TV_eff->v_target(1) = +joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-             TV_eff->v_target(2) = -joyRate*MT::sign(joyState(2))*(.25*(exp(MT::sqr(joyState(2))/10000.)-1.));
-             break;
-           }
-    case 4:{ //(3) controlling the rotation rate
-             TV_eff ->active=true;
-             TV_rot->active=true;
-             TV_eff->y_prec=TV_x_yprec;  TV_eff->v_prec=0.;
-             TV_rot->y_prec=0.; TV_rot->v_prec=TV_rot_vprec;
-             TV_rot->v_target(0) = -3.*joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-             TV_rot->v_target(1) = +3.*joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-             TV_rot->v_target(2) = -3.*joyRate*MT::sign(joyState(1))*(.25*(exp(MT::sqr(joyState(1))/10000.)-1.));
-             break;
-           }
-           /*
-              case 512:{ //follow a planned trajectory!
-              if((uint)plan_count>=plan_v.d0){ cout <<"trajectory following done..." <<endl;  break; }
-           //TV_col->params(0)=.02;
-           v_ref   .referToSubDim(plan_v,(uint)plan_count);
-           Vinv_ref.referToSubDim(plan_Vinv,(uint)plan_count);
-           plan_count+=plan_speed;
-           bwdMsgs=true;
-           break;
-           }*/
-           //grip_target = ((double)(joyState(7)/4))/5.;
+      break;
+    }
+    case 8: { //(4) motion rate without rotation
+      TV_rot->active=true;
+      TV_rot->y_prec=0.;  TV_rot->v_prec=TV_rot_vprec;
+      TV_rot->v_target.setZero();
+    }
+    case 0: { //(NIL) motion rate control
+      TV_eff ->active=true;
+      TV_eff->y_target = TV_eff->y;
+      TV_eff->y_prec=0.;  TV_eff->v_prec=TV_x_vprec;
+      TV_eff->v_target(0) = -joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
+      TV_eff->v_target(1) = +joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
+      TV_eff->v_target(2) = -joyRate*MT::sign(joyState(2))*(.25*(exp(MT::sqr(joyState(2))/10000.)-1.));
+      break;
+    }
+    case 4: { //(3) controlling the rotation rate
+      TV_eff ->active=true;
+      TV_rot->active=true;
+      TV_eff->y_prec=TV_x_yprec;  TV_eff->v_prec=0.;
+      TV_rot->y_prec=0.; TV_rot->v_prec=TV_rot_vprec;
+      TV_rot->v_target(0) = -3.*joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
+      TV_rot->v_target(1) = +3.*joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
+      TV_rot->v_target(2) = -3.*joyRate*MT::sign(joyState(1))*(.25*(exp(MT::sqr(joyState(1))/10000.)-1.));
+      break;
+    }
+    /*
+       case 512:{ //follow a planned trajectory!
+       if((uint)plan_count>=plan_v.d0){ cout <<"trajectory following done..." <<endl;  break; }
+    //TV_col->params(0)=.02;
+    v_ref   .referToSubDim(plan_v, (uint)plan_count);
+    Vinv_ref.referToSubDim(plan_Vinv, (uint)plan_count);
+    plan_count+=plan_speed;
+    bwdMsgs=true;
+    break;
+    }*/
+    //grip_target = ((double)(joyState(7)/4))/5.;
   }
 }
 
 void
 TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
-  if(joyVar){
-    joyVar->readAccess(ctrl);
-    joyState = joyVar->state;
-    joyVar->deAccess(ctrl);
-  } else MT_MSG("Variable pointer not set");
-  
   if(ctrl->skinState.N){
     TV_skin->y = ctrl->skinState;
   }else{
     TV_skin->y=ARR(.01, 0, .01, 0, .01, 0);
   }
-
+  
   if(cut_and_nil){
     //cut of the skin signal... :-(
     for(uint i=0; i<TV_skin->y.N; i++) if(TV_skin->y(i)>.02) TV_skin->y(i)=.02;
@@ -681,6 +656,7 @@ TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
     for(uint i=0; i<TV_skin->J.d0; i++) for(uint j=0; j<8; j++) TV_skin->J(i, j)=0.;
     transpose(TV_skin->Jt, TV_skin->J);
   }
+  
 }
 
 void
@@ -688,10 +664,11 @@ void
 /* TODO properly make the finction NIY and make sure the program never comes
   into this function. Objects should use their own overriden functions)
  */
-TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){} 
-      
-bool RobotModuleGroup::signalStop=false;
-void RobotModuleGroup::signalStopCallback(int){
+TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){}
+
+bool RobotProcessGroup::signalStop=false;
+void RobotProcessGroup::signalStopCallback(int s){
+  schunkEmergencyShutdown(s);
   signalStop=true;
 }
 

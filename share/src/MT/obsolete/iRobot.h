@@ -8,7 +8,7 @@
 #include <MT/ors.h>
 #include <MT/joystick.h>
 #include <MT/soc.h>
-#include <NJ/UrgModule.h>
+#include <NJ/UrgInterface.h>
 #include <NP/camera.h>
 #include <MT/schunk.h>
 #include <MT/vision.h>
@@ -102,7 +102,7 @@ struct ControllerProcess{ //--non-threaded!!
 /*! simply a collection of standard robot modules: open() opens them all,
     close() closes them all, step() communicates between them and steps them all */
        
-struct RobotModuleGroup{
+struct RobotProcessGroup{
   //modules
   bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;
@@ -110,7 +110,7 @@ struct RobotModuleGroup{
   SchunkHandModule hand;
   SchunkSkinModule skin;
   JoystickInterface joy;
-  UrgModule urg;
+  UrgInterface urg;
   EarlyVisionModule evis;
   BumblebeeModule bumble;
   GuiModule gui;
@@ -122,7 +122,7 @@ struct RobotModuleGroup{
   //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors
   
-  //IMPORTANT: call signal(SIGINT, RobotModuleGroup::signalStopCallback); in main.cpp
+  //IMPORTANT: call signal(SIGINT, RobotProcessGroup::signalStopCallback); in main.cpp
   static bool signalStop;
   static void signalStopCallback(int);
   
@@ -133,8 +133,8 @@ struct RobotModuleGroup{
   RevelInterface *revel;
   ostream *log;
 
-  RobotModuleGroup();
-  ~RobotModuleGroup();
+  RobotProcessGroup();
+  ~RobotProcessGroup();
 
   //main routines
   void open();

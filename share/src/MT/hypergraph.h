@@ -42,25 +42,25 @@ stdPipes(HyperGraph);
 void writeDot(ElementL G){
   ofstream fil;
   MT::open(fil, "z.dot");
-  fil  <<"graph G{"  <<endl;
-  fil  <<"node [ fontsize=9 ];"  <<endl;
-  fil  <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];"  <<endl;
+  fil <<"graph G{" <<endl;
+  fil <<"node [ fontsize=9 ];" <<endl;
+  fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
   uint i, j;
   Element *e, *n;
   for_list(i, e, G){
-    fil  <<e->id  <<" [ ";
-    if(e->name.N()) fil  <<"label=\""  <<e->name  <<"\", ";
-    if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil  <<"shape=box";
-    else if(e->type=="shape") fil  <<"shape=diamond";
-    else fil  <<"shape=ellipse";
-    fil  <<" ];"  <<endl;
+    fil <<e->id <<" [ ";
+    if(e->name.N()) fil <<"label=\"" <<e->name <<"\", ";
+    if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil <<"shape=box";
+    else if(e->type=="shape") fil <<"shape=diamond";
+    else fil <<"shape=ellipse";
+    fil <<" ];" <<endl;
     for_list(j, n, e->links){
-      fil  <<e->id  <<" -- "  <<n->id  <<" [ ";
-      fil  <<"label="  <<j;
-      fil  <<" ];"  <<endl;
+      fil <<e->id <<" -- " <<n->id <<" [ ";
+      fil <<"label=" <<j;
+      fil <<" ];" <<endl;
     }
   }
-  fil  <<"}"  <<endl;
+  fil <<"}" <<endl;
   fil.close();
 }
 

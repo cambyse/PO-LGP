@@ -113,7 +113,7 @@ double mdp::pomdpEM_lev2(
     for(uint i=0; i<newed.N; i++) delete newed(i);
   }
   
-  if(os)(*os)  <<"E: "  <<MT::timerRead(true)  <<"sec, M: "  <<std::flush;
+  if(os)(*os) <<"E: " <<MT::timerRead(true) <<"sec, M: " <<std::flush;
   
   //----- M-STEP
   //consider the 2nd term (alpha*P_(x'|x)*beta)
@@ -165,11 +165,11 @@ double mdp::pomdpEM_lev2(
   
   //----- rest is cosmetics
   //report
-  if(os)(*os)  <<MT::timerRead()  <<"sec, "  <<std::flush;
-  if(os)(*os)  <<" P(r=1)="  <<PR
-     <<", Exp(T)="  <<ET  <<"/" <<::log(PR)/::log(mdp.gamma)
-     <<", Exp(R)="  <<(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma)
-     <<endl;
+  if(os)(*os) <<MT::timerRead() <<"sec, " <<std::flush;
+  if(os)(*os) <<" P(r=1)=" <<PR
+    <<", Exp(T)=" <<ET <<"/" <<::log(PR)/::log(mdp.gamma)
+    <<", Exp(R)=" <<(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma)
+    <<endl;
     
   return (PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma);
 }

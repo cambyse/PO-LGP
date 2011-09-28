@@ -55,14 +55,14 @@ void blas_MM(arr& X, const arr& A, const arr& B){
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   CALL(cblas_, gemm)(CblasRowMajor,
-                    CblasNoTrans, CblasNoTrans,
-                    A.d0, B.d1, A.d1,
-                    1., A.p, A.d1,
-                    B.p, B.d1,
-                    0., X.p, X.d1);
+                     CblasNoTrans, CblasNoTrans,
+                     A.d0, B.d1, A.d1,
+                     1., A.p, A.d1,
+                     B.p, B.d1,
+                     0., X.p, X.d1);
 #if 0//test
   MT::useLapack=false;
-  std::cout   <<"blas_MM error = "  <<maxDiff(A*B, X, 0)  <<std::endl;
+  std::cout  <<"blas_MM error = " <<maxDiff(A*B, X, 0) <<std::endl;
   MT::useLapack=true;
 #endif
 }
@@ -70,15 +70,16 @@ void blas_MM(arr& X, const arr& A, const arr& B){
 void blas_Mv(arr& y, const arr& A, const arr& x){
   CHECK(A.d1==x.N, "matrix multiplication: wrong dimensions");
   y.resize(A.d0);
+  if(!x.N && !A.d1){ y.setZero(); return; }
   CALL(cblas_, gemv)(CblasRowMajor,
-                    CblasNoTrans,
-                    A.d0, A.d1,
-                    1., A.p, A.d1,
-                    x.p, 1,
-                    0., y.p, 1);
+                     CblasNoTrans,
+                     A.d0, A.d1,
+                     1., A.p, A.d1,
+                     x.p, 1,
+                     0., y.p, 1);
 #if 0 //test
   MT::useLapack=false;
-  std::cout   <<"blas_Mv error = "  <<maxDiff(A*x, y, 0)  <<std::endl;
+  std::cout  <<"blas_Mv error = " <<maxDiff(A*x, y, 0) <<std::endl;
   MT::useLapack=true;
 #endif
 }
@@ -87,18 +88,18 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B){
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   CALL(cblas_, symm)(CblasRowMajor,
-                    CblasLeft, CblasUpper,
-                    A.d0, B.d1,
-                    1., A.p, A.d1,
-                    B.p, B.d1,
-                    0., X.p, X.d1);
+                     CblasLeft, CblasUpper,
+                     A.d0, B.d1,
+                     1., A.p, A.d1,
+                     B.p, B.d1,
+                     0., X.p, X.d1);
 #if 0 //test
   arr Y(A.d0, B.d1);
   uint i, j, k;
   Y.setZero();
   for(i=0; i<Y.d0; i++) for(j=0; j<Y.d1; j++) for(k=0; k<A.d1; k++)
         Y(i, j) += A(i, k) * B(k, j);
-  std::cout   <<"blas_MsymMsym error = "  <<sqrDistance(X, Y)  <<std::endl;
+  std::cout  <<"blas_MsymMsym error = " <<sqrDistance(X, Y) <<std::endl;
 #endif
 }
 #endif
@@ -111,13 +112,13 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b){
   Acol=A;
   CALL(, posv_)((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
   if(info){
-    HALT("lapack_Ainv_b_sym error info = "  <<info
-          <<"\n typically this is because A is not invertible, A="  <<A);
+    HALT("lapack_Ainv_b_sym error info = " <<info
+         <<"\n typically this is because A is not invertible, A=" <<A);
   }
   
 #if 0
   arr y = inverse(A)*b;
-  std::cout   <<"lapack_Ainv_b_sym error = "  <<sqrDistance(x, y)  <<std::endl;
+  std::cout  <<"lapack_Ainv_b_sym error = " <<sqrDistance(x, y) <<std::endl;
 #endif
 }
 
@@ -136,7 +137,7 @@ uint lapack_SVD(
   work.resize(10*(M+N));
   integer info, wn=work.N;
   CALL(, gesvd_)((char*)"S", (char*)"S", &N, &M, Atmp.p, &N, d.p, Vt.p, &N, U.p, &D, work.p, &wn, &info);
-  CHECK(!info, "LAPACK SVD error info = "  <<info);
+  CHECK(!info, "LAPACK SVD error info = " <<info);
   return D;
 }
 
@@ -145,7 +146,7 @@ void lapack_LU(arr& LU, const arr& A){
   integer M=A.d0, N=A.d1, D=M<N?M:N, info;
   intA piv(D);
   CALL(, getrf_)(&N, &M, LU.p, &N, (integer*)piv.p, &info);
-  CHECK(!info, "LAPACK SVD error info = "  <<info);
+  CHECK(!info, "LAPACK SVD error info = " <<info);
 }
 
 void lapack_RQ(arr& R, arr &Q, const arr& A){
@@ -154,12 +155,12 @@ void lapack_RQ(arr& R, arr &Q, const arr& A){
   integer M=A.d0, N=A.d1, D=M<N?M:N, LWORK=M*N, info;
   arr tau(D), work(LWORK);
   CALL(, gerqf_)(&N, &M, Q.p, &N, tau.p, work.p, &LWORK, &info);
-  CHECK(!info, "LAPACK RQ error info = "  <<info);
+  CHECK(!info, "LAPACK RQ error info = " <<info);
   for(int i=0; i<M; i++) for(int j=0; j<=i; j++) R(j, i) = Q(i, j); //copy upper triangle
   CALL(, orgrq_)(&N, &M, &N, Q.p, &N, tau.p, work.p, &LWORK, &info);
-  CHECK(!info, "LAPACK RQ error info = "  <<info);
+  CHECK(!info, "LAPACK RQ error info = " <<info);
   Q=~Q;
-  //cout  <<"\nR="  <<R  <<"\nQ="  <<Q  <<"\nRQ="  <<R*Q  <<"\nA="  <<A  <<endl;
+  //cout <<"\nR=" <<R <<"\nQ=" <<Q <<"\nRQ=" <<R*Q <<"\nA=" <<A <<endl;
 }
 
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){
@@ -173,9 +174,9 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){
   work.resize(10*(3*N));
   integer info, wn=work.N;
   CALL(, syev_)((char*)"V", (char*)"U", &N, Evecs.p,
-               &N, Evals.p, work.p, &wn, &info);
+                &N, Evals.p, work.p, &wn, &info);
   transpose(Evecs);
-  CHECK(!info, "lapack_EigenDecomp error info = "  <<info);
+  CHECK(!info, "lapack_EigenDecomp error info = " <<info);
 }
 
 bool lapack_isPositiveSemiDefinite(const arr& symmA){
@@ -199,7 +200,7 @@ void lapack_cholesky(arr& C, const arr& A){
   C=A;
   //compute cholesky
   CALL(, potrf_)((char*)"L", &n, C.p, &n, &info);
-  CHECK(!info, "LAPACK Cholesky decomp error info = "  <<info);
+  CHECK(!info, "LAPACK Cholesky decomp error info = " <<info);
   //clear the lower triangle:
   uint i, j;
   for(i=0; i<C.d0; i++) for(j=0; j<i; j++) C(i, j)=0.;
@@ -220,10 +221,10 @@ void lapack_inverseSymPosDef(arr& Ainv, const arr& A){
   Ainv=A;
   //compute cholesky
   CALL(, potrf_)((char*)"L", &n, Ainv.p, &n, &info);
-  CHECK(!info, "LAPACK Cholesky decomp error info = "  <<info <<potrf_ERR);
+  CHECK(!info, "LAPACK Cholesky decomp error info = " <<info <<potrf_ERR);
   //invert
   CALL(, potri_)((char*)"L", &n, Ainv.p, &n, &info);
-  CHECK(!info, "lapack_inverseSymPosDef error info = "  <<info);
+  CHECK(!info, "lapack_inverseSymPosDef error info = " <<info);
   uint i, j;
   for(i=0; i<(uint)n; i++) for(j=0; j<i; j++) Ainv(i, j)=Ainv(j, i);
 }

@@ -37,14 +37,14 @@ struct Vector {
   
   Vector(){}
   Vector(double x, double y, double z){ set(x, y, z); }
-  Vector(const arr& x){ CHECK(x.N==3,"");  set(x.p); }
+  Vector(const arr& x){ CHECK(x.N==3, "");  set(x.p); }
   double& operator()(int);
   const double& operator()(int) const;
   
   void set(double, double, double);
   void set(double*);
   void setZero();
-  void setRandom();
+  void setRandom(double range=1.);
   void add(double, double, double);
   void subtract(double, double, double);
   void normalize();
@@ -72,7 +72,7 @@ struct Matrix {
   double p[9];
   
   Matrix(){};
-  Matrix(const arr& m){ CHECK(m.N==9,"");  set(m.p); };
+  Matrix(const arr& m){ CHECK(m.N==9, "");  set(m.p); };
   double& operator()(int, int);
   const double& operator()(int, int) const;
   
@@ -97,7 +97,7 @@ struct Quaternion {
   double p[4];
   
   Quaternion();
-  Quaternion(const arr& q){ CHECK(q.N==4,"");  set(q.p); };
+  Quaternion(const arr& q){ CHECK(q.N==4, "");  set(q.p); };
   
   void set(double q0, double x, double y, double z);
   void set(double* q);
@@ -384,14 +384,15 @@ struct Shape {
 //===========================================================================
 //! proximity information (when two shapes become close)
 struct Proxy {
-  int a;              //!< index of shape A
+  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ?
   int b;              //!< index of shape B
   Vector posA, velA;   //!< contact or closest point position on surface of shape A (in world coordinates)
   Vector posB, velB;   //!< contact or closest point position on surface of shape B (in world coordinates)
   Vector normal;      //!< contact normal, pointing from A to B
   double d;             //!< distance (positive) or penetration (negative) between A and B
   Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
-  uint age;
+  uint age,colorCode;
+  Proxy();
 };
 
 //===========================================================================
@@ -433,11 +434,11 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Transformation *rel=0);
-  void jacobian(arr& J, uint i, ors::Transformation *rel=0);
-  void hessian(arr& H, uint i, ors::Transformation *rel=0);
-  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0);
-  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0);
+  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a);
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -537,18 +538,18 @@ std::istream& operator>>(std::istream&, ors::Vector&);
 std::istream& operator>>(std::istream&, ors::Matrix&);
 std::istream& operator>>(std::istream&, ors::Quaternion&);
 std::istream& operator>>(std::istream&, ors::Transformation&);
-std::ostream& operator <<(std::ostream&, const ors::Vector&);
-std::ostream& operator <<(std::ostream&, const ors::Matrix&);
-std::ostream& operator <<(std::ostream&, const ors::Quaternion&);
-std::ostream& operator <<(std::ostream&, const ors::Transformation&);
+std::ostream& operator<<(std::ostream&, const ors::Vector&);
+std::ostream& operator<<(std::ostream&, const ors::Matrix&);
+std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
+std::ostream& operator<<(std::ostream&, const ors::Transformation&);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);
 std::istream& operator>>(std::istream&, ors::Joint&);
 std::istream& operator>>(std::istream&, ors::Proxy&);
-std::ostream& operator <<(std::ostream&, const ors::Body&);
-std::ostream& operator <<(std::ostream&, const ors::Joint&);
-std::ostream& operator <<(std::ostream&, const ors::Proxy&);
+std::ostream& operator<<(std::ostream&, const ors::Body&);
+std::ostream& operator<<(std::ostream&, const ors::Joint&);
+std::ostream& operator<<(std::ostream&, const ors::Proxy&);
 stdPipes(ors::Graph);
 #endif
 
@@ -591,7 +592,7 @@ void glDrawGraph(void *classP);
 
 //===========================================================================
 //
-// task variables
+// The task variable abstraction
 //
 
 #ifndef MT_ORS_ONLY_BASICS
@@ -623,54 +624,28 @@ enum TargetType { noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnRef
 struct TaskVariable {
   //!@name data fields
   bool active;          //!< active?
-  TVtype type;          //!< which type has this variable
+  TVtype type;          //!< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
   TargetType targetType;//!< what target type
   MT::String name;      //!< its name
   ors::Graph *ors;      //!< pointer to the data structure (from which it gets the kinematics)
-  int i, j;             //!< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; //!< relative position to the body
-  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
   
   arr y, y_old, v, v_old, y_target, v_target; //!< current state and final target of this variable
   arr J, Jt;                                  //!< current Jacobian and its transpose
   double y_prec, v_prec;                      //!< precision (=1/variance) associated with this variable
   arr y_trajectory, y_prec_trajectory;        //!< target & precision over a whole trajectory
   arr v_trajectory, v_prec_trajectory;        //!< target & precision over a whole trajectory
-  
+
+  //used for feedback control:
   arr y_ref, v_ref;                           //!< immediate (next step) desired target reference
   double Pgain, Dgain;                        //!< parameters of the PD controller or attractor dynamics
   
   //a bit obsolete
   double err, derr;
-  int state;                                 //!< discrete indicate state of this variable (e.g., convergence)
-  double state_tol;
   
   //!@name initialization
   TaskVariable();
-  TaskVariable(
-    const char* _name,
-    ors::Graph& _sl,
-    TVtype _type,
-    const char *iBodyName, const char *iframe,
-    const char *jBodyName, const char *jframe,
-    const arr& _params);
-  TaskVariable(
-    const char* _name,
-    ors::Graph& _sl,
-    TVtype _type,
-    const char *iShapeName,
-    const char *jShapeName,
-    const arr& _params);
-  ~TaskVariable();
-  
-  void set(
-    const char* _name,
-    ors::Graph &_sl,
-    TVtype _type,
-    int _i, const ors::Transformation& _irel,
-    int _j, const ors::Transformation& _jrel,
-    const arr& _params);
-  //void set(const char* _name, ors::Graph& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  virtual ~TaskVariable() = 0;
+  virtual TaskVariable* newClone() = 0;
   
   //!@name online target parameters
   void setGains(double Pgain, double Dgain, bool onReal=true);
@@ -681,7 +656,7 @@ struct TaskVariable {
   //MT TODO: REMOVE ALL of the following options:
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
-  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec); 
+  void setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
   void setPrecisionTrajectoryConstant(uint T, double constant_prec);
   void setPrecisionVTrajectoryFinal(uint T, double intermediate_prec, double final_prec);
   void setPrecisionVTrajectoryConstant(uint T, double constant_prec);
@@ -691,15 +666,68 @@ struct TaskVariable {
   //only keep those:
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
   void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+  void setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec);
+
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
+  void setConstTargetsConstPrecisions(uint T);
+  void appendConstTargetsAndPrecs(uint T);
   
   void shiftTargets(int offset);
   
   //!@name updates
-  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
-  void updateJacobian();
+  virtual void updateState(double tau=1.) = 0; //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
   void updateChange(int t=-1, double tau=1.);
+  virtual void getHessian(arr& H){ NIY; }
+  
+  //!@name I/O
+  virtual void write(ostream& os) const;
+};
+stdOutPipe(TaskVariable);
+
+
+//===========================================================================
+//
+// The default implementation of standard task variables
+//
+
+/*!\brief basic task variable */
+struct DefaultTaskVariable:public TaskVariable {
+  //!@name data fields
+  int i, j;             //!< which body(-ies) does it refer to?
+  ors::Transformation irel, jrel; //!< relative position to the body
+  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
+  
+  //!@name initialization
+  DefaultTaskVariable();
+  DefaultTaskVariable(
+    const char* _name,
+    ors::Graph& _ors,
+    TVtype _type,
+    const char *iBodyName, const char *iframe,
+    const char *jBodyName, const char *jframe,
+    const arr& _params);
+  DefaultTaskVariable(
+    const char* _name,
+    ors::Graph& _ors,
+    TVtype _type,
+    const char *iShapeName,
+    const char *jShapeName,
+    const arr& _params);
+  ~DefaultTaskVariable();
+  TaskVariable* newClone(){ return new DefaultTaskVariable(*this); }
+  
+  void set(
+    const char* _name,
+    ors::Graph &_ors,
+    TVtype _type,
+    int _i, const ors::Transformation& _irel,
+    int _j, const ors::Transformation& _jrel,
+    const arr& _params);
+  //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  
+  //!@name updates
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
   void getHessian(arr& H);
   
   //!@name virtual user update
@@ -709,7 +737,67 @@ struct TaskVariable {
   //!@name I/O
   void write(ostream& os) const;
 };
-stdOutPipe(TaskVariable);
+stdOutPipe(DefaultTaskVariable);
+
+
+//===========================================================================
+//
+// Collision Task Variable
+//
+
+enum CTVtype {
+  allCTVT,       //!< undefined
+  allListedCTVT,       //!< undefined
+  allExceptListedCTVT,       //!< undefined
+  bipartiteCTVT, //!< 3D position of reference, can have 2nd reference, no param
+  pairsCTVT,     //!< 3D z-axis orientation, no 2nd reference, no param
+  vectorCTVT     //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+};
+
+/*!\brief basic task variable */
+struct ProxyTaskVariable:public TaskVariable {
+  //!@name data fields
+  CTVtype type;
+  uintA shapes,shapes2;
+  double margin;
+  bool linear;
+  
+  //!@name initialization
+  ProxyTaskVariable();
+  ProxyTaskVariable(const char* _name,
+                    ors::Graph& _ors,
+                    CTVtype _type,
+                    uintA _shapes,
+                    double _margin=.02,
+                    bool _linear=false);
+  TaskVariable* newClone(){ return new ProxyTaskVariable(*this); }
+  
+  //!@name updates
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+};
+
+/*!\brief basic task variable */
+struct ProxyAlignTaskVariable:public TaskVariable {
+  //!@name data fields
+  CTVtype type;
+  uintA shapes,shapes2;
+  double margin;
+  bool linear;
+  
+  //!@name initialization
+  ProxyAlignTaskVariable();
+  ProxyAlignTaskVariable(const char* _name,
+                         ors::Graph& _ors,
+                         CTVtype _type,
+                         uintA _shapes,
+                         double _margin=3.,
+                         bool _linear=true);
+  TaskVariable* newClone(){ return new ProxyAlignTaskVariable(*this); }
+  
+  //!@name updates
+  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+};
+
 
 
 //===========================================================================
@@ -725,13 +813,13 @@ void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives=true, int 
 void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void activateAll(TaskVariableList& CS, bool active);
 void updateState(TaskVariableList& CS);
-void updateJacobian(TaskVariableList& CS);
 void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
 void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
 
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -752,7 +840,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 
 //===========================================================================
 //
-// OPENGL module
+// OPENGL interface
 //
 
 class OpenGL;
@@ -767,7 +855,7 @@ void animateConfiguration(ors::Graph& C, OpenGL& gl);
 
 //===========================================================================
 //
-// SWIFT module
+// SWIFT interface
 //
 
 class SWIFT_Scene;
@@ -782,13 +870,14 @@ struct SwiftInterface {
   ~SwiftInterface();
   SwiftInterface* newClone(const ors::Graph& G) const;
   
-  void init(const ors::Graph& C, double _cutoff=.1);
+  void init(const ors::Graph& ors, double _cutoff=.1);
+  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& C);
-  void computeProxies(ors::Graph& C, bool dumpReport=false);
+  void initActivations(const ors::Graph& ors);
+  void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 
 
@@ -894,7 +983,7 @@ public:
 
 //===========================================================================
 //
-// QHULL module
+// QHULL interface
 //
 
 void plotQhullState(uint D);
@@ -928,7 +1017,7 @@ void getDelaunayEdges(uintA& E, const arr& V);
 
 //===========================================================================
 //
-// FEATHERSTONE module
+// FEATHERSTONE interface
 //
 
 namespace ors {
@@ -947,10 +1036,10 @@ struct Link {
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
-    os  <<"*type="  <<type  <<" index="  <<index  <<" parent="  <<parent  <<endl
-     <<" XAQ="  <<X  <<A  <<Q  <<endl
-     <<" cft="  <<com  <<force  <<torque  <<endl
-     <<" mass="  <<mass  <<inertia  <<endl;
+    os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
+    <<" XAQ=" <<X <<A <<Q <<endl
+    <<" cft=" <<com <<force <<torque <<endl
+    <<" mass=" <<mass <<inertia <<endl;
   }
 };
 
@@ -971,7 +1060,7 @@ void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C);
 
 //===========================================================================
 //
-// BLENDER import
+// BLENDER interface
 //
 
 void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);

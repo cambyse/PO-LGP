@@ -1,8 +1,9 @@
 #include<MT/util.h>
 #include<MT/algos.h>
 #include<MT/functions.h>
-#include<MT/dynamics.h>
-#include<MT/plot.h>
+//#include<MT/dynamics.h>
+#include <MT/optimization.h>
+#include <MT/plot.h>
 
 using namespace std;
 
@@ -137,14 +138,13 @@ void testExp(){
 
 
 static arr F;
-void f(arr& y,const arr& x,void*){ y=F*x; }
-void df(arr& J,const arr& x,void*){ J=F; }
+void f(arr& y, arr *grad, const arr& x,void*){ y=F*x; if(grad) *grad=F; }
 void testCheckGradient(){
   F.resize(4,3);
   rndUniform(F,0.,1.,false);
   arr x(3);
   rndUniform(x,0.,1.,false);
-  MT::checkGradient(f,df,NULL,x,1e-5);
+  MT::checkGradient(f, NULL, x, 1e-5);
 }
 
 
@@ -233,11 +233,12 @@ void testLUdecomposition(){
   arr A(6,6),L,U;
   rndGauss(A,1.,false);
 
-  lapack_LU(L, U, A);
+  /*lapack_LU(L, U, A);
   cout <<A <<endl
     <<L <<endl
     <<U <<endl
     <<L*U <<endl;
+  */
 
 }
 
@@ -256,7 +257,7 @@ int main(int argn,char** argv){
   testFilter();
   testRK();
   testRKswitch();
-  testLUdecomposition();
+  //testLUdecomposition();
 
   //plan();
   

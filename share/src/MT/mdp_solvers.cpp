@@ -164,9 +164,9 @@ void mdp::prioritizedSweeping(arr& V, const MDP& mdp, double VerrThreshold){
     //if(!(t%X)) glDisplayRedBlue(V, global_maze.d0, global_maze.d1, false);
   }
   //report to console:
-  cout  <<"PS: stopped after " <<t <<" updates"  <<endl;
-  // <<" cost="  <<cost
-  // <<" value of start state="  <<from->V  <<std::endl;
+  cout <<"PS: stopped after " <<t <<" updates" <<endl;
+  // <<" cost=" <<cost
+  // <<" value of start state=" <<from->V <<std::endl;
 }
 
 void weightedAddLog(arr& x, double& xLog, double w, const arr& y, double yLog){
@@ -307,7 +307,7 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
     if(!cutoffTime && t>10 && L(t+t)>0.){
       cutoffTime=(uint)ceil(2.*cutoffTimeFactor*t);
       if(cutoffTime>Tmax) cutoffTime=Tmax;
-      std::cout  <<"fronts meet at time "  <<t  <<" - cutoff time set to "  <<cutoffTime  <<std::endl;
+      std::cout <<"fronts meet at time " <<t <<" - cutoff time set to " <<cutoffTime <<std::endl;
     }
     
     //stopping criterion
@@ -317,10 +317,10 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
     //glDisplayRedBlue(beta-alpha, global_maze.d0, global_maze.d1, false);
     //glDisplayRedBlue(alpha, global_maze.d0, global_maze.d1, false);
     showAB(alpha, beta);
-    os  <<t  <<' '  <<L(t+t-1)  <<' '  <<L(t+t)  <<std::endl;
+    os <<t <<' ' <<L(t+t-1) <<' ' <<L(t+t) <<std::endl;
     //Z-file: alpha-norm beta-norm time Z(t) beta_START(t) alpha_GOAL(t) Z(t)-alternative
   }
-  cout  <<"E: "  <<MT::timerRead()  <<"sec, M: "  <<std::flush;
+  cout <<"E: " <<MT::timerRead() <<"sec, M: " <<std::flush;
   
   /*if(Pvisited && Pvisited->N==X){
     for(x=0;x<X;x++) hat_beta(x) = MT::DIV(hat_beta(x), Px_norm(x));
@@ -355,17 +355,17 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
   LIKE = L;
   
   //report
-  cout  <<MT::timerRead()  <<"sec, "  <<std::flush;
+  cout <<MT::timerRead() <<"sec, " <<std::flush;
   double Ltot=0., PtNorm=0., Texp=0.;
   arr PtL(2*Tmax);
   for(t=0; t<2*Tmax; t++){ PtL(t)=Pt(t)*L(t); Ltot+=PtL(t); Texp+=t*PtL(t); PtNorm+=Pt(t); }
   PtL  /= PtNorm;
   Texp /= Ltot;
   Ltot /= PtNorm; //(in case Pt was not normalized)
-  cout  <<" P(r=1)="  <<Ltot
-        <<", Exp(T)="  <<Texp  <<"/" <<::log(Ltot*PtNorm)/::log(mdp.gamma)
-        <<", Exp(R)="  <<(Ltot*(Rmax-Rmin)+Rmin)*PtNorm
-        <<endl;
+  cout <<" P(r=1)=" <<Ltot
+       <<", Exp(T)=" <<Texp <<"/" <<::log(Ltot*PtNorm)/::log(mdp.gamma)
+       <<", Exp(R)=" <<(Ltot*(Rmax-Rmin)+Rmin)*PtNorm
+       <<endl;
        
   //glDisplayRedBlue(hat_beta, global_maze.d0, global_maze.d1, true);
   //glDisplayRedBlue(hat_alpha, global_maze.d0, global_maze.d1, true);

@@ -23,7 +23,7 @@ void BinaryBPNetModel::randomInit(){
   uint N=MT::getParameter<uint>("N");
   uint D=MT::getParameter<uint>("D");
   if(D==0) graphRandomUndirected(net.nodes, net.edges, N, -1.); //unconnected!
-  if(D==1) graphRandomLinear(net.nodes, net.edges, N);          //just a chain!
+  if(D==1) graphRandomLinear(net.nodes, net.edges, N);     //just a chain!
   //graphRandomTree(net.nodes, net.edges, N, 1);
   if(D>1)  graphRandomFixedDegree(net.nodes, net.edges, N, D);
   net.randomizeWeightsUniform(1., 1., MT::getParameter<bool>("positive"));
@@ -181,19 +181,19 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
   BinaryBPNet::node *n;  BinaryBPNet::edge *e;
   arr b_t, b_J;
   uint i, j;
-  //cout  <<"** before training"; net.report(cout);
+  //cout <<"** before training"; net.report(cout);
   for(i=0; i<data.N(); i++){
     net.setTandJ(w);
     net.zeroMessages();
     net.addInputEvidence(data.X[i]);  //data.sub(i, i, 0, 0));
     net.addOutputEvidence(data.Y[i]); //data.sub(i, i, 1, -1));
-    //cout  <<"** after conditioning"; net.report(cout);
+    //cout <<"** after conditioning"; net.report(cout);
     for(j=0; j<ITER; j++) net.stepBP();
-    //cout  <<"** after inference";    net.report(cout);
+    //cout <<"** after inference";    net.report(cout);
     net.getNodeBeliefTables(b_t, true);
     net.getPairBeliefTables(b_J, true);
   }
-  //cout  <<"** expectations: b_t=\n"  <<b_t  <<"\n  b_J=\n"  <<b_J  <<endl;
+  //cout <<"** expectations: b_t=\n" <<b_t <<"\n  b_J=\n" <<b_J <<endl;
   //-- M-step:
   for_list(i, n, net.nodes) n->theta=0.;
   for_list(i, e, net.edges){
@@ -202,8 +202,8 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
     double pf0, pf1, pt0, pt1;
     pf0=b_J(i, 0, 0)+b_J(i, 0, 1);  pf1=b_J(i, 1, 0)+b_J(i, 1, 1);
     pt0=b_J(i, 0, 0)+b_J(i, 1, 0);  pt1=b_J(i, 0, 1)+b_J(i, 1, 1);
-    cout  <<pf0  <<' '  <<pf1  <<b_t[e->ifrom]  <<endl;
-    cout  <<pt0  <<' '  <<pt1  <<b_t[e->ito]  <<endl;
+    cout <<pf0 <<' ' <<pf1 <<b_t[e->ifrom] <<endl;
+    cout <<pt0 <<' ' <<pt1 <<b_t[e->ito] <<endl;
     CHECK(fabs(pf0-b_t(e->ifrom, 0))<1e-5 && fabs(pf1-b_t(e->ifrom, 1))<1e-5, "");
     CHECK(fabs(pt0-b_t(e->ito  , 0))<1e-5 && fabs(pt1-b_t(e->ito  , 1))<1e-5, "");
     */
@@ -212,13 +212,13 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
     e->from->theta += t1;
     e->to  ->theta += t2;
   }
-  //cout  <<"** after J updates"; net.report(cout);
+  //cout <<"** after J updates"; net.report(cout);
   for_list(i, n, net.nodes){
     double p=table_to_nodeExp(b_t[i]);
     if(n->edges.N>1) n->theta -= (n->edges.N-1)*p;
     if(!n->edges.N) n->theta += p;
   }
-  //cout  <<"** after theta updates"; net.report(cout);
+  //cout <<"** after theta updates"; net.report(cout);
   /* --OLD CODE
     //same as the 'collect' routine:
   double x=0.;

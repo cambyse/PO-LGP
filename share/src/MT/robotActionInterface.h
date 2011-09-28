@@ -12,7 +12,7 @@
 //
 
 struct TaskAbstraction;
-struct RobotModuleGroup;
+struct RobotProcessGroup;
 
 //private space:
 struct sRobotActionInterface;
@@ -35,11 +35,11 @@ struct RobotActionInterface {
   // -- planned motions
   void perceiveObjects(PerceptionModule& perc);
   void pickObject(ReceedingHorizonProcess& planner, const char* objShape);
-  void placeObject(ReceedingHorizonProcess& planner, const char* objShape,const char* belowFromShape,const char* belowToShape);
-  void plannedHoming(ReceedingHorizonProcess& planner,const char* objShape,const char* belowToShape);
+  void placeObject(ReceedingHorizonProcess& planner, const char* objShape, const char* belowFromShape, const char* belowToShape);
+  void plannedHoming(ReceedingHorizonProcess& planner, const char* objShape, const char* belowToShape);
   void graspISF();
   
-  RobotModuleGroup* getProcessGroup();
+  RobotProcessGroup* getProcessGroup();
   TaskAbstraction* getTask();
 };
 

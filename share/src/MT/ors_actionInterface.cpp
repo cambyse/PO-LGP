@@ -24,7 +24,7 @@
 
 inline const char* getObjectString(uint ID){
   std::stringstream ss;
-  ss  <<"o"  <<ID;
+  ss <<"o" <<ID;
   return ss.str().c_str();
 }
 
@@ -116,8 +116,8 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   }
   arr Wdiag(q0.N);
   for(i=0; i<q0.N; i++) Wdiag(i)=BM(C->joints(i)->to->index);
-  //cout  <<Wdiag;
-  //Wdiag  <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
+  //cout <<Wdiag;
+  //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
   W.setDiag(Wdiag);
   
   // determine number of objects
@@ -126,7 +126,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   std::stringstream ss;
   for(i=1;; i++){
     ss.str("");
-    ss  <<"o"  <<i;
+    ss <<"o" <<i;
     ors::Body *n = C->getBodyByName(ss.str().c_str());
     if(n==0)
       break;
@@ -147,7 +147,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
 }
 
 void ActionInterface::watch(){
-  gl->text.clr()  <<"watch"  <<endl;
+  gl->text.clr() <<"watch" <<endl;
   gl->watch();
 }
 
@@ -191,7 +191,7 @@ void ActionInterface::simulate(uint t){
   C->getJointState(q);
   for(; t--;){
     oneStep(q, C, ode, swift);
-    gl->text.clr()  <<"simulation -- time "  <<t  <<endl;
+    gl->text.clr() <<"simulation -- time " <<t <<endl;
     gl->update();
   }
 }
@@ -202,13 +202,12 @@ void ActionInterface::relaxPosition(){
   
   arr I(q.N, q.N); I.setId();
   
-  TaskVariable x("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
+  DefaultTaskVariable x("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
   x.setGainsAsAttractor(20, .1);
   x.y_prec=1000.;
   x.y_target=q0;
-  x.state_tol=.2;
   
-//   /*TaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());*/
+//   /*DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());*/
 //   c.setGainsAsAttractor(20, .1);
 //   c.y_prec=10000.;
 //   c.state_tol=.005;
@@ -217,15 +216,15 @@ void ActionInterface::relaxPosition(){
   uint t;
   for(t=0; t<Tabort; t++){
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"relaxPosition --  time "  <<t  <<endl;
+    gl->text.clr() <<"relaxPosition --  time " <<t <<endl;
     gl->update();
-    if(x.state==1) break;
+    if(x.err<.2) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
 }
 
 // void ActionInterface::catchObject(const char *man_id, const char *obj_id){
-//   TaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
+//   DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
 //   x.setGainsAsAttractor(20, .2);
 //   x.y_prec=1000.;
 //   ors::Graph::node obj=C->getName(obj_id);
@@ -236,7 +235,7 @@ void ActionInterface::relaxPosition(){
 //   for(t=0;;t++){
 //     x.y_target.setCarray(obj->X.p.v, 3);
 //     controlledStep(q, W, C, ode, swift, TVs);
-//     gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
 //     gl->update();
 //     if(x.state==1 || C->getContact(x.i, obj->index)) break;
 //   }
@@ -253,7 +252,7 @@ void ActionInterface::relaxPosition(){
 // }
 
 void ActionInterface::moveTo(const char *man_id, const arr& target){
-  TaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
+  DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
   
@@ -263,9 +262,9 @@ void ActionInterface::moveTo(const char *man_id, const arr& target){
   for(t=0; t<Tabort; t++){
     x.y_target=target;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1) break;
+    if(x.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
 }
@@ -273,11 +272,11 @@ void ActionInterface::moveTo(const char *man_id, const arr& target){
 void ActionInterface::grab(const char *man_id, const char *obj_id){
   ors::Body *obj=C->getBodyByName(obj_id);
   
-  TaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
+  DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
   
-//   TaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
+//   DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
 //   c.setGainsAsAttractor(20, .1);
 //   c.y_prec=10000.;
 //   c.state_tol=.005;
@@ -298,9 +297,9 @@ void ActionInterface::grab(const char *man_id, const char *obj_id){
   for(t=0; t<Tabort; t++){
     x.y_target.setCarray(obj->X.pos.p, 3);
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1 || C->getContact(x.i, obj->index)) break;
+    if(x.err<.05 || C->getContact(x.i, obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -312,14 +311,13 @@ void ActionInterface::grab(const char *man_id, const char *obj_id){
   }
   
   // (4) move upwards (to avoid collisions)
-  x.state_tol=.05;
   for(t=0; t<Tabort; t++){
     x.y_target.setCarray(obj->X.pos.p, 3);
     x.y_target(2) = 1.2;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1) break;
+    if(x.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
 }
@@ -344,8 +342,8 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   } else
     obj_id1 = (char*) "fing1c";
     
-  TaskVariable x("obj", *C, posTVT, obj_id1, 0, 0, 0, ARR());
-  TaskVariable z;
+  DefaultTaskVariable x("obj", *C, posTVT, obj_id1, 0, 0, 0, ARR());
+  DefaultTaskVariable z;
   //
   int obj_index=C->getBodyByName(obj_id1)->index;
   delete[] obj_id1;
@@ -362,8 +360,8 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   f.rot.setDiff(VEC_z, upvec);
   z.set("obj-z-align", *C, zalignTVT, obj_index, f, -1, ors::Transformation(), ARR());
   //
-  TaskVariable r("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
-  TaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
+  DefaultTaskVariable r("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
+  DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
   
   r.setGainsAsAttractor(50, .1);
   r.y_prec=1.;
@@ -371,15 +369,12 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   r.active=false;
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
-  x.state_tol=.005;
   z.setGainsAsAttractor(20, .2);
   z.y_prec=1000.;
   z.y_target.resize(1);  z.y_target = 1.;
-  z.state_tol=.005;
   
   c.setGainsAsAttractor(20, .1);
   c.y_prec=10000.;
-  c.state_tol=.005;
   if(!swift) c.active=false;
   
   uint t;
@@ -419,20 +414,17 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   //phase 1: up
   updateState(TVs);
   x.y_target(2) += .3;
-  x.state_tol=.05;
   for(t=0; t<Tabort; t++){
     //x.y_target.setCarray(C->getBodyByName(rel_id)->X.p.v, 3);
     //x.y_target(2) += .3;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"dropObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"dropObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1) break;
+    if(x.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
   //phase 2: above object
-  x.state_tol=.05;
-  
   double HARD_LIMIT_DIST_Y = -0.8;
   
   double z_target;
@@ -448,9 +440,9 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
       x.y_target(1) = HARD_LIMIT_DIST_Y;
     x.y_target(2) = z_target + .2; // distance in m
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1) break;
+    if(x.err<.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -458,7 +450,6 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   c.active=false;
   
   //phase 3: down
-  x.state_tol=.002;
   double* obj_shape = getShape(obj_index);
   for(t=0; t<Tabort; t++){
     x.y_target.setCarray(C->getBodyByName(rel_id)->X.pos.p, 3);
@@ -474,9 +465,9 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
     double Z_ADD_DIST = obj_shape[0]/2 + .05;
     x.y_target(2) = z_target + Z_ADD_DIST; // distance in m where obj is let loose
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr()  <<"catchObject --  time "  <<t  <<endl;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
     gl->update();
-    if(x.state==1 && z.state==1) break;
+    if(x.err<.002 && z.err<.002) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -507,25 +498,25 @@ uint ActionInterface::getCatched(uint man_id){
 #if 0
   //   ors::Graph::node n = C->bodies(man_id);
   ors::Proxy *p;
-  //  cout  <<"davor";
+  //  cout <<"davor";
   uint obj=C->getBodyByName(convertObjectID2name(man_id))->index;
-  //   cout  <<"danach";
+  //   cout <<"danach";
   uint i;
-  //   cout  <<obj  <<std::flush;
+  //   cout <<obj <<std::flush;
   //
   for(i=0; i<C->proxies.N; i++)
     if(!C->proxies(i).age && C->proxies(i).d<0.){
       p=&C->proxies(i);
-      //      cout  <<"DOES THIS EVER HAPPEN?"  <<endl;
+      //      cout <<"DOES THIS EVER HAPPEN?" <<endl;
       if(p->a==(int)obj && p->b!=(int)obj){
         // TODO look only for objects "o"
         return p->b;
-        //        cout  <<"!!!!!!!!!"  <<C->bodies(p->b)->name  <<" and "  <<C->bodies(p->a)->name  <<std::flush  <<endl;
+        //        cout <<"!!!!!!!!!" <<C->bodies(p->b)->name <<" and " <<C->bodies(p->a)->name <<std::flush <<endl;
       }
       if(p->b==(int)obj && p->a!=(int)obj){
         // look only for objects "o"
         return p->a;
-        //        cout  <<"!!!!!!!!!"  <<C->bodies(p->a)->name  <<" and "  <<C->bodies(p->b)->name  <<std::flush  <<endl;
+        //        cout <<"!!!!!!!!!" <<C->bodies(p->a)->name <<" and " <<C->bodies(p->b)->name <<std::flush <<endl;
       }
     }
   return UINT_MAX;
@@ -543,28 +534,28 @@ uint ActionInterface::getCatched(){
 
 void ActionInterface::writeAllContacts(uint id){
   ors::Proxy *p;
-  //  cout  <<"davor";
+  //  cout <<"davor";
   uint obj=C->getBodyByName(convertObjectID2name(id))->index;
-  //   cout  <<"danach";
+  //   cout <<"danach";
   uint i;
-  //   cout  <<obj  <<std::flush;
-  cout  <<convertObjectID2name(id)  <<" is in contact with ";
+  //   cout <<obj <<std::flush;
+  cout <<convertObjectID2name(id) <<" is in contact with ";
   for(i=0; i<C->proxies.N; i++)
     if(!C->proxies(i)->age) // PROXIES SIND LEER!
       if(C->proxies(i)->d<0.){
         p=C->proxies(i);
-        //      cout  <<"DOES THIS EVER HAPPEN?"  <<endl;
+        //      cout <<"DOES THIS EVER HAPPEN?" <<endl;
         if(p->a==(int)obj && p->b!=(int)obj){
           // TODO look only for objects "o"
-          cout  <<C->bodies(p->b)->name  <<" ";
-          //        cout  <<"!!!!!!!!!"  <<C->bodies(p->b)->name  <<" and "  <<C->bodies(p->a)->name  <<std::flush  <<endl;
+          cout <<C->bodies(p->b)->name <<" ";
+          //        cout <<"!!!!!!!!!" <<C->bodies(p->b)->name <<" and " <<C->bodies(p->a)->name <<std::flush <<endl;
         }
         if(p->b==(int)obj && p->a!=(int)obj){
           // look only for objects "o"
-          cout  <<C->bodies(p->a)->name  <<" ";
+          cout <<C->bodies(p->a)->name <<" ";
         }
       }
-  cout  <<endl;
+  cout <<endl;
 }
 
 
@@ -636,7 +627,7 @@ void ActionInterface::getManipulableObjects(uintA& objects){
   uint i, obj;
   for(i=1; i<=noObjects; i++){
     ss.str("");
-    ss  <<"o"  <<i;
+    ss <<"o" <<i;
     ors::Body *n = C->getBodyByName(ss.str().c_str());
     obj=n->index;
     objects.append(obj);
@@ -669,7 +660,7 @@ bool ActionInterface::isUpright(uint id){
   double angle;
   angle = acos(maxz);
   
-//   cout  <<id  <<" angle = "  <<angle  <<endl;
+//   cout <<id <<" angle = " <<angle <<endl;
   if(fabs(angle) < TOLERANCE)
     return true;
   else
@@ -714,12 +705,12 @@ double* ActionInterface::getPosition(uint id){
 //   uintA objects2;
 //   uint i;
 //   FOR1D(objects, i){
-//     cout  <<convertObjectID2name(objects(i))  <<" ("  <<objects(i)  <<"): "  <<std::flush;
+//     cout <<convertObjectID2name(objects(i)) <<" (" <<objects(i) <<"): " <<std::flush;
 //     getObjectsAbove(objects2, objects(i));
-//     cout  <<"above="  <<objects2  <<" "  <<std::flush;
+//     cout <<"above=" <<objects2 <<" " <<std::flush;
 //     getObjectsBelow(objects2, objects(i));
-//     cout  <<"below="  <<objects2  <<" ";
-//     cout  <<endl;
+//     cout <<"below=" <<objects2 <<" ";
+//     cout <<endl;
 //   }
 // }
 
@@ -728,7 +719,7 @@ void ActionInterface::printObjectInfo(){
   getObjects(objects);
   uint i;
   FOR1D(objects, i){
-    cout  <<objects(i)  <<" "  <<convertObjectID2name(objects(i))  <<endl;
+    cout <<objects(i) <<" " <<convertObjectID2name(objects(i)) <<endl;
   }
 }
 
@@ -740,7 +731,7 @@ void ActionInterface::indicateFailure(){
     NIY;
     //C->del_edge(e); //otherwise: no object in hand
   }
-  std::cerr  <<"ActionInterface: CONTROL FAILURE"  <<endl;
+  std::cerr <<"ActionInterface: CONTROL FAILURE" <<endl;
   relaxPosition();
 }
 
@@ -784,7 +775,7 @@ double ActionInterface::highestPosition(double x, double y, double radius, uint 
   uintA manipObjs;
   getManipulableObjects(manipObjs);
   if(DEBUG>0){
-    cout  <<"highestPosition:" <<endl;
+    cout <<"highestPosition:" <<endl;
     cout <<"Asking for pos " <<x <<"/" <<y <<" within radius " <<radius<<endl;
   }
   uint i;

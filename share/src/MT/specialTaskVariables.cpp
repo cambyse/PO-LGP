@@ -3,25 +3,31 @@
 
 void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
   arr limits;
-  limits  <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   arr I2(7, 14); I2.setDiag(1.);
   //arr skinIdx; copy(skinIdx, ctrl->skinIndex);
   
-  TaskVariable *TV_eff  = new TaskVariable("endeffector", *sys.ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
-  TaskVariable *TV_q    = new TaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TaskVariable *TV_rot  = new TaskVariable("endeffector rotation", *sys.ors, rotTVT, "m9", 0, 0, 0, 0);
-  TaskVariable *TV_col  = new TaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
-  TaskVariable *TV_lim  = new TaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  TaskVariable *TV_eff  = new DefaultTaskVariable("endeffector", *sys.ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
+  TaskVariable *TV_q    = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  TaskVariable *TV_rot  = new DefaultTaskVariable("endeffector rotation", *sys.ors, rotTVT, "m9", 0, 0, 0, 0);
+  TaskVariable *TV_col  = new DefaultTaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(.03)); //MARGIN, perhaps .05?
+  TaskVariable *TV_lim  = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
   //TaskVariable *TV_skin = new TaskVariable("skin", *sys.ors, skinTVT, 0, 0, 0, 0, skinIdx);
-  TaskVariable *TV_up   = new TaskVariable("up1", *sys.ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
-  TaskVariable *TV_up2  = new TaskVariable("up2", *sys.ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
-  TaskVariable *TV_z1   = new TaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
-  TaskVariable *TV_z2   = new TaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
-  TaskVariable *TV_f1   = new TaskVariable("pos1", *sys.ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
-  TaskVariable *TV_f2   = new TaskVariable("pos2", *sys.ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
-  TaskVariable *TV_f3   = new TaskVariable("pos3", *sys.ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
-  TaskVariable *TV_qhand= new TaskVariable("qhand", *sys.ors, qLinearTVT, 0, 0, 0, 0, I2);
+  TaskVariable *TV_up   = new DefaultTaskVariable("up1", *sys.ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
+  TaskVariable *TV_up2  = new DefaultTaskVariable("up2", *sys.ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
+  TaskVariable *TV_z1   = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
+  TaskVariable *TV_z2   = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+#if 1
+  TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tipHook1", 0, 0);
+  TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tipHook2", 0, 0);
+  TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tipHook3", 0, 0);
+#else
+  TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tip1", "<t( .0   -.09 .0)>", 0, 0, 0);
+  TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tip2", "<t( .033 -.09 .0)>", 0, 0, 0);
+  TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tip3", "<t(-.033 -.09 .0)>", 0, 0, 0);
+#endif
+  TaskVariable *TV_qhand= new DefaultTaskVariable("qhand", *sys.ors, qLinearTVT, 0, 0, 0, 0, I2);
   TaskVariableList TVs;
   TVs.append(ARRAY(TV_eff, TV_q, TV_rot, TV_col, TV_lim)); //TV_skin
   TVs.append(ARRAY(TV_up, TV_up2, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3, TV_qhand));
@@ -29,7 +35,7 @@ void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 }
 
 void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //load parameters only once!
   static bool firstTime=true;
@@ -64,14 +70,14 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
   
   //endeff
   V=listFindByName(sys.vars, "endeffector");
-  V->irel.setText("<t(0 0 -.26)>");
+  ((DefaultTaskVariable*)V)->irel.setText("<t(0 0 -.26)>");
   V->updateState();
   V->y_target = xtarget;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, palmPrec, 0., 0.);
   
   //up
   V=listFindByName(sys.vars, "up1");
-  V->irel.setText("<d(90 1 0 0)>");
+  ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   V->updateState();
   V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
@@ -96,7 +102,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape){
 }
 
 void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowFromShape, const char* belowToShape){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -123,7 +129,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
   
   //endeff
   V=listFindByName(sys.vars, "endeffector");
-  V->irel = obj->rel;
+  ((DefaultTaskVariable*)V)->irel = obj->rel;
   V->updateState();
   V->y_target = xtarget;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
@@ -140,14 +146,14 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
   
   //up1
   V=listFindByName(sys.vars, "up1");
-  V->irel = obj->rel;  V -> irel.addRelativeRotationDeg(90, 1, 0, 0);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V) -> irel.addRelativeRotationDeg(90, 1, 0, 0);
   V->updateState();
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
   //up2
   V=listFindByName(sys.vars, "up2");
-  V->irel = obj->rel;  V-> irel.addRelativeRotationDeg(90, 0, 1, 0);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V)-> irel.addRelativeRotationDeg(90, 0, 1, 0);
   V->updateState();
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
@@ -162,7 +168,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
 }
 
 void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowToShape){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
   
   //deactivate all variables
   activateAll(sys.vars, false);

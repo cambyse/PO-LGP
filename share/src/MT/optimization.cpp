@@ -4,7 +4,7 @@
 #  define CHECK_EPS 1e-8
 #endif
 
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals){
+uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals, double maxStepSize){
   double a=1.;
   double lx, ly;
   arr Delta, y;
@@ -14,7 +14,7 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
   //compute initial costs
   f.calcTermsAt(x);  evals++;
   lx = sumOfSqr(f.phi);
-  VERBOSE(2, cout  <<"starting point x="  <<x  <<" l(x)="  <<lx  <<" a=" <<a  <<endl);
+  VERBOSE(2, cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a=" <<a <<endl);
   
   for(;;){
     //compute Delta
@@ -23,20 +23,22 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
     innerProduct(r, ~f.J, f.phi);
     
     lapack_Ainv_b_sym(Delta, R, -r);
+    if(maxStepSize>0. && norm(Delta)>maxStepSize)
+      Delta *= maxStepSize/norm(Delta);
     
     for(;;){
       y = x + a*Delta;
       f.calcTermsAt(y);  evals++;
       ly = sumOfSqr(f.phi);
-      VERBOSE(2, cout  <<evals  <<" \tprobing y="  <<y  <<" \tl(y)="  <<ly  <<" \t|Delta|="  <<norm(Delta)  <<" \ta=" <<a);
-      CHECK(ly==ly, "cost seems to be NAN: ly="  <<ly);
+      VERBOSE(2, cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a);
+      CHECK(ly==ly, "cost seems to be NAN: ly=" <<ly);
       if(ly <= lx) break;
       if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
       //decrease stepsize
       a = .5*a;
-      VERBOSE(2, cout  <<" - reject"  <<endl);
+      VERBOSE(2, cout <<" - reject" <<endl);
     }
-    VERBOSE(2, cout  <<" - ACCEPT"  <<endl);
+    VERBOSE(2, cout <<" - ACCEPT" <<endl);
     
     //adopt new point and adapt stepsize
     x = y;
@@ -46,7 +48,7 @@ uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxE
     //stopping criterion
     if(norm(Delta)<tolerance || evals>maxEvals) break;
   }
-  //cout  <<lx  <<' '  <<flush;
+  //cout <<lx <<' ' <<flush;
   return evals;
 }
 
@@ -71,13 +73,13 @@ void checkGradient(OptimizationProblem &p,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- max diff="  <<md  <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
-    //cout  <<"\nmeasured grad="  <<JJ  <<"\ncomputed grad="  <<J  <<endl;
+    //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     HALT("");
   }else{
-    cout  <<"checkGradient -- SUCCESS (max diff error="  <<md  <<")"  <<endl;
+    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
 }
 
@@ -101,13 +103,13 @@ void checkGradient_vec(OptimizationProblem &p,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- max diff="  <<md  <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
-    //cout  <<"\nmeasured grad="  <<JJ  <<"\ncomputed grad="  <<J  <<endl;
+    //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
   }else{
-    cout  <<"checkGradient -- SUCCESS (max diff error="  <<md  <<")"  <<endl;
+    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
 }
 
@@ -161,7 +163,7 @@ void Rprop::step(arr& w, const arr& grad, uint *singleI){
   uint i=0, I=w.N;
   if(singleI){ i=*(singleI); I=i+1; }
   for(; i<I; i++){
-    if(grad.elem(i) * lastGrad(i) > 0){      //same direction as last time
+    if(grad.elem(i) * lastGrad(i) > 0){  //same direction as last time
       if(rMax) dMax=fabs(rMax*w.elem(i));
       stepSize(i) = _mymin(dMax, incr * stepSize(i)); //increase step size
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
@@ -170,7 +172,7 @@ void Rprop::step(arr& w, const arr& grad, uint *singleI){
       stepSize(i) = _mymax(dMin, decr * stepSize(i)); //decrease step size
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
       lastGrad(i) = 0;                               //memorize to continue below next time
-    }else{                                    //after change of direcion
+    }else{                               //after change of direcion
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
       lastGrad(i) = grad.elem(i);                    //memorize gradient
     }
@@ -217,7 +219,7 @@ int Rprop::loop(arr& _x,
     step(x, J);
     //check stopping criterion based on step-length in x
     double diff=maxDiff(x, xmin);
-    //cout  <<"RPROP iter= " <<i  <<"  x-diff= "  <<diff  <<"  f= "  <<y  <<endl;
+    //cout <<"RPROP iter= " <<i <<"  x-diff= " <<diff <<"  f= " <<y <<endl;
     if(diff<stoppingTolerance){ small_steps++; }else{ small_steps=0; }
     if(small_steps>10)  break;
   }

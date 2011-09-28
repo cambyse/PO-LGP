@@ -198,13 +198,13 @@ void getVariableBeliefs(MT::Array<arr>& post, const VariableList& vars);
 }
 
 //-- pipes
-//inline ostream& operator <<(ostream& os, const iSpace& s)      { s.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::Variable& v)    { v.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::Factor& f)      { f.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::MessagePair& s){ s.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::VariableList& list)   { listWrite(list, os, "\n"); return os; }
-inline ostream& operator <<(ostream& os, const infer::FactorList& list)     { listWrite(list, os, "\n"); return os; }
-inline ostream& operator <<(ostream& os, const infer::MessagePairList& list){ listWrite(list, os, "\n"); return os; }
+//inline ostream& operator<<(ostream& os, const iSpace& s)      { s.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::Variable& v)    { v.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::Factor& f)      { f.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::MessagePair& s){ s.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::VariableList& list)   { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const infer::FactorList& list)     { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const infer::MessagePairList& list){ listWrite(list, os, "\n"); return os; }
 
 // =======================================================================
 //
@@ -241,7 +241,7 @@ void write(Tree& tree);
 void treeInference(MT::Array<arr>& posteriors, const Tree& tree);
 void treeInference(MT::Array<arr>& posteriors, const Tree& forest, uintA& roots);
 void randomTree(Tree& tree, uint N, uint K, uint roots=1);
-std::ostream& operator <<(std::ostream& os, const TreeNode& t);
+std::ostream& operator<<(std::ostream& os, const TreeNode& t);
 
 
 //===========================================================================
@@ -272,7 +272,7 @@ struct FactorGraph {
   void deleteAll();
   
   void setCliqueBeliefs(const FactorList& fs_orig);
-  void resetCliqueBeliefs(){setCliqueBeliefs(F);}  // B_c
+  void resetCliqueBeliefs(){setCliqueBeliefs(F);} // B_c
   void resetMessages();  // msg_pairs
   void resetVariableFactors();  // F_v
   void resetVariableBeliefs();  // B_v
@@ -320,7 +320,7 @@ void writeNice(const infer::FactorList& individual_factors);
 void writeEdges(const infer::FactorList& individual_factors, bool withProbs = false);
 void writeExtremelyNice(const infer::FactorList& facs);
 
-inline ostream& operator <<(ostream& os, const infer::FactorGraph& fg){ fg.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::FactorGraph& fg){ fg.write(os); return os; }
 
 // calculates marginal for given variables
 void getMarginal(infer::Factor& marginal, const uintA& marginalVars, infer::FactorGraph& fg);

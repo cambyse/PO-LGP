@@ -115,6 +115,7 @@ typedef MT::Array<Gaussian*> GaussianL;
 
 //! estimate a gaussian from a table of data points \ingroup infer1
 void estimate(Gaussian &g, const arr& X);
+void estimateWeighted(Gaussian& g, const arr& X, const arr& W);
 
 /*! collapses a mixture of gaussians (or weighted gaussians: P doesn't
     have to be normalized) to a single gaussian via moment matching \ingroup infer1 */
@@ -124,7 +125,7 @@ void collapseMoG(Gaussian& g, const arr& P, const GaussianL& G, bool zeroMean=fa
 /*! similar to the unscented transform: first take systematically samples
     from the Gaussian, then weight the samples proportional to f(x),
     then reestimate the Gaussian \ingroup infer1 */
-void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x));
+void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N);
 
 //! generate a single sample from a gaussian \ingroup infer1
 void sample(arr& x, const Gaussian &g);
@@ -195,6 +196,7 @@ void multiplyToJoint(Gaussian& xi, Gaussian& b);
 void blowupMarginal(Gaussian& joint, const Gaussian& x, uint dy);
 
 double reduce(GaussianA& g, uint m, const GaussianA& f, const arr& P, bool linearInit);
+double reduceIterated(GaussianA& g, uint m, const GaussianA& f, const arr& P, uint K);
 
 void write(const GaussianA& x, const char* name);
 

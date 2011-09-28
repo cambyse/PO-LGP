@@ -185,18 +185,18 @@ public:
   T& operator()(uint i, uint j) const;
   T& operator()(uint i, uint j, uint k) const;
   T& operator()(const Array<uint> &I) const;
-  Array<T> operator[](uint i) const;     // calls referToSubDim(*this,i)
-  Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this,i,j)
-  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this,i,I)
+  Array<T> operator[](uint i) const;     // calls referToSubDim(*this, i)
+  Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
+  Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
   
   //!@name access by copy
   uint dim(uint k) const;
   Array<uint> getDim() const;
-  Array<T> sub(uint i, int I) const;
-  Array<T> sub(uint i, int I, uint j, int J) const;
-  Array<T> sub(uint i, int I, uint j, int J, uint k, int K) const;
-  Array<T> sub(uint i, int I, Array<uint> cols) const;
+  Array<T> sub(int i, int I) const;
+  Array<T> sub(int i, int I, int j, int J) const;
+  Array<T> sub(int i, int I, int j, int J, int k, int K) const;
+  Array<T> sub(int i, int I, Array<uint> cols) const;
   void getMatrixBlock(Array<T>& B, uint lo0, uint lo1) const;
   void getVectorBlock(Array<T>& B, uint lo) const;
   T** getCarray() const;
@@ -214,6 +214,7 @@ public:
   void maxIndex(uint& i, uint& j, uint& k) const;
   int findValue(const T& x) const;
   void findValues(MT::Array<uint>& indices, const T& x) const;
+  bool contains(const T& x) const{ return findValue(x)!=-1; }
   bool containsDoubles() const;
   uint getMemsize() const;
   void getIndexTuple(Array<uint> &I, uint i) const;
@@ -250,6 +251,7 @@ public:
   void permute(uint i, uint j);
   void permute(const Array<uint>& permutation);
   void permuteInv(const Array<uint>& permutation);
+  void permuteRows(const Array<uint>& permutation);
   void permuteRandomly();
   void shift(int offset, bool wrapAround=true);
   
@@ -357,6 +359,11 @@ arr randn(const uintA& d);
 inline arr randn(uint n){ return randn(TUP(n, n)); }
 inline arr randn(uint d0, uint d1){ return randn(TUP(d0, d1)); }
 
+inline double max(const arr& x){ return x.max(); }
+inline double min(const arr& x){ return x.max(); }
+inline uint argmax(const arr& x){ return x.maxIndex(); }
+inline uint argmin(const arr& x){ return x.minIndex(); }
+
 inline uintA randperm(uint n){  uintA z;  z.setRandomPerm(n);  return z; }
 inline arr linspace(double base, double limit, uint n){  arr z;  z.setGrid(1, base, limit, n);  return z;  }
 arr logspace(double base, double limit, uint n);
@@ -366,7 +373,7 @@ arr logspace(double base, double limit, uint n);
 //!@name non-template functions //? needs most cleaning
 // @{
 
-arr Diag(double d, uint n);
+arr diag(double d, uint n);
 void makeSymmetric(arr& A);
 void transpose(arr& A);
 void SUS(const arr& p, uint n, uintA& s);
@@ -610,8 +617,8 @@ BinaryFunction(fmod);
 #undef BinaryFunction
 
 template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x);
-template<class T> MT::Array<T>& operator <<(MT::Array<T>& x, const char* str);
-template<class T> std::ostream& operator <<(std::ostream& os, const MT::Array<T>& x);
+template<class T> MT::Array<T>& operator<<(MT::Array<T>& x, const char* str);
+template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 template<class T> void checkNan(const MT::Array<T>& x);
 template<class T> bool operator==(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> bool operator==(const MT::Array<T>& v, const T *w);

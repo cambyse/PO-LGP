@@ -117,7 +117,7 @@ struct SocSystemAbstraction{
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
   virtual void getProcess(arr& A, arr& a, arr& B, uint t);
   virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
-  virtual double getCosts(arr& R, arr& r, const arr& qt, uint t);
+  virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
 
   // cost info
@@ -438,7 +438,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *WS;
+  SocSystem_Ors_Workspace *s;
 
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
@@ -510,7 +510,7 @@ struct SocSystem_Toy_Workspace;
 /** \brief an implementation of the SocSystemAbstraction that simulates a
     single 1D point mass on a spring */
 struct SocSystem_Toy: public virtual SocSystemAbstraction{
-  SocSystem_Toy_Workspace *WS;
+  SocSystem_Toy_Workspace *s;
 
   SocSystem_Toy();
   virtual ~SocSystem_Toy();
