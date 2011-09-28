@@ -22,7 +22,7 @@ void problem1(){
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);
   
   //setup the task
-  TaskVariable *pos = new TaskVariable("position" , *sys.ors, posTVT, "palmCenter", 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
   sys.setTaskVariables(ARRAY(pos));
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
@@ -32,7 +32,7 @@ void problem1(){
   cout <<"\n== second test: T step planning ==\n" <<endl;
   T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   sys.setTimeInterval(3.,T);
-  sys.setToq0();
+  sys.setTox0();
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,10*1e4);
   solver.init(sys);
   solver.iterate_to_convergence();
@@ -50,7 +50,7 @@ void problem2(){
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   
   //setup the task
-  TaskVariable *pos = new TaskVariable("position" , *sys.ors, posTVT, "palmCenter", 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
   sys.setTaskVariables(ARRAY(pos));
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,
@@ -115,7 +115,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
 
   /* misleading name -- this is the name of the red ball marker 10cm in
    * front of the palm surface. see schunk.ors in graspISF directory */
-  palm = sys.ors->getShapeByName("palmCenter");
+  palm = sys.ors->getShapeByName("graspCenter");
 
   /* finger tips aligned with the negative gradient of the potential field */
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
@@ -127,7 +127,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_palmAlignField = new PotentialFieldAlignTaskVariable("palm ori",
       *sys.ors, palmL, *graspobj);
   /* use this to generate different approach directions */
-  TV_palmAlignDir = new TaskVariable("appr dir",
+  TV_palmAlignDir = new DefaultTaskVariable("appr dir",
       *sys.ors, zalignTVT, "m9", "<d(0 0 0 1)>", 0, 0, 0);
    /* */
   /* opposing fingers: heuristic for a good grasp (sort of weak closure
@@ -156,7 +156,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
 #define SD_PAR_R(n)  MT::getParameter<double>((n));
 
 void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
-  sys.setq0AsCurrent();
+  sys.setx0AsCurrent();
 
   /* configuration */
   static bool firstTime=true;
@@ -233,8 +233,8 @@ void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
   V->updateState();
   V->y_target = ARR(0.,0.,0.); 
   V->v_target = ARR(-.05,-.05,-.05); 
-  V->setInterpolatedTargetsEndPrecisions(T,0.,tv_zeroLevel_prec,0.,0.);
-  V->setConstantTargetTrajectory(T);
+  V->setConstTargetsConstPrecisions(T,0.,0.);
+  V->y_prec_trajectory(T) = tv_zeroLevel_prec;
   /* set approaching velocity  for last steps*/
   uint t,M=T/8;
   for(t=T-M;t<T;t++){
@@ -457,7 +457,7 @@ void problem5(){
 
     sys.setq(q0,0);
 
-    listFindByName(sys.vars,"appr dir")->jrel.setText(ax(i)) ;
+    ((DefaultTaskVariable*)listFindByName(sys.vars,"appr dir"))->jrel.setText(ax(i)) ;
     activateVars_1step(sys);
     OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,1,false); 
     /* open fingers */
@@ -495,7 +495,7 @@ void problem5(){
   /* use full set of TVs */
   activateVars_2step(sys2);
   /* set start position 0; */
-  sys2.setq(q0); sys2.setq0AsCurrent();
+  sys2.setq(q0); sys2.setx0AsCurrent();
 
   AICO solver(sys2);
   solver.useBwdMsg=true;
