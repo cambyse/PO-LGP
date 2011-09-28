@@ -555,6 +555,23 @@ Some other contribution to the git cheat sheet:
 
 \end{verbatim} \end{code}
 
+\item{fork file with history}
+
+git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is 
+\begin{code}\begin{verbatim}
+cp a b
+git add b
+\end{verbatim} \end{code}
+
+git doesn;t have means to track hisory of files. It tracks \verb`blobs`.
+See gitcore-tutorial for details. The history is available in, e.g.
+%
+\verb`git log`, through \verb`-C` option (Then git tries to find copies.
+It is good idea to commit forked files together -- then -C has clue
+where to search. If you would not, \verb`-C -C` (double -C) or
+--find-copies-harder (or so) does the trick)
+http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
+
 \end{itemize}
 
 \subsection{svn workflow}
