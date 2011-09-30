@@ -307,7 +307,15 @@ CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
 endif
 
-ifdef OPENCV #assuming ubuntu libopencv2.3-dev package
+ifdef OPENCV
+CXXFLAGS  += -DMT_OPENCV
+## DON'T USE THE UBUNTU VERSION!!
+CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
+LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
+LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
+endif
+
+ifdef OPENCV_UBUNTU #assuming ubuntu libopencv2.3-dev package
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.3.1`
 LIBS	  += `pkg-config --libs opencv-2.3.1`
 endif

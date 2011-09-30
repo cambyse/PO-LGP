@@ -703,6 +703,16 @@ template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
   }
 }
 
+//! get absolute min (using fabs)
+template<class T> T MT::Array<T>::absMin() const {
+  CHECK(N, "");
+  uint i;
+  T t((T)::fabs(p[0]));
+  for(i=1; i<N; i++) if(fabs(p[i])<t) t=(T)::fabs(p[i]);
+  return t;
+}
+
+
 //! get absolute maximum (using fabs)
 template<class T> T MT::Array<T>::absMax() const {
   CHECK(N, "");
@@ -817,7 +827,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   MT::Array<T> x;
   if(i<0) i+=d0;
   if(I<0) I+=d0;
-  CHECK(i>0 && I>0 && i<=I, "lower limit higher than upper!");
+  CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1);
   int k;
   for(k=i; k<=I; k++) x(k-i)=operator()(k);

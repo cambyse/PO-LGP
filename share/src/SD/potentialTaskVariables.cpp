@@ -20,7 +20,7 @@ void PotentialValuesTaskVariable::userUpdate(){
     ors->kinematics(xi,s->body->index,&s->rel.pos);
     ors->jacobian  (Ji,s->body->index,&s->rel.pos);
     y(i) = f->psi(&grad,NULL,xi);
-    J[i]() = grad*Ji;
+    J[i]() = ~grad*Ji;
   }
   transpose(Jt,J);
 }

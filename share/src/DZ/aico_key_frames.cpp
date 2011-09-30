@@ -56,7 +56,7 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
 
 double OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, bool verbose, bool b_is_initialized)
+                        double time,double alpha, double task_eps, uint verbose, bool b_is_initialized)
 {
   arr H1,R,Rinv,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; 
@@ -111,15 +111,15 @@ double OneStepDynamicFull(arr& b,arr& Binv,
       b = b_old + alpha*(b-b_old);
 
 
-      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
-      if ((!restore) && (k>1) && ((fabs(alpha)<1e-2) || ((old_r - sys.taskCost(NULL, T, -1))<1e0))) break;
+      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha /*<<" r= " <<  r<<" R= " <<  R  */<<endl;
+      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<task_eps))) break;
 
       old_r = sys.taskCost(NULL, T, -1, verbose);
       restore = false;
 
-      if(verbose>0){
-        sys.displayState(NULL, NULL, "posture estimate", true);
-        }
+      if(verbose>0) sys.gl->update();
+      if(verbose>1) sys.displayState(NULL, NULL, "posture estimate", true);
+      if(verbose>2) sys.gl->watch();
     }
   }
   b=b_best;
@@ -200,8 +200,8 @@ void GetOptimalDynamicTime(double& time,
   double llk;
  while (step>min_step) {
     sys.setqv(b0);
-    OneStepDynamicFull(b,Binv,sys,old_time,alpha, false); // final posture estimation
-    
+    OneStepDynamicFull(b,Binv,sys,old_time,alpha,1e-4, false); // final posture estimation
+
     sys.setqv(b);
     if (sys.taskCost(NULL,T,-1)<old_r) { // in case best costs do not coincide with the best time
       sys.getTaskCosts(R,r,b,T);
