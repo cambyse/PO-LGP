@@ -846,7 +846,7 @@ void glGrabImage(byteA& image){
   if(!image.N) image.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH), 3);
   CHECK(image.nd==2 ||image.nd==3, "not an image format");
   GLint w=image.d1, h=image.d0;
-  CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window");
+  CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window:" <<w <<' ' <<h <<' ' <<glutGet(GLUT_WINDOW_WIDTH) <<' ' <<glutGet(GLUT_WINDOW_HEIGHT));
   
   //glPixelStorei(GL_PACK_SWAP_BYTES, 0);
   switch(image.d2){
@@ -864,7 +864,7 @@ void glGrabImage(byteA& image){
       //glReadPixels(0, 0, w, h, GL_GA, GL_UNSIGNED_BYTE, image.p);
       break;
     case 3:
-      glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, image.p);
+      glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, image.p);
       break;
     case 4:
 #if defined MT_SunOS

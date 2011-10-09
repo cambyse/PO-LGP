@@ -26,7 +26,7 @@ OBJS         = \
 #	ucm.o \
 
 
-OPENCV=1
+OPENCV_UBUNTU=1
 FELZ = 1
 #ANN=1
 

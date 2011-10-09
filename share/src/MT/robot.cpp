@@ -1,6 +1,5 @@
 #include "robot.h"
 #include "vision.h"
-#include "revelModule.h"
 #include "guiModule.h"
 #include "soc_inverseKinematics.h"
 

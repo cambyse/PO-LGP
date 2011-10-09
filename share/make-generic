@@ -309,7 +309,7 @@ endif
 
 ifdef OPENCV
 CXXFLAGS  += -DMT_OPENCV
-## DON'T USE THE UBUNTU VERSION!!
+## DON'T USE THE UBUNTU VERSION?
 CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
 LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
 LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
