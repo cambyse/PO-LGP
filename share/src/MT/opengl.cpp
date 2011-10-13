@@ -1364,11 +1364,10 @@ int OpenGL::watch(const char *txt){
 bool OpenGL::update(const char *txt){
   pressedkey=0;
   if(txt) text.clr() <<txt;
-  redrawEvent();
+  postRedrawEvent();
   processEvents();
   return !pressedkey;
 }
-
 
 //! waits some msecons before updating
 int OpenGL::timedupdate(double sec){

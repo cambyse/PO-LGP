@@ -253,7 +253,7 @@ private:
   
 protected: //driver dependent methods
   bool loopExit;
-  void redrawEvent();
+  void postRedrawEvent();
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();
