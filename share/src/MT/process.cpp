@@ -8,10 +8,6 @@
 #include <sys/resource.h>
 #include <iostream>
 #include <X11/Xlib.h>
-#include <FL/Fl.H>
-#include <FL/fl_draw.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Double_Window.H>
 
 #include "util.h"
 #include "array.h"
