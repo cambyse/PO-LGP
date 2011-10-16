@@ -671,10 +671,8 @@ SchunkHandModule::SchunkHandModule():Process("SchunkHandProcess"){}
 void SchunkHandModule::open(){}
 void SchunkHandModule::close(){}
 void SchunkHandModule::step(){}
-SchunkSkinModule::SchunkSkinModule():Process("SchunkSkinProcess"){}
+SchunkSkinModule::SchunkSkinModule():Process("SchunkSkinProcess"), Variable("SchunkSkinVariable"){}
 void SchunkSkinModule::open(){}
 void SchunkSkinModule::close(){}
 void SchunkSkinModule::step(){}
-void schunkEmergencyShutdown(int){}
-void SchunkSkinModule::getImage(byteA&){}
 #endif
