@@ -17,11 +17,27 @@
 #define FREEGLUT_STATIC
 #include <GL/freeglut.h>
 #include <X11/Xlib.h>
+#include <GL/glx.h>
+extern "C"{
+//#include "freeglut_internal.h"
+}
+
 
 #include "opengl.h"
 #include "ors.h"
+#include "process_internal.h"
 
+static Mutex globalOpenglLock;
+#define GLA globalOpenglLock.lock();
+#define GLB globalOpenglLock.unlock();
+#define GLAC GLA glutSetWindow(s->windowID); //same as above, but also sets gl cocntext (glXMakeCurrent)
+#define GLBC glXMakeCurrent(fgDisplay.Display, None, NULL); GLB //releases the context
+//-- debugging versions:
+//#include <sys/syscall.h>
+//#define GLA globalOpenglLock.lock(); MT_MSG(syscall(SYS_gettid) <<" LOCK "<<globalOpenglLock.state);
+//#define GLB MT_MSG(syscall(SYS_gettid) <<" UNLO "<<globalOpenglLock.state); globalOpenglLock.unlock();
 
+  
 //===========================================================================
 //
 // OpenGL hidden self
@@ -45,15 +61,15 @@ struct sOpenGL{
   
   //hooks for FREEGLUT (static callbacks)
   static void _Void(){ }
-  static void _Draw(){ OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); }
-  static void _Key(unsigned char key, int x, int y){ glwins(glutGetWindow())->Key(key,x,y); }
-  static void _Mouse(int button, int updown, int x, int y){ glwins(glutGetWindow())->Mouse(button,updown,x,y); }
-  static void _Motion(int x, int y){ glwins(glutGetWindow())->Motion(x,y); }
-  static void _PassiveMotion(int x, int y){ glwins(glutGetWindow())->PassiveMotion(x,y); }
-  static void _Close(){ glwins(glutGetWindow())->Close(); }
-  static void _Reshape(int w,int h){ glwins(glutGetWindow())->Reshape(w,h); }
-  static void _Special(int key, int x, int y){ glwins(glutGetWindow())->Special(key,x,y); }
-  static void _MouseWheel(int wheel, int direction, int x, int y){ glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); }
+  static void _Draw(){ GLA OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); GLB }
+  static void _Key(unsigned char key, int x, int y){ GLA glwins(glutGetWindow())->Key(key,x,y); GLB }
+  static void _Mouse(int button, int updown, int x, int y){ GLA glwins(glutGetWindow())->Mouse(button,updown,x,y); GLB }
+  static void _Motion(int x, int y){ GLA glwins(glutGetWindow())->Motion(x,y); GLB }
+  static void _PassiveMotion(int x, int y){ GLA glwins(glutGetWindow())->PassiveMotion(x,y); GLB }
+  static void _Close(){ GLA glwins(glutGetWindow())->Close(); GLB }
+  static void _Reshape(int w,int h){ GLA glwins(glutGetWindow())->Reshape(w,h); GLB }
+  static void _Special(int key, int x, int y){ GLA glwins(glutGetWindow())->Special(key,x,y); GLB }
+  static void _MouseWheel(int wheel, int direction, int x, int y){ GLA glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); GLB }
 };
 
 uint sOpenGL::nrWins=0;
@@ -109,6 +125,8 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();
 
+  GLA
+
   if(!s->nrWins){
     int argc=1;
     char *argv[1]={(char*)"x"};
@@ -151,29 +169,36 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
   //  glutSpecialUpFunc( SpecialUp );
   //  glutJoystickFunc( Joystick, 100 );
   //  glutEntryFunc ( Entry ) ;
+  GLBC
+
 }
 
 // freeglut destructor
 OpenGL::~OpenGL(){
+  GLA
   glutDestroyWindow(s->windowID);
   s->glwins(s->windowID)=0;
   s->nrWins--;
   if(!s->nrWins) fgDeinitialize();
   delete s;
+  GLB
 }
 
-void OpenGL::redrawEvent(){  glutSetWindow(s->windowID);  glutPostRedisplay(); } 
-void OpenGL::processEvents(){  glutMainLoopEvent(); }
-void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ glutMainLoopEvent(); sleepForEvents(); } }
+void OpenGL::postRedrawEvent(){GLAC glutPostRedisplay(); GLBC } 
+void OpenGL::processEvents(){  GLAC glutMainLoopEvent(); GLBC }
+void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ processEvents(); sleepForEvents(); } }
 void OpenGL::exitEventLoop(){  loopExit=true; }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
-  glutSetWindow(s->windowID);
+  GLAC
   glutReshapeWindow(w,h);
   processEvents();
+  GLBC
 }
 
-int OpenGL::width(){  glutSetWindow(s->windowID); return glutGet(GLUT_WINDOW_WIDTH); }
-int OpenGL::height(){ glutSetWindow(s->windowID); return glutGet(GLUT_WINDOW_HEIGHT); }
+int OpenGL::width(){  GLA int w=glutGet(GLUT_WINDOW_WIDTH); GLB return w; }
+int OpenGL::height(){ GLA int h=glutGet(GLUT_WINDOW_HEIGHT); GLB return h; }
 
+#undef GLA
+#undef GLB

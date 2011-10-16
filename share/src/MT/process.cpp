@@ -83,7 +83,7 @@ void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const times
 
 //===========================================================================
 //
-// Lock
+// Access Lock
 //
 
 Lock::Lock(){
@@ -123,6 +123,35 @@ void Lock::unlock(){
 }
 
 
+//===========================================================================
+//
+// Mutex Lock
+//
+
+Mutex::Mutex(){
+  _lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  //int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr);
+  state=0;
+}
+
+Mutex::~Mutex(){
+  CHECK(!state, "");
+  int rc = pthread_mutex_destroy(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+}
+
+void Mutex::lock(const char* _msg){
+  int rc = pthread_mutex_lock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  if(_msg) msg=_msg; else msg=NULL;
+  state++;
+}
+
+void Mutex::unlock(){
+  int rc = pthread_mutex_unlock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  msg=NULL;
+  state--;
+}
+
+       
 //===========================================================================
 //
 // ConditionVariable

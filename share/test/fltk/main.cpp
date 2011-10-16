@@ -1,5 +1,3 @@
-
-
 #include <MT/util.h>
 #include <MT/array.h>
 #include <FL/fl_draw.H>
@@ -132,6 +130,7 @@ int main(int argc, char **argv){
         m.redraw();
         cout <<i <<endl;
       }
+      break;
     }
     case 3:{
       Proc1 gl1("gl1"),gl2("gl2"),gl3("gl3");

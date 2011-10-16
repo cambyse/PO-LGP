@@ -136,7 +136,7 @@ struct Camera {
   void focus(float x, float y, float z);
   void focus(const Vector& v);
   void focus();
-  void watchDirection(float x, float y, float z);
+  void watchDirection(const Vector& d);
   void upright();
   void glSetProjectionMatrix();
   void glConvertToTrueDepth(double &d);
@@ -165,7 +165,7 @@ struct OpenGL {
   struct GLHoverCall { void *classP; bool (*call)(void*, OpenGL*); };
   struct GLClickCall { void *classP; bool (*call)(void*, OpenGL*); };
   struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy){ button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
-  struct GLSelect   { int name; double dmin, dmax; };
+  struct GLSelect   { int name; double dmin, dmax, x,y,z; };
   struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
@@ -253,7 +253,7 @@ private:
   
 protected: //driver dependent methods
   bool loopExit;
-  void redrawEvent();
+  void postRedrawEvent();
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();

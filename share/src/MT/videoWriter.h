@@ -6,7 +6,6 @@ struct sVideoWriter;
 
 struct VideoWriter{
   sVideoWriter *s;
-  uint numFrames,width,height;
   
   void open(uint width,uint height,const char* filename="z.avi",double fps=30);
   void addFrame(const byteA& img);
