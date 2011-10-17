@@ -10,7 +10,9 @@ using namespace std;
 void draw1(void*){
   glStandardLight(NULL);
   glColor(1,0,0);
+  glFrontFace(GL_CW);
   glutSolidTeapot(1.);
+  glFrontFace(GL_CCW);
 }
 
 void testTeapot(){
@@ -29,6 +31,7 @@ void testMultipleViews(){
   read_ppm(img,"box.ppm",false);
   OpenGL gl;
   gl.reportEvents=true;
+  gl.reportSelects=true;
   gl.add(draw1,0);
   gl.addView(0,draw1,0);
   gl.addView(1,draw1,0);
