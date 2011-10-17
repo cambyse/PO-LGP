@@ -22,7 +22,6 @@
 
 #include <MT/opengl.h>
 #include <MT/plot.h>
-#include <MT/revelModule.h>
 #include <TL/utilTL.h>
 
 #include "ors_actionInterface.h"
