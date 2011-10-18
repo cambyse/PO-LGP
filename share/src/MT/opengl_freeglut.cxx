@@ -25,7 +25,15 @@ extern "C"{
 
 #include "opengl.h"
 #include "ors.h"
-#include "process_internal.h"
+
+#ifdef MT_THREADSAFE
+#  include "process_internal.h"
+#else
+struct Mutex{
+  void lock(const char* _msg=NULL){};
+  void unlock(){};
+};
+#endif
 
 static Mutex globalOpenglLock;
 #define GLA globalOpenglLock.lock();

@@ -1075,6 +1075,7 @@ void OpenGL::init(){
   mouseposx=mouseposy=0;
   mouse_button=0;
   mouseIsDown=false;
+  mouseView=-1;
   
   reportEvents=false;
   reportSelects=false;

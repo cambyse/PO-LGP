@@ -14,6 +14,7 @@ void init(ors::Graph& G,OpenGL& gl,const char* orsFile){
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(10.,-15.,8.);
   gl.camera.focus(0,0,1.);
+  gl.camera.upright();
   gl.update();
 }
 
