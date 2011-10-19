@@ -1,0 +1,30 @@
+body last-motor { pose=<0 0 0.5 0.707107 0 0.707107 0>  }
+body knuck1 { pose=<-0.1934 -0.038105 0.5 -0.5 0.5 0.5 -0.5>  }
+body knuck2 { pose=<-0.1934 0.0190525 0.467 -0.5 0.5 0.5 -0.5>  }
+body knuck3 { pose=<-0.1934 0.0190525 0.533 -0.5 0.5 0.5 -0.5>  }
+body fing1 { pose=<-0.1934 -0.038105 0.5 0 0.707107 0 -0.707107>  }
+body fing2 { pose=<-0.1934 0.0190525 0.467 -0.707107 0 0.707107 0>  }
+body fing3 { pose=<-0.1934 0.0190525 0.533 -0.707107 0 0.707107 0>  }
+body tip1 { pose=<-0.3149 -0.038105 0.5 0 0.707107 0 -0.707107>  }
+body tip2 { pose=<-0.3149 0.0190525 0.467 -0.707107 0 0.707107 0>  }
+body tip3 { pose=<-0.3149 0.0190525 0.533 -0.707107 0 0.707107 0>  }
+
+shape (last-motor){ rel=<0 0 -0.1034 0 0.707107 0.707107 0> type=4 size=[0 0 0.008 0.04] color=[0.1 0.1 0.1]  }
+shape (last-motor){ rel=<0 0 -0.1525 0 0.707107 0.707107 0> type=3 mesh='schunk_3d/SDH_Gehaeuse_x.tri' color=[0.55 0.55 0.55]  }
+shape (fing1){ rel=<0 0 -0.0175 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (fing2){ rel=<0 0 -0.0175 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (fing3){ rel=<0 0 -0.0175 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (tip1){ rel=<0 0 -0.1385 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+shape (tip2){ rel=<0 0 -0.1385 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+shape (tip3){ rel=<0 0 -0.1385 0 0 0.707107 0.707107> type=3 mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+
+joint (last-motor knuck1){ from=<0 -0.038105 -0.1934 0.5 0.5 0.5 -0.5> to=<0 0 0 0.707107 0 0.707107 0>  }
+joint (last-motor knuck2){ from=<0.033 0.0190525 -0.1934 0.5 0.5 0.5 -0.5> to=<0 0 0 0.707107 0 0.707107 0>  }
+joint (last-motor knuck3){ from=<-0.033 0.0190525 -0.1934 0.5 0.5 0.5 -0.5> to=<0 0 0 0.707107 0 0.707107 0>  }
+joint (knuck3 fing3){ from=<0 0 0 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0>  }
+joint (fing3 tip3){ from=<0 0 0.0865 1 0 0 0> to=<0 0 0.035 1 0 0 0>  }
+joint (knuck1 fing1){ from=<0 0 0 0.707107 0 0 0.707107> to=<0 0 0 1 0 0 0>  }
+joint (fing1 tip1){ from=<0 0 0.0865 1 0 0 0> to=<0 0 0.035 1 0 0 0>  }
+joint (knuck2 fing2){ from=<0 0 0 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0>  }
+joint (fing2 tip2){ from=<0 0 0.0865 1 0 0 0> to=<0 0 0.035 1 0 0 0>  }
+
