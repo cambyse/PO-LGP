@@ -21,6 +21,20 @@ void init(ors::Graph& G,OpenGL& gl,const char* orsFile){
 
 //===========================================================================
 //
+// test laod save
+//
+
+void testLoadSave(){
+  ors::Graph G;
+  ifstream fil("my.ors");
+  fil >>G;
+  G.calcBodyFramesFromJoints();
+  cout <<G <<endl;
+}
+
+
+//===========================================================================
+//
 // Jacobian test
 //
 
@@ -412,6 +426,7 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testLoadSave();
   testPlayStateSequence();
   testKinematics();
   testFollowRedundantSequence();

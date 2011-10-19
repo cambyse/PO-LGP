@@ -944,11 +944,15 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
 void Transformation::write(std::ostream& os) const {
   bool space=false;
   os <<"<";
+#if 0
   if(!pos.isZero()){ os <<"t" <<pos;  space=true; }
+  if(!rot.isZero()){ if(space) os <<' ';  os <<"q" <<rot;  space=true; }
+#else
+  os <<pos.p[0] <<' ' <<pos.p[1] <<' ' <<pos.p[2] <<' '
+     <<rot.p[0] <<' ' <<rot.p[1] <<' ' <<rot.p[2] <<' ' <<rot.p[3];
+#endif
   if(!vel.isZero()){ if(space) os <<' ';  os <<"v" <<vel;  space=true; }
   if(!angvel.isZero()){ if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
-  if(!rot.isZero()){ if(space) os <<' ';  os <<"q" <<rot;  space=true; }
-  //if(s!=1.) os <<" s(" <<s <<") ";
   os <<">";
 }
 //! operator>>
@@ -962,7 +966,11 @@ void Transformation::read(std::istream& is){
     if(is.fail()) return; //EOF I guess
     //if(c==';') break;
     //if(c==',') is >>c;
-    switch(c){
+    if((c>='0' && c<='9') || c=='.' || c=='-'){ //read a 7-vector (pos+quat) for the transformation
+      is.putback(c);
+      is>>x[0]>>x[1]>>x[2];       addRelativeTranslation(x[0], x[1], x[2]);
+      is>>x[0]>>x[1]>>x[2]>>x[3]; addRelativeRotationQuat(x[0], x[1], x[2], x[3]);
+    }else switch(c){
         //case '<': break; //do nothing -- assume this is an opening tag
       case 't': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeTranslation(x[0], x[1], x[2]); break;
       case 'q': is>>"(">>x[0]>>x[1]>>x[2]>>x[3]>>")"; addRelativeRotationQuat(x[0], x[1], x[2], x[3]); break;
@@ -2326,8 +2334,11 @@ void ors::Body::reset(){
 }
 
 void ors::Body::write(std::ostream& os) const {
-  os <<"X=" <<X <<" ";
-  listWrite(ats, os);
+  os <<"pose=" <<X <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"X") && strcmp(a->tag,"pose")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 #define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
@@ -2348,6 +2359,7 @@ void ors::Body::read(std::istream& is){
   double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats, "X", 1);    if(sval) X.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "pose", 1); if(sval) X.setText(*sval);
   
   //shape declared in body attributes..
   dval=anyListGet<double>(ats, "type", 1);     if(dval){
@@ -2409,7 +2421,13 @@ void ors::Shape::read(std::istream& is){
 }
 
 void ors::Shape::write(std::ostream& os) const {
-  listWrite(ats, os);
+  os <<"rel=" <<rel <<' ';
+  os <<"type=" <<type <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"rel")
+       && strcmp(a->tag,"type")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 void ors::Shape::reset(){
@@ -2440,8 +2458,15 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 //
 
 void ors::Joint::write(std::ostream& os) const {
-  os <<"A=" <<A <<" Q=" <<Q <<" B=" <<B <<' ';
-  listWrite(ats, os);
+  os <<"from=" <<A <<' ';
+  os <<"to=" <<B <<' ';
+  if(!Q.isZero()) os <<"q=" <<Q <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"A") && strcmp(a->tag,"from")
+       && strcmp(a->tag,"B") && strcmp(a->tag,"to")
+       && strcmp(a->tag,"Q") && strcmp(a->tag,"q")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 void ors::Joint::read(std::istream& is){
@@ -2461,8 +2486,11 @@ void ors::Joint::read(std::istream& is){
   double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats, "A", 1);  if(sval) A.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "from", 1); if(sval) A.setText(*sval);
   sval=anyListGet<MT::String>(ats, "B", 1);  if(sval) B.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "to", 1); if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats, "Q", 1);  if(sval) Q.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "q", 1);  if(sval) Q.setText(*sval);
   dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)(*dval); else type=hingeJT;
 }
 
