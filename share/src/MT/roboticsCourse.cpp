@@ -54,6 +54,7 @@ Simulator::Simulator(const char* orsFile){
   s->gl.setClearColors(1., 1., 1., 1.);
   s->gl.camera.setPosition(10., -15., 8.);
   s->gl.camera.focus(0, 0, 1.);
+  s->gl.camera.upright();
   s->gl.update();
   s->gl.add(glDrawPlot, &plotModule);
   
@@ -207,6 +208,7 @@ VisionSimulator::VisionSimulator(){
   s->gl.setClearColors(1., 1., 1., 1.);
   s->gl.camera.setPosition(10., -15., 8.);
   s->gl.camera.focus(0, 0, 0);
+  s->gl.camera.upright();
   s->gl.update();
   s->gl.add(glDrawPlot, &plotModule);
   
