@@ -103,6 +103,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->add(ors::glDrawGraph, ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
+    gl->camera.upright();
   }
   if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
   setx0AsCurrent();

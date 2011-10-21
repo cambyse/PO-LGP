@@ -50,11 +50,13 @@ void GuiModule::open(){
     gl->addView(0, ors::glDrawGraph, ors);
     gl->views(0).camera.setPosition(7., -0., 2.);
     gl->views(0).camera.focus(0, 0, .8);
+    gl->views(0).camera.upright();
     
     gl->addView(2, glStandardLight, NULL);
     gl->addView(2, ors::glDrawGraph, ors2);
     gl->views(2).camera.setPosition(7., -0., 2.);
     gl->views(2).camera.focus(0, 0, .8);
+    gl->views(2).camera.upright();
     
     orsDrawJoints=false;
   }

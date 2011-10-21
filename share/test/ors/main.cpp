@@ -14,7 +14,22 @@ void init(ors::Graph& G,OpenGL& gl,const char* orsFile){
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(10.,-15.,8.);
   gl.camera.focus(0,0,1.);
+  gl.camera.upright();
   gl.update();
+}
+
+
+//===========================================================================
+//
+// test laod save
+//
+
+void testLoadSave(){
+  ors::Graph G;
+  ifstream fil("my.ors");
+  fil >>G;
+  G.calcBodyFramesFromJoints();
+  cout <<G <<endl;
 }
 
 
@@ -411,6 +426,7 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testLoadSave();
   testPlayStateSequence();
   testKinematics();
   testFollowRedundantSequence();

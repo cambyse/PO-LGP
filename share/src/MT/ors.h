@@ -155,6 +155,8 @@ struct Transformation {
   void setInverse(const Transformation& f);
   void setDifference(const Transformation& from, const Transformation& to);
   void setAffineMatrix(const double *m);
+
+  bool isZero() const{ return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
   
   void addRelativeTranslation(double x, double y, double z);
   void addRelativeVelocity(double x, double y, double z);
