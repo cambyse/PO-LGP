@@ -28,8 +28,8 @@ This is the central hub for information. Goals of this document:
 
 \item The default directory layout:
 \bi
-\item \verb+~/git/mlr+ for your git repository
-\item \verb+~/lib+ for your external lib installations
+\item |~/git/mlr| for your git repository
+\item |~/lib| for your external lib installations
 \ei
 
 \item Create your git repository:
@@ -69,14 +69,14 @@ schunkSDH-11-05-11@
 \end{verbatim}
 \end{code}
 
-These are symbolic-linked in the \verb+git/share/extern+ directory. Call the
-  \verb+./LINK ~\lib+ script to generate the relevant links.
+These are symbolic-linked in the |git/share/extern| directory. Call the
+  |./LINK ~\lib| script to generate the relevant links.
 
 \item TODO: In the future all external libs should be handled like
-  ODE\_0.11: minimal GET/BUILD script and .gitignore
+  |ODE_0.11|: minimal |GET/BUILD| script and .gitignore
 
-\item Try 'make' in the \verb+git/share+ directory. If problems occur, try to
-comment the following lines in the src/MT/Makefile:
+\item Try 'make' in the |it/share| directory. If problems occur, try to
+comment the following lines in the |src/MT/Makefile|:
 \begin{code}
 \begin{verbatim}
 #FREEGLUT = 1
@@ -87,11 +87,11 @@ comment the following lines in the src/MT/Makefile:
 
 This reduces functionality of the code, but should at least compile.
 
-\item Generally, the \verb+git/share/make-config+ allows to set compile
+\item Generally, the |git/share/make-config| allows to set compile
 options for all projects, the local Makefiles trigger these options by
 defining 'ANN=1' or alike.
 
-\item Try test/array/x.exe
+\item Try |test/array/x.exe|
 \end{itemize}
 
 \subsection{Guide to the robot hardware (Marc \& Stanio)}
@@ -237,6 +237,10 @@ paper!)
 optimized matrix library), lists -- and everything implemented by only
 a SINGLE basic class, not a whole lib of classes.
 \end{itemize}
+
+\subsubsection{Tip: Debugging with arrays}
+
+If |*A.p@A.N|
 
 
 \subsubsection{Important conventions}
@@ -603,7 +607,7 @@ svn commit -m 'message'
 \begin{enumerate}
 
 \item Use Inkscape. See the example mdp.svg in the pics path (note
-the \verb+\graphicspath{{pics/}}+ command):
+the |\graphicspath{{pics/}}| command):
 
 \centerline{\includegraphics[scale=.5]{mdp}}
 
@@ -670,7 +674,7 @@ Or more compact lists:\\
 \end{verbatim}
 \end{code}
 
-The \verb+list+ parameter documentation:\\
+The |list| parameter documentation:\\
 \begin{code}
 \begin{verbatim}
    * \topsep amount of extra vertical space at top of list
@@ -727,19 +731,19 @@ J^\T \phi$
 
 \item Output parameters before input parameters in function declarations.
 
-\item Naming convention \verb+name_of_a_routine(ouput,input);+ is
-  perhaps better than my old \verb+nameOfARoutine(..);+ style.
+\item Naming convention |name_of_a_routine(ouput,input);| is
+  perhaps better than my old |nameOfARoutine(..);| style.
 
 \item Make headers as clean and short and concise as possible!
 
-\item Try to avoid \verb+#includes+ in header files as much as possible!!
+\item Try to avoid |#includes| in header files as much as possible!!
   In particular, when a class's methods require an external library;
   this external library should be included only in the cpp-file.
 
- $\to$ In particular, try to avoid \verb+#includes <external_lib>+ in headers!! (I
+ $\to$ In particular, try to avoid |#includes <external_lib>| in headers!! (I
  tried to get rid of them as much as possible in all my *.h)
 
-\item Try to avoid \verb+#includes+ in header files as much as possible!!
+\item Try to avoid |#includes| in header files as much as possible!!
   If
   you think the class needs to contain members/data structures defined
   in an external library and therefore you need to include its header
@@ -793,7 +797,7 @@ MyClass::MyClass(){
   find the definition in the cpp file.
 
 
-\item Never ever use \verb+#ifdef+ directives in a header file if this
+\item Never ever use |#ifdef| directives in a header file if this
   influences definition of classes, especially which members (and
   'size') a class has!
 
@@ -805,7 +809,7 @@ MyClass::MyClass(){
   refers to different memory addesses as your routines in your
   library.
 
-  Therefore try to avoid \verb+#ifdefs+ in headers as much as possible! Move
+  Therefore try to avoid |#ifdefs| in headers as much as possible! Move
   them to the cpp file!
 
 \item If you don't have a preferred IDE, use kdevelop.
