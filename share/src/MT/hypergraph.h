@@ -32,6 +32,7 @@ struct HyperGraph {
   Element *add(const uintA& tuple);
   void del(Element *e);
   Element *get(const char* name);
+  void sortByDotOrder();
   
   void write(std::ostream &os) const;
   void read(std::istream &is);
@@ -39,11 +40,25 @@ struct HyperGraph {
 stdPipes(HyperGraph);
 
 
+void HyperGraph::sortByDotOrder(){
+  uintA perm(T.N);
+  Element *e;
+  double *order;
+  uint i;
+  for_list(i,e,T){
+    order = anyListGet<double>(e->ats, "dot_order", 1);
+    perm(i) = (uint)*order;
+  }
+  T.permuteInv(perm);
+  for_list(i,e,T) e->id=i;
+}
+
 void writeDot(ElementL G){
   ofstream fil;
   MT::open(fil, "z.dot");
   fil <<"graph G{" <<endl;
-  fil <<"node [ fontsize=9 ];" <<endl;
+  fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
+  fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
   fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
   uint i, j;
   Element *e, *n;
@@ -55,7 +70,10 @@ void writeDot(ElementL G){
     else fil <<"shape=ellipse";
     fil <<" ];" <<endl;
     for_list(j, n, e->links){
-      fil <<e->id <<" -- " <<n->id <<" [ ";
+      if(n->id<e->id)
+        fil <<n->id <<" -- " <<e->id <<" [ ";
+      else
+        fil <<e->id <<" -- " <<n->id <<" [ ";
       fil <<"label=" <<j;
       fil <<" ];" <<endl;
     }

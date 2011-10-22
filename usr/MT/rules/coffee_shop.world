@@ -1,4 +1,4 @@
-Variables {
+StateVariables {
   Location
   Coffee
   Umbrella
