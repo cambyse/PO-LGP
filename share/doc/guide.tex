@@ -52,6 +52,7 @@ libann-dev
 libplib-dev
 gnuplot
 meld
+libdc1394-22-dev
 \end{verbatim}
 \end{code}
 
@@ -71,6 +72,10 @@ schunkSDH-11-05-11@
 
 These are symbolic-linked in the |git/share/extern| directory. Call the
   |./LINK ~\lib| script to generate the relevant links.
+
+Recently, opencv-2.3 has been used. When using Ubuntu, packages can be 
+	obtained from \verb+http://packages.ros.org/ros/ubuntu/+. For 
+	convenience, the gpg-key is in the root folder.
 
 \item TODO: In the future all external libs should be handled like
   |ODE_0.11|: minimal |GET/BUILD| script and .gitignore

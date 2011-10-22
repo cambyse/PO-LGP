@@ -129,13 +129,8 @@ void Lock::unlock(){
 //
 
 Mutex::Mutex(){
-  int rc;
-  pthread_mutexattr_t attr;
-  rc = pthread_mutexattr_init(&attr); if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutex_init(&_lock, &attr); if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutexattr_init(&attr); if(rc) HALT("pthread failed with err " <<rc);
-  //_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  _lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  //int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr);
   state=0;
 }
 
