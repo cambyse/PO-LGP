@@ -1,3 +1,5 @@
+#define MT_IMPLEMENTATION
+
 #include <MT/util.h>
 #include <MT/array.h>
 #include <FL/fl_draw.H>
@@ -130,8 +132,7 @@ int main(int argc, char **argv){
         m.redraw();
         cout <<i <<endl;
       }
-      break;
-    }
+    } break;
     case 3:{
       Proc1 gl1("gl1"),gl2("gl2"),gl3("gl3");
       //Proc2 win;
@@ -139,19 +140,17 @@ int main(int argc, char **argv){
       gl2.threadLoop();
       gl3.threadLoop();
       //win.threadLoop();
-      MT::wait(5.);
+      MT::wait(10.);
       gl1.threadClose();
       gl2.threadClose();
       gl3.threadClose();
       //win.threadClose();
-      break;
-    }
+    } break;
     case 4:{
       ParameterGUI gui;
       //gui.show();
       for(;;){ Fl::wait(); }
-      break;
-    }
+    } break;
   }
 
 return 0;
