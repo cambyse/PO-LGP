@@ -30,7 +30,7 @@ ifndef OBJS
 OBJS	= main.o
 endif
 ifndef OUTPUT
-OUTPUT  = xexe
+OUTPUT  = x.exe
 endif
 
 
