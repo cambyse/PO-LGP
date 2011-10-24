@@ -1,5 +1,17 @@
 #include "MinSumGaussNewton.h"
 
+void MinSumGaussNewton::setUndirectedGraph(uint n,const uintA& E){
+  Msgs.clear();
+  for(uint i=0;i<n;i++) Msgs.append(TUP(i,i)); //node-wise messages
+  for(uint i=0;i<E.d0;i++){
+    Msgs.append(TUP(E(i,0),E(i,1))); //fwd message
+    Msgs.append(TUP(E(i,1),E(i,0))); //bwd message
+  }
+  Msgs.reshape(Msgs.N/2,2);
+  del.resize(n);
+  for(uint i=0;i<Msgs.d0;i++) del(Msgs(i,1)).append(i);
+}
+
 double MinSumGaussNewton::f(uint i, uint j, const arr& x_i, const arr& x_j){
   arr psi, psiI, psiJ;
   if(j<=i) Psi(psi, psiI, psiJ, i, j, x_i, x_j);
@@ -13,8 +25,8 @@ void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
   VERBOSE(2, cout <<"reapproximating potentials at node " <<i <<" at " <<x_i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
-    CHECK(E(m, 1)==i, "");
-    j=E(m, 0);
+    CHECK(Msgs(m, 1)==i, "");
+    j=Msgs(m, 0);
     if(j==i){ //node potential
       Psi(psi, psiI, psiJ, i, j, x_i, x[j]);
       fij(m).A=~psiI * psiI;
@@ -48,8 +60,8 @@ void MinSumGaussNewton::reapproxPotentials(uint i, const arr& x_i){
 void MinSumGaussNewton::updateMessage(uint m){
   uint i, j, k, n, mm;
   n=x.d1;
-  j=E(m, 0);
-  i=E(m, 1);
+  j=Msgs(m, 0);
+  i=Msgs(m, 1);
   VERBOSE(3, cout <<"  updating message " <<m <<":" <<j <<"->" <<i <<endl);
   if(j==i){ //node potential
     mu(m).M   =fij(m).A;
@@ -65,9 +77,9 @@ void MinSumGaussNewton::updateMessage(uint m){
       for(k=0; k<del(j).N; k++){ //collect all messages k->j to j (excluding i->j)
         //recall: this includes also node potentials since we index them as j->j
         mm=del(j)(k);
-        CHECK(E(mm, 1)==j, "");
-        if(E(mm, 0)==i) continue; //(exclude i->j)
-        VERBOSE(3, cout <<"    collecting message " <<mm <<":" <<E(mm, 0) <<"->" <<j <<endl);
+        CHECK(Msgs(mm, 1)==j, "");
+        if(Msgs(mm, 0)==i) continue; //(exclude i->j)
+        VERBOSE(3, cout <<"    collecting message " <<mm <<":" <<Msgs(mm, 0) <<"->" <<j <<endl);
         Abar    += mu(mm).M;
         abar    += mu(mm).m;
         hatabar += mu(mm).hatm;
@@ -110,7 +122,7 @@ void MinSumGaussNewton::updateMessagesToNode(uint i){
   VERBOSE(2, cout <<"updating all messages to node " <<i <<endl);
   for(k=0; k<del(i).N; k++){
     m=del(i)(k);
-    CHECK(E(m, 1)==i, "");
+    CHECK(Msgs(m, 1)==i, "");
     updateMessage(m);
   }
 }
@@ -118,8 +130,8 @@ void MinSumGaussNewton::updateMessagesToNode(uint i){
 double MinSumGaussNewton::totalCost(bool verbose){
   double Fnode=0., Fpair=0.;
   uint m, i, j;
-  for(m=0; m<E.d0; m++){
-    i=E(m, 0);  j=E(m, 1);
+  for(m=0; m<Msgs.d0; m++){
+    i=Msgs(m, 0);  j=Msgs(m, 1);
     if(j==i) Fnode += f(i, j, x[i], x[j]);
     if(j< i) Fpair += f(i, j, x[i], x[j]);
     //cout <<"i" <<i <<" j" <<j <<" f=" <<f(i, j, x[i], x[j]) <<endl;
@@ -127,8 +139,8 @@ double MinSumGaussNewton::totalCost(bool verbose){
   }
 #if 1//check consistency of cost terms!
   double F2=0.;
-  for(m=0; m<E.d0; m++){
-    i=E(m, 0);  j=E(m, 1);
+  for(m=0; m<Msgs.d0; m++){
+    i=Msgs(m, 0);  j=Msgs(m, 1);
     if(i==j){ //node potential
       F2 += (~x[i] * fij(m).A * x[i] - 2.*~(fij(m).a)*x[i])(0) + fij(m).hata;
     } else if(j<i){
@@ -151,15 +163,15 @@ void MinSumGaussNewton::init(){
   //double alpha=1.;
   
   //init potentials
-  fij.resize(E.d0);
+  fij.resize(Msgs.d0);
   for(i=0; i<x.d0; i++) reapproxPotentials(i, x[i]);
   
   //init messages zero
-  mu.resize(E.d0);
+  mu.resize(Msgs.d0);
   for(m=0; m<mu.N; m++){
     mu(m).m.resize(x.d1);       mu(m).m.setZero();
     mu(m).M.resize(x.d1, x.d1); mu(m).M.setDiag(1e-6);
-    i=E(m, 0); j=E(m, 1);
+    i=Msgs(m, 0); j=Msgs(m, 1);
     if(i==j)     mu(m).hatm=0.; //phi(i, x[i]);
     else if(i<j) mu(m).hatm=0.; //psi(i, j, x[i], x[j]);
     else         mu(m).hatm=0.; //psi(j, i, x[j], x[i]);

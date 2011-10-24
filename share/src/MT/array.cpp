@@ -1190,3 +1190,87 @@ void anyListRead(AnyList& ats, std::istream& is){
   }
 }
 
+
+//===========================================================================
+//
+// graphs
+//
+
+void graphRandomUndirected(uintA& E, uint n, double connectivity){
+  uint i, j;
+  for(i=0; i<n; i++) for(j=i+1; j<n; j++){
+    if(rnd.uni()<connectivity) E.append(TUP(i,j));
+  }
+  E.reshape(2,E.N/2);
+}
+
+void graphRandomFixedDegree(uintA& E, uint N, uint d){
+  // --- from Joris' libDAI!!
+  // Algorithm 1 in "Generating random regular graphs quickly"
+  // by A. Steger and N.C. Wormald
+  //
+  // Draws a random graph with size N and uniform degree d
+  // from an almost uniform probability distribution over these graphs
+  // (which becomes uniform in the limit that d is small and N goes
+  // to infinity).
+  
+  CHECK((N*d)%2==0, "It's impossible to create a graph with " <<N<<" nodes and fixed degree " <<d);
+  
+  uint j;
+  
+  bool ready = false;
+  uint tries = 0;
+  while(!ready){
+    tries++;
+    
+    // Start with N*d points {0, 1, ..., N*d-1} (N*d even) in N groups.
+    // Put U = {0, 1, ..., N*d-1}. (U denotes the set of unpaired points.)
+    uintA U;
+    U.setStraightPerm(N*d);
+    
+    // Repeat the following until no suitable pair can be found: Choose
+    // two random points i and j in U, and if they are suitable, pair
+    // i with j and delete i and j from U.
+    E.clear();
+    bool finished = false;
+    while(!finished){
+      U.permuteRandomly();
+      uint i1, i2;
+      bool suit_pair_found = false;
+      for(i1=0; i1<U.N-1 && !suit_pair_found; i1++){
+        for(i2=i1+1; i2<U.N && !suit_pair_found; i2++){
+          if((U(i1)/d) != (U(i2)/d)){  // they are suitable (refer to different nodes)
+            suit_pair_found = true;
+            E.append(TUP(U(i1)/d, U(i2)/d));
+            U.remove(i2);  // first remove largest
+            U.remove(i1);  // remove smallest
+          }
+          if(!suit_pair_found || !U.N)  finished = true;
+        }
+      }
+    }
+    E.reshape(E.N/2,2);
+    if(!U.N){
+      // G is a graph with edge from vertex r to vertex s if and only if
+      // there is a pair containing points in the r'th and s'th groups.
+      // If G is d-regular, output, otherwise return to Step 1.
+      uintA degrees(N);
+      degrees.setZero();
+      for(j=0;j<E.d0;j++){
+        degrees(E(j,0))++;
+        degrees(E(j,1))++;
+      }
+      ready = true;
+      for(uint n=0; n<N; n++){
+        CHECK(degrees(n)<=d, "");
+        if(degrees(n)!=d){
+          ready = false;
+          break;
+        }
+      }
+    } else ready=false;
+  }
+  
+  E.reshape(E.N/2,2);
+}
+
