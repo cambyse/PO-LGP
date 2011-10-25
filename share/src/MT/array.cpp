@@ -1201,7 +1201,14 @@ void graphRandomUndirected(uintA& E, uint n, double connectivity){
   for(i=0; i<n; i++) for(j=i+1; j<n; j++){
     if(rnd.uni()<connectivity) E.append(TUP(i,j));
   }
-  E.reshape(2,E.N/2);
+  E.reshape(E.N/2,2);
+}
+
+void graphRandomTree(uintA& E, uint N, uint roots){
+  uint i;
+  CHECK(roots>=1, "");
+  for(i=roots; i<N; i++) E.append(TUP(rnd(i), i));
+  E.reshape(E.N/2,2);
 }
 
 void graphRandomFixedDegree(uintA& E, uint N, uint d){

@@ -67,6 +67,11 @@ void MinSumGaussNewton::updateMessage(uint m){
     mu(m).M   =fij(m).A;
     mu(m).m   =fij(m).a;
     mu(m).hatm=fij(m).hata; //phi(i, hat_x_i);
+    if(damping && dampingReference.N){
+      mu(m).M += damping*eye(n,n);
+      mu(m).m += damping*dampingReference[i];
+      mu(m).hatm += damping*sumOfSqr(dampingReference[i]);
+    }
   }else{
     arr Abar, abar, tmp;
     double hatabar;
@@ -180,85 +185,117 @@ void MinSumGaussNewton::init(){
   MT::open(fil, "z.MinSum");
 }
 
-void MinSumGaussNewton::step(uint steps){
-  uint N=x.d0, n=x.d1;
-  uint i, k, m;
+double MinSumGaussNewton::updateNode(uint i){
+  //cout <<"* node " <<i <<" F=" <<cost <<endl;
+  uint k,m,n=x.d1;
   double fx, fy;
   arr A, a, Delta, y;
+  arr x_damp = x[i];
+  
   double alpha=1.;
+  for(;;){ //iterate optimizing at node i
+    reapproxPotentials(i, x[i]);
+    updateMessagesToNode(i);
+    fx=0.;
+    A.resize(n, n);  A.setZero();
+    a.resize(n);     a.setZero();
+    for(k=0; k<del(i).N; k++){
+      m=del(i)(k);
+      fx += mu(m).hatm + (~x[i]*mu(m).M*x[i] -2.*~mu(m).m*x[i])(0);
+      A  += mu(m).M;
+      a  += mu(m).m;
+    }
+    lapack_Ainv_b_sym(Delta, A, a);
+    Delta -= x[i];
+    VERBOSE(1, cout <<"optimizing over node " <<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
+    
+    double len=norm(Delta);
+    if(len>maxStep) Delta*=maxStep/len;
+    if(len<tolerance) break;  //stopping criterion
+    
+    for(;;){ //iterate over step sizes
+      y = x[i] + alpha*Delta;
+      fy=0.;
+      reapproxPotentials(i, y);
+      updateMessagesToNode(i);
+      for(k=0; k<del(i).N; k++){
+        m=del(i)(k);
+        fy += mu(m).hatm + (~y*mu(m).M*y -2.*~mu(m).m*y)(0);
+      }
+      VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \talpha=" <<alpha <<std::flush);
+      CHECK(fy==fy, "cost seems to be NAN: f(y)=" <<fy);
+      if(fy <= fx) break;
+      //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      //decrease stepsize
+      if(alpha<1e-10) break;
+      alpha = .5*alpha;
+      VERBOSE(1, cout <<" - reject and revise" <<endl);
+    }
+    if(fy<=fx){
+      VERBOSE(1, cout <<" - ACCEPT" <<endl);
+      //adopt new point and adapt stepsize
+      x[i] = y;
+      fx = fy;
+      alpha  = pow(alpha, 0.5);
+    }else{
+      VERBOSE(1, cout <<" - FINAL REJECT" <<endl);
+      break;
+    }
+  }
+  return fx;
+}
+
+void MinSumGaussNewton::step(uint steps){
+  uint N=x.d0;
+  uint i;
+  arr x_old;
+  MT::Array<Mu>  mu_old;
+  MT::Array<Fij> fij_old;
+  double cost,cost_old;
+  
+  dampingReference=x;
+  
+  /* Things:
+  
+  -- check the undo: cost should be exactly the same
+  -- have different cost functions: damped and undamped
+  */
   
   //iterate
   bool fwd=false;
   i=0;
   for(uint sweep=0; sweep<2*steps; sweep++){ //iterate over nodes
     fwd ^= true;
-    double cost = totalCost();
+    cost = totalCost();
+
+    //store:
+    x_old=x;  cost_old=cost;  mu_old=mu;  fij_old=fij;
+    
     cout <<"** Sweep " <<sweep <<" before-cost=" <<cost <<" fwd=" <<fwd <<endl;
     if(N<2) fwd=true;
     for(i=fwd?0:N-2; fwd?i<N:i>0; i+=fwd?1:-1){
       if(clamped.N && clamped(i)) continue;
-      //double cost=0.; //= totalCost();
       fil <<sweep <<' ' <<i <<' ' <<totalCost() <<' ';
       x.write(fil, " ", "", " \n");
-      //cout <<"* node " <<i <<" F=" <<cost <<endl;
-      
-      for(;;){ //iterate optimizing at node i
-        reapproxPotentials(i, x[i]);
-        updateMessagesToNode(i);
-        fx=0.;
-        A.resize(n, n);  A.setZero();
-        a.resize(n);     a.setZero();
-        for(k=0; k<del(i).N; k++){
-          m=del(i)(k);
-          fx += mu(m).hatm + (~x[i]*mu(m).M*x[i] -2.*~mu(m).m*x[i])(0);
-          A  += mu(m).M;
-          a  += mu(m).m;
-        }
-        lapack_Ainv_b_sym(Delta, A, a);
-        Delta -= x[i];
-        VERBOSE(1, cout <<"optimizing over node " <<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
-        
-        //x[i]() += Delta;  break;   VERBOSE(2, cout <<" - FORCE" <<endl);
-        double len=norm(Delta);
-        if(len>maxStep) Delta*=maxStep/len;
-        
-        //stopping criterion
-        if(len<tolerance) break;
-        
-        for(;;){ //iterate over step sizes
-          y = x[i] + alpha*Delta;
-          fy=0.;
-          reapproxPotentials(i, y);
-          updateMessagesToNode(i);
-          for(k=0; k<del(i).N; k++){
-            m=del(i)(k);
-            fy += mu(m).hatm + (~y*mu(m).M*y -2.*~mu(m).m*y)(0);
-          }
-          VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \talpha=" <<alpha <<std::flush);
-          CHECK(fy==fy, "cost seems to be NAN: f(y)=" <<fy);
-          if(fy <= fx) break;
-          //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-          //decrease stepsize
-          if(alpha<1e-10) break;
-          alpha = .5*alpha;
-          VERBOSE(1, cout <<" - reject and revise" <<endl);
-        }
-        if(fy<=fx){
-          VERBOSE(1, cout <<" - ACCEPT" <<endl);
-          //adopt new point and adapt stepsize
-          x[i] = y;
-          fx = fy;
-          alpha  = pow(alpha, 0.5);
-        }else{
-          VERBOSE(1, cout <<" - FINAL REJECT" <<endl);
-          break;
-        }
-      }
-      
+      double fx=updateNode(i);
       cout <<" * node " <<i <<" fx=" <<fx <<endl;
-      
     }
-    cout <<"** Sweep " <<sweep <<" after-cost=" <<totalCost() <<" fwd=" <<fwd <<endl;
+    cost=totalCost();
+    cout <<"** Sweep " <<sweep <<" after-cost=" <<cost <<" fwd=" <<fwd <<endl;
+
+    //undo change
+    if(damping){
+    if(cost>cost_old){ //reject
+      cout <<"****REJECT" <<damping <<endl;
+      x=x_old;  cost=cost_old;  mu=mu_old;  fij=fij_old;
+      damping *= 10.;
+    }else{ //accept
+      cout <<"****ACCEPT" <<damping <<endl;
+      dampingReference = x;
+      damping /= 5.;
+    }
+    }
+    
   }
 }
 

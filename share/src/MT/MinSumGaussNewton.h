@@ -9,7 +9,8 @@ struct Mu { arr M, m;       double hatm; };
 
 struct MinSumGaussNewton {
   arr x;
-  double tolerance, maxStep;
+  arr dampingReference;
+  double tolerance, maxStep, damping;
   
   uintA Msgs; //edges: nx2 array for n edges
   /* Actually: this is not the edge set but rather the set of message indeces:
@@ -40,6 +41,7 @@ struct MinSumGaussNewton {
   double totalCost(bool verbose=false);
   void init();
   void step(uint steps);
+  double updateNode(uint i);
 };
 
 #ifdef  MT_IMPLEMENTATION
