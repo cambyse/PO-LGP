@@ -56,8 +56,10 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
 
 double OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, double task_eps, uint verbose, bool b_is_initialized)
+                        double time, double alpha, double task_eps, uint verbose, bool b_is_initialized)
 {
+  //if(!sys.dynamic)  return OneStepKinematic(b, Binv, sys, time, alpha);
+  //CHECK(sys.dynamic,"call this function only for dynamic systems");
   arr H1,R,Rinv,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; 
   double T = sys.nTime();

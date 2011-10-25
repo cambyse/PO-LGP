@@ -40,7 +40,7 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
   
-  //up -- good
+  //up: align either with cylinder axis or one of the box sides -- works good
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
@@ -74,11 +74,11 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   shapes.append(shapeId);shapes.append(shapeId);shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
-  double grip=.9;
+  double grip=.9; //specifies the desired proxy value
   V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
   V->y_prec = colPrec;
   V->setInterpolatedTargetsEndPrecisions(T,colPrec,1e1,0.,0.);
-  for(uint t=0;t<=T;t++){
+  for(uint t=0;t<=T;t++){ //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
     if(5*t<4*T) V->y_trajectory[t]()=0.;
     else V->y_trajectory[t]() = (grip*double(5*t-4*T))/T;
   }
@@ -100,6 +100,8 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   //opposing fingers
   V=listFindByName(sys.vars, "oppose12");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+
+  MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
   
   //col lim and relax
   V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);

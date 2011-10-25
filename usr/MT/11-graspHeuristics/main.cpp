@@ -20,7 +20,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
     for(side=0;side<3;side++){
       setNewGraspGoals(sys,T,shapeId, side, 0);
-      cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false);
+      cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
       sys.displayState(&b, NULL, "posture estimate");
       sys.gl->watch();
       bs[side]() = b;
@@ -29,7 +29,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
     b = bs[side];
   }else{
     setNewGraspGoals(sys,T,shapeId, side, 0);
-    OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false);
+    OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
     sys.gl->watch();
   }
 
@@ -39,7 +39,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   sys.gl->watch();
   
   setNewGraspGoals(sys,T,shapeId, side, 1);
-  OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, false, true);
+  OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0, true);
   sys.displayState(&b, NULL, "posture estimate");
   sys.gl->watch();
 
