@@ -19,7 +19,8 @@ z.*
 MT.log
 Makefile.dep
 
-
+.cproject
+.project
 
 %% special:
 share/extern/tony_mdp/parser.tab.cpp
