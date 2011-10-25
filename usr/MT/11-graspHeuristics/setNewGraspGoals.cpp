@@ -73,7 +73,7 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
                        "tip3Shape"), sys.ors->shapes);
   shapes.append(shapeId);shapes.append(shapeId);shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
-  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
+  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .05, true);
   double grip=.9; //specifies the desired proxy value
   V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
   V->y_prec = colPrec;

@@ -189,12 +189,3 @@ shape target1(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0
 shape target2(OBJECTS){ contact, type=4, rel=<t( .25 -.2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
 
-
-###########
-## marker
-###########
-
-shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-
-shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }

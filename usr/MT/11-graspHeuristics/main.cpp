@@ -21,7 +21,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
     for(side=0;side<3;side++){
       setNewGraspGoals(sys,T,shapeId, side, 0);
       cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
-      sys.displayState(&b, NULL, "posture estimate");
+      sys.displayState(&b, NULL, "posture estimate", true);
       sys.gl->watch();
       bs[side]() = b;
     }
@@ -30,6 +30,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   }else{
     setNewGraspGoals(sys,T,shapeId, side, 0);
     OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
+    sys.displayState(NULL, NULL, "posture estimate", true);
     sys.gl->watch();
   }
 
@@ -40,7 +41,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   
   setNewGraspGoals(sys,T,shapeId, side, 1);
   OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0, true);
-  sys.displayState(&b, NULL, "posture estimate");
+  sys.displayState(&b, NULL, "posture estimate", true);
   sys.gl->watch();
 
   AICO solver(sys);
@@ -60,7 +61,8 @@ void problem1(){
   soc::SocSystem_Ors sys;
   OpenGL gl;
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
-  sys.initBasics(NULL,NULL,&gl,T,seconds,true,NULL);
+  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
+  sys.initBasics(NULL,NULL,&gl,T,seconds,true,&W);
   
   createStandardRobotTaskVariables(sys);
 
