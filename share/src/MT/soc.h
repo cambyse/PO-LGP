@@ -55,7 +55,8 @@ struct SocSystemAbstraction {
   bool dynamic;     ///< determines whether this problem is dynamic or not
   uint scalePower;  ///< if non-zero, all routines assume an horizon T=T/2^scalePower
   
-  uintA stepScale;    ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
+  uintA stepScale;   ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
+  float checkGrad;   ///<the probability by which the gradients are checked in each call of getTaskCost[Terms]
   
   ///@name initialization
   SocSystemAbstraction();
@@ -82,15 +83,18 @@ struct SocSystemAbstraction {
   virtual void setx0AsCurrent() = 0;
   virtual void setTox0(){ arr q; getx0(q); setx(q); }
   virtual void setq(const arr& q, uint t=0) = 0;
+  virtual void setq0(const arr& q);
   virtual void setqv(const arr& q_, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
   
   //motion prior, or control cost  [t indicates the step]
-  virtual void getW(arr& W, uint t) = 0;          ///< kinematic step cost metric: cost = dq^T W dq
+  virtual void getW(arr& W, uint t) = 0;          ///< kinematic step cost metric: step cost = dq^T W dq, with W = tau*W_rate where tau is step size
   virtual void getWinv(arr& Winv, uint t){ throw("NIY"); } ///< kinematic step cost metric: cost = dq^T W dq
-  virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: cost = u^T H u
-  virtual void getHinv(arr& H, uint t);           ///< dynamic control cost metric: cost = u^T H u
+  virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
+  virtual void getHinv(arr& H, uint t);           ///< inverse of H
+  virtual void getHrateInv(arr& HrateInv);
   virtual void getQ(arr& Q, uint t);              ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
+  virtual void getQrate(arr& Qrate);      ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
   
   // dynamic model
   virtual void getMF(arr& M, arr& F, uint t);
@@ -100,6 +104,7 @@ struct SocSystemAbstraction {
   virtual bool isConditioned(uint i, uint t) = 0;
   virtual bool isConstrained(uint i, uint t);
   virtual const char* taskName(uint i){ return NULL; };
+  virtual uint taskDim(uint i){ return 0; };
   virtual void getPhi(arr& phiq_i, uint i){ throw("NIY"); }
   virtual void getJJt(arr& J_i, arr& Jt_i, uint i){ throw("NIY"); }
   virtual void getJqd(arr& Jqd_i, uint i);
@@ -117,8 +122,9 @@ struct SocSystemAbstraction {
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
   virtual void getProcess(arr& A, arr& a, arr& B, uint t, arr* Winv=NULL);
   virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
-  virtual double getCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
+  virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
+  void getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t);
   
   // cost info
   double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
@@ -128,6 +134,7 @@ struct SocSystemAbstraction {
   virtual void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag);
   
   //-- convenience (prelim...)
+  void testGradientsInCurrentState(const arr& xt, uint t);
   void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
   double analyzeTrajectory(const arr& q, bool plot);
   void constantTrajectory(arr& q);

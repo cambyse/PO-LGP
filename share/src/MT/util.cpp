@@ -159,7 +159,7 @@ bool contains(const char *s, char c){
   return false;
 }
 
-//! skips the chars (typically white characters) when parsing from the istream
+//! skips the chars (typically white characters) when parsing from the istream, returns first non-skipped char
 char skip(std::istream& is, const char *skipchars, bool skipCommentLines){
   char c;
   for(;;){
@@ -238,6 +238,7 @@ void flip(int& b, uint i){ b ^= 1 <<(7-(i&7)); }
 
 double MIN(double a, double b){ return a<b?a:b; }
 double MAX(double a, double b){ return a>b?a:b; }
+uint MAX(uint a, uint b){ return a>b?a:b; }
 
 /*!\brief the distance between x and y w.r.t.\ a circular topology
     (e.g. modMetric(1, 8, 10)=3) */

@@ -108,26 +108,18 @@ void ors::Camera::focus(float x, float y, float z){ foc->set(x, y, z); focus(); 
 //! rotate the frame to focus the point given by the vector
 void ors::Camera::focus(const Vector& v){ *foc=v; focus(); }
 //! rotate the frame to focus (again) the previously given focus
-void ors::Camera::focus(){ Vector v(*foc-X->pos); watchDirection(v(0), v(1), v(2)); } //X->Z=X->pos; X->Z-=foc; X->Z.normalize(); upright(); }
+void ors::Camera::focus(){ watchDirection((*foc)-X->pos); } //X->Z=X->pos; X->Z-=foc; X->Z.normalize(); upright(); }
 //! rotate the frame to watch in the direction vector D
-void ors::Camera::watchDirection(float x, float y, float z){
-#if 1
-  Vector D(x, y, z), V(0, 0, -1);
-  X->rot.setZero();
-  if(D(0)==0. && D(1)==0.){
-    if(D(2)>0) X->rot.setDeg(180, 1, 0, 0);
+void ors::Camera::watchDirection(const Vector& d){
+  Vector tmp;
+  if(d(0)==0. && d(1)==0.){
+    X->rot.setZero();
+    if(d(2)>0) X->rot.setDeg(180, 1, 0, 0);
     return;
   }
-  D.normalize();
-  V=X->rot*V;
   Quaternion r;
-  r.setDiff(V, D);
+  r.setDiff(-X->rot.getZ(tmp), d);
   X->rot=r*X->rot;
-  upright();
-#else
-  X->Z.set(-D[0], -D[1], -D[2]); X->Z.normalize();
-  upright();
-#endif
 }
 //! rotate the frame to set it upright (i.e. camera's y aligned with 's z)
 void ors::Camera::upright(){
@@ -846,7 +838,7 @@ void glGrabImage(byteA& image){
   if(!image.N) image.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH), 3);
   CHECK(image.nd==2 ||image.nd==3, "not an image format");
   GLint w=image.d1, h=image.d0;
-  CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window");
+  CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window:" <<w <<' ' <<h <<' ' <<glutGet(GLUT_WINDOW_WIDTH) <<' ' <<glutGet(GLUT_WINDOW_HEIGHT));
   
   //glPixelStorei(GL_PACK_SWAP_BYTES, 0);
   switch(image.d2){
@@ -864,7 +856,7 @@ void glGrabImage(byteA& image){
       //glReadPixels(0, 0, w, h, GL_GA, GL_UNSIGNED_BYTE, image.p);
       break;
     case 3:
-      glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, image.p);
+      glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, image.p);
       break;
     case 4:
 #if defined MT_SunOS
@@ -1083,6 +1075,7 @@ void OpenGL::init(){
   mouseposx=mouseposy=0;
   mouse_button=0;
   mouseIsDown=false;
+  mouseView=-1;
   
   reportEvents=false;
   reportSelects=false;
@@ -1159,7 +1152,8 @@ void OpenGL::clearClickCalls(){
 #ifdef MT_GL
 void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //clear bufferer
-  glViewport(0, 0, w, h);
+  GLint viewport[4] = {0, 0, w, h};
+  glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
   glClearColor(clearR, clearG, clearB, clearA);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
@@ -1189,10 +1183,15 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //glEnable(GL_CULL_FACE); glFrontFace(GL_CCW); //CCW is default!
   glDepthFunc(GL_LESS);
   //glShadeModel(GL_SMOOTH);
+
+  //select mode?
+  GLint mode;
+  glGetIntegerv(GL_RENDER_MODE, &mode);
   
   //projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
+  if(mode==GL_SELECT) gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
   if(!cam) camera.glSetProjectionMatrix();
   else     cam->glSetProjectionMatrix();
   //glLineWidth(2);
@@ -1232,39 +1231,37 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   */
   
   //draw focus?
-  if(drawFocus){
+  if(drawFocus && mode!=GL_SELECT){
     glColor(1., .7, .3);
     double size = .005 * (camera.X->pos-*camera.foc).length();
     glDrawDiamond((*camera.foc)(0), (*camera.foc)(1), (*camera.foc)(2), size, size, size);
   }
+  /*if(topSelection && mode!=GL_SELECT){
+    glColor(1., .7, .3);
+    double size = .005 * (camera.X->pos-*camera.foc).length();
+    glDrawDiamond(topSelection->x, topSelection->y, topSelection->z, size, size, size);
+  }*/
   
   //std color: black:
   glColor(.3, .3, .5);
   
-  //draw objects
-  GLint s;
+  //draw central view
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
-  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
-  CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
-  
-  //if(!drawers.N){ MT_MSG("OpenGL: nothing to be drawn -- add draw routines!"); if(!text.N()) text <<"<nothing to draw>"; }
-  for(uint i=0; i<drawers.N; i++)(*drawers(i).call)(drawers(i).classP);
-  
+  if(mode==GL_SELECT) glInitNames();
+  for(uint i=0; i<drawers.N; i++){
+    if(mode==GL_SELECT) glLoadName(i);
+    (*drawers(i).call)(drawers(i).classP);
+  }
+
   //draw text
-  glGetIntegerv(GL_RENDER_MODE, &s);
-  if(text.N() && s!=GL_SELECT){
+  if(text.N()){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0., (double)w, (double)h, .0, -1., 1.);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if(clearR+clearG+clearB>1.){
-      glColor(0.0, 0.0, 0.0, 1.0); // clear text  5. Mar 06 (hh)
-    }else{
-      glColor(1.0, 1.0, 1.0, 1.0); // white colored text,  5. Mar 06 (hh)
-    }
+    if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
     glDrawText(text, 10, 20, 0);
   }
   
@@ -1272,8 +1269,8 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   for(uint v=0; v<views.N; v++){
     GLView *vi=&views(v);
     glViewport(vi->le*w, vi->bo*h, (vi->ri-vi->le)*w, (vi->to-vi->bo)*h);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if(vi->img){
@@ -1283,6 +1280,11 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
     }
     vi->camera.glSetProjectionMatrix();
     glMatrixMode(GL_MODELVIEW);
+    if(drawFocus){
+      glColor(1., .7, .3);
+      double size = .005 * (camera.X->pos-*camera.foc).length();
+      glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
+    }
     for(uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
     if(vi->txt.N()){
       glMatrixMode(GL_PROJECTION);
@@ -1295,9 +1297,11 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   }
   
   //check matrix stack
+  GLint s;
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
   //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
   CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
+  
 }
 
 void OpenGL::Select(){
@@ -1306,32 +1310,49 @@ void OpenGL::Select(){
   
   glSelectBuffer(1000, selectionBuffer);
   glRenderMode(GL_SELECT);
+
+#if 1
+  GLint w=width(), h=height();
   
   //projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  GLint viewport[4];
-  viewport[0]=0; viewport[1]=0; viewport[2]=width(); viewport[3]=height();
-  gluPickMatrix((GLdouble) mouseposx, (GLdouble)(height()-mouseposy), 2., 2., viewport);
-  camera.glSetProjectionMatrix();
+  if(mouseView==-1){
+    GLint viewport[4] = {0, 0, w, h};
+    gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
+    camera.glSetProjectionMatrix();
+  }else{
+    GLView *vi=&views(mouseView);
+    GLint viewport[4] = {vi->le*w, vi->bo*h, (vi->ri-vi->le)*w, (vi->to-vi->bo)*h};
+    gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
+    vi->camera.glSetProjectionMatrix();
+  }
   
   //draw objects
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glInitNames();
-  for(i=0; i<drawers.N; i++){
-    glLoadName(i);
-    (*drawers(i).call)(drawers(i).classP);
-    glGetIntegerv(GL_NAME_STACK_DEPTH, &j);
-    CHECK(j==0, "OpenGL name stack has not depth 1 (pushs>pops)");
+  if(mouseView==-1){
+    for(i=0; i<drawers.N; i++){
+      glLoadName(i);
+      (*drawers(i).call)(drawers(i).classP);
+      glGetIntegerv(GL_NAME_STACK_DEPTH, &j);
+      CHECK(j==0, "OpenGL name stack has not depth 1 (pushs>pops)");
+    }
+  }else{
+    GLView *vi=&views(mouseView);
+    for(i=0; i<vi->drawers.N; i++){ glLoadName(i); (*vi->drawers(i).call)(vi->drawers(i).classP); }
   }
-  
+#else
+  Draw(width(),height());
+#endif
+
   GLint n;
   n=glRenderMode(GL_RENDER);
   selection.resize(n);
   
   GLuint *obj, maxD=(GLuint)(-1);
-  topSelection=0;
+  topSelection=NULL;
   for(j=0, i=0; i<(uint)n; i++){
     obj=selectionBuffer+j;
     j+=3+obj[0];
@@ -1341,12 +1362,18 @@ void OpenGL::Select(){
     for(k=0; k<obj[0]; k++) selection(i).name |= obj[3+k];
     
     //get dim and dmax
-    selection(i).dmin=(double)obj[1]/maxD;  camera.glConvertToTrueDepth(selection(i).dmin);
-    selection(i).dmax=(double)obj[2]/maxD;  camera.glConvertToTrueDepth(selection(i).dmax);
+    selection(i).dmin=(double)obj[1]/maxD;  //camera.glConvertToTrueDepth(selection(i).dmin);
+    selection(i).dmax=(double)obj[2]/maxD;  //camera.glConvertToTrueDepth(selection(i).dmax);
     
     //get top-most selection
     if(!topSelection || selection(i).dmin < topSelection->dmin) topSelection = &selection(i);
   }
+  
+  if(topSelection){
+    topSelection->x=0; topSelection->y=0; topSelection->z=topSelection->dmin;
+    unproject(topSelection->x, topSelection->y, topSelection->z);
+  }
+    
   if(reportSelects) reportSelection();
 }
 #endif
@@ -1364,11 +1391,10 @@ int OpenGL::watch(const char *txt){
 bool OpenGL::update(const char *txt){
   pressedkey=0;
   if(txt) text.clr() <<txt;
-  redrawEvent();
+  postRedrawEvent();
   processEvents();
   return !pressedkey;
 }
-
 
 //! waits some msecons before updating
 int OpenGL::timedupdate(double sec){
@@ -1401,11 +1427,11 @@ void OpenGL::unproject(double &x, double &y, double &z){
   double _x, _y, _z;
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  camera.glSetProjectionMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  //glMatrixMode(GL_PROJECTION);
+  //glLoadIdentity();
+  //camera.glSetProjectionMatrix();
+  //glMatrixMode(GL_MODELVIEW);
+  //glLoadIdentity();
   glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix);
   glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
   glGetIntegerv(GL_VIEWPORT, viewPort);
@@ -1521,6 +1547,7 @@ void OpenGL::reportSelection(){
     std::cout
       <<"name = 0x" <<std::hex <<selection(i).name <<std::dec
       <<" min-depth:" <<selection(i).dmin <<" max-depth:" <<selection(i).dmax
+      <<" 3D: (" <<selection(i).x <<',' <<selection(i).y <<',' <<selection(i).z <<')'
       <<endl;
   }
 }
@@ -1676,10 +1703,17 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   if(!updown){
     for(uint i=0; i<clickCalls.N; i++) cont=cont && (*clickCalls(i).call)(clickCalls(i).classP, this);
   }
-  
-  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*ors::Vector(0, 0, 1) * (.2 * s->downPos.length());
-  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*ors::Vector(0, 0, 1) * (.2 * s->downPos.length());
-  
+
+  //mouse scroll wheel:
+  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
+
+  if(mouse_button==3){ //selection
+     Select();
+     if(topSelection)
+       cam->focus(topSelection->x, topSelection->y, topSelection->z);
+  }
+
   update();
 }
 
@@ -1707,33 +1741,37 @@ void OpenGL::Motion(int _x, int _y){
 #endif
   if(!mouseIsDown) return;
   //CHECK(mouseIsDown, "I thought the mouse is down...");
-  if(mouse_button==1){ // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
+  if(mouse_button==1){ //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
     if(s->downVec(2)<.1){
       rot.setDiff(vec, s->downVec);  //consider imagined sphere rotation of mouse-move
     }else{
-      rot.setVec((vec-s->downVec) ^ ors::Vector(0, 0, 1)); //consider only xy-mouse-move
+      rot.setVec((vec-s->downVec) ^ VEC_z); //consider only xy-mouse-move
     }
+#if 0 //rotate about origin
     cam->X->rot = s->downRot * rot;   //rotate camera's direction
     rot = s->downRot * rot / s->downRot; //interpret rotation relative to current viewing
     cam->X->pos = rot * s->downPos;   //rotate camera's position
-    //cam->X->rot = rot * s->downRot;   //rotate camera's direction
-    //cam->X->pos = s->downFoc + (cam->X->rot/s->downRot)* (s->downPos - s->downFoc);   //rotate camera's position
+#else //rotate about focus
+    cam->X->rot = s->downRot * rot;   //rotate camera's direction
+    rot = s->downRot * rot / s->downRot; //interpret rotation relative to current viewing
+    cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
+#endif
     update();
     if(immediateExitLoop) exitEventLoop();
   }
-  if(mouse_button==3){ // || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
-    ors::Vector trans = s->downVec - vec;
+  if(mouse_button==3){ //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
+/*    ors::Vector trans = s->downVec - vec;
     trans(2)=0.;
     trans = s->downRot*trans;
     cam->X->pos = s->downPos + trans;
-    update();
+    update();*/
   }
-  if(mouse_button==2){ // || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
+  if(mouse_button==2){ //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
-    cam->X->pos = s->downPos + s->downRot*ors::Vector(0, 0, 1) * dy * s->downPos.length();
+    cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
     update();
   }
 #else

@@ -34,6 +34,8 @@ typedef MT::Array<Variable*> VariableList;
 typedef MT::Array<Factor*>   FactorList;
 typedef MT::Array<MessagePair*> MessagePairList;
 
+enum SpecialFactorType { NONE=0, AND, OR, WTA };
+
 extern uint VarCount;
 }
 
@@ -48,6 +50,7 @@ struct Variable {
   MT::String name;  //!< up to you...
   FactorList factors;    //!< each variable knows all factors it is part of
   MessagePairList messages;  //!< each variable knows all the messages it directly connects to
+  AnyList ats; //any convenience information (e.g. for dot);
   
   Variable();
   Variable(uint _dim, const char *_name);
@@ -67,21 +70,23 @@ namespace infer {
     then true). */
 struct Factor {
   //core defining properties
-  uintA varIds; //!< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their indices) this factor depends on
+  uintA varIds; //!< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their id's) this factor depends on
   uintA dim;    //!< f=f(x_1, x_3, x_7) => dim=[dim(x_1), dim(x_3), dim(x_7)];  array of dimensionalities of the variables this factor depends on
   arr P;        //!< the (probability) table
   double logP;  //!< the log-scaling of the table, such that true_factor = exp(logP) * P
   
   // auxilliary & connectivity
   MT::String name;
+  SpecialFactorType specialType;
   VariableList variables;
   FactorList factors;
   MessagePairList messages;          //!< each factor knows all the msg_pairs it connects to
+  AnyList ats; //any convenience information (e.g. for dot);
   
   Factor();
   ~Factor();
   Factor(const VariableList& variables, const char *_name=NULL);
-  Factor(const VariableList& variables, const arr& q);
+  Factor(const VariableList& variables, const arr& q, const char *_name=NULL);
   void init(const VariableList& variables);
   void relinkTo(const VariableList& variables);
   void operator=(const Factor& q);
@@ -198,13 +203,13 @@ void getVariableBeliefs(MT::Array<arr>& post, const VariableList& vars);
 }
 
 //-- pipes
-//inline ostream& operator <<(ostream& os, const iSpace& s)      { s.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::Variable& v)    { v.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::Factor& f)      { f.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::MessagePair& s){ s.write(os); return os; }
-inline ostream& operator <<(ostream& os, const infer::VariableList& list)   { listWrite(list, os, "\n"); return os; }
-inline ostream& operator <<(ostream& os, const infer::FactorList& list)     { listWrite(list, os, "\n"); return os; }
-inline ostream& operator <<(ostream& os, const infer::MessagePairList& list){ listWrite(list, os, "\n"); return os; }
+//inline ostream& operator<<(ostream& os, const iSpace& s)      { s.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::Variable& v)    { v.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::Factor& f)      { f.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::MessagePair& s){ s.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::VariableList& list)   { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const infer::FactorList& list)     { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const infer::MessagePairList& list){ listWrite(list, os, "\n"); return os; }
 
 // =======================================================================
 //
@@ -241,7 +246,7 @@ void write(Tree& tree);
 void treeInference(MT::Array<arr>& posteriors, const Tree& tree);
 void treeInference(MT::Array<arr>& posteriors, const Tree& forest, uintA& roots);
 void randomTree(Tree& tree, uint N, uint K, uint roots=1);
-std::ostream& operator <<(std::ostream& os, const TreeNode& t);
+std::ostream& operator<<(std::ostream& os, const TreeNode& t);
 
 
 //===========================================================================
@@ -320,7 +325,7 @@ void writeNice(const infer::FactorList& individual_factors);
 void writeEdges(const infer::FactorList& individual_factors, bool withProbs = false);
 void writeExtremelyNice(const infer::FactorList& facs);
 
-inline ostream& operator <<(ostream& os, const infer::FactorGraph& fg){ fg.write(os); return os; }
+inline ostream& operator<<(ostream& os, const infer::FactorGraph& fg){ fg.write(os); return os; }
 
 // calculates marginal for given variables
 void getMarginal(infer::Factor& marginal, const uintA& marginalVars, infer::FactorGraph& fg);

@@ -9,17 +9,32 @@
 #include "joystick.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>
-#include <NP/camera.h>
 #include "schunk.h"
 #include "vision.h"
 #include "earlyVisionModule.h"
 #include "guiModule.h"
 #include "process.h"
 #include "process_internal.h"
-#include <NP/uvccamera.h>
+#ifdef MT_NILS
+#  include <NP/camera.h>
+#  include <NP/uvccamera.h>
+#else
+struct sCameraModule;
+//struct CalibrationParameters;
+struct CameraModule:public Process{
+  CameraImages output;
+
+  sCameraModule *s;
+//  CalibrationParameters calib;
+
+  CameraModule():Process("ACHTUNG: Dummy camera module; Compile with MT_NILS or so!!"){};
+  void open(){};
+  void step(){printf("ACHTUNG: Dummy camera module; Compile with MT_NILS or so!!");};
+  void close(){};
+};
+#endif
 
 struct ControllerProcess;
-struct RevelInterface;
 struct TaskAbstraction;
 enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
 

@@ -703,6 +703,16 @@ template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
   }
 }
 
+//! get absolute min (using fabs)
+template<class T> T MT::Array<T>::absMin() const {
+  CHECK(N, "");
+  uint i;
+  T t((T)::fabs(p[0]));
+  for(i=1; i<N; i++) if(fabs(p[i])<t) t=(T)::fabs(p[i]);
+  return t;
+}
+
+
 //! get absolute maximum (using fabs)
 template<class T> T MT::Array<T>::absMax() const {
   CHECK(N, "");
@@ -812,46 +822,51 @@ template<class T> bool MT::Array<T>::containsDoubles() const {
 /*!\brief a sub array of a 1D Array (corresponds to matlab [i:I]); when
   the upper limit I is -1, it is replaced by the max limit (like
   [i:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(uint i, int I) const {
+template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   CHECK(nd==1, "1D range error ");
   MT::Array<T> x;
-  if(I==-1) I=d0-1;
-  if((uint)I+1==i){ x.resize(0); return x; }
-  CHECK(i<=(uint)I, "lower limit higher than upper!");
+  if(i<0) i+=d0;
+  if(I<0) I+=d0;
+  CHECK(i>=0 && I>=0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1);
-  uint k;
-  for(k=i; k<=(uint)I; k++) x(k-i)=operator()(k);
+  int k;
+  for(k=i; k<=I; k++) x(k-i)=operator()(k);
   return x;
 }
 
 /*!\brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(uint i, int I, uint j, int J) const {
+template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) const {
   CHECK(nd==2, "2D range error ");
   MT::Array<T> x;
-  if(I==-1) I=d0-1;
-  if(J==-1) J=d1-1;
-  CHECK(i<=(uint)I && j<=(uint)J, "lower limit must be higher than upper!");
+  if(i<0) i+=d0;
+  if(j<0) j+=d1;
+  if(I<0) I+=d0;
+  if(J<0) J+=d1;
+  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit must be higher than upper!");
   x.resize(I-i+1, J-j+1);
-  uint k, l;
-  for(k=i; k<=(uint)I; k++) for(l=j; l<=(uint)J; l++) x(k-i, l-j)=operator()(k, l);
+  int k, l;
+  for(k=i; k<=I; k++) for(l=j; l<=J; l++) x(k-i, l-j)=operator()(k, l);
   return x;
 }
 
 /*!\brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
-template<class T> MT::Array<T> MT::Array<T>::sub(uint i, int I, uint j, int J, uint k, int K) const {
+template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {
   CHECK(nd==3, "3D range error ");
   MT::Array<T> x;
-  if(I==-1) I=d0-1;
-  if(J==-1) J=d1-1;
-  if(K==-1) K=d2-1;
-  CHECK(i<=(uint)I && j<=(uint)J && k<=(uint)K, "lower limit must be higher than upper!");
+  if(i<0) i+=d0;
+  if(j<0) j+=d1;
+  if(k<0) j+=d2;
+  if(I<0) I+=d0;
+  if(J<0) J+=d1;
+  if(K<0) J+=d2;
+  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<K, "lower limit must be higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
-  uint ii, jj, kk;
-  for(ii=i; ii<=(uint)I; ii++) for(jj=j; jj<=(uint)J; jj++)  for(kk=k; kk<=(uint)K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
+  int ii, jj, kk;
+  for(ii=i; ii<=I; ii++) for(jj=j; jj<=J; jj++)  for(kk=k; kk<=K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
   return x;
 }
 
@@ -859,14 +874,15 @@ template<class T> MT::Array<T> MT::Array<T>::sub(uint i, int I, uint j, int J, u
   runs from i to I (as explained above) while the second index runs
   over the columns explicitly referred to by cols. (col doesn't have
   to be ordered or could also contain some columns multiply) */
-template<class T> MT::Array<T> MT::Array<T>::sub(uint i, int I, Array<uint> cols) const {
+template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols) const {
   CHECK(nd==2, "2D range error ");
   MT::Array<T> x;
-  if(I==-1) I=d0-1;
-  CHECK(i<=(uint)I, "lower limit higher than upper!");
+  if(i<0) i+=d0;
+  if(I<0) I+=d0;
+  CHECK(i>0 && I>0 && i<=I, "lower limit higher than upper!");
   x.resize(I-i+1, cols.N);
-  uint k, l;
-  for(k=i; k<=(uint)I; k++) for(l=0; l<cols.N; l++) x(k-i, l)=operator()(k, cols(l));
+  int k, l;
+  for(k=i; k<=I; k++) for(l=0; l<(int)cols.N; l++) x(k-i, l)=operator()(k, cols(l));
   return x;
 }
 
@@ -1294,11 +1310,18 @@ template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare
 //! permute the elements \c i and \c j
 template<class T> void MT::Array<T>::permute(uint i, uint j){ T x=p[i]; p[i]=p[j]; p[j]=x; }
 
-//! permutes the entries according to the current this
+//! permute the entries according to the given permutation
 template<class T> void MT::Array<T>::permute(const MT::Array<uint>& permutation){
   CHECK(permutation.N<=N, "array smaller than permutation (" <<N <<"<" <<permutation.N <<")");
   MT::Array<T> b=(*this);
   for(uint i=0; i<N; i++) elem(i)=b.elem(permutation(i));
+}
+
+//! permute the rows (operator[]) according to the given permutation
+template<class T> void MT::Array<T>::permuteRows(const MT::Array<uint>& permutation){
+  CHECK(permutation.N<=d0, "array smaller than permutation ("<<N<<"<"<<permutation.N<<")");
+  MT::Array<T> b=(*this);
+  for(uint i=0; i<d0; i++) operator[](i)()=b[permutation(i)];
 }
 
 //! apply the given 'permutation' on 'this'
@@ -1338,7 +1361,7 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround){
 
 //***** I/O
 
-/*!\brief prototype for operator <<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
+/*!\brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
@@ -1971,21 +1994,11 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
     return;
   }
   if(y.nd==1 && z.nd==2){ //vector^T x matrix -> vector^T
+    HALT("This is a stupid old inconsistent case of matrix multiplication! Never use this convention! Change your code: transpose first term explicitly.");
+    /*
     MT::Array<T> zt;
     transpose(zt, z);
     x = zt*y;
-    return;
-    // HALT("This is a stupid old inconsistent case of matrix multiplication!! Never use this convention!");
-    /*
-    CHECK(y.d0==z.d0, "wrong dimensions for inner product");
-    uint i, k, d0=z.d1, dk=y.d0;
-    x.resize(d0);
-    T s;
-    for(i=0;i<d0;i++){
-      for(s=0, k=0;k<dk;k++) s+=y.p[k]*z.p[k*d0+i];
-      x.p[i]=s;
-    }
-    return;
     */
   }
   if(y.nd==2 && z.nd==3){
@@ -2108,7 +2121,7 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
 //!@name tensor operations
 //
 
-template<class T> std::ostream& operator <<(std::ostream& os, const MT::Array<T>& x);
+template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 void getIndexTuple(uintA &I, uint i, const uintA &d);
 
 #define DEBUG_TENSOR(x) //x
@@ -2423,7 +2436,7 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
   getMultiDimIncrement(X.getDim(), Yid, Ydim, Yinc, Ydec);
   Y.resize(Yid.N, Ydim);
   Y.setZero();
-  //HALT("WRONG IMPLEMENTATION! - zero don't guarantee max...");
+  HALT("WRONG IMPLEMENTATION! - zero don't guarantee max...");
   
   //loop
   for(Xcount=0, Ycount=0; Xcount<X.N; Xcount++){
@@ -2752,10 +2765,10 @@ CompoundAssignmentOperator(%=)
 template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x){ x.read(is); return is; }
 
 //! allows a notation such as x <<"[0 1; 2 3]"; to initialize an array x
-template<class T> MT::Array<T>& operator <<(MT::Array<T>& x, const char* str){ std::istringstream ss(str); ss >>x; return x; }
+template<class T> MT::Array<T>& operator<<(MT::Array<T>& x, const char* str){ std::istringstream ss(str); ss >>x; return x; }
 
 //! calls MT::Array<T>::write
-template<class T> std::ostream& operator <<(std::ostream& os, const MT::Array<T>& x){
+template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x){
   x.write(os); return os;
 }
 
@@ -3017,7 +3030,7 @@ template class MT::Array<bool>;
 template<class T> void listWrite(const MT::Array<T*>& L, std::ostream& os, const char *ELEMSEP=" ", const char *delim=NULL){
   uint i;
   if(delim) os <<delim[0];
-  for(i=0; i<L.N; i++){ if(i) os <<ELEMSEP;  if(L.elem(i)) L.elem(i)->write(os); else os <<"<NULL>"; }
+  for(i=0; i<L.N; i++){ if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
 

@@ -155,6 +155,8 @@ struct Transformation {
   void setInverse(const Transformation& f);
   void setDifference(const Transformation& from, const Transformation& to);
   void setAffineMatrix(const double *m);
+
+  bool isZero() const{ return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
   
   void addRelativeTranslation(double x, double y, double z);
   void addRelativeVelocity(double x, double y, double z);
@@ -434,11 +436,11 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Transformation *rel=0) const;
-  void jacobian(arr& J, uint i, ors::Transformation *rel=0) const;
-  void hessian(arr& H, uint i, ors::Transformation *rel=0) const;
-  void kinematicsZ(arr& z, uint i, ors::Transformation *rel=0) const;
-  void jacobianZ(arr& J, uint i, ors::Transformation *rel=0) const;
+  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a);
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -538,18 +540,18 @@ std::istream& operator>>(std::istream&, ors::Vector&);
 std::istream& operator>>(std::istream&, ors::Matrix&);
 std::istream& operator>>(std::istream&, ors::Quaternion&);
 std::istream& operator>>(std::istream&, ors::Transformation&);
-std::ostream& operator <<(std::ostream&, const ors::Vector&);
-std::ostream& operator <<(std::ostream&, const ors::Matrix&);
-std::ostream& operator <<(std::ostream&, const ors::Quaternion&);
-std::ostream& operator <<(std::ostream&, const ors::Transformation&);
+std::ostream& operator<<(std::ostream&, const ors::Vector&);
+std::ostream& operator<<(std::ostream&, const ors::Matrix&);
+std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
+std::ostream& operator<<(std::ostream&, const ors::Transformation&);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);
 std::istream& operator>>(std::istream&, ors::Joint&);
 std::istream& operator>>(std::istream&, ors::Proxy&);
-std::ostream& operator <<(std::ostream&, const ors::Body&);
-std::ostream& operator <<(std::ostream&, const ors::Joint&);
-std::ostream& operator <<(std::ostream&, const ors::Proxy&);
+std::ostream& operator<<(std::ostream&, const ors::Body&);
+std::ostream& operator<<(std::ostream&, const ors::Joint&);
+std::ostream& operator<<(std::ostream&, const ors::Proxy&);
 stdPipes(ors::Graph);
 #endif
 

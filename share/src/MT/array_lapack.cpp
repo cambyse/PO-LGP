@@ -70,6 +70,7 @@ void blas_MM(arr& X, const arr& A, const arr& B){
 void blas_Mv(arr& y, const arr& A, const arr& x){
   CHECK(A.d1==x.N, "matrix multiplication: wrong dimensions");
   y.resize(A.d0);
+  if(!x.N && !A.d1){ y.setZero(); return; }
   CALL(cblas_, gemv)(CblasRowMajor,
                      CblasNoTrans,
                      A.d0, A.d1,

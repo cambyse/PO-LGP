@@ -1,7 +1,6 @@
 #ifndef MT_vision_h
 #define MT_vision_h
 
-
 #include "array.h"
 //#include "threads.h"
 

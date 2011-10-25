@@ -58,7 +58,7 @@ struct AICO {
   void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
   void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
-  void init_trajectory(const arr& q_init, double _damping=10.);
+  void init_trajectory(const arr& q_init);
   void shift_solution(int offset);
   
   double step();

@@ -205,10 +205,10 @@ public:
     b=A.b<B.b?A.b:B.b;
   }
   
-  //! prototype for operator <<
+  //! prototype for operator<<
   void write(std::ostream& os) const { os <<"(" <<r <<":" <<g <<":" <<b <<")"; }
   
-  //! prototype for operator >>
+  //! prototype for operator>>
   void read(std::istream& is){ is >>"(" >>r >>":" >>g >>":" >>b >>")"; }
 };
 }

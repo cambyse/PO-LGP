@@ -32,7 +32,7 @@ const bool lapackSupported=true;
 #else
 const bool lapackSupported=false;
 #endif
-uint64_t globalMemoryTotal=0, globalMemoryBound=1ull <<30; //this is 1GB
+uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
 bool globalMemoryStrict=false;
 }
 //int ARRAYOLDREAD=0;

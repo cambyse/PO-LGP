@@ -45,7 +45,7 @@ show(MeshObject *o, uint win=0, const char * msg=""){
     gl[win] = new OpenGL;
     gl[win]->add(drawBase,NULL);
     gl[win]->add(glDrawMeshObject, o);
-    gl[win]->add(glDrawPlot,plotModule);
+    gl[win]->add(glDrawPlot, &plotModule);
   }
 
   if (!with_GL) return; // non interactive

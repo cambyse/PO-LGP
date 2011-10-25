@@ -1,5 +1,5 @@
 \input{docs/doc.sty}
-
+ 
 \title{The MLR Guide}
 \author{Marc Toussaint}
 
@@ -52,6 +52,7 @@ libann-dev
 libplib-dev
 gnuplot
 meld
+libdc1394-22-dev
 \end{verbatim}
 \end{code}
 
@@ -72,10 +73,14 @@ schunkSDH-11-05-11@
 These are symbolic-linked in the |git/share/extern| directory. Call the
   |./LINK ~\lib| script to generate the relevant links.
 
+Recently, opencv-2.3 has been used. When using Ubuntu, packages can be 
+	obtained from |http://packages.ros.org/ros/ubuntu/|. For 
+	convenience, the gpg-key is in the root folder.
+
 \item TODO: In the future all external libs should be handled like
   |ODE_0.11|: minimal |GET/BUILD| script and .gitignore
 
-\item Try 'make' in the git/share directory. If problems occur, try to
+\item Try 'make' in the |git/share| directory. If problems occur, try to
 comment the following lines in the |src/MT/Makefile|:
 \begin{code}
 \begin{verbatim}
@@ -201,8 +206,8 @@ conventions) and perhaps the lecture which introduces task variables
 (and their Jacobians)
 
 \item Have a look at ALL ors\_* test projects in the git repository --
-they're really basic. Understand them all. The ``ors\_editor'' is useful to
-edit the ors-file describing geometries. Play with the test.ors file
+they're really basic. Understand them all. The |ors_editor| is useful to
+edit the ors-file describing geometries. Play with the |test.ors| file
 while watching the effect in the window.
 
 \item The ors doxygen.
@@ -302,7 +307,7 @@ The current perception module does a very simple thing:
 
 \item Given the contour $\partial C$ we compute a distance-to-contour
   field/image: for each pixel $i$ we compute $d_i = \min_{j\in\partial C}
-  |i-j|$ (using some OpenCV routine). We do this for both images. The
+  \|i-j\|$ (using some OpenCV routine). We do this for both images. The
   image $d_i$ is a good potential cost function to let 2D contour
   models converge to the HSV contour.
 
@@ -416,6 +421,23 @@ LINK to my notes on the CV system
 
 \subsection{git workflow}\label{secGit}
 
+Most likely (I would wonder if not) the git man pages are installed
+together with the git binaries in your distribution. The fastest way to
+check the syntax or parameters of a git subcommand are the man pages. 
+
+As a preliminary to using git, please take an hour to read the two
+tutorials on git provided in the man pages. In your terminal write
+|man gittutorial|. When done with it read on with %
+%
+|man gittutorial-2|. Depending on your background and experience
+with other revision control systems there might be better approaches to
+introduce git, but at any rate, these two tutorials give basic
+insight into git's concepts. For deeper understanding %
+%
+|man gitcore-tutorial| is your friend.
+
+Usually, |git foo help| is synonym for |man git foo|.
+
 \begin{code}
 \begin{verbatim}
 git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
@@ -450,8 +472,118 @@ with a git-diff.sh file (in your local bin)
 \end{verbatim}
 \end{code}
 
+Some other contribution to the git cheat sheet:
 
-\subsubsection{svn workflow}
+
+\begin{itemize}
+
+
+\item{init} 
+
+- |git init|  just inits the |$PWD|, nothing added, nothing
+
+- create central repo for current development\begin{enumerate}
+	
+	\item at home, |cd ~/dev/mpcdzen|, |git init|
+	\item |git add mpcdzen.sh mpcdzen.conf|  
+	\item |git commit -m initial|
+	\item |ssh my.server.there| go to where my 'central' repos are.
+	\item |cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen|
+	\item everywhere: |git clone ssh://my.home.here/home/me/dev/mpcdzen| \end{enumerate}
+
+- when cloning on the same machine:
+  %
+  |git clone --bare --no-hardlinks -l ~/dev/mpcdzen|  can be helpful
+
+
+
+\item{commit}
+
+- |git add -u ../path/| : add all *tracked* files under path
+
+- |git add ../path/| : add *all* files under path to staging area
+
+- |git commit -a | : add all modified tracked files from the *whole
+  working copy* and commit
+  	
+
+\item{diff}
+  	
+- |git diff| : how current files and HEAD differ
+
+- |git diff --cached | : diff staged files against HEAD
+
+
+\item{status}
+
+- |git status| : list staged, modified tracked, untracked files
+
+- if |file| is not tracked you can use .gitignore or .git/info/exclude
+  to tell git not to take care of it. If it is already tracked, this is
+  the way to say the same: |git update-index --assume-unchanged ../file|  
+
+\item{remote}
+
+- |git add remote mhmgr ssh://my.homemachine/git/repo| kinda introduces
+  my home machine's repo to this one. Then, |git fetch mhmgr| and I'm
+  set to go for comparing, merging etc.
+
+\item{refs' naming}
+
+- |HEAD^| addresses the parent of |HEAD|, e.g., assuming I've
+  merged 2 branches and committed 3 times on the current branch, 
+  %
+  |git show HEAD^^^2| shows the second branch before merging. In
+  other words, direct after merge and commit, the parents of HEAD are
+  |HEAD^1|  and |HEAD^2|  
+   
+   illustration from man git-rev-parse:
+   
+   \begin{code} \begin{verbatim}
+           G   H   I   J
+            \ /     \ /
+             D   E   F
+              \  |  / \
+               \ | /   |
+                \|/    |
+                 B     C
+                  \   /
+                   \ /
+                    A
+
+           A =      = A^0
+           B = A^   = A^1     = A~1
+           C = A^2  = A^2
+           D = A^^  = A^1^1   = A~2
+           E = B^2  = A^^2
+           F = B^3  = A^^3
+           G = A^^^ = A^1^1^1 = A~3
+           H = D^2  = B^^2    = A^^^2  = A~2^2
+           I = F^   = B^3^    = A^^3^
+           J = F^2  = B^3^2   = A^^3^2
+
+\end{verbatim} \end{code}
+
+\item{fork file with history}
+
+git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is 
+\begin{code}\begin{verbatim}
+cp a b
+git add b
+\end{verbatim} \end{code}
+
+git doesn;t have means to track hisory of files. It tracks |blobs|.
+See gitcore-tutorial for details. The history is available in, e.g.
+%
+|git log|, through |-C| option (Then git tries to find copies.
+It is good idea to commit forked files together -- then -C has clue
+where to search. If you would not, |-C -C| (double -C) or
+--find-copies-harder (or so) does the trick)
+http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
+
+\end{itemize}
+
+\subsection{svn workflow}
 
 \begin{code}
 \begin{verbatim}
@@ -588,7 +720,7 @@ J^\T \phi$
 \STATE $\lambda \gets 0.8\lambda$
 \STATE $x \gets x'$
 \ENDIF
-\UNTIL $|\Delta| < \delta$
+\UNTIL $\|\Delta\| < \delta$
 \end{algorithmic}
 \end{algorithm}
 

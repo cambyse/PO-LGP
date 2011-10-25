@@ -1,0 +1,22 @@
+Variable q_currentReference
+Variable currentProxies
+Variable SchunkHandVariable
+Variable SchunkSkinVariable
+Variable Joystick
+Variable EarlyVisionOutput
+Variable BumblebeeVariable
+Variable PerceptionOutput
+Variable FutureMotionPlan
+Variable FutureMotionGoal
+
+Process ControllerProcess (q_currentReference,currentProxies)
+Process SchunkArmProcess ()
+Process SchunkHandProcess ()
+Process SchunkSkinProcess ()
+Process Joystick ()
+Process EarlyVision ()
+Process BumblebeeProcess ()
+Process GuiProcess (q_currentReference,currentProxies,PerceptionOutput,BumblebeeVariable,FutureMotionPlan)
+Process ThreadInfoX ()
+Process PerceptionModule (EarlyVisionOutput)
+Process ReceedingHorizon (FutureMotionGoal,FutureMotionPlan)

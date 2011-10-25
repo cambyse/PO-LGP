@@ -54,6 +54,7 @@ Simulator::Simulator(const char* orsFile){
   s->gl.setClearColors(1., 1., 1., 1.);
   s->gl.camera.setPosition(10., -15., 8.);
   s->gl.camera.focus(0, 0, 1.);
+  s->gl.camera.upright();
   s->gl.update();
   s->gl.add(glDrawPlot, &plotModule);
   
@@ -106,8 +107,8 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
 
 void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
   if(rel){
-    ors::Transformation f;  f.pos.set(rel->p);
-    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(rel->p);
+    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, &v);
   }else{
     s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, NULL);
   }
@@ -115,18 +116,17 @@ void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
 
 void Simulator::kinematicsVec(arr& y, const char* bodyName, const arr* vec){
   if(vec){
-    ors::Vector v; v.set(vec->p);
-    ors::Transformation f;  f.rot.setDiff(v, VEC_z);
-    s->G.kinematicsZ(y, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(vec->p);
+    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.kinematicsZ(y, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
 void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
   if(rel){
-    ors::Transformation f;  f.pos.set(rel->p);
-    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(rel->p);
+    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, &v);
   }else{
     s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, NULL);
   }
@@ -134,11 +134,10 @@ void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
 
 void Simulator::jacobianVec(arr& J, const char* bodyName, const arr* vec){
   if(vec){
-    ors::Vector v; v.set(vec->p);
-    ors::Transformation f;  f.rot.setDiff(v, VEC_z);
-    s->G.jacobianZ(J, s->G.getBodyByName(bodyName)->index, &f);
+    ors::Vector v;  v.set(vec->p);
+    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.jacobianZ(J, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
@@ -186,8 +185,8 @@ void Simulator::stepOde(const arr& qdot, bool updateDisplay){
   s->ode.setMotorVel(s->G, qdot, 100.);
   s->ode.step(0.01);
   s->ode.importStateFromOde(s->G);
-  if(updateDisplay) s->gl.update();
 #endif
+  if(updateDisplay) s->gl.update();
 }
 
 struct sVisionSimulator {
@@ -209,6 +208,7 @@ VisionSimulator::VisionSimulator(){
   s->gl.setClearColors(1., 1., 1., 1.);
   s->gl.camera.setPosition(10., -15., 8.);
   s->gl.camera.focus(0, 0, 0);
+  s->gl.camera.upright();
   s->gl.update();
   s->gl.add(glDrawPlot, &plotModule);
   

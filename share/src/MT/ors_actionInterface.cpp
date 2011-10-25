@@ -140,6 +140,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   //gl->setClearColors(1., 1., 1., 1.);
   gl->camera.setPosition(7., -0., 2.);
   gl->camera.focus(0, 0, .8);
+  gl->camera.upright();
   //gl->camera.setPosition(5., -7., 4.);
   //gl->camera.focus(0, -.3, .5);
   //gl->resize(800, 800);

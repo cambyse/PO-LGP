@@ -149,7 +149,7 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv){
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
 void TaskVariable::setConstantTargetTrajectory(uint T){
-  //OPS;
+  OPS;
   targetType=trajectoryTT;
   active=true;
   uint t;
@@ -338,16 +338,16 @@ void DefaultTaskVariable::updateState(double tau){
   switch(type){
     case posTVT:
       if(j==-1){
-        ors->kinematics(y, i, &irel);
-        ors->jacobian(J, i, &irel); 
+        ors->kinematics(y, i, &irel.pos);
+        ors->jacobian(J, i, &irel.pos); 
         break;
       }
       pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
       pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
       c = ors->bodies(j)->X.rot / (pi-pj);
       y.resize(3); y.setCarray(c.p, 3);
-      ors->jacobian(Ji, i, &irel);
-      ors->jacobian(Jj, j, &jrel);
+      ors->jacobian(Ji, i, &irel.pos);
+      ors->jacobian(Jj, j, &jrel.pos);
       ors->jacobianR(JRj, j);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++){
@@ -362,8 +362,8 @@ void DefaultTaskVariable::updateState(double tau){
       break;
     case zoriTVT:
       if(j==-1){
-        ors->kinematicsZ(y, i, &irel);
-        ors->jacobianZ(J, i, &irel);
+        ors->kinematicsVec(y, i, &irel.rot.getZ(vi));
+        ors->jacobianVec(J, i, &irel.rot.getZ(vi));
         break;
       }
       //relative
@@ -413,8 +413,8 @@ void DefaultTaskVariable::updateState(double tau){
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors->kinematicsZ(zi, i, &irel);
-      ors->jacobianZ(Ji, i, &irel);
+      ors->kinematicsVec(zi, i, &irel.rot.getZ(vi));
+      ors->jacobianVec(Ji, i, &irel.rot.getZ(vi));
       if(j==-1){
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
@@ -422,8 +422,8 @@ void DefaultTaskVariable::updateState(double tau){
         Jj.resizeAs(Ji);
         Jj.setZero();
       }else{
-        ors->kinematicsZ(zj, j, &jrel);
-        ors->jacobianZ(Jj, j, &jrel);
+        ors->kinematicsVec(zj, j, &jrel.rot.getZ(vj));
+        ors->jacobianVec(Jj, j, &jrel.rot.getZ(vj));
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -455,7 +455,7 @@ void DefaultTaskVariable::updateState(double tau){
 void DefaultTaskVariable::getHessian(arr& H){
   switch(type){
     case posTVT:
-      if(j==-1){ ors->hessian(H, i, &irel); break; }
+      if(j==-1){ ors->hessian(H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -584,7 +584,7 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
 void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
   double d;
   ors::Shape *a, *b;
-  ors::Transformation arel, brel;
+  ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
 
   a=ors->shapes(p->a); b=ors->shapes(p->b);
@@ -593,8 +593,8 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, 
   if(!linear) y += d*d;
   else        y += d;
   
-  arel.setZero();  arel.pos=a->X.rot/(p->posA-a->X.pos);
-  brel.setZero();  brel.pos=b->X.rot/(p->posB-b->X.pos);
+  arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
+  brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
           
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);

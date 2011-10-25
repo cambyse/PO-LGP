@@ -14,6 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
+#ifndef MT_util_t_cpp
 #define MT_util_t_cpp
 
 #include "util.h"
@@ -208,3 +209,4 @@ template<class T> struct TypedAny:public Any {
 template<class T> Any* anyNew(const char* tag, const T &x){        return new TypedAny<T>(tag, x); }
 template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim){ return new TypedAny<T>(tag, x, n, delim); }
 
+#endif

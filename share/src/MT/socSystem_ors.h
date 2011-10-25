@@ -45,6 +45,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   uint uDim();
   uint yDim(uint i);
   void getq0(arr& q);
+  void setq0(const arr& q);
   void getv0(arr& v);
   void getqv0(arr& q_);
   void getqv0(arr& q, arr& qd);
@@ -59,9 +60,12 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void getH(arr& H, uint t);
   void getHinv(arr& Hinv, uint t);
   void getQ(arr& Q, uint t);
+  void getHrateInv(arr& HrateInv);
+  void getQrate(arr& Qrate);      
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);
+  uint taskDim(uint i);
   void getPhi(arr& phiq_i, uint i);
   void getJJt(arr& J_i, arr& Jt_i, uint i);
   void getHessian(arr& H_i, uint i);

@@ -1,0 +1,2 @@
+mkfifo gdb_in
+mkfifo gdb_out

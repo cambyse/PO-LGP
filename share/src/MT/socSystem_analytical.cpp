@@ -82,7 +82,7 @@ struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction {
   }
   
   void getProcess(arr& A, arr& a, arr& B);
-  double getCosts(arr& R, arr& r, uint t, const arr& qt);
+  double getTaskCosts(arr& R, arr& r, uint t, const arr& qt);
   void getConstraints(arr& c, arr& coff, uint t, const arr& qt);
   
   void displayState(const arr& q, const arr *Qinv, const char *text=NULL);
@@ -96,7 +96,7 @@ void SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B){
   a.resize(N); a.setZero();
 }
 
-double SocSystem_Analytical::getCosts(arr& R, arr& r, uint t, const arr& qt){
+double SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt){
   uint N=x.N;
   R.resize(N, N); R.setZero();
   r.resize(N);   r.setZero();

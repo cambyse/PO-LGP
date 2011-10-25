@@ -12,18 +12,19 @@ void zOpposeTaskVariable::userUpdate(){
     //return sunOfSqr of this sum (is a scalar task variable)
   uint i;
   ors::Shape *s;
+  ors::Vector tmp;
   arr zi,Ji,sum_z,sum_J;
   sum_J.resize(refs.N,ors->getJointStateDimension()); sum_J.setZero();
   sum_z.resize(3); sum_z.setZero();
   for_list(i,s,refs){
-    ors->kinematicsZ(zi,s->body->index,&s->rel);
+    ors->kinematicsVec(zi,s->body->index,&s->rel.rot.getZ(tmp));
     sum_z += zi/norm(zi);
-    ors->jacobianZ  (Ji,s->body->index,&s->rel);
+    ors->jacobianVec  (Ji,s->body->index,&s->rel.rot.getZ(tmp));
     sum_J += Ji;
   }
   y.resize(1);
   y(0)=sumOfSqr(sum_z);
-  J = 2.*sum_z*sum_J;
+  J = 2.*~sum_z*sum_J;
   J.reshape(1,ors->getJointStateDimension());
   transpose(Jt,J);
 }

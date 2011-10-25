@@ -111,16 +111,17 @@ void AICO::init_messages(){
   rememberOldState();
 }
 
-void AICO::init_trajectory(const arr& q_init, double _damping){
+void AICO::init_trajectory(const arr& q_init){
   init_messages();
   uint t, T=sys->nTime();
   CHECK(q_init.nd==2 && q_init.d0==T+1 && q_init.d1==sys->qDim(), "initial trajectory was wrong dimensionality");
-  soc::getPhaseTrajectory(b, q_init, sys->getTau());
-  damping = _damping;
+  if(sys->dynamic) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  sys->getx0(b[0]()); //overwrite with x0
   q=q_init;
   xhat = b;
-  s=b;  for(uint t=0; t<=T; t++){ Sinv[t].setDiag(damping);  }
+  s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }
   v=b;  for(uint t=0; t<=T; t++){ Vinv[t].setDiag(damping);  }
+    
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1.); //compute task message at reference!
   cost = evaluateTrajectory(b, display>0);
@@ -291,7 +292,7 @@ void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance, double
   sys->getHinv(Hinv[t](), t);
   if(!sys->dynamic) sys->getWinv(Winv[t](), t);
   sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
-  sys->getCosts(R[t](), r[t](), xhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
+  sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
   //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
 }
 
@@ -509,7 +510,7 @@ double AICO::step(){
   dampingReference=b;
   if(sys->dynamic) soc::getPositionTrajectory(q, b); else q=b;
   
-  for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8); //relocate once on fwd & bwd sweep
+  //for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 1e-8, 1.); //relocate once on fwd & bwd sweep
   
   cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
   //sys->costChecks(b);

@@ -102,7 +102,7 @@ double soc::LQG::stepKinematic(){
     countSetq++;
     sys->setq(q[t]);
     //sys->getQuadraticTaskCost(R[t](), r[t](), q[t], t);
-    sys->getCosts(R[t](), r[t](), q[t], t);
+    sys->getTaskCosts(R[t](), r[t](), q[t], t);
     r[t]() *= -2.;
   }
 
