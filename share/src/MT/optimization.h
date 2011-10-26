@@ -4,6 +4,46 @@
 #include "array.h"
 #include "util.h"
 
+//===========================================================================
+//
+// problem prototypes
+//
+
+//typedef double (*ScalarFunction)(arr* optional_gradient, const arr& x, void* optional_data); 
+//typedef void (*VectorFunction)(arr& output, arr* optional_Jacobian, const arr& x, void* optional_data);
+
+struct ScalarFunction { virtual double fs(arr* grad, const arr& x) = 0; };
+struct VectorFunction { virtual void   fv(arr& y, arr* J, const arr& x) = 0; };
+
+
+//===========================================================================
+//
+// gradient checks
+//
+
+void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
+void checkGradient(VectorFunction &f, const arr& x, double tolerance);
+
+
+//===========================================================================
+//
+// optimization methods
+//
+
+/// minimizes cost(x) = phi(x)^T phi(x) using the Jacobian of phi
+uint optGaussNewton(arr& x, VectorFunction& phi, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0);
+
+/// minimizes f(x)
+uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, uint verbose=0 );
+
+
+
+
+
+
+
+
+
 /*struct Monotonizer{
   enum { LevenbergMarquard=0, StepSize };
   int mode;
@@ -40,57 +80,7 @@ struct GaussNewtonCostFunction {
   virtual void calcTermsAt(const arr& x) = 0;
 };
 
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals=1000, double maxStepSize=-1.);
-
-/*struct GaussNewtonStepper{
-  double lambda;
-  arr Delta, y;
-  arr R, r;
-
-  void init(uint n){
-    evals=0;
-    r.resize(n); R.resize(n, n);
-  }
-
-  //compute initial costs
-  f.calcTermsAt(x);  evals++;
-  lx = sumOfSqr(f.phi);
-  VERBOSE(2, cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a=" <<a <<endl);
-
-  for(;;){
-    //compute Delta
-    arr tmp;
-    innerProduct(R, ~f.J, f.J  );  R.reshape(x.N, x.N);
-    innerProduct(r, ~f.J, f.phi);
-
-    lapack_Ainv_b_sym(Delta, R, -r);
-
-    for(;;){
-      y = x + a*Delta;
-      f.calcTermsAt(y);  evals++;
-      ly = sumOfSqr(f.phi);
-      VERBOSE(2, cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a);
-      CHECK(ly==ly, "cost seems to be NAN: ly=" <<ly);
-      if(ly <= lx) break;
-      if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      //decrease stepsize
-      a = .5*a;
-      VERBOSE(2, cout <<" - reject" <<endl);
-    }
-    VERBOSE(2, cout <<" - ACCEPT" <<endl);
-
-    //adopt new point and adapt stepsize
-    x = y;
-    lx = ly;
-    a = pow(a, 0.7);
-
-    //stopping criterion
-    if(norm(Delta)<tolerance || evals>maxEvals) break;
-  }
-  //cout <<lx <<' ' <<flush;
-  return evals;
-
-}*/
+inline uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals=1000, double maxStepSize=-1.){ return 0; };
 
 struct OptimizationProblem {
   bool isVectorValued;
@@ -104,9 +94,6 @@ struct OptimizationProblem {
   virtual void   F(arr& F, arr *grad, const arr& x, int i=-1){NIY;} //!< vector valued function
   OptimizationProblem(){ N=0; }
 };
-
-void checkGradient(OptimizationProblem &p, const arr& x, double tolerance);
-void checkGradient_vec(OptimizationProblem &p, const arr& x, double tolerance);
 
 struct DecideSign {
   double sumX, sumXX;
@@ -233,8 +220,8 @@ public:
   void init(double _delta0);
   void step(arr& x, const arr& grad, uint *singleI=NULL);
   void step(double& x, const double& grad);
-  void step(arr& x, OptimizationProblem& p);
-  int loop(arr& x, OptimizationProblem& p, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxIterations=1000);
+  void step(arr& x, ScalarFunction& f);
+  uint loop(arr& x, ScalarFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxIterations=1000, uint verbose=0);
   bool done();
 };
 
