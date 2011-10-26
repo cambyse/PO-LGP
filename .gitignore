@@ -19,8 +19,6 @@ z.*
 MT.log
 Makefile.dep
 
-.cproject
-.project
 
 %% special:
 share/extern/tony_mdp/parser.tab.cpp
@@ -34,5 +32,8 @@ share/extern/opencv-2.1
 share/extern/schunkLWA
 share/extern/schunkSDH-11-05-11
 
-
+% Eclipse Files
+.cproject
+.project
+*eclipse*
 
