@@ -834,6 +834,116 @@ MyClass::MyClass(){
 \end{enumerate}
 
 
+\section{Points to improve the code}
+
+\begin{description}
+\item[Penetrating collisions] The way penetrating collisions are
+handled is really not nice |ors_swift.cpp:318|. What should ideally
+happen: find the two points on the meshes that penetrate most, set $d$
+as their negative distance, and the penetration normal aligned with
+their distance. What happens now: set the distance $d=0$ and set the
+normal align with the shape centers. The problem: the collision
+gradient is not really correct.
+
+What to do: Actually most other collision libs focus on penetration
+(bullet/ode/solid), only SWIFT focusses on distance queries. What one
+would have to do, call one of these other collision libs to compute
+the most-penetrating two points of convex shapes.
+
+
+\end{description}
+
+\subsection{Marc's older notes for code}
+
+\begin{enumerate}
+
+\item Processes may not access MT.cfg in their step routine (open() is
+  acceptable, but still not optimal).
+
+  Instead, if necessary, parameters need to be made a proper
+  variable. A special gui process offers a way to modify the variable
+  online by the user.
+
+\item The |Lock| (from |process_internal.h|) should actually not be used. The
+  fact that it is used right now shows bad programming: It is always
+  used when one process (or main loop) accesses directly another
+  process instead of via a variable. Change that!
+
+\item Make some central |ors| variable, or so, from which
+  processes can update their ors-structure. Perhaps that needs
+  some signalling -- currently this orsCopyStuff after the
+  connectivity is changed (object glued to hand/released) is not at all clean
+  (related to point above).
+
+\item The motion planners so far only optimize the next to go
+  motion. Ideally there should be parallel planners optimizing already
+  future motions $\to$ Dmitry's keyframe approach.
+
+\item Make a Variable out of the TaskVariableList!! 
+
+\item All variables should have setters and getters of the format
+
+|arr& get_qreal(Process*);|
+
+|void set_qreal(Process*,const arr&);|
+
+These throw errors if called from a process that hasn't locked the
+variable or is a 'set' is called in readLock.
+
+\item robot.cpp:281: read the current state in the schunk.open() routine!
+not here!
+
+\item remove setting accelerations in each step of schunk hand motion
+
+-- use radians (SDH constructor) out of the box
+
+-- set and get velocites with one function call to schunk lib
+
+\item SOC: make consistent to what is written in the TOMSY document
+
+\item GRASP HEURISTICS: 1) Instead of conditioning velocities for lifting
+  and placing, condition positions directly. 2) For grasp-approach:
+  instead of conditioning only final position, condition on an
+  approach position-profile: namely in the reference frame
+  object-relative-to-hand. In both cases, use sinus position profiles?
+
+\end{enumerate}
+
+
+
+\subsection{Nikolay's ideas for vision}
+\begin{enumerate}
+
+\item improve quality of color segmentation, while staying cheap
+  computationally: learn a discriminative classifier $f(x)$ to
+  separate by HSV color pixel of interest $x$ from background
+
+\item to get an intuitive interface without too much program overhead:
+  create mask of desired discrimination as an image and train
+  classifier in external program (matlab or C++), to output model
+  parameters
+
+\item use a mixture of $k$ Gaussians for the activation of pixel $x$
+  in HSV space: $f(x) = \sum_k \alpha_k exp(- \frac{\|c_k -
+    x\|^2}{\sigma_k})$ , probably 2 Gaussians are already more than
+  enough, the current code is equivalent to $k=1$ single Gaussian
+
+\item just load parameters of trained Gaussian mixture and incorporate
+  in earlyvisionmodule.step(): for each gaussian $k$ we will calculate
+  one response image and than sum them, to use the existing data
+  structures make $\sum_k \alpha_k = 1$
+
+\item optionally, use RGB space in addition to HSV space
+
+\item use the above techniques for the LEDtracker... should simplify
+  dealing with reflections
+
+\item For an example how an image interface can be useful to define
+  labels for training discriminative segmentation: few brush strokes
+  are enough to define regions of foreground and background see
+  frogsegment.jpg, (algorithm implemented by me in matlab)
+\end{enumerate}
+
 
 \end{document}
 

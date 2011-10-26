@@ -226,6 +226,7 @@ struct Mesh {
   void clean();
   void flipFaces();
   void makeVerticesRelativeToGroup();
+  Vector getMeanVertex();
   
   //[preliminary]]
   void collectTriGroups();
