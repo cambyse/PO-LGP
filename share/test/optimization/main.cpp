@@ -3,9 +3,9 @@
 struct SqrProblem:public ScalarFunction,VectorFunction{
   arr M,C;
   uint n;
-  bool nonlin;
+  bool nonlinear;
   
-  void init(uint _n, double condition=100.){
+  SqrProblem(uint _n, double condition=100.){
     n=_n;
     uint i,j;
     //let M be a ortho-normal matrix (=random rotation matrix)
@@ -20,7 +20,7 @@ struct SqrProblem:public ScalarFunction,VectorFunction{
     //the metric is equal M*M^T
     C=~M*M;
     //arr U,d,V;    svd(U, d, V, C);    cout <<U <<d <<V <<M <<C <<endl;
-    nonlin=true;
+    nonlinear=false;
   }
   
 #if 0
@@ -46,7 +46,7 @@ struct SqrProblem:public ScalarFunction,VectorFunction{
 
   void fv(arr& y, arr *J,const arr& x){
     CHECK(x.N==n,"");
-    if(!nonlin){
+    if(!nonlinear){
       y = M*x;
       if(J) (*J)=M;
     }else{
@@ -62,9 +62,9 @@ struct SqrProblem:public ScalarFunction,VectorFunction{
 };
 
 void testSqrProblem(){
-  SqrProblem P;
-  P.init(10);
-  
+  SqrProblem P(10);
+  P.nonlinear=true;
+
   arr x(P.n),x0;
   rndUniform(x,1.,10.,false);
   x0=x;
@@ -75,16 +75,59 @@ void testSqrProblem(){
   optRprop(x, P, .01, NULL, 1e-5, 1000, 2);
   MT::wait();
 
-  MT::verboseLevel=2;
+  x=x0;
+  optGradDescent(x, P, .01, NULL, 1e-5, 10000, -1., 2);
+  MT::wait();
+
   x=x0;
   optGaussNewton(x, P, NULL, 1e-5, 1000, -1., 2);
   MT::wait();
 }
 
 
+struct ChainProblem:VectorChainFunction{
+  uint T,n;
+  arr A,a;
+  arr Wi,Wj,w;
+
+  ChainProblem(uint _T,uint _n){
+    T=_T; n=_n;
+    A.resize(T+1,n,n);  a.resize(T+1,n);
+    Wi.resize(T,n,n);  Wj.resize(T,n,n);    w.resize(T+1,n);
+    rndUniform(A,-1.,1.,false);
+    rndUniform(a,-1.,1.,false);
+    rndUniform(Wi,-1.,1.,false);
+    rndUniform(Wj,-1.,1.,false);
+    rndUniform(w,-1.,1.,false);
+  }
+  
+  void fi(arr& y, arr* J, uint i, const arr& x_i){
+    y = A[i]*(x_i - a[i]);
+    if(J) *J = A[i];
+  }
+  void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+    y=Wi[j]*x_i-Wj[j]*x_j - w[j];
+    if(Ji) *Ji =  Wi[j];
+    if(Jj) *Jj = -Wj[j];
+  }
+};
+
+
+void testDynamicProgramming(){
+  ChainProblem P(10,3);
+  
+  arr x(P.T,P.n),x0;
+  rndUniform(x,-1.,1.,false);
+  x0=x;
+
+  ConvertVector2SqrChainFunction PP(P);
+  optDynamicProgramming(x, PP);
+}
+
 
 
 int main(int argn,char** argv){
-  testSqrProblem();
+  //testSqrProblem();
+  testDynamicProgramming();
   return 0;
 }
