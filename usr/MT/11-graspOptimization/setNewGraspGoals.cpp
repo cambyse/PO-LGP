@@ -30,7 +30,7 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
 
   //general target
   arr xtarget(obj->X.pos.p, 3);
-  xtarget(2) += .02; //grasp it 2cm above center
+  //xtarget(2) += .02; //grasp it 2cm above center
   
   // graspCenter -> predefined point (xtarget)
   V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
@@ -68,9 +68,11 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   
   //finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-    ARRAY<const char*>("tip1Shape", "target",
-                       "tip2Shape", "target",
-                       "tip3Shape", "target"), sys.ors->shapes);
+    ARRAY<const char*>("tip1Shape",
+                       "tip2Shape",
+                       "tip3Shape"), sys.ors->shapes);
+  shapes.append(shapeId);shapes.append(shapeId);shapes.append(shapeId);
+  shapes.reshape(2,3); shapes = ~shapes;
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
   double grip=.9;
   V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
@@ -81,7 +83,20 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
     else V->y_trajectory[t]() = (grip*double(5*t-4*T))/T;
   }
   sys.vars.append(V);
-  
+
+  //collisions with other objects
+  shapes = ARRAY(shapeId);
+  V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
+  V->y_target = ARR(0.);  V->v_target = ARR(.0);
+  V->y_prec = colPrec;
+  V->setConstTargetsConstPrecisions(T);
+  if(V->y(0)>0.){ //we are in collision/proximity -> depart slowly
+    double a=V->y(0);
+    for(uint t=0;t<=T/5;t++)
+      V->y_trajectory[t]() = a*double(T-5*t)/T;
+  }
+  sys.vars.append(V);
+
   //opposing fingers
   V=listFindByName(sys.vars, "oppose12");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);

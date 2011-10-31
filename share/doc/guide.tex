@@ -1,5 +1,5 @@
 \input{docs/doc.sty}
-
+ 
 \title{The MLR Guide}
 \author{Marc Toussaint}
 
@@ -28,8 +28,8 @@ This is the central hub for information. Goals of this document:
 
 \item The default directory layout:
 \bi
-\item \verb+~/git/mlr+ for your git repository
-\item \verb+~/lib+ for your external lib installations
+\item |~/git/mlr| for your git repository
+\item |~/lib| for your external lib installations
 \ei
 
 \item Create your git repository:
@@ -70,18 +70,18 @@ schunkSDH-11-05-11@
 \end{verbatim}
 \end{code}
 
-These are symbolic-linked in the \verb+git/share/extern+ directory. Call the
-  \verb+./LINK ~\lib+ script to generate the relevant links.
+These are symbolic-linked in the |git/share/extern| directory. Call the
+  |./LINK ~\lib| script to generate the relevant links.
 
 Recently, opencv-2.3 has been used. When using Ubuntu, packages can be 
-	obtained from \verb+http://packages.ros.org/ros/ubuntu/+. For 
+	obtained from |http://packages.ros.org/ros/ubuntu/|. For 
 	convenience, the gpg-key is in the root folder.
 
 \item TODO: In the future all external libs should be handled like
-  ODE\_0.11: minimal GET/BUILD script and .gitignore
+  |ODE_0.11|: minimal |GET/BUILD| script and .gitignore
 
-\item Try 'make' in the \verb+git/share+ directory. If problems occur, try to
-comment the following lines in the src/MT/Makefile:
+\item Try 'make' in the |git/share| directory. If problems occur, try to
+comment the following lines in the |src/MT/Makefile|:
 \begin{code}
 \begin{verbatim}
 #FREEGLUT = 1
@@ -92,11 +92,11 @@ comment the following lines in the src/MT/Makefile:
 
 This reduces functionality of the code, but should at least compile.
 
-\item Generally, the \verb+git/share/make-config+ allows to set compile
+\item Generally, the |git/share/make-config| allows to set compile
 options for all projects, the local Makefiles trigger these options by
 defining 'ANN=1' or alike.
 
-\item Try test/array/x.exe
+\item Try |test/array/x.exe|
 \end{itemize}
 
 \subsection{Guide to the robot hardware (Marc \& Stanio)}
@@ -206,8 +206,8 @@ conventions) and perhaps the lecture which introduces task variables
 (and their Jacobians)
 
 \item Have a look at ALL ors\_* test projects in the git repository --
-they're really basic. Understand them all. The \verb+ors_editor+ is useful to
-edit the ors-file describing geometries. Play with the \verb+test.ors+ file
+they're really basic. Understand them all. The |ors_editor| is useful to
+edit the ors-file describing geometries. Play with the |test.ors| file
 while watching the effect in the window.
 
 \item The ors doxygen.
@@ -242,6 +242,10 @@ paper!)
 optimized matrix library), lists -- and everything implemented by only
 a SINGLE basic class, not a whole lib of classes.
 \end{itemize}
+
+\subsubsection{Tip: Debugging with arrays}
+
+If |*A.p@A.N|
 
 
 \subsubsection{Important conventions}
@@ -303,7 +307,7 @@ The current perception module does a very simple thing:
 
 \item Given the contour $\partial C$ we compute a distance-to-contour
   field/image: for each pixel $i$ we compute $d_i = \min_{j\in\partial C}
-  |i-j|$ (using some OpenCV routine). We do this for both images. The
+  \|i-j\|$ (using some OpenCV routine). We do this for both images. The
   image $d_i$ is a good potential cost function to let 2D contour
   models converge to the HSV contour.
 
@@ -423,16 +427,16 @@ check the syntax or parameters of a git subcommand are the man pages.
 
 As a preliminary to using git, please take an hour to read the two
 tutorials on git provided in the man pages. In your terminal write
-\verb+man gittutorial+. When done with it read on with %
+|man gittutorial|. When done with it read on with %
 %
-\verb+man gittutorial-2+. Depending on your background and experience
+|man gittutorial-2|. Depending on your background and experience
 with other revision control systems there might be better approaches to
 introduce git, but at any rate, these two tutorials give basic
 insight into git's concepts. For deeper understanding %
 %
-\verb+man gitcore-tutorial+ is your friend.
+|man gitcore-tutorial| is your friend.
 
-Usually, \verb+git foo help+ is synonym for \verb+man git foo+.
+Usually, |git foo help| is synonym for |man git foo|.
 
 \begin{code}
 \begin{verbatim}
@@ -476,62 +480,62 @@ Some other contribution to the git cheat sheet:
 
 \item{init} 
 
-- \verb`git init`  just inits the \verb`$PWD`, nothing added, nothing
+- |git init|  just inits the |$PWD|, nothing added, nothing
 
 - create central repo for current development\begin{enumerate}
 	
-	\item at home, \verb`cd ~/dev/mpcdzen`, \verb`git init`
-	\item \verb`git add mpcdzen.sh mpcdzen.conf`  
-	\item \verb`git commit -m initial`
-	\item \verb`ssh my.server.there` go to where my 'central' repos are.
-	\item \verb`cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen`
-	\item everywhere: \verb`git clone ssh://my.home.here/home/me/dev/mpcdzen` \end{enumerate}
+	\item at home, |cd ~/dev/mpcdzen|, |git init|
+	\item |git add mpcdzen.sh mpcdzen.conf|  
+	\item |git commit -m initial|
+	\item |ssh my.server.there| go to where my 'central' repos are.
+	\item |cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen|
+	\item everywhere: |git clone ssh://my.home.here/home/me/dev/mpcdzen| \end{enumerate}
 
 - when cloning on the same machine:
   %
-  \verb`git clone --bare --no-hardlinks -l ~/dev/mpcdzen`  can be helpful
+  |git clone --bare --no-hardlinks -l ~/dev/mpcdzen|  can be helpful
 
 
 
 \item{commit}
 
-- \verb`git add -u ../path/` : add all *tracked* files under path
+- |git add -u ../path/| : add all *tracked* files under path
 
-- \verb`git add ../path/` : add *all* files under path to staging area
+- |git add ../path/| : add *all* files under path to staging area
 
-- \verb`git commit -a ` : add all modified tracked files from the *whole
+- |git commit -a | : add all modified tracked files from the *whole
   working copy* and commit
   	
 
 \item{diff}
   	
-- \verb`git diff` : how current files and HEAD differ
+- |git diff| : how current files and HEAD differ
 
-- \verb`git diff --cached ` : diff staged files against HEAD
+- |git diff --cached | : diff staged files against HEAD
 
 
 \item{status}
 
-- \verb`git status` : list staged, modified tracked, untracked files
+- |git status| : list staged, modified tracked, untracked files
 
-- if \verb`file` is not tracked you can use .gitignore or .git/info/exclude
+- if |file| is not tracked you can use .gitignore or .git/info/exclude
   to tell git not to take care of it. If it is already tracked, this is
-  the way to say the same: \verb`git update-index --assume-unchanged ../file`  
+  the way to say the same: |git update-index --assume-unchanged ../file|  
 
 \item{remote}
 
-- \verb`git add remote mhmgr ssh://my.homemachine/git/repo` kinda introduces
-  my home machine's repo to this one. Then, \verb`git fetch mhmgr` and I'm
+- |git add remote mhmgr ssh://my.homemachine/git/repo| kinda introduces
+  my home machine's repo to this one. Then, |git fetch mhmgr| and I'm
   set to go for comparing, merging etc.
 
 \item{refs' naming}
 
-- \verb`HEAD^` addresses the parent of \verb`HEAD`, e.g., assuming I've
+- |HEAD^| addresses the parent of |HEAD|, e.g., assuming I've
   merged 2 branches and committed 3 times on the current branch, 
   %
-  \verb`git show HEAD^^^2` shows the second branch before merging. In
+  |git show HEAD^^^2| shows the second branch before merging. In
   other words, direct after merge and commit, the parents of HEAD are
-  \verb`HEAD^1`  and \verb`HEAD^2`  
+  |HEAD^1|  and |HEAD^2|  
    
    illustration from man git-rev-parse:
    
@@ -568,12 +572,12 @@ cp a b
 git add b
 \end{verbatim} \end{code}
 
-git doesn;t have means to track hisory of files. It tracks \verb`blobs`.
+git doesn;t have means to track hisory of files. It tracks |blobs|.
 See gitcore-tutorial for details. The history is available in, e.g.
 %
-\verb`git log`, through \verb`-C` option (Then git tries to find copies.
+|git log|, through |-C| option (Then git tries to find copies.
 It is good idea to commit forked files together -- then -C has clue
-where to search. If you would not, \verb`-C -C` (double -C) or
+where to search. If you would not, |-C -C| (double -C) or
 --find-copies-harder (or so) does the trick)
 http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 
@@ -608,7 +612,7 @@ svn commit -m 'message'
 \begin{enumerate}
 
 \item Use Inkscape. See the example mdp.svg in the pics path (note
-the \verb+\graphicspath{{pics/}}+ command):
+the |\graphicspath{{pics/}}| command):
 
 \centerline{\includegraphics[scale=.5]{mdp}}
 
@@ -675,7 +679,7 @@ Or more compact lists:\\
 \end{verbatim}
 \end{code}
 
-The \verb+list+ parameter documentation:\\
+The |list| parameter documentation:\\
 \begin{code}
 \begin{verbatim}
    * \topsep amount of extra vertical space at top of list
@@ -716,7 +720,7 @@ J^\T \phi$
 \STATE $\lambda \gets 0.8\lambda$
 \STATE $x \gets x'$
 \ENDIF
-\UNTIL $|\Delta| < \delta$
+\UNTIL $\|\Delta\| < \delta$
 \end{algorithmic}
 \end{algorithm}
 
@@ -732,19 +736,19 @@ J^\T \phi$
 
 \item Output parameters before input parameters in function declarations.
 
-\item Naming convention \verb+name_of_a_routine(ouput,input);+ is
-  perhaps better than my old \verb+nameOfARoutine(..);+ style.
+\item Naming convention |name_of_a_routine(ouput,input);| is
+  perhaps better than my old |nameOfARoutine(..);| style.
 
 \item Make headers as clean and short and concise as possible!
 
-\item Try to avoid \verb+#includes+ in header files as much as possible!!
+\item Try to avoid |#includes| in header files as much as possible!!
   In particular, when a class's methods require an external library;
   this external library should be included only in the cpp-file.
 
- $\to$ In particular, try to avoid \verb+#includes <external_lib>+ in headers!! (I
+ $\to$ In particular, try to avoid |#includes <external_lib>| in headers!! (I
  tried to get rid of them as much as possible in all my *.h)
 
-\item Try to avoid \verb+#includes+ in header files as much as possible!!
+\item Try to avoid |#includes| in header files as much as possible!!
   If
   you think the class needs to contain members/data structures defined
   in an external library and therefore you need to include its header
@@ -798,7 +802,7 @@ MyClass::MyClass(){
   find the definition in the cpp file.
 
 
-\item Never ever use \verb+#ifdef+ directives in a header file if this
+\item Never ever use |#ifdef| directives in a header file if this
   influences definition of classes, especially which members (and
   'size') a class has!
 
@@ -810,7 +814,7 @@ MyClass::MyClass(){
   refers to different memory addesses as your routines in your
   library.
 
-  Therefore try to avoid \verb+#ifdefs+ in headers as much as possible! Move
+  Therefore try to avoid |#ifdefs| in headers as much as possible! Move
   them to the cpp file!
 
 \item If you don't have a preferred IDE, use kdevelop.

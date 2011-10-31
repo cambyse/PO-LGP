@@ -185,8 +185,8 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-#shape target(OBJECTS){ contact, type=4, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape target(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+shape target1(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+shape target2(OBJECTS){ contact, type=4, rel=<t( .25 -.2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
 
 

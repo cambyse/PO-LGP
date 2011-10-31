@@ -1,10 +1,10 @@
-Variable::Variable() {
+StateVariable::StateVariable() {
   id=globalVars.N;
   globalVars.append(this);
   dim=0;
 }
 
-void Variable::write(std::ostream& os) const {
+void StateVariable::write(std::ostream& os) const {
   os <<name;
   if (valueNames.N) {
     os <<' ';
@@ -13,7 +13,7 @@ void Variable::write(std::ostream& os) const {
   os <<std::endl;
 }
 
-void Variable::read(istream& is) {
+void StateVariable::read(istream& is) {
   MT::String::readStopSymbols = " []<>\n\r";
   MT::String::readEatStopSymbol = 0;
   is >>name;
@@ -54,7 +54,7 @@ void Rule::read(std::istream& is) {
   uint i;
   char c;
   MT::String varName;
-  Variable *v;
+  StateVariable *s;
   for (i=0;; i++) {
     c=MT::peerNextChar(is," \r\t");
     if (c=='\n') break;
@@ -68,12 +68,12 @@ void Rule::read(std::istream& is) {
       continue;
     }
     is >>varName;
-    v = listFindByName(globalVars,varName);
-    if (!v) {
+    s = listFindByName(globalVars,varName);
+    if (!s) {
       int r;
       uint j;
-      for_list(j,v,globalVars) {
-        r=v->valueNames.findValue(varName);
+      for_list(j,s,globalVars) {
+        r=s->valueNames.findValue(varName);
         if (r>=0) {
           values.append(r);
           break;
@@ -82,8 +82,8 @@ void Rule::read(std::istream& is) {
     } else {
       values.append(1);
     }
-    if (!v) HALT("don't know variable or value '"<<varName <<"'");
-    vars.append(v);
+    if (!s) HALT("don't know variable or value '"<<varName <<"'");
+    vars.append(s);
   }
   weight = 1.;
 }
