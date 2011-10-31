@@ -249,7 +249,7 @@ void RobotProcessGroup::open(){
   if(openGui){
     gui.q_referenceVar = &q_currentReference;
     gui.proxiesVar = &currentProxies;
-    if(openBumble) gui.cameraVar = &bumble.output;
+    if(openBumble) gui.cameraVar = &currentCameraImages;
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
@@ -263,12 +263,13 @@ void RobotProcessGroup::open(){
   }
   
   if(openBumble){
+    bumble.output = &currentCameraImages;
     bumble.threadOpen(MT::getParameter<int>("bumbleThreadNice", 0));
     bumble.threadLoop(); // -> start in loop mode!
   }
   
   if(openEarlyVision){
-    evis.input=&bumble.output;
+    evis.input = &currentCameraImages;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }

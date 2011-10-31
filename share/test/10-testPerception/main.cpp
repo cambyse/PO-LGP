@@ -24,18 +24,20 @@ int main(int argn,char** argv){
   //ors::Body * o = G.getBodyByName("OBJECTS");
   //o->X.p(0) = 100;
 
-  CameraModule cam;
+  //Variables
+  CameraImages currentCameraImages;
+  q_currentReferenceVar q_var;
+
+  //Processes
   EarlyVisionModule evis;
-#ifdef REALCAMERA
-  evis.input=&cam.output;
-#else
-  CameraImages dummyImages;
-  dummyImages.loadDummyImages();
-  evis.input=&dummyImages;
+  CameraModule cam;
+  cam.output = &currentCameraImages;
+  evis.input = &currentCameraImages;
+#ifndef REALCAMERA
+  currentCameraImages.loadDummyImages();
 #endif
   PerceptionModule perc;  perc.input=&evis.output;
 
-  q_currentReferenceVar q_var;
   G.getJointState(q_var.q_reference);
   
   GuiModule gui;  gui.cameraVar=evis.input;  gui.perceptionOutputVar=&perc.output;
@@ -59,7 +61,7 @@ int main(int argn,char** argv){
 		  //save the hsv image
 		     floatA hsvL;// hsvL.resizeAs(cam.output.rgbL);
 		     floatA tmpImg;
-		     byte2float(tmpImg,cam.output.rgbL);
+		     byte2float(tmpImg,currentCameraImages.rgbL);
 		     rgb2hsv(hsvL , tmpImg);
 		      byteA hsvInt(hsvL.d0,hsvL.d1,hsvL.d2);
 		      for(uint x = 0; x < hsvL.d0; x++)
