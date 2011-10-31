@@ -49,6 +49,7 @@ void rgb2hsv(floatA& hsv, floatA& rgb);
 void getHsvEvidences(floatA &phi, floatA &hsv, const floatA& hsvTarget, const floatA& hsvTol);
 float hsv_diff(const floatA& a, const floatA& b, const floatA& tol);
 byteA evi2rgb(const floatA& theta);
+floatA rgb2evi(const byteA& theta);
 
 //----- high-level analysis
 void getHsvCenter(arr& cen, byteA &img, uint iter, const floatA& hsvTarget, const floatA& hsvTol);
