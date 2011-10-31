@@ -5,6 +5,39 @@
 #include <MT/opengl.h>
 #include <aico_key_frames.h>
 
+void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold)
+{
+  int steps = sys.nTime();
+  arr R,r,H1,Q,Winv,W;
+  arr q0,q_old,tp,x0;
+  sys.getH(H1,1); //H_step
+  sys.getQ(Q,1);  //Q_step
+  
+  sys.getx0(x0);
+  b=x0;
+
+  double old_r,dr=1e6;
+  W = 1.0*steps*(Q+H1);
+  inverse_SymPosDef(Winv,W);
+  
+
+  for (int k=0;k<100;k++){
+    q_old = b;
+    sys.setx(b);
+    sys.getCosts(R,r,b,steps);
+    if(  sys.taskCost(NULL,steps,-1)+ sum(~(b-x0)*Winv*(b-x0)) >old_r) alpha=alpha*0.5;
+    else alpha=pow(alpha,0.5); 
+    Binv = Winv+ R;
+    lapack_Ainv_b_sym(b, Binv,  Winv*x0  + r);
+    b = q_old + alpha*(b-q_old);
+    dr = old_r;
+    old_r = sys.taskCost(NULL,steps,-1) +sum(~(b-x0)*Winv*(b-x0));
+    dr -= old_r; 
+    cout << old_r << endl;
+    if (fabs(dr)<threshold) break;
+  }
+}
+
 void decomposeMatrix(arr& A1,arr& A2,arr A){ // returns diagonal blocks of equal size
   int dim = sqrt(A.N)/2;
   A.resize(2*dim,2*dim);
@@ -48,15 +81,15 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
   static const double pi = 3.14159265358979; 
   double det = lapack_determinantSymPosDef(A); 
   arr diff = (x - a);
-  transpose(diff_tp,diff);
   inverse_SymPosDef(Ainv,A);
-  llk = sum (log(  1.0/sqrt(2.0*pi*det)) - 0.5*diff_tp*Ainv*diff);
+  llk = sum (log(  1.0/sqrt(2.0*pi*det)) - 0.5*~diff*Ainv*diff);
   return llk;
 }
 
 double OneStepDynamicFull(arr& b,arr& Binv,
                         soc::SocSystemAbstraction& sys,
-                        double time,double alpha, double task_eps, uint verbose, bool b_is_initialized)
+                        double time,double alpha,double task_eps,double eps_alpha,
+			uint verbose, bool b_is_initialized)
 {
   arr H1,R,Rinv,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; 
@@ -65,7 +98,7 @@ double OneStepDynamicFull(arr& b,arr& Binv,
   sys.getx0(x0);
   if(!b_is_initialized) b=x0;
   double old_r;
-
+  counter = 0; // number of iterations
   sys.getHrateInv(H1);
   sys.getQrate(Q);
 
@@ -76,7 +109,7 @@ double OneStepDynamicFull(arr& b,arr& Binv,
   
   arr I,Z,AT,Zv;
   I.setId(dim); Z.resize(dim,dim); Z.setZero();
-  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T
+  AT.setBlockMatrix(I,time*I,Z,I);  // A to the power of T
  
   double S0 = SumOfRow(T,0);double S1 = SumOfRow(T-1,1);double S2 = SumOfRow(T-1,2);  // sums of geometric series
   arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
@@ -87,34 +120,34 @@ double OneStepDynamicFull(arr& b,arr& Binv,
   
   sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
   inverse_SymPosDef(sumAinv,sumA);
-  suma= AT*x0;//?????
+  suma= AT*x0;
 
-  arr b_old = b;  arr b_best = b;
-  sys.setx(b_old); //MT: you can't be sure that sys is in the b state..
+ arr b_old = b;  arr b_best = b;
+  sys.setx(b_old);
   old_r = sys.taskCost(NULL,T,-1);
   bool restore;
      
   for (uint k=0;k<1000;k++){
     sys.setx(b);
-    if ((sys.taskCost(NULL, T, -1)>old_r)&&(!restore)){
+   
+    if ((sys.taskCost(NULL, T, -1) + sum(~(b-x0)*sumAinv*(b-x0)) >old_r)&&(!restore)){
       alpha=alpha*0.5; //failure
       b=b_best;
       restore=true;
     }else{
       if (!restore) alpha=pow(alpha,0.5); //success
       sys.getTaskCosts(R,r,b,T); // costs at the current position
-	
-      double eps=1e-10; arr id; id.setId(28);R= R+eps*id; //Trick against small negative eigenvalues of R
+	counter++; // Basically counts number of getCosts calls
+      double eps=1e-10; arr id; id.setId(dim*2);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
       b_best = b; b_old = b;
       lapack_Ainv_b_sym(b, Binv,  sumAinv*suma  + r);
       b = b_old + alpha*(b-b_old);
 
-
-      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha /*<<" r= " <<  r<<" R= " <<  R  */<<endl;
-      if ((!restore) && (k>1) && ((fabs(alpha)<1e-3) || ((old_r - sys.taskCost(NULL, T, -1))<task_eps))) break;
-
-      old_r = sys.taskCost(NULL, T, -1, verbose);
+      cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;
+      if ((!restore) && (k>1) && ((fabs(alpha)<eps_alpha) || ((old_r - sys.taskCost(NULL, T, -1) - sum(~(b-x0)*sumAinv*(b-x0)) )<task_eps))) break;
+      
+      old_r = sys.taskCost(NULL, T, -1, verbose) + sum(~(b-x0)*sumAinv*(b-x0)); // task+control costs
       restore = false;
 
       if(verbose>0) sys.gl->update();
@@ -129,7 +162,7 @@ double OneStepDynamicFull(arr& b,arr& Binv,
 void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAbstraction& sys,arr& R,arr& r,double time)
 {
   arr Rinv,Q,Winv,W,A,B,sumA,sumAinv,suma;
-  arr x0,q0,q_old,tp,qv0,v0,bq,bv;
+  arr x0,q0,q_old,qv0,v0,bq,bv;
 
   arr H1,Q1,Q2;
   double T = sys.nTime();
@@ -144,15 +177,15 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
   sys.getx0(x0);
   sys.getqv0(q0,v0);
  
-  arr I,Z,AT,Zv;
+  arr I,Z,AT,dAT,Zv;
   I.setId(dim);
   Z.resize(dim,dim); Z.setZero();    Zv.resize(dim); Zv.setZero(); 
-  AT.setBlockMatrix(I,I,Z,I);  // A to the power of T 
-
+  AT.setBlockMatrix(I,time*I,Z,I);  // A to the power of T 
+  dAT.setBlockMatrix(Z,I,Z,Z);
   arr Lx,dLx,dLA; //parameters of Gaussian - Likelihood;
 
   Lx= AT*x0 ;
-  dLx = cat(1.0*T*I*v0,Zv); //?????
+  dLx = dAT*x0; 
 
   arr sigma1,sigma2,sigma3,sigma4;
   double S0 = SumOfRow(T-1,0);double S1 = SumOfRow(T-1,1);double S2 = SumOfRow(T-1,2);
@@ -170,23 +203,23 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
   
   sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4); 
 
-  double eps=1e-10; arr id; id.setId(28);R= R+eps*id; //Trick against small negative eigenvalues of R
+  double eps=1e-10; arr id; id.setId(dim*2);R= R+eps*id; //Trick against small negative eigenvalues of R
   inverse_SymPosDef(Rinv,R);
-  arr h,th,sumInv;
+  arr h,sumInv;
   inverse_SymPosDef(sumInv,(sumA+Rinv));
   h = sumInv*(Lx - Rinv*r);
-  transpose(th,h);
 
   dLA.setBlockMatrix(Dsigma1,Dsigma2,Dsigma3,Dsigma4); 
-  grad = sum(-th*dLx+ 0.5*th*dLA*h - 0.5*trace(  sumInv*dLA));
+  grad = sum(-~h*dLx+ 0.5*~h*dLA*h - 0.5*trace(  sumInv*dLA));
   cout << "\nGradient=" << grad<< endl;
   likelihood= LogLikelihood(x0, Rinv*r, sumA+Rinv);
   cout<<"Log-Likelihood ="<<  likelihood<<endl;
 }
 
-void GetOptimalDynamicTime(double& time,
+void GetOptimalDynamicTime(double& time, int& counter,
 			   arr& b,arr& Binv,soc::SocSystemAbstraction& sys,
-			   double alpha,double step,double min_step, bool verbose){
+			   double alpha,double task_eps,double eps_alpha,double step,
+			   double min_step, bool verbose){
   arr  R,r,q0,x0;
   double old_time=sys.getTau(false);//+1e-1;
   double T = sys.nTime();
@@ -198,10 +231,12 @@ void GetOptimalDynamicTime(double& time,
   double old_r = 1e6;
   double old_llk = -1e6;
   double llk;
+  int cnt;
+  counter = 0;
  while (step>min_step) {
     sys.setqv(b0);
-    OneStepDynamicFull(b,Binv,sys,old_time,alpha,1e-4, false); // final posture estimation
-
+    OneStepDynamicFull(b,Binv,cnt,sys,old_time,alpha,task_eps,eps_alpha,verbose,false); // final posture estimation
+    counter+=cnt;
     sys.setqv(b);
     if (sys.taskCost(NULL,T,-1)<old_r) { // in case best costs do not coincide with the best time
       sys.getTaskCosts(R,r,b,T);
