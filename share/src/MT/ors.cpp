@@ -1570,7 +1570,7 @@ void ors::Mesh::clean(){
   uintA Tnew(T.d0, T.d1);
   Tok.append(idist);
   Tisok(idist)=true;
-  int A=0, B=0, C=0, D;
+  int A=0, B=0, D;
   uint r, k, l;
   intA neighbors;
   for(k=0; k<Tok.N; k++){
@@ -1578,9 +1578,9 @@ void ors::Mesh::clean(){
     Tnew(k, 0)=T(i, 0); Tnew(k, 1)=T(i, 1); Tnew(k, 2)=T(i, 2);
     
     for(r=0; r<3; r++){
-      if(r==0){ A=T(i, 0);  B=T(i, 1);  C=T(i, 2); }
-      if(r==1){ A=T(i, 1);  B=T(i, 2);  C=T(i, 0); }
-      if(r==2){ A=T(i, 2);  B=T(i, 0);  C=T(i, 1); }
+      if(r==0){ A=T(i, 0);  B=T(i, 1);  /*C=T(i, 2);*/ }
+      if(r==1){ A=T(i, 1);  B=T(i, 2);  /*C=T(i, 0);*/ }
+      if(r==2){ A=T(i, 2);  B=T(i, 0);  /*C=T(i, 1);*/ }
       
       //check all triangles that share A & B
       setSection(neighbors, VT[A], VT[B]);
@@ -3649,9 +3649,8 @@ void ors::Graph::read(std::istream& is){
   Shape *s;
   String tag, name, node1, node2;
   ifstream qlinfile;
-  char c;
   uint j;
-  c=MT::peerNextChar(is);
+  MT::peerNextChar(is);
   clear();
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
@@ -3899,7 +3898,6 @@ void ors::Graph::gravityToForces(){
 //! compute forces from the current contacts
 void ors::Graph::contactsToForces(double hook, double damp){
   ors::Vector trans, transvel, force;
-  double d;
   uint i;
   int a, b;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.){
@@ -3909,14 +3907,14 @@ void ors::Graph::contactsToForces(double hook, double damp){
       //trans = proxies(i)->rel.p - proxies(i-1).rel.p; //translation relative to sticking-frame
       trans    = proxies(i)->posB-proxies(i)->posA;
       transvel = proxies(i)->velB-proxies(i)->velA;
-      d=trans.length();
+      //d=trans.length();
       
       force.setZero();
       force += (hook) * trans; //*(1.+ hook*hook*d*d)
       force += damp * transvel;
       SL_DEBUG(1, cout <<"applying force: [" <<a <<':' <<b <<"] " <<force <<endl);
       
-      if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
+      if(a!=-1) addForce( force, shapes(a)->body, proxies(i)->posA);
       if(b!=-1) addForce(-force, shapes(b)->body, proxies(i)->posB);
     }
 }

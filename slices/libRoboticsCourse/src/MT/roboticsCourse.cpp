@@ -76,8 +76,9 @@ Simulator::~Simulator(){
 }
 
 
-void Simulator::watch(){
-  s->gl.watch();
+void Simulator::watch(bool pause){
+  if(pause) s->gl.watch();
+  else s->gl.update();
 }
 
 void Simulator::getJointAngles(arr& q){
