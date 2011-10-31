@@ -56,6 +56,8 @@ void getHsvCenter(arr& cen, byteA &img, uint iter, const floatA& hsvTarget, cons
 void localizeHsv(arr& worldPoint, byteA& left, byteA& right, const floatA& hsvTarget, const floatA& hsvTol, int smaller);
 void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
                              const floatA& theta, double threshold);
+void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSdv, uint range);
+
 
 //----- transformations
 void imagePointPair2WorldPoint(floatA& world, const floatA& left, const floatA& right);
