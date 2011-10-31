@@ -377,9 +377,6 @@ namespace np {struct Bumblebee2WS {};};
 np::Bumblebee2::Bumblebee2()
 {msg_missing_implementation(HERE, msg);};
 
-np::Bumblebee2::Bumblebee2()
-{msg_missing_implementation(HERE, msg);};
-
 np::Bumblebee2::~Bumblebee2()
 {msg_missing_implementation(HERE, msg);};
 
@@ -401,7 +398,7 @@ void np::Bumblebee2::start_capturing()
 void np::Bumblebee2::stop_capturing()
 {msg_missing_implementation(HERE, msg);};
 
-void np::Bumblebee2::grab(byteA& bw, byteA& rgb)
+void np::Bumblebee2::grab(byteA& rgb)
 {msg_missing_implementation(HERE, msg);};
 
 void np::Bumblebee2::grab(byteA& rgbL, byteA& rgbR)

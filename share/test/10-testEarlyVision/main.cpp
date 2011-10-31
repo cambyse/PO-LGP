@@ -1,6 +1,3 @@
-
-//#define MT_IMPLEMENTATION
-
 #include <signal.h>
 
 #include <MT/process_internal.h>
@@ -21,20 +18,22 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
   signal(SIGINT,shutdown);
 
+  //Variables
+  CameraImages currentCameraImages;
+
+  //Processes
   EarlyVisionModule evis;
   CameraModule cam;
+  cam.output = &currentCameraImages;
+  evis.input = &currentCameraImages;
 #if 0
-  evis.input=&cam.output;
-#else
-  CameraImages dummyImages;
-  dummyImages.loadDummyImages();
-  evis.input=&dummyImages;
+  currentCameraImages.loadDummyImages();
 #endif
   
-  //cam .threadOpen();
+  cam .threadOpen();
   evis.threadOpen();
 
-  //cam .threadLoop();
+  cam .threadLoop();
   evis.threadLoop();
   
   for(uint i=0;!STOP && i<10000;i++){
