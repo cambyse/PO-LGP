@@ -1,3 +1,5 @@
+# yoh yoh was ist los
+
 BASE   = ../..
 NAME   = libtl
 OUTPUT = $(BASE)/lib/$(NAME).so
