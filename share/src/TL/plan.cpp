@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -22,7 +21,7 @@
 
 
 #include "plan.h"
-
+#include "logicReasoning.h"
 
 
 
@@ -38,77 +37,77 @@
 TL::Reward::Reward() {
 }
 
-TL::Reward::Reward(uint _reward_type) {
+TL::Reward::Reward(RewardType _reward_type) {
   reward_type = _reward_type;
 }
 
 
-// PredicateReward
+// LiteralReward
 
-TL::PredicateReward::PredicateReward(TL::PredicateInstance* _pt) : Reward(REWARD_TYPE__PREDICATE_INSTANCE) {
+TL::LiteralReward::LiteralReward(TL::Literal* _pt) : Reward(reward_literal) {
   CHECK(_pt->positive, "");
-  pi = _pt;
+  lit = _pt;
 }
 
-double TL::PredicateReward::evaluate(const State& s) const {
-  if (TL::LogicEngine::holds(s, pi))
+double TL::LiteralReward::evaluate(const State& s) const {
+  if (TL::logicReasoning::holds(s, lit))
     return 1.0;
   else
     return 0.0;
 }
 
-bool TL::PredicateReward::satisfied(const State& s) const {
+bool TL::LiteralReward::satisfied(const State& s) const {
   double result = evaluate(s);
   return TL::areEqual(1., result);
 }
 
-bool TL::PredicateReward::possible(const State& s, TL::LogicEngine* le) const {
-  TL::Predicate* p_OUT = le->getPredicate(MT::String("out"));
+bool TL::LiteralReward::possible(const State& s) const {
+  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
   uint i;
-  FOR1D(pi->args, i) {
-    uintA args(1);  args(0)=pi->args(i);
-    TL::PredicateInstance* pi_out = le->getPI(p_OUT, true, args);
-    if (le->holds(s, pi_out))
+  FOR1D(lit->atom->args, i) {
+    uintA args(1);  args(0)=lit->atom->args(i);
+    TL::Literal* pi_out = logicObjectManager::getLiteral(p_OUT, true, args);
+    if (logicReasoning::holds(s, pi_out))
       return false;
   }
   return true;
 }
 
-void TL::PredicateReward::writeNice(ostream& out) const {
-  pi->writeNice(out);
+void TL::LiteralReward::writeNice(ostream& out) const {
+  lit->write(out);
 }
 
-void TL::PredicateReward::write(const char* filename) const {
+void TL::LiteralReward::write(const char* filename) const {
   ofstream out(filename);
   out<<reward_type<<endl;
-  out<<"# PredicateReward"<<endl;
-  out<<"# "; pi->writeNice(out); out<<endl;
-  pi->write(out); out<<endl;
+  out<<"# LiteralReward"<<endl;
+  out<<"# "; lit->write(out); out<<endl;
+  lit->write(out); out<<endl;
   out.close();
 }
 
 
-void TL::PredicateReward::getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const {
+void TL::LiteralReward::getRewardObjects(uintA& objects, const TL::State* s) const {
   objects.clear();
-  objects.setAppend(pi->args);
+  objects.setAppend(lit->atom->args);
 }
 
 
 
-// PredicateListReward
+// LiteralListReward
 
-TL::PredicateListReward::PredicateListReward(PredIA& _pis) : Reward(REWARD_TYPE__PREDICATE_INSTANCE_LIST) {
-  pis = _pis;
+TL::LiteralListReward::LiteralListReward(LitL& _lits) : Reward(reward_literalList) {
+  lits = _lits;
 }
 
-double TL::PredicateListReward::evaluate(const State& s) const {
-  if (TL::LogicEngine::holds(s, pis))
+double TL::LiteralListReward::evaluate(const State& s) const {
+  if (TL::logicReasoning::holds(s, lits))
     return 1.0;
   else
     return 0.0;
 }
 
-bool TL::PredicateListReward::satisfied(const State& s) const {
+bool TL::LiteralListReward::satisfied(const State& s) const {
   double result = evaluate(s);
   if (TL::areEqual(1., result))
     return true;
@@ -116,50 +115,121 @@ bool TL::PredicateListReward::satisfied(const State& s) const {
     return false;
 }
 
-bool TL::PredicateListReward::possible(const State& s, TL::LogicEngine* le) const {
-  TL::Predicate* p_OUT = le->getPredicate(MT::String("out"));
+bool TL::LiteralListReward::possible(const State& s) const {
+  // BRING IN DOMAIN KNOWLEDGE
+  
+  // Desktop world domain
+  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
   uint i, k;
   if (p_OUT != NULL) {
-    FOR1D(pis, k) {
-      FOR1D(pis(k)->args, i) {
-        uintA args(1);  args(0)=pis(k)->args(i);
-        TL::PredicateInstance* pt_out = le->getPI(p_OUT, true, args);
-        if (le->holds(s, pt_out))
+    FOR1D(lits, k) {
+      FOR1D(lits(k)->atom->args, i) {
+        uintA args(1);  args(0)=lits(k)->atom->args(i);
+        TL::Literal* pt_out = logicObjectManager::getLiteral(p_OUT, true, args);
+        if (logicReasoning::holds(s, pt_out))
           return false;
       }
     }
   }
+  
+  // Ex-Blocksworld domain
+  TL::Predicate* p_NO_DESTROYED_TABLE = logicObjectManager::getPredicate(MT::String("no-destroyed-table"));
+  TL::Predicate* p_ON_TABLE = logicObjectManager::getPredicate(MT::String("on-table"));
+  TL::Predicate* p_NO_DESTROYED = logicObjectManager::getPredicate(MT::String("no-destroyed"));
+  if (p_NO_DESTROYED_TABLE != NULL  &&  p_ON_TABLE != NULL) {
+    uintA empty;
+    TL::Literal* pi_no_destroyed_table = logicObjectManager::getLiteral(p_NO_DESTROYED_TABLE, true, empty);
+    FOR1D(lits, k) {
+      // (1)  Impossible if one object X still has to be put "on-table(X)" (but is not yet!)
+      // and it already does NOT hold "no-destroyed-table()".
+      if (lits(k)->atom->pred == p_ON_TABLE  &&  lits(k)->positive) {
+//         PRINT(*lits(k));
+//         PRINT(!logicReasoning::holds(s, lits(k)));
+//         PRINT(!logicReasoning::holds(s, pi_no_destroyed_table));
+        if (!logicReasoning::holds(s, lits(k)) &&  !logicReasoning::holds(s, pi_no_destroyed_table)) {
+          cout<<"Impossible as "<<*pi_no_destroyed_table<<" does not hold and we still require "<<*lits(k)<<endl;
+          cerr<<"Impossible as "<<*pi_no_destroyed_table<<" does not hold and we still require "<<*lits(k)<<endl;
+          return false;
+        }
+      }
+      // (2)  Impossible if object to be moved is destroyed.
+      if (lits(k)->atom->args.N == 2) {
+        if (!logicReasoning::holds(s, lits(k))) {
+          uintA helper;  helper.append(lits(k)->atom->args(0));
+          TL::Literal* pi_helper = logicObjectManager::getLiteral(p_NO_DESTROYED, true, helper);
+          if (!logicReasoning::holds(s, pi_helper)) {
+            cout<<"Impossible as "<<lits(k)->atom->args(0)<<" is already destroyed; i.e., it does not hold that "<<*pi_helper<<endl;
+            cerr<<"Impossible as "<<lits(k)->atom->args(0)<<" is already destroyed; i.e., it does not hold that "<<*pi_helper<<endl;
+            return false;
+          }
+        }
+      }
+    }
+  }
+  
+  // Triangle-tireworld domain
+  TL::Predicate* p_VEHICLE_AT = logicObjectManager::getPredicate(MT::String("vehicle-at"));
+  TL::Predicate* p_SPARE_IN = logicObjectManager::getPredicate(MT::String("spare-in"));
+  TL::Predicate* p_NOT_FLATTIRE = logicObjectManager::getPredicate(MT::String("not-flattire"));
+  TL::Predicate* p_HASSPARE = logicObjectManager::getPredicate(MT::String("hasspare"));
+  if (p_VEHICLE_AT != NULL  &&  p_NOT_FLATTIRE != NULL) {
+    uintA empty;
+    TL::Literal* pi_not_flattire = logicObjectManager::getLiteral(p_NOT_FLATTIRE, true, empty);
+    TL::Literal* pi_hasspare = logicObjectManager::getLiteral(p_HASSPARE, true, empty);
+    FOR1D(lits, k) {
+      // (1)  Impossible if   (i) not in goal-location,  (ii) not not-flattire,  (iii) not has-spare   and (iv) not spare-in current location
+      if (lits(k)->atom->pred == p_VEHICLE_AT  &&  lits(k)->positive) {
+        // (i)
+        if (!logicReasoning::holds(s, lits(k))) {
+          // (ii), (iii)
+          if (!logicReasoning::holds(s, pi_not_flattire)  &&  !logicReasoning::holds(s, pi_hasspare) ) {
+            // (iv)
+            uint current_location = logicReasoning::getArgument(s, *p_VEHICLE_AT);
+            uintA wrapper;  wrapper.append(current_location);
+            Literal* pi_spare_in_current_location = logicObjectManager::getLiteral(p_SPARE_IN, true, wrapper);
+            if (!logicReasoning::holds(s, pi_spare_in_current_location)) {
+              cout<<"Impossible as -" << *lits(k) << " (REWARD), but -"<<*pi_not_flattire<<",  current_location="
+                        <<current_location<<", -"<<*pi_hasspare<<" and -"
+                        <<*pi_spare_in_current_location<< " (CURRENT STATE)."<<endl;
+              return false;
+            }
+          }
+        }
+      }
+    }
+  }
+  
   return true;
 }
 
-void TL::PredicateListReward::writeNice(ostream& out) const {
+void TL::LiteralListReward::writeNice(ostream& out) const {
   uint i;
-  out<<"[" << pis.N  << "]  ";
-  FOR1D(pis, i) {
-    pis(i)->writeNice(out);out<<" ";
+  out<<"[" << lits.N  << "]  ";
+  FOR1D(lits, i) {
+    lits(i)->write(out);out<<" ";
   }
 }
 
-void TL::PredicateListReward::write(const char* filename) const {
+void TL::LiteralListReward::write(const char* filename) const {
   ofstream out(filename);
   out<<reward_type<<endl;
-  out<<"# PredicateListReward"<<endl;
+  out<<"# LiteralListReward"<<endl;
   uint i;
-  FOR1D(pis, i) {
-    out<<"# "; pis(i)->writeNice(out); out<<endl;
+  FOR1D(lits, i) {
+    out<<"# "; lits(i)->write(out); out<<endl;
   }
-  out<<pis.N<<endl;
-  FOR1D(pis, i) {
-    pis(i)->write(out); out<<endl;
+  out<<lits.N<<endl;
+  FOR1D(lits, i) {
+    lits(i)->write(out); out<<endl;
   }
   out.close();
 }
 
-void TL::PredicateListReward::getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const {
+void TL::LiteralListReward::getRewardObjects(uintA& objects, const TL::State* s) const {
   objects.clear();
   uint i;
-  FOR1D(pis, i) {
-    objects.setAppend(pis(i)->args);
+  FOR1D(lits, i) {
+    objects.setAppend(lits(i)->atom->args);
   }
 }
 
@@ -167,22 +237,22 @@ void TL::PredicateListReward::getRewardObjects(uintA& objects, LogicEngine* le, 
 // DisjunctionReward
 
 
-TL::DisjunctionReward::DisjunctionReward(PredIA& _pis) : Reward(REWARD_TYPE__ONE_OF_PREDICATE_INSTANCE_LIST) {
-  this->pis = _pis;
-  this->weights.resize(this->pis.N);
+TL::DisjunctionReward::DisjunctionReward(LitL& _lits) : Reward(reward_one_of_literal_list) {
+  this->lits = _lits;
+  this->weights.resize(this->lits.N);
   this->weights.setUni(1.0);
 }
 
-TL::DisjunctionReward::DisjunctionReward(PredIA& _pis, arr& _weights) : Reward(REWARD_TYPE__ONE_OF_PREDICATE_INSTANCE_LIST) {
-  this->pis = _pis;
+TL::DisjunctionReward::DisjunctionReward(LitL& _lits, arr& _weights) : Reward(reward_one_of_literal_list) {
+  this->lits = _lits;
   this->weights = _weights;
 }
 
 double TL::DisjunctionReward::evaluate(const State& s) const {
   uint i;
   double max = 0.0;
-  FOR1D(pis, i) {
-    if (TL::LogicEngine::holds(s, pis(i))) {
+  FOR1D(lits, i) {
+    if (TL::logicReasoning::holds(s, lits(i))) {
       max = TL_MAX(max, weights(i));
     }
   }
@@ -191,22 +261,22 @@ double TL::DisjunctionReward::evaluate(const State& s) const {
 
 bool TL::DisjunctionReward::satisfied(const State& s) const {
   uint i;
-  FOR1D(pis, i) {
-    if (TL::LogicEngine::holds(s, pis(i)))
+  FOR1D(lits, i) {
+    if (TL::logicReasoning::holds(s, lits(i)))
       return true;
   }
   return false;
 }
 
-bool TL::DisjunctionReward::possible(const State& s, TL::LogicEngine* le) const {
-  TL::Predicate* p_OUT = le->getPredicate(MT::String("out"));
+bool TL::DisjunctionReward::possible(const State& s) const {
+  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
   uint i, k;
   if (p_OUT != NULL) {
-    FOR1D(pis, k) {
-      FOR1D(pis(k)->args, i) {
-        uintA args(1);  args(0)=pis(k)->args(i);
-        TL::PredicateInstance* pt_out = le->getPI(p_OUT, true, args);
-        if (le->holds(s, pt_out))
+    FOR1D(lits, k) {
+      FOR1D(lits(k)->atom->args, i) {
+        uintA args(1);  args(0)=lits(k)->atom->args(i);
+        TL::Literal* pt_out = logicObjectManager::getLiteral(p_OUT, true, args);
+        if (logicReasoning::holds(s, pt_out))
           return false;
       }
     }
@@ -219,48 +289,48 @@ void TL::DisjunctionReward::write(const char* filename) const {
   out<<reward_type<<endl;
   out<<"# DisjunctionReward"<<endl;
   uint i;
-  FOR1D(pis, i) {
-    out<<"# "; pis(i)->writeNice(out); out<<endl;
+  FOR1D(lits, i) {
+    out<<"# "; lits(i)->write(out); out<<endl;
   }
-  out<<pis.N<<endl;
-  FOR1D(pis, i) {
-    pis(i)->write(out); out<<endl;
+  out<<lits.N<<endl;
+  FOR1D(lits, i) {
+    lits(i)->write(out); out<<endl;
   }
   out.close();
 }
 
 void TL::DisjunctionReward::writeNice(ostream& out) const {
   uint i;
-  out<<"[" << pis.N  << "]  OR  ";
-  FOR1D(pis, i) {
-    out<<weights(i)<<":";pis(i)->writeNice(out); out << "  ";
+  out<<"[" << lits.N  << "]  OR  ";
+  FOR1D(lits, i) {
+    out<<weights(i)<<":";lits(i)->write(out); out << "  ";
   }
 }
 
-void TL::DisjunctionReward::getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const {
+void TL::DisjunctionReward::getRewardObjects(uintA& objects, const TL::State* s) const {
   objects.clear();
   uint i;
-  FOR1D(pis, i) {
-    objects.setAppend(pis(i)->args);
+  FOR1D(lits, i) {
+    objects.setAppend(lits(i)->atom->args);
   }
 }
 
 
 // MaximizeFunctionReward
 
-TL::MaximizeFunctionReward::MaximizeFunctionReward() : Reward(REWARD_TYPE__MAXIMIZE_FUNCTION) {
-  fi = NULL;
+TL::MaximizeFunctionReward::MaximizeFunctionReward() : Reward(reward_maximize_function) {
+  fa = NULL;
 }
 
-TL::MaximizeFunctionReward::MaximizeFunctionReward(TL::FunctionInstance* _fi) : Reward(REWARD_TYPE__MAXIMIZE_FUNCTION) {
-  fi = _fi;
+TL::MaximizeFunctionReward::MaximizeFunctionReward(TL::FunctionAtom* _fa) : Reward(reward_maximize_function) {
+  fa = _fa;
 }
 
 double TL::MaximizeFunctionReward::evaluate(const State& s) const {
   uint i;
-  if (fi->f->category == TL_PRIMITIVE) {
+  if (fa->f->category == category_primitive) {
     FOR1D(s.fv_prim, i) {
-      if (s.fv_prim(i)->f == fi->f && s.fv_prim(i)->args == fi->args)
+      if (s.fv_prim(i)->atom->f == fa->f && s.fv_prim(i)->atom->args == fa->args)
         return s.fv_prim(i)->value;
     }
     CHECK(i==s.fv_prim.N, "");
@@ -268,7 +338,7 @@ double TL::MaximizeFunctionReward::evaluate(const State& s) const {
   else {
     CHECK(s.derivedDerived, "");
     FOR1D(s.fv_derived, i) {
-      if (s.fv_derived(i)->f == fi->f && s.fv_derived(i)->args == fi->args)
+      if (s.fv_derived(i)->atom->f == fa->f && s.fv_derived(i)->atom->args == fa->args)
         return s.fv_derived(i)->value;
     }
     CHECK(i==s.fv_derived.N, "");
@@ -281,13 +351,13 @@ double TL::MaximizeFunctionReward::evaluate(const State& s) const {
 bool TL::MaximizeFunctionReward::satisfied(const State& s) const {
   // Satisfied = maximum value
   // For count function with 1-arity has maximium value if all objects (except table) fullfill it
-  if (fi->f->type == TL_FUNC_COUNT) {
-    CountFunction* cf = (CountFunction*) fi->f;
+  if (fa->f->type == TL::Function::function_count) {
+    CountFunction* cf = (CountFunction*) fa->f;
     if (cf->max_value == -1) {
       if (cf->countedPred->d == 1) {
-        double value = LogicEngine::getValue(fi->f, s);
+        double value = logicReasoning::getValue(fa->f, s);
         uintA constants;
-        LogicEngine::getConstants(s, constants);
+        logicReasoning::getConstants(s, constants);
         if (TL::areEqual(value, constants.N-1))
           return true;
         else
@@ -295,7 +365,7 @@ bool TL::MaximizeFunctionReward::satisfied(const State& s) const {
       }
     }
     else {
-      int value = (int) LogicEngine::getValue(fi->f, s);
+      int value = (int) logicReasoning::getValue(fa->f, s);
 //       PRINT(value);
 //       PRINT(cf->max_value);
       if (value == cf->max_value)
@@ -304,29 +374,33 @@ bool TL::MaximizeFunctionReward::satisfied(const State& s) const {
         return false;
     }
   }
-  else if (fi->f->type == TL_FUNC_REWARD) {
-    RewardFunction* grf = dynamic_cast<RewardFunction*>(fi->f);
-    return LogicEngine::holds(s, grf->grounded_pis);
+  else if (fa->f->type == TL::Function::function_reward) {
+    RewardFunction* grf = dynamic_cast<RewardFunction*>(fa->f);
+    return logicReasoning::holds(s, grf->grounded_pis);
   }
   return false; // is never satisfied...
 }
 
 
-bool TL::MaximizeFunctionReward::possible(const State& s, TL::LogicEngine* le) const {
+bool TL::MaximizeFunctionReward::possible(const State& s) const {
   return true; // is always true
 }
 
 
 void TL::MaximizeFunctionReward::writeNice(ostream& out) const {
-  if (fi->f->type == TL_FUNC_COUNT) {
-    out<<"maximize #"<<((CountFunction*) (fi->f))->countedPred->name;
+  if (fa == NULL) {
+    out<<"TL::MaximizeFunctionReward::writeNice:  fa=NULL"<<endl;
+  }
+  else if (fa->f->type == TL::Function::function_count) {
+    out<<"maximize #"<<((CountFunction*) (fa->f))->countedPred->name;
   }
   else {
-    fi->writeNice(out);
+    fa->write(out);
     out<<"   ";
-    fi->f->writeNice(out);
+    fa->f->writeNice(out);
     out<<"   ";
     out<<"   ";
+    if (important_literals.N > 0) {cout<<"(important literals: "<<important_literals<<")  ";}
     out<<"MAXIMIZE_FUNCTION";
   }
 }
@@ -335,29 +409,38 @@ void TL::MaximizeFunctionReward::write(const char* filename) const {
   ofstream out(filename);
   out<<reward_type<<endl;
   out<<"# MaximizeFunctionReward"<<endl;
-  fi->writeNice(out); out<<endl;
-  out<<REWARD_TYPE__MAXIMIZE_FUNCTION<<endl;
-  fi->write(out); out<<endl;
+  fa->write(out); out<<endl;
+  out<<reward_maximize_function<<endl;
+  fa->write(out); out<<endl;
   out.close();
 }
 
-void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const {
+void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, const TL::State* s) const {
   objects.clear();
-  if (fi->f->type == TL_FUNC_COUNT) {
+  if (fa->f->type == TL::Function::function_count) {
     // Reward objects are those for which predicate instances don't hold yet
-    PredIA pis;
-    le->generatePredicateInstances(((CountFunction*) (fi->f))->countedPred, le->constants, pis);
-    pis.memMove = true;
+    LitL lits;
+    logicObjectManager::getLiterals(lits, ((CountFunction*) (fa->f))->countedPred, logicObjectManager::constants);
+    lits.memMove = true;
     uint i;
-    FOR1D_DOWN(pis, i) {
-      if (le->holds(*s, pis(i)))
-        pis.remove(i);
+    FOR1D_DOWN(lits, i) {
+      if (logicReasoning::holds(*s, lits(i)))
+        lits.remove(i);
     }
-    FOR1D(pis, i) {
-      objects.setAppend(pis(i)->args);
+    FOR1D(lits, i) {
+      objects.setAppend(lits(i)->atom->args);
     }
   }
-  else
+  else if (fa->f->type == TL::Function::function_reward) {
+    RewardFunction* rf = (RewardFunction*) fa->f;
+    logicReasoning::getConstants(rf->grounded_pis, objects);
+  }
+  else if (fa->f->type == TL::Function::function_sum) {
+    // Reward objects are all objects in state.
+    logicReasoning::getConstants(*s, objects);
+  }
+  
+  else 
     HALT("Warning: get reward objects has not been implemented in a korrekt way yet");
 }
 
@@ -367,7 +450,7 @@ void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, LogicEngine* l
 // NotTheseStatesReward
 
 
-TL::NotTheseStatesReward::NotTheseStatesReward(const StateA& _undesired_states) : Reward(REWARD_TYPE__NOT_THESE_STATES) {
+TL::NotTheseStatesReward::NotTheseStatesReward(const StateL& _undesired_states) : Reward(reward_not_these_states) {
   undesired_states = _undesired_states;
 }
 
@@ -391,18 +474,18 @@ bool TL::NotTheseStatesReward::satisfied(const State& s) const {
 }
 
 
-bool TL::NotTheseStatesReward::possible(const State& s, TL::LogicEngine* le) const {
+bool TL::NotTheseStatesReward::possible(const State& s) const {
   return true; // is always true
 }
 
 
 void TL::NotTheseStatesReward::writeNice(ostream& out) const {
-  out<<"REWARD_TYPE__NOT_THESE_STATES  "<<endl;
+  out<<"reward_not_these_states  "<<endl;
   uint i;
   out<<undesired_states.N<<" undesired states:"<<endl;
   FOR1D(undesired_states, i) {
     out<<i<<": ";
-    undesired_states(i)->writeNice(out, false, true);
+    undesired_states(i)->write(out, true);
     out<<endl;
   }
 }
@@ -411,7 +494,7 @@ void TL::NotTheseStatesReward::write(const char* filename) const {
   ofstream out(filename);
   out<<reward_type<<endl;
   out<<"# NotTheseStatesReward"<<endl;
-  out<<REWARD_TYPE__NOT_THESE_STATES<<endl;
+  out<<reward_not_these_states<<endl;
   out<<"# Number of undesired states = "<<undesired_states.N << endl;
   uint i;
   FOR1D(undesired_states, i) {
@@ -421,7 +504,7 @@ void TL::NotTheseStatesReward::write(const char* filename) const {
   out.close();
 }
 
-void TL::NotTheseStatesReward::getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const {
+void TL::NotTheseStatesReward::getRewardObjects(uintA& objects, const TL::State* s) const {
   objects.clear();
   NIY;
 }
@@ -434,45 +517,52 @@ void TL::NotTheseStatesReward::getRewardObjects(uintA& objects, LogicEngine* le,
 
 // Reward helpers
 
-TL::Reward* TL::readReward(const char* filename, TL::LogicEngine& le) {
+TL::Reward* TL::readReward(const char* filename) {
   ifstream in(filename);
+  if (!in.is_open()) HALT("File cannot be opened.");
   MT::skip(in);
   uint type;
   in >> type;
   MT::skip(in);
-  if (type == REWARD_TYPE__PREDICATE_INSTANCE) {
-    PredicateInstance* pi = readPredicateInstance(in, le.p_prim, le.p_derived, le.p_comp, le.f_prim, le.f_derived);
+  if (type == TL::Reward::reward_literal) {
+    MT::String line;
+    line.read(in, NULL, "\n");
+    Literal* lit = logicObjectManager::getLiteral(line);
     uint i;
-    FOR1D(pi->args, i) {
-      if (le.constants.findValue(pi->args(i)) < 0)
-        HALT("Reward uses unknown argument "<<pi->args(i));
+    FOR1D(lit->atom->args, i) {
+      if (logicObjectManager::constants.findValue(lit->atom->args(i)) < 0)
+        HALT("Reward uses unknown argument "<<lit->atom->args(i));
     }
-    pi = le.getPIorig(pi);
-    return new PredicateReward(pi);
+    lit = logicObjectManager::getLiteralOrig(lit);
+    return new LiteralReward(lit);
   }
-  else if (type == REWARD_TYPE__PREDICATE_INSTANCE_LIST) {
-    PredIA pis;
+  else if (type == TL::Reward::reward_literalList) {
+    LitL lits;
     while (MT::skip(in) != -1) {
-      PredicateInstance* pi = readPredicateInstance(in, le.p_prim, le.p_derived, le.p_comp, le.f_prim, le.f_derived);
+      MT::String line;
+      line.read(in, NULL, "\n");
+      Literal* lit = logicObjectManager::getLiteral(line);
       uint i;
-      FOR1D(pi->args, i) {
-        if (le.constants.findValue(pi->args(i)) < 0)
-          HALT("Reward uses unknown argument "<<pi->args(i));
+      FOR1D(lit->atom->args, i) {
+        if (logicObjectManager::constants.findValue(lit->atom->args(i)) < 0)
+          HALT("Reward uses unknown argument "<<lit->atom->args(i));
       }
-      pi = le.getPIorig(pi);
-      pis.append(pi);
+      lit = logicObjectManager::getLiteralOrig(lit);
+      lits.append(lit);
     }
-    return new PredicateListReward(pis);
+    return new LiteralListReward(lits);
   }
-  else if (type == REWARD_TYPE__MAXIMIZE_FUNCTION) {
-    FunctionInstance* fi = readFunctionInstance(in, le.f_prim, le.f_derived);
+  else if (type == TL::Reward::reward_maximize_function) {
+    MT::String line;
+    line.read(in, NULL, "\n");
+    FunctionAtom* fa = logicObjectManager::getFA(line);
     uint i;
-    FOR1D(fi->args, i) {
-      if (le.constants.findValue(fi->args(i)) < 0)
-        HALT("Reward uses unknown argument "<<fi->args(i));
+    FOR1D(fa->args, i) {
+      if (logicObjectManager::constants.findValue(fa->args(i)) < 0)
+        HALT("Reward uses unknown argument "<<fa->args(i));
     }
-    fi = le.getFIorig(fi);
-    return new MaximizeFunctionReward(fi);
+    fa = logicObjectManager::getFAorig(fa);
+    return new MaximizeFunctionReward(fa);
   }
   else
     HALT("Unknown reward type " << type << " in file "<< filename);
@@ -493,22 +583,22 @@ TL::Reward* TL::readReward(const char* filename, TL::LogicEngine& le) {
 // ----------------------------------------------------------------------------
 
 
-PredIA DEBUG_actions;
+AtomL DEBUG_actions;
 
-TL::PredicateInstance* TL::SST::generateAction(double& value, const TL::State& s0, const Reward& reward, uint branch, uint tau, double discount, const WorldAbstraction& wa) {
+TL::Atom* TL::SST::generateAction(double& value, const TL::State& s0, const Reward& reward, uint branch, uint tau, double discount, const WorldAbstraction& wa) {
   uint DEBUG = 0;
   if (DEBUG_actions.N == 0)
     DEBUG_actions.resize(tau);
   if (DEBUG>0) {
     cout<<"+ SST - start  tau="<<tau<<endl;
-    s0.writeNice(); cout<<endl;
+    s0.write(); cout<<endl;
   }
   if (tau == 5)
     cout<<"."<<std::flush;
   double reward_s0 = reward.evaluate(s0);
   double reward_tree = 0.;
   uint i, b;
-  TL::PredicateInstance* action = NULL;
+  TL::Atom* action = NULL;
   bool action_is_applicable;
   if (tau>0) {
     arr action_values(wa.ground_actions.N);
@@ -523,7 +613,7 @@ TL::PredicateInstance* TL::SST::generateAction(double& value, const TL::State& s
         action_is_applicable = (ruleOutcome_reward != TL_DOUBLE_NIL);
         if (!action_is_applicable) {
           if (DEBUG>1) {
-            cout<<"++ Omitting at "<<tau<<" "; wa.ground_actions(i)->writeNice(); cout<<" b="<<b<<endl;
+            cout<<"++ Omitting at "<<tau<<" "; wa.ground_actions(i)->write(); cout<<" b="<<b<<endl;
           }
           action_value = -10000.;
           break;
@@ -531,7 +621,7 @@ TL::PredicateInstance* TL::SST::generateAction(double& value, const TL::State& s
         else {
           double tree_value;
           if (DEBUG>1) {
-            cout<<"++ going down tau="<<tau<<" "; wa.ground_actions(i)->writeNice(); cout<<" b="<<b<<endl;
+            cout<<"++ going down tau="<<tau<<" "; wa.ground_actions(i)->write(); cout<<" b="<<b<<endl;
           }
           generateAction(tree_value, s_suc, reward, branch, tau-1, discount, wa);
           tree_value = wa.postprocessValue(tree_value, flag);
@@ -546,8 +636,8 @@ TL::PredicateInstance* TL::SST::generateAction(double& value, const TL::State& s
     action = wa.ground_actions(max_id);
     reward_tree = action_values(max_id);
     if (DEBUG>1) {
-      cout<<"Best Action for "; uint t; for (t=0; t<DEBUG_actions.N-tau; t++){DEBUG_actions(t)->writeNice(); cout<<" ";}
-      cout<<"  -->  ";action->writeNice(); cout<<endl;
+      cout<<"Best Action for "; uint t; for (t=0; t<DEBUG_actions.N-tau; t++){DEBUG_actions(t)->write(); cout<<" ";}
+      cout<<"  -->  ";action->write(); cout<<endl;
     }
   }
   value = reward_s0 + discount * reward_tree;
@@ -577,8 +667,7 @@ TL::PredicateInstance* TL::SST::generateAction(double& value, const TL::State& s
 // ----------------------------------------------------------------------------
 
 
-TL::NID_Planner::NID_Planner(TL::LogicEngine* le, double noise_scaling_factor) {
-  this->le = le;
+TL::NID_Planner::NID_Planner(double noise_scaling_factor) {
   this->noise_scaling_factor = noise_scaling_factor;
   this->horizon = 1;
   this->discount = 0.95;
@@ -617,15 +706,26 @@ void TL::NID_Planner::setGroundRules(TL::RuleSet& ground_rules) {
   this->ground_rules = ground_rules;
   // fill actions list
   ground_actions.clear();
-  TL::PredicateInstance* last_action = NULL;
+  is_manipulating_rule.clear();
+  TL::Atom* last_action = NULL;
   uint i;
   FOR1D_(ground_rules, i) {
     if (last_action != ground_rules.elem(i)->action  &&
-        ground_rules.elem(i)->action->pred->id != TL_DEFAULT_ACTION_PRED__ID) {
+        ground_rules.elem(i)->action->pred->id != TL::DEFAULT_ACTION_PRED__ID) {
       last_action = ground_rules.elem(i)->action;
       ground_actions.setAppend(last_action);
     }
+    bool manipulates = false;
+    uint o;
+    for (o=0; o<ground_rules.elem(i)->outcomes.N-1; o++) {
+      if (ground_rules.elem(i)->outcomes(o).N > 0) {
+        manipulates = true;
+        break;
+      }
+    }
+    is_manipulating_rule.append(manipulates);
   }
+  CHECK(is_manipulating_rule.N == this->ground_rules.num(), "");
   
   FOR1D_(ground_rules, i) {
     if (ground_rules.elem(i)->outcome_rewards.N > 0) {
@@ -662,8 +762,8 @@ double TL::NID_Planner::postprocessValue(double value, uint flag) const {
 }
 
 
-double TL::NID_Planner::sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::PredicateInstance* action) const {
-  return RuleEngine::calcSuccessorState(s_prev, ground_rules, action, flag, s_suc, true);
+double TL::NID_Planner::sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const {
+  return ruleReasoning::calcSuccessorState(s_prev, ground_rules, action, flag, s_suc, true);
 }
 
 
@@ -678,16 +778,16 @@ double TL::NID_Planner::sampleSuccessorState(TL::State& s_suc, uint& flag, const
 
 
 
-TL::NID_SST::NID_SST(TL::LogicEngine* le, uint branch, double noise_scaling_factor) : NID_Planner(le, noise_scaling_factor) {
+TL::NID_SST::NID_SST(uint branch, double noise_scaling_factor) : NID_Planner(noise_scaling_factor) {
   this->branch = branch;
 }
 
 
-TL::PredicateInstance* TL::NID_SST::generateAction(const TL::State& current_state, uint max_runs) {
+TL::Atom* TL::NID_SST::generateAction(const TL::State& current_state, uint max_runs) {
   double value;
   uint i;
   for (i=0; i<max_runs; i++) {
-     TL::PredicateInstance* action = SST::generateAction(value, current_state, *reward, branch, horizon, discount, *this);
+     TL::Atom* action = SST::generateAction(value, current_state, *reward, branch, horizon, discount, *this);
 #define SST_THRESHOLD 0.005
      if (value > SST_THRESHOLD) {
       return action;
@@ -714,20 +814,20 @@ TL::PredicateInstance* TL::NID_SST::generateAction(const TL::State& current_stat
 // ----------------------------------------------------------------------------
 
 
-TL::NID_UCT::NID_UCT(TL::LogicEngine* le, double noise_scaling_factor) : NID_Planner(le, noise_scaling_factor) {
+TL::NID_UCT::NID_UCT(double noise_scaling_factor) : NID_Planner(noise_scaling_factor) {
   c = 1.0;
 }
 
 
 TL::NID_UCT::~NID_UCT() {
-  killStateActionsInfo();
+  killAtomLctionsInfo();
 }
 
-void TL::NID_UCT::killStateActionsInfo() {
+void TL::NID_UCT::killAtomLctionsInfo() {
   listDelete(s_a_infos);
 }
 
-PredIA DEBUG__UCT_ACTIONS;
+AtomL DEBUG__UCT_ACTIONS;
 
 void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
   uint DEBUG = 0;
@@ -738,7 +838,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
   if (DEBUG>0) {
     cout<<"NID_UCT::runEpisode() [START]"<<endl;
     PRINT(t);
-    cout<<"State: "; s.writeNice(cout, true); cout<<endl;
+    cout<<"State: "; s.write(cout, true); cout<<endl;
   }
   double reward_s = reward->evaluate(s);
 //   if (reward_s > 0.) {
@@ -762,7 +862,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
 //     cout<<endl;
   }
   else {
-    StateActionsInfo* s_a_info = getStateActionsInfo(s);
+    AtomLctionsInfo* s_a_info = getAtomLctionsInfo(s);
     uint i;
     arr UCB(ground_actions.N);
     TL::RuleSet rules;
@@ -770,8 +870,8 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
     if (DEBUG>0) {cout<<"visits(s)="<<s_a_info->getVisits()<<endl;}
     FOR1D(ground_actions, i) {
       TL::State dummy_state = s;
-      TL::Rule* r = RuleEngine::uniqueCoveringRule_groundedRules_groundedAction(ground_rules, s, ground_actions(i));
-      if (r != NULL) {
+      TL::Rule* r = ground_rules.elem(ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(ground_rules, s, ground_actions(i)));
+      if (!ruleReasoning::isDefaultRule(r)) {
         rules.append(r);
         if (s_a_info->getVisits(i) == 0) {
           untried_action_ids.append(i);
@@ -781,11 +881,11 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
           UCB(i) = s_a_info->getQvalue(i)  +  c * sqrt(log(s_a_info->getVisits()) / (1.0 * s_a_info->getVisits(i)));
       }
       else {
-        rules.append(RuleEngine::getDoNothingRule()); // just as a hack
+        rules.append(ruleReasoning::getDoNothingRule()); // just as a hack
         UCB(i) = -22.;
       }
       if (DEBUG>1) {
-        ground_actions(i)->writeNice(); cout<<" UCB="<<UCB(i)<<"   (q="<<s_a_info->getQvalue(i)<<",  visits="<<s_a_info->getVisits(i)<<")"<<endl;
+        ground_actions(i)->write(); cout<<" UCB="<<UCB(i)<<"   (q="<<s_a_info->getQvalue(i)<<",  visits="<<s_a_info->getVisits(i)<<")"<<endl;
       }
     }
     uint id_opt;
@@ -794,12 +894,12 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
     else
       id_opt = UCB.maxIndex();
     if (DEBUG>0) {
-      cout<<" --> Chosen action: "; ground_actions(id_opt)->writeNice(); cout<<endl;
+      cout<<" --> Chosen action: "; ground_actions(id_opt)->write(); cout<<endl;
     }
     DEBUG__UCT_ACTIONS(t) = ground_actions(id_opt);
     uint flag;
     TL::State s_suc;
-    double ruleOutcome_value = TL::RuleEngine::calcSuccessorState(s, rules.elem(id_opt), flag, s_suc, true);
+    double ruleOutcome_value = TL::ruleReasoning::calcSuccessorState(s, rules.elem(id_opt), flag, s_suc, true);
   
     double reward_suc = 0.;
     runEpisode(reward_suc, s_suc, t+1);  // recursive call
@@ -828,9 +928,9 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
 }
 
 
-TL::PredicateInstance* TL::NID_UCT::generateAction(const TL::State& s, uint max_runs) {
+TL::Atom* TL::NID_UCT::generateAction(const TL::State& s, uint max_runs) {
   uint DEBUG = 0;
-  killStateActionsInfo(); // full replanning... comment if not desired
+  killAtomLctionsInfo(); // full replanning... comment if not desired
   uint i, k;
   DEBUG__UCT_ACTIONS.resize(horizon);
   for (k=0; k<max_runs; k++) {
@@ -839,15 +939,15 @@ TL::PredicateInstance* TL::NID_UCT::generateAction(const TL::State& s, uint max_
       if (i%10 == 0) cout<<"."<<std::flush;
       double dummy_reward;
       runEpisode(dummy_reward, s, 0);
-      if (DEBUG>1) {cout<<i<<":  "; writeNice(DEBUG__UCT_ACTIONS); cout<<endl;}
+      if (DEBUG>1) {cout<<i<<":  "; write(DEBUG__UCT_ACTIONS); cout<<endl;}
     }
     // get maximum q value for s
-    StateActionsInfo* s_a_info = getStateActionsInfo(s);
+    AtomLctionsInfo* s_a_info = getAtomLctionsInfo(s);
     if (DEBUG>1) {
       cout<<"Q values for starting state for states tried more than 0 times:"<<endl;
       FOR1D(ground_actions, i) {
         if (s_a_info->getVisits(i) > 0) {
-          ground_actions(i)->writeNice(); cout<<": "<<s_a_info->getQvalue(i)<<"   ("<<s_a_info->getVisits(i)<<" visits)"<<endl;
+          ground_actions(i)->write(); cout<<": "<<s_a_info->getQvalue(i)<<"   ("<<s_a_info->getVisits(i)<<" visits)"<<endl;
         }
       }
     }
@@ -862,14 +962,14 @@ TL::PredicateInstance* TL::NID_UCT::generateAction(const TL::State& s, uint max_
 }
 
 
-TL::StateActionsInfo* TL::NID_UCT::getStateActionsInfo(const TL::State& s) {
+TL::AtomLctionsInfo* TL::NID_UCT::getAtomLctionsInfo(const TL::State& s) {
   uint i;
   FOR1D(s_a_infos, i) {
     if (s_a_infos(i)->s == s)
       return s_a_infos(i);
   }
   // create new one
-  StateActionsInfo* s_a_info = new StateActionsInfo(s, ground_actions.N);
+  AtomLctionsInfo* s_a_info = new AtomLctionsInfo(s, ground_actions.N);
   s_a_infos.append(s_a_info);
   return s_a_info;
 }
@@ -886,37 +986,37 @@ void TL::NID_UCT::setNumEpisodes(uint numEpisodes) {
 
 
 // --------------------------------------
-//    StateActionsInfo
+//    AtomLctionsInfo
 // --------------------------------------
 
 
-TL::StateActionsInfo::StateActionsInfo(const TL::State& _s, uint num_actions) : s(_s) {
+TL::AtomLctionsInfo::AtomLctionsInfo(const TL::State& _s, uint num_actions) : s(_s) {
   values.resize(num_actions);
   values.setUni(0.);
   visits.resize(num_actions);
   visits.setUni(0.);
 }
 
-TL::StateActionsInfo::~StateActionsInfo() {
+TL::AtomLctionsInfo::~AtomLctionsInfo() {
 }
 
-uint TL::StateActionsInfo::getVisits() {
+uint TL::AtomLctionsInfo::getVisits() {
   return sum(visits);
 }
 
-uint TL::StateActionsInfo::getVisits(uint action_id) {
+uint TL::AtomLctionsInfo::getVisits(uint action_id) {
   return visits(action_id);
 }
 
-void TL::StateActionsInfo::increaseVisits(uint action_id) {
+void TL::AtomLctionsInfo::increaseVisits(uint action_id) {
   visits(action_id)++;
 }
 
-double TL::StateActionsInfo::getQvalue(uint action_id) {
+double TL::AtomLctionsInfo::getQvalue(uint action_id) {
   return values(action_id);
 }
 
-void TL::StateActionsInfo::setQvalue(uint action_id, double value) {
+void TL::AtomLctionsInfo::setQvalue(uint action_id, double value) {
   values(action_id) = value;
 }
 

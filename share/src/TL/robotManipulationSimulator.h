@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Marc Toussaint, Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -20,21 +19,21 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MT_ors_actionInterface_h
-#define MT_ors_actionInterface_h
+#ifndef TL_robot_manipulation_simulator
+#define TL_robot_manipulation_simulator
 
 #include <MT/array.h>
 #include <MT/ors.h>
-#include <TL/relationalLogic.h>
+#include <TL/logicDefinitions.h>
 
 // ---------------------------------------------
 // ODE PARAMETERS
 // Object bouncing when falling on table or other object.
-#define ODE_COLL_BOUNCE 0.01
+#define ODE_COLL_BOUNCE 0.005
 // Stiffness (time-scale of contact reaction) in [0.1, 0.5]; the larger, the more error correction
-#define ODE_COLL_ERP 0.4
+#define ODE_COLL_ERP 0.3
 // Softness in [10e-10, 10e5]; the larger, the wider, the softer, the less error correction
-#define ODE_COLL_CFM 10e-2  // 10e-4
+#define ODE_COLL_CFM 10e-2
 // Friction (alternative: dInfinity)
 #define ODE_FRICTION 0.02
 // ---------------------------------------------
@@ -52,10 +51,10 @@ struct RevelInterface;
 
 
 
-class ActionInterface{
+class RobotManipulationSimulator {
 public:
-  ActionInterface();
-  ~ActionInterface();
+  RobotManipulationSimulator();
+  ~RobotManipulationSimulator();
   
   // --------------------------------
   // ADMINISTRATION
@@ -86,7 +85,7 @@ public:
   // --------------------------------
   void displayText(const char* text, uint waiting_time);
 
-  // Camera frame:  AI.gl->camera.X    einfach raus- und reinpipen
+  // Camera frame:  AI.gl->camera.X
 
   
   // --------------------------------
@@ -113,7 +112,7 @@ public:
   // GENERAL OBJECT INFORMATION
   // --------------------------------
   void getObjects(uintA& objects); //!< return list all objects
-  void getTypes(TermTypeA& objects_types, const uintA& objects, const TermTypeA& types); //!< return list of all object types
+  void getTypes(TermTypeL& objects_types, const uintA& objects, const TermTypeL& types); //!< return list of all object types
   uint getTableID();
   void getBalls(uintA& balls);
   void getBlocks(uintA& blocks);
@@ -155,10 +154,12 @@ public:
   bool inContact(uint a,uint b);  //!< check if a and b are in contact
   void writeAllContacts(uint id);
   
+  uint getHandID();
+  
   
   //   double euclideanDistance(uint a, uint b);
   
-	void printObjectInfo();
+  void printObjectInfo();
 
   
   OpenGL *gl;
@@ -166,8 +167,7 @@ public:
   OdeInterface *ode;
   SwiftInterface *swift;
   RevelInterface *revel;
-  TaskVariableList TVs;
-  
+    
   uint numObjects;
   double neutralHeight;
   uint Tabort; //abortion time when attractors fail
@@ -183,7 +183,7 @@ public:
 };
 
 #ifdef MT_IMPLEMENTATION
-#  include "ors_actionInterface.cpp"
+#  include "robotManipulationSimulatorInterface.cpp"
 #endif
 
-#endif
+#endif  // TL_robot_manipulation_simulator

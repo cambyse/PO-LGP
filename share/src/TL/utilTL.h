@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -34,6 +33,7 @@
 
 #define PRINT(x) cout << #x << "=" << x << endl;
 #define PRINT2(x,y) y << #x << "=" << x << endl;
+#define PRINT_(x) cout << #x << " " << x << endl;
 #define PRINT1(x) cout << #x << "=" << endl << x << endl;
 
 #define TL_MAX(a,b) (a > b ? a : b)
@@ -47,6 +47,14 @@
   void operator=(const TypeName&)
 
 
+//----- check macros:
+#ifndef MT_NOCHECK
+#  define CHECK_(cond,code,msg) if(!(cond)) {cout<<endl<<endl<<endl<<endl;  code; HALT("CHECK failed: "<<msg);}
+#else
+#  define CHECK_(cond,code,msg)
+#endif
+
+
 
 namespace TL {
 const uint UINT_NIL = UINT_MAX;
@@ -57,10 +65,13 @@ const double TL_INFINITY = INFINITY;
 
 inline int signOf(int a) { return (a == 0) ? 0 : (a<0 ? -1 : 1); }
 inline double signOf(double a) { return a<0 ? -1 : 1; }
-inline bool isZero(double a) {return fabs(a) < 0.000000000001;}
+inline bool isZero(double a) {return fabs(a) < 10e-15;}
 inline bool areEqual(double a, double b) {return isZero(a-b);}
 
+// vary from left to right (left-most argument varies the fastest)
 void allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty);
+void allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty); // different arguments
+
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, uint length);
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
 

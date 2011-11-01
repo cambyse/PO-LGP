@@ -1,8 +1,7 @@
 /*  
-    Copyright 2010   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -65,14 +64,14 @@ class LogicRV {
 
 class PredicateRV : public LogicRV {
   public:
-    TL::PredicateInstance* pi;
+    TL::Literal* lit;
     PredicateRV() {type = RV_TYPE__PRED;}
     void write(ostream& os = cout);
 };
 
 class FunctionRV : public LogicRV {
   public:
-    TL::FunctionInstance* fi;
+    TL::FunctionAtom* fi;
     FunctionRV() {type = RV_TYPE__FUNC;}
     void write(ostream& os = cout);
 };
@@ -109,22 +108,22 @@ class RV_Manager {
   LVA vA; // redundant container for all variables; contains both, pvA and fvA
   
   // Function instances
-  FuncIA fiA;
+  FuncAL fiA;
   
   public:
-    RV_Manager(const PredA& preds, const FuncA& funcs, const uintA& constants);
+    RV_Manager(const PredL& preds, const FuncL& funcs, const uintA& constants);
     
-    PredicateRV* pi2v(TL::PredicateInstance* pi) const;
-    FunctionRV* fi2v(TL::FunctionInstance* fi) const;
+    PredicateRV* l2v(TL::Literal* lit) const;
+    FunctionRV* fi2v(TL::FunctionAtom* fi) const;
     LogicRV* id2var(uint id_var) const;
     
-    TL::FunctionInstance* getFVW(TL::Function* f, uintA& sa);
+    TL::FunctionAtom* getFVW(TL::Function* f, uintA& sa);
     
-    void set(TL::PredicateInstance* pt, PredicateRV* var);
-    void set(TL::FunctionInstance* pt, FunctionRV* var);
+    void set(TL::Literal* pt, PredicateRV* var);
+    void set(TL::FunctionAtom* pt, FunctionRV* var);
     
-    PredA preds;
-    FuncA funcs;
+    PredL preds;
+    FuncL funcs;
     uintA constants;
 };
 
@@ -140,7 +139,6 @@ class RV_Manager {
 class NID_DBN {
   public:
   
-  TL::LogicEngine* le;
   TL::RuleSet ground_rules;
   double noise_softener;
   uint horizon;
@@ -170,23 +168,23 @@ class NID_DBN {
   uintA action2rules;
   uintA action2rules_no; // 2 dim; how many rules per constellation
 
-  void create_dbn_structure(const uintA& constants, const PredA& preds, const FuncA& funcs, const PredA& actions);
+  void create_dbn_structure(const uintA& constants, const PredL& preds, const FuncL& funcs, const PredL& actions);
   void create_dbn_params();
   
     
   public:
-    NID_DBN(const uintA& objects, const PredA& preds, const FuncA& funcs, const PredA& actions, TL::RuleSet& ground_rules, double noise_softener, uint horizon, TL::LogicEngine* le);
+    NID_DBN(const uintA& objects, const PredL& preds, const FuncL& funcs, const PredL& actions, TL::RuleSet& ground_rules, double noise_softener, uint horizon);
     ~NID_DBN();
     
     // Inference
     void inferRules(uint t);  // from time-slice at t
-    void inferState(uint t, TL::PredicateInstance* action);  // from action and time-slice at t-1
-    void inferState(uint t, TL::PredicateInstance* action, double given_action_weight);  // from action and time-slice at t-1
-    void inferStates(const PredIA& given_action_sequence); // for given_action_sequence
+    void inferState(uint t, TL::Atom* action);  // from action and time-slice at t-1
+    void inferState(uint t, TL::Atom* action, double given_action_weight);  // from action and time-slice at t-1
+    void inferStates(const AtomL& given_action_sequence); // for given_action_sequence
     
     // Set evidence
-    void setAction(uint t, TL::PredicateInstance* action);
-    void setState(const PredIA& pis, const FuncVA& fvs, uint t);
+    void setAction(uint t, TL::Atom* action);
+    void setState(const LitL& pis, const FuncVL& fvs, uint t);
     void setStateUniform(uint t);
     
     // Comparing probabilities
@@ -203,6 +201,7 @@ class NID_DBN {
     void writeState(uint t, bool prim_only = false, double threshold = 0.0, ostream& out = cout) const;
     void writeStateSparse(uint t, bool prim_only, ostream& out = cout) const;
     void writeDAI(ostream& out = cout) const;
+    void getActions(AtomL& actions, uint horizon) const;
 };
 
 
@@ -245,49 +244,54 @@ class PRADA : public NID_Planner {
     uintA action_choices;
     
     PRADA_Reward* prada_reward;
-    PRADA_Reward* convert_reward(PredicateReward* reward);
-    PRADA_Reward* convert_reward(MaximizeFunctionReward* reward);
-    PRADA_Reward* convert_reward(PredicateListReward* reward);
-    PRADA_Reward* convert_reward(DisjunctionReward* reward);
-    PRADA_Reward* convert_reward(NotTheseStatesReward* reward);
+    static PRADA_Reward* convert_reward(LiteralReward* reward);
+    static PRADA_Reward* convert_reward(MaximizeFunctionReward* reward);
+    static PRADA_Reward* convert_reward(LiteralListReward* reward);
+    static PRADA_Reward* convert_reward(DisjunctionReward* reward);
+    static PRADA_Reward* convert_reward(NotTheseStatesReward* reward);
     
     void setState(const TL::State& s, uint t);
     
     // Rather high-level methods
-    void sampleActionsAndInfer(PredIA& plan); // one plan
+    void sampleActionsAndInfer(AtomL& plan); // one plan
     // some actions are fixed
-    void sampleActionsAndInfer(PredIA& plan, const PredIA& fixed_actions); // one plan
+    void sampleActionsAndInfer(AtomL& plan, const AtomL& fixed_actions); // one plan
     // base function --> specify which net to sample on
-    void sampleActionsAndInfer(PredIA& plan, const PredIA& fixed_actions, NID_DBN* net, uint local_horizon);
+    void sampleActionsAndInfer(AtomL& plan, const AtomL& fixed_actions, NID_DBN* net, uint local_horizon);
   public:
     // for complete action sequence (= all actions fixed), calculate posterior over hidden state variables
-    void infer(const PredIA& plan); // one plan; infer until plan-length (no additional future action sampling)
+    void infer(const AtomL& plan); // one plan; infer until plan-length (no additional future action sampling)
     double inferStateRewards();
     double inferStateRewards(uint horizon);
     double inferStateRewards_limited_sum(uint horizon);
     double inferStateRewards_limited_max(uint horizon);
     double inferStateRewards_single(uint t);
-    double calcRuleRewards(const PredIA& actions);
+    double calcRuleRewards(const AtomL& actions);
     // samples "num_samples" plans and returns best
-    virtual bool plan(PredIA& best_actions, double& bestValue, uint num_samples); // various plans
+    virtual bool plan(AtomL& best_actions, double& bestValue, uint num_samples); // various plans
     
     // DBN Construction
-    void build_dbn(const uintA& constants, const PredA& preds, const FuncA& funcs, const PredA& actions);
+    void build_dbn(const uintA& constants, const PredL& preds, const FuncL& funcs, const PredL& actions);
     // Calculates from rules and rewards which predicates, functions, and actions to use
     void build_dbn(const uintA& constants);
-    PredA dbn_preds;
-    FuncA dbn_funcs;
+    PredL dbn_preds;
+    FuncL dbn_funcs;
     void calc_dbn_concepts();
     
     
+    MT::Array< AtomL > good_old_plans;
+    
+    // TODO das hier wieder loeschen
+    uint HELPER_required_samples;
+    
   
   public :
-    PRADA(TL::LogicEngine* le);
+    PRADA();
     ~PRADA();
     
     // *** HIGH-LEVEL ROUTINES ***
-    void generatePlan(PredIA& plan, double& planValue, const TL::State& s, uint max_runs = 1);
-    TL::PredicateInstance* generateAction(const TL::State& s, uint max_runs = 1);
+    void generatePlan(AtomL& plan, double& planValue, const TL::State& s, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::State& s, uint max_runs = 1);
     
     virtual void setReward(Reward* reward);
     void setReward(Reward* reward, PRADA_Reward* prada_reward); // use only if you have domain specific knowledge!
@@ -302,6 +306,8 @@ class PRADA : public NID_Planner {
     void writeStateSparse(uint t, bool prim_only, ostream& out = cout);
     
     NID_DBN* net;
+    
+    static PRADA_Reward* create_PRADA_Reward(TL::Reward* reward);
 };
 
 
@@ -314,17 +320,17 @@ class PRADA : public NID_Planner {
 
 class A_PRADA : public PRADA {
   
-  PredIA last_seq;
+  AtomL last_seq;
   double last_value;
   
   // manipulations
-  double shorten_plan(PredIA& seq_best, const PredIA& seq, double value_old);
+  double shorten_plan(AtomL& seq_best, const AtomL& seq, double value_old);
 
   public :
-    A_PRADA(TL::LogicEngine* le);
+    A_PRADA();
     ~A_PRADA();
     
-    virtual TL::PredicateInstance* generateAction(const TL::State& current_state, uint max_runs = 1);
+    virtual TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
 
     void reset();
 };

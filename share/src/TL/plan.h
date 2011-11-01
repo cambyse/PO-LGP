@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -24,7 +23,7 @@
 #ifndef TL_plan_h
 #define TL_plan_h
 
-#include "ruleEngine.h"
+#include "ruleReasoning.h"
 
 
 
@@ -40,50 +39,48 @@ namespace TL {
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 
-// REWARD_TYPE__PREDICATE_INSTANCE = predicate instance such as on(a,b)=true
-// REWARD_TYPE__PREDICATE_INSTANCE_LIST = list of predicate instances
-// MAXIMIZE_FUNCTION = try to make function as big as possible
-//     --> Advantage: can work on expectations in case of beliefs over states
-#define REWARD_TYPE__PREDICATE_INSTANCE 1
-#define REWARD_TYPE__PREDICATE_INSTANCE_LIST 2
-#define REWARD_TYPE__MAXIMIZE_FUNCTION 3
-#define REWARD_TYPE__NOT_THESE_STATES 4
-#define REWARD_TYPE__ONE_OF_PREDICATE_INSTANCE_LIST 5
-
 
 class Reward {
+  
   public:
+    // reward_literal = literal such as on(a,b)=true
+    // reward_literalList = list of literals
+    // MAXIMIZE_FUNCTION = try to make function as big as possible
+    //     --> Advantage: can work on expectations in case of beliefs over states
+    enum RewardType {reward_literal, reward_literalList, reward_maximize_function, reward_not_these_states, reward_one_of_literal_list};
+    
+    
     Reward();
-    Reward(uint reward_type);
+    Reward(RewardType reward_type);
     virtual ~Reward() {}
     
     virtual double evaluate(const State& s) const = 0;
     virtual bool satisfied(const State& s) const = 0;
-    virtual bool possible(const State& s, TL::LogicEngine* le) const = 0;
+    virtual bool possible(const State& s) const = 0;
     
-    virtual void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const = 0;
+    virtual void getRewardObjects(uintA& objects, const TL::State* s) const = 0;
     
     virtual void writeNice(ostream& out = cout) const {};
     virtual void write(const char* filename) const = 0;
     
-//     virtual void sampleFinalState(PredIA& fixed_properties, const State& s0) const = 0; // needed for backwards reasoning
+//     virtual void sampleFinalState(LitL& fixed_properties, const State& s0) const = 0; // needed for backwards reasoning
     
-    uint reward_type;
+    RewardType reward_type;
 };
 
 
-class PredicateReward : public Reward {
+class LiteralReward : public Reward {
   public:
-    TL::PredicateInstance* pi;
+    TL::Literal* lit;
     
-    PredicateReward(TL::PredicateInstance* pi);
-    ~PredicateReward() {}
+    LiteralReward(TL::Literal* lit);
+    ~LiteralReward() {}
     
     double evaluate(const State& s) const ;
     bool satisfied(const State& s) const;
-    bool possible(const State& s, TL::LogicEngine* le) const;
+    bool possible(const State& s) const;
     
-    void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s = NULL) const;
+    void getRewardObjects(uintA& objects, const TL::State* s = NULL) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -91,18 +88,18 @@ class PredicateReward : public Reward {
 
 
 
-class PredicateListReward : public Reward {
+class LiteralListReward : public Reward {
   public:
-    PredIA pis;
+    LitL lits;
     
-    PredicateListReward(PredIA& pis);
-    ~PredicateListReward() {}
+    LiteralListReward(LitL& lits);
+    ~LiteralListReward() {}
     
     double evaluate(const State& s) const ;
     bool satisfied(const State& s) const;
-    bool possible(const State& s, TL::LogicEngine* le) const;
+    bool possible(const State& s) const;
     
-    void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::State* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -111,18 +108,18 @@ class PredicateListReward : public Reward {
 
 class DisjunctionReward : public Reward {
   public:
-    PredIA pis;
+    LitL lits;
     arr weights;
 
-    DisjunctionReward(PredIA& pis);
-    DisjunctionReward(PredIA& pis, arr& weights);
+    DisjunctionReward(LitL& lits);
+    DisjunctionReward(LitL& lits, arr& weights);
     ~DisjunctionReward() {}
     
     double evaluate(const State& s) const ;
     bool satisfied(const State& s) const;
-    bool possible(const State& s, TL::LogicEngine* le) const;
+    bool possible(const State& s) const;
     
-    void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::State* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -132,17 +129,18 @@ class DisjunctionReward : public Reward {
 
 class MaximizeFunctionReward : public Reward {
   public:
-    TL::FunctionInstance* fi;
+    TL::FunctionAtom* fa;
+    LitL important_literals; // set by hand!
     
     MaximizeFunctionReward(); // --> maximize function
-    MaximizeFunctionReward(TL::FunctionInstance* fv); // --> maximize function
+    MaximizeFunctionReward(TL::FunctionAtom* fa); // --> maximize function
     ~MaximizeFunctionReward() {}
     
     double evaluate(const State& s) const ;
     bool satisfied(const State& s) const;
-    bool possible(const State& s, TL::LogicEngine* le) const;
+    bool possible(const State& s) const;
     
-    void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::State* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -152,22 +150,22 @@ class MaximizeFunctionReward : public Reward {
 
 class NotTheseStatesReward : public Reward {
   public:
-    StateA undesired_states;
+    StateL undesired_states;
     
-    NotTheseStatesReward(const StateA& undesired_states); // --> maximize function
+    NotTheseStatesReward(const StateL& undesired_states); // --> maximize function
     ~NotTheseStatesReward() {}
     
     double evaluate(const State& s) const ;
     bool satisfied(const State& s) const;
-    bool possible(const State& s, TL::LogicEngine* le) const;
+    bool possible(const State& s) const;
     
-    void getRewardObjects(uintA& objects, LogicEngine* le, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::State* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
 };
 
-Reward* readReward(const char* filename, TL::LogicEngine& le);
+Reward* readReward(const char* filename);
 
 
 
@@ -192,10 +190,10 @@ Reward* readReward(const char* filename, TL::LogicEngine& le);
 // Used by SST planner.
 class WorldAbstraction {
   public:
-    PredIA ground_actions;
+    AtomL ground_actions;
     
     // returns false if action not applicable
-    virtual double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::PredicateInstance* action) const  = 0;
+    virtual double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const  = 0;
     virtual double postprocessValue(double value, uint flag) const {return value;}
 };
 
@@ -211,7 +209,7 @@ class WorldAbstraction {
 // -------------------------------------------------------------
 
 namespace SST {
-  TL::PredicateInstance* generateAction(double& value, const TL::State& current_state, const Reward& reward, uint branch, uint T, double discount, const WorldAbstraction& wa);
+  TL::Atom* generateAction(double& value, const TL::State& current_state, const Reward& reward, uint branch, uint T, double discount, const WorldAbstraction& wa);
 }
 
 
@@ -228,8 +226,8 @@ namespace SST {
 
 class NID_Planner : public WorldAbstraction {
   protected:
-    TL::LogicEngine* le;
     TL::RuleSet ground_rules;
+    boolA is_manipulating_rule;  // predicts non-noise changes?
     double discount;
     arr discount_pow; // for faster code
     uint horizon;
@@ -239,10 +237,10 @@ class NID_Planner : public WorldAbstraction {
     arr expected_rule_rewards;
   
   public:
-    NID_Planner(TL::LogicEngine* le, double noise_scaling_factor);
+    NID_Planner(double noise_scaling_factor);
     virtual ~NID_Planner();
     
-    virtual TL::PredicateInstance* generateAction(const TL::State& current_state, uint max_runs = 1) = 0;
+    virtual TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1) = 0;
     
     void setDiscount(double discount);
     virtual void setHorizon(uint horizon); // planning horizon
@@ -250,7 +248,7 @@ class NID_Planner : public WorldAbstraction {
     virtual void setReward(TL::Reward* reward);
     TL::Reward* getReward() {return reward;}
     
-    double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::PredicateInstance* action) const;
+    double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const;
     double postprocessValue(double value, uint flag) const;
 };
 
@@ -271,9 +269,9 @@ class NID_SST : public NID_Planner {
   uint branch;
   
   public :
-    NID_SST(TL::LogicEngine* le, uint branch, double noise_scaling_factor);
+    NID_SST(uint branch, double noise_scaling_factor);
     
-    TL::PredicateInstance* generateAction(const TL::State& current_state, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
 };
 
 
@@ -292,14 +290,14 @@ class NID_SST : public NID_Planner {
 // -------------------------------------------------------------
 
 
-struct StateActionsInfo {
+struct AtomLctionsInfo {
   public:
     const TL::State& s;
     arr values;
     uintA visits;
 
-    StateActionsInfo(const TL::State& s, uint num_actions);
-    ~StateActionsInfo();
+    AtomLctionsInfo(const TL::State& s, uint num_actions);
+    ~AtomLctionsInfo();
     
     uint getVisits();
     uint getVisits(uint action_id);
@@ -314,21 +312,21 @@ class NID_UCT : public NID_Planner {
   double c;
   uint numEpisodes;
   
-  MT::Array< StateActionsInfo* > s_a_infos;
+  MT::Array< AtomLctionsInfo* > s_a_infos;
   
-  StateActionsInfo* getStateActionsInfo(const TL::State& s);
-  void killStateActionsInfo();
+  AtomLctionsInfo* getAtomLctionsInfo(const TL::State& s);
+  void killAtomLctionsInfo();
   
   void runEpisode(double& reward, const TL::State& s, uint t);
   
   public:
-    NID_UCT(TL::LogicEngine* le, double noise_scaling_factor);
+    NID_UCT(double noise_scaling_factor);
     ~NID_UCT();
     
     void setC(double c);
     void setNumEpisodes(uint numEpisodes);
     
-    TL::PredicateInstance* generateAction(const TL::State& current_state, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
 };
 
 

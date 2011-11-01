@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -20,8 +19,295 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "TL/bwLanguage.h"
+#include "TL/robotManipulationDomain.h"
+#include "TL/logicReasoning.h"
 
+
+
+/* ---------------------
+    TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
+  --------------------- */
+
+
+TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator* sim) {
+  State* state = new State;
+  
+  uint i, j;
+  uint table_id = sim->getTableID();
+  
+  // TABLE
+  state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_table(table_id)));
+  // BLOCKS
+  uintA blocks;
+  sim->getBlocks(blocks);
+  FOR1D(blocks, i) {
+    state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_block(blocks(i))));
+  }
+  // BALLS
+  uintA balls;
+  sim->getBalls(balls);
+  FOR1D(balls, i) {
+    state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_ball(balls(i))));
+  }
+  // BOXES
+  uintA boxes;
+  sim->getBoxes(boxes);
+  FOR1D(boxes, i) {
+    state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_box(boxes(i))));
+
+  }
+  uintA all_objs;
+  sim->getObjects(all_objs);
+  // SIZE
+  if (TL::logicObjectManager::getFunction(MT::String("size")) != NULL) {
+    double length;
+    FOR1D(all_objs, i) {
+      length = sim->getSize(all_objs(i))[0];
+      state->fv_prim.append(TL::logicObjectManager::getFVorig(TL::RobotManipulationDomain::createFunctionValue_size(all_objs(i), REPLACE_SIZE(length))));
+    }
+  }
+  
+  // HOMIES
+  if (TL::logicObjectManager::getPredicate(MT::String("homies")) != NULL) {
+    uint k;
+    FOR1D(all_objs, i) {
+      for (k=i+1; k<all_objs.N; k++) {
+        if (
+            areEqual(sim->getColor(all_objs(k))[0], sim->getColor(all_objs(i))[0])
+            &&    areEqual(sim->getColor(all_objs(k))[1], sim->getColor(all_objs(i))[1])
+            &&    areEqual(sim->getColor(all_objs(k))[2], sim->getColor(all_objs(i))[2])) {
+          state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_homies(all_objs(i), all_objs(k))));
+          state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_homies(all_objs(k), all_objs(i))));
+        }
+      }
+    }
+  }
+  
+  
+  // INHAND
+  uint catchedID = sim->getInhand();
+  if (catchedID != UINT_MAX) {
+    state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_inhand(sim->getInhand())));
+  }
+  
+  // ON relations
+  uintA aboveObjs;
+  FOR1D(all_objs, i) {
+    sim->getObjectsAbove(aboveObjs, all_objs(i));
+//     cout<<"above "<<all_objs(i)<<" are "<<aboveObjs<<endl;
+    FOR1D(aboveObjs, j) {
+      if (all_objs.findValue(aboveObjs(j)) >= 0)
+        state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(aboveObjs(j), all_objs(i))));
+    }
+  }
+  
+  // UPRIGHT
+  if (TL::logicObjectManager::getPredicate(MT::String("upright")) != NULL) {
+    FOR1D(all_objs, i) {
+      if (sim->isUpright(all_objs(i)))
+        state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_upright(all_objs(i))));
+    }
+  }
+  // OUT
+  FOR1D(all_objs, i) {
+    if (sim->onGround(all_objs(i)))
+      state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_out(all_objs(i))));
+  }
+  
+  // CONTAINS
+  state->lits_prim.memMove = true;
+  FOR1D(boxes, i) {
+    uint o = sim->getContainedObject(boxes(i));
+    if (o != UINT_MAX) {
+      state->lits_prim.removeValueSafe(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(o, table_id)));
+      state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_contains(boxes(i), o)));
+    }
+  }
+  
+  // CLOSED
+  FOR1D(boxes, i) {
+    if (sim->isClosed(boxes(i))) {
+      state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_closed(boxes(i))));
+    }
+  }
+
+ 
+ 
+  TL::logicReasoning::derive(state);
+  return state;
+}
+
+
+
+
+void TL::RobotManipulationDomain::observeAngles(arr& angles, RobotManipulationSimulator* sim) {
+  uint i, k;
+  uintA objs;
+  sim->getObjects(objs);
+  angles.resize(objs.N, 2);
+  FOR1D(objs, i) {
+    arr orientation;
+    sim->getOrientation(orientation, objs(i));
+    CHECK(orientation.N == 2, "too many angles");
+    FOR1D(orientation, k) {
+      angles(i, k) = orientation(k);
+      if (angles(i, k) < 0.00001)
+        angles(i, k) = 0.;
+    }
+  }
+}
+
+void TL::RobotManipulationDomain::observePositions(arr& positions, RobotManipulationSimulator* sim) {
+  uint i, k;
+  uintA objs;
+  sim->getObjects(objs);
+  positions.resize(objs.N, 3);
+  FOR1D(objs, i) {
+    double* local_position = sim->getPosition(objs(i));
+    for (k=0; k<3; k++) {
+      positions(i, k) = local_position[k];
+    }
+  }
+}
+
+void TL::RobotManipulationDomain::writeFeatures(std::ostream& os, RobotManipulationSimulator* sim) {
+  uint i, k;
+  uintA objs;
+  sim->getObjects(objs);
+  os<<"{"<<endl;
+  // position
+  os<<"["<<endl;
+  FOR1D(objs, i) {
+    os<<objs(i)<<" ";
+    double* pos = sim->getPosition(objs(i));
+    os<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" ";
+    os<<endl;
+  }
+  os<<"]"<<endl;
+  // orientation
+  os<<"["<<endl;
+  FOR1D(objs, i) {
+    os<<objs(i)<<" ";
+    arr orientation;
+    sim->getOrientation(orientation, objs(i));
+    FOR1D(orientation, k) {
+      if (orientation(k) < 0.00001)
+        orientation(k) = 0.;
+      os<<orientation(k)<<" ";
+    }
+    os<<endl;
+  }
+  os<<"]"<<endl;
+  os<<"}"<<endl;
+}
+
+
+
+
+
+
+void TL::RobotManipulationDomain::performAction(Atom* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message) {
+  if (action == NULL  ||  action->pred->name == "doNothing"  ||  action->pred->id == 0) {
+    // don't do anything
+    return;
+  }
+  else if (action->args.N > 0) {
+    // special care for out of reach objects
+    if (sim->onGround(action->args(0))) {
+        return;
+    }
+  }
+  if (action->pred->name == "grab"  ||  action->pred->name == "grab_puton") {
+    uintA list;
+    sim->getObjectsAbove(list, action->args(0));
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
+        ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
+      sim->simulate(30, message);
+    else
+      sim->grab(action->args(0), message);
+  }
+  else if (action->pred->name == "puton"  ||  action->pred->name == "puton_puton"  ||  action->pred->name == "puton_grab") {
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX  // don't do anything if object = filled open box
+          && !sim->isClosed(action->args(0))
+          &&  sim->getContainedObject(action->args(0)) != UINT_MAX) 
+      sim->simulate(30, message); 
+    else if (sim->containedInBox(action->args(0))) // don't do anything if object in box
+      sim->simulate(30, message); 
+    else
+      sim->dropObjectAbove(action->args(0), message);
+  }
+  else if (action->pred->name == "lift") {
+    uintA list;
+    sim->getObjectsAbove(list, action->args(1));
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
+        ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
+      sim->simulate(10);
+    else if (sim->getOrsType(action->args(1)) != OBJECT_TYPE__BOX  &&     // cannot lift from not-box if not on not-box
+        list.findValue(action->args(0)) < 0)
+      sim->simulate(10);
+    else
+      sim->grab(action->args(0));
+  }
+  else if (action->pred->name == "place") {
+    if (action->args(0) != sim->getInhand()) // don't do anything if 1st object not the one in hand
+      sim->simulate(10); 
+    else if (sim->containedInBox(action->args(1))) // don't do anything if 2nd object in box
+      sim->simulate(10); 
+    else if (sim->getOrsType(action->args(1)) == OBJECT_TYPE__BOX  // don't do anything if 2nd object = filled open box
+          && !sim->isClosed(action->args(1))
+          &&  sim->getContainedObject(action->args(1)) != UINT_MAX) 
+      sim->simulate(10); 
+    else
+      sim->dropObjectAbove(action->args(0), action->args(1));
+  }
+  else if (action->pred->name == "openBox") {
+    if (!sim->isBox(action->args(0)))
+      sim->simulate(30, message);
+    else {
+      uintA aboves;
+      sim->getObjectsAbove(aboves,action->args(0));
+      if (aboves.N > 0)
+        sim->simulate(30, message); // don't do anything something on box
+      else
+        sim->openBox(action->args(0), message);
+    }
+  }
+  else if (action->pred->name == "closeBox") {
+    if (!sim->isBox(action->args(0)))
+      sim->simulate(30, message);
+    else {
+//     if (sim->getInhand() != UINT_MAX) // don't do anything if something inhand
+//       sim->simulate(10);
+//     else
+      sim->closeBox(action->args(0), message);
+    }
+  }
+  else
+    NIY
+   
+  sim->relaxPosition(message); // needed to have a observe correct subsequent state
+  sim->simulate(secs_wait_after_action); // needed to have a correct subsequent state
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---------------------
+    LANGUAGE
+  --------------------- */
 
 
 
@@ -32,35 +318,31 @@
 // #define CLEARANCE
 // #define TOWER
 
-TL::LogicEngine* TL::bwLanguage::createLogicEngine(uintA& constants) {
-  PredA p_prim;
+void TL::RobotManipulationDomain::setupLogic(uintA& constants) {
+  PredL p_prim;
   p_prim.append(getPredicate_table());
   p_prim.append(getPredicate_block());
   p_prim.append(getPredicate_ball());
   p_prim.append(getPredicate_on());
   p_prim.append(getPredicate_inhand());
-//   p_prim.append(getPredicate_upright());
+  p_prim.append(getPredicate_upright());
   p_prim.append(getPredicate_out());
   
-  PredA p_comparisons;
-  p_comparisons.append(getPredicate_comparison_constant());
-  p_comparisons.append(getPredicate_comparison_dynamic());
-  
-  FuncA f_prim;
+  FuncL f_prim;
   f_prim.append(getFunction_size());
   
-  PredA p_actions;
+  PredL p_actions;
   p_actions.append(getPredicate_action_default());
   p_actions.append(getPredicate_action_grab());
   p_actions.append(getPredicate_action_puton());
 //   p_actions.append(getPredicate_action_lift());
 //   p_actions.append(getPredicate_action_place());
   
-  PredA p_derived;
+  PredL p_derived;
   p_derived.append(getPredicate_clear());
   p_derived.append(getPredicate_inhandNil());
   
-  FuncA f_derived;
+  FuncL f_derived;
 
 #ifdef CLEARANCE
   p_derived.append(getPredicate_above());    // CLEARANCE
@@ -91,7 +373,8 @@ TL::LogicEngine* TL::bwLanguage::createLogicEngine(uintA& constants) {
   p_actions.append(getPredicate_action_closeBox());
 #endif
     
-  return new TL::LogicEngine(constants, p_prim, p_derived, p_comparisons, f_prim, f_derived, p_actions);
+  TL::logicObjectManager::setPredicatesAndFunctions(p_prim, p_derived, f_prim, f_derived, p_actions);
+  TL::logicObjectManager::setConstants(constants);
 }
 
 
@@ -107,7 +390,7 @@ TL::LogicEngine* TL::bwLanguage::createLogicEngine(uintA& constants) {
 
 
 TL::Predicate* p_ON = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_on() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_on() {
   if (p_ON == NULL) {
     p_ON = new Predicate;
     p_ON->d = 2;
@@ -118,7 +401,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_on() {
 }
 
 TL::Predicate* p_TABLE = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_table() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_table() {
   if (p_TABLE== NULL) {
     p_TABLE = new Predicate;
     p_TABLE->d = 1;
@@ -129,7 +412,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_table() {
 }
 
 TL::Predicate* p_BLOCK = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_block() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_block() {
   if (p_BLOCK == NULL) {
     p_BLOCK = new Predicate;
     p_BLOCK->d = 1;
@@ -140,7 +423,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_block() {
 }
 
 TL::Predicate* p_BOX = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_box() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_box() {
   if (p_BOX == NULL) {
     p_BOX = new Predicate;
     p_BOX->d = 1;
@@ -151,7 +434,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_box() {
 }
 
 TL::Predicate* p_BALL = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_ball() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_ball() {
   if (p_BALL == NULL) {
     p_BALL = new Predicate;
     p_BALL->d = 1;
@@ -162,7 +445,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_ball() {
 }
 
 TL::Predicate* p_INHAND = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_inhand() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_inhand() {
   if (p_INHAND == NULL) {
     p_INHAND = new Predicate;
     p_INHAND->d = 1;
@@ -173,7 +456,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_inhand() {
 }
 
 TL::Predicate* p_UPRIGHT = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_upright() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_upright() {
   if (p_UPRIGHT == NULL) {
     p_UPRIGHT = new Predicate;
     p_UPRIGHT->d = 1;
@@ -184,7 +467,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_upright() {
 }
 
 TL::Predicate* p_OUT = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_out() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_out() {
   if (p_OUT == NULL) {
     p_OUT = new Predicate;
     p_OUT->d = 1;
@@ -195,7 +478,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_out() {
 }
 
 TL::Predicate* p_HOMIES = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_homies() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_homies() {
   if (p_HOMIES == NULL) {
     p_HOMIES = new Predicate;
     p_HOMIES->d = 2;
@@ -206,7 +489,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_homies() {
 }
 
 TL::Predicate* p_CONTAINS = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_contains() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_contains() {
   if (p_CONTAINS == NULL) {
     p_CONTAINS = new Predicate;
     p_CONTAINS->d = 2;
@@ -217,7 +500,7 @@ TL::Predicate* TL::bwLanguage::getPredicate_contains() {
 }
 
 TL::Predicate* p_CLOSED = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_closed() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_closed() {
   if (p_CLOSED == NULL) {
     p_CLOSED = new Predicate;
     p_CLOSED->d = 1;
@@ -238,118 +521,91 @@ TL::Predicate* TL::bwLanguage::getPredicate_closed() {
 
 
 TL::Predicate* p_ACTION_DEFAULT = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_default() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_default() {
   if (p_ACTION_DEFAULT == NULL) {
     p_ACTION_DEFAULT = new Predicate;
     p_ACTION_DEFAULT->d = 0;
     p_ACTION_DEFAULT->name = "default";
-    p_ACTION_DEFAULT->id = TL_DEFAULT_ACTION_PRED__ID;
-    p_ACTION_DEFAULT->type = TL_PRED_ACTION;
+    p_ACTION_DEFAULT->id = TL::DEFAULT_ACTION_PRED__ID;
+    p_ACTION_DEFAULT->type = TL::Predicate::predicate_action;
   }
   return p_ACTION_DEFAULT;
 }
 
 TL::Predicate* p_GRAB = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_grab() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_grab() {
   if (p_GRAB == NULL) {
     p_GRAB = new Predicate;
     p_GRAB->d = 1;
     p_GRAB->name = "grab";
     p_GRAB->id = HAND_ID__GRAB;
-    p_GRAB->type = TL_PRED_ACTION;
+    p_GRAB->type = TL::Predicate::predicate_action;
   }
   return p_GRAB;
 }
 
 TL::Predicate* p_PUTON = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_puton() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_puton() {
   if (p_PUTON == NULL) {
     p_PUTON = new Predicate;
     p_PUTON->d = 1;
     p_PUTON->name = "puton";
     p_PUTON->id = HAND_ID__PUTON;
-    p_PUTON->type = TL_PRED_ACTION;
+    p_PUTON->type = TL::Predicate::predicate_action;
   }
   return p_PUTON;
 }
 
 TL::Predicate* p_LIFT = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_lift() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_lift() {
   if (p_LIFT == NULL) {
     p_LIFT = new Predicate;
     p_LIFT->d = 2;
     p_LIFT->name = "lift";
     p_LIFT->id = HAND_ID__LIFT;
-    p_LIFT->type = TL_PRED_ACTION;
+    p_LIFT->type = TL::Predicate::predicate_action;
   }
   return p_LIFT;
 }
 
 TL::Predicate* p_PLACE = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_place() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_place() {
   if (p_PLACE == NULL) {
     p_PLACE = new Predicate;
     p_PLACE->d = 2;
     p_PLACE->name = "place";
     p_PLACE->id = HAND_ID__PLACE;
-    p_PLACE->type = TL_PRED_ACTION;
+    p_PLACE->type = TL::Predicate::predicate_action;
   }
   return p_PLACE;
 }
 
 TL::Predicate* p_OPEN_BOX = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_openBox() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_openBox() {
   if (p_OPEN_BOX == NULL) {
     p_OPEN_BOX= new Predicate;
     p_OPEN_BOX->d = 1;
     p_OPEN_BOX->name = "openBox";
     p_OPEN_BOX->id = HAND_ID__OPEN_BOX;
-    p_OPEN_BOX->type = TL_PRED_ACTION;
+    p_OPEN_BOX->type = TL::Predicate::predicate_action;
   }
   return p_OPEN_BOX;
 }
 
 TL::Predicate* p_CLOSE_BOX = NULL;
-TL::Predicate* TL::bwLanguage::getPredicate_action_closeBox() {
+TL::Predicate* TL::RobotManipulationDomain::getPredicate_action_closeBox() {
   if (p_CLOSE_BOX == NULL) {
     p_CLOSE_BOX = new Predicate;
     p_CLOSE_BOX->d = 1;
     p_CLOSE_BOX->name = "closeBox";
     p_CLOSE_BOX->id = HAND_ID__CLOSE_BOX;
-    p_CLOSE_BOX->type = TL_PRED_ACTION;
+    p_CLOSE_BOX->type = TL::Predicate::predicate_action;
   }
   return p_CLOSE_BOX;
 }
 
 
 
-// ---------------
-//  PRIMTIVES - COMPARISONS
-// ---------------
-
-TL::ComparisonPredicate* p_COMP_CONST = NULL;
-TL::ComparisonPredicate* TL::bwLanguage::getPredicate_comparison_constant() {
-  if (p_COMP_CONST == NULL) {
-    p_COMP_CONST = new TL::ComparisonPredicate;
-    p_COMP_CONST->d = 1;
-    p_COMP_CONST->name = "comp_constant";
-    p_COMP_CONST->id = HAND_ID__PRED_COMP_CONSTANT;
-    p_COMP_CONST->constantBound = true;
-  }
-  return p_COMP_CONST;
-}
-
-TL::ComparisonPredicate* p_COMP_DYN = NULL;
-TL::ComparisonPredicate* TL::bwLanguage::getPredicate_comparison_dynamic() {
-  if (p_COMP_DYN == NULL) {
-    p_COMP_DYN = new TL::ComparisonPredicate;
-    p_COMP_DYN->d = 2;
-    p_COMP_DYN->name = "comp_dynamic";
-    p_COMP_DYN->id = HAND_ID__PRED_COMP_DYNAMIC;
-    p_COMP_DYN->constantBound = false;
-  }
-  return p_COMP_DYN;
-}
 
 
 // ---------------
@@ -357,13 +613,12 @@ TL::ComparisonPredicate* TL::bwLanguage::getPredicate_comparison_dynamic() {
 // ---------------
 
 TL::Function* f_SIZE = NULL;
-TL::Function* TL::bwLanguage::getFunction_size() {
+TL::Function* TL::RobotManipulationDomain::getFunction_size() {
   if (f_SIZE==NULL) {
     f_SIZE = new Function;
     f_SIZE->d = 1;
     f_SIZE->name = "size";
     f_SIZE->id = HAND_ID__FUNCTION_SIZE;
-    f_SIZE->range = TUP(1,2,3,4,5);
   }
   return f_SIZE;
 }
@@ -379,7 +634,7 @@ TL::Function* TL::bwLanguage::getFunction_size() {
 // ---------------
 
 TL::ConjunctionPredicate* p_CLEAR = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_clear() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_clear() {
   if (p_CLEAR == NULL) {
     p_CLEAR = new TL::ConjunctionPredicate;
     p_CLEAR->d = 1;
@@ -396,7 +651,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_clear() {
 }
 
 TL::TransClosurePredicate* p_ABOVE = NULL;
-TL::TransClosurePredicate* TL::bwLanguage::getPredicate_above() {
+TL::TransClosurePredicate* TL::RobotManipulationDomain::getPredicate_above() {
   if (p_ABOVE == NULL) {
     p_ABOVE = new TL::TransClosurePredicate;
     p_ABOVE->d = 2;
@@ -409,7 +664,7 @@ TL::TransClosurePredicate* TL::bwLanguage::getPredicate_above() {
 
 
 TL::ConjunctionPredicate* p_ABOVE_NOTABLE = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_aboveNotable() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_aboveNotable() {
   if (p_ABOVE_NOTABLE == NULL) {
     p_ABOVE_NOTABLE = new TL::ConjunctionPredicate;
     p_ABOVE_NOTABLE->d = 2;
@@ -429,7 +684,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_aboveNotable() {
 
 
 TL::ConjunctionPredicate* p_DIRTY_GUY_BELOW = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_dirtyGuyBelow() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_dirtyGuyBelow() {
   if (p_DIRTY_GUY_BELOW == NULL) {
     p_DIRTY_GUY_BELOW= new TL::ConjunctionPredicate;
     p_DIRTY_GUY_BELOW->name = "dirtyGuyBelow";
@@ -459,7 +714,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_dirtyGuyBelow() {
 
 
 TL::ConjunctionPredicate* p_DIFF_TOWER = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_diffTower() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_diffTower() {
   if (p_DIFF_TOWER == NULL) {
     p_DIFF_TOWER = new TL::ConjunctionPredicate;
     p_DIFF_TOWER->name = "diffTower";
@@ -483,7 +738,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_diffTower() {
 
 
 TL::ConjunctionPredicate* p_WITHOUT_HOMIES = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_withoutHomies() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_withoutHomies() {
   if (p_WITHOUT_HOMIES == NULL) {
     p_WITHOUT_HOMIES = new TL::ConjunctionPredicate;
     p_WITHOUT_HOMIES->name = "withoutHomies";
@@ -508,7 +763,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_withoutHomies() {
 
 
 TL::ConjunctionPredicate* p_INORDER = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_inorder() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_inorder() {
   if (p_INORDER == NULL) {
     p_INORDER = new TL::ConjunctionPredicate;
     p_INORDER->name = "inorder";
@@ -532,7 +787,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_inorder() {
 
 
 TL::ConjunctionPredicate* p_INHAND_NIL = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_inhandNil() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_inhandNil() {
   if (p_INHAND_NIL == NULL) {
     p_INHAND_NIL = new TL::ConjunctionPredicate;
     p_INHAND_NIL->name = "inhandNil";
@@ -552,7 +807,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_inhandNil() {
 
 
 TL::ConjunctionPredicate* p_ON_BOX = NULL;
-TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_onBox() {
+TL::ConjunctionPredicate* TL::RobotManipulationDomain::getPredicate_onBox() {
   if (p_ON_BOX == NULL) {
     p_ON_BOX = new ConjunctionPredicate;
     p_ON_BOX->d = 1;
@@ -583,7 +838,7 @@ TL::ConjunctionPredicate* TL::bwLanguage::getPredicate_onBox() {
 // ---------------
 
 TL::CountFunction* f_HEIGHT = NULL;
-TL::CountFunction* TL::bwLanguage::getFunction_height() {
+TL::CountFunction* TL::RobotManipulationDomain::getFunction_height() {
   if (f_HEIGHT == NULL) {
     f_HEIGHT = new TL::CountFunction;
     f_HEIGHT->d = 1;
@@ -597,7 +852,7 @@ TL::CountFunction* TL::bwLanguage::getFunction_height() {
 }
 
 TL::AverageFunction* f_AVG_HEIGHT = NULL;
-TL::AverageFunction* TL::bwLanguage::getFunction_avgheight() {
+TL::AverageFunction* TL::RobotManipulationDomain::getFunction_avgheight() {
   if (f_AVG_HEIGHT == NULL) {
     f_AVG_HEIGHT = new TL::AverageFunction;
     f_AVG_HEIGHT->d = 0;
@@ -609,7 +864,7 @@ TL::AverageFunction* TL::bwLanguage::getFunction_avgheight() {
 }
 
 TL::SumFunction* f_SUM_HEIGHT = NULL;
-TL::SumFunction* TL::bwLanguage::getFunction_sumheight() {
+TL::SumFunction* TL::RobotManipulationDomain::getFunction_sumheight() {
   if (f_SUM_HEIGHT == NULL) {
     f_SUM_HEIGHT = new TL::SumFunction;
     f_SUM_HEIGHT->id = HAND_ID__FUNCTION_SUM_HEIGHT;
@@ -622,7 +877,7 @@ TL::SumFunction* TL::bwLanguage::getFunction_sumheight() {
 
 
 TL::CountFunction* f_COUNT_INORDER = NULL;
-TL::CountFunction* TL::bwLanguage::getFunction_countInorder() {
+TL::CountFunction* TL::RobotManipulationDomain::getFunction_countInorder() {
   if (f_COUNT_INORDER == NULL) {
     f_COUNT_INORDER= new TL::CountFunction;
     f_COUNT_INORDER->id = HAND_ID__FUNCTION_COUNT_INORDER;
@@ -647,7 +902,7 @@ TL::CountFunction* TL::bwLanguage::getFunction_countInorder() {
 //   CONCEPT MANAGEMENT
 // -------------------------
 
-void TL::bwLanguage::shutdownLogic() {
+void TL::RobotManipulationDomain::shutdownLogic() {
   if (p_ON != NULL)
     delete p_ON;
   NIY;
@@ -670,78 +925,78 @@ void TL::bwLanguage::shutdownLogic() {
 // -----------------------------------
 
 
-TL::FunctionValue* TL::bwLanguage::createFunctionValue_size(uint obj, double size, LogicEngine* le) {
+TL::FunctionValue* TL::RobotManipulationDomain::createFunctionValue_size(uint obj, double size) {
   uintA sa(1);  sa(0)=obj;
-  return le->getFV(le->getFunction(MT::String("size")), sa, size);
+  return logicObjectManager::getFV(logicObjectManager::getFunction(MT::String("size")), sa, size);
 }
 	
 
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_on(uint above, uint below, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_on(uint above, uint below) {
   uintA sa(2);  sa(0)=above;  sa(1)=below;
-  return le->getPI(le->getPredicate(MT::String("on")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("on")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_table(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_table(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("table")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("table")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_block(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_block(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("block")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("block")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_ball(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_ball(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("ball")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("ball")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_box(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_box(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("box")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("box")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_upright(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_upright(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("upright")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("upright")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_out(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_out(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("out")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("out")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_inhand(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_inhand(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("inhand")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("inhand")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_homies(uint obj1, uint obj2, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_homies(uint obj1, uint obj2) {
   uintA sa(2);  sa(0)=obj1;  sa(1)=obj2;
-  return le->getPI(le->getPredicate(MT::String("homies")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("homies")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_contains(uint box, uint obj, LogicEngine* le)  {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_contains(uint box, uint obj)  {
   uintA sa(2);  sa(0)=box;  sa(1)=obj;
-  return le->getPI(le->getPredicate(MT::String("contains")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("contains")), true, sa);
 }
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_closed(uint box, LogicEngine* le)  {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_closed(uint box)  {
   uintA sa(1);  sa(0)=box;
-  return le->getPI(le->getPredicate(MT::String("closed")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("closed")), true, sa);
 }
 
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_grab(uint obj, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_grab(uint obj) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("grab")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("grab")), true, sa);
 }
 
 
-TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_puton(uint obj, uint on, LogicEngine* le) {
+TL::Literal* TL::RobotManipulationDomain::createLiteral_puton(uint obj, uint on) {
   uintA sa(1);  sa(0)=obj;
-  return le->getPI(le->getPredicate(MT::String("puton")), true, sa);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(MT::String("puton")), true, sa);
 }
 
 
@@ -764,58 +1019,58 @@ TL::PredicateInstance* TL::bwLanguage::createPredicateInstance_puton(uint obj, u
 
 
 
-TL::Reward* TL::bwLanguage::RewardLibrary::on(uint o1, uint o2, LogicEngine* le) {
-  TL::Predicate* p_ON = le->getPredicate(MT::String("on"));
+TL::Reward* TL::RobotManipulationDomain::RewardLibrary::on(uint o1, uint o2) {
+  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   uintA sa2(2);
   sa2(0)=o1;
   sa2(1)=o2;
-  TL::PredicateInstance* pt = le->getPI(p_ON, true, sa2);
-  Reward* reward = new PredicateReward(pt);
+  TL::Literal* pt = logicObjectManager::getLiteral(p_ON, true, sa2);
+  Reward* reward = new LiteralReward(pt);
   return reward;
 }
 
-TL::Reward* TL::bwLanguage::RewardLibrary::inhand(uint o1, LogicEngine* le) {
-  TL::Predicate* p_INHAND = le->getPredicate(MT::String("inhand"));
+TL::Reward* TL::RobotManipulationDomain::RewardLibrary::inhand(uint o1) {
+  TL::Predicate* p_INHAND = logicObjectManager::getPredicate(MT::String("inhand"));
   uintA sa1(1);
   sa1(0)=o1;
-  TL::PredicateInstance* pt = le->getPI(p_INHAND, true, sa1);
-  Reward* reward = new PredicateReward(pt);
+  TL::Literal* pt = logicObjectManager::getLiteral(p_INHAND, true, sa1);
+  Reward* reward = new LiteralReward(pt);
   return reward;
 }
 
-TL::Reward* TL::bwLanguage::RewardLibrary::stack(LogicEngine* le) {
+TL::Reward* TL::RobotManipulationDomain::RewardLibrary::stack() {
   // needs p_ABOVE, f_HEIGHT, f_SUM_HEIGHT
   MT_MSG("Stack defined by average (not max)");
   uintA empty;
-  FuncA funcs2add;
-  PredA preds2add;
-  if (!le->getPredicate(MT::String("above"))) {
+  FuncL funcs2add;
+  PredL preds2add;
+  if (!logicObjectManager::getPredicate(MT::String("above"))) {
     TL::TransClosurePredicate* p_ABOVE1 = getPredicate_above();
-    p_ABOVE1->basePred = le->getPredicate(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    p_ABOVE1->basePred = logicObjectManager::getPredicate(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
     preds2add.append(p_ABOVE1);
   }
-  if (!le->getPredicate(MT::String("aboveNotable"))) {
+  if (!logicObjectManager::getPredicate(MT::String("aboveNotable"))) {
     preds2add.append(getPredicate_aboveNotable());
   }
-  if (!le->getFunction(MT::String("height"))) {
+  if (!logicObjectManager::getFunction(MT::String("height"))) {
     funcs2add.append(getFunction_height());
   }
-  if (!le->getFunction(MT::String("sum_height"))) {
+  if (!logicObjectManager::getFunction(MT::String("sum_height"))) {
     funcs2add.append(getFunction_sumheight());
   }
   if (preds2add.N > 0)
-    le->addPredicates(preds2add);
+    logicObjectManager::addStatePredicates(preds2add);
   if (funcs2add.N > 0)
-    le->addFunctions(funcs2add);
-  TL::FunctionInstance* fvw = le->getFI(le->getFunction(MT::String("sum_height")), empty);
-  Reward* reward = new MaximizeFunctionReward(fvw);
+    logicObjectManager::addStateFunctions(funcs2add);
+  TL::FunctionAtom* fa = logicObjectManager::getFA(logicObjectManager::getFunction(MT::String("sum_height")), empty);
+  Reward* reward = new MaximizeFunctionReward(fa);
   return reward;
 }
 
 
-TL::Reward* TL::bwLanguage::RewardLibrary::tower(uintA& objs, LogicEngine* le) {
-  TL::Predicate* p_ON = le->getPredicate(MT::String("on"));
-  PredIA pts;
+TL::Reward* TL::RobotManipulationDomain::RewardLibrary::tower(uintA& objs) {
+  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
+  LitL pts;
   uint i;
   uintA sa2(2);
   FOR1D(objs, i) {
@@ -824,52 +1079,52 @@ TL::Reward* TL::bwLanguage::RewardLibrary::tower(uintA& objs, LogicEngine* le) {
       sa2(1)=objs(i+1);
     else
       sa2(1)=60;  // table id in my ors simulator
-    pts.append(le->getPI(p_ON, true, sa2));
+    pts.append(logicObjectManager::getLiteral(p_ON, true, sa2));
   }
-  PredicateListReward* reward = new PredicateListReward(pts);
+  LiteralListReward* reward = new LiteralListReward(pts);
   return reward;
 }
 
 
-TL::Reward* TL::bwLanguage::RewardLibrary::clearance(LogicEngine* le) {
-  FuncA funcs2add;
-  PredA preds2add;
-  if (!le->getPredicate(MT::String("above"))) {
+TL::Reward* TL::RobotManipulationDomain::RewardLibrary::clearance() {
+  FuncL funcs2add;
+  PredL preds2add;
+  if (!logicObjectManager::getPredicate(MT::String("above"))) {
     TL::TransClosurePredicate* p_ABOVE1 = getPredicate_above();
-    p_ABOVE1->basePred = le->getPredicate(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    p_ABOVE1->basePred = logicObjectManager::getPredicate(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
     preds2add.append(p_ABOVE1);
   }
-  if (!le->getPredicate(MT::String("dirtyGuyBelow"))) {
+  if (!logicObjectManager::getPredicate(MT::String("dirtyGuyBelow"))) {
     preds2add.append(getPredicate_dirtyGuyBelow());
   }
-  if (!le->getPredicate(MT::String("differentTower"))) {
+  if (!logicObjectManager::getPredicate(MT::String("differentTower"))) {
     preds2add.append(getPredicate_diffTower());
   }
-  if (!le->getPredicate(MT::String("withoutHomies"))) {
+  if (!logicObjectManager::getPredicate(MT::String("withoutHomies"))) {
     preds2add.append(getPredicate_withoutHomies());
   }
-  if (!le->getPredicate(MT::String("inorder"))) {
+  if (!logicObjectManager::getPredicate(MT::String("inorder"))) {
     preds2add.append(getPredicate_inorder());
   }
-  if (!le->getFunction(MT::String("count_inorder"))) {
+  if (!logicObjectManager::getFunction(MT::String("count_inorder"))) {
     funcs2add.append(getFunction_countInorder());
   }
   
-  le->addPredicates(preds2add);
-  le->addFunctions(funcs2add);
+  logicObjectManager::addStatePredicates(preds2add);
+  logicObjectManager::addStateFunctions(funcs2add);
   
-//   le->dependencyGraph.writeNice();
+//   logicObjectManager::dependencyGraph.writeNice();
   uintA empty;
-  TL::FunctionInstance* fi = le->getFI(getFunction_countInorder(), empty);
+  TL::FunctionAtom* fi = logicObjectManager::getFA(getFunction_countInorder(), empty);
   Reward* reward = new MaximizeFunctionReward(fi);
   return reward;
 }
 
 
 
-TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, LogicEngine& le, bool leave_existing_towers, TL::State* state) {
+TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers, TL::State* state) {
   uint DEBUG = 1;
-  if (DEBUG>0) {cout<<"TL::bwLanguage::sampleGroundGoal__stack [START]"<<endl;}
+  if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__stack [START]"<<endl;}
   if (DEBUG>1) {PRINT(blocks);  PRINT(balls);  PRINT(table_id);}
   uintA objs;
   objs.append(blocks);
@@ -1015,19 +1270,19 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__stack(const uintA& bl
   // -----------------------------------------------------------------------------
   // (3) Translate to logic
   
-  PredIA pis;
+  LitL lits;
   FOR1D(towers, i) {
     FOR1D(towers(i), k) {
       if (k==0)
         continue;
-      pis.append(createPredicateInstance_on(towers(i)(k), towers(i)(k-1), &le));
+      lits.append(createLiteral_on(towers(i)(k), towers(i)(k-1)));
     }
   }
   
-  if (DEBUG>0) {cout<<"LOGIC:"<<endl;  TL::writeNice(pis); cout<<endl;}
+  if (DEBUG>0) {cout<<"LOGIC:"<<endl;  TL::write(lits); cout<<endl;}
   
-  if (DEBUG>0) {cout<<"TL::bwLanguage::sampleGroundGoal__stack [END]"<<endl;}
-  return new PredicateListReward(pis);
+  if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__stack [END]"<<endl;}
+  return new LiteralListReward(lits);
 }
 
 
@@ -1038,9 +1293,9 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__stack(const uintA& bl
 
 
 
-TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::State& current_state, uint table_id, LogicEngine& le) {
+TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__clearance(const TL::State& current_state, uint table_id) {
   uint DEBUG = 1;
-  if (DEBUG>0) {cout<<"TL::bwLanguage::sampleGroundGoal__clearance [START]"<<endl;}
+  if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__clearance [START]"<<endl;}
 
   uint i, k;
 
@@ -1048,7 +1303,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
   // (1) Determine classes to be ordered
   
   MT::Array< uintA > gangs;
-  getHomieGangs(gangs, current_state, &le);
+  getHomieGangs(gangs, current_state);
 
   // Determine gangs (= gangs of homies)
   if (DEBUG>1) {
@@ -1060,7 +1315,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
   
   uintA gang_ids;
   FOR1D(gangs, i) {
-    if (!isInorderGang(gangs(i), current_state, &le))
+    if (!isInorderGang(gangs(i), current_state))
       gang_ids.append(i);
   }
   MT::Array< uintA > subsets;
@@ -1084,7 +1339,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
   }
   
   //-----------------------------------------------------------------------------
-  // (2) Stack em fucking somehow togetha
+  // (2) Stack them together
   
   MT::Array< uintA > towers;
   FOR1D(combo, i) {
@@ -1093,7 +1348,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
     FOR1D(local_gang, k) {
       uint candidate_position = rnd.num(tower.N+1);
       // lower chance for balls to be inside
-//       if (isBall(local_gang(k), current_state, &le)  &&  candidate_position != tower.N)
+//       if (isBall(local_gang(k), current_state)  &&  candidate_position != tower.N)
 //         candidate_position = rnd.num(tower.N+1);
       tower.insert(candidate_position, local_gang(k));
     }
@@ -1108,7 +1363,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
       FOR1D(towers(i), k) {
         cout<<" ";
         cout<<towers(i)(k);
-        if (isBall(towers(i)(k), current_state, &le)) {
+        if (isBall(towers(i)(k), current_state)) {
           cout<<"o";
         }
       }
@@ -1122,7 +1377,7 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
       FOR1D(towers(i), k) {
         cerr<<" ";
         cerr<<towers(i)(k);
-        if (isBall(towers(i)(k), current_state, &le)) {
+        if (isBall(towers(i)(k), current_state)) {
           cerr<<"o";
         }
       }
@@ -1134,19 +1389,19 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
 
   //-----------------------------------------------------------------------------
   // (3) Translate to logic
-  PredIA pis;
+  LitL lits;
   FOR1D(towers, i) {
     FOR1D(towers(i), k) {
       if (k==0)
         continue;
-      pis.append(createPredicateInstance_on(towers(i)(k), towers(i)(k-1), &le));
+      lits.append(createLiteral_on(towers(i)(k), towers(i)(k-1)));
     }
   }
   
-  if (DEBUG>1) {cout<<"LOGIC:"<<endl;  TL::writeNice(pis); cout<<endl;}
+  if (DEBUG>1) {cout<<"LOGIC:"<<endl;  TL::write(lits); cout<<endl;}
   
-  if (DEBUG>0) {cout<<"TL::bwLanguage::sampleGroundGoal__clearance [END]"<<endl;}
-  return new PredicateListReward(pis);
+  if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__clearance [END]"<<endl;}
+  return new LiteralListReward(lits);
 }
 
 
@@ -1174,76 +1429,76 @@ TL::PredicateListReward* TL::bwLanguage::sampleGroundGoal__clearance(const TL::S
 // ----------------------------------------------------------------------------
 
 
-bool TL::bwLanguage::isBlock(uint id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(id, MT::String("block"), s);
+bool TL::RobotManipulationDomain::isBlock(uint id, const TL::State& s) {
+  return logicReasoning::holds_straight(id, MT::String("block"), s);
 }
 
 
-bool TL::bwLanguage::isOut(uint id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(id, MT::String("out"), s);
+bool TL::RobotManipulationDomain::isOut(uint id, const TL::State& s) {
+  return logicReasoning::holds_straight(id, MT::String("out"), s);
 }
 
-bool TL::bwLanguage::isInhand(uint id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(id, MT::String("inhand"), s);
+bool TL::RobotManipulationDomain::isInhand(uint id, const TL::State& s) {
+  return logicReasoning::holds_straight(id, MT::String("inhand"), s);
 }
 
-bool TL::bwLanguage::isTable(uint id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(id, MT::String("table"), s);
+bool TL::RobotManipulationDomain::isTable(uint id, const TL::State& s) {
+  return logicReasoning::holds_straight(id, MT::String("table"), s);
 }
 
-bool TL::bwLanguage::isBall(uint id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(id, MT::String("ball"), s);
+bool TL::RobotManipulationDomain::isBall(uint id, const TL::State& s) {
+  return logicReasoning::holds_straight(id, MT::String("ball"), s);
 }
 
-bool TL::bwLanguage::isBox(uint id, const TL::State& s, LogicEngine* le) {
-  if (le->getPredicate(MT::String("box")) == NULL)
+bool TL::RobotManipulationDomain::isBox(uint id, const TL::State& s) {
+  if (logicObjectManager::getPredicate(MT::String("box")) == NULL)
     return false;
-  return le->holds_straight(id, MT::String("box"), s);
+  return logicReasoning::holds_straight(id, MT::String("box"), s);
 }
 
-bool TL::bwLanguage::isClosed(uint box_id, const TL::State& s, LogicEngine* le) {
-  return le->holds_straight(box_id, MT::String("closed"), s);
+bool TL::RobotManipulationDomain::isClosed(uint box_id, const TL::State& s) {
+  return logicReasoning::holds_straight(box_id, MT::String("closed"), s);
 }
 
-bool TL::bwLanguage::isInorderGang(const uintA gang, const TL::State& s, LogicEngine* le) {
+bool TL::RobotManipulationDomain::isInorderGang(const uintA gang, const TL::State& s) {
   CHECK(gang.N > 0, "");
-  if (le->getPredicate(MT::String("inorder")) == NULL) {
+  if (logicObjectManager::getPredicate(MT::String("inorder")) == NULL) {
     NIY;
   }
   else {
-    return le->holds_straight(gang(0), MT::String("inorder"), s);
+    return logicReasoning::holds_straight(gang(0), MT::String("inorder"), s);
   }
 }
 
 
 
 
-uint TL::bwLanguage::getBelow(uint id, const TL::State& s, LogicEngine* le) {
-  TL::Predicate* p_ON = le->getPredicate(MT::String("on"));
+uint TL::RobotManipulationDomain::getBelow(uint id, const TL::State& s) {
+  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_ON) {
-      if (s.pi_prim(i)->args(0) == id)
-        return s.pi_prim(i)->args(1);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_ON) {
+      if (s.lits_prim(i)->atom->args(0) == id)
+        return s.lits_prim(i)->atom->args(1);
     }
   }
   return UINT_MAX;
 }
 
-uint TL::bwLanguage::getAbove(uint id, const TL::State& s, LogicEngine* le) {
-  TL::Predicate* p_ON = le->getPredicate(MT::String("on"));
+uint TL::RobotManipulationDomain::getAbove(uint id, const TL::State& s) {
+  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_ON) {
-      if (s.pi_prim(i)->args(1) == id)
-        return s.pi_prim(i)->args(0);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_ON) {
+      if (s.lits_prim(i)->atom->args(1) == id)
+        return s.lits_prim(i)->atom->args(0);
     }
   }
   return UINT_MAX;
 }
 
-void TL::bwLanguage::getBelowObjects(uintA& ids, uint id_top, const TL::State& s, LogicEngine* le) {
-  LogicEngine::getRelatedObjects(ids, id_top, true, *le->getPredicate(MT::String("above")), s);
+void TL::RobotManipulationDomain::getBelowObjects(uintA& ids, uint id_top, const TL::State& s) {
+  logicReasoning::getRelatedObjects(ids, id_top, true, *logicObjectManager::getPredicate(MT::String("above")), s);
   /*
   ids.clear();
   TL::Predicate* p_ABOVE = ;
@@ -1256,82 +1511,84 @@ void TL::bwLanguage::getBelowObjects(uintA& ids, uint id_top, const TL::State& s
 }*/
 }
 
-void TL::bwLanguage::getAboveObjects(uintA& ids, uint id_top, const TL::State& s, LogicEngine* le) {
-  LogicEngine::getRelatedObjects(ids, id_top, false, *le->getPredicate(MT::String("above")), s);
+void TL::RobotManipulationDomain::getAboveObjects(uintA& ids, uint id_top, const TL::State& s) {
+  logicReasoning::getRelatedObjects(ids, id_top, false, *logicObjectManager::getPredicate(MT::String("above")), s);
 }
 
-uint TL::bwLanguage::getInhand(const TL::State& s, LogicEngine* le) {
-  TL::Predicate* p_INHAND = le->getPredicate(MT::String("inhand"));
+uint TL::RobotManipulationDomain::getInhand(const TL::State& s) {
+  TL::Predicate* p_INHAND = logicObjectManager::getPredicate(MT::String("inhand"));
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_INHAND) {
-      return s.pi_prim(i)->args(0);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_INHAND) {
+      return s.lits_prim(i)->atom->args(0);
     }
   }
   return UINT_MAX;
 }
 
-void TL::bwLanguage::getBoxes(uintA& ids, const TL::State& s, LogicEngine* le) {
+void TL::RobotManipulationDomain::getBoxes(uintA& ids, const TL::State& s) {
   ids.clear();
-  TL::Predicate* p_BOX = le->getPredicate(MT::String("box"));
+  TL::Predicate* p_BOX = logicObjectManager::getPredicate(MT::String("box"));
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_BOX) {
-      ids.append(s.pi_prim(i)->args(0));
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_BOX) {
+      ids.append(s.lits_prim(i)->atom->args(0));
     }
   }
 }
 
 
-uint TL::bwLanguage::getContainingBox(uint obj_id, const TL::State& s, LogicEngine* le) {
-  TL::Predicate* p_CONTAINS = le->getPredicate(MT::String("contains"));
+uint TL::RobotManipulationDomain::getContainingBox(uint obj_id, const TL::State& s) {
+  TL::Predicate* p_CONTAINS = logicObjectManager::getPredicate(MT::String("contains"));
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_CONTAINS) {
-      if (s.pi_prim(i)->args(1) == obj_id)
-        return s.pi_prim(i)->args(0);
-    }
-  }
-  return UINT_MAX;
-}
-
-
-uint TL::bwLanguage::getContainedObject(uint box_id, const TL::State& s, LogicEngine* le) {
-  TL::Predicate* p_CONTAINS = le->getPredicate(MT::String("contains"));
-  uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred == p_CONTAINS) {
-      if (s.pi_prim(i)->args(0) == box_id)
-        return s.pi_prim(i)->args(1);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_CONTAINS) {
+      if (s.lits_prim(i)->atom->args(1) == obj_id)
+        return s.lits_prim(i)->atom->args(0);
     }
   }
   return UINT_MAX;
 }
 
 
-void TL::bwLanguage::getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s, LogicEngine* le) {
+uint TL::RobotManipulationDomain::getContainedObject(uint box_id, const TL::State& s) {
+  TL::Predicate* p_CONTAINS = logicObjectManager::getPredicate(MT::String("contains"));
+  uint i;
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred == p_CONTAINS) {
+      if (s.lits_prim(i)->atom->args(0) == box_id)
+        return s.lits_prim(i)->atom->args(1);
+    }
+  }
+  return UINT_MAX;
+}
+
+
+void TL::RobotManipulationDomain::getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s) {
   homieGangs.clear();
-  Predicate* p_HOMIES = le->getPredicate(MT::String("homies"));
+  Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
   if (p_HOMIES == NULL)
     return;
   uint i, k;
-  boolA constants_covered(le->constants.N);
+  boolA constants_covered(logicObjectManager::constants.N);
   constants_covered.setUni(false);
-  FOR1D(le->constants, i) {
-    if (le->holds_straight(le->constants(i), MT::String("table"), s))
+  FOR1D(logicObjectManager::constants, i) {
+    if (logicReasoning::holds_straight(logicObjectManager::constants(i), MT::String("table"), s))
       continue;
     if (constants_covered(i))
       continue;
     uintA homies;
-    LogicEngine::getRelatedObjects(homies, le->constants(i), true, *p_HOMIES, s);
-    homies.insert(0, le->constants(i));
+    logicReasoning::getRelatedObjects(homies, logicObjectManager::constants(i), true, *p_HOMIES, s);
+    homies.insert(0, logicObjectManager::constants(i));
     constants_covered(i) = true;
     FOR1D(homies, k) {
-      constants_covered(le->constants.findValue(homies(k))) = true;
+      constants_covered(logicObjectManager::constants.findValue(homies(k))) = true;
     }
     homieGangs.append(homies);
   }
 }
+
+
 
 
 
@@ -1343,19 +1600,19 @@ void TL::bwLanguage::getHomieGangs(MT::Array< uintA >& homieGangs, const TL::Sta
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
 
-double TL::bwLanguage::reward_buildTower(const State& s) {
+double TL::RobotManipulationDomain::reward_buildTower(const State& s) {
   uint DEBUG=0;
-  if (DEBUG>0) {cout<<"bwLanguage::reward_buildTower [START]"<<endl;}
+  if (DEBUG>0) {cout<<"RobotManipulationDomain::reward_buildTower [START]"<<endl;}
   uintA piles;
   uint id_table = UINT_NIL;
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred->name == "table"  &&  s.pi_prim(i)->positive) {
-      id_table = s.pi_prim(i)->args(0);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred->name == "table"  &&  s.lits_prim(i)->positive) {
+      id_table = s.lits_prim(i)->atom->args(0);
       break;
     }
   }
-  CHECK(i<s.pi_prim.N, "table id not found");
+  CHECK(i<s.lits_prim.N, "table id not found");
   calcPiles(s, piles, id_table);
   uint height;
   for(height=0; height<piles.d1; height++) {
@@ -1367,29 +1624,31 @@ double TL::bwLanguage::reward_buildTower(const State& s) {
     PRINT(piles)
         PRINT(reward)
   }
-  if (DEBUG>0) {cout<<"bwLanguage::reward_buildTower [END]"<<endl;}
+  if (DEBUG>0) {cout<<"RobotManipulationDomain::reward_buildTower [END]"<<endl;}
   return reward;
 }
 
 
 
-void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
+void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint sort_type) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<" TL::bwLanguage::calcPiles [START]"<<endl;}
+  if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [START]"<<endl;}
+  if (DEBUG>0) {cout<<"STATE:  ";  s.write(cout, true);  cout<<endl;}
+  // calc piles (unsorted)
   MT::Array< uintA > piles_unsorted;
   uint i;
   bool inserted;
-  FOR1D(s.pi_prim, i) {
+  FOR1D(s.lits_prim, i) {
     // on(A,B)
-    if (s.pi_prim(i)->pred->id == HAND_ID__PRED_ON) {
+    if (s.lits_prim(i)->atom->pred->id == HAND_ID__PRED_ON) {
       inserted = false;
       uint A_2_top;
       FOR1D(piles_unsorted, A_2_top) {
         if (piles_unsorted(A_2_top).N == 0)
           continue;
         // pile with [A, ..., top]  -->  put B below
-        if (piles_unsorted(A_2_top)(0) == s.pi_prim(i)->args(0)) {
-          piles_unsorted(A_2_top).insert(0, s.pi_prim(i)->args(1));
+        if (piles_unsorted(A_2_top)(0) == s.lits_prim(i)->atom->args(0)) {
+          piles_unsorted(A_2_top).insert(0, s.lits_prim(i)->atom->args(1));
           inserted = true;
         }
       }
@@ -1398,7 +1657,7 @@ void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
         if (piles_unsorted(table_2_B).N == 0)
           continue;
         // pile with [table, lastBlock, ..., B]  -->  put A on top
-        if (piles_unsorted(table_2_B).last() == s.pi_prim(i)->args(1)) {
+        if (piles_unsorted(table_2_B).last() == s.lits_prim(i)->atom->args(1)) {
           if (inserted) {
             // when trying to insert a second time
             // find previous insertion point
@@ -1406,7 +1665,7 @@ void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
               if (piles_unsorted(A_2_top).N == 0)
                 continue;
               // pile with [A, ..., top]  -->  put B below
-              if (piles_unsorted(A_2_top)(0) == s.pi_prim(i)->args(1)) {  // anderer check als oben, verdammt, da B ja jetzt schon eingefuegt!
+              if (piles_unsorted(A_2_top)(0) == s.lits_prim(i)->atom->args(1)) {  // anderer check als oben, verdammt, da B ja jetzt schon eingefuegt!
                 break;
               }
             }
@@ -1415,19 +1674,28 @@ void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
             piles_unsorted(A_2_top).clear();
           }
           else {
-            piles_unsorted(table_2_B).append(s.pi_prim(i)->args(0));
+            piles_unsorted(table_2_B).append(s.lits_prim(i)->atom->args(0));
             inserted = true;
           }
         }
       }
       if (!inserted) {
         uintA newPile;
-        newPile.append(s.pi_prim(i)->args(1));
-        newPile.append(s.pi_prim(i)->args(0));
+        newPile.append(s.lits_prim(i)->atom->args(1));
+        newPile.append(s.lits_prim(i)->atom->args(0));
         piles_unsorted.append(newPile);
       }
     }
   }
+  
+  MT::Array< uintA > piles_unsorted2;
+  FOR1D(piles_unsorted, i) {
+    if (piles_unsorted(i).N > 0) {
+      piles_unsorted2.append(piles_unsorted(i));
+    }
+  }
+  piles_unsorted = piles_unsorted2;
+  
   uint j;
     
   if (DEBUG>0) {
@@ -1439,8 +1707,7 @@ void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
       cout << endl;
     }
   }
-    
-    // sort by height
+  
   uintA heights;
   FOR1D(piles_unsorted, i) {
     heights.append(piles_unsorted(i).d0);
@@ -1452,24 +1719,54 @@ void TL::bwLanguage::calcPiles(const State& s, uintA& piles, uint id_table) {
   }
   uintA sortedIndices;
   sort_desc_keys(sortedIndices, heights); // descending
-    // reorder piles
   piles.resize(piles_unsorted.d0, heights(sortedIndices(0)));
   piles.setUni(UINT_NIL);
-  FOR1D(piles, i) {
-    FOR1D(piles_unsorted(sortedIndices(i)), j) {
-      piles(i,j) = piles_unsorted(sortedIndices(i))(j);
+  
+  // sort by height
+  if (sort_type == 1) {
+    // reorder piles
+    FOR1D(piles, i) {
+      FOR1D(piles_unsorted(sortedIndices(i)), j) {
+        piles(i,j) = piles_unsorted(sortedIndices(i))(j);
+      }
     }
   }
-  if (DEBUG>0)
-    PRINT(piles);
-  if (DEBUG>0) {cout<<" TL::bwLanguage::calcPiles [END]"<<endl;}
+  // sort by id
+  else if (sort_type == 2) {
+    uintA state_constants;
+    logicReasoning::getConstants(s, state_constants);
+    uint next_pile_id = 0;
+    FOR1D(state_constants, i) {
+      FOR1D(piles_unsorted, j) {
+        if (piles_unsorted(j)(1) == state_constants(i)) {   // (1) for table
+          uint k;
+          FOR1D(piles_unsorted(j), k) {
+            piles(next_pile_id,k) = piles_unsorted(j)(k);
+          }
+          next_pile_id++;
+          break;
+        }
+      }
+    }
+    if (next_pile_id != piles_unsorted.N) {PRINT(piles_unsorted);  PRINT(piles);  PRINT(state_constants);  PRINT(next_pile_id);  HALT("resorting failed");}
+  }
+  else {
+    FOR1D(piles_unsorted, i) {
+      FOR1D(piles_unsorted(i), j) {
+        piles(i,j) = piles_unsorted(i)(j);
+      }
+    }
+  }
+  
+  if (DEBUG>0) {PRINT(piles);}
+  if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [END]"<<endl;}
 }
 
 
 
 
 // unfound objects get height = 0
-void TL::bwLanguage::calcHeights(const uintA& objects, const uintA& piles, uintA& object_heights, uint id_table) {
+void TL::RobotManipulationDomain::calcHeights(const uintA& objects, const uintA& piles, uintA& object_heights, uint id_table) {
   uint i, k, l;
   bool found;
   object_heights.resize(objects.N);
@@ -1489,7 +1786,7 @@ void TL::bwLanguage::calcHeights(const uintA& objects, const uintA& piles, uintA
 }
 
 
-void TL::bwLanguage::calcSkyscraperWeights(const uintA& heights, double skyscraper_bias, arr& weights, bool highGood, uint id_table) {
+void TL::RobotManipulationDomain::calcSkyscraperWeights(const uintA& heights, double skyscraper_bias, arr& weights, bool highGood, uint id_table) {
   uint i;
   weights.resize(heights.N);
   weights.setUni(1.0);
@@ -1507,7 +1804,7 @@ void TL::bwLanguage::calcSkyscraperWeights(const uintA& heights, double skyscrap
   }
 }
 
-void TL::bwLanguage::calcSkyscraperWeights(const uintA& objects, const uintA& piles, double skyscraper_bias, arr& weights, bool highGood, uint id_table) {
+void TL::RobotManipulationDomain::calcSkyscraperWeights(const uintA& objects, const uintA& piles, double skyscraper_bias, arr& weights, bool highGood, uint id_table) {
   uintA object_heights;
 //     PRINT(piles)
   calcHeights(objects, piles, object_heights, id_table);
@@ -1529,13 +1826,13 @@ void TL::bwLanguage::calcSkyscraperWeights(const uintA& objects, const uintA& pi
 
 
 
-void TL::bwLanguage::writeStateInfo(const State& s, LogicEngine* le, ostream& out) {
+void TL::RobotManipulationDomain::writeStateInfo(const State& s, ostream& out) {
   out<<"--"<<endl;
   uint i, k;
   uint id_table = UINT_MAX;
-  FOR1D(s.pi_prim, i) {
-    if (s.pi_prim(i)->pred->name == "table") {
-      id_table = s.pi_prim(i)->args(0);
+  FOR1D(s.lits_prim, i) {
+    if (s.lits_prim(i)->atom->pred->name == "table") {
+      id_table = s.lits_prim(i)->atom->args(0);
       break;
     }
   }
@@ -1543,7 +1840,7 @@ void TL::bwLanguage::writeStateInfo(const State& s, LogicEngine* le, ostream& ou
   
   // Piles
   uintA piles;
-  calcPiles(s, piles, id_table);
+  calcPiles(s, piles, 2);
   
 //   PRINT(piles);
   
@@ -1551,21 +1848,21 @@ void TL::bwLanguage::writeStateInfo(const State& s, LogicEngine* le, ostream& ou
     k = 0;
     while (k < piles.d1 && piles(i,k) != UINT_MAX) {
       if (k>0) out<<" ";
-      if (isBox(piles(i,k), s, le))
+      if (isBox(piles(i,k), s))
         out << "b";
       out<<piles(i,k);
-      if (isBall(piles(i,k), s, le))
+      if (isBall(piles(i,k), s))
         out<<"o";
-      else if (isBox(piles(i,k), s, le)) {
+      else if (isBox(piles(i,k), s)) {
         out<<"[ ";
-        uint obj = getContainedObject(piles(i,k), s, le);
+        uint obj = getContainedObject(piles(i,k), s);
         if (obj != UINT_MAX) {
           out<<obj;
-          if (isBall(obj, s, le))
+          if (isBall(obj, s))
             out<<"o";
           out<<" ";
         }
-        if (isClosed(piles(i,k), s, le))
+        if (isClosed(piles(i,k), s))
           out<<"]";
       }
       k++;
@@ -1573,45 +1870,36 @@ void TL::bwLanguage::writeStateInfo(const State& s, LogicEngine* le, ostream& ou
     out << endl;
   }
   
-  
-  // Boxes
-//   uintA boxes;
-//   if (le->getPredicate(MT::String("box")) != NULL) {
-//     getBoxes(boxes, s, le);
-//     if (boxes.N>0) {
-//       out<<"--"<<endl;
-//       FOR1D(boxes, i) {
-//         out<<boxes(i)<<" [ ";
-//         uint obj = getContainedObject(boxes(i), s, le);
-//         if (obj != UINT_MAX) {
-//           out<<obj;
-//           if (isBall(obj, s, le))
-//             out<<"o";
-//           out<<" ";
-//         }
-//         if (isClosed(boxes(i), s, le))
-//           out<<" ]";
-//         out<<endl;
-//       }
-//     }
-//   }
-  
   out<<"--"<<endl;
   
   out<<"H ";
-  uint id_inhand = getInhand(s, le);
+  uint id_inhand = getInhand(s);
   if (id_inhand != UINT_MAX) {
     out<<id_inhand;
-    if (isBall(id_inhand, s, le))
+    if (isBall(id_inhand, s))
       out<<"o";
   }
   else
     out << "-";
   out<<endl;
   
-  
+  // Out objects
+  uintA out_objects;
+  logicReasoning::getArguments(out_objects, s, *logicObjectManager::getPredicate(MT::String("out")));
+  if (out_objects.N>0) {
+    out<<"--"<<endl;
+    out<<"OUT:  ";
+    FOR1D(out_objects, i) {
+      out<<out_objects(i);
+      if (isBall(id_inhand, s))
+        out<<"o";
+      out<<" ";
+    }
+    out<<endl;
+  }
+    
   MT::Array< uintA > homieGangs;
-  getHomieGangs(homieGangs, s, le);
+  getHomieGangs(homieGangs, s);
   if (homieGangs.N > 0   &&   homieGangs(0).N > 1) {
     out<<"--"<<endl;
     out<<"Gangs:"<<endl;
@@ -1622,4 +1910,56 @@ void TL::bwLanguage::writeStateInfo(const State& s, LogicEngine* le, ostream& ou
   
   out<<"--"<<endl;
 }
+
+
+
+bool TL::RobotManipulationDomain::has_maximum_stack_value(const TL::State& s) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"RobotManipulationDomain::has_maximum_stack_value [START]"<<endl;}
+  if (DEBUG>0) {cout<<"STATE:   ";  s.write();  cout<<endl;}
+  
+  TL::Predicate* p_BLOCK = logicObjectManager::getPredicate(MT::String("block"));
+  TL::Predicate* p_BALL = logicObjectManager::getPredicate(MT::String("ball"));
+  TL::Predicate* p_BOX = logicObjectManager::getPredicate(MT::String("box"));
+  
+  uintA blocks, balls, boxes;
+  logicReasoning::getArguments(blocks, s, *p_BLOCK);
+  logicReasoning::getArguments(balls, s, *p_BALL);
+  logicReasoning::getArguments(boxes, s, *p_BOX);
+  
+  if (DEBUG>0) {PRINT(blocks);  PRINT(balls);  PRINT(boxes);}
+  
+  uint i;
+  double maximum_stack_value = 0.;
+  if (boxes.N > 0) {
+    FOR1D(blocks, i) {
+      maximum_stack_value += i+1;
+    }
+  }
+  else {
+    FOR1D(blocks, i) {
+      maximum_stack_value += i;
+    }
+  }
+  
+  FOR1D(balls, i) {
+    // erster ball auf die bloecke
+    if (i==0) {
+      maximum_stack_value += blocks.N;
+    }
+    // weitere baelle auf die kisten
+    else if (boxes.N > i-1) {
+      maximum_stack_value += 1;
+    }
+    else break;
+  }
+  
+  TL::Function* f_SUM_HEIGHT = logicObjectManager::getFunction(MT::String("sum_height"));
+  double real_stack_value = logicReasoning::getValue(f_SUM_HEIGHT, s);
+  
+  if (DEBUG>0) {PRINT(maximum_stack_value);  PRINT(real_stack_value);}
+  if (DEBUG>0) {cout<<"RobotManipulationDomain::has_maximum_stack_value [END]"<<endl;}
+  return TL::areEqual(maximum_stack_value, real_stack_value);
+}
+
 

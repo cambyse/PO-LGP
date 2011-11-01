@@ -1,7 +1,7 @@
 #include "prada.h"
 
-#include "TL/ruleEngine.h"
-
+#include "TL/ruleReasoning.h"
+#include "TL/logicReasoning.h"
 
 
 #define FAST 1
@@ -27,7 +27,7 @@ namespace TL {
 
 
 void PredicateRV::write(ostream& os) {
-  os<<"Var over ";pi->writeNice(os);os<<endl;
+  os<<"Var over ";lit->write(os);os<<endl;
   os<<"id="<<id<<endl;
   os<<"dim="<<dim<<endl;
   os<<"range="<<range<<endl;
@@ -43,7 +43,7 @@ void PredicateRV::write(ostream& os) {
 
 
 void FunctionRV::write(ostream& os) {
-  os<<"Var over ";fi->writeNice(os);os<<endl;
+  os<<"Var over ";fi->write(os);os<<endl;
   os<<"id="<<id<<endl;
   os<<"dim="<<dim<<endl;
   os<<"range="<<range<<endl;
@@ -59,7 +59,7 @@ void FunctionRV::write(ostream& os) {
 
 
 void ExpectationFunctionRV::write(ostream& os) {
-  os<<"Var over ";fi->writeNice(os);os<<endl;
+  os<<"Var over ";fi->write(os);os<<endl;
   os<<"id="<<id<<endl;
   os<<"changeable="<<changeable<<endl;
   os<<"Expectation"<<endl;
@@ -99,7 +99,7 @@ void write(FuncVarA& vars) {
 // -----------------------------------------------------------------
 
 
-RV_Manager::RV_Manager(const PredA& preds, const FuncA& funcs, const uintA& constants) {
+RV_Manager::RV_Manager(const PredL& preds, const FuncL& funcs, const uintA& constants) {
   this->preds = preds;
   this->funcs = funcs;
   this->constants = constants;
@@ -111,6 +111,7 @@ RV_Manager::RV_Manager(const PredA& preds, const FuncA& funcs, const uintA& cons
       max_d_p = preds(i)->d;
   }
   pvA.resize(preds.N, (uint) pow(constants.N, max_d_p));
+  pvA.setUni(NULL);
 
   uint max_d_f = 0;
   FOR1D(funcs, i) {
@@ -135,11 +136,21 @@ inline uint getIndex(const uintA& constants, const uintA& args) {
   return args_idx;
 }
 
-PredicateRV* RV_Manager::pi2v(TL::PredicateInstance* pi) const {
-  return pvA(preds.findValue(pi->pred), getIndex(constants, pi->args));
+PredicateRV* RV_Manager::l2v(TL::Literal* lit) const {
+  int preds_idx = preds.findValue(lit->atom->pred);
+  if (preds_idx<0) {
+    MT_MSG("Predicate '"<<lit->atom->pred->name<<"' for lit="<<*lit<<" not in RV_Manager.");
+    return NULL;
+  }
+  PredicateRV* rv = pvA(preds_idx, getIndex(constants, lit->atom->args));
+  if (rv == NULL) {
+    MT_MSG("RV_Manager::l2v -- No PredicateRV for "<<*lit);
+    // manche funktionen rechnen damit, dass NULL uebergeben wird...
+  }
+  return rv;
 }
 
-FunctionRV* RV_Manager::fi2v(TL::FunctionInstance* fi) const {
+FunctionRV* RV_Manager::fi2v(TL::FunctionAtom* fi) const {
   return fvA(funcs.findValue(fi->f), getIndex(constants, fi->args));
 }
 
@@ -148,12 +159,12 @@ LogicRV* RV_Manager::id2var(uint id_var) const {
 }
 
 
-void RV_Manager::set(TL::PredicateInstance* pi, PredicateRV* var) {
+void RV_Manager::set(TL::Literal* lit, PredicateRV* var) {
   vA(var->id) = var;
-  pvA(preds.findValue(pi->pred), getIndex(constants, pi->args)) = var;
+  pvA(preds.findValue(lit->atom->pred), getIndex(constants, lit->atom->args)) = var;
 }
 
-void RV_Manager::set(TL::FunctionInstance* fi, FunctionRV* var) {
+void RV_Manager::set(TL::FunctionAtom* fi, FunctionRV* var) {
   vA(var->id) = var;
   uint f_id = funcs.findValue(fi->f);
   uint sa_id = getIndex(constants, fi->args);
@@ -162,7 +173,7 @@ void RV_Manager::set(TL::FunctionInstance* fi, FunctionRV* var) {
 }
 
 
-TL::FunctionInstance* RV_Manager::getFVW(TL::Function* f, uintA& sa) {
+TL::FunctionAtom* RV_Manager::getFVW(TL::Function* f, uintA& sa) {
   return fiA(funcs.findValue(f), getIndex(constants, sa));
 }
 
@@ -180,10 +191,9 @@ TL::FunctionInstance* RV_Manager::getFVW(TL::Function* f, uintA& sa) {
 // ----------------------------------------------------------------------------
 
 
-NID_DBN::NID_DBN(const uintA& objects, const PredA& preds, const FuncA& funcs, const PredA& actions, TL::RuleSet& ground_rules, double noise_softener, uint horizon, TL::LogicEngine* le) {
+NID_DBN::NID_DBN(const uintA& objects, const PredL& preds, const FuncL& funcs, const PredL& actions, TL::RuleSet& ground_rules, double noise_softener, uint horizon) {
   rvm = NULL;
   this->objects = objects;
-  this->le = le;
   this->ground_rules = ground_rules;
   this->noise_softener = noise_softener;
   this->horizon = horizon;
@@ -220,21 +230,21 @@ NID_DBN::~NID_DBN() {
 // ----------------------------------------------------
 
 
-void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, const FuncA& funcs, const PredA& actions) {
+void NID_DBN::create_dbn_structure(const uintA& constants, const PredL& preds, const FuncL& funcs, const PredL& actions) {
   uint DEBUG = 0;
   if (DEBUG) {cout<<"NID_DBN::create_dbn_structure [START]"<<endl;}
   CHECK(!constants.containsDoubles(), "constants ain't distinct, brother! look here: "<<constants);
   
   uint i;
   for (i=0; preds.N>0 && i<preds.N-1; i++) {
-    CHECK(!(preds(i)->category == TL_DERIVED  &&  preds(i)->category == TL_PRIMITIVE), "unordered preds");
+    CHECK(!(preds(i)->category == category_derived  &&  preds(i)->category == category_primitive), "unordered preds");
   }
   for (i=0; funcs.N>0 && i<funcs.N-1; i++) {
-    CHECK(!(funcs(i)->category == TL_DERIVED  &&  funcs(i)->category == TL_PRIMITIVE), "unordered funcs");
+    CHECK(!(funcs(i)->category == category_derived  &&  funcs(i)->category == category_primitive), "unordered funcs");
   }
   
   // Build RV_Manager
-  PredA preds_all;  preds_all.append(preds);  preds_all.append(actions);
+  PredL preds_all;  preds_all.append(preds);  preds_all.append(actions);
   CHECK(rvm == NULL, "DBN has already been built before!");
   rvm = new RV_Manager(preds_all, funcs, constants);
   rvs_state__p_prim.clear();
@@ -246,7 +256,7 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
   // Build mapping: action --> rules
   // Calc max #rules per grounded action
   uint max_rules_per_action=0, rules_per_action = 0;
-  TL::PredicateInstance* last_action = NULL;
+  TL::Atom* last_action = NULL;
   FOR1D_(ground_rules, i) {
     if (ground_rules.elem(i)->action != last_action) {
       rules_per_action = 1;
@@ -254,7 +264,7 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
     }
     else
       rules_per_action++;
-//     ground_rules.elem(i)->action->writeNice(cout); cout<<"   rules_per_action="<<rules_per_action<<endl;
+//     ground_rules.elem(i)->action->write(cout); cout<<"   rules_per_action="<<rules_per_action<<endl;
     if (rules_per_action > max_rules_per_action)
       max_rules_per_action = rules_per_action;
   }
@@ -265,6 +275,7 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
       max_arity_actions = actions(i)->d;
   }
   if (DEBUG>0) {PRINT(max_rules_per_action);  PRINT(max_arity_actions); PRINT(actions.N);  PRINT(constants.N);}
+  
   action2rules.resize(actions.N, pow(constants.N, max_arity_actions), max_rules_per_action);
   action2rules.setUni(9999); // dummy value
   action2rules_no.resize(actions.N, pow(constants.N, max_arity_actions));
@@ -273,21 +284,23 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
     uint id_pred = actions.findValue(ground_rules.elem(i)->action->pred);
     uint id_args = getIndex(constants, ground_rules.elem(i)->action->args);
     action2rules_no(id_pred, id_args)++;
-//     ground_rules.elem(i)->action->writeNice(cout);   cout<<"  id_pred="<<id_pred<<"  id_args="<<id_args<<"  ";   cout<<"   action2rules_no(id_pred, id_args)="<<action2rules_no(id_pred, id_args)<<endl;
+//     ground_rules.elem(i)->action->write(cout);   cout<<"  id_pred="<<id_pred<<"  id_args="<<id_args<<"  ";   cout<<"   action2rules_no(id_pred, id_args)="<<action2rules_no(id_pred, id_args)<<endl;
     action2rules(id_pred, id_args, action2rules_no(id_pred, id_args)-1) = i;
   }
   
   // Determine changeable predicates and functions
   uintA changeable_ids_p, changeable_ids_f;
-  TL::RuleEngine::changingConcepts(changeable_ids_p, changeable_ids_f, ground_rules);
+  TL::ruleReasoning::changingConcepts(changeable_ids_p, changeable_ids_f, ground_rules);
+  if (changeable_ids_p.N == 0  &&  changeable_ids_f.N ==0)
+    HALT("no changing concepts! would be stupid to plan");
   
   // Determine predicate and function instances
-  PredIA pis_state;
+  LitL lits_state;
   FOR1D(preds, i) {
-    PredIA pts;
-    le->generateAllPossiblePredicateInstances(pts, preds(i), constants, true);
-    pis_state.setAppend(pts);
-    if (DEBUG>3) {cout<<"PIs for "<<preds(i)->name << ":  "; TL::writeNice(pts);  cout<<endl;}
+    LitL lits;
+    logicObjectManager::getLiterals(lits, preds(i), constants, true);
+    lits_state.setAppend(lits);
+    if (DEBUG>3) {cout<<"PIs for "<<preds(i)->name << ":  "; TL::write(lits);  cout<<endl;}
   }
   // Filter PIs with ground-rules
   //   Guideline: If no noise outcome, then only PIs appearing in ground rules are interesting and we can filter.
@@ -298,83 +311,80 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
       break;
     }
   }
+  
+//   cout<<endl<<endl<<endl<<endl;
+//   cout<<"GROUND RULES"<<endl;
+//   ground_rules.writeNice(cout);
+//   cout<<endl<<endl<<endl<<endl;
 
   if (do_filter) {
     uint k;
     // (1) Use all derived predicates and their precessors.
-    //     Only a hack: to account for rewards (which are often specified by means of derived predictes)
-    PredA necessary_preds;
-    FOR1D(le->p_derived, i) {
-      PredA pre_preds;
-      FuncA pre_funcs;
-      le->getAllPrecessors(*le->p_derived(i), pre_preds, pre_funcs);
+    //     Only a hack: to account for rewards (which are often specified by means of derived predicates)
+    PredL necessary_preds;
+    FOR1D(logicObjectManager::p_derived, i) {
+      PredL pre_preds;
+      FuncL pre_funcs;
+      logicObjectManager::getAllPrecessors(*logicObjectManager::p_derived(i), pre_preds, pre_funcs);
       FOR1D(pre_preds, k) {
 //         if (changeable_ids_p.findValue(pre_preds(k)->id) < 0) // only take non-changeable into account for sure; OB DAS SO PASST??
           necessary_preds.setAppend(pre_preds(k));
       }
     }
-    necessary_preds.setAppend(le->p_derived);
+    necessary_preds.setAppend(logicObjectManager::p_derived);
+    
+    // (2) Use all zero-ary preds
+    //     Another HACK: since these might be used for the rewards
+    FOR1D(preds, i) {
+      if (preds(i)->d == 0)
+        necessary_preds.append(preds(i));
+    }
+    
 //     FOR1D(necessary_preds, i) {
 //       necessary_preds(i)->writeNice(cout); cout<<endl;
 //     }
     
-    // (2) Filter
-    PredIA pis_filtered;
-    bool pi_used;
-    FOR1D(pis_state, i) {
+    // (3) Filter
+    LitL lits_filtered;
+    bool lit_used;
+    FOR1D(lits_state, i) {
       // (i)  keep all PIs from "necessary_preds"
-      if (necessary_preds.findValue(pis_state(i)->pred) >= 0) { // only primitives taken into account
-        pi_used = true;
+      if (necessary_preds.findValue(lits_state(i)->atom->pred) >= 0) { // only primitives taken into account
+        lit_used = true;
       }
       // (ii) keep all PIs appearing in ground rules
       else {
-        pi_used = false;
+        lit_used = false;
         FOR1D_(ground_rules, k) {
-          if (TL::RuleEngine::usesPI(*ground_rules.elem(k), pis_state(i))) {
-            pi_used = true;
+          if (TL::ruleReasoning::usesLiteral(*ground_rules.elem(k), lits_state(i))) {
+            lit_used = true;
             break;
           }
         }
       }
-      if (pi_used)
-        pis_filtered.append(pis_state(i));
+      if (lit_used)
+        lits_filtered.append(lits_state(i));
     }
-    pis_state = pis_filtered;
+    lits_state = lits_filtered;
   }
   
-  PredIA pts_action;
-  #if 0
-  FOR1D(actions, i) {
-    PredIA pts;
-    le->generateAllPossiblePredicateInstances(pts, actions(i), constants, true);
-    uint k, l;
-    // Use only those actions which appear in ground rules.
-    FOR1D(pts, k) {
-      FOR1D_(ground_rules, l) {
-        if (ground_rules.elem(l)->action == pts(k)) {
-          pts_action.setAppend(pts(k));
-          break;
-        }
-      }
-    }
-  }
-  #else
+  AtomL atoms_action;
   FOR1D_(ground_rules, i) {
-    pts_action.setAppend(ground_rules.elem(i)->action);
+    atoms_action.setAppend(ground_rules.elem(i)->action);
+    CHECK(atoms_action.last()->pred->d < 1  ||  logicObjectManager::constants.findValue(atoms_action.last()->args(0)) >= 0, "logicObjectManager::constants "<<logicObjectManager::constants<<" don't contain action arg for action "<<*atoms_action.last());
   }
-  #endif
   
-  FuncIA fis;
+  FuncAL fas;
   FOR1D(funcs, i) {
-    FuncIA fvws_local;
-    le->generateAllPossibleFunctionInstances(fvws_local, funcs(i), constants);
-    fis.setAppend(fvws_local);
+    FuncAL fvws_local;
+    logicObjectManager::getFAs(fvws_local, funcs(i), constants);
+    fas.setAppend(fvws_local);
   }
   if (DEBUG>0) {
-    cout<<"+++++   PREDICATE TUPLES   +++++"<<endl;
-    cout<<"State pts["<<pis_state.N<<"]:  ";TL::writeNice(pis_state);cout<<endl;
-    cout<<"fis["<<fis.N<<"]:  ";TL::writeNice(fis);cout<<endl;
-    cout<<"Action pts["<<pts_action.N<<"]:  ";TL::writeNice(pts_action);cout<<endl;
+    cout<<"+++++   FINAL LITERALS (after filtering)   +++++"<<endl;
+    cout<<"State lits["<<lits_state.N<<"]:  ";TL::write(lits_state);cout<<endl;
+    cout<<"fas["<<fas.N<<"]:  ";TL::write(fas);cout<<endl;
+    cout<<"Action lits["<<atoms_action.N<<"]:  ";TL::write(atoms_action);cout<<endl;
   }
   uint a, r, v;
   uint rv_ids = 1;
@@ -383,43 +393,44 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
   // Build random variables
   // (1) for predicate tuples
   start_id_rv__predicate = rv_ids;
-  FOR1D(pis_state, v) { // assumed to be in order p_prim to p_derived
+  FOR1D(lits_state, v) { // assumed to be in order p_prim to p_derived
     PredicateRV* var = new PredicateRV;
-    var->pi = pis_state(v);
+    var->lit = lits_state(v);
     var->dim = 2;
     var->range.resize(2); var->range(0)=0; var->range(1)=1;
     var->P.resize(horizon+1, var->dim);
     var->P.setZero();
     var->id = rv_ids++;
-    if (changeable_ids_p.findValue(var->pi->pred->id)>=0)
+    if (changeable_ids_p.findValue(var->lit->atom->pred->id)>=0)
       var->changeable = true;
     else
       var->changeable = false;
-    if (pis_state(v)->pred->category == TL_PRIMITIVE)
+    if (lits_state(v)->atom->pred->category == category_primitive)
       rvs_state__p_prim.append(var);
     else
       rvs_state__p_derived.append(var);
-    rvm->set(pis_state(v), var);
+    rvm->set(lits_state(v), var);
   }
   // (2) for function values
   start_id_rv__function = rv_ids;
   uintA rule_functions_ids; // functions that are used in rules
   FOR1D_(ground_rules, r) {
     FOR1D(ground_rules.elem(r)->context, v) {
-      if (ground_rules.elem(r)->context(v)->pred->type == TL_PRED_COMPARISON) {
-        rule_functions_ids.setAppend(((TL::ComparisonPredicateInstance*) ground_rules.elem(r)->context(v))->f->id);
+      if (ground_rules.elem(r)->context(v)->atom->pred->type == TL::Predicate::predicate_comparison) {
+        ComparisonLiteral* clit = (TL::ComparisonLiteral*) ground_rules.elem(r)->context(v);
+        rule_functions_ids.setAppend(((ComparisonAtom*)clit->atom)->fa1->f->id);
       }
     }
   }
-  FOR1D(fis, v) {
-    if (rule_functions_ids.findValue(fis(v)->f->id)<0  &&
-        (fis(v)->f->type == TL_FUNC_COUNT  ||
-        fis(v)->f->type == TL_FUNC_AVG  ||
-        fis(v)->f->type == TL_FUNC_SUM  ||
-        fis(v)->f->type == TL_FUNC_MAX  ||
-        fis(v)->f->type == TL_FUNC_REWARD)) {
+  FOR1D(fas, v) {
+    if (rule_functions_ids.findValue(fas(v)->f->id)<0  &&
+        (fas(v)->f->type == TL::Function::function_count  ||
+        fas(v)->f->type == TL::Function::function_avg  ||
+        fas(v)->f->type == TL::Function::function_sum  ||
+        fas(v)->f->type == TL::Function::function_max  ||
+        fas(v)->f->type == TL::Function::function_reward)) {
       ExpectationFunctionRV* var = new ExpectationFunctionRV;
-      var->fi = fis(v);
+      var->fi = fas(v);
       var->P.resize(horizon+1, var->dim);
       var->P.setZero();
       var->id = rv_ids++;
@@ -428,11 +439,11 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
       else
         var->changeable = false;
       rvs_state__f_derived.append(var);
-      rvm->set(fis(v), var);
+      rvm->set(fas(v), var);
     }
     else {
       FunctionRV* var = new FunctionRV;
-      var->fi = fis(v);
+      var->fi = fas(v);
       var->dim = var->fi->f->range.N;
       var->range = var->fi->f->range;
       var->P.resize(horizon+1, var->dim);
@@ -442,28 +453,28 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredA& preds, c
         var->changeable = true;
       else
         var->changeable = false;
-      if (fis(v)->f->category == TL_PRIMITIVE)
+      if (fas(v)->f->category == category_primitive)
         rvs_state__f_prim.append(var);
       else
         rvs_state__f_derived.append(var);
-      rvm->set(fis(v), var);
+      rvm->set(fas(v), var);
     }
   }
   num_state_vars = rv_ids-1;
   // (3) for actions
-  FOR1D(pts_action, a) {
-    if (pts_action(a)->pred->id == TL_DEFAULT_ACTION_PRED__ID) continue; // Noisy default rule
+  FOR1D(atoms_action, a) {
+    if (atoms_action(a)->pred->id == TL::DEFAULT_ACTION_PRED__ID) continue; // Noisy default rule
     PredicateRV* var = new PredicateRV;
-    var->pi = pts_action(a);
+    var->lit = logicObjectManager::getLiteral(atoms_action(a)->pred, true, atoms_action(a)->args);
     var->dim = 2; // binary variables
     var->range.resize(2); var->range(0)=0; var->range(1)=1;
     var->P.resize(horizon+1, var->dim);
     var->P.setZero();
     var->id = rv_ids++;
     rvs_action.append(var);
-    rvm->set(pts_action(a), var);
+    rvm->set(logicObjectManager::getLiteral(atoms_action(a)->pred, true, atoms_action(a)->args), var);
   }
-  if (DEBUG>0) {
+  if (DEBUG>1) {
     cout<<"State rvs prim:  "<<endl;write(rvs_state__p_prim);cout<<endl;
     cout<<"State rvs p_derived:  "<<endl;write(rvs_state__p_derived);cout<<endl;
     cout<<"Action rvs:  "<<endl;write(rvs_action);cout<<endl;
@@ -526,20 +537,20 @@ void NID_DBN::create_dbn_params() {
       // non-noise
       else {
         FOR1D(r_grounded->outcomes(o), v) {
-          if (r_grounded->outcomes(o)(v)->pred->type == TL_PRED_COMPARISON) {
+          if (r_grounded->outcomes(o)(v)->atom->pred->type == TL::Predicate::predicate_comparison) {
             // updatet nen functionvalue
             // kommt nie vor bisher...
             NIY;
           }
           else {
             LogicRV* var;
-            // check whether same variable appears multiple times in outcome
+            // check whether same variable appears multiple times in this outcome
             uint v2;
             uintA indices;
             FOR1D(r_grounded->outcomes(o), v2) {
               if (r_grounded->outcomes(o)(v) == r_grounded->outcomes(o)(v2))
                 indices.append(v2);
-              else if (r_grounded->outcomes(o)(v) == le->getPIneg(r_grounded->outcomes(o)(v2)))
+              else if (r_grounded->outcomes(o)(v) == logicObjectManager::getLiteralNeg(r_grounded->outcomes(o)(v2)))
                 indices.append(v2);
             }
             // Case 1: appears only once
@@ -548,17 +559,17 @@ void NID_DBN::create_dbn_params() {
 //                 r_grounded->writeNice(cout);
 //                 PRINT(o);
 //                 PRINT(v);
-                var = rvm->pi2v(r_grounded->outcomes(o)(v));
+                var = rvm->l2v(r_grounded->outcomes(o)(v));
 //                 cout<<"fu"<<endl;
               }
               else
-                var = rvm->pi2v(le->getPIneg(r_grounded->outcomes(o)(v)));
+                var = rvm->l2v(logicObjectManager::getLiteralNeg(r_grounded->outcomes(o)(v)));
               if (r_grounded->outcomes(o)(v)->positive)
                 impacts_val_p(r,var->id-1,1) += r_grounded->probs(o);
               else
                 impacts_val_p(r,var->id-1,0) += r_grounded->probs(o);
             }
-            // Case 2: appears several times
+            // Case 2: appears several times --> may happen due to rule groundings
             // Case 2.1: already covered before
             else if (indices(0) < v)
               continue;
@@ -573,9 +584,9 @@ void NID_DBN::create_dbn_params() {
                   num_neg++;
               }
               if (r_grounded->outcomes(o)(v)->positive)
-                var = rvm->pi2v(r_grounded->outcomes(o)(v));
+                var = rvm->l2v(r_grounded->outcomes(o)(v));
               else
-                var = rvm->pi2v(le->getPIneg(r_grounded->outcomes(o)(v)));
+                var = rvm->l2v(logicObjectManager::getLiteralNeg(r_grounded->outcomes(o)(v)));
               if (num_pos > num_neg) {  // more positive occurrences
                 impacts_val_p(r,var->id-1,1) += r_grounded->probs(o);
               }
@@ -633,16 +644,16 @@ void NID_DBN::create_dbn_params() {
     cout<<"+++++   IMPACTS   +++++"<<endl;
     for (r=0; r<R; r++) {
       cout<<"["<<r<<"]"<<endl;
-      ground_rules.elem(r)->writeNice(cout);
+      ground_rules.elem(r)->write(cout);
       FOR1D(rvs_state__p_prim, v) {
-        rvs_state__p_prim(v)->pi->writeNice(cout);cout<<":  ";
+        rvs_state__p_prim(v)->lit->write(cout);cout<<":  ";
         for (val=0; val<rvs_state__p_prim(v)->dim; val++) {
           cout<<rvs_state__p_prim(v)->range(val)<<":"<<impacts_val_p(r,v,val)<<"  ";
         }
         cout<<" -->  "<< impacts_V_p(r, v) << endl;
       }
       FOR1D(rvs_state__f_prim, v) {
-        rvs_state__f_prim(v)->fi->writeNice(cout);cout<<":  ";
+        rvs_state__f_prim(v)->fi->write(cout);cout<<":  ";
         for (val=0; val<rvs_state__f_prim(v)->dim; val++) {
           cout<<rvs_state__f_prim(v)->range(val)<<":"<<impacts_val_f(r,v,val)<<"  ";
         }
@@ -656,30 +667,33 @@ void NID_DBN::create_dbn_params() {
   FOR1D_(ground_rules, r) {
     uint v_current = 0;
     FOR1D(ground_rules.elem(r)->context,v) {
-      if (ground_rules.elem(r)->context(v)->pred->type == TL_PRED_COMPARISON) {
-        TL::ComparisonPredicateInstance* cpt = (TL::ComparisonPredicateInstance*) ground_rules.elem(r)->context(v);
+      if (v_current == vars_context.d1) {
+        HALT("Too large context for ground rule r="<<r<<" (PRADA only copes with maximum 20 literals in rule contexts)");
+      }
+      if (ground_rules.elem(r)->context(v)->atom->pred->type == TL::Predicate::predicate_comparison) {
+        TL::ComparisonLiteral* clit = (TL::ComparisonLiteral*) ground_rules.elem(r)->context(v);
         // f(x) < c
-        if (((TL::ComparisonPredicate*) cpt->pred)->constantBound) {
-          TL::FunctionInstance* fi = rvm->getFVW(cpt->f, cpt->args);
+        if (((TL::ComparisonPredicate*) clit->atom->pred)->constantBound) {
+          TL::FunctionAtom* fi = rvm->getFVW(((ComparisonAtom*)clit->atom)->fa1->f, ((ComparisonAtom*)clit->atom)->args);
           vars_context(r, v_current++) = rvm->fi2v(fi);
         }
         // f(x) < f(y)
         else {
           uintA sa_1, sa_2;
-          FOR1D(cpt->args, val) {
-            if (val<cpt->args.N/2)
-              sa_1.append(cpt->args(val));
+          FOR1D(((ComparisonAtom*)clit->atom)->args, val) {
+            if (val<((ComparisonAtom*)clit->atom)->args.N/2)
+              sa_1.append(((ComparisonAtom*)clit->atom)->args(val));
             else
-              sa_2.append(cpt->args(val));
+              sa_2.append(((ComparisonAtom*)clit->atom)->args(val));
           }
-          TL::FunctionInstance* fvw1 = rvm->getFVW(cpt->f, sa_1);
-          TL::FunctionInstance* fvw2 = rvm->getFVW(cpt->f, sa_2);
+          TL::FunctionAtom* fvw1 = rvm->getFVW(((ComparisonAtom*)clit->atom)->fa1->f, sa_1);
+          TL::FunctionAtom* fvw2 = rvm->getFVW(((ComparisonAtom*)clit->atom)->fa1->f, sa_2);
           vars_context(r, v_current++) = rvm->fi2v(fvw1);
           vars_context(r, v_current++) = rvm->fi2v(fvw2);
         }
       }
       else {
-        vars_context(r, v_current++) = rvm->pi2v(ground_rules.elem(r)->context(v));
+        vars_context(r, v_current++) = rvm->l2v(ground_rules.elem(r)->context(v));
       }
     }
   }
@@ -696,12 +710,12 @@ void NID_DBN::create_dbn_params() {
 
 
 #ifdef FAST
-double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager* rvm,TL::LogicEngine* le, const LVA& vars_context) {
+double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager* rvm, const LVA& vars_context) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"inferPhi [START]"<<endl;}
   if (DEBUG>0) {
     PRINT(t);
-    grounded_rule.writeNice();
+    grounded_rule.write();
   }
   double phi = 1.0;
   uint i, val, val2;
@@ -710,18 +724,21 @@ double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager*
   uint id_2D__val1, id_2D__val2;
   FOR1D(grounded_rule.context, i) {
     prob = 0.0;
-    if (grounded_rule.context(i)->pred->type == TL_PRED_COMPARISON) {
-      TL::ComparisonPredicateInstance* cpt = (TL::ComparisonPredicateInstance*) grounded_rule.context(i);
+    if (grounded_rule.context(i)->atom->pred->type == TL::Predicate::predicate_comparison) {
+      TL::ComparisonLiteral* clit = (TL::ComparisonLiteral*) grounded_rule.context(i);
+      TL::ComparisonAtom* ca = (TL::ComparisonAtom*) clit->atom;
       // f(x) < c
-      if (((TL::ComparisonPredicate*) grounded_rule.context(i)->pred)->constantBound) {
+      if (((TL::ComparisonPredicate*) grounded_rule.context(i)->atom->pred)->constantBound) {
         LogicRV* var = vars_context(rule_id, v_current++);
         if (var->type == RV_TYPE__FUNC_EXPECT) {
-          if (cpt->compare(var->P(t,0))) prob += 1.;
+          if (TL::compare(var->P(t,0), ca->bound, ca->comparisonType))
+            prob += 1.;
         }
         else {
           id_2D__val1 = var->P.d1 * t;
           FOR1D(var->range, val) {
-            if (cpt->compare(var->range(val))) prob += var->P.p[id_2D__val1];
+            if (TL::compare(var->range(val), ca->bound, ca->comparisonType))
+              prob += var->P.p[id_2D__val1];
             id_2D__val1++;
           }
         }
@@ -735,29 +752,30 @@ double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager*
           variable2->write(cout);
         }
         if (variable1->type == RV_TYPE__FUNC_EXPECT) {
-          if (cpt->compare(variable1->P(t,0), variable2->P(t,0))) prob +=  1.0;
+          if (TL::compare(variable1->P(t,0), variable2->P(t,0), ((ComparisonAtom*)clit->atom)->comparisonType))
+            prob +=  1.0;
         }
         else {
           id_2D__val1 = variable1->P.d1 * t; // Wird unten am Schleifenende je 1 hochgezaehlt.
           FOR1D(variable1->range, val) {
-            if (cpt->comparisonType == TL_COMPARISON_EQUAL) {
+            if (((ComparisonAtom*)clit->atom)->comparisonType == comparison_equal) {
               prob += variable1->P.p[id_2D__val1] * variable2->P.p[id_2D__val1];
             }
-            else if (cpt->comparisonType == TL_COMPARISON_LESS) {
+            else if (((ComparisonAtom*)clit->atom)->comparisonType == comparison_less) {
               id_2D__val2 = variable2->P.d1 * t + val + 1;
               for (val2 = val+1; val2 < variable2->range.d0; val2++) {
                 prob += variable1->P.p[id_2D__val1] * variable2->P.p[id_2D__val2];
                 id_2D__val2++;
               }
             }
-            else if (cpt->comparisonType == TL_COMPARISON_LESS_EQUAL) {
+            else if (((ComparisonAtom*)clit->atom)->comparisonType == comparison_lessEqual) {
               id_2D__val2 = variable2->P.d1 * t + val;
               for (val2 = val; val2 < variable2->range.d0; val2++) {
                 prob += variable1->P.p[id_2D__val1] * variable2->P.p[id_2D__val2];
                 id_2D__val2++;
               }
             }
-            else if (cpt->comparisonType == TL_COMPARISON_GREATER) {
+            else if (((ComparisonAtom*)clit->atom)->comparisonType == comparison_greater) {
               id_2D__val2 = variable2->P.d1 * t + val - 1;
               if (val>0) {
                 for (val2 = val-1; val2--; ) {
@@ -766,7 +784,7 @@ double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager*
                 }
               }
             }
-            else if (cpt->comparisonType == TL_COMPARISON_GREATER_EQUAL) {
+            else if (((ComparisonAtom*)clit->atom)->comparisonType == comparison_greaterEqual) {
               id_2D__val2 = variable2->P.d1 * t + val;
               for (val2 = val; val2--; ) {
                 prob += variable1->P.p[id_2D__val1] * variable2->P.p[id_2D__val2];
@@ -777,9 +795,9 @@ double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager*
             id_2D__val1++;
           }
 //           FOR1D(var2->range, val2) {
-// //               if (cpt->compare(var1->range(val), var2->range(val2))) prob += var1->P(t,val) * var2->P(t,val2);
-// //               if (cpt->compare(var1->range(val), var2->range(val2))) prob += var1->P.p[id_2D__val1] * var2->P.p[id_2D__val2];
-//             if (cpt->compare(var1->range.p[id_1D__val1], var2->range.p[id_1D__val2])) prob += var1->P.p[id_2D__val1] * var2->P.p[id_2D__val2];
+// //               if (((ComparisonAtom*)clit->atom)->compare(var1->range(val), var2->range(val2))) prob += var1->P(t,val) * var2->P(t,val2);
+// //               if (((ComparisonAtom*)clit->atom)->compare(var1->range(val), var2->range(val2))) prob += var1->P.p[id_2D__val1] * var2->P.p[id_2D__val2];
+//             if (((ComparisonAtom*)clit->atom)->compare(var1->range.p[id_1D__val1], var2->range.p[id_1D__val2])) prob += var1->P.p[id_2D__val1] * var2->P.p[id_2D__val2];
 //             id_2D__val2++;
 //             id_1D__val2++;
 //           }
@@ -801,14 +819,14 @@ double inferPhi(const TL::Rule& grounded_rule, uint rule_id, uint t, RV_Manager*
   }
   if (DEBUG>0) {
     cout<<"  -->  phi="<<phi<<endl;
-    if (phi>0.) {grounded_rule.action->writeNice(); cout<<" *****"<<endl;}
+    if (phi>0.) {grounded_rule.action->write(); cout<<" *****"<<endl;}
     cout<<"inferPhi [END]"<<endl;
   }
   return phi;
 }
 #endif
 #ifndef FAST
-double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm,TL::LogicEngine* le) {
+double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"inferPhi [START]"<<endl;}
   if (DEBUG>0) {
@@ -820,41 +838,41 @@ double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm,TL::Logic
   double prob;
   FOR1D(grounded_rule.context, i) {
     prob = 0.0;
-    if (grounded_rule.context(i)->pred->type == TL_PRED_COMPARISON) {
-      TL::ComparisonPredicateInstance* cpt = (TL::ComparisonPredicateInstance*) grounded_rule.context(i);
+    if (grounded_rule.context(i)->atom->pred->type == TL::Predicate::predicate_comparison) {
+      TL::ComparisonLiteral* clit = (TL::ComparisonLiteral*) grounded_rule.context(i);
       // f(x) < c
-      if (((TL::ComparisonPredicate*) cpt->pred)->constantBound) {
-        TL::FunctionInstance* fi = rvm->getFVW(cpt->f, cpt->args);
+      if (((TL::ComparisonPredicate*) clit->pred)->constantBound) {
+        TL::FunctionAtom* fi = rvm->getFVW(((ComparisonAtom*)clit->atom)->f, ((ComparisonAtom*)clit->atom)->args);
         LogicRV* var = rvm->fi2v(fi);
         if (var->type == RV_TYPE__FUNC_EXPECT) {
-          if (cpt->compare(var->P(t,0))) prob += 1.;
+          if (((ComparisonAtom*)clit->atom)->compare(var->P(t,0))) prob += 1.;
         }
         else {
           FOR1D(var->range, val) {
-            if (cpt->compare(var->range(val))) prob += var->P(t,val);
+            if (((ComparisonAtom*)clit->atom)->compare(var->range(val))) prob += var->P(t,val);
           }
         }
       }
       // f(x) < f(y)
       else {
         uintA sa_1, sa_2;
-        FOR1D(cpt->args, val) {
-          if (val<cpt->args.N/2)
-            sa_1.append(cpt->args(val));
+        FOR1D(((ComparisonAtom*)clit->atom)->args, val) {
+          if (val<((ComparisonAtom*)clit->atom)->args.N/2)
+            sa_1.append(((ComparisonAtom*)clit->atom)->args(val));
           else
-            sa_2.append(cpt->args(val));
+            sa_2.append(((ComparisonAtom*)clit->atom)->args(val));
         }
-        TL::FunctionInstance* fvw1 = rvm->getFVW(cpt->f, sa_1);
-        TL::FunctionInstance* fvw2 = rvm->getFVW(cpt->f, sa_2);
+        TL::FunctionAtom* fvw1 = rvm->getFVW(((ComparisonAtom*)clit->atom)->f, sa_1);
+        TL::FunctionAtom* fvw2 = rvm->getFVW(((ComparisonAtom*)clit->atom)->f, sa_2);
         LogicRV* var1 = rvm->fi2v(fvw1);
         LogicRV* var2 = rvm->fi2v(fvw2);
         if (var1->type == RV_TYPE__FUNC_EXPECT) {
-          if (cpt->compare(var1->P(t,0), var2->P(t,0))) prob +=  1.0;
+          if (((ComparisonAtom*)clit->atom)->compare(var1->P(t,0), var2->P(t,0))) prob +=  1.0;
         }
         else {
           FOR1D(var1->range, val) {
             FOR1D(var2->range, val2) {
-              if (cpt->compare(var1->range(val), var2->range(val2))) prob += var1->P(t,val) * var2->P(t,val2);
+              if (((ComparisonAtom*)clit->atom)->compare(var1->range(val), var2->range(val2))) prob += var1->P(t,val) * var2->P(t,val2);
             }
           }
         }
@@ -863,9 +881,9 @@ double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm,TL::Logic
     else {
       // Can be safely assumed to be binary (since function values only appear in p_comp).
       if (grounded_rule.context(i)->positive)
-        prob = rvm->pi2v(grounded_rule.context(i))->P(t,1);
+        prob = rvm->l2v(grounded_rule.context(i))->P(t,1);
       else
-        prob = rvm->pi2v(grounded_rule.context(i))->P(t,0);
+        prob = rvm->l2v(grounded_rule.context(i))->P(t,0);
     }
     if (DEBUG>0) {cout<<i<<":"<<prob<<"  ";}
     alpha *= prob;
@@ -897,17 +915,17 @@ void NID_DBN::inferRules(uint t) {
   uint p_id = t * rvs_rules_simple.d1;
   FOR1D_(ground_rules, r) {
 #ifdef FAST
-    rvs_rules_simple.p[p_id++] = inferPhi(*ground_rules.elem(r), r, t, rvm, le, vars_context);
+    rvs_rules_simple.p[p_id++] = inferPhi(*ground_rules.elem(r), r, t, rvm, vars_context);
 #endif
 #ifndef FAST
-    rvs_rules_simple(t,r) = inferPhi(*ground_rules.elem(r), t, rvm, le);
+    rvs_rules_simple(t,r) = inferPhi(*ground_rules.elem(r), t, rvm);
 #endif
   }
   if (DEBUG>1) {
     cout<<"phi  P(phi_r | s): (for >0)";
     for(r=0; r<ground_rules.num(); r++) {
       if (rvs_rules_simple(t,r)>0.0) {
-        ground_rules.elem(r)->writeNice();
+        ground_rules.elem(r)->write();
         cout << " -->  P(\\phi_r | s) = " << rvs_rules_simple(t,r) << endl;
       }
     }
@@ -923,8 +941,8 @@ void NID_DBN::inferRules(uint t) {
 //     PRINT(rvs_rules.d1 * t + r);
     rvs_rules.p[p_id] = rvs_rules_simple.p[p_id];
     if (rvs_rules.p[p_id] < RULE_MIN_PROB) {rvs_rules.p[p_id]=0.0; continue;}
-    uint id_pred = le->actions.findValue(ground_rules.elem(r)->action->pred);
-    uint id_args = getIndex(le->constants, ground_rules.elem(r)->action->args);
+    uint id_pred = logicObjectManager::p_actions.findValue(ground_rules.elem(r)->action->pred);
+    uint id_args = getIndex(logicObjectManager::constants, ground_rules.elem(r)->action->args);
     for (r2=0; r2<action2rules_no(id_pred, id_args); r2++) {
       if (action2rules(id_pred, id_args, r2) == r) continue;
       else {
@@ -936,7 +954,7 @@ void NID_DBN::inferRules(uint t) {
 #ifndef FAST
     rvs_rules(t,r) = alpha(t,r);
     if (rvs_rules(t,r) < RULE_MIN_PROB) {rvs_rules(t,r)=0.0; continue;}
-    uint id_pred = le->actions.findValue(ground_rules.elem(r)->action->pred);
+    uint id_pred = logicObjectManager::p_actions.findValue(ground_rules.elem(r)->action->pred);
     uint id_args = getIndex(constants, ground_rules.elem(r)->action->args);
     for (r2=0; r2<action2rules_no(id_pred, id_args); r2++) {
       if (action2rules(id_pred, id_args,r2) == r) continue;
@@ -947,20 +965,22 @@ void NID_DBN::inferRules(uint t) {
     }
 #endif
   }
-  if (DEBUG>1) {
+  if (DEBUG>0) {
     cout<<"rvs_rules  P(phi_r | s, phi_r'):";
     for(r=0; r<ground_rules.num(); r++) {
-      cout<<"  "<<rvs_rules(t,r);
+      cout<<"     "<<*ground_rules.elem(r)->action<<" "<<rvs_rules(t,r)<<" (" << rvs_rules_simple(t,r) << ")";
     }
     cout<<endl;
-    cout<<"Rules with prob>0.0:"<<endl;
-    for(r=0; r<ground_rules.num(); r++) {
-      if (rvs_rules(t,r)>0.0) {
-        ground_rules.elem(r)->writeNice();
-        cout << " --> P(phi_r | s, phi_r') = " << rvs_rules(t,r) << endl;
+    if (DEBUG>1) {
+      cout<<"Rules with prob>0.0:"<<endl;
+      for(r=0; r<ground_rules.num(); r++) {
+        if (rvs_rules(t,r)>0.0) {
+          ground_rules.elem(r)->write();
+          cout << " --> P(phi_r | s, phi_r') = " << rvs_rules(t,r) << endl;
+        }
       }
+      cout<<endl;
     }
-    cout<<endl;
   }
 }
 
@@ -972,9 +992,9 @@ void NID_DBN::inferRules(uint t) {
 //       NID_DBN:   inference state
 // ----------------------------------------------------
 
-void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action) {
-  uint id_pred = le->actions.findValue(given_action->pred);
-  uint id_args = getIndex(le->constants, given_action->args);
+void NID_DBN::inferState(uint t, TL::Atom* given_action) {
+  uint id_pred = logicObjectManager::p_actions.findValue(given_action->pred);
+  uint id_args = getIndex(logicObjectManager::constants, given_action->args);
   double action_weight = 0.;
   uint r;
   for (r=0; r<action2rules_no(id_pred, id_args); r++) {
@@ -984,23 +1004,23 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action) {
 }
 
 // from state and action at t-1
-void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double given_action_weight) {
+void NID_DBN::inferState(uint t, TL::Atom* given_action, double given_action_weight) {
   uint DEBUG = 0;
   
   if (DEBUG>0) {cout<<"inferState [START]"<<endl;}
   CHECK(t>0, "only works for state > 0");
   if (DEBUG>0) {
     PRINT(t);
-    given_action->writeNice(cout); cout<<endl;
+    given_action->write(cout); cout<<endl;
     PRINT(given_action_weight);
   }
    
   uint r, r2, v, val;
   
   // Determine which action has been taken
-  uint action_id_pred = le->actions.findValue(given_action->pred);
-  uint action_id_args = getIndex(le->constants, given_action->args);
-//   uint given_action_rv_id = rvm->pi2v(given_action)->id - (start_id_rv__predicate + num_state_vars);
+  uint action_id_pred = logicObjectManager::p_actions.findValue(given_action->pred);
+  uint action_id_args = getIndex(logicObjectManager::constants, given_action->args);
+//   uint given_action_rv_id = rvm->l2v(given_action)->id - (start_id_rv__predicate + num_state_vars);
 //   PRINT(given_action->args);
 //   PRINT(action_id_pred);
 //   PRINT(action_id_args);
@@ -1018,7 +1038,7 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double giv
   if (DEBUG>1) {
     cout<<"Important rules: "<<endl;
     FOR1D(rules_with_sampled_action, r) {
-      ground_rules.elem(rules_with_sampled_action(r))->writeNice(cout);
+      ground_rules.elem(rules_with_sampled_action(r))->write(cout);
       cout<<"  --> applicability "<<rvs_rules(t-1, rules_with_sampled_action(r));
       if (rvs_rules(t-1, rules_with_sampled_action(r)) > 0.05) {
         cout<<" ***";
@@ -1035,8 +1055,8 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double giv
     r2 = rules_with_sampled_action(r);
     p_id = r2 * P_r_v__p.d1 * P_r_v__p.d2;
     if (given_action != ground_rules.elem(r2)->action) {
-      cout<<"given_action: "; given_action->writeNice(cout); cout<<endl;
-      cout<<"ground_rules.elem(r2)->action: "; ground_rules.elem(r2)->action->writeNice(cout); cout<<endl;
+      cout<<"given_action: "; given_action->write(cout); cout<<endl;
+      cout<<"ground_rules.elem(r2)->action: "; ground_rules.elem(r2)->action->write(cout); cout<<endl;
       HALT("rule has incorrect action!");
     }
     FOR1D(rvs_state__p_prim, v) {
@@ -1066,7 +1086,7 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double giv
     for(r=0; r<ground_rules.num(); r++) {
       cout<<"rule "<<r<<""<<endl;
       for(v=0; v<rvs_state__p_prim.N; v++) {
-        rvs_state__p_prim(v)->pi->writeNice();cout<<":  ";
+        rvs_state__p_prim(v)->lit->write();cout<<":  ";
         FOR1D(rvs_state__p_prim(v)->range, val) {
           cout<<rvs_state__p_prim(v)->range(val)<<":"<<P_r_v__p(r,v,val);
           cout<<"  ";
@@ -1147,7 +1167,7 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double giv
     for(r=0; r<ground_rules.num(); r++) {
       cout<<"rule "<<r<<""<<endl;
       for(v=0; v<rvs_state__f_prim.N; v++) {
-        rvs_state__f_prim(v)->fi->writeNice();cout<<":  ";
+        rvs_state__f_prim(v)->fi->write();cout<<":  ";
         FOR1D(rvs_state__f_prim(v)->range, val) {
           cout<<rvs_state__f_prim(v)->range(val)<<":"<<P_v_r__f(r,v,val);
           cout<<"  ";
@@ -1202,7 +1222,7 @@ void NID_DBN::inferState(uint t, TL::PredicateInstance* given_action, double giv
 
 
 
-void NID_DBN::inferStates(const PredIA& given_action_sequence) {
+void NID_DBN::inferStates(const AtomL& given_action_sequence) {
 //   CHECK(given_action_sequence.N == horizon, "");
   uint t;
   FOR1D(given_action_sequence, t) {
@@ -1226,7 +1246,7 @@ double NID_DBN::log_probability(uint t, const State& state) const {
   if (DEBUG>0) {
     cout<<"log_probability [START]"<<endl;
     PRINT(t);
-    state.writeNice(cout); cout<<endl;
+    state.write(cout); cout<<endl;
   }
   
   uint i, val;
@@ -1234,11 +1254,11 @@ double NID_DBN::log_probability(uint t, const State& state) const {
   double total_log_prob = 0.;
   double prob_variable = 0.;
   FOR1D(rvs_state__p_prim, i) {
-    if (LogicEngine::holds(state, rvs_state__p_prim(i)->pi)) { // teuer, das jedes Mal wieder neu zu machen
+    if (logicReasoning::holds(state, rvs_state__p_prim(i)->lit)) { // teuer, das jedes Mal wieder neu zu machen
       prob_variable = rvs_state__p_prim(i)->P(t, 1);
       if (DEBUG>1) {
         MT::String name;
-        rvs_state__p_prim(i)->pi->name(name);
+        rvs_state__p_prim(i)->lit->name(name);
         printf("%-14s",(char*)name);
         cout << "  has prob=" << prob_variable << "   log-prob=" << log(prob_variable);
       }
@@ -1247,7 +1267,7 @@ double NID_DBN::log_probability(uint t, const State& state) const {
       prob_variable = rvs_state__p_prim(i)->P(t, 0);
       if (DEBUG>1) {
         MT::String name;
-        rvs_state__p_prim(i)->pi->name(name);
+        rvs_state__p_prim(i)->lit->name(name);
         printf("-%-13s",(char*)name);
         cout << "  has prob=" << prob_variable << "   log-prob=" << log(prob_variable);
       }
@@ -1259,9 +1279,9 @@ double NID_DBN::log_probability(uint t, const State& state) const {
   }
   
   FOR1D(rvs_state__f_prim, i) {
-    FunctionInstance* fi = rvs_state__f_prim(i)->fi;
+    FunctionAtom* fi = rvs_state__f_prim(i)->fi;
     CHECK(fi->args.N == 1, "");
-    double value = LogicEngine::getValue(fi->args(0), fi->f, state);
+    double value = logicReasoning::getValue(fi->args(0), fi->f, state);
     for (val=0; val<rvs_state__f_prim(i)->dim; val++) {
       if (TL::areEqual(value, rvs_state__f_prim(i)->range(val))) {
         prob_variable = rvs_state__f_prim(i)->P(t, val);
@@ -1270,7 +1290,7 @@ double NID_DBN::log_probability(uint t, const State& state) const {
     }
     total_log_prob += log(prob_variable);
     if (DEBUG>1) {
-      rvs_state__f_prim(i)->fi->writeNice(cout);
+      rvs_state__f_prim(i)->fi->write(cout);
       cout << "=" << value << "   prob=" << prob_variable << "  " << log(prob_variable) << "  --> total_log_prob=" <<  total_log_prob << endl;
     }
     CHECK(val < rvs_state__f_prim(i)->dim, "value has not been found");
@@ -1294,7 +1314,7 @@ double NID_DBN::belief_difference(uint t, const arr& probs_p_prim, const arr& pr
   if (DEBUG>0) {cout<<"+++ belief_difference at "<<t<<endl;}
   FOR1D(rvs_state__p_prim, i) {
     local_diff = 0.;
-    if (DEBUG>0) {rvs_state__p_prim(i)->pi->writeNice(cout);cout<<": ";}
+    if (DEBUG>0) {rvs_state__p_prim(i)->lit->write(cout);cout<<": ";}
     FOR1D(rvs_state__p_prim(i)->range, val) {
       local_diff += fabs(probs_p_prim(i,val) - rvs_state__p_prim(i)->P(t,val));
       if (DEBUG>0) {cout << " (" << probs_p_prim(i,val) << " - " << rvs_state__p_prim(i)->P(t,val)<<")";}
@@ -1305,7 +1325,7 @@ double NID_DBN::belief_difference(uint t, const arr& probs_p_prim, const arr& pr
   }
   FOR1D(rvs_state__f_prim, i) {
     local_diff = 0.;
-    if (DEBUG>0) {rvs_state__f_prim(i)->fi->writeNice(cout);cout<<": ";}
+    if (DEBUG>0) {rvs_state__f_prim(i)->fi->write(cout);cout<<": ";}
     FOR1D(rvs_state__f_prim(i)->range, val) {
       local_diff += fabs(probs_f_prim(i,val) - rvs_state__f_prim(i)->P(t,val));
       if (DEBUG>0) {cout << " (" << probs_f_prim(i,val) << " - " << rvs_state__f_prim(i)->P(t,val)<<")";}
@@ -1336,7 +1356,7 @@ void NID_DBN::checkStateSoundness(uint t, bool omit_derived) {
     if (!TL::areEqual(1.0, rvs_state__p_prim(v)->P(t,0)+rvs_state__p_prim(v)->P(t,1))
          ||   rvs_state__p_prim(v)->P(t,0) < -0.01   ||   rvs_state__p_prim(v)->P(t,1) < -0.01) {
       cerr << "Invalid distribution for rv ";
-      rvs_state__p_prim(v)->pi->writeNice(cerr);
+      rvs_state__p_prim(v)->lit->write(cerr);
       cerr << "  at t=" << t << " with id="<<rvs_state__p_prim(v)->id << endl;
       cerr << "  --> Because:  1.0  !=   P(t,0)=" << rvs_state__p_prim(v)->P(t,0) << "   +  P(t,1)=" <<rvs_state__p_prim(v)->P(t,1)<<endl;
       HALT("");
@@ -1370,12 +1390,12 @@ void NID_DBN::checkStateSoundness(uint t, bool omit_derived) {
 }
 
 
-void calcDerived(uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
+void calcDerived(uint t, RV_Manager* rvm, uintA& constants);
 
-void NID_DBN::setState(const PredIA& pts, const FuncVA& fvs, uint t) {
+void NID_DBN::setState(const LitL& lits, const FuncVL& fvs, uint t) {
   uint DEBUG = 0;
   uint v, val;
-  if (DEBUG>0) {cout<<"State: ";TL::writeNice(pts);cout<<endl;TL::writeNice(fvs);cout<<endl;}
+  if (DEBUG>0) {cout<<"State: ";TL::write(lits);cout<<endl;TL::write(fvs);cout<<endl;}
   // Everything not specified is set to false!
   FOR1D(rvs_state__p_prim, v) {
     rvs_state__p_prim(v)->P(t,0) = 1.0;
@@ -1384,20 +1404,25 @@ void NID_DBN::setState(const PredIA& pts, const FuncVA& fvs, uint t) {
     }
   }
   // Incorporating evidence
-  FOR1D(pts, v) {
-    if (DEBUG>0) {cout<<"setState:  "; pts(v)->writeNice(); cout<<endl;}
-    if (pts(v)->positive) {
-      rvm->pi2v(pts(v))->P(t,0) = 0.0;
-      rvm->pi2v(pts(v))->P(t,1) = 1.0;
+  FOR1D(lits, v) {
+    if (DEBUG>0) {cout<<"setState:  "; lits(v)->write(); cout<<endl;}
+    TL::PredicateRV* prv = rvm->l2v(lits(v));
+    if (prv == NULL) {
+      MT_MSG("Omitting setting state lit "<<*lits(v)<<" in DBN^(t=0).");
+      continue;
+    }
+    if (lits(v)->positive) {
+      prv->P(t,0) = 0.0;
+      prv->P(t,1) = 1.0;
     }
     else {
-      rvm->pi2v(pts(v))->P(t,0) = 1.0;
-      rvm->pi2v(pts(v))->P(t,1) = 0.0;
+      prv->P(t,0) = 1.0;
+      prv->P(t,1) = 0.0;
     }
   }
   FOR1D(fvs, v) {
-    TL::FunctionInstance* fi = rvm->getFVW(fvs(v)->f, fvs(v)->args);
-    if (DEBUG>0) {cout<<"setState:  "; fvs(v)->writeNice(); cout<<endl;}
+    TL::FunctionAtom* fi = rvm->getFVW(fvs(v)->atom->f, fvs(v)->atom->args);
+    if (DEBUG>0) {cout<<"setState:  "; fvs(v)->write(); cout<<endl;}
     FOR1D(fi->f->range, val) {
       if (TL::areEqual(fi->f->range(val), fvs(v)->value))
         rvm->fi2v(fi)->P(t,val) = 1.0;
@@ -1430,8 +1455,8 @@ void NID_DBN::setStateUniform(uint t) {
 }
 
 
-void NID_DBN::setAction(uint t, TL::PredicateInstance* action) {
-  PredicateRV* action_rv = rvm->pi2v(action);
+void NID_DBN::setAction(uint t, TL::Atom* action) {
+  PredicateRV* action_rv = rvm->l2v(logicObjectManager::getLiteral(action->pred, true, action->args));
   uint i;
   FOR1D(rvs_action, i) {
     if (action_rv == rvs_action(i)) {
@@ -1486,13 +1511,13 @@ void NID_DBN::writeAllStates(bool prim_only, double threshold, ostream& out) con
 
 void NID_DBN::writeState(uint t, bool prim_only, double threshold, ostream& out) const {
   uint v, val;
-//   TL::Predicate* p_HOMIES = le->getPredicate(MT::String("homies"));
+//   TL::Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
 //   out<<"homies supressed"<<endl;
   FOR1D(rvs_state__p_prim, v) {
-//     if (rvs_state__p_prim(v)->pi->pred == p_HOMIES)
+//     if (rvs_state__p_prim(v)->lit->atom->pred == p_HOMIES)
 //       continue;
     if (rvs_state__p_prim(v)->P(t,1) >= threshold) {
-      rvs_state__p_prim(v)->pi->writeNice(out);
+      rvs_state__p_prim(v)->lit->write(out);
       out<<"  ";
       out<<rvs_state__p_prim(v)->P(t,1);
       out<<endl;
@@ -1501,7 +1526,7 @@ void NID_DBN::writeState(uint t, bool prim_only, double threshold, ostream& out)
   if (!prim_only) {
     FOR1D(rvs_state__p_derived, v) {
       if (rvs_state__p_derived(v)->P(t,1) >= threshold) {
-        rvs_state__p_derived(v)->pi->writeNice(out);
+        rvs_state__p_derived(v)->lit->write(out);
         out<<" ";
         out<<rvs_state__p_derived(v)->P(t,1)<<"    ";
         out<<endl;
@@ -1509,7 +1534,7 @@ void NID_DBN::writeState(uint t, bool prim_only, double threshold, ostream& out)
     }
   }
   FOR1D(rvs_state__f_prim, v) {
-    rvs_state__f_prim(v)->fi->writeNice(out);
+    rvs_state__f_prim(v)->fi->write(out);
     out<<"  ";
     FOR1D(rvs_state__f_prim(v)->range, val) {
       out<<rvs_state__f_prim(v)->range(val)<<":"<<rvs_state__f_prim(v)->P(t,val)<<"  ";
@@ -1519,10 +1544,10 @@ void NID_DBN::writeState(uint t, bool prim_only, double threshold, ostream& out)
   if (!prim_only) {
     FOR1D(rvs_state__f_derived, v) {
       if (rvs_state__f_derived(v)->type == RV_TYPE__FUNC_EXPECT) {
-        rvs_state__f_derived(v)->fi->writeNice(out); out<<"  "<<rvs_state__f_derived(v)->P(t,0)<<" [E]"<<endl;
+        rvs_state__f_derived(v)->fi->write(out); out<<"  "<<rvs_state__f_derived(v)->P(t,0)<<" [E]"<<endl;
       }
       else {
-        rvs_state__f_derived(v)->fi->writeNice(out);
+        rvs_state__f_derived(v)->fi->write(out);
         out<<"  ";
         FOR1D(rvs_state__f_derived(v)->range, val) {
           out<<rvs_state__f_derived(v)->range(val)<<":"<<rvs_state__f_derived(v)->P(t,val)<<"  ";
@@ -1538,25 +1563,25 @@ void NID_DBN::writeStateSparse(uint t, bool prim_only, ostream& out) const {
   uint v, val;
   FOR1D(rvs_state__p_prim, v) {
     if (TL::areEqual(rvs_state__p_prim(v)->P(t,1), 1.0)) {
-      rvs_state__p_prim(v)->pi->writeNice(out); out<<"  ";
+      rvs_state__p_prim(v)->lit->write(out); out<<"  ";
     }
   }
   if (!prim_only) {
     FOR1D(rvs_state__p_derived, v) {
       if (TL::areEqual(rvs_state__p_derived(v)->P(t,1), 1.0)) {
-        rvs_state__p_derived(v)->pi->writeNice(out); out<<"  ";
+        rvs_state__p_derived(v)->lit->write(out); out<<"  ";
       }
     }
   }
   FOR1D(rvs_state__f_prim, v) {
     if (rvs_state__f_prim(v)->type == RV_TYPE__FUNC_EXPECT) {
-      rvs_state__f_prim(v)->fi->writeNice(out);
+      rvs_state__f_prim(v)->fi->write(out);
       out<<"="<<rvs_state__f_prim(v)->P(t,0)<<"  ";
     }
     else {
       FOR1D(rvs_state__f_prim(v)->range, val) {
         if (TL::areEqual(rvs_state__f_prim(v)->P(t,val), 1.0)) {
-          rvs_state__f_prim(v)->fi->writeNice(out);
+          rvs_state__f_prim(v)->fi->write(out);
           out<<"="<<rvs_state__f_prim(v)->range(val)<<"  ";
         }
       }
@@ -1565,13 +1590,13 @@ void NID_DBN::writeStateSparse(uint t, bool prim_only, ostream& out) const {
   if (!prim_only) {
     FOR1D(rvs_state__f_derived, v) {
       if (rvs_state__f_derived(v)->type == RV_TYPE__FUNC_EXPECT) {
-        rvs_state__f_derived(v)->fi->writeNice(out);
+        rvs_state__f_derived(v)->fi->write(out);
         out<<"="<<rvs_state__f_derived(v)->P(t,0)<<"  ";
       }
       else {
         FOR1D(rvs_state__f_derived(v)->range, val) {
           if (TL::areEqual(rvs_state__f_derived(v)->P(t,val), 1.0)) {
-            rvs_state__f_derived(v)->fi->writeNice(out);
+            rvs_state__f_derived(v)->fi->write(out);
             out<<"="<<rvs_state__f_derived(v)->range(val)<<"  ";
           }
         }
@@ -1582,9 +1607,23 @@ void NID_DBN::writeStateSparse(uint t, bool prim_only, ostream& out) const {
 }
 
 
-void getLines(uintA& lines, const uintA& dimensions, const uintA& fixed_values) {
-  
+void NID_DBN::getActions(AtomL& actions, uint horizon) const {
+  actions.clear();
+  uint a, t;
+  CHECK(horizon <= rvs_action(0)->P.d0, "");
+  for (t=0; t<horizon; t++) {
+    FOR1D(rvs_action, a) {
+      if (TL::isZero(rvs_action(a)->P(t,1) - 1.0)) {
+        actions.append(rvs_action(a)->lit->atom);
+        break;
+      }
+      if (rvs_action.N == a) {
+        HALT("action has not been found");
+      }
+    }
+  }
 }
+
 
 
 
@@ -1600,7 +1639,7 @@ void getLines(uintA& lines, const uintA& dimensions, const uintA& fixed_values) 
 
 
 
-PRADA::PRADA(TL::LogicEngine* le) : NID_Planner(le, 0.0), num_samples(100), noise_softener(1.0)  {
+PRADA::PRADA() : NID_Planner(0.0), num_samples(100), noise_softener(1.0)  {
   this->net = NULL;
   this->prada_reward = NULL;
   this->threshold_reward = 0.05;
@@ -1623,11 +1662,13 @@ PRADA::~PRADA() {
 // The DBN used by (A-)PRADA consists of grounded predicate and 
 // function instances which are used 
 //       (i)  in the (ground) rules and/or 
-// //       (ii) in the reward description.
+//       (ii) in the reward description.
 void PRADA::calc_dbn_concepts() {
   uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"PRADA::calc_dbn_concepts [START]"<<endl;}
   CHECK(reward != NULL, "Reward has to be set first");
   CHECK(ground_rules.num() > 0, "Ground rules have to be set first");
+  if (DEBUG>0) 
   
   dbn_preds.clear();
   dbn_funcs.clear();
@@ -1635,16 +1676,16 @@ void PRADA::calc_dbn_concepts() {
   // (i-a) rule concepts - primitive  (only predicates; functions are covered below with comparison predicates) 
   FOR1D_(ground_rules, i) {
     FOR1D(ground_rules.elem(i)->context, k) {
-      if (ground_rules.elem(i)->context(k)->pred->category == TL_PRIMITIVE
-          &&   ground_rules.elem(i)->context(k)->pred->type == TL_PRED_SIMPLE) {
-        dbn_preds.setAppend(ground_rules.elem(i)->context(k)->pred);
+      if (ground_rules.elem(i)->context(k)->atom->pred->category == category_primitive
+          &&   ground_rules.elem(i)->context(k)->atom->pred->type == TL::Predicate::predicate_simple) {
+        dbn_preds.setAppend(ground_rules.elem(i)->context(k)->atom->pred);
       }
     }
     FOR1D(ground_rules.elem(i)->outcomes, k) {
       FOR1D(ground_rules.elem(i)->outcomes(k), l) {
-        if (ground_rules.elem(i)->outcomes(k)(l)->pred->category == TL_PRIMITIVE
-          &&   ground_rules.elem(i)->outcomes(k)(l)->pred->type == TL_PRED_SIMPLE) {
-          dbn_preds.setAppend(ground_rules.elem(i)->outcomes(k)(l)->pred);
+        if (ground_rules.elem(i)->outcomes(k)(l)->atom->pred->category == category_primitive
+          &&   ground_rules.elem(i)->outcomes(k)(l)->atom->pred->type == TL::Predicate::predicate_simple) {
+          dbn_preds.setAppend(ground_rules.elem(i)->outcomes(k)(l)->atom->pred);
         }
       }
     }
@@ -1652,23 +1693,23 @@ void PRADA::calc_dbn_concepts() {
   // (i-b) rule concepts - derived and comparison (--> function)
   FOR1D_(ground_rules, i) {
     FOR1D(ground_rules.elem(i)->context, k) {
-      if (ground_rules.elem(i)->context(k)->pred->category == TL_DERIVED) {
-        dbn_preds.setAppend(ground_rules.elem(i)->context(k)->pred);
+      if (ground_rules.elem(i)->context(k)->atom->pred->category == category_derived) {
+        dbn_preds.setAppend(ground_rules.elem(i)->context(k)->atom->pred);
         // get also precessors
-        PredA pre_preds;
-        FuncA pre_funcs;
-        le->dependencyGraph.getAllPrecessors(*ground_rules.elem(i)->context(k)->pred, pre_preds, pre_funcs);
+        PredL pre_preds;
+        FuncL pre_funcs;
+        logicObjectManager::dependencyGraph.getAllPrecessors(*ground_rules.elem(i)->context(k)->atom->pred, pre_preds, pre_funcs);
         dbn_preds.setAppend(pre_preds);
         dbn_funcs.setAppend(pre_funcs);
       }
-      else if (ground_rules.elem(i)->context(k)->pred->type == TL_PRED_COMPARISON) {
-        TL::ComparisonPredicateInstance* cpi = (TL::ComparisonPredicateInstance*) ground_rules.elem(i)->context(k);
-        dbn_funcs.setAppend(cpi->f);
-        if (cpi->f->category == TL_DERIVED) {
+      else if (ground_rules.elem(i)->context(k)->atom->pred->type == TL::Predicate::predicate_comparison) {
+        TL::ComparisonLiteral* clit = (TL::ComparisonLiteral*) ground_rules.elem(i)->context(k);
+        dbn_funcs.setAppend(((ComparisonAtom*)clit->atom)->fa1->f);
+        if (((ComparisonAtom*)clit->atom)->fa1->f->category == category_derived) {
           // get also precessors
-          PredA pre_preds;
-          FuncA pre_funcs;
-          le->dependencyGraph.getAllPrecessors(*cpi->f, pre_preds, pre_funcs);
+          PredL pre_preds;
+          FuncL pre_funcs;
+          logicObjectManager::dependencyGraph.getAllPrecessors(*((ComparisonAtom*)clit->atom)->fa1->f, pre_preds, pre_funcs);
           dbn_preds.setAppend(pre_preds);
           dbn_funcs.setAppend(pre_funcs);
         }
@@ -1676,31 +1717,43 @@ void PRADA::calc_dbn_concepts() {
     }
   }
   // (ii) reward concepts
-  if (reward->reward_type == REWARD_TYPE__PREDICATE_INSTANCE) {
-    PredA pre_preds;
-    FuncA pre_funcs;
-    le->getAllPrecessors(*((TL::PredicateReward*) reward)->pi->pred, pre_preds, pre_funcs);
-    dbn_preds.setAppend(((TL::PredicateReward*) reward)->pi->pred);
+  if (reward->reward_type == TL::Reward::reward_literal) {
+    PredL pre_preds;
+    FuncL pre_funcs;
+    logicObjectManager::getAllPrecessors(*((TL::LiteralReward*) reward)->lit->atom->pred, pre_preds, pre_funcs);
+    dbn_preds.setAppend(((TL::LiteralReward*) reward)->lit->atom->pred);
     dbn_preds.setAppend(pre_preds);
     dbn_funcs.setAppend(pre_funcs);
   }
-  else if (reward->reward_type == REWARD_TYPE__PREDICATE_INSTANCE_LIST) {
-    FOR1D(((TL::PredicateListReward*) reward)->pis, k) {
-      PredA pre_preds;
-      FuncA pre_funcs;
-      le->getAllPrecessors(*((TL::PredicateListReward*) reward)->pis(k)->pred, pre_preds, pre_funcs);
-      dbn_preds.setAppend(((TL::PredicateListReward*) reward)->pis(k)->pred);
+  else if (reward->reward_type == TL::Reward::reward_literalList) {
+    FOR1D(((TL::LiteralListReward*) reward)->lits, k) {
+      PredL pre_preds;
+      FuncL pre_funcs;
+      logicObjectManager::getAllPrecessors(*((TL::LiteralListReward*) reward)->lits(k)->atom->pred, pre_preds, pre_funcs);
+      dbn_preds.setAppend(((TL::LiteralListReward*) reward)->lits(k)->atom->pred);
       dbn_preds.setAppend(pre_preds);
       dbn_funcs.setAppend(pre_funcs);
     }
   }
-  else if (reward->reward_type == REWARD_TYPE__MAXIMIZE_FUNCTION) {
-    PredA pre_preds;
-    FuncA pre_funcs;
-    le->getAllPrecessors(*((TL::MaximizeFunctionReward*) reward)->fi->f, pre_preds, pre_funcs);
-    dbn_preds.setAppend(pre_preds);
-    dbn_funcs.setAppend(((TL::MaximizeFunctionReward*) reward)->fi->f);
-    dbn_funcs.setAppend(pre_funcs);
+  else if (reward->reward_type == TL::Reward::reward_maximize_function) {
+    TL::MaximizeFunctionReward* mfr = (TL::MaximizeFunctionReward*) reward;
+    if (mfr->fa != NULL) {
+      PredL pre_preds;
+      FuncL pre_funcs;
+      logicObjectManager::getAllPrecessors(*mfr->fa->f, pre_preds, pre_funcs);
+      dbn_preds.setAppend(pre_preds);
+      dbn_funcs.setAppend(pre_funcs);
+      dbn_funcs.setAppend(mfr->fa->f);
+    }
+    if (DEBUG>0) {cout<<"Adding concepts for MaximizeFunctionReward"<<endl; PRINT(mfr->important_literals);}
+    FOR1D(mfr->important_literals, k) {
+      PredL pre_preds;
+      FuncL pre_funcs;
+      logicObjectManager::getAllPrecessors(*mfr->important_literals(k)->atom->pred, pre_preds, pre_funcs);
+      dbn_preds.setAppend(mfr->important_literals(k)->atom->pred);
+      dbn_preds.setAppend(pre_preds);
+      dbn_funcs.setAppend(pre_funcs);
+    }
   }
   else {
     NIY;
@@ -1709,18 +1762,19 @@ void PRADA::calc_dbn_concepts() {
     cout<<"(A-) PRADA's DBN will be built with nodes for the following concepts:"<<endl;
     TL::writeNice(dbn_preds);
     TL::writeNice(dbn_funcs);
-    TL::writeNice(le->actions);
+    TL::writeNice(logicObjectManager::p_actions);
   }
+  if (DEBUG>0) {cout<<"PRADA::calc_dbn_concepts [END]"<<endl;}
 }
 
 
 void PRADA::build_dbn(const uintA& constants) {
   calc_dbn_concepts();
-  build_dbn(constants, dbn_preds, dbn_funcs, le->actions);
+  build_dbn(constants, dbn_preds, dbn_funcs, logicObjectManager::p_actions);
 }
 
-void PRADA::build_dbn(const uintA& constants, const PredA& preds, const FuncA& funcs, const PredA& actions) {
-  net = new NID_DBN(constants, preds, funcs, actions, ground_rules, noise_softener, horizon, le);
+void PRADA::build_dbn(const uintA& constants, const PredL& preds, const FuncL& funcs, const PredL& actions) {
+  net = new NID_DBN(constants, preds, funcs, actions, ground_rules, noise_softener, horizon);
 }
 
 
@@ -1738,81 +1792,86 @@ void PRADA::build_dbn(const uintA& constants, const PredA& preds, const FuncA& f
 
 
 void PRADA::setState(const TL::State& s, uint t) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"PRADA::setState [START]"<<endl;}
   // Construct DBN if necessary
   if (net == NULL) {
+    if (DEBUG>0) {cout<<"Constructing net."<<endl;}
     uintA constants;
-    LogicEngine::getConstants(s, constants);
-    build_dbn(le->constants);
+    logicReasoning::getConstants(s, constants);
+    build_dbn(logicObjectManager::constants);
   }
+  if (DEBUG>0) {cout<<"Creating lits_prim_filtered and fv_prim_filtered."<<endl;}
   
   // Set
-  PredIA pi_prim_filtered;
+  LitL lits_prim_filtered;
   uint i;
-  FOR1D(s.pi_prim, i) {
-    if (dbn_preds.findValue(s.pi_prim(i)->pred) >= 0)
-      pi_prim_filtered.append(s.pi_prim(i));
+  FOR1D(s.lits_prim, i) {
+    if (dbn_preds.findValue(s.lits_prim(i)->atom->pred) >= 0)
+      lits_prim_filtered.append(s.lits_prim(i));
   }
-  FuncVA fv_prim_filtered;
+  FuncVL fv_prim_filtered;
   FOR1D(s.fv_prim, i) {
-    if (dbn_funcs.findValue(s.fv_prim(i)->f) >= 0)
+    if (dbn_funcs.findValue(s.fv_prim(i)->atom->f) >= 0)
       fv_prim_filtered.append(s.fv_prim(i));
   }
   
-  net->setState(pi_prim_filtered, fv_prim_filtered, t);
+  if (DEBUG>0) {cout<<"Setting in net."<<endl;}
+  net->setState(lits_prim_filtered, fv_prim_filtered, t);
+  if (DEBUG>0) {cout<<"PRADA::setState [END]"<<endl;}
 }
 
 
 
 
 
-// TODO kann eines Tages wieder weg, dient nur der Visualisierung!!!
-
-void calcBloxworld_homies_2(MT::Array< uintA >& gangs, const State& s, const LogicEngine& le) {
-  Predicate* p_HOMIES = le.getPredicate(MT::String("homies"));
+// TODO can be removed some day; is only for visualization
+void calcBloxworld_homies_2(MT::Array< uintA >& gangs, const State& s) {
+  Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
   gangs.clear();
   uint i, k;
-  boolA constants_covered(le.constants.N);
+  boolA constants_covered(logicObjectManager::constants.N);
   constants_covered.setUni(false);
-  FOR1D(le.constants, i) {
-    if (le.holds_straight(le.constants(i), MT::String("table"), s))
+  FOR1D(logicObjectManager::constants, i) {
+    if (logicReasoning::holds_straight(logicObjectManager::constants(i), MT::String("table"), s))
       continue;
     if (constants_covered(i))
       continue;
     uintA homies;
-    LogicEngine::getRelatedObjects(homies, le.constants(i), true, *p_HOMIES, s);
-    homies.insert(0, le.constants(i));
+    logicReasoning::getRelatedObjects(homies, logicObjectManager::constants(i), true, *p_HOMIES, s);
+    homies.insert(0, logicObjectManager::constants(i));
     constants_covered(i) = true;
     FOR1D(homies, k) {
-      constants_covered(le.constants.findValue(homies(k))) = true;
+      constants_covered(logicObjectManager::constants.findValue(homies(k))) = true;
     }
     gangs.append(homies);
   }
 }
 
-void calcBloxworld_piles_2(MT::Array< uintA >& piles, const State& s, const LogicEngine& le) {
-  Predicate* p_ON = le.getPredicate(MT::String("on"));
+void calcBloxworld_piles_2(MT::Array< uintA >& piles, const State& s) {
+  Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   bool inserted;
   uint i, k;
-  FOR1D(s.pi_prim, i) {
+  FOR1D(s.lits_prim, i) {
     // on(A,B)
-    if (s.pi_prim(i)->pred == p_ON) {
+    if (s.lits_prim(i)->atom->pred == p_ON) {
       inserted = false;
       FOR1D(piles, k) {
         // pile with [A, ..., top]  -->  put B below
-        if (piles(k)(0) == s.pi_prim(i)->args(0)) {
-          piles(k).insert(0, s.pi_prim(i)->args(1));
+        if (piles(k)(0) == s.lits_prim(i)->atom->args(0)) {
+          piles(k).insert(0, s.lits_prim(i)->atom->args(1));
           inserted = true;
         }
-        // pile with [table, lastBlock, ..., B]  -->  put A on top
-        else if (piles(k).last() == s.pi_prim(i)->args(1)) {
-          piles(k).append(s.pi_prim(i)->args(0));
+        // pile with [tablastBlock, ..., B]  -->  put A on top
+        else if (piles(k).last() == s.lits_prim(i)->atom->args(1)) {
+          piles(k).append(s.lits_prim(i)->atom->args(0));
           inserted = true;
         }
       }
       if (!inserted) {
         uintA newPile;
-        newPile.append(s.pi_prim(i)->args(1));
-        newPile.append(s.pi_prim(i)->args(0));
+        newPile.append(s.lits_prim(i)->atom->args(1));
+        newPile.append(s.lits_prim(i)->atom->args(0));
         piles.append(newPile);
       }
     }
@@ -1828,14 +1887,14 @@ void PRADA::setStartState(const TL::State& s1) {
 void PRADA::setReward(Reward* reward) {
 //   MT_MSG("Automatic conversion of reward!");
   this->reward = reward;
-  PredicateReward* pg = dynamic_cast<PredicateReward*>(reward);
+  LiteralReward* pg = dynamic_cast<LiteralReward*>(reward);
   if (pg!= NULL) {
-    this->prada_reward = convert_reward((PredicateReward*) reward);
+    this->prada_reward = convert_reward((LiteralReward*) reward);
   }
   else {
-    PredicateListReward* plg = dynamic_cast<PredicateListReward*>(reward);
+    LiteralListReward* plg = dynamic_cast<LiteralListReward*>(reward);
     if (plg!= NULL) {
-      this->prada_reward = convert_reward((PredicateListReward*) reward);
+      this->prada_reward = convert_reward((LiteralListReward*) reward);
     }
     else {
       MaximizeFunctionReward* fg = dynamic_cast<MaximizeFunctionReward*>(reward);
@@ -1908,28 +1967,32 @@ void PRADA::writeStateSparse(uint t, bool prim_only, ostream& out) {
 // ----------------------------------------------------
 
 
+void PRADA::infer(const AtomL& plan) {
+  AtomL sampled_actions;
+  sampleActionsAndInfer(sampled_actions, plan, net, plan.N);
+}
 
-void PRADA::sampleActionsAndInfer(PredIA& sampled_actions) {
-  PredIA fixed_actions(horizon);
+void PRADA::sampleActionsAndInfer(AtomL& sampled_actions) {
+  AtomL fixed_actions(horizon);
   fixed_actions.setUni(NULL);
   sampleActionsAndInfer(sampled_actions, fixed_actions);
 }
 
-void PRADA::infer(const PredIA& plan) {
-  PredIA sampled_actions;
-  sampleActionsAndInfer(sampled_actions, plan, net, plan.N);
-}
-
-
-void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_actions) {
+void PRADA::sampleActionsAndInfer(AtomL& sampled_actions, const AtomL& fixed_actions) {
   sampleActionsAndInfer(sampled_actions, fixed_actions, net, horizon);
 }
 
-void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_actions, NID_DBN* local_net, uint local_horizon) {
+void PRADA::sampleActionsAndInfer(AtomL& sampled_actions, const AtomL& fixed_actions1, NID_DBN* local_net, uint local_horizon) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"sampleActionsAndInfer [START]"<<endl;}
-  if (DEBUG>0) {cout<<"fixed_actions: ";  TL::writeNice(fixed_actions);  cout<<endl;}
-  CHECK(fixed_actions.N >= local_horizon, "fixed_actions have wrong number " << fixed_actions.N << " instead of " << local_horizon);
+  AtomL fixed_actions;  fixed_actions = fixed_actions1;
+  if (DEBUG>0) {cout<<"fixed_actions: " << fixed_actions <<endl;}
+  if (fixed_actions.N < local_horizon) {
+    if (DEBUG>>0) {cout<<"fixed_actions have wrong number " << fixed_actions.N << " instead of " << local_horizon << " and will be refilled"<<endl;}
+    do {
+      fixed_actions.append(NULL);
+    } while (fixed_actions.N < local_horizon);
+  }
   bool TIMING = false;
   clock_t start,finish;
   double time;
@@ -1952,62 +2015,65 @@ void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_a
     
     // (2) INFER ACTION-WEIGHT at t,  cf. paper Eq. (24)
     if (TIMING) {start = clock();}
-    double action_weights_sum = 0.0;
+    arr action_weights__sampling(ground_actions.N);  // --> need this for sampling distribution which shall ignore non-manipulating rules
     FOR1D(ground_actions, a) {
       action_weights(t,a) = 0.0;
-      uint id_pred = le->actions.findValue(ground_actions(a)->pred);
-      uint id_args = getIndex(le->constants, ground_actions(a)->args);
+      action_weights__sampling(a) = 0.0;
+      uint id_pred = logicObjectManager::p_actions.findValue(ground_actions(a)->pred);
+      uint id_args = getIndex(logicObjectManager::constants, ground_actions(a)->args);
       for (r=0; r<local_net->action2rules_no(id_pred, id_args); r++) {
         action_weights(t,a) += local_net->rvs_rules(t, local_net->action2rules(id_pred, id_args, r));
+        if (logicObjectManager::getAtom_doNothing() == ground_actions(a)  ||  is_manipulating_rule(local_net->action2rules(id_pred, id_args, r)))  // only consider manipulating rules
+          action_weights__sampling(a) += local_net->rvs_rules(t, local_net->action2rules(id_pred, id_args, r));
       }
       // Manually forbid doNothing-action at first time-step if free choice 
-      if (t==0  &&  le->getPI_doNothing() == ground_actions(a)  &&  fixed_actions(t) == NULL)
+      if (t==0  &&  logicObjectManager::getAtom_doNothing() == ground_actions(a)  &&  fixed_actions(t) == NULL) {
         action_weights(t,a) = 0.0;
-      action_weights_sum += action_weights(t,a);
+        action_weights__sampling(a) = 0.0;
+      }
     }
     if (DEBUG>2) {
-      cout<<"action_weights (action applicability):";
+      cout<<"action_weights__sampling (action applicability):";
       for(a=0; a<A; a++) {
-        cout<<"  "<<action_weights(t,a);
+        cout<<"  "<<action_weights__sampling(a);
       }
       cout<<endl;
       cout<<"APPLICABLE ACTIONS:   ";
       for(a=0; a<A; a++) {
         if (action_weights(t,a)>0) {
-          cout<<"   "<<action_weights(t,a)<<" ";
-          ground_actions(a)->writeNice();
+          cout<<"   "<<action_weights__sampling(a)<<" ("<<action_weights(t,a)<<") ";
+          ground_actions(a)->write();
         }
       }
       cout<<endl;
     }
-    if (TL::isZero(action_weights_sum)) {
-//       MT_MSG("No more action applicable, so we stop!");
+    if (TL::isZero(sum(action_weights__sampling))) {
+//       MT_MSG("No more action applicabso we stop!");
       break;
     }
-    arr P_action(ground_actions.N);
-    FOR1D(P_action, a) {
-      P_action(a) = action_weights(t,a) / action_weights_sum;
-    }
-    
-    
+    arr P_action = action_weights__sampling / sum(action_weights__sampling);
+        
     // (3) SELECT ACTION
-    uint sampled_action_id;
-    TL::PredicateInstance* sampled_action;
+    int sampled_action_id;
+    TL::Atom* sampled_action;
     // (3a) take fixed action
     if (fixed_actions(t) != NULL) {
       sampled_action_id = ground_actions.findValue(fixed_actions(t));
       sampled_action = fixed_actions(t);
-      if (DEBUG>1) {cout<<"*** SIMULATED ACTION (fixed):   ";  sampled_action->writeNice(cout);cout<<endl;}
+      if (sampled_action_id < 0) {
+        HALT("fixed_actions(t)="<<*fixed_actions(t)<<"  has not been found in ground_actions "<<ground_actions);
+      }
+      if (DEBUG>1) {cout<<"*** SIMULATED ACTION (fixed):   ";  sampled_action->write(cout);cout<<endl;}
     }
     // (3b) or sample action according to sampling distribution
     else {
       sampled_action_id = TL::basic_sample(P_action);
       sampled_action = ground_actions(sampled_action_id);
-      if (DEBUG>1) {cout<<"*** SIMULATED ACTION (sampled):   ";  sampled_action->writeNice(cout);cout<<endl;}
+      if (DEBUG>1) {cout<<"*** SIMULATED ACTION (sampled):   ";  sampled_action->write(cout);cout<<endl;}
     }
     sampled_actions.append(sampled_action);
     FOR1D(local_net->rvs_action, a) {
-      if (local_net->rvs_action(a)->pi == sampled_action) {
+      if (local_net->rvs_action(a)->lit->atom == sampled_action) {
         local_net->rvs_action(a)->P(t,0) = 0.;
         local_net->rvs_action(a)->P(t,1) = 1.;
       }
@@ -2021,15 +2087,15 @@ void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_a
       uint i;
       FOR1D(P_action, i) {
         if (P_action(i) > 0.) {
-          cout<<P_action(i)<< " ";  ground_actions(i)->writeNice();  cout<<"   ";
+          cout<<P_action(i)<< " ";  ground_actions(i)->write();  cout<<"   ";
         }
       }
       cout<<endl;
       PRINT(sampled_action_id);
       if (fixed_actions(t) != NULL) {cout<<"Fixed ";}
       else {cout<<"Sampled ";}
-      cout<<"action: ";sampled_action->writeNice();cout<<endl;
-//       cerr<<"Action: ";sampled_action->writeNice(cerr);cerr<<endl;
+      cout<<"action: ";sampled_action->write();cout<<endl;
+//       cerr<<"Action: ";sampled_action->write(cerr);cerr<<endl;
     }
     if (TIMING) {
       finish = clock();
@@ -2048,8 +2114,8 @@ void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_a
     }
   }
 
-  if (DEBUG>1) {cout<<"+++++ SAMPLE "<<t<<" +++++ (sans action)"<<endl;}
-  if (DEBUG>1) {local_net->writeState(t);}
+  if (DEBUG>1) {cout<<"+++++ TIME-STEP "<<t<<" +++++ (sans action)"<<endl;}
+  if (DEBUG>1) {local_net->writeState(t, false, 0.05);}
   if (DEBUG>0) {cout<<"sampleActionsAndInfer [END]"<<endl;}
 }
 
@@ -2066,81 +2132,238 @@ void PRADA::sampleActionsAndInfer(PredIA& sampled_actions, const PredIA& fixed_a
 // ----------------------------------------------------
 
 
-void my_handmade_plan(PredIA& plan, LogicEngine* le) {
-  NIY;
-//   char* geiler_plan = "load-box-on-truck-in-city(14,21,27) drive-truck(21,27,28) unload-box-from-truck-in-city(14,21,28)";
-//   le->getPIs(plan, geiler_plan);
+void my_handmade_plan(AtomL& plan) {
+//   NIY;
+  logicObjectManager::getAtoms(plan, "grab(71) puton(70)");
+//   logicObjectManager::getAtoms(plan, "grab_puton(72 71) grab_puton(66 72)");
+#if 0
+  uint i;
+  TL::Predicate* p_MOVE = logicObjectManager::getPredicate(MT::String("move"));
+  uintA args(3);
+  FOR1D(logicObjectManager::constants, i) {
+    if (i < 2) continue;
+    args(0) = logicObjectManager::constants(i);
+    args(1) = 60;
+    args(2) = logicObjectManager::constants(i-1);
+    plan.append(logicObjectManager::getLiteral(p_MOVE, true, args));
+  }
+#endif
+  
+  // search-and-rescue
+//   char* geiler_plan = "takeoff(11) takeoff(14) goto(12) explore(12) land(12) takeoff(12) goto(11) explore(11) land(11) end-mission()";
+  // Triangle-tireworld
+//   char* geiler_plan = "move-car(11 14) changetire() move-car(14 17) loadtire(17) changetire() move-car(17 15) loadtire(15) changetire() move-car(15 13)";
+  // Ex-Blocksworld 1
+//   char* geiler_plan = "pick-up(13 12) put-down(13) pick-up(11 14) put-on-block(11 13) pick-up(14 15) put-down(14) pick-up-from-table(12) put-on-block(12 14)";
+  // Ex-Blocksworld 5
+//   char* geiler_plan = "pick-up(15 13) put-on-block(15 17) pick-up(13 14) put-on-block(13 16) pick-up(15 17) put-on-block(15 13)";
+//   logicObjectManager::getLiterals(plan, geiler_plan);
+//   cout<<endl<<endl<<endl<<"USING HAND-MADE PLAN!!"<<endl<<endl<<endl;
+//   MT_MSG("USING HAND-MADE PLAN!");
 }
 
 
-bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
+bool PRADA::plan(AtomL& best_plan, double& bestValue, uint num_samples) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"PRADA::plan [START]"<<endl;}
-
+  
   uint t;
 
   if (DEBUG>1) {
-    cout<<"STARTING STATE:  ";
+    PRINT(num_samples);
+    PRINT(threshold_reward);
+    cout<<"STARTING STATE:  "<<endl;
     net->writeState(0, true, 0.9);
     cout<<endl;
-    cout<<"REWARD:  ";reward->writeNice();cout<<endl;
+    cout<<"REWARD:  ";  reward->writeNice();  cout<<endl;
   }
   
+//   FOR1D_(ground_rules, t) {
+//     if (ground_rules.elem(t)->action == logicObjectManager::getLiteral("grab(69)"))
+//       ground_rules.elem(t)->writeNice();
+//   }
+ 
+  // doNothing-value [START]
+  uint v, val;
+  for (t=1; t<=horizon; t++) {
+    FOR1D(net->rvs_state__p_prim, v) {
+      for (val=0; val<net->rvs_state__p_prim(v)->dim; val++) {
+        net->rvs_state__p_prim(v)->P(t,val) = net->rvs_state__p_prim(v)->P(0,val);
+      }
+    }
+    FOR1D(net->rvs_state__p_derived, v) {
+      for (val=0; val<net->rvs_state__p_derived(v)->dim; val++) {
+        net->rvs_state__p_derived(v)->P(t,val) = net->rvs_state__p_derived(v)->P(0,val);
+      }
+    }
+    FOR1D(net->rvs_state__f_prim, v) {
+      for (val=0; val<net->rvs_state__f_prim(v)->dim; val++) {
+        net->rvs_state__f_prim(v)->P(t,val) = net->rvs_state__f_prim(v)->P(0,val);
+      }
+    }
+    FOR1D(net->rvs_state__f_derived, v) {
+      for (val=0; val<net->rvs_state__f_derived(v)->dim; val++) {
+        net->rvs_state__f_derived(v)->P(t,val) = net->rvs_state__f_derived(v)->P(0,val);
+      }
+    }
+    // Rules -- need to be inferred first!!!  (depending on reward!)
+    net->inferRules(0);
+    if (t<net->rvs_rules_simple.d0) {
+      for (v=0; v<net->rvs_rules_simple.d1; v++) {
+        net->rvs_rules_simple(t,v) = net->rvs_rules_simple(0,v);
+        net->rvs_rules(t,v) = net->rvs_rules(0,v);
+      }
+    }
+  }
+  double do_nothing_reward = inferStateRewards();
+  if (DEBUG>0) {cout<<"Calculated do_nothing_reward="<<do_nothing_reward<<endl;}
+  // doNothing-value [END]
+ 
+ 
+ 
   action_choices.resize(horizon, ground_actions.N);
   action_choices.setUni(0);
 
   uint s;
-  MT::Array< PredIA > plans;
-  arr reward_values(num_samples);
-  arr action_values(num_samples);
-  arr values(num_samples);
-  MT::Array< arr > reward_probs(num_samples);
+  MT::Array< AtomL > plans;
+  arr reward_values;
+  arr action_values;
+  arr values;
+//   MT::Array< arr > reward_probs(num_samples);
   
   any_sensible_action = false;
+  bool good_old_plan__is_good = false;
   for(s=0; s<num_samples; s++) {
-    if (DEBUG>2) cout <<"--- SAMPLING ROUND "<<s<<" ---"<<endl;
+    if (DEBUG>2) cout <<"--- SAMPLING ROUND "<<s<<"  (/" << num_samples << ") ---"<<endl;
     if (s%10==0) cerr <<"."<<std::flush;
-    PredIA sampled_actions;
-    sampleActionsAndInfer(sampled_actions);
+    AtomL sampled_actions;
     
-//     if (s==0) {
-//       my_handmade_plan(sampled_actions, le);
-//       PredIA sampled_actions2;
-//       sampleActionsAndInfer(sampled_actions2, sampled_actions, net, horizon);
-//     }
+    if (good_old_plans.N > 0 && s==0) {
+      AtomL old_inspiration_plan = good_old_plans(0);
+      if (DEBUG>0) {cout<<"Candidate good old (complete) - s==0:  "<<old_inspiration_plan<<endl;}
+      old_inspiration_plan.memMove = true;
+      FOR1D_DOWN(old_inspiration_plan, t) {
+        if (ground_actions.findValue(old_inspiration_plan(t)) < 0) {
+          old_inspiration_plan.remove(t);
+        }
+      }
+      if (DEBUG>0) {cout<<"Retrying filtered good old (complete) - s==0:  "<<old_inspiration_plan<<endl;}
+      sampleActionsAndInfer(sampled_actions, old_inspiration_plan);
+    }
+    else if (good_old_plans.N > 0 && s==1) {
+      uint q;
+      AtomL old_inspiration_plan;
+      FOR1D(good_old_plans(0), q) {
+        if (q==0) continue;
+        if (ground_actions.findValue(good_old_plans(0)(q)) < 0) continue;
+        old_inspiration_plan.append(good_old_plans(0)(q));
+      }
+      if (DEBUG>0) {cout<<"Retrying good old (kill action 0) - s==1:  "<<old_inspiration_plan<<endl;}
+      sampleActionsAndInfer(sampled_actions, old_inspiration_plan);
+    }
+    else if (good_old_plans.N > 0 && s==2) {
+      uint q;
+      AtomL old_inspiration_plan;
+      FOR1D(good_old_plans(0), q) {
+        if (q==1) continue;
+        if (ground_actions.findValue(good_old_plans(0)(q)) < 0) continue;
+        old_inspiration_plan.append(good_old_plans(0)(q));
+      }
+      if (DEBUG>0) {cout<<"Retrying good old (kill action 1) - s==2:  "<<old_inspiration_plan<<endl;}
+      sampleActionsAndInfer(sampled_actions, old_inspiration_plan);
+    }
+    else if (good_old_plans.N > 0 && s==3) {
+      uint q;
+      AtomL old_inspiration_plan;
+      FOR1D(good_old_plans(0), q) {
+        if (q==0 || q==1) continue;
+        if (ground_actions.findValue(good_old_plans(0)(q)) < 0) continue;
+        old_inspiration_plan.append(good_old_plans(0)(q));
+      }
+      if (DEBUG>0) {cout<<"Retrying good old (kill actions 0 and 1) - s==3:  "<<old_inspiration_plan<<endl;}
+      sampleActionsAndInfer(sampled_actions, old_inspiration_plan);
+    }
+    else sampleActionsAndInfer(sampled_actions);
+    
+#if 0
+    if (s==0) {
+      AtomL hand_plan;
+      my_handmade_plan(hand_plan);
+      // ensure that all actions are possible
+      uint q;
+//       FOR1D(hand_plan, q) {
+//         if (net->rvm->l2v(hand_plan(q)) == NULL)
+//           HALT("handmade plan undoable / not recognized");
+//       }
+      while (hand_plan.N < horizon) {
+        hand_plan.append(NULL);
+      }
+      cout<<"Hand-made plan:  ";  TL::write(hand_plan);  cout<<endl;
+      sampleActionsAndInfer(sampled_actions, hand_plan, net, horizon);
+      cout<<"---> Reward = " << inferStateRewards(hand_plan.N) << endl;
+      exit(0);
+    }
+#endif
     
     plans.append(sampled_actions);
-    if (DEBUG>2) {cout<<"Sampled actions: ";TL::writeNice(sampled_actions); cout<<endl;}
+    if (DEBUG>2) {cout<<"Sampled actions: ";TL::write(sampled_actions); cout<<endl;}
     // bis zur ersten NULL evaluieren...
     FOR1D(sampled_actions, t) {
-      if (sampled_actions(t) == NULL)
+      if (sampled_actions(t) == NULL) {
         break;
+      }
     }
-    reward_values(s) = inferStateRewards(t);  // t ist hier horizont.
-    action_values(s) = 0.;
+    reward_values.append(inferStateRewards(t));  // t ist hier horizont.
+    action_values.append(0.);
     if (use_ruleOutcome_rewards) {
       action_values(s) = calcRuleRewards(sampled_actions);
     }
-    values(s) = reward_values(s) + action_values(s);
+    values.append(reward_values(s) + action_values(s));
     // statistics
     FOR1D(sampled_actions, t) {
       uint action_id = ground_actions.findValue(sampled_actions(t));
       action_choices(t, action_id)++;
     }
     
+    CHECK(plans.N == reward_values.N   &&  plans.N == action_values.N  &&  plans.N == values.N, "");
+    
     if (DEBUG>2) {cout<<"--> values(s)="<<values(s)<<"  (reward_values(s)="<<reward_values(s)<<",  action_values(s)="<<action_values(s)<<")"<<endl;}
+    
+    
+    if (!use_ruleOutcome_rewards  &&  reward->reward_type != TL::Reward::reward_maximize_function) {
+//       if (any_sensible_action  &&  s>300) {
+//         if (DEBUG>0) {cout<<"Great plan already found (s="<<s<<")!"<<endl;}
+//         break;
+//       }
+    }
+    else if (!use_ruleOutcome_rewards  &&  reward->reward_type == TL::Reward::reward_maximize_function) {
+      if (values(s) > do_nothing_reward + threshold_reward  &&  s<4) {
+        good_old_plan__is_good = true;
+      }
+      else if (good_old_plans.N > 0  &&  values(s) > do_nothing_reward + threshold_reward  &&  s>200  &&  good_old_plan__is_good) {
+//       else if (good_old_plans.N > 0  &&  values(s) > do_nothing_reward + threshold_reward  &&  s>500  &&  good_old_plan__is_good) {
+// MT_MSG("STACK version!");
+        if (DEBUG>0) {cout<<"Great good old plan (s="<<s<<")!"<<endl;}
+        break;
+      }
+      else if (values(s) > do_nothing_reward + threshold_reward  &&  s>800) {
+        if (DEBUG>0) {cout<<"Great plan already found (s="<<s<<")!"<<endl;}
+        break;
+      }
+    }
   }
+  if (DEBUG>0) {cerr<<s<<" samples taken."<<endl;}
 
   int max_id = values.maxIndex();
   double best_value = values(max_id);
-  TL::PredicateInstance* max_action = NULL;
+  TL::Atom* max_action = NULL;
   if (plans(max_id).N > 0)
    max_action = plans(max_id)(0);
   if (DEBUG>0) {
     if (DEBUG>2) {
       cout<<"Sample values:  "<<endl;
       FOR1D(plans, s) {
-        cout<<"("<<s<<") "<<values(s)<<":  ";TL::writeNice(plans(s));cout<<endl;
+        cout<<"("<<s<<") "<<values(s)<<":  ";TL::write(plans(s));cout<<endl;
       }
     }
     arr sorted_values;
@@ -2148,7 +2371,7 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
     sort_desc(sorted_values, sortedIndices, values);
     cout<<"All plans sorted (horizon="<< horizon << "):"<<endl;
     FOR1D(sortedIndices, s) {
-      if (DEBUG<2 && s>10) break;
+      if (DEBUG<3 && s>10) break;
       printf("#%4u",s);
       cout<<":   ";
       printf("(%4u)", sortedIndices(s));
@@ -2156,7 +2379,7 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
       printf("%5.3f", values(sortedIndices(s)));
       printf(" (%5.3f + %5.3f)", reward_values(sortedIndices(s)), action_values(sortedIndices(s)));
       cout<< "  ";
-      TL::writeNice(plans(sortedIndices(s)));
+      TL::write(plans(sortedIndices(s)));
       cout<<endl;
     }
     
@@ -2164,16 +2387,18 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
     if (!any_sensible_action) {cout<<"NO SENSIBLE ACTION WAS FOUND!"<<endl;}
     cout<<"Max action:  ";
     if (max_action != NULL) {
-      max_action->writeNice();cout<<"  v="<<values(max_id)<<""<<endl;
+      max_action->write();cout<<"  v="<<values(max_id)<<""<<endl;
     }
     else
       cout<<" -"<<endl;
-    cout<<"Max sequence: ("<<max_id<<") ";TL::writeNice(plans(max_id));cout<<endl;
+    cout<<"Max sequence: ("<<max_id<<") ";TL::write(plans(max_id));cout<<endl;
     reward->writeNice();cout<<endl;
   }
   
    // statistics
-  if (DEBUG>3) {
+  if ((DEBUG>0 && ground_actions.N < 20)
+       || DEBUG>1 ) {
+//   if (true) {
     cout<<"Action application statistics:"<<endl;
     printf("%-14s","Time");
     for(t=0;t<horizon;t++) printf("%5u",t);
@@ -2197,7 +2422,7 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
   // ACTION CHOICE
   // (1)  Choose maximizing action sequence
   if (action_choice__max) {
-    best_actions = plans(max_id);
+    best_plan = plans(max_id);
     bestValue = best_value;
   }
   // (2)  Choose action with maximal normalized sum
@@ -2247,52 +2472,30 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
     // Random choice of plan: just use first plan with the best action
     FOR1D(plans, s) {
       if (plans(s)(0) == ground_actions(max_id2)) {
-        best_actions = plans(s);
+        best_plan = plans(s);
         break;
       }
     }
   }
 
-  if (DEBUG>0) {cout<<"PRADA::plan [END]"<<endl;}
 
   // Return value: depends on type of reward
-  if (use_ruleOutcome_rewards)
+  if (use_ruleOutcome_rewards) {
+    if (DEBUG>0) {cout<<"PRADA::plan [END]"<<endl;}
     return true;
-  else if (reward->reward_type == REWARD_TYPE__MAXIMIZE_FUNCTION) {
-    // calculate value for doing nothing
-    uint v, val;
-    for (t=1; t<=horizon; t++) {
-      FOR1D(net->rvs_state__p_prim, v) {
-        for (val=0; val<net->rvs_state__p_prim(v)->dim; val++) {
-          net->rvs_state__p_prim(v)->P(t,val) = net->rvs_state__p_prim(v)->P(0,val);
-        }
-      }
-      FOR1D(net->rvs_state__p_derived, v) {
-        for (val=0; val<net->rvs_state__p_derived(v)->dim; val++) {
-          net->rvs_state__p_derived(v)->P(t,val) = net->rvs_state__p_derived(v)->P(0,val);
-        }
-      }
-      FOR1D(net->rvs_state__f_prim, v) {
-        for (val=0; val<net->rvs_state__f_prim(v)->dim; val++) {
-          net->rvs_state__f_prim(v)->P(t,val) = net->rvs_state__f_prim(v)->P(0,val);
-        }
-      }
-      FOR1D(net->rvs_state__f_derived, v) {
-        for (val=0; val<net->rvs_state__f_derived(v)->dim; val++) {
-          net->rvs_state__f_derived(v)->P(t,val) = net->rvs_state__f_derived(v)->P(0,val);
-        }
-      }
-    }
-    double do_nothing_reward = inferStateRewards();
+  }
+  else if (reward->reward_type == TL::Reward::reward_maximize_function) {
     if (DEBUG>0) {
       PRINT(bestValue);  PRINT(do_nothing_reward);  PRINT(threshold_reward);  PRINT(do_nothing_reward+threshold_reward);
       PRINT((bestValue > do_nothing_reward + threshold_reward));
-      cout<<"Returning 1 "<<(bestValue > do_nothing_reward + threshold_reward)<<endl;
+      cout<<"Returning-1 "<<(bestValue > do_nothing_reward + threshold_reward)<<endl;
     }
+    if (DEBUG>0) {cout<<"PRADA::plan [END]"<<endl;}
     return (bestValue > do_nothing_reward + threshold_reward);
   }
   else {
-    if (DEBUG>0) cout<<"Returning 2 "<<any_sensible_action<<endl;
+    if (DEBUG>0) cout<<"Returning02 "<<any_sensible_action<<endl;
+    if (DEBUG>0) {cout<<"PRADA::plan [END]"<<endl;}
     return any_sensible_action;
   }
 }
@@ -2301,11 +2504,59 @@ bool PRADA::plan(PredIA& best_actions, double& bestValue, uint num_samples) {
 
 
 
-void PRADA::generatePlan(PredIA& generated_plan, double& value, const TL::State& s, uint max_runs) {
+void PRADA::generatePlan(AtomL& generated_plan, double& value, const TL::State& s, uint max_runs) {
+  uint DEBUG = 2;
+  if (DEBUG>0) {cout<<"PRADA::generatePlan [START]"<<endl;}
+  if (DEBUG>0) {
+    cout<<"Reward:  ";  if (reward != NULL) reward->writeNice();  else cout<<"NULL";  cout<<endl;
+    PRINT(num_samples);
+  }
+  
+  // Check 1 whether planning makes sense at all:  are there changing concepts?
+  uintA changingIds_p, changingIds_f;
+  ruleReasoning::changingConcepts(changingIds_p, changingIds_f, ground_rules);
+  if (changingIds_p.N == 0  &&  changingIds_f.N == 0) {
+    value = -100000.;
+    generated_plan.clear();
+    if (DEBUG>0) {cout<<"Planning does not make sense here: no changing concepts"<<endl;}
+    if (DEBUG>0) {cout<<"PRADA::generatePlan [END]"<<endl;}
+    return;
+  }
+  
+  if (DEBUG>0) {cout<<"State:  ";  s.write();  cout<<endl;  PRINT(max_runs);  cout<<"Trying to set state..."<<endl;}
   setStartState(s);
+  if (DEBUG>0) {cout<<"State has been set."<<endl;}
+  
+  // Check 2 whether planning makes sense at all:  are reward concepts among random variables?
+  if (reward != NULL) {
+    LitL lits_reward;
+    LiteralReward* pg = dynamic_cast<LiteralReward*>(reward);
+    if (pg!= NULL) {
+      lits_reward.append(pg->lit);
+    }
+    else {
+      LiteralListReward* plg = dynamic_cast<LiteralListReward*>(reward);
+      if (plg!= NULL) {
+        lits_reward.append(plg->lits);
+      }
+    }
+    if (DEBUG>0) {cout<<"lits_reward:  ";  TL::write(lits_reward);  cout<<endl;}
+    uint i;
+    FOR1D(lits_reward, i) {
+      PredicateRV* var = net->rvm->l2v(lits_reward(i));
+      if (var == NULL) {
+        value = -100000.;
+        generated_plan.clear();
+        if (DEBUG>0) {cout<<"Planning does not make sense here: reward concept " << *lits_reward(i) << " not among changing concepts"<<endl;}
+        if (DEBUG>0) {cout<<"PRADA::generatePlan [END]"<<endl;}
+        return;
+      }
+    }
+  }
+  
   
   uint run = 0;
-  PredIA run_plan;
+  AtomL run_plan;
   double run_value = 0.0;
   do {
     bool improve = plan(run_plan, run_value, num_samples);
@@ -2323,12 +2574,13 @@ void PRADA::generatePlan(PredIA& generated_plan, double& value, const TL::State&
     value = -100000.;
     generated_plan.clear();
   }
+  if (DEBUG>0) {cout<<"PRADA::generatePlan [END]"<<endl;}
 }
 
 
 
-TL::PredicateInstance* PRADA::generateAction(const TL::State& s, uint max_runs) {
-  PredIA plan;
+TL::Atom* PRADA::generateAction(const TL::State& s, uint max_runs) {
+  AtomL plan;
   double value;
   generatePlan(plan, value, s, max_runs);
   if (plan.N == 0) {
@@ -2410,13 +2662,13 @@ double PRADA::inferStateRewards_limited_sum(uint depth) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"inferStateRewards_limited_sum [START]"<<endl;}
   uint t;
-  if (DEBUG>0) {
+  if (DEBUG>1) {
     reward->writeNice();cout<<endl;
     PRINT(threshold_reward);
     PRINT(any_sensible_action);
   }
   double value_t, value_0=0.0, value_total=0.;
-
+  arr debug_values;
   for (t=0; t<=depth; t++) {
 //     if (t>=T) break;
     value_t = inferStateRewards_single(t);
@@ -2426,10 +2678,15 @@ double PRADA::inferStateRewards_limited_sum(uint depth) {
         any_sensible_action = true;
     }
     value_total += discount_pow(t) * value_t;
+    debug_values.append(value_t);
     if (DEBUG>1) {cout<<"t="<<t<<":  "<<value_t<<endl;}
   }
   
   if (DEBUG>0) {
+    AtomL actions;
+    net->getActions(actions, depth);
+    TL::write(actions);  cout<<endl;
+    PRINT(debug_values);
     PRINT(value_0);
     PRINT(any_sensible_action);
   }
@@ -2447,15 +2704,15 @@ double PRADA::inferStateRewards_single(uint t) {
 
 
 
-double PRADA::calcRuleRewards(const PredIA& actions) {
+double PRADA::calcRuleRewards(const AtomL& actions) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcRuleRewards [START]"<<endl;}
   double total_reward = 0.;
   uint t, r;
   FOR1D(actions, t) {
-    if (DEBUG>0) {cout<<"+++++  t="<<t<<"  ";  actions(t)->writeNice();  cout<<endl;}
-    uint id_pred = le->actions.findValue(actions(t)->pred);
-    uint id_args = getIndex(le->constants, actions(t)->args);
+    if (DEBUG>0) {cout<<"+++++  t="<<t<<"  ";  actions(t)->write();  cout<<endl;}
+    uint id_pred = logicObjectManager::p_actions.findValue(actions(t)->pred);
+    uint id_args = getIndex(logicObjectManager::constants, actions(t)->args);
     double t_reward = 0.;
     for (r=0; r<net->action2rules_no(id_pred, id_args); r++) {
       uint rule_number = net->action2rules(id_pred, id_args, r);
@@ -2466,7 +2723,7 @@ double PRADA::calcRuleRewards(const PredIA& actions) {
       if (DEBUG>1) {
         if (net->rvs_rules(t, rule_number) > 0.01) {
           cout<<"Rule #"<<r<<endl;
-          rule->writeNice(cout);
+          rule->write(cout);
           cout<<" expected_reward="<<expected_reward << "   *   probability="<<probability<<"    *   discount="<<discount_pow(t)<<endl;
           cout<<" -> Brings "<< (discount_pow(t) * probability * expected_reward) << endl;
         }
@@ -2493,18 +2750,18 @@ double PRADA::calcRuleRewards(const PredIA& actions) {
 // ----------------------------------------------------------------------------
 
 
-A_PRADA::A_PRADA(TL::LogicEngine* le) : PRADA(le) {
+A_PRADA::A_PRADA() : PRADA() {
 }
 
 A_PRADA::~A_PRADA() {
 }
 
 
-double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double value_old) {
+double A_PRADA::shorten_plan(AtomL& seq_best, const AtomL& seq_old, double value_old) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"A_PRADA::shorten_plan [START]"<<endl;}
   if (DEBUG>0) {
-    cout<<"seq_old: ";TL::writeNice(seq_old);cout<<endl;
+    cout<<"seq_old: ";TL::write(seq_old);cout<<endl;
     PRINT(value_old);
   }
   if (seq_old.N == 0) {
@@ -2514,7 +2771,7 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
   }
   double value_best = value_old;
   double value = 0.;
-  PredIA seq_new;
+  AtomL seq_new;
   seq_best = seq_old;
   uint DEBUG_TOTAL_R=0;
   // always leave out t
@@ -2528,10 +2785,10 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
       break;
     }
     if (DEBUG>1) {cout<<"*** t="<<t<<" ***"<<endl;}
-    if (DEBUG>1) {cout<<"seq_best:   ";TL::writeNice(seq_best);cout<<endl;}
+    if (DEBUG>1) {cout<<"seq_best:   ";TL::write(seq_best);cout<<endl;}
     #if 0
     // A-PRADA samplet auch noch die letzten Sequenzen
-    PredIA seq_fixed(horizon);
+    AtomL seq_fixed(horizon);
     seq_fixed.setUni(NULL);
     for (t2=0; t2<seq_best.N; t2++) {
       if (t2 < t)
@@ -2543,7 +2800,7 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
     //     sampleActionsAndInfer(seq_new, seq_fixed, net, horizon)
     if (DEBUG>2) {cout<<" seq_fixed + sampled:  ";TL::writeNice(seq_new);cout<<endl;}
     #else
-    PredIA seq_new;
+    AtomL seq_new;
     for (t2=0; t2<seq_best.N; t2++) {
       if (t2 < t)
         seq_new.append(seq_best(t2));
@@ -2551,7 +2808,7 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
         seq_new.append(seq_best(t2));
     }
     infer(seq_new);
-    if (DEBUG>1) {cout<<"kill:    "; seq_best(t)->writeNice(cout); cout<<endl<<"seq_new:    ";TL::writeNice(seq_new);cout<<endl;}
+    if (DEBUG>1) {cout<<"kill:    "; seq_best(t)->write(cout); cout<<endl<<"seq_new:    ";TL::write(seq_new);cout<<endl;}
     #endif
     // bis zur ersten NULL evaluieren...
     FOR1D(seq_new, t2) {
@@ -2578,7 +2835,7 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
   }
   if (DEBUG>0) {
     cout<<"Result:"<<endl;
-    cout<<"seq_best: ";TL::writeNice(seq_best);cout<<endl;
+    cout<<"seq_best: ";TL::write(seq_best);cout<<endl;
     if (seq_best.N > 0   &&  seq_best(0) != seq_old(0)) cout<<"  --> Shortened!"<<endl;
     PRINT(value_best);
   }
@@ -2587,7 +2844,7 @@ double A_PRADA::shorten_plan(PredIA& seq_best, const PredIA& seq_old, double val
 }
 
 
-TL::PredicateInstance* A_PRADA::generateAction(const TL::State& s, uint max_runs) {
+TL::Atom* A_PRADA::generateAction(const TL::State& s, uint max_runs) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"A_PRADA::generateAction [START]"<<endl;}
   setStartState(s);
@@ -2595,13 +2852,13 @@ TL::PredicateInstance* A_PRADA::generateAction(const TL::State& s, uint max_runs
   // (1) take into account last best sequence: NOT IMPLEMENTED YET
 //   if (last_seq.N > 0) {
 //   uint i;
-//     PredIA last_seq_without_first;
+//     AtomL last_seq_without_first;
 //     FOR1D(last_seq, i) {
 //       if (i>0)
 //         last_seq_without_first.append(last_seq(i));
 //     }
 //     last_seq_without_first.append(NULL);
-//     PredIA last_seq_without_first__full;
+//     AtomL last_seq_without_first__full;
 //     DEBUG_SINGLE_SAMPLE = 0; // 100
 //     infer(last_seq_without_first__full); //  fehlt ne aktion
 //     DEBUG_SINGLE_SAMPLE = 0;
@@ -2626,22 +2883,22 @@ TL::PredicateInstance* A_PRADA::generateAction(const TL::State& s, uint max_runs
   
   // (2) do usual PRADA planning and thereafter try to shorten returned plan
   uint i;
-  PredIA plan_short;
+  AtomL plan_short;
   for (i=0; i<3; i++) {
-    PredIA plan;
+    AtomL plan;
     double plan_value;
     generatePlan(plan, plan_value, s, max_runs);
-    if (DEBUG>1) {cout<<"Best seq found: ";TL::writeNice(plan);cout<<endl;}
-    PredIA plan_short__local;
+    if (DEBUG>1) {cout<<"Best seq found: ";TL::write(plan);cout<<endl;}
+    AtomL plan_short__local;
     last_value = shorten_plan(plan_short__local, plan, plan_value);
-    if (DEBUG>1) {cout<<"plan_short__local (value="<<last_value<<"): ";TL::writeNice(plan_short__local);cout<<endl;}
+    if (DEBUG>1) {cout<<"plan_short__local (value="<<last_value<<"): ";TL::write(plan_short__local);cout<<endl;}
     if (plan_short__local.N > 0 
-      && RuleEngine::uniqueCoveringRule_groundedRules_groundedAction(this->ground_rules, s, plan_short__local(0)) == NULL) {
+      && ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(this->ground_rules, s, plan_short__local(0)) == 0) {
       MT_MSG("stupid action which we can't use");
       if (DEBUG>1) {cout<<"stupid action which we can't use"<<endl;}
     }
     else if (plan_short__local.N > 0 
-      && RuleEngine::uniqueCoveringRule_groundedRules_groundedAction(this->ground_rules, s, plan_short__local(0)) != NULL) {
+      && ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(this->ground_rules, s, plan_short__local(0)) != 0) {
       plan_short = plan_short__local;
       last_seq = plan_short;
       break;
@@ -2654,7 +2911,7 @@ TL::PredicateInstance* A_PRADA::generateAction(const TL::State& s, uint max_runs
   }
 
   if (DEBUG>1) {
-    cout<<"Best seq shortened: ";TL::writeNice(last_seq);cout<<endl;
+    cout<<"Best seq shortened: ";TL::write(last_seq);cout<<endl;
     PRINT(last_value);
   }
   if (DEBUG>0) {cout<<"A_PRADA::generateAction [END]"<<endl;}
@@ -2688,15 +2945,15 @@ void A_PRADA::reset() {
 
 
 class PRADA_Reward_PT : public PRADA_Reward {
-  TL::PredicateInstance* pi;
+  TL::Literal* lit;
   TL::LogicRV* rv;
   uint value;
   
   public:
-    PRADA_Reward_PT(TL::PredicateInstance* pi) {
-      this->pi = pi;
+    PRADA_Reward_PT(TL::Literal* lit) {
+      this->lit = lit;
       rv = NULL;
-      if (pi->positive)
+      if (lit->positive)
         value = 1;
       else
         value = 0;
@@ -2704,7 +2961,7 @@ class PRADA_Reward_PT : public PRADA_Reward {
     
     double evaluate_prada_reward(const NID_DBN& net, uint t) {
       if (rv == NULL) {
-        rv = net.rvm->pi2v(pi);
+        rv = net.rvm->l2v(lit);
       }
       return rv->P(t,value);
     }
@@ -2712,26 +2969,26 @@ class PRADA_Reward_PT : public PRADA_Reward {
 
 
 class PRADA_Reward_PTL : public PRADA_Reward {
-  PredIA pts;
+  LitL lits;
   PredVA rvs;
   
   public:
-    PRADA_Reward_PTL(PredIA& pts) {
-      this->pts = pts;
-      rvs.resize(this->pts.N);
+    PRADA_Reward_PTL(LitL& lits) {
+      this->lits = lits;
+      rvs.resize(this->lits.N);
       rvs.setUni(NULL);
     }
     
     double evaluate_prada_reward(const NID_DBN& net, uint t) {
       uint i;
       if (rvs(0) == NULL) {
-        FOR1D(pts, i) {
-          rvs(i) = net.rvm->pi2v(pts(i));
+        FOR1D(lits, i) {
+          rvs(i) = net.rvm->l2v(lits(i));
         }
       }
       double prob = 1.0;
       FOR1D(rvs, i) {
-        if (pts(i)->positive)
+        if (lits(i)->positive)
           prob *= rvs(i)->P(t,1);
         else
           prob *= rvs(i)->P(t,0);
@@ -2742,14 +2999,14 @@ class PRADA_Reward_PTL : public PRADA_Reward {
 
 
 class PRADA_Reward_Disjunction : public PRADA_Reward {
-  PredIA pts;
+  LitL lits;
   PredVA rvs;
   arr weights;
   
   public:
-    PRADA_Reward_Disjunction(PredIA& pts, arr& weights) {
-      this->pts = pts;
-      rvs.resize(this->pts.N);
+    PRADA_Reward_Disjunction(LitL& lits, arr& weights) {
+      this->lits = lits;
+      rvs.resize(this->lits.N);
       rvs.setUni(NULL);
       this->weights = weights;
     }
@@ -2757,13 +3014,13 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     double evaluate_prada_reward(const NID_DBN& net, uint t) {
       uint i;
       if (rvs(0) == NULL) {
-        FOR1D(pts, i) {
-          rvs(i) = net.rvm->pi2v(pts(i));
+        FOR1D(lits, i) {
+          rvs(i) = net.rvm->l2v(lits(i));
         }
       }
       double max_prob = 0.0;
       FOR1D(rvs, i) {
-        if (pts(i)->positive)
+        if (lits(i)->positive)
           max_prob = weights(i) * TL_MAX(max_prob, rvs(i)->P(t,1));
         else
           max_prob = weights(i) * TL_MAX(max_prob, rvs(i)->P(t,0));
@@ -2774,11 +3031,11 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
 
 
 class PRADA_Reward_FVW : public PRADA_Reward {
-  TL::FunctionInstance* fi;
+  TL::FunctionAtom* fi;
   TL::FunctionRV* rv;
   
   public:
-    PRADA_Reward_FVW(TL::FunctionInstance* fi) {
+    PRADA_Reward_FVW(TL::FunctionAtom* fi) {
       this->fi = fi;
       rv = NULL;
     }
@@ -2793,11 +3050,11 @@ class PRADA_Reward_FVW : public PRADA_Reward {
 
 
 class PRADA_Reward_S : public PRADA_Reward {
-  StateA undesired_states;
+  StateL undesired_states;
   double penalty;
   
   public:
-    PRADA_Reward_S(StateA& _undesired_states) {
+    PRADA_Reward_S(StateL& _undesired_states) {
       undesired_states = _undesired_states;
       penalty = -1.;
     }
@@ -2808,7 +3065,7 @@ class PRADA_Reward_S : public PRADA_Reward {
       uint i;
       if (DEBUG>0) {cout<<"=== t="<<t<<" ===="<<endl;   net.writeState(t, true, 0.1);}
       FOR1D(undesired_states, i) {
-        if (DEBUG>0) {cout<<"-----"<<endl; undesired_states(i)->writeNice(cout); cout<<endl;}
+        if (DEBUG>0) {cout<<"-----"<<endl; undesired_states(i)->write(cout); cout<<endl;}
         double state_log_probability = net.log_probability(t, *undesired_states(i));
         if (DEBUG>0) {PRINT(state_log_probability);  PRINT(exp(state_log_probability));  PRINT(penalty * exp(state_log_probability));}
         value += penalty * exp(state_log_probability);
@@ -2821,18 +3078,18 @@ class PRADA_Reward_S : public PRADA_Reward {
 
 
 
-PRADA_Reward* PRADA::convert_reward(TL::PredicateReward* reward) {
-  return new PRADA_Reward_PT(reward->pi);
+PRADA_Reward* PRADA::convert_reward(TL::LiteralReward* reward) {
+  return new PRADA_Reward_PT(reward->lit);
 }
 
 
-PRADA_Reward* PRADA::convert_reward(TL::PredicateListReward* reward) {
-  return new PRADA_Reward_PTL(reward->pis);
+PRADA_Reward* PRADA::convert_reward(TL::LiteralListReward* reward) {
+  return new PRADA_Reward_PTL(reward->lits);
 }
 
 
 PRADA_Reward* PRADA::convert_reward(TL::MaximizeFunctionReward* reward) {
-  return new PRADA_Reward_FVW(reward->fi);
+  return new PRADA_Reward_FVW(reward->fa);
 }
 
 PRADA_Reward* PRADA::convert_reward(TL::NotTheseStatesReward* reward) {
@@ -2840,11 +3097,20 @@ PRADA_Reward* PRADA::convert_reward(TL::NotTheseStatesReward* reward) {
 }
 
 PRADA_Reward* PRADA::convert_reward(TL::DisjunctionReward* reward) {
-  return new PRADA_Reward_Disjunction(reward->pis, reward->weights);
+  return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
 }
 
 
-
+PRADA_Reward* PRADA::create_PRADA_Reward(TL::Reward* reward) {
+  switch(reward->reward_type) {
+    case TL::Reward::reward_literal: return convert_reward((TL::LiteralReward*) reward);
+    case TL::Reward::reward_literalList: return convert_reward((TL::LiteralListReward*) reward);
+    case TL::Reward::reward_maximize_function: return convert_reward((TL::MaximizeFunctionReward*) reward);
+    case TL::Reward::reward_not_these_states: return convert_reward((TL::NotTheseStatesReward*) reward);
+    case TL::Reward::reward_one_of_literal_list: return convert_reward((TL::DisjunctionReward*) reward);    
+    default: NIY;
+  }
+}
 
 
 
@@ -2857,11 +3123,11 @@ PRADA_Reward* PRADA::convert_reward(TL::DisjunctionReward* reward) {
 // -----------------------------------------------------------------
 
 
-void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
-void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
-void calcDerived1(TL::CountFunction* f, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
-void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
-void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le);
+void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& constants);
+void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& constants);
+void calcDerived1(TL::CountFunction* f, uint t, RV_Manager* rvm, uintA& constants);
+void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants);
+void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constants);
 
 
 
@@ -2869,36 +3135,36 @@ void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constan
 void NID_DBN::calcDerived(uint t) {
   uintA order;
   boolA isPredicate;
-  le->dependencyGraph.getWellDefinedOrder(order, isPredicate, true);
+  logicObjectManager::dependencyGraph.getWellDefinedOrder(order, isPredicate, true);
   uint i;
   FOR1D(order, i) {
     if (isPredicate(i)) {
-      TL::Predicate* pred = le->dependencyGraph.getPredicate(order(i));
-      CHECK(pred->category == TL_DERIVED, "something wrong with dependency graph");
+      TL::Predicate* pred = logicObjectManager::dependencyGraph.getPredicate(order(i));
+      CHECK(pred->category == category_derived, "something wrong with dependency graph");
       if (rvm->preds.findValue(pred) < 0)
         continue;
-      if (pred->type == TL_PRED_CONJUNCTION) {
-        calcDerived1((TL::ConjunctionPredicate*) pred, t, rvm, objects, le);
+      if (pred->type == TL::Predicate::predicate_conjunction) {
+        calcDerived1((TL::ConjunctionPredicate*) pred, t, rvm, objects);
       }
-      else if (pred->type == TL_PRED_TRANS_CLOSURE) {
-        calcDerived1((TL::TransClosurePredicate*) pred, t, rvm, objects, le);
+      else if (pred->type == TL::Predicate::predicate_transClosure) {
+        calcDerived1((TL::TransClosurePredicate*) pred, t, rvm, objects);
       }
       else
         NIY;
     }
     else {
-      TL::Function* f = le->dependencyGraph.getFunction(order(i));
-      CHECK(f->category == TL_DERIVED, "something wrong with dependency graph");
+      TL::Function* f = logicObjectManager::dependencyGraph.getFunction(order(i));
+      CHECK(f->category == category_derived, "something wrong with dependency graph");
       if (rvm->funcs.findValue(f) < 0)
         continue;
-      if (f->type == TL_FUNC_COUNT) {
-        calcDerived1((TL::CountFunction*) f, t, rvm, objects, le);
+      if (f->type == TL::Function::function_count) {
+        calcDerived1((TL::CountFunction*) f, t, rvm, objects);
       }
-      else if (f->type == TL_FUNC_SUM) {
-        calcDerived1((TL::SumFunction*) f, t, rvm, objects, le);
+      else if (f->type == TL::Function::function_sum) {
+        calcDerived1((TL::SumFunction*) f, t, rvm, objects);
       }
-      else if (f->type == TL_FUNC_REWARD) {
-        calcDerived1((TL::RewardFunction*) f, t, rvm, objects, le);
+      else if (f->type == TL::Function::function_reward) {
+        calcDerived1((TL::RewardFunction*) f, t, rvm, objects);
       }
       else
         NIY;
@@ -2910,25 +3176,25 @@ void NID_DBN::calcDerived(uint t) {
 // void PRADA::calcDerived(uint t, RV_Manager* rvm, uintA& constants) {
 //   uint i;
 //   FOR1D(rvm->preds, i) {
-//     if (rvm->preds(i)->category == TL_PRIMITIVE)
+//     if (rvm->preds(i)->category == category_primitive)
 //       continue;
-//     else if (rvm->preds(i)->type == TL_PRED_SIMPLE_COMPOUND) {
-//       calcDerived1((TL::ConjunctionPredicate*) rvm->preds(i), t, rvm, constants, le);
+//     else if (rvm->preds(i)->type == predicate_simple_COMPOUND) {
+//       calcDerived1((TL::ConjunctionPredicate*) rvm->preds(i), t, rvm, constants);
 //     }
-//     else if (rvm->preds(i)->type == TL_PRED_TRANS_CLOSURE) {
-//       calcDerived1((TL::TransClosurePredicate*) rvm->preds(i), t, rvm, constants, le);
+//     else if (rvm->preds(i)->type == predicate_transClosure) {
+//       calcDerived1((TL::TransClosurePredicate*) rvm->preds(i), t, rvm, constants);
 //     }
 //     else
 //       NIY;
 //   }
 //   FOR1D(rvm->funcs, i) {
-//     if (rvm->funcs(i)->category == TL_PRIMITIVE)
+//     if (rvm->funcs(i)->category == category_primitive)
 //       continue;
-//     else if (rvm->funcs(i)->type == TL_FUNC_COUNT) {
-//       calcDerived1((TL::CountFunction*) rvm->funcs(i), t, rvm, constants, le);
+//     else if (rvm->funcs(i)->type == function_count) {
+//       calcDerived1((TL::CountFunction*) rvm->funcs(i), t, rvm, constants);
 //     }
-//     else if (rvm->funcs(i)->type == TL_FUNC_SUM) {
-//       calcDerived1((TL::SumFunction*) rvm->funcs(i), t, rvm, constants, le);
+//     else if (rvm->funcs(i)->type == function_sum) {
+//       calcDerived1((TL::SumFunction*) rvm->funcs(i), t, rvm, constants);
 //     }
 //     else
 //       NIY;
@@ -2939,7 +3205,7 @@ void NID_DBN::calcDerived(uint t) {
 
 
 // With free vars!
-void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& constants, TL::LogicEngine* le) {
+void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived [START]"<<endl;}
   if (DEBUG>0) {
@@ -2951,18 +3217,18 @@ void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& c
   uint i,j,k;
   
   // (1) create abstract base predicate tuples = BPT
-  PredIA basePTs_abstract;
+  LitL base_lits_abstract;
   k=0;
   FOR1D(p->basePreds, i) {
     uintA args1;
     for (j=0; j<p->basePreds(i)->d; j++) {
       args1.append(p->basePreds_mapVars2conjunction(k++));
     }
-    TL::PredicateInstance* pi = le->getPI(p->basePreds(i), p->basePreds_positive(i), args1);
-    basePTs_abstract.append(pi);
+    TL::Literal* lit = logicObjectManager::getLiteral(p->basePreds(i), p->basePreds_positive(i), args1);
+    base_lits_abstract.append(lit);
   }
-  le->order(basePTs_abstract);
-  if (DEBUG>0) {cout<<"Abstract base predicate tuples ";TL::writeNice(basePTs_abstract); cout<<endl;}
+  logicReasoning::sort(base_lits_abstract);
+  if (DEBUG>0) {cout<<"Abstract base predicate tuples ";TL::write(base_lits_abstract); cout<<endl;}
   
   // (2) check whether grounded BPTs hold
   MT::Array< uintA > combos_args;
@@ -2972,8 +3238,8 @@ void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& c
   
   uintA sa(p->d);
   FOR1D(combos_args, c1) {
-    TL::PredicateInstance* target = le->getPI(p, true, combos_args(c1));
-    if (DEBUG>1) {cout<<"Target: ";target->writeNice();cout<<endl;}
+    TL::Literal* target = logicObjectManager::getLiteral(p, true, combos_args(c1));
+    if (DEBUG>1) {cout<<"Target: ";target->write();cout<<endl;}
     // Free Vars EXISTENTIAL
     // P(p) = 1 - PRODUCT[over free-var combos c](1 - P(basePTs[sub=c]))
     // Intuition: Predicate true if not all base-pred combinations are false.
@@ -2991,15 +3257,15 @@ void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& c
         FOR1D(freeVars, i) {
           sub.addSubs(freeVars(i), combos_freevars(c2)(i));
         }
-        PredIA basePTs_grounded;
-        le->applyOriginalSub(sub, basePTs_abstract, basePTs_grounded);
+        LitL base_lits_ground;
+        logicReasoning::applyOriginalSub(sub, base_lits_abstract, base_lits_ground);
         prob = 1.0;
-        FOR1D(basePTs_grounded, i) {
-//           basePTs_grounded(i)->writeNice();  cout<<endl;
-          if (basePTs_grounded(i)->positive)
-            prob *= rvm->pi2v(basePTs_grounded(i))->P(t,1); // assume binary variables
+        FOR1D(base_lits_ground, i) {
+//           base_lits_ground(i)->writeNice();  cout<<endl;
+          if (base_lits_ground(i)->positive)
+            prob *= rvm->l2v(base_lits_ground(i))->P(t,1); // assume binary variables
           else
-            prob *= rvm->pi2v(basePTs_grounded(i))->P(t,0);
+            prob *= rvm->l2v(base_lits_ground(i))->P(t,0);
         }
         combo_probs(c2) = prob;
       }
@@ -3016,10 +3282,10 @@ void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& c
       for(i=0;i<p->d;i++) {
         sub.addSubs(i, combos_args(c1)(i));
       }
-      PredIA basePTs_grounded;
-      FOR1D(basePTs_abstract, i) {
-        if (numberSharedElements(basePTs_abstract(i)->args, freeVars)==0) {
-          basePTs_grounded.append(le->applyOriginalSub(sub, basePTs_abstract(i)));
+      LitL base_lits_ground;
+      FOR1D(base_lits_abstract, i) {
+        if (numberSharedElements(base_lits_abstract(i)->atom->args, freeVars)==0) {
+          base_lits_ground.append(logicReasoning::applyOriginalSub(sub, base_lits_abstract(i)));
         }
       }
       uintA constants_freevars = constants;
@@ -3032,37 +3298,37 @@ void calcDerived1(TL::ConjunctionPredicate* p, uint t, RV_Manager* rvm, uintA& c
         FOR1D(freeVars, i) {
           sub2.addSubs(freeVars(i), combos_freevars(c2)(i));
         }
-        FOR1D(basePTs_abstract, i) {
-          if (numberSharedElements(basePTs_abstract(i)->args, freeVars)>0) {
-            basePTs_grounded.append(le->applyOriginalSub(sub2, basePTs_abstract(i)));
+        FOR1D(base_lits_abstract, i) {
+          if (numberSharedElements(base_lits_abstract(i)->atom->args, freeVars)>0) {
+            base_lits_ground.append(logicReasoning::applyOriginalSub(sub2, base_lits_abstract(i)));
           }
         }
       }
-      if (DEBUG>1) {cout<<"Grounded base PTs:  ";TL::writeNice(basePTs_grounded);cout<<endl;}
+      if (DEBUG>1) {cout<<"Grounded base PTs:  ";TL::write(base_lits_ground);cout<<endl;}
       prob = 1.0;
-      FOR1D(basePTs_grounded, i) {
-        if (basePTs_grounded(i)->positive)
-          prob *= rvm->pi2v(basePTs_grounded(i))->P(t,1);
+      FOR1D(base_lits_ground, i) {
+        if (base_lits_ground(i)->positive)
+          prob *= rvm->l2v(base_lits_ground(i))->P(t,1);
         else
-          prob *= rvm->pi2v(basePTs_grounded(i))->P(t,0);
+          prob *= rvm->l2v(base_lits_ground(i))->P(t,0);
       }
     }
-    rvm->pi2v(target)->P(t,0) = 1.-prob;
-    rvm->pi2v(target)->P(t,1) = prob;
+    rvm->l2v(target)->P(t,0) = 1.-prob;
+    rvm->l2v(target)->P(t,1) = prob;
     if (DEBUG>0) {cout<<" ---> "<<prob<<endl;}
   }
   if (DEBUG>0) {cout<<"calcDerived [END]"<<endl;}
 }
 
 
-double getPredicateProb(TL::Predicate* p, uintA& sa, uint t, RV_Manager* rvm,TL::LogicEngine* le) {
-  TL::PredicateInstance* pi = le->getPI(p, true, sa);
-  return rvm->pi2v(pi)->P(t,1);
+double getPredicateProb(TL::Predicate* p, uintA& sa, uint t, RV_Manager* rvm) {
+  TL::Literal* lit = logicObjectManager::getLiteral(p, true, sa);
+  return rvm->l2v(lit)->P(t,1);
 }
 
 
 #if 0
-void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, double>& probs_last, double prev_prob, uint prev_constant, TL::Predicate& base_pred, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, double>& probs_last, double prev_prob, uint prev_constant, TL::Predicate& base_pred, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   uint i;
   double prob_final, prob_single;
@@ -3070,7 +3336,7 @@ void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, 
   sa(0)=prev_constant;
   FOR1D(remaining_constants, i) {
     sa(1)=remaining_constants(i);
-    prob_single = getPredicateProb(&base_pred, sa, t, rvm, le);
+    prob_single = getPredicateProb(&base_pred, sa, t, rvm);
     if (DEBUG>0) {PRINT(sa);PRINT(prob_single);PRINT(prev_prob);PRINT(probs_last[remaining_constants(i)]);}
     prob_final = prob_single * prev_prob * probs_last[remaining_constants(i)];
     probs.append(prob_final);
@@ -3078,7 +3344,7 @@ void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, 
     if (prev_prob_new > TRANS_CLOSURE_STOP_PROB) {
       uintA remaining_constants2 = remaining_constants;
       remaining_constants2.removeValue(remaining_constants(i));
-      calcDerived_tcp_dfs(probs, remaining_constants2, probs_last, prev_prob_new, remaining_constants(i), base_pred, t, rvm, constants, le);
+      calcDerived_tcp_dfs(probs, remaining_constants2, probs_last, prev_prob_new, remaining_constants(i), base_pred, t, rvm, constants);
     }
     else {
     //       if (DEBUG>0) {cerr<<"  give-up "<<(constants.N - remaining_constants.N)/*<<endl*/;}
@@ -3086,7 +3352,7 @@ void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, 
   }
 }
 
-void calcDerived(TL::TransClosurePredicate& p, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived(TL::TransClosurePredicate& p, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - TransClosurePredicate [START]"<<endl;}
   if (DEBUG>0) {
@@ -3106,19 +3372,19 @@ void calcDerived(TL::TransClosurePredicate& p, uint t, RV_Manager* rvm, uintA& c
     // A-B
     sa(0) = combos(c)(0);
     sa(1) = combos(c)(1);
-    prob = getPredicateProb(p->basePred, sa, t, rvm, le);
+    prob = getPredicateProb(p->basePred, sa, t, rvm);
     probs.append(prob);
     if (combos(c)(0)!=combos(c)(1)) {
       // A-...X...-B
       std::map<uint, double> probs_last;
       FOR1D(c_small, i) {
         sa(0) = c_small(i);
-        probs_last[c_small(i)] = getPredicateProb(p->basePred, sa, t, rvm, le);
+        probs_last[c_small(i)] = getPredicateProb(p->basePred, sa, t, rvm);
       }
-      calcDerived_tcp_dfs(probs, c_small, probs_last, 1.0, combos(c)(0), *p->basePred, t, rvm, constants, le);
+      calcDerived_tcp_dfs(probs, c_small, probs_last, 1.0, combos(c)(0), *p->basePred, t, rvm, constants);
     }
     sa(0) = combos(c)(0);
-    TL::PredicateInstance* target = le->getPI(&p, true, sa);
+    TL::Literal* target = logicObjectManager::getLiteral(&p, true, sa);
     // true if not all possible chains are false
     prob = 1.;
     FOR1D(probs, i) {
@@ -3128,8 +3394,8 @@ void calcDerived(TL::TransClosurePredicate& p, uint t, RV_Manager* rvm, uintA& c
     if (DEBUG>0) {
       target->writeNice();PRINT(probs);
     }
-    rvm->pi2v(target)->P(t,0) = 1.-prob;
-    rvm->pi2v(target)->P(t,1) = prob;
+    rvm->l2v(target)->P(t,0) = 1.-prob;
+    rvm->l2v(target)->P(t,1) = prob;
   }
   if (DEBUG>0) {cout<<"calcDerived - TransClosurePredicate [END]"<<endl;}
 }
@@ -3159,7 +3425,7 @@ void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, arr& probs_last
   }
 }
 
-void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - TransClosurePredicate [START]"<<endl;}
   if (DEBUG>0) {
@@ -3182,7 +3448,7 @@ void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& 
     idx2 = constants.findValue(combos(c)(1));
     sa(0) = combos(c)(0);
     sa(1) = combos(c)(1);
-    PROBS_TABLE(idx1, idx2) = getPredicateProb(p->basePred, sa, t, rvm, le);
+    PROBS_TABLE(idx1, idx2) = getPredicateProb(p->basePred, sa, t, rvm);
   }
   if (DEBUG>0) {PRINT(PROBS_TABLE);}
 
@@ -3207,7 +3473,7 @@ void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& 
       calcDerived_tcp_dfs(probs, c_small, probs_last, 1.0, combos(c)(0), constants, PROBS_TABLE);
     }
     sa(0) = combos(c)(0);
-    TL::PredicateInstance* target = le->getPI(p, true, sa);
+    TL::Literal* target = logicObjectManager::getLiteral(p, true, sa);
     // true if not all possible chains are false
     prob = 1.;
     FOR1D(probs, i) {
@@ -3215,17 +3481,17 @@ void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& 
     }
     prob = 1 - prob;
     if (DEBUG>0) {
-      target->writeNice();PRINT(probs);
+      target->write();PRINT(probs);
     }
-    rvm->pi2v(target)->P(t,0) = 1.-prob;
-    rvm->pi2v(target)->P(t,1) = prob;
+    rvm->l2v(target)->P(t,0) = 1.-prob;
+    rvm->l2v(target)->P(t,1) = prob;
   }
   if (DEBUG>1) {
     FOR1D(combos, c) {
       sa(0) = combos(c)(0);
       sa(1) = combos(c)(1);
-      TL::PredicateInstance* target = le->getPI(p, true, sa);
-      cout<<sa<<" :"<<rvm->pi2v(target)->P(t,1)<<endl;
+      TL::Literal* target = logicObjectManager::getLiteral(p, true, sa);
+      cout<<sa<<" :"<<rvm->l2v(target)->P(t,1)<<endl;
     }
   }
   if (DEBUG>0) {cout<<"calcDerived - TransClosurePredicate [END]"<<endl;}
@@ -3235,21 +3501,21 @@ void calcDerived1(TL::TransClosurePredicate* p, uint t, RV_Manager* rvm, uintA& 
 
 
 
-void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - CountFunction [START]"<<endl;}
   if (DEBUG>0) {
     cf->writeNice(cout);cout<<endl;
     PRINT(t);
   }
-  CHECK(cf->countedPred->type != TL_PRED_COMPARISON, "NIY for comparison predicates");
+  CHECK(cf->countedPred->type != TL::Predicate::predicate_comparison, "NIY for comparison predicates");
   uint i, c, c2, v, val;
   MT::Array< uintA > combos;
   TL::allPossibleLists(combos, constants, cf->d, true, true);
   uintA sa_base(cf->countedPred->d);
   double expect, prob_total, prob_single;
-  TL::FunctionInstance* fi;
-  TL::PredicateInstance* pt_inner;
+  TL::FunctionAtom* fi;
+  TL::Literal* pt_inner;
   uintA freeVars;
   FOR1D(cf->countedPred_mapVars2derived, i) {
     if (cf->countedPred_mapVars2derived(i) >= cf->d)
@@ -3257,7 +3523,7 @@ void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constan
   }
   FOR1D(combos, c) {
     if (DEBUG>0) {cout<<"-- "<<combos(c)<<endl;}
-    fi = le->getFI(cf, combos(c));
+    fi = logicObjectManager::getFA(cf, combos(c));
     LogicRV* var = rvm->fi2v(fi);
     FOR1D(cf->countedPred_mapVars2derived, i) {
       if (cf->countedPred_mapVars2derived(i) < cf->d)
@@ -3275,12 +3541,12 @@ void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constan
           if (cf->countedPred_mapVars2derived(i) >= cf->d)
             sa_base(i) = inner_combos(c2)(cf->countedPred_mapVars2derived(i) - cf->d);
         }
-        pt_inner = le->getPI(cf->countedPred, true, sa_base);
-        expect += rvm->pi2v(pt_inner)->P(t,1);
+        pt_inner = logicObjectManager::getLiteral(cf->countedPred, true, sa_base);
+        expect += rvm->l2v(pt_inner)->P(t,1);
         if (DEBUG>2) {
           cout<<"inner combo: "<<inner_combos(c2)<<"  ";
-          pt_inner->writeNice();
-          cout<<" "<<rvm->pi2v(pt_inner)->P(t,1)<<endl;
+          pt_inner->write();
+          cout<<" "<<rvm->l2v(pt_inner)->P(t,1)<<endl;
         }
       }
       if (DEBUG>1) {PRINT(expect);}
@@ -3295,11 +3561,11 @@ void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constan
           if (cf->countedPred_mapVars2derived(i) >= cf->d)
             sa_base(i) = inner_combos(c2)(cf->countedPred_mapVars2derived(i) - cf->d);
         }
-        pt_inner = le->getPI(cf->countedPred, true, sa_base);
-        rvs_base.append((PredicateRV*) rvm->pi2v(pt_inner));
+        pt_inner = logicObjectManager::getLiteral(cf->countedPred, true, sa_base);
+        rvs_base.append((PredicateRV*) rvm->l2v(pt_inner));
         if (DEBUG>2) {
           cout<<"inner combo: "<<inner_combos(c2)<<"  ";
-          pt_inner->writeNice();
+          pt_inner->write();
           cout<<"  "<<(rvs_base.last()->P(t,1))<<endl;
         }
       }
@@ -3319,7 +3585,7 @@ void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constan
               prob_single *= rvs_base(v)->P(t,1);
             else
               prob_single *= rvs_base(v)->P(t,0);
-            if (DEBUG>3) {cout<<" After using ";rvs_base(v)->pi->writeNice();cout<<rvs_base(v)->id<<"  "<<prob_single<<endl;}
+            if (DEBUG>3) {cout<<" After using ";rvs_base(v)->lit->write();cout<<rvs_base(v)->id<<"  "<<prob_single<<endl;}
           }
           if (DEBUG>3) {cout<<base_combos(c2)<<": "<<prob_single<<endl;}
           prob_total += prob_single;
@@ -3335,7 +3601,7 @@ void calcDerived1(TL::CountFunction* cf, uint t, RV_Manager* rvm, uintA& constan
 
 
 
-void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - SumFunction [START]"<<endl;}
   if (DEBUG>0) {
@@ -3344,7 +3610,7 @@ void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants,
   }
   CHECK(f->d == 0, "so far implemented only for zero-ary");
   uintA empty;
-  TL::FunctionInstance* fi = rvm->getFVW(f, empty);
+  TL::FunctionAtom* fi = rvm->getFVW(f, empty);
   LogicRV* var = rvm->fi2v(fi);
   CHECK(var->type == RV_TYPE__FUNC_EXPECT, "only defined for expectation random vars");
   uint c;
@@ -3354,7 +3620,7 @@ void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants,
   FOR1D(combos, c) {
 //     if (DEBUG>1) {cout<<"-- "<<combos(c)<<endl;}
     fi = rvm->getFVW(f->f_base, combos(c));
-    if (DEBUG>1) {fi->writeNice();}
+    if (DEBUG>1) {fi->write();}
     LogicRV* sub_var = rvm->fi2v(fi);
     if (DEBUG>1) {cout<<"  "<<sub_var->P(t,0)<<endl;}
     CHECK(sub_var->type == RV_TYPE__FUNC_EXPECT, "only defined for expectation random vars");
@@ -3366,7 +3632,7 @@ void calcDerived1(TL::SumFunction* f, uint t, RV_Manager* rvm, uintA& constants,
 }
 
 
-void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constants,TL::LogicEngine* le) {
+void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constants) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - RewardFunction [START]"<<endl;}
   if (DEBUG>0) {
@@ -3375,12 +3641,12 @@ void calcDerived1(TL::RewardFunction* f, uint t, RV_Manager* rvm, uintA& constan
   }
   CHECK(f->d == 0, "so far implemented only for zero-ary");
   uintA empty;
-  TL::FunctionInstance* fi = rvm->getFVW(f, empty);
+  TL::FunctionAtom* fi = rvm->getFVW(f, empty);
   LogicRV* var = rvm->fi2v(fi);
   double prob = 1.0;
   uint i;
   FOR1D(f->grounded_pis, i) {
-    PredicateRV* sub_var = rvm->pi2v(f->grounded_pis(i));
+    PredicateRV* sub_var = rvm->l2v(f->grounded_pis(i));
     if (f->grounded_pis(i)->positive)
       prob *= sub_var->P(t,1);
     else

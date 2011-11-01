@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -81,9 +80,9 @@ Memory_allPossibleLists mem__withoutRepeat_dontReturnEmpty;
 
 
 void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty) {
-	uint DEBUG = 0;
-	if (DEBUG>0) cout<<"allPossibleListsWithRepeat [START]"<<endl;
-	if (DEBUG>0) {PRINT(arguments); PRINT(length); PRINT(withRepeat);}
+  uint DEBUG = 0;
+  if (DEBUG>0) cout<<"allPossibleListsWithRepeat [START]"<<endl;
+  if (DEBUG>0) {PRINT(arguments); PRINT(length); PRINT(withRepeat);}
   
   lists.clear();
   // Try to get from memory
@@ -110,6 +109,8 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uin
     return;
   }
   
+  if (DEBUG>0) {cout<<"*** Creating new lists ***"<<endl;}
+  
   
   lists.clear();
   if (length == 0) {
@@ -124,34 +125,31 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uin
       return;
     }
   }
-	uint id=0;
-	uint a, i, _pow;
-	// beim change ganz nach hinten rutschen und wieder alle zuruecksetzen
-	while (id < pow(arguments.N, length)) {
-//     PRINT(length);
-//     PRINT(arguments.N);
-//     PRINT(pow(arguments.N, length));
-		uintA nextList(length);
-		i = id;
-		for (a=length; a>0; a--) {
-			_pow = (uint) pow(arguments.N, a-1);
-			nextList(a-1) = arguments(i / _pow);
+  uint id=0;
+  uint a, i, _pow;
+  // beim change ganz nach hinten rutschen und wieder alle zuruecksetzen
+  while (id < pow(arguments.N, length)) {
+    if (DEBUG>2) {PRINT(length);  PRINT(arguments.N);  PRINT(pow(arguments.N, length));}
+    uintA nextList(length);
+    i = id;
+    for (a=length; a>0; a--) {
+      _pow = (uint) pow(arguments.N, a-1);
+      nextList(a-1) = arguments(i / _pow);
       // Auf gar keinen Fall hier die Reihenfolge aendern wollen, in der Liste bestueckt wird.
       // Andere Methoden nutzen explizit die Reihenfolge aus, in der's von links nach rechts variiert.
-			i = i % _pow;
-		}
-		id++;
-    if (withRepeat)
-        lists.append(nextList);
-    else {
-        if (!nextList.containsDoubles())  // teuer!
-            lists.append(nextList);
+      i = i % _pow;
     }
-	}
-	if (DEBUG>0) {
-		FOR1D(lists, i)
-			PRINT(lists(i))
-	}
+    id++;
+    if (withRepeat)
+      lists.append(nextList);
+    else {
+      if (!nextList.containsDoubles())  // teuer!
+	lists.append(nextList);
+    }
+  }
+  if (DEBUG>0) {
+    FOR1D(lists, i) {PRINT(lists(i))}
+  }
   
   // Add to memory
   if (withRepeat && returnEmpty) {
@@ -167,7 +165,51 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uin
     mem__withoutRepeat_dontReturnEmpty.append(lists, arguments, length);
   }
   
-	if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
+  if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
+}
+
+
+// different arguments
+void TL::allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty)  {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"allPossibleLists [START]"<<endl;}
+  if (DEBUG>0) {PRINT(arguments_lists);  PRINT(returnEmpty);}
+  lists.clear();
+  if (arguments_lists.N == 0) {
+    if (returnEmpty) {
+      uintA empty(0);
+      lists.append(empty);
+//       if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
+      return;
+    }
+    else {
+      MT_MSG("No lists returned!");
+      return;
+    }
+  }
+  uint id=0;
+  uint a, i, k, _num_configs;
+  // beim change ganz nach hinten rutschen und wieder alle zuruecksetzen
+  uint num_configs = 1;
+  FOR1D(arguments_lists, i) {num_configs *= arguments_lists(i).N;}
+  if (DEBUG>0) {PRINT(arguments_lists.N);  PRINT(num_configs);}
+  while (id < num_configs) {
+    uintA nextList(arguments_lists.N);
+    i = id;
+    for (a=arguments_lists.N; a>0; a--) {
+      _num_configs = 1;
+      for (k=a; k>1; k--) {_num_configs *= arguments_lists(k-2).N;}
+      nextList(a-1) = arguments_lists(a-1)(i / _num_configs);
+	// Auf gar keinen Fall hier die Reihenfolge aendern wollen, in der Liste bestueckt wird.
+	// Andere Methoden nutzen explizit die Reihenfolge aus, in der's von links nach rechts variiert.
+      i = i % _num_configs;
+    }
+    lists.append(nextList);
+    id++;
+  }
+  
+  if (DEBUG>0) {PRINT(lists);}
+  if (DEBUG>0) {cout<<"allPossibleLists [END]"<<endl;}
 }
 
 
@@ -206,19 +248,6 @@ void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueS
     PRINT(max_length);
     PRINT(lists);
   }
-  
-//     CHECK(trueSubsets, "NIY");
-//     CHECK(elements.N <= 2, "NIY");
-//     // 0 elem
-//     uintA empty;
-//     lists.append(empty);
-//     // 1 elem
-//     uint i;
-//     FOR1D(elements, i) {
-//         uintA ss(1);
-//         ss(0) = elements(i);
-//         lists.append(ss);
-//     }
 }
 
 void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, uint length) {

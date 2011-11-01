@@ -1,8 +1,7 @@
 /*  
-    Copyright 2009   Tobias Lang
+    Copyright 2011   Tobias Lang
     
-    Homepage:  cs.tu-berlin.de/~lang/
-    E-mail:    lang@cs.tu-berlin.de
+    E-mail:    tobias.lang@fu-berlin.de
     
     This file is part of libPRADA.
 
@@ -20,11 +19,13 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TL__BW_LANGUAGE
-#define TL__BW_LANGUAGE
+#ifndef TL__ROBOT_MANIPULATION_DOMAIN
+#define TL__ROBOT_MANIPULATION_DOMAIN
 
-#include "TL/logicEngine.h"
+#include "TL/logicObjectManager.h"
 #include "TL/plan.h"
+#include "TL/robotManipulationSimulator.h"
+
 
 
 // Blocksworld-IDs
@@ -42,10 +43,6 @@
 #define HAND_ID__PRED_BOX 19
 #define HAND_ID__PRED_CONTAINS 20
 #define HAND_ID__PRED_CLOSED 21
-
-// Comparisons
-#define HAND_ID__PRED_COMP_CONSTANT 31
-#define HAND_ID__PRED_COMP_DYNAMIC 32
 
 // Derived predicates
 #define HAND_ID__PRED_CLEAR 41
@@ -84,21 +81,40 @@
 
 namespace TL {
   
-namespace bwLanguage {
+namespace RobotManipulationDomain {
+  
+  /* ---------------------
+    TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
+  --------------------- */
+  
+  // Observation
+  State* observeLogic(RobotManipulationSimulator* sim);
+  void observeAngles(arr& angles, RobotManipulationSimulator* sim);
+  void observePositions(arr& angles, RobotManipulationSimulator* sim);
+  
+  // Action
+  void performAction(Atom* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message = "");
+  
+  // Helpers
+  void writeFeatures(std::ostream& os, RobotManipulationSimulator* sim);
+  
+  
+  
+  
   
   /* ---------------------
     LANGUAGE DESCRIPTION
   --------------------- */
   
   // logic engine with blocksworld vocabulary
-  TL::LogicEngine* createLogicEngine(uintA& constants); // adapt this to your needs!!
+  void setupLogic(uintA& constants); // adapt this to your needs!!
   void shutdownLogic();
   
   // CONCEPTS
   // Concept creation for basic blocksworld vocabulary
-//   void createActions(PredA& actions);
-//   void createPrimitives(PredA& ps, PredA& p_comparisons, FuncA& fs);
-//   void createDerived(PredA& ps, FuncA& fs, LogicEngine* le);
+//   void createActions(PredL& actions);
+//   void createPrimitives(PredL& ps, FuncL& fs);
+//   void createDerived(PredL& ps, FuncL& fs, LogicEngine* le);
   
   // predicates  -  primitives
   TL::Predicate* getPredicate_table();
@@ -112,10 +128,6 @@ namespace bwLanguage {
   TL::Predicate* getPredicate_homies();
   TL::Predicate* getPredicate_contains();
   TL::Predicate* getPredicate_closed();
-  
-  // predicates  -  comparisons
-  TL::ComparisonPredicate* getPredicate_comparison_constant();
-  TL::ComparisonPredicate* getPredicate_comparison_dynamic();
   
   // predicates  -  actions
   TL::Predicate* getPredicate_action_default();
@@ -150,24 +162,24 @@ namespace bwLanguage {
   
   
   /* ---------------------
-      Instance creation
+      Literal creation
   --------------------- */
   
-  FunctionValue* createFunctionValue_size(uint obj, double size, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_on(uint above, uint below, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_inhand(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_table(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_block(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_box(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_homies(uint obj1, uint obj2,  LogicEngine* le);
-  PredicateInstance* createPredicateInstance_ball(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_upright(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_out(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_grab(uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_puton(uint obj, uint on, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_inhand_nil(LogicEngine* le);
-  PredicateInstance* createPredicateInstance_contains(uint box, uint obj, LogicEngine* le);
-  PredicateInstance* createPredicateInstance_closed(uint box, LogicEngine* le);
+  FunctionValue* createFunctionValue_size(uint obj, double size);
+  Literal* createLiteral_on(uint above, uint below);
+  Literal* createLiteral_inhand(uint obj);
+  Literal* createLiteral_table(uint obj);
+  Literal* createLiteral_block(uint obj);
+  Literal* createLiteral_box(uint obj);
+  Literal* createLiteral_homies(uint obj1, uint obj2);
+  Literal* createLiteral_ball(uint obj);
+  Literal* createLiteral_upright(uint obj);
+  Literal* createLiteral_out(uint obj);
+  Literal* createLiteral_grab(uint obj);
+  Literal* createLiteral_puton(uint obj, uint on);
+  Literal* createLiteral_inhand_nil();
+  Literal* createLiteral_contains(uint box, uint obj);
+  Literal* createLiteral_closed(uint box);
 
   
   
@@ -175,17 +187,21 @@ namespace bwLanguage {
      Rewards
   --------------------- */
   namespace RewardLibrary {
-    Reward* stack(LogicEngine*);
-    Reward* on(uint o1, uint o2, LogicEngine*);
-    Reward* inhand(uint o1, LogicEngine*);
-    Reward* tower(uintA& tower_objects, LogicEngine*);
-    Reward* clearance(LogicEngine*);
+    Reward* stack();
+    Reward* on(uint o1, uint o2);
+    Reward* inhand(uint o1);
+    Reward* tower(uintA& tower_objects);
+    Reward* clearance();
   };
   
   
+  bool has_maximum_stack_value(const TL::State& s);
+  
+  
+  
   // Goal state sampling
-  TL::PredicateListReward* sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, LogicEngine& le, bool leave_existing_towers = false, TL::State* = NULL);
-  TL::PredicateListReward* sampleGroundGoal__clearance(const TL::State& current_state, uint table_id, LogicEngine& le);
+  TL::LiteralListReward* sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers = false, TL::State* = NULL);
+  TL::LiteralListReward* sampleGroundGoal__clearance(const TL::State& current_state, uint table_id);
 
   
   
@@ -193,23 +209,24 @@ namespace bwLanguage {
     State information helpers
   --------------------- */
   
-  bool isBlock(uint id, const TL::State& s, LogicEngine* le);
-  bool isBall(uint id, const TL::State& s, LogicEngine* le);
-  bool isBox(uint id, const TL::State& s, LogicEngine* le);
-  bool isTable(uint id, const TL::State& s, LogicEngine* le);
-  bool isOut(uint id, const TL::State& s, LogicEngine* le);
-  bool isInhand(uint id, const TL::State& s, LogicEngine* le);
-  bool isClosed(uint box_id, const TL::State& s, LogicEngine* le);
-  bool isInorderGang(const uintA gang, const TL::State& s, LogicEngine* le);
-  void getBelowObjects(uintA& ids, uint id, const TL::State& s, LogicEngine* le);
-  void getAboveObjects(uintA& ids, uint id, const TL::State& s, LogicEngine* le); // directly above!!!
-  uint getBelow(uint id, const TL::State& s, LogicEngine* le);
-  uint getAbove(uint id, const TL::State& s, LogicEngine* le); // directly above!!!
-  uint getInhand(const TL::State& s, LogicEngine* le);
-  void getBoxes(uintA& ids, const TL::State& s, LogicEngine* le);
-  uint getContainingBox(uint obj_id, const TL::State& s, LogicEngine* le);
-  uint getContainedObject(uint box_id, const TL::State& s, LogicEngine* le);
-  void getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s, LogicEngine* le);
+  bool isBlock(uint id, const TL::State& s);
+  bool isBall(uint id, const TL::State& s);
+  bool isBox(uint id, const TL::State& s);
+  bool isTable(uint id, const TL::State& s);
+  bool isOut(uint id, const TL::State& s);
+  bool isInhand(uint id, const TL::State& s);
+  bool isClosed(uint box_id, const TL::State& s);
+  bool isInorderGang(const uintA gang, const TL::State& s);
+  void getBelowObjects(uintA& ids, uint id, const TL::State& s);
+  void getAboveObjects(uintA& ids, uint id, const TL::State& s); // directly above!!!
+  uint getBelow(uint id, const TL::State& s);
+  uint getAbove(uint id, const TL::State& s); // directly above!!!
+  uint getInhand(const TL::State& s);
+  void getBoxes(uintA& ids, const TL::State& s);
+  uint getContainingBox(uint obj_id, const TL::State& s);
+  uint getContainedObject(uint box_id, const TL::State& s);
+  void getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s);
+  void getOutObjects(uintA& outs, const TL::State& s);
   
     // Reward functions
   double reward_buildTower(const State& s);
@@ -217,14 +234,15 @@ namespace bwLanguage {
   void calcSkyscraperWeights(const uintA& heights, double skyscraper_bias, arr& weights, bool highGood, uint id_table);
   // Piles
   // sorted by heights! piles(0)=highest
-  void calcPiles(const State& s, uintA& piles, uint id_table);
+  void calcPiles(const State& s, uintA& piles, uint sort_type = 1);
   void calcHeights(const uintA& objects, const uintA& piles, uintA& object_heights, uint id_table);
 
   
   // Nice state information
-  void writeStateInfo(const State& s, LogicEngine* le, ostream& out = std::cout);
+  void writeStateInfo(const State& s, ostream& out = std::cout);
+  
 }
 
 }
 
-#endif // TL__BW_LANGUAGE
+#endif // TL__ROBOT_MANIPULATION_DOMAIN
