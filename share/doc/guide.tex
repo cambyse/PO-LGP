@@ -583,6 +583,48 @@ http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 
 \end{itemize}
 
+\subsection{Setting Up GIT Server to Maserati}
+
+First type
+\begin{verbatim}
+git remote -v 
+\end{verbatim}
+to see which git server you use. In case it is not maserati you should change this!
+
+\begin{itemize}
+\item in your web browser go to
+\begin{verbatim}
+https://maserati.mi.fu-berlin.de/redmine/
+\end{verbatim}
+and login with your account on maserati
+
+\item  browse to \textit{Public keys,New public key} and click \textit{ new value}  \\
+create a sshkey in the webpage, e.g. by copying some ssh file from your computer, here we use gedit for example:
+ \begin{verbatim}
+ cd .ssh 
+ gedit id_rsa.pub
+ \end{verbatim} 
+ copy everything after the 'ssh-rsa' string for key value and activate it on the server
+\item type in your computer to add maserati as server:
+ \begin{verbatim}
+git remote add maserati git@maserati.mi.fu-berlin.de:mlr 
+ \end{verbatim}
+\item 
+go to your main git folder and type
+ \begin{verbatim}
+gedit .git/config
+ \end{verbatim}
+then change all your remotes to maserati, remove any old/conflicting origins entries, it should look like this:
+ \begin{verbatim}
+[branch "master"]
+	remote = maserati
+	merge = refs/heads/master
+[remote "maserati"]
+	url = git@maserati.mi.fu-berlin.de:mlr
+	fetch = +refs/heads/*:refs/remotes/maserati/*
+\end{verbatim}
+	\end{itemize}
+
 \subsection{svn workflow}
 
 \begin{code}
