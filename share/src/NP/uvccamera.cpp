@@ -8,7 +8,7 @@ extern "C"
    #include <linux/videodev2.h>
    #include <sys/types.h>
    #include <sys/time.h>
-   //#include <sys/stat.h>
+   #include <sys/stat.h>
    #include <sys/mman.h>
    #include <sys/ioctl.h>
    #include <fcntl.h>
