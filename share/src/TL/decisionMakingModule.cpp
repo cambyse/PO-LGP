@@ -21,20 +21,16 @@
 */
 
 #include <MT/ors.h>
-#include <TL/utilTL.h>
-#include <TL/bwLanguage.h>
-#include <TL/ors_actionInterface.h>
-#include <TL/logic_world_interface.h>
-#include <TL/ruleEngine.h>
+#include <TL/robotManipulationDomain.h>
+#include <TL/robotManipulationSimulator.h>
+#include <TL/ruleReasoning.h>
 #include <TL/prada.h>
-#include <TL/plan.h>
 
 #include "decisionMakingModule.h"
 
 #define RULES_FILE "rules.dat"
 
-ActionInterface AI;
-TL::LogicEngine* le;
+RobotManipulationSimulator sim;
 TL::RuleSet rules;
 TL::RuleSet ground_rules;
 TL::PRADA* prada;
@@ -48,7 +44,6 @@ double discountFactor = 0.95;
   
   
 DecisionMakingModule::DecisionMakingModule():Process("DecisionMaking") {
-  le = NULL;
   prada = NULL;
   reward = NULL;
 }
@@ -56,25 +51,24 @@ DecisionMakingModule::DecisionMakingModule():Process("DecisionMaking") {
 //initialize,load knowledge, etc
 void DecisionMakingModule::open() {
   uint DEBUG = 2;
-  // Create LogicEngine
-  uintA empty;
-  le = TL::bwLanguage::createLogicEngine(empty);
-  le->writeLanguage("test");
-
-  // Create RuleEngine and rules
-  TL::RuleEngine::setLogicEngine(le);
-  TL::RuleEngine::readRulesPlain(RULES_FILE, rules);
-  TL::Rule* rule_doNothing = TL::RuleEngine::getDoNothingRule();
-  rules.append(rule_doNothing);
-  if (DEBUG>1) {rules.writeNice();}
-  
+ 
   // Connect ActionInterface
   CHECK(ors,"please set the ors pointer before launching DecisionMakingModule!");
-  AI.C = ors;
-  AI.calcObjectNumber();
+  sim.C = ors;
+  sim.calcObjectNumber();
+  
+  // Setup logic
+  uintA empty;
+  TL::RobotManipulationDomain::setupLogic(empty);
+  
+  // Create ruleReasoning and rules
+  TL::logicObjectManager::readRules(RULES_FILE, rules);
+  TL::Rule* rule_doNothing = TL::ruleReasoning::getDoNothingRule();
+  rules.append(rule_doNothing);
+  if (DEBUG>1) {rules.write();}
   
   // Set up PRADA
-  prada = new TL::PRADA(le);
+  prada = new TL::PRADA();
   prada->setNumberOfSamples(PRADA_num_samples);
   prada->setNoiseSoftener(PRADA_noise_softener);
   prada->setThresholdReward(PRADA_threshold_goal_achieved);
@@ -86,10 +80,9 @@ void DecisionMakingModule::open() {
 }
 
 void DecisionMakingModule::close() {
-//   AI.shutdownAll();
+//   sim.shutdownAll();
   delete prada;
   delete reward;
-  delete le;
 }
 
 
@@ -99,31 +92,31 @@ void DecisionMakingModule::step() {
   if (DEBUG>0) {cout<<"DecisionMakingModule::step() [START]"<<endl;}
   
   // Some administration (read out objects) if called for the first time
-  if (le->constants.N == 0) {
+  if (TL::logicObjectManager::constants.N == 0) {
     uintA objects;
-    AI.getObjects(objects);
+    sim.getObjects(objects);
     if (DEBUG>0) {PRINT(objects);}
     
 //     TermTypeA objects_types;
-//     AI.getTypes(objects_types, objects, le->types);
+//     sim.getTypes(objects_types, objects, le->types);
 //     le->setConstants(objects, objects_types);
-    le->setConstants(objects);
+    TL::logicObjectManager::setConstants(objects);
     
     // set up reward
     uintA blocks;
-    AI.getBlocks(blocks);
+    sim.getBlocks(blocks);
     CHECK(blocks.N > 1, "");
-    reward = TL::bwLanguage::RewardLibrary::on(blocks(0), blocks(1), le);
+    reward = TL::RobotManipulationDomain::RewardLibrary::on(blocks(0), blocks(1));
     if (DEBUG>0) {cout<<"Reward:  "; reward->writeNice(); cout<<endl;}
     
     // ground rules
-    TL::State* s_groundingHelper = TL::logic_world_interface::bw::observeLogic(&AI, le);
-    if (DEBUG>0) {cout<<"s_groundingHelper:"<<endl;  s_groundingHelper->writeNice();  cout<<endl;}
-    TL::RuleEngine::ground_with_filtering(ground_rules, rules, le->constants, *s_groundingHelper);
+    TL::State* s_groundingHelper = TL::RobotManipulationDomain::observeLogic(&sim);
+    if (DEBUG>0) {cout<<"s_groundingHelper:"<<endl;  s_groundingHelper->write();  cout<<endl;}
+    TL::ruleReasoning::ground_with_filtering(ground_rules, rules, TL::logicObjectManager::constants, *s_groundingHelper);
     delete s_groundingHelper;
     ground_rules.sort_using_args();
-    TL::RuleEngine::removeDoublePredicateInstances(ground_rules);
-    TL::RuleEngine::checkRules(ground_rules);
+    TL::ruleReasoning::removeDoubleLiterals(ground_rules);
+    TL::ruleReasoning::checkRules(ground_rules);
     if (DEBUG>0) {cout<<"Rules have been grounded to "<<ground_rules.num()<<" ground rules."<<endl;  /*ground_rules.writeNice();*/}
     
     // finish set up PRADA
@@ -133,8 +126,8 @@ void DecisionMakingModule::step() {
   
   
   // Read state
-  TL::State* s = TL::logic_world_interface::bw::observeLogic(&AI, le);
-  if (DEBUG>0) {cout<<"STATE:"<<endl;  s->writeNice();  cout<<endl;}
+  TL::State* s = TL::RobotManipulationDomain::observeLogic(&sim);
+  if (DEBUG>0) {cout<<"STATE:"<<endl;  s->write();  cout<<endl;}
   
   // Check if finished
   if (reward->satisfied(*s)) {
@@ -143,7 +136,7 @@ void DecisionMakingModule::step() {
   }
   
   // Plan
-  TL::PredicateInstance* pi_action = prada->generateAction(*s, 1);
+  TL::Atom* pi_action = prada->generateAction(*s, 1);
   if (DEBUG>0) {if (pi_action == NULL) cout<<"NO ACTION FOUND"<<endl; else cout<<"ACTION:   "<<*pi_action<<endl;}
   
   // Set fields

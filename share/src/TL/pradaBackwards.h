@@ -1,10 +1,10 @@
-#include "plan.h"
+#include "prada.h"
 
 namespace TL {
 
 void setUnchangeableValues(NID_DBN& net, const State& state);
 
-void setGoalBelief(Goal* goal, NID_DBN& net, uint t, const State& s0);
+void setGoalBelief(Reward* reward, NID_DBN& net, uint t, const State& s0);
 
 
 
@@ -22,8 +22,8 @@ class ZICKZACK_PRADA : public PRADA {
   double final_state_determinism_softener;
   NID_DBN* backward_net;
   
-  void forward_sampling(PredIA& sampled_actions, NID_DBN& net, uint horizon);
-  void backward_sampling(PredIA& sampled_actions, NID_DBN& net);
+  void forward_sampling(AtomL& sampled_actions, NID_DBN& net, uint horizon);
+  void backward_sampling(AtomL& sampled_actions, NID_DBN& net);
   void sampleGoalState(NID_DBN& net, uintA& usedComponents, const TL::State& s);
   void createBetas(arr& betas_p, arr& betas_f, NID_DBN& backward_net, uintA& usedComponents, uint horizon, uint num_plan_samples);
   void combine_alpha_beta(double& total_value, uint& max_d_forward, const NID_DBN& net, uint horizon_forward, const arr& betas_p, const arr& betas_f, double discount);
@@ -32,10 +32,10 @@ class ZICKZACK_PRADA : public PRADA {
 
   
   public:
-    ZICKZACK_PRADA(TL::LogicEngine* le);
+    ZICKZACK_PRADA();
     ~ZICKZACK_PRADA();
     void setStartState(const TL::State& s0);
-    bool plan(PredIA& best_actions, double& bestValue, uint num_samples); // various plans
+    bool plan(AtomL& best_actions, double& bestValue, uint num_samples); // various plans
     
     void setGroundRulesBackwards(TL::RuleSet& ground_rules_backwards);
     void setNumberOfSamplesBackward(uint num_samples_backward);

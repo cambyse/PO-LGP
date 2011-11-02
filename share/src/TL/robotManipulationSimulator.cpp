@@ -21,7 +21,6 @@
 
 #include <MT/opengl.h>
 #include <MT/plot.h>
-#include <MT/revelModule.h>
 #include <TL/utilTL.h>
 
 #include "robotManipulationSimulator.h"
@@ -407,7 +406,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   }
   
 
-  TaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -428,7 +427,9 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
   //     controlledStep(q,W,send_msg);
       controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-      if(x.state==1 || C->getContact(x.i,obj->index)) break;
+      // TODO passt das? Ueberall state durch "active" ersetzt
+//       if(x.active==1 || C->getContact(x.i,obj->index)) break;
+      if(x.active==1 || C->getContact(x.i,obj->index)) break;
     }
     if(C->bodies(id_grabbed)->inLinks.N){
       ors::Joint* e=C->bodies(id_grabbed)->inLinks(0);
@@ -445,7 +446,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.active==1 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
     
@@ -465,7 +466,8 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     s->cont = false;
   }
   
-  x.state_tol=.05;
+  // TODO
+//   x.active_tol=.05;
   for(t=0;t<Tabort;t++){
     x.y_target.setCarray(obj->X.pos.p,3);
     if (x.y_target(2) < neutralHeight)
@@ -476,7 +478,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.state==1) break;
+    if(x.active==1) break;
     
     // might drop object
     if (t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
@@ -556,8 +558,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     obj_below_id = getTableID();
   }
   
-  TaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,0);
-  TaskVariable z;
+  DefaultTaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,0);
+  DefaultTaskVariable z;
   //
   ors::Quaternion rot;
   rot = C->bodies(obj_dropped1_index)->X.rot;
@@ -572,8 +574,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   tf.rot.setDiff(VEC_z, upvec);
   z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,ors::Transformation(),0);
   //
-  TaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
-  TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
+  DefaultTaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
+  DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
   
   r.setGainsAsAttractor(50,.1);
   r.y_prec=1.;
@@ -581,15 +583,18 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   r.active=false;
   o.setGainsAsAttractor(20,.2);
   o.y_prec=1000.;
-  o.state_tol=.005;
+//   o.active_tol=.005;
+  // TODO tolerance now?
   z.setGainsAsAttractor(20,.2);
   z.y_prec=1000.;
   z.y_target.resize(1);  z.y_target = 1.;
-  z.state_tol=.005;
+  // TODO
+//   z.state_tol=.005;
   
   c.setGainsAsAttractor(20,.1);
   c.y_prec=10000.;
-  c.state_tol=.005;
+//   c.state_tol=.005;
+  // TODO tolerance now?
   if(!swift) c.active=false;
   
   uint t;
@@ -619,7 +624,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   // Phase 1: up
   updateState(TVs);
   o.y_target(2) += .3;
-  o.state_tol=.05;
+  // TODO
+//   o.active_tol=.05;
   for(t=0;t<Tabort;t++){
     if (o.y_target(2) < neutralHeight)
       o.y_target(2) += 0.05;
@@ -627,14 +633,15 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1) break;
+    if(o.active==1) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
   
   
   // Phase 2: above object
-  o.state_tol=.05;
+  // TODO
+//   o.active_tol=.05;
   o.y_target(0) = x_target;
   o.y_target(1) = y_target;
   // WHERE TO GO ABOVE
@@ -644,7 +651,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1) break;
+    if(o.active==1) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
 
@@ -654,7 +661,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   
   
   // Phase 3: down
-  o.state_tol=.002;
+  // TODO
+//   o.active_tol=.002;
   // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
   double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .05;
   if (getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
@@ -680,7 +688,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(o.state==1 && z.state==1) break;
+    if(o.active==1 && z.active==1) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -821,11 +829,12 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
   
   arr I(q.N,q.N); I.setId();
   
-  TaskVariable x("full state",*C,qLinearTVT,0,0,0,0,I);
+  DefaultTaskVariable x("full state",*C,qLinearTVT,0,0,0,0,I);
   x.setGainsAsAttractor(20,.1);
   x.y_prec=1000.;
   x.y_target=q0; 
-  x.state_tol=.2;
+//   x.active_tol=.2;
+  // TODO tolerance now?
   TaskVariableList TVs;
   TVs.append(&x);
 
@@ -835,7 +844,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1) break;
+    if(x.active==1) break;
   }
   
   // simplification: set on contacts for inhand-object
@@ -897,7 +906,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.active==1 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
@@ -941,7 +950,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.state==1 || C->getContact(x.i,obj->index)) break;
+    if(x.active==1 || C->getContact(x.i,obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
