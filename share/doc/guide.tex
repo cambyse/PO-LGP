@@ -452,11 +452,14 @@ git pull --all
 git push --all
 
 git branch -a
+// overview over all branches and configs for push and pull
 git remote show achtauge
 git checkout <branch>
 git branch <new-branch>
 git branch --track <new-branch> <remote-branch>
+// set branch to pull from some remote branch
 git branch --set-upstream <existing-branch> <remote-branch-to-be-tracked>
+// Example: git branch --set-upstream branch123 origin/branch123
 git merge <other-branch>
 
 .gitignore
