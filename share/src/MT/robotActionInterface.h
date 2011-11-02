@@ -33,7 +33,7 @@ struct RobotActionInterface {
   void setMesh(const char* shapeName, const ors::Mesh& mesh);
   
   // -- planned motions
-  void perceiveObjects(PerceptionModule& perc);
+  void perceiveObjects(PerceptionModule perc);
   void pickObject(ReceedingHorizonProcess& planner, const char* objShape);
   void placeObject(ReceedingHorizonProcess& planner, const char* objShape, const char* belowFromShape, const char* belowToShape);
   void plannedHoming(ReceedingHorizonProcess& planner, const char* objShape, const char* belowToShape);
