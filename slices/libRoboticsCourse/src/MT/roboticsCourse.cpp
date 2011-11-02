@@ -160,14 +160,12 @@ void Simulator::setContactMargin(double margin){
   s->margin = margin;
 }
 
-double Simulator::kinematicsContacts(){
-  arr tmp(1);
-  s->G.getContactMeasure(tmp, s->margin);
-  return tmp(0);
+void Simulator::kinematicsContacts(arr& y){
+  s->G.getContactMeasure(y, s->margin);
 }
 
-void Simulator::jacobianContacts(arr& grad){
-  s->G.getContactGradient(grad, s->margin);
+void Simulator::jacobianContacts(arr& J){
+  s->G.getContactGradient(J, s->margin);
 }
 
 void Simulator::getDynamics(arr& M, arr& F, const arr& qdot, bool gravity){

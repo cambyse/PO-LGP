@@ -27,8 +27,8 @@ struct Simulator {
   void jacobianVec(arr& J, const char* bodyName, const arr* vec=0);   //get the Jacobian of the body's z-axis
   void kinematicsCOM(arr& y);
   void jacobianCOM(arr& J);
-  double kinematicsContacts();                     //get a scalar meassuring current collision costs
-  void jacobianContacts(arr& grad);                //get gradient of the collision cost
+  void kinematicsContacts(arr& y);                     //get a scalar meassuring current collision costs
+  void jacobianContacts(arr& J);                //get gradient of the collision cost
   void setContactMargin(double margin);            //set the collision margin
   void reportProxies();                            //write info on collisions to console
   
