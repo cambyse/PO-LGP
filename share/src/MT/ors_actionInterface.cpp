@@ -1,11 +1,9 @@
 #include "opengl.h"
 #include "plot.h"
 #include "ors.h"
-
 #include "ors_actionInterface.h"
 #include <sstream>
 #include <limits.h>
-
 
 // huepfen der bloecke, falls sie zb runterfallen
 #define ODE_COLL_BOUNCE 0.0
@@ -35,7 +33,8 @@ void drawOrsActionInterfaceEnv(void*){
   glDrawFloor(4., 1, 1, 1);
 }
 
-void oneStep(const arr &q, ors::Graph *C, OdeModule *ode, SwiftInterface *swift){
+void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface
+*swift){
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
 #ifdef MT_ODE
@@ -57,7 +56,8 @@ void oneStep(const arr &q, ors::Graph *C, OdeModule *ode, SwiftInterface *swift)
   
 }
 
-void controlledStep(arr &q, arr &W, ors::Graph *C, OdeModule *ode, SwiftInterface *swift, TaskVariableList& TVs){
+void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode,
+SwiftInterface *swift, TaskVariableList& TVs){
   static arr dq;
   updateState(TVs);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
@@ -117,7 +117,8 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   arr Wdiag(q0.N);
   for(i=0; i<q0.N; i++) Wdiag(i)=BM(C->joints(i)->to->index);
   //cout <<Wdiag;
-  //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 20 20 10 10 10 10 10 10 ]";
+  //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+// 1 1 20 20 10 10 10 10 10 10 ]";
   W.setDiag(Wdiag);
   
   // determine number of objects
@@ -152,11 +153,12 @@ void ActionInterface::watch(){
   gl->watch();
 }
 
-void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp, double ode_coll_cfm, double ode_friction){
+void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
+double ode_coll_cfm, double ode_friction){
   CHECK(C, "load a configuration first");
 #ifdef MT_ODE
   if(ode) delete ode;
-  ode = new OdeModule;
+  ode = new OdeInterface;
 #endif
   
   // SIMULATOR PARAMETER
