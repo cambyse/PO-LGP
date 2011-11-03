@@ -1,15 +1,15 @@
-CONTEXT
-clear(X) on(X Y)
 ACTION
 grab(X)
+CONTEXT
+clear(X) on(X Y)
 OUTCOMES
 0.8 inhand(X) -on(X Y)
 0.2
 
-CONTEXT
-clear(X) inhand(Y)
 ACTION
 puton(X)
+CONTEXT
+clear(X) inhand(Y)
 OUTCOMES
 0.7 on(Y X) -inhand(Y)
 0.2

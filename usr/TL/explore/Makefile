@@ -4,7 +4,6 @@ OBJS = main.o
 # OPTIM = fast
 OPTIM = debug
 
-
 TOBIAS = 1
 
 # FREEGLUT= 1

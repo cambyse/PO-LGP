@@ -182,8 +182,8 @@ public:
 //   void controlledStep(arr &q,arr &W,const char* text);
 };
 
-#ifdef MT_IMPLEMENTATION
-#  include "robotManipulationSimulatorInterface.cpp"
-#endif
+// #ifdef MT_IMPLEMENTATION
+// #  include "robotManipulationSimulatorInterface.cpp"
+// #endif
 
 #endif  // TL_robot_manipulation_simulator

@@ -890,7 +890,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  TaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -934,7 +934,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  TaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -1284,7 +1284,7 @@ void RobotManipulationSimulator::getObjectsAbove(uintA& list,const char *obj_nam
   uintA others;
   getObjects(others);
   ors::Body* other_body;
-//   C->reportProxies();
+  C->reportProxies();
   
   for(i=0;i<C->proxies.N;i++){
     if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth

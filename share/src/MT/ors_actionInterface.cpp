@@ -35,7 +35,7 @@ void drawOrsActionInterfaceEnv(void*){
   glDrawFloor(4., 1, 1, 1);
 }
 
-void oneStep(const arr &q, ors::Graph *C, OdeModule *ode, SwiftInterface *swift){
+void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift){
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
 #ifdef MT_ODE
@@ -57,7 +57,7 @@ void oneStep(const arr &q, ors::Graph *C, OdeModule *ode, SwiftInterface *swift)
   
 }
 
-void controlledStep(arr &q, arr &W, ors::Graph *C, OdeModule *ode, SwiftInterface *swift, TaskVariableList& TVs){
+void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs){
   static arr dq;
   updateState(TVs);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
@@ -156,7 +156,7 @@ void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp, doub
   CHECK(C, "load a configuration first");
 #ifdef MT_ODE
   if(ode) delete ode;
-  ode = new OdeModule;
+  ode = new OdeInterface;
 #endif
   
   // SIMULATOR PARAMETER

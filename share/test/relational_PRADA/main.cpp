@@ -197,13 +197,14 @@ void plan() {
   cout<<"The planner would like to kindly recommend the following action to you:"<<endl<<*action<<endl;
   
   if (plan_type == PLAN_TYPE__PRADA || plan_type == PLAN_TYPE__A_PRADA) {
-    AtomA plan;
+    AtomL plan;
     double value;
     ((TL::PRADA*) planner)->generatePlan(plan, value, *s);
     cout<<endl;
     cout<<"Also, it would like to kindly recommend the following plan with value "<<value<<" to you:"<<endl<<plan<<endl;
   }
   
+  cout<<endl<<endl<<"ALL TESTS SUCCESSFUL!"<<endl<<"Adeus!"<<endl;
 }
 
 
