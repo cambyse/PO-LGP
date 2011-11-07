@@ -13,23 +13,23 @@ Tests serve you in two ways:
 Author(s):  Marc Toussaint, Tobias Lang
 Goal:       tests the decision-making interface to the relational routines and
             the robot maniplation simulator
-Comments:   none
+Comments:   -
 
 
 *** relational_basic
-Author:   Tobias Lang
-Goal:     tests basic relational routines
-Comments: none
+Author(s):  Tobias Lang
+Goal:       tests basic relational routines
+Comments:   - 
 
 
 *** relational_PRADA
 Author(s):  Tobias Lang
 Goal:       tests the planning algorithm PRADA
-Comments:   none
+Comments:   -
 
 
 *** relational_ruleLearning
 Author(s):  Tobias Lang
 Goal:       tests the relational rule learning engine
-Comments:   none
+Comments:   -
 
