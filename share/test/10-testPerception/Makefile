@@ -23,7 +23,7 @@ CUDA = 1
 #REVEL = 1
 LEWINER = 1
 NIKOLAY = 1
-TOBIAS = 1
+RELATIONAL = 1
 NILS = 1
 
 include $(BASE)/make-generic

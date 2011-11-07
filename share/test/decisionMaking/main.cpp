@@ -3,8 +3,8 @@
 #include <ctime>
 #include <stdlib.h>
 #include <cstdlib>
-#include <TL/decisionMakingModule.h>
-#include <TL/robotManipulationSimulator.h>
+#include <relational/decisionMakingModule.h>
+#include <relational/robotManipulationSimulator.h>
 
 
 

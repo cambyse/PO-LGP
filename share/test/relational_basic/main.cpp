@@ -1,6 +1,6 @@
-#include <TL/logicDefinitions.h>
-#include <TL/ruleReasoning.h>
-#include <TL/prada.h>
+#include <relational/logicDefinitions.h>
+#include <relational/ruleReasoning.h>
+#include <relational/prada.h>
 
 
 #define PLAN_TYPE__SST 1

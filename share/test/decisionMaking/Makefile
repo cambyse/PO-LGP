@@ -1,6 +1,6 @@
 BASE = ../..
 
-TOBIAS = 1
+RELATIONAL = 1
 #ODE = 1
 FREEGLUT = 1
 SWIFT   = 1
