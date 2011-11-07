@@ -158,21 +158,21 @@ void RobotActionInterface::setMesh(const char* shapeName, const ors::Mesh& mesh)
   }
 }
 
-void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
+void RobotActionInterface::perceiveObjects(PerceptionModule perc){
   s->robotProcesses.ctrl.change_task(Stop::a());
   for(; !schunkShutdown;){
-    perc.output.readAccess(NULL);
+    perc.output->readAccess(NULL);
     bool bPerceive = false;
-    for(uint i=0; i<perc.output.objects.N; i++){
-      if(perc.output.objects.N>=3){
-        if(perc.output.objects(0).found>5 &&
-            perc.output.objects(1).found>5 &&
-            perc.output.objects(2).found>5){
+    for(uint i=0; i<perc.output->objects.N; i++){
+      if(perc.output->objects.N>=3){
+        if(perc.output->objects(0).found>5 &&
+            perc.output->objects(1).found>5 &&
+            perc.output->objects(2).found>5){
           ors::Shape *sh=s->robotProcesses.ctrl.ors.getShapeByName("cyl1");
-          sh->rel.pos.set(perc.output.objects(0).center3d.p);
+          sh->rel.pos.set(perc.output->objects(0).center3d.p);
           sh->rel.pos -= sh->body->X.pos;
           sh=s->robotProcesses.ctrl.ors.getShapeByName("cyl2");
-          sh->rel.pos.set(perc.output.objects(1).center3d.p);
+          sh->rel.pos.set(perc.output->objects(1).center3d.p);
           sh->rel.pos -= sh->body->X.pos;
           
           s->robotProcesses.gui.processLock.writeLock();
@@ -183,14 +183,14 @@ void RobotActionInterface::perceiveObjects(PerceptionModule& perc){
           MT_MSG("objs found");
         }else{
           MT_MSG("looking at objects"
-                 <<perc.output.objects(0).found <<", "
-                 <<perc.output.objects(1).found <<", "
-                 <<perc.output.objects(2).found
+                 <<perc.output->objects(0).found <<", "
+                 <<perc.output->objects(1).found <<", "
+                 <<perc.output->objects(2).found
                 );
         }
       }
     }
-    perc.output.deAccess(NULL);
+    perc.output->deAccess(NULL);
     if(bPerceive) break;
     
     MT::wait(.2);

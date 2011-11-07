@@ -5,7 +5,7 @@
 #include "robot_variables.h"
 
 struct EarlyVisionModule:public Process {
-  EarlyVisionOutput output;
+  EarlyVisionOutput *output;
   CameraImages *input;
   
   //INPUTS:

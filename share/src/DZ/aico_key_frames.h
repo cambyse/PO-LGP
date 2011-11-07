@@ -1,7 +1,7 @@
 #include <MT/soc.h>
 
 /** Returns mean and variance of end-position without dynamic constraints   */
-double OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold);
+void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold);
 
 /** Returns mean and variance of end-position with dynamic constraints   */
 void OneStepDynamic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,uint T,double alpha);

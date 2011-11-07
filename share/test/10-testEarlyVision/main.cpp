@@ -20,12 +20,14 @@ int main(int argn,char** argv){
 
   //Variables
   CameraImages currentCameraImages;
+  EarlyVisionOutput evisOutput;
 
   //Processes
   EarlyVisionModule evis;
   CameraModule cam;
   cam.output = &currentCameraImages;
   evis.input = &currentCameraImages;
+  evis.output = &evisOutput;
 #if 0
   currentCameraImages.loadDummyImages();
 #endif
@@ -52,11 +54,11 @@ int main(int argn,char** argv){
       //cout <<"hsv world   = " <<hsvWorld <<endl;
     }
     
-    evis.output.readAccess(NULL);
-    if(evis.output.hsvThetaL.N){
-      write_ppm(evi2rgb(evis.output.hsvThetaL[0]),"hsvTheta.ppm");
+    evis.output->readAccess(NULL);
+    if(evis.output->hsvThetaL.N){
+      write_ppm(evi2rgb(evis.output->hsvThetaL[0]),"hsvTheta.ppm");
     }
-    evis.output.deAccess(NULL);
+    evis.output->deAccess(NULL);
   }
 
   evis.threadClose();

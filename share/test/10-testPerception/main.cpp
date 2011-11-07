@@ -27,20 +27,24 @@ int main(int argn,char** argv){
   //Variables
   CameraImages currentCameraImages;
   q_currentReferenceVar q_var;
+  EarlyVisionOutput evisOutput;
+  PerceptionOutput percOutput;
 
   //Processes
   EarlyVisionModule evis;
   CameraModule cam;
   cam.output = &currentCameraImages;
   evis.input = &currentCameraImages;
+  evis.output = &evisOutput;
+
 #ifndef REALCAMERA
   currentCameraImages.loadDummyImages();
 #endif
-  PerceptionModule perc;  perc.input=&evis.output;
-
+  PerceptionModule perc;  perc.input=evis.output;
+  perc.output = &percOutput;
   G.getJointState(q_var.q_reference);
   
-  GuiModule gui;  gui.cameraVar=evis.input;  gui.perceptionOutputVar=&perc.output;
+  GuiModule gui;  gui.cameraVar=evis.input;  gui.perceptionOutputVar=perc.output;
   gui.q_referenceVar = &q_var;
   gui.createOrsClones(&G);
 
@@ -53,7 +57,7 @@ int main(int argn,char** argv){
   bool bSave = MT::Parameter<bool>("saveImage");
   for(uint i=0;!STOP && i<1000;i++){
 	  if(bSave == 1){
-	  evis.output.readAccess(NULL);
+	  evis.output->readAccess(NULL);
 	   //   if(evis.output.hsvThetaL.N){
 	    //    write_ppm(cam.output.rgbL,"hsvTheta.ppm");
 	    //  }
@@ -70,7 +74,7 @@ int main(int argn,char** argv){
 		    			  hsvInt(x,y,z) = hsvL(x,y,z)*256;
 
 		       write_ppm(hsvInt,"hsvTheta.ppm");
-		       evis.output.deAccess(NULL);
+		       evis.output->deAccess(NULL);
 	  }
     MT::wait(.1);
     cout <<"\r" <<i <<flush;

@@ -129,6 +129,7 @@ struct RobotProcessGroup {
   SkinPressureVar skinPressureVar;
   currentProxiesVar currentProxies;
   CameraImages currentCameraImages;
+  PerceptionOutput percOutput;
 
   //Processes
   bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
