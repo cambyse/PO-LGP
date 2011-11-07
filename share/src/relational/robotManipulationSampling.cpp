@@ -19,9 +19,9 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "TL/robotManipulationDomain.h"
-#include "TL/robotManipulationSampling.h"
-#include "TL/logicReasoning.h"
+#include "relational/robotManipulationDomain.h"
+#include "relational/robotManipulationSampling.h"
+#include "relational/logicReasoning.h"
 
 
 

@@ -22,9 +22,9 @@
 #ifndef TL__ROBOT_MANIPULATION_DOMAIN
 #define TL__ROBOT_MANIPULATION_DOMAIN
 
-#include "TL/logicObjectManager.h"
-#include "TL/plan.h"
-#include "TL/robotManipulationSimulator.h"
+#include "relational/logicObjectManager.h"
+#include "relational/plan.h"
+#include "relational/robotManipulationSimulator.h"
 
 
 

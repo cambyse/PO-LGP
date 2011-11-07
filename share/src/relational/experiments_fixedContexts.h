@@ -1,9 +1,9 @@
 #ifndef TL__RULE_LEARNER_FIXED_CONTEXTS
 #define TL__RULE_LEARNER_FIXED_CONTEXTS
 
-#include "TL/logicDefinitions.h"
-#include "TL/ruleLearner.h"
-#include "TL/ruleExplorer.h"
+#include "relational/logicDefinitions.h"
+#include "relational/ruleLearner.h"
+#include "relational/ruleExplorer.h"
 
 
 

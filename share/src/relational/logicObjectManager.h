@@ -23,7 +23,7 @@
 #ifndef TL__LOGIC_OBJECT_MANAGER
 #define TL__LOGIC_OBJECT_MANAGER
 
-#include <TL/logicDefinitions.h>
+#include <relational/logicDefinitions.h>
 
 
 namespace TL {

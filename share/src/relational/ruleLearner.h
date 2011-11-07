@@ -1,7 +1,7 @@
 #ifndef TL__RULE_LEARNER
 #define TL__RULE_LEARNER
 
-#include <TL/logicObjectManager.h>
+#include <relational/logicObjectManager.h>
 
 
 /*

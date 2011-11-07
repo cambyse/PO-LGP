@@ -24,7 +24,7 @@
 
 #include <MT/array.h>
 #include <MT/ors.h>
-#include <TL/logicDefinitions.h>
+#include <relational/logicDefinitions.h>
 
 // ---------------------------------------------
 // ODE PARAMETERS

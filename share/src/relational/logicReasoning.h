@@ -23,7 +23,7 @@
 #ifndef TL__LOGIC_REASONING
 #define TL__LOGIC_REASONING
 
-#include <TL/logicDefinitions.h>
+#include <relational/logicDefinitions.h>
 
 
 

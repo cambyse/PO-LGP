@@ -1,5 +1,6 @@
 BASE = ../..
 
-TOBIAS = 1
+RELATIONAL = 1
+
 
 include $(BASE)/make-generic

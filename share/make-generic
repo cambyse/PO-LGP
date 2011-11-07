@@ -154,7 +154,6 @@ endif
 ################################################################################
 # (a tag like `FREEGLUT = 1' can be defined in the local Makefiles as needed)
 
-
 ifdef CUDA
 CXXFLAGS += -DMT_CUDA
 NXX = $(LIBPATH)/cuda/bin/nvcc
@@ -316,8 +315,8 @@ LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
 endif
 
 ifdef OPENCV_UBUNTU #assuming ubuntu libopencv2.3-dev package
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.3.1`
-LIBS	  += `pkg-config --libs opencv-2.3.1`
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
+LIBS	  += `pkg-config --libs opencv-2.1`
 endif
 
 ifdef LAPACK
@@ -407,9 +406,9 @@ LinuxLibs += -lnj
 DEPEND += externalMake_src/NJ
 endif
 
-ifdef TOBIAS
-LinuxLibs += -ltl
-DEPEND += externalMake_src/TL
+ifdef RELATIONAL
+LinuxLibs += -lrelational
+DEPEND += externalMake_src/relational
 endif
 
 ifdef STANIMIR

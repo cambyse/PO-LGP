@@ -21,7 +21,7 @@
 
 #include <MT/opengl.h>
 #include <MT/plot.h>
-#include <TL/utilTL.h>
+#include <utilTL.h>
 
 #include "robotManipulationSimulator.h"
 #include <sstream>

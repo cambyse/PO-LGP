@@ -1,6 +1,6 @@
-#include "TL/ppddl.h"
-#include "TL/logicDefinitions.h"
-#include "TL/logicReasoning.h"
+#include "ppddl.h"
+#include "logicDefinitions.h"
+#include "logicReasoning.h"
 
 const uint CONSTANTS_START = 11;
 

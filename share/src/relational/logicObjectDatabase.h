@@ -23,7 +23,7 @@
 #ifndef TL__LOGIC_OBJECT_DATABASE
 #define TL__LOGIC_OBJECT_DATABASE
 
-#include <TL/logicDefinitions.h>
+#include <relational/logicDefinitions.h>
 
 
 

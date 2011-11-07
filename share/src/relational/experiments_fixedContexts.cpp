@@ -1,8 +1,8 @@
 #include "experiments_fixedContexts.h"
 #include <math.h>
 #include <MT/algos.h>
-#include "TL/ruleReasoning.h"
-#include "TL/logicReasoning.h"
+#include "ruleReasoning.h"
+#include "logicReasoning.h"
 
 
 namespace TL {

@@ -21,10 +21,10 @@
 */
 
 #include <MT/ors.h>
-#include <TL/robotManipulationDomain.h>
-#include <TL/robotManipulationSimulator.h>
-#include <TL/ruleReasoning.h>
-#include <TL/prada.h>
+#include <robotManipulationDomain.h>
+#include <robotManipulationSimulator.h>
+#include <ruleReasoning.h>
+#include <prada.h>
 
 #include "decisionMakingModule.h"
 

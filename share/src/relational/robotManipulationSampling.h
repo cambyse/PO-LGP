@@ -22,8 +22,8 @@
 #ifndef TL__BW_SAMPLING
 #define TL__BW_SAMPLING
 
-#include <TL/robotManipulationSampling.h>
-#include <TL/logicObjectManager.h>
+#include <relational/robotManipulationSampling.h>
+#include <relational/logicObjectManager.h>
 
 namespace TL {
 

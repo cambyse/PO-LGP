@@ -22,7 +22,7 @@
 #ifndef TL__RULE_REASONING
 #define TL__RULE_REASONING
 
-#include "TL/logicObjectManager.h"
+#include "relational/logicObjectManager.h"
 
 
 #define STATE_TRANSITION__NOISE_OUTCOME 11

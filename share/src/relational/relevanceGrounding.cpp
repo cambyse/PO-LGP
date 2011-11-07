@@ -1,5 +1,5 @@
 #include "relevanceGrounding.h"
-#include <TL/robotManipulationDomain.h>
+#include <robotManipulationDomain.h>
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

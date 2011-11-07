@@ -1,5 +1,5 @@
 BASE   = ../..
-NAME   = libtl
+NAME   = librelational
 OUTPUT = $(BASE)/lib/$(NAME).so
 
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates

@@ -1,11 +1,11 @@
 #ifndef TL__RULE_EXPLORER
 #define TL__RULE_EXPLORER
 
-#include <TL/robotManipulationDomain.h>
-#include <TL/ruleLearner.h>
-#include <TL/ruleLearner_ground.h>
-#include <TL/plan.h>
-#include <TL/prada.h>
+#include <relational/robotManipulationDomain.h>
+#include <relational/ruleLearner.h>
+#include <relational/ruleLearner_ground.h>
+#include <relational/plan.h>
+#include <relational/prada.h>
 
 
 // ---------------------------------------------------

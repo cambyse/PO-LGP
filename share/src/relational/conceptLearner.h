@@ -26,7 +26,7 @@
 #define NEW_FUNCS_PER_ROUND 2
 
 
-#include <TL/ruleLearner.h>
+#include <relational/ruleLearner.h>
 
 
 class PredicateInventor {

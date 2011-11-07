@@ -24,7 +24,7 @@
 
 #include <map>
 #include <MT/util.h>
-#include <TL/utilTL.h>
+#include <relational/utilTL.h>
 
 #define FOR1D_(x,i)   for(i=0;i<x.num();i++)
 #define FOR1D_DOWN_(x,i)  for(i=x.num();i--;)

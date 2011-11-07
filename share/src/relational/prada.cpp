@@ -1,7 +1,7 @@
 #include "prada.h"
 
-#include "TL/ruleReasoning.h"
-#include "TL/logicReasoning.h"
+#include "ruleReasoning.h"
+#include "logicReasoning.h"
 
 
 #define FAST 1
