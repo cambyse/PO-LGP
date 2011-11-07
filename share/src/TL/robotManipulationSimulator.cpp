@@ -113,7 +113,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
   static arr dq;
   updateState(TVs);
   updateChanges(TVs);
-  bayesianControl_obsolete(TVs,dq,W);
+  bayesianControl(TVs,dq,W);
   q += dq;
   oneStep(q,C,ode,swift,gl,revel,text);
 #endif
@@ -393,9 +393,9 @@ bool RobotManipulationSimulator::onGround(uint id) {
 double GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0.4;
 
 void RobotManipulationSimulator::grab_final(const char *manipulator,const char *obj_grabbed, const char* message){
-  ors::Body* obj=C->getBodyByName(obj_grabbed);
+  ors::Body *obj=C->getBodyByName(obj_grabbed);
   bool isTable = obj->index == getTableID();
-  
+
   uintA list;
   getObjectsAbove(list, obj_grabbed);
   bool object_is_clear = list.N == 0;
@@ -405,18 +405,15 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     msg_string << "grab "<<obj_grabbed;
   }
   
-
-  DefaultTaskVariable x("endeffector",*C,posTVT,manipulator,0,0,0,0);
-  x.setGainsAsAttractor(20,.2);
+  DefaultTaskVariable x("endeffector", *C, posTVT, manipulator, 0, 0, 0, ARR());
+  x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
-  TaskVariableList TVs;
-  TVs.append(&x);
+  
   uint t;
-  arr q,dq;
-  C->getJointState(q);
-
-    // (1) drop object if one is in hand
-//   dropInhandObjectOnTable(message);
+  arr q, dq;
+  
+  // (1) drop object if one is in hand
+  //   dropInhandObjectOnTable(message);
   uint id_grabbed = getInhand();
   if (id_grabbed != UINT_MAX) {
     // move a bit towards new object
@@ -436,28 +433,38 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       del_edge(e,C->bodies,C->joints,true);
     }
   }
+  // MARCs OLD VERSION
+//     ors::Joint *e;
+//   uint i;
+//   for_list(i, e, C->bodies(x.i)->outLinks){
+//     NIY;
+    //C->del_edge(e);
+//   }
   
-  
-  // (2) move manipulator towards new object
-  for(t=0;t<Tabort;t++){
-    x.y_target.setCarray(obj->X.pos.p,3);
+  // (2) move towards new object
+  C->getJointState(q);
+  for(t=0; t<Tabort; t++){
+    x.y_target.setCarray(obj->X.pos.p, 3);
     if (isTable) {x.y_target(2) = neutralHeight-0.1;}
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-//     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.active==1 || C->getContact(x.i,obj->index)) break;
+//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
+//     gl->update();
+    if(x.err<.05 || C->getContact(x.i, obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
+  
     
+    
+  
   // (3) grasp if not table or world
-  if(obj->index==getTableID()){
-    //indicateFailure()?
-    // don't do anything
+  if(obj->index!=getTableID()){
+    C->glueBodies(C->bodies(x.i), obj);
   }else{
-    C->glueBodies(C->bodies(x.i),obj);
+    //indicateFailure()?
   }
-
+  
   // (4) move upwards (to avoid collisions)
   // to be sure: unset contact of that object if grabbed from table
   ors::Shape* s = NULL;
@@ -465,20 +472,18 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     s = obj->shapes(0);
     s->cont = false;
   }
-  
-  // TODO
-//   x.active_tol=.05;
-  for(t=0;t<Tabort;t++){
-    x.y_target.setCarray(obj->X.pos.p,3);
-    if (x.y_target(2) < neutralHeight)
-      x.y_target(2) += SMALL_HEIGHT_STEP;
-    else
-      break;
+   
+  for(t=0; t<Tabort; t++){
+    x.y_target.setCarray(obj->X.pos.p, 3);
+//     if (x.y_target(2) < neutralHeight)       // ALTE LOESUNG -- TOBIAS
+//       x.y_target(2) += SMALL_HEIGHT_STEP;    // ALTE LOESUNG -- TOBIAS
+    x.y_target(2) = 1.2;
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-//     controlledStep(q,W,send_msg);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-    if(x.active==1) break;
+//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
+//     gl->update();
+    if(x.err<.05) break;
     
     // might drop object
     if (t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
@@ -489,7 +494,9 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       }
     }
   }
+  if(t==Tabort){ indicateFailure(); return; }
   
+    
   // reset contact of grabbed object
   if (s!=NULL) {
     s->cont = true;
@@ -1284,7 +1291,7 @@ void RobotManipulationSimulator::getObjectsAbove(uintA& list,const char *obj_nam
   uintA others;
   getObjects(others);
   ors::Body* other_body;
-  C->reportProxies();
+//   C->reportProxies();
   
   for(i=0;i<C->proxies.N;i++){
     if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth

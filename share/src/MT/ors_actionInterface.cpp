@@ -61,7 +61,7 @@ void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInter
   static arr dq;
   updateState(TVs);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
-  bayesianControl_obsolete(TVs, dq, W);
+  bayesianControl(TVs, dq, W);
   q += dq;
   oneStep(q, C, ode, swift);
 }

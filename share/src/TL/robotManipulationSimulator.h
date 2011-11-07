@@ -167,6 +167,7 @@ public:
   OdeInterface *ode;
   SwiftInterface *swift;
   RevelInterface *revel;
+  TaskVariableList TVs;
     
   uint numObjects;
   double neutralHeight;
