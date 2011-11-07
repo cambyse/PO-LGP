@@ -2,12 +2,8 @@ NAME   = $(shell basename $(PWD))
 
 ALL =	extern/SWIFT++_1.2/src \
 	extern/libcolorseg/src \
-	extern/Lewiner \
+#	extern/Lewiner \
 	src/NJ \
-	src/TL \
-	src/NP \
-	src/SD \
-	src/DZ \
 	src/MT \
 #	extern/SWIFT++_1.2/decomposer/src \
 

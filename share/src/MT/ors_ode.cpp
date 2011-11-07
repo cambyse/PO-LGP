@@ -27,6 +27,7 @@
 #  include <ode/../internal/joints/joints.h>
 #  include <ode/../internal/collision_kernel.h>
 #  include <ode/../internal/collision_transform.h>
+
 #  ifdef MT_MSVC
 #    undef HAVE_UNISTD_H
 #    undef HAVE_SYS_TIME_H
