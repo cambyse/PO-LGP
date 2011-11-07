@@ -99,6 +99,7 @@ LIBS    += -lrt
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
 UIC = uic
+endif
 
 ifeq ($(SYS), Darwin)
 ifndef CXX
