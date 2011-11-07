@@ -586,7 +586,8 @@ http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 
 \end{itemize}
 
-\subsection{Setting Up GIT Server to Maserati}
+
+\subsubsection{Setting Up GIT Server to Maserati}
 
 First type
 \begin{verbatim}
@@ -627,6 +628,28 @@ then change all your remotes to maserati, remove any old/conflicting origins ent
 	fetch = +refs/heads/*:refs/remotes/maserati/*
 \end{verbatim}
 	\end{itemize}
+
+
+\subsubsection{How to merge individual local branch with remote branch}
+
+Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge 
+with the \verb+master+ branch in the remote repository. Here, \verb+origin+ is a variable
+for the remote git repository server (i.e., maserati in our case).
+\begin{verbatim}
+// You are in the individual branch branch123 on your local machine.
+git fetch origin master     // fetch from remote master
+git merge origin master     // merge from remote master
+git push                    // push local branch123 to remote branch123
+git checkout master         // switch to master branch
+git fetch origin branch123  // fetch from remote branch123
+git merge origin branch123  // merge from remote branch123
+git push                    // push local master to remote master
+\end{verbatim}
+
+
+
+
+
 
 \subsection{svn workflow}
 
