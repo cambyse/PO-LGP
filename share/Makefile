@@ -15,6 +15,9 @@ reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
+cleanSrc: 
+	-@find src/* -maxdepth 2 -follow -type d -exec make -C {} clean \;
+
 make/%::
 	make -C $*
 

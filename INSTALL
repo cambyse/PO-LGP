@@ -1,0 +1,127 @@
+#! /bin/sh
+
+# INSTALLING YOUR MLR-SYSTEM
+# (c) Machine Learning and Robotics Lab, FU Berlin, Germany, 2011
+# http://www.inf.fu-berlin.de/en/groups/mlr
+
+
+DIR_EXTERNAL_LIBS=~/lib/
+
+
+# Absolute path to this script, e.g. /home/user/bin/foo.sh
+SCRIPT=`readlink -f $0`
+# Absolute path this script is in, thus /home/user/bin
+DIR_GIT=`dirname $SCRIPT`
+
+
+# ----------------------------
+# (1) External Libraries
+
+echo "Setting up external libraries in: " $DIR_EXTERNAL_LIBS
+
+if [ ! -d "${DIR_EXTERNAL_LIBS}" ] ; then
+  echo "Creating lib directory: " $DIR_EXTERNAL_LIBS
+  mkdir $DIR_EXTERNAL_LIBS
+fi
+
+cd $DIR_EXTERNAL_LIBS
+
+# (1.1) Download 
+# TODO Noch geeigneten Ort fuer Tar-ball finden
+# wget \
+# https://maserati.mi.fu-berlin.de/redmine/attachments/894/mlrLibs.tgz
+# Veraendert irgendwie die Dateien :-(
+# TODO DECOMMENT NEXT LINE
+# scp tobias@achtauge.imp.fu-berlin.de:mlrLibs.tgz .
+
+# (1.2) Unpack 
+# TODO DECOMMENT NEXT LINE
+tar xfz mlrLibs.tgz
+
+
+# (1.3) Install everything
+# TODO
+
+# (1.4) Link to libraries
+
+cd $DIR_GIT
+cd share/extern
+echo "Linking 'extern/' to libraries directory " $DIR_EXTERNAL_LIBS "..."
+./LINK $DIR_EXTERNAL_LIBS
+cd ../..
+echo "Linking successfully finished."
+
+
+
+
+
+# ----------------------------
+# (2) Create make-config
+
+# Appropriate flags
+
+# Erstellung einer make-config
+
+cd share/
+mv make-config make-config.BAK
+echo "ifndef NAME
+  MTLIB = 1
+endif
+" > make-config
+cd ..
+
+
+
+
+
+
+# ----------------------------
+# (3) Install our libs
+
+
+# (3.1) libmt
+
+cd share/src/MT/
+make
+cd ../../../
+echo "src/MT/ has been made successully."
+
+
+# (3.2) libnj
+
+cd share/src/NJ/
+make
+cd ../../../
+echo "\nsrc/MT/ has been made successully.\n"
+
+
+# (3.3) libsd
+
+cd share/src/SD/
+make
+cd ../../../
+echo "\nsrc/SD/ has been made successully.\n"
+
+
+# (3.3) libsd
+
+cd share/src/DZ/
+make
+cd ../../../
+echo "\nsrc/DZ/ has been made successully.\n"
+
+
+# (3.4) librelational
+
+cd share/src/relational/
+make
+cd ../../../
+echo "\nsrc/relational/ has been made successully.\n"
+
+
+
+# ----------------------------
+# (4) Tests
+
+echo "To test the code, go to share/test/."
+
