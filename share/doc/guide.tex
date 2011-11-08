@@ -37,6 +37,8 @@ This is the central hub for information. Goals of this document:
 \begin{verbatim}
 cd ~/git
 git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
+OR
+git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
 \end{verbatim}
 \end{code}
 See section \ref{secGit} on how to use git.
@@ -421,6 +423,8 @@ LINK to my notes on the CV system
 
 \subsection{git workflow}\label{secGit}
 
+TODO: The GIT sections needs to be cleaned up.
+
 Most likely (I would wonder if not) the git man pages are installed
 together with the git binaries in your distribution. The fastest way to
 check the syntax or parameters of a git subcommand are the man pages. 
@@ -441,6 +445,9 @@ Usually, |git foo help| is synonym for |man git foo|.
 \begin{code}
 \begin{verbatim}
 git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
+OR
+git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
+// where <DIR> is your local target root directory for the GIT-clone
 git config --global diff.external git-diff.sh
 git config --global push.default tracking
 
