@@ -22,12 +22,6 @@ externals="SWIFT++_1.2 tony-mdp opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan od
 dir="$1"
 
 for f in $externals; do
-#   echo "$dir/$f"
-  #[ -d "$1" ] || echo "$dir/$f" does not exist; 
   ln -s -f "$dir/$f" $f
 done
 
-#ANN_1.1
-#libcolorseg
-#ODE_0.11
-#SWIFT++_1.2
