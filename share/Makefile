@@ -1,11 +1,16 @@
 NAME   = $(shell basename $(PWD))
 
-ALL =	extern/SWIFT++_1.2/src \
-	extern/libcolorseg/src \
-#	extern/Lewiner \
-	src/NJ \
+ALL =	\
 	src/MT \
+	src/SD \
+	src/NJ \
+	src/DZ \
+	src/relational \
+#	extern/libcolorseg/src \
+#	extern/Lewiner \
+#	extern/SWIFT++_1.2/src \
 #	extern/SWIFT++_1.2/decomposer/src \
+
 
 makeAll: $(ALL:%=make/%)
 
@@ -14,9 +19,6 @@ cleanAll: $(ALL:%=clean/%) cleanProjects
 reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
-
-cleanSrc: 
-	-@find src/* -maxdepth 2 -follow -type d -exec make -C {} clean \;
 
 make/%::
 	make -C $*
