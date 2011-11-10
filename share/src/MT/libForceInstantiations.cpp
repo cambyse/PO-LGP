@@ -47,6 +47,7 @@ template void MT::Parameter<MT::String>::initialize();
 template void MT::Parameter<bool>::initialize();
 template void MT::Parameter<double>::initialize();
 template void MT::Parameter<int>::initialize();
+template void MT::load<arr>(arr&,const char*, bool);
 
 //-- from array.h
 //full classes

@@ -21,6 +21,7 @@ struct PairSqrPotential { arr A, B, C, a, b; double hata; };
 struct VectorChainFunction {
   virtual void fi (arr& y, arr* J, uint i, const arr& x_i) = 0;
   virtual void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  double f_total(const arr& x);
 };
 struct SqrChainFunction {
   virtual double fi (SqrPotential *S, uint i, const arr& x_i) = 0;
@@ -53,6 +54,36 @@ struct ConvertVector2SqrChainFunction:SqrChainFunction{
       S->hata=sumOfSqr(Ji*x_i + Jj*x_j - y);
     }
     return sumOfSqr(y);
+  }
+};
+
+struct ConvertVectorChain2ScalarFunction:ScalarFunction{
+  VectorChainFunction *f;
+  ConvertVectorChain2ScalarFunction(VectorChainFunction& _f){ f=&_f; }
+  double fs(arr* grad, const arr& x){
+    uint T=x.d0;
+    double cost=0.;
+    arr y,J,Ji,Jj;
+    if(grad){
+      grad->resizeAs(x);
+      grad->setZero();
+    }
+    for(uint t=0;t<T;t++){ //node potentials
+      f->fi(y, (grad?&J:NULL), t, x[t]);
+      cost += sumOfSqr(y);
+      if(grad){
+        (*grad)[t]() += 2.*(~y)*J;
+      }
+    }
+    for(uint t=0;t<T-1;t++){
+      f->fij(y, (grad?&Ji:NULL), (grad?&Jj:NULL), t, t+1, x[t], x[t+1]);
+      cost += sumOfSqr(y);
+      if(grad){
+        (*grad)[t]()   += 2.*(~y)*Ji;
+        (*grad)[t+1]() += 2.*(~y)*Jj;
+      }
+    }
+    return cost;
   }
 };
 
@@ -128,6 +159,8 @@ uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_re
 uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 
 uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+uint optRicatti(arr& x, SqrChainFunction& f, const arr& x0, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 
 
 //===========================================================================

@@ -103,7 +103,7 @@ void pin_in_a_hole(){
   
   // a)
   findPosture(qT, q0, S, T, pos_hole, ARR(0,0,-1.), false);
-  cout <<"optimized qT:" <<endl;
+  cout <<"optimized qT:" <<qT <<endl;
   S.watch();
   
   // b)

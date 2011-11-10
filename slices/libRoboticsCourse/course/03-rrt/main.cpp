@@ -3,79 +3,94 @@
 #include <MT/ann.h>
 #include <MT/plot.h>
 
-
-
-void RTTplan(){
-  //Simulator S("arm7.ors");
-  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
-
-  arr q;
-  S.getJointAngles(q);
-
-  cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
-  S.watch();        //pause and watch initial posture
-
-  arr q_start = q;
-  arr qnew,d;
-  bool collision;
-  double stepsize = 0.1;
-
-  ANN ann;      //ann also stores all points added to the tree in ann.X
+struct RRT{
+private:
+  ANN ann;      //ann stores all points added to the tree in ann.X
   uintA parent; //for each point we also store the index of the parent node
+  double stepsize;
+  uint last_parent;
 
-  ann   .append(q_start); //append q as the root of the tree
-  parent.append(0);    //q has itself as parent
+public:
+  RRT(const arr& q0, double _stepsize){
+    ann   .append(q0); //append q as the root of the tree
+    parent.append(0);    //q has itself as parent
+    stepsize = _stepsize;
+  }
   
-  plotModule.colors=false;
-
-  for(uint i=0;i<100000;i++){
-    //draw random target configuration
-    rndUniform(q,-1.,1.,false);
-
+  double getProposalTowards(arr& q){
     //find NN
     uint k=ann.getNN(q);
 
     //compute little step
-    d = q - ann.X[k]; //difference vector between q and nearest neighbor
-    qnew = ann.X[k] + stepsize/norm(d) * d;
+    arr d = q - ann.X[k]; //difference vector between q and nearest neighbor
+    double dist = norm(d);
+    q = ann.X[k] + stepsize/dist * d;
+    last_parent = k;
+    return dist;
+  }
+  
+  void add(const arr& q){
+    ann.append(q);
+    parent.append(last_parent);
+  }
+  
+  void addLineDraw(const arr& q, Simulator& S){
+    //I can't draw the edge in the 7-dim joint space!
+    //But I can draw a projected edge in 3D endeffector position space:
+    arr y_from,y_to;
+    arr line;
+    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"pin");
+    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"pin");
+    line.append(y_from); line.reshape(1,line.N);
+    line.append(y_to);
+    plotLine(line); //add a line to the plot
 
-    //check collision
-    S.setJointAngles(qnew,false);
-    arr y_col;
+  }
+  
+  //some access routines
+  uint getParent(uint i){ return parent(i); }
+  uint getNumberNodes(){ return ann.X.d0; }
+  arr& getNode(uint i){ return ann.X[i](); }
+  void getRandomNode(arr& q){ q = ann.X[rnd(ann.X.d0)]; }
+};
+
+void RTTplan(){
+  //Simulator S("arm7.ors");
+  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
+  S.setContactMargin(.02); //this is 2 cm (all units are in meter)
+  
+  arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
+  arr q0, y_col, q;
+  S.getJointAngles(q0);
+  q=q0;
+
+  S.setJointAngles(qT);
+  cout <<"final posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
+  S.watch();
+
+  double stepsize = .1;
+  RRT rrt(q0, stepsize);
+  
+  plotModule.colors=false;
+  
+  for(uint i=0;i<10000;i++){
+    rndUniform(q,-MT_2PI,MT_2PI,false);
+    rrt.getProposalTowards(q);
+    S.setJointAngles(q,false);
     S.kinematicsContacts(y_col);
-    if(y_col(0)>.5) collision=true; else collision=false;
-
-    //perhaps add to tree
-    if(!collision){
-      ann.append(qnew);
-      parent.append(k);
-    }
-
-    //plot helper (makes it slow...)
-    if(!collision){
-      //I can't draw the edge in the 7-dim joint space!
-      //But I can draw a projected edge in 3D endeffector position space:
-      arr y_from,y_to;
-      arr line;
-      S.setJointAngles(ann.X[k],false);  S.kinematicsPos(y_from,"pin");
-      S.setJointAngles(qnew    ,false);  S.kinematicsPos(y_to  ,"pin");
-      line.append(y_from); line.reshape(1,line.N);
-      line.append(y_to);
-      plotLine(line); //add a line to the plot
+    if(y_col(0)<.5){
+      rrt.add(q);
+      rrt.addLineDraw(q,S);
     }
 
     //some output
-    if(!(i%1000)) S.setJointAngles(qnew); //updates diplay (makes it slow)
-    cout <<"\rRRT size = " <<ann.X.d0 <<std::flush;
+    if(!(i%1000)) S.setJointAngles(q); //updates diplay (makes it slow)
+    cout <<"\rRRT sizes = " <<rrt.getNumberNodes() <<std::flush;
   }
 }
 
 int main(int argc,char **argv){
-  uint mode=1;
-  if(argc>1) mode = atoi(argv[1]);
-  switch(mode){
-  case 1:  RTTplan();  break;
-  }
+  RTTplan();
 
   return 0;
 }
