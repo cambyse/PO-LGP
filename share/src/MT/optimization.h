@@ -4,6 +4,162 @@
 #include "array.h"
 #include "util.h"
 
+//===========================================================================
+//
+// problem prototypes
+//
+
+//typedef double (*ScalarFunction)(arr* optional_gradient, const arr& x, void* optional_data); 
+//typedef void (*VectorFunction)(arr& output, arr* optional_Jacobian, const arr& x, void* optional_data);
+
+struct ScalarFunction { virtual double fs(arr* grad, const arr& x) = 0; };
+struct VectorFunction { virtual void   fv(arr& y, arr* J, const arr& x) = 0; };
+
+struct     SqrPotential { arr A, a;          double hata; };
+struct PairSqrPotential { arr A, B, C, a, b; double hata; };
+
+struct VectorChainFunction {
+  virtual void fi (arr& y, arr* J, uint i, const arr& x_i) = 0;
+  virtual void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+};
+struct SqrChainFunction {
+  virtual double fi (SqrPotential *S, uint i, const arr& x_i) = 0;
+  virtual double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  double f_total(const arr& x);
+};
+
+struct ConvertVector2SqrChainFunction:SqrChainFunction{
+  VectorChainFunction *f;
+  ConvertVector2SqrChainFunction(VectorChainFunction& _f){ f=&_f; }
+  double fi (SqrPotential *S, uint i, const arr& x_i){
+    arr y,J;
+    f->fi(y, (S?&J:NULL), i, x_i);
+    if(S){
+      S->A=~J * J;
+      S->a=~J * (J*x_i - y);
+      S->hata=sumOfSqr(J*x_i - y);
+    }
+    return sumOfSqr(y);
+  }
+  double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j){
+    arr y,Ji,Jj;
+    f->fij(y, (S?&Ji:NULL), (S?&Jj:NULL), i, j, x_i, x_j);
+    if(S){
+      S->A=~Ji*Ji;
+      S->B=~Jj*Jj;
+      S->C=~Ji*Jj;
+      S->a=~Ji*(Ji*x_i + Jj*x_j - y);
+      S->b=~Jj*(Ji*x_i + Jj*x_j - y);
+      S->hata=sumOfSqr(Ji*x_i + Jj*x_j - y);
+    }
+    return sumOfSqr(y);
+  }
+};
+
+// struct ConvertVectorChain2Function:VectorFunction{
+//   VectorChainFunction *f;
+//   uint T;
+//   ConvertVectorChain2Function(VectorChainFunction& _f,uint _T){ f=&_f; T=_T; }
+//   void   fv(arr& y, arr* J, const arr& x){
+//     x.reshape(T,x.N/T);
+//     arr tmp;
+//     f->fi(tmp, 0, x[0]);
+//     uint n=tmp.N;
+//     y.resize(T+(T-1),n);
+//     (*J).resize(T+(T-1),n,x.d1);
+//     for(t=0;t<T;t++){
+//       f->fi(y[t](), &(*J)[t], t, x[t]);
+//       if(t>0)  f->fij(y[t](), &(*J)[t], t, x[t]);
+// 
+//   }
+//   double fi (SqrPotential *S, uint i, const arr& x_i){
+//     arr y,J;
+//     f->fi(y, (S?&J:NULL), i, x_i);
+//     if(S){
+//       S->A=~J * J;
+//       S->a=~J * (J*x_i - y);
+//       S->hata=sumOfSqr(J*x_i - y);
+//     }
+//     return sumOfSqr(y);
+//   }
+//   double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j){
+//     arr y,Ji,Jj;
+//     f->fij(y, (S?&Ji:NULL), (S?&Jj:NULL), i, j, x_i, x_j);
+//     if(S){
+//       S->A=~Ji*Ji;
+//       S->B=~Jj*Jj;
+//       S->C=~Ji*Jj;
+//       S->a=~Ji*(Ji*x_i + Jj*x_j - y);
+//       S->b=~Jj*(Ji*x_i + Jj*x_j - y);
+//       S->hata=sumOfSqr(Ji*x_i + Jj*x_j - y);
+//     }
+//     return sumOfSqr(y);
+//   }
+// };
+/*
+struct ScalarGraphFunction {
+  virtual uintA edges() = 0;
+  virtual double fi (arr* grad, uint i, const arr& x_i) = 0;
+  virtual double fij(arr* gradi, arr* gradj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  double f_total(const arr& X);
+};*/
+
+//===========================================================================
+//
+// gradient checks
+//
+
+void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
+void checkGradient(VectorFunction &f, const arr& x, double tolerance);
+
+
+//===========================================================================
+//
+// optimization methods
+//
+
+/// minimizes cost(x) = phi(x)^T phi(x) using the Jacobian of phi
+uint optGaussNewton(arr& x, VectorFunction& phi, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0);
+
+/// minimizes f(x)
+uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, uint verbose=0 );
+
+/// minimizes f(x)
+uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+
+uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+
+
+//===========================================================================
+//
+// Rprop
+//
+
+/*! Rprop, a fast gradient-based minimization */
+class Rprop {
+public:
+  double incr;
+  double decr;
+  double dMax;
+  double dMin;
+  double rMax;
+  double delta0;
+  
+  arr lastGrad; // last error gradient
+  arr stepSize; // last update
+  
+  Rprop();
+  
+  void init(double _delta0);
+  void step(arr& x, const arr& grad, uint *singleI=NULL);
+  void step(double& x, const double& grad);
+  void step(arr& x, ScalarFunction& f);
+  uint loop(arr& x, ScalarFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxIterations=1000, uint verbose=0);
+  bool done();
+};
+
+
+
 /*struct Monotonizer{
   enum { LevenbergMarquard=0, StepSize };
   int mode;
@@ -29,68 +185,6 @@
   }
   };*/
 
-struct GaussNewtonCostFunction {
-  //provides a list of cost terms:
-  //  the total cost is   cost(x) = \sum_i phi_i(x)^T C_i phi_i(x)
-  //  phi_i is a vector depending on x
-  //  J_i its Jacobian at x
-  //  C_i is a cost metric (often just Id)
-  
-  arr phi, J;
-  virtual void calcTermsAt(const arr& x) = 0;
-};
-
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals=1000, double maxStepSize=-1.);
-
-/*struct GaussNewtonStepper{
-  double lambda;
-  arr Delta, y;
-  arr R, r;
-
-  void init(uint n){
-    evals=0;
-    r.resize(n); R.resize(n, n);
-  }
-
-  //compute initial costs
-  f.calcTermsAt(x);  evals++;
-  lx = sumOfSqr(f.phi);
-  VERBOSE(2, cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a=" <<a <<endl);
-
-  for(;;){
-    //compute Delta
-    arr tmp;
-    innerProduct(R, ~f.J, f.J  );  R.reshape(x.N, x.N);
-    innerProduct(r, ~f.J, f.phi);
-
-    lapack_Ainv_b_sym(Delta, R, -r);
-
-    for(;;){
-      y = x + a*Delta;
-      f.calcTermsAt(y);  evals++;
-      ly = sumOfSqr(f.phi);
-      VERBOSE(2, cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a);
-      CHECK(ly==ly, "cost seems to be NAN: ly=" <<ly);
-      if(ly <= lx) break;
-      if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      //decrease stepsize
-      a = .5*a;
-      VERBOSE(2, cout <<" - reject" <<endl);
-    }
-    VERBOSE(2, cout <<" - ACCEPT" <<endl);
-
-    //adopt new point and adapt stepsize
-    x = y;
-    lx = ly;
-    a = pow(a, 0.7);
-
-    //stopping criterion
-    if(norm(Delta)<tolerance || evals>maxEvals) break;
-  }
-  //cout <<lx <<' ' <<flush;
-  return evals;
-
-}*/
 
 struct OptimizationProblem {
   bool isVectorValued;
@@ -104,9 +198,6 @@ struct OptimizationProblem {
   virtual void   F(arr& F, arr *grad, const arr& x, int i=-1){NIY;} //!< vector valued function
   OptimizationProblem(){ N=0; }
 };
-
-void checkGradient(OptimizationProblem &p, const arr& x, double tolerance);
-void checkGradient_vec(OptimizationProblem &p, const arr& x, double tolerance);
 
 struct DecideSign {
   double sumX, sumXX;
@@ -208,35 +299,6 @@ inline void   ModelStaticDL(arr& grad, const arr& w, void* p){((OptimizationProb
 // void checkGrad_fvec(OptimizationProblem& m, const arr& w, double tolerance){
 //   checkGradient(ModelStaticF, ModelStaticDF, &m, w, tolerance);
 // }
-
-
-//===========================================================================
-//
-// Rprop
-//
-
-/*! Rprop, a fast gradient-based minimization */
-class Rprop {
-public:
-  double incr;
-  double decr;
-  double dMax;
-  double dMin;
-  double rMax;
-  double delta0;
-  
-  arr lastGrad; // last error gradient
-  arr stepSize; // last update
-  
-  Rprop();
-  
-  void init(double _delta0);
-  void step(arr& x, const arr& grad, uint *singleI=NULL);
-  void step(double& x, const double& grad);
-  void step(arr& x, OptimizationProblem& p);
-  int loop(arr& x, OptimizationProblem& p, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxIterations=1000);
-  bool done();
-};
 
 
 //===========================================================================

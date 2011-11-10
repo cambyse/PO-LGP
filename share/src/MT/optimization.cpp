@@ -4,59 +4,119 @@
 #  define CHECK_EPS 1e-8
 #endif
 
-uint GaussNewton(arr& x, double tolerance, GaussNewtonCostFunction& f, uint maxEvals, double maxStepSize){
-  double a=1.;
-  double lx, ly;
-  arr Delta, y;
-  arr R(x.N, x.N), r(x.N);
-  uint evals=0;
-  
-  //compute initial costs
-  f.calcTermsAt(x);  evals++;
-  lx = sumOfSqr(f.phi);
-  VERBOSE(2, cout <<"starting point x=" <<x <<" l(x)=" <<lx <<" a=" <<a <<endl);
-  
-  for(;;){
-    //compute Delta
-    arr tmp;
-    innerProduct(R, ~f.J, f.J);  R.reshape(x.N, x.N);
-    innerProduct(r, ~f.J, f.phi);
-    
-    lapack_Ainv_b_sym(Delta, R, -r);
-    if(maxStepSize>0. && norm(Delta)>maxStepSize)
-      Delta *= maxStepSize/norm(Delta);
-    
-    for(;;){
-      y = x + a*Delta;
-      f.calcTermsAt(y);  evals++;
-      ly = sumOfSqr(f.phi);
-      VERBOSE(2, cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<ly <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a);
-      CHECK(ly==ly, "cost seems to be NAN: ly=" <<ly);
-      if(ly <= lx) break;
-      if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      //decrease stepsize
-      a = .5*a;
-      VERBOSE(2, cout <<" - reject" <<endl);
-    }
-    VERBOSE(2, cout <<" - ACCEPT" <<endl);
-    
-    //adopt new point and adapt stepsize
-    x = y;
-    lx = ly;
-    a = pow(a, 0.7);
-    
-    //stopping criterion
-    if(norm(Delta)<tolerance || evals>maxEvals) break;
+
+double SqrChainFunction::f_total(const arr& x){
+  double cost=0.;
+  uint T=x.d0;
+  cost += fi(NULL, 0, x[0]);
+  for(uint t=1;t<T;t++){
+    cost += fi (NULL, t, x[t]);
+    cost += fij(NULL, t-1, t, x[t-1], x[t]);
   }
-  //cout <<lx <<' ' <<flush;
+  return cost;
+}
+
+
+void init(SqrPotential &V, uint n){ V.A.resize(n,n); V.a.resize(n); V.A.setZero(); V.a.setZero(); V.hata=0.; }
+
+uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return, double stoppingTolerance, uint maxEvals, double maxStepSize, uint verbose){
+
+  uint T=x.d0,n=x.d1;
+  uint evals=0;
+  arr y;
+  y.resizeAs(x);
+
+  MT::Array<SqrPotential> V(T);
+  arr Bbarinv(T,n,n);
+  arr bbar(T,n);
+  arr tmp;
+
+  double fx = f.f_total(x);
+  cout <<fx <<endl;
+  
+  for(uint k=0;k<10;k++){
+    //backward
+    init(V(T-1),n);
+    SqrPotential fi;
+    PairSqrPotential fij;
+    //backward
+    for(uint t=T-1;t>0;t--){
+      f.fi (&fi , t, x[t]);
+      f.fij(&fij, t-1, t, x[t-1], x[t]);
+      arr Bbar = fij.B + fi.A + V(t).A;
+      bbar[t] = fij.b + fi.a + V(t).a;
+      double hatabar = fij.hata + fi.hata + V(t).hata;
+      inverse_SymPosDef(Bbarinv[t](), Bbar);
+      V(t-1).hata = hatabar - (~bbar[t] * Bbarinv[t] * bbar[t])(0);
+      tmp  = fij.C*Bbarinv[t];
+      V(t-1).a = fij.a - tmp * bbar[t];
+      V(t-1).A = fij.A - tmp * ~fij.C;
+    }
+    //forward
+    inverse_SymPosDef(tmp, V(0).A);
+    y[0] = tmp*V(0).a;
+    for(uint t=1;t<T;t++){
+      y[t] = Bbarinv[t]*(bbar[t] - ~fij.C*y[t-1]);
+    }
+  
+    double fy=V(0).hata;
+    double fy_bla = f.f_total(y);
+    if(fy<=fx){
+      x=y;
+      fx=fy;
+    }
+    
+    cout <<fx <<' ' <<fy <<endl;
+    //break;
+  }
   return evals;
 }
 
-void checkGradient(OptimizationProblem &p,
+/*double ScalarGraphFunction::f_total(const arr& X){
+  uint n=X.d0;
+  uintA E=edges();
+  double f=0.;
+  for(uint i=0;i<n;i++)    f += fi(NULL, i, X[i]);
+  for(uint i=0;i<E.d0;i++) f += fij(NULL, NULL, E(i,0), E(i,1), X[E(i,0)], X[E(i,1)]);
+  return f;
+}
+
+struct Tmp:public ScalarFunction{
+  ScalarGraphFunction *sgf;
+
+  double fs(arr* grad, const arr& X){
+    uint n=X.d0,i,j,k;
+    uintA E=sgf->edges();
+    double f=0.;
+    arr gi, gj;
+    if(grad) (*grad).resizeAs(X);
+    for(i=0;i<n;i++){
+      f += sgf->fi((grad?&gi:NULL), i, X[i]);
+      if(grad) (*grad)[i]() += gi;
+    }
+    for(k=0;k<E.d0;k++){
+      i=E(k,0);
+      j=E(i,1);
+      f += sgf->fij((grad?&gi:NULL), (grad?&gj:NULL), i, j, X[i], X[j]);
+      if(grad) (*grad)[i]() += gi;
+      if(grad) (*grad)[j]() += gj;
+    }
+    return f;
+  }
+};
+
+Tmp convert_ScalarFunction(ScalarGraphFunction& f){
+  Tmp tmp;
+  tmp.sgf=&f;
+  return tmp;
+}*/
+
+
+void checkGradient(ScalarFunction &f,
                    const arr& x, double tolerance){
   arr J, dx, JJ;
   double y, dy;
-  y=p.f(&J, x);
+  y=f.fs(&J, x);
   
   JJ.resize(x.N);
   double eps=CHECK_EPS;
@@ -64,7 +124,7 @@ void checkGradient(OptimizationProblem &p,
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    dy = p.f(NULL, dx);
+    dy = f.fs(NULL, dx);
     dy = (dy-y)/eps;
     JJ(i)=dy;
   }
@@ -73,20 +133,20 @@ void checkGradient(OptimizationProblem &p,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient (scalar) -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     HALT("");
   }else{
-    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
+    cout <<"checkGradient (scalar) -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
 }
 
-void checkGradient_vec(OptimizationProblem &p,
-                       const arr& x, double tolerance){
+void checkGradient(VectorFunction &f,
+                   const arr& x, double tolerance){
   arr y, J, dx, dy, JJ;
-  p.F(y, &J, x);
+  f.fv(y, &J, x);
   
   JJ.resize(y.N, x.N);
   double eps=CHECK_EPS;
@@ -94,7 +154,7 @@ void checkGradient_vec(OptimizationProblem &p,
   for(i=0; i<x.N; i++){
     dx=x;
     dx.elem(i) += eps;
-    p.F(dy, NULL, dx);
+    f.fv(dy, NULL, dx);
     dy = (dy-y)/eps;
     for(k=0; k<y.N; k++) JJ(k, i)=dy.elem(k);
   }
@@ -103,16 +163,116 @@ void checkGradient_vec(OptimizationProblem &p,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
+    MT_MSG("checkGradient (vector) -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
     MT::save(J, "z.J");
     MT::save(JJ, "z.JJ");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
   }else{
-    cout <<"checkGradient -- SUCCESS (max diff error=" <<md <<")" <<endl;
+    cout <<"checkGradient (vector) -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
 }
 
+uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return, double stoppingTolerance, uint maxEvals, uint verbose ){
+  Rprop rp;
+  rp.init(initialStepSize);
+  return rp.loop(x, f, fmin_return, stoppingTolerance, maxEvals, verbose);
+}
+
+uint optGaussNewton(arr& x, VectorFunction& f, double *fmin_return, double stoppingTolerance, uint maxEvals, double maxStepSize, uint verbose){
+  double a=1.;
+  double fx, fy;
+  arr Delta, y;
+  arr R(x.N, x.N), r(x.N);
+  uint evals=0;
+  
+  //compute initial costs
+  arr phi, J;
+  f.fv(phi, &J, x);  evals++;
+  fx = sumOfSqr(phi);
+  if(verbose>1) cout <<"*** optGaussNewton: starting point x=" <<x <<" l(x)=" <<fx <<" a=" <<a <<endl;
+  ofstream fil;
+  if(verbose>0) fil.open("z.gaussNewton");
+  if(verbose>0) fil <<0 <<' ' <<fx <<' ' <<a <<endl;
+  
+  for(;;){
+    //compute Delta
+    arr tmp;
+    innerProduct(R, ~J, J);  R.reshape(x.N, x.N);
+    innerProduct(r, ~J, phi);
+    
+    lapack_Ainv_b_sym(Delta, R, -r);
+    if(maxStepSize>0. && norm(Delta)>maxStepSize)
+      Delta *= maxStepSize/norm(Delta);
+    
+    for(;;){
+      y = x + a*Delta;
+      f.fv(phi, &J, y);  evals++;
+      fy = sumOfSqr(phi);
+      if(verbose>1) cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
+      CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
+      if(fy <= fx) break;
+      if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      //decrease stepsize
+      a = .1*a;
+      if(verbose>1) cout <<" - reject" <<endl;
+    }
+    if(verbose>1) cout <<" - ACCEPT" <<endl;
+    
+    //adopt new point and adapt stepsize
+    x = y;
+    fx = fy;
+    a = pow(a, 0.5);
+    if(verbose>0) fil <<evals <<' ' <<fx <<' ' <<a <<endl;
+    
+    //stopping criterion
+    if(norm(Delta)<stoppingTolerance || evals>maxEvals) break;
+  }
+  if(verbose>0) fil.close();
+  if(verbose>1) gnuplot("plot 'z.gaussNewton' us 1:2 w l");
+  return evals;
+}
+
+uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return, double stoppingTolerance, uint maxEvals, double maxStepSize, uint verbose ){
+  uint evals=0;
+  arr y, grad_x, grad_y;
+  double fx, fy;
+  double a=initialStepSize;
+
+  fx = f.fs(&grad_x, x);  evals++;
+  if(verbose>1) cout <<"*** optGradDescent: starting point x=" <<x <<" f(x)=" <<fx <<" a=" <<a <<endl;
+  ofstream fil;
+  if(verbose>0) fil.open("z.grad");
+  if(verbose>0) fil <<0 <<' ' <<fx <<' ' <<a <<endl;
+  
+  grad_x /= norm(grad_x);
+
+  for(;;){
+    y = x - a*grad_x;
+    fy = f.fs(&grad_y, y);  evals++;
+    CHECK(fy==fy, "cost seems to be NAN: fy=" <<fy);
+    if(verbose>1) cout <<evals <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|grad|=" <<norm(grad_x) <<" \ta=" <<a;
+
+    if(fy <= fx){
+      if(verbose>1) cout <<" - ACCEPT" <<endl;
+      double step=norm(x-y);
+      x = y;
+      fx = fy;
+      grad_x = grad_y/norm(grad_y);
+      a *= 1.2;
+      if(maxStepSize>0. && a>maxStepSize) a = maxStepSize;
+      if(verbose>0) fil <<evals <<' ' <<fx <<' ' <<a <<endl;
+      if(step<stoppingTolerance) break;
+    }else{
+      if(verbose>1) cout <<" - reject" <<endl;
+      a *= .5;
+    }
+    if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+  }
+  if(verbose>0) fil.close();
+  if(verbose>1) gnuplot("plot 'z.grad' us 1:2 w l");
+  return evals;
+}
 
 //===========================================================================
 //
@@ -179,28 +339,32 @@ void Rprop::step(arr& w, const arr& grad, uint *singleI){
   }
 }
 
-void Rprop::step(arr& x, OptimizationProblem& p){
+void Rprop::step(arr& x, ScalarFunction& f){
   arr grad;
-  p.f(&grad, x);
+  f.fs(&grad, x);
   step(x, grad);
 }
 
 //----- the rprop wrapped with stopping criteria
-int Rprop::loop(arr& _x,
-                OptimizationProblem& p,
-                double *fmin_return,
-                double stoppingTolerance,
-                uint maxIterations){
+uint Rprop::loop(arr& _x,
+                 ScalarFunction& f,
+                 double *fmin_return,
+                 double stoppingTolerance,
+                 uint maxEvals,
+                 uint verbose){
   arr x, J(_x.N), xmin;
   double y, ymin=0;
   uint lost_steps=0, small_steps=0;
   x=_x;
   
+  ofstream fil;
+  if(verbose>0) fil.open("z.rprop");
+  
   uint i;
-  for(i=0; i<maxIterations; i++){
+  for(i=0; i<maxEvals; i++){
     //checkGradient(p, x, stoppingTolerance);
     //compute value and gradient at x
-    y = p.f(&J, x);
+    y = f.fs(&J, x);
     //update best-so-far
     if(!i){ ymin=y; xmin=x; }
     if(y<ymin){
@@ -219,10 +383,12 @@ int Rprop::loop(arr& _x,
     step(x, J);
     //check stopping criterion based on step-length in x
     double diff=maxDiff(x, xmin);
-    //cout <<"RPROP iter= " <<i <<"  x-diff= " <<diff <<"  f= " <<y <<endl;
+    if(verbose>0) fil <<i <<' ' <<y <<' ' <<diff <<endl;
     if(diff<stoppingTolerance){ small_steps++; }else{ small_steps=0; }
     if(small_steps>10)  break;
   }
+  if(verbose>0) fil.close();
+  if(verbose>1) gnuplot("plot 'z.rprop' us 1:2 w l");
   if(fmin_return) *fmin_return=ymin;
   _x=xmin;
   return i;

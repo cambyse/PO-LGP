@@ -331,13 +331,15 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
-  struct LocalCostFunction:public GaussNewtonCostFunction {
+  struct LocalCostFunction:public VectorFunction {
     uint t;
     soc::SocSystemAbstraction* sys;
     AICO* aico;
     bool reuseOldCostTerms;
     
-    void calcTermsAt(const arr &x){
+    void fv(arr& phi, arr* Jp, const arr& x){
+      CHECK(Jp,"");
+      arr &J=*Jp;
       //all terms related to task costs
       if(reuseOldCostTerms){
         phi = aico->phiBar(t);  J = aico->JBar(t);
@@ -380,7 +382,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   f.reuseOldCostTerms=true;
   f.reuseOldCostTerms=false;
   if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
-  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations, maxStepSize);
+  optGaussNewton(xhat[t](), f, NULL, tolerance, maxRelocationIterations, maxStepSize);
   
   sys->getQ(Q[t](), t);
   sys->getHinv(Hinv[t](), t);
