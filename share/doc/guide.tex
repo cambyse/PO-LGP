@@ -50,7 +50,7 @@ libdc1394-22-dev
 
 
 \item Download the \textbf{tar-Ball} with all other required
-\textbf{external libs} (don't extract for now)
+\textbf{external libs} (don't extract for now!)
 
 |mlrLibs.tar.gz|, in Wiki (Maserati), Main, MLR, Documents
 
@@ -83,7 +83,7 @@ detail in Sec.~\ref{secGit}
 \item Install git :-)
 
 
-\item Create your \textbf{git repository}
+\item Create your \textbf{git repository} clone
 \begin{code}
 \begin{verbatim}
 cd ~/git
@@ -110,14 +110,14 @@ This script does several things for you:
 \begin{itemize}
 
 \item It makes \textbf{external} libs in a lib-directory and builds
-symbolic links to them in the |git/share/extern| directory.
+symbolic links to them in |git/share/extern|.
 
 
 \item Builds a \textbf{make-config} file. Here, you can specify your
 individual compiler options (e.g., in-/excluding libs).
 
 
-\item Makes all \textbf{MLR-libs}. These are:
+\item Makes all \textbf{MLR-libs} in |share/lib/|. These are:
 \begin{code}
 \begin{verbatim}
 libmt
@@ -331,7 +331,7 @@ If |*A.p@A.N|
    array is also O(1). And array of point is so so much simpler and
    easier to debug.
 
-   Convention: A ``ThingList'' is a typedef MT::Array<Thing*> !
+   Convention: A ``ThingList'' is a |typedef MT::Array<Thing*>| !
 
 \item Equally for graphs: A ``graph'' is a list of edges and a list of
    nodes! (What else?!) I've implemented basic graph template
@@ -492,7 +492,7 @@ LINK to my notes on the CV system
 \section{How To do things}
 
 
-\subsection{GIT workflow}\label{secGit}
+\subsection{git}\label{secGit}
 
 Check the \textbf{man pages} of git and git subcommands. Usually,
 |git foo help| is synonym for |man git foo|.
@@ -534,7 +534,7 @@ git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
 
 
 
-\subsubsection{Setting Up GIT Server to Maserati}
+\subsubsection{Setting up maserati as git server}
 
 Most steps are only required if your local git used a different git
 server before.
