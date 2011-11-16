@@ -37,8 +37,14 @@ struct Simulator {
   //linear & angular velocities of all bodies via
   //forward chaining of dynamic transformations AND update the robot display
   void setJointAnglesAndVels(const arr& q, const arr& qdot);
-  void getDynamics(arr& M, arr& F, const arr& qdot, bool gravity); //get the mass matrix and force vector describing the system equation
+  void getJointAnglesAndVels(arr& q, arr& qdot);
+  void getDynamics(arr& M, arr& F); //get the mass matrix and force vector describing the system equation
   double getEnergy();
+
+  //-- step dynamic simulation
+  void stepDynamic(const arr& u_control, double tau);
+  void setDynamicSimulationNoise(double noise);
+  void setDynamicGravity(bool gravity);
   
   //-- Physical Simulation using the OpenDynamicsEngine (ODE)
   void stepOde(const arr& qdot, bool updateDisplay=true);

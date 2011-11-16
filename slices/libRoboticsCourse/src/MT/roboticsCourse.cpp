@@ -12,10 +12,16 @@ struct sSimulator {
   OpenGL gl;
   SwiftInterface swift;
   double margin;
+  double dynamicNoise;
+  bool gravity;
+  
+  //state
+  arr q,qdot,qddot;
+
 #ifdef MT_ODE
   OdeInterface ode;
 #endif
-  sSimulator(){ margin=.1; } //default margin = 10cm
+  sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
 
 void Simulator::anchorKinematicChainIn(const char* bodyName){
@@ -65,10 +71,10 @@ Simulator::Simulator(const char* orsFile){
 #ifdef MT_ODE
   s->ode.createOde(s->G);
 #endif
-  
+
+  s->G.getJointState(s->q, s->qdot);
+
   n=s->G.getJointStateDimension();
-  
-  
 }
 
 Simulator::~Simulator(){
@@ -85,6 +91,11 @@ void Simulator::getJointAngles(arr& q){
   s->G.getJointState(q);
 }
 
+void Simulator::getJointAnglesAndVels(arr& q, arr& qdot){
+  s->G.getJointState(q, qdot);
+}
+
+
 uint Simulator::getJointDimension(){
   return s->G.getJointStateDimension();
 }
@@ -96,6 +107,8 @@ void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->swift.computeProxies(s->G, false);
   //s->G.sortProxies(true);
   if(updateDisplay) s->gl.update();
+  if(&q!=&s->q) s->q = q;
+  s->qdot.setZero();
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
@@ -104,6 +117,8 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
   s->swift.computeProxies(s->G, false);
   s->G.sortProxies(true);
   s->gl.update();
+  if(&q!=&s->q) s->q = q;
+  if(&qdot!=&s->qdot) s->qdot = qdot;
 }
 
 void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
@@ -168,15 +183,40 @@ void Simulator::jacobianContacts(arr& J){
   s->G.getContactGradient(J, s->margin);
 }
 
-void Simulator::getDynamics(arr& M, arr& F, const arr& qdot, bool gravity){
+void Simulator::getDynamics(arr& M, arr& F){
   s->G.clearForces();
-  if(gravity) s->G.gravityToForces();
-  s->G.equationOfMotion(M, F, qdot);
+  if(s->gravity) s->G.gravityToForces();
+  s->G.equationOfMotion(M, F, s->qdot);
   F *= -1.; //different convention!!
 }
 
 double Simulator::getEnergy(){
   return s->G.getEnergy();
+}
+
+
+void Simulator::stepDynamic(const arr& u_control, double tau){
+  arr M,Minv,F;
+
+  getDynamics(M, F);
+
+  inverse(Minv,M);
+  s->qddot = Minv * (u_control - F);
+    
+  if(s->dynamicNoise) rndGauss(s->qddot, s->dynamicNoise, true);
+
+  //Euler integration (Runge-Kutte4 would be much more precise...)
+  s->q    += tau * s->qdot;
+  s->qdot += tau * s->qddot;
+  setJointAnglesAndVels(s->q, s->qdot);
+}
+  
+void Simulator::setDynamicSimulationNoise(double noise){
+  s->dynamicNoise = noise;
+}
+
+void Simulator::setDynamicGravity(bool gravity){
+  s->gravity = gravity;
 }
 
 void Simulator::stepOde(const arr& qdot, bool updateDisplay){
