@@ -1,4 +1,4 @@
-#include <TL/robotManipulationDomain.h>
+#include <relational/robotManipulationDomain.h>
 
 
 RobotManipulationSimulator sim;
@@ -30,6 +30,7 @@ struct PredicateNetwork {
 };
 
 
+#if 0
 void test(int argn,char** argv) {
   uint DEBUG = 2;
   
@@ -44,7 +45,7 @@ void test(int argn,char** argv) {
   
   // ==================================================================
   // Read in Nikolay's network [START]
-  MT::Array< PredicateNetwork > pns;
+  MT::Array< PredicateNetwork* > pns;
   
 #if 0
   // Unary predicate 1
@@ -95,7 +96,7 @@ void test(int argn,char** argv) {
   PRINT(pn_b1.w2a);
   PRINT(pn_b1.w2b);
   
-  pns.append(pn_b1);
+  pns.append(&pn_b1);
   
 #if 0
   // Unary predicate 2
@@ -159,14 +160,14 @@ void test(int argn,char** argv) {
   
   
   // Add predicates for predicate networks
-  PredA new_predicates;
+  PredL new_predicates;
   FOR1D(pns, i) {
     TL::Predicate* p = new TL::Predicate;
     p->id = TL::logicObjectManager::getLowestFreeConceptID() + i;
-    p->name = pns(i).name;
-    p->d = pns(i).arity;
+    p->name = pns(i)->name;
+    p->d = pns(i)->arity;
     new_predicates.append(p);
-    pns(i).p = p;
+    pns(i)->p = p;
     if (DEBUG>1) {cout<<*p<<endl;}
   }
   TL::logicObjectManager::addStatePredicates(new_predicates);
@@ -182,9 +183,9 @@ void test(int argn,char** argv) {
   cout<<"Hand-ID="<<sim.getHandID()<<endl;
 
   
-  AtomA new_atoms;
+  AtomL new_atoms;
   FOR1D(new_predicates, i) {
-    AtomA new_atoms_p;
+    AtomL new_atoms_p;
     TL::logicObjectManager::getAtoms(new_atoms_p, new_predicates(i), objs);
     new_atoms.append(new_atoms_p);
   }
@@ -219,11 +220,11 @@ void test(int argn,char** argv) {
     }
     
     
-    LitA true_new_literals;
+    LitL true_new_literals;
     FOR1D(pns, l) {
       MT::Array< uintA > lists;
       uintA objs_indices;  FOR1D(objs, k) {objs_indices.append(k);}
-      TL::allPossibleLists(lists, objs_indices, pns(l).arity, true, true);
+      TL::allPossibleLists(lists, objs_indices, pns(l)->arity, true, true);
 //       PRINT(lists);
       arr g_values;
       
@@ -231,11 +232,11 @@ void test(int argn,char** argv) {
       FOR1D(lists, i) {
 //         PRINT(lists(i));
         arr x;
-        if (pns(l).arity == 1) {
+        if (pns(l)->arity == 1) {
           arr x_obj_1 = x_objs(lists(i)(0));
           x.append(x_obj_1);
         }
-        else if (pns(l).arity == 2) {
+        else if (pns(l)->arity == 2) {
           arr x_obj_1 = x_objs(lists(i)(0));
           arr x_obj_2 = x_objs(lists(i)(1));
           arr diff = x_obj_1 - x_obj_2;
@@ -251,14 +252,14 @@ void test(int argn,char** argv) {
 //         }
         
         // apply network
-        arr z_argument = ~pns(l).w1a * x + pns(l).w1b;
+        arr z_argument = ~pns(l)->w1a * x + pns(l)->w1b;
         arr z;
         FOR1D(z_argument, k) {
           z.append((1. / ( 1. + exp( z_argument(k) ) )));
         }
         if (DEBUG>2) {PRINT(z);}
         
-        arr g_argument = ~pns(l).w2a * z + pns(l).w2b;
+        arr g_argument = ~pns(l)->w2a * z + pns(l)->w2b;
         if (DEBUG>2) {PRINT(g_argument);}
         
         double g = (1. / ( 1. + exp( g_argument(0)) ));
@@ -268,7 +269,7 @@ void test(int argn,char** argv) {
         
         if (p>0.) {
           uintA args;  FOR1D(lists(i), k) {args.append(objs(lists(i)(k)));}
-          true_new_literals.append(TL::logicObjectManager::getLiteral(pns(l).p, true, args));
+          true_new_literals.append(TL::logicObjectManager::getLiteral(pns(l)->p, true, args));
         }
         
         if (DEBUG>2) {PRINT(g);  PRINT(p);}
@@ -277,7 +278,7 @@ void test(int argn,char** argv) {
       
       FOR1D(lists, i) {
         uintA args;  FOR1D(lists(i), k) {args.append(objs(lists(i)(k)));}
-        TL::Atom* atom = TL::logicObjectManager::getAtom(pns(l).p, args);
+        TL::Atom* atom = TL::logicObjectManager::getAtom(pns(l)->p, args);
         cout<<*atom<<"="<<(g_values(i) - 0.5 > 0)<<"  (g="<<g_values(i)<<") "<<endl;
       }
       
@@ -357,9 +358,101 @@ void test(int argn,char** argv) {
   
   sim.shutdownAll();
 }
+#endif
+
+
+
+
+
+
+
+
+
+
+
+void experiment() {
+  // Set up simulator
+  MT::String sim_file("situation.ors");
+  
+  MT::String file_ors;
+  MT::getParameter(file_ors, "file_ors");
+  
+  initSimulator(file_ors, false);
+  sim.simulate(50);
+//   sim.watch();
+  
+  // Set up logic
+  TL::logicObjectManager::setPredicatesAndFunctions("language.dat");
+  TL::logicObjectManager::writeLanguage("used_language.dat");
+  
+  // Get objects and set in logic database
+  uintA objs;
+  sim.getObjects(objs);
+  objs.append(sim.getHandID());
+  TL::logicObjectManager::setConstants(objs);
+  
+  cout<<"Table-ID="<<sim.getTableID()<<endl;
+  cout<<"Hand-ID="<<sim.getHandID()<<endl;
+  
+  
+#if 0
+  // Add predicates for predicate networks
+  PredL new_predicates;
+  FOR1D(pns, i) {
+    TL::Predicate* p = new TL::Predicate;
+    p->id = TL::logicObjectManager::getLowestFreeConceptID() + i;
+    p->name = pns(i).name;
+    p->d = pns(i).arity;
+    new_predicates.append(p);
+    pns(i).p = p;
+    if (DEBUG>1) {cout<<*p<<endl;}
+  }
+  TL::logicObjectManager::addStatePredicates(new_predicates);
+#endif
+  
+
+
+  
+//   AtomL new_atoms;
+//   uint i;
+//   FOR1D(new_predicates, i) {
+//     AtomL new_atoms_p;
+//     TL::logicObjectManager::getAtoms(new_atoms_p, new_predicates(i),
+// objs);
+//     new_atoms.append(new_atoms_p);
+//   }
+//   cout<<"NEW ATOMS:  "<<new_atoms<<endl;
+  
+  
+  AtomL actions;
+  TL::logicObjectManager::getAtoms_actions(actions, objs); 
+  PRINT(actions);
+  
+  
+  // Action predicates
+  TL::Predicate* p_grab =
+    TL::logicObjectManager::getPredicate(MT::String("grab"));
+  TL::Predicate* p_puton =
+    TL::logicObjectManager::getPredicate(MT::String("puton"));
+
+  uint t=0;
+  
+  for (t=0; t<10; t++) {
+    TL::Atom* action = actions(rnd.num(actions.N));
+    cout<<"ACTION:  "<<*action<<endl;
+    TL::RobotManipulationDomain::performAction(action, &sim, 100);
+  }
+
+  
+}
 
 
 int main(int argc, char** argv){
-  test(argc, argv);
+  MT::String config_file("config");
+  cout << "Config-file: " << config_file << endl;
+  MT::openConfigFile(config_file);
+  
+//   test(argc, argv);
+  experiment();
   return 0;
 }

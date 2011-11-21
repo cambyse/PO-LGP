@@ -114,6 +114,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
   updateState(TVs);
   updateChanges(TVs);
   bayesianControl(TVs,dq,W);
+//   if (q.N==0) q.resizeAs(dq); // TOBIAS-Aenderung
   q += dq;
   oneStep(q,C,ode,swift,gl,revel,text);
 #endif
@@ -237,6 +238,7 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
 //   gl->resize(1024, 600);
 //   gl->resize(600, 400);
 //   gl->resize(400, 320);
+//   gl->camera.upright();
   gl->camera.setPosition(2.5,-7.5,2.3);  // position of camera
 //   gl->camera.setPosition(6.,-4.,4.5);  // position of camera
   gl->camera.focus(-0.25, -0.6, 1.1);  // rotate the frame to focus the point (x,y,z)
@@ -332,8 +334,8 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
 
 
 void RobotManipulationSimulator::watch(){
-  gl->text.clr() <<"Watch" <<endl;
 #ifdef MT_FREEGLUT
+  gl->text.clr() <<"Watch" <<endl;
   gl->watch();
 #endif
 }
@@ -449,9 +451,15 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
-//     gl->update();
-    if(x.err<.05 || C->getContact(x.i, obj->index)) break;
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->update();
+    double tobias_fehler = norm(x.y - x.y_target);
+    PRINT(x.y);
+    PRINT(x.y_target);
+    PRINT(tobias_fehler);
+    PRINT(C->getContact(x.i, obj->index));
+    if(tobias_fehler<.05 || C->getContact(x.i, obj->index)) break;
+//     if(x.err<.05 || C->getContact(x.i, obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -481,8 +489,8 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_msg);
-//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
-//     gl->update();
+    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->update();
     if(x.err<.05) break;
     
     // might drop object
