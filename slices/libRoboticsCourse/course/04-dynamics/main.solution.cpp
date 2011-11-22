@@ -2,17 +2,22 @@
 #include <MT/roboticsCourse.h>
 #include <MT/plot.h>
 
-void TestPD(double Kp, double Kd){
+void TestPD(double xi, double waveLength){
   double mass = 1.0;
   double tau = 0.01;
   int T = 500;
   double Target = 1;
   arr x(T),v(T),a(T);
   double u;
+
+  double lambda = waveLength/MT_2PI;
+  double Kp = 1./(lambda*lambda);
+  double Kd = 2.*xi/lambda;
   
   for (int i = 0; i < T-1; i++){
     //control
     u  = Kp*(Target - x(i)) - Kd*v(i);
+
     //simulate
     a(i+1) = u/mass;
     v(i+1) = v(i) + a(i+1)*tau;
@@ -103,7 +108,7 @@ void followReferenceTrajectory(){
   S.setDynamicGravity(true);
 
   double tau=.01;
-  uint T=500;
+  uint T=500; //we simulate for 5 seconds
   
   arr q0(7); q0.setZero();
   arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
@@ -116,6 +121,10 @@ void followReferenceTrajectory(){
   arr M,F,u;
   S.getJointAnglesAndVels(q, qdot);
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
+  //initial perturbation
+  q(2) = .3;
+  S.setJointAnglesAndVels(q, qdot);
+
   S.watch();        //pause and watch initial posture
 
   arr joint2(T+1);
@@ -125,8 +134,8 @@ void followReferenceTrajectory(){
     S.getDynamics(M,F);
 
     //PD parameters
-    double lambda = 1./MT_2PI; //corresponds to 1 second period
-    double xi = 1.; //critically damped
+    double lambda = 1./MT_2PI; //corresponds to 1 second wavelength
+    double xi = .2; //oscillatory or critically damped
     double Kp,Kd;
     Kp = 1./(lambda*lambda);
     Kd = 2.*xi/lambda;
@@ -134,6 +143,9 @@ void followReferenceTrajectory(){
     //follow trajectory (slide 05:21)
     arr qddot = a_ref[t] + Kp * (q_ref[t] - q) + Kd * (v_ref[t] - qdot);
     arr u = M*qddot + F;
+
+    //PD heuristic, hardly works
+    //u = 1e1 * (q_ref[t] - q) - 1e+0 * qdot;
 
     //dynamic simulation (simple Euler integration of the system dynamics, look into the code)
     S.stepDynamic(u, tau);
@@ -150,9 +162,9 @@ int main(int argc,char **argv){
   int mode=5;
   if(argc>1) mode = atoi(argv[1]);
   switch(mode){
-    case 1:  TestPD(1, 10);  break;
-    case 2:  TestPD(25, 10);  break;
-    case 3:  TestPD(10.01, 1);  break;
+    case 1:  TestPD(1., .5);  break;
+    case 2:  TestPD(5., .5);  break;
+    case 3:  TestPD(.1, .5);  break;
     case 4:  testDynamicSimulation();  break;
     case 5:  followReferenceTrajectory();  break;
   }

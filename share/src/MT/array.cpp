@@ -1178,7 +1178,7 @@ void anyListRead(AnyList& ats, std::istream& is){
       } break;
       default: { //single double or nothing
         is.putback(c);
-        if(MT::contains(".0123456789", c)){ //single double
+        if(MT::contains("-.0123456789", c)){ //single double
           is >>d;
           ats.append(anyNew<double>(tag, d));
         }else{ //bool
