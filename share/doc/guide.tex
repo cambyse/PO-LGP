@@ -732,6 +732,18 @@ where to search. If you would not, |-C -C| (double -C) or
 --find-copies-harder (or so) does the trick)
 http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 
+\item{proxy}
+
+if you clone via \verb+https+ and happen to be behind a proxy, here is how
+you go:
+\begin{code}\begin{verbatim}
+git config --global http.proxy http://proxydomain:proxyport
+\end{verbatim} \end{code}
+and to inspect a configured option:
+\begin{code}\begin{verbatim}
+git config --get http.proxy 
+\end{verbatim} \end{code}
+
 \end{itemize}
 
 
