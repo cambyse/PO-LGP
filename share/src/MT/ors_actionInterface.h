@@ -27,7 +27,7 @@ typedef unsigned int uint;
 namespace ors {
 struct Graph;
 }
-class OdeModule;
+class OdeInterface;
 struct SwiftInterface;
 class OpenGL;
 
@@ -102,7 +102,7 @@ public:
   OpenGL *gl;
 //private:
   ors::Graph *C;
-  OdeModule *ode; // HIER PARAMETER verstellen
+  OdeInterface *ode; // HIER PARAMETER verstellen
   SwiftInterface *swift;
   TaskVariableList TVs;
   //SchunkModule *schunk;

@@ -32,6 +32,9 @@ int main(int argn,char **argv){
   OpenGL gl;
   gl.add(drawBase,0);
   gl.add(ors::glDrawGraph,&C);
+  //gl.reportEvents=true;
+  //gl.reportSelects=true;
+
   editConfiguration(name,C,gl);
 
   return 0;

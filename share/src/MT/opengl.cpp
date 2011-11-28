@@ -1079,7 +1079,6 @@ void OpenGL::init(){
   
   reportEvents=false;
   reportSelects=false;
-  selectOnHover=false;
   immediateExitLoop=false;
   exitkeys="";
   
@@ -1126,9 +1125,9 @@ void OpenGL::clear(){
 }
 
 //! add a hover callback
-void OpenGL::addHoverCall(bool (*call)(void*, OpenGL*), const void* classP){
-  CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
-  GLHoverCall c; c.classP=(void*)classP; c.call=call;
+void OpenGL::addHoverCall(GLHoverCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLHoverCall c; c.classP=(void*)classP; c.call=call;
   hoverCalls.append(c);
 }
 
@@ -1138,15 +1137,27 @@ void OpenGL::clearHoverCalls(){
 }
 
 //! add a click callback
-void OpenGL::addClickCall(bool (*call)(void*, OpenGL*), const void* classP){
-  CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
-  GLClickCall c; c.classP=(void*)classP; c.call=call;
+void OpenGL::addClickCall(GLClickCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLClickCall c; c.classP=(void*)classP; c.call=call;
   clickCalls.append(c);
 }
 
 //! clear click callbacks
 void OpenGL::clearClickCalls(){
   clickCalls.clear();
+}
+
+//! add a click callback
+void OpenGL::addKeyCall(GLKeyCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLKeyCall c; c.classP=(void*)classP; c.call=call;
+  keyCalls.append(c);
+}
+
+//! clear click callbacks
+void OpenGL::clearKeyCalls(){
+  keyCalls.clear();
 }
 
 #ifdef MT_GL
@@ -1422,16 +1433,20 @@ void OpenGL::setClearColors(float r, float g, float b, float a){
 /*!\brief inverse projection: given a 2D+depth coordinates in the
   camera view (e.g. as a result of selection) computes the world 3D
   coordinates */
-void OpenGL::unproject(double &x, double &y, double &z){
+void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera){
 #ifdef MT_GL
   double _x, _y, _z;
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
-  //glMatrixMode(GL_PROJECTION);
-  //glLoadIdentity();
-  //camera.glSetProjectionMatrix();
-  //glMatrixMode(GL_MODELVIEW);
-  //glLoadIdentity();
+  if(resetCamera){
+    GLint viewport[4] = {0, 0, width(), height()};
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    camera.glSetProjectionMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+  }
   glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix);
   glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
   glGetIntegerv(GL_VIEWPORT, viewPort);
@@ -1649,9 +1664,15 @@ void OpenGL::Reshape(int width, int height){
 void OpenGL::Key(unsigned char key, int _x, int _y){
   _y = height()-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y));
+  mouseposx=_x; mouseposy=_y;
   pressedkey=key;
-  if(key==13 || key==32 || key==27) exitEventLoop();
+  
+  bool cont=true;
+  for(uint i=0; i<keyCalls.N; i++) cont=cont && keyCalls(i)->keyCallback(*this);
+
+  if(key==13 || key==27) exitEventLoop();
   if(MT::contains(exitkeys, key)) exitEventLoop();
+
 }
 
 void OpenGL::Mouse(int button, int updown, int _x, int _y){
@@ -1701,7 +1722,7 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   //step through all callbacks
   bool cont=true;
   if(!updown){
-    for(uint i=0; i<clickCalls.N; i++) cont=cont && (*clickCalls(i).call)(clickCalls(i).classP, this);
+    for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
 
   //mouse scroll wheel:
@@ -1786,9 +1807,8 @@ void OpenGL::PassiveMotion(int _x, int _y){
   if(calls) return;
   calls++;
   mouseposx=_x; mouseposy=_y;
-  if(selectOnHover) Select();
   bool ud=false;
-  for(uint i=0; i<hoverCalls.N; i++) ud=ud || (*hoverCalls(i).call)(hoverCalls(i).classP, this);
+  for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
   if(ud) update();
   calls--;
 }

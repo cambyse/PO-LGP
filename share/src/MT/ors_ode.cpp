@@ -23,10 +23,10 @@
 #endif
 
 #  include <ode/ode.h>
-#  include <ode/../internal/objects.h>
-#  include <ode/../internal/joints/joints.h>
-#  include <ode/../internal/collision_kernel.h>
-#  include <ode/../internal/collision_transform.h>
+#  include <ode_internal/objects.h>
+#  include <ode_internal/joints/joints.h>
+#  include <ode_internal/collision_kernel.h>
+#  include <ode_internal/collision_transform.h>
 #  ifdef MT_MSVC
 #    undef HAVE_UNISTD_H
 #    undef HAVE_SYS_TIME_H
@@ -1105,6 +1105,7 @@ OdeInterface::OdeInterface(){ MT_MSG("WARNING - creating dummy OdeInterface"); }
 OdeInterface::~OdeInterface(){}
 void OdeInterface::OdeInterface::step(double dtime){}
 void OdeInterface::createOde(ors::Graph &C){}
+void OdeInterface::clear(){}
 void OdeInterface::slGetProxies(ors::Graph &C){}
 void OdeInterface::unsetJointMotors(ors::Graph &C){}
 void OdeInterface::exportStateToOde(ors::Graph &C){}
