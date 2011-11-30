@@ -333,6 +333,9 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   sys.dynamic=false;
 }
 */
+void soc::SocSystem_Ors::setTau(double tau){
+  s->tau = tau;
+}
 
 void soc::SocSystem_Ors::setTimeInterval(double trajectory_time,  uint trajectory_steps){
   s->T=trajectory_steps;

@@ -77,7 +77,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   double getTau(bool scaled=true);
   void getMF(arr& M, arr& F, uint t);
   void getMinvF(arr& Minv, arr& F, uint t);
-  
+  virtual void setTau(double tau);
 };
 
 }
