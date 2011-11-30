@@ -119,6 +119,7 @@ std::ofstream& log(const char *name="MT.log");
 bool contains(const char *s, char c);
 char skip(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 void skipLine(std::istream& is);
+void skipOne(std::istream& is);
 char peerNextChar(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 void parse(std::istream& is, const char *str);
 bool skipUntil(std::istream& is, const char *tag);

@@ -9,7 +9,7 @@
 
 struct PerceptionModule:public Process {
   EarlyVisionOutput *input;
-  PerceptionOutput output;
+  PerceptionOutput *output;
   
   //INPUT
   arr objectType;

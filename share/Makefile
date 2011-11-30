@@ -1,15 +1,16 @@
 NAME   = $(shell basename $(PWD))
 
-ALL =	extern/SWIFT++_1.2/src \
-	extern/libcolorseg/src \
-	extern/Lewiner \
-	src/NJ \
-	src/TL \
-	src/NP \
-	src/SD \
-	src/DZ \
+ALL =	\
 	src/MT \
+	src/SD \
+	src/NJ \
+	src/DZ \
+	src/relational \
+#	extern/libcolorseg/src \
+#	extern/Lewiner \
+#	extern/SWIFT++_1.2/src \
 #	extern/SWIFT++_1.2/decomposer/src \
+
 
 makeAll: $(ALL:%=make/%)
 

@@ -1,0 +1,329 @@
+// Rumgewichse
+//  alpha --> steckt irgendwo tief im Code 
+
+
+behavior_type 1
+
+// relational 0
+// factored 1
+// flat 2
+representation 0
+
+
+
+randSeed 1001
+secs_wait 10
+discountFactor 0.95
+
+
+
+PRADA_num_samples 200
+PRADA_horizon 4
+
+behavior_type 1
+density_estimation_type 0
+
+abstract__p_lower_bound__noise_outcome 1e-8
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-8
+
+num_trials 3
+num_rounds 5
+
+
+do_rounds_with_same_file 1
+
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/box_simple/6/state5.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/box_simple/8/state2.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state3.ors
+file_ors_4 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state4.ors
+file_ors_5 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state5.ors
+file_ors_6 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state1.ors
+file_ors_7 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state2.ors
+file_ors_8 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state3.ors
+file_ors_9 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state4.ors
+file_ors_10 /home/tobias/data/explore/jmlr/ors_situations/simple/10/state5.ors
+file_reward_1 test_files/reward_box_simple.dat
+file_reward_2 test_files/reward_box_simple.dat
+file_reward_3 test_files/reward_box_simple.dat
+file_reward_4 test_files/reward_box_simple.dat
+file_reward_5 test_files/reward_box_simple.dat
+file_reward_6 test_files/reward_box_simple.dat
+file_reward_7 test_files/reward_box_simple.dat
+file_reward_8 test_files/reward_box_simple.dat
+file_reward_9 test_files/reward_box_simple.dat
+file_reward_10 test_files/reward_box_simple.dat
+
+
+
+
+
+// box clearance
+PRADA_horizon 8
+PRADA_threshold_reward_achieved 0.1
+do_rounds_with_same_file 1
+max_actions 100
+
+// box clearance
+file_ors /home/tobias/data/explore/jmlr/ors_situations/box_clearance/8/state4.ors
+file_ors /home/tobias/data/explore/jmlr/ors_situations/box_clearance/10-complicated/state4.ors
+file_ors /home/tobias/data/explore/jmlr/ors_situations/box_clearance/8-complicated-blocks-only/state4.ors
+file_reward test_files/reward_box_clearance.dat
+file_language test_files/language_box_clearance.dat
+abstract__p_lower_bound__noise_outcome 1e-10
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-12
+
+
+
+
+// box-simple
+PRADA_horizon 6
+PRADA_threshold_reward_achieved 0.1
+do_rounds_with_same_file 0
+max_actions 100
+file_ors /home/tobias/data/explore/jmlr/ors_situations/box_simple/8/state2.ors
+file_reward test_files/reward_box_simple.dat
+file_language test_files/language_box.dat
+abstract__p_lower_bound__noise_outcome 1e-11
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-10
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/box_simple/8/state2.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/box_simple/10/state1.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/box_simple/8/state3.ors
+file_reward_1 test_files/reward_box_simple.dat
+file_reward_2 test_files/reward_box_simple.dat
+file_reward_3 test_files/reward_box_simple.dat
+file_reward_4 test_files/reward_box_simple.dat
+file_reward_5 test_files/reward_box_simple.dat
+file_reward_6 test_files/reward_box_simple.dat
+file_reward_7 test_files/reward_box_simple.dat
+file_reward_8 test_files/reward_box_simple.dat
+file_reward_9 test_files/reward_box_simple.dat
+file_reward_10 test_files/reward_box_simple.dat
+
+
+// simple
+PRADA_horizon 6
+PRADA_threshold_reward_achieved 0.1
+do_rounds_with_same_file 1
+max_actions 50
+file_ors /home/tobias/data/explore/jmlr/ors_situations/simple/10/state1.ors
+file_reward test_files/reward_simple.dat
+file_language test_files/language_box__stack.dat
+abstract__p_lower_bound__noise_outcome 1e-6
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-9
+
+
+
+
+
+
+
+
+
+
+
+
+// stack
+PRADA_horizon 6
+PRADA_threshold_reward_achieved 2.0
+do_rounds_with_same_file 0
+max_actions 100
+file_language test_files/language_box__stack.dat
+
+// stack boxes
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/stack/boxes_balls_and_blocks/10/state5.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/stack/boxes_balls_and_blocks/10/state4.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/stack/boxes_balls_and_blocks/10/state3.ors
+p_lower_bound__noise_outcome_1 1e-8
+p_lower_bound__noise_outcome_2 1e-8
+p_lower_bound__noise_outcome_3 1e-8
+p_lower_bound__noise_outcome_in_default_rule_1 1e-12
+p_lower_bound__noise_outcome_in_default_rule_2 1e-12
+p_lower_bound__noise_outcome_in_default_rule_3 1e-12
+abstract__p_lower_bound__noise_outcome 1e-9
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-12
+
+// stack balls
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state5.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state4.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state3.ors
+p_lower_bound__noise_outcome_1 1e-9
+p_lower_bound__noise_outcome_2 1e-9
+p_lower_bound__noise_outcome_3 1e-9
+p_lower_bound__noise_outcome_in_default_rule_1 1e-12
+p_lower_bound__noise_outcome_in_default_rule_2 1e-12
+p_lower_bound__noise_outcome_in_default_rule_3 1e-12
+abstract__p_lower_bound__noise_outcome 1e-9
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-12
+
+
+
+
+
+
+
+
+
+
+
+
+
+// stack blocks
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state1.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state3.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state2.ors
+p_lower_bound__noise_outcome_1 1e-6
+p_lower_bound__noise_outcome_2 1e-6
+p_lower_bound__noise_outcome_3 1e-6
+p_lower_bound__noise_outcome_in_default_rule_1 1e-9
+p_lower_bound__noise_outcome_in_default_rule_2 1e-9
+p_lower_bound__noise_outcome_in_default_rule_3 1e-9
+abstract__p_lower_bound__noise_outcome 1e-6
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-9
+
+file_ors_1 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state1.ors
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state3.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/stack/boxes_balls_and_blocks/10/state1.ors
+file_ors_4 /home/tobias/data/explore/jmlr/ors_situations/stack/boxes_balls_and_blocks/10/state5.ors
+
+file_ors_2 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state2.ors
+file_ors_3 /home/tobias/data/explore/jmlr/ors_situations/stack/blocks/8/state3.ors
+file_ors_4 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state1.ors
+file_ors_5 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state2.ors
+file_ors_6 /home/tobias/data/explore/jmlr/ors_situations/stack/balls_and_blocks/8/state3.ors
+
+file_reward_1 test_files/reward_stack.dat
+file_reward_2 test_files/reward_stack.dat
+file_reward_3 test_files/reward_stack.dat
+file_reward_4 test_files/reward_stack.dat
+file_reward_5 test_files/reward_stack.dat
+file_reward_6 test_files/reward_stack.dat
+
+p_lower_bound__noise_outcome_1 1e-6
+p_lower_bound__noise_outcome_2 1e-6
+p_lower_bound__noise_outcome_3 1e-6
+p_lower_bound__noise_outcome_4 1e-6
+p_lower_bound__noise_outcome_5 1e-6
+p_lower_bound__noise_outcome_6 1e-6
+p_lower_bound__noise_outcome_7 1e-6
+p_lower_bound__noise_outcome_8 1e-6
+p_lower_bound__noise_outcome_9 1e-6
+
+p_lower_bound__noise_outcome_in_default_rule_1 1e-9
+p_lower_bound__noise_outcome_in_default_rule_2 1e-9
+p_lower_bound__noise_outcome_in_default_rule_3 1e-9
+p_lower_bound__noise_outcome_in_default_rule_4 1e-9
+p_lower_bound__noise_outcome_in_default_rule_5 1e-9
+p_lower_bound__noise_outcome_in_default_rule_6 1e-9
+p_lower_bound__noise_outcome_in_default_rule_7 1e-9
+p_lower_bound__noise_outcome_in_default_rule_8 1e-9
+p_lower_bound__noise_outcome_in_default_rule_9 1e-9
+
+
+
+
+[general]
+
+randSeed 3
+
+
+[files]
+
+// Stack
+file_ors test_files/state_simple_blocks_ball.ors
+file_ors /home/tobias/data/explore/jmlr/ors_situations/stack/blocks_only/8/state1.ors
+file_ors /home/tobias/data/explore/jmlr/ors_situations/simple/6/state1.ors
+file_reward test_files/reward_stack.dat
+file_language test_files/language_box__stack.dat
+
+
+file_ors /home/tobias/data/explore/jmlr/ors_situations/box_simple/8/state2.ors
+file_reward test_files/reward__onBox_tower.dat
+file_reward test_files/reward__box_simple.dat
+file_language test_files/language_box.dat
+
+file_ors /home/tobias/data/explore/jmlr/ors_situations/simple/6/state2.ors
+file_reward test_files/reward.dat
+file_language test_files/language.dat
+
+// Clearance
+file_ors test_files/state_simple_clearance.ors
+file_reward test_files/reward_clearance.dat
+file_language test_files/language_clearance.dat
+
+
+file_reward reward__box_simple.dat
+file_language test_files/language_box.dat
+
+
+
+file_results results/results.dat
+
+
+// Movies
+file_ors test_files/state_simple.ors
+file_ors test_files/film_state2.ors
+file_ors test_files/state_film_ICML_exp3.ors
+
+
+
+[exploration behavior]
+
+// epsilon-greedy  0
+// E^3  1
+// R-max  2
+behavior_type 2
+use_known_state_partial 0
+// simple 0
+// entropy 1
+density_estimation_type 1
+
+
+
+
+
+[PRADA]
+
+discountFactor 0.95
+PRADA_horizon 5
+PRADA_num_samples 1000
+PRADA_noise_softener 0.01
+PRADA_threshold_reward_achieved 0.1
+PRADA_reward__sum 1  //  0 would be max
+PRADA_action_choice__max 1  // 0 would be normalized sum
+
+
+[rule-learning]
+
+abstract__complexity_penalty_coeff 0.001
+abstract__p_lower_bound__noise_outcome 1e-15
+abstract__p_lower_bound__noise_outcome_in_default_rule 1e-15
+
+factored__complexity_penalty_coeff 0.001
+factored__p_lower_bound__noise_outcome 1e-12
+factored__p_lower_bound__noise_outcome_in_default_rule 1e-15
+
+
+
+
+
+[experiment]
+
+do_rounds_with_same_file 0
+max_actions 100
+num_trials 1
+num_rounds 10
+experience_id -1
+
+fixed_contexts 0
+
+
+[simulator]
+
+secs_wait 100
+watch 0
+texture_wall_back hintergruende/grosse_wimpel/gw4.ppm
+texture_wall_back hintergruende/alt/kalender.ppm
+texture_wall_left hintergruende/alt/leerewand_dunkler.ppm
+texture_ground ../../configurations/special/tex3.ppm
+
+

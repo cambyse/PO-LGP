@@ -180,6 +180,12 @@ void skipLine(std::istream& is){
   lineCount++;
 }
 
+//! skips the next character
+void skipOne(std::istream& is){
+char c;
+c = is.get();
+}
+
 //! tell you about the next char (after skip()) but puts it back in the stream
 char peerNextChar(std::istream& is, const char *skipchars, bool skipCommentLines){
   char c;

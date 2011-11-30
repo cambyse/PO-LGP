@@ -20,28 +20,20 @@ This is the central hub for information. Goals of this document:
 \end{itemize}
 
 
-\subsection{How to setup accounts, Ubuntu packages, external libs}
+\subsection{Guide to MLR coding}
 
 \begin{itemize}
-\item You need at least an account on achtauge and redmine
-  (https://maserati.mi.fu-berlin.de/redmine/projects/mlr)
+\item Set up \textbf{accounts} on achtauge and redmine
+   (https://maserati.mi.fu-berlin.de/redmine/projects/mlr)
 
 \item The default directory layout:
 \bi
-\item |~/git/mlr| for your git repository
+\item |~/git/<dir>| for your git repository (e.g., |~/git/mlr| or
+|~/git/one|)
 \item |~/lib| for your external lib installations
 \ei
 
-\item Create your git repository:
-\begin{code}
-\begin{verbatim}
-cd ~/git
-git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
-\end{verbatim}
-\end{code}
-See section \ref{secGit} on how to use git.
-
-\item Install the following packages:
+\item Install the following \textbf{Ubuntu packages}:
 \begin{code}
 \begin{verbatim}
 liblapack-dev
@@ -57,31 +49,88 @@ libdc1394-22-dev
 \end{code}
 
 
-\item For a full installation (e.g., interaction with the robot) one also
-  needs the external libs
+\item Download the \textbf{tar-Ball} with all other required
+\textbf{external libs} (don't extract for now!)
+
+|mlrLibs.tar.gz|, in Wiki (Maserati), Main, MLR, Documents
+
+The external libs are:
 \begin{code}
 \begin{verbatim}
-cuda@
-cudaSDK@
-opencv-2.1@
-ntcan@
-schunkLWA@
-schunkSDH-11-05-11@ 
+esdcan-usb331-linux-2.6.x-x86-3.8.3
+esdcan-usb331-linux-2.6.x-x86_64-3.8.3
+ntcan
+ode-0.11
+opencv-2.1
+revel-1.1.0
+schunkLWA
+SWIFT++_1.2
+tony-mdp
+urg-0.0.2
+xvidcore-1.1.3
+\end{verbatim}
+\end{code}
+Concerning opencv-2.1: Some people in the group already use opencv-2.3.
+When using Ubuntu, packages can be obtained from
+|http://packages.ros.org/ros/ubuntu/|. For convenience, the gpg-key
+is in the root folder.
+
+
+\item Optional: set up your SSH-key in Maserati via Wiki; described in
+detail in Sec.~\ref{secGit}
+
+
+\item Install git :-)
+
+
+\item Create your \textbf{git repository} clone
+\begin{code}
+\begin{verbatim}
+cd ~/git
+git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr <dir>
+OR
+git clone git@maserati.mi.fu-berlin.de:mlr <dir>
+\end{verbatim}
+\end{code}
+This puts a clone in the directory |<dir>|. See section \ref{secGit} on
+how to use git.
+
+
+\item \textbf{Run INSTALL script} in the repository root folder. You
+need to provide the tarball with the external libs.
+\begin{code}
+\begin{verbatim}
+./INSTALL
+or
+FILE_TARBALL=mlrLibs.tar.gz ./INSTALL
+\end{verbatim}
+\end{code}
+This script does several things for you:
+
+\begin{itemize}
+
+\item It makes \textbf{external} libs in a lib-directory and builds
+symbolic links to them in |git/share/extern|.
+
+
+\item Builds a \textbf{make-config} file. Here, you can specify your
+individual compiler options (e.g., in-/excluding libs).
+
+
+\item Makes all \textbf{MLR-libs} in |share/lib/|. These are:
+\begin{code}
+\begin{verbatim}
+libmt
+libnj
+libsd
+libnp
+libdz
+librelational
 \end{verbatim}
 \end{code}
 
-These are symbolic-linked in the |git/share/extern| directory. Call the
-  |./LINK ~\lib| script to generate the relevant links.
-
-Recently, opencv-2.3 has been used. When using Ubuntu, packages can be 
-	obtained from |http://packages.ros.org/ros/ubuntu/|. For 
-	convenience, the gpg-key is in the root folder.
-
-\item TODO: In the future all external libs should be handled like
-  |ODE_0.11|: minimal |GET/BUILD| script and .gitignore
-
-\item Try 'make' in the |git/share| directory. If problems occur, try to
-comment the following lines in the |src/MT/Makefile|:
+If problems occur, try to comment the following lines in the
+|src/MT/Makefile|:
 \begin{code}
 \begin{verbatim}
 #FREEGLUT = 1
@@ -89,15 +138,39 @@ comment the following lines in the |src/MT/Makefile|:
 #LAPACK = 1
 \end{verbatim}
 \end{code}
-
 This reduces functionality of the code, but should at least compile.
 
-\item Generally, the |git/share/make-config| allows to set compile
-options for all projects, the local Makefiles trigger these options by
-defining 'ANN=1' or alike.
+
+
+\item Makes the \textbf{tests} in |share/test/|
+
 
 \item Try |test/array/x.exe|
+
 \end{itemize}
+
+\end{itemize}
+
+
+
+\subsubsection{Guide to the Makefile system}
+
+\begin{itemize}
+
+\item |share/make-generic|: central Makefile; should be included by all
+other Makefiles; provides machinery for building executables, libs etc.;
+checks for plenty of flags and includes external and MLR libs as
+appropriate
+
+\item |Makefile|: found everywhere (in local directories for building
+libs, executables in tests etc.); sets local compiler options
+
+\item |share/make-config|: included by |make-generic|; allows to set
+individual compiler options for all projects
+
+\end{itemize}
+
+
 
 \subsection{Guide to the robot hardware (Marc \& Stanio)}
 
@@ -258,7 +331,7 @@ If |*A.p@A.N|
    array is also O(1). And array of point is so so much simpler and
    easier to debug.
 
-   Convention: A ``ThingList'' is a typedef MT::Array<Thing*> !
+   Convention: A ``ThingList'' is a |typedef MT::Array<Thing*>| !
 
 \item Equally for graphs: A ``graph'' is a list of edges and a list of
    nodes! (What else?!) I've implemented basic graph template
@@ -419,30 +492,113 @@ LINK to my notes on the CV system
 \section{How To do things}
 
 
-\subsection{git workflow}\label{secGit}
+\subsection{git}\label{secGit}
 
-Most likely (I would wonder if not) the git man pages are installed
-together with the git binaries in your distribution. The fastest way to
-check the syntax or parameters of a git subcommand are the man pages. 
+Check the \textbf{man pages} of git and git subcommands. Usually,
+|git foo help| is synonym for |man git foo|.
 
 As a preliminary to using git, please take an hour to read the two
-tutorials on git provided in the man pages. In your terminal write
-|man gittutorial|. When done with it read on with %
-%
-|man gittutorial-2|. Depending on your background and experience
-with other revision control systems there might be better approaches to
-introduce git, but at any rate, these two tutorials give basic
-insight into git's concepts. For deeper understanding %
-%
-|man gitcore-tutorial| is your friend.
+\textbf{tutorials} on git provided in the man pages. In your terminal
+write |man gittutorial|. When done with it read on with
+|man gittutorial-2|.
+Depending on your background and experience with other revision control
+systems there might be better approaches to introduce git, but at any
+rate, these two tutorials give basic insight into git's concepts.
 
-Usually, |git foo help| is synonym for |man git foo|.
+For deeper understanding |man gitcore-tutorial| is your friend.
+
+
+\subsubsection{Getting git started}
+
+\begin{itemize}
+
+\item install git :-)
+
+\item Optional: define the ssh key of your local machine in maserati
+(more details below) (only for convenience)
+
+\item Get git clone
+\begin{code}
+\begin{verbatim}
+cd git  // go to git directory
+git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr <dir>
+OR
+git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
+// where <DIR> is your local target root directory for the GIT-clone
+\end{verbatim}
+\end{code}
+
+\item that's already it!
+
+\end{itemize}
+
+
+
+\subsubsection{Setting up maserati as git server}
+
+Most steps are only required if your local git used a different git
+server before.
+\\
+First type
+\begin{verbatim}
+git remote -v 
+\end{verbatim}
+to see which git server you use. In case it is not maserati you should
+change this!
+
+\begin{itemize}
+\item in your web browser go to
+\begin{verbatim}
+https://maserati.mi.fu-berlin.de/redmine/
+\end{verbatim}
+and login with your account on maserati
+
+\item  Browse to \textit{My account} (up right), \textit{Public
+keys} (almost up right) and click \textit{new value}.  \\
+Create a sshkey in the webpage, e.g. by copying some ssh file from your
+computer, here we use gedit for example:
+\begin{verbatim}
+cd .ssh    // in home-folder of your local machine
+gedit id_rsa.pub
+\end{verbatim} 
+copy everything for key value and activate it on the server
+\item type in your computer to add maserati as server:
+\begin{verbatim}
+git remote add maserati git@maserati.mi.fu-berlin.de:mlr 
+\end{verbatim}
+\item 
+go to your main git folder and type
+\begin{verbatim}
+gedit .git/config
+ \end{verbatim}
+then change all your remotes to maserati, remove any old/conflicting
+origins entries, it should look like this:
+ \begin{verbatim}
+[branch "master"]
+  remote = maserati
+  merge = refs/heads/master
+[remote "maserati"]
+  url = git@maserati.mi.fu-berlin.de:mlr
+  fetch = +refs/heads/*:refs/remotes/maserati/*
+\end{verbatim}
+\end{itemize}
+
+
+
+
+
+\subsubsection{git commands}
+
+
+\textbf{Quick list:}
 
 \begin{code}
 \begin{verbatim}
-git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
-git config --global diff.external git-diff.sh
 git config --global push.default tracking
+git config --global diff.external git-diff.sh
+// with a git-diff.sh file (in your local bin)
+// #!/bin/bash
+// /usr/bin/meld "$2" "$5" > /dev/null 2>&1
 
 git status
 git diff
@@ -467,23 +623,15 @@ git update-index --assume-unchanged <files>
 \end{verbatim}
 \end{code}
 
-with a git-diff.sh file (in your local bin)
-\begin{code}
-\begin{verbatim}
-#!/bin/bash
-/usr/bin/meld "$2" "$5" > /dev/null 2>&1
-\end{verbatim}
-\end{code}
 
-Some other contribution to the git cheat sheet:
-
-
+\noindent
+\textbf{Some other contribution to the git cheat sheet:}
 \begin{itemize}
 
 
 \item{init} 
 
-- |git init|  just inits the |$PWD|, nothing added, nothing
+- |git init|  just inits the |\$PWD|, nothing added, nothing
 
 - create central repo for current development\begin{enumerate}
 	
@@ -584,49 +732,45 @@ where to search. If you would not, |-C -C| (double -C) or
 --find-copies-harder (or so) does the trick)
 http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 
+\item{proxy}
+
+if you clone via \verb+https+ and happen to be behind a proxy, here is how
+you go:
+\begin{code}\begin{verbatim}
+git config --global http.proxy http://proxydomain:proxyport
+\end{verbatim} \end{code}
+and to inspect a configured option:
+\begin{code}\begin{verbatim}
+git config --get http.proxy 
+\end{verbatim} \end{code}
+
 \end{itemize}
 
-\subsection{Setting Up GIT Server to Maserati}
 
-First type
+
+
+\subsubsection{Standard git workflows}
+
+\paragraph{Merging individual local branch with remote branch}
+
+Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge 
+with the \verb+master+ branch in the remote repository. Here, \verb+origin+ is a variable
+for the remote git repository server (i.e., maserati in our case).
 \begin{verbatim}
-git remote -v 
+// You are in the individual branch branch123 on your local machine.
+git fetch origin master     // fetch from remote master
+git merge origin master     // merge from remote master
+git push                    // push local branch123 to remote branch123
+git checkout master         // switch to master branch
+git fetch origin branch123  // fetch from remote branch123
+git merge origin branch123  // merge from remote branch123
+git push                    // push local master to remote master
 \end{verbatim}
-to see which git server you use. In case it is not maserati you should change this!
 
-\begin{itemize}
-\item in your web browser go to
-\begin{verbatim}
-https://maserati.mi.fu-berlin.de/redmine/
-\end{verbatim}
-and login with your account on maserati
 
-\item  browse to \textit{Public keys,New public key} and click \textit{ new value}  \\
-create a sshkey in the webpage, e.g. by copying some ssh file from your computer, here we use gedit for example:
- \begin{verbatim}
- cd .ssh 
- gedit id_rsa.pub
- \end{verbatim} 
- copy everything after the 'ssh-rsa' string for key value and activate it on the server
-\item type in your computer to add maserati as server:
- \begin{verbatim}
-git remote add maserati git@maserati.mi.fu-berlin.de:mlr 
- \end{verbatim}
-\item 
-go to your main git folder and type
- \begin{verbatim}
-gedit .git/config
- \end{verbatim}
-then change all your remotes to maserati, remove any old/conflicting origins entries, it should look like this:
- \begin{verbatim}
-[branch "master"]
-	remote = maserati
-	merge = refs/heads/master
-[remote "maserati"]
-	url = git@maserati.mi.fu-berlin.de:mlr
-	fetch = +refs/heads/*:refs/remotes/maserati/*
-\end{verbatim}
-	\end{itemize}
+
+
+
 
 \subsection{svn workflow}
 
