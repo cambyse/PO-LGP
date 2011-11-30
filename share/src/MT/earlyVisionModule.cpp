@@ -96,8 +96,8 @@ void EarlyVisionModule::step(){
   //-- create memory
   if(!imgL.p_device){
     uint W=imgL.d1, H=imgL.d0;
-    output.hsvThetaL.resize(hsvColors, H, W);
-    output.hsvThetaR.resize(hsvColors, H, W);
+    output->hsvThetaL.resize(hsvColors, H, W);
+    output->hsvThetaR.resize(hsvColors, H, W);
     motionTheta.resize(H, W);
     hsvBP.resize(H, W); hsvBP.setZero();
     hsvBPmsg.resize(H, W, 4); hsvBPmsg.setZero();
@@ -105,8 +105,8 @@ void EarlyVisionModule::step(){
     cuda_alloc(imgL);
     cuda_alloc(imgR);
     cuda_alloc(lastImg);
-    cuda_alloc(output.hsvThetaL);
-    cuda_alloc(output.hsvThetaR);
+    cuda_alloc(output->hsvThetaL);
+    cuda_alloc(output->hsvThetaR);
     cuda_alloc(hsvTargets);
     cuda_alloc(motionTheta);
     cuda_alloc(hsvBP);
@@ -127,7 +127,7 @@ void EarlyVisionModule::step(){
   CudaWorkspace WS = {imgL.d0*imgL.d1, imgL.d1,
                       imgL.p_device, lastImg.p_device, imgR.p_device,
                       hsvColors,
-                      output.hsvThetaL.p_device, output.hsvThetaR.p_device , hsvTargets.p_device,
+                      output->hsvThetaL.p_device, output->hsvThetaR.p_device , hsvTargets.p_device,
                       motionTheta.p_device, 20.f,
                       //integTheta.p_device, 1., .1,
                       hsvBP.p_device, hsvBPmsg.p_device, .5
@@ -135,12 +135,12 @@ void EarlyVisionModule::step(){
   earlyVision(WS, imgL.d0*imgL.d1, 256);
   
   //-- download stuff
-  output.writeAccess(this);
+  output->writeAccess(this);
   //cout <<" process=" <<MT::timerRead(true) <<flush;
   //cuda_download(gray);
   //cuda_download(hsv);
-  cuda_download(output.hsvThetaL);
-  cuda_download(output.hsvThetaR);
+  cuda_download(output->hsvThetaL);
+  cuda_download(output->hsvThetaR);
   //cuda_download(motionTheta);
   //cuda_download(integTheta);
   //cuda_download(hsvBP);
@@ -148,11 +148,11 @@ void EarlyVisionModule::step(){
   
   //smooth thetas
   for(uint nc=0; nc< hsvColors; nc++){
-    smooth(output.hsvThetaL[nc](), thetaSmoothing);//5 originally...
-    smooth(output.hsvThetaR[nc](), thetaSmoothing);
+    smooth(output->hsvThetaL[nc](), thetaSmoothing);//5 originally...
+    smooth(output->hsvThetaR[nc](), thetaSmoothing);
   }
   
-  output.deAccess(this);
+  output->deAccess(this);
   
   //== postprocess stuff
 #if 0 //obsolete stuff -> moved to perceptionModule...
@@ -195,17 +195,17 @@ void EarlyVisionModule::step(){
   if(display){
     static uint COUNTER=0;
     COUNTER++;
-    output.readAccess(this);
+    output->readAccess(this);
     byteA disp, tmp, tmp2;
     tmp2.resize(imgL.d0/2, imgL.d1/2, 3);
     tmp .resize(imgL.d0/4, imgL.d1/4, 3);
     cvPyrDown(CVMAT(imgL), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);
     cvPyrDown(CVMAT(imgR), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);
-    cvPyrDown(CVMAT(evi2rgb(output.hsvThetaL[COUNTER%hsvColors]())), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);//cycle with different found colors
-    cvPyrDown(CVMAT(evi2rgb(output.hsvThetaR[COUNTER%hsvColors]())), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);
+    cvPyrDown(CVMAT(evi2rgb(output->hsvThetaL[COUNTER%hsvColors]())), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);//cycle with different found colors
+    cvPyrDown(CVMAT(evi2rgb(output->hsvThetaR[COUNTER%hsvColors]())), CVMAT(tmp2));  cvPyrDown(CVMAT(tmp2), CVMAT(tmp));  disp.append(tmp);
     disp.reshape(disp.N/(tmp.d1*3), tmp.d1, 3);
     cvShow(disp, "earlyVision");
-    output.deAccess(this);
+    output->deAccess(this);
     //cout <<" displaytime=" <<MT::timerRead(true) <<endl;
   }
   
@@ -216,7 +216,7 @@ void EarlyVisionModule::open(){
 }
 void EarlyVisionModule::close(){
   cuda_free(imgL);
-  cuda_free(output.hsvThetaL);
+  cuda_free(output->hsvThetaL);
 }
 
 #else //def MT_CUDA

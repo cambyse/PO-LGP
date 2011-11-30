@@ -777,7 +777,7 @@ void getJointJacobian(TaskVariableList& CS, arr& J){
   J.reshape(J.N/n, n);
 }
 
-void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
+void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W){
   uint n=W.d0;
   dq.resize(n);
   dq.setZero();
@@ -788,8 +788,6 @@ void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
   a.setZero();
   arr w(3);
   for(i=0; i<CS.N; i++) if(CS(i)->active){
-      NIY; //TODO: do I have to make updateState?
-      //CS(i)->updateJacobian();
       a += CS(i)->y_prec * CS(i)->Jt * (CS(i)->y_ref-CS(i)->y);
       A += CS(i)->y_prec * CS(i)->Jt * CS(i)->J;
     }

@@ -23,10 +23,11 @@
 #endif
 
 #  include <ode/ode.h>
-#  include <ode_internal/objects.h>
-#  include <ode_internal/joints/joints.h>
-#  include <ode_internal/collision_kernel.h>
-#  include <ode_internal/collision_transform.h>
+#  include <ode/../internal/objects.h>
+#  include <ode/../internal/joints/joints.h>
+#  include <ode/../internal/collision_kernel.h>
+#  include <ode/../internal/collision_transform.h>
+
 #  ifdef MT_MSVC
 #    undef HAVE_UNISTD_H
 #    undef HAVE_SYS_TIME_H
