@@ -2,7 +2,7 @@
 
 int main(int argn,char **argv){
 
-  const char *file="test.ors";
+  const char *file="situation.ors";
   if(argn<2){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];

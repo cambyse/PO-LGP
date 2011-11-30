@@ -27,6 +27,16 @@ struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall{
 };
 
 bool sOrsSceneGui::clickCallback(OpenGL&){
+  if(mode==emMove){
+    ors::Vector delta;
+    if(gl->mouse_button==4 && gl->mouseIsDown) delta = -.01*(gl->camera.X->pos - movingBody->X.pos);
+    if(gl->mouse_button==5 && gl->mouseIsDown) delta = +.01*(gl->camera.X->pos - movingBody->X.pos);
+    if(delta.length()){
+      selpos += delta;
+      movingBody->X.pos += delta;
+      return false;
+    }
+  }
   return true;
 }
 

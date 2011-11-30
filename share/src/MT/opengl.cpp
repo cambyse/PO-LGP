@@ -1675,12 +1675,12 @@ void OpenGL::Key(unsigned char key, int _x, int _y){
 
 }
 
-void OpenGL::Mouse(int button, int updown, int _x, int _y){
+void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
   int w=width(), h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, updown, _x, _y));
+  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, downPressed, _x, _y));
   mouse_button=1+button;
-  if(updown) mouse_button=-1-mouse_button;
+  if(downPressed) mouse_button=-1-mouse_button;
   mouseposx=_x; mouseposy=_y;
   lastEvent.set(mouse_button, -1, _x, _y, 0., 0.);
   
@@ -1698,7 +1698,7 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   if(mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
   CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
   
-  if(!updown){ //down press
+  if(!downPressed){ //down press
     if(mouseIsDown) return; //the button is already down (another button was pressed...)
     //CHECK(!mouseIsDown, "I thought the mouse is up...");
     mouseIsDown=true;
@@ -1716,18 +1716,19 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   s->downFoc=*cam->foc;
   
   //check object clicked on
-  if(!updown){
+  if(!downPressed){
     if(reportSelects) Select();
   }
   //step through all callbacks
   bool cont=true;
-  if(!updown){
+  if(!downPressed){
     for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
+  if(!cont){ update(); return; }
 
   //mouse scroll wheel:
-  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
-  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
 
   if(mouse_button==3){ //selection
      Select();
