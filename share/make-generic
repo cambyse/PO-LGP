@@ -316,11 +316,17 @@ LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
 LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
 endif
 
-#assuming ubuntu libopencv2.3-dev package
+#assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
-LIBS	  += `pkg-config --libs opencv-2.1`
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
+LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
 endif
+
+#assuming ubuntu libopencv2.3-dev package
+#ifeq ($(OPENCV_UBUNTU),1)
+#CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
+#LIBS	  += `pkg-config --libs opencv-2.1`
+#endif
 
 ifeq ($(LAPACK),1)
 CXXFLAGS  += -DMT_LAPACK
