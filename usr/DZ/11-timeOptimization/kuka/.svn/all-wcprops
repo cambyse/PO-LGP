@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka
+END
+kuka_last_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_last_lo.obj
+END
+writeTriMesh.m
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/writeTriMesh.m
+END
+loadObjMesh.m
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/loadObjMesh.m
+END
+kuka_ring.obj
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_ring.obj
+END
+kuka_wrist_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_wrist_lo.obj
+END
+kuka_mid_closed.obj
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_mid_closed.obj
+END
+kuka_mid_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_mid_lo.obj
+END
+kuka_cap.obj
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_cap.obj
+END
+ObjToTri.m
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/ObjToTri.m
+END
+kuka_base_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_base_lo.obj
+END
+kuka_wrist.obj
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_wrist.obj
+END
+kuka_link1_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_link1_lo.obj
+END
+kuka_mid.obj
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_mid.obj
+END
+kuka_link2_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_link2_lo.obj
+END
+kuka_link3_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_link3_lo.obj
+END
+kuka_base.obj
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_base.obj
+END
+kuka_link4_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_link4_lo.obj
+END
+kuka_link5_lo.obj
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/tomsy/!svn/ver/25/branches/Edinburgh/libAICO_T/libAICO/data/kuka/kuka_link5_lo.obj
+END
