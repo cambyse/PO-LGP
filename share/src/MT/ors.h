@@ -159,13 +159,13 @@ struct Transformation {
   bool isZero() const{ return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
   
   void addRelativeTranslation(double x, double y, double z);
+  void addRelativeRotationDeg(double degree, double x, double y, double z);
+  void addRelativeRotationRad(double rad, double x, double y, double z);
+  void addRelativeRotationQuat(double s, double x, double y, double z);
   void addRelativeVelocity(double x, double y, double z);
   void addRelativeAngVelocityDeg(double degree, double x, double y, double z);
   void addRelativeAngVelocityRad(double rad, double x, double y, double z);
   void addRelativeAngVelocityRad(double wx, double wy, double wz);
-  void addRelativeRotationDeg(double degree, double x, double y, double z);
-  void addRelativeRotationRad(double rad, double x, double y, double z);
-  void addRelativeRotationQuat(double s, double x, double y, double z);
   
   void appendTransformation(const Transformation& f);     // this = this * f
   void appendInvTransformation(const Transformation& f);     // this = this * f^{-1}

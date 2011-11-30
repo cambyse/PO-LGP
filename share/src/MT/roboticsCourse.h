@@ -13,7 +13,7 @@ struct Simulator {
   Simulator(const char* orsFile);
   ~Simulator();
   
-  void watch();                                    //pauses and lets you watch the OpenGL window
+  void watch(bool pause=true);                                    //pauses and lets you watch the OpenGL window
   
   //-- KINEMATICS
   //set the joint angles AND compute the frames of all bodies via
@@ -27,8 +27,8 @@ struct Simulator {
   void jacobianVec(arr& J, const char* bodyName, const arr* vec=0);   //get the Jacobian of the body's z-axis
   void kinematicsCOM(arr& y);
   void jacobianCOM(arr& J);
-  double kinematicsContacts();                     //get a scalar meassuring current collision costs
-  void jacobianContacts(arr& grad);                //get gradient of the collision cost
+  void kinematicsContacts(arr& y);                     //get a scalar meassuring current collision costs
+  void jacobianContacts(arr& J);                //get gradient of the collision cost
   void setContactMargin(double margin);            //set the collision margin
   void reportProxies();                            //write info on collisions to console
   
@@ -37,8 +37,14 @@ struct Simulator {
   //linear & angular velocities of all bodies via
   //forward chaining of dynamic transformations AND update the robot display
   void setJointAnglesAndVels(const arr& q, const arr& qdot);
-  void getDynamics(arr& M, arr& F, const arr& qdot, bool gravity); //get the mass matrix and force vector describing the system equation
+  void getJointAnglesAndVels(arr& q, arr& qdot);
+  void getDynamics(arr& M, arr& F); //get the mass matrix and force vector describing the system equation
   double getEnergy();
+
+  //-- step dynamic simulation
+  void stepDynamic(const arr& u_control, double tau);
+  void setDynamicSimulationNoise(double noise);
+  void setDynamicGravity(bool gravity);
   
   //-- Physical Simulation using the OpenDynamicsEngine (ODE)
   void stepOde(const arr& qdot, bool updateDisplay=true);
@@ -60,6 +66,22 @@ struct VisionSimulator {
   void getRandomWorldPoints(arr& X, uint N);
   void projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel=1.);
 };
+
+
+struct CarSimulator{
+  double x,y,theta; //this is the true state -- accessing it means cheating...
+  double tau,L,noise;
+  arr landmarks;
+  OpenGL *gl;
+  
+  CarSimulator();
+  void step(const arr& u); 
+  //get a (noisy) observation (meassuring landmarks) in the current state
+  void meassureCurrentLandmarks(arr& Y);
+  //compute the ideal observation if you were in state (x,y,theta): use to compute Y for a particle and compare with meassured observation
+  void getTrueLandmarksInState(arr& Y, double x, double y, double theta);
+};
+
 
 #endif
 
