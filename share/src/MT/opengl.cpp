@@ -1035,6 +1035,7 @@ void glStandardScene(void*){ NICO; };
 void glDrawDots(void *dots){ glDrawDots(*(arr*)dots); }
 
 void glDrawDots(arr& dots){
+  if(!dots.N) return;
   CHECK(dots.nd==2 && dots.d1==3, "wrong dimension");
 #if 0
   glBegin(GL_POINTS);

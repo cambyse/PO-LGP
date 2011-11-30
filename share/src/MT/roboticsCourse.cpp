@@ -321,10 +321,11 @@ CarSimulator::CarSimulator(){
   x=y=theta=0;
   tau=1.; //one second time steps
   L=2.; //2 meters between the wheels
-  noise = .03;
+  dynamicsNoise = .03;
+  observationNoise = .5;
 
   //landmarks
-  landmarks.resize(10,2);
+  landmarks.resize(2,2);
   rndGauss(landmarks, 10.);
   //landmarks=ARR(10,0); landmarks.reshape(1,2);
   
@@ -343,10 +344,10 @@ void CarSimulator::step(const arr& u){
   y += tau*v*sin(theta);
   theta += tau*(v/L)*tan(phi);
 
-  if(noise){
-    x += noise*rnd.gauss();
-    y += noise*rnd.gauss();
-    theta += noise*rnd.gauss();
+  if(dynamicsNoise){
+    x += dynamicsNoise*rnd.gauss();
+    y += dynamicsNoise*rnd.gauss();
+    theta += dynamicsNoise*rnd.gauss();
   }
   
   gl->update();
@@ -354,7 +355,7 @@ void CarSimulator::step(const arr& u){
 
 void CarSimulator::meassureCurrentLandmarks(arr& Y){
   getTrueLandmarksInState(Y, x,y,theta);
-  rndGauss(Y,.1,true);
+  rndGauss(Y,observationNoise,true);
 }
 
 void CarSimulator::getTrueLandmarksInState(arr& Y, double x, double y, double theta){
@@ -387,4 +388,14 @@ void glDrawCarSimulator(void *classP){
     glColor(.2,.8,.2);
     glDrawCylinder(.1,1.);
   }
+  
+  glLoadIdentity();
+  glColor(.2,.2,.8);
+  for(uint l=0;l<s->particlesToDraw.d0;l++){
+    glPushMatrix();
+    glTranslatef(s->particlesToDraw(l,0), s->particlesToDraw(l,1), .6);
+    glDrawDiamond(.1, .1, .1);
+    glPopMatrix();
+  }
+  
 }

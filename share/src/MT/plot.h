@@ -51,8 +51,8 @@ extern PlotModule plotModule;
 void plotGnuplot();
 void plotOpengl();
 void plotOpengl(bool perspective, double xl=-1., double xh=1., double yl=-1., double yh=1., double zl=-1., double zh=1.);
-
 void plot(bool wait=true);
+
 void plotClear();
 void plotFunction(const arr& f, double x0=0., double x1=0.);
 void plotFunctionPoints(const arr& f, double x0=0., double x1=0.);

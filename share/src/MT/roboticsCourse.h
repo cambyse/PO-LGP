@@ -70,8 +70,10 @@ struct VisionSimulator {
 
 struct CarSimulator{
   double x,y,theta; //this is the true state -- accessing it means cheating...
-  double tau,L,noise;
+  double tau,L;
+  double dynamicsNoise, observationNoise;
   arr landmarks;
+  arr particlesToDraw;
   OpenGL *gl;
   
   CarSimulator();
