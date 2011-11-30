@@ -1,9 +1,7 @@
 #include <MT/soc.h>
 #include <MT/array.h>
 #include <MT/array_t.cpp>
-#include <MT/algos_LU.cpp>
 #include <MT/opengl.h>
-#include <aico_key_frames.h>
 
 void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold)
 {
@@ -221,7 +219,7 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
 void GetOptimalDynamicTime(double& time, int& counter,
 			   arr& b,arr& Binv,soc::SocSystemAbstraction& sys,
 			   double alpha,double task_eps,double eps_alpha,double step,
-			   double min_step, bool verbose){
+			   double min_step, uint verbose){
   arr  R,r,q0,x0;
   double old_time=sys.getTau(false);//+1e-1;
   double T = sys.nTime();
