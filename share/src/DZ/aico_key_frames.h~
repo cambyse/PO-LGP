@@ -5,7 +5,7 @@ void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double al
 
 // Full dynamic versions
 /** Returns mean and variance of end-position belief with dynamic constraints  */
-double OneStepDynamicFull(arr& b,arr& Binv,int& counter,
+double OneStepDynamicFull(arr& b,arr& Binv,int counter,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha,double task_eps,double eps_alpha,
 			uint verbose, bool b_is_initialized);
