@@ -5,31 +5,155 @@
 #endif
 
 
-double SqrChainFunction::f_total(const arr& x){
-  double cost=0.;
-  uint T=x.d0;
-  cost += fi(NULL, 0, x[0]);
-  for(uint t=1;t<T;t++){
-    cost += fi (NULL, t, x[t]);
-    cost += fij(NULL, t-1, t, x[t-1], x[t]);
-  }
-  return cost;
+double evaluateSP(SqrPotential& S, const arr& x){
+  return scalarProduct(x,S.A*x) - 2.*scalarProduct(S.a,x) + S.c;
 }
 
-double VectorChainFunction::f_total(const arr& x){
-  double cost=0.;
-  uint T=x.d0;
+double evaluateSF(ScalarFunction& f, const arr& x){
+  return f.fs(NULL, x);
+}
+
+double evaluateVF(VectorFunction& f, const arr& x){
   arr y;
-  fi(y, NULL, 0, x[0]);  cost += sumOfSqr(y); 
-  for(uint t=1;t<T;t++){
-    fi (y, NULL, t, x[t]);  cost += sumOfSqr(y); 
-    fij(y, NULL, NULL, t-1, t, x[t-1], x[t]);  cost += sumOfSqr(y); 
+  f.fv(y, NULL, x);
+  return sumOfSqr(y);
+}
+
+double evaluateQCF(SqrChainFunction& f, const arr& x){
+  double cost=0.;
+  uint T=x.d0-1;
+  cost += f.fqi(NULL, 0, x[0]);
+  for(uint t=1;t<=T;t++){
+    cost += f.fqi (NULL, t, x[t]);
+    cost += f.fqij(NULL, t-1, t, x[t-1], x[t]);
+  }
+  return cost;
+}
+
+double evaluateVCF(VectorChainFunction& f, const arr& x){
+  double cost=0.;
+  uint T=x.d0-1;
+  arr y;
+  f.fvi(y, NULL, 0, x[0]);  cost += sumOfSqr(y); 
+  for(uint t=1;t<=T;t++){
+    f.fvi (y, NULL, t, x[t]);  cost += sumOfSqr(y); 
+    f.fvij(y, NULL, NULL, t-1, t, x[t-1], x[t]);  cost += sumOfSqr(y); 
   }
   return cost;
 }
 
 
-void init(SqrPotential &V, uint n){ V.A.resize(n,n); V.a.resize(n); V.A.setZero(); V.a.setZero(); V.hata=0.; }
+conv_VectorChainFunction::conv_VectorChainFunction(VectorChainFunction& _f){
+  f=&_f;
+  T = f->T; //this is the T of the SqrChainFunction!
+}
+
+double conv_VectorChainFunction::fs(arr* grad, const arr& x){
+  arr z;  z.referTo(x);
+  z.reshape(T+1,z.N/(T+1)); //x as chain representation (splitted in nodes assuming each has same dimensionality!)
+  
+  double cost=0.;
+  arr y,J,Ji,Jj;
+  if(grad){
+    grad->resizeAs(x);
+    grad->setZero();
+  }
+  for(uint t=0;t<=T;t++){ //node potentials
+    f->fvi(y, (grad?&J:NULL), t, z[t]);
+    cost += sumOfSqr(y);
+    if(grad){
+      (*grad)[t]() += 2.*(~y)*J;
+    }
+  }
+  for(uint t=0;t<T;t++){
+    f->fvij(y, (grad?&Ji:NULL), (grad?&Jj:NULL), t, t+1, z[t], z[t+1]);
+    cost += sumOfSqr(y);
+    if(grad){
+      (*grad)[t]()   += 2.*(~y)*Ji;
+      (*grad)[t+1]() += 2.*(~y)*Jj;
+    }
+  }
+  return cost;
+}
+
+void conv_VectorChainFunction::fv(arr& y, arr* J, const arr& x){
+  arr z;  z.referTo(x);
+  z.reshape(T+1,z.N/(T+1)); //x as chain representation (splitted in nodes assuming each has same dimensionality!)
+
+  //probing dimensionality (ugly..)
+  arr tmp;
+  f->fvi(tmp, NULL, 0, z[0]);
+  uint di=tmp.N; //dimensionality at nodes
+  if(T>0) f->fvij(tmp, NULL, NULL, 0, 1, z[0], z[1]);
+  uint dij=tmp.N; //dimensionality at pairs
+  
+  //resizing things:
+  arr yi (T+1,di); //the part of y which will collect all node potentials
+  arr yij(T  ,dij); //the part of y which will collect all pair potentials
+  arr Ji;  Ji .resize(TUP(T+1, di, z.d0, z.d1)); //first indices as yi, last: gradient w.r.t. x
+  arr Jij; Jij.resize(TUP(T  , dij, z.d0, z.d1)); //first indices as yi, last: gradient w.r.t. x
+  Ji.setZero();
+  Jij.setZero();
+  
+  arr y_loc,J_loc,Ji_loc,Jj_loc;
+  uint t,i,j;
+  //first collect all node potentials
+  for(t=0;t<=T;t++){
+    f->fvi(y_loc, (J?&J_loc:NULL), t, z[t]);
+    yi[t] = y_loc;
+    if(J){
+      for(i=0;i<di;i++) for(j=0;j<z.d1;j++) //copy into the right place...
+        Ji(TUP(t,i,t,j)) = J_loc(i,j);
+    }
+  }
+  //first collect all pair potentials
+  for(t=0;t<T;t++){
+    f->fvij(y_loc, (J?&Ji_loc:NULL), (J?&Jj_loc:NULL), t, t+1, z[t], z[t+1]);
+    yij[t] = y_loc;
+    if(J){
+      for(i=0;i<dij;i++) for(j=0;j<z.d1;j++) //copy into the right place...
+        Jij(TUP(t,i,t  ,j)) = Ji_loc(i,j);
+      for(i=0;i<dij;i++) for(j=0;j<z.d1;j++) //copy into the right place...
+        Jij(TUP(t,i,t+1,j)) = Jj_loc(i,j);
+    }
+  }
+  yi.reshape((T+1)*di);
+  Ji.reshape((T+1)*di, x.N);
+  yij.reshape(T*dij);
+  Jij.reshape(T*dij, x.N);
+  y=yi;  y.append(yij);
+  if(J){ *J=Ji;  J->append(Jij); }
+}
+
+double conv_VectorChainFunction::fqi (SqrPotential *S, uint i, const arr& x_i){
+  arr y,J;
+  f->fvi(y, (S?&J:NULL), i, x_i);
+  if(S){
+    S->A=~J * J;
+    S->a=~J * (J*x_i - y);
+    S->c=sumOfSqr(J*x_i - y);
+  }
+  return sumOfSqr(y);
+}
+
+double conv_VectorChainFunction::fqij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j){
+  arr y,Ji,Jj;
+  f->fvij(y, (S?&Ji:NULL), (S?&Jj:NULL), i, j, x_i, x_j);
+  if(S){
+    S->A=~Ji*Ji;
+    S->B=~Jj*Jj;
+    S->C=~Ji*Jj;
+    S->a=~Ji*(Ji*x_i + Jj*x_j - y);
+    S->b=~Jj*(Ji*x_i + Jj*x_j - y);
+    S->c=sumOfSqr(Ji*x_i + Jj*x_j - y);
+  }
+  return sumOfSqr(y);
+}
+
+
+
+
+void init(SqrPotential &V, uint n){ V.A.resize(n,n); V.a.resize(n); V.A.setZero(); V.a.setZero(); V.c=0.; }
 
 uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return, double stoppingTolerance, uint maxIter, double maxStepSize, uint verbose){
 
@@ -38,16 +162,16 @@ uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return, double sto
     uint t;
     arr x_ref;
     void fv(arr& y, arr* J, const arr& x){
-      arr yy,Ji,Jj;
-      f->fi (y, J, t, x);
+      arr yij,Ji,Jj;
+      f->fvi (y, J, t, x);
       if(t>0){
-        f->fij(yy, (J?&Ji:NULL),  (J?&Jj:NULL), t-1, t, x_ref[t], x);
-        y.append(yy);
+        f->fvij(yij, (J?&Ji:NULL),  (J?&Jj:NULL), t-1, t, x_ref[t-1], x);
+        y.append(yij);
         if(J) J->append(Jj);
       }
-      if(t<x_ref.d0-1){
-        f->fij(yy, (J?&Ji:NULL),  (J?&Jj:NULL), t, t+1, x, x_ref[t+1]);
-        y.append(yy);
+      if(t<f->T){
+        f->fvij(yij, (J?&Ji:NULL),  (J?&Jj:NULL), t, t+1, x, x_ref[t+1]);
+        y.append(yij);
         if(J) J->append(Ji);
       }
     }
@@ -55,151 +179,124 @@ uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return, double sto
 
   MyVectorFunction loc_f;
   loc_f.f = &f;
+  
+  ofstream fil;
+  if(verbose>0) fil.open("z.nodewise");
+  if(verbose>0) fil <<0 <<' ' <<evaluateVCF(f, x) <<endl;
+  if(verbose>1) cout <<"optNodewise initial cost " <<evaluateVCF(f, x) <<endl;
 
-  cout <<f.f_total(x) <<endl;
-
-  for(uint k=0;k<maxIter;k++){
-    for(uint t=1;t<x.d0;t++){
+  uint k;
+  for(k=0;k<maxIter;k++){
+    arr x_old=x;
+    for(uint t=0;t<=f.T;t++){
+      loc_f.x_ref = x;
+      loc_f.t = t;
+      //checkGradient(loc_f, x[t], 1e-4);
+      optGaussNewton(x[t](), loc_f, NULL, stoppingTolerance, 10, maxStepSize, 0);
+      if(verbose>1) cout <<"optNodewise " <<k <<" > " <<t <<' ' <<evaluateVCF(f, x) <<endl;
+    }
+    for(uint t=f.T-1;t>0;t--){
       loc_f.x_ref = x;
       loc_f.t=t;
-      optGaussNewton(x[t](), loc_f, NULL, stoppingTolerance=1e-10, 10, maxStepSize, 0);
-      cout <<f.f_total(x) <<endl;
+      //checkGradient(loc_f, x[t], 1e-4);
+      optGaussNewton(x[t](), loc_f, NULL, stoppingTolerance, 10, maxStepSize, 0);
+      if(verbose>1) cout <<"optNodewise " <<k <<" < " <<t <<' ' <<evaluateVCF(f, x) <<endl;
     }
-    for(uint t=x.d0-1;t>0;t--){
-      loc_f.x_ref = x;
-      loc_f.t=t;
-      optGaussNewton(x[t](), loc_f, NULL, stoppingTolerance=1e-10, 10, maxStepSize, 0);
-      cout <<f.f_total(x) <<endl;
-    }
+    if(verbose>0) fil <<k+1 <<' ' <<evaluateVCF(f, x) <<endl;
+    if(maxDiff(x,x_old)<stoppingTolerance) break;
   }
+  if(verbose>0) fil.close();
+  if(verbose>1) gnuplot("plot 'z.nodewise' us 1:2 w l",NULL,true);
+  return k;
 }
 
 uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return, double stoppingTolerance, uint maxIter, double maxStepSize, uint verbose){
 
-  uint T=x.d0,n=x.d1;
+  uint T=x.d0-1,n=x.d1;
   uint evals=0;
-  arr y(x),x_ref(x);
-  double damping=1.;
+  arr y(x);
+  double damping=100.;
   
-  MT::Array<SqrPotential> V(T);
+  MT::Array<SqrPotential> V(T+1);
   arr Bbarinv(T,n,n);
+  arr fijC(T,n,n);
   arr bbar(T,n);
-  arr tmp;
-
-  double fx = f.f_total(x);
+  arr Id = eye(n,n);
+  
+  double fx = evaluateQCF(f, x);
   cout <<fx <<endl;
+
+  ofstream fil;
+  if(verbose>0) fil.open("z.DP");
+  if(verbose>0) fil <<0 <<' ' <<fx <<' ' <<damping <<endl;
+  if(verbose>1) cout <<"optDP initial cost " <<fx <<endl;
   
   for(uint k=0;k<maxIter;k++){
-    SqrPotential fi;
+    SqrPotential fj;
     PairSqrPotential fij;
     
     //backward
-    init(V(T-1),n);
-    for(uint t=T-1;t>0;t--){
-      f.fi (&fi , t, x[t]);
-      f.fij(&fij, t-1, t, x[t-1], x[t]);
-      arr Bbar = fij.B + fi.A + V(t).A;
-      bbar[t]  = fij.b + fi.a + V(t).a;
-      double hatabar = fij.hata + fi.hata + V(t).hata;
+    arr Bbar,C_Bbarinv;
+    double cbar;
+    init(V(T),n);
+    for(uint t=T;t--;){
+      f.fqi (&fj , t+1, x[t+1]);  evals++;
+      f.fqij(&fij, t, t+1, x[t], x[t+1]);
+      Bbar    = fij.B + fj.A + V(t+1).A + damping*Id;
+      bbar[t] = fij.b + fj.a + V(t+1).a + damping*x[t+1];
+      cbar    = fij.c + fj.c + V(t+1).c + damping*sumOfSqr(x[t+1]);
+      fijC[t] = fij.C; //need to save this!
       inverse_SymPosDef(Bbarinv[t](), Bbar);
-      V(t-1).hata = hatabar - (~bbar[t] * Bbarinv[t] * bbar[t])(0);
-      tmp  = fij.C*Bbarinv[t];
-      V(t-1).a = fij.a - tmp * bbar[t];
-      V(t-1).A = fij.A - tmp * ~fij.C;
-    }
-    
-    //forward
-    arr step;
-    f.fi (&fi , 0, x[0]);
-    inverse_SymPosDef(tmp, fi.A + V(0).A);
-    step = tmp*(fi.a + V(0).a) - y[0];
-    if(norm(step)>maxStepSize) step *= maxStepSize/norm(step);
-    y[0]() += step;
-    for(uint t=1;t<T;t++){
-      step = Bbarinv[t]*(bbar[t] - ~fij.C*y[t-1]) - y[t];
-      if(norm(step)>maxStepSize) step *= maxStepSize/norm(step);
-      y[t]() += step;
+      V(t).c = cbar - scalarProduct(bbar[t], Bbarinv[t] * bbar[t]);
+      C_Bbarinv  = fij.C*Bbarinv[t];
+      V(t).a = fij.a - C_Bbarinv * bbar[t];
+      V(t).A = fij.A - C_Bbarinv * ~fij.C;
     }
   
-  /*double fy=V(0).hata;
-    double fy_bla = f.f_total(y);
+    //forward
+    arr step;
+    arr Bbarinv0,bbar0;
+    bool cutSteps=false;
+    f.fqi (&fj , 0, x[0]);  evals++;
+    Bbar  = fj.A + V(0).A + damping*Id;
+    bbar0 = fj.a + V(0).a + damping*x[0];
+    cbar  = fj.c + V(0).c + damping*sumOfSqr(x[0]);
+    inverse_SymPosDef(Bbarinv0, Bbar);
+    step = Bbarinv0*bbar0 - y[0];
+    if(maxStepSize>0. && norm(step)>maxStepSize){ cutSteps=true;  step *= maxStepSize/norm(step); }
+    y[0]() += step;
+    y[0] = Bbarinv0*bbar0;
+    double fy = cbar - scalarProduct(bbar0, Bbarinv0 * bbar0);
+    for(uint t=0;t<T;t++){
+    step = Bbarinv[t]*(bbar[t] - (~fijC[t])*y[t]) - y[t+1];
+      if(maxStepSize>0. && norm(step)>maxStepSize){ cutSteps=true;  step *= maxStepSize/norm(step); }
+      y[t+1]() += step;
+      y[t+1] = Bbarinv[t]*(bbar[t] - (~fijC[t])*y[t]);
+    }
+    
+    //damping cost:
+    double damping_cost=damping*sqrDistance(y,x);
+    fy -= damping_cost;
+    if(cutSteps) fy=evaluateQCF(f, y);
+    //CHECK(fabs(fy-evaluateQCF(f, y))<1e-6,"");
+    
     if(fy<=fx){
+      if(maxDiff(x,y)<stoppingTolerance){ x=y;  fx=fy;  break; }
       x=y;
       fx=fy;
+      damping /= 5.;
+    }else{
+      damping *= 10.;
     }
-        cout <<fx <<' ' <<fy <<endl;
-*/
-    x=y;
-    cout <<"f=" <<f.f_total(y) <<endl;
-    
-    //break;
+
+    if(verbose>1) cout <<"optDP " <<evals <<' ' <<fx <<' ' <<damping <<endl;
+    if(verbose>0) fil <<evals <<' ' <<fx <<endl;
   }
+  if(verbose>0) fil.close();
+  if(verbose>1) gnuplot("plot 'z.DP' us 1:2 w l",NULL,true);
   return evals;
 }
 
-uint optRicatti(arr& x, SqrChainFunction& f, const arr& x0, double *fmin_return, double stoppingTolerance, uint maxIter, double maxStepSize, uint verbose){
-  uint t, T=x.d0-1, n=x.d1;
-
-  arr Vbar(T+1, n, n), vbar(T+1, n);
-  arr R(T+1, n, n), r(T+1, n);
-  arr HVinv(T+1, n, n), VHVinv;
-  arr H = eye(n);
-  arr x_old(x);
-
-  SqrPotential fi;
-  double cost,cost_old;
-  cost = f.f_total(x);
-  
-  for(uint k=0;k<maxIter;k++){
-    //remember the old trajectory
-    x_old = x;
-    cost_old = cost;
-    
-    Vbar.resize(T+1, n, n);  vbar.resize(T+1, n);
-    R.resize(T+1, n, n);  r.resize(T+1, n);
-    
-    //linearize around current trajectory
-    for(t=0;t<=T;t++){
-      f.fi (&fi , t, x[t]);
-      R[t]() = fi.A;
-      r[t]() = fi.a;
-      r[t]() *= -2.;
-    }
-    
-    //bwd Ricatti equations
-    Vbar[T]() = R[T];
-    vbar[T]() = r[T];
-    for(t=T;t--;){
-      inverse_SymPosDef(HVinv[t+1](), H+Vbar[t+1]);
-      VHVinv = Vbar[t+1]*HVinv[t+1];
-      Vbar[t]() = R[t] + Vbar[t+1] - VHVinv*Vbar[t+1];
-      vbar[t]() = r[t] + vbar[t+1] - VHVinv*vbar[t+1];
-    }
-    
-    //fwd with optimal control
-    x[0]() = x0;
-    arr step;
-    for(t=1;t<=T;t++){
-      step = x[t-1] - HVinv[t]*((double).5*vbar[t] + Vbar[t]*x[t-1]) - x[t];
-      if(norm(step)>maxStepSize) step *= maxStepSize/norm(step);
-      x[t]() += step;
-    }
-    
-    cost = f.f_total(x);
-    if(cost>cost_old+1e-10){ //unsuccessful
-      x = x_old;
-      cost = cost_old;
-      maxStepSize *= .5;
-    }else{ //success
-      maxStepSize *= 1.2;
-
-      if(maxStepSize > 2.* stoppingTolerance && maxDiff(x_old, x)<stoppingTolerance) break;
-    }
-    
-    cout <<"cost=" <<cost <<"  stepsize=" <<maxStepSize <<endl;
-
-  }
-}
 
 /*double ScalarGraphFunction::f_total(const arr& X){
   uint n=X.d0;
@@ -262,9 +359,9 @@ void checkGradient(ScalarFunction &f,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient (scalar) -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
-    MT::save(J, "z.J");
-    MT::save(JJ, "z.JJ");
+    MT_MSG("checkGradient (scalar) -- FAILURE -- max diff=" <<md <<" (stored in files z.J_*)");
+    MT::save(J, "z.J_analytical");
+    MT::save(JJ, "z.J_empirical");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     HALT("");
   }else{
@@ -292,9 +389,9 @@ void checkGradient(VectorFunction &f,
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance){
-    MT_MSG("checkGradient (vector) -- FAILURE -- max diff=" <<md <<" (stored in files z.J and z.JJ)");
-    MT::save(J, "z.J");
-    MT::save(JJ, "z.JJ");
+    MT_MSG("checkGradient (vector) -- FAILURE -- max diff=" <<md <<" (stored in files z.J_*)");
+    MT::save(J, "z.J_analytical");
+    MT::save(JJ, "z.J_emprical");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
   }else{
@@ -338,7 +435,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, double *fmin_return, double stopp
       y = x + a*Delta;
       f.fv(phi, &J, y);  evals++;
       fy = sumOfSqr(phi);
-      if(verbose>1) cout <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
+      if(verbose>1) cout <<"optGaussNewton " <<evals <<" \tprobing y=" <<y <<" \tl(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
       if(fy <= fx) break;
       if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
@@ -358,11 +455,11 @@ uint optGaussNewton(arr& x, VectorFunction& f, double *fmin_return, double stopp
     if(norm(Delta)<stoppingTolerance || evals>maxEvals) break;
   }
   if(verbose>0) fil.close();
-  if(verbose>1) gnuplot("plot 'z.gaussNewton' us 1:2 w l");
+  if(verbose>1) gnuplot("plot 'z.gaussNewton' us 1:2 w l",NULL,true);
   return evals;
 }
 
-uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return, double stoppingTolerance, uint maxEvals, double maxStepSize, uint verbose ){
+uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return, double stoppingTolerance, uint maxEvals, double maxStepSize, uint verbose){
   uint evals=0;
   arr y, grad_x, grad_y;
   double fx, fy;
@@ -399,7 +496,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *f
     if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
   }
   if(verbose>0) fil.close();
-  if(verbose>1) gnuplot("plot 'z.grad' us 1:2 w l");
+  if(verbose>1) gnuplot("plot 'z.grad' us 1:2 w l",NULL,true);
   return evals;
 }
 
@@ -514,7 +611,7 @@ uint Rprop::loop(arr& _x,
     //check stopping criterion based on step-length in x
     double diff=maxDiff(x, xmin);
     if(verbose>0) fil <<i <<' ' <<y <<' ' <<diff <<endl;
-    if(verbose>1) cout <<i <<' ' <<y <<' ' <<diff <<endl;
+    if(verbose>1) cout <<"optRprop " <<i <<' ' <<y <<' ' <<diff <<endl;
     if(diff<stoppingTolerance){ small_steps++; }else{ small_steps=0; }
     if(small_steps>10)  break;
   }

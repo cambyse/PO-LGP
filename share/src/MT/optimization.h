@@ -6,127 +6,45 @@
 
 //===========================================================================
 //
-// problem prototypes
+// return types
 //
 
-//typedef double (*ScalarFunction)(arr* optional_gradient, const arr& x, void* optional_data); 
-//typedef void (*VectorFunction)(arr& output, arr* optional_Jacobian, const arr& x, void* optional_data);
+/// return type for a function that returns a square potential $f(x) = x^T A x - 2 a^T x + c
+struct     SqrPotential { arr A, a;          double c; };
+/// return type for a function that returns a square potential $f(x,y) = [x,y]^T [A,C; C^T,B] [x,y] - 2 [a,b]^T [x,y] + c$
+struct PairSqrPotential { arr A, B, C, a, b; double c; };
 
+
+//===========================================================================
+//
+// (cost) function types
+//
+
+/// A scalar function $y = f(x)$, gradient given
 struct ScalarFunction { virtual double fs(arr* grad, const arr& x) = 0; };
+/// A vector function $y = f(x)$, Jacobian given
+/// This implies an optimization problem $\hat f(y) = y^T(x) y(x)$ of Gauss-Newton
+/// type where the Hessian is approximated by J^T J
 struct VectorFunction { virtual void   fv(arr& y, arr* J, const arr& x) = 0; };
 
-struct     SqrPotential { arr A, a;          double hata; };
-struct PairSqrPotential { arr A, B, C, a, b; double hata; };
-
+/// Given a chain $x_{0:T}$ of variables, implies a cost function
+/// $f(x) = \sum_{i=0}^T f_i(x_i)^T f_i(x_i) + \sum_{i=1}^T f_{ij}(x_i,x_j)^T f_{ij}(x_i,x_j)$
+/// and we can access local Jacobians of f_i and f_{ij}
 struct VectorChainFunction {
-  virtual void fi (arr& y, arr* J, uint i, const arr& x_i) = 0;
-  virtual void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
-  double f_total(const arr& x);
+  uint T;
+  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i) = 0;
+  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
+
+/// Given a chain $x_{0:T}$ of variables, implies a cost function
+/// $f(x) = \sum_{i=0}^T f_i(x_i) + \sum_{i=1}^T f_{ij}(x_i,x_j)$
+/// and we can access local SqrPotential approximations of f_i and f_{ij}
 struct SqrChainFunction {
-  virtual double fi (SqrPotential *S, uint i, const arr& x_i) = 0;
-  virtual double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
-  double f_total(const arr& x);
+  uint T;
+  virtual double fqi (SqrPotential *S, uint i, const arr& x_i) = 0;
+  virtual double fqij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
 
-struct ConvertVector2SqrChainFunction:SqrChainFunction{
-  VectorChainFunction *f;
-  ConvertVector2SqrChainFunction(VectorChainFunction& _f){ f=&_f; }
-  double fi (SqrPotential *S, uint i, const arr& x_i){
-    arr y,J;
-    f->fi(y, (S?&J:NULL), i, x_i);
-    if(S){
-      S->A=~J * J;
-      S->a=~J * (J*x_i - y);
-      S->hata=sumOfSqr(J*x_i - y);
-    }
-    return sumOfSqr(y);
-  }
-  double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j){
-    arr y,Ji,Jj;
-    f->fij(y, (S?&Ji:NULL), (S?&Jj:NULL), i, j, x_i, x_j);
-    if(S){
-      S->A=~Ji*Ji;
-      S->B=~Jj*Jj;
-      S->C=~Ji*Jj;
-      S->a=~Ji*(Ji*x_i + Jj*x_j - y);
-      S->b=~Jj*(Ji*x_i + Jj*x_j - y);
-      S->hata=sumOfSqr(Ji*x_i + Jj*x_j - y);
-    }
-    return sumOfSqr(y);
-  }
-};
-
-struct ConvertVectorChain2ScalarFunction:ScalarFunction{
-  VectorChainFunction *f;
-  ConvertVectorChain2ScalarFunction(VectorChainFunction& _f){ f=&_f; }
-  double fs(arr* grad, const arr& x){
-    uint T=x.d0;
-    double cost=0.;
-    arr y,J,Ji,Jj;
-    if(grad){
-      grad->resizeAs(x);
-      grad->setZero();
-    }
-    for(uint t=0;t<T;t++){ //node potentials
-      f->fi(y, (grad?&J:NULL), t, x[t]);
-      cost += sumOfSqr(y);
-      if(grad){
-        (*grad)[t]() += 2.*(~y)*J;
-      }
-    }
-    for(uint t=0;t<T-1;t++){
-      f->fij(y, (grad?&Ji:NULL), (grad?&Jj:NULL), t, t+1, x[t], x[t+1]);
-      cost += sumOfSqr(y);
-      if(grad){
-        (*grad)[t]()   += 2.*(~y)*Ji;
-        (*grad)[t+1]() += 2.*(~y)*Jj;
-      }
-    }
-    return cost;
-  }
-};
-
-// struct ConvertVectorChain2Function:VectorFunction{
-//   VectorChainFunction *f;
-//   uint T;
-//   ConvertVectorChain2Function(VectorChainFunction& _f,uint _T){ f=&_f; T=_T; }
-//   void   fv(arr& y, arr* J, const arr& x){
-//     x.reshape(T,x.N/T);
-//     arr tmp;
-//     f->fi(tmp, 0, x[0]);
-//     uint n=tmp.N;
-//     y.resize(T+(T-1),n);
-//     (*J).resize(T+(T-1),n,x.d1);
-//     for(t=0;t<T;t++){
-//       f->fi(y[t](), &(*J)[t], t, x[t]);
-//       if(t>0)  f->fij(y[t](), &(*J)[t], t, x[t]);
-// 
-//   }
-//   double fi (SqrPotential *S, uint i, const arr& x_i){
-//     arr y,J;
-//     f->fi(y, (S?&J:NULL), i, x_i);
-//     if(S){
-//       S->A=~J * J;
-//       S->a=~J * (J*x_i - y);
-//       S->hata=sumOfSqr(J*x_i - y);
-//     }
-//     return sumOfSqr(y);
-//   }
-//   double fij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j){
-//     arr y,Ji,Jj;
-//     f->fij(y, (S?&Ji:NULL), (S?&Jj:NULL), i, j, x_i, x_j);
-//     if(S){
-//       S->A=~Ji*Ji;
-//       S->B=~Jj*Jj;
-//       S->C=~Ji*Jj;
-//       S->a=~Ji*(Ji*x_i + Jj*x_j - y);
-//       S->b=~Jj*(Ji*x_i + Jj*x_j - y);
-//       S->hata=sumOfSqr(Ji*x_i + Jj*x_j - y);
-//     }
-//     return sumOfSqr(y);
-//   }
-// };
 /*
 struct ScalarGraphFunction {
   virtual uintA edges() = 0;
@@ -134,6 +52,30 @@ struct ScalarGraphFunction {
   virtual double fij(arr* gradi, arr* gradj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
   double f_total(const arr& X);
 };*/
+
+
+//===========================================================================
+//
+// evaluation and converters
+//
+
+double evaluateSP(SqrPotential& S, const arr& x);
+double evaluateSF(ScalarFunction& f, const arr& x);
+double evaluateVF(VectorFunction& f, const arr& x);
+double evaluateVCF(VectorChainFunction& f, const arr& x);
+double evaluateQCF(SqrChainFunction& f, const arr& x);
+
+struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction{
+  VectorChainFunction *f;
+  conv_VectorChainFunction(VectorChainFunction& _f);
+  virtual double fs(arr* grad, const arr& x);                  //to a ScalarFunction
+  virtual void   fv(arr& y, arr* J, const arr& x);             //to a VectorFunction
+  virtual double fqi (SqrPotential *S, uint i, const arr& x_i); //to a SqrChainFunction
+  virtual double fqij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j);
+};
+
+
+
 
 //===========================================================================
 //
