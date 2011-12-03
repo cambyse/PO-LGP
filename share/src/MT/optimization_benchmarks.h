@@ -35,6 +35,7 @@ struct VectorChainCost:VectorChainFunction{
   uint n;
   arr A,a;
   arr Wi,Wj,w;
+  bool nonlinear;
 
   VectorChainCost(uint _T,uint _n);
   void fvi(arr& y, arr* J, uint i, const arr& x_i);

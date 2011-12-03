@@ -29,7 +29,8 @@ void testSqrProblem(){
 
 
 void testDynamicProgramming(){
-  VectorChainCost P(10,5);
+  VectorChainCost P(20,5);
+  P.nonlinear=true;
   
   arr x(P.T+1,P.n),x0;
   rndUniform(x,-1.,1.,false);

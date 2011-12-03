@@ -77,17 +77,39 @@ VectorChainCost::VectorChainCost(uint _T,uint _n){
   }
   rndUniform(a,-1.,1.,false);
   rndUniform(w,-1.,1.,false);
-//   a.setZero();  w.setZero();
+  nonlinear=false;
 }
 
 void VectorChainCost::fvi(arr& y, arr* J, uint i, const arr& x_i){
-  y = A[i]*x_i + a[i];
-  if(J) *J = A[i];
+  if(!nonlinear){
+    y = A[i]*x_i + a[i];
+    if(J) *J = A[i];
+  }else{
+    arr xi=atan(x_i);
+    y = A[i]*xi + a[i];
+    if(J){
+      arr gi(xi.N);
+      for(uint k=0;k<gi.N;k++) gi(k) = 1./(1.+x_i(k)*x_i(k));
+      *J = A[i]*diag(gi);
+    }
+  }
 }
 
 void VectorChainCost::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
-  y=Wi[i]*x_i + Wj[i]*x_j + w[i];
-  if(Ji) *Ji = Wi[i];
-  if(Jj) *Jj = Wj[i];
-//   y.setZero();  if(Ji) *Ji = 0.;  if(Jj) *Jj = 0.;
+  if(!nonlinear){
+    y=Wi[i]*x_i + Wj[i]*x_j + w[i];
+    if(Ji) *Ji = Wi[i];
+    if(Jj) *Jj = Wj[i];
+  }else{
+    arr xi=atan(x_i);
+    arr xj=atan(x_j);
+    y=Wi[i]*xi + Wj[i]*xj + w[i];
+    if(Ji && Ji){
+      arr gi(xi.N),gj(xi.N);
+      for(uint k=0;k<gi.N;k++) gi(k) = 1./(1.+x_i(k)*x_i(k));
+      for(uint k=0;k<gj.N;k++) gj(k) = 1./(1.+x_j(k)*x_j(k));
+      *Ji = Wi[i]*diag(gi);
+      *Jj = Wj[i]*diag(gj);
+    }
+  }
 }
