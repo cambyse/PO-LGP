@@ -27,6 +27,8 @@ struct ScalarFunction { virtual double fs(arr* grad, const arr& x) = 0; };
 /// type where the Hessian is approximated by J^T J
 struct VectorFunction { virtual void   fv(arr& y, arr* J, const arr& x) = 0; };
 
+struct QuadraticFunction { virtual double fq(SqrPotential*, const arr& x) = 0; };
+
 /// Given a chain $x_{0:T}$ of variables, implies a cost function
 /// $f(x) = \sum_{i=0}^T f_i(x_i)^T f_i(x_i) + \sum_{i=1}^T f_{ij}(x_i,x_j)^T f_{ij}(x_i,x_j)$
 /// and we can access local Jacobians of f_i and f_{ij}
@@ -56,8 +58,12 @@ struct ScalarGraphFunction {
 
 //===========================================================================
 //
-// evaluation and converters
+// checks, evaluation and converters
 //
+
+void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
+void checkGradient(VectorFunction &f, const arr& x, double tolerance);
+void checkGradient(QuadraticFunction &f, const arr& x, double tolerance);
 
 double evaluateSP(SqrPotential& S, const arr& x);
 double evaluateSF(ScalarFunction& f, const arr& x);
@@ -75,24 +81,16 @@ struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction{
 };
 
 
-
-
-//===========================================================================
-//
-// gradient checks
-//
-
-void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
-void checkGradient(VectorFunction &f, const arr& x, double tolerance);
-
-
 //===========================================================================
 //
 // optimization methods
 //
 
-/// minimizes cost(x) = phi(x)^T phi(x) using the Jacobian of phi
+/// minimizes f(x) = phi(x)^T phi(x) using the Jacobian of phi
 uint optGaussNewton(arr& x, VectorFunction& phi, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0);
+
+/// minimizes f(x) = A(x)^T x A^T(x) - 2 a(x)^T x + c(x)
+uint optNewton(arr& x, QuadraticFunction& f, double *fx_user=NULL, SqrPotential *S_user=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=1e-2, uint verbose=0);
 
 /// minimizes f(x)
 uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, uint verbose=0 );
@@ -100,9 +98,10 @@ uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_re
 /// minimizes f(x)
 uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 
-uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, double initialDamping=1., uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 uint optRicatti(arr& x, SqrChainFunction& f, const arr& x0, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
+uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, double initialDamping=1., uint maxIter=1000, double maxStepSize=-1., uint verbose=0);
 
 
 //===========================================================================

@@ -29,8 +29,9 @@ void testSqrProblem(){
 
 
 void testDynamicProgramming(){
-  VectorChainCost P(20,5);
-  P.nonlinear=true;
+  //VectorChainCost P(20,5);
+  SlalomProblem P(100,4,.1,.1,4.);
+  //P.nonlinear=true;
   
   arr x(P.T+1,P.n),x0;
   rndUniform(x,-1.,1.,false);
@@ -43,16 +44,18 @@ void testDynamicProgramming(){
   cout <<evaluateVCF(P, x) <<endl;
   cout <<evaluateQCF(P2, x) <<endl;
   
-  checkGradient((ScalarFunction&)P2, x, 1e-4);
+  //checkGradient((ScalarFunction&)P2, x, 1e-4);
   checkGradient((VectorFunction&)P2, x, 1e-4);
   
-  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 100, 2);
-  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 2);
-  x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 100, -1., 2);
-  x=x0;  optNodewise(x, P, NULL, 1e-3, 100, -1., 2);
-  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-6, 100, -1., 2 );
+  //x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 100, 2);
+  //x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 2);
+  //x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 100, -1., 2);
+  //x=x0;  optNodewise(x, P, NULL, 1e-3, 100, -1., 2);
+  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );
+  x=x0;  optMinSumGaussNewton(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );
 
-  gnuplot("plot 'z.nodewise' us 1:2 w l,'z.gaussNewton' us 1:2 w l,'z.rprop' us 1:2 w l,'z.grad' us 1:2 w l,'z.DP' us 1:2 w l",NULL,true);
+  write(LIST(x),"z.sol");
+  //gnuplot("plot 'z.nodewise' us 1:2 w l,'z.gaussNewton' us 1:2 w l,'z.rprop' us 1:2 w l,'z.grad' us 1:2 w l,'z.DP' us 1:2 w l,'z.MSGN' us 1:2 w l",NULL,true);
 }
 
 

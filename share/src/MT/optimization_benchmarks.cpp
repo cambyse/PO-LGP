@@ -113,3 +113,40 @@ void VectorChainCost::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& 
     }
   }
 }
+
+SlalomProblem::SlalomProblem(uint _T, uint _K, double _margin, double _w, double _power){
+  T=_T;
+  n=2;
+  K=_K;
+  margin = _margin;
+  w = _w;
+  power = _power;
+}
+
+void SlalomProblem::fvi(arr& y, arr* J, uint i, const arr& x_i){
+  CHECK(x_i.N==2,"");
+  y.resize(1);  y(0)=0.;
+  if(J){ J->resize(1,2);  J->setZero(); }
+  if(!(i%(T/K))){
+    uint obstacle=i/(T/K);
+    if(obstacle&1){ //top obstacle
+      double d=(x_i(0)-1.)/margin;
+      y(0) = pow(d,power);
+      if(J) (*J)(0,0) = power*pow(d,power-1.)/margin;
+    }else{
+      double d=(x_i(0)+1.)/margin;
+      y(0) = pow(d,power);
+      if(J) (*J)(0,0) = power*pow(d,power-1.)/margin;
+    }
+  }
+}
+
+void SlalomProblem::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+  y.resize(1);
+  double tau=.01;
+  arr A=ARRAY(1., tau, 0., 1.);  A.reshape(2,2);
+  arr M=w*diag(ARRAY(2./(tau*tau), 1./tau));  //penalize variance in position & in velocity (control)
+  y=M*(x_j - A*x_i);
+  if(Ji){ Ji->resize(2,2); (*Ji) = -M*A; }
+  if(Jj){ Jj->resize(2,2); (*Jj) = M; }
+}
