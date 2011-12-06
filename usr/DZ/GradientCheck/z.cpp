@@ -43,9 +43,8 @@ struct WritheMatrixTest:public OptimizationProblem{
     rndUniform(rope2,-1.,1.,false);
     Jq.resize(N*3,n);// rope = segments+1
     rndUniform(Jq,-1.,-1.,false);
-    one_point_jacobian = zeros(3,n);
-    rndUniform(one_point_jacobian,-1.,1.,false);
-    
+    one_point_jacobian = zeros(3,n);  // We need this jacobian for the first joint in chain which is usually fixed J == 0 !!
+      
   }
 
   void F(arr& y, arr* J, const arr& q, int i=-1){ //TODO check EVERYTHING!!!
@@ -78,6 +77,6 @@ void WritheGradientCheck(){
   x.resize(n);
   for(uint k=0;k<1000;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
-    checkGradient_vec(fm, x, 1e-6);
+    checkGradient_vec(fm, x, 1e-4);
   }
 }
