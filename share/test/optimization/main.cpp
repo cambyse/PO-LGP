@@ -30,7 +30,7 @@ void testSqrProblem(){
 
 void testDynamicProgramming(){
   //VectorChainCost P(20,5);
-  SlalomProblem P(100,4,.1,.01,4.);
+  SlalomProblem P(100,4,.1,.01,9.);
   //P.nonlinear=true;
   
   arr x(P.T+1,P.n),x0;

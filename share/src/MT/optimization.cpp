@@ -563,8 +563,8 @@ uint optNewton(arr& x, QuadraticFunction& f, double *fx_user, SqrPotential *S_us
     if(maxStepSize>0. && norm(Delta)>maxStepSize)
       Delta *= maxStepSize/norm(Delta);
     
-    //stopping criterion
-    if(norm(Delta)<stoppingTolerance || evals>maxEvals){
+    //lazy stopping criterion
+    if(norm(Delta)<1e-1*stoppingTolerance){
       x+=Delta; //DANGEROUS!!
       break;
     }
@@ -781,6 +781,8 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, double *fmin_return, doub
     if(verbose>1) cout <<"optMSGN " <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<damping <<endl;
     if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<damping <<endl;
   }
+  if(verbose>1) cout <<"optMSGN " <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<damping <<endl;
+  if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<damping <<endl;
   if(verbose>0) fil.close();
   if(verbose>1) gnuplot("plot 'z.MSGN' us 1:2 w l",NULL,true);
   return evals;
