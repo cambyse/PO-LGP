@@ -4,6 +4,9 @@
 #include "array.h"
 #include "util.h"
 
+// function evaluation counter (used only for performance meassurements, global for simplicity)
+extern uint eval_cost;
+
 //===========================================================================
 //
 // return types
@@ -65,7 +68,7 @@ void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
 void checkGradient(VectorFunction &f, const arr& x, double tolerance);
 void checkGradient(QuadraticFunction &f, const arr& x, double tolerance);
 
-double evaluateSP(SqrPotential& S, const arr& x);
+double evaluateSP(const SqrPotential& S, const arr& x);
 double evaluateSF(ScalarFunction& f, const arr& x);
 double evaluateVF(VectorFunction& f, const arr& x);
 double evaluateVCF(VectorChainFunction& f, const arr& x);

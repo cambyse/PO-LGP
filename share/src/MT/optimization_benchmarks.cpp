@@ -1,4 +1,5 @@
 #include "optimization_benchmarks.h"
+#include "functions.h"
 
 void generateConditionedRandomProjection(arr& M, uint n, double condition){
   uint i,j;
@@ -123,7 +124,24 @@ SlalomProblem::SlalomProblem(uint _T, uint _K, double _margin, double _w, double
   power = _power;
 }
 
+
+double border(double *grad, double x, double power=8.){
+  if(x>0.){ if(grad) *grad=0.; return 0.; }
+  double y = pow(x,power);
+  if(grad) *grad = power*pow(x,power-1.);
+  return y;
+}
+
+double tannenbaum(double *grad, double x, double power=8.){
+  double y=x*x;
+  if(grad) *grad = power*pow(y-floor(y),power-1.) * (2.*x);
+  y=floor(y) + pow(y-floor(y),power);
+  return y;
+}
+
+
 void SlalomProblem::fvi(arr& y, arr* J, uint i, const arr& x_i){
+  eval_cost++;
   CHECK(x_i.N==2,"");
   y.resize(1);  y(0)=0.;
   if(J){ J->resize(1,2);  J->setZero(); }
@@ -131,12 +149,14 @@ void SlalomProblem::fvi(arr& y, arr* J, uint i, const arr& x_i){
     uint obstacle=i/(T/K);
     if(obstacle&1){ //top obstacle
       double d=(x_i(0)-1.)/margin;
-      y(0) = pow(d,power);
-      if(J) (*J)(0,0) = power*pow(d,power-1.)/margin;
+//       y(0) = tannenbaum((J?&(*J)(0,0):NULL), d, power);
+      y(0) = border((J?&(*J)(0,0):NULL), d, power);
+      if(J) (*J)(0,0) /= margin;
     }else{
-      double d=(x_i(0)+1.)/margin;
-      y(0) = pow(d,power);
-      if(J) (*J)(0,0) = power*pow(d,power-1.)/margin;
+      double d=-(x_i(0)+1.)/margin;
+//       y(0) = tannenbaum((J?&J(0,0):NULL), d, power);
+      y(0) = border((J?&(*J)(0,0):NULL), d, power);
+      if(J) (*J)(0,0) /= -margin;
     }
   }
 }
