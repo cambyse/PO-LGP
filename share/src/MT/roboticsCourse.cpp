@@ -353,18 +353,31 @@ void CarSimulator::step(const arr& u){
   gl->update();
 }
 
-void CarSimulator::meassureCurrentLandmarks(arr& Y){
-  getTrueLandmarksInState(Y, x,y,theta);
+void CarSimulator::getRealNoisyObservation(arr& Y){
+  getMeanObservationGivenState(Y, x,y,theta);
   rndGauss(Y,observationNoise,true);
 }
 
-void CarSimulator::getTrueLandmarksInState(arr& Y, double x, double y, double theta){
+void CarSimulator::getMeanObservationGivenState(arr& Y, double x, double y, double theta){
   Y=landmarks;
   arr R = ARR(cos(theta), -sin(theta), sin(theta), cos(theta));
   R.reshape(2,2);
   arr p = ones(landmarks.d0,1)*~ARR(x,y);
   Y -= p;
   Y = Y*R;
+  Y.reshape(Y.N);
+}
+
+void CarSimulator::getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta){
+  uint N=landmarks.d0;
+  arr R = ARR(cos(theta), sin(theta), -sin(theta), cos(theta));
+  R.reshape(2,2);
+  C.resize(2*N,2*N);  C.setZero();
+  for(uint i=0;i<N;i++) C.setMatrixBlock(R, 2*i, 2*i);
+  cout <<C <<endl;
+  c.resize(2*N);
+  for(uint i=0;i<N;i++) c.setVectorBlock(ARR(x,y), 2*i);
+  c = - C * c;
 }
 
 void glDrawCarSimulator(void *classP){

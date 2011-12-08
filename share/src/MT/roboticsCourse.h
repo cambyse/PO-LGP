@@ -79,9 +79,14 @@ struct CarSimulator{
   CarSimulator();
   void step(const arr& u); 
   //get a (noisy) observation (meassuring landmarks) in the current state
-  void meassureCurrentLandmarks(arr& Y);
+  void getRealNoisyObservation(arr& Y);
   //compute the ideal observation if you were in state (x,y,theta): use to compute Y for a particle and compare with meassured observation
-  void getTrueLandmarksInState(arr& Y, double x, double y, double theta);
+  void getMeanObservationGivenState(arr& Y, double x, double y, double theta);
+
+  void getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta);
+
+  //void getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta);
+
 };
 
 
