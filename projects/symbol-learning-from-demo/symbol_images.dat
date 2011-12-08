@@ -1,0 +1,86 @@
+# t=0
+# Visual info
+--
+60 65
+66 67
+60 68 69 70
+--
+H -
+--
+OUT:  66 67 
+--
+# Full relational representation
+table(60) block(65) block(66) block(67) block(68) block(69) block(70) on(65 60) on(68 60) on(67 66) on(69 68) on(70 69) upright(60) upright(65) upright(66) upright(67) upright(68) upright(69) upright(70) out(66) out(67) 
+size(60)=4 size(65)=3 size(66)=3 size(67)=3 size(68)=3 size(69)=3 size(70)=3 
+clear(65) clear(67) clear(70) inhandNil() 
+
+
+#Next action:
+grab(68)
+
+
+
+# t=1
+# Visual info
+--
+60 65
+66 67
+--
+H 68
+--
+OUT:  66 67 69 70 
+--
+# Full relational representation
+table(60) block(65) block(66) block(67) block(68) block(69) block(70) inhand(68) on(65 60) on(67 66) upright(60) upright(65) upright(66) upright(67) upright(69) upright(70) out(66) out(67) out(69) out(70) 
+size(60)=4 size(65)=3 size(66)=3 size(67)=3 size(68)=3 size(69)=3 size(70)=3 
+clear(65) clear(67) clear(68) clear(69) clear(70) 
+
+
+#Next action:
+puton(60)
+
+
+
+# t=2
+# Visual info
+--
+60 65
+66 67
+60 68
+--
+H -
+--
+OUT:  66 67 69 70 
+--
+# Full relational representation
+table(60) block(65) block(66) block(67) block(68) block(69) block(70) on(65 60) on(68 60) on(67 66) upright(60) upright(65) upright(66) upright(67) upright(68) upright(69) upright(70) out(66) out(67) out(69) out(70) 
+size(60)=4 size(65)=3 size(66)=3 size(67)=3 size(68)=3 size(69)=3 size(70)=3 
+clear(65) clear(67) clear(68) clear(69) clear(70) inhandNil() 
+
+
+#Next action:
+grab(65)
+
+
+
+# t=3
+# Visual info
+--
+66 67
+60 68
+--
+H 65
+--
+OUT:  66 67 69 70 
+--
+# Full relational representation
+table(60) block(65) block(66) block(67) block(68) block(69) block(70) inhand(65) on(68 60) on(67 66) upright(60) upright(66) upright(67) upright(68) upright(69) upright(70) out(66) out(67) out(69) out(70) 
+size(60)=4 size(65)=3 size(66)=3 size(67)=3 size(68)=3 size(69)=3 size(70)=3 
+clear(65) clear(67) clear(68) clear(69) clear(70) 
+
+
+#Next action:
+puton(68)
+
+
+

@@ -84,8 +84,8 @@ public:
   //  OpenGL Displaying
   // --------------------------------
   void displayText(const char* text, uint waiting_time);
-
-  // Camera frame:  AI.gl->camera.X
+  void takeFoto(const char* foto_file); // write to file
+  
 
   
   // --------------------------------
@@ -124,7 +124,8 @@ public:
   int getOrsType(uint id); // this is the ORS type
   double* getSize(uint id);     //!< when using symmetric objects, take getSize(id)[0]
   double* getColor(uint id);    //!< returns 3-dim array with RGB values
-  
+  MT::String getColorString(uint obj);
+  void getTablePosition(double& x1, double& x2, double& y1, double& y2);
   
   // --------------------------------
   // STATE INFORMATION
@@ -138,10 +139,11 @@ public:
   uint getInhand(uint man_id); //!< get id of the object catched by man_id
   uint getInhand(); //!< get id of object catched with finger of right hand
   // pile info
-  void getObjectsAbove(uintA& list,const char *obj_id); //!< return list of objects above and in contact with id
-  void getObjectsAbove(uintA& list,const uint obj_id);
+  void getObjectsOn(uintA& list,const char *obj_id); //!< return list of objects above and in contact with id
+  void getObjectsOn(uintA& list,const uint obj_id);
   bool isClear(uint id);        //!< check if id is clear
   bool onGround(uint id);
+  void getObjectsClose(uintA& objects_close, uint obj); //!< return list of close by objects (with vertical level)
   // table
   bool freePosition(double x, double y, double radius);
   double highestPosition(double x, double y, double radius, uint id_ignored);
@@ -167,7 +169,6 @@ public:
   OdeInterface *ode;
   SwiftInterface *swift;
   RevelInterface *revel;
-  TaskVariableList TVs;
     
   uint numObjects;
   double neutralHeight;

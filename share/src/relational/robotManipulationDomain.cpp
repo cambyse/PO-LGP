@@ -91,13 +91,13 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   }
   
   // ON relations
-  uintA aboveObjs;
+  uintA objects_on;
   FOR1D(all_objs, i) {
-    sim->getObjectsAbove(aboveObjs, all_objs(i));
-//     cout<<"above "<<all_objs(i)<<" are "<<aboveObjs<<endl;
-    FOR1D(aboveObjs, j) {
-      if (all_objs.findValue(aboveObjs(j)) >= 0)
-        state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(aboveObjs(j), all_objs(i))));
+    sim->getObjectsOn(objects_on, all_objs(i));
+//     cout<<"above "<<all_objs(i)<<" are "<<objects_on<<endl;
+    FOR1D(objects_on, j) {
+      if (all_objs.findValue(objects_on(j)) >= 0)
+        state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(objects_on(j), all_objs(i))));
     }
   }
   
@@ -219,7 +219,7 @@ void TL::RobotManipulationDomain::performAction(Atom* action, RobotManipulationS
   }
   if (action->pred->name == "grab"  ||  action->pred->name == "grab_puton") {
     uintA list;
-    sim->getObjectsAbove(list, action->args(0));
+    sim->getObjectsOn(list, action->args(0));
     if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
         ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
       sim->simulate(30, message);
@@ -238,7 +238,7 @@ void TL::RobotManipulationDomain::performAction(Atom* action, RobotManipulationS
   }
   else if (action->pred->name == "lift") {
     uintA list;
-    sim->getObjectsAbove(list, action->args(1));
+    sim->getObjectsOn(list, action->args(1));
     if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
         ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
       sim->simulate(10);
@@ -265,7 +265,7 @@ void TL::RobotManipulationDomain::performAction(Atom* action, RobotManipulationS
       sim->simulate(30, message);
     else {
       uintA aboves;
-      sim->getObjectsAbove(aboves,action->args(0));
+      sim->getObjectsOn(aboves,action->args(0));
       if (aboves.N > 0)
         sim->simulate(30, message); // don't do anything something on box
       else

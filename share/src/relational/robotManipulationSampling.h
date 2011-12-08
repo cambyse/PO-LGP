@@ -19,8 +19,8 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TL__BW_SAMPLING
-#define TL__BW_SAMPLING
+#ifndef TL__RM_SAMPLING
+#define TL__RM_SAMPLING
 
 #include <relational/robotManipulationSampling.h>
 #include <relational/logicObjectManager.h>
@@ -53,4 +53,4 @@ namespace robotManipulationSampling {
 
 }
 
-#endif // TL__BW_SAMPLING
+#endif // TL__RM_SAMPLING
