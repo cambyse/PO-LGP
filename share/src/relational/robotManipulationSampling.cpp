@@ -25,11 +25,11 @@
 
 
 
-bool TL::robotManipulationSampling::SAMPLING__WATCH_AFTER_ACTION;
-uint TL::robotManipulationSampling::SAMPLING__WAIT_SEC_AFTER_ACTION;
-double TL::robotManipulationSampling::SAMPLING__PROB_SENSIBLE_ACTION;
-double TL::robotManipulationSampling::SAMPLING__PROB_GRAB_CLEARGUY;
-double TL::robotManipulationSampling::SAMPLING__PROB_PUTON_CLEARGUY;
+bool TL::robotManipulationSampling::SAMPLING__WATCH_AFTER_ACTION = false;
+uint TL::robotManipulationSampling::SAMPLING__WAIT_SEC_AFTER_ACTION = 50;
+double TL::robotManipulationSampling::SAMPLING__PROB_SENSIBLE_ACTION = 1.0;
+double TL::robotManipulationSampling::SAMPLING__PROB_GRAB_CLEARGUY =  0.8;
+double TL::robotManipulationSampling::SAMPLING__PROB_PUTON_CLEARGUY = 0.8;
 
 
 TL::Atom* TL::robotManipulationSampling::generateAction(const State& s, uint id_table) {
@@ -39,7 +39,8 @@ TL::Atom* TL::robotManipulationSampling::generateAction(const State& s, uint id_
 
 
 TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const State& s, uint id_table) {
-  uint DEBUG = 1;
+  uint DEBUG = 2;
+  if (DEBUG>0) {cout<<"generateAction_wellBiased [START]"<<endl;}
     // blocks on high towers have lower prob to be grabbed
   double skyscraper_bias = 200; // 115.0;
     
@@ -254,6 +255,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const State& 
     sa(0) = id_hand;
   }
   
+  if (DEBUG>0) {cout<<"generateAction_wellBiased [END]"<<endl;}
   return logicObjectManager::getAtom(p_action, sa);
 }
 

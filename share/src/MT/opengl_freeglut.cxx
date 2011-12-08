@@ -181,7 +181,6 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
   //  glutJoystickFunc( Joystick, 100 );
   //  glutEntryFunc ( Entry ) ;
   s->unlock_win();
-
 }
 
 // freeglut destructor

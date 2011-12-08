@@ -13,6 +13,8 @@ OBJS += $(OBJS_C:%.c=%.o)
 ODE = 1
 QHULL = 1
 SWIFT	= 1
+FREEGLUT = 1
+SOIL = 1
 
 include $(BASE)/make-generic
 
