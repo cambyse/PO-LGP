@@ -323,8 +323,13 @@ void getTriangulatedHull(uintA& T, arr& V){
   uint f, i, v;
   
   arr Vnew;
+#ifdef QHULL2010
+  Vnew.resize(qh_qh.num_vertices, 3);
+  T.resize(qh_qh.num_facets, 3);
+#else
   Vnew.resize(qh_qh->num_vertices, 3);
   T.resize(qh_qh->num_facets, 3);
+#endif
   i=0;
   FORALLvertices {
     vertex->id = i;
