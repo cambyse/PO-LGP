@@ -318,8 +318,18 @@ endif
 
 #assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
+<<<<<<< Updated upstream
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
 LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+=======
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv`
+LIBS    += `pkg-config --libs opencv`
+endif
+
+# newer qhull version?
+ifeq ($(QHULL2010),1)
+CXXFLAGS += -DQHULL2010
+>>>>>>> Stashed changes
 endif
 
 #assuming ubuntu libopencv2.3-dev package
