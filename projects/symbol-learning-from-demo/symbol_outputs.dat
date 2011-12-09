@@ -1,0 +1,392 @@
+0 60 on 65
+0 60 on 68
+0 60 not on 66
+0 60 not on 67
+0 60 not on 69
+0 60 not on 70
+0 65 not on 60
+0 65 not on 66
+0 65 not on 67
+0 65 not on 68
+0 65 not on 69
+0 65 not on 70
+0 66 on 67
+0 66 not on 60
+0 66 not on 65
+0 66 not on 68
+0 66 not on 69
+0 66 not on 70
+0 67 not on 60
+0 67 not on 65
+0 67 not on 66
+0 67 not on 68
+0 67 not on 69
+0 67 not on 70
+0 68 on 69
+0 68 not on 60
+0 68 not on 65
+0 68 not on 66
+0 68 not on 67
+0 68 not on 70
+0 69 on 70
+0 69 not on 60
+0 69 not on 65
+0 69 not on 66
+0 69 not on 67
+0 69 not on 68
+0 70 not on 60
+0 70 not on 65
+0 70 not on 66
+0 70 not on 67
+0 70 not on 68
+0 70 not on 69
+0 60 not clear
+0 65 clear
+0 66 not clear
+0 67 clear
+0 68 not clear
+0 69 not clear
+0 70 clear
+0 60 upright
+0 65 upright
+0 66 upright
+0 67 upright
+0 68 upright
+0 69 upright
+0 70 upright
+0 60 not close 65
+0 60 not close 66
+0 60 not close 67
+0 60 not close 68
+0 60 not close 69
+0 60 not close 70
+0 65 close 68
+0 65 not close 60
+0 65 not close 66
+0 65 not close 67
+0 65 not close 69
+0 65 not close 70
+0 66 not close 60
+0 66 not close 65
+0 66 not close 67
+0 66 not close 68
+0 66 not close 69
+0 66 not close 70
+0 67 not close 60
+0 67 not close 65
+0 67 not close 66
+0 67 not close 68
+0 67 not close 69
+0 67 not close 70
+0 68 close 65
+0 68 not close 60
+0 68 not close 66
+0 68 not close 67
+0 68 not close 69
+0 68 not close 70
+0 69 not close 60
+0 69 not close 65
+0 69 not close 66
+0 69 not close 67
+0 69 not close 68
+0 69 not close 70
+0 70 not close 60
+0 70 not close 65
+0 70 not close 66
+0 70 not close 67
+0 70 not close 68
+0 70 not close 69
+1 60 on 65
+1 60 not on 66
+1 60 not on 67
+1 60 not on 68
+1 60 not on 69
+1 60 not on 70
+1 65 not on 60
+1 65 not on 66
+1 65 not on 67
+1 65 not on 68
+1 65 not on 69
+1 65 not on 70
+1 66 on 67
+1 66 not on 60
+1 66 not on 65
+1 66 not on 68
+1 66 not on 69
+1 66 not on 70
+1 67 not on 60
+1 67 not on 65
+1 67 not on 66
+1 67 not on 68
+1 67 not on 69
+1 67 not on 70
+1 68 not on 60
+1 68 not on 65
+1 68 not on 66
+1 68 not on 67
+1 68 not on 69
+1 68 not on 70
+1 69 not on 60
+1 69 not on 65
+1 69 not on 66
+1 69 not on 67
+1 69 not on 68
+1 69 not on 70
+1 70 not on 60
+1 70 not on 65
+1 70 not on 66
+1 70 not on 67
+1 70 not on 68
+1 70 not on 69
+1 60 not clear
+1 65 clear
+1 66 not clear
+1 67 clear
+1 68 clear
+1 69 clear
+1 70 clear
+1 60 upright
+1 65 upright
+1 66 upright
+1 67 upright
+1 68 not upright
+1 69 upright
+1 70 upright
+1 60 not close 65
+1 60 not close 66
+1 60 not close 67
+1 60 not close 68
+1 60 not close 69
+1 60 not close 70
+1 65 not close 60
+1 65 not close 66
+1 65 not close 67
+1 65 not close 68
+1 65 not close 69
+1 65 not close 70
+1 66 not close 60
+1 66 not close 65
+1 66 not close 67
+1 66 not close 68
+1 66 not close 69
+1 66 not close 70
+1 67 not close 60
+1 67 not close 65
+1 67 not close 66
+1 67 not close 68
+1 67 not close 69
+1 67 not close 70
+1 68 not close 60
+1 68 not close 65
+1 68 not close 66
+1 68 not close 67
+1 68 not close 69
+1 68 not close 70
+1 69 close 70
+1 69 not close 60
+1 69 not close 65
+1 69 not close 66
+1 69 not close 67
+1 69 not close 68
+1 70 close 69
+1 70 not close 60
+1 70 not close 65
+1 70 not close 66
+1 70 not close 67
+1 70 not close 68
+2 60 on 65
+2 60 on 68
+2 60 not on 66
+2 60 not on 67
+2 60 not on 69
+2 60 not on 70
+2 65 not on 60
+2 65 not on 66
+2 65 not on 67
+2 65 not on 68
+2 65 not on 69
+2 65 not on 70
+2 66 on 67
+2 66 not on 60
+2 66 not on 65
+2 66 not on 68
+2 66 not on 69
+2 66 not on 70
+2 67 not on 60
+2 67 not on 65
+2 67 not on 66
+2 67 not on 68
+2 67 not on 69
+2 67 not on 70
+2 68 not on 60
+2 68 not on 65
+2 68 not on 66
+2 68 not on 67
+2 68 not on 69
+2 68 not on 70
+2 69 not on 60
+2 69 not on 65
+2 69 not on 66
+2 69 not on 67
+2 69 not on 68
+2 69 not on 70
+2 70 not on 60
+2 70 not on 65
+2 70 not on 66
+2 70 not on 67
+2 70 not on 68
+2 70 not on 69
+2 60 not clear
+2 65 clear
+2 66 not clear
+2 67 clear
+2 68 clear
+2 69 clear
+2 70 clear
+2 60 upright
+2 65 upright
+2 66 upright
+2 67 upright
+2 68 upright
+2 69 upright
+2 70 upright
+2 60 not close 65
+2 60 not close 66
+2 60 not close 67
+2 60 not close 68
+2 60 not close 69
+2 60 not close 70
+2 65 not close 60
+2 65 not close 66
+2 65 not close 67
+2 65 not close 68
+2 65 not close 69
+2 65 not close 70
+2 66 not close 60
+2 66 not close 65
+2 66 not close 67
+2 66 not close 68
+2 66 not close 69
+2 66 not close 70
+2 67 not close 60
+2 67 not close 65
+2 67 not close 66
+2 67 not close 68
+2 67 not close 69
+2 67 not close 70
+2 68 not close 60
+2 68 not close 65
+2 68 not close 66
+2 68 not close 67
+2 68 not close 69
+2 68 not close 70
+2 69 close 70
+2 69 not close 60
+2 69 not close 65
+2 69 not close 66
+2 69 not close 67
+2 69 not close 68
+2 70 close 69
+2 70 not close 60
+2 70 not close 65
+2 70 not close 66
+2 70 not close 67
+2 70 not close 68
+3 60 on 68
+3 60 not on 65
+3 60 not on 66
+3 60 not on 67
+3 60 not on 69
+3 60 not on 70
+3 65 not on 60
+3 65 not on 66
+3 65 not on 67
+3 65 not on 68
+3 65 not on 69
+3 65 not on 70
+3 66 on 67
+3 66 not on 60
+3 66 not on 65
+3 66 not on 68
+3 66 not on 69
+3 66 not on 70
+3 67 not on 60
+3 67 not on 65
+3 67 not on 66
+3 67 not on 68
+3 67 not on 69
+3 67 not on 70
+3 68 not on 60
+3 68 not on 65
+3 68 not on 66
+3 68 not on 67
+3 68 not on 69
+3 68 not on 70
+3 69 not on 60
+3 69 not on 65
+3 69 not on 66
+3 69 not on 67
+3 69 not on 68
+3 69 not on 70
+3 70 not on 60
+3 70 not on 65
+3 70 not on 66
+3 70 not on 67
+3 70 not on 68
+3 70 not on 69
+3 60 not clear
+3 65 clear
+3 66 not clear
+3 67 clear
+3 68 clear
+3 69 clear
+3 70 clear
+3 60 upright
+3 65 not upright
+3 66 upright
+3 67 upright
+3 68 upright
+3 69 upright
+3 70 upright
+3 60 not close 65
+3 60 not close 66
+3 60 not close 67
+3 60 not close 68
+3 60 not close 69
+3 60 not close 70
+3 65 not close 60
+3 65 not close 66
+3 65 not close 67
+3 65 not close 68
+3 65 not close 69
+3 65 not close 70
+3 66 not close 60
+3 66 not close 65
+3 66 not close 67
+3 66 not close 68
+3 66 not close 69
+3 66 not close 70
+3 67 not close 60
+3 67 not close 65
+3 67 not close 66
+3 67 not close 68
+3 67 not close 69
+3 67 not close 70
+3 68 not close 60
+3 68 not close 65
+3 68 not close 66
+3 68 not close 67
+3 68 not close 69
+3 68 not close 70
+3 69 close 70
+3 69 not close 60
+3 69 not close 65
+3 69 not close 66
+3 69 not close 67
+3 69 not close 68
+3 70 close 69
+3 70 not close 60
+3 70 not close 65
+3 70 not close 66
+3 70 not close 67
+3 70 not close 68

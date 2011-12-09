@@ -162,8 +162,12 @@ struct OpenGL {
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
   struct GLInitCall { void *classP; bool (*call)(void*, OpenGL*); };
-  struct GLHoverCall { void *classP; bool (*call)(void*, OpenGL*); };
-  struct GLClickCall { void *classP; bool (*call)(void*, OpenGL*); };
+  //struct GLHoverCall { void *classP; bool (*call)(void*, OpenGL*); };
+  //struct GLClickCall { void *classP; bool (*call)(void*, OpenGL*); };
+  //struct GLKeyCall   { void *classP; bool (*call)(void*, OpenGL*); };
+  struct GLHoverCall{ virtual bool hoverCallback(OpenGL&) = 0; };
+  struct GLClickCall{ virtual bool clickCallback(OpenGL&) = 0; };
+  struct GLKeyCall  { virtual bool keyCallback(OpenGL&) = 0; };
   struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy){ button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
   struct GLSelect   { int name; double dmin, dmax, x,y,z; };
   struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
@@ -172,13 +176,13 @@ struct OpenGL {
   MT::Array<GLView> views;             //!< list of draw routines
   MT::Array<GLDrawer> drawers;         //!< list of draw routines
   MT::Array<GLInitCall> initCalls;     //!< list of initialization routines
-  MT::Array<GLHoverCall> hoverCalls;   //!< list of hover callbacks
-  MT::Array<GLClickCall> clickCalls;   //!< list of click callbacks
+  MT::Array<GLHoverCall*> hoverCalls;   //!< list of hover callbacks
+  MT::Array<GLClickCall*> clickCalls;   //!< list of click callbacks
+  MT::Array<GLKeyCall*> keyCalls;   //!< list of click callbacks
   ors::Camera camera; //!< the camera used for projection
   String text;        //!< the text to be drawn as title within the opengl frame
   float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
   bool reportEvents, reportSelects;    //!< flags for verbosity
-  bool selectOnHover;
   int pressedkey;           //!< stores the key pressed
   const char *exitkeys;     //!< additional keys to exit watch mode
   int mouse_button;         //!< stores which button was pressed
@@ -205,10 +209,12 @@ struct OpenGL {
   void remove(void (*call)(void*), const void* classP=0);
   template<class T> void add(const T& x){ add(x.staticDraw, &x); } //!< add a class or struct with a staticDraw routine
   void clear();
-  void addHoverCall(bool (*call)(void*, OpenGL*), const void* classP=0);
+  void addHoverCall(GLHoverCall *c);
   void clearHoverCalls();
-  void addClickCall(bool (*call)(void*, OpenGL*), const void* classP=0);
+  void addClickCall(GLClickCall *c);
   void clearClickCalls();
+  void addKeyCall(GLKeyCall *c);
+  void clearKeyCalls();
   void addView(uint view, void (*call)(void*), const void* classP=0);
   void setViewPort(uint view, double l, double r, double b, double t);
   
@@ -222,7 +228,7 @@ struct OpenGL {
   int  timedupdate(double sec);
   void resize(int w, int h);
   void setClearColors(float r, float g, float b, float a);
-  void unproject(double &x, double &y, double &z);
+  void unproject(double &x, double &y, double &z, bool resetCamera=false);
   
   //!@name info & I/O
   void reportSelection();

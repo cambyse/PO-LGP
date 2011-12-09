@@ -356,6 +356,24 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
   ors->reportProxies(&os);
 }
 
+//! DZ: write trajectory of task variable into the file
+void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
+  uint i,k, t,m, T=nTime();
+  uint ind = -1;
+  uint num=T; m=nTasks();
+   for(i=0; i<m; i++)
+     if(strcmp(vars(i)->name, variable)==0) {ind = i;break;}
+
+  if (ind<0) return;
+  arr y_traj;
+  y_traj.resize(T,vars(ind)->y.N);
+  for(k=0; k<(uint)num; k++){
+      setq(q[k]());
+      vars(ind)->updateState();
+      y_traj[k]() = vars(ind)->y;
+   }
+   ofstream out(file); y_traj.writeRaw(out); out.close(); 
+}
 //overload the display method to include variances
 void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char *text, bool reportVariables){
   if(x){ if(x->N==qDim()) setq(*x); else setx(*x); }

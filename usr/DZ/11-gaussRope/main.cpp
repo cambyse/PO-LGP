@@ -4,7 +4,7 @@
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
 #include <MT/util.h> 
-#include <MT/aico.h>  
+#include <MT/aico.h>   
 #include <MT/plot.h>     
 #include <DZ/WritheMatrix.h>        
 #include <DZ/aico_key_frames.h>    
@@ -15,85 +15,6 @@
          
 const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
  
-
-void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
-  arr limits;
-  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
-      -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  arr I2(7, 14); I2.setDiag(1.);
-  //arr skinIdx; copy(skinIdx, ctrl->skinIndex);
-  
-  TaskVariable *TV_up   = new DefaultTaskVariable("up1", *sys.ors, zalignTVT, "arm20", "<d(90 1 0 0)>", 0, 0, 0);
-  TaskVariable *TV_z1   = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
-  TaskVariable *TV_z2   = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
-  TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tipHook1", 0, 0);
-  TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tipHook2", 0, 0);
-  TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tipHook3", 0, 0);
-  TaskVariableList TVs;
-  TVs.append(ARRAY(TV_up, TV_z1, TV_z2, TV_f1, TV_f2, TV_f3));
-  sys.setTaskVariables(TVs);
-}
-
-void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
-  sys.setx0AsCurrent();
-  
-  //load parameters only once!
-  static bool firstTime=true;
-  static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
-  if(firstTime){
-    firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
-  }
-  
-  //set the time horizon
-  CHECK(T==sys.nTime(), "");
-  
-  //deactivate all variables
- // activateAll(sys.vars, false);
-  
-  //activate collision testing with target shape
-  ors::Shape *obj = sys.ors->shapes(shapeId);
-  obj->cont=true;
-  sys.swift->initActivations(*sys.ors);
-  
-  TaskVariable *V;
-  
-  //general target
-  arr xtarget;
-  xtarget.setCarray(obj->X.pos.p, 3);
-  xtarget(2) += .02; //grasp it 2cm above center
-  
-  
-  //up
-  V=listFindByName(sys.vars, "up1");  
-  ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
-  V->updateState();
-  V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
-  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
-  
-  //finger tips
-  V=listFindByName(sys.vars, "pos1");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
-//   V->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,endPrec),ARR(0.,0.,0.,0.,0.));
-  V=listFindByName(sys.vars, "pos2");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
- //  V->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,endPrec),ARR(0.,0.,0.,0.,0.));
-  V=listFindByName(sys.vars, "pos3");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
- //  V->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,endPrec),ARR(0.,0.,0.,0.,0.));
-  
-  //opposing fingers
-  V=listFindByName(sys.vars, "oppose12");  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
- //    V->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,endPrec),ARR(0.,0.,0.,0.,0.));
-  V=listFindByName(sys.vars, "oppose13");  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
- //  V->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,endPrec),ARR(0.,0.,0.,0.,0.));
-   
-  //col lim and relax
- // V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, colPrec, 0.);
-//   V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, MT::getParameter<double>("reachPlanHomeComfort"), 0., midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
-}
 
 int problem1(){     
   ors::Graph ors;  
@@ -521,7 +442,7 @@ int problem4(){
  soc.initBasics(&ors,&swift,&gl,T,2.0,true,&ones(jsize,1).reshape(jsize) ); //Fix time
  // soc.initBasics(&ors,&swift,&gl,T,2.,true,&ID.reshape(wsize)); //Fix time
   
-  soc.getx0(x0);    
+  soc.getx0(x0);     
 //   ifstream qitstr(ss.str().c_str()); yy.readRaw(qitstr); qitstr.close(); 
        
    WritheTaskVariable *wr = new WritheTaskVariable("writhe",ors,"rope",wrsize,1);
@@ -553,7 +474,96 @@ soc.gl->watch();
 // plot_writhe(wr->y,wrsize);
  
 }
+       
 
+int problem41(){      
+  ors::Graph ors;  
+  ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
+  SwiftInterface swift;
+  swift.init(ors,.5);   
+  OpenGL gl;  
+  gl.add(glStandardScene); 
+  gl.add(ors::glDrawGraph,&ors); 
+  gl.camera.setPosition(5,-10,10); 
+  gl.camera.focus(0,0,1);
+  gl.watch("loaded configuration - press ENTER");
+  uint T=50; 
+  soc::SocSystem_Ors soc;      
+  soc.os=&std::cout;
+
+ double eps=1e1; //5e-3;  
+ arr q,yy,x0;     
+ int wrsize=20;//20;//11
+ int jsize=ors.getJointStateDimension(); //20;//11
+   
+    
+ yy = zeros(wrsize,wrsize);              
+ 
+ arr ID; ID=ones(jsize,1);  
+ for (int z=0;z<jsize;z++) ID(z,0)= z+1;//11-z;//z+1;
+ soc.initBasics(&ors,&swift,&gl,T,2.0,true,&ones(jsize,1).reshape(jsize) ); //Fix time
+ // soc.initBasics(&ors,&swift,&gl,T,2.,true,&ID.reshape(wsize)); //Fix time
+  
+  soc.getx0(x0);    
+//   ifstream qitstr(ss.str().c_str()); yy.readRaw(qitstr); qitstr.close(); 
+       
+   WritheTaskVariable *wr = new WritheTaskVariable("writhe",ors,"rope",wrsize,1);
+  wr->y.reshape(wrsize,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
+ // wr->y_target =zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   
+ // wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps); 
+  wr->setInterpolatedTargetsConstPrecisions(T,eps,0.);
+  //!
+    arr y_trajectory; y_trajectory=zeros(T,wrsize*wrsize);
+    ifstream inp("writhe_space");  y_trajectory.readRaw(inp); inp.close(); 
+    for (int i=0;i<T;i++) { wr->y_trajectory[i]() =y_trajectory[i]();  }
+    wr->y_trajectory[50]()=y_trajectory[49]() ;
+    wr->y_target=y_trajectory[49]() ;
+  //!
+    
+     TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
+  col->setGains(.5,.0);
+  col->targetType=positionGainsTT; 
+  col->y_prec=1e-2;
+  col->y_target = ARR(0.);
+  col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
+  
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  arr xtarget;
+  xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
+  reach->y_target = xtarget;   
+  reach->setInterpolatedTargetsEndPrecisions(T, 1e1, 1e1, 0., 0.);
+  //!
+    MT::Array<TaskVariable*> Tlist;       
+   Tlist.append(wr);
+    Tlist.append(col); Tlist.append(reach);
+  soc.setTaskVariables(Tlist);   
+   
+    
+ arr b,Binv,R,r;             
+ int cnt;           
+ soc.setx(x0);
+ q.resize(T,ors.getJointStateDimension());
+// ifstream inp("q_space");  q.readRaw(inp); inp.close(); 
+// soc.recordTrajectory(q,"writhe","writhe_space");
+cout << "TADA"<<endl;
+ OneStepDynamicFull(b,Binv,cnt,soc,4.,5e-2,1e-5,1e-3,0,false);
+// cout<<wr->J<<endl;       
+ double tm;    
+ soc.displayState(&b);
+//cout <<b;
+soc.gl->watch();   
+    soc.setx(x0);
+    AICO aico(soc); 
+    aico.iterate_to_convergence();  
+    q = aico.q;  
+  //  soc.recordTrajectory(q,"writhe","writhe_space");
+ //ofstream out("q_space");  q.writeRaw(out); out.close(); 
+    for (;;) soc.displayTrajectory(q,NULL,T,"AICO (planned trajectory)");
+   
+  soc.gl->watch();    
+// plot_writhe(wr->y,wrsize); 
+ 
+}
 int problem5(){      
   ors::Graph ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
@@ -729,6 +739,7 @@ int main(int argn,char **argv){
  case 2:  problem2();  break;
   case 3:  problem3();  break;
   case 4:  problem4();  break;
+  case 41:  problem41();  break;
   case 5:  problem5();  break;
   case 6:  problem6();  break;
 //  case 7:  problem7();  break;

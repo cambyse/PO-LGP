@@ -849,7 +849,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 class OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);

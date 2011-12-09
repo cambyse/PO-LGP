@@ -301,11 +301,17 @@ endif
 ifeq ($(GL2PS),1)
 CXXFLAGS  += -DMT_GL2PS
 CPATH	  := $(CPATH):$(GL2PS)
+LinuxLibs += -lgl2ps
 endif
 
 ifeq ($(GSL),1)
 CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
+endif
+
+ifeq ($(SOIL),1)
+CXXFLAGS  += -DTL_SOIL
+LIBS    += -lSOIL
 endif
 
 ifeq ($(OPENCV),1)
@@ -320,6 +326,16 @@ endif
 ifeq ($(OPENCV_UBUNTU),1)
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
 LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+ endif
+
+# newer qhull version?
+ifeq ($(QHULL2010),1)
+CXXFLAGS += -DQHULL2010
+endif
+
+# newer qhull version?
+ifeq ($(QHULL2010),1)
+CXXFLAGS += -DQHULL2010
 endif
 
 #assuming ubuntu libopencv2.3-dev package

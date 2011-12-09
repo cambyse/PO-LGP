@@ -1,4 +1,4 @@
-mode =4
+mode =41
 dynamic = 1
 Wrate = 1
 Hrate = 1e-1 5e-3 1e-3 1e-3

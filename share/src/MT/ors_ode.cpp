@@ -1106,6 +1106,7 @@ OdeInterface::OdeInterface(){ MT_MSG("WARNING - creating dummy OdeInterface"); }
 OdeInterface::~OdeInterface(){}
 void OdeInterface::OdeInterface::step(double dtime){}
 void OdeInterface::createOde(ors::Graph &C){}
+void OdeInterface::clear(){}
 void OdeInterface::slGetProxies(ors::Graph &C){}
 void OdeInterface::unsetJointMotors(ors::Graph &C){}
 void OdeInterface::exportStateToOde(ors::Graph &C){}
