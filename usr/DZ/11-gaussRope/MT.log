@@ -1,0 +1,23 @@
+Compiled at:     Nov 30 2011 16:12:14
+Execution start: Fri Dec  2 17:17:55 2011
+Program call:    './x.exe '
+                mode = opening config file 'MT.cfg'
+5 [i]
+             orsfile = rope_grasp_20.ors [N2MT6StringE] (default!)
+opening input file `rope_grasp_20.ors'
+opening input file `schunk_3d/SDH_Gehaeuse_x.tri'
+opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
+opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
+opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
+opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
+opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
+opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
+               Hrate =   0.1 [d]
+               Wrate =     1 [d]
+               Qrate = 1e-10 [d] (default!)
+      aico_sweepMode =     0 [i]
+ aico_max_iterations =    20 [j]
+      aico_tolerance =  0.01 [d]
+        aico_display =     0 [j]
+        aico_damping =     1 [d]
+       aico_filename = 

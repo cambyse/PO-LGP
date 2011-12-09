@@ -1,0 +1,106 @@
+#QlinFile schunk.ors.qlin
+
+body stem { X=<t(0 0 1)>  type=2 mass=.1 size=[0.1 0.1 2 .1] fixed }
+body arm1 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact}
+body arm2 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact}
+body arm3 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact}
+body arm4 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm5 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm6 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm7 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm8 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm9 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm10 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+body arm11 { type=2 mass=.1 size=[0.1 0.1 .4 .05] contact }
+
+#body endeff { type=2 mass=.1 size=[0.1 0.1 .2 .025] contact }
+body rope { contact, type=4, rel=<t( -0.1 -1.5 1.85) d(180 0 1 1)>, size=[.0 .0 3.0 0.03], color=[.3 .9 .1],fixed }
+
+joint (stem arm1) { A=<t(0 0 1) d(90 1 0 0) d(-45 0 1 0)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+
+joint (arm1 arm2) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm2 arm3) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm3 arm4) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm4 arm5) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm5 arm6) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+#joint (arm5 arm6) { A=<t(0 0 0.2) d(180 -1 0 -1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+ 
+joint (arm6 arm7) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm7 arm8) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm8 arm9) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm9 arm10) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+joint (arm10 arm11) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+#joint (arm10 endeff) { A=<t(0 0 0.2) d(90 1 0 1)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+
+body knuck1 {}
+body knuck2 {}
+body knuck3 {}
+body fing1  {}
+body fing2  {}
+body fing3  {}
+body tip1   {}
+body tip2   {}
+body tip3   {}
+
+
+
+# 107.4 to the root of the hand, then  98 (-10mm ring) to the finger joints
+joint (arm11 knuck1) { A=<d(0 1 0 0) t(0 0 0.2) d(-90 0 0 1) t(-0.038105    0   .086) d(-90 0 1 0)>, B=<d(90 0 1 0)>, Q=<d(0 1 0 0)> }
+joint (arm11 knuck2) { A=<d(0 1 0 0) t(0 0 0.2) d(-90 0 0 1) t( .0190525  .033 .086) d(-90 0 1 0)>, B=<d(90 0 1 0)>, Q=<d( 5 1 0 0)>  }
+joint (arm11 knuck3) { A=<d(0 1 0 0) t(0 0 0.2) d(-90 0 0 1) t( .0190525 -.033 .086) d(-90 0 1 0)>, B=<d(90 0 1 0)>, Q=<d(-5 1 0 0)>  }
+
+### THE ORDER IS IMPORTANT -- SHOULD CORRESPOND TO SCHUNK'S CONVENTION FOR ODERING!
+joint (knuck3 fing3) { A=<d(-90 0 0 1)> }
+joint (fing3 tip3) { A=<t(0 0 .0865)> B=<t(0 0 0.035)> }
+
+joint (knuck1 fing1) { A=<d( 90 0 0 1)> }
+joint (fing1 tip1) { A=<t(0 0 .0865)> B=<t(0 0 0.035)> }
+
+joint (knuck2 fing2) { A=<d(-90 0 0 1)> }
+joint (fing2 tip2) { A=<t(0 0 .0865)> B=<t(0 0 0.035)> }
+
+
+shape ring   (arm11) { rel=<d(0 1 0 0) t(0 0 0.20) d(-90 0 0 1)>, contact, type=4, size=[0 0 .008 .04], color=[.1 .1 .1] }
+
+shape wrist  (arm11) { rel=<d(0 1 0 0) t(0 0 0.25) d(-90 0 0 1)>, contact, type=3, mesh='schunk_3d/SDH_Gehaeuse_x.tri' color=[.55 .55 .55] }
+
+shape (fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape (fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape (fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+
+shape (tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape (tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape (tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
+
+shape tipNormal1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipNormal3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
+shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
+shape tipHook1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipHook2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipHook3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+
+
+#shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
+
+#shape graspCenter(arm11)     { rel=<t(0 -.005 -.32)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }
+
+body  OBJECTS{ X=<t(.0 -.8 .69)> }
+
+shape cyl1(OBJECTS){ contact, type=4, rel=<t( 0.01 -1.5 0.01)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+
+body target { X=<t(1. -1. 1.)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+#body target { X=<t(-.1 -2.5 1.85)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+#body target { X=<t(-.1 -3.6 1.85)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+#body target { X=<t(.1 -2.8 1.80)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+
+#body fileshape { X=<t(-0.25 -3 1.8)>  type=3 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] shapefile='c:/home/3dmodel/benchmark/offs/m494.off' swiftfile='c:/home/3dmodel/benchmark/offs/m494.dcp' contact fixed }
+#body ball  { X=<t(.0 -1.0 2.1)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
+#body ball2 { X=<t(.7 -1. 1.5)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
+#body ball3 { X=<t(-.22 -1.5 2.)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
+

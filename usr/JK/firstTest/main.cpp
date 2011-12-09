@@ -22,7 +22,11 @@ void MyTask::updateTaskVariables(ControllerProcess *ctrl){
     TV_eff->y_target = TV_eff->y_target +  (ARR(0.8, 0.4, 1.1)-pos); //move upward
   }else{ //velocity control
     TV_eff->v_prec =1e3;
+<<<<<<< HEAD
     TV_eff->v_target = (ARR(0., -1., 1.)-pos) + (-0.7)*(pos-oldPos); //move upward (recall tau=0.01 -> results in same speed)
+=======
+    TV_eff->v_target = (ARR(0.8, 0.4, 1.1)-pos) + (-0.7)*(pos-oldPos); //move upward (recall tau=0.01 -> results in same speed)
+>>>>>>> 8658f93c650c198c8f3676c31500cfe394967a47
   }
   oldPos = pos;
 }

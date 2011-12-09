@@ -2,6 +2,7 @@
 #include <MT/array.h>
 #include <MT/array_t.cpp>
 #include <MT/opengl.h>
+#include <aico_key_frames.h>
 
 void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold)
 {
@@ -84,7 +85,7 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
   return llk;
 }
 
-double OneStepDynamicFull(arr& b,arr& Binv, int counter,
+double OneStepDynamicFull(arr& b,arr& Binv, int& counter,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha,double task_eps,double eps_alpha,
 			uint verbose, bool b_is_initialized)

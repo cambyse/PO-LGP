@@ -326,6 +326,11 @@ endif
 ifeq ($(OPENCV_UBUNTU),1)
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
 LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+ endif
+
+# newer qhull version?
+ifeq ($(QHULL2010),1)
+CXXFLAGS += -DQHULL2010
 endif
 
 # newer qhull version?
