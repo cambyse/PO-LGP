@@ -12,7 +12,7 @@ void resample(arr& X, arr& W){
   W = 1./X.d0;
 }
 
-int main(int argc,char **argv){
+void Test(){
   CarSimulator S;
   arr u(2),y_meassured;
   
@@ -24,7 +24,7 @@ int main(int argc,char **argv){
   for(uint t=0;t<1000;t++){
     u = ARR(.1, .2); //control signal
     S.step(u);
-    S.meassureCurrentLandmarks(y_meassured);
+    S.getRealNoisyObservation(y_meassured);
 
     //1) resample weighted particles
     
@@ -42,6 +42,55 @@ int main(int argc,char **argv){
     
     cout <<u <<endl <<y_meassured <<endl;
   }
+}
 
+double likelihood(const arr& y_meassured, const arr& x, CarSimulator& S){
+  arr y;
+  S.getMeanObservationAtState(y, x);
+  double sig=10*S.observationNoise;
+  return exp(-.5*sumOfSqr(y_meassured-y)/(sig*sig));
+}
+
+void Filter(){
+  CarSimulator S;
+  arr u(2),Y,Yparticle;
+  uint N = 200;
+  arr X(N,3);
+  X.setZero();//we know where it is initially
+  //rndUniform(X,0.,1.,false);
+  arr W(N);
+  W = 1./N;
+  
+  S.gl->watch();
+  for(uint t=0;t<1000;t++){
+    u = ARR(.1, .2); //control signal
+    S.step(u);
+    S.getRealNoisyObservation(Y);
+    
+    resample(X,W);
+    
+    //transition model, look in step function
+    for(uint i=0; i<N; i++){
+      X(i,0) += u(0)*cos(X(i,2));
+      X(i,1) += u(0)*sin(X(i,2));
+      X(i,2) += (u(0)/S.L)*tan(u(1));
+    }
+    rndGauss(X, S.dynamicsNoise, true);
+    
+    //compute likelihood weights
+    for(uint i=0; i<N; i++)  W(i)=likelihood(Y, X[i], S);
+    W = W/sum(W);
+    
+    S.particlesToDraw=X;
+    //S.gl->watch();
+    //cout << X << endl;
+  }
+}
+
+
+int main(int argc,char **argv){
+  //Test();
+  Filter();
+  
   return 0;
 }

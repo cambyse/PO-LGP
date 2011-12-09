@@ -24,7 +24,7 @@ int main(int argc,char **argv){
   for(uint t=0;t<1000;t++){
     u = ARR(.1, .2); //control signal
     S.step(u);
-    S.meassureCurrentLandmarks(y_meassured);
+    S.getRealNoisyObservation(y_meassured);
 
     //1) resample weighted particles
     
