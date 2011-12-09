@@ -569,7 +569,6 @@ int problem5(){
   soc::SocSystem_Ors soc;      
   soc.os=&std::cout;
 
- double eps=1e-1; //5e-3;  
  arr q,yy,x0;     
  int wrsize=20;//20;//11
  int jsize=ors.getJointStateDimension(); //20;//11
@@ -582,16 +581,19 @@ int problem5(){
  soc.initBasics(&ors,&swift,&gl,T,2.0,true,&ones(jsize,1).reshape(jsize) ); //Fix time
  // soc.initBasics(&ors,&swift,&gl,T,2.,true,&ID.reshape(wsize)); //Fix time
   
-  soc.getx0(x0);    
-//   ifstream qitstr(ss.str().c_str()); yy.readRaw(qitstr); qitstr.close(); 
-       
+  soc.getx0(x0);  
+   yy.reshape(1,wrsize*wrsize);
+   ifstream qitstr("reach"); yy.readRaw(qitstr); qitstr.close(); 
+       yy.reshape(wrsize,wrsize);
    WritheTaskVariable *wr = new WritheTaskVariable("writhe",ors,"rope",wrsize,1);
   wr->y_prec=1e-3;//1e-0;/ / 
   wr->y.reshape(wrsize,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
-  wr->y_target =zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   
+  wr->y_target =yy;//zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   
 //wr->y_target =wr->y;
 //ifstream in("init2"); wr->y_target.readRaw(in); in.close();  
-  wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
+double eps=1e1; //5e-3;  
+ 
+wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
   MT::Array<TaskVariable*> Tlist;      
    
   TaskVariable *qit    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
@@ -602,16 +604,16 @@ int problem5(){
   
   TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
   col->setGains(.5,.0);
-  col->targetType=positionGainsTT;
+  col->targetType=positionGainsTT; 
   col->y_prec=1e-2;
   col->y_target = ARR(0.);
-  col->setInterpolatedTargetsConstPrecisions(T,1e-1,0.);
+  col->setInterpolatedTargetsConstPrecisions(T,1e1,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20",0,0,0,ARR()); 
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
-  reach->setInterpolatedTargetsEndPrecisions(T, 1e0, 1e0, 0., 0.);
+  reach->setInterpolatedTargetsEndPrecisions(T, 1e1, 1e1, 0., 0.);
   //reach->setIntervalPrecisions(T,ARR(0.,0.,0.,0.,1e-1),ARR(0.,0.,0.,0.,0.));
 
 
@@ -629,16 +631,17 @@ Tlist.append(reach);
  arr b,Binv,R,r;             
  int cnt;        
  soc.setx(x0);
-// OneStepDynamicFull(b,Binv,cnt,soc,4.,5e-2,1e-5,1e-3,0,0);
+ OneStepDynamicFull(b,Binv,cnt,soc,4.,5e-2,1e-5,1e-3,0,0);
+// ofstream out("reach"); wr->y.writeRaw(out); out.close(); 
 // cout<<wr->J<<endl;       
  double tm;   
 //GetOptimalDynamicTime(tm,cnt,b,Binv,soc,5e-2,1e-3,1e-3,1e-4,1e-5,false);
 // OneStepKinematic(b,Binv,soc,1e-2,1e-3);
 
  cout << wr->y.reshape(wrsize,wrsize);
-// soc.displayState(&b);
+ soc.displayState(&b);
 //cout <<b;
-//  soc.gl->watch();   
+  soc.gl->watch();   
     soc.setx(x0);
     AICO aico(soc); 
     aico.iterate_to_convergence();  
@@ -652,7 +655,7 @@ Tlist.append(reach);
  // soc.setq0AsCurrent();  
   soc.displayState(&b);*/
   soc.gl->watch();    
- plot_writhe(wr->y,wrsize);
+ //plot_writhe(wr->y,wrsize);
   return 0;  
   
 }
