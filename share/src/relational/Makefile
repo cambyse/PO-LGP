@@ -9,7 +9,7 @@ OBJS := $(OBJS:%.cpp=%.o)
 OBJS_C  = $(shell find . -name '*.c')
 OBJS += $(OBJS_C:%.c=%.o)
 
-
+FREEGLUT = 1
 ODE = 1
 QHULL = 1
 SWIFT	= 1
