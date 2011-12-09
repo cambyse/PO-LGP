@@ -61,6 +61,37 @@ struct WritheMatrixTest:public OptimizationProblem{
   }
 };
 
+
+struct WritheScalarTest:public OptimizationProblem{
+  uint N,n;
+  arr rope2;
+  arr Jq;
+  arr one_point_jacobian;
+  WritheScalarTest(uint _N, uint _n){
+    N=_N;
+    n=_n;
+    rope2.resize(N+1,3); // rope = segments+1
+    rndUniform(rope2,-1.,1.,false);
+    Jq.resize(N*3,n);// rope = segments+1
+    rndUniform(Jq,-1.,-1.,false);
+    one_point_jacobian = zeros(3,n);  // We need this jacobian for the first joint in chain which is usually fixed J == 0 !!
+      
+  }
+
+  void F(arr& y, arr* J, const arr& q, int i=-1){ //TODO check EVERYTHING!!!
+    arr NewJq = one_point_jacobian; NewJq.append(Jq); // trick for one more point in rope 
+    arr rope1 = NewJq * q; //we assume the rope is a random projection of the parameters q
+    rope1.reshape(N+1,3); // rope = segments+1
+    GetScalarWrithe(y, rope1, rope2, N);
+    if(J){ //the function wants also the Jacobian at this point
+      //Jq.reshape(N,3,n);
+     ScalarJacobian(*J, rope1, rope2, Jq,N);
+      Jq.reshape(N*3,n);
+      J->reshape(1,n); 
+    }
+  }
+};
+
 void WritheGradientCheck(){
   //check WritheSegment
   WritheSegmentTest fs = WritheSegmentTest();
@@ -78,5 +109,18 @@ void WritheGradientCheck(){
   for(uint k=0;k<1000;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
     checkGradient_vec(fm, x, 1e-4);
+  }
+}
+
+void GradientScalarCheck(){
+ 
+  //check WritheMatrix
+  uint N=10, n=7;
+  WritheScalarTest ws =  WritheScalarTest(N,n);
+  arr x;
+  x.resize(n);
+  for(uint k=0;k<1000;k++){
+    rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
+    checkGradient_vec(ws, x, 1e-4);
   }
 }

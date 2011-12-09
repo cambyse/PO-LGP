@@ -1,5 +1,5 @@
 EMiter = 20
-mode=7
+mode=1
 
 Wrate = 1
 Hrate = 5e2 1e4 5e-4 1e-3

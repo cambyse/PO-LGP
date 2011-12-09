@@ -150,3 +150,24 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
       cnt++;
   }} 
 }
+
+//! Scalar experiments
+void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
+  arr Matr;
+  WS=zeros(1,1);
+  GetWritheMatrix(Matr,rope1,rope2,dim);
+  Matr.reshape(dim,dim);
+  for (int k=0;k<dim;k++) WS(0,0) += Matr(k,k);
+}
+
+void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int dim){
+  int total_joint_number =  pointsJ.d1;
+  arr MatrJ;
+  WritheJacobian(MatrJ,rope1,rope2,pointsJ,dim);
+  SJ.resize(1,total_joint_number);
+  
+  for (int i=0;i<dim;i++) {
+    SJ[0]() += MatrJ[i*(dim+1)]();
+  } 
+  CHECK(SJ.nd==2 && SJ.d1==total_joint_number,"dimensions!");
+}

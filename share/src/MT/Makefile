@@ -28,7 +28,7 @@ NIKOLAY = 1
 NILS = 1
 #STANIMIR = 1
 
-GL2PS = 1
+#GL2PS = 1
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 CXXFLAGS += -DMT_Lewiner
