@@ -1,40 +1,67 @@
 #include <stdlib.h>
 #include <MT/roboticsCourse.h>
 #include <MT/opengl.h>
+//#include <MT/gauss.h>
+#include <MT/plot.h>
+
+
+void getControlJacobian(arr& B, CarSimulator & S, const arr & u,const arr & x){
+  double carLength = S.L;
+  B.resize(3,2);
+  //insert correct Jacobian here
+  B *= S.tau;
+}
+
+//ok, works
+void Kalman(){
+  double theta = 0.3;
+  
+  CarSimulator Sim;
+  Sim.gl->watch();
+  
+  arr u(2),y_meassured;
+  
+  arr s(3),S(3,3); //kalman estimates
+  arr shat,Shat,dW;
+  
+  s(0) = Sim.x; s(1) = Sim.y; s(2) = Sim.theta; //initial at true state
+  S.setDiag(0.1); //which nosy constant
+  
+  arr W(4,4);  W.setDiag(Sim.observationNoise);
+  arr Q(3,3);  Q.setDiag(Sim.dynamicsNoise);
+  
+  arr A(3,3),a;  A.setDiag(1);
+  
+  for(uint t=0;t<10000;t++){
+    u = ARR(.1, .2); //control signal
+    Sim.step(u);
+    Sim.getRealNoisyObservation(y_meassured);
+    
+    //get the linear observation model
+    arr C,y_mean;
+    Sim.getObservationJacobianAtState(C, s);
+    Sim.getMeanObservationAtState(y_mean, s);
+
+    //get the linear control model
+    arr B;
+    getControlJacobian(B, Sim, u, s);
+    a = B*u;
+    
+    //Kalman filter
+
+    //code to display a covariance
+    Sim.gaussiansToDraw.resize(1);
+    Sim.gaussiansToDraw(0).A=S.sub(0,1,0,1);
+    Sim.gaussiansToDraw(0).a=s.sub(0,1);
+    
+    //tracking error
+    cout << "estim error " <<maxDiff(s, ARR(Sim.x, Sim.y, Sim.theta)) << endl;
+  }
+}
+
 
 
 int main(int argc,char **argv){
-  CarSimulator S;
-  arr u(2),y_meassured;
-  uint N=S.landmarks.d0; //number of landmarks;
-
-  //you have access to:
-  //S.observationNoise (use when evaluating a particle likelihood)
-  //S.dynamicsNoise (use when propagating a particle)
-  
-  S.gl->watch();
-  for(uint t=0;t<1000;t++){
-    u = ARR(.1, .2); //control signal
-    S.step(u);
-    S.getRealNoisyObservation(y_meassured);
-
-    //get the linear observation model
-    arr C,c;
-    //NOTE: Access to S.x|y|theta is cheating!! In the solution
-    //you need to plug in the current mean estimate of the car state!
-    S.getLinearObservationModelGivenState(C, c, S.x, S.y, S.theta);
-    cout <<C <<endl <<c <<endl;
-
-
-    //sanity check of the linear observation model -- don't use this code in the solution!
-    arr y_mean;
-    arr landmarks = S.landmarks;
-    landmarks.reshape(2*N);
-    S.getMeanObservationGivenState(y_mean, S.x, S.y, S.theta);
-    cout <<"linear model error = " <<maxDiff(y_mean, C*landmarks + c) <<endl; //this should be zero!!
-
-    cout <<u <<endl <<y_meassured <<endl;
-  }
-
+  Kalman();
   return 0;
 }

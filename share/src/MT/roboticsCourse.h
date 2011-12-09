@@ -67,6 +67,7 @@ struct VisionSimulator {
   void projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel=1.);
 };
 
+struct Gaussian{  arr A;  arr a;  };
 
 struct CarSimulator{
   double x,y,theta; //this is the true state -- accessing it means cheating...
@@ -74,18 +75,24 @@ struct CarSimulator{
   double dynamicsNoise, observationNoise;
   arr landmarks;
   arr particlesToDraw;
+  MT::Array<Gaussian> gaussiansToDraw;
   OpenGL *gl;
   
   CarSimulator();
   void step(const arr& u); 
   //get a (noisy) observation (meassuring landmarks) in the current state
   void getRealNoisyObservation(arr& Y);
-  //compute the ideal observation if you were in state (x,y,theta): use to compute Y for a particle and compare with meassured observation
-  void getMeanObservationGivenState(arr& Y, double x, double y, double theta);
 
-  void getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta);
+  //-- access for tracking, where the true landmarks are known (Kalman/particle filter)
+  //compute the ideal mean observation if you were in state (x,y,theta): use this to compute Y for a particle and compare with meassured observation
+  void getMeanObservationAtState(arr& Y, const arr& X);
+  void getObservationJacobianAtState(arr& dy_dx, const arr& X);
 
-  //void getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta);
+  //-- access for SLAM, where only estimated landmarks are accessible
+  void getMeanObservationAtStateAndLandmarks(arr& Y, const arr& x, const arr& landmarks);
+  void getObservationJacobianAtStateAndLandmarks(arr& dy_dx, arr& dy_dlandmarks, const arr& x, const arr& landmarks);
+
+  void getLinearObservationModelAtState(arr& C, arr& c, const arr& X);
 
 };
 

@@ -332,6 +332,8 @@ CarSimulator::CarSimulator(){
   gl=new OpenGL;
   gl->add(drawEnv, this);
   gl->add(glDrawCarSimulator, this);
+  gl->add(glDrawPlot,&plotModule);
+
   gl->camera.setPosition(10., -50., 100.);
   gl->camera.focus(0, 0, .5);
   gl->camera.upright();
@@ -350,34 +352,55 @@ void CarSimulator::step(const arr& u){
     theta += dynamicsNoise*rnd.gauss();
   }
   
+  plotClear();
+  for(uint i=0;i<gaussiansToDraw.N;i++) plotCovariance(gaussiansToDraw(i).a, gaussiansToDraw(i).A);
   gl->update();
 }
 
 void CarSimulator::getRealNoisyObservation(arr& Y){
-  getMeanObservationGivenState(Y, x,y,theta);
+  getMeanObservationAtState(Y, ARR(x,y,theta));
   rndGauss(Y,observationNoise,true);
 }
 
-void CarSimulator::getMeanObservationGivenState(arr& Y, double x, double y, double theta){
+void CarSimulator::getMeanObservationAtState(arr& Y, const arr& X){
   Y=landmarks;
-  arr R = ARR(cos(theta), -sin(theta), sin(theta), cos(theta));
+  arr R = ARR(cos(X(2)), -sin(X(2)), sin(X(2)), cos(X(2)));
   R.reshape(2,2);
-  arr p = ones(landmarks.d0,1)*~ARR(x,y);
+  arr p = ones(landmarks.d0,1)*~ARR(X(0),X(1));
   Y -= p;
   Y = Y*R;
   Y.reshape(Y.N);
 }
 
-void CarSimulator::getLinearObservationModelGivenState(arr& C, arr& c, double x, double y, double theta){
+void CarSimulator::getLinearObservationModelAtState(arr& C, arr& c, const arr& X){
   uint N=landmarks.d0;
-  arr R = ARR(cos(theta), sin(theta), -sin(theta), cos(theta));
+  arr R = ARR(cos(X(2)), sin(X(2)), -sin(X(2)), cos(X(2)));
   R.reshape(2,2);
   C.resize(2*N,2*N);  C.setZero();
   for(uint i=0;i<N;i++) C.setMatrixBlock(R, 2*i, 2*i);
   cout <<C <<endl;
   c.resize(2*N);
-  for(uint i=0;i<N;i++) c.setVectorBlock(ARR(x,y), 2*i);
+  for(uint i=0;i<N;i++) c.setVectorBlock(ARR(X(0),X(1)), 2*i);
   c = - C * c;
+}
+
+void CarSimulator::getObservationJacobianAtState(arr& dy_dx, const arr& X){
+  uint N=landmarks.d0;
+  dy_dx = arr(2*N,3); dy_dx.setZero();
+  for (uint i=0; i<N; i++){
+    arr J(2,3);J.setZero();
+    //by x
+    J(0,0) = -cos(X(2));
+    J(1,0) = sin(X(2));
+    //by y
+    J(0,1) = -sin(X(2));
+    J(1,1) = -cos(X(2));
+    //by theta
+    J(0,2) = -sin(X(2))*(landmarks(i,0)-X(0)) + cos(X(2))*(landmarks(i,1)-X(1));
+    J(1,2) = -cos(X(2))*(landmarks(i,0)-X(0)) - sin(X(2))*(landmarks(i,1)-X(1));
+    dy_dx[i*2] = J[0];//copy in big J
+    dy_dx[i*2+1] = J[1];
+  }
 }
 
 void glDrawCarSimulator(void *classP){
@@ -410,5 +433,9 @@ void glDrawCarSimulator(void *classP){
     glDrawDiamond(.1, .1, .1);
     glPopMatrix();
   }
-  
+
+  for(uint l=0;l<s->particlesToDraw.d0;l++){
+  }
 }
+
+template MT::Array<Gaussian>& MT::Array<Gaussian>::resize(uint);
