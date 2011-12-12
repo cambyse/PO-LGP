@@ -1,5 +1,6 @@
+#define MT_IMPLEMENT_TEMPLATES
+#include <stdlib.h>
 #include <relational/robotManipulationDomain.h>
-
 
 RobotManipulationSimulator sim;
 
@@ -19,18 +20,195 @@ void initSimulator(const char* configurationFile, bool takeMovie) {
 }
 
 
+
+
+
+// state: 20
+// 5 Objekte, 5. Objekt ist die Roboterhand
+// (1-3): x,y,z-Koords
+// (4): Groesse
+
+// successor state: 20
+// genauso
+
+// action: 2
+// (1): Aktionstyp grasp 1, puton 2
+// (2): 
+
+// reward: 1
+
+struct Experience_State {
+  MT::Array< arr > continous_data;
+//   TL::State symbolic_data;
+  MT::Array< MT::String > symbolic_data;
+};
+
+struct Experience {
+  Experience_State state_pre;
+  Experience_State state_post;
+  uint action_type;
+  uint action_target;
+  double reward;
+};
+
+
+  
+//   MT::String line;
+//   line.read(in, NULL, "\n");
+  
+
+
+void read_data(MT::Array< Experience* >& experiences, const char* file_name) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"read_data [START]"<<endl;}
+  ifstream in(file_name);
+  CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
+  MT::String line;
+  uint OBJ_NUM = 5;
+  uint o;
+  Experience* exp = new Experience;
+  while (MT::skip(in) != -1) {
+    in >> line;
+    if (DEBUG>0) PRINT(line);
+    for (o=0; o<OBJ_NUM; o++) {
+      arr data(4);
+      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
+      if (DEBUG>0) PRINT(data);
+      exp->state_pre.continous_data.append(data);
+    }
+    for (o=0; o<OBJ_NUM; o++) {
+      arr data(4);
+      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
+      if (DEBUG>0) PRINT(data);
+      exp->state_post.continous_data.append(data);
+    }
+    line >> exp->action_type;
+    line >> exp->action_target;
+    line >> exp->reward;
+    experiences.append(exp);
+  }
+  if (DEBUG>0) {cout<<"read_data [END]"<<endl;}
+}
+
+
+
+
 struct PredicateNetwork {
   MT::String name;
   TL::Predicate* p;
-  uint arity;;
+  uint arity;
   arr w1a;
   arr w1b;
   arr w2a;
   arr w2b;
+  
+  void write() {PRINT(name);  PRINT(arity);  PRINT(w1a);  PRINT(w1b);  PRINT(w2a);  PRINT(w2b);}
 };
 
 
-#if 0
+bool holds(PredicateNetwork& pn, arr& x) {
+  uint DEBUG = 1;
+  if (DEBUG>0) {PRINT(x);  pn.write();}
+  // apply network
+  arr z_argument = ~pn.w1a * x + pn.w1b;
+  arr z;
+  uint k;
+  FOR1D(z_argument, k) {
+    z.append((1. / ( 1. + exp( z_argument(k) ) )));
+  }
+  if (DEBUG>0) {PRINT(z);}
+  arr g_argument = ~pn.w2a * z + pn.w2b;
+  if (DEBUG>0) {PRINT(g_argument);}
+  double g = (1. / ( 1. + exp( g_argument(0)) ));
+  double p = g - 0.5;
+  if (DEBUG>0) {PRINT(g);  PRINT(p);}
+  return p>0.;
+}
+
+
+void calculateSymbols(MT::Array<PredicateNetwork*>& pns, Experience_State& s) {
+  uint DEBUG = 0;
+  uint i, k;
+  FOR1D(pns, i) {
+    uintA objs;
+    for (k=0; k<s.continous_data.N; k++) {objs.append(k);}
+    MT::Array< uintA > lists;
+    TL::allPossibleLists(lists, objs, pns(i)->arity, true, true);
+    FOR1D(lists, k) {
+      arr x;
+      if (pns(i)->arity == 1) {
+        x.append(s.continous_data(lists(k)(0)));
+      }
+      else if (pns(i)->arity == 2) {
+        arr x_obj_1 = s.continous_data(lists(k)(0));
+        arr x_obj_2 = s.continous_data(lists(k)(1));
+        arr diff = x_obj_1 - x_obj_2;
+        x.append(diff);  // TODO absolute value??
+      }
+      else NIY;
+      bool is_true = holds(*pns(i), x);
+      MT::String atom_name;  atom_name<<pns(i)->name<<lists(k);
+      if (is_true) {s.symbolic_data.append(atom_name);}
+    }
+  }
+}
+
+
+void read_PredicateNetworks(MT::Array<PredicateNetwork*>& pns, const char* prefix) {
+  
+  MT::Array< MT::String > pn_names;
+  pn_names.append(MT::String("u1"));//  pn_names.append(MT::String("u2"));
+  pn_names.append(MT::String("b1"));//  pn_names.append(MT::String("b2"));
+  
+  uint i;
+  FOR1D(pn_names, i) {
+    PredicateNetwork* pn = new PredicateNetwork;
+    pn->arity = 1;
+    pn->name = pn_names(i);
+    
+    ifstream in;
+    MT::String file_name;
+  
+    file_name<<prefix<<pn_names(i)<<"w1a.txt";
+    PRINT(file_name);
+    in.open(file_name);
+    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
+    pn->w1a.read(in);
+    in.close();
+  
+    file_name.clr();
+    file_name<<prefix<<pn_names(i)<<"w1b.txt";
+    PRINT(file_name);
+    in.open(file_name);
+    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
+    pn->w1b.read(in);
+  
+    file_name.clr();
+    file_name<<prefix<<pn_names(i)<<"w2a.txt";
+    PRINT(file_name);
+    in.open(file_name);
+    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
+    pn->w2a.read(in);
+    PRINT(pn->w2a);
+  
+    file_name.clr();
+    file_name<<prefix<<pn_names(i)<<"w2b.txt";
+    PRINT(file_name);
+    in.open(file_name);
+    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
+    pn->w2b.read(in);
+    
+    pns.append(pn);
+  }
+  
+}
+
+
+
+
+
+
+#if 1
 void test(int argn,char** argv) {
   uint DEBUG = 2;
   
@@ -46,109 +224,6 @@ void test(int argn,char** argv) {
   // ==================================================================
   // Read in Nikolay's network [START]
   MT::Array< PredicateNetwork* > pns;
-  
-#if 0
-  // Unary predicate 1
-  PredicateNetwork pn_u1;
-  pn_u1.arity = 1;
-  pn_u1.name << "u1";
-  
-  ifstream in_p1a1w1a("data_grounding_project/p1a1w1a.txt");
-  pn_u1.w1a.read(in_p1a1w1a);
-  
-  ifstream in_p1a1w1b("data_grounding_project/p1a1w1b.txt");
-  pn_u1.w1b.read(in_p1a1w1b);
-  
-  ifstream in_p1a1w2a("data_grounding_project/p1a1w2a.txt");
-  pn_u1.w2a.read(in_p1a1w2a);
-  
-  ifstream in_p1a1w2b("data_grounding_project/p1a1w2b.txt");
-  pn_u1.w2b.read(in_p1a1w2b);
-  
-  PRINT(pn_u1.w1a);
-  PRINT(pn_u1.w1b);
-  PRINT(pn_u1.w2a);
-  PRINT(pn_u1.w2b);
-  
-  pns.append(pn_u1); 
-#endif
-  
-  
-  // Binary predicate 1
-  PredicateNetwork pn_b1;
-  pn_b1.arity = 2;
-  pn_b1.name << "b1";
-  
-  ifstream in_p1a2w1a("data_grounding_project/p1a2w1a.txt");
-  pn_b1.w1a.read(in_p1a2w1a);
-  
-  ifstream in_p1a2w1b("data_grounding_project/p1a2w1b.txt");
-  pn_b1.w1b.read(in_p1a2w1b);
-  
-  ifstream in_p1a2w2a("data_grounding_project/p1a2w2a.txt");
-  pn_b1.w2a.read(in_p1a2w2a);
-  
-  ifstream in_p1a2w2b("data_grounding_project/p1a2w2b.txt");
-  pn_b1.w2b.read(in_p1a2w2b);
-  
-  PRINT(pn_b1.w1a);
-  PRINT(pn_b1.w1b);
-  PRINT(pn_b1.w2a);
-  PRINT(pn_b1.w2b);
-  
-  pns.append(&pn_b1);
-  
-#if 0
-  // Unary predicate 2
-  PredicateNetwork pn_u2;
-  pn_u2.arity = 1;
-  pn_u2.name << "u2";
-  
-  ifstream in_p2a1w1a("data_grounding_project/p2a1w1a.txt");
-  pn_u2.w1a.read(in_p2a1w1a);
-  
-  ifstream in_p2a1w1b("data_grounding_project/p2a1w1b.txt");
-  pn_u2.w1b.read(in_p2a1w1b);
-  
-  ifstream in_p2a1w2a("data_grounding_project/p2a1w2a.txt");
-  pn_u2.w2a.read(in_p2a1w2a);
-  
-  ifstream in_p2a1w2b("data_grounding_project/p2a1w2b.txt");
-  pn_u2.w2b.read(in_p2a1w2b);
-  
-  PRINT(pn_u2.w1a);
-  PRINT(pn_u2.w1b);
-  PRINT(pn_u2.w2a);
-  PRINT(pn_u2.w2b);
-  
-  pns.append(pn_u2);
-  
-  
-  // Binary predicate 2
-  PredicateNetwork pn_b2;
-  pn_b2.arity = 2;
-  pn_b2.name << "b2";
-  
-  ifstream in_p2a2w1a("data_grounding_project/p2a2w1a.txt");
-  pn_b2.w1a.read(in_p2a2w1a);
-  
-  ifstream in_p2a2w1b("data_grounding_project/p2a2w1b.txt");
-  pn_b2.w1b.read(in_p2a2w1b);
-  
-  ifstream in_p2a2w2a("data_grounding_project/p2a2w2a.txt");
-  pn_b2.w2a.read(in_p2a2w2a);
-  
-  ifstream in_p2a2w2b("data_grounding_project/p2a2w2b.txt");
-  pn_b2.w2b.read(in_p2a2w2b);
-  
-  PRINT(pn_b2.w1a);
-  PRINT(pn_b2.w1b);
-  PRINT(pn_b2.w2a);
-  PRINT(pn_b2.w2b);
-  
-  pns.append(pn_b2);
-#endif
-  
   // Read in Nikolay's network [END]
   // ==================================================================
   
@@ -448,6 +523,20 @@ void experiment() {
 
 
 int main(int argc, char** argv){
+  MT::Array< Experience* > experiences;
+  read_data(experiences, "data/E1T1-.txt");
+
+  MT::Array<PredicateNetwork*> pns;
+  read_PredicateNetworks(pns, "parameters/E1T1-");
+  cout<<"PredicateNetworks have been read."<<endl;
+  
+  uint i;
+  FOR1D(experiences, i) {
+    calculateSymbols(pns, experiences(i)->state_pre);
+  }
+  
+  exit(0);
+  
   MT::String config_file("config");
   cout << "Config-file: " << config_file << endl;
   MT::openConfigFile(config_file);
