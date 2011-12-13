@@ -30,7 +30,7 @@ void testSqrProblem(){
 
 void testDynamicProgramming(){
   //VectorChainCost P(20,5);
-  SlalomProblem P(100,4,.1,.1,4.);
+  SlalomProblem P(100,4,.1,.01,9.);
   //P.nonlinear=true;
   
   arr x(P.T+1,P.n),x0;
@@ -47,15 +47,16 @@ void testDynamicProgramming(){
   //checkGradient((ScalarFunction&)P2, x, 1e-4);
   checkGradient((VectorFunction&)P2, x, 1e-4);
   
-  //x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 100, 2);
-  //x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 2);
-  //x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 100, -1., 2);
-  //x=x0;  optNodewise(x, P, NULL, 1e-3, 100, -1., 2);
-  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );
-  x=x0;  optMinSumGaussNewton(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );
+  //eval_cost=0;  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 1000, 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optNodewise(x, P, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
 
   write(LIST(x),"z.sol");
-  //gnuplot("plot 'z.nodewise' us 1:2 w l,'z.gaussNewton' us 1:2 w l,'z.rprop' us 1:2 w l,'z.grad' us 1:2 w l,'z.DP' us 1:2 w l,'z.MSGN' us 1:2 w l",NULL,true);
+  //gnuplot("plot 'z.nodewise' us 2:3 w l,'z.gaussNewton' us 2:3 w l,'z.rprop' us 2:3 w l,'z.grad' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
+  gnuplot("plot 'z.gaussNewton' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
 }
 
 

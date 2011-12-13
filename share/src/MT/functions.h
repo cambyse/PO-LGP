@@ -40,6 +40,7 @@ double dNNNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA
 double NNsdv(const doubleA& a, const doubleA& b, double sdv);
 double NNzerosdv(const doubleA& x, double sdv);
 
+
 #ifdef  MT_IMPLEMENTATION
 #  include "functions.cpp"
 #endif
