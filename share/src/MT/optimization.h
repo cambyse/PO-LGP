@@ -102,7 +102,6 @@ uint optRprop(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_re
 uint optGradDescent(arr& x, ScalarFunction& f, double initialStepSize, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 
 uint optDynamicProgramming(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, double initialDamping=1., uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
-uint optRicatti(arr& x, SqrChainFunction& f, const arr& x0, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 uint optNodewise(arr& x, VectorChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, uint maxEvals=1000, double maxStepSize=-1., uint verbose=0 );
 uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, double initialDamping=1., uint maxIter=1000, double maxStepSize=-1., uint verbose=0);
 

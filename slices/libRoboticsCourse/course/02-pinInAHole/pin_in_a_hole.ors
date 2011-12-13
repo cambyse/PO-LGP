@@ -20,7 +20,7 @@ joint (arm6 pin) { A=< t(0 0 0.2) d(45 0 0 1) > B=< t(0 0 .4) >  m }
 
 ### hole
 body hole { X = <t(0 -1 1)> }
-shape (hole){ rel = <t(0 -.1 0)> type=0 size=[.25 .05 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <t(0  .1 0)> type=0 size=[.25 .05 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <t( .1 0 0)> type=0 size=[.05 .25 .4 .05] color=[0 0 .5] contact }
-shape (hole){ rel = <t(-.1 0 0)> type=0 size=[.05 .25 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <t(0 -.30 0)> type=0 size=[1.0 .40 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <t(0  .30 0)> type=0 size=[1.0 .40 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <t( .30 0 0)> type=0 size=[.40 1.0 .4 .05] color=[0 0 .5] contact }
+shape (hole){ rel = <t(-.30 0 0)> type=0 size=[.40 1.0 .4 .05] color=[0 0 .5] contact }

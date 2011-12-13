@@ -564,8 +564,8 @@ uint optNewton(arr& x, QuadraticFunction& f, double *fx_user, SqrPotential *S_us
       Delta *= maxStepSize/norm(Delta);
     
     //lazy stopping criterion
-    if(norm(Delta)<1e-1*stoppingTolerance){
-      x+=Delta; //DANGEROUS!!
+    if(norm(Delta)<1e-3*stoppingTolerance){
+      //x+=Delta; //DANGEROUS!!
       break;
     }
     
@@ -694,6 +694,7 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, double *fmin_return, doub
   uint evals=0;
   arr y(x);
   double damping=initialDamping;
+  uint rejects=0;
   
   MT::Array<SqrPotential> V(T+1); //bwd messages
   MT::Array<SqrPotential> S(T+1); //fwd messages
@@ -769,12 +770,15 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, double *fmin_return, doub
     }
     
     if(fy<=fx){
+      rejects=0;
       if(maxDiff(x,y)<stoppingTolerance){ x=y;  fx=fy;  break; }
       x=y;
       fx=fy;
       Rx=Ry;
       damping /= 5.;
     }else{
+      rejects++;
+      if(rejects>=5 && damping>1e3) break; //give up  //&& maxDiff(x,y)<stoppingTolerance
       damping *= 10.;
     }
 

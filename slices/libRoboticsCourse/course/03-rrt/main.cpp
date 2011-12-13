@@ -7,7 +7,6 @@
 struct TrajectoryOptimizationProblem:VectorChainFunction {
   Simulator *S;
   arr x0,xT;
-  uint T;
   
   TrajectoryOptimizationProblem(Simulator& _S, uint _T, const arr& _x0, const arr& _xT){
     S = &_S;
@@ -15,25 +14,31 @@ struct TrajectoryOptimizationProblem:VectorChainFunction {
     x0=_x0;
     xT=_xT;
   }
-  virtual void fi (arr& y, arr* J, uint i, const arr& x_i){ //tasks: only collision
+  
+  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i){ //tasks: only collision
     S->setJointAngles(x_i,false);
     S->kinematicsContacts(y);
     if(J) S->jacobianContacts(*J);
-    double rho=1e5;
+    double rho=1e3;
     if(i==0){
       y.append(rho*(x_i-x0));
       if(J) J->append(rho*eye(xT.N));
-    }
-    if(i==T-1){
+    }else{
+    if(i==T){
       y.append(rho*(x_i-xT));
       if(J) J->append(rho*eye(xT.N));
-    }
+    }else{
+      y.append(zeros(1,xT.N));
+      if(J) J->append(zeros(xT.N,xT.N));
+    }}
   }
-  virtual void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){ //transitions: simple distance
+  
+  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){ //transitions: simple distance
     CHECK(i==j-1,"");
-    y = x_i-x_j;
-    if(Ji) Ji->setDiag( 1.,y.N);
-    if(Jj) Jj->setDiag(-1.,y.N);
+    double w=1.;
+    y = w*(x_i-x_j);
+    if(Ji) Ji->setDiag( w,y.N);
+    if(Jj) Jj->setDiag(-w,y.N);
   }
 };
 
@@ -186,27 +191,34 @@ void optim(){
   Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
-  arr q;
-  MT::load(q,"q.rrt");
+  arr x,x0;
+  MT::load(x0,"q.rrt");
+  x=x0;
+  uint T=x.d0-1;
   
-  TrajectoryOptimizationProblem problem(S, q.d0, q[0], q[q.d0-1]);
-  ConvertVector2SqrChainFunction problem2(problem);
-  ConvertVectorChain2ScalarFunction problem3(problem);
+  TrajectoryOptimizationProblem P(S, T, x[0], x[T]);
+  conv_VectorChainFunction P2(P);
   
   // optimize
-  //checkGradient(problem3, q, 1e-4);
-  optRprop(q, problem3, .1, NULL, 1e-3, 1000, 2);
+  //checkGradient((VectorFunction&)P2, x, 1e-4);
+
+  //eval_cost=0;  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 1000, 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;    optNodewise(x, P, NULL, 1e-3, 1000, -1., 2);  cout <<"-- evals=" <<eval_cost <<endl;
 
   //display
-  for(uint t=0;t<q.d0;t++) S.setJointAngles(q[t], true);
+  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
   S.watch();
-  for(uint t=0;t<q.d0;t++) S.setJointAngles(q[t], true);
+  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
   S.watch();
 }
 
 int main(int argc,char **argv){
-  RTTplan();
-  //optim();
+  //RTTplan();
+  optim();
 
   return 0;
 }
