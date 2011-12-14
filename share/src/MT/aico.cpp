@@ -382,7 +382,8 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   f.reuseOldCostTerms=true;
   f.reuseOldCostTerms=false;
   if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
-  optGaussNewton(xhat[t](), f, NULL, tolerance, maxRelocationIterations, maxStepSize);
+  optOptions o;
+  optGaussNewton(xhat[t](), f, (o.stopTolerance=tolerance, o.stopEvals=maxRelocationIterations, o.maxStep=maxStepSize, o) );
   
   sys->getQ(Q[t](), t);
   sys->getHinv(Hinv[t](), t);
