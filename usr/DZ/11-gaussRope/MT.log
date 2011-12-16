@@ -1,8 +1,8 @@
-Compiled at:     Dec  6 2011 17:41:58
-Execution start: Thu Dec  8 18:05:35 2011
+Compiled at:     Dec 16 2011 13:26:17
+Execution start: Fri Dec 16 16:46:34 2011
 Program call:    './x.exe '
                 mode = opening config file 'MT.cfg'
-41 [i]
+4 [i]
              orsfile = rope_grasp_20.ors [N2MT6StringE] (default!)
 opening input file `rope_grasp_20.ors'
 opening input file `schunk_3d/SDH_Gehaeuse_x.tri'
@@ -12,6 +12,7 @@ opening input file `schunk_3d/SDH_Mittelteil_Finger1_x.tri'
 opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
 opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
 opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
+              usebwd =     1 [d]
                Hrate =   0.1 [d]
                Wrate =     1 [d]
                Qrate = 1e-10 [d] (default!)

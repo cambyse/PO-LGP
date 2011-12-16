@@ -24,7 +24,8 @@ body arm19 { type=2 mass=.1 size=[0.1 0.1 .2 .05] contact }
 body arm20 { type=2 mass=.1 size=[0.1 0.1 .2 .05] contact }
 
 #body endeff { type=2 mass=.1 size=[0.1 0.1 .2 .025] contact }
-body rope { contact, type=4, rel=<t( -0.1 -1.5 1.85) d(180 0 1 1)>, size=[.0 .0 3.0 0.03], color=[.3 .9 .1],fixed }
+#body rope { contact, type=4, rel=<t( -0.1 -1.5 1.85) d(180 0 1 1)>, size=[.0 .0 3.0 0.03], color=[.3 .9 .1],fixed }
+body rope { contact, type=4, rel=<t( -0.1 -15 1.85) d(180 0 1 1)>, size=[.0 .0 30.0 0.03], color=[.3 .9 .1],fixed }
 
 joint (stem arm1) { A=<t(0 0 1) d(90 1 0 0) d(-45 0 1 0)> B=<t(0 0 .1)>  Q=<d(1 0 0 0)> }
 
@@ -109,7 +110,10 @@ shape tipHook3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0) t(0 0 .04)>, type=5, 
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape cyl1(OBJECTS){ contact, type=4, rel=<t( 0.5 -1.5 1.5)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape cyl1(OBJECTS){  type=4, rel=<t( 1.0 -1.7 1.5)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+#shape cyl1(OBJECTS){  type=4, rel=<t( 0.5 -1.5 1.7)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
 #shape cyl1(OBJECTS){ contact, type=4, rel=<t( -0.5 -1.0 0.1)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
 
