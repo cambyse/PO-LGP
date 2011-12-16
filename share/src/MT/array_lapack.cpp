@@ -17,7 +17,6 @@
 #ifdef MT_LAPACK
 
 #include "array.h"
-#include "util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -249,7 +248,6 @@ dlauum = multiply L'*L
 #  warning "MT_LAPACK undefined - using inefficient implementations"
 #endif
 #include "array.h"
-#include "util.h"
 void blas_MM(arr& X, const arr& A, const arr& B){ innerProduct(X, A, B); };
 void blas_MsymMsym(arr& X, const arr& A, const arr& B){ innerProduct(X, A, B); };
 void lapack_cholesky(arr& C, const arr& A){NICO;}

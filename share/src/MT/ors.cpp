@@ -1778,7 +1778,6 @@ void ors::Mesh::skin(uint start){
 ors::Vector ors::Mesh::getMeanVertex(){
   arr Vmean = sum(V,0);
   Vmean /= (double)V.d0;
-  cout <<"Vmean=" <<Vmean <<endl;
   return ors::Vector(Vmean);
 }
 
