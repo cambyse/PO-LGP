@@ -181,7 +181,6 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
   //  glutJoystickFunc( Joystick, 100 );
   //  glutEntryFunc ( Entry ) ;
   s->unlock_win();
-
 }
 
 // freeglut destructor
@@ -197,8 +196,8 @@ OpenGL::~OpenGL(){
 
 void OpenGL::postRedrawEvent(){s->lock_win(); glutPostRedisplay(); s->unlock_win(); } 
 void OpenGL::processEvents(){  s->lock_win(); glutMainLoopEvent(); s->unlock_win(); }
-void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ processEvents(); sleepForEvents(); } }
-void OpenGL::exitEventLoop(){  loopExit=true; }
+void OpenGL::enterEventLoop(){ loopExit=false;  while(!loopExit){  processEvents();  sleepForEvents();  } }
+void OpenGL::exitEventLoop(){ loopExit=true; }
 
 //! resize the window
 void OpenGL::resize(int w,int h){

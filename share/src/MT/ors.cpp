@@ -1775,6 +1775,13 @@ void ors::Mesh::skin(uint start){
   cout <<T <<endl;
 }
 
+ors::Vector ors::Mesh::getMeanVertex(){
+  arr Vmean = sum(V,0);
+  Vmean /= (double)V.d0;
+  cout <<"Vmean=" <<Vmean <<endl;
+  return ors::Vector(Vmean);
+}
+
 void ors::Mesh::readFile(const char* filename){
   bool loaded=false;
   const char *type = filename+(strlen(filename)-3);

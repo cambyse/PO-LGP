@@ -226,6 +226,7 @@ struct Mesh {
   void clean();
   void flipFaces();
   void makeVerticesRelativeToGroup();
+  Vector getMeanVertex();
   
   //[preliminary]]
   void collectTriGroups();
@@ -819,7 +820,7 @@ void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
-void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
+void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W);
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
@@ -848,7 +849,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 class OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);

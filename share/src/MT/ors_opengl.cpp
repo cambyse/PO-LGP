@@ -23,7 +23,7 @@
 
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
-bool orsDrawMeshes=true, orsDrawWires=false;
+bool orsDrawMeshes=true, orsDrawWires=false, orsDrawZlines=false;
 double orsDrawAlpha=1.00;
 uint orsDrawLimit=0;
 
@@ -239,6 +239,13 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         break;
       default: HALT("can't draw that geom yet");
     }
+  if(orsDrawZlines){
+    glColor(0, .7, 0);
+    glBegin(GL_LINES);
+    glVertex3d(0., 0., 0.);
+    glVertex3d(0., 0., -f.pos(2));
+    glEnd();
+  }
   if(!s->contactOrientation.isZero()){
     X.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
@@ -502,35 +509,86 @@ void animateConfiguration(ors::Graph& C, OpenGL& gl){
   C.calcBodyFramesFromJoints();
 }
 
-bool infoHoverCall(void *p, OpenGL *gl){
-  ors::Graph *C = (ors::Graph*)p;
-  ors::Joint *j=NULL;
-  ors::Shape *s=NULL;
-  OpenGL::GLSelect *top=gl->topSelection;
-  if(!top) return false;
-  uint i=top->name;
-  //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
-  if((i&3)==1) s=C->shapes(i>>2);
-  if((i&3)==2) j=C->joints(i>>2);
-  if(s){
-    gl->text.clr()
-    <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
-    listWrite(s->ats, gl->text, "\n");
+
+ors::Body *movingBody=NULL;
+ors::Vector selpos;
+double seld, selx, sely, selz;
+
+struct EditConfigurationHoverCall:OpenGL::GLHoverCall{
+  ors::Graph *ors;
+  EditConfigurationHoverCall(ors::Graph& _ors){ ors=&_ors; }
+  bool hoverCallback(OpenGL& gl){
+    if(!movingBody){
+      ors::Joint *j=NULL;
+      ors::Shape *s=NULL;
+      gl.Select();
+      OpenGL::GLSelect *top=gl.topSelection;
+      if(!top) return false;
+      uint i=top->name;
+      //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      if((i&3)==1) s=ors->shapes(i>>2);
+      if((i&3)==2) j=ors->joints(i>>2);
+      if(s){
+        gl.text.clr()
+        <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
+        listWrite(s->ats, gl.text, "\n");
+      }
+      if(j){
+        gl.text.clr()
+        <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+        <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+        listWrite(j->ats, gl.text, "\n");
+      }
+      if(!j && !s) gl.text.clr();
+    }else{
+      //gl.Select();
+      //double x=0, y=0, z=seld;
+      //double x=(double)gl.mouseposx/gl.width(), y=(double)gl.mouseposy/gl.height(), z=seld;
+      double x=gl.mouseposx, y=gl.mouseposy, z=seld;
+      gl.unproject(x, y, z, true);
+      cout <<"x=" <<x <<" y=" <<y <<" z=" <<z <<" d=" <<seld <<endl;
+      movingBody->X.pos = selpos + ARR(x-selx, y-sely, z-selz);
+    }
+    return true;
   }
-  if(j){
-    gl->text.clr()
-    <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-    <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
-    listWrite(j->ats, gl->text, "\n");
+};
+  
+struct EditConfigurationKeyCall:OpenGL::GLKeyCall{
+  ors::Graph *ors;
+  EditConfigurationKeyCall(ors::Graph& _ors){ ors=&_ors; }
+  bool keyCallback(OpenGL& gl){
+    if(gl.pressedkey!=' ') return true;
+    if(movingBody){ movingBody=NULL; return true; }
+    ors::Joint *j=NULL;
+    ors::Shape *s=NULL;
+    gl.Select();
+    OpenGL::GLSelect *top=gl.topSelection;
+    if(!top){
+      cout <<"No object below mouse!" <<endl;
+      return false;
+    }
+    uint i=top->name;
+    //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+    if((i&3)==1) s=ors->shapes(i>>2);
+    if((i&3)==2) j=ors->joints(i>>2);
+    if(s){
+      cout <<"selected shape " <<s->name <<" of body " <<s->body->name <<endl;
+      selx=top->x;
+      sely=top->y;
+      selz=top->z;
+      seld=top->dmin;
+      cout <<"x=" <<selx <<" y=" <<sely <<" z=" <<selz <<" d=" <<seld <<endl;
+      selpos = s->body->X.pos;
+      movingBody=s->body;
+    }
+    return true;
   }
-  if(!j && !s) gl->text.clr();
-  return true;
-}
+};
 
 void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
-  gl.exitkeys="1234567890hjklias, ";
-  gl.selectOnHover=true;
-  gl.addHoverCall(infoHoverCall, &C);
+  gl.exitkeys="1234567890hjklias, "; //TODO: move the key handling to the keyCall!
+  gl.addHoverCall(new EditConfigurationHoverCall(C));
+  gl.addKeyCall(new EditConfigurationKeyCall(C));
   for(;;){
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
@@ -551,7 +609,6 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
         case '4':  orsDrawProxies^=1;  break;
         case '5':  gl.reportSelects^=1;  break;
         case '6':  gl.reportEvents^=1;  break;
-        case '7':  gl.selectOnHover^=1;  break;
         case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
@@ -577,21 +634,21 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
 
 #if 0 //MT_ODE
 void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
-  gl->watch();
+  gl.watch();
   uint t, T=200;
   arr x, v;
   createOde(*C, *ode);
-  C->getJointState(x, v);
+  ors->getJointState(x, v);
   for(t=0; t<T; t++){
     ode->step();
     
     importStateFromOde(*C, *ode);
-    C->setJointState(x, v);
-    C->calcBodyFramesFromJoints();
+    ors->setJointState(x, v);
+    ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl->text.clr() <<"time " <<t;
-    gl->timedupdate(10);
+    gl.text.clr() <<"time " <<t;
+    gl.timedupdate(10);
   }
 }
 #endif

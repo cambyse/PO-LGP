@@ -48,7 +48,7 @@ struct CalibrationParameters{
 struct sCameraModule;
 
 struct CameraModule:public Process{
-  CameraImages output;
+  CameraImages *output;
 
   sCameraModule *s;
   CalibrationParameters calib;

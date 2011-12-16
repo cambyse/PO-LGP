@@ -1,0 +1,292 @@
+#! /bin/sh
+#
+#  INSTALLING YOUR MLR-SYSTEM
+#  (c) Machine Learning and Robotics Lab, FU Berlin, Germany, 2011
+#  http://www.inf.fu-berlin.de/en/groups/mlr
+#
+#
+#  Parameters:
+#
+#  - Directory where the external libraries get installed
+#    DIR_EXTERNAL_LIBS=<directory>
+#    Default: ~/lib/
+#
+#  - Tar-ball of the external libraries
+#    FILE_TARBALL=<file>
+#    Default ./mlrLibs.tgz
+#    You can get this tarball from
+#    https://maserati.mi.fu-berlin.de/redmine/attachments/922/mlrLibs.tar.gz
+#
+#  Example Call:
+#    FILE_TARBALL=mlrLibs.tar.gz  ./INSTALL
+
+
+[ -z "${DIR_EXTERNAL_LIBS}" ] && DIR_EXTERNAL_LIBS=~/lib/
+[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=mlrLibs.tgz
+
+FILE_SCRIPT=`readlink -f $0`
+DIR_GIT=`dirname $FILE_SCRIPT`
+ARCH=`uname -m`
+
+
+
+
+# ----------------------------
+# (1) External Libraries
+
+echo "
+
++++ EXTERNAL LIBS +++
+
+"
+echo "Setting up external libraries in: " $DIR_EXTERNAL_LIBS
+echo "Using tar-ball: " $FILE_TARBALL
+
+if [ ! -d "${DIR_EXTERNAL_LIBS}" ] ; then
+  echo "Creating lib directory: " $DIR_EXTERNAL_LIBS
+  mkdir $DIR_EXTERNAL_LIBS
+fi
+
+if [ ! -f "${FILE_TARBALL}" ] ; then
+  echo "ERROR: Tar-ball '"$FILE_TARBALL"' does not exist.
+       You can download it from the Maserati-Wiki, Documents."
+  exit
+fi
+
+echo 'cp' $FILE_TARBALL $DIR_EXTERNAL_LIBS
+cp $FILE_TARBALL $DIR_EXTERNAL_LIBS
+
+echo "Changing directory..."
+cd $DIR_EXTERNAL_LIBS
+pwd
+echo "Unpacking tar-ball..."
+echo 'tar xfz' $FILE_TARBALL
+tar xfz $FILE_TARBALL
+
+echo "Setting library links to libraries appropriate for the architecture..."
+echo "Architecture=" $ARCH
+
+
+
+
+# ----------- SWIFT ------------
+echo "
+
+*** MLR-Script:  BUILDING SWIFT ***
+
+"
+cd $DIR_EXTERNAL_LIBS/SWIFT++_1.2/
+./BUILD
+
+
+
+# ----------- NTCan ------------
+
+echo "
+
+*** MLR-Script:  BUILDING NTCAN ***
+
+"
+cd $DIR_EXTERNAL_LIBS/ntcan/lib/
+if [ "${ARCH}" = "x86_64" ] ; then
+  ln -s -f libntcan_x86_64.a libntcan.a
+  echo "Using libntcan_x86_64.a"
+else
+  ln -s -f libntcan_i686.a libntcan.a
+  echo "Using libntcan_i686.a"
+fi
+
+
+# ----------- ODE ------------
+echo "
+
+*** MLR-Script:  BUILDING ODE ***
+
+"
+cd $DIR_EXTERNAL_LIBS/ode-0.11/
+./BUILD
+
+
+# ----------- schunkSDH ------------
+
+cd $DIR_EXTERNAL_LIBS/schunkSDH-11-05-11/lib/
+if [ "${ARCH}" = "x86_64" ] ; then
+  rm -f libschunkSDH.a
+  ln -s -f libschunkSDH-64.a libschunkSDH.a
+  echo "Using libschunkSDH-64.a"
+fi
+
+
+# ----------- schunkLWA ------------
+
+cd $DIR_EXTERNAL_LIBS/schunkLWA/lib/
+if [ "${ARCH}" = "x86_64" ] ; then
+  ln -s -f libdevice-64.a libdevice.a
+  ln -s -f libdevice-64.so libdevice.so
+  ln -s -f libm5api-64.a libm5api.a
+  ln -s -f libm5api-64.so libm5api.so
+  ln -s -f libutil-64.a libutil.a
+  ln -s -f libutil-64.so libutil.so
+  echo "Using schunkLWA-64*"
+else
+  ln -s -f libdevice-32.a libdevice.a
+  ln -s -f libdevice-32.so libdevice.so
+  ln -s -f libm5api-32.a libm5api.a
+  ln -s -f libm5api-32.so libm5api.so
+  ln -s -f libutil-32.a libutil.a
+  ln -s -f libutil-32.so libutil.so
+  echo "Using schunkLWA-32*"
+fi
+
+
+# ----------- Xvid ------------
+
+echo "
+
+*** MLR-Script:  BUILDING XVID ***
+
+"
+cd $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/build/generic/
+./configure
+make
+cp \=build/libxvidcore.a $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/lib/
+cp \=build/libxvidcore.so.4.1 $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/lib/libxvidcore.so
+
+
+# ----------- Revel ------------
+
+echo "
+
+*** MLR-Script:  BUILDING Revel ***
+
+"
+cd $DIR_EXTERNAL_LIBS/revel-1.1.0/
+./BUILD
+cp src/librevel.a lib/
+
+
+# ----------- Lewiner ------------
+
+echo "
+
+*** MLR-Script:  BUILDING Lewiner ***
+
+"
+cd $DIR_GIT/extern/Lewiner
+make
+
+
+# ----------- Tony ------------
+
+echo "
+
+*** MLR-Script:  BUILDING TONY-MDP ***
+
+"
+cd $DIR_EXTERNAL_LIBS/tony-mdp/src/
+make
+cp libmdp.so ../lib/
+
+
+# ----------- URG ------------
+
+echo "
+
+*** MLR-Script:  BUILDING URG ***
+
+"
+cd $DIR_EXTERNAL_LIBS/urg-0.0.2/
+./configure
+make
+
+
+# ----------- LibColorSeg ------------
+
+echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
+cd $DIR_GIT/share/extern/libcolorseg/src/
+make
+
+
+
+
+echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
+directory " $DIR_EXTERNAL_LIBS "..."
+
+cd $DIR_GIT
+cd share/extern
+./LINK $DIR_EXTERNAL_LIBS
+cd ../..
+
+
+
+
+
+
+
+
+# ----------------------------
+# (2) Create make-config
+
+echo "
+
+
++++ make-config +++
+
+"
+
+echo "Creating make-config (specify individual profiles here)..."
+
+cd share/
+mv make-config make-config.BAK
+echo "ifndef NAME
+  MTLIB = 1
+endif
+" > make-config
+cd ..
+
+# TODO Profile: without hardware (no Schunk)
+
+
+
+
+
+
+# ----------------------------
+# (3) Install our libs
+
+echo "
+
+
++++ MLR-LIBS +++
+
+
+"
+
+cd $DIR_GIT/share/
+pwd
+echo "Installing MLR-libs (libmt, librelational etc.)..."
+
+make makeAll
+
+
+
+# ----------------------------
+# (4) Tests
+
+echo "
+
+
++++ TESTS +++
+
+
+"
+
+make tests
+
+echo "To test the code, go to share/test/."
+
+
+
+echo "Installation successful!"
+
+

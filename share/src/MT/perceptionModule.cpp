@@ -470,10 +470,10 @@ void PerceptionModule::step(){
       }
     }
   }
-  output.writeAccess(this);
-  output.disp = disp;
-  output.objects = objs;
-  output.deAccess(this);
+  output->writeAccess(this);
+  output->disp = disp;
+  output->objects = objs;
+  output->deAccess(this);
 }
 
 

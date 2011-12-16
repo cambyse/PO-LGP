@@ -76,6 +76,7 @@ struct SocSystemAbstraction {
   virtual void getqv0(arr& q_);        ///< start joint configuration and velocity
   virtual void getqv0(arr& q, arr& qd); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
+ virtual void setTau(double tau) = 0;
   void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
@@ -131,6 +132,7 @@ struct SocSystemAbstraction {
   double totalCost(arr *grad, const arr& q, bool plot=false);
   
   virtual void displayState(const arr *q, const arr *Qinv=NULL, const char *text=NULL, bool reportVariables=false);
+  virtual void recordTrajectory(const arr& q,const char *variable,const char *file);
   virtual void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag);
   
   //-- convenience (prelim...)

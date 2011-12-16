@@ -15,24 +15,8 @@
 #include "guiModule.h"
 #include "process.h"
 #include "process_internal.h"
-#ifdef MT_NILS
-#  include <NP/camera.h>
-#  include <NP/uvccamera.h>
-#else
-struct sCameraModule;
-//struct CalibrationParameters;
-struct CameraModule:public Process{
-  CameraImages output;
-
-  sCameraModule *s;
-//  CalibrationParameters calib;
-
-  CameraModule():Process("ACHTUNG: Dummy camera module; Compile with MT_NILS or so!!"){};
-  void open(){};
-  void step(){printf("ACHTUNG: Dummy camera module; Compile with MT_NILS or so!!");};
-  void close(){};
-};
-#endif
+#include <NP/camera.h>
+#include <NP/uvccamera.h>
 
 struct ControllerProcess;
 struct TaskAbstraction;
@@ -144,7 +128,9 @@ struct RobotProcessGroup {
   q_currentReferenceVar q_currentReference;
   SkinPressureVar skinPressureVar;
   currentProxiesVar currentProxies;
-  
+  CameraImages currentCameraImages;
+  PerceptionOutput percOutput;
+
   //Processes
   bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;
