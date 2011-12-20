@@ -1,5 +1,5 @@
 Compiled at:     Dec 16 2011 13:26:17
-Execution start: Fri Dec 16 16:46:34 2011
+Execution start: Tue Dec 20 15:30:15 2011
 Program call:    './x.exe '
                 mode = opening config file 'MT.cfg'
 4 [i]
@@ -16,6 +16,7 @@ opening input file `schunk_3d/SDH_Kuppe_Finger1_x.tri'
                Hrate =   0.1 [d]
                Wrate =     1 [d]
                Qrate = 1e-10 [d] (default!)
+opening output file `z.plotdata'
       aico_sweepMode =     0 [i]
  aico_max_iterations =    20 [j]
       aico_tolerance =  0.01 [d]

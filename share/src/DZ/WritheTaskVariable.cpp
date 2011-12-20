@@ -90,7 +90,7 @@ transpose(Jt,J);
 //     y=yy;
 //    // int wrsize = (segments)* (segments);
 //   //  y.reshape(wrsize); 
-// cout <<y<<endl;
+// //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
 //        this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1

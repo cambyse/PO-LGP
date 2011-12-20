@@ -159,16 +159,16 @@ void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
    WS.setZero();
   GetWritheMatrix(Matr,rope1,rope2,dim);
   //!diagonal
-  Matr.reshape(dim,dim);
-  for (int k=0;k<dim;k++){
-    WS(0) += Matr(k,k);
-  }
+//   Matr.reshape(dim,dim);
+//   for (int k=0;k<dim;k++){
+//     WS(0) += Matr(k,k);
+//   }
 
   //! all
-//   Matr.reshape(dim*dim);
-//   for (int k=0;k<dim*dim;k++){
-//     WS(0) += Matr(k);
-//   }
+  Matr.reshape(dim*dim);
+  for (int k=0;k<dim*dim;k++){
+    WS(0) += Matr(k);
+  }
   //!diagonal
   //! diagonal vector
 /*  Matr.reshape(dim,dim);
@@ -186,15 +186,15 @@ void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int
   SJ.resize(1,total_joint_number);//SJ.resize(1,total_joint_number);
   SJ.setZero();
   //!diagonal
-  MatrJ.reshape(dim,dim,total_joint_number);
-  for (int i=0;i<dim;i++) {
-    SJ[0]() += MatrJ[i][i];
-  } 
-  //!all
-//   MatrJ.reshape(dim*dim,total_joint_number);
-//   for (int i=0;i<dim*dim;i++) {
-//     SJ[0]() += MatrJ[i]();
+//   MatrJ.reshape(dim,dim,total_joint_number);
+//   for (int i=0;i<dim;i++) {
+//     SJ[0]() += MatrJ[i][i];
 //   } 
+  //!all
+  MatrJ.reshape(dim*dim,total_joint_number);
+  for (int i=0;i<dim*dim;i++) {
+    SJ[0]() += MatrJ[i]();
+  } 
     //!diagonal
   //! diagonal vector
 /*   for (int i=0;i<dim;i++) {

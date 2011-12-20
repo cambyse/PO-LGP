@@ -11,10 +11,60 @@
 #include <DZ/WritheTaskVariable.h>  
 #include <MT/specialTaskVariables.h> 
 #include <sstream>        
-  
+   
          
 const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
- 
+
+
+void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
+  TaskVariable *TV_q    = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  TaskVariable *TV_z1   = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
+  TaskVariable *TV_z2   = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+  TaskVariable *TV_f1   = new DefaultTaskVariable("pos1", *sys.ors, posTVT, "tipHook1", 0, 0);
+  TaskVariable *TV_f2   = new DefaultTaskVariable("pos2", *sys.ors, posTVT, "tipHook2", 0, 0);
+  TaskVariable *TV_f3   = new DefaultTaskVariable("pos3", *sys.ors, posTVT, "tipHook3", 0, 0);
+   TaskVariable *TV_up   = new DefaultTaskVariable("up1", *sys.ors, zalignTVT, "arm20", "<d(90 0 1 0)>", 0, 0, 0);
+  TaskVariableList TVs;
+  TVs.append(ARRAY( TV_z1, TV_z2, TV_f1, TV_f2, TV_f3,TV_up,TV_q));
+  sys.setTaskVariables(TVs);
+}
+
+void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T,double endPrec){
+  sys.setx0AsCurrent();
+  
+  //load parameters only once!
+  static bool firstTime=true;
+  static double midPrec, palmPrec, colPrec, limPrec, endVelPrec;
+
+  midPrec = 0.;
+ // endPrec = 1e1;
+  //set the time horizon
+  //activate collision testing with target shape
+   arr xtarget;
+  xtarget.setCarray(sys.ors->getShapeByName("cyl1")->X.pos.p, 3);
+  
+  TaskVariable *V;
+  
+  //general target
+  
+  xtarget(2) += .01; //grasp it 2cm above center
+   V=listFindByName(sys.vars, "up1");
+  ((DefaultTaskVariable*)V)->irel.setText("<d(90 0 1 0)>");
+  V->updateState();
+  V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
+  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  
+  //finger tips
+  V=listFindByName(sys.vars, "pos1");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  V=listFindByName(sys.vars, "pos2");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  V=listFindByName(sys.vars, "pos3");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  
+  //opposing fingers
+  V=listFindByName(sys.vars, "oppose12");  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  V=listFindByName(sys.vars, "oppose13");  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+   V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, 0., 0., 1e-1, 0.);
+ }
+
 
 int problem4(){      
   ors::Graph ors;  
@@ -32,7 +82,7 @@ int problem4(){
   soc::SocSystem_Ors soc;      
   soc.os=&std::cout;
 
- double eps=1e-1; //5e-3;  
+ double eps=1e-1; //1e-1  
  arr q,yy,x0;     
  int wrsize=20;//20;//11
  int jsize=ors.getJointStateDimension(); //20;//11
@@ -52,30 +102,36 @@ int problem4(){
   wr->y_prec=eps;//1e-0;/ / 
   wr->y.reshape(wrsize,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
   wr->y_target =zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   zeros(1,1); 
-  wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
+  for (int tp=0;tp< 10;tp++)  wr->y_target(tp,0) =   wr->y(tp,0);
+  wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,0.);  
   //wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,0.);  
   MT::Array<TaskVariable*> Tlist;        
-  
+   
   //!col
        TaskVariable *col = new DefaultTaskVariable("collision",ors, collTVT,0,0,0,0,ARR(.05));
   col->setGains(.5,.0);
   col->targetType=positionGainsTT; 
   col->y_prec=1e-2;
   col->y_target = ARR(0.);
-  col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
-  //! END of col
-    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);//1e0
+  //! END of col 
+    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .26)>",0,0,ARR()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
-  reach->setInterpolatedTargetsEndPrecisions(T, 0., 1e1, 0., 0.);
- // arr pr = ARRAY(0.,0.,0.,0.,1e0); 
-  //reach->setIntervalPrecisions(T,pr,pr);
+  reach->setInterpolatedTargetsEndPrecisions(T, 0., 2e0, 0., 0.);//1e1
+ // arr pr = ARRAY(0.,0.,0.,0.,1e0);  
+  //reach->setIntervalPrecisions(T,pr,pr); 
   //! end of reach
-  Tlist.append(wr);Tlist.append(col);Tlist.append(reach);
-  soc.setTaskVariables(Tlist);   
-    
-    
+  Tlist.append(wr);
+  Tlist.append(col);
+  Tlist.append(reach);
+  /*createMyStandardRobotTaskVariables(soc);
+  setMyGraspGoals(soc,T,1e0);
+  Tlist.append(soc.vars);
+  */soc.setTaskVariables(Tlist);   
+ plot_writhe(wr->y_target,wrsize);
+  //plot_writhe(wr->y,wrsize);  
  arr b,Binv,R,r;             
  int cnt;        
  soc.setx(x0);
@@ -203,7 +259,7 @@ int problem42(){
   soc::SocSystem_Ors soc;      
   soc.os=&std::cout;
 
- double eps=1e-2; //5e-3;  
+ double eps=1e-1; //5e-3;  
  arr q,yy,x0;     
  int wrsize=20;//20;//11
  int jsize=ors.getJointStateDimension(); //20;//11
@@ -220,7 +276,7 @@ int problem42(){
 //   ifstream qitstr(ss.str().c_str()); yy.readRaw(qitstr); qitstr.close(); 
        
    WritheTaskVariable *wr = new WritheTaskVariable("writhe",ors,"rope",wrsize,1);
-  wr->y_prec=1e-3;//1e-0;/ / 
+  wr->y_prec=eps;//1e-0;/ / 
   //wr->y.reshape(wrsize,wrsize);  //for (int tp=0;tp< wrsize;tp++)  wr->y(tp, wrsize-1)=0;      
   wr->y_target =zeros(1,1); //zeros(wrsize,wrsize);//wr->y;//zeros(10,10);//yy;   zeros(1,1); 
   wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);  
@@ -244,18 +300,18 @@ int problem42(){
   soc.setTaskVariables(Tlist); 
   
   //! delta check
-  arr q0;soc.getq0(q0);
-q=q0; 
-  cout << "initial state"<<x0<<endl;  
-  arr delta_q; 
-  for (int i=0;i<100;i++){ 
-    wr->delta_check(delta_q);
-   // wr->epsilon_check(delta_q);
-    q+=delta_q;
-    soc.setq(q);
-    soc.displayState(&q);
-    //soc.gl->watch();
-  } 
+//   arr q0;soc.getq0(q0);
+// q=q0; 
+//   cout << "initial state"<<x0<<endl;  
+//   arr delta_q; 
+//   for (int i=0;i<100;i++){ 
+//     wr->delta_check(delta_q);
+//    // wr->epsilon_check(delta_q);
+//     q+=delta_q;
+//     soc.setq(q);
+//     soc.displayState(&q);
+//     //soc.gl->watch();
+//   } 
   //! end of check           
  arr b,Binv,R,r;             
  int cnt;        
