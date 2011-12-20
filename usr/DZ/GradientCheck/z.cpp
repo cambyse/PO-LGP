@@ -11,7 +11,7 @@ struct WritheSegmentTest:public OptimizationProblem {
     c.setRandom();
     d.setRandom();
     Jq.resize(6,6);
-    rndUniform(Jq,-1.,1.,false); //! -1?
+    rndUniform(Jq,-1.,1.,false); 
   }
   double f(arr* J, const arr& q,int i=-1){
     CHECK(q.nd==1 && q.N==6,"");
@@ -105,12 +105,12 @@ void WritheGradientCheck(){
 
 
   //check WritheMatrix
-  uint N=10, n=1;  
+  uint N=10, n=10;  
   WritheMatrixTest fm =  WritheMatrixTest(N,n);
   x.resize(n);
   for(uint k=0;k<100;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
-    checkGradient_vec(fm, x, 1e-2);
+    checkGradient_vec(fm, x, 1e-4);
   }
 }
 

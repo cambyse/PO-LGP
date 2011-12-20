@@ -126,10 +126,10 @@ int problem4(){
   Tlist.append(wr);
   Tlist.append(col);
   Tlist.append(reach);
-  /*createMyStandardRobotTaskVariables(soc);
+  createMyStandardRobotTaskVariables(soc);
   setMyGraspGoals(soc,T,1e0);
   Tlist.append(soc.vars);
-  */soc.setTaskVariables(Tlist);   
+  soc.setTaskVariables(Tlist);   
  plot_writhe(wr->y_target,wrsize);
   //plot_writhe(wr->y,wrsize);  
  arr b,Binv,R,r;             

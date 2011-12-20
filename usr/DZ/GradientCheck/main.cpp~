@@ -3,7 +3,7 @@
 #include <DZ/WritheTaskVariable.h>  
 
 #include <z.cpp>           
-   
+    
 
 void gradient_check()   
 {     
@@ -17,7 +17,7 @@ void gradient_scalar_check()
 //===========================================================================
    
 int main(int argn,char **argv){
-  MT::initCmdLine(argn,argv);            
+  MT::initCmdLine(argn,argv);                 
   
   int mode=MT::getParameter<int>("mode");
   switch(mode){
