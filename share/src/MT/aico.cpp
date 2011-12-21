@@ -114,8 +114,8 @@ void AICO::init_messages(){
 void AICO::init_trajectory(const arr& q_init){
   init_messages();
   uint t, T=sys->nTime();
-  CHECK(q_init.nd==2 && q_init.d0==T+1 && q_init.d1==sys->qDim(), "initial trajectory was wrong dimensionality");
-  if(sys->dynamic) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  if(sys->dynamic && q_init.d1!=2*sys->qDim()) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==(sys->dynamic?2:1)*sys->qDim()) , "initial trajectory was wrong dimensionality");
   sys->getx0(b[0]()); //overwrite with x0
   q=q_init;
   xhat = b;
@@ -346,7 +346,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
         reuseOldCostTerms=false;
       }else{
         countSetq++;
-        if(sys->dynamic) sys->setqv(x); else sys->setq(x);
+        if(sys->dynamic) sys->setx(x); else sys->setq(x);
         sys->getTaskCostTerms(phi, J, x, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }

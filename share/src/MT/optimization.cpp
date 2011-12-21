@@ -84,15 +84,17 @@ double evaluateQCF(SqrChainFunction& f, const arr& x){
 }
 
 double evaluateVCF(VectorChainFunction& f, const arr& x){
-  double cost=0.;
+  double ncost=0.,pcost=0.;
   uint T=x.d0-1;
   arr y;
-  f.fvi(y, NULL, 0, x[0]);  cost += sumOfSqr(y); 
+  f.fvi(y, NULL, 0, x[0]);  ncost += sumOfSqr(y); 
   for(uint t=1;t<=T;t++){
-    f.fvi (y, NULL, t, x[t]);  cost += sumOfSqr(y); 
-    f.fvij(y, NULL, NULL, t-1, t, x[t-1], x[t]);  cost += sumOfSqr(y); 
+    f.fvi (y, NULL, t, x[t]);  ncost += sumOfSqr(y); 
+    f.fvij(y, NULL, NULL, t-1, t, x[t-1], x[t]);  pcost += sumOfSqr(y); 
+    cout <<t <<' ' <<sumOfSqr(y) <<endl;
   }
-  return cost;
+  cout <<"node costs=" <<ncost <<" pair costs=" <<pcost <<endl;
+  return ncost+pcost;
 }
 
 
@@ -159,7 +161,7 @@ void conv_VectorChainFunction::fv(arr& y, arr* J, const arr& x){
         Ji(TUP(t,i,t,j)) = J_loc(i,j);
     }
   }
-  //first collect all pair potentials
+  //then collect all pair potentials
   for(t=0;t<T;t++){
     f->fvij(y_loc, (J?&Ji_loc:NULL), (J?&Jj_loc:NULL), t, t+1, z[t], z[t+1]);
     yij[t] = y_loc;
@@ -242,7 +244,7 @@ Tmp convert_ScalarFunction(ScalarGraphFunction& f){
   return tmp;
 }*/
 
-void checkGradient(ScalarFunction &f,
+bool checkGradient(ScalarFunction &f,
                    const arr& x, double tolerance){
   arr J, dx, JJ;
   double y, dy;
@@ -267,13 +269,15 @@ void checkGradient(ScalarFunction &f,
     MT::save(J, "z.J_analytical");
     MT::save(JJ, "z.J_empirical");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
-    HALT("");
+    //HALT("");
+    return false;
   }else{
     cout <<"checkGradient (scalar) -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
-void checkJacobian(VectorFunction &f,
+bool checkJacobian(VectorFunction &f,
                    const arr& x, double tolerance){
   arr y, J, dx, dy, JJ;
   f.fv(y, &J, x);
@@ -298,9 +302,11 @@ void checkJacobian(VectorFunction &f,
     MT::save(JJ, "z.J_empirical");
     //cout <<"\nmeasured grad=" <<JJ <<"\ncomputed grad=" <<J <<endl;
     //HALT("");
+    return false;
   }else{
     cout <<"checkGradient (vector) -- SUCCESS (max diff error=" <<md <<")" <<endl;
   }
+  return true;
 }
 
 
@@ -318,6 +324,7 @@ optOptions::optOptions(){
   initStep=1.;
   minStep=-1.;
   maxStep=-1.;
+  clampInitialState=false;
   verbose=0;
 }
 
@@ -421,8 +428,8 @@ uint optDynamicProgramming(arr& x, SqrChainFunction& f, optOptions o){
     double cbar;
     init(V(T),n);
     for(uint t=T;t--;){
-      f.fqi (&fi(t+1) , t+1, x[t+1]);  evals++;
-      f.fqij(&fij(t), t, t+1, x[t], x[t+1]);
+      //f.fqi (&fi(t+1) , t+1, x[t+1]);  evals++;   //potentials should always be up-to-date (see recomputeChainSquarePotentials below)
+      //f.fqij(&fij(t), t, t+1, x[t], x[t+1]);
       Bbar    = fij(t).B + fi(t+1).A + V(t+1).A + damping*Id;
       bbar[t] = fij(t).b + fi(t+1).a + V(t+1).a + damping*x[t+1];
       cbar    = fij(t).c + fi(t+1).c + V(t+1).c + damping*sumOfSqr(x[t+1]);
@@ -435,22 +442,24 @@ uint optDynamicProgramming(arr& x, SqrChainFunction& f, optOptions o){
   
     //forward
     arr step;
-    arr Bbarinv0,bbar0;
-    bool cutSteps=false;
-    Bbar  = fi(0).A + V(0).A + damping*Id;
-    bbar0 = fi(0).a + V(0).a + damping*x[0];
-    cbar  = fi(0).c + V(0).c + damping*sumOfSqr(x[0]);
-    inverse_SymPosDef(Bbarinv0, Bbar);
-    step = Bbarinv0*bbar0 - y[0];
-    if(o.maxStep>0. && norm(step)>o.maxStep){ cutSteps=true;  step *= o.maxStep/norm(step); }
-    y[0]() += step;
-    y[0] = Bbarinv0*bbar0;
-    double fy_from_V0 = cbar - scalarProduct(bbar0, Bbarinv0 * bbar0);
+    double fy_from_V0;
+    if(!o.clampInitialState){
+      arr Bbarinv0,bbar0;
+      Bbar  = fi(0).A + V(0).A + damping*Id;
+      bbar0 = fi(0).a + V(0).a + damping*x[0];
+      cbar  = fi(0).c + V(0).c + damping*sumOfSqr(x[0]);
+      inverse_SymPosDef(Bbarinv0, Bbar);
+      step = Bbarinv0*bbar0 - y[0];
+      if(o.maxStep>0. && norm(step)>o.maxStep)  step *= o.maxStep/norm(step);
+      y[0]() += step;
+      //y[0] = Bbarinv0*bbar0;
+      fy_from_V0 = cbar - scalarProduct(bbar0, Bbarinv0 * bbar0);
+    }
     for(uint t=0;t<T;t++){
-    step = Bbarinv[t]*(bbar[t] - (~fij(t).C)*y[t]) - y[t+1];
-      if(o.maxStep>0. && norm(step)>o.maxStep){ cutSteps=true;  step *= o.maxStep/norm(step); }
+      step = Bbarinv[t]*(bbar[t] - (~fij(t).C)*y[t]) - y[t+1];
+      if(o.maxStep>0. && norm(step)>o.maxStep)  step *= o.maxStep/norm(step);
       y[t+1]() += step;
-      y[t+1] = Bbarinv[t]*(bbar[t] - (~fij(t).C)*y[t]);
+      //y[t+1] = Bbarinv[t]*(bbar[t] - (~fij(t).C)*y[t]);
     }
     
     recomputeChainSquarePotentials(fi_at_y, fij_at_y, f, y, evals);
@@ -581,6 +590,10 @@ uint optNewton(arr& x, QuadraticFunction& f,  optOptions o, double *fx_user, Sqr
     Delta = tmp-x;
     if(o.maxStep>0. && norm(Delta)>o.maxStep)  Delta *= o.maxStep/norm(Delta);
     
+//     x+=Delta;
+//     fx = f.fq(&Sx, x); evals++;
+//     break;
+
     //lazy stopping criterion
     if(norm(Delta)<1e-3*o.stopTolerance){
       //x+=Delta; //DANGEROUS!!
@@ -763,6 +776,12 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o){
       }
       
       sanityCheckUptodatePotentials(Ry, f, y);
+      
+      if(!t && o.clampInitialState){
+        y[0] = x[0];
+        Ry(0)=Rx(0);
+        continue;
+      }
       
       //iterate GaussNewton to find a new local y[t]
       LocalQuadraticFunction f_loc;

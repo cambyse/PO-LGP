@@ -22,6 +22,7 @@
 
 #include "util.h"
 #include "array.h"
+#include "optimization.h"
 
 //-- fwd declarations
 class OpenGL;
@@ -47,7 +48,7 @@ enum { ConjGrad=0, LevMar=1, Rprop=2, RpropConjGrad=3, SQP=4, Attractor=5 };
 /** \brief defines an abstraction of stochastic optimal control
     problems which interfaces between solution methods and system simulators
     -- see section 3.2 of the <a href="../guide.pdf">guide</a> */
-struct SocSystemAbstraction {
+struct SocSystemAbstraction:VectorChainFunction {
 
   ///@name data fields
   std::ostream *os; ///< if non-NULL, some routines might give output
@@ -71,21 +72,19 @@ struct SocSystemAbstraction {
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
   virtual uint yDim(uint i) = 0;       ///< dimensionality of the i-th task
-  virtual void getq0(arr& q) = 0;      ///< start joint configuration
-  virtual void getv0(arr& v) = 0;      ///< start joint velocity
-  virtual void getqv0(arr& q_);        ///< start joint configuration and velocity
-  virtual void getqv0(arr& q, arr& qd); ///< start joint configuration and velocity
+  virtual void getq0(arr& q0) = 0;      ///< start joint configuration
+  virtual void getv0(arr& v0) = 0;      ///< start joint velocity
+  virtual void getx0(arr& x0);          ///< start joint configuration and velocity
+  virtual void getqv0(arr& q0, arr& v0); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
- virtual void setTau(double tau) = 0;
-  void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
+  virtual void setTau(double tau) = 0;
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
-  void setx(const arr& x){ if(dynamic) setqv(x); else setq(x); }
   virtual void setx0AsCurrent() = 0;
   virtual void setTox0(){ arr q; getx0(q); setx(q); }
   virtual void setq(const arr& q, uint t=0) = 0;
   virtual void setq0(const arr& q);
-  virtual void setqv(const arr& q_, uint t=0);
+  virtual void setx(const arr& x, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
   
   //motion prior, or control cost  [t indicates the step]
@@ -120,7 +119,7 @@ struct SocSystemAbstraction {
   
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
-  virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
+  virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt, const arr& xt1, uint t);
   virtual void getProcess(arr& A, arr& a, arr& B, uint t, arr* Winv=NULL);
   virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
   virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
@@ -130,6 +129,10 @@ struct SocSystemAbstraction {
   // cost info
   double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
   double totalCost(arr *grad, const arr& q, bool plot=false);
+
+  //VectorChainFunction optimization interface
+  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i);
+  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
   
   virtual void displayState(const arr *q, const arr *Qinv=NULL, const char *text=NULL, bool reportVariables=false);
   virtual void recordTrajectory(const arr& q,const char *variable,const char *file);
@@ -152,8 +155,8 @@ struct SocSystemAbstraction {
 // @{
 
 void getVelocity(arr& vt, const arr& q, uint t, double tau);
-void getPhaseTrajectory(arr& _q, const arr& q, double tau);
-void getPositionTrajectory(arr& q, const arr& _q);
+void getPhaseTrajectory(arr& x, const arr& q, double tau);
+void getPositionTrajectory(arr& q, const arr& x);
 void interpolateTrajectory(arr& qNew, const arr& _q, double step);
 
 //only for the first task so far!

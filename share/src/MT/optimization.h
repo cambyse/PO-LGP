@@ -70,9 +70,9 @@ struct VectorGraphFunction {
 // checks, evaluation and converters
 //
 
-void checkGradient(ScalarFunction &f, const arr& x, double tolerance);
-void checkJacobian(VectorFunction &f, const arr& x, double tolerance);
-void checkHessian(QuadraticFunction &f, const arr& x, double tolerance); //TODO! NIY!
+bool checkGradient(ScalarFunction &f, const arr& x, double tolerance);
+bool checkJacobian(VectorFunction &f, const arr& x, double tolerance);
+bool checkHessian(QuadraticFunction &f, const arr& x, double tolerance); //TODO! NIY!
 
 //these directly simply evaluate squared potentials at some point
 double evaluateSP(const SqrPotential& S, const arr& x);
@@ -110,6 +110,7 @@ struct optOptions{
   double initStep;
   double minStep;
   double maxStep;
+  bool clampInitialState;
   uint verbose;
   optOptions();
 };

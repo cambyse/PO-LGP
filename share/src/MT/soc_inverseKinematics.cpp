@@ -57,7 +57,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 
 
 /*! \brief compute a single control step from current state to target of time t.
-    qv=output, qv_1=state at time t-1 */
+    x=output, x_1=state at time t-1 */
 void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x_1, uint t, arr *v, arr *Vinv){
   CHECK(sys.dynamic, "assumed dynamic SOC abstraction");
   uint n=sys.qDim();
@@ -81,7 +81,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
   
   //task message
   arr R, r;
-  //q_1.referToSubRange(qv_1, 0, n-1);
+  //q_1.referToSubRange(x_1, 0, n-1);
   sys.getTaskCosts(R, r, x_1, t);
   
   //v, Vinv are optional bwd messages!

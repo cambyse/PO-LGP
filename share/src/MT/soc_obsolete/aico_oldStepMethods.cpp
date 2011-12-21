@@ -575,7 +575,7 @@ double AICO_clean::stepGaussNewton(){
   s[0]=q0;      Sinv[0].setDiag(1e10);
   b[0]=q0;      Binv[0].setDiag(1e10);
   qhat[0]=q0;
-  if(sys->dynamic) sys->setqv(q0); else sys->setq(q0);
+  if(sys->dynamic) sys->setx(q0); else sys->setq(q0);
   sys->getQ(Q[0](), 0);
   if(!sys->dynamic) sys->getWinv(Winv[0](), 0);
   sys->getHinv(Hinv[0](), 0);
@@ -608,7 +608,7 @@ double AICO_clean::stepGaussNewton(){
         reuseOldCostTerms=false;
       }else{
         countSetq++;
-        if(sys->dynamic) sys->setqv(x); else sys->setq(x);
+        if(sys->dynamic) sys->setx(x); else sys->setq(x);
         sys->getTaskCostTerms(phi, J, x, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }
@@ -650,7 +650,7 @@ double AICO_clean::stepGaussNewton(){
     if(useFwdMessageAsQhat){
       qhat[t]()=s[t];
       countSetq++;
-      if(sys->dynamic) sys->setqv(qhat[t]); else sys->setq(qhat[t]);
+      if(sys->dynamic) sys->setx(qhat[t]); else sys->setq(qhat[t]);
       f.sys=sys;  f.aico=this;  f.t=t;  f.reuseOldCostTerms=false;  f.noBwdMsg=true;
       f.calcTermsAt(qhat[t]);
     }else{

@@ -3749,9 +3749,10 @@ void ors::Graph::reportProxies(std::ostream *os){
     <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
     <<") [" <<proxies(i)->age
     <<"] d=" <<proxies(i)->d
-    // <<" posA=" <<proxies(i)->posA
-    // <<" posB=" <<proxies(i)->posB
-    // <<" norm=" <<proxies(i)->posB-proxies(i)->posA
+    <<" d^2=" <<(proxies(i)->posB-proxies(i)->posA).lengthSqr()
+    <<" norm=" <<(proxies(i)->posB-proxies(i)->posA).length()
+    <<" posA=" <<proxies(i)->posA
+    <<" posB=" <<proxies(i)->posB
     <<endl;
   }
 }
