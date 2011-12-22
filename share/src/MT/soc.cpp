@@ -684,6 +684,7 @@ void soc::SocSystemAbstraction::displayState(const arr *q, const arr *Qinv, cons
   }else{
   }
 }
+void soc::SocSystemAbstraction::recordTrajectory(const arr& q,const char *variable,const char *file){};
 
 void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag){
   uint k, t, T=nTime();

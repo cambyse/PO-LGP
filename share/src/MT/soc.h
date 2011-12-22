@@ -132,6 +132,7 @@ struct SocSystemAbstraction {
   double totalCost(arr *grad, const arr& q, bool plot=false);
   
   virtual void displayState(const arr *q, const arr *Qinv=NULL, const char *text=NULL, bool reportVariables=false);
+  virtual void recordTrajectory(const arr& q,const char *variable,const char *file);
   virtual void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag);
   
   //-- convenience (prelim...)
