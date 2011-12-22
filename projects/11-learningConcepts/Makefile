@@ -4,8 +4,7 @@
 BASE = ../../share
 
 # OBJS = main.o \
-# 	$(BASE)/src/MT/array_instantiate.o \
-# 	$(BASE)/src/MT/array_t.o
+# 	symbolGrounding.o
 
 RELATIONAL = 1
 #ODE = 1

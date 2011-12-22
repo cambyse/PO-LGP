@@ -1599,7 +1599,7 @@ const char* SearchOperator::getName() {
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
 void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
-  if (DEBUG>0) cout<<"findRules [START]"<<endl;
+  if (DEBUG>0) cout<<"ExplainExperiences::findRules [START]"<<endl;
   uint i;
 //  PRINT(TL::Rule::globalRuleCounter)
   for (i=nextPotentialExperience; i<experiences.N; i++) {
@@ -1610,7 +1610,7 @@ void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const
     }
     if (covering_rules.N == 0) {
       // Create new rule by explaining current example (sets context and action)
-      if (DEBUG>0) cout << "findRules: let's explain experience #" << i << endl;
+      if (DEBUG>0) cout << "findRules: let's explain #" << i << endl;
       if (DEBUG>2) {experiences(i)->write(cout);}
       TL::Rule* newRule = explainExperience(experiences(i));
       // calc experience coverage
@@ -1631,12 +1631,13 @@ void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const
   }
 //  PRINT(rules2_add.num());
 //  PRINT(TL::Rule::globalRuleCounter)
-	if (DEBUG>0) cout<<"findRules [END]"<<endl;
+	if (DEBUG>0) cout<<"ExplainExperiences::findRules [END]"<<endl;
 }
 
 
 TL::Rule* ExplainExperiences::explainExperience(Experience* ex) {
-  return explainExperience_deictic(ex);
+//   return explainExperience_deictic(ex);
+  return explainExperience_deictic_ALL_DRs(ex);
 }
 
 
@@ -1938,14 +1939,14 @@ TL::Rule* ExplainExperiences::explainExperience_deictic(Experience* ex) {
         if (negFreeDRs.N == 0) {
           invSub = newInvSub;
           newRule->context = newContext;
-          if (DEBUG>1) {cout<<"Accepted"<<endl;}
+          if (DEBUG>1) {cout<<"Accepted ("<<ex->changedConstants(i)<<")"<<endl;}
         }
         else {
-          if (DEBUG>1) {cout << "Not accepted:  negFreeDRs=" << negFreeDRs << endl;}
+          if (DEBUG>1) {cout << "Not accepted ("<<ex->changedConstants(i)<<"):  negFreeDRs=" << negFreeDRs << endl;}
         }
       }
       else {
-        if (DEBUG>1) {cout << "Not accepted:  covers="<<covers<<"  subs.num()=" << (subs.num()==1) << endl;}
+        if (DEBUG>1) {cout << "Not accepted ("<<ex->changedConstants(i)<<"):  covers="<<covers<<"  subs.num()=" << (subs.num()) << "=/=1"<< endl;}
       }
     }
   }
@@ -1954,6 +1955,108 @@ TL::Rule* ExplainExperiences::explainExperience_deictic(Experience* ex) {
     newRule->write(cout);
   }
   if (DEBUG>0) cout << "explainExperience_deictic [END]" << endl;
+  
+  return newRule;
+}
+
+
+
+
+TL::Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(Experience* ex) {
+  uint DEBUG = 0;
+  if (DEBUG>0) cout << "explainExperience_deictic_ALL_DRs [START]" << endl;
+  if (DEBUG>1) ex->write(cout);
+  uint i, k;
+  TL::Rule* newRule = new TL::Rule;
+  
+  // ensure that all complex are derived
+  logicReasoning::derive(&ex->pre);
+  logicReasoning::derive(&ex->post);
+  
+  // Step 1.1: Create an action and context
+  // create action
+  TL::Substitution invSub;
+  logicReasoning::createInverseSubstitution(*(ex->action), invSub);
+  newRule->action = logicReasoning::applyOriginalSub(invSub, ex->action);
+  if (DEBUG>1) {cout<<"New action: ";newRule->action->write(cout);cout<<endl;}
+  // create context
+ 
+  // Step 1.2: Create deictic references and their literals
+  if (DEBUG > 2) {
+    cout << "ex->del: "; TL::write(ex->del); cout << endl;
+    cout << "ex->add: "; TL::write(ex->add); cout << endl;
+    PRINT(ex->changedConstants)
+  }
+//   
+  TL::Substitution newInvSub = invSub;
+  TL::Substitution sub_action;
+  invSub.getInverse(sub_action);
+  if (DEBUG>0) {
+    cout<<"invSub:  "; invSub.write();  cout<<endl;
+    cout<<"newInvSub: "; newInvSub.write();  cout<<endl;
+    cout<<"sub_action: "; sub_action.write();  cout<<endl;
+  }
+  
+  FOR1D(ex->changedConstants, i) {
+    if (newInvSub.hasSubs(ex->changedConstants(i))) continue;
+    newInvSub.addSubs2Variable(ex->changedConstants(i));
+//     cout<<"newInvSub: "; newInvSub.write();  cout<<endl;
+  }
+  
+  uintA context_vars;  context_vars.setAppend(ex->action->args);  context_vars.setAppend(ex->changedConstants);
+  TL::sort_asc(context_vars);
+  if (DEBUG>1) {PRINT(context_vars);}
+  LitL grounded_context_candidates;
+  logicObjectManager::getLiterals(grounded_context_candidates, context_vars);
+  LitL newContext;
+  LitL newContext_grounded;
+  FOR1D(grounded_context_candidates, k) {
+    if (DEBUG>3) {cout<<"grounded_context_candidates(k)="<<*grounded_context_candidates(k)<<" accepted? ";}
+    if (logicReasoning::holds(ex->pre, grounded_context_candidates(k))) {
+      newContext.append(logicReasoning::applyOriginalSub(newInvSub, grounded_context_candidates(k)));
+      newContext_grounded.append(grounded_context_candidates(k));
+      if (DEBUG>3) {cout<<" yes"<<endl;}
+    }
+    else {
+      if (DEBUG>3) {cout<<" no"<<endl;}
+    }
+  }
+  TL::logicReasoning::sort(newContext_grounded);
+  TL::logicReasoning::sort(newContext);
+      
+  if (DEBUG>0) {PRINT(newContext_grounded);  PRINT(newContext);}
+
+  // check whether new variables refers uniquely to s
+  TL::SubstitutionSet subs;
+  // check whether truly deictic ref (only one sub)
+  bool covers = logicReasoning::cover(ex->pre, newContext, subs, true, &sub_action);
+  if (covers && subs.num()==1) {
+    // check for neg free DRs
+    TL::Rule helper_rule;
+    helper_rule.action = newRule->action;
+    helper_rule.context = newContext;
+    uintA negFreeDRs;
+    TL::ruleReasoning::getNegFreeDeicticRefs(negFreeDRs, helper_rule);
+    if (negFreeDRs.N == 0) {
+      invSub = newInvSub;
+      newRule->context = newContext;
+      if (DEBUG>1) {cout<<"Rule accepted"<<endl;}
+    }
+    else {
+      if (DEBUG>1) {cout << "Rule not accepted:  negFreeDRs=" << negFreeDRs << endl;}
+    }
+  }
+  else {
+    if (DEBUG>1) {
+      cout << "Rule not accepted:  covers="<<covers<<"  subs.num()=" << (subs.num()) << "=/=1"<< endl;
+      FOR1D_(subs, i) {
+        cout<<"["<<i<<"] ";  subs.elem(i)->write();  cout<<endl;
+      }
+    }
+  }
+    
+  if (DEBUG>0) {newRule->write(cout);}
+  if (DEBUG>0) cout << "explainExperience_deictic_ALL_DRs [END]" << endl;
   
   return newRule;
 }
@@ -2328,15 +2431,56 @@ void SplitOnLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const Ex
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"SplitOnLiterals::findRules [START]"<<endl;
   rulesC_2add.clear();
-  uint r;
+  uint r, k;
   TL::Rule* newRule_pos = NULL;
   TL::Rule* newRule_neg = NULL;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     if (absentLiterals.N == 0) { // first round
       TL::ruleReasoning::calcAbsentLiterals(*rulesC_old.rules.elem(r), absentLiterals, true);
+      
+#if 0
+      // TODO - use refs [START]
+      uintA terms;
+      TL::ruleReasoning::calcTerms(*rulesC_old.rules.elem(r), terms);
+      uint newVar = 0;
+      FOR1D(terms, k)
+        if (terms(k) == newVar)
+          newVar++;
+      uintA arguments;
+      arguments.append(terms);
+      arguments.append(newVar);
+      uintA wrapper;
+      wrapper.append(newVar);
+      LitL lits_dr;
+      logicObjectManager::getLiterals(lits_dr, arguments, wrapper, true);
+      // hack -- don't use complex reward-concepts [START]
+      lits_dr.memMove = true;
+      FOR1D_DOWN(lits_dr, k) {
+        if ( lits_dr(k)->atom->pred->id > 43
+          || lits_dr(k)->atom->pred->id == 18  // homies
+          )
+          lits_dr.remove(k);
+      }
+      FOR1D_DOWN(lits_dr, k) {
+        if (lits_dr(k)->atom->pred->type == TL::Predicate::predicate_comparison) {
+          ComparisonLiteral* clit = (ComparisonLiteral*) lits_dr(k);
+          if (((ComparisonAtom*)clit->atom)->fa1->f->category == category_derived)
+            lits_dr.remove(k);
+        }
+      }
+      // hack -- don't use complex reward-concepts [END]
+      if (DEBUG>2) {
+        cout << "Calculated restriction literals for rule:"<<endl;
+        rulesC_old.rules.elem(r)->write(cout);
+        cout<<"Restriction literals: ";TL::write(lits_dr);cout<<endl;
+      }
+      
+      absentLiterals.append(lits_dr);
+      // TODO - use refs [END]
+#endif
+      
       // hack -- don't use complex reward-concepts [START]
       absentLiterals.memMove = true;
-      uint k;
       TL::Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
       if (p_HOMIES != NULL) {
         FOR1D_DOWN(absentLiterals, k) {
@@ -2609,7 +2753,7 @@ void AddReferences::findRules(const TL::RuleSetContainer& rulesC_old, const Expe
       }
       // hack -- don't use complex reward-concepts [END]
       if (DEBUG>2) {
-        cout << "Calculated restriction literals for rule:"<<endl;
+        cout << "Calculated restriction literals for rule "<<rulesC_old.experiences_per_rule(r)<<":"<<endl;
         rulesC_old.rules.elem(r)->write(cout);
         cout<<"Restriction literals: ";TL::write(restrictionLiterals);cout<<endl;
       }
@@ -2627,7 +2771,7 @@ void AddReferences::findRules(const TL::RuleSetContainer& rulesC_old, const Expe
       uintA covered_experiences_ids;
       calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       if (covered_experiences.N > 0) {
-        if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
+        if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences "<<covered_experiences_ids<<" and will be kept."<<endl;
         if (DEBUG>3) {
           cout<<"Covered experiences:"<<endl;
           uint k;

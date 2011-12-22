@@ -775,7 +775,7 @@ void TL::State::write(ostream& os, bool primOnly) const {
 		lits_prim(i)->write(os);
 		os << " ";
 	}
-  if (lits_prim.N>0 && breaks) os << endl;
+  if (/*lits_prim.N>0 && */breaks) os << endl;
   FOR1D(fv_prim, i) {
     fv_prim(i)->write(os);
     os << " ";
@@ -1514,8 +1514,16 @@ TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::Sta
   this->pre = pre;
   this->action = action;
   this->post = post;
-  
+  calcChanges();
+}
 
+
+TL::Experience::Experience() {}
+
+TL::Experience::~Experience() {
+}
+
+void TL::Experience::calcChanges() {
   // only look at p_prim
   changedConstants.clear();
   del.clear();
@@ -1538,21 +1546,35 @@ TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::Sta
 }
 
 
-TL::Experience::~Experience() {
-}
-
 void TL::Experience::write(ostream& os) const {
-  os << "PRE-STATE: ";
-  this->pre.write(os);
+  os << "PRE:    ";
+  this->pre.write(os, false);
+  
+//   uint i, k;
+//   uintA constants;
+//   FOR1D(pre.lits_prim, i) {
+//     FOR1D(pre.lits_prim(i)->atom->args, k) {
+//       constants.setAppend(pre.lits_prim(i)->atom->args(k));
+//     }
+//   }
+//   FOR1D(constants, i) {
+//     LitL lits;
+//     FOR1D(pre.lits_prim, k) {
+//       if (pre.lits_prim(k)->atom->args.findValue(constants(i)) >= 0)
+//         lits.append(pre.lits_prim(k));
+//     }
+//     cout<<constants(i)<<":  "<<lits<<endl;
+//   }
+  
 //   os << endl;
   os << "ACTION: ";
   this->action->write(os);
   os << endl;
-//   os << "POST: ";
-//   this->post.writeNice(os);
-//   os << endl;
-  os << "ADD: ";  TL::write(add, os);  os<<endl;
-  os << "DEL: ";  TL::write(del, os);  os<<endl;
+  os << "POST:   ";
+  this->post.write(os, false);
+//   os << "Diff: "<<(add.N + del.N)<<" (+"<<add.N<<", -"<<del.N<<")"<<endl;
+//   os << "ADD: ";  TL::write(add, os);  os<<endl;
+//   os << "DEL: ";  TL::write(del, os);  os<<endl;
 }
 
 bool TL::Experience::noChange() {

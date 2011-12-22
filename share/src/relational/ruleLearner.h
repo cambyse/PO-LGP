@@ -240,6 +240,7 @@ class ExplainExperiences : public SearchOperator {
     TL::Rule* explainExperience(TL::Experience* ex);
     TL::Rule* explainExperience_straightforward(Experience* ex);
     TL::Rule* explainExperience_deictic(Experience* ex);
+    TL::Rule* explainExperience_deictic_ALL_DRs(Experience* ex);
     
     // resets field "nextPotentialExperience
     void reset();

@@ -1,2 +1,9 @@
 file_ors situation.ors
+file_data E5T1.txt
+file_prefix_parameters parameters_RBF/E5T1-
+file_rules rules.dat
+
+// NN = 0
+// RBF = 1
+grounding_type 1
 

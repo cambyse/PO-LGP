@@ -1,6 +1,161 @@
 #define MT_IMPLEMENT_TEMPLATES
-#include <stdlib.h>
 #include <relational/robotManipulationDomain.h>
+#include <relational/logicReasoning.h>
+#include <relational/ruleLearner.h>
+#include <relational/symbolGrounding.h>
+#include <relational/robotManipulationDomain.h>
+#include <relational/prada.h>
+
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
+
+void learn_rules(TL::RuleSet& rules, ExperienceL& symbolic_experiences) {
+  double alpha_PEN = 0.01;
+  double p_min = 10e-8;
+  double p_min_noisyDefaultRule = p_min;
+  TL::RuleLearner learner(alpha_PEN, p_min, p_min_noisyDefaultRule);
+  TL::RuleSetContainer rulesC;
+  learner.learn_rules(rulesC, symbolic_experiences);
+  cout<<"Learned rule-set:"<<endl;  rulesC.writeNice();
+  rules = rulesC.rules;
+}
+
+
+void produce_rules(const char* file_rules, const char* file_data, const char* file_parameters, relational::SymbolGrounding::GroundingType grounding_type) {
+  uint i;
+  // (1) Read data
+  MT::Array< relational::FullExperience* > experiences;
+  relational::FullExperience::read_nikolayFormat(experiences, file_data);
+  cout<<experiences.N<<" experiences have been read."<<endl;
+
+  // (2) Read parameters
+  MT::Array<relational::SymbolGrounding*> sgs;
+  relational::read(sgs, file_parameters, grounding_type);
+  cout<<sgs.N<<" SymbolGroundings have been read."<<endl;
+  
+  // (3) Calculate symbols
+  FOR1D(experiences, i) {
+    relational::calculateLiterals(sgs, *experiences(i));
+  }
+  cout<<"Symbols have been calculated in experiences."<<endl;
+  
+  cout<<"Experiences ["<<experiences.N<<"]:"<<endl;
+//   relational::FullExperience::write_symbolic(experiences, cout);
+  
+  // (4) learn rules
+  ExperienceL symbolic_experiences;
+  FOR1D(experiences, i) {
+//     if (i>30) break;
+    symbolic_experiences.append(&experiences(i)->experience_symbolic);
+  }
+  TL::RuleSet rules;
+  learn_rules(rules, symbolic_experiences);
+  write(rules, file_rules);
+  cout<<rules.num()<<" rules have been learned."<<endl;
+  
+  
+  FOR1D(experiences, i) {delete experiences(i);}
+  FOR1D(sgs, i) {delete sgs(i);}
+}
+
+
+
+
+void produce_rules() {
+  uint grounding_type__uint;
+  MT::getParameter(grounding_type__uint, "grounding_type");
+  relational::SymbolGrounding::GroundingType grounding_type;
+  if (grounding_type__uint == 0)
+    grounding_type = relational::SymbolGrounding::NN;
+  else
+    grounding_type = relational::SymbolGrounding::RBF;
+  PRINT_(grounding_type);
+  
+  MT::String dir;
+  if (grounding_type == relational::SymbolGrounding::NN)
+    dir = "parameters_NN/";
+  else if (grounding_type == relational::SymbolGrounding::RBF)
+    dir = "parameters_RBF/";
+  
+  
+  // Set the objects
+  uintA objects;
+  uint i;
+  uint OBJ_NUMBER = 5;  // set by hand
+  for (i=0; i<OBJ_NUMBER; i++) {objects.append(relational::buildConstant_nikolayData(i));}
+  TL::logicObjectManager::setConstants(objects);
+  
+  TL::Predicate* p_GRAB = TL::RobotManipulationDomain::getPredicate_action_grab();
+  TL::Predicate* p_PUTON = TL::RobotManipulationDomain::getPredicate_action_puton();
+  PredL p_action;  p_action.append(p_GRAB);  p_action.append(p_PUTON);
+  TL::logicObjectManager::addActionPredicates(p_action);
+  
+  
+#if 0
+  MT::String file_rules;
+  MT::getParameter(file_rules, "file_rules");
+  PRINT_(file_rules);
+  
+  MT::String file_data;
+  MT::getParameter(file_data, "file_data");
+  PRINT_(file_data);
+  
+  MT::String file_prefix_parameters;
+  MT::getParameter(file_prefix_parameters, "file_prefix_parameters");
+  PRINT_(file_prefix_parameters);
+  
+  MT::String path_data;  path_data<<dir<<file_data;
+  MT::String path_prefix_parameters;  path_prefix_parameters<<file_prefix_parameters;
+   
+  produce_rules(file_rules, path_data, path_prefix_parameters, grounding_type);
+  HALT("raus");
+#endif
+
+  uint e, t;
+  for (e=1; e<=5; e++) {
+    for (t=1; t<=10; t++) {
+      cout<<endl<<endl<<"==================================="<<endl;
+      cout << "E" << e << "T" << t << endl<<endl;
+      
+      MT::String file_prefix_parameters;
+      file_prefix_parameters << dir << "E" << e << "T" << t << "-";
+      
+      MT::String file_data;
+      file_data << dir << "E" << e << "T" << t << ".txt";
+      
+      MT::String file_rules;
+      file_rules << "rules/rules_E" << e << "T" << t << ".dat";
+      
+      produce_rules(file_rules, file_data, file_prefix_parameters, grounding_type);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
+
 
 RobotManipulationSimulator sim;
 
@@ -20,444 +175,33 @@ void initSimulator(const char* configurationFile, bool takeMovie) {
 }
 
 
-
-
-
-// state: 20
-// 5 Objekte, 5. Objekt ist die Roboterhand
-// (1-3): x,y,z-Koords
-// (4): Groesse
-
-// successor state: 20
-// genauso
-
-// action: 2
-// (1): Aktionstyp grasp 1, puton 2
-// (2): 
-
-// reward: 1
-
-struct Experience_State {
-  MT::Array< arr > continous_data;
-//   TL::State symbolic_data;
-  MT::Array< MT::String > symbolic_data;
-};
-
-struct Experience {
-  Experience_State state_pre;
-  Experience_State state_post;
-  uint action_type;
-  uint action_target;
-  double reward;
-};
-
-
-  
-//   MT::String line;
-//   line.read(in, NULL, "\n");
-  
-
-
-void read_data(MT::Array< Experience* >& experiences, const char* file_name) {
-  uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"read_data [START]"<<endl;}
-  ifstream in(file_name);
-  CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
-  MT::String line;
-  uint OBJ_NUM = 5;
-  uint o;
-  Experience* exp = new Experience;
-  while (MT::skip(in) != -1) {
-    in >> line;
-    if (DEBUG>0) PRINT(line);
-    for (o=0; o<OBJ_NUM; o++) {
-      arr data(4);
-      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
-      if (DEBUG>0) PRINT(data);
-      exp->state_pre.continous_data.append(data);
-    }
-    for (o=0; o<OBJ_NUM; o++) {
-      arr data(4);
-      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
-      if (DEBUG>0) PRINT(data);
-      exp->state_post.continous_data.append(data);
-    }
-    line >> exp->action_type;
-    line >> exp->action_target;
-    line >> exp->reward;
-    experiences.append(exp);
-  }
-  if (DEBUG>0) {cout<<"read_data [END]"<<endl;}
-}
-
-
-
-
-struct PredicateNetwork {
-  MT::String name;
-  TL::Predicate* p;
-  uint arity;
-  arr w1a;
-  arr w1b;
-  arr w2a;
-  arr w2b;
-  
-  void write() {PRINT(name);  PRINT(arity);  PRINT(w1a);  PRINT(w1b);  PRINT(w2a);  PRINT(w2b);}
-};
-
-
-bool holds(PredicateNetwork& pn, arr& x) {
-  uint DEBUG = 1;
-  if (DEBUG>0) {PRINT(x);  pn.write();}
-  // apply network
-  arr z_argument = ~pn.w1a * x + pn.w1b;
-  arr z;
-  uint k;
-  FOR1D(z_argument, k) {
-    z.append((1. / ( 1. + exp( z_argument(k) ) )));
-  }
-  if (DEBUG>0) {PRINT(z);}
-  arr g_argument = ~pn.w2a * z + pn.w2b;
-  if (DEBUG>0) {PRINT(g_argument);}
-  double g = (1. / ( 1. + exp( g_argument(0)) ));
-  double p = g - 0.5;
-  if (DEBUG>0) {PRINT(g);  PRINT(p);}
-  return p>0.;
-}
-
-
-void calculateSymbols(MT::Array<PredicateNetwork*>& pns, Experience_State& s) {
-  uint DEBUG = 0;
-  uint i, k;
-  FOR1D(pns, i) {
-    uintA objs;
-    for (k=0; k<s.continous_data.N; k++) {objs.append(k);}
-    MT::Array< uintA > lists;
-    TL::allPossibleLists(lists, objs, pns(i)->arity, true, true);
-    FOR1D(lists, k) {
-      arr x;
-      if (pns(i)->arity == 1) {
-        x.append(s.continous_data(lists(k)(0)));
-      }
-      else if (pns(i)->arity == 2) {
-        arr x_obj_1 = s.continous_data(lists(k)(0));
-        arr x_obj_2 = s.continous_data(lists(k)(1));
-        arr diff = x_obj_1 - x_obj_2;
-        x.append(diff);  // TODO absolute value??
-      }
-      else NIY;
-      bool is_true = holds(*pns(i), x);
-      MT::String atom_name;  atom_name<<pns(i)->name<<lists(k);
-      if (is_true) {s.symbolic_data.append(atom_name);}
-    }
-  }
-}
-
-
-void read_PredicateNetworks(MT::Array<PredicateNetwork*>& pns, const char* prefix) {
-  
-  MT::Array< MT::String > pn_names;
-  pn_names.append(MT::String("u1"));//  pn_names.append(MT::String("u2"));
-  pn_names.append(MT::String("b1"));//  pn_names.append(MT::String("b2"));
-  
-  uint i;
-  FOR1D(pn_names, i) {
-    PredicateNetwork* pn = new PredicateNetwork;
-    pn->arity = 1;
-    pn->name = pn_names(i);
-    
-    ifstream in;
-    MT::String file_name;
-  
-    file_name<<prefix<<pn_names(i)<<"w1a.txt";
-    PRINT(file_name);
-    in.open(file_name);
-    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
-    pn->w1a.read(in);
-    in.close();
-  
-    file_name.clr();
-    file_name<<prefix<<pn_names(i)<<"w1b.txt";
-    PRINT(file_name);
-    in.open(file_name);
-    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
-    pn->w1b.read(in);
-  
-    file_name.clr();
-    file_name<<prefix<<pn_names(i)<<"w2a.txt";
-    PRINT(file_name);
-    in.open(file_name);
-    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
-    pn->w2a.read(in);
-    PRINT(pn->w2a);
-  
-    file_name.clr();
-    file_name<<prefix<<pn_names(i)<<"w2b.txt";
-    PRINT(file_name);
-    in.open(file_name);
-    CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
-    pn->w2b.read(in);
-    
-    pns.append(pn);
-  }
-  
-}
-
-
-
-
-
-
-#if 1
-void test(int argn,char** argv) {
-  uint DEBUG = 2;
-  
-  uint t, i, k, l;
-  uint randSeed = 12345;
-  rnd.seed(randSeed);
-
-  // Set up logic
-  TL::logicObjectManager::setPredicatesAndFunctions("language.dat");
-  TL::logicObjectManager::writeLanguage("used_language.dat");
-  
-  
-  // ==================================================================
-  // Read in Nikolay's network [START]
-  MT::Array< PredicateNetwork* > pns;
-  // Read in Nikolay's network [END]
-  // ==================================================================
-  
-
-  // Set up simulator
-  MT::String sim_file("data_grounding_project/situationNik.ors");
-  initSimulator(sim_file, false);
-  sim.simulate(50);
-  
-  
-  // Add predicates for predicate networks
-  PredL new_predicates;
-  FOR1D(pns, i) {
-    TL::Predicate* p = new TL::Predicate;
-    p->id = TL::logicObjectManager::getLowestFreeConceptID() + i;
-    p->name = pns(i)->name;
-    p->d = pns(i)->arity;
-    new_predicates.append(p);
-    pns(i)->p = p;
-    if (DEBUG>1) {cout<<*p<<endl;}
-  }
-  TL::logicObjectManager::addStatePredicates(new_predicates);
-  
-  
-  // Get objects and set in logic database
-  uintA objs;
-  sim.getObjects(objs);
-  objs.append(sim.getHandID());
-  TL::logicObjectManager::setConstants(objs);
-  
-  cout<<"Table-ID="<<sim.getTableID()<<endl;
-  cout<<"Hand-ID="<<sim.getHandID()<<endl;
-
-  
-  AtomL new_atoms;
-  FOR1D(new_predicates, i) {
-    AtomL new_atoms_p;
-    TL::logicObjectManager::getAtoms(new_atoms_p, new_predicates(i), objs);
-    new_atoms.append(new_atoms_p);
-  }
-  cout<<"NEW ATOMS:  "<<new_atoms<<endl;
-  
-  
-  
-  
-  // Action predicates
-  TL::Predicate* p_grab = TL::logicObjectManager::getPredicate(MT::String("grab"));
-  TL::Predicate* p_puton = TL::logicObjectManager::getPredicate(MT::String("puton"));
-  
-  // Perform
-  for (t=0; t<10; t++) {
-    cout<<"TIME-STEP t="<<t<<endl;
-    // OBSERVE STATE
-    TL::State* s = TL::RobotManipulationDomain::observeLogic(&sim);
-    cout<<endl<<"OBSERVED STATE:"<<endl<<*s<<endl;
-    
-    // ========================================================
-    // Calculate Nikolay's predicates [START]
-    
-    MT::Array< arr > x_objs;
-    FOR1D(objs, i) {
-      double* position_array = sim.getPosition(objs(i));
-      arr position(3);
-      position(0) = position_array[0];   position(1) = position_array[1];   position(2) = position_array[2];
-      double shape = sim.getSize(objs(i))[0];
-      arr x;  x.append(position);  x.append(shape); 
-      x_objs.append(x);
-      if (DEBUG>1) {cout<<objs(i)<<":  "<<x<<endl;}
-    }
-    
-    
-    LitL true_new_literals;
-    FOR1D(pns, l) {
-      MT::Array< uintA > lists;
-      uintA objs_indices;  FOR1D(objs, k) {objs_indices.append(k);}
-      TL::allPossibleLists(lists, objs_indices, pns(l)->arity, true, true);
-//       PRINT(lists);
-      arr g_values;
-      
-      // Evaluate Nikolay's net
-      FOR1D(lists, i) {
-//         PRINT(lists(i));
-        arr x;
-        if (pns(l)->arity == 1) {
-          arr x_obj_1 = x_objs(lists(i)(0));
-          x.append(x_obj_1);
-        }
-        else if (pns(l)->arity == 2) {
-          arr x_obj_1 = x_objs(lists(i)(0));
-          arr x_obj_2 = x_objs(lists(i)(1));
-          arr diff = x_obj_1 - x_obj_2;
-          x.append(diff);  // TODO absolute value??
-        }
-        else
-          NIY;
-        
-        PRINT(x);
-        
-//         FOR1D(lists(i), k) {
-//           x.append(x_objs(lists(i)(k)));
-//         }
-        
-        // apply network
-        arr z_argument = ~pns(l)->w1a * x + pns(l)->w1b;
-        arr z;
-        FOR1D(z_argument, k) {
-          z.append((1. / ( 1. + exp( z_argument(k) ) )));
-        }
-        if (DEBUG>2) {PRINT(z);}
-        
-        arr g_argument = ~pns(l)->w2a * z + pns(l)->w2b;
-        if (DEBUG>2) {PRINT(g_argument);}
-        
-        double g = (1. / ( 1. + exp( g_argument(0)) ));
-        double p = g - 0.5;
-        
-        g_values.append(g);
-        
-        if (p>0.) {
-          uintA args;  FOR1D(lists(i), k) {args.append(objs(lists(i)(k)));}
-          true_new_literals.append(TL::logicObjectManager::getLiteral(pns(l)->p, true, args));
-        }
-        
-        if (DEBUG>2) {PRINT(g);  PRINT(p);}
-//         exit(0);
-      }
-      
-      FOR1D(lists, i) {
-        uintA args;  FOR1D(lists(i), k) {args.append(objs(lists(i)(k)));}
-        TL::Atom* atom = TL::logicObjectManager::getAtom(pns(l)->p, args);
-        cout<<*atom<<"="<<(g_values(i) - 0.5 > 0)<<"  (g="<<g_values(i)<<") "<<endl;
-      }
-      
-      
-      
 #if 0
-      cout<<"SPECIAL OBJECT HAND"<<endl;
-      uint hand_id = sim.getHandId();
-      double* hand_position_array = sim.getPosition(hand_id);
-      arr hand_x;
-      hand_x.append(hand_position_array[0]);  hand_x.append(hand_position_array[1]);  hand_x.append(hand_position_array[2]);
-      hand_x.append(sim.getSize(hand_id)[0]);
-      cout<<"Hand data vector:  "<<hand_x<<endl;
-      FOR1D(pns, l) {
-        if (pns(l).arity == 1) {
-          // apply network
-          arr z_argument = ~pns(l).w1a * hand_x + pns(l).w1b;
-          arr z;
-          FOR1D(z_argument, k) {
-            z.append((1. / ( 1. + exp( z_argument(k) ) )));
-          }
-          if (DEBUG>2) {PRINT(z);}
-          
-          arr g_argument = ~pns(l).w2a * z + pns(l).w2b;
-          if (DEBUG>2) {PRINT(g_argument);}
-          
-          double g = (1. / ( 1. + exp( g_argument(0)) ));
-          double p = g - 0.5;
-          
-          g_values.append(g);
-          
-          if (p>0.) {
-            cout<<"HAND:   "<<pns(l).name<<"(hand)=1"<<endl;
-          }
-        
-          if (DEBUG>2) {PRINT(g);  PRINT(p);}
-        }
-      }
-#endif
-    }
-    
-    cout<<endl<<"TRUE new literals ("<<true_new_literals.N<<"):  "<<true_new_literals<<endl;
-    
-    cout<<endl<<"FALSE new literals:  ";
-    FOR1D(new_atoms, i) {
-      TL::Literal* lit = TL::logicObjectManager::getLiteral(new_atoms(i));
-      if (true_new_literals.findValue(lit) < 0) cout<<*new_atoms(i)<<" ";
-      if (i<new_atoms.N-1  &&  new_atoms(i+1)->pred != new_atoms(i)->pred) cout<<endl;
-    }
-    cout<<endl;
-    
-    
-    // Calculate Nikolay's predicates [END]
-    // ========================================================
-   
-   
-   cout<<"Please press button to continue."<<endl;
-    sim.watch();
-   
-    // ACTION
-    uintA args;
-    args.append(objs(rnd.num(objs.N)));
-    TL::Atom* action;
-    if (t % 2 == 0) {
-      action = TL::logicObjectManager::getAtom(p_grab, args);
-    }
-    else {
-      action = TL::logicObjectManager::getAtom(p_puton, args);
-    }
-    cout<<endl<<"ACTION #"<<t<<" "<<*action<<endl;
-    TL::RobotManipulationDomain::performAction(action, &sim, 50);
-    cout<<"----------------------"<<endl;
-  }
- 
-  cout<<"Please press button to continue."<<endl;
-  sim.watch();
-  
-  sim.shutdownAll();
-}
-#endif
-
-
-
-
-
-
-
-
-
-
-
-void experiment() {
-  // Set up simulator
-  MT::String sim_file("situation.ors");
-  
+void experiment_simulator() {
   MT::String file_ors;
   MT::getParameter(file_ors, "file_ors");
   
+  MT::String file_prefix_parameters;
+  MT::getParameter(file_prefix_parameters, "file_prefix_parameters");
+  
+  uint grounding_type__uint;
+  MT::getParameter(grounding_type__uint, "grounding_type");
+  relational::SymbolGrounding::GroundingType grounding_type;
+  if (grounding_type__uint == 0)
+    grounding_type = relational::SymbolGrounding::NN;
+  else
+    grounding_type = relational::SymbolGrounding::RBF;
+  PRINT_(grounding_type);
+  
+  
+  uint i, k, t;
+  
+  // Set up simulator
   initSimulator(file_ors, false);
   sim.simulate(50);
 //   sim.watch();
   
   // Set up logic
-  TL::logicObjectManager::setPredicatesAndFunctions("language.dat");
+  TL::logicObjectManager::init("language.dat");
   TL::logicObjectManager::writeLanguage("used_language.dat");
   
   // Get objects and set in logic database
@@ -465,28 +209,21 @@ void experiment() {
   sim.getObjects(objs);
   objs.append(sim.getHandID());
   TL::logicObjectManager::setConstants(objs);
+  uintA movable_objs, balls, blocks;
+  sim.getBalls(balls);
+  sim.getBlocks(blocks);
+  movable_objs.append(balls);  movable_objs.append(blocks);
   
   cout<<"Table-ID="<<sim.getTableID()<<endl;
   cout<<"Hand-ID="<<sim.getHandID()<<endl;
   
+  // ------------------------------
+  // SYMBOL GROUNDINGS
+  // (i) Read parameters
+  MT::Array<relational::SymbolGrounding*> sgs;
+  relational::read(sgs, file_prefix_parameters, grounding_type);
+  cout<<sgs.N<<" SymbolGroundings have been read."<<endl;
   
-#if 0
-  // Add predicates for predicate networks
-  PredL new_predicates;
-  FOR1D(pns, i) {
-    TL::Predicate* p = new TL::Predicate;
-    p->id = TL::logicObjectManager::getLowestFreeConceptID() + i;
-    p->name = pns(i).name;
-    p->d = pns(i).arity;
-    new_predicates.append(p);
-    pns(i).p = p;
-    if (DEBUG>1) {cout<<*p<<endl;}
-  }
-  TL::logicObjectManager::addStatePredicates(new_predicates);
-#endif
-  
-
-
   
 //   AtomL new_atoms;
 //   uint i;
@@ -510,38 +247,140 @@ void experiment() {
   TL::Predicate* p_puton =
     TL::logicObjectManager::getPredicate(MT::String("puton"));
 
-  uint t=0;
-  
   for (t=0; t<10; t++) {
+    cout<<"TIME-STEP t="<<t<<endl;
+    // OBSERVE STATE
+    TL::State* s = TL::RobotManipulationDomain::observeLogic(&sim);
+    cout<<endl<<"OBSERVED STATE:"<<endl<<*s<<endl;
+    
+    // GROUNDED SYMBOLS
+    LitL grounded_lits;
+    relational::calculateLiterals(grounded_lits, sgs, sim.C);
+    s->lits_prim.append(grounded_lits);
+    
+    TL::logicReasoning::derive(s);
+    
     TL::Atom* action = actions(rnd.num(actions.N));
     cout<<"ACTION:  "<<*action<<endl;
     TL::RobotManipulationDomain::performAction(action, &sim, 100);
   }
 
+}
+#endif
+
+
+void evaluate_rules_in_simulator(const char* file_rules, const char* file_ors, const SGL& sgl) {
+  uint i, k, t;
+  
+  TL::Reward* reward = TL::RobotManipulationDomain::RewardLibrary::stack();
+
+  TL::PRADA planner;
+  planner.setReward(reward);
+  planner.setHorizon(10);
+  planner.setNumberOfSamples(1000);
+  planner.setThresholdReward(0.1);
+  planner.setNoiseSoftener(0.1);
+  
+  // Set up simulator
+  initSimulator(file_ors, false);
+  sim.simulate(50);
+//   sim.watch();
+  
+  // Set up logic
+//   logicObjectManager::shutdown();
+  // Get objects and set in logic database
+  uintA objs;
+  sim.getObjects(objs);
+  objs.append(sim.getHandID());
+  TL::logicObjectManager::setConstants(objs);
+  uintA movable_objs, balls, blocks;
+  sim.getBalls(balls);
+  sim.getBlocks(blocks);
+  movable_objs.append(balls);  movable_objs.append(blocks);
+  
+  
+  for (t=0; t<10; t++) {
+    cout<<"TIME-STEP t="<<t<<endl;
+    // OBSERVE STATE
+    TL::State* state = TL::RobotManipulationDomain::observeLogic(&sim);
+    cout<<endl<<"OBSERVED STATE:"<<endl<<*state<<endl;
+    
+    // GROUNDED SYMBOLS
+    LitL grounded_lits;
+    relational::calculateLiterals(grounded_lits, sgl, sim.C);
+    state->lits_prim.append(grounded_lits);
+    
+    TL::logicReasoning::derive(state);
+    
+    TL::Atom* action = planner.generateAction(*state);
+    cout<<"ACTION:  "<<*action<<endl;
+    TL::RobotManipulationDomain::performAction(action, &sim, 100);
+  }
   
 }
 
 
-int main(int argc, char** argv){
-  MT::Array< Experience* > experiences;
-  read_data(experiences, "data/E1T1-.txt");
 
-  MT::Array<PredicateNetwork*> pns;
-  read_PredicateNetworks(pns, "parameters/E1T1-");
-  cout<<"PredicateNetworks have been read."<<endl;
+void symbol_evaluation() {
+  uint grounding_type__uint;
+  MT::getParameter(grounding_type__uint, "grounding_type");
+  relational::SymbolGrounding::GroundingType grounding_type;
+  if (grounding_type__uint == 0)
+    grounding_type = relational::SymbolGrounding::NN;
+  else
+    grounding_type = relational::SymbolGrounding::RBF;
+  PRINT_(grounding_type);
   
-  uint i;
-  FOR1D(experiences, i) {
-    calculateSymbols(pns, experiences(i)->state_pre);
+  MT::String dir;
+  if (grounding_type == relational::SymbolGrounding::NN)
+    dir = "parameters_NN/";
+  else if (grounding_type == relational::SymbolGrounding::RBF)
+    dir = "parameters_RBF/";
+  
+  
+  MT::String file_ors("situation.ors");
+  
+  // Set up logic
+  TL::logicObjectManager::init("language.dat");
+//   TL::logicObjectManager::writeLanguage("used_language.dat");
+  TL::Predicate* p_GRAB = TL::RobotManipulationDomain::getPredicate_action_grab();
+  TL::Predicate* p_PUTON = TL::RobotManipulationDomain::getPredicate_action_puton();
+  PredL p_action;  p_action.append(p_GRAB);  p_action.append(p_PUTON);
+  TL::logicObjectManager::addActionPredicates(p_action);
+
+  uint e, t;
+  for (e=1; e<=5; e++) {
+    for (t=1; t<=10; t++) {
+      cout<<endl<<endl<<"==================================="<<endl;
+      cout << "E" << e << "T" << t << endl<<endl;
+      
+      // Symbol grounding
+      MT::String file_prefix_parameters;
+      file_prefix_parameters << dir << "E" << e << "T" << t << "-";
+      SGL sgl;
+      relational::read(sgl, file_prefix_parameters, grounding_type);
+      cout<<sgl.N<<" SymbolGroundings have been read."<<endl;
+      
+      // Rule file
+      MT::String file_rules;
+      file_rules << "rules/" << "E" << e << "T" << t << "-";
+      
+      evaluate_rules_in_simulator(file_rules, file_ors, sgl);
+      HALT("raus");
+    }
   }
+}
+
   
-  exit(0);
-  
+
+int main(int argc, char** argv){
   MT::String config_file("config");
   cout << "Config-file: " << config_file << endl;
   MT::openConfigFile(config_file);
   
-//   test(argc, argv);
-  experiment();
+//   produce_rules();
+  
+  symbol_evaluation();
+  
   return 0;
 }
