@@ -6,7 +6,7 @@
 #include <MT/util.h>
 #include <MT/aico.h>
 
-const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
+const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hrate 1e-0";
 
 int main(int argn,char **argv){
   MT::initCmdLine(argn,argv);
@@ -14,7 +14,7 @@ int main(int argn,char **argv){
 
   OpenGL gl;
   
-  uint T=200;
+  uint T=MT::getParameter<uint>("time_steps",200);
   soc::SocSystem_Ors sys;
   sys.initBasics(NULL, NULL, &gl, T, 3., MT::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
@@ -26,7 +26,7 @@ int main(int argn,char **argv){
   pos->targetType=positionGainsTT;
   pos->y_target = arr(sys.ors->getBodyByName("target")->X.pos.p,3);
   
-  TaskVariable *col = new DefaultTaskVariable("collision", *sys.ors, collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new DefaultTaskVariable("collision", *sys.ors, collTVT,0,0,0,0,ARR(.15));
   col->setGains(.5,.0);
   col->targetType=positionGainsTT;
   col->y_prec=1e-0;
@@ -35,37 +35,66 @@ int main(int argn,char **argv){
   sys.setTaskVariables(ARRAY(pos,col));
   
   //-- feedback control (kinematic or dynamic) to reach the targets
-  arr q,dq,qv;
+  arr q,dq,x;
   sys.getq0(q);
-  sys.getqv0(qv);
+  sys.getx0(x);
   for(uint t=0;t<10;t++){
     if(!sys.dynamic){
       soc::bayesianIKControl2(sys,q,q,0);
       sys.setq(q);
     }else{
-      soc::bayesianDynamicControl(sys,qv,qv,0);
-      sys.setqv(qv);
+      soc::bayesianDynamicControl(sys,x,x,0);
+      sys.setx(x);
     }
     //soc.reportOnState(cout); //->would generate detailed ouput on the state of all variables...
-    sys.gl->update(STRING("bayesian Inverse Kinematics: iteration "<<t));
+    sys.gl->update(STRING("Inverse Kinematics: iteration "<<t));
     //gl.watch();
   }
-  sys.gl->watch("<press ENTER>");
+  //sys.gl->watch("IK solution <press ENTER>");
   
   //-- planning (AICO) to generate an optimal (kinematic) trajectory
   sys.getq0(q);
   sys.setq(q);
-  pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e3);
+  pos->setInterpolatedTargetsEndPrecisions(T, 1e-2, 1e3, 0., 1e-3);
   col->setInterpolatedTargetsConstPrecisions(T, 1e-2, 0.);
   
   q.clear();
+
 #if 0
   AICO_solver(soc,q,1e-2,.7,.01,0,0);
-#else
+#else 
+
+  arr q0,x0;
+  soc::straightTaskTrajectory(sys, q0, 0);
+  if(sys.dynamic) soc::getPhaseTrajectory(x0, q0, sys.getTau()); else x0=q0;
+
+  conv_VectorChainFunction P2(sys);
+#if 0
+  x=x0;
+  for(uint t=0;t<=T;t++)  sys.testGradientsInCurrentState(x[t], t);  MT::wait();
+  checkJacobian((VectorFunction&)P2, x, 1e-4);
+  //return 0;
+#endif
+
+  x=x0;
+  cout <<"VCF=" <<evaluateVCF(sys, x) <<endl;
+  cout <<"QCF=" <<evaluateQCF(P2, x) <<endl;
+  sys.costChecks(x);
+  
+#if 1
+  optOptions o;  o.stopTolerance=1e-3;  o.clampInitialState=true;
+  //eval_cost=0;  x=x0;  optGaussNewton(x, P2, (o.stopEvals=1000, o.initialDamping=1e-0, o.verbose=2, o));  cout <<"-- evals=" <<eval_cost <<endl;
+  //sys.displayTrajectory(x,NULL,0,"DP (planned trajectory)");
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-0, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  sys.displayTrajectory(x,NULL,1,"DP (planned trajectory)");
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-0, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  sys.displayTrajectory(x,NULL,1,"MSGN (planned trajectory)");
+#endif
+  
   //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
   AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
-  aico.init_trajectory(q);
+  aico.init_trajectory(x0);
   aico.iterate_to_convergence();
   q = aico.q;
 #endif

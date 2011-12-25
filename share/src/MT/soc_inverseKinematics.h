@@ -16,7 +16,7 @@ void hierarchicalIKControl(SocSystemAbstraction& soci, arr& dq, uint t, double r
 void bayesianIterateIKControl(SocSystemAbstraction& soci,
                               arr& qt, const arr& qt_1, uint t, double eps, uint maxIter);
 void bayesianIKTrajectory(SocSystemAbstraction& soci, arr& q, double eps=-1);
-void bayesianDynamicControl(SocSystemAbstraction& soci, arr& qv, const arr& qv_1, uint t, arr *v=NULL, arr *Vinv=NULL);
+void bayesianDynamicControl(SocSystemAbstraction& soci, arr& x, const arr& x_1, uint t, arr *v=NULL, arr *Vinv=NULL);
 void bayesianIKControl2(SocSystemAbstraction& soci, arr& q , const arr& q_1 , uint t, arr *v=NULL, arr *Vinv=NULL);
 
 }

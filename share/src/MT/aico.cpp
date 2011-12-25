@@ -114,8 +114,8 @@ void AICO::init_messages(){
 void AICO::init_trajectory(const arr& q_init){
   init_messages();
   uint t, T=sys->nTime();
-  CHECK(q_init.nd==2 && q_init.d0==T+1 && q_init.d1==sys->qDim(), "initial trajectory was wrong dimensionality");
-  if(sys->dynamic) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  if(sys->dynamic && q_init.d1!=2*sys->qDim()) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
+  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==(sys->dynamic?2:1)*sys->qDim()) , "initial trajectory was wrong dimensionality");
   sys->getx0(b[0]()); //overwrite with x0
   q=q_init;
   xhat = b;
@@ -331,20 +331,22 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
-  struct LocalCostFunction:public GaussNewtonCostFunction {
+  struct LocalCostFunction:public VectorFunction {
     uint t;
     soc::SocSystemAbstraction* sys;
     AICO* aico;
     bool reuseOldCostTerms;
     
-    void calcTermsAt(const arr &x){
+    void fv(arr& phi, arr* Jp, const arr& x){
+      CHECK(Jp,"");
+      arr &J=*Jp;
       //all terms related to task costs
       if(reuseOldCostTerms){
         phi = aico->phiBar(t);  J = aico->JBar(t);
         reuseOldCostTerms=false;
       }else{
         countSetq++;
-        if(sys->dynamic) sys->setqv(x); else sys->setq(x);
+        if(sys->dynamic) sys->setx(x); else sys->setq(x);
         sys->getTaskCostTerms(phi, J, x, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }
@@ -380,7 +382,8 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   f.reuseOldCostTerms=true;
   f.reuseOldCostTerms=false;
   if(!tolerance) HALT("need to set tolerance for AICO_gaussNewton");
-  GaussNewton(xhat[t](), tolerance, f, maxRelocationIterations, maxStepSize);
+  optOptions o;
+  optGaussNewton(xhat[t](), f, (o.stopTolerance=tolerance, o.stopEvals=maxRelocationIterations, o.maxStep=maxStepSize, o) );
   
   sys->getQ(Q[t](), t);
   sys->getHinv(Hinv[t](), t);

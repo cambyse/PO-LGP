@@ -170,13 +170,13 @@ void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N
   HALT("don't know that shape type");
 };
 
-struct ShapeFitProblem:public OptimizationProblem {
+struct ShapeFitProblem:public ScalarFunction {
   floatA distImage;
   uint type, N;
   arr x, points;
   bool display;
   
-  double f(arr *grad, const arr& x, int i=-1){
+  double fs(arr *grad, const arr& x){
     double cost=0.;
     arr weights, dfdpoints;
     generateShapePoints(points, weights, grad, type, N, x);
@@ -307,12 +307,11 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     MT::timerStart();
     double cost;
     Rprop rprop;
-    rprop.dMax = 5.;
-    rprop.init(3.);
+    rprop.init(3., 5.);
     rprop.loop(params, problem, &cost, 1.e-1, 100);
     // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
-    problem.f(NULL, params);
+    problem.fs(NULL, params);
     byteA img; copy(img, 10.f*problem.distImage);
     cvDrawPoints(img, problem.points);
     //cvShow(img, "shape optimization", false);

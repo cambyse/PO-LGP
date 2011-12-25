@@ -19,7 +19,7 @@ void drawBase(void*){
 int main(int argn,char **argv){
   cout <<USAGE <<endl;
 
-  const char *file="test.ors";
+  const char *file="car.ors";
   if(argn<2){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];

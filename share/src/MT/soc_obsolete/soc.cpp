@@ -140,10 +140,10 @@ soc::SocSystemAbstraction::~SocSystemAbstraction(){
 
 soc::SocSystemAbstraction* soc::SocSystemAbstraction::newClone() const{ NIY; }
 uint soc::SocSystemAbstraction::uDim(){ NIY; }
-void soc::SocSystemAbstraction::getqv0(arr& q_){ NIY; }
+void soc::SocSystemAbstraction::getqv0(arr& x){ NIY; }
 void soc::SocSystemAbstraction::getqv0(arr& q, arr& qd){ NIY; }
 double soc::SocSystemAbstraction::getTau(bool scaled){ NIY; }
-void soc::SocSystemAbstraction::setqv (const arr& q_, uint t){ NIY; }
+void soc::SocSystemAbstraction::setx (const arr& x, uint t){ NIY; }
 void soc::SocSystemAbstraction::setqv (const arr& q, const arr& qd, uint t){ NIY; }
 void soc::SocSystemAbstraction::getH  (arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getHinv(arr& H, uint t){ NIY; }

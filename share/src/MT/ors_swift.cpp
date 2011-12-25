@@ -408,6 +408,7 @@ void swiftQueryExactDistance(SwiftInterface& swift){
 #include "util.h"
 //#warning "MT_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff){ MT_MSG("WARNING - creating dummy SwiftInterface"); }
+void SwiftInterface::close(){}
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){}
 void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport){}
 SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const { return NULL; }

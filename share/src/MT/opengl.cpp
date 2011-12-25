@@ -1035,6 +1035,7 @@ void glStandardScene(void*){ NICO; };
 void glDrawDots(void *dots){ glDrawDots(*(arr*)dots); }
 
 void glDrawDots(arr& dots){
+  if(!dots.N) return;
   CHECK(dots.nd==2 && dots.d1==3, "wrong dimension");
 #if 0
   glBegin(GL_POINTS);
@@ -1856,12 +1857,12 @@ void glUI::glDraw(){
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   Button *b;
-  float x, y, w, h;
+  float x, y, h;
   for(uint i=0; i<buttons.N; i++){
     b = &buttons(i);
     x=b->x-b->w/2.;
     y=b->y-b->h/2.;
-    w=b->w;
+    //w=b->w;
     h=b->h;
     glColor(0, 0, 0, 1);
     glDrawText(b->name, x+5, y+h-5, 0.);

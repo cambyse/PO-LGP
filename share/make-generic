@@ -103,6 +103,19 @@ MOC = moc
 UIC = uic
 endif
 
+ifeq ($(SYS), Darwin)
+ifndef CXX
+CXX	= g++
+CC 	= gcc
+endif
+LINK	 = $(CXX)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
+LPATH	:= $(BASE)/lib:$(LPATH)
+SHAREFLAG = -dynamiclib #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
+MOC = moc
+UIC = uic
+endif
+
 ifeq ($(SYS),Cygwin)
 CXX	= g++
 CC	= g++

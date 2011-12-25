@@ -7,7 +7,8 @@ void testANN(){
   ANN ann;
   doubleA x(dim),X(N,dim),Y;
   intA idx;
-  
+  arr dists;
+
   rndUniform(X,0.,1.,false);
 
   MT::IOraw=true;
@@ -15,12 +16,14 @@ void testANN(){
   MT::timerStart();
   ann.setX(X);
   rndUniform(x,0.,1.,false); //x=.5;
-  ann.getNN(Y,x,10,.0, true);
+  ann.getNN(dists,idx,x,10,.0, true);
+  Y.resize(idx.N,x.N);
+  for(uint i=0;i<Y.d0;i++) Y[i] = X[idx(i)];
   std::cout <<"build time (#" <<ann.X.N <<") = " <<MT::timerRead() <<"sec" <<std::endl;
-  MT::save(X,"z.data");
-  MT::save(x,"z.query");
-  MT::save(Y,"z.neighbors");
-  gnuplot("set size square; set data style points; plot 'z.data','z.query','z.neighbors'");
+  write(LIST(X),"z.data");
+  write(LIST(x.reshape(1,x.N)),"z.query");
+  write(LIST(Y),"z.neighbors");
+  gnuplot("set size square; plot 'z.data' w p,'z.query' w p,'z.neighbors' w p");
   MT::wait();
 }
 
@@ -73,8 +76,8 @@ void testANNIncremental(){
 
 int main(int argn,char** argv){
 
-  //testANN();
-  testANNIncremental();
+  testANN();
+  //testANNIncremental();
   //testANNregression();
 
   return 0;

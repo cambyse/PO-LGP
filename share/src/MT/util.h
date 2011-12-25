@@ -285,8 +285,8 @@ namespace MT {
 extern String errString;
 
 inline void breakPoint(){
-  int i;
-  i=5;    //set a break point here, if you want to catch errors directly
+  int i=5;
+  i*=i;    //set a break point here, if you want to catch errors directly
 }
 }
 

@@ -1,50 +1,70 @@
 #include <MT/optimization.h>
+#include <MT/optimization_benchmarks.h>
 
-struct MyProblem:public OptimizationProblem{
-  arr C;
-  uint n;
-  
-  void init(uint _n){
-    n=_n;
-    uint i,j;
-    double condition=100.;
-    //let C be a ortho-normal matrix (=random rotation matrix)
-    C.resize(n,n);
-    rndUniform(C,-1.,1.,false);
-    for(i=0;i<n;i++){
-      for(j=0;j<i;j++) C[i]()-=scalarProduct(C[i],C[j])*C[j];
-      C[i]()/=norm(C[i]);
-    }
-    //let g be a diagonal with powers of the condition
-    arr g(n,n);
-    g.setZero();
-    for(i=0;i<n;i++) g(i,i)=pow(condition, double(i) / double(n - 1));
-    //the metric is equal C*g*C^T
-    C=C*g*~C;
-    cout <<C <<endl;
-  }
-  double f(arr *grad,const arr& x,int i=-1){
-    CHECK(x.N==n,"");
-    cout <<"  norm-x=" <<sumOfSqr(x) <<flush;
-    double f=.5*scalarProduct(C,x,x);
-    if(grad) (*grad)=C*x;
-    return f;
-  }
-};
+void testSqrProblem(){
+  //SquaredCost P(10);
+  NonlinearlyWarpedSquaredCost P(10);
 
-void testRprop(){
-  MyProblem P;
-  P.init(10);
-  
-  arr x(P.n);
+  arr x(P.n),x0;
   rndUniform(x,1.,10.,false);
+  x0=x;
 
-  Rprop rprop;
-  rprop.init(.01);
-  rprop.loop(x,P,NULL,1e-5);
+  checkGradient((ScalarFunction&)P, x, 1e-3);
+  checkJacobian((VectorFunction&)P, x, 1e-3);
+
+  optOptions o;
+  
+  optRprop(x, P, (o.initStep=.01, o.stopTolerance=1e-5, o.stopEvals=1000, o.verbose=2, o));
+  MT::wait();
+
+  x=x0;
+  optGradDescent(x, P, (o.stopEvals=10000, o));
+  MT::wait();
+
+  x=x0;
+  optGaussNewton(x, P, (o.stopEvals=10000, o));
+  MT::wait();
+
+  gnuplot("plot 'z.gaussNewton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);
+  MT::wait();
+}
+
+void testDynamicProgramming(){
+  //VectorChainCost P(20,5);
+  SlalomProblem P(100,4,.1,.01,3.);
+  //P.nonlinear=true;
+  
+  arr x(P.T+1,P.n),x0;
+  rndUniform(x,-1.,1.,false);
+  x0=x;
+
+  conv_VectorChainFunction P2(P);
+
+  cout <<evaluateSF(P2, x) <<endl;
+  cout <<evaluateVF(P2, x) <<endl;
+  cout <<evaluateVCF(P, x) <<endl;
+  cout <<evaluateQCF(P2, x) <<endl;
+  
+  //checkGradient((ScalarFunction&)P2, x, 1e-4);
+  checkJacobian((VectorFunction&)P2, x, 1e-4);
+
+  optOptions o;  o.stopTolerance=1e-3;
+  
+  //eval_cost=0;  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 1000, 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optGaussNewton(x, P2, (o.stopEvals=1000, o.verbose=1, o));  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optNodewise(x, P, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+
+  write(LIST(x),"z.sol");
+  //gnuplot("plot 'z.nodewise' us 2:3 w l,'z.gaussNewton' us 2:3 w l,'z.rprop' us 2:3 w l,'z.grad' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
+  gnuplot("plot 'z.gaussNewton' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
 }
 
 int main(int argn,char** argv){
-  testRprop();
+  //testSqrProblem();
+  testDynamicProgramming();
+  
   return 0;
 }

@@ -1,7 +1,7 @@
 #include <MT/roboticsCourse.h>
 
+
 void simpleArrayOperations(){
-  //for more, see test/array/main.cpp
   arr x;
   x = ARR(.1, .2, .3);         //directly setting the array
   cout <<"x = " <<x <<endl;
@@ -67,21 +67,13 @@ void reach(){
 
   arr y_target,y,J,Phi,PhiJ;
   for(uint i=0;i<10;i++){
-    //1st task:
-    y_target = ARR(-0.2, -0.4, 1.1); 
-    S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
-    S.jacobianPos  (J,"handR");
+    S.kinematicsVec(y,"handR");
+    S.jacobianVec  (J,"handR");
+    y_target = ARR(0., 0., 1.); 
 
-    //report on error in the first task
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
-
-    //compute joint updates
     q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
     
-    //sets joint angles AND computes all frames AND updates display
     S.setJointAngles(q);
-
-    //optional: pause and watch OpenGL
     S.watch();
   }
 }
@@ -94,6 +86,8 @@ int main(int argc,char **argv){
   case 0:  simpleArrayOperations();  break;
   case 1:  openingSimulator();  break;
   case 2:  reach();  break;
+//  case 3:  circle();  break;
+//  case 4:  multiTask();  break;
   }
 
   return 0;

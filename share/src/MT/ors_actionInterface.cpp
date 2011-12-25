@@ -472,10 +472,9 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   }
   if(t==Tabort){ indicateFailure(); return; }
   
-  ors::Joint *e;
-  e=C->bodies(x.i)->inLinks(0);
   if(obj_is_inhand){
     NIY;
+    //ors::Joint *e=C->bodies(x.i)->inLinks(0);
     //C->del_edge(e); //otherwise: no object in hand
   }
 }

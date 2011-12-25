@@ -60,7 +60,7 @@ static void sleepForEvents( void ){
 #ifdef MT_Linux
   if( ! XPending( fgDisplay.Display ) ){
     fd_set fdset;
-    int err;
+    int err=0;
     int socket;
     struct timeval wait;
 

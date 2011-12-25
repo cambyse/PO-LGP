@@ -36,7 +36,7 @@ void soc::LQG::shiftSolution(int offset){
   if(!sys->dynamic){ sys->getq0(q0); }else{ sys->getqv0(q0);  n*=2; }
 #else //take q0 to be the one specified by hatq[offset]!
   q0=q_phase[offset];
-  if(!sys->dynamic){ sys->setq(q0); }else{ sys->setqv(q0);  n*=2; }
+  if(!sys->dynamic){ sys->setq(q0); }else{ sys->setx(q0);  n*=2; }
   sys->setq0AsCurrent();
 #endif
   vbar.shift(offset*n, false);  Vbar.shift(offset*n*n, false);
@@ -188,7 +188,7 @@ double soc::LQG::stepGeneral(){
   //linearize around current trajectory
   for(t=0;t<=T;t++){
     countSetq++;
-    sys->setqv(q_phase[t]);
+    sys->setx(q_phase[t]);
     sys->getCosts  (R[t](), r[t](), q[t], t);
     sys->getProcess(A[t](), a[t](), B[t](), t);
     //cout <<"t=" <<t <<" A=" <<A[t] <<" a=" <<a[t] <<" B=" <<B[t] <<endl;
@@ -215,7 +215,7 @@ double soc::LQG::stepGeneral(){
   double ctrlC=0;
   for(t=0;t<T;t++){
     countSetq++;
-    sys->setqv(q_phase[t]);
+    sys->setx(q_phase[t]);
     sys->getH(H, t);
     sys->getProcess(A[t](), a[t](), B[t](), t);
     //if(t>T-10) cout <<"t=" <<t <<"\nqhat=" <<q_phase[t] <<endl;

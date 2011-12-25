@@ -128,7 +128,7 @@ inline void forwardSimulateTrajectory(arr& q, const arr& G, const arr& g, soc::S
     for(t=0; t<T; t++) q[t+1]() = q[t] + (G[t]*q[t] + g[t]); //A=1, B=1
   }else{
     q.resize(T+1, 2*n);
-    sys.getqv0(q[0]());
+    sys.getx0(q[0]());
     for(t=0; t<T; t++) q[t+1]() = aico.A[t]*q[t] + aico.B[t]*(G[t]*q[t] + g[t]) + aico.a[t];
     arr q_sub;
     getPositionTrajectory(q_sub, q);
