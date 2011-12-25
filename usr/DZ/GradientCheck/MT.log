@@ -1,10 +1,16 @@
-Compiled at:     Dec  6 2011 17:41:58
-Execution start: Fri Dec  9 16:26:36 2011
+Compiled at:     Dec 16 2011 13:26:17
+Execution start: Tue Dec 20 16:02:32 2011
 Program call:    '/home/pronix/git/mlr/usr/DZ/GradientCheck/x.exe '
                 mode = opening config file 'MT.cfg'
-2 [i]
+1 [i]
                 seed =     0 [j] (default!)
-Execution stop:      Fri Dec  9 16:26:51 2011
-Ellapsed double time:  14.695sec
-Process  user time:   14.680sec
-Process system time: 0sec
+opening output file `z.J'
+opening output file `z.JJ'
+opening output file `z.J'
+opening output file `z.JJ'
+opening output file `z.J'
+opening output file `z.JJ'
+Execution stop:      Tue Dec 20 16:02:33 2011
+Ellapsed double time:  1.471sec
+Process  user time:   1.460sec
+Process system time: 0.01sec

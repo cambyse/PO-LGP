@@ -22,6 +22,7 @@
 
 #include "logicReasoning.h"
 #include "logicObjectManager.h"
+#include <stdlib.h>
 
 #define LE_fast 1
 
@@ -232,13 +233,13 @@ void TL::logicReasoning::filterState_atleastOne(TL::State& s_filtered, const TL:
 
 
 void TL::logicReasoning::getConstants(const FuncVL& fvs, uintA& constants) {
-    constants.clear();
-    uint i, s;
-    FOR1D(fvs, i) {
-        FOR1D(fvs(i)->atom->args, s) {
-            constants.setAppend(fvs(i)->atom->args(s));
-        }
-    }
+  constants.clear();
+  uint i, s;
+  FOR1D(fvs, i) {
+      FOR1D(fvs(i)->atom->args, s) {
+          constants.setAppend(fvs(i)->atom->args(s));
+      }
+  }
 }
 
 
@@ -273,6 +274,10 @@ void TL::logicReasoning::getConstants(const TL::State& s, uintA& constants) {
   localConstants.clear();
   
   TL::sort_asc(constants);
+  
+  // HACK if no constants found, probably almost not literal held true...
+  // This is the case if there are not always true typing predicates.
+  if (constants.N < 3) constants = TL::logicObjectManager::constants;
 }
 
 
@@ -1955,6 +1960,7 @@ void TL::logicReasoning::createInverseSubstitution(const TL::Literal& lit, TL::S
 
 
 bool TL::logicReasoning::isConstant(uint obj) {
+  CHECK(TL::logicObjectManager::constants.N > 0, "TL::logicObjectManager::constants have not been set!");
   return obj >= TL::logicObjectManager::constants.min();  // Die Objekte koennen sich inzwischen aendern
 }
 
@@ -2040,6 +2046,7 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   bool newFound=false;
   // Free Vars EXISTENTIAL
   if (!p.freeVarsAllQuantified) {
+    if (DEBUG>1) {cout<<"free vars EXISTS"<<endl;}
     // simply call cover
     TL::SubstitutionSet subs;
     if (cover(s, base_lits, subs, false)) {
@@ -2055,16 +2062,19 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   }
   // Free Vars ALL
   else {
+    if (DEBUG>1) {cout<<"free vars ALL"<<endl;}
     // We must treat positive vars with special care, since in cover(.) positives are always ex quantified.
     // calc free vars in base predicates
     uintA freeVars_pos, freeVars_neg;
     calcFreeVars(p, freeVars_pos, freeVars_neg);
+    if (DEBUG>1) {PRINT(freeVars_pos);  PRINT(freeVars_neg);}
     // (1) Create possible argument-combos for ConjunctionPredicate.
     MT::Array< uintA > argument_lists;
     // only use constants which are provided in the state
-    uintA state_constants;
+    uintA state_constants ;
     getConstants(s, state_constants);
     TL::allPossibleLists(argument_lists, state_constants, p.d, false, true);
+    if (DEBUG>0) {PRINT(argument_lists);}
     // (2) Test each possible argument-combo.
     FOR1D(argument_lists, i) {
       TL::Substitution s_arguments;
@@ -2097,6 +2107,7 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   }
 //     double t_finish = MT::cpuTime();
 //     cout<<"deriveLiterals_conjunction time = "<<(t_finish - t_start)<<endl;
+  if (DEBUG>0) {cout<<"Derived state literals ["<<s.lits_derived.N<<"]: "<<s.lits_derived<<endl;}
   if (DEBUG>0) {cout<<"deriveLiterals_conjunction [END]"<<endl;}
   return newFound;
 }

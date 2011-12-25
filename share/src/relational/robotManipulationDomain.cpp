@@ -319,62 +319,62 @@ void TL::RobotManipulationDomain::performAction(Atom* action, RobotManipulationS
 // #define TOWER
 
 void TL::RobotManipulationDomain::setupLogic(uintA& constants) {
-  PredL p_prim;
-  p_prim.append(getPredicate_table());
-  p_prim.append(getPredicate_block());
-  p_prim.append(getPredicate_ball());
-  p_prim.append(getPredicate_on());
-  p_prim.append(getPredicate_inhand());
-  p_prim.append(getPredicate_upright());
-  p_prim.append(getPredicate_out());
+  PredL p_state;
+  // Primitives
+  p_state.append(getPredicate_table());
+  p_state.append(getPredicate_block());
+  p_state.append(getPredicate_ball());
+  p_state.append(getPredicate_on());
+  p_state.append(getPredicate_inhand());
+  p_state.append(getPredicate_upright());
+  p_state.append(getPredicate_out());
+  // Derived
+  p_state.append(getPredicate_clear());
+  p_state.append(getPredicate_inhandNil());
   
-  FuncL f_prim;
-  f_prim.append(getFunction_size());
+  FuncL f_state;
+  // Primitive
+  f_state.append(getFunction_size());
   
-  PredL p_actions;
-  p_actions.append(getPredicate_action_default());
-  p_actions.append(getPredicate_action_grab());
-  p_actions.append(getPredicate_action_puton());
-//   p_actions.append(getPredicate_action_lift());
-//   p_actions.append(getPredicate_action_place());
-  
-  PredL p_derived;
-  p_derived.append(getPredicate_clear());
-  p_derived.append(getPredicate_inhandNil());
-  
-  FuncL f_derived;
+  PredL p_action;
+  p_action.append(getPredicate_action_default());
+  p_action.append(getPredicate_action_grab());
+  p_action.append(getPredicate_action_puton());
+//   p_action.append(getPredicate_action_lift());
+//   p_action.append(getPredicate_action_place());
 
+  
 #ifdef CLEARANCE
-  p_derived.append(getPredicate_above());    // CLEARANCE
-  f_derived.append(getFunction_height());
+  p_state.append(getPredicate_above());    // CLEARANCE
+  f_state.append(getFunction_height());
 #endif
   
 #ifdef CLEARANCE
-  p_prim.append(getPredicate_homies());  // CLEARANCE
+  p_state.append(getPredicate_homies());  // CLEARANCE
+  p_state.append(getPredicate_above());    // CLEARANCE
+  p_state.append(getPredicate_aboveNotable());    // CLEARANCE
+  p_state.append(getPredicate_dirtyGuyBelow());    // CLEARANCE
+  p_state.append(getPredicate_diffTower());   // CLEARANCE
+  p_state.append(getPredicate_withoutHomies());    // CLEARANCE
+  p_state.append(getPredicate_inorder());    // CLEARANCE
   
-  p_derived.append(getPredicate_above());    // CLEARANCE
-  p_derived.append(getPredicate_aboveNotable());    // CLEARANCE
-  p_derived.append(getPredicate_dirtyGuyBelow());    // CLEARANCE
-  p_derived.append(getPredicate_diffTower());   // CLEARANCE
-  p_derived.append(getPredicate_withoutHomies());    // CLEARANCE
-  p_derived.append(getPredicate_inorder());    // CLEARANCE
-  
-  f_derived.append(getFunction_countInorder());    // CLEARANCE
+  f_state.append(getFunction_countInorder());    // CLEARANCE
 #endif
   
 #ifdef TOWER
-  p_prim.append(getPredicate_box());
-  p_prim.append(getPredicate_contains()); 
-  p_prim.append(getPredicate_closed()); 
-  
-  p_derived.append(getPredicate_onBox());
-  
-  p_actions.append(getPredicate_action_openBox());
-  p_actions.append(getPredicate_action_closeBox());
+  p_state.append(getPredicate_box());
+  p_state.append(getPredicate_contains()); 
+  p_state.append(getPredicate_closed()); 
+  p_state.append(getPredicate_onBox());
+  p_action.append(getPredicate_action_openBox());
+  p_action.append(getPredicate_action_closeBox());
 #endif
-    
-  TL::logicObjectManager::setPredicatesAndFunctions(p_prim, p_derived, f_prim, f_derived, p_actions);
+  
   TL::logicObjectManager::setConstants(constants);
+  
+  TL::logicObjectManager::addActionPredicates(p_action);
+  TL::logicObjectManager::addStatePredicates(p_state);
+  TL::logicObjectManager::addStateFunctions(f_state);
 }
 
 

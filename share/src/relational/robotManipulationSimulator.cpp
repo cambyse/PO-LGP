@@ -1611,8 +1611,6 @@ uint RobotManipulationSimulator::getHandID() {
 
 
 
-
-
 // --------------------------------
 //  OpenGL Displaying
 // --------------------------------

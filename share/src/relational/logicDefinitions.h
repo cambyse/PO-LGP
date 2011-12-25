@@ -539,23 +539,22 @@ class Substitution {
   uintA outs;
   
   public:
-          int numRefs;
-          
+  int numRefs;      
   static int globalCounter_Substitution;
       
-              Substitution() {
-                      numRefs=0;
+  Substitution() {
+    numRefs=0;
     globalCounter_Substitution++;
-              }
+  }
       
   Substitution(const Substitution& s) {
-      *this = s;
-      numRefs = 0;
-      globalCounter_Substitution++;
+    *this = s;
+    numRefs = 0;
+    globalCounter_Substitution++;
   }
               
   ~Substitution() {
-      globalCounter_Substitution--;
+    globalCounter_Substitution--;
   }
       
   // ATTENTION:  If you want to use logicReasoning, then use "applyOriginalSub"-methods there!
@@ -666,9 +665,11 @@ struct Experience {
   uintA changedConstants;
   
   Experience(const TL::State& pre, TL::Atom* action, const TL::State& post);
+  Experience();
   ~Experience();
   
   bool noChange();
+  void calcChanges();
   
   void write(ostream& os = cout) const;
 };

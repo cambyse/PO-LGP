@@ -153,21 +153,53 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
 
 //! Scalar experiments
 void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
-  arr Matr;
-  WS=zeros(1,1);
+  arr Matr,vect;
+  double scalar=0.;
+   WS.resize(1);//=zeros(dim); //(1,1);
+   WS.setZero();
   GetWritheMatrix(Matr,rope1,rope2,dim);
-  Matr.reshape(dim,dim);
-  for (int k=0;k<dim;k++) WS(0,0) += Matr(k,k);
+  //!diagonal
+//   Matr.reshape(dim,dim);
+//   for (int k=0;k<dim;k++){
+//     WS(0) += Matr(k,k);
+//   }
+
+  //! all
+  Matr.reshape(dim*dim);
+  for (int k=0;k<dim*dim;k++){
+    WS(0) += Matr(k);
+  }
+  //!diagonal
+  //! diagonal vector
+/*  Matr.reshape(dim,dim);
+  for (int k=0;k<dim;k++){
+     WS(k) = Matr(k,k);
+  }*/
+  //!end of  vector
+// WS =vect;
 }
 
 void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int dim){
   int total_joint_number =  pointsJ.d1;
   arr MatrJ;
   WritheJacobian(MatrJ,rope1,rope2,pointsJ,dim);
-  SJ.resize(1,total_joint_number);
-  
-  for (int i=0;i<dim;i++) {
-    SJ[0]() += MatrJ[i*(dim+1)]();
+  SJ.resize(1,total_joint_number);//SJ.resize(1,total_joint_number);
+  SJ.setZero();
+  //!diagonal
+//   MatrJ.reshape(dim,dim,total_joint_number);
+//   for (int i=0;i<dim;i++) {
+//     SJ[0]() += MatrJ[i][i];
+//   } 
+  //!all
+  MatrJ.reshape(dim*dim,total_joint_number);
+  for (int i=0;i<dim*dim;i++) {
+    SJ[0]() += MatrJ[i]();
   } 
-  CHECK(SJ.nd==2 && SJ.d1==total_joint_number,"dimensions!");
+    //!diagonal
+  //! diagonal vector
+/*   for (int i=0;i<dim;i++) {
+     SJ[i]() = MatrJ[i][i];
+   }*/
+  //!end of vector
+//  CHECK(SJ.nd==2 && SJ.d1==total_joint_number,"dimensions!");
 }
