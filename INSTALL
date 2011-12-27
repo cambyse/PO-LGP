@@ -62,14 +62,15 @@ tar xfz $FILE_TARBALL
 echo "Setting library links to libraries appropriate for the architecture..."
 echo "Architecture=" $ARCH
 
-# SWIFT
-if [ "${ARCH}" = "x86_64" ] ; then
-  cp SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a SWIFT++_1.2/lib/libSWIFT++.a
-  echo "Using SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a"
-else
-  cp SWIFT++_1.2/lib/libswiftpp12-debr.a SWIFT++_1.2/lib/libSWIFT++.a
-  echo "Using SWIFT++_1.2/lib/libswiftpp12-debr.a"
-fi
+# SWIFT (MT: removed because should stay in extern)
+# if [ "${ARCH}" = "x86_64" ] ; then
+#   cp SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a"
+# else
+#   cp SWIFT++_1.2/lib/libswiftpp12-debr.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-debr.a"
+# fi
+
 # NTCAN
 cd $DIR_EXTERNAL_LIBS/ntcan/lib/
 if [ "${ARCH}" = "x86_64" ] ; then
@@ -81,9 +82,9 @@ else
 fi
 
 
-echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
-cd $DIR_GIT/share/extern/libcolorseg/src/
-make
+# MT: removed since this is included in makeAll
+# echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
+# cd $DIR_GIT/share/extern/libcolorseg/src/
 
 
 echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
@@ -92,9 +93,7 @@ directory " $DIR_EXTERNAL_LIBS "..."
 cd $DIR_GIT
 cd share/extern
 ./LINK $DIR_EXTERNAL_LIBS
-cd ../..
-
-
+cd $DIR_GIT
 
 
 
@@ -107,16 +106,8 @@ echo "Creating make-config (specify individual profiles here)..."
 
 cd share/
 mv make-config make-config.BAK
-echo "ifndef NAME
-  MTLIB = 1
-endif
-" > make-config
-cd ..
-
-# TODO Profile: without hardware (no Schunk)
-
-
-
+mv make-config.default make-config
+cd $DIR_GIT
 
 
 

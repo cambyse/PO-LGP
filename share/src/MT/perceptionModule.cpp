@@ -217,6 +217,7 @@ struct ShapeFitProblem:public ScalarFunction {
   }
 };
 
+#ifdef MT_OPENCV
 bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, const floatA& theta, byteA *disp=NULL, bool reuseParams=false){
   CvMatDonor cvMatDonor;
   if(disp){
@@ -333,7 +334,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
   
   return true;
 }
-
+#endif
 
 void PerceptionModule::open(){
   ifstream fil;
@@ -351,6 +352,7 @@ void PerceptionModule::open(){
 
 
 
+#ifdef MT_OPENCV
 void PerceptionModule::step(){
   CvMatDonor cvMatDonor;
   
@@ -475,7 +477,7 @@ void PerceptionModule::step(){
   output->objects = objs;
   output->deAccess(this);
 }
-
+#endif
 
 
 void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects){
@@ -538,3 +540,7 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
     memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout <<" pos " <<ba->name <<" " <<ba->X.p <<endl;
   }
 }
+
+#ifndef MT_OPENCV
+void PerceptionModule::step(){ NIY; }
+#endif

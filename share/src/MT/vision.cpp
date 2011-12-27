@@ -123,13 +123,17 @@ void cvDrawPoints(byteA& img, const arr& points){
   }
 }
 #else
+CvMatDonor::CvMatDonor(){ NIY; }
+CvMat* CvMatDonor::get(){ NIY; }
 CvMat* arr2cvmat(CvMat *mat, const byteA& img){ NIY; return NULL; }
 CvMat* arr2cvmat(CvMat *mat, const floatA& img){ NIY; return NULL; }
-char cvShow(const byteA& img, const char *window){ NIY; return 0; }
+CvMat* arr2cvmat(CvMat *mat, const doubleA& img){ NIY; return NULL; }
+char cvShow(const byteA& img, const char *window,bool wait){ NIY; return 0; }
 char cvShow(const floatA& img, const char *window){ NIY; return 0; }
 char cvShowEvidence(const floatA& phi, const char *window){ NIY; return 0; }
 void cvDrawGraph(byteA& img, doubleA& V, uintA& E){ NIY; }
 void cvDrawBox(byteA& img, const floatA& box){ NIY; }
+void cvDrawPoints(byteA& img, const arr& points){ NIY; }
 #endif
 
 void boxConvolution(arr& out, const arr& in, uint width){
@@ -421,6 +425,7 @@ void getHsvEvidences(floatA &phi, floatA &hsv, const floatA& hsvTarget, const fl
   }
 }
 
+#ifdef MT_OPENCV
 void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSdv, uint range){
   diff.resize(img0.d0, img0.d1);
   diff.setZero();
@@ -440,6 +445,7 @@ void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSd
   for(uint i=0; i<smoothed.N; i++) smoothed.p[i] = student3(smoothed.p[i]);
   diff = smoothed;
 }
+#endif
 
 void getHsvCenter(arr& cen, byteA &img, uint iter, const floatA& hsvTarget, const floatA& hsvTol){
   floatA rgb, hsv;
@@ -833,6 +839,7 @@ void compute_hueMap(byteA& hue, const floatA& alphaV){
 
 
 
+#ifdef MT_OPENCV
 void smooth(floatA& theta, uint size){
   ENABLE_CVMAT
   floatA tmp=theta;
@@ -899,6 +906,7 @@ void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
   (*axis)(2) = -1*ax(0)+(*center)(0);
   (*axis)(3) = -1*ax(1)+(*center)(1);
 }
+#endif
 
 byteA evi2rgb(const floatA& theta){
   byteA tmp;
