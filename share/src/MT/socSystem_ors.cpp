@@ -359,11 +359,7 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 
 //! DZ: write trajectory of task variable into the file
 void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
-<<<<<<< HEAD
   uint i, k, m, T=nTime();
-=======
-  uint i,k,m,T=nTime();
->>>>>>> master
   uint ind = -1;
   uint num=T; m=nTasks();
    for(i=0; i<m; i++)

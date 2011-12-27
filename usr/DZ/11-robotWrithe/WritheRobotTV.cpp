@@ -1,5 +1,5 @@
-#include "WritheTaskVariable.h"
-#include "WritheMatrix.h"
+#include "WritheRobotTV.h"
+#include "DZ/WritheMatrix.h"
 #include <sstream>
 #include "MT/plot.h"
 
@@ -24,30 +24,31 @@ void plot_writhe(arr WM,int dim)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* obj_name){
+void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* _name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
   arr rope2=arr(rope_points,3);
   arr ty;
   
+  uint start_body = 2; 
+  ors::Vector rel; rel.set(0.,0.,0.0);// rel.setZero();
   
   for (int i=0;i<rope_points;i++) {// start with second body part
-     _ors.kinematics(ty,i,  &ors::Vector(0.,0.,.1) ); 
-       for (int j=0;j<3;j++) {
-     rope1(i,j) = ty(j);
-    }
-  _ors.kinematics(ty,1,  &ors::Vector(0.,0.,-.1) ); // first body relative transformation
-  for (int j=0;j<3;j++) rope1(0,j) = ty(j);
-  
-  rope2(i,0)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[0]; 
-  rope2(i,1)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[1] - _ors.getBodyByName(obj_name)->shapes(0)->size[2]* (i/(rope_points-1.0) -0.5) ; 
-  rope2(i,2)=_ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[2]; 
+      _ors.kinematics(ty,i+start_body,  &rel); 
+      rope1[i]() = ty;;    
+  } 
+   arr xtarget;  
+  for (int i=0;i<rope_points;i++){
+   std::stringstream ss;
+   ss << "ring" << i;
+   xtarget.setCarray(_ors.getShapeByName(ss.str().c_str())->X.pos.p,3);
+   rope2[i]()= xtarget;
   }
   r1=rope1;
   r2=rope2;
- // cout<<rope1<<endl;
-//  cout<<rope2<<endl;
+ //cout<<rope1<<endl;
+// cout<<rope2<<endl;
 }
 //! Matrix
 
@@ -57,24 +58,28 @@ void WritheTaskVariable::userUpdate(){
     GetWritheMatrix(yy,rope1,rope2,segments);
     y=zeros(segments,segments);
     y=yy;
+ // cout<<yy<<endl; // TODO LAST zero!!!
+ 
     int wrsize = (segments)* (segments);
     y.reshape(wrsize); 
-
+    
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobian(Jp,k+2,&ors::Vector(0.,0.,.0)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
-       WritheJacobian(JM,rope1,rope2,points,segments);  
-      // cout<<JM<<endl; // TODO LAST zero!!!
-      
+       
+     //  cout <<"point jacobian" <<points<< endl;
+     WritheJacobian(JM,rope1,rope2,points,segments);  
+     
+     //cout <<"final jacobian"<<JM<<endl;
        J = zeros(wrsize,ors->getJointStateDimension());
-      for (int k=0;k<wrsize;k++)
-	for (int p=1;p<segments;p++)
+    //  for (int k=0;k<wrsize;k++)
+	//for (int p=0;p<segments;p++)
 	//for (int p=segments-16;p<segments;p++)
-	   J(k,p)=JM(k,p-1); // TODO check it!!
-//	    J(k,p)=JM(k,p); 
-//   J=JM;
+	//   J(k,p)=JM(k,p-1); // TODO check it!!
+	//    J(k,p+2)=JM(k,p); 
+ J=JM;
 transpose(Jt,J);
 }
 
@@ -128,7 +133,7 @@ arr delta_y;
     
     ///////////Jacobian
   for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobian(Jp,k+1,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments);  

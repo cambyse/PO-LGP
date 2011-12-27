@@ -39,11 +39,10 @@ namespace logicObjectManager {
      SET AND GET:  PREDICATES, FUNCTIONS, CONSTANTS
    ***************************************/
   
-  void setPredicatesAndFunctions(PredL& p_prim, PredL& p_derived, FuncL& f_prim, FuncL& f_derived, PredL& p_actions);
-  void setPredicatesAndFunctions(const char* language_file, uint fileType = 1);
-  
   void setConstants(uintA& constants);
   void setConstants(uintA& constants, const TermTypeL& constants_types);
+  
+  void init(const char* language_file, uint fileType = 1);
   
   void addActionPredicates(PredL& actions);
   void addStatePredicates(PredL& preds);
@@ -60,7 +59,7 @@ namespace logicObjectManager {
   void shutdown();
   void writeLanguage(const char* filename);
   
-  uint getLowestFreeConceptID();
+  uint getLowestFreeConceptID(uint min);
   
   
   /****************************************

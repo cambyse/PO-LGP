@@ -1,7 +1,7 @@
-mode =41
+mode =42
 dynamic = 1
 Wrate = 1
-Hrate = 1e-1 5e-3 1e-3 1e-3
+Hrate = 1e-1 1e-1 5e-3 1e-3 1e-3
 
 orsFile=schunk.ors
 
@@ -21,4 +21,4 @@ reachPlanLimPrec = 0 1e-1 1e-3
 reachPlanPalmPrec = 0 1e1
 
 alpha = 1e-1
-usebwd=0
+usebwd=1

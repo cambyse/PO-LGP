@@ -20,10 +20,105 @@ along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#include "logicObjectDatabase.h"
+#include "logicObjectManager_database.h"
 
 
-uint TL::LOGIC_ENGINE__MAX_ID_NUMBER = 100;
+uint TL::LOGIC__MAX_LIMIT_OBJECT_ID = 100;
+
+namespace TL {
+
+// one per predicate, e.g. for "on(.,.)"
+struct AtomList {
+  Predicate* pred;
+  AtomL mem;
+
+  AtomList();
+  AtomList(Predicate* pred);
+  void init(Predicate* pred);
+  void clear();
+};
+
+// one per predicate, e.g. for "on(.,.)"
+struct LiteralList {
+  Predicate* pred;
+  AtomList atom_list;
+  LitL mem;
+
+  LiteralList();
+  LiteralList(Predicate* pred);
+  void init(Predicate* pred);
+  void clear();
+};
+
+
+
+
+struct ComparisonAtomListConstant {
+  Function* f;
+  MT::Array< CompAtomL > mem;  // Outer index:  args;    Inner index: bound
+
+  ComparisonAtomListConstant();
+  ComparisonAtomListConstant(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+struct ComparisonLiteralListConstant {
+  Function* f;
+  MT::Array< CompLitL > mem;  // Outer index:  args;    Inner index: bound
+
+  ComparisonLiteralListConstant();
+  ComparisonLiteralListConstant(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+
+struct ComparisonAtomListDynamic {
+  Function* f;
+  CompAtomL mem;  // Index 1:  args
+
+  ComparisonAtomListDynamic();
+  ComparisonAtomListDynamic(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+struct ComparisonLiteralListDynamic {
+  Function* f;
+  CompLitL mem;  // Index 1:  args
+
+  ComparisonLiteralListDynamic();
+  ComparisonLiteralListDynamic(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+
+
+
+struct FunctionAtomList {
+  Function* f;
+  FuncAL mem;
+
+  FunctionAtomList();
+  FunctionAtomList(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+struct FunctionValueList {
+  Function* f;
+  MT::Array< FuncVL > mem;  // Index 1:  args;    index 2: bound
+  
+  FunctionValueList();
+  FunctionValueList(Function* f);
+  void init(Function* f);
+  void clear();
+};
+
+}
+
 
 
 // ------------------------------------------------------
@@ -52,7 +147,7 @@ void TL::AtomList::init(TL::Predicate* pred) {
     uint dim[pred->d];
     uint i;
     for (i=0; i<pred->d; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(pred->d, dim);
     mem.setUni(NULL);
@@ -89,7 +184,7 @@ void TL::LiteralList::init(TL::Predicate* pred) {
     uint dim[pred->d];
     uint i;
     for (i=0; i<pred->d; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(pred->d, dim);
     mem.setUni(NULL);
@@ -129,7 +224,7 @@ void TL::ComparisonAtomListConstant::init(TL::Function* f) {
     uint dim[arg_length];
     uint i;
     for (i=0; i<arg_length; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(arg_length, dim);
     CompAtomL empty;
@@ -167,7 +262,7 @@ void TL::ComparisonLiteralListConstant::init(TL::Function* f) {
     uint dim[arg_length];
     uint i;
     for (i=0; i<arg_length; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(arg_length, dim);
     CompLitL empty;
@@ -206,7 +301,7 @@ void TL::ComparisonAtomListDynamic::init(TL::Function* f) {
     uint dim[arg_length];
     uint i;
     for (i=0; i<arg_length; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(arg_length, dim);
     mem.setUni(NULL);
@@ -243,7 +338,7 @@ void TL::ComparisonLiteralListDynamic::init(TL::Function* f) {
     uint dim[arg_length];
     uint i;
     for (i=0; i<arg_length; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(arg_length, dim);
     mem.setUni(NULL);
@@ -279,7 +374,7 @@ void TL::FunctionAtomList::init(TL::Function* f) {
   uint dim[f->d];
   uint i;
   for (i=0; i<f->d; i++) {
-    dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+    dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
   }
   mem.resize(f->d, dim);
   mem.setUni(NULL);
@@ -314,7 +409,7 @@ void TL::FunctionValueList::init(TL::Function* f) {
     uint dim[f->d];
     uint i;
     for (i=0; i<f->d; i++) {
-      dim[i] = LOGIC_ENGINE__MAX_ID_NUMBER;
+      dim[i] = LOGIC__MAX_LIMIT_OBJECT_ID;
     }
     mem.resize(f->d, dim);
     FuncVL empty;
@@ -340,103 +435,96 @@ void TL::FunctionValueList::init(TL::Function* f) {
 
 
 
-// ----------------------------------------------------------------------------
-// -------------------------------
+// --------------------------------------------------------
+// --------------------------------------------------------
+// --------------------------------------------------------
+// --------------------------------------------------------
+// --------------------------------------------------------
+//
 // LOGIC MANAGER
 
+// Lists for objects
 
-
-
-TL::LogicObjectDatabase::LogicObjectDatabase(PredL& predicates, FuncL& functions, ComparisonPredicate* _p_comp_constant, ComparisonPredicate* _p_comp_dynamic) {
-  p_comp_constant = _p_comp_constant;
-  p_comp_dynamic = _p_comp_dynamic;
-  setPredicates(predicates);
-  setFunctions(functions);
-}
-
-
-#define LOM__DEFAULT_ACTION__ID 144
-
-void TL::LogicObjectDatabase::setPredicates(PredL& predicates) {
-  uint i;
-  uint max_id = lists_atoms.d0;
-  FOR1D(predicates, i) {
-    if (predicates(i)->id == TL::DEFAULT_ACTION_PRED__ID)
-      continue;
-    if (predicates(i)->id > max_id)
-      max_id = predicates(i)->id;
-  }
-  max_id = TL_MAX(LOM__DEFAULT_ACTION__ID, max_id);
-  lists_atoms.resize(max_id+1);
-  lists_lits_pos.resize(max_id+1);
-  lists_lits_neg.resize(max_id+1);
+TL::Predicate* p_comp_constant;
+TL::Predicate* p_comp_dynamic;
   
-  FOR1D(predicates, i) {
-    addPredicate(predicates(i));
-  }
-}
+MT::Array< TL::AtomList > lists_atoms; // for each predicate its own AtomList
+MT::Array< TL::LiteralList > lists_lits_pos; // for each predicate its own positive LiteralList
+MT::Array< TL::LiteralList > lists_lits_neg; // for each predicate its own negative LiteralList
 
-void TL::LogicObjectDatabase::addPredicate(Predicate* p) {
-  uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"LogicObjectDatabase::addPredicate [START]"<<endl;}
-  if (DEBUG>0) {cout<<"Predicate p: ";  p->writeNice();  cout<<endl;}
-  if (p->id == TL::DEFAULT_ACTION_PRED__ID) {
-    AtomList atom_list(p);
-    lists_atoms(LOM__DEFAULT_ACTION__ID) = atom_list;
-    LiteralList lit_list(p);
-    lists_lits_pos(LOM__DEFAULT_ACTION__ID) = lit_list;
-    lists_lits_neg(LOM__DEFAULT_ACTION__ID) = lit_list;
-  }
-  else {
-    CHECK(p->id < lists_atoms.N, "bad new id="<<p->id<<"  vs  max_id=" << lists_atoms.N);
-    AtomList atom_list(p);
-    lists_atoms(p->id) = atom_list;
-    LiteralList lit_list(p);
-    lists_lits_pos(p->id) = lit_list;
-    lists_lits_neg(p->id) = lit_list;
-  }
-  if (DEBUG>0) {cout<<"LogicObjectDatabase::addPredicate [END]"<<endl;}
-}
+MT::Array< TL::ComparisonAtomListConstant > lists_atoms_comp_constant;  //  Outer Array:  (Index 1) function-id,  (Index 2) comparison type
+MT::Array< TL::ComparisonLiteralListConstant > lists_lits_comp_constant;   //  Outer Array:  (Index 1) function-id,  (Index 2) comparison type
+  
+MT::Array< TL::ComparisonAtomListDynamic > lists_atoms_comp_dynamic;  //  Outer Array:  (Index 1) function-id,  (Index 2) comparison type
+MT::Array< TL::ComparisonLiteralListDynamic > lists_lits_comp_dynamic;  //  Outer Array:  (Index 1) function-id,  (Index 2) comparison type
+
+MT::Array< TL::FunctionAtomList > lists_function_atoms;
+MT::Array< TL::FunctionValueList > lists_function_values;
 
 
 
-void TL::LogicObjectDatabase::setFunctions(FuncL& functions) {
-  uint i;
-  uint max_f_id;
-
-  max_f_id = lists_atoms_comp_constant.d0;
-  FOR1D(functions, i) {
-    if (functions(i)->id > max_f_id)
-      max_f_id = functions(i)->id;
-  }
+void __init_logicObjectManager_database() {
+  // Predicates
+  uint INIT_SIZE_P = 100;
+  lists_atoms.resize(INIT_SIZE_P);
+  lists_lits_pos.resize(INIT_SIZE_P);
+  lists_lits_neg.resize(INIT_SIZE_P);
+  
+  // Functions
+  uint INIT_SIZE_F = 100;
   
   uint max_compType_index = 0;
-  max_compType_index = TL_MAX(max_compType_index, comparison_equal);
-  max_compType_index = TL_MAX(max_compType_index, comparison_less);
-  max_compType_index = TL_MAX(max_compType_index, comparison_lessEqual);
-  max_compType_index = TL_MAX(max_compType_index, comparison_greater);
-  max_compType_index = TL_MAX(max_compType_index, comparison_greaterEqual);
-  
+  max_compType_index = TL_MAX(max_compType_index, TL::comparison_equal);
+  max_compType_index = TL_MAX(max_compType_index, TL::comparison_less);
+  max_compType_index = TL_MAX(max_compType_index, TL::comparison_lessEqual);
+  max_compType_index = TL_MAX(max_compType_index, TL::comparison_greater);
+  max_compType_index = TL_MAX(max_compType_index, TL::comparison_greaterEqual);
   
   // ComparisonAtoms and ComparisonLiterals
-  lists_atoms_comp_constant.resize(max_f_id+1, max_compType_index+1);
-  lists_atoms_comp_dynamic.resize(max_f_id+1, max_compType_index+1);
+  lists_atoms_comp_constant.resize(INIT_SIZE_F, max_compType_index+1);
+  lists_atoms_comp_dynamic.resize(INIT_SIZE_F, max_compType_index+1);
   
-  lists_lits_comp_constant.resize(max_f_id+1, max_compType_index+1);
-  lists_lits_comp_dynamic.resize(max_f_id+1, max_compType_index+1);
+  lists_lits_comp_constant.resize(INIT_SIZE_F, max_compType_index+1);
+  lists_lits_comp_dynamic.resize(INIT_SIZE_F, max_compType_index+1);
   
   // FunctionAtoms and FunctionValues
-  lists_function_atoms.resize(max_f_id+1);
-  lists_function_values.resize(max_f_id+1);
-    
-  
-  // Set up functions
-  FOR1D(functions, i) {
-    addFunction(functions(i));
-  }
+  lists_function_atoms.resize(INIT_SIZE_F);
+  lists_function_values.resize(INIT_SIZE_F);
 }
 
-void TL::LogicObjectDatabase::addFunction(Function* f) {
+
+void TL::logicObjectManager_database::setComparisonPredicates(ComparisonPredicate* _p_comp_constant, ComparisonPredicate* _p_comp_dynamic) {
+  __init_logicObjectManager_database();
+  p_comp_constant = _p_comp_constant;
+  p_comp_dynamic = _p_comp_dynamic;
+}
+
+
+void TL::logicObjectManager_database::addPredicate(Predicate* p) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"logicObjectManager_database::addPredicate [START]"<<endl;}
+  if (lists_atoms.N == 0) {
+    if (DEBUG>0) {cout<<"logicObjectManager_database gets inited first."<<endl;}
+    __init_logicObjectManager_database();
+  }
+  if (DEBUG>0) {cout<<"Predicate p: ";  p->writeNice();  cout<<endl;}
+  CHECK(p->id < lists_atoms.N, "bad new id="<<p->id<<"  vs  max_id=" << lists_atoms.N);
+  AtomList atom_list(p);
+  lists_atoms(p->id) = atom_list;
+  LiteralList lit_list(p);
+  lists_lits_pos(p->id) = lit_list;
+  lists_lits_neg(p->id) = lit_list;
+  if (DEBUG>0) {PRINT(atom_list.mem.nd);}
+  if (DEBUG>0) {cout<<"logicObjectManager_database::addPredicate [END]"<<endl;}
+}
+
+
+
+void TL::logicObjectManager_database::addFunction(Function* f) {
+  if (lists_function_atoms.N == 0) {
+    __init_logicObjectManager_database();
+  }
+  
   uint i;
   
   // resize lists if necessary
@@ -496,7 +584,7 @@ void TL::LogicObjectDatabase::addFunction(Function* f) {
   lists_function_values(f->id).init(f);
 }
 
-TL::LogicObjectDatabase::~LogicObjectDatabase() {
+void TL::logicObjectManager_database::shutdown() {
   lists_atoms.clear();
   lists_lits_pos.clear();
   lists_lits_neg.clear();
@@ -514,10 +602,8 @@ TL::LogicObjectDatabase::~LogicObjectDatabase() {
 
 
 
-TL::Atom* TL::LogicObjectDatabase::get(TL::Predicate* pred, const uintA& args) {
+TL::Atom* TL::logicObjectManager_database::get(TL::Predicate* pred, const uintA& args) {
   uint index = pred->id;
-  if (pred->id == TL::DEFAULT_ACTION_PRED__ID)
-    index = LOM__DEFAULT_ACTION__ID;
   Atom* a = NULL;
   a = lists_atoms(index).mem(args);
   if (a == NULL) {
@@ -530,13 +616,10 @@ TL::Atom* TL::LogicObjectDatabase::get(TL::Predicate* pred, const uintA& args) {
   return a;
 }
 
-TL::Literal* TL::LogicObjectDatabase::get(TL::Predicate* pred, const bool positive, const uintA& args) {
+TL::Literal* TL::logicObjectManager_database::get(TL::Predicate* pred, const bool positive, const uintA& args) {
   uint index = pred->id;
-  if (pred->id == TL::DEFAULT_ACTION_PRED__ID)
-    index = LOM__DEFAULT_ACTION__ID;
   Literal* lit = NULL;
   if (positive) {
-//     LiteralList& lll = lists_lits_pos(index);
     lit = lists_lits_pos(index).mem(args);
     if (lit == NULL) {
       lit = new Literal;
@@ -560,7 +643,7 @@ TL::Literal* TL::LogicObjectDatabase::get(TL::Predicate* pred, const bool positi
 
 
 
-TL::ComparisonAtom* TL::LogicObjectDatabase::get_compA(TL::Function* f, ComparisonType compType, const uintA& args1, const uintA& args2) {
+TL::ComparisonAtom* TL::logicObjectManager_database::get_compA(TL::Function* f, ComparisonType compType, const uintA& args1, const uintA& args2) {
   uintA args_all;  args_all.append(args1);  args_all.append(args2);
   TL::ComparisonAtom* ca = lists_atoms_comp_dynamic(f->id, compType).mem(args_all);
   if (ca == NULL) {
@@ -576,7 +659,7 @@ TL::ComparisonAtom* TL::LogicObjectDatabase::get_compA(TL::Function* f, Comparis
 }
 
 
-TL::ComparisonLiteral* TL::LogicObjectDatabase::get_compL(TL::Function* f, ComparisonType compType, const uintA& args1, const uintA& args2) {
+TL::ComparisonLiteral* TL::logicObjectManager_database::get_compL(TL::Function* f, ComparisonType compType, const uintA& args1, const uintA& args2) {
   uintA args_all;  args_all.append(args1);  args_all.append(args2);
   TL::ComparisonLiteral* clit = lists_lits_comp_dynamic(f->id, compType).mem(args_all);
   if (clit == NULL) {
@@ -589,7 +672,7 @@ TL::ComparisonLiteral* TL::LogicObjectDatabase::get_compL(TL::Function* f, Compa
 }
 
 
-TL::ComparisonAtom* TL::LogicObjectDatabase::get_compA(TL::Function* f, ComparisonType compType, double bound, const uintA& args) {
+TL::ComparisonAtom* TL::logicObjectManager_database::get_compA(TL::Function* f, ComparisonType compType, double bound, const uintA& args) {
   CompAtomL& clist = lists_atoms_comp_constant(f->id, compType).mem(args);
   TL::ComparisonAtom* ca = NULL;
   uint i = 0;
@@ -635,7 +718,7 @@ TL::ComparisonAtom* TL::LogicObjectDatabase::get_compA(TL::Function* f, Comparis
 }
 
 
-TL::ComparisonLiteral* TL::LogicObjectDatabase::get_compL(TL::Function* f, ComparisonType compType, double bound, const uintA& args) {
+TL::ComparisonLiteral* TL::logicObjectManager_database::get_compL(TL::Function* f, ComparisonType compType, double bound, const uintA& args) {
   ComparisonLiteralListConstant& big_list = lists_lits_comp_constant(f->id, compType);
   CompLitL& clist = big_list.mem(args);
   TL::ComparisonLiteral* clit = NULL;
@@ -681,10 +764,8 @@ TL::ComparisonLiteral* TL::LogicObjectDatabase::get_compL(TL::Function* f, Compa
 
 
 
-TL::FunctionAtom* TL::LogicObjectDatabase::get(TL::Function* f, const uintA& args) {
+TL::FunctionAtom* TL::logicObjectManager_database::get(TL::Function* f, const uintA& args) {
   uint index = f->id;
-  if (f->id == TL::DEFAULT_ACTION_PRED__ID)
-    index = LOM__DEFAULT_ACTION__ID;
   FunctionAtom* a = NULL;
   a = lists_function_atoms(index).mem(args);
   if (a == NULL) {
@@ -697,7 +778,7 @@ TL::FunctionAtom* TL::LogicObjectDatabase::get(TL::Function* f, const uintA& arg
 }
 
 
-TL::FunctionValue* TL::LogicObjectDatabase::get(TL::Function* f, const uintA& args, double value) {
+TL::FunctionValue* TL::logicObjectManager_database::get(TL::Function* f, const uintA& args, double value) {
   FuncVL& fvs = lists_function_values(f->id).mem(args);
   TL::FunctionValue* fv = NULL;
   uint i = 0;
