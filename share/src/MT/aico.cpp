@@ -137,7 +137,7 @@ void AICO::shift_solution(int offset){
   if(sys->dynamic) n*=2;
 #else //take x0 to be the one specified by hatq[offset]!
   x0=xhat[offset];
-  sys->setx0AsCurrent();
+  sys->setx0ToCurrent();
   sys->setx(x0);
   if(sys->dynamic) n*=2;
 #endif

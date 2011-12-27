@@ -485,9 +485,7 @@ struct Any {
   uint n;
   char delim;
   virtual ~Any(){};
-  //virtual void read(std::ostream &os) = 0;
   virtual void write(std::ostream &os) const = 0;
-  //virtual void free() = 0;
   virtual Any *newClone() = 0;
 };
 stdOutPipe(Any)

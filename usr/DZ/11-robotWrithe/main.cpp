@@ -43,7 +43,7 @@ void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 }
 
 void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
-  sys.setx0AsCurrent();
+  sys.setx0ToCurrent();
   
   //load parameters only once!
   static bool firstTime=true;
@@ -234,7 +234,7 @@ void problem2(){
    
    ifstream in("q_final");  q0.readRaw(in); in.close(); 
    sys.setq(q0,0);//!TODO test it!!
-   sys.setx0AsCurrent(); 
+   sys.setx0ToCurrent(); 
 
  //   cout << q0<<endl;
   createStandardRobotTaskVariables(sys);

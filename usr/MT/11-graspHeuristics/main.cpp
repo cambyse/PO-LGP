@@ -91,7 +91,7 @@ void problem1(){
     s->mesh.clear();
     sys.swift->init(*sys.ors, sys.swift->cutoff); //reinitShape(*sys.ors, s);
 
-    sys.setx0AsCurrent();
+    sys.setx0ToCurrent();
     sys.gl->watch();
   }
   

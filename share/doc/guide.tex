@@ -604,12 +604,13 @@ git status
 git diff
 git add|mv|rm|... <files>
 git commit -am 'message'  (or --all --message 'message')
-git pull --all
+git pull --all //DON'T do this! fetch --all is ok, but pull might
+               //merge EVERYTHING in the current working branch
 git push --all
 
 git branch -a
 // overview over all branches and configs for push and pull
-git remote show achtauge
+git remote show maserati
 git checkout <branch>
 git branch <new-branch>
 git branch --track <new-branch> <remote-branch>
@@ -723,7 +724,7 @@ cp a b
 git add b
 \end{verbatim} \end{code}
 
-git doesn;t have means to track hisory of files. It tracks |blobs|.
+git doesn't have means to track hisory of files. It tracks |blobs|.
 See gitcore-tutorial for details. The history is available in, e.g.
 %
 |git log|, through |-C| option (Then git tries to find copies.
@@ -745,6 +746,33 @@ git config --get http.proxy
 \end{verbatim} \end{code}
 
 \end{itemize}
+
+\subsubsection{Proposal for simplifying mlr git macros!}
+
+\begin{description}
+\item[GIT-newBranch \$1]
+
+create a new local branch; also push the branch to maserati; set the
+default tracking (the remote branch will always be named equally)
+
+\item[GIT-getBranch \$1]
+
+create a local branch tracking an existing remote one called
+maserati/\$1; ensures that the branch will always be named equally;
+ensure that the default tracking/mergin paths are set properly
+
+\item[GIT-delBranch \$1]
+
+remove the local! branch; ensure that everything has been pushed to
+maserati;
+
+\item[GIT-info]
+
+dump all possible info (git branch -a, git status, git info etc..)
+
+\end{description}
+
+
 
 
 

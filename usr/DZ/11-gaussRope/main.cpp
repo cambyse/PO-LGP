@@ -30,7 +30,7 @@ void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 }
 
 void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T,double endPrec){
-  sys.setx0AsCurrent();
+  sys.setx0ToCurrent();
   
   //load parameters only once!
   static bool firstTime=true;

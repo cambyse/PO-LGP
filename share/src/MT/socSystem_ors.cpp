@@ -106,7 +106,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.upright();
   }
   if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
-  setx0AsCurrent();
+  setx0ToCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
   arr W_rate;
   if(W){
@@ -504,7 +504,7 @@ void soc::SocSystem_Ors::setx(const arr& x, uint t){
   }
 }
 
-void soc::SocSystem_Ors::setx0AsCurrent(){
+void soc::SocSystem_Ors::setx0ToCurrent(){
   ors->getJointState(s->q0, s->v0);
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
 }

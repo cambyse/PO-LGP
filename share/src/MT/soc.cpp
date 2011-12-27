@@ -67,6 +67,28 @@ void soc::getPositionTrajectory(arr& q, const arr& _q){
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
 
+/*! \brief use regularized Inverse Kinematics to compute a joint
+    trajectory from the task trajectory previously specifies for the
+    taskid-th task variable */
+void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
+  uint t, T= sys.nTime(), n= sys.qDim();
+  arr phiq, yt, J, Jt, Jinv, W, Winv;
+  double prec;
+  q.resize(T+1, n);
+  sys.getq0(q[0]());
+  for(t=1; t<=T; t++){
+    sys.getW(W, t);
+    inverse_SymPosDef(Winv, W);
+    sys.setq(q[t-1]);
+    sys.getPhi(phiq, taskid);
+    sys.getJJt(J, Jt, taskid);
+    sys.getTarget(yt, prec, taskid, t);
+    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
+    q[t]() = q[t-1] + Jinv*(yt-phiq);
+  }
+}
+
+#if 0
 void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   uint t, T=(uint)floor(q.d0/step);
   qNew.resize(T, q.d1);
@@ -97,32 +119,12 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
   }
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
-    trajectory from the task trajectory previously specifies for the
-    taskid-th task variable */
-void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
-  uint t, T= sys.nTime(), n= sys.qDim();
-  arr phiq, yt, J, Jt, Jinv, W, Winv;
-  double prec;
-  q.resize(T+1, n);
-  sys.getq0(q[0]());
-  for(t=1; t<=T; t++){
-    sys.getW(W, t);
-    inverse_SymPosDef(Winv, W);
-    sys.setq(q[t-1]);
-    sys.getPhi(phiq, taskid);
-    sys.getJJt(J, Jt, taskid);
-    sys.getTarget(yt, prec, taskid, t);
-    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
-    q[t]() = q[t-1] + Jinv*(yt-phiq);
-  }
-  
-}
 
 //! not-yet-implemented
 void soc::partialJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& dCdx, const arr& delCdelq, const arr& q, const arr& x){
   NIY;
 }
+#endif
 
 //===========================================================================
 //
@@ -145,7 +147,7 @@ void soc::SocSystemAbstraction::getx0(arr& x){ NIY; }
 void soc::SocSystemAbstraction::getqv0(arr& q, arr& qd){ NIY; }
 double soc::SocSystemAbstraction::getTau(bool scaled){ NIY; }
 void soc::SocSystemAbstraction::setx(const arr& x, uint t){ NIY; }
-void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
+//void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
 void soc::SocSystemAbstraction::setqv(const arr& q, const arr& qd, uint t){ NIY; }
 void soc::SocSystemAbstraction::getH(arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getHinv(arr& H, uint t){ NIY; }

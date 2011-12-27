@@ -107,7 +107,7 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
-#if 0
+#if 1
   AICO solver(sys);
   solver.iterate_to_convergence();
   

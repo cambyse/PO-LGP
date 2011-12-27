@@ -83,7 +83,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
 #define SD_PAR_R(n)  MT::getParameter<double>((n));
 
 void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
-  sys.setx0AsCurrent();
+  sys.setx0ToCurrent();
 
   /* configuration */
   static bool firstTime=true;
@@ -427,7 +427,7 @@ void problem5(){
   /* use full set of TVs */
   activateVars_2step(sys2);
   /* set start position 0; */
-  sys2.setq(q0); sys2.setx0AsCurrent();
+  sys2.setq(q0); sys2.setx0ToCurrent();
 
   AICO solver(sys2);
   solver.useBwdMsg=true;
