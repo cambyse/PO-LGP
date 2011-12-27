@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::SemanticFetcherInterface Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1SemanticFetcherInterface.html">objectexpl::core::SemanticFetcherInterface</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::SemanticFetcherInterface Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::SemanticFetcherInterface" -->
+<p>Definiert die Schnittstelle zum Abfragen der semantischen Information zu einem Objekt.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="SemanticFetcherInterface_8h_source.html">SemanticFetcherInterface.h</a>&gt;</code></p>
+<div class="dynheader">
+Klassendiagramm für objectexpl::core::SemanticFetcherInterface:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classobjectexpl_1_1core_1_1SemanticFetcherInterface.png" usemap="#objectexpl::core::SemanticFetcherInterface_map" alt=""/>
+  <map id="objectexpl::core::SemanticFetcherInterface_map" name="objectexpl::core::SemanticFetcherInterface_map">
+<area href="classobjectexpl_1_1bash_1_1ObjectExplorationBash.html" alt="objectexpl::bash::ObjectExplorationBash" shape="rect" coords="0,56,252,80"/>
+<area href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html" alt="objectexpl::gui::ObjectExplorationGUI" shape="rect" coords="262,56,514,80"/>
+</map>
+</div>
+
+<p><a href="classobjectexpl_1_1core_1_1SemanticFetcherInterface-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual std::string&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1SemanticFetcherInterface.html#a57ffa1dc6cc752da422601dbdce583ec">retrieveSemantic</a> (cv::Mat segImg)=0</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die semantische Information zu einem Objekt zurück.  <a href="#a57ffa1dc6cc752da422601dbdce583ec"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Definiert die Schnittstelle zum Abfragen der semantischen Information zu einem Objekt. </p>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a57ffa1dc6cc752da422601dbdce583ec"></a><!-- doxytag: member="objectexpl::core::SemanticFetcherInterface::retrieveSemantic" ref="a57ffa1dc6cc752da422601dbdce583ec" args="(cv::Mat segImg)=0" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual std::string objectexpl::core::SemanticFetcherInterface::retrieveSemantic </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>segImg</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [pure virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die semantische Information zu einem Objekt zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>segImg</em>&nbsp;</td><td>Das segmentierte Objekt, wovon die semantische Information geholt werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die semantische Information über das Objekt in Klartext. </dd></dl>
+
+<p>Implementiert in <a class="el" href="classobjectexpl_1_1bash_1_1ObjectExplorationBash.html#a49448af7ec5d51ca6f7b5fe6ab384399">objectexpl::bash::ObjectExplorationBash</a> und <a class="el" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a62fb356fd309f3b6003560d377723405">objectexpl::gui::ObjectExplorationGUI</a>.</p>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Datei:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/semantic/<a class="el" href="SemanticFetcherInterface_8h_source.html">SemanticFetcherInterface.h</a></li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:51 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

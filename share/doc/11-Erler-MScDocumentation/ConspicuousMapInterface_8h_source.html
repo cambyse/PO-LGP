@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/saliency/ConspicuousMapInterface.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/saliency/ConspicuousMapInterface.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef CONSPICUOUSMAPINTERFACE_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define CONSPICUOUSMAPINTERFACE_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &lt;ntk/camera/rgbd_image.h&gt;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &quot;../utils/Common.h&quot;</span>
+<a name="l00006"></a>00006 
+<a name="l00007"></a>00007 <span class="keyword">namespace </span>objectexpl {
+<a name="l00008"></a>00008 <span class="keyword">namespace </span>core {
+<a name="l00009"></a>00009 
+<a name="l00013"></a><a class="code" href="classobjectexpl_1_1core_1_1ConspicuousMapInterface.html">00013</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1ConspicuousMapInterface.html" title="Definiert die Schnittstelle zur einer Auffälligkeitskarte.">ConspicuousMapInterface</a> {
+<a name="l00014"></a>00014 <span class="keyword">public</span>:
+<a name="l00023"></a>00023         <span class="keyword">virtual</span> cv::Mat1d <a class="code" href="classobjectexpl_1_1core_1_1ConspicuousMapInterface.html#a68d36138fe7b7e9869389e4fd25b7a27" title="Liefert eine Auffälligkeitskarte zurück.">getConspicuousMap</a>(cv::Mat3b rgb, cv::Mat1f depth, cv::Mat1b mask) = 0;
+<a name="l00024"></a>00024 };
+<a name="l00025"></a>00025 
+<a name="l00026"></a>00026 }
+<a name="l00027"></a>00027 }
+<a name="l00028"></a>00028 <span class="preprocessor">#endif </span><span class="comment">/* CONSPICUOUSMAPINTERFACE_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

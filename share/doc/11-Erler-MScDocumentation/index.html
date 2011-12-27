@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: Hauptseite</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li class="current"><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="headertitle">
+<h1>ObjectExploration Dokumentation</h1>  </div>
+</div>
+<div class="contents">
+<h3 class="version">1.0 </h3><h2><a class="anchor" id="Vorwort"></a>
+Vorwort</h2>
+<p>Dieses Programm entstand aus meiner Masterarbeit <em>"Aufmerksamkeitsgetriebene Objektexploration für autonom lernende Roboter"</em> im Studiengang Informatik des Fachbereichs Mathematik und Informatik der Freien Universität Berlin. </p>
+<p>(c) 2011 Oliver Erler &lt;Oliver.Erler at googlemail.com&gt; </p>
+<h2><a class="anchor" id="bib"></a>
+Verwendete Bibliotheken</h2>
+<p>Folgende Bibliotheken wurden im Programm verwendet: </p>
+<ul>
+<li>
+Nicolas Burrus NESTK Bibliothek <a href="http://sourceforge.net/projects/roboticslab/">http://sourceforge.net/projects/roboticslab/</a> </li>
+<li>
+Shane Grant und Kevin A Heins Salient Green Bibliothek <a href="http://190vision.blogspot.com/">http://190vision.blogspot.com/</a> </li>
+<li>
+Marc Toussaint ORS Bibliothek <a href="http://userpage.fu-berlin.de/~mtoussai/source-code/">http://userpage.fu-berlin.de/~mtoussai/source-code/</a> </li>
+<li>
+Point Cloud Library PCL <a href="http://www.pointclouds.org/">http://www.pointclouds.org/</a> </li>
+<li>
+Fast Light Toolkit FLTK <a href="http://www.fltk.org/">http://www.fltk.org/</a> </li>
+<li>
+OpenCV2 Bibliothek <a href="http://opencv.willowgarage.com/">http://opencv.willowgarage.com/</a> </li>
+</ul>
+<p>Die Bibliotheken befinden sich im Unterordner "lib" des Programms.</p>
+<h2><a class="anchor" id="kom"></a>
+Kompilieren des Programms</h2>
+<p>Bitte stellen Sie sicher, dass alle Abhängigkeiten von den Bibliotheken erfüllt sind. Zum Kompilieren des Programms führen Sie anschließend folgende drei Schritte unter einer Linux Konsole durch: </p>
+<ol>
+<li>
+<code>mkdir build</code> </li>
+<li>
+<code>cd build &amp;&amp; cmake .. </code> </li>
+<li>
+<code>make</code> </li>
+</ol>
+<p>Entwickelt und getestet wurde das Programm unter Ubuntu 10.10.</p>
+<h2><a class="anchor" id="param"></a>
+Startparameter des Programms</h2>
+<p>Folgende Startparameter stehen zur Verfügung: </p>
+<ul>
+<li>
+<em>-bash</em> Startet das Programm im Konsolen Modus </li>
+<li>
+<em>-openGui 1</em> Startet das Fenster vom Simulator </li>
+<li>
+<em>-openArm 1</em> Schaltet den Roboterarm aktiv </li>
+<li>
+<em>-openHand 1</em> Schaltet die Roboterhand aktiv </li>
+<li>
+<em>-openSkin 1</em> Schaltet die Drucksensoren aktiv </li>
+<li>
+<em>-openThreadInfoWin 1</em> Startet das Fenster zu den Thread Informationen </li>
+<li>
+<em>-swiftCutoff 1e-3</em> Setzt den Mindestabstand für die Kollisionserkennung </li>
+<li>
+<em>-TV_col_yprec 5e-2</em> Setzt das Gewicht für die Kollisionsbestrafung </li>
+<li>
+<em>-maxJointStep .005</em> Setzt die maximal erlaubte Schrittweite vom Roboterarm </li>
+</ul>
+<p><em>Beispiel:</em></p>
+<p><code>./ObjectExploration -openGui 1 -openThreadInfoWin 1 -openArm 1 -openHand 0 -openSkin 1 -swiftCutoff 1e-3 -TV_col_yprec 5e-2 -maxJointStep .005</code> </p>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/detector/ObjectDetector.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/detector/ObjectDetector.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef OBJECTDETECTOR_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define OBJECTDETECTOR_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;../utils/Common.h&quot;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &quot;opencv2/highgui/highgui.hpp&quot;</span>
+<a name="l00006"></a>00006 
+<a name="l00007"></a>00007 <span class="keyword">namespace </span>objectexpl {
+<a name="l00008"></a>00008 <span class="keyword">namespace </span>core {
+<a name="l00009"></a>00009 
+<a name="l00013"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html">00013</a> <span class="keyword">struct </span><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html" title="Datenstruktur für ein memoriertes Objekt.">FeatureSet</a> {
+<a name="l00014"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a39e499fafed0b1ada83637e6cd1d414f">00014</a>         <span class="keywordtype">int</span> <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a39e499fafed0b1ada83637e6cd1d414f" title="Eine fortlaufende eindeutige Identifizierungsnummer.">id</a>; 
+<a name="l00015"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#aa0f10255f3bcda021f3ebb0e6bd69914">00015</a>         cv::Mat <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#aa0f10255f3bcda021f3ebb0e6bd69914" title="Das segmentierte Originalbild vom memorierten Objekt.">img</a>; 
+<a name="l00016"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a5db9033078e989b10ea8bc87210fda2d">00016</a>         std::string <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a5db9033078e989b10ea8bc87210fda2d" title="Die semantischen Information zum mememorierten Objekt.">semantic</a>; 
+<a name="l00017"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a87c4c31dc504ed269b8e35a5ac90d85a">00017</a>         <span class="keywordtype">bool</span> <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a87c4c31dc504ed269b8e35a5ac90d85a" title="Die Beweglichkeitseigenschaft vom memorierten Objekt.">isMoveable</a>; 
+<a name="l00018"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a1f9820efff05359f9e9d8478261bb00a">00018</a>         cv::Mat <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#a1f9820efff05359f9e9d8478261bb00a" title="Der Merkmalsdeskriptor vom memorierten Objekt.">descriptor</a>; 
+<a name="l00019"></a><a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#aad45502852682a76cda48ecb0d1ac8f0">00019</a>         std::vector&lt;cv::KeyPoint&gt; <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html#aad45502852682a76cda48ecb0d1ac8f0" title="Alle markanten Merkmale vom Objekt.">keypoints</a>; 
+<a name="l00020"></a>00020 };
+<a name="l00021"></a>00021 
+<a name="l00029"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html">00029</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html" title="Ein Objekt Detektor zum Vergleich der memorierten Objekten mit der Objekthypothese.">ObjectDetector</a> {
+<a name="l00030"></a>00030 <span class="keyword">public</span>:
+<a name="l00031"></a>00031         <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#aeaf4bcd82a86b70a707ce628cf6c4255" title="Default Konstruktor.">ObjectDetector</a>(<span class="keywordtype">double</span> repeatabilityThreshold = 0.5, <span class="keywordtype">double</span> matchRatioThreshold = 0.6);
+<a name="l00032"></a>00032         <span class="keyword">virtual</span> ~<a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html" title="Ein Objekt Detektor zum Vergleich der memorierten Objekten mit der Objekthypothese.">ObjectDetector</a>();
+<a name="l00033"></a>00033 
+<a name="l00034"></a>00034         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a86991983cca468ae688d6f6e2cfae882" title="Fügt ein Objekt zu den memorierten Objekten hinzu.">addToMemSet</a>(cv::Mat image, std::string symantic, <span class="keywordtype">bool</span> isMoveable);
+<a name="l00035"></a>00035         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a7cf52726279e721d6c1287e1ea41e09d" title="Liest die Datenbank der memorierten Objekte ein.">readMemObjDatabase</a>(std::string filename);
+<a name="l00036"></a>00036         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a6be4c10b7c8c0d59b553a0d8e1991154" title="Speichert die memorierten Objekten in eine Datenbank ab.">writeMemObjDatabase</a>(std::string filename);
+<a name="l00037"></a>00037         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a03958b5486c4f7d573049665447492ef" title="Lädt Bilder und fügt sie zu den memorierten Objekten hinzu.">loadMemObjImages</a>(std::vector&lt;cv::Mat&gt; images, std::vector&lt;cv::string&gt; semInfos);
+<a name="l00038"></a>00038         <span class="keywordtype">int</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a20b1adf04786d6634fe17252fc518817" title="Vergleicht eine Objekthypothese mit den memorierten Objekten.">compareWithMemObj</a>(cv::Mat queryImage);
+<a name="l00039"></a>00039         <a class="code" href="structobjectexpl_1_1core_1_1FeatureSet.html" title="Datenstruktur für ein memoriertes Objekt.">FeatureSet</a> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#ab60a9c02fbf22b24c4273a02bad5c53b" title="Gibt die Datenstruktur zu einem memorierten Objekt zurück.">getFeatureSet</a>(<span class="keywordtype">int</span> idx);
+<a name="l00040"></a>00040         cv::Mat <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a5a991c119579839bc37d6543e7328719" title="Gibt graphisch alle gülitgen Korrespondenzpaare zurück.">getVisualizationOfMatches</a>(cv::Mat queryImage, std::vector&lt;cv::KeyPoint&gt; queryKeypoints,  std::vector&lt;std::vector&lt;cv::DMatch&gt; &gt; matches, <span class="keywordtype">int</span> bestIdx );
+<a name="l00041"></a>00041 
+<a name="l00042"></a>00042 <span class="keyword">private</span>:
+<a name="l00043"></a>00043         std::vector&lt;std::vector&lt;cv::DMatch&gt; &gt; <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a2135e348c46cb1faa415a5f3547e9756" title="Filtert die Treffer über das Verhältnis zwischen ersten und zweiten besten Nachbar heraus...">filterMatches</a>(std::vector&lt;std::vector&lt;cv::DMatch&gt; &gt; matches);
+<a name="l00044"></a>00044         <span class="keywordtype">int</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a77953e13e8b0963828a9bdca44f3dd2b" title="Gibt die ID der besten Übereinstimmung zurück.">getBestMatchIdx</a>(std::vector&lt;std::vector&lt;cv::DMatch&gt; &gt; matches);
+<a name="l00045"></a>00045         <span class="keywordtype">float</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a685dd34f0e99bb2d4752c74c4b915e3f" title="Verifiziert alle gültigen Korrespondenzpaare nochmal anhand einer projektiven Transformation.">verifyBestMatch</a>(cv::Mat queryImage, std::vector&lt;cv::KeyPoint&gt; queryKeypoints, cv::Mat memImage, std::vector&lt;cv::KeyPoint&gt; memKeypoints, std::vector&lt;std::vector&lt;cv::DMatch&gt; &gt; matches);
+<a name="l00046"></a>00046 
+<a name="l00047"></a>00047         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a661da68a31cdcfec0582c7b17273a3fc" title="Fügt die memorierten Objekten zum Objekt Detektor hinzu.">addMemSetToMatcher</a>(std::vector&lt;FeatureSet&gt; trainingSet);
+<a name="l00048"></a>00048         cv::Mat <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#ad60ef63a6215e0a54a56bde597ddefd0" title="Konvertiert alle markanten Merkmale in eine Matrix Struktur.">convertKeypointsToMat</a>(std::vector&lt;cv::KeyPoint&gt; keypoints);
+<a name="l00049"></a>00049         std::vector&lt;cv::KeyPoint&gt; <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html#aa205292da153c8b993dc020e1757917a" title="Konvertiert eine Matrix Struktur zurück in die markanten Merkmale.">convertMatToKeypoints</a>(cv::Mat mat);
+<a name="l00050"></a>00050 
+<a name="l00051"></a>00051         cv::Ptr&lt;cv::FeatureDetector&gt; featureDetector;
+<a name="l00052"></a>00052         cv::Ptr&lt;cv::DescriptorExtractor&gt; descriptorExtractor;
+<a name="l00053"></a>00053         cv::Ptr&lt;cv::DescriptorMatcher&gt; descriptorMatcher;
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055         std::vector&lt;FeatureSet&gt; memSet;
+<a name="l00056"></a>00056 
+<a name="l00057"></a>00057         <span class="keywordtype">double</span> matchRatioThreshold;
+<a name="l00058"></a>00058         <span class="keywordtype">double</span> repeatabilityThreshold;
+<a name="l00059"></a>00059 };
+<a name="l00060"></a>00060 
+<a name="l00061"></a>00061 }
+<a name="l00062"></a>00062 }
+<a name="l00063"></a>00063 <span class="preprocessor">#endif </span><span class="comment">/* OBJECTDETECTOR_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>
