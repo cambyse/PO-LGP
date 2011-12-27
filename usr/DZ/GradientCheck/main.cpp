@@ -19,7 +19,7 @@ void gradient_scalar_check()
 int main(int argn,char **argv){
   MT::initCmdLine(argn,argv);                  
   
-  int mode=MT::getParameter<int>("mode");
+  int mode=MT::getParameter<int>("mode");   
   switch(mode){
        case 1:  gradient_check(); break;
        case 2:  gradient_scalar_check(); break;

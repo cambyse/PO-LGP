@@ -7,10 +7,10 @@
 #include <SD/graspObjects.h> 
 #include "SD/potentialTaskVariables.h" 
 #include "aicot.cpp"                                     
-                                      
+                                       
   
 
-
+ 
 void problem7(){        
     cout <<"\n= problem 7: compare to Konrad's time optimization =\n" <<endl;
   
