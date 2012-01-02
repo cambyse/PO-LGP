@@ -14,89 +14,86 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#ifndef MT_soc_SI_h
-#define MT_soc_SI_h
-
-#include "soc.h"
+#include "socSystem_analytical.h"
 #include "plot.h"
 
 /** \brief very preliminary... */
-struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction {
+struct soc::SocSystem_Analytical_Workspace{
   uint T;
   arr x0, x1, x, W;
   double prec;
   arr obstacles;
-  
-  SocSystem_Analytical(){}
-  virtual ~SocSystem_Analytical(){}
-  
-  //initialization methods
-  void initKinematic(uint dim, uint trajectory_length, double w, double endPrec){
-    x0.resize(dim); x0.setZero();
-    x1=x0; x1(0)=1.;
-    x=x0;
-    W.setDiag(w, x.N);
-    prec=endPrec;
-    T=trajectory_length;
-    obstacles.resize(2, x.N);
-    obstacles(0, 0)=.3; obstacles(0, 1)=.05;
-    obstacles(1, 0)=.7; obstacles(1, 1)=-.05;
-    dynamic=false;
-    //os = &cout;
-  }
-  void initDynamic(uint dim, double trajectory_time, uint trajectory_steps, arr*H=NULL){
-    NIY;
-    dynamic=true;
-  }
-  
-  //implementations of virtual methods
-  uint nTime(){ return T; }
-  uint nTasks(){ return 2; }
-  uint qDim(){ return x0.N; }
-  uint uDim(){ return x0.N; }
-  uint yDim(uint i){ if(!i) return x0.N; else return 1; }
-  void getq0(arr& q){ q=x0; }
-  void getv0(arr& v){ NIY; }
-  void getx0(arr& x){ NIY; }
-  void getqv0(arr& q, arr& qd){ NIY; }
-  bool isDynamic(){ return false; }
-  void setq(const arr& q){ x=q; }
-  void setx(const arr& x){ NIY; }
-  void setqv(const arr& q, const arr& qd){ NIY; }
-  void setq0AsCurrent(){ NIY; }
-  void geth(arr& h){ NIY; }
-  void getW(arr& _W){ _W=W; }
-  void getH(arr& H){ NIY; }
-  void getQ(arr& Q){ NIY; }
-  bool isConditioned(uint i, uint t){ NIY; if(!i && t==T-1) return true;  return false; }
-  bool isConstrained(uint i, uint t){ NIY; if(i==1) return true;  return false; }
-  const char* taskName(uint i){ NIY; return "task"; }
-  void getPhi(arr& phiq_i, uint i){
-    NIY;
-    if(i==1){
-      phiq_i.resize(1);
-      for(uint i=0; i<obstacles.N; i++){
-        phiq_i(0) += norm(x-obstacles[i]);
-      }
-    }
-  }
-  
-  void getProcess(arr& A, arr& a, arr& B);
-  double getTaskCosts(arr& R, arr& r, uint t, const arr& qt);
-  void getConstraints(arr& c, arr& coff, uint t, const arr& qt);
-  
-  void displayState(const arr& q, const arr *Qinv, const char *text=NULL);
-  void displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag=NULL);
 };
 
-void SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B){
+
+soc::SocSystem_Analytical::SocSystem_Analytical(){}
+soc::SocSystem_Analytical::~SocSystem_Analytical(){}
+
+//initialization methods
+void soc::SocSystem_Analytical::initKinematic(uint dim, uint trajectory_length, double w, double endPrec){
+  s->x0.resize(dim); s->x0.setZero();
+  s->x1=s->x0; s->x1(0)=1.;
+  s->x=s->x0;
+  s->W.setDiag(w, s->x.N);
+  s->prec=endPrec;
+  T=trajectory_length;
+  s->obstacles.resize(2, s->x.N);
+  s->obstacles(0, 0)=.3; s->obstacles(0, 1)=.05;
+  s->obstacles(1, 0)=.7; s->obstacles(1, 1)=-.05;
+  dynamic=false;
+  //os = &cout;
+}
+void soc::SocSystem_Analytical::initDynamic(uint dim, double trajectory_time, uint trajectory_steps, arr*H){
+  NIY;
+  dynamic=true;
+}
+
+//implementations of virtual methods
+uint soc::SocSystem_Analytical::nTime(){ return s->T; }
+uint soc::SocSystem_Analytical::nTasks(){ return 2; }
+uint soc::SocSystem_Analytical::qDim(){ return s->x0.N; }
+uint soc::SocSystem_Analytical::uDim(){ return s->x0.N; }
+uint soc::SocSystem_Analytical::yDim(uint i){ if(!i) return s->x0.N; else return 1; }
+void soc::SocSystem_Analytical::getq0(arr& q){ q=s->x0; }
+void soc::SocSystem_Analytical::getv0(arr& v){ NIY; }
+void soc::SocSystem_Analytical::getx0(arr& x){ NIY; }
+void soc::SocSystem_Analytical::getqv0(arr& q, arr& qd){ NIY; }
+bool soc::SocSystem_Analytical::isDynamic(){ return false; }
+void soc::SocSystem_Analytical::setq(const arr& q, uint t){ s->x=q; }
+void soc::SocSystem_Analytical::setx(const arr& x, uint t){ NIY; }
+void soc::SocSystem_Analytical::setqv(const arr& q, const arr& qd, uint t){ NIY; }
+void soc::SocSystem_Analytical::setx0ToCurrent(){ NIY; }
+void soc::SocSystem_Analytical::getW(arr& W){ W=s->W; }
+void soc::SocSystem_Analytical::getH(arr& H, uint t){ NIY; }
+void soc::SocSystem_Analytical::getQ(arr& Q, uint t){ NIY; }
+bool soc::SocSystem_Analytical::isConditioned(uint i, uint t){ NIY; if(!i && t==s->T-1) return true;  return false; }
+bool soc::SocSystem_Analytical::isConstrained(uint i, uint t){ NIY; if(i==1) return true;  return false; }
+const char* soc::SocSystem_Analytical::taskName(uint i){ NIY; return "task"; }
+void soc::SocSystem_Analytical::getPhi(arr& phiq_i, uint i){
+  NIY;
+  if(i==1){
+    phiq_i.resize(1);
+    for(uint i=0; i<obstacles.N; i++){
+      phiq_i(0) += norm(x-obstacles[i]);
+    }
+  }
+}
+
+void soc::SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B);
+double soc::SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt);
+void soc::SocSystem_Analytical::getConstraints(arr& c, arr& coff, uint t, const arr& qt);
+
+void soc::SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const char *text=NULL);
+void soc::SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag=NULL);
+
+void soc::SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B){
   uint N=x.N;
   A.setDiag(1., N);
   B.setDiag(1., N);
   a.resize(N); a.setZero();
 }
 
-double SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt){
+double soc::SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt){
   uint N=x.N;
   R.resize(N, N); R.setZero();
   r.resize(N);   r.setZero();
@@ -132,7 +129,7 @@ double SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt)
   return C;
 }
 
-void SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, const arr& qt){
+void soc::SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, const arr& qt){
   cdir.clear();
   coff.clear();
 #ifndef USE_TRUNCATION
@@ -183,7 +180,7 @@ void SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, const ar
 #endif
 }
 
-void SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const char *text){
+void soc::SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const char *text){
   cout <<"gnuplot state display " <<text <<endl;
   plotGnuplot();
   plotClear();
@@ -195,7 +192,7 @@ void SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const cha
   plot();
 }
 
-void SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag){
+void soc::SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag){
   cout <<"gnuplot trajectory display " <<tag <<endl;
   plotGnuplot();
   plotClear();
@@ -208,7 +205,3 @@ void SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int 
   }
   plot();
 }
-
-
-
-#endif

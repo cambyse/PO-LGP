@@ -32,8 +32,6 @@ struct soc::SocSystem_Ors_Workspace {
   double tau;
   bool pseudoDynamic;
   bool newedOrs;
-  
-  
 };
 
 soc::SocSystem_Ors::SocSystem_Ors():SocSystemAbstraction::SocSystemAbstraction(){

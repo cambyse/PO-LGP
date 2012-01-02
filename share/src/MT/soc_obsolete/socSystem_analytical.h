@@ -1,44 +1,27 @@
-#ifndef MT_socSystem_ors_h
-#define MT_socSystem_ors_h
+#ifndef MT_socSystem_analytical_h
+#define MT_socSystem_analytical_h
 
 #include "soc.h"
 
 //===========================================================================
 //
-// ORS simulator implementation of the SocAbstration
+// toy implementation of the SocAbstration
 //
 
 namespace soc {
 
-struct SocSystem_Ors_Workspace;
+/** \brief an implementation of the SocSystemAbstraction that simulates a
+    single 1D point mass on a spring */
+struct SocSystem_Analytical: public virtual SocSystemAbstraction{
+  struct SocSystem_Analytical_Workspace *s;
 
-/** \brief an implementation of the SocSystemAbstraction using the \ref ors
-    simulator */
-struct SocSystem_Ors: public virtual SocSystemAbstraction {
-  ors::Graph *ors;
-  SwiftInterface *swift;
-  MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *s;
-  
-  SocSystem_Ors();
-  virtual ~SocSystem_Ors();
-  SocSystem_Ors* newClone(bool deep) const;
-  
-  //initialization methods
-  void initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
-                  uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
-  void setTimeInterval(double trajectory_time, uint trajectory_steps);
-  void setTaskVariables(const TaskVariableList& CVlist);
-  
-  //--exemplary problem setups: read specifications from MT.cfg
-  void initStandardReachProblem(uint rand_seed=0, uint T=0, bool _dynamic=false);
-  void initStandardBenchmark(uint rand_seed=0);
-  
-  //info
-  void reportOnState(std::ostream& os);
-  void displayState(const arr *x, const arr *Q=NULL, const char *text=NULL, bool reportVariables=false);
-  void recordTrajectory(const arr& q,const char *variable,const char *file);
+  SocSystem_Analytical();
+  virtual ~SocSystem_Analytical();
 
+  void initKinematic(uint dim, uint trajectory_length, double w, double endPrec);
+  void initDynamic(uint dim, double trajectory_time, uint trajectory_steps, arr *H=NULL);
+
+  
   //implementations of virtual methods
   uint nTime();
   uint nTasks();
