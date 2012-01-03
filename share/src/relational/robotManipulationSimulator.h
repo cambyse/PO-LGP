@@ -158,9 +158,6 @@ public:
   
   uint getHandID();
   
-  // Symbol Grounding
-  arr getFeatureVector(uint id);
-  
   
   
   //   double euclideanDistance(uint a, uint b);

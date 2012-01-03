@@ -1,9 +1,24 @@
+*** DIVERS ***
+
+read_nikolay 0
+rand_seed 123
+
+
+*** FILES ***
+
 file_ors situation.ors
 file_data E5T1.txt
 file_prefix_parameters parameters_RBF/E5T1-
 file_rules rules.dat
 
+
+*** SYMBOL GROUNDING ***
+
 // NN = 0
 // RBF = 1
 grounding_type 1
 
+
+*** PRADA ***
+
+PRADA_num_samples 10

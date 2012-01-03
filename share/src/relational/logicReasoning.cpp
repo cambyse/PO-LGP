@@ -2116,88 +2116,84 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
 // assumes acyclicity!
 // seems standard graph problem i don't know standard solution of
 bool TL::logicReasoning::deriveLiterals_transClosure(TL::TransClosurePredicate& p, TL::State& s) {
-    uint DEBUG = 0;
-    if (DEBUG>0) {cout<<"deriveLiterals_transClosure [START]"<<endl;}
-    if (DEBUG>0) {p.writeNice(); cout<<endl;}
-    CHECK(p.d==2, "transitive closure defined only for binary preds")
-    uint i;
-    // (1) find edges
-    std::map< uint, uintA > right;
-    std::map< uint, uintA >::iterator iter;
-    if (DEBUG>0) {cout<<"Given: ";}
-    if (p.basePred->category == category_primitive) {
-        if (p.basePred->type != TL::Predicate::predicate_comparison) {
-            FOR1D(s.lits_prim, i) {
-                if (s.lits_prim(i)->atom->pred->id == p.basePred->id) {
-                    if (DEBUG>0) {s.lits_prim(i)->write(cout);cout<<" ";}
-                    right[s.lits_prim(i)->atom->args(0)].setAppend(s.lits_prim(i)->atom->args(1));
-                }
-            }
-        }
-        else {
-          NIY;
-        }
-    }
-    else {
-        FOR1D(s.lits_derived, i) {
-            if (s.lits_derived(i)->atom->pred->id == p.basePred->id) {
-                if (DEBUG>0) {s.lits_derived(i)->write(cout);cout<<" ";}
-                right[s.lits_derived(i)->atom->args(0)].setAppend(s.lits_derived(i)->atom->args(1));
-            }
-        }
-    }
-    if (DEBUG>0) {cout<<endl;}
-    
-    if (DEBUG>1) {
-        cout<<"Direct right neighbors:"<<endl;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            cout<<iter->first<<": "<<iter->second<<endl;
-        }
-    }
-    if (right.empty())
-        return false;
-    // (2) build connections
-    bool extended;
-    uint no;
-    do {
-        extended = false;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            no = iter->second.d0;
-            uintA newGuys_candidates;
-            FOR1D(iter->second, i) {
-                newGuys_candidates.setAppend(right[iter->second(i)]);
-            }
-            iter->second.setAppend(newGuys_candidates);
-            if (iter->second.d0 > no)
-                extended = true;
-        }
-    } while (extended);
-    if (DEBUG>1) {
-        cout<<"All right neighbors:"<<endl;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            cout<<iter->first<<": "<<iter->second<<endl;
-        }
-//         cout<<"All left neighbors:"<<endl;
-//         for (iter = left.begin(); iter != left.end(); iter++) {
-//             cout<<iter->first<<": "<<iter->second<<endl;
-//         }
-    }
-    // (3) build TCP tuples
-    if (DEBUG>0) {cout<<"TL::logicObjectManager::p_derived: ";}
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"deriveLiterals_transClosure [START]"<<endl;}
+  if (DEBUG>0) {p.writeNice(); cout<<endl;}
+  CHECK(p.d==2, "transitive closure defined only for binary preds")
+  uint i;
+  // (1) find edges
+  std::map< uint, uintA > right;
+  std::map< uint, uintA >::iterator iter;
+  if (DEBUG>0) {cout<<"Given: ";}
+  if (p.basePred->category == category_primitive) {
+      if (p.basePred->type != TL::Predicate::predicate_comparison) {
+          FOR1D(s.lits_prim, i) {
+              if (s.lits_prim(i)->atom->pred->id == p.basePred->id) {
+                  if (DEBUG>0) {s.lits_prim(i)->write(cout);cout<<" ";}
+                  right[s.lits_prim(i)->atom->args(0)].setAppend(s.lits_prim(i)->atom->args(1));
+              }
+          }
+      }
+      else {
+        NIY;
+      }
+  }
+  else {
+      FOR1D(s.lits_derived, i) {
+          if (s.lits_derived(i)->atom->pred->id == p.basePred->id) {
+              if (DEBUG>0) {s.lits_derived(i)->write(cout);cout<<" ";}
+              right[s.lits_derived(i)->atom->args(0)].setAppend(s.lits_derived(i)->atom->args(1));
+          }
+      }
+  }
+  if (DEBUG>0) {cout<<endl;}
+  
+  if (DEBUG>1) {
+      cout<<"Direct right neighbors:"<<endl;
+      for (iter = right.begin(); iter != right.end(); iter++) {
+          cout<<iter->first<<": "<<iter->second<<endl;
+      }
+  }
+  if (right.empty())
+      return false;
+  // (2) build connections
+  bool extended;
+  uint no;
+  do {
+      extended = false;
+      for (iter = right.begin(); iter != right.end(); iter++) {
+          no = iter->second.d0;
+          uintA newGuys_candidates;
+          FOR1D(iter->second, i) {
+              newGuys_candidates.setAppend(right[iter->second(i)]);
+          }
+          iter->second.setAppend(newGuys_candidates);
+          if (iter->second.d0 > no)
+              extended = true;
+      }
+  } while (extended);
+  if (DEBUG>1) {
+    cout<<"All right neighbors:"<<endl;
     for (iter = right.begin(); iter != right.end(); iter++) {
-        FOR1D(iter->second, i) {
-            uintA args(2);
-            args(0)=iter->first;
-            args(1)=iter->second(i);
-            TL::Literal* lit = TL::logicObjectManager::getTransClosureLiteral(&p, args);
-            s.lits_derived.setAppend(lit);
-            if (DEBUG>0) {lit->write(cout);cout<<" ";}
-        }
+        cout<<iter->first<<": "<<iter->second<<endl;
     }
-    if (DEBUG>0) {cout<<endl;}
-    
-    if (DEBUG>0) {cout<<"deriveLiterals_transClosure [END]"<<endl;}
-    return true;
+  }
+  // (3) build TCP tuples
+  if (DEBUG>0) {cout<<"TL::logicObjectManager::p_derived: ";}
+  for (iter = right.begin(); iter != right.end(); iter++) {
+      FOR1D(iter->second, i) {
+          uintA args(2);
+          args(0)=iter->first;
+          args(1)=iter->second(i);
+          TL::Literal* lit = TL::logicObjectManager::getTransClosureLiteral(&p, args);
+          s.lits_derived.setAppend(lit);
+          if (DEBUG>0) {lit->write(cout);cout<<" ";}
+      }
+  }
+  if (DEBUG>0) {cout<<endl;}
+  
+  if (DEBUG>0) {cout<<"deriveLiterals_transClosure [END]"<<endl;}
+  return true;
 }
 
 

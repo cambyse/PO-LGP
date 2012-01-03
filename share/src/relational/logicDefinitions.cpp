@@ -1547,8 +1547,9 @@ void TL::Experience::calcChanges() {
 
 
 void TL::Experience::write(ostream& os) const {
+  os << "ACTION: " << *action << endl;
   os << "PRE:    ";
-  this->pre.write(os, false);
+  this->pre.write(os, true);
   
 //   uint i, k;
 //   uintA constants;
@@ -1567,11 +1568,8 @@ void TL::Experience::write(ostream& os) const {
 //   }
   
 //   os << endl;
-  os << "ACTION: ";
-  this->action->write(os);
-  os << endl;
   os << "POST:   ";
-  this->post.write(os, false);
+  this->post.write(os, true);
 //   os << "Diff: "<<(add.N + del.N)<<" (+"<<add.N<<", -"<<del.N<<")"<<endl;
 //   os << "ADD: ";  TL::write(add, os);  os<<endl;
 //   os << "DEL: ";  TL::write(del, os);  os<<endl;

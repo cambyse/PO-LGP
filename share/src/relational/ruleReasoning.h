@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2009-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     

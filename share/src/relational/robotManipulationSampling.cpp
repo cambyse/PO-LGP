@@ -39,7 +39,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction(const State& s, uint id_
 
 
 TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const State& s, uint id_table) {
-  uint DEBUG = 2;
+  uint DEBUG = 0;
   if (DEBUG>0) {cout<<"generateAction_wellBiased [START]"<<endl;}
     // blocks on high towers have lower prob to be grabbed
   double skyscraper_bias = 200; // 115.0;

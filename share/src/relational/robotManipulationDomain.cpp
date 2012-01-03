@@ -33,10 +33,14 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   State* state = new State;
   
   uint i, j;
-  uint table_id = sim->getTableID();
   
   // TABLE
-  state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_table(table_id)));
+  uint table_id = sim->getTableID();
+  if (TL::logicObjectManager::constants.findValue(table_id) >= 0)
+    table_id = TL::UINT_NIL;
+  if (table_id != TL::UINT_NIL) {
+    state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_table(table_id)));
+  }
   // BLOCKS
   uintA blocks;
   sim->getBlocks(blocks);
@@ -58,6 +62,13 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   }
   uintA all_objs;
   sim->getObjects(all_objs);
+  // filter for logic
+  FOR1D_DOWN(all_objs, i) {
+    if (TL::logicObjectManager::constants.findValue(all_objs(i)) < 0) {
+      all_objs.removeValueSafe(all_objs(i));
+    }
+  }
+  
   // SIZE
   if (TL::logicObjectManager::getFunction(MT::String("size")) != NULL) {
     double length;
@@ -94,7 +105,6 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   uintA objects_on;
   FOR1D(all_objs, i) {
     sim->getObjectsOn(objects_on, all_objs(i));
-//     cout<<"above "<<all_objs(i)<<" are "<<objects_on<<endl;
     FOR1D(objects_on, j) {
       if (all_objs.findValue(objects_on(j)) >= 0)
         state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(objects_on(j), all_objs(i))));
@@ -119,7 +129,9 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   FOR1D(boxes, i) {
     uint o = sim->getContainedObject(boxes(i));
     if (o != UINT_MAX) {
-      state->lits_prim.removeValueSafe(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(o, table_id)));
+      if (table_id == TL::UINT_NIL) {
+        state->lits_prim.removeValueSafe(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_on(o, table_id)));
+      }
       state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_contains(boxes(i), o)));
     }
   }
@@ -1836,7 +1848,7 @@ void TL::RobotManipulationDomain::writeStateInfo(const State& s, ostream& out) {
       break;
     }
   }
-  CHECK(id_table != UINT_MAX, "");
+//   CHECK(id_table != UINT_MAX, "");
   
   // Piles
   uintA piles;

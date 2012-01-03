@@ -77,18 +77,22 @@ relational::SymbolGrounding::SymbolGrounding(MT::String& _name, uint _arity, boo
 
 void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
   uint DEBUG = 0;
+  // HACK
+  if (arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
-  if (DEBUG>0) {PRINT(objects_ids);  PRINT(objects_data);}
+  if (DEBUG>0) {cout<<"***********  "<<this->name<<endl;  PRINT(objects_ids);  PRINT(objects_data);}
   lits.clear();
   uint i;
   if (arity == 1) {
     FOR1D(objects_ids, i) {
-      if (DEBUG>1) {PRINT(objects_ids(i));  PRINT(objects_data(i));}
+      if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(i)<<")"<<endl;}
+      if (DEBUG>1) {PRINT(objects_data(i));}
       bool does_hold = holds(objects_data(i));
       if (DEBUG>1) {PRINT(does_hold);}
       if (does_hold) {
         uintA args;  args.append(objects_ids(i));
         lits.append(TL::logicObjectManager::getLiteral(this->pred, true, args));
+        if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
   }
@@ -98,7 +102,7 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& obj
     FOR1D(objects_ids, i) {objs_numbers.append(i);}
     TL::allPossibleLists(lists, objs_numbers, arity, false, true);
     FOR1D(lists, i) {
-      if (DEBUG>1) {cout<<"Next:  "<<this->pred->name<<lists(i)<<endl;}
+      if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
       arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
       if (DEBUG>1) {PRINT(x);}
       bool does_hold = holds(x);
@@ -106,7 +110,7 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& obj
       if (does_hold) {
         uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));
         lits.append(TL::logicObjectManager::getLiteral(this->pred, true, args));
-        if (DEBUG>1) {cout<<"--> "<<*lits.last()<<endl;}
+        if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
   }
@@ -114,9 +118,6 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& obj
   if (DEBUG>0) {PRINT(lits.N);  PRINT(lits);}
   if (DEBUG>0) {cout<<"calculateLiterals [END]"<<endl;}
 }
-
-
-
 
 
 
@@ -140,20 +141,20 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<
 }
 
 
-void relational::calculateLiterals(MT::Array<SymbolGrounding*>& sgs, FullExperience& e) {
+void relational::calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullExperience& e) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
   // Pre-State
   uintA objs;
   uint k;
-  for (k=0; k<e.state_continuous_pre.N; k++) {objs.append(buildConstant_nikolayData(k));}
+  for (k=0; k<e.state_continuous_pre.N; k++) {objs.append(buildConstant(k));}
   SymbolGrounding::calculateLiterals(e.experience_symbolic.pre.lits_prim, sgs, objs, e.state_continuous_pre);
   SymbolGrounding::calculateLiterals(e.experience_symbolic.post.lits_prim, sgs, objs, e.state_continuous_post);
   TL::logicReasoning::derive(&e.experience_symbolic.pre);
   TL::logicReasoning::derive(&e.experience_symbolic.post);
   e.experience_symbolic.calcChanges();
-  if (DEBUG>2) {PRINT(e.action_target);}
-  uintA args = TUP(buildConstant_nikolayData(e.action_target));
+  if (DEBUG>1) {PRINT(e.action_args);}
+  uintA args = buildConstant(e.action_args);
   if (e.action_type == 1)
     e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("grab")), args);
   else
@@ -251,7 +252,7 @@ bool relational::NN_Grounding::holds(arr& x) const {
   double g = (1. / ( 1. + exp( g_argument(0,0)) ));
   double p = g - 0.5;
   if (DEBUG>0) {PRINT(g);  PRINT(p);}
-  if (DEBUG>0) {PRINT((p>0.));}
+  if (DEBUG>1) {PRINT((p>0.));}
   if (DEBUG>0) {cout<<"holds [END]"<<endl;}
   return p>0.;
 }
@@ -310,15 +311,15 @@ SymbolGrounding(name, arity, build_derived_predicates) {
 
 bool relational::RBF_Grounding::holds(arr& x) const {
   uint DEBUG = 0;
+  // HACK
+  if (this->arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"holds [START]"<<endl;}
-  if (DEBUG>1) {PRINT(x);  write();}
+  if (DEBUG>1) {write();  PRINT(x);}
   double p;
   arr x_diff = x - w_c;
-  arr w_mean(4);  w_mean(0) = w_sigma(0,0);  w_mean(1) = w_sigma(1,0);  w_mean(2) = w_sigma(2,0);  w_mean(3) = w_sigma(3,0);
-  double exponent = 4.;
   uint i;
-  FOR1D(w_mean, i) {w_mean(i) = pow(w_mean(i), 4);}
-  arr cov_matrix = diag(w_mean);
+  arr w_sigma_hoch_zwei = pow(w_sigma, 2.0);
+  arr cov_matrix = diag(w_sigma_hoch_zwei);
   arr cov_matrix_inv = inverse(cov_matrix);
   arr g1 = cov_matrix_inv * x_diff;
   arr g2 = ~g1 * x_diff;
@@ -326,13 +327,14 @@ bool relational::RBF_Grounding::holds(arr& x) const {
   double g = exp(-g2(0));
   p = g - 0.5;
   if (DEBUG>0) {PRINT(g);  PRINT(p);}
-  if (DEBUG>0) {PRINT((p>0.));}
+  if (DEBUG>1) {PRINT((p>0.));}
   if (DEBUG>0) {cout<<"holds [END]"<<endl;}
   return p>0.;
 }
 
 void relational::RBF_Grounding::read(const char* file_w_c, const char* file_w_sigma) {
   uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"RBF_Grounding::read [START]"<<endl;}
   ifstream in;
   in.open(file_w_c);
   CHECK(in.is_open(), "File "<<file_w_c<<" can't be opened!");
@@ -343,8 +345,10 @@ void relational::RBF_Grounding::read(const char* file_w_c, const char* file_w_si
   in.open(file_w_sigma);
   CHECK(in.is_open(), "File "<<file_w_sigma<<" can't be opened!");
   this->w_sigma.read(in);
+  this->w_sigma.reshape(4);
   if (DEBUG>0) {PRINT(this->w_sigma);}
   in.close();
+  if (DEBUG>0) {cout<<"RBF_Grounding::read [END]"<<endl;}
 }
 
 
@@ -368,7 +372,18 @@ void relational::getFeatureVector(arr& f, const ors::Graph& C, uint obj) {
   f(0) = C.bodies(obj)->X.pos.p[0];  // position
   f(1) = C.bodies(obj)->X.pos.p[1];  // position
   f(2) = C.bodies(obj)->X.pos.p[2];  // position
-  f(2) = C.bodies(obj)->shapes(0)->size[0];  // size
+  f(3) = C.bodies(obj)->shapes(0)->size[0];  // size
+}
+
+
+void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs) {
+  fs.clear();
+  uint i;
+  FOR1D(objs, i) {
+    arr f;
+    getFeatureVector(f, C, objs(i));
+    fs.append(f);
+  }
 }
 
 
@@ -390,11 +405,7 @@ void relational::calculateLiterals(LitL& lits, const MT::Array<relational::Symbo
   if (DEBUG>0) {PRINT(obj_ids);}
   
   MT::Array< arr > objects_data;
-  FOR1D(obj_ids, i) {
-    arr f1;
-    getFeatureVector(f1, *C, obj_ids(i));
-    objects_data.append(f1);
-  }
+  getFeatureVectors(objects_data, *C, obj_ids);
   if (DEBUG>0) {PRINT(objects_data);}
   
   SymbolGrounding::calculateLiterals(lits, sgs, obj_ids, objects_data);
@@ -416,17 +427,43 @@ void relational::calculateLiterals(LitL& lits, const MT::Array<relational::Symbo
 //  FullExperience
 
 
-void relational::FullExperience::write_continuous(ostream& out) {
+void relational::FullExperience::write_continuous_nice(ostream& out) const {
   out<<"PRE: "<<state_continuous_pre.N<<endl;
   out<<state_continuous_pre<<endl;
   out<<"ACTION:"<<endl;
   out<<"action_type="<<action_type<<endl;
-  out<<"action_target="<<action_target<<endl;
+  out<<"action_args="<<action_args<<endl;
   out<<"POST: "<<state_continuous_post.N<<endl;
   out<<state_continuous_post<<endl;
 }
-  
-void relational::FullExperience::write_symbolic(ostream& out) {
+
+void relational::FullExperience::write_continuous(ostream& out) const {
+  out<<"{"<<endl;
+  out<<state_continuous_pre.N<<endl;
+  out<<action_type<<endl;
+  out<<action_args<<endl;
+  out<<reward<<endl;
+  out<<endl;
+  uint i;
+  FOR1D(state_continuous_pre, i) {
+    out<<state_continuous_pre(i)<<endl;
+  }
+  out<<endl;
+  FOR1D(state_continuous_post, i) {
+    out<<state_continuous_post(i)<<endl;
+  }
+  out<<"}"<<endl;
+}
+
+void relational::FullExperience::write_continuous(MT::Array<FullExperience* > exps, ostream& out) {
+  uint i;
+  FOR1D(exps, i) {
+    exps(i)->write_continuous(out);
+    out<<endl;
+  }
+}
+
+void relational::FullExperience::write_symbolic(ostream& out) const {
   experience_symbolic.write(out);
 }
   
@@ -438,9 +475,10 @@ void relational::FullExperience::write_symbolic(MT::Array<FullExperience* > exps
   }
 }
 
-void relational::FullExperience::read_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name) {
+void relational::FullExperience::read_continuous_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"read_data [START]"<<endl;}
+  if (DEBUG>0) {cout<<"read_nikolayFormat [START]"<<endl;}
+  if (DEBUG>0) {PRINT(file_name);}
   ifstream in(file_name);
   CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
   uint OBJ_NUM = 5;
@@ -464,13 +502,117 @@ void relational::FullExperience::read_nikolayFormat(MT::Array< FullExperience* >
     }
     double action_type_double, action_target_double;
     line >> action_type_double;
-    exp->action_type = (uint) action_type_double;
+    if (TL::areEqual(action_type_double, 0.0))
+      exp->action_type = grab;
+    else if (TL::areEqual(action_type_double, 1.0))
+      exp->action_type = puton;
+    else
+      NIY;
     line >> action_target_double;
-    exp->action_target = (uint) action_target_double - 1;  // -1 since Nikolay starts to count at 1
+    exp->action_args.append((uint) action_target_double - 1);  // -1 since Nikolay starts to count at 1
     line >> exp->reward;
     experiences.append(exp);
     if (DEBUG>0) {experiences.last()->write_continuous(cout);}
   }
   
-  if (DEBUG>0) {cout<<"read_data [END]"<<endl;}
+  if (DEBUG>0) {cout<<"read_nikolayFormat [END]"<<endl;}
 }
+
+
+
+
+
+relational::FullExperience* relational::FullExperience::read_continuous(ifstream& in) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"read_continuous [START]"<<endl;}
+  
+  CHECK(in.is_open(), "Input stream ain't open!");
+  relational::FullExperience* e = new relational::FullExperience;
+  
+  MT::skip(in);
+  MT::skipLine(in);  // "{"
+  
+  MT::String line;
+  // number_objects
+  line.read(in, NULL, "\n");
+  uint number_objects;
+  line >> number_objects;
+  // action_type__uint
+  MT::skip(in);  line.read(in, NULL, "\n");
+  uint action_type__uint;
+  MT::skip(in);  line >> action_type__uint;
+   e->action_type = ActionType(action_type__uint);
+  // action_args
+  MT::skip(in);  line.read(in, NULL, "\n");
+  line >> e->action_args;
+  // reward
+  MT::skip(in);  line.read(in, NULL, "\n");
+  line >> e->reward;
+  // pre
+  uint i;
+  for (i=0; i<number_objects; i++) {
+    arr data;
+    in >> data;
+    e->state_continuous_pre.append(data);
+  }
+  // post
+  for (i=0; i<number_objects; i++) {
+    arr data;
+    in >> data;
+    e->state_continuous_post.append(data);
+  }
+  MT::skip(in);
+  MT::skipLine(in);  // "}"
+  
+  
+  if (DEBUG>0) {e->write_continuous(cout);}
+  if (DEBUG>0) {cout<<"read_continuous [END]"<<endl;}
+  return e;
+}
+
+
+void relational::FullExperience::read_continuous(MT::Array< relational::FullExperience* >& experiences, const char* filename) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"read_continuous list [START]"<<endl;}
+  if (DEBUG>0) {PRINT(filename);}
+  experiences.clear();
+  ifstream in(filename);
+//   PRINT(filename);
+  if (!in.is_open()) {
+    cerr<<"File " << filename << " can't be opened!"<<endl;
+    HALT("");
+  }  
+  // read other rules
+  while (MT::skip(in) != -1) {
+//     PRINT(MT::peerNextChar(in));
+    experiences.append(read_continuous(in));
+    if (DEBUG>0) {experiences.last()->write_continuous(cout);}
+  }
+  if (DEBUG>0) {cout<<"read_continuous list [END]"<<endl;}
+}
+
+
+void relational::FullExperience::sanityCheck(MT::Array< FullExperience* >& experiences) {
+  uint i;
+  FOR1D(experiences, i) {
+    if (i==0) continue;
+    if (i%30==0) continue;
+    if (i%10==0) continue;
+    if (experiences(i)->state_continuous_pre != experiences(i-1)->state_continuous_post) {
+      cerr << "FullExperience::sanityCheck failed:  continuous states different "<<(i-1)<<" to "<<i << endl;
+      cerr << "(i-1)=" << (i-1) << " [--> (" << i << ")]" << endl
+           << "experiences(i-1)->state_continuous_post:" << endl;
+      experiences(i-1)->write_continuous(cerr);
+//            << experiences(i-1)->state_continuous_post << endl;
+      cerr << "i=" << i << " [--> (" << (i+1) << ")]" << endl
+           << "experiences(i)->state_continuous_pre:" << endl;
+      experiences(i)->write_continuous(cerr);
+//            << experiences(i)->state_continuous_pre << endl;
+      HALT("");
+    }
+    if (experiences(i)->experience_symbolic.pre != experiences(i-1)->experience_symbolic.post)
+      HALT("FullExperience::sanityCheck failed:  symbolic states different "<<(i-1)<<" to "<<i);
+  }
+}
+
+

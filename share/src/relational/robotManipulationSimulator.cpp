@@ -139,7 +139,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
 
 
 // How many time-steps until action fails
-#define SEC_ACTION_ABORT 500
+#define SEC_ACTION_ABORT 1000
 
 RobotManipulationSimulator::RobotManipulationSimulator(){
   C=0;

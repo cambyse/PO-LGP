@@ -71,6 +71,7 @@ void read(MT::Array<SymbolGrounding*>& pns, const char* prefix, SymbolGrounding:
   
 // ors::Graph interface
 void getFeatureVector(arr& f, const ors::Graph& C, uint obj);
+void getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs);
 void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, ors::Graph* C);
 
 
@@ -82,7 +83,7 @@ typedef MT::Array< relational::SymbolGrounding* > SGL;
 namespace relational {
 
 // ------------------------------------------------------------------
-//  Experiences
+//  Nikolays Format -- Experiences
   
 // state: 20
 // 5 Objekte, 5. Objekt ist die Roboterhand
@@ -93,33 +94,44 @@ namespace relational {
 // genauso
 
 // action: 2
-// (1): Aktionstyp grasp 1, puton 2
+
 // (2): 
 
 // reward: 1
 
-inline uint buildConstant_nikolayData(uint a) {return a + 21;}
+// #define LOGIC_CONSTANTS_START 61
+#define LOGIC_CONSTANTS_START 64
+inline uint buildConstant(uint a, uint bound = LOGIC_CONSTANTS_START) {return a + bound;}  // meine Daten: erstes Objekt = table
+inline uintA buildConstant(uintA& a, uint bound = LOGIC_CONSTANTS_START) {return a + bound;}
 
 struct FullExperience {
+  enum ActionType {grab, puton};
   
   MT::Array< arr > state_continuous_pre;
   MT::Array< arr > state_continuous_post;
   
-  uint action_type;
-  uint action_target;
+  ActionType action_type;
+  uintA action_args;
   
   double reward;
   
   TL::Experience experience_symbolic;
   
-  void write_continuous(ostream& out);
-  void write_symbolic(ostream& out);
+  void write_continuous_nice(ostream& out) const;
+  void write_continuous(ostream& out) const;
+  void write_symbolic(ostream& out) const;
+  static void write_continuous(MT::Array<FullExperience* > exps, ostream& out);
   static void write_symbolic(MT::Array<FullExperience* > exps, ostream& out);
-  static void read_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static FullExperience* read_continuous(ifstream& in);
+  static void read_continuous(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static void read_continuous_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static void sanityCheck(MT::Array< FullExperience* >& experiences);
 };
 
-void calculateLiterals(MT::Array<SymbolGrounding*>& pns, FullExperience& e);
+void calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullExperience& e);
 
 }
+
+typedef MT::Array< relational::FullExperience* > FullExperienceL;
 
 #endif // TL__SYMBOL_GROUNDING

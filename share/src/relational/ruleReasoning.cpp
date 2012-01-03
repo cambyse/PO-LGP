@@ -670,11 +670,12 @@ void TL::ruleReasoning::ground(TL::RuleSet& rules_grounded, const TL::RuleSet& r
       FOR1D(r_abs->action->pred->arg_types, i) {
         TL::TermType* arg_type = r_abs->action->pred->arg_types(i);
         TL::TermType* object_type = TL::logicObjectManager::getTermTypeOfObject(combos_args(c1)(i));
-        cout<<"SDHF: ";
-        r_abs->action->write(); cout<<endl;
-        cout<<"i="<<i<<"  arg "; arg_type->writeNice();
-        cout<<"  with   const ";  object_type->writeNice();
-        cout<<"  [combos_args(c1)(i)="<<combos_args(c1)(i)<<"]"<<endl;
+        if (DEBUG>1) {
+          r_abs->action->write(); cout<<endl;
+          cout<<"i="<<i<<"  arg "; arg_type->writeNice();
+          cout<<"  with   const ";  object_type->writeNice();
+          cout<<"  [combos_args(c1)(i)="<<combos_args(c1)(i)<<"]"<<endl;
+        }
         if (!arg_type->subsumes(*object_type)) {
 //           cout<<"not subsumed!"<<endl;
           break;
