@@ -1,0 +1,4 @@
+git branch $1
+git checkout $1
+git push maserati $1
+git branch --set-upstream $1 maserati/$1
