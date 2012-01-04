@@ -442,9 +442,9 @@ void symbol_evaluation() {
 
 void collect_simulator_data() {
   MT::Array< MT::String > files_ors;
-  files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
-  files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
-  
+ // files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
+ // files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
+  files_ors.append(MT::String("situationNik.ors"));
   // Set up logic
   TL::logicObjectManager::init("language.dat");
 
@@ -560,17 +560,25 @@ void collect_simulator_data() {
  * HAUPTZIEL: gute Regeln lernen und die evaluieren
  */
 
+#include "NikolayRoutines.h"
+
 int main(int argc, char** argv){
   MT::String config_file("config");
   cout << "Config-file: " << config_file << endl;
   MT::openConfigFile(config_file);
+
+  uint nik_data;
+  MT::getParameter(nik_data, "nikolay_data");
+  if (nik_data)
+  NikGenerateData();
+
 
   uint rand_seed;
   MT::getParameter(rand_seed, "rand_seed");
   rnd.seed(rand_seed);
   PRINT_(rand_seed);
   
-//   collect_simulator_data();
+   collect_simulator_data();
   produce_rules();
 //   symbol_evaluation();
 
