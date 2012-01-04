@@ -908,7 +908,7 @@ double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm) {
 // rvs_rules_simple:  P(\phi_r | s)
 // rvs_rules: P(\phi_r | -\phi_r', s)
 void NID_DBN::inferRules(uint t) {
-  uint DEBUG = 2;
+  uint DEBUG = 0;
   if (DEBUG>0) {cout<<"inferRules [START]"<<endl;}
   if (DEBUG>0) {PRINT(t);}
   uint r, r2;
@@ -1987,7 +1987,7 @@ void PRADA::sampleActionsAndInfer(AtomL& sampled_actions, const AtomL& fixed_act
 }
 
 void PRADA::sampleActionsAndInfer(AtomL& sampled_actions, const AtomL& fixed_actions1, NID_DBN* local_net, uint local_horizon) {
-  uint DEBUG = 3;
+  uint DEBUG = 0;
   if (DEBUG>0) {cout<<"sampleActionsAndInfer [START]"<<endl;}
   AtomL fixed_actions;  fixed_actions = fixed_actions1;
   if (DEBUG>0) {cout<<"fixed_actions: " << fixed_actions <<endl;}
@@ -2168,7 +2168,7 @@ void my_handmade_plan(AtomL& plan) {
 
 
 bool PRADA::plan(AtomL& best_plan, double& bestValue, uint num_samples) {
-  uint DEBUG = 3;
+  uint DEBUG = 1;
   if (DEBUG>0) {cout<<"PRADA::plan [START]"<<endl;}
   
   uint t;

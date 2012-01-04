@@ -92,8 +92,8 @@ namespace ruleReasoning {
     SCORING
    ***************************************/
   
-  double log_likelihood(const RuleSet& rules, const ExperienceA& experiences, double p_min);
-  double score(const RuleSet& rules, const ExperienceA& experiences, double p_min, double alpha_pen);
+  double log_likelihood(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min);
+  double score(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min, double alpha_pen);
   
   
   

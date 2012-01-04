@@ -9,7 +9,8 @@
 
 namespace relational {
   
-  
+
+struct ContinuousState;
   
 // ------------------------------------------------------------------
 //  SymbolGrounding
@@ -32,7 +33,7 @@ public:
   virtual void calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const;
   virtual void write() const;
   
-  static void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, const uintA& objects_ids, const MT::Array< arr > & objects_data);
+  static void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, const ContinuousState& const_state);
 };
 
 
@@ -81,41 +82,36 @@ typedef MT::Array< relational::SymbolGrounding* > SGL;
 
 
 namespace relational {
-
-// ------------------------------------------------------------------
-//  Nikolays Format -- Experiences
   
-// state: 20
-// 5 Objekte, 5. Objekt ist die Roboterhand
-// (1-3): x,y,z-Koords
-// (4): Groesse
 
-// successor state: 20
-// genauso
+struct ContinuousState {
+  uintA object_ids;
+  MT::Array< arr > data;
+  
+  void write(ostream& out) const;
+  void read(istream& in);
+  
+  bool operator==(const ContinuousState& other) const;
+  bool operator!=(const ContinuousState& other) const;
+};
 
-// action: 2
 
-// (2): 
+ContinuousState* getContinuousState(const ors::Graph& C, const uintA& objects);
 
-// reward: 1
 
-// #define LOGIC_CONSTANTS_START 61
-#define LOGIC_CONSTANTS_START 64
-inline uint buildConstant(uint a, uint bound = LOGIC_CONSTANTS_START) {return a + bound;}  // meine Daten: erstes Objekt = table
-inline uintA buildConstant(uintA& a, uint bound = LOGIC_CONSTANTS_START) {return a + bound;}
 
 struct FullExperience {
   enum ActionType {grab, puton};
   
-  MT::Array< arr > state_continuous_pre;
-  MT::Array< arr > state_continuous_post;
+  ContinuousState state_continuous_pre;
+  ContinuousState state_continuous_post;
   
   ActionType action_type;
   uintA action_args;
   
   double reward;
   
-  TL::Experience experience_symbolic;
+  TL::SymbolicExperience experience_symbolic;
   
   void write_continuous_nice(ostream& out) const;
   void write_continuous(ostream& out) const;

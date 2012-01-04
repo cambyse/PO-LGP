@@ -995,7 +995,7 @@ std::ostream& operator<<(std::ostream& os, const TL::Rule& r) {
   r.write(os); return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const TL::Experience& e) {
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicExperience& e) {
   e.write(os); return os;
 }
 
@@ -1510,7 +1510,7 @@ TL::Trial::~Trial() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::State& post) {
+TL::SymbolicExperience::SymbolicExperience(const TL::State& pre, TL::Atom* action, const TL::State& post) {
   this->pre = pre;
   this->action = action;
   this->post = post;
@@ -1518,12 +1518,12 @@ TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::Sta
 }
 
 
-TL::Experience::Experience() {}
+TL::SymbolicExperience::SymbolicExperience() {}
 
-TL::Experience::~Experience() {
+TL::SymbolicExperience::~SymbolicExperience() {
 }
 
-void TL::Experience::calcChanges() {
+void TL::SymbolicExperience::calcChanges() {
   // only look at p_prim
   changedConstants.clear();
   del.clear();
@@ -1546,10 +1546,11 @@ void TL::Experience::calcChanges() {
 }
 
 
-void TL::Experience::write(ostream& os) const {
+void TL::SymbolicExperience::write(ostream& os) const {
   os << "ACTION: " << *action << endl;
   os << "PRE:    ";
-  this->pre.write(os, true);
+  this->pre.write(os);
+//   this->pre.write(os, true);
   
 //   uint i, k;
 //   uintA constants;
@@ -1569,13 +1570,14 @@ void TL::Experience::write(ostream& os) const {
   
 //   os << endl;
   os << "POST:   ";
-  this->post.write(os, true);
+  this->post.write(os);
+//   this->post.write(os, true);
 //   os << "Diff: "<<(add.N + del.N)<<" (+"<<add.N<<", -"<<del.N<<")"<<endl;
 //   os << "ADD: ";  TL::write(add, os);  os<<endl;
 //   os << "DEL: ";  TL::write(del, os);  os<<endl;
 }
 
-bool TL::Experience::noChange() {
+bool TL::SymbolicExperience::noChange() {
   return changedConstants.N == 0  &&  del.N == 0  &&  add.N == 0;
 }
 
@@ -1941,7 +1943,7 @@ void TL::write(const MT::Array< LitL >& outcomes, ostream& os) {
 }
 
 
-void TL::write(const ExperienceA& exs, ostream& os) {
+void TL::write(const SymbolicExperienceL& exs, ostream& os) {
   uint k;
   FOR1D(exs, k) {
     os << "(" << k << ") ";

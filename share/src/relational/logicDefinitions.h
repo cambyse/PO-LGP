@@ -619,6 +619,7 @@ class SubstitutionSet {
  ***************************************/
 
 struct State {
+  uintA state_objects;
   MT::Array<Literal*> lits_prim;
   MT::Array<Literal*> lits_derived;
   MT::Array<FunctionValue*> fv_prim;
@@ -657,26 +658,22 @@ struct Trial {
 
 
 
-struct Experience {
+struct SymbolicExperience {
   TL::State pre, post;
   TL::Atom* action;
   
   MT::Array< TL::Literal* > del, add;
   uintA changedConstants;
   
-  Experience(const TL::State& pre, TL::Atom* action, const TL::State& post);
-  Experience();
-  ~Experience();
+  SymbolicExperience(const TL::State& pre, TL::Atom* action, const TL::State& post);
+  SymbolicExperience();
+  ~SymbolicExperience();
   
   bool noChange();
   void calcChanges();
   
   void write(ostream& os = cout) const;
 };
-
-typedef MT::Array< Experience* > ExperienceA;
-
-
 
 
 }
@@ -692,7 +689,7 @@ std::ostream& operator<<(std::ostream& os, const TL::Literal& s);
 std::ostream& operator<<(std::ostream& os, const TL::FunctionAtom& fa);
 std::ostream& operator<<(std::ostream& os, const TL::FunctionValue& fv);
 std::ostream& operator<<(std::ostream& os, const TL::Rule& r);
-std::ostream& operator<<(std::ostream& os, const TL::Experience& e);
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicExperience& e);
 std::ostream& operator<<(std::ostream& os, const MT::Array< TL::Literal* > & lits);
 std::ostream& operator<<(std::ostream& os, const MT::Array< TL::Atom* > & atoms);
 
@@ -707,7 +704,7 @@ typedef MT::Array< TL::ComparisonAtom* > CompAtomL;
 typedef MT::Array< TL::ComparisonLiteral* > CompLitL;
 typedef MT::Array< TL::State* > StateL;
 typedef MT::Array< TL::TermType* > TermTypeL;
-typedef MT::Array< TL::Experience* > ExperienceL;
+typedef MT::Array< TL::SymbolicExperience* > SymbolicExperienceL;
 
 
 
@@ -725,7 +722,7 @@ void write(const AtomL& atoms, ostream& os = cout);
 void write(const LitL& lits, ostream& os = cout);
 void write(const FuncVL& fvs, ostream& os = cout);
 void write(const FuncAL& fis, ostream& os = cout);
-void write(const ExperienceL& exs, ostream& os = cout);
+void write(const SymbolicExperienceL& exs, ostream& os = cout);
 void write(const MT::Array< LitL >& list_of_lits_list, ostream& os = cout);
 void write(const RuleSet& rules, ostream& os = cout);
 void write(const RuleSet& rules, const char* filename);

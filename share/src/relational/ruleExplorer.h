@@ -89,7 +89,7 @@ class RuleExplorer {
   
   // Experiences
   MT::Array< uintA > experiences_per_modeledAction;
-  ExperienceA all_experiences;
+  SymbolicExperienceL all_experiences;
   arr experience_weights;
   boolA is_major_experience;
   MT::Array<TL::State*> visited_pre_states;

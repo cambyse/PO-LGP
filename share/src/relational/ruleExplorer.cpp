@@ -829,7 +829,7 @@ TL::Atom* RuleExplorer::decideAction(const TL::State& state, NID_Planner* planne
 void RuleExplorer::addObservation__helper(TL::State* state_pre, TL::Atom* action, TL::State* state_post) {
   visited_pre_states.append(state_pre);
   visited_actions.append(action);
-  Experience* exp = new Experience(*state_pre, action, *state_post);
+  SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
   all_experiences.append(exp);
   is_major_experience.append(false);
   experience_weights.append(1.0);
@@ -1139,7 +1139,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
       
       // (iii) learn new rules for this action
       TL::RuleSetContainer rulesC_for_action;
-      ExperienceA action_experiences;
+      SymbolicExperienceL action_experiences;
       arr action_experience_weights;
       FOR1D(experiences_per_modeledAction(i), k) {
         action_experiences.append(all_experiences(experiences_per_modeledAction(i)(k)));
@@ -1392,7 +1392,7 @@ void AbstractRuleExplorer::addObservation(State* state_pre, Atom* action, State*
   if (fixedActions.findValue(action) >= 0) {
     visited_pre_states.append(state_pre);
     visited_actions.append(action);
-    Experience* exp = new Experience(*state_pre, action, *state_post);
+    SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
     all_experiences.append(exp);
     is_major_experience.append(false);
     experience_weights.append(1.0);
@@ -1840,7 +1840,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
       
       // (iii) learn new rules for this action
       TL::RuleSetContainer_ground rulesC_for_action;
-      ExperienceA action_experiences;
+      SymbolicExperienceL action_experiences;
       arr action_experience_weights;
       FOR1D(experiences_per_modeledAction(i), k) {
         action_experiences.append(all_experiences(experiences_per_modeledAction(i)(k)));
@@ -2033,7 +2033,7 @@ void FactoredRuleExplorer::addObservation(State* state_pre, Atom* action, State*
   if (fixedActions.findValue(action) >= 0) {
     visited_pre_states.append(state_pre);
     visited_actions.append(action);
-    Experience* exp = new Experience(*state_pre, action, *state_post);
+    SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
     all_experiences.append(exp);
     is_major_experience.append(false);
     experience_weights.append(1.0);
@@ -2310,7 +2310,7 @@ void FlatExplorer::addObservation(TL::State* state_pre, TL::Atom* action, TL::St
   // General stuff
   visited_pre_states.append(state_pre);
   visited_actions.append(action);
-  Experience* exp = new Experience(*state_pre, action, *state_post);
+  SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
   all_experiences.append(exp);
   is_major_experience.append(false);
   experience_weights.append(1.0);

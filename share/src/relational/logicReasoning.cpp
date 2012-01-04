@@ -256,6 +256,11 @@ void TL::logicReasoning::getConstants(const LitL& lits, uintA& constants) {
 
 
 void TL::logicReasoning::getConstants(const TL::State& s, uintA& constants) {
+  if (s.state_objects.N > 0) {
+    constants = s.state_objects;
+    return;
+  }
+  
   uintA localConstants;
   getConstants(s.lits_prim, localConstants);
   constants.setAppend(localConstants);
@@ -275,7 +280,7 @@ void TL::logicReasoning::getConstants(const TL::State& s, uintA& constants) {
   
   TL::sort_asc(constants);
   
-  // HACK if no constants found, probably almost not literal held true...
+  // HACK if no constants found, probably almost no literal held true...
   // This is the case if there are not always true typing predicates.
   if (constants.N < 3) constants = TL::logicObjectManager::constants;
 }
@@ -2483,120 +2488,121 @@ bool TL::logicReasoning::deriveFunctionValues_reward(TL::RewardFunction& f, TL::
 // construct TL::logicObjectManager::p_derived predicates and functions
 // assumptions: no self recursion
 // negation in base predicates is only allowed for primitive predicates
-void TL::logicReasoning::derive(const LitL& lits_prim, const FuncVL& fv_prim, LitL& lits_derived, FuncVL& fv_derived) {
-    uint DEBUG = 0;
-    if (DEBUG > 0) cout << "derive [START]" << endl;
-    if (DEBUG > 1) {
-        cout << "Primitive Lits: ";
-        write(lits_prim);
-        cout << endl;
-    }
+void TL::logicReasoning::derive(const LitL& lits_prim, const FuncVL& fv_prim, LitL& lits_derived, FuncVL& fv_derived, uintA& objects) {
+  uint DEBUG = 0;
+  if (DEBUG > 0) cout << "derive [START]" << endl;
+  if (DEBUG > 1) {
+      cout << "Primitive Lits: ";
+      write(lits_prim);
+      cout << endl;
+  }
+
+  TL::State s;
+  s.derivedDerived = true; // needs to be set here, since TL::logicObjectManager::p_derived predicates that build on other TL::logicObjectManager::p_derived predicates require that the state be TL::logicObjectManager::p_derived; in short: setting this state as derivedDerived is safe here since we will derive all the stuff now anyway
+  s.lits_prim.append(lits_prim);
+  s.fv_prim.append(fv_prim);
+  s.state_objects = objects;
   
-    TL::State s;
-    s.derivedDerived = true; // needs to be set here, since TL::logicObjectManager::p_derived predicates that build on other TL::logicObjectManager::p_derived predicates require that the state be TL::logicObjectManager::p_derived; in short: setting this state as derivedDerived is safe here since we will derive all the stuff now anyway
-    s.lits_prim.append(lits_prim);
-    s.fv_prim.append(fv_prim);
-    
-    uintA ordered_ids;
-    boolA isPredicate;
-    TL::logicObjectManager::dependencyGraph.getWellDefinedOrder(ordered_ids, isPredicate, true);
-    
-    uint i, d;
-    FOR1D(ordered_ids, i) {
-        if (isPredicate(i)) {
-            FOR1D(TL::logicObjectManager::p_derived, d) {
-                if (TL::logicObjectManager::p_derived(d)->id == ordered_ids(i)) break;
-            }
-            CHECK(d<TL::logicObjectManager::p_derived.N, "TL::logicObjectManager::p_derived predicate not found");
-            if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_conjunction) {
-                TL::ConjunctionPredicate* scp = dynamic_cast<TL::ConjunctionPredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(scp!=NULL, "cast failed");
-                deriveLiterals_conjunction(*scp, s);
-            }
-            else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_transClosure) {
-                TL::TransClosurePredicate* tcp = dynamic_cast<TL::TransClosurePredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(tcp!=NULL, "cast failed");
-                deriveLiterals_transClosure(*tcp, s);
-            }
-            else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_count) {
-                TL::CountPredicate* p = dynamic_cast<TL::CountPredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(p!=NULL, "cast failed");
-                deriveLiterals_count(*p, s);
-            }
-            else {
-                HALT("Unknown predicate")
-            }
-        }
-        else {
-            FOR1D(TL::logicObjectManager::f_derived, d) {
-                if (TL::logicObjectManager::f_derived(d)->id == ordered_ids(i)) break;
-            }
-            CHECK(d<TL::logicObjectManager::f_derived.N, "TL::logicObjectManager::p_derived function not found; with id="<<ordered_ids(i));
-            if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_count) {
-                TL::CountFunction* f = dynamic_cast<TL::CountFunction*>(TL::logicObjectManager::f_derived(d));
-                CHECK(f!=NULL, "cast failed");
-                deriveFunctionValues_count(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_avg) {
-              TL::AverageFunction* f = dynamic_cast<TL::AverageFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_avg(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_max) {
-              TL::MaxFunction* f = dynamic_cast<TL::MaxFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_max(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_sum) {
-              TL::SumFunction* f = dynamic_cast<TL::SumFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_sum(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_reward) {
-              TL::RewardFunction* f = dynamic_cast<TL::RewardFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_reward(*f, s);
-            }
-            else {
-                HALT("Unknown function")
-            }
-        }
-    }
+  uintA ordered_ids;
+  boolA isPredicate;
+  TL::logicObjectManager::dependencyGraph.getWellDefinedOrder(ordered_ids, isPredicate, true);
   
-    lits_derived.clear();
-    FOR1D(s.lits_derived, i) {lits_derived.append(s.lits_derived(i));}
-    
-    fv_derived.clear();
-    FOR1D(s.fv_derived, i) {fv_derived.append(s.fv_derived(i));}
+  uint i, d;
+  FOR1D(ordered_ids, i) {
+      if (isPredicate(i)) {
+          FOR1D(TL::logicObjectManager::p_derived, d) {
+              if (TL::logicObjectManager::p_derived(d)->id == ordered_ids(i)) break;
+          }
+          CHECK(d<TL::logicObjectManager::p_derived.N, "TL::logicObjectManager::p_derived predicate not found");
+          if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_conjunction) {
+              TL::ConjunctionPredicate* scp = dynamic_cast<TL::ConjunctionPredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(scp!=NULL, "cast failed");
+              deriveLiterals_conjunction(*scp, s);
+          }
+          else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_transClosure) {
+              TL::TransClosurePredicate* tcp = dynamic_cast<TL::TransClosurePredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(tcp!=NULL, "cast failed");
+              deriveLiterals_transClosure(*tcp, s);
+          }
+          else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_count) {
+              TL::CountPredicate* p = dynamic_cast<TL::CountPredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(p!=NULL, "cast failed");
+              deriveLiterals_count(*p, s);
+          }
+          else {
+              HALT("Unknown predicate")
+          }
+      }
+      else {
+          FOR1D(TL::logicObjectManager::f_derived, d) {
+              if (TL::logicObjectManager::f_derived(d)->id == ordered_ids(i)) break;
+          }
+          CHECK(d<TL::logicObjectManager::f_derived.N, "TL::logicObjectManager::p_derived function not found; with id="<<ordered_ids(i));
+          if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_count) {
+              TL::CountFunction* f = dynamic_cast<TL::CountFunction*>(TL::logicObjectManager::f_derived(d));
+              CHECK(f!=NULL, "cast failed");
+              deriveFunctionValues_count(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_avg) {
+            TL::AverageFunction* f = dynamic_cast<TL::AverageFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_avg(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_max) {
+            TL::MaxFunction* f = dynamic_cast<TL::MaxFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_max(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_sum) {
+            TL::SumFunction* f = dynamic_cast<TL::SumFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_sum(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_reward) {
+            TL::RewardFunction* f = dynamic_cast<TL::RewardFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_reward(*f, s);
+          }
+          else {
+              HALT("Unknown function")
+          }
+      }
+  }
+
+  lits_derived.clear();
+  FOR1D(s.lits_derived, i) {lits_derived.append(s.lits_derived(i));}
   
-    if (DEBUG > 1) {
-        cout << "TL::logicObjectManager::p_derived Tuples: ";
-        write(lits_derived);
-        cout << endl;
-        cout << "TL::logicObjectManager::p_derived funcValues: ";
-        write(fv_derived);
-        cout << fv_derived;
-    }
-  
-    if (DEBUG > 0) cout << "derive [END]" << endl;
+  fv_derived.clear();
+  FOR1D(s.fv_derived, i) {fv_derived.append(s.fv_derived(i));}
+
+  if (DEBUG > 1) {
+      cout << "TL::logicObjectManager::p_derived Tuples: ";
+      write(lits_derived);
+      cout << endl;
+      cout << "TL::logicObjectManager::p_derived funcValues: ";
+      write(fv_derived);
+      cout << fv_derived;
+  }
+
+  if (DEBUG > 0) cout << "derive [END]" << endl;
 }
 
 void TL::logicReasoning::derive(TL::State* s) {
 	if (s->derivedDerived)
 		return;
-	LitL derivedPTs;
-  FuncVL derivedFVs;
-  derive(s->lits_prim, s->fv_prim, derivedPTs, derivedFVs);
-  s->lits_derived.append(derivedPTs);
-  s->fv_derived.append(derivedFVs);
+	LitL pis_derived;
+  FuncVL fvs_derived;
+  derive(s->lits_prim, s->fv_prim, pis_derived, fvs_derived, s->state_objects);
+  s->lits_derived.append(pis_derived);
+  s->fv_derived.append(fvs_derived);
 	s->derivedDerived = true;
 //     s->writeNice(cout, true);
 }
 
 void TL::logicReasoning::dederive(TL::State* s) {
-    s->lits_derived.clear();
-    s->fv_derived.clear();
-    s->derivedDerived = false;
+  s->lits_derived.clear();
+  s->fv_derived.clear();
+  s->derivedDerived = false;
 }
 
 

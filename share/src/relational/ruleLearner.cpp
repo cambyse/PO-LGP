@@ -8,7 +8,7 @@ namespace TL {
 
 
 
-void calcCoverage(ExperienceA& covered_experiences, uintA& covered_experiences_ids, const TL::Rule* r, const ExperienceA& experiences) {
+void calcCoverage(SymbolicExperienceL& covered_experiences, uintA& covered_experiences_ids, const TL::Rule* r, const SymbolicExperienceL& experiences) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calcCoverage [START]"<<endl;
   if (DEBUG>0) r->write(cout);
@@ -45,11 +45,11 @@ TL::RuleSetContainer::RuleSetContainer() {
   init(NULL);
 }
 
-TL::RuleSetContainer::RuleSetContainer(const ExperienceA* _p_experiences) {
+TL::RuleSetContainer::RuleSetContainer(const SymbolicExperienceL* _p_experiences) {
   init(_p_experiences);
 }
 
-void TL::RuleSetContainer::init(const ExperienceA* _p_experiences) {
+void TL::RuleSetContainer::init(const SymbolicExperienceL* _p_experiences) {
   this->p_experiences = _p_experiences;
   if (this->p_experiences != NULL) {
     nonDefaultRules_per_experience.resize(this->p_experiences->N);
@@ -255,6 +255,8 @@ void rule_write_hack(TL::Rule* rule, MT::Array< uintA >& outcome_tripletts, bool
   }
   os << endl;
   os << "OUT:" << endl;
+  uint total_num_experiences = 0;
+  FOR1D(rule->outcomes, i) {total_num_experiences += outcome_tripletts(i).N;}
   FOR1D(rule->outcomes, i) {
     os.precision(2);
     os << "  " << rule->probs(i) << " ";
@@ -274,7 +276,11 @@ void rule_write_hack(TL::Rule* rule, MT::Array< uintA >& outcome_tripletts, bool
       }
       os<<outcome_tripletts(i)(j)<<" ";
     }
-    os <<"]"<< endl;
+    os <<"]";
+    os << " (" << outcome_tripletts(i).N << "/" << total_num_experiences << " = ";
+    if (outcome_tripletts(i).N == total_num_experiences) os<<"100";
+    else os << ((uint) 100 * (outcome_tripletts(i).N * 1.0 / total_num_experiences));
+    os << "%)" << endl;
   }
   if (TL::ruleReasoning::isDefaultRule(rule) &&  outcome_tripletts(0).N > 0) {os<<"ACHTUNG!!! Noise rule used to model!!"<<endl;  MT_MSG("ACHTUNG!!! Noise rule used to model!!");}
 //   if (outcome_tripletts(rule->outcomes.N-1).N > 0) {os<<"ACHTUNG!!! Using noise-outcome!"<<endl;  MT_MSG("ACHTUNG!!! Using noise-outcome!");}
@@ -409,7 +415,7 @@ void TL::RuleSetContainer::sanityCheck(bool ignore_default_rule) const {
         PRINT(supposed_to_cover__1);
         PRINT(covers);
         cout<<"Rule:"<<endl;  rules.elem(i)->write();  cout<<endl;
-        cout<<"Experience:"<<endl;  (*p_experiences)(k)->write();  cout<<endl;
+        cout<<"SymbolicExperience:"<<endl;  (*p_experiences)(k)->write();  cout<<endl;
         HALT("sanity check failed 2");
       }
     }
@@ -548,7 +554,7 @@ void TL::RuleSetContainer::sort() {
 // --------------------------------------------------------------------
 
 
-ExperienceA cf_experiences_coveredByCurrentRule;
+SymbolicExperienceL cf_experiences_coveredByCurrentRule;
 boolA cf_coverage_outcome_example;
 double cf_sum;
 double cf_pos;
@@ -567,7 +573,7 @@ void CostFunction::setPenaltyPos(double pen_pos) {
   cf_pos = pen_pos;
 }
 
-void CostFunction::setRuleCoveredExperiences(const ExperienceA& coveredEx) {
+void CostFunction::setRuleCoveredExperiences(const SymbolicExperienceL& coveredEx) {
   cf_experiences_coveredByCurrentRule.clear();
   cf_experiences_coveredByCurrentRule= coveredEx;
 }
@@ -723,7 +729,7 @@ void SearchOperator::set_p_min(double p_min) {
 
 
 
-void SearchOperator::calcCoverage_outcomes(const MT::Array< LitL >& potential_outcomes, const ExperienceA& covered_experiences, const TL::Rule* old_rule, boolA& coverage) {
+void SearchOperator::calcCoverage_outcomes(const MT::Array< LitL >& potential_outcomes, const SymbolicExperienceL& covered_experiences, const TL::Rule* old_rule, boolA& coverage) {
   // ACHTUNG: old_rule hat womoeglich andere Outcomes!!
   uint DEBUG = 0;
   if (DEBUG>0) cout << "calcOutcomesCoverage [START]" << endl;
@@ -809,7 +815,7 @@ void SearchOperator::calcSubsumption(boolA& subsumes, const boolA& coverage) {
 
 
 void SearchOperator::integrateNewRules(const TL::RuleSetContainer& rulesC_old, const TL::RuleSetContainer& rulesC_2add, 
-                                       const ExperienceA& experiences, TL::RuleSetContainer& rulesC_new) {
+                                       const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_new) {
   uint DEBUG = 0;
   if (DEBUG > 0) {cout << "integrateNewRules [START]" << endl;}
   if (DEBUG > 1) {
@@ -857,7 +863,7 @@ void SearchOperator::integrateNewRules(const TL::RuleSetContainer& rulesC_old, c
 
 
 // Algorithm of Figure 4 in Pasula et al. (2007)
-void SearchOperator::createRuleSets(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, 
+void SearchOperator::createRuleSets(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, 
         MT::Array< TL::RuleSetContainer >& set_of_new_rulesC) {
   uint DEBUG = 0;
   set_of_new_rulesC.clear();
@@ -891,7 +897,7 @@ void SearchOperator::createRuleSets(const TL::RuleSetContainer& rulesC_old, cons
 
 
 // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-void SearchOperator::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const ExperienceA& coveredExperiences, const TL::Rule& rule,
+void SearchOperator::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExperiences, const TL::Rule& rule,
                                             double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"produceTrimmedOutcomes [START]"<<endl;
@@ -960,7 +966,7 @@ void SearchOperator::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& pr
 // outcomes need to be deleted. --> method produceTrimmedOutcomes(...), see above
 //
 // TODO cope with comparisons (a la Zettlemoyer et al., 2004)
-void SearchOperator::induceOutcomes(TL::Rule* r, MT::Array< uintA >& coveredExperiences_per_outcome, const ExperienceA& coveredExperiences, const uintA& covered_experiences_ids,
+void SearchOperator::induceOutcomes(TL::Rule* r, MT::Array< uintA >& coveredExperiences_per_outcome, const SymbolicExperienceL& coveredExperiences, const uintA& covered_experiences_ids,
                                     double alpha_PEN, double p_min, double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
@@ -1037,7 +1043,7 @@ void SearchOperator::induceOutcomes(TL::Rule* r, MT::Array< uintA >& coveredExpe
   outcomes_basic.append(noiseOutcome);
   
   if (DEBUG > 0) {
-    cout << "Experience outcomes (incl. noise outcome):" << endl;
+    cout << "SymbolicExperience outcomes (incl. noise outcome):" << endl;
     FOR1D(outcomes_basic, i) {
       cout << "(" << i << ") ";
       TL::write(outcomes_basic(i));
@@ -1597,7 +1603,7 @@ const char* SearchOperator::getName() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"ExplainExperiences::findRules [START]"<<endl;
   uint i;
@@ -1614,7 +1620,7 @@ void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const
       if (DEBUG>2) {experiences(i)->write(cout);}
       TL::Rule* newRule = explainExperience(experiences(i));
       // calc experience coverage
-      ExperienceA covered_experiences;
+      SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
       calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       // Estimate new outcomes for r'
@@ -1635,7 +1641,7 @@ void ExplainExperiences::findRules(const TL::RuleSetContainer& rulesC_old, const
 }
 
 
-TL::Rule* ExplainExperiences::explainExperience(Experience* ex) {
+TL::Rule* ExplainExperiences::explainExperience(SymbolicExperience* ex) {
 //   return explainExperience_deictic(ex);
   return explainExperience_deictic_ALL_DRs(ex);
 }
@@ -1772,7 +1778,7 @@ void trim_hack(LitL& lits) {
 
 
 // Algorithm Pasula et al. (2007) p. 330
-TL::Rule* ExplainExperiences::explainExperience_deictic(Experience* ex) {
+TL::Rule* ExplainExperiences::explainExperience_deictic(SymbolicExperience* ex) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "explainExperience_deictic [START]" << endl;
   if (DEBUG>1) ex->write(cout);
@@ -1962,7 +1968,7 @@ TL::Rule* ExplainExperiences::explainExperience_deictic(Experience* ex) {
 
 
 
-TL::Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(Experience* ex) {
+TL::Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(SymbolicExperience* ex) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "explainExperience_deictic_ALL_DRs [START]" << endl;
   if (DEBUG>1) ex->write(cout);
@@ -2083,7 +2089,7 @@ void ExplainExperiences::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropContextLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void DropContextLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"DropContextLiterals::findRules [START]"<<endl;
   uint r, p, i;
@@ -2105,7 +2111,7 @@ void DropContextLiterals::findRules(const TL::RuleSetContainer& rulesC_old, cons
         continue;
       }
       // Ensure that new rule covers experiences
-      ExperienceA covered_experiences;
+      SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
       calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       if (covered_experiences.N > 0) {
@@ -2158,7 +2164,7 @@ void DropContextLiterals::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropContextLiterals_approximativeVersion::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void DropContextLiterals_approximativeVersion::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"DropPre_approx::findRules [START]"<<endl;
   rulesC_2add.clear();
@@ -2239,7 +2245,7 @@ void DropContextLiterals_approximativeVersion::findRules(const TL::RuleSetContai
       continue;
     }
     // calc experience coverage
-    ExperienceA covered_experiences;
+    SymbolicExperienceL covered_experiences;
     uintA covered_experiences_ids;
     calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
     if (DEBUG>1) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
@@ -2289,7 +2295,7 @@ void DropContextLiterals_approximativeVersion::reset_total_approximator() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropReferences::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void DropReferences::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"DropReferences::findRules [START]"<<endl;
   uint r, p, i;
@@ -2328,7 +2334,7 @@ void DropReferences::findRules(const TL::RuleSetContainer& rulesC_old, const Exp
         continue;
       }
       // calc experience coverage
-      ExperienceA covered_experiences;
+      SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
       calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       if (covered_experiences.N > 0) {
@@ -2384,7 +2390,7 @@ void DropReferences::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void DropRules::createRuleSets(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, 
+void DropRules::createRuleSets(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, 
           MT::Array< TL::RuleSetContainer >& one_rulesC_new) {
   uint DEBUG = 0;
   one_rulesC_new.clear();
@@ -2407,7 +2413,7 @@ void DropRules::createRuleSets(const TL::RuleSetContainer& rulesC_old, const Exp
 }
 
 void DropRules::reset() {}
-void DropRules::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {}
+void DropRules::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {}
 
 
 
@@ -2427,7 +2433,7 @@ void DropRules::findRules(const TL::RuleSetContainer& rulesC_old, const Experien
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void SplitOnLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void SplitOnLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"SplitOnLiterals::findRules [START]"<<endl;
   rulesC_2add.clear();
@@ -2517,7 +2523,7 @@ void SplitOnLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const Ex
         newRule_pos->action = rulesC_old.rules.elem(r)->action;
         newRule_pos->context = rulesC_old.rules.elem(r)->context;
         TL::ruleReasoning::insert(*newRule_pos, *absentLiterals(nextLiteral));
-        ExperienceA covered_experiences;
+        SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage(covered_experiences, covered_experiences_ids, newRule_pos, experiences);
         if (covered_experiences.N > 0) {
@@ -2549,7 +2555,7 @@ void SplitOnLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const Ex
         newRule_neg->action = rulesC_old.rules.elem(r)->action;
         newRule_neg->context = rulesC_old.rules.elem(r)->context;
         TL::ruleReasoning::insert(*newRule_neg, *nextLiteral_neg);
-        ExperienceA covered_experiences;
+        SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage(covered_experiences, covered_experiences_ids, newRule_neg, experiences);
         if (covered_experiences.N > 0) {
@@ -2610,7 +2616,7 @@ void SplitOnLiterals::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void AddLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void AddLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"AddLits::findRules [START]"<<endl;
   uint r;
@@ -2654,7 +2660,7 @@ void AddLiterals::findRules(const TL::RuleSetContainer& rulesC_old, const Experi
         newRule->action = rulesC_old.rules.elem(r)->action;
         newRule->context = rulesC_old.rules.elem(r)->context;
         TL::ruleReasoning::insert(*newRule, *absentLiterals(nextLiteral));
-        ExperienceA covered_experiences;
+        SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
         if (covered_experiences.N > 0) {
@@ -2716,7 +2722,7 @@ void AddLiterals::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void AddReferences::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void AddReferences::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"AddReferences::findRules [START]"<<endl;
   uint r, i;
@@ -2767,7 +2773,7 @@ void AddReferences::findRules(const TL::RuleSetContainer& rulesC_old, const Expe
       newRule->action = rulesC_old.rules.elem(r)->action;
       newRule->context = rulesC_old.rules.elem(r)->context;
       TL::ruleReasoning::insert(*newRule, *restrictionLiterals(nextLiteral));
-      ExperienceA covered_experiences;
+      SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
       calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       if (covered_experiences.N > 0) {
@@ -2832,7 +2838,7 @@ void AddReferences::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void GeneralizeEquality::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void GeneralizeEquality::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"GeneralizeEquality::findRules [START]"<<endl;
   uint r, p, i;
@@ -2878,7 +2884,7 @@ void GeneralizeEquality::findRules(const TL::RuleSetContainer& rulesC_old, const
         }
         TL::logicReasoning::sort(newRule->context);
         if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-        ExperienceA covered_experiences;
+        SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
         if (covered_experiences.N > 0) {
@@ -2938,7 +2944,7 @@ void GeneralizeEquality::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void SplitOnEqualities::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void SplitOnEqualities::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"SplitOnEqualities::findRules [START]"<<endl;
   rulesC_2add.clear();
@@ -2985,7 +2991,7 @@ void SplitOnEqualities::findRules(const TL::RuleSetContainer& rulesC_old, const 
             TL::ComparisonLiteral* eq = logicObjectManager::getCompLiteral_constant(usedFunctions(f), comparison_equal, usedValues(i), eq_args);
             TL::ruleReasoning::insert(*newRule, *eq);
             if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-            ExperienceA covered_experiences;
+            SymbolicExperienceL covered_experiences;
             uintA covered_experiences_ids;
             calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
             if (covered_experiences.N > 0) {
@@ -3051,7 +3057,7 @@ void SplitOnEqualities::reset() {
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
 // only for CONSTANT-bound comparison predicates
-void ChangeRange::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void ChangeRange::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"ChangeRange::findRules [START]"<<endl;
   uint r, p, v;
@@ -3085,7 +3091,7 @@ void ChangeRange::findRules(const TL::RuleSetContainer& rulesC_old, const Experi
             }
           }
           if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-          ExperienceA covered_experiences;
+          SymbolicExperienceL covered_experiences;
           uintA covered_experiences_ids;
           calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
@@ -3150,7 +3156,7 @@ void ChangeRange::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void MakeInterval::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void MakeInterval::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"MakeInterval::findRules [START]"<<endl;
   uint r, p, v;
@@ -3212,7 +3218,7 @@ void MakeInterval::findRules(const TL::RuleSetContainer& rulesC_old, const Exper
           TL::ruleReasoning::insert(*newRule, *new_clit);
 
           if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-          ExperienceA covered_experiences;
+          SymbolicExperienceL covered_experiences;
           uintA covered_experiences_ids;
           calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
@@ -3275,7 +3281,7 @@ void MakeInterval::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void CompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void CompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"CompareFunctionValues::findRules [START]"<<endl;
   uint r, f, c, t;
@@ -3320,7 +3326,7 @@ void CompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, co
           TL::ComparisonLiteral* new_clit = logicObjectManager::getCompLiteral_dynamic(usedFunctions(f), comparisonTypes(c), args1, args2);
           TL::ruleReasoning::insert(*newRule, *new_clit);
           if (DEBUG>1) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-          ExperienceA covered_experiences;
+          SymbolicExperienceL covered_experiences;
           uintA covered_experiences_ids;
           calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
@@ -3357,7 +3363,7 @@ void CompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, co
           nextComparisonType=0;
           if (DEBUG>2) {
 //             cout<<"Recap on coverages:"<<endl;
-//             ExperienceA coveredExperiences;
+//             SymbolicExperienceL coveredExperiences;
 //             calcCoverage(rulesC_old.rules.elem(r), experiences, coveredExperiences);
 //             cout<<"Old rule: "<<endl;rulesC_old.rules.elem(r)->write(cout);cout<<" covers "<<coveredExperiences.N<<endl;
 //             cout <<"while the new rules with comparisons cover: "<<endl;
@@ -3418,7 +3424,7 @@ void CompareFunctionValues::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void SplitOnCompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceA& experiences, TL::RuleSetContainer& rulesC_2add) {
+void SplitOnCompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"SplitOnCompareFunctionValues::findRules [START]"<<endl;
   uint r, f, c, t;
@@ -3459,7 +3465,7 @@ void SplitOnCompareFunctionValues::findRules(const TL::RuleSetContainer& rulesC_
           TL::ComparisonLiteral* new_clit = logicObjectManager::getCompLiteral_dynamic(usedFunctions(f), comparisonTypes(c), args1, args2);
           TL::ruleReasoning::insert(*newRule, *new_clit);
           if (DEBUG>1) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
-          ExperienceA covered_experiences;
+          SymbolicExperienceL covered_experiences;
           uintA covered_experiences_ids;
           calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
@@ -3681,14 +3687,14 @@ RuleLearner::~RuleLearner() {
 
 
 
-double RuleLearner::score(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, double cutting_threshold) {
+double RuleLearner::score(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, double cutting_threshold) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.0);
   return score(rulesC, experiences, cutting_threshold, experience_weights);
 }
 
 
-double RuleLearner::score(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, double cutting_threshold, arr& experience_weights) {
+double RuleLearner::score(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights) {
   uint DEBUG = 0;
   if (DEBUG > 0) {cout << "SCORE [start]" << endl;}
   if (DEBUG > 1) {cout<<"RULES:"<<endl;  rulesC.writeNice(); }
@@ -3825,7 +3831,7 @@ void RuleLearner::set_p_mins(double p_min, double p_min_noisyDefaultRule) {
 
 
 
-void RuleLearner::learn_rules(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, const char* logfile) {
+void RuleLearner::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.);
   learn_rules(rulesC, experiences, experience_weights, logfile);
@@ -3833,7 +3839,7 @@ void RuleLearner::learn_rules(TL::RuleSetContainer& rulesC, TL::ExperienceA& exp
 
 
 // Algorithm in Zettlemoyer's Figure 2
-void RuleLearner::learn_rules(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, arr& experience_weights, const char* logfile) {
+void RuleLearner::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
   uint DEBUG = 0; //  2 ist gut
   rulesC.clear();
   uint i, j;

@@ -23,4 +23,5 @@ grounding_type 1
 
 *** PRADA ***
 
-PRADA_num_samples 10
+PRADA_num_samples 200
+PRADA_horizon 4

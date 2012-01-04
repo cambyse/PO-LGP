@@ -36,7 +36,7 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
   
   // TABLE
   uint table_id = sim->getTableID();
-  if (TL::logicObjectManager::constants.findValue(table_id) >= 0)
+  if (TL::logicObjectManager::constants.findValue(table_id) < 0)
     table_id = TL::UINT_NIL;
   if (table_id != TL::UINT_NIL) {
     state->lits_prim.append(TL::logicObjectManager::getLiteralOrig(TL::RobotManipulationDomain::createLiteral_table(table_id)));
@@ -1052,7 +1052,7 @@ TL::Reward* TL::RobotManipulationDomain::RewardLibrary::inhand(uint o1) {
 
 TL::Reward* TL::RobotManipulationDomain::RewardLibrary::stack() {
   // needs p_ABOVE, f_HEIGHT, f_SUM_HEIGHT
-  MT_MSG("Stack defined by average (not max)");
+  MT_MSG("Stack defined by sum (not max) over heights");
   uintA empty;
   FuncL funcs2add;
   PredL preds2add;
@@ -1921,6 +1921,8 @@ void TL::RobotManipulationDomain::writeStateInfo(const State& s, ostream& out) {
   }
   
   out<<"--"<<endl;
+  
+  out<<"(existing objects: "<<logicObjectManager::constants<<")"<<endl;
 }
 
 

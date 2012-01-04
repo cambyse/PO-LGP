@@ -336,7 +336,7 @@ double TL::MaximizeFunctionReward::evaluate(const State& s) const {
     CHECK(i==s.fv_prim.N, "");
   }
   else {
-    CHECK(s.derivedDerived, "");
+    CHECK(s.derivedDerived, "state has not been derived");
     FOR1D(s.fv_derived, i) {
       if (s.fv_derived(i)->atom->f == fa->f && s.fv_derived(i)->atom->args == fa->args)
         return s.fv_derived(i)->value;

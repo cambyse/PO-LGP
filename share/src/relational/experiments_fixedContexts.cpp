@@ -43,14 +43,14 @@ RuleLearner_FixedContexts::RuleLearner_FixedContexts(TL::Atom* action, const MT:
 
 
 
-void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, const char* logfile) {
+void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.);
   learn_rules(rulesC, experiences, experience_weights, logfile);
 }
 
 
-void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, TL::ExperienceA& experiences, arr& experience_weights, const char* logfile) {
+void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
   uint DEBUG = 0; //  2 ist gut
   if (DEBUG>0) {cout<<"RuleLearner_FixedContexts::learn_rules [START]"<<endl;}
   uint i, k;

@@ -266,7 +266,8 @@ namespace logicReasoning {
   bool deriveFunctionValues_sum(TL::SumFunction& f, TL::State& s);
   bool deriveFunctionValues_reward(TL::RewardFunction& f, TL::State& s);
     
-  void derive(const LitL& pi_prim, const FuncVL& fv_prim, LitL& pi_derived, FuncVL& fv_derived);
+  // If objects are empty, then objects are calculated from literals.
+  void derive(const LitL& pi_prim, const FuncVL& fv_prim, LitL& pi_derived, FuncVL& fv_derived, uintA& objects);
   void derive(TL::State* s);
   
   void dederive(TL::State* s);

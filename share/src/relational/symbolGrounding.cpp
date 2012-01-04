@@ -78,7 +78,7 @@ relational::SymbolGrounding::SymbolGrounding(MT::String& _name, uint _arity, boo
 void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
   uint DEBUG = 0;
   // HACK
-  if (arity == 1) DEBUG = 2;
+//   if (arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
   if (DEBUG>0) {cout<<"***********  "<<this->name<<endl;  PRINT(objects_ids);  PRINT(objects_data);}
   lits.clear();
@@ -121,18 +121,17 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& obj
 
 
 
-void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<relational::SymbolGrounding*>& sgs,
-                       const uintA& objects_ids, const MT::Array< arr > & objects_data) {
+void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<relational::SymbolGrounding*>& sgs, const ContinuousState& cont_state) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
-  if (DEBUG>0) {PRINT(objects_ids);  PRINT(objects_data);}
+  if (DEBUG>0) {PRINT(cont_state.object_ids);  PRINT(cont_state.data);}
   lits.clear();
   uint i;
   FOR1D(sgs, i) {
     CHECK(sgs(i)->pred != NULL, "No predicate object");
     if (DEBUG>0) {cout<<"Predicate "<<sgs(i)->pred->name<<endl;}
     LitL lits_p;
-    sgs(i)->calculateLiterals(lits_p, objects_ids, objects_data);
+    sgs(i)->calculateLiterals(lits_p, cont_state.object_ids, cont_state.data);
     if (DEBUG>0) {PRINT(lits_p);}
     lits.append(lits_p);
   }
@@ -144,21 +143,19 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<
 void relational::calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullExperience& e) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
-  // Pre-State
-  uintA objs;
-  uint k;
-  for (k=0; k<e.state_continuous_pre.N; k++) {objs.append(buildConstant(k));}
-  SymbolGrounding::calculateLiterals(e.experience_symbolic.pre.lits_prim, sgs, objs, e.state_continuous_pre);
-  SymbolGrounding::calculateLiterals(e.experience_symbolic.post.lits_prim, sgs, objs, e.state_continuous_post);
+  e.experience_symbolic.pre.state_objects = e.state_continuous_pre.object_ids;
+  SymbolGrounding::calculateLiterals(e.experience_symbolic.pre.lits_prim, sgs, e.state_continuous_pre);
   TL::logicReasoning::derive(&e.experience_symbolic.pre);
+  e.experience_symbolic.post.state_objects = e.state_continuous_post.object_ids;
+  SymbolGrounding::calculateLiterals(e.experience_symbolic.post.lits_prim, sgs, e.state_continuous_post);
   TL::logicReasoning::derive(&e.experience_symbolic.post);
   e.experience_symbolic.calcChanges();
   if (DEBUG>1) {PRINT(e.action_args);}
-  uintA args = buildConstant(e.action_args);
-  if (e.action_type == 1)
-    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("grab")), args);
-  else
-    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("puton")), args);
+  if (e.action_type == 0)
+    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("grab")), e.action_args);
+  else if (e.action_type == 1)
+    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("puton")), e.action_args);
+  else NIY;
   if (DEBUG>0) {e.experience_symbolic.write();}
   if (DEBUG>0) {cout<<"calculateLiterals [END]"<<endl;}
 }
@@ -312,12 +309,11 @@ SymbolGrounding(name, arity, build_derived_predicates) {
 bool relational::RBF_Grounding::holds(arr& x) const {
   uint DEBUG = 0;
   // HACK
-  if (this->arity == 1) DEBUG = 2;
+//   if (this->arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"holds [START]"<<endl;}
   if (DEBUG>1) {write();  PRINT(x);}
   double p;
   arr x_diff = x - w_c;
-  uint i;
   arr w_sigma_hoch_zwei = pow(w_sigma, 2.0);
   arr cov_matrix = diag(w_sigma_hoch_zwei);
   arr cov_matrix_inv = inverse(cov_matrix);
@@ -404,17 +400,70 @@ void relational::calculateLiterals(LitL& lits, const MT::Array<relational::Symbo
   }
   if (DEBUG>0) {PRINT(obj_ids);}
   
-  MT::Array< arr > objects_data;
-  getFeatureVectors(objects_data, *C, obj_ids);
-  if (DEBUG>0) {PRINT(objects_data);}
-  
-  SymbolGrounding::calculateLiterals(lits, sgs, obj_ids, objects_data);
+  ContinuousState* cont_state = getContinuousState(*C, obj_ids);
+  SymbolGrounding::calculateLiterals(lits, sgs, *cont_state);
+  delete cont_state;
   if (DEBUG>0) {PRINT(lits);}
   if (DEBUG>0) {cout<<"SymbolGrounding::calculateLiterals [END]"<<endl;}
 }
 
 
 
+
+
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+//
+//  ContinuousState
+
+void relational::ContinuousState::read(istream& in) {
+  uint DEBUG = 0;
+  MT::skip(in);
+  in >> object_ids;
+  if (DEBUG>0) {PRINT(object_ids);}
+  uint i;
+  FOR1D(object_ids, i) {
+    MT::skip(in);
+    arr o_data;
+    in >> o_data;
+    data.append(o_data);
+    if (DEBUG>0) {PRINT(o_data);}
+  }
+  if (DEBUG>0) {cout<<"Read continuous state:"<<endl;  write(cout);}
+}
+
+void relational::ContinuousState::write(ostream& out) const {
+  out << object_ids << endl;
+  uint i;
+  FOR1D(data, i) {
+    out << data(i) << endl;
+  }
+}
+
+bool relational::ContinuousState::operator==(const ContinuousState& other) const {
+  return this->object_ids == other.object_ids
+         &&  this->data == other.data;
+}
+
+bool relational::ContinuousState::operator!=(const ContinuousState& other) const {
+  return !(*this==other);
+}
+
+relational::ContinuousState* relational::getContinuousState(const ors::Graph& C, const uintA& objects) {
+  MT::Array< arr > objects_data;
+  relational::getFeatureVectors(objects_data, C, objects);
+  relational::ContinuousState* cont_state = new relational::ContinuousState;
+  cont_state->object_ids = objects;
+  cont_state->data = objects_data;
+  return cont_state;
+}
+
+
+
+  
 
 
 
@@ -428,30 +477,24 @@ void relational::calculateLiterals(LitL& lits, const MT::Array<relational::Symbo
 
 
 void relational::FullExperience::write_continuous_nice(ostream& out) const {
-  out<<"PRE: "<<state_continuous_pre.N<<endl;
-  out<<state_continuous_pre<<endl;
+  out<<"PRE: "<<state_continuous_pre.object_ids.N<<endl;
+  state_continuous_pre.write(out);
   out<<"ACTION:"<<endl;
   out<<"action_type="<<action_type<<endl;
   out<<"action_args="<<action_args<<endl;
-  out<<"POST: "<<state_continuous_post.N<<endl;
-  out<<state_continuous_post<<endl;
+  out<<"POST: "<<state_continuous_post.object_ids.N<<endl;
+  state_continuous_post.write(out);
 }
 
 void relational::FullExperience::write_continuous(ostream& out) const {
   out<<"{"<<endl;
-  out<<state_continuous_pre.N<<endl;
   out<<action_type<<endl;
   out<<action_args<<endl;
   out<<reward<<endl;
   out<<endl;
-  uint i;
-  FOR1D(state_continuous_pre, i) {
-    out<<state_continuous_pre(i)<<endl;
-  }
+  state_continuous_pre.write(out);
   out<<endl;
-  FOR1D(state_continuous_post, i) {
-    out<<state_continuous_post(i)<<endl;
-  }
+  state_continuous_post.write(out);
   out<<"}"<<endl;
 }
 
@@ -475,6 +518,11 @@ void relational::FullExperience::write_symbolic(MT::Array<FullExperience* > exps
   }
 }
 
+
+//  Nikolays Format -- Experiences 
+// state: 20
+// 5 Objekte, 5. Objekt ist die Roboterhand
+// (1-3): x,y,z-Koords
 void relational::FullExperience::read_continuous_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"read_nikolayFormat [START]"<<endl;}
@@ -482,36 +530,43 @@ void relational::FullExperience::read_continuous_nikolayFormat(MT::Array< FullEx
   ifstream in(file_name);
   CHECK(in.is_open(), "File "<<file_name<<" can't be opened!");
   uint OBJ_NUM = 5;
+  uintA object_ids;
+  uint o;
+  for (o=0; o<OBJ_NUM; o++) {
+    object_ids.append(o+61);
+  }
   while (MT::skip(in) != -1) {
-    FullExperience* exp = new FullExperience;
+    FullExperience* fex = new FullExperience;
     MT::String line;
     in >> line;
     if (DEBUG>0) PRINT(line);
-    uint o;
+    fex->state_continuous_pre.object_ids = object_ids;
     for (o=0; o<OBJ_NUM; o++) {
-      arr data(4);
-      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
-      if (DEBUG>0) PRINT(data);
-      exp->state_continuous_pre.append(data);
+      arr o_data(4);
+      line >> o_data(0);  line >> o_data(1);  line >> o_data(2);  line >> o_data(3);
+      if (DEBUG>0) PRINT(o_data);
+      fex->state_continuous_pre.data.append(o_data);
     }
+    fex->state_continuous_post.object_ids = object_ids;
     for (o=0; o<OBJ_NUM; o++) {
-      arr data(4);
-      line >> data(0);  line >> data(1);  line >> data(2);  line >> data(3);
-      if (DEBUG>0) PRINT(data);
-      exp->state_continuous_post.append(data);
+      arr o_data(4);
+      line >> o_data(0);  line >> o_data(1);  line >> o_data(2);  line >> o_data(3);
+      if (DEBUG>0) PRINT(o_data);
+      fex->state_continuous_post.data.append(o_data);
     }
     double action_type_double, action_target_double;
     line >> action_type_double;
-    if (TL::areEqual(action_type_double, 0.0))
-      exp->action_type = grab;
-    else if (TL::areEqual(action_type_double, 1.0))
-      exp->action_type = puton;
+    if (TL::areEqual(action_type_double, 1.0))  // ACHTUNG: andere Nummerierung (Nikolay startet von 1)
+      fex->action_type = grab;
+    else if (TL::areEqual(action_type_double, 0.0))
+      fex->action_type = puton;
     else
-      NIY;
+      HALT("Unknown action_type_double="<<action_type_double);
     line >> action_target_double;
-    exp->action_args.append((uint) action_target_double - 1);  // -1 since Nikolay starts to count at 1
-    line >> exp->reward;
-    experiences.append(exp);
+    fex->action_args.append((uint) action_target_double + 60);  // -1 since Nikolay starts to count at 1
+    if (DEBUG>0) {PRINT(action_type_double);  PRINT(fex->action_type);  PRINT(action_target_double);}
+    line >> fex->reward;
+    experiences.append(fex);
     if (DEBUG>0) {experiences.last()->write_continuous(cout);}
   }
   
@@ -531,17 +586,15 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
   
   MT::skip(in);
   MT::skipLine(in);  // "{"
+  if (DEBUG>0) {PRINT(MT::peerNextChar(in));}
   
   MT::String line;
-  // number_objects
-  line.read(in, NULL, "\n");
-  uint number_objects;
-  line >> number_objects;
   // action_type__uint
   MT::skip(in);  line.read(in, NULL, "\n");
   uint action_type__uint;
   MT::skip(in);  line >> action_type__uint;
-   e->action_type = ActionType(action_type__uint);
+  e->action_type = ActionType(action_type__uint);
+  if (DEBUG>0) {PRINT(action_type__uint);  PRINT(e->action_type);}
   // action_args
   MT::skip(in);  line.read(in, NULL, "\n");
   line >> e->action_args;
@@ -549,21 +602,11 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
   MT::skip(in);  line.read(in, NULL, "\n");
   line >> e->reward;
   // pre
-  uint i;
-  for (i=0; i<number_objects; i++) {
-    arr data;
-    in >> data;
-    e->state_continuous_pre.append(data);
-  }
+  e->state_continuous_pre.read(in);
   // post
-  for (i=0; i<number_objects; i++) {
-    arr data;
-    in >> data;
-    e->state_continuous_post.append(data);
-  }
+  e->state_continuous_post.read(in);
   MT::skip(in);
   MT::skipLine(in);  // "}"
-  
   
   if (DEBUG>0) {e->write_continuous(cout);}
   if (DEBUG>0) {cout<<"read_continuous [END]"<<endl;}
@@ -581,10 +624,9 @@ void relational::FullExperience::read_continuous(MT::Array< relational::FullExpe
   if (!in.is_open()) {
     cerr<<"File " << filename << " can't be opened!"<<endl;
     HALT("");
-  }  
+  } 
   // read other rules
   while (MT::skip(in) != -1) {
-//     PRINT(MT::peerNextChar(in));
     experiences.append(read_continuous(in));
     if (DEBUG>0) {experiences.last()->write_continuous(cout);}
   }

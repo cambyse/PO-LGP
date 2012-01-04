@@ -1371,7 +1371,7 @@ double TL::ruleReasoning::probability_defaultRule(TL::Rule* defaultRule, const T
     SCORING
    ***************************************/
   
-double TL::ruleReasoning::log_likelihood(const RuleSet& rules, const ExperienceA& experiences, double p_min) {
+double TL::ruleReasoning::log_likelihood(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min) {
   uint DEBUG = 1;
   if (DEBUG>0) {cout<<"log_likelihood [START]"<<endl;}
   double loglik = 0.;
@@ -1414,7 +1414,7 @@ double TL::ruleReasoning::log_likelihood(const RuleSet& rules, const ExperienceA
 
 
 
-double TL::ruleReasoning::score(const RuleSet& rules, const ExperienceA& experiences, double p_min, double alpha_pen) {
+double TL::ruleReasoning::score(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min, double alpha_pen) {
   uint DEBUG  =1;
   if (DEBUG>0) {cout<<"score [START]"<<endl;}
   // Loglik

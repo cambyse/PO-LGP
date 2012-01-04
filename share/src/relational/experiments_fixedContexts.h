@@ -15,14 +15,14 @@ class RuleLearner_FixedContexts : public RuleLearner {
 public:
   TL::Atom* action;
   MT::Array< LitL > contexts;
-  MT::Array< ExperienceL > experiences_per_context;
+  MT::Array< SymbolicExperienceL > experiences_per_context;
   MT::Array< uintA > experienceIds_per_context;  // redundant auxiliary container
   
   public:
     RuleLearner_FixedContexts(TL::Atom* action, const MT::Array< LitL >& contexts, double alpha_PEN, double p_min, double p_min_noisyDefaultRule);
      
-    void learn_rules(TL::RuleSetContainer& rulesC, ExperienceL& experiences, const char* logfile = DEFAULT_LOGFILE); 
-    void learn_rules(TL::RuleSetContainer& rulesC, ExperienceL& experiences, arr& experience_weights, const char* logfile = DEFAULT_LOGFILE); 
+    void learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile = DEFAULT_LOGFILE); 
+    void learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile = DEFAULT_LOGFILE); 
 };
 
 
