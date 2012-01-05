@@ -1,6 +1,12 @@
+#define MT_IMPLEMENT_TEMPLATES
 #include <MT/process.h>
-#include <MT/process_internal.h>
 #include <MT/util.h>
+
+
+//===========================================================================
+//
+// test looping multiple threads on beat or sync
+//
 
 struct TestThread:public Process{
   const char* name;
@@ -20,7 +26,8 @@ struct TestThread:public Process{
   void step (){ if(sec) MT::wait(sec); x++; cout <<name <<" has stepped, x=" <<x <<endl; }
 };
 
-int main(int argc, char *argv[]){
+
+void testLoop(){
   //Fl::lock();
   ThreadInfoWin win;
   win.threadLoopWithBeat(.1);
@@ -38,8 +45,8 @@ int main(int argc, char *argv[]){
   Metronome ticcer("ticcer (self=.1)",100);
 
   for(uint t=0;t<20;t++){
-    //C.threadStep();
-    //D.threadStep();
+    C.threadStep();
+    D.threadStep();
     cout <<"*** main process loop iteration " <<t <<endl;
     //win.threadStep();//globalThreadInfoWin.step();
     ticcer.waitForTic();
@@ -51,9 +58,59 @@ int main(int argc, char *argv[]){
   D.threadClose();
   E.threadClose();
 
-  MT::wait(1.);
+  MT::wait();
 
   win.threadClose();
+}
+
+
+
+//===========================================================================
+//
+// test excessive access to Variables
+//
+
+struct IntVar:public Variable{
+  FIELD(int, x);
+
+  IntVar():Variable("IntVar"){ x=rnd(1000); }
+};
+
+struct Maxxer:public Process{
+  IntVar *a,*b;
+
+  Maxxer():Process("Maxxer"){};
+  
+  void open (){}
+  void close(){}
+  void step (){
+    int xa=a->get_x(this);
+    int xb=b->get_x(this);
+    if(xa>xb) b->set_x(xa, this);
+    else a->set_x(xb, this);
+  }
+};
+
+void testMultiAccess(){
+  MT::Array<IntVar> vars(40);
+  MT::Array<Maxxer> procs(100);
+
+  for(uint i=0;i<procs.N;i++){
+    procs(i).a = &vars.rndElem();
+    procs(i).b = &vars.rndElem();
+  }
+
+  for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.01,.1));
+  MT::wait(1.);
+  for(uint i=0;i<procs.N;i++) procs(i).threadClose();
+  
+  for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
+  cout <<endl;
+}
+
+int main(int argc, char *argv[]){
+  //testLoop();
+  testMultiAccess();
   
   return 0;
 }
