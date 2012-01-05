@@ -22,7 +22,6 @@ struct CartPoleState{
     gl.camera.upright();
     gl.update();
   }
-
 };
 
 void glDrawCartPole(void *classP){
@@ -43,7 +42,6 @@ void glDrawCartPole(void *classP){
   glColor(.2,.2,.2);
   glDrawBox(.1, .1, 1.);
 }
-
 
 
 

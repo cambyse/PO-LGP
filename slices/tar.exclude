@@ -1,11 +1,16 @@
 *~
+z.*
 *.o
+lib*.a
 *.so
+*.exe
 x.exe
 MT.log
 
+*_doc/*
+
 SHARE
-.git
+.git*
 *.kdev4
 *solution*
 course/*/main.cpp
@@ -13,4 +18,8 @@ course/*/main.cpp
 *ODE_0.11/include
 *ODE_0.11/lib
 */IBDS*
+
 *ors_mesh*
+
+blender-*
+m494.chr
