@@ -32,7 +32,7 @@ struct GuiModule:public Process {
   
   //INTERNAL
 #ifdef MT_QT
-  QApplication *app;
+  //QApplication *app;
 #endif
   bool useOpengl, logData, plotData;
   OpenGL *gl;
@@ -41,7 +41,7 @@ struct GuiModule:public Process {
   bool isOpen;
   
 #ifdef MT_QT
-  Ui_SchunkMonitor *ui;
+  //Ui_SchunkMonitor *ui;
 #endif
   
   GuiModule();

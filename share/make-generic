@@ -218,15 +218,8 @@ QT := 1
 endif
 
 ifeq ($(QT),1)
-CXXFLAGS  += -DMT_QT -DQT_DLL# -DNOUNICODE
-CPATH   := $(CPATH):/usr/include/qt4
-LPATH   := $(LPATH):/usr/lib
-MSVC_CPATH := $(MSVC_CPATH);C:/Programme/Qt-2.3.0/include
-MSVC_LPATH := $(MSVC_LPATH);$(QTDIR)/lib
-LinuxLibs += -lQtCore -lQtGui -lQtOpenGL# -lglut -lGLU -lGL -lX11
-MinGWLibs += -lqtmain -lQtCore4 -lQtGui4 -lQtOpenGL4 -lopengl32 -lglu32
-CygwinLibs+= -lqt -lGLU -lGL
-MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
+CXXFLAGS  += -DMT_QT -DQT_DLL `pkg-config --cflags QtCore QtGui QtOpenGL` #-DNOUNICODE
+LIBS    += `pkg-config --libs QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(WX),1)
@@ -328,7 +321,7 @@ endif
 ifeq ($(OPENCV_UBUNTU),1)
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
 LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
- endif
+endif
 
 # newer qhull version?
 ifeq ($(QHULL2010),1)

@@ -1,6 +1,11 @@
+//#define MT_IMPLEMENTATION
+
 #include <MT/plot.h>
 #include <MT/opengl.h>
 #include <MT/ors.h>
+#ifdef MT_QT
+#  include <QtGui/QApplication>
+#endif
 
 using namespace std;
 
@@ -228,7 +233,7 @@ void testSelect(){
   OpenGL gl;
   gl.add(draw3,0);
   gl.text <<"hover over objects and read cout...";
-  gl.selectOnHover=true;
+  //gl.selectOnHover=true;
   gl.reportSelects=true;
   gl.reportEvents=false;
   gl.watch();
@@ -242,8 +247,8 @@ void testUI(){
   gl.reportEvents=true;
   gl.add(draw1,0);
   gl.add(glDrawUI,&ui);
-  gl.addHoverCall(glHoverUI,&ui);
-  gl.addClickCall(glClickUI,&ui);
+  gl.addHoverCall(&ui);
+  gl.addClickCall(&ui);
   ui.addButton(100,100,"OK, this is it!");
   gl.watch();
 }

@@ -33,7 +33,7 @@ ifeq ($(MAKEMODE),mlrlib_full)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
-FREEGLUT = 1
+QTGLUT = 1
 ANN = 1
 QHULL = 1
 SWIFT = 1
