@@ -203,10 +203,10 @@ AbstractRuleExplorer_FixedContexts::AbstractRuleExplorer_FixedContexts(const Rul
 
 
 
-bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const TL::State& state, TL::Atom* action) {
+bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const TL::SymbolicState& state, TL::Atom* action) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"AbstractRuleExplorer_FixedContexts::actionIsKnown [START]"<<endl;}
-  if (DEBUG>0) {cout<<"State:"<<endl<<state<<"Action:  "<<*action<<endl;}
+  if (DEBUG>0) {cout<<"SymbolicState:"<<endl<<state<<"Action:  "<<*action<<endl;}
   int id = possibleGroundActions.findValue(action);
   CHECK(id >= 0  &&  id < (int) possibleGroundActions.N, "");
   if (DEBUG>0) {PRINT(actions__confidences(id));}
@@ -331,7 +331,7 @@ class PRADA_Reward__Rmax__Specific_Contexts : public PRADA_Reward__Specific_Cont
 
 
 
-TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::State& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
+TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicState& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
   uint DEBUG = 2;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -554,7 +554,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::State& stat
           else
             break;
         }
-        cout<<"State was the same onwards from state q+1 = "<<(q+1)<<endl;
+        cout<<"SymbolicState was the same onwards from state q+1 = "<<(q+1)<<endl;
         PRINT(have_exploited_already);
         if (have_exploited_already  &&  !is_major_experience.last()) {
           MT_MSG("HOPELESS EXPLOITING: (i) current state equals previous state and (ii) no major insight from last action");

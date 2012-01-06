@@ -16,9 +16,9 @@
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 //
-//  SymbolGrounding
+//  GroundedSymbol
 
-relational::SymbolGrounding::SymbolGrounding(MT::String& _name, uint _arity, bool build_derived_predicates) { 
+relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_predicates) { 
   this->arity = _arity;
   this->name = _name;
   this->pred = TL::logicObjectManager::getPredicate(this->name);
@@ -75,11 +75,11 @@ relational::SymbolGrounding::SymbolGrounding(MT::String& _name, uint _arity, boo
 
 
 
-void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
+void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
   uint DEBUG = 0;
   // HACK
 //   if (arity == 1) DEBUG = 2;
-  if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
   if (DEBUG>0) {cout<<"***********  "<<this->name<<endl;  PRINT(objects_ids);  PRINT(objects_data);}
   lits.clear();
   uint i;
@@ -116,14 +116,14 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const uintA& obj
   }
   else NIY;
   if (DEBUG>0) {PRINT(lits.N);  PRINT(lits);}
-  if (DEBUG>0) {cout<<"calculateLiterals [END]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
 }
 
 
 
-void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<relational::SymbolGrounding*>& sgs, const ContinuousState& cont_state) {
+void relational::GroundedSymbol::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, const ContinuousState& cont_state) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
   if (DEBUG>0) {PRINT(cont_state.object_ids);  PRINT(cont_state.data);}
   lits.clear();
   uint i;
@@ -131,23 +131,23 @@ void relational::SymbolGrounding::calculateLiterals(LitL& lits, const MT::Array<
     CHECK(sgs(i)->pred != NULL, "No predicate object");
     if (DEBUG>0) {cout<<"Predicate "<<sgs(i)->pred->name<<endl;}
     LitL lits_p;
-    sgs(i)->calculateLiterals(lits_p, cont_state.object_ids, cont_state.data);
+    sgs(i)->calculateSymbols(lits_p, cont_state.object_ids, cont_state.data);
     if (DEBUG>0) {PRINT(lits_p);}
     lits.append(lits_p);
   }
   if (DEBUG>0) {PRINT(lits);}
-  if (DEBUG>0) {cout<<"calculateLiterals [END]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
 }
 
 
-void relational::calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullExperience& e) {
+void relational::calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"calculateLiterals [START]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
   e.experience_symbolic.pre.state_objects = e.state_continuous_pre.object_ids;
-  SymbolGrounding::calculateLiterals(e.experience_symbolic.pre.lits_prim, sgs, e.state_continuous_pre);
+  GroundedSymbol::calculateSymbols(e.experience_symbolic.pre.lits_prim, sgs, e.state_continuous_pre);
   TL::logicReasoning::derive(&e.experience_symbolic.pre);
   e.experience_symbolic.post.state_objects = e.state_continuous_post.object_ids;
-  SymbolGrounding::calculateLiterals(e.experience_symbolic.post.lits_prim, sgs, e.state_continuous_post);
+  GroundedSymbol::calculateSymbols(e.experience_symbolic.post.lits_prim, sgs, e.state_continuous_post);
   TL::logicReasoning::derive(&e.experience_symbolic.post);
   e.experience_symbolic.calcChanges();
   if (DEBUG>1) {PRINT(e.action_args);}
@@ -157,18 +157,18 @@ void relational::calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullE
     e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("puton")), e.action_args);
   else NIY;
   if (DEBUG>0) {e.experience_symbolic.write();}
-  if (DEBUG>0) {cout<<"calculateLiterals [END]"<<endl;}
+  if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
 }
 
 
-void relational::SymbolGrounding::write() const {
+void relational::GroundedSymbol::write() const {
   PRINT(name);  PRINT(arity);
 }
 
 
-void relational::read(MT::Array<SymbolGrounding*>& sgs, const char* prefix, SymbolGrounding::GroundingType grounding_type) {
+void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, GroundedSymbol::GroundingType grounding_type) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"SymbolGrounding::read [START]"<<endl;}
+  if (DEBUG>0) {cout<<"GroundedSymbol::read [START]"<<endl;}
   if (DEBUG>0) {PRINT(prefix);  PRINT(grounding_type);}
   
   MT::Array< MT::String > pn_names;
@@ -177,13 +177,13 @@ void relational::read(MT::Array<SymbolGrounding*>& sgs, const char* prefix, Symb
   
   uint i;
   FOR1D(pn_names, i) {
-    SymbolGrounding* sg;
+    GroundedSymbol* sg;
     uint arity;
     if (pn_names(i)(0) == 'b')
       arity = 2;
     else
       arity = 1;
-    if (grounding_type == relational::SymbolGrounding::NN) {
+    if (grounding_type == relational::GroundedSymbol::NN) {
       sg = new NN_Grounding(pn_names(i), arity, true);
       MT::String file_w1a, file_w1b, file_w2a, file_w2b;
       file_w1a<<prefix<<pn_names(i)<<"w1a.txt";
@@ -192,7 +192,7 @@ void relational::read(MT::Array<SymbolGrounding*>& sgs, const char* prefix, Symb
       file_w2b<<prefix<<pn_names(i)<<"w2b.txt";
       ((NN_Grounding*) sg)->read(file_w1a, file_w1b, file_w2a, file_w2b);
     }
-    else if (grounding_type == relational::SymbolGrounding::RBF) {
+    else if (grounding_type == relational::GroundedSymbol::RBF) {
       sg = new RBF_Grounding(pn_names(i), arity, true);
       MT::String file_w_c, file_w_sigma;
       file_w_c<<prefix<<pn_names(i)<<"w1a.txt";
@@ -205,7 +205,7 @@ void relational::read(MT::Array<SymbolGrounding*>& sgs, const char* prefix, Symb
     if (DEBUG>0) {sg->write();}
   }
   
-  if (DEBUG>0) {cout<<"SymbolGrounding::read [END]"<<endl;}
+  if (DEBUG>0) {cout<<"GroundedSymbol::read [END]"<<endl;}
 }
 
 
@@ -226,7 +226,7 @@ void relational::read(MT::Array<SymbolGrounding*>& sgs, const char* prefix, Symb
 
 
 relational::NN_Grounding::NN_Grounding(MT::String& name, uint arity, bool build_derived_predicates) : 
-SymbolGrounding(name, arity, build_derived_predicates) {
+GroundedSymbol(name, arity, build_derived_predicates) {
   this->type = NN;
 }
 
@@ -285,7 +285,7 @@ void relational::NN_Grounding::read(const char* file_w1a, const char* file_w1b, 
 
 
 void relational::NN_Grounding::write() const {
-  SymbolGrounding::write();
+  GroundedSymbol::write();
   PRINT(w1a);  PRINT(w1b);  PRINT(w2a);  PRINT(w2b);
 }
 
@@ -302,7 +302,7 @@ void relational::NN_Grounding::write() const {
 
 
 relational::RBF_Grounding::RBF_Grounding(MT::String& name, uint arity, bool build_derived_predicates) : 
-SymbolGrounding(name, arity, build_derived_predicates) {
+GroundedSymbol(name, arity, build_derived_predicates) {
   this->type = RBF;
 }
 
@@ -349,7 +349,7 @@ void relational::RBF_Grounding::read(const char* file_w_c, const char* file_w_si
 
 
 void relational::RBF_Grounding::write() const {
-  SymbolGrounding::write();  PRINT(w_c);  PRINT(w_sigma);
+  GroundedSymbol::write();  PRINT(w_c);  PRINT(w_sigma);
 }
 
 
@@ -383,9 +383,9 @@ void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, co
 }
 
 
-void relational::calculateLiterals(LitL& lits, const MT::Array<relational::SymbolGrounding*>& sgs, ors::Graph* C) {
+void relational::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, ors::Graph* C) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"SymbolGrounding::calculateLiterals [START]"<<endl;}
+  if (DEBUG>0) {cout<<"GroundedSymbol::calculateSymbols [START]"<<endl;}
   
   uintA obj_ids;
   std::stringstream ss;
@@ -401,10 +401,10 @@ void relational::calculateLiterals(LitL& lits, const MT::Array<relational::Symbo
   if (DEBUG>0) {PRINT(obj_ids);}
   
   ContinuousState* cont_state = getContinuousState(*C, obj_ids);
-  SymbolGrounding::calculateLiterals(lits, sgs, *cont_state);
+  GroundedSymbol::calculateSymbols(lits, sgs, *cont_state);
   delete cont_state;
   if (DEBUG>0) {PRINT(lits);}
-  if (DEBUG>0) {cout<<"SymbolGrounding::calculateLiterals [END]"<<endl;}
+  if (DEBUG>0) {cout<<"GroundedSymbol::calculateSymbols [END]"<<endl;}
 }
 
 
@@ -639,16 +639,17 @@ void relational::FullExperience::sanityCheck(MT::Array< FullExperience* >& exper
   FOR1D(experiences, i) {
     if (i==0) continue;
     if (i%30==0) continue;
-    if (i%10==0) continue;
+//     if (i%10==0) continue;
+    if (i%9==0) continue;
     if (experiences(i)->state_continuous_pre != experiences(i-1)->state_continuous_post) {
       cerr << "FullExperience::sanityCheck failed:  continuous states different "<<(i-1)<<" to "<<i << endl;
       cerr << "(i-1)=" << (i-1) << " [--> (" << i << ")]" << endl
            << "experiences(i-1)->state_continuous_post:" << endl;
-      experiences(i-1)->write_continuous(cerr);
+      experiences(i-1)->state_continuous_post.write(cerr);
 //            << experiences(i-1)->state_continuous_post << endl;
       cerr << "i=" << i << " [--> (" << (i+1) << ")]" << endl
            << "experiences(i)->state_continuous_pre:" << endl;
-      experiences(i)->write_continuous(cerr);
+      experiences(i)->state_continuous_pre.write(cerr);
 //            << experiences(i)->state_continuous_pre << endl;
       HALT("");
     }

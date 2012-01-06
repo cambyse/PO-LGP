@@ -80,24 +80,24 @@ namespace logicReasoning {
   /****************************************
      HELPERS FOR STATE
    ***************************************/
-  void getConstants(const TL::State& s, uintA& constants);
-  uint getArgument(const TL::State& s, const TL::Predicate& pred);
-  void getArguments(uintA& args, const TL::State& s, const TL::Predicate& pred);
-  void usedValues(const TL::Function& f, const TL::State& s, arr& values);
-  bool containsNegativeLiterals(const TL::State& s);
-  void filterState_full(TL::State& s_filtered, const TL::State& s_full, const uintA& filter_objects, bool primOnly = true);  // only "filter_objects" as args
-  void filterState_atleastOne(TL::State& s_filtered, const TL::State& s_full, const uintA& filter_objects, bool primOnly = true); // at least one in "filter_objects" as arg
-  void changes(const TL::State& pre, const TL::State& post, uintA& changedConstants, LitL& holdOnlyPre, LitL& holdOnlyPost);
+  void getConstants(const TL::SymbolicState& s, uintA& constants);
+  uint getArgument(const TL::SymbolicState& s, const TL::Predicate& pred);
+  void getArguments(uintA& args, const TL::SymbolicState& s, const TL::Predicate& pred);
+  void usedValues(const TL::Function& f, const TL::SymbolicState& s, arr& values);
+  bool containsNegativeLiterals(const TL::SymbolicState& s);
+  void filterState_full(TL::SymbolicState& s_filtered, const TL::SymbolicState& s_full, const uintA& filter_objects, bool primOnly = true);  // only "filter_objects" as args
+  void filterState_atleastOne(TL::SymbolicState& s_filtered, const TL::SymbolicState& s_full, const uintA& filter_objects, bool primOnly = true); // at least one in "filter_objects" as arg
+  void changes(const TL::SymbolicState& pre, const TL::SymbolicState& post, uintA& changedConstants, LitL& holdOnlyPre, LitL& holdOnlyPost);
   // pred(X,Y), pred(X,Z) --> {Y,Z}
-  void getRelatedObjects(uintA& objs_related, uint id, bool id_covers_first, const TL::Predicate& pred, const TL::State& s);
+  void getRelatedObjects(uintA& objs_related, uint id, bool id_covers_first, const TL::Predicate& pred, const TL::SymbolicState& s);
   // TODO hieran weiter arbeiten fuer den Graphen
-  void getGeneralRelatedObjects(uintA& objs_related, uint id, const TL::State& s);
-  void getValues(arr& values, const TL::State& s, const TL::Function& f, const uintA& objs);
-  double getValue(uint id, const MT::String& function_name, const TL::State& s);
-  double getValue(TL::Function* f, const TL::State& s);
-  double getValue(uint id, TL::Function* f, const TL::State& s);
-  double getValue(const uintA& args, TL::Function* f, const TL::State& s);
-  double getValue(const TL::FunctionAtom* fa, const TL::State& s);
+  void getGeneralRelatedObjects(uintA& objs_related, uint id, const TL::SymbolicState& s);
+  void getValues(arr& values, const TL::SymbolicState& s, const TL::Function& f, const uintA& objs);
+  double getValue(uint id, const MT::String& function_name, const TL::SymbolicState& s);
+  double getValue(TL::Function* f, const TL::SymbolicState& s);
+  double getValue(uint id, TL::Function* f, const TL::SymbolicState& s);
+  double getValue(const uintA& args, TL::Function* f, const TL::SymbolicState& s);
+  double getValue(const TL::FunctionAtom* fa, const TL::SymbolicState& s);
   
   
     
@@ -168,16 +168,16 @@ namespace logicReasoning {
   bool holds(const LitL& positive_grounded_lits, TL::Literal* lit);
   // special function for ComparisonLiterals
   bool holds(const FuncVL& fvs, TL::ComparisonLiteral* lit);
-  // Additional assumptions for State variants:
+  // Additional assumptions for SymbolicState variants:
   // (1) All complex predicate tuples have been derived in the states.
   // --> simple search
-  bool holds(const TL::State& s, TL::Literal* grounded_lit);
-  bool holds(const TL::State& s, const LitL& grounded_lits);
+  bool holds(const TL::SymbolicState& s, TL::Literal* grounded_lit);
+  bool holds(const TL::SymbolicState& s, const LitL& grounded_lits);
   // Attention: we look only at the primitive predicates thus far!!
-  bool holds(const TL::State& s1, const TL::State& s2);
+  bool holds(const TL::SymbolicState& s1, const TL::SymbolicState& s2);
     
-  // "holds_straight(.)": fast variant of "holds(TL::State* s, TL::Literal* grounded_pi)"
-  bool holds_straight(uint id, const MT::String& predicate_name, const TL::State& s);
+  // "holds_straight(.)": fast variant of "holds(TL::SymbolicState* s, TL::Literal* grounded_pi)"
+  bool holds_straight(uint id, const MT::String& predicate_name, const TL::SymbolicState& s);
 	
   
   /****************************************
@@ -229,12 +229,12 @@ namespace logicReasoning {
 	// Calculates substitutions "subs" (extensions of "initSub") which
 	// substitute the arguments in "lit" such that the resulting
 	// grounded predicate is satisfied in state "s".
-  bool cover(const TL::State& s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub = NULL);
+  bool cover(const TL::SymbolicState& s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub = NULL);
   // BASIC FUNCTION 2
 	// Calculates substitutions "subs" (extensions of "initSub") which
 	// substitute the arguments in the predicate list "lits" such that the resulting
 	// grounded predicates are satisfied in state "s".
-  bool cover(const TL::State& s, const LitL& lits, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub = NULL);
+  bool cover(const TL::SymbolicState& s, const LitL& lits, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub = NULL);
     
     
     
@@ -242,14 +242,14 @@ namespace logicReasoning {
   /****************************************
             STATE UNIFICATION 
    ***************************************/
-  void calcDifferences(LitL& pi_diff_1to2, FuncVL& fv_diff_1to2, LitL& pi_diff_2to1, FuncVL& fv_diff_2to1, const TL::State state1, const TL::State state2);
-  uint createLeastGeneralSuperState(const TL::Atom& action1, const TL::State& state1, const TL::Atom& action2, const TL::State& state2);
+  void calcDifferences(LitL& pi_diff_1to2, FuncVL& fv_diff_1to2, LitL& pi_diff_2to1, FuncVL& fv_diff_2to1, const TL::SymbolicState state1, const TL::SymbolicState state2);
+  uint createLeastGeneralSuperState(const TL::Atom& action1, const TL::SymbolicState& state1, const TL::Atom& action2, const TL::SymbolicState& state2);
   // returns min-difference in number of literals
-  uint unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::State& state1, const TL::State& state2, TL::Substitution* initSub = NULL);
-  bool unify(SubstitutionSet& subs, const TL::State& state1, const TL::State& state2, TL::Substitution* initSub = NULL);
-  bool unifiable(const TL::State& state1, const TL::State& state2);
+  uint unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::SymbolicState& state1, const TL::SymbolicState& state2, TL::Substitution* initSub = NULL);
+  bool unify(SubstitutionSet& subs, const TL::SymbolicState& state1, const TL::SymbolicState& state2, TL::Substitution* initSub = NULL);
+  bool unifiable(const TL::SymbolicState& state1, const TL::SymbolicState& state2);
   
-  uint unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::State& state1, const TL::Atom& action1, const TL::State& state2, const TL::Atom& action2);
+  uint unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::SymbolicState& state1, const TL::Atom& action1, const TL::SymbolicState& state2, const TL::Atom& action2);
 
 	
   /****************************************
@@ -257,20 +257,20 @@ namespace logicReasoning {
     ***************************************/
 	
   // specialized methods
-  bool deriveLiterals_conjunction(TL::ConjunctionPredicate& p, TL::State& s);
-  bool deriveLiterals_transClosure(TL::TransClosurePredicate& p, TL::State& s);
-  bool deriveLiterals_count(TL::CountPredicate& p, TL::State& s);
-  bool deriveFunctionValues_count(TL::CountFunction& f, TL::State& s);
-  bool deriveFunctionValues_avg(TL::AverageFunction& f, TL::State& s);
-  bool deriveFunctionValues_max(TL::MaxFunction& f, TL::State& s);
-  bool deriveFunctionValues_sum(TL::SumFunction& f, TL::State& s);
-  bool deriveFunctionValues_reward(TL::RewardFunction& f, TL::State& s);
+  bool deriveLiterals_conjunction(TL::ConjunctionPredicate& p, TL::SymbolicState& s);
+  bool deriveLiterals_transClosure(TL::TransClosurePredicate& p, TL::SymbolicState& s);
+  bool deriveLiterals_count(TL::CountPredicate& p, TL::SymbolicState& s);
+  bool deriveFunctionValues_count(TL::CountFunction& f, TL::SymbolicState& s);
+  bool deriveFunctionValues_avg(TL::AverageFunction& f, TL::SymbolicState& s);
+  bool deriveFunctionValues_max(TL::MaxFunction& f, TL::SymbolicState& s);
+  bool deriveFunctionValues_sum(TL::SumFunction& f, TL::SymbolicState& s);
+  bool deriveFunctionValues_reward(TL::RewardFunction& f, TL::SymbolicState& s);
     
   // If objects are empty, then objects are calculated from literals.
   void derive(const LitL& pi_prim, const FuncVL& fv_prim, LitL& pi_derived, FuncVL& fv_derived, uintA& objects);
-  void derive(TL::State* s);
+  void derive(TL::SymbolicState* s);
   
-  void dederive(TL::State* s);
+  void dederive(TL::SymbolicState* s);
 
   
 };

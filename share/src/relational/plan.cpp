@@ -49,19 +49,19 @@ TL::LiteralReward::LiteralReward(TL::Literal* _pt) : Reward(reward_literal) {
   lit = _pt;
 }
 
-double TL::LiteralReward::evaluate(const State& s) const {
+double TL::LiteralReward::evaluate(const SymbolicState& s) const {
   if (TL::logicReasoning::holds(s, lit))
     return 1.0;
   else
     return 0.0;
 }
 
-bool TL::LiteralReward::satisfied(const State& s) const {
+bool TL::LiteralReward::satisfied(const SymbolicState& s) const {
   double result = evaluate(s);
   return TL::areEqual(1., result);
 }
 
-bool TL::LiteralReward::possible(const State& s) const {
+bool TL::LiteralReward::possible(const SymbolicState& s) const {
   TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
   uint i;
   FOR1D(lit->atom->args, i) {
@@ -87,7 +87,7 @@ void TL::LiteralReward::write(const char* filename) const {
 }
 
 
-void TL::LiteralReward::getRewardObjects(uintA& objects, const TL::State* s) const {
+void TL::LiteralReward::getRewardObjects(uintA& objects, const TL::SymbolicState* s) const {
   objects.clear();
   objects.setAppend(lit->atom->args);
 }
@@ -100,14 +100,14 @@ TL::LiteralListReward::LiteralListReward(LitL& _lits) : Reward(reward_literalLis
   lits = _lits;
 }
 
-double TL::LiteralListReward::evaluate(const State& s) const {
+double TL::LiteralListReward::evaluate(const SymbolicState& s) const {
   if (TL::logicReasoning::holds(s, lits))
     return 1.0;
   else
     return 0.0;
 }
 
-bool TL::LiteralListReward::satisfied(const State& s) const {
+bool TL::LiteralListReward::satisfied(const SymbolicState& s) const {
   double result = evaluate(s);
   if (TL::areEqual(1., result))
     return true;
@@ -115,7 +115,7 @@ bool TL::LiteralListReward::satisfied(const State& s) const {
     return false;
 }
 
-bool TL::LiteralListReward::possible(const State& s) const {
+bool TL::LiteralListReward::possible(const SymbolicState& s) const {
   // BRING IN DOMAIN KNOWLEDGE
   
   // Desktop world domain
@@ -225,7 +225,7 @@ void TL::LiteralListReward::write(const char* filename) const {
   out.close();
 }
 
-void TL::LiteralListReward::getRewardObjects(uintA& objects, const TL::State* s) const {
+void TL::LiteralListReward::getRewardObjects(uintA& objects, const TL::SymbolicState* s) const {
   objects.clear();
   uint i;
   FOR1D(lits, i) {
@@ -248,7 +248,7 @@ TL::DisjunctionReward::DisjunctionReward(LitL& _lits, arr& _weights) : Reward(re
   this->weights = _weights;
 }
 
-double TL::DisjunctionReward::evaluate(const State& s) const {
+double TL::DisjunctionReward::evaluate(const SymbolicState& s) const {
   uint i;
   double max = 0.0;
   FOR1D(lits, i) {
@@ -259,7 +259,7 @@ double TL::DisjunctionReward::evaluate(const State& s) const {
   return max;
 }
 
-bool TL::DisjunctionReward::satisfied(const State& s) const {
+bool TL::DisjunctionReward::satisfied(const SymbolicState& s) const {
   uint i;
   FOR1D(lits, i) {
     if (TL::logicReasoning::holds(s, lits(i)))
@@ -268,7 +268,7 @@ bool TL::DisjunctionReward::satisfied(const State& s) const {
   return false;
 }
 
-bool TL::DisjunctionReward::possible(const State& s) const {
+bool TL::DisjunctionReward::possible(const SymbolicState& s) const {
   TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
   uint i, k;
   if (p_OUT != NULL) {
@@ -307,7 +307,7 @@ void TL::DisjunctionReward::writeNice(ostream& out) const {
   }
 }
 
-void TL::DisjunctionReward::getRewardObjects(uintA& objects, const TL::State* s) const {
+void TL::DisjunctionReward::getRewardObjects(uintA& objects, const TL::SymbolicState* s) const {
   objects.clear();
   uint i;
   FOR1D(lits, i) {
@@ -326,7 +326,7 @@ TL::MaximizeFunctionReward::MaximizeFunctionReward(TL::FunctionAtom* _fa) : Rewa
   fa = _fa;
 }
 
-double TL::MaximizeFunctionReward::evaluate(const State& s) const {
+double TL::MaximizeFunctionReward::evaluate(const SymbolicState& s) const {
   uint i;
   if (fa->f->category == category_primitive) {
     FOR1D(s.fv_prim, i) {
@@ -348,7 +348,7 @@ double TL::MaximizeFunctionReward::evaluate(const State& s) const {
 }
 
 
-bool TL::MaximizeFunctionReward::satisfied(const State& s) const {
+bool TL::MaximizeFunctionReward::satisfied(const SymbolicState& s) const {
   // Satisfied = maximum value
   // For count function with 1-arity has maximium value if all objects (except table) fullfill it
   if (fa->f->type == TL::Function::function_count) {
@@ -382,7 +382,7 @@ bool TL::MaximizeFunctionReward::satisfied(const State& s) const {
 }
 
 
-bool TL::MaximizeFunctionReward::possible(const State& s) const {
+bool TL::MaximizeFunctionReward::possible(const SymbolicState& s) const {
   return true; // is always true
 }
 
@@ -415,7 +415,7 @@ void TL::MaximizeFunctionReward::write(const char* filename) const {
   out.close();
 }
 
-void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, const TL::State* s) const {
+void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, const TL::SymbolicState* s) const {
   objects.clear();
   if (fa->f->type == TL::Function::function_count) {
     // Reward objects are those for which predicate instances don't hold yet
@@ -450,11 +450,11 @@ void TL::MaximizeFunctionReward::getRewardObjects(uintA& objects, const TL::Stat
 // NotTheseStatesReward
 
 
-TL::NotTheseStatesReward::NotTheseStatesReward(const StateL& _undesired_states) : Reward(reward_not_these_states) {
+TL::NotTheseStatesReward::NotTheseStatesReward(const SymbolicStateL& _undesired_states) : Reward(reward_not_these_states) {
   undesired_states = _undesired_states;
 }
 
-double TL::NotTheseStatesReward::evaluate(const State& s) const {
+double TL::NotTheseStatesReward::evaluate(const SymbolicState& s) const {
   uint i;
   FOR1D(undesired_states, i) {
     if (s == *undesired_states(i))
@@ -464,7 +464,7 @@ double TL::NotTheseStatesReward::evaluate(const State& s) const {
 }
 
 
-bool TL::NotTheseStatesReward::satisfied(const State& s) const {
+bool TL::NotTheseStatesReward::satisfied(const SymbolicState& s) const {
   uint i;
   FOR1D(undesired_states, i) {
     if (s == *undesired_states(i))
@@ -474,7 +474,7 @@ bool TL::NotTheseStatesReward::satisfied(const State& s) const {
 }
 
 
-bool TL::NotTheseStatesReward::possible(const State& s) const {
+bool TL::NotTheseStatesReward::possible(const SymbolicState& s) const {
   return true; // is always true
 }
 
@@ -504,7 +504,7 @@ void TL::NotTheseStatesReward::write(const char* filename) const {
   out.close();
 }
 
-void TL::NotTheseStatesReward::getRewardObjects(uintA& objects, const TL::State* s) const {
+void TL::NotTheseStatesReward::getRewardObjects(uintA& objects, const TL::SymbolicState* s) const {
   objects.clear();
   NIY;
 }
@@ -585,7 +585,7 @@ TL::Reward* TL::readReward(const char* filename) {
 
 AtomL DEBUG_actions;
 
-TL::Atom* TL::SST::generateAction(double& value, const TL::State& s0, const Reward& reward, uint branch, uint tau, double discount, const WorldAbstraction& wa) {
+TL::Atom* TL::SST::generateAction(double& value, const TL::SymbolicState& s0, const Reward& reward, uint branch, uint tau, double discount, const WorldAbstraction& wa) {
   uint DEBUG = 0;
   if (DEBUG_actions.N == 0)
     DEBUG_actions.resize(tau);
@@ -608,7 +608,7 @@ TL::Atom* TL::SST::generateAction(double& value, const TL::State& s0, const Rewa
       if (DEBUG>0) {DEBUG_actions(DEBUG_actions.N-tau) = wa.ground_actions(i);}
       for(b=0; b<branch; b++) {
         uint flag;
-        TL::State s_suc;
+        TL::SymbolicState s_suc;
         double ruleOutcome_reward = wa.sampleSuccessorState(s_suc, flag, s0, wa.ground_actions(i));
         action_is_applicable = (ruleOutcome_reward != TL_DOUBLE_NIL);
         if (!action_is_applicable) {
@@ -762,7 +762,7 @@ double TL::NID_Planner::postprocessValue(double value, uint flag) const {
 }
 
 
-double TL::NID_Planner::sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const {
+double TL::NID_Planner::sampleSuccessorState(TL::SymbolicState& s_suc, uint& flag, const TL::SymbolicState& s_prev, TL::Atom* action) const {
   return ruleReasoning::calcSuccessorState(s_prev, ground_rules, action, flag, s_suc, true);
 }
 
@@ -783,7 +783,7 @@ TL::NID_SST::NID_SST(uint branch, double noise_scaling_factor) : NID_Planner(noi
 }
 
 
-TL::Atom* TL::NID_SST::generateAction(const TL::State& current_state, uint max_runs) {
+TL::Atom* TL::NID_SST::generateAction(const TL::SymbolicState& current_state, uint max_runs) {
   double value;
   uint i;
   for (i=0; i<max_runs; i++) {
@@ -829,7 +829,7 @@ void TL::NID_UCT::killAtomLctionsInfo() {
 
 AtomL DEBUG__UCT_ACTIONS;
 
-void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
+void TL::NID_UCT::runEpisode(double& value, const TL::SymbolicState& s, uint t) {
   uint DEBUG = 0;
   if (t==0)
     DEBUG = 0;
@@ -838,7 +838,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
   if (DEBUG>0) {
     cout<<"NID_UCT::runEpisode() [START]"<<endl;
     PRINT(t);
-    cout<<"State: "; s.write(cout, true); cout<<endl;
+    cout<<"SymbolicState: "; s.write(cout, true); cout<<endl;
   }
   double reward_s = reward->evaluate(s);
 //   if (reward_s > 0.) {
@@ -853,7 +853,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
   else if (reward->satisfied(s)) {
     value = reward_s;
 //     cout<<"finished:"<<endl;
-//     cout<<"State: "; s.writeNice(); cout<<endl;
+//     cout<<"SymbolicState: "; s.writeNice(); cout<<endl;
 //     uint t2;
 //     cout<<"Actions:  ";
 //     for (t2=0; t2<t; t2++) {
@@ -869,7 +869,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
     uintA untried_action_ids;
     if (DEBUG>0) {cout<<"visits(s)="<<s_a_info->getVisits()<<endl;}
     FOR1D(ground_actions, i) {
-      TL::State dummy_state = s;
+      TL::SymbolicState dummy_state = s;
       TL::Rule* r = ground_rules.elem(ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(ground_rules, s, ground_actions(i)));
       if (!ruleReasoning::isDefaultRule(r)) {
         rules.append(r);
@@ -898,7 +898,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
     }
     DEBUG__UCT_ACTIONS(t) = ground_actions(id_opt);
     uint flag;
-    TL::State s_suc;
+    TL::SymbolicState s_suc;
     double ruleOutcome_value = TL::ruleReasoning::calcSuccessorState(s, rules.elem(id_opt), flag, s_suc, true);
   
     double reward_suc = 0.;
@@ -928,7 +928,7 @@ void TL::NID_UCT::runEpisode(double& value, const TL::State& s, uint t) {
 }
 
 
-TL::Atom* TL::NID_UCT::generateAction(const TL::State& s, uint max_runs) {
+TL::Atom* TL::NID_UCT::generateAction(const TL::SymbolicState& s, uint max_runs) {
   uint DEBUG = 0;
   killAtomLctionsInfo(); // full replanning... comment if not desired
   uint i, k;
@@ -962,7 +962,7 @@ TL::Atom* TL::NID_UCT::generateAction(const TL::State& s, uint max_runs) {
 }
 
 
-TL::AtomLctionsInfo* TL::NID_UCT::getAtomLctionsInfo(const TL::State& s) {
+TL::AtomLctionsInfo* TL::NID_UCT::getAtomLctionsInfo(const TL::SymbolicState& s) {
   uint i;
   FOR1D(s_a_infos, i) {
     if (s_a_infos(i)->s == s)
@@ -990,7 +990,7 @@ void TL::NID_UCT::setNumEpisodes(uint numEpisodes) {
 // --------------------------------------
 
 
-TL::AtomLctionsInfo::AtomLctionsInfo(const TL::State& _s, uint num_actions) : s(_s) {
+TL::AtomLctionsInfo::AtomLctionsInfo(const TL::SymbolicState& _s, uint num_actions) : s(_s) {
   values.resize(num_actions);
   values.setUni(0.);
   visits.resize(num_actions);

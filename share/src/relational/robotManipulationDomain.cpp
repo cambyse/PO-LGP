@@ -29,8 +29,8 @@
   --------------------- */
 
 
-TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator* sim) {
-  State* state = new State;
+TL::SymbolicState* TL::RobotManipulationDomain::calculateSymbolicState(RobotManipulationSimulator* sim) {
+  SymbolicState* state = new SymbolicState;
   
   uint i, j;
   
@@ -143,7 +143,7 @@ TL::State* TL::RobotManipulationDomain::observeLogic(RobotManipulationSimulator*
     }
   }
 
- 
+  state->state_objects = all_objs;
  
   TL::logicReasoning::derive(state);
   return state;
@@ -1134,7 +1134,7 @@ TL::Reward* TL::RobotManipulationDomain::RewardLibrary::clearance() {
 
 
 
-TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers, TL::State* state) {
+TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers, TL::SymbolicState* state) {
   uint DEBUG = 1;
   if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__stack [START]"<<endl;}
   if (DEBUG>1) {PRINT(blocks);  PRINT(balls);  PRINT(table_id);}
@@ -1305,7 +1305,7 @@ TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__stack(cons
 
 
 
-TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__clearance(const TL::State& current_state, uint table_id) {
+TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__clearance(const TL::SymbolicState& current_state, uint table_id) {
   uint DEBUG = 1;
   if (DEBUG>0) {cout<<"TL::RobotManipulationDomain::sampleGroundGoal__clearance [START]"<<endl;}
 
@@ -1441,38 +1441,38 @@ TL::LiteralListReward* TL::RobotManipulationDomain::sampleGroundGoal__clearance(
 // ----------------------------------------------------------------------------
 
 
-bool TL::RobotManipulationDomain::isBlock(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isBlock(uint id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(id, MT::String("block"), s);
 }
 
 
-bool TL::RobotManipulationDomain::isOut(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isOut(uint id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(id, MT::String("out"), s);
 }
 
-bool TL::RobotManipulationDomain::isInhand(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isInhand(uint id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(id, MT::String("inhand"), s);
 }
 
-bool TL::RobotManipulationDomain::isTable(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isTable(uint id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(id, MT::String("table"), s);
 }
 
-bool TL::RobotManipulationDomain::isBall(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isBall(uint id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(id, MT::String("ball"), s);
 }
 
-bool TL::RobotManipulationDomain::isBox(uint id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isBox(uint id, const TL::SymbolicState& s) {
   if (logicObjectManager::getPredicate(MT::String("box")) == NULL)
     return false;
   return logicReasoning::holds_straight(id, MT::String("box"), s);
 }
 
-bool TL::RobotManipulationDomain::isClosed(uint box_id, const TL::State& s) {
+bool TL::RobotManipulationDomain::isClosed(uint box_id, const TL::SymbolicState& s) {
   return logicReasoning::holds_straight(box_id, MT::String("closed"), s);
 }
 
-bool TL::RobotManipulationDomain::isInorderGang(const uintA gang, const TL::State& s) {
+bool TL::RobotManipulationDomain::isInorderGang(const uintA gang, const TL::SymbolicState& s) {
   CHECK(gang.N > 0, "");
   if (logicObjectManager::getPredicate(MT::String("inorder")) == NULL) {
     NIY;
@@ -1485,7 +1485,7 @@ bool TL::RobotManipulationDomain::isInorderGang(const uintA gang, const TL::Stat
 
 
 
-uint TL::RobotManipulationDomain::getBelow(uint id, const TL::State& s) {
+uint TL::RobotManipulationDomain::getBelow(uint id, const TL::SymbolicState& s) {
   TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -1497,7 +1497,7 @@ uint TL::RobotManipulationDomain::getBelow(uint id, const TL::State& s) {
   return UINT_MAX;
 }
 
-uint TL::RobotManipulationDomain::getAbove(uint id, const TL::State& s) {
+uint TL::RobotManipulationDomain::getAbove(uint id, const TL::SymbolicState& s) {
   TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -1509,7 +1509,7 @@ uint TL::RobotManipulationDomain::getAbove(uint id, const TL::State& s) {
   return UINT_MAX;
 }
 
-void TL::RobotManipulationDomain::getBelowObjects(uintA& ids, uint id_top, const TL::State& s) {
+void TL::RobotManipulationDomain::getBelowObjects(uintA& ids, uint id_top, const TL::SymbolicState& s) {
   logicReasoning::getRelatedObjects(ids, id_top, true, *logicObjectManager::getPredicate(MT::String("above")), s);
   /*
   ids.clear();
@@ -1523,11 +1523,11 @@ void TL::RobotManipulationDomain::getBelowObjects(uintA& ids, uint id_top, const
 }*/
 }
 
-void TL::RobotManipulationDomain::getAboveObjects(uintA& ids, uint id_top, const TL::State& s) {
+void TL::RobotManipulationDomain::getAboveObjects(uintA& ids, uint id_top, const TL::SymbolicState& s) {
   logicReasoning::getRelatedObjects(ids, id_top, false, *logicObjectManager::getPredicate(MT::String("above")), s);
 }
 
-uint TL::RobotManipulationDomain::getInhand(const TL::State& s) {
+uint TL::RobotManipulationDomain::getInhand(const TL::SymbolicState& s) {
   TL::Predicate* p_INHAND = logicObjectManager::getPredicate(MT::String("inhand"));
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -1538,7 +1538,7 @@ uint TL::RobotManipulationDomain::getInhand(const TL::State& s) {
   return UINT_MAX;
 }
 
-void TL::RobotManipulationDomain::getBoxes(uintA& ids, const TL::State& s) {
+void TL::RobotManipulationDomain::getBoxes(uintA& ids, const TL::SymbolicState& s) {
   ids.clear();
   TL::Predicate* p_BOX = logicObjectManager::getPredicate(MT::String("box"));
   uint i;
@@ -1550,7 +1550,7 @@ void TL::RobotManipulationDomain::getBoxes(uintA& ids, const TL::State& s) {
 }
 
 
-uint TL::RobotManipulationDomain::getContainingBox(uint obj_id, const TL::State& s) {
+uint TL::RobotManipulationDomain::getContainingBox(uint obj_id, const TL::SymbolicState& s) {
   TL::Predicate* p_CONTAINS = logicObjectManager::getPredicate(MT::String("contains"));
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -1563,7 +1563,7 @@ uint TL::RobotManipulationDomain::getContainingBox(uint obj_id, const TL::State&
 }
 
 
-uint TL::RobotManipulationDomain::getContainedObject(uint box_id, const TL::State& s) {
+uint TL::RobotManipulationDomain::getContainedObject(uint box_id, const TL::SymbolicState& s) {
   TL::Predicate* p_CONTAINS = logicObjectManager::getPredicate(MT::String("contains"));
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -1576,7 +1576,7 @@ uint TL::RobotManipulationDomain::getContainedObject(uint box_id, const TL::Stat
 }
 
 
-void TL::RobotManipulationDomain::getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s) {
+void TL::RobotManipulationDomain::getHomieGangs(MT::Array< uintA >& homieGangs, const TL::SymbolicState& s) {
   homieGangs.clear();
   Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
   if (p_HOMIES == NULL)
@@ -1612,7 +1612,7 @@ void TL::RobotManipulationDomain::getHomieGangs(MT::Array< uintA >& homieGangs, 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
 
-double TL::RobotManipulationDomain::reward_buildTower(const State& s) {
+double TL::RobotManipulationDomain::reward_buildTower(const SymbolicState& s) {
   uint DEBUG=0;
   if (DEBUG>0) {cout<<"RobotManipulationDomain::reward_buildTower [START]"<<endl;}
   uintA piles;
@@ -1642,13 +1642,20 @@ double TL::RobotManipulationDomain::reward_buildTower(const State& s) {
 
 
 
-void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint sort_type) {
-  uint DEBUG = 0;
+void TL::RobotManipulationDomain::calcPiles(const SymbolicState& s, uintA& piles, uint sort_type) {
+  uint DEBUG = 3;
   if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [START]"<<endl;}
   if (DEBUG>0) {cout<<"STATE:  ";  s.write(cout, true);  cout<<endl;}
+  bool use_table = false;
+  uint i;
+  FOR1D(s.state_objects, i) {
+    if (isTable(s.state_objects(i), s)) {
+      use_table = true;
+      break;
+    }
+  }
   // calc piles (unsorted)
   MT::Array< uintA > piles_unsorted;
-  uint i;
   bool inserted;
   FOR1D(s.lits_prim, i) {
     // on(A,B)
@@ -1672,7 +1679,7 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
         if (piles_unsorted(table_2_B).last() == s.lits_prim(i)->atom->args(1)) {
           if (inserted) {
             // when trying to insert a second time
-            // find previous insertion point
+            // find previous insertion point and combine both piles
             FOR1D(piles_unsorted, A_2_top) {
               if (piles_unsorted(A_2_top).N == 0)
                 continue;
@@ -1681,7 +1688,17 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
                 break;
               }
             }
-            CHECK(A_2_top != piles_unsorted.N, "");
+            if (A_2_top == piles_unsorted.N) {
+              cerr<<endl<<endl<<endl<<endl;
+              MT_MSG("ERROR! A_2_top was not found. Sorting piles will fail.");
+              PRINT2(A_2_top, cerr);
+              PRINT2(piles_unsorted.N, cerr);
+              PRINT2(piles_unsorted, cerr);
+              PRINT2(use_table, cerr);
+              PRINT2(*s.lits_prim(i), cerr);
+              cerr<<endl<<endl<<endl<<endl;
+              break;
+            }
             piles_unsorted(table_2_B).setAppend(piles_unsorted(A_2_top)); // schmeisst doppeleintrag raus
             piles_unsorted(A_2_top).clear();
           }
@@ -1711,13 +1728,19 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
   uint j;
     
   if (DEBUG>0) {
-    cout <<"piles_unsorted:"<<endl;
+    cout <<"piles_unsorted (N="<<piles_unsorted.N<<"):"<<endl;
+    PRINT(piles_unsorted);
     FOR1D(piles_unsorted, i) {
       FOR1D(piles_unsorted(i), j) {
         cout << piles_unsorted(i)(j) << " ";
       }
       cout << endl;
     }
+  }
+  if (piles_unsorted.N == 0) {
+    if (DEBUG>0) {cout<<"No piles found."<<endl;}
+    if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [END]"<<endl;}
+    return;
   }
   
   uintA heights;
@@ -1734,6 +1757,7 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
   piles.resize(piles_unsorted.d0, heights(sortedIndices(0)));
   piles.setUni(UINT_NIL);
   
+  if (DEBUG>0) {PRINT(sort_type);}
   // sort by height
   if (sort_type == 1) {
     // reorder piles
@@ -1747,10 +1771,14 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
   else if (sort_type == 2) {
     uintA state_constants;
     logicReasoning::getConstants(s, state_constants);
+    if (DEBUG>0) {PRINT(state_constants);}
     uint next_pile_id = 0;
     FOR1D(state_constants, i) {
       FOR1D(piles_unsorted, j) {
-        if (piles_unsorted(j)(1) == state_constants(i)) {   // (1) for table
+        uint first_inspected_id = 0;
+        if (use_table)
+          first_inspected_id = 1;
+        if (piles_unsorted(j)(first_inspected_id) == state_constants(i)) {   // (1) for table
           uint k;
           FOR1D(piles_unsorted(j), k) {
             piles(next_pile_id,k) = piles_unsorted(j)(k);
@@ -1760,7 +1788,17 @@ void TL::RobotManipulationDomain::calcPiles(const State& s, uintA& piles, uint s
         }
       }
     }
-    if (next_pile_id != piles_unsorted.N) {PRINT(piles_unsorted);  PRINT(piles);  PRINT(state_constants);  PRINT(next_pile_id);  HALT("resorting failed");}
+    if (next_pile_id != piles_unsorted.N) {
+      cerr<<endl<<endl<<endl<<endl;
+      PRINT(piles_unsorted);
+      PRINT(piles);
+      PRINT(state_constants);
+      PRINT(next_pile_id);
+      MT_MSG("resorting failed");
+      cerr<<endl<<endl<<endl<<endl;
+      if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [END]"<<endl;}
+      return;
+    }
   }
   else {
     FOR1D(piles_unsorted, i) {
@@ -1838,7 +1876,7 @@ void TL::RobotManipulationDomain::calcSkyscraperWeights(const uintA& objects, co
 
 
 
-void TL::RobotManipulationDomain::writeStateInfo(const State& s, ostream& out) {
+void TL::RobotManipulationDomain::writeStateInfo(const SymbolicState& s, ostream& out) {
   out<<"--"<<endl;
   uint i, k;
   uint id_table = UINT_MAX;
@@ -1927,7 +1965,7 @@ void TL::RobotManipulationDomain::writeStateInfo(const State& s, ostream& out) {
 
 
 
-bool TL::RobotManipulationDomain::has_maximum_stack_value(const TL::State& s) {
+bool TL::RobotManipulationDomain::has_maximum_stack_value(const TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RobotManipulationDomain::has_maximum_stack_value [START]"<<endl;}
   if (DEBUG>0) {cout<<"STATE:   ";  s.write();  cout<<endl;}

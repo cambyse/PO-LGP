@@ -54,16 +54,16 @@ class Reward {
     Reward(RewardType reward_type);
     virtual ~Reward() {}
     
-    virtual double evaluate(const State& s) const = 0;
-    virtual bool satisfied(const State& s) const = 0;
-    virtual bool possible(const State& s) const = 0;
+    virtual double evaluate(const SymbolicState& s) const = 0;
+    virtual bool satisfied(const SymbolicState& s) const = 0;
+    virtual bool possible(const SymbolicState& s) const = 0;
     
-    virtual void getRewardObjects(uintA& objects, const TL::State* s) const = 0;
+    virtual void getRewardObjects(uintA& objects, const TL::SymbolicState* s) const = 0;
     
     virtual void writeNice(ostream& out = cout) const {};
     virtual void write(const char* filename) const = 0;
     
-//     virtual void sampleFinalState(LitL& fixed_properties, const State& s0) const = 0; // needed for backwards reasoning
+//     virtual void sampleFinalState(LitL& fixed_properties, const SymbolicState& s0) const = 0; // needed for backwards reasoning
     
     RewardType reward_type;
 };
@@ -76,11 +76,11 @@ class LiteralReward : public Reward {
     LiteralReward(TL::Literal* lit);
     ~LiteralReward() {}
     
-    double evaluate(const State& s) const ;
-    bool satisfied(const State& s) const;
-    bool possible(const State& s) const;
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
     
-    void getRewardObjects(uintA& objects, const TL::State* s = NULL) const;
+    void getRewardObjects(uintA& objects, const TL::SymbolicState* s = NULL) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -95,11 +95,11 @@ class LiteralListReward : public Reward {
     LiteralListReward(LitL& lits);
     ~LiteralListReward() {}
     
-    double evaluate(const State& s) const ;
-    bool satisfied(const State& s) const;
-    bool possible(const State& s) const;
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
     
-    void getRewardObjects(uintA& objects, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::SymbolicState* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -115,11 +115,11 @@ class DisjunctionReward : public Reward {
     DisjunctionReward(LitL& lits, arr& weights);
     ~DisjunctionReward() {}
     
-    double evaluate(const State& s) const ;
-    bool satisfied(const State& s) const;
-    bool possible(const State& s) const;
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
     
-    void getRewardObjects(uintA& objects, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::SymbolicState* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -136,11 +136,11 @@ class MaximizeFunctionReward : public Reward {
     MaximizeFunctionReward(TL::FunctionAtom* fa); // --> maximize function
     ~MaximizeFunctionReward() {}
     
-    double evaluate(const State& s) const ;
-    bool satisfied(const State& s) const;
-    bool possible(const State& s) const;
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
     
-    void getRewardObjects(uintA& objects, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::SymbolicState* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -150,16 +150,16 @@ class MaximizeFunctionReward : public Reward {
 
 class NotTheseStatesReward : public Reward {
   public:
-    StateL undesired_states;
+    SymbolicStateL undesired_states;
     
-    NotTheseStatesReward(const StateL& undesired_states); // --> maximize function
+    NotTheseStatesReward(const SymbolicStateL& undesired_states); // --> maximize function
     ~NotTheseStatesReward() {}
     
-    double evaluate(const State& s) const ;
-    bool satisfied(const State& s) const;
-    bool possible(const State& s) const;
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
     
-    void getRewardObjects(uintA& objects, const TL::State* s) const;
+    void getRewardObjects(uintA& objects, const TL::SymbolicState* s) const;
     
     void writeNice(ostream& out = cout) const;
     void write(const char* filename) const;
@@ -193,7 +193,7 @@ class WorldAbstraction {
     AtomL ground_actions;
     
     // returns false if action not applicable
-    virtual double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const  = 0;
+    virtual double sampleSuccessorState(TL::SymbolicState& s_suc, uint& flag, const TL::SymbolicState& s_prev, TL::Atom* action) const  = 0;
     virtual double postprocessValue(double value, uint flag) const {return value;}
 };
 
@@ -209,7 +209,7 @@ class WorldAbstraction {
 // -------------------------------------------------------------
 
 namespace SST {
-  TL::Atom* generateAction(double& value, const TL::State& current_state, const Reward& reward, uint branch, uint T, double discount, const WorldAbstraction& wa);
+  TL::Atom* generateAction(double& value, const TL::SymbolicState& current_state, const Reward& reward, uint branch, uint T, double discount, const WorldAbstraction& wa);
 }
 
 
@@ -240,7 +240,7 @@ class NID_Planner : public WorldAbstraction {
     NID_Planner(double noise_scaling_factor);
     virtual ~NID_Planner();
     
-    virtual TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1) = 0;
+    virtual TL::Atom* generateAction(const TL::SymbolicState& current_state, uint max_runs = 1) = 0;
     
     void setDiscount(double discount);
     virtual void setHorizon(uint horizon); // planning horizon
@@ -248,7 +248,7 @@ class NID_Planner : public WorldAbstraction {
     virtual void setReward(TL::Reward* reward);
     TL::Reward* getReward() {return reward;}
     
-    double sampleSuccessorState(TL::State& s_suc, uint& flag, const TL::State& s_prev, TL::Atom* action) const;
+    double sampleSuccessorState(TL::SymbolicState& s_suc, uint& flag, const TL::SymbolicState& s_prev, TL::Atom* action) const;
     double postprocessValue(double value, uint flag) const;
 };
 
@@ -271,7 +271,7 @@ class NID_SST : public NID_Planner {
   public :
     NID_SST(uint branch, double noise_scaling_factor);
     
-    TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::SymbolicState& current_state, uint max_runs = 1);
 };
 
 
@@ -292,11 +292,11 @@ class NID_SST : public NID_Planner {
 
 struct AtomLctionsInfo {
   public:
-    const TL::State& s;
+    const TL::SymbolicState& s;
     arr values;
     uintA visits;
 
-    AtomLctionsInfo(const TL::State& s, uint num_actions);
+    AtomLctionsInfo(const TL::SymbolicState& s, uint num_actions);
     ~AtomLctionsInfo();
     
     uint getVisits();
@@ -314,10 +314,10 @@ class NID_UCT : public NID_Planner {
   
   MT::Array< AtomLctionsInfo* > s_a_infos;
   
-  AtomLctionsInfo* getAtomLctionsInfo(const TL::State& s);
+  AtomLctionsInfo* getAtomLctionsInfo(const TL::SymbolicState& s);
   void killAtomLctionsInfo();
   
-  void runEpisode(double& reward, const TL::State& s, uint t);
+  void runEpisode(double& reward, const TL::SymbolicState& s, uint t);
   
   public:
     NID_UCT(double noise_scaling_factor);
@@ -326,7 +326,7 @@ class NID_UCT : public NID_Planner {
     void setC(double c);
     void setNumEpisodes(uint numEpisodes);
     
-    TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::SymbolicState& current_state, uint max_runs = 1);
 };
 
 

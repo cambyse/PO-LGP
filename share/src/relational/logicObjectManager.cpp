@@ -534,7 +534,7 @@ TL::FunctionAtom* TL::logicObjectManager::getFAorig(TL::FunctionAtom* fa_copy) {
 
 
 
-void TL::logicObjectManager::makeOriginal(TL::State& s) {
+void TL::logicObjectManager::makeOriginal(TL::SymbolicState& s) {
   uint i;
   
   LitL p_prim_orig;
@@ -891,10 +891,10 @@ TL::Literal* TL::logicObjectManager::getCountLiteral(TL::CountPredicate* p, uint
 
 
 // only EQUAL so far
-void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uintA& arguments, const TL::State& s, uint what) {
+void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uintA& arguments, const TL::SymbolicState& s, uint what) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"getCompLiterals [START]"<<endl;
-  if (DEBUG>0) {PRINT(arguments); PRINT(what);  cout<<"State:  ";s.write();cout<<endl;}
+  if (DEBUG>0) {PRINT(arguments); PRINT(what);  cout<<"SymbolicState:  ";s.write();cout<<endl;}
   lits.clear();
   uint i, j, k;
   // equality
@@ -948,7 +948,7 @@ void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uin
 
 
 // works only on unary functions!
-void TL::logicObjectManager::getCompLiterals_dynamicBound(LitL& lits, const uintA& arguments, const TL::State& s, uint what) {
+void TL::logicObjectManager::getCompLiterals_dynamicBound(LitL& lits, const uintA& arguments, const TL::SymbolicState& s, uint what) {
     lits.clear();
     uint c, f, v;
     TL::FunctionValue* fv1;
@@ -1921,7 +1921,7 @@ TL::Trial* TL::logicObjectManager::readTrial_withConstants(const char* filename,
   bool read_state = true;
   while (MT::skip(in) != -1) {
     if (read_state) {
-      TL::State* state = new TL::State;
+      TL::SymbolicState* state = new TL::SymbolicState;
       MT::String line;
       line.read(in, NULL, "\n");
       if (DEBUG>0) {cout<<"READING LITERALS:"<<endl; PRINT(line);}

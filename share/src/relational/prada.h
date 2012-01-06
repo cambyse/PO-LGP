@@ -188,7 +188,7 @@ class NID_DBN {
     void setStateUniform(uint t);
     
     // Comparing probabilities
-    double log_probability(uint t, const State& state) const;
+    double log_probability(uint t, const SymbolicState& state) const;
     double belief_difference(uint t, const arr& probs_p_prim, const arr& probs_f_prim);
     
     // Misc
@@ -250,7 +250,7 @@ class PRADA : public NID_Planner {
     static PRADA_Reward* convert_reward(DisjunctionReward* reward);
     static PRADA_Reward* convert_reward(NotTheseStatesReward* reward);
     
-    void setState(const TL::State& s, uint t);
+    void setState(const TL::SymbolicState& s, uint t);
     
     // Rather high-level methods
     void sampleActionsAndInfer(AtomL& plan); // one plan
@@ -290,8 +290,8 @@ class PRADA : public NID_Planner {
     ~PRADA();
     
     // *** HIGH-LEVEL ROUTINES ***
-    void generatePlan(AtomL& plan, double& planValue, const TL::State& s, uint max_runs = 1);
-    TL::Atom* generateAction(const TL::State& s, uint max_runs = 1);
+    void generatePlan(AtomL& plan, double& planValue, const TL::SymbolicState& s, uint max_runs = 1);
+    TL::Atom* generateAction(const TL::SymbolicState& s, uint max_runs = 1);
     
     virtual void setReward(Reward* reward);
     void setReward(Reward* reward, PRADA_Reward* prada_reward); // use only if you have domain specific knowledge!
@@ -300,7 +300,7 @@ class PRADA : public NID_Planner {
     void setThresholdReward(double threshold_reward);
     void setRewardCalculation(bool reward_calculation__sum);
     void setActionChoice(bool action_choice__max);
-    virtual void setStartState(const TL::State& s0);
+    virtual void setStartState(const TL::SymbolicState& s0);
     
     void writeState(uint t, ostream& out = cout);
     void writeStateSparse(uint t, bool prim_only, ostream& out = cout);
@@ -330,7 +330,7 @@ class A_PRADA : public PRADA {
     A_PRADA();
     ~A_PRADA();
     
-    virtual TL::Atom* generateAction(const TL::State& current_state, uint max_runs = 1);
+    virtual TL::Atom* generateAction(const TL::SymbolicState& current_state, uint max_runs = 1);
 
     void reset();
 };

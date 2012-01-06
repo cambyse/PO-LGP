@@ -1,7 +1,6 @@
 BASE = ../../share
 
-# OBJS = main.o \
-# 	symbolGrounding.o
+OPTIM = fast
 
 RELATIONAL = 1
 #ODE = 1

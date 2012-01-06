@@ -779,7 +779,7 @@ void TL::ruleReasoning::ground(TL::RuleSet& rules_grounded, const TL::RuleSet& r
 
 
 
-void TL::ruleReasoning::ground_with_filtering(TL::RuleSet& rules_grounded, const TL::RuleSet& rules_abstract, const uintA& constants, const TL::State& s, bool delete_nonchanging_concepts) {
+void TL::ruleReasoning::ground_with_filtering(TL::RuleSet& rules_grounded, const TL::RuleSet& rules_abstract, const uintA& constants, const TL::SymbolicState& s, bool delete_nonchanging_concepts) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"TL::ruleReasoning::ground_with_filtering [START]"<<endl;}
   if (DEBUG>0) {
@@ -1212,7 +1212,7 @@ void TL::ruleReasoning::removeNonChangingConcepts(TL::RuleSet& rules_grounded, c
     TRANSITION KNOWLEDGE
   ***************************************/
   
-void TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, const LitL& outcome, TL::State& successor, bool deriveDerived) {
+void TL::ruleReasoning::calcSuccessorState(const TL::SymbolicState& predecessor, const LitL& outcome, TL::SymbolicState& successor, bool deriveDerived) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calcSuccessorState [START]"<<endl;
   uint i, j;
@@ -1257,7 +1257,7 @@ void TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, const L
 }
 
 
-double TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, TL::Rule* rule, uint& flag, TL::State& successor, bool deriveDerived) {
+double TL::ruleReasoning::calcSuccessorState(const TL::SymbolicState& predecessor, TL::Rule* rule, uint& flag, TL::SymbolicState& successor, bool deriveDerived) {
   //     rule->write();
   uint outcome_id = TL::basic_sample(rule->probs);
   if (outcome_id == rule->outcomes.N - 1) { // noise outcome
@@ -1275,7 +1275,7 @@ double TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, TL::R
 }
 
 
-double TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, const TL::RuleSet& ground_rules, TL::Atom* action, uint& flag, TL::State& successor, bool deriveDerived) {
+double TL::ruleReasoning::calcSuccessorState(const TL::SymbolicState& predecessor, const TL::RuleSet& ground_rules, TL::Atom* action, uint& flag, TL::SymbolicState& successor, bool deriveDerived) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcSuccessorState [START]"<<endl;}
   if (DEBUG>0) {cout<<"Precessor state:"  ; predecessor.write();  cout<<endl;  cout<<"Action:  "<<*action<<endl;}
@@ -1295,7 +1295,7 @@ double TL::ruleReasoning::calcSuccessorState(const TL::State& predecessor, const
 }
 
 
-double TL::ruleReasoning::probability_groundRule(TL::Rule* r_ground, const TL::State& pre, const TL::State& post, double noiseStateProbability) {
+double TL::ruleReasoning::probability_groundRule(TL::Rule* r_ground, const TL::SymbolicState& pre, const TL::SymbolicState& post, double noiseStateProbability) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"probability [START]"<<endl;
   if (DEBUG>1) {
@@ -1330,7 +1330,7 @@ double TL::ruleReasoning::probability_groundRule(TL::Rule* r_ground, const TL::S
 }
 
 
-double TL::ruleReasoning::probability_abstractRule(TL::Rule* abstractRule, const TL::State& pre, TL::Atom* groundedAction, const TL::State& post, double noiseStateProbability, TL::Substitution* sub) {
+double TL::ruleReasoning::probability_abstractRule(TL::Rule* abstractRule, const TL::SymbolicState& pre, TL::Atom* groundedAction, const TL::SymbolicState& post, double noiseStateProbability, TL::Substitution* sub) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"probability [START]"<<endl;
   CHECK(TL::logicReasoning::isGrounded(groundedAction), "Action is not grounded");
@@ -1356,7 +1356,7 @@ double TL::ruleReasoning::probability_abstractRule(TL::Rule* abstractRule, const
 }
 
 
-double TL::ruleReasoning::probability_defaultRule(TL::Rule* defaultRule, const TL::State& pre, const TL::State& post, double noiseStateProbability) {
+double TL::ruleReasoning::probability_defaultRule(TL::Rule* defaultRule, const TL::SymbolicState& pre, const TL::SymbolicState& post, double noiseStateProbability) {
   if (pre == post)
     return defaultRule->probs(0) * (100.0 * noiseStateProbability);
   else
@@ -1442,7 +1442,7 @@ double TL::ruleReasoning::score(const RuleSet& rules, const SymbolicExperienceL&
     COVERAGE
   ***************************************/
 
-bool TL::ruleReasoning::cover_context(const TL::State& s, const TL::Rule* rule, TL::SubstitutionSet& subs, TL::Substitution* actionSub) {
+bool TL::ruleReasoning::cover_context(const TL::SymbolicState& s, const TL::Rule* rule, TL::SubstitutionSet& subs, TL::Substitution* actionSub) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"cover_context [START]"<<endl;
   CHECK(actionSub!=NULL, "Action substitution must be provided!");
@@ -1520,7 +1520,7 @@ bool TL::ruleReasoning::cover_context(const TL::State& s, const TL::Rule* rule, 
   return covering;
 }
 
-bool TL::ruleReasoning::cover_rule_groundedAction(const TL::State& s, const TL::Atom* groundedAction, const TL::Rule* rule, TL::SubstitutionSet& subs) {
+bool TL::ruleReasoning::cover_rule_groundedAction(const TL::SymbolicState& s, const TL::Atom* groundedAction, const TL::Rule* rule, TL::SubstitutionSet& subs) {
   uint DEBUG = 0;
 //   if (groundedAction == TL::logicObjectManager::getLiteral("puton(60") &&  isAbstract(*rule)   
 //     &&  rule->context.N > 0  &&   rule->context(0) == TL::logicObjectManager::getLiteral("-on(1 0)"))
@@ -1563,12 +1563,12 @@ bool TL::ruleReasoning::cover_rule_groundedAction(const TL::State& s, const TL::
 }
 
 
-bool TL::ruleReasoning::cover_rule(const TL::State& s, const TL::Rule* rule, TL::SubstitutionSet& subs) {
+bool TL::ruleReasoning::cover_rule(const TL::SymbolicState& s, const TL::Rule* rule, TL::SubstitutionSet& subs) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"cover_rule [START]"<<endl;
   if (DEBUG>0) {
     /*cout<<"Rule:"<<endl;*/rule->write(cout);
-    cout<<"State: ";s.write(cout);cout<<endl;
+    cout<<"SymbolicState: ";s.write(cout);cout<<endl;
   }
   MT::Array< uintA > actionObjectLists;
   allPossibleLists(actionObjectLists, TL::logicObjectManager::constants, rule->action->pred->d, true, true);
@@ -1591,7 +1591,7 @@ bool TL::ruleReasoning::cover_rule(const TL::State& s, const TL::Rule* rule, TL:
 }
 
 
-bool TL::ruleReasoning::cover_groundRule_groundedAction(const TL::State& s, const TL::Atom* groundedAction, const TL::Rule* ground_rule) {
+bool TL::ruleReasoning::cover_groundRule_groundedAction(const TL::SymbolicState& s, const TL::Atom* groundedAction, const TL::Rule* ground_rule) {
   if (ground_rule->action->pred->id == TL::DEFAULT_ACTION_PRED__ID)  // noisy default rule always covers
     return true;
   if (groundedAction != ground_rule->action)
@@ -1600,7 +1600,7 @@ bool TL::ruleReasoning::cover_groundRule_groundedAction(const TL::State& s, cons
 }
 
 
-void TL::ruleReasoning::coveringRules(const TL::RuleSet& allRules, const TL::State& s, TL::RuleSet& r_grounds) {
+void TL::ruleReasoning::coveringRules(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::RuleSet& r_grounds) {
   r_grounds.clear();
   uint i, k;
   for (i=0; i<allRules.num(); i++) {
@@ -1614,7 +1614,7 @@ void TL::ruleReasoning::coveringRules(const TL::RuleSet& allRules, const TL::Sta
 }
 
 
-void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction, TL::RuleSet& r_grounds) {
+void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction, TL::RuleSet& r_grounds) {
   r_grounds.clear();
   uint i, k;
   for (i=0; i<allRules.num(); i++) {
@@ -1627,7 +1627,7 @@ void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules
   }
 }
 
-void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction, uintA& coveringRuleIDs) {
+void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction, uintA& coveringRuleIDs) {
   coveringRuleIDs.clear();
   uint i;	
   for (i=0; i<allRules.num(); i++) {
@@ -1638,7 +1638,7 @@ void TL::ruleReasoning::coveringRules_groundedAction(const TL::RuleSet& allRules
 }
 
 
-void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction, uintA& coveringRuleIDs) {
+void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction, uintA& coveringRuleIDs) {
   coveringRuleIDs.clear();
   uint i; 
   for (i=0; i<allGroundedRules.num(); i++) {
@@ -1649,7 +1649,7 @@ void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& 
 
 
 
-void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules) {
+void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"coveringGroundedRules [START]"<<endl;}
   coveringGroundedRules.clear();
@@ -1665,7 +1665,7 @@ void TL::ruleReasoning::coveringGroundedRules_groundedAction(const TL::RuleSet& 
 }
 
 
-void TL::ruleReasoning::coveringRules(uintA& coveringRulesIDs, const TL::RuleSet& abstract_rules, const AtomL& ground_actions, const TL::State& s) {
+void TL::ruleReasoning::coveringRules(uintA& coveringRulesIDs, const TL::RuleSet& abstract_rules, const AtomL& ground_actions, const TL::SymbolicState& s) {
   coveringRulesIDs.resize(ground_actions.N);
   uint i;
   FOR1D(ground_actions, i) {
@@ -1679,7 +1679,7 @@ void TL::ruleReasoning::coveringRules(uintA& coveringRulesIDs, const TL::RuleSet
 }
 
 
-void TL::ruleReasoning::coveringGroundedRules(uintA& coveringRulesIDs, const TL::RuleSet& ground_rules, const AtomL& ground_actions, const TL::State& s) {
+void TL::ruleReasoning::coveringGroundedRules(uintA& coveringRulesIDs, const TL::RuleSet& ground_rules, const AtomL& ground_actions, const TL::SymbolicState& s) {
   coveringRulesIDs.resize(ground_actions.N);
   uint i;
   FOR1D(ground_actions, i) {
@@ -1693,7 +1693,7 @@ void TL::ruleReasoning::coveringGroundedRules(uintA& coveringRulesIDs, const TL:
 }
 
 
-uint TL::ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction) {
+uint TL::ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction) {
   uintA coveringGroundedRules_ids;
   coveringGroundedRules_groundedAction(allGroundedRules, s, groundedAction, coveringGroundedRules_ids);
   if (coveringGroundedRules_ids.N == 2) {
@@ -1705,7 +1705,7 @@ uint TL::ruleReasoning::uniqueCoveringRule_groundedRules_groundedAction(const TL
 }
 
 
-uint TL::ruleReasoning::uniqueAbstractCoveringRule_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction) {
+uint TL::ruleReasoning::uniqueAbstractCoveringRule_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction) {
   uintA coveringRuleIDs;
   coveringRules_groundedAction(allRules, s, groundedAction, coveringRuleIDs);
   if (coveringRuleIDs.N == 2) {
@@ -1718,7 +1718,7 @@ uint TL::ruleReasoning::uniqueAbstractCoveringRule_groundedAction(const TL::Rule
 
 
 
-void TL::ruleReasoning::coveringOutcomes(TL::Rule* r_ground, const TL::State& pre, const TL::State& post, uintA& covering_outcomes) {
+void TL::ruleReasoning::coveringOutcomes(TL::Rule* r_ground, const TL::SymbolicState& pre, const TL::SymbolicState& post, uintA& covering_outcomes) {
   covering_outcomes.clear();
   uint o;
   FOR1D(r_ground->outcomes, o) {
@@ -1727,7 +1727,7 @@ void TL::ruleReasoning::coveringOutcomes(TL::Rule* r_ground, const TL::State& pr
       covering_outcomes.append(o);
     }	
     else {
-      TL::State succ;
+      TL::SymbolicState succ;
       calcSuccessorState(pre, r_ground->outcomes(o), succ, false);
       if (succ == post)
         covering_outcomes.append(o);
@@ -1737,7 +1737,7 @@ void TL::ruleReasoning::coveringOutcomes(TL::Rule* r_ground, const TL::State& pr
 
 
 
-void TL::ruleReasoning::coveringOutcomes(TL::Rule* abstractRule, const TL::State& pre, TL::Atom* groundedAction, const TL::State& post, uintA& covering_outcomes) {
+void TL::ruleReasoning::coveringOutcomes(TL::Rule* abstractRule, const TL::SymbolicState& pre, TL::Atom* groundedAction, const TL::SymbolicState& post, uintA& covering_outcomes) {
   CHECK(TL::logicReasoning::isAbstract(abstractRule->action), "Rule action has to be abstract!");
   TL::SubstitutionSet subs;
   cover_rule_groundedAction(pre, groundedAction, abstractRule, subs);
@@ -1749,7 +1749,7 @@ void TL::ruleReasoning::coveringOutcomes(TL::Rule* abstractRule, const TL::State
 
 
 
-void TL::ruleReasoning::calcGroundDeicticReferences(uintA& ground_drefs, const TL::State& state, const TL::Atom* groundedAction, const TL::Rule* rule) {
+void TL::ruleReasoning::calcGroundDeicticReferences(uintA& ground_drefs, const TL::SymbolicState& state, const TL::Atom* groundedAction, const TL::Rule* rule) {
   ground_drefs.clear();
   
   uintA drefs;

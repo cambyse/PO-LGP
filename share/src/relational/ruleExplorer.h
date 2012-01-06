@@ -82,8 +82,8 @@ class RuleExplorer {
   
   AtomL possibleGroundActions;
   
-  // State measures
-  TL::State current_state;
+  // SymbolicState measures
+  TL::SymbolicState current_state;
   bool current_state_is_known;
   bool current_state_is_known_partially;
   
@@ -92,7 +92,7 @@ class RuleExplorer {
   SymbolicExperienceL all_experiences;
   arr experience_weights;
   boolA is_major_experience;
-  MT::Array<TL::State*> visited_pre_states;
+  MT::Array<TL::SymbolicState*> visited_pre_states;
   AtomL visited_actions;
   
   // Relevant objects
@@ -135,22 +135,22 @@ class RuleExplorer {
   virtual void updateActionAndStateMeasures();
   
   // Access state informaction
-  void getKnownStates(StateL& known_states); // aus rules, all_ground_actions und visited_states zusammengesetzt
-  bool stateIsKnown(const TL::State& state, const AtomL& ground_actions);
-  bool stateIsKnown_partially(const TL::State& state, const AtomL& ground_actions);
-  virtual bool actionIsKnown(const TL::State& state, TL::Atom* action);
+  void getKnownStates(SymbolicStateL& known_states); // aus rules, all_ground_actions und visited_states zusammengesetzt
+  bool stateIsKnown(const TL::SymbolicState& state, const AtomL& ground_actions);
+  bool stateIsKnown_partially(const TL::SymbolicState& state, const AtomL& ground_actions);
+  virtual bool actionIsKnown(const TL::SymbolicState& state, TL::Atom* action);
   virtual uint getNumberOfCoveredExperiences(uint rule_id) = 0;
   
   // Decision-making
-  TL::Atom* getExploitAction(AtomL& exploit_plan, TL::PRADA* prada, const TL::State& state);
-  TL::Atom* getExploreAction_planned__contexts(AtomL& explore_plan, TL::PRADA* prada, const TL::State& state);
-  TL::Atom* getExploreAction_planned(AtomL& explore_plan, TL::PRADA* prada, const TL::State& state, uint type = 1);
-  TL::Atom* getExploreAction_direct(TL::PRADA* prada, const TL::State& state, TL::Atom* taboo_action = NULL);
+  TL::Atom* getExploitAction(AtomL& exploit_plan, TL::PRADA* prada, const TL::SymbolicState& state);
+  TL::Atom* getExploreAction_planned__contexts(AtomL& explore_plan, TL::PRADA* prada, const TL::SymbolicState& state);
+  TL::Atom* getExploreAction_planned(AtomL& explore_plan, TL::PRADA* prada, const TL::SymbolicState& state, uint type = 1);
+  TL::Atom* getExploreAction_direct(TL::PRADA* prada, const TL::SymbolicState& state, TL::Atom* taboo_action = NULL);
   
   // Methods for EXTERNAL use
-  virtual TL::Atom* decideAction(const TL::State& state, TL::NID_Planner* planner, uint behavior_type, bool use_known_state_partial);
-  void addObservation__helper(TL::State* state_pre, TL::Atom* action, TL::State* state_post);
-  virtual void addObservation(TL::State* state_pre, TL::Atom* action, TL::State* state_post) = 0;
+  virtual TL::Atom* decideAction(const TL::SymbolicState& state, TL::NID_Planner* planner, uint behavior_type, bool use_known_state_partial);
+  void addObservation__helper(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post);
+  virtual void addObservation(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post) = 0;
   void addObservations(const TL::Trial& trial);
   
   virtual void updateRules(bool always_re_learning = true) = 0;
@@ -191,7 +191,7 @@ public:
     const TL::RuleSet& getRules() {return rulesC.rules;}
     void get_nonDefaultRules_for_last_experience(uintA& rule_ids) {rule_ids = rulesC.nonDefaultRules_per_experience.last();}
     uint getNumberOfCoveredExperiences(uint rule_id) {return rulesC.experiences_per_rule(rule_id).N;}
-    void addObservation(TL::State* state_pre, TL::Atom* action, TL::State* state_post);
+    void addObservation(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post);
     void setFixedRulesForAction(TL::RuleSet& rules_for_action);
     double calcRuleConfidence(uint rule_id);
     void updateActionAndStateMeasures();
@@ -216,7 +216,7 @@ class FactoredRuleExplorer : public RuleExplorer {
     const TL::RuleSet& getRules() {return rulesC.rules;}
     void get_nonDefaultRules_for_last_experience(uintA& rule_ids) {rule_ids = rulesC.nonDefaultRules_per_experience.last();}
     uint getNumberOfCoveredExperiences(uint rule_id) {return rulesC.experiences_per_rule(rule_id).N;}
-    void addObservation(TL::State* state_pre, TL::Atom* action, TL::State* state_post);
+    void addObservation(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post);
 };
 
 
@@ -239,11 +239,11 @@ class FlatExplorer : public RuleExplorer {
     ~FlatExplorer();
     void init_rules();
     uint action_to_learner_id(TL::Atom* action);
-    int action_state_to_flat_id(TL::Atom* action, TL::State* state);
+    int action_state_to_flat_id(TL::Atom* action, TL::SymbolicState* state);
     void updateRules(bool always_re_learning = true);
     void updateLogicEngineConstants();
     void reset();
-    void addObservation(TL::State* state_pre, TL::Atom* action, TL::State* state_post);
+    void addObservation(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post);
     
     // Gehoert eigentlich in die Superklasse:  Problem rulesC muesste vereinheitlicht werden...Z
     const TL::RuleSet& getRules() {return rules_flat;}
@@ -257,7 +257,7 @@ class FlatExplorer : public RuleExplorer {
 #if 1
 struct RelationalStateGraph {
   
-  const TL::State state;
+  const TL::SymbolicState state;
   uintA constants;
   
   LitL lits_zeroary;
@@ -267,7 +267,7 @@ struct RelationalStateGraph {
   FuncVL fvs_zeroary;
   MT::Array< FuncVL > fvs_unary;
   
-  RelationalStateGraph(const TL::State& state);
+  RelationalStateGraph(const TL::SymbolicState& state);
   ~RelationalStateGraph();
   
   void getRelatedConstants(uintA& related_constants, uint obj, uint depth) const;
@@ -286,7 +286,7 @@ struct RelationalStateGraph {
   
   static double entropy(const AtomL& actions, const MT::Array< RelationalStateGraph* >& graphs);
   
-//   RelationalStateGraph* createGraph(const TL::Atom& action, const TL::State& state, const TL::Rule& rule, uint depth);
+//   RelationalStateGraph* createGraph(const TL::Atom& action, const TL::SymbolicState& state, const TL::Rule& rule, uint depth);
   static RelationalStateGraph* createSubgraph(const TL::Atom& action, const TL::RelationalStateGraph& full_graph, const TL::Rule& rule, uint depth);
   
   static double getMinDistance(const RelationalStateGraph& graph, const TL::Atom& action,

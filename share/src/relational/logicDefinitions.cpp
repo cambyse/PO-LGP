@@ -767,7 +767,7 @@ void TL::Substitution::write(ostream& os) {
 }
 
 
-void TL::State::write(ostream& os, bool primOnly) const {
+void TL::SymbolicState::write(ostream& os, bool primOnly) const {
   bool breaks = true;
 // 	os << "s ";
 	uint i;
@@ -796,7 +796,7 @@ void TL::State::write(ostream& os, bool primOnly) const {
   }
 }
 
-void TL::State::write_deprecated(ostream& os) const {
+void TL::SymbolicState::write_deprecated(ostream& os) const {
 //  os << "s ";
   uint i;
   os << "[" << endl;
@@ -944,12 +944,12 @@ bool TL::FunctionValue::operator!=(TL::FunctionValue& fv) const {
 
 
 
-bool TL::State::operator==(const TL::State& s) const {
+bool TL::SymbolicState::operator==(const TL::SymbolicState& s) const {
 	return equivalent(lits_prim, s.lits_prim)
       && equivalent(fv_prim, s.fv_prim);
 }
 
-bool TL::State::operator!=(const TL::State& s) const {
+bool TL::SymbolicState::operator!=(const TL::SymbolicState& s) const {
 	return !(*this == s);
 }
 
@@ -963,7 +963,7 @@ std::ostream& operator<<(std::ostream& os, const TL::Function& f) {
     f.write(os); return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const TL::State& s) {
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicState& s) {
   s.write(os); return os;
 }
 
@@ -1041,8 +1041,8 @@ void TL::Substitution::apply(const FuncVL& unsubFVs, FuncVL& subFVs) {
   }
 }
 
-TL::State* TL::Substitution::apply(const TL::State& state) {
-  TL::State* s_new = new TL::State;
+TL::SymbolicState* TL::Substitution::apply(const TL::SymbolicState& state) {
+  TL::SymbolicState* s_new = new TL::SymbolicState;
   apply(state.lits_prim, s_new->lits_prim);
   apply(state.lits_derived, s_new->lits_derived);
   apply(state.fv_prim, s_new->fv_prim);
@@ -1468,7 +1468,7 @@ TL::CountPredicate* TL::CountPredicate::newClone() {
 
 
 
-TL::State::~State() {
+TL::SymbolicState::~SymbolicState() {
   //  object deletion of concept-instances6 is managed ny the LogicEngine now!
 //     uint i;
 //     FOR1D(lits_prim, i) {
@@ -1510,7 +1510,7 @@ TL::Trial::~Trial() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-TL::SymbolicExperience::SymbolicExperience(const TL::State& pre, TL::Atom* action, const TL::State& post) {
+TL::SymbolicExperience::SymbolicExperience(const TL::SymbolicState& pre, TL::Atom* action, const TL::SymbolicState& post) {
   this->pre = pre;
   this->action = action;
   this->post = post;

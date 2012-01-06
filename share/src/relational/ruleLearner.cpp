@@ -764,7 +764,7 @@ void SearchOperator::calcCoverage_outcomes(const MT::Array< LitL >& potential_ou
       else {
         LitL outcome_grounded;
         logicReasoning::applyOriginalSub(*subs.elem(0), potential_outcomes(i), outcome_grounded);
-        TL::State successor;
+        TL::SymbolicState successor;
         TL::ruleReasoning::calcSuccessorState(covered_experiences(e)->pre, outcome_grounded, successor, false);
         if (DEBUG>1) {cout<<"[Grounded potential outcome: ";TL::write(outcome_grounded);cout<<"]";}
         if (DEBUG>2) {
@@ -994,7 +994,7 @@ void SearchOperator::induceOutcomes(TL::Rule* r, MT::Array< uintA >& coveredExpe
     CHECK(covered, "An uncovered example! Be careful when calling methods, noob!");
     if (subs.num() != 1) {
       cout << "FAILING: TOO " << (subs.num() > 1 ? "MANY" : "FEW") << "SUBS"<<endl;
-      cout<<"State: ";coveredExperiences(i)->pre.write(cout);cout<<endl;
+      cout<<"SymbolicState: ";coveredExperiences(i)->pre.write(cout);cout<<endl;
       cout<<"Action: ";coveredExperiences(i)->action->write(cout);cout<<endl;
       cout<<"Rule: "<<endl;r->write(cout);cout<<endl;
       cout << "Substitutions: ";

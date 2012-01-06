@@ -32,13 +32,13 @@ double TL::robotManipulationSampling::SAMPLING__PROB_GRAB_CLEARGUY =  0.8;
 double TL::robotManipulationSampling::SAMPLING__PROB_PUTON_CLEARGUY = 0.8;
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction(const State& s, uint id_table) {
+TL::Atom* TL::robotManipulationSampling::generateAction(const SymbolicState& s, uint id_table) {
   return generateAction_wellBiased(s, id_table);
 //   return generateAction_wellBiased_2Dactions(s, id_table);
 }
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const State& s, uint id_table) {
+TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const SymbolicState& s, uint id_table) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"generateAction_wellBiased [START]"<<endl;}
     // blocks on high towers have lower prob to be grabbed
@@ -266,7 +266,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const State& 
 // -----------------------------------------------
 uint HACK_ACT = 0;
 
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const State& s, uint id_table) {
+TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
   uint DEBUG = 1;
   
   // --------------------------------------------
@@ -610,7 +610,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
 
 
 #if 0
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const State& s, uint id_table) {
+TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
   uint DEBUG = 1;
     // blocks on high towers have lower prob to be grabbed
   double skyscraper_bias = 200; // 115.0;
@@ -829,7 +829,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
 
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction_trulyRandom(const State& s, uint id_table) {
+TL::Atom* TL::robotManipulationSampling::generateAction_trulyRandom(const SymbolicState& s, uint id_table) {
   uint i;
 	
 	// choose action
@@ -863,9 +863,9 @@ TL::Trial* TL::robotManipulationSampling::generateSimulationSequence(RobotManipu
   }
   uint i=0;
   Trial* trial = new Trial;
-  TL::State* state;
+  TL::SymbolicState* state;
   trial->constants = logicObjectManager::constants;
-  state = TL::RobotManipulationDomain::observeLogic(sim);
+  state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
   if (DEBUG > 2) {cout<<endl; state->write(cout); cout<<endl;}
   trial->states.append(state);
   TL::Atom* action;
@@ -880,7 +880,7 @@ TL::Trial* TL::robotManipulationSampling::generateSimulationSequence(RobotManipu
     TL::RobotManipulationDomain::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
-    state = TL::RobotManipulationDomain::observeLogic(sim);
+    state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
     if (DEBUG > 2) {state->write(cout,true); cout<<endl;}
     trial->states.append(state);
     trial->actions.append(action);
@@ -927,8 +927,8 @@ void TL::robotManipulationSampling::generateSimulationSequence_realistic(std::os
   // (3) Data
   os<<endl;
   os<<"# data"<<endl;
-  TL::State* logic_state, *logic_state_old;
-  logic_state = TL::RobotManipulationDomain::observeLogic(sim);
+  TL::SymbolicState* logic_state, *logic_state_old;
+  logic_state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
   logic_state->write(os);
   os<<endl;
 //   TL::RobotManipulationDomain::writeFeatures(os, sim);  os<<endl;
@@ -951,7 +951,7 @@ void TL::robotManipulationSampling::generateSimulationSequence_realistic(std::os
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
     logic_state_old = logic_state;
-    logic_state = TL::RobotManipulationDomain::observeLogic(sim);
+    logic_state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
     logic_state->write(os);
     os<<endl;
 //     TL::RobotManipulationDomain::writeFeatures(os, sim);  os<<endl;

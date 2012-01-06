@@ -2,6 +2,8 @@ BASE   = ../..
 NAME   = librelational
 OUTPUT = $(BASE)/lib/$(NAME).so
 
+#OPTIM = fast
+
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 #CXXFLAGS += -fPIC 
 OBJS  = $(shell find . \( -name '*.cpp' \) )

@@ -34,7 +34,7 @@ TL::Literal* buildLiteral(MT::String& text, const MT::Array<MT::String> string_o
 }
 
 
-void TL::readPPDDLdomain(TL::State& start_state, TL::Reward& reward, const char * filename) {
+void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, const char * filename) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"readPPDDLdomain [START]"<<endl;}
   
@@ -392,7 +392,7 @@ void TL::writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& 
 
 void TL::writePPDDL_description(const TL::RuleSet& rules, 
                                 bool all_outcome, 
-                                const TL::State& state, 
+                                const TL::SymbolicState& state, 
                                 const TL::LiteralListReward& reward,
                                 const char* filename) {
   bool use_functions = false;

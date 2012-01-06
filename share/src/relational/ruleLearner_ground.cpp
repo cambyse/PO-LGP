@@ -832,7 +832,7 @@ void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& poten
         }
       }
       else {
-        TL::State successor;
+        TL::SymbolicState successor;
         TL::ruleReasoning::calcSuccessorState(covered_experiences(e)->pre, potential_outcomes(i), successor, false);
         if (DEBUG>2) { cout<<"\nPOST:";covered_experiences(e)->post.write(cout);cout<<endl;
           cout<<"SUCC:";successor.write(cout);cout<<endl;}

@@ -32,8 +32,8 @@ public:
   AbstractRuleExplorer_FixedContexts(const RuleSet& fixed_partial_rules, double complexity_penalty_coeff, double p_lower_bound__noise_outcome, double p_lower_bound__noise_outcome_in_default_rule,
                                       TL::RuleSet& fixed_rules_for_fixed_actions, uint density_estimation_type);
   
-  bool actionIsKnown(const TL::State& state, TL::Atom* action);
-  TL::Atom* decideAction(const TL::State& state, TL::NID_Planner* planner, uint behavior_type, bool use_known_state_partial);
+  bool actionIsKnown(const TL::SymbolicState& state, TL::Atom* action);
+  TL::Atom* decideAction(const TL::SymbolicState& state, TL::NID_Planner* planner, uint behavior_type, bool use_known_state_partial);
 };
 
 }

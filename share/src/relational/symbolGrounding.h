@@ -1,5 +1,5 @@
-#ifndef TL__SYMBOL_GROUNDING
-#define TL__SYMBOL_GROUNDING
+#ifndef RELATIONAL__SYMBOL_GROUNDING
+#define RELATIONAL__SYMBOL_GROUNDING
 
 #include <relational/logicDefinitions.h>
 #include <MT/ors.h>
@@ -13,10 +13,10 @@ namespace relational {
 struct ContinuousState;
   
 // ------------------------------------------------------------------
-//  SymbolGrounding
+//  GroundedSymbol
 
 
-class SymbolGrounding {
+class GroundedSymbol {
 public:
   
   enum GroundingType {NN, RBF};
@@ -26,18 +26,18 @@ public:
   TL::Predicate* pred;
   GroundingType type;
 
-  SymbolGrounding(MT::String& name, uint arity, bool build_derived_predicates = false);
+  GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates = false);
   
   // calculates whether symbol holds given the data x
   virtual bool holds(arr& x) const = 0;
-  virtual void calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const;
+  virtual void calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const;
   virtual void write() const;
   
-  static void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, const ContinuousState& const_state);
+  static void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, const ContinuousState& const_state);
 };
 
 
-class NN_Grounding : public SymbolGrounding {
+class NN_Grounding : public GroundedSymbol {
 public:
   arr w1a;
   arr w1b;
@@ -53,7 +53,7 @@ public:
 };  
 
 
-class RBF_Grounding : public SymbolGrounding { 
+class RBF_Grounding : public GroundedSymbol { 
 public:
   arr w_c;
   arr w_sigma;
@@ -67,18 +67,18 @@ public:
 };
 
 
-void read(MT::Array<SymbolGrounding*>& pns, const char* prefix, SymbolGrounding::GroundingType grounding_type);
+void read(MT::Array<GroundedSymbol*>& pns, const char* prefix, GroundedSymbol::GroundingType grounding_type);
   
   
 // ors::Graph interface
 void getFeatureVector(arr& f, const ors::Graph& C, uint obj);
 void getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs);
-void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, ors::Graph* C);
+void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, ors::Graph* C);
 
 
 }
 
-typedef MT::Array< relational::SymbolGrounding* > SGL;
+typedef MT::Array< relational::GroundedSymbol* > SGL;
 
 
 namespace relational {
@@ -124,10 +124,10 @@ struct FullExperience {
   static void sanityCheck(MT::Array< FullExperience* >& experiences);
 };
 
-void calculateLiterals(const MT::Array<SymbolGrounding*>& sgs, FullExperience& e);
+void calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e);
 
 }
 
 typedef MT::Array< relational::FullExperience* > FullExperienceL;
 
-#endif // TL__SYMBOL_GROUNDING
+#endif // RELATIONAL__SYMBOL_GROUNDING
