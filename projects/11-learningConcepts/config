@@ -1,6 +1,11 @@
 *** DIVERS ***
 
-nikolay_data 	1
+// 1 - random
+// 2 - PRADA
+// 3 - NN
+thinking_style 2
+
+nikolay_data 1
 
 read_nikolay 0
 rand_seed 123

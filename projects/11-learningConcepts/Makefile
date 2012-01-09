@@ -1,6 +1,6 @@
 BASE = ../../share
 
-OPTIM = fast
+# OPTIM = fast
 
 RELATIONAL = 1
 #ODE = 1

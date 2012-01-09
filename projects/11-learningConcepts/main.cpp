@@ -29,12 +29,13 @@ void learn_rules(const char* file_rules, MT::Array< relational::FullExperience* 
   SymbolicExperienceL symbolic_experiences;
   FOR1D(experiences, i) {
 //     if (i>30) break;
-    symbolic_experiences.append(&experiences(i)->experience_symbolic);
+    if (experiences(i)->experience_symbolic.action->args.N != 1  ||  experiences(i)->experience_symbolic.action->args(0) != 60)
+      symbolic_experiences.append(&experiences(i)->experience_symbolic);
   }
   double alpha_PEN = 1.0;
 //   double alpha_PEN = 10e-12;
-  double p_min = 10e-7;
-  double p_min_noisyDefaultRule = p_min;
+  double p_min = 10e-8;
+  double p_min_noisyDefaultRule = 10e-12;
   TL::RuleLearner learner(alpha_PEN, p_min, p_min_noisyDefaultRule);
   TL::RuleSetContainer rulesC;
   learner.learn_rules(rulesC, symbolic_experiences);
@@ -91,16 +92,13 @@ void produce_rules() {
   }
   // (2) My data
   else {
-//     MT::Array < MT::String > files_data;
-//     files_data.append(MT::String("data_transition_model_learning/exp_o0.dat"));
-//     files_data.append(MT::String("data_transition_model_learning/exp_o1.dat"));
-    for (trial=5; trial<=10; trial++) {
-      for (e=5; e<=5; e++) {
-        for (o=0; o<2; o++) {
+    for (trial=1; trial<=10; trial++) {
+      for (e=1; e<=5; e++) {
+        for (o=0; o<5; o++) {
           MT::String file_prefix_symbols;
           file_prefix_symbols << dir << "E" << e << "T" << trial << "-";
           MT::String file_data;
-          file_data << "data_transition_model_learning/exp_o" << o << ".dat";
+          file_data << "data2/exp_o" << o << ".dat";
           MT::String file_rules;
           file_rules << "rules/rules_E" << e << "T" << trial << "_o" << o << ".dat";
           MT::Array< MT::String > kombo;
@@ -119,7 +117,9 @@ void produce_rules() {
 //   }
   FOR1D(files_kombos, i) {
     cout<<endl<<endl<<"==================================="<<endl;
+    cerr<<endl<<endl<<"==================================="<<endl;
     cout<<"Kombo #"<<i<<" (out of "<<files_kombos.N<<"):  "<<files_kombos(i)<<endl;
+    cerr<<"Kombo #"<<i<<" (out of "<<files_kombos.N<<"):  "<<files_kombos(i)<<endl;
     // SymbolGroundings
     MT::Array<relational::GroundedSymbol*> gsl;
     relational::read(gsl, files_kombos(i)(0), grounding_type);
@@ -188,7 +188,7 @@ void initSimulator(const char* configurationFile, bool takeMovie) {
 
 
 
-void run_simulator(const char* file_results, const char* file_ors, const char* file_prefix_symbols,
+void goal_directed__run_simulator(const char* file_results, const char* file_ors, const char* file_prefix_symbols,
                    relational::GroundedSymbol::GroundingType grounding_type,
                    uint thinking_style = 1, MT::String file_rules = MT::String("")) {
   PRINT(file_results);
@@ -238,6 +238,11 @@ void run_simulator(const char* file_results, const char* file_ors, const char* f
   TL::RuleSet rules;
   TL::RuleSet rules_grounded;
   TL::Reward* reward;
+  reward = TL::RobotManipulationDomain::RewardLibrary::stack();
+  // geiler HACK
+  TL::TransClosurePredicate* p_ABOVE1 = TL::RobotManipulationDomain::getPredicate_above();
+  p_ABOVE1->basePred = TL::logicObjectManager::getPredicate(MT::String("b1")); // HACK da in regelfiles bis juni 2009 on andere id hat
+  cout<<"Reward:"; reward->writeNice();
   TL::PRADA planner;
   if (thinking_style == 2) {
     // Rules
@@ -245,11 +250,6 @@ void run_simulator(const char* file_results, const char* file_ors, const char* f
     cout<<"Rules:"<<endl;  rules.write();
     TL::ruleReasoning::ground(rules_grounded, rules, movable_objs);
     cout<<"Grounded rules: "<<rules_grounded.num()<<endl;
-    reward = TL::RobotManipulationDomain::RewardLibrary::stack();
-    // geiler HACK
-    TL::TransClosurePredicate* p_ABOVE1 = TL::RobotManipulationDomain::getPredicate_above();
-    p_ABOVE1->basePred = TL::logicObjectManager::getPredicate(MT::String("b1")); // HACK da in regelfiles bis juni 2009 on andere id hat
-    cout<<"Reward:"; reward->writeNice();
     // PRADA
     uint PRADA_num_samples, PRADA_horizon;
     MT::getParameter(PRADA_num_samples, "PRADA_num_samples");
@@ -267,12 +267,6 @@ void run_simulator(const char* file_results, const char* file_ors, const char* f
   TL::logicObjectManager::getAtoms_actions(ground_actions, movable_objs);  // get all action atoms
   PRINT(ground_actions);
   
-  SymbolicStateL seq_states_unlearned;
-  SymbolicStateL seq_states_learned;
-  AtomL seq_actions;
-  SymbolicExperienceL seq_exps;
-  arr rewards;
-  
   uint run, t, i;
   
   ofstream out_results(file_results);
@@ -283,6 +277,11 @@ void run_simulator(const char* file_results, const char* file_ors, const char* f
   for (run=0; run<NUM_RUNS; run++) {
     cout<<endl<<endl<<"===== run="<<run<<" ====="<<endl;
     cerr<<endl<<endl<<"===== run="<<run<<" ====="<<endl;
+    SymbolicStateL seq_states_unlearned;
+    SymbolicStateL seq_states_learned;
+    AtomL seq_actions;
+    SymbolicExperienceL seq_exps;
+    arr rewards;
     for (t=0; t<NUM_TIMESTEPS; t++) {
       cout<<endl<<endl<<"+++++ t="<<t<<" (run="<<run<<")  +++++"<<endl;
       cerr<<endl<<endl<<"+++++ t="<<t<<" (run="<<run<<")  +++++"<<endl;
@@ -343,6 +342,9 @@ void run_simulator(const char* file_results, const char* file_ors, const char* f
 
 
 void symbol_evaluation() {
+  uint thinking_style;
+  MT::getParameter(thinking_style, "thinking_style");
+  
   uint grounding_type__uint;
   MT::getParameter(grounding_type__uint, "grounding_type");
   relational::GroundedSymbol::GroundingType grounding_type;
@@ -375,7 +377,7 @@ void symbol_evaluation() {
       file_rules << "rules/rules_" << "E" << e << "T" << trial << "_o0.dat";          
       FOR1D(files_ors, i) {
         MT::String file_results;
-        file_results << "results/results_" << "E" << e << "T" << trial << "_o0_oStart"<<i<<".dat";
+        file_results << "results/results_t"<<thinking_style<<"_" << "E" << e << "T" << trial << "_o0_s"<<i<<".dat";
         MT::Array< MT::String > kombo;
         kombo.append(file_results);
         kombo.append(files_ors(i));
@@ -389,7 +391,7 @@ void symbol_evaluation() {
   FOR1D(kombos, i) {
     cout<<"++++++++++ Kombo "<<i<<" ++++++++++"<<endl;
     cout<<kombos(i)<<endl;
-    run_simulator(kombos(i)(0), kombos(i)(1), kombos(i)(2), grounding_type, 2, kombos(i)(3));
+    goal_directed__run_simulator(kombos(i)(0), kombos(i)(1), kombos(i)(2), grounding_type, thinking_style, kombos(i)(3));
   }
 }
 
@@ -521,7 +523,11 @@ void collect_simulator_data(uint COLLECT_DATA__NUM_RUNS, uint COLLECT_DATA__NUM_
             fex->action_type = relational::FullExperience::puton;
           seq_fex.append(fex);
         }
-        TL::Atom* action = TL::robotManipulationSampling::generateAction_wellBiased(*state_unlearned, sim.getTableID());
+        TL::Atom* action = NULL;
+        do {
+          action = TL::robotManipulationSampling::generateAction_wellBiased(*state_unlearned, sim.getTableID());
+          if (action->args.N == 1  &&  action->args(0) == 60)  action = NULL;
+        } while (action == NULL);
         seq_actions.append(action);
         cout<<endl<<"ACTION:  "<<*action<<endl;
         TL::RobotManipulationDomain::performAction(action, &sim, 100);
@@ -575,25 +581,24 @@ void getVector_StateLiterals(arr& vec, ors::Graph* C, const MT::Array<relational
   delete cs;
 }
 
-void getVector(arr& vec, const relational::FullExperience& ex) {
+void getVector(arr& vec, relational::FullExperience& ex, const MT::Array<relational::GroundedSymbol*> gsl) {
   vec.clear();
   arr vec_literals;
-  getVector_StateLiterals(vec_literals, ex.experience_symbolic.pre);
+  getVector_StateLiterals(vec_literals, ex.state_continuous_pre, gsl);
   vec.append(vec_literals);
   vec.append(ex.action_type);
   vec.append(ex.action_args(0));
   vec.append(ex.reward);
 }
 
-void getVectors(MT::Array< arr >& vecs, const char* file_episode) {
+void getVectors(MT::Array< arr >& vecs, const char* file_episode, const MT::Array<relational::GroundedSymbol*> gsl) {
   vecs.clear();
   MT::Array< relational::FullExperience* > experiences;
-  relational::FullExperience::read_continuous(experiences,
-file_episode);
+  relational::FullExperience::read_continuous(experiences, file_episode);
   uint i;
   FOR1D(experiences, i) {
     arr vec;
-    getVector(vec, *experiences(i));
+    getVector(vec, *experiences(i), gsl);
     vecs.append(vec);
   }
 }
@@ -611,6 +616,11 @@ void init_getVector__for_the_nikolay() {
  
   TL::logicObjectManager::setConstants(experience__hack_to_get_objects->state_continuous_pre.object_ids);
   
+  // Get grounded symbols
+  MT::Array<relational::GroundedSymbol*> gsl;
+  relational::read(gsl, "parameters_RBF/E5T1-", relational::GroundedSymbol::RBF);
+  cout<<gsl.N<<" SymbolGroundings have been read."<<endl;
+  
   // Create all possible literals
   LitL lits_u1, lits_b1;
   TL::Predicate* p_u1 = TL::logicObjectManager::getPredicate(MT::String("u1"));
@@ -620,14 +630,11 @@ void init_getVector__for_the_nikolay() {
   lits_all__nikolay.append(lits_u1);
   lits_all__nikolay.append(lits_b1);
   
-  // Get grounded symbols
-  MT::Array<relational::GroundedSymbol*> gsl;
-  relational::read(gsl, "parameters_RBF/E5T1-", relational::GroundedSymbol::RBF);
-  cout<<gsl.N<<" SymbolGroundings have been read."<<endl;
-  
   // Get vectors
   MT::Array< arr > vecs;
-  getVectors(vecs, "data2/exp_o0.dat");
+  getVectors(vecs, "data2/exp_o0.dat", gsl);
+  
+  PRINT(vecs);
 }
 
 
@@ -635,7 +642,7 @@ void init_getVector__for_the_nikolay() {
 void example_for_nikolay() {
   // Get continuous data
   MT::Array< relational::FullExperience* > experiences;
-  relational::FullExperience::read_continuous(experiences, "data_transition_model_learning/exp_o0.dat");
+  relational::FullExperience::read_continuous(experiences, "data2/exp_o0.dat");
   
   // Logic (1):  Create symbolic actions
   TL::Predicate* p_GRAB = TL::RobotManipulationDomain::getPredicate_action_grab();
@@ -755,11 +762,11 @@ int main(int argc, char** argv){
 //   NikGenerateData();
 //   example_for_nikolay();
   
-  init_getVector__for_the_nikolay();
+//   init_getVector__for_the_nikolay();
   
 //   collect_simulator_data(10, 11);
 //   produce_rules();
-//   symbol_evaluation();
+  symbol_evaluation();
   
   return 0;
 }
