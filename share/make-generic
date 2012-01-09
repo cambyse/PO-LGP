@@ -103,6 +103,19 @@ MOC = moc
 UIC = uic
 endif
 
+ifeq ($(SYS), Darwin)
+ifndef CXX
+CXX	= g++
+CC 	= gcc
+endif
+LINK	 = $(CXX)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
+LPATH	:= $(BASE)/lib:$(LPATH)
+SHAREFLAG = -dynamiclib #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
+MOC = moc
+UIC = uic
+endif
+
 ifeq ($(SYS),Cygwin)
 CXX	= g++
 CC	= g++
@@ -198,17 +211,6 @@ CXXFLAGS  += -DMT_FLTK
 LinuxLibs += -lfltk -lfltk_gl -lGLU -lGL
 endif
 
-ifeq ($(REVEL),1)
-CXXFLAGS  += -DMT_REVEL
-CPATH	  := $(CPATH):$(LIBPATH)/revel-1.1.0/include
-LPATH	  := $(LPATH):$(LIBPATH)/revel-1.1.0/lib:$(LIBPATH)/xvidcore-1.1.3/lib
-MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/revel-1.1.0/include
-MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/revel-1.1.0/lib
-LinuxLibs += -lrevel -lxvidcore
-CygwinLibs+=
-MSVCLibs  +=
-endif
-
 ifeq ($(QTGLUT),1)
 CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL# -DNOUNICODE
 LinuxLibs += -lglut -lGLU -lGL -lX11
@@ -230,7 +232,7 @@ endif
 ifeq ($(WX),1)
 CXXFLAGS  += -DMT_WX -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXGTK__ -pthread
 CPATH := $(CPATH):/usr/lib/wx/include/gtk2-unicode-release-2.8:/usr/include/wx-2.8
-LinuxLibs += -pthread -Wl,-Bsymbolic-functions  -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8 
+LinuxLibs += -pthread -Wl,-Bsymbolic-functions  -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8
 endif
 
 ifeq ($(ODE),1)
@@ -582,7 +584,7 @@ externalMake_src/%:
 
 rm_Makefile.dep: force
 	-rm Makefile.dep
-		 
+
 %.dep: %.cpp
 	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
 

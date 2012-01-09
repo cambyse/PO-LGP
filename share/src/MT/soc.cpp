@@ -18,7 +18,7 @@
 #include "opengl.h"
 #include "plot.h"
 #include "ors.h"
-#include "algos.h"
+#include "optimization.h"
 
 uint countMsg=0, countSetq=0;
 
@@ -48,17 +48,15 @@ void soc::getVelocity(arr& vt, const arr& q, uint t, double tau){
 }
 
 //! compute the full (q, v) trajectory from a trajectory q
-void soc::getPhaseTrajectory(arr& _q, const arr& q, double tau){
-  uint T=q.d0, n=q.d1, t;
-  arr vt;
-  _q.resize(T, 2, n);
-  for(t=0; t<T; t++){
-    getVelocity(vt, q, t, tau);
-    _q.subDim(t, 0)=q[t];
-    if(t) _q.subDim(t, 1)=(q[t]-q[t-1])/tau;
-    else  _q.subDim(t, 1)=0.;
+void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
+  uint T=q.d0-1, n=q.d1, t;
+  x.resize(T+1, 2, n);
+  for(t=0; t<=T; t++){
+    x.subDim(t, 0)=q[t];
+    if(t) x.subDim(t, 1)=(q[t]-q[t-1])/tau;
+    else  x.subDim(t, 1)=0.;
   }
-  _q.reshape(T, 2*n);
+  x.reshape(T+1, 2*n);
 }
 
 //! simply get the q-trajectory from a (q, v)-trajectory
@@ -69,6 +67,28 @@ void soc::getPositionTrajectory(arr& q, const arr& _q){
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
 
+/*! \brief use regularized Inverse Kinematics to compute a joint
+    trajectory from the task trajectory previously specifies for the
+    taskid-th task variable */
+void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
+  uint t, T= sys.nTime(), n= sys.qDim();
+  arr phiq, yt, J, Jt, Jinv, W, Winv;
+  double prec;
+  q.resize(T+1, n);
+  sys.getq0(q[0]());
+  for(t=1; t<=T; t++){
+    sys.getW(W, t);
+    inverse_SymPosDef(Winv, W);
+    sys.setq(q[t-1]);
+    sys.getPhi(phiq, taskid);
+    sys.getJJt(J, Jt, taskid);
+    sys.getTarget(yt, prec, taskid, t);
+    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
+    q[t]() = q[t-1] + Jinv*(yt-phiq);
+  }
+}
+
+#if 0
 void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   uint t, T=(uint)floor(q.d0/step);
   qNew.resize(T, q.d1);
@@ -99,32 +119,12 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
   }
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
-    trajectory from the task trajectory previously specifies for the
-    taskid-th task variable */
-void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
-  uint t, T= sys.nTime(), n= sys.qDim();
-  arr phiq, yt, J, Jt, Jinv, W, Winv;
-  double prec;
-  q.resize(T+1, n);
-  sys.getq0(q[0]());
-  for(t=1; t<=T; t++){
-    sys.getW(W, t);
-    inverse_SymPosDef(Winv, W);
-    sys.setq(q[t-1]);
-    sys.getPhi(phiq, taskid);
-    sys.getJJt(J, Jt, taskid);
-    sys.getTarget(yt, prec, taskid, t);
-    pseudoInverse(Jinv, J, Winv, 1e-5+1e-3/prec);
-    q[t]() = q[t-1] + Jinv*(yt-phiq);
-  }
-  
-}
 
 //! not-yet-implemented
 void soc::partialJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& dCdx, const arr& delCdelq, const arr& q, const arr& x){
   NIY;
 }
+#endif
 
 //===========================================================================
 //
@@ -143,11 +143,11 @@ soc::SocSystemAbstraction::~SocSystemAbstraction(){
 
 soc::SocSystemAbstraction* soc::SocSystemAbstraction::newClone() const { NIY; }
 uint soc::SocSystemAbstraction::uDim(){ NIY; }
-void soc::SocSystemAbstraction::getqv0(arr& q_){ NIY; }
+void soc::SocSystemAbstraction::getx0(arr& x){ NIY; }
 void soc::SocSystemAbstraction::getqv0(arr& q, arr& qd){ NIY; }
 double soc::SocSystemAbstraction::getTau(bool scaled){ NIY; }
-void soc::SocSystemAbstraction::setqv(const arr& q_, uint t){ NIY; }
-void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
+void soc::SocSystemAbstraction::setx(const arr& x, uint t){ NIY; }
+//void soc::SocSystemAbstraction::setq0(const arr& q){ NIY; }//new
 void soc::SocSystemAbstraction::setqv(const arr& q, const arr& qd, uint t){ NIY; }
 void soc::SocSystemAbstraction::getH(arr& H, uint t){ NIY; }
 void soc::SocSystemAbstraction::getHinv(arr& H, uint t){ NIY; }
@@ -287,10 +287,10 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
     getJJt(Jac, JacT, i);
     phiBar.append(sqrt(prec)*(phi_q - y));
     if(dynamic){
+      getJqd(phi_v, i);
       getTargetV(v, precv, i, t <<scalePower);
-      getJJt(Jac, JacT, i);
-      CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
-      phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
+      //CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
+      //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
       
       arr tmp;
@@ -308,28 +308,45 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
     JBar   *= sqrt(double(1 <<scalePower));
   }
 
+  //cout <<"t=" <<t <<"phi=" <<phiBar <<"J=" <<JBar <<endl;
   if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
 }
+
+void soc::SocSystemAbstraction::fvi (arr& y, arr* J, uint i, const arr& x_i){
+  arr JBar;
+  setx(x_i,i);  eval_cost++;
+  getTaskCostTerms(y, JBar, x_i, i);
+  if(J) *J = JBar;
+}
+
+void soc::SocSystemAbstraction::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+  arr PsiI, PsiJ;
+  getTransitionCostTerms(y, PsiI, PsiJ, x_i, x_j, i);
+  if(Ji) *Ji = PsiI;
+  if(Jj) *Jj = PsiJ;
+}
+
 
 
 void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint t){
   double checkGrad_old = checkGrad;
   checkGrad=0.;
   
-  struct GradientFunction{
+  struct GradientFunction:VectorFunction{
     soc::SocSystemAbstraction *sys;
     uint t;
- 
-    static void staticf(arr& y, arr *grad, const arr& x, void *_gf){
-      GradientFunction *gf= (GradientFunction*)_gf;
-      gf->sys->setx(x);
+    void fv(arr& y, arr *J, const arr& x){
+      sys->setx(x);
       arr JBar;
-      gf->sys->getTaskCostTerms(y, JBar, x, gf->t);
-      if(grad) *grad=JBar;
+      sys->getTaskCostTerms(y, JBar, x, t);
+      if(J){ *J=JBar; cout <<J<<endl; }
     }
-  } gf = { this, t};
+  } f;
+  
+  f.sys=this;
+  f.t = t;
 
-  if(!checkGradient(gf.staticf, &gf, xt, 1e-6)){
+  if(!checkJacobian(f, xt, 1e-6)){
     cout <<"Task dimension infos:";
     MT::Array<const char*> names;
     uintA dims;
@@ -351,27 +368,27 @@ void soc::SocSystemAbstraction::getTaskInfo(MT::Array<const char*>& names, uintA
   }
 }
 
-void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt, const arr& xt1, uint t){
+void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& Ji, arr& Jj, const arr& xi, const arr& xj, uint i){
   if(!dynamic){
     arr W, M;
-    getW(W, t);
-    Psi = xt1 - xt;
+    getW(W, i);
+    Psi = xj - xi;
     lapack_cholesky(M, W);
     Psi = M*Psi;
-    PsiI = M;
-    PsiJ = -M;
+    Jj = M;
+    Ji = -M;
   }else{
     arr Hinv, A, a, B, Q, W, Winv, M;
-    getHinv(Hinv, t);
-    getProcess(A, a, B, t);
-    getQ(Q, t);
-    Psi = xt1 - (A*xt+a);
+    getHinv(Hinv, i);
+    getProcess(A, a, B, i);
+    getQ(Q, i);
+    Psi = xj - (A*xi+a);
     Winv = B*Hinv*~B + Q;
     //inverse_SymPosDef(W, Winv);
     lapack_cholesky(M, Winv);
     Psi = M*Psi;
-    PsiI = M;
-    PsiJ = -M*A;
+    Jj = M;
+    Ji = -M*A;
   }
 }
 
@@ -662,10 +679,10 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         //c3 = sqrDistance(tmp, x[t+1], A*x[t]+a);
         //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
-      //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
+      cout <<t <<' ' <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
       //if(t==0)
       //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
-      ctrlCsum+=c3;
+      ctrlCsum+=c2;
     }
   }
   cout <<"costChecks: "

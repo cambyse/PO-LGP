@@ -16,7 +16,7 @@ joint (Link4 Link5) { A=<t(0 0 0.19) d(90 0 1 0)> B=<t(0 0 0) d(-90 0 1 0)> Q=<d
 joint (Link5 Link6) { A=<t(0.0 0 0.2)> B=<t(0 0 0) d(-90 0 1 0)> Q=<d(0 1 0 0)>}
 joint (Link6 endeff) { A=<t(0.078 0 0)> B=<t(0 0 0)> Q=<d(0 1 0 0)>}
 
-body target  { X=<t(0.8 0.4 1.5)>   type=5 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+#body target  { X=<t(0.8 0.4 1.5)>   type=5 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
 
 #body obstacle1 { X=<t(0.4 0.2 1.8)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
 #body obstacle2 { X=<t(0.4 0.2 1.6)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
@@ -73,12 +73,25 @@ shape kuka_link4(Link4)   { contact,type=3, rel=<t(0 0 0) d(90 0 0 1)>, mesh='ku
 shape kuka_link5(Link5)   { contact,type=3, rel=<t(0 0 0.2) d(90 0 0 1)>, mesh='kuka/kuka_link5_lo.obj' color=[.015 .129 .623] }
 shape kuka_wrist(endeff)   { contact,type=3, rel=<t(-0.078 0 0) d(90 1 0 0) d(90 0 1 0)>, mesh='kuka/kuka_wrist_lo.obj' color=[.55 .55 .55] }
 
-body  OBJECTS{ X=<t(.0 -.8 .69)> }
-shape cyl1(OBJECTS){  type=4, rel=<t( 1.0 1.0 0.5)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+body  OBJECTS{ X=<t(.0 .0 .0)> }
 
-shape ring1(OBJECTS){ contact, type=4, rel=<t( 0.5 0.8 0.5) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
-shape ring2(OBJECTS){contact,  type=4, rel=<t( 0.5 0.6 0.6) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
-shape ring3(OBJECTS){contact,  type=4, rel=<t( 0.5 1.0 0.6) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
-shape ring4(OBJECTS){contact,  type=4, rel=<t( 0.5 1.0 0.8) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
-shape ring5(OBJECTS){contact,  type=4, rel=<t( 0.5 0.6 0.8) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
-shape ring6(OBJECTS){contact,  type=4, rel=<t( 0.5 0.8 0.9) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
+#shape cyl1(OBJECTS){  type=4, rel=<t( 0.8 0.20 1.2)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+#shape cyl1(OBJECTS){  type=4, rel=<t( 0.8 0.2 1.2)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape cyl1(OBJECTS){  type=4, rel=<t( -0.6 0.3 1.25)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape cyl1(OBJECTS){  type=4, rel=<t( -1.0 -1.0 1.8)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+#shape ref(OBJECTS){  type=4, rel=<t(.0 .0 2.048) d(90 0 1 0)>, size=[.0 .0 .508 .0175], color=[.9 .1 .1] }
+shape ring_centre(OBJECTS){  type=4, rel=<t( 0.5 0.0 1.35) d(90 0 1 0)>, size=[.0 .0 .01 .25], color=[.9 .0 .0] }
+
+shape ring0(OBJECTS){contact,  type=4, rel=<t( 0.5 -0.2 1.2) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
+shape ring1(OBJECTS){contact,  type=4, rel=<t( 0.5 -0.2 1.5) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .1 .8] }
+shape ring2(OBJECTS){contact,  type=4, rel=<t( 0.5 0.0 1.6) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
+shape ring3(OBJECTS){contact,  type=4, rel=<t( 0.5 0.2 1.5) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .2 .8] }
+shape ring4(OBJECTS){contact,  type=4, rel=<t( 0.5 0.2 1.2) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .3 .8] }
+shape ring5(OBJECTS){ contact, type=4, rel=<t( 0.5 0.0 1.1) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
+
+#shape ring4(OBJECTS){contact,  type=4, rel=<t( 0.5 -0.2 1.2) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .4 .8] }
+
+#shape ring1(OBJECTS){ contact, type=4, rel=<t( 0.5 0.0 1.1) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }
+#shape ring6(OBJECTS){contact,  type=4, rel=<t( 0.5 0.0 1.6) d(90 0 1 0)>, size=[.0 .0 .08 .0175], color=[.9 .0 .8] }

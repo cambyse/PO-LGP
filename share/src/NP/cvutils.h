@@ -20,6 +20,8 @@
 #ifndef _NP_CVUTILS_H
 #define _NP_CVUTILS_H
 
+#ifdef MT_OPENCV
+
 #include <typeinfo>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
@@ -350,6 +352,8 @@ void merge(byteA& imgLR, const byteA& imgL, const byteA& imgR);
 
 #if defined NP_IMPLEMENT_TEMPLATES
 #  include "cvutils_t.cpp"
+#endif
+
 #endif
 
 #endif

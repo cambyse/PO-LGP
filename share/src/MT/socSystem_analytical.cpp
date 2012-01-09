@@ -57,11 +57,11 @@ struct SocSystem_Analytical:public virtual soc::SocSystemAbstraction {
   uint yDim(uint i){ if(!i) return x0.N; else return 1; }
   void getq0(arr& q){ q=x0; }
   void getv0(arr& v){ NIY; }
-  void getqv0(arr& q_){ NIY; }
+  void getx0(arr& x){ NIY; }
   void getqv0(arr& q, arr& qd){ NIY; }
   bool isDynamic(){ return false; }
   void setq(const arr& q){ x=q; }
-  void setqv(const arr& q_){ NIY; }
+  void setx(const arr& x){ NIY; }
   void setqv(const arr& q, const arr& qd){ NIY; }
   void setq0AsCurrent(){ NIY; }
   void geth(arr& h){ NIY; }

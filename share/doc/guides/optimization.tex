@@ -1,0 +1,922 @@
+\article{10}{1}
+
+\renewcommand{\algorithmiccomment}[1]{\qquad{// #1}}
+
+\newcommand{\xT}{\underline{x}}
+
+\title{Software Guide\\Non-linear Optimization for Robotics}
+
+\begin{document}
+\maketitle
+
+Related software:
+
+https://software.sandia.gov/opt++/
+
+http://code.google.com/p/otkpp/
+
+
+\section{Problem}
+
+Let $x_i \in\RRR^{n_i}$ be a set of continuous variables. We consider
+a distribution of the form
+\begin{align}
+p(\vec x) = \frac{1}{Z} \exp\{-f(\vec x)\} \comma
+f(\vec x) = \sum_i f_i(x_i) + \sum_{(ij)} f_{ij}(x_i,x_j) ~,
+\end{align}
+that is, with pair-wise non-linear coupling. We further assume that
+(as with Gauss-Newton), the terms are of the form
+\begin{align}
+f_i(x_i) &= \phi_i(x_i)^\T \phi(x_i) \comma \phi_i(x_i) \in \RRR^{d_i} \\
+f_{ij}(x_i,x_j) &= \psi_{ij}(x_i,x_j)^\T \psi(x_i,x_j) \comma
+\psi_{ij}(x_i,x_j) \in \RRR^{d_{ij}}
+\end{align}
+and we can numerically evaluate $\phi_i(x_i)$ and $\psi_{ij}(x_i,x_j)$
+and their Jacobians for specific $x_i,x_j$. The problem is to find the
+MAP assignment $\argmin_{\vec x} f(\vec x)$.
+
+\subsection{Min-Sum Message passing}
+
+The Jacobians can be used to locally approximate
+\begin{align}
+f_i(x_i)
+ &\approx x_i^\T A_i x_i - 2 a_i^\T x_i + \hat a_i \\
+f_{ij}(x_i,x_j)
+ &\approx\mat{c}{x_i \\ x_j}^\T
+   \mat{cc}{ A_{ij} & C_{ij} \\ C_{ij}^\T & B_{ij} }
+   \mat{c}{x_i \\ x_j}
+ - 2 \mat{c}{a_{ij} \\ b_{ij}}^\T \mat{c}{x_i \\ x_j}
+ + \hat a_{ij} \\
+ &= x_i^\T A_{ij} x_i + x_j^\T B_{ij} x_j + 2 x_i^\T C_{ij} x_j  - 2
+ a_{ij}^\T x_i -2 b_{ij}^\T x_j + \hat a_{ij}
+\end{align}
+We assume the messages are in quadratic form
+\begin{align}
+&\mu_{j\to i}(x_i)
+ = x_i^\T M_{ji} x_i - 2 m_{ji}^\T x_i + \hat m_{ji}
+\end{align}
+%
+\newcommand{\+}{\myplus}
+\renewcommand{\-}{\myminus}
+%
+Min-Sum message passing then reads
+\begin{align}
+&\mu_{j\to i}(x_i)
+ = \min_{x_j} [f_{ij}(x_i,x_j) + f_j(x_j) + \sum_{k\in\del j\setminus
+ i} \mu_{k\to j}(x_j)] \\
+&[\cdots]
+ = x_i^\T A_{ij} x_i + x_j^\T \bar B x_j + 2 x_i^\T C_{ij} x_j
+  - 2 a_{ij}^\T x_i - 2 \bar b^\T x_j + \bar{\hat a} \\
+&\argmin_{x_j}[\cdots]
+ = \bar B^\1 [\bar b - C_{ij}^\T x_i] \\
+&\mu_{ji}(x_i) = \min_{x_j}[\cdots]
+ = x_i^\T A_{ij} x_i - 2 a_{ij}^\T x_i + \bar{\hat a}
+  -[\bar b - C_{ij}^\T x_i]^\T \bar B^\1 [\bar b - C_{ij}^\T x_i] \\
+& M_{ji} = A_{ij} - C_{ij} \bar B^\1 C_{ij}^\T \\
+& m_{ji} = a_{ij} - C_{ij} \bar B^\1 \bar b \\
+& \hat m_{ji} = \bar{\hat a} - \bar b^\T \bar B^\1 \bar b\\
+& \text{with } \bar B = B_{ij} + A_j + \sum_k M_{kj},~ \bar b=b_{ij} +
+a_j + \sum_k m_{kj},~ \bar{\hat a}=\hat a_{ij} + \hat a_j + \sum_k \hat m_{kj}
+%% & M_{ij} = B_{ij} - C_{ij}^\T \bar B^\1 C_{ij} \\
+%% & m_{ij} = b_{ij} - C_{ij}^\T \bar B^\1 \bar b \\
+%% & \hat m_{ij} = \bar{\hat a} - \bar b^\T \bar B^\1 \bar b
+\end{align}
+
+
+\subsection{Convergence under non-linearity}
+
+For simplicity, let's talk about trees only.
+
+The Min-Sum above would converge to the optimum in one (fwb-bwd) pass if $\phi$
+and $\psi$ were linear. In the non-linear case we need to iterate
+using the local approximations of $\phi$ and $\psi$. Our goal is a
+fast and monotonous algorithm converging to a \emph{local}
+optimum. (Given that we can only access local information on $\phi$
+and $\psi$, global optimization is out of scope.)
+
+In the following we will denote by $\vec{\hat x}$ the \emph{location}
+(point of localization) where all $\phi$ and $\psi$ are linearized;
+and by $\vec x^*$ the current MAP estimate based on the current
+messages:
+\begin{align}
+x_i^* = \argmin_{x_i}  f_i(x_i) + \sum_{j\in\del i} \mu_{j\to i}(x_i)
+\end{align}
+
+At convergence we require $\vec{\hat x} = \vec x^*$. For monotonicity
+we require that $f(\vec x^*_{k+1}) \le f(\vec x^*_k)$ for every
+iteration.
+
+\subsubsection{Global Levenberg-Marquard damping}
+
+There is a trivial way to make the above scheme (locally) convergent
+and monotomous: Levenberg-Marquard damping as in standard
+Gauss-Newton. For reference here are the eqs for Gauss-Newton:
+Consider a cost function
+\begin{align}
+f(x)
+ &= \phi(x)^\T \phi(x) ~.
+\end{align}
+The Gauss-Newton algorithm starts with an initialization $\hat x$, and
+linearizes $\phi(x) \approx \phi(\hat x) + J (x-\hat x)$ around $\hat
+x$, with $J=\frac{\del}{\del x}\p(x)$. Then
+\begin{align}
+f(x)
+ &\approx
+  \phi(\hat x)^2 + 2 (x-\hat x)^\T J^\T \phi(\hat x) + (x-\hat x)^\T J^\T J (x-\hat x) \\
+ &=
+  \phi(\hat x)^2 - 2 x^\T J^\T (J \hat x - \phi(\hat x)) + x^\T J^\T J x ~.
+\end{align}
+The optimum of this squared form is at
+\begin{align}
+x^* &=  \hat x - (J^\T J)^\1 J^\T \phi(\hat x) ~.
+\end{align}
+Iterating this ($\hat x \gets x^*$) is the standard Gauss-Newton
+algorithm. In general, since the linearization at $\hat x$ is only
+locally a good approximation, this update might increase costs,
+$f(x^*) > f(\hat x)$. The Levenberg-Marquard way to make this
+monotonous is to introduce a parameter $\l$ and update
+\begin{align}
+x^* &=  \hat x - (J^\T J + \l \Id)^\1 J^\T \phi(\hat x) ~.
+\end{align}
+If the cost increases with such a step, we increase $\l$ and try again
+(in the limit $\l\to\infty$ the step size vanishes and smoothness of
+$\phi$ guarantees monotonicity). If the cost decreased as desired, we
+may decrease $\l$ again.
+
+In our setup, the same is achieved by having a global LM
+parameter. Assume we have an initial global localization $\vec{\hat x}$. The
+damped node potentials are $\tilde f_i(x_i) = f_i(x_i)
++ \l\norm{x_i-\hat x_i}^2$. Global damping would iterate
+\begin{itemize}
+\item Start with some $\vec{\hat x}$ and $f(\vec{\hat x})$ and $\l$
+\item Locally linearize all $\tilde f_i$ and $f_{ij}$ and compute the
+respective damped MAP $\vec x^*$ using Min-Sum
+\item Evaluate $f(\vec x^*)$; discard and increase $\l$ if $f(\vec
+x^*)>f(\vec{\hat x})$, else adopt and decrease $\l$.
+\end{itemize}
+This global iterative procedure seems (and practically is) inefficient.
+
+\subsubsection{Local Gauss-Newton convergence}
+
+We may apply a Gauss-Newton scheme also for the local Min-Sum updates:
+Focussing on a node $x_i$ we can define a local potential for $x_i$ in
+two different ways:
+
+1) Given all messages $\mu_{j\to i}$ to this node we can define
+\begin{align}
+F(x_i) = f_i(x_i) + \sum_{j\in\del i} \mu_{j\to i}(x_i)
+\end{align}
+We may apply a local Gauss-Newton that optimizes $F(x_i)$ w.r.t.\
+$x_i$. Each iteration relocates $\hat x_i$, which implies a new local
+approximation of $f_i$ but also of all $f_{ij}$. Therefore each
+iteration updates also the incoming messages $\mu_{j\to i}(x_i)$ then
+evaluates the (damped) optimum $x^*_i = \argmin \tilde f_i(x_i)
++ \sum_{j\in\del i} \mu_{j\to i}(x_i)$ and decides whether to accept
+or increase local damping. Until convergence $\hat x_i=x^*_i$.
+
+Facts:
+\begin{itemize}
+\item These updates guarantee monotonicity in $F(x_i^*)$ during the local
+optimization.
+
+\item Of course, global monotonicity w.r.t.\ the global potential
+$f(\vec x^*)$ of these updates is not guaranteed!
+
+\item If all $\phi$ and $\psi$ are linear (perhaps except for $\phi_i$ and
+$\psi_{ij}$), then also global monotonicity w.r.t.\ $f(\vec x^*)$ is guaranteed.
+
+Sketch: In the exact-inference-on-a-tree case, all incoming messages
+$\m_{k\to_j}$ to the neighborhood $\del i$ are of course independent
+of the local potentials $f_i$ and $f_{ij}$. Our case is not exact
+inference: all messages depend on the localization $\vec{\hat x}$. In
+general, any local update influences globally $\vec x^*$ and thereby
+the localizations $\vec{\hat x}$ and thereby also the incomping messages
+$\m_{k\to_j}$.
+
+If all $\phi$ and $\psi$  except for $\phi_i$ and
+$\psi_{ij}$ are linear, then the messages $\m_{k\to_j}$ are independent of the
+localization and therefore
+\begin{align}
+F(x_i^*) = f(\vec x^*)
+\end{align}
+without approximation.
+\end{itemize}
+
+The insight is: the non-linearity of all ``other'' potentials prevents
+that local monotonicity translates to global monotonicity.
+
+2) A trivial alternative is the following: Given the current
+localization $\vec{\hat x}$ we can define a local potential
+\begin{align}
+\hat F(x_i) = f(x_i) + \sum_{j\in\del i} f_{ij}(x_i,\hat x_j)
+\end{align}
+We may apply local Gauss-Newton. Clearly this guanartees monotonicity
+of $\hat F(x_i)$ as well as $f(\vec{\hat x})$. In fact, this is not a
+message passing method at all but just a plain distributed
+optimization scheme. This is also very inefficient: even for linear
+$\phi$ and $\psi$ this may require many sweeps over all variables --
+where exact message passing on a tree would be done after one sweep.
+
+\subsubsection{Blending}
+
+We can blend between the last two options: Have a global LM parameter $\l$
+that is being used to compute messages (and damp $\vec x^*$ towards
+$\vec{\hat x}$). Then, when performing local Gauss-Newton (scheme 1
+above), have use a separate $\l_i$ for the local iterations. In the
+limit the global $\l\to\infty$ we endup with scheme 2 above.
+
+
+\subsection{Relation to other views}
+
+\emph{Non-linear Programming/Sequential Quadratic Programming.} Our
+Problem is a special case of SQP where we do not have constraints (but
+potentially severe non-linearities.) My feeling is that most QP and
+SQP methods have been developed with focus on efficient handling of
+the constraints (interior point, active set methods). This is obvious
+because QP without constraints is trivial. But our perspective is on
+non-linear pair-wise couplings.
+
+\emph{Q: Is there work on Message Passing versions of QP?}
+
+
+\emph{MAP in Gaussian MRFs.} (See Jason Johnson's notes on
+``Message-Passing Algorithms for GMRFs and Non-Linear Optimization'')
+
+I contacted Jason: His feedback (email 03/01/11) was on
+``diagonal-loading methods'' (paper with Danny Bickson). Don't know if
+that's helpful.
+
+
+%\end{document}
+
+
+\section{SOC interface}
+
+\subsection{Problem side}
+
+It is convenient to define the problem in the form of
+\begin{align}
+C(x_{0:N})
+ = \sum_{t\=0}^T \phi_t(x_t)^\T \phi_t(x_t)
+ + \sum_{t\=0}^{T\1} \psi_t(x_{t\po},x_t)^\T W \psi_t(x_{t\po},x_t)
+\end{align}
+(We could absorb the $W$ in the definition of $\psi_t$, of
+course. But in our applications it is more natural to keep the
+$W$.)
+
+$\phi_t(x_t)$ is a general $d$-dimensional task vector which is
+typically a ``concatenation'' of a number of ``task variables'', each
+with different dimensions. To given an example: Assume we have 2 task
+variables: $y_P\in\RRR^3$ for the endeffector position and
+$y_C\in\RRR$ a scalar indicating collision danger; and corresponding
+position \& velocity targets $y^*_{P,C},\dot y^*_{P,C}$ and standard
+deviations $\s_P,\s_C,\dot\s_P,\dot\s_C\in\RRR$. Then we have
+\begin{align}
+\phi(x) = 
+\mat{c}{
+(y_L-y^*_L)/\s_L\\
+(\dot y_L- \dot y^*_L)/\dot \s_L\\
+(y_C-y^*_C)/\s_C\\
+(\dot y_C- \dot y^*_C)/\dot \s_C
+} ~\quad\in\RRR^8~.
+\end{align}
+For convenience, to allow analysis tools to plot cost terms for these
+task variables separately, the problem side should give information on
+the semantics of $\phi(x)$: it should also provide a routine that
+returns the number of task variables, the dimension of each (summing
+up to $d$), and a name for each task variable.
+
+Generally, the problem side needs to implement a mapping
+\begin{align}
+t, x_t \mapsto \phi_t, J_t
+\end{align}
+where $J_t(x_t) = \frac{\del}{\del x_t}\phi_t(x_t)$.
+
+Concerning the dynamics, $\psi_t(x_{t\po},x_t)^\T$ is a general
+transition vector. The basic cases are:\\
+\cen{\begin{tabular}{l||l|l|l}
+& $P(x_{t\po} \| x_t)$ & $\psi_t(x_{t\1},x_t)$ & $W$ \\
+\hline
+kinematic
+ & $\NN(x_{t\po} \| x_t, W^\1)$
+ & $x_{t\po} - x_t$
+ & $W$ \\
+dynamic
+ & $\NN(x_{t\po} \| A x_t + a, Q  + B H^\1 B^\T)$
+ & $x_{t\po} - A x_t - a$
+ & $\[Q  + B H^\1 B^\T\]^\1$
+\end{tabular}}\\
+This is because in the dynamic case we have:
+\begin{align}
+P(x_{t\po} \| x_t)
+ &= \int \NN(x_{t\po} \| A x_t + a + B u , Q)~ \NN(u \| 0, H^\1)~ du\\
+ &= \NN(x_{t\po} \| A x_t + a, Q  + B H^\1 B^\T) ~.
+\end{align}
+
+The matrices $A,a,B$ are typically given via the differential equation
+$M(q)~ \ddot q + C(q,\dot q)~ \dot q + F(q) = u$ with mass matrix
+$M(q)$, Coriolis forces $C(q,\dot q)$ and gravity forces
+$F(q)$. The \emph{Newton-Euler} algorithm can efficiently
+(numerically) compute $M, C$ and $F$ for any specific robot
+configuration $(q,\dot q)$. Using (e.g.) Leap Frog integration with
+time step size $\tau$, the process becomes
+\begin{align*}
+q_{t\po} &= q_t + \tau (\dot q_{t\po}+\dot q_t)/2 \\
+\dot q_{t\po} &= \dot q_t + \tau M^\1(u_t+C \dot q_t+F) ~,\\
+\mat{c}{q_{t\po}\\ \dot q_{t\po}}
+ &= A  \mat{c}{q_t\\ \dot q_t} + B u + a \\
+& A=\mat{cc}{1&\tau+\tau^2 M^\1C/2\\0&1+\tau M^\1C}
+  \comma B=\mat{c}{\tau^2 M^\1/2\\\tau M^\1}
+  \comma a=\mat{c}{\tau^2 M^\1 F/2\\\tau M^\1 F}
+\end{align*}
+
+Another simple case for matrices $A,a,B$ is what we call
+the \emph{pseudo-dynamic} case, where
+\begin{align}
+& A=\mat{c@{~}c}{1&\tau\\0&1}
+  \comma B=\mat{c}{\tau^2/2 \\\tau}
+  \comma a=0 ~.
+\end{align}
+This discribes a fully decoupled dynamic system with unit mass matrix,
+without Coriolis and external forces -- which is useful, e.g., for
+generating smooth trajectories for ``high gear'' position controlled
+industrial type hardware (as opposed to truely dynamic
+torque-controlled hardware).
+
+\subsection{Solver side}
+
+The solvers interact with the SOC interface by first setting a state
+$\hat x_t$ in a time slice (the point of localization/linearization) and
+then querying the corresponding matrices $A_t,a_t,B_t,W_t,R_t,r_t,\hat
+r_t$ for that time slice.
+
+The matrices $A_t,a_t,B_t,W_t$ are as above and determine the dynamics.
+
+The matrices $R_t,r_t,\hat r_t$ approximate the cost potential around
+$\hat x_t$ in the form
+\begin{align}
+\phi_t(x_t)
+&\approx \hat\phi_t + J_t (x_t - \hat x_t) \\
+\norm{\phi_t(x_t)}^2
+ &\approx \hat\phi_t^2 + 2 \hat\phi_t^\T J_t (x_t - \hat x_t) + (x_t - \hat x_t)^\T J_t^\T J_t (x_t - \hat x_t)\\
+ &= x_t^\T R_t x_t - 2 r_t^\T x_t + \hat r_t \\
+ & R_t := J_t^\T J_t \comma
+  r_t := J_t^\T (J_t \hat x_t - \hat\phi_t) \comma
+  \hat r_t := (J_t \hat x - \hat\phi_t)^2
+\end{align}
+and are thus given via $\phi_t$ and $J_t$.
+
+
+
+\section{AICO}
+
+AICO iterates a basic step function. This step function distinguishes
+4 sweeping modes:
+\begin{enumerate}
+\item[0)] simple forward-backward with relocation (i.e., relocating the point
+of linearization) only on the forward sweep. This is similar to
+iLQG, but different in that the forward sweep is a belief rather
+than a deterministic trajectory rollout -- effectively leading to larger step sizes.
+\item[1)] simple forward-backward with relocation in both sweeps
+\item[2)] forward-backward with an iterative GaussNewton in each time slice
+\item[3)] same as (2) but with a step-size adaptation within the GaussNewton to
+guarantee monotonicity also within a time slice [there are redundant and
+costly simulator calls in option (3) currently -- I don't have the time
+to remove them, but that should be possible]
+\end{enumerate}
+
+All of these sweeps are embedded in an outer loop that increases
+Levenberg-Marquard damping and fully undoes a sweep whenever a sweep
+fails to reduce the cost of the mean trajectory. This should guarantee
+monotonicity and thereby convergence of the overall algorithm.
+
+Algorithms \ref{algTimeSlice} and \ref{algAICO} give the pseudo-code.
+
+\begin{algorithm}[t]
+\caption{UpdateTimeSlice
+\label{algTimeSlice}}
+\small
+Basic routines to update messages in a single time slice. Note that,
+depending on the options given, this implies a GaussNewton type
+iteration within the time slice to converge to a stable belief.
+
+\medskip
+
+\twocol{.6}{.4}
+{
+\begin{algorithmic}[1]\small
+\REQUIRE $t$, updateFWD, updateBWD, relocationIterations $K$, tolerance $\d$
+\STATE if(updateFWD) updateFwdMessage(t)
+\STATE if(updateBWD) updateBwdMessage(t)
+\STATE compute $B_t^\1 = S^\1_t + V^\1_t + R_t + \l\Id$
+\STATE $b_t = B_t[S^\1_t s_t + V^\1_t v_t + r_t + \l d_t]$
+\FOR[no relocation for $K=0$]{$k=1:K$}
+    \STATE if $|b_t-\hat x_t|<\d$ return
+    \STATE $\hat x_t = b_t$
+    \STATE query simulator: $\hat x_t \mapsto W_t, A_t, a_t,
+     B_t, R_t, r_t, \hat r_t$
+    \STATE optional: if(FWD) updateFwdMessage(t)
+    \STATE optional: if(BWD) updateBwdMessage(t)
+    \STATE compute $B_t^\1 = S^\1_t + V^\1_t + R_t + \l\Id$
+    \STATE $b_t = B_t[S^\1_t s_t + V^\1_t v_t + r_t + \l d_t]$
+\ENDFOR
+\end{algorithmic}
+}{
+\bigskip\textbf{\textsf{updateFwdMessage}}
+\begin{algorithmic}[1]\small
+\STATE $\bar S = S^\1_{t\1} + R_{t\1}$
+\STATE $S_t^\1 = W^\1_{t\1} + A_{t\1} \bar S A_{t\1}^\T$
+\STATE $s_t = a_{t\1} + A_{t\1} [\bar S (S^\1_{t\1} s_{t\1} + r_{t\1})]$
+\end{algorithmic}
+
+\bigskip\textbf{\textsf{updateBwdMessage}}
+\begin{algorithmic}[1]\small
+\STATE $\bar V = V^\1_{t\po} + R_{t\po}$
+\STATE $V_t^\1 =  A^\1_t (W^\1_t + \bar V) A_t^\mT$
+\STATE $v_t = A^\1_t [-a_t + \bar V (V^\1_{t\po} v_{t\po} + r_{t\po})]$
+\end{algorithmic}
+
+%% \bigskip\textbf{\textsf{evaluate}}
+%% \begin{algorithmic}[1]
+%% \REQUIRE $x_{0:T}$, $R,r,\hat r,A,a,B$ for all $t=0:T$
+%% \ENSURE
+%% \FOR{$t=0:T$}
+%% \STATE $c_\phi(t) = x_t^\T R_t x_t - 2 r_t^\T x_t + \hat r_t$
+%% \STATE $c_\psi(t) = \norm{x_{t\po} - A_t x_t - a_t}_{W_t}^2$
+%% \ENDFOR
+%% \STATE return $\sum_t c_\phi(t)+c_\psi(t)$
+%% \end{algorithmic}
+}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{AICOstep\label{algAICO}}
+\small
+
+Step routine of AICO. Note that after the sweeps there is a check
+whether the cost of the mean belief increased. If yes, the sweep is
+undone (all messages are reset to their previous state) and the
+Levenberg-Marquard damping constant increased. If no, the sweep is
+accepted, the damping reference is set to the new mean belief, and the
+damping constant decreased.
+
+\medskip
+
+\begin{algorithmic}[1]\small
+\REQUIRE tolerance $\d$; initialized (or previous) messages ($s_0,S_0$
+and $v_T,V_T$ encoding constraints); an initialized damping reference
+$d_{0:T}$ and damping factor $\l$
+\ENSURE updated messages (or on failure, increased damping)
+\STATE memorize all current messages and beliefs, e.g., $b^\old_{0:T}=b_{0:T}$
+\STATE for $t=1:T$ updateTimeSlice($t$,updateFwd=1,updateBwd=0,5,$\d$);
+\STATE for $t=T:0$ updateTimeSlice($t$,updateFwd=0,updateBwd=1,5,$\d$);
+\STATE check whether $|b_{0:T} - b^\old_{0:T}|<\d$ to stop outer loop
+\IF{cost($b_{0:T}$)$>$cost($b^\old_{0:T}$)}
+\STATE increase damping $\l \gets 10 \l$
+\STATE reset damping reference $d_{0:T} = b_{0:T}^\old$
+\STATE restore all memorized messages and beliefs
+\ELSE
+\STATE decrease damping $\l \gets  \l/2$
+\STATE update damping referencde $d_{0:T} = b_{0:T}$
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\section{Gauss-Newton}
+
+For reference:
+
+Consider a cost function
+\begin{align}
+f(x)
+ &= \phi(x)^\T \phi(x) ~.
+\end{align}
+The Gauss-Newton algorithm starts with an initialization $x_0$,
+and linearizes $\phi(x) \approx \phi(x_0) + J (x-x_0)$ around $x_0$, with
+$J=\frac{\del}{\del x}\phi(\hat x)$. Then
+\begin{align}
+f(x)
+ &\approx
+  \phi(x_0)^2 + 2 (x-x_0)^\T J^\T \phi(x_0) + (x-x_0)^\T J^\T J (x-x_0) \\
+ &=
+  \phi(x_0)^2 - 2 x^\T J^\T (J x_0 - \phi(x_0)) + x^\T J^\T J x ~.
+\end{align}
+The optimum of this squared form is at
+\begin{align}
+x_{k\po} &=  x_k - (J^\T J)^\1 J^\T \phi(x_k) ~.
+\end{align}
+Iterating this is the standard Gauss-Newton algorithm. In general,
+since the linearization at $x_0$ is only locally a good approximation,
+this update might increase costs, $f(x_{k\po}) > f(x_k)$.
+
+There are two simple ways to make this monotomous. The
+Levenberg-Marquard way is to introduce a $\l$ and update
+\begin{align}
+x_{k\po} &=  x_k - (J^\T J + \l \Id)^\1 J^\T \phi(x_k) ~.
+\end{align}
+If the cost increases with such a step, we increase $\l$ and try again
+(in the limit $\l\to\infty$ the step size vanishes). If the cost
+decreased as desired, we may slowly decrease $\l$ again.  Another
+simple way to make the updates monotonous is to adapt the stepsize
+directly:
+\begin{align}
+x_{k\po} &=  x_k - \a (J^\T J)^\1 J^\T \phi(x_k) ~,
+\end{align}
+where for each step we start with $\a=1$, test the new costs, and
+decrease $\a$ until costs decrease.
+
+\begin{algorithm}[t]
+\caption{Gauss-Newton with adaptive step size}
+\begin{algorithmic}[1]\small
+\REQUIRE start point $x$, tolerance $\d$, routines for $x \mapsto
+  (\phi(x), J(x))$
+\ENSURE converged point $x$
+\STATE initialize $\a=1$
+\STATE compute $(\phi, J)$ at $x$ and $l=\phi^\T \phi$
+\REPEAT
+\STATE compute $\D$ to solve $(J^\T J)~ \D = - J^\T \phi$
+\REPEAT
+\STATE $x' \gets x + \a\D$
+\STATE compute $(\phi, J)$ at $x'$ and $l'=\phi^\T \phi$
+\STATE\textbf{if} $l'>l$ \textbf{then} $\a \gets \a/2$
+\UNTIL $l'\le l$
+\STATE $x \gets x'$, $l \gets l'$
+\STATE $\a \gets \a^{0.8}$
+\UNTIL $|\D| < \d$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}[t]
+\caption{Gauss-Newton with adaptive Levenberg Marquardt parameter}
+\begin{algorithmic}[1]\small
+\REQUIRE start point $x$, tolerance $\d$, routines for $x \mapsto
+  (\phi(x), J(x))$
+\ENSURE converged point $x$
+\STATE initialize $\l=1$
+\STATE compute $(\phi, J)$ at $x$ and $l=\phi^\T \phi$
+\REPEAT
+\STATE\label{redo} compute $\D$ to solve $(J^\T J +\l \Id)~ \D = - J^\T \phi$
+\STATE $x' \gets x + \D$
+\STATE compute $(\phi, J)$ at $x'$ and $l'=\phi^\T \phi$
+\IF{$l'>l$}
+\STATE $\l \gets 2\l$
+\ELSE
+\STATE $\l \gets 0.8\l$
+\STATE $x \gets x'$
+\ENDIF
+\UNTIL $|\D| < \d$
+\end{algorithmic}
+\end{algorithm}
+
+
+%\end{document}
+
+\section{Min-Sum algorithm}
+
+Sum product:
+\begin{align}
+\mu_{j\to k}(y)
+ = \sum_x f_{jk}(x,y) \prod_{i \in \del j \setminus k} \mu_{i\to j}(x)
+\end{align}
+
+Min sum:
+\begin{align}
+\mu_{j\to k}(y)
+ = \min_x f_{jk}(x,y) + \sum_{i \in \del j \setminus k} \mu_{i\to j}(x)
+\end{align}
+
+Given a global cost function $F(\xT)$ with only pair-wise terms and
+ tree structure. Focussing on a local variable $x_i$ we can
+decompose the cost function as
+\begin{align}
+F(\xT)
+ &= \sum_{S\in\del x} F_S(x,X_S)
+\end{align}
+where $S$ indicates the whole subtrees neighbored to the node $x$. The
+goal is to find the global minimum. The minimum w.r.t.\ $x$ for this global
+minimum can be decomposed as (the following would also hold for $\argmin_x$)
+\begin{align}
+\min_x \min_{\xT\setminus x} F(\xT)
+ &= \min_x \min_{\xT\setminus x} [\sum_{S\in\del x} F_S(x,X_S)] \\
+ &= \min_x \sum_{S\in\del x} [\min_{X_S} F_S(x,X_S)] \\
+ &= \min_x \sum_{S\in\del x} \mu_{S\to x}(x) \\
+\mu_{S\to x}(x)
+ &:= \min_{X_S} F_S(x,X_S) \\
+ &= \min_y \min_{X_S\setminus y} F_S(x,X_S) \\
+ &= \min_y \min_{X_S\setminus y} [f_{xy}(x,y) + \sum_{S\in\del y\setminus x} F_S(y,X_S)] \\
+ &= \min_y [f_{xy}(x,y) + \sum_{S\in\del y\setminus x} \min_{X_S} F_S(y,X_S)] \\
+ &= \min_y [f_{xy}(x,y) + \sum_{S\in\del y\setminus x} \mu_{S\to y}(y)]
+\end{align}
+
+
+\section{Gaussian min-sum message passing}
+
+
+
+
+\section{From Gauss-Newton convention to other convention}
+
+
+Given points of linearization $\hat x_{1:N}$ we can linearize
+\begin{align}
+\phi_i(x_i)
+&\approx \hat\phi_i + J_i (x_i - \hat x_i) \\
+\norm{\phi_i(x_i)}^2
+% = \hat\phi_i^2 + 2 \hat\phi_i^\T J_i \D_i + \D_i^\T J_i^\T J_i \D_i
+ &= x_i^\T R_i x_i - 2 r_i^\T x_i + \hat r_i \comma
+  R_i := J_i^\T J_i \comma
+  r_i := J_i^\T (J_i \hat x_i - \hat\phi_i) \comma
+  \hat r_i := (J_i \hat x - \hat\phi_i)^2 \\
+\psi_{ij}(x_i,x_j)
+ &\approx \hat\psi_{ij} + D_{ij} (x_i - \hat x_i) + E_{ij} (x_j - \hat x_j) \\
+\norm{\psi_{ij}(x_i,x_j)}_{W_i}^2
+%%  = squares + 2 \D_{t\1}^\T A_i^\T E_i \D_i
+%%  + 2 \hat\psi_i^\T A_i \D_{t\1}
+%%  + 2 \hat\psi_i^\T E_i \D_i\\
+%% &=
+ &=\mat{c}{x_i \\ x_j}^\T
+   \mat{cc}{ A_{ij} & C_{ij} \\ C_{ij}^\T & B_{ij} }
+   \mat{c}{x_i \\ x_j}
+ - 2 \mat{c}{a_{ij} \\ b_{ij}}^\T \mat{c}{x_i \\ x_j}
+ + \hat a_{ij} \\
+&\mat{cc}{ A_{ij} & C_{ij} \\ C_{ij}^\T & B_{ij} }
+ := \mat{cc}{ D_{ij}^\T W_{ij} D_{ij} & D_{ij}^\T W_{ij} E_{ij} \\ E_{ij}^\T W_{ij} D_{ij} & E_{ij}^\T W_{ij} E_{ij} } \feed
+&\mat{c}{a_{ij} \\ b_{ij}}
+ := \mat{c}{D_{ij}^\T W_{ij} (D_{ij} \hat x_i + E_{ij} \hat x_j - \hat\psi_{ij}) \\
+            E_{ij}^\T W_{ij} (D_{ij} \hat x_i + E_{ij} \hat x_j - \hat\psi_{ij})} \feed
+&\hat a_{ij}
+ := (D_{ij} \hat x_i + E_{ij} \hat x_j - \hat\psi)^2
+\end{align}
+
+
+\section{Min-Sum algorithm for optimization (or MAP estimation) in
+sequential quadratic problems}
+
+Consider the factor graph
+\begin{align}
+f(x_{1:N})
+ = \sum_i f_i(x_i)
+ + \sum_{(ij)} f_{ij}(x_i,x_j)
+\end{align}
+We assume that factors can locally be approximated as
+\begin{align}
+f_i(x_i)
+ &\approx x_i^\T A_i x_i - 2 a_i^\T x_i + \hat a_i \\
+f_{ij}(x_i,x_j)
+ &\approx\mat{c}{x_i \\ x_j}^\T
+   \mat{cc}{ A_{ij} & C_{ij} \\ C_{ij}^\T & B_{ij} }
+   \mat{c}{x_i \\ x_j}
+ - 2 \mat{c}{a_{ij} \\ b_{ij}}^\T \mat{c}{x_i \\ x_j}
+ + \hat a_{ij} \\
+ &= x_i^\T A_{ij} x_i + x_j^\T B_{ij} x_j + 2 x_i^\T C_{ij} x_j  - 2
+ a_{ij}^\T x_i -2 b_{ij}^\T x_j + \hat a_{ij}
+\end{align}
+
+We assume the messages are in quadratic form:
+\begin{align}
+&\mu_{ji}(x_i)
+ = x_i^\T M_{ij} x_i - 2 m_{ij}^\T x_i + \hat m_{ij}
+\end{align}
+
+\newcommand{\+}{\myplus}
+\renewcommand{\-}{\myminus}
+
+Min-Sum message passing then reads
+\begin{align}
+&\mu_{ji}(x_i)
+ = \min_{x_j} [f_{ij}(x_i,x_j) + f_j(x_j) + \sum_{k\in\del j\setminus i} \mu_{kj}(x_j)] \\
+&[\cdots]
+ = x_i^\T A_{ij} x_i + 2 x_i^\T C_{ij} x_j - 2 a_{ij}^\T x_i
+  + x_j^\T \bar B x_j - 2 \bar b^\T x_j + \bar{\hat a} \\
+& \bar B = B_{ij} + A_j + \sum_k A_{kj},~ \bar b=b_{ij} + a_j + \sum_k
+a_{kj},~ \bar{\hat a}=\hat a_{ij} + \hat a_j + \sum_k \hat a_{kj} \\
+&\argmin_{x_j}[\cdots]
+ = \bar B^\1 [\bar b - C_{ij}^\T x_i] \\
+&\mu_{ji}(x_i) = \min_{x_j}[\cdots]
+ = x_i^\T A_{ij} x_i - 2 a_{ij}^\T x_i + \bar{\hat a}
+  -[\bar b - C_{ij}^\T x_i]^\T \bar B^\1 [\bar b - C_{ij}^\T x_i] \\
+& M_{ji} = A_{ij} - C_{ij} \bar B^\1 C_{ij}^\T \\
+& m_{ji} = a_{ij} - C_{ij} \bar B^\1 \bar b \\
+& \hat m_{ji} = \bar{\hat a} - \bar b^\T \bar B^\1 \bar b\\
+& M_{ij} = B_{ij} - C_{ij}^\T \bar B^\1 C_{ij} \\
+& m_{ij} = b_{ij} - C_{ij}^\T \bar B^\1 \bar b \\
+& \hat m_{ij} = \bar{\hat a} - \bar b^\T \bar B^\1 \bar b
+\end{align}
+
+
+
+\subsection{OLD}
+
+Min-Sum message passing then reads ($x_\- \equiv x_{t\1}, x_\+\equiv x_{t\po}$):
+\begin{align}
+\a(x_t)
+ &= \min_{x_\-}~ \psi_t(x_\-,x_t)^2
+  + \phi_\-(x_\-)^2
+  + \a(x_\-) \\
+& = \D_t^\T B_t \D_t - 2 b_t^\T \D_t + \hat\psi_t^2 + \hat\phi_\-^2 + \hat\a_\-^2
+  - [-a_t + C_t \D_t - r_\- - s_\- ]^\T
+    (A_t + R_\- + S_\-)^\1 [\dots] \\
+S_t
+ &= B_t - C_t^\T (A_t + R_\- + S_\-)^\1 C_t\\
+s_t
+ &= b_t - C_t^\T (A_t + R_\- + S_\-)^\1 [a_t + r_\- + s_\-  ]\\
+\hat \a
+ &= \hat\psi_t^2  + \hat\phi_\-^2 + \hat\a_\-
+  - [a_t + r_\- + s_\- ]^\T (A_t + R_\- + S_\-)^\1 [\dots] \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\b(x_t)
+ &= \min_{x_\+}~ \psi_\+(x_t,x_\+)^2
+  + \phi_\+(x_\+)^2
+  + \b_\+(x_\+) \\
+& = \D_t^\T A_\+\D_t - 2 a_\+ \D_t + \hat\psi_\+^2 + \hat\phi_\+^2 + \hat \b_\+^2
+  - [- b_\+ + C_t^\T \D_t - r_\+ - v_\+ ]^\T
+    (B_\+ + R_\+ + V_\+)^\1 [\dots] \\
+%% & \propto
+%%   D_t^\T A_\+ \D_t
+%% - 2 a_t^\T \D_t
+%% - \D_t^\T C_t^\T (W) C_t \D_t
+%% - 2 [- b_t - r_\+ - v_\+ ]^\T (W)  C_t^\T \D_t \\
+V_t
+ &= A_\+ - C_t (B_\+ + R_\+ + V_\+)^\1 C_t^\T\\
+v_t
+ &= a_\+ 
+  - C_t (B_\+ + R_\+ + V_\+)^\1 [ b_\+ + r_\+ + v_\+ ] \\
+\hat \b_t
+ &= \hat\psi_\+^2 + \hat\phi_\+^2 + \hat \b_\+
+  - [b_\+ + r_\+ + v_\+ ]^\T (B_\+ + R_\+ + V_\+)^\1 [\dots] \\
+\D^*
+ &= - (S_t + V_t + R_t)^\1 (s_t + v_t + r_t)
+\end{align}
+
+When we change $\hat x_t$, then the linearizations of $\phi_t$,
+$\psi_t$ and $\psi_\+$ change. We recompute $\m_{t\1\to t}$ and
+$\m_{t\po\to t}$. But then we also need to reevaluate!!
+
+How to evaluate: the absolute messages (not only proportional!) are,
+ neglecting constants lost earlier/later in propagation:
+\begin{align}
+\m_{t\1\to t}(x_t)
+ &= \a(x_t)^2
+  + \hat\psi_t^2 + \hat\phi_\-^2 + \hat \a_\-^2
+  - [- a_t - r_\- - s_\- ]^\T
+    (W) [\dots] \\
+ &\propto \a(x_t)^2
+  + \hat\psi_t^2 
+  - \hat\psi_t^\T A_t (W) a_t
+  - 2  \hat\psi_t^\T A_t (W) [J_\-^\T \hat\phi_\- - s_\- ] \\
+\m_{t\po\to t}(x_t)
+ &= \b(x_t)^2
+  + \hat\psi_\+^2 + \hat\phi_\+^2 + \hat \b_\+^2
+  - [- b_t - r_\+ - v_\+ ]^\T
+    (W) [\dots] \\
+\end{align}
+Therefore, the relevant part ('marginal') of $f$ (neglecting constants lost
+earlier/later) is given as
+\begin{align}
+f(x_t)
+ &= \m_{t\1\to t}(x_t)
+  + \m_{t\po\to t}(x_t)
+  + \p_t(x_t)^2
+\end{align}
+
+That's the real cost function we need to give to Gauss-Newton!!
+
+
+\newpage
+
+{
+\helvetica{9}{1.2}{m}{n}
+\begin{algorithmic}[1]
+\REQUIRE functions $\phi_t, \psi_t, W_t, J_t, A_t, B_t$, initial trajectory
+ $x_{0:T}$, tolerance $\t$
+\ENSURE $\hat x_{0:T}$ locally minimizing $f(x_{0:T})$
+\STATE initialize $F=f(x_{0:T})$, $\a=1$
+\STATE initialize $s_{0:T}=v_{0:T}=r_{0:T}=0 \comma S_{0:T}=V_{0:T}=R_{0:T}=0 $
+\STATE initialize $\hat s_{0:T}=\sum_{\tau=1}^t \hat\psi_\tau^\T
+W_\tau \hat \psi_\tau \comma \hat v_{0:T}=\sum_{\tau=t\po}^T \hat\psi_\tau^\T
+W_\tau \hat \psi_\tau \comma \hat r_t = \phi_t^\T \phi_t$
+\COMMENT we will ensure that $\forall_t: F = \hat s_t + \hat r_t
++ \hat v_t$
+\REPEAT
+\FOR{$t\in\{1..T\}$}
+\REPEAT
+\STATE linearize $\phi_t, \psi_t$ and $\psi_\+$ using $x_\-,x_t,x_\+$\newline
+ access $\phi_t, \psi_t, W_t, J_t, A_t, B_t$ for $\hat x_t$ AND MORE!
+\STATE $r \gets - J_t^\T \hat\phi_t \comma R \gets J_t^\T
+J_t \comma \hat r_t \gets \hat\phi^\T \hat\phi$
+\STATE $a \gets - D_t^\T W_t \hat\psi_t \comma b\gets E_t^\T
+W_t \hat\psi_t \comma A \gets D_t^\T W_t D_t \comma C\gets D_t^\T W_t E_t \comma B\gets E_t^\T W_t E_t$
+\STATE compute $\a(x_t)$ and $\b(x_t)$:
+\STATE $S_t \gets B_t - C_t^\T (A_t + R_\- + S_\-)^\1 C_t$
+\STATE $s_t \gets b_t - C_t^\T (A_t + R_\- + S_\-)^\1 [a_t + r_\- +
+s_\-  ]$
+\STATE $\hat s_t \gets \hat\psi_t^2  + \hat r_\- + \hat s_\- - [a_t + r_\- + s_\- ]^\T (A_t + R_\- + S_\-)^\1 [\dots]$
+\COMMENT does this change the value??
+\STATE $V_t \gets A_\+ - C_t (B_\+ + R_\+ + V_\+)^\1 C_t^\T$
+\STATE $v_t^\T \gets a_\+^\T - C_t (B_\+ + R_\+ + V_\+)^\1 [ b_\+ + r_\+ + v_\+ ]$
+\STATE $\hat v_t \gets \hat\psi_\+^2 + \hat r_\+ + \hat v_\+
+  - [b_\+ + r_\+ + v_\+ ]^\T (B_\+ + R_\+ + V_\+)^\1 [\dots]$
+\COMMENT does this change the value??
+\STATE the current cost is $F\gets \hat s_t + \hat v_\+ + \hat r_t$
+\STATE compute the optimal step $\D^* \gets - (S_t + V_t + R_t)^\1
+(s_t + v_t + r_t)$
+\REPEAT
+\STATE $x_t' \gets x_t + \a \D^*$
+\STATE linearize $\phi_t, \psi_t$, and $\psi_\+$ using $x_\-,x_t',x_\+$
+\STATE $\hat r_t' \gets \hat\phi^\T{}' \hat\phi'$
+\STATE $\hat s_t' \gets \hat\psi_t^2{}'  + \hat r_\- + \hat s_\- - [a_t' + r_\- + s_\- ]^\T (A_t' + R_\- + S_\-)^\1 [\dots]$
+\STATE $\hat v_t' \gets \hat\psi_\+^2{}' + \hat r_\+ + \hat v_\+ - [b_\+' + r_\+ + v_\+ ]^\T (B_\+' + R_\+ + V_\+)^\1 [\dots]$
+\STATE $F'\gets \hat s_t + \hat v_t + \hat r_t$
+\STATE \textbf{if} $F'>F$ \textbf{then} $a \gets a/2$
+\UNTIL $F'<F$
+\STATE $x_t \gets x_t'$, $F_t \gets F'$
+\STATE decrease all $\hat s_{t\po:T}$ and $\hat v_{0:t\1}$ by $F-F'$
+\STATE $a \gets a^{0.8}$
+\UNTIL $|\D| < \d$
+\ENDFOR
+\UNTIL
+\end{algorithmic}
+}
+
+\newpage
+{
+\helvetica{9}{1.2}{m}{n}
+\begin{algorithmic}[1]
+\REQUIRE methods $\phi_i(x_i)$, $\psi_{ij}(x_i,x_j)$ to evaluate factors, a method
+$\m_{j\to i} \gets \text{msg}(\hat x_i,\hat x_j)$ to return a local parameteric
+approximation of a message at $\hat x_i,\hat x_j$, initial states $x_{0:T}$,
+tolerance $\t$
+\ENSURE states $x_{0:T}$ locally minimizing $F(x_{0:T})$
+\STATE compute all factors $\phi_i$, $\psi_{ij}$ for $x_{1:N}$ and
+initialize all messages constant with the absolute tree cost
+\STATE \COMMENT we will ensure that always during the algorithm $\forall_i: F = \sum_{j\in\del
+i} \mu_{j\to i}(x_i)$ and that this global $F$ monotonically decreases
+[[NOT TRUE!]]
+\FOR{$i$ in any (heuristic) repeating order}
+\REPEAT
+\STATE approximate all messages $\m_{j\to i}$, $j\in\del i$ at the current values $(x_i,x_{\del i})$
+\STATE $F\gets \sum_{j\in\del i} \m_{j\to i}(x_i)$
+\COMMENT does that change anything??
+\STATE compute the optimal step $\D^* \gets \argmin_\D \sum_{j\in\del i} \m_{j\to i}(x_i+\D)$
+\REPEAT
+\STATE $x_i' \gets x_i + \a \D^*$
+\STATE compute messages $\m_{j\to i}'$ approximated at the current values $(x_i',x_{\del i})$
+\STATE $F'\gets \sum_{j\in\del i} \m_{j\to i}(x_i)$
+\STATE \textbf{if} $F'>F$ \textbf{then} $a \gets a/2$
+\UNTIL $F'<F$
+\STATE $x_t \gets x_t'$, $F \gets F'$
+\STATE decrease all $\m$ ``emanating from $i$ along
+the tree'' by $F-F'$
+\STATE $a \gets a^{0.8}$
+\UNTIL $|\D| < \d$
+\ENDFOR
+\end{algorithmic}
+}
+
+
+
+\section{Monotonicity}
+
+We want monotonicity. That's trivial when we mean fully local
+monotonicity, namely, that the terms $\psi_t^2 + \p_t^2 + \psi_\+^2$
+decrease when changing $x_t$. But we want more monotonicity in the
+sense that our current estimate of the global cost is guaranteed to
+decrease. What is the ``current estimate of global cost''? It is
+$\min_{x_i} \sum_{j\in\del i} \m_{j\to i}(x_i)$ (because $\m$ are
+cost-to-go (cost-of-branch) messages)!
+
+
+\appendix
+
+\section{Plain stuff}
+
+\begin{align}
+& f(x)
+  = \p(x)^\T \p(x) \\
+& \p(x)
+  = \hat \p + J \D \comma \D = x - \hat x\\
+& f(x)
+  = \hat\p^2 + 2 \hat\p^\T J \D + \D^\T J^\T J \D\\
+& \del_\D f(x)
+  = 2 \p(x)^\T J
+  = 2 \hat\p^\T J + 2 \D^\T J^\T J \\
+& \argmin_\D f(x)
+  = \D^*
+  = - (J^\T J)^\1 J^\T \hat\p \\
+& \min_\D f(x)
+  = f(\hat x + \D^*) \\
+&  = \hat\p^2 + 2 \hat\p^\T J \D^* + \D^*{}^\T J^\T J \D^* \\
+&  = \hat\p^2 + 2 \hat\p^\T J \D^* - \D^*{}^\T J^\T \hat\p \\
+&  = \hat\p^2 + \hat\p^\T J \D^* \\
+&  = \hat\p^2 - \hat\p^\T J (J^\T J)^\1 J^\T \hat\p \\
+\end{align}
+
+
+\begin{align}
+&f(y) = y^\T A y -2 a^\T y \\
+&\argmin_y f = A^\1 a \\
+&\min_y f = -a^\T A^\1 a
+\end{align}

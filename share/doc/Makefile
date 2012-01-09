@@ -6,7 +6,7 @@ PWD := $(shell pwd)
 default: doxy_ors doxy_array doxy_soc
 
 doxy_%::
-	doxygen $*.doxy
+	doxygen doxy/$*.doxy
 # 1> /dev/null 2> /dev/null
 
 guide::

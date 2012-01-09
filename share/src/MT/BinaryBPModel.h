@@ -1,6 +1,6 @@
 #include "BinaryBP.h"
 #include "data.h"
-#include "optimization.h"
+#include "optimization_obsolete.h"
 
 struct BinaryBPNetModel:virtual public OptimizationProblem {
   Data *data;
@@ -8,7 +8,7 @@ struct BinaryBPNetModel:virtual public OptimizationProblem {
   uint ITER;
   double regJ, regT;
   uintA layers;
-  
+   
   void initLayered(Data *_data);
   void randomInit();
   

@@ -106,7 +106,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.upright();
   }
   if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
-  setx0AsCurrent();
+  setx0ToCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
   arr W_rate;
   if(W){
@@ -134,6 +134,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     s->Q_rate.setDiag(qr, 2*s->q0.N);  //covariance \dot q-update
   }
   stepScale.resize(s->T+1);  stepScale.setZero();
+  VectorChainFunction::T = s->T;
 }
 
 void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
@@ -358,7 +359,7 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 
 //! DZ: write trajectory of task variable into the file
 void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
-  uint i,k, t,m, T=nTime();
+  uint i, k, m, T=nTime();
   uint ind = -1;
   uint num=T; m=nTasks();
    for(i=0; i<m; i++)
@@ -374,6 +375,7 @@ void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,cons
    }
    ofstream out(file); y_traj.writeRaw(out); out.close(); 
 }
+
 //overload the display method to include variances
 void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char *text, bool reportVariables){
   if(x){ if(x->N==qDim()) setq(*x); else setx(*x); }
@@ -418,10 +420,14 @@ double soc::SocSystem_Ors::getTau(bool scaled){
 void soc::SocSystem_Ors::getq0(arr& q){ q=s->q0; }
 void soc::SocSystem_Ors::setq0(const arr& q){ s->q0=q; }
 void soc::SocSystem_Ors::getv0(arr& v){ v=s->v0; }
-void soc::SocSystem_Ors::getqv0(arr& q_){
-  q_.setBlockVector(s->q0, s->v0);
+void soc::SocSystem_Ors::getx0(arr& x){
+  if(!dynamic){
+    x=s->q0;
+  }else{
+    x.setBlockVector(s->q0, s->v0);
+  }
 }
-void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ getq0(q); getv0(qd); }
+void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ q=s->q0; qd=s->v0; }
 void soc::SocSystem_Ors::getW(arr& W, uint t){
   W=s->W;
   if(stepScale(t)){
@@ -485,16 +491,20 @@ void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   for_list(i, v, vars)  if(v->active)  v->updateState();
 }
 
-void soc::SocSystem_Ors::setqv(const arr& q_, uint t){
-  uint n=q_.N/2;
-  CHECK(q_.N==2*n, "");
-  arr q, v;
-  q.referToSubRange(q_, 0, n-1);
-  v.referToSubRange(q_, n, 2*n-1);
-  setqv(q, v);
+void soc::SocSystem_Ors::setx(const arr& x, uint t){
+  if(!dynamic){
+    setq(x);
+  }else{
+    uint n=x.N/2;
+    CHECK(x.N==2*n, "");
+    arr q, v;
+    q.referToSubRange(x, 0, n-1);
+    v.referToSubRange(x, n, 2*n-1);
+    setqv(q, v);
+  }
 }
 
-void soc::SocSystem_Ors::setx0AsCurrent(){
+void soc::SocSystem_Ors::setx0ToCurrent(){
   ors->getJointState(s->q0, s->v0);
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
 }

@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::GrabCutSegmentation Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html">objectexpl::core::GrabCutSegmentation</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a> &#124;
+<a href="#pri-methods">Private Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::GrabCutSegmentation Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::GrabCutSegmentation" --><!-- doxytag: inherits="objectexpl::core::SegmentationInterface" -->
+<p>Segmentiert ein Bild mittels dem GrabCut-Algorithmus.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="GrabCutSegmentation_8h_source.html">GrabCutSegmentation.h</a>&gt;</code></p>
+<div class="dynheader">
+Klassendiagramm für objectexpl::core::GrabCutSegmentation:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classobjectexpl_1_1core_1_1GrabCutSegmentation.png" usemap="#objectexpl::core::GrabCutSegmentation_map" alt=""/>
+  <map id="objectexpl::core::GrabCutSegmentation_map" name="objectexpl::core::GrabCutSegmentation_map">
+<area href="classobjectexpl_1_1core_1_1SegmentationInterface.html" alt="objectexpl::core::SegmentationInterface" shape="rect" coords="0,0,232,24"/>
+</map>
+</div>
+
+<p><a href="classobjectexpl_1_1core_1_1GrabCutSegmentation-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#aef0065174d289a2f5855dc99c55452da">segment</a> (const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Liefert das segmentierte Bild in binär Form zurück.  <a href="#aef0065174d289a2f5855dc99c55452da"></a><br/></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Rect&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a0fdbbb6136854c0b2c5cff4157e5eff6">expandBoundingBox</a> (cv::Rect rect, int sizeW, int sizeH)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Vergrößert ein umschließendes Rechteck.  <a href="#a0fdbbb6136854c0b2c5cff4157e5eff6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a25d02aaacf78535fdc19ba1b1c2e53ee">setForegroundModel</a> (cv::Mat floodMask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt das Vordergrundmodell für den Grab-Cut Algorithmus.  <a href="#a25d02aaacf78535fdc19ba1b1c2e53ee"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a5a3ef8aee3f7625c90a0c4d00e85ad74">setBackroundModel</a> (cv::Mat surfaceMask, cv::Mat1f depthMask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt das Hintergrundmodell für den Grab-Cut Algorithmus.  <a href="#a5a3ef8aee3f7625c90a0c4d00e85ad74"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a93739dfb56d1aa3bad4786506af7d05c">saveDebugModels</a> (cv::Mat &amp;grabCutMask, cv::Rect floodRect)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Speichert das Grab-Cut graphisch in ein Farbbild ab.  <a href="#a93739dfb56d1aa3bad4786506af7d05c"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Segmentiert ein Bild mittels dem GrabCut-Algorithmus. </p>
+<p>Als Bibliothek wird der GrabCut-Algorithmus in OpenCV2 benutzt. Für die Erzeugung des Vordergrundmodells wird ein FloodFill Algorithmus angewendet, siehe <a class="el" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html" title="Segmentiert ein Bild mittels dem Flood-Fill Algorithmus.">FloodFillSegmentation</a>. Als Hintergrundmodell dient zum einem die zugehörigen Pixel der planaren Hauptfläche und alle Pixel die außerhalb des umschließenden Rechtecks vom Flood-Fill Algorithmus gehören.</p>
+<dl class="see"><dt><b>Siehe auch:</b></dt><dd>OpenCV2 <a href="http://opencv.willowgarage.com">http://opencv.willowgarage.com</a> </dd></dl>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a0fdbbb6136854c0b2c5cff4157e5eff6"></a><!-- doxytag: member="objectexpl::core::GrabCutSegmentation::expandBoundingBox" ref="a0fdbbb6136854c0b2c5cff4157e5eff6" args="(cv::Rect rect, int sizeW, int sizeH)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Rect GrabCutSegmentation::expandBoundingBox </td>
+          <td>(</td>
+          <td class="paramtype">cv::Rect&nbsp;</td>
+          <td class="paramname"> <em>rect</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>sizeW</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>sizeH</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Vergrößert ein umschließendes Rechteck. </p>
+<p>Das umschließende Rechteck kann dabei nicht über 640x480px vergrößert werden.</p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>rect</em>&nbsp;</td><td>Das umschließende Rechteck, welches vergrößert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sizeW</em>&nbsp;</td><td>Die neue Breite des umschließenden Rechteckes. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sizeH</em>&nbsp;</td><td>Die neue Höhe des umschließenden Rechteckes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die neue größe des umschließenden Rechteckes. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a93739dfb56d1aa3bad4786506af7d05c"></a><!-- doxytag: member="objectexpl::core::GrabCutSegmentation::saveDebugModels" ref="a93739dfb56d1aa3bad4786506af7d05c" args="(cv::Mat &amp;grabCutMask, cv::Rect floodRect)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void GrabCutSegmentation::saveDebugModels </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat &amp;&nbsp;</td>
+          <td class="paramname"> <em>grabCutMask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Rect&nbsp;</td>
+          <td class="paramname"> <em>floodRect</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Speichert das Grab-Cut graphisch in ein Farbbild ab. </p>
+<p>Folgende Farben im Bild kodieren das Modell: </p>
+<ul>
+<li>
+hellrot: Pixel gehört wahrscheinlich zum Hintergrund </li>
+<li>
+rot: Pixel gehört sicher zum Hintergrund </li>
+<li>
+hellgrün: Pixel gehört wahrscheinlich zum Vordergrund </li>
+<li>
+grün: Pixel gehört sicher zum Vordergrund </li>
+</ul>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>Nur für Testzwecke.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>grabCutMask</em>&nbsp;</td><td>Die Maske vom Grab-Cut Algorithmus. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>floodRect</em>&nbsp;</td><td>Das umschließende Rechteck vom Flood-Fill Algorithmus. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aef0065174d289a2f5855dc99c55452da"></a><!-- doxytag: member="objectexpl::core::GrabCutSegmentation::segment" ref="aef0065174d289a2f5855dc99c55452da" args="(const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b GrabCutSegmentation::segment </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1b&nbsp;</td>
+          <td class="paramname"> <em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Point2d&nbsp;</td>
+          <td class="paramname"> <em>startPoint</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Liefert das segmentierte Bild in binär Form zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das Bild, was segmenteirt werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mask</em>&nbsp;</td><td>Eine Maske die definiert welche Pixel bei der Segmentierung ignoriert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>startPoint</em>&nbsp;</td><td>Der Ausgangspunkt wo die Segmentierung gestartet wird. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Das segmentierte Bild in binär Form (1=Objektpixel; 0=sonst). </dd></dl>
+
+<p>Implementiert <a class="el" href="classobjectexpl_1_1core_1_1SegmentationInterface.html#ac06bb5113d75030d2a423fc12bc7926f">objectexpl::core::SegmentationInterface</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a5a3ef8aee3f7625c90a0c4d00e85ad74"></a><!-- doxytag: member="objectexpl::core::GrabCutSegmentation::setBackroundModel" ref="a5a3ef8aee3f7625c90a0c4d00e85ad74" args="(cv::Mat surfaceMask, cv::Mat1f depthMask)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void GrabCutSegmentation::setBackroundModel </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>surfaceMask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1f&nbsp;</td>
+          <td class="paramname"> <em>depthMask</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt das Hintergrundmodell für den Grab-Cut Algorithmus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>surfaceMask</em>&nbsp;</td><td>Die Maske von der planare Hauptfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>depthMask</em>&nbsp;</td><td>Die Maske für die Tiefeninformationen. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a25d02aaacf78535fdc19ba1b1c2e53ee"></a><!-- doxytag: member="objectexpl::core::GrabCutSegmentation::setForegroundModel" ref="a25d02aaacf78535fdc19ba1b1c2e53ee" args="(cv::Mat floodMask)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void GrabCutSegmentation::setForegroundModel </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>floodMask</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt das Vordergrundmodell für den Grab-Cut Algorithmus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>floodMask</em>&nbsp;</td><td>Die binäre Segmentierungsmaske vom FloodFill Algorithmus. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/<a class="el" href="GrabCutSegmentation_8h_source.html">GrabCutSegmentation.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/GrabCutSegmentation.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

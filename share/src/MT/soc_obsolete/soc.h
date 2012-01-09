@@ -72,16 +72,16 @@ struct SocSystemAbstraction{
   virtual uint yDim(uint i) = 0;       ///< dimensionality of the i-th task
   virtual void getq0 (arr& q) = 0;     ///< start joint configuration
   virtual void getv0 (arr& v) = 0;     ///< start joint velocity
-  virtual void getqv0(arr& q_);        ///< start joint configuration and velocity
+  virtual void getqv0(arr& x);        ///< start joint configuration and velocity
   virtual void getqv0(arr& q, arr& qd); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
 
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setq  (const arr& q, uint t=0) = 0;
-  virtual void setqv (const arr& q_, uint t=0);
+  virtual void setx (const arr& x, uint t=0);
   virtual void setqv (const arr& q, const arr& qd, uint t=0);
-  void setx(const arr& x){ if(dynamic) setqv(x); else setq(x); }
+  void setx(const arr& x){ if(dynamic) setx(x); else setq(x); }
   virtual void setq0AsCurrent() = 0;
   virtual void setToq0(){ arr q; getq0(q); setq(q); }
 
@@ -183,7 +183,7 @@ void hierarchicalIKControl(SocSystemAbstraction& soci, arr& dq, uint t, double r
 void bayesianIterateIKControl(SocSystemAbstraction& soci,
                               arr& qt, const arr& qt_1, uint t, double eps, uint maxIter);
 void bayesianIKTrajectory  (SocSystemAbstraction& soci, arr& q, double eps=-1);
-void bayesianDynamicControl(SocSystemAbstraction& soci, arr& qv, const arr& qv_1, uint t, arr *v=NULL, arr *Vinv=NULL);
+void bayesianDynamicControl(SocSystemAbstraction& soci, arr& x, const arr& x_1, uint t, arr *v=NULL, arr *Vinv=NULL);
 void bayesianIKControl2    (SocSystemAbstraction& soci, arr& q , const arr& q_1 , uint t, arr *v=NULL, arr *Vinv=NULL);
 
 
@@ -466,11 +466,11 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
   uint yDim(uint i);
   void getq0 (arr& q);
   void getv0 (arr& v);
-  void getqv0(arr& q_);
+  void getqv0(arr& x);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq  (const arr& q, uint t=0);
-  void setqv (const arr& q_, uint t=0);
+  void setx (const arr& x, uint t=0);
   void setqv (const arr& q, const arr& qd, uint t=0);
   void setq0AsCurrent();
   //void geth  (arr& h);
@@ -523,11 +523,11 @@ struct SocSystem_Toy: public virtual SocSystemAbstraction{
   uint yDim(uint i);
   void getq0 (arr& q);
   void getv0 (arr& v){throw("NIY");}
-  void getqv0(arr& q_);
+  void getqv0(arr& x);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq  (const arr& q, uint t=0);
-  void setqv (const arr& q_, uint t=0);
+  void setx (const arr& x, uint t=0);
   void setqv (const arr& q, const arr& qd, uint t=0);
   void setq0AsCurrent();
   void geth  (arr& h);

@@ -3,7 +3,7 @@
 #include "MT/util.h"
 #include <DZ/WritheMatrix.h> 
 
-struct WritheSegmentTest:public OptimizationProblem {
+struct WritheSegmentTest:public ScalarFunction {
   ors::Vector c,d;
   arr Jq;
 
@@ -13,7 +13,7 @@ struct WritheSegmentTest:public OptimizationProblem {
     Jq.resize(6,6);
     rndUniform(Jq,-1.,1.,false); 
   }
-  double f(arr* J, const arr& q,int i=-1){
+  double fs(arr* J, const arr& q){
     CHECK(q.nd==1 && q.N==6,"");
     arr x = Jq * q; //we assume the point positions are a random transformation from q parameters
     ors::Vector a,b;
@@ -31,7 +31,7 @@ struct WritheSegmentTest:public OptimizationProblem {
  
 };
 
-struct WritheMatrixTest:public OptimizationProblem{
+struct WritheMatrixTest:public VectorFunction{
   uint N,n;
   arr rope2;
   arr Jq;
@@ -47,7 +47,7 @@ struct WritheMatrixTest:public OptimizationProblem{
       
   }
 
-  void F(arr& y, arr* J, const arr& q, int i=-1){ //TODO check EVERYTHING!!!
+  void fv(arr& y, arr* J, const arr& q){ //TODO check EVERYTHING!!!
     arr NewJq = one_point_jacobian; NewJq.append(Jq); // trick for one more point in rope 
     arr rope1 = NewJq * q; //we assume the rope is a random projection of the parameters q
     rope1.reshape(N+1,3); // rope = segments+1
@@ -62,7 +62,7 @@ struct WritheMatrixTest:public OptimizationProblem{
 };
 
 
-struct WritheScalarTest:public OptimizationProblem{
+struct WritheScalarTest:public VectorFunction{
   uint N,n;
   arr rope2;
   arr Jq;
@@ -78,7 +78,7 @@ struct WritheScalarTest:public OptimizationProblem{
       
   }
 
-  void F(arr& y, arr* J, const arr& q, int i=-1){ //TODO check EVERYTHING!!!
+  void fv(arr& y, arr* J, const arr& q){ //TODO check EVERYTHING!!!
     arr NewJq = one_point_jacobian; NewJq.append(Jq); // trick for one more point in rope 
     arr rope1 = NewJq * q; //we assume the rope is a random projection of the parameters q
     rope1.reshape(N+1,3); // rope = segments+1
@@ -96,11 +96,11 @@ struct WritheScalarTest:public OptimizationProblem{
 
 void WritheGradientCheck(){
   //check WritheSegment
-  WritheSegmentTest fs = WritheSegmentTest();
+  WritheSegmentTest ff = WritheSegmentTest();
   arr x(2*3);
-  for(uint k=0;k<1;k++){
+  for(uint k=0;k<100;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
-    checkGradient(fs, x, 1e-4);
+    checkGradient(ff, x, 1e-4);
   }
 
 
@@ -110,7 +110,7 @@ void WritheGradientCheck(){
   x.resize(n);
   for(uint k=0;k<100;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
-    checkGradient_vec(fm, x, 1e-4);
+    checkJacobian(fm, x, 1e-4);
   }
 }
 
@@ -121,8 +121,8 @@ void GradientScalarCheck(){
   WritheScalarTest ws =  WritheScalarTest(N,n);
   arr x;
   x.resize(n);
-  for(uint k=0;k<1000;k++){
+  for(uint k=0;k<100;k++){
     rndUniform(x,-1.,1.,false); //test the gradient for a random rope1
-    checkGradient_vec(ws, x, 1e-4);
+    checkJacobian(ws, x, 1e-4);
   }
 }

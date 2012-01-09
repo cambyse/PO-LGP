@@ -159,7 +159,7 @@ void UrgInterface::scanLine(arr & line){
   line = laserConvertCartesian(*s->urg,s->data,n);
 }
  
-UrgInterface::UrgInterface(){
+UrgInterface::UrgInterface():Process("Urg"){
   s = new UrgWorkspace;
   s->urg = new urg_t();
   s->parameter = new urg_parameter_t();

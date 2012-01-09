@@ -14,6 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
+#ifdef MT_OPENCV
+
 #include <MT/array.h>
 #include <MT/util.h>
 
@@ -1055,3 +1057,4 @@ void np::merge(byteA& imgLR, const byteA& imgL, const byteA& imgR)
     cvCvtColor(&cvimgR, &cvtemp, CV_GRAY2BGR);
 };
 
+#endif

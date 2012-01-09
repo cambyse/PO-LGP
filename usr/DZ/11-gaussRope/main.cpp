@@ -30,7 +30,7 @@ void createMyStandardRobotTaskVariables(soc::SocSystem_Ors& sys){
 }
 
 void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T,double endPrec){
-  sys.setx0AsCurrent();
+  sys.setx0ToCurrent();
   
   //load parameters only once!
   static bool firstTime=true;
@@ -132,18 +132,18 @@ int problem4(){
   soc.setTaskVariables(Tlist);   
  plot_writhe(wr->y_target,wrsize);
   //plot_writhe(wr->y,wrsize);  
- arr b,Binv,R,r;             
+ arr b,Binv,R,r;               
  int cnt;        
  soc.setx(x0);
  OneStepDynamicFull(b,Binv,cnt,soc,4.,5e-2,1e-5,1e-3,0,false);
 // cout<<wr->J<<endl;       
  double tm;   
- soc.displayState(&b);
+ soc.displayState(&b); 
 //cout <<b;
 soc.gl->watch();   
     soc.setx(x0); 
     AICO aico(soc);
-    
+      
     
     aico.iterate_to_convergence();  
     q = aico.q;   
@@ -177,7 +177,7 @@ int problem41(){
     
  yy = zeros(wrsize,wrsize);              
  
- arr ID; ID=ones(jsize,1);  
+ arr ID; ID=ones(jsize,1);   
  for (int z=0;z<jsize;z++) ID(z,0)= z+1;//11-z;//z+1;
  soc.initBasics(&ors,&swift,&gl,T,1.0,true,&ones(jsize,1).reshape(jsize) ); //Fix time
  // soc.initBasics(&ors,&swift,&gl,T,2.,true,&ID.reshape(wsize)); //Fix time
@@ -211,7 +211,7 @@ int problem41(){
   reach->y_target = xtarget;   
   reach->setInterpolatedTargetsEndPrecisions(T, 1e1, 1e1, 0., 0.);
   //!
-    MT::Array<TaskVariable*> Tlist;       
+    MT::Array<TaskVariable*> Tlist;        
    Tlist.append(wr);
     Tlist.append(col); Tlist.append(reach);
   soc.setTaskVariables(Tlist);   

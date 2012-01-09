@@ -712,6 +712,10 @@ template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
 //!@name graphs
 // @{
 
+void graphRandomUndirected(uintA& E, uint n, double connectivity);
+void graphRandomFixedDegree(uintA& E, uint N, uint degree);
+void graphRandomTree(uintA& E, uint N, uint roots=1);
+
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphRandomUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, double connectivity);

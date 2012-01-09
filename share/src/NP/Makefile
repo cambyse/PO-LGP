@@ -2,6 +2,8 @@ BASE   = ../..
 NAME   = libnp
 OUTPUT = $(BASE)/lib/$(NAME).so
 
+MAKEMODE = mlrlib
+
 OBJS         = \
 	bumblebee2.o \
 	uvccamera.o \
@@ -9,11 +11,11 @@ OBJS         = \
 	pgr_conversions.o \
 	pgr_registers.o \
 	pgr_stereocam.o \
-	calibrationimage.o \
-	cvwindow.o \
-	cvutils.o \
 	libcolorseg.o \
 	../MT/process.o
+#	cvwindow.o \
+#	cvutils.o \
+#	calibrationimage.o \
 #	cameracalibrator.o \
 #	camera.o \
 #	desc.o \
@@ -26,7 +28,6 @@ OBJS         = \
 #	ucm.o \
 
 
-OPENCV=1
 FELZ = 1
 ANN=1
 

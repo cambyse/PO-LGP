@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/Log.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/Log.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef LOG_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define LOG_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &lt;iostream&gt;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &lt;fstream&gt;</span>
+<a name="l00006"></a>00006 <span class="preprocessor">#include &lt;string&gt;</span>
+<a name="l00007"></a>00007 <span class="preprocessor">#include &lt;sstream&gt;</span>
+<a name="l00008"></a>00008 
+<a name="l00009"></a>00009 <span class="preprocessor">#include &lt;opencv/cv.h&gt;</span>
+<a name="l00010"></a>00010 
+<a name="l00011"></a>00011 <span class="keyword">namespace </span>objectexpl {
+<a name="l00012"></a>00012 <span class="keyword">namespace </span>core {
+<a name="l00013"></a>00013 
+<a name="l00028"></a><a class="code" href="classobjectexpl_1_1core_1_1Log.html">00028</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a> {
+<a name="l00029"></a>00029 
+<a name="l00030"></a>00030 <span class="keyword">public</span>:
+<a name="l00031"></a>00031     <span class="keyword">static</span> <a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>&amp; <a class="code" href="classobjectexpl_1_1core_1_1Log.html#a8aca61326b3a3a4d2d22a2669dedfc77" title="Zum Aufzeichnen von Debug Meldungen.">DEBUG</a>(std::string shortcut);
+<a name="l00032"></a>00032     <span class="keyword">static</span> <a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>&amp; <a class="code" href="classobjectexpl_1_1core_1_1Log.html#a7c869b3f39502ed19a7c03ca1df4f86b" title="Zum Aufzeichnen von Warnung Meldungen.">WARNING</a>(std::string shortcut);
+<a name="l00033"></a>00033     <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>&amp; operator&lt;&lt;(T t){
+<a name="l00034"></a>00034         write(t);
+<a name="l00035"></a>00035         <span class="keywordflow">return</span> *<span class="keyword">this</span>;
+<a name="l00036"></a>00036     }
+<a name="l00037"></a>00037 
+<a name="l00038"></a>00038     <a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>&amp; operator&lt;&lt;(cv::Size t){
+<a name="l00039"></a>00039         std::ostringstream s;
+<a name="l00040"></a>00040         s &lt;&lt; <span class="stringliteral">&quot;[&quot;</span> &lt;&lt; t.width &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; t.height &lt;&lt; <span class="stringliteral">&quot;]&quot;</span>;
+<a name="l00041"></a>00041         write&lt;std::string&gt;(s.str());
+<a name="l00042"></a>00042         <span class="keywordflow">return</span> *<span class="keyword">this</span>;
+<a name="l00043"></a>00043     }
+<a name="l00044"></a>00044 
+<a name="l00045"></a>00045     <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keywordtype">void</span> write(T t){
+<a name="l00046"></a>00046         std::cout &lt;&lt; t &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;
+<a name="l00047"></a>00047         fileLog &lt;&lt; t &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; std::flush;
+<a name="l00048"></a>00048         streamLog &lt;&lt; t &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;
+<a name="l00049"></a>00049     }
+<a name="l00050"></a>00050 
+<a name="l00051"></a>00051     <span class="keyword">static</span> std::string <a class="code" href="classobjectexpl_1_1core_1_1Log.html#a52b84c5ab287a985f6943df1666ff534" title="Zeigt das Ende einer Meldung an.">end</a>();
+<a name="l00052"></a>00052 
+<a name="l00053"></a>00053     <span class="keyword">static</span> <span class="keyword">const</span> std::stringstream&amp; <a class="code" href="classobjectexpl_1_1core_1_1Log.html#ac4a8edbd76d4665328d5d228554862dc" title="Liefert die gesamten Meldungen als Stringstream zurück.">getLog</a>();
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055 <span class="keyword">private</span>:
+<a name="l00056"></a>00056     <a class="code" href="classobjectexpl_1_1core_1_1Log.html#af6071a60aa52b6c1b511f99b4bc1b8fe" title="Default Konstruktor.">Log</a>();
+<a name="l00057"></a>00057     ~<a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>();
+<a name="l00058"></a>00058     <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1Log.html#af91976ebadd955414799131cb442d24c" title="Öffnet eine Log Datei.">open</a>();
+<a name="l00059"></a>00059     <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1Log.html#adcbc96155698ce75c3ff098cb7699c09" title="Schliesst die geöffnete Log Datei.">close</a>();
+<a name="l00060"></a>00060 
+<a name="l00061"></a>00061     <span class="keyword">static</span> <a class="code" href="classobjectexpl_1_1core_1_1Log.html" title="Hilfsklasse zum Loggen von Warnungen und Debug Informationen.">Log</a>* instance;
+<a name="l00062"></a>00062     std::ofstream fileLog;
+<a name="l00063"></a>00063     <span class="keyword">static</span> std::stringstream streamLog;
+<a name="l00064"></a>00064 };
+<a name="l00065"></a>00065 
+<a name="l00066"></a>00066 }
+<a name="l00067"></a>00067 }
+<a name="l00068"></a>00068 <span class="preprocessor">#endif </span><span class="comment">/* LOG_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

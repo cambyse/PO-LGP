@@ -235,10 +235,10 @@ void GetOptimalDynamicTime(double& time, int& counter,
   int cnt;
   counter = 0;
  while (step>min_step) {
-    sys.setqv(b0);
+    sys.setx(b0);
     OneStepDynamicFull(b,Binv,cnt,sys,old_time,alpha,task_eps,eps_alpha,verbose,false); // final posture estimation
     counter+=cnt;
-    sys.setqv(b);
+    sys.setx(b);
     if (sys.taskCost(NULL,T,-1)<old_r) { // in case best costs do not coincide with the best time
       sys.getTaskCosts(R,r,b,T);
       b_old=b;
