@@ -199,7 +199,8 @@ struct OpenGL {
   
   //!@name constructors & destructors
   OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
-  OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  //OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  OpenGL(sOpenGL *_s); //special constructor: used when the underlying system-dependent class exists already
   
   OpenGL *newClone() const;
   ~OpenGL();
