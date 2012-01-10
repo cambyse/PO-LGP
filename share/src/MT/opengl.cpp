@@ -1028,7 +1028,7 @@ void glStandardScene(void*){ NICO; };
 
 //===========================================================================
 //
-// standalone draw routines for larget data structures
+// standalone draw routines for large data structures
 //
 
 #ifdef MT_GL
