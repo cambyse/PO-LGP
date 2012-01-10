@@ -112,7 +112,15 @@ double ExpDifference(const arr & a, const arr & b){
 		dif = 1;
 	if (dif ==1)
 		return dif;
-	for(int i = nDescr-3; i >=0 ; i--){
+
+	if ( a(nDescr-3) == b(nDescr-3))//action
+		dif = 0;
+	else
+		dif = 1;
+	if (dif ==1)
+		return dif;
+
+	for(int i = 0 ;i < nDescr-3; i++){
 		dif = fabs(a(i)-b(i));
 		if (dif ==1)
 			return dif;
@@ -123,8 +131,8 @@ double ExpDifference(const arr & a, const arr & b){
 void EnhanceDataset(){
 	MT::Array< arr > tracedata2(0);
 	arr rewards2;
-	int nS = 4000;//how many samples and also how far back to look
-	for(uint i =0; i < tracedata.N; i++){
+	int nS = 20000;//how many samples and also how far back to look
+	for(uint i =0; i < tracedata.N; i++){//tracedata.N
 		//add originals
 		//cout << endl << tracedata(i) << endl;
 		tracedata2.append(tracedata(i));
@@ -161,7 +169,10 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 		double gamma = 0.8;
 		tracedata =  init_getVector__for_the_nikolay(file);
 		nDescr = tracedata(0).N;
+		if(nDescr == 113)
 		nObj = 10;//constant for now !!!
+		if(nDescr == 59)
+			nObj = 7;
 		str = MT::String(file);
 		rewards = arr(tracedata.N);
 		for(uint i =0 ; i < tracedata.N; i++){
@@ -197,7 +208,11 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 	int besttarg = bestexp(nDescr-2);
 	cout << endl << " best action " << best << "; dist: " << fmin << "; reward: " << rewards(best) << "; values: " << bestact << " " << besttarg << endl;
 	cout << endl    		<< bestexp << endl;
-	cout << endl << idxes(best) << endl;
+	cout << current << endl;
+	int idx = idxes(best);
+	cout << tracedata(idx) << endl;
+	cout << tracedata(idx+1) << endl;
+	cout << tracedata(idx+2) << endl;
 	uintA args;  args.append(besttarg);
 	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(MT::String("grab"));
 	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(MT::String("puton"));

@@ -384,7 +384,7 @@ void goal_directed__run_simulator(const char* file_results, const char* file_ors
 	PRINT(file_rules);
 	PRINT(grounding_type);
 	PRINT(thinking_style);
-	cout<<"thinking_style=1 --> random,  thinking_style=2 --> planning"<<endl;
+	cout<<"thinking_style=1 --> random,  thinking_style=2 --> planning,  thinking_style=3 --> value NN trace"<<endl;
 
 	// Set up simulator
 	initSimulator(file_ors, false);
@@ -509,6 +509,7 @@ void goal_directed__run_simulator(const char* file_results, const char* file_ors
 			}
 			else if (thinking_style == 3) {
 				action =  PredictTrace(*state_learned,file_prefix_symbols);
+				sim.watch();
 			}
 			else
 				NIY;
@@ -517,6 +518,7 @@ void goal_directed__run_simulator(const char* file_results, const char* file_ors
 			cerr<<"ACTION:  "<<*action<<endl;
 			seq_actions.append(action);
 			TL::RobotManipulationDomain::performAction(action, &sim, 100);
+			sim.relaxPosition();
 		}
 		double total_reward = 0.;
 		double GAMMA = 0.99;
@@ -606,11 +608,18 @@ void symbol_evaluation() {
 
 void collect_simulator_data(uint COLLECT_DATA__NUM_RUNS, uint COLLECT_DATA__NUM_TIMESTEPS) {
 	MT::Array< MT::String > files_ors;
-	files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
-	files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
+
+	files_ors.append(MT::String("ors_situations/sit_7cubes_1.ors"));
+	files_ors.append(MT::String("ors_situations/sit_7cubes_6.ors"));
+
+	/*
+
+	 files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
+	 files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
 	files_ors.append(MT::String("ors_situations/sit_10cubes_3.ors"));
 	files_ors.append(MT::String("ors_situations/sit_10cubes_4.ors"));
 	files_ors.append(MT::String("ors_situations/sit_10cubes_5.ors"));
+	*/
 
 	// Set up logic
 	TL::logicObjectManager::init("language.dat");
@@ -759,7 +768,7 @@ int main(int argc, char** argv){
 	rnd.seed(rand_seed);
 	PRINT_(rand_seed);
 
-	symbol_evaluation();
+//	symbol_evaluation();
 
 
 	uint nik_data;
