@@ -312,18 +312,18 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
 }
 
-void soc::SocSystemAbstraction::fvi (arr& y, arr* J, uint i, const arr& x_i){
+void soc::SocSystemAbstraction::fvi (arr& y, arr& J, uint i, const arr& x_i){
   arr JBar;
   setx(x_i,i);  eval_cost++;
   getTaskCostTerms(y, JBar, x_i, i);
-  if(J) *J = JBar;
+  if(&J) J = JBar;
 }
 
-void soc::SocSystemAbstraction::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+void soc::SocSystemAbstraction::fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j){
   arr PsiI, PsiJ;
   getTransitionCostTerms(y, PsiI, PsiJ, x_i, x_j, i);
-  if(Ji) *Ji = PsiI;
-  if(Jj) *Jj = PsiJ;
+  if(&Ji) Ji = PsiI;
+  if(&Jj) Jj = PsiJ;
 }
 
 
@@ -335,11 +335,11 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
   struct GradientFunction:VectorFunction{
     soc::SocSystemAbstraction *sys;
     uint t;
-    void fv(arr& y, arr *J, const arr& x){
+    void fv(arr& y, arr& J, const arr& x){
       sys->setx(x);
       arr JBar;
       sys->getTaskCostTerms(y, JBar, x, t);
-      if(J){ *J=JBar; cout <<J<<endl; }
+      if(&J){ J=JBar; cout <<J<<endl; }
     }
   } f;
   

@@ -337,9 +337,8 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
     AICO* aico;
     bool reuseOldCostTerms;
     
-    void fv(arr& phi, arr* Jp, const arr& x){
-      CHECK(Jp,"");
-      arr &J=*Jp;
+    void fv(arr& phi, arr& J, const arr& x){
+      CHECK(&J,"");
       //all terms related to task costs
       if(reuseOldCostTerms){
         phi = aico->phiBar(t);  J = aico->JBar(t);
