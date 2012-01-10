@@ -570,10 +570,10 @@ git remote add maserati git@maserati.mi.fu-berlin.de:mlr
 go to your main git folder and type
 \begin{verbatim}
 gedit .git/config
- \end{verbatim}
+\end{verbatim}
 then change all your remotes to maserati, remove any old/conflicting
 origins entries, it should look like this:
- \begin{verbatim}
+\begin{verbatim}
 [branch "master"]
   remote = maserati
   merge = refs/heads/master
@@ -613,7 +613,7 @@ git branch -a
 git remote show maserati
 git checkout <branch>
 git branch <new-branch>
-git branch --track <new-branch> <remote-branch>
+git branch --track <new-branch> <existing-remote-branch>
 // set branch to pull from some remote branch
 git branch --set-upstream <existing-branch> <remote-branch-to-be-tracked>
 // Example: git branch --set-upstream branch123 origin/branch123
@@ -748,6 +748,8 @@ git config --get http.proxy
 \end{itemize}
 
 \subsubsection{Proposal for simplifying mlr git macros!}
+
+DONE - is included in share/bin!
 
 \begin{description}
 \item[GIT-newBranch \$1]
