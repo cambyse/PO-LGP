@@ -248,7 +248,7 @@ struct OpenGL {
   void capture(byteA &img, int w, int h, ors::Camera *cam);
   void captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline);
   
-#ifdef MT_QTGLUT
+#if 0
   void createOffscreen(int width, int height);
   void offscreenGrab(byteA& image);
   void offscreenGrab(byteA& image, byteA& depth);
