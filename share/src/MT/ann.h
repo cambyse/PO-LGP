@@ -8,10 +8,8 @@
 // Approximate Nearest Neighbor Search (kd-trees, etc)
 //
 
-struct sANN; //private space
-
 struct ANN {
-  sANN *s;
+  struct sANN *s;
   
   arr X;       //the data set for which a ANN tree is build
   uint buffer; //a tree is only rebuild if there are more than 'buffer' new points appended [default: 20]

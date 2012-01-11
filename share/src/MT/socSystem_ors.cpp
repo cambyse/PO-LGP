@@ -24,7 +24,7 @@
 // SocSystem_Ors
 //
 
-struct soc::SocSystem_Ors_Workspace {
+struct soc::sSocSystem_Ors {
   arr q0, v0, W, H_rate, Q_rate, v_act;
   arr q_external;
   
@@ -35,7 +35,7 @@ struct soc::SocSystem_Ors_Workspace {
 };
 
 soc::SocSystem_Ors::SocSystem_Ors():SocSystemAbstraction::SocSystemAbstraction(){
-  s = new SocSystem_Ors_Workspace;
+  s = new sSocSystem_Ors;
   ors   = NULL;
   swift = NULL;
   vars = NULL;
@@ -662,7 +662,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
                                    const arr& endeffector_target,
                                    const char* endeffector_name,
                                    const arr& W){
-  static soc::SocSystem_Ors_Workspace s;
+  static soc::sSocSystem_Ors s;
 
   //setup the workspace
   //s.vars = globalSpace;

@@ -13,7 +13,7 @@ namespace soc {
 /** \brief an implementation of the SocSystemAbstraction that simulates a
     single 1D point mass on a spring */
 struct SocSystem_Analytical: public virtual SocSystemAbstraction{
-  struct SocSystem_Analytical_Workspace *s;
+  struct sSocSystem_Analytical *s;
 
   SocSystem_Analytical();
   virtual ~SocSystem_Analytical();

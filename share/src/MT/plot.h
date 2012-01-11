@@ -34,9 +34,8 @@ typedef MT::Array<Gaussian*> GaussianL;
 
 typedef enum { opengl, xfig, gnupl } PlotMode;
 
-struct PlotModuleWorkspace;
 struct PlotModule {
-  PlotModuleWorkspace *s;
+  struct sPlotModule *s;
   PlotMode mode;
   OpenGL *gl;
   bool light, grid, colors, drawBox, drawDots, perspective;

@@ -10,15 +10,13 @@
 
 namespace soc {
 
-struct SocSystem_Ors_Workspace;
-
 /** \brief an implementation of the SocSystemAbstraction using the \ref ors
     simulator */
 struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *s;
+  struct sSocSystem_Ors *s;
   
   SocSystem_Ors();
   virtual ~SocSystem_Ors();

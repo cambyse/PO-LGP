@@ -2,6 +2,7 @@
 #include <MT/process.h>
 #include <MT/util.h>
 
+#include "process_monitor.h"
 
 //===========================================================================
 //
@@ -73,7 +74,7 @@ void testLoop(){
 struct IntVar:public Variable{
   FIELD(int, x);
 
-  IntVar():Variable("IntVar"){ x=rnd(1000); }
+  IntVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };
 
 struct Maxxer:public Process{
@@ -92,8 +93,9 @@ struct Maxxer:public Process{
 };
 
 void testMultiAccess(){
-  MT::Array<IntVar> vars(40);
-  MT::Array<Maxxer> procs(100);
+  uint n=10;
+  MT::Array<IntVar> vars(n);
+  MT::Array<Maxxer> procs(2*n);
 
   for(uint i=0;i<procs.N;i++){
     procs(i).a = &vars.rndElem();
@@ -103,6 +105,10 @@ void testMultiAccess(){
   for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.01,.1));
   MT::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
+
+  dumpInfo();
+
+  
   
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
   cout <<endl;

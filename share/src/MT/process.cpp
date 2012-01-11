@@ -20,6 +20,8 @@
 
 VariableL globalVariables;
 ProcessL  globalProcesses;
+uint globalVariableCount=0;
+uint globalProcessCount=0;
 
 
 //===========================================================================
@@ -331,17 +333,9 @@ void CycleTimer::cycleDone(){
 // Variable
 //
 
-struct sVariable {
-  Variable *p;
-  //ofstream os;
-  Lock lock;
-  ConditionVariable cond;
-  
-  sVariable(Variable *_p){ p = _p; }
-};
-
 Variable::Variable(const char *_name){
   s = new sVariable(this);
+  id = globalVariableCount++;
   name = _name;
   //s->os.open(STRING("var-" <<name <<".log"));
   globalVariables.memMove=true;
@@ -355,26 +349,24 @@ Variable::~Variable(){
 };
 
 void Variable::readAccess(Process *p){
-  if(p) p->V.setAppend(this);
-  //cout <<(p?p->name:"NULL") <<" reads  " <<name <<" state=";
+  if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.readLock();
-  //_write(cout);
-  //cout <<endl;
+  //cout <<(p?p->name:"NULL") <<" reads  " <<name <<" state=";
 }
 
 void Variable::writeAccess(Process *p){
-  if(p) p->V.setAppend(this);
-  //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
+  if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.writeLock();
-  //_write(cout);  cout <<endl;
-  //_write(s->os);  s->os <<endl;
+  //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
 }
 
 void Variable::deAccess(Process *p){
   //cout <<(p?p->name:"NULL") <<" frees  " <<name <<" state=";
-  //_write(cout);
-  //cout <<endl;
   s->lock.unlock();
+}
+
+int Variable::lockState(){
+  return s->lock.state;
 }
 
 int  Variable::getCondition(){
@@ -403,35 +395,10 @@ void Variable::waitForConditionNotEq(int i){
 // Process
 //
 
-enum ThreadState { tsOPEN=-1, tsCLOSE=-2, tsLOOPING=-3, tsBEATING=-4, tsSYNCLOOPING=-5, tsIDLE=0 }; //positive states indicate steps-to-go
-
-struct sProcess {
-  pthread_t thread;                    ///< pthread pointer
-  pid_t tid;                           ///< system thread id
-  ConditionVariable threadCondition;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
-  CycleTimer timer;                    ///< measures cycle and busy times
-  Metronome *metronome;                ///< used for beat-looping
-  uint skips;                          ///< how often a step was requested but (because busy) skipped
-  int threadPriority;                  ///< priority of this thread
-  
-  bool broadcastDone;
-  ConditionVariable *syncCondition;
-  
-  sProcess(){
-    skips=0;
-    threadCondition.setState(tsCLOSE);
-    tid=0;
-    threadPriority=0;
-    thread=NULL;
-    broadcastDone=false;
-    syncCondition=NULL;
-  };
-  
-  static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
-};
 
 Process::Process(const char *_name){
   s = new sProcess();
+  id = globalProcessCount++;
   name = _name;
   globalProcesses.memMove=true;
   globalProcesses.append(this);

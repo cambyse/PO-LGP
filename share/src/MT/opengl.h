@@ -150,14 +150,12 @@ struct Camera {
 // OpenGL class
 //
 
-struct sOpenGL;
-
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
 struct OpenGL {
-  sOpenGL *s;
+  struct sOpenGL *s;
   
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };

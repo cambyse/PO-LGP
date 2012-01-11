@@ -16,24 +16,22 @@ struct Monitor;
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 
-#define READ_ACCESS(var, name){\
-    var->readAccess(this);\
-    name=var->name;\
-    var->deAccess(this);
 
 //===========================================================================
 //
-// Info for Variables fields
+// automatic setters and getters and info for Variable fields
 //
 
 struct _Variable_field_info_base{
   void *p;
   const char* name;
+  virtual void write_value(ostream& os) const = 0;
 };
   
 template<class T>
 struct _Variable_field_info:_Variable_field_info_base{
   _Variable_field_info(T *_p, const char* _name){ p=_p; name=_name; }
+  void write_value(ostream& os) const{ os <<*((T*)p); }
 };
 
 #define FIELD(type, name) \
@@ -47,6 +45,7 @@ struct _Variable_field_info:_Variable_field_info_base{
   inline void reg_##name(){ \
     fields.append(new _Variable_field_info<type>(&name,#name)); }
 
+
 //===========================================================================
 //
 // Variable
@@ -54,6 +53,7 @@ struct _Variable_field_info:_Variable_field_info_base{
 
 struct Variable {
   struct sVariable *s; //private
+  uint id; //unique identifyer
   const char* name;
   MT::Array<_Variable_field_info_base*> fields;
 
@@ -70,7 +70,10 @@ struct Variable {
   void readAccess(Process*);  //might set the caller to sleep
   void writeAccess(Process*); //might set the caller to sleep
   void deAccess(Process*);
-  
+
+  //-- info
+  int lockState(); // 0=no lock, -1=write access, positive=#readers
+
   //-- the following is preliminary
 
   //-- condition variable control, to be used by processes to broadcast (publish) or wait for broadcast (subscribe)
@@ -94,6 +97,7 @@ struct Variable {
 
 struct Process {
   struct sProcess *s;
+  uint id; //unique identifyer
   const char* name;
   VariableL V;
   
