@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "robot.h"
 #include "vision.h"
 #include "guiModule.h"

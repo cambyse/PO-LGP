@@ -127,6 +127,9 @@ public:
   MT::String getColorString(uint obj);
   void getTablePosition(double& x1, double& x2, double& y1, double& y2);
   
+  double getHeight(uint id);
+  double getOverallHeight(uintA& objects);
+  
   // --------------------------------
   // STATE INFORMATION
   // --------------------------------

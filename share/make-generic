@@ -319,8 +319,8 @@ endif
 ifeq ($(OPENCV),1)
 CXXFLAGS  += -DMT_OPENCV
 ## DON'T USE THE UBUNTU VERSION?
-CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
-LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
+#CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
+#LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
 LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
 endif
 
@@ -424,7 +424,7 @@ endif
 #von NILS: -lcxcore -lcv -lcvaux -lhighgui -lml -Wl,-rpath,/home/mtoussai/svn/mlr/nils/libs/opencv/lib/ -lpgrlibdcstereo -ldc1394 -lraw1394 -pthread-lopensurf_i686 -lann11-debr
 
 ifeq ($(NILS),1)
-LinuxLibs += -lnp -ldc1394
+LinuxLibs += -lnp
 DEPEND += externalMake_src/NP
 endif
 
@@ -492,7 +492,9 @@ info: force
 	@echo "  PWD =" "$(PWD)"
 	@echo "  BASE =" "$(BASE)"
 	@echo "  NAME =" "$(NAME)"
+	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo "  LIBPATH =" "$(LIBPATH)"
+	@echo "  LIB =" "$(LIB)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"

@@ -1,3 +1,4 @@
+#include "util.h"
 #include "MLcourse.h"
 
 arr beta_true;

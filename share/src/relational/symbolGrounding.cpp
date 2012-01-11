@@ -638,8 +638,8 @@ void relational::FullExperience::sanityCheck(MT::Array< FullExperience* >& exper
   uint i;
   FOR1D(experiences, i) {
     if (i==0) continue;
-    if (i%30==0) continue;
-//     if (i%10==0) continue;
+//     if (i%30==0) continue;
+    if (i%10==0) continue;
     if (i%9==0) continue;
     if (experiences(i)->state_continuous_pre != experiences(i-1)->state_continuous_post) {
       cerr << "FullExperience::sanityCheck failed:  continuous states different "<<(i-1)<<" to "<<i << endl;

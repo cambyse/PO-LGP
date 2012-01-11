@@ -1252,8 +1252,6 @@ void RobotManipulationSimulator::getTablePosition(double& x1, double& x2, double
 
 
 
-
-
 // ==============================================================================
 // ==============================================================================
 // ==============================================================================
@@ -1333,7 +1331,6 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
 }
 
 
-
 bool RobotManipulationSimulator::isUpright(uint id) {
   // balls are always upright
   if (getOrsType(id) == ors::sphereST)
@@ -1360,6 +1357,32 @@ uint RobotManipulationSimulator::getInhand(uint man_id){
 uint RobotManipulationSimulator::getInhand() {
   return getInhand(convertObjectName2ID("fing1c"));
 }
+
+
+double RobotManipulationSimulator::getHeight(uint id) {
+  return getPosition(id)[2];
+}
+
+
+double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
+  uint i;
+  double height = 0.;
+  uint obj_inhand = getInhand();
+  double table_height = getHeight(getTableID());
+  cout<<"table "<<table_height<<endl;
+  FOR1D(objects, i) {
+    if (objects(i) == obj_inhand) {
+      cout << objects(i) << " 0 (inhand)"<<endl;
+      continue;
+    }
+    double o_height = (getHeight(objects(i)) - table_height);
+    cout<<objects(i)<<" "<<o_height<<endl;
+    height += o_height;
+  }
+//   height /= 1.0 * objects.N;
+  return height;
+}
+
 
 
 void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){

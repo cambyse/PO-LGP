@@ -609,18 +609,16 @@ void symbol_evaluation() {
 void collect_simulator_data(uint COLLECT_DATA__NUM_RUNS, uint COLLECT_DATA__NUM_TIMESTEPS) {
 	MT::Array< MT::String > files_ors;
 
-	files_ors.append(MT::String("ors_situations/sit_7cubes_1.ors"));
-	files_ors.append(MT::String("ors_situations/sit_7cubes_6.ors"));
+// 	files_ors.append(MT::String("ors_situations/sit_7cubes_1.ors"));
+// 	files_ors.append(MT::String("ors_situations/sit_7cubes_6.ors"));
 
-	/*
-
-	 files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
-	 files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
-	files_ors.append(MT::String("ors_situations/sit_10cubes_3.ors"));
-	files_ors.append(MT::String("ors_situations/sit_10cubes_4.ors"));
-	files_ors.append(MT::String("ors_situations/sit_10cubes_5.ors"));
-	*/
-
+	
+	files_ors.append(MT::String("ors_situations/size_different/sit_10cubes_1.ors"));
+	files_ors.append(MT::String("ors_situations/size_different/sit_10cubes_2.ors"));
+	files_ors.append(MT::String("ors_situations/size_different/sit_10cubes_3.ors"));
+	files_ors.append(MT::String("ors_situations/size_different/sit_10cubes_4.ors"));
+	files_ors.append(MT::String("ors_situations/size_different/sit_10cubes_5.ors"));
+	
 	// Set up logic
 	TL::logicObjectManager::init("language.dat");
 
@@ -700,9 +698,10 @@ void collect_simulator_data(uint COLLECT_DATA__NUM_RUNS, uint COLLECT_DATA__NUM_
 					PRINT(w_sigma);  PRINT2(w_sigma, cerr);
 				}
 #endif
-				double reward_value = reward->evaluate(*state_learned);
-				PRINT(reward_value);  PRINT2(reward_value, cerr);
-				seq_rewards.append(reward_value);
+				// double reward_value = reward->evaluate(*state_learned);
+      				double reward_value = sim.getOverallHeight(movable_objs);
+			        PRINT(reward_value);  PRINT2(reward_value, cerr);
+			        seq_rewards.append(reward_value);
 				if (t > 0) {
 					relational::FullExperience* fex = new relational::FullExperience;
 					fex->state_continuous_pre = *seq_states_cont(t-1);
@@ -768,7 +767,7 @@ int main(int argc, char** argv){
 	rnd.seed(rand_seed);
 	PRINT_(rand_seed);
 
-	symbol_evaluation();
+// 	symbol_evaluation();
 
 
 	uint nik_data;

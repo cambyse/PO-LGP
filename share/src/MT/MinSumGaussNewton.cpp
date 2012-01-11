@@ -1,3 +1,4 @@
+#include "util.h"
 #include "MinSumGaussNewton.h"
 
 void MinSumGaussNewton::setUndirectedGraph(uint n,const uintA& E){

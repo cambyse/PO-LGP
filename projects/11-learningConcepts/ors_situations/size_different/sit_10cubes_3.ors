@@ -214,11 +214,14 @@ body leg4 { X=<t(-.35 -1.05 .3)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.
 # ******************* THIS IS WHERE YOU MIGHT WANT TO APPLY CHANGES *****************************
 
 # lila
-body o1 { X=<t(-0.3 -0.7 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .03] color=[0.4 0 .5] contact }
+body o1 { X=<t(-0.3 -0.7 0.8)>  type=0 mass=.1 size=[.06 .06 .06 .03]
+color=[0.4 0 .5] contact }
 # orange
-body o2 { X=<t(0. -0.6 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .045] color=[1 .5 0] contact }
+body o2 { X=<t(-0.2 -0.51 1.)>  type=0 mass=.1 size=[.06 .06 .06 .045]
+color=[1 .5 0] contact }
 # grau
-body o3 { X=<t(-0.45 -0.4 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .06] color=[0.6 0.5 0.5] contact }
+body o3 { X=<t(-0.2 -0.5 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .06]
+color=[0.6 0.5 0.5] contact }
 # gruen
 body o4 { X=<t(0.3 -0.5 0.8)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[.2 1 0] contact }
 # 
@@ -232,8 +235,8 @@ color=[1 0 0] contact }
 body o8 { X=<t(0.5 -0.5 1.1)>  type=0 mass=1. size=[.08 .08 .08 .06]
 color=[.4 0 .5] contact }
 # 
-body o9 { X=<t(-0.3 -0.45 1.0)>  type=0 mass=1. size=[.08
+body o9 { X=<t(-0.21 -0.51 0.9)>  type=0 mass=1. size=[.08
 .08 .08 .06] color=[.05 0 .7] contact }
 # 
-body o10 { X=<t(-0.3 -0.45 1.1)>  type=0 mass=1. size=[.08 .08 .08 .06]
+body o10 { X=<t(0 -0.55 0.7)>  type=0 mass=1. size=[.08 .08 .08 .06]
 color=[1 .5 .75] contact }

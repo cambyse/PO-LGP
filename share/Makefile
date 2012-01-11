@@ -4,8 +4,8 @@ MLR_LIBS = \
 	src/MT \
 	src/SD \
 	src/NJ \
-	src/DZ \
-#	src/relational \
+	src/relational \
+#	src/DZ \
 
 EXTERN = \
 	extern/libcolorseg/src \

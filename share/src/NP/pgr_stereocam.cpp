@@ -1,3 +1,5 @@
+#ifdef MT_BUMBLE
+
 //=============================================================================
 // Copyright � 2008 Point Grey Research, Inc. All Rights Reserved.
 // 
@@ -868,3 +870,5 @@ writeTriclopsConfigFromCameraToFile( dc1394camera_t* camera,
 // 
 //    return;
 // }
+
+#endif

@@ -1643,7 +1643,7 @@ double TL::RobotManipulationDomain::reward_buildTower(const SymbolicState& s) {
 
 
 void TL::RobotManipulationDomain::calcPiles(const SymbolicState& s, uintA& piles, uint sort_type) {
-  uint DEBUG = 3;
+  uint DEBUG = 0;
   if (DEBUG>0) {cout<<" TL::RobotManipulationDomain::calcPiles [START]"<<endl;}
   if (DEBUG>0) {cout<<"STATE:  ";  s.write(cout, true);  cout<<endl;}
   bool use_table = false;
