@@ -28,7 +28,7 @@ namespace ors {
 //===========================================================================
 //! shape and joint type enums
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { hingeJT=0, universalJT, fixedJT, sliderJT, ballJT, glueJT };
+enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
 
 //===========================================================================
 //! a 3D vector (double[3])
@@ -159,13 +159,13 @@ struct Transformation {
   bool isZero() const{ return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
   
   void addRelativeTranslation(double x, double y, double z);
+  void addRelativeRotationDeg(double degree, double x, double y, double z);
+  void addRelativeRotationRad(double rad, double x, double y, double z);
+  void addRelativeRotationQuat(double s, double x, double y, double z);
   void addRelativeVelocity(double x, double y, double z);
   void addRelativeAngVelocityDeg(double degree, double x, double y, double z);
   void addRelativeAngVelocityRad(double rad, double x, double y, double z);
   void addRelativeAngVelocityRad(double wx, double wy, double wz);
-  void addRelativeRotationDeg(double degree, double x, double y, double z);
-  void addRelativeRotationRad(double rad, double x, double y, double z);
-  void addRelativeRotationQuat(double s, double x, double y, double z);
   
   void appendTransformation(const Transformation& f);     // this = this * f
   void appendInvTransformation(const Transformation& f);     // this = this * f^{-1}
@@ -226,6 +226,7 @@ struct Mesh {
   void clean();
   void flipFaces();
   void makeVerticesRelativeToGroup();
+  Vector getMeanVertex();
   
   //[preliminary]]
   void collectTriGroups();
@@ -819,7 +820,7 @@ void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);
 void shiftTargets(TaskVariableList& CS, int i);
-void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W);
+void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W);
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
@@ -848,7 +849,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 class OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);

@@ -83,7 +83,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
 #define SD_PAR_R(n)  MT::getParameter<double>((n));
 
 void setISPGraspGoals(soc::SocSystem_Ors& sys,uint T, GraspObject *graspobj){
-  sys.setx0AsCurrent();
+  sys.setx0ToCurrent();
 
   /* configuration */
   static bool firstTime=true;
@@ -385,7 +385,13 @@ void problem5(){
 
     ((DefaultTaskVariable*)listFindByName(sys.vars,"appr dir"))->jrel.setText(ax(i)) ;
     activateVars_1step(sys);
-    OneStepDynamicFull(b,B,sys, t/*t,t_min,tm*/,alpha,task_eps,1,false); 
+    int guenter;
+    OneStepDynamicFull(b,B,guenter, sys, t/*t,t_min,tm*/,alpha,task_eps,1e-3,false, false); 
+//     void OneStepDynamicFull(arr& b,arr& Binv,int& counter,
+//                         soc::SocSystemAbstraction& sys,
+//                         double time,double alpha,double task_eps,double eps_alpha,
+//                         bool verbose, bool b_is_initialized);
+    
     /* open fingers */
     b.subRange(7,13) = ARR(.5,-1.,.4,-1.2,.4,-1.2,.4);
     sys.setx(b);
@@ -393,7 +399,7 @@ void problem5(){
     MT_MSG( "Post belief1 :" << b); //MT_MSG( "time:" << tm);
 
     activateVars_2step(sys);
-    OneStepDynamicFull(b,B,sys, t,alpha,task_eps,1,true); 
+    OneStepDynamicFull(b,B,guenter, sys, t,alpha,task_eps,1e-3,true,false); 
     MT_MSG( "Post belief2 :" << b); //MT_MSG( "time:" << tm);
 
     /* see bwdMsg */
@@ -421,7 +427,7 @@ void problem5(){
   /* use full set of TVs */
   activateVars_2step(sys2);
   /* set start position 0; */
-  sys2.setq(q0); sys2.setx0AsCurrent();
+  sys2.setq(q0); sys2.setx0ToCurrent();
 
   AICO solver(sys2);
   solver.useBwdMsg=true;

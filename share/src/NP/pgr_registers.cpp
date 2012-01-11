@@ -1,3 +1,5 @@
+#ifdef MT_BUMBLE
+
 //=============================================================================
 // Copyright © 2008 Point Grey Research, Inc. All Rights Reserved.
 //
@@ -197,4 +199,5 @@ getSensorInfo( dc1394camera_t* 	camera,
    return err;
 }
 
+#endif
 

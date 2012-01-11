@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/ObjectExploration.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/ObjectExploration.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef OBJECTEXPLORATION_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define OBJECTEXPLORATION_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;camera/CameraModel.h&quot;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &quot;saliency/SaliencyMap.h&quot;</span>
+<a name="l00006"></a>00006 <span class="preprocessor">#include &quot;segmentation/ObjectHypothesisGenerator.h&quot;</span>
+<a name="l00007"></a>00007 <span class="preprocessor">#include &quot;robotic/RoboticArm.h&quot;</span>
+<a name="l00008"></a>00008 <span class="preprocessor">#include &quot;utils/PointCloudUtils.h&quot;</span>
+<a name="l00009"></a>00009 <span class="preprocessor">#include &quot;detector/ObjectDetector.h&quot;</span>
+<a name="l00010"></a>00010 <span class="preprocessor">#include &quot;semantic/SemanticFetcherInterface.h&quot;</span>
+<a name="l00011"></a>00011 
+<a name="l00012"></a>00012 <span class="keyword">namespace </span>objectexpl {
+<a name="l00013"></a>00013 <span class="keyword">namespace </span>core {
+<a name="l00014"></a>00014 
+<a name="l00025"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html">00025</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html" title="Die Fassade Klasse für die Kernfunktionalität des Programms.">ObjectExploration</a> {
+<a name="l00026"></a>00026 
+<a name="l00027"></a>00027 <span class="keyword">private</span>:
+<a name="l00029"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5">00029</a>         <span class="keyword">enum</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5" title="Zustände der Zyklusschritte eines Explorationszyklus.">ExploreStates</a> {
+<a name="l00030"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5a2c3fd2c9768d9fe88343d056d8bfe6d0">00030</a>                 UpdateWorld, 
+<a name="l00031"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5a2a40c7b14af9fd2865b3582032544a9b">00031</a>                 GenerateSaliencyMap, 
+<a name="l00032"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5ab5eeac7db55508c0fb2d3bfded4318c0">00032</a>                 GenerateHypothesis, 
+<a name="l00033"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5a05ba2aa90555476f68781a35d70122e0">00033</a>                 CompareHypothesis, 
+<a name="l00034"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5a29ecbe43c38de53b427f11e3463112ff">00034</a>                 InteractWithHypothesis, 
+<a name="l00035"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5a691293bcf95821524159fbec7aab88e2">00035</a>                 AnalyseMovement, 
+<a name="l00036"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5acf808797ba87f05678225e64d005eb9b">00036</a>                 RetrieveSemantic, 
+<a name="l00037"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5acbbcbd255d8ce09071da91264c85c731">00037</a>                 <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5acbbcbd255d8ce09071da91264c85c731" title="Zustand wenn die Objektexploration beendet ist.">Done</a> 
+<a name="l00038"></a>00038         };
+<a name="l00039"></a>00039 
+<a name="l00041"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016">00041</a>         <span class="keyword">enum</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016" title="Zustände der Objekthypothese.">HypothesisState</a> {
+<a name="l00042"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016a64d155a40641c89855930a4a30dff7bc">00042</a>                 ValidAndMoveable, 
+<a name="l00043"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016a6965aeb89b31481400585b175dedbbfa">00043</a>                 ValidAndNotMoveable, 
+<a name="l00044"></a><a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016ada061e98a4fa9ff481454b5993925746">00044</a>                 <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016ada061e98a4fa9ff481454b5993925746" title="Die Objekthypothese ist ungülitg.">Invalid</a> 
+<a name="l00045"></a>00045         };
+<a name="l00046"></a>00046 
+<a name="l00047"></a>00047 <span class="keyword">public</span>:
+<a name="l00048"></a>00048         <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a3332ba12133819f677b4d44beb225f00" title="Default Konstruktor.">ObjectExploration</a>();
+<a name="l00049"></a>00049         <span class="keyword">virtual</span> ~<a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html" title="Die Fassade Klasse für die Kernfunktionalität des Programms.">ObjectExploration</a>();
+<a name="l00050"></a>00050 
+<a name="l00051"></a>00051         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a74d2ad637248ae6aa78b088a7c94c569" title="Initialisiert die Objektexploration.">initialise</a>(std::string memObjFilename, std::string camPoseFilename);
+<a name="l00052"></a>00052         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a0244d66af71235b8968219e097d1abe7" title="Deinitialisert die Objektexploration.">deinitialise</a>();
+<a name="l00053"></a>00053         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#aa8ffb70c5e17141816c84158c8635bc6" title="Stellt den Zustand der Objektexploration auf den Anfangszustand zurück.">reset</a>();
+<a name="l00054"></a>00054         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ab64eb54eecec9d607030c6a3a524ac48" title="Ermittelt die aktuelle Kamera Pose.">calibrateCamera</a>(<span class="keywordtype">bool</span> withCheckerboard = <span class="keyword">false</span>);
+<a name="l00055"></a>00055         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a47ebe21df6204cc828a3c05451e04260" title="Registriert das Objekt zur der Klasse, die für die semantische Information zuständig ist...">registerSemanticFetcher</a>(<a class="code" href="classobjectexpl_1_1core_1_1SemanticFetcherInterface.html" title="Definiert die Schnittstelle zum Abfragen der semantischen Information zu einem Objekt.">SemanticFetcherInterface</a>* retriver);
+<a name="l00056"></a>00056         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ad48746efeaa4e7b15241636c53747e2a" title="Führt ein Zyklusschritt für die Objektexplorations aus.">stepExploreWorld</a>();
+<a name="l00057"></a>00057         <span class="keywordtype">int</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a730c042b1e24781d1326315760c803bb" title="Liefert die aktuelle Explorationszyklusanzahl zurück.">getCycleCount</a>();
+<a name="l00058"></a>00058         std::string <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a07b0053a2f3d831be52b38e75c57ee29" title="Gibt den aktuellen Zustand in Klartext zurück.">getExploreStateAsString</a>();
+<a name="l00059"></a>00059 
+<a name="l00060"></a>00060         <span class="keyword">const</span> ntk::RGBDImage&amp; <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a2d0952b0cf99a1800f846dff96849a1c" title="Liefert das aktuelle Frame zurück.">getCurrentFrame</a>();
+<a name="l00061"></a>00061         <span class="keyword">const</span> cv::Mat3b <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#adeb514b3ffcb3835cb76ac0513f5f6c4" title="Liefert das aktuelle Frame mit Annotationen zurück.">getAnnotatedFrame</a>();
+<a name="l00062"></a>00062         <span class="keyword">const</span> cv::Mat3b <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a9f6d3bdc4521a5c833c9881338b254f5" title="Gibt die aktuelle Aufmerksamkeitskarte zurück.">getSaliencyMap</a>();
+<a name="l00063"></a>00063         <span class="keyword">const</span> cv::Mat3b <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a3cb643dfdd94b4696bf0611ac6b31d6c" title="Gibt die Aufmerksamkeitskarte, welche mit der Hemmungskarte maskiert wurde zurück.">getSaliencyMapMasked</a>();
+<a name="l00064"></a>00064         <span class="keyword">const</span> cv::Mat3b <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#accf3844a299bf21fa221be34e291112c" title="Gibt die aktuelle Objekthypothese als segmentiertes Bild im Originalbild zurück.">getSegmentedMap</a>();
+<a name="l00065"></a>00065 
+<a name="l00066"></a>00066         <span class="comment">// Nur für Testzwecke</span>
+<a name="l00067"></a>00067         <span class="comment">/*void glDrawBottomLeft();</span>
+<a name="l00068"></a>00068 <span class="comment">        void glDrawBottomRight();</span>
+<a name="l00069"></a>00069 <span class="comment">        CameraModel* cameraModel();</span>
+<a name="l00070"></a>00070 <span class="comment">        RoboticArm* roboticArm();*/</span>
+<a name="l00071"></a>00071 <span class="keyword">protected</span>:
+<a name="l00072"></a>00072         <span class="keywordtype">void</span> run();
+<a name="l00073"></a>00073 
+<a name="l00074"></a>00074 <span class="keyword">private</span>:
+<a name="l00075"></a>00075         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a6fe252440a4c4232525d90da3d7a5bc5" title="Fügt eine Region die gehemmt werden soll in die Hemmungskarte ein.">inhibitRegion</a>(cv::Mat1b region);
+<a name="l00076"></a>00076 
+<a name="l00080"></a><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html">00080</a>         <span class="keyword">struct </span><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html" title="Datenstruktur für die Annotation im Bild.">ObjectAnnotation</a> {
+<a name="l00081"></a><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a2692d15ff04fde44f15753a60f6b2fe2">00081</a>                 std::string <a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a2692d15ff04fde44f15753a60f6b2fe2" title="Semantische Information zum Objekt.">semantic</a>; 
+<a name="l00082"></a><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a090690e297e9753710da25fea0429b8d">00082</a>                 <span class="keywordtype">bool</span> <a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a090690e297e9753710da25fea0429b8d" title="Beweglichkeit des Objektes.">moveable</a>; 
+<a name="l00083"></a><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a8f633c81f6410d8919eca03187fd099f">00083</a>                 cv::Point2d <a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a8f633c81f6410d8919eca03187fd099f" title="Schwerpunkt des Objektes.">centroid</a>; 
+<a name="l00084"></a><a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a02a394b7c9852400fb935a0525a6eafa">00084</a>                 cv::Rect <a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html#a02a394b7c9852400fb935a0525a6eafa" title="Umschließende Rechteck des Objektes.">boundingBox</a>; 
+<a name="l00085"></a>00085         };
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087         <a class="code" href="classobjectexpl_1_1core_1_1CameraModel.html" title="Stellt den Zugriff für eine Kamera bereit.">CameraModel</a> camera;
+<a name="l00088"></a>00088         <a class="code" href="classobjectexpl_1_1core_1_1SaliencyMap.html" title="Erzeugt eine Aufmerksamkeitskarte aus den gesamten Auffälligkeitskarten.">SaliencyMap</a> saliency;
+<a name="l00089"></a>00089         <a class="code" href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator.html" title="Erzeugt eine Objekthypothese anhand des Ortes mit der maximalen Aufmerksamkeit.">ObjectHypothesisGenerator</a> hypogen;
+<a name="l00090"></a>00090         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html" title="Stellt den Zugriff für ein Roboterarm bereit.">RoboticArm</a> arm;
+<a name="l00091"></a>00091         <a class="code" href="classobjectexpl_1_1core_1_1ObjectDetector.html" title="Ein Objekt Detektor zum Vergleich der memorierten Objekten mit der Objekthypothese.">ObjectDetector</a> detector;
+<a name="l00092"></a>00092         <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html" title="Hilfsmethoden um eine Punktwolke zu analyisieren und zu manipulieren.">PointCloudUtils</a> cloudUtils;
+<a name="l00093"></a>00093         <a class="code" href="classobjectexpl_1_1core_1_1SemanticFetcherInterface.html" title="Definiert die Schnittstelle zum Abfragen der semantischen Information zu einem Objekt.">SemanticFetcherInterface</a>* semantic;
+<a name="l00094"></a>00094 
+<a name="l00095"></a>00095         <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#a428b3a2070fb66285db36a525d7a53c5" title="Zustände der Zyklusschritte eines Explorationszyklus.">ExploreStates</a> exploreState;
+<a name="l00096"></a>00096         <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html#ae5eab9520ab1ccc3d71a942432f65016" title="Zustände der Objekthypothese.">HypothesisState</a> hypoState;
+<a name="l00097"></a>00097         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21" title="Zustände des Roboterarmes.">RoboticArm::ArmStates</a> armState;
+<a name="l00098"></a>00098         <span class="keywordtype">int</span> cycleCount;
+<a name="l00099"></a>00099 
+<a name="l00100"></a>00100         ntk::RGBDImage currentFrame;
+<a name="l00101"></a>00101         pcl::PointCloud&lt;pcl::PointXYZ&gt; currentPointCloud;
+<a name="l00102"></a>00102         std::vector&lt;ObjectAnnotation*&gt; objectAnnotations;
+<a name="l00103"></a>00103         <a class="code" href="structobjectexpl_1_1core_1_1ObjectExploration_1_1ObjectAnnotation.html" title="Datenstruktur für die Annotation im Bild.">ObjectAnnotation</a>* currentObjectAnnotation;
+<a name="l00104"></a>00104 
+<a name="l00105"></a>00105         cv::Mat1d saliencyMap;
+<a name="l00106"></a>00106         cv::Mat1d saliencyMapMasked;
+<a name="l00107"></a>00107         cv::Mat1b hypothesisMask;
+<a name="l00108"></a>00108         cv::Point2d maxSaliencyPoint;
+<a name="l00109"></a>00109         cv::Point2d hypothesisCentroid;
+<a name="l00110"></a>00110         cv::Point2d drivePoint;
+<a name="l00111"></a>00111         cv::Rect hypothesisBoundingBox;
+<a name="l00112"></a>00112 
+<a name="l00113"></a>00113         <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html" title="Datenstruktur für die planare Hauptfläche.">PointCloudSurface</a> surface;
+<a name="l00114"></a>00114         <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html" title="Datenstruktur für die gefundenen Cluster über der planaren Hauptfläche.">ClusterOverSurface</a> currentClusters;
+<a name="l00115"></a>00115         <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html" title="Datenstruktur für die gefundenen Cluster über der planaren Hauptfläche.">ClusterOverSurface</a> movedClusters;
+<a name="l00116"></a>00116         pcl::PointCloud&lt;pcl::PointXYZ&gt; diffClusterCloud;
+<a name="l00117"></a>00117         cv::Mat1b iorMask;
+<a name="l00118"></a>00118         cv::Mat queryImage;
+<a name="l00119"></a>00119         std::string objectSemantic;
+<a name="l00120"></a>00120 
+<a name="l00121"></a>00121         std::string memObjFilename;
+<a name="l00122"></a>00122         std::string camPoseFilename;
+<a name="l00123"></a>00123 };
+<a name="l00124"></a>00124 
+<a name="l00125"></a>00125 };
+<a name="l00126"></a>00126 };
+<a name="l00127"></a>00127 <span class="preprocessor">#endif </span><span class="comment">/* OBJECTEXPLORATION_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

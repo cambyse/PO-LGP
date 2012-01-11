@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/GrabCutSegmentation.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/GrabCutSegmentation.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef GRABCUTSEGMENTATION_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define GRABCUTSEGMENTATION_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;SegmentationInterface.h&quot;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &quot;FloodFillSegmentation.h&quot;</span>
+<a name="l00006"></a>00006 
+<a name="l00007"></a>00007 <span class="keyword">namespace </span>objectexpl {
+<a name="l00008"></a>00008 <span class="keyword">namespace </span>core {
+<a name="l00009"></a>00009 
+<a name="l00020"></a><a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html">00020</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html" title="Segmentiert ein Bild mittels dem GrabCut-Algorithmus.">GrabCutSegmentation</a> : <span class="keyword">public</span> <a class="code" href="classobjectexpl_1_1core_1_1SegmentationInterface.html" title="Definiert die Schnittstelle um ein Bild zu segmentieren.">SegmentationInterface</a> {
+<a name="l00021"></a>00021 <span class="keyword">public</span>:
+<a name="l00022"></a>00022         <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html" title="Segmentiert ein Bild mittels dem GrabCut-Algorithmus.">GrabCutSegmentation</a>();
+<a name="l00023"></a>00023         <span class="keyword">virtual</span> ~<a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html" title="Segmentiert ein Bild mittels dem GrabCut-Algorithmus.">GrabCutSegmentation</a>();
+<a name="l00024"></a>00024 
+<a name="l00025"></a>00025         cv::Mat1b <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#aef0065174d289a2f5855dc99c55452da" title="Liefert das segmentierte Bild in binär Form zurück.">segment</a>(<span class="keyword">const</span> ntk::RGBDImage&amp; image, cv::Mat1b mask, cv::Point2d startPoint);
+<a name="l00026"></a>00026 
+<a name="l00027"></a>00027 <span class="keyword">private</span>:
+<a name="l00028"></a>00028         cv::Rect <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a0fdbbb6136854c0b2c5cff4157e5eff6" title="Vergrößert ein umschließendes Rechteck.">expandBoundingBox</a>(cv::Rect rect, <span class="keywordtype">int</span> sizeW, <span class="keywordtype">int</span> sizeH);
+<a name="l00029"></a>00029         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a25d02aaacf78535fdc19ba1b1c2e53ee" title="Setzt das Vordergrundmodell für den Grab-Cut Algorithmus.">setForegroundModel</a>(cv::Mat floodMask);
+<a name="l00030"></a>00030         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a5a3ef8aee3f7625c90a0c4d00e85ad74" title="Setzt das Hintergrundmodell für den Grab-Cut Algorithmus.">setBackroundModel</a>(cv::Mat surfaceMask, cv::Mat1f depthMask);
+<a name="l00031"></a>00031         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#a93739dfb56d1aa3bad4786506af7d05c" title="Speichert das Grab-Cut graphisch in ein Farbbild ab.">saveDebugModels</a>( cv::Mat&amp; grabCutMask, cv::Rect floodRect);
+<a name="l00032"></a>00032 
+<a name="l00033"></a>00033         <a class="code" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html" title="Segmentiert ein Bild mittels dem Flood-Fill Algorithmus.">FloodFillSegmentation</a> floodFill;
+<a name="l00034"></a>00034         cv::Mat grabCutMask;
+<a name="l00035"></a>00035 };
+<a name="l00036"></a>00036 }
+<a name="l00037"></a>00037 }
+<a name="l00038"></a>00038 <span class="preprocessor">#endif </span><span class="comment">/* GRABCUTSEGMENTATION_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

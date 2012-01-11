@@ -1,3 +1,4 @@
+#include "util.h"
 #include "mdp.h"
 #include "mstep.h"
 
@@ -164,7 +165,7 @@ void mdp::prioritizedSweeping(arr& V, const MDP& mdp, double VerrThreshold){
     //if(!(t%X)) glDisplayRedBlue(V, global_maze.d0, global_maze.d1, false);
   }
   //report to console:
-  cout <<"PS: stopped after " <<t <<" updates" <<endl;
+  std::cout <<"PS: stopped after " <<t <<" updates" <<std::endl;
   // <<" cost=" <<cost
   // <<" value of start state=" <<from->V <<std::endl;
 }

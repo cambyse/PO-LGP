@@ -1,0 +1,620 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::PointCloudUtils Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html">objectexpl::core::PointCloudUtils</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::PointCloudUtils Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::PointCloudUtils" -->
+<p>Hilfsmethoden um eine Punktwolke zu analyisieren und zu manipulieren.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="PointCloudUtils_8h_source.html">PointCloudUtils.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1core_1_1PointCloudUtils-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7cccf3d3a7d13670de5de5682c9ab6da"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::PointCloudUtils" ref="a7cccf3d3a7d13670de5de5682c9ab6da" args="()" -->
+&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a7cccf3d3a7d13670de5de5682c9ab6da">PointCloudUtils</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default Konstruktor. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a61b912a5a9b0a19d9f2373e3ea6ba562">convertNTKToPointCloud</a> (ntk::Mesh ntkMesh)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Konvertiert eine NTK Punktwolke in eine PCL Punktwolke.  <a href="#a61b912a5a9b0a19d9f2373e3ea6ba562"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">ors::Mesh&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a03d08ab8a091cc4ee3ba432aa68d3dd6">convertPointCloudToORSMesh</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; pointCloud)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Konvertiert eine PCL Punkwolke in eine ORS Punktwolke.  <a href="#a03d08ab8a091cc4ee3ba432aa68d3dd6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">ors::Mesh&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a12f48815c1334dd844218e813755f2ba">convertNTKToORSMesh</a> (ntk::Mesh ntkMesh)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Konvertiert eine NTK Dreiecksnetz in eine ORS Dreiecksnetz.  <a href="#a12f48815c1334dd844218e813755f2ba"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a274bd11a6ef848f7377b54eeb6316fd5">depthThresholdCloud</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, double maxZ)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Filtert entfernte Punkte aus der Punktwolke heraus.  <a href="#a274bd11a6ef848f7377b54eeb6316fd5"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a6bb37c17ec5a4a68cd875ec17209608b">downsampleCloud</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, double gapSize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reduziert die Dichte einer Punktwolke.  <a href="#a6bb37c17ec5a4a68cd875ec17209608b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a429330c64589e68ed9ecf5257c0d3446">extractSurface</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extrahiert die planare Hauptfläche aus einer Punktwolke heraus.  <a href="#a429330c64589e68ed9ecf5257c0d3446"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html">ClusterOverSurface</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a3bf965dec3c77f95feb5a0ae04abd35b">extractClustersOverSurface</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, <a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a> table)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extrahiert alle Cluster aus der planaren Hauptfläche heraus.  <a href="#a3bf965dec3c77f95feb5a0ae04abd35b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a5dc18002f7fa59b9acf3b96ce40c7e3e">extractDifferences</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudA, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudB)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extrahiert die Differenz zweier Punktwolken.  <a href="#a5dc18002f7fa59b9acf3b96ce40c7e3e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#ab9e357b4b92195d8624fa026166ca3dc">getCloudWithIndices</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, pcl::PointIndices indices)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extrahiert aus einer Punktwolke nur die Punktwolken mit angegeben Index.  <a href="#ab9e357b4b92195d8624fa026166ca3dc"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#ac3504dd99f6be19600b44aab09991207">concatenateCloud</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudA, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudB)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Verbindet zwei Punktwolken miteinander.  <a href="#ac3504dd99f6be19600b44aab09991207"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">pcl::PointCloud&lt; pcl::PointNormal &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a080416542905aa59680d8f8b2dffbf5e">computeNormals</a> (pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Berechnet die Normalen einer Punktwolke.  <a href="#a080416542905aa59680d8f8b2dffbf5e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a8e7761780aa632e75017bd22739d12a7">writeCloudToDisk</a> (std::string filename, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Speichert die Punktwolke in eine Datei ab.  <a href="#a8e7761780aa632e75017bd22739d12a7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a6c118f1891502802ced6c078962b1c1a">getClusterMask</a> (const ntk::RGBDImage &amp;frame, <a class="el" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html">ClusterOverSurface</a> clusters)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Maske für die Cluster zurück.  <a href="#a6c118f1891502802ced6c078962b1c1a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a614b21bcf8fdc4b679edb0d7547f7681">getSurfaceMask</a> (const ntk::RGBDImage &amp;frame, <a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a> surface)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Maske für die planare Hauptfläche zurück.  <a href="#a614b21bcf8fdc4b679edb0d7547f7681"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a4c06e86175f1d501a89769273003a7a8">getCloudMask</a> (const ntk::RGBDImage &amp;frame, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Maske für eine Punktwolke zurück.  <a href="#a4c06e86175f1d501a89769273003a7a8"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Hilfsmethoden um eine Punktwolke zu analyisieren und zu manipulieren. </p>
+<p>Als Bibliothek wird die Point Cloud Library (kurz PCL) verwendet.</p>
+<p>Folgende Datenstruktur beschreiben eine Punktwolke bzw. eine Dreiecksstruktur, wobei alle höheren Operationen auf der PCL Punktwolke ausgeführt werden.</p>
+<ul>
+<li>
+PCL-Punktwolke: Datenstruktur für eine Punktwolke von der Point Cloud Library  </li>
+<li>
+NTK-Punktwolke: Datenstruktur für eine Punktwolke von der NESTK Bibliothek der Kamera </li>
+<li>
+ORS-Punktwolke: Datenstruktur für eine Punktwolke von der ORS Bibliothek des Simulators </li>
+<li>
+NTK-Mesh: Datenstruktur für ein Dreiecksnetz von der NESTK Bibliothek der Kamera </li>
+<li>
+ORS-Mesh: Datenstruktur für ein Dreiecksnetz von der ORS Bibliothek des Simulators </li>
+</ul>
+<dl class="see"><dt><b>Siehe auch:</b></dt><dd>Point Cloud Library PCL <a href="http://www.pointclouds.org/">http://www.pointclouds.org/</a> </dd></dl>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a080416542905aa59680d8f8b2dffbf5e"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::computeNormals" ref="a080416542905aa59680d8f8b2dffbf5e" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointNormal &gt; PointCloudUtils::computeNormals </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Berechnet die Normalen einer Punktwolke. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke, wovon die Normalen berechnet werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Punktwolke mit den berechneten Normalen. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ac3504dd99f6be19600b44aab09991207"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::concatenateCloud" ref="ac3504dd99f6be19600b44aab09991207" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudA, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudB)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::concatenateCloud </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloudA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloudB</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Verbindet zwei Punktwolken miteinander. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloudA</em>&nbsp;</td><td>Die erste Punktwolke. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>cloudB</em>&nbsp;</td><td>Die zweite Punktwolke. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die verbunende Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a12f48815c1334dd844218e813755f2ba"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::convertNTKToORSMesh" ref="a12f48815c1334dd844218e813755f2ba" args="(ntk::Mesh ntkMesh)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ors::Mesh PointCloudUtils::convertNTKToORSMesh </td>
+          <td>(</td>
+          <td class="paramtype">ntk::Mesh&nbsp;</td>
+          <td class="paramname"> <em>ntkMesh</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Konvertiert eine NTK Dreiecksnetz in eine ORS Dreiecksnetz. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>ntkMesh</em>&nbsp;</td><td>Das NTK Dreiecksnetz was konvertiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Das ORS Dreiecksnetz. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a61b912a5a9b0a19d9f2373e3ea6ba562"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::convertNTKToPointCloud" ref="a61b912a5a9b0a19d9f2373e3ea6ba562" args="(ntk::Mesh ntkMesh)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::convertNTKToPointCloud </td>
+          <td>(</td>
+          <td class="paramtype">ntk::Mesh&nbsp;</td>
+          <td class="paramname"> <em>ntkMesh</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Konvertiert eine NTK Punktwolke in eine PCL Punktwolke. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>ntkMesh</em>&nbsp;</td><td>Die NTK Punktwolke die konvertiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die PCL Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a03d08ab8a091cc4ee3ba432aa68d3dd6"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::convertPointCloudToORSMesh" ref="a03d08ab8a091cc4ee3ba432aa68d3dd6" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; pointCloud)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ors::Mesh PointCloudUtils::convertPointCloudToORSMesh </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>pointCloud</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Konvertiert eine PCL Punkwolke in eine ORS Punktwolke. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>pointCloud</em>&nbsp;</td><td>Die PCL Punktwolke die konvertiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die ORS Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a274bd11a6ef848f7377b54eeb6316fd5"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::depthThresholdCloud" ref="a274bd11a6ef848f7377b54eeb6316fd5" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, double maxZ)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::depthThresholdCloud </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>maxZ</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Filtert entfernte Punkte aus der Punktwolke heraus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke die gefiltert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>maxZ</em>&nbsp;</td><td>Die maximale Entfernung in m, welche die Punkte zulässt. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die gefilterte Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a6bb37c17ec5a4a68cd875ec17209608b"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::downsampleCloud" ref="a6bb37c17ec5a4a68cd875ec17209608b" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, double gapSize)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::downsampleCloud </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>gapSize</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Reduziert die Dichte einer Punktwolke. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke wovon die Dichte reduziert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>gapSize</em>&nbsp;</td><td>Der euklidische Abstand zwischen zwei Punkten in der Punktwolke zu allen Seiten in m. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die ausgedünnte Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a3bf965dec3c77f95feb5a0ae04abd35b"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::extractClustersOverSurface" ref="a3bf965dec3c77f95feb5a0ae04abd35b" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, PointCloudSurface table)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html">ClusterOverSurface</a> PointCloudUtils::extractClustersOverSurface </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a>&nbsp;</td>
+          <td class="paramname"> <em>surface</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Extrahiert alle Cluster aus der planaren Hauptfläche heraus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke aus dem die Cluster extrahiert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>surface</em>&nbsp;</td><td>Die Datenstruktur für eine planare Hauptfläche. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Datenstruktur für die gefundenen Cluster. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a5dc18002f7fa59b9acf3b96ce40c7e3e"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::extractDifferences" ref="a5dc18002f7fa59b9acf3b96ce40c7e3e" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudA, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloudB)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::extractDifferences </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloudA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloudB</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Extrahiert die Differenz zweier Punktwolken. </p>
+<p>Die Distanz zwischen zwei beträgt 0.001. Die minimale Clustergröße beträgt 50 Datenpunkte. Die Toleranzgrenze zwischen zwei Clustern ist 0.02m.</p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloudA</em>&nbsp;</td><td>Die erste Punktwolke. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>cloudB</em>&nbsp;</td><td>Die zweite Punktwolke. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Differenz der beiden Punktwolken als Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a429330c64589e68ed9ecf5257c0d3446"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::extractSurface" ref="a429330c64589e68ed9ecf5257c0d3446" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a> PointCloudUtils::extractSurface </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Extrahiert die planare Hauptfläche aus einer Punktwolke heraus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke indem die planare Hauptläche gesucht werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die planare Hauptfläche in der Punktwolke bei Erfolg, sonst eine leere Datenstruktur der planaren Hauptfläche. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a4c06e86175f1d501a89769273003a7a8"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::getCloudMask" ref="a4c06e86175f1d501a89769273003a7a8" args="(const ntk::RGBDImage &amp;frame, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b PointCloudUtils::getCloudMask </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Maske für eine Punktwolke zurück. </p>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>Am Ende wird noch ein morphologischen Close Operator durchgeführt, um Löcher bei der Projektion zu schließen.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>frame</em>&nbsp;</td><td>Ein Frame von der Kamera. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke wovon eine Maske erstellt werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Eine binäre Maske worin alle Pixel die zur Punktwolke gehören 1 sind. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab9e357b4b92195d8624fa026166ca3dc"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::getCloudWithIndices" ref="ab9e357b4b92195d8624fa026166ca3dc" args="(pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud, pcl::PointIndices indices)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pcl::PointCloud&lt; pcl::PointXYZ &gt; PointCloudUtils::getCloudWithIndices </td>
+          <td>(</td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pcl::PointIndices&nbsp;</td>
+          <td class="paramname"> <em>indices</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Extrahiert aus einer Punktwolke nur die Punktwolken mit angegeben Index. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke aus dem die indexierte Punktwolke heraus extrahiert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>indices</em>&nbsp;</td><td>Der Index welcher die extrahierte Punktwolke beschreibt. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die extrahierte Punktwolke. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a6c118f1891502802ced6c078962b1c1a"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::getClusterMask" ref="a6c118f1891502802ced6c078962b1c1a" args="(const ntk::RGBDImage &amp;frame, ClusterOverSurface clusters)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b PointCloudUtils::getClusterMask </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html">ClusterOverSurface</a>&nbsp;</td>
+          <td class="paramname"> <em>clusters</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Maske für die Cluster zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>frame</em>&nbsp;</td><td>Ein Frame der Kamera. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>clusters</em>&nbsp;</td><td>Die Cluster wovon die Maske erzeugt werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Eine binäre Maske worin alle Pixel die zu den Clustern gehören 1 sind. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a614b21bcf8fdc4b679edb0d7547f7681"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::getSurfaceMask" ref="a614b21bcf8fdc4b679edb0d7547f7681" args="(const ntk::RGBDImage &amp;frame, PointCloudSurface surface)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b PointCloudUtils::getSurfaceMask </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">PointCloudSurface</a>&nbsp;</td>
+          <td class="paramname"> <em>surface</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Maske für die planare Hauptfläche zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>frame</em>&nbsp;</td><td>Ein Frame von der Kamera. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>surface</em>&nbsp;</td><td>Die planare Hauptfläche. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Eine binäre Maske worin alle Pixel die zur planaren Hautpfläche gehören 1 sind. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a8e7761780aa632e75017bd22739d12a7"></a><!-- doxytag: member="objectexpl::core::PointCloudUtils::writeCloudToDisk" ref="a8e7761780aa632e75017bd22739d12a7" args="(std::string filename, pcl::PointCloud&lt; pcl::PointXYZ &gt; cloud)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PointCloudUtils::writeCloudToDisk </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>filename</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pcl::PointCloud&lt; pcl::PointXYZ &gt;&nbsp;</td>
+          <td class="paramname"> <em>cloud</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Speichert die Punktwolke in eine Datei ab. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>filename</em>&nbsp;</td><td>Der Dateiname indem die Punktwolke abgespeichert werden soll. (typischweise mit dem Suffix .pcd) </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>cloud</em>&nbsp;</td><td>Die Punktwolke welche abgespeichert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/<a class="el" href="PointCloudUtils_8h_source.html">PointCloudUtils.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/PointCloudUtils.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:51 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

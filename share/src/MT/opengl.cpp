@@ -30,13 +30,7 @@
 #endif
 
 #if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
-struct sOpenGL {
-  sOpenGL(OpenGL *_gl, const char* title, int w, int h, int posx, int posy){
-    MT_MSG("creating dummy OpenGL object");
-  }
-  ors::Vector downVec, downPos, downFoc;
-  ors::Quaternion downRot;
-};
+#  include "opengl_void.cxx"
 #endif
 
 
@@ -1035,6 +1029,7 @@ void glStandardScene(void*){ NICO; };
 void glDrawDots(void *dots){ glDrawDots(*(arr*)dots); }
 
 void glDrawDots(arr& dots){
+  if(!dots.N) return;
   CHECK(dots.nd==2 && dots.d1==3, "wrong dimension");
 #if 0
   glBegin(GL_POINTS);
@@ -1079,7 +1074,6 @@ void OpenGL::init(){
   
   reportEvents=false;
   reportSelects=false;
-  selectOnHover=false;
   immediateExitLoop=false;
   exitkeys="";
   
@@ -1126,9 +1120,9 @@ void OpenGL::clear(){
 }
 
 //! add a hover callback
-void OpenGL::addHoverCall(bool (*call)(void*, OpenGL*), const void* classP){
-  CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
-  GLHoverCall c; c.classP=(void*)classP; c.call=call;
+void OpenGL::addHoverCall(GLHoverCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLHoverCall c; c.classP=(void*)classP; c.call=call;
   hoverCalls.append(c);
 }
 
@@ -1138,15 +1132,27 @@ void OpenGL::clearHoverCalls(){
 }
 
 //! add a click callback
-void OpenGL::addClickCall(bool (*call)(void*, OpenGL*), const void* classP){
-  CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
-  GLClickCall c; c.classP=(void*)classP; c.call=call;
+void OpenGL::addClickCall(GLClickCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLClickCall c; c.classP=(void*)classP; c.call=call;
   clickCalls.append(c);
 }
 
 //! clear click callbacks
 void OpenGL::clearClickCalls(){
   clickCalls.clear();
+}
+
+//! add a click callback
+void OpenGL::addKeyCall(GLKeyCall *c){
+  //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
+  //GLKeyCall c; c.classP=(void*)classP; c.call=call;
+  keyCalls.append(c);
+}
+
+//! clear click callbacks
+void OpenGL::clearKeyCalls(){
+  keyCalls.clear();
 }
 
 #ifdef MT_GL
@@ -1422,16 +1428,20 @@ void OpenGL::setClearColors(float r, float g, float b, float a){
 /*!\brief inverse projection: given a 2D+depth coordinates in the
   camera view (e.g. as a result of selection) computes the world 3D
   coordinates */
-void OpenGL::unproject(double &x, double &y, double &z){
+void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera){
 #ifdef MT_GL
   double _x, _y, _z;
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
-  //glMatrixMode(GL_PROJECTION);
-  //glLoadIdentity();
-  //camera.glSetProjectionMatrix();
-  //glMatrixMode(GL_MODELVIEW);
-  //glLoadIdentity();
+  if(resetCamera){
+    GLint viewport[4] = {0, 0, width(), height()};
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    camera.glSetProjectionMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+  }
   glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix);
   glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
   glGetIntegerv(GL_VIEWPORT, viewPort);
@@ -1649,17 +1659,23 @@ void OpenGL::Reshape(int width, int height){
 void OpenGL::Key(unsigned char key, int _x, int _y){
   _y = height()-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y));
+  mouseposx=_x; mouseposy=_y;
   pressedkey=key;
-  if(key==13 || key==32 || key==27) exitEventLoop();
+  
+  bool cont=true;
+  for(uint i=0; i<keyCalls.N; i++) cont=cont && keyCalls(i)->keyCallback(*this);
+
+  if(key==13 || key==27) exitEventLoop();
   if(MT::contains(exitkeys, key)) exitEventLoop();
+
 }
 
-void OpenGL::Mouse(int button, int updown, int _x, int _y){
+void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
   int w=width(), h=height();
   _y = h-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, updown, _x, _y));
+  CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, downPressed, _x, _y));
   mouse_button=1+button;
-  if(updown) mouse_button=-1-mouse_button;
+  if(downPressed) mouse_button=-1-mouse_button;
   mouseposx=_x; mouseposy=_y;
   lastEvent.set(mouse_button, -1, _x, _y, 0., 0.);
   
@@ -1677,7 +1693,7 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   if(mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
   CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
   
-  if(!updown){ //down press
+  if(!downPressed){ //down press
     if(mouseIsDown) return; //the button is already down (another button was pressed...)
     //CHECK(!mouseIsDown, "I thought the mouse is up...");
     mouseIsDown=true;
@@ -1695,18 +1711,19 @@ void OpenGL::Mouse(int button, int updown, int _x, int _y){
   s->downFoc=*cam->foc;
   
   //check object clicked on
-  if(!updown){
+  if(!downPressed){
     if(reportSelects) Select();
   }
   //step through all callbacks
   bool cont=true;
-  if(!updown){
-    for(uint i=0; i<clickCalls.N; i++) cont=cont && (*clickCalls(i).call)(clickCalls(i).classP, this);
+  if(!downPressed){
+    for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
+  if(!cont){ update(); return; }
 
   //mouse scroll wheel:
-  if(mouse_button==4 && !updown) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
-  if(mouse_button==5 && !updown) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
 
   if(mouse_button==3){ //selection
      Select();
@@ -1786,9 +1803,8 @@ void OpenGL::PassiveMotion(int _x, int _y){
   if(calls) return;
   calls++;
   mouseposx=_x; mouseposy=_y;
-  if(selectOnHover) Select();
   bool ud=false;
-  for(uint i=0; i<hoverCalls.N; i++) ud=ud || (*hoverCalls(i).call)(hoverCalls(i).classP, this);
+  for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
   if(ud) update();
   calls--;
 }
@@ -1835,12 +1851,12 @@ void glUI::glDraw(){
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   Button *b;
-  float x, y, w, h;
+  float x, y, h;
   for(uint i=0; i<buttons.N; i++){
     b = &buttons(i);
     x=b->x-b->w/2.;
     y=b->y-b->h/2.;
-    w=b->w;
+    //w=b->w;
     h=b->h;
     glColor(0, 0, 0, 1);
     glDrawText(b->name, x+5, y+h-5, 0.);

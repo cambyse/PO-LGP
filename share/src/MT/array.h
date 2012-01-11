@@ -509,6 +509,7 @@ template<class T> MT::Array<T> sqr(const MT::Array<T>& y){ MT::Array<T> x; x.res
 template<class T> void tensorCondNormalize(MT::Array<T> &X, int left);
 template<class T> void tensorCondMax(MT::Array<T> &X, uint left);
 template<class T> void tensorCondSoftMax(MT::Array<T> &X, uint left, double beta);
+template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate);
 template<class T> void tensorCheckCondNormalization(const MT::Array<T> &X, uint left, double tol=1e-10);
 template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T> &X, uint left, double logP, double tol=1e-10);
 
@@ -711,6 +712,10 @@ template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
 // @}
 //!@name graphs
 // @{
+
+void graphRandomUndirected(uintA& E, uint n, double connectivity);
+void graphRandomFixedDegree(uintA& E, uint N, uint degree);
+void graphRandomTree(uintA& E, uint N, uint roots=1);
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E);

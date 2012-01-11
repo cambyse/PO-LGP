@@ -3,19 +3,19 @@
 #include <ctime>
 #include <stdlib.h>
 #include <cstdlib>
-#include <TL/decisionMakingModule.h>
-#include <TL/ors_actionInterface.h>
+#include <relational/decisionMakingModule.h>
+#include <relational/robotManipulationSimulator.h>
 
 
 
-ActionInterface AI_2;
+RobotManipulationSimulator sim;
 
 
 void initSimulator(const char* configurationFile) {
-  AI_2.loadConfiguration(configurationFile);
-  AI_2.startOde();
-  AI_2.startSwift();
-  AI_2.simulate(60);
+  sim.loadConfiguration(configurationFile);
+  sim.startOde();
+  sim.startSwift();
+  sim.simulate(60);
 }
 
 
@@ -25,7 +25,7 @@ int main(int argc, char** argv){
   initSimulator("state.ors");
   
   DecisionMakingModule dmm;
-  dmm.ors = AI_2.C;
+  dmm.ors = sim.C;
   dmm.open();
   
   uint MAX_NUM_ACTIONS = 10;
@@ -40,19 +40,21 @@ int main(int argc, char** argv){
     }
     else if (dmm.action == dmm.SYMBOLIC_ACTION__GRAB) {
       cerr<<"Grab " << dmm.actionArgument << endl;
-      AI_2.grab(dmm.actionArgument);
-      AI_2.simulate(100);
+      sim.grab(dmm.actionArgument);
+      sim.simulate(100);
     }
     else if (dmm.action == dmm.SYMBOLIC_ACTION__PUTON) {
       cerr<<"Puton " << dmm.actionArgument << endl;
-      AI_2.dropObjectAbove(dmm.actionArgument);
-      AI_2.simulate(100);
+      sim.dropObjectAbove(dmm.actionArgument);
+      sim.simulate(100);
     }
-    else
-      NIY;
+    else {
+      HALT("No appropriate action was found.");
+    }
   }
   dmm.close();
+  sim.simulate(100);
   
-  AI_2.shutdownAll();
+  sim.shutdownAll();
 	return 0;
 }

@@ -117,7 +117,7 @@ double KLD(const BinaryPairFG &B, const BinaryPairFG &F){
 // BinaryPairFG
 //
 
-void BinaryPairFG::write(ostream& os){
+void BinaryPairFG::write(std::ostream& os){
   os <<"logZ=" <<logZ <<"\nedges=\n" <<edges <<"\nf_ij=\n" <<f_ij <<"\nf_i=\n" <<f_i <<endl;
 }
 
@@ -644,7 +644,7 @@ void BinaryBPNet::getPerturbationGradJ(arr &g){
 }
 
 
-void BinaryBPNet::report(ostream &os){
+void BinaryBPNet::report(std::ostream &os){
   arr theta, J, b, M;
   getT(theta);
   getNodeBeliefs(b);

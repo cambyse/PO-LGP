@@ -1,0 +1,155 @@
+***** t=0 (o=0, r=3) *****
+--
+68 69 70
+71 72
+73 74
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(69 68) b1(68 69) b1(70 69) b1(68 70) b1(69 70) b1(72 71) b1(71 72) b1(74 73) b1(73 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) above(68 69) above(68 70) above(68 68) above(69 68) above(69 70) above(69 69) above(70 69) above(70 68) above(70 70) above(71 72) above(71 71) above(72 71) above(72 72) above(73 74) above(73 73) above(74 73) above(74 74) aboveNotable(69 68) aboveNotable(70 68) aboveNotable(68 69) aboveNotable(70 69) aboveNotable(68 70) aboveNotable(69 70) aboveNotable(72 71) aboveNotable(71 72) aboveNotable(74 73) aboveNotable(73 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=2 height(69)=2 height(70)=2 height(71)=1 height(72)=1 height(73)=1 height(74)=1 sum_height()=10 
+
+Action:  grab(68)
+
+***** t=1 (o=0, r=3) *****
+--
+71 72
+73 74
+--
+H 68
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: u1(68) b1(72 71) b1(71 72) b1(74 73) b1(73 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(70) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(70) above(71 72) above(71 71) above(72 71) above(72 72) above(73 74) above(73 73) above(74 73) above(74 74) aboveNotable(72 71) aboveNotable(71 72) aboveNotable(74 73) aboveNotable(73 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=0 height(71)=1 height(72)=1 height(73)=1 height(74)=1 sum_height()=4 
+
+Action:  puton(74)
+
+***** t=2 (o=0, r=3) *****
+--
+71 72
+73 74 68
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(73 68) b1(74 68) b1(72 71) b1(71 72) b1(74 73) b1(68 74) b1(73 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(69) not_b1_related_to_second(70) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(69) not_b1_related_to_first(70) above(68 74) above(68 68) above(68 73) above(71 72) above(71 71) above(72 71) above(72 72) above(73 68) above(73 74) above(73 73) above(74 68) above(74 73) above(74 74) aboveNotable(73 68) aboveNotable(74 68) aboveNotable(72 71) aboveNotable(71 72) aboveNotable(68 73) aboveNotable(74 73) aboveNotable(68 74) aboveNotable(73 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=2 height(69)=0 height(70)=0 height(71)=1 height(72)=1 height(73)=2 height(74)=2 sum_height()=8 
+
+Action:  grab(74)
+
+***** t=3 (o=0, r=3) *****
+--
+71 72
+--
+H 74
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: u1(74) b1(72 71) b1(71 72) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(70) not_b1_related_to_second(73) not_b1_related_to_second(74) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(70) not_b1_related_to_first(73) not_b1_related_to_first(74) above(71 72) above(71 71) above(72 71) above(72 72) aboveNotable(72 71) aboveNotable(71 72) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=0 height(71)=1 height(72)=1 height(73)=0 height(74)=0 sum_height()=2 
+
+Action:  puton(72)
+
+***** t=4 (o=0, r=3) *****
+--
+71 72 74
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(72 71) b1(71 72) b1(74 72) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(70) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(70) not_b1_related_to_first(73) above(71 72) above(71 74) above(71 71) above(72 71) above(72 74) above(72 72) above(74 72) above(74 71) above(74 74) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=0 height(71)=2 height(72)=2 height(73)=0 height(74)=2 sum_height()=6 
+
+Action:  grab(70)
+
+***** t=5 (o=0, r=3) *****
+--
+71 72 74
+--
+H 70
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(72 71) b1(71 72) b1(74 72) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(70) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(70) not_b1_related_to_first(73) above(71 72) above(71 74) above(71 71) above(72 71) above(72 74) above(72 72) above(74 72) above(74 71) above(74 74) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=0 height(71)=2 height(72)=2 height(73)=0 height(74)=2 sum_height()=6 
+
+Action:  puton(74)
+
+***** t=6 (o=0, r=3) *****
+--
+71 72 74 70
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(72 70) b1(74 70) b1(72 71) b1(71 72) b1(74 72) b1(70 74) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(73) above(70 74) above(70 70) above(70 72) above(70 71) above(71 72) above(71 74) above(71 70) above(71 71) above(72 70) above(72 71) above(72 74) above(72 72) above(74 70) above(74 72) above(74 74) above(74 71) aboveNotable(71 70) aboveNotable(72 70) aboveNotable(74 70) aboveNotable(70 71) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(70 72) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(70 74) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=3 height(71)=3 height(72)=3 height(73)=0 height(74)=3 sum_height()=12 
+
+Action:  grab(66)
+
+***** t=7 (o=0, r=3) *****
+--
+71 72 74 70
+--
+H 66
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: u1(66) b1(72 70) b1(74 70) b1(72 71) b1(71 72) b1(74 72) b1(70 74) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(66) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(66) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(73) above(70 74) above(70 70) above(70 72) above(70 71) above(71 72) above(71 74) above(71 70) above(71 71) above(72 70) above(72 71) above(72 74) above(72 72) above(74 70) above(74 72) above(74 74) above(74 71) aboveNotable(71 70) aboveNotable(72 70) aboveNotable(74 70) aboveNotable(70 71) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(70 72) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(70 74) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=0 height(67)=0 height(68)=0 height(69)=0 height(70)=3 height(71)=3 height(72)=3 height(73)=0 height(74)=3 sum_height()=12 
+
+Action:  puton(70)
+
+***** t=8 (o=0, r=3) *****
+--
+71 72 74 70 66
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(70 66) b1(74 66) b1(66 70) b1(72 70) b1(74 70) b1(72 71) b1(71 72) b1(74 72) b1(70 74) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(73) above(66 70) above(66 66) above(66 74) above(66 72) above(66 71) above(70 66) above(70 74) above(70 70) above(70 72) above(70 71) above(71 72) above(71 74) above(71 70) above(71 71) above(71 66) above(72 70) above(72 71) above(72 74) above(72 66) above(72 72) above(74 66) above(74 70) above(74 72) above(74 74) above(74 71) aboveNotable(70 66) aboveNotable(71 66) aboveNotable(72 66) aboveNotable(74 66) aboveNotable(66 70) aboveNotable(71 70) aboveNotable(72 70) aboveNotable(74 70) aboveNotable(66 71) aboveNotable(70 71) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(66 72) aboveNotable(70 72) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(66 74) aboveNotable(70 74) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=4 height(67)=0 height(68)=0 height(69)=0 height(70)=4 height(71)=4 height(72)=4 height(73)=0 height(74)=4 sum_height()=20 
+
+Action:  grab(73)
+
+***** t=9 (o=0, r=3) *****
+--
+71 72 74 70 66
+--
+H 73
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: u1(73) b1(70 66) b1(74 66) b1(66 70) b1(72 70) b1(74 70) b1(72 71) b1(71 72) b1(74 72) b1(70 74) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_second(73) not_b1_related_to_first(65) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) not_b1_related_to_first(73) above(66 70) above(66 66) above(66 74) above(66 72) above(66 71) above(70 66) above(70 74) above(70 70) above(70 72) above(70 71) above(71 72) above(71 74) above(71 70) above(71 71) above(71 66) above(72 70) above(72 71) above(72 74) above(72 66) above(72 72) above(74 66) above(74 70) above(74 72) above(74 74) above(74 71) aboveNotable(70 66) aboveNotable(71 66) aboveNotable(72 66) aboveNotable(74 66) aboveNotable(66 70) aboveNotable(71 70) aboveNotable(72 70) aboveNotable(74 70) aboveNotable(66 71) aboveNotable(70 71) aboveNotable(72 71) aboveNotable(74 71) aboveNotable(66 72) aboveNotable(70 72) aboveNotable(71 72) aboveNotable(74 72) aboveNotable(66 74) aboveNotable(70 74) aboveNotable(71 74) aboveNotable(72 74) 
+height(65)=0 height(66)=4 height(67)=0 height(68)=0 height(69)=0 height(70)=4 height(71)=4 height(72)=4 height(73)=0 height(74)=4 sum_height()=20 
+
+Action:  puton(66)
+
+***** t=10 (o=0, r=3) *****
+--
+71 72 74 70 66 73
+--
+H -
+--
+(existing objects: [ 65 66 67 68 69 70 71 72 73 74 ])
+
+Learned state: b1(70 66) b1(73 66) b1(74 66) b1(66 70) b1(72 70) b1(74 70) b1(72 71) b1(71 72) b1(74 72) b1(66 73) b1(70 73) b1(70 74) b1(71 74) b1(72 74) 
+clear(65) clear(66) clear(67) clear(68) clear(69) clear(70) clear(71) clear(72) clear(73) clear(74) inhandNil() not_b1_related_to_second(65) not_b1_related_to_second(67) not_b1_related_to_second(68) not_b1_related_to_second(69) not_b1_related_to_first(65) not_b1_related_to_first(67) not_b1_related_to_first(68) not_b1_related_to_first(69) above(66 70) above(66 73) above(66 66) above(66 74) above(66 72) above(66 71) above(70 66) above(70 73) above(70 74) above(70 70) above(70 72) above(70 71) above(71 72) above(71 74) above(71 70) above(71 71) above(71 66) above(71 73) above(72 70) above(72 71) above(72 74) above(72 66) above(72 73) above(72 72) above(73 66) above(73 70) above(73 73) above(73 74) above(73 72) above(73 71) above(74 66) above(74 70) above(74 72) above(74 73) above(74 74) above(74 71) aboveNotable(70 66) aboveNotable(71 66) aboveNotable(72 66) aboveNotable(73 66) aboveNotable(74 66) aboveNotable(66 70) aboveNotable(71 70) aboveNotable(72 70) aboveNotable(73 70) aboveNotable(74 70) aboveNotable(66 71) aboveNotable(70 71) aboveNotable(72 71) aboveNotable(73 71) aboveNotable(74 71) aboveNotable(66 72) aboveNotable(70 72) aboveNotable(71 72) aboveNotable(73 72) aboveNotable(74 72) aboveNotable(66 73) aboveNotable(70 73) aboveNotable(71 73) aboveNotable(72 73) aboveNotable(74 73) aboveNotable(66 74) aboveNotable(70 74) aboveNotable(71 74) aboveNotable(72 74) aboveNotable(73 74) 
+height(65)=0 height(66)=5 height(67)=0 height(68)=0 height(69)=0 height(70)=5 height(71)=5 height(72)=5 height(73)=5 height(74)=5 sum_height()=30 

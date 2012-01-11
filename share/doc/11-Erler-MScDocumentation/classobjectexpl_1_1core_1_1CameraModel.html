@@ -1,0 +1,515 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::CameraModel Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html">objectexpl::core::CameraModel</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a> &#124;
+<a href="#pri-methods">Private Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::CameraModel Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::CameraModel" -->
+<p>Stellt den Zugriff für eine Kamera bereit.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="CameraModel_8h_source.html">CameraModel.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1core_1_1CameraModel-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a5d25add9bbcef6aaad94c26c1f28d418">CameraModel</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default Konstruktur.  <a href="#a5d25add9bbcef6aaad94c26c1f28d418"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a096c4d47f17bc9e5c443248bd80c2300">cameraCalibrationWithCheckerboard</a> (int numCornersVer, int numCornersHor, double squareSize)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Findet die extrinischen Parameter der Kamera über ein ausgedrucktes Schachbrettmuster.  <a href="#a096c4d47f17bc9e5c443248bd80c2300"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a471d1f4a3cd0333b44452bc6f78a3321">cameraCalibrationWithLED</a> (cv::Point3f startPoint, int numX, int numY, <a class="el" href="classobjectexpl_1_1core_1_1RoboticArm.html">RoboticArm</a> *arm)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Findet die extrinischen Parameter der Kamera über ein am Roboterarm angebrachter Leuchtdiode.  <a href="#a471d1f4a3cd0333b44452bc6f78a3321"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a83066bbc76805a3fa73622ce366c8a"></a><!-- doxytag: member="objectexpl::core::CameraModel::runCamera" ref="a6a83066bbc76805a3fa73622ce366c8a" args="()" -->
+void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a6a83066bbc76805a3fa73622ce366c8a">runCamera</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Startet den Thread zum Holen der Frames. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a825bb04a180391365c928c61ee072938"></a><!-- doxytag: member="objectexpl::core::CameraModel::stopCamera" ref="a825bb04a180391365c928c61ee072938" args="()" -->
+void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a825bb04a180391365c928c61ee072938">stopCamera</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stoppt den Thread zum Holen der Frames. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Point2f&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#ae81bf6f17cae053dbb53f21f02006391">projectWorldToImageCoord</a> (cv::Point3f worldPoint)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Proijiziert eine Weltkoordinate zurück zum zugehörigen Bildpunkt.  <a href="#ae81bf6f17cae053dbb53f21f02006391"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Point3f&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a1e6f98b4d67654ddf7172900b2b2fda2">projectImageToWorldCoord</a> (cv::Point2f imgPoint)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Projiziert ein Bildpunkt in die zugehörige Weltkoordinate des Systems.  <a href="#a1e6f98b4d67654ddf7172900b2b2fda2"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a591ce06bc64ee9112b096d0bd0f939c7"></a><!-- doxytag: member="objectexpl::core::CameraModel::getCurrentFrame" ref="a591ce06bc64ee9112b096d0bd0f939c7" args="()" -->
+const ntk::RGBDImage &amp;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a591ce06bc64ee9112b096d0bd0f939c7">getCurrentFrame</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt das aktuelle Frame zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e023045a11c5f16c49bf4200246b9b7"></a><!-- doxytag: member="objectexpl::core::CameraModel::getCurrentMesh" ref="a5e023045a11c5f16c49bf4200246b9b7" args="()" -->
+const ntk::Mesh &amp;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a5e023045a11c5f16c49bf4200246b9b7">getCurrentMesh</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt das aktuelle Dreiecksnetz zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a003e643d5cea034dc1e927f3124c8649"></a><!-- doxytag: member="objectexpl::core::CameraModel::getFrameRate" ref="a003e643d5cea034dc1e927f3124c8649" args="()" -->
+int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a003e643d5cea034dc1e927f3124c8649">getFrameRate</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die aktuelle Framerate der Kamera zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#ae58215ea7423c5810c6ac110cc9e9a25">setTiltAngle</a> (int angle)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt den Neigungswinkel der Kamera.  <a href="#ae58215ea7423c5810c6ac110cc9e9a25"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#ace5c3d14a7023f4ee9b28aa78cb74db1">setDepthRange</a> (double min, double max)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt die Filtertiefe der Kamera.  <a href="#ace5c3d14a7023f4ee9b28aa78cb74db1"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03af892f5247ce82b584d000293ee799"></a><!-- doxytag: member="objectexpl::core::CameraModel::getTranslationVector" ref="a03af892f5247ce82b584d000293ee799" args="()" -->
+cv::Mat&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a03af892f5247ce82b584d000293ee799">getTranslationVector</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt den aktuellen Translationsvektor der Kamera zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d08426e88296f2dcfabf8af2d78ef8d"></a><!-- doxytag: member="objectexpl::core::CameraModel::getRotationMatrix" ref="a0d08426e88296f2dcfabf8af2d78ef8d" args="()" -->
+cv::Mat&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a0d08426e88296f2dcfabf8af2d78ef8d">getRotationMatrix</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die aktuelle Roationsmatrix der Kamera zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a7482a10834fdbb927528c059b4c88d38">writeCameraPose</a> (std::string filename)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Speichert die aktuelle Kamera Pose in eine Datei.  <a href="#a7482a10834fdbb927528c059b4c88d38"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a99f2988607a218908aaed0252323881b">readCameraPose</a> (std::string filename)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lädt die Kamera Pose aus einer Datei.  <a href="#a99f2988607a218908aaed0252323881b"></a><br/></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a5d4d13f69c20c84fa7399a4970271a37">setCameraPose</a> (cv::Mat rotationMatrix, cv::Mat translationVector)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt die Kamera Pose.  <a href="#a5d4d13f69c20c84fa7399a4970271a37"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a22632a1f8d17ddf1e40790120669bb72">determinePose</a> (cv::Mat worldPoints, cv::Mat imagePoints)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bestimmt die Kamera Pose zwischen den Weltkoordinaten und Bildkoordinaten.  <a href="#a22632a1f8d17ddf1e40790120669bb72"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Point2f&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a8f63648cca1d8109fdfa845c8d94123d">findCircle</a> (cv::Mat rgb)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bestimmt den Mittelpunkt eines Kreises in einem Bild.  <a href="#a8f63648cca1d8109fdfa845c8d94123d"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Stellt den Zugriff für eine Kamera bereit. </p>
+<p>Dazu wird ein Thread mittels <a class="el" href="classobjectexpl_1_1core_1_1CameraModel.html#a6a83066bbc76805a3fa73622ce366c8a" title="Startet den Thread zum Holen der Frames.">runCamera()</a> gestartet, der fortlaufend die Frames der Kamera holt. Als Bibliothek wird die NESTK Bibliothek von Nicolas Burrus verwendet, worin hier die OpenNI Treiber benutzt werden.</p>
+<dl class="see"><dt><b>Siehe auch:</b></dt><dd>Nicolas Burrus NESTK Bibliothek <a href="http://sourceforge.net/projects/roboticslab/">http://sourceforge.net/projects/roboticslab/</a> </dd>
+<dd>
+OpenNI Bibliothek <a href="http://www.openni.org/">http://www.openni.org/</a> </dd></dl>
+<hr/><h2>Beschreibung der Konstruktoren und Destruktoren</h2>
+<a class="anchor" id="a5d25add9bbcef6aaad94c26c1f28d418"></a><!-- doxytag: member="objectexpl::core::CameraModel::CameraModel" ref="a5d25add9bbcef6aaad94c26c1f28d418" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">CameraModel::CameraModel </td>
+          <td>(</td>
+          <td class="paramname"></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Default Konstruktur. </p>
+<p>Setzt die Kameraparameter der NESTK Bibliothek (kurz NTK) wie folgt: </p>
+<ul>
+<li>
+ComputeMapping = true (Gleicht den optischen Abstand zwischen RGB- und monochromen Kamera aus) </li>
+<li>
+FilterThresholdDepth = true (Filtert alle Tiefeninformationen die größer als 100cm aus) </li>
+<li>
+TriangleMesh (Erzeugt ein Dreiecksnetz der Punktwolke) </li>
+</ul>
+
+</div>
+</div>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a096c4d47f17bc9e5c443248bd80c2300"></a><!-- doxytag: member="objectexpl::core::CameraModel::cameraCalibrationWithCheckerboard" ref="a096c4d47f17bc9e5c443248bd80c2300" args="(int numCornersVer, int numCornersHor, double squareSize)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool CameraModel::cameraCalibrationWithCheckerboard </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>numCornersVer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>numCornersHor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>squareSize</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Findet die extrinischen Parameter der Kamera über ein ausgedrucktes Schachbrettmuster. </p>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>Das Schachbrettmuster knitterfrei (am besten auf ein Karton) ausdrucken/aufkleben und gut sichtbar vor die Kamera legen.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>numCornersVer</em>&nbsp;</td><td>Die Anzahl der vertikalen Eckpunkten einer Feldreihe. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>numCornersHor</em>&nbsp;</td><td>Die Anzahl der horizintalen Eckpunkten einer Feldreihe. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>squareSize</em>&nbsp;</td><td>Die Größe im Maßstab der Weltkoordinaten eines Feldes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>true bei erfolgreicher Kalibrierung, sonst false. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a471d1f4a3cd0333b44452bc6f78a3321"></a><!-- doxytag: member="objectexpl::core::CameraModel::cameraCalibrationWithLED" ref="a471d1f4a3cd0333b44452bc6f78a3321" args="(cv::Point3f startPoint, int numX, int numY, RoboticArm *arm)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool CameraModel::cameraCalibrationWithLED </td>
+          <td>(</td>
+          <td class="paramtype">cv::Point3f&nbsp;</td>
+          <td class="paramname"> <em>startPoint</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>numX</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>numY</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classobjectexpl_1_1core_1_1RoboticArm.html">RoboticArm</a> *&nbsp;</td>
+          <td class="paramname"> <em>arm</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Findet die extrinischen Parameter der Kamera über ein am Roboterarm angebrachter Leuchtdiode. </p>
+<p>Der Roboterarm fährt dazu ein virtuelles Schachbrettmusters ab. Der Anfangspunkt ist der untere linkere Eckpunkt des Schachbrettmusters. Anschließend fährt er spaltenweise das Schachbrettmuster in Abständen von 0.05m ab. Am Ende fährt der Roboterarm in die Ausgangsposition zurück.</p>
+<dl class="warning"><dt><b>Warnung:</b></dt><dd>Im Bereich vor dem Roboterarm dürfen sich keine Gegenstände sich befinden! </dd></dl>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>In einem verdunkelten Raum funktioniert die Erkennung der Leuchtdiode besser.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>startPoint</em>&nbsp;</td><td>Der Startpunkt in Weltkoordinaten von wo aus der Roboterarm losfährt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>numX</em>&nbsp;</td><td>Die Gesamtanzahl an horziontalen Bewegungsschritten (Schrittabstand 0.05m). </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>numY</em>&nbsp;</td><td>Die Gesamtanzahl an vertikalen Bewegungsschritten (Schrittabstand 0.05m). </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>arm</em>&nbsp;</td><td>Der Roboterarm welcher bewegt werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>true bei erfolgreicher Kalibrierung, sonst false. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a22632a1f8d17ddf1e40790120669bb72"></a><!-- doxytag: member="objectexpl::core::CameraModel::determinePose" ref="a22632a1f8d17ddf1e40790120669bb72" args="(cv::Mat worldPoints, cv::Mat imagePoints)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CameraModel::determinePose </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>worldPoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>imagePoints</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Bestimmt die Kamera Pose zwischen den Weltkoordinaten und Bildkoordinaten. </p>
+<p>Nach erfolgreicher Bestimmung wird die Kamera Pose gleich aktualisiert.</p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>worldPoints</em>&nbsp;</td><td>Die Weltpunkte in (x,y,z). </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>imagePoints</em>&nbsp;</td><td>Die Bildpunkte in (x,y). </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a8f63648cca1d8109fdfa845c8d94123d"></a><!-- doxytag: member="objectexpl::core::CameraModel::findCircle" ref="a8f63648cca1d8109fdfa845c8d94123d" args="(cv::Mat rgb)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Point2f CameraModel::findCircle </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>rgb</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Bestimmt den Mittelpunkt eines Kreises in einem Bild. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>rgb</em>&nbsp;</td><td>Das RGB-Bild, indem der Kreis gesucht wird. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Der Mittelpunkt des Kreises in "subpixel" Genauigkeit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a1e6f98b4d67654ddf7172900b2b2fda2"></a><!-- doxytag: member="objectexpl::core::CameraModel::projectImageToWorldCoord" ref="a1e6f98b4d67654ddf7172900b2b2fda2" args="(cv::Point2f imgPoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Point3f CameraModel::projectImageToWorldCoord </td>
+          <td>(</td>
+          <td class="paramtype">cv::Point2f&nbsp;</td>
+          <td class="paramname"> <em>imgPoint</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Projiziert ein Bildpunkt in die zugehörige Weltkoordinate des Systems. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>imgPoint</em>&nbsp;</td><td>Der Punkt der proijiziert werden soll (x,y). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Der proijizierte Punkt in Weltkoordinate (x,y,z). </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ae81bf6f17cae053dbb53f21f02006391"></a><!-- doxytag: member="objectexpl::core::CameraModel::projectWorldToImageCoord" ref="ae81bf6f17cae053dbb53f21f02006391" args="(cv::Point3f worldPoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Point2f CameraModel::projectWorldToImageCoord </td>
+          <td>(</td>
+          <td class="paramtype">cv::Point3f&nbsp;</td>
+          <td class="paramname"> <em>worldPoint</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Proijiziert eine Weltkoordinate zurück zum zugehörigen Bildpunkt. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>worldPoint</em>&nbsp;</td><td>Die Weltkoordinate (x,y,z) die zurück projiziert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Der zurück projizierte Bildpunkt (x,y). </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a99f2988607a218908aaed0252323881b"></a><!-- doxytag: member="objectexpl::core::CameraModel::readCameraPose" ref="a99f2988607a218908aaed0252323881b" args="(std::string filename)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool CameraModel::readCameraPose </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>filename</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Lädt die Kamera Pose aus einer Datei. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>filename</em>&nbsp;</td><td>Der Dateiname indem die Kamera Pose abgespeichert ist. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>true bei erfolgreichem Laden der Kamera Pose, sonst false. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a5d4d13f69c20c84fa7399a4970271a37"></a><!-- doxytag: member="objectexpl::core::CameraModel::setCameraPose" ref="a5d4d13f69c20c84fa7399a4970271a37" args="(cv::Mat rotationMatrix, cv::Mat translationVector)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CameraModel::setCameraPose </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>rotationVector</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>translationVector</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt die Kamera Pose. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>rotationVector</em>&nbsp;</td><td>Der Rotationsvektor der Kamera Pose. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>translationVector</em>&nbsp;</td><td>Der Translationsvektor der Kamera Pose. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ace5c3d14a7023f4ee9b28aa78cb74db1"></a><!-- doxytag: member="objectexpl::core::CameraModel::setDepthRange" ref="ace5c3d14a7023f4ee9b28aa78cb74db1" args="(double min, double max)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CameraModel::setDepthRange </td>
+          <td>(</td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>min</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>max</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt die Filtertiefe der Kamera. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>min</em>&nbsp;</td><td>Der minimale Abstand zur Kamera in cm. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>max</em>&nbsp;</td><td>Der maxmiale Abstand zur Kamera in cm. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ae58215ea7423c5810c6ac110cc9e9a25"></a><!-- doxytag: member="objectexpl::core::CameraModel::setTiltAngle" ref="ae58215ea7423c5810c6ac110cc9e9a25" args="(int angle)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CameraModel::setTiltAngle </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>angle</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt den Neigungswinkel der Kamera. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>angle</em>&nbsp;</td><td>Der Winkel in Grad (+-27 Grad), um welche sich die Kamera neigen soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a7482a10834fdbb927528c059b4c88d38"></a><!-- doxytag: member="objectexpl::core::CameraModel::writeCameraPose" ref="a7482a10834fdbb927528c059b4c88d38" args="(std::string filename)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CameraModel::writeCameraPose </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>filename</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Speichert die aktuelle Kamera Pose in eine Datei. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>filename</em>&nbsp;</td><td>Der Dateiname indem die Kamera Pose abgespeichert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/camera/<a class="el" href="CameraModel_8h_source.html">CameraModel.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/camera/CameraModel.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

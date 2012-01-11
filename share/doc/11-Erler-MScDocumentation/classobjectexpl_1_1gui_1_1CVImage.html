@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::gui::CVImage Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1gui.html">gui</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html">objectexpl::gui::CVImage</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::gui::CVImage Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::gui::CVImage" -->
+<p>Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="CVImage_8h_source.html">CVImage.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1gui_1_1CVImage-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a8c5377f4e35be330edb25e71f322e082">CVImage</a> (int X, int Y, int W, int H, const char *L, <a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html">CVImage</a> *zoomView=0)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default Konstruktor.  <a href="#a8c5377f4e35be330edb25e71f322e082"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a3dac4ad6b3bc0b0003d85e284ea16f2b">setSelect</a> (bool select)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt den Zustand ob das Bild selektiert wurde.  <a href="#a3dac4ad6b3bc0b0003d85e284ea16f2b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a90c58af32abdef3ae78743f09347a269">updateFrame</a> (const cv::Mat &amp;image)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Aktualisiert das angezeigte Bild.  <a href="#a90c58af32abdef3ae78743f09347a269"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a667fc6d107d010f527c3eb01cdab4282"></a><!-- doxytag: member="objectexpl::gui::CVImage::getLabel" ref="a667fc6d107d010f527c3eb01cdab4282" args="()" -->
+std::string&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a667fc6d107d010f527c3eb01cdab4282">getLabel</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt den Titel des Bildes zurück. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a7fdfa4c3702a3a9b887ce63cee2d745f">setLabel</a> (std::string label)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setzt den Titel des Bildes.  <a href="#a7fdfa4c3702a3a9b887ce63cee2d745f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2698e055c4a2b387f8fdef20a3bcf815"></a><!-- doxytag: member="objectexpl::gui::CVImage::draw" ref="a2698e055c4a2b387f8fdef20a3bcf815" args="()" -->
+void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a2698e055c4a2b387f8fdef20a3bcf815">draw</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Zeichnet das aktuelle Bild als OpenGL-Textur. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html#a354e26d1e0acb3ef295dbbb57ac2fac0">handle</a> (int e)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Callback Methode für die Mauseingabe.  <a href="#a354e26d1e0acb3ef295dbbb57ac2fac0"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar. </p>
+<p>Wird das Bild markiert wird ein grüner Rahmen angezeigt und das Bild wird im "zoom" Fenster vergrößert dargestellt. </p>
+<hr/><h2>Beschreibung der Konstruktoren und Destruktoren</h2>
+<a class="anchor" id="a8c5377f4e35be330edb25e71f322e082"></a><!-- doxytag: member="objectexpl::gui::CVImage::CVImage" ref="a8c5377f4e35be330edb25e71f322e082" args="(int X, int Y, int W, int H, const char *L, CVImage *zoomView=0)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">CVImage::CVImage </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>X</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>Y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>W</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>H</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classobjectexpl_1_1gui_1_1CVImage.html">CVImage</a> *&nbsp;</td>
+          <td class="paramname"> <em>zoomView</em> = <code>0</code></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Default Konstruktor. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>X</em>&nbsp;</td><td>Die X-Position des Bildes in der Oberfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>Y</em>&nbsp;</td><td>Die Y-Position des Bildes in der Oberfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>W</em>&nbsp;</td><td>Die Breite des Bildes in der Oberfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>H</em>&nbsp;</td><td>Die Höhe des Bildes in der Oberfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>L</em>&nbsp;</td><td>Der Name des Bildes in der Oberfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>zoomView</em>&nbsp;</td><td>Die Referenz zum vergrößerten Fenster. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a354e26d1e0acb3ef295dbbb57ac2fac0"></a><!-- doxytag: member="objectexpl::gui::CVImage::handle" ref="a354e26d1e0acb3ef295dbbb57ac2fac0" args="(int e)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int CVImage::handle </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>e</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Callback Methode für die Mauseingabe. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>e</em>&nbsp;</td><td>Die Event-Nr. was ausgelöst wurde. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Ob das Event verarbeitet wurde oder nicht. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a7fdfa4c3702a3a9b887ce63cee2d745f"></a><!-- doxytag: member="objectexpl::gui::CVImage::setLabel" ref="a7fdfa4c3702a3a9b887ce63cee2d745f" args="(std::string label)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CVImage::setLabel </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>label</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt den Titel des Bildes. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>label</em>&nbsp;</td><td>Der Titel des Bildes in Klartext. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a3dac4ad6b3bc0b0003d85e284ea16f2b"></a><!-- doxytag: member="objectexpl::gui::CVImage::setSelect" ref="a3dac4ad6b3bc0b0003d85e284ea16f2b" args="(bool select)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CVImage::setSelect </td>
+          <td>(</td>
+          <td class="paramtype">bool&nbsp;</td>
+          <td class="paramname"> <em>select</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setzt den Zustand ob das Bild selektiert wurde. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>select</em>&nbsp;</td><td>true das Bild wurde selektiert, sonst false. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a90c58af32abdef3ae78743f09347a269"></a><!-- doxytag: member="objectexpl::gui::CVImage::updateFrame" ref="a90c58af32abdef3ae78743f09347a269" args="(const cv::Mat &amp;image)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CVImage::updateFrame </td>
+          <td>(</td>
+          <td class="paramtype">const cv::Mat &amp;&nbsp;</td>
+          <td class="paramname"> <em>image</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Aktualisiert das angezeigte Bild. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das Bild was aktualisiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/gui/<a class="el" href="CVImage_8h_source.html">CVImage.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/gui/CVImage.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:51 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

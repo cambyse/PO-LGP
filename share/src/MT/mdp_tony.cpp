@@ -64,6 +64,7 @@ void mdp::readMDP_POMDP(MDP& mdp, const char *filename){
 
 #else
 
+#include "util.h"
 #include "mdp.h"
 void mdp::readMDP_POMDP(MDP& mdp, const char *filename){
   HALT("reading Tony's POMDP file only works for Linux");

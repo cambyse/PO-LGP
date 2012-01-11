@@ -26,7 +26,7 @@ struct ANN {
   
   uint getNN(const arr& x, double eps=.0, bool verbose=false);
   void getNN(intA& idx           , const arr& x, uint k, double eps=.0, bool verbose=false);
-  void getNN(arr& dists, intA& idx, const arr& x, uint k, double eps=.0, bool verbose=false);
+  void getNN(arr& sqrDists, intA& idx, const arr& x, uint k, double eps=.0, bool verbose=false);
   void getNN(arr& xx             , const arr& x, uint k, double eps=.0, bool verbose=false);
   
   void map(arr& y, const arr& x, const arr& Y); //given a data set Y of outputs for each X, do a NN regression to predict y at x

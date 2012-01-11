@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/PointCloudUtils.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/utils/PointCloudUtils.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef POINTCLOUDUTILS_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define POINTCLOUDUTILS_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;../utils/Common.h&quot;</span>
+<a name="l00005"></a>00005 
+<a name="l00006"></a>00006 <span class="preprocessor">#include &lt;ntk/mesh/mesh.h&gt;</span>
+<a name="l00007"></a>00007 <span class="preprocessor">#include &lt;ntk/mesh/mesh_generator.h&gt;</span>
+<a name="l00008"></a>00008 
+<a name="l00009"></a>00009 <span class="preprocessor">#include &lt;pcl/point_cloud.h&gt;</span>
+<a name="l00010"></a>00010 <span class="preprocessor">#include &lt;pcl/point_types.h&gt;</span>
+<a name="l00011"></a>00011 <span class="preprocessor">#include &lt;pcl/io/io.h&gt;</span>
+<a name="l00012"></a>00012 <span class="preprocessor">#include &lt;pcl/io/pcd_io.h&gt;</span>
+<a name="l00013"></a>00013 <span class="preprocessor">#include &lt;pcl/filters/voxel_grid.h&gt;</span>
+<a name="l00014"></a>00014 <span class="preprocessor">#include &lt;pcl/filters/passthrough.h&gt;</span>
+<a name="l00015"></a>00015 <span class="preprocessor">#include &lt;pcl/filters/extract_indices.h&gt;</span>
+<a name="l00016"></a>00016 <span class="preprocessor">#include &lt;pcl/features/normal_3d.h&gt;</span>
+<a name="l00017"></a>00017 <span class="preprocessor">#include &lt;pcl/kdtree/kdtree_flann.h&gt;</span>
+<a name="l00018"></a>00018 <span class="preprocessor">#include &lt;pcl/sample_consensus/method_types.h&gt;</span>
+<a name="l00019"></a>00019 <span class="preprocessor">#include &lt;pcl/sample_consensus/model_types.h&gt;</span>
+<a name="l00020"></a>00020 <span class="preprocessor">#include &lt;pcl/segmentation/sac_segmentation.h&gt;</span>
+<a name="l00021"></a>00021 <span class="preprocessor">#include &lt;pcl/filters/project_inliers.h&gt;</span>
+<a name="l00022"></a>00022 <span class="preprocessor">#include &lt;pcl/surface/convex_hull.h&gt;</span>
+<a name="l00023"></a>00023 <span class="preprocessor">#include &lt;pcl/segmentation/extract_polygonal_prism_data.h&gt;</span>
+<a name="l00024"></a>00024 <span class="preprocessor">#include &lt;pcl/segmentation/extract_clusters.h&gt;</span>
+<a name="l00025"></a>00025 <span class="preprocessor">#include &lt;pcl/segmentation/segment_differences.h&gt;</span>
+<a name="l00026"></a>00026 
+<a name="l00027"></a>00027 <span class="preprocessor">#include &lt;MT/ors.h&gt;</span>
+<a name="l00028"></a>00028 
+<a name="l00029"></a>00029 <span class="keyword">namespace </span>objectexpl {
+<a name="l00030"></a>00030 <span class="keyword">namespace </span>core {
+<a name="l00031"></a>00031 
+<a name="l00035"></a><a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html">00035</a> <span class="keyword">struct </span><a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html" title="Datenstruktur für die planare Hauptfläche.">PointCloudSurface</a> {
+<a name="l00036"></a><a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#a3071e3cb797ec020df70f47e0215243e">00036</a>         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#a3071e3cb797ec020df70f47e0215243e" title="Planare Hauptfläche als Punktwolke.">cloud</a>; 
+<a name="l00037"></a><a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#abf314c65b725dc7d4810f1e3ff55cff4">00037</a>         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#abf314c65b725dc7d4810f1e3ff55cff4" title="Konvexe Hülle der planaren Hauptfläche.">convexHull</a>; 
+<a name="l00038"></a><a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#a87670aa2368eb3804f6078960f306268">00038</a>         pcl::ModelCoefficients <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html#a87670aa2368eb3804f6078960f306268" title="Koeffizienten der planaren Hauptfläche.">coeff</a>; 
+<a name="l00039"></a>00039 };
+<a name="l00040"></a>00040 
+<a name="l00046"></a><a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html">00046</a> <span class="keyword">struct </span><a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html" title="Datenstruktur für die gefundenen Cluster über der planaren Hauptfläche.">ClusterOverSurface</a> {
+<a name="l00047"></a><a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html#a62b64415a6b76beedc81a04bcd3ea1c1">00047</a>         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html#a62b64415a6b76beedc81a04bcd3ea1c1" title="Punktwolke aller Cluster.">cloud</a>; 
+<a name="l00048"></a><a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html#a85b1f1e6f49ac951cc5fd0bd1384fb63">00048</a>         std::vector&lt;pcl::PointIndices&gt; <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html#a85b1f1e6f49ac951cc5fd0bd1384fb63" title="Referenzierte Indices, welche die einzelnen Cluster beschreiben.">indicies</a>; 
+<a name="l00049"></a>00049 };
+<a name="l00050"></a>00050 
+<a name="l00069"></a><a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html">00069</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html" title="Hilfsmethoden um eine Punktwolke zu analyisieren und zu manipulieren.">PointCloudUtils</a> {
+<a name="l00070"></a>00070 <span class="keyword">public</span>:
+<a name="l00071"></a>00071         <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a7cccf3d3a7d13670de5de5682c9ab6da" title="Default Konstruktor.">PointCloudUtils</a>();
+<a name="l00072"></a>00072         <span class="keyword">virtual</span> ~<a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html" title="Hilfsmethoden um eine Punktwolke zu analyisieren und zu manipulieren.">PointCloudUtils</a>();
+<a name="l00073"></a>00073         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a61b912a5a9b0a19d9f2373e3ea6ba562" title="Konvertiert eine NTK Punktwolke in eine PCL Punktwolke.">convertNTKToPointCloud</a>(ntk::Mesh ntkMesh);
+<a name="l00074"></a>00074         ors::Mesh <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a03d08ab8a091cc4ee3ba432aa68d3dd6" title="Konvertiert eine PCL Punkwolke in eine ORS Punktwolke.">convertPointCloudToORSMesh</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; pointCloud);
+<a name="l00075"></a>00075         ors::Mesh <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a12f48815c1334dd844218e813755f2ba" title="Konvertiert eine NTK Dreiecksnetz in eine ORS Dreiecksnetz.">convertNTKToORSMesh</a>(ntk::Mesh ntkMesh);
+<a name="l00076"></a>00076         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a274bd11a6ef848f7377b54eeb6316fd5" title="Filtert entfernte Punkte aus der Punktwolke heraus.">depthThresholdCloud</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud, <span class="keywordtype">double</span> maxZ);
+<a name="l00077"></a>00077         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a6bb37c17ec5a4a68cd875ec17209608b" title="Reduziert die Dichte einer Punktwolke.">downsampleCloud</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud, <span class="keywordtype">double</span> gapSize);
+<a name="l00078"></a>00078 
+<a name="l00079"></a>00079         <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html" title="Datenstruktur für die planare Hauptfläche.">PointCloudSurface</a> <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a429330c64589e68ed9ecf5257c0d3446" title="Extrahiert die planare Hauptfläche aus einer Punktwolke heraus.">extractSurface</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud);
+<a name="l00080"></a>00080         <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html" title="Datenstruktur für die gefundenen Cluster über der planaren Hauptfläche.">ClusterOverSurface</a> <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a3bf965dec3c77f95feb5a0ae04abd35b" title="Extrahiert alle Cluster aus der planaren Hauptfläche heraus.">extractClustersOverSurface</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud, <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html" title="Datenstruktur für die planare Hauptfläche.">PointCloudSurface</a> table);
+<a name="l00081"></a>00081         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a5dc18002f7fa59b9acf3b96ce40c7e3e" title="Extrahiert die Differenz zweier Punktwolken.">extractDifferences</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloudA, pcl::PointCloud&lt;pcl::PointXYZ&gt; cloudB);
+<a name="l00082"></a>00082         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#ab9e357b4b92195d8624fa026166ca3dc" title="Extrahiert aus einer Punktwolke nur die Punktwolken mit angegeben Index.">getCloudWithIndices</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud, pcl::PointIndices indices);
+<a name="l00083"></a>00083         pcl::PointCloud&lt;pcl::PointXYZ&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#ac3504dd99f6be19600b44aab09991207" title="Verbindet zwei Punktwolken miteinander.">concatenateCloud</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloudA, pcl::PointCloud&lt;pcl::PointXYZ&gt; cloudB);
+<a name="l00084"></a>00084         pcl::PointCloud&lt;pcl::PointNormal&gt; <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a080416542905aa59680d8f8b2dffbf5e" title="Berechnet die Normalen einer Punktwolke.">computeNormals</a>(pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud);
+<a name="l00085"></a>00085         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a8e7761780aa632e75017bd22739d12a7" title="Speichert die Punktwolke in eine Datei ab.">writeCloudToDisk</a>(std::string filename, pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud);
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087         cv::Mat1b <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a6c118f1891502802ced6c078962b1c1a" title="Gibt die Maske für die Cluster zurück.">getClusterMask</a>(<span class="keyword">const</span> ntk::RGBDImage&amp; frame, <a class="code" href="structobjectexpl_1_1core_1_1ClusterOverSurface.html" title="Datenstruktur für die gefundenen Cluster über der planaren Hauptfläche.">ClusterOverSurface</a> clusters);
+<a name="l00088"></a>00088         cv::Mat1b <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a614b21bcf8fdc4b679edb0d7547f7681" title="Gibt die Maske für die planare Hauptfläche zurück.">getSurfaceMask</a>(<span class="keyword">const</span> ntk::RGBDImage&amp; frame, <a class="code" href="structobjectexpl_1_1core_1_1PointCloudSurface.html" title="Datenstruktur für die planare Hauptfläche.">PointCloudSurface</a> surface);
+<a name="l00089"></a>00089         cv::Mat1b <a class="code" href="classobjectexpl_1_1core_1_1PointCloudUtils.html#a4c06e86175f1d501a89769273003a7a8" title="Gibt die Maske für eine Punktwolke zurück.">getCloudMask</a>(<span class="keyword">const</span> ntk::RGBDImage&amp; frame, pcl::PointCloud&lt;pcl::PointXYZ&gt; cloud);
+<a name="l00090"></a>00090 };
+<a name="l00091"></a>00091 
+<a name="l00092"></a>00092 }
+<a name="l00093"></a>00093 }
+<a name="l00094"></a>00094 <span class="preprocessor">#endif </span><span class="comment">/* POINTCLOUDUTILS_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

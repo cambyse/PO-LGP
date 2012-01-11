@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "robot.h"
 #include "vision.h"
 #include "guiModule.h"
@@ -134,7 +135,7 @@ void ControllerProcess::step(){
   //=== compute motion from the task variables
   //-- compute the motion step
   arr q_old=q_reference;
-  arr dq, qv, qv_1;
+  arr dq, x, x_1;
   //check if a colition and limit variable are active
   bool colActive=false, limActive=false;
   uint i; TaskVariable *v;
@@ -145,11 +146,11 @@ void ControllerProcess::step(){
   if(forceColLimTVs && (!colActive || !limActive)) HALT("SAFETY BREACH! You need an active collision and limit variable!");
   
   //dynamic control using SOC
-  qv_1=q_reference; qv_1.append(v_reference);
-  if(!useBwdMsg) soc::bayesianDynamicControl(sys, qv, qv_1, 0);
-  else           soc::bayesianDynamicControl(sys, qv, qv_1, 0, &bwdMsg_v, &bwdMsg_Vinv);
-  q_reference = qv.sub(0, q_reference.N-1);
-  v_reference = qv.sub(v_reference.N, -1);
+  x_1=q_reference; x_1.append(v_reference);
+  if(!useBwdMsg) soc::bayesianDynamicControl(sys, x, x_1, 0);
+  else           soc::bayesianDynamicControl(sys, x, x_1, 0, &bwdMsg_v, &bwdMsg_Vinv);
+  q_reference = x.sub(0, q_reference.N-1);
+  v_reference = x.sub(v_reference.N, -1);
   
   if(fixFingers) for(uint j=7; j<14; j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
   taskLock.unlock();
@@ -249,7 +250,7 @@ void RobotProcessGroup::open(){
   if(openGui){
     gui.q_referenceVar = &q_currentReference;
     gui.proxiesVar = &currentProxies;
-    if(openBumble) gui.cameraVar = &bumble.output;
+    if(openBumble) gui.cameraVar = &currentCameraImages;
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
@@ -263,12 +264,13 @@ void RobotProcessGroup::open(){
   }
   
   if(openBumble){
+    bumble.output = &currentCameraImages;
     bumble.threadOpen(MT::getParameter<int>("bumbleThreadNice", 0));
     bumble.threadLoop(); // -> start in loop mode!
   }
   
   if(openEarlyVision){
-    evis.input=&bumble.output;
+    evis.input = &currentCameraImages;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }

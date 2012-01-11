@@ -582,11 +582,14 @@ WARN_LOGFILE           =
 
 INPUT                  = ../src/MT/ors.h \
                          ../src/MT/ors.cpp \
-                         ../src/MT/ors_swift.cpp \
                          ../src/MT/ors_ode.cpp \
                          ../src/MT/ors_qhull.cpp \
                          ../src/MT/ors_opengl.cpp \
-                         ../src/MT/ors_taskVariables.cpp
+                         ../src/MT/ors_swift.cpp \
+                         ../src/MT/ors_featherstone.cpp \
+                         ../src/MT/ors_taskVariables.cpp \
+			 doxy/ors_mainpage.doxy
+
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 

@@ -28,6 +28,7 @@
 
 //-- from util.h
 template void MT::getParameter(double&, const char*);
+template float MT::getParameter<float>(const char*);
 template void MT::getParameter(uint&, const char*);
 template int MT::getParameter<int>(const char*);
 template void MT::getParameter(int&, const char*);
@@ -47,6 +48,7 @@ template void MT::Parameter<MT::String>::initialize();
 template void MT::Parameter<bool>::initialize();
 template void MT::Parameter<double>::initialize();
 template void MT::Parameter<int>::initialize();
+template void MT::load<arr>(arr&,const char*, bool);
 
 //-- from array.h
 //full classes

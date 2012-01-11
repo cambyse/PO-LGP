@@ -1,7 +1,6 @@
 #include <MT/soc.h>
 #include <MT/array.h>
 #include <MT/array_t.cpp>
-#include <MT/algos_LU.cpp>
 #include <MT/opengl.h>
 #include <aico_key_frames.h>
 
@@ -24,7 +23,7 @@ void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double al
   for (int k=0;k<100;k++){
     q_old = b;
     sys.setx(b);
-    sys.getCosts(R,r,b,steps);
+    sys.getTaskCosts(R,r,b,steps);
     if(  sys.taskCost(NULL,steps,-1)+ sum(~(b-x0)*Winv*(b-x0)) >old_r) alpha=alpha*0.5;
     else alpha=pow(alpha,0.5); 
     Binv = Winv+ R;
@@ -86,11 +85,13 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
   return llk;
 }
 
-double OneStepDynamicFull(arr& b,arr& Binv,
+double OneStepDynamicFull(arr& b,arr& Binv, int& counter,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha,double task_eps,double eps_alpha,
 			uint verbose, bool b_is_initialized)
 {
+  //if(!sys.dynamic)  return OneStepKinematic(b, Binv, sys, time, alpha);
+  //CHECK(sys.dynamic,"call this function only for dynamic systems");
   arr H1,R,Rinv,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; 
   double T = sys.nTime();
@@ -137,7 +138,7 @@ double OneStepDynamicFull(arr& b,arr& Binv,
     }else{
       if (!restore) alpha=pow(alpha,0.5); //success
       sys.getTaskCosts(R,r,b,T); // costs at the current position
-	counter++; // Basically counts number of getCosts calls
+	counter++; // Basically counts number of getTaskCosts calls
       double eps=1e-10; arr id; id.setId(dim*2);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
       b_best = b; b_old = b;
@@ -219,7 +220,7 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
 void GetOptimalDynamicTime(double& time, int& counter,
 			   arr& b,arr& Binv,soc::SocSystemAbstraction& sys,
 			   double alpha,double task_eps,double eps_alpha,double step,
-			   double min_step, bool verbose){
+			   double min_step, uint verbose){
   arr  R,r,q0,x0;
   double old_time=sys.getTau(false);//+1e-1;
   double T = sys.nTime();
@@ -234,10 +235,10 @@ void GetOptimalDynamicTime(double& time, int& counter,
   int cnt;
   counter = 0;
  while (step>min_step) {
-    sys.setqv(b0);
+    sys.setx(b0);
     OneStepDynamicFull(b,Binv,cnt,sys,old_time,alpha,task_eps,eps_alpha,verbose,false); // final posture estimation
     counter+=cnt;
-    sys.setqv(b);
+    sys.setx(b);
     if (sys.taskCost(NULL,T,-1)<old_r) { // in case best costs do not coincide with the best time
       sys.getTaskCosts(R,r,b,T);
       b_old=b;

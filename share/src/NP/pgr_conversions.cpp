@@ -1,3 +1,5 @@
+#ifdef MT_BUMBLE
+
 //=============================================================================
 // Copyright © 2008 Point Grey Research, Inc. All Rights Reserved.
 // 
@@ -76,4 +78,4 @@ dc1394_deinterlace_green( unsigned char* src,
   }
 }
 
-
+#endif

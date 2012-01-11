@@ -12,10 +12,16 @@ struct sSimulator {
   OpenGL gl;
   SwiftInterface swift;
   double margin;
+  double dynamicNoise;
+  bool gravity;
+  
+  //state
+  arr q,qdot,qddot;
+
 #ifdef MT_ODE
   OdeInterface ode;
 #endif
-  sSimulator(){ margin=.1; } //default margin = 10cm
+  sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
 
 void Simulator::anchorKinematicChainIn(const char* bodyName){
@@ -65,10 +71,10 @@ Simulator::Simulator(const char* orsFile){
 #ifdef MT_ODE
   s->ode.createOde(s->G);
 #endif
-  
+
+  s->G.getJointState(s->q, s->qdot);
+
   n=s->G.getJointStateDimension();
-  
-  
 }
 
 Simulator::~Simulator(){
@@ -76,13 +82,19 @@ Simulator::~Simulator(){
 }
 
 
-void Simulator::watch(){
-  s->gl.watch();
+void Simulator::watch(bool pause){
+  if(pause) s->gl.watch();
+  else s->gl.update();
 }
 
 void Simulator::getJointAngles(arr& q){
   s->G.getJointState(q);
 }
+
+void Simulator::getJointAnglesAndVels(arr& q, arr& qdot){
+  s->G.getJointState(q, qdot);
+}
+
 
 uint Simulator::getJointDimension(){
   return s->G.getJointStateDimension();
@@ -95,6 +107,8 @@ void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->swift.computeProxies(s->G, false);
   //s->G.sortProxies(true);
   if(updateDisplay) s->gl.update();
+  if(&q!=&s->q) s->q = q;
+  s->qdot.setZero();
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
@@ -103,6 +117,8 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
   s->swift.computeProxies(s->G, false);
   s->G.sortProxies(true);
   s->gl.update();
+  if(&q!=&s->q) s->q = q;
+  if(&qdot!=&s->qdot) s->qdot = qdot;
 }
 
 void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
@@ -159,25 +175,48 @@ void Simulator::setContactMargin(double margin){
   s->margin = margin;
 }
 
-double Simulator::kinematicsContacts(){
-  arr tmp(1);
-  s->G.getContactMeasure(tmp, s->margin);
-  return tmp(0);
+void Simulator::kinematicsContacts(arr& y){
+  s->G.getContactMeasure(y, s->margin);
 }
 
-void Simulator::jacobianContacts(arr& grad){
-  s->G.getContactGradient(grad, s->margin);
+void Simulator::jacobianContacts(arr& J){
+  s->G.getContactGradient(J, s->margin);
 }
 
-void Simulator::getDynamics(arr& M, arr& F, const arr& qdot, bool gravity){
+void Simulator::getDynamics(arr& M, arr& F){
   s->G.clearForces();
-  if(gravity) s->G.gravityToForces();
-  s->G.equationOfMotion(M, F, qdot);
+  if(s->gravity) s->G.gravityToForces();
+  s->G.equationOfMotion(M, F, s->qdot);
   F *= -1.; //different convention!!
 }
 
 double Simulator::getEnergy(){
   return s->G.getEnergy();
+}
+
+
+void Simulator::stepDynamic(const arr& u_control, double tau){
+  arr M,Minv,F;
+
+  getDynamics(M, F);
+
+  inverse(Minv,M);
+  s->qddot = Minv * (u_control - F);
+    
+  if(s->dynamicNoise) rndGauss(s->qddot, s->dynamicNoise, true);
+
+  //Euler integration (Runge-Kutte4 would be much more precise...)
+  s->q    += tau * s->qdot;
+  s->qdot += tau * s->qddot;
+  setJointAnglesAndVels(s->q, s->qdot);
+}
+  
+void Simulator::setDynamicSimulationNoise(double noise){
+  s->dynamicNoise = noise;
+}
+
+void Simulator::setDynamicGravity(bool gravity){
+  s->gravity = gravity;
 }
 
 void Simulator::stepOde(const arr& qdot, bool updateDisplay){
@@ -238,7 +277,8 @@ arr VisionSimulator::getCameraTranslation(){
 }
 
 void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel){
-  uint N=X.d0;
+#ifdef FREEGLUT
+	uint N=X.d0;
   x.resize(N, 3);
   
   //*
@@ -247,13 +287,13 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   glGetDoublev(GL_MODELVIEW_MATRIX, Mmodel.p);
   glGetDoublev(GL_PROJECTION_MATRIX, Mproj.p);
   glGetIntegerv(GL_VIEWPORT, Mview.p);
-  //cout <<Mview <<endl;
+	//cout <<Mview <<endl;
   //cout <<Mmodel <<endl;
   //cout <<Mproj <<s->P <<endl;
   //*/
   intA view(4);
   glGetIntegerv(GL_VIEWPORT, view.p);
-  
+
   //project the points using the OpenGL matrix
   s->P = s->gl.P;
   s->P /= s->P(0, 0);
@@ -273,4 +313,134 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   
   plotPoints(X);
   //s->gl.watch();
+#endif
 }
+
+void glDrawCarSimulator(void *classP);
+
+CarSimulator::CarSimulator(){
+  //car parameters
+  x=y=theta=0;
+  tau=1.; //one second time steps
+  L=2.; //2 meters between the wheels
+  dynamicsNoise = .03;
+  observationNoise = .5;
+
+  //landmarks
+  landmarks.resize(2,2);
+  rndGauss(landmarks, 10.);
+  //landmarks=ARR(10,0); landmarks.reshape(1,2);
+  
+  gl=new OpenGL;
+  gl->add(drawEnv, this);
+  gl->add(glDrawCarSimulator, this);
+  gl->add(glDrawPlot,&plotModule);
+
+  gl->camera.setPosition(10., -50., 100.);
+  gl->camera.focus(0, 0, .5);
+  gl->camera.upright();
+  gl->update();
+}
+
+void CarSimulator::step(const arr& u){
+  double v=u(0), phi=u(1);
+  x += tau*v*cos(theta);
+  y += tau*v*sin(theta);
+  theta += tau*(v/L)*tan(phi);
+
+  if(dynamicsNoise){
+    x += dynamicsNoise*rnd.gauss();
+    y += dynamicsNoise*rnd.gauss();
+    theta += dynamicsNoise*rnd.gauss();
+  }
+  
+  plotClear();
+  for(uint i=0;i<gaussiansToDraw.N;i++) plotCovariance(gaussiansToDraw(i).a, gaussiansToDraw(i).A);
+  gl->update();
+}
+
+void CarSimulator::getRealNoisyObservation(arr& Y){
+  getMeanObservationAtState(Y, ARR(x,y,theta));
+  rndGauss(Y,observationNoise,true);
+}
+
+void CarSimulator::getMeanObservationAtState(arr& Y, const arr& X){
+  Y=landmarks;
+  arr R = ARR(cos(X(2)), -sin(X(2)), sin(X(2)), cos(X(2)));
+  R.reshape(2,2);
+  arr p = ones(landmarks.d0,1)*~ARR(X(0),X(1));
+  Y -= p;
+  Y = Y*R;
+  Y.reshape(Y.N);
+}
+
+void CarSimulator::getLinearObservationModelAtState(arr& C, arr& c, const arr& X){
+  uint N=landmarks.d0;
+  arr R = ARR(cos(X(2)), sin(X(2)), -sin(X(2)), cos(X(2)));
+  R.reshape(2,2);
+  C.resize(2*N,2*N);  C.setZero();
+  for(uint i=0;i<N;i++) C.setMatrixBlock(R, 2*i, 2*i);
+  cout <<C <<endl;
+  c.resize(2*N);
+  for(uint i=0;i<N;i++) c.setVectorBlock(ARR(X(0),X(1)), 2*i);
+  c = - C * c;
+}
+
+void CarSimulator::getObservationJacobianAtState(arr& dy_dx, const arr& X){
+  uint N=landmarks.d0;
+  dy_dx = arr(2*N,3); dy_dx.setZero();
+  for (uint i=0; i<N; i++){
+    arr J(2,3);J.setZero();
+    //by x
+    J(0,0) = -cos(X(2));
+    J(1,0) = sin(X(2));
+    //by y
+    J(0,1) = -sin(X(2));
+    J(1,1) = -cos(X(2));
+    //by theta
+    J(0,2) = -sin(X(2))*(landmarks(i,0)-X(0)) + cos(X(2))*(landmarks(i,1)-X(1));
+    J(1,2) = -cos(X(2))*(landmarks(i,0)-X(0)) - sin(X(2))*(landmarks(i,1)-X(1));
+    dy_dx[i*2] = J[0];//copy in big J
+    dy_dx[i*2+1] = J[1];
+  }
+}
+
+void glDrawCarSimulator(void *classP){
+#ifdef FREEGLUT
+  CarSimulator *s=(CarSimulator*)classP;
+  ors::Transformation f;
+  f.addRelativeTranslation(s->x,s->y,.3);
+  f.addRelativeRotationRad(s->theta, 0., 0., 1.);
+  f.addRelativeTranslation(1.,0.,0.);
+
+  double GLmatrix[16];
+  f.getAffineMatrixGL(GLmatrix);
+  glLoadMatrixd(GLmatrix);
+  glColor(.8,.2,.2);
+  glDrawBox(3., 1.5, .5);
+  
+  for(uint l=0;l<s->landmarks.d0;l++){
+    f.setZero();
+    f.addRelativeTranslation(s->landmarks(l,0),s->landmarks(l,1), .5);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glColor(.2,.8,.2);
+    glDrawCylinder(.1,1.);
+  }
+  
+  glLoadIdentity();
+  glColor(.2,.2,.8);
+  for(uint l=0;l<s->particlesToDraw.d0;l++){
+    glPushMatrix();
+    glTranslatef(s->particlesToDraw(l,0), s->particlesToDraw(l,1), .6);
+    glDrawDiamond(.1, .1, .1);
+    glPopMatrix();
+  }
+
+  for(uint l=0;l<s->particlesToDraw.d0;l++){
+  }
+#endif
+}
+
+#include "array_t.cpp"
+template MT::Array<Gaussian>& MT::Array<Gaussian>::resize(uint);

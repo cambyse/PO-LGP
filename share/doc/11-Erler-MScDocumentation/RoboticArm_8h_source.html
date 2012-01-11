@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/robotic/RoboticArm.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/robotic/RoboticArm.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef ROBOTICARM_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define ROBOTICARM_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;../utils/Common.h&quot;</span>
+<a name="l00005"></a>00005 
+<a name="l00006"></a>00006 <span class="preprocessor">#include &lt;ntk/mesh/mesh.h&gt;</span>
+<a name="l00007"></a>00007 <span class="preprocessor">#include &lt;ntk/mesh/mesh_generator.h&gt;</span>
+<a name="l00008"></a>00008 
+<a name="l00009"></a>00009 <span class="preprocessor">#include &lt;opencv/cv.h&gt;</span>
+<a name="l00010"></a>00010 
+<a name="l00011"></a>00011 <span class="preprocessor">#define MT_FLTKGLUT</span>
+<a name="l00012"></a>00012 <span class="preprocessor"></span><span class="preprocessor">#define MT_IMPLEMENT_TEMPLATES</span>
+<a name="l00013"></a>00013 <span class="preprocessor"></span><span class="preprocessor">#include &lt;MT/robotActionInterface.h&gt;</span>
+<a name="l00014"></a>00014 <span class="preprocessor">#include &lt;MT/ors.h&gt;</span>
+<a name="l00015"></a>00015 <span class="preprocessor">#include &lt;MT/opengl.h&gt;</span>
+<a name="l00016"></a>00016 
+<a name="l00017"></a>00017 <span class="keyword">namespace </span>objectexpl {
+<a name="l00018"></a>00018 <span class="keyword">namespace </span>core {
+<a name="l00019"></a>00019 
+<a name="l00027"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html">00027</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html" title="Stellt den Zugriff für ein Roboterarm bereit.">RoboticArm</a> {
+<a name="l00028"></a>00028 <span class="keyword">public</span>:
+<a name="l00030"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21">00030</a>         <span class="keyword">enum</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21" title="Zustände des Roboterarmes.">ArmStates</a> {
+<a name="l00031"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21ad1f8fb5cd18cfea3445b114a990106e8">00031</a>                 PositionReached, 
+<a name="l00032"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21a8738ad7fe569cbcaee173f9c18964e5f">00032</a>                 InvalidPosition, 
+<a name="l00033"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21aa881452cfd0011d11769f0f07e9b483e">00033</a>                 HighTipForce,  
+<a name="l00034"></a><a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21ab5e55b878291be39f5ec28aedb6253ec">00034</a>                 <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21ab5e55b878291be39f5ec28aedb6253ec" title="Der Roboterarm ist ausgeschaltet.">ArmDisabled</a> 
+<a name="l00035"></a>00035         };
+<a name="l00036"></a>00036 
+<a name="l00037"></a>00037 <span class="keyword">public</span>:
+<a name="l00038"></a>00038         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a6cd6609b9be9f23744b1760820b6b026" title="Default Konstruktur.">RoboticArm</a>();
+<a name="l00039"></a>00039         <span class="keyword">virtual</span> ~<a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html" title="Stellt den Zugriff für ein Roboterarm bereit.">RoboticArm</a>();
+<a name="l00040"></a>00040 
+<a name="l00041"></a>00041         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a32a290e448409e5c60e5a660407cd5d6" title="Initialisiert den Roboterarm.">initialiseRoboticArm</a>(<span class="keywordtype">bool</span> adjustFingers = <span class="keyword">false</span>);
+<a name="l00042"></a>00042         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#acead4e53c169f7c26422e45f4176a68c" title="Deinitialisiert den Roboterarm.">deinitialiseRoboticArm</a>();
+<a name="l00043"></a>00043 
+<a name="l00044"></a>00044         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21" title="Zustände des Roboterarmes.">ArmStates</a> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a5f2ed0fee66291c6854370af2f596ced" title="Bewegt den Roboterarm in die Grundstellung zurück.">goToHomePosition</a>();
+<a name="l00045"></a>00045         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21" title="Zustände des Roboterarmes.">ArmStates</a> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a2f52538428cc29d24588a686b83567f3" title="Bewegt den Endeffektor auf eine Zielposition im Raum mit einer bestimmten Geschwindigkeit.">moveToTarget</a>(cv::Point3f targetPos, <span class="keywordtype">bool</span> collisionOn = <span class="keyword">true</span>, <span class="keywordtype">double</span> speed = 0.1);
+<a name="l00046"></a>00046         <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a860cf7d8c6779ee021c9087deec50f21" title="Zustände des Roboterarmes.">ArmStates</a> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#abe367d0e89c9f8c40d9d430e861d55fe" title="Bewegt die Leuchtdiode auf eine Zielposition im Raum.">moveLEDToTarget</a>(cv::Point3f targetPos);
+<a name="l00047"></a>00047         cv::Point3f <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a834de93e9f23da7cd073879db011c201" title="Gibt die aktuelle Position des Endeffektor in Weltkoordinanten an.">getEndeffectorPos</a>();
+<a name="l00048"></a>00048         cv::Point3f <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#ad766d60b7267e1a4768bcdeba6db7349" title="Gibt die aktuelle Position des Leuchtdiode in Weltkoordinaten an.">getLEDPos</a>();
+<a name="l00049"></a>00049 
+<a name="l00050"></a>00050         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#ab68f82a4ed2d3f7c8725aaddcddb2079" title="Setzt die Kollisionspunktwolke der Welt.">setCollisionWorldCloud</a>(ors::Mesh collisionWorldMesh);
+<a name="l00051"></a>00051         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a139ac5ad1dd64c86eed07bc819b555d2" title="Setzt das Dreiecksnetz der Welt im Simulator.">setWorldMesh</a>(ors::Mesh worldMesh);
+<a name="l00052"></a>00052         <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#a2a75f542051721960787bb8877937c88" title="Setzt die aktuelle Kamera Pose für den Simulator.">setCameraPose</a>(cv::Mat rotationMatrix, cv::Mat translationVector);
+<a name="l00053"></a>00053 
+<a name="l00054"></a>00054         OpenGL* <a class="code" href="classobjectexpl_1_1core_1_1RoboticArm.html#abb0b2ea22c75850eb32d0a7e52856b8f" title="Liefert das aktuelle OpenGL Fenster vom Simulator zurück.">getOpenGL</a>();
+<a name="l00055"></a>00055 
+<a name="l00056"></a>00056         <span class="comment">// Nur für Testzwecke</span>
+<a name="l00057"></a>00057         <span class="comment">/*void addGLView(int v,void (*call)(void*),const void* classP = 0);</span>
+<a name="l00058"></a>00058 <span class="comment">        void joystickMode();*/</span>
+<a name="l00059"></a>00059 <span class="keyword">private</span>:
+<a name="l00060"></a>00060         <span class="keywordtype">bool</span> isAdjustFingersOn;
+<a name="l00061"></a>00061         RobotActionInterface actionInterface;
+<a name="l00062"></a>00062 };
+<a name="l00063"></a>00063 
+<a name="l00064"></a>00064 }
+<a name="l00065"></a>00065 }
+<a name="l00066"></a>00066 <span class="preprocessor">#endif </span><span class="comment">/* ROBOTICARM_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>
