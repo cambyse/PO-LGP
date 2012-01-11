@@ -4321,6 +4321,7 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 //-- template instantiations
 
+#include "util_t.cpp"
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS

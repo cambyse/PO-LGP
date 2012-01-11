@@ -767,7 +767,7 @@ void TL::Substitution::write(ostream& os) {
 }
 
 
-void TL::State::write(ostream& os, bool primOnly) const {
+void TL::SymbolicState::write(ostream& os, bool primOnly) const {
   bool breaks = true;
 // 	os << "s ";
 	uint i;
@@ -796,7 +796,7 @@ void TL::State::write(ostream& os, bool primOnly) const {
   }
 }
 
-void TL::State::write_deprecated(ostream& os) const {
+void TL::SymbolicState::write_deprecated(ostream& os) const {
 //  os << "s ";
   uint i;
   os << "[" << endl;
@@ -944,12 +944,12 @@ bool TL::FunctionValue::operator!=(TL::FunctionValue& fv) const {
 
 
 
-bool TL::State::operator==(const TL::State& s) const {
+bool TL::SymbolicState::operator==(const TL::SymbolicState& s) const {
 	return equivalent(lits_prim, s.lits_prim)
       && equivalent(fv_prim, s.fv_prim);
 }
 
-bool TL::State::operator!=(const TL::State& s) const {
+bool TL::SymbolicState::operator!=(const TL::SymbolicState& s) const {
 	return !(*this == s);
 }
 
@@ -963,7 +963,7 @@ std::ostream& operator<<(std::ostream& os, const TL::Function& f) {
     f.write(os); return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const TL::State& s) {
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicState& s) {
   s.write(os); return os;
 }
 
@@ -995,7 +995,7 @@ std::ostream& operator<<(std::ostream& os, const TL::Rule& r) {
   r.write(os); return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const TL::Experience& e) {
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicExperience& e) {
   e.write(os); return os;
 }
 
@@ -1041,8 +1041,8 @@ void TL::Substitution::apply(const FuncVL& unsubFVs, FuncVL& subFVs) {
   }
 }
 
-TL::State* TL::Substitution::apply(const TL::State& state) {
-  TL::State* s_new = new TL::State;
+TL::SymbolicState* TL::Substitution::apply(const TL::SymbolicState& state) {
+  TL::SymbolicState* s_new = new TL::SymbolicState;
   apply(state.lits_prim, s_new->lits_prim);
   apply(state.lits_derived, s_new->lits_derived);
   apply(state.fv_prim, s_new->fv_prim);
@@ -1468,7 +1468,7 @@ TL::CountPredicate* TL::CountPredicate::newClone() {
 
 
 
-TL::State::~State() {
+TL::SymbolicState::~SymbolicState() {
   //  object deletion of concept-instances6 is managed ny the LogicEngine now!
 //     uint i;
 //     FOR1D(lits_prim, i) {
@@ -1510,7 +1510,7 @@ TL::Trial::~Trial() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::State& post) {
+TL::SymbolicExperience::SymbolicExperience(const TL::SymbolicState& pre, TL::Atom* action, const TL::SymbolicState& post) {
   this->pre = pre;
   this->action = action;
   this->post = post;
@@ -1518,12 +1518,12 @@ TL::Experience::Experience(const TL::State& pre, TL::Atom* action, const TL::Sta
 }
 
 
-TL::Experience::Experience() {}
+TL::SymbolicExperience::SymbolicExperience() {}
 
-TL::Experience::~Experience() {
+TL::SymbolicExperience::~SymbolicExperience() {
 }
 
-void TL::Experience::calcChanges() {
+void TL::SymbolicExperience::calcChanges() {
   // only look at p_prim
   changedConstants.clear();
   del.clear();
@@ -1546,9 +1546,11 @@ void TL::Experience::calcChanges() {
 }
 
 
-void TL::Experience::write(ostream& os) const {
+void TL::SymbolicExperience::write(ostream& os) const {
+  os << "ACTION: " << *action << endl;
   os << "PRE:    ";
-  this->pre.write(os, false);
+  this->pre.write(os);
+//   this->pre.write(os, true);
   
 //   uint i, k;
 //   uintA constants;
@@ -1567,17 +1569,15 @@ void TL::Experience::write(ostream& os) const {
 //   }
   
 //   os << endl;
-  os << "ACTION: ";
-  this->action->write(os);
-  os << endl;
   os << "POST:   ";
-  this->post.write(os, false);
+  this->post.write(os);
+//   this->post.write(os, true);
 //   os << "Diff: "<<(add.N + del.N)<<" (+"<<add.N<<", -"<<del.N<<")"<<endl;
 //   os << "ADD: ";  TL::write(add, os);  os<<endl;
 //   os << "DEL: ";  TL::write(del, os);  os<<endl;
 }
 
-bool TL::Experience::noChange() {
+bool TL::SymbolicExperience::noChange() {
   return changedConstants.N == 0  &&  del.N == 0  &&  add.N == 0;
 }
 
@@ -1943,7 +1943,7 @@ void TL::write(const MT::Array< LitL >& outcomes, ostream& os) {
 }
 
 
-void TL::write(const ExperienceA& exs, ostream& os) {
+void TL::write(const SymbolicExperienceL& exs, ostream& os) {
   uint k;
   FOR1D(exs, k) {
     os << "(" << k << ") ";

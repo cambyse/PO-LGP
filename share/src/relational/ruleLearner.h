@@ -92,7 +92,7 @@ class RuleSetContainer {
   public:
   // First rule = default rule
   TL::RuleSet rules;
-  const ExperienceL* p_experiences;
+  const SymbolicExperienceL* p_experiences;
   
   // redundant memories
   MT::Array< uintA > nonDefaultRules_per_experience;  // only non-default rules!
@@ -100,10 +100,10 @@ class RuleSetContainer {
   
   MT::Array< MT::Array < uintA > > experiences_per_ruleOutcome;
   
-  RuleSetContainer(const ExperienceL* _p_experiences);
+  RuleSetContainer(const SymbolicExperienceL* _p_experiences);
   RuleSetContainer(); // use init() later when using this constructor
   
-  void init(const ExperienceL* _p_experiences);
+  void init(const SymbolicExperienceL* _p_experiences);
   void append(TL::Rule* rule, uintA& experiences_of_this_rule, MT::Array< uintA >& experiences_per_outcome_of_this_rule);
   void remove(uint id);
   void clear();
@@ -126,7 +126,7 @@ class RuleSetContainer {
 
 namespace CostFunction {
   void setNoiseStateProbability(double p_min);
-  void setRuleCoveredExperiences(const ExperienceL& coveredEx);
+  void setRuleCoveredExperiences(const SymbolicExperienceL& coveredEx);
   void setOutcomesCoverage(const boolA& coverage);
   void setPenaltySum(double pen_sum);
   void setPenaltyPos(double pen_pos);
@@ -141,7 +141,7 @@ namespace CostFunction {
 
 
 
-void calcCoverage(ExperienceL& covered_experiences, uintA& covered_experiences_ids, const TL::Rule* r, const ExperienceL& experiences);
+void calcCoverage(SymbolicExperienceL& covered_experiences, uintA& covered_experiences_ids, const TL::Rule* r, const SymbolicExperienceL& experiences);
 
 
 
@@ -165,12 +165,12 @@ protected:
         
   // takes the rulelist rules2add and integrates it into existing ruleset
   void integrateNewRules(const TL::RuleSetContainer& rulesC_old, const TL::RuleSetContainer& rules_2add,
-                          const ExperienceL& experiences, TL::RuleSetContainer& rules_new);
+                          const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_new);
   
   // Creates possible new rules for the given rule-set.
   // "rules_2add" are potential additional rules which are all supposed to become part of the SAME rule-set!
   // I.e., they will be integrated into the old rule-set.
-  virtual void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add) = 0;
+  virtual void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add) = 0;
         
 public:
   SearchOperator(double alpha_PEN, double p_min, ProbabilityOptimizationType param_opt_type);
@@ -184,7 +184,7 @@ public:
   virtual void reset() = 0;
 
   // central method which is called by the RuleLearner
-  virtual void createRuleSets(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, 
+  virtual void createRuleSets(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, 
                   MT::Array< TL::RuleSetContainer >& sets_of_new_rules);
   
   const char* getName();
@@ -195,17 +195,17 @@ public:
 public:
   // Static Methods for estimation of outcomes and probabilities
   // Outcomes
-  static void calcCoverage_outcomes(const MT::Array< LitL >& outcomes, const ExperienceL& experiences, const TL::Rule* rule, boolA& coverage);
+  static void calcCoverage_outcomes(const MT::Array< LitL >& outcomes, const SymbolicExperienceL& experiences, const TL::Rule* rule, boolA& coverage);
   static void calcSubsumption(boolA& subsumes, const boolA& coverage);
   // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-  static void produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const ExperienceL& coveredExperiences,
+  static void produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExperiences,
                                       const TL::Rule& rule, double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type);
               
   // Parameter learning
   static double learnParameters_constrainedCostfunction(const MT::Array< LitL >& outcomes, doubleA& probs, double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type);
   static double learnParameters(const MT::Array< LitL >& outcomes, doubleA& probs, double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type);
   
-  static void induceOutcomes(TL::Rule* rule, MT::Array< uintA >& coveredExperiences_per_outcome, const ExperienceL& covered_experiences, const uintA& covered_experiences_ids,
+  static void induceOutcomes(TL::Rule* rule, MT::Array< uintA >& coveredExperiences_per_outcome, const SymbolicExperienceL& covered_experiences, const uintA& covered_experiences_ids,
                               double alpha_PEN, double p_min, double pen_sum, double pen_pos, ProbabilityOptimizationType param_opt_type);
 };
 
@@ -236,11 +236,11 @@ class ExplainExperiences : public SearchOperator {
       this->comparingValues = comparingValues;
     }
 
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
-    TL::Rule* explainExperience(TL::Experience* ex);
-    TL::Rule* explainExperience_straightforward(Experience* ex);
-    TL::Rule* explainExperience_deictic(Experience* ex);
-    TL::Rule* explainExperience_deictic_ALL_DRs(Experience* ex);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    TL::Rule* explainExperience(TL::SymbolicExperience* ex);
+    TL::Rule* explainExperience_straightforward(SymbolicExperience* ex);
+    TL::Rule* explainExperience_deictic(SymbolicExperience* ex);
+    TL::Rule* explainExperience_deictic_ALL_DRs(SymbolicExperience* ex);
     
     // resets field "nextPotentialExperience
     void reset();
@@ -256,7 +256,7 @@ class DropContextLiterals : public SearchOperator {
 			nextRule = 0;
 			nextContextLiteral = 0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
     
     void reset();
 };
@@ -275,7 +275,7 @@ class DropContextLiterals_approximativeVersion : public SearchOperator {
         approximative = true;
         prepareTotalNewSearch = false;
             }
-            void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+            void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
             
             void reset();
     void reset_total_approximator();
@@ -293,7 +293,7 @@ class DropReferences : public SearchOperator {
       nextReference = 0;
       nextRule=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
     
     void reset();
 };
@@ -305,11 +305,11 @@ class DropRules : public SearchOperator {
       name = "DropRules";
     }
     
-    void createRuleSets(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, 
+    void createRuleSets(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, 
               MT::Array< TL::RuleSetContainer >& sets_of_new_rules);
     
     // the following two rules are empty
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);   
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);   
     void reset();
 };
 
@@ -326,7 +326,7 @@ class SplitOnLiterals : public SearchOperator {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
     
     void reset();
 };
@@ -343,7 +343,7 @@ class AddLiterals : public SearchOperator {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
     
     void reset();
 };
@@ -359,7 +359,7 @@ class AddReferences : public SearchOperator {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
     
     void reset();
 };
@@ -380,7 +380,7 @@ class GeneralizeEquality : public SearchOperator {
         nextLiteral=0;
         doneLess=false;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
 
     void reset();
 };
@@ -405,7 +405,7 @@ class SplitOnEqualities : public SearchOperator {
           usedFunctions.append(logicObjectManager::f_prim);
           // Achtung DON'T used derived: usedFunctions.append(logicObjectManager::f_derived);!!!!
       }
-      void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+      void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
               
       void reset();
 };
@@ -426,7 +426,7 @@ class ChangeRange : public SearchOperator {
         nextLiteral=0;
         nextPossibleValue=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
             
     void reset();
 };
@@ -448,7 +448,7 @@ class MakeInterval : public SearchOperator {
         nextLiteral=0;
         nextPossibleValue=0;
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
             
     void reset();
 };
@@ -491,7 +491,7 @@ class CompareFunctionValues : public SearchOperator {
         comparisonTypes.append(comparison_equal);comparisonTypes.append(comparison_less);comparisonTypes.append(comparison_lessEqual);
         comparisonTypes.append(comparison_greater);comparisonTypes.append(comparison_greaterEqual);
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
             
     void reset();
 };
@@ -532,7 +532,7 @@ class SplitOnCompareFunctionValues : public SearchOperator {
       // collect comparison types SAFE THE ORDER!
       comparisonTypes.append(comparison_equal);comparisonTypes.append(comparison_less);comparisonTypes.append(comparison_greater);
     }
-    void findRules(const TL::RuleSetContainer& rulesC_old, const ExperienceL& experiences, TL::RuleSetContainer& rules_2add);
+    void findRules(const TL::RuleSetContainer& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer& rules_2add);
 
     void reset();
 };
@@ -582,10 +582,10 @@ public: // TODO entfernen
     void setAlphaPEN(double alpha_PEN);
     void set_p_mins(double p_min, double p_min_noisyDefaultRule);
     
-    double score(TL::RuleSetContainer& rulesC, ExperienceL& experiences, double cutting_threshold);
-    double score(TL::RuleSetContainer& rulesC, ExperienceL& experiences, double cutting_threshold, arr& experience_weights);
-    virtual void learn_rules(TL::RuleSetContainer& rulesC, ExperienceL& experiences, const char* logfile = DEFAULT_LOGFILE); 
-    virtual void learn_rules(TL::RuleSetContainer& rulesC, ExperienceL& experiences, arr& experience_weights, const char* logfile = DEFAULT_LOGFILE); 
+    double score(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, double cutting_threshold);
+    double score(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights);
+    virtual void learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile = DEFAULT_LOGFILE); 
+    virtual void learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile = DEFAULT_LOGFILE); 
 };
 
 }

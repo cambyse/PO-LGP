@@ -110,7 +110,7 @@ void DecisionMakingModule::step() {
     if (DEBUG>0) {cout<<"Reward:  "; reward->writeNice(); cout<<endl;}
     
     // ground rules
-    TL::State* s_groundingHelper = TL::RobotManipulationDomain::observeLogic(&sim);
+    TL::SymbolicState* s_groundingHelper = TL::RobotManipulationDomain::calculateSymbolicState(&sim);
     if (DEBUG>0) {cout<<"s_groundingHelper:"<<endl;  s_groundingHelper->write();  cout<<endl;}
     TL::ruleReasoning::ground_with_filtering(ground_rules, rules, TL::logicObjectManager::constants, *s_groundingHelper);
     delete s_groundingHelper;
@@ -126,7 +126,7 @@ void DecisionMakingModule::step() {
   
   
   // Read state
-  TL::State* s = TL::RobotManipulationDomain::observeLogic(&sim);
+  TL::SymbolicState* s = TL::RobotManipulationDomain::calculateSymbolicState(&sim);
   if (DEBUG>0) {cout<<"STATE:"<<endl;  s->write();  cout<<endl;}
   
   // Check if finished

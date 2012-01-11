@@ -45,16 +45,16 @@ namespace RelevanceGrounding {
  
 enum RelevanceType{TAKE_ALL, RANDOM, OPTIMAL, LEARNED};
 
-void sampleObjects(uintA& sampledObjects, const TL::State& s, TL::Reward* reward, RelevanceType relevanceType, uint sampleSize);
+void sampleObjects(uintA& sampledObjects, const TL::SymbolicState& s, TL::Reward* reward, RelevanceType relevanceType, uint sampleSize);
 
-void plan_in_single_subnet(AtomL& plan, double& value, const uintA& objects, const TL::State& s, TL::Reward* reward, RelevanceType relevanceType);
+void plan_in_single_subnet(AtomL& plan, double& value, const uintA& objects, const TL::SymbolicState& s, TL::Reward* reward, RelevanceType relevanceType);
 
 
 
 
 // Important (global) methods:
 
-void plan(AtomL& plan, const TL::State& s, TL::Reward* reward, uint subnets_num, uint verification_num, RelevanceType relevanceType, uint subnets_size, uint verification_size);
+void plan(AtomL& plan, const TL::SymbolicState& s, TL::Reward* reward, uint subnets_num, uint verification_num, RelevanceType relevanceType, uint subnets_size, uint verification_size);
 
 void initPlanParams(TL::Reward* reward, TL::RuleSet& rules, uint no_runs, double discount, uint T, RobotManipulationSimulator* sim);
 

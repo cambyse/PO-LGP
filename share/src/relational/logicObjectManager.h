@@ -104,8 +104,8 @@ namespace logicObjectManager {
   // what = 2 --> greater than[?]
   // what = 3 --> all, even compare two objects
   // all p_comp to constants!
-  void getCompLiterals_constantBound(LitL& pis, const uintA& args, const TL::State& s, uint what);
-  void getCompLiterals_dynamicBound(LitL& lits, const uintA& args, const TL::State& s, uint what);
+  void getCompLiterals_constantBound(LitL& pis, const uintA& args, const TL::SymbolicState& s, uint what);
+  void getCompLiterals_dynamicBound(LitL& lits, const uintA& args, const TL::SymbolicState& s, uint what);
   
   // FunctionAtoms
   TL::FunctionAtom* getFAorig(TL::FunctionAtom* fi_copy);
@@ -133,7 +133,7 @@ namespace logicObjectManager {
   // "original" means: replace Literal-objects by the objects of
   // the logicObjectManager if required.
   
-  void makeOriginal(TL::State& s);
+  void makeOriginal(TL::SymbolicState& s);
   void makeOriginal(TL::Trial& t);
   void makeOriginal(TL::Rule& r);
   

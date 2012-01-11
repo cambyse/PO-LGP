@@ -277,7 +277,8 @@ arr VisionSimulator::getCameraTranslation(){
 }
 
 void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel){
-  uint N=X.d0;
+#ifdef FREEGLUT
+	uint N=X.d0;
   x.resize(N, 3);
   
   //*
@@ -286,13 +287,13 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   glGetDoublev(GL_MODELVIEW_MATRIX, Mmodel.p);
   glGetDoublev(GL_PROJECTION_MATRIX, Mproj.p);
   glGetIntegerv(GL_VIEWPORT, Mview.p);
-  //cout <<Mview <<endl;
+	//cout <<Mview <<endl;
   //cout <<Mmodel <<endl;
   //cout <<Mproj <<s->P <<endl;
   //*/
   intA view(4);
   glGetIntegerv(GL_VIEWPORT, view.p);
-  
+
   //project the points using the OpenGL matrix
   s->P = s->gl.P;
   s->P /= s->P(0, 0);
@@ -312,6 +313,7 @@ void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, doub
   
   plotPoints(X);
   //s->gl.watch();
+#endif
 }
 
 void glDrawCarSimulator(void *classP);
@@ -404,6 +406,7 @@ void CarSimulator::getObservationJacobianAtState(arr& dy_dx, const arr& X){
 }
 
 void glDrawCarSimulator(void *classP){
+#ifdef FREEGLUT
   CarSimulator *s=(CarSimulator*)classP;
   ors::Transformation f;
   f.addRelativeTranslation(s->x,s->y,.3);
@@ -436,6 +439,8 @@ void glDrawCarSimulator(void *classP){
 
   for(uint l=0;l<s->particlesToDraw.d0;l++){
   }
+#endif
 }
 
+#include "array_t.cpp"
 template MT::Array<Gaussian>& MT::Array<Gaussian>::resize(uint);

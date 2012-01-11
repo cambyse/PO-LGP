@@ -1,5 +1,5 @@
-#ifndef TL__SYMBOL_GROUNDING
-#define TL__SYMBOL_GROUNDING
+#ifndef RELATIONAL__SYMBOL_GROUNDING
+#define RELATIONAL__SYMBOL_GROUNDING
 
 #include <relational/logicDefinitions.h>
 #include <MT/ors.h>
@@ -9,13 +9,14 @@
 
 namespace relational {
   
-  
+
+struct ContinuousState;
   
 // ------------------------------------------------------------------
-//  SymbolGrounding
+//  GroundedSymbol
 
 
-class SymbolGrounding {
+class GroundedSymbol {
 public:
   
   enum GroundingType {NN, RBF};
@@ -25,18 +26,18 @@ public:
   TL::Predicate* pred;
   GroundingType type;
 
-  SymbolGrounding(MT::String& name, uint arity, bool build_derived_predicates = false);
+  GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates = false);
   
   // calculates whether symbol holds given the data x
   virtual bool holds(arr& x) const = 0;
-  virtual void calculateLiterals(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const;
+  virtual void calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const;
   virtual void write() const;
   
-  static void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, const uintA& objects_ids, const MT::Array< arr > & objects_data);
+  static void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, const ContinuousState& const_state);
 };
 
 
-class NN_Grounding : public SymbolGrounding {
+class NN_Grounding : public GroundedSymbol {
 public:
   arr w1a;
   arr w1b;
@@ -52,7 +53,7 @@ public:
 };  
 
 
-class RBF_Grounding : public SymbolGrounding { 
+class RBF_Grounding : public GroundedSymbol { 
 public:
   arr w_c;
   arr w_sigma;
@@ -66,60 +67,67 @@ public:
 };
 
 
-void read(MT::Array<SymbolGrounding*>& pns, const char* prefix, SymbolGrounding::GroundingType grounding_type);
+void read(MT::Array<GroundedSymbol*>& pns, const char* prefix, GroundedSymbol::GroundingType grounding_type);
   
   
 // ors::Graph interface
 void getFeatureVector(arr& f, const ors::Graph& C, uint obj);
-void calculateLiterals(LitL& lits, const MT::Array<SymbolGrounding*>& sgs, ors::Graph* C);
+void getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs);
+void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, ors::Graph* C);
 
 
 }
 
-typedef MT::Array< relational::SymbolGrounding* > SGL;
+typedef MT::Array< relational::GroundedSymbol* > SGL;
 
 
 namespace relational {
-
-// ------------------------------------------------------------------
-//  Experiences
   
-// state: 20
-// 5 Objekte, 5. Objekt ist die Roboterhand
-// (1-3): x,y,z-Koords
-// (4): Groesse
 
-// successor state: 20
-// genauso
+struct ContinuousState {
+  uintA object_ids;
+  MT::Array< arr > data;
+  
+  void write(ostream& out) const;
+  void read(istream& in);
+  
+  bool operator==(const ContinuousState& other) const;
+  bool operator!=(const ContinuousState& other) const;
+};
 
-// action: 2
-// (1): Aktionstyp grasp 1, puton 2
-// (2): 
 
-// reward: 1
+ContinuousState* getContinuousState(const ors::Graph& C, const uintA& objects);
 
-inline uint buildConstant_nikolayData(uint a) {return a + 21;}
+
 
 struct FullExperience {
+  enum ActionType {grab, puton};
   
-  MT::Array< arr > state_continuous_pre;
-  MT::Array< arr > state_continuous_post;
+  ContinuousState state_continuous_pre;
+  ContinuousState state_continuous_post;
   
-  uint action_type;
-  uint action_target;
+  ActionType action_type;
+  uintA action_args;
   
   double reward;
   
-  TL::Experience experience_symbolic;
+  TL::SymbolicExperience experience_symbolic;
   
-  void write_continuous(ostream& out);
-  void write_symbolic(ostream& out);
+  void write_continuous_nice(ostream& out) const;
+  void write_continuous(ostream& out) const;
+  void write_symbolic(ostream& out) const;
+  static void write_continuous(MT::Array<FullExperience* > exps, ostream& out);
   static void write_symbolic(MT::Array<FullExperience* > exps, ostream& out);
-  static void read_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static FullExperience* read_continuous(ifstream& in);
+  static void read_continuous(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static void read_continuous_nikolayFormat(MT::Array< FullExperience* >& experiences, const char* file_name);
+  static void sanityCheck(MT::Array< FullExperience* >& experiences);
 };
 
-void calculateLiterals(MT::Array<SymbolGrounding*>& pns, FullExperience& e);
+void calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e);
 
 }
 
-#endif // TL__SYMBOL_GROUNDING
+typedef MT::Array< relational::FullExperience* > FullExperienceL;
+
+#endif // RELATIONAL__SYMBOL_GROUNDING
