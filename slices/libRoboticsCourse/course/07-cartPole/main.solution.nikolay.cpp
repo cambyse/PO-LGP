@@ -13,10 +13,10 @@ struct CartPoleState{
 	CartPoleState(){
 		x=0.;
 		v=0.;
-		theta=.05; //slighly non-upright //MT_PI; //haning down
+		theta=.2; //slighly non-upright //MT_PI; //haning down
 		omega=0.;
 		//init constants
-		tau = 1/60.0;
+		tau = 1/60.0; //with 1/1000 is better
 		Mp = 1;//1
 		Mc =1;
 		l = 1;//1
@@ -36,10 +36,13 @@ struct CartPoleState{
 		the2 = g*sin(theta) + cos(theta)*(-c1*u-c2*omega*omega*sin(theta));
 		the2 /= l*4/3 - c2*cos(theta)*cos(theta);
 		x2 = c1*u + c2*(omega*omega*sin(theta) - the2*cos(theta));
+
+		x += tau*v;//The correct order of euler intergration: first x and than v; NOTE: for the pendulum works better the other way around
+		theta += tau*omega;
+
 		v  += tau*x2;
 		omega += tau*the2;
-		x += tau*v;
-		theta += tau*omega;
+
 		//keep angles in range....
 		if (theta > MT_PI)
 			theta -= 2*MT_PI;
@@ -60,13 +63,13 @@ void glDrawCartPole(void *classP){
 	double GLmatrix[16];
 	ors::Transformation f;
 	//cart
-	f.addRelativeTranslation(s->x,0.,1.);
+  f.addRelativeTranslation(s->x,0.,1.);
 	f.getAffineMatrixGL(GLmatrix);
 	glLoadMatrixd(GLmatrix);
 	glColor(.8,.2,.2);
 	glDrawBox(1., .2, .2);
 	//pole
-	f.addRelativeRotationRad(s->theta,0., -1., 0.);
+  f.addRelativeRotationRad(s->theta,0., 1., 0.);
 	f.addRelativeTranslation(0., 0., .5);
 	f.getAffineMatrixGL(GLmatrix);
 	glLoadMatrixd(GLmatrix);
@@ -81,7 +84,7 @@ void testDraw(){
 
 void TestMove(){
 	CartPoleState s;
-	for (uint t = 0; t < 40000; t++){
+	for (uint t = 0; t < 400000; t++){
 		s.gl.text.clr() << t << " ; " << s.v << " ; " << s.omega;
 		s.step(0.0);
 		s.gl.update();
@@ -100,7 +103,8 @@ double GetControl(const arr & w, CartPoleState & s){
 }
 
 double GetCost(CartPoleState & s){
-	return fabs(s.x) + 0.01*fabs(s.theta) + fabs(s.v) + fabs(s.omega);
+	return s.x*s.x + 0.01*s.theta*s.theta + s.v*s.v + s.omega*s.omega;
+	//return fabs(s.x) + 0.01*fabs(s.theta) + fabs(s.v) + fabs(s.omega);
 }
 
 void TestStability(bool bNoise){
@@ -110,18 +114,18 @@ void TestStability(bool bNoise){
 	double fbest = 10000;
 	arr wbest;
 	arr w(4);w.setZero(0);wbest = w;
-	if(true)
+	if(false)
 		for (uint z = 0; z < 100000; z++){
 			s.theta = 0.1;s.omega = 0.;	s.x = 0;s.v = 0;s.the2 = 0;s.x2 = 0;
 			rndGauss(w,100,false);
 			//rndUniform()w = w*0.12;//w(3) = w(3)*2;//semms larger
 			double cost = 0;
 			for (uint t = 0; t < 600; t++){
-				if (t >= 550 && t%10 == 0)
+				if (t >= 550 && t%5 == 0)
 					cost+= GetCost(s);//at rest at 0 0
 				s.step(GetControl(w,s));
 			}
-			cost/= 5;
+			cost/= 10;
 			if (cost < fbest){
 				fbest = cost;
 				wbest =w;
@@ -135,29 +139,34 @@ void TestStability(bool bNoise){
 			}
 		}
 
-	for(uint sd = 0; sd < 3; sd++)
-		for (uint z = 0; z < 50000; z++){
-			s.theta = 0.1;s.omega = 0.;	s.x = 0;s.v = 0;s.the2 = 0;s.x2 = 0;
-			w = wbest;
-			rndGauss(w,0.6/(1+sd),true);//decreasing std
-			double cost = 0;
-			for (uint t = 0; t < 600; t++){
-				if (t >= 550 && t%10 == 0)
-					cost+= GetCost(s);//at rest at 0 0
-				s.step(GetControl(w,s));
-			}
-			cost/= 5;
-			if (cost < fbest){
-				fbest = cost;
-				wbest =w;
-				cout << " best at " << z << " " << w << " :  " << cost << " ; " << s.v << " " << s.omega << endl;
-			}
-			if(z%1000 == 0){
-				s.gl.text.clr() <<z << " " << 0.06/(1+sd) << " best: " << fbest;
-				s.gl.update();
-			}
-		}
+	wbest(0) =  22.3945;
+	wbest(1) =  18.018;
+	wbest(2) = 193.834;
+	wbest(3) =  72.4382;
 
+	if(false)
+		for(uint sd = 0; sd < 2; sd++)
+			for (uint z = 0; z < 100000; z++){
+				s.theta = 0.1;s.omega = 0.;	s.x = 0;s.v = 0;s.the2 = 0;s.x2 = 0;
+				w = wbest;
+				rndGauss(w,0.6/(1+sd),true);//decreasing std
+				double cost = 0;
+				for (uint t = 0; t < 600; t++){
+					if (t >= 550 && t%5 == 0)
+						cost+= GetCost(s);//at rest at 0 0
+					s.step(GetControl(w,s));
+				}
+				cost/= 10;
+				if (cost < fbest){
+					fbest = cost;
+					wbest =w;
+					cout << " best at " << z << " " << w << " :  " << cost << " ; " << s.v << " " << s.omega << endl;
+				}
+				if(z%1000 == 0){
+					s.gl.text.clr() <<z << " " << 0.06/(1+sd) << " best: " << fbest;
+					s.gl.update();
+				}
+			}
 	w = wbest;
 	while(true)
 	{

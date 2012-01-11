@@ -36,7 +36,7 @@ void glDrawCartPole(void *classP){
   glColor(.8,.2,.2);
   glDrawBox(1., .2, .2);
   //pole
-  f.addRelativeRotationRad(s->theta,0., -1., 0.);
+  f.addRelativeRotationRad(s->theta,0., 1., 0.);
   f.addRelativeTranslation(0., 0., .5);
   f.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
