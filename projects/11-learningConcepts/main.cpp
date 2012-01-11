@@ -127,8 +127,8 @@ void produce_rules() {
 
 		// HACK
 		arr& w_sigma = ((relational::RBF_Grounding*) gsl(0))->w_sigma;
-		w_sigma(1) += 0.2;
-		w_sigma(2) += 0.2;
+		//w_sigma(1) += 0.2;
+		//w_sigma(2) += 0.2;
 
 		// Experiences
 		MT::Array< relational::FullExperience* > experiences;
@@ -553,7 +553,7 @@ void symbol_evaluation() {
 		dir = "parameters_RBF/";
 
 	MT::Array< MT::String > files_ors;
-	files_ors.append(MT::String("ors_situations/sit_10cubes_6.ors"));
+	files_ors.append(MT::String("ors_situations/sit_7cubes_6.ors"));
 
 	/*files_ors.append(MT::String("ors_situations/sit_10cubes_1.ors"));
 	files_ors.append(MT::String("ors_situations/sit_10cubes_2.ors"));
@@ -768,7 +768,7 @@ int main(int argc, char** argv){
 	rnd.seed(rand_seed);
 	PRINT_(rand_seed);
 
-//	symbol_evaluation();
+	symbol_evaluation();
 
 
 	uint nik_data;

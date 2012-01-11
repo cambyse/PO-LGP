@@ -59,6 +59,10 @@ void PrintData(const uintA & objs, const uint & nTarget, ors::Graph * C, ofstrea
 
 MT::Array< arr > tracedata;
 arr rewards;
+
+MT::Array< arr > tracedata0;
+arr rewards0;
+
 int nDescr;//lenght of descriptor
 int nObj;//cosntant how many objects
 MT::String str;
@@ -86,10 +90,10 @@ arr ReturnPermutedState(const arr & orig, const uintA& perm){
 	for (uint i = 0; i < nObj; i++)//unary
 		p(i) = orig(perm(i));
 
-	for (uint i = 0; i < nObj; i++)//binary
+	for (uint i = 0; i < nObj; i++)//binary; assuming one unary before it !!!
 		for (uint j = 0; j < nObj; j++){
-			uint idNew = i*nObj+j;
-			uint idOld = perm(i)*nObj + perm(j);
+			uint idNew = nObj+i*nObj+j;
+			uint idOld = nObj + perm(i)*nObj + perm(j);
 			p(idNew) = orig(idOld);
 		}
 	//cout << p << endl << orig << endl;
@@ -100,11 +104,11 @@ double ExpDifference(const arr & a, const arr & b){
 	//	arr dif = a.sub(0,nDescr-3) - b.sub(0,nDescr-3) ;//difference between actions and rleational description
 	double dif =0;
 	if ( a(nDescr-1) == b(nDescr-1))//reward
-			dif = 0;
-		else
-			dif = 1;
-		if (dif ==1)
-			return dif;
+		dif = 0;
+	else
+		dif = 1;
+	if (dif ==1)
+		return dif;
 
 	if ( a(nDescr-2) == b(nDescr-2))//action
 		dif = 0;
@@ -131,12 +135,12 @@ double ExpDifference(const arr & a, const arr & b){
 void EnhanceDataset(){
 	MT::Array< arr > tracedata2(0);
 	arr rewards2;
-	int nS = 20000;//how many samples and also how far back to look
-	for(uint i =0; i < tracedata.N; i++){//tracedata.N
-		//add originals
-		//cout << endl << tracedata(i) << endl;
-		tracedata2.append(tracedata(i));
+	int nS = 7000;//how many samples and also how far back to look
+	for(uint i =0; i < tracedata.N; i++){
+		//cout << " i " << i << tracedata(i) << endl;
+		tracedata2.append(tracedata(i));//add originals
 		rewards2.append(rewards(i));
+		idxes.append(i);
 		for(uint j = 0; j < nS; j++){
 			arr tmp = ReturnPermutedState(tracedata(i),RandPerm(nObj));
 			bool bGood = true;
@@ -144,7 +148,7 @@ void EnhanceDataset(){
 				bGood = false;
 
 			if(tracedata2.N>0)
-				for(int z = tracedata2.N-1; z >=0 &&  tracedata2.N -z < 2*nS ;z--){
+				for(int z = tracedata2.N-1; z >=0 &&  tracedata2.N -z < nS ;z--){
 					if (ExpDifference(tmp,tracedata2(z))  < 1)
 						bGood = false;
 					if (!bGood)
@@ -157,9 +161,10 @@ void EnhanceDataset(){
 				idxes.append(i);
 			}
 		}
-		cout << " after permutes " << tracedata2.N << " bef " << tracedata.N << endl;
+		cout << i << " after permutes " << tracedata2.N << " bef " << tracedata.N << endl;
 	}
-	cout << " after permutes " << tracedata2.N << " bef " << tracedata.N << endl;
+	tracedata0 = tracedata;
+	rewards0  = rewards;
 	tracedata = tracedata2;
 	rewards =rewards2;
 }
@@ -170,18 +175,20 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 		tracedata =  init_getVector__for_the_nikolay(file);
 		nDescr = tracedata(0).N;
 		if(nDescr == 113)
-		nObj = 10;//constant for now !!!
+			nObj = 10;//constant for now !!!
 		if(nDescr == 59)
 			nObj = 7;
 		str = MT::String(file);
 		rewards = arr(tracedata.N);
 		for(uint i =0 ; i < tracedata.N; i++){
+			cout << i << tracedata(i) << endl;
 			rewards(i) = 0;//tracedata(i)(nDescr-1);TOBIAS has false pre reward
-			cout <<  " rew " << tracedata(i)(nDescr-1) << endl;
-			for(uint j = 1; j < 3; j++)
+			cout <<  " rew " << tracedata(i)(nDescr-1) ;
+			for(uint j = 1; j < 4; j++)
 				if (i +j < tracedata.N &
-					i/10 == (i+j)/10	)//so in same episode...
+						i/10 == (i+j)/10	)//so in same episode...
 					rewards(i)  = rewards(i) + pow(gamma,j)*tracedata(i+j)(nDescr-1);
+			cout << " val " << rewards(i) << endl;
 		}
 		EnhanceDataset();
 		cout << endl << endl << " reward and states ready " << endl;
@@ -198,7 +205,7 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 		arr tmpexp = tracedata(i);
 		arr tmpdesc = tmpexp.sub(0,nDescr-4);//last 3 are action targ reward
 		double v = norm(tmpdesc-current);
-		if (v <= fmin && (best == -1 || rewards(i) >= rewards(best)) ){
+		if (v <= fmin || (v == 0 && rewards(i) <= rewards(best))){
 			fmin = v;
 			best= i;
 		}
@@ -207,12 +214,15 @@ TL::Atom* PredictTrace(const TL::SymbolicState& ss, const char * file){
 	int bestact = bestexp(nDescr-3);
 	int besttarg = bestexp(nDescr-2);
 	cout << endl << " best action " << best << "; dist: " << fmin << "; reward: " << rewards(best) << "; values: " << bestact << " " << besttarg << endl;
-	cout << endl    		<< bestexp << endl;
-	cout << current << endl;
+	cout << " best descri: "  		<< bestexp << endl;
+	cout << " curr descri: "         <<current << endl;
 	int idx = idxes(best);
-	cout << tracedata(idx) << endl;
-	cout << tracedata(idx+1) << endl;
-	cout << tracedata(idx+2) << endl;
+	cout << idx << endl;
+	cout << " origpermute: " << tracedata0(idx) << endl << rewards0(idx)<< endl;
+	if(idx+1 < tracedata0.N)
+		cout << tracedata0(idx+1) << endl <<rewards0(idx+1)<< endl;;
+	if(idx+2 < tracedata0.N)
+		cout << tracedata0(idx+2) << endl << rewards0(idx+2)<< endl;;
 	uintA args;  args.append(besttarg);
 	TL::Predicate* p_GRAB = TL::logicObjectManager::getPredicate(MT::String("grab"));
 	TL::Predicate* p_PUTON = TL::logicObjectManager::getPredicate(MT::String("puton"));
@@ -230,7 +240,7 @@ void NikGenerateData(){
 	MT::String sim_file;
 	bool bSphere = true;
 	if(!bSphere)
-     sim_file = MT::String("situationNik.ors");
+		sim_file = MT::String("situationNik.ors");
 	else
 		sim_file =MT::String("situationNikSphere.ors");
 
@@ -245,7 +255,7 @@ void NikGenerateData(){
 	uintA objects;
 	sim.getObjects(objects);
 	if(bSphere)
-	objects.append(67);//for sphere case
+		objects.append(67);//for sphere case
 	objects.append(sim.C->getBodyByName("fing1c")->index);
 
 	cout<<"Objects: "<<objects<<endl;
