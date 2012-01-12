@@ -53,7 +53,7 @@ void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
   x.resize(T+1, 2, n);
   for(t=0; t<=T; t++){
     x.subDim(t, 0)=q[t];
-    if(t) x.subDim(t, 1)=(q[t]-q[t-1])/tau;
+    if(t<T) x.subDim(t, 1)=(q[t+1]-q[t])/tau;
     else  x.subDim(t, 1)=0.;
   }
   x.reshape(T+1, 2*n);
@@ -201,7 +201,7 @@ void soc::SocSystemAbstraction::getProcess(arr& A, arr& a, arr& B, uint t, arr* 
     arr Q, Hinv;
     getQ(Q, t);
     getHinv(Hinv, t);
-    (*Winv) = Q+(B*Hinv*(~B));
+    (*Winv) = (B*Hinv*(~B))+Q;
   }
 }
 
@@ -312,18 +312,18 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
 }
 
-void soc::SocSystemAbstraction::fvi (arr& y, arr* J, uint i, const arr& x_i){
+void soc::SocSystemAbstraction::fvi (arr& y, arr& J, uint i, const arr& x_i){
   arr JBar;
   setx(x_i,i);  eval_cost++;
   getTaskCostTerms(y, JBar, x_i, i);
-  if(J) *J = JBar;
+  if(&J) J = JBar;
 }
 
-void soc::SocSystemAbstraction::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+void soc::SocSystemAbstraction::fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j){
   arr PsiI, PsiJ;
   getTransitionCostTerms(y, PsiI, PsiJ, x_i, x_j, i);
-  if(Ji) *Ji = PsiI;
-  if(Jj) *Jj = PsiJ;
+  if(&Ji) Ji = PsiI;
+  if(&Jj) Jj = PsiJ;
 }
 
 
@@ -335,11 +335,11 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
   struct GradientFunction:VectorFunction{
     soc::SocSystemAbstraction *sys;
     uint t;
-    void fv(arr& y, arr *J, const arr& x){
+    void fv(arr& y, arr& J, const arr& x){
       sys->setx(x);
       arr JBar;
       sys->getTaskCostTerms(y, JBar, x, t);
-      if(J){ *J=JBar; cout <<J<<endl; }
+      if(&J){ J=JBar; cout <<J<<endl; }
     }
   } f;
   
@@ -383,9 +383,10 @@ void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& Ji, arr& J
     getProcess(A, a, B, i);
     getQ(Q, i);
     Psi = xj - (A*xi+a);
+    for(uint i=0;i<Q.d0/2;i++) Q(i,i) += 1e-4; //allow for noise in the position transitions!
     Winv = B*Hinv*~B + Q;
-    //inverse_SymPosDef(W, Winv);
-    lapack_cholesky(M, Winv);
+    inverse_SymPosDef(W, Winv);
+    lapack_cholesky(M, W);
     Psi = M*Psi;
     Jj = M;
     Ji = -M*A;
@@ -630,15 +631,19 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
   arr R, r;
   double c1, c2, c3;
   double taskCsum=0., ctrlCsum=0.;
-  arr q, qdd;
-  soc::getPositionTrajectory(q, x);
+  arr q, qdd, xx;
+  if(dynamic) soc::getPositionTrajectory(q, x); else q=x;
+  if(dynamic) soc::getPhaseTrajectory(xx,q,getTau());
+  cout <<"** cost checks" <<endl;
   for(t=0; t<=T; t++){
+    cout <<"time " <<t <<endl;
+
     setx(x[t]);
     getTaskCostTerms(Phi, PhiJ, x[t], t);
     c1=sumOfSqr(Phi);
     c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
-    //cout <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
+    //cout <<" tasks: " <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
     if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
@@ -653,25 +658,29 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         c2 = sqrDistance(W, x[t+1], x[t]);
         c3=c2;
       }else{
-        arr H, M, F;
+        arr H, Hinv, M, F;
         double tau=getTau();
         double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
         getH(H, t);
+        getHinv(Hinv, t);
         getMF(M, F, t);
         if(t>0){
           qdd = tau_2*(q[t+1]+q[t-1]-(double)2.*q[t]);
           c2 = sqrDistance(H, M*qdd, F);
-        }else{
+        }else{ //assumes q[t-1]=q[t], that is, zero initial velocity
           qdd = tau_2*(q[t+1]-q[t]);
           c2 = sqrDistance(H, M*qdd, F);
         }
         
-        uint n = q.d1;
-        arr A, a, B, Winv;
+        arr A, a, B, Q, W, Winv;
         getProcess(A, a, B, t, &Winv);
-        arr W(2*n, 2*n); W.setZero(); W.setMatrixBlock(tau_2*(~M)*H*M, n, n);
+        //uint n = q.d1;
+        //arr W(2*n, 2*n); W.setZero(); W.setMatrixBlock(tau_2*(~M)*H*M, n, n);
+        Winv(0,0) += 1e10;
         inverse_SymPosDef(W, Winv);
-        c3 = sqrDistance(W, x[t+1], A*x[t] + a);
+        //c3 = sqrDistance(Winv, x[t+1], A*x[t] + a); //this is the same as Psi above!
+        //cout <<W <<Winv <<endl;
+        c3 = sqrDistance(W, xx[t+1], A*xx[t] + a); //this approximates c2 - why?
         
         //compare the accelerations:
         //cout <<qdd <<endl <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1)) <<endl;
@@ -679,10 +688,8 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         //c3 = sqrDistance(tmp, x[t+1], A*x[t]+a);
         //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
-      cout <<t <<' ' <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
-      //if(t==0)
-      //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
-      ctrlCsum+=c2;
+      cout <<" trans: " <<c1 <<' ' <<c2 <<' ' <<c3 <<' ' <<endl;
+      ctrlCsum+=c1;
     }
   }
   cout <<"costChecks: "
@@ -747,7 +754,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
         taskCsum += prec*dy*(t<T?double(1 <<scalePower):1.);
         taskC(t) += prec*dy;
         taskCi(t, i)=prec*dy;
-        taskDx(t, i)=sqrt(dy);
+        taskDx(t, i)=prec*dy; //sqrt(dy);
         
         if(dynamic){
           getJqd(Jqd, i);
@@ -756,7 +763,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
           taskCsum += precv*dv*(t<T?double(1 <<scalePower):1.);
           taskC(t) += precv*dv;
           taskCi(t, i)+=precv*dv;
-          taskDv(t, i)=sqrt(dv);
+          taskDv(t, i)=precv*dv; //sqrt(dv);
         }
       }
       if(isConstrained(i, t <<scalePower)){
@@ -782,9 +789,6 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
         ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]+q[t-1]-(double)2.*q[t]), F);
       if(t==0)
         ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
-      //if(t==0)
-      //ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
-      //we don't know the velocity in the first time slice!! - so we make no assumptions and associate no costs...
     }
     ctrlCsum += ctrlC(t);
   }
@@ -807,7 +811,13 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
     MT::String cmd;
     cmd <<"set style data linespoints\n";
     cmd <<"plot 'z.trana' us 0:4 title 'ctrlC','z.trana' us 0:6 title 'taskC'";
-    for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
+    if(!dynamic){
+      for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<8+i <<" title '" <<taskName(i) <<"'";
+    }else{
+      for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<9+m+i <<" title '" <<taskName(i) <<"_q'";
+      for(i=0; i<m; i++) if(isConditioned(i, 0)||isConstrained(i, 0)) cmd <<", 'z.trana' us 0:" <<10+2*m+i <<" title '" <<taskName(i) <<"_v'";
+    }
+    //cout <<cmd <<endl;
     gnuplot(cmd);
   }
 #ifdef NIKOLAY

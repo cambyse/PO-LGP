@@ -7,7 +7,6 @@
 // function evaluation counter (used only for performance meassurements, global for simplicity)
 extern uint eval_cost;
 
-
 //===========================================================================
 //
 // return types
@@ -18,24 +17,28 @@ struct     SqrPotential { arr A, a;          double c; };
 /// return type for a function that returns a square potential $f(x,y) = [x,y]^T [A,C; C^T,B] [x,y] - 2 [a,b]^T [x,y] + c$
 struct PairSqrPotential { arr A, B, C, a, b; double c; };
 
+extern arr& NoGrad;
+extern SqrPotential& NoPot;
+extern PairSqrPotential& NoPairPot;
+
 
 //===========================================================================
 //
 // (cost) function types
 //
 
-/// A scalar function $y = f(x)$, if @grad@ is non-NULL, gradient is returned
-struct ScalarFunction { virtual double fs(arr* grad, const arr& x) = 0; };
+/// A scalar function $y = f(x)$, if @grad@ is not NoGrad, gradient is returned
+struct ScalarFunction { virtual double fs(arr& grad, const arr& x) = 0; };
 
-/// A vector function $y = f(x)$, if @J@ is non-NULL, Jacobian is returned
+/// A vector function $y = f(x)$, if @J@ is not NoGrad, Jacobian is returned
 /// This also implies an optimization problem $\hat f(y) = y^T(x) y(x)$ of (iterated)
 /// Gauss-Newton type where the Hessian is approximated by J^T J
-struct VectorFunction { virtual void   fv(arr& y, arr *J, const arr& x) = 0; };
+struct VectorFunction { virtual void   fv(arr& y, arr& J, const arr& x) = 0; };
 
 /// A scalar function $y = f(x)$, if @S@ is non-NULL, local quadratic approximation is returned
 /// This also implies an optimization problem of (iterated) Newton
 /// type with the given Hessian
-struct QuadraticFunction { virtual double fq(SqrPotential *S, const arr& x) = 0; };
+struct QuadraticFunction { virtual double fq(SqrPotential& S, const arr& x) = 0; };
 
 
 /// Given a chain $x_{0:T}$ of variables, implies a cost function
@@ -43,8 +46,8 @@ struct QuadraticFunction { virtual double fq(SqrPotential *S, const arr& x) = 0;
 /// and we can access local Jacobians of f_i and f_{ij}
 struct VectorChainFunction {
   uint T;
-  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i) = 0;
-  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  virtual void fvi (arr& y, arr& J, uint i, const arr& x_i) = 0;
+  virtual void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
 
 /// Given a chain $x_{0:T}$ of variables, implies a cost function
@@ -52,8 +55,8 @@ struct VectorChainFunction {
 /// and we can access local SqrPotential approximations of f_i and f_{ij}
 struct SqrChainFunction {
   uint T;
-  virtual double fqi (SqrPotential *S, uint i, const arr& x_i) = 0;
-  virtual double fqij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  virtual double fqi (SqrPotential& S, uint i, const arr& x_i) = 0;
+  virtual double fqij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
 
 /*
@@ -89,10 +92,10 @@ double evaluateQCF(SqrChainFunction& f, const arr& x);
 struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction{
   VectorChainFunction *f;
   conv_VectorChainFunction(VectorChainFunction& _f);
-  virtual double fs(arr* grad, const arr& x);                  //to a ScalarFunction
-  virtual void   fv(arr& y, arr* J, const arr& x);             //to a VectorFunction
-  virtual double fqi (SqrPotential *S, uint i, const arr& x_i); //to a SqrChainFunction
-  virtual double fqij(PairSqrPotential *S, uint i, uint j, const arr& x_i, const arr& x_j);
+  virtual double fs(arr& grad, const arr& x);                  //to a ScalarFunction
+  virtual void   fv(arr& y, arr& J, const arr& x);             //to a VectorFunction
+  virtual double fqi (SqrPotential& S, uint i, const arr& x_i); //to a SqrChainFunction
+  virtual double fqij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j);
 };
 
 
