@@ -11,7 +11,7 @@ EXTERN = \
 	extern/libcolorseg/src \
 	extern/Lewiner \
 	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
+#	extern/SWIFT++_1.2/decomposer/src \
 
 
 makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
