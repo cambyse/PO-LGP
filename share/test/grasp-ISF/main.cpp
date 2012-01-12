@@ -10,7 +10,6 @@
 #include <MT/earlyVisionModule.h>
 #include <MT/perceptionModule.h>
 
-#include <MT/revelModule.h>
 
 
 struct DummyTask:public TaskAbstraction{//do nothing
@@ -113,13 +112,12 @@ main(int argn,char** argv){
   Build_mesh_process buildmesh;
   PerceptionModule perc; 
   RobotProcessGroup robot;
-  RevelInterface revel;
 
   buildmesh.obj=&graspobj;
   perceive.graspobj=&graspobj;
-  perc.input=&robot.evis.output;
-  robot.gui.perceptionOutputVar=&perc.output;
-  perceive.perc_out = &perc.output;
+  perc.input=robot.evis.output;
+  robot.gui.perceptionOutputVar=perc.output;
+  perceive.perc_out = perc.output;
 
   /* set task to do nothing */
   robot.ctrl.task = &dummy;
@@ -159,7 +157,6 @@ main(int argn,char** argv){
   robot.gui.gl->views(1).camera.setPosition(-1.2,-4.,2.);
   robot.gui.gl->views(1).camera.focus(.0,-.2,.6);
 
-  revel.open(100,100);
 
   for(;!robot.signalStop;){ //catches the ^C key
 
@@ -171,7 +168,6 @@ main(int argn,char** argv){
 
     if(get_joy_state(robot)==16 || get_joy_state(robot)==32) break;
   }
-  revel.close();
   robot.close();
   perc.threadClose();
   perceive.threadClose();
