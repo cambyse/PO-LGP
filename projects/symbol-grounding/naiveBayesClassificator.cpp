@@ -143,8 +143,6 @@ void sNaiveBayesClassificator::findBestStartPoint(arr& startPoint, const int fea
     else if (dir * olddir > 0.7) stepSize *= 1.5;
     olddir = dir;
 
-    P(startPoint);
-
     startPoint = startPoint + dir * stepSize * centerdir;
   }
 }
@@ -207,10 +205,7 @@ void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int 
     
   }
   nextSample = oldn;
-  P(g1.evaluate(nextSample));
-  P(g2.evaluate(nextSample));
   p = oldp;
-  P(p);
 }
 
 void NaiveBayesClassificator::nextSample(MT::Array<arr> &sample) const {
