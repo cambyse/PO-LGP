@@ -387,6 +387,8 @@ extern bool useLapack;
 uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort=true);
 void svd(arr& U, arr& V, const arr& A);
 
+void mldivide(arr& X, const arr& A, const arr& b);
+
 uint inverse(arr& Ainv, const arr& A);
 arr  inverse(const arr& A);
 uint inverse_SVD(arr& inverse, const arr& A);
@@ -538,6 +540,7 @@ template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
 
+
 #define BinaryOperator( op, name)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
   template<class T> Array<T> operator op(T y, const Array<T>& z);  \
@@ -665,6 +668,7 @@ void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
+void lapack_mldivide(arr& X, const arr& A, const arr& b);
 void lapack_LU(arr& LU, const arr& A);
 void lapack_RQ(arr& R, arr& Q, const arr& A);
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs);

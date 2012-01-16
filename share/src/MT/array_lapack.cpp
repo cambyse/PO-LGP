@@ -213,6 +213,25 @@ const char *potrf_ERR="\n\
 *                positive definite, and the factorization could not be\n\
 *                completed.\n";
 
+void lapack_mldivide(arr& X, const arr& A, const arr& b) {
+  CHECK(A.nd == 2, "A in Ax=b must be a NxM Matrix.");
+  CHECK(b.nd == 1, "b in Ax=b must be a Vector.");
+
+  CHECK(A.d1 == b.d0, "b and A must have the same amount of rows in Ax=b.");
+  
+  X = b;
+  arr LU = A;
+  integer n = A.d1;
+  integer nrhs = 1;
+  integer lda = A.d0;
+  MT::Array<integer> ipiv(n);
+
+  integer info;
+
+  CALL(, gesv_)(&n, &nrhs, LU.p, &lda, ipiv.p, X.p, &lda, &info);
+  CHECK(!info, "LAPACK gaussian elemination error info = " <<info <<potrf_ERR);
+}
+
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A){
   CHECK(A.d0==A.d1, "");
   integer n=A.d0;
