@@ -316,6 +316,16 @@ CXXFLAGS  += -DTL_SOIL
 LIBS    += -lSOIL
 endif
 
+ifeq ($(LAPACK),1)
+CXXFLAGS  += -DMT_LAPACK
+CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
+MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
+CygwinLibs+= -lcblas -latlas -lclapack -lcblaswr -lI77 -lF77
+LinuxLibs += -llapack -lblas
+MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
+#MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
+endif
+
 ifeq ($(OPENCV),1)
 CXXFLAGS  += -DMT_OPENCV
 ## DON'T USE THE UBUNTU VERSION?
@@ -327,7 +337,7 @@ endif
 #assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
 CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
-LIBS    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+LinuxLibs    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
  endif
 
 # newer qhull version?
@@ -346,15 +356,6 @@ endif
 #LIBS	  += `pkg-config --libs opencv-2.1`
 #endif
 
-ifeq ($(LAPACK),1)
-CXXFLAGS  += -DMT_LAPACK
-CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
-MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
-CygwinLibs+= -lcblas -latlas -lclapack -lcblaswr -lI77 -lF77
-LinuxLibs += -llapack -lblas
-MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
-#MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
-endif
 
 ifeq ($(HSL),1)
 CXXFLAGS  += -DMT_HSL
