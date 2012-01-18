@@ -72,10 +72,18 @@ void testLoop(){
 //
 
 struct IntVar:public Variable{
+  //BIR_VARIABLE;
+  
   FIELD(int, x);
 
+  //BIR_FIELD(bool, mybool);
+  
   IntVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };
+
+//int IntVar::bir_typeId=-1;
+
+uint PC=0;
 
 struct Maxxer:public Process{
   IntVar *a,*b;
@@ -93,7 +101,7 @@ struct Maxxer:public Process{
 };
 
 void testMultiAccess(){
-  uint n=10;
+  uint n=MT::getParameter<uint>("n",100);
   MT::Array<IntVar> vars(n);
   MT::Array<Maxxer> procs(2*n);
 
@@ -102,7 +110,7 @@ void testMultiAccess(){
     procs(i).b = &vars.rndElem();
   }
 
-  for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.01,.1));
+  for(uint i=0;i<procs.N;i++) procs(i).threadLoopWithBeat(rnd.uni(.001,.01));
   MT::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
@@ -115,6 +123,7 @@ void testMultiAccess(){
 }
 
 int main(int argc, char *argv[]){
+  MT::initCmdLine(argc,argv);
   //testLoop();
   testMultiAccess();
   

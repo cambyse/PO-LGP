@@ -18,10 +18,7 @@
 // Global information
 //
 
-VariableL globalVariables;
-ProcessL  globalProcesses;
-uint globalVariableCount=0;
-uint globalProcessCount=0;
+GlobalInfo global;
 
 
 //===========================================================================
@@ -91,20 +88,20 @@ void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const times
 Lock::Lock(){
 //   pthread_rwlockattr_t   att;
   int rc;
-//   rc = pthread_rwlockattr_init(&att);  if(rc) HALT("pthread failed with err " <<rc);
-//   rc = pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED);  if(rc) HALT("pthread failed with err " <<rc);
-//   rc = pthread_rwlock_init(&lock, &att);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc);
+//   rc = pthread_rwlockattr_init(&att);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+//   rc = pthread_rwlockattr_setpshared(&att, PTHREAD_PROCESS_SHARED);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+//   rc = pthread_rwlock_init(&lock, &att);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   state=0;
 }
 
 Lock::~Lock(){
   CHECK(!state, "");
-  int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void Lock::readLock(const char* _msg){
-  int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
   //CHECK(state>=0, "");
   state++;
@@ -118,7 +115,7 @@ void Lock::writeLock(const char* _msg){
 }
 
 void Lock::unlock(){
-  int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   msg=NULL;
   //CHECK(state, "");
   if(state>0) state--; else state=0;
@@ -144,17 +141,17 @@ Mutex::Mutex(){
 
 Mutex::~Mutex(){
   CHECK(!state, "");
-  int rc = pthread_mutex_destroy(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_mutex_destroy(&_lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void Mutex::lock(const char* _msg){
-  int rc = pthread_mutex_lock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_mutex_lock(&_lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
   state++;
 }
 
 void Mutex::unlock(){
-  int rc = pthread_mutex_unlock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  int rc = pthread_mutex_unlock(&_lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   msg=NULL;
   state--;
 }
@@ -168,62 +165,62 @@ void Mutex::unlock(){
 ConditionVariable::ConditionVariable(){
   state=0;
   int rc;
-  rc = pthread_mutex_init(&mutex, NULL);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_init(&mutex, NULL);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 ConditionVariable::~ConditionVariable(){
   int rc;
-  rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 int ConditionVariable::getState(){
   int rc, i;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   i=state;
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   return i;
 }
 
 void ConditionVariable::setState(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   state=i;
-  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void ConditionVariable::signal(){
   int rc;
-  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void ConditionVariable::waitForSignal(){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void ConditionVariable::waitForStateEq(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   while(state!=i){
-    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void ConditionVariable::waitForStateNotEq(int i){
   int rc;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   while(state==i){
-    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void ConditionVariable::waitUntil(double absTime){
@@ -234,9 +231,9 @@ void ConditionVariable::waitUntil(double absTime){
     ts.tv_nsec = tp.tv_usec * 1000;
     ts.tv_sec += WAIT_TIME_SECONDS;
   
-    rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
-    rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
-    rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
+    rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
     */
 }
 
@@ -335,27 +332,31 @@ void CycleTimer::cycleDone(){
 
 Variable::Variable(const char *_name){
   s = new sVariable(this);
-  id = globalVariableCount++;
   name = _name;
+  global.writeAccess(NULL);
+  id = global.variableCount++;
   //s->os.open(STRING("var-" <<name <<".log"));
-  globalVariables.memMove=true;
-  globalVariables.append(this);
+  global.variables.memMove=true;
+  global.variables.append(this);
+  global.deAccess(NULL);
 };
 
 Variable::~Variable(){
   //s->os.close();
   delete s;
-  globalVariables.removeValue(this);
+  global.writeAccess(NULL);
+  global.variables.removeValue(this);
+  global.deAccess(NULL);
 };
 
 void Variable::readAccess(Process *p){
-  if(p) p->V.setAppend(this); //TODO: this is too expensive!!
+  //if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.readLock();
   //cout <<(p?p->name:"NULL") <<" reads  " <<name <<" state=";
 }
 
 void Variable::writeAccess(Process *p){
-  if(p) p->V.setAppend(this); //TODO: this is too expensive!!
+  //if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.writeLock();
   //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
 }
@@ -398,15 +399,19 @@ void Variable::waitForConditionNotEq(int i){
 
 Process::Process(const char *_name){
   s = new sProcess();
-  id = globalProcessCount++;
   name = _name;
-  globalProcesses.memMove=true;
-  globalProcesses.append(this);
+  global.writeAccess(this);
+  id = global.processCount++;
+  global.processes.memMove=true;
+  global.processes.append(this);
+  global.deAccess(this);
 }
 
 Process::~Process(){
   delete s;
-  globalProcesses.removeValue(this);
+  global.writeAccess(this);
+  global.processes.removeValue(this);
+  global.deAccess(this);
 }
 
 void Process::threadOpen(int priority){
@@ -416,17 +421,17 @@ void Process::threadOpen(int priority){
   s->threadPriority = priority;
   int rc;
   pthread_attr_t atts;
-  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   /*if(priority){ //doesn't work - but setpriority does work!!
     rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
     sched_param  param;
-    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc);
+    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
     std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
     param.sched_priority += priority;
     std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
     rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
-  rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   s->threadCondition.waitForStateEq(tsIDLE);
 #else
   std::cout <<" +++ opening 'thread' in SERIAL mode '" <<threadName <<'\'' <<std::endl;
@@ -441,7 +446,7 @@ void Process::threadClose(){
   if(s->threadCondition.state<=tsLOOPING) threadStop();
   s->threadCondition.waitForStateEq(tsIDLE);
   s->threadCondition.setState(tsCLOSE);
-  rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc);
+  rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   s->thread=NULL;
 #else
   close();
@@ -613,11 +618,12 @@ void reportGlobalProcessGraph(){
   uint i, j;
   Variable *v;
   Process *p;
-  for_list(i, v, globalVariables){
+  global.readAccess(NULL);
+  for_list(i, v, global.variables){
     fil <<"Variable " <<v->name <<endl;
   }
   fil <<endl;
-  for_list(i, p, globalProcesses){
+  for_list(i, p, global.processes){
     fil <<"Process " <<p->name <<" (";
     for_list(j, v, p->V){
       if(j) fil <<',';
@@ -625,6 +631,7 @@ void reportGlobalProcessGraph(){
     }
     fil <<")" <<endl;
   }
+  global.deAccess(NULL);
   fil.close();
 }
 
@@ -796,7 +803,8 @@ void ThreadInfoWin::step(){
   if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-  for_list(i, pr, globalProcesses){
+  global.readAccess(this);
+  for_list(i, pr, global.processes){
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -817,6 +825,7 @@ void ThreadInfoWin::step(){
     TEXTTIME(th->timer.busyDt); x+=130;
     y+=20;
   }
+  global.deAccess(this);
   y+=10;
   for_list(i, ct, globalCycleTimers){
     x=5;
