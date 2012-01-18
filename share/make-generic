@@ -394,7 +394,7 @@ ifeq ($(BUMBLE),1)
 CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
-#LinuxLibs += -ldc1394 # -lpgrlibdcstereo
+LinuxLibs += -ldc1394 # -lpgrlibdcstereo
 endif
 
 ifeq ($(FELZ),1)

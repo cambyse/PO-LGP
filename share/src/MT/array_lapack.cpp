@@ -283,4 +283,5 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b){
   x = invA*b;
 };
 double lapack_determinantSymPosDef(const arr& A){NICO};
+void lapack_mldivide(arr& X, const arr& A, const arr& b){NICO};
 #endif
