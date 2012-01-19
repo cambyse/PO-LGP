@@ -18,6 +18,7 @@ public:
   
   void setTrainingsData(const MT::Array<arr>& features, const intA& classes);
   void nextSample(MT::Array<arr>& nextSample) const;
+  void addData(const MT::Array<arr>& data, const int class_);
 };
 
 #endif // end header guard 
