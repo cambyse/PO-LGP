@@ -19,6 +19,9 @@ public:
 
 };
 
+int DataReader::getClass(const std::string predicate) const {
+  return s->classMapping[predicate];  
+}
 
 void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);

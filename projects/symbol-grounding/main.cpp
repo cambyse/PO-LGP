@@ -2,6 +2,7 @@
 
 #include "naiveBayesClassificator.h"
 #include "DataReader.h"
+#include "activeLearningProcess.h"
 
 #include <MT/array_t.cpp>
 #include <MT/ors.h>
@@ -9,14 +10,16 @@
 void sample(MT::Array<arr>& sample) {
   DataReader d;
 
-	d.readDataFile("s111230-1356-0.dat", "s111230-1356-0.dat.rel");
-  d.readDataFile("s111230-1356-1.dat", "s111230-1356-1.dat.rel");
-	d.readDataFile("s111230-1436-1.dat", "s111230-1436-1.dat.rel");
-	d.readDataFile("s111230-1439-0.dat", "s111230-1439-0.dat.rel");
-	d.readDataFile("s111230-1439-1.dat", "s111230-1439-1.dat.rel");
-  d.readDataFile("s111230-1442-0.dat", "s111230-1442-0.dat.rel");
-  d.readDataFile("s111230-1442-1.dat", "s111230-1442-1.dat.rel");
-  d.readDataFile("s111230-1442-2.dat", "s111230-1442-2.dat.rel");
+	d.readDataFile("s120116-1029-0.dat", "s120116-1029-0.dat.rel");
+  d.readDataFile("s120116-1029-1.dat", "s120116-1029-1.dat.rel");
+	d.readDataFile("s120116-1029-2.dat", "s120116-1029-2.dat.rel");
+	d.readDataFile("s120116-1029-3.dat", "s120116-1029-3.dat.rel");
+	d.readDataFile("s120116-1029-4.dat", "s120116-1029-4.dat.rel");
+  d.readDataFile("s120116-1029-5.dat", "s120116-1029-5.dat.rel");
+  d.readDataFile("s120116-1029-6.dat", "s120116-1029-6.dat.rel");
+  d.readDataFile("s120116-1029-7.dat", "s120116-1029-7.dat.rel");
+	d.readDataFile("s120116-1029-8.dat", "s120116-1029-8.dat.rel");
+  d.readDataFile("s120116-1029-9.dat", "s120116-1029-9.dat.rel");
 
   NaiveBayesClassificator cl;
   cl.setTrainingsData(d.getData(), d.getClasses());
@@ -69,50 +72,34 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const int color) {
 
 int main(int argn, char** argv) {
   MT::initCmdLine(argn,argv);
+  
+  LearningDataVariable data;
+  ActiveLearningProcess alp;
 
+  alp.data = &data;
 
   ors::Graph G;
   OpenGL gl;
-  init(G,gl,"schunk_no.ors");
+  init(G,gl,"situation.ors");
 
-  MT::Array<arr> s;
-  sample(s);
-
-  cout << "Sample: " << s << endl;
 
   ors::Body fst;
   ors::Body snd;
-  createCylinder(fst, s(0), 0);
-  createCylinder(snd, s(1), 1);
+  createCylinder(fst, ARR(0.,0.,0.), 0);
+  createCylinder(snd, ARR(0.,0.,0.), 1);
  
   G.bodies.append(&fst);
   G.bodies.append(&snd);
 
-  DataReader d;
-
-	d.readDataFile("s111230-1356-0.dat", "s111230-1356-0.dat.rel");
-  d.readDataFile("s111230-1356-1.dat", "s111230-1356-1.dat.rel");
-	d.readDataFile("s111230-1436-1.dat", "s111230-1436-1.dat.rel");
-	d.readDataFile("s111230-1439-0.dat", "s111230-1439-0.dat.rel");
-	d.readDataFile("s111230-1439-1.dat", "s111230-1439-1.dat.rel");
-  d.readDataFile("s111230-1442-0.dat", "s111230-1442-0.dat.rel");
-  d.readDataFile("s111230-1442-1.dat", "s111230-1442-1.dat.rel");
-  d.readDataFile("s111230-1442-2.dat", "s111230-1442-2.dat.rel");
-
-
-  int steps=0;
-  int i = 0;
+  alp.threadOpen();
+  alp.threadLoop();
   while (true) { 
-    steps ++;
-    if (steps % 200 == 0 && i < d.getData().d0) {
-      fst.X.pos = d.getData()(i,0);
-      snd.X.pos = d.getData()(i,1);
-      i++;
-    }
-    else if (i > d.getData().d0) {
-      fst.X.pos = s(0); 
-      snd.X.pos = s(1); 
-    }
+    data.readAccess(NULL);
+    fst.X.pos = data.pos1; 
+    snd.X.pos = data.pos2; 
+    data.deAccess(NULL);   
     gl.timedupdate(0.01); 
+    sleep(0.1);
+
   }
 }

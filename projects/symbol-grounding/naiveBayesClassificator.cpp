@@ -75,6 +75,20 @@ void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, 
   }
 }
 
+void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int class_) {
+  int d1 = s->features.d1;
+  s->features.append(data);
+  s->features.reshape(s->features.N/d1, d1);
+  s->classes.append(class_);
+
+  for (uint8_t f = 0; f < s->features.d1; ++f) {
+    for (uint8_t c = 0; c < s->numOfClasses; ++c) {
+      s->computeMeansAndVariances(c, f);
+    }
+  }
+
+}
+
 double sNaiveBayesClassificator::getPrior(const int feature, const arr& value, const int givenClass) {
   Gaussian g;
   g.setC(means(feature, givenClass), variances(feature, givenClass));

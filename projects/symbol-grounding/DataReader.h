@@ -16,6 +16,7 @@ public:
   
   MT::Array<MT::Array<double> >& getData() const;
   MT::Array<int>& getClasses() const;
+  int getClass(const std::string predicate) const;
 };
 
 #endif
