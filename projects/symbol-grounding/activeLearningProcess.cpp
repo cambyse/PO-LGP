@@ -1,13 +1,17 @@
 #include "activeLearningProcess.h"
 #include "naiveBayesClassificator.h"
 #include "DataReader.h"
+#include "blocksWorld.h"
 
 #include <MT/array.h>
+#include <MT/array_t.cpp>
+#include <JK/util.h>
 
 class sActiveLearningProcess {
   public:
     NaiveBayesClassificator cl;
     DataReader d;
+    int questions;
 };
 
 LearningDataVariable::LearningDataVariable() : Variable("Learning Data Variable") {
@@ -35,6 +39,8 @@ void ActiveLearningProcess::open() {
 }
 
 void ActiveLearningProcess::step() {
+  s->questions++;
+
   MT::Array<arr> sample;
   s->cl.nextSample(sample);
 
@@ -43,12 +49,25 @@ void ActiveLearningProcess::step() {
   data->pos2 = sample(1);
   data->deAccess(this);
 
+  JK_DEBUG(sample);
   std::cout << "Does 'on' hold? [y, n]" <<std::endl;
   char answer;
   std::cin >> answer;
 
   if (answer == 'y') { s->cl.addData(sample, s->d.getClass("on")); }
   else { s->cl.addData(sample, s->d.getClass("noton"));}
+
+  if (s -> questions % 10 == 0) {
+    generateBlocksSample(sample, 2);
+    int classified = s->cl.classify(sample);
+    JK_DEBUG(classified); 
+    data->writeAccess(this);
+    data->pos1 = sample(0);
+    data->pos2 = sample(1);
+    data->deAccess(this);
+    char unused;
+    std::cin >> unused;
+  }
 }
 
 void ActiveLearningProcess::close() {

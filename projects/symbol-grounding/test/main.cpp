@@ -1,6 +1,8 @@
 #include "../naiveBayesClassificator.h"
 #include "../DataReader.h"
 
+#include <JK/util.h>
+
 #include <MT/array_t.cpp>
 
 void testNaiveBayesClassificator() {

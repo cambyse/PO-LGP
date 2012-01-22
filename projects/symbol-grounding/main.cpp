@@ -70,6 +70,29 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const int color) {
   cyl.X = t;
 }
 
+
+void createSample(MT::Array<arr>& boxPositions, const int numOfBoxes) {
+  for (uint i = 0; i < numOfBoxes; ++i) {
+    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+    center3d.append(0.74);
+    center3d.resize(3);
+
+    boxPositions.append(center3d);
+
+    int t = rand() % 100;
+    int tower = 1;
+    while (t < 50) {
+      i++;
+      tower++;
+      center3d = center3d + randn(3,1) * 0.02;
+      center3d(2) = 0.74 + tower * 0.108;
+      t = rand() % 100;
+
+      boxPositions.append(center3d);
+    }
+  }
+}
+
 int main(int argn, char** argv) {
   MT::initCmdLine(argn,argv);
   
@@ -99,7 +122,7 @@ int main(int argn, char** argv) {
     snd.X.pos = data.pos2; 
     data.deAccess(NULL);   
     gl.timedupdate(0.01); 
-    sleep(0.1);
+    sleep(1.);
 
   }
 }
