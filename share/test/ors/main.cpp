@@ -426,16 +426,16 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testLoadSave();
+  //testLoadSave();
   testPlayStateSequence();
-  testKinematics();
-  testFollowRedundantSequence();
-  testDynamics();
-  testContacts();
+  //testKinematics();
+  //testFollowRedundantSequence();
+  //testDynamics();
+  //testContacts();
 #ifdef MT_ODE
-  testPlayTorqueSequenceInOde();
+  //testPlayTorqueSequenceInOde();
 #endif
-  testBlenderImport();
+  //testBlenderImport();
 
   return 0;
 }

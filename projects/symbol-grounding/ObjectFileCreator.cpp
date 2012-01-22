@@ -1,11 +1,11 @@
 #include "ObjectFileCreator.h"
+/*
 #include <MT/robot_variables.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <time.h>
-
 class sObjectFileCreator {
 public:
 	std::string sessionName;
@@ -94,3 +94,4 @@ void ObjectFileCreator::step() {
 void ObjectFileCreator::close() {
   delete s;
 }
+*/
