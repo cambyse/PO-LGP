@@ -7,7 +7,7 @@ yaourt or something similar to handle AUR packages.
 $ yaourt -S opencv plib ann lapack blas qhull ode
 
 In order to get a working cblas library we need atlas-lapack, but be warned. 
-This will literally takes hours of compile time (something like 5-10 h depending
+This literally will take hours of compile time (something like 5-10 h depending
 on your system).
 
 $ yaourt -S atlas-lapack
@@ -15,7 +15,7 @@ $ yaourt -S atlas-lapack
 (You can either drink a lot of coffee in the meantime or put LAPACK = 0 in your
 make-config until it is finished...)
 
-MLR needs a .so-file called libann, ann provides one, but names it libANN so we 
+MLR needs a .so-file called libANN, ann provides one, but names it libann so we 
 link it:
 
 $ sudo ln -s /usr/lib/libANN.so /usr/lib/libann.so
