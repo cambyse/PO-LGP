@@ -1,5 +1,5 @@
 #include "naiveBayesClassificator.h"
-#include "blocksWorld.h"
+#include <relational/blocksWorld.h>
 #include <JK/util.h>
 
 #include <inttypes.h>

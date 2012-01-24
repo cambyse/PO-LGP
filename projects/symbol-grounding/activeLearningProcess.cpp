@@ -1,7 +1,8 @@
 #include "activeLearningProcess.h"
 #include "naiveBayesClassificator.h"
 #include "dataReader.h"
-#include "blocksWorld.h"
+
+#include <relational/blocksWorld.h>
 
 #include <MT/array.h>
 #include <MT/array_t.cpp>
@@ -64,7 +65,7 @@ void ActiveLearningProcess::step() {
     std::cout << "on is " << s->d.getClass("on") << std::endl;
     std::cout << "noton is " << s->d.getClass("noton") << std::endl;
     for (uint i = 0; i < 200; ++i) {
-      generateBlocksSample(sample, 2);
+			relationall::generateBlocksSample(sample, 2);
       int classified = s->cl.classify(sample);
       if((sample(1)(2) == 0.848 && classified == s->d.getClass("on")) ||
          (sample(1)(2) == 0.74 && classified == s->d.getClass("noton"))){
