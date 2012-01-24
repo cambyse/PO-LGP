@@ -345,11 +345,6 @@ ifeq ($(QHULL2010),1)
 CXXFLAGS += -DQHULL2010
 endif
 
-# newer qhull version?
-ifeq ($(QHULL2010),1)
-CXXFLAGS += -DQHULL2010
-endif
-
 #assuming ubuntu libopencv2.3-dev package
 #ifeq ($(OPENCV_UBUNTU),1)
 #CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
