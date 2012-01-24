@@ -1,5 +1,20 @@
 #include "blocksWorld.h"
+
+#include <MT/ors.h>
+
 #include <cstdlib>
+
+void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
+  MT::Array<arr> pos;
+  generateBlocksSample(pos, numOfBlocks);
+  for (uint i = 0; i < numOfBlocks; ++i) {
+    ors::Body* body = new ors::Body;
+    createCylinder(*body, pos(i), ARR(1., 0., 0.)); 
+    body->name = "cyl" + i;
+    ors.bodies.append(body);
+  }
+
+}
 
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
@@ -24,3 +39,19 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   }
 }
 
+void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
+  ors::Transformation t;
+  t.pos = pos;
+  ors::Shape* s = new ors::Shape();
+  s->size[0] = 0.1;
+  s->size[1] = 0.1;
+  s->size[2] = 0.108;
+  s->size[3] = 0.0375;
+
+  s->type = ors::cylinderST;
+  for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
+  s->body = &cyl;
+  
+  cyl.shapes.append(s);
+  cyl.X = t;
+}
