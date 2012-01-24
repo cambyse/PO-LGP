@@ -1,7 +1,7 @@
 #include <MT/opengl.h>
 
 #include "naiveBayesClassificator.h"
-#include "DataReader.h"
+#include "dataReader.h"
 #include "activeLearningProcess.h"
 
 #include <MT/array_t.cpp>
@@ -71,7 +71,7 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const int color) {
 }
 
 
-void createSample(MT::Array<arr>& boxPositions, const int numOfBoxes) {
+void createSample(MT::Array<arr>& boxPositions, const uint numOfBoxes) {
   for (uint i = 0; i < numOfBoxes; ++i) {
     arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
     center3d.append(0.74);
