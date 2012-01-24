@@ -1,4 +1,5 @@
 #include "gauss.h"
+#include "util.h"
 
 #define takeC 1
 #define takeU 2
