@@ -1,3 +1,3 @@
 #include <MT/array.h>
 
-void generateBlocksSample(MT::Array<arr>& sample, int numOfBlocks);
+void generateBlocksSample(MT::Array<arr>& sample, uint numOfBlocks);

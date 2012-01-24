@@ -1,10 +1,10 @@
 #include "blocksWorld.h"
 #include <cstdlib>
 
-void generateBlocksSample(MT::Array<arr>& sample, const int numOfBlocks) {
+void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+    arr center3d = ARR(0., -.8) + randn(2,1) * 0.7;
     center3d.append(0.74);
     center3d.resize(3);
 
