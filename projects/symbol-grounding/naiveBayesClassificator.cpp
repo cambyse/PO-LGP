@@ -43,9 +43,6 @@ NaiveBayesClassificator::~NaiveBayesClassificator() {
 }
 
 int NaiveBayesClassificator::classify(const MT::Array<arr>& features, int set) const {
-  JK_DEBUG(features.d0);
-  JK_DEBUG(features);
-  JK_DEBUG(s->features.d1);
   CHECK(features.d0 == s->features.d1, "Feature vector is of different size than trainings data.");
   arr probabilities;
   s->getProbabilities(probabilities, features, set);
@@ -57,7 +54,7 @@ void sNaiveBayesClassificator::getProbabilities(arr& probabilities, const MT::Ar
   for (uint8_t i = 0; i < numOfClasses; ++i) {
     probabilities(i) = 1; // normally this should be the class probability, but 
                           // since it would be divided later, we can leave it out
-    for (uint8_t j = 0; j < feature.d1; ++j) {
+    for (uint8_t j = 0; j < feature.d0; ++j) {
       // this is actually a probability density value, not a probability. The
       // probability of a single point is 0. However it is a good estimation.
       // But note that it can be bigger than 1.
@@ -88,7 +85,6 @@ void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, 
 }
 
 void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int class_) {
-  JK_DEBUG(data);
   CHECK(data.d0 == s->features.d1, "The new feature vector does not match the number of features for data in this classificator");
   int d1 = s->features.d1;
   s->features.append(data);
@@ -106,10 +102,6 @@ void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int clas
 double sNaiveBayesClassificator::getPrior(const int feature, const arr& value, const int givenClass) {
   Gaussian g;
   g.setC(means(feature, givenClass), variances(feature, givenClass));
-  //std::cout << "feature: " << feature << std::endl << "given class: " << givenClass << std::endl;
-  //std::cout << "value: " << value << std::endl;
-
-  //std::cout << g.evaluate(value) << std::endl << variances(feature, givenClass) << std::endl << "----" << std::endl;
   return g.evaluate(value);
 }
 
@@ -183,7 +175,6 @@ void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, dou
 
   srand ( time(NULL) % 5 * time(NULL)  );
   MT::rnd.clockSeed();
-  
   for (uint i = 0; i < 1000; ++i) {
     generateBlocksSample(testSample, 2);
 
@@ -203,9 +194,8 @@ void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, dou
       nextSample = testSample;
       maxdens = dens;
     }
-  } 
+  }
   p = maxdens;
-  JK_DEBUG(nextSample << p);  
 }
 
 void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int class1, const int class2, const int feature) const {
@@ -219,8 +209,6 @@ void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int 
   findBestStartPoint(nextSample, feature, class1, class2, means(feature,class1), means(feature,class2)); 
   
   p = g1.evaluate(nextSample);
-
-  double stepSize = 0.2;
 
   while (p > oldp) {
     // cache old values 
