@@ -1,16 +1,14 @@
 #include "naiveBayesClassificator.h"
 #include "blocksWorld.h"
-
-#include <MT/array.h>
-#include <MT/array_t.cpp>
-#include <MT/gauss.h>
 #include <JK/util.h>
 
 #include <inttypes.h>
 #include <cmath>
+#include <cstdlib>
 
-
-
+#include <MT/util.h>
+#include <MT/array.h>
+#include <MT/gauss.h>
 class sNaiveBayesClassificator {
 public:
   MT::Array<arr> features; 
@@ -29,9 +27,9 @@ public:
   void getProbabilities(arr& probabilities, const MT::Array<arr>& features, int set = 0);
 
   void rejectionSampling(MT::Array<arr>& sample, double& p, const int class1, const int class2);
+  void gradientDescentSampling(arr& nextSample, double& p, const int class1, const int class2, const int feature) const;
 
   void findBestStartPoint(arr& startPoint, const int feature, const int class1, const int class2, const arr& pos1, const arr& pos2, double eps) const;
-  void nextSample(arr& nextSample, double& p, const int class1, const int class2, const int feature) const;
 };
 
 NaiveBayesClassificator::NaiveBayesClassificator() {
@@ -198,7 +196,7 @@ void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, dou
   p = maxdens;
 }
 
-void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int class1, const int class2, const int feature) const {
+void sNaiveBayesClassificator::gradientDescentSampling(arr& nextSample, double& p, const int class1, const int class2, const int feature) const {
   arr oldn;
   double oldp = -2;
   
