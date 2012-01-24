@@ -1,6 +1,6 @@
 #include "activeLearningProcess.h"
 #include "naiveBayesClassificator.h"
-#include "DataReader.h"
+#include "dataReader.h"
 #include "blocksWorld.h"
 
 #include <MT/array.h>
@@ -36,6 +36,8 @@ void ActiveLearningProcess::open() {
   s->d.readDataFile("s120116-1029-9.dat", "s120116-1029-9.dat.rel");
 
   s->cl.setTrainingsData(s->d.getData(), s->d.getClasses());
+  JK_DEBUG(s->d.getData());
+  JK_DEBUG(s->d.getClasses());
 }
 
 void ActiveLearningProcess::step() {
@@ -58,9 +60,18 @@ void ActiveLearningProcess::step() {
   else { s->cl.addData(sample, s->d.getClass("noton"));}
 
   if (s -> questions % 10 == 0) {
-    generateBlocksSample(sample, 2);
-    int classified = s->cl.classify(sample);
-    JK_DEBUG(classified); 
+    int correct = 0;
+    std::cout << "on is " << s->d.getClass("on") << std::endl;
+    std::cout << "noton is " << s->d.getClass("noton") << std::endl;
+    for (uint i = 0; i < 200; ++i) {
+      generateBlocksSample(sample, 2);
+      int classified = s->cl.classify(sample);
+      if((sample(1)(2) == 0.848 && classified == s->d.getClass("on")) ||
+         (sample(1)(2) == 0.74 && classified == s->d.getClass("noton"))){
+        correct++; 
+      }
+    }
+    JK_DEBUG(correct/200.);
     data->writeAccess(this);
     data->pos1 = sample(0);
     data->pos2 = sample(1);
