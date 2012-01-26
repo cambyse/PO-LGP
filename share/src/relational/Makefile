@@ -2,22 +2,9 @@ BASE   = ../..
 NAME   = librelational
 OUTPUT = $(BASE)/lib/$(NAME).so
 
-CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
-#CXXFLAGS += -fPIC 
-OBJS  = $(shell find . \( -name '*.cpp' \) )
-OBJS := $(OBJS:%.cpp=%.o)
-OBJS_C  = $(shell find . -name '*.c')
-OBJS += $(OBJS_C:%.c=%.o)
+MAKEMODE = mlrlib
 
-FREEGLUT = 1
-ODE = 1
-QHULL = 1
-SWIFT	= 1
-FREEGLUT = 1
-SOIL = 1
+OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
+OBJS := $(OBJS:%.cpp=%.o)
 
 include $(BASE)/make-generic
-
-# CXXFLAGS += -DMT_Linux -DMT_IMPLEMENT_TEMPLATES -DMT_NO_GLOBALMEM
-#LDFLAGS += -lrt $(LIBS)
-

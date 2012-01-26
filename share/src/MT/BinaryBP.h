@@ -34,7 +34,7 @@ struct BinaryPairFG { //minimalistic representation of a binary pair-wise FG
   double logZ;
   arr f_i, f_ij;
   uintA edges;
-  void write(ostream& os);
+  void write(std::ostream& os);
 };
 
 struct BinaryBPNet {
@@ -99,7 +99,7 @@ struct BinaryBPNet {
   void addBetheGradientDeltas();
   
   //-- I/O
-  void report(ostream &os);
+  void report(std::ostream &os);
   
   //-- generate samples
   void getSamples(uintA &samples, uint S);

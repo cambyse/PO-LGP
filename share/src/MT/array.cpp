@@ -240,6 +240,14 @@ uint inverse_SVD(arr& Ainv, const arr& A){
   return r;
 }
 
+void mldivide(arr& X, const arr& A, const arr& b) {
+#ifdef MT_LAPACK
+  lapack_mldivide(X, A, b);
+#else
+  NIY;
+#endif
+}
+
 void inverse_LU(arr& Xinv, const arr& X){
   NIY;
 #if 0

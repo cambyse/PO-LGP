@@ -205,7 +205,8 @@ individual compiler options for all projects
 \end{itemize}
 
 
-\subsection{Guide to BiROS (parallel processing architecture) (Marc)}
+\subsection{Guide to BiROS (parallel processing architecture)
+(Marc)}\label{Guide to BiROS}
 
 
 \subsubsection{Where to start learning}
@@ -279,7 +280,7 @@ conventions) and perhaps the lecture which introduces task variables
 (and their Jacobians)
 
 \item Have a look at ALL ors\_* test projects in the git repository --
-they're really basic. Understand them all. The |ors_editor| is useful to
+they're really basic. Understand them all. The |ors\_editor| is useful to
 edit the ors-file describing geometries. Play with the |test.ors| file
 while watching the effect in the window.
 
@@ -288,9 +289,64 @@ while watching the effect in the window.
 
 
 
+\subsection{Guide to RobotActionInterface}
+\subsubsection{What is the RobotActionInterface?}
+The RobotActionInterface (RAI) provides high level commands which can directly
+be executed on the real robot. One example is ``pickObject( o )'', which you can
+call from a main.cpp file. This section will show you all the neccessary details
+of the Interface in case you want to understand the underlying mechanisms.
+\subsubsection{Pointer to implementation (Pimpl) paradigm or idiom}
+%TODO: move explanation of pimpl to coding conventions, or into a section about
+%general information for the framework?
+Instead of writing every internal variables/function into the class
+header, we use a second class (the private implemenation), which provides
+all non-public details. This has several advantages. First, the
+headers will be smaller, so the user will only see the relevant data. Second, we do
+not need to include or forward classes in the primary one, which makes
+compilation faster. And third, if we change internal variables in the private
+class, the primary header stays the same. All files, which include this header,
+do not have to be recompiled either. 
+
+see also \ref{pimpl example} and  
+
+\url{http://c2.com/cgi/wiki?PimplIdiom}\newline
+\url{http://en.wikipedia.org/wiki/Opaque_pointer}
+\subsubsection{General structure}
+In principle, the interface initializes all neccessary processes, connects
+the inputs and outputs together, and finally starts every process as a seperate
+thread. This is provided by the ``open()'' command. It will automatically load
+all the standard processes like the vision, planner and controller. You can also 
+specify processes manually via the MT.cfg config file. 
+\subsubsection{Execution Motions}
+The core of the interface is the controller, which is responsible for
+executing trajectories on the robot, stopping the motors or moving the hand.
+This is done by setting one or more ``TaskVariables'' (TV) (Implemented in ors.h).
+When executing a task, the controller considers all active TV's, and calculates
+the optimal control (see also SOC/AICO). A ``Task'' is defined as a set of TV's,
+where each TV can have a different weight. For example, if you want to go to a
+specific position, you could define that there is a TV for reaching this point, a TV for collisions, a
+TV to avoid motor limits and a TV to follow the shortest path. We have already
+defined several releant tasks. (see robot.h/.cpp for
+implementation details) The list below shows our set of tasks and what the
+should accomplish. 
+\begin{itemize}
+\item BasicRobotTask(DoNothing): Deactivate all TV's
+\item BasicRobotTask(Stop): Set TV's, so that all motors stop immediately
+\item BasicRobotTask(Homing): Go to a predefined home position
+\item BasicRobotTask(OpenHand): Do not move any motors, but the finger.
+\item BasicRobotTask(CloseHand): Close hand, till we have a certain pressure on
+  the skin. Otherwise till the limit.
+\item BasicRobotTask(Reach): Move endeffector to predefined reach point
+\item BasicRobotTask(FollowTrajectory): Follow a trajectory from the planner
+  process. Thereby taking care of limits and collisions
+\item BasicRobotTask(Joystick): Activate joystick control. Each button gives
+  rise to a different set of TV's.
+\end{itemize}
+
+
 \subsection{Guide to SOC \& AICO (Stochastic Optimal Control and motion
    planning routines) (Marc)}
-
+%Robot Trajectory Optimization using Appproximate Inference
 
 
 \subsection{Guide to the Array class (the data structure most used throughout
@@ -362,7 +418,6 @@ there -- frankly I don't know how to avoid that.
    sort, etc) there will be a 'listMode' flag in the array class,
    indicating that this array is to be treated as a list of pointers.
 \end{itemize}
-
 
 \subsection{Guide to the visual perception software}
 
@@ -570,10 +625,10 @@ git remote add maserati git@maserati.mi.fu-berlin.de:mlr
 go to your main git folder and type
 \begin{verbatim}
 gedit .git/config
- \end{verbatim}
+\end{verbatim}
 then change all your remotes to maserati, remove any old/conflicting
 origins entries, it should look like this:
- \begin{verbatim}
+\begin{verbatim}
 [branch "master"]
   remote = maserati
   merge = refs/heads/master
@@ -613,7 +668,7 @@ git branch -a
 git remote show maserati
 git checkout <branch>
 git branch <new-branch>
-git branch --track <new-branch> <remote-branch>
+git branch --track <new-branch> <existing-remote-branch>
 // set branch to pull from some remote branch
 git branch --set-upstream <existing-branch> <remote-branch-to-be-tracked>
 // Example: git branch --set-upstream branch123 origin/branch123
@@ -682,12 +737,12 @@ git update-index --assume-unchanged <files>
 
 \item{refs' naming}
 
-- |HEAD^| addresses the parent of |HEAD|, e.g., assuming I've
+- |HEAD\^| addresses the parent of |HEAD|, e.g., assuming I've
   merged 2 branches and committed 3 times on the current branch, 
   %
-  |git show HEAD^^^2| shows the second branch before merging. In
+  |git show HEAD\^2| shows the second branch before merging. In
   other words, direct after merge and commit, the parents of HEAD are
-  |HEAD^1|  and |HEAD^2|  
+  |HEAD\^1|  and |HEAD\^2|  
    
    illustration from man git-rev-parse:
    
@@ -748,6 +803,8 @@ git config --get http.proxy
 \end{itemize}
 
 \subsubsection{Proposal for simplifying mlr git macros!}
+
+DONE - is included in share/bin!
 
 \begin{description}
 \item[GIT-newBranch \$1]
@@ -953,19 +1010,19 @@ J^\T \phi$
 
 \item Output parameters before input parameters in function declarations.
 
-\item Naming convention |name_of_a_routine(ouput,input);| is
+\item Naming convention |name\_of\_a\_routine(ouput,input);| is
   perhaps better than my old |nameOfARoutine(..);| style.
 
 \item Make headers as clean and short and concise as possible!
 
-\item Try to avoid |#includes| in header files as much as possible!!
+\item Try to avoid |\#includes| in header files as much as possible!!
   In particular, when a class's methods require an external library;
   this external library should be included only in the cpp-file.
 
- $\to$ In particular, try to avoid |#includes <external_lib>| in headers!! (I
+ $\to$ In particular, try to avoid |\#includes <external\_lib>| in headers!! (I
  tried to get rid of them as much as possible in all my *.h)
 
-\item Try to avoid |#includes| in header files as much as possible!!
+\item Try to avoid |\#includes| in header files as much as possible!!
   If
   you think the class needs to contain members/data structures defined
   in an external library and therefore you need to include its header
@@ -985,7 +1042,7 @@ struct MyClass{
 \end{verbatim}
 \end{code}
 
-Good example:
+Good example:\label{pimpl example}
 
 \begin{code}
 \begin{verbatim}
@@ -1019,7 +1076,7 @@ MyClass::MyClass(){
   find the definition in the cpp file.
 
 
-\item Never ever use |#ifdef| directives in a header file if this
+\item Never ever use |\#ifdef| directives in a header file if this
   influences definition of classes, especially which members (and
   'size') a class has!
 
@@ -1031,7 +1088,7 @@ MyClass::MyClass(){
   refers to different memory addesses as your routines in your
   library.
 
-  Therefore try to avoid |#ifdefs| in headers as much as possible! Move
+  Therefore try to avoid |\#ifdefs| in headers as much as possible! Move
   them to the cpp file!
 
 \item If you don't have a preferred IDE, use kdevelop.
@@ -1055,7 +1112,7 @@ MyClass::MyClass(){
 
 \begin{description}
 \item[Penetrating collisions] The way penetrating collisions are
-handled is really not nice |ors_swift.cpp:318|. What should ideally
+handled is really not nice |ors\_swift.cpp:318|. What should ideally
 happen: find the two points on the meshes that penetrate most, set $d$
 as their negative distance, and the penetration normal aligned with
 their distance. What happens now: set the distance $d=0$ and set the
@@ -1081,7 +1138,7 @@ the most-penetrating two points of convex shapes.
   variable. A special gui process offers a way to modify the variable
   online by the user.
 
-\item The |Lock| (from |process_internal.h|) should actually not be used. The
+\item The |Lock| (from |process\_internal.h|) should actually not be used. The
   fact that it is used right now shows bad programming: It is always
   used when one process (or main loop) accesses directly another
   process instead of via a variable. Change that!
@@ -1100,9 +1157,9 @@ the most-penetrating two points of convex shapes.
 
 \item All variables should have setters and getters of the format
 
-|arr& get_qreal(Process*);|
+|arr\& get\_qreal(Process*);|
 
-|void set_qreal(Process*,const arr&);|
+|void set\_qreal(Process*,const arr\&);|
 
 These throw errors if called from a process that hasn't locked the
 variable or is a 'set' is called in readLock.

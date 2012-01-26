@@ -88,7 +88,7 @@ namespace RobotManipulationDomain {
   --------------------- */
   
   // Observation
-  State* observeLogic(RobotManipulationSimulator* sim);
+  SymbolicState* calculateSymbolicState(RobotManipulationSimulator* sim);
   void observeAngles(arr& angles, RobotManipulationSimulator* sim);
   void observePositions(arr& angles, RobotManipulationSimulator* sim);
   
@@ -195,51 +195,51 @@ namespace RobotManipulationDomain {
   };
   
   
-  bool has_maximum_stack_value(const TL::State& s);
+  bool has_maximum_stack_value(const TL::SymbolicState& s);
   
   
   
   // Goal state sampling
-  TL::LiteralListReward* sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers = false, TL::State* = NULL);
-  TL::LiteralListReward* sampleGroundGoal__clearance(const TL::State& current_state, uint table_id);
+  TL::LiteralListReward* sampleGroundGoal__stack(const uintA& blocks, const uintA& balls, uint table_id, bool leave_existing_towers = false, TL::SymbolicState* = NULL);
+  TL::LiteralListReward* sampleGroundGoal__clearance(const TL::SymbolicState& current_state, uint table_id);
 
   
   
   /* ---------------------
-    State information helpers
+    SymbolicState information helpers
   --------------------- */
   
-  bool isBlock(uint id, const TL::State& s);
-  bool isBall(uint id, const TL::State& s);
-  bool isBox(uint id, const TL::State& s);
-  bool isTable(uint id, const TL::State& s);
-  bool isOut(uint id, const TL::State& s);
-  bool isInhand(uint id, const TL::State& s);
-  bool isClosed(uint box_id, const TL::State& s);
-  bool isInorderGang(const uintA gang, const TL::State& s);
-  void getBelowObjects(uintA& ids, uint id, const TL::State& s);
-  void getAboveObjects(uintA& ids, uint id, const TL::State& s); // directly above!!!
-  uint getBelow(uint id, const TL::State& s);
-  uint getAbove(uint id, const TL::State& s); // directly above!!!
-  uint getInhand(const TL::State& s);
-  void getBoxes(uintA& ids, const TL::State& s);
-  uint getContainingBox(uint obj_id, const TL::State& s);
-  uint getContainedObject(uint box_id, const TL::State& s);
-  void getHomieGangs(MT::Array< uintA >& homieGangs, const TL::State& s);
-  void getOutObjects(uintA& outs, const TL::State& s);
+  bool isBlock(uint id, const TL::SymbolicState& s);
+  bool isBall(uint id, const TL::SymbolicState& s);
+  bool isBox(uint id, const TL::SymbolicState& s);
+  bool isTable(uint id, const TL::SymbolicState& s);
+  bool isOut(uint id, const TL::SymbolicState& s);
+  bool isInhand(uint id, const TL::SymbolicState& s);
+  bool isClosed(uint box_id, const TL::SymbolicState& s);
+  bool isInorderGang(const uintA gang, const TL::SymbolicState& s);
+  void getBelowObjects(uintA& ids, uint id, const TL::SymbolicState& s);
+  void getAboveObjects(uintA& ids, uint id, const TL::SymbolicState& s); // directly above!!!
+  uint getBelow(uint id, const TL::SymbolicState& s);
+  uint getAbove(uint id, const TL::SymbolicState& s); // directly above!!!
+  uint getInhand(const TL::SymbolicState& s);
+  void getBoxes(uintA& ids, const TL::SymbolicState& s);
+  uint getContainingBox(uint obj_id, const TL::SymbolicState& s);
+  uint getContainedObject(uint box_id, const TL::SymbolicState& s);
+  void getHomieGangs(MT::Array< uintA >& homieGangs, const TL::SymbolicState& s);
+  void getOutObjects(uintA& outs, const TL::SymbolicState& s);
   
     // Reward functions
-  double reward_buildTower(const State& s);
+  double reward_buildTower(const SymbolicState& s);
   void calcSkyscraperWeights(const uintA& objects, const uintA& piles, double skyscraper_bias, arr& weights, bool highGood, uint id_table);
   void calcSkyscraperWeights(const uintA& heights, double skyscraper_bias, arr& weights, bool highGood, uint id_table);
   // Piles
   // sorted by heights! piles(0)=highest
-  void calcPiles(const State& s, uintA& piles, uint sort_type = 1);
+  void calcPiles(const SymbolicState& s, uintA& piles, uint sort_type = 1);
   void calcHeights(const uintA& objects, const uintA& piles, uintA& object_heights, uint id_table);
 
   
   // Nice state information
-  void writeStateInfo(const State& s, ostream& out = std::cout);
+  void writeStateInfo(const SymbolicState& s, ostream& out = std::cout);
   
 }
 

@@ -382,7 +382,7 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredL& preds, c
   }
   if (DEBUG>0) {
     cout<<"+++++   FINAL LITERALS (after filtering)   +++++"<<endl;
-    cout<<"State lits["<<lits_state.N<<"]:  ";TL::write(lits_state);cout<<endl;
+    cout<<"SymbolicState lits["<<lits_state.N<<"]:  ";TL::write(lits_state);cout<<endl;
     cout<<"fas["<<fas.N<<"]:  ";TL::write(fas);cout<<endl;
     cout<<"Action lits["<<atoms_action.N<<"]:  ";TL::write(atoms_action);cout<<endl;
   }
@@ -475,8 +475,8 @@ void NID_DBN::create_dbn_structure(const uintA& constants, const PredL& preds, c
     rvm->set(logicObjectManager::getLiteral(atoms_action(a)->pred, true, atoms_action(a)->args), var);
   }
   if (DEBUG>1) {
-    cout<<"State rvs prim:  "<<endl;write(rvs_state__p_prim);cout<<endl;
-    cout<<"State rvs p_derived:  "<<endl;write(rvs_state__p_derived);cout<<endl;
+    cout<<"SymbolicState rvs prim:  "<<endl;write(rvs_state__p_prim);cout<<endl;
+    cout<<"SymbolicState rvs p_derived:  "<<endl;write(rvs_state__p_derived);cout<<endl;
     cout<<"Action rvs:  "<<endl;write(rvs_action);cout<<endl;
     cout<<"Function rvs prim:  "<<endl;write(rvs_state__f_prim);cout<<endl;
     cout<<"Function rvs p_derived:  "<<endl;write(rvs_state__f_derived);cout<<endl;
@@ -909,6 +909,8 @@ double inferPhi(const TL::Rule& grounded_rule, uint t, RV_Manager* rvm) {
 // rvs_rules: P(\phi_r | -\phi_r', s)
 void NID_DBN::inferRules(uint t) {
   uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"inferRules [START]"<<endl;}
+  if (DEBUG>0) {PRINT(t);}
   uint r, r2;
   
   // rvs_rules_simple
@@ -982,6 +984,8 @@ void NID_DBN::inferRules(uint t) {
       cout<<endl;
     }
   }
+  
+  if (DEBUG>0) {cout<<"inferRules [END]"<<endl;}
 }
 
 
@@ -1237,11 +1241,11 @@ void NID_DBN::inferStates(const AtomL& given_action_sequence) {
 
 
 // ----------------------------------------------------
-//                 NID_DBN:   State probability
+//                 NID_DBN:   SymbolicState probability
 // ----------------------------------------------------
 
 
-double NID_DBN::log_probability(uint t, const State& state) const {
+double NID_DBN::log_probability(uint t, const SymbolicState& state) const {
   uint DEBUG = 0;
   if (DEBUG>0) {
     cout<<"log_probability [START]"<<endl;
@@ -1395,7 +1399,7 @@ void calcDerived(uint t, RV_Manager* rvm, uintA& constants);
 void NID_DBN::setState(const LitL& lits, const FuncVL& fvs, uint t) {
   uint DEBUG = 0;
   uint v, val;
-  if (DEBUG>0) {cout<<"State: ";TL::write(lits);cout<<endl;TL::write(fvs);cout<<endl;}
+  if (DEBUG>0) {cout<<"SymbolicState: ";TL::write(lits);cout<<endl;TL::write(fvs);cout<<endl;}
   // Everything not specified is set to false!
   FOR1D(rvs_state__p_prim, v) {
     rvs_state__p_prim(v)->P(t,0) = 1.0;
@@ -1791,7 +1795,7 @@ void PRADA::build_dbn(const uintA& constants, const PredL& preds, const FuncL& f
 // ----------------------------------------------------
 
 
-void PRADA::setState(const TL::State& s, uint t) {
+void PRADA::setState(const TL::SymbolicState& s, uint t) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"PRADA::setState [START]"<<endl;}
   // Construct DBN if necessary
@@ -1826,7 +1830,7 @@ void PRADA::setState(const TL::State& s, uint t) {
 
 
 // TODO can be removed some day; is only for visualization
-void calcBloxworld_homies_2(MT::Array< uintA >& gangs, const State& s) {
+void calcBloxworld_homies_2(MT::Array< uintA >& gangs, const SymbolicState& s) {
   Predicate* p_HOMIES = logicObjectManager::getPredicate(MT::String("homies"));
   gangs.clear();
   uint i, k;
@@ -1848,7 +1852,7 @@ void calcBloxworld_homies_2(MT::Array< uintA >& gangs, const State& s) {
   }
 }
 
-void calcBloxworld_piles_2(MT::Array< uintA >& piles, const State& s) {
+void calcBloxworld_piles_2(MT::Array< uintA >& piles, const SymbolicState& s) {
   Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
   bool inserted;
   uint i, k;
@@ -1879,7 +1883,7 @@ void calcBloxworld_piles_2(MT::Array< uintA >& piles, const State& s) {
 }
 
 
-void PRADA::setStartState(const TL::State& s1) {
+void PRADA::setStartState(const TL::SymbolicState& s1) {
   setState(s1, 0);
 }
 
@@ -2164,7 +2168,7 @@ void my_handmade_plan(AtomL& plan) {
 
 
 bool PRADA::plan(AtomL& best_plan, double& bestValue, uint num_samples) {
-  uint DEBUG = 0;
+  uint DEBUG = 1;
   if (DEBUG>0) {cout<<"PRADA::plan [START]"<<endl;}
   
   uint t;
@@ -2504,7 +2508,7 @@ bool PRADA::plan(AtomL& best_plan, double& bestValue, uint num_samples) {
 
 
 
-void PRADA::generatePlan(AtomL& generated_plan, double& value, const TL::State& s, uint max_runs) {
+void PRADA::generatePlan(AtomL& generated_plan, double& value, const TL::SymbolicState& s, uint max_runs) {
   uint DEBUG = 2;
   if (DEBUG>0) {cout<<"PRADA::generatePlan [START]"<<endl;}
   if (DEBUG>0) {
@@ -2523,9 +2527,9 @@ void PRADA::generatePlan(AtomL& generated_plan, double& value, const TL::State& 
     return;
   }
   
-  if (DEBUG>0) {cout<<"State:  ";  s.write();  cout<<endl;  PRINT(max_runs);  cout<<"Trying to set state..."<<endl;}
+  if (DEBUG>0) {cout<<"SymbolicState:  ";  s.write();  cout<<endl;  PRINT(max_runs);  cout<<"Trying to set state..."<<endl;}
   setStartState(s);
-  if (DEBUG>0) {cout<<"State has been set."<<endl;}
+  if (DEBUG>0) {cout<<"SymbolicState has been set."<<endl;}
   
   // Check 2 whether planning makes sense at all:  are reward concepts among random variables?
   if (reward != NULL) {
@@ -2579,7 +2583,7 @@ void PRADA::generatePlan(AtomL& generated_plan, double& value, const TL::State& 
 
 
 
-TL::Atom* PRADA::generateAction(const TL::State& s, uint max_runs) {
+TL::Atom* PRADA::generateAction(const TL::SymbolicState& s, uint max_runs) {
   AtomL plan;
   double value;
   generatePlan(plan, value, s, max_runs);
@@ -2844,7 +2848,7 @@ double A_PRADA::shorten_plan(AtomL& seq_best, const AtomL& seq_old, double value
 }
 
 
-TL::Atom* A_PRADA::generateAction(const TL::State& s, uint max_runs) {
+TL::Atom* A_PRADA::generateAction(const TL::SymbolicState& s, uint max_runs) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"A_PRADA::generateAction [START]"<<endl;}
   setStartState(s);
@@ -3050,11 +3054,11 @@ class PRADA_Reward_FVW : public PRADA_Reward {
 
 
 class PRADA_Reward_S : public PRADA_Reward {
-  StateL undesired_states;
+  SymbolicStateL undesired_states;
   double penalty;
   
   public:
-    PRADA_Reward_S(StateL& _undesired_states) {
+    PRADA_Reward_S(SymbolicStateL& _undesired_states) {
       undesired_states = _undesired_states;
       penalty = -1.;
     }

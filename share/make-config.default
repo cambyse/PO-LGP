@@ -11,11 +11,14 @@
 ### DEFAULT SETTINGS
 
 ifneq ($(MAKEMODE),mlrlib)
+#change the default application (test, etc) compilation mode here
 MAKEMODE = app
 endif
 
 ifeq ($(MAKEMODE),mlrlib)
+################ CHANGE THE DEFAULT lib-COMPILATION MODE HERE!! ###############
 MAKEMODE = mlrlib_full
+#MAKEMODE = mlrlib_minimal
 endif
 
 
@@ -45,6 +48,7 @@ SCHUNK = 1
 PLIB = 1
 BUMBLE = 1
 LEWINER = 1
+CUDA = 1
 endif
 
 
@@ -66,4 +70,5 @@ SCHUNK = 0
 PLIB = 0
 BUMBLE = 0
 LEWINER = 0
+CUDA = 0
 endif

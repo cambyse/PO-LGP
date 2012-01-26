@@ -12,6 +12,7 @@ struct RobotController ;
 
 struct Monitor:public StepThread{
 #ifdef MT_QT
+NEVER DO THIS()
   QApplication *app;
 #endif
   bool useOpengl,logData,plotData;
@@ -21,6 +22,7 @@ struct Monitor:public StepThread{
   bool isOpen;
   
 #ifdef MT_QT
+NEVER DO THIS()
   Ui_SchunkMonitor *ui;
 #endif
   arr q_gui;

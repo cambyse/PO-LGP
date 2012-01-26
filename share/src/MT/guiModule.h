@@ -31,18 +31,11 @@ struct GuiModule:public Process {
   Lock processLock;
   
   //INTERNAL
-#ifdef MT_QT
-  //QApplication *app;
-#endif
   bool useOpengl, logData, plotData;
   OpenGL *gl;
   ors::Graph *ors, *ors2;
   RobotProcessGroup  *ctrl;
   bool isOpen;
-  
-#ifdef MT_QT
-  //Ui_SchunkMonitor *ui;
-#endif
   
   GuiModule();
   ~GuiModule();

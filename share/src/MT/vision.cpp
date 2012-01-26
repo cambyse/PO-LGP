@@ -123,6 +123,7 @@ void cvDrawPoints(byteA& img, const arr& points){
   }
 }
 #else
+#include "util.h"
 CvMatDonor::CvMatDonor(){ NIY; }
 CvMat* CvMatDonor::get(){ NIY; }
 CvMat* arr2cvmat(CvMat *mat, const byteA& img){ NIY; return NULL; }

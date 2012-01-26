@@ -1,0 +1,245 @@
+# kinematic graph
+
+## torso & arms
+
+body waist { X=<t(0 0 .7) d(90 0 1 0)>  type=2 mass=1 size=[0. 0. .15 .1] fixed }
+
+body back { type=2 mass=1 size=[0. 0. .1 .1] }
+joint (waist back) { A=<d(-90 0 1 0) t(0 0 .05) > B=< t(0 0 .05)>  }
+
+body chest { type=2 mass=1 size=[0. 0. .2 .1] }
+joint (back chest) { A=<t(0 0 .05) d(90 0 0 1) > B=< d(-90 0 0 1) t(0 0 .1)>  }
+
+body shoulders { type=2 mass=1 size=[0. 0. .2 .1] }
+joint (chest shoulders) { A=<t(0 0 .1) d(90 0 1 0) > B=< t(-.05 0 0) >  }
+
+body shoulderL { type=1 mass=.1 size=[0. 0. .1 .08]  }
+joint (shoulders shoulderL) { A=<t(-.02 0 .15) d(-90 0 0 1) d(30 1 0 0) > B=< d(90 0 0 1)>  }
+
+body shoulderR { type=1 mass=.1 size=[0. 0. .1 .08]  }
+joint (shoulders shoulderR) { A=<d(180 0 1 0) t(.02 0 .15) d(90 0 0 1) d(30 1 0 0) > Q=<d(0 1 0 0)> B=< d(-90 0 0 1)>  }
+
+
+body upArmL { type=2 mass=.1 size=[.1 .1 .1 .05]  }
+joint (shoulderL upArmL) { A=< d(90 0 1 0) t(-.02 0 .05) > B=< t(0 0 .05) >  }
+
+body upArmR { type=2 mass=.1 size=[.1 .1 .1 .05]  }
+joint (shoulderR upArmR) { A=<d(-90 0 1 0) t(.02 0 .05) > B=< t(0 0 .05) >  }
+
+body dnArmL { type=2 mass=.1 size=[.1 .1 .1 .05]  }
+joint (upArmL dnArmL) { A=<t(0 0 .05) d(-90 0 1 0) d(30 1 0 0) > Q=<d(0 1 0 0)> B=< d(90 0 1 0) t(0 0 .05) >  }
+
+body dnArmR { type=2 mass=.1 size=[.1 .1 .1 .05]  }
+joint (upArmR dnArmR) { A=<t(0 0 .05) d(90 0 1 0) d(30 1 0 0) > Q=<d(0 1 0 0)> B=< d(-90 0 1 0) t(0 0 .05) >  }
+
+
+#body wristL { type=2 mass=.1 size=[.1 .1 .2 .05] }
+#joint (dnArmL wristL) { A=<t(0 0 .05) d(80 1 0 0) > Q=<d(40 1 0 0)> B=< t(0 0 .1) >  }
+
+body upWristR { type=2 mass=.1 size=[.1 .1 .1 .045] }
+joint (dnArmR upWristR) { A=<t(0 0 .05) d(80 1 0 0) > Q=<d(40 1 0 0)> B=< t(0 0 .05) >  }
+
+body upWristL { type=2 mass=.1 size=[.1 .1 .1 .045] }
+joint (dnArmL upWristL) { A=<t(0 0 .05) d(80 1 0 0) > Q=<d(40 1 0 0)> B=< t(0 0 .05) >  }
+
+body neck { type=2 mass=.1 size=[.0 .0 .1 .05] }
+joint (shoulders neck) { A=<t(-.05 0 0) > B=< d(-90 0 1 0) t(0 0 .05) >  }
+
+body head { type=1 mass=.1 size=[0 0 0 .14] }
+joint (neck head) { A=<t(0 0 .05) > B=< t(0 0 .1)>  }
+
+body eyeL { type=4 size=[0 0 .04 .02] color=[.5  .5 .5] }
+joint (head eyeL) { A=<t(.05 -.12 .03) d(90 1 0 0)>  }
+
+body eyeR { type=4 size=[0 0 .04 .02] color=[.5 .5 .5] }
+joint (head eyeR) { A=<t(-.05 -.12 .03) d(90 1 0 0)>  }
+
+
+###########
+## hand
+###########
+
+body dnWristR { type=2 mass=.01 size=[.1 .1 .1 .04] contact }
+joint (upWristR dnWristR) { A=<t(0 0 .05) d(90 0 1 0) d(140 1 0 0) > Q=<d(0 1 0 0)> B=< d(-90 0 1 0) t(0 0 .05) >  }
+
+body ddnWristR { type=2 mass=.01 size=[.5 .5 .04 .03] }
+joint (dnWristR ddnWristR) { A=<t(0 0 .05) d(90 0 0 1) > Q=<d(0 1 0 0)> B=< d(-90 0 0 1) t(0 0 .02) >  }
+
+body effector { type=0 mass=.01 size=[.07 .02 .1 .05] contact }
+joint (ddnWristR effector) { A=<t(0 0 .03) d(20 1 0 0) > Q=<d(-30 1 0 0)> B=< t(0 0 .05) >  }
+
+body fing1a { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (effector fing1a) { A=<t(.03 0 .05) d(10 0 1 0) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0165) >  }
+body fing1b { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing1a fing1b) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+body fing1c { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing1b fing1c) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+
+body fing2a { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (effector fing2a) { A=<t(.01 0 .05) d(5 0 1 0) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0165) >  }
+body fing2b { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing2a fing2b) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(12 1 0 0)> B=< t(0 0 .0125) >  }
+body fing2c { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing2b fing2c) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(12 1 0 0)> B=< t(0 0 .0125) >  }
+
+body fing3a { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (effector fing3a) { A=<t(-.01 0 .05) d(0 0 1 0) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0165) >  }
+body fing3b { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing3a fing3b) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(12 1 0 0)> B=< t(0 0 .0125) >  }
+body fing3c { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing3b fing3c) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(12 1 0 0)> B=< t(0 0 .0125) >  }
+
+body fing4a { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (effector fing4a) { A=<t(-.03 0 .05) d(-5 0 1 0) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0165) >  }
+body fing4b { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing4a fing4b) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+body fing4c { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing4b fing4c) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+
+## thumb
+
+body fing0a { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (effector fing0a) { A=<t(.03 0 .02) d(120 0 1 0) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0165) >  }
+body fing0b { type=2 mass=.01 size=[0 0 .025 .01] glue }
+joint (fing0a fing0b) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+body fing0c { type=2 mass=.01 size=[0 0 .025 .01] }
+joint (fing0b fing0c) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(32 1 0 0)> B=< t(0 0 .0125) >  }
+
+
+
+
+
+
+
+###########
+## hand left
+###########
+
+body dnWristL { type=2 mass=.1 size=[.1 .1 .1 .04]  }
+joint (upWristL dnWristL) { A=<t(0 0 .05) d(90 0 1 0) d(140 1 0 0) > B=< d(-90 0 1 0) t(0 0 .05) >  }
+
+body ddnWristL { type=2 mass=.1 size=[.5 .5 .04 .03] }
+joint (dnWristL ddnWristL) { A=<t(0 0 .05) d(0 0 0 1) > B=< d(-90 0 0 1) t(0 0 .02) >  }
+
+body palmL { type=0 mass=.1 size=[.07 .02 .1 .05]  }
+joint (ddnWristL palmL) { A=<t(0 0 .02) d(20 0 0 0) > B=< t(0 0 .05) >  }
+
+body fing1aL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (palmL fing1aL) { A=<t(.03 0 .05) d(10 0 1 0) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0165) >  }
+body fing1bL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing1aL fing1bL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+body fing1cL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing1bL fing1cL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+
+body fing2aL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (palmL fing2aL) { A=<t(.01 0 .05) d(5 0 1 0) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0165) >  }
+body fing2bL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing2aL fing2bL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+body fing2cL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing2bL fing2cL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+
+
+body fing3aL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (palmL fing3aL) { A=<t(-.01 0 .05) d(0 0 1 0) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0165) >  }
+body fing3bL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing3aL fing3bL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+body fing3cL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing3bL fing3cL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+
+
+body fing4aL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (palmL fing4aL) { A=<t(-.03 0 .05) d(-5 0 1 0) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0165) >  }
+body fing4bL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing4aL fing4bL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+body fing4cL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing4bL fing4cL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+
+## thumb
+
+body fing0aL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (palmL fing0aL) { A=<t(-.035 0. .02) d(20 0 1 0) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0165) >  }
+body fing0bL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing0aL fing0bL) { A=<t(0 0 .0125) d(-20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+body fing0cL { type=2 mass=.1 size=[0 0 .025 .01] }
+joint (fing0bL fing0cL) { A=<t(0 0 .0125) d(20 1 0 0) > Q=<d(60 1 0 0)> B=< t(0 0 .0125) >  }
+
+
+
+
+
+
+
+
+
+
+
+## legs
+
+body lhip { mass=1 size=[.1 .1 .02 .08] type=2 }
+body rhip { mass=1 size=[.1 .1 .02 .08] type=2 }
+body lup  { mass=1 size=[.1 .1 .26 .07] type=2 } 
+body rup  { mass=1 size=[.1 .1 .26 .07] type=2 } 
+body ldn  { mass=1 size=[.1 .1 .3 .06] type=2 } 
+body rdn  { mass=1 size=[.1 .1 .3 .06] type=2 } 
+body lfoot { mass=1 size=[.1 .3 .05 .05] type=0 } 
+body rfoot { mass=1 size=[.1 .3 .05 .05] type=0 fixed }	
+
+joint (waist lhip) { A=<d(-90 0 1 0) t(-.1 0 -.05) d(90 0 0 1) > B=< d(90 0 0 1) t(0 0 -.01)>  }
+joint (waist rhip) { A=<d(-90 0 1 0) t(+.1 0 -.05) d(90 0 0 1) > B=< d(90 0 0 1) t(0 0 -.01)>  }
+joint (lhip lup) { A=<t(0 0 -.01) d(20 1 0 0) > B=< t(0 0 -.13)>  }
+joint (rhip rup) { A=<t(0 0 -.01) d(20 1 0 0) > B=< t(0 0 -.13)>  }
+joint (lup ldn) { A=<t(0 0 -.13) d(-40 1 0 0) > B=< t(0 .01 -.15)>  }
+joint (rup rdn) { A=<t(0 0 -.13) d(-40 1 0 0) > B=< t(0 .01 -.15)>  }
+joint (ldn lfoot) { A=<t(0 0 -.17) d(20 1 0 0) > B=< t(0 .04 -.025)>  }
+joint (rdn rfoot) { A=<t(0 0 -.17) d(20 1 0 0) > B=< t(0 .04 -.025)>  }
+
+###########
+## table
+###########
+
+body table { X=<t(0 -.7 .6)>    type=0 mass=.001 size=[1.5 1.1 .1 0] color=[0.5 0.3 0.15] fixed contact }
+body leg1 { X=<t(.35 -.35 .3)>    type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg2 { X=<t(.35 -1.05 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg3 { X=<t(-.35 -.35 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg4 { X=<t(-.35 -1.05 .3)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+
+#body target { X=<t(-.0 -.5 1.2)>     type=1 mass=.001 size=[0 0 0 .02] color=[0 0 0] fixed }
+
+
+
+###########
+## objects
+###########
+
+# ******************* THIS IS WHERE YOU MIGHT WANT TO APPLY CHANGES *****************************
+
+# lila
+body o1 { X=<t(-0.45 -0.65 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .03]
+color=[0.4 0 .5] contact }
+# orange
+body o2 { X=<t(0.2 -0.5 0.8)>  type=0 mass=.1 size=[.06 .06 .06 .045]
+color=[1 .5 0] contact }
+# grau
+body o3 { X=<t(0.21 -0.51 0.9)>  type=0 mass=.1 size=[.06 .06 .06 .06]
+color=[0.6 0.5 0.5] contact }
+# gruen
+body o4 { X=<t(0. -0.56 0.8)>  type=0 mass=1. size=[.08 .08 .08 .06]
+color=[.2 1 0] contact }
+# 
+body o5 { X=<t(0. -0.54 0.9)>  type=0 mass=1. size=[.08 .08 .08 .06]
+color=[1 1 0] contact }
+# 
+body o6 { X=<t(0. -0.55 1.0)>  type=0 mass=1. size=[.06 .06 .06 .06]
+color=[0 0 1] contact }
+# 
+body o7 { X=<t(0.5 -0.5 1.0)>  type=0 mass=1. size=[.08 .08 .08 .06]
+color=[1 0 0] contact }
+# 
+body o8 { X=<t(0.5 -0.5 1.1)>  type=0 mass=1. size=[.08 .08 .08 .06]
+color=[.4 0 .5] contact }
+# 
+body o9 { X=<t(-0.3 -0.45 1.0)>  type=0 mass=1. size=[.08 .08 .08 .06]
+color=[.05 0 .7] contact }
+# 
+body o10 { X=<t(-0.3 -0.45 1.1)>  type=0 mass=1. size=[.06 .06 .06 .06]
+color=[1 .5 .75] contact }

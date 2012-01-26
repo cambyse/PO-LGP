@@ -12,6 +12,7 @@ struct RobotController ;
 
 struct Monitor:public StepThread{
 #ifdef MT_QT
+NEVER DO THIS() forcing compiler error!
   QApplication *app;
 #endif
   bool useOpengl,logData,plotData;
@@ -22,6 +23,7 @@ struct Monitor:public StepThread{
 	uint width,height;
   
 #ifdef MT_QT
+NEVER DO THIS()
   Ui_SchunkMonitor *ui;
 #endif
   arr q_gui;

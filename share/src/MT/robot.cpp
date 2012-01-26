@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "robot.h"
 #include "vision.h"
 #include "guiModule.h"
@@ -270,6 +271,8 @@ void RobotProcessGroup::open(){
   
   if(openEarlyVision){
     evis.input = &currentCameraImages;
+		std::cout << evisOutput.hsvThetaL << std::endl;
+		evis.output = &evisOutput;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }

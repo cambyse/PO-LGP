@@ -10,8 +10,8 @@ struct SquaredCost:public ScalarFunction,VectorFunction{
   SquaredCost(uint n, double condition=100.);
   void initRandom(uint n, double condition=100.);
   
-  double fs(arr *grad,const arr& x);
-  void fv(arr& y, arr *J,const arr& x);
+  double fs(arr& grad,const arr& x);
+  void fv(arr& y, arr& J,const arr& x);
 };
 
 //===========================================================================
@@ -24,8 +24,8 @@ struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction{
   NonlinearlyWarpedSquaredCost(uint n, double condition=100.);
   void initRandom(uint n, double condition=100.);
   
-  double fs(arr *grad,const arr& x);
-  void fv(arr& y, arr *J,const arr& x);
+  double fs(arr& grad,const arr& x);
+  void fv(arr& y, arr& J,const arr& x);
 };
 
 //===========================================================================
@@ -48,6 +48,6 @@ struct SlalomProblem:VectorChainFunction{
   double margin,w,power;
   
   SlalomProblem(uint _T, uint _K, double _margin, double _w, double _power);
-  void fvi(arr& y, arr* J, uint i, const arr& x_i);
-  void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  void fvi(arr& y, arr& J, uint i, const arr& x_i);
+  void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
 };

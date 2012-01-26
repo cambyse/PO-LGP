@@ -4,14 +4,14 @@ MLR_LIBS = \
 	src/MT \
 	src/SD \
 	src/NJ \
-	src/DZ \
-#	src/relational \
+	src/relational \
+#	src/DZ \
 
 EXTERN = \
 	extern/libcolorseg/src \
 	extern/Lewiner \
 	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
+#	extern/SWIFT++_1.2/decomposer/src \
 
 
 makeAll: makeEXTERN $(MLR_LIBS:%=make/%)

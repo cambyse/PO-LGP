@@ -25,6 +25,7 @@ double REPLACE_SIZE(double val) {
   // Blocks
   if (TL::areEqual(val,0.04)) return 1.0;
   if (TL::areEqual(val,0.06)) return 2.0;
+  if (TL::areEqual(val,0.08)) return 3.0;
   
   // Balls
   if (TL::areEqual(val,0.03)) return 1.0;
@@ -35,8 +36,8 @@ double REPLACE_SIZE(double val) {
     return 4.0;
   
   // TODO
-  return 3.0;
-  if (TL::areEqual(val,0.1)) return 3.0; 
+  return 5.0;
+  if (TL::areEqual(val,0.1)) return 5.0; 
   
   HALT("unknown size "<<val);
   return -100000.;

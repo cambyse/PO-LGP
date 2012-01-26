@@ -103,6 +103,9 @@ struct Gaussian {
   }
   
   double getSdv(){ makeC(); return sqrt(trace(C)); }
+
+  double evaluate(const arr& pos) const;
+  void gradient(arr& grad, const arr& pos) const;
   
   void write(std::ostream& os) const;
   void read(std::istream& os);
