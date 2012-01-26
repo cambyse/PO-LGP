@@ -288,7 +288,6 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   
   //add contacts to list
   int a, b;
-  //  ors::Vector d, p;  d.setZero();
   for(k=0, i=0; i<np; i++){
     a=swift.INDEXswift2shape(oids[i <<1]);
     b=swift.INDEXswift2shape(oids[(i <<1)+1]);
@@ -323,8 +322,10 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       proxy->b=b;
       proxy->age=0;
       proxy->d = -.0;
-      proxy->posA = C.shapes(a)->X.pos;
-      proxy->posB = C.shapes(b)->X.pos;
+      if(C.shapes(a)->type==ors::meshST) proxy->posA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex();
+      else proxy->posA = C.shapes(a)->X.pos;
+      if(C.shapes(b)->type==ors::meshST) proxy->posB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex();
+      else proxy->posB = C.shapes(b)->X.pos;
       proxy->normal = proxy->posA - proxy->posB; //normal always points from b to a
       proxy->normal.normalize();
       //!! IN PENETRATION we measure d as -1+(distance between object centers) - that gives a well-defined (though non-smooth) gradient!
@@ -407,7 +408,10 @@ void swiftQueryExactDistance(SwiftInterface& swift){
 #include "util.h"
 //#warning "MT_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff){ MT_MSG("WARNING - creating dummy SwiftInterface"); }
+void SwiftInterface::initActivations(const ors::Graph& C){}
+void SwiftInterface::close(){}
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){}
+void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2){}
 void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport){}
 SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const { return NULL; }
 void swiftQueryExactDistance(SwiftInterface& swift){}

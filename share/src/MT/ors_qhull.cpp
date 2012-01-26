@@ -286,16 +286,16 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
 //===========================================================================
 
 double forceClosureFromProxies(ors::Graph& ORS, uint i){
-  uint j, k;
+  uint k;
   ors::Vector c, cn;
   arr C, Cn, _c, _cn;
   for(k=0; k<ORS.proxies.N; k++) if(ORS.proxies(k)->a==(int)i || ORS.proxies(k)->b==(int)i){
       if(ORS.proxies(k)->a==(int)i){
-        j = ORS.proxies(k)->b;
+        //j = ORS.proxies(k)->b;
         c = ORS.proxies(k)->posA;
         cn=-ORS.proxies(k)->normal;
       }else{
-        j = ORS.proxies(k)->a;
+        //j = ORS.proxies(k)->a;
         c = ORS.proxies(k)->posB;
         cn= ORS.proxies(k)->normal;
       }
@@ -323,8 +323,13 @@ void getTriangulatedHull(uintA& T, arr& V){
   uint f, i, v;
   
   arr Vnew;
+#ifdef QHULL2010
+  Vnew.resize(qh_qh.num_vertices, 3);
+  T.resize(qh_qh.num_facets, 3);
+#else
   Vnew.resize(qh_qh->num_vertices, 3);
   T.resize(qh_qh->num_facets, 3);
+#endif
   i=0;
   FORALLvertices {
     vertex->id = i;

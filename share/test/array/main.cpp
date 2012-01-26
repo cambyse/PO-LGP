@@ -43,6 +43,10 @@ void testBasics(){
   ints = ARRAY<int>(0, -1, -2, -3, -4);
   cout <<"set by hand:\n" <<ints <<endl;
 
+  //TRY DEBUGGING with GDB:
+  //set a breakpoint here
+  //in gdb (or a watch console of your IDE) type 'print gdb(a)' and 'print gdb(ints)'
+  
   //randomization
   rndUniform(a,-1.,1,false); //same as   forall(i,a) *i=rnd.uni(-1,1);
   cout <<"\nrandom double array:\n" <<a <<endl;
@@ -320,6 +324,25 @@ void testInverse(){
   }
 }
 
+void testGaussElimintation() {
+  cout << "\n*** Gaussian elimination with partial pivoting \n";
+  if (MT::lapackSupported) {
+    arr A;
+    A.append(ARR(7., 2., 4., 3.));
+    A.append(ARR(3., 2., 6., 5.));
+    A.append(ARR(7., 5., 3., 7.));
+    A.reshape(4,3);
+    cout << "A = " << A << endl;
+
+    arr b = ARR(9., 5., 2.);
+    cout << "b = " << b << endl;
+
+    arr X;
+    lapack_mldivide(X, A, b);
+    cout << "X = " << endl << X << endl;
+  }
+}
+
 //--------------------------------------------------------------------------------
 //
 // alternative operator notation
@@ -410,6 +433,21 @@ void testTensor(){
 
 //--------------------------------------------------------------------------------
 
+char* gdb(MT::Array<double>& a){
+  static MT::String buf;
+  buf.clr();
+  a.writeDim(buf);
+  a.writeRaw(buf);
+  return buf.p;
+}
+char* gdb(MT::Array<int>& a){
+  static MT::String buf;
+  buf.clr();
+  a.writeDim(buf);
+  a.writeRaw(buf);
+  return buf.p;
+}
+
 int main(int argc, char *argv[]){
   
   testBasics();
@@ -417,15 +455,16 @@ int main(int argc, char *argv[]){
   //return 0;
   testException();
   testMemoryBound();
-  testBinaryIO();
+  //testBinaryIO();
   testExpression();
   testPermutation();
-  testGnuplot();
-  testDeterminant();
-  testInverse();
-  testMM();
-  testSVD();
-  testTensor();
+  //testGnuplot();
+  //testDeterminant();
+  //testInverse();
+  //testMM();
+  //testSVD();
+  //testTensor();
+  testGaussElimintation();
   
   cout <<"\n ** total memory still allocated = " <<MT::globalMemoryTotal <<endl;
   

@@ -387,6 +387,8 @@ extern bool useLapack;
 uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort=true);
 void svd(arr& U, arr& V, const arr& A);
 
+void mldivide(arr& X, const arr& A, const arr& b);
+
 uint inverse(arr& Ainv, const arr& A);
 arr  inverse(const arr& A);
 uint inverse_SVD(arr& inverse, const arr& A);
@@ -509,6 +511,7 @@ template<class T> MT::Array<T> sqr(const MT::Array<T>& y){ MT::Array<T> x; x.res
 template<class T> void tensorCondNormalize(MT::Array<T> &X, int left);
 template<class T> void tensorCondMax(MT::Array<T> &X, uint left);
 template<class T> void tensorCondSoftMax(MT::Array<T> &X, uint left, double beta);
+template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate);
 template<class T> void tensorCheckCondNormalization(const MT::Array<T> &X, uint left, double tol=1e-10);
 template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T> &X, uint left, double logP, double tol=1e-10);
 
@@ -536,6 +539,7 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
+
 
 #define BinaryOperator( op, name)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
@@ -664,6 +668,7 @@ void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
+void lapack_mldivide(arr& X, const arr& A, const arr& b);
 void lapack_LU(arr& LU, const arr& A);
 void lapack_RQ(arr& R, arr& Q, const arr& A);
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs);
@@ -711,6 +716,10 @@ template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
 // @}
 //!@name graphs
 // @{
+
+void graphRandomUndirected(uintA& E, uint n, double connectivity);
+void graphRandomFixedDegree(uintA& E, uint N, uint degree);
+void graphRandomTree(uintA& E, uint N, uint roots=1);
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E);

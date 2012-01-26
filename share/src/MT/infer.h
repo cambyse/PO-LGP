@@ -34,6 +34,8 @@ typedef MT::Array<Variable*> VariableList;
 typedef MT::Array<Factor*>   FactorList;
 typedef MT::Array<MessagePair*> MessagePairList;
 
+enum SpecialFactorType { NONE=0, AND, OR, WTA };
+
 extern uint VarCount;
 }
 
@@ -48,6 +50,7 @@ struct Variable {
   MT::String name;  //!< up to you...
   FactorList factors;    //!< each variable knows all factors it is part of
   MessagePairList messages;  //!< each variable knows all the messages it directly connects to
+  AnyList ats; //any convenience information (e.g. for dot);
   
   Variable();
   Variable(uint _dim, const char *_name);
@@ -67,21 +70,23 @@ namespace infer {
     then true). */
 struct Factor {
   //core defining properties
-  uintA varIds; //!< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their indices) this factor depends on
+  uintA varIds; //!< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their id's) this factor depends on
   uintA dim;    //!< f=f(x_1, x_3, x_7) => dim=[dim(x_1), dim(x_3), dim(x_7)];  array of dimensionalities of the variables this factor depends on
   arr P;        //!< the (probability) table
   double logP;  //!< the log-scaling of the table, such that true_factor = exp(logP) * P
   
   // auxilliary & connectivity
   MT::String name;
+  SpecialFactorType specialType;
   VariableList variables;
   FactorList factors;
   MessagePairList messages;          //!< each factor knows all the msg_pairs it connects to
+  AnyList ats; //any convenience information (e.g. for dot);
   
   Factor();
   ~Factor();
   Factor(const VariableList& variables, const char *_name=NULL);
-  Factor(const VariableList& variables, const arr& q);
+  Factor(const VariableList& variables, const arr& q, const char *_name=NULL);
   void init(const VariableList& variables);
   void relinkTo(const VariableList& variables);
   void operator=(const Factor& q);

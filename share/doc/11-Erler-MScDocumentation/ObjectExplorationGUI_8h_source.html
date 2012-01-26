@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: /home/olie-de/Workspace/Eclipse/ObjectExploration/src/gui/ObjectExplorationGUI.h Quellcode</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li><a href="annotated.html"><span>Klassen</span></a></li>
+      <li class="current"><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Auflistung&nbsp;der&nbsp;Dateien</span></a></li>
+    </ul>
+  </div>
+<div class="header">
+  <div class="headertitle">
+<h1>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/gui/ObjectExplorationGUI.h</h1>  </div>
+</div>
+<div class="contents">
+<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="preprocessor">#ifndef OBJECTEXPLORATIONGUI_H_</span>
+<a name="l00002"></a>00002 <span class="preprocessor"></span><span class="preprocessor">#define OBJECTEXPLORATIONGUI_H_</span>
+<a name="l00003"></a>00003 <span class="preprocessor"></span>
+<a name="l00004"></a>00004 <span class="preprocessor">#include &quot;../core/ObjectExploration.h&quot;</span>
+<a name="l00005"></a>00005 <span class="preprocessor">#include &quot;CVImage.h&quot;</span>
+<a name="l00006"></a>00006 <span class="preprocessor">#include &quot;SemanticEnquirer.h&quot;</span>
+<a name="l00007"></a>00007 
+<a name="l00008"></a>00008 <span class="preprocessor">#include &lt;ntk/utils/opencv_utils.h&gt;</span>
+<a name="l00009"></a>00009 <span class="preprocessor">#include &lt;FL/Fl.H&gt;</span>
+<a name="l00010"></a>00010 <span class="preprocessor">#include &lt;FL/Fl_Group.H&gt;</span>
+<a name="l00011"></a>00011 <span class="preprocessor">#include &lt;FL/Fl_Menu_Bar.H&gt;</span>
+<a name="l00012"></a>00012 <span class="preprocessor">#include &lt;FL/Fl_Window.H&gt;</span>
+<a name="l00013"></a>00013 <span class="preprocessor">#include &lt;FL/Fl_Double_Window.H&gt;</span>
+<a name="l00014"></a>00014 <span class="preprocessor">#include &lt;FL/Fl_Scroll.H&gt;</span>
+<a name="l00015"></a>00015 <span class="preprocessor">#include &lt;FL/Fl_Text_Display.H&gt;</span>
+<a name="l00016"></a>00016 <span class="preprocessor">#include &lt;FL/Fl_Button.H&gt;</span>
+<a name="l00017"></a>00017 <span class="preprocessor">#include &lt;FL/fl_ask.H&gt;</span>
+<a name="l00018"></a>00018 
+<a name="l00019"></a>00019 <span class="keyword">namespace </span>objectexpl {
+<a name="l00020"></a>00020 <span class="keyword">namespace </span>gui {
+<a name="l00021"></a>00021 
+<a name="l00029"></a><a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html">00029</a> <span class="keyword">class </span><a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html" title="Die graphische Benutzeroberfläche vom Programm ObjectExploration.">ObjectExplorationGUI</a> : <span class="keyword">public</span> Fl_Double_Window, <span class="keyword">public</span> QThread, <span class="keyword">public</span> core::SemanticFetcherInterface {
+<a name="l00030"></a>00030 <span class="keyword">public</span>:
+<a name="l00031"></a>00031   <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a80b1e47df153b38b3f294c34d1bbc298" title="Default Konstruktor.">ObjectExplorationGUI</a>(<span class="keywordtype">int</span> X, <span class="keywordtype">int</span> Y, <span class="keywordtype">int</span> W, <span class="keywordtype">int</span> H, <span class="keyword">const</span> <span class="keywordtype">char</span> *L = 0);
+<a name="l00032"></a>00032   ~<a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html" title="Die graphische Benutzeroberfläche vom Programm ObjectExploration.">ObjectExplorationGUI</a>();
+<a name="l00033"></a>00033 
+<a name="l00034"></a>00034   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a7baa9d619495d1f33aa0e8b12ef56b3a" title="Startet die Objektexploration.">startExploreWorld</a>();
+<a name="l00035"></a>00035   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a9625c46295395141d37c3a7d329076b5" title="Stoppt die Objektexploration.">stopExploreWorld</a>();
+<a name="l00036"></a>00036   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#ab108d22972f6de94487ae42f37830892" title="Führt ein Explorationsschritt durch.">stepExploreWorld</a>();
+<a name="l00037"></a>00037   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#ab47cfb027734585d75dbb3548eeca893" title="Stellt die Objektexploration auf ihren Initialzustand zurück.">reset</a>();
+<a name="l00038"></a>00038   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a48ee5835fb8a11213be136dc9931acc9" title="Speichert im jedem Explorationsschritt alle Karten.">record</a>();
+<a name="l00039"></a>00039   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a22d26463431be428508f6feb5a64b40a" title="Kalibriert die Kamera.">calibrate</a>();
+<a name="l00040"></a>00040 
+<a name="l00041"></a>00041 <span class="keyword">protected</span>:
+<a name="l00042"></a>00042   <span class="keywordtype">void</span> <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a272bc57d4290a903ee1c3c35fe03bca8" title="Thread der die Objektexploration steuert.">run</a>();
+<a name="l00043"></a>00043   std::string <a class="code" href="classobjectexpl_1_1gui_1_1ObjectExplorationGUI.html#a62fb356fd309f3b6003560d377723405" title="Gibt die semantische Information zu einem Objekt zurück.">retrieveSemantic</a>(cv::Mat segImg);
+<a name="l00044"></a>00044 
+<a name="l00045"></a>00045 <span class="keyword">private</span>:
+<a name="l00046"></a>00046   <span class="comment">// Dummy Methoden für die Buttons.</span>
+<a name="l00047"></a>00047   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackPreviewScrollbar(Fl_Widget*, <span class="keywordtype">void</span> *);
+<a name="l00048"></a>00048   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackStartButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00049"></a>00049   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackPauseButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00050"></a>00050   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackResetButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00051"></a>00051   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackRecordButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00052"></a>00052   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackStepButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00053"></a>00053   <span class="keyword">static</span> <span class="keywordtype">void</span> callbackCalibrateButton(Fl_Widget*, <span class="keywordtype">void</span>*);
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055   <a class="code" href="classobjectexpl_1_1core_1_1ObjectExploration.html" title="Die Fassade Klasse für die Kernfunktionalität des Programms.">core::ObjectExploration</a> exploration;
+<a name="l00056"></a>00056   <a class="code" href="classobjectexpl_1_1gui_1_1SemanticEnquirer.html" title="Dialog um die semantische Information zu einem Objekt vom Benutzer zu erfragen.">SemanticEnquirer</a>* enquirer;
+<a name="l00057"></a>00057   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* zoomImage;
+<a name="l00058"></a>00058   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* rgbImage;
+<a name="l00059"></a>00059   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* depthImage;
+<a name="l00060"></a>00060   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* saliencyImage;
+<a name="l00061"></a>00061   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* segmentedImage;
+<a name="l00062"></a>00062   <a class="code" href="classobjectexpl_1_1gui_1_1CVImage.html" title="Stellt graphisch ein OpenCV-Bild für die graphische Oberfläche dar.">CVImage</a>* saliencyMaskImage;
+<a name="l00063"></a>00063 
+<a name="l00064"></a>00064   Fl_Text_Buffer *infoBuffer;
+<a name="l00065"></a>00065   Fl_Text_Display* infoOutput;
+<a name="l00066"></a>00066   std::string infoTxt;
+<a name="l00067"></a>00067 
+<a name="l00068"></a>00068   <span class="keywordtype">bool</span> isThreadStopped;
+<a name="l00069"></a>00069   <span class="keywordtype">bool</span> isCalibrationMode;
+<a name="l00070"></a>00070   <span class="keywordtype">bool</span> isRecording;
+<a name="l00071"></a>00071 };
+<a name="l00072"></a>00072 
+<a name="l00073"></a>00073 }
+<a name="l00074"></a>00074 }
+<a name="l00075"></a>00075 <span class="preprocessor">#endif </span><span class="comment">/* OBJECTEXPLORATIONGUI_H_ */</span>
+</pre></div></div>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

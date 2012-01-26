@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::FloodFillSegmentation Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html">objectexpl::core::FloodFillSegmentation</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::FloodFillSegmentation Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::FloodFillSegmentation" --><!-- doxytag: inherits="objectexpl::core::SegmentationInterface" -->
+<p>Segmentiert ein Bild mittels dem Flood-Fill Algorithmus.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="FloodFillSegmentation_8h_source.html">FloodFillSegmentation.h</a>&gt;</code></p>
+<div class="dynheader">
+Klassendiagramm für objectexpl::core::FloodFillSegmentation:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classobjectexpl_1_1core_1_1FloodFillSegmentation.png" usemap="#objectexpl::core::FloodFillSegmentation_map" alt=""/>
+  <map id="objectexpl::core::FloodFillSegmentation_map" name="objectexpl::core::FloodFillSegmentation_map">
+<area href="classobjectexpl_1_1core_1_1SegmentationInterface.html" alt="objectexpl::core::SegmentationInterface" shape="rect" coords="0,0,232,24"/>
+</map>
+</div>
+
+<p><a href="classobjectexpl_1_1core_1_1FloodFillSegmentation-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html#a7529180888d84dc0ecb23ecd0c248b58">segment</a> (const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Liefert das segmentierte Bild in binär Form zurück.  <a href="#a7529180888d84dc0ecb23ecd0c248b58"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b4beee9a3aa151d60189f95b5372039"></a><!-- doxytag: member="objectexpl::core::FloodFillSegmentation::getSegmentedBoundingBox" ref="a3b4beee9a3aa151d60189f95b5372039" args="()" -->
+cv::Rect&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html#a3b4beee9a3aa151d60189f95b5372039">getSegmentedBoundingBox</a> ()</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt das umschließende Rechteck von der Flood-Fill Segmentierung zurück. <br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Segmentiert ein Bild mittels dem Flood-Fill Algorithmus. </p>
+<p>SeedPunkt des Flood-Fill Algorithmus ist der Ort mit der maximalen Aufmerksamkeit. Pixel die zur planaren Hautpfläche angehören, werden auf Null gesetzt. Es wird eine 8er Nachbarschaft angenommen mit einer maximalen erlaubten Differenz von 5 zum Nachbarpixel. </p>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a7529180888d84dc0ecb23ecd0c248b58"></a><!-- doxytag: member="objectexpl::core::FloodFillSegmentation::segment" ref="a7529180888d84dc0ecb23ecd0c248b58" args="(const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b FloodFillSegmentation::segment </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1b&nbsp;</td>
+          <td class="paramname"> <em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Point2d&nbsp;</td>
+          <td class="paramname"> <em>startPoint</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Liefert das segmentierte Bild in binär Form zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das Bild, was segmenteirt werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mask</em>&nbsp;</td><td>Eine Maske die definiert welche Pixel bei der Segmentierung ignoriert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>startPoint</em>&nbsp;</td><td>Der Ausgangspunkt wo die Segmentierung gestartet wird. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Das segmentierte Bild in binär Form (1=Objektpixel; 0=sonst). </dd></dl>
+
+<p>Implementiert <a class="el" href="classobjectexpl_1_1core_1_1SegmentationInterface.html#ac06bb5113d75030d2a423fc12bc7926f">objectexpl::core::SegmentationInterface</a>.</p>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/<a class="el" href="FloodFillSegmentation_8h_source.html">FloodFillSegmentation.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/FloodFillSegmentation.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

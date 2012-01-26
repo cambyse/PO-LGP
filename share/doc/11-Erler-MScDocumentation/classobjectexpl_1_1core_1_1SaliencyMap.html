@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::SaliencyMap Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1SaliencyMap.html">objectexpl::core::SaliencyMap</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::SaliencyMap Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::SaliencyMap" -->
+<p>Erzeugt eine Aufmerksamkeitskarte aus den gesamten Auffälligkeitskarten.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="SaliencyMap_8h_source.html">SaliencyMap.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1core_1_1SaliencyMap-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1d&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1SaliencyMap.html#a0653749f5b14fe5031f399278b455e31">getSaliencyMap</a> (const ntk::RGBDImage &amp;frame, cv::Mat1b mask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Aufmerksamkeitskarte zurück.  <a href="#a0653749f5b14fe5031f399278b455e31"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Point2d&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1SaliencyMap.html#a6c8b176cfc25ae8bd259366dd8bbc05b">findMaxSaliency</a> (cv::Mat1d saliencyMap)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Position mit der maximalen Aufmerksamkeitswert zurück.  <a href="#a6c8b176cfc25ae8bd259366dd8bbc05b"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Erzeugt eine Aufmerksamkeitskarte aus den gesamten Auffälligkeitskarten. </p>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a6c8b176cfc25ae8bd259366dd8bbc05b"></a><!-- doxytag: member="objectexpl::core::SaliencyMap::findMaxSaliency" ref="a6c8b176cfc25ae8bd259366dd8bbc05b" args="(cv::Mat1d saliencyMap)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Point2d SaliencyMap::findMaxSaliency </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat1d&nbsp;</td>
+          <td class="paramname"> <em>saliencyMap</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Position mit der maximalen Aufmerksamkeitswert zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>saliencyMap</em>&nbsp;</td><td>Die Aufmerksamkeitskarte indem der maximale Wert gesucht werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Position in der Aufmerksamkeitskarte mit dem maximalen Wert. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a0653749f5b14fe5031f399278b455e31"></a><!-- doxytag: member="objectexpl::core::SaliencyMap::getSaliencyMap" ref="a0653749f5b14fe5031f399278b455e31" args="(const ntk::RGBDImage &amp;frame, cv::Mat1b mask)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1d SaliencyMap::getSaliencyMap </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1b&nbsp;</td>
+          <td class="paramname"> <em>mask</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Aufmerksamkeitskarte zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>frame</em>&nbsp;</td><td>Das aktuelle Frame. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mask</em>&nbsp;</td><td>Die Maske der planaren Hauptfläche. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Aufmerksamkeitskarte normalisiert auf einem Bereich von [0..1]. </dd></dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/saliency/<a class="el" href="SaliencyMap_8h_source.html">SaliencyMap.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/saliency/SaliencyMap.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

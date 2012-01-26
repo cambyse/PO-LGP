@@ -9,17 +9,16 @@
 #include "joystick.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>
-#include <NP/camera.h>
 #include "schunk.h"
 #include "vision.h"
 #include "earlyVisionModule.h"
 #include "guiModule.h"
 #include "process.h"
 #include "process_internal.h"
+#include <NP/camera.h>
 #include <NP/uvccamera.h>
 
 struct ControllerProcess;
-struct RevelInterface;
 struct TaskAbstraction;
 enum CtrlMode { stopCM, joystickCM, reachCM, followTrajCM, closeHandCM, openHandCM, homingCM, functionCM, prefixedCM };
 
@@ -129,7 +128,10 @@ struct RobotProcessGroup {
   q_currentReferenceVar q_currentReference;
   SkinPressureVar skinPressureVar;
   currentProxiesVar currentProxies;
-  
+  CameraImages currentCameraImages;
+  PerceptionOutput percOutput;
+	EarlyVisionOutput evisOutput;
+
   //Processes
   bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
   ControllerProcess ctrl;

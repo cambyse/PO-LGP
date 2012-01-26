@@ -1,3 +1,5 @@
+#ifdef MT_FELZ
+
 //#include "common.h"
 #include "nputils.h"
 #include "libcolorseg.h"
@@ -276,3 +278,6 @@ void get_multiple_color_segmentations(
       get_single_color_segmentation(segmentations.p[i], image, sigma.p[i], k.p[i], min.p[i]);
 }
 
+#else
+
+#endif

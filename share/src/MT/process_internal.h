@@ -28,6 +28,19 @@ struct Lock {
   void unlock();                          ///< thread must unlock when they're done
 };
 
+//! a basic mutex lock
+struct Mutex {
+  int state;
+  const char* msg;
+  pthread_mutex_t _lock;
+  
+  Mutex();
+  ~Mutex();
+  
+  void lock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
+  void unlock();                          ///< thread must unlock when they're done
+};
+
 //! a basic condition variable
 struct ConditionVariable {
   int state;

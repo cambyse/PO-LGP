@@ -61,7 +61,7 @@ uint soc::SocSystem_Toy::yDim(uint i){ return 1; }
 double soc::SocSystem_Toy::getTau(bool scaled){  return s->tau; }
 
 void soc::SocSystem_Toy::getq0 (arr& q){ q.resize(1); q(0)=s->x0; }
-void soc::SocSystem_Toy::getqv0(arr& q_){ q_.resize(2); q_(0)=s->x0; q_(1)=s->v0; }
+void soc::SocSystem_Toy::getqv0(arr& x){ x.resize(2); x(0)=s->x0; x(1)=s->v0; }
 void soc::SocSystem_Toy::getqv0(arr& q, arr& qd){ q.resize(1); q(0)=s->x0; qd.resize(1); qd(0)=s->v0; }
 void soc::SocSystem_Toy::getW  (arr& W){ W=s->W; }
 void soc::SocSystem_Toy::getH  (arr& H){ H=s->H; }
@@ -73,10 +73,10 @@ void soc::SocSystem_Toy::setq(const arr& q, uint t){
   s->v=0.;
 }
 
-void soc::SocSystem_Toy::setqv(const arr& q_, uint t){
-  CHECK(q_.N==2, "");
-  s->x=q_(0);
-  s->v=q_(1);
+void soc::SocSystem_Toy::setx(const arr& x, uint t){
+  CHECK(x.N==2, "");
+  s->x=x(0);
+  s->v=x(1);
 }
 
 void soc::SocSystem_Toy::setqv(const arr& q, const arr& qd, uint t){

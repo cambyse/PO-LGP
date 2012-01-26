@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::SegmentationInterface Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1SegmentationInterface.html">objectexpl::core::SegmentationInterface</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::SegmentationInterface Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::SegmentationInterface" -->
+<p>Definiert die Schnittstelle um ein Bild zu segmentieren.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="SegmentationInterface_8h_source.html">SegmentationInterface.h</a>&gt;</code></p>
+<div class="dynheader">
+Klassendiagramm für objectexpl::core::SegmentationInterface:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classobjectexpl_1_1core_1_1SegmentationInterface.png" usemap="#objectexpl::core::SegmentationInterface_map" alt=""/>
+  <map id="objectexpl::core::SegmentationInterface_map" name="objectexpl::core::SegmentationInterface_map">
+<area href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html" alt="objectexpl::core::FloodFillSegmentation" shape="rect" coords="0,56,232,80"/>
+<area href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html" alt="objectexpl::core::GrabCutSegmentation" shape="rect" coords="242,56,474,80"/>
+</map>
+</div>
+
+<p><a href="classobjectexpl_1_1core_1_1SegmentationInterface-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1SegmentationInterface.html#ac06bb5113d75030d2a423fc12bc7926f">segment</a> (const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)=0</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Liefert das segmentierte Bild in binär Form zurück.  <a href="#ac06bb5113d75030d2a423fc12bc7926f"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Definiert die Schnittstelle um ein Bild zu segmentieren. </p>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="ac06bb5113d75030d2a423fc12bc7926f"></a><!-- doxytag: member="objectexpl::core::SegmentationInterface::segment" ref="ac06bb5113d75030d2a423fc12bc7926f" args="(const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d startPoint)=0" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual cv::Mat1b objectexpl::core::SegmentationInterface::segment </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1b&nbsp;</td>
+          <td class="paramname"> <em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Point2d&nbsp;</td>
+          <td class="paramname"> <em>startPoint</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [pure virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Liefert das segmentierte Bild in binär Form zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das Bild, was segmenteirt werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mask</em>&nbsp;</td><td>Eine Maske die definiert welche Pixel bei der Segmentierung ignoriert werden soll. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>startPoint</em>&nbsp;</td><td>Der Ausgangspunkt wo die Segmentierung gestartet wird. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Das segmentierte Bild in binär Form (1=Objektpixel; 0=sonst). </dd></dl>
+
+<p>Implementiert in <a class="el" href="classobjectexpl_1_1core_1_1FloodFillSegmentation.html#a7529180888d84dc0ecb23ecd0c248b58">objectexpl::core::FloodFillSegmentation</a> und <a class="el" href="classobjectexpl_1_1core_1_1GrabCutSegmentation.html#aef0065174d289a2f5855dc99c55452da">objectexpl::core::GrabCutSegmentation</a>.</p>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Datei:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/<a class="el" href="SegmentationInterface_8h_source.html">SegmentationInterface.h</a></li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:51 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

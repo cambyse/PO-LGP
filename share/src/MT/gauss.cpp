@@ -1,4 +1,5 @@
 #include "gauss.h"
+#include "util.h"
 
 #define takeC 1
 #define takeU 2
@@ -103,6 +104,28 @@ void Gaussian::setConditional(const arr& f, const arr& F, const arr& Q){
     u = U * u;
     setCU(false, true);
   }
+}
+
+double Gaussian::evaluate(const arr& pos) const {
+	if (useC) {
+		return ((1./sqrt(determinant(2*MT_PI*C)))*exp(-.5*(~(pos-c))*inverse(C)*(pos-c)))(0);
+	}
+	else {
+		return (exp(-.5*~u*inverse(U)*u)/sqrt((determinant(2*MT_PI*inverse(U))))*exp(-.5*~pos*U*pos+~pos*u))(0);
+	}
+}
+
+void Gaussian::gradient(arr& grad, const arr& pos) const {
+  if (!useC) makeC();
+  grad = zeros(pos.d0, 1);
+  grad.reshape(pos.d0);
+  for (uint i = 0; i < grad.d0; ++i) {
+    arr diffx = zeros(pos.d0, 1);
+    diffx.reshape(pos.d0);
+    diffx(i) = 1;
+    arr invC = inverse(C);
+    grad(i) = -evaluate(pos) * (0.5 * ~diffx * invC * (pos-c) + 0.5 * ~(pos-c) * invC * diffx)(0);
+  } 
 }
 
 void Gaussian::write(std::ostream& os) const {

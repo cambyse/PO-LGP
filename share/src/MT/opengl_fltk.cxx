@@ -59,7 +59,7 @@ OpenGL::~OpenGL(){
   delete s;
 }
 
-void OpenGL::redrawEvent(){    s->redraw(); } 
+void OpenGL::postRedrawEvent(){ s->redraw(); } 
 void OpenGL::processEvents(){  Fl::check(); }
 void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit) Fl::wait(); }
 void OpenGL::exitEventLoop(){  loopExit=true; }

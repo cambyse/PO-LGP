@@ -65,7 +65,7 @@ void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool w
 }
 
 #else
-
+#include "util.h"
 void mdp::showMaze(){ MT_MSG("display only implemented when compiling with freeglut"); }
 void mdp::showAB(const arr& alpha, const arr& beta){}
 void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}

@@ -69,6 +69,8 @@ CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
 
+
+
 ################################################################################
 #
 # different settings for different system
@@ -101,6 +103,19 @@ MOC = moc
 UIC = uic
 endif
 
+ifeq ($(SYS), Darwin)
+ifndef CXX
+CXX	= g++
+CC 	= gcc
+endif
+LINK	 = $(CXX)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
+LPATH	:= $(BASE)/lib:$(LPATH)
+SHAREFLAG = -dynamiclib #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
+MOC = moc
+UIC = uic
+endif
+
 ifeq ($(SYS),Cygwin)
 CXX	= g++
 CC	= g++
@@ -119,7 +134,7 @@ CPATH	:= $(CPATH);../../include;$(LIBPATH)/include;$(MINGDIR)/include
 LPATH	:= $(LPATH);$(LIBPATH)/lib_$(SYS);$(LIBPATH)/lib_Cygwin;$(LIBPATH)/lib;$(MINGDIR)/lib
 LDFLAGS	+= -o $(OUTPUT)
 SHAREFLAG = -shared
-ifdef QT
+ifeq ($(QT),1)
 QT 	= $(LIBPATH)/qt-win-4.1.2
 endif
 endif
@@ -154,8 +169,7 @@ endif
 ################################################################################
 # (a tag like `FREEGLUT = 1' can be defined in the local Makefiles as needed)
 
-
-ifdef CUDA
+ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
 NXX = $(LIBPATH)/cuda/bin/nvcc
 CPATH   := $(CPATH):$(LIBPATH)/cuda/include:$(LIBPATH)/cudaSDK/C/common/inc
@@ -166,7 +180,7 @@ LPATH   := $(LPATH):$(LIBPATH)/cuda/lib32:$(LIBPATH)/cudaSDK/lib
 CUDA_EMU = 1
 $(warning WARNING: using cuda EMULATION mode)
 endif
-ifdef CUDA_EMU #emulation mode!!
+ifeq ($(CUDA_EMU),1)  #emulation mode!!
 NXXFLAGS = -g -deviceemu
 LinuxLibs += -lcudart -lcublasemu -lcutil
 else
@@ -175,7 +189,7 @@ LinuxLibs += -lcudart -lcublas -lcutil
 endif
 endif
 
-ifdef SCHUNK
+ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
 CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
@@ -183,7 +197,7 @@ LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$
 LinuxLibs += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
-ifdef FREEGLUT
+ifeq ($(FREEGLUT),1)
 CXXFLAGS  += -DMT_FREEGLUT
 MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/freeglut/include
 MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/freeglut/DebugStatic
@@ -192,29 +206,18 @@ CygwinLibs+= -lglut -lGLU -lGL
 MSVCLibs  += opengl32.lib glu32.lib vfw32.lib
 endif
 
-ifdef FLTK
+ifeq ($(FLTK),1)
 CXXFLAGS  += -DMT_FLTK
 LinuxLibs += -lfltk -lfltk_gl -lGLU -lGL
 endif
 
-ifdef REVEL
-CXXFLAGS  += -DMT_REVEL
-CPATH	  := $(CPATH):$(LIBPATH)/revel-1.1.0/include
-LPATH	  := $(LPATH):$(LIBPATH)/revel-1.1.0/lib:$(LIBPATH)/xvidcore-1.1.3/lib
-MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/revel-1.1.0/include
-MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/revel-1.1.0/lib
-LinuxLibs += -lrevel -lxvidcore
-CygwinLibs+=
-MSVCLibs  +=
-endif
-
-ifdef QTGLUT
+ifeq ($(QTGLUT),1)
 CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL# -DNOUNICODE
 LinuxLibs += -lglut -lGLU -lGL -lX11
 QT := 1
 endif
 
-ifdef QT
+ifeq ($(QT),1)
 CXXFLAGS  += -DMT_QT -DQT_DLL# -DNOUNICODE
 CPATH   := $(CPATH):/usr/include/qt4
 LPATH   := $(LPATH):/usr/lib
@@ -226,13 +229,13 @@ CygwinLibs+= -lqt -lGLU -lGL
 MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
 endif
 
-ifdef WX
+ifeq ($(WX),1)
 CXXFLAGS  += -DMT_WX -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -D__WXGTK__ -pthread
 CPATH := $(CPATH):/usr/lib/wx/include/gtk2-unicode-release-2.8:/usr/include/wx-2.8
-LinuxLibs += -pthread -Wl,-Bsymbolic-functions  -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8 
+LinuxLibs += -pthread -Wl,-Bsymbolic-functions  -lwx_gtk2u_richtext-2.8 -lwx_gtk2u_aui-2.8 -lwx_gtk2u_xrc-2.8 -lwx_gtk2u_qa-2.8 -lwx_gtk2u_html-2.8 -lwx_gtk2u_adv-2.8 -lwx_gtk2u_core-2.8 -lwx_baseu_xml-2.8 -lwx_baseu_net-2.8 -lwx_baseu-2.8
 endif
 
-ifdef ODE
+ifeq ($(ODE),1)
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
 CPATH	  := $(CPATH):$(LIBPATH)/ode-0.11/include
 LPATH	  := $(LPATH):$(LIBPATH)/ode-0.11/lib
@@ -242,7 +245,7 @@ CygwinLibs+= -lode
 MSVCLibs  += ode.lib
 endif
 
-ifdef SWIFT
+ifeq ($(SWIFT),1)
 CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
 LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
@@ -251,20 +254,20 @@ QHULL := 1
 ANN := 1
 endif
 
-ifdef LEWINER
+ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
-#LPATH := $(LPATH):$(BASE)/src/Lewiner
+LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LinuxLibs += -llewiner
 endif
 
-ifdef SOLID
+ifeq ($(SOLID),1)
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
 LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
 LinuxLibs += -lFreeSOLID
 endif
 
-ifdef ANN
+ifeq ($(ANN),1)
 CXXFLAGS  += -DMT_ANN
 #CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
 #LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
@@ -272,24 +275,24 @@ CXXFLAGS  += -DMT_ANN
 LinuxLibs += -lann
 endif
 
-ifdef QHULL
+ifeq ($(QHULL),1)
 CXXFLAGS  += -DMT_QHULL
 LIBS      += -lqhull
 endif
 
-ifdef OpenML
+ifeq ($(OpenML),1)
 CXXFLAGS  += -DMT_OpenML
 MSVC_CPATH := $(MSVC_CPATH);$(OpenML)/include
 MSVC_LPATH := $(MSVC_LPATH);$(OpenML)/lib
 MSVCLibs  += ML10.lib MLU10.lib
 endif
 
-ifdef Shark
+ifeq ($(Shark),1)
 CXXFLAGS  += -DMT_Shark
 CPATH	  := $(CPATH):$(SHARK)/include
 endif
 
-ifdef IT++
+ifeq ($(IT++),1)
 CXXFLAGS  += -DMT_ITpp
 CPATH	  := $(CPATH):$(IT++)/include
 LPATH	  := $(LPATH):$(IT++)/lib
@@ -297,30 +300,23 @@ LinuxLibs += -lit++ -lit++external -lg2c
 CygwinLibs+= -lit++ -lit++external -lg2c
 endif
 
-ifdef GL2PS
+ifeq ($(GL2PS),1)
 CXXFLAGS  += -DMT_GL2PS
 CPATH	  := $(CPATH):$(GL2PS)
+LinuxLibs += -lgl2ps
 endif
 
-ifdef GSL
+ifeq ($(GSL),1)
 CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
 endif
 
-ifdef OPENCV
-CXXFLAGS  += -DMT_OPENCV
-## DON'T USE THE UBUNTU VERSION!!
-CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
-LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
-LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
+ifeq ($(SOIL),1)
+CXXFLAGS  += -DTL_SOIL
+LIBS    += -lSOIL
 endif
 
-ifdef OPENCV_UBUNTU #assuming ubuntu libopencv2.3-dev package
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.3.1`
-LIBS	  += `pkg-config --libs opencv-2.3.1`
-endif
-
-ifdef LAPACK
+ifeq ($(LAPACK),1)
 CXXFLAGS  += -DMT_LAPACK
 CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
 MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
@@ -330,106 +326,133 @@ MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
 #MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
 endif
 
-ifdef HSL
+ifeq ($(OPENCV),1)
+CXXFLAGS  += -DMT_OPENCV
+## DON'T USE THE UBUNTU VERSION?
+#CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
+#LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
+LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
+endif
+
+#assuming ubuntu libopencv2.1 synaptic package
+ifeq ($(OPENCV_UBUNTU),1)
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
+LinuxLibs    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+ endif
+
+# newer qhull version?
+ifeq ($(QHULL2010),1)
+CXXFLAGS += -DQHULL2010
+endif
+
+#assuming ubuntu libopencv2.3-dev package
+#ifeq ($(OPENCV_UBUNTU),1)
+#CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
+#LIBS	  += `pkg-config --libs opencv-2.1`
+#endif
+
+
+ifeq ($(HSL),1)
 CXXFLAGS  += -DMT_HSL
 CPATH	  := $(CPATH):$(LIBPATH)/HSL-archive/include
 LPATH	  := $(LPATH):$(LIBPATH)/HSL-archive/lib
 LinuxLibs += -lHSL-debr
 endif
 
-ifdef PLIB
+ifeq ($(PLIB),1)
 CXXFLAGS  += -DMT_PLIB
 LinuxLibs += -lplibjs -lplibul
 endif
 
-ifdef TONY
+ifeq ($(TONY),1)
 CXXFLAGS  += -DMT_TONY
 CPATH   := $(CPATH):$(LIBPATH)/tony-mdp/include
 LPATH   := $(LPATH):$(LIBPATH)/tony-mdp/lib
 LinuxLibs += -lmdp
 endif
 
-ifdef DAI
+ifeq ($(DAI),1)
 CXXFLAGS  += -DMT_DAI
 CPATH   := $(CPATH):$(LIBPATH)/libDAI-0.2.2/include
 LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LinuxLibs += -ldai
 endif
 
-ifdef URGLASER
+ifeq ($(URGLASER),1)
 CXXFLAGS  += -DMT_LASER
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.0.2/include
 LPATH     := $(LPATH):$(LIBPATH)/urg-0.0.2/lib
 LinuxLibs += -lc_urg -lc_connection
 endif
 
-ifdef BUMBLE
+ifeq ($(BUMBLE),1)
 CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
-#LinuxLibs += -ldc1394 # -lpgrlibdcstereo
+LinuxLibs += -ldc1394 # -lpgrlibdcstereo
 endif
 
-ifdef FELZ
+ifeq ($(FELZ),1)
 CXXFLAGS  += -DMT_FELZ
 CPATH     := $(CPATH):$(LIBPATH)/libcolorseg/include
 LPATH     := $(LPATH):$(LIBPATH)/libcolorseg/lib
 LinuxLibs += -lcolorseg
 endif
 
-ifdef ESS
+ifeq ($(ESS),1)
 CXXFLAGS  += -DMT_ESS
 CPATH     := $(CPATH):$(LIBPATH)/blaschko-ESS-1.1/include
 LPATH     := $(LPATH):$(LIBPATH)/blaschko-ESS-1.1/lib
 LinuxLibs += -less
 endif
 
-ifdef SURF
+ifeq ($(SURF),1)
 CPATH     := $(CPATH):$(LIBPATH)/opensurf/
 LPATH     := $(LPATH):$(LIBPATH)/opensurf/
 LinuxLibs += -lopensurf_$(ARCH)
 endif
 
-ifdef PTHREAD
+ifeq ($(PTHREAD),1)
 CXXFLAGS  += -DMT_PTHREAD
 LinuxLibs += -lpthread -lX11
 endif
 
 #von NILS: -lcxcore -lcv -lcvaux -lhighgui -lml -Wl,-rpath,/home/mtoussai/svn/mlr/nils/libs/opencv/lib/ -lpgrlibdcstereo -ldc1394 -lraw1394 -pthread-lopensurf_i686 -lann11-debr
 
-ifdef NILS
-LinuxLibs += -lnp -ldc1394
+ifeq ($(NILS),1)
+LinuxLibs += -lnp
 DEPEND += externalMake_src/NP
 endif
 
-ifdef NIKOLAY
+ifeq ($(NIKOLAY),1)
 LinuxLibs += -lnj
 DEPEND += externalMake_src/NJ
 endif
 
-ifdef TOBIAS
-LinuxLibs += -ltl
-DEPEND += externalMake_src/TL
+ifeq ($(RELATIONAL),1)
+LinuxLibs += -lrelational
+DEPEND += externalMake_src/relational
 endif
 
-ifdef STANIMIR
+ifeq ($(STANIMIR),1)
 LinuxLibs += -lsd
 DEPEND += externalMake_src/SD
 endif
 
-ifdef DMITRY
+ifeq ($(DMITRY),1)
 LinuxLibs += -ldz
 DEPEND += externalMake_src/DZ
 endif
 
-ifdef LIBVOC2009
+ifeq ($(LIBVOC2009),1)
 LinuxLibs += -lvoc2009_$(ARCH)
 endif
 
-ifdef MTLIB
+ifeq ($(MTLIB),1)
 LinuxLibs += -lmt
 DEPEND += externalMake_src/MT
 endif
+
 
 ################################################################################
 #
@@ -465,7 +488,9 @@ info: force
 	@echo "  PWD =" "$(PWD)"
 	@echo "  BASE =" "$(BASE)"
 	@echo "  NAME =" "$(NAME)"
+	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo "  LIBPATH =" "$(LIBPATH)"
+	@echo "  LIB =" "$(LIB)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"
@@ -482,6 +507,7 @@ info: force
 	@echo "  DEPEND =" "$(DEPEND)"
 	@echo
 
+all: default
 
 ################################################################################
 #
@@ -512,7 +538,7 @@ info: force
 %.mexglx: $(PREOBJS) $(OBJS)
 	mex -cxx $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs)
 
-ifdef CUDA
+ifeq ($(CUDA),1)
 %_cuda.o: %_cuda.cpp
 	if test ! -L $*_cuda.cu; then ln -s -f $*_cuda.cpp $*_cuda.cu; fi;
 	$(NXX) $(NXXFLAGS) -o $@ -c $*_cuda.cu
@@ -556,7 +582,7 @@ externalMake_src/%:
 
 rm_Makefile.dep: force
 	-rm Makefile.dep
-		 
+
 %.dep: %.cpp
 	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
 

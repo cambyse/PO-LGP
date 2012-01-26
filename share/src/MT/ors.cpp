@@ -944,11 +944,15 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
 void Transformation::write(std::ostream& os) const {
   bool space=false;
   os <<"<";
+#if 0
   if(!pos.isZero()){ os <<"t" <<pos;  space=true; }
+  if(!rot.isZero()){ if(space) os <<' ';  os <<"q" <<rot;  space=true; }
+#else
+  os <<pos.p[0] <<' ' <<pos.p[1] <<' ' <<pos.p[2] <<' '
+     <<rot.p[0] <<' ' <<rot.p[1] <<' ' <<rot.p[2] <<' ' <<rot.p[3];
+#endif
   if(!vel.isZero()){ if(space) os <<' ';  os <<"v" <<vel;  space=true; }
   if(!angvel.isZero()){ if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
-  if(!rot.isZero()){ if(space) os <<' ';  os <<"q" <<rot;  space=true; }
-  //if(s!=1.) os <<" s(" <<s <<") ";
   os <<">";
 }
 //! operator>>
@@ -962,7 +966,11 @@ void Transformation::read(std::istream& is){
     if(is.fail()) return; //EOF I guess
     //if(c==';') break;
     //if(c==',') is >>c;
-    switch(c){
+    if((c>='0' && c<='9') || c=='.' || c=='-'){ //read a 7-vector (pos+quat) for the transformation
+      is.putback(c);
+      is>>x[0]>>x[1]>>x[2];       addRelativeTranslation(x[0], x[1], x[2]);
+      is>>x[0]>>x[1]>>x[2]>>x[3]; addRelativeRotationQuat(x[0], x[1], x[2], x[3]);
+    }else switch(c){
         //case '<': break; //do nothing -- assume this is an opening tag
       case 't': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeTranslation(x[0], x[1], x[2]); break;
       case 'q': is>>"(">>x[0]>>x[1]>>x[2]>>x[3]>>")"; addRelativeRotationQuat(x[0], x[1], x[2], x[3]); break;
@@ -1562,7 +1570,7 @@ void ors::Mesh::clean(){
   uintA Tnew(T.d0, T.d1);
   Tok.append(idist);
   Tisok(idist)=true;
-  int A=0, B=0, C=0, D;
+  int A=0, B=0, D;
   uint r, k, l;
   intA neighbors;
   for(k=0; k<Tok.N; k++){
@@ -1570,9 +1578,9 @@ void ors::Mesh::clean(){
     Tnew(k, 0)=T(i, 0); Tnew(k, 1)=T(i, 1); Tnew(k, 2)=T(i, 2);
     
     for(r=0; r<3; r++){
-      if(r==0){ A=T(i, 0);  B=T(i, 1);  C=T(i, 2); }
-      if(r==1){ A=T(i, 1);  B=T(i, 2);  C=T(i, 0); }
-      if(r==2){ A=T(i, 2);  B=T(i, 0);  C=T(i, 1); }
+      if(r==0){ A=T(i, 0);  B=T(i, 1);  /*C=T(i, 2);*/ }
+      if(r==1){ A=T(i, 1);  B=T(i, 2);  /*C=T(i, 0);*/ }
+      if(r==2){ A=T(i, 2);  B=T(i, 0);  /*C=T(i, 1);*/ }
       
       //check all triangles that share A & B
       setSection(neighbors, VT[A], VT[B]);
@@ -1765,6 +1773,12 @@ void ors::Mesh::skin(uint start){
   }
   T=Tnew;
   cout <<T <<endl;
+}
+
+ors::Vector ors::Mesh::getMeanVertex(){
+  arr Vmean = sum(V,0);
+  Vmean /= (double)V.d0;
+  return ors::Vector(Vmean);
 }
 
 void ors::Mesh::readFile(const char* filename){
@@ -2326,8 +2340,11 @@ void ors::Body::reset(){
 }
 
 void ors::Body::write(std::ostream& os) const {
-  os <<"X=" <<X <<" ";
-  listWrite(ats, os);
+  os <<"pose=" <<X <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"X") && strcmp(a->tag,"pose")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 #define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
@@ -2348,6 +2365,7 @@ void ors::Body::read(std::istream& is){
   double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats, "X", 1);    if(sval) X.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "pose", 1); if(sval) X.setText(*sval);
   
   //shape declared in body attributes..
   dval=anyListGet<double>(ats, "type", 1);     if(dval){
@@ -2409,7 +2427,13 @@ void ors::Shape::read(std::istream& is){
 }
 
 void ors::Shape::write(std::ostream& os) const {
-  listWrite(ats, os);
+  os <<"rel=" <<rel <<' ';
+  os <<"type=" <<type <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"rel")
+       && strcmp(a->tag,"type")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 void ors::Shape::reset(){
@@ -2440,8 +2464,15 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 //
 
 void ors::Joint::write(std::ostream& os) const {
-  os <<"A=" <<A <<" Q=" <<Q <<" B=" <<B <<' ';
-  listWrite(ats, os);
+  os <<"from=" <<A <<' ';
+  os <<"to=" <<B <<' ';
+  if(!Q.isZero()) os <<"q=" <<Q <<' ';
+  uint i; Any *a;
+  for_list(i,a,ats)
+    if(strcmp(a->tag,"A") && strcmp(a->tag,"from")
+       && strcmp(a->tag,"B") && strcmp(a->tag,"to")
+       && strcmp(a->tag,"Q") && strcmp(a->tag,"q")) os <<*a <<' ';
+  //listWrite(ats, os);
 }
 
 void ors::Joint::read(std::istream& is){
@@ -2461,8 +2492,11 @@ void ors::Joint::read(std::istream& is){
   double *dval;
   MT::String *sval;
   sval=anyListGet<MT::String>(ats, "A", 1);  if(sval) A.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "from", 1); if(sval) A.setText(*sval);
   sval=anyListGet<MT::String>(ats, "B", 1);  if(sval) B.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "to", 1); if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats, "Q", 1);  if(sval) Q.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "q", 1);  if(sval) Q.setText(*sval);
   dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)(*dval); else type=hingeJT;
 }
 
@@ -3621,9 +3655,8 @@ void ors::Graph::read(std::istream& is){
   Shape *s;
   String tag, name, node1, node2;
   ifstream qlinfile;
-  char c;
   uint j;
-  c=MT::peerNextChar(is);
+  MT::peerNextChar(is);
   clear();
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
@@ -3716,9 +3749,10 @@ void ors::Graph::reportProxies(std::ostream *os){
     <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
     <<") [" <<proxies(i)->age
     <<"] d=" <<proxies(i)->d
-    // <<" posA=" <<proxies(i)->posA
-    // <<" posB=" <<proxies(i)->posB
-    // <<" norm=" <<proxies(i)->posB-proxies(i)->posA
+    <<" d^2=" <<(proxies(i)->posB-proxies(i)->posA).lengthSqr()
+    <<" norm=" <<(proxies(i)->posB-proxies(i)->posA).length()
+    <<" posA=" <<proxies(i)->posA
+    <<" posB=" <<proxies(i)->posB
     <<endl;
   }
 }
@@ -3871,7 +3905,6 @@ void ors::Graph::gravityToForces(){
 //! compute forces from the current contacts
 void ors::Graph::contactsToForces(double hook, double damp){
   ors::Vector trans, transvel, force;
-  double d;
   uint i;
   int a, b;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.){
@@ -3881,14 +3914,14 @@ void ors::Graph::contactsToForces(double hook, double damp){
       //trans = proxies(i)->rel.p - proxies(i-1).rel.p; //translation relative to sticking-frame
       trans    = proxies(i)->posB-proxies(i)->posA;
       transvel = proxies(i)->velB-proxies(i)->velA;
-      d=trans.length();
+      //d=trans.length();
       
       force.setZero();
       force += (hook) * trans; //*(1.+ hook*hook*d*d)
       force += damp * transvel;
       SL_DEBUG(1, cout <<"applying force: [" <<a <<':' <<b <<"] " <<force <<endl);
       
-      if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
+      if(a!=-1) addForce( force, shapes(a)->body, proxies(i)->posA);
       if(b!=-1) addForce(-force, shapes(b)->body, proxies(i)->posB);
     }
 }
@@ -4288,6 +4321,7 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 //-- template instantiations
 
+#include "util_t.cpp"
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS

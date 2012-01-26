@@ -56,10 +56,14 @@ void CameraModule::step(){
   byteA tmpL,tmpR;
   s->cam->grab(tmpL, tmpR);
   calib.rectifyImages(tmpL, tmpR);
-  output.writeAccess(this);
-  output.rgbL=tmpL;
-  output.rgbR=tmpR;
-  output.deAccess(this);
+  if(output){
+    output->writeAccess(this);
+    output->rgbL=tmpL;
+    output->rgbR=tmpR;
+    output->deAccess(this);
+  }else{
+    MT_MSG("Warning: camera writes into /dev/null");
+  }
 };
 
 void CameraModule::close(){
@@ -69,9 +73,9 @@ void CameraModule::close(){
 };
 #else
 CameraModule::CameraModule():Process("BumblebeeProcess"){}
-void CameraModule::open(){ NIY; }
-void CameraModule::step(){ NIY; }
-void CameraModule::close(){ NIY; }
+void CameraModule::open(){ MT_MSG("Warning: opening dummy Camera class"); }
+void CameraModule::step(){ }
+void CameraModule::close(){ MT_MSG("Warning: closing dummy Camera class"); }
 #endif
 
 //void np::create_distortion_maps_fov(
@@ -195,6 +199,7 @@ void CalibrationParameters::write(std::ostream& os) const{
 }
 
 void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
+#ifdef MT_OPENCV
   CvMatDonor cvMatDonor;
   if(!map1L.N){
     map1L.resize(imgL.d0,imgL.d1);
@@ -212,10 +217,17 @@ void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
   cvRemap(CVMAT(tmp), CVMAT(imgL), CVMAT(map1L), CVMAT(map2L));
   tmp=imgR;
   cvRemap(CVMAT(tmp), CVMAT(imgR), CVMAT(map1R), CVMAT(map2R));
+#else
+  HALT("Can't call this function without opencv");
+#endif
 }
 
 void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
+#ifdef MT_OPENCV
   CvMatDonor cvMatDonor;
   cvPerspectiveTransform(CVMAT(stereo), CVMAT(world), CVMAT(Q));
+#else
+  HALT("Can't call this function without opencv");
+#endif
 }
 

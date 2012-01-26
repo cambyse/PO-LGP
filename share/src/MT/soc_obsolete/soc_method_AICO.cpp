@@ -206,8 +206,8 @@ void soc::bayesianIterateIKControl(SocSystemAbstraction& sys,
 
 
 /*! \brief compute a single control step from current state to target of time t.
-    qv=output, qv_1=state at time t-1 */
-void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& qv_1, uint t, arr *v, arr *Vinv){
+    x=output, x_1=state at time t-1 */
+void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x_1, uint t, arr *v, arr *Vinv){
   CHECK(sys.dynamic, "assumed dynamic SOC abstraction");
   uint n=sys.qDim();
   
@@ -225,12 +225,12 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
   arr s(2*n), S(2*n, 2*n), Sinv(2*n, 2*n);
   S = Q;
   S += B*Hinv*tB;
-  s = a + A*qv_1;
+  s = a + A*x_1;
   inverse_SymPosDef(Sinv, S);
 
   //task message
   arr R, r, q_1;
-  q_1.referToSubRange(qv_1, 0, n-1);
+  q_1.referToSubRange(x_1, 0, n-1);
   sys.getTaskCosts(R, r, q_1, t);
 
   //v, Vinv are optional bwd messages!
@@ -241,7 +241,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
     Binv = Sinv + R;
     lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
   }else{
-    if(v->N==qv.N){ //bwd msg given as fully dynamic
+    if(v->N==x.N){ //bwd msg given as fully dynamic
       Binv = Sinv + (*Vinv) + R;
       lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
     }else{
@@ -253,7 +253,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& qv, const arr& 
     }
   }
   
-  qv=b;
+  x=b;
 }
                            
 
@@ -360,7 +360,7 @@ void soc::AICO::shiftSolution(int offset){
   if(!sys->dynamic){ sys->getq0(q0); }else{ sys->getqv0(q0);  n*=2; }
 #else //take q0 to be the one specified by hatq[offset]!
   q0=qhat[offset];
-  if(!sys->dynamic){ sys->setq(q0); }else{ sys->setqv(q0);  n*=2; }
+  if(!sys->dynamic){ sys->setq(q0); }else{ sys->setx(q0);  n*=2; }
   sys->setq0AsCurrent();
 #endif
   s.shift(offset*n, false);  Sinv.shift(offset*n*n, false);  s[0]=q0;      Sinv[0].setDiag(1e10);
@@ -974,7 +974,7 @@ double soc::AICO::stepGaussNewton(){
   s[0]=q0;      Sinv[0].setDiag(1e10);
   b[0]=q0;      Binv[0].setDiag(1e10);
   qhat[0]=q0;
-  if(sys->dynamic) sys->setqv(q0); else sys->setq(q0);
+  if(sys->dynamic) sys->setx(q0); else sys->setq(q0);
   sys->getQ(Q[0](), 0);
   sys->getWinv(Winv[0](), 0);
   sys->getHinv(Hinv[0](), 0);
@@ -1007,7 +1007,7 @@ double soc::AICO::stepGaussNewton(){
         reuseOldCostTerms=false;
       }else{
         countSetq++;
-        if(sys->dynamic) sys->setqv(x); else sys->setq(x);
+        if(sys->dynamic) sys->setx(x); else sys->setq(x);
         sys->getTaskCostTerms(phi, J, x, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }
@@ -1049,7 +1049,7 @@ double soc::AICO::stepGaussNewton(){
     if(useFwdMessageAsQhat){
       qhat[t]()=s[t];
       countSetq++;
-      if(sys->dynamic) sys->setqv(qhat[t]); else sys->setq(qhat[t]);
+      if(sys->dynamic) sys->setx(qhat[t]); else sys->setq(qhat[t]);
       f.sys=sys;  f.aico=this;  f.t=t;  f.reuseOldCostTerms=false;  f.noBwdMsg=true;
       f.calcTermsAt(qhat[t]);
     }else{

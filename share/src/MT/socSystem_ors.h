@@ -4,7 +4,7 @@
 #include "soc.h"
 
 //===========================================================================
-// @}
+//
 // ORS simulator implementation of the SocAbstration
 //
 
@@ -37,7 +37,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   //info
   void reportOnState(std::ostream& os);
   void displayState(const arr *x, const arr *Q=NULL, const char *text=NULL, bool reportVariables=false);
-  
+  void recordTrajectory(const arr& q,const char *variable,const char *file);
+
   //implementations of virtual methods
   uint nTime();
   uint nTasks();
@@ -47,13 +48,13 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void getq0(arr& q);
   void setq0(const arr& q);
   void getv0(arr& v);
-  void getqv0(arr& q_);
+  void getx0(arr& x);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq(const arr& q, uint t=0);
-  void setqv(const arr& q_, uint t=0);
+  void setx(const arr& x, uint t=0);
   void setqv(const arr& q, const arr& qd, uint t=0);
-  void setx0AsCurrent();
+  void setx0ToCurrent();
   //void geth  (arr& h);
   void getW(arr& W, uint t);
   void getWinv(arr& Winv, uint t);
@@ -77,7 +78,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   double getTau(bool scaled=true);
   void getMF(arr& M, arr& F, uint t);
   void getMinvF(arr& Minv, arr& F, uint t);
-  
+  virtual void setTau(double tau);
 };
 
 }

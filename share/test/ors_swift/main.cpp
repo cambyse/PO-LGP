@@ -12,7 +12,7 @@ void testSwift(){
   C.init("swift_test.ors");
 
   OpenGL gl;
-  gl.reportEvents=true;
+  //gl.reportEvents=true;
   gl.drawFocus=true;
   gl.add(drawInit,0);
   gl.add(ors::glDrawGraph,&C);

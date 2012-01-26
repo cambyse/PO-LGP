@@ -8,10 +8,6 @@
 #include <sys/resource.h>
 #include <iostream>
 #include <X11/Xlib.h>
-#include <FL/Fl.H>
-#include <FL/fl_draw.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Double_Window.H>
 
 #include "util.h"
 #include "array.h"
@@ -19,11 +15,11 @@
 
 //===========================================================================
 //
-// Global Static information
+// Global information
 //
 
-static VariableL globalVariables;
-static ProcessL  globalProcesses;
+VariableL globalVariables;
+ProcessL  globalProcesses;
 
 
 //===========================================================================
@@ -31,8 +27,8 @@ static ProcessL  globalProcesses;
 // helpers
 //
 
-static MT::Array<Metronome *> globalMetronomes;
-static MT::Array<CycleTimer*> globalCycleTimers;
+MT::Array<Metronome *> globalMetronomes;
+MT::Array<CycleTimer*> globalCycleTimers;
 
 void reportNice(){
   pid_t tid = syscall(SYS_gettid);
@@ -87,7 +83,7 @@ void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const times
 
 //===========================================================================
 //
-// Lock
+// Access Lock
 //
 
 Lock::Lock(){
@@ -127,6 +123,41 @@ void Lock::unlock(){
 }
 
 
+//===========================================================================
+//
+// Mutex Lock
+//
+
+Mutex::Mutex(){
+  pthread_mutexattr_t atts;
+  int rc;
+  rc = pthread_mutexattr_init(&atts);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  rc = pthread_mutexattr_settype(&atts, PTHREAD_MUTEX_RECURSIVE_NP);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  rc = pthread_mutex_init(&_lock, &atts);
+
+  //_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+
+  state=0;
+}
+
+Mutex::~Mutex(){
+  CHECK(!state, "");
+  int rc = pthread_mutex_destroy(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+}
+
+void Mutex::lock(const char* _msg){
+  int rc = pthread_mutex_lock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  if(_msg) msg=_msg; else msg=NULL;
+  state++;
+}
+
+void Mutex::unlock(){
+  int rc = pthread_mutex_unlock(&_lock);  if(rc) HALT("pthread failed with err " <<rc);
+  msg=NULL;
+  state--;
+}
+
+       
 //===========================================================================
 //
 // ConditionVariable

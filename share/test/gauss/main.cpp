@@ -57,6 +57,20 @@ void testMult(){
 
 }
 
+void testGradient() {
+  arr cov = eye(2);
+  arr mu = ARR(0., 0.);
+
+  arr grad;
+
+  Gaussian g;
+  g.setC(mu, cov);
+
+  g.gradient(grad, ARR(1.,1.));
+
+  cout << "Gradient: " << grad << endl;
+}
+
 void testSdv(){
   arr X;
   Gaussian a;
@@ -163,6 +177,22 @@ void testConditional(){
   useC=false;
   getMarginal(g2m,g2,k);
   cout <<"marginal made with U:" <<g2m;
+}
+
+void testEvaluate() {
+	Gaussian g;
+  g.setDiagonal(1, 1);
+	double p = 0;
+
+	p = g.evaluate(ARR(0.));
+	std::cout << "P(0) = " << p << std::endl;
+
+	p = g.evaluate(ARR(10.));
+	std::cout << "P(10) = " << p << std::endl;
+	
+	p = g.evaluate(ARR(1.));
+	std::cout << "P(1) = " << p << std::endl;
+
 }
 
 double px(const arr& x){
@@ -275,6 +305,9 @@ int main(int argn,char** argv){
   //testKLD();
 
   testReduction();
+  //testReduction();
+	testEvaluate();
+  testGradient();
 
   return 0;
 }

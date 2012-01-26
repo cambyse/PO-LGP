@@ -205,7 +205,9 @@ infer::Variable::~Variable(){
 }
 
 void infer::Variable::write(ostream& os) const {
-  os <<"variable " <<name <<" { dim=" <<dim <<" }";
+  os <<"variable " <<name <<" { dim=" <<dim;
+  if(ats.N){ os <<", "; listWrite(ats, os, ","); }
+  os <<" }";
 }
 
 
@@ -269,38 +271,28 @@ void infer::checkConsistent(const FactorList& F){
 
 
 infer::Factor::Factor(){
+  specialType=NONE;
   messages.memMove=true;
   logP=0.;
 }
 
-infer::Factor::~Factor(){
-  disconnectFactor(*this);
-}
-
 infer::Factor::Factor(const VariableList& variables, const char *_name){
+  specialType=NONE;
   init(variables);
   setOne();
   if(_name) name=_name;
 }
 
-infer::Factor::Factor(const VariableList& variables, const arr& q){
+infer::Factor::Factor(const VariableList& variables, const arr& q, const char *_name){
+  specialType=NONE;
   init(variables);
   setP(q);
+  if(_name) name=_name;
 }
 
-/*infer::Factor::Factor(const uintA& vars){
-  messages.memMove=true;
-  init(vars);
-  setOne();
+infer::Factor::~Factor(){
+  disconnectFactor(*this);
 }
-
-infer::Factor::Factor(const uintA& vars, const char* text){
-  messages.memMove=true;
-  init(vars);
-  setText(text);
-}
-
-*/
 
 void infer::Factor::operator=(const Factor& q){
   init(q.variables);
@@ -386,16 +378,21 @@ void infer::Factor::getP(arr& p) const {
 void infer::Factor::write(std::ostream& os, bool brief) const {
   os <<"factor " <<name <<" (";
   for(uint v=0; v<variables.N; v++){ if(v) os <<' ';  os <<variables(v)->name; }
-  os <<")";
-  if(!brief){
+  os <<") {";
+  if(specialType){
+    os <<" specialType=" <<specialType;
+    if(ats.N){ os <<", "; listWrite(ats, os, ","); }
+    os <<' ';
+  }else{
     arr p;
     getP(p);
-    if(p.nd<=1) os <<"{ P="; else os <<"{\nP=" <<std::endl;
-    //p.write(os, " ", "\n     ", false);
-    p.write(os, " ", "\n  ", "[]", false);
-    //os <<'*' <<::exp(logP) <<"=exp(" <<logP <<") ";
-    if(p.nd<=1) os <<" }"; else os <<"\n}" <<std::endl;
+    char SEP=(p.nd<=1)?' ':'\n';
+    os <<SEP <<"P=" <<SEP;
+    p.write(os, " ", "\n ", "[]", false);
+    if(ats.N){ os <<',' <<SEP; listWrite(ats, os, ","); }
+    os <<SEP;
   }
+  os <<'}' <<std::endl;
 }
 
 void infer::Factor::writeNice(std::ostream& os) const {

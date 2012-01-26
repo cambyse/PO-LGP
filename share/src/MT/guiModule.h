@@ -32,6 +32,8 @@ struct GuiModule:public Process {
   
   //INTERNAL
 #ifdef MT_QT
+  NEVER DO THIS! Forcing compiler error!
+()()()
   QApplication *app;
 #endif
   bool useOpengl, logData, plotData;
@@ -41,6 +43,7 @@ struct GuiModule:public Process {
   bool isOpen;
   
 #ifdef MT_QT
+NEVER DO THIS()
   Ui_SchunkMonitor *ui;
 #endif
   

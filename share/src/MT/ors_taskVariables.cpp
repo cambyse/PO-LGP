@@ -324,7 +324,7 @@ void TaskVariable::shiftTargets(int offset){
 }
 
 void DefaultTaskVariable::updateState(double tau){
-  arr q, qv, p;
+  arr q, qd, p;
   ors::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
   ors::Transformation f, fi, fj;
@@ -378,17 +378,17 @@ void DefaultTaskVariable::updateState(double tau){
     case rotTVT:       y.resize(3);  ors->jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
     case contactTVT:   ors->getPenetrationState(p); y.resize(1);  y(0) = p(i);  NIY;  break;
     case gripTVT:      ors->getGripState(y, i);      NIY;  break;
-    case qItselfTVT:   ors->getJointState(q, qv);    y = q;   J.setId(q.N);  break;
-    case qLinearTVT:   ors->getJointState(q, qv);    y = params * q;   J=params;  break;
+    case qItselfTVT:   ors->getJointState(q, qd);    y = q;   J.setId(q.N);  break;
+    case qLinearTVT:   ors->getJointState(q, qd);    y = params * q;   J=params;  break;
     case qSquaredTVT:
-      ors->getJointState(q, qv);
+      ors->getJointState(q, qd);
       y.resize(1);  y(0) = scalarProduct(params, q, q);
       J = params * q;
       J *= (double)2.;
       J.reshape(1, q.N);
       break;
     case qSingleTVT:
-      ors->getJointState(q, qv);
+      ors->getJointState(q, qd);
       y.resize(1);  y(0)=q(-i);
       J.resize(1, ors->getJointStateDimension());
       J.setZero();
@@ -777,7 +777,7 @@ void getJointJacobian(TaskVariableList& CS, arr& J){
   J.reshape(J.N/n, n);
 }
 
-void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
+void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W){
   uint n=W.d0;
   dq.resize(n);
   dq.setZero();
@@ -788,8 +788,6 @@ void bayesianControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
   a.setZero();
   arr w(3);
   for(i=0; i<CS.N; i++) if(CS(i)->active){
-      NIY; //TODO: do I have to make updateState?
-      //CS(i)->updateJacobian();
       a += CS(i)->y_prec * CS(i)->Jt * (CS(i)->y_ref-CS(i)->y);
       A += CS(i)->y_prec * CS(i)->Jt * CS(i)->J;
     }

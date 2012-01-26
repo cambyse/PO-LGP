@@ -19,7 +19,7 @@ void drawBase(void*){
 int main(int argn,char **argv){
   cout <<USAGE <<endl;
 
-  const char *file="test.ors";
+  const char *file="car.ors";
   if(argn<2){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];
@@ -32,6 +32,9 @@ int main(int argn,char **argv){
   OpenGL gl;
   gl.add(drawBase,0);
   gl.add(ors::glDrawGraph,&C);
+  //gl.reportEvents=true;
+  //gl.reportSelects=true;
+
   editConfiguration(name,C,gl);
 
   return 0;

@@ -21,6 +21,21 @@ void problem1(){
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
+  arr xt;
+  sys.getx0(xt);
+  sys.testGradientsInCurrentState(xt, 0);
+  
+  arr q0,x0,x;
+  soc::straightTaskTrajectory(sys, q0, 0);
+  //soc::getPhaseTrajectory(x0, q0, sys.getTau());
+  x=x0=q0;
+  conv_VectorChainFunction P2(sys);
+  checkJacobian((VectorFunction&)P2, x, 1e-4);
+  
+  optOptions o;  o.stopTolerance=1e-3;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  
   AICO solver;
 
   cout <<"\n== second test: T step planning ==\n" <<endl;
@@ -30,6 +45,8 @@ void problem1(){
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,10*1e4);
   solver.init(sys);
   solver.iterate_to_convergence();
+  
+  for(;;) sys.displayTrajectory(solver.q, NULL, 1, "result");
 }
 
 //===========================================================================
@@ -53,9 +70,26 @@ void problem2(){
                                            0.,
                                            MT::getParameter<double>("reachPlanEndVelPrec"));
 
+  arr xt;
+  sys.getx0(xt);
+  sys.testGradientsInCurrentState(xt, 0);
+  
+  arr q0,x0,x;
+  soc::straightTaskTrajectory(sys, q0, 0);
+  soc::getPhaseTrajectory(x0, q0, sys.getTau());
+  x=x0;
+  conv_VectorChainFunction P2(sys);
+  checkJacobian((VectorFunction&)P2, x, 1e-4);
+  
+  optOptions o;  o.stopTolerance=1e-3;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  
   AICO solver;
   solver.init(sys);
   solver.iterate_to_convergence();
+
+  for(;;) sys.displayTrajectory(solver.q, NULL, 1, "result");
 }
 
 
@@ -73,8 +107,28 @@ void problem3(){
   createStandardRobotTaskVariables(sys);
   setGraspGoals(sys,T,"cyl1");
 
+#if 1
   AICO solver(sys);
   solver.iterate_to_convergence();
+  
+  for(;;) sys.displayTrajectory(solver.q, NULL, 1, "result");
+  return;
+#else
+  //arr xt;
+  //sys.getx0(xt);
+  //sys.testGradientsInCurrentState(xt, 0);
+  
+  arr q0,x0,x;
+  soc::straightTaskTrajectory(sys, q0, 0);
+  soc::getPhaseTrajectory(x0, q0, sys.getTau());
+  x=x0;
+  conv_VectorChainFunction P2(sys);
+  //checkJacobian((VectorFunction&)P2, x, 1e-4);
+  
+  optOptions o;  o.stopTolerance=1e-3;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+#endif
 }
 
 //===========================================================================

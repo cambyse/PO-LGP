@@ -1,14 +1,17 @@
+#include <stdlib.h>
 #include "robot.h"
 #include "vision.h"
-#include "revelModule.h"
 #include "guiModule.h"
 #include "soc_inverseKinematics.h"
-
-#include <lwa/Device/Device.h>
+#ifdef MT_SCHUNK
+#  include <lwa/Device/Device.h>
+#endif
 #ifdef MT_NILS
 #  include <NP_2Drec/common.h>
 #  include <NP_2Drec/vision_module.h>
+#  include <NP/camera.h>
 #endif
+#include "robot_processes.h"
 
 
 #ifndef FORMAT
@@ -132,7 +135,7 @@ void ControllerProcess::step(){
   //=== compute motion from the task variables
   //-- compute the motion step
   arr q_old=q_reference;
-  arr dq, qv, qv_1;
+  arr dq, x, x_1;
   //check if a colition and limit variable are active
   bool colActive=false, limActive=false;
   uint i; TaskVariable *v;
@@ -143,11 +146,11 @@ void ControllerProcess::step(){
   if(forceColLimTVs && (!colActive || !limActive)) HALT("SAFETY BREACH! You need an active collision and limit variable!");
   
   //dynamic control using SOC
-  qv_1=q_reference; qv_1.append(v_reference);
-  if(!useBwdMsg) soc::bayesianDynamicControl(sys, qv, qv_1, 0);
-  else           soc::bayesianDynamicControl(sys, qv, qv_1, 0, &bwdMsg_v, &bwdMsg_Vinv);
-  q_reference = qv.sub(0, q_reference.N-1);
-  v_reference = qv.sub(v_reference.N, -1);
+  x_1=q_reference; x_1.append(v_reference);
+  if(!useBwdMsg) soc::bayesianDynamicControl(sys, x, x_1, 0);
+  else           soc::bayesianDynamicControl(sys, x, x_1, 0, &bwdMsg_v, &bwdMsg_Vinv);
+  q_reference = x.sub(0, q_reference.N-1);
+  v_reference = x.sub(v_reference.N, -1);
   
   if(fixFingers) for(uint j=7; j<14; j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
   taskLock.unlock();
@@ -247,7 +250,7 @@ void RobotProcessGroup::open(){
   if(openGui){
     gui.q_referenceVar = &q_currentReference;
     gui.proxiesVar = &currentProxies;
-    if(openBumble) gui.cameraVar = &bumble.output;
+    if(openBumble) gui.cameraVar = &currentCameraImages;
     //gui.perceptionOutputVar = &perc.output;
     gui.createOrsClones(&ctrl.ors);
     gui.ctrl=this;
@@ -261,12 +264,15 @@ void RobotProcessGroup::open(){
   }
   
   if(openBumble){
+    bumble.output = &currentCameraImages;
     bumble.threadOpen(MT::getParameter<int>("bumbleThreadNice", 0));
     bumble.threadLoop(); // -> start in loop mode!
   }
   
   if(openEarlyVision){
-    evis.input=&bumble.output;
+    evis.input = &currentCameraImages;
+		std::cout << evisOutput.hsvThetaL << std::endl;
+		evis.output = &evisOutput;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }
@@ -672,4 +678,44 @@ void RobotProcessGroup::signalStopCallback(int s){
   signalStop=true;
 }
 
+#ifndef MT_NILS
+// empty
+void LEDtracker::step(){}
+#else
+void LEDtracker::step(){
+    CvMatDonor cvMatDonor;
+    
+    if(!var){ MT_MSG("Variable pointer not set"); return; }
+    var->output.readAccess(this);
+    rgbL = var->output.rgbL;
+    rgbR = var->output.rgbR;
+    var->output.deAccess(this);
+    
+    green.resize(rgbL.d0, rgbL.d1);
+    floatA cen;
+    uintA box;
+    for(uint c=0; c<2; c++){
+      if(c==0) cvSplit(CVMAT(rgbL), NULL, CVMAT(green), NULL, NULL);
+      if(c==1) cvSplit(CVMAT(rgbR), NULL, CVMAT(green), NULL, NULL);
+      
+      copy(theta, green);
+      theta /= 256.f;
+      tmp.resizeAs(theta);
+      cvSmooth(CVMAT(theta), CVMAT(tmp), CV_BLUR, 5, 5);
+      theta=tmp;
+      
+      findMaxRegionInEvidence(box, &cen, NULL, theta, .05);
+      
+      writeAccess(this); {
+        center.resize(2, 2);
+        center[c] = cen;
+      } deAccess(this);
+    }
+    
+    //return;
+    cvRectangle(CVMAT(theta), cvPoint(box(0), box(1)), cvPoint(box(2), box(3)), cvScalar(0));
+    cvRectangle(CVMAT(theta), cvPoint(cen(0)-1, cen(1)-1), cvPoint(cen(0)+1, cen(1)+1), cvScalar(0.));
+    cvShow(theta, "2");
+}
+#endif // MT_NILS
 
