@@ -4,27 +4,35 @@
 #include <MT/process.h>
 #include <MT/ors.h>
 
-class LearningDataVariable : public Variable {
+class ActiveLearner;
+class Oracle;
+class TrainingsDataV: public Variable {
   public:
-    LearningDataVariable();
-    ors::Vector pos1;
-    ors::Vector pos2;
+    TrainingsDataV();
+    MT::Array<arr> data;
+    intA classes;
 };
 
-class sActiveLearningProcess;
-
-class ActiveLearningProcess : public Process {
-  private:
-    sActiveLearningProcess* s;
-
+class ClassificatorV: public Variable {
   public:
-    ActiveLearningProcess();
+    ClassificatorV();
+    ActiveLearner* cl;
+    Oracle* o;
+};
+
+
+class ActiveLearningP: public Process {
+  public:
+    ActiveLearningP();
 
     void open();
     void step();
     void close();
 
-    LearningDataVariable* data; 
+    ors::Graph* ors; 
+    TrainingsDataV* traindata;
+    ClassificatorV* classificator;
+
 };
 
 #endif
