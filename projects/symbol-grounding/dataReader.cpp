@@ -1,4 +1,4 @@
-#include "DataReader.h"
+#include "dataReader.h"
 
 #include <MT/array_t.cpp>
 
@@ -47,6 +47,7 @@ int colorToInt(const std::string& color) {
   else if (color == "blue") {
     return 4;  
   }
+  return 5;
 }
 
 DataReader::DataReader() {
@@ -103,6 +104,7 @@ int DataReader::readDataFile(const std::string& dataFile, const std::string& rel
     s->data.append(ARR(s->objectData[snd](2), s->objectData[snd](3), s->objectData[snd](4)));
   }
   s->data.resize(s->data.N/2, 2);
+  return 0;
 }
 
 MT::Array<int>& DataReader::getClasses() const {
