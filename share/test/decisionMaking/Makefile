@@ -1,6 +1,6 @@
 BASE = ../..
 
-RELATIONAL = 1
+buildAndLink_RELATIONAL = 1
 #ODE = 1
 FREEGLUT = 1
 SWIFT   = 1

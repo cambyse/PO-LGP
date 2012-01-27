@@ -8,7 +8,7 @@ BUMBLE = 1
 VISION = 1
 SCHUNK = 1
 PLIB = 1  #for the Joystick
-STANIMIR = 1
+buildAndLink_STANIMIR = 1
 LEWINER = 1
 #REVEL = 1
 
