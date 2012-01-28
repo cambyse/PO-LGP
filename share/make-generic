@@ -480,7 +480,7 @@ default: $(OUTPUT)
 clean:
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
 
-depend: Makefile.dep
+#depend: Makefile.dep
 
 info: force
 	@echo; echo ----------------------------------------
