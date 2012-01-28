@@ -480,7 +480,7 @@ default: $(OUTPUT)
 clean:
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
 
-#depend: Makefile.dep
+depend: generate_Makefile.dep
 
 info: force
 	@echo; echo ----------------------------------------
@@ -589,7 +589,7 @@ $(BASE)/make-config:
 	cp $(BASE)/make-config.default $(BASE)/make-config
 
 ## generate a make dependency file
-Makefile.dep: $(OBJS:%.o=%.cpp)
+generate_Makefile.dep: $(OBJS:%.o=%.cpp)
 	-$(CXX) -MM $(OBJS:%.o=%.cpp) $(CXXFLAGS) > Makefile.dep
 
 force:	;
