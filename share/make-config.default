@@ -26,7 +26,7 @@ endif
 ### MAKEMODE=app
 
 ifeq ($(MAKEMODE),app)
-MTLIB = 1
+buildAndLink_MTLIB = 1
 endif
 
 

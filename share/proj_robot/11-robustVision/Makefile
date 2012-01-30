@@ -17,9 +17,9 @@ REALCAMERA=1
 # CUDA = 1
 # #REVEL = 1
 # LEWINER = 1
-# NIKOLAY = 1
-# TOBIAS = 1
-# NILS = 1
+# buildAndLink_NIKOLAY = 1
+# buildAndLink_TOBIAS = 1
+# buildAndLink_NILS = 1
 
 include $(BASE)/make-generic
 

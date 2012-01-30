@@ -810,7 +810,8 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IA(N, 6, 6), fA(N, 6), a(N, 6);
   arr vJ, Ia, fa;
   qdd.resizeAs(tau);
-  
+
+  //fwd: compute the velocities v[i] and external + Coriolis forces fA[i] of all bodies
   for(i=0; i<N; i++){
     iq = tree(i).index;
     par = tree(i).parent;
@@ -818,7 +819,7 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
     if(par != -1){
       h[i]() = tree(i)._h;
       vJ = h[i] * qd(iq); //equation (2), vJ = relative vel across joint i
-      v[i]() = Xup[i] * v[par] + vJ;
+      v[i]() = Xup[i] * v[par] + vJ; //eq (27)
       dh_dq[i]() = Featherstone::crossM(v[i]) * vJ;  //WHY??
       taui(i)=tau(iq);
     }else{
@@ -829,11 +830,14 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
     }
     // v[i] = total velocity, but in joint coordinates
     IA[i] = tree(i)._I;
-    fA[i] = Featherstone::crossF(v[i]) * (tree(i)._I * v[i]) - tree(i)._f; //1st equation below (13)
+    //first part of eq (29)
+    fA[i] = Featherstone::crossF(v[i]) * (tree(i)._I * v[i]) - tree(i)._f;
   }
-  
+
+  //bwd: propagate tree inertia
   for(i=N; i--;){
     par = tree(i).parent;
+    //eq (28)
     I_h[i]()      = IA[i] * h[i];
     h_I_h(i)      = scalarProduct(h[i], I_h[i]);
     inv_h_I_h(i)  = 1./h_I_h(i);

@@ -360,7 +360,7 @@ inline arr randn(uint n){ return randn(TUP(n, n)); }
 inline arr randn(uint d0, uint d1){ return randn(TUP(d0, d1)); }
 
 inline double max(const arr& x){ return x.max(); }
-inline double min(const arr& x){ return x.max(); }
+inline double min(const arr& x){ return x.min(); }
 inline uint argmax(const arr& x){ return x.maxIndex(); }
 inline uint argmin(const arr& x){ return x.minIndex(); }
 
