@@ -1,14 +1,14 @@
 #include "naiveBayesClassificator.h"
-
-#include <MT/array.h>
-#include <MT/array_t.cpp>
-#include <MT/gauss.h>
+#include <relational/blocksWorld.h>
+#include <JK/util.h>
 
 #include <inttypes.h>
 #include <cmath>
+#include <cstdlib>
 
-#define P(var) cout << #var << " = " << var << endl
-
+#include <MT/util.h>
+#include <MT/array.h>
+#include <MT/gauss.h>
 class sNaiveBayesClassificator {
 public:
   MT::Array<arr> features; 
@@ -24,8 +24,12 @@ public:
 
   void computeMeansAndVariances(const int givenClass, const int feature);
 
+  void getProbabilities(arr& probabilities, const MT::Array<arr>& features, int set = 0);
+
+  void rejectionSampling(MT::Array<arr>& sample, double& p, const int class1, const int class2);
+  void gradientDescentSampling(arr& nextSample, double& p, const int class1, const int class2, const int feature) const;
+
   void findBestStartPoint(arr& startPoint, const int feature, const int class1, const int class2, const arr& pos1, const arr& pos2, double eps) const;
-  void nextSample(arr& nextSample, double& p, const int class1, const int class2, const int feature) const;
 };
 
 NaiveBayesClassificator::NaiveBayesClassificator() {
@@ -37,23 +41,26 @@ NaiveBayesClassificator::~NaiveBayesClassificator() {
 }
 
 int NaiveBayesClassificator::classify(const MT::Array<arr>& features, int set) const {
-  CHECK(features.d1 == s->features.d1, "Feature vector is of different size than trainings data.");
+  CHECK(features.d0 == s->features.d1, "Feature vector is of different size than trainings data.");
   arr probabilities;
-  probabilities.resize(s->numOfClasses);
-  for (uint8_t i = 0; i < s->numOfClasses; ++i) {
+  s->getProbabilities(probabilities, features, set);
+  return probabilities.maxIndex();
+}
+
+void sNaiveBayesClassificator::getProbabilities(arr& probabilities, const MT::Array<arr>& feature, int set) {
+  probabilities.resize(numOfClasses);
+  for (uint8_t i = 0; i < numOfClasses; ++i) {
     probabilities(i) = 1; // normally this should be the class probability, but 
                           // since it would be divided later, we can leave it out
-    for (uint8_t j = 0; j < s->features.d1; ++j) {
+    for (uint8_t j = 0; j < feature.d0; ++j) {
       // this is actually a probability density value, not a probability. The
       // probability of a single point is 0. However it is a good estimation.
       // But note that it can be bigger than 1.
-      probabilities(i) *= s->getPrior(j, features(set, j), i); 
+      probabilities(i) *= getPrior(j, feature(j), i); 
     }
   }
-  // this holds if we assume that every data point mus be in exactly one class
+  // this holds if we assume that every data point must be in exactly one class
   probabilities = probabilities * (1./(sum(probabilities)));
-  std::cout << "p = " << probabilities << std::endl;
-  return probabilities.maxIndex();
 }
 
 void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, const intA& classes) {
@@ -76,6 +83,7 @@ void NaiveBayesClassificator::setTrainingsData(const MT::Array<arr >& features, 
 }
 
 void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int class_) {
+  CHECK(data.d0 == s->features.d1, "The new feature vector does not match the number of features for data in this classificator");
   int d1 = s->features.d1;
   s->features.append(data);
   s->features.reshape(s->features.N/d1, d1);
@@ -92,10 +100,6 @@ void NaiveBayesClassificator::addData(const MT::Array<arr>& data, const int clas
 double sNaiveBayesClassificator::getPrior(const int feature, const arr& value, const int givenClass) {
   Gaussian g;
   g.setC(means(feature, givenClass), variances(feature, givenClass));
-  //std::cout << "feature: " << feature << std::endl << "given class: " << givenClass << std::endl;
-  //std::cout << "value: " << value << std::endl;
-
-  //std::cout << g.evaluate(value) << std::endl << variances(feature, givenClass) << std::endl << "----" << std::endl;
   return g.evaluate(value);
 }
 
@@ -160,8 +164,39 @@ void sNaiveBayesClassificator::findBestStartPoint(arr& startPoint, const int fea
     startPoint = startPoint + dir * stepSize * centerdir;
   }
 }
+ 
+void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, double& p, const int class1, const int class2) {
 
-void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int class1, const int class2, const int feature) const {
+  MT::Array<arr> testSample;
+  double eps = 0.01;
+  double maxdens = 0;
+
+  srand ( time(NULL) % 5 * time(NULL)  );
+  MT::rnd.clockSeed();
+  for (uint i = 0; i < 1000; ++i) {
+    generateBlocksSample(testSample, 2);
+
+    arr probabilities;
+    getProbabilities(probabilities, testSample);
+
+    double diff = fabs(probabilities(class1) - probabilities(class2));
+    double dens1 = 1;
+    double dens2 = 1;
+    for (uint8_t j = 0; j < features.d1; ++j) {
+      dens1 *= getPrior(j, testSample(j), class1); 
+      dens2 *= getPrior(j, testSample(j), class2);
+    }
+    double dens = (dens1 + dens2)/2;
+
+    if (diff < eps && dens > maxdens) {
+      nextSample = testSample;
+      maxdens = dens;
+    }
+  }
+  p = maxdens;
+}
+
+void sNaiveBayesClassificator::gradientDescentSampling(arr& nextSample, double& p, const int class1, const int class2, const int feature) const {
   arr oldn;
   double oldp = -2;
   
@@ -172,8 +207,6 @@ void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int 
   findBestStartPoint(nextSample, feature, class1, class2, means(feature,class1), means(feature,class2)); 
   
   p = g1.evaluate(nextSample);
-
-  double stepSize = 0.2;
 
   while (p > oldp) {
     // cache old values 
@@ -203,6 +236,7 @@ void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int 
     arr l ;
     mldivide(l, G, b);
     
+
     // test whether we go in positive or negative direction for gradient descent 
     arr dir = (l.sub(0, l.N-2) - nextSample);
     arr n1 = nextSample - 0.2 * dir;
@@ -223,18 +257,21 @@ void sNaiveBayesClassificator::nextSample(arr& nextSample, double& p, const int 
 }
 
 void NaiveBayesClassificator::nextSample(MT::Array<arr> &sample) const {
-  for (uint f = 0; f < s->features.d1; ++f) {
+  //for (uint f = 0; f < s->features.d1; ++f) {
     double pmax = 0;
-    arr max;
+    MT::Array<arr> max;
+
     for (uint c1 = 0; c1 < s->numOfClasses; ++c1) {
       for (uint c2 = 0; c2 < s->numOfClasses; ++c2) {
         if (c1 == c2) continue;
-        arr next;
+        MT::Array<arr> next;
         double p;
-        s->nextSample(next, p, c1, c2, f);
+        //s->nextSample(next, p, c1, c2, f);
+        s->rejectionSampling(next, p, c1, c2);
         if(p > pmax) { pmax = p; max = next; }
       }
     }
-    sample.append(max);
-  }
+    sample = max;
+    //sample.append(max);
+  //}
 }

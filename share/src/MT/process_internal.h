@@ -2,6 +2,7 @@
 #define MT_process_internal_h
 
 #include <pthread.h>
+#include "process.h"
 
 typedef unsigned int uint;
 

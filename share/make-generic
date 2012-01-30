@@ -1,5 +1,7 @@
 # this is a generic make file
-# supposed to be called from test and projects paths
+# supposed to be called from lib, test and projects Makefiles
+#
+# user configuration options are set in make-config -- not here!
 
 .SECONDARY:
 
@@ -15,10 +17,10 @@ $(info ------------------------------------------------------------)
 
 ################################################################################
 #
-# flags for this specific distribution (optional include)
+# load user options from the local make-config
 #
 ################################################################################
--include $(BASE)/make-config
+include $(BASE)/make-config
 
 
 ################################################################################
@@ -69,11 +71,9 @@ CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
 
-
-
 ################################################################################
 #
-# different settings for different system
+# different settings for different operating system
 #
 ################################################################################
 
@@ -164,10 +164,10 @@ endif
 
 ################################################################################
 #
-# external libraries' specifics
+# linking to external libraries
 #
 ################################################################################
-# (a tag like `FREEGLUT = 1' can be defined in the local Makefiles as needed)
+# (a tag like `FREEGLUT = 1' can be defined in the make-config as needed)
 
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
@@ -335,11 +335,6 @@ ifeq ($(QHULL2010),1)
 CXXFLAGS += -DQHULL2010
 endif
 
-# newer qhull version?
-ifeq ($(QHULL2010),1)
-CXXFLAGS += -DQHULL2010
-endif
-
 #assuming ubuntu libopencv2.3-dev package
 #ifeq ($(OPENCV_UBUNTU),1)
 #CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.1`
@@ -421,40 +416,42 @@ CXXFLAGS  += -DMT_PTHREAD
 LinuxLibs += -lpthread -lX11
 endif
 
-#von NILS: -lcxcore -lcv -lcvaux -lhighgui -lml -Wl,-rpath,/home/mtoussai/svn/mlr/nils/libs/opencv/lib/ -lpgrlibdcstereo -ldc1394 -lraw1394 -pthread-lopensurf_i686 -lann11-debr
 
-ifeq ($(NILS),1)
+################################################################################
+#
+# also building and linking to a local component
+#
+################################################################################
+# (a tag like `buildAndLink_NILS = 1' in a Makefile triggers make to also build NILS and then link to is)
+
+ifeq ($(buildAndLink_NILS),1)
+BUILDS += buildComponent/NP
 LinuxLibs += -lnp -ldc1394
-DEPEND += externalMake_src/NP
 endif
 
-ifeq ($(NIKOLAY),1)
+ifeq ($(buildAndLink_NIKOLAY),1)
+BUILDS += buildComponent/NJ
 LinuxLibs += -lnj
-DEPEND += externalMake_src/NJ
 endif
 
-ifeq ($(RELATIONAL),1)
+ifeq ($(buildAndLink_RELATIONAL),1)
+BUILDS += buildComponent/relational
 LinuxLibs += -lrelational
-DEPEND += externalMake_src/relational
 endif
 
-ifeq ($(STANIMIR),1)
+ifeq ($(buildAndLink_STANIMIR),1)
+BUILDS += buildComponent/SD
 LinuxLibs += -lsd
-DEPEND += externalMake_src/SD
 endif
 
-ifeq ($(DMITRY),1)
+ifeq ($(buildAndLink_DMITRY),1)
+BUILDS += buildComponent/DZ
 LinuxLibs += -ldz
-DEPEND += externalMake_src/DZ
 endif
 
-ifeq ($(LIBVOC2009),1)
-LinuxLibs += -lvoc2009_$(ARCH)
-endif
-
-ifeq ($(MTLIB),1)
+ifeq ($(buildAndLink_MTLIB),1)
+BUILDS += buildComponent/MT
 LinuxLibs += -lmt
-DEPEND += externalMake_src/MT
 endif
 
 
@@ -473,7 +470,7 @@ export MSVC_LPATH
 
 ################################################################################
 #
-# standard make targets
+# make targets
 #
 ################################################################################
 
@@ -482,7 +479,7 @@ default: $(OUTPUT)
 clean:
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
 
-depend: rm_Makefile.dep $(OBJS:%.o=%.dep)
+depend: generate_Makefile.dep
 
 info: force
 	@echo; echo ----------------------------------------
@@ -506,10 +503,11 @@ info: force
 	@echo "  OBJS =" "$(OBJS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
 	@echo "  OUTPUT =" "$(OUTPUT)"
-	@echo "  DEPEND =" "$(DEPEND)"
+	@echo "  BUILDS =" "$(BUILDS)"
 	@echo
 
 all: default
+
 
 ################################################################################
 #
@@ -525,16 +523,16 @@ all: default
 #
 ################################################################################
 
-%.exe: $(PREOBJS) $(OBJS) $(DEPEND)
+%.exe: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs)
 
-%.so: $(PREOBJS) $(OBJS) $(DEPEND)
+%.so: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs) $(SHAREFLAG)
 
-%.lib: $(PREOBJS) $(OBJS) $(DEPEND)
+%.lib: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $($(SYS)Libs) -static ### $(SHAREFLAG)
 
-%.a: $(PREOBJS) $(OBJS) $(DEPEND)
+%.a: $(PREOBJS) $(OBJS) $(BUILDS)
 	ar -crvs $@ $(OBJS)
 
 %.mexglx: $(PREOBJS) $(OBJS)
@@ -579,13 +577,16 @@ endif
 %_$(SYS).moccpp: %.h force
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
-externalMake_src/%:
+## build a local component
+buildComponent/%:
 	$(MAKE) -C $(BASE)/src/$*
 
-rm_Makefile.dep: force
-	-rm Makefile.dep
+## generate the make-config from the default make-config.default
+$(BASE)/make-config:
+	cp $(BASE)/make-config.default $(BASE)/make-config
 
-%.dep: %.cpp
-	-$(CXX) -MM $< $(CPPFLAGS) >> Makefile.dep
+## generate a make dependency file
+generate_Makefile.dep: $(OBJS:%.o=%.cpp)
+	-$(CXX) -MM $(OBJS:%.o=%.cpp) $(CXXFLAGS) > Makefile.dep
 
 force:	;

@@ -1,57 +1,37 @@
 #include "activeLearningProcess.h"
-#include "naiveBayesClassificator.h"
-#include "DataReader.h"
 
-#include <MT/array.h>
+#include "activeLearner.h"
+#include "oracle.h"
 
-class sActiveLearningProcess {
-  public:
-    NaiveBayesClassificator cl;
-    DataReader d;
-};
+ActiveLearningP::ActiveLearningP() : Process("Active Learning Process") {}
 
-LearningDataVariable::LearningDataVariable() : Variable("Learning Data Variable") {
-  pos1 = ARR(0.,0.,0.);
-  pos2 = ARR(0.,0.,0.);
+void ActiveLearningP::open() {
+  CHECK(traindata, "No trainingsdata available for active learner.");
+  CHECK(classificator, "No classificator available for active learner.");
+  
+  classificator->writeAccess(this);
+  classificator->cl->setTrainingsData(traindata->data, traindata->classes);
+  classificator->deAccess(this);
 }
 
-ActiveLearningProcess::ActiveLearningProcess() : Process("Active Learning Process") {}
-
-void ActiveLearningProcess::open() {
-  s = new sActiveLearningProcess;
-
-	s->d.readDataFile("s120116-1029-0.dat", "s120116-1029-0.dat.rel");
-  s->d.readDataFile("s120116-1029-1.dat", "s120116-1029-1.dat.rel");
-	s->d.readDataFile("s120116-1029-2.dat", "s120116-1029-2.dat.rel");
-	s->d.readDataFile("s120116-1029-3.dat", "s120116-1029-3.dat.rel");
-	s->d.readDataFile("s120116-1029-4.dat", "s120116-1029-4.dat.rel");
-  s->d.readDataFile("s120116-1029-5.dat", "s120116-1029-5.dat.rel");
-  s->d.readDataFile("s120116-1029-6.dat", "s120116-1029-6.dat.rel");
-  s->d.readDataFile("s120116-1029-7.dat", "s120116-1029-7.dat.rel");
-	s->d.readDataFile("s120116-1029-8.dat", "s120116-1029-8.dat.rel");
-  s->d.readDataFile("s120116-1029-9.dat", "s120116-1029-9.dat.rel");
-
-  s->cl.setTrainingsData(s->d.getData(), s->d.getClasses());
-}
-
-void ActiveLearningProcess::step() {
+void ActiveLearningP::step() {
   MT::Array<arr> sample;
-  s->cl.nextSample(sample);
-
-  data->writeAccess(this);
-  data->pos1 = sample(0);
-  data->pos2 = sample(1);
-  data->deAccess(this);
-
-  std::cout << "Does 'on' hold? [y, n]" <<std::endl;
-  char answer;
-  std::cin >> answer;
-
-  if (answer == 'y') { s->cl.addData(sample, s->d.getClass("on")); }
-  else { s->cl.addData(sample, s->d.getClass("noton"));}
+  classificator->writeAccess(this);
+  if (classificator->cl->nextSample(sample)) {
+    int _class = classificator->o->classify(sample); 
+    classificator->cl->addData(sample, _class);
+    std::cout << "Add sample as " << _class << std::endl;
+  }
+  else {
+    std::cout << "Nothing interesting" << std::endl;  
+  }
+  classificator->deAccess(this);
 }
 
-void ActiveLearningProcess::close() {
-  delete s;  
+void ActiveLearningP::close() {
+    
 }
+
+TrainingsDataV::TrainingsDataV() : Variable("Trainings Data Variable") {}
+ClassificatorV::ClassificatorV() : Variable("Classificator Variable") {}
 
