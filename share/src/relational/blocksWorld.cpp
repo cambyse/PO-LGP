@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 
+namespace relational {
 void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
   MT::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
@@ -19,7 +20,7 @@ void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr center3d = ARR(0., -.8) + randn(2,1) * 0.7;
+    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
     center3d.append(0.74);
     center3d.resize(3);
 
@@ -37,6 +38,7 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
       sample.append(center3d);
     }
   }
+  sample.reshape(1,numOfBlocks);
 }
 
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
@@ -53,5 +55,6 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
   s->body = &cyl;
   
   cyl.shapes.append(s);
-  cyl.X = t;
+  cyl.X = t; 
+}
 }
