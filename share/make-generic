@@ -218,15 +218,8 @@ QT := 1
 endif
 
 ifeq ($(QT),1)
-CXXFLAGS  += -DMT_QT -DQT_DLL# -DNOUNICODE
-CPATH   := $(CPATH):/usr/include/qt4
-LPATH   := $(LPATH):/usr/lib
-MSVC_CPATH := $(MSVC_CPATH);C:/Programme/Qt-2.3.0/include
-MSVC_LPATH := $(MSVC_LPATH);$(QTDIR)/lib
-LinuxLibs += -lQtCore -lQtGui -lQtOpenGL# -lglut -lGLU -lGL -lX11
-MinGWLibs += -lqtmain -lQtCore4 -lQtGui4 -lQtOpenGL4 -lopengl32 -lglu32
-CygwinLibs+= -lqt -lGLU -lGL
-MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
+CXXFLAGS  += -DMT_QT `pkg-config --cflags  QtCore QtGui QtOpenGL`
+LinuxLibs += `pkg-config --libs  QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(WX),1)
@@ -336,8 +329,8 @@ endif
 
 #assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
-LinuxLibs    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv`
+LinuxLibs    += `pkg-config --libs opencv`
  endif
 
 # newer qhull version?
