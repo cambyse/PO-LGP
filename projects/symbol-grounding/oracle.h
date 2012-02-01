@@ -15,7 +15,10 @@ class OnOracle : public Oracle {
 };
 
 class HumanOracle : public Oracle {
+	private:
+		const char* predicate;
   public:
+		HumanOracle(const char* predicate);
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
 #endif //_ORACLE_H_

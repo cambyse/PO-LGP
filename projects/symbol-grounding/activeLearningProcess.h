@@ -6,6 +6,7 @@
 
 class ActiveLearner;
 class Oracle;
+class Tester;
 class TrainingsDataV: public Variable {
   public:
     TrainingsDataV();
@@ -16,8 +17,9 @@ class TrainingsDataV: public Variable {
 class ClassificatorV: public Variable {
   public:
     ClassificatorV();
-    ActiveLearner* cl;
-    Oracle* o;
+    ActiveLearner* classificator;
+    Oracle* oracle;
+    Tester* tester;
 };
 
 
