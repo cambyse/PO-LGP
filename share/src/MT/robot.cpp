@@ -113,7 +113,7 @@ void ControllerProcess::step(){
     skinPressureVar->deAccess(this);
   }
   
-  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access double position of hand
+  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access real position of hand
     q_referenceVar->readAccess(this);
     for(uint m=0; m<7; m++) q_reference(q_referenceVar->handMotorIndices(m)) = q_referenceVar->q_real(q_referenceVar->handMotorIndices(m));
     q_referenceVar->deAccess(this);

@@ -86,7 +86,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
   currentProxiesVar *proxiesVar;
   FutureMotionPlan *planVar;
   JoystickInterface *joyVar;
-  
+ 
   //INPUT
   TaskAbstraction *task;
   Lock taskLock; //lock this if you change the task!!
