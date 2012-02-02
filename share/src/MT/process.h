@@ -35,6 +35,7 @@ struct Variable {
   sVariable *s;
   const char* name;
   //MT::Array<Process*> processes;
+  uint revision;
   
   Variable(const char* name);
   ~Variable();
@@ -103,6 +104,25 @@ struct Process {
 
 //===========================================================================
 //
+// Link
+//
+
+template<class T>
+struct Link{
+  T *var; ///< pointer to the Variable (T MUST be derived from Variable)
+  Process *p;
+  uint last_revision;
+
+  Link(Process*);
+
+  bool needsUpdate();
+  void readAccess();
+  void writeAccess();
+  void deAccess();
+};
+
+//===========================================================================
+//
 // Global Stuff / Monitor
 //
 
@@ -131,6 +151,10 @@ struct ThreadInfoWin:public Process {
   void close();
   void step();
 };
+
+#ifdef  MT_IMPLEMENT_TEMPLATES
+#  include "process_t.cpp"
+#endif
 
 #ifdef  MT_IMPLEMENTATION
 #  include "process.cpp"

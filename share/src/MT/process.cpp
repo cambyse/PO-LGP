@@ -349,6 +349,7 @@ struct sVariable {
 Variable::Variable(const char *_name){
   s = new sVariable(this);
   name = _name;
+  revision = 0;
   //s->os.open(STRING("var-" <<name <<".log"));
   globalVariables.memMove=true;
   globalVariables.append(this);
@@ -372,6 +373,7 @@ void Variable::writeAccess(Process *p){
   if(p) p->V.setAppend(this);
   //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
   s->lock.writeLock();
+  revision++;
   //_write(cout);  cout <<endl;
   //_write(s->os);  s->os <<endl;
 }
@@ -572,10 +574,10 @@ void Process::threadLoopSyncWithDone(Process& proc){
 
 void Process::threadStop(){
 #ifndef MT_NO_THREADS
-  CHECK(s->threadCondition.state<=tsLOOPING, "called stop loop although not looping!");
-  int state=s->threadCondition.state;
+  int state=s->threadCondition.getState();
+  CHECK(state<=tsLOOPING, "called stop loop although not looping!");
   s->threadCondition.setState(tsIDLE);
-  if(state==tsSYNCLOOPING) s->syncCondition->signal(); //force a signal that wakes up the sync-thread-loop
+  if(state==tsSYNCLOOPING) s->syncCondition->signal(); //force a signal that wakes up the synced-slave to do a last step
 #endif
 }
 
@@ -590,10 +592,11 @@ void* sProcess::staticThreadMain(void *_self){
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   if(s->threadPriority) setNice(s->threadPriority);
   
-  proc->open();
+  proc->open(); //virtual initialization routine
+
   s->threadCondition.setState(tsIDLE);
   s->timer.reset();
-  for(; s->threadCondition.state!=tsCLOSE;){
+  for(;s->threadCondition.state!=tsCLOSE;){
     int state=s->threadCondition.waitForStateNotEq(tsIDLE);
     if(state==tsCLOSE) break;
     //the state is either positive (steps to go) or looping
@@ -603,14 +606,17 @@ void* sProcess::staticThreadMain(void *_self){
     if(state==tsSYNCLOOPING) s->syncCondition->waitForSignal(); //self is a slave and waits for condition signal
     
     s->timer.cycleStart();
-    proc->step();
+    proc->step(); //virtual step routine
     s->timer.cycleDone();
     
-    state=s->threadCondition.state; //state might have changes due to stopping or so!!
+    state=s->threadCondition.getState(); //state might have changes due to stopping or so!!
     if(state>0) s->threadCondition.setState(state-1); //count down
+    //MT: Why does it also broadcast when state<0??? That's always the case when it's looping.
     if(state<0 || s->broadcastDone) s->threadCondition.signal();
   };
-  proc->close();
+
+  proc->close(); //virtual close routine
+
   std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   return NULL;
 }
