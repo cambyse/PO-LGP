@@ -6,6 +6,8 @@
 #include <QtGui/QMessageBox>
 #include <iostream>
 
+void addVariablesToTree(QTreeWidget *tree);
+
 class Gui:public QDialog{
 Q_OBJECT
 public:
@@ -14,7 +16,10 @@ public:
   Gui(){
     ui.setupUi(this);
     show();
-
+  }
+  
+  void add(){
+    addVariablesToTree(ui.VariableTree);
   }
 
 public slots:

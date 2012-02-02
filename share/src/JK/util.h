@@ -5,3 +5,5 @@
 #else
 #define JK_DEBUG(var) 
 #endif
+
+#define foreach_(container) for(typeof(container)::iterator it = container.begin(); it < container.end(); ++it) 

@@ -26,12 +26,14 @@ struct _Variable_field_info_base{
   void *p;
   const char* name;
   virtual void write_value(ostream& os) const = 0;
+  virtual MT::String type() const = 0;
 };
   
 template<class T>
 struct _Variable_field_info:_Variable_field_info_base{
   _Variable_field_info(T *_p, const char* _name){ p=_p; name=_name; }
   void write_value(ostream& os) const{ os <<*((T*)p); }
+  MT::String type() const{ MT::String s(typeid(T).name()); return s; }
 };
 
 #define FIELD(type, name) \

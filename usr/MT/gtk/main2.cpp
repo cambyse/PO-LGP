@@ -59,7 +59,7 @@ struct TestThread:public Process{
     label = gtk_label_new(STRING("label " <<name));
     gtk_container_add(GTK_CONTAINER(window), label);
  
-    label = gtk_label_new("bla"));
+    label = gtk_label_new("bla");
     gtk_container_add(GTK_CONTAINER(window), label);
     
     bool r = gtk_widget_set_gl_capability (label,

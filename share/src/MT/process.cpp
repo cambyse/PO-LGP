@@ -205,22 +205,28 @@ void ConditionVariable::waitForSignal(){
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::waitForStateEq(int i){
+int ConditionVariable::waitForStateEq(int i){
   int rc;
+  int stateAfter;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   while(state!=i){
     rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
+  stateAfter = state;
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  return stateAfter;
 }
 
-void ConditionVariable::waitForStateNotEq(int i){
+int ConditionVariable::waitForStateNotEq(int i){
   int rc;
+  int stateAfter;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   while(state==i){
     rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
+  stateAfter = state;
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  return stateAfter;
 }
 
 void ConditionVariable::waitUntil(double absTime){
@@ -560,8 +566,7 @@ void* sProcess::staticThreadMain(void *_self){
   s->threadCondition.setState(tsIDLE);
   s->timer.reset();
   for(; s->threadCondition.state!=tsCLOSE;){
-    s->threadCondition.waitForStateNotEq(tsIDLE);
-    int state=s->threadCondition.state;
+    int state=s->threadCondition.waitForStateNotEq(tsIDLE);
     if(state==tsCLOSE) break;
     //the state is either positive (steps to go) or looping
     CHECK(state>0 || state<=-3, "at this point, the thread condition should be positive (steps to do) or looping!");
