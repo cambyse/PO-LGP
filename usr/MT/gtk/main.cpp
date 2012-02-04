@@ -671,12 +671,12 @@ int main(int argc, char **argv) {
   TestThread A("A"),B("B");
   
   A.threadLoop();
-  B.threadLoop();
+  //B.threadLoop();
 
  
   MT::wait(10.);
 
-  A.threadClose();
+  //A.threadClose();
   B.threadClose();
     
   return 0;

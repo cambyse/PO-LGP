@@ -1,5 +1,10 @@
-void MotorPrimitive:step(){
+#include "motion.h"
 
+void MotionPrimitive::step(){
+
+  NIY;
+  
+  #if 0
   // query the current next action from actionplan
 
   //depending on the action type, call.....
@@ -23,5 +28,6 @@ void MotorPrimitive:step(){
     //... to set task variables
 
     //FUTURE: collaps all the task variable stuff to a single Phi
+    #endif
 };
 

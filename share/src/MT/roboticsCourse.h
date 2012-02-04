@@ -4,10 +4,8 @@
 #include "ors.h"
 #include "array.h"
 
-struct sSimulator; //forward declaration
-
 struct Simulator {
-  sSimulator *s; //hidden (private) space
+  struct sSimulator *s; //hidden (private) space
   uint n;
   
   Simulator(const char* orsFile);
@@ -52,10 +50,8 @@ struct Simulator {
   void anchorKinematicChainIn(const char* bodyName);
 };
 
-struct sVisionSimulator; //forward declaration
-
 struct VisionSimulator {
-  sVisionSimulator *s;
+  struct sVisionSimulator *s;
   
   VisionSimulator();
   ~VisionSimulator();

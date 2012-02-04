@@ -218,15 +218,13 @@ QT := 1
 endif
 
 ifeq ($(QT),1)
-CXXFLAGS  += -DMT_QT -DQT_DLL# -DNOUNICODE
-CPATH   := $(CPATH):/usr/include/qt4
-LPATH   := $(LPATH):/usr/lib
-MSVC_CPATH := $(MSVC_CPATH);C:/Programme/Qt-2.3.0/include
-MSVC_LPATH := $(MSVC_LPATH);$(QTDIR)/lib
-LinuxLibs += -lQtCore -lQtGui -lQtOpenGL# -lglut -lGLU -lGL -lX11
-MinGWLibs += -lqtmain -lQtCore4 -lQtGui4 -lQtOpenGL4 -lopengl32 -lglu32
-CygwinLibs+= -lqt -lGLU -lGL
-MSVCLibs  += qt-mt230nc.lib opengl32.lib glu32.lib vfw32.lib
+CXXFLAGS  += -DMT_QT `pkg-config --cflags  QtCore QtGui QtOpenGL`
+LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
+endif
+
+ifeq ($(GTK),1)
+CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0 `
+LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
 endif
 
 ifeq ($(WX),1)
@@ -316,28 +314,18 @@ CXXFLAGS  += -DTL_SOIL
 LIBS    += -lSOIL
 endif
 
-ifeq ($(LAPACK),1)
-CXXFLAGS  += -DMT_LAPACK
-CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
-MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
-CygwinLibs+= -lcblas -latlas -lclapack -lcblaswr -lI77 -lF77
-LinuxLibs += -llapack -lblas
-MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
-#MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
-endif
-
 ifeq ($(OPENCV),1)
 CXXFLAGS  += -DMT_OPENCV
 ## DON'T USE THE UBUNTU VERSION?
-#CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
-#LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
+CPATH     := $(CPATH):$(LIBPATH)/opencv-2.1/include
+LPATH     := $(LPATH):$(LIBPATH)/opencv-2.1/lib
 LinuxLibs += -lcxcore -lcv -lcvaux -lhighgui -lml
 endif
 
 #assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags /usr/lib/pkgconfig/opencv.pc`
-LinuxLibs    += `pkg-config --libs /usr/lib/pkgconfig/opencv.pc`
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv`
+LIBS      += `pkg-config --libs opencv`
  endif
 
 # newer qhull version?
@@ -351,6 +339,15 @@ endif
 #LIBS	  += `pkg-config --libs opencv-2.1`
 #endif
 
+ifeq ($(LAPACK),1)
+CXXFLAGS  += -DMT_LAPACK
+CPATH	  := $(LIBPATH)/lapack/include:$(CPATH)
+MSVC_CPATH := $(LIBPATH)/lapack/include;$(MSVC_CPATH)
+CygwinLibs+= -lcblas -latlas -lclapack -lcblaswr -lI77 -lF77
+LinuxLibs += -llapack -lblas
+MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
+#MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
+endif
 
 ifeq ($(HSL),1)
 CXXFLAGS  += -DMT_HSL
@@ -389,7 +386,7 @@ ifeq ($(BUMBLE),1)
 CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
-LinuxLibs += -ldc1394 # -lpgrlibdcstereo
+#LinuxLibs += -ldc1394 # -lpgrlibdcstereo
 endif
 
 ifeq ($(FELZ),1)
@@ -427,7 +424,7 @@ endif
 
 ifeq ($(buildAndLink_NILS),1)
 BUILDS += buildComponent/NP
-LinuxLibs += -lnp
+LinuxLibs += -lnp -ldc1394
 endif
 
 ifeq ($(buildAndLink_NIKOLAY),1)
@@ -490,9 +487,7 @@ info: force
 	@echo "  PWD =" "$(PWD)"
 	@echo "  BASE =" "$(BASE)"
 	@echo "  NAME =" "$(NAME)"
-	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo "  LIBPATH =" "$(LIBPATH)"
-	@echo "  LIB =" "$(LIB)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"

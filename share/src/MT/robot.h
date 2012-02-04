@@ -67,10 +67,10 @@ struct TaskAbstraction {
   TaskAbstraction();
   
   virtual void initTaskVariables(ControllerProcess*);
-  virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
+  virtual void updateTaskGoals(const arr& skinState); //RENAME  updateTaskGoals
   
   // helper
-  void prepare_skin(ControllerProcess*, bool);
+  void prepare_skin(const arr& skinState, bool);
 };
 
 
@@ -170,7 +170,7 @@ struct RobotProcessGroup {
     virtual void initTaskVariables(ControllerProcess *ctrl){ \
       TaskAbstraction::initTaskVariables(ctrl); \
     }; \
-    virtual void updateTaskVariables(ControllerProcess*); \
+    virtual void updateTaskGoals(ControllerProcess*); \
     static BasicRobotTaskName *p; \
     static BasicRobotTaskName *a(){if(!p) p=new BasicRobotTaskName(); return p;}; \
   };

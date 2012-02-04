@@ -1,11 +1,14 @@
+#include "motion.h"
+#include <MT/aico.h>
+
 struct sMotionPlanner{
   soc::SocSystem_Ors sys, *sys_parent;
   AICO planner;
-}
+};
 
 void MotionPlanner::step(){
-  if(!varPlan->get_hasGoal(this);){
-    MT::sleep(0.01);
+  if(!motionPlan->get_hasGoal(this)){
+    MT::wait(0.01);
     MT_MSG("TODO");
     //broadcast mechanism instead of sleep?
     //stop your own loop and let somebody else wake you up?
@@ -13,17 +16,17 @@ void MotionPlanner::step(){
   }
 
   //pull the current world configuration from the world
-  varGeometricState->readAccess(this);
-  s->sys.ors.copyShapesAndJoints(varGeometricState->sys);
-  varGeometricState->deAccess(this);
+  geometricState->readAccess(this);
+  s->sys.ors->copyShapesAndJoints(geometricState->ors);
+  geometricState->deAccess(this);
 
-  planner.init_messages();
+  s->planner.init_messages();
   double d=s->planner.step();
 
-  varPlan->writeAccess(this);
-  varPlan->q_plan = planner.q;
-  varPlan->tau  = sys->getTau();
-  varPlan->converged=(d<planner.tolerance);// NIKOLAY : enssure reasonable plans
-  varPlan->deAccess(this);
+  motionPlan->writeAccess(this);
+  motionPlan->q_plan = s->planner.q;
+  motionPlan->tau  = s->sys.getTau();
+  motionPlan->converged=(d<s->planner.tolerance);// NIKOLAY : enssure reasonable plans
+  motionPlan->deAccess(this);
 }
 

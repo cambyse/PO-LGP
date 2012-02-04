@@ -60,33 +60,55 @@ struct ConditionVariable {
   void waitUntil(double absTime);
 };
 
-//! a simple struct to realize a strict tic tac timing (call step() once in a loop)
-struct Metronome {
-  long targetDt;
-  timespec ticTime, lastTime;
-  uint tics;
-  const char* name;                   ///< name
+//Variable's internal data
+struct sVariable {
+  Variable *p;
+  //ofstream os;
+  Lock lock;
+  ConditionVariable cond;
   
-  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
-  ~Metronome();
-  
-  void reset();
-  void waitForTic();              //!< waits until the next tic
-  double getTimeSinceTic();       //!< time since last tic
+  sVariable(Variable *_p){ p = _p; }
 };
 
-//! a really simple thing to meassure cycle and busy times
-struct CycleTimer {
-  uint steps;
-  double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
-  double busyDt, busyDtMean, busyDtMax;  ///< internal variables to measure step time
-  timespec now, lastTime;
-  const char* name;                    ///< name
-  CycleTimer(const char *_name=NULL);
-  ~CycleTimer();
-  void reset();
-  void cycleStart();
-  void cycleDone();
+enum ThreadState { tsOPEN=-1, tsCLOSE=-2, tsLOOPING=-3, tsBEATING=-4, tsSYNCLOOPING=-5, tsIDLE=0 }; //positive states indicate steps-to-go
+
+//Process' internal data
+struct sProcess {
+  pthread_t thread;                    ///< pthread pointer
+  pid_t tid;                           ///< system thread id
+  ConditionVariable threadCondition;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
+  CycleTimer timer;                    ///< measures cycle and busy times
+  Metronome *metronome;                ///< used for beat-looping
+  uint skips;                          ///< how often a step was requested but (because busy) skipped
+  int threadPriority;                  ///< priority of this thread
+  
+  bool broadcastDone;
+  ConditionVariable *syncCondition;
+  
+  sProcess(){
+    skips=0;
+    threadCondition.setState(tsCLOSE);
+    tid=0;
+    threadPriority=0;
+    thread=NULL;
+    broadcastDone=false;
+    syncCondition=NULL;
+  };
+  
+  static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
 };
+
+
+
+
+struct GlobalInfo:Variable{
+  VariableL variables;
+  ProcessL  processes;
+  uint variableCount;
+  uint processCount;
+  GlobalInfo():Variable("GlobalInfo"){ variableCount=processCount=0; }
+};
+
+extern GlobalInfo global;
 
 #endif

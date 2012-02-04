@@ -8,11 +8,9 @@
 #include "array.h"
 
 //(``private'') space used by the implementation but hidden from this header
-struct sOrsTutorial;
-
 class OrsTutorial {
 public:
-  sOrsTutorial *s;
+  struct sOrsTutorial *s;
   
   OrsTutorial();
   ~OrsTutorial();

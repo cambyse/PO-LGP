@@ -151,14 +151,12 @@ struct Camera {
 // OpenGL class
 //
 
-struct sOpenGL;
-
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
 struct OpenGL {
-  sOpenGL *s;
+  struct sOpenGL *s;
   
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
@@ -200,7 +198,8 @@ struct OpenGL {
   
   //!@name constructors & destructors
   OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
-  OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  //OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  OpenGL(sOpenGL *_s); //special constructor: used when the underlying system-dependent class exists already
   
   OpenGL *newClone() const;
   ~OpenGL();
@@ -263,6 +262,7 @@ protected: //driver dependent methods
   void postRedrawEvent();
   void processEvents();
   void enterEventLoop();
+public:
   void exitEventLoop();
   
 protected:
@@ -290,8 +290,7 @@ protected:
 // simplest UI
 //
 
-class glUI {
-public:
+struct glUI:OpenGL::GLHoverCall,OpenGL::GLClickCall{
   int top;
   struct Button { byteA img1, img2; bool hover; uint x, y, w, h; const char* name; };
   MT::Array<Button> buttons;
@@ -301,11 +300,13 @@ public:
   void addButton(uint x, uint y, const char *name, const char *img1=0, const char *img2=0);
   void glDraw();
   bool checkMouse(int _x, int _y);
+
+  bool hoverCallback(OpenGL&);
+  bool clickCallback(OpenGL&);
+
 };
 
 void glDrawUI(void *p);
-bool glHoverUI(void *p, OpenGL *gl);
-bool glClickUI(void *p, OpenGL *gl);
 
 
 #ifdef  MT_IMPLEMENTATION

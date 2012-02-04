@@ -15,10 +15,8 @@ struct TaskAbstraction;
 struct RobotProcessGroup;
 
 //private space:
-struct sRobotActionInterface;
-
 struct RobotActionInterface {
-  sRobotActionInterface *s;
+  struct sRobotActionInterface *s;
   RobotActionInterface();
   ~RobotActionInterface();
   

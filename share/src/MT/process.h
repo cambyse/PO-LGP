@@ -13,18 +13,42 @@ struct Variable;
 struct Process;
 struct Monitor;
 
-//(``private'') spaces used by the implementation but hidden from this header
-struct sVariable;
-struct sProcess;
-struct sMonitor;
-
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 
-#define READ_ACCESS(var, name){\
-    var->readAccess(this);\
-    name=var->name;\
-    var->deAccess(this);
+
+//===========================================================================
+//
+// automatic setters and getters and info for Variable fields
+//
+
+struct _Variable_field_info_base{
+  void *p;
+  const char* name;
+  virtual void write_value(ostream& os) const = 0;
+  virtual MT::String type() const = 0;
+};
+  
+template<class T>
+struct _Variable_field_info:_Variable_field_info_base{
+  _Variable_field_info(T *_p, const char* _name){ p=_p; name=_name; }
+  void write_value(ostream& os) const{ os <<*((T*)p); }
+  MT::String type() const{ MT::String s(typeid(T).name()); return s; }
+};
+
+#define FIELD(type, name) \
+  type name; \
+  inline void set_##name(const type& _x, Process *p){ \
+    writeAccess(p);  name=(type&)_x;  deAccess(p); } \
+  inline void get_##name(type& _x, Process *p){ \
+    readAccess(p);   _x=name;  deAccess(p); } \
+  inline type get_##name(Process *p){ \
+    type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
+  inline void reg_##name(){ \
+    fields.append(new _Variable_field_info<type>(&name,#name)); }
+
+#define PARAM(type, name) \
+  type name;
 
 //===========================================================================
 //
@@ -32,8 +56,11 @@ typedef MT::Array<Process*> ProcessL;
 //
 
 struct Variable {
-  sVariable *s;
+  struct sVariable *s; //private
+  uint id; //unique identifyer
   const char* name;
+  MT::Array<_Variable_field_info_base*> fields;
+
   //MT::Array<Process*> processes;
   uint revision;
   
@@ -48,7 +75,12 @@ struct Variable {
   void readAccess(Process*);  //might set the caller to sleep
   void writeAccess(Process*); //might set the caller to sleep
   void deAccess(Process*);
-  
+
+  //-- info
+  int lockState(); // 0=no lock, -1=write access, positive=#readers
+
+  //-- the following is preliminary
+
   //-- condition variable control, to be used by processes to broadcast (publish) or wait for broadcast (subscribe)
   int  getCondition();
   void setCondition(int i);
@@ -56,7 +88,7 @@ struct Variable {
   void waitForConditionEq(int i);    //might set the caller to sleep
   void waitForConditionNotEq(int i); //might set the caller to sleep
   
-  //--
+  //-- ideas to let a variable auto initialize itself
   void clampToDefault();
   void saveAsDefault();
   bool isClamped();
@@ -69,7 +101,8 @@ struct Variable {
 //
 
 struct Process {
-  sProcess *s;
+  struct sProcess *s;
+  uint id; //unique identifyer
   const char* name;
   VariableL V;
   
@@ -114,7 +147,8 @@ struct Link{
   uint last_revision;
 
   Link(Process*);
-
+  T& operator()(){ return *var; }
+  
   bool needsUpdate();
   void readAccess();
   void writeAccess();
@@ -124,6 +158,62 @@ struct Link{
 //===========================================================================
 //
 // Global Stuff / Monitor
+//
+
+//! a simple struct to realize a strict tic tac timing (call step() once in a loop)
+struct Metronome {
+  long targetDt;
+  timespec ticTime, lastTime;
+  uint tics;
+  const char* name;                   ///< name
+  
+  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
+  ~Metronome();
+  
+  void reset();
+  void waitForTic();              //!< waits until the next tic
+  double getTimeSinceTic();       //!< time since last tic
+};
+
+//! a really simple thing to meassure cycle and busy times
+struct CycleTimer {
+  uint steps;
+  double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
+  double busyDt, busyDtMean, busyDtMax;  ///< internal variables to measure step time
+  timespec now, lastTime;
+  const char* name;                    ///< name
+  CycleTimer(const char *_name=NULL);
+  ~CycleTimer();
+  void reset();
+  void cycleStart();
+  void cycleDone();
+};
+
+
+//===========================================================================
+//
+// Basic low-level X11 Monitor
+//
+
+struct ThreadInfoWin:public Process {
+  struct sThreadInfoWin *s;
+  
+  ThreadInfoWin();
+  ~ThreadInfoWin();
+  
+  void open();
+  void close();
+  void step();
+};
+
+#ifdef  MT_IMPLEMENT_TEMPLATES
+#  include "process_t.cpp"
+#endif
+
+
+//===========================================================================
+//
+// preliminary
 //
 
 struct Group {
@@ -138,23 +228,6 @@ struct Group {
 };
 
 void reportGlobalProcessGraph();
-
-
-struct sThreadInfoWin;
-struct ThreadInfoWin:public Process {
-  sThreadInfoWin *s;
-  
-  ThreadInfoWin();
-  ~ThreadInfoWin();
-  
-  void open();
-  void close();
-  void step();
-};
-
-#ifdef  MT_IMPLEMENT_TEMPLATES
-#  include "process_t.cpp"
-#endif
 
 #ifdef  MT_IMPLEMENTATION
 #  include "process.cpp"

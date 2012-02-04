@@ -1,22 +1,22 @@
-template<class T> Link::Link(Process *p){
-  process = p;
+template<class T> Link<T>::Link(Process *_p){
+  p = _p;
   last_revision = 0;
 }
 
-bool template<class T> Link::needsUpdate(){
+template<class T> bool Link<T>::needsUpdate(){
   MT_MSG("does this need a lock???");
   return last_revision != var->revision;
 }
 
-template<class T> Link::writeAccess(){
+template<class T> void Link<T>::writeAccess(){
   var->writeAccess(p);
 }
 
-template<class T> Link::readAccess(){
+template<class T> void Link<T>::readAccess(){
   var->readAccess(p);
 }
 
-template<class T> Link::deAccess(){
+template<class T> void Link<T>::deAccess(){
   last_revision = var->revision;
   var->deAccess(p);
 }

@@ -130,7 +130,7 @@ void ControllerProcess::step(){
   sys.setqv(q_reference, v_reference);
   
   //update the setting (targets etc) of the task variables -- might be set externally
-  task->updateTaskVariables(this);
+  task->updateTaskGoals(this);
   
   //=== compute motion from the task variables
   //-- compute the motion step
@@ -440,13 +440,13 @@ OpenHand *OpenHand::p=NULL;
 Reach *Reach::p=NULL;
 
 void
-DoNothing::updateTaskVariables(ControllerProcess *ctrl){
+DoNothing::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
 }
 void
-Stop::updateTaskVariables(ControllerProcess *ctrl){
+Stop::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -456,7 +456,7 @@ Stop::updateTaskVariables(ControllerProcess *ctrl){
   TV_q->y_prec=0.;   TV_q->v_prec=1e2;  TV_q->v_target.setZero();
 }
 void
-Homing::updateTaskVariables(ControllerProcess *ctrl){
+Homing::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -469,7 +469,7 @@ Homing::updateTaskVariables(ControllerProcess *ctrl){
   if(v>vmax) TV_q->v_target*=vmax/v;
 }
 void
-OpenHand::updateTaskVariables(ControllerProcess *ctrl){
+OpenHand::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -485,7 +485,7 @@ OpenHand::updateTaskVariables(ControllerProcess *ctrl){
   //TV_skin->y_target.setZero();
 }
 void
-CloseHand::updateTaskVariables(ControllerProcess *ctrl){
+CloseHand::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -500,7 +500,7 @@ CloseHand::updateTaskVariables(ControllerProcess *ctrl){
   //if(log) (*log) <<"\r CLOSE HAND " <<TV_skin->y <<flush;
 }
 void
-Reach::updateTaskVariables(ControllerProcess *ctrl){
+Reach::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -512,7 +512,7 @@ Reach::updateTaskVariables(ControllerProcess *ctrl){
   if(v>vmax) TV_eff->v_target*=vmax/v;
 }
 void
-FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
+FollowTrajectory::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -564,7 +564,7 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
   }
 }
 void
-Joystick::updateTaskVariables(ControllerProcess *ctrl){
+Joystick::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, joyState(0)!=2);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -648,9 +648,9 @@ Joystick::updateTaskVariables(ControllerProcess *ctrl){
 }
 
 void
-TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
-  if(ctrl->skinState.N){
-    TV_skin->y = ctrl->skinState;
+TaskAbstraction::prepare_skin(const arr& skinState, bool cut_and_nil){
+  if(skinState.N){
+    TV_skin->y = skinState;
   }else{
     TV_skin->y=ARR(.01, 0, .01, 0, .01, 0);
   }
@@ -666,11 +666,11 @@ TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
 }
 
 void
-//TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){NIY;}
+//TaskAbstraction::updateTaskGoals(ControllerProcess* ctrl){NIY;}
 /* TODO properly make the finction NIY and make sure the program never comes
   into this function. Objects should use their own overriden functions)
  */
-TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){}
+TaskAbstraction::updateTaskGoals(ControllerProcess* ctrl){}
 
 bool RobotProcessGroup::signalStop=false;
 void RobotProcessGroup::signalStopCallback(int s){

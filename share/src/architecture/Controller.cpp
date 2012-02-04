@@ -1,3 +1,7 @@
+#include "motion.h"
+#include <MT/soc.h>
+#include <MT/soc_inverseKinematics.h>
+
 struct sMotionControllerProcess{
   soc::SocSystem_Ors sys;
 
@@ -15,42 +19,42 @@ struct sMotionControllerProcess{
   */
 };
 
-MotionControllerProcess::MotionControllerProcess(){
+Controller::Controller():Process("MotionController"){
   s = new sMotionControllerProcess();
 }
 
-MotionControllerProcess::~MotionControllerProcess(){
+Controller::~Controller(){
   delete s;
 }
 
-void MotionControllerProcess::step(){
-  MotionControllerMode::ControllerMode mode=varControllerMode->get_mode();
+void Controller::step(){
+  ControllerTask::ControllerMode mode=controllerMode->get_mode(this);
 
-  if(mode==MotionControllerMode::noType){
+  if(mode==ControllerTask::noType){
     //stop -> don't change q_reference
-    varMotionReference->set_v_reference(zeros(14,1));
+    controllerReference->set_v_reference(zeros(14,1), this);
     return;
   }
 
-  if(mode==MotionControllerMode::followTrajectory){
+  if(mode==ControllerTask::followTrajectory){
     //-- check if converged
-    if(varMotionPlan->get_converged()==false){
+    if(motionPlan->get_converged(this)==false){
       //stop
       MT_MSG("trying to follow non-converged trajectory");
-      varMotionReference->set_v_reference(zeros(14,1));
+      controllerReference->set_v_reference(zeros(14,1), this);
       return;
     }
 
     //-- first compute the interpolated
-    double relTime = varFollowTrajectryConfig->get_relativeRealTimeOfController(this);
-    double timeScale = varFollowTrajectryConfig->get_followTrajectoryTimeScale(this);
-    arr q_plan = varMotionPlan->get_q_plan(this);
-    double plan_tau = varMotionPlan->get_tau(this);
+    double relTime = controllerMode->get_relativeRealTimeOfController(this);
+    double timeScale = controllerMode->get_followTrajectoryTimeScale(this);
+    arr q_plan = motionPlan->get_q_plan(this);
+    double plan_tau = motionPlan->get_tau(this);
 
     //where to interpolate
     relTime += timeScale * 0.01; //!!! hard coded 10msec as basic control cycle
-    uint timeStep= relTime/tau;
-    double inter = relTime/tau - (double)timeStep;  //same as fmod
+    uint timeStep= relTime/plan_tau;
+    double inter = relTime/plan_tau - (double)timeStep;  //same as fmod
 
     //do interpolation
     arr q_reference;
@@ -58,26 +62,27 @@ void MotionControllerProcess::step(){
       q_reference = (1.-inter)*q_plan[timeStep] + inter*q_plan[timeStep+1];
     }else{ //time step is beyond the horizon of the plan
       q_reference = q_plan[q_plan.d0-1];
-      varControllerMode->set_mode(MotionControllerMode::done, this);
+      controllerMode->set_mode(ControllerTask::done, this);
     }
 
     //-- now test for collision
     MT_MSG("TODO");
 
     //-- pass to MotionReference
-    varMotionReference->set_q_reference(q_reference);
+    controllerReference->set_q_reference(q_reference, this);
   }
   
-  if(mode==MotionControllerMode::feedback){
-    if(skinPressureVar){ //access double state of skin
-      skinPressureVar->readAccess(this);
-      skinState = skinPressureVar->y_real;
-      skinPressureVar->deAccess(this);
-    }
+  if(mode==ControllerTask::feedback){
+    bool forceColLimTVs = controllerMode->get_forceColLimTVs(this);
+    bool fixFingers = controllerMode->get_fixFingers(this);
+
+    skinPressure->readAccess(this);
+    arr skinState = skinPressure->y_real;
+    skinPressure->deAccess(this);
 
     //update the controllers own internal ors state - pulling from MotionReference
-    arr q_reference = varReference->get_q_reference(this);
-    arr v_reference = varReference->get_v_reference(this);
+    arr q_reference = controllerReference->get_q_reference(this);
+    arr v_reference = controllerReference->get_v_reference(this);
     s->sys.setqv(q_reference, v_reference);
     MT_MSG("solle das socSystem nicht die task variablen liste enthalten? wird doch geupdated?");
 
@@ -85,15 +90,15 @@ void MotionControllerProcess::step(){
     MT_MSG("TODO");
 
     //update all task variables using this ors state
-    FeedbackTaskAbstraction *task = varFeedbackConfig->get_feedbackControlTask(this);
-    task->writeLock();
-    task->updateTaskVariables(s->sys.ors, s->sys.swift);
+    TaskAbstraction *task = controllerMode->get_feedbackControlTask(this);
+    //task->writeLock();
+    task->updateTaskGoals(skinState);
 
     //=== compute motion from the task variables
     //check if a collition and limit variable are active
     bool colActive=false, limActive=false;
     uint i; TaskVariable *v;
-    for_list(i, v, sys.vars) if(v->active){
+    for_list(i, v, s->sys.vars) if(v->active){
       //?? ist sys.vars und task->vars eigentlich das gleiche??
       if(v->type==collTVT) colActive=true;
       if(v->type==qLimitsTVT) limActive=true;
@@ -106,13 +111,13 @@ void MotionControllerProcess::step(){
   
     //dynamic control using SOC
     x_1=q_reference; x_1.append(v_reference);
-    soc::bayesianDynamicControl(sys, x, x_1, 0);
+    soc::bayesianDynamicControl(s->sys, x, x_1, 0);
     q_reference = x.sub(0, q_reference.N-1);
     v_reference = x.sub(v_reference.N, -1);
 
     //perhaps fix fingers
     if(fixFingers) for(uint j=7; j<14; j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
-    taskLock.unlock();
+    //taskLock.unlock();
 
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);
@@ -125,8 +130,8 @@ void MotionControllerProcess::step(){
       //v_reference.setZero(); SD: making too large step warnig  use max allowed step
     }
   
-    varReference->set_q_reference(q_reference this);
-    varReference->set_v_reference(v_reference, this);
+    controllerReference->set_q_reference(q_reference, this);
+    controllerReference->set_v_reference(v_reference, this);
 
     //push proxies to the geometric state
     MT_MSG("TODO");
@@ -141,7 +146,7 @@ void MotionControllerProcess::step(){
       } else MT_MSG("Variable pointer not set");*/
   }
 
-  if(mode==MotionControllerMode::done){
+  if(mode==ControllerTask::done){
     return;
   }
 

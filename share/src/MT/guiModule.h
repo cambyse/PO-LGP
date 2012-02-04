@@ -31,21 +31,11 @@ struct GuiModule:public Process {
   Lock processLock;
   
   //INTERNAL
-#ifdef MT_QT
-  NEVER DO THIS! Forcing compiler error!
-()()()
-  QApplication *app;
-#endif
   bool useOpengl, logData, plotData;
   OpenGL *gl;
   ors::Graph *ors, *ors2;
   RobotProcessGroup  *ctrl;
   bool isOpen;
-  
-#ifdef MT_QT
-NEVER DO THIS()
-  Ui_SchunkMonitor *ui;
-#endif
   
   GuiModule();
   ~GuiModule();
