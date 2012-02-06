@@ -9,6 +9,8 @@ class ActiveLearner {
     virtual void addData(const MT::Array<arr>& data, const int class_) = 0;
     virtual int nextSample(MT::Array<arr>& sample) const = 0;
     virtual int classify(const MT::Array<arr>& data, const int set = 0) const = 0;
+
+    virtual ~ActiveLearner() {};
 };
 
 #endif
