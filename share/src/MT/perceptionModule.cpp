@@ -308,8 +308,8 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     MT::timerStart();
     double cost;
     Rprop rprop;
-    rprop.init(3., 5.);
-    rprop.loop(params, problem, &cost, 1.e-1, 100);
+    rprop.init();
+    rprop.loop(params, problem, &cost, 1.e-1, 1., 100, 0);
     // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
     problem.fs(NoGrad, params);
