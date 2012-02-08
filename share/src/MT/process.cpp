@@ -605,6 +605,15 @@ void Group::set(const VariableL &_V, const ProcessL &_P){
   P = _P;
 }
 
+void Group::set(const ProcessL &_P){
+  P = _P;
+}
+
+void Group::open(){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadOpen();
+}
+
 void Group::loop(){
   Process *p; uint i;
   for_list(i, p, P) p->threadLoop();

@@ -1,5 +1,8 @@
 #include "motion.h"
 
+MotionPrimitive::MotionPrimitive():Process("MotionPrimitive"){
+}
+
 void MotionPrimitive::open(){ NIY }
 
 void MotionPrimitive::close(){ NIY }

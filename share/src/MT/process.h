@@ -221,6 +221,8 @@ struct Group {
   ProcessL P;
   
   void set(const VariableL&, const ProcessL&);
+  void set(const ProcessL&);
+  void open();
   void loop();
   void stop();
   void close();

@@ -6,6 +6,9 @@ struct sMotionPlanner{
   AICO planner;
 };
 
+MotionPlanner_AICO::MotionPlanner_AICO():Process("MotionPlanner_AICO"){
+}
+
 void MotionPlanner_AICO::open(){ NIY }
 
 void MotionPlanner_AICO::close(){ NIY }

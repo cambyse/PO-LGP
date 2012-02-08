@@ -19,10 +19,10 @@ namespace ors{ struct Graph; }
 // Variables
 //
 
-namespace b{
+//namespace b{
 
 struct GeometricState:Variable{
-  ors::Graph& ors;
+  ors::Graph ors;
   
   GeometricState();
 };
@@ -30,8 +30,9 @@ struct GeometricState:Variable{
 struct MotionKeyframe:Variable{
   FIELD( arr, q_estimate );
   FIELD( double, duration_estimate );
+  FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep
   FIELD( bool, converged );
-
+  
   //problem formulation
   arr q_prev;
   //optional for later:
@@ -39,23 +40,23 @@ struct MotionKeyframe:Variable{
   arr W; //diagonal of the control cost matrix
   arr Phi, rho; //task cost descriptors
   
-  MotionKeyframe();
+  MotionKeyframe():Variable("MotionKeyFrame"), hasGoal(false), converged(false) {};
 };
 
 
 struct MotionPlan:Variable{
   FIELD( arr, q_plan );
   FIELD( double, tau );
-  FIELD( bool, converged );
 
   //problem description
   FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep
+  FIELD( bool, converged );
   //FUTURE:
   //arr W; //diagonal of the control cost matrix
   //arr Phi, rho; //task cost descriptors
   //...for now: do it conventionally: task list or socSystem??
 
-  MotionPlan();
+  MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false) {};
 };
 
 struct ControllerTask:Variable{
@@ -71,11 +72,11 @@ struct ControllerTask:Variable{
   //for feedback mode:
   FIELD( TaskAbstraction*, feedbackControlTask);
   
-  ControllerTask();
+  ControllerTask():Variable("ControllerTask"), mode(noType) {};
 };
 
 
-struct ControllerReference:Variable{
+struct HardwareReference:Variable{
   FIELD( arr, q_reference );
   FIELD( arr, v_reference );
   FIELD( arr, q_real );
@@ -83,16 +84,19 @@ struct ControllerReference:Variable{
   uintA armMotorIndices, handMotorIndices;
   bool readHandFromReal;
   
-  ControllerReference();
+  HardwareReference():Variable("HardwareReference"), readHandFromReal(true) {};
 };
 
 
-struct Action{
-  enum ActionPredicate { grasp, place, home };
+struct Action:Variable{
+  enum ActionPredicate { none, grasp, place, home };
+
   ActionPredicate action;
-  uint objectRef1, objectRef2; //arguments to the relational predicates
+  bool executed;
+  const char *objectRef1, *objectRef2; //arguments to the relational predicates
   
-  Action();
+  
+  Action():Variable("Action"), action(none), executed(false), objectRef1(NULL), objectRef2(NULL) {};
 };
 
 
@@ -113,7 +117,7 @@ struct myController:Process{
   //links
   ControllerTask *controllerMode;
   MotionPlan *motionPlan;
-  ControllerReference *controllerReference;
+  HardwareReference *controllerReference;
   GeometricState *geometricState;
   SkinPressureVar *skinPressure;
 
@@ -141,6 +145,19 @@ struct MotionPlanner_AICO:Process{
   void close();
 };
 
+struct KeyframeEstimator:Process{
+  struct sKeyframeEstimator *s;
+
+  //links
+  MotionKeyframe *motionKeyframe;
+  GeometricState *geometricState;
+
+  KeyframeEstimator();
+  void open();
+  void step();
+  void close();
+  
+};
 
 struct MotionPrimitive:Process{
   //links
@@ -152,4 +169,4 @@ struct MotionPrimitive:Process{
   void step();
   void close();
 };
-}
+//}
