@@ -4,11 +4,25 @@
 
 //===========================================================================
 //
+// fields of some variables
+//
+
+namespace ors{ struct Graph; }
+/*struct TaskVectorFunction{
+  virtual void get_Phi(arr& Phi, arr& J, const arr& q, ors::Graph&) = 0;
+  virtual const char* taskName(uint i) = 0;
+  virtual uint taskDim(uint i) = 0;
+};*/
+
+//===========================================================================
+//
 // Variables
 //
 
+namespace b{
+
 struct GeometricState:Variable{
-  ors::Graph ors;
+  ors::Graph& ors;
   
   GeometricState();
 };
@@ -44,7 +58,6 @@ struct MotionPlan:Variable{
   MotionPlan();
 };
 
-
 struct ControllerTask:Variable{
   enum ControllerMode { noType=0, followTrajectory, feedback, done  };
   //optional: followWithFeedback
@@ -63,7 +76,6 @@ struct ControllerTask:Variable{
 
 
 struct ControllerReference:Variable{
-
   FIELD( arr, q_reference );
   FIELD( arr, v_reference );
   FIELD( arr, q_real );
@@ -76,7 +88,8 @@ struct ControllerReference:Variable{
 
 
 struct Action{
-  enum ActionPredicate { pick, place, home };
+  enum ActionPredicate { grasp, place, home };
+  ActionPredicate action;
   uint objectRef1, objectRef2; //arguments to the relational predicates
   
   Action();
@@ -94,7 +107,7 @@ struct ActionPlan:Variable{
 // Processes
 //
 
-struct Controller:Process{
+struct myController:Process{
   struct sMotionControllerProcess *s;
 
   //links
@@ -107,22 +120,22 @@ struct Controller:Process{
   //parameters
   PARAM( double, maxJointStep );
 
-  Controller();
-  ~Controller();
+  myController();
+  ~myController();
   void open();
   void step();
   void close();
 };
 
 
-struct MotionPlanner:Process{
+struct MotionPlanner_AICO:Process{
   struct sMotionPlanner *s;
 
   //links
   MotionPlan *motionPlan;
   GeometricState *geometricState;
 
-  MotionPlanner();
+  MotionPlanner_AICO();
   void open();
   void step();
   void close();
@@ -139,4 +152,4 @@ struct MotionPrimitive:Process{
   void step();
   void close();
 };
-
+}

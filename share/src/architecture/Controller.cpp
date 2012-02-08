@@ -19,15 +19,19 @@ struct sMotionControllerProcess{
   */
 };
 
-Controller::Controller():Process("MotionController"){
+myController::myController():Process("MotionController"){
   s = new sMotionControllerProcess();
 }
 
-Controller::~Controller(){
+myController::~myController(){
   delete s;
 }
 
-void Controller::step(){
+void myController::open(){ NIY }
+
+void myController::close(){ NIY }
+
+void myController::step(){
   ControllerTask::ControllerMode mode=controllerMode->get_mode(this);
 
   if(mode==ControllerTask::noType){
@@ -91,8 +95,8 @@ void Controller::step(){
 
     //update all task variables using this ors state
     TaskAbstraction *task = controllerMode->get_feedbackControlTask(this);
-    //task->writeLock();
-    task->updateTaskGoals(skinState);
+    s->taskLock.writeLock();
+    task->updateTaskGoals(NULL);
 
     //=== compute motion from the task variables
     //check if a collition and limit variable are active
@@ -117,7 +121,7 @@ void Controller::step(){
 
     //perhaps fix fingers
     if(fixFingers) for(uint j=7; j<14; j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
-    //taskLock.unlock();
+    s->taskLock.unlock();
 
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);

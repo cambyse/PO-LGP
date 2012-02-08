@@ -6,7 +6,11 @@ struct sMotionPlanner{
   AICO planner;
 };
 
-void MotionPlanner::step(){
+void MotionPlanner_AICO::open(){ NIY }
+
+void MotionPlanner_AICO::close(){ NIY }
+    
+void MotionPlanner_AICO::step(){
   if(!motionPlan->get_hasGoal(this)){
     MT::wait(0.01);
     MT_MSG("TODO");

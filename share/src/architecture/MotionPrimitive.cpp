@@ -1,5 +1,9 @@
 #include "motion.h"
 
+void MotionPrimitive::open(){ NIY }
+
+void MotionPrimitive::close(){ NIY }
+    
 void MotionPrimitive::step(){
 
   NIY;

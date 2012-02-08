@@ -648,9 +648,9 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
 }
 
 void
-TaskAbstraction::prepare_skin(const arr& skinState, bool cut_and_nil){
-  if(skinState.N){
-    TV_skin->y = skinState;
+TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
+  if(ctrl->skinState.N){
+    TV_skin->y = ctrl->skinState;
   }else{
     TV_skin->y=ARR(.01, 0, .01, 0, .01, 0);
   }
