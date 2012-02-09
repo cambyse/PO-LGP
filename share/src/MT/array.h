@@ -302,6 +302,14 @@ typedef MT::Array<arr*>   arrL;
 
 
 //===========================================================================
+//
+//!@name constant arrays
+// @{
+
+extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional arguments
+
+
+//===========================================================================
 // @}
 //!@name shorthand to specify arrays and lists (list=array of pointers)
 // @{

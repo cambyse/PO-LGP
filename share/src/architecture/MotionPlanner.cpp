@@ -7,13 +7,25 @@ struct sMotionPlanner{
 };
 
 MotionPlanner_AICO::MotionPlanner_AICO():Process("MotionPlanner_AICO"){
+  s = new sMotionPlanner;
+  motionPlan=NULL;
+  geometricState=NULL;
 }
 
-void MotionPlanner_AICO::open(){ NIY }
+MotionPlanner_AICO::~MotionPlanner_AICO(){
+  delete s;
+}
 
-void MotionPlanner_AICO::close(){ NIY }
+void MotionPlanner_AICO::open(){ MT_MSG("NIY") }
+
+void MotionPlanner_AICO::close(){ MT_MSG("NIY") }
     
 void MotionPlanner_AICO::step(){
+  CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
+  CHECK(geometricState, "please set geometricState before launching MotionPrimitive");
+
+  MT::wait(1.);  return;
+  
   if(!motionPlan->get_hasGoal(this)){
     MT::wait(0.01);
     MT_MSG("TODO");

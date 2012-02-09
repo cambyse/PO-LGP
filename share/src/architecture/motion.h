@@ -33,12 +33,13 @@ struct MotionKeyframe:Variable{
   FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep
   FIELD( bool, converged );
   
-  //problem formulation
+  /*//problem formulation
   arr q_prev;
   //optional for later:
   //arr q_next; optimize also w.r.t. future keyframe
   arr W; //diagonal of the control cost matrix
   arr Phi, rho; //task cost descriptors
+  */
   
   MotionKeyframe():Variable("MotionKeyFrame"), hasGoal(false), converged(false) {};
 };
@@ -89,14 +90,15 @@ struct HardwareReference:Variable{
 
 
 struct Action:Variable{
-  enum ActionPredicate { none, grasp, place, home };
+  enum ActionPredicate { noAction, grasp, place, home };
 
-  ActionPredicate action;
-  bool executed;
-  const char *objectRef1, *objectRef2; //arguments to the relational predicates
+  FIELD( ActionPredicate, action);
+  FIELD( bool, executed );
+  FIELD( char*, objectRef1); //arguments to the relational predicates
+  FIELD( char*, objectRef2);
   
   
-  Action():Variable("Action"), action(none), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
 };
 
 
@@ -115,9 +117,9 @@ struct myController:Process{
   struct sMotionControllerProcess *s;
 
   //links
-  ControllerTask *controllerMode;
+  ControllerTask *controllerTask;
   MotionPlan *motionPlan;
-  HardwareReference *controllerReference;
+  HardwareReference *hardwareReference;
   GeometricState *geometricState;
   SkinPressureVar *skinPressure;
 
@@ -140,6 +142,7 @@ struct MotionPlanner_AICO:Process{
   GeometricState *geometricState;
 
   MotionPlanner_AICO();
+  ~MotionPlanner_AICO();
   void open();
   void step();
   void close();
@@ -149,10 +152,12 @@ struct KeyframeEstimator:Process{
   struct sKeyframeEstimator *s;
 
   //links
+  Action* action;
   MotionKeyframe *motionKeyframe;
   GeometricState *geometricState;
 
   KeyframeEstimator();
+  ~KeyframeEstimator();
   void open();
   void step();
   void close();
@@ -160,11 +165,16 @@ struct KeyframeEstimator:Process{
 };
 
 struct MotionPrimitive:Process{
+  struct sMotionPrimitive *s;
   //links
-  ActionPlan *actionPlan;
+  //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
+  Action *action;
+  MotionPlan *motionPlan;
+  MotionKeyframe *motionKeyframe;
   GeometricState *geometricState;
   
   MotionPrimitive();
+  ~MotionPrimitive();
   void open();
   void step();
   void close();

@@ -21,22 +21,36 @@ struct sMotionControllerProcess{
 
 myController::myController():Process("MotionController"){
   s = new sMotionControllerProcess();
+  controllerTask=NULL;
+  motionPlan=NULL;
+  hardwareReference=NULL;
+  geometricState=NULL;
+  skinPressure=NULL;
+
 }
 
 myController::~myController(){
   delete s;
 }
 
-void myController::open(){ NIY }
+void myController::open(){ MT_MSG("NIY") }
 
-void myController::close(){ NIY }
+void myController::close(){ MT_MSG("NIY") }
 
 void myController::step(){
-  ControllerTask::ControllerMode mode=controllerMode->get_mode(this);
+  CHECK(controllerTask, "please set controllerMode before launching MotionPrimitive");
+  CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
+  CHECK(hardwareReference, "please set controllerReference before launching MotionPrimitive");
+  CHECK(geometricState, "please set geometricState before launching MotionPrimitive");
+  CHECK(skinPressure, "please set skinPressure before launching MotionPrimitive");
+  
+  MT::wait(1.);  return;
+
+  ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
 
   if(mode==ControllerTask::noType){
     //stop -> don't change q_reference
-    controllerReference->set_v_reference(zeros(14,1), this);
+    hardwareReference->set_v_reference(zeros(14,1), this);
     return;
   }
 
@@ -45,13 +59,13 @@ void myController::step(){
     if(motionPlan->get_converged(this)==false){
       //stop
       MT_MSG("trying to follow non-converged trajectory");
-      controllerReference->set_v_reference(zeros(14,1), this);
+      hardwareReference->set_v_reference(zeros(14,1), this);
       return;
     }
 
     //-- first compute the interpolated
-    double relTime = controllerMode->get_relativeRealTimeOfController(this);
-    double timeScale = controllerMode->get_followTrajectoryTimeScale(this);
+    double relTime = controllerTask->get_relativeRealTimeOfController(this);
+    double timeScale = controllerTask->get_followTrajectoryTimeScale(this);
     arr q_plan = motionPlan->get_q_plan(this);
     double plan_tau = motionPlan->get_tau(this);
 
@@ -66,27 +80,27 @@ void myController::step(){
       q_reference = (1.-inter)*q_plan[timeStep] + inter*q_plan[timeStep+1];
     }else{ //time step is beyond the horizon of the plan
       q_reference = q_plan[q_plan.d0-1];
-      controllerMode->set_mode(ControllerTask::done, this);
+      controllerTask->set_mode(ControllerTask::done, this);
     }
 
     //-- now test for collision
     MT_MSG("TODO");
 
     //-- pass to MotionReference
-    controllerReference->set_q_reference(q_reference, this);
+    hardwareReference->set_q_reference(q_reference, this);
   }
   
   if(mode==ControllerTask::feedback){
-    bool forceColLimTVs = controllerMode->get_forceColLimTVs(this);
-    bool fixFingers = controllerMode->get_fixFingers(this);
+    bool forceColLimTVs = controllerTask->get_forceColLimTVs(this);
+    bool fixFingers = controllerTask->get_fixFingers(this);
 
     skinPressure->readAccess(this);
     arr skinState = skinPressure->y_real;
     skinPressure->deAccess(this);
 
     //update the controllers own internal ors state - pulling from MotionReference
-    arr q_reference = controllerReference->get_q_reference(this);
-    arr v_reference = controllerReference->get_v_reference(this);
+    arr q_reference = hardwareReference->get_q_reference(this);
+    arr v_reference = hardwareReference->get_v_reference(this);
     s->sys.setqv(q_reference, v_reference);
     MT_MSG("solle das socSystem nicht die task variablen liste enthalten? wird doch geupdated?");
 
@@ -94,7 +108,7 @@ void myController::step(){
     MT_MSG("TODO");
 
     //update all task variables using this ors state
-    TaskAbstraction *task = controllerMode->get_feedbackControlTask(this);
+    TaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
     s->taskLock.writeLock();
     task->updateTaskGoals(NULL);
 
@@ -134,8 +148,8 @@ void myController::step(){
       //v_reference.setZero(); SD: making too large step warnig  use max allowed step
     }
   
-    controllerReference->set_q_reference(q_reference, this);
-    controllerReference->set_v_reference(v_reference, this);
+    hardwareReference->set_q_reference(q_reference, this);
+    hardwareReference->set_v_reference(v_reference, this);
 
     //push proxies to the geometric state
     MT_MSG("TODO");

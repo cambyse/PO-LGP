@@ -3,17 +3,33 @@
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
 
-  GeometricState orsState;
+  GeometricState geometricState;
   Action action;
   MotionKeyframe motionKeyframe;
   MotionPlan motionPlan;
   ControllerTask controllerTask;
-  HardwareReference reference;
+  HardwareReference hardwareReference;
+  SkinPressureVar skinPressure;
 
   myController controller;
   MotionPlanner_AICO motionPlanner;
   MotionPrimitive motionPrimitive;
   KeyframeEstimator keyframeEstimator;
+
+  motionPrimitive.geometricState = &geometricState;
+  motionPrimitive.action = &action;
+  motionPrimitive.motionPlan = &motionPlan;
+  motionPrimitive.motionKeyframe = &motionKeyframe;
+  
+  motionPlanner.motionPlan = &motionPlan;
+  motionPlanner.geometricState = &geometricState;
+  
+  controller.controllerTask = &controllerTask;
+  controller.geometricState = &geometricState;
+  controller.motionPlan = &motionPlan;
+  controller.hardwareReference = &hardwareReference;
+  controller.geometricState = &geometricState;
+  controller.skinPressure = &skinPressure;
   
   Group group;
   group.set(LIST<Process>(controller, motionPlanner, motionPrimitive, keyframeEstimator));
@@ -23,7 +39,7 @@ int main(int argn, char** argv){
   
   action.readAccess(NULL);
   action.action = Action::grasp;
-  action.objectRef1 = "dose1";
+  action.objectRef1 = "S1";
   action.executed = false;
   action.deAccess(NULL);
   

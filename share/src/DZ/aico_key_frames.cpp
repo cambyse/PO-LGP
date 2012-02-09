@@ -4,37 +4,39 @@
 #include <MT/opengl.h>
 #include <aico_key_frames.h>
 
-void OneStepKinematic(arr& b,arr& Binv, soc::SocSystemAbstraction& sys,double alpha,double threshold)
-{
+double OneStepKinematic(arr& q, arr& _Binv, int& counter, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized){
   int steps = sys.nTime();
-  arr R,r,H1,Q,Winv,W;
-  arr q0,q_old,tp,x0;
-  sys.getH(H1,1); //H_step
-  sys.getQ(Q,1);  //Q_step
+  arr R,r,H,Q,Winv,W;
+  arr q0,q_old,tp,Binv;
+  sys.getH(H,0); //H_step
+  sys.getQ(Q,0); //Q_step
   
-  sys.getx0(x0);
-  b=x0;
-
-  double old_r,dr=1e6;
-  W = 1.0*steps*(Q+H1);
+  sys.getq0(q0);
+  if(!q_is_initialized) q=q0;
+  counter = 0; // number of iterations
+  
+  double alpha = .1;
+  double old_r = 0.;
+  W = double(steps)*(Q+H);
   inverse_SymPosDef(Winv,W);
   
-
   for (int k=0;k<100;k++){
-    q_old = b;
-    sys.setx(b);
-    sys.getTaskCosts(R,r,b,steps);
-    if(  sys.taskCost(NULL,steps,-1)+ sum(~(b-x0)*Winv*(b-x0)) >old_r) alpha=alpha*0.5;
+    q_old = q;
+    sys.setq(q);
+    sys.getTaskCosts(R, r, q, steps);
+    counter++; // Basically counts number of getTaskCosts calls
+    if(sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0)) > old_r) alpha=alpha*0.5;
     else alpha=pow(alpha,0.5); 
-    Binv = Winv+ R;
-    lapack_Ainv_b_sym(b, Binv,  Winv*x0  + r);
-    b = q_old + alpha*(b-q_old);
-    dr = old_r;
-    old_r = sys.taskCost(NULL,steps,-1) +sum(~(b-x0)*Winv*(b-x0));
-    dr -= old_r; 
-    cout << old_r << endl;
-    if (fabs(dr)<threshold) break;
+    Binv = Winv + R;
+    lapack_Ainv_b_sym(q, Binv, Winv*q0 + r);
+    q = q_old + alpha*(q-q_old);
+    old_r = sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0));
+    cout <<"cost=" <<old_r << endl;
+    if (maxDiff(q, q_old)<stopTolerance) break;
   }
+  
+  if(&_Binv) _Binv=Binv;
+  return old_r;
 }
 
 void decomposeMatrix(arr& A1,arr& A2,arr A){ // returns diagonal blocks of equal size
@@ -138,7 +140,7 @@ double OneStepDynamicFull(arr& b,arr& Binv, int& counter,
     }else{
       if (!restore) alpha=pow(alpha,0.5); //success
       sys.getTaskCosts(R,r,b,T); // costs at the current position
-	counter++; // Basically counts number of getTaskCosts calls
+      counter++; // Basically counts number of getTaskCosts calls
       double eps=1e-10; arr id; id.setId(dim*2);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
       b_best = b; b_old = b;

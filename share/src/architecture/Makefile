@@ -1,5 +1,5 @@
 BASE   = ../..
-NAME   = lib$(shell basename $(PWD))
+NAME   = libarchitecture
 OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib
