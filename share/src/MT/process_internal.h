@@ -55,6 +55,7 @@ struct ConditionVariable {
   void setState(int i);
   void signal();
   void waitForSignal();
+  void waitForSignal(double seconds);
   int waitForStateEq(int i);    ///< return value is the state after the waiting
   int waitForStateNotEq(int i); ///< return value is the state after the waiting
   void waitUntil(double absTime);

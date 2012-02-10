@@ -178,7 +178,7 @@ LPATH   := $(LPATH):$(LIBPATH)/cuda/lib64:$(LIBPATH)/cudaSDK/lib
 else
 LPATH   := $(LPATH):$(LIBPATH)/cuda/lib32:$(LIBPATH)/cudaSDK/lib
 CUDA_EMU = 1
-$(warning WARNING: using cuda EMULATION mode)
+#$(warning WARNING: using cuda EMULATION mode)
 endif
 ifeq ($(CUDA_EMU),1)  #emulation mode!!
 NXXFLAGS = -g -deviceemu

@@ -538,22 +538,25 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
       fy = sumOfSqr(phi);
       if(o.verbose>1) cout <<"optGaussNewton " <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
-      if(fy <= fx) break;
-      if(evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
-      //decrease stepsize
-      a = .1*a;
-      if(o.verbose>1) cout <<" - reject" <<endl;
+      if(fy <= fx){
+        if(o.verbose>1) cout <<" - ACCEPT" <<endl;
+        //adopt new point and adapt stepsize
+        x = y;
+        fx = fy;
+        a = pow(a, 0.5);
+        break;
+      }else{
+        if(o.verbose>1) cout <<" - reject" <<endl;
+        //decrease stepsize
+        a = .1*a;
+        if(a*norm(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      }
     }
-    if(o.verbose>1) cout <<" - ACCEPT" <<endl;
     
-    //adopt new point and adapt stepsize
-    x = y;
-    fx = fy;
-    a = pow(a, 0.5);
     if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<endl;
     
     //stopping criterion
-    if(norm(Delta)<o.stopTolerance || evals>o.stopEvals) break;
+    if(norm(Delta)<o.stopTolerance || a*norm(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break;
   }
   if(o.verbose>0) fil.close();
   if(o.verbose>1) gnuplot("plot 'z.gaussNewton' us 1:3 w l",NULL,true);

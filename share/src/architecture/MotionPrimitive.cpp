@@ -1,10 +1,11 @@
 #include "motion.h"
-#include <DZ/aico_key_frames.h>
+//#include <DZ/aico_key_frames.h>
 
 struct sMotionPrimitive{
   ors::Graph *ors;
   soc::SocSystem_Ors sys;
   OpenGL gl;
+  uint verbose;
 
   void threeStepGraspHeuristic(arr& q_keyframe, uint shapeId);
 };
@@ -15,6 +16,7 @@ MotionPrimitive::MotionPrimitive():Process("MotionPrimitive"){
   motionPlan=NULL;
   motionKeyframe=NULL;
   geometricState=NULL;
+  s->verbose = 1;
 }
 
 MotionPrimitive::~MotionPrimitive(){
@@ -33,7 +35,8 @@ void MotionPrimitive::open(){
   s->gl.camera.setPosition(5, -10, 10);
   s->gl.camera.focus(0, 0, 1);
   s->gl.camera.upright();
-
+  s->gl.update();
+  
   s->sys.initBasics(s->ors, NULL, &s->gl,
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
@@ -63,6 +66,8 @@ void MotionPrimitive::step(){
   if(actionSymbol==Action::noAction){
     motionPlan->set_hasGoal(false,this);
     motionKeyframe->set_hasGoal(false,this);
+    
+    action->waitForConditionSignal(.01);
   }
   
   if(actionSymbol==Action::grasp){
@@ -78,6 +83,7 @@ void MotionPrimitive::step(){
     motionKeyframe->converged = true;
     motionKeyframe->deAccess(this);
 
+    action->waitForConditionSignal(.01);
     //start planner
     //setGraspGoals(s->sys, s->sys.nTime(), goalVar->graspShape);
   }
@@ -87,6 +93,8 @@ void MotionPrimitive::step(){
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
+      
+    action->waitForConditionSignal(.01);
   }
   
   if(actionSymbol==Action::home){
@@ -94,6 +102,8 @@ void MotionPrimitive::step(){
     //arr q;
     //soc::straightTaskTrajectory(*sys, q, 1); //task id is q!!!
     //planner.init_trajectory(q);
+    
+    action->waitForConditionSignal(.01);
   }
 
     //... to set task variables
@@ -104,6 +114,7 @@ void MotionPrimitive::step(){
 
 void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase);
 void delNewGraspGoals(soc::SocSystem_Ors& sys);
+double KeyframeOptimizer(arr& q, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized, uint verbose);
 
 void sMotionPrimitive::threeStepGraspHeuristic(arr& q_keyframex, uint shapeId){
   uint T = sys.nTime();
@@ -115,42 +126,97 @@ void sMotionPrimitive::threeStepGraspHeuristic(arr& q_keyframex, uint shapeId){
 
   uint side=0;
   //uint verbose=0;
-  int counter=0;
 
   //-- optimize ignoring hand -- testing different options for aligning with the object
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
     arr cost_side(3),q_side(3,q0.N);
     for(side=0;side<3;side++){
       setNewGraspGoals(sys, T, shapeId, side, 0);
-      cost_side(side) = OneStepKinematic(q, NoArr, counter, sys, 1e-2,false);
+      cost_side(side) = KeyframeOptimizer(q, sys, 1e-2, false, 2);
       delNewGraspGoals(sys);
-      sys.displayState(NULL, NULL, "posture estimate phase 0", false);
-      sys.gl->watch();
+      if(verbose>=2){
+        sys.displayState(NULL, NULL, "posture estimate phase 0", false);
+        sys.gl->watch();
+      }
       q_side[side]() = q;
     }
     q = q_side[cost_side.minIndex()];
   }else{
     setNewGraspGoals(sys, T, shapeId, side, 0);
-    OneStepKinematic(q, NoArr, counter, sys, 1e-2, false);
+    KeyframeOptimizer(q, sys, 1e-2, false, 2);
     delNewGraspGoals(sys);
-    sys.displayState(NULL, NULL, "posture estimate phase 0", false);
+    if(verbose>=2){
+      sys.displayState(NULL, NULL, "posture estimate phase 0", false);
+      sys.gl->watch();
+    }
   }
   
   
   //-- open hand
   q.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
   sys.setx(q);
-  sys.displayState(NULL, NULL, "posture estimate phase 1", false);
-  sys.gl->watch();
+  if(verbose>=2){
+    sys.displayState(NULL, NULL, "posture estimate phase 1", false);
+    sys.gl->watch();
+  }
 
   //-- reoptimize with close hand
   setNewGraspGoals(sys,T,shapeId, side, 1);
-  OneStepKinematic(q, NoArr, counter, sys, 1e-2, true);
+  KeyframeOptimizer(q, sys, 1e-2, true, 2);
   delNewGraspGoals(sys);
-  sys.displayState(NULL, NULL, "posture estimate phase 2", false);
-  sys.gl->watch();
+  if(verbose>=1) sys.displayState(NULL, NULL, "posture estimate phase 2", false);
+  if(verbose>=2) sys.gl->watch();
 }
 
+
+double KeyframeOptimizer(arr& q, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized, uint verbose){
+  arr H,Q,q0;
+  sys.getH(H,0); //H_step
+  sys.getQ(Q,0); //Q_step
+
+  arr wdiag;
+  getDiag(wdiag, Q+H);
+  wdiag *= double(sys.nTime());
+  for(uint i=0;i<wdiag.N;i++) wdiag(i) = 1./sqrt(wdiag(i));
+  
+  sys.getq0(q0);
+  if(!q_is_initialized) q=q0;
+  
+  struct MyOptimizationProblem:VectorFunction{
+    soc::SocSystemAbstraction *sys;
+    arr wdiag,q0;
+    bool verbose;
+    
+    void   fv(arr& Phi, arr& J, const arr& q){
+      sys->setq(q);
+      if(verbose){
+        sys->displayState(NULL, NULL, "posture", true);
+        sys->gl->watch();
+      }
+      sys->getTaskCostTerms(Phi, J, q, sys->nTime());
+      Phi.append(wdiag%(q-q0));
+      if(&J) J.append(diag(wdiag));
+    }
+  } F;
+  F.sys = &sys;
+  F.wdiag = wdiag;
+  F.q0=q0;
+  F.verbose=false;
+  if(verbose>=3) checkJacobian(F, q, 1e-6);
+  F.verbose = verbose>=3;
+
+  double cost;
+  optOptions opt;
+  opt.fmin_return=&cost;
+  opt.stopTolerance=1e-2;
+  opt.stopEvals=100;
+  opt.initialDamping=1.;
+  opt.maxStep=.5;
+  opt.verbose=verbose?verbose-1:0;
+  optGaussNewton(q, F, opt);
+  
+  return cost;
+}
 
 //===========================================================================
 //
@@ -163,15 +229,16 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   
   //load parameters only once!
   static bool firstTime=true;
-  static double midPrec, endPrec, palmPrec, colPrec, limPrec, endVelPrec;
+  static double endEffPrec, endOppPrec, endAlignPrec, graspDistPrec, colPrec, limPrec, homePrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(midPrec, "reachPlanMidPrec");
-    MT::getParameter(endPrec, "reachPlanEndPrec");
-    MT::getParameter(palmPrec, "reachPlanPalmPrec");
-    MT::getParameter(colPrec, "reachPlanColPrec");
-    MT::getParameter(limPrec, "reachPlanLimPrec");
-    MT::getParameter(endVelPrec, "reachPlanEndVelPrec");
+    MT::getParameter(endEffPrec, "graspPlanEndEffPrec");
+    MT::getParameter(endOppPrec, "graspPlanEndOppPrec");
+    MT::getParameter(endAlignPrec, "graspPlanEndAlignPrec");
+    MT::getParameter(graspDistPrec, "graspPlanGraspDistPrec");
+    MT::getParameter(colPrec, "graspPlanColPrec");
+    MT::getParameter(limPrec, "graspPlanLimPrec");
+    MT::getParameter(homePrec, "graspPlanHomePrec");
   }
   
   //set the time horizon
@@ -194,8 +261,8 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   // graspCenter -> predefined point (xtarget)
   V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
   V->y_target = xtarget;
-  V->y_prec = 1e3;
-  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, 0.);
+  V->y_prec = endEffPrec;
+  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);
   V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
   
@@ -217,9 +284,9 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   V->updateState();
   if(V->y(0)<0.) ((DefaultTaskVariable*)V)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
   V->updateState();
-  V->y_prec = 1e3; //endPrec;
+  V->y_prec = endAlignPrec;
   //V->setInterpolatedTargetsEndPrecisions(T, midPrec, 0.);
-  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, 0.);
+  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);
   V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
 
@@ -232,11 +299,11 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
                        "tip3Shape"), sys.ors->shapes);
   shapes.append(shapeId);shapes.append(shapeId);shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
-  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .05, true);
-  double grip=.9; //specifies the desired proxy value
+  V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .1, true);
+  double grip=.8; //specifies the desired proxy value
   V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
-  V->y_prec = colPrec;
-  V->setInterpolatedTargetsEndPrecisions(T,colPrec,1e1,0.,0.);
+  V->y_prec = graspDistPrec;
+  V->setInterpolatedTargetsEndPrecisions(T,0.,graspDistPrec,0.,0.);
   for(uint t=0;t<=T;t++){ //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
     if(5*t<4*T) V->y_trajectory[t]()=0.;
     else V->y_trajectory[t]() = (grip*double(5*t-4*T))/T;
@@ -257,25 +324,32 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   sys.vars.append(V);
 
   //opposing fingers
-  V=listFindByName(sys.vars, "oppose12");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
-  V=listFindByName(sys.vars, "oppose13");  V->y_prec=endPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, midPrec, endPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+  V = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
+  V->y_target = ARR(-1.);  V->v_target = ARR(0.);
+  V->y_prec=endOppPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., endOppPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+  sys.vars.append(V);
+  V = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
+  V->y_target = ARR(-1.);  V->v_target = ARR(0.);
+  V->y_prec=endOppPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., endOppPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+  sys.vars.append(V);
 
-  MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
+  //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
   
   //col lim and relax
-  V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
-  V=listFindByName(sys.vars, "qitself");
-  V->y_prec=MT::getParameter<double>("reachPlanHomeComfort");
-  V->v_prec=MT::getParameter<double>("reachPlanEndVelPrec");
-  V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, V->y_prec, V->y_prec, midPrec, V->v_prec);
+  arr limits;
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+      -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
+  //TODO: limits as parameter!
+  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
+  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  V->y_prec=homePrec;
+  V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
 }
 
 
 void delNewGraspGoals(soc::SocSystem_Ors& sys){
-  sys.vars.memMove=true;
-  TaskVariable *V;
-  V=listFindByName(sys.vars, "graspCenter");      sys.vars.removeValue(V);  delete(V);
-  V=listFindByName(sys.vars, "upAlign");          sys.vars.removeValue(V);  delete(V);
-  V=listFindByName(sys.vars, "graspContacts");    if(V){ sys.vars.removeValue(V);  delete(V); }
-  V=listFindByName(sys.vars, "otherCollisions");  if(V){ sys.vars.removeValue(V);  delete(V); }
+  listDelete(sys.vars);
 }

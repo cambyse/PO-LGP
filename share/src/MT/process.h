@@ -82,9 +82,9 @@ struct Variable {
   //-- the following is preliminary
 
   //-- condition variable control, to be used by processes to broadcast (publish) or wait for broadcast (subscribe)
+  void broadcastCondition(int i=0);
   int  getCondition();
-  void setCondition(int i);
-  void waitForConditionSignal();
+  void waitForConditionSignal(double seconds=-1.);
   void waitForConditionEq(int i);    //might set the caller to sleep
   void waitForConditionNotEq(int i); //might set the caller to sleep
   

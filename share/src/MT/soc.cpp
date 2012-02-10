@@ -278,7 +278,7 @@ double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, ui
 void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const arr& xt, uint t){
   uint i, m=nTasks();
   phiBar.clear();
-  JBar.clear();
+  if(&JBar) JBar.clear();
   arr phi_q, phi_v, Jac, JacT, y, v;
   double prec, precv;
   for(i=0; i<m; i++) if(isConditioned(i, t <<scalePower)){
@@ -293,19 +293,21 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
       //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
       
-      arr tmp;
-      tmp.resize(2*y.N, 2*Jac.d1);  tmp.setZero();
-      tmp.setMatrixBlock(sqrt(prec)*Jac, 0, 0);
-      tmp.setMatrixBlock(sqrt(precv)*Jac, y.N, Jac.d1);
-      JBar.append(tmp);
+      if(&JBar){
+        arr tmp;
+        tmp.resize(2*y.N, 2*Jac.d1);  tmp.setZero();
+        tmp.setMatrixBlock(sqrt(prec)*Jac, 0, 0);
+        tmp.setMatrixBlock(sqrt(precv)*Jac, y.N, Jac.d1);
+        JBar.append(tmp);
+      }
     }else{
-      JBar.append(sqrt(prec)*Jac);
+      if(&JBar) JBar.append(sqrt(prec)*Jac);
     }
   }
-  JBar.reshape(phiBar.N, xt.N);
+  if(&JBar) JBar.reshape(phiBar.N, xt.N);
   if(t!=nTime()){ //don't multiply task costs for the final time slice!!
     phiBar *= sqrt(double(1 <<scalePower));
-    JBar   *= sqrt(double(1 <<scalePower));
+    if(&JBar) JBar   *= sqrt(double(1 <<scalePower));
   }
 
   //cout <<"t=" <<t <<"phi=" <<phiBar <<"J=" <<JBar <<endl;

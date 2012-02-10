@@ -4,7 +4,7 @@
 #include <MT/opengl.h>
 #include <aico_key_frames.h>
 
-double OneStepKinematic(arr& q, arr& _Binv, int& counter, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized){
+double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized){
   int steps = sys.nTime();
   arr R,r,H,Q,Winv,W;
   arr q0,q_old,tp,Binv;
@@ -15,7 +15,7 @@ double OneStepKinematic(arr& q, arr& _Binv, int& counter, soc::SocSystemAbstract
   if(!q_is_initialized) q=q0;
   counter = 0; // number of iterations
   
-  double alpha = .1;
+  double alpha = .001;
   double old_r = 0.;
   W = double(steps)*(Q+H);
   inverse_SymPosDef(Winv,W);
@@ -23,6 +23,8 @@ double OneStepKinematic(arr& q, arr& _Binv, int& counter, soc::SocSystemAbstract
   for (int k=0;k<100;k++){
     q_old = q;
     sys.setq(q);
+    sys.displayState(NULL, NULL, "posture", true);
+    sys.gl->watch();
     sys.getTaskCosts(R, r, q, steps);
     counter++; // Basically counts number of getTaskCosts calls
     if(sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0)) > old_r) alpha=alpha*0.5;
@@ -32,7 +34,7 @@ double OneStepKinematic(arr& q, arr& _Binv, int& counter, soc::SocSystemAbstract
     q = q_old + alpha*(q-q_old);
     old_r = sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0));
     cout <<"cost=" <<old_r << endl;
-    if (maxDiff(q, q_old)<stopTolerance) break;
+    if (maxDiff(q, q_old)/alpha<stopTolerance) break;
   }
   
   if(&_Binv) _Binv=Binv;
@@ -87,7 +89,7 @@ double LogLikelihood(const arr& x,const arr& a,const arr& A)
   return llk;
 }
 
-double OneStepDynamicFull(arr& b,arr& Binv, int& counter,
+double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
                         soc::SocSystemAbstraction& sys,
                         double time,double alpha,double task_eps,double eps_alpha,
 			uint verbose, bool b_is_initialized)
@@ -234,7 +236,7 @@ void GetOptimalDynamicTime(double& time, int& counter,
   double old_r = 1e6;
   double old_llk = -1e6;
   double llk;
-  int cnt;
+  uint cnt;
   counter = 0;
  while (step>min_step) {
     sys.setx(b0);

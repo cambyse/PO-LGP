@@ -205,6 +205,22 @@ void ConditionVariable::waitForSignal(){
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
+void ConditionVariable::waitForSignal(double seconds){
+  struct timespec timeout;
+  clock_gettime(CLOCK_MONOTONIC, &timeout);
+  timeout.tv_nsec+=1000000000l*seconds;
+  if(timeout.tv_nsec>1000000000l){
+    timeout.tv_sec+=1;
+    timeout.tv_nsec-=1000000000l;
+  }
+  
+  int rc;
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_cond_timedwait(&cond, &mutex, &timeout);
+    if(rc && rc!=ETIMEDOUT) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
 int ConditionVariable::waitForStateEq(int i){
   int rc;
   int stateAfter;
@@ -366,6 +382,7 @@ void Variable::writeAccess(Process *p){
   //if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.writeLock();
   revision++;
+  broadcastCondition();
   //_write(cout);  cout <<endl;
   //_write(s->os);  s->os <<endl;
   //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
@@ -384,12 +401,13 @@ int  Variable::getCondition(){
   return s->cond.getState();
 }
 
-void Variable::setCondition(int i){
+void Variable::broadcastCondition(int i){
   s->cond.setState(i);
 }
 
-void Variable::waitForConditionSignal(){
-  s->cond.waitForSignal();
+void Variable::waitForConditionSignal(double seconds){
+  if(seconds<0.) s->cond.waitForSignal();
+  else           s->cond.waitForSignal(seconds);
 }
 
 void Variable::waitForConditionEq(int i){

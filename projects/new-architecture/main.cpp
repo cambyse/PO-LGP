@@ -37,16 +37,24 @@ int main(int argn, char** argv){
   group.open();
   group.loop();
   
-  action.readAccess(NULL);
+  MT::wait(2.);
+  
+  cout <<"** setting grasp action" <<endl;
+  action.writeAccess(NULL);
   action.action = Action::grasp;
-  action.objectRef1 = "S1";
+  action.objectRef1 = (char*)"S1";
   action.executed = false;
   action.deAccess(NULL);
   
   for(;;){
-    action.waitForConditionSignal();
-    if(action.executed) break;
+    motionKeyframe.waitForConditionSignal();
+    if(motionKeyframe.converged) break;
   }
+  
+  cout <<"** setting no action" <<endl;
+  action.set_action(Action::noAction,NULL);
+  
+  MT::wait(2.);
   
   group.close();
   

@@ -17,10 +17,11 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   sys.getx0(x0);
   arr cost(3),bs(3,x0.N);
   uint side=0;
+  uint steps=0;
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
     for(side=0;side<3;side++){
       setNewGraspGoals(sys,T,shapeId, side, 0);
-      cost(side) = OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
+      cost(side) = OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
       sys.displayState(NULL, NULL, "posture estimate", false);
       sys.gl->watch();
       bs[side]() = b;
@@ -29,7 +30,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
     b = bs[side];
   }else{
     setNewGraspGoals(sys,T,shapeId, side, 0);
-    OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0);
+    OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
     sys.displayState(NULL, NULL, "posture estimate", false);
     sys.gl->watch();
   }
@@ -40,7 +41,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   sys.gl->watch();
   
   setNewGraspGoals(sys,T,shapeId, side, 1);
-  OneStepDynamicFull(b, Binv, sys, seconds, 1e-1, 1e-2, 0, true);
+  OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, true);
   sys.displayState(NULL, NULL, "posture estimate", true);
   sys.gl->watch();
 
