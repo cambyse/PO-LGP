@@ -65,7 +65,6 @@ void MotionPrimitive::step(){
 
   if(actionSymbol==Action::noAction){
     motionPlan->set_hasGoal(false,this);
-    motionKeyframe->set_hasGoal(false,this);
     
     action->waitForConditionSignal(.01);
   }
@@ -80,11 +79,13 @@ void MotionPrimitive::step(){
     motionKeyframe->writeAccess(this);
     motionKeyframe->q_estimate = q_keyframe;
     motionKeyframe->duration_estimate = s->sys.getDuration();
-    motionKeyframe->converged = true;
     motionKeyframe->deAccess(this);
 
+    
     action->waitForConditionSignal(.01);
     //start planner
+    motionPlan->set_hasGoal(true, this);
+    motionPlan->set_final_keyframe((const MotionKeyframe*&)motionKeyframe, this);
     //setGraspGoals(s->sys, s->sys.nTime(), goalVar->graspShape);
   }
     

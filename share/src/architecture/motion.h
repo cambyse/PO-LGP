@@ -30,18 +30,9 @@ struct GeometricState:Variable{
 struct MotionKeyframe:Variable{
   FIELD( arr, q_estimate );
   FIELD( double, duration_estimate );
-  FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep
-  FIELD( bool, converged );
-  
-  /*//problem formulation
-  arr q_prev;
-  //optional for later:
-  //arr q_next; optimize also w.r.t. future keyframe
-  arr W; //diagonal of the control cost matrix
-  arr Phi, rho; //task cost descriptors
-  */
-  
-  MotionKeyframe():Variable("MotionKeyFrame"), hasGoal(false), converged(false) {};
+  FIELD( MotionKeyframe*, previous_keyframe );
+  FIELD( MotionKeyframe*, next_keyframe );
+  MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL) {};
 };
 
 
@@ -52,6 +43,7 @@ struct MotionPlan:Variable{
   //problem description
   FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep
   FIELD( bool, converged );
+  FIELD( MotionKeyframe*, final_keyframe );
   //FUTURE:
   //arr W; //diagonal of the control cost matrix
   //arr Phi, rho; //task cost descriptors
@@ -143,6 +135,20 @@ struct MotionPlanner_AICO:Process{
 
   MotionPlanner_AICO();
   ~MotionPlanner_AICO();
+  void open();
+  void step();
+  void close();
+};
+
+
+struct MotionPlanner_interpolation:Process{
+  struct sMotionPlanner_interpolation *s;
+  //links
+  MotionPlan *motionPlan;
+  GeometricState *geometricState;
+
+  MotionPlanner_interpolation();
+  ~MotionPlanner_interpolation();
   void open();
   void step();
   void close();

@@ -5,7 +5,6 @@ int main(int argn, char** argv){
 
   GeometricState geometricState;
   Action action;
-  MotionKeyframe motionKeyframe;
   MotionPlan motionPlan;
   ControllerTask controllerTask;
   HardwareReference hardwareReference;
@@ -14,12 +13,10 @@ int main(int argn, char** argv){
   myController controller;
   MotionPlanner_AICO motionPlanner;
   MotionPrimitive motionPrimitive;
-  KeyframeEstimator keyframeEstimator;
 
   motionPrimitive.geometricState = &geometricState;
   motionPrimitive.action = &action;
   motionPrimitive.motionPlan = &motionPlan;
-  motionPrimitive.motionKeyframe = &motionKeyframe;
   
   motionPlanner.motionPlan = &motionPlan;
   motionPlanner.geometricState = &geometricState;
@@ -32,7 +29,7 @@ int main(int argn, char** argv){
   controller.skinPressure = &skinPressure;
   
   Group group;
-  group.set(LIST<Process>(controller, motionPlanner, motionPrimitive, keyframeEstimator));
+  group.set(LIST<Process>(controller, motionPlanner, motionPrimitive));
   
   group.open();
   group.loop();
@@ -47,8 +44,8 @@ int main(int argn, char** argv){
   action.deAccess(NULL);
   
   for(;;){
-    motionKeyframe.waitForConditionSignal();
-    if(motionKeyframe.converged) break;
+    motionPlan.waitForConditionSignal();
+    if(motionPlan.hasGoal) break;
   }
   
   cout <<"** setting no action" <<endl;
