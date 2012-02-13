@@ -52,10 +52,11 @@ joint (arm19 arm20) { A=<t(0 0 0.1) d(45 1 0 1)> B=<t(0 0 .1)>  Q=<d(1 0 0 0)> }
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape cyl1(OBJECTS){ contact, type=4, rel=<t( 0.01 -1.5 0.01)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape cyl1(OBJECTS){  type=4, rel=<t( 0.5 -10.7 0.1) d(90 1 0 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape cyl1(OBJECTS){ contact, type=4, rel=<t( 0.01 -1.5 0.01)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
 
-body target { X=<t(1. -1. 1.)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+#body target { X=<t(1. -1. 1.)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
 #body target { X=<t(-.1 -2.5 1.85)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
 #body target { X=<t(-.1 -3.6 1.85)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
 #body target { X=<t(.1 -2.8 1.80)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
