@@ -85,7 +85,9 @@ void MotionPrimitive::step(){
     action->waitForConditionSignal(.01);
     //start planner
     motionPlan->set_hasGoal(true, this);
+    motionPlan->set_steps(s->sys.nTime(), this);
     motionPlan->set_final_keyframe((const MotionKeyframe*&)motionKeyframe, this);
+    //TODO: much more!
     //setGraspGoals(s->sys, s->sys.nTime(), goalVar->graspShape);
   }
     

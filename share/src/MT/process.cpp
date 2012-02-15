@@ -618,6 +618,21 @@ void* sProcess::staticThreadMain(void *_self){
 // Group
 //
 
+void loop(const ProcessL& P){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadLoop();
+}
+
+void loopWithBeat(const ProcessL& P, double sec){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadLoopWithBeat(sec);
+}
+
+void stop(const ProcessL& P){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadStop();
+}
+
 void Group::set(const VariableL &_V, const ProcessL &_P){
   V = _V;
   P = _P;

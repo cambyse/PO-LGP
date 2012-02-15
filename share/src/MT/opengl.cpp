@@ -925,6 +925,7 @@ void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom){
 void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom){
   img=(byteA*)&_img;
   zoom=_zoom;
+  //resize(img->d1*zoom,img->d0*zoom);
   if(wait) watch(); else update();
   img=NULL;
 }

@@ -11,14 +11,61 @@
 
 void generateShapePoints(arr& points, arr& weights, arr *grad, uint type, uint N, const arr& params);
 
-struct ShapeFitProblem:public OptimizationProblem {
+struct ShapeFitProblem:public ScalarFunction {
+  floatA distImage;
+  uint type, N;
+  arr x, points;
+  bool display;
+  
+  double fs(arr& grad, const arr& x){
+    double cost=0.;
+    arr weights, dfdpoints;
+    generateShapePoints(points, weights, &grad, type, N, x);
+    if(&grad){  dfdpoints.resizeAs(points);  dfdpoints.setZero();  }
+    for(uint i=0; i<points.d0; i++){ //interpolate...
+      uint x=points(i, 0), y=points(i, 1);
+      if(x>=distImage.d1-1) x=distImage.d1-2;
+      if(y>=distImage.d0-1) y=distImage.d0-2;
+      double a=fmod(points(i, 0), 1.), b=fmod(points(i, 1), 1.);
+      if(a+b<1.){
+        cost += weights(i)*((1.-a-b)*distImage(y, x) + a*distImage(y, x+1) + b*distImage(y+1, x));
+        if(&grad){
+          dfdpoints(i, 0) = weights(i)*(distImage(y, x+1) - distImage(y, x));
+          dfdpoints(i, 1) = weights(i)*(distImage(y+1, x) - distImage(y, x));
+        }
+      }else{
+        cost += weights(i)*((a+b-1.)*distImage(y+1, x+1) + (1.-a)*distImage(y+1, x) + (1.-b)*distImage(y, x+1));
+        if(&grad){
+          dfdpoints(i, 0) = weights(i)*(distImage(y+1, x+1) - distImage(y+1, x));
+          dfdpoints(i, 1) = weights(i)*(distImage(y+1, x+1) - distImage(y, x+1));
+        }
+      }
+    }
+    if(&grad){
+      dfdpoints.reshape(dfdpoints.N);
+      grad.reshape(dfdpoints.N, x.N);
+      grad = ~dfdpoints*grad;
+    }
+    if(display){
+      byteA img;
+      copy(img, 10.f*distImage);
+      cvDrawPoints(img, points);
+      //cout <<x <<endl;
+      //if(grad) cout <<*grad <<endl;
+      cvShow(img, "shape optimization", true);
+    }
+    return cost;
+  }
+};
+
+/*struct ShapeFitProblem:public OptimizationProblem {
   floatA distImage;
   uint type, N;
   arr x, points;
   bool display;
   
   double f(arr *grad, const arr& x, int i=-1);
-};
+};*/
 
 
 void testShapes(){
@@ -115,13 +162,16 @@ void testColorBasedShapeTracking(){
 
     MT::timerStart();
     double cost;
-    Rprop rprop;
-    rprop.dMax = 5.;
-    rprop.init(3.);
-    rprop.loop(params,problem,&cost,1.e-1,100);
+    optOptions opt;
+    opt.maxStep=5.;
+    opt.initStep=3.;
+    opt.fmin_return = &cost;
+    opt.stopTolerance = 1.e-1;
+    opt.stopEvals = 100;
+    optRprop(params, problem, opt);
     cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
 
-    problem.f(NULL,params);
+    problem.fs(NoArr, params);
     byteA img; copy(img,10.f*problem.distImage);
     cvDrawPoints(img,problem.points);
     cvShow(img,"shape optimization",false);

@@ -39,6 +39,7 @@ struct MotionKeyframe:Variable{
 struct MotionPlan:Variable{
   FIELD( arr, q_plan );
   FIELD( double, tau );
+  FIELD( uint, steps );
 
   //problem description
   FIELD( bool, hasGoal ); //if there is no goal (=tasks) given, the planner may sleep

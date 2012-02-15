@@ -8,6 +8,8 @@ extern arr camera_calibration;
 
 //----- opencv wrappers
 
+
+
 //macro tricks to easily convert arrays to CvMat*
 struct CvMat;
 struct CvMatDonor {

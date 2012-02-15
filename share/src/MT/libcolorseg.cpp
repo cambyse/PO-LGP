@@ -1,7 +1,7 @@
 #ifdef MT_FELZ
 
 //#include "common.h"
-#include "nputils.h"
+//#include "nputils.h"
 #include "libcolorseg.h"
 
 // Felzenszwalb's files
@@ -70,7 +70,7 @@ uint get_single_color_segmentation(
    if (seg_counter != num_segments)
    {
      std::cout << "seg_counter == " << seg_counter << " num_segments == " << num_segments << std::endl;
-     np::msg_error("LUT assignment: seg_counter != (num_segments+1)");
+     HALT("LUT assignment: seg_counter != (num_segments+1)");
    }
 
    // unwrap data and clean up
@@ -115,7 +115,7 @@ uint get_single_color_segmentation_rgb(
   for (int i = 0; i < num_segments; i++)
   {
     if (segment_sizes(i) <= 0)
-      np::msg_error("segment_sizes(i) <= 0");
+      HALT("segment_sizes(i) <= 0");
 
     rgb_avg(i,0) /= segment_sizes(i);
     rgb_avg(i,1) /= segment_sizes(i);
@@ -181,7 +181,7 @@ void patch_color_statistics(doubleA& stats, const uintA& patches, const byteA& i
   uint num_patches = patches.p[patches.maxIndex()]+1;
   uint num_pixels = image.d0*image.d1;
   if (image.d2 != 3)
-    np::msg_missing_implementation("Cannot handle b/w images yet.");
+    NIY;
 
   stats.resize(num_patches, 6);                          // Avg. R, G, B, and std dev
   stats = 0;
@@ -270,7 +270,7 @@ void get_multiple_color_segmentations(
 {
    // TODO phtread to speed up segmentation (one thread per level)
    if ((sigma.d0 != k.d0) || (sigma.d0 != min.d0))
-      np::msg_error("size of sigma, k, and min has to be equal");
+      HALT("size of sigma, k, and min has to be equal");
 
    uint num_levels = sigma.d0;
    segmentations.resize(num_levels);

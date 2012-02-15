@@ -216,6 +216,10 @@ struct ThreadInfoWin:public Process {
 // preliminary
 //
 
+void loop(const ProcessL& P);
+void loopWithBeat(const ProcessL& P, double sec);
+void stop(const ProcessL& P);
+
 struct Group {
   VariableL V;
   ProcessL P;
