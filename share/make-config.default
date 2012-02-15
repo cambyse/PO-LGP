@@ -1,0 +1,74 @@
+# NOTES:
+#
+# 'make-config' is NOT sync via git - it is your individual setup
+# 'make-config.default' is the default initialization of make-config
+#
+# There are currently 2 make modes:
+# MAKEMODE=mlrlib_full  compile libs with all external dependencies
+# MAKEMODE=mlrlib_minimal  compile libs with no external dependencies
+# MAKEMODE=app  compile settings for standard applications/tests
+
+### DEFAULT SETTINGS
+
+ifneq ($(MAKEMODE),mlrlib)
+#change the default application (test, etc) compilation mode here
+MAKEMODE = app
+endif
+
+ifeq ($(MAKEMODE),mlrlib)
+################ CHANGE THE DEFAULT lib-COMPILATION MODE HERE!! ###############
+MAKEMODE = mlrlib_full
+#MAKEMODE = mlrlib_minimal
+endif
+
+
+
+### MAKEMODE=app
+
+ifeq ($(MAKEMODE),app)
+buildAndLink_MTLIB = 1
+endif
+
+
+### MAKEMODE=mlrlib_full
+
+ifeq ($(MAKEMODE),mlrlib_full)
+CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+LIBS   += -lrt
+OPTIM  = debug
+FREEGLUT = 1
+ANN = 1
+QHULL = 1
+SWIFT = 1
+LAPACK = 1
+ODE = 1
+TONY = 1
+OPENCV_UBUNTU = 1
+SCHUNK = 1
+PLIB = 1
+BUMBLE = 1
+LEWINER = 1
+CUDA = 1
+endif
+
+
+### MAKEMODE=mlrlib_minimal
+
+ifeq ($(MAKEMODE),mlrlib_minimal)
+CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+LIBS   += -lrt
+OPTIM  = debug
+FREEGLUT = 1
+ANN = 0
+QHULL = 0
+SWIFT = 0
+LAPACK = 0
+ODE = 0
+TONY = 0
+OPENCV_UBUNTU = 0
+SCHUNK = 0
+PLIB = 0
+BUMBLE = 0
+LEWINER = 0
+CUDA = 0
+endif
