@@ -8,7 +8,7 @@
 // use OpenCV camera instead of Nils' !
 
 struct sCamera{
-  CvCapture *capture;
+  cv::VideoCapture capture;
   byteA myImg;
 };
 
@@ -18,23 +18,25 @@ Camera::Camera():Process("Camera"){
 }
 
 void Camera::open(){
-   s->capture = cvCaptureFromCAM(0);
+   s->capture.open(0);// = cvCaptureFromCAM(0);
 }
 
 void Camera::close(){
-   cvReleaseCapture(&s->capture);
+  s->capture.release();
+   //cvReleaseCapture(&s->capture);
 }
 
 void Camera::step(){
-  ENABLE_CVMAT; 
-  IplImage* img = cvQueryFrame(s->capture);
+  cv::Mat img;
+  s->capture >> img; 
   rgbImage->writeAccess(this);
-  rgbImage->rgb.resize(img->height,img->width,3);
+  rgbImage->rgb.resize(img.rows,img.cols,3);
+  
   // TODO: use memcpy or some other fast copy mechanism instead?! 
-  for (uint i=0; i<img->height*img->width*3; i+=3) {
-    rgbImage->rgb.p[i]   = img->imageData[i+2];
-    rgbImage->rgb.p[i+1] = img->imageData[i+1];
-    rgbImage->rgb.p[i+2] = img->imageData[i];
+  for (uint i=0; i<img.rows*img.cols*3; i+=3) {
+    rgbImage->rgb.p[i]   = img.data[i+2];
+    rgbImage->rgb.p[i+1] = img.data[i+1];
+    rgbImage->rgb.p[i+2] = img.data[i];
   }
   rgbImage->deAccess(this);
 }
