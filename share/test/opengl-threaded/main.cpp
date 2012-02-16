@@ -1,5 +1,5 @@
 #include <MT/opengl.h>
-#include <MT/process.h>
+#include <biros/biros.h>
 
 void draw1(void*){
   glStandardLight(NULL);

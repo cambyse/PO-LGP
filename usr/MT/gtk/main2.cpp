@@ -1,5 +1,5 @@
-#include <MT/process.h>
-#include <MT/process_internal.h>
+#include <biros/biros.h>
+#include <biros/biros_internal.h>
 #include <MT/util.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>

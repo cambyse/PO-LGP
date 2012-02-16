@@ -1,6 +1,4 @@
-BASE = ../../../share
-
-OBJS = main.o
+BASE = $(shell realpath ../..)
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 

@@ -1,5 +1,5 @@
 #define MT_IMPLEMENT_TEMPLATES
-#include <MT/process_internal.h>
+#include <biros/biros_internal.h>
 #include <QtGui/QTreeWidget>
 
 void addVariablesToTree(QTreeWidget *tree){

@@ -1,4 +1,4 @@
-include ../Makefile.base
+BASE = ../../../share
 
 OBJS = main.o processes.o
 
