@@ -1,7 +1,7 @@
 #ifndef MT_vision_h
 #define MT_vision_h
 
-#include "array.h"
+#include <MT/array.h>
 //#include "threads.h"
 
 extern arr camera_calibration;
@@ -37,11 +37,6 @@ void mrf_BP(BP_data& msg, void (*conv)(arr&, const arr&), uint iter, byteA *max=
 void boxConvolution(arr& out, const arr& in, uint width);
 void gaussConvolution(arr& out, const arr& in, uint width, double eps=0.01);
 
-//----- patch analysis
-uint incremental_patch_ids(uintA& pch);
-void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np);
-void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np);
-
 //----- belief analysis
 void getCenter(floatA& b);
 
@@ -65,8 +60,6 @@ void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSd
 void imagePointPair2WorldPoint(floatA& world, const floatA& left, const floatA& right);
 
 // draw helper routinges
-void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap);
-void random_colorMap(floatA& pch_colormap, uint np);
 void cvDrawGraph(byteA& img, doubleA& V, uintA& E);
 void cvDrawBox(byteA& img, const floatA& box);
 void cvDrawPoints(byteA& img, const arr& points);

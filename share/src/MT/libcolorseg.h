@@ -3,6 +3,13 @@
 
 #include <MT/array.h>
 
+//----- patch analysis
+void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap);
+void random_colorMap(floatA& pch_colormap, uint np);
+uint incremental_patch_ids(uintA& pch);
+void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np);
+void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np);
+
 uint get_single_color_segmentation(uintA& segmentation,  // segmented image
 				   const byteA& image,   // input image
 				   float sigma = 0.75,   // (Gaussian!?) blurring factor

@@ -1,7 +1,7 @@
 #ifndef MT_variables_h
 #define MT_variables_h
 
-#include <MT/process.h>
+#include <biros/biros.h>
 #undef COUNT
 #include <opencv/highgui.h>
 #include <opencv/cv.h>

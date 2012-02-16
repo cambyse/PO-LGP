@@ -278,6 +278,80 @@ void get_multiple_color_segmentations(
       get_single_color_segmentation(segmentations.p[i], image, sigma.p[i], k.p[i], min.p[i]);
 }
 
+uint incremental_patch_ids(uintA& pch){
+  uint i, N=pch.N;
+  uintA pch_old(pch);
+  uintA old_ids;
+  int idx;
+  for(i=0; i<N; i++){
+    idx = old_ids.findValue(pch_old.elem(i));
+    if(idx<0){
+      idx = old_ids.N;
+      old_ids.append(pch_old.elem(i));
+    }
+    pch.elem(i) = idx;
+  }
+  return old_ids.N;
+}
+
+void pch2img(byteA &img, const uintA &pch, floatA &pch_col){
+  uint i, N=pch.d0*pch.d1;
+  if(pch_col.nd==2){
+    img.resize(N, 3);
+    for(i=0; i<N; i++){
+      img(i, 0) = (byte)pch_col(pch.elem(i), 0);
+      img(i, 1) = (byte)pch_col(pch.elem(i), 1);
+      img(i, 2) = (byte)pch_col(pch.elem(i), 2);
+    }
+    img.reshape(pch.d0, pch.d1, 3);
+  }
+  if(pch_col.nd==1){
+    img.resize(N);
+    for(i=0; i<N; i++)
+      img(i) = (byte)(255.f*pch_col(pch.elem(i)));
+    img.reshape(pch.d0, pch.d1);
+  }
+}
+
+
+void random_colorMap(floatA& pch_col, uint np){
+  pch_col.resize(np, 3);
+  rndUniform(pch_col, 0, 255);
+}
+
+
+void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np){
+  uint i, Y=img.d0, X=img.d1, N=img.d0*img.d1;
+  pch.reshape(N);
+  img.reshape(N, 3);
+  pch_col.resize(np, 3);  pch_col.setZero();
+  uintA  pch_size(np);    pch_size.setZero();
+  for(i=0; i<N; i++){
+    pch_col(pch(i), 0) += (float)img(i, 0);
+    pch_col(pch(i), 1) += (float)img(i, 1);
+    pch_col(pch(i), 2) += (float)img(i, 2);
+    pch_size(pch(i))++;
+  }
+  for(i=0; i<np; i++)
+    if(pch_size(i)) pch_col[i]()/=(float)pch_size(i);
+  img.reshape(Y, X, 3);
+  pch.reshape(Y, X);
+}
+
+void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){
+  uint x, y, Y=img.d0, X=img.d1;
+  pch_cen.resize(np, 2);  pch_cen.setZero();
+  uintA  pch_size(np);    pch_size.setZero();
+  for(y=0; y<Y; y++) for(x=0; x<X; x++){
+      pch_cen(pch(y, x), 0) += (double)x;
+      pch_cen(pch(y, x), 1) += (double)y;
+      pch_size(pch(y, x))++;
+    }
+  for(uint i=0; i<np; i++)
+    if(pch_size(i)) pch_cen[i]()/=(double)pch_size(i);
+}
+
+
 #else
 
 #endif

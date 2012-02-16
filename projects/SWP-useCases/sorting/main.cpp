@@ -1,4 +1,4 @@
-#include <MT/process.h>
+#include <biros/biros.h>
 #include <MT/util.h>
 
 struct RandomNumber:public Variable{

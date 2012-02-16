@@ -1,4 +1,4 @@
-BASE = ../../../share
+BASE = ../..
 
 OBJS = main.o
 

@@ -27,7 +27,7 @@ extern "C"{
 #include "ors.h"
 
 #ifndef MT_NO_THREADS
-#  include "process_internal.h"
+#  include <biros/biros_internal.h>
 #else
 struct Mutex{
   void lock(const char* _msg=NULL){};

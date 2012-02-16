@@ -502,6 +502,7 @@ info: force
 	@echo "  PREOBJS =" "$(PREOBJS)"
 	@echo "  OUTPUT =" "$(OUTPUT)"
 	@echo "  BUILDS =" "$(BUILDS)"
+	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo
 
 all: default

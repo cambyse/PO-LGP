@@ -6,6 +6,7 @@ x.exe
 MT.log
 
 SHARE
+PROJ
 .git
 *.kdev4
 *solution*

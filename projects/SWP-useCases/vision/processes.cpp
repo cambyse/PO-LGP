@@ -1,6 +1,6 @@
 #include "processes.h"
 #include <MT/opencv.h>
-#include <MT/vision.h>
+//#include <MT/vision.h>
 #include <MT/libcolorseg.h>
 #include <MT/opengl.h>
 

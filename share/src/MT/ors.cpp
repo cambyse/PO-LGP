@@ -17,7 +17,9 @@
 #undef abs
 #include <algorithm>
 #include "ors.h"
-#include "plot.h"
+#ifndef MT_ORS_ONLY_BASICS
+#  include "plot.h"
+#endif
 
 #define SL_DEBUG_LEVEL 1
 #define SL_DEBUG(l, x) if(l<=SL_DEBUG_LEVEL) x;
