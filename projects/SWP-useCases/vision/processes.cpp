@@ -14,24 +14,28 @@ struct sCamera{
 
 Camera::Camera():Process("Camera"){
   s = new sCamera;
-  read_ppm(s->myImg,"left.ppm");  //HACK
+  //read_ppm(s->myImg,"left.ppm");  //HACK
 }
 
 void Camera::open(){
-//   s->capture = cvCaptureFromCAM(-1);
+   s->capture = cvCaptureFromCAM(0);
 }
 
 void Camera::close(){
-//   cvReleaseCapture(&s->capture);
+   cvReleaseCapture(&s->capture);
 }
 
 void Camera::step(){
-//   cvGrabFrame(s->capture);
-//   IplImage* img = cvRetrieveFrame(s->capture);
+  ENABLE_CVMAT; 
+  IplImage* img = cvQueryFrame(s->capture);
   rgbImage->writeAccess(this);
-//   rgbImage->rgb.resize(img->height,img->width,3);
-//   cvGetMat(img, CVMAT(rgbImage->rgb));
-  rgbImage->rgb = s->myImg;  MT::wait(.01); //HACK
+  rgbImage->rgb.resize(img->height,img->width,3);
+  // TODO: use memcpy or some other fast copy mechanism instead?! 
+  for (uint i=0; i<img->height*img->width*3; i+=3) {
+    rgbImage->rgb.p[i]   = img->imageData[i+2];
+    rgbImage->rgb.p[i+1] = img->imageData[i+1];
+    rgbImage->rgb.p[i+2] = img->imageData[i];
+  }
   rgbImage->deAccess(this);
 }
 
@@ -44,8 +48,11 @@ void GrayMaker::step(){
   rgbImage->get_rgb(rgb,this);
 
   gray.resize(rgb.d0,rgb.d1);
+  
+  if(!rgb.N) return;
   cv::Mat ref=cvMAT(gray);
-  cv::cvtColor(cvMAT(rgb), ref, CV_RGB2GRAY);
+  cv::Mat src=cvMAT(rgb);
+  cv::cvtColor(src, ref, CV_RGB2GRAY);
 
   grayImage->set_gray(gray,this);
 }
@@ -175,7 +182,7 @@ void SURFer::step(){
   byteA gray,display;
   grayImage->get_gray(gray,this);
   if(!gray.N) return;
-  
+
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
   (*s->surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
