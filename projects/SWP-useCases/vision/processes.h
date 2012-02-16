@@ -4,103 +4,104 @@
 #include <MT/opengl.h>
 
 class Process;
-struct Camera:Process{
+struct Camera:Process {
   struct sCamera *s;
-
+  
   RgbImage *rgbImage;
-
+  
   Camera();
   void open();
   void step();
   void close();
 };
 
-struct GrayMaker:Process{
+struct GrayMaker:Process {
   RgbImage *rgbImage;
   GrayImage *grayImage;
-
+  
   GrayMaker();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct MotionFilter:Process{
+struct MotionFilter:Process {
   struct sMotionFilter *s;
-
+  
   RgbImage *rgbImage;
   GrayImage *grayImage;
-
+  
   MotionFilter();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct DifferenceFilter:Process{
+struct DifferenceFilter:Process {
   RgbImage *rgbImage1;
   RgbImage *rgbImage2;
   RgbImage *diffImage;
   int threshold;
   
   DifferenceFilter();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct CannyFilter:Process{
+struct CannyFilter:Process {
   GrayImage *grayImage;
   GrayImage *cannyImage;
   float cannyThreshold;
   
   CannyFilter();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct Patcher:Process{
+struct Patcher:Process {
   RgbImage *rgbImage;
   PatchImage *patchImage;
-
+  
   Patcher();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct SURFer:Process{
+struct SURFer:Process {
   struct sSURFer *s;
   GrayImage *grayImage;
   SURFfeatures *features;
   
   SURFer();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
-struct HoughLineFilter:Process{
+struct HoughLineFilter:Process {
   GrayImage *grayImage;
-  HoughLines * houghLines;
-
+  HoughLines *houghLines;
+  
   HoughLineFilter();
-  void open();
+  void open() {}
   void step();
-  void close();
+  void close() {}
 };
 
 extern Mutex gllock;
+
 template<class T>
-struct ImageViewer:Process{
+struct ImageViewer:Process {
   T *var;
   OpenGL gl;
   
-  ImageViewer():Process("ImageViewer"), gl(typeid(T).name()){};
-  void open(){}
-  void close(){}
-  void step(){
+  ImageViewer(T& _var):Process("ImageViewer"), gl(_var.name) { var=&_var; }
+  void open() {}
+  void close() {}
+  void step() {
     gllock.lock();
     byteA rgb;
     var->get_dispImg(rgb,this);

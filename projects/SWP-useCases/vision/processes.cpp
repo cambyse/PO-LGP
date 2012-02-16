@@ -4,119 +4,121 @@
 #include <MT/libcolorseg.h>
 #include <MT/opengl.h>
 
+//===========================================================================
+//
+// Camera
+//
 
-// use OpenCV camera instead of Nils' !
-
-struct sCamera{
+struct sCamera {
   cv::VideoCapture capture;
   byteA myImg;
 };
 
-Camera::Camera():Process("Camera"){
+Camera::Camera():Process("Camera") {
   s = new sCamera;
-  //read_ppm(s->myImg,"left.ppm");  //HACK
 }
 
-void Camera::open(){
-   s->capture.open(0);// = cvCaptureFromCAM(0);
+void Camera::open() {
+  s->capture.open(0);
 }
 
-void Camera::close(){
+void Camera::close() {
   s->capture.release();
-   //cvReleaseCapture(&s->capture);
 }
 
-void Camera::step(){
-  cv::Mat img;
-  s->capture >> img; 
+void Camera::step() {
+  cv::Mat img,imgRGB;
+  s->capture >>img;
+  cv::cvtColor(img, imgRGB, CV_BGR2RGB);
   rgbImage->writeAccess(this);
-  rgbImage->rgb.resize(img.rows,img.cols,3);
-  
-  // TODO: use memcpy or some other fast copy mechanism instead?! 
-  for (uint i=0; i<img.rows*img.cols*3; i+=3) {
-    rgbImage->rgb.p[i]   = img.data[i+2];
-    rgbImage->rgb.p[i+1] = img.data[i+1];
-    rgbImage->rgb.p[i+2] = img.data[i];
-  }
+  rgbImage->rgb = cvtMAT(imgRGB);
   rgbImage->deAccess(this);
 }
 
-GrayMaker::GrayMaker():Process("GrayMaker"){}
-void GrayMaker::open(){}
-void GrayMaker::close(){}
 
-void GrayMaker::step(){
+//===========================================================================
+//
+// GrayMaker
+//
+
+GrayMaker::GrayMaker():Process("GrayMaker") {}
+
+void GrayMaker::step() {
   byteA rgb,gray;
   rgbImage->get_rgb(rgb,this);
-
+  
   gray.resize(rgb.d0,rgb.d1);
   
-  if(!rgb.N) return;
+  if (!rgb.N) return;
   cv::Mat ref=cvMAT(gray);
   cv::Mat src=cvMAT(rgb);
   cv::cvtColor(src, ref, CV_RGB2GRAY);
-
+  
   grayImage->set_gray(gray,this);
 }
 
-struct sMotionFilter{
+//===========================================================================
+//
+// MotionFilter
+//
+
+struct sMotionFilter {
   byteA old_rgb;
 };
 
-MotionFilter::MotionFilter():Process("MotionFilter"){
+MotionFilter::MotionFilter():Process("MotionFilter") {
   s = new sMotionFilter;
 }
 
-void MotionFilter::open(){}
-void MotionFilter::close(){}
-
-void MotionFilter::step(){
+void MotionFilter::step() {
   byteA rgb,gray;
   rgbImage->get_rgb(rgb,this);
   uint H=rgb.d0,W=rgb.d1;
-
-  if(s->old_rgb.N!=rgb.N){
+  
+  if (s->old_rgb.N!=rgb.N) {
     s->old_rgb=rgb;
     return;
   }
-
+  
   gray.resize(rgb.d0*rgb.d1);
   rgb.reshape(gray.N,3);
   s->old_rgb.reshape(gray.N,3);
-  for(uint i=0;i<gray.N;i++){
+  for (uint i=0; i<gray.N; i++) {
     uint diff
-      = abs((int)rgb(i,0)-(int)s->old_rgb(i,0))
+    = abs((int)rgb(i,0)-(int)s->old_rgb(i,0))
       + abs((int)rgb(i,1)-(int)s->old_rgb(i,1))
       + abs((int)rgb(i,2)-(int)s->old_rgb(i,2));
     gray(i) = diff/3;
   }
-
+  
   gray.reshape(H,W);
   s->old_rgb=rgb;
   
   grayImage->set_gray(gray, this);
 }
 
+//===========================================================================
+//
+// DifferenceFilter
+//
 
-DifferenceFilter::DifferenceFilter():Process("DifferenceFilter"){
+DifferenceFilter::DifferenceFilter():Process("DifferenceFilter") {
   threshold = 10;
 }
 
-void DifferenceFilter::open(){}
-void DifferenceFilter::close(){}
-void DifferenceFilter::step(){
+void DifferenceFilter::step() {
   byteA rgb1,rgb2,diff;
   rgbImage1->get_rgb(rgb1,this);
   rgbImage2->get_rgb(rgb2,this);
-
-  if(rgb1.N!=rgb2.N){
+  
+  if (rgb1.N!=rgb2.N) {
     rgb2=rgb1;
     rgbImage2->set_rgb(rgb2,this);
   }
   
   diff.resizeAs(rgb1);
   
-  for(uint i=0;i<diff.N;i++){
+  for (uint i=0; i<diff.N; i++) {
     int d = (int)rgb1.elem(i)-(int)rgb2.elem(i);
     diff.elem(i) = abs(d)>threshold?rgb1.elem(i):0;
   }
@@ -124,28 +126,34 @@ void DifferenceFilter::step(){
   diffImage->set_rgb(diff,this);
 }
 
-CannyFilter::CannyFilter():Process("CannyFilter"){
+//===========================================================================
+//
+// CannyFilter
+//
+
+CannyFilter::CannyFilter():Process("CannyFilter") {
   cannyThreshold = 50.f;
 }
 
-void CannyFilter::open(){}
-void CannyFilter::close(){}
-void CannyFilter::step(){
+void CannyFilter::step() {
   byteA gray,canny;
   grayImage->get_gray(gray,this);
-  if(!gray.N) return;
+  if (!gray.N) return;
   canny.resizeAs(gray);
   cv::Mat ref = cvMAT(canny);
   cv::Canny(cvMAT(gray), ref, cannyThreshold, 4.f*cannyThreshold, 3);
   cannyImage->set_gray(canny,this);
 }
 
-Patcher::Patcher():Process("Patcher"){
+//===========================================================================
+//
+// Patcher
+//
+
+Patcher::Patcher():Process("Patcher") {
 }
 
-void Patcher::open(){}
-void Patcher::close(){}
-void Patcher::step(){
+void Patcher::step() {
   byteA rgb,display;
   uintA patching; //for each pixel an integer
   arr pch_cen;    //patch centers
@@ -159,7 +167,7 @@ void Patcher::step(){
   get_patch_colors(pch_rgb,rgb,patching,np);
   pch2img(display,patching,pch_rgb);
   //getDelaunayEdges(pch_edges, pch_cen);
-
+  
   patchImage->writeAccess(this);
   patchImage->patching=patching;
   patchImage->pch_cen=pch_cen;
@@ -169,29 +177,32 @@ void Patcher::step(){
   patchImage->deAccess(this);
 }
 
-struct sSURFer{
+//===========================================================================
+//
+// SURFer
+//
+
+struct sSURFer {
   cv::SURF *surf;
 };
 
-SURFer::SURFer():Process("SURFer"){
+SURFer::SURFer():Process("SURFer") {
   s = new sSURFer;
   s->surf = new cv::SURF(500);
 }
-void SURFer::open(){}
-void SURFer::close(){}
 
-void SURFer::step(){
+void SURFer::step() {
   byteA gray,display;
   grayImage->get_gray(gray,this);
-  if(!gray.N) return;
-
+  if (!gray.N) return;
+  
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
   (*s->surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
   
   display=gray;
   cv::Mat ref = cvMAT(display);
-  for(uint i=0; i<keypoints.size(); i++){
+  for (uint i=0; i<keypoints.size(); i++) {
     circle(ref, keypoints[i].pt, 3, cv::Scalar(255));
   }
   
@@ -202,23 +213,26 @@ void SURFer::step(){
   features->deAccess(this);
 }
 
-HoughLineFilter::HoughLineFilter():Process("HoughLineFilter"){
+//===========================================================================
+//
+// HoughLineFilter
+//
+
+HoughLineFilter::HoughLineFilter():Process("HoughLineFilter") {
 }
 
-void HoughLineFilter::open(){}
-void HoughLineFilter::close(){}
-void HoughLineFilter::step(){
+void HoughLineFilter::step() {
   byteA gray,display;
   grayImage->get_gray(gray,this);
-  if(!gray.N) return;
+  if (!gray.N) return;
   
   std::vector<cv::Vec4i> lines;
-  cv::HoughLinesP( cvMAT(gray), lines, 1, CV_PI/180, 50, 30, 10 );
+  cv::HoughLinesP(cvMAT(gray), lines, 1, CV_PI/180, 50, 30, 10);
   display = gray;
   cv::Mat ref=cvMAT(display);
-  for(uint i=0; i<lines.size(); i++){
-    cv::line( ref, cv::Point(lines[i][0], lines[i][1]),
-              cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255), 3);
+  for (uint i=0; i<lines.size(); i++) {
+    cv::line(ref, cv::Point(lines[i][0], lines[i][1]),
+             cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255), 3);
   }
   
   houghLines->writeAccess(this);
