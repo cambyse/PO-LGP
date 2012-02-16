@@ -6,7 +6,7 @@
 #define MT_PI 3.14159265358979323846
 
 #if CUDART_VERSION < 2020
-#error "This CUDART version does not support mapped memory!\n"
+//#error "This CUDART version does not support mapped memory!\n"
 #endif
 void checkCUDAError(const char *msg);
 

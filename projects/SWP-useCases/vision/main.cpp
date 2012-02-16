@@ -1,22 +1,22 @@
 #include "variables.h"
 #include "processes.h"
 
-int main(int argn,char **argv){
+int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
   ThreadInfoWin win;
   win.threadLoopWithBeat(.1);
-
+  
   // Variables
   RgbImage backgroundI;
   RgbImage cameraI;
-  RgbImage diffI; 
+  RgbImage diffI;
   GrayImage motionI;
   GrayImage grayI;
   GrayImage cannyI;
   PatchImage patchI;
   SURFfeatures features;
   HoughLines houghLines;
-
+  
   // Processes
   Camera camera;
   GrayMaker grayMaker;
@@ -26,12 +26,7 @@ int main(int argn,char **argv){
   Patcher patcher;
   SURFer surfer;
   HoughLineFilter houghLineFilter;
-  ImageViewer<RgbImage> camView, diffView;
-  ImageViewer<GrayImage> grayView, motionView, cannyView;
-  ImageViewer<PatchImage> patchView;
-  ImageViewer<SURFfeatures> surfView;
-  ImageViewer<HoughLines> houghView;
-
+  
   // connect them
   camera.rgbImage = &cameraI;
   grayMaker.rgbImage = &cameraI;
@@ -49,14 +44,13 @@ int main(int argn,char **argv){
   surfer.features = &features;
   houghLineFilter.grayImage = &cannyI;
   houghLineFilter.houghLines = &houghLines;
-  camView.var = &cameraI;
-  grayView.var = &grayI;
-  diffView.var = &diffI;
-  motionView.var = &motionI;
-  cannyView.var = &cannyI;
-  patchView.var = &patchI;
-  surfView.var = &features;
-  houghView.var = &houghLines;
+  
+  // viewer crap
+  ImageViewer<RgbImage> camView(cameraI), diffView(diffI);
+  ImageViewer<GrayImage> grayView(grayI), motionView(motionI), cannyView(cannyI);
+  ImageViewer<PatchImage> patchView(patchI);
+  ImageViewer<SURFfeatures> surfView(features);
+  ImageViewer<HoughLines> houghView(houghLines);
   
   // loop all
   ProcessL P;
@@ -64,8 +58,8 @@ int main(int argn,char **argv){
   P.append(LIST<Process>(camView, grayView, diffView, motionView, cannyView, patchView, surfView, houghView));
   
   loopWithBeat(P,.01);
-  MT::wait();
-  stop(P);
-
+  MT::wait(2.);
+  close(P);
+  
   return 0;
 }
