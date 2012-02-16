@@ -11,7 +11,7 @@ struct RandomNumber:public Variable{
 struct Integer:public Variable{
   FIELD(int, x);
   
-  void init(RandomNumber &rnd){ x=rnd.getRnd(1000); }
+  void init(RandomNumber &rnd){ x=rnd.getRnd(100); }
   Integer():Variable("IntVar"){ x=0; reg_x(); }
 };
 
@@ -26,10 +26,11 @@ struct PairSorter:public Process{
   void step (){
     uint i=rnd->getRnd(vars.N);
     uint j=rnd->getRnd(vars.N);
-    vars(i)->writeAccess(this);
-    vars(j)->writeAccess(this);
-    if((i<j) ^ (vars(i)->x > vars(j)->x)){ //XOR
-      //swap numbers
+    if(i==j) return;
+    if(i>j){ uint k=i; i=j; j=k; }
+    vars(i)->writeAccess(this); //WARNING: locking two mutexes can lead to a deadlock!!
+    vars(j)->writeAccess(this); // ... only the strict ordering of i<j prevents this here!!
+    if(vars(i)->x > vars(j)->x){ //swap numbers
       uint tmp=vars(i)->x;
       vars(i)->x=vars(j)->x;
       vars(j)->x=tmp;
@@ -40,8 +41,8 @@ struct PairSorter:public Process{
 };
 
 int main(int argn, char **argv){
-  uint nV=100;
-  uint nP=20;
+  uint nV=20;
+  uint nP=10;
   uint nR=10;
 
   MT::Array<Integer> ints(nV);
@@ -60,8 +61,11 @@ int main(int argn, char **argv){
 
   //run
   loop(P);
-  MT::wait();
-  stop(P);
+  MT::wait(.01);
+  close(P);
 
+  for(uint i=0;i<ints.N;i++) cout <<ints(i).get_x(NULL) <<' ';
+  cout <<endl;
+  
   return 0;
 }
