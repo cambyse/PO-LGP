@@ -18,7 +18,7 @@
 // Global information
 //
 
-GlobalInfo global;
+GlobalInfo globalInfo;
 
 
 //===========================================================================
@@ -356,20 +356,22 @@ Variable::Variable(const char *_name){
   s = new sVariable(this);
   name = _name;
   revision = 0;
-  global.writeAccess(NULL);
-  id = global.variableCount++;
-  //s->os.open(STRING("var-" <<name <<".log"));
-  global.variables.memMove=true;
-  global.variables.append(this);
-  global.deAccess(NULL);
+  if(this!=&globalInfo){
+    globalInfo.writeAccess(NULL);
+    id = globalInfo.variableCount++;
+    globalInfo.variables.memMove=true;
+    globalInfo.variables.append(this);
+    globalInfo.deAccess(NULL);
+  }
 };
 
 Variable::~Variable(){
-  //s->os.close();
+  if(this!=&globalInfo){
+    globalInfo.writeAccess(NULL);
+    globalInfo.variables.removeValue(this);
+    globalInfo.deAccess(NULL);
+  }
   delete s;
-  global.writeAccess(NULL);
-  global.variables.removeValue(this);
-  global.deAccess(NULL);
 };
 
 void Variable::readAccess(Process *p){
@@ -428,18 +430,19 @@ void Variable::waitForConditionNotEq(int i){
 Process::Process(const char *_name){
   s = new sProcess();
   name = _name;
-  global.writeAccess(this);
-  id = global.processCount++;
-  global.processes.memMove=true;
-  global.processes.append(this);
-  global.deAccess(this);
+  globalInfo.writeAccess(this);
+  id = globalInfo.processCount++;
+  globalInfo.processes.memMove=true;
+  globalInfo.processes.append(this);
+  globalInfo.deAccess(this);
 }
 
 Process::~Process(){
+  if(s->thread || s->threadCondition.state!=tsCLOSE) threadClose();
+  globalInfo.writeAccess(this);
+  globalInfo.processes.removeValue(this);
+  globalInfo.deAccess(this);
   delete s;
-  global.writeAccess(this);
-  global.processes.removeValue(this);
-  global.deAccess(this);
 }
 
 void Process::threadOpen(int priority){
@@ -633,6 +636,16 @@ void stop(const ProcessL& P){
   for_list(i, p, P) p->threadStop();
 }
 
+void wait(const ProcessL& P){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadWait();
+}
+
+void close(const ProcessL& P){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadClose();
+}
+
 void Group::set(const VariableL &_V, const ProcessL &_P){
   V = _V;
   P = _P;
@@ -673,12 +686,12 @@ void reportGlobalProcessGraph(){
   uint i, j;
   Variable *v;
   Process *p;
-  global.readAccess(NULL);
-  for_list(i, v, global.variables){
+  globalInfo.readAccess(NULL);
+  for_list(i, v, globalInfo.variables){
     fil <<"Variable " <<v->name <<endl;
   }
   fil <<endl;
-  for_list(i, p, global.processes){
+  for_list(i, p, globalInfo.processes){
     fil <<"Process " <<p->name <<" (";
     for_list(j, v, p->V){
       if(j) fil <<',';
@@ -686,7 +699,7 @@ void reportGlobalProcessGraph(){
     }
     fil <<")" <<endl;
   }
-  global.deAccess(NULL);
+  globalInfo.deAccess(NULL);
   fil.close();
 }
 
@@ -810,7 +823,7 @@ ThreadInfoWin::ThreadInfoWin():Process("ThreadInfoX"){
 }
 
 ThreadInfoWin::~ThreadInfoWin(){
-  if(s->isOpen) close();
+  threadClose();
   delete s;
 }
 
@@ -858,8 +871,8 @@ void ThreadInfoWin::step(){
   if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-  global.readAccess(this);
-  for_list(i, pr, global.processes){
+  globalInfo.readAccess(this);
+  for_list(i, pr, globalInfo.processes){
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -880,7 +893,7 @@ void ThreadInfoWin::step(){
     TEXTTIME(th->timer.busyDt); x+=130;
     y+=20;
   }
-  global.deAccess(this);
+  globalInfo.deAccess(this);
   y+=10;
   for_list(i, ct, globalCycleTimers){
     x=5;

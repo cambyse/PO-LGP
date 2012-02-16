@@ -58,8 +58,8 @@ int main(int argn,char **argv) {
   P.append(LIST<Process>(camView, grayView, diffView, motionView, cannyView, patchView, surfView, houghView));
   
   loopWithBeat(P,.01);
-  MT::wait(10.);
-  stop(P);
+  MT::wait(2.);
+  close(P);
   
   return 0;
 }

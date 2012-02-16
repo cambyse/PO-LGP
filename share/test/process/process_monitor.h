@@ -24,8 +24,8 @@ void dumpInfo(){
   Variable *v;
   Process *p;
   _Variable_field_info_base *vi;
-  global.readAccess(NULL);
-  for_list(i, v, global.variables){
+  globalInfo.readAccess(NULL);
+  for_list(i, v, globalInfo.variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
     if(v->fields.N){
       cout <<'{' <<endl;
@@ -41,7 +41,7 @@ void dumpInfo(){
   }
   cout <<endl;
   cout <<" +++ PROCESSES +++" <<endl;
-  for_list(i, p, global.processes){
+  for_list(i, p, globalInfo.processes){
     cout <<"Process " <<p->name <<" (";
     for_list(j, v, p->V){
       if(j) cout <<',';
@@ -67,5 +67,5 @@ void dumpInfo(){
       }
     cout <<"\n}" <<endl;
   }
-  global.deAccess(NULL);
+  globalInfo.deAccess(NULL);
 }

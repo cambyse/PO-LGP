@@ -110,6 +110,6 @@ struct GlobalInfo:Variable{
   GlobalInfo():Variable("GlobalInfo"){ variableCount=processCount=0; }
 };
 
-extern GlobalInfo global;
+extern GlobalInfo globalInfo;
 
 #endif
