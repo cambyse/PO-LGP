@@ -32,7 +32,9 @@ struct MotionKeyframe:Variable{
   FIELD( double, duration_estimate );
   FIELD( MotionKeyframe*, previous_keyframe );
   FIELD( MotionKeyframe*, next_keyframe );
-  MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL) {};
+  FIELD( bool, converged );
+  MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL), converged(false) {};
+  void get_poseView(arr& q){ q=q_estimate; }
 };
 
 
@@ -50,7 +52,8 @@ struct MotionPlan:Variable{
   //arr Phi, rho; //task cost descriptors
   //...for now: do it conventionally: task list or socSystem??
 
-  MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false) {};
+  MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false), final_keyframe(NULL) { };
+  void get_poseView(arr& q){ q=q_plan; }
 };
 
 struct ControllerTask:Variable{
@@ -66,7 +69,7 @@ struct ControllerTask:Variable{
   //for feedback mode:
   FIELD( TaskAbstraction*, feedbackControlTask);
   
-  ControllerTask():Variable("ControllerTask"), mode(noType) {};
+  ControllerTask():Variable("ControllerTask"), mode(noType), followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.) {};
 };
 
 
@@ -79,6 +82,7 @@ struct HardwareReference:Variable{
   bool readHandFromReal;
   
   HardwareReference():Variable("HardwareReference"), readHandFromReal(true) {};
+  void get_poseView(arr& q){ q=q_reference; }
 };
 
 
@@ -117,9 +121,9 @@ struct myController:Process{
   SkinPressureVar *skinPressure;
 
   //parameters
-  PARAM( double, maxJointStep );
+  double maxJointStep;
 
-  myController();
+  myController(ControllerTask&, MotionPlan&, HardwareReference&, GeometricState&, SkinPressureVar&);
   ~myController();
   void open();
   void step();
@@ -145,10 +149,10 @@ struct MotionPlanner_AICO:Process{
 struct MotionPlanner_interpolation:Process{
   struct sMotionPlanner_interpolation *s;
   //links
-  MotionPlan *motionPlan;
-  GeometricState *geometricState;
+  MotionPlan *plan;
+  GeometricState *geo;
 
-  MotionPlanner_interpolation();
+  MotionPlanner_interpolation(MotionPlan&, GeometricState&);
   ~MotionPlanner_interpolation();
   void open();
   void step();
@@ -176,14 +180,62 @@ struct MotionPrimitive:Process{
   //links
   //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
   Action *action;
-  MotionPlan *motionPlan;
-  MotionKeyframe *motionKeyframe;
-  GeometricState *geometricState;
+  MotionKeyframe *frame0,*frame1;
+  MotionPlan *plan;
+  GeometricState *geo;
   
-  MotionPrimitive();
+  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
   ~MotionPrimitive();
   void open();
   void step();
   void close();
 };
 //}
+
+//===========================================================================
+//
+// Viewers
+//
+
+
+template<class T>
+struct PoseViewer:Process{
+  T *var;
+  GeometricState *geo;
+  OpenGL gl;
+  ors::Graph *ors;
+  
+  PoseViewer(T& v, GeometricState& g):Process("MotionPlanViewer"), var(&v), geo(&g), gl(v.name), ors(NULL) {
+  }
+  void open(){
+    geo->writeAccess(this);
+    ors = geo->ors.newClone();
+    geo->deAccess(this);
+    gl.add(glStandardScene);
+    gl.add(ors::glDrawGraph, ors);
+    gl.camera.setPosition(5, -10, 10);
+    gl.camera.focus(0, 0, 1);
+    gl.camera.upright();
+    gl.update();
+  }
+  void close(){}
+  void step(){
+    arr q;
+    var->readAccess(this);
+    var->get_poseView(q);
+    var->deAccess(this);
+    if(q.nd==1){
+      ors->setJointState(q);
+      ors->calcBodyFramesFromJoints();
+      gl.text.clr() <<"pose view";
+      gl.update();
+    }else{
+      for(uint t=0;t<q.d0;t++){
+        ors->setJointState(q[t]);
+        ors->calcBodyFramesFromJoints();
+        gl.text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
+        gl.update();
+      }
+    }
+  }
+};
