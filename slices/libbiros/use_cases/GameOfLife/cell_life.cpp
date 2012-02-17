@@ -10,10 +10,8 @@ void CellLife::step() {
 	  neighbours(i)->get_alive(alive, this);
 		if(alive) n_alive++;
 	}
-	if(n_alive<2 || n_alive>3) own->set_alive(false, this);
+	if(n_alive<3 || n_alive>4) own->set_alive(false, this);
 	if(n_alive==3) own->set_alive(true, this);
-		
-  
 }
 
 void CellLife::close() {}
