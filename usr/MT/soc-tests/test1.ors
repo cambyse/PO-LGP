@@ -1,0 +1,8 @@
+
+body stem { X=<t(0 0 1)>  type=2 mass=.1 size=[0.1 0.1 2 .1] fixed }
+
+body endeff { type=2 mass=.1 size=[0.1 0.1 .4 .1] contact }
+
+joint (stem endeff) { A=<t(0 0 1) d(90 1 0 0)> B=<t(0 0 .2)>  Q=<d(1 0 0 0)> }
+
+body target { X=<t(1. 0 1.)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
