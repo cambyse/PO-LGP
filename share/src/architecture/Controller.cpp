@@ -19,14 +19,9 @@ struct sMotionControllerProcess{
   */
 };
 
-myController::myController():Process("MotionController"){
+myController::myController(ControllerTask& t, MotionPlan& p, HardwareReference& r, GeometricState& g, SkinPressureVar& sp):Process("MotionController"),
+  controllerTask(&t), motionPlan(&p), hardwareReference(&r), geometricState(&g), skinPressure(&sp){
   s = new sMotionControllerProcess();
-  controllerTask=NULL;
-  motionPlan=NULL;
-  hardwareReference=NULL;
-  geometricState=NULL;
-  skinPressure=NULL;
-
 }
 
 myController::~myController(){
@@ -44,13 +39,12 @@ void myController::step(){
   CHECK(geometricState, "please set geometricState before launching MotionPrimitive");
   CHECK(skinPressure, "please set skinPressure before launching MotionPrimitive");
   
-  MT::wait(1.);  return;
-
   ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
 
   if(mode==ControllerTask::noType){
     //stop -> don't change q_reference
     hardwareReference->set_v_reference(zeros(14,1), this);
+    controllerTask->waitForConditionSignal(.01);
     return;
   }
 
@@ -60,19 +54,20 @@ void myController::step(){
       //stop
       MT_MSG("trying to follow non-converged trajectory");
       hardwareReference->set_v_reference(zeros(14,1), this);
+      motionPlan->waitForConditionSignal(.01);
       return;
     }
 
     //-- first compute the interpolated
-    double relTime = controllerTask->get_relativeRealTimeOfController(this);
+    double realTime = controllerTask->get_relativeRealTimeOfController(this);
     double timeScale = controllerTask->get_followTrajectoryTimeScale(this);
     arr q_plan = motionPlan->get_q_plan(this);
     double plan_tau = motionPlan->get_tau(this);
 
     //where to interpolate
-    relTime += timeScale * 0.01; //!!! hard coded 10msec as basic control cycle
-    uint timeStep= relTime/plan_tau;
-    double inter = relTime/plan_tau - (double)timeStep;  //same as fmod
+    realTime += timeScale * 0.01; //!!! hard coded 10msec as basic control cycle
+    uint timeStep= realTime/plan_tau;
+    double inter = realTime/plan_tau - (double)timeStep;  //same as fmod
 
     //do interpolation
     arr q_reference;
@@ -80,11 +75,18 @@ void myController::step(){
       q_reference = (1.-inter)*q_plan[timeStep] + inter*q_plan[timeStep+1];
     }else{ //time step is beyond the horizon of the plan
       q_reference = q_plan[q_plan.d0-1];
+    }
+    
+    cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
+    controllerTask->set_relativeRealTimeOfController(realTime, this);
+    
+    if(timeStep>=q_plan.d0-1){
       controllerTask->set_mode(ControllerTask::done, this);
+      controllerTask->set_relativeRealTimeOfController(0., this);
     }
 
     //-- now test for collision
-    MT_MSG("TODO");
+    //MT_MSG("TODO");
 
     //-- pass to MotionReference
     hardwareReference->set_q_reference(q_reference, this);
@@ -153,7 +155,7 @@ void myController::step(){
 
     //push proxies to the geometric state
     MT_MSG("TODO");
-    /* Eigentlich spield controller iM eine double role: als
+    /* Eigentlich spielt controller iM eine double role: als
        q_reference berechnen, und die kinematic/proxies/taskvariables
        mit ors berechnen -> 2 Prozesse?
      */

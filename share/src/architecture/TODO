@@ -19,6 +19,9 @@
 - imagine we tune the parameters for the grasp. Ideally this should look like this: the keyframe optimizer is running permanently.
   We have a gui for tweaking the parameters, the KeframeOptimizer responds immediatly - we can directly see the effect!!
 
+** Why does ors clone/copy require write access??
+
 *** MOTION SPECIFIC
 
 ** The MotionPrimitive is now also the KeyframeOptimizer. But this became natural because the keyframe task depends totally on the action...
+

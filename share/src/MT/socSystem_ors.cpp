@@ -92,7 +92,7 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
 }
 
 void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
-                                    uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W){
+                                    uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
   if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
@@ -103,7 +103,7 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
   }
-  if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
+  setTimeInterval(trajectory_duration, trajectory_steps);
   setx0ToCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
   arr W_rate;
@@ -336,9 +336,9 @@ void soc::SocSystem_Ors::setTau(double tau){
   s->tau = tau;
 }
 
-void soc::SocSystem_Ors::setTimeInterval(double trajectory_time,  uint trajectory_steps){
+void soc::SocSystem_Ors::setTimeInterval(double trajectory_duration,  uint trajectory_steps){
   s->T=trajectory_steps;
-  s->tau=trajectory_time/trajectory_steps;
+  s->tau=trajectory_duration/trajectory_steps;
   stepScale.resize(s->T+1);  stepScale.setZero();
 }
 

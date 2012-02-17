@@ -4,19 +4,18 @@
 struct sMotionPrimitive{
   ors::Graph *ors;
   soc::SocSystem_Ors sys;
-  OpenGL gl;
+  OpenGL *gl;
   uint verbose;
 
-  void threeStepGraspHeuristic(arr& q_keyframe, uint shapeId);
+  void threeStepGraspHeuristic(arr& q_keyframe, const arr& q0, uint shapeId);
 };
 
-MotionPrimitive::MotionPrimitive():Process("MotionPrimitive"){
+MotionPrimitive::  MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p, GeometricState& g):Process("MotionPrimitive"),
+action(&a), frame0(&f0), frame1(&f1), plan(&p), geo(&g){
   s = new sMotionPrimitive;
-  action=NULL;
-  motionPlan=NULL;
-  motionKeyframe=NULL;
-  geometricState=NULL;
-  s->verbose = 1;
+  s->verbose = 0;
+  s->gl=NULL;
+  s->ors=NULL;
 }
 
 MotionPrimitive::~MotionPrimitive(){
@@ -24,20 +23,22 @@ MotionPrimitive::~MotionPrimitive(){
 }
 
 void MotionPrimitive::open(){
-  CHECK(geometricState, "please set geometricState before launching MotionPrimitive");
+  CHECK(geo, "please set geometricState before launching MotionPrimitive");
   
   //clone the geometric state
-  geometricState->readAccess(this);
-  s->ors = geometricState->ors.newClone();
-  geometricState->deAccess(this);
-  s->gl.add(glStandardScene);
-  s->gl.add(ors::glDrawGraph, s->ors);
-  s->gl.camera.setPosition(5, -10, 10);
-  s->gl.camera.focus(0, 0, 1);
-  s->gl.camera.upright();
-  s->gl.update();
+  geo->readAccess(this);
+  s->ors = geo->ors.newClone();
+  geo->deAccess(this);
+  if(s->verbose){
+    s->gl->add(glStandardScene);
+    s->gl->add(ors::glDrawGraph, s->ors);
+    s->gl->camera.setPosition(5, -10, 10);
+    s->gl->camera.focus(0, 0, 1);
+    s->gl->camera.upright();
+    s->gl->update();
+  }
   
-  s->sys.initBasics(s->ors, NULL, &s->gl,
+  s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
                     false,
@@ -52,41 +53,57 @@ void MotionPrimitive::close(){
     
 void MotionPrimitive::step(){
   CHECK(action, "please set action before launching MotionPrimitive");
-  CHECK(motionPlan, "please set plan before launching MotionPrimitive");
-  CHECK(motionKeyframe, "please set keyFrame before launching MotionPrimitive");
+  CHECK(plan, "please set plan before launching MotionPrimitive");
+  CHECK(frame1, "please set keyFrame before launching MotionPrimitive");
   
   Action::ActionPredicate actionSymbol = action->get_action(this);
 
   if(true){//TODO: need to pull ors configuration
-    geometricState->readAccess(this);
-    geometricState->ors.copyShapesAndJoints(*s->sys.ors);
-    geometricState->deAccess(this);
+    geo->writeAccess(this); //BAD!
+    geo->ors.copyShapesAndJoints(*s->sys.ors);
+    geo->deAccess(this);
   }
 
   if(actionSymbol==Action::noAction){
-    motionPlan->set_hasGoal(false,this);
-    
-    action->waitForConditionSignal(.01);
+    plan->set_hasGoal(false,this);
   }
   
   if(actionSymbol==Action::grasp){
     uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+
+    if(frame1->get_converged(this)){
+      action->waitForConditionSignal(.01);
+      return;
+    }
+  
+    //pull start condition
+    arr q0;
+    frame0->get_q_estimate(q0, this);
+    if(!q0.N){
+      s->sys.getq0(q0);
+      frame0->set_q_estimate(q0, this);
+      frame0->set_duration_estimate(0., this);
+    }
+    
     //estimate the key frame
     arr q_keyframe;
-    s->threeStepGraspHeuristic(q_keyframe, shapeId);
+    s->threeStepGraspHeuristic(q_keyframe, q0, shapeId);
 
     //push it
-    motionKeyframe->writeAccess(this);
-    motionKeyframe->q_estimate = q_keyframe;
-    motionKeyframe->duration_estimate = s->sys.getDuration();
-    motionKeyframe->deAccess(this);
+    frame1->writeAccess(this);
+    frame1->q_estimate = q_keyframe;
+    frame1->duration_estimate = s->sys.getDuration();
+    frame1->previous_keyframe = frame0;
+    frame1->converged = true;
+    frame1->deAccess(this);
 
-    
-    action->waitForConditionSignal(.01);
     //start planner
-    motionPlan->set_hasGoal(true, this);
-    motionPlan->set_steps(s->sys.nTime(), this);
-    motionPlan->set_final_keyframe((const MotionKeyframe*&)motionKeyframe, this);
+    plan->writeAccess(this);
+    plan->hasGoal =true;
+    plan->steps = s->sys.nTime();
+    plan->tau = s->sys.getDuration() / plan->steps;
+    plan->final_keyframe = frame1;
+    plan->deAccess(this);
     //TODO: much more!
     //setGraspGoals(s->sys, s->sys.nTime(), goalVar->graspShape);
   }
@@ -96,8 +113,6 @@ void MotionPrimitive::step(){
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
-      
-    action->waitForConditionSignal(.01);
   }
   
   if(actionSymbol==Action::home){
@@ -105,10 +120,9 @@ void MotionPrimitive::step(){
     //arr q;
     //soc::straightTaskTrajectory(*sys, q, 1); //task id is q!!!
     //planner.init_trajectory(q);
-    
-    action->waitForConditionSignal(.01);
   }
-
+  
+  action->waitForConditionSignal(.01);
     //... to set task variables
 
     //FUTURE: collaps all the task variable stuff to a single Phi
@@ -119,23 +133,20 @@ void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
 void delNewGraspGoals(soc::SocSystem_Ors& sys);
 double KeyframeOptimizer(arr& q, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized, uint verbose);
 
-void sMotionPrimitive::threeStepGraspHeuristic(arr& q_keyframex, uint shapeId){
+void sMotionPrimitive::threeStepGraspHeuristic(arr& q, const arr& q0, uint shapeId){
   uint T = sys.nTime();
   //double duration = sys.getTau() * T;
   
-  arr q,q0;
-  sys.getq0(q0);
-
+  sys.setq0(q0);
 
   uint side=0;
-  //uint verbose=0;
 
   //-- optimize ignoring hand -- testing different options for aligning with the object
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
     arr cost_side(3),q_side(3,q0.N);
     for(side=0;side<3;side++){
       setNewGraspGoals(sys, T, shapeId, side, 0);
-      cost_side(side) = KeyframeOptimizer(q, sys, 1e-2, false, 2);
+      cost_side(side) = KeyframeOptimizer(q, sys, 1e-2, false, verbose);
       delNewGraspGoals(sys);
       if(verbose>=2){
         sys.displayState(NULL, NULL, "posture estimate phase 0", false);
@@ -146,7 +157,7 @@ void sMotionPrimitive::threeStepGraspHeuristic(arr& q_keyframex, uint shapeId){
     q = q_side[cost_side.minIndex()];
   }else{
     setNewGraspGoals(sys, T, shapeId, side, 0);
-    KeyframeOptimizer(q, sys, 1e-2, false, 2);
+    KeyframeOptimizer(q, sys, 1e-2, false, verbose);
     delNewGraspGoals(sys);
     if(verbose>=2){
       sys.displayState(NULL, NULL, "posture estimate phase 0", false);
@@ -165,7 +176,7 @@ void sMotionPrimitive::threeStepGraspHeuristic(arr& q_keyframex, uint shapeId){
 
   //-- reoptimize with close hand
   setNewGraspGoals(sys,T,shapeId, side, 1);
-  KeyframeOptimizer(q, sys, 1e-2, true, 2);
+  KeyframeOptimizer(q, sys, 1e-2, true, verbose);
   delNewGraspGoals(sys);
   if(verbose>=1) sys.displayState(NULL, NULL, "posture estimate phase 2", false);
   if(verbose>=2) sys.gl->watch();
