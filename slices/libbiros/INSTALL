@@ -1,0 +1,83 @@
+HOWTO INSTALL THE BIROS LIBRARY
+
+We assume you are on an Ubuntu Linux System. This works perfectly well with 
+other distributions, but some package names differ and you have to find an
+opencv 2.3 version yourself (or compile it by hand).
+
+1. Install all dependencies
+   """"""""""""""""""""""""
+
+$> sudo apt-get install build-essentials realpath freeglut3-dev
+
+   On a pretty new and plain ubuntu system I got some bugs on fonts, so I had to 
+   install some fonts:
+
+$> sudo apt-get install xfonts-100dpi xfonts-75dpi
+
+
+
+
+2. Install opencv 2.3 
+   """"""""""""""""""
+   The easiest way is to get it from willow garage. I steal
+   the install instructions from them
+	 (http://www.ros.org/wiki/electric/Installation/Ubuntu)
+
+	 Add the ros repository:
+
+$> sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu oneiric main" > \
+								/etc/apt/sources.list.d/ros-latest.list'
+
+	 (If you don't use oneiric, put the name of your Ubuntu version instead. e.g. 
+		lucid)
+
+	 Add the repository gpg key:
+
+$> wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+
+  Update apt
+
+$> sudo apt-get update
+
+   And finally install opencv:
+
+$> sudo apt-get install libopencv2.3-dev
+
+  The opencv-2.3.1.pc is messed up in this pacakge. We provide an own version.
+  Copy that version to the appropriate location:
+
+$> sudo cp opencv.pc /usr/lib/pkgconfig
+
+
+
+
+3. Build biros
+   """""""""""
+$> make
+
+
+4. Test the use cases
+   """"""""""""""""""
+
+Vision use case.
+Spawns several windows with some vision algorithms on a webcam video stream.
+
+$> cd use_cases/vision
+$> ./x.exe
+
+Game of Life
+A parallel version of Conways Game of life
+
+$> cd use_cases/game_of_life
+$> ./x.exe
+
+Sorting
+A parallel bubble sort
+
+$> cd use_cases/sorting
+$> ./x.exe
+
+
+
+
+
