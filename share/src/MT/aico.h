@@ -29,7 +29,7 @@ struct AICO {
   double damping, tolerance;
   uint max_iterations;
   uint display;
-  bool useBwdMsg;
+  bool useBwdMsg,fixFinalState;
   arr bwdMsg_v, bwdMsg_Vinv;
   
   enum SweepMode { smForwardly=0, smSymmetric, smLocalGaussNewton, smLocalGaussNewtonDamped };
@@ -59,6 +59,7 @@ struct AICO {
   void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
   void init_trajectory(const arr& q_init);
+  void fix_final_state(const arr& x_T);
   void shift_solution(int offset);
   
   double step();

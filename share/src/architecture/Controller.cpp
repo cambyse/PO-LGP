@@ -52,7 +52,7 @@ void myController::step(){
     //-- check if converged
     if(motionPlan->get_converged(this)==false){
       //stop
-      MT_MSG("trying to follow non-converged trajectory");
+      //MT_MSG("trying to follow non-converged trajectory");
       hardwareReference->set_v_reference(zeros(14,1), this);
       motionPlan->waitForConditionSignal(.01);
       return;

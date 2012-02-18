@@ -8,9 +8,11 @@
 #include <SD/potentialTaskVariables.h>
 #include <MT/ors.h>
 
-#include "setNewGraspGoals.cpp"
-#include "setNewGraspGoals_explorative.cpp"
-#include "setOldGraspGoals.cpp"
+//#include "setNewGraspGoals.cpp"
+//#include "setNewGraspGoals_explorative.cpp"
+//#include "setOldGraspGoals.cpp"
+#include <MT/setGraspGoals.h>
+//#define setGraspGoals setNewGraspGoals
 
 void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, double seconds){
   arr b,x0,b1,Binv;
@@ -20,8 +22,9 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   uint steps=0;
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
     for(side=0;side<3;side++){
-      setNewGraspGoals(sys,T,shapeId, side, 0);
-      cost(side) = OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
+      setGraspGoals(sys,T,shapeId, side, 0);
+      if(sys.dynamic) cost(side) = OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
+      else cost(side) = KeyframeOptimizer(b, sys, 1e-2, false, 0);
       sys.displayState(NULL, NULL, "posture estimate", false);
       sys.gl->watch();
       bs[side]() = b;
@@ -29,8 +32,9 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
     side=cost.minIndex();
     b = bs[side];
   }else{
-    setNewGraspGoals(sys,T,shapeId, side, 0);
-    OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
+    setGraspGoals(sys,T,shapeId, side, 0);
+    if(sys.dynamic) OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false);
+    else cost(side) = KeyframeOptimizer(b, sys, 1e-2, false, 0);
     sys.displayState(NULL, NULL, "posture estimate", false);
     sys.gl->watch();
   }
@@ -40,17 +44,30 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, doub
   sys.setx(b);
   sys.gl->watch();
   
-  setNewGraspGoals(sys,T,shapeId, side, 1);
-  OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, true);
+  setGraspGoals(sys,T,shapeId, side, 1);
+  if(sys.dynamic) OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, true);
+  else cost(side) = KeyframeOptimizer(b, sys, 1e-2, true, 0);
   sys.displayState(NULL, NULL, "posture estimate", true);
   sys.gl->watch();
 
+  if(sys.dynamic) b.subRange(14,-1) = 0.;
+
   AICO solver(sys);
-  solver.useBwdMsg=true;
-  solver.bwdMsg_v = b;
-  solver.bwdMsg_Vinv = Binv + diag(1e2,b.N);
+  solver.fix_final_state(b);
   solver.iterate_to_convergence();
 
+  sys.displayTrajectory(solver.q,NULL,1,"solution");
+}
+
+void threeStepGraspHeuristic2(soc::SocSystem_Ors& sys, uint T, uint shapeId, double seconds){
+  arr q,q0;
+  sys.getq0(q0);
+  threeStepGraspHeuristic(sys, q, q0, shapeId, 1);
+
+  AICO solver(sys);
+  solver.fix_final_state(q);
+  solver.iterate_to_convergence();
+  
   sys.displayTrajectory(solver.q,NULL,1,"solution");
 }
 
@@ -67,7 +84,7 @@ void problem1(){
   
   createStandardRobotTaskVariables(sys);
 
-  rnd.clockSeed();
+  //rnd.clockSeed();
   uint side=rnd(3);
   side = 2;
 
@@ -75,7 +92,7 @@ void problem1(){
   for(uint k=0;k<10;k++){
 
 #if 1
-    threeStepGraspHeuristic(sys, T, s->index, seconds);
+    threeStepGraspHeuristic2(sys, T, s->index, seconds);
 #else
     setNewGraspGoals(sys,T,s->index, side, 1);
     AICO solver(sys);

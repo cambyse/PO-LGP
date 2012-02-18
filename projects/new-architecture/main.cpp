@@ -49,7 +49,7 @@ int main(int argn, char** argv){
   controllerTask.mode = ControllerTask::followTrajectory;
   controllerTask.deAccess(NULL);
 
-  MT::wait(10.);
+  MT::wait(100.);
   
   cout <<"** setting no action" <<endl;
   action.set_action(Action::noAction,NULL);

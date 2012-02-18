@@ -47,6 +47,7 @@ void AICO::init(soc::SocSystemAbstraction& _sys){
   
   sweep=0;
   useBwdMsg=false;
+  fixFinalState=false;
   init_messages();
 }
 
@@ -109,6 +110,14 @@ void AICO::init_messages(){
   Psi   .resize(T+1, n);  Psi.setZero();
   
   rememberOldState();
+}
+
+void AICO::fix_final_state(const arr& x_T){
+  uint T=sys->nTime();
+  v[T] = x_T;  Vinv[T].setDiag(1e10);
+  b[T] = x_T;  Binv[T].setDiag(1e10);
+  xhat[T]=x_T;
+  fixFinalState=true;
 }
 
 void AICO::init_trajectory(const arr& q_init){
@@ -204,6 +213,7 @@ void AICO::initMessagesFromScaleParent(AICO *A){
 //--- basic helpers for inference in one time step
 
 void AICO::updateFwdMessage(uint t){
+  CHECK(t>0, "don't update fwd for first time step");
   arr barS, St;
   if(sys->dynamic){
 #ifndef TightMode
@@ -230,6 +240,7 @@ void AICO::updateFwdMessage(uint t){
 
 void AICO::updateBwdMessage(uint t){
   uint T=sys->nTime();
+  if(fixFinalState){ CHECK(t!=T, "don't update bwd for last time step when fixed"); }
   arr barV, Vt;
   if(sys->dynamic){
     if(t<T){
@@ -275,6 +286,10 @@ void AICO::updateBwdMessage(uint t){
 }
 
 void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance, double maxStepSize){
+  //uint T=sys->nTime();
+  //CHECK(t>0, "don't update task for first time step");
+  //if(fixFinalState){ CHECK(t!=T, "don't update bwd for last time step when fixed"); }
+  
   if(maxDiff(xhat[t], xhat_t)<tolerance) return;
   
   if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
@@ -297,8 +312,9 @@ void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance, double
 }
 
 void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation, double maxStepSize){
+  uint T=sys->nTime();
   if(updateFwd) updateFwdMessage(t);
-  if(updateBwd) updateBwdMessage(t);
+  if(updateBwd) if(!(fixFinalState && t==T)) updateBwdMessage(t);
   
   if(damping && dampingReference.N){
     Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);

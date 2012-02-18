@@ -51,6 +51,7 @@ struct MotionPlan:Variable{
   //arr W; //diagonal of the control cost matrix
   //arr Phi, rho; //task cost descriptors
   //...for now: do it conventionally: task list or socSystem??
+  TaskVariableList TVs;
 
   MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false), final_keyframe(NULL) { };
   void get_poseView(arr& q){ q=q_plan; }
@@ -152,6 +153,8 @@ struct MotionPlanner_interpolation:Process{
   MotionPlan *plan;
   GeometricState *geo;
 
+  enum MotionPlannerAlgo{ interpolation=0, AICO_noinit } algo;
+  
   MotionPlanner_interpolation(MotionPlan&, GeometricState&);
   ~MotionPlanner_interpolation();
   void open();
