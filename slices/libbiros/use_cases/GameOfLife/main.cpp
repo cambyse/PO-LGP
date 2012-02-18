@@ -3,34 +3,48 @@
 #include "cell_viewer.h"
 
 int main(int argc, char** argv) {
+
+  const int grid_x = 40;
+  const int grid_y = 80;
 	srand ( time(NULL) );
 	CellViewer viewer;
-	for(uint x=0;x<10;++x){
-		for(uint y=0;y<10;++y){
+	for(int x = 0; x < grid_x; ++x){
+		for(int y = 0; y < grid_y; ++y){
 			Cell* n = new Cell;
 		  viewer.cells.append(n);	
-			if(rand()%10<4) n->set_alive(true,NULL);
+			if(rand() % 100 < 7) 
+        n->set_alive(true, NULL);
+      else
+        n->set_alive(false, NULL);
 	  }
   }
-	viewer.cells.reshape(10,10);
-	for(int x=0;x<10;++x){
-		std::cout << x << std::endl;
-		for(int y=0;y<10;++y){
+	viewer.cells.reshape(grid_x, grid_y);
+  MT::Array<CellLife*> lifes;
+	for(int x = 0; x < grid_x; ++x){
+		for(int y = 0; y < grid_y; ++y){
 			CellLife* life = new CellLife;
 			life->own = viewer.cells(x,y);
-			for(int nx=x-1;nx<x+2;++x){
-				for(int ny=y-1;ny<y+2;++y){
-					if(x >= 0 && y >= 0 && x < 10 && y < 10 ) {
+			for(int nx = x - 1; nx < x + 2; ++nx) {
+				for(int ny = y - 1; ny < y + 2; ++ny) {
+					if(nx >= 0 && ny >= 0 && nx < grid_x && ny < grid_y ) {
 			      life->neighbours.append(viewer.cells(nx,ny));
 					}
-					std::cout<<y<<std::endl;
 				}
 			}
-			life->threadLoop();
+			lifes.append(life);
 		}
 	}
-	viewer.threadLoop();
+  for (uint i = 0; i < lifes.N; ++i)
+    lifes(i)->threadLoopWithBeat(0.3);
+	viewer.threadLoopWithBeat(0.3);
 	MT::wait();
-	
+	viewer.threadStop();
+	viewer.threadClose();
+  for (uint i = 0; i < lifes.N; ++i) {
+    lifes(i)->threadStop();
+    lifes(i)->threadClose();
+  }
 
+  for (uint i = 0; i < lifes.N; ++i)
+    delete lifes(i);
 }
