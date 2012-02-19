@@ -425,6 +425,7 @@ void soc::SocSystem_Ors::getx0(arr& x){
     x.setBlockVector(s->q0, s->v0);
   }
 }
+void soc::SocSystem_Ors::setx0(const arr& x0){ s->q0=x0.sub(0,x0.N/2-1); s->v0=x0.sub(x0.N/2,-1); }
 void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ q=s->q0; qd=s->v0; }
 void soc::SocSystem_Ors::getW(arr& W, uint t){
   W=s->W;

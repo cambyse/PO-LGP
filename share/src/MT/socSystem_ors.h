@@ -45,9 +45,10 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   uint uDim();
   uint yDim(uint i);
   void getq0(arr& q);
-  void setq0(const arr& q);
+  void setq0(const arr& q0);
   void getv0(arr& v);
   void getx0(arr& x);
+  void setx0(const arr& x0);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq(const arr& q, uint t=0);

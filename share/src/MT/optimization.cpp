@@ -560,6 +560,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   }
   if(o.verbose>0) fil.close();
   if(o.verbose>1) gnuplot("plot 'z.gaussNewton' us 1:3 w l",NULL,true);
+  if(o.fmin_return) *o.fmin_return = fx;
   return evals;
 }
 
@@ -633,7 +634,8 @@ uint optNewton(arr& x, QuadraticFunction& f,  optOptions o, double *fx_user, Sqr
   if(o.verbose>1) gnuplot("plot 'z.gaussNewton' us 1:3 w l",NULL,true);
   if(S_user) *S_user=Sx;
   if(fx_user) *fx_user = fx;
-  //postcondition!: S is always the correct potential at x, and fx the value at x!
+  if(o.fmin_return) *o.fmin_return = fx;
+ //postcondition!: S is always the correct potential at x, and fx the value at x!
   return evals;
 }
 

@@ -1,32 +1,34 @@
 #include "setGraspGoals.h"
 #include "opengl.h"
 
-void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, arr& q, const arr& q0, uint shapeId, uint verbose){
+void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, arr& x, const arr& x0, uint shapeId, uint verbose){
   uint T = sys.nTime();
   //double duration = sys.getTau() * T;
   
-  sys.setq0(q0);
+  sys.setx0(x0);
   listDelete(sys.vars);
 
   uint side=0;
 
   //-- optimize ignoring hand -- testing different options for aligning with the object
   if(sys.ors->shapes(shapeId)->type==ors::boxST){
-    arr cost_side(3),q_side(3,q0.N);
+    arr cost_side(3),x_side(3,x0.N);
     for(side=0;side<3;side++){
       setGraspGoals(sys, T, shapeId, side, 0);
-      cost_side(side) = KeyframeOptimizer(q, sys, 1e-2, false, verbose);
+      cost_side(side) = KeyframeOptimizer(x, sys, 1e-2, false, verbose);
       listDelete(sys.vars);
       if(verbose>=2){
         sys.displayState(NULL, NULL, "posture estimate phase 0", false);
         sys.gl->watch();
       }
-      q_side[side]() = q;
+      x_side[side]() = x;
     }
-    q = q_side[cost_side.minIndex()];
+    cout <<"3 side costs=" <<cost_side <<endl;
+    side = cost_side.minIndex();
+    x = x_side[side];
   }else{
     setGraspGoals(sys, T, shapeId, side, 0);
-    KeyframeOptimizer(q, sys, 1e-2, false, verbose);
+    KeyframeOptimizer(x, sys, 1e-2, false, verbose);
     listDelete(sys.vars);
     if(verbose>=2){
       sys.displayState(NULL, NULL, "posture estimate phase 0", false);
@@ -34,10 +36,9 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, arr& q, const arr& q0, uin
     }
   }
   
-  
   //-- open hand
-  q.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
-  sys.setx(q);
+  x.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
+  sys.setx(x);
   if(verbose>=2){
     sys.displayState(NULL, NULL, "posture estimate phase 1", false);
     sys.gl->watch();
@@ -45,7 +46,7 @@ void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, arr& q, const arr& q0, uin
 
   //-- reoptimize with close hand
   setGraspGoals(sys,T,shapeId, side, 1);
-  KeyframeOptimizer(q, sys, 1e-2, true, verbose);
+  KeyframeOptimizer(x, sys, 1e-2, true, verbose);
   //listDelete(sys.vars); //DON'T delete the grasp goals - the system should keep them for the planner
   if(verbose>=1) sys.displayState(NULL, NULL, "posture estimate phase 2", false);
   if(verbose>=2) sys.gl->watch();
@@ -176,41 +177,98 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.vars.append(V);
 }
 
+//From Dmitry
+void decomposeMatrix(arr& A1,arr& A2,arr A){ // returns diagonal blocks of equal size
+  int dim = sqrt(A.N)/2;
+  A.resize(2*dim,2*dim);
+  A1.resize(dim,dim);
+  A2.resize(dim,dim);
+  for (int i=0;i<dim;i++)
+    for (int j=0;j<dim;j++)
+    {A1(i,j) = A(i,j); 
+      A2(i,j) = A(dim+i,dim+j);
+    }  
+}
 
-double KeyframeOptimizer(arr& q, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized, uint verbose){
-  arr H,Q,q0;
-  sys.getH(H,0); //H_step
-  sys.getQ(Q,0); //Q_step
+double SumOfRow(int p,int k){ // sum of geometric series
+  double sum=0;
+  switch(k){
+    case 0: sum=p;  break;
+    case 1: sum=p*(p+1)/2.0;  break;
+    case 2: sum=p*(p+1)*(2.0*p+1)/6.0;  break;
+    default: NIY;  
+  }
+  if (sum>0)
+    return sum;
+  else return 1;
+}
 
-  arr wdiag;
-  getDiag(wdiag, Q+H);
-  wdiag *= double(sys.nTime());
-  for(uint i=0;i<wdiag.N;i++) wdiag(i) = 1./sqrt(wdiag(i));
+
+double KeyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTolerance, bool x_is_initialized, uint verbose){
+  arr sqrtWinv,x0;
   
-  sys.getq0(q0);
-  if(!q_is_initialized) q=q0;
+  if(!sys.dynamic){
+    arr W;
+    sys.getW(W,0);
+    arr wdiag;
+    getDiag(wdiag, W);
+    wdiag *= double(sys.nTime());
+    for(uint i=0;i<wdiag.N;i++) wdiag(i) = 1./sqrt(wdiag(i));
+    sqrtWinv = diag(wdiag);
+  }else{
+    //From Dmitry
+    double T = sys.nTime();
+    arr H1,Q,Q1,Q2;
+    sys.getHrateInv(H1);
+    sys.getQrate(Q);
+
+    decomposeMatrix(Q1,Q2,Q);
+    double tau = sys.getDuration();// tau is basically = time
+    double tau2=tau*tau;
+    int dim=sqrt(Q.N)/2;
+  
+    arr I,Z,AT,Zv;
+    I.setId(dim); Z.resize(dim,dim); Z.setZero();
+    AT.setBlockMatrix(I,sys.getDuration()*I,Z,I);  // A to the power of T
+    
+    double S0 = SumOfRow(T,0);double S1 = SumOfRow(T-1,1);double S2 = SumOfRow(T-1,2);  // sums of geometric series
+    arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
+    sigma1 = tau2*tau*H1*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
+    sigma2 = tau2*H1*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
+    sigma3 = sigma2;
+    sigma4 = tau*S0*(H1 + Q2)/T;
+
+    arr sumA,sumAinv;
+    sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
+    inverse_SymPosDef(sumAinv,sumA);
+    //suma= AT*x0;
+    lapack_cholesky(sqrtWinv, sumAinv);
+  }
+  
+  sys.getx0(x0);
+  if(!x_is_initialized) x=x0;
   
   struct MyOptimizationProblem:VectorFunction{
     soc::SocSystemAbstraction *sys;
-    arr wdiag,q0;
+    arr sqrtWinv,x0;
     bool verbose;
     
-    void   fv(arr& Phi, arr& J, const arr& q){
-      sys->setq(q);
+    void   fv(arr& Phi, arr& J, const arr& x){
+      sys->setx(x);
       if(verbose){
         sys->displayState(NULL, NULL, "posture", true);
         sys->gl->watch();
       }
-      sys->getTaskCostTerms(Phi, J, q, sys->nTime());
-      Phi.append(wdiag%(q-q0));
-      if(&J) J.append(diag(wdiag));
+      sys->getTaskCostTerms(Phi, J, x, sys->nTime());
+      Phi.append(sqrtWinv*(x-x0));
+      if(&J) J.append(sqrtWinv);
     }
   } F;
   F.sys = &sys;
-  F.wdiag = wdiag;
-  F.q0=q0;
+  F.sqrtWinv = sqrtWinv;
+  F.x0=x0;
   F.verbose=false;
-  if(verbose>=3) checkJacobian(F, q, 1e-6);
+  if(verbose>=3) checkJacobian(F, x, 1e-6);
   F.verbose = verbose>=3;
 
   double cost;
@@ -221,7 +279,7 @@ double KeyframeOptimizer(arr& q, soc::SocSystemAbstraction& sys, double stopTole
   opt.initialDamping=1.;
   opt.maxStep=.5;
   opt.verbose=verbose?verbose-1:0;
-  optGaussNewton(q, F, opt);
+  optGaussNewton(x, F, opt);
   
   return cost;
 }
