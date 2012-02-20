@@ -8,71 +8,7 @@
 #include <SD/potentialTaskVariables.h>
 #include <MT/ors.h>
 
-//#include "setNewGraspGoals.cpp"
-//#include "setNewGraspGoals_explorative.cpp"
-//#include "setOldGraspGoals.cpp"
-#include <MT/setGraspGoals.h>
-//#define setGraspGoals setNewGraspGoals
-
-void threeStepGraspHeuristic(soc::SocSystem_Ors& sys, uint T, uint shapeId, double seconds){
-  arr b,x0,b1,Binv;
-  sys.getx0(x0);
-  arr cost(3),bs(3,x0.N);
-  uint side=0;
-  uint steps=0;
-  if(sys.ors->shapes(shapeId)->type==ors::boxST){
-    for(side=0;side<3;side++){
-      setGraspGoals(sys,T,shapeId, side, 0);
-//       if(sys.dynamic) cost(side) = OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false); else
-      cost(side) = KeyframeOptimizer(b, sys, 1e-2, false, 0);
-      sys.displayState(NULL, NULL, "posture estimate", false);
-      sys.gl->watch();
-      bs[side]() = b;
-    }
-    cout <<"3 side costs=" <<cost <<endl;
-    side=cost.minIndex();
-    b = bs[side];
-  }else{
-    setGraspGoals(sys,T,shapeId, side, 0);
-//     if(sys.dynamic) OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, false); else
-    cost(side) = KeyframeOptimizer(b, sys, 1e-2, false, 0);
-    sys.displayState(NULL, NULL, "posture estimate", false);
-    sys.gl->watch();
-  }
-
-  b.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
-  b1=b;
-  sys.setx(b);
-  sys.gl->watch();
-  
-  setGraspGoals(sys,T,shapeId, side, 1);
-//   if(sys.dynamic) OneStepDynamicFull(b, Binv, steps, sys, seconds, 1e-1, 1e-2, 0, 0, true);  else
-  cost(side) = KeyframeOptimizer(b, sys, 1e-2, true, 0);
-  sys.displayState(NULL, NULL, "posture estimate", true);
-  sys.gl->watch();
-
-  if(sys.dynamic) b.subRange(14,-1) = 0.;
-
-  AICO solver(sys);
-  solver.fix_final_state(b);
-  solver.iterate_to_convergence();
-
-  sys.displayTrajectory(solver.q,NULL,1,"solution");
-}
-
-void threeStepGraspHeuristic2(soc::SocSystem_Ors& sys, uint T, uint shapeId, double seconds){
-  arr x,x0;
-  sys.getx0(x0);
-  threeStepGraspHeuristic(sys, x, x0, shapeId, 1);
-
-  if(sys.dynamic) x.subRange(14,-1) = 0.;
-  
-  AICO solver(sys);
-  solver.fix_final_state(x);
-  solver.iterate_to_convergence();
-  
-  sys.displayTrajectory(solver.q,NULL,1,"solution");
-}
+#include <architecture/MotionPrimitive.h>
 
 void problem1(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
@@ -95,9 +31,20 @@ void problem1(){
   for(uint k=0;k<10;k++){
 
 #if 1
-    threeStepGraspHeuristic(sys, T, s->index, seconds);
+    arr x,x0;
+    sys.getx0(x0);
+    threeStepGraspHeuristic(x, sys, x0, s->index, 1);
+    
+    //set velocities to zero
+    if(sys.dynamic) x.subRange(14,-1) = 0.;
+    
+    AICO solver(sys);
+    solver.fix_final_state(x);
+    solver.iterate_to_convergence();
+    
+    sys.displayTrajectory(solver.q,NULL,1,"solution");
 #else
-    setNewGraspGoals(sys,T,s->index, side, 1);
+    setNewGraspGoals(sys, T, s->index, side, 1);
     AICO solver(sys);
     solver.iterate_to_convergence();
     for(;;) sys.displayTrajectory(solver.q,NULL,1,"solution");

@@ -178,23 +178,6 @@ struct KeyframeEstimator:Process{
   
 };
 
-struct MotionPrimitive:Process{
-  struct sMotionPrimitive *s;
-  //links
-  //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
-  Action *action;
-  MotionKeyframe *frame0,*frame1;
-  MotionPlan *plan;
-  GeometricState *geo;
-  
-  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
-  ~MotionPrimitive();
-  void open();
-  void step();
-  void close();
-};
-//}
-
 //===========================================================================
 //
 // Viewers
