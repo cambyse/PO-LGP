@@ -76,8 +76,6 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   }
   
   listClone(sys->vars, vars); //deep copy the task variables!
-  uint i;  TaskVariable *y;
-  for_list(i, y, sys->vars) y->ors=sys->ors; //reassociate them to the local ors
   
   sys->s->q0 = s->q0;
   sys->s->v0 = s->v0;
@@ -368,7 +366,7 @@ void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,cons
   y_traj.resize(T,vars(ind)->y.N);
   for(k=0; k<(uint)num; k++){
       setq(q[k]());
-      vars(ind)->updateState();
+      vars(ind)->updateState(*ors);
       y_traj[k]() = vars(ind)->y;
    }
    ofstream out(file); y_traj.writeRaw(out); out.close(); 
@@ -475,7 +473,7 @@ void soc::SocSystem_Ors::setq(const arr& q, uint t){
   s->v_act.setZero();
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState();
+  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
@@ -487,7 +485,7 @@ void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   s->v_act=qd;
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState();
+  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setx(const arr& x, uint t){

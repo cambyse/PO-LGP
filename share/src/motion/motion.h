@@ -1,3 +1,6 @@
+#ifndef MT_motion_h
+#define MT_motion_h
+
 #include <biros/biros.h>
 #include <MT/robot.h> //TODO: needs removing!
 
@@ -28,13 +31,13 @@ struct GeometricState:Variable{
 };
 
 struct MotionKeyframe:Variable{
-  FIELD( arr, q_estimate );
+  FIELD( arr, x_estimate );
   FIELD( double, duration_estimate );
   FIELD( MotionKeyframe*, previous_keyframe );
   FIELD( MotionKeyframe*, next_keyframe );
   FIELD( bool, converged );
   MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL), converged(false) {};
-  void get_poseView(arr& q){ q=q_estimate; }
+  void get_poseView(arr& x){ x=x_estimate; }
 };
 
 
@@ -211,6 +214,7 @@ struct PoseViewer:Process{
     var->get_poseView(q);
     var->deAccess(this);
     if(q.nd==1){
+      if(q.N==2*ors->getJointStateDimension()) q = q.sub(0,q.N/2-1); //check dynamic state
       ors->setJointState(q);
       ors->calcBodyFramesFromJoints();
       gl.text.clr() <<"pose view";
@@ -225,3 +229,7 @@ struct PoseViewer:Process{
     }
   }
 };
+
+#include "MotionPrimitive.h"
+
+#endif

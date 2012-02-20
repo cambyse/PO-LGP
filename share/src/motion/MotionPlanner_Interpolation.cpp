@@ -39,7 +39,7 @@ void MotionPlanner_interpolation::open(){
   s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
-                    false,
+                    true,
                     NULL);
 }
 
@@ -63,8 +63,8 @@ void MotionPlanner_interpolation::step(){
   MotionKeyframe *frame1 = plan->get_final_keyframe(this);
   MotionKeyframe *frame0 = frame1->get_previous_keyframe(this);
 
-  arr q0 = frame0->get_q_estimate(this);
-  arr qT = frame1->get_q_estimate(this);
+  arr x0 = frame0->get_x_estimate(this);
+  arr xT = frame1->get_x_estimate(this);
   uint T = plan->get_steps(this);
   double tau = frame1->get_duration_estimate(this)/double(T);
 
@@ -76,24 +76,19 @@ void MotionPlanner_interpolation::step(){
   arr q;
   switch(algo){
   case interpolation:{
-    q.resize(T+1,q0.N);
+    q.resize(T+1,x0.N);
     for(uint t=0;t<=T;t++){
       double a=double(t)/T;
-      q[t] = (1.-a)*q0 + a*qT;
+      q[t] = (1.-a)*x0 + a*xT;
     }
   } break;
   case AICO_noinit:{
-    q.resize(T+1,q0.N);
-    for(uint t=0;t<=T;t++){
-      double a=double(t)/T;
-      q[t] = (1.-a)*q0 + a*qT;
-    }
     AICO aico(s->sys);
-    //soc::straightTaskTrajectory(s->sys, q, 0);
-    aico.init_trajectory(q);
+    if(s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
+    if(s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
+    aico.fix_initial_state(x0);
+    aico.fix_final_state(xT);
     aico.iterate_to_convergence();
-    //sys.costChecks(aico.b);
-    //sys.analyzeTrajectory(aico.b,true);
     q = aico.q;
   } break;
   }

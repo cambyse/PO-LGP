@@ -39,7 +39,7 @@ void MotionPrimitive::open(){
   s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
-                    false,
+                    true,
                     NULL);
                     //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
@@ -71,21 +71,21 @@ void MotionPrimitive::step(){
     }
   
     //pull start condition
-    arr q0;
-    frame0->get_q_estimate(q0, this);
-    if(!q0.N){
-      s->sys.getq0(q0);
-      frame0->set_q_estimate(q0, this);
+    arr x0;
+    frame0->get_x_estimate(x0, this);
+    if(!x0.N){
+      s->sys.getx0(x0);
+      frame0->set_x_estimate(x0, this);
       frame0->set_duration_estimate(0., this);
     }
     
     //estimate the key frame
-    arr q_keyframe;
-    threeStepGraspHeuristic(q_keyframe, s->sys, q0, shapeId, s->verbose);
+    arr x_keyframe;
+    threeStepGraspHeuristic(x_keyframe, s->sys, x0, shapeId, s->verbose);
 
     //push it
     frame1->writeAccess(this);
-    frame1->q_estimate = q_keyframe;
+    frame1->x_estimate = x_keyframe;
     frame1->duration_estimate = s->sys.getDuration();
     frame1->previous_keyframe = frame0;
     frame1->converged = true;
@@ -239,9 +239,9 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
     }break;
     default: NIY;
   }
-  V->updateState();
+  V->updateState(*sys.ors);
   if(V->y(0)<0.) ((DefaultTaskVariable*)V)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_prec = endAlignPrec;
   //V->setInterpolatedTargetsEndPrecisions(T, midPrec, 0.);
   V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);

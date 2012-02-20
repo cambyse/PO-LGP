@@ -71,14 +71,14 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId){
   //endeff
   V=listFindByName(sys.vars, "endeffector");
   ((DefaultTaskVariable*)V)->irel.setText("<t(0 0 -.26)>");
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_target = xtarget;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, palmPrec, 0., 0.);
   
   //up
   V=listFindByName(sys.vars, "up1");
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
@@ -130,7 +130,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
   //endeff
   V=listFindByName(sys.vars, "endeffector");
   ((DefaultTaskVariable*)V)->irel = obj->rel;
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_target = xtarget;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   //special: condition effector velocities:
@@ -147,14 +147,14 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const 
   //up1
   V=listFindByName(sys.vars, "up1");
   ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V) -> irel.addRelativeRotationDeg(90, 1, 0, 0);
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
   //up2
   V=listFindByName(sys.vars, "up2");
   ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V)-> irel.addRelativeRotationDeg(90, 0, 1, 0);
-  V->updateState();
+  V->updateState(*sys.ors);
   V->y_target = 0.;
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
@@ -189,7 +189,7 @@ void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const
   //endeff
   V=listFindByName(sys.vars, "endeffector");
   //V->irel = obj->rel;
-  V->updateState();
+  V->updateState(*sys.ors);
   V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
   //special: condition effector velocities: move above object
   uint t, M=T/8;

@@ -1,9 +1,9 @@
-#include <architecture/motion.h>
+#include <motion/motion.h>
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
-  ThreadInfoWin win;
-  win.threadLoopWithBeat(.1);
+  //ThreadInfoWin win;
+  //win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
@@ -34,9 +34,6 @@ int main(int argn, char** argv){
   ProcessL P=LIST<Process>(motionPlanner, motionPrimitive);
   P.append(LIST<Process>(view1, view2, view3));
   
-  loopWithBeat(P,.01);
-  controller.threadLoopWithBeat(0.01);
-  
   cout <<"** setting grasp action" <<endl;
   action.writeAccess(NULL);
   action.action = Action::grasp;
@@ -49,12 +46,18 @@ int main(int argn, char** argv){
   controllerTask.mode = ControllerTask::followTrajectory;
   controllerTask.deAccess(NULL);
 
+#if 1 //serial
+  motionPrimitive.open();
+  motionPrimitive.step();
+  motionPlanner.open();
+  motionPlanner.step();
+#else //parallel
+  //loopWithBeat(P,.01);
+  controller.threadLoopWithBeat(0.01);
   MT::wait(100.);
-  
-  cout <<"** setting no action" <<endl;
-  action.set_action(Action::noAction,NULL);
-  
   controller.threadClose();
+#endif
+
   close(P);
   
   cout <<"bye bye" <<endl;

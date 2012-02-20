@@ -57,7 +57,7 @@ void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swi
 
 void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs){
   static arr dq;
-  updateState(TVs);
+  updateState(TVs, *C);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
   bayesianControl(TVs, dq, W);
   q += dq;
@@ -413,7 +413,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   // hard noise [END]
   
   //phase 1: up
-  updateState(TVs);
+  updateState(TVs, *C);
   x.y_target(2) += .3;
   for(t=0; t<Tabort; t++){
     //x.y_target.setCarray(C->getBodyByName(rel_id)->X.p.v, 3);

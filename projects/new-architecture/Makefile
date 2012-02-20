@@ -1,9 +1,9 @@
 BASE = ../../share
 
 BUILDS += buildComponent/DZ
-BUILDS += buildComponent/architecture
+BUILDS += buildComponent/motion
 
-LIBS += -larchitecture
+LIBS += -lmotion
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
 include $(BASE)/make-generic

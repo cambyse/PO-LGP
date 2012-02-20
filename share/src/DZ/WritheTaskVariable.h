@@ -12,9 +12,9 @@ struct WritheTaskVariable:public DefaultTaskVariable{
 				         int _segments,
 				         int _param);
   virtual TaskVariable* newClone(){ return new WritheTaskVariable(*this); }
-  virtual void userUpdate();
-  virtual void epsilon_check(arr& delta_q);
-  virtual void delta_check(arr& delta_q);
+  virtual void userUpdate(const ors::Graph& ors);
+  virtual void epsilon_check(arr& delta_q, const ors::Graph& ors);
+  virtual void delta_check(arr& delta_q, const ors::Graph& ors);
 };
 
 void plot_writhe(arr WM,int dim);

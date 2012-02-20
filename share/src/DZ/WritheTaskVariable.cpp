@@ -24,7 +24,7 @@ void plot_writhe(arr WM,int dim)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* obj_name){
+void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points,const char* obj_name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
@@ -51,9 +51,9 @@ void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* obj_n
 }
 //! Matrix
 
-void WritheTaskVariable::userUpdate(){
+void WritheTaskVariable::userUpdate(const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points;
-    GetRopes(rope1,rope2,*this->ors,segments+1,obj_name);
+    GetRopes(rope1,rope2,ors,segments+1,obj_name);
     GetWritheMatrix(yy,rope1,rope2,segments);
     y=zeros(segments,segments);
     y=yy;
@@ -62,13 +62,13 @@ void WritheTaskVariable::userUpdate(){
 
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       ors.jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments);  
       // cout<<JM<<endl; // TODO LAST zero!!!
       
-       J = zeros(wrsize,ors->getJointStateDimension());
+       J = zeros(wrsize,ors.getJointStateDimension());
       for (int k=0;k<wrsize;k++)
 	for (int p=1;p<segments;p++)
 	//for (int p=segments-16;p<segments;p++)
@@ -110,9 +110,9 @@ transpose(Jt,J);
 // }
 //! End of scalar
 
-void WritheTaskVariable::epsilon_check(arr& delta_q){
+void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
-    GetRopes(rope1,rope2,*this->ors,segments+1,obj_name); 
+    GetRopes(rope1,rope2,ors,segments+1,obj_name); 
     GetWritheMatrix(yy,rope1,rope2,segments);
      
 //// HERE - small deformation
@@ -128,12 +128,12 @@ arr delta_y;
     
     ///////////Jacobian
   for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       ors.jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments);  
     //  cout<<sum(JM)<<endl;
-       J = zeros(segments*segments,ors->getJointStateDimension());
+       J = zeros(segments*segments,ors.getJointStateDimension());
       for (int k=0;k<(segments-1)* (segments-1);k++){
       //   for (int k=(param)*10;k<(param+1)*10;k++){
 
@@ -163,9 +163,9 @@ cout<<"\nDelta_q"<<delta_q<<endl;
 //cout<<"\nSum of Delta_q"<<sum(delta_q)<<endl;
 }
 
-void WritheTaskVariable::delta_check(arr& delta_q){
+void WritheTaskVariable::delta_check(arr& delta_q, const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
-    GetRopes(rope1,rope2,*this->ors,segments+1,obj_name); 
+    GetRopes(rope1,rope2,ors,segments+1,obj_name); 
     GetScalarWrithe(yy,rope1,rope2,segments);
 //// HERE - small deformation
     arr delta_y;
@@ -173,7 +173,7 @@ void WritheTaskVariable::delta_check(arr& delta_q){
 
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       ors.jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        ScalarJacobian(J,rope1,rope2,points,segments);  
@@ -213,7 +213,7 @@ void WritheTaskVariable::userUpdate(){
     ///////////Jacobian
       for (int k=0;k<11;k++){
 	 //ors->jacobian(Jp,k+1,NULL);
-         this->ors->jacobian(Jp,k+1);
+         ors.jacobian(Jp,k+1);
 	 points.append(Jp);
        }
        WritheJacobian(JM,rope1,rope2,points);  
