@@ -13,6 +13,11 @@ struct MotionPrimitive:Process {
   MotionPlan *plan;
   GeometricState *geo;
   
+  PARAM(uint, verbose);
+  PARAM(arr, W);
+  PARAM(uint, T);
+  PARAM(double, duration);
+  
   MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
   ~MotionPrimitive();
   void open();

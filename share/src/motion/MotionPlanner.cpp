@@ -5,28 +5,31 @@ struct sMotionPlanner_interpolation{
   ors::Graph *ors;
   soc::SocSystem_Ors sys;
   OpenGL *gl;
-  uint verbose;
 };
 
-MotionPlanner_interpolation::MotionPlanner_interpolation(MotionPlan& p, GeometricState& g):Process("MotionPlanner_interpolation"),
+MotionPlanner::MotionPlanner(MotionPlan& p, GeometricState& g):Process("MotionPlanner_interpolation"),
         plan(&p), geo(&g){
   s = new sMotionPlanner_interpolation;
-  s->verbose = 2;
   s->gl=NULL;
   algo=AICO_noinit;
 }
 
-MotionPlanner_interpolation::~MotionPlanner_interpolation(){
+MotionPlanner::~MotionPlanner(){
   delete s;
 }
 
-void MotionPlanner_interpolation::open(){
+void MotionPlanner::open(){
+  verbose = MT::getParameter<uint>("MotionPlanner_verbose");
+  W = MT::getParameter<arr>("MotionPlanner_W");
+  T = MT::getParameter<uint>("MotionPlanner_TrajectoryLength");
+  duration = MT::getParameter<double>("MotionPlanner_TrajectoryDuration");
+  
   //clone the geometric state
   geo->readAccess(this);
   s->ors = geo->ors.newClone();
   geo->deAccess(this);
 
-  if(s->verbose){
+  if(verbose){
     s->gl = new OpenGL("MotionPlanner");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, s->ors);
@@ -36,20 +39,19 @@ void MotionPlanner_interpolation::open(){
     s->gl->update();
   }
   
-  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
-  s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
-                    MT::getParameter<uint>("reachPlanTrajectoryLength"),
-                    MT::getParameter<double>("reachPlanTrajectoryDuration"),
+  s->sys.initBasics(s->ors, NULL, (verbose?s->gl:NULL),
+                    T,
+                    duration,
                     true,
                     &W);
 }
 
-void MotionPlanner_interpolation::close(){
+void MotionPlanner::close(){
   if(s->gl)  delete s->gl;   s->gl=NULL;
   if(s->ors) delete s->ors;  s->ors=NULL;
 }
     
-void MotionPlanner_interpolation::step(){
+void MotionPlanner::step(){
   
   if(!plan->get_hasGoal(this)){
     plan->waitForConditionSignal(.01);

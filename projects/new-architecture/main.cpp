@@ -16,20 +16,13 @@ int main(int argn, char** argv){
 
   // processes
   myController controller(controllerTask, motionPlan, hardwareReference, geometricState, skinPressure);
-  MotionPlanner_interpolation motionPlanner(motionPlan, geometricState);
+  MotionPlanner motionPlanner(motionPlan, geometricState);
   MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
 
   // viewers
   PoseViewer<MotionPlan>        view1(motionPlan, geometricState);
   PoseViewer<HardwareReference> view2(hardwareReference, geometricState);
   PoseViewer<MotionKeyframe>    view3(frame1, geometricState);
-  
-  controller.controllerTask = &controllerTask;
-  controller.geometricState = &geometricState;
-  controller.motionPlan = &motionPlan;
-  controller.hardwareReference = &hardwareReference;
-  controller.geometricState = &geometricState;
-  controller.skinPressure = &skinPressure;
   
   ProcessL P=LIST<Process>(motionPlanner, motionPrimitive);
   P.append(LIST<Process>(view1, view2, view3));

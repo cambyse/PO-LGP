@@ -135,31 +135,20 @@ struct myController:Process{
 };
 
 
-struct MotionPlanner_AICO:Process{
-  struct sMotionPlanner *s;
-
-  //links
-  MotionPlan *motionPlan;
-  GeometricState *geometricState;
-
-  MotionPlanner_AICO();
-  ~MotionPlanner_AICO();
-  void open();
-  void step();
-  void close();
-};
-
-
-struct MotionPlanner_interpolation:Process{
+struct MotionPlanner:Process{
   struct sMotionPlanner_interpolation *s;
   //links
   MotionPlan *plan;
   GeometricState *geo;
 
+  PARAM(uint, verbose);
+  PARAM(arr, W);
+  PARAM(uint, T);
+  PARAM(double, duration);
   enum MotionPlannerAlgo{ interpolation=0, AICO_noinit } algo;
   
-  MotionPlanner_interpolation(MotionPlan&, GeometricState&);
-  ~MotionPlanner_interpolation();
+  MotionPlanner(MotionPlan&, GeometricState&);
+  ~MotionPlanner();
   void open();
   void step();
   void close();
