@@ -27,7 +27,7 @@ void MotionPlanner_interpolation::open(){
   geo->deAccess(this);
 
   if(s->verbose){
-    s->gl = new OpenGL;
+    s->gl = new OpenGL("MotionPlanner");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, s->ors);
     s->gl->camera.setPosition(5, -10, 10);
@@ -36,11 +36,12 @@ void MotionPlanner_interpolation::open(){
     s->gl->update();
   }
   
+  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
   s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
                     true,
-                    NULL);
+                    &W);
 }
 
 void MotionPlanner_interpolation::close(){

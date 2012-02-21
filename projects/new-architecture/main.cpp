@@ -37,7 +37,7 @@ int main(int argn, char** argv){
   cout <<"** setting grasp action" <<endl;
   action.writeAccess(NULL);
   action.action = Action::grasp;
-  action.objectRef1 = (char*)"S1";
+  action.objectRef1 = (char*)"target1";
   action.executed = false;
   action.deAccess(NULL);
 
@@ -52,7 +52,7 @@ int main(int argn, char** argv){
   motionPlanner.open();
   motionPlanner.step();
 #else //parallel
-  //loopWithBeat(P,.01);
+  loopWithBeat(P,.01);
   controller.threadLoopWithBeat(0.01);
   MT::wait(100.);
   controller.threadClose();

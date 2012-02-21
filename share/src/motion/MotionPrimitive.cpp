@@ -11,7 +11,7 @@ struct sMotionPrimitive{
 MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p, GeometricState& g):Process("MotionPrimitive"),
 action(&a), frame0(&f0), frame1(&f1), plan(&p), geo(&g){
   s = new sMotionPrimitive;
-  s->verbose = 0;
+  s->verbose = 2;
   s->gl=NULL;
   s->ors=NULL;
 }
@@ -28,6 +28,7 @@ void MotionPrimitive::open(){
   s->ors = geo->ors.newClone();
   geo->deAccess(this);
   if(s->verbose){
+    s->gl = new OpenGL("MotionPrimitive");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, s->ors);
     s->gl->camera.setPosition(5, -10, 10);
@@ -36,11 +37,12 @@ void MotionPrimitive::open(){
     s->gl->update();
   }
   
+  arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
   s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
                     MT::getParameter<uint>("reachPlanTrajectoryLength"),
                     MT::getParameter<double>("reachPlanTrajectoryDuration"),
                     true,
-                    NULL);
+                    &W);
                     //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
 

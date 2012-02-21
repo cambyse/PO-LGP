@@ -8,11 +8,11 @@
 #include <SD/potentialTaskVariables.h>
 #include <MT/ors.h>
 
-#include <architecture/MotionPrimitive.h>
+#include <motion/MotionPrimitive.h>
 
 void problem1(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
-  double seconds = 5.;
+  double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
 
   //setup the problem
   soc::SocSystem_Ors sys;
@@ -21,7 +21,7 @@ void problem1(){
   arr W;  W <<"[.1 .1 .2 .2 .2 1 1    .1 .1 .1 .1 .1 .1 .1]";
   sys.initBasics(NULL,NULL,&gl,T,seconds,true,&W);
   
-  createStandardRobotTaskVariables(sys);
+  //createStandardRobotTaskVariables(sys);
 
   //rnd.clockSeed();
   uint side=rnd(3);
@@ -33,7 +33,7 @@ void problem1(){
 #if 1
     arr x,x0;
     sys.getx0(x0);
-    threeStepGraspHeuristic(x, sys, x0, s->index, 1);
+    threeStepGraspHeuristic(x, sys, x0, s->index, 2);
     
     //set velocities to zero
     if(sys.dynamic) x.subRange(14,-1) = 0.;
