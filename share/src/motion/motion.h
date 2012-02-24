@@ -2,7 +2,10 @@
 #define MT_motion_h
 
 #include <biros/biros.h>
-#include <MT/robot.h> //TODO: needs removing!
+#include <MT/ors.h>
+#include <MT/opengl.h>
+#include "hardware.h"
+//#include <MT/robot.h> //TODO: needs removing!
 
 
 //===========================================================================
@@ -17,6 +20,14 @@ namespace ors{ struct Graph; }
   virtual uint taskDim(uint i) = 0;
 };*/
 
+struct FeedbackControlTaskAbstraction {
+  TaskVariableList TVs;
+  bool requiresInit;
+  virtual void initTaskVariables(const ors::Graph& ors)=0; //reactive update of the task variables' goals
+  virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; //reactive update of the task variables' goals
+};
+
+
 //===========================================================================
 //
 // Variables
@@ -29,6 +40,7 @@ struct GeometricState:Variable{
   
   GeometricState();
 };
+
 
 struct MotionKeyframe:Variable{
   FIELD( arr, x_estimate );
@@ -65,15 +77,18 @@ struct ControllerTask:Variable{
   //optional: followWithFeedback
   
   FIELD( ControllerMode, mode );
-  FIELD( bool, forceColLimTVs );
   FIELD( bool, fixFingers );
   //for followTrajectroy mode:
   FIELD( double, followTrajectoryTimeScale ); //real in [0,1]
   FIELD( double, relativeRealTimeOfController );
   //for feedback mode:
-  FIELD( TaskAbstraction*, feedbackControlTask);
+  FIELD( bool, forceColLimTVs );
+  FIELD( FeedbackControlTaskAbstraction*, feedbackControlTask);
   
-  ControllerTask():Variable("ControllerTask"), mode(noType), followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.) {};
+  ControllerTask():Variable("ControllerTask"),
+    mode(noType), 
+    followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.),
+    forceColLimTVs(true), feedbackControlTask(NULL) {};
 };
 
 
@@ -81,11 +96,12 @@ struct HardwareReference:Variable{
   FIELD( arr, q_reference );
   FIELD( arr, v_reference );
   FIELD( arr, q_real );
+  FIELD( double, hardwareRealTime );
   
   uintA armMotorIndices, handMotorIndices;
   bool readHandFromReal;
   
-  HardwareReference():Variable("HardwareReference"), readHandFromReal(true) {};
+  HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
   void get_poseView(arr& q){ q=q_reference; }
 };
 
@@ -121,13 +137,16 @@ struct myController:Process{
   ControllerTask *controllerTask;
   MotionPlan *motionPlan;
   HardwareReference *hardwareReference;
-  GeometricState *geometricState;
-  SkinPressureVar *skinPressure;
+  GeometricState *geo;
+  SkinPressure *skinPressure;
+  JoystickState *joystickState;
 
   //parameters
-  double maxJointStep;
+  PARAM(double, tau);
+  PARAM(arr, W);
+  PARAM(double, maxJointStep);
 
-  myController(ControllerTask&, MotionPlan&, HardwareReference&, GeometricState&, SkinPressureVar&);
+  myController(ControllerTask&, MotionPlan&, HardwareReference&, GeometricState&, SkinPressure&, JoystickState&);
   ~myController();
   void open();
   void step();

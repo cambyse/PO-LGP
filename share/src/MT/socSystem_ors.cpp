@@ -342,6 +342,8 @@ void soc::SocSystem_Ors::setTimeInterval(double trajectory_duration,  uint traje
 
 void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
   vars=_CVlist;
+  uint i; TaskVariable *v;
+  for_list(i, v, vars) v->updateState(*ors);
 }
 
 //! report on some

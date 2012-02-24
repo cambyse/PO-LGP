@@ -1,12 +1,12 @@
 #include "motion.h"
+#include <MT/biros_internal.h>
 #include <MT/soc.h>
 #include <MT/soc_inverseKinematics.h>
 
 struct sMotionControllerProcess{
+  ors::Graph *ors;
   soc::SocSystem_Ors sys;
 
-  //INPUT
-  Lock taskLock; //lock this if you change the task!!
   /*
   bool useBwdMsg, forceColLimTVs, fixFingers;
   arr bwdMsg_v, bwdMsg_Vinv; //optional: backward messages from a planner
@@ -19,8 +19,8 @@ struct sMotionControllerProcess{
   */
 };
 
-myController::myController(ControllerTask& t, MotionPlan& p, HardwareReference& r, GeometricState& g, SkinPressureVar& sp):Process("MotionController"),
-  controllerTask(&t), motionPlan(&p), hardwareReference(&r), geometricState(&g), skinPressure(&sp){
+myController::myController(ControllerTask& t, MotionPlan& p, HardwareReference& r, GeometricState& g, SkinPressure& sp, JoystickState& js):Process("MotionController"),
+  controllerTask(&t), motionPlan(&p), hardwareReference(&r), geo(&g), skinPressure(&sp), joystickState(&js){
   s = new sMotionControllerProcess();
 }
 
@@ -28,7 +28,21 @@ myController::~myController(){
   delete s;
 }
 
-void myController::open(){ MT_MSG("NIY") }
+void myController::open(){
+  CHECK(geo, "please set geometricState before launching MotionPrimitive");
+  W = MT::getParameter<arr>("Controller_W");
+  tau = MT::getParameter<double>("Controller_tau");
+  maxJointStep = MT::getParameter<double>("Controller_maxJointStep");
+
+  //clone the geometric state
+  geo->readAccess(this);
+  s->ors = geo->ors.newClone();
+  geo->deAccess(this);
+  
+  s->sys.initBasics(s->ors, NULL, NULL,
+                    1, tau, true, &W);
+
+}
 
 void myController::close(){ MT_MSG("NIY") }
 
@@ -36,7 +50,7 @@ void myController::step(){
   CHECK(controllerTask, "please set controllerMode before launching MotionPrimitive");
   CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
   CHECK(hardwareReference, "please set controllerReference before launching MotionPrimitive");
-  CHECK(geometricState, "please set geometricState before launching MotionPrimitive");
+  CHECK(geo, "please set geometricState before launching MotionPrimitive");
   CHECK(skinPressure, "please set skinPressure before launching MotionPrimitive");
   
   ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
@@ -100,20 +114,22 @@ void myController::step(){
     arr skinState = skinPressure->y_real;
     skinPressure->deAccess(this);
 
+    //pull for possible changes in the geometric state
+    //MT_MSG("TODO");
+
     //update the controllers own internal ors state - pulling from MotionReference
     arr q_reference = hardwareReference->get_q_reference(this);
     arr v_reference = hardwareReference->get_v_reference(this);
-    s->sys.setqv(q_reference, v_reference);
-    MT_MSG("solle das socSystem nicht die task variablen liste enthalten? wird doch geupdated?");
-
-    //pull for possible changes in the geometric state
-    MT_MSG("TODO");
+    s->sys.vars.clear(); //unset the task variables -- they're set and updated later
+    if(q_reference.N) s->sys.setqv(q_reference, v_reference);
+    else s->sys.getqv0(q_reference, v_reference);
 
     //update all task variables using this ors state
-    TaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
-    s->taskLock.writeLock();
-    task->updateTaskGoals(NULL);
-
+    FeedbackControlTaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
+    if(task->requiresInit) task->initTaskVariables(*s->sys.ors);
+    s->sys.setTaskVariables(task->TVs);
+    task->updateTaskVariableGoals(*s->sys.ors);
+    
     //=== compute motion from the task variables
     //check if a collition and limit variable are active
     bool colActive=false, limActive=false;
@@ -137,7 +153,6 @@ void myController::step(){
 
     //perhaps fix fingers
     if(fixFingers) for(uint j=7; j<14; j++){ v_reference(j)=0.; q_reference(j)=q_old(j); }
-    s->taskLock.unlock();
 
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);
@@ -154,7 +169,7 @@ void myController::step(){
     hardwareReference->set_v_reference(v_reference, this);
 
     //push proxies to the geometric state
-    MT_MSG("TODO");
+    //MT_MSG("TODO");
     /* Eigentlich spielt controller iM eine double role: als
        q_reference berechnen, und die kinematic/proxies/taskvariables
        mit ors berechnen -> 2 Prozesse?

@@ -704,14 +704,14 @@ struct DefaultTaskVariable:public TaskVariable {
   DefaultTaskVariable();
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& ors,
+    const ors::Graph& _ors,
     TVtype _type,
     const char *iBodyName, const char *iframe,
     const char *jBodyName, const char *jframe,
     const arr& _params);
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& ors,
+    const ors::Graph& _ors,
     TVtype _type,
     const char *iShapeName,
     const char *jShapeName,
@@ -721,7 +721,7 @@ struct DefaultTaskVariable:public TaskVariable {
   
   void set(
     const char* _name,
-    ors::Graph &ors,
+    const ors::Graph& _ors,
     TVtype _type,
     int _i, const ors::Transformation& _irel,
     int _j, const ors::Transformation& _jrel,

@@ -51,9 +51,6 @@ struct TaskAbstraction {
   TaskVariable *TV_up , *TV_up2, *TV_z1, *TV_z2, *TV_f1, *TV_f2, *TV_f3;    //vars for grasping
   double TV_x_yprec, TV_x_vprec, TV_rot_vprec, TV_q_vprec;
   
-  //control options
-  uint controlMode; //RENAME taskMode
-  
   //-- options/parameters
   double joyRate;      //joystick speed
   intA joyState;

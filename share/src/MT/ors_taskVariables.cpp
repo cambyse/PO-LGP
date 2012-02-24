@@ -31,7 +31,7 @@ DefaultTaskVariable::~DefaultTaskVariable(){
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  ors::Graph& _sl,
+  const ors::Graph& _ors,
   TVtype _type,
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
@@ -41,17 +41,17 @@ DefaultTaskVariable::DefaultTaskVariable(
   targetType=noneTT;
   y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   set(
-    _name, _sl, _type,
-    iname  ? (int)_sl.getBodyByName(iname)->index      : -1,
+    _name, _ors, _type,
+    iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
     iframe ? ors::Transformation().setText(iframe) : ors::Transformation(),
-    jname  ? (int)_sl.getBodyByName(jname)->index      : -1,
+    jname  ? (int)_ors.getBodyByName(jname)->index      : -1,
     jframe ? ors::Transformation().setText(jframe) : ors::Transformation(),
     _params);
 }
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  ors::Graph& _sl,
+  const ors::Graph& _ors,
   TVtype _type,
   const char *iShapeName,
   const char *jShapeName,
@@ -60,10 +60,10 @@ DefaultTaskVariable::DefaultTaskVariable(
   type=noneTVT;
   targetType=noneTT;
   y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
-  ors::Shape *a = iShapeName ? _sl.getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? _sl.getShapeByName(jShapeName):NULL;
+  ors::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
+  ors::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
   set(
-    _name, _sl, _type,
+    _name, _ors, _type,
     a ? (int)a->body->index : -1,
     a ? a->rel : ors::Transformation(),
     b ? (int)b->body->index : -1,
@@ -76,7 +76,7 @@ TaskVariable::~TaskVariable(){
 
 void DefaultTaskVariable::set(
   const char* _name,
-  ors::Graph &ors,
+  const ors::Graph& _ors,
   TVtype _type,
   int _i, const ors::Transformation& _irel,
   int _j, const ors::Transformation& _jrel,
@@ -87,8 +87,8 @@ void DefaultTaskVariable::set(
   irel=_irel;
   j=_j;
   jrel=_jrel;
-  params=_params;
-  updateState(ors);
+  if(&_params) params=_params; else params.clear();
+  updateState(_ors);
   y_target=y;
   v_target=v;
 }
