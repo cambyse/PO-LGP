@@ -11,11 +11,11 @@
 
 struct Variable;
 struct Process;
-struct Monitor;
+struct Parameter;
 
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
-
+typedef MT::Array<Parameter*> ParameterL;
 
 //===========================================================================
 //
@@ -127,6 +127,32 @@ struct Process {
 
 //===========================================================================
 //
+// Parameters
+// (these are usually not created directly by the user,
+//  they are created automatically by a call of `getParameter')
+//
+
+struct Parameter{
+  uint id;              ///< unique identifyer
+  void *pvalue;
+  const char* name;
+  ProcessL processes;
+  Parameter(const char* name);
+  virtual void writeValue(ostream& os) const = 0;
+  virtual const char* typeName() const = 0;
+};
+  
+template<class T>
+struct Parameter_typed:Parameter{
+  T value;
+  Parameter_typed(const char* name):Parameter(name){ pvalue=&value; MT::getParameter<T>(value, name); }
+  void writeValue(ostream& os) const{ os <<value; }
+  const char* typeName() const{ return typeid(T).name(); }
+};
+
+
+//===========================================================================
+//
 // Access (preliminary - not used yet)
 //
 
@@ -144,6 +170,42 @@ struct Access{
   void writeAccess(){  var->writeAccess(p);  }
   void deAccess(){  last_revision=var->revision;  var->deAccess(p);  }
 };
+
+
+//===========================================================================
+//
+// basic access to global system info
+//
+
+struct BirosInfo:Variable{
+  VariableL variables;
+  ProcessL processes;
+  ParameterL parameters;
+  Process *getProcessFromPID();
+  BirosInfo():Variable("GlobalInfo"){ }
+  template<class T>  void getVariable(T*& v, const char* name, Process *p){
+    writeAccess(p);
+    v = (T*)listFindByName(variables, name);
+    deAccess(p);
+    if(!v) HALT("can't find biros variable '" <<name <<"'");
+  }
+  template<class T> T getParameter(const char *name, Process *p){
+    Parameter_typed<T> *par;
+    writeAccess(p);
+    par = (Parameter_typed<T>*)listFindByName(parameters, name);
+    deAccess(p);
+    if(!par) par = new Parameter_typed<T>(name);
+    if(!par->processes.contains(p)) par->processes.append(p);
+    return par->value;
+  }
+  template<class T> T getParameter(const char *name){
+    return getParameter<T>(name, getProcessFromPID());
+  }
+  void dump(); //dump everything -- for debugging
+};
+
+extern BirosInfo birosInfo;
+
 
 
 //===========================================================================

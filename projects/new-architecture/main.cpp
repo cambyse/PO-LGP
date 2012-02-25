@@ -37,8 +37,8 @@ int main(int argn, char** argv){
   JoystickState joystickState;
 
   // processes
-  myController controller(controllerTask, motionPlan, hardwareReference, geometricState, skinPressure, joystickState);
-  MotionPlanner motionPlanner(motionPlan, geometricState);
+  myController controller;
+  MotionPlanner motionPlanner;
   MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
 
   // viewers
@@ -46,7 +46,7 @@ int main(int argn, char** argv){
   PoseViewer<HardwareReference> view2(hardwareReference, geometricState);
   PoseViewer<MotionKeyframe>    view3(frame1, geometricState);
   
-  ProcessL P=LIST<Process>(motionPlanner, motionPrimitive);
+  ProcessL P=LIST<Process>(controller, motionPlanner, motionPrimitive);
   P.append(LIST<Process>(view1, view2, view3));
   
   cout <<"** setting grasp action" <<endl;
@@ -61,7 +61,7 @@ int main(int argn, char** argv){
   controllerTask.mode = ControllerTask::followTrajectory;
   controllerTask.deAccess(NULL);
 
-  uint mode=4;
+  uint mode=2;
   switch(mode){
   case 1:{ //serial mode
     motionPrimitive.open();
@@ -71,14 +71,13 @@ int main(int argn, char** argv){
   } break;
   case 2:{ //threaded mode
     loopWithBeat(P,.01);
-    controller.threadLoopWithBeat(0.01);
-    MT::wait(100.);
-    controller.threadClose();
+    MT::wait(20.);
   } break;
   case 3:{ //feedback controller
     controller.open();
     view2.open();
     MyTask myTask;
+    action.action = Action::noAction;
     controllerTask.writeAccess(NULL);
     controllerTask.mode = ControllerTask::feedback;
     controllerTask.feedbackControlTask = &myTask;
@@ -91,21 +90,20 @@ int main(int argn, char** argv){
     }
   };
   case 4:{ //feedback controller
-    controller.threadLoopWithBeat(.01);
-    view2.threadLoopWithBeat(.01);
     MyTask myTask;
+    action.action = Action::grasp;
     controllerTask.writeAccess(NULL);
     controllerTask.mode = ControllerTask::feedback;
     controllerTask.feedbackControlTask = &myTask;
     controllerTask.forceColLimTVs = false;
     controllerTask.deAccess(NULL);
-    MT::wait(10.);
-    view2.threadClose();
-    controller.threadClose();
+    loopWithBeat(P,.01);
+    MT::wait(30.);
   };
   }
 
   close(P);
+  birosInfo.dump();
   
   cout <<"bye bye" <<endl;
 };

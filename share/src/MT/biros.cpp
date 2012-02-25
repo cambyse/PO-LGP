@@ -18,7 +18,17 @@
 // Global information
 //
 
-GlobalInfo globalInfo;
+BirosInfo birosInfo;
+
+Process *BirosInfo::getProcessFromPID(){
+  pid_t tid = syscall(SYS_gettid);
+  uint i;  Process *p;
+  for_list(i, p, processes){
+    if(p->s->tid==tid) break;
+  }
+  if(i>=processes.N) return NULL;
+  return p;
+}
 
 
 //===========================================================================
@@ -356,20 +366,20 @@ Variable::Variable(const char *_name){
   s = new sVariable(this);
   name = _name;
   revision = 0;
-  if(this!=&globalInfo){
-    globalInfo.writeAccess(NULL);
-    id = globalInfo.variableCount++;
-    globalInfo.variables.memMove=true;
-    globalInfo.variables.append(this);
-    globalInfo.deAccess(NULL);
+  if(this!=&birosInfo){
+    birosInfo.writeAccess(NULL);
+    id = birosInfo.variables.N;
+    birosInfo.variables.memMove=true;
+    birosInfo.variables.append(this);
+    birosInfo.deAccess(NULL);
   }
 };
 
 Variable::~Variable(){
-  if(this!=&globalInfo){
-    globalInfo.writeAccess(NULL);
-    globalInfo.variables.removeValue(this);
-    globalInfo.deAccess(NULL);
+  if(this!=&birosInfo){
+    birosInfo.writeAccess(NULL);
+    birosInfo.variables.removeValue(this);
+    birosInfo.deAccess(NULL);
   }
   delete s;
 };
@@ -430,18 +440,18 @@ void Variable::waitForConditionNotEq(int i){
 Process::Process(const char *_name){
   s = new sProcess();
   name = _name;
-  globalInfo.writeAccess(this);
-  id = globalInfo.processCount++;
-  globalInfo.processes.memMove=true;
-  globalInfo.processes.append(this);
-  globalInfo.deAccess(this);
+  birosInfo.writeAccess(this);
+  id = birosInfo.processes.N;
+  birosInfo.processes.memMove=true;
+  birosInfo.processes.append(this);
+  birosInfo.deAccess(this);
 }
 
 Process::~Process(){
   if(s->thread || s->threadCondition.state!=tsCLOSE) threadClose();
-  globalInfo.writeAccess(this);
-  globalInfo.processes.removeValue(this);
-  globalInfo.deAccess(this);
+  birosInfo.writeAccess(this);
+  birosInfo.processes.removeValue(this);
+  birosInfo.deAccess(this);
   delete s;
 }
 
@@ -574,6 +584,22 @@ void* sProcess::staticThreadMain(void *_self){
   return NULL;
 }
 
+
+//===========================================================================
+//
+// Parameter
+//
+
+Parameter::Parameter(const char *_name){
+  name = _name;
+  birosInfo.writeAccess(NULL);
+  id = birosInfo.parameters.N;
+  birosInfo.parameters.memMove=true;
+  birosInfo.parameters.append(this);
+  birosInfo.deAccess(NULL);
+};
+
+
 //===========================================================================
 //
 // Group
@@ -604,6 +630,82 @@ void close(const ProcessL& P){
   for_list(i, p, P) p->threadClose();
 }
 
+
+//===========================================================================
+//
+// Global info dump
+//
+
+
+#define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
+
+void BirosInfo::dump(){
+  cout <<" +++ VARIABLES +++" <<endl;
+  uint i, j;
+  Variable *v;
+  Process *p;
+  Parameter *par;
+  _Variable_field_info_base *vi;
+  readAccess(NULL);
+  for_list(i, v, variables){
+    cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
+    if(v->fields.N){
+      cout <<'{' <<endl;
+      for_list(j, vi, v->fields){
+        cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
+        vi->write_value(cout);
+        cout <<endl;
+      }
+      cout <<"\n}";
+    }
+    //<<" {" <<endl;
+    cout <<endl;
+  }
+  cout <<endl;
+  cout <<" +++ PROCESSES +++" <<endl;
+  for_list(i, p, processes){
+    cout <<"Process " <<p->id <<'_' <<p->name <<" {" <<endl;
+    /*<<" ("; //process doesn't contain list of variables anymore
+    for_list(j, v, p->V){
+      if(j) cout <<',';
+      cout <<v->id <<'_' <<v->name;
+    }
+    cout <<") {" <<endl;*/
+    cout
+      <<" tid=" <<p->s->tid
+      <<" priority=" <<p->s->threadPriority
+      <<" steps=" <<p->s->timer.steps
+      <<" cycleDt=" <<TEXTTIME(p->s->timer.cyclDt)
+      <<" busyDt=" <<TEXTTIME(p->s->timer.busyDt)
+      <<" state=";
+    int state=p->s->threadCondition.state;
+    if(state>0) cout <<state; else switch(state){
+        case tsOPEN:    cout <<"open";   break;
+        case tsCLOSE:   cout <<"close";  break;
+        case tsLOOPING: cout <<"loop";   break;
+        case tsBEATING: cout <<"beat";   break;
+        case tsSYNCLOOPING: cout <<"sync";   break;
+        case tsIDLE:    cout <<"idle";   break;
+        default: cout <<"undefined:";
+      }
+    cout <<"\n}" <<endl;
+  }
+  cout <<endl;
+  cout <<" +++ PARAMETERS +++" <<endl;
+  for_list(i, par, parameters){
+    cout <<"Parameter " <<par->id <<'_' <<par->name <<" value=";
+    par->writeValue(cout);
+    cout <<" accessed by:";
+    for_list(j, p, par->processes){
+      if(j) cout <<',';
+      cout <<' ' <<(p?p->name:"NULL");
+    }
+    cout <<endl;
+  }
+  deAccess(NULL);
+}
+
+#undef TEXTTIME
 
 //===========================================================================
 //
@@ -772,8 +874,8 @@ void ThreadInfoWin::step(){
   if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-  globalInfo.readAccess(this);
-  for_list(i, pr, globalInfo.processes){
+  birosInfo.readAccess(this);
+  for_list(i, pr, birosInfo.processes){
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -794,7 +896,7 @@ void ThreadInfoWin::step(){
     TEXTTIME(th->timer.busyDt); x+=130;
     y+=20;
   }
-  globalInfo.deAccess(this);
+  birosInfo.deAccess(this);
   y+=10;
   for_list(i, ct, globalCycleTimers){
     x=5;

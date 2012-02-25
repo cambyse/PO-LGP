@@ -19,10 +19,10 @@ MotionPrimitive::~MotionPrimitive(){
 }
 
 void MotionPrimitive::open(){
-  verbose = MT::getParameter<uint>("MotionPrimitive_verbose");
-  W = MT::getParameter<arr>("MotionPrimitive_W");
-  T = MT::getParameter<uint>("MotionPrimitive_TrajectoryLength");
-  duration = MT::getParameter<double>("MotionPrimitive_TrajectoryDuration");
+  verbose = birosInfo.getParameter<uint>("MotionPrimitive_verbose", this);
+  W = birosInfo.getParameter<arr>("MotionPrimitive_W", this);
+  T = birosInfo.getParameter<uint>("MotionPrimitive_TrajectoryLength", this);
+  duration = birosInfo.getParameter<double>("MotionPrimitive_TrajectoryDuration", this);
   
   CHECK(geo, "please set geometricState before launching MotionPrimitive");
   
@@ -191,13 +191,13 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   static double endEffPrec, endOppPrec, endAlignPrec, graspDistPrec, colPrec, limPrec, homePrec;
   if(firstTime){
     firstTime=false;
-    MT::getParameter(endEffPrec, "graspPlanEndEffPrec");
-    MT::getParameter(endOppPrec, "graspPlanEndOppPrec");
-    MT::getParameter(endAlignPrec, "graspPlanEndAlignPrec");
-    MT::getParameter(graspDistPrec, "graspPlanGraspDistPrec");
-    MT::getParameter(colPrec, "graspPlanColPrec");
-    MT::getParameter(limPrec, "graspPlanLimPrec");
-    MT::getParameter(homePrec, "graspPlanHomePrec");
+    endEffPrec = birosInfo.getParameter<double>("graspPlanEndEffPrec");
+    endOppPrec = birosInfo.getParameter<double>("graspPlanEndOppPrec");
+    endAlignPrec = birosInfo.getParameter<double>("graspPlanEndAlignPrec");
+    graspDistPrec = birosInfo.getParameter<double>("graspPlanGraspDistPrec");
+    colPrec = birosInfo.getParameter<double>("graspPlanColPrec");
+    limPrec = birosInfo.getParameter<double>("graspPlanLimPrec");
+    homePrec = birosInfo.getParameter<double>("graspPlanHomePrec");
   }
   
   //set the time horizon

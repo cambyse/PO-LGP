@@ -142,14 +142,5 @@ struct sProcess {
 
 
 
-struct GlobalInfo:Variable{
-  VariableL variables;
-  ProcessL  processes;
-  uint variableCount;
-  uint processCount;
-  GlobalInfo():Variable("GlobalInfo"){ variableCount=processCount=0; }
-};
-
-extern GlobalInfo globalInfo;
 
 #endif

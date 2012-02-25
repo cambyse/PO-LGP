@@ -19,9 +19,14 @@ struct sMotionControllerProcess{
   */
 };
 
-myController::myController(ControllerTask& t, MotionPlan& p, HardwareReference& r, GeometricState& g, SkinPressure& sp, JoystickState& js):Process("MotionController"),
-  controllerTask(&t), motionPlan(&p), hardwareReference(&r), geo(&g), skinPressure(&sp), joystickState(&js){
+myController::myController():Process("MotionController"){
   s = new sMotionControllerProcess();
+  birosInfo.getVariable(controllerTask, "ControllerTask", this);
+  birosInfo.getVariable(motionPlan, "MotionPlan", this);
+  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
+  birosInfo.getVariable(geo, "GeometricState", this);
+  birosInfo.getVariable(skinPressure, "SkinPressure", this);
+  birosInfo.getVariable(joystickState, "JoystickState", this);
 }
 
 myController::~myController(){
@@ -30,9 +35,9 @@ myController::~myController(){
 
 void myController::open(){
   CHECK(geo, "please set geometricState before launching MotionPrimitive");
-  W = MT::getParameter<arr>("Controller_W");
-  tau = MT::getParameter<double>("Controller_tau");
-  maxJointStep = MT::getParameter<double>("Controller_maxJointStep");
+  W = birosInfo.getParameter<arr>("Controller_W", this);
+  tau = birosInfo.getParameter<double>("Controller_tau", this);
+  maxJointStep = birosInfo.getParameter<double>("Controller_maxJointStep", this);
 
   //clone the geometric state
   geo->readAccess(this);

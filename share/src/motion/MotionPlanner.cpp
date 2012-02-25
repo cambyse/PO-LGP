@@ -1,5 +1,6 @@
 #include "motion.h"
 #include <MT/aico.h>
+#include <MT/biros_internal.h>
 
 struct sMotionPlanner_interpolation{
   ors::Graph *ors;
@@ -7,9 +8,10 @@ struct sMotionPlanner_interpolation{
   OpenGL *gl;
 };
 
-MotionPlanner::MotionPlanner(MotionPlan& p, GeometricState& g):Process("MotionPlanner_interpolation"),
-        plan(&p), geo(&g){
+MotionPlanner::MotionPlanner():Process("MotionPlanner_interpolation"){
   s = new sMotionPlanner_interpolation;
+  birosInfo.getVariable(plan, "MotionPlan", this);
+  birosInfo.getVariable(geo, "GeometricState", this);
   s->gl=NULL;
   algo=AICO_noinit;
 }
@@ -19,10 +21,10 @@ MotionPlanner::~MotionPlanner(){
 }
 
 void MotionPlanner::open(){
-  verbose = MT::getParameter<uint>("MotionPlanner_verbose");
-  W = MT::getParameter<arr>("MotionPlanner_W");
-  T = MT::getParameter<uint>("MotionPlanner_TrajectoryLength");
-  duration = MT::getParameter<double>("MotionPlanner_TrajectoryDuration");
+  verbose = birosInfo.getParameter<uint>("MotionPlanner_verbose", this);
+  W = birosInfo.getParameter<arr>("MotionPlanner_W", this);
+  T = birosInfo.getParameter<uint>("MotionPlanner_TrajectoryLength", this);
+  duration = birosInfo.getParameter<double>("MotionPlanner_TrajectoryDuration", this);
   
   //clone the geometric state
   geo->readAccess(this);

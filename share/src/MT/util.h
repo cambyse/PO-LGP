@@ -330,7 +330,6 @@ inline void breakPoint(){
 // Parameter class - I use it frequently to read parameters from file or cmd line
 //
 
-#if 1
 namespace MT {
 /*!\brief A parameter that initializes itself from the command line
   (use \c MT::init), parameter file, or a default value (priority in
@@ -398,7 +397,6 @@ private:
 };
 
 }
-#endif
 
 
 //===========================================================================

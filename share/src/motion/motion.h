@@ -5,7 +5,6 @@
 #include <MT/ors.h>
 #include <MT/opengl.h>
 #include "hardware.h"
-//#include <MT/robot.h> //TODO: needs removing!
 
 
 //===========================================================================
@@ -146,8 +145,30 @@ struct myController:Process{
   PARAM(arr, W);
   PARAM(double, maxJointStep);
 
-  myController(ControllerTask&, MotionPlan&, HardwareReference&, GeometricState&, SkinPressure&, JoystickState&);
+  myController();
   ~myController();
+  void open();
+  void step();
+  void close();
+};
+
+
+struct MotionPrimitive:Process {
+  struct sMotionPrimitive *s;
+  //links
+  //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
+  Action *action;
+  MotionKeyframe *frame0,*frame1;
+  MotionPlan *plan;
+  GeometricState *geo;
+  
+  PARAM(uint, verbose);
+  PARAM(arr, W);
+  PARAM(uint, T);
+  PARAM(double, duration);
+  
+  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
+  ~MotionPrimitive();
   void open();
   void step();
   void close();
@@ -166,34 +187,18 @@ struct MotionPlanner:Process{
   PARAM(double, duration);
   enum MotionPlannerAlgo{ interpolation=0, AICO_noinit } algo;
   
-  MotionPlanner(MotionPlan&, GeometricState&);
+  MotionPlanner();
   ~MotionPlanner();
   void open();
   void step();
   void close();
 };
 
-struct KeyframeEstimator:Process{
-  struct sKeyframeEstimator *s;
-
-  //links
-  Action* action;
-  MotionKeyframe *motionKeyframe;
-  GeometricState *geometricState;
-
-  KeyframeEstimator();
-  ~KeyframeEstimator();
-  void open();
-  void step();
-  void close();
-  
-};
 
 //===========================================================================
 //
 // Viewers
 //
-
 
 template<class T>
 struct PoseViewer:Process{
@@ -202,7 +207,7 @@ struct PoseViewer:Process{
   OpenGL gl;
   ors::Graph *ors;
   
-  PoseViewer(T& v, GeometricState& g):Process("MotionPlanViewer"), var(&v), geo(&g), gl(v.name), ors(NULL) {
+  PoseViewer(T& v, GeometricState& g):Process("MotionPoseViewer"), var(&v), geo(&g), gl(v.name), ors(NULL) {
   }
   void open(){
     geo->writeAccess(this);
