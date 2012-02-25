@@ -37,7 +37,7 @@ int main(int argn, char** argv){
   JoystickState joystickState;
 
   // processes
-  myController controller;
+  Controller controller;
   MotionPlanner motionPlanner;
   MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
 
