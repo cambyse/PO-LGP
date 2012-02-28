@@ -14,6 +14,16 @@ class OnOracle : public Oracle {
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
 
+class CloseOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
+
+class HigherOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
+
 class HumanOracle : public Oracle {
 	private:
 		const char* predicate;
