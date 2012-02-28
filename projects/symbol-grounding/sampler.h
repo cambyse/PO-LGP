@@ -18,7 +18,7 @@ template<class S> class Evaluator {
 
 class BlocksWorldSampler : public Sampler<MT::Array<arr> > {
   public: 
-    virtual void sample(MT::Array<arr>& sample) { relational::generateBlocksSample(sample, 2); }   
+    virtual void sample(MT::Array<arr>& sample);
 };
 
 template<class Data> void rejectionSampling(Data& sample, Sampler<Data>* s, Evaluator<Data>* e, const uint nSamples = 10000) {
