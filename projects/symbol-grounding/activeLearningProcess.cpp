@@ -3,8 +3,11 @@
 #include "activeLearner.h"
 #include "oracle.h"
 #include "tester.h"
+#include "gui.h"
 
-ActiveLearningP::ActiveLearningP() : Process("Active Learning Process") {}
+ActiveLearningP::ActiveLearningP() : Process("Active Learning Process"),
+  guiData(NULL)
+{}
 
 void ActiveLearningP::open() {
   CHECK(traindata, "No trainingsdata available for active learner.");
@@ -28,6 +31,11 @@ void ActiveLearningP::step() {
   }
   if (classificator->tester) classificator->tester->test(classificator);
   classificator->deAccess(this);
+  if(guiData) {
+    guiData->writeAccess(this);
+    guiData->sample = new MT::Array<arr>(sample);
+    guiData->deAccess(this);
+  }
 }
 
 void ActiveLearningP::close() {

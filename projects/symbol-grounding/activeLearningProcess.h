@@ -7,6 +7,7 @@
 class ActiveLearner;
 class Oracle;
 class Tester;
+class GuiDataV;
 class TrainingsDataV: public Variable {
   public:
     TrainingsDataV();
@@ -34,6 +35,7 @@ class ActiveLearningP: public Process {
     ors::Graph* ors; 
     TrainingsDataV* traindata;
     ClassificatorV* classificator;
+    GuiDataV* guiData;
 
 };
 
