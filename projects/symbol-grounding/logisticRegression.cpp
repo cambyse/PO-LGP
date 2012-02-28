@@ -1,5 +1,6 @@
 #include "logisticRegression.h"
 #include "sampler.h"
+#include "al_util.h"
 
 #include <MT/array.h>
 #include <JK/util.h>
@@ -29,19 +30,6 @@ class sLogisticRegression {
     LogisticRegressionEvaluator evaluator;
     Sampler<MT::Array<arr> >* sampler;
 };
-
-void flatten(arr& out, const MT::Array<arr>& in) {
-  uint length = 0;
-  for (uint i = 0; i < in.d0; ++i) {
-    for (uint j = 0; j < in.d1; ++j) {
-      out.append(in(i, j));  
-      if (!i) {
-         length += in(i,j).N;
-      }
-    }
-  }
-  out.reshape(in.d0, length);
-}
 
 void createClassMatrix(arr& matrix, const intA& classes, const uint nClasses) {
   for (uint i = 0; i < classes.d0; ++i) {
