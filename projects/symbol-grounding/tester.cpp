@@ -53,7 +53,7 @@ ClassifyWorkerFactory::ClassifyWorkerFactory(ClassificatorV* cl) :
   classificator(cl) {}
 
 ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl) : 
-  Master<MT::Array<arr>, double>("Classify Master Process", (WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl)) ,
+  Master<MT::Array<arr>, double>("Classify Master Process", (WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl), 5) ,
   numOfJobs(numOfJobs),
   numOfWorkingJobs(numOfJobs),
   classificator(cl)
