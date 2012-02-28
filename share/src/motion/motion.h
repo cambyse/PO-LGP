@@ -4,8 +4,10 @@
 #include <biros/biros.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
-#include "hardware.h"
+//#include <hardware/hardware.h>
 
+struct SkinPressure;
+struct JoystickState;
 
 //===========================================================================
 //
@@ -116,6 +118,7 @@ struct ActionPlan:Variable {
   
   ActionPlan();
 };
+
 
 //===========================================================================
 //
