@@ -1,5 +1,5 @@
 BASE   = ../..
-NAME   = libmotion
+NAME   = libhardware
 OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib

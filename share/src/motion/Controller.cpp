@@ -2,6 +2,7 @@
 #include <MT/biros_internal.h>
 #include <MT/soc.h>
 #include <MT/soc_inverseKinematics.h>
+#include <hardware/hardware.h>
 
 struct sController {
   ors::Graph *ors;

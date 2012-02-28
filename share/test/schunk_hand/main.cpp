@@ -4,12 +4,12 @@
 #include <MT/array.h>
 #include <signal.h>
 
-#include<MT/schunk.h>
+#include <hardware/schunk.h>
 #include <sdh/sdh.h>
 
 void testMove(){
   signal(SIGINT,schunkEmergencyShutdown);
-  SchunkHandModule sdh;
+  sSchunkHand sdh;
   sdh.open();
 
   /*cout <<"** pinch" <<endl;

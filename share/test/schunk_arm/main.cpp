@@ -1,10 +1,6 @@
-#include <MT/ors.h>
-#include <MT/schunk.h>
-#include <MT/soc.h>
-#include <MT/socSystem_ors.h>
+#include <hardware/schunk.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
-#include <MT/robot_variables.h>
 
 //this is usually not included -- only here to acess directly
 #include <lwa/Device/Device.h>
@@ -60,7 +56,7 @@ void loadOrsFile(ors::Graph& C, OpenGL& gl,const char *file="../../configuration
 
 
 void testSchunk(){
-  SchunkArmModule schunk;
+  sSchunkArm schunk;
   schunk.open();
   schunk.reportParameters(cout);
   testCube( schunk, 9 );
@@ -82,7 +78,7 @@ void testControl(){
   
   bool openArm = MT::getParameter<bool>("openArm");
   //q_currentReferenceVar schunkVar;
-  SchunkArmModule schunk; //(&schunkVar);
+  sSchunkArm schunk; //(&schunkVar);
   if(openArm) schunk.open();
 
   uintA motorIndex(7);

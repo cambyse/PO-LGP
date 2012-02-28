@@ -1,12 +1,11 @@
 #include <signal.h>
 #include <MT/opengl.h>
-#include <MT/schunk.h>
+#include <hardware/schunk.h>
 
 int main( int argc, char **argv ){
   signal(SIGINT,schunkEmergencyShutdown);
 
-  //SchunkSkinVariable skinVar;
-  SchunkSkinModule skin;
+  sSchunkSkin skin;
   skin.open();
   skin.report();
 

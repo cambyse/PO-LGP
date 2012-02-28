@@ -145,7 +145,10 @@ struct Parameter{
 template<class T>
 struct Parameter_typed:Parameter{
   T value;
-  Parameter_typed(const char* name):Parameter(name){ pvalue=&value; MT::getParameter<T>(value, name); }
+  Parameter_typed(const char* name, const T& _default):Parameter(name){
+    pvalue=&value;
+    MT::getParameter<T>(value, name, _default);
+  }
   void writeValue(ostream& os) const{ os <<value; }
   const char* typeName() const{ return typeid(T).name(); }
 };
@@ -189,17 +192,20 @@ struct BirosInfo:Variable{
     deAccess(p);
     if(!v) HALT("can't find biros variable '" <<name <<"'");
   }
-  template<class T> T getParameter(const char *name, Process *p){
+  template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL){
     Parameter_typed<T> *par;
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
-    if(!par) par = new Parameter_typed<T>(name);
+    if(!par) par = new Parameter_typed<T>(name, *_default);
     if(!par->processes.contains(p)) par->processes.append(p);
     return par->value;
   }
   template<class T> T getParameter(const char *name){
-    return getParameter<T>(name, getProcessFromPID());
+    return getParameter<T>(name, getProcessFromPID(), NULL);
+  }
+  template<class T> T getParameter(const char *name, const T& _default){
+    return getParameter<T>(name, getProcessFromPID(), &_default);
   }
   void dump(); //dump everything -- for debugging
 };

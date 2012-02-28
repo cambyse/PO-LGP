@@ -17,7 +17,7 @@
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
 #include <biros/biros.h>
-#include "schunk_internal.h"
+#include "schunk.h"
 
 //===========================================================================
 //
@@ -160,10 +160,10 @@ sSchunkArm::sSchunkArm(){
 
 void sSchunkArm::open(){
   //get parameters
-  stepHorizon=birosInfo.getParameter<float>("schunkStepHorizon");
-  maxStep=birosInfo.getParameter<float>("schunkMaxStep");
-  sendMotion=birosInfo.getParameter<bool>("schunkSendArmMotion");
-  readPositions=birosInfo.getParameter<bool>("schunkReadArmPositions");
+  stepHorizon=birosInfo.getParameter<float>("schunkStepHorizon", 50);
+  maxStep=birosInfo.getParameter<float>("schunkMaxStep", .03);
+  sendMotion=birosInfo.getParameter<bool>("schunkSendArmMotion", true);
+  readPositions=birosInfo.getParameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- sSchunkArm init .." <<std::flush;
   addShutdown(this, shutdownLWA);
@@ -363,7 +363,7 @@ sSchunkHand::sSchunkHand(){
 
 void sSchunkHand::open(){
   //read parameters
-  sendMotion=birosInfo.getParameter<bool>("schunkSendHandMotion");
+  sendMotion=birosInfo.getParameter<bool>("schunkSendHandMotion", true);
   
   cout <<" -- sSchunkHand init .." <<std::flush;
   addShutdown(this, shutdownSDH);
