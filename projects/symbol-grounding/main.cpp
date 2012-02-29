@@ -1,47 +1,60 @@
 #include <MT/opengl.h>
 
+//#include "logisticRegression.h"
 #include "naiveBayesClassificator.h"
+#include "gaussProcClassificator.h"
 #include "dataReader.h"
 #include "activeLearningProcess.h"
 #include "oracle.h"
 #include "tester.h"
+#include "sampler.h"
+#include "gui.h"
 
 #include <MT/array_t.cpp>
 #include <MT/ors.h>
 
-int main(int argn, char** argv) {
-  
-  DataReader d;
+#include <csignal>
 
-	d.readDataFile("s120116-1029-0.dat", "s120116-1029-0.dat.rel");
-  d.readDataFile("s120116-1029-1.dat", "s120116-1029-1.dat.rel");
-	d.readDataFile("s120116-1029-2.dat", "s120116-1029-2.dat.rel");
-	d.readDataFile("s120116-1029-3.dat", "s120116-1029-3.dat.rel");
-	d.readDataFile("s120116-1029-4.dat", "s120116-1029-4.dat.rel");
-  d.readDataFile("s120116-1029-5.dat", "s120116-1029-5.dat.rel");
-  d.readDataFile("s120116-1029-6.dat", "s120116-1029-6.dat.rel");
-  d.readDataFile("s120116-1029-7.dat", "s120116-1029-7.dat.rel");
-	d.readDataFile("s120116-1029-8.dat", "s120116-1029-8.dat.rel");
-  d.readDataFile("s120116-1029-9.dat", "s120116-1029-9.dat.rel");
+void shutdown(int) {
+  std::cout << "Signal cought. Stop process." << std::endl;
+  exit(0);
+}
+int main(int argc, char** argv) {
+  MT::initCmdLine(argc,argv);
+  signal(SIGINT,shutdown);
+
+  BlocksWorldSampler sampler;
+  OnOracle o;
+
+  //Gui gui("situation.ors");
+  //GuiDataV guiData;
+  //gui.guiData = &guiData;
 
   TrainingsDataV train;
-
-  train.data = d.getData();
-  train.classes = d.getClasses();
+  sampler.sample(train.data);
+  intA classes;
+  classes.append(o.classify(train.data, 0));
+  train.classes = classes;
 
   ClassificatorV cl;
-  cl.classificator = new NaiveBayesClassificator(new BlocksWorldSampler);
+  cl.classificator = new GaussianProcessAL(new BlocksWorldSampler);
   cl.oracle = new OnOracle();
-  cl.tester = new Tester(5000);
+  cl.tester = new Tester(50000);
 
   ActiveLearningP alp;
-
   alp.traindata = &train;
   alp.classificator = &cl;
-
+  //alp.guiData = &guiData;
+ 
   alp.threadOpen();
   alp.threadLoop();
-  while (true) { 
-    sleep(1.);
-  }
+
+  //gui.threadOpen();
+  //gui.threadLoop();
+
+  MT::wait(60);
+
+  alp.threadClose();
 }
+
+
