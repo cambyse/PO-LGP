@@ -128,7 +128,7 @@ double GaussianProcess::max_var(){
 
 void GaussianProcess::evaluate(const arr& x, double& y, double& sig){
   uint i, N=Y.N, dN=dY.N;
-  static arr k, xi, Ginvk;
+  /*static*/ arr k, xi, Ginvk;
   if(N+dN==0){ //no data
     y = mu_func(x, priorP) + mu;
     sig=::sqrt(cov(kernelP, x, x));
