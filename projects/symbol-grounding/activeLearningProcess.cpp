@@ -24,7 +24,7 @@ void ActiveLearningP::step() {
   if (classificator->classificator->nextSample(sample)) {
     int _class = classificator->oracle->classify(sample); 
     classificator->classificator->addData(sample, _class);
-    std::cout << "Add sample as " << _class << std::endl;
+    //std::cout << "Add sample as " << _class << std::endl;
   }
   else {
     std::cout << "Nothing interesting" << std::endl;  

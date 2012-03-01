@@ -67,7 +67,6 @@ void GaussianProcessAL::addData(const MT::Array<arr>& data, const int class_) {
 }
 
 int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
-  srand(time(NULL));
   rejectionSampling(sample, s->sampler, new GaussianProcessEvaluator(s->gp));
   return 1;
 }
