@@ -135,9 +135,9 @@ void Controller::step() {
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
-    if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
+    if (task->requiresInit) task->initTaskVariables(*s->sys.ors, skinState);
     s->sys.setTaskVariables(task->TVs);
-    task->updateTaskVariableGoals(*s->sys.ors);
+    task->updateTaskVariableGoals(*s->sys.ors, skinState);
     
     //=== compute motion from the task variables
     //check if a collition and limit variable are active

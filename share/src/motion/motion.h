@@ -4,24 +4,11 @@
 #include <biros/biros.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
-//#include <hardware/hardware.h>
+#include "FeedbackControlTasks.h"
 
 struct SkinPressure;
 struct JoystickState;
 
-//===========================================================================
-//
-// fields of some variables
-//
-
-namespace ors { struct Graph; }
-
-struct FeedbackControlTaskAbstraction {
-  TaskVariableList TVs;
-  bool requiresInit;
-  virtual void initTaskVariables(const ors::Graph& ors)=0; //reactive update of the task variables' goals
-  virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; //reactive update of the task variables' goals
-};
 
 
 //===========================================================================
@@ -224,6 +211,8 @@ struct PoseViewer:Process {
     }
   }
 };
+
+
 
 #include "MotionPrimitive.h"
 

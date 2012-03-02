@@ -1,15 +1,16 @@
 #include <motion/motion.h>
+#include <hardware/hardware.h>
 
-struct MyTask:public FeedbackControlTaskAbstraction{
+struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
-  MyTask(){ requiresInit=true; }
-  virtual void initTaskVariables(const ors::Graph &ors){
+  virtual void initTaskVariables(const ors::Graph &ors, const arr& skinState){
+    listDelete(TVs);
     TV_eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", NULL, NULL, NoArr);
     TVs = LIST<TaskVariable>(*TV_eff);
     requiresInit = false;
-  }
-  virtual void updateTaskVariableGoals(const ors::Graph& ors){
     TV_eff->active=true;
+  }
+  virtual void updateTaskVariableGoals(const ors::Graph& ors, const arr& skinState){
     TV_eff->targetType=directTT; //specifies the feedback type target
     if(false){ //position control
       TV_eff->y_prec  =1e3;
