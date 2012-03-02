@@ -62,7 +62,7 @@ int main(int argn, char** argv){
   controllerTask.mode = ControllerTask::followTrajectory;
   controllerTask.deAccess(NULL);
 
-  uint mode=2;
+  uint mode=1;
   switch(mode){
   case 1:{ //serial mode
     motionPrimitive.open();

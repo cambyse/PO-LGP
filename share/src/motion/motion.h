@@ -55,7 +55,7 @@ struct MotionPlan:Variable {
 };
 
 struct ControllerTask:Variable {
-  enum ControllerMode { noType=0, followTrajectory, feedback, done  };
+  enum ControllerMode { noType=0, followPlan, feedback, done  };
   //optional: followWithFeedback
   
   FIELD(ControllerMode, mode);
@@ -80,7 +80,6 @@ struct HardwareReference:Variable {
   FIELD(arr, q_real);
   FIELD(double, hardwareRealTime);
   
-  uintA armMotorIndices, handMotorIndices;
   bool readHandFromReal;
   
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
@@ -121,7 +120,7 @@ struct Controller:Process {
   HardwareReference *hardwareReference;
   GeometricState *geo;
   SkinPressure *skinPressure;
-  JoystickState *joystickState;
+  //JoystickState *joystickState;
   
   Controller();
   ~Controller();

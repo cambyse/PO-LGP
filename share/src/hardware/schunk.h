@@ -36,6 +36,9 @@ struct sSchunkArm {
   //OUTPUT
   floatA q_real;
   
+  //Parameter
+  bool openArm;
+  
   //INTERAL
   CDevice* pDev;
   bool isOpen;

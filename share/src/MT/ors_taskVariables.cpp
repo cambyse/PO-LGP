@@ -19,7 +19,7 @@
 TaskVariable::TaskVariable(){
   active=false;
   type=noneTVT;
-  targetType=noneTT;
+  targetType=directTT;
   y_prec=0.; v_prec=0.; Pgain=Dgain=0.; err=derr=0.;
 }
 
@@ -36,10 +36,6 @@ DefaultTaskVariable::DefaultTaskVariable(
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
   const arr& _params){
-  active=false;
-  type=noneTVT;
-  targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   set(
     _name, _ors, _type,
     iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
@@ -56,10 +52,6 @@ DefaultTaskVariable::DefaultTaskVariable(
   const char *iShapeName,
   const char *jShapeName,
   const arr& _params){
-  active=false;
-  type=noneTVT;
-  targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   ors::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
   ors::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
   set(

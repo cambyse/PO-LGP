@@ -1,4 +1,6 @@
 #include "motion.h"
+#include <biros/biros.h>
+#include <hardware/hardware.h>
 
 void prepare_skin(TaskVariable *skin, const arr& skinState, bool cut_and_nil);
 
@@ -31,7 +33,7 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors, const 
   arr limits = birosInfo.getParameter<arr>("TV_limits");
   listDelete(TVs);
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-  TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin)); //MARGIN, perhaps .05?
+  TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
   TVs = ARRAY<TaskVariable*>(q, col, lim);
   activateAll(TVs, true);
@@ -137,7 +139,11 @@ void Reach_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors, c
 }
 
 void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors, const arr& skinState) {
-  double margin = birosInfo.getParameter<double>("TV_margin",.03);
+  //access the joystick Variable
+  birosInfo.getVariable(joyState, "JoystickState", NULL); //TODO get process pid
+  joyRate = birosInfo.getParameter<double>("JoystickRate");
+  
+  double margin = birosInfo.getParameter<double>("TV_margin", .03);
   arr limits = birosInfo.getParameter<arr>("TV_limits");
   arr skinIndex(6);
   skinIndex(0) = ors.getBodyByName("tip3")->index;
@@ -190,9 +196,12 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   q->y_prec=0.;  
   q->v_target.setZero();
 
-  prepare_skin(skin, skinState, joyState(0)!=2);
+  intA joys = joyState->get_state(NULL);
+  if(!joys.N){ joys.resize(8);  joys.setZero(); }
   
-  switch (joyState(0)) {
+  prepare_skin(skin, skinState, joys(0)!=2);
+  
+  switch (joys(0)) {
     case 1: { //(1) homing
       q->v_target = -q->y;
       double vmax=.5, v=norm(q->v_target);
@@ -232,18 +241,18 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
     case 0: { //(NIL) motion rate control
       eff->active=true;
       eff->y_target = eff->y;
-      eff->v_target(0) = -joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-      eff->v_target(1) = +joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-      eff->v_target(2) = -joyRate*MT::sign(joyState(2))*(.25*(exp(MT::sqr(joyState(2))/10000.)-1.));
+      eff->v_target(0) = -joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
+      eff->v_target(1) = +joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
+      eff->v_target(2) = -joyRate*MT::sign(joys(2))*(.25*(exp(MT::sqr(joys(2))/10000.)-1.));
       break;
     }
     case 4: { //(3) controlling the rotation rate
       //eff ->active=true;
       //eff->y_prec=x_yprec;  eff->v_prec=0.;
       rot->active=true;
-      rot->v_target(0) = -3.*joyRate*MT::sign(joyState(3))*(.25*(exp(MT::sqr(joyState(3))/10000.)-1.));
-      rot->v_target(1) = +3.*joyRate*MT::sign(joyState(6))*(.25*(exp(MT::sqr(joyState(6))/10000.)-1.));
-      rot->v_target(2) = -3.*joyRate*MT::sign(joyState(1))*(.25*(exp(MT::sqr(joyState(1))/10000.)-1.));
+      rot->v_target(0) = -3.*joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
+      rot->v_target(1) = +3.*joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
+      rot->v_target(2) = -3.*joyRate*MT::sign(joys(1))*(.25*(exp(MT::sqr(joys(1))/10000.)-1.));
       break;
     }
   }

@@ -30,7 +30,6 @@ Controller::Controller():Process("MotionController") {
   birosInfo.getVariable(hardwareReference, "HardwareReference", this);
   birosInfo.getVariable(geo, "GeometricState", this);
   birosInfo.getVariable(skinPressure, "SkinPressure", this);
-  birosInfo.getVariable(joystickState, "JoystickState", this);
 }
 
 Controller::~Controller() {
@@ -57,7 +56,6 @@ void Controller::close() { MT_MSG("NIY") }
 
 void Controller::step() {
   CHECK(controllerTask, "please set controllerMode before launching MotionPrimitive");
-  CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
   CHECK(hardwareReference, "please set controllerReference before launching MotionPrimitive");
   CHECK(geo, "please set geometricState before launching MotionPrimitive");
   CHECK(skinPressure, "please set skinPressure before launching MotionPrimitive");
@@ -71,7 +69,9 @@ void Controller::step() {
     return;
   }
   
-  if (mode==ControllerTask::followTrajectory) {
+  if (mode==ControllerTask::followPlan) {
+    CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
+    
     //-- check if converged
     if (motionPlan->get_converged(this)==false) {
       //stop

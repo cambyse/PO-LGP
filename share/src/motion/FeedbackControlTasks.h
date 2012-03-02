@@ -2,6 +2,7 @@
 #define motion_FeedbackControlTasks_h
 
 #include <MT/ors.h>
+struct JoystickState;
 
 //===========================================================================
 //
@@ -38,9 +39,8 @@ struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
 };
 
 struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
-  intA joyState;
+  JoystickState *joyState;
   double joyRate;
-  arr skinState;
   ~Joystick_FeedbackControlTask(){ listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors, const arr& skinState);
   virtual void updateTaskVariableGoals(const ors::Graph& ors, const arr& skinState);

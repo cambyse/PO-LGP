@@ -147,7 +147,8 @@ struct Parameter_typed:Parameter{
   T value;
   Parameter_typed(const char* name, const T& _default):Parameter(name){
     pvalue=&value;
-    MT::getParameter<T>(value, name, _default);
+    if(&_default) MT::getParameter<T>(value, name, _default);
+    else           MT::getParameter<T>(value, name);
   }
   void writeValue(ostream& os) const{ os <<value; }
   const char* typeName() const{ return typeid(T).name(); }
@@ -190,7 +191,7 @@ struct BirosInfo:Variable{
     writeAccess(p);
     v = (T*)listFindByName(variables, name);
     deAccess(p);
-    if(!v) HALT("can't find biros variable '" <<name <<"'");
+    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<p->name <<"' will not connect");
   }
   template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL){
     Parameter_typed<T> *par;

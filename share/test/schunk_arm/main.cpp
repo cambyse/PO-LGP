@@ -11,8 +11,6 @@
 
 #include <stdio.h>
 #include <termios.h>
-#include <term.h>
-#include <curses.h>
 #include <unistd.h>
 static struct termios clInitTerm, clNewTerm;
 static int iPeekChar = -1;

@@ -115,7 +115,7 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
 void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,TaskVariableList& TVs, const char* text){
 #ifdef MT_ODE
   static arr dq;
-  updateState(TVs);
+  updateState(TVs, *C);
   updateChanges(TVs);
   bayesianControl(TVs,dq,W);
 //   if (q.N==0) q.resizeAs(dq); // TOBIAS-Aenderung
@@ -630,7 +630,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   
   
   // Phase 1: up
-  updateState(local_TVs);
+  updateState(local_TVs, *C);
   o.y_target(2) += .3;
   for(t=0;t<Tabort;t++){
     if (o.y_target(2) < neutralHeight)
