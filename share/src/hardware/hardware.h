@@ -11,7 +11,7 @@
 //
 
 struct SkinPressure:public Variable {
-  arr y_real; //6D sensor reading
+  FIELD(arr, y_real); //6D sensor reading
   
   SkinPressure():Variable("SkinPressure") {
     y_real.resize(6);

@@ -15,7 +15,6 @@ struct sController {
   bool useBwdMsg, forceColLimTVs, fixFingers;
   arr bwdMsg_v, bwdMsg_Vinv; //optional: backward messages from a planner
   double maxJointStep; //computeMotionFromTaskVariables will generate a null-step if this limit is exceeded
-  arr skinState;
   
   //OUTPUT
   arr q_reference, v_reference; //, q_orsInit;  //the SIMULATION state (the modules buffer double states, simulation is synchronized with modules in the loop)
@@ -29,7 +28,6 @@ Controller::Controller():Process("MotionController") {
   birosInfo.getVariable(motionPlan, "MotionPlan", this);
   birosInfo.getVariable(hardwareReference, "HardwareReference", this);
   birosInfo.getVariable(geo, "GeometricState", this);
-  birosInfo.getVariable(skinPressure, "SkinPressure", this);
 }
 
 Controller::~Controller() {
@@ -58,7 +56,6 @@ void Controller::step() {
   CHECK(controllerTask, "please set controllerMode before launching MotionPrimitive");
   CHECK(hardwareReference, "please set controllerReference before launching MotionPrimitive");
   CHECK(geo, "please set geometricState before launching MotionPrimitive");
-  CHECK(skinPressure, "please set skinPressure before launching MotionPrimitive");
   
   ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
   
@@ -119,10 +116,6 @@ void Controller::step() {
     bool forceColLimTVs = controllerTask->get_forceColLimTVs(this);
     bool fixFingers = controllerTask->get_fixFingers(this);
     
-    skinPressure->readAccess(this);
-    arr skinState = skinPressure->y_real;
-    skinPressure->deAccess(this);
-    
     //pull for possible changes in the geometric state
     //MT_MSG("TODO");
     
@@ -135,9 +128,9 @@ void Controller::step() {
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
-    if (task->requiresInit) task->initTaskVariables(*s->sys.ors, skinState);
+    if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
     s->sys.setTaskVariables(task->TVs);
-    task->updateTaskVariableGoals(*s->sys.ors, skinState);
+    task->updateTaskVariableGoals(*s->sys.ors);
     
     //=== compute motion from the task variables
     //check if a collition and limit variable are active

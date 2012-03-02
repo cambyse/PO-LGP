@@ -119,8 +119,6 @@ struct Controller:Process {
   MotionPlan *motionPlan;
   HardwareReference *hardwareReference;
   GeometricState *geo;
-  SkinPressure *skinPressure;
-  //JoystickState *joystickState;
   
   Controller();
   ~Controller();
