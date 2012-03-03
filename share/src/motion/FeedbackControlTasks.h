@@ -32,14 +32,14 @@ _FeedbackRobotTask(OpenHand)
 
 struct CloseHand_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   SkinPressure *skinPressure;
-  ~CloseHand_FeedbackControlTask(){ listDelete(TVs); }
+  ~CloseHand_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors);
   virtual void updateTaskVariableGoals(const ors::Graph& ors);
 };
 
 struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   arr reachPoint;
-  ~Reach_FeedbackControlTask(){ listDelete(TVs); }
+  ~Reach_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors);
   virtual void updateTaskVariableGoals(const ors::Graph& ors);
 };
@@ -48,7 +48,7 @@ struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   JoystickState *joyState;
   SkinPressure *skinPressure;
   double joyRate;
-  ~Joystick_FeedbackControlTask(){ listDelete(TVs); }
+  ~Joystick_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors);
   virtual void updateTaskVariableGoals(const ors::Graph& ors);
 };

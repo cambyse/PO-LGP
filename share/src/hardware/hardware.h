@@ -21,8 +21,8 @@ struct SkinPressure:public Variable {
 
 
 struct JoystickState: public Variable {
-  FIELD( intA, state );
-  FIELD( uint, n );
+  FIELD(intA, state);
+  FIELD(uint, n);
   
   JoystickState():Variable("JoystickState") {}
   
@@ -36,9 +36,9 @@ struct JoystickState: public Variable {
 
 struct SchunkArm:public Process {
   struct sSchunkArm *s;
-
+  
   HardwareReference *hardwareReference;
-
+  
   SchunkArm();
   ~SchunkArm();
   void open();
@@ -49,9 +49,9 @@ struct SchunkArm:public Process {
 
 struct SchunkHand:public Process {
   struct sSchunkHand *s;
-
+  
   HardwareReference *hardwareReference;
-
+  
   SchunkHand();
   ~SchunkHand();
   void open();
@@ -62,9 +62,9 @@ struct SchunkHand:public Process {
 
 struct SchunkSkin:public Process {
   struct sSchunkSkin *s;
-
+  
   SkinPressure *skinPressure;
-
+  
   SchunkSkin();
   ~SchunkSkin();
   void open();
@@ -74,9 +74,9 @@ struct SchunkSkin:public Process {
 
 struct Joystick:public Process {
   struct sJoystick *s;
-
+  
   JoystickState *joystickState;
-
+  
   Joystick();
   ~Joystick();
   void open();

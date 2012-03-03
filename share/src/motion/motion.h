@@ -111,7 +111,7 @@ struct ActionPlan:Variable {
 
 struct Controller:Process {
   struct sController *s;
-
+  
   //TODO: we could remove all Variable points to the private space
   //works only if the Process really connects itself - cannot be connected from outside animore
   //OR: add a gerneric (template?) routine to Processes in general that tells them to connect to a specific
@@ -148,7 +148,7 @@ struct MotionPrimitive:Process {
 
 struct MotionPlanner:Process {
   struct sMotionPlanner_interpolation *s;
-
+  
   MotionPlan *plan;
   GeometricState *geo;
   

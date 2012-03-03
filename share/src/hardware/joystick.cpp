@@ -1,6 +1,6 @@
 #include "hardware.h"
 
-struct sJoystick{
+struct sJoystick {
   class jsJoystick *joy;
   intA state;
   uint n;
@@ -9,28 +9,28 @@ struct sJoystick{
   void close();
 };
 
-Joystick::Joystick():Process("Joystick"){
+Joystick::Joystick():Process("Joystick") {
   s = new sJoystick;
   birosInfo.getVariable(joystickState, "JoystickState", this);
   s->n=0;
 }
 
-Joystick::~Joystick(){
+Joystick::~Joystick() {
   delete s;
 }
 
-void Joystick::open(){
+void Joystick::open() {
   s->open();
   joystickState->set_n(s->n, this);
   joystickState->set_state(s->state, this);
 }
 
-void Joystick::step(){
+void Joystick::step() {
   s->step();
   joystickState->set_state(s->state, this);
 }
 
-void Joystick::close(){
+void Joystick::close() {
   s->close();
 }
 
@@ -46,7 +46,7 @@ void Joystick::close(){
 #undef min
 #undef max
 
-void sJoystick::open(){
+void sJoystick::open() {
   jsInit();
   joy = new jsJoystick();
   /*std::cout
@@ -57,20 +57,20 @@ void sJoystick::open(){
   <<std::endl;
   */
   n=joy->getNumAxes();
-  if(joy->notWorking()) n=0;
+  if (joy->notWorking()) n=0;
   state.resize(10);
   state.setZero();
   step();
 }
 
-void sJoystick::close(){
+void sJoystick::close() {
   delete joy;
   n=0;
   state.clear();
 }
 
-void sJoystick::step(){
-  if(!n) return;
+void sJoystick::step() {
+  if (!n) return;
   static int B, _B;
   static floatA A, _A;
   uint i;
@@ -78,8 +78,8 @@ void sJoystick::step(){
   state.resize(n+1);
   joy->rawRead(&B, A.p);
   state(0)=B;
-  for(i=0; i<n-2; i++) state(i+1)=((int)A(i))>>8;
-  for(; i<n  ; i++) state(i+1)=A(i);
+  for (i=0; i<n-2; i++) state(i+1)=((int)A(i))>>8;
+  for (; i<n  ; i++) state(i+1)=A(i);
   //cout <<"\rjoy state=" <<state <<std::flush;
   //bool change;
   //if(B!=_B || A!=_A) change=true; else change=false;
@@ -89,7 +89,7 @@ void sJoystick::step(){
 }
 
 #else //dummy implementations
-void sJoystick::open(){ state.resize(10); state.setZero(); MT_MSG("WARNING: dummy joystick implementation"); }
-void sJoystick::step(){ }
-void sJoystick::close(){ }
+void sJoystick::open() { state.resize(10); state.setZero(); MT_MSG("WARNING: dummy joystick implementation"); }
+void sJoystick::step() { }
+void sJoystick::close() { }
 #endif

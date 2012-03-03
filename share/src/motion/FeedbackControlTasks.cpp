@@ -81,7 +81,7 @@ void OpenHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
 
 void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   birosInfo.getVariable(skinPressure, "SkinPressure", NULL);
-
+  
   double pressure = birosInfo.getParameter<double>("closeHandPressure", .03);
   listDelete(TVs);
   arr skinIndex(6);
@@ -148,7 +148,7 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   birosInfo.getVariable(joyState, "JoystickState", NULL); //TODO get process pid
   birosInfo.getVariable(skinPressure, "SkinPressure", NULL);
   joyRate = birosInfo.getParameter<double>("JoystickRate");
-
+  
   double margin = birosInfo.getParameter<double>("TV_margin", .03);
   arr limits = birosInfo.getParameter<arr>("TV_limits");
   arr skinIndex(6);
@@ -158,7 +158,7 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   skinIndex(3) = ors.getBodyByName("fing1")->index;
   skinIndex(4) = ors.getBodyByName("tip2")->index;
   skinIndex(5) = ors.getBodyByName("fing2")->index;
-
+  
   listDelete(TVs);
   TaskVariable *eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
   TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
@@ -199,12 +199,12 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   col->active=true;
   lim->active=true;
   q->active=true;
-  q->y_prec=0.;  
+  q->y_prec=0.;
   q->v_target.setZero();
-
+  
   arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
   intA joys = joyState->get_state(NULL);
-  if(!joys.N){ joys.resize(8);  joys.setZero(); }
+  if (!joys.N) { joys.resize(8);  joys.setZero(); }
   
   prepare_skin(skin, skinState, joys(0)!=2);
   
@@ -265,18 +265,18 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   }
 }
 
-void prepare_skin(TaskVariable *skin, const arr& skinState, bool cut_and_nil){
-  if(skinState.N){
+void prepare_skin(TaskVariable *skin, const arr& skinState, bool cut_and_nil) {
+  if (skinState.N) {
     skin->y = skinState;
-  }else{
+  } else {
     skin->y = ARR(.01, 0, .01, 0, .01, 0);
   }
   
-  if(cut_and_nil){
+  if (cut_and_nil) {
     //cut of the skin signal... :-(
-    for(uint i=0; i<skin->y.N; i++) if(skin->y(i)>.02) skin->y(i)=.02;
+    for (uint i=0; i<skin->y.N; i++) if (skin->y(i)>.02) skin->y(i)=.02;
     //nil certain parts of the skin jacobian: all arm joints and hand 0-joint... :-(
-    for(uint i=0; i<skin->J.d0; i++) for(uint j=0; j<8; j++) skin->J(i, j)=0.;
+    for (uint i=0; i<skin->J.d0; i++) for (uint j=0; j<8; j++) skin->J(i, j)=0.;
     transpose(skin->Jt, skin->J);
   }
   

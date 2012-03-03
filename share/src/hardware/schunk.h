@@ -50,7 +50,7 @@ struct sSchunkArm {
   void open();
   void step();
   void close();
-
+  
   void reportParameters(std::ostream& os);
   int waitForEnd(int iMod);
   void setVel(uint motor, float vel);
@@ -89,7 +89,7 @@ struct sSchunkHand {
   void move(uint i, double x, bool wait, double v=20.);
   void moveAll(const arr& q, bool wait, double v=20.);
   void setVelocity(uint i, double v, double a);
-  void movePinch(double x){  moveAll(ARR(90, x, -.2*x, .5*x, -.1*x, x, -.2*x), true); }
+  void movePinch(double x) {  moveAll(ARR(90, x, -.2*x, .5*x, -.1*x, x, -.2*x), true); }
   
   //-- things to hide..
   SDH::cSDH* hand;
