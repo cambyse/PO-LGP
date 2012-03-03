@@ -1,16 +1,8 @@
-#include <MT/soc.h>
-#include <MT/util.h>
-#include <MT/specialTaskVariables.h>
-#include <MT/opengl.h>
 #include <MT/aico.h>
-#include <DZ/aico_key_frames.h>
-#include <SD/graspObjects.h>
-#include <SD/potentialTaskVariables.h>
-#include <MT/ors.h>
 
 #include <motion/MotionPrimitive.h>
 
-void problem1(){
+void testGraspHeuristic(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
   double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
 
@@ -70,12 +62,7 @@ void problem1(){
 int main(int argn,char **argv){
   MT::initCmdLine(argn,argv);
 
-  int mode=MT::getParameter<int>("mode");
-  switch(mode){
-  case 1:  problem1();  break;
-  //case 2:  problem2();  break;
-  //case 3:  problem3();  break;
-  default: NIY;
-  }
+  testGraspHeuristic();
+  
   return 0;
 }

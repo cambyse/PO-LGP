@@ -1,4 +1,6 @@
 #include "motion.h"
+#include "FeedbackControlTasks.h"
+
 #include <biros/biros.h>
 #include <hardware/hardware.h>
 

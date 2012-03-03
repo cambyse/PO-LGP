@@ -1,5 +1,5 @@
-#include <motion/motion.h>
 #include <hardware/hardware.h>
+#include <motion/motion.h>
 #include <motion/FeedbackControlTasks.h>
 
 int main(int argn,char** argv){

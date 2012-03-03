@@ -2,8 +2,8 @@
 #define MT_hardware_h
 
 #include <biros/biros.h>
-#include <motion/motion.h>
 
+struct HardwareReference;
 
 //===========================================================================
 //
@@ -11,7 +11,7 @@
 //
 
 struct SkinPressure:public Variable {
-  FIELD(arr, y_real); //6D sensor reading
+  FIELD(arr, y_real);
   
   SkinPressure():Variable("SkinPressure") {
     y_real.resize(6);

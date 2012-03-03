@@ -4,12 +4,10 @@
 #include <biros/biros.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
-#include "FeedbackControlTasks.h"
 
 struct SkinPressure;
 struct JoystickState;
-
-
+struct FeedbackControlTaskAbstraction;
 
 //===========================================================================
 //
@@ -17,7 +15,7 @@ struct JoystickState;
 //
 
 struct GeometricState:Variable {
-  ors::Graph ors;
+  FIELD(ors::Graph, ors);
   
   GeometricState();
 };
@@ -48,7 +46,7 @@ struct MotionPlan:Variable {
   //arr W; //diagonal of the control cost matrix
   //arr Phi, rho; //task cost descriptors
   //...for now: do it conventionally: task list or socSystem??
-  TaskVariableList TVs;
+  FIELD(TaskVariableList, TVs);
   
   MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false), final_keyframe(NULL) { };
   void get_poseView(arr& q) { q=q_plan; }
@@ -80,7 +78,7 @@ struct HardwareReference:Variable {
   FIELD(arr, q_real);
   FIELD(double, hardwareRealTime);
   
-  bool readHandFromReal;
+  FIELD(bool, readHandFromReal);
   
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
   void get_poseView(arr& q) { q=q_reference; }
@@ -113,8 +111,11 @@ struct ActionPlan:Variable {
 
 struct Controller:Process {
   struct sController *s;
-  
-  //links
+
+  //TODO: we could remove all Variable points to the private space
+  //works only if the Process really connects itself - cannot be connected from outside animore
+  //OR: add a gerneric (template?) routine to Processes in general that tells them to connect to a specific
+  //Variable?
   ControllerTask *controllerTask;
   MotionPlan *motionPlan;
   HardwareReference *hardwareReference;
@@ -130,7 +131,7 @@ struct Controller:Process {
 
 struct MotionPrimitive:Process {
   struct sMotionPrimitive *s;
-  //links
+  
   //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
   Action *action;
   MotionKeyframe *frame0,*frame1;
@@ -147,7 +148,7 @@ struct MotionPrimitive:Process {
 
 struct MotionPlanner:Process {
   struct sMotionPlanner_interpolation *s;
-  //links
+
   MotionPlan *plan;
   GeometricState *geo;
   
@@ -163,7 +164,7 @@ struct MotionPlanner:Process {
 
 //===========================================================================
 //
-// Viewers
+// Viewer (will be redundant with a more generic GUI)
 //
 
 template<class T>
@@ -208,7 +209,6 @@ struct PoseViewer:Process {
     }
   }
 };
-
 
 
 #include "MotionPrimitive.h"
