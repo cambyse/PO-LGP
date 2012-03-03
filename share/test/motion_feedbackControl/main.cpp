@@ -44,7 +44,7 @@ int main(int argn, char** argv){
   controllerTask.forceColLimTVs = false;
   controllerTask.deAccess(NULL);
 
-  uint mode=MT::getParameter<uint>("mode", 0);
+  uint mode=MT::getParameter<uint>("mode", 1);
   if(mode==0){
     controller.open();
     view.open();
