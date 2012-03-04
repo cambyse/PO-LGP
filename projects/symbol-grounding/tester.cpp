@@ -53,7 +53,7 @@ ClassifyWorkerFactory::ClassifyWorkerFactory(ClassificatorV* cl) :
   classificator(cl) {}
 
 ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl) : 
-  Master<MT::Array<arr>, double>("Classify Master Process", (WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl)) ,
+  Master<MT::Array<arr>, double>("Classify Master Process", (WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl), 5) ,
   numOfJobs(numOfJobs),
   numOfWorkingJobs(numOfJobs),
   classificator(cl)
@@ -96,10 +96,10 @@ Worker<MT::Array<arr>, double>* ClassifyWorkerFactory::createWorker() {
   return new ClassifyWorker(classificator);
 }
 
-Tester::Tester(const int testNumber) : m(NULL) {
+Tester::Tester(const int testNumber, const char* filename) : m(NULL) {
   m = new ClassifyMaster(testNumber, new ClassificatorV);
   m->testNumber = testNumber;
-  outfile.open("classification.data");
+  outfile.open(filename);
   m->threadOpen();
 }
 
