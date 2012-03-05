@@ -1,5 +1,6 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
+#include <motion/FeedbackControlTasks.h>
 
 struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
