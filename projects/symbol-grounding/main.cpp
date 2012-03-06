@@ -31,8 +31,6 @@ int main(int argc, char** argv) {
 
   MT::String filename =  MT::Parameter<MT::String>("dataFile", MT::String("classification.data"));
 
-  cout << filename << endl;
-
   BlocksWorldSampler sampler;
   OnOracle o;
 

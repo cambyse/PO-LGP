@@ -1,5 +1,6 @@
 import gdb
 import itertools
+import re
 
 
 # Try to use the new-style pretty-printing if available.
@@ -90,7 +91,23 @@ class ArrayPrinter:
     def children(self):
         return self._iterator(self.val['p'], self.val['nd'], self.val['d0'], self.val['d1'], self.val['d2'])
 
-        
+
+def MTLookupFunction(val):
+	lookup_tag = str(val.type)
+	if lookup_tag == None:
+		return None
+	regex = re.compile("^MT::Array<.*>\s*&*$")
+	if regex.match(lookup_tag):
+		return ArrayPrinter(val)
+	regex = re.compile("^arr\s*&*$")
+	if regex.match(lookup_tag):
+		return ArrayPrinter(val)
+	regex = re.compile("^const\s*arr\s*&*$")
+	if regex.match(lookup_tag):
+		return ArrayPrinter(val)
+
+	return None
+
 
 def build_mlr_pretty_printers():
     if _use_gdb_pp:
@@ -101,4 +118,4 @@ def build_mlr_pretty_printers():
 if _use_gdb_pp:
     gdb.printing.register_pretty_printer(gdb.current_objfile(), build_mlr_pretty_printers())
 else:
-    gdb.pretty_printers.append(ArrayPrinter)
+    gdb.pretty_printers.append(MTLookupFunction)
