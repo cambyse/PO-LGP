@@ -36,7 +36,7 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
    //JK_DEBUG(y);
    //
 
-   return - 10000000 * abs(y) - 1/(norm(grad)) - (sig-0.2)*(sig-0.2); // active
+   return - 10000000 * abs(y) - 1/(norm(grad)) - (sig-0.005)*(sig-0.005); // active
    //return 1; // random
 }
 
@@ -46,6 +46,7 @@ GaussianProcessAL::GaussianProcessAL(Sampler<MT::Array<arr> >* sampler) :
   s->p = new GaussKernelParams();
   s->p->obsVar = 10e-6;
   s->p->widthVar = .75;
+  s->p->priorVar = 0.01;
 
   s->gp.setGaussKernelGP(s->p, 0);
 }
