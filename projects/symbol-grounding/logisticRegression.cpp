@@ -171,7 +171,7 @@ void LogisticRegression::addData(const MT::Array<arr>& data, const int class_) {
   
 }
 int LogisticRegression::nextSample(MT::Array<arr>& sample) const {
-  rejectionSampling<MT::Array<arr> >(sample, s->sampler, &s->evaluator);
+  rejectionSampling<MT::Array<arr> >(sample, s->sampler, &s->evaluator, 100);
   return sample.N;
 }
 int LogisticRegression::classify(const MT::Array<arr>& data, const int set) const {
