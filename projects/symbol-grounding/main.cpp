@@ -24,12 +24,9 @@ int main(int argc, char** argv) {
   signal(SIGINT,shutdown);
 
   double seed = MT::getParameter<double>("seed", time(NULL));
-
   srand(seed);
 
   MT::String filename =  MT::Parameter<MT::String>("dataFile", MT::String("classification.data"));
-
-  cout << filename << endl;
 
   BlocksWorldSampler sampler;
   OnOracle o;
@@ -45,7 +42,7 @@ int main(int argc, char** argv) {
   train.classes = classes;
 
   ClassificatorV cl;
-  cl.classificator = new NaiveBayesClassificator(new BlocksWorldSampler);
+  cl.classificator = new GaussianProcessAL(new BlocksWorldSampler);
   cl.oracle = new OnOracle();
   cl.tester = new Tester(50000, filename);
 
@@ -55,12 +52,12 @@ int main(int argc, char** argv) {
   //alp.guiData = &guiData;
  
   alp.threadOpen();
-  alp.threadLoop();
+  alp.threadSteps(20);
 
   //gui.threadOpen();
   //gui.threadLoop();
 
-  MT::wait(3000);
+  //MT::wait(30);
 
   alp.threadClose();
 }
