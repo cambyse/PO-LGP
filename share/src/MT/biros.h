@@ -47,8 +47,6 @@ struct _Variable_field_info:_Variable_field_info_base{
   inline void reg_##name(){ \
     fields.append(new _Variable_field_info<type>(&name,#name)); }
 
-#define PARAM(type, name) \
-  type name;
 
 //===========================================================================
 //
@@ -245,7 +243,7 @@ void close(const ProcessL& P);
 
 
 #ifdef  MT_IMPLEMENTATION
-#  include "process.cpp"
+#  include "biros.cpp"
 #endif
 
 #endif
