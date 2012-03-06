@@ -4,8 +4,8 @@
 const int OnOracle::classify(const MT::Array<arr>& data, const int set) const {
   //if (data(set, 2)(2) - data(set, 0)(2) > 0.08 && data(set, 2)(2) - data(set, 0)(2) < 1.08 && norm( data(set, 2).subRange(0,1) - data(set, 0).subRange(0,1)) < 0.5 ) return 1;
 	double epsilon = 10e-3;
-	if (data(set, 2)(2) - data(set, 0)(2) >= (data(set, 1)(0) + data(set, 3)(0))*0.5 - epsilon&& 
-			data(set, 2)(2) - data(set, 0)(2) < (data(set, 1)(0) + data(set, 3)(0))*0.5 + epsilon && 
+	if (data(set, 2)(2) - data(set, 0)(2) >= (data(set, 1)(2) + data(set, 3)(2))*0.5 - epsilon&& 
+			data(set, 2)(2) - data(set, 0)(2) < (data(set, 1)(2) + data(set, 3)(2))*0.5 + epsilon && 
 			norm( data(set, 2).subRange(0,1) - data(set, 0).subRange(0,1)) < 0.5 ) return 1;
   else return 0;
 }

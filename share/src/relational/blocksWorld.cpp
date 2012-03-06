@@ -26,7 +26,7 @@ void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
   }
   for (uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), ARR(0.1, 0.1, sample(0,i+1)(0), 0.0375)); 
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
     body->name = "cyl"; 
     ors.bodies.append(body);
   }
@@ -44,7 +44,7 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
     center3d.resize(3);
 
     sample.append(center3d);
-    sample.append(ARR(blocksize));
+    sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
     while (t < 50 && i < numOfBlocks-1) {
       i++;
       center3d = center3d + randn(3,1) * 0.02;
@@ -53,7 +53,7 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
       towersize += blocksize;
 
       sample.append(center3d);
-      sample.append(ARR(blocksize));
+      sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
 
       t = rand() % 100;
     }
