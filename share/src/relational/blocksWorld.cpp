@@ -24,9 +24,9 @@ void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
       ors.bodies.remove(i);  
     }
   }
-  for (uint i = 0; i < sample.N; ++i) {
+  for (uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.)); 
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), ARR(0.1, 0.1, sample(0,i+1)(0), 0.0375)); 
     body->name = "cyl"; 
     ors.bodies.append(body);
   }
@@ -36,32 +36,30 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for (uint i = 0; i < numOfBlocks; ++i) {
     arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
-    center3d.append(0.74);
+
+    int t = rand() % 100;
+    double blocksize = 0.1 + (rand() % 100) / 500.;
+    double towersize = 0.69 + blocksize;
+    center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);
 
     sample.append(center3d);
-
-    int t = rand() % 100;
-    int tower = 0;
-    double blocksize = 0.1; // + (rand() % 100) / 500.;
-    double towersize = blocksize;
-    //sample.append(ARR(blocksize));
+    sample.append(ARR(blocksize));
     while (t < 50 && i < numOfBlocks-1) {
       i++;
-      tower++;
       center3d = center3d + randn(3,1) * 0.02;
-      double blocksize = 0.1; //+ (rand() % 100) / 500.;
+      double blocksize = 0.1 + (rand() % 100) / 500.;
+      center3d(2) = 0.5*blocksize + towersize;
       towersize += blocksize;
-      center3d(2) = 0.74 + towersize;
-      t = rand() % 100;
 
       sample.append(center3d);
-      //sample.append(ARR(blocksize));
+      sample.append(ARR(blocksize));
 
+      t = rand() % 100;
     }
   }
-  //sample.reshape(1,2*numOfBlocks);
-  sample.reshape(1,numOfBlocks);
+	sample.reshape(1,2*numOfBlocks);
+  //sample.reshape(1,numOfBlocks);
 }
 
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
@@ -73,7 +71,7 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, co
   ors::Transformation t;
   t.pos = pos;
   ors::Shape* s = new ors::Shape();
-  for (uint i = 0; i < 4; ++i) s->size[i] = size(i);
+  for (uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
   s->type = ors::cylinderST;
   for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
   s->body = &cyl;
