@@ -26,7 +26,8 @@ int main(int argc, char** argv) {
   double seed = MT::getParameter<double>("seed", time(NULL));
   srand(seed);
 
-  MT::String filename =  MT::Parameter<MT::String>("dataFile", MT::String("classification.data"));
+  MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
+  bool gaussproc = MT::getParameter<bool>("gauss", true);
 
   BlocksWorldSampler sampler;
   OnOracle o;
@@ -42,7 +43,10 @@ int main(int argc, char** argv) {
   train.classes = classes;
 
   ClassificatorV cl;
-  cl.classificator = new GaussianProcessAL(new BlocksWorldSampler);
+  if(gaussproc) 
+    cl.classificator = new GaussianProcessAL(new BlocksWorldSampler);
+  else
+    cl.classificator = new LogisticRegression(new BlocksWorldSampler);
   cl.oracle = new OnOracle();
   cl.tester = new Tester(50000, filename);
 
