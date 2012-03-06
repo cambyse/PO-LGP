@@ -24,6 +24,9 @@ int main(int argc, char** argv) {
   signal(SIGINT,shutdown);
 
   double seed = MT::getParameter<double>("seed", time(NULL));
+  int n_steps = MT::getParameter<int>("steps", 20);
+  cout << n_steps << endl;
+
   srand(seed);
 
   MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
@@ -56,12 +59,11 @@ int main(int argc, char** argv) {
   //alp.guiData = &guiData;
  
   alp.threadOpen();
-  alp.threadSteps(20);
+  alp.threadSteps(n_steps);
 
   //gui.threadOpen();
   //gui.threadLoop();
 
-  //MT::wait(30);
 
   alp.threadClose();
 }
