@@ -1,9 +1,9 @@
-#include "logisticRegression.h"
-#include "sampler.h"
+#include "al_logistic_regression.h"
 #include "al_util.h"
 
 #include <MT/array.h>
-#include <JK/util.h>
+#include <JK/utils/util.h>
+#include <JK/utils/sampler.h>
 
 class LogisticRegressionEvaluator : public Evaluator<MT::Array<arr> > {
   private:
@@ -84,6 +84,8 @@ void sLogisticRegression::makeFeatures(arr& Z, const arr& X, const arr& Xtrain){
 //}
 
 void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda){
+  std::cout << "Start logistic regresseion opt.... " << std::endl;
+  int t = time(NULL);
   CHECK(y.nd==2 && y.d0==X.d0, "");
   // M is the number of classes. y contains a row for each class holding a 0
   // if X(i) is not in this class and a 1 if it is in that class.
@@ -99,6 +101,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
   double logLike, lastLogLike, alpha=1.;
   beta.resize(d, M);
   beta.setZero();
+  int invtime = 0;
   for(uint k=0; k<100; k++){
     f = X*beta;
     for(uint i=0; i<f.N; i++) MT::constrain(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
@@ -128,7 +131,9 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
         for(uint i=0; i<n; i++) w(i) = p(i, c1)*((c1==c2?1.:0.)-p(i, c2));
         XtWX.setMatrixBlock(Xt*diagProduct(w, X) + (c1==c2?2.:0.)*I, c1*d, c2*d);
       }
+    int preinvtime = time(NULL);
     inverse_SymPosDef(XtWXinv, XtWX);
+    invtime += time(0) - preinvtime;
     //inverse(XtWXinv, XtWX);
     //compute the beta update
     beta_update = (Xt*(y-p) - 2.*I*beta); //the gradient as d-times-M matrix
@@ -140,8 +145,10 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
     
     beta += alpha*beta_update;
     
-    if(alpha*beta_update.absMax()<1e-5) break;
+    if(alpha*beta_update.absMax()<1e-3) break;
   }
+  cout << time(NULL) - t << " secs. ( " << invtime << " for inversion)" << std::endl;
+  std::cout << "done." <<std::endl;
 }
 
 

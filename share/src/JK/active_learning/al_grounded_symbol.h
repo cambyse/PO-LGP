@@ -1,7 +1,7 @@
 #ifndef _AL_GROUNDED_SYMBOL_H_
 #define _AL_GROUNDED_SYMBOL_H_
 
-#include "activeLearner.h"
+#include "al.h"
 
 #include <relational/symbolGrounding.h>
 

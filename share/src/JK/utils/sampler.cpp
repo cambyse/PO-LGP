@@ -1,6 +1,7 @@
 #include "sampler.h"
 
-#include <JK/util.h>
+#include <JK/utils/util.h>
+
 void BlocksWorldSampler::sample(MT::Array<arr>& sample) { 
   MT::Array<arr> next_sample;
   relational::generateBlocksSample(next_sample, 2); 

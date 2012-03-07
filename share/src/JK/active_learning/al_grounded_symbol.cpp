@@ -1,7 +1,7 @@
 #include "al_grounded_symbol.h"
 
-#include "activeLearningProcess.h"
-#include "oracle.h"
+#include "al_process.h"
+#include <JK/utils/oracle.h>
 
 struct sAL_GroundedSymbol {
   sAL_GroundedSymbol(ActiveLearner& al) : al(al) {};

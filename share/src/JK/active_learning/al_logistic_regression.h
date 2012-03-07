@@ -1,7 +1,7 @@
 #ifndef _LOGISTICREGRESSION_H_
 #define _LOGISTICREGRESSION_H_
 
-#include "activeLearner.h"
+#include "al.h"
 template<class S> class Sampler;
 class sLogisticRegression;
 

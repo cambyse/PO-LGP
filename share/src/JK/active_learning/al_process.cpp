@@ -1,9 +1,10 @@
-#include "activeLearningProcess.h"
+#include "al_process.h"
 
-#include "activeLearner.h"
-#include "oracle.h"
-#include "tester.h"
-#include "gui.h"
+#include "al.h"
+#include "al_tester.h"
+#include "al_gui.h"
+
+#include <JK/utils/oracle.h>
 
 ActiveLearningP::ActiveLearningP() : Process("Active Learning Process"),
   guiData(NULL)
@@ -24,7 +25,7 @@ void ActiveLearningP::step() {
   if (classificator->classificator->nextSample(sample)) {
     int _class = classificator->oracle->classify(sample); 
     classificator->classificator->addData(sample, _class);
-    //std::cout << "Add sample as " << _class << std::endl;
+    std::cout << "Add sample as " << _class << std::endl;
   }
   else {
     std::cout << "Nothing interesting" << std::endl;  

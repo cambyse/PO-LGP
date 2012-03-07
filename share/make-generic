@@ -96,7 +96,7 @@ endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
-LIBS    += -lrt
+LIBS    += -lrt 
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -441,6 +441,11 @@ endif
 ifeq ($(buildAndLink_DMITRY),1)
 BUILDS += buildComponent/DZ
 LinuxLibs += -ldz
+endif
+
+ifeq ($(buildAndLink_JOHANNES),1)
+BUILDS += buildComponent/JK
+LinuxLibs += -ljk
 endif
 
 ifeq ($(buildAndLink_MTLIB),1)

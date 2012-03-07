@@ -4,7 +4,7 @@
 #include "masterWorker.h"
 
 #include <queue>
-#include <JK/util.h>
+#include <JK/utils/util.h>
 
 
 template<class Job, class Result> class sMaster {

@@ -1,11 +1,11 @@
-#include "gaussProcClassificator.h"
-#include "sampler.h"
+#include "al_gaussian_process.h"
 #include "al_util.h"
 
 #include <cmath>
 
 #include <MT/gaussianProcess.h>
-#include <JK/util.h>
+#include <JK/utils/util.h>
+#include <JK/utils/sampler.h>
 
 struct sGaussianProcessAL {
   Sampler<MT::Array<arr> >* sampler;

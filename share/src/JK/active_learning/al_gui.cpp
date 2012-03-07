@@ -1,4 +1,4 @@
-#include "gui.h"
+#include "al_gui.h"
 
 #include <MT/opengl.h>
 #include <MT/ors.h>

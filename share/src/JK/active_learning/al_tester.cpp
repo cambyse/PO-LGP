@@ -1,15 +1,15 @@
-#include "tester.h"
+#include "al_tester.h"
+#include "al.h"
+#include "al_process.h"
 
-#include "masterWorker.h"
-#include "activeLearner.h"
-#include "oracle.h"
-#include "sampler.h"
-#include "activeLearningProcess.h"
+#include <JK/utils/masterWorker.h>
+#include <JK/utils/oracle.h>
+#include <JK/utils/sampler.h>
+#include <JK/utils/util.h>
 
 
 #include <relational/blocksWorld.h>
 
-#include <JK/util.h>
 
 class ClassifyMaster : public Master<MT::Array<arr>, double> {
   private:

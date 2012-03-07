@@ -1,7 +1,8 @@
 #ifndef _GAUSS_PROCESS_CLASSIFICATOR_H_
 #define _GAUSS_PROCESS_CLASSIFICATOR_H_
 
-#include "activeLearner.h"
+#include "al.h"
+
 template<class S> class Sampler;
 class sGaussianProcessAL;
 
