@@ -16,9 +16,7 @@
 
 #include "hardware.h"
 #include <perception/perception.h>
-//#include "nputils.h"
-//#include "cvutils.h"
-//#include "opencv_helper.h"
+#include <MT/vision.h>
 
 #include <fstream>
 #include <dc1394/dc1394.h>
@@ -52,12 +50,6 @@ struct CalibrationParameters{
   void stereo2world(floatA& world,const floatA& stereo);
   void write(std::ostream& os) const;
   void read(std::istream& is);
-};
-
-struct sCamera{
-  Image *camL,* camR;
-  Bumblebee *cam;
-  CalibrationParameters calib;
 };
 
 struct Bumblebee {
@@ -94,8 +86,16 @@ struct Bumblebee {
   bool              is_stereo();
 };
 
+struct sCamera{
+  Image *camL,* camR;
+  Bumblebee *cam;
+  CalibrationParameters calib;
+};
+
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
+  birosInfo.getVariable(s->camL, "CameraL", this);
+  birosInfo.getVariable(s->camR, "CameraR", this);
 };
 
 void Camera::open(){
@@ -109,7 +109,7 @@ void Camera::open(){
 void Camera::step(){
   byteA tmpL,tmpR;
   s->cam->grab(tmpL, tmpR);
-  s->calib.rectifyImages(tmpL, tmpR);
+  //s->calib.rectifyImages(tmpL, tmpR);
   s->camR->set_img(tmpR, this);
   s->camL->set_img(tmpL, this);
 };
@@ -419,3 +419,73 @@ void dc1394_capture(Bumblebee& bb){
 };
 
 
+
+//===========================================================================
+//
+// CalibrationParameters
+//
+
+void CalibrationParameters::read(std::istream& is){
+  cameraMatrix1.readTagged(is, "cameraMatrix1");
+  cameraMatrix2.readTagged(is, "cameraMatrix2");
+  distCoeffs1.readTagged(is, "distCoeffs1");
+  distCoeffs2.readTagged(is, "distCoeffs2");
+  R.readTagged(is,  "R");
+  T.readTagged(is,  "T");
+  E.readTagged(is,  "E");
+  F.readTagged(is,  "F");
+  R1.readTagged(is, "R1");
+  R2.readTagged(is, "R2");
+  P1.readTagged(is, "P1");
+  P2.readTagged(is, "P2");
+  Q.readTagged(is,  "Q");
+}
+
+void CalibrationParameters::write(std::ostream& os) const{
+  cameraMatrix1.writeTagged(os, "cameraMatrix1", false); os << std::endl;
+  cameraMatrix2.writeTagged(os, "cameraMatrix2", false); os << std::endl;
+  distCoeffs1.writeTagged(os, "distCoeffs1", false); os << std::endl;
+  distCoeffs2.writeTagged(os, "distCoeffs2", false); os << std::endl;
+  R.writeTagged(os,  "R", false);  os << std::endl;
+  T.writeTagged(os,  "T", false);  os << std::endl;
+  E.writeTagged(os,  "E", false);  os << std::endl;
+  F.writeTagged(os,  "F", false);  os << std::endl;
+  R1.writeTagged(os, "R1", false); os << std::endl;
+  R2.writeTagged(os, "R2", false); os << std::endl;
+  P1.writeTagged(os, "P1", false); os << std::endl;
+  P2.writeTagged(os, "P2", false); os << std::endl;
+  Q.writeTagged(os,  "Q", false);
+}
+
+void CalibrationParameters::rectifyImages(byteA &imgL, byteA& imgR){
+#ifdef MT_OPENCV
+  CvMatDonor cvMatDonor;
+  if(!map1L.N){
+    map1L.resize(imgL.d0,imgL.d1);
+    map2L.resize(imgL.d0,imgL.d1);
+    map1R.resize(imgL.d0,imgL.d1);
+    map2R.resize(imgL.d0,imgL.d1);
+    cvInitUndistortRectifyMap(CVMAT(cameraMatrix1), CVMAT(distCoeffs1),
+			      CVMAT(R1), CVMAT(P1),
+			      CVMAT(map1L), CVMAT(map2L));
+    cvInitUndistortRectifyMap(CVMAT(cameraMatrix2), CVMAT(distCoeffs2),
+			      CVMAT(R2), CVMAT(P2),
+			      CVMAT(map1R), CVMAT(map2R));
+  }
+  byteA tmp=imgL;
+  cvRemap(CVMAT(tmp), CVMAT(imgL), CVMAT(map1L), CVMAT(map2L));
+  tmp=imgR;
+  cvRemap(CVMAT(tmp), CVMAT(imgR), CVMAT(map1R), CVMAT(map2R));
+#else
+  HALT("Can't call this function without opencv");
+#endif
+}
+
+void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
+#ifdef MT_OPENCV
+  CvMatDonor cvMatDonor;
+  cvPerspectiveTransform(CVMAT(stereo), CVMAT(world), CVMAT(Q));
+#else
+  HALT("Can't call this function without opencv");
+#endif
+}

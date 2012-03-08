@@ -27,13 +27,14 @@ struct RigidObjectRepresentation {
   arr shapePoints3d;
   arr center3d, orsShapeParams;
   arr diagDiff;
-  
+
   RigidObjectRepresentation(){ found=0; }
 };
 
 typedef MT::Array<RigidObjectRepresentation*> RigidObjectRepresentationList;
 
 
+byteA evidence2RGB(const floatA& evidence);
 
 
 //===========================================================================
@@ -49,7 +50,7 @@ struct Image:Variable {
 
 struct FloatImage:Variable {
   FIELD(floatA, img);
-  //void get_dispImg(byteA& _img,Process *p) { get_img(_img, p); }
+  void get_dispImg(byteA& _img,Process *p) { floatA copy; get_img(copy, p); _img=evidence2RGB(copy); }
   FloatImage(const char* name):Variable(name) {}
 };
 
@@ -112,8 +113,32 @@ struct CvtHsv:Process {
   Image *rgb;
   Image *hsv;
   
-  CvtHsv();
+  CvtHsv(Image& _rgb, Image& _hsv);
   void open() {}
+  void step();
+  void close() {}
+};
+
+struct HsvFilter: Process {
+  struct sHsvFilter *s;
+  
+  Image *hsv;
+  FloatImage *evi;
+  
+  HsvFilter(Image& _hsv, FloatImage& _evi);
+  void open();
+  void step();
+  void close() {}
+};
+
+struct ShapeFitter: Process {
+  struct sShapeFitter *s;
+
+  FloatImage *eviL, *eviR;
+  PerceptionOutput *percOut;
+
+  ShapeFitter(FloatImage& _eviL, FloatImage& _eviR, PerceptionOutput &_perc);
+  void open();
   void step();
   void close() {}
 };

@@ -324,8 +324,8 @@ endif
 
 #assuming ubuntu libopencv2.1 synaptic package
 ifeq ($(OPENCV_UBUNTU),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv`
-LIBS      += `pkg-config --libs opencv`
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags opencv-2.3.1`
+LIBS      += `pkg-config --libs opencv-2.3.1`
  endif
 
 # newer qhull version?
@@ -422,10 +422,10 @@ endif
 ################################################################################
 # (a tag like `buildAndLink_NILS = 1' in a Makefile triggers make to also build NILS and then link to is)
 
-ifeq ($(buildAndLink_NILS),1)
-BUILDS += buildComponent/NP
-LinuxLibs += -lnp -ldc1394
-endif
+#ifeq ($(buildAndLink_NILS),1)
+#BUILDS += buildComponent/NP
+#LinuxLibs += -lnp -ldc1394
+#endif
 
 ifeq ($(buildAndLink_NIKOLAY),1)
 BUILDS += buildComponent/NJ
