@@ -29,10 +29,10 @@ include $(BASE)/make-config
 #
 ################################################################################
 ifndef OBJS
-OBJS	= main.o
+OBJS = main.o
 endif
 ifndef OUTPUT
-OUTPUT  = x.exe
+OUTPUT = x.exe
 endif
 
 

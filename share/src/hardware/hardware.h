@@ -34,6 +34,12 @@ struct JoystickState: public Variable {
 // Processes
 //
 
+PROCESS(Camera)
+
+PROCESS(Laser)
+
+PROCESS(Kinect)
+
 struct SchunkArm:public Process {
   struct sSchunkArm *s;
   

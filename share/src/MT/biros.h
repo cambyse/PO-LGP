@@ -17,6 +17,16 @@ typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
 
+#define PROCESS(name) \
+struct name:Process { \
+  struct s##name *s;  \
+  name();           \
+  void open();        \
+  void step();        \
+  void close();       \
+};
+
+
 //===========================================================================
 //
 // automatic setters and getters and info for Variable fields
