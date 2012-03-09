@@ -1,11 +1,27 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
+struct Info{
+  int i;
+  Info(const char* s){
+    cout <<s <<endl;
+    i=15;
+  }
+};
+struct Test{
+  static const char (*info)="bla";
+  
+  Test(){ cout <<"here: " <<info <<endl; }
+  int x;
+};
+
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   //ThreadInfoWin win;
   //win.threadLoopWithBeat(.1);
 
+  Test t;
+  
   // variables
   Image camL("CameraL"), camR("CameraR");
   Image hsvL("HsvL"), hsvR("HsvR");

@@ -20,7 +20,7 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#if defined MT_FREEGLUT || defined MT_FLTK || defined MT_QTGLUT
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
 #  define MT_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
@@ -35,7 +35,7 @@
 #  include <GL/freeglut.h>
 #endif
 
-#ifdef MT_QTGLUT
+#if defined MT_GTKGL || defined MT_QTGLUT
 #  include <GL/glut.h>
 #endif
 
@@ -270,14 +270,11 @@ protected:
   static uint selectionBuffer[1000];
   
   void init(); //initializes camera etc
-  //general callbacks (used by QT & Freeglut)
+  //general callbacks (used by all implementations)
   void Key(unsigned char key, int x, int y);
   void Mouse(int button, int updown, int x, int y);
   void Motion(int x, int y);
-  void PassiveMotion(int x, int y);
-  void Close(){ }
   void Reshape(int w, int h);
-  void Special(int key, int x, int y);
   void MouseWheel(int wheel, int direction, int x, int y);
   
   friend struct sOpenGL;

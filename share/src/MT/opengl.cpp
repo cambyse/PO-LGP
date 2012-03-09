@@ -21,6 +21,10 @@
 #  include "opengl_freeglut.cxx"
 #endif
 
+#ifdef MT_GTKGL
+#  include "opengl_gtk.cxx"
+#endif
+
 #ifdef MT_FLTK
 #  include "opengl_fltk.cxx"
 #endif
@@ -29,7 +33,7 @@
 #  include "opengl_qt.cxx"
 #endif
 
-#if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
+#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
 #  include "opengl_void.cxx"
 #endif
 
@@ -1051,6 +1055,16 @@ void glDrawDots(arr& dots){
 // OpenGL implementations
 //
 
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
+  s=new sOpenGL(this,title,w,h,posx,posy);
+  init();
+  processEvents();
+}
+
+OpenGL::~OpenGL(){
+  delete s;
+}
+
 OpenGL* OpenGL::newClone() const {
   OpenGL* gl=new OpenGL;
   //*(gl->s) = *s; //don't clone internal stuff!
@@ -1655,7 +1669,13 @@ void OpenGL::Motion(int _x, int _y){
 #else
   //int modifiers=0;
 #endif
-  if(!mouseIsDown) return;
+  if(!mouseIsDown){ //passive motion -> hover callbacks
+    mouseposx=_x; mouseposy=_y;
+    bool ud=false;
+    for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
+    if(ud) update();
+    return;
+  }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
   if(mouse_button==1){ //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
@@ -1695,20 +1715,6 @@ void OpenGL::Motion(int _x, int _y){
 #endif
 }
 
-void OpenGL::PassiveMotion(int _x, int _y){
-  _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", 0, _x, _y));
-  static int calls=0;
-  if(calls) return;
-  calls++;
-  mouseposx=_x; mouseposy=_y;
-  bool ud=false;
-  for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-  if(ud) update();
-  calls--;
-}
-
-void OpenGL::Special(int key, int x, int y){}
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y){}
 
 //===========================================================================
