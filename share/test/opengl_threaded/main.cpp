@@ -52,11 +52,10 @@ int main(int argc, char **argv){
   gl2.threadClose();
   //gl3.threadClose();
 
-  char *a = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\0";
-  Proc2 *a2;
+  Proc2 *gli;
   for (int i=0; i<50; ++i){
-    a2 = new  Proc2(a+i);
-    a2->threadLoop();
+    gli = new Proc2(STRING("many_" <<i));
+    gli->threadLoop();
     MT::wait(.2);
   }
   MT::wait(5.);

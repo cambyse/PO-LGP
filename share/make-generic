@@ -229,8 +229,9 @@ LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(GTK),1)
-CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0 `
-LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
 endif
 
 ifeq ($(WX),1)
@@ -505,6 +506,7 @@ info: force
 	@echo "  MSVC_CPATH =" "$(MSVC_CPATH)"
 	@echo "  MSVC_LPATH =" "$(MSVC_LPATH)"
 	@echo "  OBJS =" "$(OBJS)"
+	@echo "  LIBS =" "$(LIBS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
 	@echo "  OUTPUT =" "$(OUTPUT)"
 	@echo "  BUILDS =" "$(BUILDS)"
