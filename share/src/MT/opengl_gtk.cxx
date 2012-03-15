@@ -16,6 +16,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
+#include <gdk/x11/gdkglx.h>
 #undef MIN
 #undef MAX
 #include <X11/Xlib.h>
@@ -58,8 +59,8 @@ struct sOpenGL{
   static bool key_press_event(GtkWidget *widget, GdkEventKey *event);
   static void destroy(GtkWidget *widget);
   
-  static void lock(){ globalOpenglLock.lock(); }
-  static void unlock(){ gdk_flush(); globalOpenglLock.unlock(); }
+  static void lock(){ LOCK } //globalOpenglLock.lock(); }
+  static void unlock(){ UNLOCK } //globalOpenglLock.unlock(); }
 };
 
 //===========================================================================
@@ -86,7 +87,8 @@ void OpenGL::exitEventLoop(){  loopExit=true; }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
-  glutReshapeWindow(w,h);
+  NIY;
+  //glutReshapeWindow(w,h);
   processEvents();
 }
 
@@ -95,7 +97,6 @@ int OpenGL::height(){ int w,h; gtk_window_get_size(GTK_WINDOW(s->win), &w, &h); 
 
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
-  lock();
   static int argc=0;
   if(!argc){
     argc++;
@@ -151,7 +152,6 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   gtk_widget_show(win);
   gtk_widget_show(glArea);
   UNLOCK
-  unlock();
 }
 
 sOpenGL::~sOpenGL(){
@@ -175,9 +175,12 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     gdk_gl_drawable_swap_buffers(gldrawable);
   else
     glFlush();
-  //GdkGLContext  *glcontext = gtk_widget_get_gl_context(widget);
   gdk_gl_drawable_gl_end(gldrawable);
-  //glXMakeCurrent(glcontext, None, NULL);
+  
+  GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
+  Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
+  glXMakeCurrent(display, None, NULL);
+  
   unlock();
   return true;
 }

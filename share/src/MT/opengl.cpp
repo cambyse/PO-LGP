@@ -1000,7 +1000,7 @@ bool glUI::hoverCallback(OpenGL& gl){
 
 bool glUI::clickCallback(OpenGL& gl){
   bool b=checkMouse(gl.mouseposx, gl.mouseposy);
-  if(b) gl.update();
+  if(b) gl.postRedrawEvent();
   int t=top;
   if(t!=-1){
     cout <<"CLICK! on button #" <<t <<endl;
@@ -1566,7 +1566,7 @@ void OpenGL::Reshape(int width, int height){
   CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
   camera.setWHRatio((double)width/height);
   for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  //update();
+  //postRedrawEvent();
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y){
@@ -1632,7 +1632,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
   if(!downPressed){
     for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if(!cont){ update(); return; }
+  if(!cont){ postRedrawEvent(); return; }
 
   //mouse scroll wheel:
   if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
@@ -1644,7 +1644,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
        cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
 
-  update();
+  postRedrawEvent();
 }
 
 void OpenGL::Motion(int _x, int _y){
@@ -1673,7 +1673,7 @@ void OpenGL::Motion(int _x, int _y){
     mouseposx=_x; mouseposy=_y;
     bool ud=false;
     for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-    if(ud) update();
+    if(ud) postRedrawEvent();
     return;
   }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
@@ -1694,7 +1694,7 @@ void OpenGL::Motion(int _x, int _y){
     cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
 #endif
-    update();
+    postRedrawEvent();
     if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3){ //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
@@ -1702,13 +1702,13 @@ void OpenGL::Motion(int _x, int _y){
     trans(2)=0.;
     trans = s->downRot*trans;
     cam->X->pos = s->downPos + trans;
-    update();*/
+    postRedrawEvent();*/
   }
   if(mouse_button==2){ //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
-    update();
+    postRedrawEvent();
   }
 #else
   NICO;

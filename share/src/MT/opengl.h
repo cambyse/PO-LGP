@@ -257,12 +257,11 @@ private:
   void setOffscreen(int width, int height);
 #endif
   
-protected: //driver dependent methods
+public: //driver dependent methods
   bool loopExit;
   void postRedrawEvent();
   void processEvents();
   void enterEventLoop();
-public:
   void exitEventLoop();
   
 protected:
