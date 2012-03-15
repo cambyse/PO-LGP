@@ -113,8 +113,8 @@ MT::Array<OpenGL*> sOpenGL::glwins;
 // OpenGL implementations
 //
 
-void OpenGL::postRedrawEvent(){s->lock_win(); glutPostRedisplay(); s->unlock_win(); } 
-void OpenGL::processEvents(){  s->lock_win(); glutMainLoopEvent(); s->unlock_win(); }
+void OpenGL::postRedrawEvent(){s->lock_win(); glutSetWindow(s->windowID); glutPostRedisplay(); s->unlock_win(); } 
+void OpenGL::processEvents(){  s->lock_win(); glutSetWindow(s->windowID); glutMainLoopEvent(); s->unlock_win(); }
 void OpenGL::enterEventLoop(){ loopExit=false;  while(!loopExit){  processEvents();  sleepForEvents();  } }
 void OpenGL::exitEventLoop(){ loopExit=true; }
 

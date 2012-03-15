@@ -65,11 +65,14 @@ int main(int argn,char** argv){
   P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
   P.append(LIST<Process>(view0));
   //P.append(LIST<Process>(view));
-  //P.append(LIST<Process>(view7, view8, view9));
+  P.append(LIST<Process>(view7, view8, view9));
   P.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
 
   cam.threadLoop();
   loopWithBeat(P,.01);
+  
+  cout <<"arrange your windows..." <<endl;
+  MT::wait(5.);
   
   //pick-and-place loop
   for(uint k=0;k<10;k++){
