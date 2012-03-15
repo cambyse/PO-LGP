@@ -232,16 +232,21 @@ extern Mutex gllock;
 template<class T>
 struct ImageViewer:Process {
   T *var;
-  OpenGL gl;
+  OpenGL *gl;
   
-  ImageViewer(T& _var):Process("ImageViewer"), gl(_var.name) { var=&_var; }
-  void open() {}
-  void close() {}
+  ImageViewer(T& _var):Process("ImageViewer"), gl(NULL) { var=&_var; }
+  void open() {
+    gl = new OpenGL(var->name);
+  }
+  void close() {
+    delete gl;
+    gl = NULL;
+  }
   void step() {
     gllock.lock();
     byteA rgb;
     var->get_dispImg(rgb,this);
-    gl.watchImage(rgb,false,3.);
+    gl->watchImage(rgb,false,3.);
     gllock.unlock();
   }
 };

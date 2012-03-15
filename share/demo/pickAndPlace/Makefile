@@ -1,6 +1,7 @@
 BASE = ../..
 
+OBJS = main.o behaviors.o
+
 OPENCV = 1
-FELZ = 1
 
 include $(BASE)/make-generic

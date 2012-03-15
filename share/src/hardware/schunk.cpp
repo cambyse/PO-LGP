@@ -89,6 +89,9 @@ SchunkHand::~SchunkHand() {
 }
 
 void SchunkHand::open() {
+  s->openHand = birosInfo.getParameter<bool>("openHand", this, false);
+  if (!s->openHand) return;
+  
   s->open();
   
   s->motorIndex.resize(7);
@@ -100,6 +103,8 @@ void SchunkHand::open() {
 }
 
 void SchunkHand::step() {
+  if (!s->openHand) return;
+  
   hardwareReference->readAccess(this);
   if (!s->v_reference.N) s->v_reference.resize(7);
   for (uint m=0; m<7; m++) s->v_reference(m) = hardwareReference->v_reference(s->motorIndex(m));
@@ -113,6 +118,7 @@ void SchunkHand::step() {
 }
 
 void SchunkHand::close() {
+  if (!s->openHand) return;
   s->close();
 }
 
@@ -128,10 +134,14 @@ SchunkSkin::~SchunkSkin() {
 }
 
 void SchunkSkin::open() {
+  s->openSkin = birosInfo.getParameter<bool>("openSkin", this, false);
+  if (!s->openSkin) return;
+  
   s->open();
 }
 
 void SchunkSkin::step() {
+  if (!s->openSkin) return;
   s->step();
   
   skinPressure->writeAccess(this);
@@ -140,6 +150,7 @@ void SchunkSkin::step() {
 }
 
 void SchunkSkin::close() {
+  if (!s->openSkin) return;
   s->close();
 }
 

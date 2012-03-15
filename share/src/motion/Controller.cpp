@@ -65,7 +65,7 @@ void Controller::step() {
   
   ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
   
-  if (mode==ControllerTask::noType) {
+  if (mode==ControllerTask::stop) {
     //stop -> don't change q_reference
     hardwareReference->set_v_reference(zeros(14,1), this);
     controllerTask->waitForConditionSignal(.01);

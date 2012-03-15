@@ -69,6 +69,9 @@ struct sSchunkHand {
   //OUTPUT
   arr q_real;
   
+  //Parameter
+  bool openHand;
+  
   //INTERNAL
   bool isOpen;
   bool sendMotion;
@@ -103,6 +106,9 @@ struct sSchunkSkin {
   //OUTPUT
   MT::Array<uint16> emul_data;
   arr y_real;
+
+  //Parameter
+  bool openSkin;
   
   //INTERNAL
   SDH::cDSA* ts;

@@ -275,11 +275,9 @@ pmPreprocessImage( floatA &img, int iterations=5)
 }
 
 #ifdef MT_OPENCV
-bool
-getShapeParamsFromEvidence(arr& params, arr& points,
-                           const uint& type, const floatA& theta,
-                           byteA *disp=NULL, bool reuseParams=false)
-{
+bool getShapeParamsFromEvidence(arr& params, arr& points,
+				const uint& type, const floatA& theta,
+				byteA *disp=NULL, bool reuseParams=false){
   ENABLE_CVMAT
   if(disp){
     *disp=evi2rgb(theta);
@@ -506,7 +504,7 @@ getShapeParamsFromEvidence(arr& params, arr& points,
     problem.type=type;
     problem.N=20;
     problem.distImage = pow(distImage, 2.f);
-    problem.display = true;
+    problem.display = birosInfo.getParameter<bool>("shapeFitter_display", NULL);;
     if(type==0) problem.radius = params(0);
     else problem.radius = 0;
     
@@ -558,6 +556,7 @@ void ShapeFitter::step(){
   eviR->get_img(hsvR, this);
   
   if(!hsvL.N) return;
+  if(!hsvR.N) return;
 
 
   RigidObjectRepresentation *obj;

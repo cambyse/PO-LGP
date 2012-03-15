@@ -1,27 +1,11 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
-struct Info{
-  int i;
-  Info(const char* s){
-    cout <<s <<endl;
-    i=15;
-  }
-};
-struct Test{
-  static const char (*info)="bla";
-  
-  Test(){ cout <<"here: " <<info <<endl; }
-  int x;
-};
-
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   //ThreadInfoWin win;
   //win.threadLoopWithBeat(.1);
 
-  Test t;
-  
   // variables
   Image camL("CameraL"), camR("CameraR");
   Image hsvL("HsvL"), hsvR("HsvR");
@@ -42,7 +26,7 @@ int main(int argn,char** argv){
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
   
   ProcessL P=LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter);
-  ProcessL Pview=LIST<Process>(view1, view2, view3, view4, view5, view6);
+  ProcessL Pview=LIST<Process>(view1, view2, view5, view6); //view3, view4, 
 
   cam.threadLoop();
   loopWithBeat(P,.01);

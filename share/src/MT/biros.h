@@ -199,7 +199,13 @@ struct BirosInfo:Variable{
     writeAccess(p);
     v = (T*)listFindByName(variables, name);
     deAccess(p);
-    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<p->name <<"' will not connect");
+    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+  }
+  template<class T>  T* getProcess(const char* name, Process *p){
+    writeAccess(p);
+    T *pname = (T*)listFindByName(processes, name);
+    deAccess(p);
+    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
   }
   template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL){
     Parameter_typed<T> *par;

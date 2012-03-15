@@ -20,7 +20,7 @@ CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
 FREEGLUT = 1
-OPENCV_UBUNTU = 1
+OPENCV = 1
 endif
 
 ifeq ($(MAKEMODE),app)

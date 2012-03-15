@@ -18,6 +18,7 @@ struct GeometricState:Variable {
   FIELD(ors::Graph, ors);
   
   GeometricState();
+  ors::Graph& get_ors() { return ors; }
 };
 
 
@@ -53,7 +54,7 @@ struct MotionPlan:Variable {
 };
 
 struct ControllerTask:Variable {
-  enum ControllerMode { noType=0, followPlan, feedback, done  };
+  enum ControllerMode { stop=0, followPlan, feedback, done  };
   //optional: followWithFeedback
   
   FIELD(ControllerMode, mode);
@@ -66,7 +67,7 @@ struct ControllerTask:Variable {
   FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
   
   ControllerTask():Variable("ControllerTask"),
-      mode(noType),
+      mode(stop),
       followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.),
       forceColLimTVs(true), feedbackControlTask(NULL) {};
 };
@@ -92,6 +93,7 @@ struct Action:Variable {
   FIELD(bool, executed);
   FIELD(char*, objectRef1);  //arguments to the relational predicates
   FIELD(char*, objectRef2);
+  //FIELD(char*, objectRef3);
   
   Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
 };
@@ -171,23 +173,27 @@ template<class T>
 struct PoseViewer:Process {
   T *var;
   GeometricState *geo;
-  OpenGL gl;
+  OpenGL *gl;
   ors::Graph *ors;
   
-  PoseViewer(T& v, GeometricState& g):Process("MotionPoseViewer"), var(&v), geo(&g), gl(v.name), ors(NULL) {
+  PoseViewer(T& v, GeometricState& g):Process("MotionPoseViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
   }
   void open() {
     geo->writeAccess(this);
     ors = geo->ors.newClone();
     geo->deAccess(this);
-    gl.add(glStandardScene);
-    gl.add(ors::glDrawGraph, ors);
-    gl.camera.setPosition(5, -10, 10);
-    gl.camera.focus(0, 0, 1);
-    gl.camera.upright();
-    gl.update();
+    gl = new OpenGL(var->name);
+    gl->add(glStandardScene);
+    gl->add(ors::glDrawGraph, ors);
+    gl->camera.setPosition(5, -10, 10);
+    gl->camera.focus(0, 0, 1);
+    gl->camera.upright();
+    gl->update();
   }
-  void close() {}
+  void close() {
+    delete gl;
+    gl = NULL;
+  }
   void step() {
     arr q;
     var->readAccess(this);
@@ -197,19 +203,53 @@ struct PoseViewer:Process {
       if (q.N==2*ors->getJointStateDimension()) q = q.sub(0,q.N/2-1); //check dynamic state
       ors->setJointState(q);
       ors->calcBodyFramesFromJoints();
-      gl.text.clr() <<"pose view";
-      gl.update();
+      gl->text.clr() <<"pose view";
+      gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
         ors->setJointState(q[t]);
         ors->calcBodyFramesFromJoints();
-        gl.text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
-        gl.update();
+        gl->text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
+        gl->update();
       }
     }
   }
 };
 
+template<class T>
+struct OrsViewer:Process {
+  T *var;
+  GeometricState *geo;
+  OpenGL *gl;
+  ors::Graph *ors;
+  
+  OrsViewer(T& v, GeometricState& g):Process("MotionOrsViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
+  }
+  void open() {
+    geo->writeAccess(this);
+    ors = geo->ors.newClone();
+    geo->deAccess(this);
+    gl = new OpenGL(var->name);
+    gl->add(glStandardScene);
+    gl->add(ors::glDrawGraph, ors);
+    gl->camera.setPosition(5, -10, 10);
+    gl->camera.focus(0, 0, 1);
+    gl->camera.upright();
+    gl->update();
+  }
+  void close() {
+    delete gl;
+    gl = NULL;
+  }
+  void step() {
+    arr q;
+    var->readAccess(this);
+    ors->copyShapesAndJoints( var->get_ors() );
+    var->deAccess(this);
+    gl->text.clr() <<"ors view of Variable " <<var->name;
+    gl->update();
+  }
+};
 
 #include "MotionPrimitive.h"
 
