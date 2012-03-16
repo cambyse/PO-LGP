@@ -25,6 +25,7 @@
 
 #include "robotManipulationSimulator.h"
 #include <sstream>
+#include <limits>
 
 #if TL_SOIL
 #include <SOIL/SOIL.h>
@@ -804,6 +805,75 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 
 
 
+void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
+#  ifdef MT_ODE
+	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
+  MT::String msg_string(message);
+  if (msg_string.N() == 0) {
+    msg_string << "move to position "<< pos;
+  }
+  
+  ors::Body* obj = C->bodies(convertObjectName2ID("fing1c"));
+  // move manipulator towards box
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  x.setGainsAsAttractor(20,.2);
+  x.y_prec=1000.;
+  TaskVariableList TVs;
+  TVs.append(&x);
+
+	double epsilon = 10e-3;
+
+  uint t;
+  arr q,dq;
+  C->getJointState(q);
+  for(t=0;t<Tabort;t++){
+    x.y_target.setCarray(pos.p,3);
+    MT::String send_string;
+    send_string << msg_string;
+    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
+		if ((obj->X.pos - pos).length() < epsilon) break;
+  }
+  if(t==Tabort){ indicateFailure(); return; }
+  simulate(30, msg_string);
+  
+#ifdef MT_SWIFT
+  swift->initActivations(*C);
+#endif
+#endif
+}
+
+void RobotManipulationSimulator::grabHere(const char* message) {
+  #ifdef MT_SWIFT
+  MT::String msg_string(message);
+  if (msg_string.N() == 0) {
+    msg_string << "grabHere: ";
+  }
+
+	uint finger = convertObjectName2ID("fing1c");
+  // (1) drop object if one is in hand
+  dropObject(finger);
+	
+	double min_distance = std::numeric_limits<double>::max();
+	uint closest_object = 0;
+  for (uint i = 0; i< C->proxies.N; i++) {
+	  if (C->proxies(i)->a == finger || C->proxies(i)->b == finger) {
+			 if (C->proxies(i)->d < min_distance) {
+				 min_distance = C->proxies(i)->d; 
+				 closest_object = (C->proxies(i)->a == finger ? C->proxies(i)->b : C->proxies(i)->a );
+			 }
+		}
+	}
+	if (min_distance > 10e-4) {
+		msg_string << "nothing to grab";
+	}
+	else {
+		C->glueBodies(C->getBodyByName("fing1c"), C->getBodyByName(convertObjectID2name(closest_object)));
+		msg_string << "Grabed obj " << convertObjectID2name(closest_object); 
+  }
+  
+  #endif
+}
+
 
 // ==============================================================================
 // ==============================================================================
@@ -1114,6 +1184,21 @@ void RobotManipulationSimulator::getBalls(uintA& balls) {
   }
 }
 
+void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
+  cylinders.clear();
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;i<=numObjects;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (n->shapes.N == 1) {
+      if (n->shapes(0)->type == ors::cylinderST)
+        cylinders.append(n->index);
+    }
+  }
+}
 
 void RobotManipulationSimulator::getBoxes(uintA& boxes) {
   boxes.clear();
@@ -1399,7 +1484,8 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
   uintA others;
   getObjects(others);
   ors::Body* other_body;
-//   C->reportProxies();
+
+   //C->reportProxies();
   
   for(i=0;i<C->proxies.N;i++){
     if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth
