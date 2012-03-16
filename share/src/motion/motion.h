@@ -118,10 +118,10 @@ struct Controller:Process {
   //works only if the Process really connects itself - cannot be connected from outside animore
   //OR: add a gerneric (template?) routine to Processes in general that tells them to connect to a specific
   //Variable?
-  ControllerTask *controllerTask;
-  MotionPlan *motionPlan;
-  HardwareReference *hardwareReference;
-  GeometricState *geo;
+  //ControllerTask *controllerTask;
+  //MotionPlan *motionPlan;
+  //HardwareReference *hardwareReference;
+  //GeometricState *geo;
   
   Controller();
   ~Controller();
@@ -138,9 +138,8 @@ struct MotionPrimitive:Process {
   Action *action;
   MotionKeyframe *frame0,*frame1;
   MotionPlan *plan;
-  GeometricState *geo;
   
-  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
+  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&);
   ~MotionPrimitive();
   void open();
   void step();
@@ -149,12 +148,7 @@ struct MotionPrimitive:Process {
 
 
 struct MotionPlanner:Process {
-  struct sMotionPlanner_interpolation *s;
-  
-  MotionPlan *plan;
-  GeometricState *geo;
-  
-  enum MotionPlannerAlgo { interpolation=0, AICO_noinit } algo;
+  struct sMotionPlanner *s;
   
   MotionPlanner();
   ~MotionPlanner();
@@ -172,19 +166,20 @@ struct MotionPlanner:Process {
 template<class T>
 struct PoseViewer:Process {
   T *var;
-  GeometricState *geo;
+  WorkingCopy<GeometricState> geo;
   OpenGL *gl;
-  ors::Graph *ors;
   
-  PoseViewer(T& v, GeometricState& g):Process("MotionPoseViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
+  PoseViewer(T& v):Process("MotionPoseViewer"), var(&v), gl(NULL) {
+    geo.init("GeometricState", this);
   }
   void open() {
-    geo->writeAccess(this);
-    ors = geo->ors.newClone();
-    geo->deAccess(this);
+    geo.pull();
+//     geo->writeAccess(this);
+//     ors = geo->ors.newClone();
+//     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, ors);
+    gl->add(ors::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -195,20 +190,22 @@ struct PoseViewer:Process {
     gl = NULL;
   }
   void step() {
+    geo.pull();
     arr q;
     var->readAccess(this);
     var->get_poseView(q);
     var->deAccess(this);
     if (q.nd==1) {
-      if (q.N==2*ors->getJointStateDimension()) q = q.sub(0,q.N/2-1); //check dynamic state
-      ors->setJointState(q);
-      ors->calcBodyFramesFromJoints();
+      if (q.N==2*geo().ors.getJointStateDimension())
+        q = q.sub(0,q.N/2-1); //check dynamic state
+      geo().ors.setJointState(q);
+      geo().ors.calcBodyFramesFromJoints();
       gl->text.clr() <<"pose view";
       gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
-        ors->setJointState(q[t]);
-        ors->calcBodyFramesFromJoints();
+        geo().ors.setJointState(q[t]);
+        geo().ors.calcBodyFramesFromJoints();
         gl->text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
         gl->update();
       }
@@ -219,19 +216,20 @@ struct PoseViewer:Process {
 template<class T>
 struct OrsViewer:Process {
   T *var;
-  GeometricState *geo;
+  WorkingCopy<GeometricState> geo;
   OpenGL *gl;
-  ors::Graph *ors;
   
-  OrsViewer(T& v, GeometricState& g):Process("MotionOrsViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
+  OrsViewer(T& v, GeometricState& g):Process("MotionOrsViewer"), var(&v), gl(NULL) {
+    geo.init("GeometricState", this);
   }
   void open() {
-    geo->writeAccess(this);
-    ors = geo->ors.newClone();
-    geo->deAccess(this);
+    geo.pull();
+//     geo->writeAccess(this);
+//     ors = geo->ors.newClone();
+//     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, ors);
+    gl->add(ors::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -243,9 +241,7 @@ struct OrsViewer:Process {
   }
   void step() {
     arr q;
-    var->readAccess(this);
-    ors->copyShapesAndJoints( var->get_ors() );
-    var->deAccess(this);
+    geo.pull();
     gl->text.clr() <<"ors view of Variable " <<var->name;
     gl->update();
   }

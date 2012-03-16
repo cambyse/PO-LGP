@@ -20,12 +20,6 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
-#  define MT_GL
-#  include <GL/gl.h>
-#  include <GL/glu.h>
-#endif
-
 #ifdef MT_FLTK
 #  include <FL/glut.H>
 #endif
@@ -37,6 +31,12 @@
 
 #if defined MT_GTKGL || defined MT_QTGLUT
 #  include <GL/glut.h>
+#endif
+
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
+#  define MT_GL
+#  include <GL/gl.h>
+#  include <GL/glu.h>
 #endif
 
 #ifdef MT_GL2PS

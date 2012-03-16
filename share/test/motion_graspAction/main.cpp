@@ -19,12 +19,12 @@ int main(int argn, char** argv){
   // processes
   Controller controller;
   MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
+  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan);
 
   // viewers
-  PoseViewer<MotionPlan>        view1(motionPlan, geometricState);
-  PoseViewer<HardwareReference> view2(hardwareReference, geometricState);
-  PoseViewer<MotionKeyframe>    view3(frame1, geometricState);
+  PoseViewer<MotionPlan>        view1(motionPlan);
+  PoseViewer<HardwareReference> view2(hardwareReference);
+  PoseViewer<MotionKeyframe>    view3(frame1);
   
   ProcessL P=LIST<Process>(controller, motionPlanner, motionPrimitive);
   P.append(LIST<Process>(view1, view2, view3));
@@ -41,7 +41,7 @@ int main(int argn, char** argv){
   controllerTask.mode = ControllerTask::followPlan;
   controllerTask.deAccess(NULL);
 
-  uint mode=1;
+  uint mode=2;
   switch(mode){
   case 1:{ //serial mode
     motionPrimitive.open();

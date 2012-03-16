@@ -2543,10 +2543,27 @@ ors::Graph* ors::Graph::newClone() const {
   return G;
 }
 
+void ors::Graph::operator=(const ors::Graph& G) {
+  uint i;  Shape *s;  Body *b;
+  sd=G.sd;  jd=G.jd;  td=G.td;
+  Qlin = G.Qlin;  Qoff = G.Qoff;  Qinv = G.Qinv;
+  listCopy(proxies, G.proxies);
+  listCopy(joints, G.joints);
+  listCopy(shapes, G.shapes);
+  listCopy(bodies, G.bodies);
+  graphMakeLists(bodies, joints);
+  for_list(i, b, bodies) b->shapes.clear();
+  for_list(i, s, shapes){
+    b=bodies(s->ibody);
+    s->body=b;
+    b->shapes.append(s);
+  }
+}
+
 void ors::Graph::copyShapesAndJoints(const Graph& G){
   uint i;  Shape *s;  Body *b;  Joint *j;
-  for_list(i, s, shapes)(*s) = *G.shapes(i);
-  for_list(i, j, joints)(*j) = *G.joints(i);
+  for_list(i, s, shapes) (*s) = *G.shapes(i);
+  for_list(i, j, joints) (*j) = *G.joints(i);
   for_list(i, b, bodies) b->shapes.clear();
   for_list(i, s, shapes){
     b=bodies(s->ibody);

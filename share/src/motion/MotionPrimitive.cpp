@@ -2,18 +2,18 @@
 //#include <DZ/aico_key_frames.h>
 
 struct sMotionPrimitive {
-  ors::Graph *ors;
+  WorkingCopy<GeometricState> geo;
   soc::SocSystem_Ors sys;
   OpenGL *gl;
   uint verbose;
   
 };
 
-MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p, GeometricState& g):Process("MotionPrimitive"),
-    action(&a), frame0(&f0), frame1(&f1), plan(&p), geo(&g) {
+MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p):Process("MotionPrimitive"),
+    action(&a), frame0(&f0), frame1(&f1), plan(&p){
   s = new sMotionPrimitive;
+  s->geo.init("GeometricState", this);
   s->gl=NULL;
-  s->ors=NULL;
 }
 
 MotionPrimitive::~MotionPrimitive() {
@@ -26,40 +26,32 @@ void MotionPrimitive::open() {
   uint T = birosInfo.getParameter<uint>("MotionPrimitive_TrajectoryLength", this);
   double duration = birosInfo.getParameter<double>("MotionPrimitive_TrajectoryDuration", this);
   
-  CHECK(geo, "please set geometricState before launching MotionPrimitive");
-  
   //clone the geometric state
-  geo->readAccess(this);
-  s->ors = geo->ors.newClone();
-  geo->deAccess(this);
+  s->geo.pull();
+  /*geo->readAccess(this);
+//   s->ors = geo->ors.newClone();
+  geo->deAccess(this);*/
   if (s->verbose) {
     s->gl = new OpenGL("MotionPrimitive");
     s->gl->add(glStandardScene);
-    s->gl->add(ors::glDrawGraph, s->ors);
+    s->gl->add(ors::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
     s->gl->camera.focus(0, 0, 1);
     s->gl->camera.upright();
     s->gl->update();
   }
   
-  s->sys.initBasics(s->ors, NULL, (s->verbose?s->gl:NULL),
+  s->sys.initBasics(&s->geo().ors, NULL, (s->verbose?s->gl:NULL),
                     T, duration, true, &W);
   //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
 
 void MotionPrimitive::close() {
-  delete s->ors;
-  s->ors = NULL;
 }
 
 void MotionPrimitive::step() {
+  s->geo.pull();
   Action::ActionPredicate actionSymbol = action->get_action(this);
-  
-  if (true) {//TODO: need to pull ors configuration
-    geo->writeAccess(this); //BAD!
-    geo->ors.copyShapesAndJoints(*s->sys.ors);
-    geo->deAccess(this);
-  }
   
   if (actionSymbol==Action::noAction) {
     plan->set_hasGoal(false,this);

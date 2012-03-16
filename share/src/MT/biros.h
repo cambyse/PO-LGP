@@ -84,7 +84,8 @@ struct Variable {
 
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
-
+  uint get_revision(){ readAccess(NULL); uint r = revision; deAccess(NULL); return r; }
+  
   //-- condition variable control, to be called from processes to broadcast (publish) or wait for broadcast (subscribe)
   void broadcastCondition(int i=0);
   int  getCondition();
@@ -165,27 +166,6 @@ struct Parameter_typed:Parameter{
 
 //===========================================================================
 //
-// Access (preliminary - not used yet)
-//
-
-template<class T>
-struct Access{
-  T *var;             ///< pointer to the Variable (T must be derived from Variable)
-  Process *p;         ///< pointer to the Process that might want to access the Variable
-  uint last_revision; ///< last revision of a read/write access
-  
-  Access(Process *_p){ p=_p; last_revision = 0;  }
-  T& operator()(){ return *var; }
-  
-  bool needsUpdate(){  return last_revision != var->revision;  } //Does this need a lock?
-  void readAccess(){  var->readAccess(p);  }
-  void writeAccess(){  var->writeAccess(p);  }
-  void deAccess(){  last_revision=var->revision;  var->deAccess(p);  }
-};
-
-
-//===========================================================================
-//
 // basic access to global system info
 //
 
@@ -227,6 +207,53 @@ struct BirosInfo:Variable{
 
 extern BirosInfo birosInfo;
 
+
+//===========================================================================
+//
+// WorkingCopy
+//
+
+template<class T>
+struct WorkingCopy{
+  T *var;             ///< pointer to the Variable (T must be derived from Variable)
+  T copy;
+  Process *p;         ///< pointer to the Process that might want to access the Variable
+  uint last_revision; ///< last revision of a read/write access
+  
+  WorkingCopy(){ p=NULL; var=NULL; last_revision = 0;  }
+  T& operator()(){ return copy; }
+  
+  void init(T *_v, Process *_p){
+    p=_p;
+    var=_v;
+    var->readAccess(p);
+    copy = *var;
+    last_revision = var->revision;
+    var->deAccess(p);
+  }
+  void init(const char* var_name, Process *_p){
+    T *_v;
+    birosInfo.getVariable(_v, "GeometricState", _p);
+    init(_v, _p);
+  }
+  bool needsUpdate(){
+    return last_revision != var->get_revision();
+  }
+  void push(){
+    if(var->get_revision()>last_revision) MT_MSG("Warning: push overwrites revision");
+    var->writeAccess(p);
+    *var = copy;
+    last_revision = var->revision; //(was incremented already on writeAccess)
+    var->deAccess(p);
+  }
+  void pull(){
+    if(last_revision == var->get_revision()) return;
+    var->readAccess(p);
+    copy = *var;
+    last_revision = var->revision;
+    var->deAccess(p);
+  }
+};
 
 
 //===========================================================================

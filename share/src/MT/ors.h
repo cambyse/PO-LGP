@@ -413,6 +413,7 @@ struct Graph {
   //!@name constructors
   Graph(){ sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
   ~Graph(){ clear(); }
+  void operator=(const ors::Graph& G);
   Graph* newClone() const;
   void copyShapesAndJoints(const Graph& G);
   
