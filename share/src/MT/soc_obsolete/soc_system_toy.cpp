@@ -24,7 +24,7 @@
 //
 
 // mass on a spring
-struct soc::SocSystem_Toy_Workspace{
+struct soc::sSocSystem_Toy{
   double m, d; //mass and spring constant
   double x, v;  //current position and velocity
   double x0, v0;//initial position and velocity
@@ -35,7 +35,7 @@ struct soc::SocSystem_Toy_Workspace{
 };
 
 soc::SocSystem_Toy::SocSystem_Toy(){
-  s = new SocSystem_Toy_Workspace;
+  s = new sSocSystem_Toy;
   s->m=1.;
   s->d=1.3;
   s->x0=1.;
@@ -160,7 +160,7 @@ void soc::SocSystem_Toy::getPrecisionV(double& prec, uint i, uint t){
 
 void toyDrawEnv(void *p){
 #ifdef MT_GL
-  soc::SocSystem_Toy_Workspace *s = (soc::SocSystem_Toy_Workspace*)p;
+  soc::sSocSystem_Toy *s = (soc::sSocSystem_Toy*)p;
   glStandardLight(NULL);
   glDrawAxes(1.);
   glTranslatef(0, 0, s->x);

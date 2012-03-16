@@ -21,12 +21,12 @@ void GuiModule::createOrsClones(ors::Graph *_ors){
 }
 
 void GuiModule::open(){
-#ifdef MT_QT
-  app = new QApplication(MT::argc, MT::argv);
-  app->processEvents();
+// #ifdef MT_QT
+//   app = new QApplication(MT::argc, MT::argv);
+//   app->processEvents();
   
-  ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
-#endif
+//   ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
+// #endif
   
   /*//-- ors
   MT::load(ors, "../../../share/configurations/schunk.ors", true);
@@ -34,7 +34,7 @@ void GuiModule::open(){
   */
   
 #ifdef MT_QT
-  gl = new OpenGL(ui->glparent, "hallo", 401, 401, 0, 0);
+  //gl = new OpenGL(ui->glparent, "hallo", 401, 401, 0, 0);
 #else
   gl = new OpenGL("GuiModule", 2*512, 2*384);
 #endif
@@ -166,62 +166,62 @@ void GuiModule::step(){
   }*/
   
 #ifdef MT_QT
-  if(ctrl->stepCounter){
-    ui->time            ->setText(FORMAT(ctrl->lastTime));
-    ui->cycleTime       ->setText(FORMATPM(ctrl->cycleTime));
-    ui->cycleBusyTime   ->setText(FORMATPM(ctrl->cycleBusyTime));
-    ui->cycleTimeControl->setText(FORMATPM(ctrl->cycleCtrlTime));
-    ui->cycleTimeArm    ->setText(FORMATPM(ctrl->arm .threadStepTime));
-    ui->cycleTimeHand   ->setText(FORMATPM(ctrl->hand.threadStepTime));
-    ui->cycleTimeSkin   ->setText(FORMATPM(ctrl->skin.threadStepTime));
-    ui->cycleTimeMonitor->setText(FORMATPM(ctrl->gui->threadStepTime));
-//       ui->collisionCost   ->setText(FORMAT(ctrl->CV_col->x(0)));
-//       ui->limitCost       ->setText(FORMAT(ctrl->CV_lim->x(0)));
-    ui->joyState        ->setText(STRING(ctrl->joy.state));
-  }
+//   if(ctrl->stepCounter){
+//     ui->time            ->setText(FORMAT(ctrl->lastTime));
+//     ui->cycleTime       ->setText(FORMATPM(ctrl->cycleTime));
+//     ui->cycleBusyTime   ->setText(FORMATPM(ctrl->cycleBusyTime));
+//     ui->cycleTimeControl->setText(FORMATPM(ctrl->cycleCtrlTime));
+//     ui->cycleTimeArm    ->setText(FORMATPM(ctrl->arm .threadStepTime));
+//     ui->cycleTimeHand   ->setText(FORMATPM(ctrl->hand.threadStepTime));
+//     ui->cycleTimeSkin   ->setText(FORMATPM(ctrl->skin.threadStepTime));
+//     ui->cycleTimeMonitor->setText(FORMATPM(ctrl->gui->threadStepTime));
+// //       ui->collisionCost   ->setText(FORMAT(ctrl->CV_col->x(0)));
+// //       ui->limitCost       ->setText(FORMAT(ctrl->CV_lim->x(0)));
+//     ui->joyState        ->setText(STRING(ctrl->joy.state));
+//   }
   
-  /*if(arm.readPositions){
-  ui->p3->setValue(500.*ctrl->q_real(0));
-  ui->p4->setValue(500.*ctrl->q_real(1));
-  ui->p5->setValue(500.*ctrl->q_real(2));
-  ui->p6->setValue(500.*ctrl->q_real(3));
-  ui->p7->setValue(500.*ctrl->q_real(4));
-  ui->p8->setValue(500.*ctrl->q_real(5));
-  ui->p9->setValue(500.*ctrl->q_real(6));
+//   /*if(arm.readPositions){
+//   ui->p3->setValue(500.*ctrl->q_real(0));
+//   ui->p4->setValue(500.*ctrl->q_real(1));
+//   ui->p5->setValue(500.*ctrl->q_real(2));
+//   ui->p6->setValue(500.*ctrl->q_real(3));
+//   ui->p7->setValue(500.*ctrl->q_real(4));
+//   ui->p8->setValue(500.*ctrl->q_real(5));
+//   ui->p9->setValue(500.*ctrl->q_real(6));
   
-  ui->m3->setText(FORMAT(ctrl->q_real(0)));
-  ui->m4->setText(FORMAT(ctrl->q_real(1)));
-  ui->m5->setText(FORMAT(ctrl->q_real(2)));
-  ui->m6->setText(FORMAT(ctrl->q_real(3)));
-  ui->m7->setText(FORMAT(ctrl->q_real(4)));
-  ui->m8->setText(FORMAT(ctrl->q_real(5)));
-  ui->m9->setText(FORMAT(ctrl->q_real(6)));
-  }*/
+//   ui->m3->setText(FORMAT(ctrl->q_real(0)));
+//   ui->m4->setText(FORMAT(ctrl->q_real(1)));
+//   ui->m5->setText(FORMAT(ctrl->q_real(2)));
+//   ui->m6->setText(FORMAT(ctrl->q_real(3)));
+//   ui->m7->setText(FORMAT(ctrl->q_real(4)));
+//   ui->m8->setText(FORMAT(ctrl->q_real(5)));
+//   ui->m9->setText(FORMAT(ctrl->q_real(6)));
+//   }*/
   
-  /*if(readAll){
-    ui->v3->setText(FORMAT(v_real(0)));
-    ui->v4->setText(FORMAT(v_real(1)));
-    ui->v5->setText(FORMAT(v_real(2)));
-    ui->v6->setText(FORMAT(v_real(3)));
-    ui->v7->setText(FORMAT(v_real(4)));
-    ui->v8->setText(FORMAT(v_real(5)));
-    ui->v9->setText(FORMAT(v_real(6)));
-  }*/
+//   /*if(readAll){
+//     ui->v3->setText(FORMAT(v_real(0)));
+//     ui->v4->setText(FORMAT(v_real(1)));
+//     ui->v5->setText(FORMAT(v_real(2)));
+//     ui->v6->setText(FORMAT(v_real(3)));
+//     ui->v7->setText(FORMAT(v_real(4)));
+//     ui->v8->setText(FORMAT(v_real(5)));
+//     ui->v9->setText(FORMAT(v_real(6)));
+//   }*/
   
-  app->processEvents();
+//   app->processEvents();
   
-  //readPositions = ui->readPositions->isChecked();
-  logData = ui->logData->isChecked();
-  plotData = ui->plotData->isChecked();
+//   //readPositions = ui->readPositions->isChecked();
+//   logData = ui->logData->isChecked();
+//   plotData = ui->plotData->isChecked();
   
-  /*q_gui(0) = .002 * ui->t3->value();
-  q_gui(1) = .002 * ui->t4->value();
-  q_gui(2) = .002 * ui->t5->value();
-  q_gui(3) = .002 * ui->t6->value();
-  q_gui(4) = .002 * ui->t7->value();
-  q_gui(5) = .002 * ui->t8->value();
-  q_gui(6) = .002 * ui->t9->value();
-  */
+//   /*q_gui(0) = .002 * ui->t3->value();
+//   q_gui(1) = .002 * ui->t4->value();
+//   q_gui(2) = .002 * ui->t5->value();
+//   q_gui(3) = .002 * ui->t6->value();
+//   q_gui(4) = .002 * ui->t7->value();
+//   q_gui(5) = .002 * ui->t8->value();
+//   q_gui(6) = .002 * ui->t9->value();
+//   */
 #endif
 }
 
@@ -229,9 +229,9 @@ void GuiModule::close(){
   delete gl;
   gl = NULL;
 #ifdef MT_QT
-  delete app;
-  app = NULL;
-  //TOTO!!ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
+//   delete app;
+//   app = NULL;
+//   //TOTO!!ui = &(new Gui())->ui; //;Ui_SchunkMonitor();
 #endif
 }
 

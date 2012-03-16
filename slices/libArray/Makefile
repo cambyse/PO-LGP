@@ -4,7 +4,7 @@ ALL =	src/MT
 
 makeAll: $(ALL:%=make/%)
 
-cleanAll: $(ALL:%=clean/%) cleanProjects
+cleanAll: $(ALL:%=clean/%) cleanTests
 
 make/%::
 	make -C $*
@@ -15,7 +15,7 @@ clean/%::
 tests::
 	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
 
-cleanProjects::
+cleanTests::
 	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::

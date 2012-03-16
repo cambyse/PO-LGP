@@ -8,7 +8,6 @@ MAKEMODE = mlrlib
 #if in doubt, you actually want to change make-config!
 #otherwise ask Marc
 
-buildAndLink_NILS = 1
 buildAndLink_NIKOLAY = 1
 buildAndLink_DMITRY = 1
 buildAndLink_STANIMIR = 1

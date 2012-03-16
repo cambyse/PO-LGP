@@ -1,6 +1,6 @@
 #include <signal.h>
 
-#include <MT/process_internal.h>
+#include <biros/biros_internal.h>
 #include <NP/camera.h>
 #include <NP/uvccamera.h>
 

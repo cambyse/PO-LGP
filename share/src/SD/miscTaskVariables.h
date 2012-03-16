@@ -10,7 +10,7 @@ struct zOpposeTaskVariable:public DefaultTaskVariable{
 
   zOpposeTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs);
   virtual TaskVariable* newClone(){ return new zOpposeTaskVariable(*this); }
-  virtual void userUpdate();
+  virtual void userUpdate(const ors::Graph& ors);
 };
 
 struct zFocusTargetTaskVariable:public DefaultTaskVariable{
@@ -19,7 +19,7 @@ struct zFocusTargetTaskVariable:public DefaultTaskVariable{
 
   zFocusTargetTaskVariable(const char* _name, ors::Graph& _ors, ShapeList& _refs);
   virtual TaskVariable* newClone(){ return new zFocusTargetTaskVariable(*this); }
-  virtual void userUpdate();
+  virtual void userUpdate(const ors::Graph& ors);
 };
 
 

@@ -19,7 +19,7 @@
 TaskVariable::TaskVariable(){
   active=false;
   type=noneTVT;
-  targetType=noneTT;
+  targetType=directTT;
   y_prec=0.; v_prec=0.; Pgain=Dgain=0.; err=derr=0.;
 }
 
@@ -31,39 +31,31 @@ DefaultTaskVariable::~DefaultTaskVariable(){
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  ors::Graph& _sl,
+  const ors::Graph& _ors,
   TVtype _type,
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
   const arr& _params){
-  active=false;
-  type=noneTVT;
-  targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
   set(
-    _name, _sl, _type,
-    iname  ? (int)_sl.getBodyByName(iname)->index      : -1,
+    _name, _ors, _type,
+    iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
     iframe ? ors::Transformation().setText(iframe) : ors::Transformation(),
-    jname  ? (int)_sl.getBodyByName(jname)->index      : -1,
+    jname  ? (int)_ors.getBodyByName(jname)->index      : -1,
     jframe ? ors::Transformation().setText(jframe) : ors::Transformation(),
     _params);
 }
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  ors::Graph& _sl,
+  const ors::Graph& _ors,
   TVtype _type,
   const char *iShapeName,
   const char *jShapeName,
   const arr& _params){
-  active=false;
-  type=noneTVT;
-  targetType=noneTT;
-  y_prec=0.; v_prec=0.; Pgain=Dgain=0.;
-  ors::Shape *a = iShapeName ? _sl.getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? _sl.getShapeByName(jShapeName):NULL;
+  ors::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
+  ors::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
   set(
-    _name, _sl, _type,
+    _name, _ors, _type,
     a ? (int)a->body->index : -1,
     a ? a->rel : ors::Transformation(),
     b ? (int)b->body->index : -1,
@@ -76,20 +68,19 @@ TaskVariable::~TaskVariable(){
 
 void DefaultTaskVariable::set(
   const char* _name,
-  ors::Graph &_ors,
+  const ors::Graph& _ors,
   TVtype _type,
   int _i, const ors::Transformation& _irel,
   int _j, const ors::Transformation& _jrel,
   const arr& _params){
   type=_type;
   name=_name;
-  ors=&_ors;
   i=_i;
   irel=_irel;
   j=_j;
   jrel=_jrel;
-  params=_params;
-  updateState();
+  if(&_params) params=_params; else params.clear();
+  updateState(_ors);
   y_target=y;
   v_target=v;
 }
@@ -323,7 +314,7 @@ void TaskVariable::shiftTargets(int offset){
 #endif
 }
 
-void DefaultTaskVariable::updateState(double tau){
+void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
   arr q, qd, p;
   ors::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
@@ -338,74 +329,74 @@ void DefaultTaskVariable::updateState(double tau){
   switch(type){
     case posTVT:
       if(j==-1){
-        ors->kinematics(y, i, &irel.pos);
-        ors->jacobian(J, i, &irel.pos); 
+        ors.kinematics(y, i, &irel.pos);
+        ors.jacobian(J, i, &irel.pos); 
         break;
       }
-      pi = ors->bodies(i)->X.pos + ors->bodies(i)->X.rot * irel.pos;
-      pj = ors->bodies(j)->X.pos + ors->bodies(j)->X.rot * jrel.pos;
-      c = ors->bodies(j)->X.rot / (pi-pj);
+      pi = ors.bodies(i)->X.pos + ors.bodies(i)->X.rot * irel.pos;
+      pj = ors.bodies(j)->X.pos + ors.bodies(j)->X.rot * jrel.pos;
+      c = ors.bodies(j)->X.rot / (pi-pj);
       y.resize(3); y.setCarray(c.p, 3);
-      ors->jacobian(Ji, i, &irel.pos);
-      ors->jacobian(Jj, j, &jrel.pos);
-      ors->jacobianR(JRj, j);
+      ors.jacobian(Ji, i, &irel.pos);
+      ors.jacobian(Jj, j, &jrel.pos);
+      ors.jacobianR(JRj, j);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++){
         vi.set(Ji(0, k), Ji(1, k), Ji(2, k));
         vj.set(Jj(0, k), Jj(1, k), Jj(2, k));
         r .set(JRj(0, k), JRj(1, k), JRj(2, k));
-        jk =  ors->bodies(j)->X.rot / (vi - vj);
-        jk -= ors->bodies(j)->X.rot / (r ^(pi - pj));
+        jk =  ors.bodies(j)->X.rot / (vi - vj);
+        jk -= ors.bodies(j)->X.rot / (r ^(pi - pj));
         J(0, k)=jk(0); J(1, k)=jk(1); J(2, k)=jk(2);
       }
 
       break;
     case zoriTVT:
       if(j==-1){
-        ors->kinematicsVec(y, i, &irel.rot.getZ(vi));
-        ors->jacobianVec(J, i, &irel.rot.getZ(vi));
+        ors.kinematicsVec(y, i, &irel.rot.getZ(vi));
+        ors.jacobianVec(J, i, &irel.rot.getZ(vi));
         break;
       }
       //relative
       MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
-      fi = ors->bodies(i)->X; fi.appendTransformation(irel);
-      fj = ors->bodies(j)->X; fj.appendTransformation(jrel);
+      fi = ors.bodies(i)->X; fi.appendTransformation(irel);
+      fj = ors.bodies(j)->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
       f.rot.getZ(c);
       y.setCarray(c.p, 3);
       NIY; //TODO: Jacobian?
       break;
-    case rotTVT:       y.resize(3);  ors->jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
-    case contactTVT:   ors->getPenetrationState(p); y.resize(1);  y(0) = p(i);  NIY;  break;
-    case gripTVT:      ors->getGripState(y, i);      NIY;  break;
-    case qItselfTVT:   ors->getJointState(q, qd);    y = q;   J.setId(q.N);  break;
-    case qLinearTVT:   ors->getJointState(q, qd);    y = params * q;   J=params;  break;
+    case rotTVT:       y.resize(3);  ors.jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
+    case contactTVT:   ors.getPenetrationState(p); y.resize(1);  y(0) = p(i);  NIY;  break;
+    case gripTVT:      ors.getGripState(y, i);      NIY;  break;
+    case qItselfTVT:   ors.getJointState(q, qd);    y = q;   J.setId(q.N);  break;
+    case qLinearTVT:   ors.getJointState(q, qd);    y = params * q;   J=params;  break;
     case qSquaredTVT:
-      ors->getJointState(q, qd);
+      ors.getJointState(q, qd);
       y.resize(1);  y(0) = scalarProduct(params, q, q);
       J = params * q;
       J *= (double)2.;
       J.reshape(1, q.N);
       break;
     case qSingleTVT:
-      ors->getJointState(q, qd);
+      ors.getJointState(q, qd);
       y.resize(1);  y(0)=q(-i);
-      J.resize(1, ors->getJointStateDimension());
+      J.resize(1, ors.getJointStateDimension());
       J.setZero();
       J(0, -i) = 1.;
       break;
-    case qLimitsTVT:   ors->getLimitsMeasure(y, params);  ors->getLimitsGradient(J, params);   break;
-    case comTVT:       ors->getCenterOfMass(y);     y.resizeCopy(2); ors->getComGradient(J);  J.resizeCopy(2, J.d1);  break;
-    case collTVT:      ors->getContactMeasure(y, params(0)); ors->getContactGradient(J, params(0));  break;
-    case colConTVT:    ors->getContactConstraints(y);  ors->getContactConstraintsGradient(J); break;
+    case qLimitsTVT:   ors.getLimitsMeasure(y, params);  ors.getLimitsGradient(J, params);   break;
+    case comTVT:       ors.getCenterOfMass(y);     y.resizeCopy(2); ors.getComGradient(J);  J.resizeCopy(2, J.d1);  break;
+    case collTVT:      ors.getContactMeasure(y, params(0)); ors.getContactGradient(J, params(0));  break;
+    case colConTVT:    ors.getContactConstraints(y);  ors.getContactConstraintsGradient(J); break;
     case skinTVT:
       y.resize(params.N);
       y.setZero();
       J.clear();
       for(k=0; k<params.N; k++){
         l=(uint)params(k);
-        ors->jacobian(Ji, l, NULL);
-        ors->bodies(l)->X.rot.getY(vi);
+        ors.jacobian(Ji, l, NULL);
+        ors.bodies(l)->X.rot.getY(vi);
         vi *= -1.;
         zi.setCarray(vi.p, 3);
         J.append(~zi*Ji);
@@ -413,8 +404,8 @@ void DefaultTaskVariable::updateState(double tau){
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors->kinematicsVec(zi, i, &irel.rot.getZ(vi));
-      ors->jacobianVec(Ji, i, &irel.rot.getZ(vi));
+      ors.kinematicsVec(zi, i, &irel.rot.getZ(vi));
+      ors.jacobianVec(Ji, i, &irel.rot.getZ(vi));
       if(j==-1){
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
@@ -422,16 +413,16 @@ void DefaultTaskVariable::updateState(double tau){
         Jj.resizeAs(Ji);
         Jj.setZero();
       }else{
-        ors->kinematicsVec(zj, j, &jrel.rot.getZ(vj));
-        ors->jacobianVec(Jj, j, &jrel.rot.getZ(vj));
+        ors.kinematicsVec(zj, j, &jrel.rot.getZ(vj));
+        ors.jacobianVec(Jj, j, &jrel.rot.getZ(vj));
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
       J = ~zj * Ji + ~zi * Jj;
-      J.reshape(1, ors->getJointStateDimension());
+      J.reshape(1, ors.getJointStateDimension());
       break;
     case userTVT:
-      userUpdate();
+      userUpdate(ors);
       break;
     default:  HALT("no such TVT");
   }
@@ -452,10 +443,10 @@ void DefaultTaskVariable::updateState(double tau){
   }
 }
 
-void DefaultTaskVariable::getHessian(arr& H){
+void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H){
   switch(type){
     case posTVT:
-      if(j==-1){ ors->hessian(H, i, &irel.pos); break; }
+      if(j==-1){ ors.hessian(H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -539,25 +530,25 @@ void TaskVariable::write(ostream &os) const {
   <<endl;
 }
 
-void DefaultTaskVariable::write(ostream &os) const {
+void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
   TaskVariable::write(os);
   return;
   switch(type){
-    case posTVT:     os <<"  (pos " <<ors->bodies(i)->name <<")"; break;
-      //case relPosTVT:  os <<"  (relPos " <<ors->bodies(i)->name <<'-' <<ors->bodies(j)->name <<")"; break;
-    case zoriTVT:    os <<"  (zori " <<ors->bodies(i)->name <<")"; break;
-    case rotTVT:     os <<"  (rot " <<ors->bodies(i)->name <<")"; break;
-    case contactTVT: os <<"  (contact " <<ors->bodies(i)->name <<' ' <<params(0) <<")"; break;
-    case gripTVT:    os <<"  (grip " <<ors->bodies(i)->name <<")"; break;
+    case posTVT:     os <<"  (pos " <<ors.bodies(i)->name <<")"; break;
+      //case relPosTVT:  os <<"  (relPos " <<ors.bodies(i)->name <<'-' <<ors.bodies(j)->name <<")"; break;
+    case zoriTVT:    os <<"  (zori " <<ors.bodies(i)->name <<")"; break;
+    case rotTVT:     os <<"  (rot " <<ors.bodies(i)->name <<")"; break;
+    case contactTVT: os <<"  (contact " <<ors.bodies(i)->name <<' ' <<params(0) <<")"; break;
+    case gripTVT:    os <<"  (grip " <<ors.bodies(i)->name <<")"; break;
     case qLinearTVT: os <<"  (qLinear " <<sum(params) <<")"; break;
     case qSquaredTVT:os <<"  (qSquared " <<sum(params) <<")"; break;
-    case qSingleTVT: os <<"  (qSingle " <<ors->joints(-i)->from->name <<'-' <<ors->joints(-i)->to->name <<")"; break;
+    case qSingleTVT: os <<"  (qSingle " <<ors.joints(-i)->from->name <<'-' <<ors.joints(-i)->to->name <<")"; break;
     case qLimitsTVT: os <<"  (qLimitsTVT " <<sum(params) <<")"; break;
     case qItselfTVT: os <<"  (qItselfTVT)"; break;
     case comTVT:     os <<"  (COM)"; break;
     case collTVT:    os <<"  (COLL)"; break;
     case colConTVT:  os <<"  (colCon)"; break;
-    case zalignTVT:  os <<"  (zalign " <<ors->bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors->bodies(j)->name)) <<"); params:" <<params; break;
+    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name)) <<"); params:" <<params; break;
     case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }
@@ -565,29 +556,28 @@ void DefaultTaskVariable::write(ostream &os) const {
 
 
 ProxyTaskVariable::ProxyTaskVariable(const char* _name,
-                                     ors::Graph& _ors,
+                                     ors::Graph& ors,
                                      CTVtype _type,
                                      uintA _shapes,
                                      double _margin,
                                      bool _linear){
   type=_type;
   name=_name;
-  ors=&_ors;
   shapes=_shapes;
   margin=_margin;
   linear=_linear;
-  updateState();
+  updateState(ors);
   y_target=y;
   v_target=v;
 }
 
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, double margin, bool linear){
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool linear){
   double d;
   ors::Shape *a, *b;
   ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
 
-  a=ors->shapes(p->a); b=ors->shapes(p->b);
+  a=ors.shapes(p->a); b=ors.shapes(p->b);
   d=1.-p->d/margin;
 
   if(!linear) y += d*d;
@@ -599,15 +589,15 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph *ors, 
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);
   if(!linear){
-    ors->jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
-    ors->jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
+    ors.jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
+    ors.jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
   }else{
-    ors->jacobian(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
-    ors->jacobian(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
+    ors.jacobian(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
+    ors.jacobian(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
   }
 }
                  
-void ProxyTaskVariable::updateState(double tau){
+void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau){
   v_old=v;
   y_old=y;
 
@@ -615,24 +605,24 @@ void ProxyTaskVariable::updateState(double tau){
   ors::Proxy *p;
 
   y.resize(1);  y.setZero();
-  J.resize(1, ors->getJointStateDimension(false));  J.setZero();
+  J.resize(1, ors.getJointStateDimension(false));  J.setZero();
 
   switch(type){
     case allCTVT:
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         addAContact(y(0), J, p, ors, margin, linear);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         if(shapes.contains(p->a) && shapes.contains(p->b)){
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         if(!shapes.contains(p->a) && !shapes.contains(p->b)){
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 3;
@@ -640,7 +630,7 @@ void ProxyTaskVariable::updateState(double tau){
       }
       break;
     case bipartiteCTVT:
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
           (shapes.contains(p->b) && shapes2.contains(p->a))){
           addAContact(y(0), J, p, ors, margin, linear);
@@ -651,7 +641,7 @@ void ProxyTaskVariable::updateState(double tau){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         for(j=0;j<shapes.d0;j++){
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -668,7 +658,7 @@ void ProxyTaskVariable::updateState(double tau){
       y.resize(shapes.d0);  y.setZero();
       J.resize(shapes.d0,J.d1);  J.setZero();
       uint j;
-      for_list(i,p,ors->proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
         for(j=0;j<shapes.d0;j++){
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -753,9 +743,9 @@ void shiftTargets(TaskVariableList& CS, int offset){
   for(uint i=0; i<CS.N; i++) CS(i)->shiftTargets(offset);
 }
 
-void updateState(TaskVariableList& CS){
+void updateState(TaskVariableList& CS, const ors::Graph& ors){
   for(uint i=0; i<CS.N; i++){
-    CS(i)->updateState();
+    CS(i)->updateState(ors);
   }
 }
 

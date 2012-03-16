@@ -202,14 +202,14 @@ std::istream& operator>>(std::istream& is, char *str);
 #define STREAM(x) (((MT::String&)(MT::String().stream() <<x)).stream())
 
 namespace MT {
-typedef std::iostream IOStream;
+  typedef std::iostream IOStream; //TODO: why do we need this?
 
 /*!\brief String implements the functionalities of an ostream and an
 istream, but also can be send to an ostream or read from an
 istream. It is based on a simple streambuf derived from the
 MT::Mem class */
 class String:public IOStream {
-private:
+private: //TODO: hide this in a private space!
   class StringBuf:public std::streambuf {
   public:
     String *string;
@@ -225,12 +225,12 @@ private:
 public:
   //!@name data fields
   char *p;    //!< pointer to memory
-  uint memN;  //!< \# elements (excluding zero)
+  uint memN;  //!< \# elements (excluding zero) //TODO: rename to N (as for Array)
   uint M;     //!< actual buffer size (in terms of # elements)
   static const char *readSkipSymbols; //!< default argument to read method (also called by operator>>)
   static const char *readStopSymbols; //!< default argument to read method (also called by operator>>)
   static int readEatStopSymbol;       //!< default argument to read method (also called by operator>>)
-  void (*flushHandler)(String&);
+  void (*flushHandler)(String&); //TODO: hide somehow? (do we need this)
   
   //!@name constructors
   String();
@@ -239,23 +239,24 @@ public:
   ~String();
   
   //!@name access
-  uint N() const;
+  uint N() const;  //!< string length (excluding zero) //TODO rename to length()
   operator char*();
   operator const char*() const;
   char &operator()(uint i) const;
-  IOStream& stream();
-  String& operator()();
+  IOStream& stream();             //!< explicitly returns this as an std::iostream&
+  String& operator()();           //!< explicitly return this as a (non-const!) String&
   
   //!@name setting, appending
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
+  //TODO: do we need the following two operators?
   template<class T> String operator+(const T& v) const { String news(*this); news <<v; return news; }
   template<class T> String prepend(const T& v) const { String news; news <<v <<*this; return news; }
   
   //!@name resetting
-  String& clr();
-  String& resetI();
+  String& clr(); //TODO rename clear() (as for Array)
+  String& resetI(); //TODO rename resetIstream()
   
   //!@name equality
   bool operator==(const char *s);
@@ -330,7 +331,6 @@ inline void breakPoint(){
 // Parameter class - I use it frequently to read parameters from file or cmd line
 //
 
-#if 1
 namespace MT {
 /*!\brief A parameter that initializes itself from the command line
   (use \c MT::init), parameter file, or a default value (priority in
@@ -398,7 +398,6 @@ private:
 };
 
 }
-#endif
 
 
 //===========================================================================

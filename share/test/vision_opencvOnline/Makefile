@@ -1,5 +1,5 @@
 BASE = ../..
 
-OPENCV_UBUNTU = 1
+OPENCV = 1
 
 include $(BASE)/make-generic

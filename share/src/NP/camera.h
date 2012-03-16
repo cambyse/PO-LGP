@@ -21,7 +21,7 @@
 #define NP_CAMERA_H
 
 #include <MT/array.h>
-#include <MT/process.h>
+#include <biros/biros.h>
 #include <MT/robot_variables.h>
 
 

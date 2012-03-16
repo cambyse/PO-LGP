@@ -1,0 +1,1 @@
+SHARE/libcolorseg.h

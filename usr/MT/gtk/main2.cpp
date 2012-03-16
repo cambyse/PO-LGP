@@ -1,5 +1,5 @@
-#include <MT/process.h>
-#include <MT/process_internal.h>
+#include <biros/biros.h>
+#include <biros/biros_internal.h>
 #include <MT/util.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
@@ -59,7 +59,7 @@ struct TestThread:public Process{
     label = gtk_label_new(STRING("label " <<name));
     gtk_container_add(GTK_CONTAINER(window), label);
  
-    label = gtk_label_new("bla"));
+    label = gtk_label_new("bla");
     gtk_container_add(GTK_CONTAINER(window), label);
     
     bool r = gtk_widget_set_gl_capability (label,
