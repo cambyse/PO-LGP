@@ -1,7 +1,7 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
-#include <MT/process.h>
+#include <biros/biros.h>
 
 class sGui;
 
