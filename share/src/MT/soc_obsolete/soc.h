@@ -430,15 +430,13 @@ void createDynamicProblem(SocSystem_Toy &soci,
 // ORS simulator implementation of the SocAbstration
 //
 
-struct SocSystem_Ors_Workspace;
-
 /** \brief an implementation of the SocSystemAbstraction using the \ref ors
     simulator */
 struct SocSystem_Ors: public virtual SocSystemAbstraction{
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *s;
+  struct sSocSystem_Ors *s;
 
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
@@ -505,12 +503,10 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
 // toy implementation of the SocAbstration
 //
 
-struct SocSystem_Toy_Workspace;
-
 /** \brief an implementation of the SocSystemAbstraction that simulates a
     single 1D point mass on a spring */
 struct SocSystem_Toy: public virtual SocSystemAbstraction{
-  SocSystem_Toy_Workspace *s;
+  struct sSocSystem_Toy *s;
 
   SocSystem_Toy();
   virtual ~SocSystem_Toy();

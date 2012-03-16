@@ -231,8 +231,7 @@ inline int camera::stat_device(const UVCCameraWorkspace* const ws)
 
 
 
-void camera::UVCCamera::open()
-{
+void camera::UVCCamera::open(){
    if (workspace_->is_initialized_)
       ERROR("device has been initialized already");
 

@@ -1,7 +1,7 @@
 #ifndef _MASTERWORKER_H_
 #define _MASTERWORKER_H_
 
-#include <MT/process.h>
+#include <biros/biros.h>
 #include <MT/array.h>
 #include <queue>
 

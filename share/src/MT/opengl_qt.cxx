@@ -1,67 +1,189 @@
-#ifdef MT_QTGLUT
-#  include <GL/glut.h>
-#  undef scroll
-#  undef border
-// #  define QT3_SUPPORT
-// #  include <Qt/Qt3Support>
-// #  include <Qt/qtimer.h>
-#  include <QtGui/QApplication>
-#  include <QtOpenGL/QGLWidget>
-// #  include <Qt/qobject.h>
-// #  include <Qt/qevent.h>
-#  include <QtOpenGL/QtOpenGL>
-#  if defined MT_Cygwin //|| defined MT_Linux
-#    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#  else
-#    define GLformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#    define GLosformat QGL::DirectRendering | QGL::DepthBuffer | QGL::Rgba
-#  endif
-#  define MT_GLUT
-#endif
+#include "opengl_qt.h"
 
-#ifdef MT_MSVC
-#  include<windows.h>
-#  undef min //I hate it that windows defines these macros!
-#  undef max
-#endif
+//===========================================================================
+//
+// sOpenGL implementations
+//
+
+uint sOpenGL::nrWins=0;
+
+sOpenGL::sOpenGL(QDialog*& parent):QGLWidget(QGLFormat(GLformat),parent){
+  gl = new OpenGL(this);
+  QWidget::setMouseTracking(true);
+  init();
+}
+
+sOpenGL::sOpenGL(OpenGL *_gl, const char* title,int width,int height,int posx,int posy)
+  :QGLWidget(QGLFormat(GLformat)){
+  gl = _gl;
+  QGLWidget::move(posx,posy);
+  QGLWidget::resize(width,height);
+  QWidget::setMouseTracking(true);
+  QWidget::setWindowTitle(title);
+  init();
+}
+
+void sOpenGL::init(){
+  //osPixmap=0;
+  //osContext=0;
+  quitLoopOnTimer=gl->reportEvents=false;
+}
+
+sOpenGL::~sOpenGL(){
+  //if(osContext) delete osContext;
+  //if(osPixmap) delete osPixmap;
+};
 
 
-#ifdef MT_QTGLUT
-  //hooks for Qt (overloading virtuals)
-    void paintGL(){ Draw(width(),height()); }
-    void initializeGL(){ }
-    void resizeGL(int w,int h){ Reshape(w,h); }
-    void keyPressEvent(QKeyEvent *e){ pressedkey=e->text().toAscii()[0]; Key(pressedkey,mouseposx,mouseposy); }
-    void timerEvent(QTimerEvent*){ if(quitLoopOnTimer) MTexitLoop(); }
-    void mouseMoveEvent(QMouseEvent* e){
-      if(!mouseIsDown) PassiveMotion(e->x(),e->y()); else Motion(e->x(),e->y());
-    }
-    void mousePressEvent(QMouseEvent* e){
-      if(e->button()==Qt::LeftButton) { Mouse(0,0,e->x(),e->y()); }
-      if(e->button()==Qt::MidButton)  { Mouse(1,0,e->x(),e->y()); }
-      if(e->button()==Qt::RightButton){ Mouse(2,0,e->x(),e->y()); }
-    }
-    void mouseReleaseEvent(QMouseEvent* e){
-      if(e->button()==Qt::LeftButton) { Mouse(0,1,e->x(),e->y()); }
-      if(e->button()==Qt::MidButton)  { Mouse(1,1,e->x(),e->y()); }
-      if(e->button()==Qt::RightButton){ Mouse(2,1,e->x(),e->y()); }
-    }
-#endif
+//===========================================================================
+//
+// OpenGL implementations
+//
 
-#ifdef MT_QTGLUT
-    bool quitLoopOnTimer;
-    QPixmap *osPixmap;      // the paint device for off-screen rendering
-    QGLContext *osContext;  //the GL context for off-screen rendering
-#endif
+OpenGL::OpenGL(const char* title,int width,int height,int posx,int posy){
+  s=new sOpenGL(this,title,width,height,posx,posy);
+
+  if(!s->nrWins){
+    int argc=1;
+    char *argv[1]={(char*)"x"};
+    glutInit(&argc, argv);
+  }
+  s->nrWins++;
+
+  init();
+
+  s->QGLWidget::show();
+}
+
+OpenGL::OpenGL(sOpenGL *_s){
+  s=_s;
+  if(!s->nrWins){
+    int argc=1;
+    char *argv[1]={(char*)"x"};
+    glutInit(&argc, argv);
+  }
+  s->nrWins++;
+  init();
+}
+
+//! destructor
+OpenGL::~OpenGL(){
+  s->nrWins--;
+  delete s;
+};
+
+void OpenGL::postRedrawEvent(){ s->QGLWidget::update(); } 
+void OpenGL::processEvents(){  qApp->processEvents(); }
+void OpenGL::enterEventLoop(){ qApp->exec(); }
+void OpenGL::exitEventLoop(){  qApp->exit(); }
+
+
+int OpenGL::width(){  return s->QGLWidget::width(); }
+
+int OpenGL::height(){ return s->QGLWidget::height(); }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
-#ifdef MT_FREEGLUT
-  glutSetWindow(s->windowID);
-  glutReshapeWindow(w,h);
-#elif defined MT_QTGLUT
-  QGLWidget::resize(w,h);
-#endif
-  MTprocessEvents();
+  s->QGLWidget::resize(w,h);
+  processEvents();
 }
+
+void OpenGL::about(std::ostream& os){
+  os <<"Widget's OpenGL capabilities:\n";
+  QGLFormat f=s->format();
+  os <<"direct rendering: " <<f.directRendering() <<"\n"
+  <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+  <<"depth:            " <<f.depth() <<"\n"
+  <<"rgba:             " <<f.rgba() <<"\n"
+  <<"alpha:            " <<f.alpha() <<"\n"
+  <<"accum:            " <<f.accum() <<"\n"
+  <<"stencil:          " <<f.stencil() <<"\n"
+  <<"stereo:           " <<f.stereo() <<"\n"
+  <<"overlay:          " <<f.hasOverlay() <<"\n"
+  <<"plane:            " <<f.plane() <<std::endl;
+  
+#if 0
+  if(!s->osContext){
+    os <<"no off-screen context created yet" <<std::endl;
+  }else{
+    os <<"Off-screen pixmaps's OpenGL capabilities:\n";
+    f=s->osContext->format();
+    os <<"direct rendering: " <<f.directRendering() <<"\n"
+    <<"double buffering: " <<f.doubleBuffer()  <<"\n"
+    <<"depth:            " <<f.depth() <<"\n"
+    <<"rgba:             " <<f.rgba() <<"\n"
+    <<"alpha:            " <<f.alpha() <<"\n"
+    <<"accum:            " <<f.accum() <<"\n"
+    <<"stencil:          " <<f.stencil() <<"\n"
+    <<"stereo:           " <<f.stereo() <<"\n"
+    <<"overlay:          " <<f.hasOverlay() <<"\n"
+    <<"plane:            " <<f.plane() <<std::endl;
+  }
+#endif
+}
+
+#if 0 //OLD offscrean code
+/*!\brief creates a off-screen rendering context for future backround
+    rendering routines -- the off-screen context cannot be
+    resized... */
+void OpenGL::createOffscreen(int width, int height){
+  if(s->osContext && (width>s->osPixmap->width() || height>s->osPixmap->height())){
+    delete s->osContext;
+    delete s->osPixmap;
+    s->osContext=NULL;
+  }
+  if(!s->osContext){
+    s->osPixmap=new QPixmap(width, height);
+    if(!s->osPixmap) MT_MSG("can't create off-screen Pixmap");
+    s->osContext=new QGLContext(QGLFormat(GLosformat), s->osPixmap);
+    if(!s->osContext->create()) MT_MSG("can't create off-screen OpenGL context");
+  }
+}
+
+/*!\brief return the RGBA-image of the given perspective; rendering is done
+    off-screen (on an internal QPixmap) */
+void OpenGL::offscreenGrab(byteA& image){
+  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
+  setOffscreen(image.d1, image.d0);
+  Draw(image.d1, image.d0);
+  glGrabImage(image);
+}
+
+/*!\brief return the RGBA-image of the given perspective; rendering
+    is done off-screen (on an internal QPixmap) */
+void OpenGL::offscreenGrab(byteA& image, byteA& depth){
+  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
+  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  setOffscreen(image.d1, image.d0);
+  Draw(image.d1, image.d0);
+  glGrabImage(image);
+  glGrabDepth(depth);
+}
+
+/*!\brief return only the depth gray-scale map of given perspective;
+    rendering is done off-screen (on an internal QPixmap) */
+void OpenGL::offscreenGrabDepth(byteA& depth){
+  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  setOffscreen(depth.d1, depth.d0);
+  Draw(depth.d1, depth.d0);
+  glGrabDepth(depth);
+}
+
+/*!\brief return only the depth gray-scale map of given perspective;
+    rendering is done off-screen (on an internal QPixmap) */
+void OpenGL::offscreenGrabDepth(floatA& depth){
+  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  setOffscreen(depth.d1, depth.d0);
+  Draw(depth.d1, depth.d0);
+  glGrabDepth(depth);
+}
+
+void OpenGL::setOffscreen(int width, int height){
+  createOffscreen(width, height);
+  CHECK(width<=s->osPixmap->width() && height<=s->osPixmap->height(),
+        "width (" <<width <<") or height (" <<height
+        <<") too large for the created pixmap - create and set size earlier!");
+  s->osContext->makeCurrent();
+  //if(initRoutine) (*initRoutine)();
+}
+#endif

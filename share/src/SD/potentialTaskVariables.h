@@ -14,7 +14,7 @@ struct PotentialValuesTaskVariable:public DefaultTaskVariable{
   
   PotentialValuesTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual TaskVariable* newClone(){ return new PotentialValuesTaskVariable(*this); }
-  virtual void userUpdate();
+  virtual void userUpdate(const ors::Graph& ors);
 };
 
 struct PotentialFieldAlignTaskVariable:public DefaultTaskVariable{
@@ -23,7 +23,7 @@ struct PotentialFieldAlignTaskVariable:public DefaultTaskVariable{
 
   PotentialFieldAlignTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual TaskVariable* newClone(){ return new PotentialFieldAlignTaskVariable(*this); }
-  virtual void userUpdate();
+  virtual void userUpdate(const ors::Graph& ors);
 };
 
 struct GPVarianceTaskVariable:public DefaultTaskVariable{
@@ -32,7 +32,7 @@ struct GPVarianceTaskVariable:public DefaultTaskVariable{
 
   GPVarianceTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, GraspObject_GP& _f);
   virtual TaskVariable* newClone(){ return new GPVarianceTaskVariable(*this); }
-  virtual void userUpdate();
+  virtual void userUpdate(const ors::Graph& ors);
 };
 
 #ifdef  MT_IMPLEMENTATION

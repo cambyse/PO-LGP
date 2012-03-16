@@ -35,6 +35,9 @@ const bool lapackSupported=false;
 uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
 bool globalMemoryStrict=false;
 }
+
+arr& NoArr = *((arr*)NULL);
+
 //int ARRAYOLDREAD=0;
 
 /* LAPACK notes

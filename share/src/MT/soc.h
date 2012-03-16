@@ -58,7 +58,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   ///@name low level access routines: need to be implemented by the simulator
   
   // access general problem information
-  virtual uint nTime() = 0;            ///< total time steps of the trajectory
+  virtual uint nTime() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
   virtual uint nTasks() = 0;           ///< number of task variables
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
@@ -69,10 +69,11 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual void getqv0(arr& q0, arr& v0); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   virtual void setTau(double tau) = 0;
+  virtual double getDuration(){ return getTau()*nTime(); }
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setx0ToCurrent() = 0;
-  virtual void setTox0(){ arr q; getx0(q); setx(q); }
+  virtual void setTox0(){ arr x; getx0(x); setx(x); }
   virtual void setq(const arr& q, uint t=0) = 0;
   //virtual void setq0(const arr& q);
   virtual void setx(const arr& x, uint t=0);
