@@ -60,7 +60,6 @@ struct ControllerTask:Variable {
   FIELD(ControllerMode, mode);
   FIELD(bool, fixFingers);
   //for followTrajectroy mode:
-  FIELD(double, followTrajectoryTimeScale);   //real in [0,1]
   FIELD(double, relativeRealTimeOfController);
   //for feedback mode:
   FIELD(bool, forceColLimTVs);
@@ -68,7 +67,7 @@ struct ControllerTask:Variable {
   
   ControllerTask():Variable("ControllerTask"),
       mode(stop),
-      followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.),
+      relativeRealTimeOfController(0.),
       forceColLimTVs(true), feedbackControlTask(NULL) {};
 };
 
@@ -111,25 +110,9 @@ struct ActionPlan:Variable {
 // Processes
 //
 
-struct Controller:Process {
-  struct sController *s;
-  
-  //TODO: we could remove all Variable points to the private space
-  //works only if the Process really connects itself - cannot be connected from outside animore
-  //OR: add a gerneric (template?) routine to Processes in general that tells them to connect to a specific
-  //Variable?
-  //ControllerTask *controllerTask;
-  //MotionPlan *motionPlan;
-  //HardwareReference *hardwareReference;
-  //GeometricState *geo;
-  
-  Controller();
-  ~Controller();
-  void open();
-  void step();
-  void close();
-};
+PROCESS(Controller)
 
+PROCESS(MotionPlanner)
 
 struct MotionPrimitive:Process {
   struct sMotionPrimitive *s;
@@ -147,15 +130,6 @@ struct MotionPrimitive:Process {
 };
 
 
-struct MotionPlanner:Process {
-  struct sMotionPlanner *s;
-  
-  MotionPlanner();
-  ~MotionPlanner();
-  void open();
-  void step();
-  void close();
-};
 
 
 //===========================================================================
@@ -169,8 +143,9 @@ struct PoseViewer:Process {
   WorkingCopy<GeometricState> geo;
   OpenGL *gl;
   
-  PoseViewer(T& v):Process("MotionPoseViewer"), var(&v), gl(NULL) {
+  PoseViewer(T& v):Process("PoseViewer"), var(&v), gl(NULL) {
     geo.init("GeometricState", this);
+    threadListenTo(var);
   }
   void open() {
     geo.pull();
@@ -219,8 +194,9 @@ struct OrsViewer:Process {
   WorkingCopy<GeometricState> geo;
   OpenGL *gl;
   
-  OrsViewer(T& v, GeometricState& g):Process("MotionOrsViewer"), var(&v), gl(NULL) {
+  OrsViewer(T& v, GeometricState& g):Process("OrsViewer"), var(&v), gl(NULL) {
     geo.init("GeometricState", this);
+    threadListenTo(var);
   }
   void open() {
     geo.pull();

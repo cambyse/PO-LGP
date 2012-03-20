@@ -11,9 +11,10 @@ struct sMotionPlanner{
   uint verbose;
 };
 
-MotionPlanner::MotionPlanner():Process("MotionPlanner_interpolation") {
+MotionPlanner::MotionPlanner():Process("MotionPlanner") {
   s = new sMotionPlanner;
   birosInfo.getVariable(s->plan, "MotionPlan", this);
+  threadListenTo(s->plan);
   s->geo.init("GeometricState", this);
   s->gl=NULL;
   s->algo=sMotionPlanner::AICO_noinit;
@@ -57,12 +58,12 @@ void MotionPlanner::close() {
 void MotionPlanner::step() {
 
   if (!s->plan->get_hasGoal(this)) {
-    s->plan->waitForConditionSignal(.01);
+    //s->plan->waitForConditionSignal(.01);
     return;
   }
   
   if (s->plan->get_converged(this)) {
-    s->plan->waitForConditionSignal(.01);
+    //s->plan->waitForConditionSignal(.01);
     return;
   }
   

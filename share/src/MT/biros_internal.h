@@ -104,14 +104,12 @@ struct CycleTimer {
 //Variable's internal data
 struct sVariable {
   Variable *p;
-  //ofstream os;
   Lock lock;
-  ConditionVariable cond;
   
   sVariable(Variable *_p){ p = _p; }
 };
 
-enum ThreadState { tsOPEN=-1, tsCLOSE=-2, tsLOOPING=-3, tsBEATING=-4, tsSYNCLOOPING=-5, tsIDLE=0 }; //positive states indicate steps-to-go
+enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
 
 //Process' internal data
 struct sProcess {
@@ -123,17 +121,12 @@ struct sProcess {
   uint skips;                          ///< how often a step was requested but (because busy) skipped
   int threadPriority;                  ///< priority of this thread
   
-  bool broadcastDone;
-  ConditionVariable *syncCondition;
-  
   sProcess(){
     skips=0;
     threadCondition.setState(tsCLOSE);
     tid=0;
     threadPriority=0;
     thread=NULL;
-    broadcastDone=false;
-    syncCondition=NULL;
   };
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread

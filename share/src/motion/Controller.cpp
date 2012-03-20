@@ -17,6 +17,7 @@ struct sController {
   
   double tau;
   double maxJointStep;
+  double followTrajectoryTimeScale;
   
   /*
   bool useBwdMsg, forceColLimTVs, fixFingers;
@@ -34,6 +35,8 @@ Controller::Controller():Process("MotionController") {
   birosInfo.getVariable(s->controllerTask, "ControllerTask", this);
   birosInfo.getVariable(s->motionPlan, "MotionPlan", this);
   birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
+  bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
+  if(listens) threadListenTo(s->hardwareReference);
   s->geo.init("GeometricState", this);
 }
 
@@ -45,12 +48,11 @@ void Controller::open() {
   arr W = birosInfo.getParameter<arr>("Controller_W", this);
   s->tau = birosInfo.getParameter<double>("Controller_tau", this);
   s->maxJointStep = birosInfo.getParameter<double>("Controller_maxJointStep", this);
+  s->followTrajectoryTimeScale = birosInfo.getParameter<double>("Controller_followTrajectoryTimeScale", this);
+    
   
   //clone the geometric state
   s->geo.pull();
-  /*s->geo->readAccess(this);
-//   s->ors = s->geo->ors.newClone();
-  s->geo->deAccess(this);*/
   
   s->sys.initBasics(&s->geo().ors, NULL, NULL,
                     1, s->tau, true, &W);
@@ -67,7 +69,7 @@ void Controller::step() {
   if (mode==ControllerTask::stop) {
     //stop -> don't change q_reference
     s->hardwareReference->set_v_reference(zeros(14,1), this);
-    s->controllerTask->waitForConditionSignal(.01);
+    //s->controllerTask->waitForConditionSignal(.01);
     return;
   }
   
@@ -77,20 +79,18 @@ void Controller::step() {
     //-- check if converged
     if (s->motionPlan->get_converged(this)==false) {
       //stop
-      //MT_MSG("trying to follow non-converged trajectory");
       s->hardwareReference->set_v_reference(zeros(14,1), this);
-      s->motionPlan->waitForConditionSignal(.01);
+      //s->motionPlan->waitForConditionSignal(.01);
       return;
     }
     
     //-- first compute the interpolated
     double realTime = s->controllerTask->get_relativeRealTimeOfController(this);
-    double timeScale = s->controllerTask->get_followTrajectoryTimeScale(this);
     arr q_plan = s->motionPlan->get_q_plan(this);
     double plan_tau = s->motionPlan->get_tau(this);
     
     //where to interpolate
-    realTime += timeScale * s->tau; //!!! hard coded 10msec as basic control cycle
+    realTime += s->followTrajectoryTimeScale * s->tau;
     uint timeStep= realTime/plan_tau;
     double inter = realTime/plan_tau - (double)timeStep;  //same as fmod
     

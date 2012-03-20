@@ -20,7 +20,8 @@ typedef MT::Array<Parameter*> ParameterL;
 #define PROCESS(name) \
 struct name:Process { \
   struct s##name *s;  \
-  name();           \
+  name();             \
+  virtual ~name();    \
   void open();        \
   void step();        \
   void close();       \
@@ -69,6 +70,7 @@ struct Variable {
   const char* name;     ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number
   MT::Array<_Variable_field_info_base*> fields;
+  ProcessL listeners;
 
   Variable(const char* name);
   ~Variable();
@@ -85,13 +87,6 @@ struct Variable {
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
   uint get_revision(){ readAccess(NULL); uint r = revision; deAccess(NULL); return r; }
-  
-  //-- condition variable control, to be called from processes to broadcast (publish) or wait for broadcast (subscribe)
-  void broadcastCondition(int i=0);
-  int  getCondition();
-  void waitForConditionSignal(double seconds=-1.);
-  void waitForConditionEq(int i);    //might set the caller to sleep
-  void waitForConditionNotEq(int i); //might set the caller to sleep
 };
 
 
@@ -121,15 +116,16 @@ struct Process {
   void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
   
+  void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
   void threadStepOrSkip(uint maxSkips); ///< trigger a step (idle -> working mode) or skip if still busy (counts skips.., maxSkip=0 -> no warnings)
-  void threadStep(bool wait=false);     ///< trigger a step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-  void threadSteps(uint steps);         ///< trigger multiple steps (idle -> working mode)
   void threadWait();                    ///< wait until step is done (working -> idle mode)
   bool threadIsIdle();                  ///< check if in idle mode
-  
+
+  void threadListenTo(Variable *var);
+  void threadListenTo(const VariableL &signalingVars);
+
   void threadLoop();                    ///< loop, stepping forever
   void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
-  void threadLoopSyncWithDone(Process& p); ///< loop in sync with another process
   void threadStop();                    ///< stop looping
 };
 
@@ -278,6 +274,7 @@ struct ThreadInfoWin:public Process {
 // handling groups
 //
 
+void step(const ProcessL& P);
 void loop(const ProcessL& P);
 void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);

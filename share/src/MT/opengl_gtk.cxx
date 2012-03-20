@@ -82,7 +82,7 @@ void OpenGL::processEvents(){
   UNLOCK
 }
 
-void OpenGL::enterEventLoop(){ loopExit=false; LOCK while(!loopExit) gtk_main_iteration(); UNLOCK }
+void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ LOCK gtk_main_iteration(); UNLOCK } }
 void OpenGL::exitEventLoop(){  loopExit=true; }
 
 //! resize the window

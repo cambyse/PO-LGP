@@ -3,8 +3,8 @@
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
-  //ThreadInfoWin win;
-  //win.threadLoopWithBeat(.1);
+  ThreadInfoWin win;
+  win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
@@ -37,9 +37,7 @@ int main(int argn, char** argv){
   action.deAccess(NULL);
 
   cout <<"** setting controller to follow" <<endl;
-  controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::followPlan;
-  controllerTask.deAccess(NULL);
+  controllerTask.set_mode(ControllerTask::followPlan, NULL);
 
   uint mode=2;
   switch(mode){
@@ -50,8 +48,10 @@ int main(int argn, char** argv){
     motionPlanner.step();
   } break;
   case 2:{ //threaded mode
-    loopWithBeat(P,.01);
-    MT::wait(20.);
+    //loopWithBeat(P,.01);
+    step(P);
+    controller.threadLoopWithBeat(.01);
+    MT::wait();
   } break;
   }
 

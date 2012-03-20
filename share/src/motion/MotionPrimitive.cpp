@@ -11,6 +11,7 @@ struct sMotionPrimitive {
 
 MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p):Process("MotionPrimitive"),
     action(&a), frame0(&f0), frame1(&f1), plan(&p){
+  threadListenTo(action);
   s = new sMotionPrimitive;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
@@ -61,7 +62,7 @@ void MotionPrimitive::step() {
     uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
     
     if (frame1->get_converged(this)) {
-      action->waitForConditionSignal(.01);
+      //action->waitForConditionSignal(.01);
       return;
     }
     
@@ -114,7 +115,7 @@ void MotionPrimitive::step() {
     //planner.init_trajectory(q);
   }
   
-  action->waitForConditionSignal(.01);
+  //action->waitForConditionSignal(.01);
   //... to set task variables
   
   //FUTURE: collaps all the task variable stuff to a single Phi
