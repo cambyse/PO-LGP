@@ -22,14 +22,18 @@
 extern "C" {
 #endif
 
-#include "cblas.h"
+#include <cblas.h>
 #ifdef MT_MSVC
 #  include <lapack/blaswrap.h>
 #endif
 #include "f2c.h"
 #undef small
 #undef large
+#ifdef ARCH_LINUX
+#include <lapack/lapacke.h>
+#else
 #include <lapack/clapack.h>
+#endif
 #undef double
 #undef max
 #undef min
@@ -105,8 +109,8 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B){
 
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b){
   arr Acol;
-  integer n=A.d0, m=1;
-  integer info;
+  int n=A.d0, m=1;
+  int info;
   x=b;
   Acol=A;
   CALL(, posv_)((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
@@ -129,12 +133,12 @@ uint lapack_SVD(
   arr Atmp, work;
   Atmp=A;
   //transpose(Atmp, A);
-  integer M=A.d0, N=A.d1, D=M<N?M:N;
+  int M=A.d0, N=A.d1, D=M<N?M:N;
   U.resize(M, D);
   d.resize(D);
   Vt.resize(D, N);
   work.resize(10*(M+N));
-  integer info, wn=work.N;
+  int info, wn=work.N;
   CALL(, gesvd_)((char*)"S", (char*)"S", &N, &M, Atmp.p, &N, d.p, Vt.p, &N, U.p, &D, work.p, &wn, &info);
   CHECK(!info, "LAPACK SVD error info = " <<info);
   return D;
@@ -142,16 +146,16 @@ uint lapack_SVD(
 
 void lapack_LU(arr& LU, const arr& A){
   LU = A;
-  integer M=A.d0, N=A.d1, D=M<N?M:N, info;
+  int M=A.d0, N=A.d1, D=M<N?M:N, info;
   intA piv(D);
-  CALL(, getrf_)(&N, &M, LU.p, &N, (integer*)piv.p, &info);
+  CALL(, getrf_)(&N, &M, LU.p, &N, (int*)piv.p, &info);
   CHECK(!info, "LAPACK SVD error info = " <<info);
 }
 
 void lapack_RQ(arr& R, arr &Q, const arr& A){
   transpose(Q, A);
   R.resizeAs(A); R.setZero();
-  integer M=A.d0, N=A.d1, D=M<N?M:N, LWORK=M*N, info;
+  int M=A.d0, N=A.d1, D=M<N?M:N, LWORK=M*N, info;
   arr tau(D), work(LWORK);
   CALL(, gerqf_)(&N, &M, Q.p, &N, tau.p, work.p, &LWORK, &info);
   CHECK(!info, "LAPACK RQ error info = " <<info);
@@ -166,12 +170,12 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){
   CHECK(symmA.nd==2 && symmA.d0==symmA.d1, "not symmetric");
   arr work;
   Evecs=symmA;
-  integer N=symmA.d0;
+  int N=symmA.d0;
   Evals.resize(N);
   Evecs.resize(N, N);
   // any number for size
   work.resize(10*(3*N));
-  integer info, wn=work.N;
+  int info, wn=work.N;
   CALL(, syev_)((char*)"V", (char*)"U", &N, Evecs.p,
                 &N, Evals.p, work.p, &wn, &info);
   transpose(Evecs);
@@ -194,8 +198,8 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA){
 //! A=C^T C (C is upper triangular!)
 void lapack_cholesky(arr& C, const arr& A){
   CHECK(A.d0==A.d1, "");
-  integer n=A.d0;
-  integer info;
+  int n=A.d0;
+  int info;
   C=A;
   //compute cholesky
   CALL(, potrf_)((char*)"L", &n, C.p, &n, &info);
@@ -221,12 +225,12 @@ void lapack_mldivide(arr& X, const arr& A, const arr& b) {
   
   X = b;
   arr LU = A;
-  integer n = A.d1;
-  integer nrhs = 1;
-  integer lda = A.d0;
-  MT::Array<integer> ipiv(n);
+  int n = A.d1;
+  int nrhs = 1;
+  int lda = A.d0;
+  MT::Array<int> ipiv(n);
 
-  integer info;
+  int info;
 
   CALL(, gesv_)(&n, &nrhs, LU.p, &lda, ipiv.p, X.p, &lda, &info);
   CHECK(!info, "LAPACK gaussian elemination error info = " <<info <<potrf_ERR);
@@ -234,8 +238,8 @@ void lapack_mldivide(arr& X, const arr& A, const arr& b) {
 
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A){
   CHECK(A.d0==A.d1, "");
-  integer n=A.d0;
-  integer info;
+  int n=A.d0;
+  int info;
   Ainv=A;
   //compute cholesky
   CALL(, potrf_)((char*)"L", &n, Ainv.p, &n, &info);

@@ -340,8 +340,8 @@ LIBS      += `pkg-config --libs opencv-2.3.1`
 endif
 
 # newer qhull version?
-ifeq ($(QHULL2010),1)
-CXXFLAGS += -DQHULL2010
+ifeq ($(ARCH_LINUX),1)
+CXXFLAGS += -DARCH_LINUX
 endif
 
 ifeq ($(HSL),1)

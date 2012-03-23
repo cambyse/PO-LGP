@@ -323,7 +323,7 @@ void getTriangulatedHull(uintA& T, arr& V){
   uint f, i, v;
   
   arr Vnew;
-#ifdef QHULL2010
+#ifdef ARCH_LINUX
   Vnew.resize(qh_qh.num_vertices, 3);
   T.resize(qh_qh.num_facets, 3);
 #else
