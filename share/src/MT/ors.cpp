@@ -1783,6 +1783,10 @@ ors::Vector ors::Mesh::getMeanVertex(){
   return ors::Vector(Vmean);
 }
 
+void ors::Mesh::write(std::ostream& os) const {
+  os <<"Mesh: " <<V.d0 <<" vertices, " <<T.d0 <<" triangles" <<endl;
+}
+
 void ors::Mesh::readFile(const char* filename){
   bool loaded=false;
   const char *type = filename+(strlen(filename)-3);

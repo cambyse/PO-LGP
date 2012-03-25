@@ -1061,6 +1061,12 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
   processEvents();
 }
 
+OpenGL::OpenGL(void *container){
+  s=new sOpenGL(this,container);
+  init();
+  processEvents();
+}
+
 OpenGL::~OpenGL(){
   delete s;
 }

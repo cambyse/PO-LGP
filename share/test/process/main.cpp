@@ -119,14 +119,14 @@ void testScheduling(){
 // test excessive access to Variables
 //
 
-struct IntVar:public Variable{
+struct ExampleVar:public Variable{
   //BIR_VARIABLE;
   
   FIELD(int, x);
 
   //BIR_FIELD(bool, mybool);
   
-  IntVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
+  ExampleVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };
 
 //int IntVar::bir_typeId=-1;
@@ -134,7 +134,7 @@ struct IntVar:public Variable{
 uint PC=0;
 
 struct Maxxer:public Process{
-  IntVar *a,*b;
+  ExampleVar *a,*b;
 
   Maxxer():Process("Maxxer"){};
   
@@ -150,7 +150,7 @@ struct Maxxer:public Process{
 
 void testMultiAccess(){
   uint n=MT::getParameter<uint>("n",100);
-  MT::Array<IntVar> vars(n);
+  MT::Array<ExampleVar> vars(n);
   MT::Array<Maxxer> procs(2*n);
 
   for(uint i=0;i<procs.N;i++){

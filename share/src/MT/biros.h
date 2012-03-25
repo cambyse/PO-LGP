@@ -36,18 +36,18 @@ struct name:Process { \
 struct FieldInfo{
   void *p;
   const char* name;
-  const char* type;
-  const char* sysTypeName;
+  const char* userType;
+  const char* sysType;
   virtual void write_value(ostream& os) const = 0;
 };
   
 template<class T>
 struct FieldInfo_typed:FieldInfo{
-  FieldInfo_typed(T *_p, const char* _name, const char* _type){
+  FieldInfo_typed(T *_p, const char* _name, const char* _userType){
     p = _p;
     name = _name;
-    type = _type;
-    sysTypeName = typeid(T).name();
+    userType = _userType;
+    sysType = typeid(T).name();
   }
   void write_value(ostream& os) const{ os <<*((T*)p); }
 };
@@ -147,7 +147,7 @@ struct Parameter{
   void *pvalue;
   const char* name;
   ProcessL processes;
-  Parameter(const char* name);
+  Parameter();
   virtual void writeValue(ostream& os) const = 0;
   virtual const char* typeName() const = 0;
 };
@@ -155,8 +155,9 @@ struct Parameter{
 template<class T>
 struct Parameter_typed:Parameter{
   T value;
-  Parameter_typed(const char* name, const T& _default):Parameter(name){
-    pvalue=&value;
+  Parameter_typed(const char* _name, const T& _default):Parameter(){
+    name = _name;
+    pvalue = &value;
     if(&_default) MT::getParameter<T>(value, name, _default);
     else           MT::getParameter<T>(value, name);
   }
