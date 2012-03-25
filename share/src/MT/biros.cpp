@@ -624,7 +624,7 @@ void BirosInfo::dump(){
   Variable *v;
   Process *p;
   Parameter *par;
-  _Variable_field_info_base *vi;
+  FieldInfo *vi;
   readAccess(NULL);
   for_list(i, v, variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();

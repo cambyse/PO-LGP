@@ -33,18 +33,23 @@ struct name:Process { \
 // automatic setters and getters and info for Variable fields
 //
 
-struct _Variable_field_info_base{
+struct FieldInfo{
   void *p;
   const char* name;
+  const char* type;
+  const char* sysTypeName;
   virtual void write_value(ostream& os) const = 0;
-  virtual MT::String type() const = 0;
 };
   
 template<class T>
-struct _Variable_field_info:_Variable_field_info_base{
-  _Variable_field_info(T *_p, const char* _name){ p=_p; name=_name; }
+struct FieldInfo_typed:FieldInfo{
+  FieldInfo_typed(T *_p, const char* _name, const char* _type){
+    p = _p;
+    name = _name;
+    type = _type;
+    sysTypeName = typeid(T).name();
+  }
   void write_value(ostream& os) const{ os <<*((T*)p); }
-  MT::String type() const{ MT::String s(typeid(T).name()); return s; }
 };
 
 #define FIELD(type, name) \
@@ -56,7 +61,7 @@ struct _Variable_field_info:_Variable_field_info_base{
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
-    fields.append(new _Variable_field_info<type>(&name,#name)); }
+    fields.append(new FieldInfo_typed<type>(&name,#name,#type)); }
 
 
 //===========================================================================
@@ -69,7 +74,7 @@ struct Variable {
   uint id;              ///< unique identifyer
   const char* name;     ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number
-  MT::Array<_Variable_field_info_base*> fields;
+  MT::Array<FieldInfo*> fields;
   ProcessL listeners;
 
   Variable(const char* name);

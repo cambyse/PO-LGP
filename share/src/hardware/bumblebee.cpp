@@ -94,9 +94,14 @@ struct sCamera{
 
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
+  s->cam = NULL;
   birosInfo.getVariable(s->camL, "CameraL", this);
   birosInfo.getVariable(s->camR, "CameraR", this);
 };
+
+Camera::~Camera(){
+  delete s;
+}
 
 void Camera::open(){
   s->cam = new Bumblebee();
@@ -118,6 +123,7 @@ void Camera::close(){
   s->cam->stop_capturing();
   s->cam->deinit();
   delete s->cam;
+  s->cam = NULL;
 };
 
 

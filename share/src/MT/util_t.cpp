@@ -159,10 +159,10 @@ template<class T> void Parameter<T>::initialize(){
 //
 
 //this is a typed instance of the general Any struct
-template<class T> struct TypedAny:public Any {
-  virtual ~TypedAny(){ free(); };
-  TypedAny(const char* _tag, const T &x){                      tag=NULL; p=NULL; set(_tag, &x, 0, 0);  }
-  TypedAny(const char* _tag, const T *_p, uint _n, char _delim){ tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
+template<class T> struct Any_typed:public Any {
+  virtual ~Any_typed(){ free(); };
+  Any_typed(const char* _tag, const T &x){                      tag=NULL; p=NULL; set(_tag, &x, 0, 0);  }
+  Any_typed(const char* _tag, const T *_p, uint _n, char _delim){ tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
   virtual void write(std::ostream &os) const {
     if(!p){ os <<tag; return; } //boolean
     os <<tag <<"="; // <<"[" <<type <<"] = ";
@@ -203,10 +203,10 @@ template<class T> struct TypedAny:public Any {
       for(uint i=0; i<n; i++) t[i]=_p[i];
     }
   }
-  virtual Any* newClone(){ return new TypedAny<T>(tag, (T*)p, n, delim); }
+  virtual Any* newClone(){ return new Any_typed<T>(tag, (T*)p, n, delim); }
 };
 
-template<class T> Any* anyNew(const char* tag, const T &x){        return new TypedAny<T>(tag, x); }
-template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim){ return new TypedAny<T>(tag, x, n, delim); }
+template<class T> Any* anyNew(const char* tag, const T &x){        return new Any_typed<T>(tag, x); }
+template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim){ return new Any_typed<T>(tag, x, n, delim); }
 
 #endif
