@@ -19,7 +19,7 @@ struct ContinuousState;
 class GroundedSymbol {
 public:
   
-  enum GroundingType {NN, RBF};
+  enum GroundingType {NN, RBF, AL};
   
   MT::String name;
   uint arity;

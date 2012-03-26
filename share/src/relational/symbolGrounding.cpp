@@ -5,6 +5,8 @@
 
 #include "symbolGrounding.h"
 
+#include <JK/utils/util.h>
+
 
 
 
@@ -103,9 +105,17 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
     TL::allPossibleLists(lists, objs_numbers, arity, false, true);
     FOR1D(lists, i) {
       if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
-      arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
+      //arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
+			arr x;
+			x.append(objects_data(lists(i)(0)));
+			x.append(objects_data(lists(i)(1)));
+
+      JK_DEBUG(x);
+
       if (DEBUG>1) {PRINT(x);}
       bool does_hold = holds(x);
+
+      JK_DEBUG(does_hold);
       if (DEBUG>1) {PRINT(does_hold);}
       if (does_hold) {
         uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));

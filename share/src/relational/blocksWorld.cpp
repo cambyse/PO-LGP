@@ -7,27 +7,22 @@ namespace relational {
 void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
   MT::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
-  for (uint i = 0; i < numOfBlocks; ++i) {
-    ors::Body* body = new ors::Body;
-    createCylinder(*body, pos(i), ARR(1., 0., 0.)); 
-    body->name = "cyl" + i;
-    ors.bodies.append(body);
-  }
-
+	generateOrsFromSample(ors, pos);
 }
 
 void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
-  for (int i = ors.bodies.N - 1; i >= 0; --i) {
-    if (ors.bodies(i)->name.p[0] == 'c' &&
-        ors.bodies(i)->name.p[1] == 'y' &&
-        ors.bodies(i)->name.p[2] == 'l') {
-      ors.bodies.remove(i);  
-    }
-  }
+  //for (int i = ors.bodies.N - 1; i >= 0; --i) {
+    //if (ors.bodies(i)->name.p[0] == 'o') {
+      //ors.bodies.remove(i);  
+    //}
+  //}
   for (uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
     createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
-    body->name = "cyl"; 
+		MT::String name;
+		name << "o7" << i;
+		cout << name << endl;
+    body->name = name;
     ors.bodies.append(body);
   }
 }
@@ -38,22 +33,24 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
     arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
 
     int t = rand() % 100;
-    double blocksize = 0.1 + (rand() % 100) / 500.;
+    double blocksize = 0.08;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);
 
     sample.append(center3d);
-    sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+    //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+    sample.append(ARR(blocksize));
     while (t < 50 && i < numOfBlocks-1) {
       i++;
       center3d = center3d + randn(3,1) * 0.02;
-      double blocksize = 0.1 + (rand() % 100) / 500.;
+      double blocksize = 0.08;// + (rand() % 100) / 1000.;
       center3d(2) = 0.5*blocksize + towersize;
       towersize += blocksize;
 
       sample.append(center3d);
-      sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+      //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+      sample.append(ARR(blocksize));
 
       t = rand() % 100;
     }
