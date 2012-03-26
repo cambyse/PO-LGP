@@ -3,30 +3,21 @@
 #include "al_process.h"
 #include <JK/utils/oracle.h>
 
-struct sAL_GroundedSymbol {
-  sAL_GroundedSymbol(ActiveLearner& al) : al(al) {};
-  ActiveLearner& al;  
-};
+AL_GroundedSymbol::AL_GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates) :
+  GroundedSymbol(name, arity, build_derived_predicates) 
+{
+  this->type = AL;
+}
 
-AL_GroundedSymbol::AL_GroundedSymbol(ActiveLearner& al, MT::String& name, uint arity, bool build_derived_predicates) :
+AL_GroundedSymbol::AL_GroundedSymbol(ActiveLearner* al, MT::String& name, uint arity, bool build_derived_predicates) :
   GroundedSymbol(name, arity, build_derived_predicates),
-  s(new sAL_GroundedSymbol(al))
-{ }
+  classificator(al)
+{
+  this->type = AL;
+}
 
 bool AL_GroundedSymbol::holds(arr& x) const {
   MT::Array<arr> f;
   f.append(x);
-  return s->al.classify(f);
+  return classificator->classify(f);
 }
-
-void AL_GroundedSymbol::train(const uint samples, Oracle* oracle) {
-  ClassificatorV cl;
-  cl.classificator = &s->al;
-  if (NULL == oracle) oracle = new HumanOracle(GroundedSymbol::name);
-  cl.oracle = oracle;
-
-  ActiveLearningP alp;
-  alp.classificator = &cl;
-  alp.traindata = new TrainingsDataV;
-}
-

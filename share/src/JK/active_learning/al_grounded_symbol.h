@@ -6,16 +6,15 @@
 #include <relational/symbolGrounding.h>
 
 class sAL_GroundedSymbol;
-class Oracle;
+class ActiveLearner;
 
 class AL_GroundedSymbol : public relational::GroundedSymbol {
-  private:
-    sAL_GroundedSymbol *s;
   public:
-    AL_GroundedSymbol(ActiveLearner& al, MT::String& name, uint arity, bool build_derived_predicates = false);
+    AL_GroundedSymbol(ActiveLearner* al, MT::String& name, uint arity, bool build_derived_predicates = false);
+    AL_GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates = false);
     virtual bool holds(arr& x) const;
 
-    void train(const uint samples, Oracle* oracle = NULL);
+		ActiveLearner* classificator;
 };
 
 #endif

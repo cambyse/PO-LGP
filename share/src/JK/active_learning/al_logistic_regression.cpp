@@ -54,21 +54,26 @@ LogisticRegression::LogisticRegression(Sampler<MT::Array<arr> >* sampler) : s(ne
   s->sampler = sampler;
   s->ridge = MT::getParameter<double>("ridge",1e-10);
   s->rbfConst = MT::getParameter<int>("rbfConst", 0);
-  s->sigma = MT::getParameter<double>("sigma", 1);
+  s->sigma = MT::getParameter<double>("sigma", 0.1);
 }
 
 void sLogisticRegression::makeFeatures(arr& Z, const arr& X, const arr& Xtrain){
   uint n=X.d0, d=X.d1;
-  Z.resize(n, 1 + d + d*(d+1)/2 + d*(d+1)*(d+2)/6);
+  Z.resize(n, 9);// 1 + d + d*(d+1)/2 + d*(d+1)*(d+2)/6);
   uint i, j, k, l, m;
   for(i=0; i<n; i++){
     arr x=X[i];
     arr z=Z[i];
-    l=0;
-    z(l++)=1.;
-    for(j=0; j<d; j++) z(l++) = x(j);
-    for(j=0; j<d; j++) for(k=0; k<=j; k++) z(l++) = x(j)*x(k);
-    for(j=0; j<d; j++) for(k=0; k<=j; k++) for(m=0; m<=k; m++) z(l++) = x(j)*x(k)*x(m);
+    l=3;
+    z(0) = x(0) - x(4);
+    z(1) = x(1) - x(5);
+    z(2) = x(2) - x(6);
+
+
+    //z(l++)=1.;
+    //for(j=0; j<d; j++) z(l++) = x(j);
+    for(j=0; j<3; j++) for(k=0; k<=j; k++) z(l++) = (x(j)-x(j+4))*(x(k)-x(k+4));
+    //for(j=0; j<d; j++) for(k=0; k<=j; k++) for(m=0; m<=k; m++) z(l++) = x(j)*x(k)*x(m);
   }
 }
 

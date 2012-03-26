@@ -113,6 +113,7 @@ const double Tester::test(ClassificatorV* l) {
   while(m->hasWorkingJob()) sleep(1);
   m->pause();
   outfile << m->_result << std::endl;
+	cout << m->_result << std::endl;
   return m->_result;
 }
 
