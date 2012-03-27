@@ -1,6 +1,7 @@
 #include <perception/perception.h>
 #include <views/views.h>
 #include <MT/ors.h>
+#include <MT/gtk.h>
 #include "../../src/views/views.h"
 
 struct ExampleVar:Variable{
