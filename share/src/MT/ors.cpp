@@ -3054,6 +3054,7 @@ void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErro
   if(Qlin.N){
     q = Qlin*_x + Qoff;
     v = Qlin*_v;
+    v.reshape(v.N);
   }else{ q=_x; v=_v; }
   
   if(!jd) jd = getJointStateDimension(true);

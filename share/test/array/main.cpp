@@ -455,15 +455,15 @@ int main(int argc, char *argv[]){
   //return 0;
   testException();
   testMemoryBound();
-  //testBinaryIO();
+  testBinaryIO();
   testExpression();
   testPermutation();
-  //testGnuplot();
-  //testDeterminant();
-  //testInverse();
-  //testMM();
-  //testSVD();
-  //testTensor();
+  testGnuplot();
+  testDeterminant();
+  testInverse();
+  testMM();
+  testSVD();
+  testTensor();
   testGaussElimintation();
   
   cout <<"\n ** total memory still allocated = " <<MT::globalMemoryTotal <<endl;
