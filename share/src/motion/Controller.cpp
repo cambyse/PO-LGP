@@ -129,8 +129,12 @@ void Controller::step() {
     arr q_reference = hardwareReference->get_q_reference(this);
     arr v_reference = hardwareReference->get_v_reference(this);
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
-    if (q_reference.N) s->sys.setqv(q_reference, v_reference);
-    else s->sys.getqv0(q_reference, v_reference);
+    if (q_reference.N) { 
+      if(q_reference.N == 2*s->ors->getJointStateDimension()) q_reference = q_reference.sub(0, q_reference.N/2 - 1);
+      s->sys.setqv(q_reference, v_reference);
+    }
+    else 
+      s->sys.getqv0(q_reference, v_reference);
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
