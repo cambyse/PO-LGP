@@ -207,7 +207,10 @@ struct PoseViewer:Process {
       gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
-        ors->setJointState(q[t]);
+        arr qt;
+        if(q[t].N==2*ors->getJointStateDimension()) qt = q[t].sub(0,q[t].N/2-1);
+        else qt = q[t];
+        ors->setJointState(qt);
         ors->calcBodyFramesFromJoints();
         gl->text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
         gl->update();
