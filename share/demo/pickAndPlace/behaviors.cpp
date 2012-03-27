@@ -175,30 +175,30 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
     bool bPerceive = false;
     for(uint i=0; i<_PerceptionOutput->objects.N; i++){
       if(_PerceptionOutput->objects.N>=numObjects){
-	bool found=true;
-	for(uint j=0;j<numObjects;j++)
-	  found = found && _PerceptionOutput->objects(j).found>foundSteps;
-	if(found){
-	  _GeometricState->writeAccess(NULL);
-	  for(uint j=0;j<numObjects;j++){
-	    ors::Shape *sh=_GeometricState->ors.getShapeByName(STRING("cyl"<<j+1));
-	    sh->rel.pos.set(_PerceptionOutput->objects(j).center3d.p);
-	    sh->rel.pos -= sh->body->X.pos;
-	  }
-	  _GeometricState->deAccess(NULL);
-	
+        bool found=true;
+        for(uint j=0;j<numObjects;j++)
+          found = found && _PerceptionOutput->objects(j).found>foundSteps;
+        if(found){
+          _GeometricState->writeAccess(NULL);
+          for(uint j=0;j<numObjects;j++){
+            ors::Shape *sh=_GeometricState->ors.getShapeByName(STRING("cyl"<<j+1));
+            sh->rel.pos.set(_PerceptionOutput->objects(j).center3d.p);
+            sh->rel.pos -= sh->body->X.pos;
+          }
+          _GeometricState->deAccess(NULL);
+
           bPerceive = true;
           MT_MSG("objs found");
         }else{
-	  cout <<"looking at objects";
-	  for(uint j=0;j<numObjects;j++) cout <<' ' <<_PerceptionOutput->objects(j).found;
-	  cout <<endl;
+          cout <<"looking at objects";
+          for(uint j=0;j<numObjects;j++) cout <<' ' <<_PerceptionOutput->objects(j).found;
+          cout <<endl;
         }
       }
     }
     _PerceptionOutput->deAccess(NULL);
     if(bPerceive) break;
-    
+
     MT::wait(.2);
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
@@ -222,10 +222,11 @@ void pickObject(char* objShape){
   bool converged = false;
   bool executed = false;
   for(;;){
+    cout << "pick object" << endl;
     if(!converged){
       converged=_MotionPlan->get_converged(NULL);
       if(converged)
-	_ControllerTask->set_mode(ControllerTask::followPlan, NULL);
+        _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
     }
     if(converged){
       executed = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
@@ -236,11 +237,11 @@ void pickObject(char* objShape){
       _Action->set_action(Action::noAction, NULL);
       break;
     }
-    
+
     MT::wait(.2);
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
-  
+
   //-- the reattach mess!
   _GeometricState->writeAccess(NULL);
   reattachShape(_GeometricState->ors, NULL, objShape, "m9", "table");
@@ -253,7 +254,7 @@ void pickObject(char* objShape){
   _ControllerTask->feedbackControlTask = &closeTask;
   _ControllerTask->forceColLimTVs=false;
   _ControllerTask->deAccess(NULL);
-  
+
   MT::wait(3.);
   
   _ControllerTask->set_forceColLimTVs(true, NULL);
@@ -307,7 +308,7 @@ void placeObject(char* objShape, char* belowFromShape, const char* belowToShape)
   reattachShape(_GeometricState->ors, NULL, objShape, "OBJECTS", belowToShape);
   _GeometricState->deAccess(NULL);
 
-  //-- close hand
+  //-- open hand
   OpenHand_FeedbackControlTask openTask;
   _ControllerTask->writeAccess(NULL);
   _ControllerTask->mode = ControllerTask::feedback;
