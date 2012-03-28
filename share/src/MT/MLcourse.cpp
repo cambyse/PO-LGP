@@ -412,7 +412,7 @@ void load_data(arr& X, const char* filename, bool whiten){
     MT::String str;
     for(;;){
       str.read(is, " \"\t\r", " \"\t\r\n", false);
-      if(!str.N()) break;
+      if(!str.N) break;
       strs.append(str);
     }
     cout <<"header: " <<strs <<endl;

@@ -175,13 +175,13 @@ struct PoseViewer:Process {
         q = q.sub(0,q.N/2-1); //check dynamic state
       geo().ors.setJointState(q);
       geo().ors.calcBodyFramesFromJoints();
-      gl->text.clr() <<"pose view";
+      gl->text.clear() <<"pose view";
       gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
         geo().ors.setJointState(q[t]);
         geo().ors.calcBodyFramesFromJoints();
-        gl->text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
+        gl->text.clear() <<"pose view at step " <<t <<"/" <<q.d0-1;
         gl->update();
       }
     }
@@ -218,7 +218,7 @@ struct OrsViewer:Process {
   void step() {
     arr q;
     geo.pull();
-    gl->text.clr() <<"ors view of Variable " <<var->name;
+    gl->text.clear() <<"ors view of Variable " <<var->name;
     gl->update();
   }
 };

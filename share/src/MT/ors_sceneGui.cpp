@@ -47,23 +47,23 @@ bool sOrsSceneGui::hoverCallback(OpenGL&){
     ors::Shape *s=NULL;
     gl->Select();
     OpenGL::GLSelect *top=gl->topSelection;
-    if(!top){ gl->text.clr();  return false; }
+    if(!top){ gl->text.clear();  return false; }
     uint i=top->name;
     //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
     if((i&3)==1) s=ors->shapes(i>>2);
     if((i&3)==2) j=ors->joints(i>>2);
     if(s){
-      gl->text.clr()
+      gl->text.clear()
       <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
       listWrite(s->ats, gl->text, "\n");
     }
     if(j){
-      gl->text.clr()
+      gl->text.clear()
       <<"edge selection: " <<j->from->name <<' ' <<j->to->name
       <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
       listWrite(j->ats, gl->text, "\n");
     }
-    if(!j && !s) gl->text.clr();
+    if(!j && !s) gl->text.clear();
     break;
   }
   case emMove:{

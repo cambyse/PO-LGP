@@ -22,10 +22,10 @@ arr change_coupling(){
 
 #define indName(j,plus) \
     if(s->dim==2){ \
-      txt.clr() <<s->name plus; \
+      txt.clear() <<s->name plus; \
     }else{ \
-      if(s->valueNames.N) txt.clr() <<s->name <<'=' <<s->valueNames(j) plus; \
-      else                txt.clr() <<s->name <<'=' <<j plus; \
+      if(s->valueNames.N) txt.clear() <<s->name <<'=' <<s->valueNames(j) plus; \
+      else                txt.clear() <<s->name <<'=' <<j plus; \
     }
 
 void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,

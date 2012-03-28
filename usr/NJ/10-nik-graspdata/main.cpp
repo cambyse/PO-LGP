@@ -227,7 +227,7 @@ double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const ar
 		robot2.step();
 		double C = robot2.ctrl.sys.taskCost(NULL,0,-1);
 		if(robot2.openGui)
-			robot2.gui.gl->text.clr()<< C << endl;
+			robot2.gui.gl->text.clear()<< C << endl;
 		//if() cout << " taskcost: " << C << " ";
 	}
 	//robot2.ctrl.task->updateTaskVariables(&robot2.ctrl);
@@ -349,7 +349,7 @@ int main(int argn,char** argv){
 	arr qOrig;robot.ctrl.ors.getJointState(qOrig);
 	for(uint i = 0;i < nSteps && !robot.signalStop;i++){ //catches the ^C key
 		if(nMode == 0) get_skin_state(task,robot);	// skin -> graspISFtask
-		if(robot.openGui)robot.gui.gl->text.clr()<< i << endl;
+		if(robot.openGui)robot.gui.gl->text.clear()<< i << endl;
 		robot.step();
 		arr q;robot.ctrl.ors.getJointState(q);
 		joints[i]=q;

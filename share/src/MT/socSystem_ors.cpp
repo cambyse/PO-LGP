@@ -377,7 +377,7 @@ void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,cons
 //overload the display method to include variances
 void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char *text, bool reportVariables){
   if(x){ if(x->N==qDim()) setq(*x); else setx(*x); }
-  if(text) gl->text.clr() <<text;
+  if(text) gl->text.clear() <<text;
   if(Qinv){
     arr Q;
     inverse_SymPosDef(Q, *Qinv);
