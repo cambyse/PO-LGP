@@ -159,7 +159,7 @@ struct Parameter_typed:Parameter{
     name = _name;
     pvalue = &value;
     if(&_default) MT::getParameter<T>(value, name, _default);
-    else           MT::getParameter<T>(value, name);
+    else          MT::getParameter<T>(value, name);
   }
   void writeValue(ostream& os) const{ os <<value; }
   const char* typeName() const{ return typeid(T).name(); }

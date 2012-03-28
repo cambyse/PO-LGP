@@ -681,7 +681,7 @@ void MT::String::read(std::istream& is, const char* skipSymbols, const char *sto
   if(!stopSymbols) stopSymbols=readStopSymbols;
   if(eatStopSymbol==-1) eatStopSymbol=readEatStopSymbol;
   MT::skip(is, skipSymbols);
-  clearStream();
+  clear();
   char c=is.get();
   while(c!=-1 && is.good() && !MT::contains(stopSymbols, c)){
     append(c);
