@@ -964,7 +964,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftInterf
       if(display>0){
         ors->setJointState(b[t]);
         ors->calcNodeFramesFromEdges();
-        //if(t==1 || !(t%display)){ gl->text.clr() <<k <<':' <<t; gl->update(); }
+        //if(t==1 || !(t%display)){ gl->text.clear() <<k <<':' <<t; gl->update(); }
         //glGrabImage(img); write_ppm(img, STRING("imgs/plan_" <<std::setfill('0') <<std::setw(3) <<k <<std::setfill('0') <<std::setw(3) <<((k&1)?T-t:t) <<".ppm"), true);
       }
 

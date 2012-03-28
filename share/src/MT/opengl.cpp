@@ -954,7 +954,7 @@ void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){
   if(!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double ma=x.max();
-  text.clr() <<"display" <<win <<" max=" <<ma <<endl;
+  text.clear() <<"display" <<win <<" max=" <<ma <<endl;
   byteA img;
   img.resize(d0*d1);
   img.setZero();
@@ -971,7 +971,7 @@ void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win)
   if(!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double mi=x.min(), ma=x.max();
-  text.clr() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
+  text.clear() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
   cout <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
   byteA img;
   img.resize(d0*d1, 4);
@@ -1277,7 +1277,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   }
 
   //draw text
-  if(text.N()){
+  if(text.N){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0., (double)w, (double)h, .0, -1., 1.);
@@ -1308,7 +1308,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
       glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
     }
     for(uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
-    if(vi->txt.N()){
+    if(vi->txt.N){
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glMatrixMode(GL_MODELVIEW);
@@ -1412,7 +1412,7 @@ int OpenGL::watch(const char *txt){
 //! update the view (in Qt: also starts displaying the window)
 bool OpenGL::update(const char *txt){
   pressedkey=0;
-  if(txt) text.clr() <<txt;
+  if(txt) text.clear() <<txt;
   postRedrawEvent();
   processEvents();
   return !pressedkey;

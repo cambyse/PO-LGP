@@ -100,7 +100,7 @@ void onTime(){
   system(STRING("cp Z data/Z-onTime"));
   savePiFig(p,b,STRING("data/onTime.fig"));
 
-  gl.text.clr() <<"onTime my planning";
+  gl.text.clear() <<"onTime my planning";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 
@@ -111,7 +111,7 @@ void onTime(){
   p.installMaxQPolicy(); p.layoutPolicy();
   savePiFig(p,b,STRING("data/onTime-DP-1.fig"));
 
-  gl.text.clr() <<"onTime DP, gamma=1";
+  gl.text.clear() <<"onTime DP, gamma=1";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 
@@ -122,7 +122,7 @@ void onTime(){
   p.installMaxQPolicy();
   savePiFig(p,b,STRING("data/onTime-DP-09.fig"));
 
-  gl.text.clr() <<"onTime DP, gamma=.9";
+  gl.text.clear() <<"onTime DP, gamma=.9";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 
@@ -131,7 +131,7 @@ void onTime(){
   p.iteratedPlan(5,a,b,false);
   savePiFig(p,b,STRING("data/onTime-PIP-1.fig"));
 
-  gl.text.clr() <<"onTime my planning";
+  gl.text.clear() <<"onTime my planning";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 
@@ -140,7 +140,7 @@ void onTime(){
   p.iteratedPlan(5,a,b,false);
   savePiFig(p,b,STRING("data/onTime-PIP-09.fig"));
 
-  gl.text.clr() <<"onTime my planning";
+  gl.text.clear() <<"onTime my planning";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 }
@@ -163,7 +163,7 @@ void timeWindow(){
   system(STRING("cp Z data/Z-window"));
   savePiFig(p,b,STRING("data/window.fig"));
 
-  gl.text.clr() <<"window my planning";
+  gl.text.clear() <<"window my planning";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 }
@@ -188,7 +188,7 @@ void threeHoles(){
     p.plan(a,b,false); 
     system(STRING("cp T data/T-holes-"<<k));
     system(STRING("cp Z data/Z-holes-"<<k));
-    p.calcGvis(); p.layout(-1,0,0,1); gl.text.clr() <<"browse all gamma";
+    p.calcGvis(); p.layout(-1,0,0,1); gl.text.clear() <<"browse all gamma";
     do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
 
     p.installPostPolicyFromPrior(0);
@@ -196,7 +196,7 @@ void threeHoles(){
     p.makePostToPriorPolicy();
     saveGvisFig(p,b,STRING("data/holes-"<<k<<".fig"));
 
-    gl.text.clr() <<"holes - " <<k;
+    gl.text.clear() <<"holes - " <<k;
     do{ gl.display(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
     unhideAll(p);
   }
@@ -211,7 +211,7 @@ void threeHoles(){
     p.makePostToPriorPolicy();
     savePiFig(p,b,STRING("data/holesX-"<<k<<".fig"));
 
-    gl.text.clr() <<"holes - " <<k;
+    gl.text.clear() <<"holes - " <<k;
     do{ gl.display(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
     unhideAll(p);
   }
@@ -224,7 +224,7 @@ void threeHoles(){
   p.installMaxQPolicy(); p.layoutPolicy();
   savePiFig(p,b,STRING("data/holes-DP-1.fig"));
 
-  gl.text.clr() <<"holes DP, gamma=1";
+  gl.text.clear() <<"holes DP, gamma=1";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 
@@ -236,7 +236,7 @@ void threeHoles(){
   p.installMaxQPolicy(); p.layoutPolicy();
   savePiFig(p,b,STRING("data/holes-DP-095.fig"));
 
-  gl.text.clr() <<"holes DP, gamma=.95";
+  gl.text.clear() <<"holes DP, gamma=.95";
   do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   unhideAll(p);
 }
@@ -268,7 +268,7 @@ void largeMaze(){
   //p.calcGvis();
   //saveGvisFig(p,b,STRING("data/PIP-large."<<Parameter<uint>("seed")()<<".fig"));
 
-  //p.layout(-1,0,0,1); gl.text.clr() <<"browse all gamma";
+  //p.layout(-1,0,0,1); gl.text.clear() <<"browse all gamma";
   //do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
 #endif
 
@@ -282,7 +282,7 @@ void largeMaze(){
   //p.installMaxQPolicy();
   //savePiFig(p,b,STRING("data/onTime-DP-09.fig"));
 
-  //gl.text.clr() <<"onTime DP, gamma=.9";
+  //gl.text.clear() <<"onTime DP, gamma=.9";
   //do{ gl.watch(); if(gl.selected) p.G.writeSelected(gl.selected); }while(gl.selected);
   //unhideAll(p);
 }

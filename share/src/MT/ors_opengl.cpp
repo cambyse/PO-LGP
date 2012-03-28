@@ -529,17 +529,17 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall{
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
       if(s){
-        gl.text.clr()
+        gl.text.clear()
         <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
         listWrite(s->ats, gl.text, "\n");
       }
       if(j){
-        gl.text.clr()
+        gl.text.clear()
         <<"edge selection: " <<j->from->name <<' ' <<j->to->name
         <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
         listWrite(j->ats, gl.text, "\n");
       }
-      if(!j && !s) gl.text.clr();
+      if(!j && !s) gl.text.clear();
     }else{
       //gl.Select();
       //double x=0, y=0, z=seld;
@@ -647,7 +647,7 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl.text.clr() <<"time " <<t;
+    gl.text.clear() <<"time " <<t;
     gl.timedupdate(10);
   }
 }
