@@ -103,6 +103,12 @@ void Controller::step() {
       q_reference = q_plan[q_plan.d0-1];
     }
     
+    //perhaps fix fingers
+    bool fixFingers = controllerTask->get_fixFingers(this);
+    if (fixFingers) for (uint j=7; j<14; j++) {
+      q_reference(j)=q_plan[0](j); 
+    }
+    
     cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
     controllerTask->set_relativeRealTimeOfController(realTime, this);
     
