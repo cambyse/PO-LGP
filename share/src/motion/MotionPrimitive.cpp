@@ -56,9 +56,12 @@ void MotionPrimitive::step() {
   Action::ActionPredicate actionSymbol = action->get_action(this);
   
   if (true) {//TODO: need to pull ors configuration
-    geo->writeAccess(this); //BAD!
-    geo->ors.copyShapesAndJoints(*s->sys.ors);
-    geo->deAccess(this);
+    //geo->writeAccess(this); //BAD!
+    //geo->ors.copyShapesAndJoints(*s->sys.ors);
+    //geo->deAccess(this);
+		geo->readAccess(this);
+		s->sys.ors = geo->get_ors().newClone();
+		geo->deAccess(this);
   }
   
   if (actionSymbol==Action::noAction) {
