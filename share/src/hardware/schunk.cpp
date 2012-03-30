@@ -37,7 +37,6 @@ SchunkArm::~SchunkArm() { delete s; }
 
 void SchunkArm::open() {
   s->openArm = birosInfo.getParameter<bool>("openArm", this, false);
-  if (!s->openArm) return;
   
   GeometricState *geo;
   birosInfo.getVariable(geo, "GeometricState", this);
@@ -52,24 +51,41 @@ void SchunkArm::open() {
   s->motorIndex(6) = geo->ors.getBodyByName("m9")->inLinks(0)->index;
   geo->deAccess(this);
   
+  if(s->openArm) 
+    s->open();
   
-  s->open();
   hardwareReference->writeAccess(this);
   if (hardwareReference->q_real.N<7) hardwareReference->q_real.resizeCopy(7);
-  for (uint m=0; m<7; m++)
-    hardwareReference->q_real(s->motorIndex(m)) = (float)s->q_real(m);
+	if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
+	if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
+  for (uint m=0; m<7; m++) {
+    hardwareReference->q_real(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
+		hardwareReference->q_reference(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
+		hardwareReference->v_reference(s->motorIndex(m)) =  0.;
+	}
   hardwareReference->deAccess(this);
 }
 
 void SchunkArm::step() {
-  if (!s->openArm) return;
-  
-  hardwareReference->readAccess(this);
-  for (uint m=0; m<7; m++)
-    s->q_reference(m) = (float)hardwareReference->q_reference(s->motorIndex(m));
-  hardwareReference->deAccess(this);
-  
-  s->step();
+  if (s->openArm) { 
+    hardwareReference->readAccess(this);
+    for (uint m=0; m<7; m++)
+      s->q_reference(m) = (float)hardwareReference->q_reference(s->motorIndex(m));
+    hardwareReference->deAccess(this);
+    
+    s->step();
+
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++)
+      hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+    hardwareReference->deAccess(this);
+  }
+  else {
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++)
+      hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
+    hardwareReference->deAccess(this);
+  }
 }
 
 void SchunkArm::close() {
@@ -90,31 +106,47 @@ SchunkHand::~SchunkHand() {
 
 void SchunkHand::open() {
   s->openHand = birosInfo.getParameter<bool>("openHand", this, false);
-  if (!s->openHand) return;
-  
-  s->open();
   
   s->motorIndex.resize(7);
   for (uint m=0; m<=6; m++) s->motorIndex(m) = m+7;
   
   hardwareReference->writeAccess(this);
-  for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+  if(hardwareReference->q_real.N < 14) hardwareReference->q_real.resizeCopy(14);
+  if(hardwareReference->q_reference.N < 14) hardwareReference->q_reference.resizeCopy(14);
+  if (hardwareReference->v_reference.N < 14) hardwareReference->v_reference.resizeCopy(14);
+  hardwareReference->deAccess(this);
+  
+  if (s->openHand) 
+    s->open();
+
+  hardwareReference->writeAccess(this);
+  for (uint m=0; m<7; m++) { 
+    hardwareReference->q_real(s->motorIndex(m)) = s->openHand ? s->q_real(m) : 0;
+    hardwareReference->q_reference(s->motorIndex(m)) = s->openHand ? s->q_real(m) : 0;
+    hardwareReference->v_reference(s->motorIndex(m)) = 0;
+  }
   hardwareReference->deAccess(this);
 }
 
 void SchunkHand::step() {
-  if (!s->openHand) return;
-  
-  hardwareReference->readAccess(this);
-  if (!s->v_reference.N) s->v_reference.resize(7);
-  for (uint m=0; m<7; m++) s->v_reference(m) = hardwareReference->v_reference(s->motorIndex(m));
-  hardwareReference->deAccess(this);
-  
-  s->step();
-  
-  hardwareReference->writeAccess(this);
-  for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
-  hardwareReference->deAccess(this);
+  if (s->openHand) {
+    hardwareReference->readAccess(this);
+    if (!s->v_reference.N) s->v_reference.resize(7);
+    for (uint m=0; m<7; m++) s->v_reference(m) = hardwareReference->v_reference(s->motorIndex(m));
+    hardwareReference->deAccess(this);
+
+    s->step();
+
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+    hardwareReference->deAccess(this);
+  }
+  else {
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++)
+      hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
+    hardwareReference->deAccess(this);
+  }
 }
 
 void SchunkHand::close() {

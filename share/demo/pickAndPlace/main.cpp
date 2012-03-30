@@ -66,20 +66,22 @@ int main(int argn,char** argv){
   P.append(LIST<Process>(view0));
   //P.append(LIST<Process>(view));
   P.append(LIST<Process>(view7, view8, view9));
-  P.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  //P.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
 
   cam.threadLoop();
   loopWithBeat(P,.01);
   
   cout <<"arrange your windows..." <<endl;
-  MT::wait(5.);
+  MT::wait(1.);
   
   //pick-and-place loop
-  for(uint k=0;k<10;k++){
-    waitForPerceivedObjects(1, 1);
+  for(uint k=0;k<1;k++){
+    waitForPerceivedObjects(1, 0);
     pickObject("cyl1");
     //resetPlanner(planner);
+    homing(true);
     placeObject("cyl1", "table", "cyl2");
+    homing();
     //resetPlanner(planner);
     //plannedHoming("cyl1", "cyl2");
     //resetPlanner(planner);

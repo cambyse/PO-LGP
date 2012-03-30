@@ -68,8 +68,15 @@ void Controller::step() {
   
   if (mode==ControllerTask::stop) {
     //stop -> don't change q_reference
+<<<<<<< Updated upstream
     s->hardwareReference->set_v_reference(zeros(14,1), this);
     //s->controllerTask->waitForConditionSignal(.01);
+=======
+    arr tmp(14);
+    tmp.setZero();
+    hardwareReference->set_v_reference(tmp, this);
+    controllerTask->waitForConditionSignal(.01);
+>>>>>>> Stashed changes
     return;
   }
   
@@ -79,8 +86,16 @@ void Controller::step() {
     //-- check if converged
     if (s->motionPlan->get_converged(this)==false) {
       //stop
+<<<<<<< Updated upstream
       s->hardwareReference->set_v_reference(zeros(14,1), this);
       //s->motionPlan->waitForConditionSignal(.01);
+=======
+      //MT_MSG("trying to follow non-converged trajectory");
+      arr tmp(14);
+      tmp.setZero();
+      hardwareReference->set_v_reference(tmp, this);
+      motionPlan->waitForConditionSignal(.01);
+>>>>>>> Stashed changes
       return;
     }
     
@@ -125,11 +140,23 @@ void Controller::step() {
     //MT_MSG("TODO");
     
     //update the controllers own internal ors state - pulling from MotionReference
+<<<<<<< Updated upstream
     arr q_reference = s->hardwareReference->get_q_reference(this);
     arr v_reference = s->hardwareReference->get_v_reference(this);
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
     if (q_reference.N) s->sys.setqv(q_reference, v_reference);
     else s->sys.getqv0(q_reference, v_reference);
+=======
+    arr q_old = hardwareReference->get_q_real(this);
+    arr v_old = hardwareReference->get_v_reference(this);
+    s->sys.vars.clear(); //unset the task variables -- they're set and updated later
+    if (q_old.N >= 14) { 
+      if(q_old.N == 2*s->ors->getJointStateDimension()) q_old = q_old.sub(0, q_old.N/2 - 1);
+      s->sys.setqv(q_old, v_old);
+    }
+    else 
+      s->sys.getqv0(q_old, v_old);
+>>>>>>> Stashed changes
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = s->controllerTask->get_feedbackControlTask(this);
@@ -149,17 +176,19 @@ void Controller::step() {
     if (forceColLimTVs && (!colActive || !limActive)) HALT("SAFETY BREACH! You need an active collision and limit variable!");
     
     //compute the motion step
-    arr q_old=q_reference;
     arr dq, x, x_1;
     
     //dynamic control using SOC
-    x_1=q_reference; x_1.append(v_reference);
+    x_1=q_old; x_1.append(v_old);
+    arr q_reference, v_reference;
     soc::bayesianDynamicControl(s->sys, x, x_1, 0);
-    q_reference = x.sub(0, q_reference.N-1);
-    v_reference = x.sub(v_reference.N, -1);
+    q_reference = x.sub(0, q_old.N-1);
+    v_reference = x.sub(v_old.N, -1);
     
     //perhaps fix fingers
-    if (fixFingers) for (uint j=7; j<14; j++) { v_reference(j)=0.; q_reference(j)=q_old(j); }
+    if (fixFingers) for (uint j=7; j<14; j++) {
+      v_reference(j)=0.; q_reference(j)=q_old(j); 
+    }
     
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);
@@ -171,9 +200,14 @@ void Controller::step() {
       MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
       //v_reference.setZero(); SD: making too large step warnig  use max allowed step
     }
+<<<<<<< Updated upstream
     
     s->hardwareReference->set_q_reference(q_reference, this);
     s->hardwareReference->set_v_reference(v_reference, this);
+=======
+    hardwareReference->set_q_reference(q_reference, this);
+    hardwareReference->set_v_reference(v_reference, this);
+>>>>>>> Stashed changes
     
     //push proxies to the geometric state
     //MT_MSG("TODO");

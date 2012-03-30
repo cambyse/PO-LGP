@@ -1,4 +1,5 @@
 #include "MotionPrimitive.h"
+#include <JK/utils/util.h>
 //#include <DZ/aico_key_frames.h>
 
 struct sMotionPrimitive {
@@ -58,8 +59,7 @@ void MotionPrimitive::step() {
     plan->set_hasGoal(false,this);
   }
   
-  if (actionSymbol==Action::grasp) {
-    uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+  if (actionSymbol==Action::grasp || actionSymbol==Action::place) {
     
     if (frame1->get_converged(this)) {
       //action->waitForConditionSignal(.01);
@@ -77,8 +77,26 @@ void MotionPrimitive::step() {
     
     //estimate the key frame
     arr x_keyframe;
-    threeStepGraspHeuristic(x_keyframe, s->sys, x0, shapeId, s->verbose);
-    
+    if (actionSymbol==Action::grasp) {
+      uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+      threeStepGraspHeuristic(x_keyframe, s->sys, x0, shapeId, s->verbose);
+    }
+    else if (actionSymbol==Action::place) {
+      s->sys.setx0(x0);
+      listDelete(s->sys.vars);
+      uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+      uint fromId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+      uint toId = s->sys.ors->getShapeByName(action->get_objectRef3(this))->index;
+      setPlaceGoals(s->sys,s->sys.nTime(),shapeId,fromId,toId);
+      keyframeOptimizer(x_keyframe, s->sys, 1e-2, true, s->verbose);
+    }
+    else if (actionSymbol==Action::home) {
+      s->sys.setx0(x0);
+      listDelete(s->sys.vars);
+      //setHomingGoals(sys,T,shapeId, side, 1);
+      //keyframeOptimizer(x, s->sys, 1e-2, true, verbose);
+    }
+
     //push it
     frame1->writeAccess(this);
     frame1->x_estimate = x_keyframe;
@@ -97,8 +115,6 @@ void MotionPrimitive::step() {
     //details on the task costs
     listClone(plan->TVs, s->sys.vars);
     plan->deAccess(this);
-    //TODO: much more!
-    //setGraspGoals(s->sys, s->sys.nTime(), goalVar->graspShape);
   }
   
   if (actionSymbol==Action::place) {
@@ -145,7 +161,7 @@ void threeStepGraspHeuristic(arr& x, soc::SocSystem_Ors& sys, const arr& x0, uin
       listDelete(sys.vars);
       if (verbose>=2) {
         sys.displayState(NULL, NULL, "posture estimate phase 0", false);
-        sys.gl->watch();
+        //sys.gl->watch();
       }
       x_side[side]() = x;
     }
@@ -158,7 +174,7 @@ void threeStepGraspHeuristic(arr& x, soc::SocSystem_Ors& sys, const arr& x0, uin
     listDelete(sys.vars);
     if (verbose>=2) {
       sys.displayState(NULL, NULL, "posture estimate phase 0", false);
-      sys.gl->watch();
+     // sys.gl->watch();
     }
   }
   
@@ -167,7 +183,7 @@ void threeStepGraspHeuristic(arr& x, soc::SocSystem_Ors& sys, const arr& x0, uin
   sys.setx(x);
   if (verbose>=2) {
     sys.displayState(NULL, NULL, "posture estimate phase 1", false);
-    sys.gl->watch();
+    //sys.gl->watch();
   }
   
   //-- reoptimize with close hand
@@ -175,7 +191,7 @@ void threeStepGraspHeuristic(arr& x, soc::SocSystem_Ors& sys, const arr& x0, uin
   keyframeOptimizer(x, sys, 1e-2, true, verbose);
   //listDelete(sys.vars); //DON'T delete the grasp goals - the system should keep them for the planner
   if (verbose>=1) sys.displayState(NULL, NULL, "posture estimate phase 2", false);
-  if (verbose>=2) sys.gl->watch();
+  //if (verbose>=2) sys.gl->watch();
 }
 
 void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase) {
@@ -183,7 +199,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   
   //load parameters only once!
   static bool firstTime=true;
-  static double endEffPrec, endOppPrec, endAlignPrec, graspDistPrec, colPrec, limPrec, homePrec;
+  static double endEffPrec, endOppPrec, endAlignPrec, graspDistPrec, colPrec, limPrec, zeroQPrec;
   if (firstTime) {
     firstTime=false;
     endEffPrec = birosInfo.getParameter<double>("graspPlanEndEffPrec");
@@ -192,7 +208,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
     graspDistPrec = birosInfo.getParameter<double>("graspPlanGraspDistPrec");
     colPrec = birosInfo.getParameter<double>("graspPlanColPrec");
     limPrec = birosInfo.getParameter<double>("graspPlanLimPrec");
-    homePrec = birosInfo.getParameter<double>("graspPlanHomePrec");
+    zeroQPrec = birosInfo.getParameter<double>("graspPlanHomePrec");
   }
   
   //set the time horizon
@@ -298,10 +314,140 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
   sys.vars.append(V);
   V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
-  V->y_prec=homePrec;
+  V->y_prec=zeroQPrec;
   V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
   sys.vars.append(V);
 }
+
+void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFromShapeId, uint belowToShapeId){
+  sys.setTox0();
+  
+  //load parameters only once!
+  double placeMidPrec, placeAlignmentPrec, limPrec, placePositionPrec, zeroQPrec;
+  placeMidPrec = birosInfo.getParameter<double>("placeMidPrec");
+  placeAlignmentPrec = birosInfo.getParameter<double>("placeAlignmentPrec");
+  limPrec = birosInfo.getParameter<double>("limPrec");
+  zeroQPrec = birosInfo.getParameter<double>("zeroQPrec");
+  placePositionPrec = birosInfo.getParameter<double>("placePositionPrec");
+
+  double placeUpDownVelocity = birosInfo.getParameter<double>("placeUpDownVelocity");
+  double placeUpDownVelocityPrec = birosInfo.getParameter<double>("placeUpDownVelocityPrec");
+
+  
+  //set the time horizon
+  CHECK(T==sys.nTime(), "");
+  
+  //deactivate all variables
+  activateAll(sys.vars, false);
+  
+  //activate collision testing with target shape
+  ors::Shape *obj  = sys.ors->shapes(shapeId);
+  ors::Shape *from = sys.ors->shapes(belowFromShapeId);
+  ors::Shape *onto = sys.ors->shapes(belowToShapeId);
+  CHECK(obj->body==sys.ors->getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
+  obj->cont=true;
+  onto->cont=false;
+  from->cont=false;
+  sys.swift->initActivations(*sys.ors);
+  
+  TaskVariable *V;
+  
+  //general target
+  arr xtarget;
+  xtarget.setCarray(onto->X.pos.p, 3);
+  xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  
+  //endeff
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;
+  V->updateState(*sys.ors);
+  V->y_target = xtarget;
+  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placePositionPrec, 0., 0.);
+  //special: condition effector velocities:
+  uint t, M=T/8;
+  for(t=0; t<M; t++){
+    V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., placeUpDownVelocity);
+    V -> v_prec_trajectory(t) = placeUpDownVelocityPrec;
+  }
+  for(t=T-M; t<T; t++){
+    V -> v_trajectory[t]() = (1./M*(T-t))*ARR(0., 0., -placeUpDownVelocity); //0.2
+    V -> v_prec_trajectory(t) = placeUpDownVelocityPrec; // 1e1
+  }
+  sys.vars.append(V);
+  
+  //up1
+  V = new DefaultTaskVariable("up1", *sys.ors, zalignTVT, "m9", "<d(90 1 0 0)>", 0, 0, 0);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V) -> irel.addRelativeRotationDeg(90, 1, 0, 0);
+  V->updateState(*sys.ors);
+  V->y_target = 0.;
+  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placeAlignmentPrec, 0., 0.);
+  sys.vars.append(V);
+  
+  //up2
+  V = new DefaultTaskVariable("up2", *sys.ors, zalignTVT, "m9", "<d( 0 1 0 0)>", 0, 0, 0);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V)-> irel.addRelativeRotationDeg(90, 0, 1, 0);
+  V->updateState(*sys.ors);
+  V->y_target = 0.;
+  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placeAlignmentPrec, 0., 0.);
+  sys.vars.append(V);
+  
+  //col lim and relax
+  arr limits;
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+      -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
+  //TODO: limits as parameter!
+  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
+  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  V->y_prec=zeroQPrec;
+  V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
+}
+
+//void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowToShape){
+  //sys.setx0ToCurrent();
+  
+  ////deactivate all variables
+  //activateAll(sys.vars, false);
+  
+  //ors::Shape *obj  = sys.ors->getShapeByName(objShape);
+  //ors::Shape *onto = sys.ors->getShapeByName(belowToShape);
+  //obj->cont=true;
+  //onto->cont=true;
+  //sys.swift->initActivations(*sys.ors);
+  
+  //TaskVariable *V;
+  
+  ////general target
+  //double midPrec, endPrec;
+  //MT::getParameter(midPrec, "homingPlanMidPrec");
+  //MT::getParameter(endPrec, "homingPlanEndPrec");
+  
+  ////endeff
+  //V=listFindByName(sys.vars, "endeffector");
+  ////V->irel = obj->rel;
+  //V->updateState(*sys.ors);
+  //V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
+  ////special: condition effector velocities: move above object
+  //uint t, M=T/8;
+  //for(t=0; t<M; t++){
+    //V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., .2);
+    //V -> v_prec_trajectory(t) = 1e1;
+  //}
+  ////for(t=M;t<T;t++){
+  ////  V -> v_trajectory[t]() = 0;
+  ////  V -> v_prec_trajectory(t) = 0;
+  ////}
+  
+  ////col lim and relax
+  //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
+  //V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanLimPrec"), 0.);
+  //V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
+  //V->setInterpolatedTargetsEndPrecisions(T,
+                                         //midPrec, endPrec,
+                                         //midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+//}
 
 //From Dmitry
 void decomposeMatrix(arr& A1,arr& A2,arr A) { // returns diagonal blocks of equal size
