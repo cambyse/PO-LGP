@@ -24,12 +24,12 @@ int main(int argn,char** argv){
   // processes
   Controller controller;
   MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
+  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan);
   // viewers
-  OrsViewer<GeometricState>     view0(geometricState, geometricState);
-  PoseViewer<MotionPlan>        view7(motionPlan, geometricState);
-  PoseViewer<HardwareReference> view8(hardwareReference, geometricState);
-  PoseViewer<MotionKeyframe>    view9(frame1, geometricState);
+  OrsViewer<GeometricState>     view0(geometricState);
+  PoseViewer<MotionPlan>        view7(motionPlan);
+  PoseViewer<HardwareReference> view8(hardwareReference);
+  PoseViewer<MotionKeyframe>    view9(frame1);
 
   //-- hardware
   // variables
@@ -39,7 +39,7 @@ int main(int argn,char** argv){
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
   // viewers
-  PoseViewer<HardwareReference> view(hardwareReference, geometricState);
+  PoseViewer<HardwareReference> view(hardwareReference);
 
   
   //-- perception

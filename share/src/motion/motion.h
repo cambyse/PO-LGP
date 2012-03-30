@@ -194,7 +194,7 @@ struct OrsViewer:Process {
   WorkingCopy<GeometricState> geo;
   OpenGL *gl;
   
-  OrsViewer(T& v, GeometricState& g):Process("OrsViewer"), var(&v), gl(NULL) {
+  OrsViewer(T& v):Process("OrsViewer"), var(&v), gl(NULL) {
     geo.init("GeometricState", this);
     threadListenTo(var);
   }
