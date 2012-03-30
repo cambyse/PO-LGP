@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/resource.h>
+#include <sys/prctl.h>
 #include <iostream>
 #include <X11/Xlib.h>
 
@@ -395,8 +396,8 @@ void Variable::writeAccess(Process *p){
   s->lock.writeLock();
   revision++;
   uint i;  Process *l;
-  for_list(i, l, listeners)
-    if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
+  for_list(i, l, listeners){}
+    //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
   //broadcastCondition();
   //_write(cout);  cout <<endl;
   //_write(s->os);  s->os <<endl;
@@ -506,14 +507,14 @@ void Process::threadWait(){
 
 void Process::threadLoop(){
   if(s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
+  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsLOOPING);
 }
 
 void Process::threadLoopWithBeat(double sec){
   s->metronome=new Metronome("threadTiccer", 1000.*sec);
   if(s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
+  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsBEATING);
 }
 
@@ -533,10 +534,13 @@ void* sProcess::staticThreadMain(void *_self){
   // http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   if(s->threadPriority) setNice(s->threadPriority);
-  
+  prctl(PR_SET_NAME, proc->name);
+  //pthread_setname_np(proc->thread, proc->name);
+
   proc->open(); //virtual initialization routine
 
-  s->threadCondition.setState(tsIDLE);
+  if(s->threadCondition.state==tsCLOSE)
+    s->threadCondition.setState(tsIDLE);
   s->timer.reset();
   for(;s->threadCondition.state!=tsCLOSE;){
     int state=s->threadCondition.waitForStateNotEq(tsIDLE);

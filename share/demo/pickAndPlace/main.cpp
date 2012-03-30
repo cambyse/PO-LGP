@@ -63,12 +63,18 @@ int main(int argn,char** argv){
   P.append(LIST<Process>(controller, motionPlanner, motionPrimitive));
   P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
   P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
-  P.append(LIST<Process>(view0));
-  //P.append(LIST<Process>(view));
-  P.append(LIST<Process>(view7, view8, view9));
-  //P.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
 
-  cam.threadLoop();
+  //views don't need to be started -- they now listen!
+  ProcessL PV;
+  PV.append(LIST<Process>(view0));
+  PV.append(LIST<Process>(view));
+  PV.append(LIST<Process>(view7, view8, view9));
+  PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  
+  //step(PV);
+  loopWithBeat(PV,.1);
+
+  //cam.threadLoop();
   loopWithBeat(P,.01);
   
   cout <<"arrange your windows..." <<endl;
@@ -76,12 +82,12 @@ int main(int argn,char** argv){
   
   //pick-and-place loop
   for(uint k=0;k<1;k++){
-    waitForPerceivedObjects(1, 0);
+    //waitForPerceivedObjects(1, 0);
     pickObject("cyl1");
     //resetPlanner(planner);
-    homing(true);
+    //homing(true);
     placeObject("cyl1", "table", "cyl2");
-    homing();
+    //homing();
     //resetPlanner(planner);
     //plannedHoming("cyl1", "cyl2");
     //resetPlanner(planner);

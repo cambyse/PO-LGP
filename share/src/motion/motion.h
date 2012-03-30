@@ -166,13 +166,14 @@ struct PoseViewer:Process {
   }
   void step() {
     geo.pull();
+    uint n=geo().ors.getJointStateDimension();
     arr q;
     var->readAccess(this);
     var->get_poseView(q);
     var->deAccess(this);
     if (q.nd==1) {
-      if (q.N==2*geo().ors.getJointStateDimension())
-        q = q.sub(0,q.N/2-1); //check dynamic state
+      if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
+      if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
       geo().ors.setJointState(q);
       geo().ors.calcBodyFramesFromJoints();
       gl->text.clear() <<"pose view";

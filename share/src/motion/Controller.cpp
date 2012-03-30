@@ -136,6 +136,7 @@ void Controller::step() {
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = s->controllerTask->get_feedbackControlTask(this);
+    CHECK(task,"");
     if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
     s->sys.setTaskVariables(task->TVs);
     task->updateTaskVariableGoals(*s->sys.ors);
