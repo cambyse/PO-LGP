@@ -785,6 +785,68 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W){
   dq = Ainv * a;
 }
 
+
+//===========================================================================
+//
+// task variable table
+//
+
+#if 0
+
+void TaskVariableTable::init(const ors::Graph& ors){
+  uint i,j,k,m=0,T=0,t,qdim;
+  TaskVariable *v;
+  //count the total task dimension, q-d
+  for_list(i,v,list){
+    v->updateState(ors);
+    if(v->active){
+      m+=y.N;
+      if(!T) T=y_trajectory.d0;
+      else CHECK(T=y_trajectory.d0);
+      qdim=J.d1;
+    }
+  }
+  //resize everything
+  y.resize(T,m);
+  phi.resize(T,m);
+  J.resize(T,m,qdim);
+  rho.resize(T,m);
+
+  updateState(0, ors, true);
+}
+
+ //recompute all phi in time slice t using the pose in ors
+void TaskVariableTable::updateTimeSlice(uint t, const ors::Graph& ors, bool alsoTargets){
+  uint i,j,k,m=0;
+  TaskVariable *v;
+  for_list(i,v,list){
+    v->updateState(ors);
+    if(v->active){
+      for(j=0;j<v->y.N;j++){
+	phi(t,m+j) = v->y(j);
+	for(k=0;k<J.d2;k++) J(t,m+j,k) = v->J(j,k);
+	if(alsoTargets){
+	  y(t,m+j) = v->y_trajectory(t,j);
+	  rho(t,m+j) = v->y_prec_trajectroy(t,j);
+	}
+      }
+      m+=j;
+    }
+    CHECK(m==y.d1,"");
+  }
+}
+
+double TaskVariableTable::totalCost(){
+  CHECK(y.N==phi.N && y.N == rho.N,"");
+  double C = 0;
+  for(uint i=0;i<y.N;i++){
+    C += rho.elem(i)*sqrDistance(y.elem(i), phi.elem(i));
+  }
+}
+
+#endif
+
+
 /*void getJointXchange(TaskVariableList& CS, arr& y_change){
   uint i;
   y_change.clear();

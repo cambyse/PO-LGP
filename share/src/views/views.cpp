@@ -4,6 +4,45 @@
 #include <MT/ors.h>
 #include <MT/opengl_gtk.h>
 
+struct sGtkViewWindow{
+  GtkWidget *win;
+  GtkWidget *box;
+};
+
+GtkViewWindow::GtkViewWindow():Process("GtkViewWindow"){
+  s = new sGtkViewWindow;
+  s->win = NULL;
+  s->box = NULL;
+  
+  s->win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(s->win), "big window");
+  gtk_window_set_default_size(GTK_WINDOW(s->win), 100, 100);
+  gtk_widget_show(s->win);
+  
+  s->box = gtk_vbox_new (false, 5);
+  gtk_container_add(GTK_CONTAINER(s->win), s->box);
+}
+
+GtkViewWindow::~GtkViewWindow(){
+  delete s;
+}
+
+void GtkViewWindow::newView(Variable& var,uint fieldId){
+  View *v = ::newView(var,fieldId);
+  v->gtkNew(s->box);
+}
+
+void GtkViewWindow::open(){
+}
+
+void GtkViewWindow::step(){
+  while (gtk_events_pending())  gtk_main_iteration();
+}
+
+void GtkViewWindow::close(){
+}
+
+  
 MT::Array<ViewInfo*> birosViews;
 
 View *newView(Variable& var,uint fieldId){
@@ -124,10 +163,17 @@ void MeshView::glDraw() {
   ors::glDraw(*mesh);
 }
 
-void MeshView::gtkNew(GtkWidget *container){
-  gtkNewGl(container);
-}
-
 ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView");
 
 //===========================================================================
+
+OrsView::OrsView(Variable& var,uint fieldId):View(var, fieldId) {
+  ors = (ors::Graph*) var.fields(fieldId)->p;
+}
+
+void OrsView::glDraw() {
+  glStandardScene(NULL);
+  ors::glDraw(*ors);
+}
+
+ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView");

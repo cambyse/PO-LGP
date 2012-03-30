@@ -1,8 +1,12 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
+#include <views/views.h>
+#include <MT/gtk.h>
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
+  gtk_init(&argn, &argv);
+
   ThreadInfoWin win;
   win.threadLoopWithBeat(.1);
 
@@ -27,7 +31,13 @@ int main(int argn, char** argv){
   PoseViewer<MotionKeyframe>    view3(frame1);
   
   ProcessL P=LIST<Process>(controller, motionPlanner, motionPrimitive);
-  P.append(LIST<Process>(view1, view2, view3));
+  //P.append(LIST<Process>(view1, view2, view3));
+
+  GtkViewWindow wi;
+  wi.newView(geometricState,0);
+  wi.newView(geometricState,0);
+  wi.newView(geometricState,0);
+  P.append(&wi);
   
   cout <<"** setting grasp action" <<endl;
   action.writeAccess(NULL);
@@ -48,9 +58,9 @@ int main(int argn, char** argv){
     motionPlanner.step();
   } break;
   case 2:{ //threaded mode
-    //loopWithBeat(P,.01);
-    step(P);
-    controller.threadLoopWithBeat(.01);
+    loopWithBeat(P,.01);
+    //step(P);
+    //controller.threadLoopWithBeat(.01);
     MT::wait();
   } break;
   }

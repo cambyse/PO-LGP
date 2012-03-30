@@ -605,6 +605,7 @@ struct TaskVariable;
 
 /*!\brief different types of task variables: refer to different ways to
   compute/access the kinematics and Jacobians */
+//TODO: move this to Default task variable?
 enum TVtype {
   noneTVT,     //!< undefined
   posTVT,      //!< 3D position of reference, can have 2nd reference, no param
@@ -803,7 +804,6 @@ struct ProxyAlignTaskVariable:public TaskVariable {
 };
 
 
-
 //===========================================================================
 //
 // task variable lists
@@ -824,6 +824,32 @@ void shiftTargets(TaskVariableList& CS, int i);
 void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W);
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
+
+
+//===========================================================================
+//
+// task variable table
+//
+
+/* A TV table is list a list, but offering tables (arrays) that contain all TV targets, precisions, trues */
+
+struct TaskVariableTable{
+  TaskVariableList list;
+
+  arr y;   // table with all targets
+  arr phi; // table with all 'current' (phi(q))
+  arr J;   // table with all Jacobians
+  arr rho; // table with all precisions
+
+  void init(const ors::Graph& ors, bool dynamic);
+  //recompute all phi in time slice t using the pose in ors
+  void updateTimeSlice(uint t, const ors::Graph& ors, bool dynamic, bool alsoTargets);
+  double totalCost(); //\sum [rho*(y_i-phi_i)]^2
+
+  void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
+  double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
+};
+
 
 //===========================================================================
 //

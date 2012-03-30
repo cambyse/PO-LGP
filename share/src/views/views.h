@@ -15,6 +15,24 @@ extern MT::Array<ViewInfo*> birosViews;
 // ViewInfo for registering views in a global list
 //
 
+struct GtkViewWindow:Process{
+  struct sGtkViewWindow *s;
+  
+  GtkViewWindow();
+  ~GtkViewWindow();
+  
+  void newView(Variable& var,uint fieldId);
+
+  void open();
+  void step();
+  void close();
+};
+
+//===========================================================================
+//
+// ViewInfo for registering views in a global list
+//
+
 struct ViewInfo{
   MT::String name;
   MT::String fieldType;
@@ -92,10 +110,22 @@ struct MeshView:View{
   
   MeshView(Variable& var,uint fieldId);  
   void glDraw();
-  void gtkNew(GtkWidget *container);
+  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
 //===========================================================================
+
+namespace ors{ struct Graph; }
+
+struct OrsView:View {
+  ors::Graph *ors;
+  static ViewInfo_typed<OrsView, ors::Graph> info;
+  
+  OrsView(Variable& var,uint fieldId);  
+  void glDraw();
+  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
+};
+
 
 /*
 basic types include:
