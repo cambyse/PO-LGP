@@ -136,7 +136,7 @@ void testControl(){
     cout <<" q=" <<q <<flush;
     cout <<" real_q=" <<qm <<flush;
 
-    gl.text.clr() <<"time " <<t <<endl;
+    gl.text.clear() <<"time " <<t <<endl;
     //if(!(t%10)) gl.update();
     
     //-- total loop time

@@ -232,8 +232,8 @@ struct Mesh {
   void collectTriGroups();
   void skin(uint i);
   
-  
   //IO
+  void write(std::ostream&) const; ///< only writes generic info
   void readFile(const char* filename);
   void readTriFile(const char* filename);
   void readObjFile(const char* filename);
@@ -546,6 +546,7 @@ std::ostream& operator<<(std::ostream&, const ors::Vector&);
 std::ostream& operator<<(std::ostream&, const ors::Matrix&);
 std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
 std::ostream& operator<<(std::ostream&, const ors::Transformation&);
+stdOutPipe(ors::Mesh);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);

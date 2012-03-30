@@ -180,7 +180,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   bool insidePomdp=false;
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
-    if(!tag.N()) break; //end of file
+    if(!tag.N) break; //end of file
     if(tag=="variable"){
       name.read(is, " \t\n\r", " \t\n\r<({", false);
       is >>"<" >>d >>">";
@@ -279,7 +279,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   bool insidePomdp=false;
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
-    if(!tag.N()) break; //end of file
+    if(!tag.N) break; //end of file
     if(tag=="variable"){
       name.read(is, " \t\n\r", " \t\n\r({", false);
       readStringList(strings, is);
@@ -321,7 +321,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     name.read(is, " \t\n\r(", ")", true);
     v=listFindByName(mdp.vars, tag);  CHECK(v, "");
     f=listFindByName(mdp.facs, name); CHECK(f, "");
-    if(tag(tag.N()-1)!='\''){
+    if(tag(tag.N-1)!='\''){
       mdp.initFacs.append(f);
       mdp.leftVars.append(listFindByName(mdp.vars, tag));
     } else if(mdp.obsVars.findValue(v)!=-1) mdp.obsFacs.append(f);
@@ -345,7 +345,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     arr val(v->dim);
     strings=values(v->id);
     CHECK(strings.N==v->dim, "");
-    for(j=0; j<strings.N; j++) strings(j).resetI() >>val(j);
+    for(j=0; j<strings.N; j++) strings(j).resetIstream() >>val(j);
     //cout <<"reward values = " <<strings <<' ' <<val <<endl;
     Factor R(ARRAY(v));
     R.setP(val);

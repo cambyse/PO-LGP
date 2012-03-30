@@ -161,7 +161,7 @@ void menuCallback3(int i){
 
 void testMenu(){
   OpenGL gl;
-  gl.text.clr() <<"press the right moust";
+  gl.text.clear() <<"press the right moust";
   gl.add(draw1,0);
 
   int submenu1, submenu2;

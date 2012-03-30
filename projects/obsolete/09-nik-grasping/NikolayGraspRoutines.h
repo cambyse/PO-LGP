@@ -31,7 +31,7 @@ arr computeTotalCost( soc::SocSystem_Ors  & top,const arr& q, bool bSlow){
       //   if(t >0){timeC(t-1+offset,0) = cost_t; timeC(t-1+offset,1) = cost_s;timeC(t-1+offset,2) = cost_s+ cost_t;} 
     if(useDisplay){
       top.gl->update();
-      top.gl->text.clr() <<t << " (time " <<std::setw(3) <<t <<'/' <<T <<')';
+      top.gl->text.clear() <<t << " (time " <<std::setw(3) <<t <<'/' <<T <<')';
       if(bSlow)top.gl->watch();
     }
   }

@@ -70,8 +70,7 @@ bool timerUseRealTime=false;
 QApplication *myApp=NULL;
 #endif
 
-class Demon {
-public:
+struct Demon {
   std::ofstream logFile;
   int logstat;
   
@@ -151,7 +150,6 @@ void decomposeFilename(char *&_path, char *&name, const char *filename){
   }
   _path = path;
 }
-
 
 //! returns true if the (0-terminated) string s contains c
 bool contains(const char *s, char c){
@@ -349,9 +347,6 @@ double cosc(double x){
   return ::cos(x)/x;
 }
 
-
-
-
 /*!\brief double time since start of the process in floating-point seconds
   (probably in micro second resolution) -- Windows checked! */
 double realTime(){
@@ -405,8 +400,6 @@ double totalTime(){
 //! the absolute double time and date as string
 char *date(){ static time_t t; time(&t); return ctime(&t); }
 
-//void wait(double sec){ double t=realTime(); while(realTime()-t<sec); }
-
 //! wait double time
 void wait(double sec){
   timespec ts;
@@ -452,7 +445,6 @@ bool wait(){
   return true;
 }
 
-
 //! the integral shared memory size -- not implemented for Windows!
 long mem(){
 #ifndef MT_TIMEB
@@ -463,8 +455,6 @@ long mem(){
   return 0;
 #endif
 }
-
-
 
 //! start and reset the timer (user CPU time)
 void timerStart(bool useRealTime){
@@ -566,6 +556,7 @@ uint getVerboseLevel(){
 std::istream& operator>>(std::istream& is, const char *str){
   MT::parse(is, str); return is;
 }
+
 //! the same global operator for non-const string
 std::istream& operator>>(std::istream& is, char *str){
   MT::parse(is, (const char*)str); return is;
@@ -581,17 +572,21 @@ int MT::String::StringBuf::overflow(int C){
   string->append(C);
   return C;
 }
+
 int MT::String::StringBuf::sync(){
-  if(string->flushHandler) string->flushHandler(*string);
+  if(string->flushCallback) string->flushCallback(*string);
   return 0;
 }
-void MT::String::StringBuf::setIpos(char *p){ setg(string->p, p, string->p+string->memN); }
+
+void MT::String::StringBuf::setIpos(char *p){ setg(string->p, p, string->p+string->N); }
+
 char *MT::String::StringBuf::getIpos(){ return gptr(); }
 
 //-- direct memory operations
-void MT::String::append(char x){ resize(memN+1, true); operator()(memN-1)=x; }
+void MT::String::append(char x){ resize(N+1, true); operator()(N-1)=x; }
+
 void MT::String::resize(uint n, bool copy){
-  if(memN==n && M>memN) return;
+  if(N==n && M>N) return;
   char *pold=p;
   uint Mold=M;
   //flexible allocation (more than needed in case of multiple resizes)
@@ -603,50 +598,61 @@ void MT::String::resize(uint n, bool copy){
   if(M!=Mold){
     p=new char [M];
     if(!p) HALT("MT::Mem failed memory allocation of " <<M <<"bytes");
-    if(copy) memmove(p, pold, memN<n?memN:n);
+    if(copy) memmove(p, pold, N<n?N:n);
     if(Mold) delete[] pold;
   }
-  memN=n;
-  p[memN]=0;
-  resetI();
+  N=n;
+  p[N]=0;
+  resetIstream();
 }
 
-void MT::String::init(){ p=0; memN=0; M=0; buffer.string=this; flushHandler=NULL; }
+void MT::String::init(){ p=0; N=0; M=0; buffer.string=this; flushCallback=NULL; }
+
 //! standard constructor
-MT::String::String():IOStream(&buffer){ init(); clr(); }
+MT::String::String():std::iostream(&buffer){ init(); clearStream(); }
+
 //! copy constructor
-MT::String::String(const String& s):IOStream(&buffer){ init(); this->operator=(s); }
+MT::String::String(const String& s):std::iostream(&buffer){ init(); this->operator=(s); }
+
 //! copy constructor for an ordinary C-string (needs to be 0-terminated)
-MT::String::String(const char *s):IOStream(&buffer){ init(); this->operator=(s); }
+MT::String::String(const char *s):std::iostream(&buffer){ init(); this->operator=(s); }
+
 MT::String::~String(){ if(M) delete[] p; }
 
+//! returns a reference to this
+std::iostream& MT::String::stream(){ return (std::iostream&)(*this); }
 
 //! returns a reference to this
-MT::IOStream& MT::String::stream(){ return (MT::IOStream&)(*this); }
-//! returns a reference to this
 MT::String& MT::String::operator()(){ return *this; }
+
 /*!\brief returns the true memory buffer (C-string) of this class (which is
 always kept 0-terminated) */
 MT::String::operator char*(){ return p; }
+
 //! as above but const
 MT::String::operator const char*() const { return p; }
+
 //! returns the i-th char
-char& MT::String::operator()(uint i) const { CHECK(i<=memN, "String range error (" <<i <<"<=" <<memN <<")"); return p[i]; }
+char& MT::String::operator()(uint i) const { CHECK(i<=N, "String range error (" <<i <<"<=" <<N <<")"); return p[i]; }
 
 //! copy operator
 MT::String& MT::String::operator=(const String& s){
-  resize(s.memN, false);
-  memmove(p, s.p, memN);
+  resize(s.N, false);
+  memmove(p, s.p, N);
   return *this;
 }
 
 //! copies from the C-string
 void MT::String::operator=(const char *s){ resize(strlen(s), false); memmove(p, s, strlen(s)); }
+
 void MT::String::set(const char *s, uint n){ resize(n, false); memmove(p, s, n); }
+
 //! shorthand for the !strcmp command
 bool MT::String::operator==(const char *s){ return !strcmp(p, s); }
+
 //! shorthand for the !strcmp command
 bool MT::String::operator==(const String& s){ return !strcmp(p, s.p); }
+
 bool MT::String::operator!=(const String& s){ return !(operator==(s)); }
 
 bool MT::String::contains(const String& substring){
@@ -654,24 +660,20 @@ bool MT::String::contains(const String& substring){
   return p != NULL;
 }
 
-
-
 //! deletes all memory and resets all stream flags
-MT::String& MT::String::clr(){ resize(0, false); return *this; }
+MT::String& MT::String::clear(){ resize(0, false); return *this; }
+
+//! call IOstream::clear();
+MT::String& MT::String::clearStream(){ std::iostream::clear(); return *this; }
+
 /*!\brief when using this String as an istream (to read other variables
   from it), this method resets the reading-pointer to the beginning
   of the string and also clears all flags of the stream */
-MT::String& MT::String::resetI(){ buffer.setIpos(p); clear(); return *this; }
-//! set the reading-pointer to an arbitrary place
-//void setIpos(char *p){ buffer.setIpos(p); }
-//! get the reading-pointer
-//char *getIpos(){ return buffer.getIpos(); }
-
-//! returns the length of the string (excluding the terminating 0)
-uint MT::String::N() const { return memN; }
+MT::String& MT::String::resetIstream(){ buffer.setIpos(p); clearStream(); return *this; }
 
 //! writes the string into some ostream
 void MT::String::write(std::ostream& os) const { os <<p; }
+
 /*!\brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */
 void MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol){
@@ -679,7 +681,7 @@ void MT::String::read(std::istream& is, const char* skipSymbols, const char *sto
   if(!stopSymbols) stopSymbols=readStopSymbols;
   if(eatStopSymbol==-1) eatStopSymbol=readEatStopSymbol;
   MT::skip(is, skipSymbols);
-  clr();
+  clear();
   char c=is.get();
   while(c!=-1 && is.good() && !MT::contains(stopSymbols, c)){
     append(c);
@@ -687,7 +689,6 @@ void MT::String::read(std::istream& is, const char* skipSymbols, const char *sto
   }
   if(c==-1) is.clear();
   if(c!=-1 && !eatStopSymbol) is.putback(c);
-  //is.clear();
 }
 
 

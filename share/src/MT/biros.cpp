@@ -564,8 +564,7 @@ void* sProcess::staticThreadMain(void *_self){
 // Parameter
 //
 
-Parameter::Parameter(const char *_name){
-  name = _name;
+Parameter::Parameter(){
   birosInfo.writeAccess(NULL);
   id = birosInfo.parameters.N;
   birosInfo.parameters.memMove=true;

@@ -1783,6 +1783,10 @@ ors::Vector ors::Mesh::getMeanVertex(){
   return ors::Vector(Vmean);
 }
 
+void ors::Mesh::write(std::ostream& os) const {
+  os <<"Mesh: " <<V.d0 <<" vertices, " <<T.d0 <<" triangles" <<endl;
+}
+
 void ors::Mesh::readFile(const char* filename){
   bool loaded=false;
   const char *type = filename+(strlen(filename)-3);
@@ -3639,7 +3643,7 @@ ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) co
 void ors::Graph::prefixNames(){
   Body *n;
   uint j;
-  for_list(j, n, bodies) n->name=n->name.prepend(n->index);
+  for_list(j, n, bodies) n->name=STRING(n->index<< n->name);
 }
 
 /*!\brief prototype for \c operator<< */
@@ -3679,7 +3683,7 @@ void ors::Graph::read(std::istream& is){
   clear();
   for(;;){
     tag.read(is, " \t\n\r", " \t\n\r({", false);
-    if(!tag.N()) break; //end of file
+    if(!tag.N) break; //end of file
     DEBUG(cout <<"tag=" <<tag <<endl);
     if(tag=="body"){ //node
       name.read(is, " \t\n\r", " \t\n\r({", false);
