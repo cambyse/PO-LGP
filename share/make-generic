@@ -360,8 +360,8 @@ endif
 
 ifeq ($(TONY),1)
 CXXFLAGS  += -DMT_TONY
-CPATH   := $(CPATH):$(LIBPATH)/tony-mdp/include
-LPATH   := $(LPATH):$(LIBPATH)/tony-mdp/lib
+CPATH   := $(CPATH):$(LIBPATH)/tony_mdp/include
+LPATH   := $(LPATH):$(LIBPATH)/tony_mdp/lib
 LIBS += -lmdp
 endif
 

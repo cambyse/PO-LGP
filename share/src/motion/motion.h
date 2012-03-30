@@ -92,7 +92,7 @@ struct Action:Variable {
   FIELD(bool, executed);
   FIELD(char*, objectRef1);  //arguments to the relational predicates
   FIELD(char*, objectRef2);
-  //FIELD(char*, objectRef3);
+  FIELD(char*, objectRef3); // TODO: hier sollte das automatisch gemacht werden
   
   Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
 };
