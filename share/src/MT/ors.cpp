@@ -3066,16 +3066,18 @@ void ors::Graph::getJointState(arr& x) const{ arr v; getJointState(x, v); }
 
 /*!\brief sets the joint state vectors separated in positions and
   velocities */
-void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErrors){
+void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErrors){
   Joint *e;
   uint n=0, i;
   ors::Quaternion rot1, rot2;
   arr q, v;
   
+  
   if(Qlin.N){
-    q = Qlin*_x + Qoff;
+    CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
+    q = Qlin*_q + Qoff;
     v = Qlin*_v;
-  }else{ q=_x; v=_v; }
+  }else{ q=_q; v=_v; }
   
   if(!jd) jd = getJointStateDimension(true);
   CHECK(q.N==jd && v.N==jd, "wrong joint state dimensionalities");

@@ -61,15 +61,15 @@ int main(int argn,char** argv){
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
   P.append(LIST<Process>(controller, motionPlanner, motionPrimitive));
-  P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
-  P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
+  //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
+  //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
 
   //views don't need to be started -- they now listen!
   ProcessL PV;
   PV.append(LIST<Process>(view0));
-  PV.append(LIST<Process>(view));
+  //PV.append(LIST<Process>(view));
   PV.append(LIST<Process>(view7, view8, view9));
-  PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
   
   //step(PV);
   loopWithBeat(PV,.1);

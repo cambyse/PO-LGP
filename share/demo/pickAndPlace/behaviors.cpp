@@ -216,28 +216,38 @@ void pickObject(char* objShape){
   VAR(GeometricState);
   VAR(JoystickState);
   VAR(Action);
+  VAR(HardwareReference);
+
+  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  arr x0 =  _HardwareReference->get_q_reference(NULL);
+  x0.append(_HardwareReference->get_v_reference(NULL));
+  
+  _MotionPlan->writeAccess(NULL);
+  _MotionPlan->converged = false;
+  _MotionPlan->frame0->set_x_estimate(x0, NULL);
+  _MotionPlan->frame1->set_converged(false,NULL);
+  _MotionPlan->deAccess(NULL);
   
   _Action->writeAccess(NULL);
   _Action->action = Action::grasp;
   _Action->objectRef1 = objShape;
   _Action->executed = false;
   _Action->deAccess(NULL);
-  
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
-  bool converged = false;
-  bool executed = false;
+
+  bool planDone= false;
+  bool planExecuted = false;
   for(;;){
-    if(!converged){
-      converged=_MotionPlan->get_converged(NULL);
-      if(converged)
-	_ControllerTask->set_mode(ControllerTask::followPlan, NULL);
+    if(!planDone){
+      planDone=_MotionPlan->get_converged(NULL);
+      if(planDone)
+        _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
     }
-    if(converged){
-      executed = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
+    if(planDone){
+      planExecuted = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
     }
-    if(executed){
-      cout << "executed" << endl;
+    if(planExecuted){
+      cout << "plan executed" << endl;
       _ControllerTask->set_mode(ControllerTask::stop, NULL);
       _Action->set_executed(true, NULL);
       _Action->set_action(Action::noAction, NULL);
@@ -250,7 +260,11 @@ void pickObject(char* objShape){
   
   //-- the reattach mess!
   _GeometricState->writeAccess(NULL);
-  reattachShape(_GeometricState->ors, NULL, objShape, "m9", "table");
+  arr q=_HardwareReference->get_q_reference(NULL);
+  arr v=_HardwareReference->get_v_reference(NULL);
+  _GeometricState->ors.setJointState(q,v);
+  _GeometricState->ors.calcBodyFramesFromJoints();
+  reattachShape(_GeometricState->ors, NULL, objShape, "m9", NULL);
   _GeometricState->deAccess(NULL);
 
   //-- close hand
@@ -273,9 +287,19 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   VAR(GeometricState);
   VAR(JoystickState);
   VAR(Action);
-
-  _MotionPlan->set_converged(false, NULL);
+  VAR(HardwareReference);
   
+  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  arr x0 =  _HardwareReference->get_q_reference(NULL);
+  x0.append(_HardwareReference->get_v_reference(NULL));
+  
+  _MotionPlan->writeAccess(NULL);
+  _MotionPlan->converged = false;
+  _MotionPlan->frame0->set_x_estimate(x0, NULL);
+  _MotionPlan->frame1->set_converged(false,NULL);
+  _MotionPlan->deAccess(NULL);
+
   _Action->writeAccess(NULL);
   _Action->action = Action::place;
   _Action->objectRef1 = objShape;
@@ -284,22 +308,20 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   _Action->executed = false;
   _Action->deAccess(NULL);
   
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
-  bool converged = false;
-  bool executed = false;
+  bool planDone = false;
+  bool planExecuted = false;
   for(;;){
-    if(!converged){
-      converged=_MotionPlan->get_converged(NULL);
-      if(converged){
+    if(!planDone){
+      planDone=_MotionPlan->get_converged(NULL);
+      if(planDone){
         _ControllerTask->set_fixFingers(true, NULL);
         _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
       }
     }
-    if(converged){
-      executed = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
+    if(planDone){
+      planExecuted = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
     }
-    if(executed){
+    if(planExecuted){
       _ControllerTask->set_mode(ControllerTask::stop, NULL);
       _ControllerTask->set_fixFingers(false, NULL);
       _Action->set_executed(true, NULL);
@@ -313,6 +335,10 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
 
   //-- the reattach mess!
   _GeometricState->writeAccess(NULL);
+  arr q=_HardwareReference->get_q_reference(NULL);
+  arr v=_HardwareReference->get_v_reference(NULL);
+  _GeometricState->ors.setJointState(q,v);
+  _GeometricState->ors.calcBodyFramesFromJoints();
   reattachShape(_GeometricState->ors, NULL, objShape, "OBJECTS", belowToShape);
   _GeometricState->deAccess(NULL);
 

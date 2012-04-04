@@ -25,11 +25,9 @@ struct GeometricState:Variable {
 struct MotionKeyframe:Variable {
   FIELD(arr, x_estimate);
   FIELD(double, duration_estimate);
-  FIELD(MotionKeyframe*, previous_keyframe);
-  FIELD(MotionKeyframe*, next_keyframe);
   FIELD(bool, converged);
   
-  MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL), converged(false) {};
+  MotionKeyframe():Variable("MotionKeyFrame"), converged(true) {};
   void get_poseView(arr& x) { x=x_estimate; }
 };
 
@@ -40,16 +38,16 @@ struct MotionPlan:Variable {
   FIELD(uint, steps);
   
   //problem description
-  FIELD(bool, hasGoal);   //if there is no goal (=tasks) given, the planner may sleep
-  FIELD(bool, converged);
-  FIELD(MotionKeyframe*, final_keyframe);
+  FIELD(bool, converged); //if converged=true the planner may sleep 
+  FIELD(MotionKeyframe*, frame0);
+  FIELD(MotionKeyframe*, frame1);
   //FUTURE:
   //arr W; //diagonal of the control cost matrix
   //arr Phi, rho; //task cost descriptors
   //...for now: do it conventionally: task list or socSystem??
   FIELD(TaskVariableList, TVs);
   
-  MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false), final_keyframe(NULL) { };
+  MotionPlan():Variable("MotionPlan"), converged(true), frame0(NULL), frame1(NULL) { };
   void get_poseView(arr& q) { q=q_plan; }
 };
 
@@ -119,7 +117,6 @@ struct MotionPrimitive:Process {
   
   //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
   Action *action;
-  MotionKeyframe *frame0,*frame1;
   MotionPlan *plan;
   
   MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&);

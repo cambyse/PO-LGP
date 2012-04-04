@@ -1,6 +1,7 @@
 #include "MotionPrimitive.h"
 //#include <JK/utils/util.h>
 //#include <DZ/aico_key_frames.h>
+#include <unistd.h>
 
 struct sMotionPrimitive {
   WorkingCopy<GeometricState> geo;
@@ -11,11 +12,15 @@ struct sMotionPrimitive {
 };
 
 MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p):Process("MotionPrimitive"),
-    action(&a), frame0(&f0), frame1(&f1), plan(&p){
+    action(&a), plan(&p){
   threadListenTo(action);
   s = new sMotionPrimitive;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
+  plan->writeAccess(this);
+  plan->frame0 = &f0;
+  plan->frame1 = &f1;
+  plan->deAccess(this);
 }
 
 MotionPrimitive::~MotionPrimitive() {
@@ -53,10 +58,26 @@ void MotionPrimitive::close() {
 
 void MotionPrimitive::step() {
   s->geo.pull();
+  
+  MotionKeyframe *frame0 = plan->get_frame0(this);
+  MotionKeyframe *frame1 = plan->get_frame1(this);
+
   Action::ActionPredicate actionSymbol = action->get_action(this);
   
   if (actionSymbol==Action::noAction) {
-    plan->set_hasGoal(false,this);
+    frame1->writeAccess(this);
+    frame1->x_estimate = frame0->get_x_estimate(this);
+    frame1->duration_estimate = 0.;
+    frame1->converged = true;
+    frame1->deAccess(this);
+    
+    plan->writeAccess(this);
+    plan->steps = 0;
+    plan->tau = 0.;
+    listDelete(plan->TVs);
+    plan->converged=true;
+    plan->q_plan.clear();
+    plan->deAccess(this);
   }
   
   if (actionSymbol==Action::grasp || actionSymbol==Action::place) {
@@ -69,11 +90,8 @@ void MotionPrimitive::step() {
     //pull start condition
     arr x0;
     frame0->get_x_estimate(x0, this);
-    if (!x0.N) {
-      s->sys.getx0(x0);
-      frame0->set_x_estimate(x0, this);
-      frame0->set_duration_estimate(0., this);
-    }
+    CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
+    s->sys.setx0(x0);
     
     //estimate the key frame
     arr x_keyframe;
@@ -88,7 +106,7 @@ void MotionPrimitive::step() {
       uint fromId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
       uint toId = s->sys.ors->getShapeByName(action->get_objectRef3(this))->index;
       setPlaceGoals(s->sys,s->sys.nTime(),shapeId,fromId,toId);
-      keyframeOptimizer(x_keyframe, s->sys, 1e-2, true, s->verbose);
+      keyframeOptimizer(x_keyframe, s->sys, 1e-2, false, s->verbose);
     }
     else if (actionSymbol==Action::home) {
       s->sys.setx0(x0);
@@ -101,17 +119,15 @@ void MotionPrimitive::step() {
     frame1->writeAccess(this);
     frame1->x_estimate = x_keyframe;
     frame1->duration_estimate = s->sys.getDuration();
-    frame1->previous_keyframe = frame0;
     frame1->converged = true;
     frame1->deAccess(this);
     
     //-- start planner
     plan->writeAccess(this);
     //info on the plan: steps, duration, boundary
-    plan->hasGoal =true;
+    plan->converged = false;
     plan->steps = s->sys.nTime();
     plan->tau = s->sys.getDuration() / plan->steps;
-    plan->final_keyframe = frame1;
     //details on the task costs
     listClone(plan->TVs, s->sys.vars);
     plan->deAccess(this);
@@ -322,14 +338,11 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
 void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFromShapeId, uint belowToShapeId){
   sys.setTox0();
   
-  //load parameters only once!
-  double placeMidPrec, placeAlignmentPrec, limPrec, placePositionPrec, zeroQPrec;
-  placeMidPrec = birosInfo.getParameter<double>("placeMidPrec");
-  placeAlignmentPrec = birosInfo.getParameter<double>("placeAlignmentPrec");
-  limPrec = birosInfo.getParameter<double>("limPrec");
-  zeroQPrec = birosInfo.getParameter<double>("zeroQPrec");
-  placePositionPrec = birosInfo.getParameter<double>("placePositionPrec");
-
+  double placeMidPrec        = birosInfo.getParameter<double>("placeMidPrec");
+  double placeAlignmentPrec  = birosInfo.getParameter<double>("placeAlignmentPrec");
+  double limPrec             = birosInfo.getParameter<double>("limPrec");
+  double zeroQPrec           = birosInfo.getParameter<double>("zeroQPrec");
+  double placePositionPrec   = birosInfo.getParameter<double>("placePositionPrec");
   double placeUpDownVelocity = birosInfo.getParameter<double>("placeUpDownVelocity");
   double placeUpDownVelocityPrec = birosInfo.getParameter<double>("placeUpDownVelocityPrec");
 

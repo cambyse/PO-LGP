@@ -57,20 +57,16 @@ void MotionPlanner::close() {
 
 void MotionPlanner::step() {
 
-  if (!s->plan->get_hasGoal(this)) {
-    //s->plan->waitForConditionSignal(.01);
-    return;
-  }
+  if (s->plan->get_converged(this)) return;
   
-  if (s->plan->get_converged(this)) {
-    //s->plan->waitForConditionSignal(.01);
-    return;
-  }
+  MotionKeyframe *frame0 = s->plan->get_frame0(this);
+  MotionKeyframe *frame1 = s->plan->get_frame1(this);
+  
+  if (!frame1->get_converged(this)) return; //since frame1 is not converged, we can't process yet
+
+  //we have something to process
   
   s->geo.pull();
-  
-  MotionKeyframe *frame1 = s->plan->get_final_keyframe(this);
-  MotionKeyframe *frame0 = frame1->get_previous_keyframe(this);
   
   arr x0 = frame0->get_x_estimate(this);
   arr xT = frame1->get_x_estimate(this);

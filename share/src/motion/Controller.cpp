@@ -38,6 +38,11 @@ Controller::Controller():Process("MotionController") {
   bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
   if(listens) threadListenTo(s->hardwareReference);
   s->geo.init("GeometricState", this);
+  s->hardwareReference->writeAccess(this);
+  s->geo().ors.getJointState(s->hardwareReference->q_reference,
+                             s->hardwareReference->v_reference);
+  s->hardwareReference->deAccess(this);
+  
 }
 
 Controller::~Controller() {
@@ -125,7 +130,7 @@ void Controller::step() {
     //MT_MSG("TODO");
     
     //update the controllers own internal ors state - pulling from MotionReference
-    arr q_old = s->hardwareReference->get_q_real(this);
+    arr q_old = s->hardwareReference->get_q_reference(this);
     arr v_old = s->hardwareReference->get_v_reference(this);
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
     if (q_old.N >= 14) { 
