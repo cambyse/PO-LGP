@@ -7,6 +7,11 @@
 #  include <QtGui/QApplication>
 #endif
 
+#include <gtk/gtk.h>
+#include <gtk/gtkgl.h>
+#undef MIN
+#undef MAX
+
 using namespace std;
 
 
@@ -156,7 +161,7 @@ void menuCallback3(int i){
 
 void testMenu(){
   OpenGL gl;
-  gl.text.clr() <<"press the right moust";
+  gl.text.clear() <<"press the right moust";
   gl.add(draw1,0);
 
   int submenu1, submenu2;
@@ -191,10 +196,11 @@ void init5(void){
 void draw5(void*){
   glStandardLight(NULL);
 
-  glDrawTexQuad(texName, -2.0, -1.0, 0.0,
-                         -2.0, 1.0, 0.0,
-			 0.0, 1.0, 0.0,
-			 0.0, -1.0, 0.0);
+  glDrawTexQuad(texName,
+                -2.0, -1.0, 0.0,
+                -2.0, 1.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, -1.0, 0.0);
 
   glEnable(GL_TEXTURE_2D);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
@@ -266,7 +272,14 @@ int main(int argc,char **argv){
 #ifdef MT_QT
   QApplication myapp(argc,argv);
 #endif
-  
+
+#ifdef MT_GTKGL
+  g_thread_init(NULL);
+  gdk_threads_init();
+  gtk_init(&argc, &argv);
+  gtk_gl_init(&argc, &argv);
+#endif
+
   testMultipleViews();
   //return 0;
   testDepth();

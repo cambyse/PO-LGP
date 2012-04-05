@@ -1783,6 +1783,10 @@ ors::Vector ors::Mesh::getMeanVertex() {
   return ors::Vector(Vmean);
 }
 
+void ors::Mesh::write(std::ostream& os) const {
+  os <<"Mesh: " <<V.d0 <<" vertices, " <<T.d0 <<" triangles" <<endl;
+}
+
 void ors::Mesh::readFile(const char* filename) {
   bool loaded=false;
   const char *type = filename+(strlen(filename)-3);
@@ -2543,10 +2547,27 @@ ors::Graph* ors::Graph::newClone() const {
   return G;
 }
 
+void ors::Graph::operator=(const ors::Graph& G) {
+  uint i;  Shape *s;  Body *b;
+  sd=G.sd;  jd=G.jd;  td=G.td;
+  Qlin = G.Qlin;  Qoff = G.Qoff;  Qinv = G.Qinv;
+  listCopy(proxies, G.proxies);
+  listCopy(joints, G.joints);
+  listCopy(shapes, G.shapes);
+  listCopy(bodies, G.bodies);
+  graphMakeLists(bodies, joints);
+  for_list(i, b, bodies) b->shapes.clear();
+  for_list(i, s, shapes){
+    b=bodies(s->ibody);
+    s->body=b;
+    b->shapes.append(s);
+  }
+}
+
 void ors::Graph::copyShapesAndJoints(const Graph& G) {
   uint i;  Shape *s;  Body *b;  Joint *j;
-  for_list(i, s, shapes)(*s) = *G.shapes(i);
-  for_list(i, j, joints)(*j) = *G.joints(i);
+  for_list(i, s, shapes) (*s) = *G.shapes(i);
+  for_list(i, j, joints) (*j) = *G.joints(i);
   for_list(i, b, bodies) b->shapes.clear();
   for_list(i, s, shapes) {
     b=bodies(s->ibody);
@@ -2575,7 +2596,7 @@ void ors::Graph::makeLinkTree() {
 }
 
 //! [prelim] some kind of gyroscope
-void ors::Graph::getGyroscope(ors::Vector& up) {
+void ors::Graph::getGyroscope(ors::Vector& up) const {
   up.set(0, 0, 1);
   up=bodies(0)->X.rot*up;
 }
@@ -2717,7 +2738,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
 /*!\brief returns the dimensionality of the full dynamic state vector (0
    DOFs for fixed bodies, 13 DOFs for free bodies (including a
    quaternion), 2 DOFs for jointed bodies) */
-uint ors::Graph::getFullStateDimension() {
+uint ors::Graph::getFullStateDimension() const {
   Body *n;
   uint i=0, j;
   for_list(j, n, bodies) {
@@ -2732,7 +2753,7 @@ uint ors::Graph::getFullStateDimension() {
       }
     }
   }
-  sd=i;
+  ((ors::Graph*)this)->sd=i;
   return i;
 }
 
@@ -2762,13 +2783,13 @@ uint ors::Graph::getJointStateDimension(bool internal) const {
 }
 
 /*!\brief returns the full state vector */
-void ors::Graph::getFullState(arr& x) {
+void ors::Graph::getFullState(arr& x) const {
   HALT("outdated");
   Body *n;
   Joint *e;
   uint i=0, j;
   
-  if (!sd) sd=getFullStateDimension();
+  if (!sd) ((ors::Graph*)this)->sd=getFullStateDimension();
   x.resize(sd);
   
   ors::Vector rot;
@@ -2797,12 +2818,12 @@ void ors::Graph::getFullState(arr& x) {
 }
 
 /*!\brief returns the full state vector */
-void ors::Graph::getFullState(arr& x, arr& v) {
+void ors::Graph::getFullState(arr& x, arr& v) const{
   Body *n;
   Joint *e;
   uint i=0, j;
   
-  if (!sd) sd=getFullStateDimension();
+  if(!sd) ((ors::Graph*)this)->sd=getFullStateDimension();
   x.resize(sd);
   v.resize(sd);
   
@@ -2986,13 +3007,13 @@ void ors::Graph::zeroGaugeJoints() {
 
 /*!\brief returns the joint state vectors separated in positions and
   velocities */
-void ors::Graph::getJointState(arr& x, arr& v) {
+void ors::Graph::getJointState(arr& x, arr& v) const{
   Joint *e;
   uint n=0, i;
   ors::Vector rotv;
   ors::Quaternion rot;
   
-  if (!jd) jd = getJointStateDimension(true);
+  if(!jd) ((ors::Graph*)this)->jd = getJointStateDimension(true);
   x.resize(jd); v.resize(jd);
   
   for_list(i, e, joints) {
@@ -3041,22 +3062,24 @@ void ors::Graph::getJointState(arr& x, arr& v) {
 }
 
 /*!\brief returns the joint positions only */
-void ors::Graph::getJointState(arr& x) { arr v; getJointState(x, v); }
+void ors::Graph::getJointState(arr& x) const{ arr v; getJointState(x, v); }
 
 /*!\brief sets the joint state vectors separated in positions and
   velocities */
-void ors::Graph::setJointState(const arr& _x, const arr& _v, bool clearJointErrors) {
+void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErrors){
   Joint *e;
   uint n=0, i;
   ors::Quaternion rot1, rot2;
   arr q, v;
   
-  if (Qlin.N) {
-    q = Qlin*_x + Qoff;
-    v = Qlin*_v;
-  } else { q=_x; v=_v; }
   
-  if (!jd) jd = getJointStateDimension(true);
+  if(Qlin.N){
+    CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
+    q = Qlin*_q + Qoff;
+    v = Qlin*_v;
+  }else{ q=_q; v=_v; }
+  
+  if(!jd) jd = getJointStateDimension(true);
   CHECK(q.N==jd && v.N==jd, "wrong joint state dimensionalities");
   
   for_list(i, e, joints) {
@@ -3438,13 +3461,13 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
 
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
-void ors::Graph::jacobianR(arr& J, uint a) {
+void ors::Graph::jacobianR(arr& J, uint a) const{
   uint i;
   ors::Transformation Xi;
   Joint *ei;
   ors::Vector ti;
   
-  if (!jd) jd = getJointStateDimension(true);
+  if(!jd) ((ors::Graph*)this)->jd = getJointStateDimension(true);
   
   //initialize Jacobian
   J.resize(3, jd);
@@ -3565,7 +3588,7 @@ void ors::Graph::jacobianAll(arr& J) {
 #endif
 
 //! [prelim] some heuristic measure for the joint errors
-double ors::Graph::getJointErrors() {
+double ors::Graph::getJointErrors() const{
   Joint *e;
   double err=0.0;
   uint i;
@@ -3587,7 +3610,7 @@ bool ors::Graph::checkUniqueNames() const {
 }
 
 //! find body with specific name
-ors::Body* ors::Graph::getBodyByName(const char* name) {
+ors::Body* ors::Graph::getBodyByName(const char* name) const{
   Body *n;
   uint j;
   for_list(j, n, bodies) {
@@ -3598,7 +3621,7 @@ ors::Body* ors::Graph::getBodyByName(const char* name) {
 }
 
 //! find body with specific name
-ors::Shape* ors::Graph::getShapeByName(const char* name) {
+ors::Shape* ors::Graph::getShapeByName(const char* name) const{
   Shape *s;
   uint j;
   for_list(j, s, shapes) {
@@ -3609,7 +3632,7 @@ ors::Shape* ors::Graph::getShapeByName(const char* name) {
 }
 
 //! find joint connecting two bodies with specific names
-ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) {
+ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) const{
   Body *f=NULL, *t=NULL;
   uint j;
   for_list(j, f, bodies) if (strcmp(f->name, from)==0) break;
@@ -3622,7 +3645,7 @@ ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) {
 void ors::Graph::prefixNames() {
   Body *n;
   uint j;
-  for_list(j, n, bodies) n->name=n->name.prepend(n->index);
+  for_list(j, n, bodies) n->name=STRING(n->index<< n->name);
 }
 
 /*!\brief prototype for \c operator<< */
@@ -3662,7 +3685,7 @@ void ors::Graph::read(std::istream& is) {
   clear();
   for (;;) {
     tag.read(is, " \t\n\r", " \t\n\r({", false);
-    if (!tag.N()) break; //end of file
+    if(!tag.N) break; //end of file
     DEBUG(cout <<"tag=" <<tag <<endl);
     if (tag=="body") { //node
       name.read(is, " \t\n\r", " \t\n\r({", false);
@@ -3929,7 +3952,7 @@ void ors::Graph::contactsToForces(double hook, double damp) {
 }
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) {
+void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const{
   x.resize(1);
   x=0.;
   uint i;
@@ -3960,7 +3983,7 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) {
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
-double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) {
+double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) const{
   ors::Vector normal;
   uint i;
   Shape *a, *b;
@@ -4009,7 +4032,7 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) {
 }
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::Graph::getContactConstraints(arr& y) {
+void ors::Graph::getContactConstraints(arr& y) const{
   y.clear();
   uint i;
   for (i=0; i<proxies.N; i++) if (!proxies(i)->age) {
@@ -4018,7 +4041,7 @@ void ors::Graph::getContactConstraints(arr& y) {
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
-void ors::Graph::getContactConstraintsGradient(arr &dydq) {
+void ors::Graph::getContactConstraintsGradient(arr &dydq) const{
   dydq.clear();
   ors::Vector normal;
   uint i, con=0;
@@ -4089,7 +4112,7 @@ double ors::Graph::getContactGradient(arr &grad, double margin) {
 }
 #endif
 
-void ors::Graph::getLimitsMeasure(arr &x, const arr& limits, double margin) {
+void ors::Graph::getLimitsMeasure(arr &x, const arr& limits, double margin) const{
   CHECK(limits.d0==jd && limits.d1==2, "joint limits parameter size mismatch");
   x.resize(1);
   x=0.;
@@ -4105,7 +4128,7 @@ void ors::Graph::getLimitsMeasure(arr &x, const arr& limits, double margin) {
   }
 }
 
-double ors::Graph::getLimitsGradient(arr &grad, const arr& limits, double margin) {
+double ors::Graph::getLimitsGradient(arr &grad, const arr& limits, double margin) const{
   CHECK(limits.d0==jd && limits.d1==2, "");
   uint i;
   double d;
@@ -4125,7 +4148,7 @@ double ors::Graph::getLimitsGradient(arr &grad, const arr& limits, double margin
 }
 
 //! center of mass of the whole configuration (3 vector)
-double ors::Graph::getCenterOfMass(arr& x_) {
+double ors::Graph::getCenterOfMass(arr& x_) const{
   double M=0.;
   Body *n;
   uint j;
@@ -4141,7 +4164,7 @@ double ors::Graph::getCenterOfMass(arr& x_) {
 }
 
 //! gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
-void ors::Graph::getComGradient(arr &grad) {
+void ors::Graph::getComGradient(arr &grad) const{
   double M=0.;
   Body *n;
   uint j;
@@ -4156,7 +4179,7 @@ void ors::Graph::getComGradient(arr &grad) {
 }
 
 /*!\brief returns a k-dim vector containing the penetration depths of all bodies */
-void ors::Graph::getPenetrationState(arr &vec) {
+void ors::Graph::getPenetrationState(arr &vec) const{
   vec.resize(bodies.N);
   vec.setZero();
   ors::Vector d;
@@ -4169,7 +4192,7 @@ void ors::Graph::getPenetrationState(arr &vec) {
     }
 }
 
-ors::Proxy* ors::Graph::getContact(uint a, uint b) {
+ors::Proxy* ors::Graph::getContact(uint a, uint b) const{
   uint i;
   for (i=0; i<proxies.N; i++) if (!proxies(i)->age && proxies(i)->d<0.) {
       if (proxies(i)->a==(int)a && proxies(i)->b==(int)b) return proxies(i);
@@ -4179,7 +4202,7 @@ ors::Proxy* ors::Graph::getContact(uint a, uint b) {
 }
 
 /*!\brief a vector describing the incoming forces (penetrations) on one object */
-void ors::Graph::getGripState(arr& grip, uint j) {
+void ors::Graph::getGripState(arr& grip, uint j) const{
   ors::Vector d, p;
   ors::Vector sumOfD; sumOfD.setZero();
   ors::Vector torque; torque.setZero();
@@ -4248,7 +4271,7 @@ void ors::Graph::getTouchState(arr& touch) {
 #endif
 
 /*!\brief */
-double ors::Graph::getEnergy() {
+double ors::Graph::getEnergy() const{
   Body *n;
   uint j;
   double m, v, E;
@@ -4281,7 +4304,7 @@ double ors::Graph::getEnergy() {
 
 
 /*!\brief get the center of mass, total velocity, and total angular momemtum */
-void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) {
+void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const{
   Body *n;
   uint j;
   double m, M;

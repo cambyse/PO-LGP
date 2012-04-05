@@ -86,7 +86,7 @@ void RobotActionInterface::reach(const char* shapeName, const arr& posGoal, doub
   TV.setGainsAsNatural(3., 1., false);
   TV.y_prec = 1e2;  TV.y_target = posGoal;
   TV.v_prec = 0.;   TV.v_target = ARR(0., 0., 0.);
-  TV.updateState(); //non-thread state -- ors actually needs a lock
+  TV.updateState(*s->robotProcesses.ctrl.sys.ors); //non-thread state -- ors actually needs a lock
   
   task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position
@@ -117,7 +117,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   TV.setGainsAsNatural(3., 1., false);
   TV.y_prec = 1e2;  TV.y_target = posGoal;
   TV.v_prec = 0.;   TV.v_target = ARR(0., 0., 0.);
-  TV.updateState();
+  TV.updateState(*s->robotProcesses.ctrl.sys.ors);
   
   DefaultTaskVariable TValign("align", *s->robotProcesses.ctrl.sys.ors, zalignTVT, shapeName, NULL, 0);
   ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
@@ -125,7 +125,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   TValign.setGainsAsNatural(2., 1., false);
   TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
   TValign.v_prec = 0.;   TValign.v_target = ARR(0.);
-  TValign.updateState();
+  TValign.updateState(*s->robotProcesses.ctrl.sys.ors);
   
   task->TV_col->active=task->TV_lim->active=task->TV_q->active=true;
   task->TV_q->y_prec=1e-2;              task->TV_q->y_target.setZero(); //potential on home position

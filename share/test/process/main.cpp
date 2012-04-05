@@ -41,7 +41,7 @@ void testLoop(){
   //TestThread E("E loop slave of A (self=.0)",.0);
   A.threadLoop();
   B.threadLoopWithBeat(.11);
-  E.threadLoopSyncWithDone(B);
+  E.threadLoopWithBeat(.12); //SyncWithDone(B);
 
   Metronome ticcer("ticcer (self=.1)",100);
 
@@ -65,20 +65,68 @@ void testLoop(){
 }
 
 
+//===========================================================================
+//
+// test scheduling via variables
+//
+
+struct Int:Variable{
+  FIELD( int, x );
+  Int():Variable("Integer"), x(0){ reg_x(); }
+};
+
+struct Adder:public Process{
+  Int *int1;
+  Int *int2;
+  Adder(const char* name, Int *i1, Int *i2):Process(name), int1(i1), int2(i2){}
+  ~Adder(){ }
+
+  void open (){ }
+  void close(){ }
+  void step (){
+    int x=int1->get_x(this);
+    cout <<name <<": reading " <<x <<endl;
+    if(int2){
+      int2->set_x(x, this);
+      cout <<name <<": writing" <<x <<endl;
+    }else{
+      int1->set_x(x+1, this);
+      cout <<name <<": rewriting" <<x+1 <<endl;
+    }
+  }
+};
+
+void testScheduling(){
+  Int i1,i2,i3;
+  Adder a1("1", &i1, NULL);
+  Adder a2("2", &i1, &i2);
+  Adder a3("3", &i2, &i3);
+  
+  a1.threadLoopWithBeat(.5);
+  a2.threadListenTo(LIST<Variable>(i1));
+  a3.threadListenTo(LIST<Variable>(i2));
+  
+  MT::wait(2.);
+  
+  a1.threadClose();
+  a2.threadClose();
+  a3.threadClose();
+}
+
 
 //===========================================================================
 //
 // test excessive access to Variables
 //
 
-struct IntVar:public Variable{
+struct ExampleVar:public Variable{
   //BIR_VARIABLE;
   
   FIELD(int, x);
 
   //BIR_FIELD(bool, mybool);
   
-  IntVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
+  ExampleVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };
 
 //int IntVar::bir_typeId=-1;
@@ -86,7 +134,7 @@ struct IntVar:public Variable{
 uint PC=0;
 
 struct Maxxer:public Process{
-  IntVar *a,*b;
+  ExampleVar *a,*b;
 
   Maxxer():Process("Maxxer"){};
   
@@ -102,7 +150,7 @@ struct Maxxer:public Process{
 
 void testMultiAccess(){
   uint n=MT::getParameter<uint>("n",100);
-  MT::Array<IntVar> vars(n);
+  MT::Array<ExampleVar> vars(n);
   MT::Array<Maxxer> procs(2*n);
 
   for(uint i=0;i<procs.N;i++){
@@ -115,8 +163,6 @@ void testMultiAccess(){
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
   dumpInfo();
-
-  
   
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
   cout <<endl;
@@ -125,7 +171,8 @@ void testMultiAccess(){
 int main(int argc, char *argv[]){
   MT::initCmdLine(argc,argv);
   //testLoop();
-  testMultiAccess();
+  testScheduling();
+  //testMultiAccess();
   
   return 0;
 }

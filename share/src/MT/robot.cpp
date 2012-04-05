@@ -317,7 +317,7 @@ void RobotProcessGroup::open(){
   
   if(openArm){
     arm.threadLoopWithBeat(0.01);
-    ctrl.threadLoopSyncWithDone(arm);
+    NIY; // ctrl.threadLoopSyncWithDone(arm);
   }else{
     ctrl.threadLoopWithBeat(0.01);
   }
@@ -411,9 +411,9 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TV_q_vprec  = MT::Parameter<double>("TV_q_vprec", 1e-1);
   
 #ifndef VELC
-  TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=TV_x_yprec;   TV_eff->v_prec=0;
+  TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=TV_x_yprec;   TV_eff->v_prec=0;
 #else
-  TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
+  TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
 #endif
   TV_rot->active=true;  TV_rot->targetType=directTT;  TV_rot->y_prec=0;     TV_rot->v_prec=TV_rot_vprec;
   TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;

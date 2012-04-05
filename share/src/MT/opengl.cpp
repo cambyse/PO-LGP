@@ -21,6 +21,10 @@
 #  include "opengl_freeglut.cxx"
 #endif
 
+#ifdef MT_GTKGL
+#  include "opengl_gtk.cxx"
+#endif
+
 #ifdef MT_FLTK
 #  include "opengl_fltk.cxx"
 #endif
@@ -29,7 +33,7 @@
 #  include "opengl_qt.cxx"
 #endif
 
-#if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
+#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
 #  include "opengl_void.cxx"
 #endif
 
@@ -950,7 +954,7 @@ void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win) {
   if (!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double ma=x.max();
-  text.clr() <<"display" <<win <<" max=" <<ma <<endl;
+  text.clear() <<"display" <<win <<" max=" <<ma <<endl;
   byteA img;
   img.resize(d0*d1);
   img.setZero();
@@ -967,7 +971,7 @@ void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win)
   if (!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double mi=x.min(), ma=x.max();
-  text.clr() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
+  text.clear() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
   cout <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
   byteA img;
   img.resize(d0*d1, 4);
@@ -996,7 +1000,7 @@ bool glUI::hoverCallback(OpenGL& gl) {
 
 bool glUI::clickCallback(OpenGL& gl) {
   bool b=checkMouse(gl.mouseposx, gl.mouseposy);
-  if (b) gl.update();
+  if (b) gl.postRedrawEvent();
   int t=top;
   if (t!=-1) {
     cout <<"CLICK! on button #" <<t <<endl;
@@ -1050,6 +1054,22 @@ void glDrawDots(arr& dots) {
 //
 // OpenGL implementations
 //
+
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy) {
+  s=new sOpenGL(this,title,w,h,posx,posy);
+  init();
+  processEvents();
+}
+
+OpenGL::OpenGL(void *container) {
+  s=new sOpenGL(this,container);
+  init();
+  processEvents();
+}
+
+OpenGL::~OpenGL() {
+  delete s;
+}
 
 OpenGL* OpenGL::newClone() const {
   OpenGL* gl=new OpenGL;
@@ -1257,7 +1277,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   }
   
   //draw text
-  if (text.N()) {
+  if (text.N) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0., (double)w, (double)h, .0, -1., 1.);
@@ -1288,7 +1308,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
       glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
     }
     for (uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
-    if (vi->txt.N()) {
+    if (vi->txt.N) {
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glMatrixMode(GL_MODELVIEW);
@@ -1392,7 +1412,7 @@ int OpenGL::watch(const char *txt) {
 //! update the view (in Qt: also starts displaying the window)
 bool OpenGL::update(const char *txt) {
   pressedkey=0;
-  if (txt) text.clr() <<txt;
+  if (txt) text.clear() <<txt;
   postRedrawEvent();
   processEvents();
   return !pressedkey;
@@ -1552,7 +1572,7 @@ void OpenGL::Reshape(int width, int height) {
   CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
   camera.setWHRatio((double)width/height);
   for (uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  //update();
+  //postRedrawEvent();
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y) {
@@ -1618,7 +1638,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   if (!downPressed) {
     for (uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if (!cont) { update(); return; }
+  if (!cont) { postRedrawEvent(); return; }
   
   //mouse scroll wheel:
   if (mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
@@ -1630,7 +1650,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
       cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
   
-  update();
+  postRedrawEvent();
 }
 
 void OpenGL::Motion(int _x, int _y) {
@@ -1655,7 +1675,13 @@ void OpenGL::Motion(int _x, int _y) {
 #else
   //int modifiers=0;
 #endif
-  if (!mouseIsDown) return;
+  if (!mouseIsDown) { //passive motion -> hover callbacks
+    mouseposx=_x; mouseposy=_y;
+    bool ud=false;
+    for (uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
+    if (ud) postRedrawEvent();
+    return;
+  }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
   if (mouse_button==1) { //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
@@ -1674,7 +1700,7 @@ void OpenGL::Motion(int _x, int _y) {
     cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
 #endif
-    update();
+    postRedrawEvent();
     if (immediateExitLoop) exitEventLoop();
   }
   if (mouse_button==3) { //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
@@ -1682,33 +1708,19 @@ void OpenGL::Motion(int _x, int _y) {
         trans(2)=0.;
         trans = s->downRot*trans;
         cam->X->pos = s->downPos + trans;
-        update();*/
+        postRedrawEvent();*/
   }
   if (mouse_button==2) { //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if (dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
-    update();
+    postRedrawEvent();
   }
 #else
   NICO;
 #endif
 }
 
-void OpenGL::PassiveMotion(int _x, int _y) {
-  _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", 0, _x, _y));
-  static int calls=0;
-  if (calls) return;
-  calls++;
-  mouseposx=_x; mouseposy=_y;
-  bool ud=false;
-  for (uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-  if (ud) update();
-  calls--;
-}
-
-void OpenGL::Special(int key, int x, int y) {}
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {}
 
 //===========================================================================

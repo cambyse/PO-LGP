@@ -202,16 +202,13 @@ std::istream& operator>>(std::istream& is, char *str);
 #define STREAM(x) (((MT::String&)(MT::String().stream() <<x)).stream())
 
 namespace MT {
-typedef std::iostream IOStream;
-
 /*!\brief String implements the functionalities of an ostream and an
 istream, but also can be send to an ostream or read from an
 istream. It is based on a simple streambuf derived from the
 MT::Mem class */
-class String:public IOStream {
+class String:public std::iostream {
 private:
-  class StringBuf:public std::streambuf {
-  public:
+  struct StringBuf:std::streambuf {
     String *string;
     virtual int overflow(int C = traits_type::eof());
     virtual int sync();
@@ -225,12 +222,12 @@ private:
 public:
   //!@name data fields
   char *p;    //!< pointer to memory
-  uint memN;  //!< \# elements (excluding zero)
+  uint N;     //!< \# elements (excluding zero)
   uint M;     //!< actual buffer size (in terms of # elements)
   static const char *readSkipSymbols; //!< default argument to read method (also called by operator>>)
   static const char *readStopSymbols; //!< default argument to read method (also called by operator>>)
   static int readEatStopSymbol;       //!< default argument to read method (also called by operator>>)
-  void (*flushHandler)(String&);
+  void (*flushCallback)(String&);
   
   //!@name constructors
   String();
@@ -239,23 +236,21 @@ public:
   ~String();
   
   //!@name access
-  uint N() const;
   operator char*();
   operator const char*() const;
   char &operator()(uint i) const;
-  IOStream& stream();
-  String& operator()();
+  std::iostream& stream();             //!< explicitly returns this as an std::iostream&
+  String& operator()();           //!< explicitly return this as a (non-const!) String&
   
-  //!@name setting, appending
+  //!@name setting
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
-  template<class T> String operator+(const T& v) const { String news(*this); news <<v; return news; }
-  template<class T> String prepend(const T& v) const { String news; news <<v <<*this; return news; }
   
   //!@name resetting
-  String& clr();
-  String& resetI();
+  String& clear();       //as with Array: resize(0)
+  String& clearStream(); //call IOstream::clear();
+  String& resetIstream();
   
   //!@name equality
   bool operator==(const char *s);
@@ -300,7 +295,7 @@ inline void breakPoint() {
 #  define MT_MSG(msg){ std::cerr <<MT_HERE <<msg <<std::endl; MT::breakPoint(); }
 #endif
 #ifndef HALT
-#  define HALT(msg)  { MT::errString.clr() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
+#  define HALT(msg)  { MT::errString.clear() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
 #  define NIY HALT("not implemented yet")
 #  define NICO HALT("not implemented with this compiler options: usually this means that the implementation needs an external library and a corresponding compiler option - see the source code")
 #  define OPS HALT("obsolete")
@@ -330,7 +325,6 @@ inline void breakPoint() {
 // Parameter class - I use it frequently to read parameters from file or cmd line
 //
 
-#if 1
 namespace MT {
 /*!\brief A parameter that initializes itself from the command line
   (use \c MT::init), parameter file, or a default value (priority in
@@ -398,7 +392,6 @@ private:
 };
 
 }
-#endif
 
 
 //===========================================================================

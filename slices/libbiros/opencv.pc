@@ -3,7 +3,7 @@
 prefix=/usr
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
-includedir_old=${prefix}/include/opencv
+includedir_old=${prefix}/include/opencv-2.3.1
 includedir_new=${prefix}/include
 
 Name: OpenCV

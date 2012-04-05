@@ -1112,7 +1112,7 @@ void scanArrFile(const char* name) {
   String tag;
   for (;;) {
     tag.read(is, " \n\r\t", " \n\r\t");
-    if (!is.good() || tag.N()==0) return;
+    if (!is.good() || tag.N==0) return;
     x.readTagged(is, NULL);
     x.writeTagged(cout, tag);  cout <<endl;
     if (!is.good()) return;
@@ -1134,7 +1134,7 @@ void anyListRead(AnyList& ats, std::istream& is) {
   //read all generic attributes
   for (;;) {
     tag.read(is, " \t\r\n", " \t=}, ;([\n\r", false);
-    if (!tag.N()) {
+    if (!tag.N) {
       MT::skip(is, " \t\r\n;");
       is.clear();
       break;

@@ -112,6 +112,12 @@ void AICO::init_messages(){
   rememberOldState();
 }
 
+void AICO::fix_initial_state(const arr& x_0){
+  s[0] = x_0;  Sinv[0].setDiag(1e10);
+  b[0] = x_0;  Binv[0].setDiag(1e10);
+  xhat[0]=x_0;
+}
+
 void AICO::fix_final_state(const arr& x_T){
   uint T=sys->nTime();
   v[T] = x_T;  Vinv[T].setDiag(1e10);

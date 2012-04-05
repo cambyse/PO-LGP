@@ -34,6 +34,7 @@ struct sOpenGL:public Fl_Gl_Window{
 
   OpenGL *gl;
   int w_old,h_old;
+  
   ors::Vector downVec,downPos,downFoc;
   ors::Quaternion downRot;
   

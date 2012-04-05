@@ -59,6 +59,7 @@ struct AICO {
   void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
   void init_trajectory(const arr& q_init);
+  void fix_initial_state(const arr& x_0);
   void fix_final_state(const arr& x_T);
   void shift_solution(int offset);
   

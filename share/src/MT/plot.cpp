@@ -281,6 +281,7 @@ void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, do
 }
 #else
 void plotOpengl(){ MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!"); }
+void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, double zl, double zh){ NICO }
 #endif
 
 void plotImage(const arr& x){ plotModule.s->images.append(x); }

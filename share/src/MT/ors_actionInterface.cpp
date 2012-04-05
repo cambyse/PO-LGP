@@ -57,7 +57,7 @@ void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swi
 
 void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs){
   static arr dq;
-  updateState(TVs);
+  updateState(TVs, *C);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
   bayesianControl(TVs, dq, W);
   q += dq;
@@ -147,7 +147,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
 }
 
 void ActionInterface::watch(){
-  gl->text.clr() <<"watch" <<endl;
+  gl->text.clear() <<"watch" <<endl;
   gl->watch();
 }
 
@@ -192,7 +192,7 @@ void ActionInterface::simulate(uint t){
   C->getJointState(q);
   for(; t--;){
     oneStep(q, C, ode, swift);
-    gl->text.clr() <<"simulation -- time " <<t <<endl;
+    gl->text.clear() <<"simulation -- time " <<t <<endl;
     gl->update();
   }
 }
@@ -217,7 +217,7 @@ void ActionInterface::relaxPosition(){
   uint t;
   for(t=0; t<Tabort; t++){
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"relaxPosition --  time " <<t <<endl;
+    gl->text.clear() <<"relaxPosition --  time " <<t <<endl;
     gl->update();
     if(x.err<.2) break;
   }
@@ -236,7 +236,7 @@ void ActionInterface::relaxPosition(){
 //   for(t=0;;t++){
 //     x.y_target.setCarray(obj->X.p.v, 3);
 //     controlledStep(q, W, C, ode, swift, TVs);
-//     gl->text.clr() <<"catchObject --  time " <<t <<endl;
+//     gl->text.clear() <<"catchObject --  time " <<t <<endl;
 //     gl->update();
 //     if(x.state==1 || C->getContact(x.i, obj->index)) break;
 //   }
@@ -263,7 +263,7 @@ void ActionInterface::moveTo(const char *man_id, const arr& target){
   for(t=0; t<Tabort; t++){
     x.y_target=target;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.05) break;
   }
@@ -298,7 +298,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id){
   for(t=0; t<Tabort; t++){
     x.y_target.setCarray(obj->X.pos.p, 3);
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.05 || C->getContact(x.i, obj->index)) break;
   }
@@ -316,7 +316,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id){
     x.y_target.setCarray(obj->X.pos.p, 3);
     x.y_target(2) = 1.2;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.05) break;
   }
@@ -413,13 +413,13 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   // hard noise [END]
   
   //phase 1: up
-  updateState(TVs);
+  updateState(TVs, *C);
   x.y_target(2) += .3;
   for(t=0; t<Tabort; t++){
     //x.y_target.setCarray(C->getBodyByName(rel_id)->X.p.v, 3);
     //x.y_target(2) += .3;
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"dropObject --  time " <<t <<endl;
+    gl->text.clear() <<"dropObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.05) break;
   }
@@ -441,7 +441,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
       x.y_target(1) = HARD_LIMIT_DIST_Y;
     x.y_target(2) = z_target + .2; // distance in m
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.05) break;
   }
@@ -466,7 +466,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
     double Z_ADD_DIST = obj_shape[0]/2 + .05;
     x.y_target(2) = z_target + Z_ADD_DIST; // distance in m where obj is let loose
     controlledStep(q, W, C, ode, swift, TVs);
-    gl->text.clr() <<"catchObject --  time " <<t <<endl;
+    gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
     if(x.err<.002 && z.err<.002) break;
   }

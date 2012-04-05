@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/resource.h>
+#include <sys/prctl.h>
 #include <iostream>
 #include <X11/Xlib.h>
 
@@ -20,7 +21,17 @@
 // Global information
 //
 
-GlobalInfo globalInfo;
+BirosInfo birosInfo;
+
+Process *BirosInfo::getProcessFromPID(){
+  pid_t tid = syscall(SYS_gettid);
+  uint i;  Process *p;
+  for_list(i, p, processes){
+    if(p->s->tid==tid) break;
+  }
+  if(i>=processes.N) return NULL;
+  return p;
+}
 
 
 //===========================================================================
@@ -391,7 +402,10 @@ void Variable::writeAccess(Process *p) {
   revision++;
   pthread_mutex_unlock(&replay_mutex);
   logService.logWriteAccess(this, p);
-  broadcastCondition();
+  uint i;  Process *l;
+  for_list(i, l, listeners){}
+    //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
+  //broadcastCondition();
 }
 
 void Variable::deAccess(Process *p) {
@@ -506,7 +520,6 @@ Process::~Process() {
 
 void Process::threadOpen(int priority) {
   CHECK(s->threadCondition.state==tsCLOSE, "never open while not closed!");
-  s->threadCondition.setState(tsOPEN);
   s->threadPriority = priority;
   int rc;
   pthread_attr_t atts;
@@ -539,14 +552,16 @@ void Process::threadClose() {
   s->thread = 0;
 }
 
-void Process::threadStep(bool wait) {
-  if (wait) threadWait();
-  CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
-  s->threadCondition.setState(1);
+void Process::threadStep(uint steps, bool wait) {
+  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  if(wait) threadWait();
+  //CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
+  s->threadCondition.setState(steps);
 }
 
 void Process::threadStepOrSkip(uint maxSkips) {
-  if (s->threadCondition.state!=tsIDLE) {
+  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  if(s->threadCondition.state!=tsIDLE){
     s->skips++;
     //if(skips>maxSkips) HALT("skips>maxSkips: " <<skips<<'<' <<maxSkips);
     if (maxSkips && s->skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips=" <<s->skips);
@@ -556,9 +571,15 @@ void Process::threadStepOrSkip(uint maxSkips) {
   s->threadCondition.setState(1);
 }
 
-void Process::threadSteps(uint steps) {
-  CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
-  s->threadCondition.setState(steps);
+void Process::threadListenTo(const VariableL &signalingVars) {
+  uint i;  Variable *v;
+  for_list(i, v, signalingVars) threadListenTo(v);
+}
+
+void Process::threadListenTo(Variable *v){
+  v->writeAccess(this);
+  v->listeners.setAppend(this);
+  v->deAccess(this);
 }
 
 bool Process::threadIsIdle() {
@@ -576,8 +597,8 @@ void Process::threadWait() {
 }
 
 void Process::threadLoop() {
-  if (s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
+  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsLOOPING);
 }
 
@@ -586,24 +607,15 @@ void Process::threadLoopWithBeat(double sec) {
     s->metronome=new Metronome("threadTiccer", 1000.*sec);
   else
     s->metronome->reset(1000.*sec);
-  if (s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
+  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsBEATING);
-}
-
-void Process::threadLoopSyncWithDone(Process& proc) {
-  proc.s->broadcastDone=true;
-  s->syncCondition = &proc.s->threadCondition;
-  if (s->threadCondition.state==tsCLOSE) threadOpen();
-  CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
-  s->threadCondition.setState(tsSYNCLOOPING);
 }
 
 void Process::threadStop() {
   int state=s->threadCondition.getState();
   CHECK(state<=tsLOOPING, "called stop loop although not looping!");
   s->threadCondition.setState(tsIDLE);
-  if (state==tsSYNCLOOPING) s->syncCondition->signal(); //force a signal that wakes up the synced-slave to do a last step
 }
 
 void* sProcess::staticThreadMain(void *_self) {
@@ -615,27 +627,29 @@ void* sProcess::staticThreadMain(void *_self) {
   
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
-  //if(s->threadPriority) setNice(s->threadPriority);
   
+  if(s->threadPriority) setNice(s->threadPriority);
+  prctl(PR_SET_NAME, proc->name);
+  //pthread_setname_np(proc->thread, proc->name);
+
   proc->open(); //virtual initialization routine
-  
-  int state = s->threadCondition.setState(tsIDLE);
+
+  int state = s->threadCondition.getState();
+  if(state==tsCLOSE)
+    state = s->threadCondition.setState(tsIDLE);
   s->timer.reset();
   for (; state!=tsCLOSE;) {
     state = s->threadCondition.waitForStateNotEq(tsIDLE);
     if (state==tsCLOSE) break;
     CHECK(state>0 || state<=-3, "at this point, the thread condition should be positive (steps to do) or looping!");
+    
     if (state==tsBEATING) s->metronome->waitForTic();
-    if (state==tsSYNCLOOPING) s->syncCondition->waitForSignal(); //self is a slave and waits for condition signal
+    if (state>0) s->threadCondition.setState(state-1); //count down
     
     s->timer.cycleStart();
     proc->step(); //virtual step routine
     proc->step_count++;
     s->timer.cycleDone();
-    
-    state = s->threadCondition.getState(); //state might have changed due to external stopping or so!!
-    if (state>0) s->threadCondition.setState(state-1); //count steps-to-do down
-    if (s->broadcastDone) s->threadCondition.signal();
   };
   
   proc->close(); //virtual close routine
@@ -664,9 +678,15 @@ Parameter::Parameter(const char *_name) {
 //
 // Group
 //
+
 void open(const ProcessL& P) {
   Process *p; uint i;
   for_list(i, p, P) p->threadOpen();
+}
+
+void step(const ProcessL& P){
+  Process *p; uint i;
+  for_list(i, p, P) p->threadStep();
 }
 
 void loop(const ProcessL& P) {
@@ -754,13 +774,13 @@ void BirosInfo::dump() {
   Variable *v;
   Process *p;
   Parameter *par;
-  _Variable_field_info_base *vi;
+  FieldInfo *vi;
   readAccess(NULL);
-  for_list(i, v, variables) {
+  for_list(i, v, variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
-    if (v->fields.N) {
+    if(v->fields.N){
       cout <<'{' <<endl;
-      for_list(j, vi, v->fields) {
+      for_list(j, vi, v->fields){
         cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
         vi->write_value(cout);
         cout <<endl;
@@ -788,12 +808,10 @@ void BirosInfo::dump() {
       <<" busyDt=" <<TEXTTIME(p->s->timer.busyDt)
       <<" state=";
     int state=p->s->threadCondition.state;
-    if (state>0) cout <<state; else switch (state) {
-        case tsOPEN:    cout <<"open";   break;
+    if (state>0) cout <<state; else switch(state){
         case tsCLOSE:   cout <<"close";  break;
         case tsLOOPING: cout <<"loop";   break;
         case tsBEATING: cout <<"beat";   break;
-        case tsSYNCLOOPING: cout <<"sync";   break;
         case tsIDLE:    cout <<"idle";   break;
         default: cout <<"undefined:";
       }
@@ -801,11 +819,11 @@ void BirosInfo::dump() {
   }
   cout <<endl;
   cout <<" +++ PARAMETERS +++" <<endl;
-  for_list(i, par, parameters) {
+  for_list(i, par, parameters){
     cout <<"Parameter " <<par->id <<'_' <<par->name <<" value=";
     par->writeValue(cout);
     cout <<" accessed by:";
-    for_list(j, p, par->processes) {
+    for_list(j, p, par->processes){
       if (j) cout <<',';
       cout <<' ' <<(p?p->name:"NULL");
     }
@@ -983,8 +1001,8 @@ void ThreadInfoWin::step() {
   if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-  globalInfo.readAccess(this);
-  for_list(i, pr, globalInfo.processes) {
+  birosInfo.readAccess(this);
+  for_list(i, pr, birosInfo.processes){
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -992,12 +1010,10 @@ void ThreadInfoWin::step() {
     TEXT("%3i", th->threadPriority); x+=25;
     TEXT("%s" , pr->name); x+=100;
     TEXT("%4i", th->timer.steps);  x+=30;
-    if (state>0) { TEXT("%4i", state); } else switch (state) {
-        case tsOPEN:    TEXT0("open");   break;
+    if (state>0){ TEXT("%4i", state); } else switch(state){
         case tsCLOSE:   TEXT0("close");  break;
         case tsLOOPING: TEXT0("loop");   break;
         case tsBEATING: TEXT0("beat");   break;
-        case tsSYNCLOOPING: TEXT0("sync");   break;
         case tsIDLE:    TEXT0("idle");   break;
         default: TEXT0("undefined:");
       } x+=50;
@@ -1005,7 +1021,7 @@ void ThreadInfoWin::step() {
     TEXTTIME(th->timer.busyDt); x+=130;
     y+=20;
   }
-  globalInfo.deAccess(this);
+  birosInfo.deAccess(this);
   y+=10;
   for_list(i, ct, globalCycleTimers) {
     x=5;

@@ -152,7 +152,7 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
     findObstacle();
     if(bGoTarget){	//going to target or not
       arr x = arr(target->X.p.v,3) - TV_fNew->y;
-      //ctrl->gui->gl->text.clr() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
+      //ctrl->gui->gl->text.clear() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
       double speedM = 0.04;
       if(norm(x) > speedM) x = x*speedM/norm(x);
 

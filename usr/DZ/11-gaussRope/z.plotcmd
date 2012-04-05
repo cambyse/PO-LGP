@@ -1,8 +1,0 @@
-load 'z.plotcmd.inc'
-
-
-pause mouse
-set dgrid3d
-
-splot \
-'z.plotdata' every :::0::0 with l notitle
