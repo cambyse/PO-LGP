@@ -54,7 +54,7 @@ template MT::Array<glUI::Button>::~Array();
 /*!\brief constructor; specify a frame if the camera is to be attached
    to an existing frame. Otherwise the camera creates its own
       frame */
-ors::Camera::Camera(){
+ors::Camera::Camera() {
   X = new Transformation;
   //if(!frame){ f=new Frame; ownFrame=true; }else{ f=frame; ownFrame=false; }
   foc = new ors::Vector;
@@ -66,12 +66,12 @@ ors::Camera::Camera(){
   setHeightAngle(12.);
 }
 
-ors::Camera::~Camera(){
+ors::Camera::~Camera() {
   delete X;
   delete foc;
 }
 
-ors::Camera& ors::Camera::operator=(const ors::Camera& c){
+ors::Camera& ors::Camera::operator=(const ors::Camera& c) {
   //MEM_COPY_OPERATOR(c);
   memmove(this, &c, sizeof(this));
   foc = new ors::Vector(*c.foc);
@@ -79,7 +79,7 @@ ors::Camera& ors::Camera::operator=(const ors::Camera& c){
   return *this;
 }
 
-void ors::Camera::setZero(){
+void ors::Camera::setZero() {
   X->setZero();
   foc->setZero();
   heightAngle=90.;
@@ -90,29 +90,29 @@ void ors::Camera::setZero(){
 }
 
 //! the height angle (in degrees) of the camera perspective; set it 0 for orthogonal projection
-void ors::Camera::setHeightAngle(float a){ heightAngle=a; }
+void ors::Camera::setHeightAngle(float a) { heightAngle=a; }
 //! the absolute height of the camera perspective (automatically also sets heightAngle=0)
-void ors::Camera::setHeightAbs(float h){ heightAngle=0; heightAbs=h; }
+void ors::Camera::setHeightAbs(float h) { heightAngle=0; heightAbs=h; }
 //! the z-range (depth range) visible for the camera
-void ors::Camera::setZRange(float znear, float zfar){ zNear=znear; zFar=zfar; }
+void ors::Camera::setZRange(float znear, float zfar) { zNear=znear; zFar=zfar; }
 //! set the width/height ratio of your viewport to see a non-distorted picture
-void ors::Camera::setWHRatio(float ratio){ whRatio=ratio; }
+void ors::Camera::setWHRatio(float ratio) { whRatio=ratio; }
 //! the frame's position
-void ors::Camera::setPosition(float x, float y, float z){ X->pos.set(x, y, z); }
+void ors::Camera::setPosition(float x, float y, float z) { X->pos.set(x, y, z); }
 //! rotate the frame to focus the absolute coordinate origin (0, 0, 0)
-void ors::Camera::focusOrigin(){ foc->setZero(); focus(); }
+void ors::Camera::focusOrigin() { foc->setZero(); focus(); }
 //! rotate the frame to focus the point (x, y, z)
-void ors::Camera::focus(float x, float y, float z){ foc->set(x, y, z); focus(); }
+void ors::Camera::focus(float x, float y, float z) { foc->set(x, y, z); focus(); }
 //! rotate the frame to focus the point given by the vector
-void ors::Camera::focus(const Vector& v){ *foc=v; focus(); }
+void ors::Camera::focus(const Vector& v) { *foc=v; focus(); }
 //! rotate the frame to focus (again) the previously given focus
-void ors::Camera::focus(){ watchDirection((*foc)-X->pos); } //X->Z=X->pos; X->Z-=foc; X->Z.normalize(); upright(); }
+void ors::Camera::focus() { watchDirection((*foc)-X->pos); } //X->Z=X->pos; X->Z-=foc; X->Z.normalize(); upright(); }
 //! rotate the frame to watch in the direction vector D
-void ors::Camera::watchDirection(const Vector& d){
+void ors::Camera::watchDirection(const Vector& d) {
   Vector tmp;
-  if(d(0)==0. && d(1)==0.){
+  if (d(0)==0. && d(1)==0.) {
     X->rot.setZero();
-    if(d(2)>0) X->rot.setDeg(180, 1, 0, 0);
+    if (d(2)>0) X->rot.setDeg(180, 1, 0, 0);
     return;
   }
   Quaternion r;
@@ -120,20 +120,20 @@ void ors::Camera::watchDirection(const Vector& d){
   X->rot=r*X->rot;
 }
 //! rotate the frame to set it upright (i.e. camera's y aligned with 's z)
-void ors::Camera::upright(){
+void ors::Camera::upright() {
 #if 1
   //construct desired X:
   Vector v(0, 0, -1), x(1, 0, 0), dx, up;
   x=X->rot*x; //true X
   v=X->rot*v;
-  if(fabs(v(2))<1.) up.set(0, 0, 1); else up.set(0, 1, 0);
+  if (fabs(v(2))<1.) up.set(0, 0, 1); else up.set(0, 1, 0);
   dx=up^v; //desired X
-  if(dx*x<=0) dx=-dx;
+  if (dx*x<=0) dx=-dx;
   Quaternion r;
   r.setDiff(x, dx);
   X->rot=r*X->rot;
 #else
-  if(X->Z[2]<1.) X->Y.set(0, 0, 1); else X->Y.set(0, 1, 0);
+  if (X->Z[2]<1.) X->Y.set(0, 0, 1); else X->Y.set(0, 1, 0);
   X->X=X->Y^X->Z; X->X.normalize();
   X->Y=X->Z^X->X; X->Y.normalize();
 #endif
@@ -141,7 +141,7 @@ void ors::Camera::upright(){
 
 //}
 
-void ors::Camera::setCameraProjectionMatrix(const arr& P){
+void ors::Camera::setCameraProjectionMatrix(const arr& P) {
   //P is in standard convention -> computes fixedProjectionMatrix in OpenGL convention from this
   cout <<"desired P=" <<P <<endl;
   arr Kview=ARR(200, 0, 200, 0, 200, 200, 0, 0, 1); //OpenGL's calibration matrix
@@ -160,12 +160,12 @@ void ors::Camera::setCameraProjectionMatrix(const arr& P){
 
 /*! sets OpenGL's GL_PROJECTION matrix accordingly -- should be
     called in an opengl draw routine */
-void ors::Camera::glSetProjectionMatrix(){
+void ors::Camera::glSetProjectionMatrix() {
 #ifdef MT_GL
-  if(fixedProjectionMatrix.N){
+  if (fixedProjectionMatrix.N) {
     glLoadMatrixd(fixedProjectionMatrix.p);
-  }else{
-    if(heightAngle==0){
+  } else {
+    if (heightAngle==0) {
       glOrtho(-whRatio*heightAbs/2, whRatio*heightAbs/2,
               -heightAbs/2, heightAbs/2, zNear, zFar);
     } else
@@ -179,12 +179,12 @@ void ors::Camera::glSetProjectionMatrix(){
 }
 
 //! convert from gluPerspective's non-linear [0, 1] depth to the true [zNear, zFar] depth
-void ors::Camera::glConvertToTrueDepth(double &d){
+void ors::Camera::glConvertToTrueDepth(double &d) {
   d = zNear + (zFar-zNear)*d/(zFar/zNear*(1.-d)+1.);
 }
 
 //! convert from gluPerspective's non-linear [0, 1] depth to the linear [0, 1] depth
-void ors::Camera::glConvertToLinearDepth(double &d){
+void ors::Camera::glConvertToLinearDepth(double &d) {
   d = d/(zFar/zNear*(1.-d)+1.);
 }
 
@@ -206,7 +206,7 @@ uint OpenGL::selectionBuffer[1000];
 //
 
 #ifdef MT_GL
-void glStandardLight(void*){
+void glStandardLight(void*) {
   glEnable(GL_LIGHTING);
 #if 1
   static GLfloat ambient[]   = { .5, .5, .5, 1.0 };
@@ -238,13 +238,13 @@ void glStandardLight(void*){
 #endif
 }
 
-void glStandardScene(void*){
+void glStandardScene(void*) {
   glStandardLight(NULL);
 //   glDrawFloor(10, .8, .8, .8);
   glDrawFloor(10, 1.5, 0.83, .0);
 }
 
-void glColor(int col){
+void glColor(int col) {
   static const GLfloat colorsTab[6][4] = {
     {0.2, 0.2, 1.0, 1.0}, // blue
     {1.0, 0.8, 0.0, 1.0}, // gold
@@ -254,11 +254,11 @@ void glColor(int col){
     {0.2, 1.0, 0.2, 1.0}
   }; // green
   
-  if(col<0) col=0; if(col>5) col=5;
+  if (col<0) col=0; if (col>5) col=5;
   glColor(colorsTab[col][0], colorsTab[col][1], colorsTab[col][2], colorsTab[col][3]);
 }
 
-void glColor(float r, float g, float b, float alpha){
+void glColor(float r, float g, float b, float alpha) {
   float amb=1.f, diff=1.f, spec=1.f;
   GLfloat ambient[4], diffuse[4], specular[4];
   ambient[0] = r*amb;
@@ -284,7 +284,7 @@ void glColor(float r, float g, float b, float alpha){
   glColor4f(r, g, b, alpha);
 }
 
-void glColor(float *rgb){ glColor(rgb[0], rgb[1], rgb[2], 1.); }
+void glColor(float *rgb) { glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
 /* // shadows do not work with a light source;
    // thus, we need to leave this out. 4. Mar 06 (hh)
@@ -303,7 +303,7 @@ void glShadowTransform()
 }
 */
 
-void glTransform(const double pos[3], const double R[12]){
+void glTransform(const double pos[3], const double R[12]) {
   GLfloat matrix[16];
   matrix[0]=R[0];
   matrix[1]=R[4];
@@ -326,22 +326,22 @@ void glTransform(const double pos[3], const double R[12]){
 }
 
 static GLboolean glLightIsOn = false;
-void glPushLightOff(){ glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_LIGHTING); }
-void glPopLight(){ if(glLightIsOn) glEnable(GL_LIGHTING); }
+void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_LIGHTING); }
+void glPopLight() { if (glLightIsOn) glEnable(GL_LIGHTING); }
 
-void glDrawText(const char* txt, float x, float y, float z){
+void glDrawText(const char* txt, float x, float y, float z) {
 #if defined __glut_h__ || (defined __FREEGLUT_H__ && !defined MT_Cygwin)
   glPushLightOff();
   glRasterPos3f(x, y, z);
   void *font=GLUT_BITMAP_HELVETICA_12;
-  while(*txt){
-    switch(*txt){
+  while (*txt) {
+    switch (*txt) {
       case '\n':
         y+=15;
         glRasterPos3f(x, y, z);
         break;
       case '\b':
-        if(font==GLUT_BITMAP_HELVETICA_12) font=GLUT_BITMAP_HELVETICA_18;
+        if (font==GLUT_BITMAP_HELVETICA_12) font=GLUT_BITMAP_HELVETICA_18;
         else font=GLUT_BITMAP_HELVETICA_12;
         break;
       default:
@@ -354,7 +354,7 @@ void glDrawText(const char* txt, float x, float y, float z){
 }
 
 void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
-                float x3, float y3, float z3, float x4, float y4, float z4){
+                float x3, float y3, float z3, float x4, float y4, float z4) {
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glBegin(GL_POLYGON);
   glVertex3f(x1, y1, z1);
@@ -367,7 +367,7 @@ void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
 
 void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
                 float x3, float y3, float z3, float x4, float y4, float z4,
-                float r, float g, float b){
+                float r, float g, float b) {
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glBegin(GL_POLYGON);
   glColor(r, g, b);
@@ -379,11 +379,11 @@ void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
   glEnd();
 }
 
-void glDrawRect(float x, float y, float z, float r){
+void glDrawRect(float x, float y, float z, float r) {
   glDrawRect(x-r, y-r, z, x-r, y+r, z, x+r, y+r, z, x+r, y-r, z);
 }
 
-void glDrawFloor(float x, float r, float g, float b){
+void glDrawFloor(float x, float r, float g, float b) {
   x/=2.;
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glColor(r, g, b);
@@ -397,7 +397,7 @@ void glDrawFloor(float x, float r, float g, float b){
   glEnd();
 #if 1
   glColor(.75, .75, .75);
-  for(int i=-4; i<=4; i++){
+  for (int i=-4; i<=4; i++) {
     glBegin(GL_LINES);
     glVertex3f(i*x/5., -x, 0.001);
     glVertex3f(i*x/5., x, 0.001);
@@ -419,7 +419,7 @@ void glDrawFloor(float x, float r, float g, float b){
 #endif
 }
 
-void glDrawBox(float x, float y, float z){
+void glDrawBox(float x, float y, float z) {
   static GLfloat n[6][3] = {
     {-1.0, 0.0, 0.0},
     {0.0, 1.0, 0.0},
@@ -446,7 +446,7 @@ void glDrawBox(float x, float y, float z){
   v[0][2] = v[3][2] = v[4][2] = v[7][2] =  -z / 2;
   v[1][2] = v[2][2] = v[5][2] = v[6][2] =  z / 2;
   
-  for(i = 5; i >= 0; i--){
+  for (i = 5; i >= 0; i--) {
     glBegin(GL_QUADS);
     glNormal3fv(&n[i][0]);
     glVertex3fv(&v[faces[i][0]][0]);
@@ -457,7 +457,7 @@ void glDrawBox(float x, float y, float z){
   }
 }
 
-void glDrawDiamond(float x, float y, float z){
+void glDrawDiamond(float x, float y, float z) {
   glDisable(GL_CULL_FACE);
   glBegin(GL_TRIANGLE_FAN);
   glVertex3f(.0, .0, z);
@@ -478,20 +478,20 @@ void glDrawDiamond(float x, float y, float z){
   glEnable(GL_CULL_FACE);
 }
 
-void glDrawDiamond(float x, float y, float z, float dx, float dy, float dz){
+void glDrawDiamond(float x, float y, float z, float dx, float dy, float dz) {
   glPushMatrix();
   glTranslated(x, y, z);
   glDrawDiamond(dx, dy, dz);
   glPopMatrix();
 }
 
-void glDrawAxes(double scale){
+void glDrawAxes(double scale) {
   GLUquadric *style=gluNewQuadric();
   
-  for(uint i=0; i<3; i++){
+  for (uint i=0; i<3; i++) {
     glPushMatrix();
     glScalef(scale, scale, scale);
-    switch(i){
+    switch (i) {
       case 0:  glColor(1, 0, 0);  break;
       case 1:  glColor(0, 1, 0);  glRotatef(90, 0, 0, 1);  break;
       case 2:  glColor(0, 0, 1);  glRotatef(90, 0, -1, 0);  break;
@@ -511,7 +511,7 @@ void glDrawAxes(double scale){
   gluDeleteQuadric(style);
 }
 
-void drawCoordinateFrame(){
+void drawCoordinateFrame() {
   // x-axis = green
   glBegin(GL_LINE_STRIP);
   glColor(4.0, 0.0, 0.0);
@@ -552,36 +552,36 @@ void drawCoordinateFrame(){
   glEnd();
 }
 
-void glDrawSphere(float radius){
+void glDrawSphere(float radius) {
   GLUquadric *style=gluNewQuadric();
   gluSphere(style, radius, 10, 10); // last two value for detail
   gluDeleteQuadric(style);
 }
 
-void glDrawDisk(float radius){
+void glDrawDisk(float radius) {
   GLUquadric *style=gluNewQuadric();
   gluDisk(style, 0, radius, 10, 1);
   gluDeleteQuadric(style);
 }
 
-void glDrawCylinder(float radius, float length, bool closed){
+void glDrawCylinder(float radius, float length, bool closed) {
   GLUquadric *style=gluNewQuadric();
   glTranslatef(0, 0, -length/2);
   gluCylinder(style, radius, radius, length, 20, 1);
-  if(closed){
+  if (closed) {
     glScalef(-1, 1, 1);  //flip orientation of triangles...
     gluDisk(style, 0, radius, 20, 1);
     glTranslatef(0, 0, length);
     glScalef(-1, 1, 1);
     gluDisk(style, 0, radius, 20, 1);
     glTranslatef(0, 0, -length/2);
-  }else{
+  } else {
     glTranslatef(0, 0, length/2);
   }
   gluDeleteQuadric(style);
 }
 
-void glDrawCappedCylinder(float radius, float length){
+void glDrawCappedCylinder(float radius, float length) {
   GLUquadric *style1=gluNewQuadric();
   GLUquadric *style2=gluNewQuadric();
   GLUquadric *style3=gluNewQuadric();
@@ -598,7 +598,7 @@ void glDrawCappedCylinder(float radius, float length){
   gluDeleteQuadric(style3);
 }
 
-void glDrawGridBox(float x=10.){
+void glDrawGridBox(float x=10.) {
   x/=2.;
   glBegin(GL_LINE_LOOP);
   glVertex3f(-x, -x, -x);
@@ -624,7 +624,7 @@ void glDrawGridBox(float x=10.){
   glEnd();
 }
 
-void glDrawGridBox(float x1, float y1, float z1, float x2, float y2, float z2){
+void glDrawGridBox(float x1, float y1, float z1, float x2, float y2, float z2) {
   glBegin(GL_LINE_STRIP);
   glVertex3f(x1, y1, z1+0.001);
   glVertex3f(x2, y1, z1+0.001);
@@ -639,7 +639,7 @@ void glDrawGridBox(float x1, float y1, float z1, float x2, float y2, float z2){
   glEnd();
 }
 
-void glDrawKhepera(){
+void glDrawKhepera() {
   GLUquadric *style=gluNewQuadric();
   glPushMatrix();
   glRotatef(-90, 1, 0, 0);
@@ -655,7 +655,7 @@ void glDrawKhepera(){
   gluDeleteQuadric(style);
 }
 
-void glMakeSquare(int num){
+void glMakeSquare(int num) {
   glNewList(num, GL_COMPILE);
   glColor3f(1., 0., 0.);
   glBegin(GL_LINE_LOOP);
@@ -667,7 +667,7 @@ void glMakeSquare(int num){
   glEndList();
 }
 
-void glMakeStdSimplex(int num){
+void glMakeStdSimplex(int num) {
   glNewList(num, GL_COMPILE);
   //glPolygonMode(GL_BACK, GL_FILL);
   glShadeModel(GL_SMOOTH);
@@ -694,7 +694,7 @@ void glMakeStdSimplex(int num){
   glEndList();
 }
 
-void glMakeTorus(int num){
+void glMakeTorus(int num) {
   glNewList(num, GL_COMPILE);
   
   GLint i, j, rings, sides;
@@ -710,10 +710,10 @@ void glMakeTorus(int num){
   sides = 10;
   scalFac=1/(outerRadius*2);
   
-  for(i=0; i<rings; i++){
+  for (i=0; i<rings; i++) {
     theta1 = (float)i * 2.0 * MT_PI / rings;
     theta2 = (float)(i + 1) * 2.0 * MT_PI / rings;
-    for(j=0; j<sides; j++){
+    for (j=0; j<sides; j++) {
       phi1 = (float)j * 2.0 * MT_PI / sides;
       phi2 = (float)(j + 1) * 2.0 * MT_PI / sides;
       
@@ -765,7 +765,7 @@ void glMakeTorus(int num){
       t3[1] = v3[1]*scalFac + 0.5;
       t3[2] = v3[2]*scalFac + 0.5;
       
-      if((i+j)%2) glColor3f(0., 1., 0.);
+      if ((i+j)%2) glColor3f(0., 1., 0.);
       else glColor3f(0., 0., 1.);
       
       glBegin(GL_POLYGON);
@@ -779,7 +779,7 @@ void glMakeTorus(int num){
   glEndList();
 }
 
-uint glImageTexture(const byteA &img){
+uint glImageTexture(const byteA &img) {
   GLuint texName;
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -790,7 +790,7 @@ uint glImageTexture(const byteA &img){
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  switch(img.d2){
+  switch (img.d2) {
     case 0:
     case 1:
       glTexImage2D(GL_TEXTURE_2D, 0, 4, img.d1, img.d0, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, img.p);
@@ -813,7 +813,7 @@ uint glImageTexture(const byteA &img){
 void glDrawTexQuad(uint texture,
                    float x1, float y1, float z1, float x2, float y2, float z2,
                    float x3, float y3, float z3, float x4, float y4, float z4,
-                   float mulX, float mulY){
+                   float mulX, float mulY) {
   glEnable(GL_TEXTURE_2D);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); //GL_MODULATE);
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -832,14 +832,14 @@ void glDrawTexQuad(uint texture,
   buffer has to have either 2 dimensions [width, height] for a
   gray-scale luminance image or 3 dimensions [width, height, 4] for an
   RGBA-image. */
-void glGrabImage(byteA& image){
-  if(!image.N) image.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH), 3);
+void glGrabImage(byteA& image) {
+  if (!image.N) image.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH), 3);
   CHECK(image.nd==2 ||image.nd==3, "not an image format");
   GLint w=image.d1, h=image.d0;
   CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window:" <<w <<' ' <<h <<' ' <<glutGet(GLUT_WINDOW_WIDTH) <<' ' <<glutGet(GLUT_WINDOW_HEIGHT));
   
   //glPixelStorei(GL_PACK_SWAP_BYTES, 0);
-  switch(image.d2){
+  switch (image.d2) {
     case 0:
     case 1:
       glPixelTransferf(GL_RED_SCALE, .3333);
@@ -872,13 +872,13 @@ void glGrabImage(byteA& image){
   }
 }
 #else
-void glGrabImage(byteA& image){ NICO; }
+void glGrabImage(byteA& image) { NICO; }
 #endif
 
 /*!\brief return the depth map of the scenery drawn just before; the depth
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
-void glGrabDepth(byteA& depth){
+void glGrabDepth(byteA& depth) {
   CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth.p);
@@ -887,25 +887,25 @@ void glGrabDepth(byteA& depth){
 /*!\brief return the depth map of the scenery drawn just before; the depth
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
-void glGrabDepth(floatA& depth){
+void glGrabDepth(floatA& depth) {
   CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depth.p);
 }
 
-void glRasterImage(float x, float y, byteA &img, float zoom){
+void glRasterImage(float x, float y, byteA &img, float zoom) {
   glRasterPos3f(x, y, 0.); //(int)(y+zoom*img.d0)); (the latter was necessary for other pixel/raster coordinates)
   glPixelZoom(zoom, -zoom);
-  if(img.d1%4){ //necessary: extend the image to have width mod 4
+  if (img.d1%4) { //necessary: extend the image to have width mod 4
     uint P=img.d2;
-    if(!P) P=1;
+    if (!P) P=1;
     uint add=4-(img.d1%4);
     img.reshape(img.d0, img.d1*P);
     img.insColumns(img.d1, add*P);
-    if(P>1) img.reshape(img.d0, img.d1/P, P);
+    if (P>1) img.reshape(img.d0, img.d1/P, P);
   }
   
-  switch(img.d2){
+  switch (img.d2) {
     case 0:
     case 1:  glDrawPixels(img.d1, img.d0, GL_LUMINANCE, GL_UNSIGNED_BYTE, img.p);        break;
     case 2:  glDrawPixels(img.d1, img.d0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, img.p);  break;
@@ -915,22 +915,22 @@ void glRasterImage(float x, float y, byteA &img, float zoom){
   };
 }
 
-void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom){
+void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom) {
   static byteA img;
   resizeAs(img, _img);
   float x;
-  for(uint i=0; i<img.N; i++){
+  for (uint i=0; i<img.N; i++) {
     x=_img.elem(i);
     img.elem(i) = (x<0.)?0:((x>255.)?255:x);
   }
   watchImage(img, wait, _zoom);
 }
 
-void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom){
+void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {
   img=(byteA*)&_img;
   zoom=_zoom;
   //resize(img->d1*zoom,img->d0*zoom);
-  if(wait) watch(); else update();
+  if (wait) watch(); else update();
   img=NULL;
 }
 
@@ -949,26 +949,26 @@ void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom){
 }*/
 
 #ifdef MT_FREEGLUT
-void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){
-  if(!d0) d0=x.d0;
-  if(!d1) d1=x.d1;
+void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win) {
+  if (!d0) d0=x.d0;
+  if (!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double ma=x.max();
   text.clear() <<"display" <<win <<" max=" <<ma <<endl;
   byteA img;
   img.resize(d0*d1);
   img.setZero();
-  for(uint i=0; i<x.N; i++){
-    if(x.elem(i)>0.) img(i)=(byte)(255.*x.elem(i)/ma);
-    if(x.elem(i)<0.) MT_MSG("warning: negative entry");
+  for (uint i=0; i<x.N; i++) {
+    if (x.elem(i)>0.) img(i)=(byte)(255.*x.elem(i)/ma);
+    if (x.elem(i)<0.) MT_MSG("warning: negative entry");
   }
   img.reshape(d0, d1);
   watchImage(img, wait, 20);
 }
 
-void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win){
-  if(!d0) d0=x.d0;
-  if(!d1) d1=x.d1;
+void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win) {
+  if (!d0) d0=x.d0;
+  if (!d1) d1=x.d1;
   glutSetWindow(s->windowID);
   double mi=x.min(), ma=x.max();
   text.clear() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
@@ -976,33 +976,33 @@ void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win)
   byteA img;
   img.resize(d0*d1, 4);
   img.setZero();
-  for(uint i=0; i<x.N; i++){
-    if(x.elem(i)>0.) img(i, 0)=(byte)(255.*x.elem(i)/ma);
-    if(x.elem(i)<0.) img(i, 2)=(byte)(255.*x.elem(i)/mi);
+  for (uint i=0; i<x.N; i++) {
+    if (x.elem(i)>0.) img(i, 0)=(byte)(255.*x.elem(i)/ma);
+    if (x.elem(i)<0.) img(i, 2)=(byte)(255.*x.elem(i)/mi);
   }
   img.reshape(d0, d1, 4);
   watchImage(img, wait, 20);
 }
 #endif
 
-void glDrawUI(void *p){
+void glDrawUI(void *p) {
   glPushName(0x10);
   ((glUI*)p)->glDraw();
   glPopName();
 }
 
-bool glUI::hoverCallback(OpenGL& gl){
+bool glUI::hoverCallback(OpenGL& gl) {
   //bool b=
   checkMouse(gl.mouseposx, gl.mouseposy);
   //if(b) glutPostRedisplay();
   return true;
 }
 
-bool glUI::clickCallback(OpenGL& gl){
+bool glUI::clickCallback(OpenGL& gl) {
   bool b=checkMouse(gl.mouseposx, gl.mouseposy);
-  if(b) gl.postRedrawEvent();
+  if (b) gl.postRedrawEvent();
   int t=top;
-  if(t!=-1){
+  if (t!=-1) {
     cout <<"CLICK! on button #" <<t <<endl;
     gl.exitEventLoop();
     return false;
@@ -1011,17 +1011,17 @@ bool glUI::clickCallback(OpenGL& gl){
 }
 
 #ifdef MT_FREEGLUT
-void glSelectWin(uint win){
-  if(!staticgl[win]) staticgl[win]=new OpenGL;
+void glSelectWin(uint win) {
+  if (!staticgl[win]) staticgl[win]=new OpenGL;
   glutSetWindow(staticgl[win]->s->windowID);
 }
 #endif
 
 #else //! MT_GL
-void glColor(float, float, float, float){ NICO; }
-void glDrawDiamond(float, float, float, float, float, float){ NICO; }
-void glStandardLight(){ NICO; }
-void glStandardScene(void*){ NICO; };
+void glColor(float, float, float, float) { NICO; }
+void glDrawDiamond(float, float, float, float, float, float) { NICO; }
+void glStandardLight() { NICO; }
+void glStandardScene(void*) { NICO; };
 #endif
 
 
@@ -1031,14 +1031,14 @@ void glStandardScene(void*){ NICO; };
 //
 
 #ifdef MT_GL
-void glDrawDots(void *dots){ glDrawDots(*(arr*)dots); }
+void glDrawDots(void *dots) { glDrawDots(*(arr*)dots); }
 
-void glDrawDots(arr& dots){
-  if(!dots.N) return;
+void glDrawDots(arr& dots) {
+  if (!dots.N) return;
   CHECK(dots.nd==2 && dots.d1==3, "wrong dimension");
 #if 0
   glBegin(GL_POINTS);
-  for(uint i=0; i<dots.d0; i++) glVertex3dv(&dots(i, 0));
+  for (uint i=0; i<dots.d0; i++) glVertex3dv(&dots(i, 0));
   glEnd();
 #else
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -1055,19 +1055,19 @@ void glDrawDots(arr& dots){
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy) {
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();
   processEvents();
 }
 
-OpenGL::OpenGL(void *container){
+OpenGL::OpenGL(void *container) {
   s=new sOpenGL(this,container);
   init();
   processEvents();
 }
 
-OpenGL::~OpenGL(){
+OpenGL::~OpenGL() {
   delete s;
 }
 
@@ -1079,7 +1079,7 @@ OpenGL* OpenGL::newClone() const {
   return gl;
 }
 
-void OpenGL::init(){
+void OpenGL::init() {
   camera.setPosition(0., 0., 10.);
   camera.focus(0, 0, 0);
   camera.setZRange(.1, 1000.);
@@ -1103,76 +1103,76 @@ void OpenGL::init(){
 };
 
 //! add a draw routine
-void OpenGL::add(void (*call)(void*), const void* classP){
+void OpenGL::add(void (*call)(void*), const void* classP) {
   CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   GLDrawer d; d.classP=(void*)classP; d.call=call;
   drawers.append(d);
 }
 
-void OpenGL::addView(uint v, void (*call)(void*), const void* classP){
+void OpenGL::addView(uint v, void (*call)(void*), const void* classP) {
   CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   GLDrawer d; d.classP=(void*)classP; d.call=call;
-  if(v>=views.N) views.resizeCopy(v+1);
+  if (v>=views.N) views.resizeCopy(v+1);
   views(v).drawers.append(d);
 }
 
-void OpenGL::setViewPort(uint v, double l, double r, double b, double t){
-  if(v>=views.N) views.resizeCopy(v+1);
+void OpenGL::setViewPort(uint v, double l, double r, double b, double t) {
+  if (v>=views.N) views.resizeCopy(v+1);
   views(v).le=l;  views(v).ri=r;  views(v).bo=b;  views(v).to=t;
 }
 
 //! remove a draw routine
-void OpenGL::remove(void (*call)(void*), const void* classP){
+void OpenGL::remove(void (*call)(void*), const void* classP) {
   CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   uint i;
-  for(i=0; i<drawers.N; i++) if(drawers(i).call==call && drawers(i).classP==classP) break;
+  for (i=0; i<drawers.N; i++) if (drawers(i).call==call && drawers(i).classP==classP) break;
   CHECK(i<drawers.N, "value to remove not found");
   drawers.remove(i, 1);
 }
 
 //! clear the list of all draw routines
-void OpenGL::clear(){
+void OpenGL::clear() {
   drawers.resize(0);
 }
 
 //! add a hover callback
-void OpenGL::addHoverCall(GLHoverCall *c){
+void OpenGL::addHoverCall(GLHoverCall *c) {
   //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   //GLHoverCall c; c.classP=(void*)classP; c.call=call;
   hoverCalls.append(c);
 }
 
 //! clear hover callbacks
-void OpenGL::clearHoverCalls(){
+void OpenGL::clearHoverCalls() {
   hoverCalls.clear();
 }
 
 //! add a click callback
-void OpenGL::addClickCall(GLClickCall *c){
+void OpenGL::addClickCall(GLClickCall *c) {
   //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   //GLClickCall c; c.classP=(void*)classP; c.call=call;
   clickCalls.append(c);
 }
 
 //! clear click callbacks
-void OpenGL::clearClickCalls(){
+void OpenGL::clearClickCalls() {
   clickCalls.clear();
 }
 
 //! add a click callback
-void OpenGL::addKeyCall(GLKeyCall *c){
+void OpenGL::addKeyCall(GLKeyCall *c) {
   //CHECK(call!=0, "OpenGL: NULL pointer to drawing routine");
   //GLKeyCall c; c.classP=(void*)classP; c.call=call;
   keyCalls.append(c);
 }
 
 //! clear click callbacks
-void OpenGL::clearKeyCalls(){
+void OpenGL::clearKeyCalls() {
   keyCalls.clear();
 }
 
 #ifdef MT_GL
-void OpenGL::Draw(int w, int h, ors::Camera *cam){
+void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   //clear bufferer
   GLint viewport[4] = {0, 0, w, h};
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1180,7 +1180,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   //raster an image as background
-  if(img){
+  if (img) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
@@ -1205,7 +1205,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //glEnable(GL_CULL_FACE); glFrontFace(GL_CCW); //CCW is default!
   glDepthFunc(GL_LESS);
   //glShadeModel(GL_SMOOTH);
-
+  
   //select mode?
   GLint mode;
   glGetIntegerv(GL_RENDER_MODE, &mode);
@@ -1213,8 +1213,8 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  if(mode==GL_SELECT) gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
-  if(!cam) camera.glSetProjectionMatrix();
+  if (mode==GL_SELECT) gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
+  if (!cam) camera.glSetProjectionMatrix();
   else     cam->glSetProjectionMatrix();
   //glLineWidth(2);
   
@@ -1253,7 +1253,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   */
   
   //draw focus?
-  if(drawFocus && mode!=GL_SELECT){
+  if (drawFocus && mode!=GL_SELECT) {
     glColor(1., .7, .3);
     double size = .005 * (camera.X->pos-*camera.foc).length();
     glDrawDiamond((*camera.foc)(0), (*camera.foc)(1), (*camera.foc)(2), size, size, size);
@@ -1270,50 +1270,50 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //draw central view
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  if(mode==GL_SELECT) glInitNames();
-  for(uint i=0; i<drawers.N; i++){
-    if(mode==GL_SELECT) glLoadName(i);
+  if (mode==GL_SELECT) glInitNames();
+  for (uint i=0; i<drawers.N; i++) {
+    if (mode==GL_SELECT) glLoadName(i);
     (*drawers(i).call)(drawers(i).classP);
   }
-
+  
   //draw text
-  if(text.N){
+  if (text.N) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0., (double)w, (double)h, .0, -1., 1.);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
+    if (clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
     glDrawText(text, 10, 20, 0);
   }
   
   //draw subviews
-  for(uint v=0; v<views.N; v++){
+  for (uint v=0; v<views.N; v++) {
     GLView *vi=&views(v);
     glViewport(vi->le*w, vi->bo*h, (vi->ri-vi->le)*w, (vi->to-vi->bo)*h);
     //glMatrixMode(GL_MODELVIEW);
     //glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if(vi->img){
+    if (vi->img) {
       glDisable(GL_DEPTH_TEST);
       glRasterImage(-1., 1., *vi->img, zoom*(vi->ri-vi->le)*w/vi->img->d1);
       glEnable(GL_DEPTH_TEST);
     }
     vi->camera.glSetProjectionMatrix();
     glMatrixMode(GL_MODELVIEW);
-    if(drawFocus){
+    if (drawFocus) {
       glColor(1., .7, .3);
       double size = .005 * (camera.X->pos-*camera.foc).length();
       glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
     }
-    for(uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
-    if(vi->txt.N){
+    for (uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
+    if (vi->txt.N) {
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
-      if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
+      if (clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
       glDrawText(vi->txt, -1., 1., 0.);
     }
   }
@@ -1326,24 +1326,24 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   
 }
 
-void OpenGL::Select(){
+void OpenGL::Select() {
   uint i, k;
   int j;
   
   glSelectBuffer(1000, selectionBuffer);
   glRenderMode(GL_SELECT);
-
+  
 #if 1
   GLint w=width(), h=height();
   
   //projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  if(mouseView==-1){
+  if (mouseView==-1) {
     GLint viewport[4] = {0, 0, w, h};
     gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
     camera.glSetProjectionMatrix();
-  }else{
+  } else {
     GLView *vi=&views(mouseView);
     GLint viewport[4] = {vi->le*w, vi->bo*h, (vi->ri-vi->le)*w, (vi->to-vi->bo)*h};
     gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
@@ -1354,55 +1354,55 @@ void OpenGL::Select(){
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glInitNames();
-  if(mouseView==-1){
-    for(i=0; i<drawers.N; i++){
+  if (mouseView==-1) {
+    for (i=0; i<drawers.N; i++) {
       glLoadName(i);
       (*drawers(i).call)(drawers(i).classP);
       glGetIntegerv(GL_NAME_STACK_DEPTH, &j);
       CHECK(j==0, "OpenGL name stack has not depth 1 (pushs>pops)");
     }
-  }else{
+  } else {
     GLView *vi=&views(mouseView);
-    for(i=0; i<vi->drawers.N; i++){ glLoadName(i); (*vi->drawers(i).call)(vi->drawers(i).classP); }
+    for (i=0; i<vi->drawers.N; i++) { glLoadName(i); (*vi->drawers(i).call)(vi->drawers(i).classP); }
   }
 #else
   Draw(width(),height());
 #endif
-
+  
   GLint n;
   n=glRenderMode(GL_RENDER);
   selection.resize(n);
   
   GLuint *obj, maxD=(GLuint)(-1);
   topSelection=NULL;
-  for(j=0, i=0; i<(uint)n; i++){
+  for (j=0, i=0; i<(uint)n; i++) {
     obj=selectionBuffer+j;
     j+=3+obj[0];
     
     //get name as superposition of all names
     selection(i).name = 0;
-    for(k=0; k<obj[0]; k++) selection(i).name |= obj[3+k];
+    for (k=0; k<obj[0]; k++) selection(i).name |= obj[3+k];
     
     //get dim and dmax
     selection(i).dmin=(double)obj[1]/maxD;  //camera.glConvertToTrueDepth(selection(i).dmin);
     selection(i).dmax=(double)obj[2]/maxD;  //camera.glConvertToTrueDepth(selection(i).dmax);
     
     //get top-most selection
-    if(!topSelection || selection(i).dmin < topSelection->dmin) topSelection = &selection(i);
+    if (!topSelection || selection(i).dmin < topSelection->dmin) topSelection = &selection(i);
   }
   
-  if(topSelection){
+  if (topSelection) {
     topSelection->x=0; topSelection->y=0; topSelection->z=topSelection->dmin;
     unproject(topSelection->x, topSelection->y, topSelection->z);
   }
-    
-  if(reportSelects) reportSelection();
+  
+  if (reportSelects) reportSelection();
 }
 #endif
 
 /*!\brief watch in interactive mode and wait for an exiting event
   (key pressed or right mouse) */
-int OpenGL::watch(const char *txt){
+int OpenGL::watch(const char *txt) {
   update(txt);
   enterEventLoop();
   processEvents();
@@ -1410,20 +1410,20 @@ int OpenGL::watch(const char *txt){
 }
 
 //! update the view (in Qt: also starts displaying the window)
-bool OpenGL::update(const char *txt){
+bool OpenGL::update(const char *txt) {
   pressedkey=0;
-  if(txt) text.clear() <<txt;
+  if (txt) text.clear() <<txt;
   postRedrawEvent();
   processEvents();
   return !pressedkey;
 }
 
 //! waits some msecons before updating
-int OpenGL::timedupdate(double sec){
+int OpenGL::timedupdate(double sec) {
   static double lasttime=-1;
   double now;
   now=MT::realTime();
-  if(lasttime>0. && now-lasttime<sec) MT::wait(lasttime+sec-now);
+  if (lasttime>0. && now-lasttime<sec) MT::wait(lasttime+sec-now);
   lasttime=now;
   return update();
 #if 0//def MT_QTGLUT
@@ -1437,19 +1437,19 @@ int OpenGL::timedupdate(double sec){
 }
 
 //! set the four clear colors
-void OpenGL::setClearColors(float r, float g, float b, float a){
+void OpenGL::setClearColors(float r, float g, float b, float a) {
   clearR=r; clearG=g; clearB=b; clearA=a;
 }
 
 /*!\brief inverse projection: given a 2D+depth coordinates in the
   camera view (e.g. as a result of selection) computes the world 3D
   coordinates */
-void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera){
+void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
 #ifdef MT_GL
   double _x, _y, _z;
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
-  if(resetCamera){
+  if (resetCamera) {
     GLint viewport[4] = {0, 0, width(), height()};
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glMatrixMode(GL_PROJECTION);
@@ -1469,7 +1469,7 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera){
 }
 
 
-void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam){
+void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
   glutPostRedisplay();
@@ -1480,7 +1480,7 @@ void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam){
 #endif
 }
 
-void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline){
+void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
   glutPostRedisplay();
@@ -1500,11 +1500,11 @@ void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *
 
 
 //! print some info on the selection buffer
-void OpenGL::reportSelection(){
+void OpenGL::reportSelection() {
   uint i;
   std::cout <<"selection report: mouse=" <<mouseposx <<" " <<mouseposy <<" -> #selections=" <<selection.N <<std::endl;
-  for(i=0; i<selection.N; i++){
-    if(topSelection == &selection(i)) std::cout <<"  TOP: "; else std::cout <<"       ";
+  for (i=0; i<selection.N; i++) {
+    if (topSelection == &selection(i)) std::cout <<"  TOP: "; else std::cout <<"       ";
     std::cout
       <<"name = 0x" <<std::hex <<selection(i).name <<std::dec
       <<" min-depth:" <<selection(i).dmin <<" max-depth:" <<selection(i).dmax
@@ -1515,12 +1515,12 @@ void OpenGL::reportSelection(){
 
 #ifdef MT_GL2PS
 /*!\brief generates a ps from the current OpenGL display, using gl2ps */
-void OpenGL::saveEPS(const char *filename){
+void OpenGL::saveEPS(const char *filename) {
   FILE *fp = fopen(filename, "wb");
   GLint buffsize = 0, state = GL2PS_OVERFLOW;
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
-  while(state==GL2PS_OVERFLOW){
+  while (state==GL2PS_OVERFLOW) {
     buffsize+=1024*1024;
     gl2psBeginPage("Marc Toussaint", "MT", viewport,
                    GL2PS_EPS, GL2PS_BSP_SORT, GL2PS_SILENT |
@@ -1534,14 +1534,14 @@ void OpenGL::saveEPS(const char *filename){
   fclose(fp);
 }
 #else
-void OpenGL::saveEPS(const char*){
+void OpenGL::saveEPS(const char*) {
   MT_MSG("WARNING: OpenGL::saveEPS was called without MT_GL2PS configured!");
 }
 #endif
 
 #ifndef MT_QTGLUT
 /*!\brief report on the OpenGL capabilities (the QGLFormat) */
-void OpenGL::about(std::ostream& os){ MT_MSG("NICO"); }
+void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 #endif
 
 
@@ -1556,7 +1556,7 @@ void OpenGL::about(std::ostream& os){ MT_MSG("NICO"); }
 #  define CALLBACK_DEBUG(x)
 #endif
 
-void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, int to){
+void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, int to) {
   int w=ri-le, h=to-bo;
   int minwh = w<h?w:h;
   double x, y;
@@ -1565,60 +1565,60 @@ void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, i
   vec(0)=x;
   vec(1)=y;
   vec(2)=.5-(x*x+y*y);
-  if(vec(2)<0.) vec(2)=0.;
+  if (vec(2)<0.) vec(2)=0.;
 }
 
-void OpenGL::Reshape(int width, int height){
+void OpenGL::Reshape(int width, int height) {
   CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
   camera.setWHRatio((double)width/height);
-  for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
+  for (uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
   //postRedrawEvent();
 }
 
-void OpenGL::Key(unsigned char key, int _x, int _y){
+void OpenGL::Key(unsigned char key, int _x, int _y) {
   _y = height()-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y));
   mouseposx=_x; mouseposy=_y;
   pressedkey=key;
   
   bool cont=true;
-  for(uint i=0; i<keyCalls.N; i++) cont=cont && keyCalls(i)->keyCallback(*this);
-
-  if(key==13 || key==27) exitEventLoop();
-  if(MT::contains(exitkeys, key)) exitEventLoop();
-
+  for (uint i=0; i<keyCalls.N; i++) cont=cont && keyCalls(i)->keyCallback(*this);
+  
+  if (key==13 || key==27) exitEventLoop();
+  if (MT::contains(exitkeys, key)) exitEventLoop();
+  
 }
 
-void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
+void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   int w=width(), h=height();
   _y = h-_y;
   CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, downPressed, _x, _y));
   mouse_button=1+button;
-  if(downPressed) mouse_button=-1-mouse_button;
+  if (downPressed) mouse_button=-1-mouse_button;
   mouseposx=_x; mouseposy=_y;
   lastEvent.set(mouse_button, -1, _x, _y, 0., 0.);
   
   GLView *v;
   ors::Camera *cam=&camera;
   ors::Vector vec;
-  for(mouseView=views.N; mouseView--;){
+  for (mouseView=views.N; mouseView--;) {
     v=&views(mouseView);
-    if(_x<v->ri*w && _x>v->le*w && _y<v->to*h && _y>v->bo*h){
+    if (_x<v->ri*w && _x>v->le*w && _y<v->to*h && _y>v->bo*h) {
       getSphereVector(vec, _x, _y, v->le*w, v->ri*w, v->bo*h, v->to*h);
       cam=&views(mouseView).camera;
       break;
     }
   }
-  if(mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
+  if (mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
   CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
   
-  if(!downPressed){ //down press
-    if(mouseIsDown) return; //the button is already down (another button was pressed...)
+  if (!downPressed) { //down press
+    if (mouseIsDown) return; //the button is already down (another button was pressed...)
     //CHECK(!mouseIsDown, "I thought the mouse is up...");
     mouseIsDown=true;
     drawFocus=true;
-  }else{
-    if(!mouseIsDown) return; //the button is already up (another button was pressed...)
+  } else {
+    if (!mouseIsDown) return; //the button is already up (another button was pressed...)
     //CHECK(mouseIsDown, "mouse-up event although the mouse is not down???");
     mouseIsDown=false;
     drawFocus=false;
@@ -1630,30 +1630,30 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
   s->downFoc=*cam->foc;
   
   //check object clicked on
-  if(!downPressed){
-    if(reportSelects) Select();
+  if (!downPressed) {
+    if (reportSelects) Select();
   }
   //step through all callbacks
   bool cont=true;
-  if(!downPressed){
-    for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
+  if (!downPressed) {
+    for (uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if(!cont){ postRedrawEvent(); return; }
-
+  if (!cont) { postRedrawEvent(); return; }
+  
   //mouse scroll wheel:
-  if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
-  if(mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
-
-  if(mouse_button==3){ //selection
-     Select();
-     if(topSelection)
-       cam->focus(topSelection->x, topSelection->y, topSelection->z);
+  if (mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
+  if (mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
+  
+  if (mouse_button==3) { //selection
+    Select();
+    if (topSelection)
+      cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
-
+  
   postRedrawEvent();
 }
 
-void OpenGL::Motion(int _x, int _y){
+void OpenGL::Motion(int _x, int _y) {
 #ifdef MT_GL
   int w=width(), h=height();
   _y = h-_y;
@@ -1661,10 +1661,10 @@ void OpenGL::Motion(int _x, int _y){
   mouseposx=_x; mouseposy=_y;
   ors::Camera *cam;
   ors::Vector vec;
-  if(mouseView==-1){
+  if (mouseView==-1) {
     cam=&camera;
     getSphereVector(vec, _x, _y, 0, w, 0, h);
-  }else{
+  } else {
     cam=&views(mouseView).camera;
     getSphereVector(vec, _x, _y, views(mouseView).le*w, views(mouseView).ri*w, views(mouseView).bo*h, views(mouseView).to*h);
   }
@@ -1675,19 +1675,19 @@ void OpenGL::Motion(int _x, int _y){
 #else
   //int modifiers=0;
 #endif
-  if(!mouseIsDown){ //passive motion -> hover callbacks
+  if (!mouseIsDown) { //passive motion -> hover callbacks
     mouseposx=_x; mouseposy=_y;
     bool ud=false;
-    for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-    if(ud) postRedrawEvent();
+    for (uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
+    if (ud) postRedrawEvent();
     return;
   }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
-  if(mouse_button==1){ //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
+  if (mouse_button==1) { //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
-    if(s->downVec(2)<.1){
+    if (s->downVec(2)<.1) {
       rot.setDiff(vec, s->downVec);  //consider imagined sphere rotation of mouse-move
-    }else{
+    } else {
       rot.setVec((vec-s->downVec) ^ VEC_z); //consider only xy-mouse-move
     }
 #if 0 //rotate about origin
@@ -1701,18 +1701,18 @@ void OpenGL::Motion(int _x, int _y){
     //cam->focus();
 #endif
     postRedrawEvent();
-    if(immediateExitLoop) exitEventLoop();
+    if (immediateExitLoop) exitEventLoop();
   }
-  if(mouse_button==3){ //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
-/*    ors::Vector trans = s->downVec - vec;
-    trans(2)=0.;
-    trans = s->downRot*trans;
-    cam->X->pos = s->downPos + trans;
-    postRedrawEvent();*/
+  if (mouse_button==3) { //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
+    /*    ors::Vector trans = s->downVec - vec;
+        trans(2)=0.;
+        trans = s->downRot*trans;
+        cam->X->pos = s->downPos + trans;
+        postRedrawEvent();*/
   }
-  if(mouse_button==2){ //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
+  if (mouse_button==2) { //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
-    if(dy<-.99) dy = -.99;
+    if (dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
     postRedrawEvent();
   }
@@ -1721,35 +1721,35 @@ void OpenGL::Motion(int _x, int _y){
 #endif
 }
 
-void OpenGL::MouseWheel(int wheel, int direction, int x, int y){}
+void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {}
 
 //===========================================================================
 //
 // GUI implementation
 //
 
-void glUI::addButton(uint x, uint y, const char *name, const char *img1, const char *img2){
+void glUI::addButton(uint x, uint y, const char *name, const char *img1, const char *img2) {
   Button &b = buttons.append();
   byteA img;
   b.hover=false;
   b.x=x; b.y=y; b.name=name;
   //read_png(img, tex1);
-  if(img1){
+  if (img1) {
     read_ppm(img, img1, true);
-  }else{
+  } else {
     img.resize(18, strlen(name)*9+10, 3);
     img=255;
   }
   b.w=img.d1; b.h=img.d0;
   b.img1=img;    add_alpha_channel(b.img1, 100);
-  if(img2){
+  if (img2) {
     read_ppm(img, img1, true);
     CHECK(img.d1==b.w && img.d0==b.h, "mismatched size");
   }
   b.img2=img;    add_alpha_channel(b.img2, 200);
 }
 
-void glUI::glDraw(){
+void glUI::glDraw() {
 #ifdef MT_GL
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -1763,7 +1763,7 @@ void glUI::glDraw(){
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   Button *b;
   float x, y, h;
-  for(uint i=0; i<buttons.N; i++){
+  for (uint i=0; i<buttons.N; i++) {
     b = &buttons(i);
     x=b->x-b->w/2.;
     y=b->y-b->h/2.;
@@ -1771,7 +1771,7 @@ void glUI::glDraw(){
     h=b->h;
     glColor(0, 0, 0, 1);
     glDrawText(b->name, x+5, y+h-5, 0.);
-    if((int)i==top) glRasterImage((int)x, (int)y, b->img2);
+    if ((int)i==top) glRasterImage((int)x, (int)y, b->img2);
     else      glRasterImage((int)x, (int)y, b->img1);
   }
 #else
@@ -1779,20 +1779,20 @@ void glUI::glDraw(){
 #endif
 }
 
-bool glUI::checkMouse(int _x, int _y){
+bool glUI::checkMouse(int _x, int _y) {
   float x, y, w, h;
   Button *b;
   int otop=top;
   top=-1;
-  for(uint i=0; i<buttons.N; i++){
+  for (uint i=0; i<buttons.N; i++) {
     b = &buttons(i);
     x=b->x-b->w/2.;
     y=b->y-b->h/2.;
     w=b->w;
     h=b->h;
-    if(_x>=x && _x <=x+w && _y>=y && _y<=y+h) top = i;
+    if (_x>=x && _x <=x+w && _y>=y && _y<=y+h) top = i;
   }
-  if(otop==top) return false;
+  if (otop==top) return false;
   //glutPostRedisplay();
   return true;
 }

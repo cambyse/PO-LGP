@@ -279,7 +279,7 @@ stdPipes(MT::String)
 namespace MT {
 extern String errString;
 
-inline void breakPoint(){
+inline void breakPoint() {
   int i=5;
   i*=i;    //set a break point here, if you want to catch errors directly
 }
@@ -342,7 +342,7 @@ public:
   //!@name constructors
   
   //! Determines the tag to search for in parameter file/command line
-  explicit Parameter(const char *_tag){
+  explicit Parameter(const char *_tag) {
     typeName=typeid(type).name();
     initialized=false;
     tag=_tag;
@@ -351,7 +351,7 @@ public:
   
   /*!\brief specifies also a default value -- parameter does not have to but
     can be specified in the parameter file/command line */
-  Parameter(const char *_tag, const type& _default){
+  Parameter(const char *_tag, const type& _default) {
     typeName=typeid(type).name();
     initialized=false;
     tag=_tag;
@@ -359,29 +359,29 @@ public:
     Default=_default;
   };
   
-  ~Parameter(){}
+  ~Parameter() {}
   
   //!@name value access
   
   //! standard type conversion: returns a const of the parameter value
-  operator type(){ if(!initialized) initialize(); return value; }
+  operator type() { if (!initialized) initialize(); return value; }
   
   //! ()-operator: returns an lvalue of the parameter value
-  type& operator()(){ if(!initialized) initialize(); return value; }
+  type& operator()() { if (!initialized) initialize(); return value; }
   
   
   //!@name manipulation
   
   //! assigs a value to the parameter -- no further initialization needed
-  type& operator=(const type v){ initialized=true; value=v; return value; }
+  type& operator=(const type v) { initialized=true; value=v; return value; }
   
   //! set the tag (replacing the one from the constructor)
-  void setTag(char *_tag){ tag=_tag; }
+  void setTag(char *_tag) { tag=_tag; }
   
   /*!\brief enforces that the parameter is reinitialized from the parameter
     file/command line, the next time it is referenced -- even if it
     has been initialized before */
-  void reInitialize(){ initialized=false; }
+  void reInitialize() { initialized=false; }
   
   
   //!@name explicit grabbing
@@ -412,7 +412,7 @@ private:
   
 public:
   //! ...
-  Rnd(){ ready=false; };
+  Rnd() { ready=false; };
   
   
 public://!@name initialization
@@ -427,21 +427,21 @@ public://!@name initialization
   
 public://!@name access
   //! a initeger random number uniformly distributed in [0, ?]
-  uint32_t num(){ if(!ready) seed(); return (uint32_t)rnd250() >>5; }
+  uint32_t num() { if (!ready) seed(); return (uint32_t)rnd250() >>5; }
   //! same as \c num()
-  uint32_t operator()(){ return num(); }
+  uint32_t operator()() { return num(); }
   //! a initeger random number uniformly distributed in [0, \c i-1]
-  uint32_t num(uint32_t limit){
+  uint32_t num(uint32_t limit) {
     CHECK(limit, "zero limit in rnd.num()"); return num() % limit;
   }
-  uint32_t num(int32_t lo, int32_t hi){ return lo+num(hi-lo+1); }
+  uint32_t num(int32_t lo, int32_t hi) { return lo+num(hi-lo+1); }
   //! same as \c num(i)
-  uint32_t operator()(uint32_t i){ return num(i); }
-  uint32_t operator()(int32_t lo, int32_t hi){ return num(lo, hi); }
+  uint32_t operator()(uint32_t i) { return num(i); }
+  uint32_t operator()(int32_t lo, int32_t hi) { return num(lo, hi); }
   //! a random variable uniformly distributed in [0, 1]
-  double uni(){ return ((double)num(1 <<22))/(1 <<22); }
+  double uni() { return ((double)num(1 <<22))/(1 <<22); }
   //! a random variable uniformly distributed in [\c low, \c high]
-  double uni(double low, double high){ return low+uni()*(high-low); }
+  double uni(double low, double high) { return low+uni()*(high-low); }
   //! a gaussian random variable with mean zero
   double gauss();
   /*!\brief a positive integer drawn from a poisson distribution with given
@@ -452,7 +452,7 @@ public://!@name access
   
   
 private:
-  int32_t rnd250(){
+  int32_t rnd250() {
     rpoint = (rpoint+1) & 255;          // Index erhoehen
     return rfield[rpoint] =  rfield[(rpoint-250) & 255]
                              ^ rfield[(rpoint-103) & 255];
@@ -477,7 +477,7 @@ struct Any {
   void *p;
   uint n;
   char delim;
-  virtual ~Any(){};
+  virtual ~Any() {};
   virtual void write(std::ostream &os) const = 0;
   virtual Any *newClone() = 0;
 };
