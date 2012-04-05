@@ -15,23 +15,8 @@ typedef unsigned int uint;
 void reportNice();
 bool setNice(int);
 
-//! a basic read/write access lock
-struct Lock {
-  int state;
-  const char* msg;
-  pthread_rwlock_t lock;
-  
-  Lock();
-  ~Lock();
-  
-  void readLock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
-  void writeLock(const char* _msg=NULL);  ///< only one thread may request 'lock for write'
-  void unlock();                          ///< thread must unlock when they're done
-};
-
 //! a basic mutex lock
 struct Mutex {
-  int state;
   const char* msg;
   pthread_mutex_t _lock;
   
@@ -42,8 +27,24 @@ struct Mutex {
   void unlock();                          ///< thread must unlock when they're done
 };
 
+//! a basic read/write access lock
+struct Lock {
+  int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
+  const char* msg;
+  Mutex stateMutex;
+  pthread_rwlock_t lock;
+  
+  Lock();
+  ~Lock();
+  
+  void readLock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
+  void writeLock(const char* _msg=NULL);  ///< only one thread may request 'lock for write'
+  void unlock();                          ///< thread must unlock when they're done
+};
+
 //! a basic condition variable
 struct ConditionVariable {
+  /*volatile*/
   int state;
   pthread_mutex_t mutex;
   pthread_cond_t  cond;
@@ -52,12 +53,12 @@ struct ConditionVariable {
   ~ConditionVariable();
   
   int  getState();
-  void setState(int i);
+  int  setState(int i);
   void signal();
   void waitForSignal();
   void waitForSignal(double seconds);
-  int waitForStateEq(int i);    ///< return value is the state after the waiting
-  int waitForStateNotEq(int i); ///< return value is the state after the waiting
+  int  waitForStateEq(int i);    ///< return value is the state after the waiting
+  int  waitForStateNotEq(int i); ///< return value is the state after the waiting
   void waitUntil(double absTime);
 };
 
@@ -76,7 +77,7 @@ struct Metronome {
   Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
   ~Metronome();
   
-  void reset();
+  void reset(long _targetDt);
   void waitForTic();              //!< waits until the next tic
   double getTimeSinceTic();       //!< time since last tic
 };
@@ -108,7 +109,7 @@ struct sVariable {
   Lock lock;
   ConditionVariable cond;
   
-  sVariable(Variable *_p){ p = _p; }
+  sVariable(Variable *_p) { p = _p; }
 };
 
 enum ThreadState { tsOPEN=-1, tsCLOSE=-2, tsLOOPING=-3, tsBEATING=-4, tsSYNCLOOPING=-5, tsIDLE=0 }; //positive states indicate steps-to-go
@@ -126,30 +127,19 @@ struct sProcess {
   bool broadcastDone;
   ConditionVariable *syncCondition;
   
-  sProcess(){
+  sProcess() {
     skips=0;
     threadCondition.setState(tsCLOSE);
     tid=0;
     threadPriority=0;
-    thread=NULL;
+    thread=0;
     broadcastDone=false;
     syncCondition=NULL;
+    metronome=NULL;
   };
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
 };
 
-
-
-
-struct GlobalInfo:Variable{
-  VariableL variables;
-  ProcessL  processes;
-  uint variableCount;
-  uint processCount;
-  GlobalInfo():Variable("GlobalInfo"){ variableCount=processCount=0; }
-};
-
-extern GlobalInfo globalInfo;
 
 #endif
