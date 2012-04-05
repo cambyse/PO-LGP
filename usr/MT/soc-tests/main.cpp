@@ -68,10 +68,42 @@ void testRobotSystem(bool testFeedbackControl=false){
   AICO_solver(soc,q,1e-2,.7,.01,0,0);
 #else 
 
+  arr q0,x0;
+  soc::straightTaskTrajectory(sys, q0, 0);
+  if(sys.dynamic) soc::getPhaseTrajectory(x0, q0, sys.getTau()); else x0=q0;
+
+  conv_VectorChainFunction P2(sys);
+#if 0
+  x=x0;
+  for(uint t=0;t<=T;t++)  sys.testGradientsInCurrentState(x[t], t);  MT::wait();
+  checkJacobian((VectorFunction&)P2, x, 1e-4);
+  //return 0;
+#endif
+
+  x=x0;
+  cout <<"VCF=" <<evaluateVCF(sys, x) <<endl;
+  cout <<"QCF=" <<evaluateQCF(P2, x) <<endl;
+  sys.costChecks(x);
+  
+#if 0
+  optOptions o;  o.stopTolerance=1e-3;  o.clampInitialState=true;
+  //eval_cost=0;  x=x0;  optGaussNewton(x, P2, (o.stopEvals=1000, o.initialDamping=1e-0, o.verbose=2, o));  cout <<"-- evals=" <<eval_cost <<endl;
+  //sys.displayTrajectory(x,NULL,0,"DP (planned trajectory)");
+  
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-0, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  //sys.costChecks(x);
+  sys.analyzeTrajectory(x,true);
+  sys.displayTrajectory(x,NULL,1,"MSGN (planned trajectory)");
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-0, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
+  //sys.costChecks(x);
+  sys.analyzeTrajectory(x,true);
+  sys.displayTrajectory(x,NULL,1,"DP (planned trajectory)");
+#endif
+  
   //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
   AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
-  aico.init_trajectory(q);
+  aico.init_trajectory(x0);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
   sys.analyzeTrajectory(aico.b,true);

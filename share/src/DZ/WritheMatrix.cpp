@@ -69,14 +69,14 @@ J4 = Jr(r_bc, r_ac, r_ad, 1, 0, 0,Jab);
 JTscalar=J1+J2+J3+J4;
 }
 
-void GetWritheMatrix(arr& WM, const arr& rope1, const arr& rope2,int dim){
+void GetWritheMatrix(arr& WM, const arr& rope1, const arr& rope2,int dim1,int dim2){
  ors::Vector A,B,C,D;
   double writhe; 
-   WM = zeros(dim,dim);
-  for (int i=0;i<dim;i++) {
+   WM = zeros(dim1,dim2);
+  for (int i=0;i<dim1;i++) {
    A.set(rope1(i,0),rope1(i,1),rope1(i,2));
    B.set(rope1(i+1,0),rope1(i+1,1),rope1(i+1,2));
-   for (int j=0;j<dim;j++) {
+   for (int j=0;j<dim2;j++) {
     C.set(rope2(j,0),rope2(j,1),rope2(j,2));
     D.set(rope2(j+1,0),rope2(j+1,1),rope2(j+1,2));
     GetWritheSegment(writhe, A,B,C,D);
@@ -85,16 +85,16 @@ void GetWritheMatrix(arr& WM, const arr& rope1, const arr& rope2,int dim){
  
 }
 
-void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int dim){
+void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int dim1,int dim2){
   int total_joint_number =  pointsJ.d1;
-  pointsJ.reshape(dim, 3, total_joint_number);
+  pointsJ.reshape(dim1, 3, total_joint_number);
   
   ors::Vector A,B,C,D;
   arr Jab(2,3,total_joint_number);
   arr jj; 
-  JM.resize(dim*dim,total_joint_number);
+  JM.resize(dim1*dim2,total_joint_number);
   int cnt=0;
-  for (int i=0;i<dim;i++) {
+  for (int i=0;i<dim1;i++) {
     //! TODO check it!
     if (i>0) Jab[0] = pointsJ[i-1];
     else Jab[0]=zeros(3,total_joint_number);
@@ -102,7 +102,7 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
     Jab[1] = pointsJ[i];
      A.set(rope1(i,0),rope1(i,1),rope1(i,2));
      B.set(rope1(i+1,0),rope1(i+1,1),rope1(i+1,2));
-    for (int j=0;j<dim;j++) {
+    for (int j=0;j<dim2;j++) {
       C.set(rope2(j,0),rope2(j,1),rope2(j,2));
       D.set(rope2(j+1,0),rope2(j+1,1),rope2(j+1,2));
       GetWritheJacobianSegment(jj, A,B,C,D, Jab);  
@@ -117,7 +117,7 @@ void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
   double scalar=0.;
    WS.resize(1);//=zeros(dim); //(1,1);
    WS.setZero();
-  GetWritheMatrix(Matr,rope1,rope2,dim);
+  GetWritheMatrix(Matr,rope1,rope2,dim,dim);
   //!diagonal
 //   Matr.reshape(dim,dim);
 //   for (int k=0;k<dim;k++){
@@ -142,7 +142,7 @@ void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
 void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int dim){
   int total_joint_number =  pointsJ.d1;
   arr MatrJ;
-  WritheJacobian(MatrJ,rope1,rope2,pointsJ,dim);
+  WritheJacobian(MatrJ,rope1,rope2,pointsJ,dim,dim);
   SJ.resize(1,total_joint_number);//SJ.resize(1,total_joint_number);
   SJ.setZero();
   //!diagonal

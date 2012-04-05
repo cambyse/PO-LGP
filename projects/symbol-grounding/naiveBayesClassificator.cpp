@@ -176,7 +176,6 @@ void sNaiveBayesClassificator::rejectionSampling(MT::Array<arr>& nextSample, dou
   double eps = 0.001;
   double maxdens = 0;
 
-  srand ( time(NULL) % 5 * time(NULL)  );
   MT::rnd.clockSeed();
   for (uint i = 0; i < 10000; ++i) {
     sampler->sample(testSample);

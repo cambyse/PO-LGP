@@ -9,7 +9,7 @@ class ClassificatorV;
 template<class S> class Sampler;
 class Tester {
   public:
-    Tester(const int testNumber = 5000);
+    Tester(const int testNumber = 5000, const char* filename = "classification.data");
     virtual ~Tester();
     const double test(ClassificatorV* l);
 
