@@ -179,6 +179,53 @@ struct Parameter_typed:Parameter {
 };
 
 
+//===========================================================================
+//
+// basic access to global system info
+//
+
+struct BirosInfo:Variable {
+
+  VariableL variables;
+  ProcessL processes;
+  ParameterL parameters;
+  
+  Process *getProcessFromPID();
+  
+  BirosInfo();
+  
+  template<class T>  void getVariable(T*& v, const char* name, Process *p) {
+    writeAccess(p);
+    v = (T*)listFindByName(variables, name);
+    deAccess(p);
+    if (!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+  }
+  template<class T>  T* getProcess(const char* name, Process *p){
+    writeAccess(p);
+    T *pname = (T*)listFindByName(processes, name);
+    deAccess(p);
+    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+  }
+  template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL) {
+    Parameter_typed<T> *par;
+    writeAccess(p);
+    par = (Parameter_typed<T>*)listFindByName(parameters, name);
+    deAccess(p);
+    if (!par) par = new Parameter_typed<T>(name, *_default);
+    if (!par->processes.contains(p)) par->processes.append(p);
+    return par->value;
+  }
+  template<class T> T getParameter(const char *name) {
+    return getParameter<T>(name, getProcessFromPID(), NULL);
+  }
+  template<class T> T getParameter(const char *name, const T& _default) {
+    return getParameter<T>(name, getProcessFromPID(), &_default);
+  }
+  void dump(); //dump everything -- for debugging
+};
+
+extern BirosInfo birosInfo;
+
 
 //===========================================================================
 //
@@ -225,52 +272,6 @@ struct WorkingCopy {
     last_revision = var->revision;
     var->deAccess(p);
   }
-};
-
-
-//===========================================================================
-//
-// basic access to global system info
-//
-
-struct BirosInfo:Variable {
-
-  VariableL variables;
-  ProcessL processes;
-  ParameterL parameters;
-  
-  Process *getProcessFromPID();
-  
-  BirosInfo();
-  
-  template<class T>  void getVariable(T*& v, const char* name, Process *p) {
-    writeAccess(p);
-    v = (T*)listFindByName(variables, name);
-    deAccess(p);
-    if (!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
-  }
-  template<class T>  T* getProcess(const char* name, Process *p){
-    writeAccess(p);
-    T *pname = (T*)listFindByName(processes, name);
-    deAccess(p);
-    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
-  }
-  template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL) {
-    Parameter_typed<T> *par;
-    writeAccess(p);
-    par = (Parameter_typed<T>*)listFindByName(parameters, name);
-    deAccess(p);
-    if (!par) par = new Parameter_typed<T>(name, *_default);
-    if (!par->processes.contains(p)) par->processes.append(p);
-    return par->value;
-  }
-  template<class T> T getParameter(const char *name) {
-    return getParameter<T>(name, getProcessFromPID(), NULL);
-  }
-  template<class T> T getParameter(const char *name, const T& _default) {
-    return getParameter<T>(name, getProcessFromPID(), &_default);
-  }
-  void dump(); //dump everything -- for debugging
 };
 
 

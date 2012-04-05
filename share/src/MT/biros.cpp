@@ -1,7 +1,7 @@
 #include "biros.h"
 #include "biros_internal.h"
-#include "logger.h"
-#include "threadless.h"
+//#include "logger.h"
+//#include "threadless.h"
 
 #include <errno.h>
 #include <string.h>
@@ -14,24 +14,6 @@
 
 #include <MT/util.h>
 #include <MT/array.h>
-
-
-//===========================================================================
-//
-// Global information
-//
-
-BirosInfo birosInfo;
-
-Process *BirosInfo::getProcessFromPID(){
-  pid_t tid = syscall(SYS_gettid);
-  uint i;  Process *p;
-  for_list(i, p, processes){
-    if(p->s->tid==tid) break;
-  }
-  if(i>=processes.N) return NULL;
-  return p;
-}
 
 
 //===========================================================================
@@ -367,20 +349,20 @@ Variable::Variable(const char *_name) {
   logValues = true;
   dbDrivenReplay = false;
   pthread_mutex_init(&replay_mutex, NULL);
-  if (this != &globalInfo) {
-    globalInfo.writeAccess(NULL);
-    id = globalInfo.variables.N;
-    globalInfo.variables.memMove = true;
-    globalInfo.variables.append(this);
-    globalInfo.deAccess(NULL);
+  if (this != &birosInfo) {
+    birosInfo.writeAccess(NULL);
+    id = birosInfo.variables.N;
+    birosInfo.variables.memMove = true;
+    birosInfo.variables.append(this);
+    birosInfo.deAccess(NULL);
   }
 }
 
 Variable::~Variable() {
-  if (this != &globalInfo) {
-    globalInfo.writeAccess(NULL);
-    globalInfo.variables.removeValue(this);
-    globalInfo.deAccess(NULL);
+  if (this != &birosInfo) {
+    birosInfo.writeAccess(NULL);
+    birosInfo.variables.removeValue(this);
+    birosInfo.deAccess(NULL);
   }
   for (uint i=0; i<fields.N; i++) delete fields(i);
   
@@ -423,31 +405,10 @@ int Variable::lockState() {
   return s->lock.state;
 }
 
-int Variable::getCondition() {
-  return s->cond.getState();
-}
-
-void Variable::broadcastCondition(int i) {
-  s->cond.setState(i);
-}
-
-void Variable::waitForConditionSignal(double seconds) {
-  if (seconds<0.) s->cond.waitForSignal();
-  else           s->cond.waitForSignal(seconds);
-}
-
-void Variable::waitForConditionEq(int i) {
-  s->cond.waitForStateEq(i);
-}
-
-void Variable::waitForConditionNotEq(int i) {
-  s->cond.waitForStateNotEq(i);
-}
-
 void Variable::serializeToString(MT::String &string) const {
-  string.clr();
+  string.clear();
   MT::String field_string;
-  field_string.clr();
+  field_string.clear();
   
   // go through fields
   for (uint i=0; i < fields.N; i++) {
@@ -455,7 +416,7 @@ void Variable::serializeToString(MT::String &string) const {
     fields(i)->write_value(field_string);
     
     // replace every occurence of "\" by "\\"
-    for (uint j=0; j < field_string.N(); j++) {
+    for (uint j=0; j < field_string.N; j++) {
       char c = field_string(j);
       if ('\\' == c) string << '\\';
       string << c;
@@ -468,12 +429,12 @@ void Variable::serializeToString(MT::String &string) const {
 
 void Variable::deSerializeFromString(const MT::String &string) {
   MT::String string_copy(string), field_string;
-  field_string.clr();
+  field_string.clear();
   uint j = 0;
   for (uint i=0; i< fields.N; i++) {
     // get field strings from string (seperated by "\\,")
     bool escaped = false; // true if previous char was '\\'
-    while (j < string_copy.N()) {
+    while (j < string_copy.N) {
       char c = string_copy(j++);
       if ('\\' == c) {
         escaped = true;
@@ -503,18 +464,18 @@ Process::Process(const char *_name) {
   name = _name;
   id = 0U; /* we need something initial */ //TODO: why?
   step_count = 0U;
-  globalInfo.writeAccess(this);
-  id = globalInfo.processes.N;
-  globalInfo.processes.memMove=true;
-  globalInfo.processes.append(this);
-  globalInfo.deAccess(this);
+  birosInfo.writeAccess(this);
+  id = birosInfo.processes.N;
+  birosInfo.processes.memMove=true;
+  birosInfo.processes.append(this);
+  birosInfo.deAccess(this);
 }
 
 Process::~Process() {
   if (s->thread || s->threadCondition.state!=tsCLOSE) threadClose();
-  globalInfo.writeAccess(this);
-  globalInfo.processes.removeValue(this);
-  globalInfo.deAccess(this);
+  birosInfo.writeAccess(this);
+  birosInfo.processes.removeValue(this);
+  birosInfo.deAccess(this);
   delete s;
 }
 
@@ -664,13 +625,12 @@ void* sProcess::staticThreadMain(void *_self) {
 // Parameter
 //
 
-Parameter::Parameter(const char *_name) {
-  name = _name;
-  globalInfo.writeAccess(NULL);
-  id = globalInfo.parameters.N;
-  globalInfo.parameters.memMove=true;
-  globalInfo.parameters.append(this);
-  globalInfo.deAccess(NULL);
+Parameter::Parameter() {
+  birosInfo.writeAccess(NULL);
+  id = birosInfo.parameters.N;
+  birosInfo.parameters.memMove=true;
+  birosInfo.parameters.append(this);
+  birosInfo.deAccess(NULL);
 };
 
 
@@ -748,6 +708,8 @@ void close(const ProcessL& P) {
 //
 // Global information
 //
+
+BirosInfo birosInfo;
 
 Process *BirosInfo::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
