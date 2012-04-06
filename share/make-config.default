@@ -17,8 +17,9 @@ endif
 
 ifeq ($(MAKEMODE),mlrlib)
 ################ CHANGE THE DEFAULT lib-COMPILATION MODE HERE!! ###############
-MAKEMODE = mlrlib_full
+#MAKEMODE = mlrlib_full
 #MAKEMODE = mlrlib_minimal
+MAKEMODE = mlrlib_ubuntu
 endif
 
 
@@ -58,7 +59,7 @@ ifeq ($(MAKEMODE),mlrlib_minimal)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
-FREEGLUT = 1
+FREEGLUT = 0
 ANN = 0
 QHULL = 0
 SWIFT = 0
@@ -72,3 +73,27 @@ BUMBLE = 0
 LEWINER = 0
 CUDA = 0
 endif
+
+
+### MAKEMODE=mlrlib_ubuntu
+
+ifeq ($(MAKEMODE),mlrlib_ubuntu)
+CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+LIBS   += -lrt
+OPTIM  = debug
+FREEGLUT = 0
+GTKGL = 1
+ANN = 1
+QHULL = 1
+SWIFT = 1
+LAPACK = 1
+ODE = 0
+TONY = 1
+OPENCV = 1
+SCHUNK = 0
+PLIB = 1
+BUMBLE = 0
+LEWINER = 0
+CUDA = 0
+endif
+

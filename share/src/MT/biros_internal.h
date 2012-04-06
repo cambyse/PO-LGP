@@ -126,7 +126,7 @@ struct sProcess {
     threadCondition.setState(tsCLOSE);
     tid=0;
     threadPriority=0;
-    thread=NULL;
+    thread=0;
   };
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
