@@ -279,6 +279,8 @@ void pickObject(char* objShape){
   
   _ControllerTask->set_forceColLimTVs(true, NULL);
   _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  MT::wait(.1); //this wait is horrible: required to ensure that at least the current step of the controller finishes since it has a pointer to the task which will be destroyed on exit of this routine..
+  
 }
 
 void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
@@ -342,7 +344,7 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   reattachShape(_GeometricState->ors, NULL, objShape, "OBJECTS", belowToShape);
   _GeometricState->deAccess(NULL);
 
-  //-- close hand
+  //-- open hand
   OpenHand_FeedbackControlTask openTask;
   _ControllerTask->writeAccess(NULL);
   _ControllerTask->mode = ControllerTask::feedback;
@@ -354,6 +356,8 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   
   _ControllerTask->set_forceColLimTVs(true, NULL);
   _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  MT::wait(.1); //this wait is horrible: required to ensure that at least the current step of the controller finishes since it has a pointer to the task which will be destroyed on exit of this routine..
 }
 
 void plannedHoming(const char* objShape, const char* belowToShape){

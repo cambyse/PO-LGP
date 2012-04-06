@@ -548,7 +548,7 @@ void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
     case comTVT:     os <<"  (COM)"; break;
     case collTVT:    os <<"  (COLL)"; break;
     case colConTVT:  os <<"  (colCon)"; break;
-    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name)) <<"); params:" <<params; break;
+    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name).p) <<"); params:" <<params; break;
     case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }

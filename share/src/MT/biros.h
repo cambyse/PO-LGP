@@ -72,7 +72,7 @@ struct FieldInfo_typed:FieldInfo{
 struct Variable {
   struct sVariable *s;  ///< private
   uint id;              ///< unique identifyer
-  const char* name;     ///< Variable name
+  MT::String name;     ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number
   MT::Array<FieldInfo*> fields;
   ProcessL listeners;
@@ -103,7 +103,7 @@ struct Variable {
 struct Process {
   struct sProcess *s;   ///< private
   uint id;              ///< unique identifyer
-  const char* name;     ///< Process name
+  MT::String name;     ///< Process name
   
   Process(const char* name);
   virtual ~Process();
@@ -181,20 +181,20 @@ struct BirosInfo:Variable{
     writeAccess(p);
     v = (T*)listFindByName(variables, name);
     deAccess(p);
-    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
   template<class T>  T* getProcess(const char* name, Process *p){
     writeAccess(p);
     T *pname = (T*)listFindByName(processes, name);
     deAccess(p);
-    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
-  template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL){
+  template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)){
     Parameter_typed<T> *par;
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
-    if(!par) par = new Parameter_typed<T>(name, *_default);
+    if(!par) par = new Parameter_typed<T>(name, _default);
     if(!par->processes.contains(p)) par->processes.append(p);
     return par->value;
   }
@@ -202,7 +202,7 @@ struct BirosInfo:Variable{
     return getParameter<T>(name, getProcessFromPID(), NULL);
   }
   template<class T> T getParameter(const char *name, const T& _default){
-    return getParameter<T>(name, getProcessFromPID(), &_default);
+    return getParameter<T>(name, getProcessFromPID(), _default);
   }
   void dump(); //dump everything -- for debugging
 };

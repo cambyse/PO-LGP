@@ -2,14 +2,11 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
-#include "behaviors.h"
-
-int main(int argn,char** argv){
-  MT::initCmdLine(argn, argv);
-  //ThreadInfoWin win;
-  //win.threadLoopWithBeat(.1);
-  
-  ProcessL P;
+/* What doesn't work yet:
+ 
+ - collisions with grasped objects are not turned on again?
+ - feedback tasks (like open hand) have not termination criterion - fixed time is not ok!
+*/
 
   //-- motion
   // variables
@@ -81,17 +78,25 @@ int main(int argn,char** argv){
   MT::wait(1.);
   
   //pick-and-place loop
-  for(uint k=0;k<1;k++){
-    //waitForPerceivedObjects(1, 0);
-    pickObject("cyl1");
-    //resetPlanner(planner);
-    //homing(true);
-    placeObject("cyl1", "table", "cyl2");
-    //homing();
-    //resetPlanner(planner);
-    //plannedHoming("cyl1", "cyl2");
-    //resetPlanner(planner);
-    cout <<"DDOONNEE!" <<endl;
+  for(uint k=0;k<2;k++){
+    pickObject("box1");
+    placeObject("box1", "table", "cyl1");
+
+    pickObject("box2");
+    placeObject("box2", "table", "cyl2");
+    
+    pickObject("box1");
+    placeObject("box1", "cyl1", "table");
+
+    pickObject("box2");
+    placeObject("box2", "cyl2", "cyl1");
+    
+    pickObject("box1");
+    placeObject("box1", "table", "cyl2");
+
+    pickObject("box2");
+    placeObject("box2", "cyl1", "table");
+    
   }
   
   cam.threadClose();

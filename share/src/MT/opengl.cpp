@@ -1359,7 +1359,7 @@ void OpenGL::Select() {
       glLoadName(i);
       (*drawers(i).call)(drawers(i).classP);
       glGetIntegerv(GL_NAME_STACK_DEPTH, &j);
-      CHECK(j==0, "OpenGL name stack has not depth 1 (pushs>pops)");
+      CHECK(j<=1, "OpenGL name stack has not depth 1 (pushs>pops)");
     }
   } else {
     GLView *vi=&views(mouseView);

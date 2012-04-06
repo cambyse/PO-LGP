@@ -534,7 +534,7 @@ void* sProcess::staticThreadMain(void *_self){
   // http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   if(s->threadPriority) setNice(s->threadPriority);
-  prctl(PR_SET_NAME, proc->name);
+  prctl(PR_SET_NAME, proc->name.p);
   //pthread_setname_np(proc->thread, proc->name);
 
   proc->open(); //virtual initialization routine
@@ -678,7 +678,7 @@ void BirosInfo::dump(){
     cout <<" accessed by:";
     for_list(j, p, par->processes){
       if(j) cout <<',';
-      cout <<' ' <<(p?p->name:"NULL");
+      cout <<' ' <<(p?p->name:STRING("NULL"));
     }
     cout <<endl;
   }
@@ -861,7 +861,7 @@ void ThreadInfoWin::step(){
     x=5;
     TEXT("%4i", th->tid); x+=25;
     TEXT("%3i", th->threadPriority); x+=25;
-    TEXT("%s" , pr->name); x+=100;
+    TEXT("%s" , pr->name.p); x+=100;
     TEXT("%4i", th->timer.steps);  x+=30;
     if(state>0){ TEXT("%4i", state); } else switch(state){
         case tsCLOSE:   TEXT0("close");  break;
