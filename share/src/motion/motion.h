@@ -48,6 +48,8 @@ struct MotionPlan:Variable {
   FIELD(TaskVariableList, TVs);
   
   MotionPlan():Variable("MotionPlan"), converged(true), frame0(NULL), frame1(NULL) { };
+  
+  int setClear(const arr& frame0_pose, Process *p);
   void get_poseView(arr& q) { q=q_plan; }
 };
 
@@ -67,6 +69,8 @@ struct ControllerTask:Variable {
       mode(stop),
       relativeRealTimeOfController(0.),
       forceColLimTVs(true), feedbackControlTask(NULL) {};
+      
+  void setFeedbackTask(FeedbackControlTaskAbstraction& task, bool _forceColLimTVs, bool _fixFingers, Process *p);
 };
 
 
@@ -93,6 +97,8 @@ struct Action:Variable {
   FIELD(char*, objectRef3); // TODO: hier sollte das automatisch gemacht werden
   
   Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  
+  void setNewAction(const ActionPredicate _action, char *ref1, char *ref2, char *ref3, Process *p);
 };
 
 

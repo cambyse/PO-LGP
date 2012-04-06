@@ -202,7 +202,7 @@ void ConditionVariable::setState(int i){
   rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::signal(){
+void ConditionVariable::broadcast(){
   int rc;
   rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
@@ -249,6 +249,18 @@ int ConditionVariable::waitForStateNotEq(int i){
   int stateAfter;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   while(state==i){
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  stateAfter = state;
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  return stateAfter;
+}
+
+int ConditionVariable::waitForStateGreaterThan(int i){
+  int rc;
+  int stateAfter;
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  while(state<=i){
     rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
   stateAfter = state;
@@ -385,28 +397,37 @@ Variable::~Variable(){
   delete s;
 };
 
-void Variable::readAccess(Process *p){
+int Variable::readAccess(Process *p){
   //if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.readLock();
   //cout <<(p?p->name:"NULL") <<" reads  " <<name <<" state=";
+  return revision;
 }
 
-void Variable::writeAccess(Process *p){
+int Variable::writeAccess(Process *p){
   //if(p) p->V.setAppend(this); //TODO: this is too expensive!!
   s->lock.writeLock();
   revision++;
   uint i;  Process *l;
   for_list(i, l, listeners){}
     //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
+  s->cond.setState(revision);
   //broadcastCondition();
   //_write(cout);  cout <<endl;
   //_write(s->os);  s->os <<endl;
   //cout <<(p?p->name:"NULL") <<" writes " <<name <<" state=";
+  return revision;
 }
 
-void Variable::deAccess(Process *p){
+int Variable::deAccess(Process *p){
   //cout <<(p?p->name:"NULL") <<" frees  " <<name <<" state=";
+  int rev=revision;
   s->lock.unlock();
+  return rev;
+}
+
+int Variable::waitForRevisionGreaterThan(uint rev){
+  return s->cond.waitForStateGreaterThan(rev);
 }
 
 int Variable::lockState(){

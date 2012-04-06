@@ -39,15 +39,13 @@ void joystick(){
   VAR(ControllerTask);
   VAR(JoystickState);
   Joystick_FeedbackControlTask joyTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &joyTask;
-  _ControllerTask->deAccess(NULL);
+  _ControllerTask->setFeedbackTask(joyTask, true, false, NULL);
 
   for(;;){
     MT::wait(.2);
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
+  
   _ControllerTask->set_mode(ControllerTask::stop, NULL);
 }
 
@@ -56,11 +54,7 @@ void homing(bool fixFingers){
   VAR(HardwareReference);
   VAR(JoystickState);
   Homing_FeedbackControlTask homeTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->fixFingers = fixFingers;
-  _ControllerTask->feedbackControlTask = &homeTask;
-  _ControllerTask->deAccess(NULL);
+  _ControllerTask->setFeedbackTask(homeTask, true, fixFingers, NULL);
   
   for(;;){
     MT::wait(.2);
@@ -217,46 +211,26 @@ void pickObject(char* objShape){
   VAR(JoystickState);
   VAR(Action);
   VAR(HardwareReference);
-
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
   
   arr x0 =  _HardwareReference->get_q_reference(NULL);
   x0.append(_HardwareReference->get_v_reference(NULL));
   
-  _MotionPlan->writeAccess(NULL);
-  _MotionPlan->converged = false;
-  _MotionPlan->frame0->set_x_estimate(x0, NULL);
-  _MotionPlan->frame1->set_converged(false,NULL);
-  _MotionPlan->deAccess(NULL);
-  
-  _Action->writeAccess(NULL);
-  _Action->action = Action::grasp;
-  _Action->objectRef1 = objShape;
-  _Action->executed = false;
-  _Action->deAccess(NULL);
+  _MotionPlan->setClear(x0, NULL);
+  _Action->setNewAction(Action::grasp, objShape, (char*)"", (char*)"", NULL);
+  int rev = _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
 
-  bool planDone= false;
-  bool planExecuted = false;
-  for(;;){
-    if(!planDone){
-      planDone=_MotionPlan->get_converged(NULL);
-      if(planDone)
-        _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-    }
-    if(planDone){
-      planExecuted = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
-    }
-    if(planExecuted){
-      cout << "plan executed" << endl;
-      _ControllerTask->set_mode(ControllerTask::stop, NULL);
-      _Action->set_executed(true, NULL);
-      _Action->set_action(Action::noAction, NULL);
-      break;
-    }
-    
-    MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+  //wait for controller to execute
+  while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
+    rev = _ControllerTask->waitForRevisionGreaterThan(rev);
   }
+  
+  cout << "plan executed" << endl;
+  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _Action->set_executed(true, NULL);
+  _Action->set_action(Action::noAction, NULL);
+
+  //TODO: the joystick emergency is disabled!!
+  //if(_JoystickState->get_state(NULL)(0)&0x30) break;
   
   //-- the reattach mess!
   _GeometricState->writeAccess(NULL);
@@ -269,11 +243,7 @@ void pickObject(char* objShape){
 
   //-- close hand
   CloseHand_FeedbackControlTask closeTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &closeTask;
-  _ControllerTask->forceColLimTVs=false;
-  _ControllerTask->deAccess(NULL);
+  _ControllerTask->setFeedbackTask(closeTask, false, false, NULL);
   
   MT::wait(3.);
   
@@ -291,49 +261,24 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   VAR(Action);
   VAR(HardwareReference);
   
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
   arr x0 =  _HardwareReference->get_q_reference(NULL);
   x0.append(_HardwareReference->get_v_reference(NULL));
   
-  _MotionPlan->writeAccess(NULL);
-  _MotionPlan->converged = false;
-  _MotionPlan->frame0->set_x_estimate(x0, NULL);
-  _MotionPlan->frame1->set_converged(false,NULL);
-  _MotionPlan->deAccess(NULL);
-
-  _Action->writeAccess(NULL);
-  _Action->action = Action::place;
-  _Action->objectRef1 = objShape;
-  _Action->objectRef2 = belowFromShape;
-  _Action->objectRef3 = belowToShape;
-  _Action->executed = false;
-  _Action->deAccess(NULL);
+  _MotionPlan->setClear(x0, NULL);
+  _Action->setNewAction(Action::place, objShape, belowFromShape, belowToShape, NULL);
+  int rev = _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
+  _ControllerTask->set_fixFingers(true, NULL);
   
-  bool planDone = false;
-  bool planExecuted = false;
-  for(;;){
-    if(!planDone){
-      planDone=_MotionPlan->get_converged(NULL);
-      if(planDone){
-        _ControllerTask->set_fixFingers(true, NULL);
-        _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-      }
-    }
-    if(planDone){
-      planExecuted = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
-    }
-    if(planExecuted){
-      _ControllerTask->set_mode(ControllerTask::stop, NULL);
-      _ControllerTask->set_fixFingers(false, NULL);
-      _Action->set_executed(true, NULL);
-      _Action->set_action(Action::noAction, NULL);
-      break;
-    }
-
-    MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+  //wait for controller to execute
+  while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
+    rev = _ControllerTask->waitForRevisionGreaterThan(rev);
   }
+  
+  cout << "plan executed" << endl;
+  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _ControllerTask->set_fixFingers(false, NULL);
+  _Action->set_executed(true, NULL);
+  _Action->set_action(Action::noAction, NULL);
 
   //-- the reattach mess!
   _GeometricState->writeAccess(NULL);
@@ -346,11 +291,7 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
 
   //-- open hand
   OpenHand_FeedbackControlTask openTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &openTask;
-  _ControllerTask->forceColLimTVs=false;
-  _ControllerTask->deAccess(NULL);
+  _ControllerTask->setFeedbackTask(openTask, false, false, NULL);
   
   MT::wait(3.);
   

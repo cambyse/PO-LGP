@@ -53,11 +53,12 @@ struct ConditionVariable {
   
   int  getState();
   void setState(int i);
-  void signal();
+  void broadcast();
   void waitForSignal();
   void waitForSignal(double seconds);
   int waitForStateEq(int i);    ///< return value is the state after the waiting
   int waitForStateNotEq(int i); ///< return value is the state after the waiting
+  int waitForStateGreaterThan(int i); ///< return value is the state after the waiting
   void waitUntil(double absTime);
 };
 
@@ -105,6 +106,7 @@ struct CycleTimer {
 struct sVariable {
   Variable *p;
   Lock lock;
+  ConditionVariable cond; //to broadcast write access to this variable
   
   sVariable(Variable *_p){ p = _p; }
 };

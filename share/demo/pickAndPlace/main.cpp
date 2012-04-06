@@ -8,6 +8,15 @@
  - feedback tasks (like open hand) have not termination criterion - fixed time is not ok!
 */
 
+#include "behaviors.h"
+
+int main(int argn,char** argv){
+  MT::initCmdLine(argn, argv);
+  //ThreadInfoWin win;
+  //win.threadLoopWithBeat(.1);
+  
+  ProcessL P;
+
   //-- motion
   // variables
   GeometricState geometricState;

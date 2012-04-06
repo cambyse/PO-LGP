@@ -54,10 +54,10 @@ struct FieldInfo_typed:FieldInfo{
 
 #define FIELD(type, name) \
   type name; \
-  inline void set_##name(const type& _x, Process *p){ \
-    writeAccess(p);  name=(type&)_x;  deAccess(p); } \
-  inline void get_##name(type& _x, Process *p){ \
-    readAccess(p);   _x=name;  deAccess(p); } \
+  inline int set_##name(const type& _x, Process *p){ \
+    writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
+  inline int get_##name(type& _x, Process *p){ \
+    readAccess(p);   _x=name;  return deAccess(p); } \
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
@@ -72,8 +72,8 @@ struct FieldInfo_typed:FieldInfo{
 struct Variable {
   struct sVariable *s;  ///< private
   uint id;              ///< unique identifyer
-  MT::String name;     ///< Variable name
-  uint revision;        ///< revision (= number of write accesses) number
+  MT::String name;      ///< Variable name
+  uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
   MT::Array<FieldInfo*> fields;
   ProcessL listeners;
 
@@ -85,10 +85,13 @@ struct Variable {
   //virtual void read(istream& is){ }
   
   //-- access control, to be called by a processes before access
-  void readAccess(Process*);  //might set the caller to sleep
-  void writeAccess(Process*); //might set the caller to sleep
-  void deAccess(Process*);
+  int readAccess(Process*);  //might set the caller to sleep
+  int writeAccess(Process*); //might set the caller to sleep
+  int deAccess(Process*);
 
+  //-- syncing via a variable
+  int waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
+  
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
   uint get_revision(){ readAccess(NULL); uint r = revision; deAccess(NULL); return r; }
