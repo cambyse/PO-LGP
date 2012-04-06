@@ -28,6 +28,14 @@ endif
 
 ifeq ($(MAKEMODE),app)
 buildAndLink_MTLIB = 1
+BUILDS += buildComponent/motion
+LIBS += -lmotion
+BUILDS += buildComponent/hardware
+LIBS += -lhardware
+BUILDS += buildComponent/perception
+LIBS += -lperception
+BUILDS += buildComponent/views
+LIBS += -lviews
 endif
 
 
