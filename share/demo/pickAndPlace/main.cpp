@@ -4,7 +4,7 @@
 
 /* What doesn't work yet:
  
- - collisions with grasped objects are not turned on again?
+ - collisions with the grasped object UNTIL the 4/5 time using a special proxy variable
  - feedback tasks (like open hand) have not termination criterion - fixed time is not ok!
 */
 

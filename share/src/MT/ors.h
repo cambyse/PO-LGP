@@ -751,12 +751,13 @@ struct DefaultTaskVariable:public TaskVariable {
 //
 
 enum CTVtype {
-  allCTVT,       //!< undefined
-  allListedCTVT,       //!< undefined
-  allExceptListedCTVT,       //!< undefined
-  bipartiteCTVT, //!< 3D position of reference, can have 2nd reference, no param
-  pairsCTVT,     //!< 3D z-axis orientation, no 2nd reference, no param
-  vectorCTVT     //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  allCTVT,
+  allListedCTVT,
+  allExceptListedCTVT,
+  bipartiteCTVT,
+  pairsCTVT,
+  allExceptPairsCTVT,
+  vectorCTVT
 };
 
 /*!\brief basic task variable */
@@ -906,7 +907,7 @@ struct SwiftInterface {
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& ors);
+  void initActivations(const ors::Graph& ors, uint parentLevelsToDeactivate=3);
   void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 

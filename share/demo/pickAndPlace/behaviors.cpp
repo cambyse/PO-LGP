@@ -21,6 +21,7 @@ Some behaviors are sequential like a finite state machine.
   Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
+void reattachShape(HardwareReference *_HardwareReference, const char* objShape, const char* toBody, const char* belowShape);
 
 void wait(double sec){
   VAR(ControllerTask);
@@ -207,8 +208,6 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
 void pickObject(char* objShape){
   VAR(ControllerTask);
   VAR(MotionPlan);
-  VAR(GeometricState);
-  VAR(JoystickState);
   VAR(Action);
   VAR(HardwareReference);
   
@@ -217,33 +216,27 @@ void pickObject(char* objShape){
   
   _MotionPlan->setClear(x0, NULL);
   _Action->setNewAction(Action::grasp, objShape, (char*)"", (char*)"", NULL);
-  int rev = _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
+  _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
 
   //wait for controller to execute
+  int rev = 0;
   while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
     rev = _ControllerTask->waitForRevisionGreaterThan(rev);
   }
   
   cout << "plan executed" << endl;
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
   _Action->set_executed(true, NULL);
   _Action->set_action(Action::noAction, NULL);
+  
+  //-- close hand
+  CloseHand_FeedbackControlTask closeTask;
+  _ControllerTask->setFeedbackTask(closeTask, false, false, NULL);
 
   //TODO: the joystick emergency is disabled!!
   //if(_JoystickState->get_state(NULL)(0)&0x30) break;
   
   //-- the reattach mess!
-  _GeometricState->writeAccess(NULL);
-  arr q=_HardwareReference->get_q_reference(NULL);
-  arr v=_HardwareReference->get_v_reference(NULL);
-  _GeometricState->ors.setJointState(q,v);
-  _GeometricState->ors.calcBodyFramesFromJoints();
-  reattachShape(_GeometricState->ors, NULL, objShape, "m9", NULL);
-  _GeometricState->deAccess(NULL);
-
-  //-- close hand
-  CloseHand_FeedbackControlTask closeTask;
-  _ControllerTask->setFeedbackTask(closeTask, false, false, NULL);
+  reattachShape(_HardwareReference, objShape, "m9", NULL);
   
   MT::wait(3.);
   
@@ -256,8 +249,6 @@ void pickObject(char* objShape){
 void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   VAR(ControllerTask);
   VAR(MotionPlan);
-  VAR(GeometricState);
-  VAR(JoystickState);
   VAR(Action);
   VAR(HardwareReference);
   
@@ -266,34 +257,26 @@ void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
   
   _MotionPlan->setClear(x0, NULL);
   _Action->setNewAction(Action::place, objShape, belowFromShape, belowToShape, NULL);
-  int rev = _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
+  _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
   _ControllerTask->set_fixFingers(true, NULL);
   
   //wait for controller to execute
+  int rev = 0;
   while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
     rev = _ControllerTask->waitForRevisionGreaterThan(rev);
   }
   
   cout << "plan executed" << endl;
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  _ControllerTask->set_fixFingers(false, NULL);
   _Action->set_executed(true, NULL);
   _Action->set_action(Action::noAction, NULL);
-
-  //-- the reattach mess!
-  _GeometricState->writeAccess(NULL);
-  arr q=_HardwareReference->get_q_reference(NULL);
-  arr v=_HardwareReference->get_v_reference(NULL);
-  _GeometricState->ors.setJointState(q,v);
-  _GeometricState->ors.calcBodyFramesFromJoints();
-  reattachShape(_GeometricState->ors, NULL, objShape, "OBJECTS", belowToShape);
-  _GeometricState->deAccess(NULL);
-
+  
   //-- open hand
   OpenHand_FeedbackControlTask openTask;
   _ControllerTask->setFeedbackTask(openTask, false, false, NULL);
-  
-  MT::wait(3.);
+
+  reattachShape(_HardwareReference, objShape, "OBJECTS", belowToShape);
+
+  MT::wait(3.); //TODO: waiting for opening the hand -- should be with feedback!!
   
   _ControllerTask->set_forceColLimTVs(true, NULL);
   _ControllerTask->set_mode(ControllerTask::stop, NULL);
@@ -370,3 +353,13 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
   }
 }
 
+void reattachShape(HardwareReference *_HardwareReference, const char* objShape, const char* toBody, const char* belowShape){
+  VAR(GeometricState);
+  _GeometricState->writeAccess(NULL);
+  arr q=_HardwareReference->get_q_reference(NULL);
+  arr v=_HardwareReference->get_v_reference(NULL);
+  _GeometricState->ors.setJointState(q,v);
+  _GeometricState->ors.calcBodyFramesFromJoints();
+  reattachShape(_GeometricState->ors, NULL, objShape, toBody, belowShape);
+  _GeometricState->deAccess(NULL);
+}

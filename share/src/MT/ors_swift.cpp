@@ -149,7 +149,7 @@ void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s){
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(const ors::Graph& C){
+void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate){
   ors::Shape *s;
   ors::Body *b, *b2;
   ors::Joint *e;
@@ -183,7 +183,7 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   for_list(k, b, C.bodies){
     MT::Array<ors::Body*> group, children;
     group.append(b);
-    for(uint l=0; l<3; l++){
+    for(uint l=0; l<parentLevelsToDeactivate; l++){
       //listWriteNames(group, cout);
       children.clear();
       for_list(k2, b2, group){
@@ -193,37 +193,31 @@ void SwiftInterface::initActivations(const ors::Graph& C){
         }
       }
       group.setAppend(children);
-      //listWriteNames(group, cout);
     }
     deactivate(group);
   }
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){
-  //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
-  uint i1, i2, k1, k2;
-  ors::Shape *s1, *s2;
-  ors::Body *b1, *b2;
-  for(i1=0; i1<bodies.N; i1++) for(i2=i1+1; i2<bodies.N; i2++){
-      b1=bodies(i1);
-      b2=bodies(i2);
-      for_list(k1, s1, b1->shapes) for_list(k2, s2, b2->shapes){
-        if(INDEXshape2swift(s1->index)!=-1 && INDEXshape2swift(s2->index)!=-1)
-          scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
-      }
-    }
+  cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
+  MT::Array<ors::Shape*> shapes;
+  uint i;  ors::Body *b;
+  for_list(i,b,bodies) shapes.setAppend(b->shapes);
+  deactivate(shapes);
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes){
+  cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
   uint k1, k2;
   ors::Shape *s1, *s2;
   for_list(k1, s1, shapes) for_list(k2, s2, shapes){
-    if(k1>k2 && INDEXshape2swift(s1->index)!=-1 && INDEXshape2swift(s2->index)!=-1)
-      scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
+    if(k1>k2) deactivate(s1, s2);
   }
 }
 
 void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2){
+  if(INDEXshape2swift(s1->index)==-1 || INDEXshape2swift(s2->index)==-1) return;
+  cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
@@ -279,14 +273,19 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   }
   
   //resize old list
+#if 0
   uint Nold=C.proxies.N;
   for(i=0; i<(int)Nold; i++) C.proxies(i)->age++;
   C.proxies.memMove=true;
   C.proxies.resizeCopy(Nold+k);
   for(i=0; i<k; i++) C.proxies(Nold+i) = new ors::Proxy;
-  ors::Proxy *proxy;
+#else
+  uint Nold=0;
+  listResize(C.proxies,k);
+#endif
   
   //add contacts to list
+  ors::Proxy *proxy;
   int a, b;
   for(k=0, i=0; i<np; i++){
     a=swift.INDEXswift2shape(oids[i <<1]);
