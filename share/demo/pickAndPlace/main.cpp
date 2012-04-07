@@ -87,23 +87,23 @@ int main(int argn,char** argv){
   
   //pick-and-place loop
   for(uint k=0;k<2;k++){
-    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box1", "table", "cyl1");
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "cyl1");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box2", "table", "cyl2");
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl2");
     
-    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box1", "cyl1", "table");
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "table");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box2", "cyl2", "cyl1");
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl1");
     
-    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box1", "table", "cyl2");
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "cyl2");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
-    pickOrPlaceObject(Action::place, "box2", "cyl1", "table");
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "table");
     
   }
   

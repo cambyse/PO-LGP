@@ -206,7 +206,7 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   }
 }
 
-void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowFromShape, const char* belowToShape){
+void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
   VAR(MotionPrimitive);
   VAR(Action);
   VAR(HardwareReference);
