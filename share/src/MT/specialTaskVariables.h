@@ -20,7 +20,7 @@ typedef MT::Array<ors::Shape*> ShapeList;
 void createStandardRobotTaskVariables(soc::SocSystem_Ors& sys);
 void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId);
 void setGraspGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape);
-void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowFromShape, const char* belowToShape);
+/*void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowFromShape, const char* belowToShape);*/
 void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowToShape);
 
 

@@ -103,9 +103,8 @@ void ActionToMotionPrimitive::step() {
       s->sys.setx0(x0);
       listDelete(s->sys.vars);
       uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-      uint fromId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-      uint toId = s->sys.ors->getShapeByName(action->get_objectRef3(this))->index;
-      setPlaceGoals(s->sys,s->sys.nTime(),shapeId,fromId,toId);
+      uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+      setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId);
       keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
     }
     else if (actionSymbol==Action::home) {
@@ -359,7 +358,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.vars.append(V);
 }
 
-void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFromShapeId, uint belowToShapeId){
+void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
   sys.setTox0();
   
   double midPrec        = birosInfo.getParameter<double>("placeMidPrec");
@@ -380,12 +379,10 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   
   //activate collision testing with target shape
   ors::Shape *obj  = sys.ors->shapes(shapeId);
-  ors::Shape *from = sys.ors->shapes(belowFromShapeId);
   ors::Shape *onto = sys.ors->shapes(belowToShapeId);
   CHECK(obj->body==sys.ors->getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   onto->cont=false;
-  from->cont=false;
   sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
@@ -430,7 +427,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   sys.vars.append(V);
   
   //collisions except obj-from and obj-to
-  uintA shapes = ARRAY<uint>(shapeId, belowFromShapeId, shapeId, belowToShapeId);
+  uintA shapes = ARRAY<uint>(shapeId, shapeId, belowToShapeId);
   V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
   V->y_target = ARR(0.);  V->v_target = ARR(.0);
   V->y_prec = colPrec;

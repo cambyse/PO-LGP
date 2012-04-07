@@ -1,11 +1,10 @@
 #include "motion.h"
 
-void Action::setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const char *ref3, Process *p){
+void Action::setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p){
   writeAccess(p);
   action = _action;
   objectRef1 = (char*)ref1;
   objectRef2 = (char*)ref2;
-  objectRef3 = (char*)ref3;
   executed = false;
   deAccess(p);
 }

@@ -29,11 +29,10 @@ struct Action:Variable {
   FIELD(bool, executed);
   FIELD(char*, objectRef1);  //arguments to the relational predicates
   FIELD(char*, objectRef2);
-  FIELD(char*, objectRef3); // TODO: hier sollte das automatisch gemacht werden
   
   Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
   
-  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const char *ref3, Process *p);
+  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
 };
 
 
