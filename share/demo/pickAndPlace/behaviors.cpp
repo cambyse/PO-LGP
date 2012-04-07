@@ -24,9 +24,9 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
 void reattachShape(HardwareReference *_HardwareReference, const char* objShape, const char* toBody, const char* belowShape);
 
 void wait(double sec){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(JoystickState);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
   
   double time=MT::realTime();
   for(;;){
@@ -37,25 +37,25 @@ void wait(double sec){
 }
 
 void joystick(){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(JoystickState);
   Joystick_FeedbackControlTask joyTask;
-  _ControllerTask->setFeedbackTask(joyTask, true, false, NULL);
+  _MotionPrimitive->setFeedbackTask(joyTask, true, false, NULL);
 
   for(;;){
     MT::wait(.2);
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
   
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 }
 
 void homing(bool fixFingers){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(HardwareReference);
   VAR(JoystickState);
   Homing_FeedbackControlTask homeTask;
-  _ControllerTask->setFeedbackTask(homeTask, true, fixFingers, NULL);
+  _MotionPrimitive->setFeedbackTask(homeTask, true, fixFingers, NULL);
   
   for(;;){
     MT::wait(.2);
@@ -68,7 +68,8 @@ void homing(bool fixFingers){
     if(dist<1e-1) break;
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 }
 
 void reach(const char* shapeName, const arr& posGoal, double maxVel){
@@ -165,11 +166,11 @@ void setMesh(const char* shapeName, const ors::Mesh& mesh){
 }
 
 void waitForPerceivedObjects(uint numObjects, uint foundSteps){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(PerceptionOutput);
   VAR(GeometricState);
   VAR(JoystickState);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 
   for(;;){
     _PerceptionOutput->readAccess(NULL);
@@ -205,23 +206,22 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   }
 }
 
-void pickObject(char* objShape){
-  VAR(ControllerTask);
-  VAR(MotionPlan);
+void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowFromShape, const char* belowToShape){
+  VAR(MotionPrimitive);
   VAR(Action);
   VAR(HardwareReference);
   
   arr x0 =  _HardwareReference->get_q_reference(NULL);
   x0.append(_HardwareReference->get_v_reference(NULL));
   
-  _MotionPlan->setClear(x0, NULL);
-  _Action->setNewAction(Action::grasp, objShape, (char*)"", (char*)"", NULL);
-  _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-
+  _MotionPrimitive->setClearPlanTask(x0, NULL);
+  _Action->setNewAction(action, objShape, belowFromShape, belowToShape, NULL);
+  if(action==Action::place) _MotionPrimitive->set_fixFingers(true, NULL);
+  
   //wait for controller to execute
   int rev = 0;
-  while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
-    rev = _ControllerTask->waitForRevisionGreaterThan(rev);
+  while(_MotionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
+    rev = _MotionPrimitive->waitForRevisionGreaterThan(rev);
   }
   
   cout << "plan executed" << endl;
@@ -229,58 +229,22 @@ void pickObject(char* objShape){
   _Action->set_action(Action::noAction, NULL);
   
   //-- close hand
-  CloseHand_FeedbackControlTask closeTask;
-  _ControllerTask->setFeedbackTask(closeTask, false, false, NULL);
+  FeedbackControlTaskAbstraction *task;
+  if(action==Action::grasp) task = new CloseHand_FeedbackControlTask;
+  if(action==Action::place) task = new OpenHand_FeedbackControlTask;
+  _MotionPrimitive->setFeedbackTask(*task, false, false, NULL);
 
   //TODO: the joystick emergency is disabled!!
   //if(_JoystickState->get_state(NULL)(0)&0x30) break;
   
   //-- the reattach mess!
-  reattachShape(_HardwareReference, objShape, "m9", NULL);
-  
-  MT::wait(3.);
-  
-  _ControllerTask->set_forceColLimTVs(true, NULL);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  MT::wait(.1); //this wait is horrible: required to ensure that at least the current step of the controller finishes since it has a pointer to the task which will be destroyed on exit of this routine..
-  
-}
-
-void placeObject(char* objShape, char* belowFromShape, char* belowToShape){
-  VAR(ControllerTask);
-  VAR(MotionPlan);
-  VAR(Action);
-  VAR(HardwareReference);
-  
-  arr x0 =  _HardwareReference->get_q_reference(NULL);
-  x0.append(_HardwareReference->get_v_reference(NULL));
-  
-  _MotionPlan->setClear(x0, NULL);
-  _Action->setNewAction(Action::place, objShape, belowFromShape, belowToShape, NULL);
-  _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-  _ControllerTask->set_fixFingers(true, NULL);
-  
-  //wait for controller to execute
-  int rev = 0;
-  while(_ControllerTask->get_mode(NULL)!=ControllerTask::done){
-    rev = _ControllerTask->waitForRevisionGreaterThan(rev);
-  }
-  
-  cout << "plan executed" << endl;
-  _Action->set_executed(true, NULL);
-  _Action->set_action(Action::noAction, NULL);
-  
-  //-- open hand
-  OpenHand_FeedbackControlTask openTask;
-  _ControllerTask->setFeedbackTask(openTask, false, false, NULL);
-
-  reattachShape(_HardwareReference, objShape, "OBJECTS", belowToShape);
+  if(action==Action::grasp) reattachShape(_HardwareReference, objShape, "m9", NULL);
+  if(action==Action::place) reattachShape(_HardwareReference, objShape, "OBJECTS", belowToShape);
 
   MT::wait(3.); //TODO: waiting for opening the hand -- should be with feedback!!
   
-  _ControllerTask->set_forceColLimTVs(true, NULL);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
+  _MotionPrimitive->set_forceColLimTVs(true, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
   MT::wait(.1); //this wait is horrible: required to ensure that at least the current step of the controller finishes since it has a pointer to the task which will be destroyed on exit of this routine..
 }
 

@@ -484,7 +484,7 @@ void Process::threadClose(){
   s->threadCondition.waitForStateEq(tsIDLE);
   s->threadCondition.setState(tsCLOSE);
   rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  s->thread=NULL;
+  s->thread=0;
 }
 
 void Process::threadStep(uint steps, bool wait){
@@ -844,7 +844,7 @@ void ThreadInfoWin::open(){
   //-adobe-courier-medium-r-*-*-*-80-*-*-*-*-*-*"));
   XSetBackground(s->display, s->gc, 0x000000);
   XSetForeground(s->display, s->gc, 0xffffff);
-  XWindowChanges change={1500, 700,  600, 300,  10, NULL, 0};
+  XWindowChanges change={1500, 700,  600, 300,  10, 0, 0};
   XConfigureWindow(s->display, s->window, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &change);
   XFlush(s->display);
   //timer.reset();

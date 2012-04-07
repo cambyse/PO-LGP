@@ -1,9 +1,9 @@
-#include "MotionPrimitive.h"
-//#include <JK/utils/util.h>
-//#include <DZ/aico_key_frames.h>
+#include "ActionToMotionPrimitive.h"
+#include <MT/aico.h>
 #include <unistd.h>
 
-struct sMotionPrimitive {
+struct sActionToMotionPrimitive {
+  enum MotionPlannerAlgo { interpolation=0, AICO_noinit } planningAlgo;
   WorkingCopy<GeometricState> geo;
   soc::SocSystem_Ors sys;
   OpenGL *gl;
@@ -11,27 +11,28 @@ struct sMotionPrimitive {
   
 };
 
-MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p):Process("MotionPrimitive"),
-    action(&a), plan(&p){
+ActionToMotionPrimitive::ActionToMotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPrimitive& p):Process("ActionToMotionPrimitive"),
+    action(&a), motionPrimitive(&p){
   threadListenTo(action);
-  s = new sMotionPrimitive;
+  s = new sActionToMotionPrimitive;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
-  plan->writeAccess(this);
-  plan->frame0 = &f0;
-  plan->frame1 = &f1;
-  plan->deAccess(this);
+  s->planningAlgo=sActionToMotionPrimitive::AICO_noinit;
+  motionPrimitive->writeAccess(this);
+  motionPrimitive->frame0 = &f0;
+  motionPrimitive->frame1 = &f1;
+  motionPrimitive->deAccess(this);
 }
 
-MotionPrimitive::~MotionPrimitive() {
+ActionToMotionPrimitive::~ActionToMotionPrimitive() {
   delete s;
 }
 
-void MotionPrimitive::open() {
-  s->verbose = birosInfo.getParameter<uint>("MotionPrimitive_verbose", this);
-  arr W = birosInfo.getParameter<arr>("MotionPrimitive_W", this);
-  uint T = birosInfo.getParameter<uint>("MotionPrimitive_TrajectoryLength", this);
-  double duration = birosInfo.getParameter<double>("MotionPrimitive_TrajectoryDuration", this);
+void ActionToMotionPrimitive::open() {
+  s->verbose = birosInfo.getParameter<uint>("ActionToMotionPrimitive_verbose", this);
+  arr W = birosInfo.getParameter<arr>("ActionToMotionPrimitive_W", this);
+  uint T = birosInfo.getParameter<uint>("ActionToMotionPrimitive_TrajectoryLength", this);
+  double duration = birosInfo.getParameter<double>("ActionToMotionPrimitive_TrajectoryDuration", this);
   
   //clone the geometric state
   s->geo.pull();
@@ -39,7 +40,7 @@ void MotionPrimitive::open() {
 //   s->ors = geo->ors.newClone();
   geo->deAccess(this);*/
   if (s->verbose) {
-    s->gl = new OpenGL("MotionPrimitive");
+    s->gl = new OpenGL("ActionToMotionPrimitive");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
@@ -53,14 +54,14 @@ void MotionPrimitive::open() {
   //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
 
-void MotionPrimitive::close() {
+void ActionToMotionPrimitive::close() {
 }
 
-void MotionPrimitive::step() {
+void ActionToMotionPrimitive::step() {
   s->geo.pull();
   
-  MotionKeyframe *frame0 = plan->get_frame0(this);
-  MotionKeyframe *frame1 = plan->get_frame1(this);
+  MotionKeyframe *frame0 = motionPrimitive->get_frame0(this);
+  MotionKeyframe *frame1 = motionPrimitive->get_frame1(this);
 
   Action::ActionPredicate actionSymbol = action->get_action(this);
   
@@ -71,13 +72,12 @@ void MotionPrimitive::step() {
     frame1->converged = true;
     frame1->deAccess(this);
     
-    plan->writeAccess(this);
-    plan->steps = 0;
-    plan->tau = 0.;
-    listDelete(plan->TVs);
-    plan->converged=true;
-    plan->q_plan.clear();
-    plan->deAccess(this);
+    motionPrimitive->writeAccess(this);
+    motionPrimitive->q_plan.clear();
+    motionPrimitive->tau = 0.;
+    //listDelete(motionPrimitive->TVs);
+    motionPrimitive->planConverged=false;
+    motionPrimitive->deAccess(this);
   }
   
   if (actionSymbol==Action::grasp || actionSymbol==Action::place) {
@@ -93,11 +93,11 @@ void MotionPrimitive::step() {
     CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
     
-    //estimate the key frame
-    arr x_keyframe;
+    //-- estimate the keyframe
+    arr xT;
     if (actionSymbol==Action::grasp) {
       uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-      threeStepGraspHeuristic(x_keyframe, s->sys, x0, shapeId, s->verbose);
+      threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
     }
     else if (actionSymbol==Action::place) {
       s->sys.setx0(x0);
@@ -106,7 +106,7 @@ void MotionPrimitive::step() {
       uint fromId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
       uint toId = s->sys.ors->getShapeByName(action->get_objectRef3(this))->index;
       setPlaceGoals(s->sys,s->sys.nTime(),shapeId,fromId,toId);
-      keyframeOptimizer(x_keyframe, s->sys, 1e-2, false, s->verbose);
+      keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
     }
     else if (actionSymbol==Action::home) {
       s->sys.setx0(x0);
@@ -115,22 +115,51 @@ void MotionPrimitive::step() {
       //keyframeOptimizer(x, s->sys, 1e-2, true, verbose);
     }
 
-    //push it
+    //--push it
     frame1->writeAccess(this);
-    frame1->x_estimate = x_keyframe;
+    frame1->x_estimate = xT;
     frame1->duration_estimate = s->sys.getDuration();
     frame1->converged = true;
     frame1->deAccess(this);
     
+    //-- optimize the plan
+    //arr x0 = frame0->get_x_estimate(this);
+    //arr xT = frame1->get_x_estimate(this);
+    uint T = s->sys.nTime();
+    double tau = s->sys.getDuration()/double(T);
+  
+    arr q;
+    switch (s->planningAlgo) {
+      case sActionToMotionPrimitive::interpolation: {
+	q.resize(T+1,x0.N);
+	for (uint t=0; t<=T; t++) {
+	  double a=double(t)/T;
+	  q[t] = (1.-a)*x0 + a*xT;
+	}
+      } break;
+      case sActionToMotionPrimitive::AICO_noinit: {
+	AICO aico(s->sys);
+	if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
+	if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
+	aico.fix_initial_state(x0);
+	aico.fix_final_state(xT);
+	aico.iterate_to_convergence();
+	q = aico.q;
+      } break;
+      default:
+      HALT("no mode set!");
+    }
+    
     //-- start planner
-    plan->writeAccess(this);
+    motionPrimitive->writeAccess(this);
     //info on the plan: steps, duration, boundary
-    plan->converged = false;
-    plan->steps = s->sys.nTime();
-    plan->tau = s->sys.getDuration() / plan->steps;
+    motionPrimitive->q_plan = q;
+    motionPrimitive->tau = tau;
+    motionPrimitive->planConverged = true;
     //details on the task costs
-    listClone(plan->TVs, s->sys.vars);
-    plan->deAccess(this);
+    //listClone(motionPrimitive->TVs, s->sys.vars);
+    motionPrimitive->deAccess(this);
+
   }
   
   if (actionSymbol==Action::place) {
@@ -240,7 +269,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   //xtarget(2) += .02; //grasp it 2cm above center
   
   // graspCenter -> predefined point (xtarget)
-  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
   V->y_target = xtarget;
   V->y_prec = positionPrec;
   V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);
@@ -248,7 +277,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.vars.append(V);
   
   //up: align either with cylinder axis or one of the box sides -- works good
-  V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
+  V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, NoArr);
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch (obj->type) {
     case ors::cylinderST:
@@ -367,7 +396,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   
   //endeff
-  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
   ((DefaultTaskVariable*)V)->irel = obj->rel;
   V->updateState(*sys.ors);
   V->y_target = xtarget;

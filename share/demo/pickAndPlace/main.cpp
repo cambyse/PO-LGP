@@ -21,19 +21,18 @@ int main(int argn,char** argv){
   // variables
   GeometricState geometricState;
   Action action;
-  MotionPlan motionPlan;
+  MotionPrimitive motionPrimitive;
   MotionKeyframe frame0,frame1;
-  ControllerTask controllerTask;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
   JoystickState joystickState;
   // processes
   Controller controller;
-  MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan);
+  //MotionPrimitivener motionPlanner;
+  ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
   // viewers
   OrsViewer<GeometricState>     view0(geometricState);
-  PoseViewer<MotionPlan>        view7(motionPlan);
+  PoseViewer<MotionPrimitive>        view7(motionPrimitive);
   PoseViewer<HardwareReference> view8(hardwareReference);
   PoseViewer<MotionKeyframe>    view9(frame1);
 
@@ -66,7 +65,7 @@ int main(int argn,char** argv){
   ImageViewer<Image> view3(hsvL), view4(hsvR);
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
-  P.append(LIST<Process>(controller, motionPlanner, motionPrimitive));
+  P.append(LIST<Process>(controller, actionToMotionPrimitive));
   //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
   //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
 
@@ -88,23 +87,23 @@ int main(int argn,char** argv){
   
   //pick-and-place loop
   for(uint k=0;k<2;k++){
-    pickObject("box1");
-    placeObject("box1", "table", "cyl1");
+    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box1", "table", "cyl1");
 
-    pickObject("box2");
-    placeObject("box2", "table", "cyl2");
+    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box2", "table", "cyl2");
     
-    pickObject("box1");
-    placeObject("box1", "cyl1", "table");
+    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box1", "cyl1", "table");
 
-    pickObject("box2");
-    placeObject("box2", "cyl2", "cyl1");
+    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl2", "cyl1");
     
-    pickObject("box1");
-    placeObject("box1", "table", "cyl2");
+    pickOrPlaceObject(Action::grasp, "box1", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box1", "table", "cyl2");
 
-    pickObject("box2");
-    placeObject("box2", "cyl1", "table");
+    pickOrPlaceObject(Action::grasp, "box2", NULL, NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl1", "table");
     
   }
   

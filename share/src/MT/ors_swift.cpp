@@ -199,7 +199,7 @@ void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDea
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){
-  cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
+  //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
   MT::Array<ors::Shape*> shapes;
   uint i;  ors::Body *b;
   for_list(i,b,bodies) shapes.setAppend(b->shapes);
@@ -207,7 +207,7 @@ void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes){
-  cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
+  //cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
   uint k1, k2;
   ors::Shape *s1, *s2;
   for_list(k1, s1, shapes) for_list(k2, s2, shapes){
@@ -217,7 +217,7 @@ void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes){
 
 void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2){
   if(INDEXshape2swift(s1->index)==-1 || INDEXshape2swift(s2->index)==-1) return;
-  cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
+  //cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 

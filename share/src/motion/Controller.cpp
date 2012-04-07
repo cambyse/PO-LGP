@@ -6,8 +6,7 @@
 #include <hardware/hardware.h>
 
 struct sController {
-  ControllerTask *controllerTask;
-  MotionPlan *motionPlan;
+  MotionPrimitive *motionPrimitive;
   HardwareReference *hardwareReference;
   //GeometricState *geo;
   WorkingCopy<GeometricState> geo;
@@ -32,8 +31,7 @@ struct sController {
 
 Controller::Controller():Process("MotionController") {
   s = new sController();
-  birosInfo.getVariable(s->controllerTask, "ControllerTask", this);
-  birosInfo.getVariable(s->motionPlan, "MotionPlan", this);
+  birosInfo.getVariable(s->motionPrimitive, "MotionPrimitive", this);
   birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
   bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
   if(listens) threadListenTo(s->hardwareReference);
@@ -69,20 +67,20 @@ void Controller::step() {
   
   s->geo.pull();
   
-  ControllerTask::ControllerMode mode=s->controllerTask->get_mode(this);
+  MotionPrimitive::MotionMode mode=s->motionPrimitive->get_mode(this);
   
-  if (mode==ControllerTask::stop) {
+  if (mode==MotionPrimitive::stop) {
     //stop -> don't change q_reference
     arr tmp(14);  tmp.setZero();
     s->hardwareReference->set_v_reference(tmp, this);
     return;
   }
   
-  if (mode==ControllerTask::followPlan) {
-    CHECK(s->motionPlan, "please set motionPlan before launching MotionPrimitive");
+  if (mode==MotionPrimitive::followPlan) {
+    CHECK(s->motionPrimitive, "please set motionPrimitive before launching ActionToMotionPrimitive");
     
     //-- check if converged
-    if (s->motionPlan->get_converged(this)==false) {
+    if (s->motionPrimitive->get_planConverged(this)==false) {
       //stop
       arr tmp(14);  tmp.setZero();
       s->hardwareReference->set_v_reference(tmp, this);
@@ -90,9 +88,9 @@ void Controller::step() {
     }
     
     //-- first compute the interpolated
-    double realTime = s->controllerTask->get_relativeRealTimeOfController(this);
-    arr q_plan = s->motionPlan->get_q_plan(this);
-    double plan_tau = s->motionPlan->get_tau(this);
+    double realTime = s->motionPrimitive->get_relativeRealTimeOfController(this);
+    arr q_plan = s->motionPrimitive->get_q_plan(this);
+    double plan_tau = s->motionPrimitive->get_tau(this);
     
     //where to interpolate
     realTime += s->followTrajectoryTimeScale * s->tau;
@@ -108,11 +106,11 @@ void Controller::step() {
     }
     
     cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
-    s->controllerTask->set_relativeRealTimeOfController(realTime, this);
+    s->motionPrimitive->set_relativeRealTimeOfController(realTime, this);
     
     if (timeStep>=q_plan.d0-1) {
-      s->controllerTask->set_mode(ControllerTask::done, this);
-      s->controllerTask->set_relativeRealTimeOfController(0., this);
+      s->motionPrimitive->set_mode(MotionPrimitive::done, this);
+      s->motionPrimitive->set_relativeRealTimeOfController(0., this);
     }
     
     //-- now test for collision
@@ -122,9 +120,9 @@ void Controller::step() {
     s->hardwareReference->set_q_reference(q_reference, this);
   }
   
-  if (mode==ControllerTask::feedback) {
-    bool forceColLimTVs = s->controllerTask->get_forceColLimTVs(this);
-    bool fixFingers = s->controllerTask->get_fixFingers(this);
+  if (mode==MotionPrimitive::feedback) {
+    bool forceColLimTVs = s->motionPrimitive->get_forceColLimTVs(this);
+    bool fixFingers = s->motionPrimitive->get_fixFingers(this);
     
     //pull for possible changes in the geometric state
     //MT_MSG("TODO");
@@ -140,7 +138,7 @@ void Controller::step() {
       s->sys.getqv0(q_old, v_old);
     
     //update all task variables using this ors state
-    FeedbackControlTaskAbstraction *task = s->controllerTask->get_feedbackControlTask(this);
+    FeedbackControlTaskAbstraction *task = s->motionPrimitive->get_feedbackControlTask(this);
     CHECK(task,"");
     if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
     s->sys.setTaskVariables(task->TVs);
@@ -198,7 +196,7 @@ void Controller::step() {
       } else MT_MSG("Variable pointer not set");*/
   }
   
-  if (mode==ControllerTask::done) {
+  if (mode==MotionPrimitive::done) {
     return;
   }
   

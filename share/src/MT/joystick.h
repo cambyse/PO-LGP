@@ -8,7 +8,7 @@ class jsJoystick;
 
 struct JoystickInterface:public Process, public Variable {
   jsJoystick *joy;
-  intA state;
+  FIELD(intA, state);
   uint n;
   JoystickInterface();
   void open();

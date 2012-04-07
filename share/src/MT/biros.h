@@ -202,7 +202,7 @@ struct BirosInfo:Variable{
     return par->value;
   }
   template<class T> T getParameter(const char *name){
-    return getParameter<T>(name, getProcessFromPID(), NULL);
+    return getParameter<T>(name, getProcessFromPID());
   }
   template<class T> T getParameter(const char *name, const T& _default){
     return getParameter<T>(name, getProcessFromPID(), _default);

@@ -1,5 +1,5 @@
-#ifndef MT_MotionPrimitive_h
-#define MT_MotionPrimitive_h
+#ifndef MT_ActionToMotionPrimitive_h
+#define MT_ActionToMotionPrimitive_h
 
 #include "motion.h"
 #include <MT/socSystem_ors.h>
