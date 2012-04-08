@@ -1,4 +1,4 @@
-#include <MT/biros_internal.h>
+#include <biros/biros_internal.h>
 
 #define BIR_VARIABLE \
 static int bir_typeId; \

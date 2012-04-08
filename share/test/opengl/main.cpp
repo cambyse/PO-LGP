@@ -7,10 +7,7 @@
 #  include <QtGui/QApplication>
 #endif
 
-#include <gtk/gtk.h>
-#include <gtk/gtkgl.h>
-#undef MIN
-#undef MAX
+#include <GL/glut.h>
 
 using namespace std;
 
@@ -160,6 +157,7 @@ void menuCallback3(int i){
 }
 
 void testMenu(){
+#if 0
   OpenGL gl;
   gl.text.clear() <<"press the right moust";
   gl.add(draw1,0);
@@ -182,6 +180,7 @@ void testMenu(){
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   gl.watch();
+#endif
 }
 
 
@@ -271,13 +270,6 @@ int main(int argc,char **argv){
 
 #ifdef MT_QT
   QApplication myapp(argc,argv);
-#endif
-
-#ifdef MT_GTKGL
-  g_thread_init(NULL);
-  gdk_threads_init();
-  gtk_init(&argc, &argv);
-  gtk_gl_init(&argc, &argv);
 #endif
 
   testMultipleViews();

@@ -1,5 +1,5 @@
 BASE   = ../..
-NAME   = libmt
+NAME   = libMT
 OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib
