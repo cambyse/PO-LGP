@@ -184,7 +184,7 @@ int ConditionVariable::setState(int i) {
   return state;
 }
 
-void ConditionVariable::broadcast(){
+void ConditionVariable::broadcast() {
   int rc;
   rc = pthread_mutex_lock(&mutex);     if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   rc = pthread_cond_broadcast(&cond);  if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
@@ -238,19 +238,19 @@ int ConditionVariable::waitForStateNotEq(int i) {
   return stateAfter;
 }
 
-int ConditionVariable::waitForStateGreaterThan(int i){
+int ConditionVariable::waitForStateGreaterThan(int i) {
   int rc;
   int stateAfter;
-  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  while(state<=i){
-    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_lock(&mutex);  if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  while (state<=i) {
+    rc = pthread_cond_wait(&cond, &mutex);  if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
   stateAfter = state;
-  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_mutex_unlock(&mutex);  if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   return stateAfter;
 }
 
-void ConditionVariable::waitUntil(double absTime){
+void ConditionVariable::waitUntil(double absTime) {
   NIY;
   /*  int rc;
     timespec ts;
@@ -398,8 +398,8 @@ void Variable::writeAccess(Process *p) {
   pthread_mutex_unlock(&replay_mutex);
   logService.logWriteAccess(this, p);
   uint i;  Process *l;
-  for_list(i, l, listeners){}
-    //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
+  for_list(i, l, listeners) {}
+  //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
   s->cond.setState(revision);
   //broadcastCondition();
   return revision;
@@ -418,7 +418,7 @@ void Variable::deAccess(Process *p) {
   return rev;
 }
 
-int Variable::waitForRevisionGreaterThan(uint rev){
+int Variable::waitForRevisionGreaterThan(uint rev) {
   return s->cond.waitForStateGreaterThan(rev);
 }
 
@@ -535,15 +535,15 @@ void Process::threadClose() {
 }
 
 void Process::threadStep(uint steps, bool wait) {
-  if(s->threadCondition.state==tsCLOSE) threadOpen();
-  if(wait) threadWait();
+  if (s->threadCondition.state==tsCLOSE) threadOpen();
+  if (wait) threadWait();
   //CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
   s->threadCondition.setState(steps);
 }
 
 void Process::threadStepOrSkip(uint maxSkips) {
-  if(s->threadCondition.state==tsCLOSE) threadOpen();
-  if(s->threadCondition.state!=tsIDLE){
+  if (s->threadCondition.state==tsCLOSE) threadOpen();
+  if (s->threadCondition.state!=tsIDLE) {
     s->skips++;
     //if(skips>maxSkips) HALT("skips>maxSkips: " <<skips<<'<' <<maxSkips);
     if (maxSkips && s->skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips=" <<s->skips);
@@ -558,7 +558,7 @@ void Process::threadListenTo(const VariableL &signalingVars) {
   for_list(i, v, signalingVars) threadListenTo(v);
 }
 
-void Process::threadListenTo(Variable *v){
+void Process::threadListenTo(Variable *v) {
   v->writeAccess(this);
   v->listeners.setAppend(this);
   v->deAccess(this);
@@ -579,7 +579,7 @@ void Process::threadWait() {
 }
 
 void Process::threadLoop() {
-  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  if (s->threadCondition.state==tsCLOSE) threadOpen();
   //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsLOOPING);
 }
@@ -589,7 +589,7 @@ void Process::threadLoopWithBeat(double sec) {
     s->metronome=new Metronome("threadTiccer", 1000.*sec);
   else
     s->metronome->reset(1000.*sec);
-  if(s->threadCondition.state==tsCLOSE) threadOpen();
+  if (s->threadCondition.state==tsCLOSE) threadOpen();
   //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsBEATING);
 }
@@ -610,14 +610,14 @@ void* sProcess::staticThreadMain(void *_self) {
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   
-  if(s->threadPriority) setNice(s->threadPriority);
+  if (s->threadPriority) setNice(s->threadPriority);
   prctl(PR_SET_NAME, proc->name.p);
   //pthread_setname_np(proc->thread, proc->name);
-
+  
   proc->open(); //virtual initialization routine
-
+  
   int state = s->threadCondition.getState();
-  if(state==tsCLOSE)
+  if (state==tsCLOSE)
     state = s->threadCondition.setState(tsIDLE);
   s->timer.reset();
   for (; state!=tsCLOSE;) {
@@ -665,7 +665,7 @@ void open(const ProcessL& P) {
   for_list(i, p, P) p->threadOpen();
 }
 
-void step(const ProcessL& P){
+void step(const ProcessL& P) {
   Process *p; uint i;
   for_list(i, p, P) p->threadStep();
 }
@@ -673,35 +673,6 @@ void step(const ProcessL& P){
 void loop(const ProcessL& P) {
   Process *p; uint i;
   for_list(i, p, P) p->threadLoop();
-}
-
-void loopSerialized(const ProcessL& P) {
-  Threadless threadless;
-  cout << "starting serialization" << endl;
-  while (true) {
-    int pID = threadless.nextProcess();
-    //cout << "next step by " << pID << endl;
-    // job done
-    if (-1 == pID) {
-      cout << "serialization done" << endl;
-      break;
-    }
-    if (-2 == pID) {
-      cout << "serialization not possible" << endl;
-      break;
-    }
-    Process* p;
-    uint i;
-    for_list(i, p, P) {
-      //cout << "checking " << p->id << endl;
-      if ((int) p->id == pID) {
-        cout << "step by process " << pID << endl;
-        if (p->s->threadCondition.state==tsCLOSE) p->threadOpen();
-        while (!p->threadIsIdle()) sleep(0.000001);
-        p->threadStep();
-      }
-    }
-  }
 }
 
 void loopWithBeat(const ProcessL& P, double sec) {
@@ -759,11 +730,11 @@ void BirosInfo::dump() {
   Parameter *par;
   FieldInfo *vi;
   readAccess(NULL);
-  for_list(i, v, variables){
+  for_list(i, v, variables) {
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
-    if(v->fields.N){
+    if (v->fields.N) {
       cout <<'{' <<endl;
-      for_list(j, vi, v->fields){
+      for_list(j, vi, v->fields) {
         cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
         vi->write_value(cout);
         cout <<endl;
@@ -791,7 +762,7 @@ void BirosInfo::dump() {
       <<" busyDt=" <<TEXTTIME(p->s->timer.busyDt)
       <<" state=";
     int state=p->s->threadCondition.state;
-    if (state>0) cout <<state; else switch(state){
+    if (state>0) cout <<state; else switch (state) {
         case tsCLOSE:   cout <<"close";  break;
         case tsLOOPING: cout <<"loop";   break;
         case tsBEATING: cout <<"beat";   break;
@@ -802,12 +773,12 @@ void BirosInfo::dump() {
   }
   cout <<endl;
   cout <<" +++ PARAMETERS +++" <<endl;
-  for_list(i, par, parameters){
+  for_list(i, par, parameters) {
     cout <<"Parameter " <<par->id <<'_' <<par->name <<" value=";
     par->writeValue(cout);
     cout <<" accessed by:";
-    for_list(j, p, par->processes){
-      if(j) cout <<',';
+    for_list(j, p, par->processes) {
+      if (j) cout <<',';
       cout <<' ' <<(p?p->name:STRING("NULL"));
     }
     cout <<endl;
@@ -985,7 +956,7 @@ void ThreadInfoWin::step() {
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
   birosInfo.readAccess(this);
-  for_list(i, pr, birosInfo.processes){
+  for_list(i, pr, birosInfo.processes) {
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -993,7 +964,7 @@ void ThreadInfoWin::step() {
     TEXT("%3i", th->threadPriority); x+=25;
     TEXT("%s" , pr->name.p); x+=100;
     TEXT("%4i", th->timer.steps);  x+=30;
-    if (state>0){ TEXT("%4i", state); } else switch(state){
+    if (state>0) { TEXT("%4i", state); } else switch (state) {
         case tsCLOSE:   TEXT0("close");  break;
         case tsLOOPING: TEXT0("loop");   break;
         case tsBEATING: TEXT0("beat");   break;

@@ -53,7 +53,7 @@ struct ConditionVariable {
   
   int  getState();
   int  setState(int i);
-  void signal();
+  void broadcast();
   void waitForSignal();
   void waitForSignal(double seconds);
   int  waitForStateEq(int i);    ///< return value is the state after the waiting

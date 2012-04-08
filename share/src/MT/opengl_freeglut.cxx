@@ -25,50 +25,50 @@
 #ifndef MT_NO_THREADS
 #  include <biros/biros_internal.h>
 #else
-struct Mutex{
-  void lock(const char* _msg=NULL){};
-  void unlock(){};
+struct Mutex {
+  void lock(const char* _msg=NULL) {};
+  void unlock() {};
 };
 #endif
 
 static Mutex globalOpenglLock;
 
-  
+
 //===========================================================================
 //
 // special trick for the event loop
 //
 
-extern "C"{
-  void fgDeinitialize( void );
+extern "C" {
+  void fgDeinitialize(void);
 }
-struct SFG_Display_dummy{
+struct SFG_Display_dummy {
   _XDisplay *Display;
 };
 extern SFG_Display_dummy fgDisplay;
 
-static void sleepForEvents( void ){
+static void sleepForEvents(void) {
 #ifdef MT_Linux
-  if( ! XPending( fgDisplay.Display ) ){
+  if (! XPending(fgDisplay.Display)) {
     fd_set fdset;
     int err=0;
     int socket;
     struct timeval wait;
-
-    socket = ConnectionNumber( fgDisplay.Display );
-    FD_ZERO( &fdset );
-    FD_SET( socket, &fdset );
+    
+    socket = ConnectionNumber(fgDisplay.Display);
+    FD_ZERO(&fdset);
+    FD_SET(socket, &fdset);
     wait.tv_sec = 10000 / 1000;
     wait.tv_usec = (10000 % 1000) * 1000;
-    err = select( socket+1, &fdset, NULL, NULL, &wait );
-
+    err = select(socket+1, &fdset, NULL, NULL, &wait);
+    
 #if HAVE_ERRNO
-  if( ( -1 == err ) && ( errno != EINTR ) )
-    fgWarning ( "freeglut select() error: %d", errno );
+    if ((-1 == err) && (errno != EINTR))
+      fgWarning("freeglut select() error: %d", errno);
 #endif
   }
 #elif defined MT_MSVC
-  MsgWaitForMultipleObjects( 0, NULL, FALSE, msec, QS_ALLINPUT );
+  MsgWaitForMultipleObjects(0, NULL, FALSE, msec, QS_ALLINPUT);
 #endif
 }
 
@@ -78,31 +78,31 @@ static void sleepForEvents( void ){
 // OpenGL hidden self
 //
 
-struct sOpenGL{
+struct sOpenGL {
   sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy);
   sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
-
+  
   static uint nrWins;
   static MT::Array<OpenGL*> glwins;    //!< global window list
   int windowID;                        //!< id of this window in the global glwins list
-
+  
   ors::Vector downVec,downPos,downFoc;
   ors::Quaternion downRot;
   
-  static void _Void(){ }
-  static void _Draw(){ lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); unlock(); }
-  static void _Key(unsigned char key, int x, int y){ lock(); glwins(glutGetWindow())->Key(key,x,y); unlock(); }
-  static void _Mouse(int button, int updown, int x, int y){ lock(); glwins(glutGetWindow())->Mouse(button,updown,x,y); unlock(); }
-  static void _Motion(int x, int y){ lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
-  static void _PassiveMotion(int x, int y){ lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
-  static void _Reshape(int w,int h){ lock(); glwins(glutGetWindow())->Reshape(w,h); unlock(); }
-  static void _MouseWheel(int wheel, int direction, int x, int y){ lock(); glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); unlock(); }
+  static void _Void() { }
+  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); unlock(); }
+  static void _Key(unsigned char key, int x, int y) { lock(); glwins(glutGetWindow())->Key(key,x,y); unlock(); }
+  static void _Mouse(int button, int updown, int x, int y) { lock(); glwins(glutGetWindow())->Mouse(button,updown,x,y); unlock(); }
+  static void _Motion(int x, int y) { lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
+  static void _PassiveMotion(int x, int y) { lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
+  static void _Reshape(int w,int h) { lock(); glwins(glutGetWindow())->Reshape(w,h); unlock(); }
+  static void _MouseWheel(int wheel, int direction, int x, int y) { lock(); glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); unlock(); }
   
-  static void lock(){ globalOpenglLock.lock(); }
-  static void unlock(){ globalOpenglLock.unlock(); }
-  void lock_win(){ lock(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
-  void unlock_win(){ glXMakeCurrent(fgDisplay.Display, None, NULL); unlock(); } //releases the context
+  static void lock() { globalOpenglLock.lock(); }
+  static void unlock() { globalOpenglLock.unlock(); }
+  void lock_win() { lock(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
+  void unlock_win() { glXMakeCurrent(fgDisplay.Display, None, NULL); unlock(); } //releases the context
 };
 
 uint sOpenGL::nrWins=0;
@@ -114,60 +114,60 @@ MT::Array<OpenGL*> sOpenGL::glwins;
 // OpenGL implementations
 //
 
-void OpenGL::postRedrawEvent(){s->lock_win(); glutSetWindow(s->windowID); glutPostRedisplay(); s->unlock_win(); } 
-void OpenGL::processEvents(){  s->lock_win(); glutSetWindow(s->windowID); glutMainLoopEvent(); s->unlock_win(); }
-void OpenGL::enterEventLoop(){ loopExit=false;  while(!loopExit){  processEvents();  sleepForEvents();  } }
-void OpenGL::exitEventLoop(){ loopExit=true; }
+void OpenGL::postRedrawEvent() {s->lock_win(); glutSetWindow(s->windowID); glutPostRedisplay(); s->unlock_win(); }
+void OpenGL::processEvents() {  s->lock_win(); glutSetWindow(s->windowID); glutMainLoopEvent(); s->unlock_win(); }
+void OpenGL::enterEventLoop() { loopExit=false;  while (!loopExit) {  processEvents();  sleepForEvents();  } }
+void OpenGL::exitEventLoop() { loopExit=true; }
 
-void OpenGL::resize(int w,int h){
+void OpenGL::resize(int w,int h) {
   s->lock_win();
   glutReshapeWindow(w,h);
   processEvents();
   s->unlock_win();
 }
 
-int OpenGL::width(){  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
-int OpenGL::height(){ s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
+int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
+int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
 
-sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
+sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   lock();
-
-  if(!nrWins){
+  
+  if (!nrWins) {
     int argc=1;
     char *argv[1]={(char*)"x"};
     glutInit(&argc, argv);
   }
   nrWins++;
-
+  
   glutInitWindowSize(w,h);
   glutInitWindowPosition(posx,posy);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-
+  
   windowID = glutCreateWindow(title);
-
-  if(glwins.N<(uint)windowID+1) glwins.resizeCopy(windowID+1);
+  
+  if (glwins.N<(uint)windowID+1) glwins.resizeCopy(windowID+1);
   glwins(windowID) = gl;
-
-  glutDisplayFunc( _Draw );
-  glutKeyboardFunc( _Key );
-  glutMouseFunc ( _Mouse ) ;
-  glutMotionFunc ( _Motion ) ;
-  glutPassiveMotionFunc ( _PassiveMotion ) ;
-  glutReshapeFunc( _Reshape );
-  glutMouseWheelFunc ( _MouseWheel ) ;
-
+  
+  glutDisplayFunc(_Draw);
+  glutKeyboardFunc(_Key);
+  glutMouseFunc(_Mouse) ;
+  glutMotionFunc(_Motion) ;
+  glutPassiveMotionFunc(_PassiveMotion) ;
+  glutReshapeFunc(_Reshape);
+  glutMouseWheelFunc(_MouseWheel) ;
+  
   unlock_win();
 }
 
-sOpenGL::sOpenGL(OpenGL *gl, void *container){
+sOpenGL::sOpenGL(OpenGL *gl, void *container) {
   NIY;
 }
 
-sOpenGL::~sOpenGL(){
+sOpenGL::~sOpenGL() {
   lock();
   glutDestroyWindow(windowID);
   glwins(windowID)=0;
   nrWins--;
-  if(!nrWins) fgDeinitialize();
+  if (!nrWins) fgDeinitialize();
   unlock();
 }
