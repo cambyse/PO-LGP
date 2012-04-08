@@ -548,7 +548,7 @@ void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
     case comTVT:     os <<"  (COM)"; break;
     case collTVT:    os <<"  (COLL)"; break;
     case colConTVT:  os <<"  (colCon)"; break;
-    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name)) <<"); params:" <<params; break;
+    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name).p) <<"); params:" <<params; break;
     case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }
@@ -646,7 +646,22 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau){
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
         }
-        if(j<shapes.d0){
+        if(j<shapes.d0){ //if a pair was found
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 5;
+        }
+      }
+    } break;
+    case allExceptPairsCTVT:{
+      shapes.reshape(shapes.N/2,2);
+      // only explicit paris in 2D array shapes
+      uint j;
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
+        for(j=0;j<shapes.d0;j++){
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j==shapes.d0){ //if a pair was not found
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 5;
         }

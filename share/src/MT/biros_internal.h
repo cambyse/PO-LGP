@@ -58,6 +58,7 @@ struct ConditionVariable {
   void waitForSignal(double seconds);
   int  waitForStateEq(int i);    ///< return value is the state after the waiting
   int  waitForStateNotEq(int i); ///< return value is the state after the waiting
+  int waitForStateGreaterThan(int i); ///< return value is the state after the waiting
   void waitUntil(double absTime);
 };
 
@@ -105,6 +106,7 @@ struct CycleTimer {
 struct sVariable {
   Variable *p;
   Lock lock;
+  ConditionVariable cond; //to broadcast write access to this variable
   
   sVariable(Variable *_p) { p = _p; }
 };
@@ -127,7 +129,6 @@ struct sProcess {
     tid=0;
     threadPriority=0;
     thread=0;
-    metronome=NULL;
   };
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread

@@ -1,9 +1,9 @@
-#include "MotionPrimitive.h"
-//#include <JK/utils/util.h>
-//#include <DZ/aico_key_frames.h>
+#include "ActionToMotionPrimitive.h"
+#include <MT/aico.h>
 #include <unistd.h>
 
-struct sMotionPrimitive {
+struct sActionToMotionPrimitive {
+  enum MotionPlannerAlgo { interpolation=0, AICO_noinit } planningAlgo;
   WorkingCopy<GeometricState> geo;
   soc::SocSystem_Ors sys;
   OpenGL *gl;
@@ -11,27 +11,28 @@ struct sMotionPrimitive {
   
 };
 
-MotionPrimitive::MotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPlan& p):Process("MotionPrimitive"),
-    action(&a), plan(&p){
+ActionToMotionPrimitive::ActionToMotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPrimitive& p):Process("ActionToMotionPrimitive"),
+    action(&a), motionPrimitive(&p){
   threadListenTo(action);
-  s = new sMotionPrimitive;
+  s = new sActionToMotionPrimitive;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
-  plan->writeAccess(this);
-  plan->frame0 = &f0;
-  plan->frame1 = &f1;
-  plan->deAccess(this);
+  s->planningAlgo=sActionToMotionPrimitive::AICO_noinit;
+  motionPrimitive->writeAccess(this);
+  motionPrimitive->frame0 = &f0;
+  motionPrimitive->frame1 = &f1;
+  motionPrimitive->deAccess(this);
 }
 
-MotionPrimitive::~MotionPrimitive() {
+ActionToMotionPrimitive::~ActionToMotionPrimitive() {
   delete s;
 }
 
-void MotionPrimitive::open() {
-  s->verbose = birosInfo.getParameter<uint>("MotionPrimitive_verbose", this);
-  arr W = birosInfo.getParameter<arr>("MotionPrimitive_W", this);
-  uint T = birosInfo.getParameter<uint>("MotionPrimitive_TrajectoryLength", this);
-  double duration = birosInfo.getParameter<double>("MotionPrimitive_TrajectoryDuration", this);
+void ActionToMotionPrimitive::open() {
+  s->verbose = birosInfo.getParameter<uint>("ActionToMotionPrimitive_verbose", this);
+  arr W = birosInfo.getParameter<arr>("ActionToMotionPrimitive_W", this);
+  uint T = birosInfo.getParameter<uint>("ActionToMotionPrimitive_TrajectoryLength", this);
+  double duration = birosInfo.getParameter<double>("ActionToMotionPrimitive_TrajectoryDuration", this);
   
   //clone the geometric state
   s->geo.pull();
@@ -39,7 +40,7 @@ void MotionPrimitive::open() {
 //   s->ors = geo->ors.newClone();
   geo->deAccess(this);*/
   if (s->verbose) {
-    s->gl = new OpenGL("MotionPrimitive");
+    s->gl = new OpenGL("ActionToMotionPrimitive");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
@@ -53,14 +54,14 @@ void MotionPrimitive::open() {
   //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
 
-void MotionPrimitive::close() {
+void ActionToMotionPrimitive::close() {
 }
 
-void MotionPrimitive::step() {
+void ActionToMotionPrimitive::step() {
   s->geo.pull();
   
-  MotionKeyframe *frame0 = plan->get_frame0(this);
-  MotionKeyframe *frame1 = plan->get_frame1(this);
+  MotionKeyframe *frame0 = motionPrimitive->get_frame0(this);
+  MotionKeyframe *frame1 = motionPrimitive->get_frame1(this);
 
   Action::ActionPredicate actionSymbol = action->get_action(this);
   
@@ -71,13 +72,12 @@ void MotionPrimitive::step() {
     frame1->converged = true;
     frame1->deAccess(this);
     
-    plan->writeAccess(this);
-    plan->steps = 0;
-    plan->tau = 0.;
-    listDelete(plan->TVs);
-    plan->converged=true;
-    plan->q_plan.clear();
-    plan->deAccess(this);
+    motionPrimitive->writeAccess(this);
+    motionPrimitive->q_plan.clear();
+    motionPrimitive->tau = 0.;
+    //listDelete(motionPrimitive->TVs);
+    motionPrimitive->planConverged=false;
+    motionPrimitive->deAccess(this);
   }
   
   if (actionSymbol==Action::grasp || actionSymbol==Action::place) {
@@ -93,20 +93,19 @@ void MotionPrimitive::step() {
     CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
     
-    //estimate the key frame
-    arr x_keyframe;
+    //-- estimate the keyframe
+    arr xT;
     if (actionSymbol==Action::grasp) {
       uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-      threeStepGraspHeuristic(x_keyframe, s->sys, x0, shapeId, s->verbose);
+      threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
     }
     else if (actionSymbol==Action::place) {
       s->sys.setx0(x0);
       listDelete(s->sys.vars);
       uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-      uint fromId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-      uint toId = s->sys.ors->getShapeByName(action->get_objectRef3(this))->index;
-      setPlaceGoals(s->sys,s->sys.nTime(),shapeId,fromId,toId);
-      keyframeOptimizer(x_keyframe, s->sys, 1e-2, false, s->verbose);
+      uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+      setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId);
+      keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
     }
     else if (actionSymbol==Action::home) {
       s->sys.setx0(x0);
@@ -115,22 +114,51 @@ void MotionPrimitive::step() {
       //keyframeOptimizer(x, s->sys, 1e-2, true, verbose);
     }
 
-    //push it
+    //--push it
     frame1->writeAccess(this);
-    frame1->x_estimate = x_keyframe;
+    frame1->x_estimate = xT;
     frame1->duration_estimate = s->sys.getDuration();
     frame1->converged = true;
     frame1->deAccess(this);
     
+    //-- optimize the plan
+    //arr x0 = frame0->get_x_estimate(this);
+    //arr xT = frame1->get_x_estimate(this);
+    uint T = s->sys.nTime();
+    double tau = s->sys.getDuration()/double(T);
+  
+    arr q;
+    switch (s->planningAlgo) {
+      case sActionToMotionPrimitive::interpolation: {
+	q.resize(T+1,x0.N);
+	for (uint t=0; t<=T; t++) {
+	  double a=double(t)/T;
+	  q[t] = (1.-a)*x0 + a*xT;
+	}
+      } break;
+      case sActionToMotionPrimitive::AICO_noinit: {
+	AICO aico(s->sys);
+	if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
+	if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
+	aico.fix_initial_state(x0);
+	aico.fix_final_state(xT);
+	aico.iterate_to_convergence();
+	q = aico.q;
+      } break;
+      default:
+      HALT("no mode set!");
+    }
+    
     //-- start planner
-    plan->writeAccess(this);
+    motionPrimitive->writeAccess(this);
     //info on the plan: steps, duration, boundary
-    plan->converged = false;
-    plan->steps = s->sys.nTime();
-    plan->tau = s->sys.getDuration() / plan->steps;
+    motionPrimitive->q_plan = q;
+    motionPrimitive->tau = tau;
+    motionPrimitive->planConverged = true;
     //details on the task costs
-    listClone(plan->TVs, s->sys.vars);
-    plan->deAccess(this);
+    //listClone(motionPrimitive->TVs, s->sys.vars);
+    motionPrimitive->deAccess(this);
+
   }
   
   if (actionSymbol==Action::place) {
@@ -214,18 +242,13 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.setTox0();
   
   //load parameters only once!
-  static bool firstTime=true;
-  static double endEffPrec, endOppPrec, endAlignPrec, graspDistPrec, colPrec, limPrec, zeroQPrec;
-  if (firstTime) {
-    firstTime=false;
-    endEffPrec = birosInfo.getParameter<double>("graspPlanEndEffPrec");
-    endOppPrec = birosInfo.getParameter<double>("graspPlanEndOppPrec");
-    endAlignPrec = birosInfo.getParameter<double>("graspPlanEndAlignPrec");
-    graspDistPrec = birosInfo.getParameter<double>("graspPlanGraspDistPrec");
-    colPrec = birosInfo.getParameter<double>("graspPlanColPrec");
-    limPrec = birosInfo.getParameter<double>("graspPlanLimPrec");
-    zeroQPrec = birosInfo.getParameter<double>("graspPlanHomePrec");
-  }
+  double positionPrec = birosInfo.getParameter<double>("graspPlanPositionPrec");
+  double oppositionPrec = birosInfo.getParameter<double>("graspPlanOppositionPrec");
+  double alignmentPrec = birosInfo.getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = birosInfo.getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = birosInfo.getParameter<double>("graspPlanColPrec");
+  double limPrec = birosInfo.getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = birosInfo.getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
   CHECK(T==sys.nTime(), "");
@@ -245,15 +268,15 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   //xtarget(2) += .02; //grasp it 2cm above center
   
   // graspCenter -> predefined point (xtarget)
-  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
   V->y_target = xtarget;
-  V->y_prec = endEffPrec;
+  V->y_prec = positionPrec;
   V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);
   V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
   
   //up: align either with cylinder axis or one of the box sides -- works good
-  V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
+  V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, NoArr);
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch (obj->type) {
     case ors::cylinderST:
@@ -270,7 +293,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   V->updateState(*sys.ors);
   if (V->y(0)<0.)((DefaultTaskVariable*)V)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
   V->updateState(*sys.ors);
-  V->y_prec = endAlignPrec;
+  V->y_prec = alignmentPrec;
   //V->setInterpolatedTargetsEndPrecisions(T, midPrec, 0.);
   V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., 0.);
   V->appendConstTargetsAndPrecs(T);
@@ -288,8 +311,8 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .05, true);
   double grip=.8; //specifies the desired proxy value
   V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
-  V->y_prec = graspDistPrec;
-  V->setInterpolatedTargetsEndPrecisions(T,colPrec,graspDistPrec,0.,0.);
+  V->y_prec = fingerDistPrec;
+  V->setInterpolatedTargetsEndPrecisions(T,colPrec,fingerDistPrec,0.,0.);
   for (uint t=0; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
     if (5*t<4*T) V->y_trajectory[t]()=0.;
     else V->y_trajectory[t]() = (grip*double(5*t-4*T))/T;
@@ -297,7 +320,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.vars.append(V);
   
   //collisions with other objects
-  shapes = ARRAY(shapeId);
+  shapes = ARRAY<uint>(shapeId);
   V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
   V->y_target = ARR(0.);  V->v_target = ARR(.0);
   V->y_prec = colPrec;
@@ -312,11 +335,11 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   //opposing fingers
   V = new DefaultTaskVariable("oppose12", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip2", "<d( 90 1 0 0)>", 0);
   V->y_target = ARR(-1.);  V->v_target = ARR(0.);
-  V->y_prec=endOppPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., endOppPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+  V->y_prec=oppositionPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., oppositionPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
   V = new DefaultTaskVariable("oppose13", *sys.ors, zalignTVT, "tip1", "<d(90 1 0 0)>", "tip3", "<d( 90 1 0 0)>", 0);
   V->y_target = ARR(-1.);  V->v_target = ARR(0.);
-  V->y_prec=endOppPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., endOppPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
+  V->y_prec=oppositionPrec;  V->setInterpolatedTargetsEndPrecisions(4*T/5, 0., oppositionPrec, 0., 0.);  V->appendConstTargetsAndPrecs(T);
   sys.vars.append(V);
   
   //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
@@ -335,16 +358,17 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.vars.append(V);
 }
 
-void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFromShapeId, uint belowToShapeId){
+void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
   sys.setTox0();
   
-  double placeMidPrec        = birosInfo.getParameter<double>("placeMidPrec");
-  double placeAlignmentPrec  = birosInfo.getParameter<double>("placeAlignmentPrec");
-  double limPrec             = birosInfo.getParameter<double>("limPrec");
-  double zeroQPrec           = birosInfo.getParameter<double>("zeroQPrec");
-  double placePositionPrec   = birosInfo.getParameter<double>("placePositionPrec");
-  double placeUpDownVelocity = birosInfo.getParameter<double>("placeUpDownVelocity");
-  double placeUpDownVelocityPrec = birosInfo.getParameter<double>("placeUpDownVelocityPrec");
+  double midPrec        = birosInfo.getParameter<double>("placeMidPrec");
+  double alignmentPrec  = birosInfo.getParameter<double>("placeAlignmentPrec");
+  double limPrec             = birosInfo.getParameter<double>("placePlanLimPrec");
+  double colPrec             = birosInfo.getParameter<double>("placePlanColPrec");
+  double zeroQPrec           = birosInfo.getParameter<double>("placePlanZeroQPrec");
+  double positionPrec   = birosInfo.getParameter<double>("placePositionPrec");
+  double upDownVelocity = birosInfo.getParameter<double>("placeUpDownVelocity");
+  double upDownVelocityPrec = birosInfo.getParameter<double>("placeUpDownVelocityPrec");
 
   
   //set the time horizon
@@ -355,13 +379,11 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   
   //activate collision testing with target shape
   ors::Shape *obj  = sys.ors->shapes(shapeId);
-  ors::Shape *from = sys.ors->shapes(belowFromShapeId);
   ors::Shape *onto = sys.ors->shapes(belowToShapeId);
   CHECK(obj->body==sys.ors->getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   onto->cont=false;
-  from->cont=false;
-  sys.swift->initActivations(*sys.ors);
+  sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
   
@@ -371,20 +393,20 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   
   //endeff
-  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NULL);
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
   ((DefaultTaskVariable*)V)->irel = obj->rel;
   V->updateState(*sys.ors);
   V->y_target = xtarget;
-  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placePositionPrec, 0., 0.);
+  V->setInterpolatedTargetsEndPrecisions(T, midPrec, positionPrec, 0., 0.);
   //special: condition effector velocities:
   uint t, M=T/8;
   for(t=0; t<M; t++){
-    V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., placeUpDownVelocity);
-    V -> v_prec_trajectory(t) = placeUpDownVelocityPrec;
+    V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., upDownVelocity);
+    V -> v_prec_trajectory(t) = upDownVelocityPrec;
   }
   for(t=T-M; t<T; t++){
-    V -> v_trajectory[t]() = (1./M*(T-t))*ARR(0., 0., -placeUpDownVelocity); //0.2
-    V -> v_prec_trajectory(t) = placeUpDownVelocityPrec; // 1e1
+    V -> v_trajectory[t]() = (1./M*(T-t))*ARR(0., 0., -upDownVelocity); //0.2
+    V -> v_prec_trajectory(t) = upDownVelocityPrec; // 1e1
   }
   sys.vars.append(V);
   
@@ -393,7 +415,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V) -> irel.addRelativeRotationDeg(90, 1, 0, 0);
   V->updateState(*sys.ors);
   V->y_target = 0.;
-  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placeAlignmentPrec, 0., 0.);
+  V->setInterpolatedTargetsEndPrecisions(T, midPrec, alignmentPrec, 0., 0.);
   sys.vars.append(V);
   
   //up2
@@ -401,10 +423,24 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowFrom
   ((DefaultTaskVariable*)V)->irel = obj->rel;  ((DefaultTaskVariable*)V)-> irel.addRelativeRotationDeg(90, 0, 1, 0);
   V->updateState(*sys.ors);
   V->y_target = 0.;
-  V->setInterpolatedTargetsEndPrecisions(T, placeMidPrec, placeAlignmentPrec, 0., 0.);
+  V->setInterpolatedTargetsEndPrecisions(T, midPrec, alignmentPrec, 0., 0.);
+  sys.vars.append(V);
+  
+  //collisions except obj-from and obj-to
+  uintA shapes = ARRAY<uint>(shapeId, shapeId, belowToShapeId);
+  V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
+  V->y_target = ARR(0.);  V->v_target = ARR(.0);
+  V->y_prec = colPrec;
+  V->setConstTargetsConstPrecisions(T);
+  if (V->y(0)>0.) { //we are in collision/proximity -> depart slowly
+    double a=V->y(0);
+    for (uint t=0; t<=T/5; t++)
+      V->y_trajectory[t]() = a*double(T-5*t)/T;
+  }
   sys.vars.append(V);
   
   //col lim and relax
+  //TODO: there are no collisions!
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";

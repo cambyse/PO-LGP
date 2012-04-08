@@ -198,7 +198,7 @@ std::istream& operator>>(std::istream& is, char *str);
 // String class
 //
 
-#define STRING(x) (((MT::String&)(MT::String().stream() <<x)).p)
+#define STRING(x) (((MT::String&)(MT::String().stream() <<x)))
 #define STREAM(x) (((MT::String&)(MT::String().stream() <<x)).stream())
 
 namespace MT {

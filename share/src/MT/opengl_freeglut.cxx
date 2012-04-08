@@ -80,6 +80,7 @@ static void sleepForEvents( void ){
 
 struct sOpenGL{
   sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
 
   static uint nrWins;
@@ -156,6 +157,10 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   glutMouseWheelFunc ( _MouseWheel ) ;
 
   unlock_win();
+}
+
+sOpenGL::sOpenGL(OpenGL *gl, void *container){
+  NIY;
 }
 
 sOpenGL::~sOpenGL(){

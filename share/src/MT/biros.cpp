@@ -184,7 +184,7 @@ int ConditionVariable::setState(int i) {
   return state;
 }
 
-void ConditionVariable::signal() {
+void ConditionVariable::broadcast(){
   int rc;
   rc = pthread_mutex_lock(&mutex);     if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   rc = pthread_cond_broadcast(&cond);  if (rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
@@ -238,7 +238,19 @@ int ConditionVariable::waitForStateNotEq(int i) {
   return stateAfter;
 }
 
-void ConditionVariable::waitUntil(double absTime) {
+int ConditionVariable::waitForStateGreaterThan(int i){
+  int rc;
+  int stateAfter;
+  rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  while(state<=i){
+    rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  stateAfter = state;
+  rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  return stateAfter;
+}
+
+void ConditionVariable::waitUntil(double absTime){
   NIY;
   /*  int rc;
     timespec ts;
@@ -371,10 +383,11 @@ Variable::~Variable() {
   delete s;
 }
 
-void Variable::readAccess(Process *p) {
+int Variable::readAccess(Process *p) {
   logService.queryReadAccess(this, p);
   s->lock.readLock();
   logService.logReadAccess(this, p);
+  return revision;
 }
 
 void Variable::writeAccess(Process *p) {
@@ -387,7 +400,9 @@ void Variable::writeAccess(Process *p) {
   uint i;  Process *l;
   for_list(i, l, listeners){}
     //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
+  s->cond.setState(revision);
   //broadcastCondition();
+  return revision;
 }
 
 void Variable::deAccess(Process *p) {
@@ -398,7 +413,13 @@ void Variable::deAccess(Process *p) {
   } else {
     logService.freeReadAccess(this);
   }
+  int rev=revision;
   s->lock.unlock();
+  return rev;
+}
+
+int Variable::waitForRevisionGreaterThan(uint rev){
+  return s->cond.waitForStateGreaterThan(rev);
 }
 
 int Variable::lockState() {
@@ -590,7 +611,7 @@ void* sProcess::staticThreadMain(void *_self) {
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   
   if(s->threadPriority) setNice(s->threadPriority);
-  prctl(PR_SET_NAME, proc->name);
+  prctl(PR_SET_NAME, proc->name.p);
   //pthread_setname_np(proc->thread, proc->name);
 
   proc->open(); //virtual initialization routine
@@ -786,8 +807,8 @@ void BirosInfo::dump() {
     par->writeValue(cout);
     cout <<" accessed by:";
     for_list(j, p, par->processes){
-      if (j) cout <<',';
-      cout <<' ' <<(p?p->name:"NULL");
+      if(j) cout <<',';
+      cout <<' ' <<(p?p->name:STRING("NULL"));
     }
     cout <<endl;
   }
@@ -932,7 +953,7 @@ void ThreadInfoWin::open() {
   //-adobe-courier-medium-r-*-*-*-80-*-*-*-*-*-*"));
   XSetBackground(s->display, s->gc, 0x000000);
   XSetForeground(s->display, s->gc, 0xffffff);
-  XWindowChanges change= {1500, 700,  600, 300,  10, NULL, 0};
+  XWindowChanges change={1500, 700,  600, 300,  10, 0, 0};
   XConfigureWindow(s->display, s->window, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &change);
   XFlush(s->display);
   //timer.reset();
@@ -970,7 +991,7 @@ void ThreadInfoWin::step() {
     x=5;
     TEXT("%4i", th->tid); x+=25;
     TEXT("%3i", th->threadPriority); x+=25;
-    TEXT("%s" , pr->name); x+=100;
+    TEXT("%s" , pr->name.p); x+=100;
     TEXT("%4i", th->timer.steps);  x+=30;
     if (state>0){ TEXT("%4i", state); } else switch(state){
         case tsCLOSE:   TEXT0("close");  break;

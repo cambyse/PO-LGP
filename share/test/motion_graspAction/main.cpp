@@ -13,7 +13,7 @@ int main(int argn, char** argv){
   // variables
   GeometricState geometricState;
   Action action;
-  MotionPlan motionPlan;
+  MotionPrimitive motionPrimitive;
   MotionKeyframe frame0,frame1;
   ControllerTask controllerTask;
   HardwareReference hardwareReference;
@@ -23,14 +23,14 @@ int main(int argn, char** argv){
   // processes
   Controller controller;
   MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan);
+  ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
 
   // viewers
-  PoseViewer<MotionPlan>        view1(motionPlan);
+  PoseViewer<MotionPrimitive>        view1(motionPrimitive);
   PoseViewer<HardwareReference> view2(hardwareReference);
   PoseViewer<MotionKeyframe>    view3(frame1);
   
-  ProcessL P=LIST<Process>(controller, motionPlanner, motionPrimitive);
+  ProcessL P=LIST<Process>(controller, motionPlanner, actionToMotionPrimitive);
   //P.append(LIST<Process>(view1, view2, view3));
 
   GtkViewWindow wi;
@@ -52,8 +52,8 @@ int main(int argn, char** argv){
   uint mode=2;
   switch(mode){
   case 1:{ //serial mode
-    motionPrimitive.open();
-    motionPrimitive.step();
+    actionToMotionPrimitive.open();
+    actionToMotionPrimitive.step();
     motionPlanner.open();
     motionPlanner.step();
   } break;

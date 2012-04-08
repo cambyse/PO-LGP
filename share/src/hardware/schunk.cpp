@@ -802,18 +802,16 @@ void testCube(sSchunkArm &schunk, int iMod) {
 
 #else //ndef MT_SCHUNK
 
-#include "schunk_internal.h"
-
 bool schunkShutdown=false;
-sSchunkArm::sSchunkArm(q_currentReferenceVar *_var):Process("SchunkArmProcess") {}
+sSchunkArm::sSchunkArm() {}
 void sSchunkArm::open() {}
 void sSchunkArm::close() {}
 void sSchunkArm::step() {}
-sSchunkHand::sSchunkHand():Process("SchunkHandProcess") {}
+sSchunkHand::sSchunkHand() {}
 void sSchunkHand::open() {}
 void sSchunkHand::close() {}
 void sSchunkHand::step() {}
-sSchunkSkin::sSchunkSkin():Process("SchunkSkinProcess") {}
+sSchunkSkin::sSchunkSkin() {}
 void sSchunkSkin::open() {}
 void sSchunkSkin::close() {}
 void sSchunkSkin::step() {}

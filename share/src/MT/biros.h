@@ -59,10 +59,10 @@ struct FieldInfo_typed:FieldInfo{
 
 #define FIELD(type, name) \
   type name; \
-  inline void set_##name(const type& _x, Process *p){ \
-    writeAccess(p);  name=(type&)_x;  deAccess(p); } \
-  inline void get_##name(type& _x, Process *p){ \
-    readAccess(p);   _x=name;  deAccess(p); } \
+  inline int set_##name(const type& _x, Process *p){ \
+    writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
+  inline int get_##name(type& _x, Process *p){ \
+    readAccess(p);   _x=name;  return deAccess(p); } \
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
@@ -77,8 +77,8 @@ struct FieldInfo_typed:FieldInfo{
 struct Variable {
   struct sVariable *s;  ///< private
   uint id;              ///< unique identifyer
-  MT::String name;     ///< Variable name
-  volatile uint revision;        ///< revision (= number of write accesses) number //TODO: why volatile?
+  MT::String name;      ///< Variable name
+  uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
   MT::Array<FieldInfo*> fields;
   ProcessL listeners;
   bool logValues;
@@ -93,9 +93,12 @@ struct Variable {
   //virtual void read(istream& is){ }
   
   //-- access control, to be called by a processes before access
-  void readAccess(Process*);  //might set the caller to sleep
-  void writeAccess(Process*); //might set the caller to sleep
-  void deAccess(Process*);
+  int readAccess(Process*);  //might set the caller to sleep
+  int writeAccess(Process*); //might set the caller to sleep
+  int deAccess(Process*);
+
+  //-- syncing via a variable
+  int waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
   
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
@@ -115,7 +118,7 @@ struct Process {
   struct sProcess *s;  ///< private
   int id;              ///< unique identifier
   uint step_count;     ///< step count
-  const char* name;    ///< Process name
+  MT::String name;     ///< Process name
   
   Process(const char* name);
   virtual ~Process();
@@ -198,15 +201,15 @@ struct BirosInfo:Variable {
     writeAccess(p);
     v = (T*)listFindByName(variables, name);
     deAccess(p);
-    if (!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+    if(!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
   template<class T>  T* getProcess(const char* name, Process *p){
     writeAccess(p);
     T *pname = (T*)listFindByName(processes, name);
     deAccess(p);
-    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:"NULL") <<"' will not connect");
+    if(!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
   }
-  template<class T> T getParameter(const char *name, Process *p, const T *_default=NULL) {
+  template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)){
     Parameter_typed<T> *par;
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);

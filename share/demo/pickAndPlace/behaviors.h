@@ -1,6 +1,8 @@
 #include <MT/array.h>
 #include <MT/ors.h>
 
+#include <motion/motion.h>
+
 void joystick();
 void wait(double sec=0);
 void homing(bool fixFingers = false);
@@ -9,8 +11,8 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
 void setMesh(const char* shapeName, const ors::Mesh& mesh);
 
 void waitForPerceivedObjects(uint numObjects, uint foundSteps);
-void pickObject(char* objShape);
-void placeObject(char* objShape, char* belowFromShape, char* belowToShape);
+void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape);
+void closeOrOpenHand(bool closeHand);
 void plannedHoming(const char* objShape, const char* belowToShape);
 void graspISF();
 

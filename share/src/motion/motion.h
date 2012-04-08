@@ -22,6 +22,20 @@ struct GeometricState:Variable {
 };
 
 
+struct Action:Variable {
+  enum ActionPredicate { noAction, grasp, place, home };
+  
+  FIELD(ActionPredicate, action);
+  FIELD(bool, executed);
+  FIELD(char*, objectRef1);  //arguments to the relational predicates
+  FIELD(char*, objectRef2);
+  
+  Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  
+  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+};
+
+
 struct MotionKeyframe:Variable {
   FIELD(arr, x_estimate);
   FIELD(double, duration_estimate);
@@ -32,41 +46,38 @@ struct MotionKeyframe:Variable {
 };
 
 
-struct MotionPlan:Variable {
-  FIELD(arr, q_plan);
-  FIELD(double, tau);
-  FIELD(uint, steps);
+struct MotionPrimitive:Variable {
+  enum MotionMode{ stop=0, followPlan, feedback, done  };
+
+  FIELD(MotionMode, mode);
   
-  //problem description
-  FIELD(bool, converged); //if converged=true the planner may sleep 
+  //in case of followPlan
   FIELD(MotionKeyframe*, frame0);
   FIELD(MotionKeyframe*, frame1);
-  //FUTURE:
-  //arr W; //diagonal of the control cost matrix
-  //arr Phi, rho; //task cost descriptors
-  //...for now: do it conventionally: task list or socSystem??
-  FIELD(TaskVariableList, TVs);
-  
-  MotionPlan():Variable("MotionPlan"), converged(true), frame0(NULL), frame1(NULL) { };
-  void get_poseView(arr& q) { q=q_plan; }
-};
+  FIELD(arr, q_plan);
+  FIELD(double, tau);
+  FIELD(bool, planConverged);
 
-struct ControllerTask:Variable {
-  enum ControllerMode { stop=0, followPlan, feedback, done  };
-  //optional: followWithFeedback
-  
-  FIELD(ControllerMode, mode);
-  FIELD(bool, fixFingers);
-  //for followTrajectroy mode:
-  FIELD(double, relativeRealTimeOfController);
-  //for feedback mode:
-  FIELD(bool, forceColLimTVs);
+  //in case of feedback
   FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
+
+  //controller options
+  FIELD(bool, fixFingers);
+  FIELD(bool, forceColLimTVs);
+  FIELD(double, relativeRealTimeOfController);
+
+  //only for info - to enable a view
+  //FIELD(TaskVariableList, TVs);
   
-  ControllerTask():Variable("ControllerTask"),
+  MotionPrimitive():Variable("MotionPrimitive"),
       mode(stop),
-      relativeRealTimeOfController(0.),
-      forceColLimTVs(true), feedbackControlTask(NULL) {};
+      frame0(NULL), frame1(NULL), planConverged(false),
+      feedbackControlTask(NULL),
+      forceColLimTVs(true), relativeRealTimeOfController(0.) { };
+  
+  void get_poseView(arr& q) { q=q_plan; }
+  void setClearPlanTask(const arr& frame0_pose, Process *p);
+  void setFeedbackTask(FeedbackControlTaskAbstraction& task, bool _forceColLimTVs, bool _fixFingers, Process *p);
 };
 
 
@@ -83,26 +94,6 @@ struct HardwareReference:Variable {
 };
 
 
-struct Action:Variable {
-  enum ActionPredicate { noAction, grasp, place, home };
-  
-  FIELD(ActionPredicate, action);
-  FIELD(bool, executed);
-  FIELD(char*, objectRef1);  //arguments to the relational predicates
-  FIELD(char*, objectRef2);
-  FIELD(char*, objectRef3); // TODO: hier sollte das automatisch gemacht werden
-  
-  Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
-};
-
-
-struct ActionPlan:Variable {
-  MT::Array<Action> a_plan;
-  
-  ActionPlan();
-};
-
-
 //===========================================================================
 //
 // Processes
@@ -110,17 +101,17 @@ struct ActionPlan:Variable {
 
 PROCESS(Controller)
 
-PROCESS(MotionPlanner)
+//PROCESS(MotionPlanner)
 
-struct MotionPrimitive:Process {
-  struct sMotionPrimitive *s;
+struct ActionToMotionPrimitive:Process {
+  struct sActionToMotionPrimitive *s;
   
   //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
   Action *action;
-  MotionPlan *plan;
+  MotionPrimitive *motionPrimitive;
   
-  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&);
-  ~MotionPrimitive();
+  ActionToMotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
+  ~ActionToMotionPrimitive();
   void open();
   void step();
   void close();
@@ -221,6 +212,6 @@ struct OrsViewer:Process {
   }
 };
 
-#include "MotionPrimitive.h"
+#include "ActionToMotionPrimitive.h"
 
 #endif
