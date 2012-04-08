@@ -20,33 +20,30 @@ int main(int argn,char** argv){
   //-- motion
   // variables
   GeometricState geometricState;
-  Action action;
-  MotionPrimitive motionPrimitive;
-  MotionKeyframe frame0,frame1;
+  MotionFuture motions;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
   JoystickState joystickState;
+  
   // processes
   Controller controller;
-  //MotionPrimitivener motionPlanner;
-  ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
+  ActionProgressor actionProgressor;
+  
   // viewers
   OrsViewer<GeometricState>     view0(geometricState);
-  PoseViewer<MotionPrimitive>   view7(motionPrimitive);
   PoseViewer<HardwareReference> view8(hardwareReference);
-  PoseViewer<MotionKeyframe>    view9(frame1);
 
   //-- hardware
   // variables
+  //(none)
   // processes
   Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
   // viewers
-  PoseViewer<HardwareReference> view(hardwareReference);
+  //(none)
 
-  
   //-- perception
   // variables
   Image camL("CameraL"), camR("CameraR");
@@ -65,7 +62,7 @@ int main(int argn,char** argv){
   ImageViewer<Image> view3(hsvL), view4(hsvR);
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
-  P.append(LIST<Process>(controller, actionToMotionPrimitive));
+  P.append(LIST<Process>(controller));
   //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
   //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
 
@@ -73,7 +70,7 @@ int main(int argn,char** argv){
   ProcessL PV;
   PV.append(LIST<Process>(view0));
   //PV.append(LIST<Process>(view));
-  PV.append(LIST<Process>(view7, view8, view9));
+  PV.append(LIST<Process>(view8));
   //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
   
   //step(PV);
@@ -81,6 +78,9 @@ int main(int argn,char** argv){
 
   //cam.threadLoop();
   loopWithBeat(P,.01);
+
+  actionProgressor.threadLoopWithBeat(0.01);
+  
   
   cout <<"arrange your windows..." <<endl;
   MT::wait(1.);
@@ -104,7 +104,6 @@ int main(int argn,char** argv){
 
     pickOrPlaceObject(Action::grasp, "box2", NULL);
     pickOrPlaceObject(Action::place, "box2", "table");
-    
   }
   
   cam.threadClose();

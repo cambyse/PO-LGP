@@ -20,9 +20,6 @@ Some behaviors are sequential like a finite state machine.
 #define VAR(Type) \
   Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
-void reattachShape(const char* objShape, const char* toBody);
-
 void wait(double sec){
   VAR(MotionPrimitive);
   VAR(JoystickState);
@@ -206,52 +203,21 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   }
 }
 
-void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
-  VAR(MotionPrimitive);
-  VAR(Action);
-  VAR(HardwareReference);
-  
-  arr x0 =  _HardwareReference->get_q_reference(NULL);
-  x0.append(_HardwareReference->get_v_reference(NULL));
-  
-  _MotionPrimitive->setClearPlanTask(x0, NULL);
-  _Action->setNewAction(action, objShape, belowToShape, NULL);
-  if(action==Action::place) _MotionPrimitive->set_fixFingers(true, NULL);
-  
-  //wait for controller to execute
+void waitForSmallMotionQueue(MotionFuture *motionFuture, uint queuesize){
   int rev = 0;
-  while(_MotionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = _MotionPrimitive->waitForRevisionGreaterThan(rev);
+  while(motionFuture->getTodoFrames(NULL)>queuesize){
+    rev = motionFuture->waitForRevisionGreaterThan(rev);
   }
-  
-  cout << "plan executed" << endl;
-  _Action->set_executed(true, NULL);
-  _Action->set_action(Action::noAction, NULL);
-  
-  if(action==Action::grasp){ reattachShape(objShape, "m9");      closeOrOpenHand(true); }
-  if(action==Action::place){ reattachShape(objShape, "OBJECTS"); closeOrOpenHand(false); }
 }
 
-void closeOrOpenHand(bool closeHand){
-  VAR(MotionPrimitive);
+void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
+  VAR(MotionFuture);
   
-  //-- close hand
-  FeedbackControlTaskAbstraction *task;
-  if(closeHand) task = new CloseHand_FeedbackControlTask;
-  else          task = new OpenHand_FeedbackControlTask;
-  _MotionPrimitive->setFeedbackTask(*task, false, false, NULL);
+  waitForSmallMotionQueue(_MotionFuture, 1);
 
-  //TODO: the joystick emergency is disabled!!
-  //if(_JoystickState->get_state(NULL)(0)&0x30) break;
-  
-  //-- the reattach mess!
-
-  MT::wait(3.); //TODO: waiting for opening the hand -- should be with feedback!!
-  
-  _MotionPrimitive->set_forceColLimTVs(true, NULL);
-  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
-  
-  MT::wait(.1); //this wait is horrible: required to ensure that at least the current step of the controller finishes since it has a pointer to the task which will be destroyed on exit of this routine..
+  _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
+  if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NULL);
+  if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NULL);
 }
 
 void plannedHoming(const char* objShape, const char* belowToShape){
@@ -310,24 +276,3 @@ void graspISF(){
   */
 }
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
-  ors::Shape *obj  = ors.getShapeByName(objShape);
-  obj->body->shapes.removeValue(obj);
-  obj->body = ors.getBodyByName(toBody);
-  obj->ibody = obj->body->index;
-  obj->body->shapes.append(obj);
-  obj->rel.setDifference(obj->body->X, obj->X);
-  if(swift) swift->initActivations(ors);
-}
-
-void reattachShape(const char* objShape, const char* toBody){
-  VAR(GeometricState);
-  VAR(HardwareReference);
-  _GeometricState->writeAccess(NULL);
-  arr q=_HardwareReference->get_q_reference(NULL);
-  arr v=_HardwareReference->get_v_reference(NULL);
-  _GeometricState->ors.setJointState(q,v);
-  _GeometricState->ors.calcBodyFramesFromJoints();
-  reattachShape(_GeometricState->ors, NULL, objShape, toBody);
-  _GeometricState->deAccess(NULL);
-}

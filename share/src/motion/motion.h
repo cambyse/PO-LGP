@@ -25,14 +25,15 @@ struct GeometricState:Variable {
 
 /** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
 struct Action:Variable {
-  enum ActionPredicate { noAction, grasp, place, home };
+  enum ActionPredicate { noAction, grasp, place, openHand, closeHand, home };
   
+  FIELD(uint, frameCount);
   FIELD(ActionPredicate, action);
   FIELD(bool, executed);
   FIELD(char*, objectRef1);  //arguments to the relational predicates
   FIELD(char*, objectRef2);
   
-  Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
   
   void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
 };
@@ -40,11 +41,12 @@ struct Action:Variable {
 
 /** \brief A keyframe represents a pose at the beginning and end of a motion primitive, that is, in between two symbolic actions. */
 struct MotionKeyframe:Variable {
+  FIELD(uint, frameCount);
   FIELD(arr, x_estimate);
   FIELD(double, duration_estimate);
   FIELD(bool, converged);
   
-  MotionKeyframe():Variable("MotionKeyFrame"), converged(true) {};
+  MotionKeyframe():Variable("MotionKeyFrame"), frameCount(0), converged(false) {};
   void get_poseView(arr& x) { x=x_estimate; }
 };
 
@@ -55,6 +57,7 @@ struct MotionKeyframe:Variable {
 struct MotionPrimitive:Variable {
   enum MotionMode{ stop=0, followPlan, feedback, done  };
 
+  FIELD(uint, frameCount);
   FIELD(MotionMode, mode);
   
   //in case of followPlan
@@ -76,6 +79,7 @@ struct MotionPrimitive:Variable {
   //FIELD(TaskVariableList, TVs);
   
   MotionPrimitive():Variable("MotionPrimitive"),
+      frameCount(0), 
       mode(stop),
       frame0(NULL), frame1(NULL), planConverged(false),
       feedbackControlTask(NULL),
@@ -106,14 +110,19 @@ struct HardwareReference:Variable {
  * planning of the motion primitives even when the action will only be in the future. The ActionProgressor takes care to point
  * the controller to the next motion primitive when the previous one was executed */
 struct MotionFuture:Variable {
+  FIELD(uint, currentFrame);
   FIELD(MT::Array<Action*>, actions)
   FIELD(MT::Array<MotionPrimitive*>, motions);
   FIELD(MT::Array<MotionKeyframe*>, frames);
   FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
   
-  MotionFuture():Variable("MotionFuture") {};
+  MotionFuture():Variable("MotionFuture"), currentFrame(0) {};
   
   void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+  void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
+  uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
+  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
+  Action *getCurrentAction(Process *p){ readAccess(p); Action *a=actions(currentFrame); deAccess(p); return a; }
 };
 
 //===========================================================================
@@ -122,6 +131,8 @@ struct MotionFuture:Variable {
 //
 
 PROCESS(Controller)
+
+PROCESS(ActionProgressor)
 
 struct ActionToMotionPrimitive:Process {
   struct sActionToMotionPrimitive *s;

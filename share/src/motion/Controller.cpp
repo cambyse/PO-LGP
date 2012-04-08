@@ -6,6 +6,7 @@
 #include <hardware/hardware.h>
 
 struct sController {
+  MotionFuture *motionFuture;
   MotionPrimitive *motionPrimitive;
   HardwareReference *hardwareReference;
   //GeometricState *geo;
@@ -31,7 +32,7 @@ struct sController {
 
 Controller::Controller():Process("MotionController") {
   s = new sController();
-  birosInfo.getVariable(s->motionPrimitive, "MotionPrimitive", this);
+  birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
   birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
   bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
   if(listens) threadListenTo(s->hardwareReference);
@@ -40,6 +41,7 @@ Controller::Controller():Process("MotionController") {
   s->geo().ors.getJointState(s->hardwareReference->q_reference,
                              s->hardwareReference->v_reference);
   s->hardwareReference->deAccess(this);
+  s->motionPrimitive = NULL;
   
 }
 
@@ -64,15 +66,25 @@ void Controller::open() {
 void Controller::close() { }
 
 void Controller::step() {
+  arr zeros(14);  zeros.setZero();
   
   s->geo.pull();
-  
+
+  CHECK(s->motionFuture,"");
+  s->motionFuture->writeAccess(this);
+  if(s->motionFuture->motions.N)
+    s->motionPrimitive = s->motionFuture->motions(s->motionFuture->currentFrame);
+  s->motionFuture->deAccess(this);
+    
+  if (!s->motionPrimitive){ //no motion primitive is set! don't do anything
+    s->hardwareReference->set_v_reference(zeros, this);
+    return;
+  }
+
   MotionPrimitive::MotionMode mode=s->motionPrimitive->get_mode(this);
   
-  if (mode==MotionPrimitive::stop) {
-    //stop -> don't change q_reference
-    arr tmp(14);  tmp.setZero();
-    s->hardwareReference->set_v_reference(tmp, this);
+  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) {
+    s->hardwareReference->set_v_reference(zeros, this);
     return;
   }
   
@@ -81,9 +93,7 @@ void Controller::step() {
     
     //-- check if converged
     if (s->motionPrimitive->get_planConverged(this)==false) {
-      //stop
-      arr tmp(14);  tmp.setZero();
-      s->hardwareReference->set_v_reference(tmp, this);
+      s->hardwareReference->set_v_reference(zeros, this);
       return;
     }
     
@@ -194,10 +204,6 @@ void Controller::step() {
       listCopy(proxiesVar->proxies, ors.proxies);
       proxiesVar->deAccess(this);
       } else MT_MSG("Variable pointer not set");*/
-  }
-  
-  if (mode==MotionPrimitive::done) {
-    return;
   }
   
 }
