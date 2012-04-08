@@ -1,5 +1,5 @@
 #define MT_IMPLEMENT_TEMPLATES
-#include <biros/biros.h>
+#include <MT/biros.h>
 #include <MT/util.h>
 
 #include "process_monitor.h"
@@ -30,8 +30,8 @@ struct TestThread:public Process{
 
 void testLoop(){
   //Fl::lock();
-  ThreadInfoWin win;
-  win.threadLoopWithBeat(.1);
+//   ThreadInfoWin win;
+//   win.threadLoopWithBeat(.1);
 
   TestThread A("A loop (self=.08)",.08);
   TestThread E("E slave of B (self=.0)",.0);
@@ -61,7 +61,7 @@ void testLoop(){
 
   MT::wait();
 
-  win.threadClose();
+//   win.threadClose();
 }
 
 
@@ -170,9 +170,9 @@ void testMultiAccess(){
 
 int main(int argc, char *argv[]){
   MT::initCmdLine(argc,argv);
-  //testLoop();
+  testLoop();
   testScheduling();
-  //testMultiAccess();
+  testMultiAccess();
   
   return 0;
 }

@@ -2,7 +2,7 @@
 #define MT_process_internal_h
 
 #include <pthread.h>
-#include "biros.h"
+#include <biros/biros.h>
 
 typedef unsigned int uint;
 
@@ -129,6 +129,7 @@ struct sProcess {
     tid=0;
     threadPriority=0;
     thread=0;
+    metronome = NULL;
   };
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread

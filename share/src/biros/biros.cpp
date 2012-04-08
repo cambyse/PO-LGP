@@ -1,7 +1,7 @@
-#include "biros.h"
-#include "biros_internal.h"
-//#include "logger.h"
-//#include "threadless.h"
+#include <biros/biros.h>
+#include <biros/biros_internal.h>
+//#include "biros_logger.h"
+//#include "biros_threadless.h"
 
 #include <errno.h>
 #include <string.h>
@@ -356,11 +356,11 @@ void CycleTimer::cycleDone() {
 Variable::Variable(const char *_name) {
   s = new sVariable(this);
   name = _name;
-  revision = 0;
+  revision = 0U;
   id = 0U;
-  logValues = true;
-  dbDrivenReplay = false;
-  pthread_mutex_init(&replay_mutex, NULL);
+  //MT logValues = false;
+  //MT dbDrivenReplay = false;
+  //MT pthread_mutex_init(&replay_mutex, NULL);
   if (this != &birosInfo) {
     birosInfo.writeAccess(NULL);
     id = birosInfo.variables.N;
@@ -378,40 +378,40 @@ Variable::~Variable() {
   }
   for (uint i=0; i<fields.N; i++) delete fields(i);
   
-  pthread_mutex_destroy(&replay_mutex);
+  //MT pthread_mutex_destroy(&replay_mutex);
   
   delete s;
 }
 
 int Variable::readAccess(Process *p) {
-  logService.queryReadAccess(this, p);
+  //MT logService.queryReadAccess(this, p);
   s->lock.readLock();
-  logService.logReadAccess(this, p);
+  //MT logService.logReadAccess(this, p);
   return revision;
 }
 
-void Variable::writeAccess(Process *p) {
-  logService.queryWriteAccess(this, p);
+int Variable::writeAccess(Process *p) {
+  //MT logService.queryWriteAccess(this, p);
   s->lock.writeLock();
-  pthread_mutex_lock(&replay_mutex); //TODO: why do I need this lock?
+  //MT pthread_mutex_lock(&replay_mutex); //TODO: why do I need this lock?
   revision++;
-  pthread_mutex_unlock(&replay_mutex);
-  logService.logWriteAccess(this, p);
+  //MT pthread_mutex_unlock(&replay_mutex);
+  //MT logService.logWriteAccess(this, p);
   uint i;  Process *l;
-  for_list(i, l, listeners) {}
+  //for_list(i, l, listeners) {}
   //if(l!=p) l->threadStep(); //TODO: or should we only 'wake' a process instead of directly triggering a step?
   s->cond.setState(revision);
   //broadcastCondition();
   return revision;
 }
 
-void Variable::deAccess(Process *p) {
+int Variable::deAccess(Process *p) {
   if (s->lock.state == -1) { //log a revision after write access
-    logService.logRevision(this);
-    logService.setValueIfDbDriven(this);
-    logService.freeWriteAccess(this);
+    //MT logService.logRevision(this);
+    //MT logService.setValueIfDbDriven(this);
+    //MT logService.freeWriteAccess(this);
   } else {
-    logService.freeReadAccess(this);
+    //MT logService.freeReadAccess(this);
   }
   int rev=revision;
   s->lock.unlock();
@@ -483,7 +483,6 @@ void Variable::deSerializeFromString(const MT::String &string) {
 Process::Process(const char *_name) {
   s = new sProcess();
   name = _name;
-  id = 0U; /* we need something initial */ //TODO: why?
   step_count = 0U;
   birosInfo.writeAccess(this);
   id = birosInfo.processes.N;
@@ -711,13 +710,6 @@ Process *BirosInfo::getProcessFromPID() {
   }
   if (i>=processes.N) return NULL;
   return p;
-}
-
-BirosInfo::BirosInfo():Variable("BirosInfo") {
-  revision = 0U;
-  id = 0U; //TODO verify this, Lutz.
-  this->variables.memMove = true;
-  this->variables.append(this);
 }
 
 #define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max

@@ -221,7 +221,7 @@ public:
   
   //!@name appending etc
   T& append();
-  void append(const T& x);
+  T& append(const T& x);
   void append(const Array<T>& x);
   void append(const T *p, uint n);
   void replicate(uint copies);

@@ -32,7 +32,7 @@ int main(int argn,char** argv){
   ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
   // viewers
   OrsViewer<GeometricState>     view0(geometricState);
-  PoseViewer<MotionPrimitive>        view7(motionPrimitive);
+  PoseViewer<MotionPrimitive>   view7(motionPrimitive);
   PoseViewer<HardwareReference> view8(hardwareReference);
   PoseViewer<MotionKeyframe>    view9(frame1);
 

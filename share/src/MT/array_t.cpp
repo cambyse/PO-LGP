@@ -395,7 +395,7 @@ template<class T> T& MT::Array<T>::append() {
 }
 
 //! append an element to the array -- the array becomes 1D!
-template<class T> void MT::Array<T>::append(const T& x) { append()=x; }
+template<class T> T& MT::Array<T>::append(const T& x) { append()=x; return p[N-1]; }
 
 //! append another array to the array (by copying it) -- the array might become 1D!
 template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {

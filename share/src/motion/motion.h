@@ -8,6 +8,7 @@
 struct SkinPressure;
 struct JoystickState;
 struct FeedbackControlTaskAbstraction;
+struct ActionToMotionPrimitive;
 
 //===========================================================================
 //
@@ -22,6 +23,7 @@ struct GeometricState:Variable {
 };
 
 
+/** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
 struct Action:Variable {
   enum ActionPredicate { noAction, grasp, place, home };
   
@@ -36,6 +38,7 @@ struct Action:Variable {
 };
 
 
+/** \brief A keyframe represents a pose at the beginning and end of a motion primitive, that is, in between two symbolic actions. */
 struct MotionKeyframe:Variable {
   FIELD(arr, x_estimate);
   FIELD(double, duration_estimate);
@@ -46,6 +49,9 @@ struct MotionKeyframe:Variable {
 };
 
 
+/** \brief A motion primitive is the motion-grounding of a symbolic action. It can be a feedback control task, or a planned motion.
+ In the first case, the MotionPrimitive is given a FeedbackControlTaskAbstraction, which implements the necessary task variable updates for a feedback controller.
+ In the planned case, a motion planner first generates a trajectroy (q_plan), then this is followed by the controller */
 struct MotionPrimitive:Variable {
   enum MotionMode{ stop=0, followPlan, feedback, done  };
 
@@ -81,6 +87,8 @@ struct MotionPrimitive:Variable {
 };
 
 
+/** \brief The HardwareReference is the interface to motors, containing the reference pose for the motor controllers and
+ * their return values (q_real). */
 struct HardwareReference:Variable {
   FIELD(arr, q_reference);
   FIELD(arr, v_reference);
@@ -94,14 +102,26 @@ struct HardwareReference:Variable {
 };
 
 
+/** \brief The MotionFuture contains a whole queue of future actions, motion primitives and keyframes. This allows parallel
+ * planning of the motion primitives even when the action will only be in the future. The ActionProgressor takes care to point
+ * the controller to the next motion primitive when the previous one was executed */
+struct MotionFuture:Variable {
+  FIELD(MT::Array<Action*>, actions)
+  FIELD(MT::Array<MotionPrimitive*>, motions);
+  FIELD(MT::Array<MotionKeyframe*>, frames);
+  FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
+  
+  MotionFuture():Variable("MotionFuture") {};
+  
+  void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+};
+
 //===========================================================================
 //
 // Processes
 //
 
 PROCESS(Controller)
-
-//PROCESS(MotionPlanner)
 
 struct ActionToMotionPrimitive:Process {
   struct sActionToMotionPrimitive *s;

@@ -40,7 +40,7 @@ struct FieldInfo {
   const char* userType;
   const char* sysType;
   virtual void write_value(ostream& os) const = 0;
-  virtual void read_value(istream& os) const = 0;
+  virtual void read_value(istream& os) const { NIY; }
   virtual MT::String type() const = 0;
 };
 
@@ -53,7 +53,7 @@ struct FieldInfo_typed:FieldInfo {
     sysType = typeid(T).name();
   }
   void write_value(ostream& os) const { os <<*((T*)p); }
-  void read_value(istream& is) const { is >> *((T*)p); }
+//   void read_value(istream& is) const { is >>*((T*)p); }
   MT::String type() const { MT::String s(typeid(T).name()); return s; }
 };
 
@@ -81,9 +81,9 @@ struct Variable {
   uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
   MT::Array<FieldInfo*> fields;
   ProcessL listeners;
-  bool logValues;
-  bool dbDrivenReplay;
-  pthread_mutex_t replay_mutex; //TODO: move to sVariable! (that's the point of private..)
+  //MT bool logValues;
+  //MT bool dbDrivenReplay;
+  //MT pthread_mutex_t replay_mutex; //TODO: move to sVariable! (that's the point of private..)
   
   Variable(const char* name);
   ~Variable();
@@ -195,7 +195,7 @@ struct BirosInfo:Variable {
   
   Process *getProcessFromPID();
   
-  BirosInfo();
+  BirosInfo():Variable("BirosInfo") {};
   
   template<class T>  void getVariable(T*& v, const char* name, Process *p) {
     writeAccess(p);
@@ -214,15 +214,15 @@ struct BirosInfo:Variable {
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
-    if (!par) par = new Parameter_typed<T>(name, *_default);
+    if (!par) par = new Parameter_typed<T>(name, _default);
     if (!par->processes.contains(p)) par->processes.append(p);
     return par->value;
   }
   template<class T> T getParameter(const char *name) {
-    return getParameter<T>(name, getProcessFromPID(), NULL);
+    return getParameter<T>(name, getProcessFromPID());
   }
   template<class T> T getParameter(const char *name, const T& _default) {
-    return getParameter<T>(name, getProcessFromPID(), &_default);
+    return getParameter<T>(name, getProcessFromPID(), _default);
   }
   void dump(); //dump everything -- for debugging
 };

@@ -1,8 +1,8 @@
-#include <biros/biros_internal.h>
+#include <MT/biros_internal.h>
 
 #define BIR_VARIABLE \
 static int bir_typeId; \
-static MT::Array<_Variable_field_info_base*> bir_fields;
+static MT::Array<FieldInfo*> bir_fields;
 
 #define BIR_FIELD(type, name) \
   type name; \
@@ -23,7 +23,7 @@ void dumpInfo(){
   uint i, j;
   Variable *v;
   Process *p;
-  _Variable_field_info_base *vi;
+  FieldInfo *vi;
   birosInfo.readAccess(NULL);
   for_list(i, v, birosInfo.variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
