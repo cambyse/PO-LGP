@@ -72,7 +72,7 @@ void ActionToMotionPrimitive::step() {
     frame1->writeAccess(this);
     frame1->x_estimate = frame0->get_x_estimate(this);
     frame1->duration_estimate = 0.;
-    frame1->converged = true;
+    frame1->converged = false;
     frame1->deAccess(this);
     
     motionPrimitive->writeAccess(this);
@@ -151,16 +151,17 @@ void ActionToMotionPrimitive::step() {
 	if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
 	if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
 	
-	if(!s->aico){
+	//if(!s->aico){
 	  s->aico = new AICO(s->sys);
 	  s->aico->fix_initial_state(x0);
 	  s->aico->fix_final_state(xT);
-	} else { //we've been optimizing this before!!
+	/*} else { //we've been optimizing this before!!
           s->aico->fix_initial_state(x0);
 	  s->aico->fix_final_state(xT);
-	}
+	}*/
 	s->aico->iterate_to_convergence();
 	q = s->aico->q;
+	delete s->aico;
       } break;
       default:
       HALT("no mode set!");

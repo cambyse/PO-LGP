@@ -23,6 +23,7 @@ void ActionProgressor::open(){
 }
 
 void ActionProgressor::step(){
+#if 0
   if(s->motionFuture->getTodoFrames(this) == 0) return;
   MotionPrimitive *motionPrimitive = s->motionFuture->getCurrentMotionPrimitive(this);
   Action *action = s->motionFuture->getCurrentAction(this);
@@ -79,7 +80,7 @@ void ActionProgressor::step(){
     */
   }
   f->deAccess(this);
-
+#endif
 }
 
 void ActionProgressor::close(){

@@ -71,7 +71,7 @@ void Controller::step() {
   s->geo.pull();
 
   CHECK(s->motionFuture,"");
-  s->motionFuture->writeAccess(this);
+  s->motionFuture->readAccess(this);
   if(s->motionFuture->motions.N)
     s->motionPrimitive = s->motionFuture->motions(s->motionFuture->currentFrame);
   s->motionFuture->deAccess(this);

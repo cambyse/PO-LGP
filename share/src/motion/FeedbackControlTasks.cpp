@@ -66,7 +66,7 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TVs = ARRAY<TaskVariable*>(q);
   activateAll(TVs, true);
-  q->y_prec=1e2;
+  q->y_prec=1e1;
   q->v_prec=birosInfo.getParameter<double>("TV_q_vprec", 1e-1);
   q->y_target.setZero();
   q->v_target.setZero();
