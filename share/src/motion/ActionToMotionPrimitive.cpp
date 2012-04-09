@@ -39,9 +39,7 @@ void ActionToMotionPrimitive::open() {
   
   //clone the geometric state
   s->geo.pull();
-  /*geo->readAccess(this);
-//   s->ors = geo->ors.newClone();
-  geo->deAccess(this);*/
+  
   if (s->verbose) {
     s->gl = new OpenGL("ActionToMotionPrimitive");
     s->gl->add(glStandardScene);
@@ -100,7 +98,8 @@ void ActionToMotionPrimitive::step() {
     frame0->get_x_estimate(x0, this);
     CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
-    
+    cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<frame0->frameCount <<' ' <<frame1->frameCount <<' ' <<motionPrimitive->frameCount <<endl;
+
     //-- estimate the keyframe
     arr xT;
     if (!frame1->get_converged(this)){
@@ -167,6 +166,10 @@ void ActionToMotionPrimitive::step() {
       HALT("no mode set!");
     }
     
+    if (actionSymbol==Action::place) {
+      cout <<"PLAN:\n" <<q[0] <<'\n' <<q[1] <<'\n' <<q[q.d0-1] <<endl;
+    }
+    
     //-- set the motion primitive -- for the controller to go
     motionPrimitive->writeAccess(this);
     motionPrimitive->q_plan = q;
@@ -184,8 +187,7 @@ void ActionToMotionPrimitive::step() {
       return;
     }
 
-    if (frame1->get_converged(this)) {
-      //action->waitForConditionSignal(.01);
+    if (frame1->get_converged(this) && motionPrimitive->get_planConverged(this)) { // nothing to do anymore
       return;
     }
     

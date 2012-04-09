@@ -42,13 +42,14 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
     frames(0)->set_x_estimate(x0, p);
     frames(0)->set_converged(true, p);
   }
-  
+
   //create new Variables
   Action *a = actions.append(new Action);
   MotionKeyframe *f0 = frames.last();
   MotionKeyframe *f1 = frames.append(new MotionKeyframe);
   MotionPrimitive *m = motions.append(new MotionPrimitive);
-
+  done = false;
+  
   //assign Variables
   a->setNewAction(_action, ref1, ref2, p);
   a->set_frameCount(actions.N-1, p);
@@ -57,7 +58,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   
   //create new Processes
   ActionToMotionPrimitive *planner = planners.append(new ActionToMotionPrimitive(*a, *f0, *f1, *m));
-
+  
   //loop the process
   planner -> threadLoopWithBeat(0.01);
   

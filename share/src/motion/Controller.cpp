@@ -115,7 +115,7 @@ void Controller::step() {
       q_reference = q_plan[q_plan.d0-1];
     }
     
-    cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
+    //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
     s->motionPrimitive->set_relativeRealTimeOfController(realTime, this);
     
     if (timeStep>=q_plan.d0-1) {

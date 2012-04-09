@@ -210,14 +210,27 @@ void waitForSmallMotionQueue(MotionFuture *motionFuture, uint queuesize){
   }
 }
 
+void waitForEmptyQueue(MotionFuture *motionFuture){
+  int rev = 0;
+  while(!motionFuture->get_done(NULL)){
+    rev = motionFuture->waitForRevisionGreaterThan(rev);
+  }
+}
+
 void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
   VAR(MotionFuture);
   
   waitForSmallMotionQueue(_MotionFuture, 1);
 
   _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
+  
+  waitForSmallMotionQueue(_MotionFuture, 1);
+  waitForEmptyQueue(_MotionFuture);
+  
   if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NULL);
   if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NULL);
+  
+  waitForEmptyQueue(_MotionFuture);
 }
 
 void plannedHoming(const char* objShape, const char* belowToShape){

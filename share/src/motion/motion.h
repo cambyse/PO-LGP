@@ -111,12 +111,13 @@ struct HardwareReference:Variable {
  * the controller to the next motion primitive when the previous one was executed */
 struct MotionFuture:Variable {
   FIELD(uint, currentFrame);
+  FIELD(bool, done);
   FIELD(MT::Array<Action*>, actions)
   FIELD(MT::Array<MotionPrimitive*>, motions);
   FIELD(MT::Array<MotionKeyframe*>, frames);
   FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
   
-  MotionFuture():Variable("MotionFuture"), currentFrame(0) {};
+  MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {};
   
   void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
   void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
