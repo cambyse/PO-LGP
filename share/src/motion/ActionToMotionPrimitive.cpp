@@ -140,28 +140,34 @@ void ActionToMotionPrimitive::step() {
     arr q;
     switch (s->planningAlgo) {
       case sActionToMotionPrimitive::interpolation: {
-	q.resize(T+1,x0.N);
-	for (uint t=0; t<=T; t++) {
-	  double a=double(t)/T;
-	  q[t] = (1.-a)*x0 + a*xT;
-	}
+        q.resize(T+1,x0.N);
+        for (uint t=0; t<=T; t++) {
+          double a=double(t)/T;
+          q[t] = (1.-a)*x0 + a*xT;
+        }
       } break;
       case sActionToMotionPrimitive::AICO_noinit: {
-	//enforce zero velocity start/end vel
-	if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
-	if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
-	
-	//if(!s->aico){
-	  s->aico = new AICO(s->sys);
-	  s->aico->fix_initial_state(x0);
-	  s->aico->fix_final_state(xT);
-	/*} else { //we've been optimizing this before!!
-          s->aico->fix_initial_state(x0);
-	  s->aico->fix_final_state(xT);
-	}*/
-	s->aico->iterate_to_convergence();
-	q = s->aico->q;
-	delete s->aico;
+          //enforce zero velocity start/end vel
+          if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
+          if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
+
+          //if(!s->aico){
+            s->aico = new AICO(s->sys);
+            s->aico->fix_initial_state(x0);
+            s->aico->fix_final_state(xT);
+          /*} else { //we've been optimizing this before!!
+                  s->aico->fix_initial_state(x0);
+            s->aico->fix_final_state(xT);
+          }*/
+          s->aico->iterate_to_convergence();
+          cout << s->aico->cost << endl;
+          motionPrimitive->writeAccess(this);
+          motionPrimitive->cost = s->aico->cost;
+          motionPrimitive->iterations_till_convergence = s->aico->iterations_till_convergence;
+          motionPrimitive->deAccess(this);
+
+          q = s->aico->q;
+          delete s->aico;
       } break;
       default:
       HALT("no mode set!");

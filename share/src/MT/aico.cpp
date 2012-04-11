@@ -62,9 +62,13 @@ void AICO::init(soc::SocSystemAbstraction& _sys,
 void AICO::iterate_to_convergence(const arr* q_init){
   if(q_init) init_trajectory(*q_init);
   
+  iterations_till_convergence=0;
   for(uint k=0; k<max_iterations; k++){
     double d=step();
-    if(k && d<tolerance) break; //d*(1.+damping)
+    if(k && d<tolerance){
+      iterations_till_convergence=k+1;
+      break; //d*(1.+damping)
+    }
   }
 }
 

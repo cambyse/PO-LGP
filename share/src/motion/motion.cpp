@@ -108,6 +108,9 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   
   if(_action == Action::grasp || _action==Action::place)
     waitForDoneMotionPrimitive2(m);
+
+  cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
+
   if(_action == Action::grasp) reattachShape(a->get_objectRef1(p), "m9");
   if(_action == Action::place) reattachShape(a->get_objectRef1(p), "OBJECTS");
 

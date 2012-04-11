@@ -51,6 +51,8 @@ struct AICO {
   arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; //!< processes...
   uint sweep;                     //!< #sweeps so far
   uint scale;                     //!< scale of this AICO in a multi-scale approach
+
+  uint iterations_till_convergence;
   
   AICO(){ sweep=0; scale=0; sweepMode=smLocalGaussNewton; }
   AICO(soc::SocSystemAbstraction& sys){ sweep=0; scale=0; init(sys); }
