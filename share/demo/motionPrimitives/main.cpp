@@ -121,19 +121,38 @@ int main(int argn,char** argv){
   printGraspMotionParameters();
 
   MT::wait(1.);
+
+  double threshold = 0.0000001;
+  double step = 10;
+
   //objects box1,box2,cyl1,cyl2,table
-  for(uint k=0;k<2;k++){
+  double oldPosPrec = 0;
+  double newPosPrec = 100;
+  FILE *logger = fopen("graspprec.test", "w");
+  fprintf(logger, "oldprec | newprec | cost\n");
+  while( fabs(oldPosPrec - newPosPrec) > threshold ){
+    oldPosPrec = newPosPrec;
     //pickOrPlaceObject(Action::grasp, "box1", NULL);
-    double pcost = pickOrPlaceObjectCost(Action::grasp, "box1", NULL);
-    cout << "COST FOR GRASP: " << pcost << endl;
-    double oldPosPrec = birosInfo.getParameter<double>("graspPlanPositionPrec");
-    cout << "old pos prec: " << oldPosPrec << endl;
-    birosInfo.setParameter<double>("graspPlanPositionPrec", (double)133);
-    double newPosPrec = birosInfo.getParameter<double>("graspPlanPositionPrec");
-    cout << "new pos prec: " << newPosPrec << endl;
+
+    birosInfo.setParameter<double>("graspPlanPositionPrec", oldPosPrec);
+    double pcost= pickOrPlaceObjectCost(Action::grasp, "box1", NULL);
+    //plannedHoming("box1", "box2");
+
+    //reset the robot hand (TODO: segfault, do it manually?)
+    //homing();
+
+    newPosPrec = oldPosPrec - step * pcost;
+    if(newPosPrec < 0) newPosPrec = 0;
+    cout << "oldPrec: " << oldPosPrec << endl;
+    cout << "newPrec: " << newPosPrec << endl;
+    cout << "pcost: " << pcost << endl;
+    cout << "old-new: " << fabs(oldPosPrec - newPosPrec) << endl;
+    fprintf(logger, "%.2f %.2f %.2f\n", oldPosPrec, newPosPrec, pcost);
 
   }
-  
+  cout << "Best local optima for graspPlanPosPrec: " << newPosPrec << endl;
+  fclose(logger);
+
   cam.threadClose();
   close(P);
 
