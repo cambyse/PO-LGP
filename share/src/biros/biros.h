@@ -224,6 +224,19 @@ struct BirosInfo:Variable {
   template<class T> T getParameter(const char *name, const T& _default) {
     return getParameter<T>(name, getProcessFromPID(), _default);
   }
+  template<class T>
+  void setParameter(const char *name, T value ) {
+    Process *p = getProcessFromPID();
+    Parameter_typed<T> *par;
+    writeAccess(p);
+    par = (Parameter_typed<T>*)listFindByName(parameters, name);
+    deAccess(p);
+    if (!par) MT_MSG("WARNING: cannot find " << name << " in parameters, nothing is changed.");
+    cout << "change " << par->value << " to ";
+    par->value = value;
+    cout << par->value << endl;
+
+  }
   void dump(); //dump everything -- for debugging
 };
 
