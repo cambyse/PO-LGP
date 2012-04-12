@@ -34,7 +34,7 @@ template<class T> void save(const T& x, const char *filename) {
 std::ifstream file; MT::open(file, filename); file >>x;
 file.close(); */
 template<class T> void load(T& x, const char *filename, bool change_directory) {
-  if (!change_directory) {
+  if(!change_directory) {
     std::ifstream file;
     open(file, filename);
     file >>x;
@@ -42,13 +42,13 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
   } else {
     char *path, *name, cwd[200];
     MT::decomposeFilename(path, name, filename);
-    if (!getcwd(cwd, 200)) HALT("couldn't get current dir");
-    if (path[0]) if (chdir(path)) HALT("couldn't change to directory " <<path);
+    if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
+    if(path[0]) if(chdir(path)) HALT("couldn't change to directory " <<path);
     std::ifstream file;
     open(file, name);
     file >>x;
     file.close();
-    if (path[0]) if (chdir(cwd)) HALT("couldn't change to directory " <<cwd);
+    if(path[0]) if(chdir(cwd)) HALT("couldn't change to directory " <<cwd);
   }
 }
 
@@ -58,10 +58,10 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
 template<class T>
 bool getFromCmdLine(T& x, const char *tag) {
   char *opt=getCmdLineArgument(tag);
-  if (!opt) return false;
+  if(!opt) return false;
   std::istringstream s(opt);
   s >>x;
-  if (s.fail()) HALT("error when reading parameter from command line: " <<tag);
+  if(s.fail()) HALT("error when reading parameter from command line: " <<tag);
   return true;
 }
 
@@ -70,27 +70,27 @@ in the config file (opened automatically) and, if found, pipes
 it in \c value. Returns false if parameter is not found. */
 template<class T>
 bool getFromCfgFile(T& x, const char *tag) {
-  if (!cfgOpenFlag) openConfigFile();
+  if(!cfgOpenFlag) openConfigFile();
   CHECK(!cfgLock, "cfg file is locked");
   cfgLock=true;
   cfgFile.clear();
   cfgFile.seekg(std::ios::beg);
-  if (!cfgFile.good()) { cfgLock=false; return false; }
+  if(!cfgFile.good()) { cfgLock=false; return false; }
   unsigned n=strlen(tag);
   char *buf=new char [n+2]; memset(buf, 0, n+2);
-  while (cfgFile.good()) {
+  while(cfgFile.good()) {
     memmove(buf, buf+1, n);
     buf[n]=cfgFile.get();
-    if (buf[n]==' ' || buf[n]=='\t' || buf[n]==':' || buf[n]=='=') { buf[n]=0; if (!strcmp(tag, buf)) break; buf[n]=':'; }
+    if(buf[n]==' ' || buf[n]=='\t' || buf[n]==':' || buf[n]=='=') { buf[n]=0; if(!strcmp(tag, buf)) break; buf[n]=':'; }
   };
   delete[] buf;
   
-  if (!cfgFile.good()) { cfgLock=false; return false; }
+  if(!cfgFile.good()) { cfgLock=false; return false; }
   
   skip(cfgFile, " :=\n\r\t");
   cfgFile >>x;
   
-  if (cfgFile.fail()) HALT("error when reading parameter " <<tag);
+  if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
   cfgLock=false;
   return true;
 }
@@ -100,18 +100,18 @@ bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default) 
   log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
   log().flush();
   
-  if (getFromCmdLine(x, tag)) {
+  if(getFromCmdLine(x, tag)) {
     log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
     return true;
   }
   
-  if (getFromCfgFile(x, tag)) {
+  if(getFromCfgFile(x, tag)) {
     log() <<x <<" [" <<typeid(x).name() <<"]" <<std::endl;
     return true;
   }
   
-  if (hasDefault) {
-    if (Default) {
+  if(hasDefault) {
+    if(Default) {
       x=*Default;
       log() <<x <<" [" <<typeid(x).name() <<"] (default!)" <<std::endl;
     }
@@ -145,7 +145,7 @@ template<class T> bool checkParameter(const char *tag) {
   return getParameterBase(x, tag, true, (T*)NULL);
 }
 template<class T> void Parameter<T>::initialize() {
-  if (!initialized) {
+  if(!initialized) {
     getParameterBase(value, tag, hasDefault, &Default);
     initialized = true;
   }
@@ -164,26 +164,26 @@ template<class T> struct Any_typed:public Any {
   Any_typed(const char* _tag, const T &x) {                      tag=NULL; p=NULL; set(_tag, &x, 0, 0);  }
   Any_typed(const char* _tag, const T *_p, uint _n, char _delim) { tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
   virtual void write(std::ostream &os) const {
-    if (!p) { os <<tag; return; } //boolean
+    if(!p) { os <<tag; return; }  //boolean
     os <<tag <<"="; // <<"[" <<type <<"] = ";
-    if (!n) {
-      if (typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os <<'\'' <<*((T*)p) <<'\'';
+    if(!n) {
+      if(typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os <<'\'' <<*((T*)p) <<'\'';
       else os <<*((T*)p);
     } else {
       T *t=(T*)p;
       os <<delim <<t[0];
-      for (uint i=1; i<n; i++) os <<' ' <<t[i];
-      if (delim=='(') os <<')';
-      else if (delim=='[') os <<']';
-      else if (delim=='{') os <<'}';
+      for(uint i=1; i<n; i++) os <<' ' <<t[i];
+      if(delim=='(') os <<')';
+      else if(delim=='[') os <<']';
+      else if(delim=='{') os <<'}';
       else os <<delim;
     }
   }
   virtual void free() {
-    if (!tag) { CHECK(!p, ""); return; }
+    if(!tag) { CHECK(!p, ""); return; }
     delete[] tag;
-    if (!p) return;
-    if (!n) delete((T*)p);
+    if(!p) return;
+    if(!n) delete((T*)p);
     else   delete[]((T*)p);
     p=NULL;
   }
@@ -192,15 +192,15 @@ template<class T> struct Any_typed:public Any {
     type=typeid(T).name();
     tag=new char[strlen(_tag)+1];
     strcpy(tag, _tag);
-    if (!_p) { p=NULL; n=0; delim=0; return; } //assume this is a ``boolean tag'' without data
+    if(!_p) { p=NULL; n=0; delim=0; return; }  //assume this is a ``boolean tag'' without data
     n=_n;
     delim=_delim;
-    if (!n) {
+    if(!n) {
       p = new T(_p[0]);
     } else {
       p = new T[n];
       T *t=(T*)p;
-      for (uint i=0; i<n; i++) t[i]=_p[i];
+      for(uint i=0; i<n; i++) t[i]=_p[i];
     }
   }
   virtual Any* newClone() { return new Any_typed<T>(tag, (T*)p, n, delim); }

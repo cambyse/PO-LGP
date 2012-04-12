@@ -28,6 +28,7 @@ struct AICO {
   soc::SocSystemAbstraction *sys;
   double damping, tolerance;
   uint max_iterations;
+  double maxStepSize;
   uint display;
   bool useBwdMsg,fixFinalState;
   arr bwdMsg_v, bwdMsg_Vinv;
@@ -39,32 +40,32 @@ struct AICO {
   std::ostream *os;
   
   //messages
-  arr s, Sinv, v, Vinv, r, R, rhat;     //!< fwd, bwd, and task messages
-  MT::Array<arr> phiBar, JBar;     //!< all task cost terms
-  arr Psi;                        //!< all transition cost terms
-  arr b, Binv;                     //!< beliefs
-  arr q, xhat;                     //!< q-trajectory (MAP), and point of linearization
+  arr s, Sinv, v, Vinv, r, R, rhat; //!< fwd, bwd, and task messages
+  MT::Array<arr> phiBar, JBar;      //!< all task cost terms
+  arr Psi;                          //!< all transition cost terms
+  arr b, Binv;                      //!< beliefs
+  arr q, xhat;                      //!< q-trajectory (MAP), and point of linearization
   arr s_old, Sinv_old, v_old, Vinv_old, r_old, R_old, rhat_old, b_old, Binv_old, q_old, qhat_old;
   arr dampingReference;
-  double cost, cost_old;                      //!< cost of MAP trajectory
+  double cost, cost_old;            //!< cost of MAP trajectory
   double b_step;
   arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; //!< processes...
-  uint sweep;                     //!< #sweeps so far
-  uint scale;                     //!< scale of this AICO in a multi-scale approach
+  uint sweep;                       //!< #sweeps so far
+  uint scale;                       //!< scale of this AICO in a multi-scale approach
   
   AICO(){ sweep=0; scale=0; sweepMode=smLocalGaussNewton; }
   AICO(soc::SocSystemAbstraction& sys){ sweep=0; scale=0; init(sys); }
   
   void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
-  void init(soc::SocSystemAbstraction& _sys, double _tolerance, uint _display, uint _scale);
   void init_messages();
   void init_trajectory(const arr& q_init);
+  void prepare_for_changed_task();
   void fix_initial_state(const arr& x_0);
   void fix_final_state(const arr& x_T);
   void shift_solution(int offset);
   
   double step();
-  void iterate_to_convergence(const arr* q_init=NULL);
+  void iterate_to_convergence();
   
   //old:
   void initMessagesFromScaleParent(AICO *parent);
@@ -72,9 +73,9 @@ struct AICO {
 private:
   void updateFwdMessage(uint t);
   void updateBwdMessage(uint t);
-  void updateTaskMessage(uint t, const arr& qhat_t, double tolerance, double maxStepSize=-1.);
-  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation, double maxStepSize=-1.);
-  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, double maxStepSize=-1.);
+  void updateTaskMessage(uint t, const arr& qhat_t, double tolerance);
+  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation);
+  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance);
   double evaluateTimeStep(uint t, bool includeDamping);
   double evaluateTrajectory(const arr& x, bool plot);
   void rememberOldState();

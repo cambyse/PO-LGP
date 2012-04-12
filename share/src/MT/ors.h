@@ -1061,16 +1061,16 @@ struct Link {
   ors::Vector com, force, torque;
   double mass;
   ors::Matrix inertia;
-  uint dof() { if (type==hingeJT) return 1; else return 0; }
+  uint dof() { if(type==hingeJT) return 1; else return 0; }
   
   arr _h, _A, _Q, _I, _f; //featherstone types
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
     os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
-    <<" XAQ=" <<X <<A <<Q <<endl
-    <<" cft=" <<com <<force <<torque <<endl
-    <<" mass=" <<mass <<inertia <<endl;
+       <<" XAQ=" <<X <<A <<Q <<endl
+       <<" cft=" <<com <<force <<torque <<endl
+       <<" mass=" <<mass <<inertia <<endl;
   }
 };
 

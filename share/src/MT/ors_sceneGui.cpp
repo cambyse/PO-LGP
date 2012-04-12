@@ -1,8 +1,8 @@
 #include "ors_sceneGui.h"
 
-enum EditMode{ emNone, emMove, emOde };
+enum EditMode { emNone, emMove, emOde };
 
-struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall{
+struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall {
   OpenGL *gl;
   ors::Graph *ors;
   OdeInterface ode;
@@ -10,11 +10,11 @@ struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall{
   ors::Body *movingBody;
   ors::Vector selpos;
   double seld, selx, sely, selz;
-  sOrsSceneGui(){
+  sOrsSceneGui() {
     mode = emNone;
   }
-
-  static void drawBase(void*){
+  
+  static void drawBase(void*) {
     glStandardLight(NULL);
     glDrawFloor(10,.8,.8,.8);
     glColor(1.,.5,0.);
@@ -23,15 +23,15 @@ struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall{
   bool keyCallback(OpenGL&);
   bool hoverCallback(OpenGL&);
   bool clickCallback(OpenGL&);
-
+  
 };
 
-bool sOrsSceneGui::clickCallback(OpenGL&){
-  if(mode==emMove){
+bool sOrsSceneGui::clickCallback(OpenGL&) {
+  if(mode==emMove) {
     ors::Vector delta;
     if(gl->mouse_button==4 && gl->mouseIsDown) delta = -.01*(gl->camera.X->pos - movingBody->X.pos);
     if(gl->mouse_button==5 && gl->mouseIsDown) delta = +.01*(gl->camera.X->pos - movingBody->X.pos);
-    if(delta.length()){
+    if(delta.length()) {
       selpos += delta;
       movingBody->X.pos += delta;
       return false;
@@ -40,105 +40,105 @@ bool sOrsSceneGui::clickCallback(OpenGL&){
   return true;
 }
 
-bool sOrsSceneGui::hoverCallback(OpenGL&){
-  switch(mode){
-  case emNone:{
-    ors::Joint *j=NULL;
-    ors::Shape *s=NULL;
-    gl->Select();
-    OpenGL::GLSelect *top=gl->topSelection;
-    if(!top){ gl->text.clear();  return false; }
-    uint i=top->name;
-    //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
-    if((i&3)==1) s=ors->shapes(i>>2);
-    if((i&3)==2) j=ors->joints(i>>2);
-    if(s){
-      gl->text.clear()
-      <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
-      listWrite(s->ats, gl->text, "\n");
+bool sOrsSceneGui::hoverCallback(OpenGL&) {
+  switch(mode) {
+    case emNone: {
+      ors::Joint *j=NULL;
+      ors::Shape *s=NULL;
+      gl->Select();
+      OpenGL::GLSelect *top=gl->topSelection;
+      if(!top) { gl->text.clear();  return false; }
+      uint i=top->name;
+      //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
+      if((i&3)==1) s=ors->shapes(i>>2);
+      if((i&3)==2) j=ors->joints(i>>2);
+      if(s) {
+        gl->text.clear()
+            <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
+        listWrite(s->ats, gl->text, "\n");
+      }
+      if(j) {
+        gl->text.clear()
+            <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+            <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+        listWrite(j->ats, gl->text, "\n");
+      }
+      if(!j && !s) gl->text.clear();
+      break;
     }
-    if(j){
-      gl->text.clear()
-      <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-      <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
-      listWrite(j->ats, gl->text, "\n");
+    case emMove: {
+      //gl->Select();
+      //double x=0, y=0, z=seld;
+      //double x=(double)gl->mouseposx/gl->width(), y=(double)gl->mouseposy/gl->height(), z=seld;
+      double x=gl->mouseposx, y=gl->mouseposy, z=seld;
+      gl->unproject(x, y, z, true);
+      cout <<"x=" <<x <<" y=" <<y <<" z=" <<z <<" d=" <<seld <<endl;
+      movingBody->X.pos = selpos + ARR(x-selx, y-sely, z-selz);
+      break;
     }
-    if(!j && !s) gl->text.clear();
-    break;
-  }
-  case emMove:{
-    //gl->Select();
-    //double x=0, y=0, z=seld;
-    //double x=(double)gl->mouseposx/gl->width(), y=(double)gl->mouseposy/gl->height(), z=seld;
-    double x=gl->mouseposx, y=gl->mouseposy, z=seld;
-    gl->unproject(x, y, z, true);
-    cout <<"x=" <<x <<" y=" <<y <<" z=" <<z <<" d=" <<seld <<endl;
-    movingBody->X.pos = selpos + ARR(x-selx, y-sely, z-selz);
-    break;
-  }
-  case emOde:{
-    cout <<"ODE step" <<endl;
-    ode.exportStateToOde(*ors);
-    ode.step(.01);
-    ode.importStateFromOde(*ors);
-    break;
-  }
+    case emOde: {
+      cout <<"ODE step" <<endl;
+      ode.exportStateToOde(*ors);
+      ode.step(.01);
+      ode.importStateFromOde(*ors);
+      break;
+    }
   }
   return true;
 }
 
-bool sOrsSceneGui::keyCallback(OpenGL&){
-  switch(gl->pressedkey){
-  case ' ':{ //move x-y the object
-    if(mode==emMove){ mode=emNone; movingBody=NULL; cout <<"move off" <<endl; return true; }
-    cout <<"move mode" <<endl;
-    mode=emMove;
-    gl->Select();
-    OpenGL::GLSelect *top=gl->topSelection;
-    if(!top){
-      cout <<"No object below mouse!" <<endl;
-      return NULL;
+bool sOrsSceneGui::keyCallback(OpenGL&) {
+  switch(gl->pressedkey) {
+    case ' ': { //move x-y the object
+      if(mode==emMove) { mode=emNone; movingBody=NULL; cout <<"move off" <<endl; return true; }
+      cout <<"move mode" <<endl;
+      mode=emMove;
+      gl->Select();
+      OpenGL::GLSelect *top=gl->topSelection;
+      if(!top) {
+        cout <<"No object below mouse!" <<endl;
+        return NULL;
+      }
+      uint i=top->name;
+      //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
+      ors::Body *b=NULL;
+      if((i&3)==1) b=ors->shapes(i>>2)->body;
+      if(b) {
+        cout <<"selected body " <<b->name <<endl;
+        selx=top->x;
+        sely=top->y;
+        selz=top->z;
+        seld=top->dmin;
+        cout <<"x=" <<selx <<" y=" <<sely <<" z=" <<selz <<" d=" <<seld <<endl;
+        selpos = b->X.pos;
+        movingBody=b;
+      }
+      return true;
     }
-    uint i=top->name;
-    //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
-    ors::Body *b=NULL;
-    if((i&3)==1) b=ors->shapes(i>>2)->body;
-    if(b){
-      cout <<"selected body " <<b->name <<endl;
-      selx=top->x;
-      sely=top->y;
-      selz=top->z;
-      seld=top->dmin;
-      cout <<"x=" <<selx <<" y=" <<sely <<" z=" <<selz <<" d=" <<seld <<endl;
-      selpos = b->X.pos;
-      movingBody=b;
+    case 'y': {
+      //depth moving
+      break;
     }
-    return true;
-  }
-  case 'y':{
-    //depth moving
-    break;
-  }
-  case 'z':{
-    //rotation
-    break;
-  }
-  case 'v':{
-    if(mode==emOde){ mode=emNone; ode.clear();  cout <<"ODE off" <<endl;  return true; }
-    cout <<"ODE mode" <<endl;
-    mode=emOde;
-    ode.createOde(*ors);
-    return true;
-  }
+    case 'z': {
+      //rotation
+      break;
+    }
+    case 'v': {
+      if(mode==emOde) { mode=emNone; ode.clear();  cout <<"ODE off" <<endl;  return true; }
+      cout <<"ODE mode" <<endl;
+      mode=emOde;
+      ode.createOde(*ors);
+      return true;
+    }
   }
   return true;
 }
 
-OrsSceneGui::OrsSceneGui(ors::Graph& ors, OpenGL* gl){
+OrsSceneGui::OrsSceneGui(ors::Graph& ors, OpenGL* gl) {
   s=new sOrsSceneGui();
   s->ors = &ors;
   orsDrawZlines=true;
-  if(!gl){
+  if(!gl) {
     gl = new OpenGL();
     gl->add(sOrsSceneGui::drawBase,0);
     gl->add(ors::glDrawGraph,&ors);
@@ -147,10 +147,10 @@ OrsSceneGui::OrsSceneGui(ors::Graph& ors, OpenGL* gl){
   gl->addHoverCall(s);
   gl->addKeyCall(s);
   gl->addClickCall(s);
-
+  
 }
 
-void OrsSceneGui::edit(){
+void OrsSceneGui::edit() {
   s->gl->watch();
 }
 

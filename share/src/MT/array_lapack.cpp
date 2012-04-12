@@ -46,11 +46,11 @@ extern "C" {
 #endif
 
 #ifdef NO_BLAS
-void blas_MM(arr& X, const arr& A, const arr& B){       MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
-void blas_MsymMsym(arr& X, const arr& A, const arr& B){ MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
-void blas_Mv(arr& y, const arr& A, const arr& x){       MT::useLapack=false; innerProduct(y, A, x); MT::useLapack=true; };
+void blas_MM(arr& X, const arr& A, const arr& B) {       MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
+void blas_MsymMsym(arr& X, const arr& A, const arr& B) { MT::useLapack=false; innerProduct(X, A, B); MT::useLapack=true; };
+void blas_Mv(arr& y, const arr& A, const arr& x) {       MT::useLapack=false; innerProduct(y, A, x); MT::useLapack=true; };
 #else
-void blas_MM(arr& X, const arr& A, const arr& B){
+void blas_MM(arr& X, const arr& A, const arr& B) {
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   CALL(cblas_, gemm)(CblasRowMajor,
@@ -66,10 +66,10 @@ void blas_MM(arr& X, const arr& A, const arr& B){
 #endif
 }
 
-void blas_Mv(arr& y, const arr& A, const arr& x){
+void blas_Mv(arr& y, const arr& A, const arr& x) {
   CHECK(A.d1==x.N, "matrix multiplication: wrong dimensions");
   y.resize(A.d0);
-  if(!x.N && !A.d1){ y.setZero(); return; }
+  if(!x.N && !A.d1) { y.setZero(); return; }
   CALL(cblas_, gemv)(CblasRowMajor,
                      CblasNoTrans,
                      A.d0, A.d1,
@@ -83,7 +83,7 @@ void blas_Mv(arr& y, const arr& A, const arr& x){
 #endif
 }
 
-void blas_MsymMsym(arr& X, const arr& A, const arr& B){
+void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   CALL(cblas_, symm)(CblasRowMajor,
@@ -103,14 +103,14 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B){
 }
 #endif
 
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b){
+void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   arr Acol;
   integer n=A.d0, m=1;
   integer info;
   x=b;
   Acol=A;
   CALL(, posv_)((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
-  if(info){
+  if(info) {
     HALT("lapack_Ainv_b_sym error info = " <<info
          <<"\n typically this is because A is not invertible, A=" <<A);
   }
@@ -125,7 +125,7 @@ uint lapack_SVD(
   arr& U,
   arr& d,
   arr& Vt,
-  const arr& A){
+  const arr& A) {
   arr Atmp, work;
   Atmp=A;
   //transpose(Atmp, A);
@@ -140,7 +140,7 @@ uint lapack_SVD(
   return D;
 }
 
-void lapack_LU(arr& LU, const arr& A){
+void lapack_LU(arr& LU, const arr& A) {
   LU = A;
   integer M=A.d0, N=A.d1, D=M<N?M:N, info;
   intA piv(D);
@@ -148,7 +148,7 @@ void lapack_LU(arr& LU, const arr& A){
   CHECK(!info, "LAPACK SVD error info = " <<info);
 }
 
-void lapack_RQ(arr& R, arr &Q, const arr& A){
+void lapack_RQ(arr& R, arr &Q, const arr& A) {
   transpose(Q, A);
   R.resizeAs(A); R.setZero();
   integer M=A.d0, N=A.d1, D=M<N?M:N, LWORK=M*N, info;
@@ -162,7 +162,7 @@ void lapack_RQ(arr& R, arr &Q, const arr& A){
   //cout <<"\nR=" <<R <<"\nQ=" <<Q <<"\nRQ=" <<R*Q <<"\nA=" <<A <<endl;
 }
 
-void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){
+void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {
   CHECK(symmA.nd==2 && symmA.d0==symmA.d1, "not symmetric");
   arr work;
   Evecs=symmA;
@@ -178,7 +178,7 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){
   CHECK(!info, "lapack_EigenDecomp error info = " <<info);
 }
 
-bool lapack_isPositiveSemiDefinite(const arr& symmA){
+bool lapack_isPositiveSemiDefinite(const arr& symmA) {
   // Check that all eigenvalues are nonnegative.
   arr d, V;
   lapack_EigenDecomp(symmA, d, V);
@@ -192,7 +192,7 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA){
 }
 
 //! A=C^T C (C is upper triangular!)
-void lapack_cholesky(arr& C, const arr& A){
+void lapack_cholesky(arr& C, const arr& A) {
   CHECK(A.d0==A.d1, "");
   integer n=A.d0;
   integer info;
@@ -216,7 +216,7 @@ const char *potrf_ERR="\n\
 void lapack_mldivide(arr& X, const arr& A, const arr& b) {
   CHECK(A.nd == 2, "A in Ax=b must be a NxM Matrix.");
   CHECK(b.nd == 1, "b in Ax=b must be a Vector.");
-
+  
   CHECK(A.d1 == b.d0, "b and A must have the same amount of rows in Ax=b.");
   
   X = b;
@@ -225,14 +225,14 @@ void lapack_mldivide(arr& X, const arr& A, const arr& b) {
   integer nrhs = 1;
   integer lda = A.d0;
   MT::Array<integer> ipiv(n);
-
+  
   integer info;
-
+  
   CALL(, gesv_)(&n, &nrhs, LU.p, &lda, ipiv.p, X.p, &lda, &info);
   CHECK(!info, "LAPACK gaussian elemination error info = " <<info <<potrf_ERR);
 }
 
-void lapack_inverseSymPosDef(arr& Ainv, const arr& A){
+void lapack_inverseSymPosDef(arr& Ainv, const arr& A) {
   CHECK(A.d0==A.d1, "");
   integer n=A.d0;
   integer info;
@@ -247,7 +247,7 @@ void lapack_inverseSymPosDef(arr& Ainv, const arr& A){
   for(i=0; i<(uint)n; i++) for(j=0; j<i; j++) Ainv(i, j)=Ainv(j, i);
 }
 
-double lapack_determinantSymPosDef(const arr& A){
+double lapack_determinantSymPosDef(const arr& A) {
   arr C;
   lapack_cholesky(C, A);
   double det=1.;
@@ -268,20 +268,20 @@ dlauum = multiply L'*L
 #endif
 #include "util.h"
 #include "array.h"
-void blas_MM(arr& X, const arr& A, const arr& B){ innerProduct(X, A, B); };
-void blas_MsymMsym(arr& X, const arr& A, const arr& B){ innerProduct(X, A, B); };
-void lapack_cholesky(arr& C, const arr& A){NICO;}
-uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A){NICO};
-void lapack_LU(arr& LU, const arr& A){NICO};
-void lapack_RQ(arr& R, arr &Q, const arr& A){NICO};
-void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs){NICO};
-bool lapack_isPositiveSemiDefinite(const arr& symmA){NICO};
-void lapack_inverseSymPosDef(arr& Ainv, const arr& A){NICO};
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b){
+void blas_MM(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
+void blas_MsymMsym(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
+void lapack_cholesky(arr& C, const arr& A) {NICO;}
+uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A) {NICO};
+void lapack_LU(arr& LU, const arr& A) {NICO};
+void lapack_RQ(arr& R, arr &Q, const arr& A) {NICO};
+void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {NICO};
+bool lapack_isPositiveSemiDefinite(const arr& symmA) {NICO};
+void lapack_inverseSymPosDef(arr& Ainv, const arr& A) {NICO};
+void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   arr invA;
   inverse(invA, A);
   x = invA*b;
 };
-double lapack_determinantSymPosDef(const arr& A){NICO};
-void lapack_mldivide(arr& X, const arr& A, const arr& b){NICO};
+double lapack_determinantSymPosDef(const arr& A) {NICO};
+void lapack_mldivide(arr& X, const arr& A, const arr& b) {NICO};
 #endif

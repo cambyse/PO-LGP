@@ -120,10 +120,13 @@ public:
   //!@name constructors
   Array();
   Array(const Array<T>& a);
+  Array(const Array<T>& a, uint i);         //reference constructor
+  Array(const Array<T>& a, uint i, uint j); //reference constructor
   Array(uint D0);
   Array(uint D0, uint D1);
   Array(uint D0, uint D1, uint D2);
   Array(const T* p, uint size);
+  
   ~Array();
   
   Array<T>& operator=(const T& v);
@@ -262,6 +265,7 @@ public:
   //!@name I/O
   void write(std::ostream& os=std::cout, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="[]", bool dimTag=false, bool binary=false) const;
   void read(std::istream& is);
+  void read(const char* filename);
   void writeTagged(std::ostream& os, const char* tag, bool binary=false) const;
   bool readTagged(std::istream& is, const char *tag);
   void writeTagged(const char* filename, const char* tag, bool binary=false) const;
@@ -508,7 +512,7 @@ template<class T> void rndGauss(MT::Array<T>& a, double stdDev=1., bool add=fals
 //template<class T> void rndGauss(MT::Array<T>& a, bool add=false);
 //template<class T> MT::Array<T>& rndGauss(double stdDev, uint dim);
 template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta);
-template<class T> MT::Array<T> sqr(const MT::Array<T>& y) { MT::Array<T> x; x.resizeAs(y); for (uint i=0; i<x.N; i++) x.elem(i)=y.elem(i)*y.elem(i); return x; }
+template<class T> MT::Array<T> sqr(const MT::Array<T>& y) { MT::Array<T> x; x.resizeAs(y); for(uint i=0; i<x.N; i++) x.elem(i)=y.elem(i)*y.elem(i); return x; }
 
 
 //===========================================================================
@@ -547,7 +551,6 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
-
 
 #define BinaryOperator( op, name)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
@@ -649,14 +652,14 @@ template<class T> bool operator<(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T, class S> void resizeAs(MT::Array<T>& x, const MT::Array<S>& a) {
   x.nd=a.nd; x.d0=a.d0; x.d1=a.d1; x.d2=a.d2;
   x.resetD();
-  if (x.nd>3) { x.d=new uint[x.nd];  memmove(x.d, a.d, x.nd*sizeof(uint)); }
+  if(x.nd>3) { x.d=new uint[x.nd];  memmove(x.d, a.d, x.nd*sizeof(uint)); }
   x.resizeMEM(a.N, false);
 }
 template<class T, class S> void resizeCopyAs(MT::Array<T>& x, const MT::Array<S>& a);
 template<class T, class S> void reshapeAs(MT::Array<T>& x, const MT::Array<S>& a);
 template<class T, class S> void copy(MT::Array<T>& x, const MT::Array<S>& a) {
   resizeAs(x, a);
-  for (uint i=0; i<x.N; i++) x.elem(i)=(T)a.elem(i);
+  for(uint i=0; i<x.N; i++) x.elem(i)=(T)a.elem(i);
 }
 //! check whether this and \c a have same dimensions
 template<class T, class S>
@@ -709,7 +712,7 @@ template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOper
 template<class T> MT::Array<T*> LIST(const MT::Array<T>& A) {
   MT::Array<T*> L;
   resizeAs(L, A);
-  for (uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);
+  for(uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);
   return L;
 }
 template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.append(e); return e; }

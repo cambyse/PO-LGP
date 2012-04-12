@@ -364,10 +364,10 @@ public:
   //!@name value access
   
   //! standard type conversion: returns a const of the parameter value
-  operator type() { if (!initialized) initialize(); return value; }
+  operator type() { if(!initialized) initialize(); return value; }
   
   //! ()-operator: returns an lvalue of the parameter value
-  type& operator()() { if (!initialized) initialize(); return value; }
+  type& operator()() { if(!initialized) initialize(); return value; }
   
   
   //!@name manipulation
@@ -427,7 +427,7 @@ public://!@name initialization
   
 public://!@name access
   //! a initeger random number uniformly distributed in [0, ?]
-  uint32_t num() { if (!ready) seed(); return (uint32_t)rnd250() >>5; }
+  uint32_t num() { if(!ready) seed(); return (uint32_t)rnd250() >>5; }
   //! same as \c num()
   uint32_t operator()() { return num(); }
   //! a initeger random number uniformly distributed in [0, \c i-1]

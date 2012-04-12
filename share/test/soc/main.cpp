@@ -20,13 +20,9 @@ void testRobotSystem(bool testFeedbackControl=false){
  
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position", *sys.ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
-  pos->setGainsAsNatural(20,.2);
-  pos->targetType=positionGainsTT;
   pos->y_target = arr(sys.ors->getBodyByName("target")->X.pos.p,3);
   
   TaskVariable *col = new DefaultTaskVariable("collision", *sys.ors, collTVT,0,0,0,0,ARR(.15));
-  col->setGains(.5,.0);
-  col->targetType=positionGainsTT;
   col->y_prec=1e-0;
   col->y_target = ARR(0.);
 
@@ -40,6 +36,11 @@ void testRobotSystem(bool testFeedbackControl=false){
     //-- feedback control (kinematic or dynamic) to reach the targets
     sys.getq0(q);
     sys.getx0(x);
+    pos->setGainsAsNatural(20,.2);
+    pos->targetType=positionGainsTT;
+    col->setGains(.5,.0);
+    col->targetType=positionGainsTT;
+    
     for(uint t=0;t<10;t++){
       if(!sys.dynamic){
         soc::bayesianIKControl2(sys,q,q,0);
@@ -64,22 +65,32 @@ void testRobotSystem(bool testFeedbackControl=false){
 
   q.clear();
 
-#if 0
-  AICO_solver(soc,q,1e-2,.7,.01,0,0);
-#else 
-
   //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
   AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
-  aico.init_trajectory(q);
+  aico.init_messages();
+  //aico.init_trajectory(q);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
   sys.analyzeTrajectory(aico.b,true);
   q = aico.q;
-#endif
   ofstream os("z.traj"); q.writeRaw(os); os.close();
-  for(;;) sys.displayTrajectory(q,NULL,1,"AICO (planned trajectory)");
+  sys.displayTrajectory(q,NULL,1,"AICO (planned trajectory)");
 
+  //test iterated optimization with changing goals/initial condition
+  for(uint k=0;k<10;k++){
+    pos->y_target(2) += .1;
+    pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
+    AICO aic(sys);
+    aico.prepare_for_changed_task();
+    aic.iterate_to_convergence();
+    aico.iterate_to_convergence();
+    q = aico.q;
+    sys.analyzeTrajectory(aic.b,true);
+    sys.displayTrajectory(aic.q,NULL,1,"AIC (planned trajectory)");
+    sys.analyzeTrajectory(aico.b,true);
+    sys.displayTrajectory(aico.q,NULL,1,"AICO (planned trajectory)");
+  }
 }
 
 
