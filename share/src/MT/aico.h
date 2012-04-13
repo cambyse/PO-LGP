@@ -73,9 +73,10 @@ struct AICO {
 private:
   void updateFwdMessage(uint t);
   void updateBwdMessage(uint t);
-  void updateTaskMessage(uint t, const arr& qhat_t, double tolerance);
-  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation);
-  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance);
+  void updateTaskMessage(uint t, arr& qhat_t); //may change qhat_t is stepsize too large
+  void updateBelief(uint t);
+  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation);
+  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations);
   double evaluateTimeStep(uint t, bool includeDamping);
   double evaluateTrajectory(const arr& x, bool plot);
   void rememberOldState();

@@ -22,6 +22,6 @@ body target { X=<t(1. 0 1.)>  type=1 mass=.1 size=[.1 .1 .1 .05] color=[0 .5 0] 
 
 #body fileshape { X=<t(-0.25 -3 1.8)>  type=3 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] shapefile='c:/home/3dmodel/benchmark/offs/m494.off' swiftfile='c:/home/3dmodel/benchmark/offs/m494.dcp' contact fixed }
 #body ball  { X=<t(.0 -1.0 2.1)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
-#body ball2 { X=<t(.7 -1. 1.5)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
+body ball2 { X=<t(.7 -1. 1.5)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
 #body ball3 { X=<t(-.22 -1.5 2.)>  type=1 mass=.1 size=[.3 .3 .3 .1] color=[1 0 0] contact fixed }
 

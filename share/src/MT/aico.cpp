@@ -19,6 +19,7 @@
 #include "optimization.h"
 
 //#define TightMode
+#define BELIEF_IS_OFF_xhat
 
 void Lapack_A_Binv_A_sym(arr& X, const arr& A, const arr& B){
   static arr Binv, tmp;
@@ -146,7 +147,7 @@ void AICO::init_trajectory(const arr& q_init){
   v=b;  for(uint t=0; t<=T; t++){ Vinv[t].setDiag(damping);  }
     
   dampingReference = b;
-  for(t=0; t<=T; t++) updateTaskMessage(t, b[t], 0.); //compute task message at reference!
+  for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
   cost = evaluateTrajectory(b, display>0);
   displayCurrentSolution();
   rememberOldState();
@@ -294,17 +295,14 @@ void AICO::updateBwdMessage(uint t){
   }
 }
 
-void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance){
-  
-  if(maxDiff(xhat[t], xhat_t)<tolerance) return;
+void AICO::updateTaskMessage(uint t, arr& xhat_t){
   
   if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
     arr Delta = xhat_t-xhat[t];
     Delta *= maxStepSize/norm(Delta);
-    xhat[t]() += Delta;
-  }else{
-    xhat[t]() = xhat_t;
+    xhat_t = xhat[t] + Delta;  //really change the given xhat_t (often the belief!!)
   }
+  xhat[t]() = xhat_t;
   countSetq++;
   sys->setx(xhat[t]);
   
@@ -313,15 +311,12 @@ void AICO::updateTaskMessage(uint t, const arr& xhat_t, double tolerance){
   sys->getHinv(Hinv[t](), t);
   if(!sys->dynamic) sys->getWinv(Winv[t](), t);
   sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
-  sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
-  //rhat(t) -= scalarProduct(R[t], qhat[t], qhat[t]) - 2.*scalarProduct(r[t], qhat[t]);
+   sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
+  //double C_alt = scalarProduct(R[t], xhat[t], xhat[t]) - 2.*scalarProduct(r[t], xhat[t]) + rhat(t);
+  //cout <<t <<' ' <<C <<' ' <<C_alt <<endl;
 }
 
-void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation){
-  uint T=sys->nTime();
-  if(updateFwd) updateFwdMessage(t);
-  if(updateBwd) if(!(fixFinalState && t==T)) updateBwdMessage(t);
-  
+void AICO::updateBelief(uint t){
   if(damping && dampingReference.N){
     Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
     lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
@@ -329,27 +324,32 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
     Binv[t] = Sinv[t] + Vinv[t] + R[t];
     lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
   }
+}
+
+void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
+  uint T=sys->nTime();
+  if(updateFwd) updateFwdMessage(t);
+  if(updateBwd) if(!(fixFinalState && t==T)) updateBwdMessage(t);
+
+  updateBelief(t);
   
   for(uint k=0; k<maxRelocationIterations; k++){
-    if(!((!k && forceRelocation) || maxDiff(b[t], xhat[t])>tolerance)) break;
+    if(k || !forceRelocation)
+      if(maxDiff(b[t], xhat[t])<tolerance) break;
     
-    updateTaskMessage(t, b[t], 0.);
+    updateTaskMessage(t, b[t]());
     
     //optional reupdate fwd or bwd message (if the dynamics might have changed...)
     //if(updateFwd) updateFwdMessage(t);
     //if(updateBwd) updateBwdMessage(t);
     
-    if(damping && dampingReference.N){
-      Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
-    }else{
-      Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-    }
+#ifdef BELIEF_IS_OFF_xhat
+    updateBelief(t);
+#endif
   }
 }
 
-void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance){
+void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
@@ -412,13 +412,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
   //R and r should be up-to-date!
   
-  if(damping && dampingReference.N){
-    Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
-  }else{
-    Binv[t] = Sinv[t] + Vinv[t] + R[t];
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
-  }
+  updateBelief(t);
 }
 
 double AICO::evaluateTimeStep(uint t, bool includeDamping){
@@ -446,6 +440,8 @@ double AICO::evaluateTrajectory(const arr& x, bool plot){
   for(t=0; t<=T; t++){
     Ctask(t) = scalarProduct(R[t], x[t], x[t]) - 2.*scalarProduct(r[t], x[t]) + rhat(t);
     //Ctask(t) = rhat(t);
+    //double C = sys->getTaskCosts(R[t](), r[t](), x[t], t);
+    //cout <<t <<' ' <<C <<' ' <<Ctask(t) <<endl;
     if(!sys->dynamic){
       arr W;
       sys->getW(W, t);
@@ -502,23 +498,23 @@ double AICO::step(){
   rememberOldState();
   
   switch(sweepMode){
-      //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
-      //updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, double tolerance, bool forceRelocation){
+    //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
+    //updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
     case smForwardly:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd sweep
-      for(t=T+1; t--;)    updateTimeStep(t, false, true, 0, tolerance, false); //...not on bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?0:1), (cost<0.));
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, 1, (true));
       break;
     case smSymmetric:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, tolerance, !sweep); //relocate once on fwd & bwd sweep
-      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?1:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, (cost<0.));
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, 1, (true));
       break;
     case smLocalGaussNewton:
-      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), tolerance, !sweep); //relocate iteratively on
-      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false); //...fwd & bwd sweep
+      for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?5:1), (cost<0.)); //relocate iteratively on
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:1), (true)); //...fwd & bwd sweep
       break;
     case smLocalGaussNewtonDamped:
-      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1), tolerance); //GaussNewton in fwd & bwd sweep
-      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:0), tolerance, false);
+      for(t=1; t<=T; t++) updateTimeStepGaussNewton(t, true, false, (sweep?5:1)); //GaussNewton in fwd & bwd sweep
+      for(t=T+1; t--;)    updateTimeStep(t, false, true, (sweep?5:1), (true));
       break;
     default: HALT("non-existing sweep mode");
   }
@@ -533,11 +529,16 @@ double AICO::step(){
     *sys->os <<"AICO(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<b_step <<" damp " <<damping <<std::flush;
   }
 
-  //cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
   //if(cost_old>0 && cost>cost_old)
-    //cost_old = sys->analyzeTrajectory(b_old, display>0); //this routine calles the simulator again for each time step
+  //cost_old = sys->analyzeTrajectory(b_old, display>0); //this routine calles the simulator again for each time step
+#ifdef BELIEF_IS_OFF_xhat
   cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
+#else
+  cost = evaluateTrajectory(b, display>0); //this routine takes the current R, r matrices to compute costs
+  //double exact_cost = sys->analyzeTrajectory(b, display>0); //this routine calles the simulator again for each time step
   //sys->costChecks(b);
+  //cout <<"DIFF=" <<fabs(cost-exact_cost) <<endl;
+#endif
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)
   if(damping) perhapsUndoStep();

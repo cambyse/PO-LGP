@@ -645,7 +645,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     c1=sumOfSqr(Phi);
     c3=getTaskCosts(R, r, x[t], t);
     c2=taskCost(NULL, t, -1);
-    //cout <<" tasks: " <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
+    cout <<" tasks: " <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
     if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
     
     taskCsum+=c2;
