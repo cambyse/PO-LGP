@@ -83,7 +83,7 @@ void ActionToMotionPrimitive::step() {
     motionPrimitive->deAccess(this);
   }
   
-  if (actionSymbol==Action::grasp || actionSymbol==Action::place) {
+  if (actionSymbol==Action::grasp || actionSymbol==Action::place || actionSymbol == Action::home || actionSymbol == Action::reach){
     
     if (!frame0->get_converged(this)) { //can't do anything with frame0 not converged
       return;
@@ -103,23 +103,25 @@ void ActionToMotionPrimitive::step() {
     //-- estimate the keyframe
     arr xT;
     if (!frame1->get_converged(this)){
-      if (actionSymbol==Action::grasp) {
-	uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-	threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
+      if (actionSymbol==Action::grasp || actionSymbol == Action::reach) {
+        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+        threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
       }
       else if (actionSymbol==Action::place) {
-	s->sys.setx0(x0);
-	listDelete(s->sys.vars);
-	uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-	uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-	setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId);
-	keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+        s->sys.setx0(x0);
+        listDelete(s->sys.vars);
+        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+        uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId);
+        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       else if (actionSymbol==Action::home) {
-	s->sys.setx0(x0);
-	listDelete(s->sys.vars);
-	//setHomingGoals(sys,T,shapeId, side, 1);
-	//keyframeOptimizer(x, s->sys, 1e-2, true, verbose);
+        s->sys.setx0(x0);
+        listDelete(s->sys.vars);
+        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+        uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+        setHomingGoals(s->sys, s->sys.nTime(), shapeId, toId);
+        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       
       //--push it
@@ -184,7 +186,7 @@ void ActionToMotionPrimitive::step() {
     motionPrimitive->planConverged = true;
     motionPrimitive->mode = MotionPrimitive::followPlan;
     if (actionSymbol==Action::place) motionPrimitive->fixFingers = true;
-    if (actionSymbol==Action::grasp) motionPrimitive->fixFingers = false;
+    if (actionSymbol==Action::grasp || actionSymbol==Action::reach) motionPrimitive->fixFingers = false;
     motionPrimitive->deAccess(this);
 
   }
@@ -218,13 +220,6 @@ void ActionToMotionPrimitive::step() {
     motionPrimitive->fixFingers = false;
     motionPrimitive->deAccess(this);
     
-  }
-  
-  if (actionSymbol==Action::home) {
-    //setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
-    //arr q;
-    //soc::straightTaskTrajectory(*sys, q, 1); //task id is q!!!
-    //planner.init_trajectory(q);
   }
   
   //action->waitForConditionSignal(.01);
@@ -511,49 +506,67 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToSh
   sys.vars.append(V);
 }
 
-//void setHomingGoals(soc::SocSystem_Ors& sys, uint T, const char* objShape, const char* belowToShape){
-  //sys.setx0ToCurrent();
+void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
+  sys.setx0ToCurrent();
   
-  ////deactivate all variables
-  //activateAll(sys.vars, false);
+  //deactivate all variables
+  activateAll(sys.vars, false);
   
-  //ors::Shape *obj  = sys.ors->getShapeByName(objShape);
-  //ors::Shape *onto = sys.ors->getShapeByName(belowToShape);
-  //obj->cont=true;
-  //onto->cont=true;
-  //sys.swift->initActivations(*sys.ors);
+  ors::Shape *obj = sys.ors->shapes(shapeId);
+  ors::Shape *onto = sys.ors->shapes(belowToShapeId);
+  obj->cont=true;
+  onto->cont=true;
+  sys.swift->initActivations(*sys.ors);
   
-  //TaskVariable *V;
+  TaskVariable *V;
   
-  ////general target
-  //double midPrec, endPrec;
-  //MT::getParameter(midPrec, "homingPlanMidPrec");
-  //MT::getParameter(endPrec, "homingPlanEndPrec");
+  //general target
+  double midPrec, endPrec;
+  MT::getParameter(midPrec, "homingPlanMidPrec");
+  MT::getParameter(endPrec, "homingPlanEndPrec");
   
-  ////endeff
+  //endeff
   //V=listFindByName(sys.vars, "endeffector");
-  ////V->irel = obj->rel;
-  //V->updateState(*sys.ors);
-  //V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
-  ////special: condition effector velocities: move above object
-  //uint t, M=T/8;
-  //for(t=0; t<M; t++){
-    //V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., .2);
-    //V -> v_prec_trajectory(t) = 1e1;
+  V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
+  ((DefaultTaskVariable*)V)->irel = obj->rel;
+  V->updateState(*sys.ors);
+  //V->irel = obj->rel;
+  V->updateState(*sys.ors);
+  V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
+  //special: condition effector velocities: move above object
+  uint t, M=T/8;
+  for(t=0; t<M; t++){
+    V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., .2);
+    V -> v_prec_trajectory(t) = 1e1;
+  }
+  sys.vars.append(V);
+
+  //for(t=M;t<T;t++){
+  //  V -> v_trajectory[t]() = 0;
+  //  V -> v_prec_trajectory(t) = 0;
   //}
-  ////for(t=M;t<T;t++){
-  ////  V -> v_trajectory[t]() = 0;
-  ////  V -> v_prec_trajectory(t) = 0;
-  ////}
   
-  ////col lim and relax
+  //col lim and relax
+  arr limits;
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+      -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
+  //TODO: limits as parameter!
+  //V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  //V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
+  //sys.vars.append(V);
+  //V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  //V->y_prec=zeroQPrec;
+  //V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
+  //sys.vars.append(V);
+
+  //deprecated task variable assignment
   //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
   //V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanLimPrec"), 0.);
   //V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
   //V->setInterpolatedTargetsEndPrecisions(T,
                                          //midPrec, endPrec,
                                          //midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
-//}
+}
 
 //From Dmitry
 void decomposeMatrix(arr& A1,arr& A2,arr A) { // returns diagonal blocks of equal size

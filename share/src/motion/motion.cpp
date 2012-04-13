@@ -106,7 +106,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   
   deAccess(p);
   
-  if(_action == Action::grasp || _action==Action::place)
+  if(_action == Action::grasp || _action==Action::place || _action == Action::home || _action == Action::reach)
     waitForDoneMotionPrimitive2(m);
 
   cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;

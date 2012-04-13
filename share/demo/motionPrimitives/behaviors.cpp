@@ -46,7 +46,6 @@ void joystick(){
   
   _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 }
-
 void homing(bool fixFingers){
   VAR(MotionPrimitive);
   VAR(HardwareReference);
@@ -233,19 +232,28 @@ void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, con
   waitForEmptyQueue(_MotionFuture);
 }
 
-double pickOrPlaceObjectCost(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
+double reach2(const char* objShape, const char* belowToShape){
   VAR(MotionFuture);
-
   waitForSmallMotionQueue(_MotionFuture, 1);
 
-  _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
+  _MotionFuture->appendNewAction(Action::reach, objShape, belowToShape, NULL);
 
   ActionToMotionPrimitive *planner = _MotionFuture->planners(0);
-  cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
+  //cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
 
   waitForSmallMotionQueue(_MotionFuture, 1);
   waitForEmptyQueue(_MotionFuture);
   return planner->motionPrimitive->cost;
+}
+void homing2(const char* objShape, const char* belowToShape){
+  VAR(MotionFuture);
+
+  waitForSmallMotionQueue(_MotionFuture, 1);
+
+  _MotionFuture->appendNewAction(Action::home, objShape, belowToShape, NULL);
+
+  waitForSmallMotionQueue(_MotionFuture, 1);
+  waitForEmptyQueue(_MotionFuture);
 
 }
 void plannedHoming(const char* objShape, const char* belowToShape){

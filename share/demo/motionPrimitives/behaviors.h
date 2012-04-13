@@ -11,8 +11,9 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
 void setMesh(const char* shapeName, const ors::Mesh& mesh);
 
 void waitForPerceivedObjects(uint numObjects, uint foundSteps);
+void homing2(const char* objShape, const char* belowToShape);
+double reach2(const char* objShape, const char* belowToShape);
 void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape);
-double pickOrPlaceObjectCost(Action::ActionPredicate action, const char* objShape, const char* belowToShape);
 void closeOrOpenHand(bool closeHand);
 void plannedHoming(const char* objShape, const char* belowToShape);
 void graspISF();

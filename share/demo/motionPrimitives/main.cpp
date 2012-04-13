@@ -105,7 +105,7 @@ int main(int argn,char** argv){
   ProcessL PV;
   PV.append(LIST<Process>(view0));
   //PV.append(LIST<Process>(view));
-  //PV.append(LIST<Process>(view8));
+  PV.append(LIST<Process>(view8));
   //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
   
   //step(PV);
@@ -123,31 +123,38 @@ int main(int argn,char** argv){
   MT::wait(1.);
 
   double threshold = 0.0000001;
-  double step = 10;
+  double step = 0.1;
 
   //objects box1,box2,cyl1,cyl2,table
   double oldPosPrec = 0;
   double newPosPrec = 100;
   FILE *logger = fopen("graspprec.test", "w");
-  fprintf(logger, "oldprec | newprec | cost\n");
+  fprintf(logger, "oldprec | newprec | costMean | costVar\n");
   while( fabs(oldPosPrec - newPosPrec) > threshold ){
     oldPosPrec = newPosPrec;
     //pickOrPlaceObject(Action::grasp, "box1", NULL);
 
     birosInfo.setParameter<double>("graspPlanPositionPrec", oldPosPrec);
-    double pcost= pickOrPlaceObjectCost(Action::grasp, "box1", NULL);
-    //plannedHoming("box1", "box2");
+
+    //average the cost over Ntrials
+    uint Ntrials = 1;
+    arr pcostL(Ntrials);
+    for( uint i=0;i<Ntrials;i++){
+      pcostL.append(reach2("box1", NULL));
+      homing2("box1", "table");
+    }
+    double pcostMean = mean(pcostL);
+    double pcostDev = var(pcostL);
 
     //reset the robot hand (TODO: segfault, do it manually?)
     //homing();
 
-    newPosPrec = oldPosPrec - step * pcost;
+    newPosPrec = oldPosPrec - step * pcostMean;
     if(newPosPrec < 0) newPosPrec = 0;
     cout << "oldPrec: " << oldPosPrec << endl;
     cout << "newPrec: " << newPosPrec << endl;
-    cout << "pcost: " << pcost << endl;
     cout << "old-new: " << fabs(oldPosPrec - newPosPrec) << endl;
-    fprintf(logger, "%.2f %.2f %.2f\n", oldPosPrec, newPosPrec, pcost);
+    fprintf(logger, "%.2f %.2f %.2f %.2f\n", oldPosPrec, newPosPrec, pcostMean, pcostDev);
 
   }
   cout << "Best local optima for graspPlanPosPrec: " << newPosPrec << endl;

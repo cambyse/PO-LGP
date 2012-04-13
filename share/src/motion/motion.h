@@ -25,7 +25,9 @@ struct GeometricState:Variable {
 
 /** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
 struct Action:Variable {
-  enum ActionPredicate { noAction, grasp, place, openHand, closeHand, home };
+  //grasp: goto object, close hand, attach shape to hand
+  //reach: goto object or move to location, but do not attach shape
+  enum ActionPredicate { noAction, reach, grasp, place, openHand, closeHand, home };
   
   FIELD(uint, frameCount);
   FIELD(ActionPredicate, action);

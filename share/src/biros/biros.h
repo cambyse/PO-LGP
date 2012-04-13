@@ -232,10 +232,7 @@ struct BirosInfo:Variable {
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
     if (!par) MT_MSG("WARNING: cannot find " << name << " in parameters, nothing is changed.");
-    cout << "change " << par->value << " to ";
     par->value = value;
-    cout << par->value << endl;
-
   }
   void dump(); //dump everything -- for debugging
 };

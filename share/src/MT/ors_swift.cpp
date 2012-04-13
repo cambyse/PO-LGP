@@ -405,7 +405,7 @@ void swiftQueryExactDistance(SwiftInterface& swift){
 
 #else
 #include "util.h"
-//#warning "MT_SWIFT undefined - using HALT implementations"
+#warning "MT_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff){ MT_MSG("WARNING - creating dummy SwiftInterface"); }
 void SwiftInterface::initActivations(const ors::Graph& C){}
 void SwiftInterface::close(){}
