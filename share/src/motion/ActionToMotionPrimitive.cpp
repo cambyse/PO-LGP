@@ -116,8 +116,6 @@ void ActionToMotionPrimitive::step() {
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       else if (actionSymbol==Action::home) {
-        s->sys.setx0(x0);
-        listDelete(s->sys.vars);
         uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
         uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
         setHomingGoals(s->sys, s->sys.nTime(), shapeId, toId);
@@ -507,7 +505,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToSh
 }
 
 void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
-  sys.setx0ToCurrent();
+  sys.setTox0();
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -521,15 +519,15 @@ void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToS
   TaskVariable *V;
   
   //general target
-  double midPrec, endPrec;
+  double midPrec, endPrec, limPrec;
   MT::getParameter(midPrec, "homingPlanMidPrec");
   MT::getParameter(endPrec, "homingPlanEndPrec");
-  
+  MT::getParameter(limPrec, "homingPlanLimPrec");
+
   //endeff
   //V=listFindByName(sys.vars, "endeffector");
   V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
-  ((DefaultTaskVariable*)V)->irel = obj->rel;
-  V->updateState(*sys.ors);
+  //((DefaultTaskVariable*)V)->irel = obj->rel;
   //V->irel = obj->rel;
   V->updateState(*sys.ors);
   V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
@@ -537,7 +535,7 @@ void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToS
   uint t, M=T/8;
   for(t=0; t<M; t++){
     V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., .2);
-    V -> v_prec_trajectory(t) = 1e1;
+    V -> v_prec_trajectory(t) = midPrec;
   }
   sys.vars.append(V);
 
@@ -551,13 +549,13 @@ void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToS
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   //TODO: limits as parameter!
-  //V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  //V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
-  //sys.vars.append(V);
-  //V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
-  //V->y_prec=zeroQPrec;
-  //V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
-  //sys.vars.append(V);
+  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
+  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  V->y_prec=endPrec;
+  V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
 
   //deprecated task variable assignment
   //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
