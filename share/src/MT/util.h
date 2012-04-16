@@ -261,9 +261,10 @@ public:
   String& resetI(); //TODO rename resetIstream()
   
   //!@name equality
-  bool operator==(const char *s);
-  bool operator==(const String& s);
-  bool operator!=(const String& s);
+  bool operator==(const char *s) const;
+  bool operator==(const String& s) const;
+  bool operator!=(const String& s) const;
+  bool operator<(const String& s) const;
   
   //!@name misc
   bool contains(const String& substring);

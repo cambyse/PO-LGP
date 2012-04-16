@@ -1592,7 +1592,7 @@ template<class T> bool MT::Array<T>::readTagged(std::istream& is, const char *ta
   if(tag){
     String read_tag;
     read_tag.read(is, " \t\n\r", " \t\n\r");
-    if(!is.good() || read_tag.N==0) return false;
+    if(!is.good() || read_tag.N()==0) return false;
     CHECK(read_tag==tag, "read `" <<read_tag <<"' instead of `" <<tag <<"' in arr file");
   };
   read(is);

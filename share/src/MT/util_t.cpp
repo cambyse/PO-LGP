@@ -18,6 +18,8 @@
 #define MT_util_t_cpp
 
 #include "util.h"
+#include <map>
+#include <string>
 
 namespace MT {
 /*!\brief a standard method to save an object into a file. The same as
@@ -100,14 +102,21 @@ bool getFromCfgFile(T& x, const char *tag){
 }
 
 template<class T>
+struct ParameterMap {
+  static std::map<std::string,T> m;
+};
+
+template<class T> std::map<std::string,T> ParameterMap<T>::m;
+
+template<class T> //von Tim Rackowski
 void putParameter(const char* tag, const T& x) {
-  parameters<T>::p[tag] = x;
+  ParameterMap<T>::map[tag] = x;
 }
 
 template <class T>
 bool getFromMap(T& x, const char* tag) {
-  typename map<string,T>::const_iterator p = parameters<T>::p.find(tag);
-  if(p == parameters<T>::p.end())
+  typename std::map<std::string,T>::const_iterator p = ParameterMap<T>::m.find(tag);
+  if(p == ParameterMap<T>::m.end())
     return false;
   x = p->second;
   return true;
