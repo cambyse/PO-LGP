@@ -120,10 +120,13 @@ public:
   //!@name constructors
   Array();
   Array(const Array<T>& a);
+  Array(const Array<T>& a, uint i);         //reference constructor
+  Array(const Array<T>& a, uint i, uint j); //reference constructor
   Array(uint D0);
   Array(uint D0, uint D1);
   Array(uint D0, uint D1, uint D2);
   Array(const T* p, uint size);
+  
   ~Array();
   
   Array<T>& operator=(const T& v);
@@ -165,8 +168,8 @@ public:
   void setStraightPerm(int n=-1);
   void setReversePerm(int n=-1);
   void setRandomPerm(int n=-1);
-  void setCarray(T *buffer, uint D0);
-  void setCarray(T **buffer, uint D0, uint D1);
+  void setCarray(const T *buffer, uint D0);
+  void setCarray(const T **buffer, uint D0, uint D1);
   void referTo(const T *buffer, uint n);
   void referTo(const Array<T>& a);
   void referToSubRange(const Array<T>& a, uint i, int I);
@@ -221,7 +224,7 @@ public:
   
   //!@name appending etc
   T& append();
-  void append(const T& x);
+  T& append(const T& x);
   void append(const Array<T>& x);
   void append(const T *p, uint n);
   void replicate(uint copies);
@@ -262,6 +265,7 @@ public:
   //!@name I/O
   void write(std::ostream& os=std::cout, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="[]", bool dimTag=false, bool binary=false) const;
   void read(std::istream& is);
+  void read(const char* filename);
   void writeTagged(std::ostream& os, const char* tag, bool binary=false) const;
   bool readTagged(std::istream& is, const char *tag);
   void writeTagged(const char* filename, const char* tag, bool binary=false) const;
@@ -299,6 +303,14 @@ struct Any;
 typedef MT::Array<Any*>   AnyList;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
+
+
+//===========================================================================
+//
+//!@name constant arrays
+// @{
+
+extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional arguments
 
 
 //===========================================================================
@@ -360,7 +372,7 @@ inline arr randn(uint n){ return randn(TUP(n, n)); }
 inline arr randn(uint d0, uint d1){ return randn(TUP(d0, d1)); }
 
 inline double max(const arr& x){ return x.max(); }
-inline double min(const arr& x){ return x.max(); }
+inline double min(const arr& x) { return x.min(); }
 inline uint argmax(const arr& x){ return x.maxIndex(); }
 inline uint argmin(const arr& x){ return x.minIndex(); }
 
@@ -386,6 +398,8 @@ extern bool useLapack;
 
 uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort=true);
 void svd(arr& U, arr& V, const arr& A);
+
+void mldivide(arr& X, const arr& A, const arr& b);
 
 uint inverse(arr& Ainv, const arr& A);
 arr  inverse(const arr& A);
@@ -509,6 +523,7 @@ template<class T> MT::Array<T> sqr(const MT::Array<T>& y){ MT::Array<T> x; x.res
 template<class T> void tensorCondNormalize(MT::Array<T> &X, int left);
 template<class T> void tensorCondMax(MT::Array<T> &X, uint left);
 template<class T> void tensorCondSoftMax(MT::Array<T> &X, uint left, double beta);
+template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate);
 template<class T> void tensorCheckCondNormalization(const MT::Array<T> &X, uint left, double tol=1e-10);
 template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T> &X, uint left, double logP, double tol=1e-10);
 
@@ -664,6 +679,7 @@ void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
+void lapack_mldivide(arr& X, const arr& A, const arr& b);
 void lapack_LU(arr& LU, const arr& A);
 void lapack_RQ(arr& R, arr& Q, const arr& A);
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs);
@@ -693,7 +709,7 @@ template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type); /
 template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);
 
 //TODO obsolete?
-template<class T> MT::Array<T*> getList(const MT::Array<T>& A){
+template<class T> MT::Array<T*> LIST(const MT::Array<T>& A) {
   MT::Array<T*> L;
   resizeAs(L, A);
   for(uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);

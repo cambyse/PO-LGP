@@ -2372,7 +2372,7 @@ void ors::Body::read(std::istream& is){
     if(!shapes.N) shapes.append(new Shape());
     shapes(0)->body=this;
     shapes(0)->ibody=index;
-    shapes(0)->type=(ShapeType)(*dval);
+    shapes(0)->type=(ShapeType)((int)*dval);
   }
   dval=anyListGet<double>(ats, "size", 4);     if(dval) memmove(shapes(0)->size, dval, 4*sizeof(double));
   dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(shapes(0)->color, dval, 3*sizeof(double));
@@ -2420,7 +2420,7 @@ void ors::Shape::read(std::istream& is){
   sval=anyListGet<MT::String>(ats, "rel", 1);  if(sval) rel.setText(*sval);
   dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(color, dval, 3*sizeof(double));
   dval=anyListGet<double>(ats, "size", 4);     if(dval) memmove(size, dval, 4*sizeof(double));
-  dval=anyListGet<double>(ats, "type", 1);     if(dval) type=(ShapeType)(*dval);
+  dval=anyListGet<double>(ats, "type", 1);     if(dval) type=(ShapeType)((int)*dval);
   
   sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) mesh.readFile(*sval);
   if(anyListGet<double>(ats, "contact", 0))    cont=true;
@@ -2497,7 +2497,7 @@ void ors::Joint::read(std::istream& is){
   sval=anyListGet<MT::String>(ats, "to", 1); if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats, "Q", 1);  if(sval) Q.setText(*sval);
   sval=anyListGet<MT::String>(ats, "q", 1);  if(sval) Q.setText(*sval);
-  dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)(*dval); else type=hingeJT;
+  dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)((int)*dval); else type=hingeJT;
 }
 
 

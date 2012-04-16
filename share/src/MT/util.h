@@ -48,7 +48,6 @@
 #  undef min
 #  undef max
 #  define MT_TIMEB
-#  define __FUNCTION__ ""
 #  ifdef MT_QT
 #    undef  NOUNICODE
 #    define NOUNICODE
@@ -184,6 +183,9 @@ template<class T> T getParameter(const char *tag, const T& Default);
 template<class T> void getParameter(T& x, const char *tag, const T& Default);
 template<class T> void getParameter(T& x, const char *tag);
 template<class T> bool checkParameter(const char *tag);
+
+template <class T> void putParameter(const char* tag, const T& x);
+template <class T> bool getFromMap(T& x, const char* tag);
 
 //----- get verbose level
 uint getVerboseLevel();

@@ -393,6 +393,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o){
     if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<endl;
     if(maxDiff(x,x_old)<o.stopTolerance) break;
   }
+  if(o.fmin_return) *o.fmin_return=fx;
   if(o.verbose>0) fil.close();
   if(o.verbose>1) gnuplot("plot 'z.nodewise' us 1:3 w l",NULL,true);
 
@@ -552,8 +553,11 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
     //stopping criterion
     if(norm(Delta)<o.stopTolerance || evals>o.stopEvals) break;
   }
+  if(o.fmin_return) *o.fmin_return=fx;
   if(o.verbose>0) fil.close();
+#ifndef MT_MSVC
   if(o.verbose>1) gnuplot("plot 'z.gaussNewton' us 1:3 w l",NULL,true);
+#endif
   return evals;
 }
 

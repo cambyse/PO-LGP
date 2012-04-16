@@ -409,6 +409,7 @@ char *date(){ static time_t t; time(&t); return ctime(&t); }
 
 //! wait double time
 void wait(double sec){
+#ifndef MT_MSVC
   timespec ts;
   ts.tv_sec = (long)(floor(sec));
   sec -= (double)ts.tv_sec;
@@ -417,6 +418,10 @@ void wait(double sec){
   if(rc){
     if(rc==0){ MT_MSG("clock_nanosleep() interrupted by signal"); } else MT_MSG("clock_nanosleep() failed " <<rc);
   }
+#else
+  Sleep((int)(1000.*sec));
+  //MsgWaitForMultipleObjects( 0, NULL, FALSE, (int)(1000.*sec), QS_ALLEVENTS);
+#endif
   
 #if 0
 #ifndef MT_TIMEB
@@ -430,13 +435,8 @@ void wait(double sec){
      r!=0 data in NULL stream available (nonsense)
      */
 #else
-#  ifdef _WINDOWS_
-  Sleep((int)(1000.*sec));
-  //MsgWaitForMultipleObjects( 0, NULL, FALSE, (int)(1000.*sec), QS_ALLEVENTS);
-#  else
   double t=realTime(); while(realTime()-t<sec);
 #  endif
-#endif
 #endif
 }
 
@@ -788,6 +788,7 @@ void gnuplotClose(){
   if(MT_gp){ fflush(MT_gp); fclose(MT_gp); }
 }
 void gnuplot(const char *command, const char *PDFfile, bool persist){
+#ifndef MT_MSVC
   if(!MT_gp){
     if(!persist) MT_gp=popen("env gnuplot -noraise", "w");
     else         MT_gp=popen("env gnuplot -noraise -persist", "w");
@@ -810,6 +811,9 @@ void gnuplot(const char *command, const char *PDFfile, bool persist){
   }
   fputs(cmd.p, MT_gp);
   fflush(MT_gp) ;
+#else
+  NIY;
+#endif
 }
 
 

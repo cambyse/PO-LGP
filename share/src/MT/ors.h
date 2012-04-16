@@ -846,7 +846,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 // OPENGL interface
 //
 
-class OpenGL;
+struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;

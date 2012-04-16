@@ -1,4 +1,5 @@
 #include "MLcourse.h"
+#include "util.h"
 
 arr beta_true;
 
@@ -143,7 +144,7 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
   }
 }
 
-void CrossValidation::crossValidate(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, double *scoreMean, double *scoreSDV, double *scoreTrain){
+void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, arr* beta_k_fold, arr* beta_total, double *scoreMean, double *scoreSDV, double *scoreTrain) {
   arr Xtrain, Xtest, ytrain, ytest;
   uint n=X.d0, blocksize;
   CHECK(y.N==n, "");
@@ -151,12 +152,15 @@ void CrossValidation::crossValidate(const arr& X, const arr& y, double lambda, u
   blocksize = n/k_fold;
   double cost, costM=0., costD=0.;
   arr X_perm, y_perm;
+  arr beta;
   if(permute){
     uintA perm;
     perm.setRandomPerm(X.d0);
     X_perm=X;  X_perm.permuteRows(perm);
     y_perm=y;  y_perm.permute(perm);
   }
+  if(beta_k_fold) beta_k_fold->clear();
+  
   for(uint k=0; k<k_fold; k++){
     if(!permute){
       Xtrain = X;  ytrain = y;
@@ -168,33 +172,38 @@ void CrossValidation::crossValidate(const arr& X, const arr& y, double lambda, u
     Xtest.referToSubRange(X, k*blocksize, (k+1)*blocksize-1);
     ytest.referToSubRange(y, k*blocksize, (k+1)*blocksize-1);
     
-    train(Xtrain, ytrain, lambda);
-    cost = test(Xtest, ytest);
+    train(Xtrain, ytrain, lambda, beta);
+    if(beta_k_fold) beta_k_fold->append(beta);
+    
+    cost = test(Xtest, ytest, beta);
     costM += cost;
     costD += cost*cost;
   }
+  if(beta_k_fold) beta_k_fold->reshape(k_fold,beta.N);
+  
   costM /= k_fold;
   costD /= k_fold;
   costD -= costM*costM;
-  costD = sqrt(costD)/sqrt(k_fold); //sdv of the mean estimator
+  costD = sqrt(costD)/sqrt((double)k_fold); //sdv of the mean estimator
   
   //on full training data:
-  train(X, y, lambda);
-  double costT = test(X, y);
+  train(X, y, lambda, beta);
+  double costT = test(X, y, beta);
+  if(beta_total) *beta_total = beta;
   
   if(scoreMean)  *scoreMean =costM; else scoreMeans =ARR(costM);
   if(scoreSDV)   *scoreSDV  =costD; else scoreSDVs  =ARR(costD);
   if(scoreTrain) *scoreTrain=costT; else scoreTrains=ARR(costT);
-  cout <<"CV: lambda=" <<lambda <<" \tmean=" <<costM <<" \tsdv=" <<costD <<" \ttrain=" <<costT <<endl;
+  cout <<"CV: lambda=" <<lambda <<" \tmean-on-rest=" <<costM <<" \tsdv=" <<costD <<" \ttrain-on-full=" <<costT <<endl;
 }
 
-void CrossValidation::crossValidate(const arr& X, const arr& y, const arr& _lambdas, uint k_fold, bool permute){
+void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, const arr& _lambdas, uint k_fold, bool permute) {
   lambdas=_lambdas;
   scoreMeans.resizeAs(lambdas);
   scoreSDVs.resizeAs(lambdas);
   scoreTrains.resizeAs(lambdas);
   for(uint i=0; i<lambdas.N; i++){
-    crossValidate(X, y, lambdas(i), k_fold, permute, &scoreMeans(i), &scoreSDVs(i), &scoreTrains(i));
+    crossValidateSingleLambda(X, y, lambdas(i), k_fold, permute, NULL, NULL, &scoreMeans(i), &scoreSDVs(i), &scoreTrains(i));
   }
 }
 

@@ -40,6 +40,7 @@ template<class T> void load(T& x, const char *filename, bool change_directory){
     file >>x;
     file.close();
   }else{
+#ifndef MT_MSVC
     char *path, *name, cwd[200];
     MT::decomposeFilename(path, name, filename);
     if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
@@ -49,6 +50,9 @@ template<class T> void load(T& x, const char *filename, bool change_directory){
     file >>x;
     file.close();
     if(path[0]) if(chdir(cwd)) HALT("couldn't change to directory " <<cwd);
+#else
+    HALT("MSVC!");
+#endif
   }
 }
 
@@ -96,9 +100,28 @@ bool getFromCfgFile(T& x, const char *tag){
 }
 
 template<class T>
+void putParameter(const char* tag, const T& x) {
+  parameters<T>::p[tag] = x;
+}
+
+template <class T>
+bool getFromMap(T& x, const char* tag) {
+  typename map<string,T>::const_iterator p = parameters<T>::p.find(tag);
+  if(p == parameters<T>::p.end())
+    return false;
+  x = p->second;
+  return true;
+}
+
+template<class T>
 bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default){
   log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
   log().flush();
+  
+  if(getFromMap<T>(x, tag)) {
+    log() <<x <<" [" <<typeid(x).name() <<"] (map!)" <<std::endl;
+    return true;
+  }
   
   if(getFromCmdLine(x, tag)){
     log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;

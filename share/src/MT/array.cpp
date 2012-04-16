@@ -35,6 +35,9 @@ const bool lapackSupported=false;
 uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
 bool globalMemoryStrict=false;
 }
+
+arr& NoArr = *((arr*)NULL);
+
 //int ARRAYOLDREAD=0;
 
 /* LAPACK notes
@@ -238,6 +241,14 @@ uint inverse_SVD(arr& Ainv, const arr& A){
   check_inverse(Ainv, A);
 #endif
   return r;
+}
+
+void mldivide(arr& X, const arr& A, const arr& b) {
+#ifdef MT_LAPACK
+  lapack_mldivide(X, A, b);
+#else
+  NIY;
+#endif
 }
 
 void inverse_LU(arr& Xinv, const arr& X){
@@ -1101,7 +1112,7 @@ void scanArrFile(const char* name){
   String tag;
   for(;;){
     tag.read(is, " \n\r\t", " \n\r\t");
-    if(!is.good() || tag.N()==0) return;
+    if(!is.good() || tag.N==0) return;
     x.readTagged(is, NULL);
     x.writeTagged(cout, tag);  cout <<endl;
     if(!is.good()) return;
@@ -1123,7 +1134,7 @@ void anyListRead(AnyList& ats, std::istream& is){
   //read all generic attributes
   for(;;){
     tag.read(is, " \t\r\n", " \t=}, ;([\n\r", false);
-    if(!tag.N()){
+    if(!tag.N) {
       MT::skip(is, " \t\r\n;");
       is.clear();
       break;

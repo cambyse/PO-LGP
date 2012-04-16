@@ -50,6 +50,15 @@ template void MT::Parameter<double>::initialize();
 template void MT::Parameter<int>::initialize();
 template void MT::load<arr>(arr&,const char*, bool);
 
+map<string,int> MT::parameters<int>::p;
+map<string,double> MT::parameters<double>::p;
+map<string,unsigned int> MT::parameters<unsigned int>::p;
+map<string,float> MT::parameters<float>::p;
+map<string,bool> MT::parameters<bool>::p;
+map<string,long> MT::parameters<long>::p;
+map<string,MT::String> MT::parameters<MT::String>::p;
+map<string,string> MT::parameters<string>::p;
+
 //-- from array.h
 //full classes
 //template class MT::Array<uint>;

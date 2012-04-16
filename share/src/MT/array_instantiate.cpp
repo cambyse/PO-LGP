@@ -93,7 +93,7 @@ template T scalarProduct(const MT::Array<T>& g, const MT::Array<T>& v, const MT:
 template MT::Array<T> catCol(const MT::Array<MT::Array<T>* >& X);
 
 
-template void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum=0);
+template void tensorEquation(MT::Array<T> &X, const MT::Array<T> &A, const uintA &pickA, const MT::Array<T> &B, const uintA &pickB, uint sum);
 template void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid);
 template void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const MT::Array<uint> &Yid);
 template void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const MT::Array<uint> &Yid);

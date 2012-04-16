@@ -30,13 +30,7 @@
 #endif
 
 #if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
-struct sOpenGL {
-  sOpenGL(OpenGL *_gl, const char* title, int w, int h, int posx, int posy){
-    MT_MSG("creating dummy OpenGL object");
-  }
-  ors::Vector downVec, downPos, downFoc;
-  ors::Quaternion downRot;
-};
+#  include "opengl_dummy.cxx"
 #endif
 
 
@@ -1161,8 +1155,8 @@ void OpenGL::clearKeyCalls(){
   keyCalls.clear();
 }
 
+void OpenGL::Draw(int w, int h, ors::Camera *cam) {
 #ifdef MT_GL
-void OpenGL::Draw(int w, int h, ors::Camera *cam){
   //clear bufferer
   GLint viewport[4] = {0, 0, w, h};
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1313,10 +1307,11 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam){
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
   //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
   CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
-  
+#endif
 }
 
 void OpenGL::Select(){
+#ifdef MT_GL
   uint i, k;
   int j;
   
@@ -1387,8 +1382,8 @@ void OpenGL::Select(){
   }
     
   if(reportSelects) reportSelection();
-}
 #endif
+}
 
 /*!\brief watch in interactive mode and wait for an exiting event
   (key pressed or right mouse) */
