@@ -1,4 +1,0 @@
-ifndef NAME
-  MTLIB = 1
-endif
-

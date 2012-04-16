@@ -24,7 +24,7 @@
 // SocSystem_Ors
 //
 
-struct soc::SocSystem_Ors_Workspace {
+struct soc::sSocSystem_Ors {
   arr q0, v0, W, H_rate, Q_rate, v_act;
   arr q_external;
   
@@ -32,12 +32,10 @@ struct soc::SocSystem_Ors_Workspace {
   double tau;
   bool pseudoDynamic;
   bool newedOrs;
-  
-  
 };
 
 soc::SocSystem_Ors::SocSystem_Ors():SocSystemAbstraction::SocSystemAbstraction(){
-  s = new SocSystem_Ors_Workspace;
+  s = new sSocSystem_Ors;
   ors   = NULL;
   swift = NULL;
   vars = NULL;
@@ -78,8 +76,6 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   }
   
   listClone(sys->vars, vars); //deep copy the task variables!
-  uint i;  TaskVariable *y;
-  for_list(i, y, sys->vars) y->ors=sys->ors; //reassociate them to the local ors
   
   sys->s->q0 = s->q0;
   sys->s->v0 = s->v0;
@@ -94,7 +90,7 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
 }
 
 void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
-                                    uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W){
+                                    uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
   if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
@@ -105,8 +101,8 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
   }
-  if(!_dynamic){  s->T = trajectory_steps;  s->tau=1.;  } else setTimeInterval(trajectory_time, trajectory_steps);
-  setx0AsCurrent();
+  setTimeInterval(trajectory_duration, trajectory_steps);
+  setx0ToCurrent();
   //swift->computeProxies(*ors, false); if(gl) gl->watch();
   arr W_rate;
   if(W){
@@ -338,14 +334,16 @@ void soc::SocSystem_Ors::setTau(double tau){
   s->tau = tau;
 }
 
-void soc::SocSystem_Ors::setTimeInterval(double trajectory_time,  uint trajectory_steps){
+void soc::SocSystem_Ors::setTimeInterval(double trajectory_duration,  uint trajectory_steps){
   s->T=trajectory_steps;
-  s->tau=trajectory_time/trajectory_steps;
+  s->tau=trajectory_duration/trajectory_steps;
   stepScale.resize(s->T+1);  stepScale.setZero();
 }
 
 void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
   vars=_CVlist;
+  uint i; TaskVariable *v;
+  for_list(i, v, vars) v->updateState(*ors);
 }
 
 //! report on some
@@ -359,11 +357,7 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 
 //! DZ: write trajectory of task variable into the file
 void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
-<<<<<<< HEAD
   uint i, k, m, T=nTime();
-=======
-  uint i,k,m,T=nTime();
->>>>>>> master
   uint ind = -1;
   uint num=T; m=nTasks();
    for(i=0; i<m; i++)
@@ -374,7 +368,7 @@ void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,cons
   y_traj.resize(T,vars(ind)->y.N);
   for(k=0; k<(uint)num; k++){
       setq(q[k]());
-      vars(ind)->updateState();
+      vars(ind)->updateState(*ors);
       y_traj[k]() = vars(ind)->y;
    }
    ofstream out(file); y_traj.writeRaw(out); out.close(); 
@@ -431,6 +425,7 @@ void soc::SocSystem_Ors::getx0(arr& x){
     x.setBlockVector(s->q0, s->v0);
   }
 }
+void soc::SocSystem_Ors::setx0(const arr& x0){ s->q0=x0.sub(0,x0.N/2-1); s->v0=x0.sub(x0.N/2,-1); }
 void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ q=s->q0; qd=s->v0; }
 void soc::SocSystem_Ors::getW(arr& W, uint t){
   W=s->W;
@@ -480,7 +475,7 @@ void soc::SocSystem_Ors::setq(const arr& q, uint t){
   s->v_act.setZero();
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState();
+  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
@@ -492,7 +487,7 @@ void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   s->v_act=qd;
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState();
+  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setx(const arr& x, uint t){
@@ -508,7 +503,7 @@ void soc::SocSystem_Ors::setx(const arr& x, uint t){
   }
 }
 
-void soc::SocSystem_Ors::setx0AsCurrent(){
+void soc::SocSystem_Ors::setx0ToCurrent(){
   ors->getJointState(s->q0, s->v0);
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
 }
@@ -668,7 +663,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
                                    const arr& endeffector_target,
                                    const char* endeffector_name,
                                    const arr& W){
-  static soc::SocSystem_Ors_Workspace s;
+  static soc::sSocSystem_Ors s;
 
   //setup the workspace
   //s.vars = globalSpace;

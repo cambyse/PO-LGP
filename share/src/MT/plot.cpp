@@ -28,7 +28,7 @@
 
 PlotModule plotModule;
 
-struct PlotModuleWorkspace {
+struct sPlotModule {
   MT::Array<arr> array;
   MT::Array<arr> images;
   MT::Array<arr> points;
@@ -40,7 +40,7 @@ struct PlotModuleWorkspace {
 };
 
 PlotModule::PlotModule(){
-  s = new PlotModuleWorkspace;
+  s = new sPlotModule;
   mode=gnupl;
   gl=0;
   light=false;
@@ -550,7 +550,7 @@ void plotGaussians(const GaussianL& G){
 
 void plotDrawOpenGL(void *_data){
 #ifdef MT_GL
-  PlotModuleWorkspace& data=(*((PlotModuleWorkspace*)_data));
+  sPlotModule& data=(*((sPlotModule*)_data));
   uint a, i, j;
   
   MT::Color c;
@@ -753,7 +753,7 @@ void plotDrawOpenGL(void *_data){
   <<"'z.plotdata' every :::" <<(block) <<"::" <<(block) <<(with);
 
 void plotDrawGnuplot(void *_data){
-  PlotModuleWorkspace& data=(*((PlotModuleWorkspace*)_data));
+  sPlotModule& data=(*((sPlotModule*)_data));
   uint i, j, k;
   
   //openfiles
@@ -834,7 +834,7 @@ void plotDrawGnuplot(void *_data){
 
 /*
 double lo[3], hi[3];
-PlotModuleWorkspace(){
+sPlotModule(){
 lo[0]=lo[1]=lo[2]= 0.;
 hi[0]=hi[1]=hi[2]= 1.;
 }

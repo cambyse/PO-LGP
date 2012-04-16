@@ -2,11 +2,9 @@ BASE   = ../..
 NAME   = libsd
 OUTPUT = $(BASE)/lib/$(NAME).so
 
-CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
-#CXXFLAGS += -fPIC 
-OBJS  = $(shell find . \( -name '*.cpp' \) )
+MAKEMODE = mlrlib
+
+OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS := $(OBJS:%.cpp=%.o)
-OBJS_C  = $(shell find . -name '*.c')
-OBJS += $(OBJS_C:%.c=%.o)
 
 include $(BASE)/make-generic

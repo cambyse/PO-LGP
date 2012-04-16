@@ -21,6 +21,7 @@ struct Monitor:public StepThread{
   bool isOpen;
   
 #ifdef MT_QT
+ NEVER DO THIS()() forcing compiler error!
   Ui_SchunkMonitor *ui;
 #endif
   arr q_gui;

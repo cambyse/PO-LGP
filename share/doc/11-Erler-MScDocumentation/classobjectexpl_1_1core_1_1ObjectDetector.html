@@ -1,0 +1,568 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::ObjectDetector Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html">objectexpl::core::ObjectDetector</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a> &#124;
+<a href="#pri-methods">Private Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::ObjectDetector Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::ObjectDetector" -->
+<p>Ein Objekt Detektor zum Vergleich der memorierten Objekten mit der Objekthypothese.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="ObjectDetector_8h_source.html">ObjectDetector.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1core_1_1ObjectDetector-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#aeaf4bcd82a86b70a707ce628cf6c4255">ObjectDetector</a> (double repeatabilityThreshold=0.5, double matchRatioThreshold=0.6)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default Konstruktor.  <a href="#aeaf4bcd82a86b70a707ce628cf6c4255"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a86991983cca468ae688d6f6e2cfae882">addToMemSet</a> (cv::Mat image, std::string symantic, bool isMoveable)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Fügt ein Objekt zu den memorierten Objekten hinzu.  <a href="#a86991983cca468ae688d6f6e2cfae882"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a7cf52726279e721d6c1287e1ea41e09d">readMemObjDatabase</a> (std::string filename)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Liest die Datenbank der memorierten Objekte ein.  <a href="#a7cf52726279e721d6c1287e1ea41e09d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a6be4c10b7c8c0d59b553a0d8e1991154">writeMemObjDatabase</a> (std::string filename)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Speichert die memorierten Objekten in eine Datenbank ab.  <a href="#a6be4c10b7c8c0d59b553a0d8e1991154"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a03958b5486c4f7d573049665447492ef">loadMemObjImages</a> (std::vector&lt; cv::Mat &gt; images, std::vector&lt; cv::string &gt; semInfos)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Lädt Bilder und fügt sie zu den memorierten Objekten hinzu.  <a href="#a03958b5486c4f7d573049665447492ef"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a20b1adf04786d6634fe17252fc518817">compareWithMemObj</a> (cv::Mat queryImage)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Vergleicht eine Objekthypothese mit den memorierten Objekten.  <a href="#a20b1adf04786d6634fe17252fc518817"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structobjectexpl_1_1core_1_1FeatureSet.html">FeatureSet</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#ab60a9c02fbf22b24c4273a02bad5c53b">getFeatureSet</a> (int idx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Datenstruktur zu einem memorierten Objekt zurück.  <a href="#ab60a9c02fbf22b24c4273a02bad5c53b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a5a991c119579839bc37d6543e7328719">getVisualizationOfMatches</a> (cv::Mat queryImage, std::vector&lt; cv::KeyPoint &gt; queryKeypoints, std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches, int bestIdx)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt graphisch alle gülitgen Korrespondenzpaare zurück.  <a href="#a5a991c119579839bc37d6543e7328719"></a><br/></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector<br class="typebreak"/>
+&lt; cv::DMatch &gt; &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a2135e348c46cb1faa415a5f3547e9756">filterMatches</a> (std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Filtert die Treffer über das Verhältnis zwischen ersten und zweiten besten Nachbar heraus.  <a href="#a2135e348c46cb1faa415a5f3547e9756"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a77953e13e8b0963828a9bdca44f3dd2b">getBestMatchIdx</a> (std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die ID der besten Übereinstimmung zurück.  <a href="#a77953e13e8b0963828a9bdca44f3dd2b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a685dd34f0e99bb2d4752c74c4b915e3f">verifyBestMatch</a> (cv::Mat queryImage, std::vector&lt; cv::KeyPoint &gt; queryKeypoints, cv::Mat memImage, std::vector&lt; cv::KeyPoint &gt; memKeypoints, std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Verifiziert alle gültigen Korrespondenzpaare nochmal anhand einer projektiven Transformation.  <a href="#a685dd34f0e99bb2d4752c74c4b915e3f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#a661da68a31cdcfec0582c7b17273a3fc">addMemSetToMatcher</a> (std::vector&lt; <a class="el" href="structobjectexpl_1_1core_1_1FeatureSet.html">FeatureSet</a> &gt; trainingSet)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Fügt die memorierten Objekten zum Objekt Detektor hinzu.  <a href="#a661da68a31cdcfec0582c7b17273a3fc"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#ad60ef63a6215e0a54a56bde597ddefd0">convertKeypointsToMat</a> (std::vector&lt; cv::KeyPoint &gt; keypoints)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Konvertiert alle markanten Merkmale in eine Matrix Struktur.  <a href="#ad60ef63a6215e0a54a56bde597ddefd0"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">std::vector&lt; cv::KeyPoint &gt;&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectDetector.html#aa205292da153c8b993dc020e1757917a">convertMatToKeypoints</a> (cv::Mat mat)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Konvertiert eine Matrix Struktur zurück in die markanten Merkmale.  <a href="#aa205292da153c8b993dc020e1757917a"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Ein Objekt Detektor zum Vergleich der memorierten Objekten mit der Objekthypothese. </p>
+<p>Als Algorithmus wird der SIFT-Algorithmus von der OpenCV2 Bibliothek verwendet.</p>
+<dl class="see"><dt><b>Siehe auch:</b></dt><dd>OpenCV2 Bibliothek <a href="http://opencv.willowgarage.com">http://opencv.willowgarage.com</a> </dd></dl>
+<hr/><h2>Beschreibung der Konstruktoren und Destruktoren</h2>
+<a class="anchor" id="aeaf4bcd82a86b70a707ce628cf6c4255"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::ObjectDetector" ref="aeaf4bcd82a86b70a707ce628cf6c4255" args="(double repeatabilityThreshold=0.5, double matchRatioThreshold=0.6)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ObjectDetector::ObjectDetector </td>
+          <td>(</td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>repeatabilityThreshold</em> = <code>0.5</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>matchRatioThreshold</em> = <code>0.6</code></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Default Konstruktor. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>repeatabilityThreshold</em>&nbsp;</td><td>Der Schwellwert für den Abstand der Homographie Matrix. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>matchRatioThreshold</em>&nbsp;</td><td>Der Schwellwert für das Verhältnis zwischen ersten und zweiten Treffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a661da68a31cdcfec0582c7b17273a3fc"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::addMemSetToMatcher" ref="a661da68a31cdcfec0582c7b17273a3fc" args="(std::vector&lt; FeatureSet &gt; trainingSet)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ObjectDetector::addMemSetToMatcher </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structobjectexpl_1_1core_1_1FeatureSet.html">FeatureSet</a> &gt;&nbsp;</td>
+          <td class="paramname"> <em>memObjSet</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Fügt die memorierten Objekten zum Objekt Detektor hinzu. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>memObjSet</em>&nbsp;</td><td>Die memorieten Objekten, welche hinzugefügt werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a86991983cca468ae688d6f6e2cfae882"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::addToMemSet" ref="a86991983cca468ae688d6f6e2cfae882" args="(cv::Mat image, std::string symantic, bool isMoveable)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ObjectDetector::addToMemSet </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>symantic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&nbsp;</td>
+          <td class="paramname"> <em>isMoveable</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Fügt ein Objekt zu den memorierten Objekten hinzu. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das segmentierte Originalbild vom Objekt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>symantic</em>&nbsp;</td><td>Die semantische Information vom Objekt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>isMoveable</em>&nbsp;</td><td>Die ermittelte Beweglichkeit vom Objekt. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a20b1adf04786d6634fe17252fc518817"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::compareWithMemObj" ref="a20b1adf04786d6634fe17252fc518817" args="(cv::Mat queryImage)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int ObjectDetector::compareWithMemObj </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>queryImage</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Vergleicht eine Objekthypothese mit den memorierten Objekten. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>queryImage</em>&nbsp;</td><td>Die Objekthypothese als segmentiertes RGB-Bild. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>-1 bei wenn die Objekthypothese nicht verifiziert werden konnte, sonst die ID des memorierten Objektes. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ad60ef63a6215e0a54a56bde597ddefd0"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::convertKeypointsToMat" ref="ad60ef63a6215e0a54a56bde597ddefd0" args="(std::vector&lt; cv::KeyPoint &gt; keypoints)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat ObjectDetector::convertKeypointsToMat </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; cv::KeyPoint &gt;&nbsp;</td>
+          <td class="paramname"> <em>keypoints</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Konvertiert alle markanten Merkmale in eine Matrix Struktur. </p>
+<p>Jede Zeile in der Matrix beschreibt ein markanten Merkmal.</p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>keypoints</em>&nbsp;</td><td>Die markanten Merkmale die konvertiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die markanten Merkmale als Matrix Struktur. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aa205292da153c8b993dc020e1757917a"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::convertMatToKeypoints" ref="aa205292da153c8b993dc020e1757917a" args="(cv::Mat mat)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; cv::KeyPoint &gt; ObjectDetector::convertMatToKeypoints </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>mat</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Konvertiert eine Matrix Struktur zurück in die markanten Merkmale. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>mat</em>&nbsp;</td><td>Die Matrix Struktur, welche konvertiert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die markanten Merkmale. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a2135e348c46cb1faa415a5f3547e9756"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::filterMatches" ref="a2135e348c46cb1faa415a5f3547e9756" args="(std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; ObjectDetector::filterMatches </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt;&nbsp;</td>
+          <td class="paramname"> <em>matches</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Filtert die Treffer über das Verhältnis zwischen ersten und zweiten besten Nachbar heraus. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>matches</em>&nbsp;</td><td>Die Korrespondenzpaare der Merkmale die gefiltert werden sollen. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die gefilterten Korrespondenzpaare. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a77953e13e8b0963828a9bdca44f3dd2b"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::getBestMatchIdx" ref="a77953e13e8b0963828a9bdca44f3dd2b" args="(std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int ObjectDetector::getBestMatchIdx </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt;&nbsp;</td>
+          <td class="paramname"> <em>matches</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die ID der besten Übereinstimmung zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>matches</em>&nbsp;</td><td>Die Korrespondenzpaare der Merkmale. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die ID mit der besten Übereinstimmung. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab60a9c02fbf22b24c4273a02bad5c53b"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::getFeatureSet" ref="ab60a9c02fbf22b24c4273a02bad5c53b" args="(int idx)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structobjectexpl_1_1core_1_1FeatureSet.html">FeatureSet</a> ObjectDetector::getFeatureSet </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>idx</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Datenstruktur zu einem memorierten Objekt zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>idx</em>&nbsp;</td><td>Die ID des memorierten Objektes, welches zurückgegeben werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Datenstruktur vom memorierten Objekt. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a5a991c119579839bc37d6543e7328719"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::getVisualizationOfMatches" ref="a5a991c119579839bc37d6543e7328719" args="(cv::Mat queryImage, std::vector&lt; cv::KeyPoint &gt; queryKeypoints, std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches, int bestIdx)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat ObjectDetector::getVisualizationOfMatches </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>queryImage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; cv::KeyPoint &gt;&nbsp;</td>
+          <td class="paramname"> <em>queryKeypoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt;&nbsp;</td>
+          <td class="paramname"> <em>matches</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>idx</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt graphisch alle gülitgen Korrespondenzpaare zurück. </p>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>Nur zu Testzwecken vorhanden.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>queryImage</em>&nbsp;</td><td>Die Objekthypothese als segmentiertes RGB-Bild. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>queryKeypoints</em>&nbsp;</td><td>Die markanten Merkmal von der Objekthypothese. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>matches</em>&nbsp;</td><td>Die Korrespondenzpaare zwischen der Hypothese und dem memorierten Objekt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>idx</em>&nbsp;</td><td>Die ID des memorierten Objektes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Ein Bild indem die alle gültigen Korrespondenzpaare visuell eingezeichnet sind. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a03958b5486c4f7d573049665447492ef"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::loadMemObjImages" ref="a03958b5486c4f7d573049665447492ef" args="(std::vector&lt; cv::Mat &gt; images, std::vector&lt; cv::string &gt; semInfos)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ObjectDetector::loadMemObjImages </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; cv::Mat &gt;&nbsp;</td>
+          <td class="paramname"> <em>images</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; cv::string &gt;&nbsp;</td>
+          <td class="paramname"> <em>semInfos</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Lädt Bilder und fügt sie zu den memorierten Objekten hinzu. </p>
+<dl class="note"><dt><b>Zu beachten:</b></dt><dd>Methode nur zu Testzwecken vorhanden.</dd></dl>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>images</em>&nbsp;</td><td>Die Bilder die zu den memorierten Objekten hinzugefügt werden. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>semInfos</em>&nbsp;</td><td>Die semantische Information zu den einzelnen Bildern. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a7cf52726279e721d6c1287e1ea41e09d"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::readMemObjDatabase" ref="a7cf52726279e721d6c1287e1ea41e09d" args="(std::string filename)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ObjectDetector::readMemObjDatabase </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>filename</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Liest die Datenbank der memorierten Objekte ein. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>filename</em>&nbsp;</td><td>Der Dateiname von der Datenbank mit den memorierten Objekten. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a685dd34f0e99bb2d4752c74c4b915e3f"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::verifyBestMatch" ref="a685dd34f0e99bb2d4752c74c4b915e3f" args="(cv::Mat queryImage, std::vector&lt; cv::KeyPoint &gt; queryKeypoints, cv::Mat memImage, std::vector&lt; cv::KeyPoint &gt; memKeypoints, std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt; matches)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ObjectDetector::verifyBestMatch </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>queryImage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; cv::KeyPoint &gt;&nbsp;</td>
+          <td class="paramname"> <em>queryKeypoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>memImage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; cv::KeyPoint &gt;&nbsp;</td>
+          <td class="paramname"> <em>memKeypoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; cv::DMatch &gt; &gt;&nbsp;</td>
+          <td class="paramname"> <em>matches</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Verifiziert alle gültigen Korrespondenzpaare nochmal anhand einer projektiven Transformation. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>queryImage</em>&nbsp;</td><td>Die Objekthypothese als segmentiertes RGB-Bild. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>queryKeypoints</em>&nbsp;</td><td>Die markanten Merkmale von der Objekthypothese. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>memImage</em>&nbsp;</td><td>Das segmentierte Originalbild vom memorierten Objekt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>memKeypoints</em>&nbsp;</td><td>Die markanten Merkmale vom memorierten Objekt. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>matches</em>&nbsp;</td><td>Die Korrespondenzpaare der Merkmale. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Wiederholbarkeit in Prozent. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a6be4c10b7c8c0d59b553a0d8e1991154"></a><!-- doxytag: member="objectexpl::core::ObjectDetector::writeMemObjDatabase" ref="a6be4c10b7c8c0d59b553a0d8e1991154" args="(std::string filename)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ObjectDetector::writeMemObjDatabase </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>filename</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Speichert die memorierten Objekten in eine Datenbank ab. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>filename</em>&nbsp;</td><td>Der Dateiname indem die memorierten Objekte abgespeichert werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/detector/<a class="el" href="ObjectDetector_8h_source.html">ObjectDetector.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/detector/ObjectDetector.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:50 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

@@ -13,8 +13,8 @@
 #include "vision.h"
 #include "earlyVisionModule.h"
 #include "guiModule.h"
-#include "process.h"
-#include "process_internal.h"
+#include "biros.h"
+#include "biros_internal.h"
 #include <NP/camera.h>
 #include <NP/uvccamera.h>
 
@@ -51,9 +51,6 @@ struct TaskAbstraction {
   TaskVariable *TV_up , *TV_up2, *TV_z1, *TV_z2, *TV_f1, *TV_f2, *TV_f3;    //vars for grasping
   double TV_x_yprec, TV_x_vprec, TV_rot_vprec, TV_q_vprec;
   
-  //control options
-  uint controlMode; //RENAME taskMode
-  
   //-- options/parameters
   double joyRate;      //joystick speed
   intA joyState;
@@ -67,7 +64,7 @@ struct TaskAbstraction {
   TaskAbstraction();
   
   virtual void initTaskVariables(ControllerProcess*);
-  virtual void updateTaskVariables(ControllerProcess*); //RENAME  updateTaskGoals
+  virtual void updateTaskGoals(ControllerProcess*); //RENAME  updateTaskGoals
   
   // helper
   void prepare_skin(ControllerProcess*, bool);
@@ -86,7 +83,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
   currentProxiesVar *proxiesVar;
   FutureMotionPlan *planVar;
   JoystickInterface *joyVar;
-  
+ 
   //INPUT
   TaskAbstraction *task;
   Lock taskLock; //lock this if you change the task!!
@@ -130,6 +127,7 @@ struct RobotProcessGroup {
   currentProxiesVar currentProxies;
   CameraImages currentCameraImages;
   PerceptionOutput percOutput;
+	EarlyVisionOutput evisOutput;
 
   //Processes
   bool openArm, openHand, openSkin, openJoystick, openLaser, openBumble, openEarlyVision, openGui, openThreadInfoWin;
@@ -169,7 +167,7 @@ struct RobotProcessGroup {
     virtual void initTaskVariables(ControllerProcess *ctrl){ \
       TaskAbstraction::initTaskVariables(ctrl); \
     }; \
-    virtual void updateTaskVariables(ControllerProcess*); \
+    virtual void updateTaskGoals(ControllerProcess*); \
     static BasicRobotTaskName *p; \
     static BasicRobotTaskName *a(){if(!p) p=new BasicRobotTaskName(); return p;}; \
   };

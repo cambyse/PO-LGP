@@ -32,7 +32,6 @@ void testSurf(){
   cvShow(greyL,"left");
   cvShow(greyR,"right",true);
 
-#if 1
   //-- Canny
   byteA edges(greyL),tmp(greyL);
   float th=MT::getParameter<float>("cannyTh");
@@ -45,8 +44,8 @@ void testSurf(){
   CvMemStorage* storage = cvCreateMemStorage(0);
   MT::timerStart();
   cvExtractSURF(CVMAT(greyL), NULL,
-		&imageKeypoints, &imageDescriptors,
-		storage, cvSURFParams(500, 1) );
+                &imageKeypoints, &imageDescriptors,
+                storage, cvSURFParams(500, 1) );
   cout <<"Image Descriptors =" <<imageDescriptors->total
        <<"\nExtraction time = " <<MT::timerRead() <<"sec" <<endl;
   CvSeqReader reader;
@@ -57,11 +56,11 @@ void testSurf(){
     CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
     cvCircle(CVMAT(rgbDraw), cvPointFrom32f(kp->pt), 3, cvScalar(255,0,0));
     /*cout <<i
-	 <<" pos=" <<kp->pt.x <<',' <<kp->pt.y
-	 <<" laplacian=" <<kp->laplacian
-	 <<" size=" <<kp->size
-	 <<" dir=" <<kp->dir
-	 <<" hessian=" <<kp->hessian <<endl;
+    <<" pos=" <<kp->pt.x <<',' <<kp->pt.y
+    <<" laplacian=" <<kp->laplacian
+    <<" size=" <<kp->size
+    <<" dir=" <<kp->dir
+    <<" hessian=" <<kp->hessian <<endl;
     */
 
   }
@@ -75,7 +74,7 @@ void testSurf(){
   int cornerCount;
   MT::timerStart();
   cvGoodFeaturesToTrack(CVMAT(greyL), CVMAT(tmp1), CVMAT(tmp2),
-			corners, &cornerCount, .1f, 5, NULL, 5, 0);
+                        corners, &cornerCount, .1f, 5, NULL, 5, 0);
   cout <<"Good Corners #=" <<cornerCount <<" time=" <<MT::timerRead() <<endl;
   rgbDraw = rgbL;
   for(int i=0; i<cornerCount; i++){
@@ -93,9 +92,9 @@ void testSurf(){
     int r = kpt.size/2;
     cvCircle( CVMAT(rgbDraw), kpt.pt, r, CV_RGB(0,255,0));
     cvLine(  CVMAT(rgbDraw), cvPoint(kpt.pt.x + r, kpt.pt.y + r),
-	    cvPoint(kpt.pt.x - r, kpt.pt.y - r), CV_RGB(0,255,0));
+             cvPoint(kpt.pt.x - r, kpt.pt.y - r), CV_RGB(0,255,0));
     cvLine(  CVMAT(rgbDraw), cvPoint(kpt.pt.x - r, kpt.pt.y + r),
-	      cvPoint(kpt.pt.x + r, kpt.pt.y - r), CV_RGB(0,255,0));
+             cvPoint(kpt.pt.x + r, kpt.pt.y - r), CV_RGB(0,255,0));
   }
   cvShow(rgbDraw,"Star keypoints",true);
 
@@ -105,7 +104,7 @@ void testSurf(){
   cvShow(edges, "hough input");
   MT::timerStart();
   lines = cvHoughLines2( CVMAT(edges), storage,
-			 CV_HOUGH_PROBABILISTIC, 1, CV_PI/180, 50, 30, 10 );
+                         CV_HOUGH_PROBABILISTIC, 1, CV_PI/180, 50, 30, 10 );
   cout <<"Hough #=" <<lines->total <<" time=" <<MT::timerRead() <<endl;
   rgbDraw = rgbL;
   for(int i = 0; i < MT::MIN(lines->total,100); i++ ){
@@ -113,7 +112,6 @@ void testSurf(){
     cvLine( CVMAT(rgbDraw), line[0], line[1], CV_RGB(255,0,0), 2.);
   }
   cvShow(rgbDraw, "Canny -- Hough", true);
-#endif
 
   //-- Displarity BM & GC
   floatA dispL,dispR;
@@ -124,7 +122,7 @@ void testSurf(){
   CvStereoBMState* statebm = cvCreateStereoBMState(CV_STEREO_BM_BASIC, maxDisp);
   MT::timerStart();
   cvFindStereoCorrespondenceBM(CVMAT(greyL), CVMAT(greyR),
-			       CVMAT(dispL), statebm);
+                               CVMAT(dispL), statebm);
   dispL /= float(maxDisp);
   cvReleaseStereoBMState( &statebm );
   cout <<"stereo BM, time = " <<MT::timerRead()
@@ -135,8 +133,8 @@ void testSurf(){
   CvStereoGCState* stategc = cvCreateStereoGCState( maxDisp, 3 );
   MT::timerStart();
   cvFindStereoCorrespondenceGC(CVMAT(greyL), CVMAT(greyR),
-			       CVMAT(dispL), CVMAT(dispR),
-			       stategc);
+                               CVMAT(dispL), CVMAT(dispR),
+                               stategc);
   dispL /= -float(maxDisp);
   dispR /=  float(maxDisp);
   cvReleaseStereoGCState( &stategc );
@@ -170,10 +168,10 @@ void testShiftAnalysis(){
     if(!d) max=diff; 
     else{
       for(uint i=0;i<diff.N;i++){
-	if(diff.elem(i)>2.*max.elem(i)){ //HACK!
-	  max.elem(i)=diff.elem(i);
-	  disp.elem(i)=d;
-	}
+        if(diff.elem(i)>2.*max.elem(i)){ //HACK!
+          max.elem(i)=diff.elem(i);
+          disp.elem(i)=d;
+        }
       }
     }
   }

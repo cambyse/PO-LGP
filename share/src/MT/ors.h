@@ -442,7 +442,7 @@ struct Graph {
   void hessian(arr& H, uint i, ors::Vector *rel=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
   void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
-  void jacobianR(arr& J, uint a);
+  void jacobianR(arr& J, uint a) const;
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
   void dynamics(arr& qdd, const arr& qd, const arr& tau);
@@ -450,26 +450,26 @@ struct Graph {
   
   //!@name get state
   uint getJointStateDimension(bool internal=false) const;
-  void getJointState(arr& x, arr& v);
-  void getJointState(arr& x);
-  uint getFullStateDimension();
-  void getFullState(arr& x);
-  void getFullState(arr& x, arr& v);
-  void getContactConstraints(arr& y);
-  void getContactConstraintsGradient(arr &dydq);
-  void getContactMeasure(arr &x, double margin=.02, bool linear=false);
-  double getContactGradient(arr &grad, double margin=.02, bool linear=false);
-  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1);
-  double getLimitsGradient(arr &grad, const arr& limits, double margin=.1);
-  void getComGradient(arr &grad);
-  void getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori);
-  void getGyroscope(ors::Vector& up);
-  double getEnergy();
-  double getCenterOfMass(arr& com);
-  double getJointErrors();
-  void getPenetrationState(arr &vec);
-  void getGripState(arr& grip, uint j);
-  ors::Proxy* getContact(uint a, uint b);
+  void getJointState(arr& x, arr& v) const;
+  void getJointState(arr& x) const;
+  uint getFullStateDimension() const;
+  void getFullState(arr& x) const;
+  void getFullState(arr& x, arr& v) const;
+  void getContactConstraints(arr& y) const;
+  void getContactConstraintsGradient(arr &dydq) const;
+  void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
+  double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
+  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
+  double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
+  void getComGradient(arr &grad) const;
+  void getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const;
+  void getGyroscope(ors::Vector& up) const;
+  double getEnergy() const;
+  double getCenterOfMass(arr& com) const;
+  double getJointErrors() const;
+  void getPenetrationState(arr &vec) const;
+  void getGripState(arr& grip, uint j) const;
+  ors::Proxy* getContact(uint a, uint b) const;
   
   //!@name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=true);
@@ -492,9 +492,9 @@ struct Graph {
   //!@name managing the data
   void sortProxies(bool deleteMultiple=false, bool deleteOld=false);
   bool checkUniqueNames() const;
-  Body  *getBodyByName(const char* name);
-  Shape *getShapeByName(const char* name);
-  Joint *getJointByBodyNames(const char* from, const char* to);
+  Body  *getBodyByName(const char* name) const;
+  Shape *getShapeByName(const char* name) const;
+  Joint *getJointByBodyNames(const char* from, const char* to) const;
   void prefixNames();
   
   void write(std::ostream& os) const;
@@ -630,7 +630,6 @@ struct TaskVariable {
   TVtype type;          //!< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
   TargetType targetType;//!< what target type
   MT::String name;      //!< its name
-  ors::Graph *ors;      //!< pointer to the data structure (from which it gets the kinematics)
   
   arr y, y_old, v, v_old, y_target, v_target; //!< current state and final target of this variable
   arr J, Jt;                                  //!< current Jacobian and its transpose
@@ -679,7 +678,7 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   //!@name updates
-  virtual void updateState(double tau=1.) = 0; //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  virtual void updateState(const ors::Graph &ors, double tau=1.) = 0;
   void updateChange(int t=-1, double tau=1.);
   virtual void getHessian(arr& H){ NIY; }
   
@@ -705,14 +704,14 @@ struct DefaultTaskVariable:public TaskVariable {
   DefaultTaskVariable();
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& _ors,
+    const ors::Graph& _ors,
     TVtype _type,
     const char *iBodyName, const char *iframe,
     const char *jBodyName, const char *jframe,
     const arr& _params);
   DefaultTaskVariable(
     const char* _name,
-    ors::Graph& _ors,
+    const ors::Graph& _ors,
     TVtype _type,
     const char *iShapeName,
     const char *jShapeName,
@@ -722,7 +721,7 @@ struct DefaultTaskVariable:public TaskVariable {
   
   void set(
     const char* _name,
-    ors::Graph &_ors,
+    const ors::Graph& _ors,
     TVtype _type,
     int _i, const ors::Transformation& _irel,
     int _j, const ors::Transformation& _jrel,
@@ -730,17 +729,17 @@ struct DefaultTaskVariable:public TaskVariable {
   //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
   
   //!@name updates
-  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
-  void getHessian(arr& H);
+  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void getHessian(const ors::Graph& ors, arr& H);
   
   //!@name virtual user update
-  virtual void userUpdate(){ NIY; } //updates both, state and Jacobian
+  virtual void userUpdate(const ors::Graph& ors){ NIY; } //updates both, state and Jacobian
   
   
   //!@name I/O
-  void write(ostream& os) const;
+  void write(ostream& os, const ors::Graph& ors) const;
 };
-stdOutPipe(DefaultTaskVariable);
+//stdOutPipe(DefaultTaskVariable);
 
 
 //===========================================================================
@@ -776,7 +775,7 @@ struct ProxyTaskVariable:public TaskVariable {
   TaskVariable* newClone(){ return new ProxyTaskVariable(*this); }
   
   //!@name updates
-  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
 };
 
 /*!\brief basic task variable */
@@ -798,7 +797,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
   TaskVariable* newClone(){ return new ProxyAlignTaskVariable(*this); }
   
   //!@name updates
-  void updateState(double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
 };
 
 
@@ -815,7 +814,7 @@ void reportState(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives=true, int t=-1);
 void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void activateAll(TaskVariableList& CS, bool active);
-void updateState(TaskVariableList& CS);
+void updateState(TaskVariableList& CS, const ors::Graph& ors);
 void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);

@@ -527,7 +527,7 @@ class RuleSet {
 
 
 
-class State;
+class SymbolicState;
 
 
 /****************************************
@@ -539,34 +539,33 @@ class Substitution {
   uintA outs;
   
   public:
-          int numRefs;
-          
+  int numRefs;      
   static int globalCounter_Substitution;
       
-              Substitution() {
-                      numRefs=0;
+  Substitution() {
+    numRefs=0;
     globalCounter_Substitution++;
-              }
+  }
       
   Substitution(const Substitution& s) {
-      *this = s;
-      numRefs = 0;
-      globalCounter_Substitution++;
+    *this = s;
+    numRefs = 0;
+    globalCounter_Substitution++;
   }
               
   ~Substitution() {
-      globalCounter_Substitution--;
+    globalCounter_Substitution--;
   }
       
   // ATTENTION:  If you want to use logicReasoning, then use "applyOriginalSub"-methods there!
   //  (These use the singleton objects for literals and atoms maintained by the logicObjectManager.)
   void apply(const MT::Array< TL::Literal* >& unsub_lits, MT::Array< TL::Literal* >& subPreds);
   void apply(const MT::Array< TL::FunctionValue* >& unsubFVs, MT::Array< TL::FunctionValue* >& subFVs);
-  Atom* apply(Atom* unsub_lit);
+  Atom* apply(Atom* unsub_atom);
   Literal* apply(Literal* unsub_lit);
   FunctionAtom* apply(FunctionAtom* unsub_fa);
   FunctionValue* apply(FunctionValue* unsub_fv);
-  TL::State* apply(const TL::State& state);
+  TL::SymbolicState* apply(const TL::SymbolicState& state);
   uint getSubs(uint in);
   void getIns(uintA& ids) const;
   void getOuts(uintA& ids) const;
@@ -619,20 +618,21 @@ class SubstitutionSet {
      STATE & TRIAL & EXPERIENCE
  ***************************************/
 
-struct State {
+struct SymbolicState {
+  uintA state_objects;
   MT::Array<Literal*> lits_prim;
   MT::Array<Literal*> lits_derived;
   MT::Array<FunctionValue*> fv_prim;
   MT::Array<FunctionValue*> fv_derived;
   bool derivedDerived; // Have derived concepts been calculated?
     
-  State() {
+  SymbolicState() {
     derivedDerived = false;
   }
-  ~State();
+  ~SymbolicState();
 	
-  bool operator==(const State& lit) const;
-  bool operator!=(const State& lit) const;
+  bool operator==(const SymbolicState& lit) const;
+  bool operator!=(const SymbolicState& lit) const;
 	
   void write_deprecated(ostream& os) const;
   void write(ostream& os = std::cout, bool primOnly = false) const;
@@ -640,7 +640,7 @@ struct State {
 
 struct Trial {
   uintA constants;
-  MT::Array<State*> states;
+  MT::Array<SymbolicState*> states;
   MT::Array<Atom*> actions;
   
   // potential non-logical additional info [start]
@@ -658,24 +658,22 @@ struct Trial {
 
 
 
-struct Experience {
-  TL::State pre, post;
+struct SymbolicExperience {
+  TL::SymbolicState pre, post;
   TL::Atom* action;
   
   MT::Array< TL::Literal* > del, add;
   uintA changedConstants;
   
-  Experience(const TL::State& pre, TL::Atom* action, const TL::State& post);
-  ~Experience();
+  SymbolicExperience(const TL::SymbolicState& pre, TL::Atom* action, const TL::SymbolicState& post);
+  SymbolicExperience();
+  ~SymbolicExperience();
   
   bool noChange();
+  void calcChanges();
   
   void write(ostream& os = cout) const;
 };
-
-typedef MT::Array< Experience* > ExperienceA;
-
-
 
 
 }
@@ -684,14 +682,14 @@ typedef MT::Array< Experience* > ExperienceA;
 
 std::ostream& operator<<(std::ostream& os, const TL::Predicate& p);
 std::ostream& operator<<(std::ostream& os, const TL::Function& f);
-std::ostream& operator<<(std::ostream& os, const TL::State& s);
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicState& s);
 std::ostream& operator<<(std::ostream& os, const TL::Trial& s);
 std::ostream& operator<<(std::ostream& os, const TL::Atom& s);
 std::ostream& operator<<(std::ostream& os, const TL::Literal& s);
 std::ostream& operator<<(std::ostream& os, const TL::FunctionAtom& fa);
 std::ostream& operator<<(std::ostream& os, const TL::FunctionValue& fv);
 std::ostream& operator<<(std::ostream& os, const TL::Rule& r);
-std::ostream& operator<<(std::ostream& os, const TL::Experience& e);
+std::ostream& operator<<(std::ostream& os, const TL::SymbolicExperience& e);
 std::ostream& operator<<(std::ostream& os, const MT::Array< TL::Literal* > & lits);
 std::ostream& operator<<(std::ostream& os, const MT::Array< TL::Atom* > & atoms);
 
@@ -704,9 +702,9 @@ typedef MT::Array< TL::Atom* > AtomL;
 typedef MT::Array< TL::Literal* > LitL;
 typedef MT::Array< TL::ComparisonAtom* > CompAtomL;
 typedef MT::Array< TL::ComparisonLiteral* > CompLitL;
-typedef MT::Array< TL::State* > StateL;
+typedef MT::Array< TL::SymbolicState* > SymbolicStateL;
 typedef MT::Array< TL::TermType* > TermTypeL;
-typedef MT::Array< TL::Experience* > ExperienceL;
+typedef MT::Array< TL::SymbolicExperience* > SymbolicExperienceL;
 
 
 
@@ -724,7 +722,7 @@ void write(const AtomL& atoms, ostream& os = cout);
 void write(const LitL& lits, ostream& os = cout);
 void write(const FuncVL& fvs, ostream& os = cout);
 void write(const FuncAL& fis, ostream& os = cout);
-void write(const ExperienceL& exs, ostream& os = cout);
+void write(const SymbolicExperienceL& exs, ostream& os = cout);
 void write(const MT::Array< LitL >& list_of_lits_list, ostream& os = cout);
 void write(const RuleSet& rules, ostream& os = cout);
 void write(const RuleSet& rules, const char* filename);

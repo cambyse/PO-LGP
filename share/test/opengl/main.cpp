@@ -1,6 +1,16 @@
+//#define MT_IMPLEMENTATION
+
 #include <MT/plot.h>
 #include <MT/opengl.h>
 #include <MT/ors.h>
+#ifdef MT_QT
+#  include <QtGui/QApplication>
+#endif
+
+#include <gtk/gtk.h>
+#include <gtk/gtkgl.h>
+#undef MIN
+#undef MAX
 
 using namespace std;
 
@@ -186,10 +196,11 @@ void init5(void){
 void draw5(void*){
   glStandardLight(NULL);
 
-  glDrawTexQuad(texName, -2.0, -1.0, 0.0,
-                         -2.0, 1.0, 0.0,
-			 0.0, 1.0, 0.0,
-			 0.0, -1.0, 0.0);
+  glDrawTexQuad(texName,
+                -2.0, -1.0, 0.0,
+                -2.0, 1.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, -1.0, 0.0);
 
   glEnable(GL_TEXTURE_2D);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
@@ -228,7 +239,7 @@ void testSelect(){
   OpenGL gl;
   gl.add(draw3,0);
   gl.text <<"hover over objects and read cout...";
-  gl.selectOnHover=true;
+  //gl.selectOnHover=true;
   gl.reportSelects=true;
   gl.reportEvents=false;
   gl.watch();
@@ -242,8 +253,8 @@ void testUI(){
   gl.reportEvents=true;
   gl.add(draw1,0);
   gl.add(glDrawUI,&ui);
-  gl.addHoverCall(glHoverUI,&ui);
-  gl.addClickCall(glClickUI,&ui);
+  gl.addHoverCall(&ui);
+  gl.addClickCall(&ui);
   ui.addButton(100,100,"OK, this is it!");
   gl.watch();
 }
@@ -261,7 +272,14 @@ int main(int argc,char **argv){
 #ifdef MT_QT
   QApplication myapp(argc,argv);
 #endif
-  
+
+#ifdef MT_GTKGL
+  g_thread_init(NULL);
+  gdk_threads_init();
+  gtk_init(&argc, &argv);
+  gtk_gl_init(&argc, &argv);
+#endif
+
   testMultipleViews();
   //return 0;
   testDepth();

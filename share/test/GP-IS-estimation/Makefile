@@ -1,7 +1,7 @@
 BASE = $(shell pwd)/../..
 
 FREEGLUT = 1
-STANIMIR = 1
+buildAndLink_STANIMIR = 1
 LEWINER = 1
 CXXFLAGS += -DMT_Lewiner
 

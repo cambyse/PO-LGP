@@ -104,6 +104,8 @@ public:
   void dropInhandObjectOnTable(const char* message = "");
   // posture control
   void relaxPosition(const char* message = "");   //!< move into a relaxed position
+	void moveToPosition(const arr& pos, const char* message = "");
+	void grabHere(const char* message = "");
   
   void openBox(uint id, const char* message = "");
   void closeBox(uint id, const char* message = "");
@@ -117,6 +119,7 @@ public:
   void getBalls(uintA& balls);
   void getBlocks(uintA& blocks);
   void getBoxes(uintA& boxes);
+  void getCylinders(uintA& cylinders);
   bool isBox(uint id);
   uint convertObjectName2ID(const char* name); //!< returns the graph-index of the object named "name"
   const char* convertObjectID2name(uint ID); //!< returns the name of the object with index "ID" in graph
@@ -126,6 +129,9 @@ public:
   double* getColor(uint id);    //!< returns 3-dim array with RGB values
   MT::String getColorString(uint obj);
   void getTablePosition(double& x1, double& x2, double& y1, double& y2);
+  
+  double getHeight(uint id);
+  double getOverallHeight(uintA& objects);
   
   // --------------------------------
   // STATE INFORMATION
@@ -157,6 +163,7 @@ public:
   void writeAllContacts(uint id);
   
   uint getHandID();
+  
   
   
   //   double euclideanDistance(uint a, uint b);

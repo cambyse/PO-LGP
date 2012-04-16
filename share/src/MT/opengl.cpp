@@ -21,6 +21,10 @@
 #  include "opengl_freeglut.cxx"
 #endif
 
+#ifdef MT_GTKGL
+#  include "opengl_gtk.cxx"
+#endif
+
 #ifdef MT_FLTK
 #  include "opengl_fltk.cxx"
 #endif
@@ -29,8 +33,8 @@
 #  include "opengl_qt.cxx"
 #endif
 
-#if !defined MT_FREEGLUT && !defined MT_FLTK && !defined MT_QTGLUT
-#  include "opengl_dummy.cxx"
+#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
+#  include "opengl_void.cxx"
 #endif
 
 
@@ -925,6 +929,7 @@ void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom){
 void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom){
   img=(byteA*)&_img;
   zoom=_zoom;
+  //resize(img->d1*zoom,img->d0*zoom);
   if(wait) watch(); else update();
   img=NULL;
 }
@@ -986,20 +991,20 @@ void glDrawUI(void *p){
   glPopName();
 }
 
-bool glHoverUI(void *p, OpenGL *gl){
+bool glUI::hoverCallback(OpenGL& gl){
   //bool b=
-  ((glUI*)p)->checkMouse(gl->mouseposx, gl->mouseposy);
+  checkMouse(gl.mouseposx, gl.mouseposy);
   //if(b) glutPostRedisplay();
   return true;
 }
 
-bool glClickUI(void *p, OpenGL *gl){
-  bool b=((glUI*)p)->checkMouse(gl->mouseposx, gl->mouseposy);
-  if(b) gl->update();
-  int t=((glUI*)p)->top;
+bool glUI::clickCallback(OpenGL& gl){
+  bool b=checkMouse(gl.mouseposx, gl.mouseposy);
+  if(b) gl.postRedrawEvent();
+  int t=top;
   if(t!=-1){
     cout <<"CLICK! on button #" <<t <<endl;
-    gl->exitEventLoop();
+    gl.exitEventLoop();
     return false;
   }
   return true;
@@ -1022,7 +1027,7 @@ void glStandardScene(void*){ NICO; };
 
 //===========================================================================
 //
-// standalone draw routines for larget data structures
+// standalone draw routines for large data structures
 //
 
 #ifdef MT_GL
@@ -1049,6 +1054,16 @@ void glDrawDots(arr& dots){
 //
 // OpenGL implementations
 //
+
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy){
+  s=new sOpenGL(this,title,w,h,posx,posy);
+  init();
+  processEvents();
+}
+
+OpenGL::~OpenGL(){
+  delete s;
+}
 
 OpenGL* OpenGL::newClone() const {
   OpenGL* gl=new OpenGL;
@@ -1079,11 +1094,6 @@ void OpenGL::init(){
   
   img=NULL;
   zoom=1;
-#ifdef MT_QTGLUT
-  osPixmap=0;
-  osContext=0;
-  quitLoopOnTimer=reportEvents=false;
-#endif
 };
 
 //! add a draw routine
@@ -1482,71 +1492,6 @@ void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *
 #endif
 }
 
-#ifdef MT_QTGLUT
-/*!\brief creates a off-screen rendering context for future backround
-    rendering routines -- the off-screen context cannot be
-    resized... */
-void OpenGL::createOffscreen(int width, int height){
-  if(osContext && (width>osPixmap->width() || height>osPixmap->height())){
-    delete osContext;
-    delete osPixmap;
-    osContext=0;
-  }
-  if(!osContext){
-    osPixmap=new QPixmap(width, height);
-    if(!osPixmap) MT_MSG("can't create off-screen Pixmap");
-    osContext=new QGLContext(QGLFormat(GLosformat), osPixmap);
-    if(!osContext->create()) MT_MSG("can't create off-screen OpenGL context");
-  }
-}
-
-/*!\brief return the RGBA-image of the given perspective; rendering is done
-    off-screen (on an internal QPixmap) */
-void OpenGL::offscreenGrab(byteA& image){
-  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
-  setOffscreen(image.d1, image.d0);
-  Draw(image.d1, image.d0);
-  glGrabImage(image);
-}
-
-/*!\brief return the RGBA-image of the given perspective; rendering
-    is done off-screen (on an internal QPixmap) */
-void OpenGL::offscreenGrab(byteA& image, byteA& depth){
-  if(image.nd==3){ CHECK(image.d2==4, "3rd dim of image has to be 4 for RGBA");}else{ CHECK(image.nd==2, "image has to be either 2- or 3(for RGBA)-dimensional");}
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
-  setOffscreen(image.d1, image.d0);
-  Draw(image.d1, image.d0);
-  glGrabImage(image);
-  glGrabDepth(depth);
-}
-
-/*!\brief return only the depth gray-scale map of given perspective;
-    rendering is done off-screen (on an internal QPixmap) */
-void OpenGL::offscreenGrabDepth(byteA& depth){
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
-  setOffscreen(depth.d1, depth.d0);
-  Draw(depth.d1, depth.d0);
-  glGrabDepth(depth);
-}
-
-/*!\brief return only the depth gray-scale map of given perspective;
-    rendering is done off-screen (on an internal QPixmap) */
-void OpenGL::offscreenGrabDepth(floatA& depth){
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
-  setOffscreen(depth.d1, depth.d0);
-  Draw(depth.d1, depth.d0);
-  glGrabDepth(depth);
-}
-
-void OpenGL::setOffscreen(int width, int height){
-  createOffscreen(width, height);
-  CHECK(width<=osPixmap->width() && height<=osPixmap->height(),
-        "width (" <<width <<") or height (" <<height
-        <<") too large for the created pixmap - create and set size earlier!");
-  osContext->makeCurrent();
-  //if(initRoutine) (*initRoutine)();
-}
-#endif
 
 
 //! print some info on the selection buffer
@@ -1589,39 +1534,7 @@ void OpenGL::saveEPS(const char*){
 }
 #endif
 
-#ifdef MT_QTGLUT
-void OpenGL::about(std::ostream& os){
-  os <<"Widget's OpenGL capabilities:\n";
-  QGLFormat f=format();
-  os <<"direct rendering: " <<f.directRendering() <<"\n"
-  <<"double buffering: " <<f.doubleBuffer()  <<"\n"
-  <<"depth:            " <<f.depth() <<"\n"
-  <<"rgba:             " <<f.rgba() <<"\n"
-  <<"alpha:            " <<f.alpha() <<"\n"
-  <<"accum:            " <<f.accum() <<"\n"
-  <<"stencil:          " <<f.stencil() <<"\n"
-  <<"stereo:           " <<f.stereo() <<"\n"
-  <<"overlay:          " <<f.hasOverlay() <<"\n"
-  <<"plane:            " <<f.plane() <<std::endl;
-  
-  if(!osContext){
-    os <<"no off-screen context created yet" <<std::endl;
-  }else{
-    os <<"Off-screen pixmaps's OpenGL capabilities:\n";
-    f=osContext->format();
-    os <<"direct rendering: " <<f.directRendering() <<"\n"
-    <<"double buffering: " <<f.doubleBuffer()  <<"\n"
-    <<"depth:            " <<f.depth() <<"\n"
-    <<"rgba:             " <<f.rgba() <<"\n"
-    <<"alpha:            " <<f.alpha() <<"\n"
-    <<"accum:            " <<f.accum() <<"\n"
-    <<"stencil:          " <<f.stencil() <<"\n"
-    <<"stereo:           " <<f.stereo() <<"\n"
-    <<"overlay:          " <<f.hasOverlay() <<"\n"
-    <<"plane:            " <<f.plane() <<std::endl;
-  }
-}
-#else
+#ifndef MT_QTGLUT
 /*!\brief report on the OpenGL capabilities (the QGLFormat) */
 void OpenGL::about(std::ostream& os){ MT_MSG("NICO"); }
 #endif
@@ -1654,7 +1567,7 @@ void OpenGL::Reshape(int width, int height){
   CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
   camera.setWHRatio((double)width/height);
   for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  //update();
+  //postRedrawEvent();
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y){
@@ -1720,7 +1633,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
   if(!downPressed){
     for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if(!cont){ update(); return; }
+  if(!cont){ postRedrawEvent(); return; }
 
   //mouse scroll wheel:
   if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
@@ -1732,7 +1645,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y){
        cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
 
-  update();
+  postRedrawEvent();
 }
 
 void OpenGL::Motion(int _x, int _y){
@@ -1757,7 +1670,13 @@ void OpenGL::Motion(int _x, int _y){
 #else
   //int modifiers=0;
 #endif
-  if(!mouseIsDown) return;
+  if(!mouseIsDown){ //passive motion -> hover callbacks
+    mouseposx=_x; mouseposy=_y;
+    bool ud=false;
+    for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
+    if(ud) postRedrawEvent();
+    return;
+  }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
   if(mouse_button==1){ //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
@@ -1776,7 +1695,7 @@ void OpenGL::Motion(int _x, int _y){
     cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
 #endif
-    update();
+    postRedrawEvent();
     if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3){ //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
@@ -1784,33 +1703,19 @@ void OpenGL::Motion(int _x, int _y){
     trans(2)=0.;
     trans = s->downRot*trans;
     cam->X->pos = s->downPos + trans;
-    update();*/
+    postRedrawEvent();*/
   }
   if(mouse_button==2){ //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
-    update();
+    postRedrawEvent();
   }
 #else
   NICO;
 #endif
 }
 
-void OpenGL::PassiveMotion(int _x, int _y){
-  _y = height()-_y;
-  CALLBACK_DEBUG(printf("Window %d Mouse Passive Motion Callback:  %d %d\n", 0, _x, _y));
-  static int calls=0;
-  if(calls) return;
-  calls++;
-  mouseposx=_x; mouseposy=_y;
-  bool ud=false;
-  for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-  if(ud) update();
-  calls--;
-}
-
-void OpenGL::Special(int key, int x, int y){}
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y){}
 
 //===========================================================================
@@ -1893,7 +1798,7 @@ bool glUI::checkMouse(int _x, int _y){
 #elif defined MT_SunOS
 #  include"opengl_SunOS.moccpp"
 #elif defined MT_Linux
-#  include"opengl_moc.cpp"
+#  include"opengl_qt_moc.cxx"
 #elif defined MT_Cygwin
 #  include"opengl_Cygwin.moccpp"
 #endif

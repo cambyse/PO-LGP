@@ -53,6 +53,7 @@ int main(int argc, char** argv){
     }
   }
   dmm.close();
+  sim.simulate(100);
   
   sim.shutdownAll();
 	return 0;

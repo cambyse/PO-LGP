@@ -17,15 +17,15 @@
 #include "ors.h"
 #include "opengl.h"
 
-#ifdef MT_GL
-#  include <GL/gl.h>
-#  include <GL/glu.h>
-
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
 bool orsDrawMeshes=true, orsDrawWires=false, orsDrawZlines=false;
 double orsDrawAlpha=1.00;
 uint orsDrawLimit=0;
+
+#ifdef MT_GL
+#  include <GL/gl.h>
+#  include <GL/glu.h>
 
 extern void glDrawRect(float, float, float, float, float, float,
                        float, float, float, float, float, float);

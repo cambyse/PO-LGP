@@ -20,7 +20,7 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#if defined MT_FREEGLUT || defined MT_FLTK || defined MT_QTGLUT
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
 #  define MT_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
@@ -35,7 +35,7 @@
 #  include <GL/freeglut.h>
 #endif
 
-#ifdef MT_QTGLUT
+#if defined MT_GTKGL || defined MT_QTGLUT
 #  include <GL/glut.h>
 #endif
 
@@ -45,6 +45,7 @@
 
 #include "util.h"
 #include "array.h"
+#include "array_t.cpp"
 
 
 //===========================================================================
@@ -150,14 +151,12 @@ struct Camera {
 // OpenGL class
 //
 
-struct sOpenGL;
-
 /*!\brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
 struct OpenGL {
-  sOpenGL *s;
+  struct sOpenGL *s;
   
   //!@name little structs to store objects and callbacks
   struct GLDrawer   { void *classP; void (*call)(void*); };
@@ -199,7 +198,8 @@ struct OpenGL {
   
   //!@name constructors & destructors
   OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
-  OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  //OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
+  OpenGL(sOpenGL *_s); //special constructor: used when the underlying system-dependent class exists already
   
   OpenGL *newClone() const;
   ~OpenGL();
@@ -247,7 +247,7 @@ struct OpenGL {
   void capture(byteA &img, int w, int h, ors::Camera *cam);
   void captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline);
   
-#ifdef MT_QTGLUT
+#if 0
   void createOffscreen(int width, int height);
   void offscreenGrab(byteA& image);
   void offscreenGrab(byteA& image, byteA& depth);
@@ -257,7 +257,7 @@ private:
   void setOffscreen(int width, int height);
 #endif
   
-protected: //driver dependent methods
+public: //driver dependent methods
   bool loopExit;
   void postRedrawEvent();
   void processEvents();
@@ -269,14 +269,11 @@ protected:
   static uint selectionBuffer[1000];
   
   void init(); //initializes camera etc
-  //general callbacks (used by QT & Freeglut)
+  //general callbacks (used by all implementations)
   void Key(unsigned char key, int x, int y);
   void Mouse(int button, int updown, int x, int y);
   void Motion(int x, int y);
-  void PassiveMotion(int x, int y);
-  void Close(){ }
   void Reshape(int w, int h);
-  void Special(int key, int x, int y);
   void MouseWheel(int wheel, int direction, int x, int y);
   
   friend struct sOpenGL;
@@ -289,8 +286,7 @@ protected:
 // simplest UI
 //
 
-class glUI {
-public:
+struct glUI:OpenGL::GLHoverCall,OpenGL::GLClickCall{
   int top;
   struct Button { byteA img1, img2; bool hover; uint x, y, w, h; const char* name; };
   MT::Array<Button> buttons;
@@ -300,11 +296,13 @@ public:
   void addButton(uint x, uint y, const char *name, const char *img1=0, const char *img2=0);
   void glDraw();
   bool checkMouse(int _x, int _y);
+
+  bool hoverCallback(OpenGL&);
+  bool clickCallback(OpenGL&);
+
 };
 
 void glDrawUI(void *p);
-bool glHoverUI(void *p, OpenGL *gl);
-bool glClickUI(void *p, OpenGL *gl);
 
 
 #ifdef  MT_IMPLEMENTATION

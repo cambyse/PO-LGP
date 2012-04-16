@@ -2,15 +2,14 @@
 #define MT_socSystem_ors_h
 
 #include "soc.h"
+#include "ors.h"
 
 //===========================================================================
-// @}
+//
 // ORS simulator implementation of the SocAbstration
 //
 
 namespace soc {
-
-struct SocSystem_Ors_Workspace;
 
 /** \brief an implementation of the SocSystemAbstraction using the \ref ors
     simulator */
@@ -18,7 +17,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
-  SocSystem_Ors_Workspace *s;
+  struct sSocSystem_Ors *s;
   
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
@@ -46,15 +45,16 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   uint uDim();
   uint yDim(uint i);
   void getq0(arr& q);
-  void setq0(const arr& q);
+  void setq0(const arr& q0);
   void getv0(arr& v);
   void getx0(arr& x);
+  void setx0(const arr& x0);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq(const arr& q, uint t=0);
   void setx(const arr& x, uint t=0);
   void setqv(const arr& q, const arr& qd, uint t=0);
-  void setx0AsCurrent();
+  void setx0ToCurrent();
   //void geth  (arr& h);
   void getW(arr& W, uint t);
   void getWinv(arr& Winv, uint t);

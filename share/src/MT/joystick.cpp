@@ -53,6 +53,7 @@ void JoystickInterface::step(){
 }
 
 #else //dummy implementations
+JoystickInterface::JoystickInterface():Process("Joystick"), Variable("Joystick"){}
 void JoystickInterface::open(){ state.resize(10); state.setZero(); MT_MSG("WARNING: dummy joystick implementation"); }
 void JoystickInterface::step(){ }
 void JoystickInterface::close(){ }

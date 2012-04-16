@@ -324,6 +324,25 @@ void testInverse(){
   }
 }
 
+void testGaussElimintation() {
+  cout << "\n*** Gaussian elimination with partial pivoting \n";
+  if (MT::lapackSupported) {
+    arr A;
+    A.append(ARR(7., 2., 4., 3.));
+    A.append(ARR(3., 2., 6., 5.));
+    A.append(ARR(7., 5., 3., 7.));
+    A.reshape(4,3);
+    cout << "A = " << A << endl;
+
+    arr b = ARR(9., 5., 2.);
+    cout << "b = " << b << endl;
+
+    arr X;
+    lapack_mldivide(X, A, b);
+    cout << "X = " << endl << X << endl;
+  }
+}
+
 //--------------------------------------------------------------------------------
 //
 // alternative operator notation
@@ -445,6 +464,7 @@ int main(int argc, char *argv[]){
   testMM();
   testSVD();
   testTensor();
+  testGaussElimintation();
   
   cout <<"\n ** total memory still allocated = " <<MT::globalMemoryTotal <<endl;
   

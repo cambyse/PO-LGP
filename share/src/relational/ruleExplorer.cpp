@@ -247,7 +247,7 @@ void TL::RuleExplorer::updateActionAndStateMeasures() {
   }
   
   //-------------------------------------
-  // State is known?
+  // SymbolicState is known?
   current_state_is_known = stateIsKnown(current_state, possibleGroundActions);
   current_state_is_known_partially = stateIsKnown_partially(current_state, possibleGroundActions);
   
@@ -289,7 +289,7 @@ cout<<endl;
 //   Access state informaction
 
 
-void RuleExplorer::getKnownStates(StateL& known_states) {
+void RuleExplorer::getKnownStates(SymbolicStateL& known_states) {
   known_states.clear();
   uint i;
   FOR1D(visited_pre_states, i) {
@@ -298,7 +298,7 @@ void RuleExplorer::getKnownStates(StateL& known_states) {
   }
 }
 
-bool RuleExplorer::stateIsKnown(const TL::State& state, const AtomL& ground_actions) {
+bool RuleExplorer::stateIsKnown(const TL::SymbolicState& state, const AtomL& ground_actions) {
   uint i;
   FOR1D(ground_actions, i) {
     if (!actionIsKnown(state, ground_actions(i)))
@@ -307,7 +307,7 @@ bool RuleExplorer::stateIsKnown(const TL::State& state, const AtomL& ground_acti
   return true;
 }
 
-bool RuleExplorer::stateIsKnown_partially(const TL::State& state, const AtomL& ground_actions) {
+bool RuleExplorer::stateIsKnown_partially(const TL::SymbolicState& state, const AtomL& ground_actions) {
   uint i;
   FOR1D(ground_actions, i) {
     if (action__has_interesting_argument(i) &&  !actionIsKnown(state, ground_actions(i)))
@@ -316,7 +316,7 @@ bool RuleExplorer::stateIsKnown_partially(const TL::State& state, const AtomL& g
   return true;
 }
 
-bool RuleExplorer::actionIsKnown(const TL::State& state, TL::Atom* action) {
+bool RuleExplorer::actionIsKnown(const TL::SymbolicState& state, TL::Atom* action) {
   int id = possibleGroundActions.findValue(action);
   CHECK(id >= 0  &&  id < (int) possibleGroundActions.N, "");
   if (fixedActions.findValue(action) >= 0)
@@ -336,7 +336,7 @@ bool RuleExplorer::actionIsKnown(const TL::State& state, TL::Atom* action) {
 // ====================================================================================================
 //   Decision-making
 
-TL::Atom* RuleExplorer::getExploitAction(AtomL& plan, TL::PRADA* prada, const TL::State& state) {
+TL::Atom* RuleExplorer::getExploitAction(AtomL& plan, TL::PRADA* prada, const TL::SymbolicState& state) {
   uint DEBUG = 0;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -464,7 +464,7 @@ class PRADA_Reward__Rmax : public PRADA_Reward__Unknown_Context {
 
 
 
-TL::Atom* RuleExplorer::getExploreAction_planned__contexts(AtomL& explore_plan, TL::PRADA* prada, const TL::State& state) {
+TL::Atom* RuleExplorer::getExploreAction_planned__contexts(AtomL& explore_plan, TL::PRADA* prada, const TL::SymbolicState& state) {
   uint DEBUG = 1;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -515,7 +515,7 @@ TL::Atom* RuleExplorer::getExploreAction_planned__contexts(AtomL& explore_plan, 
 }
 
 
-TL::Atom* RuleExplorer::getExploreAction_planned(AtomL& explore_plan, TL::PRADA* prada, const TL::State& state, uint type) {
+TL::Atom* RuleExplorer::getExploreAction_planned(AtomL& explore_plan, TL::PRADA* prada, const TL::SymbolicState& state, uint type) {
   if (type == 1) {
     return getExploreAction_planned__contexts(explore_plan, prada, state);
   }
@@ -525,7 +525,7 @@ TL::Atom* RuleExplorer::getExploreAction_planned(AtomL& explore_plan, TL::PRADA*
 
 
 
-TL::Atom* RuleExplorer::getExploreAction_direct(TL::PRADA* prada, const TL::State& state, TL::Atom* taboo_action) {
+TL::Atom* RuleExplorer::getExploreAction_direct(TL::PRADA* prada, const TL::SymbolicState& state, TL::Atom* taboo_action) {
   uint DEBUG = 1;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -550,7 +550,7 @@ TL::Atom* RuleExplorer::getExploreAction_direct(TL::PRADA* prada, const TL::Stat
 // ====================================================================================================
 //  Methods for EXTERNAL use
 
-TL::Atom* RuleExplorer::decideAction(const TL::State& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
+TL::Atom* RuleExplorer::decideAction(const TL::SymbolicState& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
   uint DEBUG = 2;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -667,7 +667,7 @@ TL::Atom* RuleExplorer::decideAction(const TL::State& state, NID_Planner* planne
           if (*visited_pre_states(q) != current_state)
             break;
         }
-        cout<<"State was the same onwards from state q+1 = "<<(q+1)<<"  (now is "<<visited_pre_states.N<<")"<<endl;
+        cout<<"SymbolicState was the same onwards from state q+1 = "<<(q+1)<<"  (now is "<<visited_pre_states.N<<")"<<endl;
         if (visited_pre_states.N - (q+1) >= 1 &&  !is_major_experience.last()) {
           MT_MSG("HOPELESS EXPLOITING: (i) current state equals previous states and (ii) no major insight from last action");
           cout<<"HOPELESS EXPLOITING: (i) current state equals previous states and (ii) no major insight from last action"<<endl;
@@ -826,10 +826,10 @@ TL::Atom* RuleExplorer::decideAction(const TL::State& state, NID_Planner* planne
 }
 
 
-void RuleExplorer::addObservation__helper(TL::State* state_pre, TL::Atom* action, TL::State* state_post) {
+void RuleExplorer::addObservation__helper(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post) {
   visited_pre_states.append(state_pre);
   visited_actions.append(action);
-  Experience* exp = new Experience(*state_pre, action, *state_post);
+  SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
   all_experiences.append(exp);
   is_major_experience.append(false);
   experience_weights.append(1.0);
@@ -1040,7 +1040,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
           if (DEBUG>1) {cout<<"The following experience for action "<<*modeledActions(i)<<" has not been used:"<<endl;  PRINT(experience_id);
                         all_experiences(experience_id)->write();}
           if (experience_id != all_experiences.N-1)  HALT("not last experience -- aber nur dafuer derzeit programmiert");
-          TL::State& s_pre = all_experiences(experience_id)->pre;
+          TL::SymbolicState& s_pre = all_experiences(experience_id)->pre;
           TL::Atom* action = all_experiences(experience_id)->action;
           uint rule_idx = TL::ruleReasoning::uniqueAbstractCoveringRule_groundedAction(rulesC.rules, s_pre, action);
           if (DEBUG>1) {cout<<"Modeling rule:"<<endl;  rulesC.rules.elem(rule_idx)->write();}
@@ -1139,7 +1139,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
       
       // (iii) learn new rules for this action
       TL::RuleSetContainer rulesC_for_action;
-      ExperienceA action_experiences;
+      SymbolicExperienceL action_experiences;
       arr action_experience_weights;
       FOR1D(experiences_per_modeledAction(i), k) {
         action_experiences.append(all_experiences(experiences_per_modeledAction(i)(k)));
@@ -1386,13 +1386,13 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
 }
 
   
-void AbstractRuleExplorer::addObservation(State* state_pre, Atom* action, State* state_post) {
+void AbstractRuleExplorer::addObservation(SymbolicState* state_pre, Atom* action, SymbolicState* state_post) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"AbstractRuleExplorer::addObservation [START]"<<endl;}
   if (fixedActions.findValue(action) >= 0) {
     visited_pre_states.append(state_pre);
     visited_actions.append(action);
-    Experience* exp = new Experience(*state_pre, action, *state_post);
+    SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
     all_experiences.append(exp);
     is_major_experience.append(false);
     experience_weights.append(1.0);
@@ -1542,7 +1542,7 @@ void TL::AbstractRuleExplorer::updateActionAndStateMeasures() {
   }
   
   //-------------------------------------
-  // State is known?
+  // SymbolicState is known?
   current_state_is_known = stateIsKnown(current_state, possibleGroundActions);
   current_state_is_known_partially = stateIsKnown_partially(current_state, possibleGroundActions);
    
@@ -1840,7 +1840,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
       
       // (iii) learn new rules for this action
       TL::RuleSetContainer_ground rulesC_for_action;
-      ExperienceA action_experiences;
+      SymbolicExperienceL action_experiences;
       arr action_experience_weights;
       FOR1D(experiences_per_modeledAction(i), k) {
         action_experiences.append(all_experiences(experiences_per_modeledAction(i)(k)));
@@ -2027,13 +2027,13 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
 }
 
 
-void FactoredRuleExplorer::addObservation(State* state_pre, Atom* action, State* state_post) {
+void FactoredRuleExplorer::addObservation(SymbolicState* state_pre, Atom* action, SymbolicState* state_post) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"addObservation [START]"<<endl;}
   if (fixedActions.findValue(action) >= 0) {
     visited_pre_states.append(state_pre);
     visited_actions.append(action);
-    Experience* exp = new Experience(*state_pre, action, *state_post);
+    SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
     all_experiences.append(exp);
     is_major_experience.append(false);
     experience_weights.append(1.0);
@@ -2296,7 +2296,7 @@ void FlatExplorer::updateRules(bool always_re_learning) {
 
 
 
-void FlatExplorer::addObservation(TL::State* state_pre, TL::Atom* action, TL::State* state_post) {
+void FlatExplorer::addObservation(TL::SymbolicState* state_pre, TL::Atom* action, TL::SymbolicState* state_post) {
   uint DEBUG = 1;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -2310,7 +2310,7 @@ void FlatExplorer::addObservation(TL::State* state_pre, TL::Atom* action, TL::St
   // General stuff
   visited_pre_states.append(state_pre);
   visited_actions.append(action);
-  Experience* exp = new Experience(*state_pre, action, *state_post);
+  SymbolicExperience* exp = new SymbolicExperience(*state_pre, action, *state_post);
   all_experiences.append(exp);
   is_major_experience.append(false);
   experience_weights.append(1.0);
@@ -2438,7 +2438,7 @@ void FlatExplorer::addObservation(TL::State* state_pre, TL::Atom* action, TL::St
 }
 
 
-int TL::FlatExplorer::action_state_to_flat_id(TL::Atom* action, TL::State* state) {
+int TL::FlatExplorer::action_state_to_flat_id(TL::Atom* action, TL::SymbolicState* state) {
   uint i, k;
   int idx_actions = modeledActions.findValue(action);
   CHECK(idx_actions>=0, "");
@@ -2489,7 +2489,7 @@ void TL::FlatExplorer::get_nonDefaultRules_for_last_experience(uintA& rule_ids) 
 // ---------------------------------------------------------------------------
 //   RelationalStateGraph
 
-RelationalStateGraph::RelationalStateGraph(const TL::State& _state) : state(_state) {
+RelationalStateGraph::RelationalStateGraph(const TL::SymbolicState& _state) : state(_state) {
   // read constants
   logicReasoning::getConstants(state, constants);
   uint i;
@@ -2623,7 +2623,7 @@ void RelationalStateGraph::getDirectNeighbors(uintA& neighbors, uint obj) const 
 }
 
 RelationalStateGraph* RelationalStateGraph::getSubgraph(const uintA& objects) const {
-  TL::State s_filtered;
+  TL::SymbolicState s_filtered;
   logicReasoning::filterState_full(s_filtered, state, objects, false);  // only "filter_objects" as args
   RelationalStateGraph* graph = new RelationalStateGraph(s_filtered);
   return graph;
@@ -2667,14 +2667,14 @@ double RelationalStateGraph::distance(const RelationalStateGraph& g1, const TL::
   #if 1
   // HACK fuer das homie-Praedikat [START]
   uint i;
-  TL::State hack_g1_state = g1.state;
+  TL::SymbolicState hack_g1_state = g1.state;
   hack_g1_state.lits_prim.memMove = true;
   FOR1D_DOWN(hack_g1_state.lits_prim, i) {
     if (hack_g1_state.lits_prim(i)->atom->pred->name == MT::String("homies"))
       hack_g1_state.lits_prim.remove(i);
   }
   
-  TL::State hack_g2_state = g2.state;
+  TL::SymbolicState hack_g2_state = g2.state;
   hack_g2_state.lits_prim.memMove = true;
   FOR1D_DOWN(hack_g2_state.lits_prim, i) {
     if (hack_g2_state.lits_prim(i)->atom->pred->name == MT::String("homies"))

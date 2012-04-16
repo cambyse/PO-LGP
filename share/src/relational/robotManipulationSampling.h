@@ -40,11 +40,11 @@ namespace robotManipulationSampling {
   extern double SAMPLING__PROB_PUTON_CLEARGUY;
   
 	// Action generation
-  TL::Atom* generateAction(const State& s, uint id_table);
-  TL::Atom* generateAction_onlyPossible(const State& s, uint id_table);
-  TL::Atom* generateAction_trulyRandom(const State& s, uint id_table);
-  TL::Atom* generateAction_wellBiased(const State& s, uint id_table);
-  TL::Atom* generateAction_wellBiased_2Dactions(const State& s, uint id_table);
+  TL::Atom* generateAction(const SymbolicState& s, uint id_table);
+  TL::Atom* generateAction_onlyPossible(const SymbolicState& s, uint id_table);
+  TL::Atom* generateAction_trulyRandom(const SymbolicState& s, uint id_table);
+  TL::Atom* generateAction_wellBiased(const SymbolicState& s, uint id_table);
+  TL::Atom* generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table);
   TL::Trial* generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);	
   // generate & write
   void generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);

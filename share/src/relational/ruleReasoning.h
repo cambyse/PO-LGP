@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2009-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -67,7 +67,7 @@ namespace ruleReasoning {
   // rule application in state s
   TL::Rule* ground(TL::Rule* r, TL::Substitution* sub);
   void ground(TL::RuleSet& rules_grounded, const TL::RuleSet& rules_abstract, const uintA& constants);
-  void ground_with_filtering(TL::RuleSet& rules_grounded, const TL::RuleSet& rules_abstract, const uintA& constants, const TL::State& s, bool delete_nonchanging_concepts = false);
+  void ground_with_filtering(TL::RuleSet& rules_grounded, const TL::RuleSet& rules_abstract, const uintA& constants, const TL::SymbolicState& s, bool delete_nonchanging_concepts = false);
   
   
   
@@ -75,25 +75,25 @@ namespace ruleReasoning {
     TRANSITION KNOWLEDGE
    ***************************************/
   // Assumption: outcome contains primitives only
-  void calcSuccessorState(const TL::State& precessor, const LitL& outcome, TL::State& successor, bool deriveDerived);
-  double calcSuccessorState(const TL::State& precessor, TL::Rule* rule, uint& flag, TL::State& successor, bool deriveDerived);
+  void calcSuccessorState(const TL::SymbolicState& precessor, const LitL& outcome, TL::SymbolicState& successor, bool deriveDerived);
+  double calcSuccessorState(const TL::SymbolicState& precessor, TL::Rule* rule, uint& flag, TL::SymbolicState& successor, bool deriveDerived);
   // returns true iff unique covering rule; otherwise returns false (--> undefined successor state)
-  double calcSuccessorState(const TL::State& precessor, const TL::RuleSet& ground_rules, TL::Atom* action, uint& flag, TL::State& successor, bool deriveDerived);
+  double calcSuccessorState(const TL::SymbolicState& precessor, const TL::RuleSet& ground_rules, TL::Atom* action, uint& flag, TL::SymbolicState& successor, bool deriveDerived);
 	
 	// assumes that rule is indeed applicable and rule is grounded
-  double probability_groundRule(TL::Rule* groundRule, const TL::State& pre, const TL::State& post, double noiseStateProbability = 0.0);
+  double probability_groundRule(TL::Rule* groundRule, const TL::SymbolicState& pre, const TL::SymbolicState& post, double noiseStateProbability = 0.0);
 	// grounds rule first (checks whether context and action hold)
-  double probability_abstractRule(TL::Rule* abstractRule, const TL::State& pre, TL::Atom* groundedAction, const TL::State& post, double noiseStateProbability = 0.0, TL::Substitution* sub = NULL);
+  double probability_abstractRule(TL::Rule* abstractRule, const TL::SymbolicState& pre, TL::Atom* groundedAction, const TL::SymbolicState& post, double noiseStateProbability = 0.0, TL::Substitution* sub = NULL);
 
-  double probability_defaultRule(TL::Rule* defaultRule, const TL::State& pre, const TL::State& post, double noiseStateProbability = 0.0);
+  double probability_defaultRule(TL::Rule* defaultRule, const TL::SymbolicState& pre, const TL::SymbolicState& post, double noiseStateProbability = 0.0);
   
   
   /****************************************
     SCORING
    ***************************************/
   
-  double log_likelihood(const RuleSet& rules, const ExperienceA& experiences, double p_min);
-  double score(const RuleSet& rules, const ExperienceA& experiences, double p_min, double alpha_pen);
+  double log_likelihood(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min);
+  double score(const RuleSet& rules, const SymbolicExperienceL& experiences, double p_min, double alpha_pen);
   
   
   
@@ -104,43 +104,43 @@ namespace ruleReasoning {
   // Calculates the substitutions "subs" of context variables
   // such that the context of "rule" are satisified in state "s".
   // Ensures that deictic references are different from action arguments!
-  bool cover_context(const TL::State& s, const TL::Rule* rule, TL::SubstitutionSet& subs, TL::Substitution* actionSub);
+  bool cover_context(const TL::SymbolicState& s, const TL::Rule* rule, TL::SubstitutionSet& subs, TL::Substitution* actionSub);
 	
   // RULE COVERAGE
   // action prescribed to be "groundedAction"
   // (Calculates the substitutions "subs" which ground the _action_ and the context
 	// of "rule" such that they are satisified in "action" and state "s".)
-  bool cover_rule_groundedAction(const TL::State& s, const TL::Atom* groundedAction, const TL::Rule* rule, TL::SubstitutionSet& subs);
+  bool cover_rule_groundedAction(const TL::SymbolicState& s, const TL::Atom* groundedAction, const TL::Rule* rule, TL::SubstitutionSet& subs);
   // General version.
   // Returns all possible instantiations for this rule.
   // (Remember: action arguments are allowed
   // to have different substitutions, while deictic reference can only have one sub once the
   // subs for the action arguments are given.)
-  bool cover_rule(const TL::State& s, const TL::Rule* rule, TL::SubstitutionSet& subs);
+  bool cover_rule(const TL::SymbolicState& s, const TL::Rule* rule, TL::SubstitutionSet& subs);
 
-  bool cover_groundRule_groundedAction(const TL::State& s, const TL::Atom* groundedAction, const TL::Rule* ground_rule);
+  bool cover_groundRule_groundedAction(const TL::SymbolicState& s, const TL::Atom* groundedAction, const TL::Rule* ground_rule);
     
   // WRAPPERS FOR RULE-SETS
   // action prescribed to be "groundedAction"
-  void coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules);
-  void coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction, uintA& coveringRuleIDs);
-  void coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules);
-  void coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction, uintA& coveringRuleIDs);
-  uint uniqueCoveringRule_groundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::Atom* groundedAction);
-  uint uniqueAbstractCoveringRule_groundedAction(const TL::RuleSet& allRules, const TL::State& s, TL::Atom* groundedAction);
+  void coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules);
+  void coveringRules_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction, uintA& coveringRuleIDs);
+  void coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction, TL::RuleSet& coveringGroundedRules);
+  void coveringGroundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction, uintA& coveringRuleIDs);
+  uint uniqueCoveringRule_groundedRules_groundedAction(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::Atom* groundedAction);
+  uint uniqueAbstractCoveringRule_groundedAction(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::Atom* groundedAction);
   // General version for all actions
-  void coveringRules(const TL::RuleSet& allRules, const TL::State& s, TL::RuleSet& coveringGroundedRules);
-  void coveringGroundedRules(const TL::RuleSet& allGroundedRules, const TL::State& s, TL::RuleSet& coveringGroundedRules);
+  void coveringRules(const TL::RuleSet& allRules, const TL::SymbolicState& s, TL::RuleSet& coveringGroundedRules);
+  void coveringGroundedRules(const TL::RuleSet& allGroundedRules, const TL::SymbolicState& s, TL::RuleSet& coveringGroundedRules);
   
   // For several actions
-  void coveringRules(uintA& coveringRulesIDs, const TL::RuleSet& abstract_rules, const AtomL& ground_actions, const TL::State& s);
-  void coveringGroundedRules(uintA& coveringRulesIDs, const TL::RuleSet& ground_rules, const AtomL& ground_actions, const TL::State& s);
+  void coveringRules(uintA& coveringRulesIDs, const TL::RuleSet& abstract_rules, const AtomL& ground_actions, const TL::SymbolicState& s);
+  void coveringGroundedRules(uintA& coveringRulesIDs, const TL::RuleSet& ground_rules, const AtomL& ground_actions, const TL::SymbolicState& s);
   
   // explaining state transitions
-  void coveringOutcomes(TL::Rule* groundedRule, const TL::State& pre, const TL::State& post, uintA& covering_outcomes);
-  void coveringOutcomes(TL::Rule* abstractRule, const TL::State& pre, TL::Atom* groundedAction, const TL::State& post, uintA& covering_outcomes);
+  void coveringOutcomes(TL::Rule* groundedRule, const TL::SymbolicState& pre, const TL::SymbolicState& post, uintA& covering_outcomes);
+  void coveringOutcomes(TL::Rule* abstractRule, const TL::SymbolicState& pre, TL::Atom* groundedAction, const TL::SymbolicState& post, uintA& covering_outcomes);
   
-  void calcGroundDeicticReferences(uintA& ground_drefs, const TL::State& state, const TL::Atom* groundedAction, const TL::Rule* rule);
+  void calcGroundDeicticReferences(uintA& ground_drefs, const TL::SymbolicState& state, const TL::Atom* groundedAction, const TL::Rule* rule);
   
   
   

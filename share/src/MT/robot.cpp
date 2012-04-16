@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "robot.h"
 #include "vision.h"
 #include "guiModule.h"
@@ -112,7 +113,7 @@ void ControllerProcess::step(){
     skinPressureVar->deAccess(this);
   }
   
-  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access double position of hand
+  if(q_referenceVar && q_referenceVar->readHandFromReal){ //access real position of hand
     q_referenceVar->readAccess(this);
     for(uint m=0; m<7; m++) q_reference(q_referenceVar->handMotorIndices(m)) = q_referenceVar->q_real(q_referenceVar->handMotorIndices(m));
     q_referenceVar->deAccess(this);
@@ -129,7 +130,7 @@ void ControllerProcess::step(){
   sys.setqv(q_reference, v_reference);
   
   //update the setting (targets etc) of the task variables -- might be set externally
-  task->updateTaskVariables(this);
+  task->updateTaskGoals(this);
   
   //=== compute motion from the task variables
   //-- compute the motion step
@@ -270,6 +271,8 @@ void RobotProcessGroup::open(){
   
   if(openEarlyVision){
     evis.input = &currentCameraImages;
+		std::cout << evisOutput.hsvThetaL << std::endl;
+		evis.output = &evisOutput;
     evis.threadOpen(MT::getParameter<int>("evisThreadNice", 0));
     evis.threadLoop();
   }
@@ -408,9 +411,9 @@ void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
   TV_q_vprec  = MT::Parameter<double>("TV_q_vprec", 1e-1);
   
 #ifndef VELC
-  TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=TV_x_yprec;   TV_eff->v_prec=0;
+  TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=TV_x_yprec;   TV_eff->v_prec=0;
 #else
-  TV_eff->active=true;    TV_eff->targetType=directTT;    TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
+  TV_eff->active=true;  TV_eff->targetType=directTT;  TV_eff  ->y_prec=0;     TV_eff->v_prec=TV_x_vprec;
 #endif
   TV_rot->active=true;  TV_rot->targetType=directTT;  TV_rot->y_prec=0;     TV_rot->v_prec=TV_rot_vprec;
   TV_col->active=true;  TV_col->targetType=directTT;  TV_col->y_prec=MT::Parameter<double>("TV_col_yprec", 1e0); TV_col->v_prec=0;
@@ -437,13 +440,13 @@ OpenHand *OpenHand::p=NULL;
 Reach *Reach::p=NULL;
 
 void
-DoNothing::updateTaskVariables(ControllerProcess *ctrl){
+DoNothing::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
 }
 void
-Stop::updateTaskVariables(ControllerProcess *ctrl){
+Stop::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -453,7 +456,7 @@ Stop::updateTaskVariables(ControllerProcess *ctrl){
   TV_q->y_prec=0.;   TV_q->v_prec=1e2;  TV_q->v_target.setZero();
 }
 void
-Homing::updateTaskVariables(ControllerProcess *ctrl){
+Homing::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -466,7 +469,7 @@ Homing::updateTaskVariables(ControllerProcess *ctrl){
   if(v>vmax) TV_q->v_target*=vmax/v;
 }
 void
-OpenHand::updateTaskVariables(ControllerProcess *ctrl){
+OpenHand::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -482,7 +485,7 @@ OpenHand::updateTaskVariables(ControllerProcess *ctrl){
   //TV_skin->y_target.setZero();
 }
 void
-CloseHand::updateTaskVariables(ControllerProcess *ctrl){
+CloseHand::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -497,7 +500,7 @@ CloseHand::updateTaskVariables(ControllerProcess *ctrl){
   //if(log) (*log) <<"\r CLOSE HAND " <<TV_skin->y <<flush;
 }
 void
-Reach::updateTaskVariables(ControllerProcess *ctrl){
+Reach::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -509,7 +512,7 @@ Reach::updateTaskVariables(ControllerProcess *ctrl){
   if(v>vmax) TV_eff->v_target*=vmax/v;
 }
 void
-FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
+FollowTrajectory::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, true);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -561,7 +564,7 @@ FollowTrajectory::updateTaskVariables(ControllerProcess *ctrl){
   }
 }
 void
-Joystick::updateTaskVariables(ControllerProcess *ctrl){
+Joystick::updateTaskGoals(ControllerProcess *ctrl){
   prepare_skin(ctrl, joyState(0)!=2);
   activateAll(TVall, false);
   ctrl->useBwdMsg=false;
@@ -663,11 +666,11 @@ TaskAbstraction::prepare_skin(ControllerProcess *ctrl, bool cut_and_nil){
 }
 
 void
-//TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){NIY;}
+//TaskAbstraction::updateTaskGoals(ControllerProcess* ctrl){NIY;}
 /* TODO properly make the finction NIY and make sure the program never comes
   into this function. Objects should use their own overriden functions)
  */
-TaskAbstraction::updateTaskVariables(ControllerProcess* ctrl){}
+TaskAbstraction::updateTaskGoals(ControllerProcess* ctrl){}
 
 bool RobotProcessGroup::signalStop=false;
 void RobotProcessGroup::signalStopCallback(int s){

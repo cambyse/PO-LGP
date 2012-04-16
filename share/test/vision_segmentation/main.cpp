@@ -11,8 +11,8 @@
 #include <MT/opengl.h>
 #include <MT/BinaryBP.h>
 #include <MT/vision.h>
+#include <MT/libcolorseg.h>
 
-#include <NP/libcolorseg.h>
 //#include <NP/common.h>
 #include <NP/uvccamera.h>
 #include <NP/uvccamera.cpp>
@@ -145,11 +145,11 @@ void testFelz(){
     get_patch_colors(pch_rgb,img,pch,np);
     pch2img(tmp,pch,pch_rgb);
 
-    /*get_patch_centroids(pch_cen,img,pch,np);
+    get_patch_centroids(pch_cen,img,pch,np);
     if(t>10){
       getDelaunayEdges(pch_edges, pch_cen);
       cvDrawGraph(tmp,pch_cen,pch_edges);
-      }*/
+    }
     cvShow(tmp,"3");
 
     pch_rgb/=255.f;

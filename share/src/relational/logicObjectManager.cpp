@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -20,8 +20,8 @@
 */
 
 
+#include "logicObjectManager_database.h"
 #include "logicObjectManager.h"
-#include "logicObjectDatabase.h"
 #include "logicReasoning.h"
 
 
@@ -52,32 +52,26 @@ TL::ConceptDependencyGraph TL::logicObjectManager::dependencyGraph;
 
 
 
-
-TL::LogicObjectDatabase* lo_db;
-
-
-void TL::logicObjectManager::setPredicatesAndFunctions(const char* language_file, uint fileType) {
-  PredL _p_prim, _p_derived, _actions;
-  FuncL _f_prim, _f_derived;
-  TermTypeL _types;
-  if (fileType == 1)
-    readLanguage(language_file, _p_prim, _p_derived, _actions, _f_prim, _f_derived, _types);
-  else if (fileType == 2)
-    readLanguageSimpleFormat(language_file, _p_prim, _p_derived, _actions, _f_prim, _f_derived, _types);
-  else
-    HALT("");
-  setPredicatesAndFunctions(_p_prim, _p_derived, _f_prim, _f_derived, _actions);
-  TL::logicObjectManager::types = _types;
-}
-
-
-void TL::logicObjectManager::setPredicatesAndFunctions(PredL& _p_prim, PredL& _p_derived, FuncL& _f_prim, FuncL& _f_derived, PredL& _actions) {
-  uint i;
-  TL::logicObjectManager::p_prim = _p_prim;   TL::sort(TL::logicObjectManager::p_prim);
-  TL::logicObjectManager::p_derived = _p_derived;    TL::sort(TL::logicObjectManager::p_derived);
-  TL::logicObjectManager::f_prim = _f_prim;    TL::sort(TL::logicObjectManager::f_prim);
-  TL::logicObjectManager::f_derived = _f_derived;    TL::sort(TL::logicObjectManager::f_derived);
-  TL::logicObjectManager::p_actions = _actions;    TL::sort(TL::logicObjectManager::p_actions);
+void __init_logicObjectManager () {
+  if (TL::logicObjectManager::getPredicate(MT::String("default")) != NULL) {
+    // has already been inited: in p_actions there has to be default action
+    return;
+  }
+  
+  // Build ComparisonPredicates
+  TL::logicObjectManager::p_comp_constant.id = TL::logicObjectManager::getLowestFreeConceptID(30);
+  TL::logicObjectManager::p_comp_constant.name = MT::String("comp_constant");
+  TL::logicObjectManager::p_comp_constant.d = 0;
+  TL::logicObjectManager::p_comp_constant.type = TL::Predicate::predicate_comparison;
+  TL::logicObjectManager::p_comp_constant.constantBound = true;
+  
+  TL::logicObjectManager::p_comp_dynamic.id = TL::logicObjectManager::getLowestFreeConceptID(30)+1;
+  TL::logicObjectManager::p_comp_dynamic.name = MT::String("comp_dynamic");
+  TL::logicObjectManager::p_comp_dynamic.d = 0;
+  TL::logicObjectManager::p_comp_dynamic.type = TL::Predicate::predicate_comparison;
+  TL::logicObjectManager::p_comp_dynamic.constantBound = false;
+  
+  TL::logicObjectManager_database::setComparisonPredicates(&TL::logicObjectManager::p_comp_constant, &TL::logicObjectManager::p_comp_dynamic);
   
   // Build default action predicate   (always created by hand)
   TL::Predicate* p_action_default = NULL;
@@ -86,52 +80,34 @@ void TL::logicObjectManager::setPredicatesAndFunctions(PredL& _p_prim, PredL& _p
   p_action_default->name = "default";
   p_action_default->d = 0;
   p_action_default->type = TL::Predicate::predicate_action;
+  PredL wrapper;  wrapper.append(p_action_default);
   TL::logicObjectManager::p_actions.append(p_action_default);
-  
-  
-  // Build ComparisonPredicates
-  p_comp_constant.id = getLowestFreeConceptID();
-  p_comp_constant.name = MT::String("comp_constant");
-  p_comp_constant.d = 0;
-  p_comp_constant.type = TL::Predicate::predicate_comparison;
-  p_comp_constant.constantBound = true;
-  
-  p_comp_dynamic.id = getLowestFreeConceptID();
-  p_comp_dynamic.name = MT::String("comp_dynamic");
-  p_comp_dynamic.d = 0;
-  p_comp_dynamic.type = TL::Predicate::predicate_comparison;
-  p_comp_dynamic.constantBound = false;
-  
-  
-  // LogicObjectDatabase
-  PredL allPreds;
-  allPreds.append(p_prim);
-  FOR1D(p_derived, i) {
-    allPreds.append(p_derived(i));
-  }
-  allPreds.append(TL::logicObjectManager::p_actions);
-    
-  FuncL allFunctions;
-  allFunctions.append(f_prim);
-  allFunctions.append(f_derived);
-  lo_db = new TL::LogicObjectDatabase(allPreds, allFunctions, &p_comp_constant, &p_comp_dynamic);
-    
-  // determine concept dependencies
-  PredL ps_all;
-  ps_all.append(p_prim);
-  ps_all.append(p_derived);
-  FuncL fs_all;
-  fs_all.append(f_prim);
-  fs_all.append(f_derived);
-  dependencyGraph.setNodes(ps_all, fs_all);
-  CHECK(dependencyGraph.isAcyclic(), "Dependencies contain cycle!");
+  TL::logicObjectManager_database::addPredicate(p_action_default);
+}
+
+
+void TL::logicObjectManager::init(const char* language_file, uint fileType) {
+  PredL _p_prim, _p_derived, _p_actions;
+  FuncL _f_prim, _f_derived;
+  TermTypeL _types;
+  if (fileType == 1)
+    readLanguage(language_file, _p_prim, _p_derived, _p_actions, _f_prim, _f_derived, _types);
+  else if (fileType == 2)
+    readLanguageSimpleFormat(language_file, _p_prim, _p_derived, _p_actions, _f_prim, _f_derived, _types);
+  else
+    HALT("");
+  addStatePredicates(_p_prim);
+  addStatePredicates(_p_derived);
+  addStateFunctions(_f_prim);
+  addStateFunctions(_f_derived);
+  addActionPredicates(_p_actions);
+  TL::logicObjectManager::types = _types;
 }
 
 
 
-
 void TL::logicObjectManager::shutdown() {
-  delete lo_db;
+  TL::logicObjectManager_database::shutdown();
   uint i=0;
   FOR1D(TL::logicObjectManager::p_actions, i) {
     delete TL::logicObjectManager::p_actions(i);
@@ -162,10 +138,8 @@ void TL::logicObjectManager::setConstants(uintA& constants) {
   FOR1D(constants_types, i) {
     constants_types(i) = default_type;
   }
-  
-  
-  
-  // init LOM
+
+  // for initing database
   uint k, v;
   FOR1D(p_prim, i) {
     MT::Array< uintA > sas;
@@ -221,6 +195,8 @@ void TL::logicObjectManager::setConstants(uintA& constants, const TermTypeL& con
 
 
 void TL::logicObjectManager::addStatePredicates(PredL& preds) {
+  __init_logicObjectManager();
+  TL::sort(preds);
   uint i;
   FOR1D(preds, i) {
     if (preds(i)->category == category_derived) {
@@ -234,7 +210,7 @@ void TL::logicObjectManager::addStatePredicates(PredL& preds) {
   
   // update LogicObjectDatabase
   FOR1D(preds, i) {
-    lo_db->addPredicate(preds(i));
+    logicObjectManager_database::addPredicate(preds(i));
   }
   
   // update dependency graph
@@ -249,17 +225,21 @@ void TL::logicObjectManager::addStatePredicates(PredL& preds) {
 }
 
 
-void TL::logicObjectManager::addActionPredicates(PredL& _actions) {
-  TL::logicObjectManager::p_actions.append(_actions);
+void TL::logicObjectManager::addActionPredicates(PredL& _p_action) {
+  __init_logicObjectManager();
+  TL::sort(_p_action);
+  TL::logicObjectManager::p_actions.append(_p_action);
   // update LogicObjectDatabase
   uint i;
-  FOR1D(_actions, i) {
-    lo_db->addPredicate(_actions(i));
+  FOR1D(_p_action, i) {
+    logicObjectManager_database::addPredicate(_p_action(i));
   }
 }
 
 
 void TL::logicObjectManager::addStateFunctions(FuncL& funcs) {
+  __init_logicObjectManager();
+  TL::sort(funcs);
   uint i;
   FOR1D(funcs, i) {
     if (funcs(i)->category == category_primitive)
@@ -270,7 +250,7 @@ void TL::logicObjectManager::addStateFunctions(FuncL& funcs) {
   
   // update LogicObjectDatabase
   FOR1D(funcs, i) {
-    lo_db->addFunction(funcs(i));
+    logicObjectManager_database::addFunction(funcs(i));
   }
   
   // update dependency graph
@@ -287,7 +267,7 @@ void TL::logicObjectManager::addStateFunctions(FuncL& funcs) {
 
 
 
-uint TL::logicObjectManager::getLowestFreeConceptID() {
+uint TL::logicObjectManager::getLowestFreeConceptID(uint min) {
   uintA used_ids;
   uint i;
   FOR1D(p_actions, i) {used_ids.append(p_actions(i)->id);}
@@ -297,14 +277,14 @@ uint TL::logicObjectManager::getLowestFreeConceptID() {
   FOR1D(f_derived, i) {used_ids.append(f_derived(i)->id);}
   used_ids.append(p_comp_constant.id);
   used_ids.append(p_comp_dynamic.id);
-  uint min_free_id = 1;
+  uint min_free_id = min;
   while (used_ids.findValue(min_free_id) >= 0) {
     min_free_id++;
   }
   return min_free_id;
 }
 
-
+// 
 
 TL::TermType* TL::logicObjectManager::getTermTypeOfObject(uint object_id) {
   int idx = constants.findValue(object_id);
@@ -326,14 +306,13 @@ TL::Atom* TL::logicObjectManager::getAtom_doNothing() {
     uint i;
     uint doNothing__id = 0;
     FOR1D(TL::logicObjectManager::p_actions, i) {
-      if (TL::logicObjectManager::p_actions(i)->id == TL::DEFAULT_ACTION_PRED__ID)
-        continue;
       if (TL::logicObjectManager::p_actions(i)->id >= doNothing__id)
         doNothing__id = TL::logicObjectManager::p_actions(i)->id+1;
     }
     doNothing->id = doNothing__id;
     FOR1D(p_prim, i) {
-      CHECK(p_prim(i)->id != doNothing->id, "Invalid action id");
+      if (p_prim(i)->id == doNothing->id)
+        HALT("doNothing action predicate shall be assigned id="<<doNothing->id<<" although this is already assigned to predicate "<<p_prim(i)->name);
     }
     doNothing->d = 0;
     doNothing->name = "doNothing";
@@ -422,7 +401,7 @@ TL::Atom* TL::logicObjectManager::getAtom(TL::Predicate* pred, uintA& args) {
 TL::Literal* TL::logicObjectManager::getLiteral(TL::Predicate* pred, bool positive, uintA& args) {
   if (pred == NULL) HALT("Predicate == NULL");
   CHECK(args.N == pred->d, "Invalid predicate instance: "<<pred->name<<" has d="<<pred->d << "   vs. args="<<args);
-  return lo_db->get(pred, positive, args);
+  return logicObjectManager_database::get(pred, positive, args);
 }
 
 TL::ComparisonAtom* TL::logicObjectManager::getCompAtom_constant(TL::Function* f, ComparisonType compType, double bound, uintA& args) {
@@ -436,26 +415,26 @@ TL::ComparisonAtom* TL::logicObjectManager::getCompAtom_dynamic(TL::Function* f,
 }
 
 TL::ComparisonLiteral* TL::logicObjectManager::getCompLiteral_constant(TL::Function* f, ComparisonType compType, double bound, uintA& args) {
-    return lo_db->get_compL(f, compType, bound, args);
+    return logicObjectManager_database::get_compL(f, compType, bound, args);
 }
 
 TL::ComparisonLiteral* TL::logicObjectManager::getCompLiteral_dynamic(TL::Function* f, ComparisonType compType, uintA& args1, uintA& args2) {
-    return lo_db->get_compL(f, compType, args1, args2);
+    return logicObjectManager_database::get_compL(f, compType, args1, args2);
 }
 
 TL::FunctionValue* TL::logicObjectManager::getFV(TL::Function* f, uintA& args, double value) {
   CHECK(args.N == f->d, "");
-  return lo_db->get(f, args, value);
+  return logicObjectManager_database::get(f, args, value);
 }
 
 TL::FunctionAtom* TL::logicObjectManager::getFA(TL::Function* f, const uintA& args) {
   CHECK(args.N == f->d, "");
-  return lo_db->get(f, args);
+  return logicObjectManager_database::get(f, args);
 }
 
 TL::Literal* TL::logicObjectManager::getLiteralNeg(TL::Literal* lit) {
     CHECK(lit->atom->pred->type != TL::Predicate::predicate_comparison, "not defined for p_comp")
-    return lo_db->get(lit->atom->pred, !lit->positive, lit->atom->args);
+    return logicObjectManager_database::get(lit->atom->pred, !lit->positive, lit->atom->args);
 }
 
 TL::Literal* TL::logicObjectManager::getLiteralOrig(TL::Literal* lit_copy) {
@@ -555,7 +534,7 @@ TL::FunctionAtom* TL::logicObjectManager::getFAorig(TL::FunctionAtom* fa_copy) {
 
 
 
-void TL::logicObjectManager::makeOriginal(TL::State& s) {
+void TL::logicObjectManager::makeOriginal(TL::SymbolicState& s) {
   uint i;
   
   LitL p_prim_orig;
@@ -912,10 +891,10 @@ TL::Literal* TL::logicObjectManager::getCountLiteral(TL::CountPredicate* p, uint
 
 
 // only EQUAL so far
-void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uintA& arguments, const TL::State& s, uint what) {
+void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uintA& arguments, const TL::SymbolicState& s, uint what) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"getCompLiterals [START]"<<endl;
-  if (DEBUG>0) {PRINT(arguments); PRINT(what);  cout<<"State:  ";s.write();cout<<endl;}
+  if (DEBUG>0) {PRINT(arguments); PRINT(what);  cout<<"SymbolicState:  ";s.write();cout<<endl;}
   lits.clear();
   uint i, j, k;
   // equality
@@ -969,7 +948,7 @@ void TL::logicObjectManager::getCompLiterals_constantBound(LitL& lits, const uin
 
 
 // works only on unary functions!
-void TL::logicObjectManager::getCompLiterals_dynamicBound(LitL& lits, const uintA& arguments, const TL::State& s, uint what) {
+void TL::logicObjectManager::getCompLiterals_dynamicBound(LitL& lits, const uintA& arguments, const TL::SymbolicState& s, uint what) {
     lits.clear();
     uint c, f, v;
     TL::FunctionValue* fv1;
@@ -1942,7 +1921,7 @@ TL::Trial* TL::logicObjectManager::readTrial_withConstants(const char* filename,
   bool read_state = true;
   while (MT::skip(in) != -1) {
     if (read_state) {
-      TL::State* state = new TL::State;
+      TL::SymbolicState* state = new TL::SymbolicState;
       MT::String line;
       line.read(in, NULL, "\n");
       if (DEBUG>0) {cout<<"READING LITERALS:"<<endl; PRINT(line);}

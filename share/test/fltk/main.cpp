@@ -4,7 +4,7 @@
 #include <MT/array.h>
 #include <FL/fl_draw.H>
 #include <MT/opengl.h>
-#include <MT/process.h>
+#include <biros/biros.h>
 #include <unistd.h>
 #include "start.h"
 #include "start.cpp"

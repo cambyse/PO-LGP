@@ -123,13 +123,18 @@ void cvDrawPoints(byteA& img, const arr& points){
   }
 }
 #else
+#include "util.h"
+CvMatDonor::CvMatDonor(){ NIY; }
+CvMat* CvMatDonor::get(){ NIY; }
 CvMat* arr2cvmat(CvMat *mat, const byteA& img){ NIY; return NULL; }
 CvMat* arr2cvmat(CvMat *mat, const floatA& img){ NIY; return NULL; }
-char cvShow(const byteA& img, const char *window){ NIY; return 0; }
+CvMat* arr2cvmat(CvMat *mat, const doubleA& img){ NIY; return NULL; }
+char cvShow(const byteA& img, const char *window,bool wait){ NIY; return 0; }
 char cvShow(const floatA& img, const char *window){ NIY; return 0; }
 char cvShowEvidence(const floatA& phi, const char *window){ NIY; return 0; }
 void cvDrawGraph(byteA& img, doubleA& V, uintA& E){ NIY; }
 void cvDrawBox(byteA& img, const floatA& box){ NIY; }
+void cvDrawPoints(byteA& img, const arr& points){ NIY; }
 #endif
 
 void boxConvolution(arr& out, const arr& in, uint width){
@@ -208,78 +213,6 @@ void mrf_BP(BP_data& msg, void (*conv)(arr&, const arr&), uint iter, byteA *max)
 }
 
 
-uint incremental_patch_ids(uintA& pch){
-  uint i, N=pch.N;
-  uintA pch_old(pch);
-  uintA old_ids;
-  int idx;
-  for(i=0; i<N; i++){
-    idx = old_ids.findValue(pch_old.elem(i));
-    if(idx<0){
-      idx = old_ids.N;
-      old_ids.append(pch_old.elem(i));
-    }
-    pch.elem(i) = idx;
-  }
-  return old_ids.N;
-}
-
-void pch2img(byteA &img, const uintA &pch, floatA &pch_col){
-  uint i, N=pch.d0*pch.d1;
-  if(pch_col.nd==2){
-    img.resize(N, 3);
-    for(i=0; i<N; i++){
-      img(i, 0) = (byte)pch_col(pch.elem(i), 0);
-      img(i, 1) = (byte)pch_col(pch.elem(i), 1);
-      img(i, 2) = (byte)pch_col(pch.elem(i), 2);
-    }
-    img.reshape(pch.d0, pch.d1, 3);
-  }
-  if(pch_col.nd==1){
-    img.resize(N);
-    for(i=0; i<N; i++)
-      img(i) = (byte)(255.f*pch_col(pch.elem(i)));
-    img.reshape(pch.d0, pch.d1);
-  }
-}
-
-
-void random_colorMap(floatA& pch_col, uint np){
-  pch_col.resize(np, 3);
-  rndUniform(pch_col, 0, 255);
-}
-
-
-void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np){
-  uint i, Y=img.d0, X=img.d1, N=img.d0*img.d1;
-  pch.reshape(N);
-  img.reshape(N, 3);
-  pch_col.resize(np, 3);  pch_col.setZero();
-  uintA  pch_size(np);    pch_size.setZero();
-  for(i=0; i<N; i++){
-    pch_col(pch(i), 0) += (float)img(i, 0);
-    pch_col(pch(i), 1) += (float)img(i, 1);
-    pch_col(pch(i), 2) += (float)img(i, 2);
-    pch_size(pch(i))++;
-  }
-  for(i=0; i<np; i++)
-    if(pch_size(i)) pch_col[i]()/=(float)pch_size(i);
-  img.reshape(Y, X, 3);
-  pch.reshape(Y, X);
-}
-
-void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){
-  uint x, y, Y=img.d0, X=img.d1;
-  pch_cen.resize(np, 2);  pch_cen.setZero();
-  uintA  pch_size(np);    pch_size.setZero();
-  for(y=0; y<Y; y++) for(x=0; x<X; x++){
-      pch_cen(pch(y, x), 0) += (double)x;
-      pch_cen(pch(y, x), 1) += (double)y;
-      pch_size(pch(y, x))++;
-    }
-  for(uint i=0; i<np; i++)
-    if(pch_size(i)) pch_cen[i]()/=(double)pch_size(i);
-}
 
 void getMaskedStats(floatA& mean, floatA& sdv, byteA& img, floatA& mask){
   mean.resize(img.d2); mean.setZero();
@@ -421,6 +354,7 @@ void getHsvEvidences(floatA &phi, floatA &hsv, const floatA& hsvTarget, const fl
   }
 }
 
+#ifdef MT_OPENCV
 void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSdv, uint range){
   diff.resize(img0.d0, img0.d1);
   diff.setZero();
@@ -440,6 +374,7 @@ void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSd
   for(uint i=0; i<smoothed.N; i++) smoothed.p[i] = student3(smoothed.p[i]);
   diff = smoothed;
 }
+#endif
 
 void getHsvCenter(arr& cen, byteA &img, uint iter, const floatA& hsvTarget, const floatA& hsvTol){
   floatA rgb, hsv;
@@ -833,6 +768,7 @@ void compute_hueMap(byteA& hue, const floatA& alphaV){
 
 
 
+#ifdef MT_OPENCV
 void smooth(floatA& theta, uint size){
   ENABLE_CVMAT
   floatA tmp=theta;
@@ -899,6 +835,7 @@ void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
   (*axis)(2) = -1*ax(0)+(*center)(0);
   (*axis)(3) = -1*ax(1)+(*center)(1);
 }
+#endif
 
 byteA evi2rgb(const floatA& theta){
   byteA tmp;

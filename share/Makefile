@@ -1,20 +1,27 @@
 NAME   = $(shell basename $(PWD))
 
-ALL =	\
+MLR_LIBS = \
 	src/MT \
 	src/SD \
 	src/NJ \
-	src/DZ \
 	src/relational \
-#	extern/libcolorseg/src \
-#	extern/Lewiner \
-#	extern/SWIFT++_1.2/src \
+	src/DZ \
+	src/JK
+
+EXTERN = \
+	extern/libcolorseg/src \
+	extern/Lewiner \
+	extern/tony_mdp \
+	extern/SWIFT++_1.2/src \
 #	extern/SWIFT++_1.2/decomposer/src \
 
 
-makeAll: $(ALL:%=make/%)
+makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
 
-cleanAll: $(ALL:%=clean/%) cleanProjects
+cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
+
+makeEXTERN: $(EXTERN:%=make/%)
+
 
 reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"

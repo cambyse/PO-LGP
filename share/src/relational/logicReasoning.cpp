@@ -22,6 +22,7 @@
 
 #include "logicReasoning.h"
 #include "logicObjectManager.h"
+#include <stdlib.h>
 
 #define LE_fast 1
 
@@ -107,7 +108,7 @@ bool TL::logicReasoning::containsNegativeBasePredicate(TL::Predicate* p) {
 }
 
 
-void TL::logicReasoning::filterState_full(TL::State& s_filtered, const TL::State& s_full, const uintA& filter_objects, bool primOnly) {
+void TL::logicReasoning::filterState_full(TL::SymbolicState& s_filtered, const TL::SymbolicState& s_full, const uintA& filter_objects, bool primOnly) {
   uint i, k;
   
   // lits_prim
@@ -166,7 +167,7 @@ void TL::logicReasoning::filterState_full(TL::State& s_filtered, const TL::State
 
 
 
-void TL::logicReasoning::filterState_atleastOne(TL::State& s_filtered, const TL::State& s_full, const uintA& filter_objects, bool primOnly) {
+void TL::logicReasoning::filterState_atleastOne(TL::SymbolicState& s_filtered, const TL::SymbolicState& s_full, const uintA& filter_objects, bool primOnly) {
   uint i, k;
   
   // lits_prim
@@ -232,13 +233,13 @@ void TL::logicReasoning::filterState_atleastOne(TL::State& s_filtered, const TL:
 
 
 void TL::logicReasoning::getConstants(const FuncVL& fvs, uintA& constants) {
-    constants.clear();
-    uint i, s;
-    FOR1D(fvs, i) {
-        FOR1D(fvs(i)->atom->args, s) {
-            constants.setAppend(fvs(i)->atom->args(s));
-        }
-    }
+  constants.clear();
+  uint i, s;
+  FOR1D(fvs, i) {
+      FOR1D(fvs(i)->atom->args, s) {
+          constants.setAppend(fvs(i)->atom->args(s));
+      }
+  }
 }
 
 
@@ -254,7 +255,12 @@ void TL::logicReasoning::getConstants(const LitL& lits, uintA& constants) {
 
 
 
-void TL::logicReasoning::getConstants(const TL::State& s, uintA& constants) {
+void TL::logicReasoning::getConstants(const TL::SymbolicState& s, uintA& constants) {
+  if (s.state_objects.N > 0) {
+    constants = s.state_objects;
+    return;
+  }
+  
   uintA localConstants;
   getConstants(s.lits_prim, localConstants);
   constants.setAppend(localConstants);
@@ -273,10 +279,14 @@ void TL::logicReasoning::getConstants(const TL::State& s, uintA& constants) {
   localConstants.clear();
   
   TL::sort_asc(constants);
+  
+  // HACK if no constants found, probably almost no literal held true...
+  // This is the case if there are not always true typing predicates.
+  if (constants.N < 3) constants = TL::logicObjectManager::constants;
 }
 
 
-uint TL::logicReasoning::getArgument(const TL::State& s, const TL::Predicate& pred) {
+uint TL::logicReasoning::getArgument(const TL::SymbolicState& s, const TL::Predicate& pred) {
   CHECK(pred.d == 1, "");
   uintA args;
   getArguments(args, s, pred);
@@ -286,7 +296,7 @@ uint TL::logicReasoning::getArgument(const TL::State& s, const TL::Predicate& pr
     return UINT_MAX;
 }
 
-void TL::logicReasoning::getArguments(uintA& args, const TL::State& s, const TL::Predicate& pred) {
+void TL::logicReasoning::getArguments(uintA& args, const TL::SymbolicState& s, const TL::Predicate& pred) {
   args.clear();
   uint i;
   if (pred.category == category_primitive) {
@@ -331,7 +341,7 @@ void TL::logicReasoning::getUnconstrainedNegatedArguments(uintA& args, const Lit
 }
 
 
-void TL::logicReasoning::getRelatedObjects(uintA& objs_related, uint id, bool id_covers_first, const TL::Predicate& pred, const TL::State& s) {
+void TL::logicReasoning::getRelatedObjects(uintA& objs_related, uint id, bool id_covers_first, const TL::Predicate& pred, const TL::SymbolicState& s) {
   objs_related.clear();
   uint i;
   if (pred.category == category_primitive) {
@@ -366,7 +376,7 @@ void TL::logicReasoning::getRelatedObjects(uintA& objs_related, uint id, bool id
 }
 
 
-void TL::logicReasoning::getGeneralRelatedObjects(uintA& objs_related, uint id, const TL::State& s) {
+void TL::logicReasoning::getGeneralRelatedObjects(uintA& objs_related, uint id, const TL::SymbolicState& s) {
   objs_related.clear();
   uint i;
   FOR1D(s.lits_prim, i) {
@@ -387,7 +397,7 @@ void TL::logicReasoning::getGeneralRelatedObjects(uintA& objs_related, uint id, 
 
 
 
-void TL::logicReasoning::getValues(arr& values, const TL::State& s, const TL::Function& f, const uintA& objs) {
+void TL::logicReasoning::getValues(arr& values, const TL::SymbolicState& s, const TL::Function& f, const uintA& objs) {
   uint i;
   int k;
   values.resize(objs.N);
@@ -411,11 +421,11 @@ void TL::logicReasoning::getValues(arr& values, const TL::State& s, const TL::Fu
   }
 }
 
-double TL::logicReasoning::getValue(uint id, const MT::String& function_name, const TL::State& s) {
+double TL::logicReasoning::getValue(uint id, const MT::String& function_name, const TL::SymbolicState& s) {
   return getValue(id, TL::logicObjectManager::getFunction(function_name), s);
 }
 
-double TL::logicReasoning::getValue(TL::Function* f, const TL::State& s) {
+double TL::logicReasoning::getValue(TL::Function* f, const TL::SymbolicState& s) {
   CHECK(f->d == 0, "incorrect arity of function");
   uint i;
   if (f->category == category_primitive) {
@@ -436,14 +446,14 @@ double TL::logicReasoning::getValue(TL::Function* f, const TL::State& s) {
   return TL_DOUBLE_NIL;
 }
 
-double TL::logicReasoning::getValue(uint id, TL::Function* f, const TL::State& s) {
+double TL::logicReasoning::getValue(uint id, TL::Function* f, const TL::SymbolicState& s) {
   uintA args;
   args.append(id);
   return getValue(args, f, s);
 }
 
 
-double TL::logicReasoning::getValue(const uintA& args, TL::Function* f, const TL::State& s) {
+double TL::logicReasoning::getValue(const uintA& args, TL::Function* f, const TL::SymbolicState& s) {
   FunctionAtom* fa = logicObjectManager::getFA(f, args);
   double value = getValue(*fa, s.fv_prim);
   if (!TL::areEqual(value, TL_DOUBLE_NIL))
@@ -459,7 +469,7 @@ double TL::logicReasoning::getValue(const uintA& args, TL::Function* f, const TL
 }
 
 
-bool TL::logicReasoning::holds_straight(uint id, const MT::String& predicate_name, const TL::State& s) {
+bool TL::logicReasoning::holds_straight(uint id, const MT::String& predicate_name, const TL::SymbolicState& s) {
   TL::Predicate* pred = TL::logicObjectManager::getPredicate(predicate_name);
   uint i;
   if (pred->category == category_primitive) {
@@ -617,7 +627,7 @@ bool TL::logicReasoning::containsNegativeLiterals(const LitL& LitLs) {
 }
 
 
-bool TL::logicReasoning::containsNegativeLiterals(const TL::State& s) {
+bool TL::logicReasoning::containsNegativeLiterals(const TL::SymbolicState& s) {
   if (containsNegativeLiterals(s.lits_prim))
 		return true;;
 	return false;
@@ -751,7 +761,7 @@ void TL::logicReasoning::removeRedundant(LitL& p) {
 
 
 
-void TL::logicReasoning::usedValues(const TL::Function& f, const TL::State& s, arr& values) {
+void TL::logicReasoning::usedValues(const TL::Function& f, const TL::SymbolicState& s, arr& values) {
     values.clear();
     uint i;
     if (f.category == category_primitive) {
@@ -1022,7 +1032,7 @@ bool TL::logicReasoning::holds(const FuncVL& fvs, TL::ComparisonLiteral* lit) {
 
 
 
-bool TL::logicReasoning::holds(const TL::State& s, TL::Literal* lit) {
+bool TL::logicReasoning::holds(const TL::SymbolicState& s, TL::Literal* lit) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "holds [START]" << endl;
   if (DEBUG>0) {
@@ -1056,7 +1066,7 @@ bool TL::logicReasoning::holds(const TL::State& s, TL::Literal* lit) {
 }
 
 
-bool TL::logicReasoning::holds(const TL::State& s, const LitL& lits_grounded) {
+bool TL::logicReasoning::holds(const TL::SymbolicState& s, const LitL& lits_grounded) {
   uint i;
   FOR1D(lits_grounded, i) {
     if (!holds(s, lits_grounded(i)))
@@ -1065,7 +1075,7 @@ bool TL::logicReasoning::holds(const TL::State& s, const LitL& lits_grounded) {
   return true;
 }
 
-bool TL::logicReasoning::holds(const TL::State& s1, const TL::State& s2) {
+bool TL::logicReasoning::holds(const TL::SymbolicState& s1, const TL::SymbolicState& s2) {
   return holds(s1, s2.lits_prim);
 }
 
@@ -1219,14 +1229,14 @@ bool TL::logicReasoning::unify(TL::FunctionValue* grounded_fv_left, TL::Function
 
 // BASIC COVERAGE
 // FOR ALL
-bool TL::logicReasoning::cover(const TL::State& s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub) {
+bool TL::logicReasoning::cover(const TL::SymbolicState& s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"cover - basic [START]"<<endl;
 
   CHECK(subs.num()==0, "Already subs given, Aldaaaaaa!")
   
   if (DEBUG>1) {
-    cout << "State: "; s.write(cout); cout<<endl;
+    cout << "SymbolicState: "; s.write(cout); cout<<endl;
     cout << "lit: "; lit->write(cout); cout<<endl;
     PRINT(freeNegVarsAllQuantified)
     cout << "initSub: "; if (initSub==NULL) cout<<" NULL"; else initSub->write(cout); cout<<endl;
@@ -1347,7 +1357,7 @@ bool TL::logicReasoning::cover(const TL::State& s, TL::Literal* lit, TL::Substit
           sub_left = *initSub;
             
           if (allValues(l)->atom->args.N != args_left.N) {
-            cout<<"logicReasoning::cover(TL::State* s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub)"<<endl;
+            cout<<"logicReasoning::cover(TL::SymbolicState* s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub)"<<endl;
             cout<<"allValues(l): ";allValues(l)->write(cout);cout<<endl;
             cout<<"clit: ";clit->write(cout);cout<<endl;
             sub_left.write(cout);
@@ -1362,7 +1372,7 @@ bool TL::logicReasoning::cover(const TL::State& s, TL::Literal* lit, TL::Substit
               sub_right = sub_left;
                   
               if (allValues(r)->atom->args.N != args_right.N) {
-                  cout<<"logicReasoning::cover(TL::State* s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub)"<<endl;
+                  cout<<"logicReasoning::cover(TL::SymbolicState* s, TL::Literal* lit, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub)"<<endl;
                   cout<<"allValues(r): ";allValues(r)->write(cout);cout<<endl;
                   cout<<"clit: ";clit->write(cout);cout<<endl;
                   sub_right.write(cout);
@@ -1511,13 +1521,13 @@ bool TL::logicReasoning::cover(const TL::State& s, TL::Literal* lit, TL::Substit
 
 
 
-bool TL::logicReasoning::cover(const TL::State& s, const LitL& lits, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub) {
+bool TL::logicReasoning::cover(const TL::SymbolicState& s, const LitL& lits, TL::SubstitutionSet& subs, bool freeNegVarsAllQuantified, TL::Substitution* initSub) {
   int DEBUG = 0;
 
   if (DEBUG>0) cout<<"cover [START]"<<endl;
   if (DEBUG > 0) {
     cout << "lits: "; write(lits); cout << endl;
-    cout << "State: ";
+    cout << "SymbolicState: ";
     s.write(cout);
     cout << endl;
   }
@@ -1587,13 +1597,13 @@ bool TL::logicReasoning::cover(const TL::State& s, const LitL& lits, TL::Substit
 // ----------------------------------------------------------------------------
 
 
-void TL::logicReasoning::calcDifferences(LitL& lits_diff_1to2, FuncVL& fv_diff_1to2, LitL& lits_diff_2to1, FuncVL& fv_diff_2to1, const TL::State state1, const TL::State state2) {
+void TL::logicReasoning::calcDifferences(LitL& lits_diff_1to2, FuncVL& fv_diff_1to2, LitL& lits_diff_2to1, FuncVL& fv_diff_2to1, const TL::SymbolicState state1, const TL::SymbolicState state2) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDifferences [START]"<<endl;}
   
   if (DEBUG>0) {
-    cout<<"State 1:"<<endl;  state1.write();  cout<<endl;
-    cout<<"State 2:"<<endl;  state2.write();  cout<<endl;
+    cout<<"SymbolicState 1:"<<endl;  state1.write();  cout<<endl;
+    cout<<"SymbolicState 2:"<<endl;  state2.write();  cout<<endl;
   }
   
   lits_diff_1to2.clear();
@@ -1632,16 +1642,16 @@ void TL::logicReasoning::calcDifferences(LitL& lits_diff_1to2, FuncVL& fv_diff_1
 
 
 
-uint TL::logicReasoning::createLeastGeneralSuperState(const TL::Atom& action1, const TL::State& state1, 
-                                                   const TL::Atom& action2, const TL::State& state2) {
+uint TL::logicReasoning::createLeastGeneralSuperState(const TL::Atom& action1, const TL::SymbolicState& state1, 
+                                                   const TL::Atom& action2, const TL::SymbolicState& state2) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"createLeastGeneralSuperState [START]"<<endl;}
   
   if (DEBUG>0) {
     cout << "Action 1:  "<<action1<<endl;
-    cout << "State 1:   ";  state1.write(cout, true);  cout<<endl;
+    cout << "SymbolicState 1:   ";  state1.write(cout, true);  cout<<endl;
     cout << "Action 2:  "<<action1<<endl;
-    cout << "State 2:   ";  state2.write(cout, true);  cout<<endl;
+    cout << "SymbolicState 2:   ";  state2.write(cout, true);  cout<<endl;
   }
   
   if (action1.pred != action2.pred)
@@ -1665,24 +1675,24 @@ uint TL::logicReasoning::createLeastGeneralSuperState(const TL::Atom& action1, c
 
 
 
-uint TL::logicReasoning::unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::State& state1, const TL::State& state2, TL::Substitution* initSub) {
+uint TL::logicReasoning::unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::SymbolicState& state1, const TL::SymbolicState& state2, TL::Substitution* initSub) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"unifyAsMuchAsPossible [START]"<<endl;}
   
   if (DEBUG>0) {
-    cout << "State 1:   "; state1.write(cout, true);  cout<<endl;
-    cout << "State 2:   "; state2.write(cout, true);  cout<<endl;
+    cout << "SymbolicState 1:   "; state1.write(cout, true);  cout<<endl;
+    cout << "SymbolicState 2:   "; state2.write(cout, true);  cout<<endl;
     cout<<"initSub:  "<<flush; if (initSub == NULL) cout<<"NULL"<<endl;  else initSub->write();  cout<<endl;
   }
   
   // (1) Calc Differences (with initSub)
-//   TL::State* state1_initSubbed = initSub->apply(state1);
+//   TL::SymbolicState* state1_initSubbed = initSub->apply(state1);
 //   makeOriginal(*state1_initSubbed);
   LitL lits_diff_1to2, lits_diff_2to1;
   FuncVL fv_diff_1to2, fv_diff_2to1;
   calcDifferences(lits_diff_1to2, fv_diff_1to2, lits_diff_2to1, fv_diff_2to1, state1, state2);
   if (DEBUG>0) {
-//     cout << "State 1 (with init-sub):  "; state1_initSubbed->writeNice(cout, false, true);  cout<<endl;
+//     cout << "SymbolicState 1 (with init-sub):  "; state1_initSubbed->writeNice(cout, false, true);  cout<<endl;
     cout<<"Differences:"<<endl;
     cout<<"lits_diff_1to2:    "; TL::write(lits_diff_1to2); cout<<endl;
     cout<<"fv_diff_1to2:    "; TL::write(fv_diff_1to2); cout<<endl;
@@ -1844,7 +1854,7 @@ uint TL::logicReasoning::unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::
   uint minDiff = 10000; // over all subsitutions
   FOR1D_(potential_subs, i) {
     // "potential_state2 should be state2
-    TL::State* potential_state2 = potential_subs.elem(i)->apply(state1);
+    TL::SymbolicState* potential_state2 = potential_subs.elem(i)->apply(state1);
     TL::logicObjectManager::makeOriginal(*potential_state2);
     if (DEBUG>0) {
       cout<<"Potential sub #" << i << ":"<<endl;
@@ -1893,21 +1903,21 @@ uint TL::logicReasoning::unifyAsMuchAsPossible(SubstitutionSet& subs, const TL::
 
 
 
-bool TL::logicReasoning::unify(SubstitutionSet& subs, const TL::State& state1, const TL::State& state2, TL::Substitution* initSub) {
+bool TL::logicReasoning::unify(SubstitutionSet& subs, const TL::SymbolicState& state1, const TL::SymbolicState& state2, TL::Substitution* initSub) {
   uint minDiff = unifyAsMuchAsPossible(subs, state1, state2, initSub);
   return minDiff == 0;
 }
 
 
-bool TL::logicReasoning::unifiable(const TL::State& state1, const TL::State& state2) {
+bool TL::logicReasoning::unifiable(const TL::SymbolicState& state1, const TL::SymbolicState& state2) {
   SubstitutionSet subs;
   return unify(subs, state1, state2);
 }
 
 
 uint TL::logicReasoning::unifyAsMuchAsPossible(SubstitutionSet& subs,
-                                const TL::State& state1, const TL::Atom& action1,
-                                const TL::State& state2, const TL::Atom& action2) {
+                                const TL::SymbolicState& state1, const TL::Atom& action1,
+                                const TL::SymbolicState& state2, const TL::Atom& action2) {
   TL::Substitution* action_sub = new TL::Substitution; // don't delete
   CHECK(action1.pred == action2.pred, "Try to unify nicht-zusammenpassende predicates:  " << action2.pred->id << " vs " << action1.pred);
   uint i;
@@ -1955,6 +1965,7 @@ void TL::logicReasoning::createInverseSubstitution(const TL::Literal& lit, TL::S
 
 
 bool TL::logicReasoning::isConstant(uint obj) {
+  CHECK(TL::logicObjectManager::constants.N > 0, "TL::logicObjectManager::constants have not been set!");
   return obj >= TL::logicObjectManager::constants.min();  // Die Objekte koennen sich inzwischen aendern
 }
 
@@ -2017,11 +2028,11 @@ bool TL::logicReasoning::isAbstract(const TL::Literal* lit) {
 
 
 // derives all ConjunctionPredicates that hold in this state (at the current moment)
-bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p, TL::State& s) {
+bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p, TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"deriveLiterals_conjunction [START]"<<endl;}
 //     double t_start = MT::cpuTime();
-  if (DEBUG>1) {cout<<"ConjunctionPredicate: ";p.writeNice(cout);cout<<endl;cout<<"State: ";s.write(cout);cout<<endl;}
+  if (DEBUG>1) {cout<<"ConjunctionPredicate: ";p.writeNice(cout);cout<<endl;cout<<"SymbolicState: ";s.write(cout);cout<<endl;}
   uint i, j, k;
   // (1) create base predicate tuples = BPT
   LitL base_lits;
@@ -2040,6 +2051,7 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   bool newFound=false;
   // Free Vars EXISTENTIAL
   if (!p.freeVarsAllQuantified) {
+    if (DEBUG>1) {cout<<"free vars EXISTS"<<endl;}
     // simply call cover
     TL::SubstitutionSet subs;
     if (cover(s, base_lits, subs, false)) {
@@ -2055,16 +2067,19 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   }
   // Free Vars ALL
   else {
+    if (DEBUG>1) {cout<<"free vars ALL"<<endl;}
     // We must treat positive vars with special care, since in cover(.) positives are always ex quantified.
     // calc free vars in base predicates
     uintA freeVars_pos, freeVars_neg;
     calcFreeVars(p, freeVars_pos, freeVars_neg);
+    if (DEBUG>1) {PRINT(freeVars_pos);  PRINT(freeVars_neg);}
     // (1) Create possible argument-combos for ConjunctionPredicate.
     MT::Array< uintA > argument_lists;
     // only use constants which are provided in the state
-    uintA state_constants;
+    uintA state_constants ;
     getConstants(s, state_constants);
     TL::allPossibleLists(argument_lists, state_constants, p.d, false, true);
+    if (DEBUG>0) {PRINT(argument_lists);}
     // (2) Test each possible argument-combo.
     FOR1D(argument_lists, i) {
       TL::Substitution s_arguments;
@@ -2097,6 +2112,7 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
   }
 //     double t_finish = MT::cpuTime();
 //     cout<<"deriveLiterals_conjunction time = "<<(t_finish - t_start)<<endl;
+  if (DEBUG>0) {cout<<"Derived state literals ["<<s.lits_derived.N<<"]: "<<s.lits_derived<<endl;}
   if (DEBUG>0) {cout<<"deriveLiterals_conjunction [END]"<<endl;}
   return newFound;
 }
@@ -2104,94 +2120,90 @@ bool TL::logicReasoning::deriveLiterals_conjunction(TL::ConjunctionPredicate& p,
 
 // assumes acyclicity!
 // seems standard graph problem i don't know standard solution of
-bool TL::logicReasoning::deriveLiterals_transClosure(TL::TransClosurePredicate& p, TL::State& s) {
-    uint DEBUG = 0;
-    if (DEBUG>0) {cout<<"deriveLiterals_transClosure [START]"<<endl;}
-    if (DEBUG>0) {p.writeNice(); cout<<endl;}
-    CHECK(p.d==2, "transitive closure defined only for binary preds")
-    uint i;
-    // (1) find edges
-    std::map< uint, uintA > right;
-    std::map< uint, uintA >::iterator iter;
-    if (DEBUG>0) {cout<<"Given: ";}
-    if (p.basePred->category == category_primitive) {
-        if (p.basePred->type != TL::Predicate::predicate_comparison) {
-            FOR1D(s.lits_prim, i) {
-                if (s.lits_prim(i)->atom->pred->id == p.basePred->id) {
-                    if (DEBUG>0) {s.lits_prim(i)->write(cout);cout<<" ";}
-                    right[s.lits_prim(i)->atom->args(0)].setAppend(s.lits_prim(i)->atom->args(1));
-                }
-            }
-        }
-        else {
-          NIY;
-        }
-    }
-    else {
-        FOR1D(s.lits_derived, i) {
-            if (s.lits_derived(i)->atom->pred->id == p.basePred->id) {
-                if (DEBUG>0) {s.lits_derived(i)->write(cout);cout<<" ";}
-                right[s.lits_derived(i)->atom->args(0)].setAppend(s.lits_derived(i)->atom->args(1));
-            }
-        }
-    }
-    if (DEBUG>0) {cout<<endl;}
-    
-    if (DEBUG>1) {
-        cout<<"Direct right neighbors:"<<endl;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            cout<<iter->first<<": "<<iter->second<<endl;
-        }
-    }
-    if (right.empty())
-        return false;
-    // (2) build connections
-    bool extended;
-    uint no;
-    do {
-        extended = false;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            no = iter->second.d0;
-            uintA newGuys_candidates;
-            FOR1D(iter->second, i) {
-                newGuys_candidates.setAppend(right[iter->second(i)]);
-            }
-            iter->second.setAppend(newGuys_candidates);
-            if (iter->second.d0 > no)
-                extended = true;
-        }
-    } while (extended);
-    if (DEBUG>1) {
-        cout<<"All right neighbors:"<<endl;
-        for (iter = right.begin(); iter != right.end(); iter++) {
-            cout<<iter->first<<": "<<iter->second<<endl;
-        }
-//         cout<<"All left neighbors:"<<endl;
-//         for (iter = left.begin(); iter != left.end(); iter++) {
-//             cout<<iter->first<<": "<<iter->second<<endl;
-//         }
-    }
-    // (3) build TCP tuples
-    if (DEBUG>0) {cout<<"TL::logicObjectManager::p_derived: ";}
+bool TL::logicReasoning::deriveLiterals_transClosure(TL::TransClosurePredicate& p, TL::SymbolicState& s) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"deriveLiterals_transClosure [START]"<<endl;}
+  if (DEBUG>0) {p.writeNice(); cout<<endl;}
+  CHECK(p.d==2, "transitive closure defined only for binary preds")
+  uint i;
+  // (1) find edges
+  std::map< uint, uintA > right;
+  std::map< uint, uintA >::iterator iter;
+  if (DEBUG>0) {cout<<"Given: ";}
+  if (p.basePred->category == category_primitive) {
+      if (p.basePred->type != TL::Predicate::predicate_comparison) {
+          FOR1D(s.lits_prim, i) {
+              if (s.lits_prim(i)->atom->pred->id == p.basePred->id) {
+                  if (DEBUG>0) {s.lits_prim(i)->write(cout);cout<<" ";}
+                  right[s.lits_prim(i)->atom->args(0)].setAppend(s.lits_prim(i)->atom->args(1));
+              }
+          }
+      }
+      else {
+        NIY;
+      }
+  }
+  else {
+      FOR1D(s.lits_derived, i) {
+          if (s.lits_derived(i)->atom->pred->id == p.basePred->id) {
+              if (DEBUG>0) {s.lits_derived(i)->write(cout);cout<<" ";}
+              right[s.lits_derived(i)->atom->args(0)].setAppend(s.lits_derived(i)->atom->args(1));
+          }
+      }
+  }
+  if (DEBUG>0) {cout<<endl;}
+  
+  if (DEBUG>1) {
+      cout<<"Direct right neighbors:"<<endl;
+      for (iter = right.begin(); iter != right.end(); iter++) {
+          cout<<iter->first<<": "<<iter->second<<endl;
+      }
+  }
+  if (right.empty())
+      return false;
+  // (2) build connections
+  bool extended;
+  uint no;
+  do {
+      extended = false;
+      for (iter = right.begin(); iter != right.end(); iter++) {
+          no = iter->second.d0;
+          uintA newGuys_candidates;
+          FOR1D(iter->second, i) {
+              newGuys_candidates.setAppend(right[iter->second(i)]);
+          }
+          iter->second.setAppend(newGuys_candidates);
+          if (iter->second.d0 > no)
+              extended = true;
+      }
+  } while (extended);
+  if (DEBUG>1) {
+    cout<<"All right neighbors:"<<endl;
     for (iter = right.begin(); iter != right.end(); iter++) {
-        FOR1D(iter->second, i) {
-            uintA args(2);
-            args(0)=iter->first;
-            args(1)=iter->second(i);
-            TL::Literal* lit = TL::logicObjectManager::getTransClosureLiteral(&p, args);
-            s.lits_derived.setAppend(lit);
-            if (DEBUG>0) {lit->write(cout);cout<<" ";}
-        }
+        cout<<iter->first<<": "<<iter->second<<endl;
     }
-    if (DEBUG>0) {cout<<endl;}
-    
-    if (DEBUG>0) {cout<<"deriveLiterals_transClosure [END]"<<endl;}
-    return true;
+  }
+  // (3) build TCP tuples
+  if (DEBUG>0) {cout<<"TL::logicObjectManager::p_derived: ";}
+  for (iter = right.begin(); iter != right.end(); iter++) {
+      FOR1D(iter->second, i) {
+          uintA args(2);
+          args(0)=iter->first;
+          args(1)=iter->second(i);
+          TL::Literal* lit = TL::logicObjectManager::getTransClosureLiteral(&p, args);
+          s.lits_derived.setAppend(lit);
+          if (DEBUG>0) {lit->write(cout);cout<<" ";}
+      }
+  }
+  if (DEBUG>0) {cout<<endl;}
+  
+  if (DEBUG>0) {cout<<"deriveLiterals_transClosure [END]"<<endl;}
+  return true;
 }
 
 
 
-bool TL::logicReasoning::deriveLiterals_count(TL::CountPredicate& p, TL::State& s) {
+bool TL::logicReasoning::deriveLiterals_count(TL::CountPredicate& p, TL::SymbolicState& s) {
     uint DEBUG=0;
     if (DEBUG>0) {cout<<"deriveLiterals_count [START]"<<endl;}
     if (DEBUG>0) {p.writeNice(cout);cout<<endl;}
@@ -2276,7 +2288,7 @@ bool TL::logicReasoning::deriveLiterals_count(TL::CountPredicate& p, TL::State& 
 
 
 
-bool TL::logicReasoning::deriveFunctionValues_count(TL::CountFunction& f, TL::State& s) {
+bool TL::logicReasoning::deriveFunctionValues_count(TL::CountFunction& f, TL::SymbolicState& s) {
     uint DEBUG = 0;
     if (DEBUG>0) {cout<<"deriveFunctionValues_count [START]"<<endl;}
     if (DEBUG>0) {f.writeNice();cout<<endl;}
@@ -2325,7 +2337,7 @@ bool TL::logicReasoning::deriveFunctionValues_count(TL::CountFunction& f, TL::St
 }
 
 
-bool TL::logicReasoning::deriveFunctionValues_avg(TL::AverageFunction& f, TL::State& s) {
+bool TL::logicReasoning::deriveFunctionValues_avg(TL::AverageFunction& f, TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"deriveFunctionValues_avg [START]"<<endl;}
   CHECK(f.d==0, "only implemented for zero-ary avg functions");
@@ -2367,7 +2379,7 @@ bool TL::logicReasoning::deriveFunctionValues_avg(TL::AverageFunction& f, TL::St
 }
 
 
-bool TL::logicReasoning::deriveFunctionValues_sum(TL::SumFunction& f, TL::State& s) {
+bool TL::logicReasoning::deriveFunctionValues_sum(TL::SumFunction& f, TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"deriveFunctionValues_sum [START]"<<endl;}
   CHECK(f.d==0, "only implemented for zero-ary avg functions");
@@ -2409,7 +2421,7 @@ bool TL::logicReasoning::deriveFunctionValues_sum(TL::SumFunction& f, TL::State&
 
 
 
-bool TL::logicReasoning::deriveFunctionValues_max(TL::MaxFunction& f, TL::State& s) {
+bool TL::logicReasoning::deriveFunctionValues_max(TL::MaxFunction& f, TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"deriveFunctionValues_max [START]"<<endl;}
   CHECK(f.d==0, "only implemented for zero-ary max functions");
@@ -2451,7 +2463,7 @@ bool TL::logicReasoning::deriveFunctionValues_max(TL::MaxFunction& f, TL::State&
 }
 
 
-bool TL::logicReasoning::deriveFunctionValues_reward(TL::RewardFunction& f, TL::State& s) {
+bool TL::logicReasoning::deriveFunctionValues_reward(TL::RewardFunction& f, TL::SymbolicState& s) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"deriveFunctionValues_reward [START]"<<endl;}
   CHECK(f.d==0, "only zero-ary functions");
@@ -2476,120 +2488,121 @@ bool TL::logicReasoning::deriveFunctionValues_reward(TL::RewardFunction& f, TL::
 // construct TL::logicObjectManager::p_derived predicates and functions
 // assumptions: no self recursion
 // negation in base predicates is only allowed for primitive predicates
-void TL::logicReasoning::derive(const LitL& lits_prim, const FuncVL& fv_prim, LitL& lits_derived, FuncVL& fv_derived) {
-    uint DEBUG = 0;
-    if (DEBUG > 0) cout << "derive [START]" << endl;
-    if (DEBUG > 1) {
-        cout << "Primitive Lits: ";
-        write(lits_prim);
-        cout << endl;
-    }
+void TL::logicReasoning::derive(const LitL& lits_prim, const FuncVL& fv_prim, LitL& lits_derived, FuncVL& fv_derived, uintA& objects) {
+  uint DEBUG = 0;
+  if (DEBUG > 0) cout << "derive [START]" << endl;
+  if (DEBUG > 1) {
+      cout << "Primitive Lits: ";
+      write(lits_prim);
+      cout << endl;
+  }
+
+  TL::SymbolicState s;
+  s.derivedDerived = true; // needs to be set here, since TL::logicObjectManager::p_derived predicates that build on other TL::logicObjectManager::p_derived predicates require that the state be TL::logicObjectManager::p_derived; in short: setting this state as derivedDerived is safe here since we will derive all the stuff now anyway
+  s.lits_prim.append(lits_prim);
+  s.fv_prim.append(fv_prim);
+  s.state_objects = objects;
   
-    TL::State s;
-    s.derivedDerived = true; // needs to be set here, since TL::logicObjectManager::p_derived predicates that build on other TL::logicObjectManager::p_derived predicates require that the state be TL::logicObjectManager::p_derived; in short: setting this state as derivedDerived is safe here since we will derive all the stuff now anyway
-    s.lits_prim.append(lits_prim);
-    s.fv_prim.append(fv_prim);
-    
-    uintA ordered_ids;
-    boolA isPredicate;
-    TL::logicObjectManager::dependencyGraph.getWellDefinedOrder(ordered_ids, isPredicate, true);
-    
-    uint i, d;
-    FOR1D(ordered_ids, i) {
-        if (isPredicate(i)) {
-            FOR1D(TL::logicObjectManager::p_derived, d) {
-                if (TL::logicObjectManager::p_derived(d)->id == ordered_ids(i)) break;
-            }
-            CHECK(d<TL::logicObjectManager::p_derived.N, "TL::logicObjectManager::p_derived predicate not found");
-            if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_conjunction) {
-                TL::ConjunctionPredicate* scp = dynamic_cast<TL::ConjunctionPredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(scp!=NULL, "cast failed");
-                deriveLiterals_conjunction(*scp, s);
-            }
-            else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_transClosure) {
-                TL::TransClosurePredicate* tcp = dynamic_cast<TL::TransClosurePredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(tcp!=NULL, "cast failed");
-                deriveLiterals_transClosure(*tcp, s);
-            }
-            else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_count) {
-                TL::CountPredicate* p = dynamic_cast<TL::CountPredicate*>(TL::logicObjectManager::p_derived(d));
-                CHECK(p!=NULL, "cast failed");
-                deriveLiterals_count(*p, s);
-            }
-            else {
-                HALT("Unknown predicate")
-            }
-        }
-        else {
-            FOR1D(TL::logicObjectManager::f_derived, d) {
-                if (TL::logicObjectManager::f_derived(d)->id == ordered_ids(i)) break;
-            }
-            CHECK(d<TL::logicObjectManager::f_derived.N, "TL::logicObjectManager::p_derived function not found; with id="<<ordered_ids(i));
-            if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_count) {
-                TL::CountFunction* f = dynamic_cast<TL::CountFunction*>(TL::logicObjectManager::f_derived(d));
-                CHECK(f!=NULL, "cast failed");
-                deriveFunctionValues_count(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_avg) {
-              TL::AverageFunction* f = dynamic_cast<TL::AverageFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_avg(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_max) {
-              TL::MaxFunction* f = dynamic_cast<TL::MaxFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_max(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_sum) {
-              TL::SumFunction* f = dynamic_cast<TL::SumFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_sum(*f, s);
-            }
-            else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_reward) {
-              TL::RewardFunction* f = dynamic_cast<TL::RewardFunction*>(TL::logicObjectManager::f_derived(d));
-              CHECK(f!=NULL, "cast failed");
-              deriveFunctionValues_reward(*f, s);
-            }
-            else {
-                HALT("Unknown function")
-            }
-        }
-    }
+  uintA ordered_ids;
+  boolA isPredicate;
+  TL::logicObjectManager::dependencyGraph.getWellDefinedOrder(ordered_ids, isPredicate, true);
   
-    lits_derived.clear();
-    FOR1D(s.lits_derived, i) {lits_derived.append(s.lits_derived(i));}
-    
-    fv_derived.clear();
-    FOR1D(s.fv_derived, i) {fv_derived.append(s.fv_derived(i));}
+  uint i, d;
+  FOR1D(ordered_ids, i) {
+      if (isPredicate(i)) {
+          FOR1D(TL::logicObjectManager::p_derived, d) {
+              if (TL::logicObjectManager::p_derived(d)->id == ordered_ids(i)) break;
+          }
+          CHECK(d<TL::logicObjectManager::p_derived.N, "TL::logicObjectManager::p_derived predicate not found");
+          if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_conjunction) {
+              TL::ConjunctionPredicate* scp = dynamic_cast<TL::ConjunctionPredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(scp!=NULL, "cast failed");
+              deriveLiterals_conjunction(*scp, s);
+          }
+          else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_transClosure) {
+              TL::TransClosurePredicate* tcp = dynamic_cast<TL::TransClosurePredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(tcp!=NULL, "cast failed");
+              deriveLiterals_transClosure(*tcp, s);
+          }
+          else if (TL::logicObjectManager::p_derived(d)->type == TL::Predicate::predicate_count) {
+              TL::CountPredicate* p = dynamic_cast<TL::CountPredicate*>(TL::logicObjectManager::p_derived(d));
+              CHECK(p!=NULL, "cast failed");
+              deriveLiterals_count(*p, s);
+          }
+          else {
+              HALT("Unknown predicate")
+          }
+      }
+      else {
+          FOR1D(TL::logicObjectManager::f_derived, d) {
+              if (TL::logicObjectManager::f_derived(d)->id == ordered_ids(i)) break;
+          }
+          CHECK(d<TL::logicObjectManager::f_derived.N, "TL::logicObjectManager::p_derived function not found; with id="<<ordered_ids(i));
+          if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_count) {
+              TL::CountFunction* f = dynamic_cast<TL::CountFunction*>(TL::logicObjectManager::f_derived(d));
+              CHECK(f!=NULL, "cast failed");
+              deriveFunctionValues_count(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_avg) {
+            TL::AverageFunction* f = dynamic_cast<TL::AverageFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_avg(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_max) {
+            TL::MaxFunction* f = dynamic_cast<TL::MaxFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_max(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_sum) {
+            TL::SumFunction* f = dynamic_cast<TL::SumFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_sum(*f, s);
+          }
+          else if (TL::logicObjectManager::f_derived(d)->type == TL::Function::function_reward) {
+            TL::RewardFunction* f = dynamic_cast<TL::RewardFunction*>(TL::logicObjectManager::f_derived(d));
+            CHECK(f!=NULL, "cast failed");
+            deriveFunctionValues_reward(*f, s);
+          }
+          else {
+              HALT("Unknown function")
+          }
+      }
+  }
+
+  lits_derived.clear();
+  FOR1D(s.lits_derived, i) {lits_derived.append(s.lits_derived(i));}
   
-    if (DEBUG > 1) {
-        cout << "TL::logicObjectManager::p_derived Tuples: ";
-        write(lits_derived);
-        cout << endl;
-        cout << "TL::logicObjectManager::p_derived funcValues: ";
-        write(fv_derived);
-        cout << fv_derived;
-    }
-  
-    if (DEBUG > 0) cout << "derive [END]" << endl;
+  fv_derived.clear();
+  FOR1D(s.fv_derived, i) {fv_derived.append(s.fv_derived(i));}
+
+  if (DEBUG > 1) {
+      cout << "TL::logicObjectManager::p_derived Tuples: ";
+      write(lits_derived);
+      cout << endl;
+      cout << "TL::logicObjectManager::p_derived funcValues: ";
+      write(fv_derived);
+      cout << fv_derived;
+  }
+
+  if (DEBUG > 0) cout << "derive [END]" << endl;
 }
 
-void TL::logicReasoning::derive(TL::State* s) {
+void TL::logicReasoning::derive(TL::SymbolicState* s) {
 	if (s->derivedDerived)
 		return;
-	LitL derivedPTs;
-  FuncVL derivedFVs;
-  derive(s->lits_prim, s->fv_prim, derivedPTs, derivedFVs);
-  s->lits_derived.append(derivedPTs);
-  s->fv_derived.append(derivedFVs);
+	LitL pis_derived;
+  FuncVL fvs_derived;
+  derive(s->lits_prim, s->fv_prim, pis_derived, fvs_derived, s->state_objects);
+  s->lits_derived.append(pis_derived);
+  s->fv_derived.append(fvs_derived);
 	s->derivedDerived = true;
 //     s->writeNice(cout, true);
 }
 
-void TL::logicReasoning::dederive(TL::State* s) {
-    s->lits_derived.clear();
-    s->fv_derived.clear();
-    s->derivedDerived = false;
+void TL::logicReasoning::dederive(TL::SymbolicState* s) {
+  s->lits_derived.clear();
+  s->fv_derived.clear();
+  s->derivedDerived = false;
 }
 
 
@@ -2781,7 +2794,7 @@ void TL::logicReasoning::killBaseConcepts(LitL& lits) {
 
 
 
-void TL::logicReasoning::changes(const TL::State& pre, const TL::State& post, uintA& changedConstants, LitL& holdOnlyPre, LitL& holdOnlyPost) {
+void TL::logicReasoning::changes(const TL::SymbolicState& pre, const TL::SymbolicState& post, uintA& changedConstants, LitL& holdOnlyPre, LitL& holdOnlyPost) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"changes [START]" << endl;
   if (DEBUG>1) {

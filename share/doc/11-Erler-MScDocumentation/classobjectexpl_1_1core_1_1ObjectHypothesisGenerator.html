@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>ObjectExploration: objectexpl::core::ObjectHypothesisGenerator Klassenreferenz</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!-- Erzeugt von Doxygen 1.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Hauptseite</span></a></li>
+      <li><a href="namespaces.html"><span>Namensbereiche</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Klassen</span></a></li>
+      <li><a href="files.html"><span>Dateien</span></a></li>
+    </ul>
+  </div>
+  <div class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Auflistung&nbsp;der&nbsp;Klassen</span></a></li>
+      <li><a href="classes.html"><span>Klassen-Verzeichnis</span></a></li>
+      <li><a href="hierarchy.html"><span>Klassenhierarchie</span></a></li>
+      <li><a href="functions.html"><span>Klassen-Elemente</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath">
+    <ul>
+      <li><b>objectexpl</b>      </li>
+      <li><a class="el" href="namespaceobjectexpl_1_1core.html">core</a>      </li>
+      <li><a class="el" href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator.html">objectexpl::core::ObjectHypothesisGenerator</a>      </li>
+    </ul>
+  </div>
+</div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Öffentliche Methoden</a>  </div>
+  <div class="headertitle">
+<h1>objectexpl::core::ObjectHypothesisGenerator Klassenreferenz</h1>  </div>
+</div>
+<div class="contents">
+<!-- doxytag: class="objectexpl::core::ObjectHypothesisGenerator" -->
+<p>Erzeugt eine Objekthypothese anhand des Ortes mit der maximalen Aufmerksamkeit.  
+<a href="#_details">Mehr ...</a></p>
+
+<p><code>#include &lt;<a class="el" href="ObjectHypothesisGenerator_8h_source.html">ObjectHypothesisGenerator.h</a>&gt;</code></p>
+
+<p><a href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator-members.html">Aufstellung aller Elemente</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Öffentliche Methoden</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Mat1b&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator.html#a968aa612a9c42f9e97bc39b2713a42ba">generateObjectHypothesis</a> (const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d maxSaliencyPoint)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt die Objekthypothese zurück.  <a href="#a968aa612a9c42f9e97bc39b2713a42ba"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Rect&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator.html#ab5a85deccb383f10f120782ba511167e">getBoundingBox</a> (cv::Mat segment)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt das umschließende Rechteck einer Objekthypothese zurück.  <a href="#ab5a85deccb383f10f120782ba511167e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cv::Point2d&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="classobjectexpl_1_1core_1_1ObjectHypothesisGenerator.html#a094d896a12a8535492d4605ff7a2e816">getCentroid</a> (cv::Mat segment)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Gibt den Schwerpunkt der Objekthypothese zurück.  <a href="#a094d896a12a8535492d4605ff7a2e816"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Ausführliche Beschreibung</h2>
+<p>Erzeugt eine Objekthypothese anhand des Ortes mit der maximalen Aufmerksamkeit. </p>
+<hr/><h2>Dokumentation der Elementfunktionen</h2>
+<a class="anchor" id="a968aa612a9c42f9e97bc39b2713a42ba"></a><!-- doxytag: member="objectexpl::core::ObjectHypothesisGenerator::generateObjectHypothesis" ref="a968aa612a9c42f9e97bc39b2713a42ba" args="(const ntk::RGBDImage &amp;image, cv::Mat1b mask, cv::Point2d maxSaliencyPoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Mat1b ObjectHypothesisGenerator::generateObjectHypothesis </td>
+          <td>(</td>
+          <td class="paramtype">const ntk::RGBDImage &amp;&nbsp;</td>
+          <td class="paramname"> <em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Mat1b&nbsp;</td>
+          <td class="paramname"> <em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cv::Point2d&nbsp;</td>
+          <td class="paramname"> <em>maxSaliencyPoint</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt die Objekthypothese zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>image</em>&nbsp;</td><td>Das Original Frame wovon die Aufmerksamkeitskarte erstellt wurde. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mask</em>&nbsp;</td><td>Die Maske von der planaren Hauptfläche. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>maxSaliencyPoint</em>&nbsp;</td><td>Der Ort mit der maximalen Wert in der Aufmerksamkeitskarte. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Die Objekthypothese in binärer Form (1=Objektpixel; 0=sonst). </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab5a85deccb383f10f120782ba511167e"></a><!-- doxytag: member="objectexpl::core::ObjectHypothesisGenerator::getBoundingBox" ref="ab5a85deccb383f10f120782ba511167e" args="(cv::Mat segment)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Rect ObjectHypothesisGenerator::getBoundingBox </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>hypothesis</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt das umschließende Rechteck einer Objekthypothese zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>hypothesis</em>&nbsp;</td><td>Die Objekthypothese, wovon das umschließende Rechteck berechnet werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Das umschließende Rechteck der Objekthypothese. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a094d896a12a8535492d4605ff7a2e816"></a><!-- doxytag: member="objectexpl::core::ObjectHypothesisGenerator::getCentroid" ref="a094d896a12a8535492d4605ff7a2e816" args="(cv::Mat segment)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cv::Point2d ObjectHypothesisGenerator::getCentroid </td>
+          <td>(</td>
+          <td class="paramtype">cv::Mat&nbsp;</td>
+          <td class="paramname"> <em>hypothesis</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gibt den Schwerpunkt der Objekthypothese zurück. </p>
+<dl><dt><b>Parameter:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>hypothesis</em>&nbsp;</td><td>Die Objekthypothese, wovon der Schwerpunkt berechnet werden soll. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Rückgabe:</b></dt><dd>Der Schwerpunkt der Objekthypothese. </dd></dl>
+
+</div>
+</div>
+<hr/>Die Dokumentation für diese Klasse wurde erzeugt aufgrund der Dateien:<ul>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/<a class="el" href="ObjectHypothesisGenerator_8h_source.html">ObjectHypothesisGenerator.h</a></li>
+<li>/home/olie-de/Workspace/Eclipse/ObjectExploration/src/core/segmentation/ObjectHypothesisGenerator.cpp</li>
+</ul>
+</div>
+<hr class="footer"/><address class="footer"><small>Erzeugt am Wed Aug 24 2011 15:29:51 für ObjectExploration von&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
+</body>
+</html>

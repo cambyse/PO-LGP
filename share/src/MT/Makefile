@@ -1,44 +1,17 @@
 BASE   = ../..
 NAME   = libmt
 OUTPUT = $(BASE)/lib/$(NAME).so
-CXXFLAGS += -fPIC
-LIBS   += -lrt
 
-#OPTIM  = fast_debug
-OPTIM  = debug
+MAKEMODE = mlrlib
 
-FREEGLUT = 1
-#OPENCV = 1
-ANN = 1
-QHULL = 1
-SWIFT = 1
-LAPACK = 1
-<<<<<<< HEAD
-#REVEL = 1
-=======
->>>>>>> master
-ODE = 1
+#NOBODY MAKES CHANGES HERE ANYMORE OTHER THAN MARC :-)
+#if in doubt, you actually want to change make-config!
+#otherwise ask Marc
 
-TONY = 1
-OPENCV_UBUNTU = 1
-SCHUNK = 1
-PLIB = 1
-BUMBLE = 1
-#URGLASER = 1
-<<<<<<< HEAD
-# CUDA = 1
-=======
-CUDA = 1
->>>>>>> master
-LEWINER = 1
-NIKOLAY = 1
-NILS = 1
-#STANIMIR = 1
+buildAndLink_NIKOLAY = 1
+buildAndLink_DMITRY = 1
+buildAndLink_STANIMIR = 1
 
-#GL2PS = 1
-
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
-CXXFLAGS += -DMT_Lewiner
 OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS := $(OBJS:%.cpp=%.o)
 

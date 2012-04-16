@@ -26,19 +26,10 @@
 
 //-- fwd declarations
 class OpenGL;
-struct SwiftInterface;
-namespace ors { struct Graph; }
-struct TaskVariable;
-typedef MT::Array<TaskVariable*> TaskVariableList;
 extern uint countMsg, countSetq;
 
 
 namespace soc {
-
-/// gradient method options
-//enum SocSolverType{ ConjGrad=0, LevMar=1, Rprop=2, RpropConjGrad=3, SQP=4, Attractor=5 };
-enum { ConjGrad=0, LevMar=1, Rprop=2, RpropConjGrad=3, SQP=4, Attractor=5 };
-
 
 //===========================================================================
 //
@@ -67,7 +58,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   ///@name low level access routines: need to be implemented by the simulator
   
   // access general problem information
-  virtual uint nTime() = 0;            ///< total time steps of the trajectory
+  virtual uint nTime() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
   virtual uint nTasks() = 0;           ///< number of task variables
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
@@ -78,16 +69,17 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual void getqv0(arr& q0, arr& v0); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   virtual void setTau(double tau) = 0;
+  virtual double getDuration(){ return getTau()*nTime(); }
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
-  virtual void setx0AsCurrent() = 0;
-  virtual void setTox0(){ arr q; getx0(q); setx(q); }
+  virtual void setx0ToCurrent() = 0;
+  virtual void setTox0(){ arr x; getx0(x); setx(x); }
   virtual void setq(const arr& q, uint t=0) = 0;
-  virtual void setq0(const arr& q);
+  //virtual void setq0(const arr& q);
   virtual void setx(const arr& x, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
   
-  //motion prior, or control cost  [t indicates the step]
+  //motion prior, or control cost PER STEP unless rate is explicitly indicated [t indicates the step]
   virtual void getW(arr& W, uint t) = 0;          ///< kinematic step cost metric: step cost = dq^T W dq, with W = tau*W_rate where tau is step size
   virtual void getWinv(arr& Winv, uint t){ throw("NIY"); } ///< kinematic step cost metric: cost = dq^T W dq
   virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
@@ -114,7 +106,6 @@ struct SocSystemAbstraction:VectorChainFunction {
   //virtual void getLinearConstraint(arr& c, double& coff, uint i, uint t); ///< defines a cost 1 iff [[c^T y_i + coff>0]]
   
   
-  
   ///@name high level methods: they are being accessed by the solvers
   
   // abstract SOC interface
@@ -126,13 +117,16 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
   void getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t);
   
-  // cost info
+  //old cost computation routines -- still very useful for reference and checking
   double taskCost(arr* grad, int t, int whichTask, bool verbose=false); //whichTask=-1 -> all, verbose: print individual task costs
   double totalCost(arr *grad, const arr& q, bool plot=false);
+  void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
 
   //VectorChainFunction optimization interface
-  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i);
-  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  virtual void fvi (arr& y, arr& J, uint i, const arr& x_i);
+  virtual void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  
+  ///@name utilities:
   
   virtual void displayState(const arr *q, const arr *Qinv=NULL, const char *text=NULL, bool reportVariables=false);
   virtual void recordTrajectory(const arr& q,const char *variable,const char *file);
@@ -140,7 +134,6 @@ struct SocSystemAbstraction:VectorChainFunction {
   
   //-- convenience (prelim...)
   void testGradientsInCurrentState(const arr& xt, uint t);
-  void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
   double analyzeTrajectory(const arr& q, bool plot);
   void constantTrajectory(arr& q);
   void passiveDynamicTrajectory(arr& q);
@@ -157,14 +150,10 @@ struct SocSystemAbstraction:VectorChainFunction {
 void getVelocity(arr& vt, const arr& q, uint t, double tau);
 void getPhaseTrajectory(arr& x, const arr& q, double tau);
 void getPositionTrajectory(arr& q, const arr& x);
-void interpolateTrajectory(arr& qNew, const arr& _q, double step);
+//void interpolateTrajectory(arr& qNew, const arr& _q, double step);
 
 //only for the first task so far!
-void getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const arr& x);
-void partialJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& dx, const arr& dq, const arr& q, const arr& x);
 void straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid);
-
-
 } //namespace
 
 //===========================================================================

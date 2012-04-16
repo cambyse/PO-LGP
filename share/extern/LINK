@@ -14,7 +14,7 @@ DESCRIPTION
 	
 "
 
-externals="SWIFT++_1.2 tony-mdp opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan ode-0.11 revel-1.1.0 xvidcore-1.1.3 urg-0.0.2"
+externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan ode-0.11 urg-0.0.2 tony_mdp"
 
 [ -z "$1" ] && { echo "$USAGE"; exit 1; } 
 [ -d "$1" ] || { echo "$USAGE"; exit 1; }
@@ -22,6 +22,12 @@ externals="SWIFT++_1.2 tony-mdp opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan od
 dir="$1"
 
 for f in $externals; do
+#   echo "$dir/$f"
+  #[ -d "$1" ] || echo "$dir/$f" does not exist; 
   ln -s -f "$dir/$f" $f
 done
 
+#ANN_1.1
+#libcolorseg
+#ODE_0.11
+#SWIFT++_1.2

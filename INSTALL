@@ -3,6 +3,7 @@
 #  INSTALLING YOUR MLR-SYSTEM
 #  (c) Machine Learning and Robotics Lab, FU Berlin, Germany, 2011
 #  http://www.inf.fu-berlin.de/en/groups/mlr
+#  Tobias Lang
 #
 #
 #  Parameters:
@@ -22,7 +23,7 @@
 
 
 [ -z "${DIR_EXTERNAL_LIBS}" ] && DIR_EXTERNAL_LIBS=~/lib/
-[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=mlrLibs.tgz
+[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=/home/kulick/Downloads/mlrLibs.tar.gz
 
 FILE_SCRIPT=`readlink -f $0`
 DIR_GIT=`dirname $FILE_SCRIPT`
@@ -34,11 +35,7 @@ ARCH=`uname -m`
 # ----------------------------
 # (1) External Libraries
 
-echo "
-
-+++ EXTERNAL LIBS +++
-
-"
+echo "+++ EXTERNAL LIBS +++\n\n"
 echo "Setting up external libraries in: " $DIR_EXTERNAL_LIBS
 echo "Using tar-ball: " $FILE_TARBALL
 
@@ -48,8 +45,7 @@ if [ ! -d "${DIR_EXTERNAL_LIBS}" ] ; then
 fi
 
 if [ ! -f "${FILE_TARBALL}" ] ; then
-  echo "ERROR: Tar-ball '"$FILE_TARBALL"' does not exist.
-       You can download it from the Maserati-Wiki, Documents."
+  echo "ERROR: Tar-ball '"$FILE_TARBALL"' does not exist."
   exit
 fi
 
@@ -66,27 +62,16 @@ tar xfz $FILE_TARBALL
 echo "Setting library links to libraries appropriate for the architecture..."
 echo "Architecture=" $ARCH
 
+# SWIFT (MT: removed because should stay in extern)
+# if [ "${ARCH}" = "x86_64" ] ; then
+#   cp SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a"
+# else
+#   cp SWIFT++_1.2/lib/libswiftpp12-debr.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-debr.a"
+# fi
 
-
-
-# ----------- SWIFT ------------
-echo "
-
-*** MLR-Script:  BUILDING SWIFT ***
-
-"
-cd $DIR_EXTERNAL_LIBS/SWIFT++_1.2/
-./BUILD
-
-
-
-# ----------- NTCan ------------
-
-echo "
-
-*** MLR-Script:  BUILDING NTCAN ***
-
-"
+# NTCAN
 cd $DIR_EXTERNAL_LIBS/ntcan/lib/
 if [ "${ARCH}" = "x86_64" ] ; then
   ln -s -f libntcan_x86_64.a libntcan.a
@@ -97,116 +82,9 @@ else
 fi
 
 
-# ----------- ODE ------------
-echo "
-
-*** MLR-Script:  BUILDING ODE ***
-
-"
-cd $DIR_EXTERNAL_LIBS/ode-0.11/
-./BUILD
-
-
-# ----------- schunkSDH ------------
-
-cd $DIR_EXTERNAL_LIBS/schunkSDH-11-05-11/lib/
-if [ "${ARCH}" = "x86_64" ] ; then
-  rm -f libschunkSDH.a
-  ln -s -f libschunkSDH-64.a libschunkSDH.a
-  echo "Using libschunkSDH-64.a"
-fi
-
-
-# ----------- schunkLWA ------------
-
-cd $DIR_EXTERNAL_LIBS/schunkLWA/lib/
-if [ "${ARCH}" = "x86_64" ] ; then
-  ln -s -f libdevice-64.a libdevice.a
-  ln -s -f libdevice-64.so libdevice.so
-  ln -s -f libm5api-64.a libm5api.a
-  ln -s -f libm5api-64.so libm5api.so
-  ln -s -f libutil-64.a libutil.a
-  ln -s -f libutil-64.so libutil.so
-  echo "Using schunkLWA-64*"
-else
-  ln -s -f libdevice-32.a libdevice.a
-  ln -s -f libdevice-32.so libdevice.so
-  ln -s -f libm5api-32.a libm5api.a
-  ln -s -f libm5api-32.so libm5api.so
-  ln -s -f libutil-32.a libutil.a
-  ln -s -f libutil-32.so libutil.so
-  echo "Using schunkLWA-32*"
-fi
-
-
-# ----------- Xvid ------------
-
-echo "
-
-*** MLR-Script:  BUILDING XVID ***
-
-"
-cd $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/build/generic/
-./configure
-make
-cp \=build/libxvidcore.a $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/lib/
-cp \=build/libxvidcore.so.4.1 $DIR_EXTERNAL_LIBS/xvidcore-1.1.3/lib/libxvidcore.so
-
-
-# ----------- Revel ------------
-
-echo "
-
-*** MLR-Script:  BUILDING Revel ***
-
-"
-cd $DIR_EXTERNAL_LIBS/revel-1.1.0/
-./BUILD
-cp src/librevel.a lib/
-
-
-# ----------- Lewiner ------------
-
-echo "
-
-*** MLR-Script:  BUILDING Lewiner ***
-
-"
-cd $DIR_GIT/extern/Lewiner
-make
-
-
-# ----------- Tony ------------
-
-echo "
-
-*** MLR-Script:  BUILDING TONY-MDP ***
-
-"
-cd $DIR_EXTERNAL_LIBS/tony-mdp/src/
-make
-cp libmdp.so ../lib/
-
-
-# ----------- URG ------------
-
-echo "
-
-*** MLR-Script:  BUILDING URG ***
-
-"
-cd $DIR_EXTERNAL_LIBS/urg-0.0.2/
-./configure
-make
-
-
-# ----------- LibColorSeg ------------
-
-echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
-cd $DIR_GIT/share/extern/libcolorseg/src/
-make
-
-
+# MT: removed since this is included in makeAll
+# echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
+# cd $DIR_GIT/share/extern/libcolorseg/src/
 
 
 echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
@@ -215,52 +93,28 @@ directory " $DIR_EXTERNAL_LIBS "..."
 cd $DIR_GIT
 cd share/extern
 ./LINK $DIR_EXTERNAL_LIBS
-cd ../..
-
-
-
-
-
+cd $DIR_GIT
 
 
 
 # ----------------------------
 # (2) Create make-config
 
-echo "
-
-
-+++ make-config +++
-
-"
+echo "\n\n\n+++ make-config +++\n\n"
 
 echo "Creating make-config (specify individual profiles here)..."
 
 cd share/
 mv make-config make-config.BAK
-echo "ifndef NAME
-  MTLIB = 1
-endif
-" > make-config
-cd ..
-
-# TODO Profile: without hardware (no Schunk)
-
-
-
+mv make-config.default make-config
+cd $DIR_GIT
 
 
 
 # ----------------------------
 # (3) Install our libs
 
-echo "
-
-
-+++ MLR-LIBS +++
-
-
-"
+echo "\n\n\n+++ MLR-LIBS +++\n\n"
 
 cd $DIR_GIT/share/
 pwd
@@ -273,20 +127,14 @@ make makeAll
 # ----------------------------
 # (4) Tests
 
-echo "
-
-
-+++ TESTS +++
-
-
-"
+echo "\n\n\n+++ TESTS +++\n\n"
 
 make tests
 
-echo "To test the code, go to share/test/."
+echo "\n\n\n\nTo test the code, go to share/test/."
 
 
 
-echo "Installation successful!"
+echo "\n\nInstallation successful!"
 
 

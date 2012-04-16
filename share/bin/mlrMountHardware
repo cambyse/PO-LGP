@@ -1,6 +1,6 @@
-sudo mknod --mode=a+rw /dev/can0 c 50 0
-sudo mknod --mode=a+rw /dev/can1 c 50 1
-sudo insmod ~/lib/esdcan-usb331-linux-2.6.x-x86_64-3.8.3/src/esdcan-usb331.ko
+sudo mknod --mode=a+rw /dev/can0 c 54 0
+sudo mknod --mode=a+rw /dev/can1 c 54 1
+sudo insmod /var/mlr/driver/esdcan-pci200-linux-2.6.x-x86_64-3.9.2/src/esdcan-pci200.ko
 sudo ln -s /dev/ttyUSB0 /dev/ttyS9
 sudo ln -s /dev/ttyACM0 /dev/ttyURG
 sudo chmod a+rw /dev/video1394/0 /dev/raw1394 /dev/ttyUSB0

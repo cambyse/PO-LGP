@@ -54,7 +54,7 @@ void AICOT::calcBeliefs(){
     for(int k = 0; k < K; ++k){
         //get local process
         if(sys->dynamic){
-            sys->setqv(b[k]);
+            sys->setx(b[k]); //!setx instead of DZ setqv?
         } else {
             sys->setq(b[k]);
         }
@@ -203,7 +203,7 @@ void AICOT::calcMStep()
       nxt_p = p[k+1];
       //std::cout << cur_p << std::endl;
       if(sys->dynamic){
-        sys->setqv(p[k]);
+         sys->setx(b[k]); //!setx instead of DZ setqv?
       } else {
         sys->setq(p[k]);
       }

@@ -323,7 +323,7 @@ void getTriangulatedHull(uintA& T, arr& V){
   uint f, i, v;
   
   arr Vnew;
-#ifdef QHULL2010
+#ifdef ARCH_LINUX
   Vnew.resize(qh_qh.num_vertices, 3);
   T.resize(qh_qh.num_facets, 3);
 #else
@@ -370,7 +370,7 @@ void getDelaunayEdges(uintA& E, const arr& V){
   vertexT *vertex, **vertexp;
   uint i, j, k, dim=V.d1;
   
-  E.resize(0, 2);
+  E.clear();
   uint face[dim+1];
   FORALLfacets {
     if(!facet->upperdelaunay){
@@ -382,6 +382,7 @@ void getDelaunayEdges(uintA& E, const arr& V){
         }
     }
   }
+  E.reshape(E.N/2,2);
   
   qh_freeqhull(!qh_ALL);
   int curlong, totlong;

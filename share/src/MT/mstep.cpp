@@ -1,3 +1,4 @@
+#include <math.h>
 #include "mstep.h"
 
 void standardMstep(arr& param, const arr& post, uint left, double noise){

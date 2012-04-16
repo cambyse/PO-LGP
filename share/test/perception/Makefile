@@ -3,10 +3,10 @@ OBJS = main.o
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
-###MTLIB = 1
+###buildAndLink_MTLIB = 1
 ###OPENCV = 1
 
-MTLIB = 1
+buildAndLink_MTLIB = 1
 ANN = 1
 #TONY = 1
 OPENCV = 1
@@ -22,8 +22,8 @@ BUMBLE = 1
 CUDA = 1
 #REVEL = 1
 LEWINER = 1
-NIKOLAY = 1
-RELATIONAL = 1
-NILS = 1
+buildAndLink_NIKOLAY = 1
+buildAndLink_RELATIONAL = 1
+buildAndLink_NILS = 1
 
 include $(BASE)/make-generic
