@@ -27,7 +27,10 @@ endif
 ### MAKEMODE=app
 
 ifeq ($(MAKEMODE),app)
-buildAndLink_MTLIB = 1
+BUILDS += buildComponent/MT
+LIBS += -lMT
+BUILDS += buildComponent/biros
+LIBS += -lbiros
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 BUILDS += buildComponent/hardware

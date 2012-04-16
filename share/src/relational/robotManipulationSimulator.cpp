@@ -845,7 +845,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 void RobotManipulationSimulator::grabHere(const char* message) {
   #ifdef MT_SWIFT
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "grabHere: ";
   }
 
