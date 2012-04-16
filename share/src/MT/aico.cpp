@@ -21,15 +21,87 @@
 //#define TightMode
 #define BELIEF_IS_OFF_xhat
 
-void Lapack_A_Binv_A_sym(arr& X, const arr& A, const arr& B){
-  static arr Binv, tmp;
-  inverse_SymPosDef(Binv, B);
-  blas_MM(tmp, Binv, A);
-  blas_MM(X, A, tmp);
+struct sAICO{
+  //parameters
+  soc::SocSystemAbstraction *sys;
+  double damping, tolerance;
+  uint max_iterations;
+  double maxStepSize;
+  uint display;
+  bool useBwdMsg,fixFinalState;
+  arr bwdMsg_v, bwdMsg_Vinv;
+  
+  enum SweepMode { smForwardly=0, smSymmetric, smLocalGaussNewton, smLocalGaussNewtonDamped };
+  int sweepMode;
+  
+  MT::String filename;
+  std::ostream *os;
+  
+  //messages
+  arr s, Sinv, v, Vinv, r, R, rhat; //!< fwd, bwd, and task messages
+  MT::Array<arr> phiBar, JBar;      //!< all task cost terms
+  arr Psi;                          //!< all transition cost terms
+  arr b, Binv;                      //!< beliefs
+  arr q, xhat;                      //!< q-trajectory (MAP), and point of linearization
+  arr s_old, Sinv_old, v_old, Vinv_old, r_old, R_old, rhat_old, b_old, Binv_old, q_old, qhat_old;
+  arr dampingReference;
+  double cost, cost_old;            //!< cost of MAP trajectory
+  double b_step;
+  arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; //!< processes...
+  uint sweep;                       //!< #sweeps so far
+  uint scale;                       //!< scale of this AICO in a multi-scale approach
+
+  sAICO(){ sys=NULL; }
+  
+  void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
+  void init_messages();
+  void init_trajectory(const arr& q_init);
+  void shift_solution(int offset);
+  
+  double step();
+  void iterate_to_convergence();
+  
+  void updateFwdMessage(uint t);
+  void updateBwdMessage(uint t);
+  void updateTaskMessage(uint t, arr& qhat_t); //may change qhat_t is stepsize too large
+  void updateBelief(uint t);
+  void updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation);
+  void updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations);
+  double evaluateTimeStep(uint t, bool includeDamping);
+  double evaluateTrajectory(const arr& x, bool plot);
+  void rememberOldState();
+  void perhapsUndoStep();
+  void displayCurrentSolution();
+  
+  //old:
+  void initMessagesFromScaleParent(sAICO *parent);
+};
+
+
+AICO::AICO(){
+  self = new sAICO;
 }
 
+AICO::AICO(soc::SocSystemAbstraction& sys){
+  self = new sAICO;
+  init(sys);
+}
 
-void AICO::init(soc::SocSystemAbstraction& _sys){
+AICO::~AICO(){
+  delete self;
+}
+
+void AICO::init(soc::SocSystemAbstraction& _sys){ self->init(_sys); }
+void AICO::init_messages(){ self->init_messages(); }
+double AICO::step(){ return self->step(); }
+arr& AICO::q(){ return self->q; }
+arr& AICO::b(){ return self->b; }
+arr& AICO::v(){ return self->v; }
+arr& AICO::Vinv(){ return self->Vinv; }
+double AICO::cost(){ return self->cost; }
+double AICO::tolerance(){ return self->tolerance; }
+
+void sAICO::init(soc::SocSystemAbstraction& _sys){
   sys = &_sys;
   
   MT::getParameter(sweepMode, "aico_sweepMode");
@@ -47,27 +119,28 @@ void AICO::init(soc::SocSystemAbstraction& _sys){
     os = &cout;
   }
   
-  cost=-1;
   sweep=0;
+  scale=0;
+  cost=-1;
   useBwdMsg=false;
   fixFinalState=false;
   init_messages();
 }
 
 void AICO::prepare_for_changed_task(){
-  cost=-1;
-  MT::getParameter(damping, "aico_damping");
-  damping /= 10.;
+  self->cost=-1;
+  MT::getParameter(self->damping, "aico_damping");
+  self->damping /= 10.;
 }
 
 void AICO::iterate_to_convergence(){
-  for(uint k=0; k<max_iterations; k++){
-    double d=step();
-    if(k && d<tolerance) break; //d*(1.+damping)
+  for(uint k=0; k<self->max_iterations; k++){
+    double d=self->step();
+    if(k && d<self->tolerance) break; //d*(1.+damping)
   }
 }
 
-void AICO::init_messages(){
+void sAICO::init_messages(){
   uint T=sys->nTime();
   arr x0;
   sys->getx0(x0);
@@ -122,20 +195,20 @@ void AICO::init_messages(){
 }
 
 void AICO::fix_initial_state(const arr& x_0){
-  s[0] = x_0;  Sinv[0].setDiag(1e10);
-  b[0] = x_0;  Binv[0].setDiag(1e10);
-  xhat[0]=x_0;
+  self->s[0] = x_0;  self->Sinv[0].setDiag(1e10);
+  self->b[0] = x_0;  self->Binv[0].setDiag(1e10);
+  self->xhat[0]=x_0;
 }
 
 void AICO::fix_final_state(const arr& x_T){
-  uint T=sys->nTime();
-  v[T] = x_T;  Vinv[T].setDiag(1e10);
-  b[T] = x_T;  Binv[T].setDiag(1e10);
-  xhat[T]=x_T;
-  fixFinalState=true;
+  uint T=self->sys->nTime();
+  self->v[T] = x_T;  self->Vinv[T].setDiag(1e10);
+  self->b[T] = x_T;  self->Binv[T].setDiag(1e10);
+  self->xhat[T]=x_T;
+  self->fixFinalState=true;
 }
 
-void AICO::init_trajectory(const arr& q_init){
+void sAICO::init_trajectory(const arr& q_init){
   init_messages();
   uint t, T=sys->nTime();
   if(sys->dynamic && q_init.d1!=2*sys->qDim()) soc::getPhaseTrajectory(b, q_init, sys->getTau());  else  b=q_init;
@@ -153,7 +226,7 @@ void AICO::init_trajectory(const arr& q_init){
   rememberOldState();
 }
 
-void AICO::shift_solution(int offset){
+void sAICO::shift_solution(int offset){
   uint n=sys->qDim();
   arr x0;
 #if 0 //trust that the system knows x0!
@@ -181,19 +254,19 @@ void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
     sys.scalePower=i;
     sys.stepScale=i;
     aicos(i).init(sys);
-    aicos(i).scale = i;
+    aicos(i).self->scale = i;
   }
   for(uint i=aicos.N; i--;){
     sys.scalePower=i;
     sys.stepScale=i;
     double d;
-    if(i+1<aicos.N) aicos(i).initMessagesFromScaleParent(&aicos(i+1));
+    if(i+1<aicos.N) aicos(i).self->initMessagesFromScaleParent(aicos(i+1).self);
     aicos(i).iterate_to_convergence();
   }
-  q=aicos(0).q;
+  q=aicos(0).q();
 }
 
-void AICO::initMessagesFromScaleParent(AICO *A){
+void sAICO::initMessagesFromScaleParent(sAICO *A){
   uint t, T=sys->nTime();
   for(t=0; t<=T; t+=2){
     s[t] = A->s[t>>1]; Sinv[t] = A->Sinv[t>>1];  if(t<T){ s[t+1]=A->s[t>>1];     Sinv[t+1]=A->Sinv[t>>1];     }
@@ -222,7 +295,7 @@ void AICO::initMessagesFromScaleParent(AICO *A){
 
 //--- basic helpers for inference in one time step
 
-void AICO::updateFwdMessage(uint t){
+void sAICO::updateFwdMessage(uint t){
   CHECK(t>0, "don't update fwd for first time step");
   arr barS, St;
   if(sys->dynamic){
@@ -248,7 +321,7 @@ void AICO::updateFwdMessage(uint t){
   }
 }
 
-void AICO::updateBwdMessage(uint t){
+void sAICO::updateBwdMessage(uint t){
   uint T=sys->nTime();
   if(fixFinalState){ CHECK(t!=T, "don't update bwd for last time step when fixed"); }
   arr barV, Vt;
@@ -295,7 +368,7 @@ void AICO::updateBwdMessage(uint t){
   }
 }
 
-void AICO::updateTaskMessage(uint t, arr& xhat_t){
+void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   
   if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
     arr Delta = xhat_t-xhat[t];
@@ -316,7 +389,7 @@ void AICO::updateTaskMessage(uint t, arr& xhat_t){
   //cout <<t <<' ' <<C <<' ' <<C_alt <<endl;
 }
 
-void AICO::updateBelief(uint t){
+void sAICO::updateBelief(uint t){
   if(damping && dampingReference.N){
     Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
     lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
@@ -326,7 +399,7 @@ void AICO::updateBelief(uint t){
   }
 }
 
-void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
+void sAICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
   uint T=sys->nTime();
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) if(!(fixFinalState && t==T)) updateBwdMessage(t);
@@ -349,14 +422,14 @@ void AICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxReloca
   }
 }
 
-void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations){
+void sAICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations){
   if(updateFwd) updateFwdMessage(t);
   if(updateBwd) updateBwdMessage(t);
   
   struct LocalCostFunction:public VectorFunction {
     uint t;
     soc::SocSystemAbstraction* sys;
-    AICO* aico;
+    sAICO* aico;
     bool reuseOldCostTerms;
     
     void fv(arr& phi, arr& J, const arr& x){
@@ -415,7 +488,7 @@ void AICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, uin
   updateBelief(t);
 }
 
-double AICO::evaluateTimeStep(uint t, bool includeDamping){
+double sAICO::evaluateTimeStep(uint t, bool includeDamping){
   double C=0.;
   //C += scalarProduct(R[t], b[t], b[t]) - 2.*scalarProduct(r[t], b[t]) + rhat(t);
   C += rhat(t);
@@ -429,7 +502,7 @@ double AICO::evaluateTimeStep(uint t, bool includeDamping){
 //--- helpers for inference over time series
 
 //log-likelihood of a trajectory (assuming the current local approximations)
-double AICO::evaluateTrajectory(const arr& x, bool plot){
+double sAICO::evaluateTrajectory(const arr& x, bool plot){
   uint t, T=sys->nTime();
   double tau=sys->getTau();
   double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
@@ -465,13 +538,13 @@ double AICO::evaluateTrajectory(const arr& x, bool plot){
   return Ct+Cc;
 }
 
-void AICO::rememberOldState(){
+void sAICO::rememberOldState(){
   cost_old=cost;
   b_old=b;  q_old=q;  qhat_old=xhat;
   s_old=s; Sinv_old=Sinv;  v_old=v; Vinv_old=Vinv;  r_old=r; R_old=R;
 }
 
-void AICO::perhapsUndoStep(){
+void sAICO::perhapsUndoStep(){
   if(cost_old>0 && cost>cost_old){
     //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
     damping *= 10.;
@@ -484,7 +557,7 @@ void AICO::perhapsUndoStep(){
   }
 }
 
-void AICO::displayCurrentSolution(){
+void sAICO::displayCurrentSolution(){
   MT::timerPause();
   if(sys->gl){
     sys->displayTrajectory(q, NULL, display, STRING("AICO - iteration " <<sweep));
@@ -492,7 +565,7 @@ void AICO::displayCurrentSolution(){
   MT::timerResume();
 }
 
-double AICO::step(){
+double sAICO::step(){
   uint t, T=sys->nTime();
   
   rememberOldState();
@@ -548,3 +621,60 @@ double AICO::step(){
   return b_step;
 }
 
+
+#if 0
+
+inline void getController(arr& G, arr& g, const AICO& aico){
+  //we can only compute a controller for time steps 0 to T-1 (based on V_{t+1})
+  uint T=aico.s.d0-1;
+  uint n=aico.s.d1;
+  if(!aico.sys->dynamic){
+    G.resize(T, n, n);
+    g.resize(T, n);
+  }else{
+    G.resize(T, n/2, n);
+    g.resize(T, n/2);
+  }
+  arr H;
+  for(uint t=0; t<T; t++){
+    arr Vstar, barv, VstarH;
+    aico.sys->getH(H, t);
+    if(!aico.sys->dynamic){
+      //controller model u_mean = G*x+g
+      Vstar = aico.Vinv[t+1] + aico.R[t+1];
+      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      inverse_SymPosDef(VstarH, Vstar + H);
+      G[t] = - VstarH * Vstar; // * aico.A[t];
+      g[t] = VstarH * Vstar * (barv); // - aico.a[t]);
+    }else{
+      Vstar = aico.Vinv[t+1] + aico.R[t+1];
+      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      inverse_SymPosDef(VstarH, aico.tB[t]*Vstar*aico.B[t] + H);
+      G[t] = - VstarH * aico.tB[t] * Vstar * aico.A[t];
+      g[t] = VstarH * aico.tB[t] * Vstar * (barv - aico.a[t]);
+    }
+  }
+}
+
+inline void forwardSimulateTrajectory(arr& q, const arr& G, const arr& g, soc::SocSystemAbstraction& sys, const soc::AICO& aico){
+  uint t, T=sys.nTime(), n=sys.qDim();
+  if(!aico.sys->dynamic){
+    q.resize(T+1, n);
+    sys.getq0(q[0]());
+    for(t=0; t<T; t++) q[t+1]() = q[t] + (G[t]*q[t] + g[t]); //A=1, B=1
+  }else{
+    q.resize(T+1, 2*n);
+    sys.getx0(q[0]());
+    for(t=0; t<T; t++) q[t+1]() = aico.A[t]*q[t] + aico.B[t]*(G[t]*q[t] + g[t]) + aico.a[t];
+    arr q_sub;
+    getPositionTrajectory(q_sub, q);
+    q=q_sub;
+  }
+}
+
+inline void getControlledTrajectory(arr& q, const soc::AICO& aico){
+  arr G, g;
+  getController(G, g, aico);
+  forwardSimulateTrajectory(q, G, g, *aico.sys, aico);
+}
+#endif

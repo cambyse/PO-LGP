@@ -72,8 +72,8 @@ void testRobotSystem(bool testFeedbackControl=false){
   //aico.init_trajectory(q);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
-  sys.analyzeTrajectory(aico.b,true);
-  q = aico.q;
+  sys.analyzeTrajectory(aico.b(),true);
+  q = aico.q();
   ofstream os("z.traj"); q.writeRaw(os); os.close();
   sys.displayTrajectory(q,NULL,1,"AICO (planned trajectory)");
 
@@ -85,11 +85,11 @@ void testRobotSystem(bool testFeedbackControl=false){
     aico.prepare_for_changed_task();
     aic.iterate_to_convergence();
     aico.iterate_to_convergence();
-    q = aico.q;
-    sys.analyzeTrajectory(aic.b,true);
-    sys.displayTrajectory(aic.q,NULL,1,"AIC (planned trajectory)");
-    sys.analyzeTrajectory(aico.b,true);
-    sys.displayTrajectory(aico.q,NULL,1,"AICO (planned trajectory)");
+    q = aico.q();
+    sys.analyzeTrajectory(aic.b(),true);
+    sys.displayTrajectory(aic.q(),NULL,1,"AIC (planned trajectory)");
+    sys.analyzeTrajectory(aico.b(),true);
+    sys.displayTrajectory(aico.q(),NULL,1,"AICO (planned trajectory)");
   }
 }
 

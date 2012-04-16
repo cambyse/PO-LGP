@@ -160,7 +160,7 @@ void ActionToMotionPrimitive::step() {
 	  s->aico->fix_final_state(xT);
 	}*/
 	s->aico->iterate_to_convergence();
-	q = s->aico->q;
+	q = s->aico->q();
 	delete s->aico;
       } break;
       default:
