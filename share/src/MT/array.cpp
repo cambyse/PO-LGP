@@ -17,7 +17,7 @@
 #include "array.h"
 #include "util.h"
 
-static double MT_SIGN_SVD(double a, double b){ return b>0 ? ::fabs(a) : -::fabs(a); }
+static double MT_SIGN_SVD(double a, double b) { return b>0 ? ::fabs(a) : -::fabs(a); }
 #define MT_max_SVD(a, b) ( (a)>(b) ? (a) : (b) )
 #define MT_SVD_MINVALUE .0 //1e-10
 #ifndef MT_NOCHECK
@@ -61,7 +61,7 @@ I've put the clapack.h directly into the MT directory - one only has to link to 
 //
 
 
-arr repmat(const arr& A, uint m, uint n){
+arr repmat(const arr& A, uint m, uint n) {
   CHECK(A.nd==1 || A.nd==2, "");
   arr B;
   B.referTo(A);
@@ -73,29 +73,29 @@ arr repmat(const arr& A, uint m, uint n){
       z.setMatrixBlock(B, i*B.d0, j*B.d1);
   return z;
 }
-arr rand(const uintA& d){  arr z;  z.resize(d);  rndUniform(z, false); return z;  }
-arr randn(const uintA& d){  arr z;  z.resize(d);  rndGauss(z, 1., false);  return z;  }
+arr rand(const uintA& d) {  arr z;  z.resize(d);  rndUniform(z, false); return z;  }
+arr randn(const uintA& d) {  arr z;  z.resize(d);  rndGauss(z, 1., false);  return z;  }
 
 
-arr diag(double d, uint n){
+arr diag(double d, uint n) {
   arr z;
   z.setDiag(d, n);
   return z;
 }
 
 //! make symmetric \f$A=(A+A^T)/2\f$
-void makeSymmetric(arr& A){
+void makeSymmetric(arr& A) {
   CHECK(A.nd==2 && A.d0==A.d1, "not symmetric");
   uint n=A.d0, i, j;
   for(i=1; i<n; i++) for(j=0; j<i; j++) A(j, i) = A(i, j) = .5 * (A(i, j) + A(j, i));
 }
 
 //! make its transpose \f$A \gets A^T\f$
-void transpose(arr& A){
+void transpose(arr& A) {
   CHECK(A.nd==2 && A.d0==A.d1, "not symmetric");
   uint n=A.d0, i, j;
   double z;
-  for(i=1; i<n; i++) for(j=0; j<i; j++){ z=A(j, i); A(j, i)=A(i, j); A(i, j)=z; }
+  for(i=1; i<n; i++) for(j=0; j<i; j++) { z=A(j, i); A(j, i)=A(i, j); A(i, j)=z; }
 }
 
 namespace MT {
@@ -123,13 +123,13 @@ uint own_SVD(
   \f$U\f$ and \f$V\f$ are orthogonal and \f$D\f$ diagonal (the
   returned array d is 1-dimensional) -- uses LAPACK if MT_LAPACK is
   defined */
-uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort){
+uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort) {
   uint r;
 #ifdef MT_LAPACK
-  if(MT::useLapack){
+  if(MT::useLapack) {
     r=lapack_SVD(U, d, V, A);
     V=~V;
-  }else{
+  } else {
     r=own_SVD(U, d, V, A, sort);
   }
 #else
@@ -148,12 +148,12 @@ uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort){
   Atmp = U * dD * ~V;
   //cout <<"\nA=" <<A <<"\nAtmp=" <<Atmp <<"U=" <<U <<"W=" <<dD <<"~V=" <<~V <<endl;
   std::cout <<"SVD is correct:  " <<(err=maxDiff(Atmp, A)) <<' ' <<endl;    CHECK(err<MT_CHECK_SVD, "");
-  if(A.d0<=A.d1){
+  if(A.d0<=A.d1) {
     I.setId(U.d0);
     std::cout <<"U is orthogonal: " <<(err=maxDiff(U * ~U, I)) <<' ' <<endl;  CHECK(err<MT_CHECK_SVD, "");
     I.setId(V.d1);
     std::cout <<"V is orthogonal: " <<(err=maxDiff(~V * V, I)) <<endl;        CHECK(err<MT_CHECK_SVD, "");
-  }else{
+  } else {
     I.setId(U.d1);
     std::cout <<"U is orthogonal: " <<(err=maxDiff(~U * U, I)) <<' ' <<endl;  CHECK(err<MT_CHECK_SVD, "");
     I.setId(V.d0);
@@ -166,7 +166,7 @@ uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort){
 }
 
 //! gives a decomposition \f$A = U V^T\f$
-void svd(arr& U, arr& V, const arr& A){
+void svd(arr& U, arr& V, const arr& A) {
   arr d, D;
   ::svd(U, d, V, A);
   D.resize(d.N, d.N); D=0.;
@@ -176,38 +176,38 @@ void svd(arr& U, arr& V, const arr& A){
   //CHECK(maxDiff(A, U*~V) <1e-4, "");
 }
 
-void check_inverse(const arr& Ainv, const arr& A){
+void check_inverse(const arr& Ainv, const arr& A) {
 #ifdef MT_CHECK_INVERSE
   arr D, _D; D.setId(A.d0);
   uint me;
   _D=A*Ainv;
   double err=maxDiff(_D, D, &me);
   cout <<"inverse is correct: " <<err <<endl;
-  if(A.d0<10){
+  if(A.d0<10) {
     CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me) <<"\nA=" <<A <<"\nAinv=" <<Ainv <<"\nA*Ainv=" <<_D);
-  }else{
+  } else {
     CHECK(err<MT_CHECK_INVERSE , "inverting failed, error=" <<err <<" " <<_D.elem(me) <<"!=" <<D.elem(me));
   }
 #endif
 }
 
-uint inverse(arr& Ainv, const arr& A){
+uint inverse(arr& Ainv, const arr& A) {
   uint r=inverse_SVD(Ainv, A);
   //MT::inverse_LU(inverse, A); return A.d0;
   return r;
 }
 
 //! calls inverse(B, A) and returns B
-arr inverse(const arr& A){ arr B; inverse(B, A); return B; }
+arr inverse(const arr& A) { arr B; inverse(B, A); return B; }
 
 //! Pseudo Inverse based on SVD; computes \f$B\f$ such that \f$ABA = A\f$
-uint inverse_SVD(arr& Ainv, const arr& A){
+uint inverse_SVD(arr& Ainv, const arr& A) {
   unsigned i, j, k, m=A.d0, n=A.d1, r;
   arr U, V, w, winv;
   Ainv.resize(n, m);
   if(m==0 || n==0) return 0;
-  if(m==n && m==1){ Ainv(0, 0)=1./A(0, 0); return 0; }
-  if(m==n && m==2){ inverse2d(Ainv, A); return 0; }
+  if(m==n && m==1) { Ainv(0, 0)=1./A(0, 0); return 0; }
+  if(m==n && m==2) { inverse2d(Ainv, A); return 0; }
   
   r=svd(U, w, V, A, true);
   
@@ -216,7 +216,7 @@ uint inverse_SVD(arr& Ainv, const arr& A){
   //CHECK(fabs(maxDiff(A, U*W*~V))<1e-10, "");
   
   winv.resizeAs(w);
-  for(i=0; i<r; i++){
+  for(i=0; i<r; i++) {
     if(w(i)>1e-10) winv(i) = 1./w(i); else winv(i) = 1e10;
   }
   for(; i<w.N; i++) winv(i) = 0.;
@@ -227,7 +227,7 @@ uint inverse_SVD(arr& Ainv, const arr& A){
   Ainv = V * W * ~U;
 #else
   double *Ainvij=&Ainv(0, 0);
-  for(i=0; i<n; i++) for(j=0; j<m; j++){
+  for(i=0; i<n; i++) for(j=0; j<m; j++) {
       double* vi = &V(i, 0);
       double* uj = &U(j, 0);
       double  t  = 0.;
@@ -251,19 +251,19 @@ void mldivide(arr& X, const arr& A, const arr& b) {
 #endif
 }
 
-void inverse_LU(arr& Xinv, const arr& X){
+void inverse_LU(arr& Xinv, const arr& X) {
   NIY;
 #if 0
   CHECK(X.nd==2 && X.d0==X.d1, "");
   uint n=X.d0, i, j;
   Xinv.resize(n, n);
   if(n==0) return;
-  if(n==n && n==1){ Xinv(0, 0)=1./X(0, 0); return; }
-  if(n==n && n==2){ inverse2d(Xinv, X); return; }
+  if(n==n && n==1) { Xinv(0, 0)=1./X(0, 0); return; }
+  if(n==n && n==2) { inverse2d(Xinv, X); return; }
   arr LU, piv;
   lapackLU(X, LU, piv);
   arr col(n);
-  for(j=0; j<n; j++){
+  for(j=0; j<n; j++) {
     col.setZero();
     col(j)=1.0;
     lubksb(LU.pp, n, idx, col.p);
@@ -279,7 +279,7 @@ void inverse_LU(arr& Xinv, const arr& X){
 #endif
 }
 
-void inverse_SymPosDef(arr& Ainv, const arr& A){
+void inverse_SymPosDef(arr& Ainv, const arr& A) {
   CHECK(A.d0==A.d1, "");
 #ifdef MT_LAPACK
   lapack_inverseSymPosDef(Ainv, A);
@@ -291,12 +291,12 @@ void inverse_SymPosDef(arr& Ainv, const arr& A){
 #endif
 }
 
-void pseudoInverse(arr& Ainv, const arr& A, const arr& Winv, double eps){
+void pseudoInverse(arr& Ainv, const arr& A, const arr& Winv, double eps) {
   arr tA, E, AWAinv;
   transpose(tA, A);
-  if(!eps){
+  if(!eps) {
     inverse_SymPosDef(AWAinv, A*Winv*tA);
-  }else{
+  } else {
     E.setDiag(eps, A.d0);
     inverse_SymPosDef(AWAinv, E+A*Winv*tA);
   }
@@ -310,7 +310,7 @@ double determinant(const arr& A);
   the ith row and the jth column */
 double cofactor(const arr& A, uint i, uint j);
 
-void gaussFromData(arr& a, arr& A, const arr& X){
+void gaussFromData(arr& a, arr& A, const arr& X) {
   CHECK(X.nd==2, "");
   uint N=X.d0, n=X.d1;
   arr ones(N); ones=1.;
@@ -319,11 +319,11 @@ void gaussFromData(arr& a, arr& A, const arr& X){
 }
 
 /* compute a rotation matrix that rotates a onto v in arbitrary dimensions */
-void rotationFromAtoB(arr& R, const arr& a, const arr& v){
+void rotationFromAtoB(arr& R, const arr& a, const arr& v) {
   CHECK(a.N==v.N, "");
   CHECK(fabs(1.-norm(a))<1e-10 && fabs(1.-norm(v))<1e-10, "");
   uint n=a.N, i, j;
-  if(maxDiff(a, v)<1e-10){ R.setId(n); return; } //nothing to rotate!!
+  if(maxDiff(a, v)<1e-10) { R.setId(n); return; }  //nothing to rotate!!
   R.resize(n, n);
   //-- compute b orthogonal to a such that (a, b) span the rotation plane
   arr b;
@@ -336,14 +336,14 @@ void rotationFromAtoB(arr& R, const arr& a, const arr& v){
   //-- compute columns of R:
   arr x(n), x_res;
   double x_a, x_b;
-  for(i=0; i<n; i++){
+  for(i=0; i<n; i++) {
     x.setZero(); x(i)=1.;       //x=i-th unit vector
     x_a=scalarProduct(x, a);     //component along a
     x_b=scalarProduct(x, b);     //component along b
     x_res = x - x_a*a - x_b*b;  //residual (rest) of the vector
     //rotated vector = residual + rotated a-component + rotated b-component
     x = x_res + (v_a*x_a-v_b*x_b)*a + (v_b*x_a+v_a*x_b)*b;
-    for(j=0; j<n; j++) R(j, i)=x(j); //store as column of the final rotation
+    for(j=0; j<n; j++) R(j, i)=x(j);  //store as column of the final rotation
   }
 }
 
@@ -397,7 +397,7 @@ uint own_SVD(
   arr& w,
   arr& V,
   const arr& A,
-  bool sort){
+  bool sort) {
   //MT::Array<double*> Apointers, Upointers, Vpointers;
   unsigned m = A.d0; /* rows */
   unsigned n = A.d1; /* cols */
@@ -420,16 +420,16 @@ uint own_SVD(
   /* householder reduction to pickBiagonal form */
   g = scale = anorm = 0.0;
   
-  for(i=0; i<n; i++){
+  for(i=0; i<n; i++) {
     l = i + 1;
     rv1(i) = scale * g;
     g = s = scale = 0.0;
     
-    if(i<m){
+    if(i<m) {
       for(k=i; k<m; k++) scale += fabs(u[k][i]);
       
-      if(scale!=0.0){
-        for(k=i; k<m; k++){
+      if(scale!=0.0) {
+        for(k=i; k<m; k++) {
           u[k][i] /= scale;
           s += u[k][i] * u[k][i];
         }
@@ -439,7 +439,7 @@ uint own_SVD(
         h = f * g - s;
         u[i][i] = f - g;
         
-        for(j=l; j<n; j++){
+        for(j=l; j<n; j++) {
           s = 0.0;
           for(k=i; k<m; k++) s += u[k][i] * u[k][j];
           
@@ -454,11 +454,11 @@ uint own_SVD(
     w(i) = scale * g;
     g = s = scale = 0.0;
     
-    if(i<m && i!=n-1){
+    if(i<m && i!=n-1) {
       for(k=l; k<n; k++)scale += fabs(u[i][k]);
       
-      if(scale!=0.0){
-        for(k=l; k<n; k++){
+      if(scale!=0.0) {
+        for(k=l; k<n; k++) {
           u[i][k] /= scale;
           s += u[i][k] * u[i][k];
         }
@@ -470,7 +470,7 @@ uint own_SVD(
         
         for(k=l; k<n; k++) rv1(k) = u[i][k] / h;
         
-        for(j=l; j<m; j++){
+        for(j=l; j<m; j++) {
           s = 0.0;
           for(k=l; k<n; k++) s += u[j][k] * u[i][k];
           
@@ -485,13 +485,13 @@ uint own_SVD(
   }
   
   /* accumulation of right-hand transformations */
-  for(l=i=n; i--; l--){
-    if(l<n){
-      if(g!=0.0){
+  for(l=i=n; i--; l--) {
+    if(l<n) {
+      if(g!=0.0) {
         /* double division avoids possible underflow */
         for(j=l; j<n; j++) v[j][i] = (u[i][j] / u[i][l]) / g;
         
-        for(j=l; j<n; j++){
+        for(j=l; j<n; j++) {
           s = 0.0;
           for(k=l; k<n; k++) s += u[i][k] * v[k][j];
           
@@ -507,15 +507,15 @@ uint own_SVD(
   }
   
   /* accumulation of left-hand transformations */
-  for(l=i=(m<n?m:n); i--; l--){
+  for(l=i=(m<n?m:n); i--; l--) {
     g = w(i);
     
     for(j=l; j<n; j++) u[i][j] = 0.0;
     
-    if(g!=0.0){
+    if(g!=0.0) {
       g = 1.0 / g;
       
-      for(j=l; j<n; j++){
+      for(j=l; j<n; j++) {
         s = 0.0;
         for(k=l; k<m; k++) s += u[k][i] * u[k][j];
         
@@ -526,7 +526,7 @@ uint own_SVD(
       }
       
       for(j=i; j<m; j++) u[j][i] *= g;
-    }else{
+    } else {
       for(j=i; j<m; j++) u[j][i] = 0.0;
     }
     
@@ -534,16 +534,16 @@ uint own_SVD(
   }
   
   /* diagonalization of the pickBiagonal form */
-  for(k=n; k--;){
-    for(its=1; its<=30; its++){
+  for(k=n; k--;) {
+    for(its=1; its<=30; its++) {
       flag = 1;
       
       /* test for splitting */
-      for(l = k + 1; l--;){
+      for(l = k + 1; l--;) {
         /* rv1 [0] is always zero, so there is no exit */
         nm = l - 1;
         
-        if(fabs(rv1(l)) + anorm == anorm){
+        if(fabs(rv1(l)) + anorm == anorm) {
           flag = 0;
           break;
         }
@@ -552,12 +552,12 @@ uint own_SVD(
         if(fabs(w(nm)) + anorm == anorm) break;
       }
       
-      if(flag){
+      if(flag) {
         /* cancellation of rv1 [l] if l greater than 0 */
         c = 0.0;
         s = 1.0;
         
-        for(i=l; i<=k; i++){
+        for(i=l; i<=k; i++) {
           f = s * rv1(i);
           rv1(i) *= c;
           
@@ -570,7 +570,7 @@ uint own_SVD(
           c = g * h;
           s = -f * h;
           
-          for(j=0; j<m; j++){
+          for(j=0; j<m; j++) {
             y = u[j][nm];
             z = u[j][i];
             u[j][nm] = y * c + z * s;
@@ -582,8 +582,8 @@ uint own_SVD(
       /* test for convergence */
       z = w(k);
       
-      if(l==k){
-        if(z<0.0){
+      if(l==k) {
+        if(z<0.0) {
           w(k) = -z;
           for(j=0; j<n; j++) v[j][k] = -v[j][k];
         }
@@ -606,7 +606,7 @@ uint own_SVD(
       /* next qr transformation */
       c = s = 1.0;
       
-      for(j=l; j<k; j++){
+      for(j=l; j<k; j++) {
         i = j + 1;
         g = rv1(i);
         y = w(i);
@@ -621,7 +621,7 @@ uint own_SVD(
         h = y * s;
         y *= c;
         
-        for(jj=0; jj<n; jj++){
+        for(jj=0; jj<n; jj++) {
           x = v[jj][j];
           z = v[jj][i];
           v[jj][j] = x * c + z * s;
@@ -632,7 +632,7 @@ uint own_SVD(
         w(j) = z;
         
         /* rotation can be arbitrary if z is zero */
-        if(z!=0.0){
+        if(z!=0.0) {
           z = 1.0 / z;
           c = f * z;
           s = h * z;
@@ -641,7 +641,7 @@ uint own_SVD(
         f = c * g + s * y;
         x = c * y - s * g;
         
-        for(jj=0; jj<m; jj++){
+        for(jj=0; jj<m; jj++) {
           y = u[jj][j];
           z = u[jj][i];
           u[jj][j] = y * c + z * s;
@@ -656,26 +656,26 @@ uint own_SVD(
   }
   
   //sorting:
-  if(sort){
+  if(sort) {
     unsigned i, j, k;
     double   p;
     
-    for(i=0; i<n-1; i++){
+    for(i=0; i<n-1; i++) {
       p = w(k=i);
       
       for(j=i+1; j<n; j++) if(w(j)>=p) p = w(k=j);
       
-      if(k!=i){
+      if(k!=i) {
         w(k) = w(i);
         w(i) = p;
         
-        for(j=0; j<n; j++){
+        for(j=0; j<n; j++) {
           p       = v[j][i];
           v[j][i] = v[j][k];
           v[j][k] = p;
         }
         
-        for(j=0; j<m; j++){
+        for(j=0; j<m; j++) {
           p       = u[j][i];
           u[j][i] = u[j][k];
           u[j][k] = p;
@@ -686,7 +686,7 @@ uint own_SVD(
   
   //rank analysis
   
-  for(r=0; r<n && w(r)>MT_SVD_MINVALUE; r++){};
+  for(r=0; r<n && w(r)>MT_SVD_MINVALUE; r++) {};
   
   t = r < n ? fabs(w(n-1)) : 0.0;
   r = 0;
@@ -696,14 +696,14 @@ uint own_SVD(
   return r;
 }
 
-double determinantSubroutine(double **A, uint n){
+double determinantSubroutine(double **A, uint n) {
   if(n==1) return A[0][0];
   if(n==2) return A[0][0]*A[1][1]-A[0][1]*A[1][0];
   uint i, j;
   double d=0;
   double **B=new double*[n-1];
-  for(i=0; i<n; i++){
-    for(j=0; j<n; j++){
+  for(i=0; i<n; i++) {
+    for(j=0; j<n; j++) {
       if(j<i) B[j]=&A[j][1];
       if(j>i) B[j-1]=&A[j][1];
     }
@@ -713,14 +713,14 @@ double determinantSubroutine(double **A, uint n){
   return d;
 }
 
-double determinant(const arr& A){
+double determinant(const arr& A) {
   CHECK(A.nd==2 && A.d0==A.d1, "determinants require a squared 2D matrix");
   //MT::Array<double*> B;
   A.getCarray(); //Pointers(B);
   return determinantSubroutine(A.pp, A.d0);
 }
 
-double cofactor(const arr& A, uint i, uint j){
+double cofactor(const arr& A, uint i, uint j) {
   CHECK(A.nd==2 && A.d0==A.d1, "determinants require a squared 2D matrix");
   arr B=A;
   B.delRows(i);
@@ -731,23 +731,23 @@ double cofactor(const arr& A, uint i, uint j){
 /*! Given a distribution p over a discrete domain {0, .., p.N-1}
     Stochastic Universal Sampling draws n samples from this
     distribution, stored as integers in s */
-void SUS(const arr& p, uint n, uintA& s){
+void SUS(const arr& p, uint n, uintA& s) {
   //following T. Baeck "EA in Theo. and Prac." p120
   s.resize(n);
   double sum=0, ptr=MT::rnd.uni();
   uint i, j=0;
-  for(i=0; i<p.N; i++){
+  for(i=0; i<p.N; i++) {
     sum+=p(i)*n;
-    while(sum>ptr){ s(j)=i; j++; ptr+=1.; }
+    while(sum>ptr) { s(j)=i; j++; ptr+=1.; }
   }
   //now, 'sum' should = 'n' and 'ptr' has been 'n'-times increased -> 'j=n'
   CHECK(j==n, "error in rnd::SUS(p, n, s) -> p not normalized?");
 }
 
-uint SUS(const arr& p){
+uint SUS(const arr& p) {
   double sum=0, ptr=MT::rnd.uni();
   uint i;
-  for(i=0; i<p.N; i++){
+  for(i=0; i<p.N; i++) {
     sum+=p(i);
     if(sum>ptr) return i;
   }
@@ -755,22 +755,22 @@ uint SUS(const arr& p){
   return 0;
 }
 
-void gnuplot(const arr& X){
-  if(X.nd==2 && X.d1!=2){ //assume array -> splot
+void gnuplot(const arr& X) {
+  if(X.nd==2 && X.d1!=2) {  //assume array -> splot
     MT::IOraw=true;
     MT::save(X, "z.pltX");
     gnuplot("splot 'z.pltX' matrix with pm3d, 'z.pltX' matrix with lines");
     MT::IOraw=false;
     return;
   }
-  if(X.nd==2 && X.d1==2){ //assume curve -> plot
+  if(X.nd==2 && X.d1==2) {  //assume curve -> plot
     MT::IOraw=true;
     MT::save(X, "z.pltX");
     gnuplot("plot 'z.pltX' us 1:2");
     MT::IOraw=false;
     return;
   }
-  if(X.nd==1){ //assume curve -> plot
+  if(X.nd==1) {  //assume curve -> plot
     MT::IOraw=true;
     arr Y;
     Y.referTo(X);
@@ -782,22 +782,22 @@ void gnuplot(const arr& X){
   }
 }
 
-void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary){
+void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) {
   std::ofstream fil(filename);
   catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
   fil.close();
 }
 
-void write(const arr& X, const arr& Y, const char* name){
+void write(const arr& X, const arr& Y, const char* name) {
   std::ofstream os;
   MT::open(os, name);
   MT::IOraw=true;
   uint i, j;
-  if(X.nd==1){
+  if(X.nd==1) {
     for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<std::endl;
   }
-  if(X.nd==2){
-    for(i=0; i<X.d0; i++){
+  if(X.nd==2) {
+    for(i=0; i<X.d0; i++) {
       for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
       os <<std::endl;
@@ -805,16 +805,16 @@ void write(const arr& X, const arr& Y, const char* name){
   }
 }
 
-void write(const arr& X, const arr& Y, const arr& Z, const char* name){
+void write(const arr& X, const arr& Y, const arr& Z, const char* name) {
   std::ofstream os;
   MT::open(os, name);
   MT::IOraw=true;
   uint i, j;
-  if(X.nd==1){
+  if(X.nd==1) {
     for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<std::endl;
   }
-  if(X.nd==2){
-    for(i=0; i<X.d0; i++){
+  if(X.nd==2) {
+    for(i=0; i<X.d0; i++) {
       for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
@@ -823,16 +823,16 @@ void write(const arr& X, const arr& Y, const arr& Z, const char* name){
   }
 }
 
-void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const char* name){
+void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const char* name) {
   std::ofstream os;
   MT::open(os, name);
   MT::IOraw=true;
   uint i, j;
-  if(X.nd==1){
+  if(X.nd==1) {
     for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<' ' <<A(i) <<std::endl;
   }
-  if(X.nd==2){
-    for(i=0; i<X.d0; i++){
+  if(X.nd==2) {
+    for(i=0; i<X.d0; i++) {
       for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
@@ -842,16 +842,16 @@ void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const char* n
   }
 }
 
-void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const arr& B, const char* name){
+void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const arr& B, const char* name) {
   std::ofstream os;
   MT::open(os, name);
   MT::IOraw=true;
   uint i, j;
-  if(X.nd==1){
+  if(X.nd==1) {
     for(i=0; i<X.N; i++) os <<X(i) <<' ' <<Y(i) <<' ' <<Z(i) <<' ' <<A(i) <<' ' <<B(i) <<std::endl;
   }
-  if(X.nd==2){
-    for(i=0; i<X.d0; i++){
+  if(X.nd==2) {
+    for(i=0; i<X.d0; i++) {
       for(j=0; j<X[i].N; j++) os <<X[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Y[i].elem(j) <<' ';
       for(j=0; j<Y[i].N; j++) os <<Z[i].elem(j) <<' ';
@@ -862,23 +862,23 @@ void write(const arr& X, const arr& Y, const arr& Z, const arr& A, const arr& B,
   }
 }
 
-void write_ppm(const byteA &img, const char *file_name, bool swap_rows){
+void write_ppm(const byteA &img, const char *file_name, bool swap_rows) {
   CHECK(img.nd==2 || (img.nd==3 && img.d2==3), "only rgb or gray images to ppm");
   ofstream os;
   os.open(file_name, std::ios::out | std::ios::binary);
   if(!os.good()) HALT("could not open file `" <<file_name <<"' for output");
-  switch(img.d2){
+  switch(img.d2) {
     case 0:  os <<"P5 " <<img.d1 <<' ' <<img.d0 <<" 255\n";  break; //PGM
     case 3:  os <<"P6 " <<img.d1 <<' ' <<img.d0 <<" 255\n";  break; //PPM
   }
-  if(!swap_rows){
+  if(!swap_rows) {
     os.write((char*)img.p, img.N);
-  }else{
+  } else {
     for(uint i=img.d0; i--;) os.write((char*)&img(i, 0, 0), img.d1*img.d2);
   }
 }
 
-void read_ppm(byteA &img, const char *file_name, bool swap_rows){
+void read_ppm(byteA &img, const char *file_name, bool swap_rows) {
   uint mode, width, height, max;
   ifstream is;
   is.open(file_name, std::ios::in | std::ios::binary);
@@ -888,18 +888,18 @@ void read_ppm(byteA &img, const char *file_name, bool swap_rows){
   if(MT::peerNextChar(is)=='#') MT::skipLine(is);
   is >>width >>height >>max;
   is.get(); //MUST be a white character if everything went ok
-  switch(mode){
+  switch(mode) {
     case 5:  img.resize(height, width);    break; //PGM
     case 6:  img.resize(height, width, 3);  break; //PPM
   }
-  if(!swap_rows){
+  if(!swap_rows) {
     is.read((char*)img.p, img.N);
-  }else{
+  } else {
     for(uint i=img.d0; i--;) is.read((char*)&img(i, 0, 0), img.d1*img.d2);
   }
 }
 
-void add_alpha_channel(byteA &img, byte alpha){
+void add_alpha_channel(byteA &img, byte alpha) {
   uint w=img.d1, h=img.d0;
   img.reshape(h*w, 3);
   img.insColumns(3, 1);
@@ -907,11 +907,11 @@ void add_alpha_channel(byteA &img, byte alpha){
   img.reshape(h, w, 4);
 }
 
-void flip_image(byteA &img){
+void flip_image(byteA &img) {
   uint h=img.d0, n=img.N/img.d0;
   byteA line(n);
   byte *a, *b, *c;
-  for(uint i=0; i<h/2; i++){
+  for(uint i=0; i<h/2; i++) {
     a=img.p+i*n;
     b=img.p+(h-1-i)*n;
     c=line.p;
@@ -921,21 +921,21 @@ void flip_image(byteA &img){
   }
 }
 
-void make_grey(byteA &img){
+void make_grey(byteA &img) {
   CHECK(img.nd==3 && (img.d2==3 || img.d1==4), "makeGray requires color image as input");
   byteA tmp;
   tmp.resize(img.d0, img.d1);
-  for(uint i=0; i<img.d0; i++) for(uint j=0; j<img.d1; j++){
+  for(uint i=0; i<img.d0; i++) for(uint j=0; j<img.d1; j++) {
       tmp(i, j) = ((uint)img(i, j, 0) + img(i, j, 1) + img(i, j, 2))/3;
     }
   img=tmp;
 }
 
-void make_RGB(byteA &img){
+void make_RGB(byteA &img) {
   CHECK(img.nd==2, "make_RGB requires grey image as input");
   byteA tmp;
   tmp.resize(img.d0, img.d1, 3);
-  for(uint i=0; i<img.d0; i++) for(uint j=0; j<img.d1; j++){
+  for(uint i=0; i<img.d0; i++) for(uint j=0; j<img.d1; j++) {
       tmp(i, j, 0) = img(i, j);
       tmp(i, j, 1) = img(i, j);
       tmp(i, j, 2) = img(i, j);
@@ -944,7 +944,7 @@ void make_RGB(byteA &img){
 }
 
 #ifdef MT_EXPRESSIONS
-void assign(arr& x){
+void assign(arr& x) {
   CHECK(x.ex, "self-assignment only if it is an expression");
   MT::Ex *e=x.ex;
   x.init();
@@ -954,42 +954,42 @@ void assign(arr& x){
   x.ex=0;
 }
 
-void assign(arr& x, const arr& a){
-  if(!a.ex){ x=a; return; }
+void assign(arr& x, const arr& a) {
+  if(!a.ex) { x=a; return; }
   MT::Ex &e=*a.ex;
-  if(e.op==MT::UNI){
+  if(e.op==MT::UNI) {
     arr *A=(arr*)e.A;
     if(A->ex) assign(*A);
-    if(!e.trans && e.mul==1 && e.add==0){ x=*A; return; }
-    if(!e.trans && e.mul==1){ scalarPlus(x, *A, *((double*)&e.add)); return; }
-    if(!e.trans && e.add==0){ scalarMultiplication(x, *A, *((double*)&e.mul)); return; }
-    if(e.mul==1 && e.add==0){ transpose(x, *A); return; }
+    if(!e.trans && e.mul==1 && e.add==0) { x=*A; return; }
+    if(!e.trans && e.mul==1) { scalarPlus(x, *A, *((double*)&e.add)); return; }
+    if(!e.trans && e.add==0) { scalarMultiplication(x, *A, *((double*)&e.mul)); return; }
+    if(e.mul==1 && e.add==0) { transpose(x, *A); return; }
     HALT("");
-  }else{
+  } else {
     arr *A=(arr*)e.A, *B=(arr*)e.B;
     if(A->ex) assign(*A);
     if(B->ex) assign(*B);
     //bool at, bt;
     //double ac, bc, ap, bp;
-    switch(e.op){
+    switch(e.op) {
       case MT::PROD:
-        if(!A->ex && !B->ex){ innerProduct(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { innerProduct(x, *A, *B); return; }
         HALT("prod");
         break;
       case MT::MUL:
-        if(!A->ex && !B->ex){ mult(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { mult(x, *A, *B); return; }
         HALT("mult");
         break;
       case MT::Div:
-        if(!A->ex && !B->ex){ div(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { div(x, *A, *B); return; }
         HALT("mult");
         break;
       case MT::OUT:
-        if(!A->ex && !B->ex){ outerProduct(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { outerProduct(x, *A, *B); return; }
         HALT("out");
         break;
       case MT::PLUS:
-        if(!A->ex && !B->ex){ plus(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { plus(x, *A, *B); return; }
         //if(A->ex){ ap=A->ex->add; ac=A->ex->mul; at=A->ex->trans; A=(arr*)A->ex->A; }else{ ap=0; ac=1; at=false; }
         //if(B->ex){ bp=B->ex->add; bc=B->ex->mul; bt=B->ex->trans; B=(arr*)B->ex->A; }else{ bp=0; bc=1; bt=false; }
         //if(!at && !bt && !ap && !bp){ plus(x, ac, *A, bc, *B); return; }
@@ -997,7 +997,7 @@ void assign(arr& x, const arr& a){
         HALT("plus");
         break;
       case MT::MINUS:
-        if(!A->ex && !B->ex){ minus(x, *A, *B); return; }
+        if(!A->ex && !B->ex) { minus(x, *A, *B); return; }
         //if(A->ex){ ap=A->ex->add; ac=A->ex->mul; at=A->ex->trans; A=(arr*)A->ex->A; }else{ ap=0; ac=1; at=false; }
         //if(B->ex){ bp=B->ex->add; bc=B->ex->mul; bt=B->ex->trans; B=(arr*)B->ex->A; }else{ bp=0; bc=1; bt=false; }
         //if(!at && !bt && !ap && !bp){ plus(x, ac, *A, -bc, *B); return; }
@@ -1015,19 +1015,19 @@ void assign(arr& x, const arr& a){
 
 
 
-void getIndexTuple(uintA &I, uint i, const uintA &d){
+void getIndexTuple(uintA &I, uint i, const uintA &d) {
   uint j;
   CHECK(i<product(d), "out of range");
   I.resize(d.N);
   I.setZero();
-  for(j=d.N; j--;){
+  for(j=d.N; j--;) {
     I.p[j] = i%d.p[j];
     i -= I.p[j];
     i /= d.p[j];
   }
 }
 
-void lognormScale(arr& P, double& logP, bool force){
+void lognormScale(arr& P, double& logP, bool force) {
 #ifdef MT_NoLognormScale
   return;
 #endif
@@ -1035,49 +1035,49 @@ void lognormScale(arr& P, double& logP, bool force){
   for(uint i=0; i<P.N; i++) Z += fabs(P.elem(i));
   if(!force && Z>1e-3 && Z<1e3) return;
   if(fabs(Z-1.)<1e-10) return;
-  if(Z>1e-100){
+  if(Z>1e-100) {
     logP+=::log(Z);
     P/=Z;
-  }else{
+  } else {
     logP+=::log(Z);
     P=1.;
     MT_MSG("ill-conditioned table factor for norm scaling");
   }
 }
 
-void sparseProduct(arr& y, arr& A, const arr& x){
+void sparseProduct(arr& y, arr& A, const arr& x) {
   CHECK(x.nd==1 && A.nd==2 && x.d0==A.d1, "not a proper matrix multiplication");
-  if(!A.sparse && !x.sparse){
+  if(!A.sparse && !x.sparse) {
     innerProduct(y, A, x);
     return;
   }
-  if(A.sparse && !x.sparse){
+  if(A.sparse && !x.sparse) {
     uint i, j, *k, *kstop;
     y.resize(A.d0); y.setZero();
     double *Ap=A.p;
     uintA *elems=A.sparse;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++){
+    for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++) {
       i=*k; k++;
       j=*k; k++;
       y.p[i] += (*Ap) * x.p[j];
     }
     return;
   }
-  if(A.sparse && x.sparse){
+  if(A.sparse && x.sparse) {
     uint i, j, n, *k, *kstop, *l, *lstop;
     y.clear(); y.nd=1; y.d0=A.d0; y.sparse=new uintA [2]; y.sparse[1].resize(y.d0); y.sparse[1]=(uint)-1;
     double *xp=x.p;
     uintA *elems, *col;
     elems=x.sparse;
     uint *slot;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++){
+    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
       j=*k; k++;
       col=A.sparse+(1+j);
-      for(l=col->p, lstop=col->pstop; l!=lstop;){
+      for(l=col->p, lstop=col->pstop; l!=lstop;) {
         i =*l; l++;
         n =*l; l++;
         slot=&y.sparse[1](i);
-        if(*slot==(uint)-1){
+        if(*slot==(uint)-1) {
           *slot=y.N;
           y.resizeMEM(y.N+1, true); y(y.N-1)=0.;
           y.sparse[0].append(i);
@@ -1089,15 +1089,15 @@ void sparseProduct(arr& y, arr& A, const arr& x){
     }
     return;
   }
-  if(!A.sparse && x.sparse){
+  if(!A.sparse && x.sparse) {
     uint i, j, *k, *kstop, d1=A.d1;
     y.resize(A.d0); y.setZero();
     double *xp=x.p;
     uintA *elems;
     elems=x.sparse;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++){
+    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
       j=*k; k++;
-      for(i=0; i<A.d0; i++){
+      for(i=0; i<A.d0; i++) {
         y.p[i] += A.p[i*d1+j] * (*xp);
       }
     }
@@ -1105,14 +1105,14 @@ void sparseProduct(arr& y, arr& A, const arr& x){
   }
 }
 
-void scanArrFile(const char* name){
+void scanArrFile(const char* name) {
   ifstream is(name, std::ios::binary);
   CHECK(is.good(), "couldn't open file " <<name);
   arr x;
   String tag;
-  for(;;){
+  for(;;) {
     tag.read(is, " \n\r\t", " \n\r\t");
-    if(!is.good() || tag.N()==0) return;
+    if(!is.good() || tag.N==0) return;
     x.readTagged(is, NULL);
     x.writeTagged(cout, tag);  cout <<endl;
     if(!is.good()) return;
@@ -1124,7 +1124,7 @@ void scanArrFile(const char* name){
 // lists
 //
 
-void anyListRead(AnyList& ats, std::istream& is){
+void anyListRead(AnyList& ats, std::istream& is) {
   char c, delim;
   MT::String tag, str;
   double d;
@@ -1132,36 +1132,36 @@ void anyListRead(AnyList& ats, std::istream& is){
   MT::Array<MT::String> strings;
   
   //read all generic attributes
-  for(;;){
+  for(;;) {
     tag.read(is, " \t\r\n", " \t=}, ;([\n\r", false);
-    if(!tag.N()) {
+    if(!tag.N) {
       MT::skip(is, " \t\r\n;");
       is.clear();
       break;
     }
     MT::skip(is);  is.get(c);
-    if(c=='='){ MT::skip(is); is.get(c); }
-    switch(c){
+    if(c=='=') { MT::skip(is); is.get(c); }
+    switch(c) {
       case '(': { //vector of strings
         delim=c;
         strings.clear();
-        for(;;){
+        for(;;) {
           MT::skip(is);
           is.get(c);
           if(c==')') break; else is.putback(c);
           str.read(is, "", "), \t\r\n", false);
           strings.append(str);
         }
-        if(strings.N==1){ //not nice - one should clearly distinguish between a vector and scalar...
+        if(strings.N==1) {  //not nice - one should clearly distinguish between a vector and scalar...
           ats.append(anyNew<MT::String>(tag, strings(0)));
-        }else{
+        } else {
           ats.append(anyNew<MT::String>(tag, strings.p, strings.N, delim));
         }
       } break;
       case '[': { //vector of reals
         delim=c;
         reals.clear();
-        for(;;){
+        for(;;) {
           MT::skip(is);
           is.get(c);
           if(c==']' || c==')') break; else is.putback(c);
@@ -1169,9 +1169,9 @@ void anyListRead(AnyList& ats, std::istream& is){
           reals.append(d);
           if(!is.good()) HALT("ERROR");
         }
-        if(reals.N==1){ //not nice - one should clearly distinguish between a vector and scalar...
+        if(reals.N==1) {  //not nice - one should clearly distinguish between a vector and scalar...
           ats.append(anyNew<double>(tag, reals(0)));
-        }else{
+        } else {
           ats.append(anyNew<double>(tag, reals.p, reals.N, delim));
         }
       } break;
@@ -1189,10 +1189,10 @@ void anyListRead(AnyList& ats, std::istream& is){
       } break;
       default: { //single double or nothing
         is.putback(c);
-        if(MT::contains("-.0123456789", c)){ //single double
+        if(MT::contains("-.0123456789", c)) {  //single double
           is >>d;
           ats.append(anyNew<double>(tag, d));
-        }else{ //bool
+        } else { //bool
           ats.append(anyNew<double>(tag, (double*)0, 0, 0));
         }
       } break;
@@ -1207,22 +1207,22 @@ void anyListRead(AnyList& ats, std::istream& is){
 // graphs
 //
 
-void graphRandomUndirected(uintA& E, uint n, double connectivity){
+void graphRandomUndirected(uintA& E, uint n, double connectivity) {
   uint i, j;
-  for(i=0; i<n; i++) for(j=i+1; j<n; j++){
-    if(rnd.uni()<connectivity) E.append(TUP(i,j));
-  }
+  for(i=0; i<n; i++) for(j=i+1; j<n; j++) {
+      if(rnd.uni()<connectivity) E.append(TUP(i,j));
+    }
   E.reshape(E.N/2,2);
 }
 
-void graphRandomTree(uintA& E, uint N, uint roots){
+void graphRandomTree(uintA& E, uint N, uint roots) {
   uint i;
   CHECK(roots>=1, "");
   for(i=roots; i<N; i++) E.append(TUP(rnd(i), i));
   E.reshape(E.N/2,2);
 }
 
-void graphRandomFixedDegree(uintA& E, uint N, uint d){
+void graphRandomFixedDegree(uintA& E, uint N, uint d) {
   // --- from Joris' libDAI!!
   // Algorithm 1 in "Generating random regular graphs quickly"
   // by A. Steger and N.C. Wormald
@@ -1238,7 +1238,7 @@ void graphRandomFixedDegree(uintA& E, uint N, uint d){
   
   bool ready = false;
   uint tries = 0;
-  while(!ready){
+  while(!ready) {
     tries++;
     
     // Start with N*d points {0, 1, ..., N*d-1} (N*d even) in N groups.
@@ -1251,13 +1251,13 @@ void graphRandomFixedDegree(uintA& E, uint N, uint d){
     // i with j and delete i and j from U.
     E.clear();
     bool finished = false;
-    while(!finished){
+    while(!finished) {
       U.permuteRandomly();
       uint i1, i2;
       bool suit_pair_found = false;
-      for(i1=0; i1<U.N-1 && !suit_pair_found; i1++){
-        for(i2=i1+1; i2<U.N && !suit_pair_found; i2++){
-          if((U(i1)/d) != (U(i2)/d)){  // they are suitable (refer to different nodes)
+      for(i1=0; i1<U.N-1 && !suit_pair_found; i1++) {
+        for(i2=i1+1; i2<U.N && !suit_pair_found; i2++) {
+          if((U(i1)/d) != (U(i2)/d)) {  // they are suitable (refer to different nodes)
             suit_pair_found = true;
             E.append(TUP(U(i1)/d, U(i2)/d));
             U.remove(i2);  // first remove largest
@@ -1268,20 +1268,20 @@ void graphRandomFixedDegree(uintA& E, uint N, uint d){
       }
     }
     E.reshape(E.N/2,2);
-    if(!U.N){
+    if(!U.N) {
       // G is a graph with edge from vertex r to vertex s if and only if
       // there is a pair containing points in the r'th and s'th groups.
       // If G is d-regular, output, otherwise return to Step 1.
       uintA degrees(N);
       degrees.setZero();
-      for(j=0;j<E.d0;j++){
+      for(j=0; j<E.d0; j++) {
         degrees(E(j,0))++;
         degrees(E(j,1))++;
       }
       ready = true;
-      for(uint n=0; n<N; n++){
+      for(uint n=0; n<N; n++) {
         CHECK(degrees(n)<=d, "");
-        if(degrees(n)!=d){
+        if(degrees(n)!=d) {
           ready = false;
           break;
         }

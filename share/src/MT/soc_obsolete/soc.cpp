@@ -617,7 +617,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 void soc::SocSystemAbstraction::displayState(const arr& q, const arr *Qinv, const char *text){
   if(gl){
     setq(q);
-    if(text) gl->text.clr() <<text;
+    if(text) gl->text.clear() <<text;
     gl->update();
     //gl->timedupdate(getTau()*(T-1)/(display-1));
   }else{

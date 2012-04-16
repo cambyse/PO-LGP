@@ -146,7 +146,7 @@ void GuiModule::step(){
     ors2->setJointState(q_trajectory[t]);
     //if(q_external.N)  ors2->setExternalState(q_external[t]);
     ors2->calcBodyFramesFromJoints();
-    gl->text.clr() <<"t=" <<t;
+    gl->text.clear() <<"t=" <<t;
   }
   
   gl->update();

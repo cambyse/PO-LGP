@@ -1,7 +1,7 @@
 BASE = ../..
-OBJS = main.o
 
-STANIMIR = 1
-DMITRY = 1
+OPENCV = 1
+GTK = 1
+GTKGL = 1
 
 include $(BASE)/make-generic

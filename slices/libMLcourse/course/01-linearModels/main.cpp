@@ -5,7 +5,7 @@
 using namespace std;
 
 #include <MT/MLcourse.h>
-#include <MT/util.h> //"../../../../../marc/code/src/MT/util.h"
+#include <MT/util.h>
 
 
 void testLinReg(){

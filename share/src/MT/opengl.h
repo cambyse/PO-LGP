@@ -20,12 +20,6 @@
 #ifndef MT_opengl_h
 #define MT_opengl_h
 
-#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
-#  define MT_GL
-#  include <GL/gl.h>
-#  include <GL/glu.h>
-#endif
-
 #ifdef MT_FLTK
 #  include <FL/glut.H>
 #endif
@@ -37,6 +31,12 @@
 
 #if defined MT_GTKGL || defined MT_QTGLUT
 #  include <GL/glut.h>
+#endif
+
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
+#  define MT_GL
+#  include <GL/gl.h>
+#  include <GL/glu.h>
 #endif
 
 #ifdef MT_GL2PS
@@ -121,7 +121,7 @@ struct Camera {
   arr fixedProjectionMatrix;
   
   Camera();
-  Camera(const Camera& c){ *this=c; }
+  Camera(const Camera& c) { *this=c; }
   ~Camera();
   Camera& operator=(const Camera& c);
   
@@ -164,12 +164,12 @@ struct OpenGL {
   //struct GLHoverCall { void *classP; bool (*call)(void*, OpenGL*); };
   //struct GLClickCall { void *classP; bool (*call)(void*, OpenGL*); };
   //struct GLKeyCall   { void *classP; bool (*call)(void*, OpenGL*); };
-  struct GLHoverCall{ virtual bool hoverCallback(OpenGL&) = 0; };
-  struct GLClickCall{ virtual bool clickCallback(OpenGL&) = 0; };
+  struct GLHoverCall { virtual bool hoverCallback(OpenGL&) = 0; };
+  struct GLClickCall { virtual bool clickCallback(OpenGL&) = 0; };
   struct GLKeyCall  { virtual bool keyCallback(OpenGL&) = 0; };
-  struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy){ button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
+  struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy) { button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
   struct GLSelect   { int name; double dmin, dmax, x,y,z; };
-  struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView(){ img=NULL; le=bo=0.; ri=to=1.; } };
+  struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
   MT::Array<GLView> views;             //!< list of draw routines
@@ -199,7 +199,7 @@ struct OpenGL {
   //!@name constructors & destructors
   OpenGL(const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
   //OpenGL(void *parent, const char* title="MT::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
-  OpenGL(sOpenGL *_s); //special constructor: used when the underlying system-dependent class exists already
+  OpenGL(void *container); //special constructor: used when the underlying system-dependent class exists already
   
   OpenGL *newClone() const;
   ~OpenGL();
@@ -207,7 +207,7 @@ struct OpenGL {
   //!@name adding drawing routines and callbacks
   void add(void (*call)(void*), const void* classP=0);
   void remove(void (*call)(void*), const void* classP=0);
-  template<class T> void add(const T& x){ add(x.staticDraw, &x); } //!< add a class or struct with a staticDraw routine
+  template<class T> void add(const T& x) { add(x.staticDraw, &x); } //!< add a class or struct with a staticDraw routine
   void clear();
   void addHoverCall(GLHoverCall *c);
   void clearHoverCalls();
@@ -286,20 +286,20 @@ protected:
 // simplest UI
 //
 
-struct glUI:OpenGL::GLHoverCall,OpenGL::GLClickCall{
+struct glUI:OpenGL::GLHoverCall,OpenGL::GLClickCall {
   int top;
   struct Button { byteA img1, img2; bool hover; uint x, y, w, h; const char* name; };
   MT::Array<Button> buttons;
   
-  glUI(){ top=-1; }
+  glUI() { top=-1; }
   
   void addButton(uint x, uint y, const char *name, const char *img1=0, const char *img2=0);
   void glDraw();
   bool checkMouse(int _x, int _y);
-
+  
   bool hoverCallback(OpenGL&);
   bool clickCallback(OpenGL&);
-
+  
 };
 
 void glDrawUI(void *p);

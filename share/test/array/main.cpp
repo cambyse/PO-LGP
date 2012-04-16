@@ -435,14 +435,14 @@ void testTensor(){
 
 char* gdb(MT::Array<double>& a){
   static MT::String buf;
-  buf.clr();
+  buf.clear();
   a.writeDim(buf);
   a.writeRaw(buf);
   return buf.p;
 }
 char* gdb(MT::Array<int>& a){
   static MT::String buf;
-  buf.clr();
+  buf.clear();
   a.writeDim(buf);
   a.writeRaw(buf);
   return buf.p;
@@ -452,7 +452,7 @@ int main(int argc, char *argv[]){
   
   testBasics();
   testMatlab();
-  //return 0;
+//   return 0;
   testException();
   testMemoryBound();
   testBinaryIO();

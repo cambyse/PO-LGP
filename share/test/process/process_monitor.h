@@ -2,7 +2,7 @@
 
 #define BIR_VARIABLE \
 static int bir_typeId; \
-static MT::Array<_Variable_field_info_base*> bir_fields;
+static MT::Array<FieldInfo*> bir_fields;
 
 #define BIR_FIELD(type, name) \
   type name; \
@@ -23,9 +23,9 @@ void dumpInfo(){
   uint i, j;
   Variable *v;
   Process *p;
-  _Variable_field_info_base *vi;
-  globalInfo.readAccess(NULL);
-  for_list(i, v, globalInfo.variables){
+  FieldInfo *vi;
+  birosInfo.readAccess(NULL);
+  for_list(i, v, birosInfo.variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
     if(v->fields.N){
       cout <<'{' <<endl;
@@ -41,12 +41,12 @@ void dumpInfo(){
   }
   cout <<endl;
   cout <<" +++ PROCESSES +++" <<endl;
-  for_list(i, p, globalInfo.processes){
+  for_list(i, p, birosInfo.processes){
     cout <<"Process " <<p->name <<" (";
-    for_list(j, v, p->V){
+    /*for_list(j, v, p->V){
       if(j) cout <<',';
       cout <<v->id <<'_' <<v->name;
-    }
+    }*/
     cout <<") {" <<endl;
     cout
       <<" tid=" <<p->s->tid
@@ -57,15 +57,13 @@ void dumpInfo(){
       <<" state=";
     int state=p->s->threadCondition.state;
     if(state>0) cout <<state; else switch(state){
-        case tsOPEN:    cout <<"open";   break;
         case tsCLOSE:   cout <<"close";  break;
         case tsLOOPING: cout <<"loop";   break;
         case tsBEATING: cout <<"beat";   break;
-        case tsSYNCLOOPING: cout <<"sync";   break;
         case tsIDLE:    cout <<"idle";   break;
         default: cout <<"undefined:";
       }
     cout <<"\n}" <<endl;
   }
-  globalInfo.deAccess(NULL);
+  birosInfo.deAccess(NULL);
 }

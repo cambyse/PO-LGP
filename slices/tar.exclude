@@ -1,6 +1,7 @@
 *~
 *.o
 *.so
+*.exclude
 */z.*
 x.exe
 MT.log

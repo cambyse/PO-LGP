@@ -144,7 +144,7 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
   if (started_track) {
     findTarget();//call later if it is too slow, or in some intervals
     arr x = arr(target->X.p.v,3) - TV_fNew->y;
-    robotProcesses->gui.gl->text.clr() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
+    robotProcesses->gui.gl->text.clear() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
     double speedM = 0.04;
     if(norm(x) > speedM) x = x*speedM/norm(x);
 

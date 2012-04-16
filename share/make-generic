@@ -229,9 +229,11 @@ LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(GTK),1)
-CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+#CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+#LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+#LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
 endif
 
 ifeq ($(WX),1)
@@ -358,8 +360,8 @@ endif
 
 ifeq ($(TONY),1)
 CXXFLAGS  += -DMT_TONY
-CPATH   := $(CPATH):$(LIBPATH)/tony-mdp/include
-LPATH   := $(LPATH):$(LIBPATH)/tony-mdp/lib
+CPATH   := $(CPATH):$(LIBPATH)/tony_mdp/include
+LPATH   := $(LPATH):$(LIBPATH)/tony_mdp/lib
 LIBS += -lmdp
 endif
 
@@ -378,10 +380,10 @@ LIBS += -lc_urg -lc_connection
 endif
 
 ifeq ($(BUMBLE),1)
-CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
+CXXFLAGS  += -DMT_BUMBLE
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
-#LIBS += -ldc1394 # -lpgrlibdcstereo
+LIBS += -ldc1394 # -lpgrlibdcstereo
 endif
 
 ifeq ($(FELZ),1)

@@ -563,7 +563,7 @@ TL::Atom* RuleExplorer::decideAction(const TL::SymbolicState& state, NID_Planner
   if (confident_ground_rules.num() == 0)  // This is required if world has changed. Then ground rules need to be recalculated.
     updateRules();
   
-  message.clr();
+  message.clear();
 //   message << "[" << visited_actions.N << "]  ";
   
   // (1) reward_constants

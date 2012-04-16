@@ -317,7 +317,7 @@ void RobotProcessGroup::open(){
   
   if(openArm){
     arm.threadLoopWithBeat(0.01);
-    ctrl.threadLoopSyncWithDone(arm);
+    NIY; // ctrl.threadLoopSyncWithDone(arm);
   }else{
     ctrl.threadLoopWithBeat(0.01);
   }

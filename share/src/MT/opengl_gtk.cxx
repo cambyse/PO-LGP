@@ -42,7 +42,8 @@ static Mutex globalOpenglLock;
 //
 
 struct sOpenGL{
-  sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *_gl, const char* title, int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
   
   GtkWidget *win;
@@ -58,6 +59,7 @@ struct sOpenGL{
   static bool button_release(GtkWidget *widget, GdkEventButton *event);
   static bool key_press_event(GtkWidget *widget, GdkEventKey *event);
   static void destroy(GtkWidget *widget);
+  static bool size_allocate_event(GtkWidget *widget, GdkRectangle *allocation);
   
   static void lock(){ LOCK } //globalOpenglLock.lock(); }
   static void unlock(){ UNLOCK } //globalOpenglLock.unlock(); }
@@ -82,18 +84,17 @@ void OpenGL::processEvents(){
   UNLOCK
 }
 
-void OpenGL::enterEventLoop(){ loopExit=false; LOCK while(!loopExit) gtk_main_iteration(); UNLOCK }
+void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ LOCK gtk_main_iteration(); UNLOCK } }
 void OpenGL::exitEventLoop(){  loopExit=true; }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
-  NIY;
-  //glutReshapeWindow(w,h);
+  gtk_widget_set_size_request(s->glArea, w, h);
   processEvents();
 }
 
-int OpenGL::width(){  int w,h; gtk_window_get_size(GTK_WINDOW(s->win), &w, &h); return w; }
-int OpenGL::height(){ int w,h; gtk_window_get_size(GTK_WINDOW(s->win), &w, &h); return h; }
+int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
+int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
@@ -144,6 +145,45 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   g_signal_connect(G_OBJECT(glArea), "button_release_event",G_CALLBACK(button_release), NULL);
   g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
   //  g_signal_connect(G_OBJECT(glArea), "key_press_event",     G_CALLBACK(key_press_event), NULL);
+  
+  g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
+  //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
+  
+  gtk_container_add(GTK_CONTAINER(win), glArea);
+  gtk_widget_show(win);
+  gtk_widget_show(glArea);
+  UNLOCK
+}
+
+sOpenGL::sOpenGL(OpenGL *gl, void *container){
+  win = GTK_WIDGET(container);
+  
+  LOCK
+  glArea = gtk_drawing_area_new();
+  g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
+    
+  GdkGLConfig *glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
+  GDK_GL_MODE_DEPTH |
+  GDK_GL_MODE_DOUBLE));
+    
+  gtk_widget_set_gl_capability(glArea,
+                               glconfig,
+                               NULL,
+                               TRUE,
+                               GDK_GL_RGBA_TYPE);
+                               
+  gtk_widget_set_events(glArea,
+                        GDK_EXPOSURE_MASK|
+                        GDK_BUTTON_PRESS_MASK|
+                        GDK_BUTTON_RELEASE_MASK|
+                        GDK_POINTER_MOTION_MASK);
+                                                       
+  g_signal_connect(G_OBJECT(glArea), "expose_event",        G_CALLBACK(expose), NULL);
+  g_signal_connect(G_OBJECT(glArea), "motion_notify_event", G_CALLBACK(motion_notify), NULL);
+  g_signal_connect(G_OBJECT(glArea), "button_press_event",  G_CALLBACK(button_press), NULL);
+  g_signal_connect(G_OBJECT(glArea), "button_release_event",G_CALLBACK(button_release), NULL);
+  g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
+  g_signal_connect(G_OBJECT(glArea), "size_allocate",       G_CALLBACK(size_allocate_event), NULL);
   
   g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
@@ -218,4 +258,10 @@ bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
 void sOpenGL::destroy(GtkWidget *widget) {
   int i=10;
   i++;
+}
+
+bool sOpenGL::size_allocate_event(GtkWidget *widget, GdkRectangle *allo){
+  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
+  gl->Reshape(allo->width, allo->height);
+  return true;
 }

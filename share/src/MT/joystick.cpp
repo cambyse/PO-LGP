@@ -35,8 +35,8 @@ void JoystickInterface::close(){
 
 void JoystickInterface::step(){
   if(!n) return;
-  static int B, _B;
-  static floatA A, _A;
+  int B;
+  floatA A;
   uint i;
   A.resize(n);
   state.resize(n+1);
@@ -44,12 +44,6 @@ void JoystickInterface::step(){
   state(0)=B;
   for(i=0; i<n-2; i++) state(i+1)=((int)A(i))>>8;
   for(; i<n  ; i++) state(i+1)=A(i);
-  //cout <<"\rjoy state=" <<state <<std::flush;
-  //bool change;
-  //if(B!=_B || A!=_A) change=true; else change=false;
-  _B=B;
-  _A=A;
-  //return change;
 }
 
 #else //dummy implementations

@@ -1,16 +1,15 @@
 #include "util.h"
 #include "MLcourse.h"
-#include "util.h"
 
 arr beta_true;
 
-double NormalSdv(const double& a, const double& b, double sdv){
+double NormalSdv(const double& a, const double& b, double sdv) {
   double d=(a-b)/sdv;
   double norm = 1./(::sqrt(MT_2PI)*sdv);
   return norm*::exp(-.5*d*d);
 }
 
-void linearRegression(arr& beta, const arr& X, const arr& y, const arr* weighted){
+void linearRegression(arr& beta, const arr& X, const arr& y, const arr* weighted) {
   CHECK(y.nd==1 && X.nd==2 && y.N==X.d0, "wrong dimensions");
   arr Xt, XtXinv;
   transpose(Xt, X);
@@ -19,7 +18,7 @@ void linearRegression(arr& beta, const arr& X, const arr& y, const arr* weighted
   beta = XtXinv*(Xt*y);
 }
 
-void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const arr* weighted, arr* zScores){
+void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const arr* weighted, arr* zScores) {
   CHECK(y.nd==1 && X.nd==2 && y.N==X.d0, "wrong dimensions");
   arr Xt, XtXinv, I;
   transpose(Xt, X);
@@ -28,16 +27,16 @@ void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const
   if(weighted) Xt = Xt * diag(*weighted);
   inverse_SymPosDef(XtXinv, Xt*X + I);
   beta = XtXinv*(Xt*y);
-  if(zScores){
+  if(zScores) {
     (*zScores).resize(beta.N);
     double sigma = sumOfSqr(X*beta-y)/(y.N - X.d1 - 1.);
-    for(uint i=0; i<beta.N; i++){
+    for(uint i=0; i<beta.N; i++) {
       (*zScores)(i) = fabs(beta(i)) / (sigma * sqrt(XtXinv(i, i)));
     }
   }
 }
 
-void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lambda){
+void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lambda) {
   CHECK(y.nd==1, "");
   uint n=y.N, d=X.d1;
   arr Xt;
@@ -51,10 +50,10 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
   double logLike, lastLogLike, alpha=1.;
   beta.resize(d);
   beta.setZero();
-  for(uint k=0; k<100; k++){
+  for(uint k=0; k<100; k++) {
     f = X*beta;
     logLike=0.;
-    for(uint i=0; i<n; i++){
+    for(uint i=0; i<n; i++) {
       if(f(i)<-100.) f(i)=-100.;  if(f(i)>100.) f(i)=100.;  //constrain the discriminative values to avoid NANs...
       p(i) = 1./(1.+exp(-f(i)));
       w(i) = p(i)*(1.-p(i));
@@ -63,14 +62,14 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
     }
     
     //optionally reject the update
-    if(k && logLike<lastLogLike){
+    if(k && logLike<lastLogLike) {
       //cout <<"REJECT" <<endl;
       beta -= alpha*beta_update;
       alpha *= .1;
       beta += alpha*beta_update;
       if(alpha*beta_update.absMax()<1e-5) break;
       continue;
-    }else{
+    } else {
       alpha = pow(alpha, .8);
     }
     lastLogLike=logLike;
@@ -85,7 +84,7 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
   }
 }
 
-void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda){
+void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda) {
   CHECK(y.nd==2 && y.d0==X.d0, "");
   uint n=y.d0, d=X.d1, M=y.d1;
   arr Xt;
@@ -99,25 +98,25 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
   double logLike, lastLogLike, alpha=1.;
   beta.resize(d, M);
   beta.setZero();
-  for(uint k=0; k<100; k++){
+  for(uint k=0; k<100; k++) {
     f = X*beta;
     for(uint i=0; i<f.N; i++) MT::constrain(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
     p = exp(f);
     logLike=0.;
-    for(uint i=0; i<n; i++){
+    for(uint i=0; i<n; i++) {
       p[i]() /= sum(p[i]); //normalize the exp(f(x)) along each row
       for(uint c=0; c<M; c++) logLike += y(i, c)*log(p(i, c));
     }
     
     //optionally reject the update
-    if(k && logLike<lastLogLike){
+    if(k && logLike<lastLogLike) {
       //cout <<"REJECT" <<endl;
       beta -= alpha*beta_update;
       alpha *= .1;
       beta += alpha*beta_update;
       if(alpha*beta_update.absMax()<1e-5) break;
       continue;
-    }else{
+    } else {
       alpha = pow(alpha, .8);
     }
     lastLogLike=logLike;
@@ -125,7 +124,7 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
     //construct the Hessian matrix as block matrix of size d*M-times-d*M (the beta is of size d*M)
     XtWX.resize(beta.N, beta.N);
     XtWX.setZero();
-    for(uint c1=0; c1<M; c1++) for(uint c2=0; c2<M; c2++){
+    for(uint c1=0; c1<M; c1++) for(uint c2=0; c2<M; c2++) {
         for(uint i=0; i<n; i++) w(i) = p(i, c1)*((c1==c2?1.:0.)-p(i, c2));
         XtWX.setMatrixBlock(Xt*diagProduct(w, X) + (c1==c2?2.:0.)*I, c1*d, c2*d);
       }
@@ -165,7 +164,7 @@ void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, doub
   for(uint k=0; k<k_fold; k++){
     if(!permute){
       Xtrain = X;  ytrain = y;
-    }else{
+    } else {
       Xtrain = X_perm;  ytrain = y_perm;
     }
     Xtrain.delRows(k*blocksize, blocksize);
@@ -208,21 +207,21 @@ void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, c
   }
 }
 
-void CrossValidation::plot(){
+void CrossValidation::plot() {
   write(LIST(lambdas, scoreMeans, scoreSDVs, scoreTrains), "cv");
   gnuplot("set log x; set xlabel 'lambda'; set ylabel 'mean squared error'; plot 'cv' us 1:2:3 w errorlines title 'cv error','cv' us 1:4 w l title 'training error'", "z.pdf", true);
   
 }
 
-void linearFeatures(arr& Z, const arr& X){
+void linearFeatures(arr& Z, const arr& X) {
   Z.setBlockMatrix(ones(TUP(X.d0, 1)), X);
 }
 
-void quadraticFeatures(arr& Z, const arr& X){
+void quadraticFeatures(arr& Z, const arr& X) {
   uint n=X.d0, d=X.d1;
   Z.resize(n, 1 + d + d*(d+1)/2);
   uint i, j, k, l;
-  for(i=0; i<n; i++){
+  for(i=0; i<n; i++) {
     arr x=X[i];
     arr z=Z[i];
     l=0;
@@ -232,11 +231,11 @@ void quadraticFeatures(arr& Z, const arr& X){
   }
 }
 
-void cubicFeatures(arr& Z, const arr& X){
+void cubicFeatures(arr& Z, const arr& X) {
   uint n=X.d0, d=X.d1;
   Z.resize(n, 1 + d + d*(d+1)/2 + d*(d+1)*(d+2)/6);
   uint i, j, k, l, m;
-  for(i=0; i<n; i++){
+  for(i=0; i<n; i++) {
     arr x=X[i];
     arr z=Z[i];
     l=0;
@@ -247,12 +246,12 @@ void cubicFeatures(arr& Z, const arr& X){
   }
 }
 
-void piecewiseConstantFeatures(arr& Z, const arr& X){
+void piecewiseConstantFeatures(arr& Z, const arr& X) {
   uint n=X.d0, d=X.d1;
   if(d!=1) HALT("only for 1D data");
   Z.resize(n, 6);
   Z.setZero();
-  for(uint i=0; i<n; i++){
+  for(uint i=0; i<n; i++) {
     double x=X(i, 0);
     arr z=Z[i];
     if(x<-2.5) x=-2.5; if(x>2.5) x=2.5;
@@ -260,12 +259,12 @@ void piecewiseConstantFeatures(arr& Z, const arr& X){
   }
 }
 
-void piecewiseLinearFeatures(arr& Z, const arr& X){
+void piecewiseLinearFeatures(arr& Z, const arr& X) {
   uint n=X.d0, d=X.d1;
   if(d!=1) HALT("only for 1D data");
   Z.resize(n, 7);
   Z.setZero();
-  for(uint i=0; i<n; i++){
+  for(uint i=0; i<n; i++) {
     double x=X(i, 0);
     arr z=Z[i];
     z(0) = 1.; //constant
@@ -275,21 +274,21 @@ void piecewiseLinearFeatures(arr& Z, const arr& X){
 }
 
 
-void rbfFeatures(arr& Z, const arr& X, const arr& Xtrain, double sigma){
+void rbfFeatures(arr& Z, const arr& X, const arr& Xtrain, double sigma) {
   int rbfConst = MT::getParameter<int>("rbfConst", 0);
   Z.resize(X.d0, Xtrain.d0+rbfConst);
-  for(uint i=0; i<Z.d0; i++){
+  for(uint i=0; i<Z.d0; i++) {
     if(rbfConst) Z(i, 0) = 1.; //constant feature also for rbfs
-    for(uint j=0; j<Xtrain.d0; j++){
+    for(uint j=0; j<Xtrain.d0; j++) {
       double d=euclideanDistance(X[i], Xtrain[j])/sigma;
       Z(i, j+rbfConst) = ::exp(-.5*d*d);
     }
   }
 }
 
-void makeFeatures(arr& Z, const arr& X, const arr& Xtrain, FeatureType featureType){
+void makeFeatures(arr& Z, const arr& X, const arr& Xtrain, FeatureType featureType) {
   if(featureType==readFromCfgFileFT) featureType = (FeatureType)MT::getParameter<uint>("modelFeatureType", 1);
-  switch(featureType){
+  switch(featureType) {
     case linearFT:    linearFeatures(Z, X);  break;
     case quadraticFT: quadraticFeatures(Z, X);  break;
     case cubicFT:     cubicFeatures(Z, X);  break;
@@ -302,13 +301,13 @@ void makeFeatures(arr& Z, const arr& X, const arr& Xtrain, FeatureType featureTy
 
 
 
-void artificialData(arr& X, arr& y, ArtificialDataType dataType){
+void artificialData(arr& X, arr& y, ArtificialDataType dataType) {
   uint n = MT::getParameter<uint>("n", 100);
   uint d = MT::getParameter<uint>("d", 1);
   double sigma = MT::getParameter<double>("sigma", 1.); // observation noise
   
   if(dataType==readFromCfgFileDT) dataType = (ArtificialDataType)MT::getParameter<uint>("dataType", 1);
-  switch(dataType){
+  switch(dataType) {
     case linearData: {
       X = randn(n, d);
       arr Z;
@@ -335,9 +334,9 @@ void artificialData(arr& X, arr& y, ArtificialDataType dataType){
       arr beta;
       beta = randn(Z.d1, 1).reshape(Z.d1);
       y = Z*beta;
-      for(uint i=0; i<y.N; i++)  if(rnd.uni()<rate){
+      for(uint i=0; i<y.N; i++)  if(rnd.uni()<rate) {
           y(i) += MT::getParameter<double>("outlierSigma", 10.)*rnd.gauss();
-        }else{
+        } else {
           y(i) += sigma*rnd.gauss();
         }
       beta_true = beta;
@@ -347,7 +346,7 @@ void artificialData(arr& X, arr& y, ArtificialDataType dataType){
   }
 }
 
-void artificialData_Hasties2Class(arr& X, arr& y){
+void artificialData_Hasties2Class(arr& X, arr& y) {
   uint n = MT::getParameter<uint>("n", 100);
   
   arr means0(10, 2), means1(10, 2), x(2);
@@ -357,7 +356,7 @@ void artificialData_Hasties2Class(arr& X, arr& y){
   
   X.clear();
   y.clear();
-  for(uint i=0; i<n; i++){
+  for(uint i=0; i<n; i++) {
     rndGauss(x, .2);  x += means0[rnd(10)];
     X.append(~x);
     y.append(0);
@@ -368,7 +367,7 @@ void artificialData_Hasties2Class(arr& X, arr& y){
   }
 }
 
-void artificialData_HastiesMultiClass(arr& X, arr& y){
+void artificialData_HastiesMultiClass(arr& X, arr& y) {
   uint n = MT::getParameter<uint>("n", 100);
   uint M = MT::getParameter<uint>("M", 3);
   
@@ -380,15 +379,15 @@ void artificialData_HastiesMultiClass(arr& X, arr& y){
   X.resize(M*n, 2);
   y.resize(M*n, M);
   y.setZero();
-  for(uint i=0; i<n; i++){
-    for(uint c=0; c<M; c++){
+  for(uint i=0; i<n; i++) {
+    for(uint c=0; c<M; c++) {
       arr x=X[i*M+c];  rndGauss(x, .2);  x += means[c][rnd(10)];
       y(i*M+c, c)=1.;
     }
   }
 }
 
-void artificialData_GaussianMixture(arr& X, arr& y){
+void artificialData_GaussianMixture(arr& X, arr& y) {
   uint n = MT::getParameter<uint>("n", 100);
   uint M = MT::getParameter<uint>("M", 3);
   double sig = MT::getParameter<double>("sigma", .2);
@@ -403,8 +402,8 @@ void artificialData_GaussianMixture(arr& X, arr& y){
   X.resize(M*n, 2);
   y.resize(M*n, M);
   y.setZero();
-  for(uint i=0; i<n; i++){
-    for(uint c=0; c<M; c++){
+  for(uint i=0; i<n; i++) {
+    for(uint c=0; c<M; c++) {
       arr x=X[i*M+c];  rndGauss(x, sig);  x = V[c]*x;  x += means[c];
       y(i*M+c, c)=1.;
     }
@@ -412,16 +411,16 @@ void artificialData_GaussianMixture(arr& X, arr& y){
 }
 
 
-void load_data(arr& X, const char* filename, bool whiten){
+void load_data(arr& X, const char* filename, bool whiten) {
   ifstream is;
   MT::open(is, filename);
   MT::Array<MT::String> strs;
-  if(!MT::contains("0123456789.-+", MT::peerNextChar(is))){
+  if(!MT::contains("0123456789.-+", MT::peerNextChar(is))) {
     //read line of strings
     MT::String str;
-    for(;;){
+    for(;;) {
       str.read(is, " \"\t\r", " \"\t\r\n", false);
-      if(!str.N()) break;
+      if(!str.N) break;
       strs.append(str);
     }
     cout <<"header: " <<strs <<endl;
@@ -435,15 +434,15 @@ void load_data(arr& X, const char* filename, bool whiten){
   arr mean = sum(X, 0);  mean /= (double)X.d0;
   arr var = ~X*X;       var /= (double)X.d0;
   var -= mean^mean;
-  for(uint j=0; j<X.d1; j++){
+  for(uint j=0; j<X.d1; j++) {
     cout <<j <<' ';
     if(strs.N) cout <<strs(j) <<' ';
     cout <<mean(j) <<' ' <<sqrt(var(j, j)) <<endl;
   }
   
   //-- whiten the data
-  if(whiten){
-    for(uint i=0; i<X.d0; i++) for(uint j=0; j<X.d1; j++){
+  if(whiten) {
+    for(uint i=0; i<X.d0; i++) for(uint j=0; j<X.d1; j++) {
         X(i, j) /= sqrt(var(j, j));
       }
   }

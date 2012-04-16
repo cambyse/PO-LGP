@@ -64,7 +64,7 @@ void writeDot(ElementL G){
   Element *e, *n;
   for_list(i, e, G){
     fil <<e->id <<" [ ";
-    if(e->name.N()) fil <<"label=\"" <<e->name <<"\", ";
+    if(e->name.N) fil <<"label=\"" <<e->name <<"\", ";
     if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil <<"shape=box";
     else if(e->type=="shape") fil <<"shape=diamond";
     else fil <<"shape=ellipse";

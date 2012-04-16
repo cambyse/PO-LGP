@@ -62,7 +62,7 @@ void testKinematics(){
     T1::i=rnd.num(0,G.bodies.N-1);
     T1::rel.setRandom();
     rndUniform(x,-.5,.5,false);
-    gl.text.clr() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
+    gl.text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //gl.update();
     MT::checkGradient(T1::f ,NULL,x,1e-5);
     MT::checkGradient(T1::f1,NULL,x,1e-5);
@@ -116,7 +116,7 @@ void testContacts(){
     G.getContactMeasure(con,.2);
     c=G.getContactGradient(grad,.2); //generate a gradient pushing away to 20cm distance
     cout <<"contact meassure = " <<con(0) <<' ' <<c <<endl;
-    gl.text.clr() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
+    gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
     //gl.watch();
     gl.update();
     //x += inverse(grad)*(-.1*c);
@@ -163,7 +163,7 @@ void testPlayStateSequence(){
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
     G.calcBodyFramesFromJoints();
-    gl.text.clr() <<"replay of a state sequence -- time " <<t;
+    gl.text.clear() <<"replay of a state sequence -- time " <<t;
     gl.timedupdate(0.01);
   }
 }
@@ -191,7 +191,7 @@ void testPlayTorqueSequenceInOde(){
     ode.step(0.03);
     ode.importStateFromOde(G);
     G.getJointState(Xt[t](),Vt[t]());
-    gl.text.clr() <<"play a random torque sequence [using ODE] -- time " <<t;
+    gl.text.clear() <<"play a random torque sequence [using ODE] -- time " <<t;
     gl.timedupdate(.01);
   }
 }
@@ -239,7 +239,7 @@ void testFollowRedundantSequence(){
     G.calcBodyFramesFromJoints();
     G.kinematics(z,N,&rel);  //get the new endeffector position
     //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
-    gl.text.clr() <<"follow redundant trajectory -- time " <<t;
+    gl.text.clear() <<"follow redundant trajectory -- time " <<t;
     gl.update();
     //gl.timedupdate(.01);
   }
@@ -315,16 +315,16 @@ void testDynamics(){
       G.setJointState(q,qd);
       G.calcBodyFramesFromJoints();
       //cout <<q <<qd <<qdd <<endl;
-      gl.text.clr() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
+      gl.text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
       MT::rk4dd(q,qd,q,qd,ddf_joints,dt);
       if(t>300){
         T2::friction=true;
-        gl.text.clr() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
+        gl.text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
       }else{
         T2::friction=false;
-        gl.text.clr() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
+        gl.text.clear() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
       }
     }
     gl.update();
@@ -391,7 +391,7 @@ void testContactDynamics(){
     cross=MT::rk4dd_switch(q,qd,s,q,qd,s,ddf_joints,switchfunction,dt,1e-4);
     //G.reportProxies();
     cout <<"*** s = " <<s <<endl;
-    gl.text.clr() <<"t=" <<t <<"  using RK4_switch,  energy=" <<G.getEnergy();
+    gl.text.clear() <<"t=" <<t <<"  using RK4_switch,  energy=" <<G.getEnergy();
     //if(cross) gl.watch();
     gl.update();
   }

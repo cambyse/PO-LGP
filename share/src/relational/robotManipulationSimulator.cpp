@@ -95,7 +95,7 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
   if(gl){
     gl_step++;
 //     if (gl_step % 1 == 50) {
-      gl->text.clr() <<text <<endl;
+      gl->text.clear() <<text <<endl;
       gl->update();
 //     }
   }
@@ -320,7 +320,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
   bool change = true;
   for(;t--;){
     MT::String send_string;
-    if (msg_string.N() == 0) {
+    if (msg_string.N == 0) {
       if (t%20==0)
         change = !change;
       if (change)
@@ -336,7 +336,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
 
 void RobotManipulationSimulator::watch(){
 #ifdef MT_FREEGLUT
-  gl->text.clr() <<"Watch" <<endl;
+  gl->text.clear() <<"Watch" <<endl;
   gl->watch();
 #endif
 }
@@ -407,7 +407,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   bool object_is_clear = list.N == 0;
   
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "grab "<<obj_grabbed;
   }
   
@@ -552,7 +552,7 @@ void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
 
 void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message){
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "puton " << obj_below;
   }
   
@@ -884,7 +884,7 @@ void RobotManipulationSimulator::grabHere(const char* message) {
 
 void RobotManipulationSimulator::relaxPosition(const char* message){
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "Relax position";
   }
   
@@ -958,7 +958,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
 void RobotManipulationSimulator::openBox(uint id, const char* message) {
 #  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "openBox "<<id;
   }
   
@@ -1002,7 +1002,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
 void RobotManipulationSimulator::closeBox(uint id, const char* message) {
 #  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "closeBox "<<id;
   }
   
@@ -1727,7 +1727,7 @@ uint RobotManipulationSimulator::getHandID() {
 void RobotManipulationSimulator::displayText(const char* text, uint t) {
   if(gl){
     for(;t--;) {
-      gl->text.clr() <<text <<endl;
+      gl->text.clear() <<text <<endl;
       gl->update();
     }
   }
