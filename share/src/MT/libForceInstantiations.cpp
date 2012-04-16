@@ -15,7 +15,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 //#define MT_IMPLEMENTATION
-//#define MT_IMPLEMENT_TEMPLATES
+#ifndef MT_IMPLEMENT_TEMPLATES
+#  define MT_IMPLEMENT_TEMPLATES
+#endif
 
 //the above two flags cause the following headers to
 //include their implementations...
