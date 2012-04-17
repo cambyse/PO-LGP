@@ -1,1 +1,1 @@
-git checkout --track remotes/maserati/$1
+git checkout --track remotes/origin/$1
