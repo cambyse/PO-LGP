@@ -134,9 +134,13 @@ void AICO::prepare_for_changed_task(){
 }
 
 void AICO::iterate_to_convergence(){
+  iterations_till_convergence=0;
   for(uint k=0; k<self->max_iterations; k++){
     double d=self->step();
-    if(k && d<self->tolerance) break; //d*(1.+damping)
+    if(k && d<self->tolerance){
+      iterations_till_convergence=k+1;
+      break; //d*(1.+damping)
+    }
   }
 }
 

@@ -25,7 +25,9 @@ struct GeometricState:Variable {
 
 /** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
 struct Action:Variable {
-  enum ActionPredicate { noAction, grasp, place, openHand, closeHand, home };
+  //grasp: goto object, close hand, attach shape to hand
+  //reach: goto object or move to location, but do not attach shape
+  enum ActionPredicate { noAction, reach, grasp, place, openHand, closeHand, home };
   
   FIELD(uint, frameCount);
   FIELD(ActionPredicate, action);
@@ -66,9 +68,26 @@ struct MotionPrimitive:Variable {
   FIELD(arr, q_plan);
   FIELD(double, tau);
   FIELD(bool, planConverged);
+  FIELD(uint, iterations_till_convergence);
+  FIELD(double, cost);
 
   //in case of feedback
   FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
+
+  /** \brief The HardwareReference is the interface to motors, containing the reference pose for the motor controllers and
+   * their return values (q_real). */
+  struct HardwareReference:Variable {
+    FIELD(arr, q_reference);
+    FIELD(arr, v_reference);
+    FIELD(arr, q_real);
+    FIELD(double, hardwareRealTime);
+
+    FIELD(bool, readHandFromReal);
+
+    HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
+    void get_poseView(arr& q) { q=q_reference; }
+  };
+
 
   //controller options
   FIELD(bool, fixFingers);
