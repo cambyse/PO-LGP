@@ -90,8 +90,7 @@ void testMultiClass(){
 void testCV(){
   
   struct myCV:public CrossValidation{
-    arr beta;
-    void  train(const arr& X, const arr& y,double param){
+    void  train(const arr& X, const arr& y, double param, arr& beta){
       ridgeRegression(beta, X,y,param);
 
       //arr y_pred = X*beta;
@@ -99,7 +98,7 @@ void testCV(){
       //gnuplot("plot 'data' us 2:3 w p,'data' us 2:4 w l");
       //MT::wait();
     };
-    double test(const arr& X, const arr& y){
+    double test(const arr& X, const arr& y, const arr& beta){
       arr y_pred = X*beta;
       return sumOfSqr(y_pred-y)/y.N;
     };
@@ -111,7 +110,7 @@ void testCV(){
   makeFeatures(Phi,X,X);
 
   //cv.crossValidate(Phi,y,0.,10);
-  cv.crossValidate(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
+  cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
   cv.plot();
   cout <<"10-fold CV: costMeans= " <<cv.scoreMeans <<" costSDVs= " <<cv.scoreSDVs <<endl;
   
