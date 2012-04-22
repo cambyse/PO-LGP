@@ -160,13 +160,12 @@ void ActionToMotionPrimitive::step() {
             s->aico->fix_final_state(xT);
           }*/
           s->aico->iterate_to_convergence();
-          cout << s->aico->cost << endl;
+          cout << s->aico->cost() << endl;
           motionPrimitive->writeAccess(this);
-          motionPrimitive->cost = s->aico->cost;
-          motionPrimitive->iterations_till_convergence = s->aico->iterations_till_convergence;
+          motionPrimitive->cost = s->aico->cost();
           motionPrimitive->deAccess(this);
 
-          q = s->aico->q;
+          q = s->aico->q();
           delete s->aico;
       } break;
       default:

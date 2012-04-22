@@ -2,7 +2,6 @@
 #include <views/views.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
-#include "../../src/views/views.h"
 
 struct ExampleVar:Variable{
   FIELD( int, i );

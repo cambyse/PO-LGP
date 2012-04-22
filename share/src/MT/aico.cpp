@@ -33,9 +33,11 @@ struct sAICO{
   
   enum SweepMode { smForwardly=0, smSymmetric, smLocalGaussNewton, smLocalGaussNewtonDamped };
   int sweepMode;
-  
+
+  //log/info
   MT::String filename;
   std::ostream *os;
+  uint iterations_till_convergence;
   
   //messages
   arr s, Sinv, v, Vinv, r, R, rhat; //!< fwd, bwd, and task messages
@@ -134,11 +136,11 @@ void AICO::prepare_for_changed_task(){
 }
 
 void AICO::iterate_to_convergence(){
-  iterations_till_convergence=0;
+  self->iterations_till_convergence=0;
   for(uint k=0; k<self->max_iterations; k++){
     double d=self->step();
     if(k && d<self->tolerance){
-      iterations_till_convergence=k+1;
+      self->iterations_till_convergence=k+1;
       break; //d*(1.+damping)
     }
   }
@@ -263,7 +265,6 @@ void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
   for(uint i=aicos.N; i--;){
     sys.scalePower=i;
     sys.stepScale=i;
-    double d;
     if(i+1<aicos.N) aicos(i).self->initMessagesFromScaleParent(aicos(i+1).self);
     aicos(i).iterate_to_convergence();
   }

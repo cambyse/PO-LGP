@@ -50,7 +50,7 @@ View *newView(Variable& var,uint fieldId){
   ViewInfo *v;
   MT::String type(var.fields(fieldId)->sysType);
   for_list(i,v,birosViews){
-    if(v->fieldType == type) break;
+    if(v->applicableOnType == type) break;
   }
   if(i==birosViews.N){
     MT_MSG("No View for field type '" <<type <<"' found");
@@ -68,7 +68,7 @@ void dumpViews(){
   cout <<" *** Views:" <<endl;
   for_list(i, v, birosViews){
     cout
-      <<"View '" <<v->name <<"' applies to fields of type '" <<v->fieldType <<"'" <<endl;
+      <<"View '" <<v->name <<"' applies to fields of type '" <<v->applicableOnType <<"'" <<endl;
   }
 }
 
@@ -150,7 +150,7 @@ void RgbView::gtkUpdate(){
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
 
-ViewInfo_typed<RgbView, byteA> RgbView::info("RgbView");
+ViewInfo_typed<RgbView, byteA> RgbView::info("RgbView", ViewInfo::fieldVT);
 
 //===========================================================================
 
@@ -163,7 +163,7 @@ void MeshView::glDraw() {
   ors::glDraw(*mesh);
 }
 
-ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView");
+ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT);
 
 //===========================================================================
 
@@ -176,4 +176,4 @@ void OrsView::glDraw() {
   ors::glDraw(*ors);
 }
 
-ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView");
+ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView", ViewInfo::fieldVT);
