@@ -1321,15 +1321,14 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   //check matrix stack
   GLint s;
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
-  //if(s!=1) MT_MSG("OpenGL matrix stack has not depth 1 (pushs>pops)");
-  CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
+  if(s!=1) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in DRAW mode:" <<s);
+  //CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
 #endif
 }
 
 void OpenGL::Select(){
 #ifdef MT_GL
-  uint i, k;
-  int j;
+  uint i, j, k;
   
   glSelectBuffer(1000, selectionBuffer);
   glRenderMode(GL_SELECT);
@@ -1359,8 +1358,9 @@ void OpenGL::Select(){
     for(i=0; i<drawers.N; i++) {
       glLoadName(i);
       (*drawers(i).call)(drawers(i).classP);
-      glGetIntegerv(GL_NAME_STACK_DEPTH, &j);
-      CHECK(j<=1, "OpenGL name stack has not depth 1 (pushs>pops)");
+      GLint s;
+      glGetIntegerv(GL_NAME_STACK_DEPTH, &s);
+      if(s!=1) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in SELECT mode:" <<s);
     }
   } else {
     GLView *vi=&views(mouseView);
