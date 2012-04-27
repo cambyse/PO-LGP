@@ -98,7 +98,7 @@ void ActionToMotionPrimitive::step() {
     frame0->get_x_estimate(x0, this);
     CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
-    cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<frame0->frameCount <<' ' <<frame1->frameCount <<' ' <<motionPrimitive->frameCount <<endl;
+    //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<frame0->frameCount <<' ' <<frame1->frameCount <<' ' <<motionPrimitive->frameCount <<endl;
 
     //-- estimate the keyframe
     arr xT;
@@ -147,16 +147,17 @@ void ActionToMotionPrimitive::step() {
           if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
           if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
 
-          //if(!s->aico){
+	  if(!s->aico){
             s->aico = new AICO(s->sys);
             s->aico->fix_initial_state(x0);
             s->aico->fix_final_state(xT);
 	    interpolate_trajectory(q,x0,xT,T);
 	    s->aico->init_trajectory(q);
-          /*} else { //we've been optimizing this before!!
-                  s->aico->fix_initial_state(x0);
+          } else { //we've been optimizing this before!!
+            s->aico->fix_initial_state(x0);
             s->aico->fix_final_state(xT);
-          }*/
+	    s->aico->prepare_for_changed_task();
+          }
           s->aico->iterate_to_convergence();
           cout << s->aico->cost() << endl;
           motionPrimitive->writeAccess(this);
@@ -164,7 +165,7 @@ void ActionToMotionPrimitive::step() {
           motionPrimitive->deAccess(this);
 
           q = s->aico->q();
-          delete s->aico;
+	  //delete s->aico;
       } break;
       default:
       HALT("no mode set!");

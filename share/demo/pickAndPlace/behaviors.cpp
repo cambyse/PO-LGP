@@ -224,13 +224,13 @@ void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, con
 
   _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
   
-  waitForSmallMotionQueue(_MotionFuture, 1);
-  waitForEmptyQueue(_MotionFuture);
+  //waitForSmallMotionQueue(_MotionFuture, 1);
+  //waitForEmptyQueue(_MotionFuture);
   
   if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NULL);
   if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NULL);
   
-  waitForEmptyQueue(_MotionFuture);
+  //waitForEmptyQueue(_MotionFuture);
 }
 
 void plannedHoming(const char* objShape, const char* belowToShape){

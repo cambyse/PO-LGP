@@ -23,7 +23,7 @@ void ActionProgressor::open(){
 }
 
 void ActionProgressor::step(){
-#if 0
+#if 1
   if(s->motionFuture->getTodoFrames(this) == 0) return;
   MotionPrimitive *motionPrimitive = s->motionFuture->getCurrentMotionPrimitive(this);
   Action *action = s->motionFuture->getCurrentAction(this);
@@ -64,21 +64,12 @@ void ActionProgressor::step(){
   arr x0 =  _HardwareReference->get_q_reference(this);
   x0.append(_HardwareReference->get_v_reference(this));
   x0.subRange(x0.N/2,-1) = 0.;
-  cout <<"0-state! in motion progressor\n" <<x0 <<"\n ...frame=" <<f->currentFrame <<endl;
+  //cout <<"0-state! in motion progressor\n" <<x0 <<"\n ...frame=" <<f->currentFrame <<endl;
   f->frames(f->currentFrame)->set_x_estimate(x0, this);
   //f->frames(f->currentFrame)->set_converged(true, this);
-  //f->frames(f->currentFrame+1)->set_converged(false, this);
+  f->frames(f->currentFrame+1)->set_converged(false, this);
   f->motions(f->currentFrame)->set_planConverged(false, this);
   
-  if(f->actions(f->currentFrame)->action == Action::place){
-    /*
-    Process *p = new PoseViewer<MotionKeyframe> (*f->frames(f->currentFrame));
-    p->threadLoopWithBeat(.01);
-    PoseViewer<MotionPrimitive> *view = new PoseViewer<MotionPrimitive>(*f->motions(f->currentFrame));
-    view -> threadLoopWithBeat(.01);
-    MT::wait(10.);
-    */
-  }
   f->deAccess(this);
 #endif
 }

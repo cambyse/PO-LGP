@@ -41,7 +41,7 @@ void waitForDoneMotionPrimitive2(MotionPrimitive *motionPrimitive){
 
 void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p){
   
-#if 0 //this is the version that should actually work - but has problems with the optimization
+#if 1 //this is the version that should actually work - but has problems with the optimization
   writeAccess(p);
   //check if at least 1 keyframe exists
   if (!frames.N){
