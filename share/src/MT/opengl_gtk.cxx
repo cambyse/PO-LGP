@@ -45,6 +45,8 @@ struct sOpenGL{
   sOpenGL(OpenGL *_gl, const char* title, int w,int h,int posx,int posy);
   sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
+  void init(OpenGL *gl, void *container);
+  
   
   GtkWidget *win;
   GtkWidget *glArea;
@@ -113,49 +115,20 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
     UNLOCK
   }
 
-  LOCK
   win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(win), title);
   gtk_window_set_default_size(GTK_WINDOW(win), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(win), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(win));
   
-  glArea = gtk_drawing_area_new();
-  g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
-    
-  GdkGLConfig *glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
-  GDK_GL_MODE_DEPTH |
-  GDK_GL_MODE_DOUBLE));
-    
-  gtk_widget_set_gl_capability(glArea,
-                               glconfig,
-                               NULL,
-                               TRUE,
-                               GDK_GL_RGBA_TYPE);
-                               
-  gtk_widget_set_events(glArea,
-                        GDK_EXPOSURE_MASK|
-                        GDK_BUTTON_PRESS_MASK|
-                        GDK_BUTTON_RELEASE_MASK|
-                        GDK_POINTER_MOTION_MASK);
-                                                       
-  g_signal_connect(G_OBJECT(glArea), "expose_event",        G_CALLBACK(expose), NULL);
-  g_signal_connect(G_OBJECT(glArea), "motion_notify_event", G_CALLBACK(motion_notify), NULL);
-  g_signal_connect(G_OBJECT(glArea), "button_press_event",  G_CALLBACK(button_press), NULL);
-  g_signal_connect(G_OBJECT(glArea), "button_release_event",G_CALLBACK(button_release), NULL);
-  g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
-  //  g_signal_connect(G_OBJECT(glArea), "key_press_event",     G_CALLBACK(key_press_event), NULL);
-  
-  g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
-  //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
-  
-  gtk_container_add(GTK_CONTAINER(win), glArea);
-  gtk_widget_show(win);
-  gtk_widget_show(glArea);
-  UNLOCK
+  init(gl,win);
 }
 
 sOpenGL::sOpenGL(OpenGL *gl, void *container){
+  init(gl,container);
+}
+
+void sOpenGL::init(OpenGL *gl, void *container){
   win = GTK_WIDGET(container);
   
   LOCK
@@ -219,7 +192,13 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
   
   GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
   Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
-  glXMakeCurrent(display, None, NULL);
+  //glXMakeCurrent(display, None, NULL);
+  /*somehow this leads to the stack error and Select won't work
+    perhaps solution: write proper switchThread routine; before
+    entering code check if you need to switch the thread; only then
+    release the context; check if you're not in the middle of
+    something (mutex...) */
+
   
   unlock();
   return true;

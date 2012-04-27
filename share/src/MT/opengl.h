@@ -169,7 +169,7 @@ struct OpenGL {
   struct GLKeyCall  { virtual bool keyCallback(OpenGL&) = 0; };
   struct GLEvent    { int button, key, x, y; float dx, dy; void set(int b, int k, int _x, int _y, float _dx, float _dy) { button=b; key=k; x=_x; y=_y; dx=_dx; dy=_dy; } };
   struct GLSelect   { int name; double dmin, dmax, x,y,z; };
-  struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String txt;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
+  struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String text;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
   MT::Array<GLView> views;             //!< list of draw routines
@@ -179,7 +179,7 @@ struct OpenGL {
   MT::Array<GLClickCall*> clickCalls;   //!< list of click callbacks
   MT::Array<GLKeyCall*> keyCalls;   //!< list of click callbacks
   ors::Camera camera; //!< the camera used for projection
-  String text;        //!< the text to be drawn as title within the opengl frame
+  MT::String text;        //!< the text to be drawn as title within the opengl frame
   float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
   bool reportEvents, reportSelects;    //!< flags for verbosity
   int pressedkey;           //!< stores the key pressed

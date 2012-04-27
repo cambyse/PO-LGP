@@ -330,7 +330,7 @@ void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_L
 void glPopLight() { if(glLightIsOn) glEnable(GL_LIGHTING); }
 
 void glDrawText(const char* txt, float x, float y, float z) {
-#if defined __glut_h__ || (defined __FREEGLUT_H__ && !defined MT_Cygwin)
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK // && !defined MT_QTGLUT
   glPushLightOff();
   glRasterPos3f(x, y, z);
   void *font=GLUT_BITMAP_HELVETICA_12;
@@ -1278,13 +1278,13 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   
   //draw text
   if(text.N) {
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glOrtho(0., (double)w, (double)h, .0, -1., 1.);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glOrtho(0., (double)w, (double)h, .0, -1., 1.);
     glDrawText(text, 10, 20, 0);
+    glLoadIdentity();
   }
   
   //draw subviews
@@ -1302,19 +1302,21 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
     }
     vi->camera.glSetProjectionMatrix();
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
     if(drawFocus) {
       glColor(1., .7, .3);
       double size = .005 * (camera.X->pos-*camera.foc).length();
       glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
     }
     for(uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
-    if(vi->txt.N) {
+    if(vi->text.N) {
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
+      if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
-      if(clearR+clearG+clearB>1.) glColor(0.0, 0.0, 0.0, 1.0); else glColor(1.0, 1.0, 1.0, 1.0);
-      glDrawText(vi->txt, -1., 1., 0.);
+      //glOrtho(0., (vi->ri-vi->le)*w, (vi->to-vi->bo)*h, .0, -1., 1.);
+      glDrawText(vi->text, -.95, .85, 0.);
     }
   }
   
@@ -1360,7 +1362,7 @@ void OpenGL::Select(){
       (*drawers(i).call)(drawers(i).classP);
       GLint s;
       glGetIntegerv(GL_NAME_STACK_DEPTH, &s);
-      if(s!=1) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in SELECT mode:" <<s);
+      if(s!=0) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in SELECT mode:" <<s);
     }
   } else {
     GLView *vi=&views(mouseView);
