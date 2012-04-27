@@ -71,7 +71,7 @@ int main(int argn,char** argv){
   ProcessL PV;
   PV.append(LIST<Process>(view0));
   //PV.append(LIST<Process>(view));
-  //PV.append(LIST<Process>(view8));
+  PV.append(LIST<Process>(view8));
   //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
   
   //step(PV);

@@ -69,7 +69,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
   aico.init_messages();
-  //aico.init_trajectory(q);
+  aico.init_trajectory(q);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
   sys.analyzeTrajectory(aico.b(),true);

@@ -140,11 +140,7 @@ void ActionToMotionPrimitive::step() {
     arr q;
     switch (s->planningAlgo) {
       case sActionToMotionPrimitive::interpolation: {
-        q.resize(T+1,x0.N);
-        for (uint t=0; t<=T; t++) {
-          double a=double(t)/T;
-          q[t] = (1.-a)*x0 + a*xT;
-        }
+	interpolate_trajectory(q,x0,xT,T);
       } break;
       case sActionToMotionPrimitive::AICO_noinit: {
           //enforce zero velocity start/end vel
@@ -155,6 +151,8 @@ void ActionToMotionPrimitive::step() {
             s->aico = new AICO(s->sys);
             s->aico->fix_initial_state(x0);
             s->aico->fix_final_state(xT);
+	    interpolate_trajectory(q,x0,xT,T);
+	    s->aico->init_trajectory(q);
           /*} else { //we've been optimizing this before!!
                   s->aico->fix_initial_state(x0);
             s->aico->fix_final_state(xT);
@@ -672,3 +670,11 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
   return cost;
 }
 
+
+void interpolate_trajectory(arr &q, const arr& q0, const arr& qT, uint T){
+  q.resize(T+1,q0.N);
+  for (uint t=0; t<=T; t++) {
+    double a=double(t)/T;
+    q[t] = (1.-a)*q0 + a*qT;
+  }
+}
