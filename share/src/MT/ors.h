@@ -203,10 +203,10 @@ struct Mesh {
   void setTetrahedron();
   void setOctahedron();
   void setDodecahedron();
-  void setSphere(uint fineness=4);
-  void setHalfSphere(uint fineness=4);
-  void setCylinder(double r, double l, uint fineness=4);
-  void setCappedCylinder(double r, double l, uint fineness=4);
+  void setSphere(uint fineness=3);
+  void setHalfSphere(uint fineness=3);
+  void setCylinder(double r, double l, uint fineness=3);
+  void setCappedCylinder(double r, double l, uint fineness=3);
   void setGrid(uint X, uint Y);
   void setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res);
   
@@ -500,6 +500,7 @@ struct Graph {
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void writePlyFile(const char* filename) const;
 };
 #endif
 }

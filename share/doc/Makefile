@@ -46,4 +46,4 @@ html::
 
 
 clean::
-	rm -Rf guide html HTML *.log *.aux *.out *.toc *.blg guide.dvi
+	rm -Rf guide html HTML *_doc *.log *.aux *.out *.toc *.blg guide.dvi

@@ -18,12 +18,13 @@ void testLinReg(){
   ridgeRegression(beta, Phi, y, MT::getParameter<double>("ridge",1e-10));
   cout <<"estimated beta = "<< beta <<endl;
 
+  write(LIST(X, y), "z.train");
+
   arr X_test,y_test;
   X_test.setGrid(X.d1,-3,3,100);
   makeFeatures(Phi,X_test,X);
   y_test = Phi*beta;
 
-  write(LIST(X, y), "z.train");
   write(LIST(X_test, y_test), "z.model");
   gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l","z.pdf",true);
   //MT::wait();

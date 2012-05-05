@@ -1195,23 +1195,11 @@ void ors::Mesh::setCylinder(double r, double l, uint fineness) {
 }
 
 void ors::Mesh::setCappedCylinder(double r, double l, uint fineness) {
-#if 0
-  setCylinder(m, r, l, fineness);
-  ors::Mesh cap;
-  setHalfSphere(cap, fineness);
-  scale(cap, -r, r, r);
-  MeshTranslate(cap, 0, 0, .5*l);
-  MeshAddMesh(m, cap);
-  scale(cap, -1, 1, -1);
-  MeshAddMesh(m, cap);
-  fuseNearVertices(1e-5);
-#else
   uint i;
   setSphere(fineness);
   scale(r, r, r);
   for(i=0; i<V.d0; i++) if(V(i, 2)>0.) V(i, 2)+=l;
   translate(0, 0, -.5*l);
-#endif
 }
 
 /*!\brief add triangles according to the given grid; grid has to be a 2D
@@ -3760,6 +3748,56 @@ void ors::Graph::read(std::istream& is) {
   graphMakeLists(bodies, joints);
 }
 
+void ors::Graph::writePlyFile(const char* filename) const{
+  ofstream os;
+  MT::open(os, filename);
+  uint nT=0,nV=0;
+  uint i,j;
+  ors::Shape *s;
+  ors::Mesh *m;
+  for_list(i,s,shapes){ nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
+  
+  os <<"\
+ply\n\
+format ascii 1.0\n\
+element vertex " <<nV <<"\n\
+property float x\n\
+property float y\n\
+property float z\n\
+property uchar red\n\
+property uchar green\n\
+property uchar blue\n\
+element face " <<nT <<"\n\
+property list uchar int vertex_index\n\
+end_header\n";
+
+  uint k=0;
+  ors::Transformation t;
+  ors::Vector v;
+  for_list(i,s,shapes){
+    m = &s->mesh;
+    t = s->X;
+    if(m->C.d0!=m->V.d0){
+      m->C.resizeAs(m->V);
+      for(j=0; j<m->C.d0; j++) { m->C(j, 0)=s->color[0]; m->C(j, 1)=s->color[1]; m->C(j, 2)=s->color[2]; }
+    }
+    for(j=0; j<m->V.d0; j++) {
+      v.set(m->V(j, 0), m->V(j, 1), m->V(j, 2));
+      v = t*v;
+      os <<' ' <<v(0) <<' ' <<v(1) <<' ' <<v(2)
+         <<' ' <<int(255.f*m->C(j, 0)) <<' ' <<int(255.f*m->C(j, 1)) <<' ' <<int(255.f*m->C(j, 2)) <<endl;
+    }
+    k+=j;
+  }
+  uint offset=0;
+  for_list(i,s,shapes){
+    m=&s->mesh;
+    for(j=0; j<m->T.d0; j++) {
+      os <<"3 " <<offset+m->T(j, 0) <<' ' <<offset+m->T(j, 1) <<' ' <<offset+m->T(j, 2) <<endl;
+    }
+    offset+=m->V.d0;
+  }
+}
 
 //! dump the list of current proximities on the screen
 void ors::Graph::reportProxies(std::ostream *os) {
