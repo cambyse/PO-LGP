@@ -74,21 +74,6 @@ struct MotionPrimitive:Variable {
   //in case of feedback
   FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
 
-  /** \brief The HardwareReference is the interface to motors, containing the reference pose for the motor controllers and
-   * their return values (q_real). */
-  struct HardwareReference:Variable {
-    FIELD(arr, q_reference);
-    FIELD(arr, v_reference);
-    FIELD(arr, q_real);
-    FIELD(double, hardwareRealTime);
-
-    FIELD(bool, readHandFromReal);
-
-    HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
-    void get_poseView(arr& q) { q=q_reference; }
-  };
-
-
   //controller options
   FIELD(bool, fixFingers);
   FIELD(bool, forceColLimTVs);
