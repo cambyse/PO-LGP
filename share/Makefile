@@ -36,12 +36,12 @@ clean/%::
 tests::
 	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
 
-projects::
-	-@find proj_* -maxdepth 1 -follow -type d -not -name 'proj_*' -not -name 'SHARE' -exec make -C {} \;
+demo::
+	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec make -C {} \;
 
 cleanProjects::
 	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
-	-@find proj_* -maxdepth 1 -follow -type d -not -name 'robot' -not -name 'SHARE' -exec make -C {} clean \;
+	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::
 	make -C doc guide doxy

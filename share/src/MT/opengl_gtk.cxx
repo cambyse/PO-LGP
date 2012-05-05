@@ -190,8 +190,8 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
   gdk_gl_drawable_gl_end(gldrawable);
   
-  GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
-  Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
+  //GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
+  //Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
   //glXMakeCurrent(display, None, NULL);
   /*somehow this leads to the stack error and Select won't work
     perhaps solution: write proper switchThread routine; before

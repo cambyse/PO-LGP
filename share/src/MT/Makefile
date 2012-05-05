@@ -8,11 +8,10 @@ MAKEMODE = mlrlib
 #if in doubt, you actually want to change make-config!
 #otherwise ask Marc
 
-buildAndLink_NIKOLAY = 1
-buildAndLink_DMITRY = 1
-buildAndLink_STANIMIR = 1
+BUILDS += buildComponent/NJ buildComponent/DZ buildComponent/SD
+LIBS += -lNJ -lDZ -lSD
 
-OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
+OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)
 
 include $(BASE)/make-generic

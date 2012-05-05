@@ -68,23 +68,23 @@ template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
 //template class MT::Array<MT::Array<uint> >;
 //full classes & numerical routines
 #define T double
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define NOFLOAT
 #define T float
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T uint
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T uint16
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T int
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T byte
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #undef NOFLOAT
 

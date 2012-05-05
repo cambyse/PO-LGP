@@ -505,7 +505,7 @@ void gnuplotClose();
 //
 
 #if defined MT_IMPLEMENTATION | defined MT_IMPLEMENT_TEMPLATES
-#  include "util_t.cpp"
+#  include "util_t.cxx"
 #endif
 
 #ifdef  MT_IMPLEMENTATION

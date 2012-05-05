@@ -346,7 +346,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
     uint *evals;
     void fv(arr& y, arr& J, const arr& x) {
       arr yij,Ji,Jj;
-      f->fvi(y, J, t, x);  *evals++;
+      f->fvi(y, J, t, x);  (*evals)++;
       if(t>0) {
         f->fvij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t-1, t, x_ref[t-1], x);
         y.append(yij);
