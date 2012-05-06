@@ -47,7 +47,7 @@ void makeFeatures(arr& Phi, const arr& X, const arr& Xtrain, FeatureType feature
 //
 
 extern arr beta_true;
-enum ArtificialDataType { readFromCfgFileDT=0, linearData, sinusData, linearOutlier };
+enum ArtificialDataType { readFromCfgFileDT=0, linearData, sinusData, linearOutlier, linearRedundantData };
 
 void artificialData(arr& X, arr& y, ArtificialDataType dataType=readFromCfgFileDT);
 void artificialData_Hasties2Class(arr& X, arr& y);

@@ -126,16 +126,6 @@ RV_Manager::RV_Manager(const PredL& preds, const FuncL& funcs, const uintA& cons
 }
 
 
-inline uint getIndex(const uintA& constants, const uintA& args) {
-  uint args_idx=0;
-  uint i;
-  FOR1D(args, i) {
-    args_idx += ((uint) pow(constants.N, i)) * constants.findValue(args(i));
-  }
-//   cout<<"getIndex: constants="<<constants<<"  args="<<args<<"    args_idx="<<args_idx<<endl;
-  return args_idx;
-}
-
 PredicateRV* RV_Manager::l2v(TL::Literal* lit) const {
   int preds_idx = preds.findValue(lit->atom->pred);
   if (preds_idx<0) {

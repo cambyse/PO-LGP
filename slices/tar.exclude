@@ -11,7 +11,6 @@ PROJ
 .git
 *.kdev4
 *solution*
-course/*/main.cpp
 *ODE_0.11/ode-0.11
 *ODE_0.11/include
 *ODE_0.11/lib

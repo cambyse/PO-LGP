@@ -207,7 +207,33 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
     glColor(0, 0, .5);
     glDrawSphere(.1*scale);
   }
-  if(orsDrawShapes) switch(s->type) {
+  if(orsDrawShapes){
+    if(orsDrawMeshes && !s->mesh.V.N){
+      switch(s->type) {
+      case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
+      case ors::boxST:
+        s->mesh.setBox();
+        s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+        break;
+      case ors::sphereST:
+        s->mesh.setSphere();
+        s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+        break;
+      case ors::cylinderST:
+        s->mesh.setCylinder(s->size[3], s->size[2]);
+        break;
+      case ors::cappedCylinderST:
+        s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+        break;
+      case ors::markerST:
+	break;
+      case ors::meshST:
+      case ors::pointCloudST:
+        CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
+	break;
+      }
+    }
+    switch(s->type) {
       case ors::noneST: break;
       case ors::boxST:
         if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
@@ -226,8 +252,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
-        else { glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); }
+	glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -239,6 +264,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
         break;
       default: HALT("can't draw that geom yet");
     }
+  }
   if(orsDrawZlines) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
@@ -518,6 +544,7 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::Graph *ors;
   EditConfigurationHoverCall(ors::Graph& _ors) { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
+    if(!movingBody) return false;
     if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
@@ -608,6 +635,7 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
         case '4':  orsDrawProxies^=1;  break;
         case '5':  gl.reportSelects^=1;  break;
         case '6':  gl.reportEvents^=1;  break;
+        case '7':  C.writePlyFile("z.ply");  break;
         case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;

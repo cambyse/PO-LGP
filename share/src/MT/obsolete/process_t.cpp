@@ -1,3 +1,5 @@
+#include "process.h"
+
 template<class T> Link<T>::Link(Process *_p){
   p = _p;
   last_revision = 0;

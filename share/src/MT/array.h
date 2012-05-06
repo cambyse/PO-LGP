@@ -776,7 +776,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 //
 
 #if defined MT_IMPLEMENT_TEMPLATES | defined MT_IMPLEMENTATION
-#  include "array_t.cpp"
+#  include "array_t.cxx"
 #endif
 
 #ifdef  MT_IMPLEMENTATION

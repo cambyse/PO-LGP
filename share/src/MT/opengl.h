@@ -45,7 +45,7 @@
 
 #include "util.h"
 #include "array.h"
-#include "array_t.cpp"
+#include "array_t.cxx"
 
 
 //===========================================================================

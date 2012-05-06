@@ -346,7 +346,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
     uint *evals;
     void fv(arr& y, arr& J, const arr& x) {
       arr yij,Ji,Jj;
-      f->fvi(y, J, t, x);  *evals++;
+      f->fvi(y, J, t, x);  (*evals)++;
       if(t>0) {
         f->fvij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t-1, t, x_ref[t-1], x);
         y.append(yij);
@@ -903,7 +903,7 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
       lastGrad(i) = grad.elem(i);                    //memorize gradient
     } else if(grad.elem(i) * lastGrad(i) < 0) { //change of direction
       stepSize(i) = _mymax(dMin, decr * stepSize(i)); //decrease step size
-      w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction
+      w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction (undo half the step)
       lastGrad(i) = 0;                               //memorize to continue below next time
     } else {                              //after change of direcion
       w.elem(i) += stepSize(i) * -_sgn(grad.elem(i)); //step in right direction

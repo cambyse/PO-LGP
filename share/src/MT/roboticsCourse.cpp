@@ -442,5 +442,5 @@ void glDrawCarSimulator(void *classP){
 #endif
 }
 
-#include "array_t.cpp"
+#include "array_t.cxx"
 template MT::Array<Gaussian>& MT::Array<Gaussian>::resize(uint);

@@ -308,12 +308,17 @@ void artificialData(arr& X, arr& y, ArtificialDataType dataType) {
   
   if(dataType==readFromCfgFileDT) dataType = (ArtificialDataType)MT::getParameter<uint>("dataType", 1);
   switch(dataType) {
+    case linearRedundantData:
     case linearData: {
       X = randn(n, d);
       arr Z;
       makeFeatures(Z, X, X, (FeatureType)MT::getParameter<uint>("dataFeatureType", 1));
       arr beta;
       beta = randn(Z.d1, 1).reshape(Z.d1);
+      if(dataType==linearRedundantData){
+	double pr = MT::getParameter<double>("d_p_redundant", .5);
+	for(uint j=1;j<beta.N;j++) if(rnd.uni()<pr) beta(j)=0.;
+      }
       y = Z*beta;
       y = y + sigma*randn(size(y));
       beta_true = beta;
@@ -344,6 +349,7 @@ void artificialData(arr& X, arr& y, ArtificialDataType dataType) {
     }
     default: HALT("");
   }
+  cout <<"correct beta=" <<beta_true <<endl;
 }
 
 void artificialData_Hasties2Class(arr& X, arr& y) {

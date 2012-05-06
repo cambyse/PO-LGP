@@ -22,7 +22,9 @@
 #  define Array MT::Array
 #endif
 
-#define CHECK_EPS 1e-6
+#ifndef CHECK_EPS
+#  define CHECK_EPS 1e-6
+#endif
 
 //===========================================================================
 //
