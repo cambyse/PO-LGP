@@ -27,7 +27,7 @@ namespace ors {
 
 //===========================================================================
 //! shape and joint type enums
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
+  enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, cylinderST, meshST, pointCloudST, markerST };
 enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
 
 //===========================================================================

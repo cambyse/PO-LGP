@@ -1656,6 +1656,14 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   postRedrawEvent();
 }
 
+void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {
+  CALLBACK_DEBUG(printf("Window %d Mouse Wheel Callback:  %d %d %d %d\n", 0, wheel, direction, x, y));
+  if(direction>0) camera.X->pos += camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
+  else            camera.X->pos -= camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
+  postRedrawEvent();
+}
+
+
 void OpenGL::Motion(int _x, int _y) {
 #ifdef MT_GL
   int w=width(), h=height();
@@ -1723,8 +1731,6 @@ void OpenGL::Motion(int _x, int _y) {
   NICO;
 #endif
 }
-
-void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {}
 
 //===========================================================================
 //

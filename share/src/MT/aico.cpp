@@ -422,6 +422,26 @@ void sAICO::unrollXhatFwd(uint t){
   }
 }
 
+#if 0
+void sAICO::unrollXhatBwd(uint t){
+  CHECK(t>0, "don't update fwd for first time step");
+  arr Vt;
+  if(sys->dynamic){
+    Vt = Q[t];
+    Vt += B[t]*Hinv[t]*tB[t];
+    v[t] = a[t-1] + A[t-1]*xhat[t-1];
+    Vt = Ainv[t]*Vt*invtA[t];
+    v[t] = Ainv[t]*(-a[t] + xhat[t+1]barV*(Vinv[t+1]*v[t+1] + r[t+1]));
+    inverse_SymPosDef(Vinv[t](), Vt);
+    
+    updateBelief(t);
+    xhat[t]() = b[t];
+  }else{
+    NIY
+  }
+}
+#endif
+
 void sAICO::updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
   uint T=sys->nTime();
   if(updateFwd) updateFwdMessage(t);
@@ -596,8 +616,17 @@ double sAICO::step(){
     //NOTE: the dependence on (sweep?..:..) could perhaps be replaced by (dampingReference.N?..:..)
     //updateTimeStep(uint t, bool updateFwd, bool updateBwd, uint maxRelocationIterations, bool forceRelocation){
     case smForwardly:
+#if 1
       for(t=1; t<=T; t++) updateTimeStep(t, true, false, (sweep?0:1), (cost<0.));
       for(t=T+1; t--;)    updateTimeStep(t, false, true, 1, (true));
+#else
+      for(t=1; t<=T; t++) updateFwdMessage(t);
+      if(cost<0.) for(t=0; t<=T; t++) updateTaskMessage(t, b[t]());
+      for(t=T+1; t--;) if(!(fixFinalState && t==T)) updateBwdMessage(t);
+      for(t=0; t<=T; t++) updateBelief(t);
+      for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
+      for(t=0; t<=T; t++) updateBelief(t);
+#endif
       break;
     case smSymmetric:
       for(t=1; t<=T; t++) updateTimeStep(t, true, false, 1, (cost<0.));

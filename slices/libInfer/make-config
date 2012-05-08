@@ -1,5 +1,3 @@
-#CXXFLAGS += -DMT_IMPLEMENTATION
-
-ifndef NAME
-LIBS += -lInfer
+ifneq ($(NAME),libInfer)
+  LIBS += -lInfer
 endif

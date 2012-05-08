@@ -186,7 +186,7 @@ void ors::glDrawGraph(void *classP) {
   ors::glDraw(*((ors::Graph*)classP));
 }
 
-void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
+void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
@@ -196,10 +196,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
   scale*=.3;
   
   double GLmatrix[16];
-  ors::Transformation f;
-  f = X;
-  f.appendTransformation(s->rel);
-  f.getAffineMatrixGL(GLmatrix);
+  s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
   
   if(!orsDrawShapes) {
@@ -269,11 +266,11 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
-    glVertex3d(0., 0., -f.pos(2));
+    glVertex3d(0., 0., -s->X.pos(2));
     glEnd();
   }
   if(!s->contactOrientation.isZero()) {
-    X.getAffineMatrixGL(GLmatrix);
+    s->X.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
     glColor(0, .7, 0);
     glBegin(GL_LINES);
@@ -286,7 +283,6 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X) {
 
 //! GL routine to draw a ors::Graph
 void ors::glDraw(Graph& C) {
-  ors::Body *n;
   ors::Joint *e;
   ors::Shape *s;
   ors::Proxy *proxy;
@@ -297,8 +293,8 @@ void ors::glDraw(Graph& C) {
   glPushMatrix();
   
   //bodies
-  if(orsDrawBodies) for_list(j, n, C.bodies) {
-    for_list(k, s, n->shapes) glDrawShape(s, n->X);
+  if(orsDrawBodies) for_list(k, s, C.shapes){
+    glDrawShape(s);
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }

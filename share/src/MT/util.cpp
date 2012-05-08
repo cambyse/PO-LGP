@@ -671,7 +671,7 @@ MT::String& MT::String::clearStream() { std::iostream::clear(); return *this; }
 MT::String& MT::String::resetIstream() { buffer.setIpos(p); clearStream(); return *this; }
 
 //! writes the string into some ostream
-void MT::String::write(std::ostream& os) const { os <<p; }
+void MT::String::write(std::ostream& os) const { if(N) os <<p; }
 
 /*!\brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */

@@ -81,15 +81,19 @@ void testRobotSystem(bool testFeedbackControl=false){
   for(uint k=0;k<10;k++){
     pos->y_target(2) += .1;
     pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
-    AICO aic(sys);
     aico.prepare_for_changed_task();
-    aic.iterate_to_convergence();
     aico.iterate_to_convergence();
     q = aico.q();
-    sys.analyzeTrajectory(aic.b(),true);
-    sys.displayTrajectory(aic.q(),NULL,1,"AIC (planned trajectory)");
     sys.analyzeTrajectory(aico.b(),true);
-    sys.displayTrajectory(aico.q(),NULL,1,"AICO (planned trajectory)");
+    sys.displayTrajectory(aico.q(),NULL,1,"AICO_replanned (planned trajectory)");
+    //from scratch
+    arr qalt;
+    AICO aic(sys);
+    soc::straightTaskTrajectory(sys, qalt, 0);
+    aico.init_trajectory(qalt);
+    aic.iterate_to_convergence();
+    sys.analyzeTrajectory(aic.b(),true);
+    sys.displayTrajectory(aic.q(),NULL,1,"AICO (planned trajectory)");
   }
 }
 

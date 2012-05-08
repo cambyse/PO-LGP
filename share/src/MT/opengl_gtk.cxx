@@ -59,6 +59,7 @@ struct sOpenGL{
   static bool motion_notify(GtkWidget *widget, GdkEventMotion *event);
   static bool button_press(GtkWidget *widget, GdkEventButton *event);
   static bool button_release(GtkWidget *widget, GdkEventButton *event);
+  static bool scroll_event(GtkWidget *widget, GdkEventScroll *event);
   static bool key_press_event(GtkWidget *widget, GdkEventKey *event);
   static void destroy(GtkWidget *widget);
   static bool size_allocate_event(GtkWidget *widget, GdkRectangle *allocation);
@@ -155,6 +156,7 @@ void sOpenGL::init(OpenGL *gl, void *container){
   g_signal_connect(G_OBJECT(glArea), "motion_notify_event", G_CALLBACK(motion_notify), NULL);
   g_signal_connect(G_OBJECT(glArea), "button_press_event",  G_CALLBACK(button_press), NULL);
   g_signal_connect(G_OBJECT(glArea), "button_release_event",G_CALLBACK(button_release), NULL);
+  g_signal_connect(G_OBJECT(glArea), "scroll_event",        G_CALLBACK(scroll_event), NULL);
   g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
   g_signal_connect(G_OBJECT(glArea), "size_allocate",       G_CALLBACK(size_allocate_event), NULL);
   
@@ -225,6 +227,12 @@ bool sOpenGL::button_release(GtkWidget *widget, GdkEventButton *event) {
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Mouse(event->button-1, true, event->x, event->y);
   unlock();
+  return true;
+}
+
+bool sOpenGL::scroll_event(GtkWidget *widget, GdkEventScroll *event){
+  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
+  gl->MouseWheel(0, event->direction, event->x, event->y);
   return true;
 }
 
