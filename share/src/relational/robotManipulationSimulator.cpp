@@ -810,7 +810,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 #  ifdef MT_ODE
 	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "move to position "<< pos;
   }
   
