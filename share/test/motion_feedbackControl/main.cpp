@@ -34,9 +34,9 @@ int main(int argn, char** argv){
   Controller controller;
 
   // viewers
-  PoseViewer<HardwareReference> view(hardwareReference, geometricState);
+  PoseViewer<HardwareReference> view(hardwareReference);
   
-  ProcessL P=LIST<Process>(controller, view);
+  ProcessL P=LIST<Process>(controller/*, view*/);
 
   MyTask myTask;
   controllerTask.writeAccess(NULL);
@@ -48,10 +48,10 @@ int main(int argn, char** argv){
   uint mode=MT::getParameter<uint>("mode", 1);
   if(mode==0){
     controller.open();
-    view.open();
+//  view.open();
     for(;;){
       controller.step();
-      view.step();
+//    view.step(); the view is automatially opened as thread and stepsOnListen...
       MT::wait();
     }
   }

@@ -2,13 +2,13 @@
 
 void Element::write(std::ostream& os) const {
   uint i;  Element *e;
-  if(type.N()) os <<type <<' ';
-  if(name.N()) os <<name <<' '; else os <<id <<' ';
+  if(type.N) os <<type <<' ';
+  if(name.N) os <<name <<' '; else os <<id <<' ';
   if(links.N){
     os <<" (";
     for_list(i, e, links){
       if(i) os <<' ';
-      if(e->name.N()) os <<e->name; else os <<e->id;
+      if(e->name.N) os <<e->name; else os <<e->id;
     }
     os <<") ";
   }
@@ -29,7 +29,7 @@ void Element::read(std::istream& is, ElementL& list){
     MT::parse(is, "(");
     for(j=0;; j++){
       link.read(is, " , ", " , )", false);
-      if(!link.N()) break;
+      if(!link.N) break;
       e=listFindByName(list, link);
       if(e){ //sucessfully found
         links.append(e);
@@ -39,7 +39,7 @@ void Element::read(std::istream& is, ElementL& list){
         HALT("line:" <<MT::lineCount <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
         //check if this is a derived element (notationally: new_name = old_name+'one_char')
         MT::String sublink;
-        sublink.set(link.p, link.N()-1);
+        sublink.set(link.p, link.N-1);
         for_list(i, e, list) if(e->name==sublink) break;
         if(i<list.N){//sucessfully found
           //create new element with same type and attributes, but extended name!!

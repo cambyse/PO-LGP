@@ -3,7 +3,7 @@
 //===========================================================================
 
 /// $f(x) = x^T C x$ where C has eigen values ranging from 1 to 'condition'
-struct SquaredCost:public ScalarFunction,VectorFunction{
+struct SquaredCost:public ScalarFunction,VectorFunction {
   arr M,C; /// $C = M^T M $
   uint n;  /// dimensionality of $x$
   
@@ -17,7 +17,7 @@ struct SquaredCost:public ScalarFunction,VectorFunction{
 //===========================================================================
 
 /// Same as SquaredCost but $x_i \gets atan(x_i)$ before evaluating the squared cost
-struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction{
+struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction {
   uint n;  /// dimensionality of $x$
   SquaredCost sq;
   
@@ -30,12 +30,12 @@ struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction{
 
 //===========================================================================
 
-struct VectorChainCost:VectorChainFunction{
+struct VectorChainCost:VectorChainFunction {
   uint n;
   arr A,a;
   arr Wi,Wj,w;
   bool nonlinear;
-
+  
   VectorChainCost(uint _T,uint _n);
   void fvi(arr& y, arr* J, uint i, const arr& x_i);
   void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
@@ -43,7 +43,7 @@ struct VectorChainCost:VectorChainFunction{
 
 //===========================================================================
 
-struct SlalomProblem:VectorChainFunction{
+struct SlalomProblem:VectorChainFunction {
   uint K,n;
   double margin,w,power;
   

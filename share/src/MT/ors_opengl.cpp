@@ -35,19 +35,19 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
 //! static GL routine to draw a ors::Mesh
-void ors::glDrawMesh(void *classP){
+void ors::glDrawMesh(void *classP) {
   glDraw(*((ors::Mesh*)classP));
 }
 
 //! GL routine to draw a ors::Mesh
-void ors::glDraw(ors::Mesh& mesh){
-  if(mesh.V.d0!=mesh.Vn.d0 || mesh.T.d0!=mesh.Tn.d0){
+void ors::glDraw(ors::Mesh& mesh) {
+  if(mesh.V.d0!=mesh.Vn.d0 || mesh.T.d0!=mesh.Tn.d0) {
     mesh.computeNormals();
   }
-  if(orsDrawWires){
+  if(orsDrawWires) {
 #if 0
     uint t;
-    for(t=0; t<mesh.T.d0; t++){
+    for(t=0; t<mesh.T.d0; t++) {
       glBegin(GL_LINE_LOOP);
       glVertex3dv(&mesh.V(mesh.T(t, 0), 0));
       glVertex3dv(&mesh.V(mesh.T(t, 1), 0));
@@ -66,7 +66,7 @@ void ors::glDraw(ors::Mesh& mesh){
     return;
   }
 #if 1
-  if(!mesh.GF.N){ //no group frames  ->  use OpenGL's Arrays for fast drawing...
+  if(!mesh.GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
     glShadeModel(GL_SMOOTH);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -76,16 +76,16 @@ void ors::glDraw(ors::Mesh& mesh){
     glNormalPointer(GL_DOUBLE, 0, mesh.Vn.p);
     
     glDrawElements(GL_TRIANGLES, mesh.T.N, GL_UNSIGNED_INT, mesh.T.p);
-  }else{
+  } else {
     int g;
     uint v, t, i, j;
     double GLmatrix[16];
     Vector w;
-    if(!mesh.GT.N){
-      for(t=0; t<mesh.T.d0; t++){
+    if(!mesh.GT.N) {
+      for(t=0; t<mesh.T.d0; t++) {
         glPushName(t <<4);
         glBegin(GL_TRIANGLES);
-        for(j=0; j<3; j++){
+        for(j=0; j<3; j++) {
           v=mesh.T(t, j);
           if(mesh.G.N) g=mesh.G(v); else g=-1;
           w.set(&mesh.Vn(v, 0));
@@ -99,16 +99,16 @@ void ors::glDraw(ors::Mesh& mesh){
         glEnd();
         glPopName();
       }
-    }else{
+    } else {
       //faces that belong to one group only
-      for(g=0; g<(int)mesh.GT.N-1; g++){
+      for(g=0; g<(int)mesh.GT.N-1; g++) {
         glPushMatrix();
         mesh.GF(g)->getAffineMatrixGL(GLmatrix);
         glLoadMatrixd(GLmatrix);
         glBegin(GL_TRIANGLES);
-        for(i=0; i<mesh.GT(g).N; i++){
+        for(i=0; i<mesh.GT(g).N; i++) {
           t=mesh.GT(g)(i);
-          for(j=0; j<3; j++){
+          for(j=0; j<3; j++) {
             v=mesh.T(t, j);
             glNormal3dv(&mesh.Vn(v, 0));
             if(mesh.C.N) glColor3dv(&mesh.C(v, 0));
@@ -120,9 +120,9 @@ void ors::glDraw(ors::Mesh& mesh){
       }
       //faces with vertices from different groups (transform each vertex individually)
       glBegin(GL_TRIANGLES);
-      for(i=0; i<mesh.GT(mesh.GT.N-1).N; i++){
+      for(i=0; i<mesh.GT(mesh.GT.N-1).N; i++) {
         t=mesh.GT(mesh.GT.N-1)(i);
-        for(j=0; j<3; j++){
+        for(j=0; j<3; j++) {
           v=mesh.T(t, j);
           g=mesh.G(v);
           w.set(&mesh.Vn(v, 0));  if(g!=-1) w=mesh.GF(g)->rot*w;  glNormal3dv(w.p);
@@ -146,7 +146,7 @@ void ors::glDraw(ors::Mesh& mesh){
   uint i, v;
   glShadeModel(GL_SMOOTH);
   glBegin(GL_TRIANGLES);
-  for(i=0; i<mesh.T.d0; i++){
+  for(i=0; i<mesh.T.d0; i++) {
     v=mesh.T(i, 0);  glNormal3dv(&mesh.Vn(v, 0));  if(mesh.C.N) glColor3dv(&mesh.C(v, 0));  glVertex3dv(&mesh.V(v, 0));
     v=mesh.T(i, 1);  glNormal3dv(&mesh.Vn(v, 0));  if(mesh.C.N) glColor3dv(&mesh.C(v, 0));  glVertex3dv(&mesh.V(v, 0));
     v=mesh.T(i, 2);  glNormal3dv(&mesh.Vn(v, 0));  if(mesh.C.N) glColor3dv(&mesh.C(v, 0));  glVertex3dv(&mesh.V(v, 0));
@@ -156,7 +156,7 @@ void ors::glDraw(ors::Mesh& mesh){
   uint i, v;
   mesh.computeNormals();
   glBegin(GL_TRIANGLES);
-  for(i=0; i<mesh.T.d0; i++){
+  for(i=0; i<mesh.T.d0; i++) {
     glNormal3dv(&mesh.Tn(i, 0));
     v=mesh.T(i, 0);  if(mesh.C.N) glColor3dv(&mesh.C(v, 0));  glVertex3dv(&mesh.V(v, 0));
     v=mesh.T(i, 1);  if(mesh.C.N) glColor3dv(&mesh.C(v, 0));  glVertex3dv(&mesh.V(v, 0));
@@ -166,7 +166,7 @@ void ors::glDraw(ors::Mesh& mesh){
 #if 0 //draw normals
   glColor(.5, 1., .0);
   Vector a, b, c, x;
-  for(i=0; i<mesh.T.d0; i++){
+  for(i=0; i<mesh.T.d0; i++) {
     glBegin(GL_LINES);
     a.set(&mesh.V(mesh.T(i, 0), 0)); b.set(&mesh.V(mesh.T(i, 1), 0)); c.set(&mesh.V(mesh.T(i, 2), 0));
     x.setZero(); x+=a; x+=b; x+=c; x/=3;
@@ -182,11 +182,11 @@ void ors::glDraw(ors::Mesh& mesh){
 
 #ifndef MT_ORS_ONLY_BASICS
 //! static GL routine to draw a ors::Graph
-void ors::glDrawGraph(void *classP){
+void ors::glDrawGraph(void *classP) {
   ors::glDraw(*((ors::Graph*)classP));
 }
 
-void glDrawShape(ors::Shape *s, const ors::Transformation& X){
+void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
@@ -196,18 +196,41 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
   scale*=.3;
   
   double GLmatrix[16];
-  ors::Transformation f;
-  f = X;
-  f.appendTransformation(s->rel);
-  f.getAffineMatrixGL(GLmatrix);
+  s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
   
-  if(!orsDrawShapes){
+  if(!orsDrawShapes) {
     glDrawAxes(scale);
     glColor(0, 0, .5);
     glDrawSphere(.1*scale);
   }
-  if(orsDrawShapes) switch(s->type){
+  if(orsDrawShapes){
+    if(orsDrawMeshes && !s->mesh.V.N){
+      switch(s->type) {
+      case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
+      case ors::boxST:
+        s->mesh.setBox();
+        s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+        break;
+      case ors::sphereST:
+        s->mesh.setSphere();
+        s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+        break;
+      case ors::cylinderST:
+        s->mesh.setCylinder(s->size[3], s->size[2]);
+        break;
+      case ors::cappedCylinderST:
+        s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+        break;
+      case ors::markerST:
+	break;
+      case ors::meshST:
+      case ors::pointCloudST:
+        CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
+	break;
+      }
+    }
+    switch(s->type) {
       case ors::noneST: break;
       case ors::boxST:
         if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
@@ -226,8 +249,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        if(orsDrawMeshes && s->mesh.V.N) ors::glDraw(s->mesh);
-        else { glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); }
+	glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -239,15 +261,16 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
         break;
       default: HALT("can't draw that geom yet");
     }
-  if(orsDrawZlines){
+  }
+  if(orsDrawZlines) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
-    glVertex3d(0., 0., -f.pos(2));
+    glVertex3d(0., 0., -s->X.pos(2));
     glEnd();
   }
-  if(!s->contactOrientation.isZero()){
-    X.getAffineMatrixGL(GLmatrix);
+  if(!s->contactOrientation.isZero()) {
+    s->X.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
     glColor(0, .7, 0);
     glBegin(GL_LINES);
@@ -259,8 +282,7 @@ void glDrawShape(ors::Shape *s, const ors::Transformation& X){
 }
 
 //! GL routine to draw a ors::Graph
-void ors::glDraw(Graph& C){
-  ors::Body *n;
+void ors::glDraw(Graph& C) {
   ors::Joint *e;
   ors::Shape *s;
   ors::Proxy *proxy;
@@ -271,14 +293,14 @@ void ors::glDraw(Graph& C){
   glPushMatrix();
   
   //bodies
-  if(orsDrawBodies) for_list(j, n, C.bodies){
-    for_list(k, s, n->shapes) glDrawShape(s, n->X);
+  if(orsDrawBodies) for_list(k, s, C.shapes){
+    glDrawShape(s);
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
   
   //joints
-  if(orsDrawJoints) for_list(j, e, C.joints){
+  if(orsDrawJoints) for_list(j, e, C.joints) {
     //set name (for OpenGL selection)
     glPushName((e->index <<2) | 2);
     
@@ -325,7 +347,7 @@ void ors::glDraw(Graph& C){
   }
   
   //proxies
-  if(orsDrawProxies) for(i=0; i<C.proxies.N; i++) if(!C.proxies(i)->age){
+  if(orsDrawProxies) for(i=0; i<C.proxies.N; i++) if(!C.proxies(i)->age) {
         proxy = C.proxies(i);
         glLoadIdentity();
         if(!proxy->colorCode) glColor(.75,.75,.75);
@@ -487,22 +509,22 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::Graph& C, OpenGL& gl){
+void animateConfiguration(ors::Graph& C, OpenGL& gl) {
   arr x, x0, v0;
   uint t, i;
   C.calcBodyFramesFromJoints();
   x0.resize(C.getJointStateDimension());
   v0.resizeAs(x0);
   C.getJointState(x0, v0);
-  for(i=x0.N; i--;){
+  for(i=x0.N; i--;) {
     //for(i=20;i<x0.N;i++){
     x=x0;
-    for(t=0; t<20; t++){
+    for(t=0; t<20; t++) {
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x, v0);
       C.calcBodyFramesFromJoints();
       MT::wait(0.01);
-      if(!gl.update()){ return; }
+      if(!gl.update()) { return; }
     }
   }
   C.setJointState(x0, v0);
@@ -514,11 +536,12 @@ ors::Body *movingBody=NULL;
 ors::Vector selpos;
 double seld, selx, sely, selz;
 
-struct EditConfigurationHoverCall:OpenGL::GLHoverCall{
+struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::Graph *ors;
-  EditConfigurationHoverCall(ors::Graph& _ors){ ors=&_ors; }
-  bool hoverCallback(OpenGL& gl){
-    if(!movingBody){
+  EditConfigurationHoverCall(ors::Graph& _ors) { ors=&_ors; }
+  bool hoverCallback(OpenGL& gl) {
+    if(!movingBody) return false;
+    if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
       gl.Select();
@@ -528,19 +551,18 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall{
       //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
-      if(s){
-        gl.text.clr()
-        <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
+      gl.text.clear();
+      if(s) {
+	gl.text <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
         listWrite(s->ats, gl.text, "\n");
       }
-      if(j){
-        gl.text.clr()
-        <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-        <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+      if(j) {
+        gl.text
+            <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+            <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
         listWrite(j->ats, gl.text, "\n");
       }
-      if(!j && !s) gl.text.clr();
-    }else{
+    } else {
       //gl.Select();
       //double x=0, y=0, z=seld;
       //double x=(double)gl.mouseposx/gl.width(), y=(double)gl.mouseposy/gl.height(), z=seld;
@@ -552,18 +574,18 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall{
     return true;
   }
 };
-  
-struct EditConfigurationKeyCall:OpenGL::GLKeyCall{
+
+struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   ors::Graph *ors;
-  EditConfigurationKeyCall(ors::Graph& _ors){ ors=&_ors; }
-  bool keyCallback(OpenGL& gl){
+  EditConfigurationKeyCall(ors::Graph& _ors) { ors=&_ors; }
+  bool keyCallback(OpenGL& gl) {
     if(gl.pressedkey!=' ') return true;
-    if(movingBody){ movingBody=NULL; return true; }
+    if(movingBody) { movingBody=NULL; return true; }
     ors::Joint *j=NULL;
     ors::Shape *s=NULL;
     gl.Select();
     OpenGL::GLSelect *top=gl.topSelection;
-    if(!top){
+    if(!top) {
       cout <<"No object below mouse!" <<endl;
       return false;
     }
@@ -571,7 +593,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall{
     //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
     if((i&3)==1) s=ors->shapes(i>>2);
     if((i&3)==2) j=ors->joints(i>>2);
-    if(s){
+    if(s) {
       cout <<"selected shape " <<s->name <<" of body " <<s->body->name <<endl;
       selx=top->x;
       sely=top->y;
@@ -585,30 +607,31 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall{
   }
 };
 
-void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
+void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
   gl.exitkeys="1234567890hjklias, "; //TODO: move the key handling to the keyCall!
   gl.addHoverCall(new EditConfigurationHoverCall(C));
   gl.addKeyCall(new EditConfigurationKeyCall(C));
-  for(;;){
+  for(;;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
       MT::load(C, filename);
-    } catch (const char* msg){
+    } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       gl.watch();
       continue;
     }
     animateConfiguration(C, gl);
     gl.watch();
-    while(MT::contains(gl.exitkeys, gl.pressedkey)){
-      switch(gl.pressedkey){
+    while(MT::contains(gl.exitkeys, gl.pressedkey)) {
+      switch(gl.pressedkey) {
         case '1':  orsDrawBodies^=1;  break;
         case '2':  orsDrawShapes^=1;  break;
         case '3':  orsDrawJoints^=1;  break;
         case '4':  orsDrawProxies^=1;  break;
         case '5':  gl.reportSelects^=1;  break;
         case '6':  gl.reportEvents^=1;  break;
+        case '7':  C.writePlyFile("z.ply");  break;
         case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
         case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
@@ -633,13 +656,13 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl){
 }
 
 #if 0 //MT_ODE
-void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
+void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
   gl.watch();
   uint t, T=200;
   arr x, v;
   createOde(*C, *ode);
   ors->getJointState(x, v);
-  for(t=0; t<T; t++){
+  for(t=0; t<T; t++) {
     ode->step();
     
     importStateFromOde(*C, *ode);
@@ -647,7 +670,7 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl.text.clr() <<"time " <<t;
+    gl.text.clear() <<"time " <<t;
     gl.timedupdate(10);
   }
 }
@@ -655,12 +678,12 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl){
 #endif
 
 #else //!MT_GL
-void ors::glDraw(ors::Mesh& mesh){ NICO; }
-void ors::glDrawMesh(void *classP){ NICO; }
+void ors::glDraw(ors::Mesh& mesh) { NICO; }
+void ors::glDrawMesh(void *classP) { NICO; }
 #ifndef MT_ORS_ONLY_BASICS
-void ors::glDraw(ors::Graph& graph){ NICO; }
-void ors::glDrawGraph(void *classP){ NICO; }
-void editConfiguration(const char* filename, ors::Graph *C, OpenGL *gl){ NICO; }
-void animateConfiguration(ors::Graph *C, OpenGL *gl){}
+void ors::glDraw(ors::Graph& graph) { NICO; }
+void ors::glDrawGraph(void *classP) { NICO; }
+void editConfiguration(const char* filename, ors::Graph *C, OpenGL *gl) { NICO; }
+void animateConfiguration(ors::Graph *C, OpenGL *gl) {}
 #endif
 #endif

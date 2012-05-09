@@ -738,7 +738,7 @@ ArgumentType* ArgumentType::read(ifstream& in) {
   MT::String line;
   line.read(in, NULL, "\n");
   if (DEBUG>0) PRINT(line);
-  if(line.N() == 0) return NULL;
+  if(line.N == 0) return NULL;
  
   uint type, typeI;
   MT::String name;

@@ -99,6 +99,7 @@ void sort_asc_keys(uintA& sortedIndices, const arr& unsorted);
 // check for cycles
 bool isAcyclic(boolA adjMatrix);
 
+uint getIndex(const uintA& constants, const uintA& args);
 
 
 double getcputime();

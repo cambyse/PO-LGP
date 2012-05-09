@@ -22,7 +22,7 @@ typedef void fdd(arr& xdd, const arr& x);
 
 void MT::rk4(arr& x1, const arr& x0,
              void (*df)(arr& xd, const arr& x),
-             double dt){
+             double dt) {
   uint n=x0.N;
   arr k1(n), k2(n), k3(n), k4(n);
   
@@ -37,7 +37,7 @@ void MT::rk4(arr& x1, const arr& x0,
 
 void (*global_ddf)(arr& xdd, const arr& x, const arr& v);
 void (*global_sf)(arr& s,  const arr& x, const arr& v);
-void rk_df(arr& xd, const arr& x){
+void rk_df(arr& xd, const arr& x) {
   uint n=x.N/2;
   arr X; X.referTo(x);
   X.reshape(2, n);
@@ -47,7 +47,7 @@ void rk_df(arr& xd, const arr& x){
   xd.setVectorBlock(X[1], 0);
   xd.setVectorBlock(a, n);
 }
-void rk_sf(arr& s, const arr& x){
+void rk_sf(arr& s, const arr& x) {
   uint n=x.N/2;
   arr X; X.referTo(x);
   X.reshape(2, n);
@@ -56,7 +56,7 @@ void rk_sf(arr& s, const arr& x){
 
 void MT::rk4dd(arr& x1, arr& v1, const arr& x0, const arr& v0,
                void (*ddf)(arr& xdd, const arr& x, const arr& v),
-               double dt){
+               double dt) {
                
   global_ddf = ddf;
   
@@ -78,7 +78,7 @@ void MT::rk4dd(arr& x1, arr& v1, const arr& x0, const arr& v0,
 bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
                     void (*df)(arr& xd, const arr& x),
                     void (*sf)(arr& s, const arr& x),
-                    double& dt, double tol){
+                    double& dt, double tol) {
   uint i, sn;
   arr sa=s0, sb, sm, xa=x0, xb, xm; //states at times a, m, t
   rk4(xb, x0, df, dt);
@@ -86,22 +86,22 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
   //CHECK(sa.N==sb.N, "inconsistent state indicators");
   bool change=false;
   sn=sa.N<sb.N?sa.N:sb.N;
-  for(i=0; i<sn; i++) if(s0(i)*sb(i)<0.){
+  for(i=0; i<sn; i++) if(s0(i)*sb(i)<0.) {
       change=true;
       break;
     }
-  if(!change){ x1=xb; s1=sb; return false; }//no problems: no switch
+  if(!change) { x1=xb; s1=sb; return false; } //no problems: no switch
   
   //we have a switch - so we must find it precisely!
   double a=0., b=dt; //time interval [a, b]
   double m, min_m;   //where to cut the interval (determined by linear interpolation)
   
   cout <<"entering zero-crossing detection loop" <<endl;
-  for(; fabs(b-a)>tol;){
+  for(; fabs(b-a)>tol;) {
     //compute new m
     min_m=m=b;
     sn=sa.N<sb.N?sa.N:sb.N;
-    for(i=0; i<sn; i++) if(sa(i)*sb(i)<0.){
+    for(i=0; i<sn; i++) if(sa(i)*sb(i)<0.) {
         m = b - sb(i) * (b-a)/(sb(i)-sa(i));
         if(m<min_m) min_m=m;
       }
@@ -112,15 +112,15 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
     sf(sm, xm);
     change=false;
     sn=s0.N<sm.N?s0.N:sm.N;
-    for(i=0; i<sn; i++) if(s0(i)*sm(i)<0.){ change=true; break; }
+    for(i=0; i<sn; i++) if(s0(i)*sm(i)<0.) { change=true; break; }
     
     //cout <<"a=" <<a <<" b=" <<b <<" m=" <<m <<" sa=" <<sa <<" sb=" <<sb <<" sm=" <<sm <<endl;
     cout <<" sm=" <<sm <<endl;
-    if(!change){
+    if(!change) {
       a=m;
       sa=sm;
       xa=xm;
-    }else{
+    } else {
       b=m;
       sb=sm;
       xb=xm;
@@ -138,7 +138,7 @@ bool MT::rk4_switch(arr& x1, arr& s1, const arr& x0, const arr& s0,
 bool MT::rk4dd_switch(arr& x1, arr& v1, arr& s1, const arr& x0, const arr& v0, const arr& s0,
                       void (*ddf)(arr& xdd, const arr& x, const arr& v),
                       void (*sf)(arr& s, const arr& x, const arr& v),
-                      double& dt, double tol){
+                      double& dt, double tol) {
                       
   global_ddf = ddf;
   global_sf  = sf;

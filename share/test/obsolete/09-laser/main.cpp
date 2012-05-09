@@ -31,7 +31,7 @@ OpenGL gl;
      line(np,1) = p(np,1);
    }
    plotData.lines.append(line);
-   gl.text.clr() <<"lines: " << plotData.lines.N ;
+   gl.text.clear() <<"lines: " << plotData.lines.N ;
    gl.update();
   // gl.watch();
  }

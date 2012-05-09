@@ -363,7 +363,7 @@ void RHV::updateTaskVariables(ControllerModule *ctrl){
 	if (started_track) {
 		findObstacle(ctrl);
 		arr x = arr(target->X.p.v,3) - TV_fNew->y;
-		//ctrl->gui->gl->text.clr() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
+		//ctrl->gui->gl->text.clear() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
 		if(recho.bwdMsg_v.d1==2*ctrl->q_reference.N){
 			ctrl->useBwdMsg=true;
 			ctrl->bwdMsg_v   .referToSubDim(recho.bwdMsg_v,   (uint)recho.bwdMsg_count);

@@ -63,9 +63,10 @@ struct VisionSimulator {
   void projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel=1.);
 };
 
-struct Gaussian{  arr A;  arr a;  };
 
 struct CarSimulator{
+  struct Gaussian{  arr A;  arr a;  };
+
   double x,y,theta; //this is the true state -- accessing it means cheating...
   double tau,L;
   double dynamicsNoise, observationNoise;

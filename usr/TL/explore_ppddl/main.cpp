@@ -299,30 +299,30 @@ void experiment_exploration() {
   // GROUND THE WORLD RULES
   // -------------------------------------
   TL::RuleSet ground_world_rules;
-  if (name_file_ground_world_rules.N() > 39) {
+  if (name_file_ground_world_rules.N > 39) {
     // boxworld
     // boxworld_ground_rules_2.dat
     // 19 bis vor "_ground"
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-27));
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-26));
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-25));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-27));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-26));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-25));
     // rectangle
     // rectangle_tireworld_ground_rules_2.dat
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-39));
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-38));
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-37));
-    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N()-36));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-39));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-38));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-37));
+    PRINT(name_file_ground_world_rules(name_file_ground_world_rules.N-36));
   }
-  if (   name_file_ground_world_rules.N() > 25
-      && (   (   name_file_ground_world_rules(name_file_ground_world_rules.N()-27) == 'b'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-26) == 'o'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-25) == 'x')
-              || (    name_file_ground_world_rules(name_file_ground_world_rules.N()-38) == 'r'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-37) == 'e'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-36) == 'c')
-              || (    name_file_ground_world_rules(name_file_ground_world_rules.N()-39) == 'r'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-38) == 'e'
-                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N()-37) == 'c')
+  if (   name_file_ground_world_rules.N > 25
+      && (   (   name_file_ground_world_rules(name_file_ground_world_rules.N-27) == 'b'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-26) == 'o'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-25) == 'x')
+              || (    name_file_ground_world_rules(name_file_ground_world_rules.N-38) == 'r'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-37) == 'e'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-36) == 'c')
+              || (    name_file_ground_world_rules(name_file_ground_world_rules.N-39) == 'r'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-38) == 'e'
+                  &&  name_file_ground_world_rules(name_file_ground_world_rules.N-37) == 'c')
           )
      ) {
     cout<<"Reading ground rules from file."<<endl;

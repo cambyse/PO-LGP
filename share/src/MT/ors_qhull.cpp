@@ -31,7 +31,7 @@ int QHULL_DEBUG_LEVEL=0;
 
 //===========================================================================
 
-void plotQhullState(uint D){
+void plotQhullState(uint D) {
   uint i;
   double *point, *pointtemp;
   vertexT *vertex, **vertexp;
@@ -59,7 +59,7 @@ void plotQhullState(uint D){
   FORALLfacets {
     cout <<"\n  " <<facet->id <<":";
     line.clear();
-    FOREACHvertex_(facet->vertices){
+    FOREACHvertex_(facet->vertices) {
       cout <<' ' <<vertex->id;
       x.setCarray(vertex->point, D);
       line.append(x);
@@ -74,7 +74,7 @@ void plotQhullState(uint D){
 
 //===========================================================================
 
-double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uintA *faceVertices, bool freeqhull){
+double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uintA *faceVertices, bool freeqhull) {
   int exitcode;
   //static const char* cmd = "qhull Tv i p";
   static char* cmd = (char*) "qhull ";
@@ -102,26 +102,26 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
   CHECK(norm(y)>1e-10 || fabs(bestdist-bestfacet->offset)<1e-10, "inconsistent!");
   CHECK((isoutside && bestdist>-1e-10) || (!isoutside && bestdist<1e-10), "");
   
-  if(projectedPoint){
+  if(projectedPoint) {
     *projectedPoint=y;
     double *normal=bestfacet->normal;
     for(i=X.d1; i--;)(*projectedPoint)(i) -= bestdist * normal[i];
   }
   
-  if(faceVertices){
+  if(faceVertices) {
     faceVertices->clear();
     vertexT *vertex, **vertexp;
-    FOREACHvertex_(bestfacet->vertices){
+    FOREACHvertex_(bestfacet->vertices) {
       i = (vertex->point - (qh first_point))/X.d1;
       faceVertices->append(i);
     }
   }
   
-  if(QHULL_DEBUG_LEVEL>1){
+  if(QHULL_DEBUG_LEVEL>1) {
     arr line;
     plotQhullState(X.d1);
     plotPoints(y);
-    if(projectedPoint){
+    if(projectedPoint) {
       line.clear();
       line.append(y);
       line.append(*projectedPoint);
@@ -135,7 +135,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
     //FOREACHvertex_(facet->vertices) cout <<vertex->id <<' ';
   }
   
-  if(freeqhull){
+  if(freeqhull) {
     qh_freeqhull(!qh_ALL);
     int curlong, totlong;
     qh_memfreeshort(&curlong, &totlong);
@@ -148,9 +148,9 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
 
 //===========================================================================
 
-void makeNormal(arr& a, const arr& b){ a -= b * scalarProduct(a, b)/sumOfSqr(b); }
+void makeNormal(arr& a, const arr& b) { a -= b * scalarProduct(a, b)/sumOfSqr(b); }
 
-double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool freeqhull){
+double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool freeqhull) {
   arr p;
   uintA vertices;
   double d;
@@ -163,7 +163,7 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
   uint i, j, k, l;
   arr v, f, w, v_f, y_f, dv, subn, wk, W;
   double dd;
-  for(i=0; i<vertices.N; i++){
+  for(i=0; i<vertices.N; i++) {
     v.referToSubDim(X, vertices(i)); //v is the vertex in question
     
     // subn: normal of the sub-facet opposit to v
@@ -171,7 +171,7 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
     w.referToSubDim(X, vertices(j)); //take w as origin of local frame
     CHECK(vertices.N>=X.d1, ""); //won't work otherwise..
     W.resize(vertices.N, X.d1);      //compose matrix of basis vectors
-    for(k=0, l=0; k<vertices.N; k++) if(k!=i && k!=j){
+    for(k=0, l=0; k<vertices.N; k++) if(k!=i && k!=j) {
         wk.referToSubDim(X, vertices(k));
         W[l]() = wk-w;
         l++;
@@ -207,7 +207,7 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
 
 //===========================================================================
 
-double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, float mu, float discountTorques, arr *dFdC){ //, arr *dFdCn
+double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, float mu, float discountTorques, arr *dFdC) { //, arr *dFdCn
   CHECK(C.d0==Cn.d0, "different number of points and normals");
   CHECK(C.d1==3, "");
   
@@ -218,7 +218,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
   arr X(C.d0*S, 6);                     //store 6d points for convex hull
   
   arr dXdC;
-  if(dFdC){
+  if(dFdC) {
     dXdC.resize(C.d0*S, 6, 3);
     dXdC.setZero();
   }
@@ -227,7 +227,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     dXdCn.setZero();
   }*/
   
-  for(i=0; i<C.d0; i++){   //each contact point contributes a friction cone
+  for(i=0; i<C.d0; i++) {  //each contact point contributes a friction cone
     c.set(&C(i, 0));                    //contact point
     n.set(&Cn(i, 0));                   //contact normal
     c -= center;
@@ -235,7 +235,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
     ors::Quaternion r;
     r.setDiff(ors::Vector(0, 0, 1), n);//rotate cone's z-axis into contact normal n
     
-    for(j=0; j<S; j++){    //each sample, equidistant on a circle
+    for(j=0; j<S; j++) {   //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;
       f(0) = cos(angle)*mu;            //force point sampled from cone
       f(1) = sin(angle)*mu;
@@ -251,7 +251,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
       X(i*S+j, 3) = discountTorques * c_f(0);
       X(i*S+j, 4) = discountTorques * c_f(1);
       X(i*S+j, 5) = discountTorques * c_f(2);
-      if(dFdC){
+      if(dFdC) {
         dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f(2);  dXdC(i*S+j, 3, 2) = -f(1);
         dXdC(i*S+j, 4, 0) = -f(2);  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f(0);
         dXdC(i*S+j, 5, 0) =  f(1);  dXdC(i*S+j, 5, 1) = -f(0);  dXdC(i*S+j, 5, 2) =  0   ;
@@ -270,9 +270,9 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
   double d;
   arr origin(6);
   origin.setZero();
-  if(!dFdC){
+  if(!dFdC) {
     d = distanceToConvexHull(X, origin, 0, 0, true);
-  }else{
+  } else {
     arr dFdX;
     d = distanceToConvexHullGradient(dFdX, X, origin, true);
     dFdX.reshape(TUP(C.d0, S, 6));
@@ -285,16 +285,16 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, floa
 
 //===========================================================================
 
-double forceClosureFromProxies(ors::Graph& ORS, uint i){
+double forceClosureFromProxies(ors::Graph& ORS, uint i) {
   uint k;
   ors::Vector c, cn;
   arr C, Cn, _c, _cn;
-  for(k=0; k<ORS.proxies.N; k++) if(ORS.proxies(k)->a==(int)i || ORS.proxies(k)->b==(int)i){
-      if(ORS.proxies(k)->a==(int)i){
+  for(k=0; k<ORS.proxies.N; k++) if(ORS.proxies(k)->a==(int)i || ORS.proxies(k)->b==(int)i) {
+      if(ORS.proxies(k)->a==(int)i) {
         //j = ORS.proxies(k)->b;
         c = ORS.proxies(k)->posA;
         cn=-ORS.proxies(k)->normal;
-      }else{
+      } else {
         //j = ORS.proxies(k)->a;
         c = ORS.proxies(k)->posB;
         cn= ORS.proxies(k)->normal;
@@ -311,7 +311,7 @@ double forceClosureFromProxies(ors::Graph& ORS, uint i){
 
 //===========================================================================
 
-void getTriangulatedHull(uintA& T, arr& V){
+void getTriangulatedHull(uintA& T, arr& V) {
   int exitcode;
   static char* cmd = (char*) "qhull Qt ";
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
@@ -339,11 +339,11 @@ void getTriangulatedHull(uintA& T, arr& V){
   f=0;
   FORALLfacets {
     i=0;
-    FOREACHvertex_(facet->vertices){
+    FOREACHvertex_(facet->vertices) {
       if(i<3) T(f, i)=vertex->id; else MT_MSG("face " <<f <<" has " <<i <<" vertices" <<endl);
       i++;
     }
-    if(facet->toporient){
+    if(facet->toporient) {
       v=T(f, 2);  T(f, 2)=T(f, 1);  T(f, 1)=v;
     }
     f++;
@@ -359,8 +359,8 @@ void getTriangulatedHull(uintA& T, arr& V){
   V=Vnew;
 }
 
-void getDelaunayEdges(uintA& E, const arr& V){
-  if(V.d0<3){ E.clear(); return; }
+void getDelaunayEdges(uintA& E, const arr& V) {
+  if(V.d0<3) { E.clear(); return; }
   int exitcode;
   static char* cmd = (char*) "qhull d Qbb Qt ";
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
@@ -373,11 +373,11 @@ void getDelaunayEdges(uintA& E, const arr& V){
   E.clear();
   uint face[dim+1];
   FORALLfacets {
-    if(!facet->upperdelaunay){
+    if(!facet->upperdelaunay) {
       i=0;
       FOREACHvertex_(facet->vertices) face[i++]=qh_pointid(vertex->point);//vertex->id;
       CHECK(i==dim+1, "strange number of vertices of a facet!");
-      for(j=0; j<dim+1; j++) for(k=j+1; k<dim+1; k++){
+      for(j=0; j<dim+1; j++) for(k=j+1; k<dim+1; k++) {
           E.append(ARRAY<uint>(face[j], face[k]));
         }
     }
@@ -407,14 +407,14 @@ void getDelaunayEdges(uintA& E, const arr& V){
     (#dynamic_cast<doubleA& >(N& n)# has to be defined); if
     the node does not have this member, the code won't compile... */
 template<class N, class E>
-void delaunay(Graph<N, E>& g, uint dim=2){
+void delaunay(Graph<N, E>& g, uint dim=2) {
   uint i;
   
   g.clear_edges();
   
   doubleA P;
   P.resize(g.N, dim);
-  for(i=0; i<g.N; i++){
+  for(i=0; i<g.N; i++) {
     CHECK(g.nodes(i)->point.N==dim, "point doesn't have expected dim in delaunay");
     P[i]=(doubleA&)(*(g.nodes(i)));
     //P(i, 0)=g.nodes(i)->feat.x;
@@ -422,14 +422,14 @@ void delaunay(Graph<N, E>& g, uint dim=2){
     //P(i, 2)=g.nodes(i)->feat.z;
   }
   
-  if(!qh_new_qhull(dim, g.N, P.p, false, "qhull d Qbb T0", NULL, stderr)){
+  if(!qh_new_qhull(dim, g.N, P.p, false, "qhull d Qbb T0", NULL, stderr)) {
     facetT *facet;
     vertexT *vertex, **vertexp;
     uint *face, k, l;
     face=new uint[dim+1];
     
     FORALLfacets {
-      if(!facet->upperdelaunay){
+      if(!facet->upperdelaunay) {
         uint j=0;
         FOREACHvertex_(facet->vertices) face[j++]=qh_pointid(vertex->point);
         CHECK(j==dim+1, "strange number of vertices of a facet!");

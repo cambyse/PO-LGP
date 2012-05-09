@@ -379,7 +379,7 @@ Rule* Rule::read(ifstream& in) {
   // Action
   line.read(in, NULL, "\n"); // ACTION:
   if (DEBUG>1) PRINT(line);
-  CHECK(line(0)=='A',"bad action (expecting action first);  line="<<line);   CHECK(line.N() < 10, "bad action: too short");
+  CHECK(line(0)=='A',"bad action (expecting action first);  line="<<line);   CHECK(line.N < 10, "bad action: too short");
   line.read(in, NULL, "\n");
   if (DEBUG>1) PRINT(line);
   LitL actions_wrapper;
@@ -392,23 +392,23 @@ Rule* Rule::read(ifstream& in) {
   line.read(untrimmed_line, NULL, " \n\t");
   if (DEBUG>1) PRINT(line);
   CHECK((line(0)=='C' && line(1)=='O'), "bad context:  line="<<line);
-  CHECK(line.N() < 10, "bad context due to length (line.N()="<<line.N()<<"; line=\""<<line<<"\")");
+  CHECK(line.N < 10, "bad context due to length (line.N="<<line.N<<"; line=\""<<line<<"\")");
   line.read(in, NULL, "\n");
   if (DEBUG>1) PRINT(line);
-  if (line(0) != '-'   ||   (line.N() > 1  &&  line(1) != '-'  &&  line(1) != ' '))
+  if (line(0) != '-'   ||   (line.N > 1  &&  line(1) != '-'  &&  line(1) != ' '))
     Literal::get(r->context, line);
   
   // Outcomes
   if (DEBUG>0) {cout<<"Reading the outcomes:"<<endl;}
   line.read(in, NULL, "\n"); // OUTCOMES:
-  CHECK((line(0)=='O' && line(1)=='U'),"bad outcomes:  "<<line);   CHECK(line.N() < 11, "bad outcomes due to length");
+  CHECK((line(0)=='O' && line(1)=='U'),"bad outcomes:  "<<line);   CHECK(line.N < 11, "bad outcomes due to length");
   MT::Array< LitL > outcomes;
   bool noise_outcome_has_been_read = false;
   while ( MT::peerNextChar(in) != ' '  &&  MT::peerNextChar(in) != 'P'  &&   MT::peerNextChar(in) != 'C'
                                        &&  MT::peerNextChar(in) != 'R'&&  MT::peerNextChar(in) != 'A') {
     line.read(in, NULL, "=\n");
     if (DEBUG>1) PRINT(line);
-    if (line.N()<2) {
+    if (line.N<2) {
       cout<<"bad line: "<<endl;
       PRINT(line);
       HALT("");

@@ -1,4 +1,6 @@
-#include<stdio.h>
+#ifdef MT_CUDA
+
+#include <stdio.h>
 #include <cuda.h>
 #include <assert.h>
 #include "vision_cuda.h"
@@ -158,3 +160,11 @@ void earlyVision(CudaWorkspace WS, int N, int threads_per_block){
   cudaThreadSynchronize();
   cuda_error("cudaThreadSynchronize");
 }
+
+#else //!def MT_CUDA
+/* This is an empty file.
+
+   In case CUDA=1 is not set in Makefile, the linker will still want
+   to link to a vision_cuda.o file. With this empty file we create a
+   dummy (empty) object file */
+#endif

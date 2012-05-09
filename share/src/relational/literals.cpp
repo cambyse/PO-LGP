@@ -144,7 +144,7 @@ Literal* Literal::get(const char* text) {
       arg >> args(i);
     }
     else {  // for string variables
-      if (arg.N() != 1) HALT("non-digit argument in bad format: "<<arg);
+      if (arg.N != 1) HALT("non-digit argument in bad format: "<<arg);
       if (arg(0) == 'X') args(i) = 0;
       else if (arg(0) == 'Y') args(i) = 1;
       else if (arg(0) == 'Z') args(i) = 2;

@@ -27,7 +27,7 @@ struct VertGroup {
 //template class MT::Array<VertGroup>;
 //template class MT::Array<String>;
 
-void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
+void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
   ifstream is(filename, std::ios::binary);
   CHECK(is.good(), "couldn't open file " <<filename);
   
@@ -45,26 +45,26 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   String::readSkipSymbols="\"\n\r\t ";
   String::readEatStopSymbol = true;
   
-  for(;;){
+  for(;;) {
     CHECK(is.good(), "error in scanning the file (previous tag = `" <<tag <<"'");
     String::readStopSymbols="\n\r\t ";  //space terminates tags
     is >>tag;
     String::readStopSymbols="\n\r\t\"";       //quotes terminate names
-    if(tag=="vertices"){   vertices.readTagged(is, 0);   continue;  }
-    if(tag=="normals"){    normals.readTagged(is, 0);    continue;  }
-    if(tag=="faces"){      faces.readTagged(is, 0);      continue;  }
-    if(tag=="frames"){     frames.readTagged(is, 0);     continue;  }
-    if(tag=="tailsHeads"){ tailsHeads.readTagged(is, 0); continue;  }
-    if(tag=="groups"){
+    if(tag=="vertices") {   vertices.readTagged(is, 0);   continue;  }
+    if(tag=="normals") {    normals.readTagged(is, 0);    continue;  }
+    if(tag=="faces") {      faces.readTagged(is, 0);      continue;  }
+    if(tag=="frames") {     frames.readTagged(is, 0);     continue;  }
+    if(tag=="tailsHeads") { tailsHeads.readTagged(is, 0); continue;  }
+    if(tag=="groups") {
       is >>(const char*)"<" >>j >>(const char*)">";
       G.resize(j);
-      for(i=0; i<j; i++){
+      for(i=0; i<j; i++) {
         is >>G(i).name;
         G(i).verts.readTagged(is, 0);
       }
       continue;
     }
-    if(tag=="graph"){
+    if(tag=="graph") {
       is >>(const char*)"{" >>i >>j >>(const char*)"}";
       graph.resize(j, 2);
       c=is.get(); CHECK(c=='\n', "couldn't read newline after ascii tag :-(");
@@ -72,20 +72,20 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
       c=is.get(); CHECK(c=='\n', "couldn't read newline after array buffer :-(");
       continue;
     }
-    if(tag=="names"){
+    if(tag=="names") {
       is >>(const char*)"<" >>j >>(const char*)">";
       //fscanf(is.rdbuf()->_File, "<%d>", &j);
       names.resize(j);
       for(i=0; i<j; i++) is >>names(i);
       continue;
     }
-    if(tag=="quit"){ CHECK(is.good(), "not perfect import..."); break; }
+    if(tag=="quit") { CHECK(is.good(), "not perfect import..."); break; }
     HALT("unknown tag `" <<tag <<"'");
   }
   
   ors::Vector *w;
   ors::Quaternion r; r.setDeg(0, 1, 0, 0); //don't rotate the mesh
-  for(i=0; i<vertices.d0; i++){
+  for(i=0; i<vertices.d0; i++) {
     w = (ors::Vector*)&vertices(i, 0);
     *w = r*(*w);
   }
@@ -94,11 +94,11 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   mesh.T=faces;
   mesh.Tn=normals;
   mesh.G.resize(vertices.d0); mesh.G=-1;
-  for(i=0; i<G.N; i++){
-    for(b=0; b<names.N; b++){ if(G(i).name==names(b)) break; }
-    if(b==names.N){
+  for(i=0; i<G.N; i++) {
+    for(b=0; b<names.N; b++) { if(G(i).name==names(b)) break; }
+    if(b==names.N) {
       cout <<"unknown body: " <<G(i).name <<endl;
-    }else{
+    } else {
       for(j=0; j<G(i).verts.N; j++) mesh.G(G(i).verts(j))=b;
     }
   }
@@ -114,7 +114,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   ors::Transformation f;
   ors::Quaternion ROT; ROT.setDeg(90, 1, 0, 0); //rotate the armature
   
-  for(i=0; i<frames.d0; i++){
+  for(i=0; i<frames.d0; i++) {
     n=new ors::Body(bl.bodies);
     s=new ors::Shape(bl.shapes, n); //always create a shape for a body...
     MT::skip(is);
@@ -139,7 +139,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
     v[0]=v[1]=v[3]=l/20.; v[2]=l;
     memmove(s->size, v, 4*sizeof(double));
   }
-  for(i=0; i<graph.d0; i++){
+  for(i=0; i<graph.d0; i++) {
     p=bl.bodies(graph(i, 0));
     n=bl.bodies(graph(i, 1));
     //e=new_edge(p, n, bl.bodies, bl.joints);
@@ -157,7 +157,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl){
   }
   graphMakeLists(bl.bodies, bl.joints);
   mesh.GF.resize(bl.bodies.N);
-  for(i=0; i<bl.bodies.N; i++){
+  for(i=0; i<bl.bodies.N; i++) {
     mesh.GF(i) = &(bl.bodies(i)->X);
   }
   mesh.makeVerticesRelativeToGroup();

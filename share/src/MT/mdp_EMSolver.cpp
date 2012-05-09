@@ -48,7 +48,7 @@ void mdp::EMSolver::reportParameters(std::ostream& os){
 }
 
 void mdp::EMSolver::initProblem(){
-  outfilename.clr() <<outputPrefix;
+  outfilename.clear() <<outputPrefix;
   //MT::IOraw=true;
   //levels.write(outfilename, "-");
   //MT::IOraw=false;
@@ -135,11 +135,11 @@ void mdp::EMSolver::obsolete_loop_lev12(){
   CHECK(levels.N==1 || levels.N==2, "old solver can only handle 1 or 2 levels!");
   if(levels.N==1){
     standardInitFsc1(fsc1, mdp, levels(0));
-    writeFSC_lev1(outfilename+".init-fsc1", fsc1, false);
+    writeFSC_lev1(STRING(outfilename <<".init-fsc1"), fsc1, false);
   }
   if(levels.N==2){
     standardInitFsc2(fsc2, mdp, levels(0), levels(1), fscType==FscHierarchical);
-    writeFSC_lev2(outfilename+".init-fsc2", fsc2, false);
+    writeFSC_lev2(STRING(outfilename <<".init-fsc2"), fsc2, false);
   }
   
   //iterate EM

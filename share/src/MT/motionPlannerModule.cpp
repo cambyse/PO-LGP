@@ -68,14 +68,14 @@ void ReceedingHorizonProcess::step(){
   
   if(planVar){
     planVar->writeAccess(this);
-    planVar->bwdMsg_v   =planner.v;
-    planVar->bwdMsg_Vinv=planner.Vinv;
-    planVar->q    = planner.q;
-    planVar->x    = planner.b;
-    planVar->cost = planner.cost;
+    planVar->bwdMsg_v   =planner.v();
+    planVar->bwdMsg_Vinv=planner.Vinv();
+    planVar->q    = planner.q();
+    planVar->x    = planner.b();
+    planVar->cost = planner.cost();
     planVar->tau  = sys->getTau();
     planVar->totalTime = planVar->tau*sys->nTime();
-    planVar->converged=(d<planner.tolerance);// NIKOLAY : enssure reasonable plans
+    planVar->converged=(d<planner.tolerance());// NIKOLAY : enssure reasonable plans
     planVar->deAccess(this);
   }
 }

@@ -37,7 +37,7 @@ void swiftQueryExactDistance(SwiftInterface& swift);
 ANN *global_ANN=NULL;
 ors::Shape *global_ANN_shape;
 
-SwiftInterface::~SwiftInterface(){
+SwiftInterface::~SwiftInterface() {
   close();
 }
 
@@ -47,7 +47,7 @@ SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const {
   return s;
 }
 
-void SwiftInterface::close(){
+void SwiftInterface::close() {
   if(scene) delete scene;
   if(global_ANN) delete global_ANN;
   scene=NULL;
@@ -55,7 +55,7 @@ void SwiftInterface::close(){
   isOpen=false;
 }
 
-void SwiftInterface::init(const ors::Graph& C, double _cutoff){
+void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
   ors::Shape *s;
   uint k;
   bool r, add;
@@ -68,10 +68,10 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
   INDEXshape2swift.resize(C.shapes.N);  INDEXshape2swift=-1;
   
   cout <<" -- SwiftInterface init";
-  for_list(k, s, C.shapes){
+  for_list(k, s, C.shapes) {
     cout <<'.' <<flush;
     add=true;
-    switch(s->type){
+    switch(s->type) {
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
       case ors::boxST:
         s->mesh.setBox();
@@ -93,7 +93,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
         filename=anyListGet<MT::String>(s->ats, "swiftfile", 1);
         if(!filename)
           filename=anyListGet<MT::String>(s->body->ats, "swiftfile", 1);
-        if(filename){
+        if(filename) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");
         }
@@ -113,7 +113,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
       default:
         NIY;
     }
-    if(add){
+    if(add) {
       r=scene->Add_Convex_Object(
           s->mesh.V.p, (int*)s->mesh.T.p,
           s->mesh.V.d0, s->mesh.T.d0, INDEXshape2swift(s->index), false,
@@ -132,7 +132,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff){
   isOpen=true;
 }
 
-void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s){
+void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s) {
   int sw = INDEXshape2swift(s->index);
   scene->Delete_Object(sw);
   INDEXswift2shape(sw) = -1;
@@ -142,14 +142,14 @@ void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s){
                                   DEFAULT_ORIENTATION, DEFAULT_TRANSLATION, DEFAULT_SCALE,
                                   DEFAULT_BOX_SETTING, DEFAULT_BOX_ENLARGE_REL, cutoff);
   if(!r) HALT("--failed!");
-
+  
   INDEXshape2swift(s->index) = sw;
   INDEXswift2shape(sw) = s->index;
-
+  
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(const ors::Graph& C){
+void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {
   ors::Shape *s;
   ors::Body *b, *b2;
   ors::Joint *e;
@@ -165,8 +165,8 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   //cout <<"collision active shapes: ";
   //for_list(k, s, C.shapes) if(s->cont) cout <<s->name <<' ';
   
-  for_list(k, s, C.shapes){
-    if(!s->cont){
+  for_list(k, s, C.shapes) {
+    if(!s->cont) {
       if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index));
     } else {
       if(INDEXshape2swift(s->index)!=-1) scene->Activate(INDEXshape2swift(s->index));
@@ -175,65 +175,59 @@ void SwiftInterface::initActivations(const ors::Graph& C){
   //shapes within a body
   for_list(j, b, C.bodies) deactivate(b->shapes);
   //deactivate along edges...
-  for_list(j, e, C.joints){
+  for_list(j, e, C.joints) {
     //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
     deactivate(ARRAY(e->from, e->to));
   }
   //deactivate along trees...
-  for_list(k, b, C.bodies){
+  for_list(k, b, C.bodies) {
     MT::Array<ors::Body*> group, children;
     group.append(b);
-    for(uint l=0; l<3; l++){
+    for(uint l=0; l<parentLevelsToDeactivate; l++) {
       //listWriteNames(group, cout);
       children.clear();
-      for_list(k2, b2, group){
-        for_list(j, e, b2->outLinks){
+      for_list(k2, b2, group) {
+        for_list(j, e, b2->outLinks) {
           children.setAppend(e->to);
           //listWriteNames(children, cout);
         }
       }
       group.setAppend(children);
-      //listWriteNames(group, cout);
     }
     deactivate(group);
   }
 }
 
-void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){
+void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {
   //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
-  uint i1, i2, k1, k2;
-  ors::Shape *s1, *s2;
-  ors::Body *b1, *b2;
-  for(i1=0; i1<bodies.N; i1++) for(i2=i1+1; i2<bodies.N; i2++){
-      b1=bodies(i1);
-      b2=bodies(i2);
-      for_list(k1, s1, b1->shapes) for_list(k2, s2, b2->shapes){
-        if(INDEXshape2swift(s1->index)!=-1 && INDEXshape2swift(s2->index)!=-1)
-          scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
-      }
-    }
+  MT::Array<ors::Shape*> shapes;
+  uint i;  ors::Body *b;
+  for_list(i,b,bodies) shapes.setAppend(b->shapes);
+  deactivate(shapes);
 }
 
-void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes){
+void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {
+  //cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
   uint k1, k2;
   ors::Shape *s1, *s2;
-  for_list(k1, s1, shapes) for_list(k2, s2, shapes){
-    if(k1>k2 && INDEXshape2swift(s1->index)!=-1 && INDEXshape2swift(s2->index)!=-1)
-      scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
+  for_list(k1, s1, shapes) for_list(k2, s2, shapes) {
+    if(k1>k2) deactivate(s1, s2);
   }
 }
 
-void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2){
+void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
+  if(INDEXshape2swift(s1->index)==-1 || INDEXshape2swift(s2->index)==-1) return;
+  //cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
-void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift){
+void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
   ors::Shape *s;
   uint k;
   arr rot(3, 3);
-  for_list(k, s, C.shapes){
+  for_list(k, s, C.shapes) {
     s->X.rot.getMatrix(rot.p);
-    if(swift.INDEXshape2swift(s->index)!=-1){
+    if(swift.INDEXshape2swift(s->index)!=-1) {
       swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p, s->X.pos.p);
       if(!s->cont) swift.scene->Deactivate(swift.INDEXshape2swift(s->index));
       //else         swift.scene->Activate( swift.INDEXshape2swift(s->index) );
@@ -241,7 +235,7 @@ void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift){
   }
 }
 
-void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport){
+void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport) {
   int i, j, k, np;
   int *oids, *num_contacts;
   SWIFT_Real *dists, *nearest_pts, *normals;
@@ -253,17 +247,17 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       &dists,
       &nearest_pts,
       &normals);
-  } catch (const char *msg){
+  } catch(const char *msg) {
     cout <<"... catching error '" <<msg <<"' -- SWIFT failed! .. no proxies for this posture!!..." <<endl;
     return;
   }
   
-  if(dumpReport){
+  if(dumpReport) {
     cout <<"contacts: np=" <<np <<endl;
-    for(k=0, i=0; i<np; i++){
+    for(k=0, i=0; i<np; i++) {
       cout <<"* Object " <<C.shapes(oids[i <<1])->name <<" vs. Object " <<C.shapes(oids[(i <<1)+1])->name <<endl;
       cout <<"  #contacts = " <<num_contacts[i] <<endl;
-      for(j=0; j<num_contacts[i]; j++, k++){
+      for(j=0; j<num_contacts[i]; j++, k++) {
         cout <<"  - contact " <<j <<endl;
         cout <<"    distance= " <<dists[k] <<endl;
         cout <<"    points  = " <<nearest_pts[6*k+0] <<' ' <<nearest_pts[6*k+1] <<' ' <<nearest_pts[6*k+2] <<' ' <<nearest_pts[6*k+3] <<' ' <<nearest_pts[6*k+4] <<' ' <<nearest_pts[6*k+5] <<endl;
@@ -273,27 +267,32 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   }
   
   //count total number of new proxies:
-  for(k=0, i=0; i<np; i++){
+  for(k=0, i=0; i<np; i++) {
     if(num_contacts[i]>=0) k+=num_contacts[i];
     if(num_contacts[i]==-1) k++;
   }
   
   //resize old list
+#if 0
   uint Nold=C.proxies.N;
   for(i=0; i<(int)Nold; i++) C.proxies(i)->age++;
   C.proxies.memMove=true;
   C.proxies.resizeCopy(Nold+k);
   for(i=0; i<k; i++) C.proxies(Nold+i) = new ors::Proxy;
-  ors::Proxy *proxy;
+#else
+  uint Nold=0;
+  listResize(C.proxies,k);
+#endif
   
   //add contacts to list
+  ors::Proxy *proxy;
   int a, b;
-  for(k=0, i=0; i<np; i++){
+  for(k=0, i=0; i<np; i++) {
     a=swift.INDEXswift2shape(oids[i <<1]);
     b=swift.INDEXswift2shape(oids[(i <<1)+1]);
     //CHECK(swift.ids(a)==a && swift.ids(b)==b, "shape index does not coincide with swift index");
     //non-penetrating pair of objects
-    if(num_contacts[i]>=0) for(j=0; j<num_contacts[i]; j++, k++){
+    if(num_contacts[i]>=0) for(j=0; j<num_contacts[i]; j++, k++) {
         proxy=C.proxies(Nold+k);
         proxy->a=a;
         proxy->b=b;
@@ -316,7 +315,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       }
       
     //penetrating pair of objects
-    if(num_contacts[i]==-1){
+    if(num_contacts[i]==-1) {
       proxy=C.proxies(Nold+k);
       proxy->a=a;
       proxy->b=b;
@@ -341,13 +340,13 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   CHECK(k+Nold == C.proxies.N, "");
   
   //add pointClound stuff to list
-  if(global_ANN){
+  if(global_ANN) {
     ors::Shape *s;
     uint i, k, _i;
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;
-    for_list(k, s, C.shapes){
+    for_list(k, s, C.shapes) {
       if(!s->cont || s==global_ANN_shape) continue;
       
       //relative rotation and translation of shapes
@@ -357,11 +356,11 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       t.setCarray(rel.pos.p, 3);
       
       //check for each vertex
-      for(i=0; i<s->mesh.V.d0; i++){
+      for(i=0; i<s->mesh.V.d0; i++) {
         v = s->mesh.V[i];
         v = R*v + t;
         global_ANN->getNN(dists, idx, v, 1);
-        if(!i || dists(0)<_dists(0)){
+        if(!i || dists(0)<_dists(0)) {
           _i=i;  _dists=dists;  _idx=idx;
         }
       }
@@ -385,12 +384,12 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   C.sortProxies();
 }
 
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport){
+void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {
   exportStateToSwift(C, *this);
   importProxiesFromSwift(C, *this, dumpReport);
 }
 
-void swiftQueryExactDistance(SwiftInterface& swift){
+void swiftQueryExactDistance(SwiftInterface& swift) {
   int i, np;
   int *oids;
   SWIFT_Real *dists;
@@ -398,7 +397,7 @@ void swiftQueryExactDistance(SwiftInterface& swift){
   swift.scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
   
   cout <<"exact distances: np=" <<np <<endl;
-  for(i=0; i<np; i++){
+  for(i=0; i<np; i++) {
     cout <<"    Object " <<oids[i <<1] <<" vs. Object "
          <<oids[(i <<1)+1] <<" = " <<dists[i] <<endl;
   }
@@ -407,13 +406,13 @@ void swiftQueryExactDistance(SwiftInterface& swift){
 #else
 #include "util.h"
 //#warning "MT_SWIFT undefined - using HALT implementations"
-void SwiftInterface::init(const ors::Graph& C, double _cutoff){ MT_MSG("WARNING - creating dummy SwiftInterface"); }
-void SwiftInterface::initActivations(const ors::Graph& C){}
-void SwiftInterface::close(){}
-void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies){}
-void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2){}
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport){}
+void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
+void SwiftInterface::initActivations(const ors::Graph& C) {}
+void SwiftInterface::close() {}
+void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
+void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
+void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {}
 SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const { return NULL; }
-void swiftQueryExactDistance(SwiftInterface& swift){}
-SwiftInterface::~SwiftInterface(){}
+void swiftQueryExactDistance(SwiftInterface& swift) {}
+SwiftInterface::~SwiftInterface() {}
 #endif

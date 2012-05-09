@@ -348,7 +348,7 @@ Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& stat
   if (confident_ground_rules.num() == 0)  // This is required if world has changed. Then ground rules need to be recalculated.
     updateRules();
   
-  message.clr();
+  message.clear();
 //   message << "[" << visited_actions.N << "]  ";
   
   if (DEBUG>0) {PRINT(fixed_partial_rules.num());  PRINT(rulesC.rules.num());}

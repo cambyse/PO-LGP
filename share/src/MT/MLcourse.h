@@ -22,11 +22,12 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
 struct CrossValidation {
   arr scoreMeans, scoreSDVs, scoreTrains, lambdas;
   
-  virtual void  train(const arr& X, const arr& y, double lambda) = 0;
-  virtual double test(const arr& X, const arr& y) = 0;
+  virtual void  train(const arr& X, const arr& y, double lambda, arr& beta) = 0;
+  virtual double test(const arr& X, const arr& y, const arr& beta) = 0;
   
-  void crossValidate(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, double *scoreMean=NULL, double *scoreSDV=NULL, double *scoreTrain=NULL);
-  void crossValidate(const arr& X, const arr& y, const arr& lambdas, uint k_fold, bool permute);
+  //beta_k_fold will contain k parameter sets for the partitions
+  void crossValidateSingleLambda(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, arr* beta_k_fold=NULL, arr *beta_total=NULL, double *scoreMean=NULL, double *scoreSDV=NULL, double *scoreTrain=NULL);
+  void crossValidateMultipleLambdas(const arr& X, const arr& y, const arr& lambdas, uint k_fold, bool permute);
   void plot();
 };
 
@@ -46,7 +47,7 @@ void makeFeatures(arr& Phi, const arr& X, const arr& Xtrain, FeatureType feature
 //
 
 extern arr beta_true;
-enum ArtificialDataType { readFromCfgFileDT=0, linearData, sinusData, linearOutlier };
+enum ArtificialDataType { readFromCfgFileDT=0, linearData, sinusData, linearOutlier, linearRedundantData };
 
 void artificialData(arr& X, arr& y, ArtificialDataType dataType=readFromCfgFileDT);
 void artificialData_Hasties2Class(arr& X, arr& y);

@@ -5,7 +5,7 @@
 using namespace std;
 
 #include <MT/MLcourse.h>
-#include <MT/util.h> //"../../../../../marc/code/src/MT/util.h"
+#include <MT/util.h>
 
 
 void testLinReg(){
@@ -18,12 +18,13 @@ void testLinReg(){
   ridgeRegression(beta, Phi, y, MT::getParameter<double>("ridge",1e-10));
   cout <<"estimated beta = "<< beta <<endl;
 
+  write(LIST(X, y), "z.train");
+
   arr X_test,y_test;
   X_test.setGrid(X.d1,-3,3,100);
   makeFeatures(Phi,X_test,X);
   y_test = Phi*beta;
 
-  write(LIST(X, y), "z.train");
   write(LIST(X_test, y_test), "z.model");
   gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l","z.pdf",true);
   //MT::wait();
@@ -90,8 +91,7 @@ void testMultiClass(){
 void testCV(){
   
   struct myCV:public CrossValidation{
-    arr beta;
-    void  train(const arr& X, const arr& y,double param){
+    void  train(const arr& X, const arr& y, double param, arr& beta){
       ridgeRegression(beta, X,y,param);
 
       //arr y_pred = X*beta;
@@ -99,7 +99,7 @@ void testCV(){
       //gnuplot("plot 'data' us 2:3 w p,'data' us 2:4 w l");
       //MT::wait();
     };
-    double test(const arr& X, const arr& y){
+    double test(const arr& X, const arr& y, const arr& beta){
       arr y_pred = X*beta;
       return sumOfSqr(y_pred-y)/y.N;
     };
@@ -111,7 +111,7 @@ void testCV(){
   makeFeatures(Phi,X,X);
 
   //cv.crossValidate(Phi,y,0.,10);
-  cv.crossValidate(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
+  cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
   cv.plot();
   cout <<"10-fold CV: costMeans= " <<cv.scoreMeans <<" costSDVs= " <<cv.scoreSDVs <<endl;
   

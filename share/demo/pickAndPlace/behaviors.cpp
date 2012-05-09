@@ -1,4 +1,5 @@
 #include "behaviors.h"
+//#include <JK/utils/util.h>
 
 /*
 
@@ -19,12 +20,10 @@ Some behaviors are sequential like a finite state machine.
 #define VAR(Type) \
   Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
-
 void wait(double sec){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(JoystickState);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
   
   double time=MT::realTime();
   for(;;){
@@ -35,39 +34,39 @@ void wait(double sec){
 }
 
 void joystick(){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(JoystickState);
   Joystick_FeedbackControlTask joyTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &joyTask;
-  _ControllerTask->deAccess(NULL);
+  _MotionPrimitive->setFeedbackTask(joyTask, true, false, NULL);
 
   for(;;){
     MT::wait(.2);
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 }
 
-void homing(){
-  VAR(ControllerTask);
+void homing(bool fixFingers){
+  VAR(MotionPrimitive);
   VAR(HardwareReference);
   VAR(JoystickState);
   Homing_FeedbackControlTask homeTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &homeTask;
-  _ControllerTask->deAccess(NULL);
+  _MotionPrimitive->setFeedbackTask(homeTask, true, fixFingers, NULL);
   
   for(;;){
     MT::wait(.2);
-    double dist=norm(_HardwareReference->get_q_reference(NULL));
+    double dist;
+    if(fixFingers)
+      dist=norm(_HardwareReference->get_q_reference(NULL).sub(0,6));
+    else 
+      dist=norm(_HardwareReference->get_q_reference(NULL));
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 }
 
 void reach(const char* shapeName, const arr& posGoal, double maxVel){
@@ -164,11 +163,11 @@ void setMesh(const char* shapeName, const ors::Mesh& mesh){
 }
 
 void waitForPerceivedObjects(uint numObjects, uint foundSteps){
-  VAR(ControllerTask);
+  VAR(MotionPrimitive);
   VAR(PerceptionOutput);
   VAR(GeometricState);
   VAR(JoystickState);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
 
   for(;;){
     _PerceptionOutput->readAccess(NULL);
@@ -204,122 +203,34 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   }
 }
 
-void pickObject(char* objShape){
-  VAR(ControllerTask);
-  VAR(MotionPlan);
-  VAR(GeometricState);
-  VAR(JoystickState);
-  VAR(Action);
-  
-  _Action->writeAccess(NULL);
-  _Action->action = Action::grasp;
-  _Action->objectRef1 = objShape;
-  _Action->executed = false;
-  _Action->deAccess(NULL);
-  
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
-  bool converged = false;
-  bool executed = false;
-  for(;;){
-    cout << "pick object" << endl;
-    if(!converged){
-      converged=_MotionPlan->get_converged(NULL);
-      if(converged)
-        _ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-    }
-    if(converged){
-      executed = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
-    }
-    if(executed){
-      _ControllerTask->set_mode(ControllerTask::stop, NULL);
-      _Action->set_executed(true, NULL);
-      _Action->set_action(Action::noAction, NULL);
-      break;
-    }
-
-    MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+void waitForSmallMotionQueue(MotionFuture *motionFuture, uint queuesize){
+  int rev = 0;
+  while(motionFuture->getTodoFrames(NULL)>queuesize){
+    rev = motionFuture->waitForRevisionGreaterThan(rev);
   }
-
-  //-- the reattach mess!
-  _GeometricState->writeAccess(NULL);
-  reattachShape(_GeometricState->ors, NULL, objShape, "m9", "table");
-  _GeometricState->deAccess(NULL);
-
-  //-- close hand
-  CloseHand_FeedbackControlTask closeTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &closeTask;
-  _ControllerTask->forceColLimTVs=false;
-  _ControllerTask->deAccess(NULL);
-
-  MT::wait(3.);
-  
-  _ControllerTask->set_forceColLimTVs(true, NULL);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
 }
 
-void placeObject(char* objShape, char* belowFromShape, const char* belowToShape){
-  VAR(ControllerTask);
-  VAR(MotionPlan);
-  VAR(GeometricState);
-  VAR(JoystickState);
-  VAR(Action);
-  
-  _Action->writeAccess(NULL);
-  _Action->action = Action::place;
-  _Action->objectRef1 = objShape;
-  _Action->objectRef2 = belowFromShape;
-  //_Action->objectRef3 = belowToShape;
-  _Action->executed = false;
-  _Action->deAccess(NULL);
-  
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
-  
-  bool converged = false;
-  bool executed = false;
-    for(;;){
-    if(!converged){
-      converged=_MotionPlan->get_converged(NULL);
-      if(converged){
-	_ControllerTask->set_fixFingers(true, NULL);
-	_ControllerTask->set_mode(ControllerTask::followPlan, NULL);
-      }
-    }
-    if(converged){
-      executed = (_ControllerTask->get_mode(NULL)==ControllerTask::done);
-    }
-    if(executed){
-      _ControllerTask->set_mode(ControllerTask::stop, NULL);
-      _ControllerTask->set_fixFingers(false, NULL);
-      _Action->set_executed(true, NULL);
-      _Action->set_action(Action::noAction, NULL);
-      break;
-    }
-    
-    MT::wait(.2);
-    if(_JoystickState->get_state(NULL)(0)&0x30) break;
+void waitForEmptyQueue(MotionFuture *motionFuture){
+  int rev = 0;
+  while(!motionFuture->get_done(NULL)){
+    rev = motionFuture->waitForRevisionGreaterThan(rev);
   }
+}
 
-  //-- the reattach mess!
-  _GeometricState->writeAccess(NULL);
-  reattachShape(_GeometricState->ors, NULL, objShape, "OBJECTS", belowToShape);
-  _GeometricState->deAccess(NULL);
+void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
+  VAR(MotionFuture);
+  
+  waitForSmallMotionQueue(_MotionFuture, 1);
 
-  //-- open hand
-  OpenHand_FeedbackControlTask openTask;
-  _ControllerTask->writeAccess(NULL);
-  _ControllerTask->mode = ControllerTask::feedback;
-  _ControllerTask->feedbackControlTask = &openTask;
-  _ControllerTask->forceColLimTVs=false;
-  _ControllerTask->deAccess(NULL);
+  _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
   
-  MT::wait(3.);
+  //waitForSmallMotionQueue(_MotionFuture, 1);
+  //waitForEmptyQueue(_MotionFuture);
   
-  _ControllerTask->set_forceColLimTVs(true, NULL);
-  _ControllerTask->set_mode(ControllerTask::stop, NULL);
+  if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NULL);
+  if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NULL);
+  
+  //waitForEmptyQueue(_MotionFuture);
 }
 
 void plannedHoming(const char* objShape, const char* belowToShape){
@@ -376,18 +287,5 @@ void graspISF(){
   
   perceive.threadClose();
   */
-}
-
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
-  ors::Shape *obj  = ors.getShapeByName(objShape);
-  obj->body->shapes.removeValue(obj);
-  obj->body = ors.getBodyByName(toBody);
-  obj->ibody = obj->body->index;
-  obj->body->shapes.append(obj);
-  obj->rel.setDifference(obj->body->X, obj->X);
-  if(swift && belowShape){
-    swift->initActivations(ors);
-    swift->deactivate(obj, ors.getShapeByName(belowShape));
-  }
 }
 

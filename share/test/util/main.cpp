@@ -1,3 +1,4 @@
+#define MT_IMPLEMENT_TEMPLATES
 #include<MT/util.h>
 
 void testRnd(){
@@ -8,13 +9,12 @@ void testRnd(){
 
 void testString(){
   String s("4.123, ");                   // create the string
-  cout <<s <<"length=" <<s.N() <<'|' <<endl;   // output the string
-  cout <<s+"length="+s.N() <<'|' <<endl;       // concatenate strings with other things
+  cout <<s <<"length=" <<s.N <<'|' <<endl;   // output the string
   cout <<s <<"length=7|" <<endl;
 
   String tmp;
-  tmp <<s <<"length=" <<s.N();
-  //tmp=STRING(s <<"length=" <<s.N()); // pipe into temporary string String()
+  tmp <<s <<"length=" <<s.N;
+  //tmp=STRING(s <<"length=" <<s.N); // pipe into temporary string String()
   cout <<tmp <<'|' <<endl;
 
   double a,b;
@@ -25,11 +25,11 @@ void testString(){
   s >>tmp;      // read string from string (starting at current scan position)
   cout <<"a=" <<a <<", b=" <<b <<tmp <<'|' <<endl;
 
-  s.resetI();   // reset the istream pointer of source string before...
+  s.resetIstream();   // reset the istream pointer of source string before...
   s >>tmp;      // ...reading string from string (starting at beginning of string)
   cout <<tmp <<'|' <<endl;
 
-  s.resetI();   // reset the istream pointer of source string before...
+  s.resetIstream();   // reset the istream pointer of source string before...
   tmp.read(s," ,;:\n\r");
   cout <<tmp <<'|' <<endl;
 }
