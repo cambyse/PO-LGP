@@ -1086,10 +1086,10 @@ void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list a
 }
 
 
-void RobotManipulationSimulator::getTypes(PRADA::ArgumentTypeL& objects_types, const uintA& objects, const PRADA::ArgumentTypeL& types) { //!< return list of all object types
+void RobotManipulationSimulator::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types) { //!< return list of all object types
   objects_types.resize(objects.N);
   uint i;
-  PRADA::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
+  relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
   FOR1D(types, i) {
     if (types(i)->name == MT::String("block")) {
       type_block = types(i);

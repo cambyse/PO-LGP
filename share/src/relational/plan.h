@@ -20,13 +20,13 @@
 */
     
 
-#ifndef PRADA_plan_h
-#define PRADA_plan_h
+#ifndef RELATIONAL_plan_h
+#define RELATIONAL_plan_h
 
 #include "reason.h"
 
 
-namespace PRADA {
+namespace relational {
   
 
 /************************************************
@@ -285,4 +285,4 @@ class NotTheseStatesReward : public Reward {
 
 }
 
-#endif // PRADA_plan_h
+#endif // RELATIONAL_plan_h

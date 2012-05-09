@@ -115,7 +115,7 @@ public:
   // GENERAL OBJECT INFORMATION
   // --------------------------------
   void getObjects(uintA& objects); //!< return list all objects
-  void getTypes(PRADA::ArgumentTypeL& objects_types, const uintA& objects, const PRADA::ArgumentTypeL& types); //!< return list of all object types
+  void getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types); //!< return list of all object types
   uint getTableID();
   void getBalls(uintA& balls);
   void getBlocks(uintA& blocks);

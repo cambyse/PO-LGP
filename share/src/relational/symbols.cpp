@@ -24,7 +24,7 @@
 #include "relational/literals.h"
 
 
-namespace PRADA {
+namespace relational {
 
   
 /************************************************
@@ -304,7 +304,7 @@ void ConjunctionSymbol::write(ostream& os) const {
     os <<" ";
     os <<" ";
   }
-  PRADA::write(base_literals, os);
+  relational::write(base_literals, os);
 }
 
 
@@ -994,17 +994,17 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
 
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Symbol& s) {
+std::ostream& operator<<(std::ostream& os, const relational::Symbol& s) {
   s.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::ArgumentType& t) {
+std::ostream& operator<<(std::ostream& os, const relational::ArgumentType& t) {
   t.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::SymL& symbols) {
+std::ostream& operator<<(std::ostream& os, const relational::SymL& symbols) {
   writeSymbols(symbols, os);
   return os;
 }

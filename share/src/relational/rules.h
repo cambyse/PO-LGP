@@ -19,10 +19,8 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define MT_IMPLEMENT_TEMPLATES
-
-#ifndef PRADA__rules
-#define PRADA__rules
+#ifndef RELATIONAL_rules_h
+#define RELATIONAL_rules_h
 
 #include <MT/util.h>
 #include <relational/utilTL.h>
@@ -33,10 +31,8 @@
 #define FOR1D_DOWN_(x,i)  for(i=x.num();i--;)
 
 
-namespace PRADA {
+namespace relational {
   
-
-
 
 /************************************************
  * 
@@ -214,13 +210,13 @@ public:
 
 
 
-} // PRADA namespace
+} // relational namespace
 
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Rule& r);
-std::ostream& operator<<(std::ostream& os, const PRADA::Substitution& s);
+std::ostream& operator<<(std::ostream& os, const relational::Rule& r);
+std::ostream& operator<<(std::ostream& os, const relational::Substitution& s);
 
  
 
-#endif // PRADA__rules
+#endif // RELATIONAL_rules_h

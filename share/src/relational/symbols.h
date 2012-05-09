@@ -19,17 +19,16 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define MT_IMPLEMENT_TEMPLATES
 
-#ifndef PRADA__SYMBOLS
-#define PRADA__SYMBOLS
+#ifndef RELATIONAL_symbols_h
+#define RELATIONAL_symbols_h
 
 #include <MT/util.h>
 #include <relational/utilTL.h>
 
 
 
-namespace PRADA {
+namespace relational {
   
 
 /************************************************
@@ -41,8 +40,8 @@ namespace PRADA {
 
 class ArgumentType;
 class Symbol;
-typedef MT::Array< PRADA::Symbol* > SymL;
-typedef MT::Array< PRADA::ArgumentType* > ArgumentTypeL;
+typedef MT::Array< Symbol* > SymL;
+typedef MT::Array< ArgumentType* > ArgumentTypeL;
 
 class Symbol {
   protected:
@@ -308,13 +307,13 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in);
 
 
 
-} // PRADA namespace
+} // relational namespace
 
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Symbol& s);
-std::ostream& operator<<(std::ostream& os, const PRADA::ArgumentType& s);
-std::ostream& operator<<(std::ostream& os, const PRADA::SymL& symbols);
+std::ostream& operator<<(std::ostream& os, const relational::Symbol& s);
+std::ostream& operator<<(std::ostream& os, const relational::ArgumentType& s);
+std::ostream& operator<<(std::ostream& os, const relational::SymL& symbols);
 
 
-#endif // PRADA__SYMBOLS
+#endif // RELATIONAL_symbols_h

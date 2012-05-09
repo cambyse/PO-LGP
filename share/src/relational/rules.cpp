@@ -24,10 +24,10 @@
 #include "reason.h"
 #include <stdlib.h>
 
-#define RE_fast 1
+#define FAST__RULES_REASONING 1
 
 
-namespace PRADA {
+namespace relational {
 
 
 
@@ -662,7 +662,7 @@ void RuleSet::sort_using_args() {
   }
   // max_arity > 2
   else {
-    PRADA::write(*this, "ground_rules.dat.unsorted_backup");
+    relational::write(*this, "ground_rules.dat.unsorted_backup");
     
     MT::Array< Rule* > ra_sorted;
     ra_sorted.memMove = true;
@@ -846,7 +846,7 @@ void RuleSet::read(const char* filename, RuleSet& rules) {
 }
 
 
-#ifndef RE_fast
+#ifndef FAST__RULES_REASONING
 // Assumption: Rule arguments have to be different vom Deictic References
 void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const uintA constants) {
   rules_ground.clear();
@@ -881,7 +881,7 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
   rules_ground.sort_using_args();
 }
 #endif
-#ifdef RE_fast
+#ifdef FAST__RULES_REASONING
 // Assumption: Rule arguments have to be different vom Deictic References
 void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const uintA& constants) {
   uint DEBUG = 0;
@@ -1726,14 +1726,14 @@ void SubstitutionSet::createAllPossibleSubstitutions(SubstitutionSet& subs, cons
 
 
 
-}  // namespace PRADA
+}  // namespace relational
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Rule& r) {
+std::ostream& operator<<(std::ostream& os, const relational::Rule& r) {
   r.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Substitution& s) {
+std::ostream& operator<<(std::ostream& os, const relational::Substitution& s) {
   s.write(os); return os;
 }

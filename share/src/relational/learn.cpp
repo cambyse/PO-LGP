@@ -19,14 +19,12 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <math.h>
 #include <MT/algos.h>
 #include "learn.h"
 #include "reason.h"
 
-namespace PRADA {
+namespace relational {
   
   
 
@@ -1748,7 +1746,7 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   double STOPPING_THRESHOLD = 0.001;
   uint MAX_STEPS = 1000;
   // RProp
-  Rprop rp;
+  TL::Rprop rp;
   rp.init(0.025);
   rp.dMin = 1e-9;
   i=0;

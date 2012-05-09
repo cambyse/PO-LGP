@@ -19,8 +19,8 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PRADA__ROBOT_MANIPULATION_DOMAIN
-#define PRADA__ROBOT_MANIPULATION_DOMAIN
+#ifndef RMSIM_robotManipulationSimulator_h
+#define RMSIM_robotManipulationSimulator_h
 
 #include "relational/reason.h"
 #include "relational/plan.h"
@@ -36,10 +36,10 @@ namespace RobotManipulationInterface {
     TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
   --------------------- */
   // Observation
-  PRADA::SymbolicState* calculateSymbolicState(RobotManipulationSimulator* sim);
+  relational::SymbolicState* calculateSymbolicState(RobotManipulationSimulator* sim);
   
   // Action
-  void performAction(PRADA::Literal* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message = "");
+  void performAction(relational::Literal* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message = "");
 
   
   
@@ -51,12 +51,12 @@ namespace RobotManipulationInterface {
   extern double SAMPLING__PROB_PUTON_CLEARGUY;
   
   // Action generation
-  PRADA::Literal* generateAction(const PRADA::SymbolicState& s, uint id_table);
-  PRADA::Literal* generateAction_onlyPossible(const PRADA::SymbolicState& s, uint id_table);
-  PRADA::Literal* generateAction_trulyRandom(const PRADA::SymbolicState& s, uint id_table);
-  PRADA::Literal* generateAction_wellBiased(const PRADA::SymbolicState& s, uint id_table);
-  PRADA::Literal* generateAction_wellBiased_2Dactions(const PRADA::SymbolicState& s, uint id_table);
-  PRADA::StateTransitionL& generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);  
+  relational::Literal* generateAction(const relational::SymbolicState& s, uint id_table);
+  relational::Literal* generateAction_onlyPossible(const relational::SymbolicState& s, uint id_table);
+  relational::Literal* generateAction_trulyRandom(const relational::SymbolicState& s, uint id_table);
+  relational::Literal* generateAction_wellBiased(const relational::SymbolicState& s, uint id_table);
+  relational::Literal* generateAction_wellBiased_2Dactions(const relational::SymbolicState& s, uint id_table);
+  relational::StateTransitionL& generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);  
   // generate & write
   void generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);
 
@@ -64,5 +64,5 @@ namespace RobotManipulationInterface {
 
 }
 
-#endif // PRADA__ROBOT_MANIPULATION_DOMAIN
+#endif // RMSIM_robotManipulationSimulator_h
 

@@ -32,8 +32,7 @@
 
 
 
-
-namespace PRADA {
+namespace relational {
 
 inline uint getIndex(const uintA& constants, const uintA& args) {
   uint args_idx=0;

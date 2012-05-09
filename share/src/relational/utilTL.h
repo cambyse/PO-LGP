@@ -19,14 +19,16 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef STD_TL
-#define STD_TL
+#ifndef UTIL_TL_h
+#define UTIL_TL_h
 
 #include <limits.h>
 #include <float.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#ifndef MT_IMPLEMENT_TEMPLATES
 #define MT_IMPLEMENT_TEMPLATES
+#endif
 #include <MT/array.h>
 #include <MT/util.h>
 #include <cmath>
@@ -121,7 +123,7 @@ template<class T> T* getRef(T* p) {
 	return p;
 }
 
-}
+
 
 // for my ors simulator
 double REPLACE_SIZE(double val);
@@ -160,7 +162,7 @@ public:
   bool done();
 };
 
-
+}
 
 
 
