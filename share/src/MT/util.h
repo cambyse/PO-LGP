@@ -48,7 +48,6 @@
 #  undef min
 #  undef max
 #  define MT_TIMEB
-#  define __FUNCTION__ ""
 #  ifdef MT_QT
 #    undef  NOUNICODE
 #    define NOUNICODE
@@ -185,6 +184,9 @@ template<class T> void getParameter(T& x, const char *tag, const T& Default);
 template<class T> void getParameter(T& x, const char *tag);
 template<class T> bool checkParameter(const char *tag);
 
+template <class T> void putParameter(const char* tag, const T& x);
+template <class T> bool getFromMap(T& x, const char* tag);
+
 //----- get verbose level
 uint getVerboseLevel();
 }
@@ -198,20 +200,17 @@ std::istream& operator>>(std::istream& is, char *str);
 // String class
 //
 
-#define STRING(x) (((MT::String&)(MT::String().stream() <<x)).p)
+#define STRING(x) (((MT::String&)(MT::String().stream() <<x)))
 #define STREAM(x) (((MT::String&)(MT::String().stream() <<x)).stream())
 
 namespace MT {
-  typedef std::iostream IOStream; //TODO: why do we need this?
-
 /*!\brief String implements the functionalities of an ostream and an
 istream, but also can be send to an ostream or read from an
 istream. It is based on a simple streambuf derived from the
 MT::Mem class */
-class String:public IOStream {
-private: //TODO: hide this in a private space!
-  class StringBuf:public std::streambuf {
-  public:
+class String:public std::iostream {
+private:
+  struct StringBuf:std::streambuf {
     String *string;
     virtual int overflow(int C = traits_type::eof());
     virtual int sync();
@@ -225,12 +224,12 @@ private: //TODO: hide this in a private space!
 public:
   //!@name data fields
   char *p;    //!< pointer to memory
-  uint memN;  //!< \# elements (excluding zero) //TODO: rename to N (as for Array)
+  uint N;     //!< \# elements (excluding zero)
   uint M;     //!< actual buffer size (in terms of # elements)
   static const char *readSkipSymbols; //!< default argument to read method (also called by operator>>)
   static const char *readStopSymbols; //!< default argument to read method (also called by operator>>)
   static int readEatStopSymbol;       //!< default argument to read method (also called by operator>>)
-  void (*flushHandler)(String&); //TODO: hide somehow? (do we need this)
+  void (*flushCallback)(String&);
   
   //!@name constructors
   String();
@@ -239,30 +238,28 @@ public:
   ~String();
   
   //!@name access
-  uint N() const;  //!< string length (excluding zero) //TODO rename to length()
   operator char*();
   operator const char*() const;
   char &operator()(uint i) const;
-  IOStream& stream();             //!< explicitly returns this as an std::iostream&
+  std::iostream& stream();             //!< explicitly returns this as an std::iostream&
   String& operator()();           //!< explicitly return this as a (non-const!) String&
   
-  //!@name setting, appending
+  //!@name setting
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
-  //TODO: do we need the following two operators?
-  template<class T> String operator+(const T& v) const { String news(*this); news <<v; return news; }
-  template<class T> String prepend(const T& v) const { String news; news <<v <<*this; return news; }
   
   //!@name resetting
-  String& clr(); //TODO rename clear() (as for Array)
-  String& resetI(); //TODO rename resetIstream()
+  String& clear();       //as with Array: resize(0)
+  String& clearStream(); //call IOstream::clear();
+  String& resetIstream();
   
   //!@name equality
   bool operator==(const char *s) const;
   bool operator==(const String& s) const;
   bool operator!=(const char *s) const;
   bool operator!=(const String& s) const;
+  bool operator<(const String& s) const;
   
   //!@name misc
   bool contains(const String& substring) const;
@@ -286,7 +283,7 @@ stdPipes(MT::String)
 namespace MT {
 extern String errString;
 
-inline void breakPoint(){
+inline void breakPoint() {
   int i=5;
   i*=i;    //set a break point here, if you want to catch errors directly
 }
@@ -302,7 +299,7 @@ inline void breakPoint(){
 #  define MT_MSG(msg){ std::cerr <<MT_HERE <<msg <<std::endl; MT::breakPoint(); }
 #endif
 #ifndef HALT
-#  define HALT(msg)  { MT::errString.clr() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
+#  define HALT(msg)  { MT::errString.clear() <<MT_HERE <<msg <<" --- HALT"; std::cerr <<MT::errString <<std::endl; MT::breakPoint(); throw MT::errString.p; }
 #  define NIY HALT("not implemented yet")
 #  define NICO HALT("not implemented with this compiler options: usually this means that the implementation needs an external library and a corresponding compiler option - see the source code")
 #  define OPS HALT("obsolete")
@@ -349,7 +346,7 @@ public:
   //!@name constructors
   
   //! Determines the tag to search for in parameter file/command line
-  explicit Parameter(const char *_tag){
+  explicit Parameter(const char *_tag) {
     typeName=typeid(type).name();
     initialized=false;
     tag=_tag;
@@ -358,7 +355,7 @@ public:
   
   /*!\brief specifies also a default value -- parameter does not have to but
     can be specified in the parameter file/command line */
-  Parameter(const char *_tag, const type& _default){
+  Parameter(const char *_tag, const type& _default) {
     typeName=typeid(type).name();
     initialized=false;
     tag=_tag;
@@ -366,29 +363,29 @@ public:
     Default=_default;
   };
   
-  ~Parameter(){}
+  ~Parameter() {}
   
   //!@name value access
   
   //! standard type conversion: returns a const of the parameter value
-  operator type(){ if(!initialized) initialize(); return value; }
+  operator type() { if(!initialized) initialize(); return value; }
   
   //! ()-operator: returns an lvalue of the parameter value
-  type& operator()(){ if(!initialized) initialize(); return value; }
+  type& operator()() { if(!initialized) initialize(); return value; }
   
   
   //!@name manipulation
   
   //! assigs a value to the parameter -- no further initialization needed
-  type& operator=(const type v){ initialized=true; value=v; return value; }
+  type& operator=(const type v) { initialized=true; value=v; return value; }
   
   //! set the tag (replacing the one from the constructor)
-  void setTag(char *_tag){ tag=_tag; }
+  void setTag(char *_tag) { tag=_tag; }
   
   /*!\brief enforces that the parameter is reinitialized from the parameter
     file/command line, the next time it is referenced -- even if it
     has been initialized before */
-  void reInitialize(){ initialized=false; }
+  void reInitialize() { initialized=false; }
   
   
   //!@name explicit grabbing
@@ -419,7 +416,7 @@ private:
   
 public:
   //! ...
-  Rnd(){ ready=false; };
+  Rnd() { ready=false; };
   
   
 public://!@name initialization
@@ -434,21 +431,21 @@ public://!@name initialization
   
 public://!@name access
   //! a initeger random number uniformly distributed in [0, ?]
-  uint32_t num(){ if(!ready) seed(); return (uint32_t)rnd250() >>5; }
+  uint32_t num() { if(!ready) seed(); return (uint32_t)rnd250() >>5; }
   //! same as \c num()
-  uint32_t operator()(){ return num(); }
+  uint32_t operator()() { return num(); }
   //! a initeger random number uniformly distributed in [0, \c i-1]
-  uint32_t num(uint32_t limit){
+  uint32_t num(uint32_t limit) {
     CHECK(limit, "zero limit in rnd.num()"); return num() % limit;
   }
-  uint32_t num(int32_t lo, int32_t hi){ return lo+num(hi-lo+1); }
+  uint32_t num(int32_t lo, int32_t hi) { return lo+num(hi-lo+1); }
   //! same as \c num(i)
-  uint32_t operator()(uint32_t i){ return num(i); }
-  uint32_t operator()(int32_t lo, int32_t hi){ return num(lo, hi); }
+  uint32_t operator()(uint32_t i) { return num(i); }
+  uint32_t operator()(int32_t lo, int32_t hi) { return num(lo, hi); }
   //! a random variable uniformly distributed in [0, 1]
-  double uni(){ return ((double)num(1 <<22))/(1 <<22); }
+  double uni() { return ((double)num(1 <<22))/(1 <<22); }
   //! a random variable uniformly distributed in [\c low, \c high]
-  double uni(double low, double high){ return low+uni()*(high-low); }
+  double uni(double low, double high) { return low+uni()*(high-low); }
   //! a gaussian random variable with mean zero
   double gauss();
   /*!\brief a positive integer drawn from a poisson distribution with given
@@ -459,7 +456,7 @@ public://!@name access
   
   
 private:
-  int32_t rnd250(){
+  int32_t rnd250() {
     rpoint = (rpoint+1) & 255;          // Index erhoehen
     return rfield[rpoint] =  rfield[(rpoint-250) & 255]
                              ^ rfield[(rpoint-103) & 255];
@@ -484,7 +481,7 @@ struct Any {
   void *p;
   uint n;
   char delim;
-  virtual ~Any(){};
+  virtual ~Any() {};
   virtual void write(std::ostream &os) const = 0;
   virtual Any *newClone() = 0;
 };
@@ -509,7 +506,7 @@ void gnuplotClose();
 //
 
 #if defined MT_IMPLEMENTATION | defined MT_IMPLEMENT_TEMPLATES
-#  include "util_t.cpp"
+#  include "util_t.cxx"
 #endif
 
 #ifdef  MT_IMPLEMENTATION

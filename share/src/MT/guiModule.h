@@ -2,8 +2,8 @@
 #define MT_guiModule_h
 
 #include "array.h"
-#include "biros.h"
-#include "biros_internal.h"
+#include <biros/biros.h>
+#include <biros/biros_internal.h>
 #include "robot_variables.h"
 
 struct OpenGL;

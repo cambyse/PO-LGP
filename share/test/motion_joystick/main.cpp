@@ -4,6 +4,8 @@
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
+  ThreadInfoWin win;
+  win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
@@ -16,12 +18,16 @@ int main(int argn,char** argv){
   Controller controller;
   Joystick joystick;
   SchunkArm schunkArm;
-  //SchunkHand schunkHand;
+  SchunkHand schunkHand;
   //SchunkSkin schunkSkin;
 
-  PoseViewer<HardwareReference> view(hardwareReference, geometricState);
+  PoseViewer<HardwareReference> view(hardwareReference);
 
-  ProcessL P=LIST<Process>(controller, joystick, schunkArm, view); //, schunkHand, schunkSkin, 
+  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, joystick);
+
+  ProcessL P=LIST<Process>(controller, view); //, , schunkSkin, 
+
+  
   
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
@@ -29,7 +35,8 @@ int main(int argn,char** argv){
   controllerTask.mode = ControllerTask::feedback;
   controllerTask.feedbackControlTask = &joyTask;
   controllerTask.deAccess(NULL);
-
+  //view.threadLoopWithBeat(.01);
+  loopWithBeat(hardware, .01); // hardware must be started before the controller
   loopWithBeat(P,.01);
   MT::wait(20.);
   close(P);

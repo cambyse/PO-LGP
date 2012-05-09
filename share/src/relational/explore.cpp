@@ -358,17 +358,6 @@ Atom* RuleExplorer::getExploitAction(AtomL& plan, PRADA_Planner* prada, const Sy
 
 
 
-uint getIndex(const uintA& constants, const uintA& args) {
-  uint args_idx=0;
-  uint i;
-  FOR1D(args, i) {
-    args_idx += ((uint) pow(constants.N, i)) * constants.findValue(args(i));
-  }
-//   cout<<"getIndex: constants="<<constants<<"  args="<<args<<"    args_idx="<<args_idx<<endl;
-  return args_idx;
-}
-
-
 
 // ------------------------------------
 //  Reward for Unknown Contexts
@@ -565,7 +554,7 @@ Atom* RuleExplorer::decideAction(const SymbolicState& state, NID_Planner* planne
   if (confident_ground_rules.num() == 0)  // This is required if world has changed. Then ground rules need to be recalculated.
     updateRules();
   
-  message.clr();
+  message.clear();
 //   message << "[" << visited_actions.N << "]  ";
   
   // (1) reward_constants

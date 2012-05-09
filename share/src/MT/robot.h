@@ -13,8 +13,8 @@
 #include "vision.h"
 #include "earlyVisionModule.h"
 #include "guiModule.h"
-#include "biros.h"
-#include "biros_internal.h"
+#include <biros/biros.h>
+#include <biros/biros_internal.h>
 #include <NP/camera.h>
 #include <NP/uvccamera.h>
 

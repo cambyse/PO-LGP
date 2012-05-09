@@ -108,7 +108,7 @@ arr crossF(const arr& v);
 //#define Qstate
 
 #if 0
-ors::Body *robotbody(uint i, const Featherstone::Robot& robot){ return robot.C->nodes(i); }
+ors::Body *robotbody(uint i, const Featherstone::Robot& robot) { return robot.C->nodes(i); }
 
 uint Featherstone::Robot::N() const { return C->nodes.N; }
 
@@ -121,8 +121,8 @@ int Featherstone::Robot::parent(uint i) const {
 byte Featherstone::Robot::dof(uint i) const {
   ors::Body *n=C->nodes(i);
   if(n->fixed) return 0;
-  if(n->inLinks.N){
-    switch(n->inLinks(0)->type){
+  if(n->inLinks.N) {
+    switch(n->inLinks(0)->type) {
       case 0: return 1;
 #ifndef Qstate
       case 4: return 3;
@@ -140,7 +140,7 @@ const arr Featherstone::Robot::S(uint i) const {
   ors::Quaternion r;
   ors::Matrix R;
   arr Ss, rr;
-  switch(d_i){
+  switch(d_i) {
     case 0: S.resize(6, (uint)0); S.setZero(); break;
     case 1: S.resize(6, 1); S.setZero(); S(0, 0)=1.; break;
     case 3:
@@ -178,15 +178,15 @@ const arr Featherstone::Robot::Xlink(uint i) const {
   //slide 15
   ors::Transformation f;
   ors::Joint *e1=C->nodes(i)->firstIn;
-  if(!e1){
+  if(!e1) {
     f.setZero();
-  }else{
+  } else {
     ors::Joint *e0=e1->from->firstIn;
-    if(e0){
+    if(e0) {
       f = e0->B;
       f.addRelativeFrame(e1->A);
       //f.addRelativeFrame(e1->X);
-    }else{
+    } else {
       //NIY;
       f = e1->from->X;
       f.addRelativeFrame(e1->A);
@@ -230,16 +230,16 @@ const arr Featherstone::Robot::force(uint i) const {
 
 #endif
 
-void Featherstone::skew(arr& X, const double *v){
+void Featherstone::skew(arr& X, const double *v) {
   X.resize(3, 3);  X.setZero();
   X(0, 1) = -v[2];  X(1, 0) = v[2];
   X(1, 2) = -v[0];  X(2, 1) = v[0];
   X(2, 0) = -v[1];  X(0, 2) = v[1];
 }
 
-arr Featherstone::skew(const double *v){ arr X; skew(X, v); return X; }
+arr Featherstone::skew(const double *v) { arr X; skew(X, v); return X; }
 
-void FrameToMatrix(arr &X, const ors::Transformation& f){
+void FrameToMatrix(arr &X, const ors::Transformation& f) {
   arr z(3, 3);  z.setZero();
   arr r(3, 3);  Featherstone::skew(r, f.pos.p);
   arr R(3, 3);  f.rot.getMatrix(R.p);
@@ -248,8 +248,8 @@ void FrameToMatrix(arr &X, const ors::Transformation& f){
   //cout <<"\nz=" <<z <<"\nr=" <<r <<"\nR=" <<R <<"\nX=" <<X <<endl;
 }
 
-void ors::Link::setFeatherstones(){
-  switch(type){
+void ors::Link::setFeatherstones() {
+  switch(type) {
     case -1:     CHECK(parent==-1, ""); _h.clear();  break;
     case hingeJT: _h.resize(6); _h.setZero(); _h(0)=1.; break;
     default: NIY;
@@ -259,7 +259,7 @@ void ors::Link::setFeatherstones(){
   updateFeatherstones();
 }
 
-void ors::Link::updateFeatherstones(){
+void ors::Link::updateFeatherstones() {
   FrameToMatrix(_A, A);
   FrameToMatrix(_Q, Q);
   
@@ -273,7 +273,7 @@ void ors::Link::updateFeatherstones(){
   _f(3)=fo(0);  _f(4)=fo(1);  _f(5)=fo(2);
 }
 
-void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
+void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
   tree.resize(C.bodies.N);
   
   uint i, iq;
@@ -282,9 +282,9 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
   ors::Transformation f;
   for(i=0; i<tree.N; i++) tree(i).parent=-1;
   iq=0;
-  for_list(i, n, C.bodies){
+  for_list(i, n, C.bodies) {
     CHECK(i==n->index, "not sorted");
-    if(n->inLinks.N){
+    if(n->inLinks.N) {
       CHECK(n->inLinks.N==1, "this is not a tree");
       e=n->inLinks(0);
       p=e->from;
@@ -305,7 +305,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
       
       tree(i).Q=e->Q;
       iq++;
-    }else{
+    } else {
       CHECK(n->inLinks.N==0, "dammit");
       
       tree(i).type=-1;
@@ -325,7 +325,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
   for(i=0; i<tree.N; i++) tree(i).setFeatherstones();
 }
 
-void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
+void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
   CHECK(tree.N==C.bodies.N, "");
   
   uint i;
@@ -333,12 +333,12 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
   ors::Joint *e;
   ors::Transformation f;
   i=0;
-  for_list(i, n, C.bodies){
-    if(n->inLinks.N){
+  for_list(i, n, C.bodies) {
+    if(n->inLinks.N) {
       e=n->inLinks(0);
       p=e->from;
       
-      if(!p->inLinks.N){
+      if(!p->inLinks.N) {
         f=p->X;
         f.appendTransformation(e->A);
         tree(i).A=f;
@@ -349,7 +349,7 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
       tree(i).X=f;
       
       tree(i).Q=e->Q;
-    }else{
+    } else {
       tree(i).com=n->X.pos;
     }
     tree(i).force=n->force;
@@ -362,7 +362,7 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C){
 /*
 ----------- Xrotx.m ----------------------------------------------------------
 */
-void Featherstone::Xrotx(arr& X, double h){
+void Featherstone::Xrotx(arr& X, double h) {
   /*
   % Xrotx  MM6 coordinate transform from X-axis rotation.
   % Xrotx(h) calculates the MM6 coordinate transform matrix (for motion
@@ -388,7 +388,7 @@ void Featherstone::Xrotx(arr& X, double h){
 /*
 ----------- Xroty.m ----------------------------------------------------------
 */
-void Featherstone::Xroty(arr& X, double h){
+void Featherstone::Xroty(arr& X, double h) {
   /*
   % Xroty  MM6 coordinate transform from Y-axis rotation.
   % Xroty(h) calculates the MM6 coordinate transform matrix (for motion
@@ -414,7 +414,7 @@ void Featherstone::Xroty(arr& X, double h){
 /*
 ----------- Xrotz.m ----------------------------------------------------------
 */
-void Featherstone::Xrotz(arr& X, double h){
+void Featherstone::Xrotz(arr& X, double h) {
   /*
   % Xrotz  MM6 coordinate transform from Z-axis rotation.
   % Xrotz(h) calculates the MM6 coordinate transform matrix (for motion
@@ -440,7 +440,7 @@ void Featherstone::Xrotz(arr& X, double h){
 /*
 ----------- Xtrans.m ---------------------------------------------------------
 */
-void Featherstone::Xtrans(arr& X, double* r){
+void Featherstone::Xtrans(arr& X, double* r) {
   /*
   % Xtrans  MM6 coordinate transform from 3D translation vector.
   % Xtrans(r) calculates the MM6 coordinate transform matrix (for motion
@@ -463,7 +463,7 @@ void Featherstone::Xtrans(arr& X, double* r){
 /*
 ----------- RBmci.m ----------------------------------------------------------
 */
-void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I){
+void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I) {
   /*
   % RBmci  Calculate RBI from mass, CoM and rotational inertia.
   % RBmci(m, c, I) calculate MF6 rigid-body inertia tensor for a body with
@@ -483,7 +483,7 @@ void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I){
 /*
 ------------------------------------------------------------------------------
 */
-void Featherstone::crossF(arr& vcross, const arr& v){
+void Featherstone::crossF(arr& vcross, const arr& v) {
   /*
   % crossF  FF6 cross-product tensor from M6 vector.
   % crossF(v) calculates the FF6 cross-product tensor of motion vector v
@@ -496,12 +496,12 @@ void Featherstone::crossF(arr& vcross, const arr& v){
   //vcross = -crossM(v)';
 }
 
-arr Featherstone::crossF(const arr& v){ arr X; crossF(X, v); return X; }
+arr Featherstone::crossF(const arr& v) { arr X; crossF(X, v); return X; }
 
 /*
 ------------------------------------------------------------------------------
 */
-void Featherstone::crossM(arr& vcross, const arr& v){
+void Featherstone::crossM(arr& vcross, const arr& v) {
   /*
   % crossM  MM6 cross-product tensor from M6 vector.
   % crossM(v) calculates the MM6 cross-product tensor of motion vector v
@@ -525,13 +525,13 @@ void Featherstone::crossM(arr& vcross, const arr& v){
      ]; */
 }
 
-arr Featherstone::crossM(const arr& v){ arr X; crossM(X, v); return X; }
+arr Featherstone::crossM(const arr& v) { arr X; crossM(X, v); return X; }
 
 /*
 ------------------------------------------------------------------------------
 */
 #if 0
-void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const arr& qdd, const arr& grav){
+void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const arr& qdd, const arr& grav) {
   /*
   % INVDYN  Calculate robot inverse dynamics.
   % invdyn(robot, q, qd, qdd) calculates the inverse dynamics of a robot using
@@ -543,9 +543,9 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
   
   arr grav_accn(6);
   grav_accn.setZero();
-  if(!grav.N){
+  if(!grav.N) {
     //grav_accn(5)=9.81;
-  }else{
+  } else {
     grav_accn.setVectorBlock(grav, 3);
   }
   
@@ -554,40 +554,40 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
   arr Xup(N, 6, 6), v(N, 6), f(N, 6), a(N, 6);
   arr Q;
   
-  for(i=0, n=0; i<N; i++){
+  for(i=0, n=0; i<N; i++) {
     d_i=robot.dof(i);
-    if(d_i){
+    if(d_i) {
       qd_i(i) .referToSubRange(qd , n, n+d_i-1);
       qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
       tau_i(i).referToSubRange(tau, n, n+d_i-1);
-    }else{
+    } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
       tau_i(i).clear(); tau_i(i).resize(0);
     }
     n += d_i;
     S(i) = robot.S(i);
-    if(robot.C->nodes(i)->inLinks.N){
+    if(robot.C->nodes(i)->inLinks.N) {
       FrameToMatrix(Q, robot.C->nodes(i)->inLinks(0)->X);
       Xup[i] = Q * robot.Xlink(i); //the transformation from the i-th to the j-th
-    }else{
+    } else {
       Xup[i] = robot.Xlink(i); //the transformation from the i-th to the j-th
     }
   }
   CHECK(n==qd.N && n==qdd.N && n==tau.N, "")
   
-  for(i=0; i<N; i++){
-    if(robot.parent(i) == -1){
+  for(i=0; i<N; i++) {
+    if(robot.parent(i) == -1) {
       v[i] = S(i) * qd_i(i);
       a[i] = Xup[i]*grav_accn + S(i)*qdd_i(i);
-    }else{
+    } else {
       v[i] = Xup[i] * v[robot.parent(i)] + S(i) * qd_i(i);
       a[i] = Xup[i] * a[robot.parent(i)] + S(i) * qdd_i(i) + crossM(v[i])*S(i)*qd_i(i);
     }
     f[i] = robot.Ilink(i)*a[i] + crossF(v[i])*robot.Ilink(i)*v[i] - robot.force(i);
     
 #if 0
-    if(i){
+    if(i) {
       ors::Transformation f, r, g;
       f=robot.C->nodes(i)->X;
       f.subRelativeFrame(robot.C->nodes(i)->inLinks(0)->B);
@@ -602,11 +602,11 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
   }
   
   
-  for(i=N; i--;){
-    if(robot.dof(i)){
+  for(i=N; i--;) {
+    if(robot.dof(i)) {
       tau_i(i) = ~S(i) * f[i];
     }
-    if(robot.parent(i) != -1){
+    if(robot.parent(i) != -1) {
       f[robot.parent(i)] = f[robot.parent(i)] + ~Xup[i]*f[i];
     }
   }
@@ -621,7 +621,7 @@ void Featherstone::fwdDynamics_old(arr& qdd,
                                    const Robot& robot,
                                    const arr& qd,
                                    const arr& tau,
-                                   const arr& grav){
+                                   const arr& grav) {
   /*
   % FDab  Forward Dynamics via Articulated-Body Algorithm
   % FDab(model, q, qd, tau, f_ext, grav_accn) calculates the forward dynamics of a
@@ -640,7 +640,7 @@ void Featherstone::fwdDynamics_old(arr& qdd,
   //CHANGE: default is gravity zero (assume to be included in external forces)
   arr a_grav(6);
   a_grav.setZero();
-  if(grav.N){
+  if(grav.N) {
     a_grav.setVectorBlock(grav, 3);
   }
   
@@ -651,14 +651,14 @@ void Featherstone::fwdDynamics_old(arr& qdd,
   arr vJ, Ia, fa;
   arr Q;
   
-  for(i=0, n=0; i<N; i++){
+  for(i=0, n=0; i<N; i++) {
     //for general multi-dimensional joints, pick the sub-arrays
     d_i=robot.dof(i);
-    if(d_i){
+    if(d_i) {
       qd_i(i) .referToSubRange(qd , n, n+d_i-1);
       qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
       tau_i(i).referToSubRange(tau, n, n+d_i-1);
-    }else{
+    } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
       tau_i(i).clear(); tau_i(i).resize(0);
@@ -667,16 +667,16 @@ void Featherstone::fwdDynamics_old(arr& qdd,
     
     h(i) = robot.S(i);
     vJ = h(i) * qd_i(i); //equation (2), vJ = relative vel across joint i
-    if(robot.C->nodes(i)->inLinks.N){
+    if(robot.C->nodes(i)->inLinks.N) {
       FrameToMatrix(Q, robot.C->nodes(i)->inLinks(0)->X);
       Xup[i] = Q * robot.Xlink(i); //the transformation from the i-th to the j-th
-    }else{
+    } else {
       Xup[i] = robot.Xlink(i); //the transformation from the i-th to the j-th
     }
-    if(robot.parent(i) == -1){
+    if(robot.parent(i) == -1) {
       v[i] = vJ;
       dh_dq[i] = 0.;
-    }else{
+    } else {
       v[i] = Xup[i] * v[robot.parent(i)] + vJ;
       dh_dq[i] = crossM(v[i]) * vJ;  //WHY??
     }
@@ -685,18 +685,18 @@ void Featherstone::fwdDynamics_old(arr& qdd,
     fA[i] = crossF(v[i]) * robot.Ilink(i) * v[i] - robot.force(i); //1st equation below (13)
   }
   
-  for(i=N; i--;){
+  for(i=N; i--;) {
     I_h(i) = IA[i] * h(i);
-    if(robot.dof(i)){
+    if(robot.dof(i)) {
       h_I_h(i)      = ~h(i)*I_h(i);
       tau__h_fA(i) = tau_i(i) - ~h(i)*fA[i]; //[change from above] last term in (13), 2nd equation below (13)
-    }else{
+    } else {
       h_I_h(i).clear();
       tau__h_fA(i).clear();
     }
     inverse(inv_h_I_h(i), h_I_h(i));
     par = robot.parent(i);
-    if(par != -1){
+    if(par != -1) {
       Ia = IA[i] - I_h(i)*inv_h_I_h(i)*~I_h(i);
       fa = fA[i] + Ia*dh_dq[i] + I_h(i)*inv_h_I_h(i)*tau__h_fA(i);
       IA[par] = IA[par] + ~Xup[i] * Ia * Xup[i];         //equation (12)
@@ -704,14 +704,14 @@ void Featherstone::fwdDynamics_old(arr& qdd,
     }
   }
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     par=robot.parent(i);
-    if(par == -1){
+    if(par == -1) {
       a[i] = Xup[i] * a_grav + dh_dq[i]; //[change from above]
-    }else{
+    } else {
       a[i] = Xup[i] * a[par] + dh_dq[i]; //[change from above]
     }
-    if(robot.dof(i)){
+    if(robot.dof(i)) {
       qdd_i(i) = inverse(h_I_h(i))*(tau__h_fA(i) - ~I_h(i)*a[i]); //equation (14)
     }
     a[i] = a[i] + h(i)*qdd_i(i); //equation above (14)
@@ -728,20 +728,20 @@ void Featherstone::fwdDynamics_old(arr& qdd,
 void ors::fwdDynamics_aba_nD(arr& qdd,
                              const ors::LinkTree& tree,
                              const arr& qd,
-                             const arr& tau){
+                             const arr& tau) {
   int par;
   uint i, N=tree.N, d_i, n;
   MT::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N), I_h(N), h_I_h(N), u(N);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IA(N, 6, 6), fA(N, 6), a(N, 6);
   qdd.resizeAs(tau);
   
-  for(i=0, n=0; i<N; i++){
+  for(i=0, n=0; i<N; i++) {
     d_i=tree(i).dof();
-    if(d_i){
+    if(d_i) {
       qd_i(i) .referToSubRange(qd , n, n+d_i-1);
       qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
       tau_i(i).referToSubRange(tau, n, n+d_i-1);
-    }else{
+    } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
       tau_i(i).clear(); tau_i(i).resize(0);
@@ -753,12 +753,12 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
   }
   CHECK(n==qd.N && n==qdd.N && n==tau.N, "")
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     par = tree(i).parent;
-    if(par == -1){
+    if(par == -1) {
       v[i] = h(i) * qd_i(i);
       dh_dq[i] = 0.;
-    }else{
+    } else {
       v[i] = Xup[i] * v[par] + h(i) * qd_i(i);
       dh_dq[i] = Featherstone::crossM(v[i]) * h(i) * qd_i(i);
     }
@@ -766,30 +766,30 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
     fA[i] = Featherstone::crossF(v[i]) * tree(i)._I * v[i] - tree(i)._f;
   }
   
-  for(i=N; i--;){
+  for(i=N; i--;) {
     par = tree(i).parent;
     I_h(i) = IA[i] * h(i);
-    if(tree(i).dof()){
+    if(tree(i).dof()) {
       h_I_h(i) = ~h(i)*I_h(i);
       u(i) = tau_i(i) - ~I_h(i)*dh_dq[i] - ~h(i)*fA[i];
-    }else{
+    } else {
       h_I_h(i).clear(); h_I_h(i).resize(0);
       u(i).clear(); u(i).resize(0);
     }
-    if(par != -1){
+    if(par != -1) {
       IA[par]() += ~Xup[i] * (IA[i] - I_h(i)*inverse(h_I_h(i))*~I_h(i)) * Xup[i];
       fA[par]() += ~Xup[i] * (fA[i] + IA[i]*dh_dq[i] + I_h(i)*inverse(h_I_h(i))*u(i));
     }
   }
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     par=tree(i).parent;
-    if(par == -1){
+    if(par == -1) {
       a[i] = 0; //Xup[i] * grav_accn;
-    }else{
+    } else {
       a[i]() = Xup[i] * a[par];
     }
-    if(tree(i).dof()){
+    if(tree(i).dof()) {
       qdd_i(i) = inverse(h_I_h(i))*(u(i) - ~I_h(i)*a[i]);
     }
     a[i] = a[i] + dh_dq[i] + h(i)*qdd_i(i);
@@ -803,26 +803,26 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
 void ors::fwdDynamics_aba_1D(arr& qdd,
                              const ors::LinkTree& tree,
                              const arr& qd,
-                             const arr& tau){
+                             const arr& tau) {
   int par;
   uint i, N=tree.N, iq;
   arr h(N, 6), I_h(N, 6), h_I_h(N), inv_h_I_h(N), taui(N), tau__h_fA(N);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IA(N, 6, 6), fA(N, 6), a(N, 6);
   arr vJ, Ia, fa;
   qdd.resizeAs(tau);
-
+  
   //fwd: compute the velocities v[i] and external + Coriolis forces fA[i] of all bodies
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     iq = tree(i).index;
     par = tree(i).parent;
     Xup[i]() = tree(i)._Q * tree(i)._A; //the transformation from the i-th to the j-th
-    if(par != -1){
+    if(par != -1) {
       h[i]() = tree(i)._h;
       vJ = h[i] * qd(iq); //equation (2), vJ = relative vel across joint i
       v[i]() = Xup[i] * v[par] + vJ; //eq (27)
       dh_dq[i]() = Featherstone::crossM(v[i]) * vJ;  //WHY??
       taui(i)=tau(iq);
-    }else{
+    } else {
       h[i]() = 0.;
       v[i]() = 0.;
       dh_dq[i] = 0.;
@@ -833,16 +833,16 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
     //first part of eq (29)
     fA[i] = Featherstone::crossF(v[i]) * (tree(i)._I * v[i]) - tree(i)._f;
   }
-
+  
   //bwd: propagate tree inertia
-  for(i=N; i--;){
+  for(i=N; i--;) {
     par = tree(i).parent;
     //eq (28)
     I_h[i]()      = IA[i] * h[i];
     h_I_h(i)      = scalarProduct(h[i], I_h[i]);
     inv_h_I_h(i)  = 1./h_I_h(i);
     tau__h_fA(i) = taui(i) - scalarProduct(h[i], fA[i]); //[change from above] last term in (13), 2nd equation below (13)
-    if(par != -1){
+    if(par != -1) {
       Ia = IA[i] - I_h[i]*(inv_h_I_h(i)*~I_h[i]);
       fa = fA[i] + Ia*dh_dq[i] + I_h[i]*(inv_h_I_h(i)*tau__h_fA(i));
       IA[par] = IA[par] + ~Xup[i] * Ia * Xup[i];         //equation (12)
@@ -850,14 +850,14 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
     }
   }
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     iq = tree(i).index;
     par= tree(i).parent;
-    if(par != -1){
+    if(par != -1) {
       a[i] = Xup[i] * a[par] + dh_dq[i]; //[change from above]
       qdd(iq) = inv_h_I_h(i)*(tau__h_fA(i) - scalarProduct(I_h[i], a[i])); //equation (14)
       a[i] = a[i] + h[i]*qdd(iq); //equation above (14)
-    }else{
+    } else {
       a[i] = dh_dq[i]; //[change from above]
     }
   }
@@ -868,20 +868,20 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
 void ors::invDynamics(arr& tau,
                       const ors::LinkTree& tree,
                       const arr& qd,
-                      const arr& qdd){
+                      const arr& qdd) {
   int par;
   uint i, N=tree.N, d_i, n;
   MT::Array<arr> h(N), qd_i(N), qdd_i(N), tau_i(N);
   arr Xup(N, 6, 6), v(N, 6), fJ(N, 6), a(N, 6);
   tau.resizeAs(qdd);
   
-  for(i=0, n=0; i<N; i++){
+  for(i=0, n=0; i<N; i++) {
     d_i=tree(i).dof();
-    if(d_i){
+    if(d_i) {
       qd_i(i) .referToSubRange(qd , n, n+d_i-1);
       qdd_i(i).referToSubRange(qdd, n, n+d_i-1);
       tau_i(i).referToSubRange(tau, n, n+d_i-1);
-    }else{
+    } else {
       qd_i(i) .clear(); qd_i(i). resize(0);
       qdd_i(i).clear(); qdd_i(i).resize(0);
       tau_i(i).clear(); tau_i(i).resize(0);
@@ -893,12 +893,12 @@ void ors::invDynamics(arr& tau,
   }
   CHECK(n==qd.N && n==qdd.N && n==tau.N, "")
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     par = tree(i).parent;
-    if(par == -1){
+    if(par == -1) {
       v[i] = h(i) * qd_i(i);
       a[i] = h(i) * qdd_i(i);
-    }else{
+    } else {
       v[i] = Xup[i] * v[par] + h(i) * qd_i(i);
       a[i] = Xup[i] * a[par] + h(i) * qdd_i(i) + Featherstone::crossM(v[i]) * h(i) * qd_i(i);
     }
@@ -906,7 +906,7 @@ void ors::invDynamics(arr& tau,
     fJ[i] = tree(i)._I*a[i] + Featherstone::crossF(v[i]) * tree(i)._I * v[i] - tree(i)._f;
   }
   
-  for(i=N; i--;){
+  for(i=N; i--;) {
     par = tree(i).parent;
     if(tree(i).dof()) tau_i(i) = ~h(i) * fJ[i];
     if(par != -1)     fJ[par]() += ~Xup[i] * fJ[i];
@@ -918,7 +918,7 @@ void ors::invDynamics(arr& tau,
 
 void ors::equationOfMotion(arr& H, arr& C,
                            const ors::LinkTree& tree,
-                           const arr& qd){
+                           const arr& qd) {
                            
   /*function  [H, C] = HandC( model, q, qd, f_ext, grav_accn )
   
@@ -947,17 +947,17 @@ void ors::equationOfMotion(arr& H, arr& C,
   
   avp.setZero();
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     iq  = tree(i).index;
     par = tree(i).parent;
     Xup[i]() = tree(i)._Q * tree(i)._A; //the transformation from the i-th to the j-th
-    if(par != -1){
+    if(par != -1) {
       h[i]() = tree(i)._h;
       vJ = h[i] * qd(iq); //equation (2), vJ = relative vel across joint i
       v[i]() = Xup[i] * v[par] + vJ;
       dh_dq[i]() = Featherstone::crossM(v[i]) * vJ;  //WHY??
       avp[i]() = Xup[i]*avp[par] + Featherstone::crossM(v[i])*vJ;
-    }else{
+    } else {
       h[i]() = 0.;
       v[i]() = 0.;
       dh_dq[i] = 0.;
@@ -970,13 +970,13 @@ void ors::equationOfMotion(arr& H, arr& C,
   
   C.resize(qd.N);
   
-  for(i=N; i--;){
+  for(i=N; i--;) {
     iq  = tree(i).index;
     par = tree(i).parent;
-    if((int) iq !=-1){
+    if((int) iq !=-1) {
       C(iq) = scalarProduct(h[i], fvp[i]);
     }
-    if(par!=-1){
+    if(par!=-1) {
       fvp[par]() += ~Xup[i] * fvp[i];
       IC[par]() += ~Xup[i] * IC[i] * Xup[i];
     }
@@ -985,18 +985,18 @@ void ors::equationOfMotion(arr& H, arr& C,
   H.resize(qd.N, qd.N);
   H.setZero();
   
-  for(i=0; i<N; i++){
+  for(i=0; i<N; i++) {
     iq = tree(i).index;
     fh = IC[i] * h[i];
-    if((int)iq!=-1){
+    if((int)iq!=-1) {
       H(iq, iq) = scalarProduct(h[i], fh);
     }
     j = i;
-    while(tree(j).parent!=-1){
+    while(tree(j).parent!=-1) {
       fh = ~Xup[j] * fh;
       j  = tree(j).parent;
       jq = tree(j).index;
-      if((int)jq!=-1){
+      if((int)jq!=-1) {
         H(iq, jq) = scalarProduct(h[j], fh);
         H(jq, iq) = H(iq, jq);
       }
@@ -1011,7 +1011,7 @@ void ors::equationOfMotion(arr& H, arr& C,
 void ors::fwdDynamics_MF(arr& qdd,
                          const ors::LinkTree& tree,
                          const arr& qd,
-                         const arr& tau){
+                         const arr& tau) {
                          
   arr M, Minv, F;
   equationOfMotion(M, F, tree, qd);
@@ -1021,17 +1021,17 @@ void ors::fwdDynamics_MF(arr& qdd,
 }
 
 #else //!MT_FEATHERSTONE
-void GraphToTree(ors::LinkTree& tree, const ors::Graph& C){ NIY; }
-void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C){ NIY; }
+void GraphToTree(ors::LinkTree& tree, const ors::Graph& C) { NIY; }
+void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C) { NIY; }
 void Featherstone::equationOfMotion(arr& H, arr& C,
                                     const ors::LinkTree& tree,
-                                    const arr& qd){ NIY; }
+                                    const arr& qd) { NIY; }
 void Featherstone::fwdDynamics_MF(arr& qdd,
                                   const ors::LinkTree& tree,
                                   const arr& qd,
-                                  const arr& tau){ NIY; }
+                                  const arr& tau) { NIY; }
 void Featherstone::invDynamics(arr& tau,
                                const ors::LinkTree& tree,
                                const arr& qd,
-                               const arr& qdd){ NIY; }
+                               const arr& qdd) { NIY; }
 #endif

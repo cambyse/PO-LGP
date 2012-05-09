@@ -6,16 +6,18 @@
 #include <hardware/hardware.h>
 
 struct sController {
-  ControllerTask *controllerTask;
-  MotionPlan *motionPlan;
+  MotionFuture *motionFuture;
+  MotionPrimitive *motionPrimitive;
   HardwareReference *hardwareReference;
-  GeometricState *geo;
+  //GeometricState *geo;
+  WorkingCopy<GeometricState> geo;
   
-  ors::Graph *ors;
+  //ors::Graph *ors;
   soc::SocSystem_Ors sys;
   
   double tau;
   double maxJointStep;
+  double followTrajectoryTimeScale;
   
   /*
   bool useBwdMsg, forceColLimTVs, fixFingers;
@@ -30,10 +32,17 @@ struct sController {
 
 Controller::Controller():Process("MotionController") {
   s = new sController();
-  birosInfo.getVariable(controllerTask, "ControllerTask", this);
-  birosInfo.getVariable(motionPlan, "MotionPlan", this);
-  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
-  birosInfo.getVariable(geo, "GeometricState", this);
+  birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+  birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
+  bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
+  if(listens) threadListenTo(s->hardwareReference);
+  s->geo.init("GeometricState", this);
+  s->hardwareReference->writeAccess(this);
+  s->geo().ors.getJointState(s->hardwareReference->q_reference,
+                             s->hardwareReference->v_reference);
+  s->hardwareReference->deAccess(this);
+  s->motionPrimitive = NULL;
+  
 }
 
 Controller::~Controller() {
@@ -41,57 +50,60 @@ Controller::~Controller() {
 }
 
 void Controller::open() {
-  CHECK(geo, "please set geometricState before launching MotionPrimitive");
   arr W = birosInfo.getParameter<arr>("Controller_W", this);
   s->tau = birosInfo.getParameter<double>("Controller_tau", this);
   s->maxJointStep = birosInfo.getParameter<double>("Controller_maxJointStep", this);
+  s->followTrajectoryTimeScale = birosInfo.getParameter<double>("Controller_followTrajectoryTimeScale", this);
+    
   
   //clone the geometric state
-  geo->readAccess(this);
-  s->ors = geo->ors.newClone();
-  geo->deAccess(this);
+  s->geo.pull();
   
-  s->sys.initBasics(s->ors, NULL, NULL,
+  s->sys.initBasics(&s->geo().ors, NULL, NULL,
                     1, s->tau, true, &W);
-                    
 }
 
-void Controller::close() { MT_MSG("NIY") }
+void Controller::close() { }
 
 void Controller::step() {
-  CHECK(controllerTask, "please set controllerMode before launching MotionPrimitive");
-  CHECK(hardwareReference, "please set controllerReference before launching MotionPrimitive");
-  CHECK(geo, "please set geometricState before launching MotionPrimitive");
+  arr zeros(14);  zeros.setZero();
   
-  ControllerTask::ControllerMode mode=controllerTask->get_mode(this);
+  s->geo.pull();
+
+  CHECK(s->motionFuture,"");
+  s->motionFuture->readAccess(this);
+  if(s->motionFuture->motions.N)
+    s->motionPrimitive = s->motionFuture->motions(s->motionFuture->currentFrame);
+  s->motionFuture->deAccess(this);
+    
+  if (!s->motionPrimitive){ //no motion primitive is set! don't do anything
+    s->hardwareReference->set_v_reference(zeros, this);
+    return;
+  }
+
+  MotionPrimitive::MotionMode mode=s->motionPrimitive->get_mode(this);
   
-  if (mode==ControllerTask::stop) {
-    //stop -> don't change q_reference
-    hardwareReference->set_v_reference(zeros(14,1), this);
-    controllerTask->waitForConditionSignal(.01);
+  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) {
+    s->hardwareReference->set_v_reference(zeros, this);
     return;
   }
   
-  if (mode==ControllerTask::followPlan) {
-    CHECK(motionPlan, "please set motionPlan before launching MotionPrimitive");
+  if (mode==MotionPrimitive::followPlan) {
+    CHECK(s->motionPrimitive, "please set motionPrimitive before launching ActionToMotionPrimitive");
     
     //-- check if converged
-    if (motionPlan->get_converged(this)==false) {
-      //stop
-      //MT_MSG("trying to follow non-converged trajectory");
-      hardwareReference->set_v_reference(zeros(14,1), this);
-      motionPlan->waitForConditionSignal(.01);
+    if (s->motionPrimitive->get_planConverged(this)==false) {
+      s->hardwareReference->set_v_reference(zeros, this);
       return;
     }
     
     //-- first compute the interpolated
-    double realTime = controllerTask->get_relativeRealTimeOfController(this);
-    double timeScale = controllerTask->get_followTrajectoryTimeScale(this);
-    arr q_plan = motionPlan->get_q_plan(this);
-    double plan_tau = motionPlan->get_tau(this);
+    double realTime = s->motionPrimitive->get_relativeRealTimeOfController(this);
+    arr q_plan = s->motionPrimitive->get_q_plan(this);
+    double plan_tau = s->motionPrimitive->get_tau(this);
     
     //where to interpolate
-    realTime += timeScale * s->tau; //!!! hard coded 10msec as basic control cycle
+    realTime += s->followTrajectoryTimeScale * s->tau;
     uint timeStep= realTime/plan_tau;
     double inter = realTime/plan_tau - (double)timeStep;  //same as fmod
     
@@ -103,47 +115,41 @@ void Controller::step() {
       q_reference = q_plan[q_plan.d0-1];
     }
     
-    //perhaps fix fingers
-    bool fixFingers = controllerTask->get_fixFingers(this);
-    if (fixFingers) for (uint j=7; j<14; j++) {
-      q_reference(j)=q_plan[0](j); 
-    }
-    
-    cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
-    controllerTask->set_relativeRealTimeOfController(realTime, this);
+    //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
+    s->motionPrimitive->set_relativeRealTimeOfController(realTime, this);
     
     if (timeStep>=q_plan.d0-1) {
-      controllerTask->set_mode(ControllerTask::done, this);
-      controllerTask->set_relativeRealTimeOfController(0., this);
+      s->motionPrimitive->set_mode(MotionPrimitive::done, this);
+      s->motionPrimitive->set_relativeRealTimeOfController(0., this);
     }
     
     //-- now test for collision
     //MT_MSG("TODO");
     
     //-- pass to MotionReference
-    hardwareReference->set_q_reference(q_reference, this);
+    s->hardwareReference->set_q_reference(q_reference, this);
   }
   
-  if (mode==ControllerTask::feedback) {
-    bool forceColLimTVs = controllerTask->get_forceColLimTVs(this);
-    bool fixFingers = controllerTask->get_fixFingers(this);
+  if (mode==MotionPrimitive::feedback) {
+    bool forceColLimTVs = s->motionPrimitive->get_forceColLimTVs(this);
+    bool fixFingers = s->motionPrimitive->get_fixFingers(this);
     
     //pull for possible changes in the geometric state
     //MT_MSG("TODO");
     
     //update the controllers own internal ors state - pulling from MotionReference
-    arr q_reference = hardwareReference->get_q_reference(this);
-    arr v_reference = hardwareReference->get_v_reference(this);
+    arr q_old = s->hardwareReference->get_q_reference(this);
+    arr v_old = s->hardwareReference->get_v_reference(this);
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
-    if (q_reference.N) { 
-      if(q_reference.N == 2*s->ors->getJointStateDimension()) q_reference = q_reference.sub(0, q_reference.N/2 - 1);
-      s->sys.setqv(q_reference, v_reference);
-    }
-    else 
-      s->sys.getqv0(q_reference, v_reference);
+    if (q_old.N >= 14) { 
+      if(q_old.N == 2*s->geo().ors.getJointStateDimension()) q_old = q_old.sub(0, q_old.N/2 - 1);
+      s->sys.setqv(q_old, v_old);
+    } else 
+      s->sys.getqv0(q_old, v_old);
     
     //update all task variables using this ors state
-    FeedbackControlTaskAbstraction *task = controllerTask->get_feedbackControlTask(this);
+    FeedbackControlTaskAbstraction *task = s->motionPrimitive->get_feedbackControlTask(this);
+    CHECK(task,"");
     if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
     s->sys.setTaskVariables(task->TVs);
     task->updateTaskVariableGoals(*s->sys.ors);
@@ -160,17 +166,19 @@ void Controller::step() {
     if (forceColLimTVs && (!colActive || !limActive)) HALT("SAFETY BREACH! You need an active collision and limit variable!");
     
     //compute the motion step
-    arr q_old=q_reference;
     arr dq, x, x_1;
     
     //dynamic control using SOC
-    x_1=q_reference; x_1.append(v_reference);
+    x_1=q_old; x_1.append(v_old);
+    arr q_reference, v_reference;
     soc::bayesianDynamicControl(s->sys, x, x_1, 0);
-    q_reference = x.sub(0, q_reference.N-1);
-    v_reference = x.sub(v_reference.N, -1);
+    q_reference = x.sub(0, q_old.N-1);
+    v_reference = x.sub(v_old.N, -1);
     
     //perhaps fix fingers
-    if (fixFingers) for (uint j=7; j<14; j++) { v_reference(j)=0.; q_reference(j)=q_old(j); }
+    if (fixFingers) for (uint j=7; j<14; j++) {
+      v_reference(j)=0.; q_reference(j)=q_old(j); 
+    }
     
     //SAFTY CHECK: too large steps?
     double step=euclideanDistance(q_reference, q_old);
@@ -182,9 +190,8 @@ void Controller::step() {
       MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
       //v_reference.setZero(); SD: making too large step warnig  use max allowed step
     }
-    
-    hardwareReference->set_q_reference(q_reference, this);
-    hardwareReference->set_v_reference(v_reference, this);
+    s->hardwareReference->set_q_reference(q_reference, this);
+    s->hardwareReference->set_v_reference(v_reference, this);
     
     //push proxies to the geometric state
     //MT_MSG("TODO");
@@ -197,10 +204,6 @@ void Controller::step() {
       listCopy(proxiesVar->proxies, ors.proxies);
       proxiesVar->deAccess(this);
       } else MT_MSG("Variable pointer not set");*/
-  }
-  
-  if (mode==ControllerTask::done) {
-    return;
   }
   
 }

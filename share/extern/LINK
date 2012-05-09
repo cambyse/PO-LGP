@@ -14,7 +14,7 @@ DESCRIPTION
 	
 "
 
-externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan ode-0.11 urg-0.0.2 tony_mdp"
+externals="cuda cudaSDK opencv-2.1 schunkLWA schunkSDH-11-05-11 ntcan ode-0.11 urg-0.0.2"
 
 [ -z "$1" ] && { echo "$USAGE"; exit 1; } 
 [ -d "$1" ] || { echo "$USAGE"; exit 1; }

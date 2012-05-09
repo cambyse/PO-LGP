@@ -9,27 +9,27 @@
 #include "util.h"
 
 #define T double
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 #define T int
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 #define T uint
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 #define T char
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 #define T unsigned char
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 #define T float
-#include <MT/array_instantiate.cpp>
+#include <MT/array_instantiate.cxx>
 #undef T
 
 template void MT::save<MT::Array<double> >(MT::Array<double> const&, char const*);

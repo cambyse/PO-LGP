@@ -158,7 +158,6 @@ void testBurglary() {
   post_bl.getP(p4);
 
   //** LoopyBP
-  //loopyBP_bipartite(variables,factors,10);
   infer::LoopyBP lbp;
   lbp.initBipartite(variables,factors);
   for(uint t=0;t<10;t++) lbp.step();

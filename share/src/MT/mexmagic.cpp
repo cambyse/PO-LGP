@@ -10,7 +10,7 @@ mxArray **_plhs;
 const mxArray **_prhs;
 
 void mexFlushHandler(MT::String& string){
-  mexPrintf(string.p); string.clr();
+  mexPrintf(string.p); string.clear();
 }
 
 void initMex(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){

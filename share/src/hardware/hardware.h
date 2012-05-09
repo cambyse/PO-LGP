@@ -24,7 +24,10 @@ struct JoystickState: public Variable {
   FIELD(intA, state);
   FIELD(uint, n);
   
-  JoystickState():Variable("JoystickState") {}
+  JoystickState():Variable("JoystickState") {
+    state.resize(1);
+    state(0)=0;
+  }
   
 };
 

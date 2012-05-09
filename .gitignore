@@ -12,7 +12,6 @@
 z.*
 
 *_doc
-*.data
 
 *_moc.cpp
 *_ui.h

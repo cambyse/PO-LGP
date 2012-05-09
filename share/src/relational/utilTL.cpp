@@ -488,6 +488,15 @@ double TL::getcputime() {
   return t;
 }
 
+uint TL::getIndex(const uintA& constants, const uintA& args) {
+  uint args_idx=0;
+  uint i;
+  FOR1D(args, i) {
+    args_idx += ((uint) pow(constants.N, i)) * constants.findValue(args(i));
+  }
+//   cout<<"getIndex: constants="<<constants<<"  args="<<args<<"    args_idx="<<args_idx<<endl;
+  return args_idx;
+}
 
 
 

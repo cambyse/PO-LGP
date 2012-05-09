@@ -2,7 +2,7 @@
 #include "mstep.h"
 #include "infer.h"
 
-using namespace infer;
+
 
 double mdp::pomdpEM_structured(
   const MDP_structured& mdp,
@@ -25,7 +25,7 @@ double mdp::pomdpEM_structured(
   uint i;
   //----- rescale rewards if necessary
 #if rescaleRewards
-  Factor *Rax=listFindName(mdp.facs, "Rax");
+  infer::Factor *Rax=listFindName(mdp.facs, "Rax");
   arr mdp_Rax_org;
   Rax->getP(mdp_Rax_org);
   arr mdp_Rax = mdp_Rax_org;
@@ -39,31 +39,31 @@ double mdp::pomdpEM_structured(
   Rax->setP(mdp_Rax);
 #endif
   
-  VariableList leftVars=cat(fsc.leftVars, mdp.leftVars);
-  VariableList rightVars=cat(fsc.rightVars, mdp.rightVars);
-  VariableList tail_headVars=cat(rightVars, leftVars);
+  infer::VariableList leftVars=cat(fsc.leftVars, mdp.leftVars);
+  infer::VariableList rightVars=cat(fsc.rightVars, mdp.rightVars);
+  infer::VariableList tail_headVars=cat(rightVars, leftVars);
   
-  FactorList allTransitions = cat(fsc.transFacs, mdp.obsFacs, mdp.transFacs);
-  FactorList allRewards = cat(mdp.rewardFacs, allTransitions);
-  FactorList allInits = cat(fsc.initFacs, mdp.initFacs);
+  infer::FactorList allTransitions = cat(fsc.transFacs, mdp.obsFacs, mdp.transFacs);
+  infer::FactorList allRewards = cat(mdp.rewardFacs, allTransitions);
+  infer::FactorList allInits = cat(fsc.initFacs, mdp.initFacs);
   
-  Factor Falpha(leftVars);
-  Factor Fbeta(rightVars);
+  infer::Factor Falpha(leftVars);
+  infer::Factor Fbeta(rightVars);
   arr PT;
   double PR, ET;
   if(!estepStructured){
     //----- collapse to unstructured model for generic inference
     uint dz = 1;  for(i=0; i<leftVars.N; i++) dz *= leftVars(i)->dim;
     //get transition matrix
-    Factor Fzz;
+    infer::Factor Fzz;
     eliminationAlgorithm(Fzz, allTransitions, tail_headVars);
     Fzz.P.reshape(dz, dz);
     //get reward vector
-    Factor FRz;
+    infer::Factor FRz;
     eliminationAlgorithm(FRz, allRewards, leftVars);
     FRz.P.reshape(dz);
     //get start vector
-    Factor Fz;
+    infer::Factor Fz;
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
@@ -78,9 +78,9 @@ double mdp::pomdpEM_structured(
       _beta .referTo(*beta);   _beta .reshape(dz);
     }
     
-    inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
-                               Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
-                               estepIncremental);
+    infer::inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
+				      Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
+				      estepIncremental);
     Falpha.setP(_alpha);
     Fbeta .setP(_beta);
     
@@ -90,7 +90,7 @@ double mdp::pomdpEM_structured(
     }
   }else{
     //----- use factor lists for generic inference
-    FactorList temporary;
+    infer::FactorList temporary;
     //eliminateVariable(allTransitions, temporary, a);
     //eliminateVariable(allTransitions, temporary, y_);
     //eliminateVariable(allRewards, temporary, a);
@@ -118,19 +118,19 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
+  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
   
   //term1: derived from the immediate reward model
-  FactorList immediateR = cat(mdp.rewardFacs, fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
+  infer::FactorList immediateR = cat(mdp.rewardFacs, fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
   
   //loop through all transition factors of the controller
   for(i=0; i<fsc.transFacs.N; i++){
     //term2: terms from the two-time-slice model
-    Factor X_term2;
+    infer::Factor X_term2;
     eliminationAlgorithm(X_term2, twotimeslice, fsc.transFacs(i)->variables);
     
     //term1: terms from immediate reward
-    Factor X_term1;
+    infer::Factor X_term1;
     eliminationAlgorithm(X_term1, immediateR  , fsc.transFacs(i)->variables);
     
     //get the expectations by adding both terms

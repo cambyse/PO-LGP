@@ -1,7 +1,7 @@
 #ifndef MT_motionPlannerModule_h
 #define MT_motionPlannerModule_h
 
-#include "biros.h"
+#include <biros/biros.h>
 #include "robot_variables.h"
 #include "socSystem_ors.h"
 #include "aico.h"

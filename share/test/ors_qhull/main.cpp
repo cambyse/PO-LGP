@@ -156,7 +156,7 @@ void testFCinOrs(){
     cout <<"forceclosure=" <<fc <<endl;
     /*C.reportProxies();
     c=C.getContactGradient(grad,.1); //generate a gradient pushing away to 10cm distance
-    gl->text.clr() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
+    gl->text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
     */
     gl.watch();
     //x += inverse(grad)*(-.1*c);
