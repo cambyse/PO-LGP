@@ -1,3 +1,5 @@
+#if 0
+
 #include "relevanceGrounding.h"
 #include <robotManipulationDomain.h>
 
@@ -1082,5 +1084,7 @@ void RelevanceGrounding::plan(PredIA& plan, const TL::State& s, Goal* goal, uint
 }
 
 
+
+#endif
 
 #endif

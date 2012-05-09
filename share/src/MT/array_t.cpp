@@ -1274,7 +1274,7 @@ template<class T> void MT::Array<T>::sort(ElemCompare comp){
 }
 
 //! fast find method in a sorted array, returns index to element equal to x
-template<class T> uint MT::Array<T>::findInSorted(const T& x, ElemCompare comp){
+template<class T> uint MT::Array<T>::findInSorted(const T& x, ElemCompare comp) const {
   if(!N) return 0;
   if(comp(x, elem(0))) return 0;
   if(!comp(x, elem(N-1))) return N;

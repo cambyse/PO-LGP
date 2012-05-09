@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -21,7 +21,7 @@
 
 #include <MT/opengl.h>
 #include <MT/plot.h>
-#include <utilTL.h>
+#include <relational/utilTL.h>
 
 #include "robotManipulationSimulator.h"
 #include <sstream>
@@ -248,7 +248,8 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
 
 
 void RobotManipulationSimulator::write(const char* ors_filename){
-  MT::save(*C,ors_filename);
+  NIY;
+//   MT::save(*C,ors_filename);
 }
 
 
@@ -1015,10 +1016,10 @@ void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list a
 }
 
 
-void RobotManipulationSimulator::getTypes(TermTypeL& objects_types, const uintA& objects, const TermTypeL& types) { //!< return list of all object types
+void RobotManipulationSimulator::getTypes(PRADA::ArgumentTypeL& objects_types, const uintA& objects, const PRADA::ArgumentTypeL& types) { //!< return list of all object types
   objects_types.resize(objects.N);
   uint i;
-  TL::TermType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
+  PRADA::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
   FOR1D(types, i) {
     if (types(i)->name == MT::String("block")) {
       type_block = types(i);
@@ -1273,6 +1274,38 @@ double* RobotManipulationSimulator::getPosition(uint id) {
 }
 
 
+void RobotManipulationSimulator::getObjectAngles(arr& angles) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  angles.resize(objs.N, 2);
+  FOR1D(objs, i) {
+    arr orientation;
+    getOrientation(orientation, objs(i));
+    CHECK(orientation.N == 2, "too many angles");
+    FOR1D(orientation, k) {
+      angles(i, k) = orientation(k);
+      if (angles(i, k) < 0.00001)
+        angles(i, k) = 0.;
+    }
+  }
+}
+
+
+void RobotManipulationSimulator::getObjectPositions(arr& positions) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  positions.resize(objs.N, 3);
+  FOR1D(objs, i) {
+    double* local_position = getPosition(objs(i));
+    for (k=0; k<3; k++) {
+      positions(i, k) = local_position[k];
+    }
+  }
+}
+
+
 // orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
 void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
@@ -1438,10 +1471,10 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
   }
 }
 
+
 void RobotManipulationSimulator::getObjectsOn(uintA& list,const uint obj_id) {
   getObjectsOn(list, convertObjectID2name(obj_id));
 }
-
 
 
 bool RobotManipulationSimulator::isClear(uint id) {

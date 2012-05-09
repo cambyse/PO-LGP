@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -19,26 +19,273 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "relational/robotManipulationDomain.h"
-#include "relational/robotManipulationSampling.h"
-#include "relational/logicReasoning.h"
+#include "robotManipulationInterface.h"
+#include "robotManipulationSymbols.h"
+#include "reason.h"
+
+
+namespace RMSim {
+
+
+using namespace PRADA;
+  
+/* ---------------------
+    TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
+  --------------------- */
+
+
+SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulationSimulator* sim) {
+  SymbolicState* state = new SymbolicState;
+  
+  uint i, j;
+  
+  // TABLE
+  uint table_id = sim->getTableID();
+  if (reason::getConstants().findValue(table_id) < 0)
+    table_id = TL::UINT_NIL;
+  if (table_id != TL::UINT_NIL) {
+    state->lits.append(Literal::get(Symbol::get("table"), TUP(table_id), 1.));
+  }
+  // BLOCKS
+  uintA blocks;
+  sim->getBlocks(blocks);
+  FOR1D(blocks, i) {
+    state->lits.append(Literal::get(Symbol::get("block"), TUP(blocks(i)), 1.));
+  }
+  // BALLS
+  uintA balls;
+  sim->getBalls(balls);
+  FOR1D(balls, i) {
+    state->lits.append(Literal::get(Symbol::get("ball"), TUP(balls(i)), 1.));
+  }
+  // BOXES
+  uintA boxes;
+  sim->getBoxes(boxes);
+  FOR1D(boxes, i) {
+    state->lits.append(Literal::get(Symbol::get("box"), TUP(boxes(i)), 1.));
+  }
+  uintA all_objs;
+  sim->getObjects(all_objs);
+  // filter for logic
+  FOR1D_DOWN(all_objs, i) {
+    if (reason::getConstants().findValue(all_objs(i)) < 0) {
+      all_objs.removeValueSafe(all_objs(i));
+    }
+  }
+  
+  // SIZE
+  if (Symbol::get(MT::String("size")) != NULL) {
+    double length;
+    FOR1D(all_objs, i) {
+      length = sim->getSize(all_objs(i))[0];
+      state->lits.append(Literal::get(Symbol::get("size"), TUP(all_objs(i)), REPLACE_SIZE(length)));
+    }
+  }
+  
+  // HOMIES
+  if (Symbol::get(MT::String("homies")) != NULL) {
+    uint k;
+    FOR1D(all_objs, i) {
+      for (k=i+1; k<all_objs.N; k++) {
+        if (
+            TL::areEqual(sim->getColor(all_objs(k))[0], sim->getColor(all_objs(i))[0])
+            &&    TL::areEqual(sim->getColor(all_objs(k))[1], sim->getColor(all_objs(i))[1])
+            &&    TL::areEqual(sim->getColor(all_objs(k))[2], sim->getColor(all_objs(i))[2])) {
+          state->lits.append(Literal::get(Symbol::get("homies"), TUP(all_objs(i), all_objs(k)), 1.));
+          state->lits.append(Literal::get(Symbol::get("homies"), TUP(all_objs(k), all_objs(i)), 1.));
+        }
+      }
+    }
+  }
+  
+  
+  // INHAND
+  uint catchedID = sim->getInhand();
+  if (catchedID != UINT_MAX) {
+    state->lits.append(Literal::get(Symbol::get("inhand"), TUP(sim->getInhand()), 1.));
+  }
+  
+  // ON relations
+  uintA objects_on;
+  FOR1D(all_objs, i) {
+    sim->getObjectsOn(objects_on, all_objs(i));
+    FOR1D(objects_on, j) {
+      if (all_objs.findValue(objects_on(j)) >= 0)
+        state->lits.append(Literal::get(Symbol::get("on"), TUP(objects_on(j), all_objs(i)), 1.));
+    }
+  }
+  
+  // UPRIGHT
+  if (Symbol::get(MT::String("upright")) != NULL) {
+    FOR1D(all_objs, i) {
+      if (sim->isUpright(all_objs(i)))
+        state->lits.append(Literal::get(Symbol::get("upright"), TUP(all_objs(i)), 1.));
+    }
+  }
+  // OUT
+  FOR1D(all_objs, i) {
+    if (sim->onGround(all_objs(i)))
+      state->lits.append(Literal::get(Symbol::get("out"), TUP(all_objs(i)), 1.));
+  }
+  
+  // CONTAINS
+  state->lits.memMove = true;
+  FOR1D(boxes, i) {
+    uint o = sim->getContainedObject(boxes(i));
+    if (o != UINT_MAX) {
+      if (table_id == TL::UINT_NIL) {
+        state->lits.removeValueSafe(Literal::get(Symbol::get("on"), TUP(o, table_id), 1.));
+      }
+      state->lits.append(Literal::get(Symbol::get("contains"), TUP(boxes(i), o), 1.));
+    }
+  }
+  
+  // CLOSED
+  FOR1D(boxes, i) {
+    if (sim->isClosed(boxes(i))) {
+      state->lits.append(Literal::get(Symbol::get("closed"), TUP(boxes(i)), 1.));
+    }
+  }
+
+  state->state_constants = all_objs;
+ 
+  reason::derive(state);
+  return state;
+}
+
+
+void RobotManipulationInterface::performAction(Literal* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message) {
+  if (action == NULL  ||  action->s->name == "doNothing"  ||  action == Literal::getLiteral_default_action()) {
+    // don't do anything
+    return;
+  }
+  else if (action->args.N > 0) {
+    // special care for out of reach objects
+    if (sim->onGround(action->args(0))) {
+        return;
+    }
+  }
+  if (action->s->name == "grab"  ||  action->s->name == "grab_puton") {
+    uintA list;
+    sim->getObjectsOn(list, action->args(0));
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
+        ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
+      sim->simulate(30, message);
+    else
+      sim->grab(action->args(0), message);
+  }
+  else if (action->s->name == "puton"  ||  action->s->name == "puton_puton"  ||  action->s->name == "puton_grab") {
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX  // don't do anything if object = filled open box
+          && !sim->isClosed(action->args(0))
+          &&  sim->getContainedObject(action->args(0)) != UINT_MAX) 
+      sim->simulate(30, message); 
+    else if (sim->containedInBox(action->args(0))) // don't do anything if object in box
+      sim->simulate(30, message); 
+    else
+      sim->dropObjectAbove(action->args(0), message);
+  }
+  else if (action->s->name == "lift") {
+    uintA list;
+    sim->getObjectsOn(list, action->args(1));
+    if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX   // cannot lift box
+        ||   sim->containedInClosedBox(action->args(0)))    // cannot take from closed box
+      sim->simulate(10);
+    else if (sim->getOrsType(action->args(1)) != OBJECT_TYPE__BOX  &&     // cannot lift from not-box if not on not-box
+        list.findValue(action->args(0)) < 0)
+      sim->simulate(10);
+    else
+      sim->grab(action->args(0));
+  }
+  else if (action->s->name == "place") {
+    if (action->args(0) != sim->getInhand()) // don't do anything if 1st object not the one in hand
+      sim->simulate(10); 
+    else if (sim->containedInBox(action->args(1))) // don't do anything if 2nd object in box
+      sim->simulate(10); 
+    else if (sim->getOrsType(action->args(1)) == OBJECT_TYPE__BOX  // don't do anything if 2nd object = filled open box
+          && !sim->isClosed(action->args(1))
+          &&  sim->getContainedObject(action->args(1)) != UINT_MAX) 
+      sim->simulate(10); 
+    else
+      sim->dropObjectAbove(action->args(0), action->args(1));
+  }
+  else if (action->s->name == "openBox") {
+    if (!sim->isBox(action->args(0)))
+      sim->simulate(30, message);
+    else {
+      uintA aboves;
+      sim->getObjectsOn(aboves,action->args(0));
+      if (aboves.N > 0)
+        sim->simulate(30, message); // don't do anything something on box
+      else
+        sim->openBox(action->args(0), message);
+    }
+  }
+  else if (action->s->name == "closeBox") {
+    if (!sim->isBox(action->args(0)))
+      sim->simulate(30, message);
+    else {
+//     if (sim->getInhand() != UINT_MAX) // don't do anything if something inhand
+//       sim->simulate(10);
+//     else
+      sim->closeBox(action->args(0), message);
+    }
+  }
+  else
+    NIY
+   
+  sim->relaxPosition(message); // needed to have a observe correct subsequent state
+  sim->simulate(secs_wait_after_action); // needed to have a correct subsequent state
+}
 
 
 
-bool TL::robotManipulationSampling::SAMPLING__WATCH_AFTER_ACTION = false;
-uint TL::robotManipulationSampling::SAMPLING__WAIT_SEC_AFTER_ACTION = 50;
-double TL::robotManipulationSampling::SAMPLING__PROB_SENSIBLE_ACTION = 1.0;
-double TL::robotManipulationSampling::SAMPLING__PROB_GRAB_CLEARGUY =  0.8;
-double TL::robotManipulationSampling::SAMPLING__PROB_PUTON_CLEARGUY = 0.8;
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction(const SymbolicState& s, uint id_table) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Sampling
+
+
+
+bool RobotManipulationInterface::SAMPLING__WATCH_AFTER_ACTION = false;
+uint RobotManipulationInterface::SAMPLING__WAIT_SEC_AFTER_ACTION = 50;
+double RobotManipulationInterface::SAMPLING__PROB_SENSIBLE_ACTION = 1.0;
+double RobotManipulationInterface::SAMPLING__PROB_GRAB_CLEARGUY =  0.8;
+double RobotManipulationInterface::SAMPLING__PROB_PUTON_CLEARGUY = 0.8;
+
+
+Literal* RobotManipulationInterface::generateAction(const SymbolicState& s, uint id_table) {
   return generateAction_wellBiased(s, id_table);
 //   return generateAction_wellBiased_2Dactions(s, id_table);
 }
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const SymbolicState& s, uint id_table) {
+Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicState& state, uint id_table) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"generateAction_wellBiased [START]"<<endl;}
     // blocks on high towers have lower prob to be grabbed
@@ -46,32 +293,32 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
     
   uint i;
   // determine inhand object
-  uint id_hand = TL::RobotManipulationDomain::getInhand(s);
+  uint id_hand = RobotManipulationSymbols::getInhand(state);
   
   // determine number of non-out blocks
-  uint no_out_blocks = 0;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred->name == "out") {
-      no_out_blocks++;
+  uint num_out_blocks = 0;
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s->name == "out") {
+      num_out_blocks++;
     }
   }
-  uint no_non_out_blocks = logicObjectManager::constants.N-1-no_out_blocks;
+  uint no_non_out_blocks = reason::getConstants().N-1-num_out_blocks;
   if (no_non_out_blocks <= 1) {
     MT_MSG("Too few objects left for sensible acting!");
     return NULL;
   }
 
-  TL::Predicate* p_GRAB = logicObjectManager::getPredicate(MT::String("grab"));
-  TL::Predicate* p_PUTON = logicObjectManager::getPredicate(MT::String("puton"));
-  TL::Predicate* p_LIFT = logicObjectManager::getPredicate(MT::String("lift"));
-  TL::Predicate* p_PLACE = logicObjectManager::getPredicate(MT::String("place"));
-  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
-  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
+  Symbol* p_GRAB = Symbol::get(MT::String("grab"));
+  Symbol* p_PUTON = Symbol::get(MT::String("puton"));
+  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
+  Symbol* p_PLACE = Symbol::get(MT::String("place"));
+  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_OUT = Symbol::get(MT::String("out"));
   
   // determine action
   double randNum;
   randNum = rnd.uni();
-  TL::Predicate* p_action;
+  Symbol* p_action;
   if (randNum < SAMPLING__PROB_SENSIBLE_ACTION) {
     if (id_hand == UINT_MAX) {
       if (p_GRAB != NULL)
@@ -104,12 +351,12 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
   }
     
   // calc clear and not-clear guys (out guys are not contained!)
-  uintA clearGuys = logicObjectManager::constants;
+  uintA clearGuys = reason::getConstants();
   uintA nonClearGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_ON) {
-      clearGuys.removeValueSafe(s.lits_prim(i)->atom->args(1));
-      nonClearGuys.setAppend(s.lits_prim(i)->atom->args(1));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_ON) {
+      clearGuys.removeValueSafe(state.lits(i)->args(1));
+      nonClearGuys.setAppend(state.lits(i)->args(1));
     }
   }
   if (id_hand != UINT_MAX) {
@@ -118,14 +365,14 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
   }
     // PRINT(clearGuys)
     // PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == logicObjectManager::constants.N, "Clear guy calculation failed");
+  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
   CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
             
   // calc out-guys
   uintA outGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_OUT) {
-      outGuys.setAppend(s.lits_prim(i)->atom->args(0));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_OUT) {
+      outGuys.setAppend(state.lits(i)->args(0));
     }
   }
     
@@ -137,7 +384,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
     
   // introduce bias for building high tower
   uintA piles;
-  TL::RobotManipulationDomain::calcPiles(s, piles, id_table);
+  RobotManipulationSymbols::calcPiles(state, piles, id_table);
 
   uintA sa;
   
@@ -163,9 +410,9 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
       if (sensibleGuys.N>0) {
         // take low one
         arr weights;
-        TL::RobotManipulationDomain::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, false, id_table);
+        RobotManipulationSymbols::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, false, id_table);
 //                 cout<<"PICKUP: ";PRINT(weights);cout<<endl;
-        sa(0) = sensibleGuys(basic_sample(weights));
+        sa(0) = sensibleGuys(TL::basic_sample(weights));
       }
       else // must grab non_clear guy
         sa(0) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
@@ -201,20 +448,20 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
       if (sensibleGuys.N>0) {  // clear guy indeed available
                 // put on high guy, digga
         arr weights;
-        TL::RobotManipulationDomain::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, true, id_table);
+        RobotManipulationSymbols::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, true, id_table);
                 // bias for putting on blocks (instead of on balls)
         FOR1D(sensibleGuys, i) {
 //                   cout<<sensibleGuys(i);
-          if (TL::RobotManipulationDomain::isBlock(sensibleGuys(i), s)) {   // prefer blocks
+          if (RobotManipulationSymbols::isBlock(sensibleGuys(i), state)) {   // prefer blocks
 //                     cout<<" is block"<<endl;
             weights(i) *= 3.;
           }
         }
 //                 cout<<"PUTON: ";PRINT(weights);cout<<endl;
-        sa(0) = sensibleGuys(basic_sample(weights));
+        sa(0) = sensibleGuys(TL::basic_sample(weights));
                 // lowering chance for table
         if (sa(0) == id_table) {
-          sa(0) = sensibleGuys(basic_sample(weights));
+          sa(0) = sensibleGuys(TL::basic_sample(weights));
         }
       }
       else // no clear guy available --> put on non-clear guy
@@ -245,7 +492,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
     sa.resize(2);
     sa(0) = arg1;
     // get below
-    sa(1) = TL::RobotManipulationDomain::getBelow(arg1, s);
+    sa(1) = RobotManipulationSymbols::getBelow(arg1, state);
   }
   else if (p_action == p_PLACE) {
     uint arg2 = sa(0);
@@ -256,7 +503,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
   }
   
   if (DEBUG>0) {cout<<"generateAction_wellBiased [END]"<<endl;}
-  return logicObjectManager::getAtom(p_action, sa);
+  return Literal::get(p_action, sa, 1.);
 }
 
 
@@ -266,41 +513,41 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased(const Symboli
 // -----------------------------------------------
 uint HACK_ACT = 0;
 
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
+Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const SymbolicState& state, uint id_table) {
   uint DEBUG = 1;
   
   // --------------------------------------------
   //  GENERAL STATE INFORMATION
   
-  TL::Predicate* p_LIFT = logicObjectManager::getPredicate(MT::String("lift"));
-  TL::Predicate* p_PLACE = logicObjectManager::getPredicate(MT::String("place"));
-  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
-  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
+  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
+  Symbol* p_PLACE = Symbol::get(MT::String("place"));
+  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_OUT = Symbol::get(MT::String("out"));
   
   uint i;
   // determine inhand object
-  uint id_hand = TL::RobotManipulationDomain::getInhand(s);
+  uint id_hand = RobotManipulationSymbols::getInhand(state);
   
   // determine number of non-out blocks
   uint num_out_objects = 0;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_OUT) {
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_OUT) {
       num_out_objects++;
     }
   }
-  uint num_non_out_objects = logicObjectManager::constants.N-1-num_out_objects;
+  uint num_non_out_objects = reason::getConstants().N-1-num_out_objects;
   if (num_non_out_objects <= 1) {
     MT_MSG("Too few objects left for sensible acting!");
     return NULL;
   }
   
   // calc clear and not-clear guys (out guys are not contained!)
-  uintA clearGuys = logicObjectManager::constants;
+  uintA clearGuys = reason::getConstants();
   uintA nonClearGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_ON) {
-      clearGuys.removeValueSafe(s.lits_prim(i)->atom->args(1));
-      nonClearGuys.setAppend(s.lits_prim(i)->atom->args(1));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_ON) {
+      clearGuys.removeValueSafe(state.lits(i)->args(1));
+      nonClearGuys.setAppend(state.lits(i)->args(1));
     }
   }
   if (id_hand != UINT_MAX) {
@@ -309,14 +556,14 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
   }
   // PRINT(clearGuys)
   // PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == logicObjectManager::constants.N, "Clear guy calculation failed");
+  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
   CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
   
   // calc out-guys
   uintA outGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_OUT) {
-      outGuys.setAppend(s.lits_prim(i)->atom->args(0));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_OUT) {
+      outGuys.setAppend(state.lits(i)->args(0));
     }
   }
   
@@ -324,7 +571,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
   // --------------------------------------------
   //  ACTION DETERMINATION
 
-  TL::Predicate* p_action;
+  Symbol* p_action;
   
   double randNum;
   bool sensible_action;
@@ -339,11 +586,11 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
   
   // [start] TODO
   if (rnd.uni() < 0.25) { // Do something with box
-    TL::Predicate* p_BOX = logicObjectManager::getPredicate(MT::String("box"));
+    Symbol* p_BOX = Symbol::get(MT::String("box"));
     uintA boxes;
-    FOR1D(s.lits_prim, i) {
-      if (s.lits_prim(i)->atom->pred == p_BOX)
-        boxes.append(s.lits_prim(i)->atom->args(0));
+    FOR1D(state.lits, i) {
+      if (state.lits(i)->s == p_BOX)
+        boxes.append(state.lits(i)->args(0));
     }
     p_action = NULL;
     
@@ -359,13 +606,13 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
         // try to grab object out of box
         uintA boxedObjs;
         FOR1D(boxes, i) {
-          uint obj = TL::RobotManipulationDomain::getContainedObject(boxes(i), s);
+          uint obj = RobotManipulationSymbols::getContainedObject(boxes(i), state);
           if (obj != UINT_MAX)
             boxedObjs.append(obj);
         }
         if (boxedObjs.N > 0) {
           args(0) = boxedObjs(rnd.num(boxedObjs.N));
-          args(1) = TL::RobotManipulationDomain::getContainingBox(args(0), s);
+          args(1) = RobotManipulationSymbols::getContainingBox(args(0), state);
           p_action = p_LIFT;
         }
       }
@@ -377,19 +624,19 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
       args.resize(1);
       args(0) = box;
       if (sensible_action) {
-        if (TL::RobotManipulationDomain::isClosed(args(0), s))
-          p_action = logicObjectManager::getPredicate(MT::String("openBox"));
+        if (RobotManipulationSymbols::isClosed(args(0), state))
+          p_action = Symbol::get(MT::String("openBox"));
         else
-          p_action = logicObjectManager::getPredicate(MT::String("closeBox"));
+          p_action = Symbol::get(MT::String("closeBox"));
       }
       else {
-        if (TL::RobotManipulationDomain::isClosed(args(0), s))
-          p_action = logicObjectManager::getPredicate(MT::String("closeBox"));
+        if (RobotManipulationSymbols::isClosed(args(0), state))
+          p_action = Symbol::get(MT::String("closeBox"));
         else
-          p_action = logicObjectManager::getPredicate(MT::String("openBox"));
+          p_action = Symbol::get(MT::String("openBox"));
       }
     }
-    return logicObjectManager::getAtom(p_action, args); 
+    return Literal::get(p_action, args, 1.); 
   }
   // [end] TODO
   
@@ -461,9 +708,9 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
         else // must pickup clear guy
           args(0) = sensibleFirstArgs(rnd.num(sensibleFirstArgs.N));
       }
-      args(1) = TL::RobotManipulationDomain::getBelow(args(0), s);
+      args(1) = RobotManipulationSymbols::getBelow(args(0), state);
       if (UINT_MAX == args(1))
-        args(1) = TL::RobotManipulationDomain::getContainingBox(args(0), s);
+        args(1) = RobotManipulationSymbols::getContainingBox(args(0), state);
     }
     //  ------------------------------------------------------------------
     // (1.2) SENSIBLE PLACE
@@ -505,18 +752,18 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
           double skyscraper_bias = 200;
           // introduce bias for building high tower
           uintA piles;
-          TL::RobotManipulationDomain::calcPiles(s, piles, id_table);
-          TL::RobotManipulationDomain::calcSkyscraperWeights(sensibleSecondArgs, piles, skyscraper_bias, weights, true, id_table);
+          RobotManipulationSymbols::calcPiles(state, piles, id_table);
+          RobotManipulationSymbols::calcSkyscraperWeights(sensibleSecondArgs, piles, skyscraper_bias, weights, true, id_table);
           // bias for putti~ng on blocks (instead of on balls)
           FOR1D(sensibleSecondArgs, i) {
-            if (TL::RobotManipulationDomain::isBlock(sensibleSecondArgs(i), s)) {   // prefer blocks
+            if (RobotManipulationSymbols::isBlock(sensibleSecondArgs(i), state)) {   // prefer blocks
               weights(i) *= 5.;
             }
           }
-          args(1) = sensibleSecondArgs(basic_sample(weights));
+          args(1) = sensibleSecondArgs(TL::basic_sample(weights));
           // lowering chance for table
           if (args(1) == id_table) {
-            args(1) = sensibleSecondArgs(basic_sample(weights));
+            args(1) = sensibleSecondArgs(TL::basic_sample(weights));
           }
         }
         else // no clear guy available --> put on non-clear guy
@@ -562,18 +809,18 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
     if (p_action == p_PLACE) {
       // (2.1.1)   if inhand-nil:  place(a,b) with random a and b
       if (id_hand == UINT_MAX) {
-        args(0) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+        args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
         do {
-          args(1) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+          args(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
         } while (args(0) == args(1));
       }
       // (2.1.2)   if inhand(a):  place(b,c) with b and c random and not a
       else {
         do {
-          args(0) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+          args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
         } while (args(0) == id_hand);
         do {
-          args(1) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+          args(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
         } while (args(0) == args(1)   ||   args(1) == id_hand);
       }
     }
@@ -582,68 +829,68 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
       // (2.2.1)  if inhand(a):  lift(b,c)   with b not inhand and on(b,c)
       if (id_hand != UINT_MAX  && rnd.uni() < 0.95) {
         do {
-          args(0) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
-          args(1) = TL::RobotManipulationDomain::getBelow(args(0), s);
+          args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
+          args(1) = RobotManipulationSymbols::getBelow(args(0), state);
         } while (args(0) == id_hand  ||  args(1) == UINT_MAX);
       }
       // (2.2.2)  if inhand-nil:  lift(a,b)  with  a and b random, but _not_ on(a,b)
       else {
         uint sa0_below;
         do {
-          args(0) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
-          args(1) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
-          sa0_below = TL::RobotManipulationDomain::getBelow(args(0), s);
+          args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
+          args(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
+          sa0_below = RobotManipulationSymbols::getBelow(args(0), state);
         } while (args(1) == sa0_below);
       }
     }
   }
   
-  if (logicObjectManager::constants.findValue(args(0)) < 0  ||  logicObjectManager::constants.findValue(args(1)) < 0) {
+  if (reason::getConstants().findValue(args(0)) < 0  ||  reason::getConstants().findValue(args(1)) < 0) {
     PRINT(args(0));
     PRINT(args(1));
     HALT("");
   }
   
-  return logicObjectManager::getAtom(p_action, args);
+  return Literal::get(p_action, args, 1.);
 }
 
 
 
 #if 0
-TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
+Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
   uint DEBUG = 1;
     // blocks on high towers have lower prob to be grabbed
   double skyscraper_bias = 200; // 115.0;
     
   uint i;
   // determine inhand object
-  uint id_hand = TL::RobotManipulationDomain::getInhand(s);
+  uint id_hand = RobotManipulationInterface::getInhand(s);
   
   // determine number of non-out blocks
-  uint no_out_blocks = 0;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred->name == "out") {
-      no_out_blocks++;
+  uint num_out_blocks = 0;
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s->name == "out") {
+      num_out_blocks++;
     }
   }
-  uint no_non_out_blocks = logicObjectManager::constants.N-1-no_out_blocks;
+  uint no_non_out_blocks = reason::getConstants().N-1-num_out_blocks;
   if (no_non_out_blocks <= 1) {
     MT_MSG("Too few objects left for sensible acting!");
     return NULL;
   }
 
-  TL::Predicate* p_LIFT = logicObjectManager::getPredicate(MT::String("lift"));
-  TL::Predicate* p_PLACE = logicObjectManager::getPredicate(MT::String("place"));
-  TL::Predicate* p_ON = logicObjectManager::getPredicate(MT::String("on"));
-  TL::Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
+  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
+  Symbol* p_PLACE = Symbol::get(MT::String("place"));
+  Symbol* p_ON = Symbol::get(MT::String("on"));
+  Symbol* p_OUT = Symbol::get(MT::String("out"));
   
   // calc clear and not-clear guys (out guys are not contained!)
-  uintA clearGuys = logicObjectManager::constants;
+  uintA clearGuys = reason::getConstants();
   uintA nonClearGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_ON) {
-      clearGuys.removeValueSafe(s.lits_prim(i)->atom->args(1));
-      nonClearGuys.setAppend(s.lits_prim(i)->atom->args(1));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_ON) {
+      clearGuys.removeValueSafe(state.lits(i)->args(1));
+      nonClearGuys.setAppend(state.lits(i)->args(1));
     }
   }
   if (id_hand != UINT_MAX) {
@@ -652,14 +899,14 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
   }
   // PRINT(clearGuys)
   // PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == logicObjectManager::constants.N, "Clear guy calculation failed");
+  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
   CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
   
   // calc out-guys
   uintA outGuys;
-  FOR1D(s.lits_prim, i) {
-    if (s.lits_prim(i)->atom->pred == p_OUT) {
-      outGuys.setAppend(s.lits_prim(i)->atom->args(0));
+  FOR1D(state.lits, i) {
+    if (state.lits(i)->s == p_OUT) {
+      outGuys.setAppend(state.lits(i)->args(0));
     }
   }
   
@@ -671,7 +918,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
     sensible_action = true;
   else
     sensible_action = false;
-  TL::Predicate* p_action;
+  Symbol* p_action;
   if (sensible_action) {
     if (id_hand == UINT_MAX) {
       p_action = p_LIFT;
@@ -700,7 +947,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
     
   // introduce bias for building high tower
   uintA piles;
-  TL::RobotManipulationDomain::calcPiles(s, piles, id_table);
+  RobotManipulationInterface::calcPiles(s, piles, id_table);
 
   uintA sa(2);
   
@@ -727,8 +974,8 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
         // take low one
         arr weights(sensibleGuys.N);
         weights.setUni(1.0);
-//         TL::RobotManipulationDomain::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, false, id_table);
-        sa(0) = sensibleGuys(basic_sample(weights));
+//         RobotManipulationInterface::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, false, id_table);
+        sa(0) = sensibleGuys(TL::basic_sample(weights));
       }
       else // must grab non_clear guy
         sa(0) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
@@ -747,10 +994,10 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
     // -------------------------
     //  Argument 2 = passive object (where to lift from)
     if (rnd.uni() > 0.9  ||  !sensible_action) {
-      sa(1) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+      sa(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
     }
     else {
-      sa(1) = TL::RobotManipulationDomain::getBelow(sa(0), s);
+      sa(1) = RobotManipulationInterface::getBelow(sa(0), s);
     }
   }
   // place
@@ -775,20 +1022,20 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
       if (sensibleGuys.N>0) {  // clear guy indeed available
         // put on high guy, digga
         arr weights;
-        TL::RobotManipulationDomain::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, true, id_table);
+        RobotManipulationInterface::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, true, id_table);
                 // bias for putting on blocks (instead of on balls)
         FOR1D(sensibleGuys, i) {
 //                   cout<<sensibleGuys(i);
-          if (TL::RobotManipulationDomain::isBlock(sensibleGuys(i), s)) {   // prefer blocks
+          if (RobotManipulationInterface::isBlock(sensibleGuys(i), s)) {   // prefer blocks
 //                     cout<<" is block"<<endl;
             weights(i) *= 3.;
           }
         }
 //                 cout<<"PUTON: ";PRINT(weights);cout<<endl;
-        sa(1) = sensibleGuys(basic_sample(weights));
+        sa(1) = sensibleGuys(TL::basic_sample(weights));
         // lowering chance for table
         if (sa(1) == id_table) {
-          sa(1) = sensibleGuys(basic_sample(weights));
+          sa(1) = sensibleGuys(TL::basic_sample(weights));
         }
       }
       else // no clear guy available --> put on non-clear guy
@@ -816,7 +1063,7 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
     // -------------------------
     //  Argument 1 = moved object
     if (rnd.uni() > 0.9  ||  !sensible_action) {
-      sa(0) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+      sa(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
     }
     else {
       sa(0) = id_hand;
@@ -829,32 +1076,31 @@ TL::Atom* TL::robotManipulationSampling::generateAction_wellBiased_2Dactions(con
 
 
 
-TL::Atom* TL::robotManipulationSampling::generateAction_trulyRandom(const SymbolicState& s, uint id_table) {
+Literal* RobotManipulationInterface::generateAction_trulyRandom(const SymbolicState& s, uint id_table) {
   uint i;
-	
-	// choose action
+  
+  // choose action
   HALT("funktioniertso nicht mit default action");
-  TL::Predicate* action = logicObjectManager::p_actions(rnd.num(logicObjectManager::p_actions.N-1)); // omitting default action
+  SymL syms_action;
+  Symbol::get_action(syms_action);
+  Symbol* action = syms_action(rnd.num(syms_action.N-1)+1); // omitting default action
  
-  uintA sa(action->d);
+  uintA sa(action->arity);
   FOR1D(sa, i) {
-    sa(i) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
-		// first should never be table
+    sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
+    // first should never be table
     if (i==0) {
       while( sa(i) != id_table ){
-        sa(i) = logicObjectManager::constants(rnd.num(logicObjectManager::constants.N));
+        sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
       }
     }
   }
   
-  return logicObjectManager::getAtom(action, sa);
+  return Literal::get(action, sa, 1.);
 }
 
 
-
-
-
-TL::Trial* TL::robotManipulationSampling::generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
+StateTransitionL& RobotManipulationInterface::generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
   uint DEBUG = 3;
   if (DEBUG>0) cout << "New sampling sequence" << endl;
   if (DEBUG > 1) {
@@ -862,43 +1108,38 @@ TL::Trial* TL::robotManipulationSampling::generateSimulationSequence(RobotManipu
     sim->printObjectInfo();
   }
   uint i=0;
-  Trial* trial = new Trial;
-  TL::SymbolicState* state;
-  trial->constants = logicObjectManager::constants;
-  state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
+  StateTransitionL experiences;
+  SymbolicState* state, *state_old = NULL;
+  state = RobotManipulationInterface::calculateSymbolicState(sim);
   if (DEBUG > 2) {cout<<endl; state->write(cout); cout<<endl;}
-  trial->states.append(state);
-  TL::Atom* action;
+  Literal* action;
   while (i<maxSeqLength) {
     if (DEBUG>0) cout << "*** Step " << i << endl;
-    action = generateAction(*trial->states.last(), id_table);
+    state_old = state;
+    action = generateAction(experiences.last()->post, id_table);
     if (action == NULL) {
       if (DEBUG>0) {cout<<"No more sensible action possible, so we stop generating."<<endl;}
       break;
     }
     if (DEBUG > 2) {action->write(cout); cout << endl;}
-    TL::RobotManipulationDomain::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
+    RobotManipulationInterface::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
-    state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
+    state = RobotManipulationInterface::calculateSymbolicState(sim);
     if (DEBUG > 2) {state->write(cout,true); cout<<endl;}
-    trial->states.append(state);
-    trial->actions.append(action);
+    experiences.append(new StateTransition(*state_old, action, *state));
     i++;
     if (SAMPLING__WATCH_AFTER_ACTION)
       sim->watch();
     if (DEBUG > 2) {
-      uintA changedConstants;
-      LitL holdOnlyPre, holdOnlyPost;
-      logicReasoning::changes(*trial->states(trial->states.N-2), *trial->states(trial->states.N-1), changedConstants, holdOnlyPre, holdOnlyPost);
       cout<<"CHANGE:  ";
-      cout<<"\tBefore: ";write(holdOnlyPre);cout<<endl;
-      cout<<"\tAfter: ";write(holdOnlyPost);cout<<endl;
+      cout<<"\tBefore: "<<experiences.last()->add<<endl;
+      cout<<"\tAfter: "<<experiences.last()->del<<endl;
     }
   }
   if (DEBUG > 1)
     cout << "sampleSimulationSequence [END]" << endl;
-  return trial;
+  return experiences;
 }
 
 
@@ -907,7 +1148,7 @@ TL::Trial* TL::robotManipulationSampling::generateSimulationSequence(RobotManipu
 
 
 
-void TL::robotManipulationSampling::generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
+void RobotManipulationInterface::generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
   uint DEBUG = 3;
   if (DEBUG>0) cout << "New sampling sequence" << endl;
   if (DEBUG > 1) {
@@ -919,22 +1160,22 @@ void TL::robotManipulationSampling::generateSimulationSequence_realistic(std::os
   // (2) Objects
   os<<endl;
   os<<"# objects"<<endl;
-  FOR1D(logicObjectManager::constants, i) {
-    os<<logicObjectManager::constants(i)<<" ";
+  FOR1D(reason::getConstants(), i) {
+    os<<reason::getConstants()(i)<<" ";
   }
   os<<endl;
   
   // (3) Data
   os<<endl;
   os<<"# data"<<endl;
-  TL::SymbolicState* logic_state, *logic_state_old;
-  logic_state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
+  SymbolicState* logic_state, *logic_state_old;
+  logic_state = RobotManipulationInterface::calculateSymbolicState(sim);
   logic_state->write(os);
   os<<endl;
-//   TL::RobotManipulationDomain::writeFeatures(os, sim);  os<<endl;
+//   RobotManipulationInterface::writeFeatures(os, sim);  os<<endl;
   if (DEBUG > 2) {cout<<endl; logic_state->write(cout, true); cout<<endl;}
 
-  TL::Atom* action;
+  Literal* action;
   i=0;
   while (i<maxSeqLength) {
     if (DEBUG>0) cout << "*** Step " << i << endl;
@@ -947,33 +1188,30 @@ void TL::robotManipulationSampling::generateSimulationSequence_realistic(std::os
       break;
     }
     if (DEBUG > 2) {cout<<"ACTION: "; action->write(cout); cout << endl;}
-    TL::RobotManipulationDomain::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
+    RobotManipulationInterface::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
     logic_state_old = logic_state;
-    logic_state = TL::RobotManipulationDomain::calculateSymbolicState(sim);
+    logic_state = RobotManipulationInterface::calculateSymbolicState(sim);
     logic_state->write(os);
     os<<endl;
-//     TL::RobotManipulationDomain::writeFeatures(os, sim);  os<<endl;
+//     RobotManipulationInterface::writeFeatures(os, sim);  os<<endl;
     if (DEBUG > 2) {logic_state->write(cout); cout<<endl;}
-    if (DEBUG>2) {TL::RobotManipulationDomain::writeStateInfo(*logic_state);}
+    if (DEBUG>2) {RobotManipulationSymbols::writeStateInfo(*logic_state);}
     i++;
     if (SAMPLING__WATCH_AFTER_ACTION)
       sim->watch();
     if (DEBUG > 2) {
       uintA changedConstants;
       LitL holdOnlyPre, holdOnlyPost;
-      logicReasoning::changes(*logic_state_old, *logic_state, changedConstants, holdOnlyPre, holdOnlyPost);
-      cout<<"CHANGE:  "<<endl;
-      cout<<"  Before: ";write(holdOnlyPre);cout<<endl;
-      cout<<"  After: ";write(holdOnlyPost);cout<<endl;
+      SymbolicState::calcDifferences(holdOnlyPre, holdOnlyPost, changedConstants, *logic_state_old, *logic_state);
+      cout<<"CHANGE:  ";
+      cout<<"\tBefore: "<<holdOnlyPre<<endl;
+      cout<<"\tAfter: "<<holdOnlyPost<<endl;
     }
   }
   if (DEBUG > 1)
     cout << "sampleSimulationSequence [END]" << endl;
 }
 
-
-
-
-
+}  // namespace PRADA

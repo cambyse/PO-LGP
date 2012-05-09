@@ -1,9 +1,7 @@
 #define MT_IMPLEMENT_TEMPLATES
 
-#include <relational/logicObjectManager.h>
-#include <relational/logicReasoning.h>
-
 #include "symbolGrounding.h"
+
 
 
 
@@ -18,32 +16,23 @@
 //
 //  GroundedSymbol
 
-relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_predicates) { 
-  this->arity = _arity;
-  this->name = _name;
-  this->pred = TL::logicObjectManager::getPredicate(this->name);
-  if (this->pred != NULL)
-    return;
-  this->pred = new TL::Predicate;
-  this->pred->id = TL::logicObjectManager::getLowestFreeConceptID(11);
-  this->pred->name = this->name;
-  this->pred->d = this->arity;
-  PredL new_predicates;
-  new_predicates.append(this->pred);
-  TL::logicObjectManager::addStatePredicates(new_predicates);
+relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_symbols) { 
+  this->symbol = PRADA::Symbol::get(this->name, this->arity = _arity);
   
-  if (build_derived_predicates) {
-    if (this->pred->d == 2) {
+  if (build_derived_symbols) {
+    NIY;
+#if 0
+    if (this->symbol->d == 2) {
       MT::String derived_name;
-      derived_name << "not_" << this->pred->name << "_related_to_second";
-      if (TL::logicObjectManager::getPredicate(derived_name) == NULL) {
+      derived_name << "not_" << this->symbol->name << "_related_to_second";
+      if (PRADA::logicObjectManager::getPredicate(derived_name) == NULL) {
         // add 
         // du1(X) = forall Y; not b1(X,Y)
-        TL::ConjunctionPredicate* p_NOT_P_RELATED_TO_SECOND = new TL::ConjunctionPredicate;
+        PRADA::ConjunctionPredicate* p_NOT_P_RELATED_TO_SECOND = new PRADA::ConjunctionPredicate;
         p_NOT_P_RELATED_TO_SECOND->d = 1;
         p_NOT_P_RELATED_TO_SECOND->name = derived_name;
-        p_NOT_P_RELATED_TO_SECOND->id = TL::logicObjectManager::getLowestFreeConceptID(11);
-        p_NOT_P_RELATED_TO_SECOND->basePreds.append(TL::logicObjectManager::getPredicate(MT::String("b1")));
+        p_NOT_P_RELATED_TO_SECOND->id = PRADA::logicObjectManager::getLowestFreeConceptID(11);
+        p_NOT_P_RELATED_TO_SECOND->basePreds.append(PRADA::logicObjectManager::getPredicate(MT::String("b1")));
         p_NOT_P_RELATED_TO_SECOND->basePreds_positive.append(false);
         p_NOT_P_RELATED_TO_SECOND->basePreds_mapVars2conjunction.resize(2);
         p_NOT_P_RELATED_TO_SECOND->basePreds_mapVars2conjunction(0) = 0;
@@ -51,11 +40,11 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
         p_NOT_P_RELATED_TO_SECOND->freeVarsAllQuantified = true;
     //     p_NOT_P_RELATED_TO_SECOND->writeNice(cout); cout<<endl;
 
-        TL::ConjunctionPredicate* p_NOT_P_RELATED_TO_FIRST = new TL::ConjunctionPredicate;
+        PRADA::ConjunctionPredicate* p_NOT_P_RELATED_TO_FIRST = new PRADA::ConjunctionPredicate;
         p_NOT_P_RELATED_TO_FIRST->d = 1;
-        p_NOT_P_RELATED_TO_FIRST->name << "not_" << this->pred->name << "_related_to_first";
-        p_NOT_P_RELATED_TO_FIRST->id = TL::logicObjectManager::getLowestFreeConceptID(11) + 1;
-        p_NOT_P_RELATED_TO_FIRST->basePreds.append(TL::logicObjectManager::getPredicate(MT::String("b1")));
+        p_NOT_P_RELATED_TO_FIRST->name << "not_" << this->symbol->name << "_related_to_first";
+        p_NOT_P_RELATED_TO_FIRST->id = PRADA::logicObjectManager::getLowestFreeConceptID(11) + 1;
+        p_NOT_P_RELATED_TO_FIRST->basePreds.append(PRADA::logicObjectManager::getPredicate(MT::String("b1")));
         p_NOT_P_RELATED_TO_FIRST->basePreds_positive.append(false);
         p_NOT_P_RELATED_TO_FIRST->basePreds_mapVars2conjunction.resize(2);
         p_NOT_P_RELATED_TO_FIRST->basePreds_mapVars2conjunction(0) = 1;
@@ -63,12 +52,13 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
         p_NOT_P_RELATED_TO_FIRST->freeVarsAllQuantified = true;
     //     p_NOT_P_RELATED_TO_FIRST->writeNice(cout); cout<<endl;
         
-        PredL preds;
-        preds.append(p_NOT_P_RELATED_TO_SECOND);
-        preds.append(p_NOT_P_RELATED_TO_FIRST);
-        TL::logicObjectManager::addStatePredicates(preds);
+        PredL symbols;
+        symbols.append(p_NOT_P_RELATED_TO_SECOND);
+        symbols.append(p_NOT_P_RELATED_TO_FIRST);
+        PRADA::logicObjectManager::addStatePredicates(symbols);
       }
     }
+#endif
   }
 }
 
@@ -77,6 +67,8 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
 
 void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
   uint DEBUG = 0;
+  NIY;
+#if 0
   // HACK
 //   if (arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
@@ -85,13 +77,13 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
   uint i;
   if (arity == 1) {
     FOR1D(objects_ids, i) {
-      if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(i)<<")"<<endl;}
+      if (DEBUG>1) {cout<<"*** Next:  "<<this->symbol->name<<"("<<objects_ids(i)<<")"<<endl;}
       if (DEBUG>1) {PRINT(objects_data(i));}
       bool does_hold = holds(objects_data(i));
       if (DEBUG>1) {PRINT(does_hold);}
       if (does_hold) {
         uintA args;  args.append(objects_ids(i));
-        lits.append(TL::logicObjectManager::getLiteral(this->pred, true, args));
+        lits.append(PRADA::logicObjectManager::getLiteral(this->symbol, true, args));
         if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
@@ -100,16 +92,16 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
     MT::Array< uintA > lists;
     uintA objs_numbers;
     FOR1D(objects_ids, i) {objs_numbers.append(i);}
-    TL::allPossibleLists(lists, objs_numbers, arity, false, true);
+    TL::allPermutations(lists, objs_numbers, arity, false, true);
     FOR1D(lists, i) {
-      if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
+      if (DEBUG>1) {cout<<"*** Next:  "<<this->symbol->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
       arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
       if (DEBUG>1) {PRINT(x);}
       bool does_hold = holds(x);
       if (DEBUG>1) {PRINT(does_hold);}
       if (does_hold) {
         uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));
-        lits.append(TL::logicObjectManager::getLiteral(this->pred, true, args));
+        lits.append(PRADA::logicObjectManager::getLiteral(this->symbol, true, args));
         if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
@@ -117,6 +109,7 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
   else NIY;
   if (DEBUG>0) {PRINT(lits.N);  PRINT(lits);}
   if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
+#endif
 }
 
 
@@ -128,8 +121,8 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const MT::Array<re
   lits.clear();
   uint i;
   FOR1D(sgs, i) {
-    CHECK(sgs(i)->pred != NULL, "No predicate object");
-    if (DEBUG>0) {cout<<"Predicate "<<sgs(i)->pred->name<<endl;}
+    CHECK(sgs(i)->symbol != NULL, "No symbolicate object");
+    if (DEBUG>0) {cout<<"Predicate "<<sgs(i)->symbol->name<<endl;}
     LitL lits_p;
     sgs(i)->calculateSymbols(lits_p, cont_state.object_ids, cont_state.data);
     if (DEBUG>0) {PRINT(lits_p);}
@@ -141,23 +134,26 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const MT::Array<re
 
 
 void relational::calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e) {
+  NIY;
+#if 0
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
   e.experience_symbolic.pre.state_objects = e.state_continuous_pre.object_ids;
   GroundedSymbol::calculateSymbols(e.experience_symbolic.pre.lits_prim, sgs, e.state_continuous_pre);
-  TL::logicReasoning::derive(&e.experience_symbolic.pre);
+  PRADA::logicReasoning::derive(&e.experience_symbolic.pre);
   e.experience_symbolic.post.state_objects = e.state_continuous_post.object_ids;
   GroundedSymbol::calculateSymbols(e.experience_symbolic.post.lits_prim, sgs, e.state_continuous_post);
-  TL::logicReasoning::derive(&e.experience_symbolic.post);
+  PRADA::logicReasoning::derive(&e.experience_symbolic.post);
   e.experience_symbolic.calcChanges();
   if (DEBUG>1) {PRINT(e.action_args);}
   if (e.action_type == 0)
-    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("grab")), e.action_args);
+    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(MT::String("grab")), e.action_args);
   else if (e.action_type == 1)
-    e.experience_symbolic.action = TL::logicObjectManager::getAtom(TL::logicObjectManager::getPredicate(MT::String("puton")), e.action_args);
+    e.experience_symbolic.action = PRADA::logicObjectManager::getAtom(PRADA::logicObjectManager::getPredicate(MT::String("puton")), e.action_args);
   else NIY;
   if (DEBUG>0) {e.experience_symbolic.write();}
   if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
+#endif
 }
 
 
@@ -225,8 +221,8 @@ void relational::read(MT::Array<GroundedSymbol*>& sgs, const char* prefix, Groun
 // NN_Grounding
 
 
-relational::NN_Grounding::NN_Grounding(MT::String& name, uint arity, bool build_derived_predicates) : 
-GroundedSymbol(name, arity, build_derived_predicates) {
+relational::NN_Grounding::NN_Grounding(MT::String& name, uint arity, bool build_derived_symbols) : 
+GroundedSymbol(name, arity, build_derived_symbols) {
   this->type = NN;
 }
 
@@ -301,8 +297,8 @@ void relational::NN_Grounding::write() const {
 //  RBF_Grounding
 
 
-relational::RBF_Grounding::RBF_Grounding(MT::String& name, uint arity, bool build_derived_predicates) : 
-GroundedSymbol(name, arity, build_derived_predicates) {
+relational::RBF_Grounding::RBF_Grounding(MT::String& name, uint arity, bool build_derived_symbols) : 
+GroundedSymbol(name, arity, build_derived_symbols) {
   this->type = RBF;
 }
 

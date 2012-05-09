@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -24,7 +24,8 @@
 
 #include <MT/array.h>
 #include <MT/ors.h>
-#include <relational/logicDefinitions.h>
+#include <relational/symbols.h>
+#include <relational/rules.h>
 
 // ---------------------------------------------
 // ODE PARAMETERS
@@ -112,7 +113,7 @@ public:
   // GENERAL OBJECT INFORMATION
   // --------------------------------
   void getObjects(uintA& objects); //!< return list all objects
-  void getTypes(TermTypeL& objects_types, const uintA& objects, const TermTypeL& types); //!< return list of all object types
+  void getTypes(PRADA::ArgumentTypeL& objects_types, const uintA& objects, const PRADA::ArgumentTypeL& types); //!< return list of all object types
   uint getTableID();
   void getBalls(uintA& balls);
   void getBlocks(uintA& blocks);
@@ -137,6 +138,8 @@ public:
   double* getPosition(uint id);   //!< returns 3-dim array with x/y/z-coordinates
   // orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
   void getOrientation(arr& orientation, uint id);
+  void getObjectAngles(arr& angles);
+  void getObjectPositions(arr& positions);
   bool isUpright(uint id);        //!< check if id is upright
   // inhand
   uint getInhand(uint man_id); //!< get id of the object catched by man_id
