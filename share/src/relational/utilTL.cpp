@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -80,7 +80,7 @@ Memory_allPossibleLists mem__withoutRepeat_dontReturnEmpty;
 
 
 
-void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty) {
+void TL::allPermutations(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"allPossibleListsWithRepeat [START]"<<endl;
   if (DEBUG>0) {PRINT(arguments); PRINT(length); PRINT(withRepeat);}
@@ -122,7 +122,7 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uin
       return;
     }
     else {
-      MT_MSG("No lists returned!");
+//       MT_MSG("No lists returned!");
       return;
     }
   }
@@ -171,9 +171,9 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uin
 
 
 // different arguments
-void TL::allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty)  {
+void TL::allPermutations(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty)  {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"allPossibleLists [START]"<<endl;}
+  if (DEBUG>0) {cout<<"allPermutations [START]"<<endl;}
   if (DEBUG>0) {PRINT(arguments_lists);  PRINT(returnEmpty);}
   lists.clear();
   if (arguments_lists.N == 0) {
@@ -210,7 +210,7 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& a
   }
   
   if (DEBUG>0) {PRINT(lists);}
-  if (DEBUG>0) {cout<<"allPossibleLists [END]"<<endl;}
+  if (DEBUG>0) {cout<<"allPermutations [END]"<<endl;}
 }
 
 
@@ -224,7 +224,7 @@ void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueS
   // others
   for (length=1; length<=max_length; length++) {
     MT::Array< uintA > local_lists;
-    allPossibleLists(local_lists, elements, length, false, false);
+    allPermutations(local_lists, elements, length, false, false);
     FOR1D(local_lists, i) {
       for (k=0; k<local_lists(i).N-1; k++) {
         if (local_lists(i)(k) >= local_lists(i)(k+1))

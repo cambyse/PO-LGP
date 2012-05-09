@@ -1,13 +1,16 @@
 #ifndef RELATIONAL__SYMBOL_GROUNDING
 #define RELATIONAL__SYMBOL_GROUNDING
 
-#include <relational/logicDefinitions.h>
+#include <relational/symbols.h>
+#include <relational/literals.h>
 #include <MT/ors.h>
 
 
 
 
 namespace relational {
+  
+using namespace PRADA;
   
 
 struct ContinuousState;
@@ -23,7 +26,7 @@ public:
   
   MT::String name;
   uint arity;
-  TL::Predicate* pred;
+  PRADA::Symbol* symbol;
   GroundingType type;
 
   GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates = false);
@@ -111,7 +114,7 @@ struct FullExperience {
   
   double reward;
   
-  TL::SymbolicExperience experience_symbolic;
+  PRADA::StateTransition experience_symbolic;
   
   void write_continuous_nice(ostream& out) const;
   void write_continuous(ostream& out) const;

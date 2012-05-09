@@ -244,7 +244,7 @@ public:
   
   //!@name sorting and permuting this array
   void sort(ElemCompare comp);
-  uint findInSorted(const T& x, ElemCompare comp);
+  uint findInSorted(const T& x, ElemCompare comp) const;
   uint insertInSorted(const T& x, ElemCompare comp);
   void removeValueInSorted(const T& x, ElemCompare comp);
   void reverse();
