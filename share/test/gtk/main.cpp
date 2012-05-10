@@ -48,13 +48,15 @@ void addVariablesToTree(GtkTreeStore *store){
 
   uint i,j;
   Variable *v;
-  _Variable_field_info_base *vi;
-  global.readAccess(NULL);
-  for_list(i, v, global.variables){
+  FieldInfo *vi;
+  birosInfo.readAccess(NULL);
+  for_list(i, v, birosInfo.variables){
     gtk_tree_store_append (store, &iter1, NULL);  /* Acquire a top-level iterator */
+    MT::String s;
+    s <<"id=" <<v->id <<" type=" <<typeid(*v).name() <<" state=" <<v->lockState();
     gtk_tree_store_set (store, &iter1,
-                        0, v->name,
-                        1, STRING("id=" <<v->id <<" type=" <<typeid(*v).name() <<" state=" <<v->lockState()),
+                        0, v->name.p,
+                        1, s.p,
                         -1);
     for_list(j, vi, v->fields){
       gtk_tree_store_append (store, &iter2, &iter1);  /* Acquire a child iterator */
@@ -64,7 +66,7 @@ void addVariablesToTree(GtkTreeStore *store){
                           -1);
     }
   }
-  global.deAccess(NULL);
+  birosInfo.deAccess(NULL);
 }
 
 void gui(){
