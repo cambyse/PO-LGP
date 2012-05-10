@@ -1,5 +1,8 @@
+#define MT_IMPLEMENT_TEMPLATES
+
 #include <relational/prada.h>
 #include <relational/robotManipulationSymbols.h>
+
 
 
 #define PLAN_TYPE__PRADA 1

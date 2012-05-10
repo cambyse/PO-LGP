@@ -21,7 +21,6 @@
 
 
 #include <math.h>
-#include <MT/algos.h>
 #include "reason.h"
 #include "learn.h"
 

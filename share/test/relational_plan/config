@@ -22,7 +22,7 @@ noise_scaling_factor 0.75
 [PRADA]
 
 PRADA_horizon 4
-PRADA_num_samples 2000
+PRADA_num_samples 500
 PRADA_noise_softener 0.2
 
 

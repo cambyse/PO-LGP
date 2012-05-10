@@ -1,3 +1,5 @@
+#define MT_IMPLEMENT_TEMPLATES
+
 #include <relational/learn.h>
 
 

@@ -20,7 +20,6 @@
 */
 
 #include <math.h>
-#include <MT/algos.h>
 #include "learn.h"
 #include "reason.h"
 
