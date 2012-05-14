@@ -19,15 +19,15 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PRADA__LEARN
-#define PRADA__LEARN
+#ifndef RELATIONAL_learn_h
+#define RELATIONAL_learn_h
 
 #include <relational/reason.h>
 
 
 
 
-namespace PRADA {
+namespace relational {
   
 /************************************************
  * 
@@ -463,6 +463,6 @@ class SplitOnCompareFunctionValues : public SearchOperator {
 
 
 
-}  // namespace PRADA
+}  // namespace relational
 
-#endif // PRADA__LEARN
+#endif // RELATIONAL_learn_h

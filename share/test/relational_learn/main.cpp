@@ -1,3 +1,5 @@
+#define MT_IMPLEMENT_TEMPLATES
+
 #include <relational/learn.h>
 
 
@@ -27,12 +29,12 @@ void test_learn() {
   MT::String logfile("learn.log");
 	
 	// Symbols
-  PRADA::SymL symbols;
-  PRADA::ArgumentTypeL types;
-  PRADA::readSymbolsAndTypes(symbols, types, "symbols.dat");
+  relational::SymL symbols;
+  relational::ArgumentTypeL types;
+  relational::readSymbolsAndTypes(symbols, types, "symbols.dat");
 	
 	// Data
-  PRADA::StateTransitionL transitions = PRADA::StateTransition::read("data.dat");
+  relational::StateTransitionL transitions = relational::StateTransition::read("data.dat");
   PRINT(transitions.N);
 //   write(transitions);
 	
@@ -41,13 +43,13 @@ void test_learn() {
   //  LEARN
   // -------------------------------------
 	
-  PRADA::learn::set_penalty(alpha_pen);
-  PRADA::learn::set_p_min(prob_state_given_NoisyOutcome, prob_state_given_NoisyOutcome__in_noisyDefaultRule);
-  PRADA::RuleSetContainer rulesC;
+  relational::learn::set_penalty(alpha_pen);
+  relational::learn::set_p_min(prob_state_given_NoisyOutcome, prob_state_given_NoisyOutcome__in_noisyDefaultRule);
+  relational::RuleSetContainer rulesC;
 	cout<<"Starting rule-learning... (might take quite a while; watch '"<<logfile<<"')"<<endl;
-  PRADA::learn::learn_rules(rulesC, transitions); 
+  relational::learn::learn_rules(rulesC, transitions); 
   
-  PRADA::write(rulesC.rules, "learned_rules.dat");
+  relational::write(rulesC.rules, "learned_rules.dat");
 	cout<<"Learned rules have been written to 'learned_rules.dat'."<<endl;
 }
 

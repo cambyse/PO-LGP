@@ -20,14 +20,14 @@
 */
     
 
-#ifndef PRADA_prada_h
-#define PRADA_prada_h
+#ifndef RELATIONAL_prada_h
+#define RELATIONAL_prada_h
 
 #include "plan.h"
 
 
 
-namespace PRADA {
+namespace relational {
 
 
 /************************************************
@@ -313,5 +313,5 @@ void write(const RVL& vars);
 
 
 
-#endif // PRADA_prada_h
+#endif // RELATIONAL_prada_h
 

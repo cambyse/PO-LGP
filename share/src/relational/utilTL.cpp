@@ -21,7 +21,7 @@
 
 #include "utilTL.h"
 
-double REPLACE_SIZE(double val) {
+double TL::REPLACE_SIZE(double val) {
   // Blocks
   if (TL::areEqual(val,0.04)) return 1.0;
   if (TL::areEqual(val,0.06)) return 2.0;
@@ -513,7 +513,7 @@ double _mymin(double x,double y){ return x < y ? x : y; }
 double _mymax(double x,double y){ return x > y ? x : y; }
 
 
-Rprop::Rprop(){
+TL::Rprop::Rprop(){
   incr   = 1.2;
   decr   = .33;
   dMax = 50;
@@ -522,24 +522,24 @@ Rprop::Rprop(){
   delta0 = 1.;
 }
 
-void Rprop::init(double _delta0){
+void TL::Rprop::init(double _delta0){
   stepSize.resize(0);
   lastGrad.resize(0);
   delta0 = _delta0;
 }
 
-bool Rprop::done(){
+bool TL::Rprop::done(){
   double maxStep = stepSize(stepSize.maxIndex());
   return maxStep < incr*dMin;
 }
 
-void Rprop::step(double& w,const double& grad){
+void TL::Rprop::step(double& w,const double& grad){
   static arr W,GRAD;
   W.referTo(&w,1); GRAD.referTo(&grad,1);
   step(W,GRAD);
 }
 
-void Rprop::step(arr& w,const arr& grad,uint *singleI){
+void TL::Rprop::step(arr& w,const arr& grad,uint *singleI){
   if(!stepSize.N){ //initialize
     stepSize.resize(w.N);
     lastGrad.resize(w.N);

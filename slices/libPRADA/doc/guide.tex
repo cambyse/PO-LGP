@@ -1,0 +1,972 @@
+\documentclass[10pt,twoside,twocolumn,fleqn]{article}
+
+\input{macro}
+\input{macros_tobias}
+
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+% \usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{palatino}
+% \usepackage{mlapa}
+\usepackage{hyperref}
+
+
+% \renewcommand{\baselinestretch}{1.1}
+\geometry{a4paper,headsep=7mm,hdivide={15mm,*,15mm},vdivide={20mm,*,15mm}}
+
+
+
+%headsep=0mm,
+\allowdisplaybreaks
+
+\fancyhead[OL,ER]{\thetitle, \textit{Tobias Lang}---\today}
+\fancyhead[C]{}
+\fancyhead[OR,EL]{\thepage}
+\fancyfoot{}
+\pagestyle{fancy}
+
+
+
+\definecolor{codecol}{rgb}{.9,.9,.9}
+\usepackage{listings}
+\lstset{ %
+    language=C++,                % choose the language of the code
+    basicstyle=\sf\footnotesize,       % the size of the fonts that are used
+% for the code
+    frame=none,                   % adds a frame around the code
+    tabsize=4,                      % sets default tabsize to 2 spaces
+    captionpos=b,                   % sets the caption-position to bottom
+    texcl=true,
+    mathescape=true,
+    backgroundcolor=\color{codecol},
+    escapechar=\%,
+    columns=flexible,
+    xleftmargin=1ex,
+%    numbers=left, numberstyle=\footnotesize, stepnumber=1, numbersep=3ex
+}
+
+
+
+
+\mytitle{libPRADA -- Version 1.0\\Learning and Planning with Probabilistic
+Relational Rules}
+\myauthor{Tobias Lang \\\texttt{http://userpage.fu-berlin.de/tlang/prada/}}
+
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\emph{When using this library, please cite \citet{lang-toussaint-10jair}.}
+\end{center}
+
+\tableofcontents
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+
+\section{Disclaimer}
+
+libPRADA is work in progress! I did my best to avoid mistakes and to increase
+comprehensibility (at least at high-level interfaces). Nonetheless, you
+will probably encounter bugs and lacks in functionality. \textbf{Please contact
+me in this case!} I`ll be happy to fix bugs, hear your complaints, add
+desired functionality and implement proposals and wishes for the library :-).
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Introduction}
+
+This library provides a C++-implementation for using probabilistic
+relational rules in the context of model-based relational reinforcement
+learning in stochastic domains.
+\begin{itemize}
+\item libPRADA provides algorithms for \fett{planning} in stochastic
+relational domains: PRADA \cite{lang-toussaint-10jair}, sparse sampling
+trees (SST) \cite{kearns02ss} and UCT \cite{kocsis06uct}.
+
+\item libPRADA implements the algorithm for \fett{learning}
+probabilistic relational rules by \citet{pasula07ai}.
+
+\item Consequently, libPRADA provides plenty of basic data-structures
+and methods to deal with relational logic objects such as
+symbols (predicates), symbolic states and rules.
+\end{itemize}
+
+
+
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Installation}
+
+First, please build the \fett{library}:
+\begin{itemize}
+\item cd lib
+\item type make, and pray
+\end{itemize}
+Then, please run the \fett{example programs}:
+\begin{itemize}
+\item cd ../test/simple\_demos/
+\item type make, and pray again
+\item ./x.exe
+\item cd ../test/plan/
+\item type make, and pray once again
+\item ./plan.exe
+\end{itemize}
+Finally, you might want to take a closer look at this guide.
+
+If compiling the library did \kursiv{not} work out, then you can compile the
+whole example programs directly in their directories. For example:
+\begin{itemize}
+\item cd test/demos/
+\item make -f Makefile\_direct
+\end{itemize}
+If this still does not work, please contact me.
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Programmer's guide}
+
+We will discuss the important headers in \code{libPRADA/src/}.
+
+\noindent File overview:
+\begin{itemize}
+\item \code{MT/array.h}: data-structure for lists
+\item TODO
+\item \code{relational/reason.h}: manipulating and processing basic
+logical objects and rules
+\item \code{relational/plan.h}: planning with NID rules including SST and
+UCT
+\item \code{relational/prada.h}: PRADA for planning with NID rules
+\item \code{relational/learn.h}: learning NID rules from data
+\end{itemize}
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Lists}
+
+File: \code{MT/array.h}\\
+
+I use Marc Toussaint's \code{Array} class to store all kinds of data (primitive
+data-types, objects, pointers) in lists. Likewise, it can be used to define
+mathematical objects such as vectors and matrices. For instances, a list of
+\code{double} becomes a vector of reals. His class provides many basic
+self-explanatory methods to deal with lists, vectors and matrices.
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Symbols}
+
+File: \code{relational/symbols.h}\\
+
+\paragraph{Data structure}
+
+A symbol consists of the following attributes:
+\begin{lstlisting}
+MT::String name;
+uint arity;   // e.g. 2 for on(.,.)
+SymbolType symbol_type;
+RangeType range_type;
+uintA range;   // optional
+ArgumentTypeL arg_types;   // optional
+\end{lstlisting}
+\code{SymbolType} is an enum in \code{Symbol}. The most important types
+are \code{action} and \code{primitive} which constitute the basic
+predicates and functions in a domain.  The truth of primitive symbols 
+needs to be provided from outside the logical machinery (e.g., by compiling
+observations into logical symbols, also known as the ``grounding''
+problem).
+
+All other types denote symbol types which are defined in terms of other
+symbols. For instance, a \code{conjunction} symbol is $clear(X) = \forall Y
+\neg on(Y,X)$. \code{Symbol.h} provides implementations for these more
+complex symbol types. They should be largely self-explanatory. You can also
+add your own symbol types with appropriate definitions. Please note that
+these derived symbols can be used to specify complex logical reward
+functions (see also below). For instance, it is possible to thereby define
+a reward for stacking large towers of blocks in a blocks-world. Here are
+some of the provided symbol types:
+\begin{itemize}
+\item \code{ConjunctionSymbol}: a conjunction of (possibly negated)
+symbols, allowing for either existentially or universally quantified
+variables;
+example: $clear(X) = \forall Y \neg on(Y,X)$
+\item \code{TransClosureSymbol}: transitive closure for a symbol;
+example
+$above(X,Y) = +on(X,Y)$
+\item \code{CountSymbol}: counts how often a symbol holds; example
+$countClear() = \sharp X: clear(X)$
+\item \code{AverageFunction}: computes the average over function values;
+example $averageHeight() = average_X[height(X)]$
+\item \code{SumFunction}: computes the sum over function values;
+example $sumHeight() = \sum_X height(X)$
+\item \code{MaxFunction}: computes the max over function values;
+example $maxHeight() = \max_X height(X)$
+\end{itemize}
+
+
+\code{RangeType} denotes the range of a symbol. Symbols can have a
+\code{binary} range and correspond to standard predicates then: they are
+either true (value 1) or false (value 0). Symbols can be functions which
+have the \code{integers} or the \code{reals} as range. It is also
+possible to define a \code{integer\_set} for a specific set of range
+values: this set needs to be defined in \code{range}.
+
+Finally, libPRADA also allows for typed arguments by means of the
+data-structure \code{ArgumentType}. For instance, one may want to define a
+type \texttt{cube} for constants. However, this is still work in progress.
+(Alternatively, one may use typing predicates such as $cube(\cdot)$.)
+
+
+
+\paragraph{File syntax}
+
+The syntax for a symbols file is simply a list of symbols and
+(optionally) argument types as follows:
+\begin{lstlisting}
+<Symbol>+
+{ [    // optional
+<ArgumentType> +
+] }
+\end{lstlisting}
+A single symbol is represented by its spelled out attributes \code{(name)
+(arity) (type) (range) [otherstuff]}. \code{[otherstuff]} is needed to
+define derived symbols. The exact syntax depends strongly on the type of
+the derived symbol. Please see the example files in the
+\code{test}-directories. Here is an example for symbols file:
+\begin{lstlisting}
+grab 1 action binary
+on 2 primitive binary
+size 1 primitive integers
+clear 1 conjunction binary  <-- All Y  -on(Y X)   // conjunction
+\end{lstlisting}
+TODO more examples here; range for functions
+
+
+
+
+\paragraph{Object Management}
+
+For object management reasons, C++-objects of symbols cannot be constructed
+from outside the class. Rather, the following method needs to be called to
+construct a symbol:    
+\begin{lstlisting}
+static Symbol* get(const MT::String& name, uint arity, SymbolType
+symbol_type = primitive, RangeType range_type = binary);
+\end{lstlisting}
+Analogous \code{get}-methods exist for the derived symbols. Thereafter,
+symbols can also simply be accessed by their names:
+\begin{lstlisting}
+static Symbol* get(const MT::String& name);
+\end{lstlisting}
+
+
+
+
+
+    
+
+
+
+
+
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Literals}
+
+File: \code{relational/literals.h}\\
+
+
+Literals are instantiated symbols (that is, with a list of arguments)
+together with a value. Examples: $on(61,63)=1$ and $size(62)=4$.
+
+
+\subsubsection{Arguments: logic variables and constants}
+\label{sec:literals:arguments}
+
+Arguments of literals are represented by non-negative integers
+(\code{uint}) $0,1,2 \dots$. For reasoning, we need to distinguish between
+logic variables and constants. This is achieved by reserving a set of
+\code{uint}s for the constants (\code{uintA} = \code{MT::Array< uint >}).
+You can find the required methods in \code{relational/reason.h}:
+\begin{lstlisting}
+void setConstants(uintA& constants);
+bool isConstant(uint id);
+\end{lstlisting}
+The default is that all \code{uint}s $<10$ are variables, all other
+constants.
+
+There are also appropriate methods to fix the \code{ArgumentType} of
+constants.
+
+
+\subsubsection{Literals}
+
+A literal consists of the following attributes:
+\begin{lstlisting}
+Symbol* s;
+uintA args;
+double value;
+ComparisonType comparison_type;  // default: comparison\_equal
+\end{lstlisting}
+\code{uintA} is short for \code{MT::Array<uint>} (a list of unsigned
+integers). For binary symbols (aka predicates), the value 0 represents a
+negated (/negative/false) symbol and the value 1 a true (/positive) symbol.
+For instance, for $on(61,63)=1$ we have \code{s = Symbol::get(``on'')},
+\code{args(0)=61, args(1)=62}, \code{value=1} and \code{comparison\_type
+= Literal::comparison\_equal}.
+
+\code{ComparisonType} is an enum in \code{Literal} and represents
+the different comparison forms $=, <, \le, >, \ge$. Hence, we can define
+comparisons such as $size(62)<5$.
+
+
+
+
+\paragraph{File syntax}
+
+Simply use \textbf{plain text} descriptions:
+\begin{lstlisting}
+on(65, 60)  // for predicates: corresponds to value=1
+-inhand(71)  // for predicates: corresponds to value=0
+size(1)<=2
+size(66)=2
+\end{lstlisting}
+Please note the special notation for the value of binary symbols (=
+predicates) which is close to standard logic notation: if it is omitted, it
+denotes value 1 (= true); with a leading \code{-}, it denotes value 0
+(=false).
+
+Lists of literals are usually written in one line, separated by a space
+or by a comma.
+
+
+
+
+
+\subsubsection{SymbolicState}
+
+A \code{SymbolicState} consists of:
+\begin{lstlisting}
+MT::Array<Literal*> lits;
+uintA state_constants;
+bool derivedDerived;
+\end{lstlisting}
+The important attribute is the list of literals \code{lits}. We make the 
+closed world assumption: \code{lits} contains binary literals only if
+they are positive (with value 1). Hence, all binary literals which are not
+explicitly stated are assumed to be false. \code{state\_constants} can be
+set optionally and contains all constants in the state (note that not
+necessarily all state constants need to appear as an argument in
+\code{lits}). \code{derivedDerived} is a flag which stores whether the
+derived symbols have already been calculated.
+
+
+
+\paragraph{File syntax: States and Trials}
+
+A state is simply represented by its list of literals:
+\begin{lstlisting}
+on(61,62) on(65,64) inhand(66) size(64)=3
+\end{lstlisting}
+Please note the special syntax for literals of binary symbols
+(predicates) as described above: no negative binary symbols are allowed
+and positive binary symbols don't have a value specified (no \code{=1}).
+
+
+
+\subsubsection{StateTransition}
+\label{sec:state-transition}
+
+\code{StateTransition} is a convenience wrapper for the reinforcement
+learner's favorite triplet $(s,a,s')$:
+\begin{lstlisting}
+SymbolicState pre, post;
+Literal* action;
+MT::Array< Literal* > del, add;
+uintA changedConstants;
+\end{lstlisting}
+\code{del}, \code{add} and \code{changedConstants} are calculated
+automatically by the constructor.
+
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+
+\subsection{Rules}
+
+File: \code{relational/rules.h}\\
+
+Probabilistic relational rules are at the heart of libPRADA. They provide
+a transition model $P(s' \| s,a)$ for model-based relational reinforcement
+learning.
+
+
+\subsubsection{Rules}
+
+The data-structure \code{Rule} implements the noisy indeterministic deictic
+(NID) rules of \cite{pasula07ai}. The semantics of NID rules follows
+exactly their paper. Please confer their paper for further details (or my
+Ph.D.~thesis \citet{11-lang-phd} :-) ), including state-action coverage
+and the noise outcome. In particular, it is important for you to understand
+when a rule covers a state-action pair and when not (I'll describe this
+superficially also below): the concepts of a rule uniqueness and of noisy
+default rule are important.
+
+\code{Rule} has the following attributes:
+\begin{lstlisting}
+Literal* action;
+LitL context;
+MT::Array< LitL > outcomes;
+doubleA probs;
+double noise_changes;
+arr outcome_rewards; // optional
+\end{lstlisting}
+Please note that \code{LitL} is short for \code{MT::Array< Literal* >}, a
+list of \code{Literal} pointers.
+
+\code{action} is the rule's action (surprise, surprise). \code{context} is
+the list of (abstract) literals which need to be covered by a state so that
+the rule can apply. \code{outcomes} contains the different outcomes,
+\code{probs} the corresponding probabilities. Please note an important
+convenience for \code{outcomes} and \code{probs}: the last outcome is
+the noise outcome. \code{noise\_changes} is PRADA's noise outcome
+heuristic: it states the average number of state properties that have
+changed in case of the noise outcome -- however, in practice, this is a
+negligible parameter. \code{outcome\_rewards} is an optional parameter
+which specifies a reward for each outcome: planners like PRADA take these
+in account in addition to global rewards on states (see the IPPC domains
+for example domains).
+
+\code{Rule} provides many convenience methods. It also provides a method
+to construct the \fett{noisy default rule} which is important when
+learning and reasoning with NID rules (see \cite{pasula07ai}):
+\begin{lstlisting}
+static Rule* generateDefaultRule(double noiseProb,
+			double minProb, double change);
+\end{lstlisting}
+The default rule uses the special action $default()$ and is applied when
+there is no unique non-default covering rule for a state-action pair.
+
+Sets of rules should be managed by means of the class \code{RuleSet}. Most
+importantly, \code{RuleSet} controls the deletion of C++-objects of
+\code{Rule} so that your working memory does not drown in \code{Rule}
+pointers. There is also an additional container structure
+\code{RuleSetContainer} for \code{RuleSet} in \code{learn.h} which is used
+for efficiency reasons in rule-learning and provides auxiliarly methods
+and statistics.
+
+
+\paragraph{File Syntax: rules}
+
+The general syntax is straightforward:
+\begin{lstlisting}
+ACTION:
+<Literal>
+CONTEXT:
+<Literal>+
+OUTCOMES:               // List of outcomes
+<double> <Literal>+     // Outcome 1 incl. probability
+<double> <Literal>+     // Outcome 2 incl. probability
+...
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+ACTION:
+  puton(X)
+CONTEXT:
+  block(X), inhand(Y), size(X)==2
+OUTCOMES:
+  0.7 on(Y X), upright(Y), -inhand(Y)
+  0.2 -inhand(Y)
+  0.1  <noise>
+\end{lstlisting}
+
+Some guidelines for rules:
+\begin{itemize}
+\item Outcomes are lists of \emph{primitive} literals with a leading
+probability. (No literals for derived symbols here! Derived literals,
+however, may appear in the context.)
+\item The last outcome of a rule \emph{must} be the noise outcome.
+\item The noise outcome can specify how many (random) state properties
+are expected to change (required by PRADA's heuristic to deal with the noise
+outcome).
+\end{itemize}
+
+
+\subsubsection{Substitution}
+
+A \code{Substitution} maps integers to integers. It can be used for
+instance for grounding abstract literals, then mapping variables to
+constants (please recall that both variables and constants are represented
+by \code{uint}). The essential two attributes are:
+\begin{lstlisting}
+uintA ins;
+uintA outs;
+\end{lstlisting}
+These are two lists of \code{uint}s. \code{ins(i)} maps to \code{outs(i)}.
+\code{Substitution} provides many (hopefully) self-explanatory methods.
+The most important ones are the various \code{apply} methods such as
+applying substitutions to rules and \code{void addSubs(uint in,
+uint out)} for adding a substitution.
+
+Sets of substitutions can be managed by means of the container class
+\code{SubstitutionSet}. Similarly as for \code{RuleSet} the major purpose
+is to control the deletion of C++-objects of \code{Substitution}.
+
+  
+
+
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Reasoning}
+
+File: \code{relational/reason.h}\\
+
+The namespace \code{reason} provides methods for logical reasoning. These
+methods are broadly into \fett{basic} reasoning and \fett{rule reasoning}
+methods.
+
+
+\subsubsection{Basic reasoning}
+
+Basic reasoning methods fulfill three major functionalities: (i)
+distinguishing between constants and variables; (ii) deriving literals for
+derived symbols (symbols which are defined in terms of other symbols);
+(iii) basic coverage methods.
+
+
+\paragraph{Distinguishing between constants and variables}
+
+As described in Sec.~\ref{sec:literals:arguments}, arguments of literals
+(variables and constants) are represented by \code{uint}s. \code{reason}
+maintains the information which \code{uint} refers to a variable and which
+to a constant. By default, all \code{uint}s $<10$ refer to variables, all
+other to constants. Alternatively, you may provide a set of constants by
+\code{void setConstants(uintA\& constants)}. The fundamental methods of
+libPRADA for distinguishing ground and abstract literals are:
+\begin{lstlisting}
+bool isGround(const Literal* lit);
+bool isPurelyAbstract(const Literal* lit);
+\end{lstlisting}
+Please note that for a literal to be purely abstract, all arguments need
+to be variables.
+
+\paragraph{Deriving literals}
+
+There are primitive and derived (/non-primitive) symbols. Derived symbols
+are defined in terms of other symbols. To describe the world
+symbolically, the truth of literals for primitive symbols needs to be
+specified from outside the logical machinery. This is the grounding
+problem: how do symbol relate the true world? Please note that this is
+different from \emph{grounding} an abstract literal to a ground literal.
+In contrast, the literals for derived symbols need to be calculated from
+other literals using logical reasoning. \code{reason} provides the
+required methods. The central method for calculating the derived
+literals for a state is:
+\begin{lstlisting}
+void derive(SymbolicState* s);
+\end{lstlisting}
+
+
+\paragraph{Basic coverage methods}
+
+There are three types of basic coverage methods which are based on each
+other. The \code{holds} methods check for test literals whether they hold
+in a given list of literals (simple contains check). The \code{unify}
+methods try to unify different literals (typically, abstract and ground
+literals): if successful, the resulting \code{Substitution} provides the
+mapping of variables to variables/constants. The \code{cover} methods try
+to unify \emph{lists} of literals and return lists of appropriate
+substitutions.
+
+
+
+\subsubsection{Rule reasoning}
+
+The methods for rule reasoning fulfill the following functionalities: (i)
+distinguishing between ground and abstract rules; (ii) calculating
+successor states and their probabilities for a rule and a given
+state-action pair; (iii) calculating the coverage of rules; (iv)
+calculating likelihoods of experiences $(s,a,s')$ for rule-sets.
+
+\paragraph{Coverage of rules}
+
+The implementation of state-action coverage for NID rules in libPRADA
+follows directly the specification in \citet{pasula07ai}. It has a specific
+semantics which might be unexpected. Understanding this semantics is
+crucial for learning and planning with NID rules. Please see
+\citet{pasula07ai} and \citet{lang-toussaint-10jair} for details.
+
+I highlight the most important feature here: For a given state-action pair
+$(s,a)$ and a rule-set $\Gamma$, we check which rules in $\Gamma$ cover
+$(s,a)$. That is, we substitute the arguments in the abstract rule action
+with the constants in $a$. Then, we try to find a unique substitution for
+the remaining variables in the rule. These remaining variables which do not
+appear in the action's arguments are called deictic references. If there is
+exactly one non-default rule in $\Gamma$ covering $(s,a)$ we call it the
+unique covering rule and use it to model $P(s'\|s,a)$. If there is no such
+unique covering (there is no covering rule or there are at least two
+covering rules), we use the default rule, basically saying that we do not
+know what will happen.
+
+There is a further subtlety concerning the deictic references: for a rule
+to cover $(s,a)$ there needs to be a unique substitution for these
+references. Thus, if there several groundings for a deictic reference such
+that the rule's context holds then the rule does \emph{not} cover $(s,a)$.
+
+Since this is so important, I give a small example here. Consider the
+rule:
+\begin{lstlisting}
+ACTION:
+  puton(X)
+CONTEXT:
+  block(X), inhand(Y)
+OUTCOMES:
+  0.9 on(Y X), -inhand(Y)
+  0.1  <noise>
+\end{lstlisting}
+$Y$ is a deictic reference here. Consider the symbolic states $s_1 =
+\{block(a), inhand(b)\}$, $s_2 = \{block(a)\}$, $s_3 = \{block(a),
+inhand(b), inhand(c)\}$. The rule covers only $s_1$: there is the unique
+grounding $\{X \to a, Y \to b\}$. However, it does not cover $s_2$: $Y$
+cannot be resolved. Most importantly, the rule does not cover $s_3$,
+either: there is no unique grounding. The reason is that the deictic
+reference $Y$ cannot be resolved uniquely: there are two possible
+groundings $\{X \to a, Y \to b\}$ and $\{X \to a, Y \to c\}$.
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Planning}
+
+Files: \code{reasoning/plan.h}, \code{reasoning/prada.h}\\
+
+This is a core part of libPRADA. It provides four algorithms (PRADA,
+A-PRADA, SST, UCT) for planning with \emph{ground} NID rules. The central
+methods for any planner are:
+\begin{lstlisting}
+Literal* plan_action(const SymbolicState& current_state);
+void setReward(Reward*);
+void setGroundRules(RuleSet& ground_rules);
+\end{lstlisting}
+The first action lets the planner plan an action for a given state,
+yielding a policy $\pi: s \to a$. The planner tries to find the
+approximately best action leading to high rewards. PRADA and A-PRADA also
+provide a method to generate a complete plan. In contrast, SST and UCT
+cannot provide a complete plan due to their outcome sampling. The second
+method sets the planning reward function of the planner (see below). The
+third method sets the \emph{ground} rules which provide the transition
+model $P(s'\|s,a)$ used by the planner. Hence, a set of abstract NID rules
+needs to be grounded first (see \code{reasoning/reason.h}) with respect to
+the domain constants; the ground rules are then provided to the planner.
+
+All planning algorithms share the following parameters:
+\begin{lstlisting}
+double discount;
+uint horizon;
+double noise_scaling_factor;
+\end{lstlisting}
+\code{discount} is a discount factor $\gamma$ $\in (0,1]$ (a future reward
+at time $t$ is discounted by $\gamma^t$). \code{horizon} is the planning
+horizon $h>0$. Specific parameters for the individual planners are
+discussed below. \code{noise\_scaling\_factor} is a noise scaling factor
+$\eta$ used by SST and UCT: it scales down the future values when sampling
+the noise outcome.
+
+
+\subsubsection{Individual planners}
+
+
+\paragraph{PRADA}
+
+PRADA stands for ``probabilistic relational action-sampling in dynamic
+Bayesian networks planning algorithm'' \cite{lang-toussaint-10jair}. 
+
+The most important parameter for PRADA is \code{num\_samples}: PRADA
+samples action-sequences and evaluates their rewards using a dynamic
+Bayesian network (DBN) \code{PRADA\_DBN* dbn} for all ground symbols.
+\code{num\_samples} controls the number of samples: the more samples, the
+higher the probability to find good plans and the higher planning
+complexity.
+
+Furthermore, you may specify \code{threshold\_reward} $\in (0,1]$ to define
+what a ``good'' plan is: it sets the threshold on the probability to
+achieve the reward. Another parameters is \code{noise\_softener} $\in
+(0,1]$: there is no clear way how to deal with the noise outcome of rules;
+PRADA's heuristic to do so can be harmful if the noise outcome has too high
+probability; this parameter may reduce the noise outcome's effects
+
+
+
+\paragraph{A-PRADA}
+
+Adaptive-PRADA extends PRADA as described in \cite{lang-toussaint-10jair}.
+The important method called during planning is 
+\begin{lstlisting}
+double shorten_plan(LitL& seq_best, const LitL& seq, double value_old);
+\end{lstlisting}
+It takes a plan and examines whether this plan can be improved by deleting
+some actions.
+
+
+\paragraph{SST}
+
+SST stands for ``sparse sampling tree'' (SST) algorithm
+\citep{kearns02ss}. SST is used for planning with NID rules in the work by
+\cite{pasula07ai}. It has the following additional parameter:
+\begin{itemize}
+\item \code{branch}: branch $b$ which determines the number of samples from
+the successor state distribution for a given action
+\end{itemize}
+
+
+\paragraph{UCT}
+
+UCT stands for ``upper confidence bounds applied to trees''
+\citep{kocsis06uct}.
+It has the following two additional parameters:
+\begin{itemize}
+\item \code{c}: bias $c$ for less often explored actions
+\item \code{numEpisodes}: number of episodes (or rollouts) $e$
+\end{itemize}
+
+
+
+\subsubsection{Reward functions}
+
+Reward functions $R: S \to A$ (here: from states to actions) are modelled
+by the class \code{Reward}. \code{Reward} provides the following methods to
+evaluate states:
+\begin{lstlisting}
+double evaluate(State& s);
+bool satisfied(State& s);
+bool possible(State& s);
+\end{lstlisting}
+Methods two and three may have trivial implementations by always returning
+true.
+
+The following pre-defined reward types are provided by libPRADA:
+\begin{itemize}
+\item LiteralReward: the reward is given for achieving a single literal,
+e.g.~$inhand(a)$ or $inhand(X)$
+\item LiteralListReward: the reward is given for achieving a conjunction
+of literals, e.g.~$on(a,b), on(b,c)$
+\item MaximizeReward: the value of an atom shall be maximized,
+e.g.~$sumHeight()$ (this defines the stacking task in good, old
+blocksworld)
+\end{itemize}
+
+PRADA reasons on beliefs over states (rather than on states directly). For
+this purpose, PRADA maintains its own class \code{PRADA\_Reward}. For the
+three reward functions discussed above, automated conversion routines are
+used when setting the standard \code{Reward} for PRADA. If you come up with
+your own reward function type, however, you must also define a
+\code{PRADA\_Reward} type that implements evaluating this reward function
+over beliefs.
+
+
+\paragraph{File syntax: rewards}
+
+Simply a flag of the reward type plus the literal(s) as described above.
+
+LiteralReward:
+\begin{lstlisting}
+1
+<Literal>
+\end{lstlisting}
+
+LiteralListReward:
+\begin{lstlisting}
+2
+<Literal>+
+\end{lstlisting}
+
+MaximizeReward:
+\begin{lstlisting}
+3
+<Literal>
+\end{lstlisting}
+
+
+
+
+
+
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+% -------------------------------------------------------------------
+
+\subsection{Rule learning}
+
+File: \code{relational/learn.h}\\
+
+libPRADA provides a direct implementation of the learning algorithm for
+probabilistic relational rules by \citet{pasula07ai}.
+
+To learn rules, you need to come up with a set $\{(s,a,s')\}$ of state
+transitions $(s,a,s')$ using the data-structure \code{StateTransition} (see
+\ref{sec:state-transition}). The central method is:
+\begin{lstlisting}
+void learn_rules(RuleSetContainer& rulesC,
+		StateTransitionL& experiences,
+		const char* logfile);
+\end{lstlisting}
+For efficient rule-learning the data-structure \code{RuleSetContainer} is
+used: \code{RuleSetContainer} is a wrapper for \code{RuleSet} which stores
+information on covered state-transitions.
+
+The learning algorithm is very sensitive to two parameters: the noise
+penalty $\alpha$ and the lower bound $p_{min}$ on the probability on the
+noise outcome (see \cite{lang-toussaint-10jair,pasula07ai} for details).
+You can set them with these methods:
+\begin{lstlisting}
+void set_penalty(double alpha_PEN);
+void set_p_min(double p_min);
+\end{lstlisting}
+You need to get a feeling for these parameters to be able to learn rules
+which you consider ``good''. This cannot be set automatically because what
+is ``good'' depends on your prior knowledge (for instance, you must choose
+whether you want a very accurate and complex model or a compact model only
+for typical state transition). I discuss this briefly in my thesis
+\cite{11-lang-phd}.
+
+The learning algorithm is a heuristic search through the space of
+rule-sets based on search operators. You may adapt the algorithm to your
+needs by defining your own search operator, deriving from
+\code{SearchOperator}. Which operator is tried at each time-step is
+determined by the method
+\begin{lstlisting}
+void set_ChoiceTypeSeachOperators(uint choice_type);
+\end{lstlisting}
+The random choice takes into account sampling weights for the search
+operators. Hence, you may change the algorithm by giving different weights
+to the search operators.
+
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{User's guide}
+
+To use libPRADA successfully, you have to understand: \kursiv{(i)} how
+libPRADA represents symbols, literals, states and rules
+(\code{relational/symbols.h}, \code{relational/literals.h},
+\code{relational/rules.h}); \kursiv{(ii)} how to set up properly a planning
+scenario (\code{relational/plan.h}, \code{relational/prada.h});
+\kursiv{(iii)} how to set up properly a rule learning procedure
+(\code{relational/learn.h}).
+
+This is demonstrated in three tests: \code{tests/relational\_basics},
+\code{tests/relational\_plan} and \code{tests/relational\_learn}. Please
+take a look at the \code{main.cpp} of the corresponding test.  The tests
+use the robot manipulation domain as first presented in
+\cite{lang-toussaint-10jair}.
+
+In the following, I will summarize the most important steps to set up a
+planning problem:
+\begin{enumerate}
+\item Create your relational logic \fett{language}: primitive and derived
+predicates and functions
+\item Define your set of \fett{constants} (/objects)
+\item Initialise the \texttt{logicObjectManager} with the language and constants
+\item Create a \fett{starting state} for planning
+\item Define a \fett{reward function}
+\item Create \fett{rules}
+\item \fett{Ground} all rules
+\item Set up the \fett{planners}
+\item Provide rules, reward and all necessary \fett{parameters} to your planner
+\item Finally, \fett{plan} :-) !
+\end{enumerate}
+
+
+\subsection{Rule learning}
+
+The file \code{data.dat} contains a trial (transitions of state, action,
+successor state) from which rules can be learned. Please check
+\code{main.cpp} for how to set parameters. The important parameters are the
+regularizer $\alpha$ (\code{alpha\_pen}) and the lower bound for states in
+the noise outcome $p_{min}$ (\code{p\_min}).
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Trouble shooting}
+
+Learning:
+parameter
+
+Planning:
+Per Hand ausrechnen, ob die Regeln wirklich so sind, wie sein sollen.
+Haeufig anders.
+Wahrscheinlichkeiten
+Horizont
+
+
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Future research}
+
+Limitations of NID rules and PRADA
+
+What you can research on 
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
+\end{document}

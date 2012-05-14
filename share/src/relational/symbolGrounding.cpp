@@ -1,5 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
-
 #include "symbolGrounding.h"
 
 #include <JK/utils/util.h>
@@ -19,7 +17,7 @@
 //  GroundedSymbol
 
 relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_symbols) { 
-  this->symbol = PRADA::Symbol::get(this->name, this->arity = _arity);
+  this->symbol = Symbol::get(this->name, this->arity = _arity);
   
   if (build_derived_symbols) {
     NIY;

@@ -20,13 +20,13 @@
 */
 
 
-#ifndef PRADA__REASON
-#define PRADA__REASON
+#ifndef RELATIONAL_reason_h
+#define RELATIONAL_reason_h
 
 #include <relational/rules.h>
 
 
-namespace PRADA {
+namespace relational {
 
 
 namespace reason {
@@ -265,4 +265,4 @@ namespace reason {
 
 
 
-#endif // PRADA__REASON
+#endif // RELATIONAL_reason_h

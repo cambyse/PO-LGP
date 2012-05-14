@@ -8,7 +8,7 @@
 #include <JK/utils/util.h>
 
 
-#include <relational/blocksWorld.h>
+#include <relational/robotManipulationSimulator.h>
 
 
 class ClassifyMaster : public Master<MT::Array<arr>, double> {

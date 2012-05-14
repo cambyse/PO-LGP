@@ -31,10 +31,10 @@
 #define RULES_FILE "rules.dat"
 
 RobotManipulationSimulator sim;
-PRADA::RuleSet rules;
-PRADA::RuleSet ground_rules;
-PRADA::PRADA_Planner* prada;
-PRADA::Reward* reward;
+relational::RuleSet rules;
+relational::RuleSet ground_rules;
+relational::PRADA_Planner* prada;
+relational::Reward* reward;
 
 uint PRADA_horizon = 4;
 uint PRADA_num_samples = 500;
@@ -42,7 +42,7 @@ double PRADA_noise_softener = 0.1;
 double PRADA_threshold_goal_achieved = 0.1;
 double discountFactor = 0.95;
 
-using namespace PRADA;
+using namespace relational;
   
   
 DecisionMakingModule::DecisionMakingModule():Process("DecisionMaking") {
@@ -60,16 +60,16 @@ void DecisionMakingModule::open() {
   sim.calcObjectNumber();
   
   // Setup logic
-  PRADA::RobotManipulationSymbols::initSymbols();
+  relational::RobotManipulationSymbols::initSymbols();
   
   // Create ruleReasoning and rules
-  PRADA::RuleSet::read(RULES_FILE, rules);
-  PRADA::Rule* rule_doNothing = PRADA::Rule::getDoNothingRule();
+  relational::RuleSet::read(RULES_FILE, rules);
+  relational::Rule* rule_doNothing = relational::Rule::getDoNothingRule();
   rules.append(rule_doNothing);
   if (DEBUG>1) {rules.write();}
   
   // Set up PRADA
-  prada = new PRADA::PRADA_Planner();
+  prada = new relational::PRADA_Planner();
   prada->setNumberOfSamples(PRADA_num_samples);
   prada->setNoiseSoftener(PRADA_noise_softener);
   prada->setThresholdReward(PRADA_threshold_goal_achieved);
@@ -93,7 +93,7 @@ void DecisionMakingModule::step() {
   if (DEBUG>0) {cout<<"DecisionMakingModule::step() [START]"<<endl;}
   
   // Some administration (read out objects) if called for the first time
-  if (PRADA::reason::getConstants().N == 0) {
+  if (relational::reason::getConstants().N == 0) {
     uintA objects;
     sim.getObjects(objects);
     if (DEBUG>0) {PRINT(objects);}
@@ -101,19 +101,19 @@ void DecisionMakingModule::step() {
 //     TermTypeA objects_types;
 //     sim.getTypes(objects_types, objects, le->types);
 //     le->setConstants(objects, objects_types);
-    PRADA::reason::setConstants(objects);
+    relational::reason::setConstants(objects);
     
     // set up reward
     uintA blocks;
     sim.getBlocks(blocks);
     CHECK(blocks.N > 1, "");
-    reward = PRADA::RobotManipulationSymbols::RewardLibrary::on(blocks(0), blocks(1));
+    reward = relational::RobotManipulationSymbols::RewardLibrary::on(blocks(0), blocks(1));
     if (DEBUG>0) {cout<<"Reward:  "; reward->write(); cout<<endl;}
     
     // ground rules
-    PRADA::SymbolicState* s_groundingHelper = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+    relational::SymbolicState* s_groundingHelper = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
     if (DEBUG>0) {cout<<"s_groundingHelper:"<<endl;  s_groundingHelper->write();  cout<<endl;}
-    PRADA::RuleSet::ground_with_filtering(ground_rules, rules, PRADA::reason::getConstants(), *s_groundingHelper);
+    relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), *s_groundingHelper);
     delete s_groundingHelper;
     ground_rules.sort_using_args();
     ground_rules.sanityCheck();
@@ -126,7 +126,7 @@ void DecisionMakingModule::step() {
   
   
   // Read state
-  PRADA::SymbolicState* s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+  relational::SymbolicState* s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
   if (DEBUG>0) {cout<<"STATE:"<<*s<<endl;}
   
   // Check if finished
@@ -136,7 +136,7 @@ void DecisionMakingModule::step() {
   }
   
   // Plan
-  PRADA::Literal* lit_action = prada->plan_action(*s, 1);
+  relational::Literal* lit_action = prada->plan_action(*s, 1);
   if (DEBUG>0) {if (lit_action == NULL) cout<<"NO ACTION FOUND"<<endl; else cout<<"ACTION:   "<<*lit_action<<endl;}
   
   // Set fields

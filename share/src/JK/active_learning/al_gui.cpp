@@ -2,7 +2,7 @@
 
 #include <MT/opengl.h>
 #include <MT/ors.h>
-#include <relational/blocksWorld.cpp>
+#include <relational/robotManipulationSimulator.h>
 
 class sGui {
   public:

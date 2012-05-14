@@ -28,7 +28,7 @@
 
 
 
-namespace PRADA {
+namespace relational {
   
 
 /****************************************
@@ -498,7 +498,7 @@ void reason::derive(LitL& lits_derived, const LitL& lits_given, const uintA& con
 
 
 void reason::derive(SymbolicState* state) {
-  if (state->derivedDerived)
+  if (state->including_derived_literals)
     return;
   LitL lits_derived;
   if (state->state_constants.N == 0) {
@@ -506,7 +506,7 @@ void reason::derive(SymbolicState* state) {
   }
   derive(state->lits, lits_derived, state->state_constants);
   state->lits.append(lits_derived);
-  state->derivedDerived = true;
+  state->including_derived_literals = true;
 }
 
 void reason::dederive(SymbolicState* state) {
@@ -515,7 +515,7 @@ void reason::dederive(SymbolicState* state) {
     if (state->lits(i)->s->symbol_type != Symbol::primitive)
       state->lits.remove(i);
   }
-  state->derivedDerived = false;
+  state->including_derived_literals = false;
 }
 
 

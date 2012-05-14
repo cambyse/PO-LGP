@@ -19,17 +19,15 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define MT_IMPLEMENT_TEMPLATES
-
-#ifndef PRADA__LITERALS
-#define PRADA__LITERALS
+#ifndef RELATIONAL_literals_h
+#define RELATIONAL_literals_h
 
 #include <MT/util.h>
 #include <relational/symbols.h>
 
 
 
-namespace PRADA {
+namespace relational {
   
 /************************************************
  * 
@@ -113,7 +111,7 @@ struct SymbolicState {
   // Essential data-fields
   MT::Array<Literal*> lits;
   uintA state_constants; // not necessarily set
-  bool derivedDerived; // Have derived concepts been calculated?
+  bool including_derived_literals; // Have literals derived symbols been calculated?
   
   // -----------------------------------
   // Convenience methods
@@ -171,17 +169,17 @@ void write(const StateTransitionL& exs, ostream& os = cout);
 
 
 
-} // PRADA namespace
+} // relational namespace
 
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::SymbolicState& s);
-std::ostream& operator<<(std::ostream& os, const PRADA::Literal& s);
-std::ostream& operator<<(std::ostream& os, const PRADA::StateTransition& e);
-std::ostream& operator<<(std::ostream& os, const PRADA::LitL& lits);
-std::ostream& operator<<(std::ostream& os, const PRADA::StateTransitionL& e);
+std::ostream& operator<<(std::ostream& os, const relational::SymbolicState& s);
+std::ostream& operator<<(std::ostream& os, const relational::Literal& s);
+std::ostream& operator<<(std::ostream& os, const relational::StateTransition& e);
+std::ostream& operator<<(std::ostream& os, const relational::LitL& lits);
+std::ostream& operator<<(std::ostream& os, const relational::StateTransitionL& e);
 
 
 
 
-#endif // PRADA__LITERALS
+#endif // RELATIONAL_literals_h

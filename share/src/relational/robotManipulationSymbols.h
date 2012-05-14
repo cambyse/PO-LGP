@@ -19,14 +19,14 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PRADA__ROBOT_MANIPULATION_SYMBOLS
-#define PRADA__ROBOT_MANIPULATION_SYMBOLS
+#ifndef RELATIONAL_robotManipulationSymbols_h
+#define RELATIONAL_robotManipulationSymbols_h
 
 #include "relational/reason.h"
 #include "relational/plan.h"
 
 
-namespace PRADA {
+namespace relational {
   
 namespace RobotManipulationSymbols {
   
@@ -141,4 +141,4 @@ namespace RobotManipulationSymbols {
 
 }
 
-#endif // PRADA__ROBOT_MANIPULATION_SYMBOLS
+#endif // RELATIONAL_robotManipulationSymbols_h

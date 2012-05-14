@@ -27,7 +27,7 @@
 namespace RMSim {
 
 
-using namespace PRADA;
+using namespace relational;
   
 /* ---------------------
     TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
@@ -78,7 +78,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
     double length;
     FOR1D(all_objs, i) {
       length = sim->getSize(all_objs(i))[0];
-      state->lits.append(Literal::get(Symbol::get("size"), TUP(all_objs(i)), REPLACE_SIZE(length)));
+      state->lits.append(Literal::get(Symbol::get("size"), TUP(all_objs(i)), TL::REPLACE_SIZE(length)));
     }
   }
   

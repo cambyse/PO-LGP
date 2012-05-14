@@ -25,7 +25,7 @@
 
 #define NOISE_MARKER 'N'
 
-namespace PRADA {
+namespace relational {
 
   
 /************************************************
@@ -214,7 +214,7 @@ void Literal::get(LitL& lits, const char* text) {
     if (DEBUG>0) {PRINT(lit_text);}
     lits.append(Literal::get(lit_text));
   }
-  if (DEBUG>0) {PRADA::write(lits); cout<<endl;}
+  if (DEBUG>0) {relational::write(lits); cout<<endl;}
   if (DEBUG>0) {cout<<"Literal::get(LitL) [END]"<<endl;}
 }
 
@@ -372,7 +372,7 @@ void Literal::getLiterals_state(LitL& lits, const uintA& constants, const uintA&
       lits.append(lits_total(i));
     }
   }
-  if (DEBUG>1) PRADA::write(lits);
+  if (DEBUG>1) relational::write(lits);
   if (DEBUG>0) cout<<"getLiterals_state [END]"<<endl;
 }
 
@@ -552,11 +552,12 @@ void write(const MT::Array< LitL >& outcomes, ostream& os) {
  ************************************************/
 
 SymbolicState::SymbolicState() {
-  derivedDerived = false;
+  including_derived_literals = false;
 }
 
 
 SymbolicState::SymbolicState(const MT::Array<Literal*>& _lits) {
+  including_derived_literals = false;
   this->lits = _lits;
   reason::derive(this);
   Literal::getArguments(state_constants, lits);
@@ -588,7 +589,7 @@ void SymbolicState::read(ifstream& in, bool read_constants) {
     if (lits(i)->s->symbol_type != Symbol::primitive)
       lits.remove(i);
   }
-  derivedDerived = false;
+  including_derived_literals = false;
   reason::derive(this);
 }
 
@@ -893,28 +894,28 @@ void write(const StateTransitionL& exs, ostream& os) {
 
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::SymbolicState& s) {
+std::ostream& operator<<(std::ostream& os, const relational::SymbolicState& s) {
   s.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::Literal& l) {
+std::ostream& operator<<(std::ostream& os, const relational::Literal& l) {
   l.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::StateTransition& e) {
+std::ostream& operator<<(std::ostream& os, const relational::StateTransition& e) {
   e.write(os); return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::LitL& lits) {
+std::ostream& operator<<(std::ostream& os, const relational::LitL& lits) {
   write(lits, os);
   return os;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const PRADA::StateTransitionL& sl) {
+std::ostream& operator<<(std::ostream& os, const relational::StateTransitionL& sl) {
   write(sl, os);
   return os;
 }

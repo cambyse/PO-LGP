@@ -23,7 +23,7 @@
 #include "reason.h"
 #include <stdlib.h>
 
-namespace PRADA {
+namespace relational {
 
 /****************************************
     Grounding
@@ -317,7 +317,7 @@ bool reason::calcSubstitutions_context(SubstitutionSet& subs, const SymbolicStat
   }
   CHECK(subs.num()==0, "Already subs given!");
   CHECK(rule->action->args.N==actionSub->num(), "Incomplete actionSub.");
-  if (!state.derivedDerived) {MT_MSG("Derived symbols have not been derived in state!");}
+  if (!state.including_derived_literals) {MT_MSG("Derived symbols have not been derived in state!");}
   uintA actionSub_outs;
   actionSub->getOuts(actionSub_outs);
   //  The deep question of QUANTIFICATION with NEGATED FREE DEICTIC VARS

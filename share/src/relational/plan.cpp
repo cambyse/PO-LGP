@@ -24,9 +24,7 @@
 #include "reason.h"
 
 
-namespace PRADA {
-
-
+namespace relational {
 
   
 // ----------------------------------------------------------------------------

@@ -1,5 +1,8 @@
+#define MT_IMPLEMENT_TEMPLATES
+
 #include <relational/prada.h>
 #include <relational/robotManipulationSymbols.h>
+
 
 
 #define PLAN_TYPE__PRADA 1
@@ -108,12 +111,12 @@ void test_plan() {
 	cout<<endl<<endl;
 	cout<<"SYMBOLS:"<<endl;
 	cout<<"Reading symbols from file \""<<symbolsFile_name<<"\"..."<<flush;
-  PRADA::SymL symbols;
-  PRADA::ArgumentTypeL types;
-  PRADA::readSymbolsAndTypes(symbols, types, symbolsFile_name);
+  relational::SymL symbols;
+  relational::ArgumentTypeL types;
+  relational::readSymbolsAndTypes(symbols, types, symbolsFile_name);
   cout<<"done!"<<endl;
   
-  PRADA::writeSymbolsAndTypes("used_symbols.dat");
+  relational::writeSymbolsAndTypes("used_symbols.dat");
 
 
   // -------------------------------------
@@ -123,13 +126,13 @@ void test_plan() {
 	cout<<endl<<endl;
   cout<<"STARTING STATE:"<<endl;
 	cout<<"Reading state from file \""<<stateFile_name<<"\"... "<<flush;
-  PRADA::SymbolicState s;
+  relational::SymbolicState s;
   ifstream in_state(stateFile_name);
   s.read(in_state);
   cout<<"done!"<<endl<<endl;
 	cout<<"State:"<<endl<<s<<endl<<endl;
-  PRADA::reason::setConstants(s.state_constants);
-  cout<<"CONSTANTS:"<<endl;  PRINT(PRADA::reason::getConstants());
+  relational::reason::setConstants(s.state_constants);
+  cout<<"CONSTANTS:"<<endl;  PRINT(relational::reason::getConstants());
   
   
   
@@ -139,20 +142,20 @@ void test_plan() {
   
 	cout<<endl<<endl;
 	cout<<"REWARD: "<<endl;
-  PRADA::Reward* reward = NULL;
+  relational::Reward* reward = NULL;
 	// (1) SIMPLE REWARD FOR TOWER
 	//     Create here by hand
 	// (1a) LiteralReward
-//   PRADA::Literal* lit = PRADA::Literal::get(PRADA::Symbol::get("on"), TUP(66, 67), 1.);
-//   reward = new PRADA::LiteralReward(lit);
+//   relational::Literal* lit = relational::Literal::get(relational::Symbol::get("on"), TUP(66, 67), 1.);
+//   reward = new relational::LiteralReward(lit);
 	// (1b) LiteralListReward
-//   PRADA::LitL lits_reward;
-//   PRADA::Literal::get(lits_reward, MT::String("on(66 69) on(69 67)"));
-//   reward = new PRADA::LiteralListReward(lits_reward);
+//   relational::LitL lits_reward;
+//   relational::Literal::get(lits_reward, MT::String("on(66 69) on(69 67)"));
+//   reward = new relational::LiteralListReward(lits_reward);
 
 	// (2) STACKING REWARD 
 	//     Use specification in robotManipulationInterface
-  reward = PRADA::RobotManipulationSymbols::RewardLibrary::stack();
+  reward = relational::RobotManipulationSymbols::RewardLibrary::stack();
 
 	reward->write();
 	
@@ -163,26 +166,26 @@ void test_plan() {
   
 	cout<<endl<<endl;
 	cout<<"RULES:"<<endl;
-  PRADA::RuleSet rules;
-  PRADA::RuleSet::read(rulesFile_name, rules);
+  relational::RuleSet rules;
+  relational::RuleSet::read(rulesFile_name, rules);
   cout<<"Rules successfully read from file \""<<rulesFile_name<<"\"."<<endl;
   cout<<"Rules ("<<rules.num()<<"):"<<endl;   rules.write(cout);
   
 #if 1
   // Manually create "doNothing"-rule if desired
-  PRADA::Rule* rule_doNothing = PRADA::Rule::getDoNothingRule();
+  relational::Rule* rule_doNothing = relational::Rule::getDoNothingRule();
   rules.append(rule_doNothing);
   rule_doNothing->write();
 #endif
 
   
   // Example: check which rules cover the current state
-  PRADA::RuleSet coveringGroundRules;
-  PRADA::reason::calc_coveringRules(coveringGroundRules, rules, s);
+  relational::RuleSet coveringGroundRules;
+  relational::reason::calc_coveringRules(coveringGroundRules, rules, s);
 //   cout<<endl<<endl<<"COVERING RULE GROUNDINGS FOR START STATE (#="<<coveringGroundRules.num()<<"):"<<endl;
 //   coveringGroundRules.write();
 //   if (coveringGroundRules.num() == 0  
-//     ||  (coveringGroundRules.num() == 1 && PRADA::Rule::isDefaultRule(coveringGroundRules.elem(0)))) {
+//     ||  (coveringGroundRules.num() == 1 && relational::Rule::isDefaultRule(coveringGroundRules.elem(0)))) {
 //     cout<<"No covering rules for current state!"<<endl;
 //   }
 //   cout<<endl<<endl<<endl;
@@ -198,8 +201,8 @@ void test_plan() {
   // GROUND THE RULES
   // -------------------------------------
   
-  PRADA::RuleSet ground_rules;
-  PRADA::RuleSet::ground_with_filtering(ground_rules, rules, PRADA::reason::getConstants(), s);
+  relational::RuleSet ground_rules;
+  relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), s);
 	cout<<endl<<endl;
   cout<<"GROUND RULES: (plenty!!)"<<endl;
   cout<<"# = "<<ground_rules.num()<<endl;
@@ -213,28 +216,28 @@ void test_plan() {
   
 	cout<<endl<<endl;
 	cout<<"PLANNER:"<<endl;
-  PRADA::NID_Planner* planner = NULL;
+  relational::NID_Planner* planner = NULL;
   if (plan_type == PLAN_TYPE__SST) {
-    planner = new PRADA::NID_SST(SST_branch);
+    planner = new relational::NID_SST(SST_branch);
     planner->setNoiseScalingFactor(SST_noise_scaling_factor);
     cout<<"Planner: SST"<<endl;
   }
   else if (plan_type == PLAN_TYPE__PRADA) {
-    planner = new PRADA::PRADA_Planner();
-    ((PRADA::PRADA_Planner* ) planner)->setNumberOfSamples(PRADA_num_samples);
-    ((PRADA::PRADA_Planner* ) planner)->setNoiseSoftener(PRADA_noise_softener);
+    planner = new relational::PRADA_Planner();
+    ((relational::PRADA_Planner* ) planner)->setNumberOfSamples(PRADA_num_samples);
+    ((relational::PRADA_Planner* ) planner)->setNoiseSoftener(PRADA_noise_softener);
     cout<<"Planner: PRADA"<<endl;
   }
   else if (plan_type == PLAN_TYPE__A_PRADA) {
-    planner = new PRADA::A_PRADA();
-    ((PRADA::A_PRADA* ) planner)->setNumberOfSamples(PRADA_num_samples);
-    ((PRADA::A_PRADA* ) planner)->setNoiseSoftener(PRADA_noise_softener);
+    planner = new relational::A_PRADA();
+    ((relational::A_PRADA* ) planner)->setNumberOfSamples(PRADA_num_samples);
+    ((relational::A_PRADA* ) planner)->setNoiseSoftener(PRADA_noise_softener);
     cout<<"Planner: A-PRADA"<<endl;
   }
   else if (plan_type == PLAN_TYPE__UCT) {
-    planner = new PRADA::NID_UCT();
-    ((PRADA::NID_UCT*) planner)->setNumEpisodes(UCT_numEpisodes);
-    ((PRADA::NID_UCT*) planner)->setC(UCT_c);
+    planner = new relational::NID_UCT();
+    ((relational::NID_UCT*) planner)->setNumEpisodes(UCT_numEpisodes);
+    ((relational::NID_UCT*) planner)->setC(UCT_c);
     planner->setNoiseScalingFactor(SST_noise_scaling_factor);
     cout<<"Planner: UCT"<<endl;
   }
@@ -258,7 +261,7 @@ void test_plan() {
   
 	cout<<endl<<endl;
 	cout<<"PLANNING:"<<endl;
-  PRADA::Literal* action;
+  relational::Literal* action;
   cout<<endl<<endl<<"*** Planning for a single action."<<endl;
   action = planner->plan_action(s);
   
@@ -269,9 +272,9 @@ void test_plan() {
 	 	
   if (plan_type == PLAN_TYPE__PRADA || plan_type == PLAN_TYPE__A_PRADA) {
     cout<<endl<<endl<<"*** Planning for a complete plan."<<endl;
-    PRADA::LitL plan;
+    relational::LitL plan;
     double value;
-    ((PRADA::PRADA_Planner*) planner)->plan_full(plan, value, s);
+    ((relational::PRADA_Planner*) planner)->plan_full(plan, value, s);
     cout<<endl;
     cout<<"Also, it would like to kindly recommend the following plan with value "<<value<<" to you:"<<endl<<plan<<endl;
   }

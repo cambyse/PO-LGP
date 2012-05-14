@@ -20,15 +20,12 @@
 */
 
 
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <math.h>
-#include <MT/algos.h>
 #include "reason.h"
 #include "learn.h"
 
 
-namespace PRADA {
+namespace relational {
   
 
 
@@ -1776,8 +1773,8 @@ MakeInterval::MakeInterval() : SearchOperator() {
 void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"MakeInterval::findRules [START]"<<endl;
-  uint r, p, v;
 #if 0
+  uint r, p, v;
   Rule* newRule;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     for (p=nextLiteral; p<rulesC_old.rules.elem(r)->context.N; p++) {
