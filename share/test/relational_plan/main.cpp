@@ -22,11 +22,11 @@ void test_plan() {
   cout<<"********************************"<<endl;
   
 	
-	// -------------------------------------
+  // -------------------------------------
   // READ CONFIG
   // -------------------------------------
 	
-	cout<<endl<<"READ CONFIG:"<<endl;
+  cout<<endl<<"READ CONFIG:"<<endl;
 	
   uint randSeed;
   MT::getParameter(randSeed, "randSeed");
@@ -104,13 +104,13 @@ void test_plan() {
   PRINT(symbolsFile_name);
 	
 
-	// -------------------------------------
+  // -------------------------------------
   //  SET UP LOGIC
   // -------------------------------------
   
-	cout<<endl<<endl;
-	cout<<"SYMBOLS:"<<endl;
-	cout<<"Reading symbols from file \""<<symbolsFile_name<<"\"..."<<flush;
+  cout<<endl<<endl;
+  cout<<"SYMBOLS:"<<endl;
+  cout<<"Reading symbols from file \""<<symbolsFile_name<<"\"..."<<flush;
   relational::SymL symbols;
   relational::ArgumentTypeL types;
   relational::readSymbolsAndTypes(symbols, types, symbolsFile_name);
@@ -123,14 +123,14 @@ void test_plan() {
   //   STATE
   // -------------------------------------
   
-	cout<<endl<<endl;
+  cout<<endl<<endl;
   cout<<"STARTING STATE:"<<endl;
-	cout<<"Reading state from file \""<<stateFile_name<<"\"... "<<flush;
+  cout<<"Reading state from file \""<<stateFile_name<<"\"... "<<flush;
   relational::SymbolicState s;
   ifstream in_state(stateFile_name);
   s.read(in_state);
   cout<<"done!"<<endl<<endl;
-	cout<<"State:"<<endl<<s<<endl<<endl;
+  cout<<"State:"<<endl<<s<<endl<<endl;
   relational::reason::setConstants(s.state_constants);
   cout<<"CONSTANTS:"<<endl;  PRINT(relational::reason::getConstants());
   
@@ -140,32 +140,32 @@ void test_plan() {
   // REWARD
   // -------------------------------------
   
-	cout<<endl<<endl;
-	cout<<"REWARD: "<<endl;
+  cout<<endl<<endl;
+  cout<<"REWARD: "<<endl;
   relational::Reward* reward = NULL;
-	// (1) SIMPLE REWARD FOR TOWER
-	//     Create here by hand
-	// (1a) LiteralReward
+  // (1) SIMPLE REWARD FOR TOWER
+  //     Create here by hand
+  // (1a) LiteralReward
 //   relational::Literal* lit = relational::Literal::get(relational::Symbol::get("on"), TUP(66, 67), 1.);
 //   reward = new relational::LiteralReward(lit);
-	// (1b) LiteralListReward
-//   relational::LitL lits_reward;
-//   relational::Literal::get(lits_reward, MT::String("on(66 69) on(69 67)"));
-//   reward = new relational::LiteralListReward(lits_reward);
+  // (1b) LiteralListReward
+  relational::LitL lits_reward;
+  relational::Literal::get(lits_reward, MT::String("on(66 69) on(69 67)"));
+  reward = new relational::LiteralListReward(lits_reward);
 
-	// (2) STACKING REWARD 
-	//     Use specification in robotManipulationInterface
-  reward = relational::RobotManipulationSymbols::RewardLibrary::stack();
+  // (2) STACKING REWARD 
+  //     Use specification in robotManipulationInterface
+//   reward = relational::RobotManipulationSymbols::RewardLibrary::stack();
 
-	reward->write();
+  reward->write();
 	
 	
   // -------------------------------------
   // RULES
   // -------------------------------------
   
-	cout<<endl<<endl;
-	cout<<"RULES:"<<endl;
+  cout<<endl<<endl;
+  cout<<"RULES:"<<endl;
   relational::RuleSet rules;
   relational::RuleSet::read(rulesFile_name, rules);
   cout<<"Rules successfully read from file \""<<rulesFile_name<<"\"."<<endl;
@@ -189,12 +189,12 @@ void test_plan() {
 //     cout<<"No covering rules for current state!"<<endl;
 //   }
 //   cout<<endl<<endl<<endl;
-	cout<<endl<<endl<<"Ground actions with unique covering rules:"<<endl;
-	uint i;
-	FOR1D_(coveringGroundRules, i) {
-		cout<<*coveringGroundRules.elem(i)->action<<" ";
-	}
-	cout<<endl;
+  cout<<endl<<endl<<"Ground actions with unique covering rules:"<<endl;
+  uint i;
+  FOR1D_(coveringGroundRules, i) {
+    cout<<*coveringGroundRules.elem(i)->action<<" ";
+  }
+  cout<<endl;
   
   
   // -------------------------------------
@@ -203,7 +203,7 @@ void test_plan() {
   
   relational::RuleSet ground_rules;
   relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), s);
-	cout<<endl<<endl;
+  cout<<endl<<endl;
   cout<<"GROUND RULES: (plenty!!)"<<endl;
   cout<<"# = "<<ground_rules.num()<<endl;
 //   ground_rules.write();
@@ -214,8 +214,8 @@ void test_plan() {
   // PLANNERs
   // -------------------------------------
   
-	cout<<endl<<endl;
-	cout<<"PLANNER:"<<endl;
+  cout<<endl<<endl;
+  cout<<"PLANNER:"<<endl;
   relational::NID_Planner* planner = NULL;
   if (plan_type == PLAN_TYPE__SST) {
     planner = new relational::NID_SST(SST_branch);
@@ -259,8 +259,8 @@ void test_plan() {
   //    PLANNING
   // -------------------------------------
   
-	cout<<endl<<endl;
-	cout<<"PLANNING:"<<endl;
+  cout<<endl<<endl;
+  cout<<"PLANNING:"<<endl;
   relational::Literal* action;
   cout<<endl<<endl<<"*** Planning for a single action."<<endl;
   action = planner->plan_action(s);

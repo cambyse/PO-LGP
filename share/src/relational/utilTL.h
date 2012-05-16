@@ -71,8 +71,8 @@ inline bool isZero(double a) {return fabs(a) < 10e-15;}
 inline bool areEqual(double a, double b) {return isZero(a-b);}
 
 // vary from left to right (left-most argument varies the fastest)
-void allPermutations(MT::Array< uintA >& permutations, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty);
-void allPermutations(MT::Array< uintA >& permutations, const MT::Array< uintA >& arguments_lists, bool returnEmpty); // different arguments
+void allPermutations(MT::Array< uintA >& permutations, const uintA& arguments, uint length, bool withRepeat, bool returnEmptyIfNoneFound);
+void allPermutations(MT::Array< uintA >& permutations, const MT::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound); // different arguments
 
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, uint length);
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
@@ -105,6 +105,9 @@ uint getIndex(const uintA& constants, const uintA& args);
 
 
 double getcputime();
+
+
+bool uint_compare(const uint& a, const uint& b);
 
 
 // Reference Managing

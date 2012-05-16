@@ -53,7 +53,7 @@ bool reason::isGround(const Rule& r) {
 bool reason::isPurelyAbstract(const Rule& r) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"reason::isPurelyAbstract [START]"<<endl;}
-  if (DEBUG>1) {cout<<r<<endl;}
+  if (DEBUG>1) {cout<<r<<endl;  PRINT(getConstants());}
   if (Rule::isDefaultRule(&r)) return true;
   uint i, j;
   FOR1D(r.context, i) {
@@ -209,7 +209,7 @@ double reason::sampleSuccessorState_groundRules(SymbolicState& successor, const 
     if (DEBUG>0) {cout<<"Unique covering rule."<<endl;}
     value = sampleSuccessorState_groundRule(successor, predecessor, ground_rules_cov.elem(0), flag);
   }
-  if (DEBUG>0) {PRINT(value);}
+  if (DEBUG>0) {PRINT(value);  PRINT(successor);}
   if (DEBUG>0) {cout<<"sampleSuccessorState_groundRules [END]"<<endl;}
   return value;
 }
@@ -382,6 +382,7 @@ bool reason::calcSubstitutions_context(SubstitutionSet& subs, const SymbolicStat
   return covering;
 }
 
+
 bool reason::calcSubstitutions_rule_groundAction(SubstitutionSet& subs, const SymbolicState& s, const Literal* groundAction, const Rule* rule) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calcSubstitutions_rule_groundAction [START]"<<endl;
@@ -434,11 +435,11 @@ bool reason::calcSubstitutions_rule(SubstitutionSet& subs, const SymbolicState& 
     /*cout<<"Rule:"<<endl;*/rule->write(cout);
     cout<<"SymbolicState: "<<state<<endl;
   }
-  MT::Array< uintA > actionObjectLists;
-  TL::allPermutations(actionObjectLists, reason::getConstants(), rule->action->s->arity, true, true);
+  MT::Array< uintA > list_actionArguments;
+  TL::allPermutations(list_actionArguments, reason::getConstants(), rule->action->s->arity, true, true);
   uint i;
-  FOR1D(actionObjectLists, i) {
-    Literal* groundAction = Literal::get(rule->action->s, actionObjectLists(i), 1.);
+  FOR1D(list_actionArguments, i) {
+    Literal* groundAction = Literal::get(rule->action->s, list_actionArguments(i), 1.);
     SubstitutionSet subs_inner;
     if (calcSubstitutions_rule_groundAction(subs_inner, state, groundAction, rule)) {
       subs.append(subs_inner);

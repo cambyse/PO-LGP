@@ -79,8 +79,15 @@ void reason::setConstants(uintA& _constants) {
 
 
 void reason::setConstants(uintA& _constants, const ArgumentTypeL& _constants_types) {
-  mem__constants = _constants;
-  mem__constants_types = _constants_types;
+  uintA sortedIndices;
+  TL::sort_asc(mem__constants, sortedIndices, _constants);
+  if (_constants.N == _constants_types.N) {
+    mem__constants_types.clear();
+    uint i;
+    FOR1D(sortedIndices, i) {
+      mem__constants_types.append(_constants_types(sortedIndices(i)));
+    }
+  }
 }
 
 
@@ -148,6 +155,7 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
       FOR1D(args_list(i), j) {
         sub_args.addSubs(j, args_list(i)(j));
       }
+      if (DEBUG>2) {PRINT(sub_args);}
       // For the remaining positive free variables, *all* instantiations must hold.
       MT::Array< uintA > args_freePos_lists;
       TL::allPermutations(args_freePos_lists, constants, freeVars_pos.d0, true, true);
@@ -539,7 +547,14 @@ bool reason::consistent(Literal* lit_given, Literal* lit_test) {
   bool does_hold = false;
   if (lit_given->s == lit_test->s
       &&  lit_given->args == lit_test->args) {
-      does_hold = lit_given->compareValueTo(lit_given->comparison_type, lit_test->value);
+    if (lit_given->comparison_type == Literal::comparison_equal) {
+      does_hold = lit_given->compareValueTo(lit_test->comparison_type, lit_test->value);
+    }
+    else if (lit_test->comparison_type == Literal::comparison_equal) {
+      does_hold = lit_test->compareValueTo(lit_given->comparison_type, lit_given->value);
+    }
+    else
+      NIY;
   }
   if (DEBUG>0) cout<<" --> "<<does_hold<<endl;
   if (DEBUG>0) cout << "consistent [END]" << endl;
@@ -662,9 +677,9 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
   if (isGround(lit_input__ground_init)) {
     if (DEBUG>1) cout<<"lit is ground after initSub:  lit_input__ground_init="<<*lit_input__ground_init<<endl;
     if (lit_input__ground_init->isNegated()) {
-      Literal* init_ground_lit_pos;
-      init_ground_lit_pos = lit_input__ground_init->getNegated();
-      if (!holds(lits_ground, init_ground_lit_pos)) {
+      Literal* lit_input__ground_init__pos;
+      lit_input__ground_init__pos = lit_input__ground_init->getNegated();
+      if (!holds(lits_ground, lit_input__ground_init__pos)) {
         Substitution* s = new Substitution;
         if (initSub != NULL) *s = *initSub;
         subs.append(s);
@@ -695,7 +710,7 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
     FOR1D(lits_ground, i) {
       Substitution* sub1 = new Substitution;
       literalTrue = calcSubstitution(*sub1, lits_ground(i), lit_input__ground_init);
-      if (literalTrue) subs.append(Substitution::combine(*sub1, *initSub));
+      if (literalTrue) {subs.append(Substitution::combine(*sub1, *initSub));}
       delete sub1;
     }
   }

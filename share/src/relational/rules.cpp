@@ -1402,11 +1402,18 @@ Substitution::~Substitution() {
 }
 
 
+Substitution& Substitution::operator=(const Substitution& s) {
+  this->ins = s.ins;
+  this->outs = s.outs;
+  return *this;
+}
+
+
 void Substitution::apply(LitL& sub_lits, const LitL& unsub_lits) const {
-  sub_lits.clear();
+  sub_lits.resize(unsub_lits.N);
   uint i;
   FOR1D(unsub_lits, i) {
-    sub_lits.append(apply(unsub_lits(i)));
+    sub_lits(i) = apply(unsub_lits(i));
   }
 }
 
@@ -1419,10 +1426,10 @@ SymbolicState* Substitution::apply(const SymbolicState& state) const {
 
 
 Literal* Substitution::apply(Literal* in_lit) const {
-  uintA out_args;
+  uintA out_args(in_lit->args.N);
   uint i;
   FOR1D(in_lit->args, i) {
-    out_args.append(getSubs(in_lit->args(i)));
+    out_args(i) = getSubs(in_lit->args(i));
   }
   return Literal::get(in_lit->s, out_args, in_lit->value, in_lit->comparison_type);
 }
@@ -1431,8 +1438,9 @@ Literal* Substitution::apply(Literal* in_lit) const {
 Rule* Substitution::apply(const Rule& r) const {
   Rule* new_r = new Rule;
   uint i;
+  new_r->context.resize(r.context.N);
   FOR1D(r.context, i) {
-    new_r->context.append(apply(r.context(i)));
+    new_r->context(i) = apply(r.context(i));
   }
   new_r->action = apply(r.action);
   uint j;
@@ -1449,17 +1457,12 @@ Rule* Substitution::apply(const Rule& r) const {
 }
 
 
-bool my_uint_compare(const uint& a, const uint& b) {
-  return a <= b;
-}
-
-
 uint Substitution::getSubs(uint in) const {
 //   cout<<"getSubs [START]"<<endl;
 //   PRINT(in);
 //   PRINT(ins);
 //   PRINT(outs);
-  uint i = ins.findInSorted(in, &my_uint_compare);
+  uint i = ins.rankInSorted(in, TL::uint_compare);
 //   PRINT(i);
   if (i < ins.N) {
     if (in == ins(i)) {
@@ -1475,7 +1478,7 @@ uint Substitution::getSubs(uint in) const {
 
 
 bool Substitution::empty() const {
-    return ins.N == 0;
+  return ins.N == 0;
 }
 
 
@@ -1485,19 +1488,19 @@ uint Substitution::num() const {
 
 
 void Substitution::getIns(uintA& ids) const {
-  ids.clear();
+  ids.resize(ins.N);
   uint i;
   FOR1D(ins, i) {
-    ids.append(ins(i));
+    ids(i) = ins(i);
   }
 }
 
 
 void Substitution::getOuts(uintA& ids) const {
-  ids.clear();
+  ids.resize(outs.N);
   uint i;
   FOR1D(outs, i) {
-    ids.append(outs(i));
+    ids(i) = outs(i);
   }
 }
 
@@ -1523,7 +1526,7 @@ void Substitution::addSubs2Variable(uint in) {
 
 
 void Substitution::addSubs(uint in, uint out) {
-  uint i = ins.findInSorted(in, &my_uint_compare);
+  uint i = ins.rankInSorted(in, TL::uint_compare);
   if (i < ins.N) {
     if (in == ins(i)) { // in already in usage
       outs(i) = out;
@@ -1541,7 +1544,7 @@ void Substitution::addSubs(uint in, uint out) {
 
 
 bool Substitution::hasSubs(uint in) const {
-  uint i = ins.findInSorted(in, &my_uint_compare);
+  uint i = ins.rankInSorted(in, TL::uint_compare);
   if (i < ins.N) {
     if (in == ins(i))
       return true;
@@ -1551,12 +1554,13 @@ bool Substitution::hasSubs(uint in) const {
 
 
 void Substitution::getInverse(Substitution& invSub) const {
-  CHECK(invSub.empty(), "substituschn already filled!");
+  CHECK(invSub.empty(), "Substitution already filled!");
   uint i;
   FOR1D(ins, i) {
     invSub.addSubs(outs(i), ins(i));
   }
 }
+
 
 bool Substitution::mapsToDistinct() const {
   return ins.N == outs.N  &&  !outs.containsDoubles();
@@ -1569,21 +1573,14 @@ Substitution* Substitution::combine(Substitution& sub1, Substitution& sub2) {
   uintA ids1;
   sub1.getIns(ids1);
   FOR1D(ids1, i) {
-      s->addSubs(ids1(i), sub1.getSubs(ids1(i)));
+    s->addSubs(ids1(i), sub1.getSubs(ids1(i)));
   }
   uintA ids2;
   sub2.getIns(ids2);
   FOR1D(ids2, i) {
-      s->addSubs(ids2(i), sub2.getSubs(ids2(i)));
+    s->addSubs(ids2(i), sub2.getSubs(ids2(i)));
   }
   return s;
-}
-
-
-Substitution& Substitution::operator=(const Substitution& s) {
-  this->ins = s.ins;
-  this->outs = s.outs;
-  return *this;
 }
 
 

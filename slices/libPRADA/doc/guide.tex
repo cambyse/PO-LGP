@@ -82,7 +82,7 @@ libPRADA is work in progress! I did my best to avoid mistakes and to increase
 comprehensibility (at least at high-level interfaces). Nonetheless, you
 will probably encounter bugs and lacks in functionality. \textbf{Please contact
 me in this case!} I`ll be happy to fix bugs, hear your complaints, add
-desired functionality and implement proposals and wishes for the library :-).
+desired functionality and implement proposals and wishes for the library.
 
 
 % ******************************************************************
@@ -91,25 +91,21 @@ desired functionality and implement proposals and wishes for the library :-).
 
 \section{Introduction}
 
-This library provides a C++-implementation for using probabilistic
-relational rules in the context of model-based relational reinforcement
+libPRADA is a C++-library for model-based relational reinforcement
 learning in stochastic domains.
 \begin{itemize}
-\item libPRADA provides algorithms for \fett{planning} in stochastic
-relational domains: PRADA \cite{lang-toussaint-10jair}, sparse sampling
-trees (SST) \cite{kearns02ss} and UCT \cite{kocsis06uct}.
+\item libPRADA provides basic \fett{data-structures and methods for
+symbolic reasoning with relational representations}. In particular, it
+implements probabilistic relational rules which can be used as a transition
+model $P(s'\|s,a)$ in a Markov decision process.
 
 \item libPRADA implements the algorithm for \fett{learning}
 probabilistic relational rules by \citet{pasula07ai}.
 
-\item Consequently, libPRADA provides plenty of basic data-structures
-and methods to deal with relational logic objects such as
-symbols (predicates), symbolic states and rules.
+\item libPRADA provides algorithms for \fett{planning} with ground
+relational rules: PRADA \cite{lang-toussaint-10jair}, sparse sampling  trees
+(SST) \cite{kearns02ss} and UCT \cite{kocsis06uct}.
 \end{itemize}
-
-
-
-
 
 
 % ******************************************************************
@@ -118,29 +114,16 @@ symbols (predicates), symbolic states and rules.
 
 \section{Installation}
 
-First, please build the \fett{library}:
-\begin{itemize}
-\item cd lib
-\item type make, and pray
-\end{itemize}
-Then, please run the \fett{example programs}:
-\begin{itemize}
-\item cd ../test/simple\_demos/
-\item type make, and pray again
-\item ./x.exe
-\item cd ../test/plan/
-\item type make, and pray once again
-\item ./plan.exe
-\end{itemize}
-Finally, you might want to take a closer look at this guide.
+In the root-directory \code{libPRADA/}, please type \code{make}. This
+should compile the library \code{lib/libPRADA.so} and the demos in
+\code{test/}. If you have problems getting this working, please contact me.
 
-If compiling the library did \kursiv{not} work out, then you can compile the
-whole example programs directly in their directories. For example:
-\begin{itemize}
-\item cd test/demos/
-\item make -f Makefile\_direct
-\end{itemize}
-If this still does not work, please contact me.
+If compilation succeeded, you can check out the three demos in
+\code{test/}.
+
+In \code{make-config}, you can set the flag \code{OPTIM} to control the
+compiler options: \code{OPTIM = debug} sets debug information, \code{OPTIM 
+= fast} optimizes the compiled code.
 
 
 
@@ -155,13 +138,20 @@ We will discuss the important headers in \code{libPRADA/src/}.
 \noindent File overview:
 \begin{itemize}
 \item \code{MT/array.h}: data-structure for lists
-\item TODO
-\item \code{relational/reason.h}: manipulating and processing basic
-logical objects and rules
-\item \code{relational/plan.h}: planning with NID rules including SST and
-UCT
-\item \code{relational/prada.h}: PRADA for planning with NID rules
-\item \code{relational/learn.h}: learning NID rules from data
+\item \code{relational/symbols.h}: definition of the relational
+vocabulary; symbols are predicates and functions such as $on(\cdot,\cdot)$
+and $size(\cdot)$
+\item \code{relational/literals.h}: literals are instantiated
+symbosl such as $on(a,b)$ and $size(b)=2$; definitions and basic methods
+for dealing with literals and sets of literals
+\item \code{relational/rules.h}: probabilistic relational rules provide a
+transition model $P(s' \| s,a)$; definitions and basic methods for dealing
+with rules and argument substitutions
+\item \code{relational/reason.h}: reasoning with symbols, literals and
+rules such as calculating which rules cover a state and action
+\item \code{relational/plan.h}, \code{relational/prada.h}: planning with
+rules
+\item \code{relational/learn.h}: learning rules from data
 \end{itemize}
 
 
@@ -262,14 +252,18 @@ A single symbol is represented by its spelled out attributes \code{(name)
 (arity) (type) (range) [otherstuff]}. \code{[otherstuff]} is needed to
 define derived symbols. The exact syntax depends strongly on the type of
 the derived symbol. Please see the example files in the
-\code{test}-directories. Here is an example for symbols file:
+\code{test}-directories. Here is an example for a symbols file:
 \begin{lstlisting}
 grab 1 action binary
 on 2 primitive binary
 size 1 primitive integers
-clear 1 conjunction binary  <-- All Y  -on(Y X)   // conjunction
+clear 1 conjunction binary  <-- All Y  -on(Y X)
+inhandNil 0 conjunction binary  <-- All X  -inhand(X)
+above 2 transclosure binary  <-- + on
+aboveNotable 2 conjunction binary  <-- above(X Y) -table(Y)
+height 1 count integers  <-- Num Y  aboveNotable(X Y)
+sum_height 0 sum integers  <--  Sum height
 \end{lstlisting}
-TODO more examples here; range for functions
 
 
 
@@ -311,10 +305,11 @@ File: \code{relational/literals.h}\\
 
 
 Literals are instantiated symbols (that is, with a list of arguments)
-together with a value. Examples: $on(61,63)=1$ and $size(62)=4$.
+together with a value. Examples: $on(a,b)=1$ and $size(a)=4$. Actions
+are also literals, for example $grab(a)$.
 
 
-\subsubsection{Arguments: logic variables and constants}
+\subsubsection{Arguments: variables and constants}
 \label{sec:literals:arguments}
 
 Arguments of literals are represented by non-negative integers
@@ -895,44 +890,56 @@ to the search operators.
 
 \section{User's guide}
 
-To use libPRADA successfully, you have to understand: \kursiv{(i)} how
-libPRADA represents symbols, literals, states and rules
+To use libPRADA successfully, you have to understand:
+\begin{enumerate}
+\item how libPRADA represents symbols, literals, states and rules \\
 (\code{relational/symbols.h}, \code{relational/literals.h},
-\code{relational/rules.h}); \kursiv{(ii)} how to set up properly a planning
-scenario (\code{relational/plan.h}, \code{relational/prada.h});
-\kursiv{(iii)} how to set up properly a rule learning procedure
-(\code{relational/learn.h}).
+\code{relational/rules.h}) \\
+$\to$ \code{test/relational\_basics}
 
-This is demonstrated in three tests: \code{tests/relational\_basics},
-\code{tests/relational\_plan} and \code{tests/relational\_learn}. Please
-take a look at the \code{main.cpp} of the corresponding test.  The tests
-use the robot manipulation domain as first presented in
+\item  how to set up a planning scenario \\
+(\code{relational/plan.h}, \code{relational/prada.h}) \\
+$\to$ \code{test/relational\_plan}
+
+\item how to set up a rule learning run \\
+(\code{relational/learn.h}) \\
+$\to$ \code{test/relational\_learn}
+\end{enumerate}
+Please take a look at the \code{main.cpp} of the corresponding test.  The
+tests use the robot manipulation domain as first presented in
 \cite{lang-toussaint-10jair}.
 
-In the following, I will summarize the most important steps to set up a
-planning problem:
+\textbf{Basic steps} you always need to perform when using libPRADA:
 \begin{enumerate}
-\item Create your relational logic \fett{language}: primitive and derived
-predicates and functions
-\item Define your set of \fett{constants} (/objects)
-\item Initialise the \texttt{logicObjectManager} with the language and constants
-\item Create a \fett{starting state} for planning
+\item Set up \fett{symbols}
+\item Optional: define \fett{constants} (/objects); this tells libPRADA
+which \code{uint}s refer to constants, which to variables
+\end{enumerate}
+
+Additional steps for \textbf{planning}:
+\begin{enumerate}
+\item Set up a \fett{start state} for planning
 \item Define a \fett{reward function}
-\item Create \fett{rules}
+\item Set up (abstract) \fett{rules}
 \item \fett{Ground} all rules
-\item Set up the \fett{planners}
-\item Provide rules, reward and all necessary \fett{parameters} to your planner
+\item Set up the \fett{planner}
+\item Provide ground rules, reward and all necessary \fett{parameters} to
+your planner
 \item Finally, \fett{plan} :-) !
 \end{enumerate}
 
+Additional steps for \textbf{learning}:
+\begin{enumerate}
+\item Set up \fett{data} in the form of state transitions $(s,a,s')$ using
+\code{StateTransition}
 
-\subsection{Rule learning}
+\item Set \fett{regularization} parameter $\alpha$ (\code{alpha\_pen})
 
-The file \code{data.dat} contains a trial (transitions of state, action,
-successor state) from which rules can be learned. Please check
-\code{main.cpp} for how to set parameters. The important parameters are the
-regularizer $\alpha$ (\code{alpha\_pen}) and the lower bound for states in
-the noise outcome $p_{min}$ (\code{p\_min}).
+\item Set \fett{lower bound for noise outcome} $p_{min}$ (\code{p\_min})
+
+\item Finally, \fett{learn} :-) !
+\end{enumerate}
+
 
 
 
@@ -942,14 +949,59 @@ the noise outcome $p_{min}$ (\code{p\_min}).
 
 \section{Trouble shooting}
 
-Learning:
-parameter
+\subsection{Planning}
+\begin{itemize}
+\item Double-check the abstract rules. Do they really allow to find a
+correct plan? Are there \emph{unique} covering rules (with \emph{unique}
+deictic references) for the desired actions ? \\
+The human intuition that ``these rules are sufficent for that reward'' is
+often wrong: after detailed inspection of the planner, it often turns out
+that the rules are actually ``wrong'' and the planner is ``right'': the
+given rules do \emph{not} enable a correct plan.
 
-Planning:
-Per Hand ausrechnen, ob die Regeln wirklich so sind, wie sein sollen.
-Haeufig anders.
-Wahrscheinlichkeiten
-Horizont
+\item Please be sure to understand the concept of \emph{unique covering
+rule} as described in \citet{pasula07ai} and \citet{lang-toussaint-10jair}.
+
+\item Is the horizon $h$ set correctly? Too short is obviously bad.
+However, also too long horizons can confuse PRADA: the approximation in
+form of the factored frontier gets more and more inexact over time.
+
+\item Use a very large number of samples \code{numSamples} for PRADA.
+Likewise, a large number of episodes for UCT and a high branching factor
+for SST.
+
+\item The rule outcomes which are required for a plan shouldn't be too
+small. If they are too small, the sampling-based planners SST and UCT	
+might not sample them. Similarly, PRADA may drastically underestimate
+the true probability: the factored frontier approximation of PRADA
+multiplies probabilites over time and within a time-step (individual
+variables used in a rule context) -- in case of small probabilities, this
+leads quickly to almost zero-values.
+
+\item You may want to use the DEBUG information of the individual methods
+in \code{relational/prada.cpp} and \code{relational/plan.cpp}.
+\end{itemize}
+
+
+\subsection{Learning}
+\begin{itemize}
+\item Play with different settings of $\alpha$ and $p_{min}$. The learning
+procedure is extremely sensitive to these parameters.
+
+\item Do you have sufficient data? Are the data sufficient evidence for
+the rules you have in mind?
+
+\item The learning algorithm is a heuristic search. It does not guarantee
+an optimal solution. Also, different rule-sets may achieve the same
+performance (in terms of the loss function): the found rule-set might
+explain the data as well as the rule-set you actually have in mind.
+
+\item You may want to use the DEBUG information of the individual methods
+in \code{relational/learn*.cpp}.
+\end{itemize}
+
+
+
 
 
 
@@ -961,9 +1013,21 @@ Horizont
 
 \section{Future research}
 
-Limitations of NID rules and PRADA
+Model-based relational reinforcement learning is a promising framework to
+advance our understanding of intelligent agents acting in the real world. I
+hope libPRADA helps you to take part in this fascinating research area.
 
-What you can research on 
+Clearly, NID rules and PRADA have strong limitations. There are plenty of
+relevant directions for future research. These include: online learning of
+rules; extending the rule framework to work with continuous symbolic
+functions; improving PRADA by using a better sampling function of actions;
+accounting for the relevance of objects; finding better planning strategies
+which exploit redundancies in the ground DBNs. And many, many more!
+
+Good luck with your research!
+
+
+
 
 \bibliographystyle{plainnat}
 \bibliography{references}

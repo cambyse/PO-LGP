@@ -144,13 +144,14 @@ void write(const RuleSet& rules, const char* filename);
 class Substitution {
   uintA ins;
   uintA outs;
-  
+
   public:
   int numRefs;      
   static int globalCounter_Substitution;
       
   Substitution();
   Substitution(const Substitution& s);
+  Substitution& operator=(const Substitution& s);
   ~Substitution();
   void apply(LitL& sub_lits, const LitL& unsub_lits) const;
   Literal* apply(Literal* unsub_lit) const;
@@ -167,8 +168,6 @@ class Substitution {
   bool empty() const;
   uint num() const;
   void getInverse(Substitution& invSub) const;
-              
-  Substitution& operator=(const Substitution& s);
       
   void write(ostream& os = cout) const;
       

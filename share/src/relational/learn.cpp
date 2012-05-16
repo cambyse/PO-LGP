@@ -289,7 +289,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
 //     if (DEBUG>1) {cout<<"Sanity checks of "<<set_of__rulesC_new.N<<" new rule-sets"<<endl;}
 //     FOR1D(set_of__rulesC_new, j) {
 //       if (DEBUG>1) {cout<<"Sanity check for new candidate rule-set #"<<j<<endl;}
-//       set_of__rulesC_new(j).sanityCheck();
+//       set_of__rulesC_new(k).sanityCheck();
 //     }
     arr new_scores;
     FOR1D(set_of__rulesC_new, k) {
@@ -375,7 +375,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
   logfile_info << logfile << ".info";
   open(log_info, logfile_info);
   
-  log_info<<"--- VOCABULARY ---"<<endl;
+  log_info<<"--- SYMBOLS ---"<<endl;
   log_info<<"*State symbols*"<<endl;
   SymL symbols_state;
   Symbol::get_state(symbols_state);
@@ -388,11 +388,18 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
   MT::Array< uintA > covered_experiences;
   arr responsibilities;
   rulesC.getResponsibilities(responsibilities, covered_experiences, covered_experiences_num);
+  uint num_experiences_explained_as_noise = 0;
+  FOR1D(rulesC.experiences_per_ruleOutcome, k) {
+    num_experiences_explained_as_noise += rulesC.experiences_per_ruleOutcome(k).last().N;
+  }
+  num_experiences_explained_as_noise += responsibilities(0);
+  
   log_info<<"Responsibilities:"<<endl;
   FOR1D(responsibilities, k) {
       log_info << "[" << k << "] " << covered_experiences_num(k) << " " << responsibilities(k) << endl;
   }
   log_info << "-> Coverage of non-default rules: " << (100. * (1.0 - responsibilities(0))) << "%" << endl;
+  log_info << "-> Non-noise explanations: "<<(100. * (1. - num_experiences_explained_as_noise * 1.0 / experiences.N))<<"% (1. - "<<num_experiences_explained_as_noise<<"/"<<experiences.N<<")"<<endl;
   log_info<<endl;
   log_info <<"--- STATISTICS ---"<<endl;
   log_info << "#rounds = " << (round-1) << endl;
@@ -419,12 +426,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
           cout << "[" << k << "] " << covered_experiences_num(k) << " " << responsibilities(k) << " " << covered_experiences(k) << endl;
       }
       cout << "-> Coverage of non-default rules: " << (100. * (1.0 - responsibilities(0))) << "%" << endl;
-      uint total_noise = 0;
-      FOR1D(rulesC.experiences_per_ruleOutcome, k) {
-        total_noise += rulesC.experiences_per_ruleOutcome(k).last().N;
-      }
-      total_noise += responsibilities(0);
-      cout <<"-> Non-noise explanations: "<<(100. * (1. - total_noise * 1.0 / experiences.N))<<"% (1. - "<<total_noise<<"/"<<experiences.N<<")"<<endl;
+      cout << "-> Non-noise explanations: "<<(100. * (1. - num_experiences_explained_as_noise * 1.0 / experiences.N))<<"% (1. - "<<num_experiences_explained_as_noise<<"/"<<experiences.N<<")"<<endl;
       cout<<"STATISTICS:"<<endl;
       cout << "#rounds = " << (round-1) << endl;
       cout << "Scores: "<<scores<<endl;
@@ -824,7 +826,7 @@ void RuleSetContainer::getPartitionsForAction(MT::Array< uintA >& partitions, Li
 void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool with_action, ostream& os) {
   CHECK(outcome_tripletts.N = rule->outcomes.N, "wrong size");
 //  os << "r" << endl;
-  uint i, j;
+  uint i, k;
   // Default rule does not have an action specified...
   if (with_action) {
     os << "ACTION: ";
@@ -845,21 +847,21 @@ void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool wit
   FOR1D(rule->outcomes, i) {
     os.precision(2);
     os << "  " << rule->probs(i) << " ";
-    FOR1D(rule->outcomes(i), j) {
-      rule->outcomes(i)(j)->write(os);
-//       os<<outcomes(i)(j);
+    FOR1D(rule->outcomes(i), k) {
+      rule->outcomes(i)(k)->write(os);
+//       os<<outcomes(i)(k);
       os << " ";
     }
     if (i==rule->outcomes.N-1)
 //       os<<rule->noise_changes;
       os<<"noise";
     os<<"    [";
-    FOR1D(outcome_tripletts(i), j) {
-      if (j > 10) {
+    FOR1D(outcome_tripletts(i), k) {
+      if (k > 10) {
         os<<"...";
         break;
       }
-      os<<outcome_tripletts(i)(j)<<" ";
+      os<<outcome_tripletts(i)(k)<<" ";
     }
     os <<"]";
     os << " (" << outcome_tripletts(i).N << "/" << total_num_experiences << " = ";
@@ -1250,7 +1252,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   CHECK(coveredExperiences.N>0, "No experiences, bro!");
     
   // calc changes first per experience
-  uint i, j;
+  uint i, k;
   if (DEBUG > 0) {r->write(cout);  PRINT(coveredExperiences.N);}
   
   // prepare cost function (stays like this for complete following induceOutcomes-procedure)
@@ -1290,22 +1292,22 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
     }
       
     // insert add-predicates
-    FOR1D(coveredExperiences(i)->add, j) {
-      if (coveredExperiences(i)->add(j)->s->symbol_type == Symbol::primitive) {
-        nextOutcome.setAppend(invSub.apply(coveredExperiences(i)->add(j)));
+    FOR1D(coveredExperiences(i)->add, k) {
+      if (coveredExperiences(i)->add(k)->s->symbol_type == Symbol::primitive) {
+        nextOutcome.setAppend(invSub.apply(coveredExperiences(i)->add(k)));
       }
     }
     // insert negations of del-predicates
-    FOR1D(coveredExperiences(i)->del, j) {
-      if (coveredExperiences(i)->del(j)->s->symbol_type == Symbol::primitive) {
-        Literal* lit = coveredExperiences(i)->del(j)->getNegated();
+    FOR1D(coveredExperiences(i)->del, k) {
+      if (coveredExperiences(i)->del(k)->s->symbol_type == Symbol::primitive) {
+        Literal* lit = coveredExperiences(i)->del(k)->getNegated();
         nextOutcome.setAppend(invSub.apply(lit));
       }
     }
     LitL nextOutcome_pureAbstract;
-    FOR1D(nextOutcome, j) {
-      if (reason::isPurelyAbstract(nextOutcome(j)))
-        nextOutcome_pureAbstract.append(nextOutcome(j));
+    FOR1D(nextOutcome, k) {
+      if (reason::isPurelyAbstract(nextOutcome(k)))
+        nextOutcome_pureAbstract.append(nextOutcome(k));
         
     }
     outcomes_basic.append(nextOutcome_pureAbstract);
@@ -1338,11 +1340,11 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
       break;
     if (prune(i))
       continue;
-    for (j=i+1; j<outcomes_basic.d0-1; j++) {
-      if (prune(j))
+    for (k=i+1; k<outcomes_basic.d0-1; k++) {
+      if (prune(k))
         continue;
-      if (Literal::equivalent(outcomes_basic(i), outcomes_basic(j)))
-        prune(j) = true;
+      if (Literal::equivalent(outcomes_basic(i), outcomes_basic(k)))
+        prune(k) = true;
     }
   }
   MT::Array< LitL > outcomes;
@@ -1369,7 +1371,9 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   
   // evaluate and calc score
   loglik = CostFunction::loglikelihood(probs);
-  score = loglik - __alpha_PEN * Literal::numberLiterals(outcomes);
+  uint num_outcome_literals = 0;
+  FOR1D(outcomes, i) {num_outcome_literals += outcomes(i).N;}
+  score = loglik - __alpha_PEN * num_outcome_literals;
   if (DEBUG > 1) {
     cout << "\nBASIC OUTCOMES:" << endl;
     FOR1D(outcomes, i) {
@@ -1401,9 +1405,9 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
       unifiable.setUni(false);
       // calculate which ones are unifiable
       FOR1D(unifiable, i) {
-        for(j=i+1; j<unifiable.d1; j++) {
-          unifiable(i,j) = Literal::nonContradicting(outcomes(i), outcomes(j));
-          if (unifiable(i,j))
+        for(k=i+1; k<unifiable.d1; k++) {
+          unifiable(i,k) = Literal::nonContradicting(outcomes(i), outcomes(k));
+          if (unifiable(i,k))
             numUnifiables++;
         }
       }
@@ -1413,10 +1417,10 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
         int ix = rnd.num(numUnifiables);
         bool found = false;
         for(i=0; i<unifiable.d0; i++) {
-          for(j=i+1; j<unifiable.d1; j++) {
-            if (unifiable(i,j)) {
+          for(k=i+1; k<unifiable.d1; k++) {
+            if (unifiable(i,k)) {
               if (ix-- == 0) {
-                found = true; // we'll combining outcomes i and j
+                found = true; // we'll combining outcomes i and k
                 break;
               }
             }
@@ -1426,7 +1430,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
         }
         LitL unifiedOutcome;
         unifiedOutcome.append(outcomes(i));
-        unifiedOutcome.append(outcomes(j));
+        unifiedOutcome.append(outcomes(k));
         uint o, o2;
         FOR1D(unifiedOutcome, o) {
           uintA indices;
@@ -1437,7 +1441,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
         }
         outcomes_new.append(unifiedOutcome);
         FOR1D(outcomes, o) {
-          if (o==i || o==j)
+          if (o==i || o==k)
             continue;
           else
             outcomes_new.append(outcomes(o));
@@ -1447,7 +1451,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
           PRINT(unifiable)
           cout<<"We gonna add:"<<endl;
           cout<<i<<" :";write(outcomes(i));cout<<endl;
-          cout<<j<<" :";write(outcomes(j));cout<<endl;
+          cout<<k<<" :";write(outcomes(k));cout<<endl;
           cout<<"  --> ";write(unifiedOutcome);cout<<endl;
         }
       }
@@ -1464,10 +1468,10 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
       boolA overlapped(outcomes.N-1);
       overlapped.setUni(false);
       for (i=0; i<outcomes.N-1; i++) {
-        for (j=0; j<outcomes.N-1; j++) {
-          if (j==i)
+        for (k=0; k<outcomes.N-1; k++) {
+          if (k==i)
             continue;
-          if (subsumes(j,i)) {
+          if (subsumes(k,i)) {
             overlapped(i) = true;
             break;
           }
@@ -1557,7 +1561,9 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
             
       // evaluate and calc score
       loglik = CostFunction::loglikelihood(probs_new);
-      score = loglik - __alpha_PEN * Literal::numberLiterals(outcomes_new);
+      num_outcome_literals = 0;
+      FOR1D(outcomes, i) {num_outcome_literals += outcomes(i).N;}
+      score = loglik - __alpha_PEN * num_outcome_literals;
             
       if (DEBUG > 1) {
         cout << "\nNEW OUTCOMES (now with new_probs and score):" << endl;

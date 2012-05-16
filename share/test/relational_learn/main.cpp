@@ -4,19 +4,19 @@
 
 
 void test_learn() {
-	cout<<"********************************"<<endl;
+  cout<<"********************************"<<endl;
   cout<<" libPRADA learn demo"<<endl;
   cout<<" This demo shows how to learn probabilistic relational rules"<<endl
-			<<" with the algorithm by Pasula et al., JAIR (2007)."<<endl
+      <<" with the algorithm by Pasula et al., JAIR (2007)."<<endl
       <<" The demo uses the robot manipulation domain of the experiments in"<<endl
       <<" the paper Lang & Toussaint, JAIR (2010)."<<endl;
   cout<<"********************************"<<endl;
 	
-	// Rule learning algorithm is heuristic and makes some random choices.
+  // Rule learning algorithm is heuristic and makes some random choices.
   rnd.seed(12345);
 	
 	
-	// -------------------------------------
+  // -------------------------------------
   //  PARAMETERS
   // -------------------------------------
   // Regularizer
@@ -28,29 +28,29 @@ void test_learn() {
   // Log-file
   MT::String logfile("learn.log");
 	
-	// Symbols
+  // Symbols
   relational::SymL symbols;
   relational::ArgumentTypeL types;
   relational::readSymbolsAndTypes(symbols, types, "symbols.dat");
 	
-	// Data
+  // Data
   relational::StateTransitionL transitions = relational::StateTransition::read("data.dat");
   PRINT(transitions.N);
 //   write(transitions);
 	
  
-	// -------------------------------------
+  // -------------------------------------
   //  LEARN
   // -------------------------------------
 	
   relational::learn::set_penalty(alpha_pen);
   relational::learn::set_p_min(prob_state_given_NoisyOutcome, prob_state_given_NoisyOutcome__in_noisyDefaultRule);
   relational::RuleSetContainer rulesC;
-	cout<<"Starting rule-learning... (might take quite a while; watch '"<<logfile<<"')"<<endl;
+  cout<<"Starting rule-learning... (might take quite a while; watch '"<<logfile<<"')"<<endl;
   relational::learn::learn_rules(rulesC, transitions); 
   
   relational::write(rulesC.rules, "learned_rules.dat");
-	cout<<"Learned rules have been written to 'learned_rules.dat'."<<endl;
+  cout<<"Learned rules have been written to 'learned_rules.dat'."<<endl;
 }
 
 

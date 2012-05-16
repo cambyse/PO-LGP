@@ -8,7 +8,7 @@ file_state state.dat
 file_reward reward.dat
 
 // 1 PRADA,  2 A_PRADA  3 UCT,  4 SST
-plan_type 1 
+plan_type 1
 
 
 [SHARED PARAMETERS]
