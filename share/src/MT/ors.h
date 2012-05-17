@@ -267,6 +267,7 @@ struct Spline {
 #ifndef MT_ORS_ONLY_BASICS
 struct Joint;
 struct Shape;
+struct Graph;
 //===========================================================================
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
@@ -286,13 +287,9 @@ struct Body {
   
   MT::Array<Shape*> shapes;
   
-  Body() { reset(); }
-  explicit Body(const Body& b) { reset(); *this=b; }
-  explicit Body(MT::Array<Body*>& bodies) {
-    reset();
-    index=bodies.N;
-    bodies.append(this);
-  }
+  Body();
+  explicit Body(const Body& b);
+  explicit Body(Graph& G);
   ~Body();
   void operator=(const Body& b) {
     index=b.index; name=b.name; X=b.X; listClone(ats, b.ats);
@@ -317,15 +314,9 @@ struct Joint {
   Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
   AnyList ats;         //!< list of any-type attributes
   
-  Joint() { reset(); }
-  explicit Joint(const Joint& j) { from=to=NULL; *this=j; }
-  Joint(MT::Array<Joint*>& joints, Body *f, Body *t) {
-    reset();
-    index=joints.N;
-    joints.append(this);
-    from=f;  ifrom=f->index;
-    to=t;    ito  =t->index;
-  }
+  Joint();
+  explicit Joint(const Joint& j);
+  explicit Joint(Graph& G, Body *f, Body *t);
   ~Joint() { reset(); }
   void operator=(const Joint& j) {
     index=j.index; ifrom=j.ifrom; ito=j.ito;
@@ -357,21 +348,9 @@ struct Shape {
   
   AnyList ats;    //!< list of any-type attributes
   
-  Shape() { reset(); }
-  explicit Shape(const Shape& s) { body=NULL; *this=s; }
-  Shape(MT::Array<Shape*>& shapes, Body *b) {
-    reset();
-    type=noneST;
-    cont=false;
-    size[0]=size[1]=size[2]=size[3]=1.;
-    color[0]=color[1]=color[2]=.8;
-    contactOrientation.setZero();
-    index=shapes.N;
-    shapes.append(this);
-    body=b;
-    b->shapes.append(this);
-    ibody=b->index;
-  }
+  Shape();
+  explicit Shape(const Shape& s);
+  explicit Shape(Graph& G, Body *b, Shape *copyShape=NULL);
   ~Shape() { reset(); }
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
@@ -432,6 +411,7 @@ struct Graph {
   
   //!@name computations on the DoFs
   void calcBodyFramesFromJoints();
+  void calcShapeFramesFromBodies();
   void calcJointsFromBodyFrames();
   void clearJointErrors();
   void invertTime();
@@ -536,6 +516,8 @@ Quaternion operator*(const Quaternion& b, const Quaternion& c);
 Quaternion operator/(const Quaternion& b, const Quaternion& c);
 Vector operator*(const Quaternion& b, const Vector& c);
 Vector operator/(const Quaternion& b, const Vector& c);
+Transformation operator*(const Transformation& b, const Transformation& c);
+Transformation operator/(const Transformation& b, const Transformation& c);
 Vector operator*(const Transformation& b, const Vector& c);
 Vector operator/(const Transformation& b, const Vector& c);
 }
@@ -883,6 +865,7 @@ extern uint orsDrawLimit;
 
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 
 
 //===========================================================================

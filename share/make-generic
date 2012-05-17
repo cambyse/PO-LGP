@@ -7,6 +7,9 @@
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
+ifndef MLR_EXLIB_PATH
+MLR_EXLIB_PATH = $(HOME)/lib
+endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
@@ -370,6 +373,12 @@ CXXFLAGS  += -DMT_DAI
 CPATH   := $(CPATH):$(LIBPATH)/libDAI-0.2.2/include
 LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LIBS += -ldai
+endif
+
+ifeq ($(IBDS),1)
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ibds/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
+LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
 ifeq ($(URGLASER),1)

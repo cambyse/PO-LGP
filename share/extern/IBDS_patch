@@ -1,0 +1,51 @@
+diff -rupN ibds/Math//MatrixNxM.cpp ibds-mod/Math//MatrixNxM.cpp
+--- ibds/Math//MatrixNxM.cpp	2008-02-24 10:57:48.000000000 +0100
++++ ibds-mod/Math//MatrixNxM.cpp	2012-05-16 15:11:56.464047838 +0200
+@@ -25,6 +25,7 @@
+ #include "Matrix2x3.h"
+ #include "Matrix3x2.h"
+ #include "math.h"
++#include <string.h>
+ 
+ using namespace IBDS;
+ 
+diff -rupN ibds/Math//Vector3D.cpp ibds-mod/Math//Vector3D.cpp
+--- ibds/Math//Vector3D.cpp	2008-02-24 10:57:48.000000000 +0100
++++ ibds-mod/Math//Vector3D.cpp	2012-05-16 15:17:01.316037057 +0200
+@@ -22,6 +22,7 @@
+  */
+ 
+ #include "math.h"
++#include <string.h>
+ #include "Matrix3x3.h"
+ #include "Matrix2x3.h"
+ #include "Matrix3x2.h"
+diff -rupN ibds/Math//Vector3D.h ibds-mod/Math//Vector3D.h
+--- ibds/Math//Vector3D.h	2008-02-24 10:57:48.000000000 +0100
++++ ibds-mod/Math//Vector3D.h	2012-05-16 15:17:54.600035079 +0200
+@@ -96,5 +96,10 @@ namespace IBDS
+ 	};
+ }
+ 
++
++namespace IBDS {
++  Vector3D operator ^ (const Vector3D& a, const Vector3D& b);
++}
++
+ #endif
+ 
+diff -rupN ibds/Math//VectorND.h ibds-mod/Math//VectorND.h
+--- ibds/Math//VectorND.h	2008-02-24 10:57:48.000000000 +0100
++++ ibds-mod/Math//VectorND.h	2012-05-16 15:17:50.288035325 +0200
+@@ -88,5 +88,11 @@ namespace IBDS
+ 	};
+ }
+ 
++
++namespace IBDS {
++  bool operator == (const VectorND &a, const VectorND &b);
++  bool operator != (const VectorND &a, const VectorND &b);
++}
++
+ #endif
+ 

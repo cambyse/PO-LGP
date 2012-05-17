@@ -1020,7 +1020,7 @@ void glSelectWin(uint win) {
 #else //! MT_GL
 void glColor(float, float, float, float) { NICO; }
 void glDrawDiamond(float, float, float, float, float, float) { NICO; }
-void glStandardLight() { NICO; }
+void glStandardLight(void*) { NICO; }
 void glStandardScene(void*) { NICO; };
 #endif
 

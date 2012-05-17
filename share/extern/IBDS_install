@@ -1,0 +1,42 @@
+#! /bin/sh
+
+[ -z "${MLR_EXLIB_PATH}" ] && MLR_EXLIB_PATH=$HOME/lib
+THIS_PATH=$PWD
+URL=http://sourceforge.net/projects/ibds/files/ibds/IBDS%201.09/IBDS-1.09.tar.gz/download
+
+echo "Calling path:" $THIS_PATH
+
+if [ ! -d $MLR_EXLIB_PATH ] ; then
+  echo "Creating lib directory: " $MLR_EXLIB_PATH
+  mkdir $MLR_EXLIB_PATH
+fi
+
+## download 
+cd $MLR_EXLIB_PATH
+rm -R ibds
+wget $URL -O ibds.tgz
+
+## unpack
+tar xvzf ibds.tgz
+cd ibds
+
+## patch
+patch -p1 < $THIS_PATH/IBDS_patch
+
+## make
+cd Linux_Make
+./MakeIBDS.sh
+cd ..
+
+## arrange includes and libs
+mkdir include
+cd include
+ln -s ../DynamicSimulation
+ln -s ../CollisionDetection
+ln -s ../Math
+cd ..
+
+## clean
+find . -name '*.o' -delete
+rm ../ibds.tgz
+
