@@ -726,12 +726,12 @@ void write(const MT::Array< LitL >& outcomes, ostream& os) {
  ************************************************/
 
 SymbolicState::SymbolicState() {
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
 }
 
 
 SymbolicState::SymbolicState(const MT::Array<Literal*>& _lits) {
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
   this->lits = _lits;
   reason::derive(this);
   Literal::getArguments(state_constants, lits);
@@ -763,7 +763,7 @@ void SymbolicState::read(ifstream& in, bool read_constants) {
     if (lits(i)->s->symbol_type != Symbol::primitive)
       lits.remove(i);
   }
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
   reason::derive(this);
 }
 

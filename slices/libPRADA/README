@@ -16,19 +16,11 @@ please read the guide:
 
 *** Installation
 
-First, please create the library:
-(1) cd lib/
-(2) make
+Please type "make" in the root directory libPRADA/.
 
-Then, please run the test examples:
-(1) cd ../test/simple_demos/
-(2) make
-(3) ./x.exe
+Then, try out the three demos in libPRADA/test/.
 
-If compiling the library did NOT work out, then you can do 
-alternatively the following:
-(1) cd test/simple_demos/
-(2) make -f Makefile_direct
+In case of problems, please contact me.
 
 
 

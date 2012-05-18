@@ -109,7 +109,7 @@ struct SymbolicState {
   // Essential data-fields
   MT::Array<Literal*> lits;
   uintA state_constants; // not necessarily set
-  bool including_derived_literals; // Have literals derived symbols been calculated?
+  bool derived_lits_are_calculated; // Have literals derived symbols been calculated?
   
   // -----------------------------------
   // Convenience methods

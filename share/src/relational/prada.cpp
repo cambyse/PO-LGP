@@ -823,7 +823,7 @@ double PRADA_Planner::calcRuleRewards(const LitL& actions) {
 //     uint idx_symbol = logicObjectManager::p_actions.findValue(actions(t)->s);
     uint idx_args = getIndex__PRADA_Planner(reason::getConstants(), actions(t)->args);
     double t_reward = 0.;
-    for (r=0; r<dbn->action2rules_no(idx_symbol, idx_args); r++) {
+    for (r=0; r<dbn->action2rules_num(idx_symbol, idx_args); r++) {
       uint rule_number = dbn->action2rules(idx_symbol, idx_args, r);
       Rule* rule = ground_rules.elem(rule_number);
       double expected_reward = this->expected_rule_rewards(rule_number);
@@ -1117,7 +1117,7 @@ void PRADA_Planner::sampleActionsAndInfer(LitL& sampled_actions, const LitL& fix
       action_weights__sampling(a) = 0.0;
       uint idx_symbol = dbn->net_symbols_action.findValue(ground_actions(a)->s);
       uint idx_args = getIndex__PRADA_Planner(reason::getConstants(), ground_actions(a)->args);
-      for (r=0; r<local_net->action2rules_no(idx_symbol, idx_args); r++) {
+      for (r=0; r<local_net->action2rules_num(idx_symbol, idx_args); r++) {
         action_weights(t,a) += local_net->vars_rules(t, local_net->action2rules(idx_symbol, idx_args, r));
         if (Literal::getLiteral_doNothing() == ground_actions(a)  ||  is_manipulating_rule(local_net->action2rules(idx_symbol, idx_args, r)))  // only consider manipulating rules
           action_weights__sampling(a) += local_net->vars_rules(t, local_net->action2rules(idx_symbol, idx_args, r));
@@ -1710,7 +1710,7 @@ void PRADA_DBN::inferRules(uint t) {
     if (vars_rules.p[p_id] < RULE_MIN_PROB) {vars_rules.p[p_id]=0.0; continue;}
     uint idx_symbol = net_symbols_action.findValue(ground_rules.elem(r)->action->s);
     uint idx_args = getIndex__PRADA_DBN(ground_rules.elem(r)->action->args);
-    for (r2=0; r2<action2rules_no(idx_symbol, idx_args); r2++) {
+    for (r2=0; r2<action2rules_num(idx_symbol, idx_args); r2++) {
       if (action2rules(idx_symbol, idx_args, r2) == r) continue;
       else {
         vars_rules.p[p_id] *= (1. - vars_rules_simple(t,action2rules(idx_symbol, idx_args, r2)));
@@ -1723,7 +1723,7 @@ void PRADA_DBN::inferRules(uint t) {
     if (vars_rules(t,r) < RULE_MIN_PROB) {vars_rules(t,r)=0.0; continue;}
     uint idx_symbol = logicObjectManager::p_actions.findValue(ground_rules.elem(r)->action->s);
     uint idx_args = getIndex(constants, ground_rules.elem(r)->action->args);
-    for (r2=0; r2<action2rules_no(idx_symbol, idx_args); r2++) {
+    for (r2=0; r2<action2rules_num(idx_symbol, idx_args); r2++) {
       if (action2rules(idx_symbol, idx_args,r2) == r) continue;
       else {
         vars_rules(t,r) *= (1. - alpha(t,action2rules(idx_symbol, idx_args,r2)));
@@ -1767,7 +1767,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action) {
 //   uint idx_args = getIndex(reason::getConstants(), given_action->args);
 //   double action_weight = 0.;
 //   uint r;
-//   for (r=0; r<action2rules_no(idx_symbol, idx_args); r++) {
+//   for (r=0; r<action2rules_num(idx_symbol, idx_args); r++) {
 //     action_weight += vars_rules(t-1, action2rules(idx_symbol, idx_args, r));
 //   }
 //   inferState(t, given_action, action_weight);
@@ -1797,7 +1797,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
   
   uintA rules_with_sampled_action;
   uint p_id_start = (action_idx_symbol * action2rules.d1  +  action_idx_args) * action2rules.d2;
-  for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+  for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
     rules_with_sampled_action.append(action2rules.p[p_id_start+r]);
   }
   if (DEBUG>1) {PRINT(rules_with_sampled_action);}
@@ -1859,7 +1859,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
       var->P(t,val) = (1.-given_action_weight) * var->P(t-1,val);
     }
   }
-  for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+  for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
     r2 = action2rules(action_idx_symbol, action_idx_args, r);
     double r2_prob = vars_rules(t-1, r2);
     FOR1D(vars_state__prim, v) {
@@ -1881,7 +1881,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
     LiteralRV* var = vars_state__prim(v);
     FOR1D(var->range, val) {
       var->P(t,val) = 0.0;
-      for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+      for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
         r2 = action2rules(action_idx_symbol, action_idx_args, r);
         var->P(t,val) += reference_P_v_r__v(r2,val) * vars_rules(t-1, r2);
       }
@@ -2724,14 +2724,14 @@ void PRADA_DBN::create_dbn_structure(const SymL& symbols_state, const SymL& acti
   
   action2rules.resize(actions.N, pow(net_constants.N, max_arity_actions), max_rules_per_action);
   action2rules.setUni(9999); // dummy value
-  action2rules_no.resize(actions.N, pow(net_constants.N, max_arity_actions));
-  action2rules_no.setZero();
+  action2rules_num.resize(actions.N, pow(net_constants.N, max_arity_actions));
+  action2rules_num.setZero();
   FOR1D_(ground_rules, i) {
     uint idx_symbol = actions.findValue(ground_rules.elem(i)->action->s);
     uint idx_args = getIndex__PRADA_DBN(ground_rules.elem(i)->action->args);
-    action2rules_no(idx_symbol, idx_args)++;
-//     ground_rules.elem(i)->action->write(cout);   cout<<"  idx_symbol="<<idx_symbol<<"  idx_args="<<idx_args<<"  ";   cout<<"   action2rules_no(idx_symbol, idx_args)="<<action2rules_no(idx_symbol, idx_args)<<endl;
-    action2rules(idx_symbol, idx_args, action2rules_no(idx_symbol, idx_args)-1) = i;
+    action2rules_num(idx_symbol, idx_args)++;
+//     ground_rules.elem(i)->action->write(cout);   cout<<"  idx_symbol="<<idx_symbol<<"  idx_args="<<idx_args<<"  ";   cout<<"   action2rules_num(idx_symbol, idx_args)="<<action2rules_num(idx_symbol, idx_args)<<endl;
+    action2rules(idx_symbol, idx_args, action2rules_num(idx_symbol, idx_args)-1) = i;
   }
   
   // Determine changeable symbols

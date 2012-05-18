@@ -460,7 +460,7 @@ void learn::set_p_min(double p_min, double p_min_noisyDefaultRule) {
 }
 
 
-void learn::set_ChoiceTypeSeachOperators(uint choice_type) {
+void learn::set_ChoiceTypeSearchOperators(uint choice_type) {
   __so_choice_type = choice_type;
 }
 

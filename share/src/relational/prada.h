@@ -229,7 +229,7 @@ class PRADA_DBN {
   MT::Array< arr > impacts_val; // on single values;  2 dim: (1) var, (2) arr for rule
   // dim_1 actions,  dim_2 arguments,  dim_3 rules
   uintA action2rules;
-  uintA action2rules_no; // 2 dim; how many rules per constellation
+  uintA action2rules_num; // 2 dim; how many rules per constellation
 
   
   
