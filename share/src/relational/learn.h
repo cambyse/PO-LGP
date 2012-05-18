@@ -72,7 +72,7 @@ namespace learn {
   // Choice of search operators
   #define RULE_LEARNER__OP_CHOICE__LINEAR 1
   #define RULE_LEARNER__OP_CHOICE__RANDOM 2
-  void set_ChoiceTypeSeachOperators(uint choice_type);
+  void set_ChoiceTypeSearchOperators(uint choice_type);
   // Consideration horizon of previous successful search operator applications:
   #define SEARCH_OP_CHOICE__PAST_HORIZON 20
   #define SEARCH_OP_CHOICE__PAST_WEIGHT 0.5

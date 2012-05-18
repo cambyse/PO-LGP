@@ -13,7 +13,7 @@
     libPRADA is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    GNU General Public License for more details->
 
     You should have received a copy of the GNU General Public License
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
@@ -33,30 +33,64 @@ namespace relational {
  *     LiteralStorage
  * 
  ************************************************/
-  
-
-static const uint LOGIC__MAX_LIMIT_CONSTANT_ID = 80;
 
 struct LiteralStorage {
-  Symbol* symbol;
-  MT::Array< LitL > mem;
-  LiteralStorage(Symbol* s, uint arity) : symbol(s) {
-    if      (arity == 0) {mem.resize(1);}
-    else if (arity == 1) {mem.resize(LOGIC__MAX_LIMIT_CONSTANT_ID);}
-    else if (arity == 2) {mem.resize(LOGIC__MAX_LIMIT_CONSTANT_ID, LOGIC__MAX_LIMIT_CONSTANT_ID);}
-    else NIY;
-    LitL empty(0);
-    mem.setUni(empty);
+  Symbol* s;
+#if 1
+  LitL mem_arity0;
+  MT::Array< short > indices;
+  MT::Array< LitL* > mem;
+    
+  LiteralStorage(Symbol* _s) : s(_s) {
+    if (s->arity == 1) {
+      indices.resize(100);
+      indices.setUni(100);
+    }
+    else if (s->arity >= 2) {
+      indices.resize(100, 100);
+      indices.setUni(100);
+    }
   }
   LiteralStorage() {} // only for array_t.cpp
   ~LiteralStorage() {
     uint i, k;
-    FOR_ALL(mem, i) {
-      FOR1D(mem.elem(i), k) {
-        if (mem.elem(i)(k) != NULL) delete mem.elem(i)(k);
+    if (s->arity == 0) {listDelete(mem_arity0);}
+    else {
+      FOR_ALL(mem, i) {
+        listDelete((*mem(i)));
+        delete mem(i);
       }
     }
   }
+#else
+  std::map<uint, uint> map_indices_arg1;
+  MT::Array< std::map<uint, uint> > maps_indices_arg2;
+  
+  LitL mem_arity0;
+  MT::Array< LitL >  mem_arity1;
+  MT::Array< MT::Array< LitL> >  mem_arity2plus;
+  
+  
+  LiteralStorage(Symbol* _s) : s(_s) {
+  }
+  LiteralStorage() {} // only for array_t.cpp
+  ~LiteralStorage() {
+    uint i, k;
+    if (s->arity == 0) {listDelete(mem_arity0);}
+    else if (s->arity == 1) {
+      FOR_ALL(mem_arity1, i) {
+        listDelete(mem_arity1(i));
+      }
+    }
+    else {
+      FOR_ALL(mem_arity2plus, i) {
+        FOR_ALL(mem_arity2plus(i), k) {
+          listDelete(mem_arity2plus(i)(k));
+        }
+      }
+    }
+  }
+#endif
 };
 
 
@@ -66,9 +100,27 @@ struct LiteralStorage_Container {
   ~LiteralStorage_Container() {listDelete(literal_storages);}
 };
 
-
 LiteralStorage_Container lsc;
 
+
+Literal* __getLiteral(LitL& mem, const uintA& args, double value, Literal::ComparisonType comparison_type) {
+  uint i;
+  if (args.N <= 2) {
+    FOR1D(mem, i) {
+      if (TL::areEqual(mem(i)->value, value)  &&  mem(i)->comparison_type == comparison_type) {
+        return mem(i);
+      }
+    }
+  }
+  else {
+    FOR1D(mem, i) {
+      if (mem(i)->args == args  &&  TL::areEqual(mem(i)->value, value)  &&  mem(i)->comparison_type == comparison_type) {
+        return mem(i);
+      }
+    }
+  }
+  return NULL;
+}
 
 
 /************************************************
@@ -79,36 +131,173 @@ LiteralStorage_Container lsc;
 
 Literal::Literal() {}
 
-
+#if 1
+// Version for arguments < 100
 Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType comparison_type) {
-  if (s->arity != args.N) {HALT("s->arity!=args.N  s="<<*s<<"    args="<<args);}
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"Literal::get[START]"<<endl;}
+  if (DEBUG>0) {cout<<"asking:  "<<s->name<<" args="<<args<<" value="<<value<<" comparison_type="<<comparison_type<<endl;}
   uint i;
+  FOR1D(args, i) {if (args(i) > 99) HALT("arguments must be <=99");}
+  if (s->arity != args.N) {HALT("s->arity!=args.N  s="<<*s<<"    args="<<args);}
+  uint p_id = 0;
   FOR1D(lsc.literal_storages, i) {
-    if (lsc.literal_storages(i)->symbol == s) break;
+    if (lsc.literal_storages.p[p_id++]->s == s)
+      break;
   }
-  if (i == lsc.literal_storages.N) {
-    lsc.literal_storages.append(new LiteralStorage(s, s->arity));
+  if (i==lsc.literal_storages.N) {
+    lsc.literal_storages.append(new LiteralStorage(s));
   }
-  uintA args_memIndex = args;
+  LiteralStorage* ls = lsc.literal_storages(i);
+  Literal* l = NULL;
   if (s->arity == 0) {
-    CHECK(args.N == 0, "");
-    args_memIndex.append(0);
-  }
-  LitL& literal_list = lsc.literal_storages(i)->mem(args_memIndex); 
-  FOR1D(literal_list, i) {
-    if (TL::areEqual(literal_list(i)->value, value)) {
-      return literal_list(i);
+    l = __getLiteral(ls->mem_arity0, args, value, comparison_type);
+    if (l==NULL) {
+      l = new Literal;
+      l->s = s;
+      l->args = args;
+      l->value = value;
+      l->comparison_type = comparison_type;
+      ls->mem_arity0.append(l);
     }
   }
-  // insert
-  Literal* new_literal = new Literal;
-  new_literal->s = s;
-  new_literal->args = args;
-  new_literal->value = value;
-  new_literal->comparison_type = comparison_type;
-  literal_list.append(new_literal);
-  return new_literal;
+  else {
+    uint idx1 = 10000;
+    if (s->arity == 1) {
+      idx1 = ls->indices(args(0));
+      if (DEBUG>0) {PRINT(idx1);}
+      if (idx1 == 100) {
+        LitL* new_lits_list = new LitL;
+        ls->mem.append(new_lits_list);
+        ls->indices(args(0)) = ls->mem.N-1;
+        idx1 = ls->mem.N-1;
+      }
+    }
+    else {
+      idx1 = ls->indices(args(0), args(1));
+      if (DEBUG>0) {PRINT(idx1);}
+      if (idx1 == 100) {
+        LitL* new_lits_list = new LitL;
+        ls->mem.append(new_lits_list);
+        ls->indices(args(0), args(1)) = ls->mem.N-1;
+        idx1 = ls->mem.N-1;
+      }
+    }
+    l = __getLiteral(*ls->mem(idx1), args, value, comparison_type);
+    if (DEBUG>0) {cout<<(l!=NULL?"found":"not found")<<endl;}
+    if (l==NULL) {
+      l = new Literal;
+      l->s = s;
+      l->args = args;
+      l->value = value;
+      l->comparison_type = comparison_type;
+      ls->mem(idx1)->append(l);
+    }
+    if (DEBUG>0) {PRINT(ls->mem(idx1));}
+  }
+  CHECK(l!=NULL, "literal could not be made");
+  if (DEBUG>0) {cout<<"getting:  "<<*l<<" "<<l<<endl;}
+  if (DEBUG>0) {CHECK(l->args.N==0 || l->args == args, "");}
+  if (DEBUG>0) {cout<<"Literal::get[END]"<<endl;}
+  return l;
 }
+#else
+Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType comparison_type) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"Literal::get[START]"<<endl;}
+  if (DEBUG>0) {cout<<"asking:  "<<s->name<<" args="<<args<<" value="<<value<<" comparison_type="<<comparison_type<<endl;}
+  if (s->arity != args.N) {HALT("s->arity!=args.N  s="<<*s<<"    args="<<args);}
+  uint i;
+  uint p_id = 0;
+  FOR1D(lsc.literal_storages, i) {
+    if (lsc.literal_storages.p[p_id++]->s == s)
+      break;
+  }
+  if (i==lsc.literal_storages.N) {
+    lsc.literal_storages.append(new LiteralStorage(s));
+  }
+  LiteralStorage* ls = lsc.literal_storages(i);
+  Literal* l = NULL;
+  if (s->arity == 0) {
+    l = __getLiteral(ls->mem_arity0, args, value, comparison_type);
+    if (l==NULL) {
+      l = new Literal;
+      l->s = s;
+      l->args = args;
+      l->value = value;
+      l->comparison_type = comparison_type;
+      ls->mem_arity0.append(l);
+    }
+  }
+  else if (s->arity == 1) {
+    std::map<uint, uint>::iterator iter(ls->map_indices_arg1.lower_bound(args(0)));
+    uint idx_1;
+    if (iter == ls->map_indices_arg1.end()  ||  args(0) < iter->first) {
+      LitL new_lits_list;
+      ls->mem_arity1.append(new_lits_list);
+      std::pair<uint,uint> pair = std::make_pair(args(0), ls->mem_arity1.N-1);
+      ls->map_indices_arg1.insert(iter, pair);
+      idx_1 = pair.second;
+    }
+    else
+      idx_1 = iter->second;
+    l = __getLiteral(ls->mem_arity1(idx_1), args, value, comparison_type);
+    if (l==NULL) {
+      l = new Literal;
+      l->s = s;
+      l->args = args;
+      l->value = value;
+      l->comparison_type = comparison_type;
+      ls->mem_arity1(idx_1).append(l);
+    }
+  }
+  // arity >= 2
+  else {
+    std::map<uint, uint>::iterator iter(ls->map_indices_arg1.lower_bound(args(0)));
+    uint idx_1;
+    if (iter == ls->map_indices_arg1.end()  ||  args(0) < iter->first) {
+      // add memory
+      MT::Array< LitL> new_outer_list;
+      ls->mem_arity2plus.append(new_outer_list);
+      // add to args_pos2
+      std::map< uint, uint> new_arg2_map;
+      ls->maps_indices_arg2.append(new_arg2_map);
+      // insert in args_pos1
+      std::pair<uint,uint> pair = std::make_pair(args(0), ls->mem_arity2plus.N-1);
+      ls->map_indices_arg1.insert(iter, pair);
+      idx_1 = pair.second;
+    }
+    else
+      idx_1 = iter->second;
+    std::map<uint, uint>::iterator iter2(ls->maps_indices_arg2(idx_1).lower_bound(args(1)));
+    uint idx_2;
+    if (iter2 == ls->maps_indices_arg2(idx_1).end()  ||  args(1) < iter2->first) {
+      LitL new_lits_list;
+      ls->mem_arity2plus(idx_1).append(new_lits_list);
+      std::pair<uint,uint> pair = std::make_pair(args(1), ls->mem_arity2plus(idx_1).N-1);
+      ls->maps_indices_arg2(idx_1).insert(iter2, pair);
+      idx_2 = pair.second;
+    }
+    else
+      idx_2 = iter2->second;
+    if (DEBUG>1) {PRINT(idx_2);}
+    l = __getLiteral(ls->mem_arity2plus(idx_1)(idx_2), args, value, comparison_type);
+    if (l==NULL) {
+      l = new Literal;
+      l->s = s;
+      l->args = args;
+      l->value = value;
+      l->comparison_type = comparison_type;
+      ls->mem_arity2plus(idx_1)(idx_2).append(l);
+    }
+  }
+  CHECK(l!=NULL, "literal could not be made");
+  if (DEBUG>0) {cout<<"getting:  "<<*l<<endl;}
+  if (DEBUG>0) {CHECK(l->args.N==0 || l->args == args, "");}
+  if (DEBUG>0) {cout<<"Literal::get[END]"<<endl;}
+  return l;
+}
+#endif
 
 
 Literal* Literal::get(const char* text) {
@@ -234,6 +423,7 @@ bool Literal::operator==(Literal& l) const {
     return false;
 }
 
+
 bool Literal::operator!=(Literal& lit) const {
   return !(*this == lit);
 }
@@ -335,10 +525,10 @@ bool Literal::nonContradicting(const LitL& l1, const LitL& l2) {
 }
 
 
-void Literal::getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value) {
+void Literal::getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value, bool withRepeatingArguments) {
   lits.clear();
   MT::Array< uintA > args_lists;
-  TL::allPermutations(args_lists, constants, s->arity, true, true);
+  TL::allPermutations(args_lists, constants, s->arity, withRepeatingArguments, true);
   uint i;
   FOR1D(args_lists, i) {
     lits.append(Literal::get(s, args_lists(i), value));
@@ -424,15 +614,6 @@ bool Literal::negativeBinaryLiteralsLast(const LitL& lits) {
 }
 
 
-uint Literal::numberLiterals(const MT::Array< LitL >& LitLs) {
-  uint no = 0;
-  uint i;
-  FOR1D(LitLs, i) {
-    no += LitLs(i).N;
-  }
-  return no;
-}
-
 // positives first
 void Literal::sort(LitL& lits) {
   uint DEBUG = 0;
@@ -481,17 +662,6 @@ void Literal::sort(LitL& lits) {
 }
 
 
-void Literal::negate(const LitL& lits, LitL& predTs_negated) {
-  predTs_negated.clear();
-  uint i;
-  Literal* lit;
-  FOR1D(lits, i) {
-    lit = Literal::get(lits(i)->s, lits(i)->args, TL::isZero(lits(i)->value));
-    predTs_negated.append(lit);
-  }
-}
-
-
 int Literal::findPattern(const LitL& actions, uint minRepeats) {
   uint length, repeat, pos;
   int max_repeat_length = 0;
@@ -516,9 +686,13 @@ Literal* Literal::getLiteral_default_action() {
 }
 
 
+Literal* l_doNothing = NULL;
 Literal* Literal::getLiteral_doNothing() {
-  uintA empty;
-  return get(Symbol::get(MT::String("doNothing"), 0, Symbol::action), empty, 1.);
+  if (l_doNothing == NULL) {
+    uintA empty;
+    l_doNothing = get(Symbol::get(MT::String("doNothing"), 0, Symbol::action), empty, 1.);
+  }
+  return l_doNothing;
 }
 
 
@@ -552,12 +726,12 @@ void write(const MT::Array< LitL >& outcomes, ostream& os) {
  ************************************************/
 
 SymbolicState::SymbolicState() {
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
 }
 
 
 SymbolicState::SymbolicState(const MT::Array<Literal*>& _lits) {
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
   this->lits = _lits;
   reason::derive(this);
   Literal::getArguments(state_constants, lits);
@@ -589,7 +763,7 @@ void SymbolicState::read(ifstream& in, bool read_constants) {
     if (lits(i)->s->symbol_type != Symbol::primitive)
       lits.remove(i);
   }
-  including_derived_literals = false;
+  derived_lits_are_calculated = false;
   reason::derive(this);
 }
 

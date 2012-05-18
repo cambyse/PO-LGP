@@ -121,6 +121,9 @@ class ConjunctionSymbol : public Symbol {
     void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
     void getFreeVars(uintA& freeVars) const;
     void getFreeVars(uintA& freeVars_pos, uintA& freeVars_neg) const;
+    
+    // auxiliarly data-structure
+    boolA redundant__base_literal_with_free_vars;
 };
 
 
