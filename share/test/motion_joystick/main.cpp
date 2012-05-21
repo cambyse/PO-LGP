@@ -4,12 +4,13 @@
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
-  ThreadInfoWin win;
-  win.threadLoopWithBeat(.1);
+  //ThreadInfoWin win;
+  //win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
-  ControllerTask controllerTask;
+  MotionPrimitive controllerTask;
+  MotionFuture motionFuture;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
   JoystickState joystickState;
@@ -32,7 +33,7 @@ int main(int argn,char** argv){
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
   controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::feedback;
+  controllerTask.mode = MotionPrimitive::feedback;
   controllerTask.feedbackControlTask = &joyTask;
   controllerTask.deAccess(NULL);
   //view.threadLoopWithBeat(.01);
