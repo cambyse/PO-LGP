@@ -33,6 +33,7 @@ struct sController {
 Controller::Controller():Process("MotionController") {
   s = new sController();
   birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+  birosInfo.getVariable(s->motionPrimitive, "MotionPrimitive", this);
   birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
   bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
   if(listens) threadListenTo(s->hardwareReference);
@@ -41,7 +42,7 @@ Controller::Controller():Process("MotionController") {
   s->geo().ors.getJointState(s->hardwareReference->q_reference,
                              s->hardwareReference->v_reference);
   s->hardwareReference->deAccess(this);
-  s->motionPrimitive = NULL;
+  //s->motionPrimitive = NULL;
   
 }
 
