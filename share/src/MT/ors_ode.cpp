@@ -402,6 +402,7 @@ void OdeInterface::importStateFromOde(ors::Graph &C) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
   }
   C.calcJointsFromBodyFrames();
+  C.calcShapeFramesFromBodies();
 }
 
 
@@ -600,8 +601,6 @@ void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double v
 // higher level C
 //
 
-//static dGeomID lastGeomHack;
-
 void OdeInterface::createOde(ors::Graph &C) {
   ors::Body *n;
   ors::Joint *e;
@@ -619,8 +618,6 @@ void OdeInterface::createOde(ors::Graph &C) {
   //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
   //, *inertiaTensor, *realMass, *centerOfMass;
   uint i, j;
-  //trimeshPhysics triPhys;
-  dTriMeshDataID TriData;
   
   clear();
   C.calcBodyFramesFromJoints();
@@ -655,29 +652,31 @@ void OdeInterface::createOde(ors::Graph &C) {
       }
       
       switch(s->type) {
-      default: case ors::boxST: // box
+      default: case ors::boxST:
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
           geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
           break;
-        case ors::sphereST: // sphere
+        case ors::sphereST:
           dMassSetSphere(&odeMass, n->mass, s->size[3]);
           dBodySetMass(b, &odeMass);
           geom=dCreateSphere(myspace, s->size[3]);
           break;
-        case ors::cylinderST: // capped cylinder, 6. Mar 06 (hh)
+        case ors::cylinderST:
           dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
           dBodySetMass(b, &odeMass);
           geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
           break;
-        case ors::cappedCylinderST: // capped cylinder, 6. Mar 06 (hh)
+        case ors::cappedCylinderST:
           dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
 //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
           dBodySetMass(b, &odeMass);
           geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
           break;
-        case ors::meshST: // trimesh loaded from file, 12. Jun 06 (hh & dm)
+        case ors::meshST:{
+#if 0
           NIY;
+#else
           s->mesh.computeNormals();
           // get inertia tensor and REAL mass (careful no density)
           //n->ats.get("I", inertiaTensor, 9);
@@ -686,57 +685,49 @@ void OdeInterface::createOde(ors::Graph &C) {
           
           // transform the mesh to ODE trimesh format;
           //i=0; j=0;
-          
-          /*
-          triPhys.reset(s->mesh.numtriangles);
+
+#if 0 //correct mass/density stuff
+	  trimeshPhysics triPhys;
+          triPhys.reset(s->mesh.T.N);
           if(inertiaTensor && realMass && centerOfMass) // are all important params set in the dcg file
           {
-          triPhys._mass = *realMass;
-          triPhys.r[0]=centerOfMass[0];
-          triPhys.r[1]=centerOfMass[1];
-          triPhys.r[2]=centerOfMass[2];
-          triPhys.J[0][0]= inertiaTensor[0];
-          triPhys.J[1][1]= inertiaTensor[4];
-          triPhys.J[2][2]= inertiaTensor[8];
-          triPhys.J[0][1]= inertiaTensor[1];
-          triPhys.J[0][2]= inertiaTensor[2];
-          triPhys.J[1][2]= inertiaTensor[5];
-          }
-          
-          else // not all parametrs specified in dcg file....need to calculate them
-          {
-          triPhys.calculateODEparams(&s->mesh, s->mass); // note: 2nd parameter is the density
+	    triPhys._mass = *realMass;
+	    triPhys.r[0]=centerOfMass[0];
+	    triPhys.r[1]=centerOfMass[1];
+	    triPhys.r[2]=centerOfMass[2];
+	    triPhys.J[0][0]= inertiaTensor[0];
+	    triPhys.J[1][1]= inertiaTensor[4];
+	    triPhys.J[2][2]= inertiaTensor[8];
+	    triPhys.J[0][1]= inertiaTensor[1];
+	    triPhys.J[0][2]= inertiaTensor[2];
+	    triPhys.J[1][2]= inertiaTensor[5];
+	  } else { // not all parametrs specified in dcg file....need to calculate them
+            triPhys.calculateODEparams(&s->mesh, s->mass); // note: 2nd parameter is the density
           }
           
           dMassSetParameters (&odeMass, triPhys._mass,
-          triPhys.r[0], triPhys.r[1], triPhys.r[2],
-          triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
-          triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
+			      triPhys.r[0], triPhys.r[1], triPhys.r[2],
+			      triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
+			      triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
           
           dBodySetMass(b, &odeMass);
-          */
+#else //don't care about mass...
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
+#endif
           
-          
-          if(true) {
-            TriData = dGeomTriMeshDataCreate();
-            dGeomTriMeshDataBuildDouble(TriData,
-                                        s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
-                                        s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
-            //dGeomTriMeshDataPreprocess(TriData);
+	  dTriMeshDataID TriData;
+	  TriData = dGeomTriMeshDataCreate();
+	  dGeomTriMeshDataBuildDouble(TriData,
+				      s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
+				      s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
+	  dGeomTriMeshDataPreprocess(TriData);
             
+	  geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
             
-            geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
-            
-            dGeomTriMeshClearTCCache(geom);
-            //lastGeomHack = geom;
-          }
-          /*else{
-            geom = lastGeomHack;
-            geom->gflags = 28;
-          }*/
-          break; //end of mesh
+	  dGeomTriMeshClearTCCache(geom);
+#endif
+	}break; //end of mesh
       }
       
       geoms(s->index) = geom;
