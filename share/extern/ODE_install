@@ -1,0 +1,44 @@
+#! /bin/sh
+
+[ -z "${MLR_EXLIB_PATH}" ] && MLR_EXLIB_PATH=$HOME/lib
+THIS_PATH=$PWD
+URL=http://sourceforge.net/projects/opende/files/ODE/0.11/ode-0.11.tar.gz/download
+DOWNLOAD_PATH=ors-0.11
+LIBNAME=ode
+
+echo "Calling path:" $THIS_PATH
+
+if [ ! -d $MLR_EXLIB_PATH ] ; then
+  echo "Creating lib directory: " $MLR_EXLIB_PATH
+  mkdir $MLR_EXLIB_PATH
+fi
+
+## delete everything
+cd $MLR_EXLIB_PATH
+rm -R $LIBNAME
+mkdir $LIBNAME
+cd $LIBNAME
+
+## download & unpack
+wget $URL -O $LIBNAME_sources.tgz
+tar xvzf $LIBNAME_sources.tgz
+mv $DOWNLOAD_PATH $LIBNAME_sources
+cd $LIBNAME_sources
+
+## make
+sh autogen.sh
+#./configure --help
+./configure --prefix=$MLR_EXLIB_PATH/ode --enable-double-precision --with-trimesh=opcode --with-pic
+make -j2
+cd ..
+
+## arrange includes and libs
+rm -Rf lib include
+mkdir lib include include/internal include/internal/joints
+cp ode-0.11/ode/src/.libs/libode.a ode-0.11/ode/src/.libs/libfast.a lib
+cp -R ode-0.11/include/ode include
+cp -R ode-0.11/ode/src/*.h include/internal
+cp -R ode-0.11/ode/src/joints/*.h include/internal/joints
+
+## clean
+find . -name '*.o' -delete

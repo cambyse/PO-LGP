@@ -244,12 +244,9 @@ endif
 
 ifeq ($(ODE),1)
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
-CPATH	  := $(CPATH):$(LIBPATH)/ode-0.11/include
-LPATH	  := $(LPATH):$(LIBPATH)/ode-0.11/lib
-MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/ode-0.11/include
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ode/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ode/lib
 LIBS += -lode
-CygwinLibs+= -lode
-MSVCLibs  += ode.lib
 endif
 
 ifeq ($(SWIFT),1)
