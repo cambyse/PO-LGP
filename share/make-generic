@@ -7,6 +7,9 @@
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
+ifndef MLR_EXLIB_PATH
+MLR_EXLIB_PATH = $(HOME)/lib
+endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
@@ -229,9 +232,11 @@ LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(GTK),1)
-CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+#CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+#LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
+CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+#LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
 endif
 
 ifeq ($(WX),1)
@@ -358,8 +363,8 @@ endif
 
 ifeq ($(TONY),1)
 CXXFLAGS  += -DMT_TONY
-CPATH   := $(CPATH):$(LIBPATH)/tony-mdp/include
-LPATH   := $(LPATH):$(LIBPATH)/tony-mdp/lib
+CPATH   := $(CPATH):$(LIBPATH)/tony_mdp/include
+LPATH   := $(LPATH):$(LIBPATH)/tony_mdp/lib
 LIBS += -lmdp
 endif
 
@@ -368,6 +373,12 @@ CXXFLAGS  += -DMT_DAI
 CPATH   := $(CPATH):$(LIBPATH)/libDAI-0.2.2/include
 LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LIBS += -ldai
+endif
+
+ifeq ($(IBDS),1)
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ibds/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
+LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
 ifeq ($(URGLASER),1)
@@ -388,10 +399,10 @@ LIBS      += -ldxl
 endif
 
 ifeq ($(BUMBLE),1)
-CXXFLAGS  += -DMT_BUMBLE -DNP_DC1394
+CXXFLAGS  += -DMT_BUMBLE
 #CPATH     := $(CPATH):$(LIBPATH)/pgrlibdcstereo/
 #LPATH     := $(LPATH):$(LIBPATH)/pgrlibdcstereo/
-#LIBS += -ldc1394 # -lpgrlibdcstereo
+LIBS += -ldc1394 # -lpgrlibdcstereo
 endif
 
 ifeq ($(FELZ),1)
@@ -429,12 +440,12 @@ endif
 
 #ifeq ($(buildAndLink_NILS),1)
 #BUILDS += buildComponent/NP
-#LIBS += -lnp -ldc1394
+#LIBS += -lNP -ldc1394
 #endif
 
 ifeq ($(buildAndLink_NIKOLAY),1)
 BUILDS += buildComponent/NJ
-LIBS += -lnj
+LIBS += -lNJ
 endif
 
 ifeq ($(buildAndLink_RELATIONAL),1)
@@ -444,22 +455,22 @@ endif
 
 ifeq ($(buildAndLink_STANIMIR),1)
 BUILDS += buildComponent/SD
-LIBS += -lsd
+LIBS += -lSD
 endif
 
 ifeq ($(buildAndLink_DMITRY),1)
 BUILDS += buildComponent/DZ
-LIBS += -ldz
+LIBS += -lDZ
 endif
 
 ifeq ($(buildAndLink_JOHANNES),1)
 BUILDS += buildComponent/JK
-LinuxLibs += -ljk
+LinuxLibs += -lJK
 endif
 
 ifeq ($(buildAndLink_MTLIB),1)
 BUILDS += buildComponent/MT
-LIBS += -lmt
+LIBS += -lMT
 endif
 
 
@@ -485,7 +496,7 @@ export MSVC_LPATH
 default: $(OUTPUT)
 
 clean:
-	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
+	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* includeAll.o $(CLEAN)
 
 depend: generate_Makefile.dep
 
@@ -536,8 +547,13 @@ all: default
 %.exe: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
+ifeq ($(compileWithIncludeAll),1)
+%.so: $(PREOBJS) includeAll.o $(BUILDS)
+	$(LINK) $(LDFLAGS) -o $@ includeAll.o $(LIBS) $(SHAREFLAG)
+else
 %.so: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
+endif
 
 %.lib: $(PREOBJS) $(OBJS) $(BUILDS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
@@ -554,7 +570,7 @@ ifeq ($(CUDA),1)
 	$(NXX) $(NXXFLAGS) -o $@ -c $*_cuda.cu
 else
 %_cuda.o: %_cuda.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $*_empty.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 endif
 
 %.o: %.cpp
@@ -598,5 +614,8 @@ $(BASE)/make-config:
 ## generate a make dependency file
 generate_Makefile.dep: $(OBJS:%.o=%.cpp)
 	-$(CXX) -MM $(OBJS:%.o=%.cpp) $(CXXFLAGS) > Makefile.dep
+
+includeAll.cxx: force
+	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
 
 force:	;

@@ -16,6 +16,9 @@
 
 #include "hardware.h"
 #include <perception/perception.h>
+
+#ifdef MT_BUMBLE
+  
 #include <MT/vision.h>
 
 #include <fstream>
@@ -94,9 +97,14 @@ struct sCamera{
 
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
+  s->cam = NULL;
   birosInfo.getVariable(s->camL, "CameraL", this);
   birosInfo.getVariable(s->camR, "CameraR", this);
 };
+
+Camera::~Camera(){
+  delete s;
+}
 
 void Camera::open(){
   s->cam = new Bumblebee();
@@ -118,6 +126,7 @@ void Camera::close(){
   s->cam->stop_capturing();
   s->cam->deinit();
   delete s->cam;
+  s->cam = NULL;
 };
 
 
@@ -489,3 +498,37 @@ void CalibrationParameters::stereo2world(floatA& world,const floatA& stereo){
   HALT("Can't call this function without opencv");
 #endif
 }
+
+#else //MT_BUMBLE
+
+struct sCamera{
+  Image *camL,* camR;
+  byteA dummyL, dummyR;
+};
+
+Camera::Camera():Process("BumblebeeCamera"){
+  s = new sCamera;
+  birosInfo.getVariable(s->camL, "CameraL", this);
+  birosInfo.getVariable(s->camR, "CameraR", this);
+  MT::String filename = birosInfo.getParameter<MT::String>("DummyCameraFile", this, STRING("DummyCameraImage_"));
+  read_ppm(s->dummyL, STRING(filename <<"L.ppm"));
+  read_ppm(s->dummyR, STRING(filename <<"R.ppm"));
+};
+
+Camera::~Camera(){
+  delete s;
+}
+
+void Camera::open(){
+  step();
+};
+
+void Camera::step(){
+  s->camR->set_img(s->dummyR, this);
+  s->camL->set_img(s->dummyL, this);
+};
+
+void Camera::close(){
+};
+
+#endif

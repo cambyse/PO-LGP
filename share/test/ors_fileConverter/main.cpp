@@ -33,7 +33,7 @@ int main(int argn, char** argv){
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;
 
-  file(file.N()-4)=0; //replace . by 0
+  file(file.N-4)=0; //replace . by 0
 
   //modify
   if(MT::checkCmdLineTag("view")){

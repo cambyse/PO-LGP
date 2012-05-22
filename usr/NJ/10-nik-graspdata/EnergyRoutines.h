@@ -315,7 +315,7 @@ void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJo
 				fJ << J << endl;
 			}
 			if (false){
-				robot.gui.gl->text.clr()<< i << endl;
+				robot.gui.gl->text.clear()<< i << endl;
 				//robot.gui.q_reference = noise;
 				MT::wait(0.1);
 				robot.gui.threadStep();
@@ -380,7 +380,7 @@ void SampleTrajectory(RobotProcessGroup & robot){
 		lastJoint = best[t];
 		if (true){//display best sample
 			robot.ctrl.q_reference = best[t];
-			robot.gui.gl->text.clr()<< t << " best " << fMin << endl;
+			robot.gui.gl->text.clear()<< t << " best " << fMin << endl;
 			robot.step();
 		}
 	}
@@ -389,7 +389,7 @@ void SampleTrajectory(RobotProcessGroup & robot){
 		for(uint t = 0; t < T; t++){
 			MT::wait(0.15);
 			robot.ctrl.q_reference = best[t];
-			robot.gui.gl->text.clr()<< t<< endl;
+			robot.gui.gl->text.clear()<< t<< endl;
 			robot.step();
 		}
 }
@@ -439,7 +439,7 @@ void GradTrajectory(RobotProcessGroup & robot){
 		lastJoint = best[t];
 		if (true){//display best sample
 			robot.ctrl.q_reference = best[t];
-			robot.gui.gl->text.clr()<< t << endl;
+			robot.gui.gl->text.clear()<< t << endl;
 			robot.step();
 		}
 	}
@@ -448,7 +448,7 @@ void GradTrajectory(RobotProcessGroup & robot){
 		for(uint t = 0; t < T; t++){
 			MT::wait(0.15);
 			robot.ctrl.q_reference = best[t];
-			robot.gui.gl->text.clr()<< t<< endl;
+			robot.gui.gl->text.clear()<< t<< endl;
 			robot.step();
 		}
 }

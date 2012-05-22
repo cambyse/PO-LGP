@@ -142,7 +142,7 @@ void MultiPlan::findTarget(){
     pos_file.flush();
     robotProcesses->gui.ors->getBodyByName("target")->X.p = val;
     robotProcesses->gui.ors2->getBodyByName("target")->X.p = val;
-   if(recho.bwdMsg_count == recho.T || recho.bwdMsg_count == 0) robotProcesses->gui.gl->text.clr() << " sense " << val << endl << lastTarget;
+   if(recho.bwdMsg_count == recho.T || recho.bwdMsg_count == 0) robotProcesses->gui.gl->text.clear() << " sense " << val << endl << lastTarget;
    // recho.UpdateExtState(target);//no influence without setGoals !!, can be ignored for now...
   }
   else if(perc->objects.N == 0)
@@ -246,7 +246,7 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
 
       //if(tmpco >= 399.0) tmpco = 399;       tmpco += 1.0;//allow to slow trajectory
 
-       robotProcesses->gui.gl->text.clr() << "msg# " <<recho.bwdMsg_count << endl << " dist " << lastDistance;
+       robotProcesses->gui.gl->text.clear() << "msg# " <<recho.bwdMsg_count << endl << " dist " << lastDistance;
       recho.bwdMsg_count ++ ;
      }
    else{ //stop

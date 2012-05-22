@@ -289,7 +289,7 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
     }
     else{ //stop
       cout << " stopping " << recho.bwdMsg_count << " " << recho.lastCost  << " " << recho.bwdMsg_v.d1 <<
-          " semaphors " << recho.bUnsetInit << recho.bShiftAll << endl;      //robotProcesses->gui.gl->text.clr() << "msg# " <<recho.bwdMsg_count << endl;
+          " semaphors " << recho.bUnsetInit << recho.bShiftAll << endl;      //robotProcesses->gui.gl->text.clear() << "msg# " <<recho.bwdMsg_count << endl;
       TV_q-> v_prec = 1e2;
       TV_q->v_target = TV_q->y*0.0;
         TV_q->y_prec = 1e1;TV_q->y_target = TV_q->y;

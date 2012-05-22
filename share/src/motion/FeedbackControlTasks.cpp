@@ -71,7 +71,7 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   q->y_target.setZero();
   q->v_target.setZero();
   q->y_target = q->y;
-  q->y_target(8)=q->y_target(10)=q->y_target(12)=-.8;
+  q->y_target(8)=q->y_target(10)=q->y_target(12)=-1.;
   q->y_target(9)=q->y_target(11)=q->y_target(13)= .6;
   requiresInit = false;
 }

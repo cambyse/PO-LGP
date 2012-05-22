@@ -1,17 +1,21 @@
+#if 0
+
 #include "plan.h"
 
-namespace TL {
+namespace PRADA {
 
 // PPDDL: reads objects, start-state, goal
-void readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& goal, const char * filename);
-// void readPPDDLdomain(TL::SymbolicState& start_state, TL::PredicateListGoal& goal, LogicEngine& le, const char * filename);
-// void readPPDDLdomain(TL::SymbolicState& start_state, TL::MaximizeFunctionGoal& goal, LogicEngine& le, const char * filename);
+void readPPDDLdomain(SymbolicState& start_state, Reward& goal, const char * filename);
+// void readPPDDLdomain(SymbolicState& start_state, PredicateListGoal& goal, LogicEngine& le, const char * filename);
+// void readPPDDLdomain(SymbolicState& start_state, MaximizeFunctionGoal& goal, LogicEngine& le, const char * filename);
 
 
 // NID --> PPDDL
-void writePPDDL_description(const TL::RuleSet& rules, bool all_outcome, const TL::SymbolicState& state, const TL::LiteralListReward& goal, const char* filename);
-void writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& out);
-// void writeRulesAsPPDDL2(const TL::RuleSet& rules, const TL::LogicEngine& le, ostream& out);
+void writePPDDL_description(const RuleSet& rules, bool all_outcome, const SymbolicState& state, const LiteralListReward& goal, const char* filename);
+void writeRulesAsPPDDL(const RuleSet& rules, bool all_outcome, ostream& out);
+// void writeRulesAsPPDDL2(const RuleSet& rules, const LogicEngine& le, ostream& out);
 
 
 }
+
+#endif

@@ -1,5 +1,8 @@
+#if 0
+
 #ifndef TL__RULE_LEARNER_GROUND
 #define TL__RULE_LEARNER_GROUND
+
 
 /*
 
@@ -20,7 +23,7 @@ HEURISTISCHE WERTE:
 
 
 
-#include <relational/ruleLearner.h>
+#include <relational/learn.h>
 
 // ANDERSDA ++++++++++++++
 #define SO_WEIGHT__EXPLAIN_EXPERIENCE 4.0
@@ -65,13 +68,13 @@ HEURISTISCHE WERTE:
 #define RULE_LEARNER__OP_CHOICE__RANDOM 2
 
 
-namespace TL {
+namespace PRADA {
 class RuleSetContainer_ground {
   private:
     
   public:
   
-  TL::RuleSet rules;
+  RuleSet rules;
   const SymbolicExperienceL* p_examples;  // TODO den hier noch const machen
   
   // redundant memories
@@ -84,7 +87,7 @@ class RuleSetContainer_ground {
   RuleSetContainer_ground(); // sollte nicht verwendet werden
   
   void init(const SymbolicExperienceL* _p_examples);
-  void append(TL::Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule);
+  void append(Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule);
   void remove(uint id);
   void clear();
   void recomputeDefaultRule();
@@ -121,7 +124,7 @@ namespace CostFunction_ground {
 
 
 
-void calcCoverage_ground(SymbolicExperienceL& covered_examples, uintA& covered_examples_ids, const TL::Rule* ground_r, const SymbolicExperienceL& examples);
+void calcCoverage_ground(SymbolicExperienceL& covered_examples, uintA& covered_examples_ids, const Rule* ground_r, const SymbolicExperienceL& examples);
 
 
 
@@ -144,24 +147,24 @@ class SearchOperator_ground {
     bool approximative;
 	
     // Outcomes
-    void calcCoverage_outcomes(const MT::Array< LitL >& outcomes, const SymbolicExperienceL& examples, const TL::Rule* rule, boolA& coverage);
+    void calcCoverage_outcomes(const MT::Array< LitL >& outcomes, const SymbolicExperienceL& examples, const Rule* rule, boolA& coverage);
     void calcSubsumption(boolA& subsumes, const boolA& coverage);
     // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-    void produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const TL::Rule& rule);
-		void induceOutcomes(TL::Rule* rule, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& covered_examples, const uintA& covered_examples_ids);
+    void produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule);
+		void induceOutcomes(Rule* rule, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& covered_examples, const uintA& covered_examples_ids);
 		
         // Parameter learning
 		double learnParameters_constrainedCostfunction(const MT::Array< LitL >& outcomes, doubleA& probs);
 		double learnParameters(const MT::Array< LitL >& outcomes, doubleA& probs);
         
     // takes the rulelist rules2add and integrates it into existing ruleset
-    void integrateNewRules(const TL::RuleSetContainer_ground& rulesC_old, const TL::RuleSetContainer_ground& rules_2add,
-                            const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_new);
+    void integrateNewRules(const RuleSetContainer_ground& rulesC_old, const RuleSetContainer_ground& rules_2add,
+                            const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_new);
     
     // Creates possible new rules for the given rule-set.
     // "rules_2add" are potential additional rules which are all supposed to become part of the SAME rule-set!
     // I.e., they will be integrated into the old rule-set.
-    virtual void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add) = 0;
+    virtual void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add) = 0;
         
         
 	public:
@@ -175,8 +178,8 @@ class SearchOperator_ground {
     virtual void reset() = 0;
 
     // central method which is called by the RuleLearner
-    virtual void createRuleSets(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-                    MT::Array< TL::RuleSetContainer_ground >& sets_of_new_rules);
+    virtual void createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
+                    MT::Array< RuleSetContainer_ground >& sets_of_new_rules);
     
     const char* getName();
     bool isApproximator() {return approximative;}
@@ -210,10 +213,10 @@ class ExplainExperiences_ground : public SearchOperator_ground {
       this->comparingValues = comparingValues;
 		}
 
-		void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
-		TL::Rule* explainExperience_ground(SymbolicExperience* ex);
-		TL::Rule* explainExperience_straightforward_ground(SymbolicExperience* ex);
-		TL::Rule* explainExperience_deictic_ground(SymbolicExperience* ex);
+		void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
+		Rule* explainExperience_ground(SymbolicExperience* ex);
+		Rule* explainExperience_straightforward_ground(SymbolicExperience* ex);
+		Rule* explainExperience_deictic_ground(SymbolicExperience* ex);
 		
 		// resets field "nextPotentialExperience
 		void reset();
@@ -229,7 +232,7 @@ class DropPreconditions_ground : public SearchOperator_ground {
 			nextRule = 0;
 			nextPrecondition = 0;
 		}
-		void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+		void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
 		void reset();
 };
@@ -248,7 +251,7 @@ class DropPreconditions_approximativeVersion_ground : public SearchOperator_grou
             approximative = true;
             prepareTotalNewSearch = false;
 		}
-		void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+		void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
 		void reset();
         void reset_total_approximator();
@@ -266,7 +269,7 @@ class DropReferences_ground : public SearchOperator_ground {
       nextReference = 0;
       nextRule=0;
     }
-    void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+    void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
     
     void reset();
 };
@@ -278,11 +281,11 @@ class DropRules_ground : public SearchOperator_ground {
       name = "DropRules";
     }
     
-    void createRuleSets(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-              MT::Array< TL::RuleSetContainer_ground >& sets_of_new_rules);
+    void createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
+              MT::Array< RuleSetContainer_ground >& sets_of_new_rules);
     
     // the following two rules are empty
-    void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);   
+    void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);   
     void reset();
 };
 
@@ -299,7 +302,7 @@ class SplitOnLiterals_ground : public SearchOperator_ground {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+    void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
     
     void reset();
 };
@@ -316,7 +319,7 @@ class AddLiterals_ground : public SearchOperator_ground {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+    void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
     
     void reset();
 };
@@ -332,7 +335,7 @@ class AddReferences_ground : public SearchOperator_ground {
       nextRule=1; // ignore default rule
       nextLiteral=0;
     }
-    void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+    void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
     
     void reset();
 };
@@ -353,7 +356,7 @@ class GeneralizeEquality_ground : public SearchOperator_ground {
             nextLiteral=0;
             doneLess=false;
         }
-        void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+        void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
     
         void reset();
 };
@@ -381,7 +384,7 @@ class SplitOnEqualities : publc SearchOperator_ground {
             usedFunctions.append(le->f_prim);
             usedFunctions.append(le->f_derived);
         }
-        void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+        void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
         void reset();
 };
@@ -402,7 +405,7 @@ class ChangeRange : public SearchOperator_ground {
             nextLiteral=0;
             nextPossibleValue=0;
         }
-        void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+        void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
         void reset();
 };
@@ -424,7 +427,7 @@ class MakeInterval : public SearchOperator_ground {
             nextLiteral=0;
             nextPossibleValue=0;
         }
-        void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+        void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
         void reset();
 };
@@ -466,7 +469,7 @@ class CompareFunctionValues : public SearchOperator_ground {
             // collect comparison types SAFE THE ORDER!
             comparisonTypes.append(comparison_equal);comparisonTypes.append(comparison_less);comparisonTypes.append(comparison_lessEqual);comparisonTypes.append(comparison_greater);comparisonTypes.append(comparison_greaterEqual);
         }
-        void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+        void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
 		
         void reset();
 };
@@ -507,7 +510,7 @@ class SplitOnCompareFunctionValues : public SearchOperator_ground {
         // collect comparison types SAFE THE ORDER!
         comparisonTypes.append(comparison_equal);comparisonTypes.append(comparison_less);comparisonTypes.append(comparison_greater);
       }
-      void findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rules_2add);
+      void findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rules_2add);
   
       void reset();
 };*/
@@ -558,12 +561,14 @@ class RuleLearner_ground {
   
     void setAlphaPEN(double alpha_PEN);
     
-    double score(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold);
-    double score(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights);
-    void learn_rules(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, const char* logfile = "ruleLearner_ground.log"); 
-    void learn_rules(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile = "ruleLearner_ground.log"); 
+    double score(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold);
+    double score(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights);
+    void learn_rules(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, const char* logfile = "ruleLearner_ground.log"); 
+    void learn_rules(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile = "ruleLearner_ground.log"); 
 };
 
 }
 
 #endif // TL__RULE_LEARNER_GROUND
+
+#endif

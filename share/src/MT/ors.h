@@ -35,9 +35,9 @@ enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
 struct Vector {
   double p[3];
   
-  Vector(){}
-  Vector(double x, double y, double z){ set(x, y, z); }
-  Vector(const arr& x){ CHECK(x.N==3, "");  set(x.p); }
+  Vector() {}
+  Vector(double x, double y, double z) { set(x, y, z); }
+  Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
   double& operator()(int);
   const double& operator()(int) const;
   
@@ -71,8 +71,8 @@ struct Vector {
 struct Matrix {
   double p[9];
   
-  Matrix(){};
-  Matrix(const arr& m){ CHECK(m.N==9, "");  set(m.p); };
+  Matrix() {};
+  Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
   double& operator()(int, int);
   const double& operator()(int, int) const;
   
@@ -97,7 +97,7 @@ struct Quaternion {
   double p[4];
   
   Quaternion();
-  Quaternion(const arr& q){ CHECK(q.N==4, "");  set(q.p); };
+  Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
   
   void set(double q0, double x, double y, double z);
   void set(double* q);
@@ -155,8 +155,8 @@ struct Transformation {
   void setInverse(const Transformation& f);
   void setDifference(const Transformation& from, const Transformation& to);
   void setAffineMatrix(const double *m);
-
-  bool isZero() const{ return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
+  
+  bool isZero() const { return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
   
   void addRelativeTranslation(double x, double y, double z);
   void addRelativeRotationDeg(double degree, double x, double y, double z);
@@ -203,10 +203,10 @@ struct Mesh {
   void setTetrahedron();
   void setOctahedron();
   void setDodecahedron();
-  void setSphere(uint fineness=4);
-  void setHalfSphere(uint fineness=4);
-  void setCylinder(double r, double l, uint fineness=4);
-  void setCappedCylinder(double r, double l, uint fineness=4);
+  void setSphere(uint fineness=3);
+  void setHalfSphere(uint fineness=3);
+  void setCylinder(double r, double l, uint fineness=3);
+  void setCappedCylinder(double r, double l, uint fineness=3);
   void setGrid(uint X, uint Y);
   void setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res);
   
@@ -232,8 +232,8 @@ struct Mesh {
   void collectTriGroups();
   void skin(uint i);
   
-  
   //IO
+  void write(std::ostream&) const; ///< only writes generic info
   void readFile(const char* filename);
   void readTriFile(const char* filename);
   void readObjFile(const char* filename);
@@ -267,6 +267,7 @@ struct Spline {
 #ifndef MT_ORS_ONLY_BASICS
 struct Joint;
 struct Shape;
+struct Graph;
 //===========================================================================
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
@@ -286,15 +287,11 @@ struct Body {
   
   MT::Array<Shape*> shapes;
   
-  Body(){ reset(); }
-  explicit Body(const Body& b){ reset(); *this=b; }
-  explicit Body(MT::Array<Body*>& bodies){
-    reset();
-    index=bodies.N;
-    bodies.append(this);
-  }
+  Body();
+  explicit Body(const Body& b);
+  explicit Body(Graph& G);
   ~Body();
-  void operator=(const Body& b){
+  void operator=(const Body& b) {
     index=b.index; name=b.name; X=b.X; listClone(ats, b.ats);
     fixed=b.fixed; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
@@ -317,25 +314,19 @@ struct Joint {
   Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
   AnyList ats;         //!< list of any-type attributes
   
-  Joint(){ reset(); }
-  explicit Joint(const Joint& j){ from=to=NULL; *this=j; }
-  Joint(MT::Array<Joint*>& joints, Body *f, Body *t){
-    reset();
-    index=joints.N;
-    joints.append(this);
-    from=f;  ifrom=f->index;
-    to=t;    ito  =t->index;
-  }
-  ~Joint(){ reset(); }
-  void operator=(const Joint& j){
+  Joint();
+  explicit Joint(const Joint& j);
+  explicit Joint(Graph& G, Body *f, Body *t);
+  ~Joint() { reset(); }
+  void operator=(const Joint& j) {
     index=j.index; ifrom=j.ifrom; ito=j.ito;
     type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
     listClone(ats, j.ats);
   }
-  void reset(){ listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
+  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  Joint &data(){ return *this; }
+  Joint &data() { return *this; }
 };
 
 //===========================================================================
@@ -357,23 +348,11 @@ struct Shape {
   
   AnyList ats;    //!< list of any-type attributes
   
-  Shape(){ reset(); }
-  explicit Shape(const Shape& s){ body=NULL; *this=s; }
-  Shape(MT::Array<Shape*>& shapes, Body *b){
-    reset();
-    type=noneST;
-    cont=false;
-    size[0]=size[1]=size[2]=size[3]=1.;
-    color[0]=color[1]=color[2]=.8;
-    contactOrientation.setZero();
-    index=shapes.N;
-    shapes.append(this);
-    body=b;
-    b->shapes.append(this);
-    ibody=b->index;
-  }
-  ~Shape(){ reset(); }
-  void operator=(const Shape& s){
+  Shape();
+  explicit Shape(const Shape& s);
+  explicit Shape(Graph& G, Body *b, Shape *copyShape=NULL);
+  ~Shape() { reset(); }
+  void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
     mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
@@ -411,8 +390,9 @@ struct Graph {
   bool isLinkTree;
   
   //!@name constructors
-  Graph(){ sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
-  ~Graph(){ clear(); }
+  Graph() { sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
+  ~Graph() { clear(); }
+  void operator=(const ors::Graph& G);
   Graph* newClone() const;
   void copyShapesAndJoints(const Graph& G);
   
@@ -431,6 +411,7 @@ struct Graph {
   
   //!@name computations on the DoFs
   void calcBodyFramesFromJoints();
+  void calcShapeFramesFromBodies();
   void calcJointsFromBodyFrames();
   void clearJointErrors();
   void invertTime();
@@ -499,6 +480,7 @@ struct Graph {
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void writePlyFile(const char* filename) const;
 };
 #endif
 }
@@ -534,6 +516,8 @@ Quaternion operator*(const Quaternion& b, const Quaternion& c);
 Quaternion operator/(const Quaternion& b, const Quaternion& c);
 Vector operator*(const Quaternion& b, const Vector& c);
 Vector operator/(const Quaternion& b, const Vector& c);
+Transformation operator*(const Transformation& b, const Transformation& c);
+Transformation operator/(const Transformation& b, const Transformation& c);
 Vector operator*(const Transformation& b, const Vector& c);
 Vector operator/(const Transformation& b, const Vector& c);
 }
@@ -545,6 +529,7 @@ std::ostream& operator<<(std::ostream&, const ors::Vector&);
 std::ostream& operator<<(std::ostream&, const ors::Matrix&);
 std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
 std::ostream& operator<<(std::ostream&, const ors::Transformation&);
+stdOutPipe(ors::Mesh);
 
 #ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream&, ors::Body&);
@@ -564,9 +549,9 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 // conversions to arr
 //
 
-inline arr ARRAY(const ors::Vector& v){     return arr(v.p, 3); }
-inline arr ARRAY(const ors::Quaternion& q){ return arr(q.p, 4); }
-inline arr ARRAY(const ors::Matrix& m){     return arr(m.p, 9); }
+inline arr ARRAY(const ors::Vector& v) {     return arr(v.p, 3); }
+inline arr ARRAY(const ors::Quaternion& q) { return arr(q.p, 4); }
+inline arr ARRAY(const ors::Matrix& m) {     return arr(m.p, 9); }
 
 //===========================================================================
 //
@@ -603,6 +588,7 @@ struct TaskVariable;
 
 /*!\brief different types of task variables: refer to different ways to
   compute/access the kinematics and Jacobians */
+//TODO: move this to Default task variable?
 enum TVtype {
   noneTVT,     //!< undefined
   posTVT,      //!< 3D position of reference, can have 2nd reference, no param
@@ -636,7 +622,7 @@ struct TaskVariable {
   double y_prec, v_prec;                      //!< precision (=1/variance) associated with this variable
   arr y_trajectory, y_prec_trajectory;        //!< target & precision over a whole trajectory
   arr v_trajectory, v_prec_trajectory;        //!< target & precision over a whole trajectory
-
+  
   //used for feedback control:
   arr y_ref, v_ref;                           //!< immediate (next step) desired target reference
   double Pgain, Dgain;                        //!< parameters of the PD controller or attractor dynamics
@@ -669,7 +655,7 @@ struct TaskVariable {
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec);
   void setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec);
   void setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec);
-
+  
   void setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec); //those versions assume y_prec and v_prec were set and use this.
   void setInterpolatedTargetsConstPrecisions(uint T);
   void setConstTargetsConstPrecisions(uint T);
@@ -680,7 +666,7 @@ struct TaskVariable {
   //!@name updates
   virtual void updateState(const ors::Graph &ors, double tau=1.) = 0;
   void updateChange(int t=-1, double tau=1.);
-  virtual void getHessian(arr& H){ NIY; }
+  virtual void getHessian(arr& H) { NIY; }
   
   //!@name I/O
   virtual void write(ostream& os) const;
@@ -717,7 +703,7 @@ struct DefaultTaskVariable:public TaskVariable {
     const char *jShapeName,
     const arr& _params);
   ~DefaultTaskVariable();
-  TaskVariable* newClone(){ return new DefaultTaskVariable(*this); }
+  TaskVariable* newClone() { return new DefaultTaskVariable(*this); }
   
   void set(
     const char* _name,
@@ -733,7 +719,7 @@ struct DefaultTaskVariable:public TaskVariable {
   void getHessian(const ors::Graph& ors, arr& H);
   
   //!@name virtual user update
-  virtual void userUpdate(const ors::Graph& ors){ NIY; } //updates both, state and Jacobian
+  virtual void userUpdate(const ors::Graph& ors) { NIY; } //updates both, state and Jacobian
   
   
   //!@name I/O
@@ -748,12 +734,13 @@ struct DefaultTaskVariable:public TaskVariable {
 //
 
 enum CTVtype {
-  allCTVT,       //!< undefined
-  allListedCTVT,       //!< undefined
-  allExceptListedCTVT,       //!< undefined
-  bipartiteCTVT, //!< 3D position of reference, can have 2nd reference, no param
-  pairsCTVT,     //!< 3D z-axis orientation, no 2nd reference, no param
-  vectorCTVT     //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  allCTVT,
+  allListedCTVT,
+  allExceptListedCTVT,
+  bipartiteCTVT,
+  pairsCTVT,
+  allExceptPairsCTVT,
+  vectorCTVT
 };
 
 /*!\brief basic task variable */
@@ -772,7 +759,7 @@ struct ProxyTaskVariable:public TaskVariable {
                     uintA _shapes,
                     double _margin=.02,
                     bool _linear=false);
-  TaskVariable* newClone(){ return new ProxyTaskVariable(*this); }
+  TaskVariable* newClone() { return new ProxyTaskVariable(*this); }
   
   //!@name updates
   void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
@@ -794,12 +781,11 @@ struct ProxyAlignTaskVariable:public TaskVariable {
                          uintA _shapes,
                          double _margin=3.,
                          bool _linear=true);
-  TaskVariable* newClone(){ return new ProxyAlignTaskVariable(*this); }
+  TaskVariable* newClone() { return new ProxyAlignTaskVariable(*this); }
   
   //!@name updates
   void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
 };
-
 
 
 //===========================================================================
@@ -823,6 +809,32 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W);
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
 
+
+//===========================================================================
+//
+// task variable table
+//
+
+/* A TV table is list a list, but offering tables (arrays) that contain all TV targets, precisions, trues */
+
+struct TaskVariableTable {
+  TaskVariableList list;
+  
+  arr y;   // table with all targets
+  arr phi; // table with all 'current' (phi(q))
+  arr J;   // table with all Jacobians
+  arr rho; // table with all precisions
+  
+  void init(const ors::Graph& ors, bool dynamic);
+  //recompute all phi in time slice t using the pose in ors
+  void updateTimeSlice(uint t, const ors::Graph& ors, bool dynamic, bool alsoTargets);
+  double totalCost(); //\sum [rho*(y_i-phi_i)]^2
+  
+  void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
+  double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
+};
+
+
 //===========================================================================
 //
 // C-style functions
@@ -845,7 +857,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 // OPENGL interface
 //
 
-class OpenGL;
+struct OpenGL;
 
 //-- global draw options
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
@@ -853,6 +865,7 @@ extern uint orsDrawLimit;
 
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 
 
 //===========================================================================
@@ -868,7 +881,7 @@ struct SwiftInterface {
   bool isOpen;
   intA INDEXswift2shape, INDEXshape2swift;
   double cutoff;
-  SwiftInterface(){ scene=NULL; cutoff=.1; isOpen=false; }
+  SwiftInterface() { scene=NULL; cutoff=.1; isOpen=false; }
   ~SwiftInterface();
   SwiftInterface* newClone(const ors::Graph& G) const;
   
@@ -878,7 +891,7 @@ struct SwiftInterface {
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& ors);
+  void initActivations(const ors::Graph& ors, uint parentLevelsToDeactivate=3);
   void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
 
@@ -1032,16 +1045,16 @@ struct Link {
   ors::Vector com, force, torque;
   double mass;
   ors::Matrix inertia;
-  uint dof(){ if(type==hingeJT) return 1; else return 0; }
+  uint dof() { if(type==hingeJT) return 1; else return 0; }
   
   arr _h, _A, _Q, _I, _f; //featherstone types
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
     os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
-    <<" XAQ=" <<X <<A <<Q <<endl
-    <<" cft=" <<com <<force <<torque <<endl
-    <<" mass=" <<mass <<inertia <<endl;
+       <<" XAQ=" <<X <<A <<Q <<endl
+       <<" cft=" <<com <<force <<torque <<endl
+       <<" mass=" <<mass <<inertia <<endl;
   }
 };
 
@@ -1069,7 +1082,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);
 #endif
 
 
-#ifdef  MT_IMPLEMENTATION
+#ifdef MT_IMPLEMENTATION
 #include "ors.cpp"
 #include "ors_taskVariables.cpp"
 #include "ors_opengl.cpp"

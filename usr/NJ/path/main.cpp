@@ -231,7 +231,7 @@ void testControl(){
     ors.setJointState(q);
     ors.calcNodeFramesFromEdges();
 
-    gl.text.clr() <<"time " <<t <<endl;
+    gl.text.clear() <<"time " <<t <<endl;
     gl.update();
     //if(x.state==1) break;
     cout <<std::setprecision(2) <<MT::timerRead(true) <<"secs" <<endl;

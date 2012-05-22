@@ -17,6 +17,7 @@ double TANH(double x){
 }*/
 #define TANH tanh
 #define ATANH atanh
+#undef EXP
 double RATIO(double a, double b){
   double c=(1.-MT::sqr(TANH(a)));
   double d=(1.-MT::sqr(TANH(b)));

@@ -2,7 +2,7 @@
 #define MT_robot_variables_h
 
 #include "array.h"
-#include "biros.h"
+#include <biros/biros.h>
 #include "ors.h"
 
 //===========================================================================

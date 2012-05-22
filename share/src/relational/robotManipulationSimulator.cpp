@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -21,7 +21,7 @@
 
 #include <MT/opengl.h>
 #include <MT/plot.h>
-#include <utilTL.h>
+#include <relational/utilTL.h>
 
 #include "robotManipulationSimulator.h"
 #include <sstream>
@@ -95,7 +95,7 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
   if(gl){
     gl_step++;
 //     if (gl_step % 1 == 50) {
-      gl->text.clr() <<text <<endl;
+      gl->text.clear() <<text <<endl;
       gl->update();
 //     }
   }
@@ -249,7 +249,8 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
 
 
 void RobotManipulationSimulator::write(const char* ors_filename){
-  MT::save(*C,ors_filename);
+  NIY;
+//   MT::save(*C,ors_filename);
 }
 
 
@@ -320,7 +321,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
   bool change = true;
   for(;t--;){
     MT::String send_string;
-    if (msg_string.N() == 0) {
+    if (msg_string.N == 0) {
       if (t%20==0)
         change = !change;
       if (change)
@@ -336,7 +337,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
 
 void RobotManipulationSimulator::watch(){
 #ifdef MT_FREEGLUT
-  gl->text.clr() <<"Watch" <<endl;
+  gl->text.clear() <<"Watch" <<endl;
   gl->watch();
 #endif
 }
@@ -407,7 +408,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   bool object_is_clear = list.N == 0;
   
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "grab "<<obj_grabbed;
   }
   
@@ -552,7 +553,7 @@ void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
 
 void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message){
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "puton " << obj_below;
   }
   
@@ -809,7 +810,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 #  ifdef MT_ODE
 	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "move to position "<< pos;
   }
   
@@ -845,7 +846,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 void RobotManipulationSimulator::grabHere(const char* message) {
   #ifdef MT_SWIFT
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "grabHere: ";
   }
 
@@ -884,7 +885,7 @@ void RobotManipulationSimulator::grabHere(const char* message) {
 
 void RobotManipulationSimulator::relaxPosition(const char* message){
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "Relax position";
   }
   
@@ -958,7 +959,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
 void RobotManipulationSimulator::openBox(uint id, const char* message) {
 #  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "openBox "<<id;
   }
   
@@ -1002,7 +1003,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
 void RobotManipulationSimulator::closeBox(uint id, const char* message) {
 #  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N() == 0) {
+  if (msg_string.N == 0) {
     msg_string << "closeBox "<<id;
   }
   
@@ -1085,10 +1086,10 @@ void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list a
 }
 
 
-void RobotManipulationSimulator::getTypes(TermTypeL& objects_types, const uintA& objects, const TermTypeL& types) { //!< return list of all object types
+void RobotManipulationSimulator::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types) { //!< return list of all object types
   objects_types.resize(objects.N);
   uint i;
-  TL::TermType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
+  relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
   FOR1D(types, i) {
     if (types(i)->name == MT::String("block")) {
       type_block = types(i);
@@ -1358,6 +1359,38 @@ double* RobotManipulationSimulator::getPosition(uint id) {
 }
 
 
+void RobotManipulationSimulator::getObjectAngles(arr& angles) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  angles.resize(objs.N, 2);
+  FOR1D(objs, i) {
+    arr orientation;
+    getOrientation(orientation, objs(i));
+    CHECK(orientation.N == 2, "too many angles");
+    FOR1D(orientation, k) {
+      angles(i, k) = orientation(k);
+      if (angles(i, k) < 0.00001)
+        angles(i, k) = 0.;
+    }
+  }
+}
+
+
+void RobotManipulationSimulator::getObjectPositions(arr& positions) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  positions.resize(objs.N, 3);
+  FOR1D(objs, i) {
+    double* local_position = getPosition(objs(i));
+    for (k=0; k<3; k++) {
+      positions(i, k) = local_position[k];
+    }
+  }
+}
+
+
 // orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
 void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
@@ -1524,10 +1557,10 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
   }
 }
 
+
 void RobotManipulationSimulator::getObjectsOn(uintA& list,const uint obj_id) {
   getObjectsOn(list, convertObjectID2name(obj_id));
 }
-
 
 
 bool RobotManipulationSimulator::isClear(uint id) {
@@ -1727,7 +1760,7 @@ uint RobotManipulationSimulator::getHandID() {
 void RobotManipulationSimulator::displayText(const char* text, uint t) {
   if(gl){
     for(;t--;) {
-      gl->text.clr() <<text <<endl;
+      gl->text.clear() <<text <<endl;
       gl->update();
     }
   }
@@ -1790,4 +1823,89 @@ void RobotManipulationSimulator::takeFoto(const char* foto_file) {
 #endif
 #endif
 }
+
+
+
+
+
+
+
+
+
+namespace relational {
+void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
+  MT::Array<arr> pos;
+  generateBlocksSample(pos, numOfBlocks);
+	generateOrsFromSample(ors, pos);
+}
+
+void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
+  //for (int i = ors.bodies.N - 1; i >= 0; --i) {
+    //if (ors.bodies(i)->name.p[0] == 'o') {
+      //ors.bodies.remove(i);  
+    //}
+  //}
+  for (uint i = 0; i < sample.N; i+=2) {
+    ors::Body* body = new ors::Body;
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
+		MT::String name;
+		name << "o7" << i;
+		cout << name << endl;
+    body->name = name;
+    ors.bodies.append(body);
+  }
+}
+
+void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
+  sample.clear();
+  for (uint i = 0; i < numOfBlocks; ++i) {
+    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+
+    int t = rand() % 100;
+    double blocksize = 0.08;// + (rand() % 100) / 100000.;
+    double towersize = 0.69 + blocksize;
+    center3d.append(0.69 + 0.5*blocksize);
+    center3d.resize(3);
+
+    sample.append(center3d);
+    //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+    sample.append(ARR(blocksize));
+    while (t < 50 && i < numOfBlocks-1) {
+      i++;
+      center3d = center3d + randn(3,1) * 0.02;
+      double blocksize = 0.08;// + (rand() % 100) / 1000.;
+      center3d(2) = 0.5*blocksize + towersize;
+      towersize += blocksize;
+
+      sample.append(center3d);
+      //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
+      sample.append(ARR(blocksize));
+
+      t = rand() % 100;
+    }
+  }
+	sample.reshape(1,2*numOfBlocks);
+  //sample.reshape(1,numOfBlocks);
+}
+
+void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
+  arr size = ARR(0.1, 0.1, 0.108, 0.0375);
+  createCylinder(cyl, pos, color, size);
+}
+
+void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
+  ors::Transformation t;
+  t.pos = pos;
+  ors::Shape* s = new ors::Shape();
+  for (uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
+  s->type = ors::cylinderST;
+  for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
+  s->body = &cyl;
+  
+  cyl.shapes.append(s);
+  cyl.X = t; 
+}
+
+}
+
 

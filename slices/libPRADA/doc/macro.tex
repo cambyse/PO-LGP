@@ -1,0 +1,910 @@
+%auto-ignore
+%------------------------------------------------------------------------------
+% standard
+
+\newcommand{\miniheader}{
+  \documentclass[10pt,twoside,fleqn]{article}
+  \usepackage{palatino}
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{amsfonts}
+  \usepackage{amsthm}
+  \usepackage{eucal}
+  \usepackage{graphicx}
+  \usepackage{color}
+
+  \usepackage{fancyhdr}
+  \renewcommand{\headrulewidth}{.0pt}\renewcommand{\footrulewidth}{.0pt}\cfoot{}
+  \fancyhead[OL,EC]{\it\theauthor---\today}
+  \fancyhead[ER]{\leftmark}
+  \fancyhead[OR,EL]{\thepage}
+  \fancyfoot[EL,OR]{}
+
+  \usepackage{chicago}
+  \bibliographystyle{chicago}
+
+  \usepackage{geometry}
+  \geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+  \renewcommand{\baselinestretch}{1.1}
+
+  \input{macros}
+}
+
+\newcommand{\stdpackages}{
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{amsfonts}
+  %\allowdisplaybreaks
+  \usepackage{amsthm}
+  \usepackage{eucal}
+  %\usepackage{ntheorem}
+  %\usepackage{calrsfs}
+  %\usepackage{calligra}
+  \usepackage{graphicx}
+  \usepackage{color}
+  %\usepackage{psfrag}
+  \usepackage{geometry}
+
+  \usepackage{multicol} 
+  \usepackage{fancyhdr}
+  \renewcommand{\headrulewidth}{.0pt}\renewcommand{\footrulewidth}{.0pt}\cfoot{}
+  %\setlength{\headsep}{10mm}
+  \fancyhead[OL,EC]{\it\theauthor---\today}
+  %\fancyhead[OL]{\rightmark}
+  \fancyhead[ER]{\leftmark}
+  \fancyhead[OR,EL]{\thepage}
+  \fancyfoot[EL,OR]{}
+
+  \newcommand{\draft}{\usepackage[light,first]{draftcopy}\draftcopyName{draft}{350}}
+  \newcommand{\labels}{\usepackage{showlabels}}
+  \newcommand{\maple}{\usepackage{maple2e}}
+  \newcommand{\makeidx}{\usepackage{makeidx}\makeindex}
+  \newcommand{\chicago}{\usepackage{chicago}\bibliographystyle{chicago}
+    \renewcommand{\refname}{References\renewcommand{\refname}{}}}
+  \newcommand{\showlines}{
+    \usepackage[modulo]{lineno} %options: pagewise, modulo, mathlines
+    \renewcommand{\BM}{\begin{linenomath}}
+    \renewcommand{\EM}{\end{linenomath}}
+    \linenumbers
+    \modulolinenumbers[5]
+  }\newcommand{\BM}{}\newcommand{\EM}{}
+  \newcommand{\pdflatex}{
+    \definecolor{bluecol}{rgb}{0,0,.5}
+    \definecolor{greencol}{rgb}{0,.4,0}
+    \usepackage
+    [
+%    pdftex%,
+%%    letterpaper,
+%    bookmarks,
+%    bookmarksnumbered,
+    colorlinks,
+    urlcolor=bluecol,
+    citecolor=black,
+    linkcolor=bluecol,
+%    pagecolor=bluecol,
+    pdfborder={0 0 0},
+    %pdfborderstyle={/S/U/W 1},
+%%    backref,     %link from bibliography back to sections
+%%    pagebackref, %link from bibliography back to pages
+%%    pdfstartview=FitH, %fitwidth instead of fit window
+    pdfpagemode=None, %UseOutlines, %bookmarks are displayed by acrobat
+%%    pdftitle={\thetitle},
+    pdfauthor={Marc Toussaint}
+    ]{hyperref}
+    \DeclareGraphicsExtensions{.jpg,.pdf}
+    \renewcommand{\r}{\varrho}
+    \renewcommand{\l}{\lambda}
+    \renewcommand{\L}{\Lambda}
+    \renewcommand{\s}{\sigma}
+    \renewcommand{\O}{\Omega}
+    \renewcommand{\SS}{{\cal S}}
+    \renewcommand{\boldsymbol}{}
+    %\renewcommand{\Chapter}{\chapter}
+    %\renewcommand{\Subsection}{\subsection}
+  }
+}
+\newcommand{\stdtheorems}{
+  \theoremstyle{plain}
+  \newtheorem{theorem}{Theorem}
+  \newtheorem{lemma}[theorem]{Lemma}
+  \newtheorem{corollary}[theorem]{Corollary}
+  \newtheorem{proposition}{Proposition}
+  \newtheorem{conjecture}{Conjecture}
+  \newtheorem{result}{Result}[section]
+  \newtheorem{hypothesis}{Hypothesis}[section]
+  \theoremstyle{definition}
+  \newtheorem{definition}{Definition}
+  \theoremstyle{remark}
+  \newtheorem{remark}{Remark}[section]
+  \newtheorem{example}{Example}[section]
+  \newtheorem{algoTheo}{Algorithm}
+  \newtheorem{testTheo}{Test}
+}
+\newcommand{\stdstyle}[1]{
+  \stdpackages
+  \stdtheorems
+  \renewcommand{\labelenumi}{\textbf{(\roman{enumi})}}
+  \renewcommand{\theenumi}{(\roman{enumi})} %for ref
+  %\renewcommand{\labelenumi}{${}^{\bf (\roman{enumi})}$}
+  %\renewcommand{\labelitemi}{\bf $\cdot$}
+  \newcommand{\itemdot}{\renewcommand{\labelitemi}{\bf $\cdot$}}
+  \newcommand{\enumA}{\renewcommand{\labelenumi}{\textbf{\Alph{enumi}}}}
+  \newcommand{\blockindent}{3ex}
+  \renewcommand{\baselinestretch}{#1}
+  \renewcommand{\arraystretch}{1.2}
+  %\renewcommand{\textfloatsep}{3ex}
+  %\renewcommand{\floatpagefraction}{.6}
+  %\renewcommand{\dblfloatpagefraction}{.6}
+  %\setlength{\mathindent}{2.5em}
+  %\setlength{\jot}{0pt} %zwischen den math zeilen
+  %\setlength{\abovedisplayskip}{-10pt}
+  %\setlength{\belowdisplayskip}{-10pt}
+  %\setlength{\mathsurround}{-10pt}
+  %\renewcommand{\floatsep}{-1ex}
+  \renewcommand{\topfraction}{1}
+  \renewcommand{\bottomfraction}{1}
+  \renewcommand{\textfraction}{0}
+  \columnsep 5ex
+  \parindent 3ex
+  \parskip 1ex
+
+  % Lists and paragraphs
+  \parindent 0pt
+  \topsep 4pt plus 1pt minus 2pt
+  \partopsep 1pt plus 0.5pt minus 0.5pt
+  \itemsep 2pt plus 1pt minus 0.5pt
+  \parsep 2pt plus 1pt minus 0.5pt
+  \parskip .5pc %add _in_ {thebibliography} environment in *.bbl
+
+  \setcounter{tocdepth}{3}
+  \setcounter{secnumdepth}{3}
+
+  \geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+
+  %\usepackage{layout}\layout
+
+  %\thispagestyle{fancy}
+  %\pagestyle{fancy}
+
+  \renewenvironment{abstract}
+    {\vspace*{5ex}\begin{rblock}\hrule\vspace{1.5ex}{\bf Abstract.~}\small}
+    {\vspace{2ex}\hrule\end{rblock}\vspace{5ex}}
+  \newenvironment{keyword}
+    {\par{\it Keywords:~}}
+    {}
+  %\usepackage{mt}
+  \newcommand{\published}{}
+  \def\makemytitle{%
+    \thispagestyle{empty}
+    \begin{list}{}{\leftmargin3ex \rightmargin3ex \topsep0ex \parsep0ex}\item[]
+      \begin{center}
+        {\fontsize{18}{25}\selectfont{\thetitle\\}}\vspace{5ex}
+
+        {\fontsize{14}{16}\selectfont{\theauthor\\}}\vspace{1ex}
+
+        {\footnotesize{\sl \addressBerlin}\\ \emailBerlin}
+
+        {\footnotesize \today}
+
+        \vspace{1ex}
+        {\small \published}
+      \end{center}
+    \end{list}
+    \renewcommand{\maketitle}{\chapter{\thetitle}}
+  }
+}
+
+\newcommand{\cleardefs}{
+  \renewcommand{\article}[2]{}
+  \renewcommand{\book}[2]{}
+  \renewcommand{\draft}{}
+  \renewcommand{\labels}{}
+  \renewcommand{\maple}{}
+  \renewcommand{\makeidx}{}
+  \renewcommand{\chicago}{}
+  \renewcommand{\pdflatex}{}
+  \renewcommand{\header}{}
+}
+
+% A0  1189 x 841 mm   1,000 qm
+% A1  841 x 594 mm    0,500 qm
+% A2  594 x 420 mm    0,25O qm
+% A3  420 x 297 mm    0,125 qm
+% A4  297 x 210 mm    0,063 qm
+% A5  210 x 148 mm    0,032 qm
+% A6  148 x 105 mm    0,016 qm
+% A7  105 x 74 mm     0,008 qm
+% A8  74 x 52 mm      0,004 qm
+% A9  37 x 52 mm      0,002 qm
+% A10 26 x 37 mm      0,001 qm
+% B0  1414 x 1000 mm  14.140 qcm
+% B1  1000 x 707 mm   7.070 qcm
+% B2  707 x 500 mm    3.535 qcm
+% B3  500 x 353 mm    1.765 qcm
+% B4  353 x 250 mm    882 qcm
+% B5  250 x 176 mm    440 qcm
+% B6  176 x 125 mm    220 qcm
+% C0  1297 x 917 mm   11.894 qcm
+% C1  917 x 648 mm    5.942 qcm
+% C2  648 x 458 mm    2.968 qcm
+% C3  458 x 324 mm    1.484 qcm
+% C4  324 x 229 mm    742 qcm
+% C5  229 x 162 mm    371 qcm
+% C6  162 x 115 mm    186 qcm
+% C7  115 x 81 mm     93 qcm
+
+
+%------------------------------------------------------------------------------
+% classes
+
+\newcommand{\article}[2]{
+  \documentclass[#1pt,twoside,fleqn]{article}
+  \stdstyle{#2}
+  \usepackage{palatino}
+  \input{macros}
+}
+\newcommand{\lectureNote}{
+  \documentclass[10pt,twoside,twocolumn,fleqn]{article}
+  \usepackage{palatino}
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{amsfonts}
+  \usepackage{amsthm}
+  \usepackage{eucal}
+  \usepackage{graphicx}
+  \usepackage{color}
+  \usepackage{fancyhdr}
+  %\usepackage{chicago}
+  \usepackage{geometry}
+  \usepackage{palatino}
+
+  %\bibliographystyle{chicago}
+  \renewcommand{\baselinestretch}{1.1}
+  \geometry{a4paper,headsep=7mm,hdivide={15mm,*,15mm},vdivide={20mm,*,15mm}}
+    
+    %headsep=0mm,
+\allowdisplaybreaks
+
+  \fancyhead[OL,ER]{\thetitle, \textit{Marc Toussaint}---\today}
+  \fancyhead[C]{}
+  \fancyhead[OR,EL]{\thepage}
+  \fancyfoot{}
+  \pagestyle{fancy}
+  \input{macros}
+}
+\newcommand{\nips}{
+  \documentclass{article}
+  \usepackage{nips07submit_e,times}
+  %\usepackage{nips06,times}
+  \stdpackages\input{macros}
+  \pagestyle{plain}
+}
+\newcommand{\nipsben}{
+  \documentclass{article}
+  \usepackage{nips06}
+  \stdpackages\input{macros}
+  \pagestyle{plain}
+}
+\newcommand{\ijcnn}{
+  \documentclass[10pt,twocolumn]{ijcnn}
+  %\documentclass[10pt,twocolumn]{article}\usepackage{wcci}
+  \stdpackages\input{macros}
+  \bibliographystyle{abbrv} 
+}
+\newcommand{\springer}{
+  \documentclass{springer_llncs}
+  \renewcommand{\theenumi}{\alph{enumi}}
+  \renewcommand{\labelenumi}{(\alph{enumi})}
+  \renewcommand{\labelitemi}{$\bullet$}
+  \bibliographystyle{abbrv}
+  \stdpackages\stdtheorems\input{macros}
+}
+\newcommand{\elsevier}{
+  \documentclass{elsart1p}
+  \usepackage{natbib}
+  \bibliographystyle{elsart-harv}
+  \stdpackages
+  \stdtheorems
+  \input{macros}
+%\renewcommand{\cite}[2][]{\citep*[#1]{#2}}
+%\newcommand{\citeN}[2][]{\citet*[#1]{#2}}
+%\newcommand{\citeNP}[1]{\citealt*{#1}}
+%\newcommand{\citeyearNP}[1]{\citeyear{#1}}
+%\newcommand{\shortcite}[1]{\citep{#1}}
+%\newcommand{\shortciteN}[1]{\citet{#1}}
+%\newcommand{\shortciteNP}[1]{\citealt{#1}}
+}
+\newcommand{\ieeejournal}{
+  \documentclass[journal,twoside]{IEEEtran}
+  \renewcommand{\theenumi}{\roman{enumi}}
+  \renewcommand{\labelenumi}{(\roman{enumi})}
+  %\renewcommand{\labelitemi}{$\bullet$}
+  \bibliographystyle{IEEEtran.bst}
+  %\bibliographystyle{abbrv}
+  \usepackage{cite}
+  \stdpackages
+  \stdtheorems
+  \input{macros}
+}
+\newcommand{\ieeeconf}{
+  \documentclass[a4paper, 10pt, conference]{ieeeconf}
+  \IEEEoverridecommandlockouts
+  \overrideIEEEmargins
+  \bibliographystyle{IEEEtran.bst}
+  \stdpackages
+  \stdtheorems
+  \renewcommand{\theenumi}{\roman{enumi}}
+  \renewcommand{\labelenumi}{(\roman{enumi})}
+  \input{macros}
+}
+\newcommand{\foga}{
+  \documentclass{article} 
+  \stdpackages\input{macros}
+  \usepackage{foga-02}
+  \usepackage{chicago}
+  \bibliographystyle{foga-chicago}
+}
+\newcommand{\book}[2]{
+  \documentclass[#1pt,twoside,fleqn]{book}
+  \newenvironment{abstract}{\begin{rblock}{\bf Abstract.~}\small}{\end{rblock}}
+  \stdstyle{#2}
+  %\renewcommand{\thechapter}{\Roman{chapter}}
+  \input{macros}
+}
+
+\newcommand{\letter}{
+  \article{11}{1.1}
+  \parskip2.5ex
+  \pagestyle{plain}
+  \renewcommand{\familydefault}{\sfdefault}
+}
+\newcommand{\letterhead}[1]{
+  \begin{minipage}[t]{8cm}
+    #1
+  \end{minipage}
+  \hspace*{\fill}
+  \begin{minipage}[t]{6cm}
+    \mbox{}~\hfill Dr. Marc Toussaint\\
+    \mbox{}~\hfill Technische Universit\"at Berlin\\
+    \mbox{}~\hfill Franklinstr. 28/29, FR 6-9\\
+    \mbox{}~\hfill 10587 Berlin, Germany\\
+    \mbox{}~\hfill tel: +49 30 314 24470\\
+    \mbox{}~\hfill mtoussai@cs.tu-berlin.de
+%    \mbox{}~\hfill Honda Research Institute Europe\\
+%    \mbox{}~\hfill Carl-Legien-Strasse 30\\
+%    \mbox{}~\hfill 63073 Offenbach/Main\\
+%    \mbox{}~\hfill Telefon: ++49-69-89011-717\\
+%    %\mbox{}~\hfill 10117 Berlin\\
+%    %\mbox{}~\hfill Telefon: +49-30-39494-833\\
+%    \mbox{}~\hfill mtoussai@inf.ed.ac.uk
+  \end{minipage}
+}
+%Dr.-Ing. Christian Goerick
+%Chief Scientist
+%Honda Research Institute Europe GmbH
+%Carl-Legien-Strasse 30                      Fon: ++49 (0)69 89011-742
+%63073 Offenbach/Main                        Fax: ++49 (0)69 89011-759
+%Germany
+%Christian.Goerick@honda-ri.de
+
+%%   \vspace*{10mm}\hfill #3, \today
+
+%%   \vspace*{10mm}{\textbf{#2}}
+
+%%   \vspace*{5mm}
+%% }
+
+\newcommand{\slides}{
+  \documentclass[fleqn,t]{beamer}
+  \usetheme{default}
+  \usefonttheme[onlymath]{serif}
+  \setbeamertemplate{navigation symbols}{}
+
+  %\usepackage{palatino}
+  \stdpackages
+  \usepackage{multimedia}
+
+  %%% geometry/spacing issues
+  %
+  \setbeamersize{text margin left=5mm}
+  \setbeamersize{text margin right=5mm}
+  \setbeamertemplate{itemize items}{{\color{black}$\bullet$}}
+    \definecolor{bluecol}{rgb}{0,0,.5}
+    \definecolor{greencol}{rgb}{0,.6,0}
+  \renewcommand{\baselinestretch}{1.1}
+  \renewcommand{\arraystretch}{1.2}
+  \columnsep 0mm
+  \columnseprule 0pt
+  \parindent 0ex
+  \parskip 0ex
+  %\setlength{\itemsep}{3ex}
+  %\renewcommand{\labelitemi}{\rule[3pt]{10pt}{10pt}~}
+  %\renewcommand{\labelenumi}{\textbf{(\arabic{enumi})}}
+  \newcommand{\headerfont}{\helvetica{14}{1.5}{b}{n}}
+  %\newcommand{\slidefont} {\helvetica{24.88}{1.2}{m}{n}}
+  %\newcommand{\ite} {\helvetica{20}{1.2}{m}{n}}
+  \newcommand{\slidefont} {\helvetica{10}{1.5}{m}{n}}
+  \renewcommand{\small} {\helvetica{9}{1.5}{m}{n}}
+  \renewcommand{\tiny} {\helvetica{7}{1.5}{m}{n}}
+
+  %%% fancy headers and footers
+  %
+  \pagestyle{fancy}
+  %\addtolength{\footheight}{15mm}
+  \renewcommand{\headrulewidth}{0pt} %1pt}
+  \renewcommand{\footrulewidth}{0pt} %.5pt}
+  %\renewcommand{\labelenumi}{\textbf{\arabic{enumi}.}~~}
+  %\newcommand{\theauthor}{Marc Toussaint} 
+  \rhead{}
+  \lhead{}
+  %\rfoot{~\anchor{30,12}{\tiny\textsf{\thepage/\pageref{lastpage}}}}
+  %\lfoot{\small\textsf{Marc Toussaint}}
+  
+  %%% count pages properly and put the page number in bottom right
+  %
+  \newcounter{mypage}
+  \newcommand{\incpage}{\addtocounter{mypage}{1}\setcounter{page}{\arabic{mypage}}}
+  \setcounter{mypage}{0}
+  \rfoot{~\anchor{-10,12}{\tiny\textsf{\arabic{mypage}/\pageref{lastpage}}}}
+  %\lfoot{\raisebox{5mm}{\tiny\textsf{\slideauthor}}}
+  %\rfoot{\raisebox{5mm}{\tiny\textsf{\slidevenue{} -- \arabic{mypage}/\pageref{lastpage}}}}
+  \resetcounteronoverlays{page}
+
+  \definecolor{grey}{rgb}{.8,.8,.8}
+  \definecolor{head}{rgb}{.9,.9,.9}
+  \definecolor{blue}{rgb}{.0,.0,.5}
+  \definecolor{red}{rgb}{.8,.0,.0}
+  \newcommand{\inverted}{
+    \definecolor{main}{rgb}{1,1,1}
+    \color{main}
+    \pagecolor[rgb]{.3,.3,.3}
+  }
+  \input{macros}
+}
+
+%params: authors, address, title
+\newcommand{\titleslide}[4][Marc Toussaint]{
+  \newcommand{\slideauthor}{#1}
+  \newcommand{\slidevenue}{#3}
+  \slidefont
+  \incpage
+  \begin{frame}
+  \begin{center}
+    \vspace*{-5mm}
+
+    {\headerfont #2\\}
+        
+    \vspace*{5mm}
+
+      #1 \\
+
+      \vspace*{2mm}
+
+      {\small 
+%        head of Emmy Noether group\\
+        Machine Learning \& Robotics group -- TU Berlin\\
+%        Technische Universit\"at Berlin\\
+        mtoussai@cs.tu-berlin.de\\
+        \emph{#3}
+      }
+
+      \vspace*{0mm}
+
+      %\includegraphics[scale=.1]{pics/eushield-fullcolour}
+
+    \end{center}
+    \begin{itemize}\item[]~\\
+      #4
+    \end{itemize}
+  \end{frame}
+}
+
+\newcommand{\titleslideempty}[2]{
+  \slidefont
+  \incpage
+  \begin{frame}
+  \begin{center}
+    \vspace*{0mm}
+
+    {\headerfont #1\\}
+        
+    \end{center}
+    \begin{itemize}\item[]~\\
+      #2
+    \end{itemize}
+  \end{frame}
+}
+
+\newcommand{\slide}[2]{
+  \slidefont
+  \incpage\begin{frame}
+    \footskip-5mm
+  \setlength{\unitlength}{1mm}
+%  \begin{picture}(0,0)(6,4)
+%  \put(0,0){{\color{head}\rule{130mm}{13mm}{}}}
+%  \end{picture}
+%  {\headerfont #1}\\[-2ex]
+  \centerline{\headerfont #1}
+  \vspace*{-2ex}
+  \begin{itemize}\item[]~\\
+    #2
+  \end{itemize}
+  \end{frame}
+}
+
+\newcommand{\slideempty}[2]{
+  \slidefont
+  \incpage\begin{frame}
+  \setlength{\unitlength}{1mm}
+  \begin{picture}(0,0)(6,4)
+  \put(0,0){{\color{head}\rule{130mm}{13mm}{}}}
+  \end{picture}
+  {\headerfont #1}\\[-2ex]
+    #2
+  \end{frame}
+}
+
+\newcommand{\sliden}[2]{
+  \slidefont
+  \incpage\begin{frame}
+  \setlength{\unitlength}{1mm}
+%  \begin{picture}(0,0)(6,4)
+%  \put(0,0){{\color{head}\rule{130mm}{13mm}{}}}
+%  \end{picture}
+%  {\headerfont #1}\\[-2ex]
+  \centerline{\headerfont #1}
+  \vspace*{-2ex}
+  \begin{enumerate}\item[]~\\
+    #2
+  \end{enumerate}
+  \end{frame}
+}
+
+\newcommand{\slidetwo}[2]{
+  \slidefont
+  \incpage\begin{frame}
+  \setlength{\unitlength}{1mm}
+  \begin{picture}(0,0)(6,5)
+  \put(0,0){{\color{head}\rule{130mm}{14mm}{}}}
+  \end{picture}
+  {\headerfont #1}\\[-2ex]
+  \begin{multicols}{2}
+  \begin{itemize}%\item[]~\\
+    #2
+  \end{itemize}
+  \end{multicols}
+  \end{frame}
+}
+
+\newcommand{\poster}{
+  \documentclass[fleqn]{article}
+  \stdpackages
+  \renewcommand{\baselinestretch}{1}
+  \renewcommand{\arraystretch}{1.8}
+
+  \usepackage{geometry}
+  \geometry{
+    paperwidth=1189mm,
+    paperheight=841mm, %841mm, %91.3cm, % 120cm
+%    landscape,
+    headheight=0mm,
+    headsep=0mm,
+    footskip=1mm,
+    hdivide={3cm,*,3cm},vdivide={1cm,*,1cm}}
+
+%\textwidth  86.3cm     %  Paper=91.3cm 
+%\textheight  108cm     %  Paper=???,  banner=5cm 
+%\oddsidemargin  0pt 
+%\parindent  0pt 
+%\parskip  0pt 
+%\topmargin  1cm 
+%\footskip  0pt 
+%\headheight  0pt 
+%\headsep  0pt 
+
+  \setlength{\columnsep}{5cm}
+  \columnseprule 3pt
+  \renewcommand{\labelitemi}{\rule[.4ex]{.6ex}{.6ex}~}
+
+  \pagestyle{empty}
+
+  \definecolor{grey}{rgb}{.9,.9,.9}
+  \newcommand{\inverted}{
+    \definecolor{main}{rgb}{1,1,1}
+    \color{main}
+    \pagecolor[rgb]{.3,.3,.3}
+  }
+
+  \input{macros}
+}
+
+
+%------------------------------------------------------------------------------
+% title page
+
+\author{Marc Toussaint}
+
+\newcommand{\inilogo}[1][.25]{\includegraphics[scale=#1]{INI}}
+\newcommand{\rublogo}[1][.25]{\includegraphics[scale=#1]{RUB}}
+\newcommand{\edinlogo}[1][.25]{\includegraphics[scale=#1]{pics/eushield-fullcolour}}
+%\newcommand{\edinlogo}[1][.25]{\includegraphics[scale=#1]{pics/eushield}}
+
+\newcommand{\addressCologne}{
+  Institute for Theoretical Physics\\
+  University of Cologne\\
+  50923 K\"oln, Germany\\
+  {\tt mt@thp.uni-koeln.de}\\
+  {\tt www.thp.uni-koeln.de/\~{}mt/}
+}
+
+
+\newcommand{\emailINI}{mt@neuroinformatik.ruhr-uni-bochum.de}
+\newcommand{\phoneINI}{+49-234-32-27974}
+\newcommand{\faxINI}{+49-234-32-14209}
+\newcommand{\urlINI}{\texttt{www.neuroinformatik.rub.de/PEOPLE/mt/}}
+\newcommand{\AddressINI}{
+  Institut~f\"ur~Neuroinformatik,
+  Ruhr-Universit\"at~Bochum, ND~04,
+  44780~Bochum, Germany
+}
+\newcommand{\addressINI}{
+  Institut~f\"ur~Neuroinformatik\\
+  Ruhr-Universit\"at Bochum, ND~04\\
+  44780~Bochum, Germany
+}
+
+\newcommand{\emailANC}{mtoussai@inf.ed.ac.uk}
+\newcommand{\phoneANC}{+44 131 650 3089}
+\newcommand{\faxANC}{+44 131 650 6899}
+\newcommand{\urlANC}{homepages.inf.ed.ac.uk/mtoussai}
+\newcommand{\AddressANC}{
+  School of Informatics,\\
+  Institute for Adaptive and Neural Computation,\\
+  University of Edinburgh, 5 Forrest Hill,\\
+  Edinburgh EH1 2QL, Scotland, UK
+}
+\newcommand{\addressANC}{
+  School~of~Informatics,\\
+  %Institute~for~Adaptive~and~Neural~Computation\\
+  University~of~Edinburgh, 5~Forrest~Hill\\
+  Edinburgh~EH1~2QL, Scotland,~UK
+}
+
+\newcommand{\AddressBerlin}{
+  Machine Learning \& Robotics group\\
+  TU Berlin\\
+  Franklinstr. 28/29, FR 6-9\\
+  10587 Berlin, Germany
+}
+\newcommand{\addressBerlin}{
+  Machine~Learning~\&~Robotics~group, TU~Berlin\\\small
+  Franklinstr. 28/29,~FR~6-9, 10587~Berlin, Germany
+}
+\newcommand{\emailBerlin}{mtoussai@cs.tu-berlin.de}
+\newcommand{\phoneBerlin}{+49 30 314 24470}
+
+\newcommand{\phoneHonda}{+49-69-89011-717}
+\newcommand{\AddressHonda}{
+  Honda Research Institute Europe\\
+  Carl-Legien-Strasse 30\\
+  63073 Offenbach/Main
+}
+\newcommand{\addressHonda}{
+  Honda~Research~Institute~Europe~GmbH,\\\small
+  Carl-Legien-Strasse~30, 63073~Offenbach/Main
+}
+
+
+%------------------------------------------------------------------------------
+% special sectioning, markings, environments, commands
+
+\newlength{\subsecwidth}
+
+\newcommand{\subsec}[1]{
+  \addtocontents{toc}{
+    \protect\setlength{\subsecwidth}{\textwidth}\protect\addtolength{\subsecwidth}{-27ex}
+      \protect\vspace*{-1.5ex}\protect\hspace*{20ex}
+      \protect\begin{minipage}[t]{\subsecwidth}\protect\footnotesize\protect\textsf{#1}\protect\end{minipage}
+      \protect\par
+  }
+  \begin{rblock}\it #1\end{rblock}\medskip\noindent
+}
+\newcommand{\tocsep}{
+  \addtocontents{toc}{\protect\bigskip}
+}
+\newcommand{\Chapter}[1]{
+\chapter*{#1}\thispagestyle{empty}
+\addcontentsline{toc}{chapter}{\protect\numberline{}#1}
+}
+\newcommand{\Section}[1]{
+  \section*{#1}
+  \addcontentsline{toc}{section}{\protect\numberline{}#1}
+}
+\newcommand{\Subsection}[1]{
+  \subsection*{#1}
+  \addcontentsline{toc}{subsection}{\protect\numberline{}#1}
+}
+\newcommand{\content}[1]{
+%  \begin{rblock}\it #1\end{rblock}\medskip
+%  \addtocontents{toc}{\protect\begin{list}{}{\leftmargin9ex
+%        \rightmargin9ex \topsep-2ex \parsep.5ex}}
+%  \addtocontents{toc}{\protect\item[] \protect\small\protect\it #1}
+%  \addtocontents{toc}{\protect\end{list}\protect\medskip}
+%\renewcommand{\contentsname}{}\vspace*{-36pt}
+%\tableofcontents
+}
+\newcommand{\sepline}[1][200]{
+  \begin{center} \begin{picture}(#1,0)
+    \line(1,0){#1}
+  \end{picture}\end{center}
+}
+\newcommand{\sepstar}{
+  \begin{center} {\vspace{0.5ex}\rule[1.2ex]{5ex}{.1pt}~*~\rule[1.2ex]{5ex}{.1pt}} \end{center}\vspace{-1.5ex}\noindent
+}
+\newcommand{\partsection}[1]{
+  \vspace{5ex}
+  \centerline{\sc\LARGE #1}
+  \addtocontents{toc}{\contentsline{section}{{\sc #1}}{}}
+}
+\newcommand{\intro}[1]{\textbf{#1}\index{#1}}
+
+
+\newcounter{parac}
+\newcommand{\para}{\noindent\refstepcounter{parac}{\bf [{\roman{parac}}]}~~}
+\newcommand{\Pref}[1]{[\emph{\ref{#1}}\,]}
+
+
+\newenvironment{items}{
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex
+  \labelwidth2ex \topsep-\parskip \parsep.5ex \itemsep0pt}
+}{
+\end{list}
+}
+
+% {list} help:
+%    * \topsep amount of extra vertical space at top of list
+%    * \partopsep extra length at top if environment is prececed by a blank line (it should be a rubber length)
+%    * \itemsep amount of extra vertical space between items
+%    * \parsep amount of vertical space between paragraphs within an item
+%    * \leftmargin horizontal distance between the left margins of the environment and the list; must be nonnegative
+%    * \rightmargin horizontal distance betwen the right margins of the enviroment and the list; must be nonnegative
+%    * \listparindent amount of extra space for paragraph indent after the first in an item; can be negative
+%    * \itemindent indentation of first line of an item; can be negative
+%    * \labelsep separation between end of the box containing the label and the text of the first line of an item
+%    * \labelwidth normal width of the box containing the label; if the actual label is bigger, the natural width is used, extending into the space for the first line of the item's text
+%    * \makelabel{label} generates the label printed by the \item command
+
+%    * \usecounter{ctr} enables the counter ctr to be used for
+%    numbering items; it is initialized to zero and stepped when
+%    executing an \item command that has no optional label argument. 
+
+\newenvironment{block}[1][]{{\noindent\bf #1}
+\begin{list}{}{\leftmargin\blockindent \topsep-\parskip}
+\item[]
+}{
+\end{list}
+}
+
+\newenvironment{rblock}{
+\begin{list}{}{\leftmargin\blockindent \rightmargin\blockindent \topsep-\parskip}\item[]}{\end{list}}
+
+\newcounter{algoi}
+%\renewcommand{\thealgoi}{\textbf{\arabic{enumi}.}}
+%\newcommand{\labelenumi}{\textbf{(\roman{enumi})}}
+\newenvironment{algoList}{
+\begin{list}{{(\thealgoi)}}
+{\usecounter{algoi} \leftmargin7ex \rightmargin3ex \labelsep1ex
+  \labelwidth5ex \topsep-.5ex \parsep.5ex \itemsep0pt}
+}{
+\end{list}\vspace*{1ex}
+}
+\newenvironment{algo}[1][]{
+  \begin{algoTheo}[#1]~\begin{algoList}
+}{
+  \end{algoList}\end{algoTheo}
+}
+\newenvironment{test}[1][]{
+  \medskip\begin{testTheo}[#1]~\begin{algoList}
+}{
+  \end{algoList}\end{testTheo}
+}
+
+\newcounter{questi}
+\newenvironment{question}{
+\begin{list}{\textbf{\thealgoi.}}
+{\usecounter{algoi} \leftmargin2ex \rightmargin0ex \labelsep1ex
+  \labelwidth1ex \topsep0ex \parsep.5ex \itemsep0pt}
+\addtocounter{questi}{1}
+\item[\textsf{Q\thequesti:}]
+}{
+\end{list}
+}
+
+%\newenvironment{keywords}{\paragraph{Keywords}\begin{rblock}\small}{\end{rblock}}
+
+\newenvironment{colpage}{
+\addtolength{\columnwidth}{-3ex}
+\begin{minipage}{\columnwidth}
+\vspace{.5ex}
+}{
+\vspace{.5ex}
+\end{minipage}
+}
+
+\newenvironment{enum}{
+\begin{list}{}{\leftmargin3ex \topsep0ex \itemsep0ex}
+\item[\labelenumi]
+}{
+\end{list}
+}
+
+\newenvironment{cramp}{
+\begin{quote} \begin{picture}(0,0)
+        \put(-5,0){\line(1,0){20}}
+        \put(-5,0){\line(0,-1){20}}
+\end{picture}
+}{
+\begin{picture}(0,0)
+        \put(-5,5){\line(1,0){20}}
+        \put(-5,5){\line(0,1){20}}
+\end{picture} \end{quote}
+}
+
+\newcommand{\localcite}[1]{{
+\begin{bibunit}[chicago]
+\renewcommand{\refname}{\vspace{-\parskip}} \let\chapter\phantom \let\section\phantom
+\nocite{#1}
+\putbib[bibs]
+\end{bibunit}%use \setcounter{enumiv}{xx} in thebibliography environment
+}}
+
+%\newcommand{\theauthor}{Marc Toussaint}
+%\renewcommand{\author}[1]{\renewcommand{\theauthor}{#1}}%\@author}
+%\renewcommand{\title}[1]{\newcommand{\thetitle}{#1}}%\@title}
+\newcommand{\myauthor}[1]{\author{#1}\newcommand{\theauthor}{#1}}%\@author}
+\newcommand{\mytitle}[1]{\title{#1}\newcommand{\thetitle}{#1}}%\@title}
+
+\newcommand{\boxpage}[2][\textwidth]{
+  \setcounter{equation}{0}
+  \renewcommand{\theequation}{A.\arabic{equation}}
+  \fboxsep1ex
+  \fbox{
+  \begin{minipage}{#1}
+    #2
+  \end{minipage}
+  }
+}
+
+\newcommand{\tightmath}{
+  \setlength{\jot}{0pt}
+  \setlength{\abovedisplayskip}{.5ex}
+  \setlength{\belowdisplayskip}{.5ex}
+}
+
+\newenvironment{myproof}{
+  \small
+  \noindent \textit{Proof.~}
+  \tightmath
+}{
+  \hfill
+  \begin{picture}(0,0)(0,0)
+  \put(-3.5,12){\rule{5pt}{5pt}}
+  \end{picture}
+}
+
+\newcommand{\lst}{
+  \usepackage{listings}
+  \lstset{ %
+    language=C,                % choose the language of the code
+    basicstyle=\normalfont\small,       % the size of the fonts that are used for the code
+    frame=none,                   % adds a frame around the code
+    tabsize=4,                      % sets default tabsize to 2 spaces
+    captionpos=b,                   % sets the caption-position to bottom
+    texcl=true,
+    mathescape=true,
+    escapechar=\#,
+    columns=flexible,
+    xleftmargin=6ex,
+    numbers=left, numberstyle=\footnotesize, stepnumber=1, numbersep=3ex
+  }
+}

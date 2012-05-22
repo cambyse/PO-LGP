@@ -19,15 +19,10 @@ void drawBase(void*){
 int main(int argn,char **argv){
   cout <<USAGE <<endl;
 
-  const char *file="car.ors";
-  if(argn<2){
-    cout <<"opening standard file `" <<file <<"'" <<endl;
-  }else file=argv[1];
+  MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
+  if(argn==2) file=argv[1];
+  cout <<"opening file `" <<file <<"'" <<endl;
 
-  char *path,*name;
-  MT::decomposeFilename(path,name,file);
-  chdir(path);
-  
   ors::Graph C;
   OpenGL gl;
   gl.add(drawBase,0);
@@ -35,7 +30,7 @@ int main(int argn,char **argv){
   //gl.reportEvents=true;
   //gl.reportSelects=true;
 
-  editConfiguration(name,C,gl);
+  editConfiguration(file,C,gl);
 
   return 0;
 }

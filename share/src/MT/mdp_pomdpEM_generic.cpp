@@ -2,7 +2,7 @@
 #include "mstep.h"
 #include "infer.h"
 
-using namespace infer;
+
 
 double mdp::pomdpEM_structured(
   const MDP& mdp,
@@ -34,55 +34,55 @@ double mdp::pomdpEM_structured(
   
   
   //----- find the variable ids for the mdp world:
-  Variable *x=NULL, *y=NULL, *a=NULL, *x_=NULL, *y_=NULL;
+  infer::Variable *x=NULL, *y=NULL, *a=NULL, *x_=NULL, *y_=NULL;
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="state(t)"){         x =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="observation(t)"){   y =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="action(t)"){        a =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="state(t+1)"){       x_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="observation(t+1)"){ y_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
   
-  VariableList mdp_leftVars=ARRAY(x);
-  VariableList mdp_rightVars=ARRAY(x_);
+  infer::VariableList mdp_leftVars=ARRAY(x);
+  infer::VariableList mdp_rightVars=ARRAY(x_);
   
   //----- define factors for the mdp components
   //start
-  Factor Fx(ARRAY(x));       Fx.setP(mdp.Px);
-  Factor Fy(ARRAY(y));       Fy.setUniform();
+  infer::Factor Fx(ARRAY(x));       Fx.setP(mdp.Px);
+  infer::Factor Fy(ARRAY(y));       Fy.setUniform();
   //transition
-  Factor Fxax(ARRAY(x_, a, x));  Fxax.setP(mdp.Pxax);
-  Factor Fyxa(ARRAY(y_, x_, a)); Fyxa.setP(mdp.Pyxa);
+  infer::Factor Fxax(ARRAY(x_, a, x));  Fxax.setP(mdp.Pxax);
+  infer::Factor Fyxa(ARRAY(y_, x_, a)); Fyxa.setP(mdp.Pyxa);
   //reward
-  Factor FRax(ARRAY(a, x));     FRax.setP(mdp_Rax);
+  infer::Factor FRax(ARRAY(a, x));     FRax.setP(mdp_Rax);
   
-  FactorList mdp_transitions = ARRAY(&Fyxa, &Fxax);
-  FactorList mdp_inits       = ARRAY(&Fy, &Fx);
-  FactorList mdp_rewards     = ARRAY(&FRax);
+  infer::FactorList mdp_transitions = ARRAY(&Fyxa, &Fxax);
+  infer::FactorList mdp_inits       = ARRAY(&Fy, &Fx);
+  infer::FactorList mdp_rewards     = ARRAY(&FRax);
   
-  VariableList leftVars=cat(fsc.leftVars, mdp_leftVars);
-  VariableList rightVars=cat(fsc.rightVars, mdp_rightVars);
-  VariableList tail_headVars=cat(rightVars, leftVars);
+  infer::VariableList leftVars=cat(fsc.leftVars, mdp_leftVars);
+  infer::VariableList rightVars=cat(fsc.rightVars, mdp_rightVars);
+  infer::VariableList tail_headVars=cat(rightVars, leftVars);
   
-  FactorList allTransitions = cat(fsc.transFacs, mdp_transitions);
-  FactorList allRewards = cat(mdp_rewards, allTransitions);
-  FactorList allInits = cat(fsc.initFacs, mdp_inits);
+  infer::FactorList allTransitions = cat(fsc.transFacs, mdp_transitions);
+  infer::FactorList allRewards = cat(mdp_rewards, allTransitions);
+  infer::FactorList allInits = cat(fsc.initFacs, mdp_inits);
   
-  Factor Falpha(leftVars);
-  Factor Fbeta(rightVars);
+  infer::Factor Falpha(leftVars);
+  infer::Factor Fbeta(rightVars);
   arr PT;
   double PR, ET;
   if(!estepStructured){
     //----- collapse to unstructured model for generic inference
     uint dz = 1;  for(i=0; i<leftVars.N; i++) dz *= leftVars(i)->dim;
     //get transition matrix
-    Factor Fzz;
+    infer::Factor Fzz;
     eliminationAlgorithm(Fzz, allTransitions, tail_headVars);
     Fzz.P.reshape(dz, dz);
     //get reward vector
-    Factor FRz;
+    infer::Factor FRz;
     eliminationAlgorithm(FRz, allRewards, leftVars);
     FRz.P.reshape(dz);
     //get start vector
-    Factor Fz;
+    infer::Factor Fz;
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
@@ -97,9 +97,9 @@ double mdp::pomdpEM_structured(
       _beta .referTo(*beta);   _beta .reshape(dz);
     }
     
-    inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
-                               Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
-                               estepIncremental);
+    infer::inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
+				      Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
+				      estepIncremental);
     Falpha.setP(_alpha);
     Fbeta .setP(_beta);
     
@@ -109,7 +109,7 @@ double mdp::pomdpEM_structured(
     }
   }else{
     //----- use factor lists for generic inference
-    FactorList temporary;
+    infer::FactorList temporary;
     //eliminateVariable(allTransitions, temporary, a);
     //eliminateVariable(allTransitions, temporary, y_);
     //eliminateVariable(allRewards, temporary, a);
@@ -137,19 +137,19 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
   
   //term1: derived from the immediate reward model
-  FactorList immediateR = cat(mdp_rewards, fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList immediateR = cat(mdp_rewards, fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
   
   //loop through all transition factors of the controller
   for(i=0; i<fsc.transFacs.N; i++){
     //term2: terms from the two-time-slice model
-    Factor X_term2;
+    infer::Factor X_term2;
     eliminationAlgorithm(X_term2, twotimeslice, fsc.transFacs(i)->variables);
     
     //term1: terms from immediate reward
-    Factor X_term1;
+    infer::Factor X_term1;
     eliminationAlgorithm(X_term1, immediateR  , fsc.transFacs(i)->variables);
     
     //get the expectations by adding both terms

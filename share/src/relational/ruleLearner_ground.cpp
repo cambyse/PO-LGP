@@ -1,3 +1,5 @@
+#if 0
+
 #include "ruleLearner_ground.h"
 #include "logicReasoning.h"
 #include "ruleReasoning.h"
@@ -5,7 +7,7 @@
 #include <MT/algos.h>
 
 
-namespace TL {
+namespace PRADA {
 
 const uint SearchOperator_ground::PARAM_OPT__GRAD_DESC = 0;
 const uint SearchOperator_ground::PARAM_OPT__NEWTON = 1;
@@ -15,7 +17,7 @@ const uint SearchOperator_ground::PARAM_OPT__COND_GRAD = 4;
 
 
 
-void calcCoverage_ground(SymbolicExperienceL& covered_experiences, uintA& covered_experiences_ids, const TL::Rule* ground_r, const SymbolicExperienceL& examples) {
+void calcCoverage_ground(SymbolicExperienceL& covered_experiences, uintA& covered_experiences_ids, const Rule* ground_r, const SymbolicExperienceL& examples) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"calcCoverage_ground [START]"<<endl;
   if (DEBUG>0) ground_r->write(cout);
@@ -26,7 +28,7 @@ void calcCoverage_ground(SymbolicExperienceL& covered_experiences, uintA& covere
     if (DEBUG>0) cout<<"ex"<<i<< " " << endl;
     if (DEBUG>1) examples(i)->write(cout);
     else if (DEBUG>0) cout<<*examples(i)->action<<endl;
-    if (TL::ruleReasoning::cover_groundRule_groundedAction(examples(i)->pre, examples(i)->action, ground_r)) {
+    if (ruleReasoning::cover_groundRule_groundedAction(examples(i)->pre, examples(i)->action, ground_r)) {
       covered_experiences.append(examples(i));
       covered_experiences_ids.append(i);
       if (DEBUG>0) cout<<" --> 1"<<endl;
@@ -48,15 +50,15 @@ void calcCoverage_ground(SymbolicExperienceL& covered_experiences, uintA& covere
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-TL::RuleSetContainer_ground::RuleSetContainer_ground() {
+RuleSetContainer_ground::RuleSetContainer_ground() {
   init(NULL);
 }
 
-TL::RuleSetContainer_ground::RuleSetContainer_ground(const SymbolicExperienceL* _p_examples) {
+RuleSetContainer_ground::RuleSetContainer_ground(const SymbolicExperienceL* _p_examples) {
   init(_p_examples);
 }
 
-void TL::RuleSetContainer_ground::init(const SymbolicExperienceL* _p_examples) {
+void RuleSetContainer_ground::init(const SymbolicExperienceL* _p_examples) {
   rules.clear();
   nonDefaultRules_per_experience.clear();  // only non-default rules!
   experiences_per_rule.clear();
@@ -68,17 +70,17 @@ void TL::RuleSetContainer_ground::init(const SymbolicExperienceL* _p_examples) {
   }
 }
 
-void TL::RuleSetContainer_ground::append(TL::Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule) {
+void RuleSetContainer_ground::append(Rule* rule, uintA& examples_of_this_rule, MT::Array< uintA >& examples_per_outcome_of_this_rule) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleSetContainer_ground::append [START]"<<endl;}
   if (DEBUG>0) {rule->write(cout);  PRINT(examples_of_this_rule);  PRINT(examples_per_outcome_of_this_rule);}
-  if (TL::ruleReasoning::isDefaultRule(rule)  &&   rules.num() > 0) {
+  if (ruleReasoning::isDefaultRule(rule)  &&   rules.num() > 0) {
     HALT("don't append default rule");
   }
   // (1) update rules
   rules.append(rule);
   
-  if (!TL::ruleReasoning::isDefaultRule(rule)) {
+  if (!ruleReasoning::isDefaultRule(rule)) {
     // (2 - A) update experiences_per_rule
     experiences_per_rule.append(examples_of_this_rule);
     // (3) update nonDefaultRules_per_experience
@@ -102,7 +104,7 @@ void TL::RuleSetContainer_ground::append(TL::Rule* rule, uintA& examples_of_this
 }
 
 
-void TL::RuleSetContainer_ground::remove(uint id) {
+void RuleSetContainer_ground::remove(uint id) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleSetContainer_ground::remove [START]"<<endl;}
   if (DEBUG>0) {PRINT(id);  cout<<"RULES BEFORE REMOVE:"<<endl;  writeNice(cout, true);}
@@ -141,7 +143,7 @@ void TL::RuleSetContainer_ground::remove(uint id) {
   if (DEBUG>0) {cout<<"RuleSetContainer_ground::remove [END]"<<endl;}
 }
 
-void TL::RuleSetContainer_ground::clear() {
+void RuleSetContainer_ground::clear() {
   rules.clear();
   uint i, k;
   FOR1D(nonDefaultRules_per_experience, i) {
@@ -160,10 +162,10 @@ void TL::RuleSetContainer_ground::clear() {
   experiences_per_ruleOutcome.clear();
 }
 
-void TL::RuleSetContainer_ground::recomputeDefaultRule() {
+void RuleSetContainer_ground::recomputeDefaultRule() {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"recomputeDefault [START]"<<endl;
-  CHECK(TL::ruleReasoning::isDefaultRule(rules.elem(0)), "First rule should be default rule, digger");
+  CHECK(ruleReasoning::isDefaultRule(rules.elem(0)), "First rule should be default rule, digger");
   // prepare data-fields
   if (experiences_per_rule.N == 0) {
     uintA empty;
@@ -190,7 +192,7 @@ void TL::RuleSetContainer_ground::recomputeDefaultRule() {
   // finalize rule
   if ((*p_examples).N == 0   ||   experiences_per_rule(0).N == 0) {
     double DEFAULT_CHANGE_PROB = 0.5;
-    rules.overwrite(0, TL::ruleReasoning::generateDefaultRule(DEFAULT_CHANGE_PROB));
+    rules.overwrite(0, ruleReasoning::generateDefaultRule(DEFAULT_CHANGE_PROB));
   }
   else {
     uint changes = 0;
@@ -200,14 +202,14 @@ void TL::RuleSetContainer_ground::recomputeDefaultRule() {
     }
     double prob_change = ((double) changes) / experiences_per_rule(0).N;
     if (DEBUG>1) {PRINT(prob_change);}
-    TL::Rule* new_default_rule = TL::ruleReasoning::generateDefaultRule(prob_change, 0.05);
+    Rule* new_default_rule = ruleReasoning::generateDefaultRule(prob_change, 0.05);
     rules.overwrite(0, new_default_rule);
   }
   if (DEBUG>1) {rules.elem(0)->write(cout);}
   if (DEBUG>0) {cout<<"recomputeDefault [END]"<<endl;}
 }
 
-void TL::RuleSetContainer_ground::getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
+void RuleSetContainer_ground::getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
   responsibilities.clear();
   covered_experiences.clear();
   covered_experiences_num.clear();
@@ -232,7 +234,7 @@ void TL::RuleSetContainer_ground::getResponsibilities(arr& responsibilities, MT:
 }
 
 
-void rule_write_hack_ground(TL::Rule* rule, MT::Array< uintA >& outcome_tripletts, ostream& os) {
+void rule_write_hack_ground(Rule* rule, MT::Array< uintA >& outcome_tripletts, ostream& os) {
   CHECK(outcome_tripletts.N = rule->outcomes.N, "wrong size");
 //  os << "r" << endl;
   uint i, j;
@@ -267,10 +269,10 @@ void rule_write_hack_ground(TL::Rule* rule, MT::Array< uintA >& outcome_triplett
 }
 
 
-void TL::RuleSetContainer_ground::writeNice(ostream& out, bool only_action) const {
+void RuleSetContainer_ground::writeNice(ostream& out, bool only_action) const {
   uint i;
   out<<"RULES:"<<endl;
-  TL::Atom* last_action = NULL;
+  Atom* last_action = NULL;
   FOR1D_(rules, i) {
     if (last_action != rules.elem(i)->action) {
       last_action = rules.elem(i)->action;
@@ -292,7 +294,7 @@ void TL::RuleSetContainer_ground::writeNice(ostream& out, bool only_action) cons
   out<<endl;
 }
 
-void TL::RuleSetContainer_ground::write_experiencesWithRules(ostream& os) const {
+void RuleSetContainer_ground::write_experiencesWithRules(ostream& os) const {
   uint i, k;
   FOR1D((*p_examples), i) {
     os<<"--------------"<<endl;
@@ -305,7 +307,7 @@ void TL::RuleSetContainer_ground::write_experiencesWithRules(ostream& os) const 
   }
 }
 
-void TL::RuleSetContainer_ground::write_rulesWithExperiences(ostream& os) const {
+void RuleSetContainer_ground::write_rulesWithExperiences(ostream& os) const {
   uint i, k;
   FOR1D_(rules, i) {
     os<<"--------------"<<endl;
@@ -319,8 +321,8 @@ void TL::RuleSetContainer_ground::write_rulesWithExperiences(ostream& os) const 
   }
 }
 
-void TL::RuleSetContainer_ground::sanityCheck() const {
-  TL::ruleReasoning::checkRules(rules);
+void RuleSetContainer_ground::sanityCheck() const {
+  ruleReasoning::checkRules(rules);
   
   if (rules.num() != experiences_per_rule.N) {
     cout<<"FAILED SANITY CHECK:"<<endl;
@@ -344,7 +346,7 @@ void TL::RuleSetContainer_ground::sanityCheck() const {
     if (i == 0)
       continue;
     FOR1D((*p_examples), k) {
-      TL::SubstitutionSet subs;
+      SubstitutionSet subs;
       bool supposed_to_cover__1 = experiences_per_rule(i).findValue(k) >= 0;
       bool supposed_to_cover__2 = nonDefaultRules_per_experience(k).findValue(i) >= 0;
       if (supposed_to_cover__1 != supposed_to_cover__2) {
@@ -358,7 +360,7 @@ void TL::RuleSetContainer_ground::sanityCheck() const {
         PRINT(supposed_to_cover__2);
         HALT("sanity check failed 1");
       }
-      bool covers = TL::ruleReasoning::cover_groundRule_groundedAction((*p_examples)(k)->pre, (*p_examples)(k)->action, rules.elem(i));
+      bool covers = ruleReasoning::cover_groundRule_groundedAction((*p_examples)(k)->pre, (*p_examples)(k)->action, rules.elem(i));
       if (covers != supposed_to_cover__1) {
         cout<<"FAILED SANITY CHECK:"<<endl;
         writeNice(cout, false);
@@ -433,10 +435,10 @@ void TL::RuleSetContainer_ground::sanityCheck() const {
 
 
 
-/*void TL::RuleSetContainer_ground::sort() {
+/*void RuleSetContainer_ground::sort() {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"sort [START]"<<endl;}
-  TL::RuleSet new__rules;
+  RuleSet new__rules;
   MT::Array< uintA > new__nonDefaultRules_per_experience;
   MT::Array< uintA > new__experiences_per_rule;
   MT::Array< MT::Array < uintA > > new__experiences_per_ruleOutcome;
@@ -446,10 +448,10 @@ void TL::RuleSetContainer_ground::sanityCheck() const {
   FOR1D_(rules, i) {
     action_ids.setAppend(rules.elem(i)->action->pred->id);
   }
-  TL::sort_desc(action_ids);  // descending
-  CHECK(action_ids(0) == TL::DEFAULT_ACTION_PRED__ID, "");
+  sort_desc(action_ids);  // descending
+  CHECK(action_ids(0) == DEFAULT_ACTION_PRED__ID, "");
   
-  TL::Substitution sub;
+  Substitution sub;
   FOR1D(action_ids, i) {
     FOR1D_(rules, k) {
       if (rules.elem(k)->action->pred->id == action_ids(i)) {
@@ -477,7 +479,7 @@ void TL::RuleSetContainer_ground::sanityCheck() const {
 }
 */
 
-void TL::RuleSetContainer_ground::sort() {
+void RuleSetContainer_ground::sort() {
   uint max_arity = 0;
   uint r2;
   FOR1D_(rules, r2) {
@@ -489,13 +491,13 @@ void TL::RuleSetContainer_ground::sort() {
     MT::Array< uintA > new__nonDefaultRules_per_experience;
     MT::Array< uintA > new__experiences_per_rule;
     MT::Array< MT::Array < uintA > > new__experiences_per_ruleOutcome;
-    TL::RuleSet rules_sorted;
+    RuleSet rules_sorted;
     uintA action_ids;
     uint r, i;
     uint id;
-    TL::Substitution sub;
+    Substitution sub;
     FOR1D_(rules, r) {
-      if (rules.elem(r)->action->pred->id == TL::DEFAULT_ACTION_PRED__ID)
+      if (rules.elem(r)->action->pred->id == DEFAULT_ACTION_PRED__ID)
         continue;
       if (rules.elem(r)->action->pred->d == 0)
         id = rules.elem(r)->action->pred->id * 100;
@@ -518,7 +520,7 @@ void TL::RuleSetContainer_ground::sort() {
     }
     
     // DEFAULT RULE always first rule
-    uint DEFAULT_ACTION_ID = TL::DEFAULT_ACTION_PRED__ID * 100;
+    uint DEFAULT_ACTION_ID = DEFAULT_ACTION_PRED__ID * 100;
     action_ids.insert(0, DEFAULT_ACTION_ID);
     
     FOR1D(action_ids, i) {
@@ -569,7 +571,7 @@ void TL::RuleSetContainer_ground::sort() {
     NIY;
     write(rules, "ground_rules.dat.unsorted_backup");
     
-    MT::Array< TL::Rule* > ra_sorted;
+    MT::Array< Rule* > ra_sorted;
     ra_sorted.memMove = true;
     uint r, r2, d;
     FOR1D_(rules, r) {
@@ -608,7 +610,7 @@ void TL::RuleSetContainer_ground::sort() {
 //     cout<<endl;
     
     CHECK(rules.num() == ra_sorted.N, "Some strange rule-sorting mistake.");
-    TL::RuleSet rules_sorted;
+    RuleSet rules_sorted;
     uint i;
     FOR1D(ra_sorted, i) {
       rules_sorted.append(ra_sorted(i));
@@ -803,23 +805,23 @@ SearchOperator_ground::SearchOperator_ground(double alpha_PEN, double p_min, uin
 
 
 
-void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& potential_outcomes, const SymbolicExperienceL& covered_experiences, const TL::Rule* old_rule, boolA& coverage) {
+void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& potential_outcomes, const SymbolicExperienceL& covered_experiences, const Rule* old_rule, boolA& coverage) {
   // ACHTUNG: old_rule hat womoeglich andere Outcomes!!
   uint DEBUG = 0;
   if (DEBUG>0) cout << "calcOutcomesCoverage [START]" << endl;
-  if (DEBUG>1) {TL::write(old_rule->context);cout<<endl;old_rule->action->write(cout);cout<<endl;}
+  if (DEBUG>1) {write(old_rule->context);cout<<endl;old_rule->action->write(cout);cout<<endl;}
   coverage.resize(potential_outcomes.N, covered_experiences.N);
   uint i, e;
   FOR1D(covered_experiences, e) {
     if (DEBUG>0) {cout<<"### Ex "<<e<<":"<<endl; covered_experiences(e)->write(cout);}
     // provide the initial substitution given by action and context --> setting all vars
-    TL::SubstitutionSet subs;
-    bool covered = TL::ruleReasoning::cover_groundRule_groundedAction(covered_experiences(e)->pre, covered_experiences(e)->action, old_rule);
+    SubstitutionSet subs;
+    bool covered = ruleReasoning::cover_groundRule_groundedAction(covered_experiences(e)->pre, covered_experiences(e)->action, old_rule);
     if (!covered) {
       HALT("Example must be preAct_covered by rule!");
     }
     FOR1D(potential_outcomes, i) {
-      if (DEBUG>1) {cout<<"+++ Potential outcome: ";TL::write(potential_outcomes(i));cout<<endl;}
+      if (DEBUG>1) {cout<<"+++ Potential outcome: ";write(potential_outcomes(i));cout<<endl;}
       if (i == potential_outcomes.N-1) {
         // nur falls nicht gecovert, covert das Noise outcome
         coverage(i, e) = true;
@@ -832,8 +834,8 @@ void SearchOperator_ground::calcCoverage_outcomes(const MT::Array< LitL >& poten
         }
       }
       else {
-        TL::SymbolicState successor;
-        TL::ruleReasoning::calcSuccessorState(covered_experiences(e)->pre, potential_outcomes(i), successor, false);
+        SymbolicState successor;
+        ruleReasoning::calcSuccessorState(covered_experiences(e)->pre, potential_outcomes(i), successor, false);
         if (DEBUG>2) { cout<<"\nPOST:";covered_experiences(e)->post.write(cout);cout<<endl;
           cout<<"SUCC:";successor.write(cout);cout<<endl;}
         if (covered_experiences(e)->post == successor)
@@ -879,8 +881,8 @@ void SearchOperator_ground::calcSubsumption(boolA& subsumes, const boolA& covera
 
 
 
-void SearchOperator_ground::integrateNewRules(const TL::RuleSetContainer_ground& rulesC_old, const TL::RuleSetContainer_ground& rulesC_2add, 
-                                       const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_new) {
+void SearchOperator_ground::integrateNewRules(const RuleSetContainer_ground& rulesC_old, const RuleSetContainer_ground& rulesC_2add, 
+                                       const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_new) {
   uint DEBUG = 0;
   if (DEBUG > 0) {cout << "integrateNewRules [START]" << endl;}
   if (DEBUG > 1) {
@@ -895,14 +897,14 @@ void SearchOperator_ground::integrateNewRules(const TL::RuleSetContainer_ground&
   // Create a copy of the input rule-set
   rulesC_new = rulesC_old;
   
-//  TL::write(rulesC_old);
+//  write(rulesC_old);
 //  cout << endl;
   // For each new rule r'
   FOR1D_(rulesC_2add.rules, i) {
     // Remove rules in R' that cover any examples r' covers
     uintA& covered_new = rulesC_2add.experiences_per_rule(i);
     // Clean-up rules
-    TL::ruleReasoning::cleanup(*rulesC_2add.rules.elem(i));
+    ruleReasoning::cleanup(*rulesC_2add.rules.elem(i));
     // SPECIAL: default rule (at pos 0) is never removed
     for (j=rulesC_new.rules.num()-1; j>0; j--) {
       uintA& covered_old = rulesC_new.experiences_per_rule(j);
@@ -934,13 +936,13 @@ void SearchOperator_ground::integrateNewRules(const TL::RuleSetContainer_ground&
 
 
 // Algorithm of Figure 4 in Zettlemoyer (2007)
-void SearchOperator_ground::createRuleSets(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-        MT::Array< TL::RuleSetContainer_ground >& set_of_new_rulesC) {
+void SearchOperator_ground::createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
+        MT::Array< RuleSetContainer_ground >& set_of_new_rulesC) {
   uint DEBUG = 0;
   set_of_new_rulesC.clear();
   reset();
   while (true) {
-    TL::RuleSetContainer_ground rulesC_2add(&examples);
+    RuleSetContainer_ground rulesC_2add(&examples);
     // this is where the local knowledge of the individual search operators comes in
     findRules(rulesC_old, examples, rulesC_2add);
     uint i;
@@ -951,7 +953,7 @@ void SearchOperator_ground::createRuleSets(const TL::RuleSetContainer_ground& ru
     }
     if (rulesC_2add.rules.num() == 0)
       break;
-    TL::RuleSetContainer_ground rulesC_new(&examples);
+    RuleSetContainer_ground rulesC_new(&examples);
     integrateNewRules(rulesC_old, rulesC_2add, examples, rulesC_new);
     set_of_new_rulesC.append(rulesC_new);
     if (approximative) {
@@ -968,12 +970,12 @@ void SearchOperator_ground::createRuleSets(const TL::RuleSetContainer_ground& ru
 
 
 // remove outcomes that (i) do not cover any example and (ii) have zero-probability  and (iii) sets coverage for cost function
-void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const TL::Rule& rule) {
+void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, arr& probs, boolA& coverage, const SymbolicExperienceL& coveredExamples, const Rule& rule) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"produceTrimmedOutcomes [START]"<<endl;
   uint i;
   bool removed, atleastone;
-  if (DEBUG>1) {cout<<"Outcomes before:\n"; TL::write(outcomes);}
+  if (DEBUG>1) {cout<<"Outcomes before:\n"; write(outcomes);}
   
   // (i) remove outcomes that do not cover any example
   if (DEBUG>1) cout<<"Removing outcomes that do not cover any example"<<endl;
@@ -991,7 +993,7 @@ void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, 
     else
       o_help.append(outcomes(i));
   }
-  if (DEBUG>1) {cout<<"Outcomes now:\n"; TL::write(o_help);}
+  if (DEBUG>1) {cout<<"Outcomes now:\n"; write(o_help);}
   if (removed) {
     calcCoverage_outcomes(o_help, coveredExamples, &rule, coverage);
     CostFunction_ground::setOutcomesCoverage(coverage);
@@ -1020,7 +1022,7 @@ void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, 
     CostFunction_ground::setOutcomesCoverage(coverage);
     if (DEBUG>3) PRINT(coverage)
   }
-  if (DEBUG>1) {cout<<"Outcomes final:\n"; TL::write(outcomes);}
+  if (DEBUG>1) {cout<<"Outcomes final:\n"; write(outcomes);}
   if (DEBUG>0) cout<<"produceTrimmedOutcomes [END]"<<endl;
 }
 
@@ -1042,7 +1044,7 @@ void SearchOperator_ground::produceTrimmedOutcomes(MT::Array< LitL >& outcomes, 
 // When we create new outcomes, we have to check whether there are outcomes with
 // (i) no examples covered or (ii) a probability of 0. In both cases, the corresponding
 // outcomes need to be deleted. --> method trimOutcomes(...), see above
-void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& coveredExamples, const uintA& covered_experiences_ids) {
+void SearchOperator_ground::induceOutcomes(Rule* ground_r, MT::Array< uintA >& coveredExamples_per_outcome, const SymbolicExperienceL& coveredExamples, const uintA& covered_experiences_ids) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "induceOutcomes [START]" << endl;
   
@@ -1063,7 +1065,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
   MT::Array< LitL > outcomes_basic;
   FOR1D(coveredExamples, i) {
     if (DEBUG>4) {cout<<"====== Using ex "<<i<<":"<<endl; coveredExamples(i)->write(cout);}
-    bool covered = TL::ruleReasoning::cover_groundRule_groundedAction(coveredExamples(i)->pre, coveredExamples(i)->action, ground_r);
+    bool covered = ruleReasoning::cover_groundRule_groundedAction(coveredExamples(i)->pre, coveredExamples(i)->action, ground_r);
     if (!covered) {
       HALT("An uncovered example! Be careful when calling methods, noob!");
     }
@@ -1072,13 +1074,13 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
       
     // insert postOnly-predicates
     FOR1D(coveredExamples(i)->add, j) {
-      if (coveredExamples(i)->add(j)->atom->pred->type == TL::Predicate::predicate_simple) {
+      if (coveredExamples(i)->add(j)->atom->pred->type == Predicate::predicate_simple) {
         nextOutcome.append(coveredExamples(i)->add(j));
       }
     }
     // insert negations of preOnly-predicates
     FOR1D(coveredExamples(i)->del, j) {
-      if (coveredExamples(i)->del(j)->atom->pred->type == TL::Predicate::predicate_simple) {
+      if (coveredExamples(i)->del(j)->atom->pred->type == Predicate::predicate_simple) {
         nextOutcome.append(logicObjectManager::getLiteralNeg(coveredExamples(i)->del(j)));
       }
     }
@@ -1097,7 +1099,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
     cout << "Examples outcomes (incl. noise outcome):" << endl;
     FOR1D(outcomes_basic, i) {
       cout << "(" << i << ") ";
-      TL::write(outcomes_basic(i));
+      write(outcomes_basic(i));
       cout << endl;
     }
   }
@@ -1115,7 +1117,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
     for (j=i+1; j<outcomes_basic.d0-1; j++) {
       if (prune(j))
         continue;
-      if (TL::equivalent(outcomes_basic(i), outcomes_basic(j)))
+      if (equivalent(outcomes_basic(i), outcomes_basic(j)))
         prune(j) = true;
     }
   }
@@ -1127,7 +1129,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
   }
   if (DEBUG > 0) {
     cout << "Collapsed examples outcomes (copies removed)  (incl. noise outcome):" << endl;
-    FOR1D(outcomes, i) {cout << "(" << i << ") "; TL::write(outcomes(i)); cout << endl;}
+    FOR1D(outcomes, i) {cout << "(" << i << ") "; write(outcomes(i)); cout << endl;}
   }
 
   // trim outcomes
@@ -1144,12 +1146,12 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
   
   // evaluate and calc score
   loglik = CostFunction_ground::loglikelihood(probs);
-  score = loglik - this->alpha_PEN * TL::logicReasoning::numberLiterals(outcomes);
+  score = loglik - this->alpha_PEN * logicReasoning::numberLiterals(outcomes);
   if (DEBUG > 1) {
     cout << "\nBASIC OUTCOMES:" << endl;
     FOR1D(outcomes, i) {
       cout << "("<< i << ") ";
-      TL::write(outcomes(i));
+      write(outcomes(i));
       cout << " " << probs(i);
       cout << endl;
     }
@@ -1215,9 +1217,9 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
           PRINT(numUnifiables)
           PRINT(unifiable)
           cout<<"We gonna add:"<<endl;
-          cout<<i<<" :";TL::write(outcomes(i));cout<<endl;
-          cout<<j<<" :";TL::write(outcomes(j));cout<<endl;
-          cout<<"  --> ";TL::write(unifiedOutcome);cout<<endl;
+          cout<<i<<" :";write(outcomes(i));cout<<endl;
+          cout<<j<<" :";write(outcomes(j));cout<<endl;
+          cout<<"  --> ";write(unifiedOutcome);cout<<endl;
         }
       }
     }
@@ -1316,7 +1318,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
         cout << "\nNEW OUTCOMES:" << endl;
         FOR1D(outcomes_new, i) {
           cout << i << ": ";
-          TL::write(outcomes_new(i));
+          write(outcomes_new(i));
           cout << endl;
         }
       }
@@ -1326,13 +1328,13 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
             
       // evaluate and calc score
       loglik = CostFunction_ground::loglikelihood(probs_new);
-      score = loglik - this->alpha_PEN * TL::logicReasoning::numberLiterals(outcomes_new);
+      score = loglik - this->alpha_PEN * logicReasoning::numberLiterals(outcomes_new);
             
       if (DEBUG > 1) {
         cout << "\nNEW OUTCOMES (now with new_probs and score):" << endl;
         FOR1D(outcomes_new, i) {
           cout << i << ": ";
-          TL::write(outcomes_new(i));
+          write(outcomes_new(i));
                     cout << " " << probs_new(i);
           cout << endl;
         }
@@ -1386,7 +1388,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
     PRINT(coveredExamples_per_outcome);
     FOR1D(ground_r->outcomes, i) {
       cout << i << ": ";
-      TL::write(ground_r->outcomes(i));
+      write(ground_r->outcomes(i));
       cout << " " << ground_r->probs(i) << " " << coveredExamples_per_outcome(i);
       cout << endl;
     }
@@ -1404,7 +1406,7 @@ void SearchOperator_ground::induceOutcomes(TL::Rule* ground_r, MT::Array< uintA 
     PRINT(coveredExamples_per_outcome);
     FOR1D(ground_r->outcomes, i) {
       cout << i << ": ";
-      TL::write(ground_r->outcomes(i));
+      write(ground_r->outcomes(i));
       cout << " " << ground_r->probs(i) << " " << coveredExamples_per_outcome(i);
       cout << endl;
     }
@@ -1662,22 +1664,22 @@ const char* SearchOperator_ground::getName() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void ExplainExperiences_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& experiences, TL::RuleSetContainer_ground& rulesC_2add) {
+void ExplainExperiences_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& experiences, RuleSetContainer_ground& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"ExplainExperiences_ground::findRules [START]"<<endl;
   uint i;
-//  PRINT(TL::Rule::globalRuleCounter)
+//  PRINT(Rule::globalRuleCounter)
   for (i=nextPotentialExperience; i<experiences.N; i++) {
     uintA& covering_rules = rulesC_old.nonDefaultRules_per_experience(i);
     if (DEBUG>1) {
-      TL::write(rulesC_old.rules);
+      write(rulesC_old.rules);
       cout<<"#Covering non-default rules for example (" << i << ") = " << covering_rules.N << endl;
     }
     if (covering_rules.N == 0) {
       // Create new rule by explaining current example (sets context and action)
       if (DEBUG>0) cout << "findRules: let's explain example " << i << endl;
       if (DEBUG>2) {experiences(i)->write(cout);}
-      TL::Rule* newRule = explainExperience_ground(experiences(i));
+      Rule* newRule = explainExperience_ground(experiences(i));
       if (DEBUG>0) {cout<<"New Rule:"<<endl; newRule->write(cout);}
       SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
@@ -1694,12 +1696,12 @@ void ExplainExperiences_ground::findRules(const TL::RuleSetContainer_ground& rul
     }
   }
 //  PRINT(rules2_add.num());
-//  PRINT(TL::Rule::globalRuleCounter)
+//  PRINT(Rule::globalRuleCounter)
 	if (DEBUG>0) cout<<"ExplainExperiences_ground::findRules [END]"<<endl;
 }
 
 
-TL::Rule* ExplainExperiences_ground::explainExperience_ground(SymbolicExperience* ex) {
+Rule* ExplainExperiences_ground::explainExperience_ground(SymbolicExperience* ex) {
 	return explainExperience_deictic_ground(ex);
 // 	return explainExperience_straightforward(ex);
 }
@@ -1717,7 +1719,7 @@ void trim_hack_ground(LitL& lits) {
   if (lits.N == k)
     return;
 //   MT_MSG("IS TRIM_HACK UP TO DATE FOR THE PREDICATE IDs???");
-  if (DEBUG>0) {cout << "trim_hack_ground before: [N="<<lits.N<<"] "; TL::write(lits); cout<<endl;}
+  if (DEBUG>0) {cout << "trim_hack_ground before: [N="<<lits.N<<"] "; write(lits); cout<<endl;}
   // only apply for primitive predicates
   uint __TABLE_PRED_ID = logicObjectManager::getPredicate(MT::String("table"))->id;
   uint __BLOCK_PRED_ID = logicObjectManager::getPredicate(MT::String("block"))->id;
@@ -1748,7 +1750,7 @@ void trim_hack_ground(LitL& lits) {
           }
       }
   }
-  if (DEBUG>1) {cout << "trim_hack_ground now: "; TL::write(lits); cout<<endl;}
+  if (DEBUG>1) {cout << "trim_hack_ground now: "; write(lits); cout<<endl;}
   
   // for X>__TABLE_OBJECT_ID: not table(X) [--> cares only about constants]
   FOR1D_DOWN(lits, i) {
@@ -1760,9 +1762,9 @@ void trim_hack_ground(LitL& lits) {
       lits.remove(i);
     }
   }
-  if (DEBUG>1) {cout << "trim_hack_ground now: "; TL::write(lits); cout<<endl;}
+  if (DEBUG>1) {cout << "trim_hack_ground now: "; write(lits); cout<<endl;}
   
-  if (DEBUG>1) {cout << "trim_hack_ground now: "; TL::write(lits); cout<<endl;}
+  if (DEBUG>1) {cout << "trim_hack_ground now: "; write(lits); cout<<endl;}
   
   // if on(X,Y) then -on(Y,X) is redundant
   FOR1D_DOWN(lits, i) {
@@ -1790,9 +1792,9 @@ void trim_hack_ground(LitL& lits) {
           }
       }
   }
-  if (DEBUG>1) {cout << "trim_hack_ground now: "; TL::write(lits); cout<<endl;}
+  if (DEBUG>1) {cout << "trim_hack_ground now: "; write(lits); cout<<endl;}
   
-  if (DEBUG>0) {cout << "trim_hack_ground after: [N="<<lits.N<<"] "; TL::write(lits); cout<<endl;}
+  if (DEBUG>0) {cout << "trim_hack_ground after: [N="<<lits.N<<"] "; write(lits); cout<<endl;}
 }
 
 
@@ -1803,10 +1805,10 @@ void trim_hack_ground(LitL& lits) {
 	Apply s to pre-state to derive partially abstracted pre-state pre_a. Keep only those predicates in pre_a which are fully abstract now. These form the context of the new rule.
 	The outcomes will only be calculated in "induce_outcomes".
 */
-// TL::Rule* ExplainExperiences_ground::explainExperience_straightforward(SymbolicExperience* ex) {
+// Rule* ExplainExperiences_ground::explainExperience_straightforward(SymbolicExperience* ex) {
 // 	uint DEBUG = 0;
 // 	if (DEBUG>0) cout << "explainExperience_straightforward [START]" << endl;
-// 	TL::Rule* newRule = new TL::Rule;
+// 	Rule* newRule = new Rule;
 // 	
 // 	if (DEBUG>0) {
 // 		cout << "Explaining example:" << endl;
@@ -1816,7 +1818,7 @@ void trim_hack_ground(LitL& lits) {
 // 	}
 // 	
 // 	// Substitution
-// 	TL::Substitution invSub;
+// 	Substitution invSub;
 //     le->createInverseSubstitution(*(ex->action), invSub);
 // 	LitL changedProperties_onlyPre_grounded;
 // 	LitL changedProperties_onlyPost_grounded;
@@ -1829,8 +1831,8 @@ void trim_hack_ground(LitL& lits) {
 // 	}
 // 	
 // 	if (DEBUG > 2) {
-// 		cout << "changedProperties_onlyPre_grounded: "; TL::write(changedProperties_onlyPre_grounded); cout << endl;
-// 		cout << "changedProperties_onlyPost_grounded: "; TL::write(changedProperties_onlyPost_grounded); cout << endl;
+// 		cout << "changedProperties_onlyPre_grounded: "; write(changedProperties_onlyPre_grounded); cout << endl;
+// 		cout << "changedProperties_onlyPost_grounded: "; write(changedProperties_onlyPost_grounded); cout << endl;
 // 		PRINT(changedConstants)
 // 		cout<<"Established inverse substitution "; invSub.write(cout); cout << endl;
 // 	}
@@ -1851,7 +1853,7 @@ void trim_hack_ground(LitL& lits) {
 // 	
 // 	if (DEBUG>1) {
 // 		cout << "context_grounded: ";
-// 		TL::write(context_grounded);
+// 		write(context_grounded);
 // 		cout << endl;
 // 	}
 // 	
@@ -1864,7 +1866,7 @@ void trim_hack_ground(LitL& lits) {
 // 	le->applyOriginalSub(invSub, context_grounded, context_abstracted);
 // 	if (DEBUG>1) {
 // 		cout << "context_abstracted: ";
-// 		TL::write(context_abstracted);
+// 		write(context_abstracted);
 // 		cout << endl;
 // 	}
 // 	
@@ -1877,7 +1879,7 @@ void trim_hack_ground(LitL& lits) {
 // 	
 // 	if (DEBUG>0) {
 // 		cout << "newRule->context: ";
-// 		TL::write(newRule->context);
+// 		write(newRule->context);
 // 		cout << endl;
 // 	}
 // 	
@@ -1887,7 +1889,7 @@ void trim_hack_ground(LitL& lits) {
 //         logicReasoning::killBaseConcepts(newRule->context);
 //     if (DEBUG>0) {
 //       cout << "newRule->context after trimming: ";
-//       TL::write(newRule->context);
+//       write(newRule->context);
 //       cout << endl;
 //     }
 //     
@@ -1907,12 +1909,12 @@ void trim_hack_ground(LitL& lits) {
 
 
 // Algorithm Pasula et al. (2007) p. 330
-TL::Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicExperience* ex) {
+Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicExperience* ex) {
   uint DEBUG = 0;
   if (DEBUG>0) cout << "explainExperience_deictic [START]" << endl;
   if (DEBUG>1) ex->write(cout);
   uint i, j;
-  TL::Rule* newRule = new TL::Rule;
+  Rule* newRule = new Rule;
   
   // ensure that all complex are derived
   logicReasoning::derive(&ex->pre);
@@ -1927,26 +1929,26 @@ TL::Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicEx
   // create normal literals
   // (also accounts for negations)
   logicObjectManager::getLiterals(precond_candidates, newRule->action->args);
-  if (DEBUG>2) {cout<<"Precondition candidates (based on action arguments, w./o. comparisons): ";TL::write(precond_candidates);cout<<endl;}
+  if (DEBUG>2) {cout<<"Precondition candidates (based on action arguments, w./o. comparisons): ";write(precond_candidates);cout<<endl;}
   FOR1D(precond_candidates, i) {
     if (logicReasoning::holds(ex->pre, precond_candidates(i)))
       newRule->context.append(precond_candidates(i));
   }
   // create comparison literals
   LitL equalityLiterals;
-  TL::logicObjectManager::getCompLiterals_constantBound(equalityLiterals, newRule->action->args, ex->pre, 0);
+  logicObjectManager::getCompLiterals_constantBound(equalityLiterals, newRule->action->args, ex->pre, 0);
   FOR1D(equalityLiterals, i) {
 //     cout<<"equalityLiterals(i):  ";  equalityLiterals(i)->write(cout);  cout<<endl;
     newRule->context.append(equalityLiterals(i));
   }
   // order by positives first
-  TL::logicReasoning::sort(newRule->context);
-  if (DEBUG>1) {cout<<"Context (preliminary): ";TL::write(newRule->context);cout<<endl;}
+  logicReasoning::sort(newRule->context);
+  if (DEBUG>1) {cout<<"Context (preliminary): ";write(newRule->context);cout<<endl;}
   
   // Step 1.2: Create deictic references
   if (DEBUG > 2) {
-    cout << "ex->del: "; TL::write(ex->del); cout << endl;
-    cout << "ex->add: "; TL::write(ex->add); cout << endl;
+    cout << "ex->del: "; write(ex->del); cout << endl;
+    cout << "ex->add: "; write(ex->add); cout << endl;
     PRINT(ex->changedConstants)
   }
   uintA used_constants;
@@ -1964,7 +1966,7 @@ TL::Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicEx
     logicObjectManager::getCompLiterals_constantBound(equalityLiterals, changedConstantWrapper, ex->pre, 0);
     precond_candidates.append(equalityLiterals);
     if (DEBUG>1) {cout<<"Deictic candidate: "<<ex->changedConstants(i)<<endl;}
-    if (DEBUG>2) {cout<<"Precondition candidates (based on deictic candidate): ";TL::write(precond_candidates);cout<<endl;}
+    if (DEBUG>2) {cout<<"Precondition candidates (based on deictic candidate): ";write(precond_candidates);cout<<endl;}
     // create possible newPreconditions
     newPreconditions = newRule->context;
     FOR1D(precond_candidates, j) {
@@ -1972,8 +1974,8 @@ TL::Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicEx
         newPreconditions.append(precond_candidates(j));
       }
     }
-    TL::logicReasoning::sort(newPreconditions);
-    if (DEBUG>1) {cout<<"Context with deic ref (potential): ";TL::write(newPreconditions);cout<<endl;}
+    logicReasoning::sort(newPreconditions);
+    if (DEBUG>1) {cout<<"Context with deic ref (potential): ";write(newPreconditions);cout<<endl;}
     newRule->context = newPreconditions;
   }
   
@@ -1983,7 +1985,7 @@ TL::Rule* ExplainExperiences_ground::explainExperience_deictic_ground(SymbolicEx
     logicReasoning::killBaseConcepts(newRule->context);
   if (DEBUG>0) {
     cout << "newRule->context after trimming: ";
-    TL::write(newRule->context);
+    write(newRule->context);
     cout << endl;
   }
   
@@ -2017,15 +2019,15 @@ void ExplainExperiences_ground::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropPreconditions_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {
+void DropPreconditions_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"DropPre::findRules [START]"<<endl;
   uint r, p, i;
-  TL::Rule* newRule;
+  Rule* newRule;
   bool stop = false;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     for (p=nextPrecondition; p<rulesC_old.rules.elem(r)->context.N; p++) {
-      newRule = new TL::Rule;
+      newRule = new Rule;
       FOR1D(rulesC_old.rules.elem(r)->context, i) {
         if (i!=p)
           newRule->context.append(rulesC_old.rules.elem(r)->context(i));
@@ -2084,7 +2086,7 @@ void DropPreconditions_ground::reset() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropPreconditions_approximativeVersion_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {
+void DropPreconditions_approximativeVersion_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"DropPre_approx::findRules [START]"<<endl;
   rulesC_2add.clear();
@@ -2102,7 +2104,7 @@ void DropPreconditions_approximativeVersion_ground::findRules(const TL::RuleSetC
   }
   uint random_precondition, id_precondition, id_rule, starting_id_for_current_rule;
   uint num_open_context;
-  TL::Rule* newRule;
+  Rule* newRule;
   uint resamples=0;
   while (rulesC_2add.rules.num()==0) {
     num_open_context = sum(usablePreconds);
@@ -2151,7 +2153,7 @@ void DropPreconditions_approximativeVersion_ground::findRules(const TL::RuleSetC
     else
       resamples=0;
     if (DEBUG>1) {cout<<"Deletion executed."<<endl;}
-    newRule = new TL::Rule;
+    newRule = new Rule;
     FOR1D(rulesC_old.rules.elem(id_rule)->context, k) {
       if (k!=id_precondition)
         newRule->context.append(rulesC_old.rules.elem(id_rule)->context(k));
@@ -2208,15 +2210,15 @@ void DropPreconditions_approximativeVersion_ground::reset_total_approximator() {
 
 // creates possible new rules for the given rule-set
 // newRules are potential additional rules which are all intended to be added to the SAME rule-set!
-void DropReferences_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {
+void DropReferences_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {
 	uint DEBUG = 0;
 	if (DEBUG>0) cout<<"DropReferences_ground::findRules [START]"<<endl;
 	uint r, p, i;
   bool stop = false;
-	TL::Rule* newRule = NULL;
+	Rule* newRule = NULL;
 	for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     uintA terms;
-    TL::ruleReasoning::calcTerms(*rulesC_old.rules.elem(r), terms);
+    ruleReasoning::calcTerms(*rulesC_old.rules.elem(r), terms);
     uintA non_arg_terms;
     FOR1D(terms, i) {
       if (rulesC_old.rules.elem(r)->action->args.findValue(terms(i)) < 0)
@@ -2227,14 +2229,14 @@ void DropReferences_ground::findRules(const TL::RuleSetContainer_ground& rulesC_
         cout<<"Removing non-arg reference "<<terms(nextReference)<<" in rule:"<<endl;
         rulesC_old.rules.elem(r)->write(cout);
       }
-      newRule = new TL::Rule;
+      newRule = new Rule;
       newRule->action = rulesC_old.rules.elem(r)->action;
       FOR1D(rulesC_old.rules.elem(r)->context, i) {
           if (DEBUG>4) {PRINT(rulesC_old.rules.elem(r)->context(i)->atom->args);}
           if (rulesC_old.rules.elem(r)->context(i)->atom->args.findValue(terms(nextReference))<0)
               newRule->context.append(rulesC_old.rules.elem(r)->context(i));
       }
-      if (DEBUG>0) {cout<<"Yielding the new context: "; TL::write(newRule->context); cout<<endl;}
+      if (DEBUG>0) {cout<<"Yielding the new context: "; write(newRule->context); cout<<endl;}
       SymbolicExperienceL covered_experiences;
       uintA covered_experiences_ids;
       calcCoverage_ground(covered_experiences, covered_experiences_ids, newRule, examples);
@@ -2291,15 +2293,15 @@ void DropReferences_ground::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void DropRules_ground::createRuleSets(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
-          MT::Array< TL::RuleSetContainer_ground >& one_rulesC_new) {
+void DropRules_ground::createRuleSets(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, 
+          MT::Array< RuleSetContainer_ground >& one_rulesC_new) {
   uint DEBUG = 0;
   one_rulesC_new.clear();
   uint i, j;
   if (DEBUG>0) {cout<<"Old rule-set:"<<endl;  rulesC_old.writeNice(cout, true); cout<<endl<<endl;}
   for (i=1; i<rulesC_old.rules.num(); i++) { // default rule must always be in
     if (DEBUG>0) {cout<<"Dropping rule #" << i << endl;}
-    TL::RuleSetContainer_ground rulesC_new(&examples);
+    RuleSetContainer_ground rulesC_new(&examples);
 //     rulesC_new = rulesC_old;
     FOR1D_(rulesC_old.rules, j) {
       if (i!=j) {
@@ -2314,7 +2316,7 @@ void DropRules_ground::createRuleSets(const TL::RuleSetContainer_ground& rulesC_
 }
 
 void DropRules_ground::reset() {}
-void DropRules_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {}
+void DropRules_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {}
 
 
 
@@ -2334,20 +2336,20 @@ void DropRules_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void SplitOnLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {
+void SplitOnLiterals_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"SplitOnLiterals_ground::findRules [START]"<<endl;
   rulesC_2add.clear();
   uint r;
-  TL::Rule* newRule_pos = NULL;
-  TL::Rule* newRule_neg = NULL;
+  Rule* newRule_pos = NULL;
+  Rule* newRule_neg = NULL;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     if (absentLiterals.N == 0) { // first round
-      TL::ruleReasoning::calcAbsentLiterals(*rulesC_old.rules.elem(r), absentLiterals, true);
+      ruleReasoning::calcAbsentLiterals(*rulesC_old.rules.elem(r), absentLiterals, true);
       if (DEBUG>2) {
         cout << "Calculated absent literals for rule:"<<endl;
         rulesC_old.rules.elem(r)->write(cout);
-        cout<<"Absent literals: ";TL::write(absentLiterals);cout<<endl;
+        cout<<"Absent literals: ";write(absentLiterals);cout<<endl;
       }
     }
     while (nextLiteral<absentLiterals.N) {
@@ -2356,15 +2358,15 @@ void SplitOnLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC
       wrapper.append(absentLiterals(nextLiteral));
       if (DEBUG>1) {
         cout<<"Trying to insert ";absentLiterals(nextLiteral)->write(cout);cout<<"   into   ";
-        TL::write(rulesC_old.rules.elem(r)->context);cout<<endl;
+        write(rulesC_old.rules.elem(r)->context);cout<<endl;
       }
       if (logicReasoning::nonContradicting(wrapper, rulesC_old.rules.elem(r)->context)
              && !logicReasoning::containsLiteral(rulesC_old.rules.elem(r)->context, *absentLiterals(nextLiteral))) {
         if (DEBUG>1) cout<<" --> Feasible and will be done."<<endl;
-        newRule_pos = new TL::Rule;
+        newRule_pos = new Rule;
         newRule_pos->action = rulesC_old.rules.elem(r)->action;
         newRule_pos->context = rulesC_old.rules.elem(r)->context;
-        TL::ruleReasoning::insert(*newRule_pos, *absentLiterals(nextLiteral));
+        ruleReasoning::insert(*newRule_pos, *absentLiterals(nextLiteral));
         SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage_ground(covered_experiences, covered_experiences_ids, newRule_pos, examples);
@@ -2383,20 +2385,20 @@ void SplitOnLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC
         if (DEBUG>1) cout<<" --> Impossible."<<endl;
       }
       // negative version
-      TL::Literal* nextLiteral_neg = logicObjectManager::getLiteralNeg(absentLiterals(nextLiteral));
+      Literal* nextLiteral_neg = logicObjectManager::getLiteralNeg(absentLiterals(nextLiteral));
       wrapper.clear();
       wrapper.append(nextLiteral_neg);
       if (DEBUG>1) {
         cout<<"Trying to insert ";nextLiteral_neg->write(cout);cout<<"   into   ";
-        TL::write(rulesC_old.rules.elem(r)->context);cout<<endl;
+        write(rulesC_old.rules.elem(r)->context);cout<<endl;
       }
       if (logicReasoning::nonContradicting(wrapper, rulesC_old.rules.elem(r)->context)
              && !logicReasoning::containsLiteral(rulesC_old.rules.elem(r)->context, *nextLiteral_neg)) {
         if (DEBUG>1) cout<<" --> Feasible and will be done."<<endl;
-        newRule_neg = new TL::Rule;
+        newRule_neg = new Rule;
         newRule_neg->action = rulesC_old.rules.elem(r)->action;
         newRule_neg->context = rulesC_old.rules.elem(r)->context;
-        TL::ruleReasoning::insert(*newRule_neg, *nextLiteral_neg);
+        ruleReasoning::insert(*newRule_neg, *nextLiteral_neg);
         SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage_ground(covered_experiences, covered_experiences_ids, newRule_neg, examples);
@@ -2434,7 +2436,7 @@ void SplitOnLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC
       absentLiterals.clear();
     }
   }
-  if (DEBUG>0) {if (rulesC_2add.rules.num() > 0) {TL::write(rulesC_2add.rules);}}
+  if (DEBUG>0) {if (rulesC_2add.rules.num() > 0) {write(rulesC_2add.rules);}}
   if (DEBUG>0) cout<<"SplitOnLiterals_ground::findRules [END]"<<endl;
 }
 
@@ -2458,18 +2460,18 @@ void SplitOnLiterals_ground::reset() {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-void AddLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, TL::RuleSetContainer_ground& rulesC_2add) {
+void AddLiterals_ground::findRules(const RuleSetContainer_ground& rulesC_old, const SymbolicExperienceL& examples, RuleSetContainer_ground& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"AddLits::findRules [START]"<<endl;
   uint r;
-  TL::Rule* newRule = NULL;
+  Rule* newRule = NULL;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     if (absentLiterals.N == 0) { // first round
-      TL::ruleReasoning::calcAbsentLiterals(*rulesC_old.rules.elem(r), absentLiterals);
+      ruleReasoning::calcAbsentLiterals(*rulesC_old.rules.elem(r), absentLiterals);
       if (DEBUG>2) {
         cout << "Calculated absent literals for rule:"<<endl;
         rulesC_old.rules.elem(r)->write(cout);
-        cout<<"Absent literals: ";TL::write(absentLiterals);cout<<endl;
+        cout<<"Absent literals: ";write(absentLiterals);cout<<endl;
       }
     }
     while (nextLiteral<absentLiterals.N) {
@@ -2477,14 +2479,14 @@ void AddLiterals_ground::findRules(const TL::RuleSetContainer_ground& rulesC_old
       wrapper.append(absentLiterals(nextLiteral));
       if (DEBUG>1) {
         cout<<"Trying to insert ";absentLiterals(nextLiteral)->write(cout);cout<<"   into   ";
-        TL::write(rulesC_old.rules.elem(r)->context);cout<<endl;
+        write(rulesC_old.rules.elem(r)->context);cout<<endl;
       }
       if (logicReasoning::nonContradicting(wrapper, rulesC_old.rules.elem(r)->context)) {
         if (DEBUG>1) cout<<" --> Feasible and will be done."<<endl;
-        newRule = new TL::Rule;
+        newRule = new Rule;
         newRule->action = rulesC_old.rules.elem(r)->action;
         newRule->context = rulesC_old.rules.elem(r)->context;
-        TL::ruleReasoning::insert(*newRule, *absentLiterals(nextLiteral));
+        ruleReasoning::insert(*newRule, *absentLiterals(nextLiteral));
         SymbolicExperienceL covered_experiences;
         uintA covered_experiences_ids;
         calcCoverage_ground(covered_experiences, covered_experiences_ids, newRule, examples);
@@ -2641,13 +2643,13 @@ RuleLearner_ground::~RuleLearner_ground() {
 
 
 
-double RuleLearner_ground::score(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold) {
+double RuleLearner_ground::score(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.0);
   return score(rulesC, experiences, cutting_threshold, experience_weights);
 }
 
-double RuleLearner_ground::score(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights) {
+double RuleLearner_ground::score(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, double cutting_threshold, arr& experience_weights) {
   uint DEBUG = 0;
   if (DEBUG > 0) {cout << "SCORE [start]" << endl;}
   if (DEBUG > 1) {cout<<"RULES:"<<endl;  rulesC.writeNice(); }
@@ -2656,7 +2658,7 @@ double RuleLearner_ground::score(TL::RuleSetContainer_ground& rulesC, SymbolicEx
   // (1) Penalty
   double penalty = 0.0;
   FOR1D_(rulesC.rules, i) {
-    penalty += TL::ruleReasoning::numLiterals(*rulesC.rules.elem(i));
+    penalty += ruleReasoning::numLiterals(*rulesC.rules.elem(i));
   }
   penalty *= alpha_PEN;
   if (DEBUG > 0) {PRINT(penalty);}
@@ -2669,13 +2671,13 @@ double RuleLearner_ground::score(TL::RuleSetContainer_ground& rulesC, SymbolicEx
     if (DEBUG>1) {PRINT(covering_rules);}
     // only one non-default rule covers
     if (covering_rules.N == 1) {
-      TL::Rule* rule = rulesC.rules.elem(covering_rules(0));
+      Rule* rule = rulesC.rules.elem(covering_rules(0));
       if (DEBUG > 2) {
         cout << "Use rule #" << covering_rules(0) << "  " << rulesC.experiences_per_rule(covering_rules(0)) << endl;
         rule->write(cout);
       }
       #if 0
-      exLik = TL::ruleReasoning::probability_abstractRule(rule, *examples(i)->pre, examples(i)->action, *examples(i)->post, p_min);
+      exLik = ruleReasoning::probability_abstractRule(rule, *examples(i)->pre, examples(i)->action, *examples(i)->post, p_min);
       #else
       uint o;
       MT::Array< uintA >& exs_per_out = rulesC.experiences_per_ruleOutcome(covering_rules(0));
@@ -2700,8 +2702,8 @@ double RuleLearner_ground::score(TL::RuleSetContainer_ground& rulesC, SymbolicEx
       if (DEBUG > 2) {
         cout << " Using default rule." << endl;
       }
-      TL::Rule* default_rule = rulesC.rules.elem(0);
-//       exLik = TL::ruleReasoning::probability_defaultRule(default_rule, *examples(i)->pre, *examples(i)->post, p_min_noisyDefaultRule);
+      Rule* default_rule = rulesC.rules.elem(0);
+//       exLik = ruleReasoning::probability_defaultRule(default_rule, *examples(i)->pre, *examples(i)->post, p_min_noisyDefaultRule);
       if (rulesC.experiences_per_ruleOutcome(0)(0).findValue(i) >= 0)
         exLik = default_rule->probs(0) * (100.0 * p_min_noisyDefaultRule);
       else 
@@ -2781,14 +2783,14 @@ void RuleLearner_ground::setAlphaPEN(double alpha_PEN) {
 }
 
 
-void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
+void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.0);
   learn_rules(rulesC, experiences, experience_weights, logfile);
 }
 
 // Algorithm in Zettlemoyer's Figure 2
-void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
+void RuleLearner_ground::learn_rules(RuleSetContainer_ground& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
   uint DEBUG = 0; //  2 ist gut
   rulesC.clear();
   rulesC.init(&experiences);
@@ -2802,7 +2804,7 @@ void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, Symbol
 //   }
   
   // Init default rule
-  rulesC.rules.append(TL::ruleReasoning::generateDefaultRule());
+  rulesC.rules.append(ruleReasoning::generateDefaultRule());
   rulesC.recomputeDefaultRule();
   bool betterRulesFound = true;
   uint round = 0;
@@ -2859,7 +2861,7 @@ void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, Symbol
     if (DEBUG > 1) {if(so_useAgain) cout<<"Using op again."<<endl; else cout<<"Using fresh op."<<endl;}
     so_UsageHistory.append(op);
     num_so_applied(op)++;
-    MT::Array< TL::RuleSetContainer_ground > set_of__rulesC_new;
+    MT::Array< RuleSetContainer_ground > set_of__rulesC_new;
     searchOperators(op)->createRuleSets(rulesC, experiences, set_of__rulesC_new);
     if (set_of__rulesC_new.N == 0) {
       op_applicable(op) = false;
@@ -2954,13 +2956,13 @@ void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, Symbol
   
   log_info<<"--- VOCABULARY ---"<<endl;
   log_info<<"*Primitive predicates*"<<endl;
-  TL::writeNice(logicObjectManager::p_prim, log_info);
+  writeNice(logicObjectManager::p_prim, log_info);
   log_info<<"*Derived predicates*"<<endl;
-  TL::writeNice(logicObjectManager::p_derived, log_info);
+  writeNice(logicObjectManager::p_derived, log_info);
   log_info<<"*Primitive functions*"<<endl;
-  TL::writeNice(logicObjectManager::f_prim, log_info);
+  writeNice(logicObjectManager::f_prim, log_info);
   log_info<<"*Derived functions*"<<endl;
-  TL::writeNice(logicObjectManager::f_derived, log_info);
+  writeNice(logicObjectManager::f_derived, log_info);
   log_info<<endl;
   log_info<<"--- RULES ---"<<endl;
   rulesC.rules.write(log_info);
@@ -3019,3 +3021,5 @@ void RuleLearner_ground::learn_rules(TL::RuleSetContainer_ground& rulesC, Symbol
 
 
 }
+
+#endif

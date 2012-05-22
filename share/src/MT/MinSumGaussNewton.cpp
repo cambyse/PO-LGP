@@ -300,7 +300,7 @@ void MinSumGaussNewton::step(uint steps){
   }
 }
 
-#include "array_t.cpp"
+#include "array_t.cxx"
 template MT::Array<Fij>::Array();
 template MT::Array<Fij>::~Array();
 template MT::Array<Mu>::Array();

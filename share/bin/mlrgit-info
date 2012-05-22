@@ -3,7 +3,7 @@ git branch -a
 echo; echo '   *** BRANCHES not merged in current HEAD (tip of currently checked-out branch) ***'
 git branch -a --no-merge
 echo; echo '   *** details on remote branches ***'
-git remote show maserati
+git remote show origin
 echo; echo '   *** STATUS ***'
 git status
 echo; echo '   *** info on HEAD ***'
