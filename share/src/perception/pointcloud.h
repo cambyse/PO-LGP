@@ -1,19 +1,22 @@
 #include <JK/utils/masterWorker.h>
 #include <hardware/kinect.h>
+#include <pcl/ModelCoefficients.h>
 
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
 
 class PointCloudSet : public Variable {
-  FIELD(PointCloudL, point_clouds);
+  public:
+    FIELD(PointCloudL, point_clouds);
 };
 class ObjectSet : public Variable {
-  FIELD(arr, point_clouds);
+  public:
+    FIELD(arr, point_clouds);
 };
 class ObjectClusterer : public Process {
   public:
-    PointCloud* data_3d;
+    PointCloudVar* data_3d;
     PointCloudSet* point_clouds;
 
     void open();
@@ -22,15 +25,16 @@ class ObjectClusterer : public Process {
 };
   
 class ObjectFitterMaster : public Master<FittingJob, FittingResult> {
-  PointCloudSet* point_clouds;
-  ObjectSet* objects;
-  //virtual int hasNextJob();
-  //virtual int hasWorkingJob();
-  //virtual FittingJob createJob();
-  virtual void integrateResult(const FittingResult &r);
+  public:
+    PointCloudSet* point_clouds;
+    ObjectSet* objects;
+    //virtual int hasNextJob();
+    //virtual int hasWorkingJob();
+    //virtual FittingJob createJob();
+    virtual void integrateResult(const FittingResult &r);
 };
 
 class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
   public:
-    void doWork(FittingResult &r, const FittingJoba &j);
+    void doWork(FittingResult &r, const FittingJob &j);
 };
