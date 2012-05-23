@@ -29,14 +29,19 @@ template<class Job, class Result> class Worker : public Process {
 };
 
 template<class Job, class Result> class Master : public Process {
-  private:
+  protected:
     sMaster<Job, Result>* s;
   public:
     Master<Job, Result>(const char* name, WorkerFactory<Job, Result>* factory, const int numOfWorkers = 5);
     virtual ~Master<Job, Result>();
-    virtual int hasNextJob() = 0;
-    virtual int hasWorkingJob() = 0;
-    virtual Job createJob() = 0;
+
+    // override the following two functions if you want to use restart()
+    virtual int hasNextJob();
+    virtual Job createJob();
+
+    //override if you want to see if all jobs are done
+    virtual int hasWorkingJob();
+
     virtual void integrateResult(const Result& r) = 0;
 
     virtual void open();
