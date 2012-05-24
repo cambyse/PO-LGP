@@ -14,6 +14,48 @@
 
 #include "behaviors.h"
 
+class ViewWindow : public Process {
+	private:
+		MT::Array<View*> views;
+
+	public:
+		ViewWindow(MT::Array<View*> views) : Process("ViewWindow") {
+			this->views = views;
+		};
+
+		void open(){
+			//gtk_init(&argn, &argv);
+			gtk_init(0, NULL);
+
+			/*GtkBuilder *builder = gtk_builder_new ();
+			gtk_builder_add_from_file (builder, "win.glade", NULL);
+			GtkWidget *win = GTK_WIDGET(gtk_builder_get_object (builder, "window"));
+			GtkWidget *container = GTK_WIDGET(gtk_builder_get_object (builder, "vbox1"));
+			gtk_builder_connect_signals (builder, NULL);
+			g_object_unref (G_OBJECT (builder));
+			gtk_widget_show(win);
+			*/
+
+			GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+			gtk_window_set_title(GTK_WINDOW(win), "big window");
+			gtk_window_set_default_size(GTK_WINDOW(win), 100, 100);
+			gtk_widget_show(win);
+
+			GtkWidget *box = gtk_vbox_new (false, 5);
+			gtk_container_add(GTK_CONTAINER(win), box);
+
+			views(0)->gtkNew(box);
+		};
+
+		void step(){
+			gtk_main_iteration_do (false); // non blocking ui iteration
+		};
+
+		void close(){
+
+		};
+};
+
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   //ThreadInfoWin win;
@@ -85,26 +127,8 @@ int main(int argn,char** argv){
 
   View *v0 = newView(geometricState, 0);
 
-  gtk_init(&argn, &argv);
-  /*GtkBuilder *builder = gtk_builder_new ();
-  gtk_builder_add_from_file (builder, "win.glade", NULL);
-  GtkWidget *win = GTK_WIDGET(gtk_builder_get_object (builder, "window"));
-  GtkWidget *container = GTK_WIDGET(gtk_builder_get_object (builder, "vbox1"));
-  gtk_builder_connect_signals (builder, NULL);
-  g_object_unref (G_OBJECT (builder));
-  gtk_widget_show(win);
-  */
-
-  GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(win), "big window");
-  gtk_window_set_default_size(GTK_WINDOW(win), 100, 100);
-  gtk_widget_show(win);
-
-  GtkWidget *box = gtk_vbox_new (false, 5);
-  gtk_container_add(GTK_CONTAINER(win), box);
-
-  v0->gtkNew(box);
-  gtk_main();
+  ViewWindow viewWindow(LIST<View>(*v0));
+  P.append(LIST<Process>(viewWindow));
   /////////////////////////////////////////////////////////////////////////////
 
   //cam.threadLoop();
