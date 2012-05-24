@@ -8,9 +8,7 @@
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
-
-//forward Declaration
-class ObjectFitterMaster;
+typedef MT::Array<FittingResult> FittingResultL;
 
 class PointCloudSet : public Variable {
   public:
@@ -20,7 +18,7 @@ class PointCloudSet : public Variable {
 class ObjectSet : public Variable {
   public:
     ObjectSet(const char *name) : Variable(name) { reg_objects(); }
-    FIELD(arr, objects);
+    FIELD(FittingResultL, objects);
 };
 class ObjectClusterer : public Process {
   public:
@@ -33,33 +31,33 @@ class ObjectClusterer : public Process {
     void close();
 };
 
-//class ObjectFitter : public Process {
-  //public:
-    //ObjectFitter() : Process("ObjectFitter") {}
-    //PointCloudSet* point_clouds;
-    //ObjectSet* objects;
-    //ObjectFitterMaster* master;
-    //void open();
-    //void step();
-    //void close();
-    
-//};
   
-//class ObjectFitterMaster : public Master<FittingJob, FittingResult> {
-  //public:
-    //ObjectFitterMaster(WorkerFactory<FittingJob, FittingResult> *factory, int num_of_workers) : Master<FittingJob, FittingResult>("ObjectFitter (Master)", factory, num_of_workers) {}
-    //PointCloudSet* point_clouds;
-    //ObjectSet* objects;
-    //virtual int hasNextJob();
-    //virtual int hasWorkingJob();
-    //virtual FittingJob createJob();
-    //virtual void integrateResult(const FittingResult &r);
-//};
+class ObjectFitterIntegrator : public Integrator<FittingResult> {
+  public:
+    ObjectFitterIntegrator() : Integrator<FittingResult>("ObjectFitter (Integrator)") { birosInfo.getVariable(objects, "Objects", this); }
+    PointCloudSet* point_clouds;
+    ObjectSet* objects;
+    void restart();
+    virtual void integrateResult(const FittingResult &r);
+};
 
-//class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
-  //public:
-    //ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)") {}
-    //void doWork(FittingResult &r, const FittingJob &j);
-//};
+class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
+  public:
+    ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)") {}
+    void doWork(FittingResult &r, const FittingJob &j);
+};
+
+class ObjectFitterWorkerFactory : public WorkerFactory<FittingJob, FittingResult> {
+  public:
+    Worker<FittingJob, FittingResult>* createWorker() { return new ObjectFitterWorker(); }
+};
+
+class ObjectFitter : public Master<FittingJob, FittingResult> {
+  public:
+    ObjectFitter(ObjectFitterWorkerFactory *factory, ObjectFitterIntegrator *integrator, int num_of_workers) :
+      Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
+        birosInfo.getVariable(integrator->point_clouds, "ObjectClusters", integrator);
+      };
+};
 
 #endif

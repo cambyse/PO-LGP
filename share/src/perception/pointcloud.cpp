@@ -81,59 +81,67 @@ void ObjectClusterer::step() {
   point_clouds->set_point_clouds(_point_clouds, this);
 }
 
-//void ObjectFitter::open() { }
+void ObjectFitterIntegrator::restart() {
+  objects->writeAccess(this);
+  objects->objects.clear();
+  objects->deAccess(this);
+}
 
-//void ObjectFitter::step() {
-  //master->pause();
-  //objects->set_objects(master->objects);
-  //master->restart();
-//}
+void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
+  // add to ObjectSet  
+  if (result.get() == 0) return;
+  objects->writeAccess(this);
+  objects->objects.append(result);
+  objects->deAccess(this);
+}
 
-//void ObjectFitter::close() { }
-
-
-//int ObjectFitterMaster::hasNextJob() {
-  //return point_clouds.get_point_clouds(this).N - jobs.size();
-//}
-//int ObjectFitterMaster::hasWorkingJob() {
-  //return 0; 
-//}
-//FittingJob ObjectFitterMaster::createJob() {
-  //jobs.push(point_clouds.get_point_clouds(this).N);
+void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
+  // Build kd-tree from cloud
+  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+  tree->setInputCloud (cloud);
   
-//}
-
-//void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
-  ////do pcl stuff  
-  //pcl::NormalEstimation<PointT, pcl::Normal> ne;
-  //pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
-  //pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
-  //pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-  //pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-  //pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-  //tree->setInputCloud (cloud);
-
+  // Estimate point normals
+  pcl::NormalEstimation<PointT, pcl::Normal> ne;
+  ne.setSearchMethod (tree);
+  ne.setInputCloud (cloud);
+  ne.setKSearch (50);
   
-  //// Estimate point normals
-  //ne.setSearchMethod (tree);
-  //ne.setInputCloud (cloud);
-  //ne.setKSearch (50);
-  //ne.compute (*cloud_normals);
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+  ne.compute (*cloud_normals);
 
-  //// Create the segmentation object for cylinder segmentation and set all the parameters
-  //seg.setOptimizeCoefficients (true);
-  //seg.setModelType (pcl::SACMODEL_CYLINDER);
-  //seg.setMethodType (pcl::SAC_RANSAC);
-  //seg.setNormalDistanceWeight (0.1);
-  //seg.setMaxIterations (100);
-  //seg.setDistanceThreshold (0.05);
-  //seg.setRadiusLimits (0, 0.1);
-  //seg.setInputCloud (cloud);
-  //seg.setInputNormals (cloud_normals);
+  // Create the segmentation object for cylinder segmentation and set all the parameters
+  // TODO: make parameters
+  pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
+  seg.setOptimizeCoefficients (true);
+  seg.setModelType (pcl::SACMODEL_CYLINDER);
+  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setNormalDistanceWeight (0.1);
+  seg.setMaxIterations (100);
+  seg.setDistanceThreshold (0.01);
+  seg.setRadiusLimits (0.01, 0.1);
+  seg.setInputCloud (cloud);
+  seg.setInputNormals (cloud_normals);
 
-  //seg.segment (*inliers_cylinder, *coefficients_cylinder);
+  pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
+  pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
+  seg.segment (*inliers_cylinder, *coefficients_cylinder);
 
-  //std::cout << "Num of inliers: " << inliers_cylinder->indices.size() << std::endl;
+  if (inliers_cylinder->indices.size() < 500) object.reset();
+  else {
+    object = coefficients_cylinder;
+   
+    // if rest points are enough create new job
+    if (cloud->size() - inliers_cylinder->indices.size() > 500) {
+      FittingJob outliers(new pcl::PointCloud<PointT>());
+      pcl::ExtractIndices<PointT> extract;
+      extract.setInputCloud(cloud);
+      extract.setIndices(inliers_cylinder);
+      extract.setNegative(true);
+      extract.filter(*outliers);
+      jobs->writeAccess(this);
+      jobs->data.push(outliers);
+      jobs->deAccess(this);
+    }
+  }
+}
 
-  //object = coefficients_cylinder;
-//}
