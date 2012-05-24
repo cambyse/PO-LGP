@@ -65,6 +65,8 @@ template<class Job, class Result> Master<Job, Result>::Master(WorkerFactory<Job,
     w->results = results;
     w->threadOpen();
   }
+  s->integrator->results = results;
+  s->integrator->threadOpen();
 
 }
 
@@ -88,15 +90,19 @@ template<class Job, class Result> void Master<Job, Result>::restart(Process *p) 
     jobs->deAccess(p);
   }
   s->restartWorker();
-  s->integrator->threadListenTo(results);
+  s->integrator->restart();
+  s->integrator->threadLoop();
 
 }
 template<class Job, class Result> void Master<Job, Result>::restart(std::queue<Job> &jobs, Process *p) {
   if (!s->paused) return;
   s->paused = false;
-  jobs->set_data(jobs, p);
+  this->jobs->writeAccess(p);
+  this->jobs->data = jobs;
+  this->jobs->deAccess(p);
   s->restartWorker();
-  s->integrator->threadListenTo(results);
+  s->integrator->restart();
+  s->integrator->threadLoop();
 }
   
 
@@ -108,6 +114,9 @@ template<class Job, class Result> void sMaster<Job, Result>::restartWorker() {
 }
 
 template<class Result> void Integrator<Result>::open() {
+}
+
+template<class Result> void Integrator<Result>::restart() {
 }
 
 template<class Result> void Integrator<Result>::step() {
@@ -131,6 +140,6 @@ template<class Job, class Result> Master<Job, Result>::~Master() {
   }
 }
 
-template<class T> Pool<T>::Pool() : Variable("Pool Variable") { reg_data(); }
+template<class T> Pool<T>::Pool() : Variable("Pool Variable") { }
 
 #endif

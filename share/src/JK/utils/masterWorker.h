@@ -12,7 +12,7 @@ template<class Result> class Integrator;
 template<class T> class Pool : public Variable {
   public:
     Pool<T>();
-    FIELD(std::queue<T>, data); 
+    std::queue<T> data; // Not a FIELD, since then we need operator<< for every T
 };
 
 template<class Job, class Result> class Worker : public Process {
@@ -38,11 +38,11 @@ template<class Job, class Result> class Master  {
 
     //override if you want to use restart(Process*) instead of
     //restart(std::queue<Job>&, Process*)
-    virtual int hasNextJob();
-    virtual Job createJob();
+    virtual int hasNextJob() { MT_MSG("Don't use restart() without overriding hasNextJob()!"); return 0; }
+    virtual Job createJob() { } ;
 
     //override if you want to see if all jobs are done
-    virtual int hasWorkingJob();
+    virtual int hasWorkingJob() { MT_MSG("hasWorkingJob() is not implemted. Override it!"); return 0; }
 
     virtual void pause();
     virtual void restart(Process* p);
@@ -57,9 +57,10 @@ template<class Result> class Integrator : public Process {
     Integrator(const char *name) : Process(name) {};
     virtual void integrateResult(const Result& r) = 0;
 
-    void open();
+    virtual void open();
     void step();
-    void close();
+    virtual void close();
+    virtual void restart();
 
     Pool<Result>* results;
 };
