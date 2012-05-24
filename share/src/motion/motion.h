@@ -18,7 +18,7 @@ struct ActionToMotionPrimitive;
 struct GeometricState:Variable {
   FIELD(ors::Graph, ors);
   
-  GeometricState();
+  GeometricState():Variable("GeometricState"){reg_ors();};
   ors::Graph& get_ors() { return ors; }
 };
 

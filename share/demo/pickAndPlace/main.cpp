@@ -2,6 +2,9 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
+#include <views/views.h>
+#include <MT/ors.h>
+#include <MT/gtk.h>
 
 /* What doesn't work yet:
  
@@ -75,7 +78,34 @@ int main(int argn,char** argv){
   //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
   
   //step(PV);
-  loopWithBeat(PV,.1);
+  //loopWithBeat(PV,.1);
+
+  /////////////////////////////////////////////////////////////////////////////
+  //new view stuff
+
+  View *v0 = newView(geometricState, 0);
+
+  gtk_init(&argn, &argv);
+  /*GtkBuilder *builder = gtk_builder_new ();
+  gtk_builder_add_from_file (builder, "win.glade", NULL);
+  GtkWidget *win = GTK_WIDGET(gtk_builder_get_object (builder, "window"));
+  GtkWidget *container = GTK_WIDGET(gtk_builder_get_object (builder, "vbox1"));
+  gtk_builder_connect_signals (builder, NULL);
+  g_object_unref (G_OBJECT (builder));
+  gtk_widget_show(win);
+  */
+
+  GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(win), "big window");
+  gtk_window_set_default_size(GTK_WINDOW(win), 100, 100);
+  gtk_widget_show(win);
+
+  GtkWidget *box = gtk_vbox_new (false, 5);
+  gtk_container_add(GTK_CONTAINER(win), box);
+
+  v0->gtkNew(box);
+  gtk_main();
+  /////////////////////////////////////////////////////////////////////////////
 
   //cam.threadLoop();
   loopWithBeat(P,.01);
