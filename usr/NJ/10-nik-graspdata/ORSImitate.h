@@ -101,7 +101,7 @@ void PlanTrajectory(ors::Graph * ors,RobotProcessGroup & robot,GraspObject* objM
 			sys.ors->setJointState(best[t]);
 			sys.ors->calcBodyFramesFromJoints();		//	robot.gui.step();
 			gl.update();
-			gl.text.clr()<< t<< endl;
+			gl.text.clear()<< t<< endl;
 		}
 		TVImitate->updateState();
 		cout << " last value " << TVImitate->y << endl;

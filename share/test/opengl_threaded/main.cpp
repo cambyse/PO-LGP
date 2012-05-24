@@ -24,7 +24,7 @@ struct Proc:public Process{
 
 int main(int argc, char **argv){
   MT::initCmdLine(argc,argv);
-  int mode = MT::getParameter<int>("mode",3);
+  //int mode = MT::getParameter<int>("mode",3);
   
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
   gl1.threadLoop();
@@ -38,7 +38,7 @@ int main(int argc, char **argv){
   MT::Array<MT::String> names;
   ProcessL procs;
   for (int i=0; i<20; ++i){
-    names.append(MT::String()+"many_"+i);
+    names.append(STRING("many_"<<i));
     gli = new Proc(names(i));
     gli->threadLoop();
     procs.append(gli);

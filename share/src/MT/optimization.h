@@ -46,7 +46,7 @@ struct QuadraticFunction { virtual double fq(SqrPotential& S, const arr& x) = 0;
 /// and we can access local Jacobians of f_i and f_{ij}
 struct VectorChainFunction {
   uint T;
-  virtual void fvi (arr& y, arr& J, uint i, const arr& x_i) = 0;
+  virtual void fvi(arr& y, arr& J, uint i, const arr& x_i) = 0;
   virtual void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
 
@@ -55,7 +55,7 @@ struct VectorChainFunction {
 /// and we can access local SqrPotential approximations of f_i and f_{ij}
 struct SqrChainFunction {
   uint T;
-  virtual double fqi (SqrPotential& S, uint i, const arr& x_i) = 0;
+  virtual double fqi(SqrPotential& S, uint i, const arr& x_i) = 0;
   virtual double fqij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
 };
 
@@ -87,14 +87,14 @@ double evaluateSF(ScalarFunction& f, const arr& x);
 double evaluateVF(VectorFunction& f, const arr& x);
 double evaluateVCF(VectorChainFunction& f, const arr& x);
 double evaluateQCF(SqrChainFunction& f, const arr& x);
-    
+
 /// converts a VectorChainFunction to any of a ScalarFunction, VectorFunction or SqrChainFunction
-struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction{
+struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction {
   VectorChainFunction *f;
   conv_VectorChainFunction(VectorChainFunction& _f);
   virtual double fs(arr& grad, const arr& x);                  //to a ScalarFunction
   virtual void   fv(arr& y, arr& J, const arr& x);             //to a VectorFunction
-  virtual double fqi (SqrPotential& S, uint i, const arr& x_i); //to a SqrChainFunction
+  virtual double fqi(SqrPotential& S, uint i, const arr& x_i);  //to a SqrChainFunction
   virtual double fqij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j);
 };
 
@@ -104,7 +104,7 @@ struct conv_VectorChainFunction:ScalarFunction,VectorFunction,SqrChainFunction{
 // optimization methods
 //
 
-struct optOptions{ 
+struct optOptions {
   double *fmin_return;
   double stopTolerance;
   uint   stopEvals;

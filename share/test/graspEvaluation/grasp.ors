@@ -1,0 +1,22 @@
+body hand { pose=<0.000633764 -0.407796 0.807121 0.0936383 -0.541849 0.33926 0.76324>  }
+body object { pose=<0.25 -0.6 0.745 0.875426 -0.109382 0.23457 0.408218>  }
+
+shape (hand){ rel=<-0 0 0 -0.707108 4.24736e-17 2.865e-17 -0.707108> type=3 contact mesh='schunk_3d/schunk_0306910_prl_6010_x.tri' color=[0.5 0.5 0.5]  }
+shape (hand){ rel=<-2.06423e-07 1.29244e-07 -0.0800002 -6.1847e-17 1.92988e-17 -1.98138e-17 -1> type=3 contact mesh='schunk_3d/3385031717_vbe_0606_x.tri'  }
+shape (hand){ rel=<-2.66801e-07 1.67048e-07 -0.1034 -3.74863e-17 -0.707108 -0.707108 7.15302e-17> type=4 contact size=[0 0 0.008 0.04] color=[0.1 0.1 0.1]  }
+shape (hand){ rel=<-3.93493e-07 2.46372e-07 -0.1525 -3.74863e-17 -0.707108 -0.707108 7.15302e-17> type=3 contact mesh='schunk_3d/SDH_Gehaeuse_x.tri' color=[0.55 0.55 0.55]  }
+shape (hand){ rel=<-8.32572e-07 -0.00599952 -0.320001 -1 0 0 0> type=5 size=[0.05 0 0 0.5] color=[0 1 0]  }
+shape (hand){ rel=<-5.62728e-07 -0.0281153 -0.179032 1.47451e-17 9.48677e-19 0.463234 -0.886239> type=3 contact mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (hand){ rel=<-4.8934e-07 -0.0580058 -0.246551 0.463234 -0.886239 -3.35832e-17 -4.33071e-17> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (hand){ rel=<0.0327353 0.0103363 -0.178228 0.865443 -0.500782 0.00759028 -0.0131174> type=3 contact mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (hand){ rel=<0.0334625 0.0343157 -0.248062 0.00759028 -0.0131174 -0.865443 0.500782> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (hand){ rel=<-0.0327652 0.0112864 -0.17772 0.84961 -0.527198 -0.00799066 0.0128774> type=3 contact mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[0.55 0.55 0.55]  }
+shape (hand){ rel=<-0.0333605 0.030923 -0.248898 -0.00799066 0.0128774 -0.84961 0.527198> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (hand){ rel=<-5.69975e-07 -0.0794445 -0.161235 1.014e-16 2.67527e-17 0.679098 -0.734051> type=3 contact mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+shape (hand){ rel=<-4.06152e-07 -0.0748571 -0.295497 0.679098 -0.734051 1.13841e-18 -5.5999e-17> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (hand){ rel=<0.0335735 0.0379796 -0.167757 0.785253 -0.618994 0.00938199 -0.011902> type=3 contact mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+shape (hand){ rel=<0.0340765 0.0545619 -0.301069 0.00938199 -0.011902 -0.785253 0.618994> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (hand){ rel=<-0.0334526 0.0339588 -0.170108 0.78317 -0.621627 -0.0094219 0.0118704> type=3 contact mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[0.5 0.5 0.5]  }
+shape (hand){ rel=<-0.0339281 0.049646 -0.303529 -0.0094219 0.0118704 -0.78317 0.621627> type=5 size=[0.01 0 0 0] color=[1 0 0]  }
+shape (object){ rel=<0 0 0 1 0 0 0> type=0 contact size=[0.1 0.1 0.15 0] color=[0.3 0.9 0.1]  }
+

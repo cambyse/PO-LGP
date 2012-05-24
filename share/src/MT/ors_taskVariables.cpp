@@ -16,17 +16,17 @@
 
 #include "ors.h"
 
-TaskVariable::TaskVariable(){
+TaskVariable::TaskVariable() {
   active=false;
   type=noneTVT;
   targetType=directTT;
   y_prec=0.; v_prec=0.; Pgain=Dgain=0.; err=derr=0.;
 }
 
-DefaultTaskVariable::DefaultTaskVariable():TaskVariable(){
+DefaultTaskVariable::DefaultTaskVariable():TaskVariable() {
 }
 
-DefaultTaskVariable::~DefaultTaskVariable(){
+DefaultTaskVariable::~DefaultTaskVariable() {
 }
 
 DefaultTaskVariable::DefaultTaskVariable(
@@ -35,7 +35,7 @@ DefaultTaskVariable::DefaultTaskVariable(
   TVtype _type,
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
-  const arr& _params){
+  const arr& _params) {
   set(
     _name, _ors, _type,
     iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
@@ -51,7 +51,7 @@ DefaultTaskVariable::DefaultTaskVariable(
   TVtype _type,
   const char *iShapeName,
   const char *jShapeName,
-  const arr& _params){
+  const arr& _params) {
   ors::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
   ors::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
   set(
@@ -63,7 +63,7 @@ DefaultTaskVariable::DefaultTaskVariable(
     _params);
 }
 
-TaskVariable::~TaskVariable(){
+TaskVariable::~TaskVariable() {
 }
 
 void DefaultTaskVariable::set(
@@ -72,7 +72,7 @@ void DefaultTaskVariable::set(
   TVtype _type,
   int _i, const ors::Transformation& _irel,
   int _j, const ors::Transformation& _jrel,
-  const arr& _params){
+  const arr& _params) {
   type=_type;
   name=_name;
   i=_i;
@@ -93,7 +93,7 @@ void DefaultTaskVariable::set(
     ors::Transformation().setText(reltext));
 }*/
 
-void TaskVariable::setGains(double pgain, double dgain, bool onReal){
+void TaskVariable::setGains(double pgain, double dgain, bool onReal) {
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Pgain=pgain;
@@ -101,7 +101,7 @@ void TaskVariable::setGains(double pgain, double dgain, bool onReal){
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsNatural(double oscPeriod, double dampingRatio, bool onReal){
+void TaskVariable::setGainsAsNatural(double oscPeriod, double dampingRatio, bool onReal) {
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Pgain = MT::sqr(MT_PI/oscPeriod);
@@ -109,7 +109,7 @@ void TaskVariable::setGainsAsNatural(double oscPeriod, double dampingRatio, bool
   if(!y_prec) y_prec=100.;
 }
 
-void TaskVariable::setGainsAsAttractor(double decaySteps, double oscillations, bool onReal){
+void TaskVariable::setGainsAsAttractor(double decaySteps, double oscillations, bool onReal) {
   if(onReal)  targetType=pdGainOnRealTT;  else  targetType=pdGainOnReferenceTT;
   active=true;
   Dgain=2./decaySteps;
@@ -118,7 +118,7 @@ void TaskVariable::setGainsAsAttractor(double decaySteps, double oscillations, b
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv){
+void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv) {
   OPS;
   targetType=trajectoryTT;
   active=true;
@@ -128,7 +128,7 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv){
   y_prec_trajectory.resize(T);
   v_trajectory.resize(T, y.N);
   v_prec_trajectory.resize(T);
-  for(t=0; t<T; t++){
+  for(t=0; t<T; t++) {
     a = (double)t/(T-1);
     y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
     y_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./y_prec) + ((double)1.-a)*funnelsdv);
@@ -139,21 +139,21 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv){
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setConstantTargetTrajectory(uint T){
+void TaskVariable::setConstantTargetTrajectory(uint T) {
   OPS;
   targetType=trajectoryTT;
   active=true;
   uint t;
   y_trajectory.resize(T+1, y.N);
   v_trajectory.resize(T+1, y.N);
-  for(t=0; t<=T; t++){
+  for(t=0; t<=T; t++) {
     y_trajectory[t]()  = y_target;
     v_trajectory[t]()  = v_target;
   }
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setInterpolatedTargetTrajectory(uint T){
+void TaskVariable::setInterpolatedTargetTrajectory(uint T) {
   OPS;
   targetType=trajectoryTT;
   active=true;
@@ -161,26 +161,26 @@ void TaskVariable::setInterpolatedTargetTrajectory(uint T){
   double a;
   y_trajectory.resize(T, y.N);
   v_trajectory.resize(T, y.N);
-  for(t=0; t<T; t++){
+  for(t=0; t<T; t++) {
     a = (double)t/(T-1);
     y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
     v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
   }
 }
 
-void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec){
+void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double final_y_prec, double mid_v_prec, double final_v_prec) {
   targetType=trajectoryTT;
   active=true;
   uint t;
   double a;
   y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
   v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
-  for(t=0; t<=T; t++){
+  for(t=0; t<=T; t++) {
     a = (double)t/T;
     y_trajectory[t]() = ((double)1.-a)*y + a*y_target;
     v_trajectory[t]() = ((double)1.-a)*v + a*v_target;
   }
-  for(t=0; t<T; t++){
+  for(t=0; t<T; t++) {
     y_prec_trajectory(t) = mid_y_prec;
     v_prec_trajectory(t) = mid_v_prec;
   }
@@ -188,31 +188,31 @@ void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec
   v_prec_trajectory(T) = final_v_prec;
 }
 
-void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec){
+void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T, double y_prec, double v_prec) {
   targetType=trajectoryTT;
   active=true;
   uint t;
   double a;
   y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
   v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
-  for(t=0; t<=T; t++){
+  for(t=0; t<=T; t++) {
     a = (double)t/T;
     y_trajectory[t]() = ((double)1.-a)*y + a*y_target;
     v_trajectory[t]() = ((double)1.-a)*v + a*v_target;
   }
-  for(t=0; t<=T; t++){
+  for(t=0; t<=T; t++) {
     y_prec_trajectory(t) = y_prec;
     v_prec_trajectory(t) = v_prec;
   }
 }
 
-void TaskVariable::setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec){
+void TaskVariable::setConstTargetsConstPrecisions(uint T, double y_prec, double v_prec) {
   targetType=trajectoryTT;
   active=true;
   uint t;
   y_trajectory.resize(T+1, y.N);  y_prec_trajectory.resize(T+1);
   v_trajectory.resize(T+1, y.N);  v_prec_trajectory.resize(T+1);
-  for(t=0; t<=T; t++){
+  for(t=0; t<=T; t++) {
     y_trajectory[t]() = y_target;
     v_trajectory[t]() = v_target;
     y_prec_trajectory(t) = y_prec;
@@ -220,14 +220,14 @@ void TaskVariable::setConstTargetsConstPrecisions(uint T, double y_prec, double 
   }
 }
 
-void TaskVariable::appendConstTargetsAndPrecs(uint T){
+void TaskVariable::appendConstTargetsAndPrecs(uint T) {
   targetType=trajectoryTT;
   active=true;
   uint t,t0=y_trajectory.d0;
   CHECK(t0,"");
   y_trajectory.resizeCopy(T+1, y.N);  y_prec_trajectory.resizeCopy(T+1);
   v_trajectory.resizeCopy(T+1, y.N);  v_prec_trajectory.resizeCopy(T+1);
-  for(t=t0; t<=T; t++){
+  for(t=t0; t<=T; t++) {
     y_trajectory[t]() = y_trajectory[t0-1];
     v_trajectory[t]() = v_trajectory[t0-1];
     y_prec_trajectory(t) = y_prec_trajectory(t0-1);
@@ -235,19 +235,19 @@ void TaskVariable::appendConstTargetsAndPrecs(uint T){
   }
 }
 
-void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec){
+void TaskVariable::setInterpolatedTargetsEndPrecisions(uint T, double mid_y_prec, double mid_v_prec) {
   setInterpolatedTargetsEndPrecisions(T, mid_y_prec, y_prec, mid_v_prec, v_prec);
 }
 
-void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T){
+void TaskVariable::setInterpolatedTargetsConstPrecisions(uint T) {
   setInterpolatedTargetsConstPrecisions(T, y_prec, v_prec);
 }
 
-void TaskVariable::setConstTargetsConstPrecisions(uint T){
+void TaskVariable::setConstTargetsConstPrecisions(uint T) {
   setConstTargetsConstPrecisions(T, y_prec, v_prec);
 }
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec){
+void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec, double final_prec) {
   OPS;
   active=true;
   uint t;
@@ -257,14 +257,14 @@ void TaskVariable::setPrecisionTrajectoryFinal(uint T, double intermediate_prec,
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionTrajectoryConstant(uint T, double const_prec){
+void TaskVariable::setPrecisionTrajectoryConstant(uint T, double const_prec) {
   OPS;
   active=true;
   y_prec_trajectory.resize(T);
   y_prec_trajectory = const_prec;
 }
 
-void TaskVariable::setPrecisionVTrajectoryFinal(uint T, double intermediate_v_prec, double final_v_prec){
+void TaskVariable::setPrecisionVTrajectoryFinal(uint T, double intermediate_v_prec, double final_v_prec) {
   OPS;
   active=true;
   uint t;
@@ -274,7 +274,7 @@ void TaskVariable::setPrecisionVTrajectoryFinal(uint T, double intermediate_v_pr
 }
 
 //compute an y_trajectory and y_prec_trajectory which connects y with y_target and 0 with y_prec
-void TaskVariable::setPrecisionVTrajectoryConstant(uint T, double const_prec){
+void TaskVariable::setPrecisionVTrajectoryConstant(uint T, double const_prec) {
   OPS;
   active=true;
   v_prec_trajectory.resize(T);
@@ -283,7 +283,7 @@ void TaskVariable::setPrecisionVTrajectoryConstant(uint T, double const_prec){
 
 //set velocity and position precisions splitting the T-step-trajectory into as
 //much intervals as y_precs given.
-void TaskVariable::setIntervalPrecisions(uint T, arr& y_precs, arr& v_precs){
+void TaskVariable::setIntervalPrecisions(uint T, arr& y_precs, arr& v_precs) {
   CHECK(y_precs.nd==1 && v_precs.nd==1 && y_precs.N>0 && v_precs.N>0
         && y_precs.N<=T+1 && y_precs.N<=T+1,
         "number of intervals needs to be in [1, T+1].");
@@ -294,27 +294,27 @@ void TaskVariable::setIntervalPrecisions(uint T, arr& y_precs, arr& v_precs){
   v_prec_trajectory.resize(T+1);
   y_prec_trajectory.resize(T+1);
   
-  for(t=0; t<=T; ++t){
+  for(t=0; t<=T; ++t) {
     y_prec_trajectory(t) = y_precs(t * y_precs.N/(T+1));
     v_prec_trajectory(t) = v_precs(t * v_precs.N/(T+1));
   }
 }
 
-void TaskVariable::shiftTargets(int offset){
+void TaskVariable::shiftTargets(int offset) {
   if(!y_trajectory.N) return;
   uint n=y_trajectory.d1, T=y_trajectory.d0;
   y_trajectory.shift(offset*n, false);  y_prec_trajectory.shift(offset, false);
   v_trajectory.shift(offset*n, false);  v_prec_trajectory.shift(offset, false);
 #if 1
   uint L = T+offset-1; //last good value before shift
-  for(uint t=T+offset; t<T; t++){
+  for(uint t=T+offset; t<T; t++) {
     y_trajectory[t] = y_trajectory[L];  y_prec_trajectory(t) = .5*y_prec_trajectory(L); //reduce precision more and more...
     v_trajectory[t] = v_trajectory[L];  v_prec_trajectory(t) = .5*v_prec_trajectory(L);
   }
 #endif
 }
 
-void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
+void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
   arr q, qd, p;
   ors::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
@@ -326,11 +326,11 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
   y_old=y;
   
   //get state
-  switch(type){
+  switch(type) {
     case posTVT:
-      if(j==-1){
+      if(j==-1) {
         ors.kinematics(y, i, &irel.pos);
-        ors.jacobian(J, i, &irel.pos); 
+        ors.jacobian(J, i, &irel.pos);
         break;
       }
       pi = ors.bodies(i)->X.pos + ors.bodies(i)->X.rot * irel.pos;
@@ -341,7 +341,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
       ors.jacobian(Jj, j, &jrel.pos);
       ors.jacobianR(JRj, j);
       J.resize(3, Jj.d1);
-      for(k=0; k<Jj.d1; k++){
+      for(k=0; k<Jj.d1; k++) {
         vi.set(Ji(0, k), Ji(1, k), Ji(2, k));
         vj.set(Jj(0, k), Jj(1, k), Jj(2, k));
         r .set(JRj(0, k), JRj(1, k), JRj(2, k));
@@ -349,10 +349,10 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
         jk -= ors.bodies(j)->X.rot / (r ^(pi - pj));
         J(0, k)=jk(0); J(1, k)=jk(1); J(2, k)=jk(2);
       }
-
+      
       break;
     case zoriTVT:
-      if(j==-1){
+      if(j==-1) {
         ors.kinematicsVec(y, i, &irel.rot.getZ(vi));
         ors.jacobianVec(J, i, &irel.rot.getZ(vi));
         break;
@@ -393,7 +393,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
       y.resize(params.N);
       y.setZero();
       J.clear();
-      for(k=0; k<params.N; k++){
+      for(k=0; k<params.N; k++) {
         l=(uint)params(k);
         ors.jacobian(Ji, l, NULL);
         ors.bodies(l)->X.rot.getY(vi);
@@ -406,13 +406,13 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
     case zalignTVT:
       ors.kinematicsVec(zi, i, &irel.rot.getZ(vi));
       ors.jacobianVec(Ji, i, &irel.rot.getZ(vi));
-      if(j==-1){
+      if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
         zj.setCarray((jrel*world_z).p, 3);
         Jj.resizeAs(Ji);
         Jj.setZero();
-      }else{
+      } else {
         ors.kinematicsVec(zj, j, &jrel.rot.getZ(vj));
         ors.jacobianVec(Jj, j, &jrel.rot.getZ(vj));
       }
@@ -427,8 +427,8 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
     default:  HALT("no such TVT");
   }
   transpose(Jt, J);
-
-  if(y_old.N!=y.N){
+  
+  if(y_old.N!=y.N) {
     y_old=y;
     v.resizeAs(y); v.setZero();
     v_old=v;
@@ -437,34 +437,34 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau){
   //v = .5*v + .5*(y - y_old);
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
   
-  if(y_target.N==y.N){
+  if(y_target.N==y.N) {
     err=norm(y - y_target);
     derr=err - norm(y_old - y_target);
   }
 }
 
-void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H){
-  switch(type){
+void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H) {
+  switch(type) {
     case posTVT:
-      if(j==-1){ ors.hessian(H, i, &irel.pos); break; }
+      if(j==-1) { ors.hessian(H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
 
-void TaskVariable::updateChange(int t, double tau){
+void TaskVariable::updateChange(int t, double tau) {
   CHECK(y.N, "variable needs to be updated before!");
   arr yt, vt;
-  if(t!=-1){
+  if(t!=-1) {
     yt.referToSubDim(y_trajectory, t);
     vt.referToSubDim(v_trajectory, t);
     //y_prec     = y_prec_trajectory(t);
-  }else{
+  } else {
     yt.referTo(y_target);
     vt.referTo(v_target);
   }
   CHECK(yt.N==y.N, "targets have wrong dimension -- perhaps need to be set before");
   CHECK(vt.N==v.N, "targets have wrong dimension -- perhaps need to be set before");
-  switch(targetType){
+  switch(targetType) {
     case trajectoryTT:
     case directTT: {
       y_ref = yt;
@@ -483,7 +483,7 @@ void TaskVariable::updateChange(int t, double tau){
       break;
     }
     case pdGainOnReferenceTT: {
-      if(y_ref.N!=y.N){ y_ref=y; v_ref=v; }
+      if(y_ref.N!=y.N) { y_ref=y; v_ref=v; }
       v_ref = v_ref + tau*(Pgain*(yt - y_ref) + Dgain*(vt - v_ref));
       y_ref = y_ref + tau*v_ref; //``Euler integration''
       //v_ref /= tau;  //TaskVariable measures vel in steps; here we meassure vel in double time
@@ -514,26 +514,26 @@ void TaskVariable::updateChange(int t, double tau){
 void TaskVariable::write(ostream &os) const {
   os <<"TaskVariable '" <<name <<'\'';
   os
-  <<"\n  y=" <<y
-  <<"\t  v=" <<v
-  <<"\n  y_target=" <<y_target
-  <<"\t  v_target=" <<v_target
-  <<"\n  y_ref="  <<y_ref
-  <<"\t  v_ref=" <<v_ref
-  <<"\n  y_prec=" <<y_prec
-  <<"\t  v_prec=" <<v_prec
-  <<"\n  Pgain=" <<Pgain
-  <<"\t  Dgain=" <<Dgain
-  <<"\n  y_error=" <<sqrDistance(y, y_target)
-  <<"\t  v_error=" <<sqrDistance(v, v_target)
-  <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
-  <<endl;
+      <<"\n  y=" <<y
+      <<"\t  v=" <<v
+      <<"\n  y_target=" <<y_target
+      <<"\t  v_target=" <<v_target
+      <<"\n  y_ref="  <<y_ref
+      <<"\t  v_ref=" <<v_ref
+      <<"\n  y_prec=" <<y_prec
+      <<"\t  v_prec=" <<v_prec
+      <<"\n  Pgain=" <<Pgain
+      <<"\t  Dgain=" <<Dgain
+      <<"\n  y_error=" <<sqrDistance(y, y_target)
+      <<"\t  v_error=" <<sqrDistance(v, v_target)
+      <<"\t  error="  <<y_prec*sqrDistance(y, y_target)+v_prec*sqrDistance(v, v_target)
+      <<endl;
 }
 
 void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
   TaskVariable::write(os);
   return;
-  switch(type){
+  switch(type) {
     case posTVT:     os <<"  (pos " <<ors.bodies(i)->name <<")"; break;
       //case relPosTVT:  os <<"  (relPos " <<ors.bodies(i)->name <<'-' <<ors.bodies(j)->name <<")"; break;
     case zoriTVT:    os <<"  (zori " <<ors.bodies(i)->name <<")"; break;
@@ -548,7 +548,7 @@ void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
     case comTVT:     os <<"  (COM)"; break;
     case collTVT:    os <<"  (COLL)"; break;
     case colConTVT:  os <<"  (colCon)"; break;
-    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name)) <<"); params:" <<params; break;
+    case zalignTVT:  os <<"  (zalign " <<ors.bodies(i)->name <<'-' <<(j==-1?"-1":STRING("" <<ors.bodies(j)->name).p) <<"); params:" <<params; break;
     case userTVT:    os <<"  (userTVT)"; break;
     default: HALT("CV::write - no such TVT");
   }
@@ -560,7 +560,7 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
                                      CTVtype _type,
                                      uintA _shapes,
                                      double _margin,
-                                     bool _linear){
+                                     bool _linear) {
   type=_type;
   name=_name;
   shapes=_shapes;
@@ -571,99 +571,114 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
   v_target=v;
 }
 
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool linear){
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool linear) {
   double d;
   ors::Shape *a, *b;
   ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
-
+  
   a=ors.shapes(p->a); b=ors.shapes(p->b);
   d=1.-p->d/margin;
-
+  
   if(!linear) y += d*d;
   else        y += d;
   
   arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
   brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
-          
+  
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);
-  if(!linear){
+  if(!linear) {
     ors.jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
     ors.jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
-  }else{
+  } else {
     ors.jacobian(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
     ors.jacobian(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
   }
 }
-                 
-void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau){
+
+void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   v_old=v;
   y_old=y;
-
+  
   uint i;
   ors::Proxy *p;
-
+  
   y.resize(1);  y.setZero();
   J.resize(1, ors.getJointStateDimension(false));  J.setZero();
-
-  switch(type){
+  
+  switch(type) {
     case allCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
         addAContact(y(0), J, p, ors, margin, linear);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
-        if(shapes.contains(p->a) && shapes.contains(p->b)){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+        if(shapes.contains(p->a) && shapes.contains(p->b)) {
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
-        if(!shapes.contains(p->a) && !shapes.contains(p->b)){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+        if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 3;
         }
       }
       break;
     case bipartiteCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
-          (shapes.contains(p->b) && shapes2.contains(p->a))){
+            (shapes.contains(p->b) && shapes2.contains(p->a))) {
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 4;
         }
       }
-    case pairsCTVT:{
+    case pairsCTVT: {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
-        for(j=0;j<shapes.d0;j++){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+        for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
         }
-        if(j<shapes.d0){
+        if(j<shapes.d0) { //if a pair was found
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 5;
         }
       }
     } break;
-    case vectorCTVT:{
+    case allExceptPairsCTVT: {
+      shapes.reshape(shapes.N/2,2);
+      // only explicit paris in 2D array shapes
+      uint j;
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+        for(j=0; j<shapes.d0; j++) {
+          if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
+            break;
+        }
+        if(j==shapes.d0) { //if a pair was not found
+          addAContact(y(0), J, p, ors, margin, linear);
+          p->colorCode = 5;
+        }
+      }
+    } break;
+    case vectorCTVT: {
       //outputs a vector of collision meassures, with entry for each explicit pair
       shapes.reshape(shapes.N/2,2);
       y.resize(shapes.d0);  y.setZero();
       J.resize(shapes.d0,J.d1);  J.setZero();
       uint j;
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin){
-        for(j=0;j<shapes.d0;j++){
+      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+        for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
         }
-        if(j<shapes.d0){
+        if(j<shapes.d0) {
           addAContact(y(j), J[j](), p, ors, margin, linear);
           p->colorCode = 5;
         }
@@ -672,15 +687,15 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau){
     default: NIY;
   }
   transpose(Jt, J);
-
-  if(y_old.N!=y.N){
+  
+  if(y_old.N!=y.N) {
     y_old=y;
     v.resizeAs(y); v.setZero();
     v_old=v;
   }
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
   
-  if(y_target.N==y.N){
+  if(y_target.N==y.N) {
     err=norm(y - y_target);
     derr=err - norm(y_old - y_target);
   }
@@ -692,17 +707,17 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau){
 // TaskVariableList functions
 //
 
-void reportAll(TaskVariableList& CS, ostream& os, bool onlyActives){
-  for(uint i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
+void reportAll(TaskVariableList& CS, ostream& os, bool onlyActives) {
+  for(uint i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
       os <<'[' <<i <<"] " <<*CS(i);
     }
 }
 
-void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives){
+void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives) {
   uint i, j, n=1;
   os <<"CVnames = {";
-  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
-      for(j=0; j<CS(i)->y.N; j++){
+  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
+      for(j=0; j<CS(i)->y.N; j++) {
         os <<"'" <<n <<'-' <<CS(i)->name <<j <<"' ";
         n++;
       }
@@ -710,20 +725,20 @@ void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives){
   os <<"};" <<endl;
 }
 
-void reportState(TaskVariableList& CS, ostream& os, bool onlyActives){
+void reportState(TaskVariableList& CS, ostream& os, bool onlyActives) {
   ;
   uint i;
   MT::IOraw=true;
-  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
+  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
       os <<CS(i)->y;
     }
   os <<endl;
 }
 
-void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t){
+void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t) {
   uint i;
   double e, E=0.;
-  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active){
+  for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
       if(t!=-1)
         if(t) e=norm(CS(i)->y - CS(i)->y_trajectory[t-1]);
         else  e=0.;
@@ -735,30 +750,30 @@ void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t){
   os <<E <<endl;
 }
 
-void activateAll(TaskVariableList& CS, bool active){
+void activateAll(TaskVariableList& CS, bool active) {
   for(uint i=0; i<CS.N; i++) CS(i)->active=active;
 }
 
-void shiftTargets(TaskVariableList& CS, int offset){
+void shiftTargets(TaskVariableList& CS, int offset) {
   for(uint i=0; i<CS.N; i++) CS(i)->shiftTargets(offset);
 }
 
-void updateState(TaskVariableList& CS, const ors::Graph& ors){
-  for(uint i=0; i<CS.N; i++){
+void updateState(TaskVariableList& CS, const ors::Graph& ors) {
+  for(uint i=0; i<CS.N; i++) {
     CS(i)->updateState(ors);
   }
 }
 
-void updateChanges(TaskVariableList& CS, int t){
-  for(uint i=0; i<CS.N; i++) if(CS(i)->active){
+void updateChanges(TaskVariableList& CS, int t) {
+  for(uint i=0; i<CS.N; i++) if(CS(i)->active) {
       CS(i)->updateChange(t);
     }
 }
 
-void getJointJacobian(TaskVariableList& CS, arr& J){
+void getJointJacobian(TaskVariableList& CS, arr& J) {
   uint i, n=0;
   J.clear();
-  for(i=0; i<CS.N; i++) if(CS(i)->active){
+  for(i=0; i<CS.N; i++) if(CS(i)->active) {
       NIY; //TODO: do I have to do updateState?
       //CS(i)->updateJacobian();
       J.append(CS(i)->J);
@@ -767,7 +782,7 @@ void getJointJacobian(TaskVariableList& CS, arr& J){
   J.reshape(J.N/n, n);
 }
 
-void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W){
+void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W) {
   uint n=W.d0;
   dq.resize(n);
   dq.setZero();
@@ -777,13 +792,75 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W){
   A=W;
   a.setZero();
   arr w(3);
-  for(i=0; i<CS.N; i++) if(CS(i)->active){
+  for(i=0; i<CS.N; i++) if(CS(i)->active) {
       a += CS(i)->y_prec * CS(i)->Jt * (CS(i)->y_ref-CS(i)->y);
       A += CS(i)->y_prec * CS(i)->Jt * CS(i)->J;
     }
   inverse_SymPosDef(Ainv, A);
   dq = Ainv * a;
 }
+
+
+//===========================================================================
+//
+// task variable table
+//
+
+#if 0
+
+void TaskVariableTable::init(const ors::Graph& ors) {
+  uint i,j,k,m=0,T=0,t,qdim;
+  TaskVariable *v;
+  //count the total task dimension, q-d
+  for_list(i,v,list) {
+    v->updateState(ors);
+    if(v->active) {
+      m+=y.N;
+      if(!T) T=y_trajectory.d0;
+      else CHECK(T=y_trajectory.d0);
+      qdim=J.d1;
+    }
+  }
+  //resize everything
+  y.resize(T,m);
+  phi.resize(T,m);
+  J.resize(T,m,qdim);
+  rho.resize(T,m);
+  
+  updateState(0, ors, true);
+}
+
+//recompute all phi in time slice t using the pose in ors
+void TaskVariableTable::updateTimeSlice(uint t, const ors::Graph& ors, bool alsoTargets) {
+  uint i,j,k,m=0;
+  TaskVariable *v;
+  for_list(i,v,list) {
+    v->updateState(ors);
+    if(v->active) {
+      for(j=0; j<v->y.N; j++) {
+        phi(t,m+j) = v->y(j);
+        for(k=0; k<J.d2; k++) J(t,m+j,k) = v->J(j,k);
+        if(alsoTargets) {
+          y(t,m+j) = v->y_trajectory(t,j);
+          rho(t,m+j) = v->y_prec_trajectroy(t,j);
+        }
+      }
+      m+=j;
+    }
+    CHECK(m==y.d1,"");
+  }
+}
+
+double TaskVariableTable::totalCost() {
+  CHECK(y.N==phi.N && y.N == rho.N,"");
+  double C = 0;
+  for(uint i=0; i<y.N; i++) {
+    C += rho.elem(i)*sqrDistance(y.elem(i), phi.elem(i));
+  }
+}
+
+#endif
+
 
 /*void getJointXchange(TaskVariableList& CS, arr& y_change){
   uint i;
@@ -964,7 +1041,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftInterf
       if(display>0){
         ors->setJointState(b[t]);
         ors->calcNodeFramesFromEdges();
-        //if(t==1 || !(t%display)){ gl->text.clr() <<k <<':' <<t; gl->update(); }
+        //if(t==1 || !(t%display)){ gl->text.clear() <<k <<':' <<t; gl->update(); }
         //glGrabImage(img); write_ppm(img, STRING("imgs/plan_" <<std::setfill('0') <<std::setw(3) <<k <<std::setfill('0') <<std::setw(3) <<((k&1)?T-t:t) <<".ppm"), true);
       }
 
@@ -1007,7 +1084,7 @@ void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftInterf
 */
 
 #if 0
-void SMAC::readCVdef(std::istream& is){
+void SMAC::readCVdef(std::istream& is) {
   char c;
   TaskVariable *cv;
   MT::String name, ref1, ref2;
@@ -1016,12 +1093,12 @@ void SMAC::readCVdef(std::istream& is){
   arr mat;
   MT::String::readSkipSymbols=" \n\r\t";
   MT::String::readStopSymbols=" \n\r\t";
-  for(;;){
+  for(;;) {
     MT::skip(is);
     is.get(c);
     if(!is.good()) break;
     cv=&CVs.append();
-    switch(c){
+    switch(c) {
       case 'p':
         is >>name >>ref1 >>"<" >>f >>">";
         cv->initPos(name, *ors, ors->getBodyByName(ref1)->index, f);
@@ -1079,16 +1156,16 @@ void SMAC::readCVdef(std::istream& is){
   is.clear();
 }
 
-void SMAC::CVclear(){
+void SMAC::CVclear() {
   uint i;
   for(i=0; i<CS.N; i++)
     CS(i)->y.clear();
 }
 
-void SMAC::plotCVs(){
+void SMAC::plotCVs() {
   plotData.points.resize(2*CS.N);
   uint i;
-  for(i=0; i<CS.N; i++){
+  for(i=0; i<CS.N; i++) {
     plotData.points(2*i) = CS(i)->y;
     plotData.points(2*i+1) = CS(i)->y_target;
   }

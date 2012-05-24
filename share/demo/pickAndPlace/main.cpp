@@ -2,6 +2,13 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
+
+/* What doesn't work yet:
+ 
+ - collisions with the grasped object UNTIL the 4/5 time using a special proxy variable
+ - feedback tasks (like open hand) have not termination criterion - fixed time is not ok!
+*/
+
 #include "behaviors.h"
 
 int main(int argn,char** argv){
@@ -14,34 +21,30 @@ int main(int argn,char** argv){
   //-- motion
   // variables
   GeometricState geometricState;
-  Action action;
-  MotionPlan motionPlan;
-  MotionKeyframe frame0,frame1;
-  ControllerTask controllerTask;
+  MotionFuture motions;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
   JoystickState joystickState;
+  
   // processes
   Controller controller;
-  MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
+  ActionProgressor actionProgressor;
+  
   // viewers
-  OrsViewer<GeometricState>     view0(geometricState, geometricState);
-  PoseViewer<MotionPlan>        view7(motionPlan, geometricState);
-  PoseViewer<HardwareReference> view8(hardwareReference, geometricState);
-  PoseViewer<MotionKeyframe>    view9(frame1, geometricState);
+  OrsViewer<GeometricState>     view0(geometricState);
+  PoseViewer<HardwareReference> view8(hardwareReference);
 
   //-- hardware
   // variables
+  //(none)
   // processes
   Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
   // viewers
-  PoseViewer<HardwareReference> view(hardwareReference, geometricState);
+  //(none)
 
-  
   //-- perception
   // variables
   Image camL("CameraL"), camR("CameraR");
@@ -60,30 +63,48 @@ int main(int argn,char** argv){
   ImageViewer<Image> view3(hsvL), view4(hsvR);
   ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
-  P.append(LIST<Process>(controller, motionPlanner, motionPrimitive));
-  P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
-  P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
-  P.append(LIST<Process>(view0));
-  //P.append(LIST<Process>(view));
-  P.append(LIST<Process>(view7, view8, view9));
-  P.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  P.append(LIST<Process>(controller));
+  //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
+  //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
 
-  cam.threadLoop();
+  //views don't need to be started -- they now listen!
+  ProcessL PV;
+  PV.append(LIST<Process>(view0));
+  //PV.append(LIST<Process>(view));
+  PV.append(LIST<Process>(view8));
+  //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  
+  //step(PV);
+  loopWithBeat(PV,.1);
+
+  //cam.threadLoop();
   loopWithBeat(P,.01);
+
+  actionProgressor.threadLoopWithBeat(0.01);
+  
   
   cout <<"arrange your windows..." <<endl;
-  MT::wait(5.);
+  MT::wait(1.);
   
   //pick-and-place loop
-  for(uint k=0;k<10;k++){
-    waitForPerceivedObjects(1, 1);
-    pickObject("cyl1");
-    //resetPlanner(planner);
-    placeObject("cyl1", "table", "cyl2");
-    //resetPlanner(planner);
-    //plannedHoming("cyl1", "cyl2");
-    //resetPlanner(planner);
-    cout <<"DDOONNEE!" <<endl;
+  for(uint k=0;k<2;k++){
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "cyl1");
+
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl2");
+    
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "table");
+
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "cyl1");
+    
+    pickOrPlaceObject(Action::grasp, "box1", NULL);
+    pickOrPlaceObject(Action::place, "box1", "cyl2");
+
+    pickOrPlaceObject(Action::grasp, "box2", NULL);
+    pickOrPlaceObject(Action::place, "box2", "table");
   }
   
   cam.threadClose();

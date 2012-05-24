@@ -2,9 +2,9 @@ NAME   = $(shell basename $(PWD))
 
 ALL =	src/MT
 
-makeAll: $(ALL:%=make/%)
+makeAll: $(ALL:%=make/%) tests doc
 
-cleanAll: $(ALL:%=clean/%) cleanProjects
+cleanAll: $(ALL:%=clean/%) cleanTests clean/doc
 
 make/%::
 	make -C $*
@@ -13,13 +13,13 @@ clean/%::
 	make clean -C $*
 
 tests::
-	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
+	-@find -L test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
 
-cleanProjects::
-	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
+cleanTests::
+	-@find -L test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::
-	make -C doc guide doxy
+	make -C doc doxy_array
 
 zip::
-	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".kdev*" --exclude "*.svn" --exclude ".git*" --exclude "cudaSDK/*" --exclude "opencv-2.1/*" --exclude "cuda/*"
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude

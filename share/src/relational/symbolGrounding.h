@@ -1,14 +1,15 @@
-#ifndef RELATIONAL__SYMBOL_GROUNDING
-#define RELATIONAL__SYMBOL_GROUNDING
+#ifndef RELATIONAL_symbolGrounding_h
+#define RELATIONAL_symbolGrounding_h
 
-#include <relational/logicDefinitions.h>
+#include <relational/symbols.h>
+#include <relational/literals.h>
 #include <MT/ors.h>
 
 
 
 
 namespace relational {
-  
+   
 
 struct ContinuousState;
   
@@ -23,7 +24,7 @@ public:
   
   MT::String name;
   uint arity;
-  TL::Predicate* pred;
+  Symbol* symbol;
   GroundingType type;
 
   GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates = false);
@@ -111,7 +112,7 @@ struct FullExperience {
   
   double reward;
   
-  TL::SymbolicExperience experience_symbolic;
+  StateTransition experience_symbolic;
   
   void write_continuous_nice(ostream& out) const;
   void write_continuous(ostream& out) const;
@@ -130,4 +131,4 @@ void calculateSymbols(const MT::Array<GroundedSymbol*>& sgs, FullExperience& e);
 
 typedef MT::Array< relational::FullExperience* > FullExperienceL;
 
-#endif // RELATIONAL__SYMBOL_GROUNDING
+#endif // RELATIONAL_symbolGrounding_h

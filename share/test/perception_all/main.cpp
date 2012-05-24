@@ -1,5 +1,6 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
+#include <JK/utils/util.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
@@ -32,7 +33,12 @@ int main(int argn,char** argv){
   loopWithBeat(P,.01);
   loopWithBeat(Pview,.01);
 
-  MT::wait(30.);
+  for(int i=0;i<10000;++i) {
+		MT::wait(0.1);
+		JK_DEBUG(percOut.objects.N);
+		if(percOut.objects.N)
+			JK_DEBUG(percOut.objects(0).center3d);
+  } 
   
   cam.threadClose();
   close(Pview);

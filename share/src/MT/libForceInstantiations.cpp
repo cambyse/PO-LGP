@@ -15,7 +15,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 //#define MT_IMPLEMENTATION
-//#define MT_IMPLEMENT_TEMPLATES
+#ifndef MT_IMPLEMENT_TEMPLATES
+#  define MT_IMPLEMENT_TEMPLATES
+#endif
 
 //the above two flags cause the following headers to
 //include their implementations...
@@ -50,6 +52,15 @@ template void MT::Parameter<double>::initialize();
 template void MT::Parameter<int>::initialize();
 template void MT::load<arr>(arr&,const char*, bool);
 
+template std::map<std::string,int> MT::ParameterMap<int>::m;
+template std::map<std::string,double> MT::ParameterMap<double>::m;
+template std::map<std::string,unsigned int> MT::ParameterMap<unsigned int>::m;
+template std::map<std::string,float> MT::ParameterMap<float>::m;
+template std::map<std::string,bool> MT::ParameterMap<bool>::m;
+template std::map<std::string,long> MT::ParameterMap<long>::m;
+template std::map<std::string,MT::String> MT::ParameterMap<MT::String>::m;
+template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
+
 //-- from array.h
 //full classes
 //template class MT::Array<uint>;
@@ -57,23 +68,23 @@ template void MT::load<arr>(arr&,const char*, bool);
 //template class MT::Array<MT::Array<uint> >;
 //full classes & numerical routines
 #define T double
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define NOFLOAT
 #define T float
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T uint
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T uint16
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T int
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #define T byte
-#  include "array_instantiate.cpp"
+#  include "array_instantiate.cxx"
 #undef T
 #undef NOFLOAT
 

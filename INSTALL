@@ -23,7 +23,7 @@
 
 
 [ -z "${DIR_EXTERNAL_LIBS}" ] && DIR_EXTERNAL_LIBS=~/lib/
-[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=/home/kulick/Downloads/mlrLibs.tar.gz
+[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=mlrLibs.tgz
 
 FILE_SCRIPT=`readlink -f $0`
 DIR_GIT=`dirname $FILE_SCRIPT`

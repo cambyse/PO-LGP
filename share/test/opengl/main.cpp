@@ -7,10 +7,7 @@
 #  include <QtGui/QApplication>
 #endif
 
-#include <gtk/gtk.h>
-#include <gtk/gtkgl.h>
-#undef MIN
-#undef MAX
+#include <GL/glut.h>
 
 using namespace std;
 
@@ -42,12 +39,15 @@ void testMultipleViews(){
   OpenGL gl;
   gl.reportEvents=true;
   gl.reportSelects=true;
+  gl.text <<"multiple views";
   gl.add(draw1,0);
   gl.addView(0,draw1,0);
   gl.addView(1,draw1,0);
   gl.setViewPort(1,.1,.4,.1,.4);
   gl.setViewPort(0,.6,.9,.6,.9);
   gl.views(0).img=&img;
+  gl.views(0).text="little image";
+  gl.views(1).text="2nd teapot";
   gl.watch();
 }
 
@@ -160,8 +160,9 @@ void menuCallback3(int i){
 }
 
 void testMenu(){
+#if 0
   OpenGL gl;
-  gl.text.clr() <<"press the right moust";
+  gl.text.clear() <<"press the right moust";
   gl.add(draw1,0);
 
   int submenu1, submenu2;
@@ -182,6 +183,7 @@ void testMenu(){
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   gl.watch();
+#endif
 }
 
 
@@ -271,13 +273,6 @@ int main(int argc,char **argv){
 
 #ifdef MT_QT
   QApplication myapp(argc,argv);
-#endif
-
-#ifdef MT_GTKGL
-  g_thread_init(NULL);
-  gdk_threads_init();
-  gtk_init(&argc, &argv);
-  gtk_gl_init(&argc, &argv);
 #endif
 
   testMultipleViews();

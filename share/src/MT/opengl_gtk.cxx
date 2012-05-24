@@ -42,8 +42,11 @@ static Mutex globalOpenglLock;
 //
 
 struct sOpenGL{
-  sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *_gl, const char* title, int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
+  void init(OpenGL *gl, void *container);
+  
   
   GtkWidget *win;
   GtkWidget *glArea;
@@ -56,8 +59,10 @@ struct sOpenGL{
   static bool motion_notify(GtkWidget *widget, GdkEventMotion *event);
   static bool button_press(GtkWidget *widget, GdkEventButton *event);
   static bool button_release(GtkWidget *widget, GdkEventButton *event);
+  static bool scroll_event(GtkWidget *widget, GdkEventScroll *event);
   static bool key_press_event(GtkWidget *widget, GdkEventKey *event);
   static void destroy(GtkWidget *widget);
+  static bool size_allocate_event(GtkWidget *widget, GdkRectangle *allocation);
   
   static void lock(){ LOCK } //globalOpenglLock.lock(); }
   static void unlock(){ UNLOCK } //globalOpenglLock.unlock(); }
@@ -82,18 +87,17 @@ void OpenGL::processEvents(){
   UNLOCK
 }
 
-void OpenGL::enterEventLoop(){ loopExit=false; LOCK while(!loopExit) gtk_main_iteration(); UNLOCK }
+void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ LOCK gtk_main_iteration(); UNLOCK } }
 void OpenGL::exitEventLoop(){  loopExit=true; }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
-  NIY;
-  //glutReshapeWindow(w,h);
+  gtk_widget_set_size_request(s->glArea, w, h);
   processEvents();
 }
 
-int OpenGL::width(){  int w,h; gtk_window_get_size(GTK_WINDOW(s->win), &w, &h); return w; }
-int OpenGL::height(){ int w,h; gtk_window_get_size(GTK_WINDOW(s->win), &w, &h); return h; }
+int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
+int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
@@ -112,13 +116,23 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
     UNLOCK
   }
 
-  LOCK
   win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(win), title);
   gtk_window_set_default_size(GTK_WINDOW(win), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(win), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(win));
   
+  init(gl,win);
+}
+
+sOpenGL::sOpenGL(OpenGL *gl, void *container){
+  init(gl,container);
+}
+
+void sOpenGL::init(OpenGL *gl, void *container){
+  win = GTK_WIDGET(container);
+  
+  LOCK
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
     
@@ -142,8 +156,9 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   g_signal_connect(G_OBJECT(glArea), "motion_notify_event", G_CALLBACK(motion_notify), NULL);
   g_signal_connect(G_OBJECT(glArea), "button_press_event",  G_CALLBACK(button_press), NULL);
   g_signal_connect(G_OBJECT(glArea), "button_release_event",G_CALLBACK(button_release), NULL);
+  g_signal_connect(G_OBJECT(glArea), "scroll_event",        G_CALLBACK(scroll_event), NULL);
   g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
-  //  g_signal_connect(G_OBJECT(glArea), "key_press_event",     G_CALLBACK(key_press_event), NULL);
+  g_signal_connect(G_OBJECT(glArea), "size_allocate",       G_CALLBACK(size_allocate_event), NULL);
   
   g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
@@ -177,9 +192,15 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
   gdk_gl_drawable_gl_end(gldrawable);
   
-  GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
-  Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
-  glXMakeCurrent(display, None, NULL);
+  //GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
+  //Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
+  //glXMakeCurrent(display, None, NULL);
+  /*somehow this leads to the stack error and Select won't work
+    perhaps solution: write proper switchThread routine; before
+    entering code check if you need to switch the thread; only then
+    release the context; check if you're not in the middle of
+    something (mutex...) */
+
   
   unlock();
   return true;
@@ -209,6 +230,12 @@ bool sOpenGL::button_release(GtkWidget *widget, GdkEventButton *event) {
   return true;
 }
 
+bool sOpenGL::scroll_event(GtkWidget *widget, GdkEventScroll *event){
+  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
+  gl->MouseWheel(0, event->direction, event->x, event->y);
+  return true;
+}
+
 bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Key(event->keyval, gl->mouseposx, gl->height()-gl->mouseposy);
@@ -218,4 +245,10 @@ bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
 void sOpenGL::destroy(GtkWidget *widget) {
   int i=10;
   i++;
+}
+
+bool sOpenGL::size_allocate_event(GtkWidget *widget, GdkRectangle *allo){
+  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
+  gl->Reshape(allo->width, allo->height);
+  return true;
 }

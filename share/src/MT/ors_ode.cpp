@@ -46,7 +46,7 @@ static bool ODEinitialized=false;
 // Ode implementations
 //
 
-OdeInterface::OdeInterface(){
+OdeInterface::OdeInterface() {
   isOpen=false;
   time=0.;
   
@@ -65,17 +65,17 @@ OdeInterface::OdeInterface(){
   space=NULL;
   contactgroup=0;
   
-  if(!ODEinitialized){  dInitODE();  ODEinitialized=true; }
+  if(!ODEinitialized) {  dInitODE();  ODEinitialized=true; }
   clear();
 }
 
-OdeInterface::~OdeInterface(){
+OdeInterface::~OdeInterface() {
   if(contactgroup) dJointGroupDestroy(contactgroup);
   if(space) dSpaceDestroy(space);
   if(world) dWorldDestroy(world);
 }
 
-void OdeInterface::clear(){
+void OdeInterface::clear() {
   if(contactgroup) dJointGroupDestroy(contactgroup);
   if(space) dSpaceDestroy(space);
   if(world) dWorldDestroy(world);
@@ -84,9 +84,9 @@ void OdeInterface::clear(){
   space=dSimpleSpaceCreate(0);
   contactgroup=dJointGroupCreate(0);
   //std::cout <<"default ERP=" <<dWorldGetERP(world) <<"default CFM=" <<dWorldGetCFM(world) <<std::endl;
-  if(noGravity){
+  if(noGravity) {
     dWorldSetGravity(world, 0, 0, 0);
-  }else{
+  } else {
     dWorldSetGravity(world, 0, 0, -9.81);
   }
   dWorldSetCFM(world, CFM);
@@ -106,7 +106,7 @@ void OdeInterface::clear(){
   isOpen=false;
 }
 
-void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2){
+void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
   static dContact contacts[100]; // array with maximum number of contacts
   uint i, n;
   dJointID c;
@@ -145,7 +145,7 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2){
   
   if(((OdeInterface*)classP)->noContactJoints) return;
   
-  for(i=0; i<n; i++){
+  for(i=0; i<n; i++) {
     contacts[i].surface.mode = dContactSoftCFM | dContactSoftERP | dContactBounce;
     //if(b1 && b2)
     contacts[i].surface.mu   = ((OdeInterface*)classP)->friction; //dInfinity; //friction
@@ -154,11 +154,11 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2){
     contacts[i].surface.soft_erp = ((OdeInterface*)classP)->coll_ERP;   //usually .2!! stiffness (time-scale of contact reaction)
     contacts[i].surface.soft_cfm = ((OdeInterface*)classP)->coll_CFM;  //softness
     
-    if(!db1 || !db2 || (db1->shapes(0)->cont && db2->shapes(0)->cont)){
+    if(!db1 || !db2 || (db1->shapes(0)->cont && db2->shapes(0)->cont)) {
       //normal contact:
       c=dJointCreateContact(((OdeInterface*)classP)->world, ((OdeInterface*)classP)->contactgroup, &contacts[i]);
       dJointAttach(c, b1, b2);
-    }else{
+    } else {
       //special contact:
       //one of them ignores the contact
       //hence we consider it (kinematically) coupled to the background
@@ -166,37 +166,37 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2){
       ors::Vector no; no.set(contacts[i].geom.normal);
       ors::Vector d1; d1=db1->X.vel; d1.makeNormal(no); //bug: we should have sorted b1 and b2 before such that b1!=0
       double v=d1.length();
-      if(v>1e-4){
+      if(v>1e-4) {
         d1 /= v;
         CP3(contacts[i].fdir1, d1.p);
         contacts[i].surface.mode = contacts[i].surface.mode | dContactMotion1 | dContactFDir1;
         contacts[i].surface.motion1 = v;
       }
       c=dJointCreateContact(((OdeInterface*)classP)->world, ((OdeInterface*)classP)->contactgroup, &contacts[i]);
-      if(!db1->shapes(0)->cont){
+      if(!db1->shapes(0)->cont) {
         dJointAttach(c, 0, b2);
       }
-      if(!db2->shapes(0)->cont){
+      if(!db2->shapes(0)->cont) {
         dJointAttach(c, b1, 0);
       }
     }
   }
 }
 
-void OdeInterface::setForceFree(bool free){
+void OdeInterface::setForceFree(bool free) {
   noGravity=free;
-  if(free){
+  if(free) {
     dWorldSetGravity(world, 0, 0, 0);
     dWorldSetCFM(world, CFM);
     dWorldSetERP(world, ERP);
-  }else{
+  } else {
     dWorldSetGravity(world, 0, 0, -9.81);
     dWorldSetCFM(world, CFM);
     dWorldSetERP(world, ERP);
   }
 }
 
-void OdeInterface::step(double dtime){
+void OdeInterface::step(double dtime) {
   conts.clear();
   dSpaceCollide(space, this, &staticCallback);
   //if(noContactJoints) contactForces();
@@ -207,21 +207,21 @@ void OdeInterface::step(double dtime){
   time+=dtime;
 }
 
-void OdeInterface::reportContacts(){
+void OdeInterface::reportContacts() {
   std::cout <<"contacts: " <<conts.N <<std::endl;
   dContactGeom *c;
-  for(uint i=0; i<conts.N; i++){
+  for(uint i=0; i<conts.N; i++) {
     c = conts(i);
     dBodyID b1 = dGeomGetBody(c->g1);
     dBodyID b2 = dGeomGetBody(c->g2);
     ors::Body *db1 = b1?(ors::Body*)b1->userdata:0;
     ors::Body *db2 = b2?(ors::Body*)b2->userdata:0;
     std::cout
-      <<i <<": " <<(b1?db1->name.p:"GROUND") <<'-' <<(b2?db2->name.p:"GROUND")
-      <<"\nposition=" <<OUTv(c->pos)
-      <<"\nnormal=" <<OUTv(c->normal)
-      <<"\npenetration depth=" <<OUTs(c->depth)
-      <<std::endl;
+        <<i <<": " <<(b1?db1->name.p:"GROUND") <<'-' <<(b2?db2->name.p:"GROUND")
+        <<"\nposition=" <<OUTv(c->pos)
+        <<"\nnormal=" <<OUTv(c->normal)
+        <<"\npenetration depth=" <<OUTs(c->depth)
+        <<std::endl;
   }
 }
 
@@ -230,14 +230,14 @@ void OdeInterface::reportContacts(){
 // - fixed bug (I did not assume that each contact is
 //   just represented once), 12. Mar 06 (hh).
 // - copy penetration data to Body, 22. May 06 (hh)
-void OdeInterface::penetration(ors::Vector &p){
+void OdeInterface::penetration(ors::Vector &p) {
   NIY;
 #if 0
   dContactGeom *c;
   double d;
   dBodyID b1, b2;
   
-  for(uint i=0; i<conts.N; i++){
+  for(uint i=0; i<conts.N; i++) {
     c = conts(i);
     b1 = dGeomGetBody(c->g1);
     b2 = dGeomGetBody(c->g2);
@@ -246,12 +246,12 @@ void OdeInterface::penetration(ors::Vector &p){
     if(b1) touch1=anyListGet<double>(((ors::Body*)b1->userdata)->ats, "touchsensor", 0);
     if(b2) touch2=anyListGet<double>(((ors::Body*)b2->userdata)->ats, "touchsensor", 0);
     
-    if(touch1 || touch2){
+    if(touch1 || touch2) {
       d = c->depth;
       p.set(c->normal);
       p *= d;
       if(touch1)((ors::Body*)b1->userdata)->touch = p;
-      else ((ors::Body*)b2->userdata)->touch = -p;
+      else((ors::Body*)b2->userdata)->touch = -p;
       //printf("%lf\n", d);
       std::cout <<"contact " <<i <<": penetration: " <<OUTv(p.v) <<"\n";
     }
@@ -260,14 +260,14 @@ void OdeInterface::penetration(ors::Vector &p){
 }
 
 
-void OdeInterface::contactForces(){
+void OdeInterface::contactForces() {
   uint i;
   dContactGeom *c;
   dBodyID b1, b2;
   ors::Vector pos, normal, v1, v2, vrel;
   dMass mass;
   double force, d, m1, m2;
-  for(i=0; i<conts.N; i++){
+  for(i=0; i<conts.N; i++) {
     c = conts(i);
     pos.set(c->pos);
     d=c->depth*20.;
@@ -275,8 +275,8 @@ void OdeInterface::contactForces(){
     normal *=-1.; //vector from b1 -> b2
     b1 = dGeomGetBody(c->g1);
     b2 = dGeomGetBody(c->g2);
-    if(b1){ v1.set(b1->lvel); dBodyGetMass(b1, &mass); m1=mass.mass; }else{ v1.setZero(); m1=0.; }
-    if(b2){ v2.set(b1->lvel); dBodyGetMass(b2, &mass); m2=mass.mass; }else{ v2.setZero(); m2=0.; }
+    if(b1) { v1.set(b1->lvel); dBodyGetMass(b1, &mass); m1=mass.mass; } else { v1.setZero(); m1=0.; }
+    if(b2) { v2.set(b1->lvel); dBodyGetMass(b2, &mass); m2=mass.mass; } else { v2.setZero(); m2=0.; }
     
     // ** normal force:
     force=0.;
@@ -289,7 +289,7 @@ void OdeInterface::contactForces(){
     if(b1) dBodyAddForceAtPos(b1, force*normal(0), force*normal(1), force*normal(2), pos(0), pos(1), pos(2));
     
     //inward viscosity
-    if(vrel * normal <= 0){
+    if(vrel * normal <= 0) {
       force += 10.*vrel.length();
       if(b2) dBodyAddForceAtPos(b2, force*m2*normal(0), force*m2*normal(1), force*m2*normal(2), pos(0), pos(1), pos(2));
       force *= -1.; //invert on other body
@@ -325,7 +325,7 @@ void OdeInterface::contactForces(){
 // graph
 //
 
-void OdeInterface::exportStateToOde(ors::Graph &C){
+void OdeInterface::exportStateToOde(ors::Graph &C) {
   ors::Body *n;
   ors::Joint *e;
   uint j, i;
@@ -333,7 +333,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C){
   
   C.calcBodyFramesFromJoints();
   
-  for_list(i, n, C.bodies){
+  for_list(i, n, C.bodies) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     b = bodies(n->index);
     CP3(b->posr.pos, n->X.pos.p);                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
@@ -342,11 +342,11 @@ void OdeInterface::exportStateToOde(ors::Graph &C){
     CP3(b->avel, n->X.angvel.p);
     //n->copyFrameToOde();
 #ifndef MT_ode_nojoints
-    for_list(j, e, n->inLinks) if(e->type!=ors::glueJT){
+    for_list(j, e, n->inLinks) if(e->type!=ors::glueJT) {
       dxJointHinge* hj=(dxJointHinge*)joints(e->index);
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
       dxJointSlider* sj=(dxJointSlider*)joints(e->index);
-      switch(e->type){ //16. Mar 06 (hh)
+      switch(e->type) { //16. Mar 06 (hh)
         case ors::fixedJT:
           break;
         case ors::hingeJT:
@@ -377,22 +377,22 @@ void OdeInterface::exportStateToOde(ors::Graph &C){
   }
 }
 
-void OdeInterface::exportForcesToOde(ors::Graph &C){
+void OdeInterface::exportForcesToOde(ors::Graph &C) {
   ors::Body *n;
   uint j;
   dBodyID b;
-  for_list(j, n, C.bodies){
+  for_list(j, n, C.bodies) {
     b=bodies(n->index);
     CP3(b->facc, n->force.p);
     CP3(b->tacc, n->torque.p);
   }
 }
 
-void OdeInterface::importStateFromOde(ors::Graph &C){
+void OdeInterface::importStateFromOde(ors::Graph &C) {
   ors::Body *n;
   uint j;
   dBodyID b;
-  for_list(j, n, C.bodies){
+  for_list(j, n, C.bodies) {
     //n->getFrameFromOde();
     b=bodies(n->index);
     CP3(n->X.pos.p, b->posr.pos);
@@ -405,8 +405,8 @@ void OdeInterface::importStateFromOde(ors::Graph &C){
 }
 
 
-void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double f2){
-  switch(e->type){
+void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double f2) {
+  switch(e->type) {
     default:
     case ors::hingeJT:
       dJointAddHingeTorque(joints(e->index), -f1);
@@ -422,12 +422,12 @@ void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double
   }
 }
 
-void OdeInterface::addJointForce(ors::Graph& C, doubleA& x){
+void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
   ors::Joint *e;
   uint i=0, n=0;
   
-  for_list(i, e, C.joints){ // loop over edges, 16. Mar 06 (hh)
-    switch(e->type){ //  3. Apr 06 (hh)
+  for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
+    switch(e->type) { //  3. Apr 06 (hh)
       default:
       case ors::hingeJT:
         dJointAddHingeTorque(joints(e->index), -x(n));
@@ -448,12 +448,12 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x){
   CHECK(n==x.N, "wrong dimensionality");
 }
 
-void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF){
+void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
   ors::Joint *e;
   uint i=0, n=0;
   
-  for_list(i, e, C.joints){
-    switch(e->type){
+  for_list(i, e, C.joints) {
+    switch(e->type) {
       default:
       case ors::hingeJT:
         dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(i));
@@ -473,12 +473,12 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF){
   CHECK(n==qdot.N, "wrong dimensionality");
 }
 
-uint OdeInterface::getJointMotorDimension(ors::Graph& C){
+uint OdeInterface::getJointMotorDimension(ors::Graph& C) {
   NIY;
   ors::Body *n; ors::Joint *e;
   uint i=0, j, k;
-  for_list(k, n, C.bodies){
-    for_list(j, e, n->inLinks){ // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
+  for_list(k, n, C.bodies) {
+    for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
       if(e->type==ors::universalJT) i+=2;
       else i++;
     }
@@ -486,24 +486,24 @@ uint OdeInterface::getJointMotorDimension(ors::Graph& C){
   return i;
 }
 
-void OdeInterface::setJointMotorPos(ors::Graph &C, ors::Joint *e, double x0, double maxF, double tau){
+void OdeInterface::setJointMotorPos(ors::Graph &C, ors::Joint *e, double x0, double maxF, double tau) {
   double x=-dJointGetHingeAngle(joints(e->index));
   setJointMotorVel(C, e, .1*(x0-x)/tau, maxF);
 }
 
-void OdeInterface::setJointMotorVel(ors::Graph &C, ors::Joint *e, double v0, double maxF){
+void OdeInterface::setJointMotorVel(ors::Graph &C, ors::Joint *e, double v0, double maxF) {
   dJointSetAMotorParam(motors(e->index), dParamVel, -v0);
   dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
 }
 
-void OdeInterface::setJointMotorPos(ors::Graph &C, doubleA& x, double maxF, double tau){
+void OdeInterface::setJointMotorPos(ors::Graph &C, doubleA& x, double maxF, double tau) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i=0, j, k;
-  for_list(k, n, C.bodies){
-    for_list(j, e, n->inLinks){ // if(e->motor)
+  for_list(k, n, C.bodies) {
+    for_list(j, e, n->inLinks) { // if(e->motor)
       setJointMotorPos(C, e, x(i), maxF, tau);
       i++;
       break;
@@ -512,14 +512,14 @@ void OdeInterface::setJointMotorPos(ors::Graph &C, doubleA& x, double maxF, doub
   CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
-void OdeInterface::setJointMotorVel(ors::Graph &C, doubleA& x, double maxF){
+void OdeInterface::setJointMotorVel(ors::Graph &C, doubleA& x, double maxF) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i=0, j, k;
-  for_list(k, n, C.bodies){
-    for_list(j, e, n->inLinks){// if(e->motor){
+  for_list(k, n, C.bodies) {
+    for_list(j, e, n->inLinks) { // if(e->motor){
       setJointMotorVel(C, e, x(i), maxF);
       i++;
       break;
@@ -528,22 +528,22 @@ void OdeInterface::setJointMotorVel(ors::Graph &C, doubleA& x, double maxF){
   CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
-void OdeInterface::unsetJointMotors(ors::Graph &C){
+void OdeInterface::unsetJointMotors(ors::Graph &C) {
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i, j;
-  for_list(j, n, C.bodies) for_list(i, e, n->inLinks){// if(e->motor){
+  for_list(j, n, C.bodies) for_list(i, e, n->inLinks) { // if(e->motor){
     unsetJointMotor(C, e);
     break;
   }
 }
 
-void OdeInterface::unsetJointMotor(ors::Graph &C, ors::Joint *e){
+void OdeInterface::unsetJointMotor(ors::Graph &C, ors::Joint *e) {
   dJointSetAMotorParam(motors(e->index), dParamFMax, 0.);
 }
 
-void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f){
+void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f) {
   dJointFeedback* fb=dJointGetFeedback(motors(e->index));
   CHECK(fb, "no feedback buffer set for this joint");
   //std::cout <<OUTv(fb->f1) <<' ' <<OUTv(fb->t1) <<' ' <<OUTv(fb->f2) <<' ' <<OUTv(fb->t2) <<std::endl;
@@ -552,13 +552,13 @@ void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f){
   f=-f;
 }
 
-void OdeInterface::getJointMotorForce(ors::Graph &C, doubleA& f){
+void OdeInterface::getJointMotorForce(ors::Graph &C, doubleA& f) {
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i=0, j, k;
-  for_list(k, n, C.bodies){
-    for_list(j, e, n->inLinks){// if(!e->fixed && e->motor){
+  for_list(k, n, C.bodies) {
+    for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){
       getJointMotorForce(C, e, f(i));
       i++;
       break;
@@ -567,14 +567,14 @@ void OdeInterface::getJointMotorForce(ors::Graph &C, doubleA& f){
   CHECK(f.N==i, "joint motor array had wrong dimension " <<f.N <<"!=" <<i);
 }
 
-void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt){
+void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt) {
   double x, v, f;
   //double a, b, c, dAcc;
   
   x=-dJointGetHingeAngle(joints(e->index));
   v=-dJointGetHingeAngleRate(joints(e->index));
   f = xGain*(x0-x) + vGain*(v0-v);
-  if(eInt){
+  if(eInt) {
     f+=iGain* (*eInt);
     (*eInt) = .99*(*eInt) + .01 *(x0-x);
   }
@@ -583,7 +583,7 @@ void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v
   dJointAddHingeTorque(joints(e->index), -f);
 }
 
-void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain){
+void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain) {
   double v, f;
   
   v=-dJointGetHingeAngleRate(joints(e->index));
@@ -602,7 +602,7 @@ void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double v
 
 //static dGeomID lastGeomHack;
 
-void OdeInterface::createOde(ors::Graph &C){
+void OdeInterface::createOde(ors::Graph &C) {
   ors::Body *n;
   ors::Joint *e;
   dBodyID b;
@@ -630,7 +630,7 @@ void OdeInterface::createOde(ors::Graph &C){
   joints.resize(C.joints.N); joints=0;
   motors.resize(C.joints.N); motors=0;
   
-  for_list(j, n, C.bodies){
+  for_list(j, n, C.bodies) {
     b=dBodyCreate(world);
     
     bodies(n->index)=b;
@@ -645,16 +645,16 @@ void OdeInterface::createOde(ors::Graph &C){
     
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
     ors::Shape *s;
-    for_list(i, s, n->shapes){
-      if(!(s->rel.rot.isZero()) || !(s->rel.pos.isZero())){ //we need a relative transformation
+    for_list(i, s, n->shapes) {
+      if(!(s->rel.rot.isZero()) || !(s->rel.pos.isZero())) { //we need a relative transformation
         trans = dCreateGeomTransform(space);
         myspace = NULL; //the object is added to no space, but (below) associated with the transform
-      }else{
+      } else {
         trans = NULL;
         myspace = space; //the object is added normally to the main space
       }
       
-      switch(s->type){
+      switch(s->type) {
       default: case ors::boxST: // box
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
@@ -719,7 +719,7 @@ void OdeInterface::createOde(ors::Graph &C){
           dBodySetMass(b, &odeMass);
           
           
-          if(true){
+          if(true) {
             TriData = dGeomTriMeshDataCreate();
             dGeomTriMeshDataBuildDouble(TriData,
                                         s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
@@ -740,27 +740,27 @@ void OdeInterface::createOde(ors::Graph &C){
       }
       
       geoms(s->index) = geom;
-      if(trans){
+      if(trans) {
         //geoms(s->index) = trans;
         dGeomTransformSetGeom(trans, geom);
         dGeomSetPosition(geom, s->rel.pos(0), s->rel.pos(1), s->rel.pos(2));
         dGeomSetQuaternion(geom, s->rel.rot.p);
         dGeomSetBody(trans, b); //attaches the geom to the body
-      }else{
+      } else {
         dGeomSetBody(geom, b); //attaches the geom to the body
       }
     }//loop through shapes
     
-    if(n->fixed){
+    if(n->fixed) {
       jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
       dJointAttach(jointF, b, 0);
       dJointSetFixed(jointF);
     }
   }
 #ifndef MT_ode_nojoints
-  for_list(j, n, C.bodies){
-    for_list(i, e, n->inLinks){
-      switch(e->type){
+  for_list(j, n, C.bodies) {
+    for_list(i, e, n->inLinks) {
+      switch(e->type) {
         case ors::fixedJT:
           jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
           dJointAttach(jointF, bodies(e->from->index), bodies(e->to->index));
@@ -794,7 +794,7 @@ void OdeInterface::createOde(ors::Graph &C){
           break;
         default: HALT("");
       }
-      if(e->type==ors::hingeJT){
+      if(e->type==ors::hingeJT) {
         jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
         dJointSetAMotorNumAxes(jointM, 1);
         dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
@@ -813,7 +813,7 @@ void OdeInterface::createOde(ors::Graph &C){
   isOpen=true;
 }
 
-void OdeInterface::step(ors::Graph &C, doubleA& in, doubleA& force, doubleA& out, uint steps){
+void OdeInterface::step(ors::Graph &C, doubleA& in, doubleA& force, doubleA& out, uint steps) {
   C.setFullState(in);
   exportStateToOde(C);
   addJointForce(C, force);
@@ -822,25 +822,25 @@ void OdeInterface::step(ors::Graph &C, doubleA& in, doubleA& force, doubleA& out
   C.getFullState(out);
 }
 
-void OdeInterface::step(ors::Graph &C, doubleA& force, doubleA& out, uint steps){
+void OdeInterface::step(ors::Graph &C, doubleA& force, doubleA& out, uint steps) {
   addJointForce(C, force);
   for(; steps--;) step();
   importStateFromOde(C);
   C.getFullState(out);
 }
 
-void OdeInterface::step(ors::Graph &C, uint steps, double tau){
+void OdeInterface::step(ors::Graph &C, uint steps, double tau) {
   for(; steps--;) step(tau);
   importStateFromOde(C);
 }
 
-void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts){
+void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts) {
   cts.resize(C.bodies.N);
   cts=false;
   //reportContacts();
   uint i;
   dContactGeom *c;
-  for(i=0; i<conts.N; i++){
+  for(i=0; i<conts.N; i++) {
     c = conts(i);
     dBodyID b1, b2;
     b1 = dGeomGetBody(c->g1);
@@ -859,7 +859,7 @@ void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts){
   };*/
 
 
-void OdeInterface::importProxiesFromOde(ors::Graph &C){
+void OdeInterface::importProxiesFromOde(ors::Graph &C) {
   uint i, Nold=C.proxies.N;
   //Nold=0;
   for(i=0; i<Nold; i++) C.proxies(i)->age++;
@@ -869,7 +869,7 @@ void OdeInterface::importProxiesFromOde(ors::Graph &C){
   dContactGeom *c;
   int a, b;
   ors::Vector d, p;
-  for(i=0; i<conts.N; i++){
+  for(i=0; i<conts.N; i++) {
     c = conts(i);
     dBodyID b1, b2;
     b1 = dGeomGetBody(c->g1);
@@ -901,23 +901,23 @@ void OdeInterface::importProxiesFromOde(ors::Graph &C){
   C.sortProxies();
 }
 
-void OdeInterface::reportContacts2(){
+void OdeInterface::reportContacts2() {
   uint i;
   dBodyID b1, b2;
   ors::Body* b;
   dContactGeom* c;
   ors::Vector x;
   std::cout <<"contacts=" <<conts.N <<std::endl;
-  for(i=0; i<conts.N; i++){
+  for(i=0; i<conts.N; i++) {
     c = conts(i);
     std::cout <<i <<' ';
     b1=dGeomGetBody(c->g1);
     b2=dGeomGetBody(c->g2);
-    if(b1){
+    if(b1) {
       b=(ors::Body*)b1->userdata;
       std::cout <<b->name <<' ';
     } else std::cout <<"NIL ";
-    if(b2){
+    if(b2) {
       b=(ors::Body*)b2->userdata;
       std::cout <<b->name <<' ';
     } else std::cout <<"NIL ";
@@ -928,7 +928,7 @@ void OdeInterface::reportContacts2(){
 }
 
 struct Bound { ors::Vector p, n; };
-bool OdeInterface::inFloorContacts(ors::Vector& x){
+bool OdeInterface::inFloorContacts(ors::Vector& x) {
   uint i, j, k;
   dBodyID b1, b2;
   dContactGeom* c;
@@ -938,11 +938,11 @@ bool OdeInterface::inFloorContacts(ors::Vector& x){
   
   MT::Array<ors::Vector> v;
   //collect list of floor contacts
-  for(i=0; i<conts.N; i++){
+  for(i=0; i<conts.N; i++) {
     c = conts(i);
     b1=dGeomGetBody(c->g1);
     b2=dGeomGetBody(c->g2);
-    if((!b1 && b2) || (b1 &&!b2)){
+    if((!b1 && b2) || (b1 &&!b2)) {
       y.set(c->pos);  y(2)=0.;
       v.append(y);
     }
@@ -958,12 +958,12 @@ bool OdeInterface::inFloorContacts(ors::Vector& x){
   MT::Array<Bound> bounds;
   double s;
   bool f;
-  for(i=0; i<v.N; i++) for(j=0; j<i; j++){
+  for(i=0; i<v.N; i++) for(j=0; j<i; j++) {
       b.p=v(i); b.n=(v(j)-v(i)) ^ ors::Vector(0, 0, 1);
       f=false;
-      for(k=0; k<v.N; k++) if(k!=j && k!=i){
+      for(k=0; k<v.N; k++) if(k!=j && k!=i) {
           s=(v(k)-b.p) * b.n ;
-          if(s<0){
+          if(s<0) {
             if(f) break;
             b.n=-b.n;
           }
@@ -977,13 +977,13 @@ bool OdeInterface::inFloorContacts(ors::Vector& x){
   
   std::cout <<"\nquery: " <<x <<std::endl;
   //check for internal
-  for(i=0; i<bounds.N; i++){
+  for(i=0; i<bounds.N; i++) {
     if((x-bounds(i).p) * bounds(i).n < 0) return false;
   }
   return true;
 }
 
-void OdeInterface::slGetProxies(ors::Graph &C){
+void OdeInterface::slGetProxies(ors::Graph &C) {
   //C.setJointState(x);
   //dJointGroupEmpty(contactgroup);
   //exportStateToOde(C, ode);
@@ -1102,15 +1102,15 @@ bool inFloorContacts(ors::Vector& x);
 #endif
 
 #else
-OdeInterface::OdeInterface(){ MT_MSG("WARNING - creating dummy OdeInterface"); }
-OdeInterface::~OdeInterface(){}
-void OdeInterface::OdeInterface::step(double dtime){}
-void OdeInterface::createOde(ors::Graph &C){}
-void OdeInterface::clear(){}
-void OdeInterface::slGetProxies(ors::Graph &C){}
-void OdeInterface::unsetJointMotors(ors::Graph &C){}
-void OdeInterface::exportStateToOde(ors::Graph &C){}
-void OdeInterface::importStateFromOde(ors::Graph &C){}
-void OdeInterface::importProxiesFromOde(ors::Graph &C){}
-void OdeInterface::addJointForce(ors::Graph &C, arr& f){}
+OdeInterface::OdeInterface() { MT_MSG("WARNING - creating dummy OdeInterface"); }
+OdeInterface::~OdeInterface() {}
+void OdeInterface::OdeInterface::step(double dtime) {}
+void OdeInterface::createOde(ors::Graph &C) {}
+void OdeInterface::clear() {}
+void OdeInterface::slGetProxies(ors::Graph &C) {}
+void OdeInterface::unsetJointMotors(ors::Graph &C) {}
+void OdeInterface::exportStateToOde(ors::Graph &C) {}
+void OdeInterface::importStateFromOde(ors::Graph &C) {}
+void OdeInterface::importProxiesFromOde(ors::Graph &C) {}
+void OdeInterface::addJointForce(ors::Graph &C, arr& f) {}
 #endif

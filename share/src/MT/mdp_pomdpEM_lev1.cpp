@@ -2,7 +2,7 @@
 #include "mstep.h"
 #include "infer.h"
 
-using namespace infer;
+
 
 double mdp::pomdpEM_lev1(
   const MDP& mdp,
@@ -50,51 +50,51 @@ double mdp::pomdpEM_lev1(
 #endif
   
   //----- define the factor model
-  Variable x(dx , "state(t)");
-  Variable y(dy , "observation(t)");
-  Variable n0(d0 , "node0(t)");
-  Variable a(da , "action(t)");
-  Variable x_(dx , "state(t+1)");
-  Variable y_(dy , "observation(t+1)");
-  Variable n0_(d0 , "node0(t+1)");
+  infer::Variable x(dx , "state(t)");
+  infer::Variable y(dy , "observation(t)");
+  infer::Variable n0(d0 , "node0(t)");
+  infer::Variable a(da , "action(t)");
+  infer::Variable x_(dx , "state(t+1)");
+  infer::Variable y_(dy , "observation(t+1)");
+  infer::Variable n0_(d0 , "node0(t+1)");
   //start
-  Factor Fx(ARRAY(&x)        , mdp.Px);
-  Factor Fy(ARRAY(&y));      Fy.setUniform();
-  Factor F0(ARRAY(&n0)       , fsc.P0);
+  infer::Factor Fx(ARRAY(&x)        , mdp.Px);
+  infer::Factor Fy(ARRAY(&y));      Fy.setUniform();
+  infer::Factor F0(ARRAY(&n0)       , fsc.P0);
   //transition
-  Factor Fa0(ARRAY(&a, &n0)     , fsc.Pa0);
-  Factor Fxax(ARRAY(&x_, &a, &x)   , mdp.Pxax);
-  Factor Fyxa(ARRAY(&y_, &x_, &a)  , mdp.Pyxa);
-  Factor F0y0(ARRAY(&n0_, &y_, &n0), fsc.P0y0);
+  infer::Factor Fa0(ARRAY(&a, &n0)     , fsc.Pa0);
+  infer::Factor Fxax(ARRAY(&x_, &a, &x)   , mdp.Pxax);
+  infer::Factor Fyxa(ARRAY(&y_, &x_, &a)  , mdp.Pyxa);
+  infer::Factor F0y0(ARRAY(&n0_, &y_, &n0), fsc.P0y0);
   //reward
-  Factor FRax(ARRAY(&a, &x)      , mdp_Rax);
+  infer::Factor FRax(ARRAY(&a, &x)      , mdp_Rax);
   
-  VariableList leftVars=ARRAY(&n0 , &x);
-  VariableList rightVars=ARRAY(&n0_, &x_);
-  VariableList tail_headVars=cat(rightVars, leftVars);
+  infer::VariableList leftVars=ARRAY(&n0 , &x);
+  infer::VariableList rightVars=ARRAY(&n0_, &x_);
+  infer::VariableList tail_headVars=cat(rightVars, leftVars);
   
-  //FactorList allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
-  FactorList allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
-  FactorList allRewards = ARRAY(&FRax, &Fa0);
-  FactorList allInits = ARRAY(&F0, &Fx, &Fy);
+  //infer::FactorList allTransitions=ARRAY(&Fa0, &Fxax, &Fyxa, &F0y0);
+  infer::FactorList allTransitions = ARRAY(&F0y0, &Fyxa, &Fxax, &Fa0);
+  infer::FactorList allRewards = ARRAY(&FRax, &Fa0);
+  infer::FactorList allInits = ARRAY(&F0, &Fx, &Fy);
   
-  Factor Falpha(leftVars);
-  Factor Fbeta(rightVars);
+  infer::Factor Falpha(leftVars);
+  infer::Factor Fbeta(rightVars);
   arr PT;
   double PR, ET;
   if(!estepStructured){
     //----- collapse to unstructured model for generic inference
     uint dz = d0*dx;
     //get transition matrix
-    Factor Fzz;
+    infer::Factor Fzz;
     eliminationAlgorithm(Fzz, allTransitions, tail_headVars);
     Fzz.P.reshape(dz, dz);
     //get reward vector
-    Factor FRz;
+    infer::Factor FRz;
     eliminationAlgorithm(FRz, allRewards, leftVars);
     FRz.P.reshape(dz);
     //get start vector
-    Factor Fz;
+    infer::Factor Fz;
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
@@ -109,9 +109,9 @@ double mdp::pomdpEM_lev1(
       _beta .referTo(*beta);   _beta .reshape(dz);
     }
     
-    inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
-                               Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
-                               estepIncremental);
+    infer::inferMixLengthUnstructured(_alpha, _beta, PT, PR, ET,
+				      Fz.P, FRz.P, Fzz.P, mdp.gamma, estepHorizon,
+				      estepIncremental);
     Falpha.setP(_alpha);
     Fbeta .setP(_beta);
     
@@ -121,7 +121,7 @@ double mdp::pomdpEM_lev1(
     }
   }else{
     //----- use factor lists for generic inference
-    FactorList temporary;
+    infer::FactorList temporary;
     //eliminateVariable(allTransitions, temporary, a);
     //eliminateVariable(allTransitions, temporary, y_);
     //eliminateVariable(allRewards, temporary, a);
@@ -149,19 +149,19 @@ double mdp::pomdpEM_lev1(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  FactorList twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
+  infer::FactorList twotimeslice = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &Fbeta);
   
-  Factor X0y0_term2;
+  infer::Factor X0y0_term2;
   eliminationAlgorithm(X0y0_term2, twotimeslice, ARRAY(&n0_, &y_, &n0));
-  Factor Xa0_term2;
+  infer::Factor Xa0_term2;
   eliminationAlgorithm(Xa0_term2, twotimeslice, ARRAY(&a, &n0));
   
   //consider the 1st term (alpha*R_x)
-  FactorList immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
+  infer::FactorList immediateR   = ARRAY(&Falpha, &Fa0, &Fxax, &Fyxa, &F0y0, &FRax);
   
-  Factor X0y0_term1;
+  infer::Factor X0y0_term1;
   eliminationAlgorithm(X0y0_term1 , immediateR, ARRAY(&n0_, &y_, &n0));
-  Factor Xa0_term1;
+  infer::Factor Xa0_term1;
   eliminationAlgorithm(Xa0_term1, immediateR, ARRAY(&a, &n0));
   
   arr X0y0;

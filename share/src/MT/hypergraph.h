@@ -12,7 +12,7 @@ typedef MT::Array<Element*> ElementL;
 
 struct Element {
   uint id;                 //!< id of this element
-  String type, name;        //!< type & name
+  MT::String type, name;   //!< type & name
   uintA    linksIds;       //!< this elem links a set of other elems
   ElementL links;          //!< this elem links a set of other elems
   ElementL elemof[maxDegree]; //!< this elem is linked by other elems in a certain 'slot'
@@ -23,10 +23,9 @@ struct Element {
 };
 stdOutPipe(Element);
 
-struct HyperGraph {
-  uint N[maxDegree];
+
+struct HyperGraph:ElementL {
   uintA unused;
-  ElementL T;
   
   ElementL& getOutEdges(uint i);
   Element *add(const uintA& tuple);
@@ -40,20 +39,21 @@ struct HyperGraph {
 stdPipes(HyperGraph);
 
 
-void HyperGraph::sortByDotOrder(){
-  uintA perm(T.N);
+inline void sortByDotOrder(ElementL& G){
+  uintA perm(G.N);
   Element *e;
   double *order;
   uint i;
-  for_list(i,e,T){
+  for_list(i,e,G){
     order = anyListGet<double>(e->ats, "dot_order", 1);
+    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
     perm(i) = (uint)*order;
   }
-  T.permuteInv(perm);
-  for_list(i,e,T) e->id=i;
+  G.permuteInv(perm);
+  for_list(i,e,G) e->id=i;
 }
 
-void writeDot(ElementL G){
+inline void writeDot(ElementL& G){
   ofstream fil;
   MT::open(fil, "z.dot");
   fil <<"graph G{" <<endl;
@@ -64,7 +64,7 @@ void writeDot(ElementL G){
   Element *e, *n;
   for_list(i, e, G){
     fil <<e->id <<" [ ";
-    if(e->name.N()) fil <<"label=\"" <<e->name <<"\", ";
+    if(e->name.N) fil <<"label=\"" <<e->name <<"\", ";
     if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil <<"shape=box";
     else if(e->type=="shape") fil <<"shape=diamond";
     else fil <<"shape=ellipse";

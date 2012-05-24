@@ -1,5 +1,7 @@
 #ifdef MT_OPENCV
 #undef COUNT
+#undef True
+#undef False
 #include <opencv/highgui.h>
 #include <opencv/cv.h>
 #undef MIN

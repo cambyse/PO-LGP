@@ -8,6 +8,7 @@
 struct SkinPressure;
 struct JoystickState;
 struct FeedbackControlTaskAbstraction;
+struct ActionToMotionPrimitive;
 
 //===========================================================================
 //
@@ -22,57 +23,80 @@ struct GeometricState:Variable {
 };
 
 
+/** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
+struct Action:Variable {
+  //grasp: goto object, close hand, attach shape to hand
+  //reach: goto object or move to location, but do not attach shape
+  enum ActionPredicate { noAction, reach, grasp, place, openHand, closeHand, home };
+  
+  FIELD(uint, frameCount);
+  FIELD(ActionPredicate, action);
+  FIELD(bool, executed);
+  FIELD(char*, objectRef1);  //arguments to the relational predicates
+  FIELD(char*, objectRef2);
+  
+  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  
+  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+};
+
+
+/** \brief A keyframe represents a pose at the beginning and end of a motion primitive, that is, in between two symbolic actions. */
 struct MotionKeyframe:Variable {
+  FIELD(uint, frameCount);
   FIELD(arr, x_estimate);
   FIELD(double, duration_estimate);
-  FIELD(MotionKeyframe*, previous_keyframe);
-  FIELD(MotionKeyframe*, next_keyframe);
   FIELD(bool, converged);
   
-  MotionKeyframe():Variable("MotionKeyFrame"), previous_keyframe(NULL), next_keyframe(NULL), converged(false) {};
+  MotionKeyframe():Variable("MotionKeyFrame"), frameCount(0), converged(false) {};
   void get_poseView(arr& x) { x=x_estimate; }
 };
 
 
-struct MotionPlan:Variable {
+/** \brief A motion primitive is the motion-grounding of a symbolic action. It can be a feedback control task, or a planned motion.
+ In the first case, the MotionPrimitive is given a FeedbackControlTaskAbstraction, which implements the necessary task variable updates for a feedback controller.
+ In the planned case, a motion planner first generates a trajectroy (q_plan), then this is followed by the controller */
+struct MotionPrimitive:Variable {
+  enum MotionMode{ stop=0, followPlan, feedback, done  };
+
+  FIELD(uint, frameCount);
+  FIELD(MotionMode, mode);
+  
+  //in case of followPlan
+  FIELD(MotionKeyframe*, frame0);
+  FIELD(MotionKeyframe*, frame1);
   FIELD(arr, q_plan);
   FIELD(double, tau);
-  FIELD(uint, steps);
-  
-  //problem description
-  FIELD(bool, hasGoal);   //if there is no goal (=tasks) given, the planner may sleep
-  FIELD(bool, converged);
-  FIELD(MotionKeyframe*, final_keyframe);
-  //FUTURE:
-  //arr W; //diagonal of the control cost matrix
-  //arr Phi, rho; //task cost descriptors
-  //...for now: do it conventionally: task list or socSystem??
-  FIELD(TaskVariableList, TVs);
-  
-  MotionPlan():Variable("MotionPlan"), hasGoal(false), converged(false), final_keyframe(NULL) { };
-  void get_poseView(arr& q) { q=q_plan; }
-};
+  FIELD(bool, planConverged);
+  FIELD(uint, iterations_till_convergence);
+  FIELD(double, cost);
 
-struct ControllerTask:Variable {
-  enum ControllerMode { stop=0, followPlan, feedback, done  };
-  //optional: followWithFeedback
-  
-  FIELD(ControllerMode, mode);
-  FIELD(bool, fixFingers);
-  //for followTrajectroy mode:
-  FIELD(double, followTrajectoryTimeScale);   //real in [0,1]
-  FIELD(double, relativeRealTimeOfController);
-  //for feedback mode:
-  FIELD(bool, forceColLimTVs);
+  //in case of feedback
   FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
+
+  //controller options
+  FIELD(bool, fixFingers);
+  FIELD(bool, forceColLimTVs);
+  FIELD(double, relativeRealTimeOfController);
+
+  //only for info - to enable a view
+  //FIELD(TaskVariableList, TVs);
   
-  ControllerTask():Variable("ControllerTask"),
+  MotionPrimitive():Variable("MotionPrimitive"),
+      frameCount(0), 
       mode(stop),
-      followTrajectoryTimeScale(1.), relativeRealTimeOfController(0.),
-      forceColLimTVs(true), feedbackControlTask(NULL) {};
+      frame0(NULL), frame1(NULL), planConverged(false),
+      feedbackControlTask(NULL),
+      forceColLimTVs(true), relativeRealTimeOfController(0.) { };
+  
+  void get_poseView(arr& q) { q=q_plan; }
+  void setClearPlanTask(const arr& frame0_pose, Process *p);
+  void setFeedbackTask(FeedbackControlTaskAbstraction& task, bool _forceColLimTVs, bool _fixFingers, Process *p);
 };
 
 
+/** \brief The HardwareReference is the interface to motors, containing the reference pose for the motor controllers and
+ * their return values (q_real). */
 struct HardwareReference:Variable {
   FIELD(arr, q_reference);
   FIELD(arr, v_reference);
@@ -86,82 +110,50 @@ struct HardwareReference:Variable {
 };
 
 
-struct Action:Variable {
-  enum ActionPredicate { noAction, grasp, place, home };
+/** \brief The MotionFuture contains a whole queue of future actions, motion primitives and keyframes. This allows parallel
+ * planning of the motion primitives even when the action will only be in the future. The ActionProgressor takes care to point
+ * the controller to the next motion primitive when the previous one was executed */
+struct MotionFuture:Variable {
+  FIELD(uint, currentFrame);
+  FIELD(bool, done);
+  FIELD(MT::Array<Action*>, actions)
+  FIELD(MT::Array<MotionPrimitive*>, motions);
+  FIELD(MT::Array<MotionKeyframe*>, frames);
+  FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
   
-  FIELD(ActionPredicate, action);
-  FIELD(bool, executed);
-  FIELD(char*, objectRef1);  //arguments to the relational predicates
-  FIELD(char*, objectRef2);
-  //FIELD(char*, objectRef3);
+  MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {};
   
-  Action():Variable("Action"), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+  void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
+  uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
+  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
+  Action *getCurrentAction(Process *p){ readAccess(p); Action *a=actions(currentFrame); deAccess(p); return a; }
 };
-
-
-struct ActionPlan:Variable {
-  MT::Array<Action> a_plan;
-  
-  ActionPlan();
-};
-
 
 //===========================================================================
 //
 // Processes
 //
 
-struct Controller:Process {
-  struct sController *s;
-  
-  //TODO: we could remove all Variable points to the private space
-  //works only if the Process really connects itself - cannot be connected from outside animore
-  //OR: add a gerneric (template?) routine to Processes in general that tells them to connect to a specific
-  //Variable?
-  ControllerTask *controllerTask;
-  MotionPlan *motionPlan;
-  HardwareReference *hardwareReference;
-  GeometricState *geo;
-  
-  Controller();
-  ~Controller();
-  void open();
-  void step();
-  void close();
-};
+PROCESS(Controller)
 
+PROCESS(ActionProgressor)
 
-struct MotionPrimitive:Process {
-  struct sMotionPrimitive *s;
+struct ActionToMotionPrimitive:Process {
+  struct sActionToMotionPrimitive *s;
   
   //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
   Action *action;
-  MotionKeyframe *frame0,*frame1;
-  MotionPlan *plan;
-  GeometricState *geo;
+  MotionPrimitive *motionPrimitive;
   
-  MotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPlan&, GeometricState&);
-  ~MotionPrimitive();
+  ActionToMotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
+  ~ActionToMotionPrimitive();
   void open();
   void step();
   void close();
 };
 
 
-struct MotionPlanner:Process {
-  struct sMotionPlanner_interpolation *s;
-  
-  MotionPlan *plan;
-  GeometricState *geo;
-  
-  enum MotionPlannerAlgo { interpolation=0, AICO_noinit } algo;
-  
-  MotionPlanner();
-  ~MotionPlanner();
-  void open();
-  void step();
-  void close();
-};
 
 
 //===========================================================================
@@ -172,19 +164,21 @@ struct MotionPlanner:Process {
 template<class T>
 struct PoseViewer:Process {
   T *var;
-  GeometricState *geo;
+  WorkingCopy<GeometricState> geo;
   OpenGL *gl;
-  ors::Graph *ors;
   
-  PoseViewer(T& v, GeometricState& g):Process("MotionPoseViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
+  PoseViewer(T& v):Process("PoseViewer"), var(&v), gl(NULL) {
+    geo.init("GeometricState", this);
+    threadListenTo(var);
   }
   void open() {
-    geo->writeAccess(this);
-    ors = geo->ors.newClone();
-    geo->deAccess(this);
+    geo.pull();
+//     geo->writeAccess(this);
+//     ors = geo->ors.newClone();
+//     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, ors);
+    gl->add(ors::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -195,24 +189,24 @@ struct PoseViewer:Process {
     gl = NULL;
   }
   void step() {
+    geo.pull();
+    uint n=geo().ors.getJointStateDimension();
     arr q;
     var->readAccess(this);
     var->get_poseView(q);
     var->deAccess(this);
     if (q.nd==1) {
-      if (q.N==2*ors->getJointStateDimension()) q = q.sub(0,q.N/2-1); //check dynamic state
-      ors->setJointState(q);
-      ors->calcBodyFramesFromJoints();
-      gl->text.clr() <<"pose view";
+      if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
+      if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
+      geo().ors.setJointState(q);
+      geo().ors.calcBodyFramesFromJoints();
+      gl->text.clear() <<"pose view";
       gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
-        arr qt;
-        if(q[t].N==2*ors->getJointStateDimension()) qt = q[t].sub(0,q[t].N/2-1);
-        else qt = q[t];
-        ors->setJointState(qt);
-        ors->calcBodyFramesFromJoints();
-        gl->text.clr() <<"pose view at step " <<t <<"/" <<q.d0-1;
+        geo().ors.setJointState(q[t]);
+        geo().ors.calcBodyFramesFromJoints();
+        gl->text.clear() <<"pose view at step " <<t <<"/" <<q.d0-1;
         gl->update();
       }
     }
@@ -222,19 +216,21 @@ struct PoseViewer:Process {
 template<class T>
 struct OrsViewer:Process {
   T *var;
-  GeometricState *geo;
+  WorkingCopy<GeometricState> geo;
   OpenGL *gl;
-  ors::Graph *ors;
   
-  OrsViewer(T& v, GeometricState& g):Process("MotionOrsViewer"), var(&v), geo(&g), gl(NULL), ors(NULL) {
+  OrsViewer(T& v):Process("OrsViewer"), var(&v), gl(NULL) {
+    geo.init("GeometricState", this);
+    threadListenTo(var);
   }
   void open() {
-    geo->writeAccess(this);
-    ors = geo->ors.newClone();
-    geo->deAccess(this);
+    geo.pull();
+//     geo->writeAccess(this);
+//     ors = geo->ors.newClone();
+//     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, ors);
+    gl->add(ors::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -246,14 +242,12 @@ struct OrsViewer:Process {
   }
   void step() {
     arr q;
-    var->readAccess(this);
-    ors->copyShapesAndJoints( var->get_ors() );
-    var->deAccess(this);
-    gl->text.clr() <<"ors view of Variable " <<var->name;
+    geo.pull();
+    gl->text.clear() <<"ors view of Variable " <<var->name;
     gl->update();
   }
 };
 
-#include "MotionPrimitive.h"
+#include "ActionToMotionPrimitive.h"
 
 #endif

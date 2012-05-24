@@ -120,10 +120,13 @@ public:
   //!@name constructors
   Array();
   Array(const Array<T>& a);
+  Array(const Array<T>& a, uint i);         //reference constructor
+  Array(const Array<T>& a, uint i, uint j); //reference constructor
   Array(uint D0);
   Array(uint D0, uint D1);
   Array(uint D0, uint D1, uint D2);
   Array(const T* p, uint size);
+  
   ~Array();
   
   Array<T>& operator=(const T& v);
@@ -165,8 +168,8 @@ public:
   void setStraightPerm(int n=-1);
   void setReversePerm(int n=-1);
   void setRandomPerm(int n=-1);
-  void setCarray(T *buffer, uint D0);
-  void setCarray(T **buffer, uint D0, uint D1);
+  void setCarray(const T *buffer, uint D0);
+  void setCarray(const T **buffer, uint D0, uint D1);
   void referTo(const T *buffer, uint n);
   void referTo(const Array<T>& a);
   void referToSubRange(const Array<T>& a, uint i, int I);
@@ -214,14 +217,14 @@ public:
   void maxIndex(uint& i, uint& j, uint& k) const;
   int findValue(const T& x) const;
   void findValues(MT::Array<uint>& indices, const T& x) const;
-  bool contains(const T& x) const{ return findValue(x)!=-1; }
+  bool contains(const T& x) const { return findValue(x)!=-1; }
   bool containsDoubles() const;
   uint getMemsize() const;
   void getIndexTuple(Array<uint> &I, uint i) const;
   
   //!@name appending etc
   T& append();
-  void append(const T& x);
+  T& append(const T& x);
   void append(const Array<T>& x);
   void append(const T *p, uint n);
   void replicate(uint copies);
@@ -244,8 +247,11 @@ public:
   
   //!@name sorting and permuting this array
   void sort(ElemCompare comp);
-  uint findInSorted(const T& x, ElemCompare comp);
+  bool isSorted(ElemCompare comp) const;
+  uint rankInSorted(const T& x, ElemCompare comp) const;
+  int findValueInSorted(const T& x, ElemCompare comp) const;
   uint insertInSorted(const T& x, ElemCompare comp);
+  uint setAppendInSorted(const T& x, ElemCompare comp);
   void removeValueInSorted(const T& x, ElemCompare comp);
   void reverse();
   void permute(uint i, uint j);
@@ -262,6 +268,7 @@ public:
   //!@name I/O
   void write(std::ostream& os=std::cout, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="[]", bool dimTag=false, bool binary=false) const;
   void read(std::istream& is);
+  void read(const char* filename);
   void writeTagged(std::ostream& os, const char* tag, bool binary=false) const;
   bool readTagged(std::istream& is, const char *tag);
   void writeTagged(const char* filename, const char* tag, bool binary=false) const;
@@ -314,26 +321,49 @@ extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional argumen
 //!@name shorthand to specify arrays and lists (list=array of pointers)
 // @{
 
-template<class T> MT::Array<T> ARRAY(){                                    MT::Array<T> z(0); return z; }
-template<class T> MT::Array<T> ARRAY(const T& i){                                    MT::Array<T> z(1); z(0)=i; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j){                               MT::Array<T> z(2); z(0)=i; z(1)=j; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k){                          MT::Array<T> z(3); z(0)=i; z(1)=j; z(2)=k; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l){                     MT::Array<T> z(4); z(0)=i; z(1)=j; z(2)=k; z(3)=l; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m){                MT::Array<T> z(5); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n){           MT::Array<T> z(6); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o){      MT::Array<T> z(7); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p){ MT::Array<T> z(8); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; z(7)=p; return z; }
-template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p, const T& q){ MT::Array<T> z(9); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; z(7)=p; z(8)=q; return z; }
+// Andreas: this is a generic array builder via recursive variadic templates:
+// uses C++0x specification. Tested with gcc 4.4.6, should work with >4.3
+// according to http://gcc.gnu.org/gcc-4.3/cxx0x_status.html
 
-template<class T> MT::Array<T*> LIST(){                                    MT::Array<T*> z(0); return z; }
-template<class T> MT::Array<T*> LIST(const T& i){                                    MT::Array<T*> z(1); z(0)=(T*)&i; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j){                               MT::Array<T*> z(2); z(0)=(T*)&i; z(1)=(T*)&j; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k){                          MT::Array<T*> z(3); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l){                     MT::Array<T*> z(4); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m){                MT::Array<T*> z(5); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n){           MT::Array<T*> z(6); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o){      MT::Array<T*> z(7); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; return z; }
-template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p){ MT::Array<T*> z(8); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; z(7)=(T*)&p; return z; }
+//	enable this by adding -std=c++0x to your CXXFLAGS variable
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+  template<class T>
+  void ahelper(MT::Array<T> &z, T t){ z(z.N-1)=t; }
+
+  template<class T, typename ...A>
+  void ahelper(MT::Array<T> &z, T t, A ...args){
+    z(z.N-1-sizeof...(args))=t;
+    if(sizeof...(args)) ahelper<T>(z, args...);
+  }
+
+  template<class T, typename ...A>
+  MT::Array<T> ARRAY( A ...args) {
+      MT::Array<T> z(sizeof...(args));
+      ahelper<T>(z, args...);
+      return z;
+  }
+#else
+  template<class T> MT::Array<T> ARRAY() {                                    MT::Array<T> z(0); return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i) {                                    MT::Array<T> z(1); z(0)=i; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j) {                               MT::Array<T> z(2); z(0)=i; z(1)=j; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k) {                          MT::Array<T> z(3); z(0)=i; z(1)=j; z(2)=k; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l) {                     MT::Array<T> z(4); z(0)=i; z(1)=j; z(2)=k; z(3)=l; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m) {                MT::Array<T> z(5); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n) {           MT::Array<T> z(6); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o) {      MT::Array<T> z(7); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p) { MT::Array<T> z(8); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; z(7)=p; return z; }
+  template<class T> MT::Array<T> ARRAY(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p, const T& q) { MT::Array<T> z(9); z(0)=i; z(1)=j; z(2)=k; z(3)=l; z(4)=m; z(5)=n; z(6)=o; z(7)=p; z(8)=q; return z; }
+#endif
+
+template<class T> MT::Array<T*> LIST() {                                    MT::Array<T*> z(0); return z; }
+template<class T> MT::Array<T*> LIST(const T& i) {                                    MT::Array<T*> z(1); z(0)=(T*)&i; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j) {                               MT::Array<T*> z(2); z(0)=(T*)&i; z(1)=(T*)&j; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k) {                          MT::Array<T*> z(3); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l) {                     MT::Array<T*> z(4); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m) {                MT::Array<T*> z(5); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n) {           MT::Array<T*> z(6); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o) {      MT::Array<T*> z(7); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; return z; }
+template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p) { MT::Array<T*> z(8); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; z(7)=(T*)&p; return z; }
 
 
 //===========================================================================
@@ -342,38 +372,38 @@ template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T
 // @{
 
 //! return identity matrix
-inline arr eye(uint d0, uint d1){ arr z;  z.resize(d0, d1);  z.setId();  return z; }
-inline arr eye(uint n){ return eye(n, n); }
+inline arr eye(uint d0, uint d1) { arr z;  z.resize(d0, d1);  z.setId();  return z; }
+inline arr eye(uint n) { return eye(n, n); }
 
 //! return matrix of ones
-inline arr ones(const uintA& d){  arr z;  z.resize(d);  z=1.;  return z;  }
-inline arr ones(uint n){ return ones(TUP(n, n)); }
-inline arr ones(uint d0, uint d1){ return ones(TUP(d0, d1)); }
+inline arr ones(const uintA& d) {  arr z;  z.resize(d);  z=1.;  return z;  }
+inline arr ones(uint n) { return ones(TUP(n, n)); }
+inline arr ones(uint d0, uint d1) { return ones(TUP(d0, d1)); }
 
 //! return matrix of zeros
-inline arr zeros(const uintA& d){  arr z;  z.resize(d);  z.setZero();  return z; }
-inline arr zeros(uint n){ return zeros(TUP(n, n)); }
-inline arr zeros(uint d0, uint d1){ return zeros(TUP(d0, d1)); }
+inline arr zeros(const uintA& d) {  arr z;  z.resize(d);  z.setZero();  return z; }
+inline arr zeros(uint n) { return zeros(TUP(n, n)); }
+inline arr zeros(uint d0, uint d1) { return zeros(TUP(d0, d1)); }
 
 arr repmat(const arr& A, uint m, uint n);
 
 //! return array with random numbers in [0, 1]
 arr rand(const uintA& d);
-inline arr rand(uint n){ return rand(TUP(n, n)); }
-inline arr rand(uint d0, uint d1){ return rand(TUP(d0, d1)); }
+inline arr rand(uint n) { return rand(TUP(n, n)); }
+inline arr rand(uint d0, uint d1) { return rand(TUP(d0, d1)); }
 
 //! return array with normal (Gaussian) random numbers
 arr randn(const uintA& d);
-inline arr randn(uint n){ return randn(TUP(n, n)); }
-inline arr randn(uint d0, uint d1){ return randn(TUP(d0, d1)); }
+inline arr randn(uint n) { return randn(TUP(n, n)); }
+inline arr randn(uint d0, uint d1) { return randn(TUP(d0, d1)); }
 
 inline double max(const arr& x){ return x.max(); }
-inline double min(const arr& x){ return x.min(); }
+inline double min(const arr& x) { return x.min(); }
 inline uint argmax(const arr& x){ return x.maxIndex(); }
 inline uint argmin(const arr& x){ return x.minIndex(); }
 
-inline uintA randperm(uint n){  uintA z;  z.setRandomPerm(n);  return z; }
-inline arr linspace(double base, double limit, uint n){  arr z;  z.setGrid(1, base, limit, n);  return z;  }
+inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
+inline arr linspace(double base, double limit, uint n) {  arr z;  z.setGrid(1, base, limit, n);  return z;  }
 arr logspace(double base, double limit, uint n);
 
 //===========================================================================
@@ -433,18 +463,18 @@ void scanArrFile(const char* name);
 
 template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void getDiag(MT::Array<T>& x, const MT::Array<T>& y);
-template<class T> MT::Array<T> diag(const MT::Array<T>& x){  MT::Array<T> y;  y.setDiag(x);  return y;  }
-template<class T> MT::Array<T> skew(const MT::Array<T>& x){  MT::Array<T> y;  y.setSkew(x);  return y;  }
+template<class T> MT::Array<T> diag(const MT::Array<T>& x) {  MT::Array<T> y;  y.setDiag(x);  return y;  }
+template<class T> MT::Array<T> skew(const MT::Array<T>& x) {  MT::Array<T> y;  y.setSkew(x);  return y;  }
 template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A);
 
-template<class T> uintA size(const MT::Array<T>& x){ return x.getDim(); }
+template<class T> uintA size(const MT::Array<T>& x) { return x.getDim(); }
 
 
 template<class T> T entropy(const MT::Array<T>& v);
 template<class T> T normalizeDist(MT::Array<T>& v);
 template<class T> void makeConditional(MT::Array<T>& P);
 template<class T> void checkNormalization(MT::Array<T>& v, double tol);
-template<class T> void checkNormalization(MT::Array<T>& v){ checkNormalization(v, 1e-10); }
+template<class T> void checkNormalization(MT::Array<T>& v) { checkNormalization(v, 1e-10); }
 template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d);
 template<class T> void eliminate(MT::Array<T>& x, const MT::Array<T>& y, uint d, uint e);
 template<class T> void eliminatePartial(MT::Array<T>& x, const MT::Array<T>& y, uint d);
@@ -484,10 +514,10 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
 //!@name concatenating arrays together
 // @{
 
-template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z){ MT::Array<T> x; x.append(y); x.append(z); return x; }
-template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z, const MT::Array<T>& w){ MT::Array<T> x; x.append(y); x.append(z); x.append(w); return x; }
-template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d){ MT::Array<T> x; x.append(a); x.append(b); x.append(c); x.append(d); return x; }
-template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d, const MT::Array<T>& e){ MT::Array<T> x; x.append(a); x.append(b); x.append(c); x.append(d); x.append(e); return x; }
+template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; x.append(y); x.append(z); return x; }
+template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z, const MT::Array<T>& w) { MT::Array<T> x; x.append(y); x.append(z); x.append(w); return x; }
+template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d) { MT::Array<T> x; x.append(a); x.append(b); x.append(c); x.append(d); return x; }
+template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d, const MT::Array<T>& e) { MT::Array<T> x; x.append(a); x.append(b); x.append(c); x.append(d); x.append(e); return x; }
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X);
 
 //===========================================================================
@@ -497,8 +527,8 @@ template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X);
 
 template<class T> void setUnion(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
-template<class T> MT::Array<T> setUnion(const MT::Array<T>& y, const MT::Array<T>& z){ MT::Array<T> x; setUnion(x, y, z); return x; }
-template<class T> MT::Array<T> setSection(const MT::Array<T>& y, const MT::Array<T>& z){ MT::Array<T> x; setSection(x, y, z); return x; }
+template<class T> MT::Array<T> setUnion(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; setUnion(x, y, z); return x; }
+template<class T> MT::Array<T> setSection(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; setSection(x, y, z); return x; }
 template<class T> void setMinus(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void rndInteger(MT::Array<T>& a, int low=0, int high=1, bool add=false);
@@ -508,7 +538,7 @@ template<class T> void rndGauss(MT::Array<T>& a, double stdDev=1., bool add=fals
 //template<class T> void rndGauss(MT::Array<T>& a, bool add=false);
 //template<class T> MT::Array<T>& rndGauss(double stdDev, uint dim);
 template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta);
-template<class T> MT::Array<T> sqr(const MT::Array<T>& y){ MT::Array<T> x; x.resizeAs(y); for(uint i=0; i<x.N; i++) x.elem(i)=y.elem(i)*y.elem(i); return x; }
+template<class T> MT::Array<T> sqr(const MT::Array<T>& y) { MT::Array<T> x; x.resizeAs(y); for(uint i=0; i<x.N; i++) x.elem(i)=y.elem(i)*y.elem(i); return x; }
 
 
 //===========================================================================
@@ -547,7 +577,6 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
-
 
 #define BinaryOperator( op, name)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
@@ -646,21 +675,21 @@ template<class T> bool operator<(const MT::Array<T>& v, const MT::Array<T>& w);
 // @{
 
 #ifndef SWIG
-template<class T, class S> void resizeAs(MT::Array<T>& x, const MT::Array<S>& a){
+template<class T, class S> void resizeAs(MT::Array<T>& x, const MT::Array<S>& a) {
   x.nd=a.nd; x.d0=a.d0; x.d1=a.d1; x.d2=a.d2;
   x.resetD();
-  if(x.nd>3){ x.d=new uint[x.nd];  memmove(x.d, a.d, x.nd*sizeof(uint)); }
+  if(x.nd>3) { x.d=new uint[x.nd];  memmove(x.d, a.d, x.nd*sizeof(uint)); }
   x.resizeMEM(a.N, false);
 }
 template<class T, class S> void resizeCopyAs(MT::Array<T>& x, const MT::Array<S>& a);
 template<class T, class S> void reshapeAs(MT::Array<T>& x, const MT::Array<S>& a);
-template<class T, class S> void copy(MT::Array<T>& x, const MT::Array<S>& a){
+template<class T, class S> void copy(MT::Array<T>& x, const MT::Array<S>& a) {
   resizeAs(x, a);
   for(uint i=0; i<x.N; i++) x.elem(i)=(T)a.elem(i);
 }
 //! check whether this and \c a have same dimensions
 template<class T, class S>
-bool samedim(const MT::Array<T>& a, const MT::Array<S>& b){
+bool samedim(const MT::Array<T>& a, const MT::Array<S>& b) {
   return (b.nd==a.nd && b.d0==a.d0 && b.d1==a.d1 && b.d2==a.d2);
 }
 #endif
@@ -706,13 +735,13 @@ template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type); /
 template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);
 
 //TODO obsolete?
-template<class T> MT::Array<T*> LIST(const MT::Array<T>& A){
+template<class T> MT::Array<T*> List(const MT::Array<T>& A) {
   MT::Array<T*> L;
   resizeAs(L, A);
   for(uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);
   return L;
 }
-template<class T> T* new_elem(MT::Array<T*>& L){ T *e=new T; e->index=L.N; L.append(e); return e; }
+template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.append(e); return e; }
 
 
 //-- AnyLists
@@ -750,7 +779,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 //
 
 #if defined MT_IMPLEMENT_TEMPLATES | defined MT_IMPLEMENTATION
-#  include "array_t.cpp"
+#  include "array_t.cxx"
 #endif
 
 #ifdef  MT_IMPLEMENTATION

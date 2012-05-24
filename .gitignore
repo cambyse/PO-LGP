@@ -13,10 +13,11 @@
 z.*
 
 *_doc
-*.data
 
 *_moc.cpp
 *_ui.h
+
+*.swp
 
 MT.log
 Makefile.dep

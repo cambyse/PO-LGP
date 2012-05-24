@@ -1,3 +1,5 @@
+#if 0
+
 #include "pradaBackwards.h"
 // #include <gsl/gsl_sf_log.h>
 
@@ -1720,5 +1722,7 @@ void ZICKZACK_PRADA::combine_alpha_beta(double& total_value, const NID_DBN& net,
 
 
 }
+
+#endif
 
 #endif

@@ -40,12 +40,12 @@
 
    for(uint i=0;i<10;i++){
      MT::wait(1.);
-     txt.clr() <<"hallo " <<i;
+     txt.clear() <<"hallo " <<i;
      
      XClearWindow(d,w);
      XFillRectangle(d, w, gc, 20, 20, 10, 10);
-     XDrawString(d, w, gc, 50, 50, txt.p, txt.N());
-     //XDrawImageString(d, w, gc, 50, 70, txt.p, txt.N());
+     XDrawString(d, w, gc, 50, 50, txt.p, txt.N);
+     //XDrawImageString(d, w, gc, 50, 70, txt.p, txt.N);
 
      XFlush(d);
    }

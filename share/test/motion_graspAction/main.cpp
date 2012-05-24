@@ -1,15 +1,19 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
+#include <views/views.h>
+#include <MT/gtk.h>
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
-  //ThreadInfoWin win;
-  //win.threadLoopWithBeat(.1);
+  gtk_init(&argn, &argv);
+
+  ThreadInfoWin win;
+  win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
   Action action;
-  MotionPlan motionPlan;
+  MotionPrimitive motionPrimitive;
   MotionKeyframe frame0,frame1;
   ControllerTask controllerTask;
   HardwareReference hardwareReference;
@@ -19,15 +23,21 @@ int main(int argn, char** argv){
   // processes
   Controller controller;
   MotionPlanner motionPlanner;
-  MotionPrimitive motionPrimitive(action, frame0, frame1, motionPlan, geometricState);
+  ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
 
   // viewers
-  PoseViewer<MotionPlan>        view1(motionPlan, geometricState);
-  PoseViewer<HardwareReference> view2(hardwareReference, geometricState);
-  PoseViewer<MotionKeyframe>    view3(frame1, geometricState);
+  PoseViewer<MotionPrimitive>        view1(motionPrimitive);
+  PoseViewer<HardwareReference> view2(hardwareReference);
+  PoseViewer<MotionKeyframe>    view3(frame1);
   
-  ProcessL P=LIST<Process>(controller, motionPlanner, motionPrimitive);
-  P.append(LIST<Process>(view1, view2, view3));
+  ProcessL P=LIST<Process>(controller, motionPlanner, actionToMotionPrimitive);
+  //P.append(LIST<Process>(view1, view2, view3));
+
+  GtkViewWindow wi;
+  wi.newView(geometricState,0);
+  wi.newView(geometricState,0);
+  wi.newView(geometricState,0);
+  P.append(&wi);
   
   cout <<"** setting grasp action" <<endl;
   action.writeAccess(NULL);
@@ -37,21 +47,21 @@ int main(int argn, char** argv){
   action.deAccess(NULL);
 
   cout <<"** setting controller to follow" <<endl;
-  controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::followPlan;
-  controllerTask.deAccess(NULL);
+  controllerTask.set_mode(ControllerTask::followPlan, NULL);
 
-  uint mode=1;
+  uint mode=2;
   switch(mode){
   case 1:{ //serial mode
-    motionPrimitive.open();
-    motionPrimitive.step();
+    actionToMotionPrimitive.open();
+    actionToMotionPrimitive.step();
     motionPlanner.open();
     motionPlanner.step();
   } break;
   case 2:{ //threaded mode
     loopWithBeat(P,.01);
-    MT::wait(20.);
+    //step(P);
+    //controller.threadLoopWithBeat(.01);
+    MT::wait();
   } break;
   }
 

@@ -1,3 +1,5 @@
+#if 0
+
 #include "experiments_fixedContexts.h"
 #include <math.h>
 #include <MT/algos.h>
@@ -5,11 +7,13 @@
 #include "logicReasoning.h"
 
 
-namespace TL {
+namespace PRADA {
   
-bool USING_IPPC_DOMAIN() {
-  return TL::logicObjectManager::getPredicate(MT::String("table")) == NULL;
-}
+bool USING_IPPC_DOMAIN();
+
+// {
+//   return logicObjectManager::getPredicate(MT::String("table")) == NULL;
+// }
 
 
 // --------------------------------------------------------------------
@@ -21,7 +25,7 @@ bool USING_IPPC_DOMAIN() {
 // --------------------------------------------------------------------
 
 
-RuleLearner_FixedContexts::RuleLearner_FixedContexts(TL::Atom* action, const MT::Array< LitL >& contexts, double alpha, double p_min, double p_min_noisyDefaultRule) :
+RuleLearner_FixedContexts::RuleLearner_FixedContexts(Atom* action, const MT::Array< LitL >& contexts, double alpha, double p_min, double p_min_noisyDefaultRule) :
       RuleLearner(alpha, p_min, p_min_noisyDefaultRule) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleLearner_FixedContexts [START]"<<endl;}
@@ -43,14 +47,14 @@ RuleLearner_FixedContexts::RuleLearner_FixedContexts(TL::Atom* action, const MT:
 
 
 
-void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
+void RuleLearner_FixedContexts::learn_rules(RuleSetContainer& rulesC, SymbolicExperienceL& experiences, const char* logfile) {
   arr experience_weights(experiences.N);
   experience_weights.setUni(1.);
   learn_rules(rulesC, experiences, experience_weights, logfile);
 }
 
 
-void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
+void RuleLearner_FixedContexts::learn_rules(RuleSetContainer& rulesC, SymbolicExperienceL& experiences, arr& experience_weights, const char* logfile) {
   uint DEBUG = 0; //  2 ist gut
   if (DEBUG>0) {cout<<"RuleLearner_FixedContexts::learn_rules [START]"<<endl;}
   uint i, k;
@@ -76,9 +80,9 @@ void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, Symbol
   }
   
   FOR1D(experiences, i) {
-    TL::logicReasoning::sort(experiences(i)->pre.lits_prim);
+    logicReasoning::sort(experiences(i)->pre.lits_prim);
   }
-  TL::logicReasoning::sort(experiences.last()->post.lits_prim);
+  logicReasoning::sort(experiences.last()->post.lits_prim);
   
   
   // assumes there is exactly one covering context
@@ -87,8 +91,8 @@ void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, Symbol
     if (DEBUG>1) {cout<<"Experience #"<<i<<":"<<endl;  experiences(i)->write();}
     FOR1D(contexts, k) {
       if (DEBUG>1) {cout<<"Contexts #k="<<k<<":  "<<contexts(k)<<endl;}
-      TL::SubstitutionSet subs;
-      TL::Rule fake_rule;
+      SubstitutionSet subs;
+      Rule fake_rule;
       fake_rule.action = action;
       fake_rule.context = contexts(k);
       if (ruleReasoning::cover_rule_groundedAction(experiences(i)->pre, experiences(i)->action, &fake_rule, subs)) {
@@ -107,12 +111,12 @@ void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, Symbol
   if (DEBUG>0) {cout<<endl<<"Learning rules (i.e., outcomes)..."<<endl;}
   rulesC.init(&experiences);
   // Init default rule
-  rulesC.rules.append(TL::ruleReasoning::generateDefaultRule());
+  rulesC.rules.append(ruleReasoning::generateDefaultRule());
   rulesC.recomputeDefaultRule();  
   FOR1D(contexts, i) {
     if (DEBUG>1) {cout<<"Contexts #i="<<i<<":  "<<contexts(i)<<endl;}
     if (DEBUG>1) {PRINT(experiences_per_context(i));}
-    TL::Rule* rule = new TL::Rule;
+    Rule* rule = new Rule;
     rule->context = contexts(i);
     rule->action = action;
     MT::Array< uintA > coveredExperiences_per_outcome;
@@ -120,7 +124,7 @@ void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, Symbol
     double pen_pos = 20.;
     if (experiences_per_context(i).N > 0) {
       SearchOperator::induceOutcomes(rule, coveredExperiences_per_outcome, experiences_per_context(i), experienceIds_per_context(i),
-                                   alpha_PEN, p_min, pen_sum, pen_pos, TL::SearchOperator::rprop);
+                                   alpha_PEN, p_min, pen_sum, pen_pos, SearchOperator::rprop);
     }
     else {
       rule->outcomes.resize(2);
@@ -155,7 +159,7 @@ void RuleLearner_FixedContexts::learn_rules(TL::RuleSetContainer& rulesC, Symbol
 
 AbstractRuleExplorer_FixedContexts::AbstractRuleExplorer_FixedContexts(const RuleSet& _fixed_partial_rules, double complexity_penalty_coeff,
                                            double p_lower_bound__noise_outcome, double p_lower_bound__noise_outcome_in_default_rule,
-                                           TL::RuleSet& fixed_rules_for_fixed_actions, uint _density_estimation_type)
+                                           RuleSet& fixed_rules_for_fixed_actions, uint _density_estimation_type)
                     : AbstractRuleExplorer(complexity_penalty_coeff, p_lower_bound__noise_outcome, p_lower_bound__noise_outcome_in_default_rule,
                                             fixed_rules_for_fixed_actions, _density_estimation_type) {
   uint DEBUG = 0;
@@ -203,7 +207,7 @@ AbstractRuleExplorer_FixedContexts::AbstractRuleExplorer_FixedContexts(const Rul
 
 
 
-bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const TL::SymbolicState& state, TL::Atom* action) {
+bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const SymbolicState& state, Atom* action) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"AbstractRuleExplorer_FixedContexts::actionIsKnown [START]"<<endl;}
   if (DEBUG>0) {cout<<"SymbolicState:"<<endl<<state<<"Action:  "<<*action<<endl;}
@@ -214,8 +218,8 @@ bool AbstractRuleExplorer_FixedContexts::actionIsKnown(const TL::SymbolicState& 
   if (actions__confidences(id) < RULE_CONFIDENCE_THRESHOLD) {
     uint i;
     FOR1D_(fixed_partial_rules, i) {
-      TL::SubstitutionSet subs;
-      if (TL::ruleReasoning::cover_rule_groundedAction(state, action, fixed_partial_rules.elem(i), subs)) {
+      SubstitutionSet subs;
+      if (ruleReasoning::cover_rule_groundedAction(state, action, fixed_partial_rules.elem(i), subs)) {
         if (DEBUG>0) {cout<<"Covering rule:"<<endl<<*fixed_partial_rules.elem(i)<<endl;}
         if (DEBUG>0) {cout<<"Return false"<<endl<<"AbstractRuleExplorer_FixedContexts::actionIsKnown [END]"<<endl;}
         return false;
@@ -245,7 +249,7 @@ double evaluate_prada_reward__specific_contexts(const MT::Array< LitL >& ground_
     double prob = 1.;
     FOR1D(ground_contexts(i), k) {
       if (DEBUG>2) {cout<<"k="<<k<<"  "<<*ground_contexts(i)(k)<<endl;}
-      CHECK(ground_contexts(i)(k)->atom->pred->type != TL::Predicate::predicate_comparison, "Here, no comparisons allowed in ground_contexts.");
+      CHECK(ground_contexts(i)(k)->atom->pred->type != Predicate::predicate_comparison, "Here, no comparisons allowed in ground_contexts.");
       PredicateRV* v = net.rvm->l2v(ground_contexts(i)(k));
       if (v != NULL) {
         if (ground_contexts(i)(k)->positive)
@@ -312,9 +316,9 @@ class PRADA_Reward__Rmax__Specific_Contexts : public PRADA_Reward__Specific_Cont
   
   public :
     
-    PRADA_Reward__Rmax__Specific_Contexts(TL::Reward* exploit_reward, MT::Array< LitL > _ground_contexts, uint _depth)
+    PRADA_Reward__Rmax__Specific_Contexts(Reward* exploit_reward, MT::Array< LitL > _ground_contexts, uint _depth)
             : PRADA_Reward__Specific_Contexts(_ground_contexts, _depth) {
-      exploit_PRADA_reward = TL::PRADA::create_PRADA_Reward(exploit_reward);
+      exploit_PRADA_reward = PRADA_Planner::create_PRADA_Reward(exploit_reward);
     }
     
     // Random variables --> Reals
@@ -331,7 +335,7 @@ class PRADA_Reward__Rmax__Specific_Contexts : public PRADA_Reward__Specific_Cont
 
 
 
-TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicState& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
+Atom* AbstractRuleExplorer_FixedContexts::decideAction(const SymbolicState& state, NID_Planner* planner, uint behavior_type, bool use_known_state_partial) {
   uint DEBUG = 2;
   #ifdef ENFORCED_SILENCE
   DEBUG = 0;
@@ -344,7 +348,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   if (confident_ground_rules.num() == 0)  // This is required if world has changed. Then ground rules need to be recalculated.
     updateRules();
   
-  message.clr();
+  message.clear();
 //   message << "[" << visited_actions.N << "]  ";
   
   if (DEBUG>0) {PRINT(fixed_partial_rules.num());  PRINT(rulesC.rules.num());}
@@ -383,7 +387,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   
   // (3) Decide action
   t_start = MT::cpuTime();
-  TL::Atom* action = NULL;
+  Atom* action = NULL;
   // only use confident rules
   planner->setGroundRules(confident_ground_rules);
   
@@ -393,8 +397,8 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   uintA actions_with_effect__ids;
   FOR1D(possibleGroundActions, i) {
     FOR1D_(fixed_partial_rules, k) {
-      TL::SubstitutionSet subs;
-      if (TL::ruleReasoning::cover_rule_groundedAction(state, possibleGroundActions(i), fixed_partial_rules.elem(k), subs)) {
+      SubstitutionSet subs;
+      if (ruleReasoning::cover_rule_groundedAction(state, possibleGroundActions(i), fixed_partial_rules.elem(k), subs)) {
         actions_with_effect.append(possibleGroundActions(i));
         actions_with_effect__ids.append(i);
         break;
@@ -422,11 +426,11 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   
   
    // Collect unknown contexts
-  TL::RuleSet non_confident_rules;
-  TL::RuleSet confident_rules;
+  RuleSet non_confident_rules;
+  RuleSet confident_rules;
   CHECK(rules__confidences. N == rulesC.rules.num(), "");
   FOR1D_(fixed_partial_rules, i) {
-    if (TL::ruleReasoning::isDefaultRule(fixed_partial_rules.elem(i)))
+    if (ruleReasoning::isDefaultRule(fixed_partial_rules.elem(i)))
       continue;
     bool confident = false;
     FOR1D_(rulesC.rules, k) {
@@ -448,8 +452,8 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   
   
   // Save the literals in the unknown contexts for the reward
-  TL::RuleSet non_confident_ground_rules;
-  TL::ruleReasoning::ground(non_confident_ground_rules, non_confident_rules, logicObjectManager::constants);
+  RuleSet non_confident_ground_rules;
+  ruleReasoning::ground(non_confident_ground_rules, non_confident_rules, logicObjectManager::constants);
   LitL grounded_unknown_context_literals;
   MT::Array< LitL > grounded_unknown_contexts;
   FOR1D_(non_confident_ground_rules, i) {
@@ -466,7 +470,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
       cout<<"i="<<i<<":  "<<non_confident_rules.elem(i)->context<<endl;
       uint l;
       FOR1D(non_confident_rules.elem(i)->context, l) {
-        TL::Literal* lit = non_confident_rules.elem(i)->context(l);
+        Literal* lit = non_confident_rules.elem(i)->context(l);
         if (changingIds_preds.findValue(lit->atom->pred->id) < 0) {
           cout<<"In rule #i="<<i<<": literal #l="<<l<<" "<<*lit<<" cannot be achieved."<<endl;
         }
@@ -477,7 +481,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
     cout<<"grounded_unknown_contexts:"<<endl;
     FOR1D(grounded_unknown_contexts, i) {
       cout<<"i="<<i<<":  "<<grounded_unknown_contexts(i);
-      if (TL::logicReasoning::holds(state, grounded_unknown_contexts(i))) {
+      if (logicReasoning::holds(state, grounded_unknown_contexts(i))) {
         cout<<"  --> 1"<<endl;  // can easily happen!  rule with effect, but uncertain outcomes!
       }
       else
@@ -499,7 +503,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
       if (DEBUG>0) {cout<<"TRYING TO EXPLOIT."<<endl;   cerr<<"TRYING TO EXPLOIT."<<endl;}
       // (1) TRY EXPLOIT
       AtomL exploit_plan;
-      action = getExploitAction(exploit_plan, (TL::PRADA*) planner, state);
+      action = getExploitAction(exploit_plan, (PRADA_Planner*) planner, state);
       if (action != NULL) {
         last_exploit_plan = exploit_plan;
         moves_exploit.append(visited_pre_states.N);
@@ -528,7 +532,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   // ----------------------------
   else if (behavior_type == ecube) {
     if (DEBUG>0) {cout<<"E^3"<<endl;}
-    TL::Atom* bad_action = NULL;
+    Atom* bad_action = NULL;
     //   (E^3)  (1) STATE KNOWN --> PLAN
     if (fixedContext__current_state_is_known) {
       if (DEBUG>0) {cout<<"*** STATE IS KNOWN --> PLAN. ***"<<endl;  cerr<<"*** STATE IS KNOWN --> PLAN. ***"<<endl;}
@@ -563,12 +567,12 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
           action = NULL;
         }
         else {
-          action = getExploitAction(exploit_plan, (TL::PRADA*) planner, state);
+          action = getExploitAction(exploit_plan, (PRADA_Planner*) planner, state);
         }
       }
       // Special heuristic [END]
       else
-        action = getExploitAction(exploit_plan, (TL::PRADA*) planner, state);
+        action = getExploitAction(exploit_plan, (PRADA_Planner*) planner, state);
       if (action != NULL) {
         if (DEBUG>0) {cout<<"Candidate exploit plan:  "<<exploit_plan<<endl;}
         last_exploit_plan = exploit_plan;
@@ -606,19 +610,19 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
         if (DEBUG>0) {cout<<"(Plan towards specific unknown contexts.)"<<endl;}
         AtomL explore_plan;
                 
-        delete ((TL::PRADA*) planner)->net;
-        ((TL::PRADA*) planner)->net = NULL;
+        delete ((PRADA_Planner*) planner)->net;
+        ((PRADA_Planner*) planner)->net = NULL;
         
         MaximizeFunctionReward fake_reward;
         fake_reward.important_literals = grounded_unknown_context_literals;
         PRADA_Reward__Specific_Contexts* planned_explore_reward = new PRADA_Reward__Specific_Contexts(grounded_unknown_contexts, PLANNED_EXPLORE__HORIZON);
-        ((TL::PRADA*) planner)->setReward(&fake_reward, planned_explore_reward);
-        ((TL::PRADA*) planner)->setHorizon(PLANNED_EXPLORE__HORIZON+1);
-        ((TL::PRADA*) planner)->setNumberOfSamples(PLANNED_EXPLORE__NUMBER_PRADA_SAMPLES);
-        ((TL::PRADA*) planner)->setThresholdReward(0.05);
+        ((PRADA_Planner*) planner)->setReward(&fake_reward, planned_explore_reward);
+        ((PRADA_Planner*) planner)->setHorizon(PLANNED_EXPLORE__HORIZON+1);
+        ((PRADA_Planner*) planner)->setNumberOfSamples(PLANNED_EXPLORE__NUMBER_PRADA_SAMPLES);
+        ((PRADA_Planner*) planner)->setThresholdReward(0.05);
         
         double value;
-        ((TL::PRADA*) planner)->generatePlan(explore_plan, value, state, 1);
+        ((PRADA_Planner*) planner)->generatePlan(explore_plan, value, state, 1);
         
         action = NULL;
         if (explore_plan.N > 0  && value > PLANNED_EXPLORE__THRESHOLD) {
@@ -635,7 +639,7 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
           for (i=visited_actions.N; i>0 && last_actions.N < 10; i--) {
             last_actions.append(visited_actions(i-1));
           }
-          uint found_max_pattern_length = TL::logicReasoning::findPattern(last_actions, MIN_PATTERN_ACTION_REPEATS);
+          uint found_max_pattern_length = logicReasoning::findPattern(last_actions, MIN_PATTERN_ACTION_REPEATS);
           if (DEBUG>0) {cout<<"  -->  Pattern of length "<<found_max_pattern_length<<" has been seen at least "<<MIN_PATTERN_ACTION_REPEATS<<" times."<<endl;}
           // Check whether this action is part of a pattern [END]
           if (found_max_pattern_length >= BAD_PATTERN_MIN_LENGTH) {
@@ -691,17 +695,17 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
   else if (behavior_type == rmax) {
     if (DEBUG>0) {cout<<"R-max"<<endl;}
     
-    TL::Reward* exploit_reward = planner->getReward();
+    Reward* exploit_reward = planner->getReward();
      
     // build r-max reward
     MaximizeFunctionReward fake_reward;
     fake_reward.important_literals = grounded_unknown_context_literals;
     PRADA_Reward__Specific_Contexts* planned_explore_reward = new PRADA_Reward__Rmax__Specific_Contexts(exploit_reward, grounded_unknown_contexts, PLANNED_EXPLORE__HORIZON);
-    ((TL::PRADA*) planner)->setReward(&fake_reward, planned_explore_reward);
+    ((PRADA_Planner*) planner)->setReward(&fake_reward, planned_explore_reward);
     
     // start "get_exploit_action"
     AtomL plan;
-    action = getExploitAction(plan, (TL::PRADA*) planner, state);
+    action = getExploitAction(plan, (PRADA_Planner*) planner, state);
     
     if (action != NULL) {
       if (DEBUG>0) {PRINT(*action);}
@@ -755,3 +759,5 @@ TL::Atom* AbstractRuleExplorer_FixedContexts::decideAction(const TL::SymbolicSta
 
 
 }
+
+#endif
