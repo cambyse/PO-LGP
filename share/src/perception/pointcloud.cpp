@@ -1,5 +1,7 @@
 #include "pointcloud.h"
 
+#include <numeric>
+
 #include <biros/biros.h>
 
 #include <pcl/point_cloud.h>
@@ -16,6 +18,89 @@ ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
   birosInfo.getVariable(data_3d, "KinectData3D", this, true);
   birosInfo.getVariable(point_clouds, "ObjectClusters", this, true);
 }
+
+struct sObjectFitterWorker {
+  sObjectFitterWorker(ObjectFitterWorker *p) : p(p) {}
+  ObjectFitterWorker *p;
+ 
+  void createNewJob(const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointIndices::Ptr &inliers){ 
+    FittingJob outliers(new pcl::PointCloud<PointT>());
+    pcl::ExtractIndices<PointT> extract;
+    extract.setInputCloud(cloud);
+    extract.setIndices(inliers);
+    extract.setNegative(true);
+    extract.filter(*outliers);
+    p->jobs->writeAccess(p);
+    p->jobs->data.push(outliers);
+    p->jobs->deAccess(p);
+  }
+  
+  double confidenceForCylinder(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
+    // Create the segmentation object for cylinder segmentation and set all the parameters
+    // TODO: make parameters
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
+    seg.setOptimizeCoefficients (true);
+    seg.setModelType (pcl::SACMODEL_CYLINDER);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    double ndw = birosInfo.getParameter<double>("CylNormalDistanceWeight", p, 0.07);
+    seg.setNormalDistanceWeight (ndw);
+    seg.setMaxIterations (100);
+    double dt = birosInfo.getParameter<double>("CylDistanceThreshold", p, 0.01);
+    seg.setDistanceThreshold (dt);
+    seg.setRadiusLimits (0.01, 0.1);
+    seg.setInputCloud (cloud);
+    seg.setInputNormals (normals);
+
+    pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
+    seg.segment (*inliers_cylinder, *coefficients_cylinder);
+
+    if (inliers_cylinder->indices.size() < 500) {
+      object.reset();   
+      return 0;
+    }
+    else {
+      object = coefficients_cylinder;
+      inliers = inliers_cylinder;
+      return 1./(1 + cloud->size() - inliers->indices.size());
+    }
+  }
+  
+  double confidenceForSphere(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
+    // Create the segmentation object for sphere segmentation and set all the parameters
+    // TODO: make parameters
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
+    seg.setOptimizeCoefficients (true);
+    seg.setModelType (pcl::SACMODEL_SPHERE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    double ndw = birosInfo.getParameter<double>("SphereNormalDistanceWeight", p, 10);
+    seg.setNormalDistanceWeight (ndw);
+    seg.setMaxIterations (100);
+    double dt = birosInfo.getParameter<double>("SphereDistanceThreshold", p, .0005);
+    seg.setDistanceThreshold (dt);
+    seg.setRadiusLimits (0.01, 0.1);
+    seg.setInputCloud (cloud);
+    seg.setInputNormals (normals);
+
+    pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
+    seg.segment (*inliers_sphere, *coefficients_sphere);
+    if (inliers_sphere->indices.size() < 500) {
+      object.reset();   
+      return 0;
+    }
+    else {
+      object = coefficients_sphere;
+      inliers = inliers_sphere;
+     
+      // if rest points are enough create new job
+      //if (cloud->size() - inliers_sphere->indices.size() > 500) {
+        //createNewJob(cloud, inliers_sphere);
+      //}
+      return 1./(1 + cloud->size() - inliers->indices.size());
+    }
+  }
+};
 
 void ObjectClusterer::open() {}
 
@@ -95,6 +180,8 @@ void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
   objects->deAccess(this);
 }
 
+ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {}
+
 void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
   // Build kd-tree from cloud
   pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
@@ -109,39 +196,35 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
   ne.compute (*cloud_normals);
 
-  // Create the segmentation object for cylinder segmentation and set all the parameters
-  // TODO: make parameters
-  pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
-  seg.setOptimizeCoefficients (true);
-  seg.setModelType (pcl::SACMODEL_CYLINDER);
-  seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setNormalDistanceWeight (0.1);
-  seg.setMaxIterations (100);
-  seg.setDistanceThreshold (0.01);
-  seg.setRadiusLimits (0.01, 0.1);
-  seg.setInputCloud (cloud);
-  seg.setInputNormals (cloud_normals);
+  FittingResult cyl_object;
+  pcl::PointIndices::Ptr cyl_inliers;
+  double cylinder_confidence = s->confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
+  FittingResult sphere_object;
+  pcl::PointIndices::Ptr sphere_inliers;
+  double sphere_confidence = s->confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
 
-  pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-  pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
-  seg.segment (*inliers_cylinder, *coefficients_cylinder);
+  JK_DEBUG(sphere_confidence);
+  JK_DEBUG(cylinder_confidence);
+ 
+  double threshold = 0.;
 
-  if (inliers_cylinder->indices.size() < 500) object.reset();
+  pcl::PointIndices::Ptr inliers;
+  if (sphere_confidence > threshold && sphere_confidence > cylinder_confidence) {
+     object = sphere_object; 
+     inliers = sphere_inliers;
+  }
+  else if (cylinder_confidence > threshold) {
+    object = cyl_object;  
+    inliers = cyl_inliers;
+  }
   else {
-    object = coefficients_cylinder;
-   
-    // if rest points are enough create new job
-    if (cloud->size() - inliers_cylinder->indices.size() > 500) {
-      FittingJob outliers(new pcl::PointCloud<PointT>());
-      pcl::ExtractIndices<PointT> extract;
-      extract.setInputCloud(cloud);
-      extract.setIndices(inliers_cylinder);
-      extract.setNegative(true);
-      extract.filter(*outliers);
-      jobs->writeAccess(this);
-      jobs->data.push(outliers);
-      jobs->deAccess(this);
-    }
+    object.reset();  
+    return;
+  }
+  //if rest points are enough create new job
+  if (cloud->size() - inliers->indices.size() > 500) {
+    s->createNewJob(cloud, inliers);
   }
 }
+
 

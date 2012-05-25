@@ -30,7 +30,6 @@ class ObjectClusterer : public Process {
     void step();
     void close();
 };
-
   
 class ObjectFitterIntegrator : public Integrator<FittingResult> {
   public:
@@ -43,8 +42,11 @@ class ObjectFitterIntegrator : public Integrator<FittingResult> {
 
 class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
   public:
-    ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)") {}
+    ObjectFitterWorker();
     void doWork(FittingResult &r, const FittingJob &j);
+  private:
+    class sObjectFitterWorker *s;
+
 };
 
 class ObjectFitterWorkerFactory : public WorkerFactory<FittingJob, FittingResult> {
