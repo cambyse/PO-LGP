@@ -380,9 +380,19 @@ endif
 
 ifeq ($(URGLASER),1)
 CXXFLAGS  += -DMT_LASER
-CPATH     := $(CPATH):$(LIBPATH)/urg-0.0.2/include
-LPATH     := $(LPATH):$(LIBPATH)/urg-0.0.2/lib
-LIBS += -lc_urg -lc_connection
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/urg/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/system/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/connection/.libs
+LIBS += -lc_urg -lc_urg_system -lc_urg_connection
+endif
+
+ifeq ($(DYNAMIXEL),1)
+CXXFLAGS  += -DMT_DYNAMIXEL
+CPATH     := $(CPATH):$(LIBPATH)/dynamixel/include
+LPATH     := $(LPATH):$(LIBPATH)/dynamixel/lib
+LIBS      += -ldxl
 endif
 
 ifeq ($(BUMBLE),1)

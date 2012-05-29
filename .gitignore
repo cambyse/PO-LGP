@@ -2,6 +2,7 @@
 *.a
 *.so
 *.exe
+*.swp
 
 *.kdev4
 
@@ -15,6 +16,8 @@ z.*
 
 *_moc.cpp
 *_ui.h
+
+*.swp
 
 MT.log
 Makefile.dep
