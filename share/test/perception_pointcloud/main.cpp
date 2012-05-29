@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   }
 
   for(int t = 0; t < 1000; ++t) {
-    if(t % 50 == 0 ) {
+    if(t % 30 == 0 ) {
       objectClusters.readAccess(NULL);
       plist = objectClusters.point_clouds;
       std::queue<FittingJob> jobs;
