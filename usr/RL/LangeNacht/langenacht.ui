@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LangeNachtClass</class>
+ <widget class="QWidget" name="LangeNachtClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>678</width>
+    <height>458</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LangeNacht</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0" rowspan="8" colspan="3">
+    <widget class="QGraphicsView" name="_wDisplay"/>
+   </item>
+   <item row="5" column="3" colspan="2">
+    <widget class="QPushButton" name="_wDeleteAllRewards">
+     <property name="text">
+      <string>Alle Belohnungen Löschen</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="3">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="9" column="1">
+    <widget class="QSlider" name="_wRandom">
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="2">
+    <widget class="QLineEdit" name="_wRandomValue">
+     <property name="maximumSize">
+      <size>
+       <width>50</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>0%</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Zufall in %</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Vergessen in %</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QSlider" name="_wDiscount">
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="sliderPosition">
+      <number>10</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <widget class="QLineEdit" name="_wDiscountValue">
+     <property name="maximumSize">
+      <size>
+       <width>50</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>10%</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3" colspan="2">
+    <widget class="QPushButton" name="_wDeleteAllWalls">
+     <property name="text">
+      <string>Alle Wände Löschen</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3" colspan="2">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Aktionen anzeigen</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="_wShowActions">
+        <property name="text">
+         <string>anzeigen</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radioButton_4">
+        <property name="text">
+         <string>nicht anzeigen</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Farbwert der Felder</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="_wShowRewards">
+        <property name="text">
+         <string>Belohnungen</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radioButton_2">
+        <property name="text">
+         <string>Erwartungen</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Value Iteration</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radioButton_5">
+        <property name="text">
+         <string>mit 'Enter'</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="_wLoopValueIteration">
+        <property name="text">
+         <string>Loop</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Aktionen wählen</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radioButton_7">
+        <property name="text">
+         <string>manuell (Pfeiltasten,
+'Space', 'r', 'o')</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="_wLoopActions">
+        <property name="text">
+         <string>Loop
+(optimal)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Speed (f/s)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QSlider" name="_wSpeed">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="value">
+      <number>30</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="2">
+    <widget class="QLineEdit" name="_wSpeedValue">
+     <property name="maximumSize">
+      <size>
+       <width>50</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>30</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>_wDeleteAllRewards</sender>
+   <signal>clicked()</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>delete_all_rewards()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>437</x>
+     <y>280</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>452</x>
+     <y>365</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wDeleteAllWalls</sender>
+   <signal>clicked()</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>delete_all_walls()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>597</x>
+     <y>329</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>576</x>
+     <y>344</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wRandom</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>random_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>344</x>
+     <y>391</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>592</x>
+     <y>457</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wDiscount</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>discount_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>344</x>
+     <y>418</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>633</x>
+     <y>457</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wShowRewards</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>show_rewards_changed(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>508</x>
+     <y>44</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>55</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wShowActions</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>show_actions_changed(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>454</x>
+     <y>116</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>675</x>
+     <y>110</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wSpeed</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>LangeNachtClass</receiver>
+   <slot>speed_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>238</x>
+     <y>431</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>403</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>redraw()</slot>
+  <slot>transition_random()</slot>
+  <slot>transition_left()</slot>
+  <slot>transition_right()</slot>
+  <slot>transition_up()</slot>
+  <slot>transition_down()</slot>
+  <slot>transition_stay()</slot>
+  <slot>delete_all_rewards()</slot>
+  <slot>delete_all_walls()</slot>
+  <slot>random_changed(int)</slot>
+  <slot>discount_changed(int)</slot>
+  <slot>show_rewards_changed(bool)</slot>
+  <slot>show_actions_changed(bool)</slot>
+  <slot>speed_changed(int)</slot>
+ </slots>
+</ui>
