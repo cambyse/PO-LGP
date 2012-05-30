@@ -12,6 +12,7 @@ template<class Job, class Result> class sMaster {
     std::vector<Worker<Job, Result>* > workers;
     WorkerFactory<Job, Result>* workerFactory;
     uint numOfWorkers;
+    Integrator<Result> *integrator;
 
     void restartWorker();
     bool paused;
@@ -46,13 +47,16 @@ template<class Job, class Result> void Worker<Job, Result>::close() {
     
 }
 
-template<class Job, class Result> Master<Job, Result>::Master(const char* name, WorkerFactory<Job, Result>* fac, const int numOfWorkers) : Process(name) {
+template<class Job, class Result> Master<Job, Result>::Master(WorkerFactory<Job, Result>* fac, Integrator<Result> *i, const int numOfWorkers) {
   s = new sMaster<Job, Result>;
   s->workerFactory = fac;
   s->numOfWorkers = numOfWorkers; 
+  s->integrator = i;
 
   jobs = new Pool<Job>();
   results = new Pool<Result>();
+
+  s->paused = true;
   
   for (uint i = 0; i < s->numOfWorkers; ++i) {
     Worker<Job, Result>* w = s->workerFactory->createWorker();
@@ -61,6 +65,9 @@ template<class Job, class Result> Master<Job, Result>::Master(const char* name, 
     w->results = results;
     w->threadOpen();
   }
+  s->integrator->results = results;
+  s->integrator->threadOpen();
+
 }
 
 template<class Job, class Result> void Master<Job, Result>::pause() {
@@ -70,22 +77,34 @@ template<class Job, class Result> void Master<Job, Result>::pause() {
   for (w = s->workers.begin(); w != s->workers.end(); w++) {
     (*w)->threadStop();
   }
-  this->threadStop();
+  s->integrator->threadStop();
 }
 
-template<class Job, class Result> void Master<Job, Result>::restart() {
+template<class Job, class Result> void Master<Job, Result>::restart(Process *p) {
   if (!s->paused) return;
   s->paused = false;
   while (hasNextJob()) {
     Job j = createJob();
-    jobs->writeAccess(this);
+    jobs->writeAccess(p);
     jobs->data.push(j);
-    jobs->deAccess(this);
+    jobs->deAccess(p);
   }
   s->restartWorker();
-  this->threadLoop();
+  s->integrator->restart();
+  s->integrator->threadLoop();
 
 }
+template<class Job, class Result> void Master<Job, Result>::restart(std::queue<Job> &jobs, Process *p) {
+  if (!s->paused) return;
+  s->paused = false;
+  this->jobs->writeAccess(p);
+  this->jobs->data = jobs;
+  this->jobs->deAccess(p);
+  s->restartWorker();
+  s->integrator->restart();
+  s->integrator->threadLoop();
+}
+  
 
 template<class Job, class Result> void sMaster<Job, Result>::restartWorker() {
   typename std::vector<Worker<Job, Result>* >::iterator w;
@@ -94,11 +113,13 @@ template<class Job, class Result> void sMaster<Job, Result>::restartWorker() {
   }
 }
 
-template<class Job, class Result> void Master<Job, Result>::open() {
-  s->paused = true;
+template<class Result> void Integrator<Result>::open() {
 }
 
-template<class Job, class Result> void Master<Job, Result>::step() {
+template<class Result> void Integrator<Result>::restart() {
+}
+
+template<class Result> void Integrator<Result>::step() {
   results->writeAccess(this);
   if (!results->data.empty()) {
     integrateResult(results->data.front());
@@ -107,7 +128,7 @@ template<class Job, class Result> void Master<Job, Result>::step() {
   results->deAccess(this);
 }
 
-template<class Job, class Result> void Master<Job, Result>::close() {
+template<class Result> void Integrator<Result>::close() {
 }
 
 template<class Job, class Result> Master<Job, Result>::~Master() {
@@ -119,6 +140,6 @@ template<class Job, class Result> Master<Job, Result>::~Master() {
   }
 }
 
-template<class T> Pool<T>::Pool() : Variable("Pool Variable") {}
+template<class T> Pool<T>::Pool() : Variable("Pool Variable") { }
 
 #endif

@@ -1,23 +1,148 @@
 #include "pointcloud.h"
 
-typedef pcl::PointXYZRGBA PointT;
+#include <numeric>
+#include <limits>
 
-void ObjectClusterer::open() {
-  biros.getVariable(data_3d, "Kinect Data", this);
+#include <biros/biros.h>
+#include <MT/array.h>
+
+#include <pcl/point_cloud.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/segmentation/sac_segmentation.h>
+
+#include <vtkSmartPointer.h>
+#include <vtkDataSet.h>
+#include <vtkLineSource.h>
+#include <vtkTubeFilter.h>
+
+ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
+  birosInfo.getVariable(data_3d, "KinectData3D", this, true);
+  birosInfo.getVariable(point_clouds, "ObjectClusters", this, true);
 }
 
-ObjectClusterer::step() {
+void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::PointCloud<PointT>::Ptr &cloud, const arr &direction) {
+  arr dir = direction/norm(direction);
+  min = std::numeric_limits<double>::max();
+  max = -std::numeric_limits<double>::max();
+  for(int i=0; i<cloud->size(); ++i) {
+    arr point = ARR((*cloud)[i].x, (*cloud)[i].y, (*cloud)[i].z);
+    double p = scalarProduct(dir, point);
+    if(p < min) {
+      min = p;
+      copy(start, point);
+    }
+    if(p > max) max = p;
+  }
+}
+
+struct sObjectFitterWorker {
+  sObjectFitterWorker(ObjectFitterWorker *p) : p(p) {}
+  ObjectFitterWorker *p;
+
+  void createNewJob(const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointIndices::Ptr &inliers){ 
+    FittingJob outliers(new pcl::PointCloud<PointT>());
+    pcl::ExtractIndices<PointT> extract;
+    extract.setInputCloud(cloud);
+    extract.setIndices(inliers);
+    extract.setNegative(true);
+    extract.filter(*outliers);
+    p->jobs->writeAccess(p);
+    p->jobs->data.push(outliers);
+    p->jobs->deAccess(p);
+  }
+  
+  double confidenceForCylinder(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
+    // Create the segmentation object for cylinder segmentation and set all the parameters
+    // TODO: make parameters
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
+    seg.setOptimizeCoefficients (true);
+    seg.setModelType (pcl::SACMODEL_CYLINDER);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    double ndw = birosInfo.getParameter<double>("CylNormalDistanceWeight", p, 0.07);
+    seg.setNormalDistanceWeight (ndw);
+    seg.setMaxIterations (100);
+    double dt = birosInfo.getParameter<double>("CylDistanceThreshold", p, 0.01);
+    seg.setDistanceThreshold (dt);
+    seg.setRadiusLimits (0.01, 0.1);
+    seg.setInputCloud (cloud);
+    seg.setInputNormals (normals);
+
+    pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
+    seg.segment (*inliers_cylinder, *coefficients_cylinder);
+
+    int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", p, 500);
+    if (inliers_cylinder->indices.size() < minCloudSize) {
+      object.reset();   
+      return 0;
+    }
+    else {
+      object = coefficients_cylinder;
+      inliers = inliers_cylinder;
+      return 1./(1 + cloud->size() - inliers->indices.size());
+    }
+  }
+  
+  double confidenceForSphere(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
+    // Create the segmentation object for sphere segmentation and set all the parameters
+    // TODO: make parameters
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
+    seg.setOptimizeCoefficients (true);
+    seg.setModelType (pcl::SACMODEL_SPHERE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    double ndw = birosInfo.getParameter<double>("SphereNormalDistanceWeight", p, 10);
+    seg.setNormalDistanceWeight (ndw);
+    seg.setMaxIterations (100);
+    double dt = birosInfo.getParameter<double>("SphereDistanceThreshold", p, .0005);
+    seg.setDistanceThreshold (dt);
+    seg.setRadiusLimits (0.01, 0.1);
+    seg.setInputCloud (cloud);
+    seg.setInputNormals (normals);
+
+    pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
+    seg.segment (*inliers_sphere, *coefficients_sphere);
+    int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", p, 500);
+    if (inliers_sphere->indices.size() < minCloudSize) {
+      object.reset();   
+      return 0;
+    }
+    else {
+      object = coefficients_sphere;
+      inliers = inliers_sphere;
+     
+      // if rest points are enough create new job
+      //if (cloud->size() - inliers_sphere->indices.size() > 500) {
+        //createNewJob(cloud, inliers_sphere);
+      //}
+      return 1./(1 + cloud->size() - inliers->indices.size());
+    }
+  }
+};
+
+void ObjectClusterer::open() {}
+
+void ObjectClusterer::close() {}
+
+void ObjectClusterer::step() {
   //get a copy of the kinect data
-  pcl::PointCloud<PointT>::Ptr cloud(data_3d->get_point_cloud(this));
+  pcl::PointCloud<PointT>::Ptr cloud(data_3d->get_point_cloud_copy(this));
+  if(cloud->points.size() == 0) return;
 
   // filter all points too far away
   // TODO: filter also points too far left/right/up/down
-  pcl::PointCloud<PointT>::Ptr cloud_filtered(new PointCloud<PointT>());
+  pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>());
   pcl::PassThrough<PointT> passthrough;
   passthrough.setInputCloud(cloud);
   passthrough.setFilterFieldName("z");
   passthrough.setFilterLimits(0,1.5);
-  passthrough.filter(*cloud);
+  passthrough.filter(*cloud_filtered);
  
   // filter away the table. This is done by fitting a plane to all data and
   // remove all inliers. This assumes that there is one big plane, which
@@ -30,19 +155,22 @@ ObjectClusterer::step() {
   ransac.computeModel();
   ransac.getInliers(*inliers);
 
-  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  pcl::ExtractIndices<PointT> extract;
   extract.setInputCloud(cloud_filtered);
   extract.setIndices(inliers);
   extract.setNegative(true);
   extract.filter(*cloud_filtered);
 
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  if (cloud_filtered->points.size() == 0) return;
+
+  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
   tree->setInputCloud (cloud_filtered);
 
   std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+  pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance(0.01);
-  ec.setMinClusterSize(500);
+  int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", this, 500);
+  ec.setMinClusterSize(minCloudSize);
   ec.setMaxClusterSize(25000);
   ec.setSearchMethod(tree);
   ec.setInputCloud(cloud_filtered);
@@ -51,7 +179,7 @@ ObjectClusterer::step() {
   PointCloudL _point_clouds;
   // append cluster to PointCloud list 
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); pit++)
       cloud_cluster->points.push_back (cloud_filtered->points[*pit]); 
     cloud_cluster->width = cloud_cluster->points.size ();
@@ -60,48 +188,90 @@ ObjectClusterer::step() {
     _point_clouds.append(cloud_cluster);
   }
 
-  point_clouds.set_point_clouds(_point_clouds);
+  point_clouds->set_point_clouds(_point_clouds, this);
 }
 
-void ObjectFitter::step() {
-  while (master->hasWorkingJobs()) MT::wait(.1);
-  master->pause();
-  objects->set_objects(master->objects);
-  master->restart();
+void ObjectFitterIntegrator::restart() {
+  objects->writeAccess(this);
+  objects->objects.clear();
+  objects->deAccess(this);
 }
 
+void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
+  // add to ObjectSet  
+  if (result.get() == 0) return;
+  objects->writeAccess(this);
+  objects->objects.append(result);
+  objects->deAccess(this);
+}
 
-void ObjectFitterWorker::doWork(FittingResult &object, FittingJob &cloud) {
-  //do pcl stuff  
-  pcl::NormalEstimation<PointT, pcl::Normal> ne;
-  pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg; 
-  pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
-  pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {}
+
+void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
+  // Build kd-tree from cloud
+  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
   tree->setInputCloud (cloud);
-
   
   // Estimate point normals
+  pcl::NormalEstimation<PointT, pcl::Normal> ne;
   ne.setSearchMethod (tree);
-  ne.setInputCloud (cloud_cluster);
+  ne.setInputCloud (cloud);
   ne.setKSearch (50);
+  
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
   ne.compute (*cloud_normals);
 
-  // Create the segmentation object for cylinder segmentation and set all the parameters
-  seg.setOptimizeCoefficients (true);
-  seg.setModelType (pcl::SACMODEL_CYLINDER);
-  seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setNormalDistanceWeight (0.1);
-  seg.setMaxIterations (100);
-  seg.setDistanceThreshold (0.05);
-  seg.setRadiusLimits (0, 0.1);
-  seg.setInputCloud (cloud_cluster);
-  seg.setInputNormals (cloud_normals);
+  FittingResult cyl_object;
+  pcl::PointIndices::Ptr cyl_inliers;
+  double cylinder_confidence = s->confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
+  FittingResult sphere_object;
+  pcl::PointIndices::Ptr sphere_inliers;
+  double sphere_confidence = s->confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
 
-  seg.segment (*inliers_cylinder, *coefficients_cylinder);
+  JK_DEBUG(sphere_confidence);
+  JK_DEBUG(cylinder_confidence);
+ 
+  double threshold = 0.;
 
-  std::cout << "Num of inliers: " << inliers_cylinder->indices.size() << std::endl;
-
-  object = *coefficients_cylinder;
+  pcl::PointIndices::Ptr inliers;
+  if (sphere_confidence > threshold && sphere_confidence > cylinder_confidence) {
+     object = sphere_object; 
+     inliers = sphere_inliers;
+  }
+  else if (cylinder_confidence > threshold) {
+    object = cyl_object;  
+    inliers = cyl_inliers;
+    double min, max;
+    arr direction = ARR(object->values[3], object->values[4], object->values[5]);
+    pcl::PointCloud<PointT>::Ptr cylinder(new pcl::PointCloud<PointT>());
+    pcl::ExtractIndices<PointT> extract;
+    extract.setInputCloud(cloud);
+    extract.setIndices(inliers);
+    extract.setNegative(false);
+    extract.filter(*cylinder);
+    arr start;
+    findMinMaxOfCylinder(min, max, start, cylinder, direction);
+    arr s = ARR(object->values[0], object->values[1], object->values[2]);
+    direction = direction/norm(direction);
+    arr st = s+scalarProduct(direction, (start-s))*direction;
+    direction = (max - min) * direction;
+    object->values[0] = st(0);
+    object->values[1] = st(1);
+    object->values[2] = st(2);
+    object->values[3] = direction(0);
+    object->values[4] = direction(1);
+    object->values[5] = direction(2);
+  }
+  else {
+    object.reset();  
+    return;
+  }
+  //if rest points are enough create new job
+ 
+  int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", this, 500);
+  if (cloud->size() - inliers->indices.size() > minCloudSize) {
+    s->createNewJob(cloud, inliers);
+  }
 }
+
+
