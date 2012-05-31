@@ -87,9 +87,7 @@ void glDrawTexQuad(uint texture,
                    float x1, float y1, float z1, float x2, float y2, float z2,
                    float x3, float y3, float z3, float x4, float y4, float z4,
                    float mulX=1., float mulY=1.);
-void glGrabImage(byteA& img);
-void glGrabDepth(byteA& depth);
-void glGrabDepth(floatA& depth);
+//grabImage: use OpenGL::capture instead!
 void glRasterImage(float x, float y, byteA &img, float zoom=1.);
 
 
@@ -244,7 +242,9 @@ struct OpenGL {
   void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
   
   //!@name capture routines
-  void capture(byteA &img, int w, int h, ors::Camera *cam);
+  void capture(byteA &img, int w, int h, ors::Camera *cam=NULL);
+  void captureDepth(byteA &depth, int w, int h, ors::Camera *cam=NULL);
+  void captureDepth(floatA &depth, int w, int h, ors::Camera *cam=NULL);
   void captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline);
   
 #if 0

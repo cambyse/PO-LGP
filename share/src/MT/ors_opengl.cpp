@@ -34,6 +34,7 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
+#ifndef MT_ORS_ONLY_BASICS
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   if(orsFile) G.init(orsFile);
   gl.add(glStandardScene,0);
@@ -44,6 +45,7 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   gl.camera.upright();
   gl.update();
 }
+#endif
 
 //! static GL routine to draw a ors::Mesh
 void ors::glDrawMesh(void *classP) {

@@ -1405,7 +1405,11 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
-  
+
+  if(!ELEMSEP) ELEMSEP=MT::arrayElemsep;
+  if(!LINESEP) LINESEP=MT::arrayLinesep;
+  if(!BRACKETS) BRACKETS=MT::arrayBrackets;
+
   if(binary) {
     writeDim(os);
     os <<std::endl;

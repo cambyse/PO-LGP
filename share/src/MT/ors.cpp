@@ -1041,16 +1041,20 @@ std::istream& operator>>(std::istream& is, ors::Vector& x)    { x.read(is); retu
 std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Quaternion& x) { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
+#ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream& is, ors::Body& x){ x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Joint& x){ x.read(is); return is; }
 //std::istream& operator>>(std::istream& is, ors::Proxy& x){ x.read(is); return is; }
+#endif
 std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
+#ifndef MT_ORS_ONLY_BASICS
 std::ostream& operator<<(std::ostream& os, const ors::Body& x){ x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Joint& x){ x.write(os); return os; }
 //std::ostream& operator<<(std::ostream& os, const ors::Proxy& x){ x.write(os); return os; }
+#endif
 
 
 //================================================================================

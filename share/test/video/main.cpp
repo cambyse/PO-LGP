@@ -19,7 +19,7 @@ void testVideo(){
   video.open(gl.width(),gl.height());
   for(angle=0.;angle<180.;angle+=180./150.){
     gl.update();
-    video.addFrameFromOpengl();
+    video.addFrameFromOpengl(gl);
   }
   video.close();
 }

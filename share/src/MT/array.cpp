@@ -25,6 +25,7 @@ static double MT_SIGN_SVD(double a, double b) { return b>0 ? ::fabs(a) : -::fabs
 //#  define MT_CHECK_SVD 1e-5
 #endif
 
+
 namespace MT {
 bool useLapack=true;
 #ifdef MT_LAPACK
@@ -34,6 +35,9 @@ const bool lapackSupported=false;
 #endif
 uint64_t globalMemoryTotal=0, globalMemoryBound=1ull<<30; //this is 1GB
 bool globalMemoryStrict=false;
+const char* arrayElemsep=" ";
+const char* arrayLinesep="\n ";
+const char* arrayBrackets="[]";
 }
 
 arr& NoArr = *((arr*)NULL);

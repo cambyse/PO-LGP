@@ -51,13 +51,19 @@ void testMultipleViews(){
   gl.watch();
 }
 
-/************ depth test ************/
+/************ grab test ************/
 
 
-void testDepth(){
+void testGrab(){
   OpenGL gl("title",300,300);
   gl.add(draw1,0);
-  cout <<"normal view " <<endl;
+  cout <<"normal view - written to z.ppm " <<endl;
+  byteA img,depth;
+  gl.capture(img,300,300);
+  gl.captureDepth(depth,300,300);
+  write_ppm(img,"z.1.ppm");
+  write_ppm(depth,"z.2.ppm");
+
   gl.watch();
 
   gl.camera.setPosition(0,0,10);
@@ -66,11 +72,11 @@ void testDepth(){
   cout <<"orthogonal top view" <<endl;
   gl.watch();
 
+
   //grap the depth image from current view:
-  byteA depthImage(300,300);
-  glGrabDepth(depthImage);
-  cout <<"max " <<(int)depthImage.max() <<" min " <<(int)depthImage.min() <<endl;
-  gl.watchImage(depthImage,true,1);
+  gl.captureDepth(depth,300,300);
+  cout <<"max " <<(int)depth.max() <<" min " <<(int)depth.min() <<endl;
+  gl.watchImage(depth,true,1);
 }
 
 
@@ -275,9 +281,10 @@ int main(int argc,char **argv){
   QApplication myapp(argc,argv);
 #endif
 
+  testGrab();
+  return 0;
   testMultipleViews();
   //return 0;
-  testDepth();
   testTeapot();
   testObj();
   testMesh();

@@ -1,5 +1,7 @@
 #include "views.h"
 
+#ifdef MT_GTK
+
 #include <MT/gtk.h>
 #include <MT/ors.h>
 #include <MT/opengl_gtk.h>
@@ -177,3 +179,5 @@ void OrsView::glDraw() {
 }
 
 ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView", ViewInfo::fieldVT);
+
+#endif

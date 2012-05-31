@@ -3,12 +3,14 @@
 
 #include "array.h"
 
+struct OpenGL;
+
 struct VideoWriter{
   struct sVideoWriter *s;
   
   void open(uint width,uint height,const char* filename="z.avi",double fps=30);
   void addFrame(const byteA& img);
-  void addFrameFromOpengl();
+  void addFrameFromOpengl(OpenGL& gl);
   void close();
 };
 

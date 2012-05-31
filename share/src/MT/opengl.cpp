@@ -35,6 +35,8 @@
 
 #if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
 #  include "opengl_void.cxx"
+#else
+#  define MT_GLUT
 #endif
 
 
@@ -330,7 +332,7 @@ void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_L
 void glPopLight() { if(glLightIsOn) glEnable(GL_LIGHTING); }
 
 void glDrawText(const char* txt, float x, float y, float z) {
-#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK // && !defined MT_QTGLUT
+#if defined MT_GLUT
   glPushLightOff();
   glRasterPos3f(x, y, z);
   void *font=GLUT_BITMAP_HELVETICA_12;
@@ -827,16 +829,16 @@ void glDrawTexQuad(uint texture,
   glDisable(GL_TEXTURE_2D);
 }
 
-#ifdef MT_FREEGLUT
+#ifdef MT_GLUT
 /*!\brief return the RGBA-image of scenery drawn just before; the image
   buffer has to have either 2 dimensions [width, height] for a
   gray-scale luminance image or 3 dimensions [width, height, 4] for an
   RGBA-image. */
 void glGrabImage(byteA& image) {
   if(!image.N) image.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH), 3);
-  CHECK(image.nd==2 ||image.nd==3, "not an image format");
+  CHECK(image.nd==2 || image.nd==3, "not an image format");
   GLint w=image.d1, h=image.d0;
-  CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window:" <<w <<' ' <<h <<' ' <<glutGet(GLUT_WINDOW_WIDTH) <<' ' <<glutGet(GLUT_WINDOW_HEIGHT));
+  //CHECK(w<=glutGet(GLUT_WINDOW_WIDTH) && h<=glutGet(GLUT_WINDOW_HEIGHT), "grabbing large image from small window:" <<w <<' ' <<h <<' ' <<glutGet(GLUT_WINDOW_WIDTH) <<' ' <<glutGet(GLUT_WINDOW_HEIGHT));
   
   //glPixelStorei(GL_PACK_SWAP_BYTES, 0);
   switch(image.d2) {
@@ -879,6 +881,7 @@ void glGrabImage(byteA& image) { NICO; }
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
 void glGrabDepth(byteA& depth) {
+  if(!depth.N) depth.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH));
   CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth.p);
@@ -888,7 +891,8 @@ void glGrabDepth(byteA& depth) {
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
 void glGrabDepth(floatA& depth) {
-  CHECK(depth.nd==2, "depth buffer has to be either 2-dimensional");
+  if(!depth.N) depth.resize(glutGet(GLUT_WINDOW_HEIGHT), glutGet(GLUT_WINDOW_WIDTH));
+  CHECK(depth.nd==2, "depth buffer has to be 2-dimensional");
   GLint w=depth.d1, h=depth.d0;
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, depth.p);
 }
@@ -1319,6 +1323,10 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
       glDrawText(vi->text, -.95, .85, 0.);
     }
   }
+
+  //byteA img(h,w,3);
+  //glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, img.p);
+  //write_ppm(img,"z.opengl.ppm");
   
   //check matrix stack
   GLint s;
@@ -1473,19 +1481,49 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
 
 
 void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam) {
+#ifdef MT_GLUT
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
-  glutPostRedisplay();
-  processEvents();
+#endif
+  //glutPostRedisplay();
+  //processEvents();
   Draw(w, h, cam);
   img.resize(h, w, 3);
   glGrabImage(img);
 #endif
 }
 
-void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline) {
+void OpenGL::captureDepth(byteA &depth, int w, int h, ors::Camera *cam) {
+#ifdef MT_GLUT
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
+#endif
+  //glutPostRedisplay();
+  //processEvents();
+  Draw(w, h, cam);
+  depth.resize(h, w);
+  glGrabDepth(depth);
+#endif
+}
+
+void OpenGL::captureDepth(floatA &depth, int w, int h, ors::Camera *cam) {
+#ifdef MT_GLUT
+#ifdef MT_FREEGLUT
+  glutSetWindow(s->windowID);
+#endif
+  //glutPostRedisplay();
+  //processEvents();
+  Draw(w, h, cam);
+  depth.resize(h, w);
+  glGrabDepth(depth);
+#endif
+}
+
+void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline) {
+#ifdef MT_GLUT
+#ifdef MT_FREEGLUT
+  glutSetWindow(s->windowID);
+#endif
   glutPostRedisplay();
   processEvents();
   Draw(w, h, cam);

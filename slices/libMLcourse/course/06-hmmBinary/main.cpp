@@ -122,6 +122,7 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
 
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
+  MT::arrayBrackets="  ";
 
   //-- build transition and observation matrices
   uint T=1000,K=2;
