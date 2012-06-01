@@ -38,6 +38,15 @@ ParticleFilter::ParticleFilter(int num_of_particles, int dim) : s(new sParticleF
   particles.reshape(num_of_particles, dim);
 }
 
+void ParticleFilter::init(const arr &mean) {
+  arr next;
+  for (int i=0; i<particles.d0; ++i) {
+    next.append(mean+0.001*randn(1,particles.d1));  
+  }
+  next.reshape(particles.d0, particles.d1);
+  copy(particles, next);
+}
+
 void ParticleFilter::step() {
   for (int i=0; i<particles.d0; ++i) {
     arr x;
