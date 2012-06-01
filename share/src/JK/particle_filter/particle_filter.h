@@ -27,6 +27,7 @@ class ParticleFilter :public Process {
 
     ParticleFilter(int num_of_particles, int dim);
     ~ParticleFilter();
+    void init(const arr &mean);
     void step();
     void add_measurement(const arr &measurement);
 };
