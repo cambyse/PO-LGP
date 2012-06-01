@@ -30,40 +30,38 @@ class sParticleFilter {
     }
 };
 
-ParticleFilter::ParticleFilter(int num_of_particles, int dim) : s(new sParticleFilter(this)) {
-  particles.writeAccess(this);
-  for (int i=0; i< num_of_particles; ++i) {
-    particles.particles.append(rand(dim,1));
-  }
-  particles.particles.reshape(num_of_particles, dim);
-  particles.deAccess(this);
+ParticleFilter::ParticleFilter() : Process("ParticleFilter"), s(new sParticleFilter(this)) {
 }
 
-void ParticleFilter::init(const arr &mean) {
+void ParticleFilter::init(const arr &mean, int num_of_particles) {
   arr next;
-  for (int i=0; i<particles.d0; ++i) {
-    next.append(mean+0.001*randn(1,particles.d1));  
+  for (int i=0; i<num_of_particles; ++i) {
+    next.append(mean+0.001*randn(1,mean.d1));  
   }
-  next.reshape(particles.d0, particles.d1);
-  copy(particles, next);
+  next.reshape(num_of_particles, mean.d1);
+  particles->writeAccess(this);
+  copy(particles->particles, next);
+  particles->deAccess(this);
 }
 
+void ParticleFilter::open() {}
+void ParticleFilter::close() {}
 void ParticleFilter::step() {
   //get current measurement
   arr measurement_;
-  measurement.writeAccess(this);
-  //if(measurement.measurements.isEmpty() {
-    //measurement.deAccess(this);
+  measurement->writeAccess(this);
+  //if(measurement->measurements.isEmpty() {
+    //measurement->deAccess(this);
     //return;
   //}
-  copy(measurement_, measurement.measurement())
-  measurement.deAccess();
+  copy(measurement_, measurement->measurement());
+  measurement->deAccess(this);
 
   // get copy of particles
   arr particles_;
-  particles.readAccess(this);
-  copy(particles_, particles.particles);
-  particles.deAccess(this);
+  particles->readAccess(this);
+  copy(particles_, particles->particles);
+  particles->deAccess(this);
 
   // compute particle filter
   for (int i=0; i<particles_.d0; ++i) {
@@ -71,7 +69,7 @@ void ParticleFilter::step() {
     control(x, particles_[i]);
     particles_[i] = x;
   }
-  s->reset_drawing(particles_, measurement_));
+  s->reset_drawing(particles_, measurement_);
   arr next;
   for (int i=0; i<particles_.d0; ++i) {
     next.append(s->draw(particles_, measurement_));
@@ -79,15 +77,15 @@ void ParticleFilter::step() {
   next.reshape(particles_.d0, particles_.d1);
 
   // write particles back to Variable
-  particles.writeAccess(this); 
-  copy(particles.particles, next);
-  particles.deAccess(this);
+  particles->writeAccess(this); 
+  copy(particles->particles, next);
+  particles->deAccess(this);
 }
 
 void ParticleFilter::add_measurement(const arr &measurement) {
-  measurement.writeAccess(this);
-  copy(measurement.measurement, measurement);
-  measurement.deAccess(this;
+  this->measurement->writeAccess(this);
+  copy(this->measurement->measurement, measurement);
+  this->measurement->deAccess(this);
 }
 ParticleFilter::~ParticleFilter() {
   delete s;  
