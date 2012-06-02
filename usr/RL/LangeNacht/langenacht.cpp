@@ -13,7 +13,7 @@
 #include "WorldModel/debug.h"
 
 LangeNacht::LangeNacht(QWidget *parent)
-    : QWidget(parent), click_type(NONE), world_model(NULL)
+    : QWidget(parent), click_type(NONE), rew_x(-1), rew_y(-1), world_model(NULL)
 {
 	ui.setupUi(this);
 
@@ -209,6 +209,18 @@ void LangeNacht::loop() {
 	if(!ui._wLoopValueIteration->isChecked() && !ui._wLoopActions->isChecked()) return;
 	if(ui._wLoopValueIteration->isChecked()) world_model->iterate_value_function();
 	if(ui._wLoopActions->isChecked()) world_model->perform_optimal_transition();
+	if(ui._wAutoRewards->isChecked()) {
+		int x, y;
+		world_model->get_current_state(x,y);
+		if( rew_x==-1 || rew_y==-1 || (x==rew_x && y==rew_y) ) {
+			world_model->delete_all_rewards();
+			x = rand()%world_model->get_x_size();
+			y = rand()%world_model->get_y_size();
+			world_model->set_reward(x,y,1);
+			rew_x=x;
+			rew_y=y;
+		}
+	}
 	redraw();
 }
 

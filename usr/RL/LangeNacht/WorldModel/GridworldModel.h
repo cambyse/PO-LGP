@@ -50,6 +50,9 @@ public:
 	void display_agent(QGraphicsScene * const scene);
 
 	void set_current_state(int x, int y);
+	void get_current_state(int& x, int& y);
+	int get_x_size() { return x_size; }
+	int get_y_size() { return y_size; }
 
 	void add_wall(const int& x1, const int& y1, const int& x2, const int& y2);
 	void remove_wall(const int& x1, const int& y1, const int& x2, const int& y2);

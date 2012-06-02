@@ -108,6 +108,11 @@ void GridworldModel::set_current_state(int x, int y) {
 	agent_state = &state_map[x][y];
 }
 
+void GridworldModel::get_current_state(int& x, int& y) {
+	x = agent_state->grid_world_state_model.get_x();
+	y = agent_state->grid_world_state_model.get_y();
+}
+
 void GridworldModel::add_wall(const int& x1, const int& y1, const int& x2, const int& y2) {
 
 	// both state inside allowed bounds

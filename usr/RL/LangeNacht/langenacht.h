@@ -52,7 +52,7 @@ private:
 	enum BUTTON_MODE { LEFT, RIGHT, MIDDLE };
 	CLICK_TYPE click_type;
 	BUTTON_MODE button_mode;
-	int old_state_x_idx, old_state_y_idx;
+	int old_state_x_idx, old_state_y_idx, rew_x, rew_y;
     Ui::LangeNachtClass ui;
     GridworldModel * world_model;
     QTimer *timer;
