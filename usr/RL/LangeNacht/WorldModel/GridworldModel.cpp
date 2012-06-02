@@ -49,7 +49,7 @@ GridworldModel::GridworldModel(const int& x, const int& y, const double& r, cons
 }
 
 
-void GridworldModel::display_all_states(QGraphicsScene * const scene, const char c) {
+void GridworldModel::display_all_states(QGraphicsScene * const scene, const char c, const bool& show_actions) {
     switch(c) {
     case 'r':
     {
@@ -62,8 +62,8 @@ void GridworldModel::display_all_states(QGraphicsScene * const scene, const char
             for(int y=0; y<y_size; ++y) {
                 val = state_map[x][y].state_action_value_state_model.state_reward/norm;
                 DEBUG_OUT(2,"State reward: " << state_map[x][y].state_action_value_state_model.state_reward << ", min: " << min_rew << ", max: " << max_rew << ", color value: "<< val);
-                if( val>0 ) state_map[x][y].grid_world_state_model.display(scene,QColor(245,245*(1-val),245*(1-val)));
-                else state_map[x][y].grid_world_state_model.display(scene,QColor(245*(1+val),245*(1+val),245));
+                if( val>0 ) state_map[x][y].grid_world_state_model.display(scene,QColor(245,245*(1-val),245*(1-val)),state_map[x][y].state_action_value_state_model.action_values,state_map[x][y].state_action_value_state_model.available_actions,show_actions);
+                else state_map[x][y].grid_world_state_model.display(scene,QColor(245*(1+val),245*(1+val),245),state_map[x][y].state_action_value_state_model.action_values,state_map[x][y].state_action_value_state_model.available_actions,show_actions);
             }
     }
     break;
@@ -80,8 +80,8 @@ void GridworldModel::display_all_states(QGraphicsScene * const scene, const char
             for(int y=0; y<y_size; ++y) {
                 val = state_map[x][y].state_action_value_state_model.state_value/norm;
                 DEBUG_OUT(2,"State value: " << state_map[x][y].state_action_value_state_model.state_value << ", min: " << min << ", max: " << max << ", color value: "<< val);
-                if( val>0 ) state_map[x][y].grid_world_state_model.display(scene,QColor(245,245*(1-val),245*(1-val)));
-                else state_map[x][y].grid_world_state_model.display(scene,QColor(245*(1+val),245*(1+val),245));
+                if( val>0 ) state_map[x][y].grid_world_state_model.display(scene,QColor(245,245*(1-val),245*(1-val)),state_map[x][y].state_action_value_state_model.action_values,state_map[x][y].state_action_value_state_model.available_actions,show_actions);
+                else state_map[x][y].grid_world_state_model.display(scene,QColor(245*(1+val),245*(1+val),245),state_map[x][y].state_action_value_state_model.action_values,state_map[x][y].state_action_value_state_model.available_actions,show_actions);
             }
     }
     break;
@@ -91,12 +91,12 @@ void GridworldModel::display_all_states(QGraphicsScene * const scene, const char
 void GridworldModel::display_agent(QGraphicsScene * const scene) {
 	double size = agent_state->grid_world_state_model.get_size();
 	scene->addEllipse(
-			agent_state->grid_world_state_model.get_x() - size/2 + 0.1*size,
-			agent_state->grid_world_state_model.get_y() - size/2 + 0.1*size,
-			0.8*size,
-			0.8*size,
+			agent_state->grid_world_state_model.get_x() - size/2 + 0.2*size,
+			agent_state->grid_world_state_model.get_y() - size/2 + 0.2*size,
+			0.6*size,
+			0.6*size,
 			QPen(QColor(0,0,0)),
-			QBrush(QColor(0,245,0))
+			QBrush(QColor(0,255,0,180))
 	);
 }
 
@@ -192,64 +192,6 @@ void GridworldModel::remove_all_walls() {
 			}
 	}
 }
-
-//void GridworldModel::toggle_wall(const int& x1, const int& y1, const int& x2, const int& y2, const bool& remember) {
-//
-//	// both state inside allowed bounds
-//	if( x1>=0 && x1<x_size && x2>=0 && x2<x_size && y1>=0 && y1<y_size && y2>=0 && y2<y_size ) {
-//
-//		// s2 is left of s1
-//		if( x1-x2==+1 && y1-y2== 0 ) {
-//			if(state_map[x1][y1].grid_world_state_model.get_wall('l')) {
-//				state_map[x1][y1].grid_world_state_model.unset_wall('l');
-//				state_map[x2][y2].grid_world_state_model.unset_wall('r');
-//			} else {
-//				state_map[x1][y1].grid_world_state_model.set_wall('l');
-//				state_map[x2][y2].grid_world_state_model.set_wall('r');
-//			}
-//		}
-//		// s2 is right of s1
-//		else if( x1-x2==-1 && y1-y2== 0 ) {
-//			if(state_map[x1][y1].grid_world_state_model.get_wall('r')) {
-//				state_map[x1][y1].grid_world_state_model.unset_wall('r');
-//				state_map[x2][y2].grid_world_state_model.unset_wall('l');
-//			} else {
-//				state_map[x1][y1].grid_world_state_model.set_wall('r');
-//				state_map[x2][y2].grid_world_state_model.set_wall('l');
-//			}
-//		}
-//		// s2 is above of s1
-//		else if( x1-x2== 0 && y1-y2==+1 ) {
-//			if(state_map[x1][y1].grid_world_state_model.get_wall('t')) {
-//				state_map[x1][y1].grid_world_state_model.unset_wall('t');
-//				state_map[x2][y2].grid_world_state_model.unset_wall('b');
-//			} else {
-//				state_map[x1][y1].grid_world_state_model.set_wall('t');
-//				state_map[x2][y2].grid_world_state_model.set_wall('b');
-//			}
-//		}
-//		// s2 is below of s1
-//		else if( x1-x2== 0 && y1-y2==-1 ) {
-//			if(state_map[x1][y1].grid_world_state_model.get_wall('b')) {
-//				state_map[x1][y1].grid_world_state_model.unset_wall('b');
-//				state_map[x2][y2].grid_world_state_model.unset_wall('t');
-//			} else {
-//				state_map[x1][y1].grid_world_state_model.set_wall('b');
-//				state_map[x2][y2].grid_world_state_model.set_wall('t');
-//			}
-//		}
-//		else {
-//			DEBUG_OUT(0,"Error: Unable to toggle wall (states are not adjoined: (" << x1 << "," << y1 << ")/(" << x2 << "," << y2 << ") )");
-//			return;
-//		}
-//
-//		g.enable_bidirectional_transitions(&state_map[x1][y1], &state_map[x2][y2], false);
-//	}
-//	else {
-//		DEBUG_OUT(0,"Error: Unable to toggle wall (at least one state index is out of range: (" << x1 << "," << y1 << ")/(" << x2 << "," << y2 << ") )");
-//		return;
-//	}
-//}
 
 void GridworldModel::set_reward(int x, int y, const double& r) {
 	// state inside allowed bounds

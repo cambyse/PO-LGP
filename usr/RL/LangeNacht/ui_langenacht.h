@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'langenacht.ui'
 **
-** Created: Wed May 30 00:14:47 2012
+** Created: Sat Jun 2 01:56:31 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -24,6 +24,7 @@
 #include <QtGui/QRadioButton>
 #include <QtGui/QSlider>
 #include <QtGui/QSpacerItem>
+#include <QtGui/QSpinBox>
 #include <QtGui/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -34,7 +35,6 @@ public:
     QGridLayout *gridLayout;
     MyDisplay *_wDisplay;
     QPushButton *_wDeleteAllRewards;
-    QSpacerItem *verticalSpacer;
     QSlider *_wRandom;
     QLineEdit *_wRandomValue;
     QLabel *label;
@@ -61,12 +61,18 @@ public:
     QLabel *label_3;
     QSlider *_wSpeed;
     QLineEdit *_wSpeedValue;
+    QSpinBox *_wXSize;
+    QSpinBox *_wYSize;
+    QPushButton *_wReset;
+    QLabel *label_4;
+    QLabel *label_5;
+    QSpacerItem *verticalSpacer_2;
 
     void setupUi(QWidget *LangeNachtClass)
     {
         if (LangeNachtClass->objectName().isEmpty())
             LangeNachtClass->setObjectName(QString::fromUtf8("LangeNachtClass"));
-        LangeNachtClass->resize(678, 458);
+        LangeNachtClass->resize(745, 569);
         gridLayout = new QGridLayout(LangeNachtClass);
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
@@ -74,58 +80,56 @@ public:
         _wDisplay = new MyDisplay(LangeNachtClass);
         _wDisplay->setObjectName(QString::fromUtf8("_wDisplay"));
 
-        gridLayout->addWidget(_wDisplay, 1, 0, 8, 3);
+        gridLayout->addWidget(_wDisplay, 1, 0, 10, 3);
 
         _wDeleteAllRewards = new QPushButton(LangeNachtClass);
         _wDeleteAllRewards->setObjectName(QString::fromUtf8("_wDeleteAllRewards"));
 
-        gridLayout->addWidget(_wDeleteAllRewards, 5, 3, 1, 2);
-
-        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-        gridLayout->addItem(verticalSpacer, 7, 3, 1, 1);
+        gridLayout->addWidget(_wDeleteAllRewards, 5, 3, 1, 4);
 
         _wRandom = new QSlider(LangeNachtClass);
         _wRandom->setObjectName(QString::fromUtf8("_wRandom"));
+        _wRandom->setMinimumSize(QSize(150, 0));
         _wRandom->setMaximum(100);
         _wRandom->setOrientation(Qt::Horizontal);
 
-        gridLayout->addWidget(_wRandom, 9, 1, 1, 1);
+        gridLayout->addWidget(_wRandom, 11, 1, 1, 1);
 
         _wRandomValue = new QLineEdit(LangeNachtClass);
         _wRandomValue->setObjectName(QString::fromUtf8("_wRandomValue"));
         _wRandomValue->setMaximumSize(QSize(50, 16777215));
 
-        gridLayout->addWidget(_wRandomValue, 9, 2, 1, 1);
+        gridLayout->addWidget(_wRandomValue, 11, 2, 1, 1);
 
         label = new QLabel(LangeNachtClass);
         label->setObjectName(QString::fromUtf8("label"));
 
-        gridLayout->addWidget(label, 9, 0, 1, 1);
+        gridLayout->addWidget(label, 11, 0, 1, 1);
 
         label_2 = new QLabel(LangeNachtClass);
         label_2->setObjectName(QString::fromUtf8("label_2"));
 
-        gridLayout->addWidget(label_2, 10, 0, 1, 1);
+        gridLayout->addWidget(label_2, 12, 0, 1, 1);
 
         _wDiscount = new QSlider(LangeNachtClass);
         _wDiscount->setObjectName(QString::fromUtf8("_wDiscount"));
+        _wDiscount->setMinimumSize(QSize(150, 0));
         _wDiscount->setMaximum(100);
         _wDiscount->setSliderPosition(10);
         _wDiscount->setOrientation(Qt::Horizontal);
 
-        gridLayout->addWidget(_wDiscount, 10, 1, 1, 1);
+        gridLayout->addWidget(_wDiscount, 12, 1, 1, 1);
 
         _wDiscountValue = new QLineEdit(LangeNachtClass);
         _wDiscountValue->setObjectName(QString::fromUtf8("_wDiscountValue"));
         _wDiscountValue->setMaximumSize(QSize(50, 16777215));
 
-        gridLayout->addWidget(_wDiscountValue, 10, 2, 1, 1);
+        gridLayout->addWidget(_wDiscountValue, 12, 2, 1, 1);
 
         _wDeleteAllWalls = new QPushButton(LangeNachtClass);
         _wDeleteAllWalls->setObjectName(QString::fromUtf8("_wDeleteAllWalls"));
 
-        gridLayout->addWidget(_wDeleteAllWalls, 6, 3, 1, 2);
+        gridLayout->addWidget(_wDeleteAllWalls, 6, 3, 1, 4);
 
         groupBox = new QGroupBox(LangeNachtClass);
         groupBox->setObjectName(QString::fromUtf8("groupBox"));
@@ -146,7 +150,7 @@ public:
         gridLayout_2->addWidget(radioButton_4, 0, 1, 1, 1);
 
 
-        gridLayout->addWidget(groupBox, 2, 3, 1, 2);
+        gridLayout->addWidget(groupBox, 2, 3, 1, 4);
 
         groupBox_2 = new QGroupBox(LangeNachtClass);
         groupBox_2->setObjectName(QString::fromUtf8("groupBox_2"));
@@ -166,7 +170,7 @@ public:
         gridLayout_3->addWidget(radioButton_2, 0, 1, 1, 1);
 
 
-        gridLayout->addWidget(groupBox_2, 1, 3, 1, 1);
+        gridLayout->addWidget(groupBox_2, 1, 3, 1, 4);
 
         groupBox_3 = new QGroupBox(LangeNachtClass);
         groupBox_3->setObjectName(QString::fromUtf8("groupBox_3"));
@@ -186,7 +190,7 @@ public:
         gridLayout_4->addWidget(_wLoopValueIteration, 0, 1, 1, 1);
 
 
-        gridLayout->addWidget(groupBox_3, 3, 3, 1, 1);
+        gridLayout->addWidget(groupBox_3, 3, 3, 1, 4);
 
         groupBox_4 = new QGroupBox(LangeNachtClass);
         groupBox_4->setObjectName(QString::fromUtf8("groupBox_4"));
@@ -206,27 +210,63 @@ public:
         gridLayout_5->addWidget(_wLoopActions, 0, 1, 1, 1);
 
 
-        gridLayout->addWidget(groupBox_4, 4, 3, 1, 1);
+        gridLayout->addWidget(groupBox_4, 4, 3, 1, 4);
 
         label_3 = new QLabel(LangeNachtClass);
         label_3->setObjectName(QString::fromUtf8("label_3"));
 
-        gridLayout->addWidget(label_3, 11, 0, 1, 1);
+        gridLayout->addWidget(label_3, 13, 0, 1, 1);
 
         _wSpeed = new QSlider(LangeNachtClass);
         _wSpeed->setObjectName(QString::fromUtf8("_wSpeed"));
+        _wSpeed->setMinimumSize(QSize(150, 0));
         _wSpeed->setMinimum(1);
         _wSpeed->setMaximum(100);
         _wSpeed->setValue(30);
         _wSpeed->setOrientation(Qt::Horizontal);
 
-        gridLayout->addWidget(_wSpeed, 11, 1, 1, 1);
+        gridLayout->addWidget(_wSpeed, 13, 1, 1, 1);
 
         _wSpeedValue = new QLineEdit(LangeNachtClass);
         _wSpeedValue->setObjectName(QString::fromUtf8("_wSpeedValue"));
         _wSpeedValue->setMaximumSize(QSize(50, 16777215));
 
-        gridLayout->addWidget(_wSpeedValue, 11, 2, 1, 1);
+        gridLayout->addWidget(_wSpeedValue, 13, 2, 1, 1);
+
+        _wXSize = new QSpinBox(LangeNachtClass);
+        _wXSize->setObjectName(QString::fromUtf8("_wXSize"));
+        _wXSize->setMaximumSize(QSize(50, 16777215));
+        _wXSize->setValue(10);
+
+        gridLayout->addWidget(_wXSize, 8, 4, 1, 1);
+
+        _wYSize = new QSpinBox(LangeNachtClass);
+        _wYSize->setObjectName(QString::fromUtf8("_wYSize"));
+        _wYSize->setMaximumSize(QSize(50, 16777215));
+        _wYSize->setValue(10);
+
+        gridLayout->addWidget(_wYSize, 9, 4, 1, 1);
+
+        _wReset = new QPushButton(LangeNachtClass);
+        _wReset->setObjectName(QString::fromUtf8("_wReset"));
+
+        gridLayout->addWidget(_wReset, 8, 5, 2, 1);
+
+        label_4 = new QLabel(LangeNachtClass);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+        label_4->setMaximumSize(QSize(17, 16777215));
+
+        gridLayout->addWidget(label_4, 8, 3, 1, 1);
+
+        label_5 = new QLabel(LangeNachtClass);
+        label_5->setObjectName(QString::fromUtf8("label_5"));
+        label_5->setMaximumSize(QSize(17, 16777215));
+
+        gridLayout->addWidget(label_5, 9, 3, 1, 1);
+
+        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout->addItem(verticalSpacer_2, 7, 4, 1, 1);
 
 
         retranslateUi(LangeNachtClass);
@@ -237,6 +277,7 @@ public:
         QObject::connect(_wShowRewards, SIGNAL(toggled(bool)), LangeNachtClass, SLOT(show_rewards_changed(bool)));
         QObject::connect(_wShowActions, SIGNAL(toggled(bool)), LangeNachtClass, SLOT(show_actions_changed(bool)));
         QObject::connect(_wSpeed, SIGNAL(valueChanged(int)), LangeNachtClass, SLOT(speed_changed(int)));
+        QObject::connect(_wReset, SIGNAL(clicked()), LangeNachtClass, SLOT(reset_grid_world()));
 
         QMetaObject::connectSlotsByName(LangeNachtClass);
     } // setupUi
@@ -266,6 +307,9 @@ public:
 "(optimal)", 0, QApplication::UnicodeUTF8));
         label_3->setText(QApplication::translate("LangeNachtClass", "Speed (f/s)", 0, QApplication::UnicodeUTF8));
         _wSpeedValue->setText(QApplication::translate("LangeNachtClass", "30", 0, QApplication::UnicodeUTF8));
+        _wReset->setText(QApplication::translate("LangeNachtClass", "Reset", 0, QApplication::UnicodeUTF8));
+        label_4->setText(QApplication::translate("LangeNachtClass", "X", 0, QApplication::UnicodeUTF8));
+        label_5->setText(QApplication::translate("LangeNachtClass", "Y", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

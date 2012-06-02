@@ -45,7 +45,7 @@ public:
 
 	virtual ~GridworldModel() {}
 
-	void display_all_states(QGraphicsScene * const scene, const char c);
+	void display_all_states(QGraphicsScene * const scene, const char c, const bool& show_actions);
 
 	void display_agent(QGraphicsScene * const scene);
 
@@ -53,7 +53,6 @@ public:
 
 	void add_wall(const int& x1, const int& y1, const int& x2, const int& y2);
 	void remove_wall(const int& x1, const int& y1, const int& x2, const int& y2);
-//	void toggle_wall(const int& x1, const int& y1, const int& x2, const int& y2, const bool& remember = true);
 	void remove_all_walls();
 
 

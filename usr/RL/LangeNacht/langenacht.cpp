@@ -13,7 +13,7 @@
 #include "WorldModel/debug.h"
 
 LangeNacht::LangeNacht(QWidget *parent)
-    : QWidget(parent), click_type(NONE), world_model(10,10,0.0,0.9)
+    : QWidget(parent), click_type(NONE), world_model(NULL)
 {
 	ui.setupUi(this);
 
@@ -22,7 +22,7 @@ LangeNacht::LangeNacht(QWidget *parent)
 
 	srand(time(NULL));
 
-	world_model.set_current_state(1,1);
+	reset_grid_world();
 
 	redraw();
 
@@ -33,9 +33,12 @@ LangeNacht::LangeNacht(QWidget *parent)
 	DEBUG_OUT(1,"Initialization done.");
 }
 
-LangeNacht::~LangeNacht() {}
+LangeNacht::~LangeNacht() {
+	delete world_model;
+	delete timer;
+}
 
-void LangeNacht::redraw(const char c) {
+void LangeNacht::redraw() {
 	QGraphicsView* display = ui._wDisplay;
 	QGraphicsScene* scene = display->scene();
 	if(scene==NULL) {
@@ -44,8 +47,10 @@ void LangeNacht::redraw(const char c) {
 	}
 	scene->clear();
 
-	world_model.display_all_states(scene, c);
-	world_model.display_agent(scene);
+	char c = ui._wShowRewards->isChecked() ? 'r' : 'v';
+	bool show_actions = ui._wShowActions->isChecked();
+	world_model->display_all_states(scene, c, show_actions);
+	world_model->display_agent(scene);
 
 	scene->setSceneRect(scene->itemsBoundingRect());
 	display->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
@@ -79,12 +84,12 @@ void LangeNacht::keyPressEvent(QKeyEvent * event) {
 		transition_random();
 			break;
 	case Qt::Key_O: // o
-	    world_model.perform_optimal_transition();
+	    world_model->perform_optimal_transition();
 	    redraw();
 	    break;
 	case Qt::Key_Return:
 	case Qt::Key_Enter:
-		world_model.iterate_value_function();
+		world_model->iterate_value_function();
 		redraw();
 		break;
 	default:
@@ -120,20 +125,20 @@ void LangeNacht::transition_random() {
 	int a = rand()%5;
 	switch(a) {
 	case 0:
-        world_model.perform_transition('u');
+        world_model->perform_transition('u');
 		break;
 	case 1:
-        world_model.perform_transition('d');
+        world_model->perform_transition('d');
 		break;
 	case 2:
-        world_model.perform_transition('l');
+        world_model->perform_transition('l');
 		break;
 	case 3:
-        world_model.perform_transition('r');
+        world_model->perform_transition('r');
 		break;
 	case 4:
 	default:
-        world_model.perform_transition('s');
+        world_model->perform_transition('s');
 		break;
 	}
 	redraw();
@@ -141,45 +146,41 @@ void LangeNacht::transition_random() {
 
 void LangeNacht::transition_left() {
 	DEBUG_OUT(1,"Transition left");
-	world_model.perform_transition('l');
+	world_model->perform_transition('l');
 	redraw();
 }
 
 void LangeNacht::transition_right() {
 	DEBUG_OUT(1,"Transition right");
-	world_model.perform_transition('r');
+	world_model->perform_transition('r');
 	redraw();
 }
 
 void LangeNacht::transition_up() {
 	DEBUG_OUT(1,"Transition up");
-	world_model.perform_transition('u');
+	world_model->perform_transition('u');
 	redraw();
 }
 
 void LangeNacht::transition_down() {
 	DEBUG_OUT(1,"Transition down");
-	world_model.perform_transition('d');
+	world_model->perform_transition('d');
 	redraw();
 }
 
 void LangeNacht::transition_stay() {
 	DEBUG_OUT(1,"Transition stay");
-	world_model.perform_transition('s');
+	world_model->perform_transition('s');
 	redraw();
 }
 
-void LangeNacht::show_rewards_changed(bool) {
-	loop();
-}
-
 void LangeNacht::delete_all_rewards() {
-    world_model.delete_all_rewards();
-    redraw('r');
+    world_model->delete_all_rewards();
+    redraw();
 }
 
 void LangeNacht::delete_all_walls() {
-	world_model.remove_all_walls();
+	world_model->remove_all_walls();
 }
 
 void LangeNacht::random_changed(int) {
@@ -187,14 +188,14 @@ void LangeNacht::random_changed(int) {
 	QString valStr = QString().setNum(val).append('%');
 	ui._wRandomValue->setText(valStr);
 	double dVal = val/100.;
-	world_model.set_random(dVal);
+	world_model->set_random(dVal);
 }
 void LangeNacht::discount_changed(int) {
 	int val = ui._wDiscount->value();
 	QString valStr = QString().setNum(val).append('%');
 	ui._wDiscountValue->setText(valStr);
 	double dVal = val/100.;
-	world_model.set_discount(1-dVal);
+	world_model->set_discount(1-dVal);
 }
 
 void LangeNacht::speed_changed(int) {
@@ -206,10 +207,15 @@ void LangeNacht::speed_changed(int) {
 
 void LangeNacht::loop() {
 	if(!ui._wLoopValueIteration->isChecked() && !ui._wLoopActions->isChecked()) return;
-	if(ui._wLoopValueIteration->isChecked()) world_model.iterate_value_function();
-	if(ui._wLoopActions->isChecked()) world_model.perform_optimal_transition();
-	if(ui._wShowRewards->isChecked()) redraw('r');
-	else redraw('v');
+	if(ui._wLoopValueIteration->isChecked()) world_model->iterate_value_function();
+	if(ui._wLoopActions->isChecked()) world_model->perform_optimal_transition();
+	redraw();
+}
+
+void LangeNacht::reset_grid_world() {
+	if(world_model) delete world_model;
+	world_model = new GridworldModel(ui._wXSize->value(), ui._wYSize->value(), (double)ui._wRandom->value()/100, 1-(double)ui._wDiscount->value()/100);
+	world_model->set_current_state(0,0);
 }
 
 void LangeNacht::set_click_type() {
@@ -257,22 +263,22 @@ void LangeNacht::handle_mouse_event() {
 	        DEBUG_OUT(2,"Set old state index to (" << old_state_x_idx << "," << old_state_y_idx << ")");
 	        switch(button_mode) {
 	        case LEFT:
-	            world_model.set_reward(xIdx,yIdx, world_model.get_reward(xIdx,yIdx) + 1 );
-	            DEBUG_OUT(1, "Add reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model.get_reward(xIdx,yIdx) );
+	            world_model->set_reward(xIdx,yIdx, world_model->get_reward(xIdx,yIdx) + 1 );
+	            DEBUG_OUT(1, "Add reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model->get_reward(xIdx,yIdx) );
 	            break;
 	        case RIGHT:
-	            world_model.set_reward(xIdx,yIdx, world_model.get_reward(xIdx,yIdx) - 1 );
-	            DEBUG_OUT(1, "Subtract reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model.get_reward(xIdx,yIdx) );
+	            world_model->set_reward(xIdx,yIdx, world_model->get_reward(xIdx,yIdx) - 1 );
+	            DEBUG_OUT(1, "Subtract reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model->get_reward(xIdx,yIdx) );
 	            break;
 	        case MIDDLE:
-	            world_model.set_reward(xIdx,yIdx, 0 );
-	            DEBUG_OUT(1, "Delete reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model.get_reward(xIdx,yIdx) );
+	            world_model->set_reward(xIdx,yIdx, 0 );
+	            DEBUG_OUT(1, "Delete reward in state (" << xIdx << "," << yIdx << "). Now is: " << world_model->get_reward(xIdx,yIdx) );
 	            break;
 	        default:
 	            DEBUG_OUT(0,"Unhandled button mode");
 	            break;
 	        }
-	        redraw('r');
+	        redraw();
 	        return;
 	    }
 	}
@@ -285,23 +291,23 @@ void LangeNacht::handle_mouse_event() {
 	    if(click_type!=WALL) return;
 	    else {
 	        if( xMod >  yMod && xMod >= -yMod) { // right
-	            if(button_mode==LEFT) world_model.add_wall(xIdx, yIdx, xIdx+1, yIdx  );
-	            else if(button_mode==RIGHT) world_model.remove_wall(xIdx, yIdx, xIdx+1, yIdx  );
+	            if(button_mode==LEFT) world_model->add_wall(xIdx, yIdx, xIdx+1, yIdx  );
+	            else if(button_mode==RIGHT) world_model->remove_wall(xIdx, yIdx, xIdx+1, yIdx  );
 	            else return;
 	        }
 	        else if( xMod < -yMod && xMod >=  yMod) { // top
-	            if(button_mode==LEFT) world_model.add_wall(xIdx, yIdx, xIdx  , yIdx-1);
-	            else if(button_mode==RIGHT) world_model.remove_wall(xIdx, yIdx, xIdx  , yIdx-1);
+	            if(button_mode==LEFT) world_model->add_wall(xIdx, yIdx, xIdx  , yIdx-1);
+	            else if(button_mode==RIGHT) world_model->remove_wall(xIdx, yIdx, xIdx  , yIdx-1);
 	            else return;
 	        }
 	        else if( xMod <  yMod && xMod <= -yMod) { // left
-	            if(button_mode==LEFT) world_model.add_wall(xIdx, yIdx, xIdx-1, yIdx  );
-	            else if(button_mode==RIGHT) world_model.remove_wall(xIdx, yIdx, xIdx-1, yIdx  );
+	            if(button_mode==LEFT) world_model->add_wall(xIdx, yIdx, xIdx-1, yIdx  );
+	            else if(button_mode==RIGHT) world_model->remove_wall(xIdx, yIdx, xIdx-1, yIdx  );
 	            else return;
 	        }
 	        else if( xMod > -yMod && xMod <=  yMod) { // bottom
-	            if(button_mode==LEFT) world_model.add_wall(xIdx, yIdx, xIdx  , yIdx+1);
-	            else if(button_mode==RIGHT) world_model.remove_wall(xIdx, yIdx, xIdx  , yIdx+1);
+	            if(button_mode==LEFT) world_model->add_wall(xIdx, yIdx, xIdx  , yIdx+1);
+	            else if(button_mode==RIGHT) world_model->remove_wall(xIdx, yIdx, xIdx  , yIdx+1);
 	            else return;
 	        }
 	        else DEBUG_OUT(0,"Error: Unhandled mouse event at (" << x << "," << y << ")" );

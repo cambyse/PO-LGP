@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'langenacht.h'
 **
-** Created: Wed May 30 00:15:20 2012
+** Created: Sat Jun 2 02:13:30 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -31,36 +31,35 @@ static const uint qt_meta_data_LangeNacht[] = {
        0,       // signalCount
 
  // slots: signature, parameters, type, tag, flags
-      14,   12,   11,   11, 0x0a,
-      27,   11,   11,   11, 0x2a,
-      36,   11,   11,   11, 0x0a,
-      56,   11,   11,   11, 0x0a,
-      74,   11,   11,   11, 0x0a,
-      93,   11,   11,   11, 0x0a,
-     109,   11,   11,   11, 0x0a,
-     127,   11,   11,   11, 0x0a,
-     145,   11,   11,   11, 0x0a,
-     172,   11,   11,   11, 0x0a,
-     199,   11,   11,   11, 0x0a,
-     220,   11,   11,   11, 0x0a,
-     239,   11,   11,   11, 0x0a,
-     259,   11,   11,   11, 0x0a,
-     281,   11,   11,   11, 0x0a,
-     300,   11,   11,   11, 0x0a,
+      12,   11,   11,   11, 0x0a,
+      21,   11,   11,   11, 0x0a,
+      41,   11,   11,   11, 0x0a,
+      59,   11,   11,   11, 0x0a,
+      78,   11,   11,   11, 0x0a,
+      94,   11,   11,   11, 0x0a,
+     112,   11,   11,   11, 0x0a,
+     130,   11,   11,   11, 0x0a,
+     157,   11,   11,   11, 0x0a,
+     184,   11,   11,   11, 0x0a,
+     205,   11,   11,   11, 0x0a,
+     224,   11,   11,   11, 0x0a,
+     244,   11,   11,   11, 0x0a,
+     266,   11,   11,   11, 0x0a,
+     285,   11,   11,   11, 0x0a,
+     292,   11,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_LangeNacht[] = {
-    "LangeNacht\0\0c\0redraw(char)\0redraw()\0"
-    "transition_random()\0transition_left()\0"
-    "transition_right()\0transition_up()\0"
-    "transition_down()\0transition_stay()\0"
-    "show_rewards_changed(bool)\0"
+    "LangeNacht\0\0redraw()\0transition_random()\0"
+    "transition_left()\0transition_right()\0"
+    "transition_up()\0transition_down()\0"
+    "transition_stay()\0show_rewards_changed(bool)\0"
     "show_actions_changed(bool)\0"
     "delete_all_rewards()\0delete_all_walls()\0"
     "random_changed(int)\0discount_changed(int)\0"
-    "speed_changed(int)\0loop()\0"
+    "speed_changed(int)\0loop()\0reset_grid_world()\0"
 };
 
 void LangeNacht::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -69,22 +68,22 @@ void LangeNacht::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         Q_ASSERT(staticMetaObject.cast(_o));
         LangeNacht *_t = static_cast<LangeNacht *>(_o);
         switch (_id) {
-        case 0: _t->redraw((*reinterpret_cast< const char(*)>(_a[1]))); break;
-        case 1: _t->redraw(); break;
-        case 2: _t->transition_random(); break;
-        case 3: _t->transition_left(); break;
-        case 4: _t->transition_right(); break;
-        case 5: _t->transition_up(); break;
-        case 6: _t->transition_down(); break;
-        case 7: _t->transition_stay(); break;
-        case 8: _t->show_rewards_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 9: _t->show_actions_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 10: _t->delete_all_rewards(); break;
-        case 11: _t->delete_all_walls(); break;
-        case 12: _t->random_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 13: _t->discount_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 14: _t->speed_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 15: _t->loop(); break;
+        case 0: _t->redraw(); break;
+        case 1: _t->transition_random(); break;
+        case 2: _t->transition_left(); break;
+        case 3: _t->transition_right(); break;
+        case 4: _t->transition_up(); break;
+        case 5: _t->transition_down(); break;
+        case 6: _t->transition_stay(); break;
+        case 7: _t->show_rewards_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 8: _t->show_actions_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 9: _t->delete_all_rewards(); break;
+        case 10: _t->delete_all_walls(); break;
+        case 11: _t->random_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 12: _t->discount_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 13: _t->speed_changed((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 14: _t->loop(); break;
+        case 15: _t->reset_grid_world(); break;
         default: ;
         }
     }

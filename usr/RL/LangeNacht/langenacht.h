@@ -26,21 +26,22 @@ protected:
     void mouseMoveEvent(QMouseEvent * event);
 
 public slots:
-	void redraw(const char c = 'v');
+	void redraw();
 	void transition_random();
 	void transition_left();
 	void transition_right();
 	void transition_up();
 	void transition_down();
 	void transition_stay();
-	void show_rewards_changed(bool);
-	void show_actions_changed(bool){DEBUG_OUT(0,"2");}
+	void show_rewards_changed(bool){redraw();}
+	void show_actions_changed(bool){redraw();}
 	void delete_all_rewards();
 	void delete_all_walls();
 	void random_changed(int);
 	void discount_changed(int);
 	void speed_changed(int);
 	void loop();
+	void reset_grid_world();
 
 private:
 
@@ -53,7 +54,7 @@ private:
 	BUTTON_MODE button_mode;
 	int old_state_x_idx, old_state_y_idx;
     Ui::LangeNachtClass ui;
-    GridworldModel world_model;
+    GridworldModel * world_model;
     QTimer *timer;
 
 };
