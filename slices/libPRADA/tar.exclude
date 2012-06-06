@@ -27,3 +27,4 @@ learned_rules.dat
 libSWIFT++.a
 doc/Makefile
 test/simple_demos/logicDemo__used_language.dat
+archive/*

@@ -547,7 +547,10 @@ bool reason::consistent(Literal* lit_given, Literal* lit_test) {
   bool does_hold = false;
   if (lit_given->s == lit_test->s
       &&  lit_given->args == lit_test->args) {
-    if (lit_given->comparison_type == Literal::comparison_equal) {
+    if (lit_given->comparison_type == Literal::comparison_variable || lit_test->comparison_type == Literal::comparison_variable) {
+      does_hold = true;     //Variable comparison always holds
+    }
+    else if (lit_given->comparison_type == Literal::comparison_equal) {
       does_hold = lit_given->compareValueTo(lit_test->comparison_type, lit_test->value);
     }
     else if (lit_test->comparison_type == Literal::comparison_equal) {

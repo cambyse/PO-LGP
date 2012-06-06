@@ -426,7 +426,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (1) drop object if one is in hand
   //   dropInhandObjectOnTable(message);
   uint id_grabbed = getInhand();
-  if (id_grabbed != UINT_MAX) {
+  if (id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0;t<10;t++){
       x.y_target.setCarray(obj->X.pos.p,3);
@@ -545,7 +545,7 @@ void RobotManipulationSimulator::dropObject(uint manipulator_id) {
 
 void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
   uint id_grabbed = getInhand();
-  if (UINT_MAX == id_grabbed)
+  if (TL::UINT_NIL == id_grabbed)
     return;
   dropObjectAbove(id_grabbed, getTableID(), message);
   relaxPosition(message);
@@ -892,7 +892,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
   uint inhand_id = getInhand();
   ors::Shape* s = NULL;
   // simplification: set off contacts for inhand-object
-  if (inhand_id != UINT_MAX) {
+  if (inhand_id != TL::UINT_NIL) {
     s = C->getBodyByName(convertObjectID2name(inhand_id))->shapes(0);
     s->cont = false;
   }
@@ -1467,7 +1467,7 @@ bool RobotManipulationSimulator::isUpright(uint id) {
 
 uint RobotManipulationSimulator::getInhand(uint man_id){
   ors::Joint* e;
-  if(!C->bodies(man_id)->outLinks.N) return UINT_MAX;
+  if(!C->bodies(man_id)->outLinks.N) return TL::UINT_NIL;
   e=C->bodies(man_id)->outLinks(0);
   return e->to->index;
 }
@@ -1667,7 +1667,7 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
       return balls(i);
          }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 
@@ -1768,6 +1768,7 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 
 
 void RobotManipulationSimulator::takeFoto(const char* foto_file) {
+  NIY;
 //   gl->saveEPS(foto_file);
 
 //   byteA img;
@@ -1780,14 +1781,14 @@ void RobotManipulationSimulator::takeFoto(const char* foto_file) {
 //   out_file << img << endl;
   
 //   byteA image(gl->height(), gl->width(), 4);
-  byteA image(gl->height(), gl->width());
-  glGrabImage(image);
+//   byteA image(gl->height(), gl->width());
+//   glGrabImage(image);
 //   PRINT(image(100,200,3));
 //   PRINT(image(100,20,3));
-  PRINT(image(100,200));
-  PRINT(image(100,20));
-  ofstream out_file(foto_file);
-  out_file << image << endl;
+//   PRINT(image(100,200));
+//   PRINT(image(100,20));
+//   ofstream out_file(foto_file);
+//   out_file << image << endl;
   
   
 #if 0

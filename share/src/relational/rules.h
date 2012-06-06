@@ -59,7 +59,7 @@ struct Rule {
   void getSymbols(SymL& symbols) const;
   void getArguments(uintA& args) const;
   void getDeicticRefs(uintA& drefs) const;
-  void getDeicticRefs(uintA& drefs_pos, uintA& drefs_neg) const;
+  void getDeicticRefs(uintA& drefs_pos, uintA& drefs_neg, uintA& drefs_nonBinary) const;
   void getDeicticRefsContains(boolA& containsDR) const;  // calcs which context literals contain deictic refs
   void getAbsentLiterals(LitL& literals, bool positiveOnly = false) const;
   bool usesAtom(Literal* lit) const;
@@ -68,6 +68,9 @@ struct Rule {
   void cleanup();  // order context and outcomes, clean-up DRs
   void copyBody(const Rule& other);
   void sanityCheck() const;
+
+  ///Checks whether symbol s with the argument args is specified in the outcome
+  bool existsInOutcome(Symbol *s, uintA args);
   
   static Rule* read(ifstream& in);
   

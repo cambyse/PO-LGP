@@ -144,14 +144,14 @@ void Rule::getArguments(uintA& args) const {
 
 
 void Rule::getDeicticRefs(uintA& drefs) const {
-  uintA drefs_pos, drefs_neg;
-  getDeicticRefs(drefs_pos, drefs_neg);
+  uintA drefs_pos, drefs_neg, drefs_nonBinary;
+  getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
   drefs.clear();
   drefs.append(drefs_pos);  drefs.append(drefs_neg);
 }
 
 
-void Rule::getDeicticRefs(uintA& drefs_pos, uintA& drefs_neg) const {
+void Rule::getDeicticRefs(uintA& drefs_pos, uintA& drefs_neg, uintA& drefs_nonBinary) const {
   CHECK(Literal::negativeBinaryLiteralsLast(context), "negative literals should come last");
   drefs_pos.clear();  drefs_neg.clear();
   uint i, k;
@@ -159,10 +159,17 @@ void Rule::getDeicticRefs(uintA& drefs_pos, uintA& drefs_neg) const {
     FOR1D(context(i)->args, k) {
       uint arg = context(i)->args(k);
       if (action->args.findValue(arg) < 0) {
-        if (drefs_pos.findValue(arg)<0  &&  context(i)->isNegated())
-          drefs_neg.setAppend(arg);
-        else
-          drefs_pos.setAppend(arg);
+        if (context(i)->s->range_type == Symbol::binary) {
+          if (context(i)->isNegated() && drefs_pos.findValue(arg)<0  &&  drefs_nonBinary.findValue(arg)<0)
+            drefs_neg.setAppend(arg);
+          else
+            drefs_pos.setAppend(arg);
+        }
+        else {
+          //cont deictic references in non-binary as neg deictic for the moment
+          if (drefs_pos.findValue(arg)<0 && drefs_neg.findValue(arg))
+            drefs_nonBinary.setAppend(arg);
+        }
       }
     }
   }
@@ -253,7 +260,7 @@ void Rule::insertContext(Literal* literal) {
       uint pos = 0;
       // check deictic refs
       FOR1D(context, i) {
-        if (!context(i)->value)
+        if (context(i)->isNegated())
           break;
         if (numberSharedElements(context(i)->args, literal_deicticRefs) > 0) {
           pos = i+1;
@@ -264,7 +271,7 @@ void Rule::insertContext(Literal* literal) {
   }
   else {
     FOR1D(context, i) {
-      if (!context(i)->value)
+      if (context(i)->isNegated())
         break;
     }
     uint firstNeg = i;
@@ -354,9 +361,9 @@ void Rule::sanityCheck() const {
     }
   }
   // (5) check no negated free deictic references
-  uintA drefs_pos, drefs_neg;
-  getDeicticRefs(drefs_pos, drefs_neg);
-  if (drefs_neg.N > 0) {
+  uintA drefs_pos, drefs_neg, drefs_nonBinary;
+  getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+  if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
     cout<<endl<<endl<<endl;
     cout<<"FAILED SANITY CHECK  -  Negated free deictic references:   "<<drefs_neg<<endl;
     cout<<"RULE:  "<<endl<<*this;
@@ -364,6 +371,19 @@ void Rule::sanityCheck() const {
     cerr<<"Remove this sanity check if you want to allow for negated free deictic references."<<endl;
     HALT("FAILED SANITY CHECK  -  Negated free deictic references:   "<<drefs_neg);
   }
+}
+
+
+bool Rule::existsInOutcome(Symbol *s, uintA args) {
+  uint i, j;
+  FOR1D(outcomes, i) {
+    FOR1D(outcomes(i), j) {
+    if (outcomes(i)(j)->s == s && outcomes(i)(j)->args == args)
+      return true;
+    }
+  }
+
+  return false;
 }
 
 
@@ -894,11 +914,11 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
   
   FOR1D_(rules_abstract, r) {
     Rule* r_abs = rules_abstract.elem(r);
-    uintA args, drefs_pos, drefs_neg;
+    uintA args, drefs_pos, drefs_neg, drefs_nonBinary;
     r_abs->getArguments(args);
     boolA inNegatedLiteralsOnly;
-    r_abs->getDeicticRefs(drefs_pos, drefs_neg);
-    if (drefs_neg.N >= 0) {HALT("negated free DRs are not allowed");}
+    r_abs->getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+    if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {HALT("negated or non-Binary free DRs are not allowed");}
     setMinus(args, drefs_pos);
     if (DEBUG>0) {
       cout<<endl<<"******* New abstract rule:"<<endl; r_abs->write(cout);
@@ -1096,12 +1116,12 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
   // ABSTRACT RULES
   FOR1D_(rules_abstract, r) {
     Rule* r_abs = rules_abstract.elem(r);
-    uintA args, drefs_pos, drefs_neg;
+    uintA args, drefs_pos, drefs_neg, drefs_nonBinary;
     r_abs->getArguments(args);
     boolA inNegatedLiteralsOnly;
-    r_abs->getDeicticRefs(drefs_pos, drefs_neg);
-    if (drefs_neg.N > 0) {
-      cerr<<endl<<endl<<endl<<"Bad abstract rule:"<<endl;  r_abs->write(cerr);  HALT("disallow negated free DRs!");
+    r_abs->getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+    if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
+      cerr<<endl<<endl<<endl<<"Bad abstract rule:"<<endl;  r_abs->write(cerr);  HALT("disallow negated or non-Binary free DRs!");
     }
     setMinus(args, drefs_pos);
     

@@ -129,14 +129,17 @@ void reason::calcSuccessorState(SymbolicState& suc, const SymbolicState& pre, co
   if (DEBUG>0) cout<<"calcSuccessorState [START]"<<endl;
   if (DEBUG>0) {cout<<"pre (N="<<pre.lits.N<<"): "<<pre<<endl<<"Outcome: "<<outcome<<endl;}
   uint i, k;
-	// keep non-negated literals from predecessor
+	// keep literals from predecessor that are not specified in outcome
   FOR1D(pre.lits, i) {
     if (pre.lits(i)->s->symbol_type != Symbol::primitive) continue;
     FOR1D(outcome, k) {
-      if (TL::isZero(outcome(k)->value)
-          && outcome(k)->s == pre.lits(i)->s
-          && outcome(k)->args == pre.lits(i)->args)
+      if (outcome(k)->s == pre.lits(i)->s
+      && outcome(k)->args == pre.lits(i)->args) {
+        if (outcome(k)->s->range_type != Symbol::binary && outcome(k)->comparison_type == Literal::comparison_offset) {    //apply offset
+          suc.lits.append(Literal::get(pre.lits(i)->s, pre.lits(i)->args, pre.lits(i)->value+outcome(k)->value));
+        }
         break;
+      }
     }
     if (k==outcome.N) { // add if not found
       suc.lits.append(pre.lits(i));
@@ -146,15 +149,14 @@ void reason::calcSuccessorState(SymbolicState& suc, const SymbolicState& pre, co
       if (DEBUG>1) {cout<<*pre.lits(i)<<" --> DEL"<<endl;}
     }
   }
-	// add positive literals from outcome
+
+	// add outcome literals
   FOR1D(outcome, i) {
-    if (outcome(i)->value > 0) {
-      if (suc.lits.findValue(outcome(i)) < 0) {
-        suc.lits.append(outcome(i));
-        if (DEBUG>1) {cout<<*outcome(i)<<" --> ADD"<<endl;}
-      }
-    }
+    if (outcome(i)->s->range_type != Symbol::binary && outcome(i)->comparison_type == Literal::comparison_offset) continue;
+    if (outcome(i)->s->range_type == Symbol::binary && outcome(i)->value == 0) continue;  //do not add negated binary symbols, they are implicitly negative
+    suc.lits.setAppend(outcome(i));
   }
+
   Literal::sort(suc.lits);
   reason::derive(&suc);
   if (DEBUG>0) {cout<<"suc (N="<<suc.lits.N<<"):  "<<suc<<endl;}
@@ -623,7 +625,7 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
   uint noise_predictions = 0;
   FOR1D(experiences, i) {
     if (DEBUG>1) {cout<<"+++++ Ex "<<i<<" +++++"<<endl;}
-    if (DEBUG>1) {cout<<"Ex-ADD: "<<experiences(i)->add<<endl;  cout<<"Ex-DEL: "<<experiences(i)->del<<endl;}
+    if (DEBUG>1) {cout<<"Ex-Changed: "<<experiences(i)->changed<<endl;}
     RuleSet coveringGroundRules;
     calc_coveringRules_groundAction(coveringGroundRules, rules, experiences(i)->pre, experiences(i)->action);
     CHECK(coveringGroundRules.num() > 0, "at least default rule should cover");

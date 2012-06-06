@@ -55,7 +55,7 @@
 
 
 
-\mytitle{libPRADA -- Version 1.0\\Learning and Planning with Probabilistic
+\mytitle{libPRADA -- Version 1.1\\Learning and Planning with Probabilistic
 Relational Rules}
 \myauthor{Tobias Lang \\\texttt{http://userpage.fu-berlin.de/tlang/prada/}}
 
@@ -433,10 +433,10 @@ learner's favorite triplet $(s,a,s')$:
 \begin{lstlisting}
 SymbolicState pre, post;
 Literal* action;
-MT::Array< Literal* > del, add;
+MT::Array< Literal* > changed;
 uintA changedConstants;
 \end{lstlisting}
-\code{del}, \code{add} and \code{changedConstants} are calculated
+\code{changed} and \code{changedConstants} are calculated
 automatically by the constructor. A list of state transitions can be read
 using the following method:
 \begin{lstlisting}
@@ -1085,6 +1085,17 @@ which exploit redundancies in the ground DBNs. And many, many more!
 
 Good luck with your research!
 
+
+
+
+% ******************************************************************
+% ******************************************************************
+% ******************************************************************
+
+\section{Acknowledgements}
+
+Thanks to Andreas Henne who has provided code for learning and
+reasoning with non-binary symbols.
 
 
 
