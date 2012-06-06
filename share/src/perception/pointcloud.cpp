@@ -77,7 +77,7 @@ struct sObjectFitterWorker {
     pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
     seg.segment (*inliers_cylinder, *coefficients_cylinder);
 
-    int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", p, 500);
+    int minCloudSize = birosInfo.getParameter<int>("minCloudSize", p, 500);
     if (inliers_cylinder->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -108,7 +108,7 @@ struct sObjectFitterWorker {
     pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
     seg.segment (*inliers_sphere, *coefficients_sphere);
-    int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", p, 500);
+    int minCloudSize = birosInfo.getParameter<int>("minCloudSize", p, 500);
     if (inliers_sphere->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -169,7 +169,7 @@ void ObjectClusterer::step() {
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance(0.01);
-  int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", this, 500);
+  int minCloudSize = birosInfo.getParameter<int>("minCloudSize", this, 500);
   ec.setMinClusterSize(minCloudSize);
   ec.setMaxClusterSize(25000);
   ec.setSearchMethod(tree);
@@ -268,7 +268,7 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
   }
   //if rest points are enough create new job
  
-  int minCloudSize = birosInfo.getParameter<int>("maxCloudSize", this, 500);
+  int minCloudSize = birosInfo.getParameter<int>("minCloudSize", this, 500);
   if (cloud->size() - inliers->indices.size() > minCloudSize) {
     s->createNewJob(cloud, inliers);
   }
