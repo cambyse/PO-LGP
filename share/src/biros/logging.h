@@ -13,13 +13,13 @@
 
 #define DEBUG_VAR(name, var) \
   if(Logger<_logger_with_name_ ## name>::level >= DEBUG){\
-  std::stringstream _intern_logging_msg; \
-  _intern_logging_msg << #var << " = " << var;\
-  _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name,"DEBUG", DEBUG,  __FILE__, __LINE__, _intern_logging_msg.str().c_str());\
-}
+    std::stringstream _intern_logging_msg; \
+    _intern_logging_msg << #var << " = " << var;\
+    _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name,"DEBUG", DEBUG, __FILE__, __LINE__, _intern_logging_msg.str().c_str());\
+  }
 
 #define DEBUG(name, msg) \
-  _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name, "DEBUG", DEBUG,  __FILE__, __LINE__, msg);
+  _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name, "DEBUG", DEBUG, __FILE__, __LINE__, msg);
 
 #define INFO(name, msg) \
   _if<Logger<_logger_with_name_ ## name>::level >= INFO>::result.print(#name, "INFO ", INFO, __FILE__, __LINE__, msg);
@@ -38,9 +38,7 @@ enum LogLevel {
 };
 
 template<class T>
-struct Logger {
-  static const LogLevel level = ERROR;
-};
+struct Logger;
 
 struct OutputReal {
   inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) { (level != ERROR ? std::cout : std::cerr ) << "[@" << file << ":" << line << " | " << name << " | " << level_str << " | "  << msg << " ]" <<  std::endl; };
