@@ -2,12 +2,15 @@
 #define _MASTERWORKER_H_
 
 #include <biros/biros.h>
+#include <biros/logging.h>
 #include <MT/array.h>
 #include <queue>
 
 template<class Job, class Result> class sMaster;
 template<class Job, class Result> class WorkerFactory;
 template<class Result> class Integrator;
+
+SET_LOG(masterworker, WARN);
 
 template<class T> class Pool : public Variable {
   public:
@@ -38,11 +41,11 @@ template<class Job, class Result> class Master  {
 
     //override if you want to use restart(Process*) instead of
     //restart(std::queue<Job>&, Process*)
-    virtual int hasNextJob() { MT_MSG("Don't use restart() without overriding hasNextJob()!"); return 0; }
+    virtual int hasNextJob() { WARN(masterworker, "Don't use restart() without overriding hasNextJob()!"); return 0; }
     virtual Job createJob() { } ;
 
     //override if you want to see if all jobs are done
-    virtual int hasWorkingJob() { MT_MSG("hasWorkingJob() is not implemted. Override it!"); return 0; }
+    virtual int hasWorkingJob() { WARN(masterworker, "hasWorkingJob() is not implemted. Override it!"); return 0; }
 
     virtual void pause();
     virtual void restart(Process* p);
