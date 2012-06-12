@@ -1,11 +1,27 @@
 #ifndef _TESTER_H_
 #define _TESTER_H_
 
+#include <biros/biros.h>
+#include <biros/logging.h>
 #include <MT/array.h>
 #include <iostream>
 
+SET_LOG(classify, DEBUG)
+
 class ClassifyMaster;
 class ClassificatorV;
+class ClassifyData : public Variable {
+  public:
+    FIELD(int, numOfResults);
+    FIELD(int, numOfJobs);
+    FIELD(int, numOfJobsToStart);
+    FIELD(int, numOfWorkingJobs);
+    FIELD(double, sumOfCorrect);
+    FIELD(double, result);
+    ClassifyData() : Variable("Classify Data") {
+      reg_numOfResults(); reg_numOfJobs(); reg_numOfWorkingJobs(); reg_sumOfCorrect(); reg_result(); 
+    }
+};
 template<class S> class Sampler;
 class Tester {
   public:
