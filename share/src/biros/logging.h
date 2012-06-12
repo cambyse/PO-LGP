@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <ctime>
 
 #define SET_LOG(name, logLevel) \
   struct _logger_with_name_ ## name {}; \
@@ -41,7 +42,20 @@ template<class T>
 struct Logger;
 
 struct OutputReal {
-  inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) { (level != ERROR ? std::cout : std::cerr ) << "[@" << file << ":" << line << " | " << name << " | " << level_str << " | "  << msg << " ]" <<  std::endl; };
+  inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) {
+    struct tm tm;
+    char current_time[32];
+    char current_date[32];
+    time_t tt = time(NULL);
+    tm = *localtime(&tt);
+    strftime(current_time, 31, "%H:%M:%S", &tm);
+    strftime(current_date, 31, "%Y-%m-%d", &tm);
+#ifndef LOG_STRING
+    (level != ERROR ? std::cout : std::cerr ) << "[@" << file << ":" << line << " | " << name << " | " << current_date << " " << current_time << " | " << level_str << " | "  << msg << " ]" <<  std::endl; };
+#else
+    LOG_STRING;
+    };
+#endif
 };
 struct OutputEmpty {
   inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) { };
