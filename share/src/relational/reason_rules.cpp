@@ -625,7 +625,7 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
   uint noise_predictions = 0;
   FOR1D(experiences, i) {
     if (DEBUG>1) {cout<<"+++++ Ex "<<i<<" +++++"<<endl;}
-    if (DEBUG>1) {cout<<"Ex-Changed: "<<experiences(i)->changed<<endl;}
+    if (DEBUG>1) {cout<<"Ex-Changed: "<<experiences(i)->changes<<endl;}
     RuleSet coveringGroundRules;
     calc_coveringRules_groundAction(coveringGroundRules, rules, experiences(i)->pre, experiences(i)->action);
     CHECK(coveringGroundRules.num() > 0, "at least default rule should cover");

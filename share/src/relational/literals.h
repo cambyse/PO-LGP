@@ -146,7 +146,7 @@ struct StateTransition {
   // Essential data-fields
   SymbolicState pre, post;
   Literal* action;
-  MT::Array< Literal* > changed;
+  MT::Array< Literal* > changes;
   uintA changedConstants;
   
   // -----------------------------------

@@ -1,0 +1,12 @@
+-------------------------------
+-- SWIFT Example Application --
+-------------------------------
+
+The sample application demonstrates the ease with which an application can use
+the SWIFT system.  The provided example application first creates a SWIFT_Scene
+object, then adds two randomly tesselated spheres to it.  The objects then
+orbit one another for a given number of steps at a given velocity.  Also
+demonstrated is the setting of transformations and querying.
+
+To find out how to run the example program type: example -h
+

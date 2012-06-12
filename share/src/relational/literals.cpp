@@ -980,7 +980,7 @@ StateTransition::~StateTransition() {}
 void StateTransition::calcChanges() {
   // only look at p_prim
   changedConstants.clear();
-  changed.clear();
+  changes.clear();
   uint i,j;
 
   //changed values from pre to post
@@ -989,12 +989,12 @@ void StateTransition::calcChanges() {
     if (post.lits.findValue(pre.lits(i)) < 0) {     //Literal has changed
       changedConstants.setAppend(pre.lits(i)->args);
       if (pre.lits(i)->s->range_type == Symbol::binary)
-        changed.append(pre.lits(i)->getNegated());      //predicate is negated in post state
+        changes.append(pre.lits(i)->getNegated());      //predicate is negated in post state
       else {    //search for symbol with same arguments
         bool found = false;
         FOR1D(post.lits, j) {
           if (post.lits(j)->s == pre.lits(i)->s && post.lits(j)->args == pre.lits(i)->args) {
-              changed.append(post.lits(j));    
+              changes.append(post.lits(j));    
               found = true;
               break;
           }
@@ -1010,7 +1010,7 @@ void StateTransition::calcChanges() {
   FOR1D(post.lits, i) {
     if (post.lits(i)->s->symbol_type != Symbol::primitive || post.lits(i)->s->range_type != Symbol::binary) continue;
     if (pre.lits.findValue(post.lits(i)) < 0) {
-      changed.append(post.lits(i));
+      changes.append(post.lits(i));
       changedConstants.setAppend(post.lits(i)->args);
     }
   }
@@ -1025,14 +1025,14 @@ void StateTransition::write(ostream& os, bool with_details) const {
     os << "POST:   ";
     this->post.write(os, true);  os<<endl;
     os<<"Changed constants: "<<changedConstants<<endl;
-    os << "Diff: "<< changed.N << endl;
+    os << "Diff: "<< changes.N << endl;
   }
-  os<<"Changed literals:    " << changed << endl;
+  os<<"Changed literals:    " << changes << endl;
 }
 
 
 bool StateTransition::noChange() {
-  return changedConstants.N == 0  && changed.N == 0;
+  return changedConstants.N == 0  && changes.N == 0;
 }
 
 

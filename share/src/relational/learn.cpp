@@ -1371,11 +1371,11 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
     }
       
     // insert changed literals
-    FOR1D(coveredExperiences(i)->changed, k) {
-      if (coveredExperiences(i)->changed(k)->s->symbol_type == Symbol::primitive) {
-        Literal *litInv = invSub.apply(coveredExperiences(i)->changed(k));
+    FOR1D(coveredExperiences(i)->changes, k) {
+      if (coveredExperiences(i)->changes(k)->s->symbol_type == Symbol::primitive) {
+        Literal *litInv = invSub.apply(coveredExperiences(i)->changes(k));
 
-        std::multimap<Symbol*, Literal*>::iterator find = functionValueSubs.find(coveredExperiences(i)->changed(k)->s);
+        std::multimap<Symbol*, Literal*>::iterator find = functionValueSubs.find(coveredExperiences(i)->changes(k)->s);
         for (; find != functionValueSubs.end(); find++) {
           if (find->second->args == litInv->args) {
             //create Literal X + offset
