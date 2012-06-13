@@ -1,17 +1,33 @@
 #include <perception/pointcloud.h>
 #include <JK/utils/util.h>
+#include <JK/particle_filter/particle_filter.h>
+#include <MT/gauss.h>
 
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include <queue>
 
+Gaussian g;
+double gaussian_weight(const arr& particle, const arr &measurement) {
+   g.c = measurement;
+   g.C = eye(measurement.N) *.00001;
+   return g.evaluate(particle);
+}
+
+void gaussian_control(arr &after, const arr &before) {
+  after = before + 0.0005 * randn(before.d0, 1);  
+}
+
 int main(int argc, char **argv) {
   MT::initCmdLine(argc,argv);
+
+  srand(time(NULL));
 
   // Variables
   PointCloudVar kinectData3d("KinectData3D");
   PointCloudSet objectClusters("ObjectClusters");
   ObjectSet objects("Objects");
+  ObjectSet filteredObjects("filteredObjects");
 
   // Processes
   KinectInterface kinect("Kinect");
@@ -20,6 +36,8 @@ int main(int argc, char **argv) {
 
   ObjectFitterWorkerFactory factory;
   ObjectFitter fitter(&factory, &integrator, 10); //no process but a master!
+
+  ObjectFilter filter("Object Filter");
 
   kinect.threadLoop();
   clusterer.threadLoop();
@@ -44,8 +62,9 @@ int main(int argc, char **argv) {
         pcl::visualization::PointCloudColorHandlerRandom<PointT>(tmp), s.str());
   }
 
+  filter.threadLoop();
   for(int t = 0; t < 1000; ++t) {
-    if(t % 30 == 0 ) {
+    if(t % 5 == 0 ) {
       objectClusters.readAccess(NULL);
       plist = objectClusters.point_clouds;
       std::queue<FittingJob> jobs;
@@ -57,19 +76,18 @@ int main(int argc, char **argv) {
       }
       std::cout << plist.N << std::endl;
       fitter.pause();
+      viewer->removeAllShapes();
+      filteredObjects.readAccess(NULL);
+      for(int i = 0; i < filteredObjects.objects.N; ++i) {
+        std::stringstream name;
+        name << "shape_" << i;
+        viewer->addCylinder(*filteredObjects.objects(i), name.str());
+      }
+      filteredObjects.deAccess(NULL);
       fitter.restart(jobs, NULL);
       objectClusters.deAccess(NULL);
     }
     MT::wait(.1);
-    viewer->removeAllShapes();
-    for(int i = 0; i < objects.get_objects(NULL).N; ++i) {
-      std::stringstream name;
-      name << "shape_" << i;
-      if(objects.get_objects(NULL)(i)->values.size() == 7)
-        viewer->addCylinder(*objects.get_objects(NULL)(i), name.str());
-      else if(objects.get_objects(NULL)(i)->values.size() == 4)
-        viewer->addSphere(*objects.get_objects(NULL)(i), name.str());
-    }
     viewer->updatePointCloud(kinectData3d.get_point_cloud(NULL), "cluster");
     viewer->spinOnce();
   }
