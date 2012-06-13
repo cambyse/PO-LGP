@@ -4,10 +4,9 @@
 
 BASE = ../../share
 
-LIBS += -lrelational -lmt
+LIBS += -lrelational -lMT -lbiros -ljk
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 CUDA = 0
-OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
-OBJS := $(OBJS:%.cpp=%.o)
+OBJS  = main.o 
 
 include $(BASE)/make-generic
