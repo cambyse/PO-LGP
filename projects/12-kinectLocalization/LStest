@@ -1,0 +1,60 @@
+#include <unistd.h>
+#include <MT/array.h>
+#include <MT/util.h>
+
+// All homogenous!!
+MT::Array<double> Y, X, A, kinectPt, orsPt;
+
+void calcTransformationMatrix() {
+  arr Xt, At;
+  transpose(Xt, X);
+  At = inverse(Xt * X) * Xt * Y;
+  transpose(A, At);
+}
+
+int main(int argn, char **argv) {
+
+  //X.resize(0,4);
+  //Y.resize(0,4);
+  //orsPt = ARR( 1, 0 , 0 , 1);
+  //std::cout << "Corresponding ors point is " << orsPt << std::endl;
+  //Y.append(orsPt);
+  kinectPt = ARR(1.,0.,0.,1.);
+  X.append(kinectPt);
+  kinectPt = ARR(0.,1.,0.,1.);
+  X.append(kinectPt);
+  kinectPt = ARR(0.,0.,1.,1.);
+  X.append(kinectPt);
+  kinectPt = ARR(2.,0.,0.,1.);
+  X.append(kinectPt);
+  kinectPt = ARR(0.,2.,0.,1.);
+  X.append(kinectPt);
+  kinectPt = ARR(0.,0.,2.,1);
+  X.append(kinectPt);
+
+  orsPt = ARR(0.,-.1,.1,1);
+  Y.append(orsPt);
+  orsPt = ARR(.1,0.,.1,1);
+  Y.append(orsPt);
+  orsPt = ARR(0.,0.,.2,1);
+  Y.append(orsPt);
+  orsPt = ARR(0.,-.2,.1,1);
+  Y.append(orsPt);
+  orsPt = ARR(.2,0.,.1,1);
+  Y.append(orsPt);
+  orsPt = ARR(0.,0.,.3,1);
+  Y.append(orsPt);
+
+  Y.resize(Y.N/4, 4);
+  X.resize(X.N/4, 4);
+  std::cout << "Y dim = " << Y.nd << "\t X dim = " << X.nd << std::endl;
+  std::cout << X << std::endl;
+  std::cout << Y << std::endl;
+  calcTransformationMatrix();
+  std::cout << A << std::endl;
+  arr testt, test = ARR(1,1,1,1);
+  transpose(testt, test);
+  arr result = A * test;
+  std::cout << result << std::endl;
+  return 0;
+}
