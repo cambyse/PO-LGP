@@ -1,0 +1,25 @@
+diff -rupN tmp//Include/extensions/PxDefaultAllocator.h PhysX//Include/extensions/PxDefaultAllocator.h
+--- tmp//Include/extensions/PxDefaultAllocator.h	2012-03-16 16:30:48.000000000 +0100
++++ PhysX//Include/extensions/PxDefaultAllocator.h	2012-06-14 12:30:40.632300432 +0200
+@@ -67,7 +67,7 @@ public:
+ 	}
+ };
+ 
+-#elif defined (ANDROID)
++#elif 1//defined (ANDROID)
+ 
+ #include <malloc.h>
+ 	class PxDefaultAllocator : public PxAllocatorCallback
+diff -rupN tmp//Include/foundation/PxPreprocessor.h PhysX//Include/foundation/PxPreprocessor.h
+--- tmp//Include/foundation/PxPreprocessor.h	2012-03-16 16:30:48.000000000 +0100
++++ PhysX//Include/foundation/PxPreprocessor.h	2012-06-14 12:31:46.320302312 +0200
+@@ -327,7 +327,7 @@ General defines
+ 
+ struct PxPackValidation { char _; long long a; };
+ 
+-#if !defined(PX_APPLE_IOS)
++#if 0 //!defined(PX_APPLE_IOS)
+ PX_COMPILE_TIME_ASSERT(PX_OFFSET_OF(PxPackValidation, a) == 8);
+ #endif
+ 
+Binary files tmp//.zip and PhysX//.zip differ

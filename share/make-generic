@@ -428,16 +428,9 @@ LIBS += -lpthread -lX11
 endif
 
 ifeq ($(PHYSX),1)
-PHYS = $(HOME)/tmp/Physix32
-PHY = $(HOME)/tmp/Physix32/Include
-LPATH := $(PHYS)/Lib/linux32/:$(LPATH)
-CXXFLAGS += -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX  \
--I$(PHY) \
--I$(PHY)/extensions \
--I$(PHY)/foundation \
--I/opt/PhysXSDK/pxtask/include \
--I$(PHY)/deprecated
-
+CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/PhysX/Include:$(MLR_EXLIB_PATH)/PhysX/Include/extensions:$(MLR_EXLIB_PATH)/PhysX/Include/foundation:$(MLR_EXLIB_PATH)/PhysX/Include/deprecated
+LPATH := $(MLR_EXLIB_PATH)/PhysX/Lib/linux32/:$(LPATH)
 LIBS += -Wl,--start-group -lpthread -lrt\
 -lPhysX3CommonCHECKED \
 -lPvdRuntimeCHECKED \
@@ -453,8 +446,7 @@ LIBS += -Wl,--start-group -lpthread -lrt\
 -lRepX3CHECKED \
 -lRepXUpgrader3CHECKED \
 -lPhysXProfileSDKCHECKED \
--lPxTaskCHECKED -Wl,--end-group \
--lm
+-lPxTaskCHECKED -Wl,--end-group
 endif
 
 ################################################################################
