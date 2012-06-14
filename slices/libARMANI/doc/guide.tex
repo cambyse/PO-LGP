@@ -1,0 +1,327 @@
+\documentclass[10pt,twoside,twocolumn,fleqn]{article}
+
+\input{macro}
+\input{macros_tobias}
+
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+% \usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{palatino}
+% \usepackage{mlapa}
+% \usepackage{hyperref}
+
+
+% \renewcommand{\baselinestretch}{1.1}
+\geometry{a4paper,headsep=7mm,hdivide={15mm,*,15mm},vdivide={20mm,*,15mm}}
+
+
+
+%headsep=0mm,
+\allowdisplaybreaks
+
+\fancyhead[OL,ER]{\thetitle \textit{Tobias Lang and Marc Toussaint}---\today}
+\fancyhead[C]{}
+\fancyhead[OR,EL]{\thepage}
+\fancyfoot{}
+\pagestyle{fancy}
+
+
+
+\definecolor{codecol}{rgb}{.9,.9,.9}
+\usepackage{listings}
+\lstset{ %
+    language=C++,                % choose the language of the code
+    basicstyle=\sf\footnotesize,       % the size of the fonts that are used
+% for the code
+    frame=none,                   % adds a frame around the code
+    tabsize=4,                      % sets default tabsize to 2 spaces
+    captionpos=b,                   % sets the caption-position to bottom
+    texcl=true,
+    mathescape=true,
+    backgroundcolor=\color{codecol},
+    escapechar=\%,
+    columns=flexible,
+    xleftmargin=1ex,
+%    numbers=left, numberstyle=\footnotesize, stepnumber=1, numbersep=3ex
+}
+
+
+
+
+\mytitle{libARMANI -- Version 1.0\\Autonomous Robot Manipulation Simulator}
+\myauthor{Tobias Lang and Marc Toussaint \\
+\texttt{http://userpage.fu-berlin.de/tlang/armani/}}
+
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\emph{When using this library, please cite \citet{lang-toussaint-10jair}.}
+\end{center}
+
+\tableofcontents
+
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+\section{Introduction}
+
+libARMANI is a C++-simulator for \textbf{Autonomous Robot MANIpulation
+of objects}. It simulates a robot which manipulates cubes, balls and
+boxes of different sizes scattered on a table. This provides a
+physically realistic extension of one of the most popular scenarios in
+Artificial Intelligence, namely of the good, old ``blocks world''.
+
+libARMANI has been developed to serve as an easy-to-use test-bed for
+\textbf{model-based relational reinforcement learning in stochastic
+domains} \citep{lang-toussaint-10jair}: the actions of the simulated
+robot are affected by noise; relational representations are appropriate
+to learn and reason with the simulator objects.
+
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+\section{Installation}
+
+\subsection{Required Software}
+
+\begin{itemize}
+  \item Freeglut (tested with v2.4.0): probably already installed on your
+system (Debian/Ubuntu: freeglut3-dev)
+  \item QHull (tested with v2003.1): probably already installed on your system
+(Debian/Ubuntu: libqhull-dev)
+  \item ODE (tested with v0.11): probably needs to be installed by hand (make
+sure to configure ODE with \texttt{--enable-double-precision}, which isn't
+the default)
+  \item SWIFT++ (tested with v1.2): comes with libARMANI in directory
+\texttt{extern}
+  \item ANN (tested with v1.1.1): probably already installed on your system
+(Debian/Ubuntu: libann-dev)
+\end{itemize}
+
+
+
+
+\subsection{Compilation}
+
+First, please compile SWIFT++ in the directory \texttt{extern/}
+and ensure that the correct pathes are set for Freeglut,
+QHull, ODE and ANN in \texttt{make-generic}.
+
+Then, please type \code{make} in the root-directory
+\code{libARMANI/}. This should compile the library
+\code{lib/libARMANI.so} and the demos in \code{test/}. If you have
+problems getting this working, please contact me. If compilation
+succeeded, you can check out the demos in \code{test/}.
+
+You can clean everything via \texttt{libARMANI/make cleanAll}.
+
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+\section{ORS Configuration Files}
+
+Configuration files specify all objects and robot body parts used in the
+simulator: from the robot's individual fingers over the table to the
+manipulated balls. The configuration files reflect Marc Toussaint's
+graph-based representation Open Robot Simulator Toolkit (ORS). ORS is
+the backbone data representation of libARMANI. For more information,
+please take a look at \texttt{http://userpage.fu-berlin.de/}
+\texttt{mtoussai/source-code/}.
+
+Example configuration files are
+\texttt{test/relational\_armani\_basic/situation\_simple.ors} and
+\texttt{test/relational\_armani\_basic/situation\_box.ors}.
+
+The important part for your modifications is the list of manipulated
+objects at the end of the file. Please note that these object
+definitions need to stay at the end of the file.
+
+\subsection{Cubes and ball}
+
+How to specify cubes (blocks) and balls is best explained by means of an
+example:
+
+\begin{lstlisting}
+body o1 { X=<t(-0.3 -0.7 0.8)> type=1 mass=.1
+   size=[.03 .03 .03 .03] color=[0.4 0 .5] contact }
+\end{lstlisting}
+
+\texttt{o1} is the name of the object. Objects have to be named \texttt{oX}
+where \texttt{X} is a number in ascending order.
+
+\texttt{X=<t(-0.3 -0.7 0.8)>} specifies the position in (x/y/z)-coordinates.
+(To get an idea of the coordinate system, play with the parameters.)
+
+\texttt{type} specifies the type of the object which can either be a cube (0) or
+a ball (1).
+
+\texttt{size=[.03 .03 .03 .03]} specifies the size of the object. Use the
+following sizes for objects:
+\begin{itemize}
+  \item Big cube: [.06 .06 .06 .06]
+  \item Small cube: [.04 .04 .04 .04]
+  \item Big ball: [.045 .045 .045 .045]
+  \item Small ball: [.03 .03 .03 .03]
+\end{itemize}
+
+The mentioned requirements need to be met to be certain that all our
+implementations work correctly. In principle, you are not obliged to
+them, of course, in order to get the simulator run. But then you might
+need to modify some of our provided implemented methods.
+
+
+\subsection{Boxes}
+
+\textbf{Boxes} are more complicated to specify: they consist of
+combining an ORS-body with several ORS-shapes (the individual sides of
+the box). I recommend to simply look at the example file
+\texttt{test/relational\_armani\_basic/situation\_box.ors}.
+
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+\section{User's Guide}
+
+There are two important header files in \texttt{src/relational/}:
+\begin{itemize}
+\item \texttt{robotManipulationSimulator.h} declares the simulator. It
+provides methods (i) to query the current state of the simulator and
+(ii) to trigger actions of the simulated robot. The main actions are
+grabbing objects and dropping them above other objects.
+
+\item \texttt{robotManipulationInterface.h} provides a simple high-level
+interface between the simulator and symbolic relational representations.
+\end{itemize}
+
+
+
+\subsection{Simulator Core}
+
+At its heart, the simulator uses Marc Toussaint's graph-based
+representation Open Robot Simulator Toolkit (ORS) and approximate
+inference for control (AICO) \citep{toussaint:09-icml} to control the
+robot. For more information, please take a look at 
+\texttt{http://userpage.fu-berlin.de/}
+\texttt{mtoussai/source-code/}, in
+particular \texttt{libAICO}, where you'll find a guide explaining all
+this in detail.
+
+The simulator uses unsigned integer variables to identify objects.
+
+The behavior of the robot is defined in
+\texttt{robotManipulationSimulator}. For example, if we command the
+robot to grab an object it first puts the inhand object on the table; if
+it grabs an object below some other object, it will fail to grab this
+object with 40\% probability. You may choose to change all these
+behaviors according to your own ideas.
+
+The concept of \textbf{noise} may be of particular interest for you to
+implement your own ideas of stochastic worlds. Of course, the
+simulator by itself is unnoisy and you have to specify explicitly
+sources of noise. For example, we chose as a major source of noise the
+calculation of a target location in a puton action (take a look at the
+method \texttt{calcTargetPositionForDrop}). We deliberately add Gaussian
+noise to the target location. You may want to define differents sources
+and/or degrees of noise.
+
+
+
+
+\subsection{Symbolic Relational Representations}
+\label{programmerGuide:logic}
+
+libARMANI provides the interface \texttt{robotManipulationInterface.h}
+to symbolic relational representations. This interface uses relational
+representations as implemented in \texttt{libPRADA}, a library for
+model-based relational reinforcement learning. You can download this
+library together with a guide from
+\texttt{http://userpage.fu-berlin.de/tlang/prada/}.
+
+
+
+\subsection{Demos}
+
+The following demos are provided in \texttt{test/}:
+
+\begin{itemize}
+\item \texttt{relational\_armani\_basic/}: \\
+This example program shows you how to directly control the simulator via
+\texttt{robotManipulationSimulator.h}. Objects are managed by means
+of their ids (which are unsigned integers), which are used to retrieve
+state information and to trigger actions.
+
+\item \texttt{relational\_armani\_symbolic/}: \\
+This example shows you how to use an abstract relational
+representation to control the robot via the interface in
+\texttt{robotManipulationInterface.h}. This uses the extensive logic
+machinery (see the various files in \texttt{src/relational/}) of our
+experiments in \cite{lang-toussaint-10jair} which is implemented in
+libPRADA. It provides many convenience functions (writing to files,
+specifying symbols etc.). See Sec.~\ref{programmerGuide:logic}.
+\end{itemize}
+
+
+
+
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+\section{Trouble Shooting}
+
+\subsection{ODE}
+
+Make sure to configure ODE with \texttt{--enable-double-precision}, which isn't
+the default.
+
+In \texttt{ors\_ode.cpp} and \texttt{robotManipulationSimulator.cpp}, you
+might want to change the following includes
+
+\begin{lstlisting}
+#  include <ode/../internal/objects.h>
+#  include <ode/../internal/joints/joints.h>
+#  include <ode/../internal/collision_kernel.h>
+#  include <ode/../internal/collision_transform.h>
+\end{lstlisting}
+
+to:
+
+\begin{lstlisting}
+#  include <ode/../../ode/src/objects.h>
+#  include <ode/../../ode/src/joints/joints.h>
+#  include <ode/../../ode/src/collision_kernel.h>
+#  include <ode/../../ode/src/collision_transform.h>
+\end{lstlisting}
+
+You might also want to change the LinuxLibs ODE library specification
+appropriately to your needs.
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
+\end{document}
