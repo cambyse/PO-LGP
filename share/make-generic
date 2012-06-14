@@ -427,6 +427,35 @@ CXXFLAGS  += -DMT_PTHREAD
 LIBS += -lpthread -lX11
 endif
 
+ifeq ($(PHYSX),1)
+PHYS = $(HOME)/tmp/Physix32
+PHY = $(HOME)/tmp/Physix32/Include
+LPATH := $(PHYS)/Lib/linux32/:$(LPATH)
+CXXFLAGS += -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX  \
+-I$(PHY) \
+-I$(PHY)/extensions \
+-I$(PHY)/foundation \
+-I/opt/PhysXSDK/pxtask/include \
+-I$(PHY)/deprecated
+
+LIBS += -Wl,--start-group -lpthread -lrt\
+-lPhysX3CommonCHECKED \
+-lPvdRuntimeCHECKED \
+-lSimulationControllerCHECKED \
+-lSceneQueryCHECKED \
+-lLowLevelCHECKED \
+-lLowLevelClothCHECKED \
+-lPhysX3 \
+-lPhysX3VehicleCHECKED \
+-lPhysX3CookingCHECKED \
+-lPhysX3ExtensionsCHECKED \
+-lPhysX3CharacterKinematicCHECKED \
+-lRepX3CHECKED \
+-lRepXUpgrader3CHECKED \
+-lPhysXProfileSDKCHECKED \
+-lPxTaskCHECKED -Wl,--end-group \
+-lm
+endif
 
 ################################################################################
 #

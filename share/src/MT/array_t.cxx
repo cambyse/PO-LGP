@@ -646,15 +646,9 @@ template<class T> T& MT::Array<T>::rndElem() const {
   return elem(rnd(N));
 }
 
-/* scalar reference (legal iff N==1) */
-/*operator T&() const{
-  CHECK(N==1, "scalar reference (" <<N <<"!=1)");
-  return *p;
-  }*/
-
 //! scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
-  CHECK(nd==0 && N==1, "scalar range error (N=" <<N <<")");
+  CHECK(nd<=1 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 

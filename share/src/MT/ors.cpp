@@ -964,6 +964,7 @@ void Transformation::write(std::ostream& os) const {
 #else
   os <<pos.p[0] <<' ' <<pos.p[1] <<' ' <<pos.p[2] <<' '
      <<rot.p[0] <<' ' <<rot.p[1] <<' ' <<rot.p[2] <<' ' <<rot.p[3];
+  space=true;
 #endif
   if(!vel.isZero()) { if(space) os <<' ';  os <<"v" <<vel;  space=true; }
   if(!angvel.isZero()) { if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
