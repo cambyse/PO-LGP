@@ -10,6 +10,7 @@
 #include <PxMat33.h>
 //#include <PxMat33Legacy.h>
 #include <PxSimpleFactory.h>
+#include <PxTkStream.h>
 
 #include "ors_physx.h"
 #include "opengl.h"
@@ -17,10 +18,20 @@
 using namespace physx;
 
 static PxFoundation* mFoundation = NULL;
-static PxPhysics* gPhysicsSDK = NULL;
+static PxPhysics* mPhysics = NULL;
+static PxCooking* mCooking = NULL;
 static PxDefaultErrorCallback gDefaultErrorCallback;
 static PxDefaultAllocator gDefaultAllocatorCallback;
 static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterShader;
+
+void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose){
+  f.pos.set(pose.p.x, pose.p.y, pose.p.z);
+  f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+}
+
+PxTransform OrsTrans2PxTrans(const ors::Transformation& f){
+  return PxTransform(PxVec3(f.pos(0), f.pos(1), f.pos(2)), PxQuat(f.rot.p[1], f.rot.p[2], f.rot.p[3], f.rot.p[0]));
+}
 
 struct sPhysXInterface {
   PxScene* gScene;
@@ -55,18 +66,20 @@ void PhysXInterface::create() {
   CHECK(G,"");
   if(!mFoundation) {
     mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
-    gPhysicsSDK = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
-    if(!gPhysicsSDK)
-      HALT("Error creating PhysX3 device.");
+    mPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
+    PxCookingParams cookParams; cookParams.skinWidth = .001f;
+    mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *mFoundation, cookParams);
+    if(!mCooking) HALT("PxCreateCooking failed!");
+    if(!mPhysics) HALT("Error creating PhysX3 device.");
       
-    if(!PxInitExtensions(*gPhysicsSDK))
+    if(!PxInitExtensions(*mPhysics))
       HALT("PxInitExtensions failed!");
   }
   
-  //PxExtensionVisualDebugger::connect(gPhysicsSDK->getPvdConnectionManager(),"localhost",5425, 10000, true);
+  //PxExtensionVisualDebugger::connect(mPhysics->getPvdConnectionManager(),"localhost",5425, 10000, true);
   
   //-- Create the scene
-  PxSceneDesc sceneDesc(gPhysicsSDK->getTolerancesScale());
+  PxSceneDesc sceneDesc(mPhysics->getTolerancesScale());
   sceneDesc.gravity=PxVec3(0.f, 0.f, -9.8f);
   
   if(!sceneDesc.cpuDispatcher) {
@@ -78,7 +91,7 @@ void PhysXInterface::create() {
   if(!sceneDesc.filterShader)
     sceneDesc.filterShader  = gDefaultFilterShader;
     
-  s->gScene = gPhysicsSDK->createScene(sceneDesc);
+  s->gScene = mPhysics->createScene(sceneDesc);
   if(!s->gScene)
     cerr<<"createScene failed!"<<endl;
     
@@ -87,13 +100,13 @@ void PhysXInterface::create() {
   
   
   //-- Create objects
-  PxMaterial* mMaterial = gPhysicsSDK->createMaterial(0.5,0.5,0.5);
+  PxMaterial* mMaterial = mPhysics->createMaterial(0.5,0.5,0.5);
   
   //Create ground plane
   //PxReal d = 0.0f;
   PxTransform pose = PxTransform(PxVec3(0.f, 0.f, 0.f),PxQuat(-PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f)));
   
-  PxRigidStatic* plane = gPhysicsSDK->createRigidStatic(pose);
+  PxRigidStatic* plane = mPhysics->createRigidStatic(pose);
   CHECK(plane, "create plane failed!");
   
   PxShape* planeShape = plane->createShape(PxPlaneGeometry(), *mMaterial);
@@ -108,14 +121,30 @@ void PhysXInterface::create() {
   for_list(i,b,G->bodies) {
     CHECK(b->shapes.N==1,"can't handle multiple shapes yet");
     for_list(j,s,b->shapes) {
-      //2) Create cube
-      PxTransform transform(PxVec3(s->X.pos(0), s->X.pos(1)+1., s->X.pos(2)+1.), PxQuat(s->X.rot.p[1], s->X.rot.p[2], s->X.rot.p[3], s->X.rot.p[0]));
-      PxBoxGeometry geometry(.5*PxVec3(s->size[0], s->size[1], s->size[2]));
-      
-      PxRigidDynamic *actor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *mMaterial, 1.f);
+      PxGeometry *geometry;
+      floatA Vfloat;
+      switch(s->type){
+	case ors::boxST:{
+	  geometry = new PxBoxGeometry(.5*PxVec3(s->size[0], s->size[1], s->size[2]));
+	}  break;
+	case ors::sphereST:{
+	  geometry = new PxSphereGeometry(s->size[3]);
+	}  break;
+	case ors::meshST:{
+	  //PxSimpleTriangleMesh *me = new PxSimpleTriangleMesh();
+	  //s->mesh.fuseNearVertices(1e-4);
+	  //s->mesh.makeConvexHull();
+	  copy(Vfloat,s->mesh.V); //convert vertices to float array..
+	  //PxTriangleMesh* triangleMesh = PxToolkit::createTriangleMesh32(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, s->mesh.T.p, s->mesh.T.d0);
+	  PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, PxConvexFlag::eCOMPUTE_CONVEX|PxConvexFlag::eINFLATE_CONVEX);
+	  geometry = new PxConvexMeshGeometry(triangleMesh);
+	}  break;
+      }
+      PxRigidDynamic *actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
+      CHECK(actor, "create actor failed!");
       actor->setAngularDamping(0.75);
       actor->setLinearVelocity(PxVec3(b->X.vel(0), b->X.vel(1), b->X.vel(2)));
-      CHECK(actor, "create actor failed!");
+      actor->setAngularVelocity(PxVec3(b->X.angvel(0), b->X.angvel(1), b->X.angvel(2)));
       this->s->gScene->addActor(*actor);
       
       this->s->objects.append(actor);
@@ -127,10 +156,7 @@ void PhysXInterface::create() {
 void PhysXInterface::pullState() {
   uint i;
   for_index(i,s->objects) {
-    PxTransform pose = s->objects(i)->getGlobalPose();
-    ors::Transformation& f=G->bodies(i)->X;
-    f.pos.set(pose.p.x, pose.p.y, pose.p.z);
-    f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+    PxTrans2OrsTrans(G->bodies(i)->X, s->objects(i)->getGlobalPose());
   }
   G->calcShapeFramesFromBodies();
 }
@@ -142,74 +168,178 @@ void PhysXInterface::ShutdownPhysX() {
     s->objects(i)->release();
   }
   s->gScene->release();
-  gPhysicsSDK->release();
+  mPhysics->release();
 }
 
-
-void getColumnMajor(PxMat33 m, PxVec3 t, float* mat) {
-  mat[0] = m.column0[0];
-  mat[1] = m.column0[1];
-  mat[2] = m.column0[2];
-  mat[3] = 0;
-  
-  mat[4] = m.column1[0];
-  mat[5] = m.column1[1];
-  mat[6] = m.column1[2];
-  mat[7] = 0;
-  
-  mat[8] = m.column2[0];
-  mat[9] = m.column2[1];
-  mat[10] = m.column2[2];
-  mat[11] = 0;
-  
-  mat[12] = t[0];
-  mat[13] = t[1];
-  mat[14] = t[2];
-  mat[15] = 1;
-}
-
-void DrawBox(PxShape* pShape) {
-  PxTransform pT = PxShapeExt::getGlobalPose(*pShape);
-  PxBoxGeometry bg;
-  pShape->getBoxGeometry(bg);
-  PxMat33 m(pT.q);
-  float mat[16];
-  getColumnMajor(m,pT.p, mat);
-  glPushMatrix();
-  glMultMatrixf(mat);
-  glutSolidCube(bg.halfExtents.x*2);
-  glPopMatrix();
-}
-
-void DrawShape(PxShape* shape) {
-  PxGeometryType::Enum type = shape->getGeometryType();
-  switch(type) {
-    case PxGeometryType::eBOX:
-      DrawBox(shape);
-      break;
-  }
-}
-
-void DrawActor(PxRigidActor* actor) {
+void DrawActor(PxRigidActor* actor,ors::Body *body) {
   PxU32 nShapes = actor->getNbShapes();
   PxShape** shapes=new PxShape*[nShapes];
   
   actor->getShapes(shapes, nShapes);
   while(nShapes--) {
-    DrawShape(shapes[nShapes]);
+    PxShape *shape = shapes[nShapes];
+    ors::Transformation f;
+    double mat[16];
+    PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape));
+    glLoadMatrixd(f.getAffineMatrixGL(mat));
+    switch(shape->getGeometryType()){
+      case PxGeometryType::eBOX:{
+	PxBoxGeometry g;
+	shape->getBoxGeometry(g);
+	glutSolidCube(g.halfExtents.x*2);
+      } break;
+      case PxGeometryType::eSPHERE:{
+	PxSphereGeometry g;
+	shape->getSphereGeometry(g);
+	glutSolidSphere(g.radius, 10, 10);
+      } break;
+      case PxGeometryType::eCONVEXMESH:{
+#if 1
+        PxConvexMeshGeometry g;
+	shape->getConvexMeshGeometry(g);
+	ors::Mesh mesh;
+	floatA Vfloat((float*)g.convexMesh->getVertices(),3*g.convexMesh->getNbVertices());
+	copy(mesh.V,Vfloat);
+	mesh.V.reshape(g.convexMesh->getNbVertices(),3);
+	mesh.makeConvexHull();
+	mesh.glDraw();
+#else
+        body->shapes(nShapes)->mesh.glDraw();
+#endif
+      } break;
+      
+      default:
+	MT_MSG("can't draw this type");
+    }
   }
   delete [] shapes;
 }
 
 void PhysXInterface::glDraw() {
   uint i;
-  for_index(i,s->objects)  DrawActor(s->objects(i));
+  for_index(i,s->objects)  DrawActor(s->objects(i), G->bodies(i));
 }
 
 void glPhysXInterface(void *classP) {
   PhysXInterface *phys = (PhysXInterface*)classP;
   phys->glDraw();
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+//stuff from Samples/PxToolkit
+
+using namespace PxToolkit;
+
+PxConvexMesh* PxToolkit::createConvexMesh(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, PxConvexFlags flags)
+{
+	PxConvexMeshDesc convexDesc;
+	convexDesc.points.count			= vertCount;
+	convexDesc.points.stride		= sizeof(PxVec3);
+	convexDesc.points.data			= verts;
+	convexDesc.flags				= flags;
+
+	MemoryOutputStream buf;
+	if(!cooking.cookConvexMesh(convexDesc, buf))
+		return NULL;
+
+	PxToolkit::MemoryInputData input(buf.getData(), buf.getSize());
+	return physics.createConvexMesh(input);
+}
+
+PxTriangleMesh* PxToolkit::createTriangleMesh32(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, const PxU32* indices32, PxU32 triCount)
+{
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.points.count			= vertCount;
+	meshDesc.points.stride			= 3*sizeof(float);
+	meshDesc.points.data			= verts;
+
+	meshDesc.triangles.count		= triCount;
+	meshDesc.triangles.stride		= 3*sizeof(uint);
+	meshDesc.triangles.data			= indices32;
+
+	PxToolkit::MemoryOutputStream writeBuffer;
+	bool status = cooking.cookTriangleMesh(meshDesc, writeBuffer);
+	if(!status)
+		return NULL;
+
+	PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+	return physics.createTriangleMesh(readBuffer);
+}
+
+MemoryOutputStream::MemoryOutputStream() :
+	mData		(NULL),
+	mSize		(0),
+	mCapacity	(0)
+{
+}
+
+MemoryOutputStream::~MemoryOutputStream()
+{
+	if(mData)
+		delete[] mData;
+}
+
+PxU32 MemoryOutputStream::write(const void* src, PxU32 size)
+{
+	PxU32 expectedSize = mSize + size;
+	if(expectedSize > mCapacity)
+	{
+		mCapacity = expectedSize + 4096;
+
+		PxU8* newData = new PxU8[mCapacity];
+		PX_ASSERT(newData!=NULL);
+
+		if(newData)
+		{
+			memcpy(newData, mData, mSize);
+			delete[] mData;
+		}
+		mData = newData;
+	}
+	memcpy(mData+mSize, src, size);
+	mSize += size;
+	return size;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+MemoryInputData::MemoryInputData(PxU8* data, PxU32 length) :
+	mSize	(length),
+	mData	(data),
+	mPos	(0)
+{
+}
+
+PxU32 MemoryInputData::read(void* dest, PxU32 count)
+{
+	PxU32 length = PxMin<PxU32>(count, mSize-mPos);
+	memcpy(dest, mData+mPos, length);
+	mPos += length;
+	return length;
+}
+
+PxU32 MemoryInputData::getLength() const
+{
+	return mSize;
+}
+
+void MemoryInputData::seek(PxU32 offset)
+{
+	mPos = PxMin<PxU32>(mSize, offset);
+}
+
+PxU32 MemoryInputData::tell() const
+{
+	return mPos;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
 
 #else //MT_PHYSX
 
@@ -226,3 +356,5 @@ void PhysXInterface::ShutdownPhysX(){ NICO }
 void glPhysXInterface(void *classP){ NICO }
 
 #endif
+
+

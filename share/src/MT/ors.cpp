@@ -1310,6 +1310,11 @@ void ors::Mesh::addMesh(const ors::Mesh& mesh2) {
   for(; t<T.d0; t++) {  T(t, 0)+=n;  T(t, 1)+=n;  T(t, 2)+=n;  }
 }
 
+void ors::Mesh::makeConvexHull(){
+  getTriangulatedHull(T, V);
+}
+  
+
 /*!\brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
   all adjacent triangles that are in the triangle list or member of

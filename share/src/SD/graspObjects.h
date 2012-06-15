@@ -24,7 +24,7 @@ struct MeshObject {
   void getEnclCube(double &lo, double &hi);
   void getEnclRect(arr &maxs, arr &mins);
   /* gl and meshes */
-  virtual void glDraw(){ if(m.V.N) ors::glDraw(m); };
+  virtual void glDraw(){ if(m.V.N) m.glDraw(); };
 };
 
 struct PotentialField : public MeshObject

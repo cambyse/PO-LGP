@@ -218,6 +218,7 @@ struct Mesh {
   void center();
   void box();
   void addMesh(const ors::Mesh& mesh2);
+  void makeConvexHull();
   
   //internal computations & cleanup
   void computeNormals();
@@ -242,6 +243,7 @@ struct Mesh {
   void readStlFile(const char* filename);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
+  void glDraw();
 };
 
 //===========================================================================
@@ -481,6 +483,7 @@ struct Graph {
   void write(std::ostream& os) const;
   void read(std::istream& is);
   void writePlyFile(const char* filename) const;
+  void glDraw();
 };
 #endif
 }
@@ -569,10 +572,8 @@ extern const ors::Vector VEC_z;
 //
 
 namespace ors {
-void glDraw(Mesh& mesh);
 void glDrawMesh(void *classP);
 #ifndef MT_ORS_ONLY_BASICS
-void glDraw(Graph& graph);
 void glDrawGraph(void *classP);
 #endif
 }
