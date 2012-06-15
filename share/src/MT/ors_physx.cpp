@@ -1,3 +1,5 @@
+#ifdef MT_PHYSX
+
 #include <PxPhysicsAPI.h>
 #include <PxExtensionsAPI.h>
 #include <PxDefaultErrorCallback.h>
@@ -208,3 +210,19 @@ void glPhysXInterface(void *classP) {
   PhysXInterface *phys = (PhysXInterface*)classP;
   phys->glDraw();
 }
+
+#else //MT_PHYSX
+
+#include "ors_physx.h"
+
+PhysXInterface::PhysXInterface(){ NICO }
+PhysXInterface::~PhysXInterface(){ NICO }
+void PhysXInterface::create(){ NICO }
+void PhysXInterface::step(){ NICO }
+void PhysXInterface::glDraw(){ NICO }
+void PhysXInterface::pushState(){ NICO }
+void PhysXInterface::pullState(){ NICO }
+void PhysXInterface::ShutdownPhysX(){ NICO }
+void glPhysXInterface(void *classP){ NICO }
+
+#endif
