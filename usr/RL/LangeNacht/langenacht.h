@@ -42,6 +42,7 @@ public slots:
 	void speed_changed(int);
 	void loop();
 	void reset_grid_world();
+	void auto_rewards_changed(bool);
 
 private:
 

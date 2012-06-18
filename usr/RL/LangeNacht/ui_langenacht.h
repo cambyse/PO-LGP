@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'langenacht.ui'
 **
-** Created: Sat Jun 2 12:56:51 2012
+** Created: Mon Jun 18 15:25:12 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -302,6 +302,7 @@ public:
         QObject::connect(_wShowActions, SIGNAL(toggled(bool)), LangeNachtClass, SLOT(show_actions_changed(bool)));
         QObject::connect(_wSpeed, SIGNAL(valueChanged(int)), LangeNachtClass, SLOT(speed_changed(int)));
         QObject::connect(_wReset, SIGNAL(clicked()), LangeNachtClass, SLOT(reset_grid_world()));
+        QObject::connect(_wAutoRewards, SIGNAL(toggled(bool)), LangeNachtClass, SLOT(auto_rewards_changed(bool)));
 
         QMetaObject::connectSlotsByName(LangeNachtClass);
     } // setupUi

@@ -213,7 +213,7 @@ void LangeNacht::loop() {
 		int x, y;
 		world_model->get_current_state(x,y);
 		if( rew_x==-1 || rew_y==-1 || (x==rew_x && y==rew_y) ) {
-			world_model->delete_all_rewards();
+		    world_model->delete_all_rewards();
 			x = rand()%world_model->get_x_size();
 			y = rand()%world_model->get_y_size();
 			world_model->set_reward(x,y,1);
@@ -228,6 +228,11 @@ void LangeNacht::reset_grid_world() {
 	if(world_model) delete world_model;
 	world_model = new GridworldModel(ui._wXSize->value(), ui._wYSize->value(), (double)ui._wRandom->value()/100, 1-(double)ui._wDiscount->value()/100);
 	world_model->set_current_state(0,0);
+}
+
+void LangeNacht::auto_rewards_changed(bool) {
+    rew_x = -1;
+    rew_y = -1;
 }
 
 void LangeNacht::set_click_type() {
