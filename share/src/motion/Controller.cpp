@@ -193,6 +193,9 @@ void Controller::step() {
     }
     s->hardwareReference->set_q_reference(q_reference, this);
     s->hardwareReference->set_v_reference(v_reference, this);
+    s->geo().ors.setJointState(q_reference, v_reference);
+    s->geo().ors.calcBodyFramesFromJoints();
+    s->geo.push();
     
     //push proxies to the geometric state
     //MT_MSG("TODO");
