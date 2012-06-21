@@ -197,7 +197,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   for(uint k=0; k<=K; k++){
     b=new ors::Body(*ors);
     b->name = STRING("body" <<k);
-    if(!k) b->fixed=true;
+    if(!k) b->type=ors::staticBT;
     s=new ors::Shape(*ors, b);
     s->type=ors::cappedCylinderST;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=1./K; s->size[3]=.2/K;

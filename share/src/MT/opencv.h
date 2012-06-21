@@ -3,6 +3,8 @@
 #ifndef MT_opencv_h
 #define MT_opencv_h
 
+#ifdef MT_OPENCV
+
 #undef COUNT
 #include <opencv/highgui.h>
 #include <opencv/cv.h>
@@ -38,5 +40,14 @@ inline byteA cvtMAT(const cv::Mat& mat){
   NIY;
   return byteA();
 }
+
+#else
+
+inline cv::Mat cvMAT(const byteA& img){ NICO }
+inline cv::Mat cvMAT(const floatA& img){ NICO }
+inline cv::Mat cvMAT(const doubleA& img){ NICO }
+inline byteA cvtMAT(const cv::Mat& mat){ NICO }
+
+#endif //MT_OPENCV
 
 #endif

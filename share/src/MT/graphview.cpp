@@ -1,10 +1,11 @@
+#include "gtk.h"
 #include <gtk/gtk.h>
-#include <mygraphviz/gvc.h>
-#include <mygraphviz/gvplugin_device.h>
+#include <graphviz/gvc.h>
+#include <graphviz/gvplugin_device.h>
 #undef MIN
 #undef MAX
 
-#include "graphvizGtk.h"
+#include "graphview.h"
 
 #define INFO(x) printf("CALLBACK: %s\n",#x);
 
@@ -12,9 +13,9 @@ extern "C"{
   GVJ_t *gvjobs_first(GVC_t * gvc);
 }
 
-struct sGraphvizGtk {
+struct sGraphView {
   ElementL *G;
-  GraphvizGtk *p;
+  GraphView *p;
   MT::String title;
   
   // on gtk side
@@ -39,8 +40,10 @@ struct sGraphvizGtk {
   
 };
 
-GraphvizGtk::GraphvizGtk(ElementL& G, const char* title, void *container) {
-  s = new sGraphvizGtk;
+GraphView::GraphView(ElementL& G, const char* title, void *container) {
+  gtkCheckInitialized();
+  
+  s = new sGraphView;
   s->p=this;
   s->title=title;
   s->container=GTK_WIDGET(container);
@@ -48,40 +51,59 @@ GraphvizGtk::GraphvizGtk(ElementL& G, const char* title, void *container) {
   s->G = &G;
 }
 
-GraphvizGtk::~GraphvizGtk() {
+GraphView::~GraphView() {
   delete s;
 }
 
 
-void GraphvizGtk::update(){
+void GraphView::update(){
   s->updateGraphvizGraph();
   gvLayoutJobs(s->gvContext, s->gvGraph);
   gvRenderJobs(s->gvContext, s->gvGraph);
 }
 
-void GraphvizGtk::watch(){
+void GraphView::watch(){
   update();
   gtk_main();
 }
 
 
-void sGraphvizGtk::updateGraphvizGraph(){
+void sGraphView::updateGraphvizGraph(){
   aginit();
   gvGraph = agopen("new_graph", AGDIGRAPH);
   
   uint i,j;
   Element *e, *n;
+  gvNodes.resize(G->N);
+  //first add `nodes' (elements without links)
   for_list(i, e, (*G)){
-    if(e->links.N==2){ //is an edge
-      gvNodes.append() = (Agnode_t*)agedge(gvGraph, gvNodes(e->links(0)->id), gvNodes(e->links(1)->id));
-    }else{ //is a node
-      gvNodes.append() = agnode(gvGraph, e->name.p);
+    CHECK(i==e->id,"");
+    if(e->links.N!=2){ //not an edge
+      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name));
+//       if(e->name.N) agattr(gvNodes(i), "label", str->p);
+//       if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") agattr(gvNodes(i), "shape", "box");
+//       else if(e->type=="shape") agattr(gvNodes(i), "shape", "diamond");
+//       else agattr(gvNodes(i), "shape", "ellipse");
     }
   }
+  //now all others
+  for_list(i, e, (*G)){
+    if(e->links.N==2){ //is an edge
+      gvNodes(i) = (Agnode_t*)agedge(gvGraph, gvNodes(e->links(0)->id), gvNodes(e->links(1)->id));
+    }else if(e->links.N){
+      for_list(j, n, e->links){
+	if(n->id<e->id)
+	  agedge(gvGraph, gvNodes(n->id), gvNodes(e->id));
+	else
+	  agedge(gvGraph, gvNodes(e->id), gvNodes(n->id));
+      }
+    }
+  }
+  
   cout <<gvNodes <<endl;
 }
 
-void sGraphvizGtk::init() {
+void sGraphView::init() {
   gvContext = ::gvContext();
   char *bla[] = {"dot", "-Tx11", NULL};
   gvParseArgs(gvContext, 2, bla);
@@ -111,14 +133,14 @@ void sGraphvizGtk::init() {
 }
 
 
-bool sGraphvizGtk::on_drawingarea_expose_event(GtkWidget       *widget,            GdkEventExpose  *event,            gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_expose_event(GtkWidget       *widget,            GdkEventExpose  *event,            gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   cairo_t *cr;
   
   //INFO(on_drawingarea_expose_event);
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   cr = gdk_cairo_create(widget->window);
   
@@ -160,14 +182,14 @@ bool sGraphvizGtk::on_drawingarea_expose_event(GtkWidget       *widget,         
 }
 
 
-bool sGraphvizGtk::on_drawingarea_motion_notify_event(GtkWidget       *widget,                   GdkEventMotion  *event,                   gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_motion_notify_event(GtkWidget       *widget,                   GdkEventMotion  *event,                   gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   pointf pointer;
   
   //INFO(on_drawingarea_motion_notify_event);
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
   job->pointer.x = event->x;
@@ -179,7 +201,7 @@ bool sGraphvizGtk::on_drawingarea_motion_notify_event(GtkWidget       *widget,  
   return FALSE;
 }
 
-bool sGraphvizGtk::on_container_delete_event(GtkWidget       *widget,       GdkEvent        *event,       gpointer         user_data) {
+bool sGraphView::on_container_delete_event(GtkWidget       *widget,       GdkEvent        *event,       gpointer         user_data) {
 
   INFO(on_container_delete_event);
   
@@ -188,8 +210,8 @@ bool sGraphvizGtk::on_container_delete_event(GtkWidget       *widget,       GdkE
 }
 
 
-bool sGraphvizGtk::on_drawingarea_configure_event(GtkWidget       *widget,               GdkEventConfigure *event,               gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_configure_event(GtkWidget       *widget,               GdkEventConfigure *event,               gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   double zoom_to_fit;
   
@@ -201,7 +223,7 @@ bool sGraphvizGtk::on_drawingarea_configure_event(GtkWidget       *widget,      
   /*      plugin/xlib/gvdevice_xlib.c */
   /*      lib/gvc/gvevent.c */
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
   if(! job->has_been_rendered) {
@@ -222,14 +244,14 @@ bool sGraphvizGtk::on_drawingarea_configure_event(GtkWidget       *widget,      
 }
 
 
-bool sGraphvizGtk::on_drawingarea_button_press_event(GtkWidget       *widget,                  GdkEventButton  *event,                  gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_button_press_event(GtkWidget       *widget,                  GdkEventButton  *event,                  gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   pointf pointer;
   
   INFO(on_drawingarea_button_press_event);
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
   pointer.x = event->x;
@@ -241,14 +263,14 @@ bool sGraphvizGtk::on_drawingarea_button_press_event(GtkWidget       *widget,   
   return FALSE;
 }
 
-bool sGraphvizGtk::on_drawingarea_button_release_event(GtkWidget       *widget,                    GdkEventButton  *event,                    gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_button_release_event(GtkWidget       *widget,                    GdkEventButton  *event,                    gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   pointf pointer;
   
   INFO(on_drawingarea_button_release_event);
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
   pointer.x = event->x;
@@ -261,14 +283,14 @@ bool sGraphvizGtk::on_drawingarea_button_release_event(GtkWidget       *widget, 
 }
 
 
-bool sGraphvizGtk::on_drawingarea_scroll_event(GtkWidget       *widget,            GdkEventScroll        *event,            gpointer         user_data) {
-  sGraphvizGtk *gv;
+bool sGraphView::on_drawingarea_scroll_event(GtkWidget       *widget,            GdkEventScroll        *event,            gpointer         user_data) {
+  sGraphView *gv;
   GVJ_t *job;
   pointf pointer;
   
   INFO(on_drawingarea_scroll_event);
   
-  gv = (sGraphvizGtk*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
+  gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
   pointer.x = event->x;

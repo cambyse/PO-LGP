@@ -170,19 +170,19 @@ struct OpenGL {
   struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String text;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
-  MT::Array<GLView> views;             //!< list of draw routines
-  MT::Array<GLDrawer> drawers;         //!< list of draw routines
-  MT::Array<GLInitCall> initCalls;     //!< list of initialization routines
-  MT::Array<GLHoverCall*> hoverCalls;   //!< list of hover callbacks
-  MT::Array<GLClickCall*> clickCalls;   //!< list of click callbacks
-  MT::Array<GLKeyCall*> keyCalls;   //!< list of click callbacks
-  ors::Camera camera; //!< the camera used for projection
+  MT::Array<GLView> views;            //!< list of draw routines
+  MT::Array<GLDrawer> drawers;        //!< list of draw routines
+  MT::Array<GLInitCall> initCalls;    //!< list of initialization routines
+  MT::Array<GLHoverCall*> hoverCalls; //!< list of hover callbacks
+  MT::Array<GLClickCall*> clickCalls; //!< list of click callbacks
+  MT::Array<GLKeyCall*> keyCalls;     //!< list of click callbacks
+  ors::Camera camera;     //!< the camera used for projection
   MT::String text;        //!< the text to be drawn as title within the opengl frame
   float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
   bool reportEvents, reportSelects;    //!< flags for verbosity
-  int pressedkey;           //!< stores the key pressed
-  const char *exitkeys;     //!< additional keys to exit watch mode
-  int mouse_button;         //!< stores which button was pressed
+  int pressedkey;         //!< stores the key pressed
+  const char *exitkeys;   //!< additional keys to exit watch mode
+  int mouse_button;       //!< stores which button was pressed
   int mouseposx, mouseposy;  //!< current x- and y-position of mouse
   int mouseView;
   bool mouseIsDown;

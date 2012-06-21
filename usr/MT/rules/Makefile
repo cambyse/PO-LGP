@@ -1,5 +1,3 @@
-BASE = ../../../share
-
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
+BASE = ../..
 
 include $(BASE)/make-generic

@@ -1,17 +1,12 @@
 BASE = ../../../share
 
-GTK = 1
+//GTK = 1
 
-OBJS = main.o graphvizGtk.o
+#CPATH	:= $(HOME)/tmp/gvd/include:$(CPATH)
+#LPATH	:= $(HOME)/tmp/gvd/lib:$(LPATH)
 
-#OBJS = gvplugin_gtk.o
-#OUTPUT = libgvplugin_gtk.so
+#CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
-CPATH	:= $(HOME)/tmp/gvd/include:$(CPATH)
-LPATH	:= $(HOME)/tmp/gvd/lib:$(LPATH)
-
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
-
-LIBS += -lgraph -lgvc
+#LIBS += -lgraph -lgvc
 
 include $(BASE)/make-generic

@@ -36,7 +36,7 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f){
 struct sPhysXInterface {
   PxScene* gScene;
   PxReal timestep;
-  MT::Array<PxRigidActor*> objects;
+  MT::Array<PxRigidActor*> actors;
   
   sPhysXInterface() {
     gScene = NULL;
@@ -53,13 +53,23 @@ PhysXInterface::~PhysXInterface() {
 }
 
 void PhysXInterface::step() {
+  //-- push positions of all kinematic objects
+  uint i;
+  ors::Body *b;
+  for_list(i,b,G->bodies) if(b->type==ors::kinematicBT){
+    ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
+  }
+
+  //-- dynamic simulation
   s->gScene->simulate(s->timestep);
-  pullState();
   
   //...perform useful work here using previous frame's state data
   while(!s->gScene->fetchResults()) {
-    // do something useful
   }
+    
+  //-- pull state of all objects
+  pullState();
+  
 }
 
 void PhysXInterface::create() {
@@ -100,7 +110,7 @@ void PhysXInterface::create() {
   
   
   //-- Create objects
-  PxMaterial* mMaterial = mPhysics->createMaterial(0.5,0.5,0.5);
+  PxMaterial* mMaterial = mPhysics->createMaterial(1.f,1.f,0.5f);
   
   //Create ground plane
   //PxReal d = 0.0f;
@@ -119,53 +129,76 @@ void PhysXInterface::create() {
   ors::Shape *s;
   
   for_list(i,b,G->bodies) {
-    CHECK(b->shapes.N==1,"can't handle multiple shapes yet");
+    PxRigidDynamic *actor;
+    switch(b->type){
+      case ors::staticBT:
+	actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
+	break;
+      case ors::dynamicBT:
+	actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+	break;
+      case ors::kinematicBT:
+	actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+	actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+	break;
+    }	
+    CHECK(actor, "create actor failed!");
     for_list(j,s,b->shapes) {
       PxGeometry *geometry;
       floatA Vfloat;
       switch(s->type){
 	case ors::boxST:{
-	  geometry = new PxBoxGeometry(.5*PxVec3(s->size[0], s->size[1], s->size[2]));
+	  geometry = new PxBoxGeometry(.5*s->size[0], .5*s->size[1], .5*s->size[2]);
 	}  break;
 	case ors::sphereST:{
 	  geometry = new PxSphereGeometry(s->size[3]);
 	}  break;
+	case ors::cylinderST:
 	case ors::meshST:{
 	  //PxSimpleTriangleMesh *me = new PxSimpleTriangleMesh();
 	  //s->mesh.fuseNearVertices(1e-4);
 	  //s->mesh.makeConvexHull();
+	  Vfloat.clear();
 	  copy(Vfloat,s->mesh.V); //convert vertices to float array..
 	  //PxTriangleMesh* triangleMesh = PxToolkit::createTriangleMesh32(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, s->mesh.T.p, s->mesh.T.d0);
 	  PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, PxConvexFlag::eCOMPUTE_CONVEX|PxConvexFlag::eINFLATE_CONVEX);
 	  geometry = new PxConvexMeshGeometry(triangleMesh);
 	}  break;
+	case ors::markerST:{
+	  geometry=NULL;
+	}  break;
+	default: NIY;
       }
-      PxRigidDynamic *actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
-      CHECK(actor, "create actor failed!");
+      if(geometry){
+	PxShape* shape = actor->createShape(*geometry, *mMaterial, OrsTrans2PxTrans(s->rel));
+	CHECK(shape, "create shape failed!");
+      }
+      //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
+    }
+    if(b->type==ors::dynamicBT){
+      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
       actor->setAngularDamping(0.75);
       actor->setLinearVelocity(PxVec3(b->X.vel(0), b->X.vel(1), b->X.vel(2)));
       actor->setAngularVelocity(PxVec3(b->X.angvel(0), b->X.angvel(1), b->X.angvel(2)));
-      this->s->gScene->addActor(*actor);
-      
-      this->s->objects.append(actor);
-      //WARNING: objects must be aligned (indexed) exactly as G->bodies
     }
+    this->s->gScene->addActor(*actor);
+      
+    this->s->actors.append(actor);
+      //WARNING: actors must be aligned (indexed) exactly as G->bodies
   }
 }
 
 void PhysXInterface::pullState() {
   uint i;
-  for_index(i,s->objects) {
-    PxTrans2OrsTrans(G->bodies(i)->X, s->objects(i)->getGlobalPose());
-  }
+  for_index(i,s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
   G->calcShapeFramesFromBodies();
 }
 
 void PhysXInterface::ShutdownPhysX() {
   uint i;
-  for_index(i,s->objects) {
-    s->gScene->removeActor(*s->objects(i));
-    s->objects(i)->release();
+  for_index(i,s->actors) {
+    s->gScene->removeActor(*s->actors(i));
+    s->actors(i)->release();
   }
   s->gScene->release();
   mPhysics->release();
@@ -174,19 +207,24 @@ void PhysXInterface::ShutdownPhysX() {
 void DrawActor(PxRigidActor* actor,ors::Body *body) {
   PxU32 nShapes = actor->getNbShapes();
   PxShape** shapes=new PxShape*[nShapes];
+  //cout <<"#shapes=" <<nShapes;
   
   actor->getShapes(shapes, nShapes);
   while(nShapes--) {
     PxShape *shape = shapes[nShapes];
+    ors::Shape *s = body->shapes(nShapes);
+    glColor(s->color[0], s->color[1], s->color[2], 1.);
     ors::Transformation f;
     double mat[16];
     PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape));
     glLoadMatrixd(f.getAffineMatrixGL(mat));
+    //cout <<"drawing shape " <<body->name <<endl;
     switch(shape->getGeometryType()){
       case PxGeometryType::eBOX:{
 	PxBoxGeometry g;
 	shape->getBoxGeometry(g);
-	glutSolidCube(g.halfExtents.x*2);
+	//glutSolidCube(g.halfExtents.x*2, g.halfExtents.y*2, g.halfExtents.z*2);
+	glDrawBox(g.halfExtents.x*2, g.halfExtents.y*2, g.halfExtents.z*2);
       } break;
       case PxGeometryType::eSPHERE:{
 	PxSphereGeometry g;
@@ -197,14 +235,14 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
 #if 1
         PxConvexMeshGeometry g;
 	shape->getConvexMeshGeometry(g);
+	floatA Vfloat((float*)g.convexMesh->getVertices(), 3*g.convexMesh->getNbVertices()); //reference
 	ors::Mesh mesh;
-	floatA Vfloat((float*)g.convexMesh->getVertices(),3*g.convexMesh->getNbVertices());
 	copy(mesh.V,Vfloat);
 	mesh.V.reshape(g.convexMesh->getNbVertices(),3);
 	mesh.makeConvexHull();
 	mesh.glDraw();
 #else
-        body->shapes(nShapes)->mesh.glDraw();
+        s->mesh.glDraw();
 #endif
       } break;
       
@@ -217,12 +255,11 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
 
 void PhysXInterface::glDraw() {
   uint i;
-  for_index(i,s->objects)  DrawActor(s->objects(i), G->bodies(i));
+  for_index(i,s->actors)  DrawActor(s->actors(i), G->bodies(i));
 }
 
 void glPhysXInterface(void *classP) {
-  PhysXInterface *phys = (PhysXInterface*)classP;
-  phys->glDraw();
+  ((PhysXInterface*)classP)->glDraw();
 }
 
 

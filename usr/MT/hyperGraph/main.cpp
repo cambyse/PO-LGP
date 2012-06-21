@@ -1,14 +1,19 @@
 #include <MT/hypergraph.h>
+#include <MT/graphview.h>
 
-void testRead(const char *filename="graph"){
+void testRead(const char *filename="../rules/coffee_shop.fg"){
   HyperGraph H;
 
   cout <<"reading graph..." <<endl;
   MT::load(H,filename);
+  //cout <<H <<endl;
+  sortByDotOrder(H);
   cout <<H <<endl;
-  H.sortByDotOrder();
-  cout <<H <<endl;
-  writeDot(H.T);
+  writeDot(H);
+  
+  GraphView gv(H);
+  gv.watch();
+
 }
 
 void testBasic(){
@@ -35,9 +40,6 @@ void testBasic(){
   cout <<"--------------------------" <<endl;
 }
 
-void testDot(const char *filename="graph"){
-}
-
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
   
@@ -45,7 +47,6 @@ int main(int argn,char** argv){
   switch(mode){
     case 0:  testBasic();  break;
     case 1:  if(argn>1) testRead(argv[1]); else testRead();  break;
-    case 2:  if(argn>1) testDot(argv[1]); else testDot();  break;
   }
   
   return 0;

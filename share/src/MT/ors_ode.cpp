@@ -125,11 +125,11 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
   if(b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeSlider)) return;
   
   // exit if fixed body intersects with earth,  4. Mar 06 (hh)
-  if(b1==0 && db2->fixed==true) return;
-  if(b2==0 && db1->fixed==true) return;
+  if(b1==0 && db2->type==ors::staticBT) return;
+  if(b2==0 && db1->type==ors::staticBT) return;
   
   // exit if we have two fixed bodies,  6. Mar 06 (hh)
-  if(db1 && db2 && db1->fixed==true && db2->fixed==true) return;
+  if(db1 && db2 && db1->type==ors::staticBT && db2->type==ors::staticBT) return;
   
   // exit if none of the bodies have cont enabled (mt)
   //if(db1 && !db1->cont && db2 && !db2->cont) return;
@@ -742,7 +742,7 @@ void OdeInterface::createOde(ors::Graph &C) {
       }
     }//loop through shapes
     
-    if(n->fixed) {
+    if(n->type==ors::staticBT) {
       jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
       dJointAttach(jointF, b, 0);
       dJointSetFixed(jointF);
