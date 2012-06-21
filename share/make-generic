@@ -51,10 +51,10 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)
+CXXFLAGS := -g -Wall -Wunused-but-set-variable $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),fast_debug)
-CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
+CXXFLAGS := -g -O3 -Wall -Wunused-but-set-variable $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),penibel)
 CXXFLAGS := -g -Wall -Wextra $(CXXFLAGS)

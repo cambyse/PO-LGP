@@ -31,6 +31,12 @@ int QHULL_DEBUG_LEVEL=0;
 
 //===========================================================================
 
+const char* qhullVersion(){
+  return qh_version;
+}
+
+//===========================================================================
+
 void plotQhullState(uint D) {
   uint i;
   double *point, *pointtemp;
@@ -207,19 +213,21 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
 
 //===========================================================================
 
-double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, double mu, double discountTorques, arr *dFdC) { //, arr *dFdCn
+double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
+		    double mu, double torqueWeights, arr *dFdC) { //, arr *dFdCn
   CHECK(C.d0==Cn.d0, "different number of points and normals");
   CHECK(C.d1==3, "");
   
   uint i, j, S=7;
-  ors::Vector c, n, f, c_f;
-  ors::Quaternion r;
+  ors::Vector c, n;
   
-  arr X(C.d0*S, 6);                     //store 6d points for convex hull
-  
+  arr X;
+  if(torqueWeights>0.)  X.resize(C.d0*S, 6);  //store 6d points for convex wrench hull
+  else X.resize(C.d0*S, 3);                //store 3d points for convex force hull
+
   arr dXdC;
   if(dFdC) {
-    dXdC.resize(C.d0*S, 6, 3);
+    dXdC.resize(X.d0,X.d1, 3);
     dXdC.setZero();
   }
   /*if(dFdCn){
@@ -237,20 +245,26 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, doub
     
     for(j=0; j<S; j++) {   //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;
-      f(0) = cos(angle)*mu;            //force point sampled from cone
-      f(1) = sin(angle)*mu;
-      f(2) = 1.;
+      ors::Vector f(cos(angle)*mu, sin(angle)*mu, 1.);  //force point sampled from cone
       
       f = r*f;                         //rotate
-      c_f = c^f;
+      ors::Vector c_f = c^f;
       
       //what about different scales in force vs torque??!!
-      X(i*S+j, 0) = f(0);
-      X(i*S+j, 1) = f(1);
-      X(i*S+j, 2) = f(2);
-      X(i*S+j, 3) = discountTorques * c_f(0);
-      X(i*S+j, 4) = discountTorques * c_f(1);
-      X(i*S+j, 5) = discountTorques * c_f(2);
+      if(torqueWeights>=0.){ //forceClosure
+	X(i*S+j, 0) = f(0);
+	X(i*S+j, 1) = f(1);
+	X(i*S+j, 2) = f(2);
+      }else{ //torqueClosure
+	X(i*S+j, 0) = c_f(0);
+	X(i*S+j, 1) = c_f(1);
+	X(i*S+j, 2) = c_f(2);
+      }
+      if(torqueWeights>0.){ //both (wrench)
+	X(i*S+j, 3) = torqueWeights * c_f(0);
+	X(i*S+j, 4) = torqueWeights * c_f(1);
+	X(i*S+j, 5) = torqueWeights * c_f(2);
+      }
       if(dFdC) {
         dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f(2);  dXdC(i*S+j, 3, 2) = -f(1);
         dXdC(i*S+j, 4, 0) = -f(2);  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f(0);
@@ -265,18 +279,20 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, doub
     }
   }
   
-  if(dFdC)  dXdC *= (double)discountTorques;
+  if(dFdC)  dXdC *= (double)torqueWeights;
   
   double d;
-  arr origin(6);
+  arr origin(X.d1);
   origin.setZero();
   if(!dFdC) {
-    d = distanceToConvexHull(X, origin, 0, 0, true);
+    //note: distance to hull is negative if inside the hull
+    d = -distanceToConvexHull(X, origin, 0, 0, true);
   } else {
     arr dFdX;
-    d = distanceToConvexHullGradient(dFdX, X, origin, true);
-    dFdX.reshape(TUP(C.d0, S, 6));
-    dXdC.reshape(TUP(C.d0, S, 6, 3));
+    d = -distanceToConvexHullGradient(dFdX, X, origin, true);
+    dFdX *= -1.;
+    dFdX.reshape(TUP(C.d0, S, origin.N));
+    dXdC.reshape(TUP(C.d0, S, origin.N, 3));
     dFdC->resize(TUP(C.d0, 3));
     tensorEquation(*dFdC, dFdX, TUP(0, 2, 3), dXdC, TUP(0, 2, 3, 1), 2);
   }
@@ -285,7 +301,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center, doub
 
 //===========================================================================
 
-double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceThreshold, double mu, double discountTorques) {
+double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
   uint k;
   ors::Vector c, cn;
   arr C, Cn;
@@ -307,7 +323,7 @@ double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceT
   }
   C .reshape(C.N/3, 3);
   Cn.reshape(C.N/3, 3);
-  double fc=forceClosure(C, Cn, ORS.bodies(bodyIndex)->X.pos, mu, discountTorques, NULL);
+  double fc=forceClosure(C, Cn, ORS.bodies(bodyIndex)->X.pos, mu, torqueWeights, NULL);
   return fc;
 }
 

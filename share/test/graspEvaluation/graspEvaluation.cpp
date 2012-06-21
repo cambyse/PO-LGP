@@ -77,13 +77,17 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   
   arr mean = sum(contactPoints,0)/(double)contactPoints.d0;
   
-  //cout <<forceClosureFromProxies(grasp, 0) <<endl;
+  score_forceClosure  = forceClosureFromProxies(grasp, 0, 0.01, .2, 0.);
+  score_torqueClosure = forceClosureFromProxies(grasp, 0, 0.01, .2, -1.);
+  score_wrenchClosure = forceClosureFromProxies(grasp, 0, 0.01, .2, 1.);
 
-  forceClosureMeassure = forceClosure(contactPoints, contactNormals,
-                                     ors::Vector(mean),
-				      5., 1., NULL);
+  //forceClosureMeassure = forceClosure(contactPoints, contactNormals,
+  //ors::Vector(mean),
+  //5., 1., NULL);
 
-  cout <<"force closure = " <<forceClosureMeassure <<endl;
+  cout <<"force  closure = " <<score_forceClosure  <<endl;
+  cout <<"torque closure = " <<score_torqueClosure <<endl;
+  cout <<"wrench closure = " <<score_wrenchClosure <<endl;
 }
 
 void GraspEvaluation::copyGraspFromOrs(const ors::Graph& all,

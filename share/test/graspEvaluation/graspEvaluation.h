@@ -7,7 +7,10 @@ struct GraspEvaluation{
   ors::Graph grasp; //!< the isolated grasp with only two bodies: hand and object
   OpenGL gl;
   arr contactPoints, contactNormals;
-  double forceClosureMeassure;
+
+  double score_forceClosure;
+  double score_torqueClosure;
+  double score_wrenchClosure;
   
   GraspEvaluation();
   

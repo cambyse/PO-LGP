@@ -1008,6 +1008,8 @@ void plotQhullState(uint D);
 
 extern int QHULL_DEBUG_LEVEL;
 
+const char* qhullVersion();
+
 double distanceToConvexHull(const arr &X,        //points
                             const arr &y,        //query point
                             arr *projectedPoint, //return query point projected on closest facet
