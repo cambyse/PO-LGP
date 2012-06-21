@@ -1,4 +1,7 @@
 #include "gtk.h"
+
+#ifdef MT_GTK
+
 #include <gtk/gtk.h>
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin_device.h>
@@ -310,4 +313,8 @@ bool sGraphView::on_drawingarea_scroll_event(GtkWidget       *widget,           
   
   return FALSE;
 }
+
+#else //MT_GTK
+
+#endif
 
