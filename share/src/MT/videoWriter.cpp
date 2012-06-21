@@ -48,6 +48,6 @@ void VideoWriter::addFrameFromOpengl(OpenGL& gl){
 #include "util.h"
   void VideoWriter::open(uint width,uint height,const char* filename,double fps){ MT_MSG("WARNING - using dummy Revel module"); };
   void VideoWriter::addFrame(const byteA& img){};
-  void VideoWriter::addFrameFromOpengl(){};
+  void VideoWriter::addFrameFromOpengl(OpenGL& gl){};
   void VideoWriter::close(){};
 #endif

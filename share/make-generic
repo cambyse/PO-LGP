@@ -234,9 +234,13 @@ endif
 ifeq ($(GTK),1)
 #CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 #LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
-LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+CXXFLAGS += `pkg-config --cflags gtk+-2.0 gthread-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs gtk+-2.0 gthread-2.0 gtkglext-1.0`
 #LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+endif
+
+ifeq ($(GRAPHVIZ),1)
+LIBS += -lgraph -lgvc
 endif
 
 ifeq ($(WX),1)

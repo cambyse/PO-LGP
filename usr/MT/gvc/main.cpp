@@ -1,10 +1,7 @@
 #define MT_IMPLEMENT_TEMPLATES
-#include <MT/util.h>
-#include <gtk/gtk.h>
-#undef MIN
-#undef MAX
 
-#include "graphvizGtk.h"
+#include <MT/util.h>
+#include <MT/graphview.h>
 
 void test(){
   HyperGraph G;
@@ -12,14 +9,11 @@ void test(){
   MT::load(G,"graph");
   writeDot(G);
   
-  GraphvizGtk gv(G);
+  GraphView gv(G);
   gv.watch();
-  
 }
 
 int main(int argc, char **argv){
-  gtk_init (&argc, &argv);
-  
   test();
 
   return 0;

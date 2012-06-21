@@ -3,11 +3,13 @@
 
 #include "util.h"
 #include "array.h"
-#include "ors.h"
 
 #define maxDegree 10
 
 struct Element;
+//list of elements:
+// actually this is the whole `HyperGraph' data structure
+// the class below only adds convenience stuff
 typedef MT::Array<Element*> ElementL;
 
 struct Element {
@@ -31,7 +33,6 @@ struct HyperGraph:ElementL {
   Element *add(const uintA& tuple);
   void del(Element *e);
   Element *get(const char* name);
-  void sortByDotOrder();
   
   void write(std::ostream &os) const;
   void read(std::istream &is);
