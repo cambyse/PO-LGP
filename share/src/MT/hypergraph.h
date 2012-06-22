@@ -3,16 +3,18 @@
 
 #include "util.h"
 #include "array.h"
-#include "ors.h"
 
 #define maxDegree 10
 
 struct Element;
+//list of elements:
+// actually this is the whole `HyperGraph' data structure
+// the class below only adds convenience stuff
 typedef MT::Array<Element*> ElementL;
 
 struct Element {
   uint id;                 //!< id of this element
-  String type, name;        //!< type & name
+  MT::String type, name;   //!< type & name
   uintA    linksIds;       //!< this elem links a set of other elems
   ElementL links;          //!< this elem links a set of other elems
   ElementL elemof[maxDegree]; //!< this elem is linked by other elems in a certain 'slot'
@@ -23,16 +25,14 @@ struct Element {
 };
 stdOutPipe(Element);
 
-struct HyperGraph {
-  uint N[maxDegree];
+
+struct HyperGraph:ElementL {
   uintA unused;
-  ElementL T;
   
   ElementL& getOutEdges(uint i);
   Element *add(const uintA& tuple);
   void del(Element *e);
   Element *get(const char* name);
-  void sortByDotOrder();
   
   void write(std::ostream &os) const;
   void read(std::istream &is);
@@ -40,20 +40,21 @@ struct HyperGraph {
 stdPipes(HyperGraph);
 
 
-void HyperGraph::sortByDotOrder(){
-  uintA perm(T.N);
+inline void sortByDotOrder(ElementL& G){
+  uintA perm(G.N);
   Element *e;
   double *order;
   uint i;
-  for_list(i,e,T){
+  for_list(i,e,G){
     order = anyListGet<double>(e->ats, "dot_order", 1);
+    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
     perm(i) = (uint)*order;
   }
-  T.permuteInv(perm);
-  for_list(i,e,T) e->id=i;
+  G.permuteInv(perm);
+  for_list(i,e,G) e->id=i;
 }
 
-void writeDot(ElementL G){
+inline void writeDot(ElementL& G){
   ofstream fil;
   MT::open(fil, "z.dot");
   fil <<"graph G{" <<endl;

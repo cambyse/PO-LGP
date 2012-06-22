@@ -180,8 +180,7 @@ void skipLine(std::istream& is) {
 
 //! skips the next character
 void skipOne(std::istream& is) {
-  char c;
-  c = is.get();
+  is.get();
 }
 
 //! tell you about the next char (after skip()) but puts it back in the stream
@@ -651,10 +650,11 @@ void MT::String::set(const char *s, uint n) { resize(n, false); memmove(p, s, n)
 bool MT::String::operator==(const char *s) const { return !strcmp(p, s); }
 //! shorthand for the !strcmp command
 bool MT::String::operator==(const String& s) const { return !strcmp(p, s.p); }
-bool MT::String::operator<(const String& s) const { return strcmp(p, s.p)<0; }
+bool MT::String::operator!=(const char *s) const { return !operator==(s); }
 bool MT::String::operator!=(const String& s) const { return !(operator==(s)); }
+bool MT::String::operator<(const String& s) const { return strcmp(p, s.p)<0; }
 
-bool MT::String::contains(const String& substring) {
+bool MT::String::contains(const String& substring) const {
   char* p = strstr(this->p, substring.p);
   return p != NULL;
 }

@@ -1,5 +1,3 @@
-
-
 #include<MT/ors.h>
 #include<MT/opengl.h>
 #include<MT/algos.h>
@@ -165,7 +163,7 @@ void testFCinOrs(){
 }
 
 int main(int argc, char *argv[]){
-  cout <<"QHull version = " <<qh_version <<endl;
+  cout <<"QHull version = " <<qhullVersion() <<endl;
 
   testConvexHull();
   //testForceClosure();

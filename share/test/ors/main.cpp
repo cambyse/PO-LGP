@@ -4,20 +4,6 @@
 #include<MT/plot.h>
 #include <GL/gl.h>
 
-void drawEnv(void*){  glStandardLight(NULL); }
-
-void init(ors::Graph& G,OpenGL& gl,const char* orsFile){
-  G.init(orsFile);
-  //G.makeLinkTree();
-  gl.add(drawEnv,0);
-  gl.add(ors::glDrawGraph,&G);
-  gl.setClearColors(1.,1.,1.,1.);
-  gl.camera.setPosition(10.,-15.,8.);
-  gl.camera.focus(0,0,1.);
-  gl.camera.upright();
-  gl.update();
-}
-
 
 //===========================================================================
 //
@@ -192,6 +178,20 @@ void testPlayTorqueSequenceInOde(){
     ode.importStateFromOde(G);
     G.getJointState(Xt[t](),Vt[t]());
     gl.text.clear() <<"play a random torque sequence [using ODE] -- time " <<t;
+    gl.timedupdate(.01);
+  }
+}
+
+void testMeshShapesInOde(){
+  ors::Graph G;
+  OpenGL gl;
+  init(G, gl, "testOdeMesh.ors");
+  OdeInterface ode;
+  ode.createOde(G);
+  for(uint t=0;t<1000;t++){
+    //G.clearJointErrors(); exportStateToOde(C,); //try doing this without clearing joint errors...!
+    ode.step(0.03);
+    ode.importStateFromOde(G);
     gl.timedupdate(.01);
   }
 }
@@ -416,7 +416,7 @@ void testBlenderImport(){
   readBlender("blender-export",mesh,bl);
   cout <<"loading time =" <<MT::timerRead() <<"sec" <<endl;
   OpenGL gl;
-  gl.add(drawEnv,0);
+  gl.add(glStandardScene, NULL);
   gl.add(drawTrimesh,&mesh);
   gl.watch("mesh only");
   gl.add(ors::glDrawGraph,&bl);
@@ -427,13 +427,14 @@ void testBlenderImport(){
 int main(int argc,char **argv){
 
   //testLoadSave();
-  testPlayStateSequence();
+  //testPlayStateSequence();
   //testKinematics();
   //testFollowRedundantSequence();
   //testDynamics();
   //testContacts();
 #ifdef MT_ODE
-  //testPlayTorqueSequenceInOde();
+  testMeshShapesInOde();
+  testPlayTorqueSequenceInOde();
 #endif
   //testBlenderImport();
 

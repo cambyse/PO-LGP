@@ -257,11 +257,12 @@ public:
   //!@name equality
   bool operator==(const char *s) const;
   bool operator==(const String& s) const;
+  bool operator!=(const char *s) const;
   bool operator!=(const String& s) const;
   bool operator<(const String& s) const;
   
   //!@name misc
-  bool contains(const String& substring);
+  bool contains(const String& substring) const;
   
   //!@name I/O
   void write(std::ostream& os) const;

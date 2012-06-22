@@ -17,9 +17,7 @@
 #include "plot.h"
 #include "array.h"
 #include "ors.h"
-#if defined MT_GL || defined MT_QTGLUT || defined MT_FREEGLUT
-#  include "opengl.h"
-#endif
+#include "opengl.h"
 
 //===========================================================================
 //
@@ -639,7 +637,7 @@ void plotDrawOpenGL(void *_data) {
           }
         data.mesh.computeNormals();
         glDisable(GL_CULL_FACE);
-        ors::glDraw(data.mesh);
+        data.mesh.glDraw();
         glEnable(GL_CULL_FACE);
       } else { //as a grid
         c.blacken(.5);

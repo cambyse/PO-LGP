@@ -49,6 +49,10 @@ extern bool useLapack;
 extern const bool lapackSupported;
 extern uint64_t globalMemoryTotal, globalMemoryBound;
 extern bool globalMemoryStrict;
+extern const char* arrayElemsep;
+extern const char* arrayLinesep;
+extern const char* arrayBrackets;
+
 }
 
 //===========================================================================
@@ -247,8 +251,11 @@ public:
   
   //!@name sorting and permuting this array
   void sort(ElemCompare comp);
-  uint findInSorted(const T& x, ElemCompare comp);
+  bool isSorted(ElemCompare comp) const;
+  uint rankInSorted(const T& x, ElemCompare comp) const;
+  int findValueInSorted(const T& x, ElemCompare comp) const;
   uint insertInSorted(const T& x, ElemCompare comp);
+  uint setAppendInSorted(const T& x, ElemCompare comp);
   void removeValueInSorted(const T& x, ElemCompare comp);
   void reverse();
   void permute(uint i, uint j);
@@ -263,7 +270,7 @@ public:
   void makeSparse();
   
   //!@name I/O
-  void write(std::ostream& os=std::cout, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="[]", bool dimTag=false, bool binary=false) const;
+  void write(std::ostream& os=std::cout, const char *ELEMSEP=NULL, const char *LINESEP=NULL, const char *BRACKETS=NULL, bool dimTag=false, bool binary=false) const;
   void read(std::istream& is);
   void read(const char* filename);
   void writeTagged(std::ostream& os, const char* tag, bool binary=false) const;

@@ -1,0 +1,25 @@
+grab 1 action binary 
+puton 1 action binary 
+openBox 1 action binary 
+closeBox 1 action binary 
+table 1 primitive binary 
+block 1 primitive binary 
+ball 1 primitive binary 
+box 1 primitive binary 
+on 2 primitive binary 
+contains 2 primitive binary 
+closed 1 primitive binary
+inhand 1 primitive binary 
+upright 1 primitive binary 
+out 1 primitive binary 
+size 1 primitive integers 
+clear 1 conjunction binary  <-- All Y  -on(Y X) 
+inhandNil 0 conjunction binary  <-- All X  -inhand(X) 
+above 2 transclosure binary  <-- + on
+aboveNotable 2 conjunction binary  <-- above(X Y) -table(Y) 
+height 1 count integers  <-- Num Y  aboveNotable(X Y)
+sum_height 0 sum integers  <--  Sum height
+onBox 1 conjunction binary  <-- Ex Y  on(X Y) box(Y)
+filled 1 conjunction binary  <-- Ex Y  box(X) contains(X Y)
+inClosedBox 1 conjunction binary  <-- Ex Y  closed(Y) contains(Y X)
+accessible 1 conjunction binary  <-- -out(X) -inClosedBox(X)

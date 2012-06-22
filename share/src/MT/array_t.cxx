@@ -646,15 +646,9 @@ template<class T> T& MT::Array<T>::rndElem() const {
   return elem(rnd(N));
 }
 
-/* scalar reference (legal iff N==1) */
-/*operator T&() const{
-  CHECK(N==1, "scalar reference (" <<N <<"!=1)");
-  return *p;
-  }*/
-
 //! scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
-  CHECK(nd==0 && N==1, "scalar range error (N=" <<N <<")");
+  CHECK(nd<=1 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 
@@ -1285,33 +1279,61 @@ template<class T> void MT::Array<T>::sort(ElemCompare comp) {
   std::sort(p, pstop, comp);
 }
 
-//! fast find method in a sorted array, returns index to element equal to x
-template<class T> uint MT::Array<T>::findInSorted(const T& x, ElemCompare comp) {
+
+//! check whether list is sorted
+template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
+  uint i;
+  for (i=0; i<N-1; i++) {
+    if (!comp(elem(i), elem(i+1))) return false;
+  }
+  return true;
+}
+
+
+//! fast find method in a sorted array, returns index where x would fit into array
+template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
   if(!N) return 0;
   if(comp(x, elem(0))) return 0;
-  if(!comp(x, elem(N-1))) return N;
-  uint lo=0, up=N-1, mi;
-  for(;;) {
-    if(lo+1==up) return up;
+  if(comp(elem(N-1), x)) return N;
+  uint lo=0, up=N-1, mi=lo+(up-lo)/2;
+  while (lo<=up) {
     mi=lo+(up-lo)/2;
-    if(comp(x, elem(mi))) up=mi; else lo=mi;
+    if (elem(mi) == x) return mi;
+    if(comp(x, elem(mi))) up=mi-1; else lo=mi+1;
+    if(comp(x, elem(lo))) return lo;
+    if(comp(elem(up), x)) return up+1;
   }
-  HALT("you shouldn't be here!");
-  return 0;
+  return mi;
+}
+
+//! fast find method in a sorted array, returns index to element equal to x
+template<class T> int MT::Array<T>::findValueInSorted(const T& x, ElemCompare comp) const {
+  uint cand_pos = rankInSorted(x, comp);
+  if (cand_pos == N) return -1;
+  else if (elem(cand_pos) != x) return -1;
+  else return cand_pos;
 }
 
 //! fast insert method in a sorted array, the array remains sorted
 template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
-  if(!N) { append(x); return 1; }
-  uint i=findInSorted(x, comp);
-  insert(i, x);
-  return i;
+  uint cand_pos = rankInSorted(x, comp);
+  insert(cand_pos, x);
+  return cand_pos;
 }
+
+
+template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
+  CHECK(memMove, "");
+  uint cand_pos = rankInSorted(x, comp);
+  if (cand_pos == N  ||  elem(cand_pos) != x) insert(cand_pos, x);
+  return cand_pos;
+}
+
 
 //! fast remove method in a sorted array, the array remains sorted
 template<class T> void MT::Array<T>::removeValueInSorted(const T& x, ElemCompare comp) {
-  uint i=findInSorted(x, comp);
+  uint i=findValueInSorted(x, comp);
   CHECK(elem(i)==x, "value not found");
   remove(i);
 }
@@ -1377,7 +1399,11 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
-  
+
+  if(!ELEMSEP) ELEMSEP=MT::arrayElemsep;
+  if(!LINESEP) LINESEP=MT::arrayLinesep;
+  if(!BRACKETS) BRACKETS=MT::arrayBrackets;
+
   if(binary) {
     writeDim(os);
     os <<std::endl;

@@ -255,7 +255,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   if(dumpReport) {
     cout <<"contacts: np=" <<np <<endl;
     for(k=0, i=0; i<np; i++) {
-      cout <<"* Object " <<C.shapes(oids[i <<1])->name <<" vs. Object " <<C.shapes(oids[(i <<1)+1])->name <<endl;
+      cout <<"* Shape '" <<C.shapes(oids[i <<1])->name <<"' vs. Shape '" <<C.shapes(oids[(i <<1)+1])->name <<"'" <<endl;
       cout <<"  #contacts = " <<num_contacts[i] <<endl;
       for(j=0; j<num_contacts[i]; j++, k++) {
         cout <<"  - contact " <<j <<endl;
@@ -407,7 +407,7 @@ void swiftQueryExactDistance(SwiftInterface& swift) {
 #include "util.h"
 //#warning "MT_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
-void SwiftInterface::initActivations(const ors::Graph& C) {}
+void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {}
 void SwiftInterface::close() {}
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
 void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}

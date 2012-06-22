@@ -1,0 +1,5 @@
+body { X = <t(0 1.01 .5) d(30 0 1 0)>, contact, type=3 mesh='pin1.off' size=[.1 .1 .1 .1]}
+
+#body block {X=<t(0 1.2 2)> type=0 size[.2 .2 .2 .2]}
+#body sphere {X=<t(0 1.1 1)> type=1 size=[.2 .2 .2 .2]}
+

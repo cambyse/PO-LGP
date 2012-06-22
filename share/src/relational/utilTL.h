@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -19,14 +19,18 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef UTIL_TL_h
+#define UTIL_TL_h
 
-#ifndef STD_TL
-#define STD_TL
-
-#include <limits.h>
+#include <limits>
 #include <float.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#ifndef MT_MSVC
+	#include <sys/time.h>
+	#include <sys/resource.h>
+#endif
+#ifndef MT_IMPLEMENT_TEMPLATES
+#define MT_IMPLEMENT_TEMPLATES
+#endif
 #include <MT/array.h>
 #include <MT/util.h>
 #include <cmath>
@@ -54,14 +58,21 @@
 #  define CHECK_(cond,code,msg)
 #endif
 
-
+#ifdef MT_MSVC
+	#define pow(b, e) pow((double)b, (double)e)
+#endif
 
 namespace TL {
-const uint UINT_NIL = UINT_MAX;
+const uint UINT_NIL = std::numeric_limits<uint>::max();
 
 const double TL_DOUBLE_NIL = -98765.43211234589;
-const double TL_DOUBLE_MIN = DBL_MAX * (-1.);
-const double TL_INFINITY = INFINITY;
+const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
+
+#ifdef MT_MSVC
+    #define TL_INFINITY numeric_limits<double>::infinity();
+#else
+	const double TL_INFINITY = std::numeric_limits<double>::infinity();
+#endif
 
 inline int signOf(int a) { return (a == 0) ? 0 : (a<0 ? -1 : 1); }
 inline double signOf(double a) { return a<0 ? -1 : 1; }
@@ -69,8 +80,8 @@ inline bool isZero(double a) {return fabs(a) < 10e-15;}
 inline bool areEqual(double a, double b) {return isZero(a-b);}
 
 // vary from left to right (left-most argument varies the fastest)
-void allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty);
-void allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty); // different arguments
+void allPermutations(MT::Array< uintA >& permutations, const uintA& arguments, uint length, bool withRepeat, bool returnEmptyIfNoneFound);
+void allPermutations(MT::Array< uintA >& permutations, const MT::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound); // different arguments
 
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, uint length);
 void allSubsets(MT::Array< uintA >& subsets, const uintA& elements, bool trueSubsets, bool withEmpty);
@@ -105,6 +116,9 @@ uint getIndex(const uintA& constants, const uintA& args);
 double getcputime();
 
 
+bool uint_compare(const uint& a, const uint& b);
+
+
 // Reference Managing
 
 template<class T> void del(T* p) {
@@ -121,7 +135,7 @@ template<class T> T* getRef(T* p) {
 	return p;
 }
 
-}
+
 
 // for my ors simulator
 double REPLACE_SIZE(double val);
@@ -160,7 +174,7 @@ public:
   bool done();
 };
 
-
+}
 
 
 

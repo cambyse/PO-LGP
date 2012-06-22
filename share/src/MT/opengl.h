@@ -87,9 +87,7 @@ void glDrawTexQuad(uint texture,
                    float x1, float y1, float z1, float x2, float y2, float z2,
                    float x3, float y3, float z3, float x4, float y4, float z4,
                    float mulX=1., float mulY=1.);
-void glGrabImage(byteA& img);
-void glGrabDepth(byteA& depth);
-void glGrabDepth(floatA& depth);
+//grabImage: use OpenGL::capture instead!
 void glRasterImage(float x, float y, byteA &img, float zoom=1.);
 
 
@@ -172,19 +170,19 @@ struct OpenGL {
   struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String text;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
-  MT::Array<GLView> views;             //!< list of draw routines
-  MT::Array<GLDrawer> drawers;         //!< list of draw routines
-  MT::Array<GLInitCall> initCalls;     //!< list of initialization routines
-  MT::Array<GLHoverCall*> hoverCalls;   //!< list of hover callbacks
-  MT::Array<GLClickCall*> clickCalls;   //!< list of click callbacks
-  MT::Array<GLKeyCall*> keyCalls;   //!< list of click callbacks
-  ors::Camera camera; //!< the camera used for projection
+  MT::Array<GLView> views;            //!< list of draw routines
+  MT::Array<GLDrawer> drawers;        //!< list of draw routines
+  MT::Array<GLInitCall> initCalls;    //!< list of initialization routines
+  MT::Array<GLHoverCall*> hoverCalls; //!< list of hover callbacks
+  MT::Array<GLClickCall*> clickCalls; //!< list of click callbacks
+  MT::Array<GLKeyCall*> keyCalls;     //!< list of click callbacks
+  ors::Camera camera;     //!< the camera used for projection
   MT::String text;        //!< the text to be drawn as title within the opengl frame
   float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
   bool reportEvents, reportSelects;    //!< flags for verbosity
-  int pressedkey;           //!< stores the key pressed
-  const char *exitkeys;     //!< additional keys to exit watch mode
-  int mouse_button;         //!< stores which button was pressed
+  int pressedkey;         //!< stores the key pressed
+  const char *exitkeys;   //!< additional keys to exit watch mode
+  int mouse_button;       //!< stores which button was pressed
   int mouseposx, mouseposy;  //!< current x- and y-position of mouse
   int mouseView;
   bool mouseIsDown;
@@ -244,7 +242,9 @@ struct OpenGL {
   void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
   
   //!@name capture routines
-  void capture(byteA &img, int w, int h, ors::Camera *cam);
+  void capture(byteA &img, int w, int h, ors::Camera *cam=NULL);
+  void captureDepth(byteA &depth, int w, int h, ors::Camera *cam=NULL);
+  void captureDepth(floatA &depth, int w, int h, ors::Camera *cam=NULL);
   void captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *cam, double baseline);
   
 #if 0

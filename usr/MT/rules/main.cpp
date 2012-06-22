@@ -42,8 +42,8 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       //-- for each binary variable: an indicator, a modification indicator, and a next-time-step indicate
       indName(0, );
       vars.append(v_pre  = new infer::Variable(2, txt));
-      vars.append(v_mod  = new infer::Variable(2, txt+"_mod"));
-      vars.append(v_post = new infer::Variable(2, txt+"'"));
+      vars.append(v_mod  = new infer::Variable(2, STRING(txt <<"_mod")));
+      vars.append(v_post = new infer::Variable(2, STRING(txt <<"'")));
       totalIndicators++;
       
       //-- for each value of each variable: a factor enforcing equality or neutrality depending on change value
@@ -53,8 +53,8 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
       //-- for each value of each variable: an indicator, a modification indicator, and a next-time-step indicate
       indName(j, );
       vars.append(v_pre  = new infer::Variable(2, txt));
-      vars.append(v_mod  = new infer::Variable(2, txt+"_mod"));
-      vars.append(v_post = new infer::Variable(2, txt+"'"));
+      vars.append(v_mod  = new infer::Variable(2, STRING(txt <<"_mod")));
+      vars.append(v_post = new infer::Variable(2, STRING(txt <<"'")));
       totalIndicators++;
 
       //-- for each value of each variable: a factor enforcing equality or neutrality depending on change value
@@ -118,7 +118,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
     }
   }
   
-  //=== dot order
+  //=== dot order: append an attribute to each element which gives strict dot ordering
   uint dot_order=0;
   for_list(i, s, S){
     if(s->dim==2){
@@ -172,15 +172,17 @@ int main(int argn, char** argv){
   listRead(R, fil, "{}");
   fil.close();
   
-  //cout <<"StateVariables";  listWrite(S, cout, "  ", "{}");
-  //cout <<"\n\nRules";  listWrite(R, cout, "  ", "{}");
-  
+  cout <<"\n\n*** StateVariables\n";  listWrite(S, cout, "  ", "{}");
+  cout <<"\n\n*** Rules\n";  listWrite(R, cout, "  ", "{}");
   
   //--------------
   infer::VariableList vars;
   infer::FactorList facs;
   RulesToFactorGraph(vars, facs, S, R);
   
-  cout <<vars <<endl;
-  cout <<facs <<endl;
+  cout <<"\n\n*** Variables\n" <<vars <<endl;
+  cout <<"\n\n*** Factors\n" <<facs <<endl;
+  
+  ofstream os("coffee_shop.fg");
+  os <<vars <<endl <<facs <<endl;
 }

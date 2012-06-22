@@ -195,17 +195,17 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   ors=new ors::Graph;
   //the links
   for(uint k=0; k<=K; k++){
-    b=new ors::Body(ors->bodies);
+    b=new ors::Body(*ors);
     b->name = STRING("body" <<k);
-    if(!k) b->fixed=true;
-    s=new ors::Shape(ors->shapes, b);
+    if(!k) b->type=ors::staticBT;
+    s=new ors::Shape(*ors, b);
     s->type=ors::cappedCylinderST;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=1./K; s->size[3]=.2/K;
     s->rel.setText(STRING("<t(0 0 " <<.5/K <<")>"));
     if(k&1){ s->color[0]=.5; s->color[1]=.2; s->color[2]=.2; } else   { s->color[0]=.2; s->color[1]=.2; s->color[2]=.2; }
     s->cont=true;
     if(k){
-      j=new ors::Joint(ors->joints, ors->bodies(k-1), ors->bodies(k));
+      j=new ors::Joint(*ors, ors->bodies(k-1), ors->bodies(k));
       j->type = ors::hingeJT;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
@@ -218,16 +218,16 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   }
   endeff=b;
   //the target
-  b=new ors::Body(ors->bodies);
+  b=new ors::Body(*ors);
   b->name = "target";
   b->X.setText("<t(.2 0 0)>");
-  s=new ors::Shape(ors->shapes, b);
+  s=new ors::Shape(*ors, b);
   s->read(STREAM("type=1 size=[.0 .0 .1 .02] color=[0 0 1]"));
-  s=new ors::Shape(ors->shapes, b);
+  s=new ors::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(0 -.1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  s=new ors::Shape(ors->shapes, b);
+  s=new ors::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(0 .1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  s=new ors::Shape(ors->shapes, b);
+  s=new ors::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(.1 0 0)> size=[.01 .2 .3 .0] color=[0 0 0] contact"));
   graphMakeLists(ors->bodies, ors->joints);
   ors->calcBodyFramesFromJoints();

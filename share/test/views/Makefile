@@ -1,6 +1,6 @@
 BASE = ../..
 
-OPENCV = 1
+OPENCV = 0 1
 GTK = 1
 GTKGL = 1
 

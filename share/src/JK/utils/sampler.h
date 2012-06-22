@@ -2,7 +2,7 @@
 #define _SAMPLER_H_
 
 #include <MT/array.h>
-#include <relational/blocksWorld.h>
+#include <relational/robotManipulationSimulator.h>
 
 #include <limits>
 

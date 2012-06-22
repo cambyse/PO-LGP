@@ -21,6 +21,9 @@
 
 void ludcmp(double **a, int n, int *indx, double *d);
 void lubksb(double **a, int n, int *indx, double b[]);
+double *vector(uint i, uint j) { return new double[j]; }
+void nrerror(const char* msg) { HALT(msg); }
+void free_vector(double* p, uint i, uint j) { delete[] p; }
 
 namespace MT {
 double determinant_LU(const arr& X){

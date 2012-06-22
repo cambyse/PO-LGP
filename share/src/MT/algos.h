@@ -268,17 +268,6 @@ public:
 };
 
 
-
-//===========================================================================
-//
-// helpers to include foreign code
-//
-
-double *vector(uint i, uint j);
-void nrerror(const char* msg);
-void free_vector(double* p, uint i, uint j);
-
-
 //===========================================================================
 //
 // implementations

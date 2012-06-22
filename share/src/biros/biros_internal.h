@@ -1,5 +1,5 @@
-#ifndef MT_process_internal_h
-#define MT_process_internal_h
+#ifndef MT_biros_internal_h
+#define MT_biros_internal_h
 
 #include <pthread.h>
 #include <biros/biros.h>

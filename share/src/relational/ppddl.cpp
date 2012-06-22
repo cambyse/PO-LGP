@@ -1,10 +1,14 @@
+#if 0
+
 #include "ppddl.h"
 #include "logicDefinitions.h"
 #include "logicReasoning.h"
 
+namespace PRADA {
+
 const uint CONSTANTS_START = 11;
 
-TL::Literal* buildLiteral(MT::String& text, const MT::Array<MT::String> string_objects) {
+Literal* buildLiteral(MT::String& text, const MT::Array<MT::String> string_objects) {
   uint DEBUG = 0;
   MT::skip(text, "(");
   bool is_true = true;
@@ -30,11 +34,11 @@ TL::Literal* buildLiteral(MT::String& text, const MT::Array<MT::String> string_o
     args.append(string_objects.findValue(string_arguments(i)) + CONSTANTS_START);
   }
   
-  return TL::logicObjectManager::getLiteral(TL::logicObjectManager::getPredicate(predicate_name), is_true, args);
+  return logicObjectManager::getLiteral(logicObjectManager::getPredicate(predicate_name), is_true, args);
 }
 
 
-void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, const char * filename) {
+void readPPDDLdomain(SymbolicState& start_state, Reward& reward, const char * filename) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"readPPDDLdomain [START]"<<endl;}
   
@@ -72,8 +76,8 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
       cout<<string_objects(i)<<"  -->  "<< constants(i)<<endl;
     }
   }
-  TL::logicObjectManager::setConstants(constants);
-  if (DEBUG>0) {PRINT(TL::logicObjectManager::constants);}
+  logicObjectManager::setConstants(constants);
+  if (DEBUG>0) {PRINT(logicObjectManager::constants);}
   
   
   // (2) INITIAL STATE
@@ -98,7 +102,7 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
     }
 //     HALT("");
   }
-  TL::logicReasoning::sort(start_state.lits_prim);
+  logicReasoning::sort(start_state.lits_prim);
   if (DEBUG>0) {
     cout<<"START STATE:  "<<start_state<<endl;
   }
@@ -107,8 +111,8 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
   MT::skip(in);
   
   // (3) GOAL
-  if (reward.reward_type == TL::Reward::reward_literalList) {
-    TL::LiteralListReward* cast_reward = (TL::LiteralListReward*) &reward;
+  if (reward.reward_type == Reward::reward_literalList) {
+    LiteralListReward* cast_reward = (LiteralListReward*) &reward;
     MT::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
@@ -128,7 +132,7 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
   //     HALT("");
     }
   }
-  else if (reward.reward_type == TL::Reward::reward_maximize_function) {
+  else if (reward.reward_type == Reward::reward_maximize_function) {
     MT::String line_reward;
     in >> line_reward;
     if (DEBUG>1) {PRINT(line_reward);}
@@ -142,11 +146,11 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
       string_function.read(line_reward, NULL, "(");
 //       PRINT(string_function);
       uint q;
-      TL::CountFunction* f = NULL;
-      FOR1D(TL::logicObjectManager::f_derived, q) {
-//         PRINT(TL::logicObjectManager::f_derived(q)->name);
-        if (TL::logicObjectManager::f_derived(q)->name == string_function) {
-          f = (TL::CountFunction*) TL::logicObjectManager::f_derived(q);
+      CountFunction* f = NULL;
+      FOR1D(logicObjectManager::f_derived, q) {
+//         PRINT(logicObjectManager::f_derived(q)->name);
+        if (logicObjectManager::f_derived(q)->name == string_function) {
+          f = (CountFunction*) logicObjectManager::f_derived(q);
           break;
         }
       }
@@ -155,8 +159,8 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
       CHECK(f!=NULL, "");
       uintA empty;
       empty.resize(0);
-      TL::MaximizeFunctionReward* cast_reward = (TL::MaximizeFunctionReward*) &reward;
-      cast_reward->fa = TL::logicObjectManager::getFA(f, empty);
+      MaximizeFunctionReward* cast_reward = (MaximizeFunctionReward*) &reward;
+      cast_reward->fa = logicObjectManager::getFA(f, empty);
       
       // reward-reward
       MT::skipUntil(in, "(");
@@ -193,7 +197,7 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
       double rewardReward;
       line_rewardReward >> rewardReward;
       if (DEBUG>1) {PRINT(rewardReward);}
-      TL::RewardFunction* f = new TL::RewardFunction;
+      RewardFunction* f = new RewardFunction;
       f->reward_value = rewardReward;
       f->grounded_pis = reward_lits;
       f->id = 1;
@@ -202,11 +206,11 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
       if (DEBUG>1) {f->writeNice(); cout<<endl;}
       FuncL wrapper;
       wrapper.append(f);
-      TL::logicObjectManager::addStateFunctions(wrapper);
+      logicObjectManager::addStateFunctions(wrapper);
       uintA empty;
       empty.resize(0);
-      TL::MaximizeFunctionReward* cast_reward = (TL::MaximizeFunctionReward*) &reward;
-      cast_reward->fa = TL::logicObjectManager::getFA(f, empty);
+      MaximizeFunctionReward* cast_reward = (MaximizeFunctionReward*) &reward;
+      cast_reward->fa = logicObjectManager::getFA(f, empty);
     }
   }
   else
@@ -217,7 +221,7 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
   }
   
     // (4) DERIVE INITIAL STATE
-  TL::logicReasoning::derive(&start_state);
+  logicReasoning::derive(&start_state);
   if (DEBUG>0) {
     cout<<"START STATE:  "<<start_state<<endl;
   }
@@ -243,18 +247,18 @@ void TL::readPPDDLdomain(TL::SymbolicState& start_state, TL::Reward& reward, con
 MT::Array< char > vars;
 
 
-void lit2ppddl(TL::Literal& lit, ostream& out) {
+void lit2ppddl(Literal& lit, ostream& out) {
   uint i;
   out << "(";
-  if (lit.atom->pred->type == TL::Predicate::predicate_comparison) {
-    TL::ComparisonAtom* ca = (TL::ComparisonAtom*) lit.atom;
+  if (lit.atom->pred->type == Predicate::predicate_comparison) {
+    ComparisonAtom* ca = (ComparisonAtom*) lit.atom;
     CHECK(ca->hasConstantBound(), "non-constant-bound");
     switch(ca->comparisonType) {
-      case TL::comparison_less: out << "<"; break;
-      case TL::comparison_lessEqual: out << "<="; break;
-      case TL::comparison_greater: out << ">"; break;
-      case TL::comparison_greaterEqual: out << ">="; break;
-      case TL::comparison_equal: out << "="; break;
+      case comparison_less: out << "<"; break;
+      case comparison_lessEqual: out << "<="; break;
+      case comparison_greater: out << ">"; break;
+      case comparison_greaterEqual: out << ">="; break;
+      case comparison_equal: out << "="; break;
     }
     out << " ";
     if (ca->args.N == 1) {
@@ -284,7 +288,7 @@ void lit2ppddl(TL::Literal& lit, ostream& out) {
 }
 
 
-void fv2ppddl(TL::FunctionValue& fv, ostream& out) {
+void fv2ppddl(FunctionValue& fv, ostream& out) {
   out << "(";
   out << "= ";
   if (fv.atom->args.N == 1) {
@@ -302,7 +306,7 @@ void fv2ppddl(TL::FunctionValue& fv, ostream& out) {
 
 
 
-void TL::writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& out) {
+void writeRulesAsPPDDL(const RuleSet& rules, bool all_outcome, ostream& out) {
   vars.clear();
   vars.append('x');
   vars.append('y');
@@ -314,9 +318,9 @@ void TL::writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& 
   
   uint i, k, l;
   FOR1D_(rules, i) {
-    TL::Rule* rule = rules.elem(i);
+    Rule* rule = rules.elem(i);
     // letzteres HACK fuer noAction
-    if (TL::ruleReasoning::isDefaultRule(rule)  ||  rule->action->pred->id == 3)
+    if (ruleReasoning::isDefaultRule(rule)  ||  rule->action->pred->id == 3)
       continue;
     uintA terms, drefs;
     ruleReasoning::calcTerms(*rule, terms);
@@ -342,10 +346,10 @@ void TL::writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& 
     }
     
     // explicitely set all objects to be not out
-    TL::Predicate* p_OUT = TL::logicObjectManager::getPredicate(MT::String("out"));
+    Predicate* p_OUT = logicObjectManager::getPredicate(MT::String("out"));
     FOR1D(terms, k) {
       uintA args(1);  args(0) = terms(k);
-      Literal* lit = TL::logicObjectManager::getLiteral(p_OUT, false, args);
+      Literal* lit = logicObjectManager::getLiteral(p_OUT, false, args);
       lit2ppddl(*lit, out);
       out<<"  ";
     }
@@ -390,10 +394,10 @@ void TL::writeRulesAsPPDDL(const TL::RuleSet& rules, bool all_outcome, ostream& 
 }
 
 
-void TL::writePPDDL_description(const TL::RuleSet& rules, 
+void writePPDDL_description(const RuleSet& rules, 
                                 bool all_outcome, 
-                                const TL::SymbolicState& state, 
-                                const TL::LiteralListReward& reward,
+                                const SymbolicState& state, 
+                                const LiteralListReward& reward,
                                 const char* filename) {
   bool use_functions = false;
   bool use_complex_rule_conversion = false;
@@ -408,11 +412,11 @@ void TL::writePPDDL_description(const TL::RuleSet& rules,
     out<<"\t(:requirements :probabilistic-effects :equality :fluents :negative-preconditions  :rewards)"<<endl;
   }
   out<<"\t(:predicates  (block ?x)  (ball ?x)  (table ?x)  (on ?x ?y)  (inhand ?x)  (upright ?x)  (out ?x)";
-  if (TL::logicObjectManager::getPredicate(MT::String("clear")) != NULL)
+  if (logicObjectManager::getPredicate(MT::String("clear")) != NULL)
     out << "  (clear ?x)";
-  if (TL::logicObjectManager::getPredicate(MT::String("homies")) != NULL)
+  if (logicObjectManager::getPredicate(MT::String("homies")) != NULL)
     out << "  (homies ?x ?y)";
-  if (TL::logicObjectManager::getPredicate(MT::String("inhandNil")) != NULL)
+  if (logicObjectManager::getPredicate(MT::String("inhandNil")) != NULL)
     out << "  (inhandNil)";
   out << "  )" << endl;
   if (use_functions) {out<<"\t(:functions  (size ?x) )"<<endl;}
@@ -434,8 +438,8 @@ void TL::writePPDDL_description(const TL::RuleSet& rules,
   out<<"(:domain desktop-world)"<<endl;
   out<<"(:objects";
   uint i;
-  FOR1D(TL::logicObjectManager::constants, i) {
-    out<<" o"<<TL::logicObjectManager::constants(i);
+  FOR1D(logicObjectManager::constants, i) {
+    out<<" o"<<logicObjectManager::constants(i);
   }
   out<<")"<<endl;
   // Start state
@@ -469,3 +473,8 @@ void TL::writePPDDL_description(const TL::RuleSet& rules,
   out<<")"<<endl;
 }
 
+
+} // namespace PRADA
+
+
+#endif

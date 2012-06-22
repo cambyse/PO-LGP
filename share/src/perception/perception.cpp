@@ -1,4 +1,7 @@
 #include "perception.h"
+
+#ifdef MT_OPENCV
+
 #include <MT/opencv.h>
 
 #undef COUNT
@@ -121,3 +124,6 @@ byteA evidence2RGB(const floatA& evidence){
 
   return tmp;
 }
+
+#else //MT_OPENCV
+#endif

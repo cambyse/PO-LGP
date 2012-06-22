@@ -1,5 +1,5 @@
 /*  
-    Copyright 2011   Tobias Lang
+    Copyright 2008-2012   Tobias Lang
     
     E-mail:    tobias.lang@fu-berlin.de
     
@@ -21,7 +21,7 @@
 
 #include "utilTL.h"
 
-double REPLACE_SIZE(double val) {
+double TL::REPLACE_SIZE(double val) {
   // Blocks
   if (TL::areEqual(val,0.04)) return 1.0;
   if (TL::areEqual(val,0.06)) return 2.0;
@@ -44,143 +44,292 @@ double REPLACE_SIZE(double val) {
 }
 
 
-// with or without repeat
+typedef MT::Array< uintA > PermutationsList;
 
-struct Memory_allPossibleLists {
-  MT::Array< MT::Array< uintA > > list_arguments;
-  MT::Array< MT::Array< MT::Array< uintA > > > list_lists;  // 0 - length,  1 - arguments,  2 - lists
+
+
+struct PermutationsMemory { 
+  uint length;
+  bool returnEmptyIfNoneFound;
+  bool withRepeat;
   
-  Memory_allPossibleLists() {
-    list_arguments.resize(20);
-    list_lists.resize(20);
-  }
+  // only for array_t.cxx
+  PermutationsMemory() {}
   
-  bool get(MT::Array< uintA >& lists, const uintA& arguments, uint length) {
-    uint i;
-    FOR1D(list_arguments(length), i) {
-      if (list_arguments(length)(i) == arguments) {
-        lists = list_lists(length)(i);
-        return true;
+  void create_new_list(PermutationsList& permutationsList, const uintA& args) {
+    uint DEBUG = 0;
+    if (DEBUG>0) {cout<<"create_new_list [START]"<<endl;}
+    uint id=0;
+    uint a, i, _pow;
+    // beim change ganz nach hinten rutschen und wieder alle zuruecksetzen
+    while (id < pow(args.N, length)) {
+      if (DEBUG>2) {PRINT(length);  PRINT(args.N);  PRINT(pow(args.N, length));}
+      uintA nextPermutation(length);
+      i = id;
+      for (a=length; a>0; a--) {
+        _pow = (uint) pow(args.N, a-1);
+        nextPermutation(a-1) = args(i / _pow);
+        // Auf gar keinen Fall hier die Reihenfolge aendern wollen, in der Liste bestueckt wird.
+        // Andere Methoden nutzen explizit die Reihenfolge aus, in der's von links nach rechts variiert.
+        i = i % _pow;
+      }
+      id++;
+      if (withRepeat)
+        permutationsList.append(nextPermutation);
+      else {
+        if (!nextPermutation.containsDoubles())  // teuer!
+          permutationsList.append(nextPermutation);
       }
     }
-    return false;
+    if (DEBUG>0) {
+      FOR1D(permutationsList, i) {PRINT(permutationsList(i))}
+    }
+    if (DEBUG>0) {cout<<"create_new_list [END]"<<endl;}
   }
   
-  void append(MT::Array< uintA >& lists, const uintA& arguments, uint length) {
-    list_arguments(length).append(arguments);
-    list_lists(length).append(lists);
+  
+#if 1
+// Version for arguments < 100
+  MT::Array< short > indices;
+  MT::Array<              // arg1-arg2
+    MT::Array<            // various arguments
+      PermutationsList
+    > 
+  > mem;
+  MT::Array<              // arg1-arg2
+    MT::Array<            // various arguments
+      uintA
+    >
+  > mem_args;
+  
+  PermutationsMemory(uint _length, bool _withRepeat, bool _returnEmpty) : length(_length), returnEmptyIfNoneFound(_returnEmpty), withRepeat(_withRepeat) {
+    indices.resize(100, 100);
+    indices.setUni(100);
+  }
+  
+  ~PermutationsMemory() {
+  }
+  
+  void get(PermutationsList& permutationsList, const uintA& args) {
+    uint DEBUG = 0;
+//     if (length>=2) DEBUG = 2;
+    if (DEBUG>0) {cout<<"PermutationsMemory::get [START]"<<endl;}
+    if (DEBUG>0) {PRINT(length);  PRINT(returnEmptyIfNoneFound);  PRINT(withRepeat);  PRINT(args);}
+    permutationsList.clear();
+    if (length == 1) {
+      uintA one(1);
+      permutationsList.resize(args.N);
+      permutationsList.setUni(one);
+      uint i;
+      FOR1D(args, i) {
+        permutationsList(i)(0) = args(i);
+      }
+    }
+    else if (length > 1  &&  args.N>0) {
+      CHECK(withRepeat || args.N >= length, "args="<<args<<" length="<<length);
+      short idx;
+      if (args.N > 1)
+        idx = indices(args(0), args(1));
+      else
+        idx = indices(args(0), args(0));
+      if (DEBUG>0) {PRINT(idx);}
+      if (idx == 100) {
+        if (DEBUG>0) {cout<<"creating memory list for args(0)-args(1)"<<endl;}
+        // extend memory
+        MT::Array< PermutationsList > new_mem;
+        mem.append(new_mem);
+        MT::Array< uintA > new_mem_args;
+        mem_args.append(new_mem_args);
+        // update indices
+        if (args.N > 1)
+          indices(args(0), args(1)) = mem.N-1;
+        else
+          indices(args(0), args(0)) = mem.N-1;
+        idx = mem.N-1;
+      }
+      if (DEBUG>1) {PRINT(mem(idx));  PRINT(mem_args(idx));}
+      uint i;
+      FOR1D(mem_args(idx), i) {
+        if (mem_args(idx)(i) == args) {
+          if (DEBUG>1) {cout<<"found existing entry"<<endl;}
+          permutationsList = mem(idx)(i);
+          break;
+        }
+      }
+      if (i==mem_args(idx).N) {
+        if (DEBUG>1) {cout<<"creating new entry"<<endl;}
+        create_new_list(permutationsList, args);
+        mem(idx).append(permutationsList);
+        mem_args(idx).append(args);
+      }
+    }
+    if (permutationsList.N == 0  &&  returnEmptyIfNoneFound) {
+      uintA empty(0);
+      permutationsList.append(empty);
+    }
+    if (DEBUG>0) {PRINT(permutationsList);}
+    if (DEBUG>0) {cout<<"PermutationsMemory::get [END]"<<endl;}
+  }
+  
+  
+  
+  std::map< uint, uint > map_1;
+  MT::Array< std::map< uint, uint > > map_2;
+  
+  // 0 - argument1,  1 - argument2,  2 - lists
+  MT::Array<  // arg 1
+    MT::Array< // arg 2
+      MT::Array< // various arguments (starting with arg1 and arg2)
+        PermutationsList // lists
+      >
+    > 
+  > mem__2plus;
+  
+  MT::Array<  // arg 1
+    MT::Array< // arg 2
+      MT::Array< uintA > // arguments lists
+    > 
+  > mem_args__2plus;
+#else
+  PermutationsMemory(uint _length, bool _withRepeat, bool _returnEmpty) : length(_length), returnEmptyIfNoneFound(_returnEmpty), withRepeat(_withRepeat) {
+  }
+  
+  ~PermutationsMemory() {
+  }
+  
+  void get(PermutationsList& permutationsList, const uintA& args) {
+    uint DEBUG = 0;
+    if (DEBUG>0) {PRINT(args);}
+    permutationsList.clear();
+    if (length == 1) {
+      permutationsList.resize(args.N);
+      uint i;
+      FOR1D(args, i) {
+        permutationsList.elem(i).resize(1);
+        permutationsList.elem(i)(0) = args(i);
+      }
+    }
+    else {
+      if (map_1.count(args(0)) == 0) {
+        // key
+        std::map< uint, uint> new_map2;
+        map_2.append(new_map2);
+        map_1[args(0)] = map_2.N-1;
+        // memory - permutations
+        MT::Array< MT::Array< PermutationsList > > mem_list;
+        mem__2plus.append(mem_list);
+        CHECK(mem__2plus.N-1 == map_1[args(0)], "");
+        // memory - arguments
+        MT::Array< MT::Array< uintA > > mem_args_list;
+        mem_args__2plus.append(mem_args_list);
+      }
+      int idx1 = map_1[args(0)];
+      if (DEBUG>0) {PRINT(idx1);}
+      if (map_2(idx1).count(args(1)) == 0) {
+        // memory - permutations
+        MT::Array< PermutationsList > mem_list;
+        if (DEBUG>0) {PRINT(mem_list);}
+        mem__2plus(idx1).append(mem_list);
+        if (DEBUG>0) {PRINT(mem__2plus(idx1));}
+        map_2(idx1)[args(1)] = mem__2plus(idx1).N-1;
+        // memory - arguments
+        MT::Array< uintA > mem_args_list;
+        mem_args__2plus(idx1).append(mem_args_list);
+      }
+      int idx2 = map_2(idx1)[args(1)];
+      if (DEBUG>0) {PRINT(idx2);}
+      if (DEBUG>0) {PRINT(mem__2plus(idx1));}
+      MT::Array< PermutationsList> & mem_prefix = mem__2plus(idx1)(idx2);
+      if (DEBUG>0) {PRINT(mem_prefix);}
+      MT::Array< uintA > & mem_args_prefix = mem_args__2plus(idx1)(idx2);
+      if (DEBUG>0) {PRINT(mem_args_prefix);}
+      uint i;
+      FOR1D(mem_args_prefix, i) {
+        if (mem_args_prefix(i) == args) {
+          permutationsList = mem_prefix(i);
+          break;
+        }
+      }
+      // not found --> fill in
+      if (mem_args_prefix.N == i) {
+        mem_args_prefix.append(args);
+        create_new_list(permutationsList, args);
+        mem_prefix.append(permutationsList);
+      }
+    }
+    if (permutationsList.N == 0  &&  returnEmptyIfNoneFound) {
+      uintA empty(0);
+      permutationsList.append(empty);
+    }
+    if (DEBUG>0) {PRINT(permutationsList);}
+  }
+#endif
+};
+
+
+struct PermutationsMemoryWrapper {
+  MT::Array< PermutationsMemory* > all_mem;
+  bool withRepeat;
+  bool returnEmptyIfNoneFound;
+  
+  PermutationsMemoryWrapper(bool _withRepeat, bool _returnEmpty) : withRepeat(_withRepeat), returnEmptyIfNoneFound(_returnEmpty) {
+  }
+  
+  ~PermutationsMemoryWrapper() {listDelete(all_mem);}
+  
+  void get(MT::Array< uintA >& output_lists, const uintA& args, uint length) {
+    while (length >= all_mem.N) {
+      all_mem.append(new PermutationsMemory(all_mem.N, withRepeat, returnEmptyIfNoneFound));
+    } 
+    all_mem(length)->get(output_lists, args);
   }
 };
 
 
-Memory_allPossibleLists mem__withRepeat_returnEmpty;
-Memory_allPossibleLists mem__withRepeat_dontReturnEmpty;
-Memory_allPossibleLists mem__withoutRepeat_returnEmpty;
-Memory_allPossibleLists mem__withoutRepeat_dontReturnEmpty;
+PermutationsMemoryWrapper mem__withRepeat_returnEmpty(true, true);
+PermutationsMemoryWrapper mem__withRepeat_dontReturnEmpty(true, false);
+PermutationsMemoryWrapper mem__withoutRepeat_returnEmpty(false, true);
+PermutationsMemoryWrapper mem__withoutRepeat_dontReturnEmpty(false, false);
 
 
-
-void TL::allPossibleLists(MT::Array< uintA >& lists, const uintA& arguments, uint length, bool withRepeat, bool returnEmpty) {
+void TL::allPermutations(PermutationsList& permutationsList, const uintA& arguments, uint length, bool withRepeat, bool returnEmptyIfNoneFound) {
   uint DEBUG = 0;
-  if (DEBUG>0) cout<<"allPossibleListsWithRepeat [START]"<<endl;
-  if (DEBUG>0) {PRINT(arguments); PRINT(length); PRINT(withRepeat);}
+  if (DEBUG>0) cout<<"allPermutations [START]"<<endl;
+  if (DEBUG>0) {PRINT(arguments); PRINT(length); PRINT(withRepeat);  PRINT(returnEmptyIfNoneFound);}
   
-  lists.clear();
+  permutationsList.clear();
   // Try to get from memory
-  bool foundInMemory = false;
-  if (withRepeat && returnEmpty) {
-    foundInMemory = mem__withRepeat_returnEmpty.get(lists, arguments, length);
+  if (withRepeat && returnEmptyIfNoneFound) {
+    mem__withRepeat_returnEmpty.get(permutationsList, arguments, length);
   }
-  else if (withRepeat && !returnEmpty) {
-    foundInMemory = mem__withRepeat_dontReturnEmpty.get(lists, arguments, length);
+  else if (withRepeat && !returnEmptyIfNoneFound) {
+    mem__withRepeat_dontReturnEmpty.get(permutationsList, arguments, length);
   }
-  else if (!withRepeat && returnEmpty) {
-    foundInMemory = mem__withoutRepeat_returnEmpty.get(lists, arguments, length);
+  else if (!withRepeat && returnEmptyIfNoneFound) {
+    mem__withoutRepeat_returnEmpty.get(permutationsList, arguments, length);
   }
   else {
-    foundInMemory = mem__withoutRepeat_dontReturnEmpty.get(lists, arguments, length);
-  }
-  if (foundInMemory) {
-    if (DEBUG>0) {
-      cout<<"found in memory:"<<endl;
-      uint i;
-      FOR1D(lists, i) {PRINT(lists(i));}
-    }
-    if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
-    return;
-  }
-  
-  if (DEBUG>0) {cout<<"*** Creating new lists ***"<<endl;}
-  
-  
-  lists.clear();
-  if (length == 0) {
-    if (returnEmpty) {
-      uintA empty(0);
-      lists.append(empty);
-      if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
-      return;
-    }
-    else {
-      MT_MSG("No lists returned!");
-      return;
-    }
-  }
-  uint id=0;
-  uint a, i, _pow;
-  // beim change ganz nach hinten rutschen und wieder alle zuruecksetzen
-  while (id < pow(arguments.N, length)) {
-    if (DEBUG>2) {PRINT(length);  PRINT(arguments.N);  PRINT(pow(arguments.N, length));}
-    uintA nextList(length);
-    i = id;
-    for (a=length; a>0; a--) {
-      _pow = (uint) pow(arguments.N, a-1);
-      nextList(a-1) = arguments(i / _pow);
-      // Auf gar keinen Fall hier die Reihenfolge aendern wollen, in der Liste bestueckt wird.
-      // Andere Methoden nutzen explizit die Reihenfolge aus, in der's von links nach rechts variiert.
-      i = i % _pow;
-    }
-    id++;
-    if (withRepeat)
-      lists.append(nextList);
-    else {
-      if (!nextList.containsDoubles())  // teuer!
-	lists.append(nextList);
-    }
+    mem__withoutRepeat_dontReturnEmpty.get(permutationsList, arguments, length);
   }
   if (DEBUG>0) {
-    FOR1D(lists, i) {PRINT(lists(i))}
+    uint i;
+    FOR1D(permutationsList, i) {PRINT(permutationsList(i));}
   }
-  
-  // Add to memory
-  if (withRepeat && returnEmpty) {
-    mem__withRepeat_returnEmpty.append(lists, arguments, length);
-  }
-  else if (withRepeat && !returnEmpty) {
-    mem__withRepeat_dontReturnEmpty.append(lists, arguments, length);
-  }
-  else if (!withRepeat && returnEmpty) {
-    mem__withoutRepeat_returnEmpty.append(lists, arguments, length);
-  }
-  else {
-    mem__withoutRepeat_dontReturnEmpty.append(lists, arguments, length);
-  }
-  
-  if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
+  if (DEBUG>0) cout<<"allPermutations [END]"<<endl;
 }
 
 
 // different arguments
-void TL::allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmpty)  {
+void TL::allPermutations(MT::Array< uintA >& lists, const MT::Array< uintA >& arguments_lists, bool returnEmptyIfNoneFound)  {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"allPossibleLists [START]"<<endl;}
-  if (DEBUG>0) {PRINT(arguments_lists);  PRINT(returnEmpty);}
+  if (DEBUG>0) {cout<<"allPermutations [START]"<<endl;}
+  if (DEBUG>0) {PRINT(arguments_lists);  PRINT(returnEmptyIfNoneFound);}
   lists.clear();
   if (arguments_lists.N == 0) {
-    if (returnEmpty) {
+    if (returnEmptyIfNoneFound) {
       uintA empty(0);
       lists.append(empty);
-//       if (DEBUG>0) cout<<"allPossibleListsWithRepeat [END]"<<endl;
+//       if (DEBUG>0) cout<<"allPermutations [END]"<<endl;
       return;
     }
     else {
@@ -210,7 +359,7 @@ void TL::allPossibleLists(MT::Array< uintA >& lists, const MT::Array< uintA >& a
   }
   
   if (DEBUG>0) {PRINT(lists);}
-  if (DEBUG>0) {cout<<"allPossibleLists [END]"<<endl;}
+  if (DEBUG>0) {cout<<"allPermutations [END]"<<endl;}
 }
 
 
@@ -224,7 +373,7 @@ void TL::allSubsets(MT::Array< uintA >& lists, const uintA& elements, bool trueS
   // others
   for (length=1; length<=max_length; length++) {
     MT::Array< uintA > local_lists;
-    allPossibleLists(local_lists, elements, length, false, false);
+    allPermutations(local_lists, elements, length, false, false);
     FOR1D(local_lists, i) {
       for (k=0; k<local_lists(i).N-1; k++) {
         if (local_lists(i)(k) >= local_lists(i)(k+1))
@@ -478,13 +627,16 @@ bool TL::isAcyclic(boolA adjMatrix) {
 
 
 double TL::getcputime() {
+  double t = 0;
+#ifndef MT_MSVC
   struct timeval tim;
   struct rusage ru;
   getrusage(RUSAGE_SELF, &ru);
   tim=ru.ru_utime;
-  double t=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
+  t=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
   tim=ru.ru_stime;
   t+=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
+#endif
   return t;
 }
 
@@ -499,7 +651,7 @@ uint TL::getIndex(const uintA& constants, const uintA& args) {
 }
 
 
-
+bool TL::uint_compare(const uint& a,const uint& b) { return a<b; }
 
 
 
@@ -513,7 +665,7 @@ double _mymin(double x,double y){ return x < y ? x : y; }
 double _mymax(double x,double y){ return x > y ? x : y; }
 
 
-Rprop::Rprop(){
+TL::Rprop::Rprop(){
   incr   = 1.2;
   decr   = .33;
   dMax = 50;
@@ -522,24 +674,24 @@ Rprop::Rprop(){
   delta0 = 1.;
 }
 
-void Rprop::init(double _delta0){
+void TL::Rprop::init(double _delta0){
   stepSize.resize(0);
   lastGrad.resize(0);
   delta0 = _delta0;
 }
 
-bool Rprop::done(){
+bool TL::Rprop::done(){
   double maxStep = stepSize(stepSize.maxIndex());
   return maxStep < incr*dMin;
 }
 
-void Rprop::step(double& w,const double& grad){
+void TL::Rprop::step(double& w,const double& grad){
   static arr W,GRAD;
   W.referTo(&w,1); GRAD.referTo(&grad,1);
   step(W,GRAD);
 }
 
-void Rprop::step(arr& w,const arr& grad,uint *singleI){
+void TL::Rprop::step(arr& w,const arr& grad,uint *singleI){
   if(!stepSize.N){ //initialize
     stepSize.resize(w.N);
     lastGrad.resize(w.N);

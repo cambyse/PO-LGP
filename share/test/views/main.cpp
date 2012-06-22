@@ -2,6 +2,8 @@
 #include <views/views.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
+#include <gtk/gtk.h>
+#include <gtk/gtkgl.h>
 
 struct ExampleVar:Variable{
   FIELD( int, i );
@@ -33,7 +35,7 @@ int main(int argn,char** argv){
   v.mesh.setBox();
   v.deAccess(NULL);
   
-  gtk_init(&argn, &argv);
+  gtkCheckInitialized();
   /*GtkBuilder *builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "win.glade", NULL);
   GtkWidget *win = GTK_WIDGET(gtk_builder_get_object (builder, "window"));

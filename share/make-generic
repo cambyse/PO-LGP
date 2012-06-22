@@ -7,6 +7,9 @@
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
+ifndef MLR_EXLIB_PATH
+MLR_EXLIB_PATH = $(HOME)/lib
+endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
@@ -48,10 +51,10 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)
+CXXFLAGS := -g -Wall -Wunused-but-set-variable $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),fast_debug)
-CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
+CXXFLAGS := -g -O3 -Wall -Wunused-but-set-variable $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),penibel)
 CXXFLAGS := -g -Wall -Wextra $(CXXFLAGS)
@@ -231,9 +234,13 @@ endif
 ifeq ($(GTK),1)
 #CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 #LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
-LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gthread-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs gtk+-2.0 gthread-2.0 gtkglext-1.0`
 #LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+endif
+
+ifeq ($(GRAPHVIZ),1)
+LIBS += -lgraph -lcgraph -lgvc
 endif
 
 ifeq ($(WX),1)
@@ -244,12 +251,9 @@ endif
 
 ifeq ($(ODE),1)
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
-CPATH	  := $(CPATH):$(LIBPATH)/ode-0.11/include
-LPATH	  := $(LPATH):$(LIBPATH)/ode-0.11/lib
-MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/ode-0.11/include
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ode/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ode/lib
 LIBS += -lode
-CygwinLibs+= -lode
-MSVCLibs  += ode.lib
 endif
 
 ifeq ($(SWIFT),1)
@@ -372,11 +376,27 @@ LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LIBS += -ldai
 endif
 
+ifeq ($(IBDS),1)
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ibds/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
+LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
+endif
+
 ifeq ($(URGLASER),1)
 CXXFLAGS  += -DMT_LASER
-CPATH     := $(CPATH):$(LIBPATH)/urg-0.0.2/include
-LPATH     := $(LPATH):$(LIBPATH)/urg-0.0.2/lib
-LIBS += -lc_urg -lc_connection
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/urg/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/system/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/connection/.libs
+LIBS += -lc_urg -lc_urg_system -lc_urg_connection
+endif
+
+ifeq ($(DYNAMIXEL),1)
+CXXFLAGS  += -DMT_DYNAMIXEL
+CPATH     := $(CPATH):$(LIBPATH)/dynamixel/include
+LPATH     := $(LPATH):$(LIBPATH)/dynamixel/lib
+LIBS      += -ldxl
 endif
 
 ifeq ($(BUMBLE),1)
@@ -411,6 +431,27 @@ CXXFLAGS  += -DMT_PTHREAD
 LIBS += -lpthread -lX11
 endif
 
+ifeq ($(PHYSX),1)
+CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/PhysX/Include:$(MLR_EXLIB_PATH)/PhysX/Include/extensions:$(MLR_EXLIB_PATH)/PhysX/Include/foundation:$(MLR_EXLIB_PATH)/PhysX/Include/deprecated
+LPATH := $(MLR_EXLIB_PATH)/PhysX/Lib/linux32/:$(LPATH)
+LIBS += -Wl,--start-group -lpthread -lrt\
+-lPhysX3CommonCHECKED \
+-lPvdRuntimeCHECKED \
+-lSimulationControllerCHECKED \
+-lSceneQueryCHECKED \
+-lLowLevelCHECKED \
+-lLowLevelClothCHECKED \
+-lPhysX3 \
+-lPhysX3VehicleCHECKED \
+-lPhysX3CookingCHECKED \
+-lPhysX3ExtensionsCHECKED \
+-lPhysX3CharacterKinematicCHECKED \
+-lRepX3CHECKED \
+-lRepXUpgrader3CHECKED \
+-lPhysXProfileSDKCHECKED \
+-lPxTaskCHECKED -Wl,--end-group
+endif
 
 ################################################################################
 #
