@@ -10,10 +10,9 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   sortByDotOrder(H);
   cout <<H <<endl;
   writeDot(H);
-  
+
   GraphView gv(H);
   gv.watch();
-
 }
 
 void testBasic(){

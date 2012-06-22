@@ -156,6 +156,8 @@ void GraspEvaluation::simulateInPhysX(){
     gl.update();
     s->glPhysx->update();
     
+    //check if object still in hand
+    
     //jiggle at the grasp hand
     ors::Quaternion &rot(grasp.bodies(1)->X.rot);
     ors::Quaternion a,b,c;

@@ -3,6 +3,7 @@
 #ifdef MT_GTK
 
 #include <gtk/gtk.h>
+//#define WITH_CGRAPH
 #include <graphviz/gvc.h>
 #include <graphviz/gvplugin_device.h>
 #undef MIN
@@ -73,32 +74,51 @@ void GraphView::watch(){
 
 void sGraphView::updateGraphvizGraph(){
   aginit();
+  //gvGraph = agopen("new_graph", Agdirected, NULL);
   gvGraph = agopen("new_graph", AGDIGRAPH);
+  agraphattr(gvGraph, "rankdir", "LR");
+  agraphattr(gvGraph, "ranksep", "0.05");
+
+  agnodeattr(gvGraph, "label", "");
+  agnodeattr(gvGraph, "shape", "");
+  agnodeattr(gvGraph, "fontsize", "11");
+  agnodeattr(gvGraph, "width", ".3");
+  agnodeattr(gvGraph, "height", ".3");
   
+  agedgeattr(gvGraph, "label", "");
+  agedgeattr(gvGraph, "arrowhead", "none");
+  agedgeattr(gvGraph, "arrowsize", ".5");
+  agedgeattr(gvGraph, "fontsize", "6");
+
   uint i,j;
   Element *e, *n;
   gvNodes.resize(G->N);
   //first add `nodes' (elements without links)
   for_list(i, e, (*G)){
     CHECK(i==e->id,"");
-    if(e->links.N!=2){ //not an edge
-      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name));
-//       if(e->name.N) agattr(gvNodes(i), "label", str->p);
-//       if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") agattr(gvNodes(i), "shape", "box");
-//       else if(e->type=="shape") agattr(gvNodes(i), "shape", "diamond");
-//       else agattr(gvNodes(i), "shape", "ellipse");
-    }
+    //if(e->links.N!=2){ //not an edge
+      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name)); //, true);
+      if(e->name.N) agset(gvNodes(i), "label", e->name.p);
+      if(e->links.N){
+	agset(gvNodes(i), "shape", "box");
+	agset(gvNodes(i), "fontsize", "6");
+	agset(gvNodes(i), "width", ".1");
+	agset(gvNodes(i), "height", ".1");
+      }
+   // }
   }
   //now all others
   for_list(i, e, (*G)){
-    if(e->links.N==2){ //is an edge
-      gvNodes(i) = (Agnode_t*)agedge(gvGraph, gvNodes(e->links(0)->id), gvNodes(e->links(1)->id));
-    }else if(e->links.N){
+    /*if(e->links.N==2){ //is an edge
+      gvNodes(i) = (Agnode_t*)agedge(gvGraph, gvNodes(e->links(0)->id), gvNodes(e->links(1)->id)); //, STRING(i <<"_" <<e->name), true);
+    }else*/ if(e->links.N){
       for_list(j, n, e->links){
+	Agedge_t *ge;
 	if(n->id<e->id)
-	  agedge(gvGraph, gvNodes(n->id), gvNodes(e->id));
+	  ge=agedge(gvGraph, gvNodes(n->id), gvNodes(e->id)); //, STRING(n->name <<"--" <<e->name), true);
 	else
-	  agedge(gvGraph, gvNodes(e->id), gvNodes(n->id));
+	  ge=agedge(gvGraph, gvNodes(e->id), gvNodes(n->id)); //, STRING(e->name <<"--" <<n->name), true);
+	agset(ge, "label", STRING(j));
       }
     }
   }
