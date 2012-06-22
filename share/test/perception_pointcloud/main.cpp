@@ -7,6 +7,8 @@
 
 #include <queue>
 
+SET_LOG(main, DEBUG);
+
 Gaussian g;
 double gaussian_weight(const arr& particle, const arr &measurement) {
    g.c = measurement;
@@ -28,6 +30,7 @@ int main(int argc, char **argv) {
   PointCloudSet objectClusters("ObjectClusters");
   ObjectSet objects("Objects");
   ObjectSet filteredObjects("filteredObjects");
+  GeometricState geo;
 
   // Processes
   KinectInterface kinect("Kinect");
@@ -38,6 +41,13 @@ int main(int argc, char **argv) {
   ObjectFitter fitter(&factory, &integrator, 10); //no process but a master!
 
   ObjectFilter filter("Object Filter");
+
+  ObjectTransformator transform("Object Transformator"); 
+
+  OrsViewer<GeometricState> ors_viewer(geo);
+
+  ors_viewer.threadLoopWithBeat(0.1);
+
 
   kinect.threadLoop();
   clusterer.threadLoop();
@@ -64,6 +74,10 @@ int main(int argc, char **argv) {
 
   filter.threadLoop();
   for(int t = 0; t < 1000; ++t) {
+    geo.writeAccess(NULL);
+    //DEBUG_VAR(main, geo.ors);
+    geo.ors.calcBodyFramesFromJoints();
+    geo.deAccess(NULL);
     if(t % 5 == 0 ) {
       objectClusters.readAccess(NULL);
       plist = objectClusters.point_clouds;
@@ -74,14 +88,17 @@ int main(int argc, char **argv) {
         jobs.push(plist(i));
         viewer->updatePointCloud(plist(i), pcl::visualization::PointCloudColorHandlerRandom<PointT>(plist(i)), n.str());
       }
-      std::cout << plist.N << std::endl;
       fitter.pause();
+      transform.threadStep();
       viewer->removeAllShapes();
       filteredObjects.readAccess(NULL);
       for(int i = 0; i < filteredObjects.objects.N; ++i) {
         std::stringstream name;
         name << "shape_" << i;
-        viewer->addCylinder(*filteredObjects.objects(i), name.str());
+        if (filteredObjects.objects(i)->values.size() == 7)
+          viewer->addCylinder(*filteredObjects.objects(i), name.str());
+        else if (filteredObjects.objects(i)->values.size() == 4)
+          viewer->addSphere(*filteredObjects.objects(i), name.str());
       }
       filteredObjects.deAccess(NULL);
       fitter.restart(jobs, NULL);
