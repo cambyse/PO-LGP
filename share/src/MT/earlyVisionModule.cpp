@@ -2,8 +2,8 @@
 #undef COUNT
 #undef True
 #undef False
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv2/highgui.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 #endif
