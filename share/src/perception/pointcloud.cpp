@@ -1,4 +1,5 @@
 #include "pointcloud.h"
+#include "perception.h"
 
 #include <numeric>
 #include <limits>
@@ -373,24 +374,19 @@ void ObjectFilter::step() {
   out_objects->writeAccess(this);
   out_objects->objects.clear();
   for (int i = 0; i<cyl_pos.d0; i++) {
-    pcl::ModelCoefficients::Ptr cyl(new pcl::ModelCoefficients);
-    cyl->values.resize(7);
-    cyl->values[0] = cyl_pos(i,0);
-    cyl->values[1] = cyl_pos(i,1);
-    cyl->values[2] = cyl_pos(i,2);
-    cyl->values[3] = cyl_pos(i,3);//0;
-    cyl->values[4] = cyl_pos(i,4);//.1;
-    cyl->values[5] = cyl_pos(i,5);
-    cyl->values[6] = cyl_pos(i,6);//.025;
+    ObjectBelief *cyl = new ObjectBelief();
+    cyl->position = ARR(cyl_pos(i,0), cyl_pos(i,1), cyl_pos(i,2));
+    cyl->rotation.setDiff(ARR(0,0,1), ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
+    cyl->shapeParams(RADIUS) = cyl_pos(i,6);//.025;
+    cyl->shapeParams(HEIGHT) = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
+    cyl->shapeType = ors::cylinderST;
     out_objects->objects.append(cyl);
   }
   for (int i = 0; i<sph_pos.d0; i++) {
-    pcl::ModelCoefficients::Ptr sph(new pcl::ModelCoefficients);
-    sph->values.resize(4);
-    sph->values[0] = sph_pos(i,0);
-    sph->values[1] = sph_pos(i,1);
-    sph->values[2] = sph_pos(i,2);
-    sph->values[3] = sph_pos(i,3);//0;
+    ObjectBelief *sph = new ObjectBelief;
+    sph->position = ARR(sph_pos(i,0), sph_pos(i,1), sph_pos(i,2));
+    sph->shapeParams(RADIUS) = sph_pos(i,3);
+    sph->shapeType = ors::sphereST;
     out_objects->objects.append(sph);
   }
   out_objects->deAccess(this);

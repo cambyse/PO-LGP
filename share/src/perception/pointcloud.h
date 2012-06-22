@@ -66,6 +66,8 @@ class ObjectFitter : public Master<FittingJob, FittingResult> {
       };
 };
 
+struct ObjectBeliefSet;
+
 class ObjectFilter : public Process {
   public:
     struct sObjectFilter *s;
@@ -75,7 +77,7 @@ class ObjectFilter : public Process {
     void close() {};
 
     ObjectSet* in_objects;
-    ObjectSet* out_objects;
+    ObjectBeliefSet* out_objects;
 
     
 };
