@@ -162,7 +162,7 @@ MeshView::MeshView(Variable& var,uint fieldId):View(var, fieldId) {
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
-  ors::glDraw(*mesh);
+  mesh->glDraw();
 }
 
 ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT);
@@ -175,7 +175,7 @@ OrsView::OrsView(Variable& var,uint fieldId):View(var, fieldId) {
 
 void OrsView::glDraw() {
   glStandardScene(NULL);
-  ors::glDraw(*ors);
+  ors->glDraw();
 }
 
 ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView", ViewInfo::fieldVT);

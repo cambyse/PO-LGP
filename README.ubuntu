@@ -27,6 +27,6 @@ Using the newest ROS OpenCV version:
 
 include the ROS repository for your ubuntu version (http://www.ros.org/wiki/ROS/Installation)
 
-libopencv2.3-dev
+libopencv-dev
 
 Delete '${exec_prefix}/lib/lib' and '.so.2.3.1' everywhere from the /usr/lib/pkgconfig/opencv-2.3.1.pc

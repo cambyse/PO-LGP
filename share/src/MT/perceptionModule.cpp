@@ -1,7 +1,7 @@
 #ifdef MT_OPENCV
 #undef COUNT
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 #endif
