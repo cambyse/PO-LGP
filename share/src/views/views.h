@@ -65,7 +65,7 @@ struct GtkViewWindow:Process{
   GtkViewWindow();
   ~GtkViewWindow();
   
-  void newView(Variable& var,uint fieldId);
+  void newView(FieldInfo&);
 
   void open();
   void step();
@@ -77,46 +77,43 @@ struct GtkViewWindow:Process{
 // ViewInfo: little structs that describe which views exist and
 // will be accessible in a global list 'birosViews'
 //
+// View base class
+//
 
 /* A common pattern: to store a list of heterogeneous things, all elements derive from a virtual base class ('ViewInfo') via a typed template classe ('ViewInfo_typed') */
 
 struct ViewInfo{
-  enum ViewType{ fieldVT, variableVT, processVT, parameterVT, globalVT };
   MT::String name;
-  ViewType viewType;
-  MT::String applicableOnType; //on which types (field type, parameter type, variable type, etc) is this view applicable?
-  virtual View *newInstance(Variable& _var,uint fieldId) = 0;
+  enum ViewType{ fieldVT, variableVT, processVT, parameterVT, globalVT } type;
+  MT::String appliesOn_sysType; //on which types (field type, parameter type, variable type, etc) is this view applicable?
+  virtual View *newInstance() = 0;
 };
 
-template<class TView, class TApplicable>
+
+template<class TView, class TAppliesOn>
 struct ViewInfo_typed:ViewInfo{
-  ViewInfo_typed(const char *_name, ViewType _viewType){
+  ViewInfo_typed(const char *_name, ViewType _type, const char* _appliesOn_sysType=NULL){
     name = _name;
-    viewType = _viewType;
-    applicableOnType = typeid(TApplicable).name();
+    type = _type;
+    appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(TAppliesOn).name();
     birosViews.append(this);
+    cout <<"creating demon: ViewInfo " <<name <<" type " <<type <<endl;
   }
-  View *newInstance(Variable& _var,uint fieldId){ return new TView( _var, fieldId); }
+  View *newInstance(){ return new TView(); }
 };
-
-void dumpViews(); ///< dump info on the list of all available views
-View *newView(Variable& var,uint fieldId);
-
-
-//===========================================================================
-//
-// View base class
-//
 
 struct View{
-  Variable *var; //TODO: presumes that this is a fieldVT view
-  uint fieldId;
-
+  Process *proc;
+  Variable *var;
+  FieldInfo *field;
+  Parameter *param;
+  
   GtkWidget *widget;    //which gtk widget has this view created?
+  ViewInfo *_info;
+  
+  View(ViewInfo& info):proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), _info(&info) {}
 
-  View(Variable& _var, uint _fieldId): var(&_var), fieldId(_fieldId), widget(NULL) {}
-
-  virtual void write(std::ostream& os) { var->fields(fieldId)->write_value(os); } //writing into a stream
+  virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
   virtual void glDraw() {} //a generic GL draw routine
   virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
@@ -126,20 +123,60 @@ struct View{
 };
 
 
+//helpers, TODO: replaced by control.h stuff
+void dumpViews(); ///< dump info on the list of all available views
+View *newView(FieldInfo& field);
+View *newView(Variable& var);
+
+
+
+//===========================================================================
+//===========================================================================
+//===========================================================================
+//===========================================================================
+//===========================================================================
 //===========================================================================
 //
-// specific views
+// specific views -> perhaps move somewhere else
 //
 
-template<class T>
-struct BasicTypeView:View{
-  static ViewInfo_typed<BasicTypeView, T> info;
-  BasicTypeView(Variable& var,uint fieldId):View(var, fieldId) {}
+//-- helpers
+void writeInfo(ostream& os, Process& p);
+void writeInfo(ostream& os, Variable& v);
+void writeInfo(ostream& os, FieldInfo& f);
+void writeInfo(ostream& os, Parameter& pa);
+void writeInfo(ostream& os, ViewInfo& vi);
 
-  //doesn't overload any display routines -> uses generic console write
+//===========================================================================
+
+#define BasicWriteInfoView(_what, _arg, _type) \
+\
+struct Basic##_what##View:View{ \
+  static ViewInfo_typed<Basic##_what##View, _what> info; \
+  Basic##_what##View():View(info) {} \
+\
+  virtual void write(std::ostream& os) { writeInfo(os, *_arg); } \
 };
 
-template<class T> ViewInfo_typed<BasicTypeView<T>, T> BasicTypeView<T>::info("BasicTypeView", ViewInfo::fieldVT);
+#define BasicWriteInfoView_CPP(_what, _arg, _type) \
+ViewInfo_typed<Basic##_what##View, _what> Basic##_what##View::info("Basic##_what##View", ViewInfo::_type, "ALL");
+
+BasicWriteInfoView(Process, proc, processVT);
+BasicWriteInfoView(Variable, var, variableVT);
+BasicWriteInfoView(FieldInfo, field, fieldVT);
+BasicWriteInfoView(Parameter, param, parameterVT);
+
+//===========================================================================
+
+template<class T>
+struct BasicFieldView:View{
+  static ViewInfo_typed<BasicFieldView, T> info;
+  BasicFieldView():View(info) {}
+
+  virtual void write(std::ostream& os) { writeInfo(os, *field); } //writing into a stream
+};
+
+template<class T> ViewInfo_typed<BasicFieldView<T>, T> BasicFieldView<T>::info("BasicFieldView", ViewInfo::fieldVT);
 
 //===========================================================================
 
@@ -147,7 +184,7 @@ struct RgbView:View{
   byteA *rgb;
   static ViewInfo_typed<RgbView, byteA> info;
   
-  RgbView(Variable& var,uint fieldId);
+  RgbView();
   void gtkNew(GtkWidget *container);
   void gtkUpdate();
 };
@@ -160,7 +197,7 @@ struct MeshView:View{
   ors::Mesh *mesh;
   static ViewInfo_typed<MeshView, ors::Mesh> info;
   
-  MeshView(Variable& var,uint fieldId);  
+  MeshView();  
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
@@ -173,7 +210,7 @@ struct OrsView:View {
   ors::Graph *ors;
   static ViewInfo_typed<OrsView, ors::Graph> info;
   
-  OrsView(Variable& var,uint fieldId);  
+  OrsView();  
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };

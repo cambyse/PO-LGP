@@ -1,10 +1,18 @@
 #include "views.h"
 
+MT::Array<ViewInfo*> birosViews;
+
+BasicWriteInfoView_CPP(Process, proc, processVT);
+BasicWriteInfoView_CPP(Variable, var, variableVT);
+BasicWriteInfoView_CPP(FieldInfo, field, fieldVT);
+BasicWriteInfoView_CPP(Parameter, param, parameterVT);
+
 #ifdef MT_GTK
 
 #include <MT/gtk.h>
 #include <MT/ors.h>
 #include <MT/opengl_gtk.h>
+
 
 struct sGtkViewWindow{
   GtkWidget *win;
@@ -29,8 +37,8 @@ GtkViewWindow::~GtkViewWindow(){
   delete s;
 }
 
-void GtkViewWindow::newView(Variable& var,uint fieldId){
-  View *v = ::newView(var,fieldId);
+void GtkViewWindow::newView(FieldInfo& field){
+  View *v = ::newView(field);
   v->gtkNew(s->box);
 }
 
@@ -45,23 +53,24 @@ void GtkViewWindow::close(){
 }
 
   
-MT::Array<ViewInfo*> birosViews;
 
-View *newView(Variable& var,uint fieldId){
+View *newView(FieldInfo& field){
   uint i;
   ViewInfo *v;
-  MT::String type(var.fields(fieldId)->sysType);
+  MT::String type(field.sysType);
   for_list(i,v,birosViews){
-    if(v->applicableOnType == type) break;
+    if(v->appliesOn_sysType == type) break;
   }
   if(i==birosViews.N){
-    MT_MSG("No View for field type '" <<type <<"' found");
+    MT_MSG("No View for field sysType '" <<type <<"' found");
     return NULL;
   }
   cout
-    <<"Creating new view '" <<v->name <<"' for field #" <<fieldId <<" named '"
-    <<var.fields(fieldId)->name <<"' (type '" <<type <<"') of Variable '" <<var.name <<"'" <<endl;
-  return v->newInstance(var,fieldId);
+    <<"Creating new view '" <<v->name <<"' for field " <<field.name
+    <<"' (type '" <<type <<"') of Variable '" <<field.var->name <<"'" <<endl;
+  View *vi = v->newInstance();
+  vi->field = &field;
+  return vi;
 }
 
 void dumpViews(){
@@ -70,7 +79,7 @@ void dumpViews(){
   cout <<" *** Views:" <<endl;
   for_list(i, v, birosViews){
     cout
-      <<"View '" <<v->name <<"' applies to fields of type '" <<v->applicableOnType <<"'" <<endl;
+      <<"View '" <<v->name <<"' applies to fields of type '" <<v->appliesOn_sysType <<"'" <<endl;
   }
 }
 
@@ -115,16 +124,16 @@ void View::gtkNewGl(GtkWidget *container){
 //
 
 //explicit instantiation! triggers the creation of the static _info
-template class BasicTypeView<byte>;
-template class BasicTypeView<int>;
-template class BasicTypeView<uint>;
-template class BasicTypeView<float>;
-template class BasicTypeView<double>;
+template class BasicFieldView<byte>;
+template class BasicFieldView<int>;
+template class BasicFieldView<uint>;
+template class BasicFieldView<float>;
+template class BasicFieldView<double>;
 
 //===========================================================================
 
-RgbView::RgbView(Variable& var,uint fieldId):View(var, fieldId) {
-  rgb = (byteA*) var.fields(fieldId)->p;
+RgbView::RgbView():View(info){
+  rgb = (byteA*) field->p;
 }
 
 void RgbView::gtkNew(GtkWidget *container){
@@ -154,10 +163,12 @@ void RgbView::gtkUpdate(){
 
 ViewInfo_typed<RgbView, byteA> RgbView::info("RgbView", ViewInfo::fieldVT);
 
+
+
 //===========================================================================
 
-MeshView::MeshView(Variable& var,uint fieldId):View(var, fieldId) {
-  mesh = (ors::Mesh*) var.fields(fieldId)->p;
+MeshView::MeshView():View(info) {
+  mesh = (ors::Mesh*) field->p;
 }
 
 void MeshView::glDraw() {
@@ -169,8 +180,8 @@ ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT
 
 //===========================================================================
 
-OrsView::OrsView(Variable& var,uint fieldId):View(var, fieldId) {
-  ors = (ors::Graph*) var.fields(fieldId)->p;
+OrsView::OrsView():View(info) {
+  ors = (ors::Graph*) field->p;
 }
 
 void OrsView::glDraw() {

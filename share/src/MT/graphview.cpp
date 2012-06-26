@@ -165,12 +165,12 @@ bool sGraphView::on_drawingarea_expose_event(GtkWidget       *widget,           
   
   gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
-  cr = gdk_cairo_create(widget->window);
+  cr = gdk_cairo_create(gtk_widget_get_window(widget));
   
   job->context = (void *)cr;
   job->external_context = TRUE;
-  job->width = widget->allocation.width;
-  job->height = widget->allocation.height;
+  job->width = widget->allocation.width; //gtk_widget_get_allocated_width(widget);
+  job->height = widget->allocation.height; //gtk_widget_get_allocated_height(widget);
   if(job->has_been_rendered) {
     (job->callbacks->refresh)(job);
   } else {

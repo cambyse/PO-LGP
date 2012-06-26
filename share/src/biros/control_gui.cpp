@@ -1,0 +1,270 @@
+#include "control.h"
+#include "biros_internal.h"
+#include <MT/gtk.h>
+#include <gtk/gtk.h>
+
+struct InsideOutGui{
+  GtkWidget *win;
+  GtkTreeStore *varStore, *procStore, *paramStore, *viewStore;
+  GtkVBox *viewBox;
+
+  void open();
+  void update();
+  void updateVarStore();
+  void updateProcStore();
+  void updateParamStore();
+  void updateViewStore();
+
+  static void onVariableTreeRowActivated(GtkTreeView* caller, gpointer data);
+  static void onProcessTreeRowActivated(GtkTreeView* caller, gpointer data);
+} gui;
+
+//-- helpers
+void writeInfo(ostream& os, Process& p);
+void writeInfo(ostream& os, Variable& v);
+void writeInfo(ostream& os, FieldInfo& f);
+void writeInfo(ostream& os, Parameter& pa);
+void writeInfo(ostream& os, ViewInfo& vi);
+
+void b::openInsideOut(){
+  gui.open();
+}
+
+void b::updateInsideOut(){
+  gui.update();
+}
+
+void InsideOutGui::open(){
+  gtkCheckInitialized();
+
+  const char *pwd = __FILE__;
+  char *path,*name;
+  MT::decomposeFilename(path, name, pwd);
+  MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
+  gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
+  //load glade gui
+  GtkBuilder *builder = gtk_builder_new();
+  gtk_builder_add_from_file(builder, gladeFile.p, NULL);
+  win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
+  varStore = (GtkTreeStore*) gtk_builder_get_object(builder, "variableTreeStore");
+  procStore = (GtkTreeStore*) gtk_builder_get_object(builder, "processTreeStore");
+  paramStore = (GtkTreeStore*) gtk_builder_get_object(builder, "parameterTreeStore");
+  viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
+  viewBox = GTK_VBOX( gtk_builder_get_object(builder, "viewBox") );
+  gtk_builder_connect_signals(builder, NULL);
+  g_object_unref(G_OBJECT(builder));
+  g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
+  
+  //add data
+  update();
+  
+  //show
+  gtk_widget_show(win);
+
+  gtkProcessEvents();
+}
+
+void InsideOutGui::update(){
+  updateVarStore();
+  updateProcStore();
+  updateParamStore();
+  updateViewStore();
+  gtkProcessEvents();
+}
+
+
+void InsideOutGui::updateVarStore(){
+  gtk_tree_store_clear(varStore);
+
+  uint i,j;
+  GtkTreeIter i_it, j_it;
+  Variable *v;
+  FieldInfo *f;
+  Process *p;
+  MT::String info;
+  birosInfo.readAccess(NULL);
+  for_list(i, v, birosInfo.variables) {
+    writeInfo(info.clear(), *v);
+    gtk_tree_store_append(varStore, &i_it, NULL);
+    gtk_tree_store_set(varStore, &i_it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
+    for_list(j, f, v->fields) {
+      writeInfo(info.clear(), *f);
+      gtk_tree_store_append(varStore, &j_it, &i_it);
+      gtk_tree_store_set(varStore, &j_it, 0, j, 1, 'F', 2, f->name, 3, info.p, -1);
+    }
+    for_list(j, p, v->listeners) {
+      info="last access=?rw";
+      gtk_tree_store_append(varStore, &j_it, &i_it);
+      gtk_tree_store_set(varStore, &j_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+    }
+  }
+  birosInfo.deAccess(NULL);
+}
+
+void InsideOutGui::updateProcStore(){
+  gtk_tree_store_clear(procStore);
+
+  uint i,j,k;
+  GtkTreeIter i_it, j_it, k_it;
+  Variable *v;
+  FieldInfo *f;
+  Process *p;
+  Parameter *pa;
+  MT::String info;
+  birosInfo.readAccess(NULL);
+  for_list(i, p, birosInfo.processes) {
+    writeInfo(info.clear(), *p);
+    gtk_tree_store_append(procStore, &i_it, NULL);
+    gtk_tree_store_set(procStore, &i_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+    for_list(j, v, p->listensTo) {
+      writeInfo(info.clear(), *v);
+      gtk_tree_store_append(procStore, &j_it, &i_it);
+      gtk_tree_store_set(procStore, &j_it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
+      for_list(k, f, v->fields) {
+	writeInfo(info.clear(), *f);
+	gtk_tree_store_append(procStore, &k_it, &j_it);
+	gtk_tree_store_set(procStore, &k_it, 0, k, 1, 'F', 2, f->name, 3, info.p, -1);
+      }
+    }
+    for_list(j, pa, p->dependsOn) {
+      writeInfo(info.clear(), *pa);
+      gtk_tree_store_append(procStore, &j_it, &i_it);
+      gtk_tree_store_set(procStore, &j_it, 0, pa->id, 1, 'A', 2, pa->name, 3, info.p, -1);
+    }
+  }
+  birosInfo.deAccess(NULL);
+}
+
+void InsideOutGui::updateParamStore(){
+  gtk_tree_store_clear(paramStore);
+
+  uint i,j;
+  GtkTreeIter i_it, j_it;
+  Process *p;
+  Parameter *pa;
+  MT::String info;
+  birosInfo.readAccess(NULL);
+  for_list(i, pa, birosInfo.parameters) {
+    writeInfo(info.clear(), *pa);
+    gtk_tree_store_append(paramStore, &i_it, NULL);
+    gtk_tree_store_set(paramStore, &i_it, 0, pa->id, 1, 'A', 2, pa->name, 3, info.p, -1);
+    for_list(j, p, pa->processes) {
+      writeInfo(info.clear(), *p);
+      gtk_tree_store_append(paramStore, &j_it, &i_it);
+      gtk_tree_store_set(paramStore, &j_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+    }
+  }
+  birosInfo.deAccess(NULL);
+}
+
+void InsideOutGui::updateViewStore(){
+  gtk_tree_store_clear(viewStore);
+
+  uint i;
+  GtkTreeIter i_it;
+  ViewInfo *vi;
+  MT::String info;
+  birosInfo.readAccess(NULL);
+  for_list(i, vi, birosViews) {
+    writeInfo(info.clear(), *vi);
+    gtk_tree_store_append(viewStore, &i_it, NULL);
+    gtk_tree_store_set(viewStore, &i_it, 0, i, 1, 'I', 2, vi->name.p, 3, info.p, -1);
+  }
+  birosInfo.deAccess(NULL);
+}
+
+extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
+  uint id;
+  char tag;
+  GtkTreeSelection *tsel = gtk_tree_view_get_selection(caller);
+  GtkTreeIter it;
+  GtkTreeModel *tm;
+  View *view=NULL;
+  if(gtk_tree_selection_get_selected(tsel , &tm , &it)) {
+    gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
+    switch(tag){
+    case 'V':{
+      b::getViews(ViewInfo::variableVT, typeid(*birosInfo.variables(id)).name() );
+      GtkWidget *menu = gtk_menu_new();
+      gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, gtk_get_current_event_time());
+      gtk_container_add(GTK_CONTAINER(menu), gtk_menu_item_new_with_label("bla"));
+      gtk_container_add(GTK_CONTAINER(menu), gtk_menu_item_new_with_label("bla"));
+      gtk_container_add(GTK_CONTAINER(menu), gtk_menu_item_new_with_label("bla"));
+      gtk_container_add(GTK_CONTAINER(menu), gtk_menu_item_new_with_label("bla"));
+      gtk_widget_show(menu);
+      gtkProcessEvents();
+      //view = b::newView(*birosInfo.variables(id), NULL);
+    }  break;
+    case 'P':  view = b::newView(*birosInfo.processes(id), NULL);  break;
+    //case 'I':  view = b::newView(*birosViews(id), NULL);  break;
+    case 'F':{
+      //get variable id first by accessing
+      uint varid;
+      GtkTreeIter var;
+      gtk_tree_model_iter_parent(tm, &var, &it);
+      gtk_tree_model_get(tm, &var, 0, &varid, -1);
+      view = b::newView(*birosInfo.variables(varid)->fields(id), NULL);
+    }  break;
+    }
+  }
+
+  if(!view){
+    MT_MSG("failed");
+    return;
+  }
+  //retrieve InsideOutGui data structure
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+
+  view->gtkNew(GTK_WIDGET(iog->viewBox));
+}
+
+
+void writeInfo(ostream& os, Process& p){
+#define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
+  os <<" tid=" <<p.s->tid
+     <<" priority=" <<p.s->threadPriority
+     <<" steps=" <<p.s->timer.steps
+     <<" cycleDt=" <<TEXTTIME(p.s->timer.cyclDt)
+     <<" busyDt=" <<TEXTTIME(p.s->timer.busyDt)
+     <<" state=";
+    int state=p.stepState();
+    if (state>0) os <<state; else switch (state) {
+      case tsCLOSE:   os <<"close";  break;
+      case tsLOOPING: os <<"loop";   break;
+      case tsBEATING: os <<"beat";   break;
+      case tsIDLE:    os <<"idle";   break;
+      default: os <<"undefined:";
+    }
+#undef TEXTTIME
+}
+
+void writeInfo(ostream& os, Variable& v){
+  os <<"revision=" <<v.revision
+     <<" type=" <<typeid(v).name()
+     <<" state=" <<v.lockState();
+}
+
+void writeInfo(ostream& os, FieldInfo& f){
+  os <<"value=";
+  f.writeValue(os);
+  os <<" type=" <<f.userType;
+}
+
+void writeInfo(ostream& os, Parameter& pa){
+  os <<"value=";
+  pa.writeValue(os);
+  os <<" type=" <<pa.typeName();
+}
+
+void writeInfo(ostream& os, ViewInfo& vi){
+  os <<"type=";
+  switch (vi.type) {
+    case ViewInfo::fieldVT:    os <<"field";  break;
+    case ViewInfo::variableVT: os <<"variable";  break;
+    case ViewInfo::processVT:  os <<"process";  break;
+    case ViewInfo::parameterVT:os <<"parameter";  break;
+    case ViewInfo::globalVT:   os <<"global";  break;
+  }
+  os <<" applies_on=" <<vi.appliesOn_sysType;
+}

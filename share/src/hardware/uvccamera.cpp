@@ -18,32 +18,48 @@ extern "C"
 #include "hardware.h"
 //#include "common.h"
 
-struct sCamera{
+struct Workspace;
+
+struct sUVCCamera{
   Image *camL,* camR;
-  UVC *cam;
+
+  const char* device_name;
+      
+  sUVCCamera();
+  ~sUVCCamera();
+  void open();
+  void close();
+  void grab(byteA& img);
+
+private:
+   Workspace*  workspace_;
+
 };
 
+
 UVCCamera::UVCCamera():Process("UVC"){
-  s = new sCamera;
+  s = new sUVCCamera;
   birosInfo.getVariable(s->camL, "CameraL", this);
   birosInfo.getVariable(s->camR, "CameraR", this);
 };
 
+UVCCamera::~UVCCamera(){
+  delete s;
+}
+
 void UVCCamera::open(){
-  s->cam = new UVC();
-  s->cam->open();
+  s->open();
 };
 
 void UVCCamera::step(){
   byteA tmp;
-  s->cam->grab(tmp);
+  s->grab(tmp);
   s->camR->set_img(tmp, this);
   s->camL->set_img(tmp, this);
 };
 
 void UVCCamera::close(){
-  s->cam->close();
-  delete s->cam;
+  s->close();
 };
 
 /******************************************************************************
@@ -84,7 +100,7 @@ struct UVCCameraBuffer
    uint  length;
 };
 
-struct UVCCameraWorkspace
+struct Workspace
 {
    MT::Array<UVCCameraBuffer> buffers_;               // pointers to frame data (mmap'd)
    uint                 frame_size_;
@@ -103,17 +119,17 @@ struct UVCCameraWorkspace
    struct v4l2_requestbuffers req;                    // data transfer negotiations
 
    int *conv_rv, *conv_gv, *conv_gu, *conv_bu;
-   UVCCameraWorkspace();
-   ~UVCCameraWorkspace();
+   Workspace();
+   ~Workspace();
 };
 
 // -----------------------------------------------------------------------------
 //                                                            utility functions
 // -----------------------------------------------------------------------------
-void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace& ws, bool swap=false);
-inline int stat_device(const UVCCameraWorkspace* const ws);
+void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const Workspace& ws, bool swap=false);
+inline int stat_device(const Workspace* const ws);
 
-UVCCameraWorkspace::UVCCameraWorkspace()
+Workspace::Workspace()
 {
    // Look-up table w/ coefficients to convert YUV buffer to RGB
    conv_rv = new int[256];
@@ -130,7 +146,7 @@ UVCCameraWorkspace::UVCCameraWorkspace()
    }
 };
 
-UVCCameraWorkspace::~UVCCameraWorkspace()
+Workspace::~Workspace()
 {
    delete [] conv_rv;
    delete [] conv_gv;
@@ -142,19 +158,19 @@ UVCCameraWorkspace::~UVCCameraWorkspace()
 // -----------------------------------------------------------------------------
 //                                                                    UVC
 // -----------------------------------------------------------------------------
-UVC::UVC():
+sUVCCamera::sUVCCamera():
   workspace_(NULL){
   device_name = "/dev/video0";
 
-   workspace_ = new UVCCameraWorkspace();
+   workspace_ = new Workspace();
 }
 
-UVC::~UVC()
+sUVCCamera::~sUVCCamera()
 {
    delete workspace_;
 }
 
-void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace& ws, bool swap)
+void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const Workspace& ws, bool swap)
 {
   int len = min(frame.N, src.length);
   int half_img_size = len / 4;                       // 4 b/c of (Y0 U Y1 V)
@@ -235,7 +251,7 @@ void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace
   }
 }
 
-inline int stat_device(const UVCCameraWorkspace* const ws)
+inline int stat_device(const Workspace* const ws)
 {
    struct stat buf;
    int ret = fstat(ws->device_file_desc_, &buf);
@@ -258,7 +274,7 @@ inline int stat_device(const UVCCameraWorkspace* const ws)
 
 
 
-void UVC::open(){
+void sUVCCamera::open(){
    if (workspace_->is_initialized_)
       ERROR("device has been initialized already");
 
@@ -380,7 +396,7 @@ void UVC::open(){
    grab(tmp);
 }
 
-void UVC::close(){
+void sUVCCamera::close(){
    if(workspace_->is_initialized_)
    {
       // stop capturing
@@ -401,7 +417,7 @@ void UVC::close(){
    }
 }
 
-void UVC::grab(byteA& img)
+void sUVCCamera::grab(byteA& img)
 {
    int ret;                                           // return value of iotcl
    fd_set fds;                                        // FD set for select()

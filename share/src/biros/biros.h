@@ -13,10 +13,12 @@
 struct Variable;
 struct Process;
 struct Parameter;
+struct VariableReference;
 
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
+typedef MT::Array<VariableReference*> VariableReferenceL;
 
 #define PROCESS(name) \
   struct name:Process { \
@@ -36,24 +38,26 @@ typedef MT::Array<Parameter*> ParameterL;
 
 struct FieldInfo {
   void *p;
+  Variable *var;
   const char* name;
   const char* userType;
   const char* sysType;
-  virtual void write_value(ostream& os) const = 0;
-  virtual void read_value(istream& os) const { NIY; }
+  virtual void writeValue(ostream& os) const = 0;
+  virtual void readValue(istream& os) const { NIY; }
   virtual MT::String type() const = 0;
 };
 
 template<class T>
 struct FieldInfo_typed:FieldInfo {
-  FieldInfo_typed(T *_p, const char* _name, const char* _userType) {
+  FieldInfo_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
     p = _p;
+    var = _var;
     name = _name;
     userType = _userType;
     sysType = typeid(T).name();
   }
-  void write_value(ostream& os) const { os <<*((T*)p); }
-//   void read_value(istream& is) const { is >>*((T*)p); }
+  void writeValue(ostream& os) const { os <<*((T*)p); }
+//   void readValue(istream& is) const { is >>*((T*)p); }
   MT::String type() const { MT::String s(typeid(T).name()); return s; }
 };
 
@@ -66,7 +70,7 @@ struct FieldInfo_typed:FieldInfo {
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
-    fields.append(new FieldInfo_typed<type>(&name,#name,#type)); }
+    fields.append(new FieldInfo_typed<type>(&name,this,#name,#type)); }
 
 
 //===========================================================================
@@ -79,7 +83,7 @@ struct Variable {
   uint id;              ///< unique identifyer
   MT::String name;      ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
-  MT::Array<FieldInfo*> fields;
+  MT::Array<FieldInfo*> fields; //? make static? not recreating for each variable?
   ProcessL listeners;
   //MT bool logValues;
   //MT bool dbDrivenReplay;
@@ -119,6 +123,8 @@ struct Process {
   int id;              ///< unique identifier
   uint step_count;     ///< step count
   MT::String name;     ///< Process name
+  VariableL listensTo;
+  ParameterL dependsOn;
   
   Process(const char* name);
   virtual ~Process();
@@ -127,6 +133,9 @@ struct Process {
   virtual void open() = 0;    ///< is called within the thread when the thread is created
   virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
   virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
+  
+  //-- info
+  int stepState(); // 0=idle, >0=steps-to-go, <0=special loop modes
   
   //-- a scalar function which may depend only on the referenced variables
   //   -- code correctness requires that a call of _step() may only decrease _f() !!
@@ -138,7 +147,7 @@ struct Process {
   
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
   void threadStepOrSkip(uint maxSkips); ///< trigger a step (idle -> working mode) or skip if still busy (counts skips.., maxSkip=0 -> no warnings)
-  void threadWait();                    ///< caller waits until step is done (working -> idle mode)
+  void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
   bool threadIsIdle();                  ///< check if in idle mode
   bool threadIsClosed();                ///< check if closed
   
@@ -201,13 +210,17 @@ struct BirosInfo:Variable {
     writeAccess(p);
     v = (T*)listFindByName(variables, name);
     deAccess(p);
-    if (!v) MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    if (!v) MT_MSG("can't find biros variable '" <<name
+		   <<"' -- Process '" <<(p?p->name:STRING("NULL"))
+		   <<"' will not connect");
   }
   template<class T>  T* getProcess(const char* name, Process *p) {
     writeAccess(p);
     T *pname = (T*)listFindByName(processes, name);
     deAccess(p);
-    if (!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    if (!pname) MT_MSG("can't find biros process '" <<name
+		       <<"' -- Process '" <<(p?p->name:STRING("NULL"))
+		       <<"' will not connect");
   }
   template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)) {
     Parameter_typed<T> *par;
@@ -224,14 +237,14 @@ struct BirosInfo:Variable {
   template<class T> T getParameter(const char *name, const T& _default) {
     return getParameter<T>(name, getProcessFromPID(), _default);
   }
-  template<class T>
-  void setParameter(const char *name, T value ) {
+  template<class T> void setParameter(const char *name, T value) {
     Process *p = getProcessFromPID();
     Parameter_typed<T> *par;
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
-    if (!par) MT_MSG("WARNING: cannot find " << name << " in parameters, nothing is changed.");
+    if (!par) MT_MSG("WARNING: cannot find " <<name
+		     <<" in parameters, nothing is changed.");
     par->value = value;
   }
   void dump(); //dump everything -- for debugging

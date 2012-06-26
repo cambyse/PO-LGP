@@ -17,49 +17,51 @@ bool setNice(int);
 
 //! a basic mutex lock
 struct Mutex {
-  const char* msg;
-  pthread_mutex_t _lock;
+  pthread_mutex_t mutex;
   
   Mutex();
   ~Mutex();
   
-  void lock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
+  void lock();   ///< multiple threads may request 'lock for read'
   void unlock();                          ///< thread must unlock when they're done
 };
 
 //! a basic read/write access lock
 struct Lock {
   int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
-  const char* msg;
   Mutex stateMutex;
   pthread_rwlock_t lock;
   
   Lock();
   ~Lock();
   
-  void readLock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
-  void writeLock(const char* _msg=NULL);  ///< only one thread may request 'lock for write'
-  void unlock();                          ///< thread must unlock when they're done
+  void readLock();   ///< multiple threads may request 'lock for read'
+  void writeLock();  ///< only one thread may request 'lock for write'
+  void unlock();     ///< thread must unlock when they're done
 };
 
 //! a basic condition variable
 struct ConditionVariable {
   int state;
-  pthread_mutex_t mutex;
+  Mutex stateMutex;
   pthread_cond_t  cond;
   
   ConditionVariable();
   ~ConditionVariable();
   
-  int  getState();
-  int  setState(int i);
+  int  getState();  //WARNING: be aware that the returned state might be outdated already
+  void setState(int i);
   void broadcast();
+  //WARNING: by default the following routines will NOT unlock the mutex
+  // This is to exclude that another process is changing the state again while it is processed.
+  // YOU need to call waitUnlock(); after you've analyzed the new state
   void waitForSignal();
   void waitForSignal(double seconds);
-  int  waitForStateEq(int i);    ///< return value is the state after the waiting
-  int  waitForStateNotEq(int i); ///< return value is the state after the waiting
-  int waitForStateGreaterThan(int i); ///< return value is the state after the waiting
+  void waitForStateEq(int i);    ///< return value is the state after the waiting
+  void waitForStateNotEq(int i); ///< return value is the state after the waiting
+  void waitForStateGreaterThan(int i); ///< return value is the state after the waiting
   void waitUntil(double absTime);
+  void waitUnlock();
 };
 
 //===========================================================================
@@ -111,7 +113,7 @@ struct sVariable {
   sVariable(Variable *_p) { p = _p; }
 };
 
-enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
+enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsSTARTUP=-2, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
 
 //Process' internal data
 struct sProcess {

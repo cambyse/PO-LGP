@@ -234,8 +234,8 @@ endif
 ifeq ($(GTK),1)
 #CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 #LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gthread-2.0 gtkglext-1.0`
-LIBS     += `pkg-config --libs gtk+-2.0 gthread-2.0 gtkglext-1.0`
+CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs  gtk+-2.0 gtkglext-1.0` -lgthread-2.0
 #LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
 endif
 

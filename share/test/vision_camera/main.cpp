@@ -1,11 +1,12 @@
-#include <MT/vision.h>
-#include <NP/uvccamera.h>
-#include <NP/camera.h>
+#include <perception/perception.h>
+#include <hardware/uvccamera.h>
 #include <MT/opengl.h>
 
 int main(int argc, char** argv){
   //CameraModule camera;
-  camera::UVCCamera camera;
+  UVCCamera camera;
+  Image imgL("cameraL"), imgR("cameraR");
+  
   camera.open();
   OpenGL gl;
    
@@ -15,13 +16,13 @@ int main(int argc, char** argv){
   for(i=0;i<100;i++){
     //MT::wait(.5);
     camera.step();
-    gl.img=&camera.output.rgbL;
+    gl.img=&imgL.img;
     gl.update();
   }
   cout <<"fps=" <<i/(MT::realTime()-time) <<endl;
 
-  write_ppm(camera.output.rgbL,"left.ppm");
-  write_ppm(camera.output.rgbL,"right.ppm");
+  write_ppm(imgL.img,"left.ppm");
+  write_ppm(imgR.img,"right.ppm");
 
   camera.close();
 

@@ -1,0 +1,10 @@
+how to add a tree view
+
+1) treestore
+2) treeview (selecting the treestore)
+3) edit treeview:
+a) 'General'
+-- add columns
+b) 'Hierarchy'
+-- add columns
+-- right=click columns -> add Text cellrenderer
