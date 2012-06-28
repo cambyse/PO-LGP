@@ -18,19 +18,20 @@ bool setNice(int);
 //! a basic mutex lock
 struct Mutex {
   pthread_mutex_t mutex;
+  int state; ///< 0=unlocked, 1=locked
   
   Mutex();
   ~Mutex();
   
-  void lock();   ///< multiple threads may request 'lock for read'
-  void unlock();                          ///< thread must unlock when they're done
+  void lock();
+  void unlock();
 };
 
 //! a basic read/write access lock
 struct Lock {
+  pthread_rwlock_t lock;
   int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
   Mutex stateMutex;
-  pthread_rwlock_t lock;
   
   Lock();
   ~Lock();
@@ -46,22 +47,22 @@ struct ConditionVariable {
   Mutex stateMutex;
   pthread_cond_t  cond;
   
-  ConditionVariable();
+  ConditionVariable(int initialState=0);
   ~ConditionVariable();
   
-  int  getState();  //WARNING: be aware that the returned state might be outdated already
-  void setState(int i);
-  void broadcast();
-  //WARNING: by default the following routines will NOT unlock the mutex
-  // This is to exclude that another process is changing the state again while it is processed.
-  // YOU need to call waitUnlock(); after you've analyzed the new state
-  void waitForSignal();
-  void waitForSignal(double seconds);
-  void waitForStateEq(int i);    ///< return value is the state after the waiting
-  void waitForStateNotEq(int i); ///< return value is the state after the waiting
-  void waitForStateGreaterThan(int i); ///< return value is the state after the waiting
-  void waitUntil(double absTime);
-  void waitUnlock();
+  void setState(int i); ///< sets state and broadcasts
+  void broadcast();     ///< just broadcast
+  
+  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userLock=true below!
+  void unlock();
+  
+  int  getState(bool userLock=false);
+  void waitForSignal(bool userLock=false);
+  void waitForSignal(double seconds, bool userLock=false);
+  void waitForStateEq(int i, bool userLock=false);    ///< return value is the state after the waiting
+  void waitForStateNotEq(int i, bool userLock=false); ///< return value is the state after the waiting
+  void waitForStateGreaterThan(int i, bool userLock=false); ///< return value is the state after the waiting
+  void waitUntil(double absTime, bool userLock=false);
 };
 
 //===========================================================================
@@ -110,10 +111,10 @@ struct sVariable {
   Lock lock;
   ConditionVariable cond; //to broadcast write access to this variable
   
-  sVariable(Variable *_p) { p = _p; }
+  sVariable(Variable *_p): p(_p) {}
 };
 
-enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsSTARTUP=-2, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
+enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
 
 //Process' internal data
 struct sProcess {
@@ -125,14 +126,7 @@ struct sProcess {
   uint skips;                          ///< how often a step was requested but (because busy) skipped
   int threadPriority;                  ///< priority of this thread
   
-  sProcess() {
-    skips=0;
-    threadCondition.setState(tsCLOSE);
-    tid=0;
-    threadPriority=0;
-    thread=0;
-    metronome = NULL;
-  };
+  sProcess(): thread(0), tid(0), threadCondition(tsCLOSE), metronome(NULL), skips(0), threadPriority(0) {}
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
 };

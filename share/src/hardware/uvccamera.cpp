@@ -65,9 +65,6 @@ void UVCCamera::close(){
 /******************************************************************************
  * common stuff
  ******************************************************************************/
-#define ERROR(msg) { std::cerr << "ERROR: " << __FILE__ << ':' \
-             << __LINE__ << " : " << msg << std::endl; \
-             throw STRING(msg);}
 inline int min(int a, int b) { return (a < b ? a : b); }
 //inline int clip(int v) { return (v>255) ? 255 : ((v<0) ? 0 : v); }
 inline byte clip(int v) { return (v&0xf00)?(byte)0xff:(byte)v; } //cheaper version
@@ -260,11 +257,11 @@ inline int stat_device(const Workspace* const ws)
       switch(errno)
       {
          case EIO:
-            ERROR("I/O error occurred while reading from the file system");
+            HALT("I/O error occurred while reading from the file system");
          case EBADF:
-            ERROR("The file descriptor argument is not a valid one");
+            HALT("The file descriptor argument is not a valid one");
          default:
-            ERROR("fstat() failed on device");
+            HALT("fstat() failed on device");
       }
    }
    else
@@ -276,25 +273,25 @@ inline int stat_device(const Workspace* const ws)
 
 void sUVCCamera::open(){
    if (workspace_->is_initialized_)
-      ERROR("device has been initialized already");
+      HALT("device has been initialized already");
 
    workspace_->width_ = DEFAULT_WIDTH;
    workspace_->height_ = DEFAULT_HEIGHT;
 
    workspace_->device_file_desc_ = ::open(device_name, O_RDWR, 0);
    if (workspace_->device_file_desc_ == -1)
-      ERROR("device cannot be opened");
+      HALT("device cannot be opened");
 
    //
    // set up initial parameters
    //
    if (stat_device(workspace_) == -1)
-      ERROR("Cannot stat device");
+      HALT("Cannot stat device");
    // query camera capabilities
    if (ioctl(workspace_->device_file_desc_, VIDIOC_QUERYCAP, &workspace_->capability) == -1)
-      ERROR("Cannot query device: VIDIOC_QUERYCAP");  // not a V4L2 device
+      HALT("Cannot query device: VIDIOC_QUERYCAP");  // not a V4L2 device
    if (!(workspace_->capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
-      ERROR("this is not a video capture device");
+      HALT("this is not a video capture device");
 
    //
    // set up data format
@@ -312,11 +309,11 @@ void sUVCCamera::open(){
       switch(errno)
       {
          case EAGAIN:
-            ERROR("cannot set video format: VIDIOC_S_FMT + EAGAIN");
+            HALT("cannot set video format: VIDIOC_S_FMT + EAGAIN");
          case EIO:
-            ERROR("cannot set video format: VIDIOC_S_FMT + EIO");
+            HALT("cannot set video format: VIDIOC_S_FMT + EIO");
          default:
-            ERROR("cannot set video format: VIDIOC_S_FMT");
+            HALT("cannot set video format: VIDIOC_S_FMT");
             break;
       }
 
@@ -334,7 +331,7 @@ void sUVCCamera::open(){
          workspace_->frame_size_ = workspace_->width_ * workspace_->height_ * 2;
          break;
       default:
-         ERROR("Cannot set pixel format: unknown format");
+         HALT("Cannot set pixel format: unknown format");
          break;
    }
 
@@ -342,7 +339,7 @@ void sUVCCamera::open(){
    // set up memory buffers
    //
    if (!(workspace_->capability.capabilities & V4L2_CAP_STREAMING))
-      ERROR("Cannot initialize MMAP: device does not support streaming");
+      HALT("Cannot initialize MMAP: device does not support streaming");
 
    // requesting the default number of buffers for mmapping.
    memset(&workspace_->req, 0, sizeof(v4l2_requestbuffers));
@@ -351,9 +348,9 @@ void sUVCCamera::open(){
    workspace_->req.memory = V4L2_MEMORY_MMAP;
 
    if (ioctl(workspace_->device_file_desc_, VIDIOC_REQBUFS, &workspace_->req) == -1)
-      ERROR("Cannot initialize MMAP: VIDIOC_REQBUFS");
+      HALT("Cannot initialize MMAP: VIDIOC_REQBUFS");
    if (workspace_->req.count < 2)
-      ERROR("Cannot initialize MMAP: VIDIOC_REQBUFS + insufficient memory");
+      HALT("Cannot initialize MMAP: VIDIOC_REQBUFS + insufficient memory");
 
    // Enqueue the number of buffers which were requested (and granted), followed
    // by memory mapping them into the address space of our application.
@@ -368,7 +365,7 @@ void sUVCCamera::open(){
       buf.index       = i;
 
       if (ioctl(workspace_->device_file_desc_, VIDIOC_QUERYBUF, &buf) == -1)
-         ERROR("Cannot initialize MMAP: VIDIOC_QUERYBUF");
+         HALT("Cannot initialize MMAP: VIDIOC_QUERYBUF");
 
       void* start = mmap(
                          NULL,                        // let mmap choose address
@@ -380,7 +377,7 @@ void sUVCCamera::open(){
                         );
 
       if (start == MAP_FAILED)
-         ERROR("Cannot initialize MMAP: memory could not be mapped");
+         HALT("Cannot initialize MMAP: memory could not be mapped");
 
       workspace_->buffers_.p[i].start = start;
       workspace_->buffers_.p[i].length = buf.length;
@@ -388,7 +385,7 @@ void sUVCCamera::open(){
 
    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    if (ioctl(workspace_->device_file_desc_, VIDIOC_STREAMON, &type))
-      ERROR("cannot start streaming");
+      HALT("cannot start streaming");
 
    workspace_->is_initialized_ = true;
 
@@ -403,7 +400,7 @@ void sUVCCamera::close(){
       enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       int ret = ioctl(workspace_->device_file_desc_, VIDIOC_STREAMOFF, &type);
       if(ret < 0)
-         ERROR("Cannot stop capturing: VIDIOC_STREAMOFF");
+         HALT("Cannot stop capturing: VIDIOC_STREAMOFF");
 
       // undo mmap
       for(uint i = 0; i < workspace_->buffers_.N; i++)
@@ -431,10 +428,9 @@ void sUVCCamera::grab(byteA& img)
    tv.tv_sec  = 2;                                    // Set the timeout to 2s
    tv.tv_usec = 0;
    ret = select(workspace_->device_file_desc_+1, &fds, NULL, NULL, &tv);
-   if (ret == 0)
-   {ERROR("Cannot capture rawframe: timeout");}
+   if (ret == 0){ HALT("Cannot capture rawframe: timeout"); }
    else if(ret < 0 && errno != EINTR)                 // Something bad happened
-     ERROR("Cannot capture rawframe: select(...) failed");
+     HALT("Cannot capture rawframe: select(...) failed");
 
    // retrieve frame data
    struct v4l2_buffer buf;
@@ -450,7 +446,7 @@ void sUVCCamera::grab(byteA& img)
    
    
    if (ioctl(workspace_->device_file_desc_, VIDIOC_QBUF, &buf) == -1)
-     ERROR("cannot queue buffer");
+     HALT("cannot queue buffer");
 }
 
 

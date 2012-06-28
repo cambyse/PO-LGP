@@ -146,7 +146,6 @@ struct Process {
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
   
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-  void threadStepOrSkip(uint maxSkips); ///< trigger a step (idle -> working mode) or skip if still busy (counts skips.., maxSkip=0 -> no warnings)
   void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
   bool threadIsIdle();                  ///< check if in idle mode
   bool threadIsClosed();                ///< check if closed

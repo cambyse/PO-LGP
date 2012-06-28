@@ -31,7 +31,7 @@ void dumpInfo(){
       cout <<'{' <<endl;
       for_list(j, vi, v->fields){
         cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
-        vi->write_value(cout);
+        vi->writeValue(cout);
         cout <<endl;
       }
       cout <<"\n}";

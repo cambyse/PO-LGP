@@ -97,7 +97,7 @@ struct ViewInfo_typed:ViewInfo{
     type = _type;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(TAppliesOn).name();
     birosViews.append(this);
-    cout <<"creating demon: ViewInfo " <<name <<" type " <<type <<endl;
+    //cout <<"creating demon: ViewInfo " <<name <<" type " <<type <<endl;
   }
   View *newInstance(){ return new TView(); }
 };

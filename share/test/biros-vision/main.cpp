@@ -3,8 +3,8 @@
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
-  ThreadInfoWin win;
-  win.threadLoopWithBeat(.1);
+  //  ThreadInfoWin win;
+  //win.threadLoopWithBeat(.1);
   
   // Variables
   RgbImage backgroundI;

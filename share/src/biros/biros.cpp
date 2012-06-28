@@ -87,17 +87,21 @@ Mutex::Mutex() {
   rc = pthread_mutexattr_settype(&atts, PTHREAD_MUTEX_RECURSIVE_NP);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   rc = pthread_mutex_init(&mutex, &atts);
   //mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  state=0;
 }
 
 Mutex::~Mutex() {
+  CHECK(!state, "");
   int rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void Mutex::lock() {
   int rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  state=syscall(SYS_gettid);
 }
 
 void Mutex::unlock() {
+  state=0;
   int rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
@@ -144,20 +148,13 @@ void Lock::unlock() {
 // ConditionVariable
 //
 
-ConditionVariable::ConditionVariable() {
+ConditionVariable::ConditionVariable(int initialState) {
   int rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  state=0;
+  state=initialState;
 }
 
 ConditionVariable::~ConditionVariable() {
   int rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-}
-
-int ConditionVariable::getState() {
-  stateMutex.lock();
-  int i=state;
-  stateMutex.unlock();
-  return i;
 }
 
 void ConditionVariable::setState(int i) {
@@ -171,12 +168,28 @@ void ConditionVariable::broadcast() {
   int rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::waitForSignal() {
+void ConditionVariable::lock() {
   stateMutex.lock();
-  int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::waitForSignal(double seconds) {
+void ConditionVariable::unlock() {
+  stateMutex.unlock();
+}
+
+int ConditionVariable::getState(bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int i=state;
+  if(!userLock) stateMutex.unlock();
+  return i;
+}
+
+void ConditionVariable::waitForSignal(bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(!userLock) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForSignal(double seconds, bool userLock) {
   struct timespec timeout;
   clock_gettime(CLOCK_MONOTONIC, &timeout);
   timeout.tv_nsec+=1000000000l*seconds;
@@ -185,37 +198,38 @@ void ConditionVariable::waitForSignal(double seconds) {
     timeout.tv_nsec-=1000000000l;
   }
   
-  stateMutex.lock();
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   int rc = pthread_cond_timedwait(&cond, &stateMutex.mutex, &timeout);
   if(rc && rc!=ETIMEDOUT) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(!userLock) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateEq(int i) {
-  stateMutex.lock();
+void ConditionVariable::waitForStateEq(int i, bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state!=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
+  if(!userLock) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateNotEq(int i) {
-  stateMutex.lock();
+void ConditionVariable::waitForStateNotEq(int i, bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state==i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
+  if(!userLock) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateGreaterThan(int i) {
-  stateMutex.lock();
+void ConditionVariable::waitForStateGreaterThan(int i, bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state<=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
+  if(!userLock) stateMutex.unlock();
 }
 
-void ConditionVariable::waitUnlock() {
-  stateMutex.unlock();
-}
 
-void ConditionVariable::waitUntil(double absTime) {
+void ConditionVariable::waitUntil(double absTime, bool userLock) {
   NIY;
   /*  int rc;
     timespec ts;
@@ -382,9 +396,10 @@ int Variable::deAccess(Process *p) {
 }
 
 int Variable::waitForRevisionGreaterThan(uint rev) {
-  s->cond.waitForStateGreaterThan(rev);
+  s->cond.lock();
+  s->cond.waitForStateGreaterThan(rev, true);
   int state=s->cond.state;
-  s->cond.waitUnlock();
+  s->cond.unlock();
   return state;
 }
 
@@ -470,6 +485,8 @@ int Process::stepState() {
 }
 
 void Process::threadOpen(int priority) {
+  s->threadCondition.lock();
+  if(s->thread){ s->threadCondition.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
   s->threadPriority = priority;
   int rc;
   pthread_attr_t atts;
@@ -483,17 +500,18 @@ void Process::threadOpen(int priority) {
     std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
     rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
-  CHECK(s->thread==NULL, "never open while not closed!");
-  s->threadCondition.setState(tsSTARTUP);
   rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  s->threadCondition.state=tsIDLE;
+  s->threadCondition.unlock();
 }
 
 void Process::threadClose() {
   if(!s->thread) return; // we were here already
   s->threadCondition.setState(tsCLOSE);
   int rc;
+  CHECK(s->thread, "parallel call to threadClose -> NIY");
   rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  s->thread = NULL;
+  s->thread = 0;
 }
 
 void Process::threadStep(uint steps, bool wait) {
@@ -501,18 +519,6 @@ void Process::threadStep(uint steps, bool wait) {
   if(wait) threadWaitIdle();
   //CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
   s->threadCondition.setState(steps);
-}
-
-void Process::threadStepOrSkip(uint maxSkips) {
-  if(!s->thread) threadOpen();
-  if(s->threadCondition.state!=tsIDLE) {
-    s->skips++;
-    //if(skips>maxSkips) HALT("skips>maxSkips: " <<skips<<'<' <<maxSkips);
-    if(maxSkips && s->skips>=maxSkips) MT_MSG("WARNING: skips>=maxSkips=" <<s->skips);
-    return;
-  }
-  s->skips=0;
-  s->threadCondition.setState(1);
 }
 
 void Process::threadListenTo(const VariableL &signalingVars) {
@@ -528,23 +534,19 @@ void Process::threadListenTo(Variable *v) {
 }
 
 bool Process::threadIsIdle() {
-  if(s->threadCondition.state==tsIDLE) return true;
-  return false;
+  return s->threadCondition.getState()==tsIDLE;
 }
 
 bool Process::threadIsClosed() {
-  if(s->threadCondition.state==tsCLOSE) return true;
-  return false;
+  return s->threadCondition.getState()==tsCLOSE;
 }
 
 void Process::threadWaitIdle() {
   s->threadCondition.waitForStateEq(tsIDLE);
-  s->threadCondition.waitUnlock();
 }
 
 void Process::threadLoop() {
   if(!s->thread) threadOpen();
-  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsLOOPING);
 }
 
@@ -554,20 +556,18 @@ void Process::threadLoopWithBeat(double sec) {
   else
     s->metronome->reset(1000.*sec);
   if(!s->thread) threadOpen();
-  //CHECK(s->threadCondition.state==tsIDLE, "thread '" <<name <<"': never start loop while thread is busy!");
   s->threadCondition.setState(tsBEATING);
 }
 
 void Process::threadStop() {
-  int state=s->threadCondition.getState();
-  CHECK(state<=tsLOOPING, "called stop loop although not looping!");
+  CHECK(s->thread, "called stop to closed thread");
   s->threadCondition.setState(tsIDLE);
 }
 
 void* sProcess::staticThreadMain(void *_self) {
   Process  *proc=(Process*)_self;
   sProcess *s   =proc->s;
-  std::cout <<" +++ entering staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
+  //std::cout <<" +++ entering staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   
   s->tid = syscall(SYS_gettid);
   
@@ -580,34 +580,28 @@ void* sProcess::staticThreadMain(void *_self) {
   
   proc->open(); //virtual initialization routine
 
-  int state=s->threadCondition.getState();
-  if(state==tsSTARTUP){
-    s->threadCondition.setState(tsIDLE);
-  }
-  
   s->timer.reset();
   for(;;){
-    s->threadCondition.waitForStateNotEq(tsIDLE); //this LOCKS the state variable!
-    if(s->threadCondition.state==tsCLOSE){
-      s->threadCondition.waitUnlock();
-      break;
-    }
-    CHECK(s->threadCondition.state>0 || s->threadCondition.state<=-3,
-	  "at this point, the thread condition should be positive (steps to do) or looping!");
-    
-    if(s->threadCondition.state==tsBEATING) s->metronome->waitForTic();
+    bool waitForTic=false;
+    s->threadCondition.lock();
+    s->threadCondition.waitForStateNotEq(tsIDLE, true);
+    if(s->threadCondition.state==tsCLOSE) break;
+    if(s->threadCondition.state==tsBEATING) waitForTic=true;
     if(s->threadCondition.state>0) s->threadCondition.state--; //count down
-    s->threadCondition.waitUnlock(); //this UNLOCKS the state variable
+    s->threadCondition.unlock();
+    
+    if(waitForTic) s->metronome->waitForTic();
     
     s->timer.cycleStart();
     proc->step(); //virtual step routine
     proc->step_count++;
     s->timer.cycleDone();
   };
+  s->threadCondition.unlock();
   
   proc->close(); //virtual close routine
   
-  std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
+  //std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   return NULL;
 }
 
