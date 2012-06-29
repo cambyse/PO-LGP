@@ -19,8 +19,6 @@ Process *newPairSorter(Integer& a, Integer& b);
 int main(int argn, char **argv) {
   uint N=200;
 
-  //dumpViews(); //this is possible because ViewInfos are static entities that are created before main
-  
   MT::Array<Integer> ints(N);
 
   cout <<"*** Before sorting:";
@@ -43,7 +41,7 @@ int main(int argn, char **argv) {
   if(!logService.getReplay()) {
     MT::wait(1.);
     close(P);
-  } else {
+  }else{
     Process *p;
     uint i;
     uint step = 0;

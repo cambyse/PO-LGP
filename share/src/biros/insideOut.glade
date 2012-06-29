@@ -510,48 +510,8 @@
                         <property name="use_action_appearance">False</property>
                         <property name="label" translatable="yes">stop all</property>
                         <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-media-stop</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="label" translatable="yes">run all</property>
-                        <property name="stock_id">gtk-media-forward</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton3">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="label" translatable="yes">stop</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-media-pause</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="toolbutton4">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="label" translatable="yes">run</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-media-play</property>
+                        <property name="stock_id">gtk-refresh</property>
+                        <signal name="clicked" handler="on_refresh_clicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>

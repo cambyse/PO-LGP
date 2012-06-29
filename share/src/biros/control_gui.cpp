@@ -76,6 +76,7 @@ void InsideOutGui::close(){
 }
 
 void InsideOutGui::step(){
+  if(view) view->gtkUpdate();
   gtkProcessEvents();
 }
 
@@ -202,6 +203,13 @@ extern "C" G_MODULE_EXPORT void toggle_expand(GtkTreeView *view, GtkTreePath *pa
   }
 }
 
+extern "C" G_MODULE_EXPORT void on_refresh_clicked(GtkWidget* caller){
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  iog->update();
+  cout <<"GUI: refresh" <<endl;
+}
+
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   uint id;
   char tag;
@@ -229,7 +237,10 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
         iog->view = b::newView(*birosInfo.variables(id), vis(0));
       }else{
 	ViewInfo *vi;  uint i;
-	GtkWidget *menu = gtk_menu_new();
+	StringL choices;
+	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
+	int choice = gtkPopupMenuChoice(choices);
+	/*GtkWidget *menu = gtk_menu_new();
 	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, gtk_get_current_event_time());
 	for_list(i, vi, vis){
 	  GtkWidget *item = gtk_menu_item_new_with_label(vi->name);
@@ -240,8 +251,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	menuChoice=-1;
 	gtk_widget_show_all(menu);
 	gtk_menu_shell_select_first(GTK_MENU_SHELL(menu), false);
-	while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;
-        iog->view = b::newView(*birosInfo.variables(id), vis(menuChoice));
+	while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;*/
+        iog->view = b::newView(*birosInfo.variables(id), vis(choice));
       }
       label <<"Variable " <<id <<" '" <<iog->view->var->name <<"'";
     }  break;
@@ -256,7 +267,17 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       GtkTreeIter var;
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
-      iog->view = b::newView(*birosInfo.variables(varid)->fields(id), NULL);
+      FieldInfo *field = birosInfo.variables(varid)->fields(id);
+      ViewInfoL vis = b::getViews(ViewInfo::fieldVT, field->sysType );
+      if(!vis.N) break;
+      int choice=0;
+      if(vis.N>1){ //multiple choices -> menu
+	ViewInfo *vi;  uint i;
+	StringL choices;
+	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
+	choice = gtkPopupMenuChoice(choices);
+      }
+      iog->view = b::newView(*field, vis(choice));
       label <<"Field " <<id <<" '" <<iog->view->field->name <<"' of Variable " <<varid <<" '" <<birosInfo.variables(varid)->name.p <<"'";
     }  break;
     }
@@ -267,6 +288,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     return;
   }
 
+  label <<" [View=" <<iog->view->_info->name <<"]";
+  
   gtk_frame_set_label(GTK_FRAME(iog->viewBox), label.p);
   iog->view->gtkNew(iog->viewBox);
 }
@@ -277,12 +300,12 @@ void writeInfo(ostream& os, Process& p, bool brief){
     os <<p.s->timer.steps <<" [" <<std::setprecision(2) <<p.s->timer.cyclDtMax <<':' <<p.s->timer.busyDtMax <<']';
   }else{
 #define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
-    os <<" tid=" <<p.s->tid
-       <<" priority=" <<p.s->threadPriority
-       <<" steps=" <<p.s->timer.steps
-       <<" cycleDt=" <<TEXTTIME(p.s->timer.cyclDt)
-       <<" busyDt=" <<TEXTTIME(p.s->timer.busyDt)
-       <<" state=";
+    os <<"tid=" <<p.s->tid
+       <<"\npriority=" <<p.s->threadPriority
+       <<"\nsteps=" <<p.s->timer.steps
+       <<"\ncycleDt=" <<TEXTTIME(p.s->timer.cyclDt)
+       <<"\nbusyDt=" <<TEXTTIME(p.s->timer.busyDt)
+       <<"\nstate=";
     int state=p.stepState();
     if (state>0) os <<state; else switch (state) {
       case tsCLOSE:   os <<"close";  break;
@@ -300,8 +323,8 @@ void writeInfo(ostream& os, Variable& v, bool brief){
     os <<v.revision;
   }else{
     os <<"revision=" <<v.revision
-       <<" type=" <<typeid(v).name()
-       <<" state=" <<v.lockState();
+       <<"\ntype=" <<typeid(v).name()
+       <<"\nstate=" <<v.lockState();
   }
 }
 
@@ -311,7 +334,7 @@ void writeInfo(ostream& os, FieldInfo& f, bool brief){
   }else{
     os <<"value=";
     f.writeValue(os);
-    os <<" type=" <<f.userType;
+    os <<"\ntype=" <<f.userType;
   }
 }
 
@@ -321,7 +344,7 @@ void writeInfo(ostream& os, Parameter& pa, bool brief){
   }else{
     os <<"value=";
     pa.writeValue(os);
-    os <<" type=" <<pa.typeName();
+    os <<"\ntype=" <<pa.typeName();
   }
 }
 
@@ -334,7 +357,7 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief){
     case ViewInfo::parameterVT:os <<"parameter";  break;
     case ViewInfo::globalVT:   os <<"global";  break;
   }
-  os <<" applies_on=" <<vi.appliesOn_sysType;
+  os <<"\napplies_on=" <<vi.appliesOn_sysType;
 }
 
 /*

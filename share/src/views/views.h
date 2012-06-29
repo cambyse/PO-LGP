@@ -120,7 +120,7 @@ struct View{
   virtual void read (std::istream& is) {} //reading from a stream
   virtual void glDraw() {} //a generic GL draw routine
   virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
-  virtual void gtkUpdate() {}; //let the view update the gtk widget
+  virtual void gtkUpdate(); //let the view update the gtk widget
   void gtkNewGl(GtkWidget *container);  //create a gtk widget using the gl routines
   void gtkNewText(GtkWidget *container); //create a gtk widget using the text write/read routines
 };
@@ -152,34 +152,37 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief);
 
 //===========================================================================
 
-#define BasicWriteInfoView(_what, _arg, _type) \
+#define GenericInfoView(_what, _arg, _type) \
 \
-struct Basic##_what##View:View{ \
-  static ViewInfo_typed<Basic##_what##View, _what> info; \
-  Basic##_what##View():View(info) {} \
+struct Generic##_what##View:View{ \
+  static ViewInfo_typed<Generic##_what##View, _what> info; \
+  Generic##_what##View():View(info) {} \
 \
   virtual void write(std::ostream& os) { writeInfo(os, *_arg, false); } \
 };
 
-#define BasicWriteInfoView_CPP(_what, _arg, _type) \
-ViewInfo_typed<Basic##_what##View, _what> Basic##_what##View::info("GenericView", ViewInfo::_type, "ALL");
+#define GenericInfoView_CPP(_what, _arg, _type) \
+ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View::info("GenericView", ViewInfo::_type, "ALL");
 
-BasicWriteInfoView(Process, proc, processVT);
-BasicWriteInfoView(Variable, var, variableVT);
-BasicWriteInfoView(FieldInfo, field, fieldVT);
-BasicWriteInfoView(Parameter, param, parameterVT);
+GenericInfoView(Process, proc, processVT);
+GenericInfoView(Variable, var, variableVT);
+GenericInfoView(FieldInfo, field, fieldVT);
+GenericInfoView(Parameter, param, parameterVT);
+
+#undef GenericInfoView
 
 //===========================================================================
 
-template<class T>
-struct BasicFieldView:View{
-  static ViewInfo_typed<BasicFieldView, T> info;
-  BasicFieldView():View(info) {}
-
-  virtual void write(std::ostream& os) { writeInfo(os, *field, false); } //writing into a stream
-};
-
-template<class T> ViewInfo_typed<BasicFieldView<T>, T> BasicFieldView<T>::info("BasicFieldView", ViewInfo::fieldVT);
+// The generic field view does exactly the same - no need to have a special view for each basic type
+// template<class T>
+// struct BasicFieldView:View{
+//   static ViewInfo_typed<BasicFieldView, T> info;
+//   BasicFieldView():View(info) {}
+// 
+//   virtual void write(std::ostream& os) { writeInfo(os, *field, false); } //writing into a stream
+// };
+// 
+// template<class T> ViewInfo_typed<BasicFieldView<T>, T> BasicFieldView<T>::info("BasicFieldView", ViewInfo::fieldVT);
 
 //===========================================================================
 

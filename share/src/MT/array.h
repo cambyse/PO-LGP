@@ -311,6 +311,9 @@ typedef MT::Array<Any*>   AnyList;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
 
+namespace MT{ struct String; }
+typedef MT::Array<MT::String*> StringL;
+
 
 //===========================================================================
 //

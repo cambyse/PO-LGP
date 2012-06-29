@@ -1,6 +1,6 @@
 #include <motion/motion.h>
-#include <hardware/hardware.h>
 #include <motion/FeedbackControlTasks.h>
+#include <biros/control.h>
 
 struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
@@ -27,26 +27,28 @@ int main(int argn, char** argv){
 
   // variables
   GeometricState geometricState;
-  ControllerTask controllerTask;
+  MotionPrimitive motionPrimitive;
   HardwareReference hardwareReference;
 
   // processes
   Controller controller;
 
+  b::openInsideOut();
+  
   // viewers
   PoseViewer<HardwareReference> view(hardwareReference);
   
   ProcessL P=LIST<Process>(controller/*, view*/);
 
   MyTask myTask;
-  controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::feedback;
-  controllerTask.feedbackControlTask = &myTask;
-  controllerTask.forceColLimTVs = false;
-  controllerTask.deAccess(NULL);
+  motionPrimitive.writeAccess(NULL);
+  motionPrimitive.mode = MotionPrimitive::feedback;
+  motionPrimitive.feedbackControlTask = &myTask;
+  motionPrimitive.forceColLimTVs = false;
+  motionPrimitive.deAccess(NULL);
 
   uint mode=MT::getParameter<uint>("mode", 1);
-  if(mode==0){
+  if(mode==0){ //non-threaded
     controller.open();
 //  view.open();
     for(;;){

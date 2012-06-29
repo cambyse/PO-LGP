@@ -2,6 +2,7 @@
 #define MT_motion_h
 
 #include <biros/biros.h>
+#include <views/views.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
 
@@ -104,7 +105,8 @@ struct HardwareReference:Variable {
   
   FIELD(bool, readHandFromReal);
   
-  HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {};
+  HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {
+    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal(); };
   void get_poseView(arr& q) { q=q_reference; }
 };
 
@@ -128,6 +130,7 @@ struct MotionFuture:Variable {
   MotionPrimitive *getCurrentMotionPrimitive(Process *p){ readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
   Action *getCurrentAction(Process *p){ readAccess(p); Action *a=actions(currentFrame); deAccess(p); return a; }
 };
+
 
 //===========================================================================
 //
@@ -153,7 +156,20 @@ struct ActionToMotionPrimitive:Process {
 };
 
 
+//===========================================================================
+//
+// Views
+//
 
+struct PoseView:View{
+  arr *q;
+  WorkingCopy<GeometricState> geo;
+  static ViewInfo_typed<PoseView, arr> info;
+  
+  PoseView();
+  void glDraw();
+  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
+};
 
 //===========================================================================
 //

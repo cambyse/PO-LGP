@@ -33,6 +33,7 @@ struct sController {
 Controller::Controller():Process("MotionController") {
   s = new sController();
   birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+  birosInfo.getVariable(s->motionPrimitive, "MotionPrimitive", this);
   birosInfo.getVariable(s->hardwareReference, "HardwareReference", this);
   bool listens = birosInfo.getParameter<bool>("Controller_listens", this);
   if(listens) threadListenTo(s->hardwareReference);
@@ -41,8 +42,6 @@ Controller::Controller():Process("MotionController") {
   s->geo().ors.getJointState(s->hardwareReference->q_reference,
                              s->hardwareReference->v_reference);
   s->hardwareReference->deAccess(this);
-  s->motionPrimitive = NULL;
-  
 }
 
 Controller::~Controller() {
@@ -70,14 +69,16 @@ void Controller::step() {
   
   s->geo.pull();
 
-  CHECK(s->motionFuture,"");
-  s->motionFuture->readAccess(this);
-  if(s->motionFuture->motions.N)
-    s->motionPrimitive = s->motionFuture->motions(s->motionFuture->currentFrame);
-  s->motionFuture->deAccess(this);
-    
+  if(s->motionFuture){ //this is hooked to a motionFuture...
+    s->motionFuture->readAccess(this);
+    if(s->motionFuture->motions.N)
+      s->motionPrimitive = s->motionFuture->motions(s->motionFuture->currentFrame);
+    s->motionFuture->deAccess(this);
+  }
+  
   if (!s->motionPrimitive){ //no motion primitive is set! don't do anything
     s->hardwareReference->set_v_reference(zeros, this);
+    MT_MSG("no motion primitive set -> controller stays put");
     return;
   }
 

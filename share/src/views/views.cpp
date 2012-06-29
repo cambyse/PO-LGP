@@ -2,10 +2,12 @@
 
 MT::Array<ViewInfo*> birosViews;
 
-BasicWriteInfoView_CPP(Process, proc, processVT);
-BasicWriteInfoView_CPP(Variable, var, variableVT);
-BasicWriteInfoView_CPP(FieldInfo, field, fieldVT);
-BasicWriteInfoView_CPP(Parameter, param, parameterVT);
+GenericInfoView_CPP(Process, proc, processVT);
+GenericInfoView_CPP(Variable, var, variableVT);
+GenericInfoView_CPP(FieldInfo, field, fieldVT);
+GenericInfoView_CPP(Parameter, param, parameterVT);
+
+#undef GenericInfoView_CPP
 
 #ifdef MT_GTK
 
@@ -92,16 +94,11 @@ void View::gtkNewText(GtkWidget *container){
   CHECK(container,"");
   CHECK(!widget,"");
   widget = gtk_text_view_new ();
-
-  GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
-
-  MT::String str;
-  write(str);
-  gtk_text_buffer_set_text (buffer, str, -1);
-    
   gtk_container_add(GTK_CONTAINER(container), widget);
   gtk_widget_show(container);
   gtk_widget_show(widget);
+  
+  gtkUpdate();
 }
 
 
@@ -119,6 +116,16 @@ void View::gtkNewGl(GtkWidget *container){
   gl->update();
 }
 
+void View::gtkUpdate(){
+  if(gl) gl->update();
+  if(widget){
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
+    MT::String str;
+    write(str);
+    gtk_text_buffer_set_text (buffer, str, -1);
+  }
+}
+
 View::~View(){
   if(widget) gtk_widget_destroy(widget);
   if(gl) delete gl;
@@ -130,11 +137,11 @@ View::~View(){
 //
 
 //explicit instantiation! triggers the creation of the static _info
-template class BasicFieldView<byte>;
-template class BasicFieldView<int>;
-template class BasicFieldView<uint>;
-template class BasicFieldView<float>;
-template class BasicFieldView<double>;
+// template class BasicFieldView<byte>;
+// template class BasicFieldView<int>;
+// template class BasicFieldView<uint>;
+// template class BasicFieldView<float>;
+// template class BasicFieldView<double>;
 
 //===========================================================================
 
