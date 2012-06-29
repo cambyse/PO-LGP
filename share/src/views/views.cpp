@@ -90,6 +90,7 @@ void dumpViews(){
 
 void View::gtkNewText(GtkWidget *container){
   CHECK(container,"");
+  CHECK(!widget,"");
   widget = gtk_text_view_new ();
 
   GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
@@ -111,12 +112,17 @@ void glDrawView(void *classP){
 
 void View::gtkNewGl(GtkWidget *container){
   CHECK(container,"");
-  OpenGL *gl = new OpenGL(container);
+  CHECK(!gl,"");
+  gl = new OpenGL(container);
   gtk_widget_set_size_request(gl->s->glArea, 100, 100);
   gl->add(glDrawView, this);
   gl->update();
 }
 
+View::~View(){
+  if(widget) gtk_widget_destroy(widget);
+  if(gl) delete gl;
+}
 
 //===========================================================================
 //

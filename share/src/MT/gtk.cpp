@@ -22,7 +22,8 @@ void gtkCheckInitialized(){
   }
 }
 
-void gtkProcessEvents(){
+void gtkProcessEvents(bool waitForEvents){
+  if(waitForEvents) gtk_main_iteration();
   while (gtk_events_pending())  gtk_main_iteration();
 }
 

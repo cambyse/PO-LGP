@@ -1,5 +1,6 @@
 #include <biros/biros.h>
 #include <MT/util.h>
+#include <MT/gtk.h>
 #include <biros/biros_logger.h>
 #include <biros/control.h>
 #include <gtk/gtk.h>
@@ -8,7 +9,7 @@
 struct Integer:public Variable {
   FIELD(int, x);
   
-  Integer():Variable("IntVar") { x=rnd(100); }
+  Integer():Variable("IntVar") { reg_x(); x=rnd(100); }
 };
 
 //declaration of a Process
@@ -29,17 +30,18 @@ int main(int argn, char **argv) {
   for(uint i=1; i<N; i++) newPairSorter(ints(i-1), ints(i));
 
   b::openInsideOut();
+  MT::wait(1.);
   
   //run
   //loopSerialized(P);
   step(birosInfo.processes);
   
 #if 1
-  MT::wait(1.); //let them work for a second
+  MT::wait(1.);
   close(birosInfo.processes);
 #else
   if(!logService.getReplay()) {
-    MT::wait(10.);
+    MT::wait(1.);
     close(P);
   } else {
     Process *p;
@@ -63,11 +65,11 @@ int main(int argn, char **argv) {
     cout <<ints(i).x <<' ';
     if(i) CHECK(ints(i).x>=ints(i-1).x,"not sorted!");
   }
-  cout << endl;
+  cout <<endl;
 
   b::updateInsideOut();
-  gtk_main();
-  
+  MT::wait(20.);
+
   return 0;
 }
 
@@ -105,15 +107,18 @@ struct Ref{
 struct PairSorter:public Process {
   Ref<Integer> a;
   Ref<Integer> b;
+  double delay;
   
   PairSorter(Integer& _a, Integer& _b):Process("PairSorter"), a(_a, this), b(_b, this) {
     //a = &_a;
     //b = &_b;
+    delay = birosInfo.getParameter<double>("stepDelay", this);
   };
   
   void open() {}
   void close() {}
   void step() {
+    if(delay)  MT::wait(delay);
     int xa = a.get().x;
     int xb = b.get().x;//->get_x(this);
     if(xa>xb){  //swap numbers

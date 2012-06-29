@@ -170,7 +170,7 @@ struct Parameter {
   uint id;              ///< unique identifyer
   void *pvalue;
   const char* name;
-  ProcessL processes;
+  ProcessL dependers;
   Parameter();
   virtual void writeValue(ostream& os) const = 0;
   virtual const char* typeName() const = 0;
@@ -227,7 +227,7 @@ struct BirosInfo:Variable {
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
     if (!par) par = new Parameter_typed<T>(name, _default);
-    if (!par->processes.contains(p)) par->processes.append(p);
+    if (!par->dependers.contains(p)) par->dependers.append(p);
     return par->value;
   }
   template<class T> T getParameter(const char *name) {

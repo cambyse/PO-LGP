@@ -51,6 +51,7 @@ Views:
 typedef struct _GtkWidget GtkWidget;
 struct View;
 struct ViewInfo;
+struct OpenGL;
 extern MT::Array<ViewInfo*> birosViews;
 
 
@@ -109,10 +110,12 @@ struct View{
   Parameter *param;
   
   GtkWidget *widget;    //which gtk widget has this view created?
+  OpenGL *gl;           //which gl has this view created?
   ViewInfo *_info;
   
-  View(ViewInfo& info):proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), _info(&info) {}
-
+  View(ViewInfo& info):proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), gl(NULL), _info(&info) {}
+  ~View();
+  
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
   virtual void glDraw() {} //a generic GL draw routine
@@ -141,11 +144,11 @@ View *newView(Variable& var);
 //
 
 //-- helpers
-void writeInfo(ostream& os, Process& p);
-void writeInfo(ostream& os, Variable& v);
-void writeInfo(ostream& os, FieldInfo& f);
-void writeInfo(ostream& os, Parameter& pa);
-void writeInfo(ostream& os, ViewInfo& vi);
+void writeInfo(ostream& os, Process& p, bool brief);
+void writeInfo(ostream& os, Variable& v, bool brief);
+void writeInfo(ostream& os, FieldInfo& f, bool brief);
+void writeInfo(ostream& os, Parameter& pa, bool brief);
+void writeInfo(ostream& os, ViewInfo& vi, bool brief);
 
 //===========================================================================
 
@@ -155,11 +158,11 @@ struct Basic##_what##View:View{ \
   static ViewInfo_typed<Basic##_what##View, _what> info; \
   Basic##_what##View():View(info) {} \
 \
-  virtual void write(std::ostream& os) { writeInfo(os, *_arg); } \
+  virtual void write(std::ostream& os) { writeInfo(os, *_arg, false); } \
 };
 
 #define BasicWriteInfoView_CPP(_what, _arg, _type) \
-ViewInfo_typed<Basic##_what##View, _what> Basic##_what##View::info("Basic##_what##View", ViewInfo::_type, "ALL");
+ViewInfo_typed<Basic##_what##View, _what> Basic##_what##View::info("GenericView", ViewInfo::_type, "ALL");
 
 BasicWriteInfoView(Process, proc, processVT);
 BasicWriteInfoView(Variable, var, variableVT);
@@ -173,7 +176,7 @@ struct BasicFieldView:View{
   static ViewInfo_typed<BasicFieldView, T> info;
   BasicFieldView():View(info) {}
 
-  virtual void write(std::ostream& os) { writeInfo(os, *field); } //writing into a stream
+  virtual void write(std::ostream& os) { writeInfo(os, *field, false); } //writing into a stream
 };
 
 template<class T> ViewInfo_typed<BasicFieldView<T>, T> BasicFieldView<T>::info("BasicFieldView", ViewInfo::fieldVT);

@@ -2,6 +2,6 @@
 #define MT_gtk_h
 
 void gtkCheckInitialized();
-void gtkProcessEvents();
+void gtkProcessEvents(bool waitForEvents=false);
 
 #endif

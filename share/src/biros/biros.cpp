@@ -333,7 +333,7 @@ void CycleTimer::cycleDone() {
 //
 
 Variable::Variable(const char *_name) {
-  s = new sVariable(this);
+  s = new sVariable();
   name = _name;
   revision = 0U;
   id = 0U;
@@ -735,7 +735,7 @@ void BirosInfo::dump() {
     cout <<"Parameter " <<par->id <<'_' <<par->name <<" value=";
     par->writeValue(cout);
     cout <<" accessed by:";
-    for_list(j, p, par->processes) {
+    for_list(j, p, par->dependers) {
       if(j) cout <<',';
       cout <<' ' <<(p?p->name:STRING("NULL"));
     }

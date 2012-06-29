@@ -107,11 +107,10 @@ struct CycleTimer {
 
 //Variable's internal data
 struct sVariable {
-  Variable *p;
   Lock lock;
   ConditionVariable cond; //to broadcast write access to this variable
   
-  sVariable(Variable *_p): p(_p) {}
+  sVariable(){}
 };
 
 enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
