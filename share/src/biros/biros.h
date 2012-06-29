@@ -274,7 +274,7 @@ struct WorkingCopy {
     copy = *var;
     last_revision = var->revision;
     var->deAccess(p);
-    copy.name <<"_WorkingCopy_" <<p->name;
+    copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
   }
   void init(const char* var_name, Process *_p) {
     T *_v;

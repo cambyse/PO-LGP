@@ -68,7 +68,7 @@ View *newView(FieldInfo& field){
     return NULL;
   }
   cout
-    <<"Creating new view '" <<v->name <<"' for field " <<field.name
+    <<"Creating new view '" <<v->name <<"' for field '" <<field.name
     <<"' (type '" <<type <<"') of Variable '" <<field.var->name <<"'" <<endl;
   View *vi = v->newInstance();
   vi->field = &field;
@@ -113,12 +113,14 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gtk_widget_set_size_request(gl->s->glArea, 100, 100);
   gl->add(glDrawView, this);
+  glInit();
   gl->update();
 }
 
 void View::gtkUpdate(){
-  if(gl) gl->update();
-  if(widget){
+  if(gl){
+    gl->update();
+  }else if(widget){
     GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
     MT::String str;
     write(str);
@@ -194,10 +196,18 @@ ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT
 //===========================================================================
 
 OrsView::OrsView():View(info) {
-  ors = (ors::Graph*) field->p;
+}
+
+void OrsView::glInit() {
+  gl->setClearColors(1.,1.,1.,1.);
+  gl->camera.setPosition(10.,-15.,8.);
+  gl->camera.focus(0,0,1.);
+  gl->camera.upright();
+  gl->update();
 }
 
 void OrsView::glDraw() {
+  ors::Graph *ors = (ors::Graph*) field->p;
   glStandardScene(NULL);
   ors->glDraw();
 }

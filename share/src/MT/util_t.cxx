@@ -52,6 +52,7 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
     file >>x;
     file.close();
     if(path[0]) if(chdir(cwd)) HALT("couldn't change to directory " <<cwd);
+//     if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
 #else
     HALT("MSVC!");
 #endif

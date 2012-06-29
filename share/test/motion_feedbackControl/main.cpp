@@ -36,7 +36,7 @@ int main(int argn, char** argv){
   b::openInsideOut();
   
   // viewers
-  PoseViewer<HardwareReference> view(hardwareReference);
+  //PoseViewer<HardwareReference> view(hardwareReference);
   
   ProcessL P=LIST<Process>(controller/*, view*/);
 

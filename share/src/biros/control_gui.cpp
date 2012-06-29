@@ -3,15 +3,20 @@
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
 
+#define VIEWBOXES 4
+
 struct InsideOutGui:Process{
+  GtkBuilder *builder;
   GtkWidget *win;
   GtkTreeStore *varStore, *procStore, *paramStore, *viewStore;
-  GtkWidget *viewBox;
-  View *view;
+  GtkWidget* viewBox [VIEWBOXES];
+  uint box;
+  View *view [VIEWBOXES];
 
   InsideOutGui():Process("InsideOutGui"){
     birosInfo.processes.removeValue(this);
-    view=NULL;
+    for(uint b=0;b<VIEWBOXES;b++) view[b]=NULL;
+    box=0;
   }
   ~InsideOutGui(){
     birosInfo.processes.append(this); //to avoid crash
@@ -50,16 +55,18 @@ void InsideOutGui::open(){
   MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
   gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
   //load glade gui
-  GtkBuilder *builder = gtk_builder_new();
+  builder = gtk_builder_new();
   gtk_builder_add_from_file(builder, gladeFile.p, NULL);
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
   varStore = (GtkTreeStore*) gtk_builder_get_object(builder, "variableTreeStore");
   procStore = (GtkTreeStore*) gtk_builder_get_object(builder, "processTreeStore");
   paramStore = (GtkTreeStore*) gtk_builder_get_object(builder, "parameterTreeStore");
   viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
-  viewBox = GTK_WIDGET( gtk_builder_get_object(builder, "viewBox") );
+  for(uint b=0;b<VIEWBOXES;b++){
+    viewBox[b] = GTK_WIDGET( gtk_builder_get_object(builder, STRING("viewBox"<<b).p ));
+    g_object_set_data(G_OBJECT(gtk_builder_get_object(builder, STRING("boxToggle"<<b).p )), "id", (void*)b);
+  }
   gtk_builder_connect_signals(builder, NULL);
-  g_object_unref(G_OBJECT(builder));
   g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
   
   //add data
@@ -73,10 +80,11 @@ void InsideOutGui::open(){
 
 void InsideOutGui::close(){
   gtk_widget_destroy(win);
+  g_object_unref(G_OBJECT(builder));
 }
 
 void InsideOutGui::step(){
-  if(view) view->gtkUpdate();
+  for(uint b=0;b<VIEWBOXES;b++) if(view[b]) view[b]->gtkUpdate();
   gtkProcessEvents();
 }
 
@@ -210,6 +218,14 @@ extern "C" G_MODULE_EXPORT void on_refresh_clicked(GtkWidget* caller){
   cout <<"GUI: refresh" <<endl;
 }
 
+extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  int b = (int)g_object_get_data(G_OBJECT(caller), "id");
+  iog->box = b;
+  cout <<"GUI: box select " <<b <<endl;
+}
+
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   uint id;
   char tag;
@@ -223,9 +239,9 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   //iog->update();
   
-  if(iog->view){
-    delete iog->view;
-    iog->view=NULL;
+  if(iog->view[iog->box]){
+    delete iog->view[iog->box];
+    iog->view[iog->box]=NULL;
   }
   if(gtk_tree_selection_get_selected(tsel , &tm , &it)) {
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
@@ -234,7 +250,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       ViewInfoL vis = b::getViews(ViewInfo::variableVT, typeid(*birosInfo.variables(id)).name() );
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
-        iog->view = b::newView(*birosInfo.variables(id), vis(0));
+        iog->view[iog->box] = b::newView(*birosInfo.variables(id), vis(0));
       }else{
 	ViewInfo *vi;  uint i;
 	StringL choices;
@@ -252,13 +268,13 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	gtk_widget_show_all(menu);
 	gtk_menu_shell_select_first(GTK_MENU_SHELL(menu), false);
 	while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;*/
-        iog->view = b::newView(*birosInfo.variables(id), vis(choice));
+        iog->view[iog->box] = b::newView(*birosInfo.variables(id), vis(choice));
       }
-      label <<"Variable " <<id <<" '" <<iog->view->var->name <<"'";
+      label <<"Variable " <<id <<" '" <<iog->view[iog->box]->var->name <<"'";
     }  break;
     case 'P':
-      iog->view = b::newView(*birosInfo.processes(id), NULL);
-      label <<"Process " <<id <<" '" <<iog->view->proc->name <<"'";
+      iog->view[iog->box] = b::newView(*birosInfo.processes(id), NULL);
+      label <<"Process " <<id <<" '" <<iog->view[iog->box]->proc->name <<"'";
       break;
     //case 'I':  iog->view = b::newView(*birosViews(id), NULL);  break;
     case 'F':{
@@ -268,6 +284,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
       FieldInfo *field = birosInfo.variables(varid)->fields(id);
+      
       ViewInfoL vis = b::getViews(ViewInfo::fieldVT, field->sysType );
       if(!vis.N) break;
       int choice=0;
@@ -276,22 +293,25 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	choice = gtkPopupMenuChoice(choices);
+	listDelete(choices);
       }
-      iog->view = b::newView(*field, vis(choice));
-      label <<"Field " <<id <<" '" <<iog->view->field->name <<"' of Variable " <<varid <<" '" <<birosInfo.variables(varid)->name.p <<"'";
+      iog->view[iog->box] = b::newView(*field, vis(choice));
+      label <<"Field " <<id <<" '" <<iog->view[iog->box]->field->name <<"' of Variable " <<varid <<" '" <<birosInfo.variables(varid)->name.p <<"'";
     }  break;
     }
   }
 
-  if(!iog->view){
+  if(!iog->view[iog->box]){
     MT_MSG("failed");
     return;
   }
 
-  label <<" [View=" <<iog->view->_info->name <<"]";
+  label <<" [View=" <<iog->view[iog->box]->_info->name <<"]";
   
-  gtk_frame_set_label(GTK_FRAME(iog->viewBox), label.p);
-  iog->view->gtkNew(iog->viewBox);
+  GtkLabel *l = GTK_LABEL(gtk_builder_get_object(iog->builder, STRING("boxLabel" <<iog->box)));
+  GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
+  gtk_label_set_text(l, label.p);
+  iog->view[iog->box]->gtkNew(container);
 }
 
 
@@ -330,7 +350,10 @@ void writeInfo(ostream& os, Variable& v, bool brief){
 
 void writeInfo(ostream& os, FieldInfo& f, bool brief){
   if(brief){
-    f.writeValue(os);
+    MT::String str;
+    f.writeValue(str);
+    if(str.N>20) str.resize(20,true);
+    os <<str;
   }else{
     os <<"value=";
     f.writeValue(os);

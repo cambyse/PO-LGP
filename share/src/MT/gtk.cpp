@@ -45,7 +45,8 @@ int gtkPopupMenuChoice(StringL& choices){
   gtk_widget_show_all(menu);
   gtk_menu_shell_select_first(GTK_MENU_SHELL(menu), false);
   while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;
-  return menuChoice;
+  gtk_widget_destroy(menu);
+  return menuChoice>=0?menuChoice:0;
 }
 
 #else //MT_GTK

@@ -118,6 +118,7 @@ struct View{
   
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
+  virtual void glInit() {} //a generic GL draw routine
   virtual void glDraw() {} //a generic GL draw routine
   virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
   virtual void gtkUpdate(); //let the view update the gtk widget
@@ -213,10 +214,10 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
-  ors::Graph *ors;
   static ViewInfo_typed<OrsView, ors::Graph> info;
   
-  OrsView();  
+  OrsView();
+  void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };

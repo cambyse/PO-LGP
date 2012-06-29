@@ -50,6 +50,7 @@ struct sOpenGL{
   
   GtkWidget *win;
   GtkWidget *glArea;
+  bool ownWin;
   
   //OpenGL *gl;
   ors::Vector downVec,downPos,downFoc;
@@ -121,11 +122,13 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   gtk_window_set_default_size(GTK_WINDOW(win), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(win), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(win));
+  ownWin = true;
   
   init(gl,win);
 }
 
 sOpenGL::sOpenGL(OpenGL *gl, void *container){
+  ownWin = false;
   init(gl,container);
 }
 
@@ -171,7 +174,8 @@ void sOpenGL::init(OpenGL *gl, void *container){
 
 sOpenGL::~sOpenGL(){
   lock();
-  gtk_widget_destroy(win);
+  gtk_widget_destroy(glArea);
+  if(ownWin) gtk_widget_destroy(win);
   unlock();
 }
 

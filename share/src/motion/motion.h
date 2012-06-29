@@ -162,11 +162,11 @@ struct ActionToMotionPrimitive:Process {
 //
 
 struct PoseView:View{
-  arr *q;
   WorkingCopy<GeometricState> geo;
   static ViewInfo_typed<PoseView, arr> info;
   
   PoseView();
+  void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
