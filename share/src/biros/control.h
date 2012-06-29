@@ -43,7 +43,8 @@ namespace b{
   ViewInfoL getViews();
   ViewInfoL getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType);
   ViewInfoL getGlobalViews();
-
+  ViewInfo* getView(const char *name);
+  
   //! creat a new view; if ViewInfo==NULL the first available
   View* newView(Process&,ViewInfo*);
   View* newView(Variable&,ViewInfo*);

@@ -2,10 +2,10 @@
 
 MT::Array<ViewInfo*> birosViews;
 
-GenericInfoView_CPP(Process, proc, processVT);
-GenericInfoView_CPP(Variable, var, variableVT);
-GenericInfoView_CPP(FieldInfo, field, fieldVT);
-GenericInfoView_CPP(Parameter, param, parameterVT);
+GenericInfoView_CPP(Process, GenericProcessView, processVT);
+GenericInfoView_CPP(Variable, GenericVariableView, variableVT);
+GenericInfoView_CPP(FieldInfo, GenericFieldInfoView, fieldVT);
+GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
 
 #undef GenericInfoView_CPP
 

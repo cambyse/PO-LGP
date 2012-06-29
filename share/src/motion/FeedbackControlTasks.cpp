@@ -204,7 +204,7 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   
   arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
   intA joys = joyState->get_state(NULL);
-  if (!joys.N) { joys.resize(8);  joys.setZero(); }
+  if (joys.N<8) { joys.resize(8);  joys.setZero(); }
   
   prepare_skin(skin, skinState, joys(0)!=2);
   

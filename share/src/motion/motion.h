@@ -35,7 +35,9 @@ struct Action:Variable {
   FIELD(char*, objectRef1);  //arguments to the relational predicates
   FIELD(char*, objectRef2);
   
-  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {};
+  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {
+    reg_frameCount(); reg_action(); reg_executed(); reg_objectRef1(); reg_objectRef2();
+  };
   
   void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
 };
@@ -48,7 +50,9 @@ struct MotionKeyframe:Variable {
   FIELD(double, duration_estimate);
   FIELD(bool, converged);
   
-  MotionKeyframe():Variable("MotionKeyFrame"), frameCount(0), converged(false) {};
+  MotionKeyframe():Variable("MotionKeyFrame"), frameCount(0), converged(false) {
+    reg_frameCount(); reg_x_estimate(); reg_duration_estimate(); reg_converged();
+  };
   void get_poseView(arr& x) { x=x_estimate; }
 };
 
@@ -87,7 +91,11 @@ struct MotionPrimitive:Variable {
       mode(stop),
       frame0(NULL), frame1(NULL), planConverged(false),
       feedbackControlTask(NULL),
-      forceColLimTVs(true), relativeRealTimeOfController(0.) { };
+      forceColLimTVs(true), relativeRealTimeOfController(0.) {
+	reg_frameCount(); reg_mode(); reg_frame0(); reg_frame1(); reg_q_plan(); reg_tau(); reg_planConverged();
+	reg_iterations_till_convergence(); reg_cost();
+	reg_feedbackControlTask(); reg_fixFingers(); reg_forceColLimTVs(); reg_relativeRealTimeOfController();
+      };
   
   void get_poseView(arr& q) { q=q_plan; }
   void setClearPlanTask(const arr& frame0_pose, Process *p);
@@ -106,7 +114,8 @@ struct HardwareReference:Variable {
   FIELD(bool, readHandFromReal);
   
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {
-    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal(); };
+    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal();
+  };
   void get_poseView(arr& q) { q=q_reference; }
 };
 
@@ -122,7 +131,9 @@ struct MotionFuture:Variable {
   FIELD(MT::Array<MotionKeyframe*>, frames);
   FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
   
-  MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {};
+  MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {
+    reg_currentFrame(); reg_actions(); reg_motions(); reg_frames(); reg_planners();
+  };
   
   void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
   void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }

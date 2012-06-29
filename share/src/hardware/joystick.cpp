@@ -58,7 +58,7 @@ void sJoystick::open() {
   */
   n=joy->getNumAxes();
   if (joy->notWorking()) n=0;
-  state.resize(10);
+  state.resize(n+1);
   state.setZero();
   step();
 }

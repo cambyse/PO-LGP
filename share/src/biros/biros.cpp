@@ -24,6 +24,10 @@
 MT::Array<Metronome *> globalMetronomes;
 MT::Array<CycleTimer*> globalCycleTimers;
 
+Mutex parameterAccessGlobalMutex;
+void MT::parameterAccessGlobalLock(){ parameterAccessGlobalMutex.lock(); }
+void MT::parameterAccessGlobalUnLock(){ parameterAccessGlobalMutex.unlock(); }
+
 void reportNice() {
   pid_t tid = syscall(SYS_gettid);
   int priority = getpriority(PRIO_PROCESS, tid);

@@ -1,15 +1,14 @@
 #include <hardware/hardware.h>
 #include <motion/motion.h>
 #include <motion/FeedbackControlTasks.h>
+#include <biros/control.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
-  ThreadInfoWin win;
-  win.threadLoopWithBeat(.1);
 
   // variables
   GeometricState geometricState;
-  ControllerTask controllerTask;
+  MotionPrimitive motionPrimitive;
   HardwareReference hardwareReference;
   SkinPressure skinPressure;
   JoystickState joystickState;
@@ -21,25 +20,24 @@ int main(int argn,char** argv){
   SchunkHand schunkHand;
   //SchunkSkin schunkSkin;
 
-  PoseViewer<HardwareReference> view(hardwareReference);
-
   ProcessL hardware=LIST<Process>(schunkArm, schunkHand, joystick);
 
-  ProcessL P=LIST<Process>(controller, view); //, , schunkSkin, 
+  ProcessL P=LIST<Process>(controller); //, , schunkSkin, 
 
-  
+  b::openInsideOut();
   
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
-  controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::feedback;
-  controllerTask.feedbackControlTask = &joyTask;
-  controllerTask.deAccess(NULL);
+  motionPrimitive.writeAccess(NULL);
+  motionPrimitive.mode = MotionPrimitive::feedback;
+  motionPrimitive.feedbackControlTask = &joyTask;
+  motionPrimitive.deAccess(NULL);
   //view.threadLoopWithBeat(.01);
   loopWithBeat(hardware, .01); // hardware must be started before the controller
   loopWithBeat(P,.01);
-  MT::wait(20.);
+  MT::wait(60.);
   close(P);
+  close(hardware);
 
   cout <<" *** bye bye" <<endl;
 

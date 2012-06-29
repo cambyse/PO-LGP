@@ -30,6 +30,9 @@ typedef MT::Array<VariableReference*> VariableReferenceL;
     void close();       \
   };
 
+#define VAR(Type) \
+  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+
 
 //===========================================================================
 //
@@ -182,7 +185,7 @@ struct Parameter_typed:Parameter {
   Parameter_typed(const char* _name, const T& _default):Parameter() {
     name = _name;
     pvalue = &value;
-    if (&_default) MT::getParameter<T>(value, name, _default);
+    if(&_default) MT::getParameter<T>(value, name, _default);
     else          MT::getParameter<T>(value, name);
   }
   void writeValue(ostream& os) const { os <<value; }
@@ -201,9 +204,9 @@ struct BirosInfo:Variable {
   ProcessL processes;
   ParameterL parameters;
   
-  Process *getProcessFromPID();
-  
   BirosInfo():Variable("BirosInfo") {};
+  
+  Process *getProcessFromPID();
   
   template<class T>  void getVariable(T*& v, const char* name, Process *p) {
     writeAccess(p);
@@ -220,6 +223,7 @@ struct BirosInfo:Variable {
     if (!pname) MT_MSG("can't find biros process '" <<name
 		       <<"' -- Process '" <<(p?p->name:STRING("NULL"))
 		       <<"' will not connect");
+    return pname;
   }
   template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)) {
     Parameter_typed<T> *par;

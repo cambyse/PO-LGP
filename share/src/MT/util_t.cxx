@@ -72,11 +72,15 @@ bool getFromCmdLine(T& x, const char *tag) {
   return true;
 }
 
+void parameterAccessGlobalLock();
+void parameterAccessGlobalUnLock();
+
 /*!\brief Search the first occurence of a sequence '\c tag:'
 in the config file (opened automatically) and, if found, pipes
 it in \c value. Returns false if parameter is not found. */
 template<class T>
 bool getFromCfgFile(T& x, const char *tag) {
+  parameterAccessGlobalLock();
   if(!cfgOpenFlag) openConfigFile();
   CHECK(!cfgLock, "cfg file is locked");
   cfgLock=true;
@@ -92,13 +96,14 @@ bool getFromCfgFile(T& x, const char *tag) {
   };
   delete[] buf;
   
-  if(!cfgFile.good()) { cfgLock=false; return false; }
+  if(!cfgFile.good()) { cfgLock=false; parameterAccessGlobalUnLock(); return false; }
   
   skip(cfgFile, " :=\n\r\t");
   cfgFile >>x;
   
   if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
   cfgLock=false;
+  parameterAccessGlobalUnLock();
   return true;
 }
 

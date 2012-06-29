@@ -162,8 +162,8 @@ struct Generic##_what##View:View{ \
   virtual void write(std::ostream& os) { writeInfo(os, *_arg, false); } \
 };
 
-#define GenericInfoView_CPP(_what, _arg, _type) \
-ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View::info("GenericView", ViewInfo::_type, "ALL");
+#define GenericInfoView_CPP(_what, _name, _type) \
+ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View::info(#_name, ViewInfo::_type, "ALL");
 
 GenericInfoView(Process, proc, processVT);
 GenericInfoView(Variable, var, variableVT);

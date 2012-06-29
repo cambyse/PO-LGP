@@ -85,8 +85,20 @@ void ActionToMotionPrimitive::step() {
   
   if (actionSymbol==Action::grasp || actionSymbol==Action::place || actionSymbol == Action::home || actionSymbol == Action::reach){
     
-    if (!frame0->get_converged(this)) { //can't do anything with frame0 not converged
-      return;
+    if (!frame0->get_converged(this)) {
+      frame0->readAccess(this);
+      if(frame0->frameCount==0 && frame0->x_estimate.N==0){ //assume this is the FIRST frame of all
+        VAR(HardwareReference);
+        arr x0 =  _HardwareReference->get_q_reference(NULL);
+	x0.append(_HardwareReference->get_v_reference(NULL));
+	frame0->x_estimate = x0;
+	frame0->converged = true;
+      }else{
+	//can't do anything with frame0 not converged
+	frame0->deAccess(this);
+	return;
+      }
+      frame0->deAccess(this);
     }
     
     if (frame1->get_converged(this) && motionPrimitive->get_planConverged(this)) { // nothing to do anymore

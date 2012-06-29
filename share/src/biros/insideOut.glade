@@ -198,82 +198,6 @@
                     <property name="tab_pos">left</property>
                     <property name="scrollable">True</property>
                     <child>
-                      <object class="GtkScrolledWindow" id="scrolledwindow1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">automatic</property>
-                        <property name="vscrollbar_policy">automatic</property>
-                        <child>
-                          <object class="GtkTreeView" id="processTreeView">
-                            <property name="width_request">125</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="model">processTreeStore</property>
-                            <property name="headers_clickable">False</property>
-                            <property name="reorderable">True</property>
-                            <property name="search_column">0</property>
-                            <property name="hover_selection">True</property>
-                            <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
-                            <signal name="row-activated" handler="toggle_expand" swapped="no"/>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="treeviewcolumn6">
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext14"/>
-                                  <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="processTreeColumnName">
-                                <property name="title">Name</property>
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext5"/>
-                                  <attributes>
-                                    <attribute name="text">2</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="processTreeColumnId">
-                                <property name="title">ID</property>
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext6"/>
-                                  <attributes>
-                                    <attribute name="text">0</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="treeviewcolumn4">
-                                <property name="title" translatable="yes">Info</property>
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext12"/>
-                                  <attributes>
-                                    <attribute name="text">3</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child type="tab">
-                      <object class="GtkLabel" id="label3">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Processes</property>
-                        <property name="angle">90</property>
-                      </object>
-                      <packing>
-                        <property name="tab_fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkScrolledWindow" id="scrolledwindow2">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -287,16 +211,6 @@
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
                             <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="treeviewcolumn5">
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext13"/>
-                                  <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="variableTreeColumn1">
                                 <property name="title">Name</property>
@@ -350,6 +264,76 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkScrolledWindow" id="scrolledwindow1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <object class="GtkTreeView" id="processTreeView">
+                            <property name="width_request">125</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="model">processTreeStore</property>
+                            <property name="headers_clickable">False</property>
+                            <property name="reorderable">True</property>
+                            <property name="search_column">0</property>
+                            <property name="hover_selection">True</property>
+                            <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
+                            <signal name="row-activated" handler="toggle_expand" swapped="no"/>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="processTreeColumnName">
+                                <property name="title">Name</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="cellrenderertext5"/>
+                                  <attributes>
+                                    <attribute name="text">2</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="processTreeColumnId">
+                                <property name="title">ID</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="cellrenderertext6"/>
+                                  <attributes>
+                                    <attribute name="text">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="treeviewcolumn4">
+                                <property name="title" translatable="yes">Info</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="cellrenderertext12"/>
+                                  <attributes>
+                                    <attribute name="text">3</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child type="tab">
+                      <object class="GtkLabel" id="label3">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Processes</property>
+                        <property name="angle">90</property>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                        <property name="tab_fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkScrolledWindow" id="scrolledwindow3">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -369,17 +353,6 @@
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext3"/>
                                   <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="treeviewcolumn3">
-                                <property name="title" translatable="yes">Value</property>
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext10"/>
-                                  <attributes>
                                     <attribute name="text">2</attribute>
                                   </attributes>
                                 </child>
@@ -392,6 +365,17 @@
                                   <object class="GtkCellRendererText" id="cellrenderertext4"/>
                                   <attributes>
                                     <attribute name="text">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="treeviewcolumn3">
+                                <property name="title" translatable="yes">Value</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="cellrenderertext10"/>
+                                  <attributes>
+                                    <attribute name="text">3</attribute>
                                   </attributes>
                                 </child>
                               </object>
@@ -429,16 +413,6 @@
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
                             <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
-                            <child>
-                              <object class="GtkTreeViewColumn" id="treeviewcolumn7">
-                                <child>
-                                  <object class="GtkCellRendererText" id="cellrenderertext9"/>
-                                  <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
-                                </child>
-                              </object>
-                            </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="treeviewcolumn8">
                                 <property name="title" translatable="yes">Name</property>
@@ -507,10 +481,25 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_action_appearance">False</property>
-                        <property name="label" translatable="yes">stop all</property>
+                        <property name="label" translatable="yes">refresh</property>
                         <property name="use_underline">True</property>
                         <property name="stock_id">gtk-refresh</property>
                         <signal name="clicked" handler="on_refresh_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbutton2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="label" translatable="yes">save</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-save</property>
+                        <signal name="clicked" handler="on_save_clicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -532,7 +521,7 @@
             </child>
             <child>
               <object class="GtkTable" id="table1">
-                <property name="width_request">500</property>
+                <property name="width_request">700</property>
                 <property name="height_request">500</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>

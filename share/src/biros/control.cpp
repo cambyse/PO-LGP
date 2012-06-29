@@ -11,6 +11,11 @@ ViewInfoL b::getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType
   return vis;
 }
 
+ViewInfo* b::getView(const char *name){
+  return listFindByName(birosViews, name);
+}
+
+
 View* b::newView(Process& proc, ViewInfo *vi){
   if(!vi){
     ViewInfoL vis=getViews(ViewInfo::processVT, typeid(proc).name());
@@ -24,6 +29,22 @@ View* b::newView(Process& proc, ViewInfo *vi){
     <<"Creating new view '" <<vi->name <<"' for process '" <<proc.name <<"'" <<endl;
   View *v = vi->newInstance();
   v->proc = &proc;
+  return v;
+}
+
+View* b::newView(Parameter& param, ViewInfo *vi){
+  if(!vi){
+    ViewInfoL vis=getViews(ViewInfo::parameterVT, param.typeName());
+    if(!vis.N){
+      MT_MSG("No View for Variable sysType '" <<param.typeName() <<"' found");
+      return NULL;
+    }
+    vi = vis(0);
+  }
+  cout
+    <<"Creating new view '" <<vi->name <<"' for parameter '" <<param.name <<"'" <<endl;
+  View *v = vi->newInstance();
+  v->param = &param;
   return v;
 }
 

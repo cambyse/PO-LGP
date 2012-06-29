@@ -76,6 +76,51 @@ void InsideOutGui::open(){
   gtk_widget_show(win);
 
   gtkProcessEvents();
+  
+  //try to open config file
+  ifstream is;
+  MT::open(is,"ino.cfg");
+  if(is.good()){
+    MT::String name,type, fld;
+    uint _b;
+    ViewInfo *vi;
+    Variable *v;
+    Process *p;
+    FieldInfo *f;
+    for(uint b=0;b<VIEWBOXES;b++){
+      is >>_b;
+      if(!is.good() || _b!=b) break;
+      name.read(is," "," \n\r");
+      type.read(is," "," \n\r");
+      vi = b::getView(name);
+      if(type=="field"){
+	name.read(is," "," \n\r");
+	birosInfo.getVariable(v, name, NULL);
+        fld.read(is," "," \n\r");
+	f = listFindByName(v->fields, fld);
+	view[b] = b::newView(*f, vi); view[b]->field=f;
+      }
+      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo.getVariable(v, name, NULL); view[b] = b::newView(*v, vi); view[b]->var=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->proc = birosInfo.getProcess<Process>(name, NULL);       view[b] = b::newView(*view[b]->proc, vi);  }
+      //if(type=="parameter"){view[b] = b::newView(ViewInfo::parameterVT, vi);is >>name; birosInfo.getParameter(view[b]->param, name); }
+//       if(type=="global"){   view[b] = b::newGlobalView(vi); }
+
+      MT::String label;
+      if(!view[b]){
+	MT_MSG("failed");
+	return;
+      }
+      label.clear() <<" [View=" <<view[b]->_info->name <<"]";
+      GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<b)));
+      GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxView" <<b)));
+      gtk_label_set_text(l, label.p);
+      view[b]->gtkNew(container);
+
+    }
+    is.close();
+  }
+
+
 }
 
 void InsideOutGui::close(){
@@ -171,7 +216,7 @@ void InsideOutGui::updateParamStore(){
   for_list(i, pa, birosInfo.parameters) {
     writeInfo(info.clear(), *pa, true);
     gtk_tree_store_append(paramStore, &i_it, NULL);
-    gtk_tree_store_set(paramStore, &i_it, 0, pa->id, 1, 'A', 2, pa->name, 3, info.p, -1);
+    gtk_tree_store_set(paramStore, &i_it, 0, pa->id, 1, 'p', 2, pa->name, 3, info.p, -1);
     for_list(j, p, pa->dependers) if(p){
       writeInfo(info.clear(), *p, true);
       gtk_tree_store_append(paramStore, &j_it, &i_it);
@@ -216,6 +261,29 @@ extern "C" G_MODULE_EXPORT void on_refresh_clicked(GtkWidget* caller){
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   iog->update();
   cout <<"GUI: refresh" <<endl;
+}
+
+extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  iog->update();
+  cout <<"GUI: save" <<endl;
+  ofstream os;
+  MT::open(os,"ino.cfg");
+  for(uint b=0;b<VIEWBOXES;b++) if(iog->view[b]){
+    View *v=iog->view[b];
+    ViewInfo *vi=v->_info;
+    os <<b <<' ' <<vi->name;
+    switch (vi->type) {
+      case ViewInfo::fieldVT:    os <<" field " <<v->field->var->name <<' ' <<v->field->name;  break;
+      case ViewInfo::variableVT: os <<" variable" <<' ' <<v->var->name;  break;
+      case ViewInfo::processVT:  os <<" process" <<' ' <<v->proc->name;  break;
+      case ViewInfo::parameterVT:os <<" parameter" <<' ' <<v->param->name;  break;
+      case ViewInfo::globalVT:   os <<" global";  break;
+    }
+    os <<endl;
+  }
+  os.close();
 }
 
 extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
@@ -276,7 +344,10 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       iog->view[iog->box] = b::newView(*birosInfo.processes(id), NULL);
       label <<"Process " <<id <<" '" <<iog->view[iog->box]->proc->name <<"'";
       break;
-    //case 'I':  iog->view = b::newView(*birosViews(id), NULL);  break;
+    case 'p':
+      iog->view[iog->box] = b::newView(*birosInfo.parameters(id), NULL);
+      label <<"Parameter " <<id <<" '" <<iog->view[iog->box]->param->name <<"'";
+      break;
     case 'F':{
       //get variable id first by accessing
       uint varid;
@@ -363,7 +434,11 @@ void writeInfo(ostream& os, FieldInfo& f, bool brief){
 
 void writeInfo(ostream& os, Parameter& pa, bool brief){
   if(brief){
-    pa.writeValue(os);
+    MT::String str;
+    pa.writeValue(str);
+    if(str.N>20) str.resize(20,true);
+    for(uint i=0;i<str.N;i++) if(str(i)=='\n') str(i)=' ';
+    os <<str;
   }else{
     os <<"value=";
     pa.writeValue(os);

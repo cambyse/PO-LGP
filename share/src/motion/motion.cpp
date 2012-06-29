@@ -1,8 +1,5 @@
 #include "motion.h"
 
-#define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
-
 void reattachShape(const char* objShape, const char* toBody);
 
 void Action::setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p){
@@ -56,8 +53,8 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   //create new Variables
   Action *a = actions.append(new Action);
   MotionKeyframe *f0 = frames.last();
-  MotionKeyframe *f1 = frames.append(new MotionKeyframe);
-  MotionPrimitive *m = motions.append(new MotionPrimitive);
+  MotionKeyframe *f1 = frames.append(new MotionKeyframe);   //append a new frame
+  MotionPrimitive *m = motions.append(new MotionPrimitive); //append a new motion primitive
   done = false;
   
   //assign Variables
