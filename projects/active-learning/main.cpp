@@ -23,6 +23,7 @@
 //#include "tester.h"
 //#include "sampler.h"
 //#include "gui.h"
+SET_LOG(main, DEBUG);
 
 #include <MT/array_t.cxx>
 #include <MT/ors.h>
@@ -50,12 +51,18 @@ int main(int argc, char** argv) {
   BlocksWorldSampler sampler;
   OnOracle o;
 
-  //Gui gui("situation.ors");
-  //GuiDataV guiData;
-  //gui.guiData = &guiData;
+  Gui gui("situation.ors");
+  GuiDataV guiData;
+  gui.guiData = &guiData;
 
   TrainingsDataV train;
-  sampler.sample(train.data);
+  train.data.append(ARR(0.359201, -1.20565, 0.81));
+  train.data.append(ARR( 0.08)); 
+  train.data.append(ARR(0.357674, -1.20132, 0.73 ));
+  train.data.append(ARR(0.08));
+  train.data.reshape(1,4);
+  DEBUG_VAR(main, train.data);
+  DEBUG_VAR(main, o.classify(train.data, 0));
   intA classes;
   classes.append(o.classify(train.data, 0));
   train.classes = classes;
@@ -66,7 +73,7 @@ int main(int argc, char** argv) {
   else
     cl.classificator = new LogisticRegression(new BlocksWorldSampler);
   cl.oracle = new OnOracle();
-  cl.tester = new Tester(5000, filename);
+  cl.tester = new Tester(5000, filename, 24);
 
   DEBUG_VAR(classify, d.get_numOfWorkingJobs(NULL));
   DEBUG_VAR(classify, &d);
@@ -74,17 +81,13 @@ int main(int argc, char** argv) {
   ActiveLearningP alp;
   alp.traindata = &train;
   alp.classificator = &cl;
-  //alp.guiData = &guiData;
+  alp.guiData = &guiData;
  
   alp.threadOpen();
-  alp.threadLoop();
+  alp.threadStep(n_steps);
 
-  while(true) {
-    MT::wait(.1);
-  }
-
-  //gui.threadOpen();
-  //gui.threadLoop();
+  gui.threadOpen();
+  gui.threadLoop();
 
 
   alp.threadClose();
