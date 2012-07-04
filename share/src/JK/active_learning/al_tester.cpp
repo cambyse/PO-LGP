@@ -17,7 +17,7 @@ class ClassifyMaster : public Master<MT::Array<arr>, double> {
   public:
     int testNumber;
 
-    ClassifyMaster(int numOfJobs, ClassificatorV* cl);
+    ClassifyMaster(int numOfJobs, ClassificatorV* cl, int numOfWorkers);
     virtual MT::Array<arr> createJob();  
     virtual int hasNextJob();
     virtual int hasWorkingJob();
@@ -62,8 +62,8 @@ void ClassifyIntegrator::integrateResult(const double& result) {
 ClassifyWorkerFactory::ClassifyWorkerFactory(ClassificatorV* cl) :
   classificator(cl) {}
 
-ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl) : 
-  Master<MT::Array<arr>, double>((WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl), (Integrator<double> *) new ClassifyIntegrator(numOfJobs), 6) ,
+ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl, int numOfWorkers) : 
+  Master<MT::Array<arr>, double>((WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl), (Integrator<double> *) new ClassifyIntegrator(numOfJobs), numOfWorkers) ,
   classificator(cl)
 {
   birosInfo.getVariable<ClassifyData>(data, "Classify Data", NULL);
@@ -106,8 +106,8 @@ Worker<MT::Array<arr>, double>* ClassifyWorkerFactory::createWorker() {
   return new ClassifyWorker(classificator);
 }
 
-Tester::Tester(const int testNumber, const char* filename) : m(NULL) {
-  m = new ClassifyMaster(testNumber, new ClassificatorV);
+Tester::Tester(const int testNumber, const char* filename, int numOfWorkers) : m(NULL) {
+  m = new ClassifyMaster(testNumber, new ClassificatorV, numOfWorkers);
   ClassifyData *d = new ClassifyData();
   m->testNumber = testNumber;
   outfile.open(filename);

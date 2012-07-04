@@ -25,7 +25,7 @@ class ClassifyData : public Variable {
 template<class S> class Sampler;
 class Tester {
   public:
-    Tester(const int testNumber = 5000, const char* filename = "classification.data");
+    Tester(const int testNumber = 5000, const char* filename = "classification.data", int numOfWorkers=5);
     virtual ~Tester();
     const double test(ClassificatorV* l);
 
