@@ -4,7 +4,7 @@
 
 BASE = ../../share
 
-LIBS += -lrelational -lMT -lbiros -ljk
+LIBS += -lrelational -lMT -lbiros -ljk -lstdc++
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 CUDA = 0
 OBJS  = main.o 

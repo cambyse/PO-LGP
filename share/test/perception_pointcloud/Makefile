@@ -8,7 +8,7 @@ CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
 PCL=1
 
-LIBS += -lbiros -lhardware -lperception
+LIBS += -lbiros -lhardware -lperception -ljk -lrelational -lmotion
 
 buildAndLink_MTLIB = 1
 

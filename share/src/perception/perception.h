@@ -10,6 +10,9 @@
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
 #include <MT/opengl.h>
+#include <MT/ors.h>
+
+#include <MT/array_t.cxx>
 
 //===========================================================================
 //
@@ -251,6 +254,35 @@ struct ImageViewer:Process {
   }
 };
 
+namespace pcl {
+  template <class T>
+  struct PointCloud;
+};
+
+const int RADIUS = 2;
+const int HEIGHT = 3;
+
+
+struct ObjectBelief {
+  //pose
+  ors::Vector position;
+  ors::Quaternion rotation;
+
+  arr poseCov;
+
+  // primitive shapes
+  ors::ShapeType shapeType;
+  arr shapeParams;
+
+  //pcl::PointCloud<PointT>* pointCloud;
+  arr veritces;
+  uintA triangles;
+};
+
+struct ObjectBeliefSet : Variable {
+  FIELD(MT::Array<ObjectBelief*>, objects);
+  ObjectBeliefSet(const char *name) : Variable(name) { reg_objects(); }
+};
 #endif
 
 

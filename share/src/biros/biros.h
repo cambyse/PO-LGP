@@ -269,7 +269,7 @@ struct WorkingCopy {
   }
   void init(const char* var_name, Process *_p) {
     T *_v;
-    birosInfo.getVariable(_v, "GeometricState", _p);
+    birosInfo.getVariable(_v, var_name, _p);
     init(_v, _p);
   }
   bool needsUpdate() {

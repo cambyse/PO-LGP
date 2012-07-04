@@ -2,8 +2,12 @@
 #define _PERCEPTION_H_
 
 #include <JK/utils/masterWorker.h>
+#include <biros/logging.h>
 #include <hardware/kinect.h>
+#include <motion/motion.h>
 #include <pcl/ModelCoefficients.h>
+
+SET_LOG(pointcloud, DEBUG);
 
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
@@ -60,6 +64,33 @@ class ObjectFitter : public Master<FittingJob, FittingResult> {
       Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
         birosInfo.getVariable(integrator->point_clouds, "ObjectClusters", integrator);
       };
+};
+
+struct ObjectBeliefSet;
+
+class ObjectFilter : public Process {
+  public:
+    struct sObjectFilter *s;
+    ObjectFilter(const char *name) ;
+    void open();
+    void step();
+    void close() {};
+
+    ObjectSet* in_objects;
+    ObjectBeliefSet* out_objects;
+
+    
+};
+
+class ObjectTransformator : public Process {
+  public:
+    ObjectTransformator(const char *name) : Process(name) {};
+    void open();
+    void step();
+    void close() {};
+
+    ObjectSet* kinect_objects;
+    WorkingCopy<GeometricState> geo;
 };
 
 #endif
