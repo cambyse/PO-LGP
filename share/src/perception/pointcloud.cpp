@@ -276,82 +276,66 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
     s->createNewJob(cloud, inliers);
   }
 }
-
 struct sObjectFilter {
-   void filterCylinders(arr& pos, const FittingResultL& objects, Process *p) {
-     intA nums;
-     pos.clear();
-     nums.resize(0);
-     pos.resize(0,7);
-     for (int i = 0; i< objects.N; ++i) {
-       if (objects(i)->values.size() != 7) continue;
-       bool found = false;
-       arr measurement;
-       measurement.resize(1,7);
-       measurement(0,0) = objects(i)->values[0];
-       measurement(0,1) = objects(i)->values[1];
-       measurement(0,2) = objects(i)->values[2];
-       measurement(0,3) = objects(i)->values[3];
-       measurement(0,4) = objects(i)->values[4];
-       measurement(0,5) = objects(i)->values[5];
-       measurement(0,6) = objects(i)->values[6];
-       arr measurement_;
-       measurement_.append(measurement.sub(0,0,0,2)+measurement.sub(0,0,3,5));
-       measurement_.append(-measurement.sub(0,0,3,5));
-       measurement_.append(measurement(0,6));
-       measurement_.resize(1,7);
-       double epsilon = birosInfo.getParameter<double>("objectDistance", p);
-       for (int j = 0; j<pos.d0; ++j) {
-         if (norm(measurement - pos[j]) < epsilon)  {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-         else if (norm(measurement_ - pos[j]) < epsilon) {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement_ * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-       }
-       if(!found) {
-         pos.append(measurement);
-         nums.append(1);
-       }
-     }
+  bool filterShape(arr& pos, intA& nums, const arr& measurement, const int i, const double epsilon ) {
+    if (norm(measurement - pos[i]) < epsilon)  {
+      pos[i] = pos[i] * ((nums(i)-1.)/nums(i)) + measurement * (1./nums(i));
+      nums(i)++;
+      return true;
+    }
+    return false;
+  }
 
-   }
-   void filterSpheres(arr& pos, const FittingResultL& objects, Process* p) {
-     intA nums;
-     pos.clear();
-     nums.resize(0);
-     pos.resize(0,4);
-     for (int i = 0; i< objects.N; ++i) {
-       if (objects(i)->values.size() != 4) continue;
-       bool found = false;
-       arr measurement;
-       measurement.resize(1,4);
-       measurement(0,0) = objects(i)->values[0];
-       measurement(0,1) = objects(i)->values[1];
-       measurement(0,2) = objects(i)->values[2];
-       measurement(0,3) = objects(i)->values[3];
-       double epsilon = birosInfo.getParameter<double>("objectDistance", p);
-       for (int j = 0; j<pos.d0; ++j) {
-         if (norm(measurement - pos[j]) < epsilon)  {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-       }
-       if(!found) {
-         pos.append(measurement);
-         nums.append(1);
-       }
-     }
+  void filterCylinders(arr& pos, const FittingResultL& objects, Process *p) {
+    intA nums;
+    pos.clear();
+    nums.resize(0);
+    pos.resize(0,7);
+    for (int i = 0; i< objects.N; ++i) {
+      if (objects(i)->values.size() != 7) continue;
+      bool found = false;
+      arr measurement;
+      measurement.resize(1,7);
+      std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
+      arr measurement_;
+      measurement_.append(measurement.sub(0,0,0,2)+measurement.sub(0,0,3,5));
+      measurement_.append(-measurement.sub(0,0,3,5));
+      measurement_.append(measurement(0,6));
+      measurement_.resize(1,7);
+      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      for (int j = 0; j<pos.d0; ++j) {
+        if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break;}
+        else if (filterShape(pos, nums, measurement_, j, epsilon)) {found = true; break; }
+      }
+      if(!found) {
+        pos.append(measurement);
+        nums.append(1);
+      }
+    }
 
-   }
+  }
+  void filterSpheres(arr& pos, const FittingResultL& objects, Process* p) {
+    intA nums;
+    pos.clear();
+    nums.resize(0);
+    pos.resize(0,4);
+    for (int i = 0; i< objects.N; ++i) {
+      if (objects(i)->values.size() != 4) continue;
+      bool found = false;
+      arr measurement;
+      measurement.resize(1,4);
+      std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
+      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      for (int j = 0; j<pos.d0; ++j) {
+        if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break; }
+      }
+      if(!found) {
+        pos.append(measurement);
+        nums.append(1);
+      }
+    }
+
+  }
 };
 
 ObjectFilter::ObjectFilter(const char* name) : Process(name) {
