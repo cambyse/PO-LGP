@@ -259,11 +259,16 @@ namespace pcl {
   struct PointCloud;
 };
 
+//TODO: where should this go?
 const int RADIUS = 2;
 const int HEIGHT = 3;
 
 
 struct ObjectBelief {
+
+  ObjectBelief() {
+    shapeParams.resize(4);  
+  }
   //pose
   ors::Vector position;
   ors::Quaternion rotation;
