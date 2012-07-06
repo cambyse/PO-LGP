@@ -89,7 +89,7 @@ class ObjectTransformator : public Process {
     void step();
     void close() {};
 
-    ObjectSet* kinect_objects;
+    ObjectBeliefSet* kinect_objects;
     WorkingCopy<GeometricState> geo;
 };
 
