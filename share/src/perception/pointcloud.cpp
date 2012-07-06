@@ -381,44 +381,27 @@ void ObjectTransformator::open() {
   geo.init("GeometricState", this);
 }
 
-void createCylinder(ors::Body& cyl, const arr &pos, const arr &direction, const double radius) {
+void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& transformation) {
   ors::Transformation t;
-  arr dir = direction.sub(0,2)*(1./direction(3));
+  t.pos = object->position;
+  t.rot = object->rotation;
 
-  for (uint i = 0; i < 3; ++i) t.pos(i) = pos(i) + 0.5*dir(i);
-  
-  t.rot.setDiff(ARR(0,0,1), dir);
-  
-  arr size = ARR(0.1, 1, norm(dir), radius);
+  ors::Transformation sensor_to_ors;
+  sensor_to_ors.setAffineMatrix(transformation.p);
+
+  t.appendTransformation(sensor_to_ors);
+
+  arr size = ARR(0., 0., object->shapeParams(HEIGHT), object->shapeParams(RADIUS));
  
   ors::Shape* s = new ors::Shape();
   for (uint i = 0; i < 4; ++i) s->size[i] = size(i);
   for (uint i = 0; i < 3; ++i) s->color[i] = .3;
-  s->type = ors::cylinderST;
-  s->body = &cyl;
+  s->type = object->shapeType;
+  s->body = &body;
   s->name = "pointcloud_shape";
   
-  cyl.shapes.append(s);
-  cyl.X = t; 
-}
-
-void createSphere(ors::Body& cyl, const arr &pos, const double radius) {
-  ors::Transformation t;
-
-  for (uint i = 0; i < 3; ++i) t.pos(i) = pos(i);
-  
-  arr size = ARR(0.1, 1, 1, radius);
- 
-  ors::Shape* s = new ors::Shape();
-  for (uint i = 0; i < 4; ++i) s->size[i] = size(i);
-  for (uint i = 0; i < 3; ++i) s->color[i] = .3;
-  s->type = ors::sphereST;
-  s->body = &cyl;
-  s->name = "pointcloud_shape";
-  
-  cyl.shapes.append(s);
-  cyl.X = t; 
-    
+  body.shapes.append(s);
+  body.X = t; 
 }
 
 void ObjectTransformator::step() {
