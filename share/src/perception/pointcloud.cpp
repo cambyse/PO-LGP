@@ -425,69 +425,13 @@ void ObjectTransformator::step() {
   kinect_objects->readAccess(this);
   for(int i=0;i<kinect_objects->objects.N;i++){
     //add new body  
+    ors::Body *b = new ors::Body();
     MT::String name;
     name << "pointcloud_object" << i;
-    ors::Body *b = new ors::Body();
-    if(kinect_objects->objects(i)->values.size() == 7) {
-      arr pos;
-      arr direction;
-      pos.resize(4);
-      direction.resize(4);
-      
-      pos(0) = kinect_objects->objects(i)->values[0];
-      pos(1) = kinect_objects->objects(i)->values[1];
-      pos(2) = kinect_objects->objects(i)->values[2];
-      pos(3) = 1;
+    b->name = name;
 
-      direction(0) = kinect_objects->objects(i)->values[3];
-      direction(1) = kinect_objects->objects(i)->values[4];
-      direction(2) = kinect_objects->objects(i)->values[5];
-      direction(3) = 1;
-
-      direction = transformation * direction;
-      pos = transformation * pos;
-
-      arr rad = ARR(kinect_objects->objects(i)->values[6], 0, 0, 1);
-      rad = (transformation * rad); 
-      rad = rad * (1./rad(3));
-      double radius = norm(rad.sub(0,2));
-
-      createCylinder(*b, pos, direction, radius);  
-      b->name = name.p;
-      geo().ors.bodies.append(b);
-      int ibody = geo().ors.bodies.N - 1;
-      int i; ors::Shape *s;
-      for_list(i, s, b->shapes) {
-        s->ibody = ibody;
-        s->index = geo().ors.shapes.N;
-        geo().ors.shapes.append(s);
-      }
-    }
-    else if(kinect_objects->objects(i)->values.size() == 4) {
-      arr pos;
-      pos.resize(4);
-
-      pos(0) = kinect_objects->objects(i)->values[0];
-      pos(1) = kinect_objects->objects(i)->values[1];
-      pos(2) = kinect_objects->objects(i)->values[2];
-      pos(3) = 1;
-
-      arr rad = ARR(kinect_objects->objects(i)->values[3], 0, 0, 1);
-      rad = (transformation * rad); 
-      rad = rad * (1./rad(3));
-      double radius = norm(rad.sub(0,2));
-
-      createSphere(*b, pos, radius);  
-      b->name = name.p;
-      geo().ors.bodies.append(b);
-      int ibody = geo().ors.bodies.N - 1;
-      int i; ors::Shape *s;
-      for_list(i, s, b->shapes) {
-        s->ibody = ibody;
-        s->index = geo().ors.shapes.N;
-        geo().ors.shapes.append(s);
-      }
-    }
+    createOrsObject(*b, kinect_objects->objects(i), transformation );  
+    geo().ors.addObject(b);
   }
   kinect_objects->deAccess(this);
   geo().ors.calcBodyFramesFromJoints();
