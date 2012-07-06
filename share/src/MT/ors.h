@@ -429,6 +429,7 @@ struct Graph {
   void makeLinkTree(); //modify transformations so that B's become identity
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
+  void addObject(Body *b);
   
   //!@name computations on the DoFs
   void calcBodyFramesFromJoints();
