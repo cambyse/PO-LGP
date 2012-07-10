@@ -1,6 +1,6 @@
 #include "biros.h"
-#include "log.h"
-#include <views/views.h>
+#include "biros_views.h"
+#include "logging.h"
 
 struct Variable;
 struct Process;
@@ -23,8 +23,12 @@ namespace b{
   void blockVariable_write(Variable&);
   void blockVariable_read(Variable&);
 
+  //-- gui
+  void openInsideOut();
+  void updateInsideOut();
+
   //-- access logs
-  AccessTicketL getAccessLog(const Variable&);
+  AccessEventL getAccessLog();
 
   //-- data logs
   void dumpRevisionLog(ostream&, const Variable&);
@@ -34,10 +38,6 @@ namespace b{
   ProcessL getProcesses();
   VariableL getVariables();
   ParameterL getParameters();
-
-  //-- gui
-  void openInsideOut();
-  void updateInsideOut();
 
   //-- query available views for specific objects
   ViewInfoL getViews();

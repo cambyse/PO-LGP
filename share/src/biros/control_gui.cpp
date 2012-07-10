@@ -3,25 +3,39 @@
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
 
+
+//===========================================================================
+//
+// helpers
+//
+
+void writeInfo(ostream& os, Process& p, bool brief);
+void writeInfo(ostream& os, Variable& v, bool brief);
+void writeInfo(ostream& os, FieldInfo& f, bool brief);
+void writeInfo(ostream& os, Parameter& pa, bool brief);
+void writeInfo(ostream& os, ViewInfo& vi, bool brief);
+
+GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, FieldInfo *f, uint id, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIter* par);
+
+//===========================================================================
+//
+// the InsideOutGui definition
+//
+
 #define VIEWBOXES 4
 
 struct InsideOutGui:Process{
   GtkBuilder *builder;
   GtkWidget *win;
-  GtkTreeStore *varStore, *procStore, *paramStore, *viewStore;
-  GtkWidget* viewBox [VIEWBOXES];
   uint box;
   View *view [VIEWBOXES];
 
-  InsideOutGui():Process("InsideOutGui"){
-    birosInfo.processes.removeValue(this);
-    for(uint b=0;b<VIEWBOXES;b++) view[b]=NULL;
-    box=0;
-  }
-  ~InsideOutGui(){
-    birosInfo.processes.append(this); //to avoid crash
-    threadClose();
-  }
+  InsideOutGui();
+  ~InsideOutGui();
   
   void open();
   void step();
@@ -31,41 +45,46 @@ struct InsideOutGui:Process{
   void updateProcStore();
   void updateParamStore();
   void updateViewStore();
-
-  static void onVariableTreeRowActivated(GtkTreeView* caller, gpointer data);
-  static void onProcessTreeRowActivated(GtkTreeView* caller, gpointer data);
 } gui;
 
-//-- helpers
-void writeInfo(ostream& os, Process& p, bool brief);
-void writeInfo(ostream& os, Variable& v, bool brief);
-void writeInfo(ostream& os, FieldInfo& f, bool brief);
-void writeInfo(ostream& os, Parameter& pa, bool brief);
-void writeInfo(ostream& os, ViewInfo& vi, bool brief);
+
+//===========================================================================
+//
+// implementations of control.h methods
+//
 
 void b::openInsideOut(){    gui.threadLoopWithBeat(.1); }
 void b::updateInsideOut(){  gui.update(); } //gui.threadStep(); }
 
+
+//===========================================================================
+//
+// implementations of the InsideOutGui
+//
+
+InsideOutGui::InsideOutGui():Process("InsideOutGui"){
+  birosInfo.processes.removeValue(this); //don't include THIS in the process list
+  for(uint b=0;b<VIEWBOXES;b++) view[b]=NULL;
+  box=0;
+}
+
+InsideOutGui::~InsideOutGui(){
+  birosInfo.processes.append(this); //to avoid crash
+  threadClose();
+}
+
 void InsideOutGui::open(){
   gtkCheckInitialized();
 
-  const char *pwd = __FILE__;
-  char *path,*name;
-  MT::decomposeFilename(path, name, pwd);
-  MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
+  // const char *pwd = __FILE__;
+  // char *path,*name;
+  // MT::decomposeFilename(path, name, pwd);
+  // MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
+  MT::String gladeFile;
   gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
-  //load glade gui
   builder = gtk_builder_new();
   gtk_builder_add_from_file(builder, gladeFile.p, NULL);
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
-  varStore = (GtkTreeStore*) gtk_builder_get_object(builder, "variableTreeStore");
-  procStore = (GtkTreeStore*) gtk_builder_get_object(builder, "processTreeStore");
-  paramStore = (GtkTreeStore*) gtk_builder_get_object(builder, "parameterTreeStore");
-  viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
-  for(uint b=0;b<VIEWBOXES;b++){
-    viewBox[b] = GTK_WIDGET( gtk_builder_get_object(builder, STRING("viewBox"<<b).p ));
-    g_object_set_data(G_OBJECT(gtk_builder_get_object(builder, STRING("boxToggle"<<b).p )), "id", (void*)b);
-  }
   gtk_builder_connect_signals(builder, NULL);
   g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
   
@@ -78,14 +97,13 @@ void InsideOutGui::open(){
   gtkProcessEvents();
   
   //try to open config file
-  ifstream is;
-  MT::open(is,"ino.cfg");
+  ifstream is("ino.cfg");
   if(is.good()){
     MT::String name,type, fld;
     uint _b;
     ViewInfo *vi;
     Variable *v;
-    Process *p;
+    //Process *p;
     FieldInfo *f;
     for(uint b=0;b<VIEWBOXES;b++){
       is >>_b;
@@ -110,7 +128,7 @@ void InsideOutGui::open(){
 	MT_MSG("failed");
 	return;
       }
-      label.clear() <<" [View=" <<view[b]->_info->name <<"]";
+      label.clear() <<" [View=" <<view[b]->info->name <<"]";
       GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<b)));
       GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxView" <<b)));
       gtk_label_set_text(l, label.p);
@@ -119,8 +137,6 @@ void InsideOutGui::open(){
     }
     is.close();
   }
-
-
 }
 
 void InsideOutGui::close(){
@@ -141,112 +157,71 @@ void InsideOutGui::update(){
   gtkProcessEvents();
 }
 
-
 void InsideOutGui::updateVarStore(){
+  GtkTreeStore *varStore = (GtkTreeStore*) gtk_builder_get_object(builder, "variableTreeStore");
   gtk_tree_store_clear(varStore);
-
   uint i,j;
-  GtkTreeIter i_it, j_it;
-  Variable *v;
-  FieldInfo *f;
-  Process *p;
-  MT::String info;
+  GtkTreeIter it;
+  Variable *v;  FieldInfo *f;  Process *p;
   birosInfo.readAccess(NULL);
   for_list(i, v, birosInfo.variables) {
-    writeInfo(info.clear(), *v, true);
-    gtk_tree_store_append(varStore, &i_it, NULL);
-    gtk_tree_store_set(varStore, &i_it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
-    for_list(j, f, v->fields) {
-      writeInfo(info.clear(), *f, true);
-      gtk_tree_store_append(varStore, &j_it, &i_it);
-      gtk_tree_store_set(varStore, &j_it, 0, j, 1, 'F', 2, f->name, 3, info.p, -1);
-    }
-    for_list(j, p, v->listeners) {
-      info="last access=?rw";
-      gtk_tree_store_append(varStore, &j_it, &i_it);
-      gtk_tree_store_set(varStore, &j_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
-    }
+    it = appendToStore(varStore, v, NULL);
+    for_list(j, f, v->fields) appendToStore(varStore, f, j, &it);
+    for_list(j, p, v->listeners) appendToStore(varStore, p, &it);
   }
   birosInfo.deAccess(NULL);
 }
 
 void InsideOutGui::updateProcStore(){
+  GtkTreeStore *procStore = (GtkTreeStore*) gtk_builder_get_object(builder, "processTreeStore");
   gtk_tree_store_clear(procStore);
-
   uint i,j,k;
-  GtkTreeIter i_it, j_it, k_it;
-  Variable *v;
-  FieldInfo *f;
-  Process *p;
-  Parameter *pa;
-  MT::String info;
+  GtkTreeIter i_it, j_it;
+  Variable *v;  FieldInfo *f;  Process *p;  Parameter *pa;
   birosInfo.readAccess(NULL);
   for_list(i, p, birosInfo.processes) {
-    writeInfo(info.clear(), *p, true);
-    gtk_tree_store_append(procStore, &i_it, NULL);
-    gtk_tree_store_set(procStore, &i_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+    i_it = appendToStore(procStore, p, NULL);
     for_list(j, v, p->listensTo) {
-      writeInfo(info.clear(), *v, true);
-      gtk_tree_store_append(procStore, &j_it, &i_it);
-      gtk_tree_store_set(procStore, &j_it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
-      for_list(k, f, v->fields) {
-	writeInfo(info.clear(), *f, true);
-	gtk_tree_store_append(procStore, &k_it, &j_it);
-	gtk_tree_store_set(procStore, &k_it, 0, k, 1, 'F', 2, f->name, 3, info.p, -1);
-      }
+      j_it = appendToStore(procStore, v, &i_it);
+      for_list(k, f, v->fields) appendToStore(procStore, f, k, &j_it);
     }
-    for_list(j, pa, p->dependsOn) {
-      writeInfo(info.clear(), *pa, true);
-      gtk_tree_store_append(procStore, &j_it, &i_it);
-      gtk_tree_store_set(procStore, &j_it, 0, pa->id, 1, 'A', 2, pa->name, 3, info.p, -1);
-    }
+    for_list(j, pa, p->dependsOn) appendToStore(procStore, pa, &i_it);
   }
   birosInfo.deAccess(NULL);
 }
 
 void InsideOutGui::updateParamStore(){
+  GtkTreeStore *paramStore = (GtkTreeStore*) gtk_builder_get_object(builder, "parameterTreeStore");
   gtk_tree_store_clear(paramStore);
-
   uint i,j;
-  GtkTreeIter i_it, j_it;
-  Process *p;
-  Parameter *pa;
-  MT::String info;
+  GtkTreeIter it;
+  Process *p;  Parameter *pa;
   birosInfo.readAccess(NULL);
   for_list(i, pa, birosInfo.parameters) {
-    writeInfo(info.clear(), *pa, true);
-    gtk_tree_store_append(paramStore, &i_it, NULL);
-    gtk_tree_store_set(paramStore, &i_it, 0, pa->id, 1, 'p', 2, pa->name, 3, info.p, -1);
-    for_list(j, p, pa->dependers) if(p){
-      writeInfo(info.clear(), *p, true);
-      gtk_tree_store_append(paramStore, &j_it, &i_it);
-      gtk_tree_store_set(paramStore, &j_it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
-    }
+    it = appendToStore(paramStore, pa, NULL);
+    for_list(j, p, pa->dependers) if(p) appendToStore(paramStore, p, &it);
   }
   birosInfo.deAccess(NULL);
 }
 
 void InsideOutGui::updateViewStore(){
+  GtkTreeStore *viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
   gtk_tree_store_clear(viewStore);
-
   uint i;
-  GtkTreeIter i_it;
+  GtkTreeIter it;
   ViewInfo *vi;
-  MT::String info;
   birosInfo.readAccess(NULL);
-  for_list(i, vi, birosViews) {
-    writeInfo(info.clear(), *vi, true);
-    gtk_tree_store_append(viewStore, &i_it, NULL);
-    gtk_tree_store_set(viewStore, &i_it, 0, i, 1, 'I', 2, vi->name.p, 3, info.p, -1);
+  for_list(i, vi, birosInfo.views) {
+    appendToStore(viewStore, vi, i, NULL);
   }
   birosInfo.deAccess(NULL);
 }
 
-static int menuChoice=-1;
 
-static void menuitem_response(int choice){
-  menuChoice = choice;
-}
+//===========================================================================
+//
+// callbacks
+//
 
 extern "C" G_MODULE_EXPORT void toggle_expand(GtkTreeView *view, GtkTreePath *path){
   if(gtk_tree_view_row_expanded(view, path)){
@@ -272,7 +247,7 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
   MT::open(os,"ino.cfg");
   for(uint b=0;b<VIEWBOXES;b++) if(iog->view[b]){
     View *v=iog->view[b];
-    ViewInfo *vi=v->_info;
+    ViewInfo *vi=v->info;
     os <<b <<' ' <<vi->name;
     switch (vi->type) {
       case ViewInfo::fieldVT:    os <<" field " <<v->field->var->name <<' ' <<v->field->name;  break;
@@ -324,18 +299,6 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	int choice = gtkPopupMenuChoice(choices);
-	/*GtkWidget *menu = gtk_menu_new();
-	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, gtk_get_current_event_time());
-	for_list(i, vi, vis){
-	  GtkWidget *item = gtk_menu_item_new_with_label(vi->name);
-	  gtk_container_add(GTK_CONTAINER(menu), item);
-	  gtk_signal_connect_object(GTK_OBJECT (item), "activate",
-				    GTK_SIGNAL_FUNC (menuitem_response), (gpointer) i);
-	}
-	menuChoice=-1;
-	gtk_widget_show_all(menu);
-	gtk_menu_shell_select_first(GTK_MENU_SHELL(menu), false);
-	while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;*/
         iog->view[iog->box] = b::newView(*birosInfo.variables(id), vis(choice));
       }
       label <<"Variable " <<id <<" '" <<iog->view[iog->box]->var->name <<"'";
@@ -377,7 +340,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     return;
   }
 
-  label <<" [View=" <<iog->view[iog->box]->_info->name <<"]";
+  label <<" [View=" <<iog->view[iog->box]->info->name <<"]";
   
   GtkLabel *l = GTK_LABEL(gtk_builder_get_object(iog->builder, STRING("boxLabel" <<iog->box)));
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
@@ -385,6 +348,11 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   iog->view[iog->box]->gtkNew(container);
 }
 
+
+//===========================================================================
+//
+// implementation of helpers
+//
 
 void writeInfo(ostream& os, Process& p, bool brief){
   if(brief){
@@ -458,9 +426,61 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief){
   os <<"\napplies_on=" <<vi.appliesOn_sysType;
 }
 
+
+GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par){
+  GtkTreeIter it;
+  MT::String info;
+  writeInfo(info.clear(), *p, true);
+  gtk_tree_store_append(store, &it, par);
+  gtk_tree_store_set(store, &it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+  return it;
+}
+    
+GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, GtkTreeIter* par){
+  GtkTreeIter it;
+  MT::String info;
+  writeInfo(info.clear(), *v, true);
+  gtk_tree_store_append(store, &it, par);
+  gtk_tree_store_set(store, &it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
+  return it;
+}
+
+GtkTreeIter appendToStore(GtkTreeStore *store, FieldInfo *f, uint id, GtkTreeIter* par){
+  GtkTreeIter it;
+  MT::String info;
+  writeInfo(info.clear(), *f, true);
+  gtk_tree_store_append(store, &it, par);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'F', 2, f->name, 3, info.p, -1);
+  return it;
+}
+
+GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par){
+  GtkTreeIter it;
+  MT::String info;
+  writeInfo(info.clear(), *pa, true);
+  gtk_tree_store_append(store, &it, par);
+  gtk_tree_store_set(store, &it, 0, pa->id, 1, 'p', 2, pa->name, 3, info.p, -1);
+  return it;
+}
+
+GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIter* par){
+  GtkTreeIter it;
+  MT::String info;
+  writeInfo(info.clear(), *vi, true);
+  gtk_tree_store_append(store, &it, NULL);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'I', 2, vi->name.p, 3, info.p, -1);
+  return it;
+}
+
 /*
  
 notes:
+
+-- clean clean clean!
+
+-- recode process declarations as merely newProcess functions
+
+-- 
 
 -- add generic views for variable: historyView, logView
 

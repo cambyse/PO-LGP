@@ -141,7 +141,7 @@ struct RobotProcessGroup {
   EarlyVisionModule evis;
   CameraModule bumble;
   GuiModule gui;
-  ThreadInfoWin threadWin;
+  //ThreadInfoWin threadWin;
   
   //internal: communication ControllerProcess <-> Schunk
   uintA motorIndex;          //association between ors-joints and schunk-motors

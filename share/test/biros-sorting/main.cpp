@@ -1,7 +1,7 @@
 #include <biros/biros.h>
 #include <MT/util.h>
 #include <MT/gtk.h>
-#include <biros/biros_logger.h>
+//#include <biros/biros_logger.h>
 #include <biros/control.h>
 #include <gtk/gtk.h>
 
@@ -98,8 +98,8 @@ struct Ref{
   Ref(T& _var, Process *_p){ var=&_var; p=_p; p->threadListenTo(var); }
   T& get(){ return ReadAccess(this)(); }
   T& operator()(){ return *var; } //TODO ensure that it is locked
-  T& writeAccess(){ var->writeAccess(p); }
-  T& deAccess(){ var->deAccess(p); }
+  void writeAccess(){ var->writeAccess(p); }
+  void deAccess(){ var->deAccess(p); }
 };
 
 struct PairSorter:public Process {

@@ -13,12 +13,12 @@
 struct Variable;
 struct Process;
 struct Parameter;
-struct VariableReference;
+struct ViewInfo;
 
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
-typedef MT::Array<VariableReference*> VariableReferenceL;
+typedef MT::Array<ViewInfo*> ViewInfoL;
 
 #define PROCESS(name) \
   struct name:Process { \
@@ -203,7 +203,8 @@ struct BirosInfo:Variable {
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
-  
+  ViewInfoL views;
+
   BirosInfo():Variable("BirosInfo") {};
   
   Process *getProcessFromPID();
@@ -307,23 +308,6 @@ struct WorkingCopy {
 
 //===========================================================================
 //
-// very basic low-level X11 Monitor
-//
-
-struct ThreadInfoWin:public Process {
-  struct sThreadInfoWin *s;
-  
-  ThreadInfoWin();
-  ~ThreadInfoWin();
-  
-  void open();
-  void close();
-  void step();
-};
-
-
-//===========================================================================
-//
 // handling groups
 //
 
@@ -334,6 +318,25 @@ void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
+
+//===========================================================================
+//
+// preliminary: supposed to be a 'main window'
+//
+
+struct GtkViewWindow:Process{
+  struct sGtkViewWindow *s;
+  
+  GtkViewWindow();
+  ~GtkViewWindow();
+  
+  void newView(FieldInfo&);
+
+  void open();
+  void step();
+  void close();
+};
+
 
 
 #ifdef  MT_IMPLEMENTATION

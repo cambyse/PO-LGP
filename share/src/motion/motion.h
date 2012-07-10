@@ -2,7 +2,7 @@
 #define MT_motion_h
 
 #include <biros/biros.h>
-#include <views/views.h>
+#include <biros/biros_views.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
 
@@ -174,7 +174,7 @@ struct ActionToMotionPrimitive:Process {
 
 struct PoseView:View{
   WorkingCopy<GeometricState> geo;
-  static ViewInfo_typed<PoseView, arr> info;
+  static ViewInfo_typed<PoseView, arr> staticInfo;
   
   PoseView();
   void glInit();

@@ -6,7 +6,6 @@
 
 typedef unsigned int uint;
 
-
 //===========================================================================
 //
 // simple wrappers of basic threading ingredients
@@ -109,8 +108,9 @@ struct CycleTimer {
 struct sVariable {
   Lock lock;
   ConditionVariable cond; //to broadcast write access to this variable
+  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
   
-  sVariable(){}
+  sVariable():loggerData(NULL){}
 };
 
 enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go

@@ -3,9 +3,8 @@
 #include <MT/opengl.h>
 
 int main(int argc, char** argv){
-  //CameraModule camera;
+  Image imgL("CameraL"), imgR("CameraR");
   UVCCamera camera;
-  Image imgL("cameraL"), imgR("cameraR");
   
   camera.open();
   OpenGL gl;
@@ -21,8 +20,8 @@ int main(int argc, char** argv){
   }
   cout <<"fps=" <<i/(MT::realTime()-time) <<endl;
 
-  write_ppm(imgL.img,"left.ppm");
-  write_ppm(imgR.img,"right.ppm");
+  write_ppm(imgL.img,"z.left.ppm");
+  write_ppm(imgR.img,"z.right.ppm");
 
   camera.close();
 

@@ -1,4 +1,4 @@
-#include "views.h"
+#include "biros_views.h"
 
 MT::Array<ViewInfo*> birosViews;
 
@@ -147,14 +147,14 @@ View::~View(){
 
 //===========================================================================
 
-RgbView::RgbView():View(info){
+RgbView::RgbView():View(staticInfo){
   rgb = (byteA*) field->p;
 }
 
 void RgbView::gtkNew(GtkWidget *container){
   if(!container){
     container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(container), info.name);
+    gtk_window_set_title(GTK_WINDOW(container), info->name);
     gtk_window_set_default_size(GTK_WINDOW(container), 100, 100);
     //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
   }
@@ -176,13 +176,13 @@ void RgbView::gtkUpdate(){
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
 
-ViewInfo_typed<RgbView, byteA> RgbView::info("RgbView", ViewInfo::fieldVT);
+ViewInfo_typed<RgbView, byteA> RgbView::staticInfo("RgbView", ViewInfo::fieldVT);
 
 
 
 //===========================================================================
 
-MeshView::MeshView():View(info) {
+MeshView::MeshView():View(staticInfo) {
   mesh = (ors::Mesh*) field->p;
 }
 
@@ -191,11 +191,11 @@ void MeshView::glDraw() {
   mesh->glDraw();
 }
 
-ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT);
+ViewInfo_typed<MeshView, ors::Mesh> MeshView::staticInfo("MeshView", ViewInfo::fieldVT);
 
 //===========================================================================
 
-OrsView::OrsView():View(info) {
+OrsView::OrsView():View(staticInfo) {
 }
 
 void OrsView::glInit() {
@@ -212,6 +212,6 @@ void OrsView::glDraw() {
   ors->glDraw();
 }
 
-ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView", ViewInfo::fieldVT);
+ViewInfo_typed<OrsView, ors::Graph> OrsView::staticInfo("OrsView", ViewInfo::fieldVT);
 
 #endif

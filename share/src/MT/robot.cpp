@@ -312,7 +312,7 @@ void RobotProcessGroup::open(){
   }
   
   if(openThreadInfoWin){
-    threadWin.threadLoopWithBeat(.1);
+    //threadWin.threadLoopWithBeat(.1);
   }
   
   if(openArm){
@@ -324,7 +324,7 @@ void RobotProcessGroup::open(){
 }
 
 void RobotProcessGroup::close(){
-  if(openThreadInfoWin) threadWin.threadClose();
+  //if(openThreadInfoWin) threadWin.threadClose();
   if(openLaser){  urg.threadClose(); /*laserfile.close();*/  }
   if(openBumble) bumble.threadClose();
   if(openArm)    arm .threadClose();

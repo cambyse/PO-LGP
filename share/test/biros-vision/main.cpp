@@ -1,5 +1,6 @@
 #include "variables.h"
 #include "processes.h"
+#include <biros/control.h>
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
@@ -18,9 +19,9 @@ int main(int argn,char **argv) {
   HoughLines houghLines;
   
   // Processes
-  Camera camera;
-  GrayMaker grayMaker;
-  MotionFilter motionFilter;
+  newCamera(cameraI);
+  newGrayMaker(cameraI, grayI);
+  newMotionFilter(cameraI, motionI);
   DifferenceFilter differenceFilter;
   CannyFilter cannyFilter;
   Patcher patcher;
@@ -45,8 +46,11 @@ int main(int argn,char **argv) {
   houghLineFilter.grayImage = &cannyI;
   houghLineFilter.houghLines = &houghLines;
   
+  //b::openInsideOut();
+
   // viewer crap
-  ImageViewer<RgbImage> camView(cameraI), diffView(diffI);
+  ImageViewer<RgbImage> camView(cameraI);
+  ImageViewer<RgbImage> diffView(diffI);
   ImageViewer<GrayImage> grayView(grayI), motionView(motionI), cannyView(cannyI);
   ImageViewer<PatchImage> patchView(patchI);
   ImageViewer<SURFfeatures> surfView(features);
@@ -58,7 +62,7 @@ int main(int argn,char **argv) {
   P.append(LIST<Process>(camView, grayView, diffView, motionView, cannyView, patchView, surfView, houghView));
   
   loopWithBeat(P,.01);
-  MT::wait(2.);
+  MT::wait(20.);
   close(P);
   
   return 0;

@@ -1,8 +1,8 @@
 #include "motion.h"
 
-ViewInfo_typed<PoseView, arr> PoseView::info("PoseView", ViewInfo::fieldVT);
+ViewInfo_typed<PoseView, arr> PoseView::staticInfo("PoseView", ViewInfo::fieldVT);
 
-PoseView::PoseView():View(info) {
+PoseView::PoseView():View(staticInfo) {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 

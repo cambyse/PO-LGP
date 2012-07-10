@@ -4,6 +4,159 @@
 #include <MT/libcolorseg.h>
 #include <MT/opengl.h>
 
+
+
+//===========================================================================
+//
+// Processes
+//
+
+struct Camera:Process {
+  struct sCamera *s;
+  
+  RgbImage *rgbImage;
+  
+  Camera();
+  void open();
+  void step();
+  void close();
+};
+
+struct GrayMaker:Process {
+  RgbImage *rgbImage;
+  GrayImage *grayImage;
+  
+  GrayMaker();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct MotionFilter:Process {
+  struct sMotionFilter *s;
+  
+  RgbImage *rgbImage;
+  GrayImage *grayImage;
+  
+  MotionFilter();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct DifferenceFilter:Process {
+  RgbImage *rgbImage1;
+  RgbImage *rgbImage2;
+  RgbImage *diffImage;
+  int threshold;
+  
+  DifferenceFilter();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct CannyFilter:Process {
+  GrayImage *grayImage;
+  GrayImage *cannyImage;
+  float cannyThreshold;
+  
+  CannyFilter();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct Patcher:Process {
+  RgbImage *rgbImage;
+  PatchImage *patchImage;
+  
+  Patcher();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct SURFer:Process {
+  struct sSURFer *s;
+  GrayImage *grayImage;
+  SURFfeatures *features;
+  
+  SURFer();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+struct HoughLineFilter:Process {
+  GrayImage *grayImage;
+  HoughLines *houghLines;
+  
+  HoughLineFilter();
+  void open() {}
+  void step();
+  void close() {}
+};
+
+
+//===========================================================================
+//
+//
+//
+
+Process* newCamera(RgbImage *rgbImage){
+  Camera *p = new Camera();
+  p->rgbImage = rgbImage;
+  return p;
+}
+
+Process* newGrayMaker(RgbImage *rgbImage, GrayImage *grayImage){
+  GrayMaker *p = new GrayMaker();
+  p->rgbImage = rgbImage;
+  p->grayImage = grayImage;
+  return p;
+}
+
+Process* newMotionFilter(RgbImage *rgbImage,GrayImage *motion){
+  MotionFilter *p = new MotionFilter();
+  p->rgbImage = rgbImage;
+  p->grayImage = motion;
+  return p;
+}
+
+Process* newDifferenceFilter(RgbImage* i1,RgbImage* i2, RgbImage *diff){
+  DifferenceFilter *p = new DifferenceFilter();
+  p->rgbImage1 = i1;
+  p->rgbImage1 = i2;
+  p->diffImage = diff;
+  return p;
+}
+
+/*Process* newCannyFilter(GrayImage *grayImage, GrayImage *cannyImage, float cannyThreshold){
+  Camera *p = new Camera();
+  p->rgbImage = rgbImage;
+  return p;
+}
+
+Process* newPatcher(RgbImage *rgbImage, PatchImage *patchImage){
+  Camera *p = new Camera();
+  p->rgbImage = rgbImage;
+  return p;
+}
+
+Process* newSURFer(GrayImage *grayImage, SURFfeatures *features){
+  Camera *p = new Camera();
+  p->rgbImage = rgbImage;
+  return p;
+}
+
+Process* newHoughLineFilter(GrayImage *grayImage, HoughLines *houghLines){
+  Camera *p = new Camera();
+  p->rgbImage = rgbImage;
+  return p;
+}
+*/
+
 //===========================================================================
 //
 // Camera
@@ -20,6 +173,8 @@ Camera::Camera():Process("Camera") {
 
 void Camera::open() {
   s->capture.open(0);
+  //s->capture.set(CV_CAP_PROP_CONVERT_RGB, 1);
+  //cout <<"FPS of opened OpenCV VideoCapture = " <<s->capture.get(CV_CAP_PROP_FPS) <<endl;;
 }
 
 void Camera::close() {
@@ -28,7 +183,7 @@ void Camera::close() {
 
 void Camera::step() {
   cv::Mat img,imgRGB;
-  s->capture >>img;
+  s->capture.read(img);
   cv::cvtColor(img, imgRGB, CV_BGR2RGB);
   rgbImage->writeAccess(this);
   rgbImage->rgb = cvtMAT(imgRGB);
