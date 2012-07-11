@@ -51,16 +51,26 @@ int main(int argc, char** argv) {
   BlocksWorldSampler sampler;
   OnOracle o;
 
-  Gui gui("situation.ors");
-  GuiDataV guiData;
-  gui.guiData = &guiData;
+  //Gui gui("situation.ors");
+  //GuiDataV guiData;
+  //gui.guiData = &guiData;
 
   TrainingsDataV train;
-  train.data.append(ARR(0.359201, -1.20565, 0.81));
-  train.data.append(ARR( 0.08)); 
-  train.data.append(ARR(0.357674, -1.20132, 0.73 ));
-  train.data.append(ARR(0.08));
+  MT::Array<arr> sample;
+  ifstream is("samples.data");
+  for (int i=0; i<MT::getParameter<int>("sample_number"); ++i) {
+    is >> sample;  
+  }
+  train.data = sample;
   train.data.reshape(1,4);
+  //do {
+    //sampler.sample(train.data);  
+  //} while (!o.classify(train.data, 0)) ;
+  //train.data.append(ARR(0.359201, -1.20565, 0.81));
+  //train.data.append(ARR( 0.08)); 
+  //train.data.append(ARR(0.357674, -1.20132, 0.73 ));
+  //train.data.append(ARR(0.08));
+  //train.data.reshape(1,4);
   DEBUG_VAR(main, train.data);
   DEBUG_VAR(main, o.classify(train.data, 0));
   intA classes;
@@ -81,13 +91,13 @@ int main(int argc, char** argv) {
   ActiveLearningP alp;
   alp.traindata = &train;
   alp.classificator = &cl;
-  alp.guiData = &guiData;
+  //alp.guiData = &guiData;
  
   alp.threadOpen();
   alp.threadStep(n_steps);
 
-  gui.threadOpen();
-  gui.threadLoop();
+  //gui.threadOpen();
+  //gui.threadLoop();
 
 
   alp.threadClose();
