@@ -2,6 +2,9 @@
 #define _LOGISTICREGRESSION_H_
 
 #include "al.h"
+#include "biros/logging.h"
+
+SET_LOG(lr, DEBUG);
 template<class S> class Sampler;
 class sLogisticRegression;
 
