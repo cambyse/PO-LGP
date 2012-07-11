@@ -9,6 +9,7 @@ uint eval_cost=0;
 arr& NoGrad=*((arr*)NULL);
 SqrPotential& NoPot=*((SqrPotential*)NULL);
 PairSqrPotential& NoPairPot=*((PairSqrPotential*)NULL);
+optOptions globalOptOptions;
 
 //===========================================================================
 //

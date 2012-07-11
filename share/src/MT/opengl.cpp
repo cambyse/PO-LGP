@@ -332,7 +332,7 @@ void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_L
 void glPopLight() { if(glLightIsOn) glEnable(GL_LIGHTING); }
 
 void glDrawText(const char* txt, float x, float y, float z) {
-#if defined MT_GLUT
+#if defined MT_FREEGLUT
   glPushLightOff();
   glRasterPos3f(x, y, z);
   void *font=GLUT_BITMAP_HELVETICA_12;

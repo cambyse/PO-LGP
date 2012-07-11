@@ -55,7 +55,7 @@ void testDynamicProgramming(){
   eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
   eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, (o.stopIters=100, o.initialDamping=1e-4, o.verbose=2, o) );  cout <<"-- evals=" <<eval_cost <<endl;
 
-  write(LIST(x),"z.sol");
+  write(LIST<arr>(x),"z.sol");
   //gnuplot("plot 'z.nodewise' us 2:3 w l,'z.gaussNewton' us 2:3 w l,'z.rprop' us 2:3 w l,'z.grad' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
   gnuplot("plot 'z.gaussNewton' us 2:3 w l,'z.DP' us 2:3 w l,'z.MSGN' us 2:3 w l",NULL,true);
 }

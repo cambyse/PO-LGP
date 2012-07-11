@@ -496,7 +496,7 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command, const char* EPSfile=NULL, bool persist=false);
+void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
 void gnuplotClose();
 
 

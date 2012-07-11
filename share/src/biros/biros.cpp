@@ -15,6 +15,7 @@
 #include <MT/util.h>
 #include <MT/array.h>
 
+#define MUTEX_DUMP(x) x
 
 //===========================================================================
 //
@@ -95,16 +96,18 @@ Mutex::Mutex() {
 }
 
 Mutex::~Mutex() {
-  CHECK(!state, "");
+  CHECK(!state, "Mutex destropyed without unlocking first");
   int rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void Mutex::lock() {
   int rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   state=syscall(SYS_gettid);
+  MUTEX_DUMP(cout <<"Mutex-lock: " <<state <<endl);
 }
 
 void Mutex::unlock() {
+  MUTEX_DUMP(cout <<"Mutex-unlock: " <<state <<endl);
   state=0;
   int rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }

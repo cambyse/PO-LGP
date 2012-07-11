@@ -249,7 +249,7 @@ inline void plotBelief(GaussianProcess& gp, double lo, double hi, bool pause=tru
   plot(pause);
 }
 
-inline void plotKernel1D(GaussianProcess& gp, double lo, double hi){
+inline void plotKernel1D(GaussianProcess& gp, double lo, double hi, bool pause=true){
   arr X, K, KD1, KD2;
   X.setGrid(1, lo, hi, 1000);
   K.resize(X.d0);
@@ -265,10 +265,10 @@ inline void plotKernel1D(GaussianProcess& gp, double lo, double hi){
   plotFunction(X, K);
   plotFunction(X, KD1);
   plotFunction(X, KD2);
-  plot(true);
+  plot(pause);
 }
 
-inline void plotKernel2D(GaussianProcess& gp, double lo, double hi){
+inline void plotKernel2D(GaussianProcess& gp, double lo, double hi, bool pause=true){
   arr X, K, KD1, KD2;
   X.setGrid(2, lo, hi, 1000);
   K.resize(X.d0, X.d1);
@@ -286,7 +286,7 @@ inline void plotKernel2D(GaussianProcess& gp, double lo, double hi){
   plotSurface(K);
   plotSurface(KD1);
   plotSurface(KD2);
-  plot(true);
+  plot(pause);
 }
 
 inline void randomFunction(GaussianProcess& gp, arr& Xbase, bool illustrate, bool fromPosterior=false){

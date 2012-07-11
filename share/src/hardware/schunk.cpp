@@ -816,6 +816,8 @@ void sSchunkSkin::open() {}
 void sSchunkSkin::close() {}
 void sSchunkSkin::step() {}
 void sSchunkSkin::getImage(byteA&) {}
+void sSchunkSkin::getIntegrals(arr&) {}
+void sSchunkSkin::report() { NICO }
 void schunkEmergencyShutdown(int) {}
 
 #endif

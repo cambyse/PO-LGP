@@ -45,16 +45,27 @@ struct InsideOutGui:Process{
   void updateProcStore();
   void updateParamStore();
   void updateViewStore();
-} gui;
+};
 
+struct InsideOutGuiDemon{
+  InsideOutGui *gui;
+  InsideOutGuiDemon():gui(NULL){}
+  ~InsideOutGuiDemon(){ if(gui) delete gui; }
+} demon;
 
 //===========================================================================
 //
 // implementations of control.h methods
 //
 
-void b::openInsideOut(){    gui.threadLoopWithBeat(.1); }
-void b::updateInsideOut(){  gui.update(); } //gui.threadStep(); }
+void b::openInsideOut(){
+  if(!demon.gui) demon.gui=new InsideOutGui();
+  demon.gui->threadLoopWithBeat(.1);
+}
+
+void b::updateInsideOut(){
+  demon.gui->update();
+} //gui.threadStep(); }
 
 
 //===========================================================================

@@ -173,7 +173,6 @@ GenericInfoView(Parameter, param, parameterVT);
 //===========================================================================
 
 struct RgbView:View{
-  byteA *rgb;
   static ViewInfo_typed<RgbView, byteA> staticInfo;
   
   RgbView();
@@ -186,7 +185,6 @@ struct RgbView:View{
 namespace ors{ struct Mesh; }
 
 struct MeshView:View{
-  ors::Mesh *mesh;
   static ViewInfo_typed<MeshView, ors::Mesh> staticInfo;
   
   MeshView();  

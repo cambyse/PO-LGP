@@ -86,7 +86,7 @@ bool getFromCfgFile(T& x, const char *tag) {
   cfgLock=true;
   cfgFile.clear();
   cfgFile.seekg(std::ios::beg);
-  if(!cfgFile.good()) { cfgLock=false; return false; }
+  if(!cfgFile.good()) { cfgLock=false; parameterAccessGlobalUnLock(); return false; }
   unsigned n=strlen(tag);
   char *buf=new char [n+2]; memset(buf, 0, n+2);
   while(cfgFile.good()) {

@@ -148,10 +148,10 @@ View::~View(){
 //===========================================================================
 
 RgbView::RgbView():View(staticInfo){
-  rgb = (byteA*) field->p;
 }
 
 void RgbView::gtkNew(GtkWidget *container){
+  byteA& rgb = *((byteA*) field->p);
   if(!container){
     container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(container), info->name);
@@ -161,7 +161,7 @@ void RgbView::gtkNew(GtkWidget *container){
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
   
-  GdkColor col = {0, guint16((*rgb)(0))<<8, guint16((*rgb)(1))<<8, guint16((*rgb)(2))<<8 };
+  GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
   gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
   //set events...
   
@@ -171,7 +171,8 @@ void RgbView::gtkNew(GtkWidget *container){
 }; //the view crates a new gtk widget within the container
 
 void RgbView::gtkUpdate(){
-  GdkColor col = {0, guint16((*rgb)(0))<<8, guint16((*rgb)(1))<<8, guint16((*rgb)(2))<<8 };
+  byteA& rgb = *((byteA*) field->p);
+  GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
   gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
@@ -183,12 +184,11 @@ ViewInfo_typed<RgbView, byteA> RgbView::staticInfo("RgbView", ViewInfo::fieldVT)
 //===========================================================================
 
 MeshView::MeshView():View(staticInfo) {
-  mesh = (ors::Mesh*) field->p;
 }
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
-  mesh->glDraw();
+  ((ors::Mesh*)field->p)->glDraw();
 }
 
 ViewInfo_typed<MeshView, ors::Mesh> MeshView::staticInfo("MeshView", ViewInfo::fieldVT);

@@ -621,10 +621,11 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
 };
 
 void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
-  gl.exitkeys="1234567890hjklias, "; //TODO: move the key handling to the keyCall!
+  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   gl.addHoverCall(new EditConfigurationHoverCall(C));
   gl.addKeyCall(new EditConfigurationKeyCall(C));
-  for(;;) {
+  bool exit=false;
+  for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
@@ -636,7 +637,7 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
     }
     animateConfiguration(C, gl);
     gl.watch();
-    while(MT::contains(gl.exitkeys, gl.pressedkey)) {
+    while(!exit && MT::contains(gl.exitkeys, gl.pressedkey)) {
       switch(gl.pressedkey) {
         case '1':  orsDrawBodies^=1;  break;
         case '2':  orsDrawShapes^=1;  break;
@@ -662,8 +663,12 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
               ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
             ) * .01;
           break;
+        case 'q' :
+	  cout <<"EXITING" <<endl;
+	  exit=true;
+	  break;
       }
-      gl.watch();
+      if(!exit) gl.watch();
     }
   }
 }

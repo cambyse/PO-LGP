@@ -1,18 +1,7 @@
 BASE = ../..
 
-
-FREEGLUT = 1
-SWIFT = 1
-LAPACK = 1
-BUMBLE = 1
-VISION = 1
-SCHUNK = 1
-PLIB = 1  #for the Joystick
-buildAndLink_STANIMIR = 1
-LEWINER = 1
-#REVEL = 1
-
-CXXFLAGS += -DMT_Lewiner
+BUILDS += buildComponent/SD
+LIBS += -lSD
 
 include $(BASE)/make-generic
 

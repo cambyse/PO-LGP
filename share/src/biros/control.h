@@ -46,10 +46,10 @@ namespace b{
   ViewInfo* getView(const char *name);
   
   //! creat a new view; if ViewInfo==NULL the first available
-  View* newView(Process&,ViewInfo*);
-  View* newView(Variable&,ViewInfo*);
-  View* newView(FieldInfo&,ViewInfo*);
-  View* newView(Parameter&,ViewInfo*);
+  View* newView(Process&,ViewInfo *vi=NULL);
+  View* newView(Variable&,ViewInfo *vi);
+  View* newView(FieldInfo&,ViewInfo *vi=NULL);
+  View* newView(Parameter&,ViewInfo *vi=NULL);
   View* newGlobalView(ViewInfo*);
 
   //! get a hypergraph of communicating processes-variables-parameters
