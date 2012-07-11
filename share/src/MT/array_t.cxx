@@ -857,7 +857,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   return x;
 }
 
-/*!\brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
+/*!\brief copies a sub array of a 3D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {

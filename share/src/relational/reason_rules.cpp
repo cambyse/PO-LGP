@@ -136,7 +136,14 @@ void reason::calcSuccessorState(SymbolicState& suc, const SymbolicState& pre, co
       if (outcome(k)->s == pre.lits(i)->s
       && outcome(k)->args == pre.lits(i)->args) {
         if (outcome(k)->s->range_type != Symbol::binary && outcome(k)->comparison_type == Literal::comparison_offset) {    //apply offset
-          suc.lits.append(Literal::get(pre.lits(i)->s, pre.lits(i)->args, pre.lits(i)->value+outcome(k)->value));
+          double sumValue = pre.lits(i)->value + outcome(k)->value;
+          if (outcome(k)->s->range_type == Symbol::integer_set) {   //clamp   
+            uint rangeMin = outcome(k)->s->range.min();
+            uint rangeMax = outcome(k)->s->range.max();  
+            if (sumValue < rangeMin) sumValue = rangeMin;
+            if (sumValue > rangeMax) sumValue = rangeMax;
+          }
+          suc.lits.append(Literal::get(pre.lits(i)->s, pre.lits(i)->args, sumValue));
         }
         break;
       }
@@ -608,6 +615,7 @@ void reason::calc_coveringOutcomes(uintA& covering_outcomes, Rule* abstractRule,
   CHECK(subs.num()==1, "rule coverage only in case of exactly one sub");
   Rule* r_ground = subs.elem(0)->apply(*abstractRule);
   calc_coveringOutcomes(covering_outcomes, r_ground, pre, post);
+  delete r_ground;
 }
 
 

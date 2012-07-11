@@ -119,8 +119,13 @@ void PRADA_Planner::setReward(Reward* reward) {
           DisjunctionReward* dg = dynamic_cast<DisjunctionReward*>(reward);
           if (dg!= NULL)
             this->prada_reward = convert_reward((DisjunctionReward*) reward);
-          else
-            NIY;
+          else {
+            RewardConjunction *rc = dynamic_cast<RewardConjunction*>(reward);
+            if (rc != NULL)
+              this->prada_reward = convert_reward(rc);
+            else 
+              NIY;
+          }
         }
       }
     }
@@ -146,6 +151,7 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
     case Reward::reward_maximize_function: return convert_reward((MaximizeReward*) reward);
     case Reward::reward_not_these_states: return convert_reward((NotTheseStatesReward*) reward);
     case Reward::reward_one_of_literal_list: return convert_reward((DisjunctionReward*) reward);    
+    case Reward::conjunction_of_rewards: return convert_reward((RewardConjunction*) reward);    
     default: NIY;
   }
 }
@@ -620,6 +626,46 @@ bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) 
  * 
  ************************************************/
 
+
+void calc_dbn_state_symbols_for_rewards(SymL& reward_symbols, Reward *r) {
+  reward_symbols.clear();
+  uint k;
+  if (r->reward_type == Reward::reward_literal) {
+    reward_symbols.setAppend(((LiteralReward*) r)->lit->s);
+    SymL defining_symbols;
+    reward_symbols.last()->getDefiningSymbols(defining_symbols, false);
+    reward_symbols.setAppend(defining_symbols);
+  }
+  else if (r->reward_type == Reward::reward_literalList) {
+    FOR1D(((LiteralListReward*) r)->lits, k) {
+      reward_symbols.setAppend(((LiteralListReward*) r)->lits(k)->s);
+      SymL defining_symbols;
+      reward_symbols.last()->getDefiningSymbols(defining_symbols, false);
+      reward_symbols.setAppend(defining_symbols);
+    }
+  }
+  else if (r->reward_type == Reward::reward_maximize_function) {
+    MaximizeReward* mfr = (MaximizeReward*) r;
+    if (mfr->literal_to_be_maximized != NULL) {
+      reward_symbols.setAppend(mfr->literal_to_be_maximized->s);
+      SymL defining_symbols;
+      mfr->literal_to_be_maximized->s->getDefiningSymbols(defining_symbols, false);
+      reward_symbols.setAppend(defining_symbols);
+    }
+  }
+  else if (r->reward_type == Reward::conjunction_of_rewards) {
+    for (uint i = 0; i < ((RewardConjunction*)r)->rewards.N; i++) {
+      SymL reward_symbols__inner;
+      calc_dbn_state_symbols_for_rewards(reward_symbols__inner, ((RewardConjunction*)r)->rewards(i));
+      reward_symbols.setAppend(reward_symbols__inner);
+    }
+  }
+  else
+    NIY;
+}
+
+
+
 // The DBN used by (A-)PRADA consists of grounded predicate and 
 // function instances which are used 
 //       (i)  in the (ground) rules and/or 
@@ -658,32 +704,10 @@ void PRADA_Planner::calc_dbn_state_symbols() {
     }
   }
   // (ii) reward concepts
-  if (reward->reward_type == Reward::reward_literal) {
-    dbn_state_symbols.setAppend(((LiteralReward*) reward)->lit->s);
-    SymL defining_symbols;
-    dbn_state_symbols.last()->getDefiningSymbols(defining_symbols, false);
-    dbn_state_symbols.setAppend(defining_symbols);
-  }
-  else if (reward->reward_type == Reward::reward_literalList) {
-    FOR1D(((LiteralListReward*) reward)->lits, k) {
-      dbn_state_symbols.setAppend(((LiteralListReward*) reward)->lits(k)->s);
-      SymL defining_symbols;
-      dbn_state_symbols.last()->getDefiningSymbols(defining_symbols, false);
-      dbn_state_symbols.setAppend(defining_symbols);
-    }
-  }
-  else if (reward->reward_type == Reward::reward_maximize_function) {
-    MaximizeReward* mfr = (MaximizeReward*) reward;
-    if (mfr->literal_to_be_maximized != NULL) {
-      dbn_state_symbols.setAppend(mfr->literal_to_be_maximized->s);
-      SymL defining_symbols;
-      mfr->literal_to_be_maximized->s->getDefiningSymbols(defining_symbols, false);
-      dbn_state_symbols.setAppend(defining_symbols);
-    }
-  }
-  else {
-    NIY;
-  }
+  SymL symbols_reward;
+  calc_dbn_state_symbols_for_rewards(symbols_reward, reward);
+  dbn_state_symbols.setAppend(symbols_reward);
+
   Symbol::sort(dbn_state_symbols);
   if (DEBUG>0) {
     cout<<"(A-) PRADA's DBN will be built with random variables for the following state symbols:"<<endl;
@@ -880,10 +904,17 @@ class PRADA_Reward_Literal : public PRADA_Reward {
     PRADA_Reward_Literal(Literal* lit) {
       this->lit = lit;
       rv = NULL;
-      if (lit->value > 0.)
-        value = 1;
-      else
-        value = 0;
+      if (lit->s->range_type == Symbol::binary) {
+        if (lit->value > 0.)
+          value = 1;
+        else
+          value = 0;
+      }
+      else {
+        uint rangeIndex = lit->s->range.findValue((uint)lit->value);
+        CHECK(rangeIndex >= 0, "Value out of range!")
+        value = rangeIndex;
+      }
     }
     
     double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
@@ -915,10 +946,17 @@ class PRADA_Reward_LiteralList : public PRADA_Reward {
       }
       double prob = 1.0;
       FOR1D(rvs, i) {
-        if (lits(i)->value > 0.)
-          prob *= rvs(i)->P(t,1);
-        else
-          prob *= rvs(i)->P(t,0);
+        if (lits(i)->s->range_type == Symbol::binary) {
+          if (lits(i)->value > 0.)
+            prob *= rvs(i)->P(t,1);
+          else
+            prob *= rvs(i)->P(t,0);
+        }
+        else {
+          uint rangeIndex = lits(i)->s->range.findValue((uint)lits(i)->value);
+          CHECK(rangeIndex >= 0, "Value out of range!")
+          prob *= rvs(i)->P(t, rangeIndex);
+        }
       }
       return prob;
     }
@@ -956,14 +994,33 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     }
 };
 
+class PRADA_Reward_ConjunctionOfRewards : public PRADA_Reward {
+  MT::Array<PRADA_Reward*> pradaRewards;
+  
+  public:
+    PRADA_Reward_ConjunctionOfRewards(const MT::Array<PRADA_Reward*> &rewards) {
+      pradaRewards = rewards;
+    }
+    
+    double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
+      double product = 1;
+      for (uint i = 0; i < pradaRewards.N; i++) {
+        product *= pradaRewards(i)->evaluate_prada_reward(dbn, t);
+      }
+      return product;
+    }
+};
+
 
 class PRADA_Reward_Maximize : public PRADA_Reward {
   Literal* fl;
   LiteralRV* rv;
+  double offset;
   
   public:
-    PRADA_Reward_Maximize(Literal* fl) {
+    PRADA_Reward_Maximize(Literal* fl, double offset) {
       this->fl = fl;
+      this->offset = offset;
       rv = NULL;
     }
     
@@ -971,7 +1028,7 @@ class PRADA_Reward_Maximize : public PRADA_Reward {
       if (rv == NULL) {
         rv = dbn.RVefficiency__atom2var(fl);
       }
-      return rv->P(t,0);
+      return rv->P(t,0)+offset;	//quick and dirty, need this for reward conjunction
     }
 };
 
@@ -1014,7 +1071,7 @@ PRADA_Reward* PRADA_Planner::convert_reward(LiteralListReward* reward) {
 
 
 PRADA_Reward* PRADA_Planner::convert_reward(MaximizeReward* reward) {
-  return new PRADA_Reward_Maximize(reward->literal_to_be_maximized);
+  return new PRADA_Reward_Maximize(reward->literal_to_be_maximized, reward->offset);
 }
 
 
@@ -1025,6 +1082,15 @@ PRADA_Reward* PRADA_Planner::convert_reward(NotTheseStatesReward* reward) {
 
 PRADA_Reward* PRADA_Planner::convert_reward(DisjunctionReward* reward) {
   return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
+}
+
+
+PRADA_Reward* PRADA_Planner::convert_reward(RewardConjunction* reward) {
+  MT::Array<PRADA_Reward*> pradaRewards;
+  for (uint i = 0; i < reward->rewards.N; i++) {
+    pradaRewards.append(create_PRADA_Reward(reward->rewards(i)));
+  }
+  return new PRADA_Reward_ConjunctionOfRewards(pradaRewards);
 }
 
 
@@ -1491,27 +1557,26 @@ double inferPhi(const Rule& grounded_rule, uint rule_id, uint t, const RVL& vars
   FOR1D(grounded_rule.context, i) {
     prob = 0.0;
     if (grounded_rule.context(i)->s->range_type != Symbol::binary) {
-      NIY;
-#if 0
+      //NIY;
+
+      uint val;
       uint id_2D__val1, id_2D__val2;
-      ComparisonLiteral* clit = (ComparisonLiteral*) grounded_rule.context(i);
-      ComparisonAtom* ca = (ComparisonAtom*) clit->atom;
-      // f(x) < c
-      if (((ComparisonPredicate*) grounded_rule.context(i)->s)->constantBound) {
+      Literal* clit = grounded_rule.context(i);
+      // f(x) comp constant
+      {
         LiteralRV* var = vars_context(rule_id, v_current++);
-        if (var->type == RV_TYPE__FUNC_EXPECT) {
-          if (compare(var->P(t,0), ca->bound, ca->comparisonType))
+        if (var->type == LiteralRV::expectation) {
+          if (Literal::compare(var->P(t,0), clit->comparison_type, clit->value))
             prob += 1.;
         }
         else {
-          id_2D__val1 = var->P.d1 * t;
           FOR1D(var->range, val) {
-            if (compare(var->range(val), ca->bound, ca->comparisonType))
-              prob += var->P.p[id_2D__val1];
-            id_2D__val1++;
+            if (Literal::compare(var->range(val), clit->comparison_type, clit->value))
+              prob += var->P(t, val);
           }
         }
       }
+#if 0
       // f(x) < f(y)
       else {
         LiteralRV* variable1 = vars_context(rule_id, v_current++);
@@ -1587,7 +1652,13 @@ double inferPhi(const Rule& grounded_rule, uint rule_id, uint t, const RVL& vars
     phi *= prob;
     if (phi < RULE_MIN_PROB) {phi=0.0; break;}
   }
-  if (DEBUG>0) {
+  if (DEBUG == 1 && phi > 0) {
+    grounded_rule.write();
+    cout<<"  -->  phi="<<phi<<endl;
+    if (phi>0.) {grounded_rule.action->write(); cout<<" *****"<<endl;}
+    cout<<"inferPhi [END]"<<endl;
+  }
+  else if (DEBUG > 1) {
     cout<<"  -->  phi="<<phi<<endl;
     if (phi>0.) {grounded_rule.action->write(); cout<<" *****"<<endl;}
     cout<<"inferPhi [END]"<<endl;
@@ -1959,8 +2030,9 @@ void PRADA_DBN::setState(const LitL& lits, uint t) {
     }
     if (rv->type == LiteralRV::simple) {
       for (val=0; val<rv->dim; val++) {
-        if (TL::areEqual(lits(v)->value, rv->range(val)))
+        if (TL::areEqual(lits(v)->value, rv->range(val))) {
           rv->P(t,val) = 1.0;
+        }
         else
           rv->P(t,val) = 0.0;
       }
@@ -2081,6 +2153,7 @@ void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_D
 void calcDerived1(CountSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn);
 void calcDerived1(SumFunction* f, uint t, const uintA& constants, PRADA_DBN* dbn);
 void calcDerived1(RewardFunction* f, uint t, const uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(DifferenceFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn);
 
 
 void PRADA_DBN::calcDerived(uint t) {
@@ -2097,6 +2170,8 @@ void PRADA_DBN::calcDerived(uint t) {
       calcDerived1((SumFunction*) net_symbols_state(i), t, net_constants, this);
     else if (net_symbols_state(i)->symbol_type == Symbol::function_reward)
       calcDerived1((RewardFunction*) net_symbols_state(i), t, net_constants, this);
+    else if (net_symbols_state(i)->symbol_type == Symbol::function_difference)
+      calcDerived1((DifferenceFunction*) net_symbols_state(i), t, net_constants, this);
     else
       HALT("unknown symbol type: "<<*net_symbols_state(i))
   }
@@ -2480,6 +2555,66 @@ void calcDerived1(RewardFunction* f, uint t, const uintA& constants, PRADA_DBN* 
 }
 
 
+void calcDerived1(DifferenceFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"calcDerived - DifferenceFunction [START]"<<endl;}
+  if (DEBUG>0) {
+    s->write(cout);cout<<endl;
+    PRINT(t);
+  }
+
+  uintA freeVars;
+  s->getFreeVars(freeVars);
+  uint i;
+  MT::Array< uintA > combos_args__conjunction_lit;
+  TL::allPermutations(combos_args__conjunction_lit, constants, s->arity, true, true);
+  uint c1, c2;
+  double prob;  
+  uintA sa(s->arity);
+  FOR1D(combos_args__conjunction_lit, c1) {
+    Literal* target = Literal::get(s, combos_args__conjunction_lit(c1), 1.);
+    if (DEBUG>1) {PRINT(*target);}
+    // Free Vars EXISTENTIAL
+    // P(p) = 1 - PRODUCT[over free-var combos c](1 - P(basePTs[sub=c]))
+    // Intuition: Predicate true if not all base-pred combinations are false.
+    MT::Array< uintA > combos_freevars___base_lits;
+    uintA constants_freevars = constants;
+    setMinus(constants_freevars, combos_args__conjunction_lit(c1));
+    TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
+    arr probs__combos_freevars___base_lits(combos_freevars___base_lits.N);
+    FOR1D(combos_freevars___base_lits, c2) {
+      Substitution sub;
+      for(i=0;i<s->arity;i++) {
+        sub.addSubs(i, combos_args__conjunction_lit(c1)(i));
+      }
+      FOR1D(freeVars, i) {
+        sub.addSubs(freeVars(i), combos_freevars___base_lits(c2)(i));
+      }
+      prob = 1.0;
+      FOR1D(s->restrictionLits, i) {
+        Literal* base_lit_ground = sub.apply(s->restrictionLits(i));
+        LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
+        int val_idx = var->range.findValue(base_lit_ground->value);
+        prob *= var->P(t,val_idx);
+        if (prob < 0.01) {
+          if (DEBUG>1) {cout<<"Stop calculation as probablity is already very small - 1: "<<prob<<endl;}
+          break;
+        }
+      }
+      if (prob > 0.99) {
+        LiteralRV *rv1 = dbn->RVefficiency__atom2var(sub.apply(s->baseFunctionLit1));
+        LiteralRV *rv2 = dbn->RVefficiency__atom2var(sub.apply(s->baseFunctionLit2));
+        CHECK(rv1->type == LiteralRV::expectation && rv2->type == LiteralRV::expectation, "Both functions of a function difference symbol must be of type expectation!")
+        if (DEBUG > 0) cout << *target << " expectation: " << rv1->P(t,0) - rv2->P(t,0) << endl;
+        dbn->RVefficiency__atom2var(target)->P(t,0) = rv1->P(t,0) - rv2->P(t,0);
+        return;
+      }
+    }
+  }
+  CHECK(false, "Restriction literals do not cover!")
+}
+
+
 
 
 
@@ -2503,7 +2638,7 @@ void PRADA_DBN::checkStateSoundness(uint t, bool omit_derived) {
       sum += vars_state__prim(i)->P(t,val);
     }
     if (!TL::areEqual(1.0, sum))
-      HALT("invalid distribution for rv with id="<<vars_state__prim(i)->id);
+      HALT("invalid distribution for rv with id="<<vars_state__prim(i)->id << " and literal " << *vars_state__prim(i)->lit);
   }
   if (!omit_derived) {
     FOR1D(vars_state__derived, i) {

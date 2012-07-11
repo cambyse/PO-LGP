@@ -242,15 +242,36 @@ uint Rule::numberLiterals() const {
 }
 
 
+uint Rule::getNegStartPos() {
+  uint i;
+  FOR1D(context, i) {
+    if (context(i)->isNegated())
+      break;
+  }
+  return i;
+}
+
+
+uint Rule::getNonBinaryStartPos() {
+  uint i;
+  FOR1D(context, i) {
+    if (context(i)->s->range_type != Symbol::binary || context(i)->isNegated())
+      break;
+  }
+  return i;
+}
+
+
 void Rule::insertContext(Literal* literal) {
+  if (context.findValue(literal) >= 0) return;
   uint i;
   uintA drefs;
   getDeicticRefs(drefs);
   uintA literal_deicticRefs;
   setSection(literal_deicticRefs, drefs, literal->args);
   context.memMove = true;
-  // if positive always place before neg!
-  if (!literal->isNegated()) {
+  // if positive always place before neg and non-binaries!
+  if (literal->s->range_type == Symbol::binary && !literal->isNegated()) {
     // does not contain deictic refs
     if (literal_deicticRefs.N == 0) {
       context.insert(0, literal);
@@ -259,9 +280,7 @@ void Rule::insertContext(Literal* literal) {
     else {
       uint pos = 0;
       // check deictic refs
-      FOR1D(context, i) {
-        if (context(i)->isNegated())
-          break;
+      for (i = 0; i < getNonBinaryStartPos(); i++) {
         if (numberSharedElements(context(i)->args, literal_deicticRefs) > 0) {
           pos = i+1;
         }
@@ -269,12 +288,8 @@ void Rule::insertContext(Literal* literal) {
       context.insert(pos, literal);
     }
   }
-  else {
-    FOR1D(context, i) {
-      if (context(i)->isNegated())
-        break;
-    }
-    uint firstNeg = i;
+  else if (literal->s->range_type == Symbol::binary) {
+    uint firstNeg = getNegStartPos();
     // does not contain deictic refs
     if (literal_deicticRefs.N == 0) {
       context.insert(firstNeg, literal);
@@ -283,7 +298,29 @@ void Rule::insertContext(Literal* literal) {
     else {
       uint pos = firstNeg;
       // check deictic refs
-      for (i=firstNeg; i<context.N; i++) {
+      for (i=firstNeg; i < context.N; i++) {
+        if (numberSharedElements(context(i)->args, literal_deicticRefs) > 0) {
+          pos = i+1;
+        }
+      }
+      context.insert(pos, literal);
+    }
+  }
+  else {    //non-binary
+    FOR1D(context, i) {
+      if (context(i)->s->range_type != Symbol::binary)
+        break;
+    }
+    uint firstNonBinary = getNonBinaryStartPos();
+    // does not contain deictic refs
+    if (literal_deicticRefs.N == 0) {
+      context.insert(firstNonBinary, literal);
+    }
+    // does contain deictic refs
+    else {
+      uint pos = firstNonBinary;
+      // check deictic refs
+      for (i = firstNonBinary; i < getNegStartPos(); i++) {
         if (numberSharedElements(context(i)->args, literal_deicticRefs) > 0) {
           pos = i+1;
         }
@@ -363,13 +400,21 @@ void Rule::sanityCheck() const {
   // (5) check no negated free deictic references
   uintA drefs_pos, drefs_neg, drefs_nonBinary;
   getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
-  if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
+  if (drefs_neg.N > 0) {
     cout<<endl<<endl<<endl;
     cout<<"FAILED SANITY CHECK  -  Negated free deictic references:   "<<drefs_neg<<endl;
     cout<<"RULE:  "<<endl<<*this;
     cout<<"Remove this sanity check if you want to allow for negated free deictic references."<<endl;
     cerr<<"Remove this sanity check if you want to allow for negated free deictic references."<<endl;
     HALT("FAILED SANITY CHECK  -  Negated free deictic references:   "<<drefs_neg);
+  }
+  if (drefs_nonBinary.N > 0) {
+    cout<<endl<<endl<<endl;
+    cout<<"FAILED SANITY CHECK  -  free non-binary deictic references:   "<<drefs_nonBinary<<endl;
+    cout<<"RULE:  "<<endl<<*this;
+    cout<<"Remove this sanity check if you want to allow for free non-binary references."<<endl;
+    cerr<<"Remove this sanity check if you want to allow for free non-binary references."<<endl;
+    HALT("FAILED SANITY CHECK  -  free non-binary deictic references:   "<< drefs_nonBinary);
   }
 }
 
@@ -426,7 +471,7 @@ Rule* Rule::read(ifstream& in) {
   bool noise_outcome_has_been_read = false;
   while ( MT::peerNextChar(in) != ' '  &&  MT::peerNextChar(in) != 'P'  &&   MT::peerNextChar(in) != 'C'
                                        &&  MT::peerNextChar(in) != 'R'&&  MT::peerNextChar(in) != 'A') {
-    line.read(in, NULL, "=\n");
+    line.read(in, NULL, "\n");
     if (DEBUG>1) PRINT(line);
     if (line.N<2) {
       cout<<"bad line: "<<endl;
@@ -1049,7 +1094,7 @@ void RuleSet::ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const
 #endif
 
 
-void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_abstract, const uintA& constants, const SymbolicState& state, bool delete_nonchanging_concepts) {
+void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_fullyAbstract, const uintA& constants, const SymbolicState& state, bool delete_nonchanging_concepts) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"RuleSet::ground_with_filtering [START]"<<endl;}
   if (DEBUG>0) {
@@ -1062,6 +1107,10 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
     cout<< "**************  ATTENTION  ************"<<endl;
     cout << "Assumes that DRs lists change from left to right!!!"<<endl <<endl <<endl <<endl;
   }
+
+  RuleSet rules_abstract;
+  groundFunctionVars(rules_fullyAbstract, rules_abstract);
+  if (DEBUG > 0) { cout << "Rules with grounded function values:" << endl; rules_abstract.write(); cout << endl; }
   
   // (1) Determine never changing predicate instances and function values
   
@@ -1082,10 +1131,19 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
     MT::Array< uintA > combos;
     TL::allPermutations(combos, constants, s->arity, true, true);
     FOR1D(combos, k) {
-      Literal* lit = Literal::get(s, combos(k), 1);
-      if (reason::holds(state.lits, lit)) {
-        nonchanging_lits.append(lit);
+      if (s->range_type == Symbol::binary) {
+        Literal *lit = Literal::get(s, combos(k), 1);
+        if (reason::holds(state.lits, lit))
+          nonchanging_lits.append(lit);
       }
+      else {
+        for (uint j = 0; j < s->range.N; j++) {
+          Literal *lit = Literal::get(s, combos(k), s->range(j));
+        if (reason::holds(state.lits, lit))
+          nonchanging_lits.append(lit);
+        }
+      }
+
     }
   }
   
@@ -1263,6 +1321,7 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
                   if (DEBUG>3) {cout<<" invalid! ";}
                 }
               }
+               if (!r_ground->context(i)->typeCheck()) valid_all = false; //type check
             }
             else {
               r_ground->context(i) = r_last->context(i);
@@ -1325,10 +1384,11 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
                   // (iii B) Only non_latest_DR arguments?
                   else if (!context_containsLatestDR(i)) {
                     valid_nonlatest_drefs = false;
-                    if (DEBUG>2) {cout<<"valid_nonlatest_drefs=false because of literal "<<r_ground->context(i)<<endl;}
+                    if (DEBUG>2) {cout<<"valid_nonlatest_drefs=false because of literal "<<*r_ground->context(i)<<endl;}
                   }
                 }
             } // End of checking r_ground->context(i)
+            if (!r_ground->context(i)->typeCheck()) valid_all = false; //type check
           } // End of filtering of r_ground->context
           if (DEBUG>2) {cout<<endl<<"Candidate ground rule:"<<endl;r_ground->write(cout);}
           if (DEBUG>2) {PRINT(valid_all);  PRINT(valid_action_args);  PRINT(valid_nonlatest_drefs);}
@@ -1364,6 +1424,15 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
   if (delete_nonchanging_concepts) {
     rules_ground.removeNonChangingSymbols();
   }
+
+  FOR1D(rules_ground.ra, r) {
+    if (rules_ground.ra(r)->context.containsDoubles()) {    //remove doubles if necessary
+      LitL newContext;
+      for (int ci = 0; ci < rules_ground.ra(r)->context.N; ci++)
+        newContext.setAppend(rules_ground.ra(r)->context(ci));
+      rules_ground.ra(r)->context = newContext;
+    }
+  }
   
   rules_ground.sanityCheck();
   
@@ -1372,6 +1441,54 @@ void RuleSet::ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_
     cout<<"# Rejected rules: "<<NUM_REJECTED<<endl;
   }
   if (DEBUG>0) {cout<<"ruleReasoning::ground_with_filtering [END]"<<endl;}
+}
+
+
+void RuleSet::groundFunctionVars(const RuleSet& rules, RuleSet& rules_expanded) {
+  uint r, i, j, x, y;
+  FOR1D_(rules, r) {
+    Rule* rule = rules.elem(r);
+    bool addedNewRules = false;
+    FOR1D(rule->context, i) {
+      if (rule->context(i)->comparison_type == Literal::comparison_variable) {
+        FOR1D(rule->context(i)->s->range, j) {
+          Rule *newRule = new Rule();
+          newRule->action = rule->action;
+          newRule->probs = rule->probs;
+          double bound = rule->context(i)->s->range(j);
+          Literal *newLit = Literal::get(rule->context(i)->s, rule->context(i)->args, bound, Literal::comparison_equal);
+          //build new context and outcomes with replaced any/offset literal
+          FOR1D(rule->context, x) {
+            if (x != i) newRule->insertContext(rule->context(x));
+            else newRule->insertContext(newLit);
+          }
+          //now ground the outcomes
+          FOR1D(rule->outcomes, x) {
+            MT::Array<Literal*> newOutcome;
+            FOR1D(rule->outcomes(x), y) {
+              if (rule->outcomes(x)(y)->s == rule->context(i)->s && rule->outcomes(x)(y)->args == rule->context(i)->args && rule->outcomes(x)(y)->comparison_type == Literal::comparison_offset) {
+                double finalValue = bound + rule->outcomes(x)(y)->value;
+                if (rule->outcomes(x)(y)->s->range_type == Symbol::integer_set) {   //clamp   
+                  uint rangeMin = rule->outcomes(x)(y)->s->range.min();
+                  uint rangeMax = rule->outcomes(x)(y)->s->range.max();  
+                  if (finalValue < rangeMin) finalValue = rangeMin;
+                  if (finalValue > rangeMax) finalValue = rangeMax;
+                }
+                if (finalValue != bound)
+                  newOutcome.append(Literal::get(rule->outcomes(x)(y)->s, rule->outcomes(x)(y)->args, finalValue));
+              }
+              else newOutcome.append(rule->outcomes(x)(y));
+            }
+            newRule->outcomes.append(newOutcome);
+          }
+          addedNewRules = true;
+          rules_expanded.append(newRule);
+        }
+        if (addedNewRules) break;        //only one any literal per call
+      }
+    }
+    if (!addedNewRules) rules_expanded.append(rule);
+  }
 }
 
 
@@ -1714,8 +1831,9 @@ void SubstitutionSet::createAllPossibleSubstitutions(SubstitutionSet& subs, cons
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"createAllPossibleSubstitutions [START]"<<endl;
   if (DEBUG>0) {PRINT(vars); PRINT(constants);}
+  if (vars.N > 0 && constants.N == 0) HALT("No constants: constants="<<constants);
   Substitution* sub;
-  uint j;
+  uint i;
   uintA assignment(vars.N);
   assignment.setUni(0);
   int id = vars.N-1;
@@ -1723,7 +1841,7 @@ void SubstitutionSet::createAllPossibleSubstitutions(SubstitutionSet& subs, cons
   while (true) {
     if (DEBUG>0) PRINT(assignment)
     sub = new Substitution;
-    FOR1D(vars, j) {sub->addSubs(vars(j), constants(assignment(j)));}
+    FOR1D(vars, i) {sub->addSubs(vars(i), constants(assignment(i)));}
     if (DEBUG>1) {sub->write(cout); cout<<endl;}
     subs.append(sub);
     while (id>=0 && assignment(id) >= constants.N-1) {

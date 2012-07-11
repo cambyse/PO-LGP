@@ -117,6 +117,7 @@ void Symbol::write(ostream& os) const {
     case function_change: os << "function_change"; break;
     case sum: os << "sum"; break;
     case function_reward: os << "function_reward"; break;
+    case function_difference: os << "function_difference"; break;
     default: NIY;
   }
   os << " ";
@@ -669,7 +670,77 @@ void RewardFunction::getDefiningSymbols(SymL & symbols, bool only_direct_predece
 
 
 
+/************************************************
+ * 
+ *     DifferenceFunction
+ * 
+ ************************************************/
 
+//f(X) - f(Y)
+DifferenceFunction* DifferenceFunction::get(const MT::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const MT::Array< Literal* > &restriction_lits) {
+  Symbol* potential_s = Symbol::get(name);
+  if (potential_s != NULL) {
+    if ( potential_s->arity != arity
+      || potential_s->symbol_type != function_difference
+      || potential_s->range_type != integers
+      || ((SumFunction*) potential_s)->base_symbol != base_symbol
+    ) {
+      HALT("Symbol "<<name<<" already exists with different properties: "<<*potential_s);
+    }
+    else
+      return (DifferenceFunction*) potential_s;
+  }
+  DifferenceFunction* s = new DifferenceFunction;
+  s->name = name;
+  s->arity = arity;
+  s->range_type = integers;
+  s->baseSymbol = base_symbol;
+  s->restrictionLits = restriction_lits;
+  s->baseFunctionLit1 = baseFunctionLit1;
+  s->baseFunctionLit2 = baseFunctionLit2;
+  return s;
+}
+
+void DifferenceFunction::getFreeVars(uintA& freeVars) const {
+  uint i, k;
+  FOR1D(restrictionLits, i) {
+    CHECK (!restrictionLits(i)->isNegated(), "Restriction Literals must be positive atm!")
+      FOR1D(restrictionLits(i)->args, k) {
+        if (restrictionLits(i)->args(k) >= arity)
+          freeVars.setAppend(restrictionLits(i)->args(k));
+    }
+  }
+}
+
+void DifferenceFunction::write(ostream& os) const {
+  Symbol::write(os);
+  os << " <-- ";
+  uint i;
+  for(i=0;i<arity;i++) {
+    if (i == arity-1)
+      os << i;
+    else
+      os << i << " ";
+  }
+  os << baseSymbol->name << " " << restrictionLits;
+}
+void DifferenceFunction::getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors) const {
+  symbols.clear();
+  if (!only_direct_predecessors) {
+    SymL local_symbols;
+    baseSymbol->getDefiningSymbols(local_symbols, only_direct_predecessors);
+    symbols.setAppend(local_symbols);
+
+    for (int i = 0; i < restrictionLits.N; i++) {
+      restrictionLits(i)->s->getDefiningSymbols(local_symbols, only_direct_predecessors);
+      symbols.setAppend(local_symbols);
+    }
+  }
+  symbols.setAppend(baseSymbol);
+    for (int i = 0; i < restrictionLits.N; i++) {
+      symbols.setAppend(restrictionLits(i)->s);
+    }
+}
 
 
 
@@ -684,7 +755,7 @@ ArgumentTypeL ArgumentType::mem_all_argument_types;
 
 
 bool ArgumentType::subsumes(const ArgumentType& t) const {
-  return this->type == t.type  ||  t.name == "any" || this->name == "any";
+  return this->name == t.name  ||  t.name == "any" || this->name == "any";
 }
 
 
@@ -726,11 +797,11 @@ void DisjunctionArgumentType::write(ostream& os) const {
 }
 
 
-ArgumentType* ArgumentType::get(const MT::String& name, ArgumentType_Type type) {
+ArgumentType* ArgumentType::get(const MT::String& name) {
   uint i;
   FOR1D(mem_all_argument_types, i) {
     if (mem_all_argument_types(i)->name == name) {
-      if (mem_all_argument_types(i)->type != type) {
+      if (mem_all_argument_types(i)->type != ArgumentType::simple) {
         HALT("already exists with different type");
       }
       else
@@ -795,6 +866,23 @@ void ArgumentType::get(ArgumentTypeL& all_argumentTypes) {
 }
 
 
+DisjunctionArgumentType* DisjunctionArgumentType::get(const MT::String& name, const ArgumentTypeL& base_types) {
+  uint i;
+  FOR1D(mem_all_argument_types, i) {
+    if (mem_all_argument_types(i)->name == name) {
+      if (mem_all_argument_types(i)->type != ArgumentType::disjunction) {
+        HALT("already exists with different type");
+      }
+      else
+        return (DisjunctionArgumentType*)mem_all_argument_types(i);
+    }
+  }
+  DisjunctionArgumentType* t = new DisjunctionArgumentType();
+  t->name = name;
+  t->base_types = base_types;
+  mem_all_argument_types.append(t);
+  return t;
+}
 
 /************************************************
  * 
@@ -854,7 +942,7 @@ void writeSymbolsAndTypes(const char* filename) {
 void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, const char *filename) {
   ifstream in;
   in.open(filename);
-  CHECK(in.is_open(), "File can't be opened!");
+  CHECK(in.is_open(), "Symbols file '"<<filename<<"' can't be opened!");
   readSymbolsAndTypes(symbols, types, in);
 }
 
@@ -896,6 +984,7 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
     else if (symbol_type__string == "sum") symbol_type = Symbol::sum;
     else if (symbol_type__string == "function_change") symbol_type = Symbol::function_change;
     else if (symbol_type__string == "function_reward") symbol_type = Symbol::function_reward;
+    else if (symbol_type__string == "function_difference") symbol_type = Symbol::function_difference;
     else HALT("unknown symbol_type:  "<<symbol_type__string);
     
     // read range
@@ -980,6 +1069,24 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       Symbol* base_symbol = Symbol::get(remaining_string);
       if (base_symbol == NULL) {HALT("base symbol "<<remaining_string<<" does not exist");}
       s = SumFunction::get(name, arity, base_symbol);
+    }
+    else if (symbol_type == Symbol::function_difference) {
+      MT::skip(line);
+      MT::skipUntil(line, " ");  // skip "<--"
+      MT::String substring;
+      line >> substring;
+      LitL base_literals;
+      base_literals.memMove = true;
+      if (DEBUG>0) {PRINT(substring);}
+      Literal::get(base_literals, substring);
+      CHECK(base_literals.N >= 2, "Too few parameters!")
+      CHECK(base_literals(0)->s == base_literals(1)->s, "Functions must be equal!")
+      Symbol *baseSymbol = base_literals(0)->s;
+      Literal *baseFLit1 = base_literals(0);
+      Literal *baseFLit2 = base_literals(1);
+      base_literals.remove(0);
+      base_literals.remove(0);
+      s = DifferenceFunction::get(name, arity, baseSymbol, baseFLit1, baseFLit2, base_literals);    //Really terrible code, must be improved!
     }
     else
       HALT("unknown symbol type "<<symbol_type);

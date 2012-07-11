@@ -21,7 +21,7 @@
 #define MT_util_h
 
 //----- if no system flag, I assume Linux
-#if !defined MT_MSVC && !defined MT_Cygwin && !defined MT_Linux && !defined MT_MinGW
+#if !defined MT_MSVC && !defined MT_Cygwin && !defined MT_Linux && !defined MT_MinGW && !defined MT_Darwin
 #  define MT_Linux
 #endif
 
@@ -35,7 +35,7 @@
 #include <string.h>
 #include <cmath>
 #include <stdint.h>
-#if defined MT_Linux || defined MT_Cygwin
+#if defined MT_Linux || defined MT_Cygwin || defined MT_Darwin
 #  include <stdint.h>
 #  include <sys/time.h>
 #  include <sys/times.h>
