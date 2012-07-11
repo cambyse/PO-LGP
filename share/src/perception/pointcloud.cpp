@@ -276,82 +276,66 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
     s->createNewJob(cloud, inliers);
   }
 }
-
 struct sObjectFilter {
-   void filterCylinders(arr& pos, const FittingResultL& objects, Process *p) {
-     intA nums;
-     pos.clear();
-     nums.resize(0);
-     pos.resize(0,7);
-     for (int i = 0; i< objects.N; ++i) {
-       if (objects(i)->values.size() != 7) continue;
-       bool found = false;
-       arr measurement;
-       measurement.resize(1,7);
-       measurement(0,0) = objects(i)->values[0];
-       measurement(0,1) = objects(i)->values[1];
-       measurement(0,2) = objects(i)->values[2];
-       measurement(0,3) = objects(i)->values[3];
-       measurement(0,4) = objects(i)->values[4];
-       measurement(0,5) = objects(i)->values[5];
-       measurement(0,6) = objects(i)->values[6];
-       arr measurement_;
-       measurement_.append(measurement.sub(0,0,0,2)+measurement.sub(0,0,3,5));
-       measurement_.append(-measurement.sub(0,0,3,5));
-       measurement_.append(measurement(0,6));
-       measurement_.resize(1,7);
-       double epsilon = birosInfo.getParameter<double>("objectDistance", p);
-       for (int j = 0; j<pos.d0; ++j) {
-         if (norm(measurement - pos[j]) < epsilon)  {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-         else if (norm(measurement_ - pos[j]) < epsilon) {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement_ * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-       }
-       if(!found) {
-         pos.append(measurement);
-         nums.append(1);
-       }
-     }
+  bool filterShape(arr& pos, intA& nums, const arr& measurement, const int i, const double epsilon ) {
+    if (norm(measurement - pos[i]) < epsilon)  {
+      pos[i] = pos[i] * ((nums(i)-1.)/nums(i)) + measurement * (1./nums(i));
+      nums(i)++;
+      return true;
+    }
+    return false;
+  }
 
-   }
-   void filterSpheres(arr& pos, const FittingResultL& objects, Process* p) {
-     intA nums;
-     pos.clear();
-     nums.resize(0);
-     pos.resize(0,4);
-     for (int i = 0; i< objects.N; ++i) {
-       if (objects(i)->values.size() != 4) continue;
-       bool found = false;
-       arr measurement;
-       measurement.resize(1,4);
-       measurement(0,0) = objects(i)->values[0];
-       measurement(0,1) = objects(i)->values[1];
-       measurement(0,2) = objects(i)->values[2];
-       measurement(0,3) = objects(i)->values[3];
-       double epsilon = birosInfo.getParameter<double>("objectDistance", p);
-       for (int j = 0; j<pos.d0; ++j) {
-         if (norm(measurement - pos[j]) < epsilon)  {
-           pos[j] = pos[j] * ((nums(j)-1.)/nums(j)) + measurement * (1./nums(j));
-           nums(j)++;
-           found = true;
-           break;
-         }
-       }
-       if(!found) {
-         pos.append(measurement);
-         nums.append(1);
-       }
-     }
+  void filterCylinders(arr& pos, const FittingResultL& objects, Process *p) {
+    intA nums;
+    pos.clear();
+    nums.resize(0);
+    pos.resize(0,7);
+    for (int i = 0; i< objects.N; ++i) {
+      if (objects(i)->values.size() != 7) continue;
+      bool found = false;
+      arr measurement;
+      measurement.resize(1,7);
+      std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
+      arr measurement_;
+      measurement_.append(measurement.sub(0,0,0,2)+measurement.sub(0,0,3,5));
+      measurement_.append(-measurement.sub(0,0,3,5));
+      measurement_.append(measurement(0,6));
+      measurement_.resize(1,7);
+      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      for (int j = 0; j<pos.d0; ++j) {
+        if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break;}
+        else if (filterShape(pos, nums, measurement_, j, epsilon)) {found = true; break; }
+      }
+      if(!found) {
+        pos.append(measurement);
+        nums.append(1);
+      }
+    }
 
-   }
+  }
+  void filterSpheres(arr& pos, const FittingResultL& objects, Process* p) {
+    intA nums;
+    pos.clear();
+    nums.resize(0);
+    pos.resize(0,4);
+    for (int i = 0; i< objects.N; ++i) {
+      if (objects(i)->values.size() != 4) continue;
+      bool found = false;
+      arr measurement;
+      measurement.resize(1,4);
+      std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
+      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      for (int j = 0; j<pos.d0; ++j) {
+        if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break; }
+      }
+      if(!found) {
+        pos.append(measurement);
+        nums.append(1);
+      }
+    }
+
+  }
 };
 
 ObjectFilter::ObjectFilter(const char* name) : Process(name) {
@@ -397,44 +381,27 @@ void ObjectTransformator::open() {
   geo.init("GeometricState", this);
 }
 
-void createCylinder(ors::Body& cyl, const arr &pos, const arr &direction, const double radius) {
+void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& transformation) {
   ors::Transformation t;
-  arr dir = direction.sub(0,2)*(1./direction(3));
+  t.pos = object->position;
+  t.rot = object->rotation;
 
-  for (uint i = 0; i < 3; ++i) t.pos(i) = pos(i) + 0.5*dir(i);
-  
-  t.rot.setDiff(ARR(0,0,1), dir);
-  
-  arr size = ARR(0.1, 1, norm(dir), radius);
+  ors::Transformation sensor_to_ors;
+  sensor_to_ors.setAffineMatrix(transformation.p);
+
+  t.appendTransformation(sensor_to_ors);
+
+  arr size = ARR(0., 0., object->shapeParams(HEIGHT), object->shapeParams(RADIUS));
  
   ors::Shape* s = new ors::Shape();
   for (uint i = 0; i < 4; ++i) s->size[i] = size(i);
   for (uint i = 0; i < 3; ++i) s->color[i] = .3;
-  s->type = ors::cylinderST;
-  s->body = &cyl;
+  s->type = object->shapeType;
+  s->body = &body;
   s->name = "pointcloud_shape";
   
-  cyl.shapes.append(s);
-  cyl.X = t; 
-}
-
-void createSphere(ors::Body& cyl, const arr &pos, const double radius) {
-  ors::Transformation t;
-
-  for (uint i = 0; i < 3; ++i) t.pos(i) = pos(i);
-  
-  arr size = ARR(0.1, 1, 1, radius);
- 
-  ors::Shape* s = new ors::Shape();
-  for (uint i = 0; i < 4; ++i) s->size[i] = size(i);
-  for (uint i = 0; i < 3; ++i) s->color[i] = .3;
-  s->type = ors::sphereST;
-  s->body = &cyl;
-  s->name = "pointcloud_shape";
-  
-  cyl.shapes.append(s);
-  cyl.X = t; 
-    
+  body.shapes.append(s);
+  body.X = t; 
 }
 
 void ObjectTransformator::step() {
@@ -458,69 +425,13 @@ void ObjectTransformator::step() {
   kinect_objects->readAccess(this);
   for(int i=0;i<kinect_objects->objects.N;i++){
     //add new body  
+    ors::Body *b = new ors::Body();
     MT::String name;
     name << "pointcloud_object" << i;
-    ors::Body *b = new ors::Body();
-    if(kinect_objects->objects(i)->values.size() == 7) {
-      arr pos;
-      arr direction;
-      pos.resize(4);
-      direction.resize(4);
-      
-      pos(0) = kinect_objects->objects(i)->values[0];
-      pos(1) = kinect_objects->objects(i)->values[1];
-      pos(2) = kinect_objects->objects(i)->values[2];
-      pos(3) = 1;
+    b->name = name;
 
-      direction(0) = kinect_objects->objects(i)->values[3];
-      direction(1) = kinect_objects->objects(i)->values[4];
-      direction(2) = kinect_objects->objects(i)->values[5];
-      direction(3) = 1;
-
-      direction = transformation * direction;
-      pos = transformation * pos;
-
-      arr rad = ARR(kinect_objects->objects(i)->values[6], 0, 0, 1);
-      rad = (transformation * rad); 
-      rad = rad * (1./rad(3));
-      double radius = norm(rad.sub(0,2));
-
-      createCylinder(*b, pos, direction, radius);  
-      b->name = name.p;
-      geo().ors.bodies.append(b);
-      int ibody = geo().ors.bodies.N - 1;
-      int i; ors::Shape *s;
-      for_list(i, s, b->shapes) {
-        s->ibody = ibody;
-        s->index = geo().ors.shapes.N;
-        geo().ors.shapes.append(s);
-      }
-    }
-    else if(kinect_objects->objects(i)->values.size() == 4) {
-      arr pos;
-      pos.resize(4);
-
-      pos(0) = kinect_objects->objects(i)->values[0];
-      pos(1) = kinect_objects->objects(i)->values[1];
-      pos(2) = kinect_objects->objects(i)->values[2];
-      pos(3) = 1;
-
-      arr rad = ARR(kinect_objects->objects(i)->values[3], 0, 0, 1);
-      rad = (transformation * rad); 
-      rad = rad * (1./rad(3));
-      double radius = norm(rad.sub(0,2));
-
-      createSphere(*b, pos, radius);  
-      b->name = name.p;
-      geo().ors.bodies.append(b);
-      int ibody = geo().ors.bodies.N - 1;
-      int i; ors::Shape *s;
-      for_list(i, s, b->shapes) {
-        s->ibody = ibody;
-        s->index = geo().ors.shapes.N;
-        geo().ors.shapes.append(s);
-      }
-    }
+    createOrsObject(*b, kinect_objects->objects(i), transformation );  
+    geo().ors.addObject(b);
   }
   kinect_objects->deAccess(this);
   geo().ors.calcBodyFramesFromJoints();

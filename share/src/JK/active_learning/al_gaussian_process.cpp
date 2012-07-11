@@ -4,8 +4,13 @@
 #include <cmath>
 
 #include <MT/gaussianProcess.h>
+#include <MT/array.h>
 #include <JK/utils/util.h>
 #include <JK/utils/sampler.h>
+
+#include <biros/logging.h>
+
+SET_LOG(algp, DEBUG);
 
 struct sGaussianProcessAL {
   Sampler<MT::Array<arr> >* sampler;
@@ -16,6 +21,7 @@ struct sGaussianProcessAL {
 };
 
 void makeFeatures(arr& Z, const arr& X){
+
   //uint n=X.d0, d=X.d1;
   //Z.resize(n, 1 + d + d*(d+1)/2  + d*(d+1)*(d+2)/6);
   //uint i, j, k, l, m;
@@ -41,7 +47,11 @@ class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
     GaussianProcessEvaluator(GaussianProcess& gp): gp(gp){};
 };
 
+
 double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
+  if (MT::getParameter<bool>("random", false)) {
+    return 0.;
+  }
   arr d, f;
   flatten(d, sample);
   makeFeatures(f, d);
@@ -56,8 +66,9 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
   //JK_DEBUG(y);
   //
 
-  return -100*abs(y) - 1/norm(grad);
-  //return 1; // random
+  //DEBUG_VAR(algp, -10*fabs(y));
+  return -10*fabs(y) + norm(grad)*sig;
+  //return 1a // random
 }
 
 
@@ -65,7 +76,7 @@ GaussianProcessAL::GaussianProcessAL(Sampler<MT::Array<arr> >* sampler) :
   s(new sGaussianProcessAL(sampler)) {
   s->p = new GaussKernelParams();
   s->p->obsVar = 10e-6;
-  s->p->widthVar = 0.5;
+  s->p->widthVar = 0.01;
   s->p->priorVar = 0.1;
 	//s->gp.mu = -1;
 
@@ -96,7 +107,6 @@ int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
 	flatten(d, sample);
   makeFeatures(f, d);
 	
-	JK_DEBUG(sample);
    double y, sig;
    s->gp.evaluate(f[0], y, sig);
 
@@ -107,9 +117,6 @@ int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
    //JK_DEBUG(y);
    //
 
-   JK_DEBUG(y);
-	 JK_DEBUG(norm(grad));
-	 JK_DEBUG(sig);// - (sig-0.005)*(sig-0.005); // active
   return 1;
 }
 

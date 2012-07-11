@@ -34,8 +34,10 @@ void Gui::open() {}
 
 void Gui::step() {
   guiData->readAccess(this);
-  if(guiData->sample)
+  if(guiData->sample) {
     relational::generateOrsFromSample(s->ors, *guiData->sample);
+    s->ors.calcBodyFramesFromJoints();
+  }
   guiData->deAccess(this);
   s->gl.timedupdate(0.01);
 }

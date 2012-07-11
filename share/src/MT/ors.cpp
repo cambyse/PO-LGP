@@ -4332,6 +4332,17 @@ double ors::Graph::getEnergy() const {
   return E;
 }
 
+void ors::Graph::addObject(ors::Body *b) {
+  bodies.append(b);
+  int ibody = bodies.N - 1;
+  int i; ors::Shape *s;
+  for_list(i, s, b->shapes) {
+    s->ibody = ibody;
+    s->index = shapes.N;
+    shapes.append(s);
+  }
+}
+
 // ------------------ end slGraph ---------------------
 
 
