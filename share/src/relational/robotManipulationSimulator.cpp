@@ -1840,29 +1840,38 @@ void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
 }
 
 void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
-  //for (int i = ors.bodies.N - 1; i >= 0; --i) {
-    //if (ors.bodies(i)->name.p[0] == 'o') {
-      //ors.bodies.remove(i);  
-    //}
-  //}
+  for (int i = ors.bodies.N - 1; i >= 0; --i) {
+    if (strncmp(ors.bodies(i)->name.p, "cylinder", 8)==0) {
+      ors::Body* b = ors.bodies(i);
+      ors.bodies.remove(i);  
+      delete b;
+    }
+  }
+  for (int i = ors.shapes.N - 1; i >= 0; --i) {
+    if (ors.shapes(i)->name.p && strncmp(ors.shapes(i)->name.p, "cylinder", 8)==0) {
+      ors::Shape* s = ors.shapes(i);
+      ors.shapes.remove(i);  
+      delete s;
+    }
+  }
   for (uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
-		MT::String name;
-		name << "o7" << i;
-		cout << name << endl;
-    body->name = name;
-    ors.bodies.append(body);
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.)); 
+    ors.addObject(body);
   }
 }
 
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
+  arr center3d = ARR(10., 10.);
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+    arr old_center = center3d;
+    while(norm(old_center.sub(0,1)-center3d.sub(0,1)) < 0.02) {
+       center3d = ARR(0., -.8) + randn(2,1) * 0.3; 
+    }
 
     int t = rand() % 100;
-    double blocksize = 0.08;// + (rand() % 100) / 100000.;
+    double blocksize = 0.108;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);
@@ -1873,7 +1882,7 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
     while (t < 50 && i < numOfBlocks-1) {
       i++;
       center3d = center3d + randn(3,1) * 0.02;
-      double blocksize = 0.08;// + (rand() % 100) / 1000.;
+      double blocksize = 0.108;// + (rand() % 100) / 1000.;
       center3d(2) = 0.5*blocksize + towersize;
       towersize += blocksize;
 
@@ -1902,6 +1911,10 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, co
   for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
   s->body = &cyl;
   
+  const char* name = "cylinder";
+  s->name = name;
+
+  cyl.name = name;
   cyl.shapes.append(s);
   cyl.X = t; 
 }
