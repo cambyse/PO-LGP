@@ -1,5 +1,9 @@
 #include "control.h"
 
+void b::dump(){
+  birosInfo.dump();
+}
+
 ViewInfoL b::getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType){
   uint i;
   ViewInfo *vi;

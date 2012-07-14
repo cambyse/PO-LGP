@@ -1,5 +1,6 @@
-#include <biros/biros.h>
-#include <biros/biros_internal.h>
+#include "biros.h"
+#include "biros_internal.h"
+#include "biros_views.h"
 //#include "biros_logger.h"
 //#include "biros_threadless.h"
 
@@ -15,7 +16,7 @@
 #include <MT/util.h>
 #include <MT/array.h>
 
-#define MUTEX_DUMP(x) x
+#define MUTEX_DUMP(x) //x
 
 //===========================================================================
 //
@@ -687,24 +688,31 @@ Process *BirosInfo::getProcessFromPID() {
 
 #define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
 
+void writeInfo(ostream& os, Process& p, bool brief);
+void writeInfo(ostream& os, Variable& v, bool brief);
+void writeInfo(ostream& os, FieldInfo& f, bool brief);
+void writeInfo(ostream& os, Parameter& pa, bool brief);
+void writeInfo(ostream& os, ViewInfo& vi, bool brief);
+
 void BirosInfo::dump() {
   cout <<" +++ VARIABLES +++" <<endl;
   uint i, j;
   Variable *v;
   Process *p;
   Parameter *par;
-  FieldInfo *vi;
+  FieldInfo *f;
+  ViewInfo *vi;
   readAccess(NULL);
   for_list(i, v, variables) {
-    cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
+    cout <<"Variable " <<v->id <<' ' <<v->name <<" lock-state=" <<v->lockState();
     if(v->fields.N) {
       cout <<'{' <<endl;
-      for_list(j, vi, v->fields) {
-        cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
-        vi->writeValue(cout);
+      for_list(j, f, v->fields) {
+        cout <<"   field " <<j <<' ' <<f->name <<' ' <<f->p <<" value=";
+        f->writeValue(cout);
         cout <<endl;
       }
-      cout <<"\n}";
+      cout <<"}\n";
     }
     //<<" {" <<endl;
     cout <<endl;
@@ -712,7 +720,7 @@ void BirosInfo::dump() {
   cout <<endl;
   cout <<" +++ PROCESSES +++" <<endl;
   for_list(i, p, processes) {
-    cout <<"Process " <<p->id <<'_' <<p->name <<" {" <<endl;
+    cout <<"Process " <<p->id <<' ' <<p->name <<" {" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
     for_list(j, v, p->V){
       if(j) cout <<',';
@@ -739,7 +747,7 @@ void BirosInfo::dump() {
   cout <<endl;
   cout <<" +++ PARAMETERS +++" <<endl;
   for_list(i, par, parameters) {
-    cout <<"Parameter " <<par->id <<'_' <<par->name <<" value=";
+    cout <<"Parameter " <<par->id <<' ' <<par->name <<" value=";
     par->writeValue(cout);
     cout <<" accessed by:";
     for_list(j, p, par->dependers) {
@@ -747,6 +755,11 @@ void BirosInfo::dump() {
       cout <<' ' <<(p?p->name:STRING("NULL"));
     }
     cout <<endl;
+  }
+  cout <<" +++ VIEWS +++" <<endl;
+  for_list(i, vi, views) {
+    cout <<"ViewInfo " <<i <<' ' <<vi->name <<' ';
+    writeInfo(cout, *vi, false);
   }
   deAccess(NULL);
 }

@@ -103,8 +103,8 @@ struct View{
   
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
-  virtual void glInit() {} //a generic GL draw routine
-  virtual void glDraw() {} //a generic GL draw routine
+  virtual void glInit(OpenGL*) {} //a generic GL draw routine
+  virtual void glDraw(OpenGL*) {} //a generic GL draw routine
   virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
   virtual void gtkUpdate(); //let the view update the gtk widget
   void gtkNewGl(GtkWidget *container);  //create a gtk widget using the gl routines
@@ -172,6 +172,17 @@ GenericInfoView(Parameter, param, parameterVT);
 
 //===========================================================================
 
+struct ImageView:View{
+  static ViewInfo_typed<ImageView, byteA> staticInfo;
+  
+  ImageView();
+  void glInit(OpenGL*);
+  void glDraw(OpenGL*);
+  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
+};
+
+//===========================================================================
+
 struct RgbView:View{
   static ViewInfo_typed<RgbView, byteA> staticInfo;
   
@@ -188,7 +199,7 @@ struct MeshView:View{
   static ViewInfo_typed<MeshView, ors::Mesh> staticInfo;
   
   MeshView();  
-  void glDraw();
+  void glDraw(OpenGL*);
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
@@ -200,8 +211,8 @@ struct OrsView:View {
   static ViewInfo_typed<OrsView, ors::Graph> staticInfo;
   
   OrsView();
-  void glInit();
-  void glDraw();
+  void glInit(OpenGL*);
+  void glDraw(OpenGL*);
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 

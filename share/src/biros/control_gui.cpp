@@ -98,6 +98,10 @@ void InsideOutGui::open(){
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
   gtk_builder_connect_signals(builder, NULL);
   g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
+  for(uint i=0;i<VIEWBOXES;i++){
+    GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxToggle"<<i).p));
+    g_object_set_data(G_OBJECT(widget), "id", (void*)i);
+  }
   
   //add data
   update();
@@ -434,7 +438,7 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief){
     case ViewInfo::parameterVT:os <<"parameter";  break;
     case ViewInfo::globalVT:   os <<"global";  break;
   }
-  os <<"\napplies_on=" <<vi.appliesOn_sysType;
+  os <<" applies_on=" <<vi.appliesOn_sysType <<endl;
 }
 
 

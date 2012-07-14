@@ -72,6 +72,7 @@
 typedef unsigned char byte;            //!< byte
 typedef unsigned short int uint16;     //!< 2 bytes
 typedef unsigned int uint;             //!< unsigned integer
+typedef const char* charp;
 
 //----- macros to define the standard <<and >>operatos for most my classes:
 #define stdInPipe(type)\

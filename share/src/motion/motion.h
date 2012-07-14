@@ -32,10 +32,10 @@ struct Action:Variable {
   FIELD(uint, frameCount);
   FIELD(ActionPredicate, action);
   FIELD(bool, executed);
-  FIELD(char*, objectRef1);  //arguments to the relational predicates
-  FIELD(char*, objectRef2);
+  FIELD(charp, objectRef1);  //arguments to the relational predicates
+  FIELD(charp, objectRef2);
   
-  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(NULL), objectRef2(NULL) {
+  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(""), objectRef2("") {
     reg_frameCount(); reg_action(); reg_executed(); reg_objectRef1(); reg_objectRef2();
   };
   

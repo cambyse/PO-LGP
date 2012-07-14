@@ -153,7 +153,7 @@ struct Process {
   bool threadIsIdle();                  ///< check if in idle mode
   bool threadIsClosed();                ///< check if closed
   
-  void threadListenTo(Variable *var);
+  void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
   void threadListenTo(const VariableL &signalingVars);
   
   void threadLoop();                    ///< loop, stepping forever

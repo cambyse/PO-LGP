@@ -1,69 +1,37 @@
-#include "variables.h"
-#include "processes.h"
+#include "birosOpencv.h"
 #include <biros/control.h>
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
-  //  ThreadInfoWin win;
-  //win.threadLoopWithBeat(.1);
   
   // Variables
-  RgbImage backgroundI;
-  RgbImage cameraI;
-  RgbImage diffI;
-  GrayImage motionI;
-  GrayImage grayI;
-  GrayImage cannyI;
-  PatchImage patchI;
-  SURFfeatures features;
-  HoughLines houghLines;
+  RgbImage cameraI("camera");
+  RgbImage backgroundI("background");
+  RgbImage diffI("difference");
+  GrayImage motionI("motion");
+  GrayImage grayI("gray");
+  GrayImage cannyI("canny");
+  PatchImage patchI("patches");
+  SURFfeatures features("SURF_features");
+  HoughLines houghLines("hough_lines");
   
   // Processes
-  newCamera(cameraI);
+  Process *cam=newCamera(cameraI);
   newGrayMaker(cameraI, grayI);
-  newMotionFilter(cameraI, motionI);
-  DifferenceFilter differenceFilter;
-  CannyFilter cannyFilter;
-  Patcher patcher;
-  SURFer surfer;
-  HoughLineFilter houghLineFilter;
+  //newMotionFilter(cameraI, motionI);
+  //newDifferenceFilter(cameraI, backgroundI, diffI);
+  newCannyFilter(grayI, cannyI);
+  //newPatcher(cameraI, patchI);
+  newSURFer(grayI, features);
+  newHoughLineFilter(cannyI, houghLines);
   
-  // connect them
-  camera.rgbImage = &cameraI;
-  grayMaker.rgbImage = &cameraI;
-  grayMaker.grayImage = &grayI;
-  motionFilter.rgbImage = &cameraI;
-  motionFilter.grayImage = &motionI;
-  differenceFilter.rgbImage1 = &cameraI;
-  differenceFilter.rgbImage2 = &backgroundI;
-  differenceFilter.diffImage = &diffI;
-  cannyFilter.grayImage = &grayI;
-  cannyFilter.cannyImage = &cannyI;
-  patcher.rgbImage = &cameraI;
-  patcher.patchImage = &patchI;
-  surfer.grayImage = &grayI;
-  surfer.features = &features;
-  houghLineFilter.grayImage = &cannyI;
-  houghLineFilter.houghLines = &houghLines;
   
-  //b::openInsideOut();
-
-  // viewer crap
-  ImageViewer<RgbImage> camView(cameraI);
-  ImageViewer<RgbImage> diffView(diffI);
-  ImageViewer<GrayImage> grayView(grayI), motionView(motionI), cannyView(cannyI);
-  ImageViewer<PatchImage> patchView(patchI);
-  ImageViewer<SURFfeatures> surfView(features);
-  ImageViewer<HoughLines> houghView(houghLines);
+  b::dump();
+  b::openInsideOut();
   
-  // loop all
-  ProcessL P;
-  P.append(LIST<Process>(camera, grayMaker, differenceFilter, motionFilter, cannyFilter, patcher, surfer, houghLineFilter));
-  P.append(LIST<Process>(camView, grayView, diffView, motionView, cannyView, patchView, surfView, houghView));
-  
-  loopWithBeat(P,.01);
+  cam->threadLoop();
   MT::wait(20.);
-  close(P);
+  close(birosInfo.processes);
   
   return 0;
 }

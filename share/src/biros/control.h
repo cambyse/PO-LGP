@@ -27,6 +27,9 @@ namespace b{
   void openInsideOut();
   void updateInsideOut();
 
+  //-- dump everything to console
+  void dump();
+  
   //-- access logs
   AccessEventL getAccessLog();
 

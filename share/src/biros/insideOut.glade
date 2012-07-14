@@ -211,6 +211,7 @@
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
                             <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
+                            <signal name="row-activated" handler="toggle_expand" swapped="no"/>
                             <child>
                               <object class="GtkTreeViewColumn" id="variableTreeColumn1">
                                 <property name="title">Name</property>
@@ -276,9 +277,7 @@
                             <property name="can_focus">True</property>
                             <property name="model">processTreeStore</property>
                             <property name="headers_clickable">False</property>
-                            <property name="reorderable">True</property>
                             <property name="search_column">0</property>
-                            <property name="hover_selection">True</property>
                             <signal name="cursor-changed" handler="on_row_activated" swapped="no"/>
                             <signal name="row-activated" handler="toggle_expand" swapped="no"/>
                             <child>

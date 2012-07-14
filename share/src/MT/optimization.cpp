@@ -826,7 +826,7 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
       x=y;
       fx=fy;
       Rx=Ry;
-      damping /= 5.;
+      damping *= .2;
     } else {
       rejects++;
       if(rejects>=5 && damping>1e3) break; //give up  //&& maxDiff(x,y)<stoppingTolerance

@@ -1,6 +1,6 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
-#include <views/views.h>
+//#include <views/views.h>
 #include <MT/gtk.h>
 #include <biros/control.h>
 
@@ -28,6 +28,8 @@ int main(int argn, char** argv){
   ProcessL P=LIST<Process>(controller, actionToMotionPrimitive);
   //P.append(LIST<Process>(view1, view2, view3));
 
+  b::dump();
+  MT::wait();
   b::openInsideOut();
   
   cout <<"** setting grasp action" <<endl;

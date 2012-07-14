@@ -75,15 +75,6 @@ View *newView(FieldInfo& field){
   return vi;
 }
 
-void dumpViews(){
-  uint i;
-  ViewInfo *v;
-  cout <<" *** Views:" <<endl;
-  for_list(i, v, birosViews){
-    cout
-      <<"View '" <<v->name <<"' applies to fields of type '" <<v->appliesOn_sysType <<"'" <<endl;
-  }
-}
 
 //===========================================================================
 //
@@ -104,7 +95,7 @@ void View::gtkNewText(GtkWidget *container){
 
 void glDrawView(void *classP){
   View *v = (View*) classP;
-  v->glDraw();
+  v->glDraw(v->gl);
 }
 
 void View::gtkNewGl(GtkWidget *container){
@@ -113,7 +104,7 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gtk_widget_set_size_request(gl->s->glArea, 100, 100);
   gl->add(glDrawView, this);
-  glInit();
+  glInit(gl);
   gl->update();
 }
 
@@ -147,11 +138,29 @@ View::~View(){
 
 //===========================================================================
 
+ImageView::ImageView():View(staticInfo){
+}
+
+void ImageView::glInit(OpenGL *gl) {
+  gl->img = ((byteA*) field->p);
+}
+
+void ImageView::glDraw(OpenGL *gl) {
+  gl->img = ((byteA*) field->p);
+}
+
+ViewInfo_typed<ImageView, byteA> ImageView::staticInfo("ImageView", ViewInfo::fieldVT);
+
+
+//===========================================================================
+
 RgbView::RgbView():View(staticInfo){
 }
 
 void RgbView::gtkNew(GtkWidget *container){
   byteA& rgb = *((byteA*) field->p);
+  CHECK(rgb.N==3 && rgb.nd==1,"this is not a 3-vector of RGB values - did you mean to display an image instead?");
+  
   if(!container){
     container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(container), info->name);
@@ -160,7 +169,7 @@ void RgbView::gtkNew(GtkWidget *container){
   }
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
-  
+
   GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
   gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
   //set events...
@@ -186,7 +195,7 @@ ViewInfo_typed<RgbView, byteA> RgbView::staticInfo("RgbView", ViewInfo::fieldVT)
 MeshView::MeshView():View(staticInfo) {
 }
 
-void MeshView::glDraw() {
+void MeshView::glDraw(OpenGL*) {
   glStandardLight(NULL);
   ((ors::Mesh*)field->p)->glDraw();
 }
@@ -198,7 +207,7 @@ ViewInfo_typed<MeshView, ors::Mesh> MeshView::staticInfo("MeshView", ViewInfo::f
 OrsView::OrsView():View(staticInfo) {
 }
 
-void OrsView::glInit() {
+void OrsView::glInit(OpenGL*) {
   gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(10.,-15.,8.);
   gl->camera.focus(0,0,1.);
@@ -206,7 +215,7 @@ void OrsView::glInit() {
   gl->update();
 }
 
-void OrsView::glDraw() {
+void OrsView::glDraw(OpenGL*) {
   ors::Graph *ors = (ors::Graph*) field->p;
   glStandardScene(NULL);
   ors->glDraw();
