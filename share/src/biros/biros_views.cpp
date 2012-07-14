@@ -16,66 +16,6 @@ GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
 #include <MT/opengl_gtk.h>
 
 
-struct sGtkViewWindow{
-  GtkWidget *win;
-  GtkWidget *box;
-};
-
-GtkViewWindow::GtkViewWindow():Process("GtkViewWindow"){
-  s = new sGtkViewWindow;
-  s->win = NULL;
-  s->box = NULL;
-  
-  s->win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(s->win), "big window");
-  gtk_window_set_default_size(GTK_WINDOW(s->win), 100, 100);
-  gtk_widget_show(s->win);
-  
-  s->box = gtk_vbox_new (false, 5);
-  gtk_container_add(GTK_CONTAINER(s->win), s->box);
-}
-
-GtkViewWindow::~GtkViewWindow(){
-  delete s;
-}
-
-void GtkViewWindow::newView(FieldInfo& field){
-  View *v = ::newView(field);
-  v->gtkNew(s->box);
-}
-
-void GtkViewWindow::open(){
-}
-
-void GtkViewWindow::step(){
-  while (gtk_events_pending())  gtk_main_iteration();
-}
-
-void GtkViewWindow::close(){
-}
-
-  
-
-View *newView(FieldInfo& field){
-  uint i;
-  ViewInfo *v;
-  MT::String type(field.sysType);
-  for_list(i,v,birosViews){
-    if(v->appliesOn_sysType == type) break;
-  }
-  if(i==birosViews.N){
-    MT_MSG("No View for field sysType '" <<type <<"' found");
-    return NULL;
-  }
-  cout
-    <<"Creating new view '" <<v->name <<"' for field '" <<field.name
-    <<"' (type '" <<type <<"') of Variable '" <<field.var->name <<"'" <<endl;
-  View *vi = v->newInstance();
-  vi->field = &field;
-  return vi;
-}
-
-
 //===========================================================================
 //
 // View
@@ -124,19 +64,11 @@ View::~View(){
   if(gl) delete gl;
 }
 
+
 //===========================================================================
 //
 // specific views
 //
-
-//explicit instantiation! triggers the creation of the static _info
-// template class BasicFieldView<byte>;
-// template class BasicFieldView<int>;
-// template class BasicFieldView<uint>;
-// template class BasicFieldView<float>;
-// template class BasicFieldView<double>;
-
-//===========================================================================
 
 ImageView::ImageView():View(staticInfo){
 }

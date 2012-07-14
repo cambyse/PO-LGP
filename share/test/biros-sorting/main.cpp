@@ -5,19 +5,19 @@
 #include <biros/control.h>
 #include <gtk/gtk.h>
 
-//standard Variable containing only an integer
+//-- standard Variable containing only an integer
 struct Integer:public Variable {
   FIELD(int, x);
   
   Integer():Variable("IntVar") { reg_x(); x=rnd(100); }
 };
 
-//declaration of a Process
+//-- process creator
 Process *newPairSorter(Integer& a, Integer& b);
 
 
 int main(int argn, char **argv) {
-  uint N=200;
+  uint N=20;
 
   MT::Array<Integer> ints(N);
 
@@ -27,6 +27,7 @@ int main(int argn, char **argv) {
 
   for(uint i=1; i<N; i++) newPairSorter(ints(i-1), ints(i));
 
+  b::dump();
   b::openInsideOut();
   MT::wait(1.);
   

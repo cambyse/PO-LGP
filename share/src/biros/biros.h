@@ -319,24 +319,17 @@ void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
 
+
 //===========================================================================
 //
-// preliminary: supposed to be a 'main window'
+// helpers
 //
 
-struct GtkViewWindow:Process{
-  struct sGtkViewWindow *s;
-  
-  GtkViewWindow();
-  ~GtkViewWindow();
-  
-  void newView(FieldInfo&);
-
-  void open();
-  void step();
-  void close();
-};
-
+void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
+void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
+void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
+void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
+void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
 
 
 #ifdef  MT_IMPLEMENTATION

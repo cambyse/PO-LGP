@@ -9,12 +9,6 @@
 // helpers
 //
 
-void writeInfo(ostream& os, Process& p, bool brief);
-void writeInfo(ostream& os, Variable& v, bool brief);
-void writeInfo(ostream& os, FieldInfo& f, bool brief);
-void writeInfo(ostream& os, Parameter& pa, bool brief);
-void writeInfo(ostream& os, ViewInfo& vi, bool brief);
-
 GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par);
 GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, GtkTreeIter* par);
 GtkTreeIter appendToStore(GtkTreeStore *store, FieldInfo *f, uint id, GtkTreeIter* par);
@@ -369,17 +363,17 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 // implementation of helpers
 //
 
-void writeInfo(ostream& os, Process& p, bool brief){
-  if(brief){
-    os <<p.s->timer.steps <<" [" <<std::setprecision(2) <<p.s->timer.cyclDtMax <<':' <<p.s->timer.busyDtMax <<']';
-  }else{
+void writeInfo(ostream& os, Process& p, bool brief, char nl){
 #define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
-    os <<"tid=" <<p.s->tid
-       <<"\npriority=" <<p.s->threadPriority
-       <<"\nsteps=" <<p.s->timer.steps
-       <<"\ncycleDt=" <<TEXTTIME(p.s->timer.cyclDt)
-       <<"\nbusyDt=" <<TEXTTIME(p.s->timer.busyDt)
-       <<"\nstate=";
+  if(brief){
+    os <<p.s->timer.steps <<" [" <<std::setprecision(2) <<TEXTTIME(p.s->timer.busyDt)<<':' <<TEXTTIME(p.s->timer.cyclDt) <<']';
+  }else{
+    os <<"tid=" <<p.s->tid <<nl
+       <<"priority=" <<p.s->threadPriority <<nl
+       <<"steps=" <<p.s->timer.steps <<nl
+       <<"busyDt=" <<TEXTTIME(p.s->timer.busyDt) <<nl
+       <<"cycleDt=" <<TEXTTIME(p.s->timer.cyclDt) <<nl
+       <<"state=";
     int state=p.stepState();
     if (state>0) os <<state; else switch (state) {
       case tsCLOSE:   os <<"close";  break;
@@ -392,17 +386,17 @@ void writeInfo(ostream& os, Process& p, bool brief){
   }
 }
 
-void writeInfo(ostream& os, Variable& v, bool brief){
+void writeInfo(ostream& os, Variable& v, bool brief, char nl){
   if(brief){
     os <<v.revision;
   }else{
-    os <<"revision=" <<v.revision
-       <<"\ntype=" <<typeid(v).name()
-       <<"\nstate=" <<v.lockState();
+    os <<"revision=" <<v.revision <<nl
+       <<"type=" <<typeid(v).name() <<nl
+       <<"lock-state=" <<v.lockState();
   }
 }
 
-void writeInfo(ostream& os, FieldInfo& f, bool brief){
+void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl){
   if(brief){
     MT::String str;
     f.writeValue(str);
@@ -411,11 +405,11 @@ void writeInfo(ostream& os, FieldInfo& f, bool brief){
   }else{
     os <<"value=";
     f.writeValue(os);
-    os <<"\ntype=" <<f.userType;
+    os <<nl <<"type=" <<f.userType;
   }
 }
 
-void writeInfo(ostream& os, Parameter& pa, bool brief){
+void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
   if(brief){
     MT::String str;
     pa.writeValue(str);
@@ -425,11 +419,11 @@ void writeInfo(ostream& os, Parameter& pa, bool brief){
   }else{
     os <<"value=";
     pa.writeValue(os);
-    os <<"\ntype=" <<pa.typeName();
+    os <<nl <<"type=" <<pa.typeName();
   }
 }
 
-void writeInfo(ostream& os, ViewInfo& vi, bool brief){
+void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
   os <<"type=";
   switch (vi.type) {
     case ViewInfo::fieldVT:    os <<"field";  break;
@@ -438,7 +432,7 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief){
     case ViewInfo::parameterVT:os <<"parameter";  break;
     case ViewInfo::globalVT:   os <<"global";  break;
   }
-  os <<" applies_on=" <<vi.appliesOn_sysType <<endl;
+  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
 }
 
 

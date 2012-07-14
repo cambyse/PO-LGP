@@ -686,14 +686,7 @@ Process *BirosInfo::getProcessFromPID() {
   return p;
 }
 
-#define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
-
-void writeInfo(ostream& os, Process& p, bool brief);
-void writeInfo(ostream& os, Variable& v, bool brief);
-void writeInfo(ostream& os, FieldInfo& f, bool brief);
-void writeInfo(ostream& os, Parameter& pa, bool brief);
-void writeInfo(ostream& os, ViewInfo& vi, bool brief);
-
+//TODO: move this to the b:dump control.h
 void BirosInfo::dump() {
   cout <<" +++ VARIABLES +++" <<endl;
   uint i, j;
@@ -704,66 +697,43 @@ void BirosInfo::dump() {
   ViewInfo *vi;
   readAccess(NULL);
   for_list(i, v, variables) {
-    cout <<"Variable " <<v->id <<' ' <<v->name <<" lock-state=" <<v->lockState();
-    if(v->fields.N) {
-      cout <<'{' <<endl;
-      for_list(j, f, v->fields) {
-        cout <<"   field " <<j <<' ' <<f->name <<' ' <<f->p <<" value=";
-        f->writeValue(cout);
-        cout <<endl;
-      }
-      cout <<"}\n";
+    cout <<"Variable " <<v->id <<' ' <<v->name <<" {\n  ";
+    writeInfo(cout, *v, false, ' ');
+    for_list(j, f, v->fields) {
+      cout <<"\n  Field " <<j <<' ' <<f->name <<' ';
+      writeInfo(cout, *f, false, ' ');
     }
-    //<<" {" <<endl;
-    cout <<endl;
+    cout <<"\n}" <<endl;
   }
-  cout <<endl;
-  cout <<" +++ PROCESSES +++" <<endl;
+  cout <<"\n +++ PROCESSES +++" <<endl;
   for_list(i, p, processes) {
-    cout <<"Process " <<p->id <<' ' <<p->name <<" {" <<endl;
+    cout <<"Process " <<p->id <<' ' <<p->name <<" {\n  ";
+    writeInfo(cout, *p, false, ' ');
+    cout <<"\n}" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
     for_list(j, v, p->V){
       if(j) cout <<',';
       cout <<v->id <<'_' <<v->name;
     }
     cout <<") {" <<endl;*/
-    cout
-      <<" tid=" <<p->s->tid
-      <<" priority=" <<p->s->threadPriority
-      <<" steps=" <<p->s->timer.steps
-      <<" cycleDt=" <<TEXTTIME(p->s->timer.cyclDt)
-      <<" busyDt=" <<TEXTTIME(p->s->timer.busyDt)
-      <<" state=";
-    int state=p->s->threadCondition.state;
-    if(state>0) cout <<state; else switch (state) {
-        case tsCLOSE:   cout <<"close";  break;
-        case tsLOOPING: cout <<"loop";   break;
-        case tsBEATING: cout <<"beat";   break;
-        case tsIDLE:    cout <<"idle";   break;
-        default: cout <<"undefined:";
-      }
-    cout <<"\n}" <<endl;
   }
-  cout <<endl;
-  cout <<" +++ PARAMETERS +++" <<endl;
+  cout <<"\n +++ PARAMETERS +++" <<endl;
   for_list(i, par, parameters) {
-    cout <<"Parameter " <<par->id <<' ' <<par->name <<" value=";
-    par->writeValue(cout);
-    cout <<" accessed by:";
+    cout <<"Parameter " <<par->id <<' ' <<par->name <<" {\n  ";
+    writeInfo(cout, *par, false, ' ');
+    cout <<"\n  accessed by=";
     for_list(j, p, par->dependers) {
       if(j) cout <<',';
       cout <<' ' <<(p?p->name:STRING("NULL"));
     }
-    cout <<endl;
+    cout <<"\n}" <<endl;
   }
-  cout <<" +++ VIEWS +++" <<endl;
+  cout <<"\n +++ VIEWS +++" <<endl;
   for_list(i, vi, views) {
     cout <<"ViewInfo " <<i <<' ' <<vi->name <<' ';
-    writeInfo(cout, *vi, false);
+    writeInfo(cout, *vi, false, ' ');
   }
   deAccess(NULL);
 }
-
-#undef TEXTTIME
 
 

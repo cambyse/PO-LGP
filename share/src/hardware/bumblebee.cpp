@@ -1,3 +1,6 @@
+//TODO: Bumblebee -> sBumblebee
+//  fuse sCamera and Camera to struct Bumblebee:Process
+
 /*  Copyright 2010 Nils Plath
     email: nilsp@cs.tu-berlin.de
 
@@ -25,8 +28,6 @@
 #include <dc1394/dc1394.h>
 #include "pgr_registers.h"
 #include "pgr_stereocam.h"
-
-struct Bumblebee;
 
 //===========================================================================
 //

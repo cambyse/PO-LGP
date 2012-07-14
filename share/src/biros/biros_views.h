@@ -112,31 +112,10 @@ struct View{
 };
 
 
-//helpers, TODO: replaced by control.h stuff
-void dumpViews(); ///< dump info on the list of all available views
-View *newView(FieldInfo& field);
-View *newView(Variable& var);
-
-
-
-//===========================================================================
-//===========================================================================
-//===========================================================================
-//===========================================================================
-//===========================================================================
 //===========================================================================
 //
 // specific views -> perhaps move somewhere else
 //
-
-//-- helpers
-void writeInfo(ostream& os, Process& p, bool brief);
-void writeInfo(ostream& os, Variable& v, bool brief);
-void writeInfo(ostream& os, FieldInfo& f, bool brief);
-void writeInfo(ostream& os, Parameter& pa, bool brief);
-void writeInfo(ostream& os, ViewInfo& vi, bool brief);
-
-//===========================================================================
 
 #define GenericInfoView(_what, _arg, _type) \
 \
@@ -156,19 +135,6 @@ GenericInfoView(FieldInfo, field, fieldVT);
 GenericInfoView(Parameter, param, parameterVT);
 
 #undef GenericInfoView
-
-//===========================================================================
-
-// The generic field view does exactly the same - no need to have a special view for each basic type
-// template<class T>
-// struct BasicFieldView:View{
-//   static ViewInfo_typed<BasicFieldView, T> staticInfo;
-//   BasicFieldView():View(staticInfo) {}
-// 
-//   virtual void write(std::ostream& os) { writeInfo(os, *field, false); } //writing into a stream
-// };
-// 
-// template<class T> ViewInfo_typed<BasicFieldView<T>, T> BasicFieldView<T>::staticInfo("BasicFieldView", ViewInfo::fieldVT);
 
 //===========================================================================
 

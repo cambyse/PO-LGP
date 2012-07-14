@@ -33,20 +33,17 @@ Process* newHoughLineFilter(GrayImage& grayImage, HoughLines& houghLines);
 
 struct RgbImage:Variable {
   FIELD(byteA, rgb);
-  void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=rgb; deAccess(p); }
   RgbImage(charp name=NULL):Variable(name?name:"RgbImage") { reg_rgb(); }
 };
 
 struct GrayImage:Variable {
   FIELD(byteA, gray);
-  void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=gray; deAccess(p); }
   GrayImage(charp name=NULL):Variable(name?name:"GrayImage") { reg_gray(); }
 };
 
 struct HoughLines:Variable {
   std::vector<cv::Vec4i> lines;
   FIELD(byteA, display);
-  void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
   HoughLines(charp name=NULL):Variable(name?name:"HoughLines") { reg_display(); }
 };
 
@@ -56,7 +53,6 @@ struct PatchImage:Variable {
   uintA pch_edges; //patch Delauney edges
   floatA pch_rgb; //patch mean colors
   FIELD(byteA, display);
-  void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
   PatchImage(charp name=NULL):Variable(name?name:"PatchImage") { reg_display(); }
 };
 
@@ -64,7 +60,6 @@ struct SURFfeatures:Variable {
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
   FIELD(byteA, display);
-  void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
   SURFfeatures(charp name):Variable(name?name:"SURFfeatures") { reg_display(); }
 };
 
