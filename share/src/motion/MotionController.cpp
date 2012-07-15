@@ -85,7 +85,7 @@ void MotionController::step() {
 
   MotionPrimitive::MotionMode mode=motionPrimitive->get_mode(this);
   
-  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) {
+  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) { //nothing to do -> stop
     hardwareReference->set_v_reference(zeros, this);
     return;
   }

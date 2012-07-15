@@ -4,7 +4,6 @@
   Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody);
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive);
 
 Process* newActionProgressor(MotionFuture& a){
   return new ActionProgressor(a);
@@ -18,27 +17,21 @@ ActionProgressor::ActionProgressor(MotionFuture& a)
   if(motionPrimitive) threadListenTo(motionPrimitive);
 }
 
-ActionProgressor::~ActionProgressor() {
-}
-
-void ActionProgressor::open(){
-}
-
 void ActionProgressor::step(){
   //TODO: the progressor shouldn't wait itself - it should be triggered listening to the primitive and future
-#if 1
-  if(motionFuture->getTodoFrames(this) == 0) return;
+  
+  if(motionFuture->getTodoFrames(this) <= 1) return; //no future to progress to
   MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
   threadListenTo(motionPrimitive);
   Action *action = motionFuture->getCurrentAction(this);
   
   switch(action->get_action(this)){ //wait, depending on current action
     case Action::grasp: {
-      waitForDoneMotionPrimitive(motionPrimitive);
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
       reattachShape(action->get_objectRef1(this), "m9");
     } break;
     case Action::place: {
-      waitForDoneMotionPrimitive(motionPrimitive);
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
       reattachShape(action->get_objectRef1(this), "OBJECTS");
     } break;
     case Action::closeHand:
@@ -49,19 +42,10 @@ void ActionProgressor::step(){
     default:
       HALT("");
   }
-  
-  if(motionFuture->getTodoFrames(this)==1)
-    motionFuture->set_done(true, this);
-  
-  //wait for somebody outside to append a new action
-  int rev = 0;
-  while(motionFuture->getTodoFrames(this)<=1){
-    rev = motionFuture->waitForRevisionGreaterThan(rev);
-  }
 
   motionFuture->incrementFrame(this);
   
-  //reset the frame0 of the motion primitive!
+  //reset the frame0 of the motion primitive to the real hardware pose! -> triggers the MotionPlanner to refine!
   MotionFuture *f = motionFuture;
   f->writeAccess(this);
   VAR(HardwareReference);
@@ -73,20 +57,7 @@ void ActionProgressor::step(){
   //f->frames(f->currentFrame)->set_converged(true, this);
   f->frames(f->currentFrame+1)->set_converged(false, this);
   f->motions(f->currentFrame)->set_planConverged(false, this);
-  
   f->deAccess(this);
-#endif
-}
-
-void ActionProgressor::close(){
-}
-
-
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive){
-  int rev = 0;
-  while(motionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = motionPrimitive->waitForRevisionGreaterThan(rev);
-  }
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody){

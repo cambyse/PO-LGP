@@ -10,6 +10,8 @@ struct SkinPressure;
 // FeedbackControlTasks
 //
 
+//TODO: feedback controllers must have a stopping condition: when to stop the feedback motion primitive!
+
 struct FeedbackControlTaskAbstraction {
   TaskVariableList TVs;
   bool requiresInit;

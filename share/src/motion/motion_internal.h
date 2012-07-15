@@ -34,10 +34,10 @@ struct ActionProgressor:Process {
   MotionFuture *motionFuture;
   
   ActionProgressor(MotionFuture&);
-  ~ActionProgressor();
-  void open();
+  ~ActionProgressor(){};
+  void open(){};
   void step();
-  void close();
+  void close(){};
 };
 
 

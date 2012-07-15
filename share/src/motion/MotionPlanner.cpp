@@ -230,9 +230,6 @@ void MotionPlanner::step() {
     
   }
   
-  //action->waitForConditionSignal(.01);
-  //... to set task variables
-  
   //FUTURE: collaps all the task variable stuff to a single Phi
 };
 

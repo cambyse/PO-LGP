@@ -30,12 +30,6 @@ void MotionPrimitive::setFeedbackTask(FeedbackControlTaskAbstraction& task, bool
   deAccess(p);
 }
 
-void waitForDoneMotionPrimitive2(MotionPrimitive *motionPrimitive){
-  int rev = 0;
-  while(motionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = motionPrimitive->waitForRevisionGreaterThan(rev);
-  }
-}
 
 void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p){
   
@@ -104,8 +98,13 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   
   deAccess(p);
   
-  if(_action == Action::grasp || _action==Action::place || _action == Action::home || _action == Action::reach)
-    waitForDoneMotionPrimitive2(m);
+  if(_action == Action::grasp || _action==Action::place || _action == Action::home || _action == Action::reach){
+    //wait for done motion primitive
+    int rev = 0;
+    while(m->get_mode(this)!=MotionPrimitive::done){
+      rev = m->waitForRevisionGreaterThan(rev);
+    }
+  }
 
   cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
 
