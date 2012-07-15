@@ -1,10 +1,15 @@
-#include "ActionToMotionPrimitive.h"
+#include "MotionPlanner.h"
 #include "FeedbackControlTasks.h"
+#include "motion_internal.h"
 
 #include <MT/aico.h>
 #include <unistd.h>
 
-struct sActionToMotionPrimitive {
+Process* newMotionPlanner(Action& a, MotionKeyframe& b, MotionKeyframe& c, MotionPrimitive& d){
+  return new MotionPlanner(a,b,c,d);
+}
+
+struct sMotionPlanner {
   enum MotionPlannerAlgo { interpolation=0, AICO_noinit } planningAlgo;
   WorkingCopy<GeometricState> geo;
   soc::SocSystem_Ors sys;
@@ -13,35 +18,36 @@ struct sActionToMotionPrimitive {
   AICO *aico;
 };
 
-ActionToMotionPrimitive::ActionToMotionPrimitive(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPrimitive& p):Process("ActionToMotionPrimitive"),
+MotionPlanner::MotionPlanner(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPrimitive& p):Process("MotionPlanner"),
     action(&a), motionPrimitive(&p){
-  threadListenTo(action);
-  s = new sActionToMotionPrimitive;
+  s = new sMotionPlanner;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
-  s->planningAlgo=sActionToMotionPrimitive::AICO_noinit;
+  s->planningAlgo=sMotionPlanner::AICO_noinit;
   s->aico=NULL;
   motionPrimitive->writeAccess(this);
   motionPrimitive->frame0 = &f0;
   motionPrimitive->frame1 = &f1;
   motionPrimitive->deAccess(this);
+  threadListenTo(action);
+  threadListenTo(&f0);
 }
 
-ActionToMotionPrimitive::~ActionToMotionPrimitive() {
+MotionPlanner::~MotionPlanner() {
   delete s;
 }
 
-void ActionToMotionPrimitive::open() {
-  s->verbose = birosInfo.getParameter<uint>("ActionToMotionPrimitive_verbose", this);
-  arr W = birosInfo.getParameter<arr>("ActionToMotionPrimitive_W", this);
-  uint T = birosInfo.getParameter<uint>("ActionToMotionPrimitive_TrajectoryLength", this);
-  double duration = birosInfo.getParameter<double>("ActionToMotionPrimitive_TrajectoryDuration", this);
+void MotionPlanner::open() {
+  s->verbose = birosInfo.getParameter<uint>("MotionPlanner_verbose", this);
+  arr W = birosInfo.getParameter<arr>("MotionPlanner_W", this);
+  uint T = birosInfo.getParameter<uint>("MotionPlanner_TrajectoryLength", this);
+  double duration = birosInfo.getParameter<double>("MotionPlanner_TrajectoryDuration", this);
   
   //clone the geometric state
   s->geo.pull();
   
   if (s->verbose) {
-    s->gl = new OpenGL("ActionToMotionPrimitive");
+    s->gl = new OpenGL("MotionPlanner");
     s->gl->add(glStandardScene);
     s->gl->add(ors::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
@@ -55,10 +61,10 @@ void ActionToMotionPrimitive::open() {
   //TODO: Wrate and Hrate are being pulled from MT.cfg WITHIN initBasics - that's not good
 }
 
-void ActionToMotionPrimitive::close() {
+void MotionPlanner::close() {
 }
 
-void ActionToMotionPrimitive::step() {
+void MotionPlanner::step() {
   s->geo.pull();
   
   CHECK(motionPrimitive,"");
@@ -143,18 +149,16 @@ void ActionToMotionPrimitive::step() {
     }else{
       frame1->get_x_estimate(xT, this);
     }
+    
     //-- optimize the plan
-    //arr x0 = frame0->get_x_estimate(this);
-    //arr xT = frame1->get_x_estimate(this);
     uint T = s->sys.nTime();
     double tau = s->sys.getDuration()/double(T);
-  
     arr q;
     switch (s->planningAlgo) {
-      case sActionToMotionPrimitive::interpolation: {
+      case sMotionPlanner::interpolation: {
 	interpolate_trajectory(q,x0,xT,T);
       } break;
-      case sActionToMotionPrimitive::AICO_noinit: {
+      case sMotionPlanner::AICO_noinit: {
           //enforce zero velocity start/end vel
           if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
           if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
@@ -171,7 +175,7 @@ void ActionToMotionPrimitive::step() {
 	    s->aico->prepare_for_changed_task();
           }
           s->aico->iterate_to_convergence();
-          cout << s->aico->cost() << endl;
+          //cout << s->aico->cost() << endl;
           motionPrimitive->writeAccess(this);
           motionPrimitive->cost = s->aico->cost();
           motionPrimitive->deAccess(this);
@@ -183,11 +187,7 @@ void ActionToMotionPrimitive::step() {
       HALT("no mode set!");
     }
     
-    if (actionSymbol==Action::place) {
-      cout <<"PLAN:\n" <<q[0] <<'\n' <<q[1] <<'\n' <<q[q.d0-1] <<endl;
-    }
-    
-    //-- set the motion primitive -- for the controller to go
+    //-- output the motion primitive -- for the controller to go
     motionPrimitive->writeAccess(this);
     motionPrimitive->q_plan = q;
     motionPrimitive->tau = tau;

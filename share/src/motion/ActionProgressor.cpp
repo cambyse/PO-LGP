@@ -1,4 +1,4 @@
-#include "motion.h"
+#include "motion_internal.h"
 
 #define VAR(Type) \
   Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
@@ -6,29 +6,33 @@
 void reattachShape(const char* objShape, const char* toBody);
 void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive);
 
-struct sActionProgressor {
-  MotionFuture *motionFuture;
-};
+Process* newActionProgressor(MotionFuture& a){
+  return new ActionProgressor(a);
+}
 
-ActionProgressor::ActionProgressor():Process("ActionProgressor") {
-  s = new sActionProgressor();
-  birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+ActionProgressor::ActionProgressor(MotionFuture& a)
+:Process("ActionProgressor"), motionFuture(&a) {
+  if(!motionFuture) birosInfo.getVariable(motionFuture, "MotionFuture", this);
+  threadListenTo(motionFuture);
+  MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
+  if(motionPrimitive) threadListenTo(motionPrimitive);
 }
 
 ActionProgressor::~ActionProgressor() {
-  delete s;
 }
 
 void ActionProgressor::open(){
 }
 
 void ActionProgressor::step(){
+  //TODO: the progressor shouldn't wait itself - it should be triggered listening to the primitive and future
 #if 1
-  if(s->motionFuture->getTodoFrames(this) == 0) return;
-  MotionPrimitive *motionPrimitive = s->motionFuture->getCurrentMotionPrimitive(this);
-  Action *action = s->motionFuture->getCurrentAction(this);
+  if(motionFuture->getTodoFrames(this) == 0) return;
+  MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
+  threadListenTo(motionPrimitive);
+  Action *action = motionFuture->getCurrentAction(this);
   
-  switch(action->get_action(this)){
+  switch(action->get_action(this)){ //wait, depending on current action
     case Action::grasp: {
       waitForDoneMotionPrimitive(motionPrimitive);
       reattachShape(action->get_objectRef1(this), "m9");
@@ -46,19 +50,19 @@ void ActionProgressor::step(){
       HALT("");
   }
   
-  if(s->motionFuture->getTodoFrames(this)==1)
-    s->motionFuture->set_done(true, this);
+  if(motionFuture->getTodoFrames(this)==1)
+    motionFuture->set_done(true, this);
   
   //wait for somebody outside to append a new action
   int rev = 0;
-  while(s->motionFuture->getTodoFrames(this)<=1){
-    rev = s->motionFuture->waitForRevisionGreaterThan(rev);
+  while(motionFuture->getTodoFrames(this)<=1){
+    rev = motionFuture->waitForRevisionGreaterThan(rev);
   }
 
-  s->motionFuture->incrementFrame(this);
+  motionFuture->incrementFrame(this);
   
   //reset the frame0 of the motion primitive!
-  MotionFuture *f = s->motionFuture;
+  MotionFuture *f = motionFuture;
   f->writeAccess(this);
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(this);

@@ -9,7 +9,7 @@
 struct SkinPressure;
 struct JoystickState;
 struct FeedbackControlTaskAbstraction;
-struct ActionToMotionPrimitive;
+struct MotionPlanner;
 
 //===========================================================================
 //
@@ -129,7 +129,7 @@ struct MotionFuture:Variable {
   FIELD(MT::Array<Action*>, actions)
   FIELD(MT::Array<MotionPrimitive*>, motions);
   FIELD(MT::Array<MotionKeyframe*>, frames);
-  FIELD(MT::Array<ActionToMotionPrimitive*>, planners);
+  FIELD(MT::Array<MotionPlanner*>, planners);
   
   MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {
     reg_currentFrame(); reg_actions(); reg_motions(); reg_frames(); reg_planners();
@@ -138,7 +138,7 @@ struct MotionFuture:Variable {
   void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
   void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
   uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
-  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
+  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ if(!getTodoFrames(p)) return NULL; readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
   Action *getCurrentAction(Process *p){ readAccess(p); Action *a=actions(currentFrame); deAccess(p); return a; }
 };
 
@@ -148,23 +148,14 @@ struct MotionFuture:Variable {
 // Processes
 //
 
-PROCESS(Controller)
+//either MotionFuture or MotionPrimitive must be set, one can be zero;
+Process* newMotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
 
-PROCESS(ActionProgressor)
+Process* newMotionPlanner(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
 
-struct ActionToMotionPrimitive:Process {
-  struct sActionToMotionPrimitive *s;
-  
-  //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
-  Action *action;
-  MotionPrimitive *motionPrimitive;
-  
-  ActionToMotionPrimitive(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
-  ~ActionToMotionPrimitive();
-  void open();
-  void step();
-  void close();
-};
+Process* newActionProgressor(MotionFuture&);
+
+
 
 
 //===========================================================================
@@ -174,106 +165,14 @@ struct ActionToMotionPrimitive:Process {
 
 struct PoseView:View{
   WorkingCopy<GeometricState> geo;
-  static ViewInfo_typed<PoseView, arr> staticInfo;
-  
+  uint t;
   PoseView();
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
-//===========================================================================
-//
-// Viewer (will be redundant with a more generic GUI)
-//
 
-template<class T>
-struct PoseViewer:Process {
-  T *var;
-  WorkingCopy<GeometricState> geo;
-  OpenGL *gl;
-  
-  PoseViewer(T& v):Process("PoseViewer"), var(&v), gl(NULL) {
-    geo.init("GeometricState", this);
-    threadListenTo(var);
-  }
-  void open() {
-    geo.pull();
-//     geo->writeAccess(this);
-//     ors = geo->ors.newClone();
-//     geo->deAccess(this);
-    gl = new OpenGL(var->name);
-    gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, &geo().ors);
-    gl->camera.setPosition(5, -10, 10);
-    gl->camera.focus(0, 0, 1);
-    gl->camera.upright();
-    gl->update();
-  }
-  void close() {
-    delete gl;
-    gl = NULL;
-  }
-  void step() {
-    geo.pull();
-    uint n=geo().ors.getJointStateDimension();
-    arr q;
-    var->readAccess(this);
-    var->get_poseView(q);
-    var->deAccess(this);
-    if (q.nd==1) {
-      if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
-      if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
-      geo().ors.setJointState(q);
-      geo().ors.calcBodyFramesFromJoints();
-      gl->text.clear() <<"pose view";
-      gl->update();
-    } else {
-      for (uint t=0; t<q.d0; t++) {
-        geo().ors.setJointState(q[t]);
-        geo().ors.calcBodyFramesFromJoints();
-        gl->text.clear() <<"pose view at step " <<t <<"/" <<q.d0-1;
-        gl->update();
-      }
-    }
-  }
-};
-
-template<class T>
-struct OrsViewer:Process {
-  T *var;
-  WorkingCopy<GeometricState> geo;
-  OpenGL *gl;
-  
-  OrsViewer(T& v):Process("OrsViewer"), var(&v), gl(NULL) {
-    geo.init("GeometricState", this);
-    threadListenTo(var);
-  }
-  void open() {
-    geo.pull();
-//     geo->writeAccess(this);
-//     ors = geo->ors.newClone();
-//     geo->deAccess(this);
-    gl = new OpenGL(var->name);
-    gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, &geo().ors);
-    gl->camera.setPosition(5, -10, 10);
-    gl->camera.focus(0, 0, 1);
-    gl->camera.upright();
-    gl->update();
-  }
-  void close() {
-    delete gl;
-    gl = NULL;
-  }
-  void step() {
-    arr q;
-    geo.pull();
-    gl->text.clear() <<"ors view of Variable " <<var->name;
-    gl->update();
-  }
-};
-
-#include "ActionToMotionPrimitive.h"
+#include "MotionPlanner.h"
 
 #endif

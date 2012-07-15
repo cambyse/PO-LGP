@@ -48,8 +48,37 @@ Views:
 #include "biros.h"
 
 typedef struct _GtkWidget GtkWidget;
-struct View;
+struct ViewInfo;
 struct OpenGL;
+
+
+//===========================================================================
+//
+// A View,
+//
+
+struct View{
+  Process *proc;
+  Variable *var;
+  FieldInfo *field;
+  Parameter *param;
+  
+  GtkWidget *widget;    //which gtk widget has this view created?
+  OpenGL *gl;           //which gl has this view created?
+  ViewInfo *info;
+  
+  View():proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), gl(NULL), info(NULL) {}
+  ~View();
+  
+  virtual void write(std::ostream& os) {} //writing into a stream
+  virtual void read (std::istream& is) {} //reading from a stream
+  virtual void glInit() {} //a generic GL draw routine
+  virtual void glDraw() {} //a generic GL draw routine
+  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
+  virtual void gtkUpdate(); //let the view update the gtk widget
+  void gtkNewGl(GtkWidget *container);  //create a gtk widget using the gl routines
+  void gtkNewText(GtkWidget *container); //create a gtk widget using the text write/read routines
+};
 
 
 //===========================================================================
@@ -79,40 +108,14 @@ struct ViewInfo_typed:ViewInfo{
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     birosInfo.views.append(this);
   }
-  View *newInstance(){ return new ViewT(); }
+  View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };
 
-
-//===========================================================================
-//
-// A View,
-//
-
-struct View{
-  Process *proc;
-  Variable *var;
-  FieldInfo *field;
-  Parameter *param;
-  
-  GtkWidget *widget;    //which gtk widget has this view created?
-  OpenGL *gl;           //which gl has this view created?
-  ViewInfo *info;
-  
-  View(ViewInfo& _info):proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), gl(NULL), info(&_info) {}
-  ~View();
-  
-  virtual void write(std::ostream& os) {} //writing into a stream
-  virtual void read (std::istream& is) {} //reading from a stream
-  virtual void glInit(OpenGL*) {} //a generic GL draw routine
-  virtual void glDraw(OpenGL*) {} //a generic GL draw routine
-  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
-  virtual void gtkUpdate(); //let the view update the gtk widget
-  void gtkNewGl(GtkWidget *container);  //create a gtk widget using the gl routines
-  void gtkNewText(GtkWidget *container); //create a gtk widget using the text write/read routines
-};
+#define REGISTER_VIEW_TYPE(ViewT, AppliesOnT, viewKind)\
+  ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT, ViewInfo:: viewKind);
 
 
-//===========================================================================
+  //===========================================================================
 //
 // specific views -> perhaps move somewhere else
 //
@@ -120,14 +123,13 @@ struct View{
 #define GenericInfoView(_what, _arg, _type) \
 \
 struct Generic##_what##View:View{ \
-  static ViewInfo_typed<Generic##_what##View, _what> staticInfo; \
-  Generic##_what##View():View(staticInfo) {} \
+  Generic##_what##View():View() {} \
 \
   virtual void write(std::ostream& os) { writeInfo(os, *_arg, false); } \
 };
 
-#define GenericInfoView_CPP(_what, _name, _type) \
-ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View::staticInfo(#_name, ViewInfo::_type, "ALL");
+#define GenericInfoView_CPP(_what, _name, viewKind) \
+  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy(#_name, ViewInfo::viewKind, "ALL");
 
 GenericInfoView(Process, proc, processVT);
 GenericInfoView(Variable, var, variableVT);
@@ -136,23 +138,17 @@ GenericInfoView(Parameter, param, parameterVT);
 
 #undef GenericInfoView
 
-//===========================================================================
+// //===========================================================================
 
 struct ImageView:View{
-  static ViewInfo_typed<ImageView, byteA> staticInfo;
-  
-  ImageView();
-  void glInit(OpenGL*);
-  void glDraw(OpenGL*);
+  void glInit();
+  void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
 //===========================================================================
 
 struct RgbView:View{
-  static ViewInfo_typed<RgbView, byteA> staticInfo;
-  
-  RgbView();
   void gtkNew(GtkWidget *container);
   void gtkUpdate();
 };
@@ -162,10 +158,7 @@ struct RgbView:View{
 namespace ors{ struct Mesh; }
 
 struct MeshView:View{
-  static ViewInfo_typed<MeshView, ors::Mesh> staticInfo;
-  
-  MeshView();  
-  void glDraw(OpenGL*);
+  void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
@@ -174,11 +167,8 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
-  static ViewInfo_typed<OrsView, ors::Graph> staticInfo;
-  
-  OrsView();
-  void glInit(OpenGL*);
-  void glDraw(OpenGL*);
+  void glInit();
+  void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 

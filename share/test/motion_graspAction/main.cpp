@@ -13,23 +13,12 @@ int main(int argn, char** argv){
   MotionPrimitive motionPrimitive;
   MotionKeyframe frame0,frame1;
   HardwareReference hardwareReference;
-  SkinPressure skinPressure;
-  JoystickState joystickState;
 
   // processes
-  Controller controller;
-  ActionToMotionPrimitive actionToMotionPrimitive(action, frame0, frame1, motionPrimitive);
+  Process *ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
+  Process *planner = newMotionPlanner(action, frame0, frame1, motionPrimitive);
 
-  // viewers
-  //PoseViewer<MotionPrimitive>   view1(motionPrimitive);
-  //PoseViewer<HardwareReference> view2(hardwareReference);
-  //PoseViewer<MotionKeyframe>    view3(frame1);
-  
-  ProcessL P=LIST<Process>(controller, actionToMotionPrimitive);
-  //P.append(LIST<Process>(view1, view2, view3));
-
-  b::dump();
-  MT::wait();
+//   b::dump();  MT::wait();
   b::openInsideOut();
   
   cout <<"** setting grasp action" <<endl;
@@ -45,18 +34,18 @@ int main(int argn, char** argv){
   uint mode=2;
   switch(mode){
   case 1:{ //serial mode
-    actionToMotionPrimitive.open();
-    actionToMotionPrimitive.step();
+    planner->open();
+    planner->step();
   } break;
   case 2:{ //threaded mode
-    loopWithBeat(P,.01);
+    ctrl->threadLoopWithBeat(.01);
     //step(P);
     //controller.threadLoopWithBeat(.01);
     MT::wait();
   } break;
   }
 
-  close(P);
+  close(birosInfo.processes);
   birosInfo.dump();
   
   cout <<"bye bye" <<endl;

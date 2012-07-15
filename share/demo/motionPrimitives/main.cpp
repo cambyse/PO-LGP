@@ -61,7 +61,7 @@ int main(int argn,char** argv){
   JoystickState joystickState;
   
   // processes
-  Controller controller;
+  MotionController controller;
   ActionProgressor actionProgressor;
   
   // viewers

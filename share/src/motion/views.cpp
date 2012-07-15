@@ -1,8 +1,8 @@
 #include "motion.h"
 
-ViewInfo_typed<PoseView, arr> PoseView::staticInfo("PoseView", ViewInfo::fieldVT);
+REGISTER_VIEW_TYPE(PoseView, arr, fieldVT);
 
-PoseView::PoseView():View(staticInfo) {
+PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 
@@ -15,12 +15,22 @@ void PoseView::glInit() {
 }
 
 void PoseView::glDraw() {
-  arr *q = (arr*)field->p;
-  glStandardScene(NULL);
-  if(q->N){
-    geo().ors.setJointState(*q); //it's using the ors copy to interpret the pose array (field->p)
+  arr q = *(arr*)field->p; //copy!
+  geo.pull();
+  uint n=geo().ors.getJointStateDimension();
+  if(q.nd==1){
+    if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
+    if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
+    geo().ors.setJointState(q); //it's using the ors copy to interpret the pose array (field->p)
     geo().ors.calcBodyFramesFromJoints(); //it's using the ors copy to interpret the pose array (field->p)
   }
+  if(q.nd==2){
+    t++;
+    if(t>=q.d0) t=0;
+    geo().ors.setJointState(q[t]);
+    geo().ors.calcBodyFramesFromJoints();
+  }
+  glStandardScene(NULL);
   geo().ors.glDraw(); //..and draws it
 }
 

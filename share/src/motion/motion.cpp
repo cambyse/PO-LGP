@@ -1,4 +1,5 @@
 #include "motion.h"
+#include "motion_internal.h"
 
 void reattachShape(const char* objShape, const char* toBody);
 
@@ -64,10 +65,10 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   m->set_frameCount(motions.N-1, p);
   
   //create new Processes
-  ActionToMotionPrimitive *planner = planners.append(new ActionToMotionPrimitive(*a, *f0, *f1, *m));
+  MotionPlanner *planner = planners.append(new MotionPlanner(*a, *f0, *f1, *m));
   
-  //loop the process
-  planner -> threadLoopWithBeat(0.01);
+  //start the process
+  planner -> threadStep();
   
   deAccess(p);
 
@@ -80,7 +81,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
     frames.append(new MotionKeyframe);
     actions.append(new Action);
     motions.append(new MotionPrimitive);
-    planners.append(new ActionToMotionPrimitive(*actions(0), *frames(0), *frames(1), *motions(0)));
+    planners.append(new MotionPlanner(*actions(0), *frames(0), *frames(1), *motions(0)));
     planners(0) -> threadLoopWithBeat(0.01);
   }
   
@@ -88,7 +89,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   MotionKeyframe *f0 = frames(0);
   MotionKeyframe *f1 = frames(1);
   MotionPrimitive *m = motions(0);
-  ActionToMotionPrimitive *planner = planners(0);
+  MotionPlanner *planner = planners(0);
   
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(p);

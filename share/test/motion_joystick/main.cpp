@@ -14,7 +14,7 @@ int main(int argn,char** argv){
   JoystickState joystickState;
 
   // processes
-  Controller controller;
+  MotionController controller;
   Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;

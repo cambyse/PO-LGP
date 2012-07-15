@@ -40,11 +40,11 @@ struct JoystickState: public Variable {
 //
 
 //TODO:
-Process* newBumblebee(Image& left, Image& right);
-Process* newJoystick(JoystickState &joy);
-Process* newSchunkArm(HardwareReference &ref);
-Process* newSchunkHand(HardwareReference &ref);
-Process* newSchunkSkin(SkinPressure &skin);
+// Process* newBumblebee(Image& left, Image& right);
+// Process* newJoystick(JoystickState &joy);
+// Process* newSchunkArm(HardwareReference &ref);
+// Process* newSchunkHand(HardwareReference &ref);
+// Process* newSchunkSkin(SkinPressure &skin);
 
 PROCESS(Camera)
 

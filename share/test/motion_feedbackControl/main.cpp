@@ -31,15 +31,10 @@ int main(int argn, char** argv){
   HardwareReference hardwareReference;
 
   // processes
-  Controller controller;
+  Process* ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
 
   b::openInsideOut();
   
-  // viewers
-  //PoseViewer<HardwareReference> view(hardwareReference);
-  
-  ProcessL P=LIST<Process>(controller/*, view*/);
-
   MyTask myTask;
   motionPrimitive.writeAccess(NULL);
   motionPrimitive.mode = MotionPrimitive::feedback;
@@ -49,20 +44,20 @@ int main(int argn, char** argv){
 
   uint mode=MT::getParameter<uint>("mode", 1);
   if(mode==0){ //non-threaded
-    controller.open();
+    ctrl->open();
 //  view.open();
     for(;;){
-      controller.step();
+      ctrl->step();
 //    view.step(); the view is automatially opened as thread and stepsOnListen...
       MT::wait();
     }
   }
   if(mode==1){
-    loopWithBeat(P,.01);
+    ctrl->threadLoopWithBeat(.01);
     MT::wait(30.);
   }
 
-  close(P);
+  close(birosInfo.processes);
   birosInfo.dump();
   
   cout <<"bye bye" <<endl;

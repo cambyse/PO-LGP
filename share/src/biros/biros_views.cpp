@@ -35,7 +35,7 @@ void View::gtkNewText(GtkWidget *container){
 
 void glDrawView(void *classP){
   View *v = (View*) classP;
-  v->glDraw(v->gl);
+  v->glDraw();
 }
 
 void View::gtkNewGl(GtkWidget *container){
@@ -44,7 +44,7 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gtk_widget_set_size_request(gl->s->glArea, 100, 100);
   gl->add(glDrawView, this);
-  glInit(gl);
+  glInit();
   gl->update();
 }
 
@@ -70,24 +70,21 @@ View::~View(){
 // specific views
 //
 
-ImageView::ImageView():View(staticInfo){
-}
+REGISTER_VIEW_TYPE(ImageView, byteA, fieldVT);
 
-void ImageView::glInit(OpenGL *gl) {
+void ImageView::glInit() {
   gl->img = ((byteA*) field->p);
 }
 
-void ImageView::glDraw(OpenGL *gl) {
+void ImageView::glDraw() {
   gl->img = ((byteA*) field->p);
 }
 
-ViewInfo_typed<ImageView, byteA> ImageView::staticInfo("ImageView", ViewInfo::fieldVT);
 
 
 //===========================================================================
 
-RgbView::RgbView():View(staticInfo){
-}
+REGISTER_VIEW_TYPE(RgbView, byteA, fieldVT);
 
 void RgbView::gtkNew(GtkWidget *container){
   byteA& rgb = *((byteA*) field->p);
@@ -118,28 +115,22 @@ void RgbView::gtkUpdate(){
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
 
-ViewInfo_typed<RgbView, byteA> RgbView::staticInfo("RgbView", ViewInfo::fieldVT);
-
-
 
 //===========================================================================
 
-MeshView::MeshView():View(staticInfo) {
-}
+REGISTER_VIEW_TYPE(MeshView, ors::Mesh, fieldVT);
 
-void MeshView::glDraw(OpenGL*) {
+void MeshView::glDraw() {
   glStandardLight(NULL);
   ((ors::Mesh*)field->p)->glDraw();
 }
 
-ViewInfo_typed<MeshView, ors::Mesh> MeshView::staticInfo("MeshView", ViewInfo::fieldVT);
 
 //===========================================================================
 
-OrsView::OrsView():View(staticInfo) {
-}
+REGISTER_VIEW_TYPE(OrsView, ors::Graph, fieldVT);
 
-void OrsView::glInit(OpenGL*) {
+void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(10.,-15.,8.);
   gl->camera.focus(0,0,1.);
@@ -147,12 +138,11 @@ void OrsView::glInit(OpenGL*) {
   gl->update();
 }
 
-void OrsView::glDraw(OpenGL*) {
+void OrsView::glDraw() {
   ors::Graph *ors = (ors::Graph*) field->p;
   glStandardScene(NULL);
   ors->glDraw();
 }
 
-ViewInfo_typed<OrsView, ors::Graph> OrsView::staticInfo("OrsView", ViewInfo::fieldVT);
 
 #endif
