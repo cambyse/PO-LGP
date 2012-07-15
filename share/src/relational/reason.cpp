@@ -59,6 +59,21 @@ bool reason::isGround(const Literal* lit) {
 }
 
 
+bool reason::isGround(const SymbolicState& state) {
+  uint i;
+  FOR1D(state.lits, i) {
+    if (!isGround(state.lits(i)))
+      return false;
+  }
+  return true;
+}
+
+
+bool reason::isGround(const StateTransition& trans) {
+  return isGround(trans.pre)  &&  isGround(trans.action)  &&  isGround(trans.post);
+}
+
+
 bool reason::isPurelyAbstract(const Literal* lit) {
   uint i;
   FOR1D(lit->args, i) {
@@ -70,7 +85,7 @@ bool reason::isPurelyAbstract(const Literal* lit) {
 
 
 void reason::setConstants(uintA& _constants) {
-  ArgumentType* default_type = ArgumentType::get(MT::String("any"), ArgumentType::simple);
+  ArgumentType* default_type = ArgumentType::get(MT::String("any"));
   ArgumentTypeL _constants_types;
   uint i;
   FOR1D(_constants, i) {_constants_types.append(default_type);}
@@ -102,7 +117,7 @@ ArgumentType* reason::getArgumentTypeOfObject(uint object_id) {
     return mem__constants_types(idx);
   }
   else {
-    return ArgumentType::get(MT::String("any"), ArgumentType::simple);
+    return ArgumentType::get(MT::String("any"));
   }
 }
 
@@ -291,6 +306,41 @@ bool reason::derive_count(LitL& lits_derived, CountSymbol& s, const LitL& lits_g
   }
   if (DEBUG>0) {cout<<"derive_count [END]"<<endl;}
   return true; // always holds
+}
+
+
+bool reason::derive_functiondiff(LitL& lits_derived, DifferenceFunction& s, const LitL& lits_given, const uintA& constants) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"derive_functiondiff [START]"<<endl;}
+
+  SubstitutionSet subs;
+  calcSubstitutions(subs, lits_given, s.restrictionLits, false);
+
+  uint i,j;
+  LitL baseSymbolLits;
+  FOR1D(lits_given, i) {
+    if (lits_given(i)->s == s.baseSymbol)
+      baseSymbolLits.append(lits_given(i));
+  }
+  
+  FOR1D_(subs, i) {
+    double val1 = 0;
+    FOR1D(baseSymbolLits, j) {
+      if (baseSymbolLits(j)->args(0) == subs.elem(i)->getSubs(s.baseFunctionLit1->args(0)))
+        val1 = baseSymbolLits(j)->value;
+    }
+    double val2 = 0;
+    FOR1D(baseSymbolLits, j) {
+      if (baseSymbolLits(j)->args(0) == subs.elem(i)->getSubs(s.baseFunctionLit2->args(0)))
+        val2 = baseSymbolLits(j)->value;
+    }
+    double diff = val2-val1;
+    //if (diff < 0) diff = 0;
+    uintA args;
+    args.append(subs.elem(i)->getSubs(0));
+    lits_derived.append(Literal::get(&s, args, diff));
+  }
+  return true;
 }
 
 
@@ -494,6 +544,13 @@ void reason::derive(LitL& lits_derived, const LitL& lits_given, const uintA& con
       CHECK(s!=NULL, "cast failed");
       LitL lits_derived_local;
       derive_reward(lits_derived_local, *s, lits_all, constants);
+      lits_derived.append(lits_derived_local);
+    }
+    else if (symbols(i)->symbol_type == Symbol::function_difference) {
+      DifferenceFunction *s = dynamic_cast<DifferenceFunction*>(symbols(i));
+      CHECK(s!=NULL, "cast failed");
+      LitL lits_derived_local;
+      derive_functiondiff(lits_derived_local, *s, lits_all, constants);
       lits_derived.append(lits_derived_local);
     }
     else
@@ -711,10 +768,9 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
     if (DEBUG>0) {cout<<"Positive"<<endl;}
     bool literalTrue;
     FOR1D(lits_ground, i) {
-      Substitution* sub1 = new Substitution;
-      literalTrue = calcSubstitution(*sub1, lits_ground(i), lit_input__ground_init);
-      if (literalTrue) {subs.append(Substitution::combine(*sub1, *initSub));}
-      delete sub1;
+      Substitution sub1;
+      literalTrue = calcSubstitution(sub1, lits_ground(i), lit_input__ground_init);
+      if (literalTrue) {subs.append(Substitution::combine(sub1, *initSub));}
     }
   }
   else {
@@ -726,13 +782,11 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
       if (DEBUG>0) {cout<<"All quantification"<<endl;}
       bool literalTrue = false;
       uint i;
-      Substitution* sub1;
       Literal* lit_input__ground_init_pos = lit_input__ground_init->getNegated();
       FOR1D(lits_ground, i) {
-        sub1 = new Substitution;
-        if (initSub != NULL) *sub1 = *initSub;
-        literalTrue = calcSubstitution(*sub1, lits_ground(i), lit_input__ground_init_pos);
-        delete sub1;
+        Substitution sub1;
+        if (initSub != NULL) sub1 = *initSub;
+        literalTrue = calcSubstitution(sub1, lits_ground(i), lit_input__ground_init_pos);
         if (literalTrue) break;
       }
       if (lits_ground.N == i) {  // lit_pos cannot be unified

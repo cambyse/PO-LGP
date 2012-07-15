@@ -401,7 +401,9 @@ char *date() { static time_t t; time(&t); return ctime(&t); }
 
 //! wait double time
 void wait(double sec) {
-#ifndef MT_MSVC
+#if defined(MT_Darwin)
+  sleep((int)sec);
+#elif !defined(MT_MSVC)
   timespec ts;
   ts.tv_sec = (long)(floor(sec));
   sec -= (double)ts.tv_sec;

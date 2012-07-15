@@ -63,7 +63,8 @@ class Symbol {
                       max,
                       sum,
                       function_change,
-                      function_reward
+                      function_reward,
+                      function_difference
     };
     SymbolType symbol_type;
     
@@ -243,6 +244,28 @@ class RewardFunction : public Symbol {
     void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
 };
 
+class DifferenceFunction : public Symbol {
+  protected:
+    DifferenceFunction() {
+      symbol_type = function_difference;
+      range_type = integers;
+    }
+
+  public:
+    // -----------------------------------
+    // Essential data-fields
+    Symbol *baseSymbol;
+    Literal *baseFunctionLit1, *baseFunctionLit2;
+    MT::Array< Literal* > restrictionLits;
+
+     void getFreeVars(uintA& freeVars) const;
+    
+    // -----------------------------------
+    // Convenience methods
+    static DifferenceFunction* get(const MT::String& name, uint arity, Symbol* base_symbol, Literal *baseFunctionLit1, Literal *baseFunctionLit2, const MT::Array< Literal* > &restriction_lits);
+    void write(ostream& os) const;
+    void getDefiningSymbols(MT::Array< Symbol* > & symbols, bool only_direct_predecessors = true) const;
+};
 
 
 /************************************************
@@ -271,7 +294,7 @@ class ArgumentType {
     virtual bool operator!=(const ArgumentType& t) const;
     virtual bool subsumes(const ArgumentType& t) const;
     virtual void write(ostream& os = cout) const;
-    static ArgumentType* get(const MT::String& name, ArgumentType_Type type = simple);
+    static ArgumentType* get(const MT::String& name);
     static ArgumentType* read(ifstream& in);
     static void get(ArgumentTypeL& all_argumentTypes);
     

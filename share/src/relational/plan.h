@@ -173,7 +173,8 @@ class Reward {
                       reward_maximize_function,  // try to make function as big as possible
                                                  // --> Advantage: can work on expectations in case of beliefs over states
                       reward_not_these_states, 
-                      reward_one_of_literal_list
+                      reward_one_of_literal_list,
+                      conjunction_of_rewards
     };
     
     Reward();
@@ -232,6 +233,7 @@ class LiteralListReward : public Reward {
 class MaximizeReward : public Reward {
   public:
     Literal* literal_to_be_maximized;
+    double offset;
     
     MaximizeReward(); // --> maximize function
     MaximizeReward(Literal* function_literal); // --> maximize function
@@ -282,6 +284,27 @@ class NotTheseStatesReward : public Reward {
     void write(ostream& out = cout) const;
     void write(const char* filename) const;
 };
+
+
+class RewardConjunction : public Reward {
+  public:
+    MT::Array<Reward*> rewards;
+
+    RewardConjunction() : Reward(conjunction_of_rewards) {}
+    virtual ~RewardConjunction() {}
+
+    void addReward(Reward *reward);
+
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
+
+    void getRewardConstants(uintA& constants, const SymbolicState* s = NULL) const;
+
+    void write(ostream& out = cout) const;
+    void write(const char* filename) const;
+};
+
 
 }
 

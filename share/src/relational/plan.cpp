@@ -758,9 +758,11 @@ void LiteralListReward::write(const char* filename) const {
 
 MaximizeReward::MaximizeReward() : Reward(reward_maximize_function) {
   literal_to_be_maximized = NULL;
+  offset = 0;
 }
 
 MaximizeReward::MaximizeReward(Literal* _function_literal) : Reward(reward_maximize_function) {
+  offset = 0;
   literal_to_be_maximized = _function_literal;
 }
 
@@ -769,7 +771,7 @@ double MaximizeReward::evaluate(const SymbolicState& state) const {
   FOR1D(state.lits, i) {
     if (state.lits(i)->s == literal_to_be_maximized->s
       &&  state.lits(i)->args == literal_to_be_maximized->args) {
-      return state.lits(i)->value;
+      return state.lits(i)->value+offset;
     }
   }
   HALT("failed");
@@ -806,21 +808,21 @@ bool MaximizeReward::possible(const SymbolicState& state) const {
 
 void MaximizeReward::getRewardConstants(uintA& constants, const SymbolicState* s) const {
   constants.clear();
-  NIY;
-//   if (fa->f->type == Function::function_count) {
-//     // Reward constants are those for which predicate instances don't hold yet
-//     LitL lits;
-//     Literal::gets(lits, ((CountFunction*) (fa->f))->countedPred, logicObjectManager::constants);
-//     lits.memMove = true;
-//     uint i;
-//     FOR1D_DOWN(lits, i) {
-//       if (reason::holds(*s, lits(i)))
-//         lits.remove(i);
-//     }
-//     FOR1D(lits, i) {
-//       constants.setAppend(lits(i)->args);
-//     }
-//   }
+   if (literal_to_be_maximized->s->symbol_type == Symbol::count) {
+     // Reward constants are those for which predicate instances don't hold yet
+     LitL lits;
+     Literal::getLiterals(lits, ((CountSymbol*)literal_to_be_maximized->s)->base_literal->s, reason::getConstants(), 1.0);
+     lits.memMove = true;
+     uint i;
+     FOR1D_DOWN(lits, i) {
+       if (reason::holds(s->lits, lits(i)))
+         lits.remove(i);
+     }
+     FOR1D(lits, i) {
+       constants.setAppend(lits(i)->args);
+     }
+   }
+   else NIY;
 //   else if (fa->f->type == Function::function_reward) {
 //     RewardFunction* rf = (RewardFunction*) fa->f;
 //     reason::getConstants(rf->grounded_pis, constants);
@@ -1016,12 +1018,52 @@ void NotTheseStatesReward::write(const char* filename) const {
 
 
 
+/************************************************
+ * 
+ *     RewardConjunction
+ * 
+ ************************************************/
 
+void RewardConjunction::addReward(Reward *reward) {
+  rewards.append(reward);
+}
 
+double RewardConjunction::evaluate(const SymbolicState& s) const {
+  double product = 1;
+  for (uint i = 0; i < rewards.N; i++) {
+    product *= rewards(i)->evaluate(s);
+  }
+  return product;
+}
 
+bool RewardConjunction::satisfied(const SymbolicState& s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    if (!rewards(i)->satisfied(s)) return false;
+  }
+  return true;
+}
+bool RewardConjunction::possible(const SymbolicState& s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    if (!rewards(i)->possible(s)) return false;
+  }
+  return true;
+}
 
+void RewardConjunction::getRewardConstants(uintA& constants, const SymbolicState* s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    uintA rewardConstants;
+    rewards(i)->getRewardConstants(rewardConstants, s);
+    constants.setAppend(rewardConstants);
+  }
+}
 
-
+void RewardConjunction::write(ostream& out) const {
+  cout << "Conjunction of rewards:" << endl;
+  for (uint i = 0; i < rewards.N; i++)
+    rewards(i)->write(out);
+}
+void RewardConjunction::write(const char* filename) const {
+}
 
 
 

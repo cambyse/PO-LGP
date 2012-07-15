@@ -44,6 +44,8 @@ namespace reason {
   
   bool isConstant(uint id);
   bool isGround(const Literal* lit);
+  bool isGround(const SymbolicState& state);
+  bool isGround(const StateTransition& trans);
   bool isPurelyAbstract(const Literal* lit);
   
   void setConstants(uintA& constants);
@@ -65,6 +67,7 @@ namespace reason {
   bool derive_max(LitL& lits_derived, MaxFunction& s, const LitL& lits_given, const uintA& constants);
   bool derive_sum(LitL& lits_derived, SumFunction& s, const LitL& lits_given, const uintA& constants);
   bool derive_reward(LitL& lits_derived, RewardFunction& s, const LitL& lits_given, const uintA& constants);
+  bool derive_functiondiff(LitL& lits_derived, DifferenceFunction& s, const LitL& lits_given, const uintA& constants);
     
   // If constants are empty, then constants are calculated from literals.
   void derive(LitL& lits_derived, const LitL& lits_given, const uintA& constants);

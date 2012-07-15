@@ -125,7 +125,8 @@ struct RuleSetContainer {
   void getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const;
   void getPartitionsForAction(MT::Array< uintA >& partititions, Literal* action) const;
   
-  void write(ostream& out = std::cout, bool only_action = false) const;
+  void write(ostream& out = std::cout, bool only_action = false, bool additional_experience_info = true) const;
+  void write(const char* filename, bool only_action = false, bool additional_experience_info = true) const;
   void write_experiencesWithRules(ostream& os = std::cout) const;
   void write_rulesWithExperiences(ostream& os = std::cout) const;
   
@@ -205,9 +206,10 @@ namespace learn {
 #define SO_WEIGHT__ADD_REFS 3.0
 
 // constant bounds
-#define SO_WEIGHT__SPLIT_ON_EQS 2.0
-#define SO_WEIGHT__CHANGE_RANGE 3.0
-#define SO_WEIGHT__MAKE_INTVL 3.0
+#define SO_WEIGHT__SPLIT_ON_EQS 1.0
+#define SO_WEIGHT__SPLIT_ON_INEQUALITIES 0.5
+#define SO_WEIGHT__CHANGE_RANGE 1.0
+#define SO_WEIGHT__MAKE_INTVL 1.0
 // dynamic bounds
 #define SO_WEIGHT__COMPARE_FUNCTIONVALUES 0.0
 #define SO_WEIGHT__SPLIT_ON_COMPARE_FUNCTIONVALUES 0.0
@@ -216,6 +218,8 @@ namespace learn {
 
 #define SO_WEIGHT__ABSTRACT_EQS 2.0
 #define SO_WEIGHT__ADD_ABSTRACT_EQS 3.0
+#define SO_WEIGHT__ADD_REFS_AND_ADD_LITS 0//0.5
+#define SO_WEIGHT__ADD_REFS_INDIRECT 0//0.1
 
 
 
@@ -316,6 +320,7 @@ class SplitOnLiterals : public SearchOperator {
   uint nextRule;
   uint nextLiteral;
   LitL absentLiterals;
+  uint newVar;
   public:
     SplitOnLiterals();
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
@@ -383,6 +388,36 @@ class AddAbstractEquality : public SearchOperator {
       void reset();
 };
 
+class AddIndirectReferences: public SearchOperator {
+  uint nextRule;
+  uint nextRefLiteral;
+  LitL restrictionRefLiterals;
+
+  uint newVar;
+  uint nextNewVarLit;
+  LitL restrictionNewVarLiterals;
+
+  public:
+    AddIndirectReferences();
+    void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
+    void reset();
+};
+
+class AddReferencesAndAddLits: public SearchOperator {
+  uint nextRule;
+  uint nextRefLiteral;
+  LitL restrictionRefLiterals;
+
+  uint newVar;
+  uint nextNewVarLit;
+  LitL restrictionNewVarLiterals;
+
+  public:
+    AddReferencesAndAddLits();
+    void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
+    void reset();
+};
+
 // for each variable v for each function f for which a comparison predicate with v is not
 // used yet, we introduce equality literals for all existing values for v.
 class SplitOnEqualities : public SearchOperator {
@@ -391,8 +426,6 @@ class SplitOnEqualities : public SearchOperator {
   uint nextFunc;
   uintA vars;
   SymL usedFunctions;
-
-  bool tryRelativeTransition;
 
   //cached used function values accross all experiences
   std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
@@ -405,6 +438,24 @@ class SplitOnEqualities : public SearchOperator {
       void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
+class SplitOnInequalities : public SearchOperator {
+  uint nextRule;
+  uint nextVar;
+  uint nextFunc;
+  uint nextValue;
+  uintA vars;
+  SymL usedFunctions;
+
+  //cached used function values accross all experiences
+  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+  
+  public:
+      SplitOnInequalities();
+      void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
+      void reset();
+
+      void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
+};
 
 // changes ranges of all comp preds
 class ChangeRange : public SearchOperator {
