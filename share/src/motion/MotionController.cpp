@@ -31,7 +31,7 @@ struct sMotionController {
 };
 
 MotionController::MotionController(HardwareReference* a, MotionPrimitive* b, MotionFuture* c)
-:Process("MotionMotionController"), hardwareReference(a), motionPrimitive(b), motionFuture(c) {
+:Process("MotionController"), hardwareReference(a), motionPrimitive(b), motionFuture(c) {
   s = new sMotionController();
   if(!hardwareReference) birosInfo.getVariable(hardwareReference, "HardwareReference", this);
   if(!motionPrimitive)   birosInfo.getVariable(motionPrimitive, "MotionPrimitive", this);
@@ -78,7 +78,10 @@ void MotionController::step() {
   }
   
   if (!motionPrimitive){ //no motion primitive is set! don't do anything
-    hardwareReference->set_v_reference(zeros, this);
+    hardwareReference->writeAccess(this);
+    hardwareReference->v_reference.setZero();
+    hardwareReference->motionPrimitiveRelativeTime = 0.;
+    hardwareReference->deAccess(this);
     MT_MSG("no motion primitive set -> controller stays put");
     return;
   }
@@ -86,7 +89,10 @@ void MotionController::step() {
   MotionPrimitive::MotionMode mode=motionPrimitive->get_mode(this);
   
   if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) { //nothing to do -> stop
-    hardwareReference->set_v_reference(zeros, this);
+    hardwareReference->writeAccess(this);
+    hardwareReference->v_reference.setZero();
+    hardwareReference->motionPrimitiveRelativeTime = 0.;
+    hardwareReference->deAccess(this);
     return;
   }
   
@@ -95,12 +101,15 @@ void MotionController::step() {
     
     //-- check if converged
     if (motionPrimitive->get_planConverged(this)==false) {
-      hardwareReference->set_v_reference(zeros, this);
+      hardwareReference->writeAccess(this);
+      hardwareReference->v_reference.setZero();
+      hardwareReference->motionPrimitiveRelativeTime = 0.;
+      hardwareReference->deAccess(this);
       return;
     }
     
     //-- first compute the interpolated
-    double realTime = motionPrimitive->get_relativeRealTimeOfController(this);
+    double realTime = hardwareReference->get_motionPrimitiveRelativeTime(this);
     arr q_plan = motionPrimitive->get_q_plan(this);
     double plan_tau = motionPrimitive->get_tau(this);
     
@@ -117,19 +126,21 @@ void MotionController::step() {
       q_reference = q_plan[q_plan.d0-1];
     }
     
-    //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
-    motionPrimitive->set_relativeRealTimeOfController(realTime, this);
     
     if (timeStep>=q_plan.d0-1) {
       motionPrimitive->set_mode(MotionPrimitive::done, this);
-      motionPrimitive->set_relativeRealTimeOfController(0., this);
+      hardwareReference->set_motionPrimitiveRelativeTime(0., this);
     }
     
     //-- now test for collision
     //MT_MSG("TODO");
     
     //-- pass to MotionReference
-    hardwareReference->set_q_reference(q_reference, this);
+    //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
+    hardwareReference->writeAccess(this);
+    hardwareReference->q_reference = q_reference;
+    hardwareReference->motionPrimitiveRelativeTime = realTime;
+    hardwareReference->deAccess(this);
   }
   
   if (mode==MotionPrimitive::feedback) {

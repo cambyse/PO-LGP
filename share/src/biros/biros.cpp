@@ -1,6 +1,7 @@
 #include "biros.h"
 #include "biros_internal.h"
 #include "biros_views.h"
+#include "logging.h"
 //#include "biros_logger.h"
 //#include "biros_threadless.h"
 
@@ -371,19 +372,17 @@ Variable::~Variable() {
 }
 
 int Variable::readAccess(Process *p) {
-  //MT logService.queryReadAccess(this, p);
+  accessController.queryReadAccess(this, p);
   s->lock.readLock();
-  //MT logService.logReadAccess(this, p);
+  accessController.logReadAccess(this, p);
   return revision;
 }
 
 int Variable::writeAccess(Process *p) {
-  //MT logService.queryWriteAccess(this, p);
+  accessController.queryWriteAccess(this, p);
   s->lock.writeLock();
-  //MT pthread_mutex_lock(&replay_mutex); //TODO: why do I need this lock?
   revision++;
-  //MT pthread_mutex_unlock(&replay_mutex);
-  //MT logService.logWriteAccess(this, p);
+  accessController.logWriteAccess(this, p);
   uint i;  Process *l;
   s->cond.setState(revision);
   for_list(i, l, listeners) if(l!=p) l->threadStep();
@@ -394,9 +393,9 @@ int Variable::deAccess(Process *p) {
   if(s->lock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
-    //MT logService.freeWriteAccess(this);
+    accessController.logWriteDeAccess(this,p);
   } else {
-    //MT logService.freeReadAccess(this);
+    accessController.logReadDeAccess(this,p);
   }
   int rev=revision;
   s->lock.unlock();

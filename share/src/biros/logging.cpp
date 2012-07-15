@@ -1,6 +1,11 @@
 #include "logging.h"
 #include "control.h"
 #include "biros_internal.h"
+#include "../hardware/hardware.h"
+
+bool enableLogging=false;
+AccessController accessController;
+
 //some data we want to associate with each variable
 struct LoggerVariableData {
   //-- the contoller (user interface) may block accesses (AFTER they're done to allow inspection)
@@ -42,10 +47,16 @@ struct sAccessController{
   }
 };
 
-AccessController::AccessController(){
+AccessController::AccessController()
+:dumpFile(NULL){
   s = new sAccessController;
-  s->enableAccessLog = true;
+  s->enableAccessLog = false;
   s->replay = false;
+}
+
+AccessController::~AccessController(){
+  if(dumpFile){ dumpFile->close();  delete dumpFile; }
+  delete s;
 }
   
 void AccessController::queryReadAccess(Variable *v, const Process *p){
@@ -60,18 +71,20 @@ void AccessController::queryWriteAccess(Variable *v, const Process *p){
   
 void AccessController::logReadAccess(const Variable *v, const Process *p) {
   if(!s->enableAccessLog || s->replay) return;
-  AccessEvent *e = new AccessEvent(v, p, AccessEvent::read, v->revision, p->step_count);
+  AccessEvent *e = new AccessEvent(v, p, AccessEvent::read, v->revision, p?p->step_count:0);
   s->eventsLock.writeLock();
   events.append(e);
   s->eventsLock.unlock();
+  if(events.N>100) dumpEventList();
 }
 
 void AccessController::logWriteAccess(const Variable *v, const Process *p) {
   if(!s->enableAccessLog || s->replay) return;
-  AccessEvent *e = new AccessEvent(v, p, AccessEvent::write, v->revision, p->step_count);
+  AccessEvent *e = new AccessEvent(v, p, AccessEvent::write, v->revision, p?p->step_count:0);
   s->eventsLock.writeLock();
   events.append(e);
   s->eventsLock.unlock();
+  if(events.N>100) dumpEventList();
 }
 
 void AccessController::logReadDeAccess(const Variable *v, const Process *p) {
@@ -85,6 +98,30 @@ void AccessController::logWriteDeAccess(const Variable *v, const Process *p) {
   //do something if enableDataLog
   if(s->getVariableData(v)->controllerBlocksWrite)
     s->breakpointSleep();
+}
+
+void AccessController::dumpEventList(){
+  if(!dumpFile){
+    dumpFile = new ofstream;
+    MT::open(*dumpFile,"z.eventLog");
+  }
+  
+  AccessEventL copy;
+  s->eventsLock.writeLock();
+  copy.takeOver(events);
+  events.clear();
+  s->eventsLock.unlock();
+  
+  uint i;
+  AccessEvent *e;
+  for_list(i,e,copy){
+    (*dumpFile)
+      <<(e->type==AccessEvent::read?'r':'w')
+      <<' ' <<e->var->name <<'-' <<e->var->id
+      <<' ' <<e->revision
+      <<' ' <<(e->proc?e->proc->name:"NULL")
+      <<' ' <<e->procStep <<endl;
+  }
 }
 
 //===========================================================================

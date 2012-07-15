@@ -57,6 +57,7 @@ void ActionProgressor::step(){
   //f->frames(f->currentFrame)->set_converged(true, this);
   f->frames(f->currentFrame+1)->set_converged(false, this);
   f->motions(f->currentFrame)->set_planConverged(false, this);
+  _HardwareReference->set_motionPrimitiveRelativeTime(0., this);
   f->deAccess(this);
 }
 

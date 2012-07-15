@@ -379,6 +379,7 @@ template<class T> void MT::Array<T>::freeMEM() {
   pp=NULL;
   sparse=NULL;
   d=&d0;
+  reference=false;
 }
 
 //! reset the dimensionality pointer d to point to &d0

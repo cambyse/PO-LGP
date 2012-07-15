@@ -81,7 +81,6 @@ struct MotionPrimitive:Variable {
   //controller options
   FIELD(bool, fixFingers);
   FIELD(bool, forceColLimTVs);
-  FIELD(double, relativeRealTimeOfController);
 
   //only for info - to enable a view
   //FIELD(TaskVariableList, TVs);
@@ -91,10 +90,10 @@ struct MotionPrimitive:Variable {
       mode(stop),
       frame0(NULL), frame1(NULL), planConverged(false),
       feedbackControlTask(NULL),
-      forceColLimTVs(true), relativeRealTimeOfController(0.) {
+      forceColLimTVs(true) {
 	reg_frameCount(); reg_mode(); reg_frame0(); reg_frame1(); reg_q_plan(); reg_tau(); reg_planConverged();
 	reg_iterations_till_convergence(); reg_cost();
-	reg_feedbackControlTask(); reg_fixFingers(); reg_forceColLimTVs(); reg_relativeRealTimeOfController();
+	reg_feedbackControlTask(); reg_fixFingers(); reg_forceColLimTVs();
       };
   
   void get_poseView(arr& q) { q=q_plan; }
@@ -110,11 +109,12 @@ struct HardwareReference:Variable {
   FIELD(arr, v_reference);
   FIELD(arr, q_real);
   FIELD(double, hardwareRealTime);
+  FIELD(double, motionPrimitiveRelativeTime);
   
   FIELD(bool, readHandFromReal);
   
-  HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), readHandFromReal(true) {
-    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal();
+  HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), motionPrimitiveRelativeTime(0.), readHandFromReal(true) {
+    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal(); reg_motionPrimitiveRelativeTime();
   };
   void get_poseView(arr& q) { q=q_reference; }
 };

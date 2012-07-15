@@ -30,6 +30,7 @@ struct AccessController {
   
   AccessEventL events;
   boolA variableBlock;
+  ofstream* dumpFile;
   
   AccessController();
   ~AccessController();
@@ -44,6 +45,9 @@ struct AccessController {
   void logReadDeAccess(const Variable *v, const Process *p);
   void logWriteAccess(const Variable *v, const Process *p);
   void logWriteDeAccess(const Variable *v, const Process *p);
+  
+  //writing into a file
+  void dumpEventList();
 };
 
 extern AccessController accessController;
