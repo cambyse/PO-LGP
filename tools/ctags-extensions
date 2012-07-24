@@ -22,6 +22,14 @@ preprocessing, so it can't resolve these macros and consequently fails
 to recognize var as a field. 
 
 adding the following argument to ctags fixes this:
-	--regex-C++="/FIELD\(.*,([^)]*)\)/\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/set_\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/get_\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/reg_\1/"
 
+Take a look at ./ctags-ext.sh
 Enjoy.
+
+TODO: specify kinds (as in 
+	--regex-C++="/FIELD\(.*,([^)]*)\)/\1/m, struct member/"
+)
