@@ -977,7 +977,7 @@ void RuleSetContainer::write(ostream& out, bool only_action, bool additional_exp
     out<<"#  NON-default rules explain: "<<(100. * num_explanations_by_nonDefault_rule) / num_explanations
               <<"% ("<<num_explanations_by_nonDefault_rule<<"/"<<num_explanations<<")"<<endl;
     out<<"#  NON-noise outcomes explain: "<<(100. * num_explanations_as_nonNoise) / num_explanations
-              <<"% ("<<num_explanations_as_noise<<"/"<<num_explanations<<")"<<endl;          
+              <<"% ("<<num_explanations_as_nonNoise<<"/"<<num_explanations<<")"<<endl;          
     FOR1D(nonDefaultRules_per_experience, i) {
       out<<"# "<<i<<":";
       if (nonDefaultRules_per_experience(i).N > 1)

@@ -22,9 +22,9 @@ void test_learn() {
   // Regularizer
   double alpha_pen = 0.5;
   // Lower bounds for probabilities of states in case of noise outcome
-  double prob_state_given_NoisyOutcome = 1e-8; // p_min
+  double prob_state_given_NoisyOutcome = 1e-10; // p_min
   // ... same, only for noisy default rule
-  double prob_state_given_NoisyOutcome__in_noisyDefaultRule = 1e-9;
+  double prob_state_given_NoisyOutcome__in_noisyDefaultRule = 1e-11;
   // Log-file
   MT::String logfile("learn.log");
 	
@@ -34,7 +34,7 @@ void test_learn() {
   relational::readSymbolsAndTypes(symbols, types, "symbols.dat");
 	
   // Data
-  relational::StateTransitionL transitions = relational::StateTransition::read("data.dat");
+  relational::StateTransitionL transitions = relational::StateTransition::read_SASAS("data.dat");
   PRINT(transitions.N);
 //   write(transitions);
 	

@@ -2,10 +2,13 @@ BASE   = ../..
 NAME   = $(shell basename $(BASE))
 OUTPUT = $(BASE)/lib/$(NAME).so
 CXXFLAGS += -fPIC
-LIBS   += -lrt
 
-#OPTIM  = fast_debug
-OPTIM  = debug
+ifneq ($(SYS), Darwin)
+LIBS   += -lrt
+endif
+
+OPTIM  = fast_debug
+#OPTIM  = debug
 
 LAPACK = 0
 

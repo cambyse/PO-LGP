@@ -85,7 +85,8 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
   if(gl){
     gl_step++;
 //     if (gl_step % 1 == 50) {
-      gl->text.clear() <<text <<endl;
+      gl->text.clear();
+      gl->text <<text <<endl;
       gl->update();
 //     }
   }
@@ -1442,11 +1443,12 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 * 
 ************************************************/
 
-void RobotManipulationSimulator::relaxPosition(const char* message){
+void RobotManipulationSimulator::relaxPosition(const char* message) {
   MT::String msg_string(message);
   if (msg_string.N == 0) {
     msg_string << "Relax position";
   }
+  PRINT(msg_string);
   
   uint inhand_id = getInhand();
   ors::Shape* s = NULL;
@@ -1480,6 +1482,8 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
     if (diff < 0.5) break;
 //     if(x.active==1) break;
   }
+  PRINT(t);
+  exit(0);
   
   // simplification: set on contacts for inhand-object
   if (s!=NULL) {

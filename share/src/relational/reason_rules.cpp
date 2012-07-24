@@ -633,6 +633,7 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
   uint noise_predictions = 0;
   FOR1D(experiences, i) {
     if (DEBUG>1) {cout<<"+++++ Ex "<<i<<" +++++"<<endl;}
+    if (DEBUG>2) {experiences(i)->write(cout, true);}
     if (DEBUG>1) {cout<<"Ex-Changed: "<<experiences(i)->changes<<endl;}
     RuleSet coveringGroundRules;
     calc_coveringRules_groundAction(coveringGroundRules, rules, experiences(i)->pre, experiences(i)->action);
@@ -640,22 +641,12 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
     if (DEBUG>1) {PRINT(coveringGroundRules.num());}
     Rule* explaining_rule = NULL;
     double lik = 0.;
+    CHECK(Rule::isDefaultRule(coveringGroundRules.elem(0)), "first covering rule needs to be default rule");
     // Explain as non-noise
-    if (coveringGroundRules.num() == 2) {
-      // erste sollte default regel sein, oder?
-      NIY;
-//       CHECK(coveringGroundRules.elem(0)->action->s->id == DEFAULT_ACTION_PRED__ID, "");
-      explaining_rule = coveringGroundRules.elem(1);
-      lik = probability_groundRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
-    }
+    if (coveringGroundRules.num() == 2) {explaining_rule = coveringGroundRules.elem(1);}
     // Explain as noise
-    else {
-      explaining_rule = coveringGroundRules.elem(0);
-      NIY;
-//       CHECK(explaining_rule->action->s->id == DEFAULT_ACTION_PRED__ID, "");
-      lik = probability_defaultRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
-      noise_predictions++;
-    }
+    else {explaining_rule = coveringGroundRules.elem(0);  noise_predictions++;}
+    lik = probability_groundRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
     if (DEBUG>1) {cout<<"Explaining rule:"<<endl<<*explaining_rule;  PRINT(lik);  PRINT(log(lik));}
     loglik += log(lik);
   }

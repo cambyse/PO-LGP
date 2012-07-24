@@ -103,6 +103,7 @@ namespace learn {
 
 struct RuleSetContainer {
   // First rule = default rule
+  // Don't set rules directly, but use append(.) below.
   RuleSet rules;
   const StateTransitionL* p_experiences;
   

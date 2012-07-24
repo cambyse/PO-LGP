@@ -200,6 +200,10 @@ Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType
   }
   CHECK(l!=NULL, "literal could not be made");
   if (DEBUG>0) {cout<<"getting:  "<<*l<<" "<<l<<endl;}
+  if (l->s->range_type == Symbol::binary) {
+    if (!TL::areEqual(l->value, 0)  &&  !TL::areEqual(l->value, 1))
+      HALT("Literal "<<*l<<" is defined for a binary symbol "<<*l->s<<", but has value "<<l->value);
+  }
   if (DEBUG>0) {CHECK(l->args.N==0 || l->args == args, "");}
   if (DEBUG>0) {cout<<"Literal::get[END]"<<endl;}
   return l;
