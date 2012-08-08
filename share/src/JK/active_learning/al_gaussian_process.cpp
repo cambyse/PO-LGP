@@ -78,7 +78,7 @@ GaussianProcessAL::GaussianProcessAL(Sampler<MT::Array<arr> >* sampler) :
   s->p->obsVar = 10e-6;
   s->p->widthVar = 0.01;
   s->p->priorVar = 0.1;
-	//s->gp.mu = -1;
+	s->gp.mu = -0.01;
 
   s->gp.setGaussKernelGP(s->p, 0);
 }
