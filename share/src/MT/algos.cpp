@@ -1220,6 +1220,3 @@ int MT::minimize(double(*f)(arr*, const arr&, void*),
 // helper functions for imporing foreign code
 //
 
-double *vector(uint i, uint j) { return new double[j]; }
-void nrerror(const char* msg) { HALT(msg); }
-void free_vector(double* p, uint i, uint j) { delete[] p; }

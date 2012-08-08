@@ -1,4 +1,5 @@
 #include <MT/aico.h>
+#include <MT/util_t.cxx>
 
 #include <motion/ActionToMotionPrimitive.h>
 
@@ -16,8 +17,8 @@ void testGraspHeuristic(){
   //createStandardRobotTaskVariables(sys);
 
   //rnd.clockSeed();
-  uint side=rnd(3);
-  side = 2;
+  //uint side=rnd(3);
+  //side = 2;
 
   ors::Shape *s = sys.ors->getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -34,13 +35,15 @@ void testGraspHeuristic(){
     solver.fix_final_state(x);
     solver.iterate_to_convergence();
     
-    sys.displayTrajectory(solver.q,NULL,1,"solution");
+    sys.displayTrajectory(solver.q(),NULL,1,"solution");
 #else
     setNewGraspGoals(sys, T, s->index, side, 1);
     AICO solver(sys);
     solver.iterate_to_convergence();
     for(;;) sys.displayTrajectory(solver.q,NULL,1,"solution");
 #endif
+
+    MT::save(*sys.ors,"z.ors");
 
     if(k%2) s=sys.ors->getShapeByName("target1");
     else  s=sys.ors->getShapeByName("target2");

@@ -7,6 +7,9 @@
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
+ifndef MLR_EXLIB_PATH
+MLR_EXLIB_PATH = $(HOME)/lib
+endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
@@ -363,12 +366,14 @@ LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LIBS += -ldai
 endif
 
+ifeq ($(IBDS),1)
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ibds/include
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
+LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
+endif
+
 ifeq ($(URGLASER),1)
 CXXFLAGS  += -DMT_LASER
-CPATH     := $(CPATH):$(LIBPATH)/urg-0.0.2/include
-LPATH     := $(LPATH):$(LIBPATH)/urg-0.0.2/lib
-LIBS += -lc_urg -lc_urg_connection
-endif
 
 ifeq ($(PCL),1)
 QHULL = 1
@@ -381,6 +386,22 @@ CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv-2.3.1`
 CXXFLAGS += `pkg-config --cflags-only-I opencv-2.3.1`
 %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
 LIBS      += `pkg-config --libs opencv-2.3.1`
+endif
+
+ifeq ($URGLASER),1)
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
+CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/urg/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/system/.libs
+LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/connection/.libs
+LIBS += -lc_urg -lc_urg_system -lc_urg_connection
+endif
+
+ifeq ($(DYNAMIXEL),1)
+CXXFLAGS  += -DMT_DYNAMIXEL
+CPATH     := $(CPATH):$(LIBPATH)/dynamixel/include
+LPATH     := $(LPATH):$(LIBPATH)/dynamixel/lib
+LIBS      += -ldxl
 endif
 
 ifeq ($(BUMBLE),1)

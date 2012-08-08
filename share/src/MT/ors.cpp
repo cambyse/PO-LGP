@@ -712,6 +712,18 @@ Vector operator/(const Quaternion& b, const Vector& c) {
   return a;
 }
 
+Transformation operator*(const Transformation& X, const Transformation& c) {
+  Transformation f(X);
+  f.appendTransformation(c);
+  return f;
+}
+
+Transformation operator/(const Transformation& X, const Transformation& c) {
+  Transformation f(X);
+  f.appendInvTransformation(c);
+  return f;
+}
+  
 //! transform of a vector by a frame
 Vector operator*(const Transformation& X, const Vector& c) {
   Vector a;
@@ -1029,10 +1041,16 @@ std::istream& operator>>(std::istream& is, ors::Vector& x)    { x.read(is); retu
 std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Quaternion& x) { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
+std::istream& operator>>(std::istream& is, ors::Body& x){ x.read(is); return is; }
+std::istream& operator>>(std::istream& is, ors::Joint& x){ x.read(is); return is; }
+//std::istream& operator>>(std::istream& is, ors::Proxy& x){ x.read(is); return is; }
 std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Body& x){ x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Joint& x){ x.write(os); return os; }
+//std::ostream& operator<<(std::ostream& os, const ors::Proxy& x){ x.write(os); return os; }
 
 
 //================================================================================
@@ -1654,7 +1672,7 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
   intA Vt, VT;
   getVertexNeighorsList(m, Vt, VT);
   
-  uint A=0, B=0, C=0, t, tt, i, r, k;
+  uint A=0, B=0, t, tt, i, r, k;
   //build edge list
   EV.resize(m.T.d0*3, 2);   EV=0;     //edge vert neighbors
   ET.resize(m.T.d0*3, 10);  ET=-1;    //edge tri neighbors
@@ -1662,9 +1680,9 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
   boolA done(m.T.d0); done=false;
   for(t=0, k=0; t<m.T.d0; t++) {
     for(r=0; r<3; r++) {
-      if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  C=m.T(t, 2); }
-      if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  C=m.T(t, 0); }
-      if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  C=m.T(t, 1); }
+      if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  }
+      if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  }
+      if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  }
       
       //has AB already been taken care of?
       bool yes=false;
@@ -1705,14 +1723,14 @@ void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT) {
   intA Vt, VT;
   getVertexNeighorsList(m, Vt, VT);
   
-  uint A=0, B=0, C=0, t, tt, r, i;
+  uint A=0, B=0, t, tt, r, i;
   Tt.resize(m.T.d0, 3);     Tt.setZero();
   TT.resize(m.T.d0, 3, 100); TT=-1;
   for(t=0; t<m.T.d0; t++) {
     for(r=0; r<3; r++) {
-      if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  C=m.T(t, 2); }
-      if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  C=m.T(t, 0); }
-      if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  C=m.T(t, 1); }
+      if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  }
+      if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  }
+      if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  }
       
       for(i=0; i<(uint)Vt(A); i++) {
         tt=VT(A, i);
@@ -2320,6 +2338,16 @@ void ors::Spline::partial(arr& dCdx, arr& dCdt, const arr& dCdf, bool constrain)
    }
 */
 
+ors::Body::Body() { reset(); }
+
+ors::Body::Body(const Body& b) { reset(); *this=b; }
+
+ors::Body::Body(Graph& G) {
+  reset();
+  index=G.bodies.N;
+  G.bodies.append(this);
+}
+
 ors::Body::~Body() { reset(); }
 
 void ors::Body::reset() {
@@ -2403,6 +2431,20 @@ void ors::Body::read(std::istream& is) {
 // Shape implementations
 //
 
+ors::Shape::Shape() { reset(); }
+
+ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
+
+ors::Shape::Shape(Graph& G, Body *b, Shape *copyShape) {
+    reset();
+    if(copyShape) *this = *copyShape;
+    index=G.shapes.N;
+    G.shapes.append(this);
+    body=b;
+    b->shapes.append(this);
+    ibody=b->index;
+  }
+
 void ors::Shape::read(std::istream& is) {
   reset();
   anyListRead(ats, is);
@@ -2456,6 +2498,18 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 //
 // Joint implementations
 //
+
+ors::Joint::Joint() { reset(); }
+
+ors::Joint::Joint(const Joint& j) { from=to=NULL; *this=j; }
+
+ors::Joint::Joint(Graph& G, Body *f, Body *t) {
+    reset();
+    index=G.joints.N;
+    G.joints.append(this);
+    from=f;  ifrom=f->index;
+    to=t;    ito  =t->index;
+  }
 
 void ors::Joint::write(std::ostream& os) const {
   os <<"from=" <<A <<' ';
@@ -2595,7 +2649,6 @@ void ors::Graph::getGyroscope(ors::Vector& up) const {
 void ors::Graph::calcBodyFramesFromJoints() {
   Body *n;
   Joint *e;
-  Shape *s;
   uint i, j;
   ors::Transformation f;
   for_list(j, n, bodies) {
@@ -2611,6 +2664,16 @@ void ors::Graph::calcBodyFramesFromJoints() {
         MT_MSG("loopy geometry - code missing: check if n->X and f are consistent!");
       }
     }
+  }
+  calcShapeFramesFromBodies();
+}
+
+void ors::Graph::calcShapeFramesFromBodies() {
+  Body *n;
+  Shape *s;
+  uint i, j;
+  ors::Transformation f;
+  for_list(j, n, bodies) {
     for_list(i, s, n->shapes) {
       s->X = n->X;
       s->X.appendTransformation(s->rel);
@@ -3679,7 +3742,7 @@ void ors::Graph::read(std::istream& is) {
     if(tag=="body") {  //node
       name.read(is, " \t\n\r", " \t\n\r({", false);
       DEBUG(cout <<"name=" <<name <<endl);
-      n=new Body(bodies);
+      n=new Body(*this);
       n->name = name;
       if(MT::peerNextChar(is)=='(') { MT::parse(is, "("); MT::parse(is, ")"); }
       MT::parse(is, "{");
@@ -3707,7 +3770,7 @@ void ors::Graph::read(std::istream& is) {
       DEBUG(cout <<"node2=" <<node2 <<endl);
       for_list(j, n, bodies) if(n->name==node2) { t=n; break; }
       if(!t) RERR("reading edge: don't know to-name " <<node2);
-      e=new Joint(joints, f, t);
+      e=new Joint(*this, f, t);
       MT::parse(is, "{");
       if(is.fail()) RERR("can't read opening brace for edge (" <<e->from->name <<' ' <<e->to->name <<")");
       try { e->read(is); } catch(...) RERR("error in parsing edge (" <<e->from->name <<' ' <<e->to->name <<")");
@@ -3724,7 +3787,7 @@ void ors::Graph::read(std::istream& is) {
       DEBUG(cout <<"node1=" <<node1 <<endl);
       for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
       if(!f) RERR("reading shape: don't know from-name " <<node1);
-      s=new Shape(shapes, f);
+      s=new Shape(*this, f);
       s->name=name;
       MT::parse(is, "{");
       if(is.fail()) RERR("can't read opening brace for shape (" <<f->name <<'-' <<name <<")");

@@ -56,7 +56,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
   FOR2D(tr,i,j){
     MT::String s; s<<tr(i,j);
 
-    s1 =  new ors::Shape(G.shapes, b);
+    s1 =  new ors::Shape(G, b);
     s1->reset();
     a = new MT::String("a"); *a<<i<<" "<<j;
     s1->name = a->p;
@@ -66,7 +66,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
     SD_COL(s1->color, .8, .1, .1 );
     sh_s.append(s1);
 
-    s2 =  new ors::Shape(G.shapes, b);
+    s2 =  new ors::Shape(G, b);
     s2->reset();
     n = new MT::String("n"); *a<<i<<" "<<j;
     s2->name = n->p;

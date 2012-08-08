@@ -74,7 +74,7 @@ class Literal {
     bool isNegated() const;
     
     Literal* getNegated();
-    static void getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value);
+    static void getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value, bool withRepeatingArguments = true);
     static void getLiterals_state(LitL& lits, const uintA& constants, double value, bool binaryOnly = false);
     static void getLiterals_state(LitL& lits, const uintA& constants, const uintA& constants_mustBeContained, double value, bool binaryOnly = false);
     static void getLiterals_actions(LitL& lits_actions, const uintA& constants);  // get all action atoms
@@ -88,8 +88,6 @@ class Literal {
     static bool equivalent(const LitL& lits1, const LitL& lits2);
     static bool nonContradicting(const LitL& l1, const LitL& l2);
     // TODO the below methods seem to be not required anymore
-    static void negate(const LitL& lits, LitL& lits_negated);
-    static uint numberLiterals(const MT::Array< LitL >& LitLs);
     static int findPattern(const LitL& actions, uint minRepeats);
     static bool negativeBinaryLiteralsLast(const LitL& lits);
 };
@@ -111,7 +109,7 @@ struct SymbolicState {
   // Essential data-fields
   MT::Array<Literal*> lits;
   uintA state_constants; // not necessarily set
-  bool including_derived_literals; // Have literals derived symbols been calculated?
+  bool derived_lits_are_calculated; // Have literals derived symbols been calculated?
   
   // -----------------------------------
   // Convenience methods

@@ -65,8 +65,8 @@ class PRADA_Planner : public NID_Planner {
     // -- All remaining methods not required for high-level planning from outside. -- 
     
     // samples "num_samples" plans and returns best
-    void plan__wrapper(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs);
-    bool plan__run(LitL& best_plan, double& bestValue, uint num_samples);
+    void plan1_wrapper(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs);
+    bool plan1(LitL& best_plan, double& bestValue, uint num_samples);
     MT::Array< LitL > good_old_plans;
     
     // dynamic Bayesian network used for inference
@@ -202,13 +202,13 @@ class PRADA_DBN {
     
   public:
     
-    void create_dbn_structure(const uintA& constants, const SymL& state_symbols, const SymL& actions);
+    void create_dbn_structure(const SymL& state_symbols, const SymL& actions);
     void create_dbn_params();
   
   RuleSet ground_rules;
   double noise_softener;
   uint horizon;
-  uintA net_constants;  // ojects over which net is built
+  uintA net_constants;  // ojects over which net is built; don't change them from outside!
   SymL net_symbols_state;
   SymL net_symbols_action;
 
@@ -229,18 +229,17 @@ class PRADA_DBN {
   MT::Array< arr > impacts_val; // on single values;  2 dim: (1) var, (2) arr for rule
   // dim_1 actions,  dim_2 arguments,  dim_3 rules
   uintA action2rules;
-  uintA action2rules_no; // 2 dim; how many rules per constellation
+  uintA action2rules_num; // 2 dim; how many rules per constellation
 
   
   
   // --- Efficiency managing of random variables based on redundant data-structures ---
   // required for fast access by rewards and derive-methods
-  void RVefficiency__init(const SymL& symbols, const uintA& constants);
+  void RVefficiency__init(const SymL& symbols);
   LiteralRV* RVefficiency__atom2var(Literal* lit) const;
   LiteralRV* RVefficiency__id2var(uint id_var) const;
   void RVefficiency__setAtom(Literal* lit, LiteralRV* var);
   SymL RVefficiency__symbols;
-  uintA RVefficiency__constants;
   RVL RVefficiency__LRV_A__structured;
   RVL RVefficiency__LRV_A__flat; // redundant container
   LitL RVefficiency__function_literals;

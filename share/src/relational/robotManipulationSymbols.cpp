@@ -417,20 +417,20 @@ Reward* RobotManipulationSymbols::RewardLibrary::inhand(uint o1) {
 Reward* RobotManipulationSymbols::RewardLibrary::stack() {
 //   ATTENTION:  Stack defined by sum (not max) over heights
   uintA empty;
-  SymL preds2add;
+  SymL symbols2add;
   if (!Symbol::get(MT::String("above"))) {
     TransClosureSymbol* p_ABOVE1 = getSymbol_above();
     p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
-    preds2add.append(p_ABOVE1);
+    symbols2add.append(p_ABOVE1);
   }
   if (!Symbol::get(MT::String("aboveNotable"))) {
-    preds2add.append(getSymbol_aboveNotable());
+    symbols2add.append(getSymbol_aboveNotable());
   }
   if (!Symbol::get(MT::String("height"))) {
-    preds2add.append(getSymbol_height());
+    symbols2add.append(getSymbol_height());
   }
   if (!Symbol::get(MT::String("sum_height"))) {
-    preds2add.append(getFunction_sumheight());
+    symbols2add.append(getFunction_sumheight());
   }
   Literal* fa = Literal::get(Symbol::get(MT::String("sum_height")), empty, 1.);
   Reward* reward = new MaximizeReward(fa);
@@ -457,26 +457,26 @@ Reward* RobotManipulationSymbols::RewardLibrary::tower(uintA& objs) {
 
 
 Reward* RobotManipulationSymbols::RewardLibrary::clearance() {
-  SymL preds2add;
+  SymL symbols2add;
   if (!Symbol::get(MT::String("above"))) {
     TransClosureSymbol* p_ABOVE1 = getSymbol_above();
     p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
-    preds2add.append(p_ABOVE1);
+    symbols2add.append(p_ABOVE1);
   }
   if (!Symbol::get(MT::String("dirtyGuyBelow"))) {
-    preds2add.append(getSymbol_dirtyGuyBelow());
+    symbols2add.append(getSymbol_dirtyGuyBelow());
   }
   if (!Symbol::get(MT::String("differentTower"))) {
-    preds2add.append(getSymbol_diffTower());
+    symbols2add.append(getSymbol_diffTower());
   }
   if (!Symbol::get(MT::String("withoutHomies"))) {
-    preds2add.append(getSymbol_withoutHomies());
+    symbols2add.append(getSymbol_withoutHomies());
   }
   if (!Symbol::get(MT::String("inorder"))) {
-    preds2add.append(getSymbol_inorder());
+    symbols2add.append(getSymbol_inorder());
   }
   if (!Symbol::get(MT::String("count_inorder"))) {
-    preds2add.append(getFunction_countInorder());
+    symbols2add.append(getFunction_countInorder());
   }
   uintA empty;
   Literal* fi = Literal::get(getFunction_countInorder(), empty, 1.);

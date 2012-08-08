@@ -180,8 +180,7 @@ void skipLine(std::istream& is) {
 
 //! skips the next character
 void skipOne(std::istream& is) {
-  char c;
-  c = is.get();
+  is.get();
 }
 
 //! tell you about the next char (after skip()) but puts it back in the stream

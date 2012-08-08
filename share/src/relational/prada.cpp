@@ -28,13 +28,12 @@
 
 #define MAX_FUNCTION_VALUE 10
 #define RULE_MIN_PROB 0.03
-#define TRANS_CLOSURE_STOP_PROB 0.001
 
 
 
 namespace relational {
 
-inline uint getIndex(const uintA& constants, const uintA& args) {
+inline uint getIndex__PRADA_Planner(const uintA& constants, const uintA& args) {
   uint args_idx=0;
   uint i;
   FOR1D(args, i) {
@@ -69,7 +68,7 @@ PRADA_Planner::~PRADA_Planner() {
 
 
 void PRADA_Planner::plan_full(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs) {
-  plan__wrapper(best_plan, best_value, s, max_runs);
+  plan1_wrapper(best_plan, best_value, s, max_runs);
 }
 
 
@@ -208,9 +207,9 @@ void my_handmade_plan(LitL& plan) {
 }
 
 
-void PRADA_Planner::plan__wrapper(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs) {
+void PRADA_Planner::plan1_wrapper(LitL& best_plan, double& best_value, const SymbolicState& s, uint max_runs) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"PRADA_Planner::plan__wrapper [START]"<<endl;}
+  if (DEBUG>0) {cout<<"PRADA_Planner::plan1_wrapper [START]"<<endl;}
   if (DEBUG>0) {
     cout<<"Reward:  ";  if (reward != NULL) reward->write();  else cout<<"NULL";  cout<<endl;
     PRINT(num_samples);
@@ -229,7 +228,7 @@ void PRADA_Planner::plan__wrapper(LitL& best_plan, double& best_value, const Sym
     best_value = -100000.;
     best_plan.clear();
     if (DEBUG>0) {cout<<"Planning does not make sense here: no changing concepts"<<endl;}
-    if (DEBUG>0) {cout<<"PRADA_Planner::plan__wrapper [END]"<<endl;}
+    if (DEBUG>0) {cout<<"PRADA_Planner::plan1_wrapper [END]"<<endl;}
     return;
   }
   
@@ -258,7 +257,7 @@ void PRADA_Planner::plan__wrapper(LitL& best_plan, double& best_value, const Sym
         best_value = -100000.;
         best_plan.clear();
         if (DEBUG>0) {cout<<"Planning does not make sense here: reward concept " << *lits_reward(i) << " not among changing concepts"<<endl;}
-        if (DEBUG>0) {cout<<"PRADA_Planner::plan__wrapper [END]"<<endl;}
+        if (DEBUG>0) {cout<<"PRADA_Planner::plan1_wrapper [END]"<<endl;}
         return;
       }
     }
@@ -269,7 +268,7 @@ void PRADA_Planner::plan__wrapper(LitL& best_plan, double& best_value, const Sym
   LitL run_plan;
   double run_value = 0.0;
   do {
-    bool improve = plan__run(run_plan, run_value, num_samples);
+    bool improve = plan1(run_plan, run_value, num_samples);
     if (improve) {
       best_plan = run_plan;
       best_value = run_value;
@@ -284,13 +283,13 @@ void PRADA_Planner::plan__wrapper(LitL& best_plan, double& best_value, const Sym
     best_value = -100000.;
     best_plan.clear();
   }
-  if (DEBUG>0) {cout<<"PRADA_Planner::plan__wrapper [END]"<<endl;}
+  if (DEBUG>0) {cout<<"PRADA_Planner::plan1_wrapper [END]"<<endl;}
 }
 
 
-bool PRADA_Planner::plan__run(LitL& best_plan, double& bestValue, uint num_samples) {
+bool PRADA_Planner::plan1(LitL& best_plan, double& bestValue, uint num_samples) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"PRADA_Planner::plan__run [START]"<<endl;}
+  if (DEBUG>0) {cout<<"PRADA_Planner::plan1 [START]"<<endl;}
   
   uint t;
 
@@ -594,7 +593,7 @@ bool PRADA_Planner::plan__run(LitL& best_plan, double& bestValue, uint num_sampl
 
   // Return value: depends on type of reward
   if (use_ruleOutcome_rewards) {
-    if (DEBUG>0) {cout<<"PRADA_Planner::plan__run [END]"<<endl;}
+    if (DEBUG>0) {cout<<"PRADA_Planner::plan1 [END]"<<endl;}
     return true;
   }
   else if (reward->reward_type == Reward::reward_maximize_function) {
@@ -603,12 +602,12 @@ bool PRADA_Planner::plan__run(LitL& best_plan, double& bestValue, uint num_sampl
       PRINT((bestValue > do_nothing_reward + threshold_reward));
       cout<<"Returning-1 "<<(bestValue > do_nothing_reward + threshold_reward)<<endl;
     }
-    if (DEBUG>0) {cout<<"PRADA_Planner::plan__run [END]"<<endl;}
+    if (DEBUG>0) {cout<<"PRADA_Planner::plan1 [END]"<<endl;}
     return (bestValue > do_nothing_reward + threshold_reward);
   }
   else {
     if (DEBUG>0) cout<<"Returning02 "<<any_sensible_action<<endl;
-    if (DEBUG>0) {cout<<"PRADA_Planner::plan__run [END]"<<endl;}
+    if (DEBUG>0) {cout<<"PRADA_Planner::plan1 [END]"<<endl;}
     return any_sensible_action;
   }
 }
@@ -822,9 +821,9 @@ double PRADA_Planner::calcRuleRewards(const LitL& actions) {
     NIY;
     uint idx_symbol = 11111111;
 //     uint idx_symbol = logicObjectManager::p_actions.findValue(actions(t)->s);
-    uint idx_args = getIndex(reason::getConstants(), actions(t)->args);
+    uint idx_args = getIndex__PRADA_Planner(reason::getConstants(), actions(t)->args);
     double t_reward = 0.;
-    for (r=0; r<dbn->action2rules_no(idx_symbol, idx_args); r++) {
+    for (r=0; r<dbn->action2rules_num(idx_symbol, idx_args); r++) {
       uint rule_number = dbn->action2rules(idx_symbol, idx_args, r);
       Rule* rule = ground_rules.elem(rule_number);
       double expected_reward = this->expected_rule_rewards(rule_number);
@@ -1045,6 +1044,7 @@ void PRADA_Planner::setState(const SymbolicState& s, uint t) {
     build_dbn(reason::getConstants());
   }
   if (DEBUG>0) {cout<<"Creating lits_prim_filtered and fv_prim_filtered."<<endl;}
+    if (DEBUG>0) {cout<<"Setting state: "<<s<<endl;}
   
   // Set
   LitL lits_prim_filtered;
@@ -1116,8 +1116,8 @@ void PRADA_Planner::sampleActionsAndInfer(LitL& sampled_actions, const LitL& fix
       action_weights(t,a) = 0.0;
       action_weights__sampling(a) = 0.0;
       uint idx_symbol = dbn->net_symbols_action.findValue(ground_actions(a)->s);
-      uint idx_args = getIndex(reason::getConstants(), ground_actions(a)->args);
-      for (r=0; r<local_net->action2rules_no(idx_symbol, idx_args); r++) {
+      uint idx_args = getIndex__PRADA_Planner(reason::getConstants(), ground_actions(a)->args);
+      for (r=0; r<local_net->action2rules_num(idx_symbol, idx_args); r++) {
         action_weights(t,a) += local_net->vars_rules(t, local_net->action2rules(idx_symbol, idx_args, r));
         if (Literal::getLiteral_doNothing() == ground_actions(a)  ||  is_manipulating_rule(local_net->action2rules(idx_symbol, idx_args, r)))  // only consider manipulating rules
           action_weights__sampling(a) += local_net->vars_rules(t, local_net->action2rules(idx_symbol, idx_args, r));
@@ -1368,7 +1368,7 @@ void A_PRADA::plan_full(LitL& best_plan, double& best_value, const SymbolicState
   for (i=0; i<3; i++) {
     LitL provisory__best_plan;
     double provisory__best_value;
-    plan__wrapper(provisory__best_plan, provisory__best_value, s, max_runs);
+    plan1_wrapper(provisory__best_plan, provisory__best_value, s, max_runs);
     if (DEBUG>1) {cout<<"best_plan found: "<<provisory__best_plan<<endl;}
     LitL plan_short__local;
     last_value = shorten_plan(plan_short__local, provisory__best_plan, provisory__best_value);
@@ -1420,15 +1420,34 @@ void A_PRADA::reset() {
  * 
  ************************************************/
 
+uintA __prada_dbn__constantsIndices(100);
+uint __prada_dbn__num_constants = 10000;
+
+inline uint getIndex__PRADA_DBN(const uintA& args) {
+  uint args_idx=0;
+  uint i;
+  FOR1D(args, i) {
+    args_idx += ((uint) pow(__prada_dbn__num_constants, i)) * __prada_dbn__constantsIndices(args(i));
+  }
+//   cout<<"getIndex: constants="<<constants<<"  args="<<args<<"    args_idx="<<args_idx<<endl;
+  return args_idx;
+}
+
+
 PRADA_DBN::PRADA_DBN(const uintA& _net_constants, const SymL& _net_symbols_state, const SymL& _net_symbols_action, RuleSet& _ground_rules, double noise_softener, uint horizon) {
   this->net_constants = _net_constants;
+  uint i;
+  FOR1D(this->net_constants, i) {
+    __prada_dbn__constantsIndices(this->net_constants(i)) = i;
+  }
+  __prada_dbn__num_constants = this->net_constants.N;
   this->net_symbols_state = _net_symbols_state;
   Symbol::sort(this->net_symbols_state);
   this->net_symbols_action = _net_symbols_action;
   this->ground_rules = _ground_rules;
   this->noise_softener = noise_softener;
   this->horizon = horizon;
-  create_dbn_structure(this->net_constants, this->net_symbols_state, this->net_symbols_action);
+  create_dbn_structure(this->net_symbols_state, this->net_symbols_action);
   create_dbn_params();
 }
 
@@ -1690,8 +1709,8 @@ void PRADA_DBN::inferRules(uint t) {
     vars_rules.p[p_id] = vars_rules_simple.p[p_id];
     if (vars_rules.p[p_id] < RULE_MIN_PROB) {vars_rules.p[p_id]=0.0; continue;}
     uint idx_symbol = net_symbols_action.findValue(ground_rules.elem(r)->action->s);
-    uint idx_args = getIndex(reason::getConstants(), ground_rules.elem(r)->action->args);
-    for (r2=0; r2<action2rules_no(idx_symbol, idx_args); r2++) {
+    uint idx_args = getIndex__PRADA_DBN(ground_rules.elem(r)->action->args);
+    for (r2=0; r2<action2rules_num(idx_symbol, idx_args); r2++) {
       if (action2rules(idx_symbol, idx_args, r2) == r) continue;
       else {
         vars_rules.p[p_id] *= (1. - vars_rules_simple(t,action2rules(idx_symbol, idx_args, r2)));
@@ -1704,7 +1723,7 @@ void PRADA_DBN::inferRules(uint t) {
     if (vars_rules(t,r) < RULE_MIN_PROB) {vars_rules(t,r)=0.0; continue;}
     uint idx_symbol = logicObjectManager::p_actions.findValue(ground_rules.elem(r)->action->s);
     uint idx_args = getIndex(constants, ground_rules.elem(r)->action->args);
-    for (r2=0; r2<action2rules_no(idx_symbol, idx_args); r2++) {
+    for (r2=0; r2<action2rules_num(idx_symbol, idx_args); r2++) {
       if (action2rules(idx_symbol, idx_args,r2) == r) continue;
       else {
         vars_rules(t,r) *= (1. - alpha(t,action2rules(idx_symbol, idx_args,r2)));
@@ -1748,7 +1767,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action) {
 //   uint idx_args = getIndex(reason::getConstants(), given_action->args);
 //   double action_weight = 0.;
 //   uint r;
-//   for (r=0; r<action2rules_no(idx_symbol, idx_args); r++) {
+//   for (r=0; r<action2rules_num(idx_symbol, idx_args); r++) {
 //     action_weight += vars_rules(t-1, action2rules(idx_symbol, idx_args, r));
 //   }
 //   inferState(t, given_action, action_weight);
@@ -1771,14 +1790,14 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
   
   // Determine which action has been taken
   uint action_idx_symbol = net_symbols_action.findValue(given_action->s);
-  uint action_idx_args = getIndex(reason::getConstants(), given_action->args);
+  uint action_idx_args = getIndex__PRADA_DBN(given_action->args);
 //   PRINT(given_action->args);
 //   PRINT(action_idx_symbol);
 //   PRINT(action_idx_args);
   
   uintA rules_with_sampled_action;
   uint p_id_start = (action_idx_symbol * action2rules.d1  +  action_idx_args) * action2rules.d2;
-  for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+  for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
     rules_with_sampled_action.append(action2rules.p[p_id_start+r]);
   }
   if (DEBUG>1) {PRINT(rules_with_sampled_action);}
@@ -1793,27 +1812,26 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
       cout<<endl;
     }
   }
-  uint p_id;  
+  uint p_id, p_id2;  
   // (1) calc P_t+1(v_i|r, a_t, s)
-  MT::Array< arr > P_v__r_val;  // dim 1: variable;  dim 2: arr for rule x value
+  MT::Array< arr* > p_P_v__r_val;  // dim 1: variable;  dim 2: arr for rule x value
   FOR1D(vars_state__prim, v) {
     LiteralRV* var = vars_state__prim(v);
-    arr local_P_r_val(ground_rules.num(), var->dim);
-    local_P_r_val.setZero();
+    arr* p_local_P_r_val = new arr(ground_rules.num(), var->dim);
     arr& reference__impacts_val_v = impacts_val(v);
     if (DEBUG>1) {PRINT(rules_with_sampled_action);}
     FOR1D(rules_with_sampled_action, r) {
       r2 = rules_with_sampled_action(r);
       double one_minus_impacts_V__r2_v = 1. - impacts_V(v)(r2);
-      p_id = r2 * local_P_r_val.d1;
+      p_id = r2 * p_local_P_r_val->d1;
+      p_id2 = var->P.d1 * (t-1);
       FOR1D(var->range, val) {
-        // SLOW
-//         local_P_r_val(r2, val) = reference__impacts_val_v(r2,val) + one_minus_impacts_V__r2_v * var->P(t-1,val);
-        local_P_r_val.p[p_id] = reference__impacts_val_v.p[p_id] + one_minus_impacts_V__r2_v * var->P(t-1,val);
+        p_local_P_r_val->p[p_id] = reference__impacts_val_v.p[p_id] + one_minus_impacts_V__r2_v * var->P.p[p_id2];
         p_id++;
+        p_id2++;
       }
     }
-    P_v__r_val.append(local_P_r_val);
+    p_P_v__r_val.append(p_local_P_r_val);
   }
   if (DEBUG>2) {
     cout<<"P_v_r =  P(v_i | r, a_t, s):"<<endl;
@@ -1826,7 +1844,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
       for(v=0; v<vars_state__prim.N; v++) {
         cout<<*vars_state__prim(v)->lit<<":  ";
         FOR1D(vars_state__prim(v)->range, val) {
-          cout<<vars_state__prim(v)->range(val)<<":"<<P_v__r_val(v)(r,val);
+          cout<<vars_state__prim(v)->range(val)<<":"<<(*p_P_v__r_val(v))(r,val);
           cout<<"  ";
         }
         cout<<endl;
@@ -1841,15 +1859,19 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
       var->P(t,val) = (1.-given_action_weight) * var->P(t-1,val);
     }
   }
-  for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+  for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
     r2 = action2rules(action_idx_symbol, action_idx_args, r);
+    double r2_prob = vars_rules(t-1, r2);
     FOR1D(vars_state__prim, v) {
-      arr& reference_P_r_val = P_v__r_val(v);
+      arr* p_P_r_val = p_P_v__r_val(v);
       LiteralRV* var = vars_state__prim(v);
-      p_id = r2 * reference_P_r_val.d1;
+      p_id = r2 * p_P_r_val->d1;
+      p_id2 = t * var->P.d1;
       FOR1D(var->range, val) {
-        var->P(t,val) += reference_P_r_val.p[p_id] * vars_rules(t-1, r2);
+//         var->P(t,val) += p_P_r_val->p[p_id] * r2_prob;
+        var->P.p[p_id2] += p_P_r_val->p[p_id] * r2_prob;
         p_id++;
+        p_id2++;
       }
     }
   }
@@ -1859,7 +1881,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
     LiteralRV* var = vars_state__prim(v);
     FOR1D(var->range, val) {
       var->P(t,val) = 0.0;
-      for(r=0; r<action2rules_no(action_idx_symbol, action_idx_args); r++) {
+      for(r=0; r<action2rules_num(action_idx_symbol, action_idx_args); r++) {
         r2 = action2rules(action_idx_symbol, action_idx_args, r);
         var->P(t,val) += reference_P_v_r__v(r2,val) * vars_rules(t-1, r2);
       }
@@ -1867,6 +1889,7 @@ void PRADA_DBN::inferState(uint t, Literal* given_action, double given_action_we
     }
   }
 #endif
+  listDelete(p_P_v__r_val);
     
   // INFER DERIVED SYMBOLS
   if (DEBUG>1) {cout<<"After inference over primitive symbols:" << endl; writeState(t);}
@@ -2053,11 +2076,11 @@ double PRADA_DBN::belief_difference(uint t, const arr& probs_p_prim, const arr& 
  * 
  ************************************************/
 
-void calcDerived1(ConjunctionSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn);
-void calcDerived1(TransClosureSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn);
-void calcDerived1(CountSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn);
-void calcDerived1(SumFunction* f, uint t, uintA& constants, PRADA_DBN* dbn);
-void calcDerived1(RewardFunction* f, uint t, uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(CountSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(SumFunction* f, uint t, const uintA& constants, PRADA_DBN* dbn);
+void calcDerived1(RewardFunction* f, uint t, const uintA& constants, PRADA_DBN* dbn);
 
 
 void PRADA_DBN::calcDerived(uint t) {
@@ -2081,55 +2104,54 @@ void PRADA_DBN::calcDerived(uint t) {
 
 
 // With free vars!
-void calcDerived1(ConjunctionSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn) {
+void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived [START]"<<endl;}
-  if (DEBUG>0) {
-    s->write(cout);cout<<endl;
-  }
+  if (DEBUG>0) {cout<<*s<<endl;}
   uintA freeVars;
   s->getFreeVars(freeVars);
   uint i;
-  MT::Array< uintA > combos_args;
-  TL::allPermutations(combos_args, constants, s->arity, true, true);
+  MT::Array< uintA > combos_args__conjunction_lit;
+  TL::allPermutations(combos_args__conjunction_lit, constants, s->arity, true, true);
   uint c1, c2;
   double prob;  
   uintA sa(s->arity);
-  FOR1D(combos_args, c1) {
-    Literal* target = Literal::get(s, combos_args(c1), 1.);
-    if (DEBUG>1) {cout<<"Target: ";target->write();cout<<endl;}
+  FOR1D(combos_args__conjunction_lit, c1) {
+    Literal* target = Literal::get(s, combos_args__conjunction_lit(c1), 1.);
+    if (DEBUG>1) {PRINT(*target);}
     // Free Vars EXISTENTIAL
     // P(p) = 1 - PRODUCT[over free-var combos c](1 - P(basePTs[sub=c]))
     // Intuition: Predicate true if not all base-pred combinations are false.
     if (!s->free_vars_all_quantified) {
-      MT::Array< uintA > combos_freevars;
+      MT::Array< uintA > combos_freevars___base_lits;
       uintA constants_freevars = constants;
-      setMinus(constants_freevars, combos_args(c1));
-      TL::allPermutations(combos_freevars, constants_freevars, freeVars.N, false, true);
-      arr combo_probs(combos_freevars.N);
-      FOR1D(combos_freevars, c2) {
+      setMinus(constants_freevars, combos_args__conjunction_lit(c1));
+      TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
+      arr probs__combos_freevars___base_lits(combos_freevars___base_lits.N);
+      FOR1D(combos_freevars___base_lits, c2) {
         Substitution sub;
         for(i=0;i<s->arity;i++) {
-          sub.addSubs(i, combos_args(c1)(i));
+          sub.addSubs(i, combos_args__conjunction_lit(c1)(i));
         }
         FOR1D(freeVars, i) {
-          sub.addSubs(freeVars(i), combos_freevars(c2)(i));
+          sub.addSubs(freeVars(i), combos_freevars___base_lits(c2)(i));
         }
-        LitL base_lits_ground;
-        sub.apply(base_lits_ground, s->base_literals);
         prob = 1.0;
-        FOR1D(base_lits_ground, i) {
-//           base_lits_ground(i)->write();  cout<<endl;
-          if (base_lits_ground(i)->value>0.)
-            prob *= dbn->RVefficiency__atom2var(base_lits_ground(i))->P(t,1); // assume binary variables
-          else
-            prob *= dbn->RVefficiency__atom2var(base_lits_ground(i))->P(t,0);
+        FOR1D(s->base_literals, i) {
+          Literal* base_lit_ground = sub.apply(s->base_literals(i));
+          LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
+          int val_idx = var->range.findValue(base_lit_ground->value);
+          prob *= var->P(t,val_idx);
+          if (prob < 0.01) {
+            if (DEBUG>0) {cout<<"Stop calculation as probablity is already very small - 1: "<<prob<<endl;}
+            break;
+          }
         }
-        combo_probs(c2) = prob;
+        probs__combos_freevars___base_lits(c2) = prob;
       }
       prob = 1.0;
-      FOR1D(combo_probs, c2) {
-        prob *= 1-combo_probs(c2);
+      FOR1D(probs__combos_freevars___base_lits, c2) {
+        prob *= 1-probs__combos_freevars___base_lits(c2);
       }
       prob = 1.-prob;
     }
@@ -2138,37 +2160,48 @@ void calcDerived1(ConjunctionSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn
     else {
       Substitution sub;
       for(i=0;i<s->arity;i++) {
-        sub.addSubs(i, combos_args(c1)(i));
+        sub.addSubs(i, combos_args__conjunction_lit(c1)(i));
       }
-      LitL base_lits_ground;
+      // base literals WITHOUT additional variables
+      prob = 1.0;
       FOR1D(s->base_literals, i) {
-        if (numberSharedElements(s->base_literals(i)->args, freeVars)==0) {
-          base_lits_ground.append(sub.apply(s->base_literals(i)));
+        if (!s->redundant__base_literal_with_free_vars(i)) {
+          Literal* base_lit_ground = sub.apply(s->base_literals(i));
+          LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
+          CHECK(var!=NULL, "variable is missing for base_lit_ground "<<*base_lit_ground);
+          int val_idx = var->range.findValue(base_lit_ground->value);
+          prob *= var->P(t,val_idx);
+          if (prob < 0.01)
+            break;
         }
       }
-      uintA constants_freevars = constants;
-      setMinus(constants_freevars, combos_args(c1));
-      MT::Array< uintA > combos_freevars;
-      TL::allPermutations(combos_freevars, constants_freevars, freeVars.N, false, true);
-      FOR1D(combos_freevars, c2) {
+      if (prob > 0.99) {
+        // base literals WITH additional variables
+        uintA constants_freevars = constants;
+        setMinus(constants_freevars, combos_args__conjunction_lit(c1));
+        MT::Array< uintA > combos_freevars___base_lits;
+        TL::allPermutations(combos_freevars___base_lits, constants_freevars, freeVars.N, false, true);
         Substitution sub2;
         sub2 = sub;
-        FOR1D(freeVars, i) {
-          sub2.addSubs(freeVars(i), combos_freevars(c2)(i));
-        }
-        FOR1D(s->base_literals, i) {
-          if (numberSharedElements(s->base_literals(i)->args, freeVars)>0) {
-            base_lits_ground.append(sub2.apply(s->base_literals(i)));
+        FOR1D(combos_freevars___base_lits, c2) {
+          FOR1D(freeVars, i) {
+            sub2.addSubs(freeVars(i), combos_freevars___base_lits(c2)(i));
           }
+          FOR1D(s->base_literals, i) {
+            if (s->redundant__base_literal_with_free_vars(i)) {
+              Literal* base_lit_ground = sub2.apply(s->base_literals(i));
+              LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
+              int val_idx = var->range.findValue(base_lit_ground->value);
+              prob *= var->P(t,val_idx);
+              if (prob < 0.01)
+                break;
+            }
+          }
+          if (prob < 0.01) break;
         }
       }
-      if (DEBUG>1) {cout<<"Grounded base PTs:  ";write(base_lits_ground);cout<<endl;}
-      prob = 1.0;
-      FOR1D(base_lits_ground, i) {
-        if (base_lits_ground(i)->value > 0.)
-          prob *= dbn->RVefficiency__atom2var(base_lits_ground(i))->P(t,1);
-        else
-          prob *= dbn->RVefficiency__atom2var(base_lits_ground(i))->P(t,0);
+      else {
+        if (DEBUG>0) {cout<<"Stop calculation as probablity is already very small - 2: "<<prob<<endl;}
       }
     }
     dbn->RVefficiency__atom2var(target)->P(t,0) = 1.-prob;
@@ -2179,97 +2212,29 @@ void calcDerived1(ConjunctionSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn
 }
 
 
-#if 0
-void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, std::map<uint, double>& probs_last, double prev_prob, uint prev_constant, Predicate& base_pred, uint t, RV_Manager* rvm, uintA& constants) {
-  uint DEBUG = 0;
-  uint i;
-  double prob_final, prob_single;
-  uintA sa(2);
-  sa(0)=prev_constant;
-  FOR1D(remaining_constants, i) {
-    sa(1)=remaining_constants(i);
-    prob_single = getPredicateProb(&base_pred, sa, t, rvm);
-    if (DEBUG>0) {PRINT(sa);PRINT(prob_single);PRINT(prev_prob);PRINT(probs_last[remaining_constants(i)]);}
-    prob_final = prob_single * prev_prob * probs_last[remaining_constants(i)];
-    probs.append(prob_final);
-    double prev_prob_new = prob_single * prev_prob;
-    if (prev_prob_new > TRANS_CLOSURE_STOP_PROB) {
-      uintA remaining_constants2 = remaining_constants;
-      remaining_constants2.removeValue(remaining_constants(i));
-      calcDerived_tcp_dfs(probs, remaining_constants2, probs_last, prev_prob_new, remaining_constants(i), base_pred, t, rvm, constants);
-    }
-    else {
-    //       if (DEBUG>0) {cerr<<"  give-up "<<(constants.N - remaining_constants.N)/*<<endl*/;}
-    }
-  }
-}
 
-void calcDerived(TransClosureSymbol& p, uint t, RV_Manager* rvm, uintA& constants) {
-  uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"calcDerived - TransClosureSymbol [START]"<<endl;}
-  if (DEBUG>0) {
-    p->write(cout);cout<<endl;
-  }
-  uint i,c;
-  CHECK(p->d==2, "TransClosureSymbol has to be 2dim");
-  uintA sa(2);
-  MT::Array< uintA > combos;
-  double prob;
-  TL::allPermutations(combos, constants, p->d, true, true);
-  FOR1D(combos, c) {
-    if (DEBUG>0) {cout<<"-- "<<combos(c)<<endl;}
-    arr probs;
-    uintA c_small = constants;
-    setMinus(c_small, combos(c));
-    // A-B
-    sa(0) = combos(c)(0);
-    sa(1) = combos(c)(1);
-    prob = getPredicateProb(p->base_symbol, sa, t, rvm);
-    probs.append(prob);
-    if (combos(c)(0)!=combos(c)(1)) {
-      // A-...X...-B
-      std::map<uint, double> probs_last;
-      FOR1D(c_small, i) {
-        sa(0) = c_small(i);
-        probs_last[c_small(i)] = getPredicateProb(p->base_symbol, sa, t, rvm);
-      }
-      calcDerived_tcp_dfs(probs, c_small, probs_last, 1.0, combos(c)(0), *p->base_symbol, t, rvm, constants);
-    }
-    sa(0) = combos(c)(0);
-    Literal* target = logicObjectManager::getLiteral(&p, true, sa);
-    // true if not all possible chains are false
-    prob = 1.;
-    FOR1D(probs, i) {
-      prob *= (1-probs(i));
-    }
-    prob = 1 - prob;
-    if (DEBUG>0) {
-      target->write();PRINT(probs);
-    }
-    RVefficiency__atom2var(target)->P(t,0) = 1.-prob;
-    RVefficiency__atom2var(target)->P(t,1) = prob;
-  }
-  if (DEBUG>0) {cout<<"calcDerived - TransClosureSymbol [END]"<<endl;}
-}
-#else
+uintA __auxiliary_transclosure__constants;
+uintA __auxiliary_transclosure__constantsIndices(100);
+
 // FAST version
-void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, arr& probs_last, double prev_prob, uint prev_constant, uintA& constants, arr& PROBS_TABLE) {
+void calcDerived_tcp_dfs(arr& probs, const uintA& remaining_constants, const arr& probs_last, double prev_prob, uint prev_constant, const uintA& constants, const arr& PROBS_BASE_TABLE) {
   uint DEBUG = 0;
   uint i;
   double prob_final, prob_single;
   int idx1, idx2;
-  idx1 = constants.findValue(prev_constant);
+  idx1 = __auxiliary_transclosure__constantsIndices(prev_constant);
   FOR1D(remaining_constants, i) {
-    idx2 = constants.findValue(remaining_constants(i));
-    prob_single = PROBS_TABLE(idx1, idx2);
+    idx2 = __auxiliary_transclosure__constantsIndices(remaining_constants(i));
+    prob_single = PROBS_BASE_TABLE(idx1, idx2);
     if (DEBUG>0) {PRINT(prev_constant);PRINT(remaining_constants(i));PRINT(prob_single);PRINT(prev_prob);PRINT(probs_last(remaining_constants(i)));}
     prob_final = prob_single * prev_prob * probs_last(remaining_constants(i));
     probs.append(prob_final);
     double prev_prob_new = prob_single * prev_prob;
+    #define TRANS_CLOSURE_STOP_PROB 0.01
     if (prev_prob_new > TRANS_CLOSURE_STOP_PROB) {
       uintA remaining_constants2 = remaining_constants;
-      remaining_constants2.removeValue(remaining_constants(i));
-      calcDerived_tcp_dfs(probs, remaining_constants2, probs_last, prev_prob_new, remaining_constants(i), constants, PROBS_TABLE);
+      remaining_constants2.removeValueInSorted(remaining_constants(i), TL::uint_compare);
+      calcDerived_tcp_dfs(probs, remaining_constants2, probs_last, prev_prob_new, remaining_constants(i), constants, PROBS_BASE_TABLE);
     }
     else {
 //       if (DEBUG>0) {cerr<<"  give-up "<<(constants.N - remaining_constants.N)/*<<endl*/;}
@@ -2278,81 +2243,118 @@ void calcDerived_tcp_dfs(arr& probs, uintA& remaining_constants, arr& probs_last
 }
 
 
-void calcDerived1(TransClosureSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn) {
+MT::Array< TransClosureSymbol* > __auxiliary_transclosure__symbols;
+MT::Array< LitL > __auxiliary_transclosure__baseLits;
+MT::Array< LitL > __auxiliary_transclosure__transclosureLits;
+MT::Array< RVL > __auxiliary_transclosure__transclosureVars;
+
+void calcDerived1(TransClosureSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - TransClosureSymbol [START]"<<endl;}
   if (DEBUG>0) {
     s->write(cout);cout<<endl;
     PRINT(constants);
   }
-  uint i,c;
+  CHECK(constants.isSorted(TL::uint_compare), "");
+  uint i, k;
   CHECK(s->arity==2, "TransClosureSymbol has to be 2dim");
-  MT::Array< uintA > combos;
-  double prob;
-  TL::allPermutations(combos, constants, s->arity, true, true);
-
-  // precompute all probs
-  arr PROBS_TABLE(constants.N, constants.N);
-  PROBS_TABLE.setUni(0.);
-  int idx1, idx2;
-  uintA args(2);
-  FOR1D(combos, c) {
-    idx1 = constants.findValue(combos(c)(0));
-    idx2 = constants.findValue(combos(c)(1));
-    args(0) = combos(c)(0);
-    args(1) = combos(c)(1);
-    PROBS_TABLE(idx1, idx2) = dbn->RVefficiency__atom2var(Literal::get(s->base_symbol, args, 1.))->P(t,1);
-  }
-  if (DEBUG>0) {PRINT(PROBS_TABLE);}
-
-  FOR1D(combos, c) {
-    if (DEBUG>0) {cout<<"-- "<<combos(c)<<endl;}
-    arr probs;
-    uintA c_small = constants;
-    setMinus(c_small, combos(c));
-    // A-B
-    idx1 = constants.findValue(combos(c)(0));
-    idx2 = constants.findValue(combos(c)(1));
-    probs.append(PROBS_TABLE(idx1, idx2));
-    args(0) = combos(c)(1);
-    args(1) = combos(c)(1);
-    if (combos(c)(0)!=combos(c)(1)) {
-      // A-...X...-B
-      arr probs_last(c_small.max()+1);
-      FOR1D(c_small, i) {
-        idx1 = constants.findValue(c_small(i));
-        probs_last(c_small(i)) = PROBS_TABLE(idx1, idx2);
-      }
-      calcDerived_tcp_dfs(probs, c_small, probs_last, 1.0, combos(c)(0), constants, PROBS_TABLE);
+  if (__auxiliary_transclosure__constants != constants) {
+    __auxiliary_transclosure__symbols.clear();
+    __auxiliary_transclosure__baseLits.clear();
+    __auxiliary_transclosure__transclosureVars.clear();
+    __auxiliary_transclosure__constants = constants;
+    FOR1D(constants, i) {
+      __auxiliary_transclosure__constantsIndices(constants(i)) = i;
     }
-    args(0) = combos(c)(0);
-    Literal* target = Literal::get(s, args, 1.);
+  }
+  LitL baseLits;
+  LitL transclosureLits;
+  RVL transclosureVars;
+  FOR1D(__auxiliary_transclosure__symbols, i) {
+    if (__auxiliary_transclosure__symbols(i) == s) {
+      baseLits = __auxiliary_transclosure__baseLits(i);
+      transclosureLits = __auxiliary_transclosure__transclosureLits(i);
+      transclosureVars = __auxiliary_transclosure__transclosureVars(i);
+      break;
+    }
+  }
+  if (i==__auxiliary_transclosure__symbols.N) {
+    __auxiliary_transclosure__symbols.append(s);
+    Literal::getLiterals(baseLits, s->base_symbol, constants, 1.);
+    __auxiliary_transclosure__baseLits.append(baseLits);
+    Literal::getLiterals(transclosureLits, s, constants, 1.);
+    __auxiliary_transclosure__transclosureLits.append(transclosureLits);
+    FOR1D(transclosureLits, i) {
+      transclosureVars.append(dbn->RVefficiency__atom2var(transclosureLits(i)));
+    }
+    __auxiliary_transclosure__transclosureVars.append(transclosureVars);
+  }
+  // precompute all probs
+  arr PROBS_BASE_TABLE(constants.N, constants.N);
+  PROBS_BASE_TABLE.setUni(0.);
+  int idx1, idx2;
+  FOR1D(baseLits, i) {
+    idx1 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(0));
+    idx2 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(1));
+    PROBS_BASE_TABLE(idx1, idx2) = dbn->RVefficiency__atom2var(baseLits(i))->P(t,1);
+  }
+  if (DEBUG>0) {PRINT(PROBS_BASE_TABLE);}
+  double prob;
+  FOR1D(transclosureLits, i) {
+    if (DEBUG>0) {cout<<"-- "<<*transclosureLits(i)<<endl;}
+    // A-B
+    idx1 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(0));
+    idx2 = __auxiliary_transclosure__constantsIndices(baseLits(i)->args(1));
+    arr probs(1);
+    probs(0) = PROBS_BASE_TABLE(idx1, idx2);
+    if (DEBUG>0) {cout<<*baseLits(i)<<" has start prob = "<<probs.last()<<endl;}
+    if (idx1!=idx2) {
+      // A-...X...-B
+      uintA constants_remaining(constants.N-2);
+      int __l = 0;
+      FOR1D(constants, k) {
+        uint idx_constant = __auxiliary_transclosure__constantsIndices(constants(k));
+        if (idx_constant != idx1  &&  idx_constant != idx2)
+          constants_remaining(__l++) = constants(k);
+      }
+      if (DEBUG>0) {PRINT(constants_remaining);}
+      arr probs_last(constants_remaining.max()+1);
+      uint num_nonzero_probs__arg1 = 0, num_nonzero_probs__arg2 = 0;
+      FOR1D(constants_remaining, k) {
+        uint idx_remaining = __auxiliary_transclosure__constantsIndices(constants_remaining(k));
+        double prob = PROBS_BASE_TABLE(idx_remaining, idx2);
+        probs_last(constants_remaining(k)) = prob;
+        if (DEBUG>1) {cout<<"prob for ("<<constants(idx_remaining)<<","<<constants(idx2)<<") = "<<prob<<endl;}
+        if (prob>0.01) num_nonzero_probs__arg2++;
+        prob = PROBS_BASE_TABLE(idx1, idx_remaining);
+        if (DEBUG>1) {cout<<"prob for ("<<constants(idx1)<<","<<constants(idx_remaining)<<") = "<<prob<<endl;}
+        if (prob > 0.01) num_nonzero_probs__arg1++;
+      }
+      if (DEBUG>0) {PRINT(num_nonzero_probs__arg1);  PRINT(num_nonzero_probs__arg2);}
+      if (num_nonzero_probs__arg1>0  &&  num_nonzero_probs__arg2>0) {
+        if (DEBUG>0) {cout<<"starting depth search"<<endl;}
+        calcDerived_tcp_dfs(probs, constants_remaining, probs_last, 1.0, baseLits(i)->args(0), constants, PROBS_BASE_TABLE);
+      }
+    }
     // true if not all possible chains are false
     prob = 1.;
-    FOR1D(probs, i) {
-      prob *= (1-probs(i));
+    FOR1D(probs, k) {
+      prob *= (1-probs(k));
     }
     prob = 1 - prob;
     if (DEBUG>0) {
-      target->write();PRINT(probs);
+      PRINT(probs);
+      PRINT(prob);
     }
-    dbn->RVefficiency__atom2var(target)->P(t,0) = 1.-prob;
-    dbn->RVefficiency__atom2var(target)->P(t,1) = prob;
-  }
-  if (DEBUG>1) {
-    FOR1D(combos, c) {
-      args(0) = combos(c)(0);
-      args(1) = combos(c)(1);
-      Literal* target = Literal::get(s, args, 1.);
-      cout<<args<<" :"<<dbn->RVefficiency__atom2var(target)->P(t,1)<<endl;
-    }
+    LiteralRV* var = transclosureVars(i);
+    var->P(t,0) = 1.-prob;
+    var->P(t,1) = prob;
   }
   if (DEBUG>0) {cout<<"calcDerived - TransClosureSymbol [END]"<<endl;}
 }
-#endif
 
 
-void calcDerived1(CountSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn) {
+void calcDerived1(CountSymbol* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - CountSymbol [START]"<<endl;}
   if (DEBUG>0) {
@@ -2416,7 +2418,7 @@ void calcDerived1(CountSymbol* s, uint t, uintA& constants, PRADA_DBN* dbn) {
 }
 
 
-void calcDerived1(SumFunction* s, uint t, uintA& constants, PRADA_DBN* dbn) {
+void calcDerived1(SumFunction* s, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - SumFunction [START]"<<endl;}
   if (DEBUG>0) {
@@ -2449,7 +2451,7 @@ void calcDerived1(SumFunction* s, uint t, uintA& constants, PRADA_DBN* dbn) {
 }
 
 
-void calcDerived1(RewardFunction* f, uint t, uintA& constants, PRADA_DBN* dbn) {
+void calcDerived1(RewardFunction* f, uint t, const uintA& constants, PRADA_DBN* dbn) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"calcDerived - RewardFunction [START]"<<endl;}
   if (DEBUG>0) {
@@ -2505,7 +2507,8 @@ void PRADA_DBN::checkStateSoundness(uint t, bool omit_derived) {
   }
   if (!omit_derived) {
     FOR1D(vars_state__derived, i) {
-      if (vars_state__derived(i)->type == LiteralRV::expectation) continue;
+      if (vars_state__derived(i)->type == LiteralRV::expectation)
+        continue;
       sum = 0.;
       FOR1D(vars_state__derived(i)->range, val) {
         if (vars_state__derived(i)->P(t,val) < -0.01) {
@@ -2515,7 +2518,8 @@ void PRADA_DBN::checkStateSoundness(uint t, bool omit_derived) {
         sum += vars_state__derived(i)->P(t,val);
       }
       if (!TL::areEqual(1.0, sum))
-        HALT("invalid distribution for rv with id="<<vars_state__derived(i)->id);
+        HALT("invalid distribution for rv with id="<<vars_state__derived(i)->id
+            <<" for literal "<<*vars_state__derived(i)->lit<<"   sum="<<sum);
     }
   }
 }
@@ -2675,11 +2679,11 @@ void PRADA_DBN::getActions(LitL& actions, uint horizon) const {
  ************************************************/
 
 
-void PRADA_DBN::create_dbn_structure(const uintA& constants, const SymL& symbols_state, const SymL& actions) {
+void PRADA_DBN::create_dbn_structure(const SymL& symbols_state, const SymL& actions) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"PRADA_DBN::create_dbn_structure [START]"<<endl;}
   if (DEBUG>0) {PRINT(symbols_state);  PRINT(actions);}
-  CHECK(!constants.containsDoubles(), "constants ain't distinct, brother! look here: "<<constants);
+  CHECK(!net_constants.containsDoubles(), "constants ain't distinct, brother! look here: "<<net_constants);
   
   uint i;
   for (i=0; symbols_state.N>0 && i<symbols_state.N-1; i++) {
@@ -2693,7 +2697,7 @@ void PRADA_DBN::create_dbn_structure(const uintA& constants, const SymL& symbols
   // Init efficiency structure
   SymL symbols_all;  symbols_all.append(symbols_state);  symbols_all.append(actions);
   CHECK(RVefficiency__symbols.N == 0, "DBN has already been built before!");
-  RVefficiency__init(symbols_all, constants);
+  RVefficiency__init(symbols_all);
   
   // Build mapping: action --> rules
   // Calc max #rules per grounded action
@@ -2716,18 +2720,18 @@ void PRADA_DBN::create_dbn_structure(const uintA& constants, const SymL& symbols
     if (actions(i)->arity > max_arity_actions)
       max_arity_actions = actions(i)->arity;
   }
-  if (DEBUG>0) {PRINT(max_rules_per_action);  PRINT(max_arity_actions); PRINT(actions.N);  PRINT(constants.N);}
+  if (DEBUG>0) {PRINT(max_rules_per_action);  PRINT(max_arity_actions); PRINT(actions.N);  PRINT(net_constants.N);}
   
-  action2rules.resize(actions.N, pow(constants.N, max_arity_actions), max_rules_per_action);
+  action2rules.resize(actions.N, pow(net_constants.N, max_arity_actions), max_rules_per_action);
   action2rules.setUni(9999); // dummy value
-  action2rules_no.resize(actions.N, pow(constants.N, max_arity_actions));
-  action2rules_no.setZero();
+  action2rules_num.resize(actions.N, pow(net_constants.N, max_arity_actions));
+  action2rules_num.setZero();
   FOR1D_(ground_rules, i) {
     uint idx_symbol = actions.findValue(ground_rules.elem(i)->action->s);
-    uint idx_args = getIndex(constants, ground_rules.elem(i)->action->args);
-    action2rules_no(idx_symbol, idx_args)++;
-//     ground_rules.elem(i)->action->write(cout);   cout<<"  idx_symbol="<<idx_symbol<<"  idx_args="<<idx_args<<"  ";   cout<<"   action2rules_no(idx_symbol, idx_args)="<<action2rules_no(idx_symbol, idx_args)<<endl;
-    action2rules(idx_symbol, idx_args, action2rules_no(idx_symbol, idx_args)-1) = i;
+    uint idx_args = getIndex__PRADA_DBN(ground_rules.elem(i)->action->args);
+    action2rules_num(idx_symbol, idx_args)++;
+//     ground_rules.elem(i)->action->write(cout);   cout<<"  idx_symbol="<<idx_symbol<<"  idx_args="<<idx_args<<"  ";   cout<<"   action2rules_num(idx_symbol, idx_args)="<<action2rules_num(idx_symbol, idx_args)<<endl;
+    action2rules(idx_symbol, idx_args, action2rules_num(idx_symbol, idx_args)-1) = i;
   }
   
   // Determine changeable symbols
@@ -2740,7 +2744,7 @@ void PRADA_DBN::create_dbn_structure(const uintA& constants, const SymL& symbols
   LitL lits_state;
   FOR1D(symbols_state, i) {
     LitL lits;
-    Literal::getLiterals(lits, symbols_state(i), constants, 1.0);
+    Literal::getLiterals(lits, symbols_state(i), net_constants, 1.0);
     lits_state.setAppend(lits);
     if (DEBUG>3) {cout<<"Lits for "<<symbols_state(i)->name << ":  "<<lits<<endl;}
   }
@@ -2993,16 +2997,15 @@ void PRADA_DBN::create_dbn_params() {
  * 
  ************************************************/
 
-void PRADA_DBN::RVefficiency__init(const SymL& symbols, const uintA& constants) {
+void PRADA_DBN::RVefficiency__init(const SymL& symbols) {
   RVefficiency__symbols = symbols;
-  RVefficiency__constants = constants;
   uint max_arity = 0;
   uint i;
   FOR1D(symbols, i) {
     if (symbols(i)->arity > max_arity)
       max_arity = symbols(i)->arity;
   }
-  RVefficiency__LRV_A__structured.resize(symbols.N, (uint) pow(constants.N, max_arity));
+  RVefficiency__LRV_A__structured.resize(symbols.N, (uint) pow(net_constants.N, max_arity));
   RVefficiency__LRV_A__structured.setUni(NULL);
   RVefficiency__LRV_A__flat.resize(RVefficiency__LRV_A__structured.N+10);
   RVefficiency__LRV_A__flat.setUni(NULL);
@@ -3015,7 +3018,7 @@ LiteralRV* PRADA_DBN::RVefficiency__atom2var(Literal* lit) const {
     MT_MSG("Symbol '"<<lit->s->name<<"' for lit="<<*lit<<" not in RVefficiency.");
     return NULL;
   }
-  LiteralRV* rv = RVefficiency__LRV_A__structured(s_idx, getIndex(RVefficiency__constants, lit->args));
+  LiteralRV* rv = RVefficiency__LRV_A__structured(s_idx, getIndex__PRADA_DBN(lit->args));
   if (rv == NULL) {
 //     MT_MSG("RV_Manager::l2v -- No LiteralRV for "<<*lit<<" with calculated s_idx="<<s_idx);
     // Some methods expect that NULL is returned in that case.
@@ -3031,7 +3034,7 @@ LiteralRV* PRADA_DBN::RVefficiency__id2var(uint id_var) const {
 
 void PRADA_DBN::RVefficiency__setAtom(Literal* lit, LiteralRV* var) {
   int idx_symbol = RVefficiency__symbols.findValue(lit->s);
-  uint idx_args = getIndex(RVefficiency__constants, lit->args);
+  uint idx_args = getIndex__PRADA_DBN(lit->args);
   RVefficiency__LRV_A__structured(idx_symbol, idx_args) = var;
   RVefficiency__LRV_A__flat(var->id) = var;
 }

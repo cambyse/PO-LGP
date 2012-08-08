@@ -275,8 +275,19 @@ ConjunctionSymbol* ConjunctionSymbol::get(const MT::String& name, uint arity, MT
   s->arity = arity;
   s->base_literals = base_literals;
   s->free_vars_all_quantified = free_vars_all_quantified;
-  return s;
   
+  uint i, k;
+  s->redundant__base_literal_with_free_vars.resize(base_literals.N);
+  s->redundant__base_literal_with_free_vars.setUni(false);
+  FOR1D(s->base_literals, i) {
+    FOR1D(s->base_literals(i)->args, k) {
+      if (s->base_literals(i)->args(k) >= arity) {
+        s->redundant__base_literal_with_free_vars(i) = true;
+        break;
+      }
+    }
+  }
+  return s;
 }
 
 
