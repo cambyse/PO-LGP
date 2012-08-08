@@ -372,9 +372,6 @@ LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
 LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
-ifeq ($(URGLASER),1)
-CXXFLAGS  += -DMT_LASER
-
 ifeq ($(PCL),1)
 QHULL = 1
 CXXFLAGS  +=  -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.5 pcl_io-1.5 pcl_range_image_border_extractor-1.5 pcl_segmentation-1.5 pcl_common-1.5 pcl_kdtree-1.5 pcl_registration-1.5 pcl_surface-1.5 pcl_features-1.5 pcl_keypoints-1.5 pcl_sample_consensus-1.5 pcl_tracking-1.5 pcl_filters-1.5 pcl_octree-1.5 pcl_search-1.5 pcl_visualization-1.5` -I/usr/include/vtk-5.2 
