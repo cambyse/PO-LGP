@@ -29,6 +29,11 @@
 #  define MT_LogFileName "MT.log"
 #endif
 
+//TODO!!
+namespace MT{
+void parameterAccessGlobalLock(){}
+void parameterAccessGlobalUnLock(){}
+}
 
 //===========================================================================
 //

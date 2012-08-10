@@ -17,6 +17,7 @@
 #ifdef MT_LAPACK
 
 #include "array.h"
+#include "util.h"
 
 #ifdef __cplusplus
 extern "C" {

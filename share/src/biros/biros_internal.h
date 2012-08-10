@@ -49,8 +49,8 @@ struct ConditionVariable {
   ConditionVariable(int initialState=0);
   ~ConditionVariable();
   
-  void setState(int i); ///< sets state and broadcasts
-  void broadcast();     ///< just broadcast
+  void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
   void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userLock=true below!
   void unlock();
@@ -61,6 +61,7 @@ struct ConditionVariable {
   void waitForStateEq(int i, bool userLock=false);    ///< return value is the state after the waiting
   void waitForStateNotEq(int i, bool userLock=false); ///< return value is the state after the waiting
   void waitForStateGreaterThan(int i, bool userLock=false); ///< return value is the state after the waiting
+  void waitForStateSmallerThan(int i, bool userLock=false); ///< return value is the state after the waiting
   void waitUntil(double absTime, bool userLock=false);
 };
 

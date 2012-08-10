@@ -496,6 +496,7 @@ template<class T> T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>&
 template<class T> T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 
 template<class T> T sum(const MT::Array<T>& v);
+template<class T> T scalar(const MT::Array<T>& v);
 template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d);
 template<class T> T sumOfAbs(const MT::Array<T>& v);
 template<class T> T sumOfSqr(const MT::Array<T>& v);

@@ -1,6 +1,8 @@
 NAME   = $(shell basename $(PWD))
 
-ALL =	src/MT src/biros use_cases/vision/extern/libcolorseg/src
+ALL =	src/MT \
+        src/biros \
+        use_cases/vision/extern/libcolorseg/src
 
 makeAll: $(ALL:%=make/%) useCases
 

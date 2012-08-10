@@ -1893,6 +1893,10 @@ template<class T> T sum(const MT::Array<T>& v) {
   return t;
 }
 
+template<class T> T scalar(const MT::Array<T>& x) {
+  return x.scalar();
+}
+
 //! \f$\sum_i x_i\f$
 template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   CHECK(v.nd>d, "array doesn't have this dimension");

@@ -27,14 +27,22 @@ typedef MT::Array<AccessEvent*> AccessEventL;
 
 struct AccessController {
   struct sAccessController *s;
-  
+
+  //all accesses
   AccessEventL events;
-  boolA variableBlock;
-  ofstream* dumpFile;
+  ofstream* eventsFile;
+  
+  //blocking accesses
+  AccessEventL blockedAccesses;
   
   AccessController();
   ~AccessController();
+  
   //methods called by the user
+  void blockAllAccesses();
+  void unblockAllAccesses();
+  void stepToNextAccess();
+  void stepToNextWriteAccess();
   void setReplay(const bool replay = true);
   bool getReplay() const;
   

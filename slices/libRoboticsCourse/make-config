@@ -1,3 +1,18 @@
-ifneq ($(NAME),libRoboticsCourse)
+## these are the options for compiling the lib
+ifeq ($(CONFIGMODE),mlrlib)
+CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES -DMT_NO_THREADS
+LIBS   += -lrt
+OPTIM  = debug
+ANN = 1
+QHULL = 1
+FREEGLUT = 1
+SWIFT = 1
+LAPACK = 1
+PHYSX = 1 ## REQUIRES PhysX !!!
+endif
+
+
+## these are the options for compiling the applications
+ifneq ($(CONFIGMODE),mlrlib)
   LIBS += -lRoboticsCourse
 endif

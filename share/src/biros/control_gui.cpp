@@ -17,6 +17,7 @@ GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par);
 GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIter* par);
 void setBoxView(View *v, GtkBuilder *builder, uint box);
 
+
 //===========================================================================
 //
 // the InsideOutGui definition
@@ -259,6 +260,18 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
     os <<endl;
   }
   os.close();
+}
+
+extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
+  accessController.blockAllAccesses();
+}
+
+extern "C" G_MODULE_EXPORT void on_run_clicked(GtkWidget* caller){
+  accessController.unblockAllAccesses();
+}
+
+extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
+  accessController.stepToNextWriteAccess();
 }
 
 extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){

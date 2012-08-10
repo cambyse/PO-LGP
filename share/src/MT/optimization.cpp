@@ -752,7 +752,8 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
   
   //get all potentials
   recomputeChainSquarePotentials(Rx, fij, f, x, evals);
-  double fy,fx = evaluateCSP(Rx, fij, x);
+  //double fy;
+  double fx = evaluateCSP(Rx, fij, x);
   //fx = evaluateQCF(f, x);
   
   sanityCheckUptodatePotentials(Rx, f, x);
@@ -768,7 +769,7 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
   
   for(uint k=0; k<o.stopIters; k++) {
     y=x;
-    fy=fx;
+    //fy=fx;
     Ry=Rx;
     
     sanityCheckUptodatePotentials(Ry, f, y);

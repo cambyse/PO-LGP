@@ -15,13 +15,10 @@ typedef MT::Array<ViewInfo*> ViewInfoL;
 
 namespace b{
   //-- basic control of processes
-  void runAllProcesses();
-  void pauseAllProcesses();
-  void stepProcess(Process&);
-  void runProcess(Process&);
-  void pauseProcess(Process&);
-  void blockVariable_write(Variable&);
-  void blockVariable_read(Variable&);
+  void blockAllAccesses();
+  void unblockAllAccesses();
+  void stepToNextAccess();
+  void stepToNextWriteAccess();
 
   //-- gui
   void openInsideOut();

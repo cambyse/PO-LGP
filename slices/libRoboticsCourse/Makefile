@@ -4,9 +4,9 @@ ALL =	extern/SWIFT++_1.2/src \
 	src/MT
 #	extern/SWIFT++_1.2/decomposer/src \
 
-makeAll: $(ALL:%=make/%) tests courses
+makeAll: $(ALL:%=make/%) makePaths/test makePaths/course
 
-cleanAll: $(ALL:%=clean/%) cleanProjects
+cleanAll: $(ALL:%=clean/%) cleanPaths/test cleanPaths/course
 
 make/%::
 	make -C $*
@@ -14,15 +14,11 @@ make/%::
 clean/%::
 	make clean -C $*
 
-tests::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
+makePaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec make -C {} \;
 
-courses::
-	-@find course -maxdepth 1 -follow -type d -not -name 'course' -not -name 'SHARE' -exec make -C {} \;
-
-cleanProjects::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
-	-@find course -maxdepth 1 -follow -type d -not -name 'course' -not -name 'SHARE' -exec make -C {} clean \;
+cleanPaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::
 	make -C doc doxy_array

@@ -1,6 +1,7 @@
 #include <MT/array.h>
 #include <MT/MinSumGaussNewton.h>
 #include <MT/util.h>
+#include <MT/array_t.cxx>
 
 #include "test1.cpp" //other tests
 

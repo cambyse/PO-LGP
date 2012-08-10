@@ -166,15 +166,19 @@ ConditionVariable::~ConditionVariable() {
   int rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::setState(int i) {
+void ConditionVariable::setState(int i, bool signalOnlyFirstInQueue) {
   stateMutex.lock();
   state=i;
   broadcast();
   stateMutex.unlock();
 }
 
-void ConditionVariable::broadcast() {
-  int rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+void ConditionVariable::broadcast(bool signalOnlyFirstInQueue) {
+  if(!signalOnlyFirstInQueue){
+    int rc = pthread_cond_signal(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }else{
+    int rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
 }
 
 void ConditionVariable::lock() {
@@ -232,6 +236,14 @@ void ConditionVariable::waitForStateNotEq(int i, bool userLock) {
 void ConditionVariable::waitForStateGreaterThan(int i, bool userLock) {
   if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state<=i) {
+    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  if(!userLock) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForStateSmallerThan(int i, bool userLock) {
+  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (state>=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
   if(!userLock) stateMutex.unlock();

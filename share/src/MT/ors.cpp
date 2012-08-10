@@ -1311,7 +1311,11 @@ void ors::Mesh::addMesh(const ors::Mesh& mesh2) {
 }
 
 void ors::Mesh::makeConvexHull(){
+#ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
+#else
+  NICO
+#endif
 }
   
 
@@ -4469,10 +4473,10 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 #include "util_t.cxx"
 template void MT::Parameter<ors::Vector>::initialize();
-template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 
 #ifndef  MT_ORS_ONLY_BASICS
 #  include "array_t.cxx"
+template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 #endif

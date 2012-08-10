@@ -25,7 +25,9 @@ struct sAccessController{
   bool enableDataLog;
   bool replay;
   Lock eventsLock;
-  
+
+  ConditionVariable blockMode;
+
   LoggerVariableData* getVariableData(const Variable *v);
   
   MT::Array<ConditionVariable*> breakpointQueue;
@@ -48,25 +50,63 @@ struct sAccessController{
 };
 
 AccessController::AccessController()
-:dumpFile(NULL){
+:eventsFile(NULL){
   s = new sAccessController;
   s->enableAccessLog = false;
   s->replay = false;
+  s->blockMode.setState(0);
 }
 
 AccessController::~AccessController(){
-  if(dumpFile){ dumpFile->close();  delete dumpFile; }
+  if(eventsFile){ eventsFile->close();  delete eventsFile; }
   delete s;
 }
-  
+
+//0 = reads run, writes run
+//1 = reads run, next write runs
+//2 = reads run, writes blocked
+//3 = next read runs, writes blocked
+//4 = reads blocked,  writes blocked
+
+void AccessController::blockAllAccesses(){
+  s->blockMode.setState(4);
+}
+
+void AccessController::unblockAllAccesses(){
+  s->blockMode.setState(0);
+}
+
+void AccessController::stepToNextAccess(){
+  s->blockMode.setState(3, true);
+}
+
+void AccessController::stepToNextWriteAccess(){
+  s->blockMode.setState(1, true);
+}
+
 void AccessController::queryReadAccess(Variable *v, const Process *p){
-  //VariableBlock *block=s->getVariableBlock(v);
-  //block->writeCondVar.waitForSignaltateNotEq(-2);
+  s->blockMode.lock();
+  if(s->blockMode.state>=4){
+    AccessEvent *e = new AccessEvent(v, p, AccessEvent::read, v->revision, p?p->step_count:0);
+    s->blockMode.waitForStateSmallerThan(4, true);
+    if(s->blockMode.state==3) s->blockMode.state=4; //only this read steps, next to wait
+    blockedAccesses.removeValue(e);
+    delete e;
+  }
+  s->blockMode.unlock();
 }
 
 void AccessController::queryWriteAccess(Variable *v, const Process *p){
-  //VariableBlock *block=s->getVariableBlock(v);
-  //block->writeCondVar.waitForStateNotEq(-2);
+  s->blockMode.lock();
+  if(s->blockMode.state>=2){
+    AccessEvent *e = new AccessEvent(v, p, AccessEvent::write, v->revision, p?p->step_count:0);
+    blockedAccesses.append(e);
+    s->blockMode.waitForStateSmallerThan(2, true);
+    if(s->blockMode.state==1) s->blockMode.state=4; //only this read steps, next to wait
+    blockedAccesses.removeValue(e);
+    delete e;
+  }
+  s->blockMode.unlock();
 }
   
 void AccessController::logReadAccess(const Variable *v, const Process *p) {
@@ -101,9 +141,9 @@ void AccessController::logWriteDeAccess(const Variable *v, const Process *p) {
 }
 
 void AccessController::dumpEventList(){
-  if(!dumpFile){
-    dumpFile = new ofstream;
-    MT::open(*dumpFile,"z.eventLog");
+  if(!eventsFile){
+    eventsFile = new ofstream;
+    MT::open(*eventsFile,"z.eventLog");
   }
   
   AccessEventL copy;
@@ -115,7 +155,7 @@ void AccessController::dumpEventList(){
   uint i;
   AccessEvent *e;
   for_list(i,e,copy){
-    (*dumpFile)
+    (*eventsFile)
       <<(e->type==AccessEvent::read?'r':'w')
       <<' ' <<e->var->name <<'-' <<e->var->id
       <<' ' <<e->revision

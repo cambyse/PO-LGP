@@ -616,6 +616,9 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       selpos = s->body->X.pos;
       movingBody=s->body;
     }
+    if(j){
+      cout <<"selected joint " <<j->index <<" connecting " <<j->from->name <<"--" <<j->to->name <<endl;
+    }
     return true;
   }
 };

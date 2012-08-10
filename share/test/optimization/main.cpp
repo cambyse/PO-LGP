@@ -12,21 +12,18 @@ void testSqrProblem(){
   checkGradient((ScalarFunction&)P, x, 1e-3);
   checkJacobian((VectorFunction&)P, x, 1e-3);
 
-  optOptions o;
-  
-  optRprop(x, P, (o.initStep=.01, o.stopTolerance=1e-5, o.stopEvals=1000, o.verbose=2, o));
+  optRprop(x, P, OPT4(initStep=.01, stopTolerance=1e-5, stopEvals=1000, verbose=2));
   MT::wait();
 
   x=x0;
-  optGradDescent(x, P, (o.stopEvals=10000, o));
+  optGradDescent(x, P, OPT1(stopEvals=10000));
   MT::wait();
 
   x=x0;
-  optGaussNewton(x, P, (o.stopEvals=10000, o));
+  optGaussNewton(x, P, OPT1(stopEvals=10000));
   MT::wait();
 
   gnuplot("plot 'z.gaussNewton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);
-  MT::wait();
 }
 
 void testDynamicProgramming(){
@@ -61,8 +58,8 @@ void testDynamicProgramming(){
 }
 
 int main(int argn,char** argv){
-  //testSqrProblem();
-  testDynamicProgramming();
+  testSqrProblem();
+  //testDynamicProgramming();
   
   return 0;
 }
