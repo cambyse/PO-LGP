@@ -22,8 +22,6 @@ class ClassifyMaster : public Master<MT::Array<arr>, double> {
 
     ClassificatorV* classificator;
     ClassifyData *data;
-
-    Sampler<MT::Array<arr> >* sampler;
 };
 
 class ClassifyIntegrator : public Integrator<double> {
@@ -76,7 +74,7 @@ ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl, int numOfWorke
 
 MT::Array<arr> ClassifyMaster::createJob() {
   MT::Array<arr> sample;
-  sampler->sample(sample);
+  classificator->classificator->problem.sampler->sample(sample);
   return sample;
 }
 
@@ -97,7 +95,7 @@ ClassifyWorker::ClassifyWorker(ClassificatorV* cl) :
 
 void ClassifyWorker::doWork(double& result, const MT::Array<arr>& job) {
   classificator->readAccess(this);
-  if (classificator->classificator->classify(job) == classificator->oracle->classify(job)) result = 1;
+  if (classificator->classificator->classify(job) == classificator->classificator->problem.oracle->classify(job)) result = 1;
   else result = 0;
   classificator->deAccess(this);
 }
@@ -110,14 +108,12 @@ Tester::Tester(const int testNumber, const char* filename, int numOfWorkers, Sam
   m = new ClassifyMaster(testNumber, new ClassificatorV, numOfWorkers);
   ClassifyData *d = new ClassifyData();
   m->testNumber = testNumber;
-  m->sampler = sampler;
   outfile.open(filename);
 }
 
 const double Tester::test(ClassificatorV* l) {
   m->classificator->writeAccess(NULL);
   m->classificator->classificator = l->classificator;
-  m->classificator->oracle = l->oracle;
   m->classificator->deAccess(NULL);
   m->restart(NULL);
   while(m->hasWorkingJob()) sleep(1);

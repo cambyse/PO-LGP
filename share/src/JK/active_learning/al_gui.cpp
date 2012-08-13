@@ -33,10 +33,10 @@ Gui::Gui(const char* orsFile) : Process("Gui Process"),
 void Gui::open() {}
 
 void Gui::step() {
-  bool tray = birosInfo.getParameter<bool>("tray", this);
+  MT::String problem = birosInfo.getParameter<MT::String>("problem", this, MT::String("tray"));
   guiData->readAccess(this);
   if(guiData->sample) {
-    if (tray)
+    if (problem == "tray")
       relational::generateOrsFromTraySample(s->ors, *guiData->sample);
     else
       relational::generateOrsFromSample(s->ors, *guiData->sample);

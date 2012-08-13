@@ -4,18 +4,19 @@
 #include <MT/array.h>
 #include <JK/utils/util.h>
 #include <JK/utils/sampler.h>
+#include <JK/utils/featureGenerator.h>
 
 class LogisticRegressionEvaluator : public Evaluator<MT::Array<arr> > {
-  private:
     sLogisticRegression* p;
   public:
-    LogisticRegressionEvaluator(sLogisticRegression* p) : p(p) {};
+    LogisticRegressionEvaluator(sLogisticRegression* p, const ActiveLearningProblem& prb) : p(p), problem(prb) {};
     double evaluate(MT::Array<arr>& sample);
+    const ActiveLearningProblem problem;
 };
 
 class sLogisticRegression {
   public:
-    sLogisticRegression() : evaluator(LogisticRegressionEvaluator(this)) {};
+    sLogisticRegression() {};
     arr beta;  
 
     arr data;
@@ -24,11 +25,8 @@ class sLogisticRegression {
     double ridge, sigma;
     int rbfConst;
 
-    void makeFeatures(arr& Z, const arr& X, const arr& Xtrain );
     void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda);
 
-    LogisticRegressionEvaluator evaluator;
-    Sampler<MT::Array<arr> >* sampler;
 };
 
 void createClassMatrix(arr& matrix, const intA& classes, const uint nClasses) {
@@ -44,37 +42,17 @@ void createClassMatrix(arr& matrix, const intA& classes, const uint nClasses) {
 double LogisticRegressionEvaluator::evaluate(MT::Array<arr>& sample) {
   arr Phi, x;
   flatten(x, sample);
-  p->makeFeatures(Phi, x, p->data);
+  problem.generator->makeFeatures(Phi, x);
   arr classes = Phi*p->beta;
   //return 1;
   return -fabs(classes(0, 0));
 }
 
-LogisticRegression::LogisticRegression(Sampler<MT::Array<arr> >* sampler) : s(new sLogisticRegression) {
-  s->sampler = sampler;
+LogisticRegression::LogisticRegression(ActiveLearningProblem& prob) : s(new sLogisticRegression) {
+  this->problem = prob;
   s->ridge = MT::getParameter<double>("ridge",1e-10);
   s->rbfConst = MT::getParameter<int>("rbfConst", 0);
   s->sigma = MT::getParameter<double>("sigma", 0.1);
-}
-
-void sLogisticRegression::makeFeatures(arr& Z, const arr& X, const arr& Xtrain){
-  uint n=X.d0, d=X.d1;
-  Z.resize(n, 9);// 1 + d + d*(d+1)/2 + d*(d+1)*(d+2)/6);
-  uint i, j, k, l, m;
-  for(i=0; i<n; i++){
-    arr x=X[i];
-    arr z=Z[i];
-    l=3;
-    z(0) = x(0) - x(4);
-    z(1) = x(1) - x(5);
-    z(2) = x(2) - x(6);
-
-
-    //z(l++)=1.;
-    //for(j=0; j<d; j++) z(l++) = x(j);
-    for(j=0; j<3; j++) for(k=0; k<=j; k++) z(l++) = (x(j)-x(j+4))*(x(k)-x(k+4));
-    //for(j=0; j<d; j++) for(k=0; k<=j; k++) for(m=0; m<=k; m++) z(l++) = x(j)*x(k)*x(m);
-  }
 }
 
 //void sLogisticRegression::makeFeatures(arr& Z, const arr& X, const arr& Xtrain ) {
@@ -166,7 +144,7 @@ void LogisticRegression::setTrainingsData(const MT::Array<arr>& data, const intA
   s->classes = matrix;
   s->data = x;
 
-  s->makeFeatures(Phi,x,x);
+  problem.generator->makeFeatures(Phi,x);
   s->logisticRegressionMultiClass(s->beta, Phi, matrix, s->ridge);
 }
 void LogisticRegression::addData(const MT::Array<arr>& data, const int class_) {
@@ -178,19 +156,20 @@ void LogisticRegression::addData(const MT::Array<arr>& data, const int class_) {
   s->classes.append(matrix);
 
   arr Phi;
-  s->makeFeatures(Phi, s->data, s->data);
+  problem.generator->makeFeatures(Phi, s->data);
   s->logisticRegressionMultiClass(s->beta, Phi, s->classes, s->ridge);
   
 }
 int LogisticRegression::nextSample(MT::Array<arr>& sample) const {
-  rejectionSampling<MT::Array<arr> >(sample, s->sampler, &s->evaluator, 100);
+  rejectionSampling<MT::Array<arr> >(sample, problem.sampler, new LogisticRegressionEvaluator(s, problem), 100);
   return sample.N;
 }
 int LogisticRegression::classify(const MT::Array<arr>& data, const int set) const {
   arr Phi, x;
   flatten(x, data);
-  s->makeFeatures(Phi, x, s->data);
+  problem.generator->makeFeatures(Phi, x);
   arr classes = Phi*s->beta;
   return classes.maxIndex();
 }
 
+void LogisticRegression::setProblem(ActiveLearningProblem& prob) { problem = prob; }

@@ -45,7 +45,10 @@ void TraySampler::sample(MT::Array<arr>& sample) {
     arr tray_center;
     if(inside) {
       DEBUG_VAR(sampler, next_sample);
-      tray_center = next_sample(0, o1).sub(0,1) + randn(2,1) * 0.1;
+      double x = 0.35*(rand()/RAND_MAX);
+      double y = 0.2*(rand()/RAND_MAX);
+      
+      tray_center = next_sample(0, o1).sub(0,1) + ARR(x, y);
     }
     else {
       tray_center = ARR(0., -.8) + randn(2,1) * 0.3; 

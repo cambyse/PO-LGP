@@ -26,7 +26,7 @@ void ActiveLearningP::step() {
   MT::Array<arr> sample;
   classificator->writeAccess(this);
   if (classificator->classificator->nextSample(sample)) {
-    int _class = classificator->oracle->classify(sample); 
+    int _class = classificator->classificator->problem.oracle->classify(sample); 
     classificator->classificator->addData(sample, _class);
     os << sample << _class << std::endl;
     std::cout << "Add sample as " << _class << std::endl;
