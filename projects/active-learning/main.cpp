@@ -48,42 +48,49 @@ int main(int argc, char** argv) {
   MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
   bool gaussproc = MT::getParameter<bool>("gauss", true);
 
-  BlocksWorldSampler sampler;
-  OnOracle o;
+  TraySampler sampler;
+  InsideOracle o;
 
-  //Gui gui("situation.ors");
-  //GuiDataV guiData;
-  //gui.guiData = &guiData;
+  Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
+  GuiDataV guiData;
+  gui.guiData = &guiData;
 
   TrainingsDataV train;
-  MT::Array<arr> sample;
-  ifstream is("samples.data");
-  for (int i=0; i<MT::getParameter<int>("sample_number"); ++i) {
-    is >> sample;  
-  }
-  train.data = sample;
-  train.data.reshape(1,4);
-  //do {
-    //sampler.sample(train.data);  
-  //} while (!o.classify(train.data, 0)) ;
-  //train.data.append(ARR(0.359201, -1.20565, 0.81));
-  //train.data.append(ARR( 0.08)); 
-  //train.data.append(ARR(0.357674, -1.20132, 0.73 ));
-  //train.data.append(ARR(0.08));
+  //MT::Array<arr> sample;
+  //ifstream is("samples.data");
+  //for (int i=0; i<MT::getParameter<int>("sample_number"); ++i) {
+    //is >> sample;  
+  //}
+  //train.data = sample;
   //train.data.reshape(1,4);
+  do {
+    sampler.sample(train.data);  
+  } while (!o.classify(train.data, 0)) ;
+  //train.data.append(ARR(0.159201, -1.00565, 0.838));
+  //train.data.append(ARR( 0.08)); 
+  //train.data.append(ARR(0.157674, -1.00132, 0.73 ));
+  //train.data.append(ARR(0.08));
+  train.data.reshape(1,3);
   DEBUG_VAR(main, train.data);
   DEBUG_VAR(main, o.classify(train.data, 0));
   intA classes;
   classes.append(o.classify(train.data, 0));
   train.classes = classes;
 
+  char unused;
+  guiData.sample = &train.data;
+
+  gui.threadOpen();
+  gui.threadLoop();
+  //std::cin >> unused;
+
   ClassificatorV cl;
   if(gaussproc) 
-    cl.classificator = new GaussianProcessAL(new BlocksWorldSampler);
+    cl.classificator = new GaussianProcessAL(&sampler);
   else
-    cl.classificator = new LogisticRegression(new BlocksWorldSampler);
-  cl.oracle = new OnOracle();
-  cl.tester = new Tester(5000, filename, 24);
+    cl.classificator = new LogisticRegression(&sampler);
+  cl.oracle = new InsideOracle();
+  cl.tester = new Tester(5000, filename, 24, &sampler);
 
   DEBUG_VAR(classify, d.get_numOfWorkingJobs(NULL));
   DEBUG_VAR(classify, &d);
@@ -91,16 +98,18 @@ int main(int argc, char** argv) {
   ActiveLearningP alp;
   alp.traindata = &train;
   alp.classificator = &cl;
-  //alp.guiData = &guiData;
+  alp.guiData = &guiData;
  
   alp.threadOpen();
-  alp.threadStep(n_steps);
+  alp.threadStep();
 
-  //gui.threadOpen();
-  //gui.threadLoop();
+
+
+  alp.threadStep(n_steps);
 
 
   alp.threadClose();
+  gui.threadClose();
 }
 
 
