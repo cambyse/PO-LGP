@@ -655,12 +655,12 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
         case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
         case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
         case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
-        case 'a':  gl.camera.focus( //TODO
+        case 'a':  gl.camera.focus(
             (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
              ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
             + *gl.camera.foc);
           break;
-        case 's':  gl.camera.X->pos += //TODO
+        case 's':  gl.camera.X->pos +=
             (
               gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
               ^(gl.camera.X->rot * ors::Vector(1., 0, 0))

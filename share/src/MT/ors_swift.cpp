@@ -17,9 +17,6 @@
 #include "ors.h"
 #include "ann.h"
 
-/* MT TODO: are prenetrations optimally handled? proper penetration depth+gradient? Would be useful also for grasp variable */
-
-
 #ifdef MT_SWIFT
 
 #ifdef MT_SINGLE

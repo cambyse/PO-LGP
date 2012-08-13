@@ -80,7 +80,7 @@ void testDraw(){
 void TestMove(){
   CartPoleState s;
   for (uint t=0; t<400000; t++){
-    s.gl.text.clr() <<t <<" ; " <<s.x1 << " ; " <<s.th1;
+    s.gl.text.clear() <<t <<" ; " <<s.x1 << " ; " <<s.th1;
     s.step(0.0);
     s.gl.update();
   }
@@ -118,11 +118,11 @@ void optimize(arr& w, bool noise){
       fbest = cost;
       wbest =w;
       cout << " best at " << z << " " << w << " :  " << cost << " x1 " << s.x1 << " th1" << s.th1 << endl;
-      s.gl.text.clr() <<z <<  " best: " << fbest;
+      s.gl.text.clear() <<z <<  " best: " << fbest;
       s.gl.update();
     }
     if(z%1000 == 0){
-      s.gl.text.clr() <<z<<  " best: " << fbest;
+      s.gl.text.clear() <<z<<  " best: " << fbest;
       s.gl.update();
     }
   }
@@ -145,7 +145,7 @@ void optimize(arr& w, bool noise){
 	cout << " best at " << z << " " << w << " :  " << cost << " ; " << s.x1 << " " << s.th1 << endl;
       }
       if(z%1000 == 0){
-	s.gl.text.clr() <<z << " " << 0.06/(1+sd) << " best: " << fbest;
+	s.gl.text.clear() <<z << " " << 0.06/(1+sd) << " best: " << fbest;
 	s.gl.update();
       }
     }
@@ -159,7 +159,7 @@ void playController(const arr& w,bool noise){
   for(uint t=0;;t++){
     s.step(GetControl(w,s));
     s.gl.update();
-    s.gl.text.clr() << t;
+    s.gl.text.clear() << t;
   }
 }
 

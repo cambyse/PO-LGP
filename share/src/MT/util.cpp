@@ -29,7 +29,7 @@
 #  define MT_LogFileName "MT.log"
 #endif
 
-//TODO!!
+//TODO: move basic threading routines from biros to util!
 namespace MT{
 void parameterAccessGlobalLock(){}
 void parameterAccessGlobalUnLock(){}

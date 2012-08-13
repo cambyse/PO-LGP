@@ -8,7 +8,7 @@ QHULL = 1
 FREEGLUT = 1
 SWIFT = 1
 LAPACK = 1
-PHYSX = 1 ## REQUIRES PhysX !!!
+PHYSX = 1## REQUIRES PhysX !!!
 endif
 
 

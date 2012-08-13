@@ -511,7 +511,7 @@ export MSVC_LPATH
 
 ################################################################################
 #
-# make targets
+# concrete make targets
 #
 ################################################################################
 
@@ -639,5 +639,30 @@ generate_Makefile.dep: $(OBJS:%.o=%.cpp)
 
 includeAll.cxx: force
 	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
+
+################################################################################
+#
+# meta rules -- for calling make in other directories
+#
+################################################################################
+
+makePath/%::
+	$(MAKE) -C $*
+
+cleanPath/%::
+	$(MAKE) clean -C $*
+
+makeSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;
+
+cleanSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+
+doc::
+	$(MAKE) -C doc doxy_array
+
+zip::
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude
+
 
 force:	;
