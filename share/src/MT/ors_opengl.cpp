@@ -39,9 +39,16 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   gl.add(glStandardScene,0);
   gl.add(ors::glDrawGraph,&G);
   gl.setClearColors(1.,1.,1.,1.);
-  gl.camera.setPosition(10.,-15.,8.);
-  gl.camera.focus(0,0,1.);
-  gl.camera.upright();
+ 
+  ors::Body* glCamera = G.getBodyByName("glCamera");
+  if(glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  }
+  else { 
+    gl.camera.setPosition(10.,-15.,8.);
+    gl.camera.focus(0,0,1.);
+    gl.camera.upright();
+  }
   gl.update();
 }
 
@@ -302,7 +309,7 @@ void ors::glDraw(Graph& C) {
   double GLmatrix[16];
   
   glPushMatrix();
-  
+
   //bodies
   if(orsDrawBodies) for_list(k, s, C.shapes){
     glDrawShape(s);
