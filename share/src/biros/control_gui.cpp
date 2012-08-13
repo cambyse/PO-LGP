@@ -210,7 +210,7 @@ void InsideOutGui::updateViewStore(){
   GtkTreeStore *viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
   gtk_tree_store_clear(viewStore);
   uint i;
-  GtkTreeIter it;
+  //GtkTreeIter it;
   ViewInfo *vi;
   birosInfo.readAccess(NULL);
   for_list(i, vi, birosInfo.views) {
@@ -277,7 +277,7 @@ extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
 extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  int b = (int)g_object_get_data(G_OBJECT(caller), "id");
+  long b = (long)g_object_get_data(G_OBJECT(caller), "id");
   iog->box = b;
   cout <<"GUI: box select " <<b <<endl;
 }

@@ -10,27 +10,27 @@
 
 ### DEFAULT SETTINGS
 
-ifneq ($(MAKEMODE),mlrlib)
+ifndef MAKEMODE  ### app configuration
 #change the default application (test, etc) compilation mode here
 MAKEMODE = app
 endif
 
-ifeq ($(MAKEMODE),mlrlib)
-################ CHANGE THE DEFAULT lib-COMPILATION MODE HERE!! ###############
+ifeq ($(MAKEMODE),mlrlib)  ### lib configuration
 #MAKEMODE = mlrlib_full
 #MAKEMODE = mlrlib_minimal
 MAKEMODE = mlrlib_ubuntu
 endif
 
+ifeq ($(MAKEMODE),externlib)  ### external lib configuration
+endif
 
 
 ### MAKEMODE=app
 
 ifeq ($(MAKEMODE),app)
-BUILDS += buildComponent/MT
-LIBS += -lMT
-BUILDS += buildComponent/biros
-LIBS += -lbiros
+buildAndLink_MTLIB = 1
+LIBS += -lmotion -lhardware -lperception
+BUILDS += buildComponent/hardware
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 BUILDS += buildComponent/hardware
@@ -48,7 +48,8 @@ ifeq ($(MAKEMODE),mlrlib_full)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
-FREEGLUT = 1
+FREEGLUT = 0
+GTKGL = 1
 ANN = 1
 QHULL = 1
 SWIFT = 1
@@ -61,6 +62,9 @@ PLIB = 1
 BUMBLE = 1
 LEWINER = 1
 CUDA = 1
+GRAPHVIZ = 1
+GTK = 1
+PHYSX = 1
 endif
 
 

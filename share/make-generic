@@ -13,10 +13,10 @@ endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
-$(info ------------------------------------------------------------)
-$(info make $(shell pwd -L) )
-$(info BASE=$(BASE) )
-$(info ------------------------------------------------------------)
+# $(info ------------------------------------------------------------)
+# $(info make $(shell pwd -L) )
+# $(info BASE=$(BASE) )
+# $(info ------------------------------------------------------------)
 
 ################################################################################
 #
@@ -51,10 +51,10 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall -Wunused-but-set-variable $(CXXFLAGS)
+CXXFLAGS := -g -Wall $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),fast_debug)
-CXXFLAGS := -g -O3 -Wall -Wunused-but-set-variable $(CXXFLAGS)
+CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),penibel)
 CXXFLAGS := -g -Wall -Wextra $(CXXFLAGS)
@@ -240,6 +240,7 @@ LIBS     += `pkg-config --libs  gtk+-2.0 gtkglext-1.0` -lgthread-2.0
 endif
 
 ifeq ($(GRAPHVIZ),1)
+CXXFLAGS += -DMT_GRAPHVIZ
 LIBS += -lgraph -lcgraph -lgvc
 endif
 

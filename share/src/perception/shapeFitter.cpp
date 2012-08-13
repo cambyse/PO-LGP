@@ -740,3 +740,8 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
     memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout <<" pos " <<ba->name <<" " <<ba->X.p <<endl;
   }
 }
+
+
+#ifndef MT_OPENCV
+void ShapeFitter::step(){ NICO }
+#endif

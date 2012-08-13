@@ -3,6 +3,8 @@ BASE   = ../..
 
 OUTPUT = lib$(NAME).so
 
+MAKEMODE = externlib
+
 CXXFLAGS += -fPIC
 
 #CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
