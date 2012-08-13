@@ -23,6 +23,10 @@
 #include <MT/plot.h>
 #include <relational/utilTL.h>
 
+#include <biros/logging.h>
+
+SET_LOG(simulator, DEBUG);
+
 #include "robotManipulationSimulator.h"
 #include <sstream>
 #include <limits>
@@ -30,6 +34,8 @@
 #if TL_SOIL
 #include <SOIL/SOIL.h>
 #endif
+
+MT::String ENDEFFECTOR = MT::getParameter<MT::String>("endeffector_name", MT::String("fing1c"));
 
 
 // SPECIFIC OBJECT KNOWLEDGE
@@ -348,7 +354,7 @@ void RobotManipulationSimulator::indicateFailure(){
   // drop object
   ors::Joint* e;
   uint i;
-  for_list(i,e,C->getBodyByName("fing1c")->outLinks){
+  for_list(i,e,C->getBodyByName(ENDEFFECTOR)->outLinks){
     del_edge(e,C->bodies,C->joints,true); //otherwise: no object in hand
   }
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;
@@ -521,7 +527,7 @@ void RobotManipulationSimulator::grab(uint ID, const char* message) {
 }
 
 void RobotManipulationSimulator::grab(const char* obj, const char* message) {
-  grab_final("fing1c", obj, message);
+  grab_final(ENDEFFECTOR, obj, message);
 }
 
 
@@ -564,7 +570,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     obj_dropped1 = obj_dropped;
   }
   else
-    obj_dropped1 = "fing1c";
+    obj_dropped1 = ENDEFFECTOR;
   
   uint obj_dropped1_index=C->getBodyByName(obj_dropped1)->index;
   uint obj_below_id = convertObjectName2ID(obj_below);
@@ -814,9 +820,9 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
     msg_string << "move to position "<< pos;
   }
   
-  ors::Body* obj = C->bodies(convertObjectName2ID("fing1c"));
+  ors::Body* obj = C->bodies(convertObjectName2ID(ENDEFFECTOR));
   // move manipulator towards box
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -850,7 +856,7 @@ void RobotManipulationSimulator::grabHere(const char* message) {
     msg_string << "grabHere: ";
   }
 
-	uint finger = convertObjectName2ID("fing1c");
+	uint finger = convertObjectName2ID(ENDEFFECTOR);
   // (1) drop object if one is in hand
   dropObject(finger);
 	
@@ -868,7 +874,7 @@ void RobotManipulationSimulator::grabHere(const char* message) {
 		msg_string << "nothing to grab";
 	}
 	else {
-		C->glueBodies(C->getBodyByName("fing1c"), C->getBodyByName(convertObjectID2name(closest_object)));
+		C->glueBodies(C->getBodyByName(ENDEFFECTOR), C->getBodyByName(convertObjectID2name(closest_object)));
 		msg_string << "Grabed obj " << convertObjectID2name(closest_object); 
   }
   
@@ -965,7 +971,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -1009,7 +1015,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -1473,7 +1479,7 @@ uint RobotManipulationSimulator::getInhand(uint man_id){
 }
 
 uint RobotManipulationSimulator::getInhand() {
-  return getInhand(convertObjectName2ID("fing1c"));
+  return getInhand(convertObjectName2ID(ENDEFFECTOR));
 }
 
 
@@ -1748,7 +1754,7 @@ void RobotManipulationSimulator::printObjectInfo() {
 
 
 uint RobotManipulationSimulator::getHandID() {
-  return convertObjectName2ID("fing1c");
+  return convertObjectName2ID(ENDEFFECTOR);
 }
 
 
@@ -1858,6 +1864,17 @@ void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
     ors::Body* body = new ors::Body;
     createCylinder(*body, sample(0,i), ARR(1., 0., 0.)); 
     ors.addObject(body);
+  }
+}
+
+void generateOrsFromTraySample(ors::Graph& ors, const MT::Array<arr>& sample) {
+  for (int i = ors.bodies.N - 1; i >= 0; --i) {
+    if(strncmp(ors.bodies(i)->name.p, "tray", 4)==0) {
+      ors.bodies(i)->X.pos = sample(0,0);
+    }
+    if(strncmp(ors.bodies(i)->name.p, "cube", 4)==0) {
+      ors.bodies(i)->X.pos= sample(0,1);
+    }
   }
 }
 

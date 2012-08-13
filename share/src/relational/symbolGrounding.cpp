@@ -17,7 +17,7 @@
 //  GroundedSymbol
 
 relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool build_derived_symbols) { 
-  this->symbol = Symbol::get(this->name, this->arity = _arity);
+  this->symbol = Symbol::get(this->name = _name, this->arity = _arity);
   
   if (build_derived_symbols) {
     NIY;
@@ -67,8 +67,6 @@ relational::GroundedSymbol::GroundedSymbol(MT::String& _name, uint _arity, bool 
 
 void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objects_ids, const MT::Array< arr > & objects_data) const {
   uint DEBUG = 0;
-  NIY;
-#if 0
   // HACK
 //   if (arity == 1) DEBUG = 2;
   if (DEBUG>0) {cout<<"calculateSymbols [START]"<<endl;}
@@ -81,9 +79,9 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
       if (DEBUG>1) {PRINT(objects_data(i));}
       bool does_hold = holds(objects_data(i));
       if (DEBUG>1) {PRINT(does_hold);}
+      uintA args;  args.append(objects_ids(i));
       if (does_hold) {
-        uintA args;  args.append(objects_ids(i));
-        lits.append(PRADA::logicObjectManager::getLiteral(this->symbol, true, args));
+        lits.append(Literal::get(this->symbol, args, 1));
         if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
@@ -94,8 +92,7 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
     FOR1D(objects_ids, i) {objs_numbers.append(i);}
     TL::allPermutations(lists, objs_numbers, arity, false, true);
     FOR1D(lists, i) {
-<<<<<<< .merge_file_lwJd7I
-      if (DEBUG>1) {cout<<"*** Next:  "<<this->pred->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
+      if (DEBUG>1) {cout<<"*** Next:  "<<this->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
       //arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
 			arr x;
 			x.append(objects_data(lists(i)(0)));
@@ -103,18 +100,14 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
 
       JK_DEBUG(x);
 
-=======
-      if (DEBUG>1) {cout<<"*** Next:  "<<this->symbol->name<<"("<<objects_ids(lists(i)(0))<<" "<<objects_ids(lists(i)(1))<<")"<<endl;}
-      arr x = objects_data(lists(i)(0)) - objects_data(lists(i)(1));
->>>>>>> .merge_file_7Hr8QI
       if (DEBUG>1) {PRINT(x);}
       bool does_hold = holds(x);
 
       JK_DEBUG(does_hold);
       if (DEBUG>1) {PRINT(does_hold);}
+      uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));
       if (does_hold) {
-        uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));
-        lits.append(PRADA::logicObjectManager::getLiteral(this->symbol, true, args));
+        lits.append(Literal::get(this->symbol, args, 1));
         if (DEBUG>1) {cout<<" $$$$$$ --> "<<*lits.last()<<endl;}
       }
     }
@@ -122,7 +115,6 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
   else NIY;
   if (DEBUG>0) {PRINT(lits.N);  PRINT(lits);}
   if (DEBUG>0) {cout<<"calculateSymbols [END]"<<endl;}
-#endif
 }
 
 

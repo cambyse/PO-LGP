@@ -23,6 +23,9 @@
 #include "robotManipulationSymbols.h"
 #include "reason.h"
 
+#include <biros/logging.h>
+SET_LOG(rmi, DEBUG);
+
 
 namespace RMSim {
 
@@ -108,8 +111,10 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   // ON relations
   uintA objects_on;
   FOR1D(all_objs, i) {
+    if (all_objs(i) != table_id) continue;
     sim->getObjectsOn(objects_on, all_objs(i));
     FOR1D(objects_on, j) {
+      
       if (all_objs.findValue(objects_on(j)) >= 0)
         state->lits.append(Literal::get(Symbol::get("on"), TUP(objects_on(j), all_objs(i)), 1.));
     }
@@ -149,7 +154,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
 
   state->state_constants = all_objs;
  
-  reason::derive(state);
+  //reason::derive(state);
   return state;
 }
 
