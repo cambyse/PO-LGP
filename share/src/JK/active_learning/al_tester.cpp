@@ -12,8 +12,6 @@
 #include <relational/robotManipulationSimulator.h>
 
 class ClassifyMaster : public Master<MT::Array<arr>, double> {
-  private:
-    BlocksWorldSampler sampler;
   public:
     int testNumber;
 
@@ -24,6 +22,8 @@ class ClassifyMaster : public Master<MT::Array<arr>, double> {
 
     ClassificatorV* classificator;
     ClassifyData *data;
+
+    Sampler<MT::Array<arr> >* sampler;
 };
 
 class ClassifyIntegrator : public Integrator<double> {
@@ -76,7 +76,7 @@ ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl, int numOfWorke
 
 MT::Array<arr> ClassifyMaster::createJob() {
   MT::Array<arr> sample;
-  sampler.sample(sample);
+  sampler->sample(sample);
   return sample;
 }
 
@@ -106,10 +106,11 @@ Worker<MT::Array<arr>, double>* ClassifyWorkerFactory::createWorker() {
   return new ClassifyWorker(classificator);
 }
 
-Tester::Tester(const int testNumber, const char* filename, int numOfWorkers) : m(NULL) {
+Tester::Tester(const int testNumber, const char* filename, int numOfWorkers, Sampler<MT::Array<arr> >* sampler) : m(NULL) {
   m = new ClassifyMaster(testNumber, new ClassificatorV, numOfWorkers);
   ClassifyData *d = new ClassifyData();
   m->testNumber = testNumber;
+  m->sampler = sampler;
   outfile.open(filename);
 }
 

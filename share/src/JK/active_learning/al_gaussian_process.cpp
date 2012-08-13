@@ -34,8 +34,8 @@ void makeFeatures(arr& Z, const arr& X){
     //for(j=0; j<d; j++) for(k=0; k<=j; k++) z(l++) = x(j)*x(k);
     //for(j=0; j<d; j++) for(k=0; k<=j; k++) for(m=0; m<=k; m++) z(l++) = x(j)*x(k)*x(m);
   //}
-  Z.append(X(0,6) - X(0,2));
-  Z.append(X.sub(0,-1,4,5) - X.sub(0,-1,0,1));
+  //Z.append(X(0,6) - X(0,2));
+  Z.append(X.sub(0,-1,3,5) - X.sub(0,-1,0,2));
   Z.reshape(1,3);
   //Z = X;
 }

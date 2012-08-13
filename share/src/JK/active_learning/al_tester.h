@@ -3,6 +3,7 @@
 
 #include <biros/biros.h>
 #include <biros/logging.h>
+#include <JK/utils/sampler.h>
 #include <MT/array.h>
 #include <iostream>
 
@@ -21,16 +22,16 @@ class ClassifyData : public Variable {
     ClassifyData() : Variable("Classify Data") {
       reg_numOfResults(); reg_numOfJobs(); reg_numOfWorkingJobs(); reg_sumOfCorrect(); reg_result(); 
     }
+    ~ClassifyData() {};
 };
 template<class S> class Sampler;
 class Tester {
   public:
-    Tester(const int testNumber = 5000, const char* filename = "classification.data", int numOfWorkers=5);
+    Tester(const int testNumber = 5000, const char* filename = "classification.data", int numOfWorkers=5, Sampler<MT::Array<arr> >* sampler = new BlocksWorldSampler);
     virtual ~Tester();
     const double test(ClassificatorV* l);
 
     ClassifyMaster* m;
-    Sampler<MT::Array<arr> >* sampler;
 
     std::ofstream outfile;
 };

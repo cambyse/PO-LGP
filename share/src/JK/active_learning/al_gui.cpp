@@ -33,9 +33,13 @@ Gui::Gui(const char* orsFile) : Process("Gui Process"),
 void Gui::open() {}
 
 void Gui::step() {
+  bool tray = birosInfo.getParameter<bool>("tray", this);
   guiData->readAccess(this);
   if(guiData->sample) {
-    relational::generateOrsFromSample(s->ors, *guiData->sample);
+    if (tray)
+      relational::generateOrsFromTraySample(s->ors, *guiData->sample);
+    else
+      relational::generateOrsFromSample(s->ors, *guiData->sample);
     s->ors.calcBodyFramesFromJoints();
   }
   guiData->deAccess(this);
