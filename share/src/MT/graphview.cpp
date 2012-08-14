@@ -1,6 +1,7 @@
 #include "gtk.h"
 
-#ifdef MT_GTK
+#if defined MT_GTK and defined MT_GRAPHVIZ
+
 
 #include <gtk/gtk.h>
 //#define WITH_CGRAPH

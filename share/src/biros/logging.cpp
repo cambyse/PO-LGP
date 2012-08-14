@@ -159,7 +159,7 @@ void AccessController::dumpEventList(){
       <<(e->type==AccessEvent::read?'r':'w')
       <<' ' <<e->var->name <<'-' <<e->var->id
       <<' ' <<e->revision
-      <<' ' <<(e->proc?e->proc->name:"NULL")
+      <<' ' <<(e->proc?e->proc->name:STRING("NULL"))
       <<' ' <<e->procStep <<endl;
   }
 }

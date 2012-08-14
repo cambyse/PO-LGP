@@ -22,6 +22,8 @@ cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
 
 makeEXTERN: $(EXTERN:%=make/%)
 
+cleanEXTERN: $(EXTERN:%=clean/%)
+
 
 reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"

@@ -21,6 +21,9 @@
 #include "schunk.h"
 
 #define NTCAN_CLEAN_NAMESPACE
+#ifdef VAR
+#  undef VAR
+#endif
 #include <sdh/sdh.h>
 #include <sdh/dsa.h>
 #define __EXPORTED_HEADERS__

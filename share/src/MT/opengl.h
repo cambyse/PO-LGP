@@ -30,6 +30,9 @@
 #endif
 
 #if defined MT_GTKGL || defined MT_QTGLUT
+#  ifdef MT_CUDA
+#    undef APIENTRY
+#  endif
 #  include <GL/glut.h>
 #endif
 
