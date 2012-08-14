@@ -58,16 +58,12 @@ struct OpenGL;
 //
 
 struct View{
-  Process *proc;
-  Variable *var;
-  FieldInfo *field;
-  Parameter *param;
-  
+  void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
-  ViewInfo *info;
+  ViewInfo *info;       //
   
-  View():proc(NULL), var(NULL), field(NULL), param(NULL), widget(NULL), gl(NULL), info(NULL) {}
+  View():object(NULL), widget(NULL), gl(NULL), info(NULL) {}
   ~View();
   
   virtual void write(std::ostream& os) {} //writing into a stream
@@ -76,8 +72,8 @@ struct View{
   virtual void glDraw() {} //a generic GL draw routine
   virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
   virtual void gtkUpdate(); //let the view update the gtk widget
-  void gtkNewGl(GtkWidget *container);  //create a gtk widget using the gl routines
-  void gtkNewText(GtkWidget *container); //create a gtk widget using the text write/read routines
+  void gtkNewGl(GtkWidget *container);  //implementation of gtkNew using the gl routines
+  void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read routines
 };
 
 
@@ -115,7 +111,7 @@ struct ViewInfo_typed:ViewInfo{
   ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT, ViewInfo:: viewKind);
 
 
-  //===========================================================================
+//===========================================================================
 //
 // specific views -> perhaps move somewhere else
 //
@@ -125,7 +121,7 @@ struct ViewInfo_typed:ViewInfo{
 struct Generic##_what##View:View{ \
   Generic##_what##View():View() {} \
 \
-  virtual void write(std::ostream& os) { writeInfo(os, *_arg, false); } \
+  virtual void write(std::ostream& os) { writeInfo(os, *((_what*)object), false); } \
 };
 
 #define GenericInfoView_CPP(_what, _name, viewKind) \
@@ -138,7 +134,7 @@ GenericInfoView(Parameter, param, parameterVT);
 
 #undef GenericInfoView
 
-// //===========================================================================
+//===========================================================================
 
 struct ImageView:View{
   void glInit();

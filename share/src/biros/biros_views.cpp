@@ -73,11 +73,11 @@ View::~View(){
 REGISTER_VIEW_TYPE(ImageView, byteA, fieldVT);
 
 void ImageView::glInit() {
-  gl->img = ((byteA*) field->p);
+  gl->img = ((byteA*) ((FieldInfo*)object)->p);
 }
 
 void ImageView::glDraw() {
-  gl->img = ((byteA*) field->p);
+  gl->img = ((byteA*) ((FieldInfo*)object)->p);
 }
 
 
@@ -87,12 +87,12 @@ void ImageView::glDraw() {
 REGISTER_VIEW_TYPE(RgbView, byteA, fieldVT);
 
 void RgbView::gtkNew(GtkWidget *container){
-  byteA& rgb = *((byteA*) field->p);
+  byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
   CHECK(rgb.N==3 && rgb.nd==1,"this is not a 3-vector of RGB values - did you mean to display an image instead?");
   
   if(!container){
     container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(container), info->name);
+    gtk_window_set_title(GTK_WINDOW(container), info?info->name:((FieldInfo*)object)->name);
     gtk_window_set_default_size(GTK_WINDOW(container), 100, 100);
     //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
   }
@@ -109,7 +109,7 @@ void RgbView::gtkNew(GtkWidget *container){
 }; //the view crates a new gtk widget within the container
 
 void RgbView::gtkUpdate(){
-  byteA& rgb = *((byteA*) field->p);
+  byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
   GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
   gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
@@ -122,7 +122,7 @@ REGISTER_VIEW_TYPE(MeshView, ors::Mesh, fieldVT);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
-  ((ors::Mesh*)field->p)->glDraw();
+  ((ors::Mesh*)((FieldInfo*)object)->p)->glDraw();
 }
 
 
@@ -139,7 +139,7 @@ void OrsView::glInit() {
 }
 
 void OrsView::glDraw() {
-  ors::Graph *ors = (ors::Graph*) field->p;
+  ors::Graph *ors = (ors::Graph*) ((FieldInfo*)object)->p;
   glStandardScene(NULL);
   ors->glDraw();
 }

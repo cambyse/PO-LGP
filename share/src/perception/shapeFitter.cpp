@@ -741,7 +741,6 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
   }
 }
 
-
 #ifndef MT_OPENCV
 void ShapeFitter::step(){ NICO }
 #endif

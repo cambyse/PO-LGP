@@ -128,10 +128,10 @@ void InsideOutGui::open(){
 	birosInfo.getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
 	f = listFindByName(v->fields, fld);
-	view[b] = b::newView(*f, vi); view[b]->field=f;
+	view[b] = b::newView(*f, vi); view[b]->object=f;
       }
-      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo.getVariable(v, name, NULL); view[b] = b::newView(*v, vi); view[b]->var=v; }
-      if(type=="process"){  name.read(is," "," \n\r"); view[b]->proc = birosInfo.getProcess<Process>(name, NULL);       view[b] = b::newView(*view[b]->proc, vi);  }
+      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo.getVariable(v, name, NULL); view[b] = b::newView(*v, vi); view[b]->object=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo.getProcess<Process>(name, NULL);       view[b] = b::newView(*((Process*)view[b]->object), vi);  }
       //if(type=="parameter"){view[b] = b::newView(ViewInfo::parameterVT, vi);is >>name; birosInfo.getParameter(view[b]->param, name); }
       //if(type=="global"){   view[b] = b::newGlobalView(vi); }
 
@@ -251,10 +251,10 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
     View *v=iog->view[b];
     os <<b <<' ' <<v->info->name;
     switch (v->info->type) {
-      case ViewInfo::fieldVT:    os <<" field " <<v->field->var->name <<' ' <<v->field->name;  break;
-      case ViewInfo::variableVT: os <<" variable" <<' ' <<v->var->name;  break;
-      case ViewInfo::processVT:  os <<" process" <<' ' <<v->proc->name;  break;
-      case ViewInfo::parameterVT:os <<" parameter" <<' ' <<v->param->name;  break;
+    case ViewInfo::fieldVT:    os <<" field " <<((FieldInfo*)v->object)->var->name <<' ' <<((FieldInfo*)v->object)->name;  break;
+      case ViewInfo::variableVT: os <<" variable " <<((Variable*)v->object)->name;  break;
+      case ViewInfo::processVT:  os <<" process " <<((Process*)v->object)->name;  break;
+      case ViewInfo::parameterVT:os <<" parameter " <<((Parameter*)v->object)->name;  break;
       case ViewInfo::globalVT:   os <<" global";  break;
     }
     os <<endl;
@@ -474,10 +474,10 @@ void setBoxView(View *v, GtkBuilder *builder, uint box){
   if(!v){ MT_MSG("setting box view failed"); return; }
   MT::String label;
   switch (v->info->type) {
-    case ViewInfo::fieldVT:    label <<"F " <<v->field->var->name <<'-' <<v->field->name;  break;
-    case ViewInfo::variableVT: label <<"V " <<' ' <<v->var->name;  break;
-    case ViewInfo::processVT:  label <<"P " <<' ' <<v->proc->name;  break;
-    case ViewInfo::parameterVT:label <<"p " <<' ' <<v->param->name;  break;
+    case ViewInfo::fieldVT:    label <<"F " <<((FieldInfo*)v->object)->var->name <<' ' <<((FieldInfo*)v->object)->name;  break;
+  case ViewInfo::variableVT: label <<"V " <<((Variable*)v->object)->name;  break;
+  case ViewInfo::processVT:  label <<"P " <<((Process*)v->object)->name;  break;
+  case ViewInfo::parameterVT:label <<"p " <<((Parameter*)v->object)->name;  break;
     case ViewInfo::globalVT:   label <<"gobal";  break;
   }
   label <<" [" <<v->info->name <<']';
