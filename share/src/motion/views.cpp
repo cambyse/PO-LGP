@@ -15,7 +15,7 @@ void PoseView::glInit() {
 }
 
 void PoseView::glDraw() {
-  arr q = *(arr*)field->p; //copy!
+  arr q = *(arr*) ((FieldInfo*)object)->p; //copy!
   geo.pull();
   uint n=geo().ors.getJointStateDimension();
   if(q.nd==1){

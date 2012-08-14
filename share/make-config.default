@@ -29,16 +29,14 @@ endif
 ifeq ($(MAKEMODE),app)
 BUILDS += buildComponent/MT
 LIBS += -lMT
-BUILDS += buildComponent/biros
-LIBS += -lbiros
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 BUILDS += buildComponent/hardware
 LIBS += -lhardware
 BUILDS += buildComponent/perception
 LIBS += -lperception
-BUILDS += buildComponent/views
-LIBS += -lviews
+BUILDS += buildComponent/biros
+LIBS += -lbiros
 endif
 
 
@@ -55,6 +53,7 @@ SWIFT = 1
 LAPACK = 1
 ODE = 1
 TONY = 1
+FELZ = 1
 OPENCV = 1
 SCHUNK = 1
 PLIB = 1
@@ -77,6 +76,7 @@ SWIFT = 0
 LAPACK = 0
 ODE = 0
 TONY = 0
+FELZ = 0
 OPENCV = 0
 SCHUNK = 0
 PLIB = 0
@@ -100,6 +100,7 @@ SWIFT = 1
 LAPACK = 1
 ODE = 0
 TONY = 1
+FELZ = 1
 OPENCV = 0
 SCHUNK = 0
 PLIB = 1

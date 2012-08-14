@@ -32,7 +32,7 @@ View* b::newView(Process& proc, ViewInfo *vi){
   cout
     <<"Creating new view '" <<vi->name <<"' for process '" <<proc.name <<"'" <<endl;
   View *v = vi->newInstance();
-  v->proc = &proc;
+  v->object = &proc;
   return v;
 }
 
@@ -48,7 +48,7 @@ View* b::newView(Parameter& param, ViewInfo *vi){
   cout
     <<"Creating new view '" <<vi->name <<"' for parameter '" <<param.name <<"'" <<endl;
   View *v = vi->newInstance();
-  v->param = &param;
+  v->object = &param;
   return v;
 }
 
@@ -64,7 +64,7 @@ View* b::newView(Variable& var, ViewInfo *vi){
   cout
     <<"Creating new view '" <<vi->name <<"' for variable '" <<var.name <<"'" <<endl;
   View *v = vi->newInstance();
-  v->var = &var;
+  v->object = &var;
   return v;
 }
 
@@ -81,7 +81,7 @@ View* b::newView(FieldInfo& field, ViewInfo *vi){
     <<"Creating new view '" <<vi->name <<"' for field '" <<field.name
     <<"' (type '" <<field.sysType <<"') of Variable '" <<field.var->name <<"'" <<endl;
   View *v = vi->newInstance();
-  v->field = &field;
+  v->object = &field;
   return v;
 }
 
