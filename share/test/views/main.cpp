@@ -16,13 +16,13 @@ struct ExampleVar:Variable{
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   
-  dumpViews(); //before anything has been done!
+  b::dump(); //before anything has been done!
   
   ExampleVar v;
   View *v1 = b::newView(*v.fields(0));
   View *v2 = b::newView(*v.fields(1));
-  View *v3 = b::newView(*v.fields(1), &RgbView::staticInfo);
-  View *v4 = b::newView(*v.fields(2), &MeshView::staticInfo);
+  View *v3 = b::newView(*v.fields(1)); //, &RgbView::staticInfo);
+  View *v4 = b::newView(*v.fields(2)); //, &MeshView::staticInfo);
 
   v.set_i(1, NULL);
   v1->write(cout);  cout <<endl;

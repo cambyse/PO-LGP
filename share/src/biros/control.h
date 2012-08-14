@@ -47,7 +47,7 @@ namespace b{
   
   //! creat a new view; if ViewInfo==NULL the first available
   View* newView(Process&,ViewInfo *vi=NULL);
-  View* newView(Variable&,ViewInfo *vi);
+  View* newView(Variable&,ViewInfo *vi=NULL);
   View* newView(FieldInfo&,ViewInfo *vi=NULL);
   View* newView(Parameter&,ViewInfo *vi=NULL);
   View* newGlobalView(ViewInfo*);

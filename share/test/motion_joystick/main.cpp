@@ -14,7 +14,7 @@ int main(int argn,char** argv){
   JoystickState joystickState;
 
   // processes
-  MotionController controller;
+  Process *controller = newMotionController(&hardwareReference, &motionPrimitive, NULL);
   Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
@@ -22,9 +22,9 @@ int main(int argn,char** argv){
 
   ProcessL hardware=LIST<Process>(schunkArm, schunkHand, joystick);
 
-  ProcessL P=LIST<Process>(controller); //, , schunkSkin, 
+  ProcessL P=ARRAY(controller); //, , schunkSkin, 
 
-  b::openInsideOut();
+  //b::openInsideOut();
   
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
