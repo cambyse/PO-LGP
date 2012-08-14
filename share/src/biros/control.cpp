@@ -1,14 +1,14 @@
 #include "control.h"
 
 void b::dump(){
-  birosInfo.dump();
+  birosInfo().dump();
 }
 
 ViewInfoL b::getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType){
   uint i;
   ViewInfo *vi;
   ViewInfoL vis;
-  for_list(i,vi,birosInfo.views){
+  for_list(i,vi,birosInfo().views){
     if(vi->type==viewType && (!strcmp(vi->appliesOn_sysType,"ALL") || !strcmp(vi->appliesOn_sysType, appliesOn_sysType)))
       vis.append(vi);
   }
@@ -16,7 +16,7 @@ ViewInfoL b::getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType
 }
 
 ViewInfo* b::getView(const char *name){
-  return listFindByName(birosInfo.views, name);
+  return listFindByName(birosInfo().views, name);
 }
 
 

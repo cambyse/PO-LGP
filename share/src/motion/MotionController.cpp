@@ -33,15 +33,15 @@ struct sMotionController {
 MotionController::MotionController(HardwareReference* a, MotionPrimitive* b, MotionFuture* c)
 :Process("MotionController"), hardwareReference(a), motionPrimitive(b), motionFuture(c) {
   s = new sMotionController();
-  if(!hardwareReference) birosInfo.getVariable(hardwareReference, "HardwareReference", this);
-  if(!motionPrimitive)   birosInfo.getVariable(motionPrimitive, "MotionPrimitive", this);
-  if(!motionFuture)      birosInfo.getVariable(motionFuture, "MotionFuture", this);
+  if(!hardwareReference) birosInfo().getVariable(hardwareReference, "HardwareReference", this);
+  if(!motionPrimitive)   birosInfo().getVariable(motionPrimitive, "MotionPrimitive", this);
+  if(!motionFuture)      birosInfo().getVariable(motionFuture, "MotionFuture", this);
   s->geo.init("GeometricState", this);
   hardwareReference->writeAccess(this);
   s->geo().ors.getJointState(hardwareReference->q_reference,
                              hardwareReference->v_reference);
   hardwareReference->deAccess(this);
-  bool listens = birosInfo.getParameter<bool>("MotionController_listens", this);
+  bool listens = birosInfo().getParameter<bool>("MotionController_listens", this);
   if(listens) threadListenTo(hardwareReference);
 }
 
@@ -50,10 +50,10 @@ MotionController::~MotionController() {
 }
 
 void MotionController::open() {
-  arr W = birosInfo.getParameter<arr>("MotionController_W", this);
-  s->tau = birosInfo.getParameter<double>("MotionController_tau", this);
-  s->maxJointStep = birosInfo.getParameter<double>("MotionController_maxJointStep", this);
-  s->followTrajectoryTimeScale = birosInfo.getParameter<double>("MotionController_followTrajectoryTimeScale", this);
+  arr W = birosInfo().getParameter<arr>("MotionController_W", this);
+  s->tau = birosInfo().getParameter<double>("MotionController_tau", this);
+  s->maxJointStep = birosInfo().getParameter<double>("MotionController_maxJointStep", this);
+  s->followTrajectoryTimeScale = birosInfo().getParameter<double>("MotionController_followTrajectoryTimeScale", this);
     
   
   //clone the geometric state

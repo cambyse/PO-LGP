@@ -33,11 +33,11 @@ int main(int argn, char **argv) {
   
   //run
   //loopSerialized(P);
-  step(birosInfo.processes);
+  step(birosInfo().processes);
   
 #if 1
   MT::wait(1.);
-  close(birosInfo.processes);
+  close(birosInfo().processes);
 #else
   if(!logService.getReplay()) {
     MT::wait(1.);
@@ -111,7 +111,7 @@ struct PairSorter:public Process {
   PairSorter(Integer& _a, Integer& _b):Process("PairSorter"), a(_a, this), b(_b, this) {
     //a = &_a;
     //b = &_b;
-    delay = birosInfo.getParameter<double>("stepDelay", this);
+    delay = birosInfo().getParameter<double>("stepDelay", this);
   };
   
   void open() {}

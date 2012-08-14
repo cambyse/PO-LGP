@@ -99,7 +99,6 @@ endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
-LIBS    += -lrt 
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -194,9 +193,9 @@ endif
 
 ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
+CPATH   := $(CPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/include:$(MLR_EXLIB_PATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
+LPATH   := $(LPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/lib:$(MLR_EXLIB_PATH)/schunkLWA/lib:$(MLR_EXLIB_PATH)/ntcan/lib
 LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 

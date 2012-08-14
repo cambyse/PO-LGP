@@ -1,3 +1,5 @@
+#ifdef MT_GTK
+
 #include "control.h"
 #include "biros_internal.h"
 #include "../motion/motion.h"
@@ -71,13 +73,13 @@ void b::updateInsideOut(){
 //
 
 InsideOutGui::InsideOutGui():Process("InsideOutGui"){
-  birosInfo.processes.removeValue(this); //don't include THIS in the process list
+  birosInfo().processes.removeValue(this); //don't include THIS in the process list
   for(uint b=0;b<VIEWBOXES;b++) view[b]=NULL;
   box=0;
 }
 
 InsideOutGui::~InsideOutGui(){
-  birosInfo.processes.append(this); //to avoid crash
+  birosInfo().processes.append(this); //to avoid crash
   threadClose();
 }
 
@@ -97,7 +99,7 @@ void InsideOutGui::open(){
   g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
   for(uint i=0;i<VIEWBOXES;i++){
     GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxToggle"<<i).p));
-    g_object_set_data(G_OBJECT(widget), "id", (void*)i);
+    g_object_set_data(G_OBJECT(widget), "id", (void*)(long)i);
   }
   
   //add data
@@ -125,14 +127,14 @@ void InsideOutGui::open(){
       vi = b::getView(name);
       if(type=="field"){
 	name.read(is," "," \n\r");
-	birosInfo.getVariable(v, name, NULL);
+	birosInfo().getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
 	f = listFindByName(v->fields, fld);
 	view[b] = b::newView(*f, vi); view[b]->object=f;
       }
-      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo.getVariable(v, name, NULL); view[b] = b::newView(*v, vi); view[b]->object=v; }
-      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo.getProcess<Process>(name, NULL);       view[b] = b::newView(*((Process*)view[b]->object), vi);  }
-      //if(type=="parameter"){view[b] = b::newView(ViewInfo::parameterVT, vi);is >>name; birosInfo.getParameter(view[b]->param, name); }
+      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = b::newView(*v, vi); view[b]->object=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = b::newView(*((Process*)view[b]->object), vi);  }
+      //if(type=="parameter"){view[b] = b::newView(ViewInfo::parameterVT, vi);is >>name; birosInfo().getParameter(view[b]->param, name); }
       //if(type=="global"){   view[b] = b::newGlobalView(vi); }
 
       setBoxView(view[b], builder, b);
@@ -165,13 +167,13 @@ void InsideOutGui::updateVarStore(){
   uint i,j;
   GtkTreeIter it;
   Variable *v;  FieldInfo *f;  Process *p;
-  birosInfo.readAccess(NULL);
-  for_list(i, v, birosInfo.variables) {
+  birosInfo().readAccess(NULL);
+  for_list(i, v, birosInfo().variables) {
     it = appendToStore(varStore, v, NULL);
     for_list(j, f, v->fields) appendToStore(varStore, f, j, &it);
     for_list(j, p, v->listeners) appendToStore(varStore, p, &it);
   }
-  birosInfo.deAccess(NULL);
+  birosInfo().deAccess(NULL);
 }
 
 void InsideOutGui::updateProcStore(){
@@ -180,8 +182,8 @@ void InsideOutGui::updateProcStore(){
   uint i,j,k;
   GtkTreeIter i_it, j_it;
   Variable *v;  FieldInfo *f;  Process *p;  Parameter *pa;
-  birosInfo.readAccess(NULL);
-  for_list(i, p, birosInfo.processes) {
+  birosInfo().readAccess(NULL);
+  for_list(i, p, birosInfo().processes) {
     i_it = appendToStore(procStore, p, NULL);
     for_list(j, v, p->listensTo) {
       j_it = appendToStore(procStore, v, &i_it);
@@ -189,7 +191,7 @@ void InsideOutGui::updateProcStore(){
     }
     for_list(j, pa, p->dependsOn) appendToStore(procStore, pa, &i_it);
   }
-  birosInfo.deAccess(NULL);
+  birosInfo().deAccess(NULL);
 }
 
 void InsideOutGui::updateParamStore(){
@@ -198,12 +200,12 @@ void InsideOutGui::updateParamStore(){
   uint i,j;
   GtkTreeIter it;
   Process *p;  Parameter *pa;
-  birosInfo.readAccess(NULL);
-  for_list(i, pa, birosInfo.parameters) {
+  birosInfo().readAccess(NULL);
+  for_list(i, pa, birosInfo().parameters) {
     it = appendToStore(paramStore, pa, NULL);
     for_list(j, p, pa->dependers) if(p) appendToStore(paramStore, p, &it);
   }
-  birosInfo.deAccess(NULL);
+  birosInfo().deAccess(NULL);
 }
 
 void InsideOutGui::updateViewStore(){
@@ -212,11 +214,11 @@ void InsideOutGui::updateViewStore(){
   uint i;
   //GtkTreeIter it;
   ViewInfo *vi;
-  birosInfo.readAccess(NULL);
-  for_list(i, vi, birosInfo.views) {
+  birosInfo().readAccess(NULL);
+  for_list(i, vi, birosInfo().views) {
     appendToStore(viewStore, vi, i, NULL);
   }
-  birosInfo.deAccess(NULL);
+  birosInfo().deAccess(NULL);
 }
 
 
@@ -302,23 +304,23 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
     case 'V':{
-      ViewInfoL vis = b::getViews(ViewInfo::variableVT, typeid(*birosInfo.variables(id)).name() );
+      ViewInfoL vis = b::getViews(ViewInfo::variableVT, typeid(*birosInfo().variables(id)).name() );
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
-        iog->view[iog->box] = b::newView(*birosInfo.variables(id), vis(0));
+        iog->view[iog->box] = b::newView(*birosInfo().variables(id), vis(0));
       }else{ //multiple choices -> open menu
 	ViewInfo *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = b::newView(*birosInfo.variables(id), vis(choice));
+        iog->view[iog->box] = b::newView(*birosInfo().variables(id), vis(choice));
       }
     }  break;
     case 'P':
-      iog->view[iog->box] = b::newView(*birosInfo.processes(id), NULL);
+      iog->view[iog->box] = b::newView(*birosInfo().processes(id), NULL);
       break;
     case 'p':
-      iog->view[iog->box] = b::newView(*birosInfo.parameters(id), NULL);
+      iog->view[iog->box] = b::newView(*birosInfo().parameters(id), NULL);
       break;
     case 'F':{
       //get variable id first by accessing
@@ -326,7 +328,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       GtkTreeIter var;
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
-      FieldInfo *field = birosInfo.variables(varid)->fields(id);
+      FieldInfo *field = birosInfo().variables(varid)->fields(id);
       
       ViewInfoL vis = b::getViews(ViewInfo::fieldVT, field->sysType );
       if(!vis.N) break;
@@ -507,3 +509,6 @@ notes:
 
 
  */
+
+#else //MT_GTK
+#endif

@@ -31,7 +31,7 @@ int main(int argn,char **argv) {
   
   cam->threadLoop();
   MT::wait(20.);
-  close(birosInfo.processes);
+  close(birosInfo().processes);
   
   return 0;
 }

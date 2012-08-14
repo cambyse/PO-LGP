@@ -19,6 +19,20 @@
 
 #define MUTEX_DUMP(x) //x
 
+
+//===========================================================================
+//
+// global singleton
+//
+
+BirosInfo *global_birosInfo=NULL;
+
+BirosInfo& birosInfo(){
+  if(!global_birosInfo) global_birosInfo = new BirosInfo();
+  return *global_birosInfo;
+}
+
+
 //===========================================================================
 //
 // helpers
@@ -361,20 +375,20 @@ Variable::Variable(const char *_name) {
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
-  if(this != &birosInfo) {
-    birosInfo.writeAccess(NULL);
-    id = birosInfo.variables.N;
-    birosInfo.variables.memMove = true;
-    birosInfo.variables.append(this);
-    birosInfo.deAccess(NULL);
+  if(global_birosInfo) { //-> birosInfo itself will not be registered!
+    birosInfo().writeAccess(NULL);
+    id = birosInfo().variables.N;
+    birosInfo().variables.memMove = true;
+    birosInfo().variables.append(this);
+    birosInfo().deAccess(NULL);
   }
 }
 
 Variable::~Variable() {
-  if(this != &birosInfo) {
-    birosInfo.writeAccess(NULL);
-    birosInfo.variables.removeValue(this);
-    birosInfo.deAccess(NULL);
+  if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
+    birosInfo().writeAccess(NULL);
+    birosInfo().variables.removeValue(this);
+    birosInfo().deAccess(NULL);
   }
   for (uint i=0; i<fields.N; i++) delete fields(i);
   
@@ -484,18 +498,18 @@ Process::Process(const char *_name) {
   s = new sProcess();
   name = _name;
   step_count = 0U;
-  birosInfo.writeAccess(this);
-  id = birosInfo.processes.N;
-  birosInfo.processes.memMove=true;
-  birosInfo.processes.append(this);
-  birosInfo.deAccess(this);
+  birosInfo().writeAccess(this);
+  id = birosInfo().processes.N;
+  birosInfo().processes.memMove=true;
+  birosInfo().processes.append(this);
+  birosInfo().deAccess(this);
 }
 
 Process::~Process() {
   if(s->thread || s->threadCondition.state!=tsCLOSE) threadClose();
-  birosInfo.writeAccess(this);
-  birosInfo.processes.removeValue(this);
-  birosInfo.deAccess(this);
+  birosInfo().writeAccess(this);
+  birosInfo().processes.removeValue(this);
+  birosInfo().deAccess(this);
   delete s;
 }
 
@@ -631,11 +645,11 @@ void* sProcess::staticThreadMain(void *_self) {
 //
 
 Parameter::Parameter() {
-  birosInfo.writeAccess(NULL);
-  id = birosInfo.parameters.N;
-  birosInfo.parameters.memMove=true;
-  birosInfo.parameters.append(this);
-  birosInfo.deAccess(NULL);
+  birosInfo().writeAccess(NULL);
+  id = birosInfo().parameters.N;
+  birosInfo().parameters.memMove=true;
+  birosInfo().parameters.append(this);
+  birosInfo().deAccess(NULL);
 };
 
 
@@ -684,8 +698,6 @@ void close(const ProcessL& P) {
 //
 // Global information
 //
-
-BirosInfo birosInfo;
 
 Process *BirosInfo::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);

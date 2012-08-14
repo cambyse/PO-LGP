@@ -31,7 +31,7 @@ typedef MT::Array<ViewInfo*> ViewInfoL;
   };
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
 
 
 //===========================================================================
@@ -254,7 +254,7 @@ struct BirosInfo:Variable {
   void dump(); //dump everything -- for debugging
 };
 
-extern BirosInfo birosInfo;
+BirosInfo& birosInfo(); //get access to the global info struct
 
 
 //===========================================================================
@@ -283,7 +283,7 @@ struct WorkingCopy {
   }
   void init(const char* var_name, Process *_p) {
     T *_v;
-    birosInfo.getVariable(_v, "GeometricState", _p);
+    birosInfo().getVariable(_v, "GeometricState", _p);
     init(_v, _p);
   }
   bool needsUpdate() {

@@ -24,8 +24,10 @@ int main(int argn,char** argv){
 
   ProcessL P=ARRAY(controller); //, , schunkSkin, 
 
-  //b::openInsideOut();
+  b::openInsideOut();
   
+  MT::wait(20.);
+
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
   motionPrimitive.writeAccess(NULL);

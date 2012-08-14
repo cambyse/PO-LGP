@@ -1,7 +1,7 @@
 #include "motion_internal.h"
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody);
 
@@ -11,7 +11,7 @@ Process* newActionProgressor(MotionFuture& a){
 
 ActionProgressor::ActionProgressor(MotionFuture& a)
 :Process("ActionProgressor"), motionFuture(&a) {
-  if(!motionFuture) birosInfo.getVariable(motionFuture, "MotionFuture", this);
+  if(!motionFuture) birosInfo().getVariable(motionFuture, "MotionFuture", this);
   threadListenTo(motionFuture);
   MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
   if(motionPrimitive) threadListenTo(motionPrimitive);
@@ -72,7 +72,7 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
 }
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody){
   VAR(GeometricState);

@@ -8,5 +8,5 @@ endif
 
 ## these are the options for compiling the applications
 ifneq ($(CONFIGMODE),mlrlib)
-  LIBS += -lArray
+  LIBS += -lrt -lArray
 endif

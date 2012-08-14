@@ -90,7 +90,7 @@ int main(int argn,char** argv){
   cam.threadClose();
   close(P);
 
-  birosInfo.dump();
+  birosInfo().dump();
   cout <<"bye bye" <<endl;
   return 0;
 }

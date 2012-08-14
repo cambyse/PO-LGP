@@ -13,13 +13,13 @@ Views:
 4) parameters (equal to fields?)
 5) global (which access birosInfo themselves and get whatever they want)
 
-** All views are registered in the birosInfo.views list. This list doesn't
+** All views are registered in the birosInfo().views list. This list doesn't
   contain View instantiations itself, but only ViewInfo structs, which
   describe the name, kind of view and on which things the view is
   applicable. This list is generated automatically BEFORE main routine
   entry via the static ViewInfo_typed entry of a View. Since they are
   static their constructor is called before main loop entry. The
-  constructor enters the ViewInfo in the birosInfo.views list. Therefore,
+  constructor enters the ViewInfo in the birosInfo().views list. Therefore,
   in addition to deriving from the 'View' class, every View
   implementation need to contain a static ViewInfo_typed to enlist
   itself.
@@ -102,7 +102,7 @@ struct ViewInfo_typed:ViewInfo{
     name = _name;
     type = _type;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
-    birosInfo.views.append(this);
+    birosInfo().views.append(this);
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };

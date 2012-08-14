@@ -64,14 +64,14 @@ HsvFilter::HsvFilter(Image& _hsv, FloatImage& _evi): Process("HsvFilter"), hsv(&
 }
 
 void HsvFilter::open(){
-  s->hsvMean      = birosInfo.getParameter<floatA>("hsvMean", this);
-  s->hsvDeviation = birosInfo.getParameter<floatA>("hsvDeviation", this);
+  s->hsvMean      = birosInfo().getParameter<floatA>("hsvMean", this);
+  s->hsvDeviation = birosInfo().getParameter<floatA>("hsvDeviation", this);
 }
 
 Mutex MTcfgLock;
 void HsvFilter::step(){
-  s->hsvMean      = birosInfo.getParameter<floatA>("hsvMean", this);
-  s->hsvDeviation = birosInfo.getParameter<floatA>("hsvDeviation", this);
+  s->hsvMean      = birosInfo().getParameter<floatA>("hsvMean", this);
+  s->hsvDeviation = birosInfo().getParameter<floatA>("hsvDeviation", this);
   /*MTcfgLock.lock();
   s->hsvMean      = MT::getParameter<floatA>("hsvMean");
   s->hsvDeviation = MT::getParameter<floatA>("hsvDeviation");

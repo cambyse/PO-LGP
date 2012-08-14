@@ -30,16 +30,16 @@
 
 SchunkArm::SchunkArm():Process("SchunkArm") {
   s = new sSchunkArm();
-  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
+  birosInfo().getVariable(hardwareReference, "HardwareReference", this);
 }
 
 SchunkArm::~SchunkArm() { delete s; }
 
 void SchunkArm::open() {
-  s->openArm = birosInfo.getParameter<bool>("openArm", this, false);
+  s->openArm = birosInfo().getParameter<bool>("openArm", this, false);
   
   GeometricState *geo;
-  birosInfo.getVariable(geo, "GeometricState", this);
+  birosInfo().getVariable(geo, "GeometricState", this);
   geo->readAccess(this);
   s->motorIndex.resize(7);
   s->motorIndex(0) = geo->ors.getBodyByName("m3")->inLinks(0)->index;
@@ -97,7 +97,7 @@ void SchunkArm::close() {
 
 SchunkHand::SchunkHand():Process("SchunkHand") {
   s = new sSchunkHand();
-  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
+  birosInfo().getVariable(hardwareReference, "HardwareReference", this);
 }
 
 SchunkHand::~SchunkHand() {
@@ -105,7 +105,7 @@ SchunkHand::~SchunkHand() {
 }
 
 void SchunkHand::open() {
-  s->openHand = birosInfo.getParameter<bool>("openHand", this, false);
+  s->openHand = birosInfo().getParameter<bool>("openHand", this, false);
   
   s->motorIndex.resize(7);
   for (uint m=0; m<=6; m++) s->motorIndex(m) = m+7;
@@ -158,7 +158,7 @@ void SchunkHand::close() {
 
 SchunkSkin::SchunkSkin():Process("SchunkSkin") {
   s = new sSchunkSkin();
-  birosInfo.getVariable(skinPressure, "SkinPressure", this);
+  birosInfo().getVariable(skinPressure, "SkinPressure", this);
 }
 
 SchunkSkin::~SchunkSkin() {
@@ -166,7 +166,7 @@ SchunkSkin::~SchunkSkin() {
 }
 
 void SchunkSkin::open() {
-  s->openSkin = birosInfo.getParameter<bool>("openSkin", this, false);
+  s->openSkin = birosInfo().getParameter<bool>("openSkin", this, false);
   if (!s->openSkin) return;
   
   s->open();
@@ -230,10 +230,10 @@ sSchunkArm::sSchunkArm() {
 
 void sSchunkArm::open() {
   //get parameters
-  stepHorizon=birosInfo.getParameter<float>("schunkStepHorizon", 50);
-  maxStep=birosInfo.getParameter<float>("schunkMaxStep", .03);
-  sendMotion=birosInfo.getParameter<bool>("schunkSendArmMotion", false);
-  readPositions=birosInfo.getParameter<bool>("schunkReadArmPositions", false);
+  stepHorizon=birosInfo().getParameter<float>("schunkStepHorizon", 50);
+  maxStep=birosInfo().getParameter<float>("schunkMaxStep", .03);
+  sendMotion=birosInfo().getParameter<bool>("schunkSendArmMotion", false);
+  readPositions=birosInfo().getParameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- sSchunkArm init .." <<std::flush;
   addShutdown(this, shutdownLWA);
@@ -433,7 +433,7 @@ sSchunkHand::sSchunkHand() {
 
 void sSchunkHand::open() {
   //read parameters
-  sendMotion=birosInfo.getParameter<bool>("schunkSendHandMotion", true);
+  sendMotion=birosInfo().getParameter<bool>("schunkSendHandMotion", true);
   
   cout <<" -- sSchunkHand init .." <<std::flush;
   addShutdown(this, shutdownSDH);
@@ -446,11 +446,18 @@ void sSchunkHand::open() {
   int  can_id_write = 42;
   //int  rs232_port = 9;
   //int  rs232_baudrate = 115200;
-  hand->OpenCAN_ESD(can_net,
-                    can_baudrate,
-                    can_timeout,
-                    can_id_read,
-                    can_id_write);
+  try {
+    hand->OpenCAN_ESD(can_net,
+		      can_baudrate,
+		      can_timeout,
+		      can_id_read,
+		      can_id_write);
+  } catch (SDH::cSDHLibraryException* e) {
+    cerr <<"\ndemo-dsa main(): Caught exception from SDHLibrary: " <<e->what() <<". Giving up!\n";
+    delete e;
+  } catch (...) {
+    cerr <<"\ncaught unknown exception, giving up\n";
+  }
                     
   fingers.push_back(0);
   fingers.push_back(1);
