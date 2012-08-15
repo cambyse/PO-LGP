@@ -151,23 +151,3 @@ shape leg3(table) { rel=<t(.3 .3 -.37)>  type=0 mass=.001 size=[.04 .04 .7 0] co
 shape leg4(table) { rel=<t(.3 -.3 -.37)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
 
 
-###########
-## tray
-###########
-
-body tray{ X=<t(.0 -.9 .69>)> }
-shape bottom(tray){ contact, type=0, size=[.35 .25 .01 .01], color=[.8 .0 .0], rel=<t(0 0 0) d(0 0 0 0)> }
-shape bottom(tray){ contact, type=0, size=[.35 .01 .05 .01], color=[.8 .0 .0], rel=<t(0 .12 .025) d(0 0 0 0)> }
-shape bottom(tray){ contact, type=0, size=[.35 .01 .05 .01], color=[.8 .0 .0], rel=<t(0 -.12 .025) d(0 0 0 0)> }
-shape bottom(tray){ contact, type=0, size=[.01 .25 .05 .01], color=[.8 .0 .0], rel=<t(.17 0 .025) d(0 0 0 0)> }
-shape bottom(tray){ contact, type=0, size=[.01 .25 .05 .01], color=[.8 .0 .0], rel=<t(-.17 0 .025) d(0 0 0 0)> }
-
-body cube { X=<t(.0 -.9 .8)> }
-shape c1 (cube) { type=0 size=[.08 .08 .08 .05] color=[.1 .2 .4] }
-
-#body tray_green{ X=<t(-.23 -.9 .69>)> }
-#shape bottom(tray_green){ contact, type=0, size=[.35 .25 .01 .01], color=[0 .0 0.8], rel=<t(0 0 0) d(0 0 0 0)> }
-#shape bottom(tray_green){ contact, type=0, size=[.35 .01 .05 .01], color=[0 .0 0.8], rel=<t(0 .12 .025) d(0 0 0 0)> }
-#shape bottom(tray_green){ contact, type=0, size=[.35 .01 .05 .01], color=[0 .0 0.8], rel=<t(0 -.12 .025) d(0 0 0 0)> }
-#shape bottom(tray_green){ contact, type=0, size=[.01 .25 .05 .01], color=[0 .0 0.8], rel=<t(.17 0 .025) d(0 0 0 0)> }
-#shape bottom(tray_green){ contact, type=0, size=[.01 .25 .05 .01], color=[0 .0 0.8], rel=<t(-.17 0 .025) d(0 0 0 0)> }
