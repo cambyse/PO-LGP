@@ -2,6 +2,10 @@
 #include <MT/array.h>
 
 void DistanceFeatureGenerator::makeFeatures(arr& Z, const arr& X){
+  Z.append(X.sub(0,-1,4,6) - X.sub(0,-1,0,2));
+  Z.reshape(1,3);
+}
+void TrayFeatureGenerator::makeFeatures(arr& Z, const arr& X){
   Z.append(X.sub(0,-1,3,5) - X.sub(0,-1,0,2));
   Z.reshape(1,3);
 }

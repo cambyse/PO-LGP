@@ -7,14 +7,22 @@ template<class Sample>
 class FeatureGenerator {
   public:
     virtual void makeFeatures(Sample& features, const Sample& data) = 0;
+    virtual void getSize(uintA& size) = 0;
 };
 class DistanceFeatureGenerator : public FeatureGenerator<arr> {
   public:
     virtual void makeFeatures(arr& features, const arr& data);
+    virtual void getSize(uintA& size) { size = TUP(1,4); }
+};
+class TrayFeatureGenerator : public FeatureGenerator<arr> {
+  public:
+    virtual void makeFeatures(arr& features, const arr& data);
+    virtual void getSize(uintA& size) { size = TUP(1,3); }
 };
 class CubicFeatureGenerator : public FeatureGenerator<arr> {
   public:
     virtual void makeFeatures(arr& features, const arr& data);
+    virtual void getSize(uintA& size) { size = TUP(1,4); }
 };
 
 #endif
