@@ -56,13 +56,13 @@ void SchunkArm::open() {
   
   hardwareReference->writeAccess(this);
   if (hardwareReference->q_real.N<7) hardwareReference->q_real.resizeCopy(7);
-	if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
-	if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
+  if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
+  if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
   for (uint m=0; m<7; m++) {
     hardwareReference->q_real(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
-		hardwareReference->q_reference(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
-		hardwareReference->v_reference(s->motorIndex(m)) =  0.;
-	}
+    hardwareReference->q_reference(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
+    hardwareReference->v_reference(s->motorIndex(m)) =  0.;
+  }
   hardwareReference->deAccess(this);
 }
 
@@ -74,18 +74,12 @@ void SchunkArm::step() {
     hardwareReference->deAccess(this);
     
     s->step();
-
-    hardwareReference->writeAccess(this);
-    for (uint m=0; m<7; m++)
-      hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
-    hardwareReference->deAccess(this);
   }
-  else {
-    hardwareReference->writeAccess(this);
-    for (uint m=0; m<7; m++)
-      hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
-    hardwareReference->deAccess(this);
-  }
+  
+  hardwareReference->writeAccess(this);
+  for (uint m=0; m<7; m++)
+    hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+  hardwareReference->deAccess(this);
 }
 
 void SchunkArm::close() {
@@ -232,7 +226,7 @@ void sSchunkArm::open() {
   //get parameters
   stepHorizon=birosInfo().getParameter<float>("schunkStepHorizon", 50);
   maxStep=birosInfo().getParameter<float>("schunkMaxStep", .03);
-  sendMotion=birosInfo().getParameter<bool>("schunkSendArmMotion", false);
+  sendMotion=birosInfo().getParameter<bool>("schunkSendArmMotion", true);
   readPositions=birosInfo().getParameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- sSchunkArm init .." <<std::flush;

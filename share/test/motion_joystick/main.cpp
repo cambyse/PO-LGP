@@ -26,18 +26,19 @@ int main(int argn,char** argv){
 
   b::openInsideOut();
   
-  MT::wait(20.);
-
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
   motionPrimitive.writeAccess(NULL);
   motionPrimitive.mode = MotionPrimitive::feedback;
   motionPrimitive.feedbackControlTask = &joyTask;
   motionPrimitive.deAccess(NULL);
-  //view.threadLoopWithBeat(.01);
-  loopWithBeat(hardware, .01); // hardware must be started before the controller
+  
+  loopWithBeat(hardware, .01); // hardware must be started before the controller// WHY??
   loopWithBeat(P,.01);
-  MT::wait(60.);
+  for(;;){
+    joystickState.waitForNextWriteAccess();
+    if(joystickState.get_exitSignal(NULL)) break;
+  }
   close(P);
   close(hardware);
 

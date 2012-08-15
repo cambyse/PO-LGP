@@ -399,14 +399,14 @@ Variable::~Variable() {
 
 int Variable::readAccess(Process *p) {
   accessController.queryReadAccess(this, p);
-  s->lock.readLock();
+  s->rwlock.readLock();
   accessController.logReadAccess(this, p);
   return revision;
 }
 
 int Variable::writeAccess(Process *p) {
   accessController.queryWriteAccess(this, p);
-  s->lock.writeLock();
+  s->rwlock.writeLock();
   revision++;
   accessController.logWriteAccess(this, p);
   uint i;  Process *l;
@@ -416,7 +416,7 @@ int Variable::writeAccess(Process *p) {
 }
 
 int Variable::deAccess(Process *p) {
-  if(s->lock.state == -1) { //log a revision after write access
+  if(s->rwlock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
     accessController.logWriteDeAccess(this,p);
@@ -424,20 +424,23 @@ int Variable::deAccess(Process *p) {
     accessController.logReadDeAccess(this,p);
   }
   int rev=revision;
-  s->lock.unlock();
+  s->rwlock.unlock();
   return rev;
 }
 
-int Variable::waitForRevisionGreaterThan(uint rev) {
+void Variable::waitForNextWriteAccess(){
+  s->cond.waitForSignal();
+}
+
+void Variable::waitForRevisionGreaterThan(uint& rev) {
   s->cond.lock();
   s->cond.waitForStateGreaterThan(rev, true);
-  int state=s->cond.state;
+  rev=s->cond.state;
   s->cond.unlock();
-  return state;
 }
 
 int Variable::lockState() {
-  return s->lock.state;
+  return s->rwlock.state;
 }
 
 void Variable::serializeToString(MT::String &string) const {
@@ -560,9 +563,9 @@ void Process::threadListenTo(const VariableL &signalingVars) {
 }
 
 void Process::threadListenTo(Variable *v) {
-  v->s->lock.writeLock(); //don't want to increase revision and broadcast!
+  v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->listeners.setAppend(this);
-  v->s->lock.unlock();
+  v->s->rwlock.unlock();
   listensTo.append(v);
 }
 

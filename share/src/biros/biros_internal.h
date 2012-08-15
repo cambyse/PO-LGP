@@ -107,7 +107,7 @@ struct CycleTimer {
 
 //Variable's internal data
 struct sVariable {
-  Lock lock;
+  Lock rwlock;
   ConditionVariable cond; //to broadcast write access to this variable
   struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
   

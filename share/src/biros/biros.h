@@ -105,7 +105,8 @@ struct Variable {
   int deAccess(Process*);
   
   //-- syncing via a variable
-  int waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
+  void waitForNextWriteAccess();
+  void waitForRevisionGreaterThan(uint& rev);  //sets calling thread to sleep
   
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers

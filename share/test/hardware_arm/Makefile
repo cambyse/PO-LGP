@@ -1,11 +1,6 @@
 BASE = ../..
 
-CXXFLAGS += -w
-
-LIBS += -lmotion -lhardware -lperception -lmt
-
-OBJ = \
-  main.o
+LIBS += -lmotion -lhardware -lperception -lMT
 
 FREEGLUT = 1
 LAPACK = 1

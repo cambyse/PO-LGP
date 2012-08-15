@@ -27,7 +27,10 @@ void Joystick::open() {
 
 void Joystick::step() {
   s->step();
-  joystickState->set_state(s->state, this);
+  joystickState->writeAccess(this);
+  joystickState->state = s->state;
+  joystickState->exitSignal=(s->state(0)==16 || s->state(0)==32);
+  joystickState->deAccess(this);
 }
 
 void Joystick::close() {

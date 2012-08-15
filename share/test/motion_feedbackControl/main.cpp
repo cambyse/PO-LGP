@@ -34,6 +34,8 @@ int main(int argn, char** argv){
   Process* ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
 
   b::openInsideOut();
+
+  MT::wait(10.);
   
   MyTask myTask;
   motionPrimitive.writeAccess(NULL);

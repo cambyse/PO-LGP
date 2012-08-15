@@ -23,10 +23,12 @@ struct SkinPressure:public Variable {
 struct JoystickState: public Variable {
   FIELD(intA, state);
   FIELD(uint, n);
+  FIELD(bool, exitSignal);
   
-  JoystickState():Variable("JoystickState") {
+  JoystickState():Variable("JoystickState"), n(0), exitSignal(false) {
     reg_state();
     reg_n();
+    reg_exitSignal();
     state.resize(1);
     state(0)=0;
   }
