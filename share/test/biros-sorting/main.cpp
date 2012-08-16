@@ -67,7 +67,8 @@ int main(int argn, char **argv) {
   cout <<endl;
 
   b::updateInsideOut();
-  MT::wait(20.);
+  
+  MT::wait();
 
   return 0;
 }

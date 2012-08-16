@@ -18,19 +18,17 @@ int main(int argn,char** argv){
   Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
-  //SchunkSkin schunkSkin;
+  SchunkSkin schunkSkin;
 
-  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, joystick);
+  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, joystick);
 
-  ProcessL P=ARRAY(controller); //, , schunkSkin, 
+  ProcessL P=ARRAY(controller);
 
   b::openInsideOut();
 
-  View *v = new PoseView(hardwareReference.fields(0));
-  v->gtkNew(NULL);
+  //View *v = new PoseView(hardwareReference.fields(0));
+  //v->gtkNew(NULL);
 
-  MT::wait();
-  
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
   motionPrimitive.writeAccess(NULL);

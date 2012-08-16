@@ -151,8 +151,12 @@ void MotionController::step() {
     //MT_MSG("TODO");
     
     //update the controllers own internal ors state - pulling from MotionReference
-    arr q_old = hardwareReference->get_q_reference(this);
-    arr v_old = hardwareReference->get_v_reference(this);
+    hardwareReference->readAccess(this);
+    arr q_old = hardwareReference->q_reference;
+    arr v_old = hardwareReference->v_reference;
+    for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real skin state!!!
+    hardwareReference->deAccess(this);
+    
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
     if (q_old.N >= 14) { 
       if(q_old.N == 2*s->geo().ors.getJointStateDimension()) q_old = q_old.sub(0, q_old.N/2 - 1);
