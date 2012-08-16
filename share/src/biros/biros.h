@@ -106,7 +106,7 @@ struct Variable {
   
   //-- syncing via a variable
   void waitForNextWriteAccess();
-  void waitForRevisionGreaterThan(uint& rev);  //sets calling thread to sleep
+  uint waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
   
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers

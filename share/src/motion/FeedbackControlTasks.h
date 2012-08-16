@@ -49,7 +49,7 @@ struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
 struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   JoystickState *joyState;
   SkinPressure *skinPressure;
-  double joyRate;
+  double joyRate, defaultEff_vprec;
   ~Joystick_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors);
   virtual void updateTaskVariableGoals(const ors::Graph& ors);

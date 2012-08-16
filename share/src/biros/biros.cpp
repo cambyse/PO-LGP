@@ -311,10 +311,7 @@ void Metronome::waitForTic() {
   }
   //wait for target time
   int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
-  if(rc) {
-    if(rc==0) { MT_MSG("clock_nanosleep() interrupted by signal") } else { MT_MSG("clock_nanosleep() failed " <<rc); }
-  }
-  //}
+  if(rc && errno) MT_MSG("clock_nanosleep() failed " <<rc <<" errno=" <<errno <<' ' <<strerror(errno));
   
   tics++;
 }
@@ -432,11 +429,12 @@ void Variable::waitForNextWriteAccess(){
   s->cond.waitForSignal();
 }
 
-void Variable::waitForRevisionGreaterThan(uint& rev) {
+uint Variable::waitForRevisionGreaterThan(uint rev) {
   s->cond.lock();
   s->cond.waitForStateGreaterThan(rev, true);
   rev=s->cond.state;
   s->cond.unlock();
+  return rev;
 }
 
 int Variable::lockState() {

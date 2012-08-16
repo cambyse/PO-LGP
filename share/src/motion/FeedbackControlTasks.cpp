@@ -169,9 +169,9 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   TVs = ARRAY<TaskVariable*>(eff, q, rot, col, lim, skin);
   activateAll(TVs, true);
   eff->y_prec=0.; //birosInfo().getParameter<double>("TV_eff_yprec", 1e3);
-  eff->v_prec=birosInfo().getParameter<double>("TV_eff_vprec", 1e0);
+  eff->v_prec=defaultEff_vprec=birosInfo().getParameter<double>("TV_eff_vprec", 1e1);
   q->y_prec=0;
-  q->v_prec=birosInfo().getParameter<double>("TV_q_vprec", 1e-1);
+  q->v_prec=birosInfo().getParameter<double>("TV_q_vprec", 1e0);
   rot->y_prec=0.;
   rot->v_prec=birosInfo().getParameter<double>("TV_rot_vprec", 1e-1);
   col->y_prec=birosInfo().getParameter<double>("TV_col_yprec", 1e0);
@@ -201,6 +201,7 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   q->active=true;
   q->y_prec=0.;
   q->v_target.setZero();
+  eff->v_prec=defaultEff_vprec;
   
   arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
   intA joys = joyState->get_state(NULL);
@@ -209,9 +210,17 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
   prepare_skin(skin, skinState, joys(0)!=2);
   
   switch (joys(0)) {
+    case 0: { //(NIL) motion rate control
+      eff->active=true;
+      eff->y_target = eff->y;
+      eff->v_target(0) = -joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
+      eff->v_target(1) = +joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
+      eff->v_target(2) = -joyRate*MT::sign(joys(2))*(.25*(exp(MT::sqr(joys(2))/10000.)-1.));
+      break;
+    }
     case 1: { //(1) homing
-      q->v_target = -q->y;
-      double vmax=.5, v=norm(q->v_target);
+      q->v_target = -5.*q->y;
+      double vmax=.3, v=q->v_target.absMax();
       if (v>vmax) q->v_target*=vmax/v;
       break;
     }
@@ -222,44 +231,31 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
       //ON SIMULATION: since it is set to (.01, .01, .01) this will always give a repelling force!
       break;
     }
-    case 256: { //(select)close hand
-      skin->active=true;
-      skin->y_prec = 1e3;
-      skin->y_target=ARR(.03, 0, .03, 0, .03, 0);
-      break;
-    }
-    case 512: { //(start)open hand
-#if 1
-      q->y_prec=1e1;
-      q->y_target = q->y;
-      q->y_target(8)=q->y_target(10)=q->y_target(12)=-.8;
-      q->y_target(9)=q->y_target(11)=q->y_target(13)= .6;
-#else
-      skin->active=true;
-      skin->y_target.setZero();
-      skin->y_prec = 1e3;
-#endif
+    case 4: { //(3) controlling the rotation rate
+      eff->active=true;
+      eff->v_target = 0.;      eff->v_prec = 1e5;
+      rot->active=true;
+      rot->v_target(0) = -3.*joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
+      rot->v_target(1) = +3.*joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
+      rot->v_target(2) = -3.*joyRate*MT::sign(joys(1))*(.25*(exp(MT::sqr(joys(1))/10000.)-1.));
       break;
     }
     case 8: { //(4) motion rate without rotation
       rot->active=true;
       rot->v_target.setZero();
     }
-    case 0: { //(NIL) motion rate control
-      eff->active=true;
-      eff->y_target = eff->y;
-      eff->v_target(0) = -joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
-      eff->v_target(1) = +joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
-      eff->v_target(2) = -joyRate*MT::sign(joys(2))*(.25*(exp(MT::sqr(joys(2))/10000.)-1.));
+    case 256: { //(select)close hand
+      skin->active=true;
+      skin->y_target=ARR(.007, 0, .02, 0, .007, 0);
       break;
     }
-    case 4: { //(3) controlling the rotation rate
-      //eff ->active=true;
-      //eff->y_prec=x_yprec;  eff->v_prec=0.;
-      rot->active=true;
-      rot->v_target(0) = -3.*joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
-      rot->v_target(1) = +3.*joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
-      rot->v_target(2) = -3.*joyRate*MT::sign(joys(1))*(.25*(exp(MT::sqr(joys(1))/10000.)-1.));
+    case 512: { //(start)open hand
+      arr target = q->y;
+      target(8)=target(10)=target(12)=-.8;
+      target(9)=target(11)=target(13)= .6;
+      q->v_target = 1.*(target - q->y);
+      double vmax=.5, v=q->v_target.absMax();
+      if (v>vmax) q->v_target*=vmax/v;
       break;
     }
   }

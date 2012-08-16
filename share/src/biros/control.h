@@ -23,6 +23,7 @@ namespace b{
   //-- gui
   void openInsideOut();
   void updateInsideOut();
+  void closeInsideOut();
 
   //-- dump everything to console
   void dump();

@@ -78,12 +78,17 @@ void SchunkArm::step() {
     hardwareReference->deAccess(this);
     
     s->step();
-  }
   
-  hardwareReference->writeAccess(this);
-  for (uint m=0; m<7; m++)
-    hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
-  hardwareReference->deAccess(this);
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++)
+      hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+    hardwareReference->deAccess(this);
+  }else{
+    hardwareReference->writeAccess(this);
+    for (uint m=0; m<7; m++)
+      hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
+    hardwareReference->deAccess(this);
+  }
 }
 
 void SchunkArm::close() {
@@ -138,8 +143,7 @@ void SchunkHand::step() {
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
     hardwareReference->deAccess(this);
-  }
-  else {
+  } else {
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++)
       hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
@@ -545,7 +549,6 @@ void sSchunkHand::getPos(arr &q) {
 }
 
 void sSchunkHand::step() {
-
   if (isOpen && sendMotion) {
     setVelocities(v_reference, 360.);
     getPos(q_real);

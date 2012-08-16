@@ -25,7 +25,7 @@ void setBoxView(View *v, GtkBuilder *builder, uint box);
 // the InsideOutGui definition
 //
 
-#define VIEWBOXES 4
+#define VIEWBOXES 3
 
 struct InsideOutGui:Process{
   GtkBuilder *builder;
@@ -65,6 +65,11 @@ void b::openInsideOut(){
 void b::updateInsideOut(){
   demon.gui->update();
 } //gui.threadStep(); }
+
+void b::closeInsideOut(){
+  if(!demon.gui) demon.gui=new InsideOutGui();
+  demon.gui->threadClose();
+}
 
 
 //===========================================================================
@@ -264,6 +269,23 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
   os.close();
 }
 
+extern "C" G_MODULE_EXPORT void on_pushView_clicked(GtkWidget* caller){
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  iog->update();
+  iog->box++;
+  if(iog->box>=VIEWBOXES) iog->box=0;
+  cout <<"GUI: push view" <<iog->box <<endl;
+}
+
+extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
+  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
+  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  long b = (long)g_object_get_data(G_OBJECT(caller), "id");
+  iog->box = b;
+  cout <<"GUI: box select " <<b <<endl;
+}
+
 extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
   accessController.blockAllAccesses();
 }
@@ -274,14 +296,6 @@ extern "C" G_MODULE_EXPORT void on_run_clicked(GtkWidget* caller){
 
 extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
   accessController.stepToNextWriteAccess();
-}
-
-extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
-  GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  long b = (long)g_object_get_data(G_OBJECT(caller), "id");
-  iog->box = b;
-  cout <<"GUI: box select " <<b <<endl;
 }
 
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
