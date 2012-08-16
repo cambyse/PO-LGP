@@ -293,6 +293,7 @@ struct WorkingCopy {
   void push() {
     if (var->get_revision()>last_revision) MT_MSG("Warning: push overwrites revision");
     var->writeAccess(p);
+    NIY //never do this: you can't overwrite the members name, field, s, id, revision, etc!!
     *var = copy;
     last_revision = var->revision; //(was incremented already on writeAccess)
     var->deAccess(p);
