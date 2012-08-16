@@ -119,6 +119,7 @@ struct optOptions {
 };
 
 extern optOptions globalOptOptions;
+#define OPT0() (globalOptOptions)
 #define OPT1(a) (globalOptOptions.a, globalOptOptions)
 #define OPT2(a,b) (globalOptOptions.a, globalOptOptions.b, globalOptOptions)
 #define OPT3(a,b,c) (globalOptOptions.a, globalOptOptions.b, globalOptOptions.c, globalOptOptions)

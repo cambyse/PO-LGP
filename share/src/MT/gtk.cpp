@@ -49,6 +49,15 @@ int gtkPopupMenuChoice(StringL& choices){
   return menuChoice>=0?menuChoice:0;
 }
 
+GtkWidget *gtkTopWindow(const char* name){
+  gtkCheckInitialized();
+  GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(win), name);
+  gtk_window_set_default_size(GTK_WINDOW(win), 300, 300);
+  //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
+  return win;
+}
+
 #else //MT_GTK
 #endif
 

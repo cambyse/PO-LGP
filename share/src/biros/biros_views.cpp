@@ -90,12 +90,7 @@ void RgbView::gtkNew(GtkWidget *container){
   byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
   CHECK(rgb.N==3 && rgb.nd==1,"this is not a 3-vector of RGB values - did you mean to display an image instead?");
   
-  if(!container){
-    container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(container), info?info->name:((FieldInfo*)object)->name);
-    gtk_window_set_default_size(GTK_WINDOW(container), 100, 100);
-    //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
-  }
+  if(!container) container = gtkTopWindow(info?info->name:((FieldInfo*)object)->name);
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
 

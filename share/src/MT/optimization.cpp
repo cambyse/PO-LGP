@@ -509,6 +509,7 @@ uint optRprop(arr& x, ScalarFunction& f, optOptions o) {
 
 uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *Jx_user) {
   double a=1.;
+  double lambda = 1e-10;
   double fx, fy;
   arr Delta, y;
   arr R(x.N, x.N), r(x.N);
@@ -520,17 +521,18 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   arr phi, J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
-  if(o.verbose>1) cout <<"*** optGaussNewton: starting point x=" <<x <<" f(x)=" <<fx <<" a=" <<a <<endl;
+  if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" a=" <<a <<endl;
+  if(o.verbose>2) cout <<"\nx=" <<x <<endl; 
   ofstream fil;
   if(o.verbose>0) fil.open("z.gaussNewton");
   if(o.verbose>0) fil <<0 <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<endl;
   
   for(;;) {
     //compute Delta
-    arr tmp;
     innerProduct(R, ~J, J);  R.reshape(x.N, x.N);
     innerProduct(r, ~J, phi);
-    
+
+    if(lambda) for(uint i=0;i<R.d0;i++) R(i,i) += lambda;  //Levenberg Marquardt damping
     lapack_Ainv_b_sym(Delta, R, -r);
     if(o.maxStep>0. && norm(Delta)>o.maxStep)  Delta *= o.maxStep/norm(Delta);
     
@@ -538,7 +540,9 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
       y = x + a*Delta;
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
-      if(o.verbose>1) cout <<"optGaussNewton " <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
+      if(o.verbose>1) cout <<"optGaussNewton evals=" <<evals <<" eval_cost=" <<eval_cost;
+      if(o.verbose>2) cout <<" \tprobing y=" <<y;
+      if(o.verbose>1) cout <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
       if(fy <= fx) {
         if(o.verbose>1) cout <<" - ACCEPT" <<endl;

@@ -6,6 +6,10 @@ PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 
+PoseView::PoseView(FieldInfo* field):View(field) {
+  geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
+}
+
 void PoseView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(10.,-15.,8.);

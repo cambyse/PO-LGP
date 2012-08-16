@@ -46,6 +46,7 @@ Views:
 */
 
 #include "biros.h"
+#include <MT/gtk.h>
 
 typedef struct _GtkWidget GtkWidget;
 struct ViewInfo;
@@ -64,6 +65,7 @@ struct View{
   ViewInfo *info;       //
   
   View():object(NULL), widget(NULL), gl(NULL), info(NULL) {}
+  View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {}
   ~View();
   
   virtual void write(std::ostream& os) {} //writing into a stream

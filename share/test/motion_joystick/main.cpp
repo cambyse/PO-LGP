@@ -25,6 +25,11 @@ int main(int argn,char** argv){
   ProcessL P=ARRAY(controller); //, , schunkSkin, 
 
   b::openInsideOut();
+
+  View *v = new PoseView(hardwareReference.fields(0));
+  v->gtkNew(NULL);
+
+  MT::wait();
   
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;

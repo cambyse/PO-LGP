@@ -1,12 +1,15 @@
 #include "kOrderMarkovProblem.h"
+#include <MT/functions.h>
+
+#define DIM 3
 
 struct ParticleAroundWalls:KOrderMarkovFunction {
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
   uint get_T(){ return 100; }
-  uint get_k(){ return 2; }
-  uint get_n(){ return 1; }
-  uint get_m(uint t){ return 2; }
+  uint get_k(){ return 3; }
+  uint get_n(){ return DIM; }
+  uint get_m(uint t){ return 2*DIM; }
 };
 
 void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
@@ -17,34 +20,35 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   CHECK(x_bar.d1==n,"");
   CHECK(t<=T-k,"");
 
-  // the three coupled states
-  arr x0=x_bar[0];
-  arr x1=x_bar[1];
-  arr x2=x_bar[2];
-
   phi.resize(m);
   phi.setZero();
 
-  phi(0) = scalar(x1 - .5*(x2+x0)); //penalize curvature of path
-
+  if(k==1)  phi.setVectorBlock(x_bar[1]-x_bar[0], 0); //penalize velocity
+  if(k==2)  phi.setVectorBlock(x_bar[2]-2.*x_bar[1]+x_bar[0], 0); //penalize acceleration
+  if(k==3)  phi.setVectorBlock(x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0], 0); //penalize jerk
+    
+  double eps=.1, power=2.;
   //phi(1) contains the ``task costs''
-  if(t==0)   phi(1) = scalar(x0);    //first factor: ``tying to zero''
-  if(t==T-k) phi(1) = scalar(x2);    //last factor: ``tying to zero''
-  if(t==T/2) phi(1) = scalar(x0-1.); //middle factor: ``tying to 1.''
-
+  for(uint i=0;i<n;i++){ //add barrier costs to each dimension
+    if(t==0)   phi(n+i) = barrier(x_bar(0,i)+i, eps, power);    //first factor: ``tying to zero''
+    if(t==T-k) phi(n+i) = barrier(x_bar(k,i)+i, eps, power);    //last factor: ``tying to zero''
+    if(t==T/2) phi(n+i) = barrier(1.+i-x_bar(0,i), eps, power); //middle factor: ``tying to 1.''
+  }
   if(&J){ //we also need to return the Jacobian
     J.resize(m,k+1,n);
     J.setZero();
 
-    CHECK(n==1,"only implemented for n=1 yet");
-
     //curvature
-    J[0][1] = 1.;
-    J[0][0] = -.5;
-    J[0][2] = -.5;
+    for(uint i=0;i<n;i++){
+      if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
+      if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+      if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+    }
 
-    if(t==0)   J[1][0] = 1.;
-    if(t==T-k) J[1][2] = 1.;
-    if(t==T/2) J[1][0] = 1.;
+    for(uint i=0;i<n;i++){ //add barrier costs to each dimension
+      if(t==0)   J(n+i,0,i) = d_barrier(x_bar(0,i)+i, eps, power);
+      if(t==T-k) J(n+i,k,i) = d_barrier(x_bar(k,i)+i, eps, power);
+      if(t==T/2) J(n+i,0,i) = -d_barrier(1.+i-x_bar(0,i), eps, power);
+    }
   }
 }

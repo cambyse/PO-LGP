@@ -16,7 +16,7 @@ struct KOrderMarkovFunction {
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() = 0;
   virtual uint get_k() = 0;
-  virtual uint get_n() = 0;
+  virtual uint get_n() = 0; //the dimensionality of $x_t$
   virtual uint get_m(uint t) = 0; //the dimensionality of $\phi_t$
 };
 

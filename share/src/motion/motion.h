@@ -167,9 +167,10 @@ struct PoseView:View{
   WorkingCopy<GeometricState> geo;
   uint t;
   PoseView();
+  PoseView(struct FieldInfo* field);
   void glInit();
   void glDraw();
-  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
+  void gtkNew(GtkWidget *container){ if(!container) container=gtkTopWindow("PoseView"); gtkNewGl(container); }
 };
 
 

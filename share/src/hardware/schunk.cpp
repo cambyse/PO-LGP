@@ -51,16 +51,20 @@ void SchunkArm::open() {
   s->motorIndex(6) = geo->ors.getBodyByName("m9")->inLinks(0)->index;
   geo->deAccess(this);
   
-  if(s->openArm) 
+  if(s->openArm){
     s->open();
+  }else{
+    s->q_real.resize(7);
+    s->q_real.setZero();
+  }
   
   hardwareReference->writeAccess(this);
   if (hardwareReference->q_real.N<7) hardwareReference->q_real.resizeCopy(7);
   if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
   if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
   for (uint m=0; m<7; m++) {
-    hardwareReference->q_real(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
-    hardwareReference->q_reference(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
+    hardwareReference->q_real(s->motorIndex(m)) = (float)s->q_real(m);
+    hardwareReference->q_reference(s->motorIndex(m)) = (float)s->q_real(m);
     hardwareReference->v_reference(s->motorIndex(m)) =  0.;
   }
   hardwareReference->deAccess(this);
