@@ -1,4 +1,5 @@
 #include "biros_views.h"
+#include "control.h"
 
 MT::Array<ViewInfo*> birosViews;
 
@@ -21,13 +22,34 @@ GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
 // View
 //
 
+View::View():object(NULL), widget(NULL), gl(NULL), info(NULL) {
+  gtkLock();
+  gtkProcess()->views.append(this);
+  gtkUnlock();
+}
+
+View::View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {
+  gtkLock();
+  gtkProcess()->views.append(this);
+  gtkUnlock();
+}
+
+View::~View(){
+  gtkLock();
+  if(widget) gtk_widget_destroy(widget);
+  if(gl) delete gl;
+  gtkUnlock();
+}
+
 void View::gtkNewText(GtkWidget *container){
-  CHECK(container,"");
+  if(!container) container=gtkTopWindow("text view");
   CHECK(!widget,"");
+  gtkLock();
   widget = gtk_text_view_new ();
   gtk_container_add(GTK_CONTAINER(container), widget);
   gtk_widget_show(container);
   gtk_widget_show(widget);
+  gtkUnlock();
   
   gtkUpdate();
 }
@@ -39,10 +61,9 @@ void glDrawView(void *classP){
 }
 
 void View::gtkNewGl(GtkWidget *container){
-  CHECK(container,"");
+  if(!container) container=gtkTopWindow("GL view");
   CHECK(!gl,"");
   gl = new OpenGL(container);
-  gtk_widget_set_size_request(gl->s->glArea, 100, 100);
   gl->add(glDrawView, this);
   glInit();
   gl->update();
@@ -52,16 +73,13 @@ void View::gtkUpdate(){
   if(gl){
     gl->update();
   }else if(widget){
+    gtkLock();
     GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
     MT::String str;
     write(str);
     gtk_text_buffer_set_text (buffer, str, -1);
+    gtkUnlock();
   }
-}
-
-View::~View(){
-  if(widget) gtk_widget_destroy(widget);
-  if(gl) delete gl;
 }
 
 
@@ -104,9 +122,14 @@ void RgbView::gtkNew(GtkWidget *container){
 }; //the view crates a new gtk widget within the container
 
 void RgbView::gtkUpdate(){
-  byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
-  GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
-  gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
+  FieldInfo *f=(FieldInfo*)object;
+  f->var->readAccess(NULL);
+  byteA& rgb = *((byteA*)f->p);
+  if(rgb.N==3) {
+    GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
+    gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
+  }
+  f->var->deAccess(NULL);
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
 

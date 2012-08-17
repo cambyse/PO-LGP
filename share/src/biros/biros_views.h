@@ -64,8 +64,8 @@ struct View{
   OpenGL *gl;           //which gl has this view created?
   ViewInfo *info;       //
   
-  View():object(NULL), widget(NULL), gl(NULL), info(NULL) {}
-  View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {}
+  View();
+  View(void* _object);
   ~View();
   
   virtual void write(std::ostream& os) {} //writing into a stream

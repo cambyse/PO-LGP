@@ -203,20 +203,20 @@ void ConditionVariable::unlock() {
   stateMutex.unlock();
 }
 
-int ConditionVariable::getState(bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+int ConditionVariable::getState(bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   int i=state;
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
   return i;
 }
 
-void ConditionVariable::waitForSignal(bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void ConditionVariable::waitForSignal(bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForSignal(double seconds, bool userLock) {
+void ConditionVariable::waitForSignal(double seconds, bool userHasLocked) {
   struct timespec timeout;
   clock_gettime(CLOCK_MONOTONIC, &timeout);
   timeout.tv_nsec+=1000000000l*seconds;
@@ -225,46 +225,46 @@ void ConditionVariable::waitForSignal(double seconds, bool userLock) {
     timeout.tv_nsec-=1000000000l;
   }
   
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   int rc = pthread_cond_timedwait(&cond, &stateMutex.mutex, &timeout);
   if(rc && rc!=ETIMEDOUT) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateEq(int i, bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void ConditionVariable::waitForStateEq(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state!=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateNotEq(int i, bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void ConditionVariable::waitForStateNotEq(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state==i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateGreaterThan(int i, bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void ConditionVariable::waitForStateGreaterThan(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state<=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
-void ConditionVariable::waitForStateSmallerThan(int i, bool userLock) {
-  if(!userLock) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void ConditionVariable::waitForStateSmallerThan(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
   while (state>=i) {
     int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userLock) stateMutex.unlock();
+  if(!userHasLocked) stateMutex.unlock();
 }
 
 
-void ConditionVariable::waitUntil(double absTime, bool userLock) {
+void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
   NIY;
   /*  int rc;
     timespec ts;

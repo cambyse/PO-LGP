@@ -33,7 +33,6 @@ int main(int argc, char **argv){
   gl1.threadClose();
   gl2.threadClose();
 
-  
   Proc *gli;
   MT::Array<MT::String> names;
   ProcessL procs;

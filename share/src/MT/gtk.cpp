@@ -1,30 +1,43 @@
 #include "gtk.h"
+#include <sys/syscall.h>
+
+#include <biros/biros_internal.h>
 
 #ifdef MT_GTK
 
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
+#include <GL/glut.h>
 
-static bool isGtkInitized=false;
+bool gtkInitialized=false;
+Mutex global_gtkLock;
 
-void gtkCheckInitialized(){
-  if(!isGtkInitized){
+void gtkLock(){ global_gtkLock.lock();  if(!gtkInitialized) gtkCheckInitialized(true); }
+void gtkUnlock(){ global_gtkLock.unlock(); }
+
+void gtkCheckInitialized(bool userHasLocked){
+  if(!userHasLocked) gtkLock(); else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  if(!gtkInitialized){
     int argc=1;
     char **argv = new char*[1];
     argv[0] = (char*)"x.exe";
-
+    glutInit(&argc, argv);
+    
     g_thread_init(NULL);
     gdk_threads_init();
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
     
-    isGtkInitized = true;
+    gtkInitialized = true;
   }
+  if(!userHasLocked) gtkUnlock();
 }
 
-void gtkProcessEvents(bool waitForEvents){
+void gtkProcessEvents(bool waitForEvents, bool userHasLocked){
+  if(!userHasLocked) gtkLock(); else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
   if(waitForEvents) gtk_main_iteration();
   while (gtk_events_pending())  gtk_main_iteration();
+  if(!userHasLocked) gtkUnlock();
 }
 
 static int menuChoice=-1;
@@ -51,10 +64,12 @@ int gtkPopupMenuChoice(StringL& choices){
 
 GtkWidget *gtkTopWindow(const char* name){
   gtkCheckInitialized();
+  gtkLock();
   GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(win), name);
   gtk_window_set_default_size(GTK_WINDOW(win), 300, 300);
   //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
+  gtkUnlock();
   return win;
 }
 
