@@ -12,7 +12,7 @@
 
 #include <biros/logging.h>
 
-SET_LOG(algp, DEBUG);
+SET_LOG(algp, INFO);
 
 struct sGaussianProcessAL {
   GaussianProcess gp;   
@@ -80,6 +80,7 @@ void GaussianProcessAL::addData(const MT::Array<arr>& data, const int class_) {
   arr d, f;
   flatten(d, data);
   problem.generator->makeFeatures(f, d);
+  DEBUG_VAR(algp, f);
   s->gp.appendObservation(f[0], class_ * 2 - 1);  
   s->gp.recompute();
 }
