@@ -25,11 +25,13 @@ int main(int argc, char **argv) {
 
   srand(time(NULL));
 
+  DEBUG_VAR(main, birosInfo.getParameter<arr>("kinect_trans_mat"));
+
   // Variables
   PointCloudVar kinectData3d("KinectData3D");
   PointCloudSet objectClusters("ObjectClusters");
   ObjectSet objects("Objects");
-  ObjectSet filteredObjects("filteredObjects");
+  ObjectBeliefSet filteredObjects("filteredObjects");
   GeometricState geo;
 
   // Processes
@@ -72,12 +74,8 @@ int main(int argc, char **argv) {
         pcl::visualization::PointCloudColorHandlerRandom<PointT>(tmp), s.str());
   }
 
-  filter.threadLoop();
+  //filter.threadLoop();
   for(int t = 0; t < 1000; ++t) {
-    geo.writeAccess(NULL);
-    //DEBUG_VAR(main, geo.ors);
-    geo.ors.calcBodyFramesFromJoints();
-    geo.deAccess(NULL);
     if(t % 5 == 0 ) {
       objectClusters.readAccess(NULL);
       plist = objectClusters.point_clouds;
@@ -89,22 +87,28 @@ int main(int argc, char **argv) {
         viewer->updatePointCloud(plist(i), pcl::visualization::PointCloudColorHandlerRandom<PointT>(plist(i)), n.str());
       }
       fitter.pause();
+      filter.threadStep();
       transform.threadStep();
-      viewer->removeAllShapes();
+      geo.writeAccess(NULL);
+      geo.ors.calcBodyFramesFromJoints();
+      geo.deAccess(NULL);
       filteredObjects.readAccess(NULL);
       for(int i = 0; i < filteredObjects.objects.N; ++i) {
         std::stringstream name;
         name << "shape_" << i;
-        if (filteredObjects.objects(i)->values.size() == 7)
-          viewer->addCylinder(*filteredObjects.objects(i), name.str());
-        else if (filteredObjects.objects(i)->values.size() == 4)
-          viewer->addSphere(*filteredObjects.objects(i), name.str());
+        if (filteredObjects.objects(i)->shapeType == ors::cylinderST) {
+          DEBUG(main, "Add cylinder");
+        }
+        else if (filteredObjects.objects(i)->shapeType == ors::sphereST) {
+          DEBUG_VAR(main, geo.ors);
+          DEBUG(main, "Add sphere");
+        }
       }
       filteredObjects.deAccess(NULL);
       fitter.restart(jobs, NULL);
       objectClusters.deAccess(NULL);
     }
-    MT::wait(.1);
+    MT::wait(.5);
     viewer->updatePointCloud(kinectData3d.get_point_cloud(NULL), "cluster");
     viewer->spinOnce();
   }
