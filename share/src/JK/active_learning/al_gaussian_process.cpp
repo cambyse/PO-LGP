@@ -29,28 +29,62 @@ class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
     const ActiveLearningProblem problem;
 };
 
+double cummulativeApproxVariance(int i, arr& x, GaussianProcess& gp0, GaussianProcess& gp1) {
+  if ( i == x.N) {
+    double sig0, sig1, y;
+    gp0.evaluate(x, y, sig0);
+    gp1.evaluate(x, y, sig1);
+    return sig0 + sig1;
+  }
+  else {
+    double r;
+    for (double j = -.5; j < .5; j += .1) {
+      x(i) = j;
+      r += cummulativeApproxVariance(i+1, x, gp0, gp1);
+    }
+    return r;
+  }
+}
+
 
 double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
   if (MT::getParameter<bool>("random", false)) {
     return 0.;
   }
-  arr d, f;
-  flatten(d, sample);
-  problem.generator->makeFeatures(f, d);
+  else if (MT::getParameter<bool>("cummulative", false)) {
+    arr d, f;
+    flatten(d, sample);
+    makeFeatures(f, d);
 
-  double y, sig;
-  gp.evaluate(f[0], y, sig);
+    GaussianProcess cp1, cp0;
+    cp1.copyFrom(gp); cp0.copyFrom(gp);
+    cp1.appendObservation(f[0], 1); cp0.appendObservation(f[0], -1);
+    cp1.recompute(); cp0.recompute();
 
-  arr grad;
-  gp.gradient(grad, f[0]);
+    arr x;
+    x.resize(3);
 
-  //JK_DEBUG(sig);
-  //JK_DEBUG(y);
-  //
+    return - cummulativeApproxVariance(0, x, cp1, cp0);
+  }
+  else {
+    arr d, f;
+    flatten(d, sample);
+    makeFeatures(f, d);
 
-  //DEBUG_VAR(algp, -10*fabs(y));
-  return -10*fabs(y) + norm(grad)*sig;
-  //return 1a // random
+    double y, sig;
+    gp.evaluate(f[0], y, sig);
+
+    arr grad;
+    gp.gradient(grad, f[0]);
+
+    //JK_DEBUG(sig);
+    //JK_DEBUG(y);
+    //
+
+    //DEBUG_VAR(algp, -10*fabs(y));
+    return -10*fabs(y) + norm(grad)*sig;
+    //return 1a // random
+  }
 }
 
 
