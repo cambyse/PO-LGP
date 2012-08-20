@@ -120,11 +120,13 @@ int main(int argc, char** argv) {
   alp.guiData = &guiData;
  
   alp.threadOpen();
-  for (int s=0; s<n_steps; ++s) {
-    alp.threadStep();
-    if(pause)
+  if (pause) {
+    for (int s=0; s<n_steps; ++s) {
+      alp.threadStep();
       std::cin >> unused;
+    }
   }
+  else alp.threadStep(n_steps);
 
   alp.threadClose();
   gui.threadClose();
