@@ -30,11 +30,11 @@
 // ---------------------------------------------
 // ODE PARAMETERS
 // Object bouncing when falling on table or other object.
-#define ODE_COLL_BOUNCE 0.005
+#define ODE_COLL_BOUNCE 0.001
 // Stiffness (time-scale of contact reaction) in [0.1, 0.5]; the larger, the more error correction
 #define ODE_COLL_ERP 0.3
 // Softness in [10e-10, 10e5]; the larger, the wider, the softer, the less error correction
-#define ODE_COLL_CFM 10e-2
+#define ODE_COLL_CFM 10e0
 // Friction (alternative: dInfinity)
 #define ODE_FRICTION 0.02
 // ---------------------------------------------

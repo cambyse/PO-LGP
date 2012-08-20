@@ -87,7 +87,8 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
   C->calcBodyFramesFromJoints();
   if(ode){
     ode->exportStateToOde(*C);
-    ode->step(.01);
+    ode->step(.005);
+    ode->step(.005);
     ode->importStateFromOde(*C);
     //ode->importProxiesFromOde(*C);
   //C->getJointState(q);
@@ -674,7 +675,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   
   // Phase 3: down
   // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
-  double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .03;
+  double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .05;
   if (getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
     Z_ADD_DIST += 0.05;
   }
@@ -763,9 +764,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     }
   }
   // Below = Block
-  else if (obj_below_type == ors::boxST) {
+  else if (obj_below_type == ors::boxST || obj_below_type == ors::cylinderST) {
     // (1) Dropping block
-    if (obj_dropped_type == ors::boxST) {
+    if (obj_dropped_type == ors::boxST || obj_dropped_type == ors::cylinderST) {
       // (1a) on small block
       if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
@@ -789,7 +790,12 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
       else if (TL::areEqual(obj_below_size, BLOCK_BIG)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_BIG_BLOCK;
       }
-      else {NIY;}
+      else if (TL::areEqual(obj_below_size, BLOCK_VERY_BIG)) {
+        std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
+      }
+      else {
+        std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
+      }
     }
     else {NIY;}
     
@@ -798,6 +804,31 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     
 //     PRINT(obj_below_size);
 //     PRINT(std_dev_noise);
+  }
+  else if (obj_below_type == OBJECT_TYPE__BOX) {
+    double DROP_TARGET_NOISE__ON_TRAY= 0.01;
+    std_dev_noise = DROP_TARGET_NOISE__ON_TRAY;
+    uint tries = 0;
+    while (true) {
+      tries++;
+      if (tries>20000) {
+          MT_MSG("Can't find empty position on tray, throw it whereever!");
+          break;
+      }
+      x_noise = 0.2 * rand()/(double) RAND_MAX - .1;
+      y_noise = 0.1 * rand()/(double) RAND_MAX - .05; // tisch ist nicht so breit wie lang
+
+      PRINT(x_noise);
+      PRINT(y_noise);
+//       if (x_noise>0.5 || y_noise>0.5) // stay on table
+      if (x_noise>0.5) // stay on table
+        continue;
+      break;
+      //if (C->bodies(obj_below)->X.pos.p[1] + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.p[1] + y_noise > -0.05)
+        //continue;
+      //if (freePosition(C->bodies(obj_below)->X.pos.p[0]+x_noise, C->bodies(obj_below)->X.pos.p[1]+y_noise, 0.05))
+        //break;
+    }
   }
   // Below = Ball
   else if (obj_below_type == ors::sphereST) {
@@ -1089,6 +1120,10 @@ void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list a
   uintA boxes;
   getBoxes(boxes);
   objects.append(boxes);
+
+  uintA cylinder;
+  getCylinders(cylinder);
+  objects.append(cylinder);
 }
 
 
@@ -1220,7 +1255,6 @@ void RobotManipulationSimulator::getBoxes(uintA& boxes) {
       boxes.append(n->index);
   }
 }
-
 
 bool RobotManipulationSimulator::isBox(uint id) {
   return C->bodies(id)->shapes.N == 6;
@@ -1873,7 +1907,7 @@ void generateOrsFromTraySample(ors::Graph& ors, const MT::Array<arr>& sample) {
       ors.bodies(i)->X.pos = sample(0,0);
     }
     if(strncmp(ors.bodies(i)->name.p, "cube", 4)==0) {
-      ors.bodies(i)->X.pos= sample(0,1);
+      ors.bodies(i)->X.pos= sample(0,2);
     }
   }
 }
