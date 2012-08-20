@@ -20,6 +20,7 @@
 */
 
 #include "robotManipulationSymbols.h"
+#include "robotManipulationSimulator.h"
 #include "reason.h"
 
 
@@ -413,6 +414,54 @@ Reward* RobotManipulationSymbols::RewardLibrary::inhand(uint o1) {
   return new LiteralReward(pt);
 }
 
+Reward* RobotManipulationSymbols::RewardLibrary::cleanup(RobotManipulationSimulator *sim) {
+  // Correct tray 
+  LitL symbs;
+  uintA args(2); uint i;
+  args(0) = 20; // block-tray
+  uintA blocks;
+  sim->getBlocks(blocks);
+  FOR1D(blocks, i) {
+    args(1) = blocks(i);
+    symbs.append(Literal::get(Symbol::get(MT::String("inside")), args, 1)); 
+  }
+  args(0) = 21; // ball-tray
+  uintA balls;
+  sim->getBalls(balls);
+  FOR1D(balls, i) {
+    args(1) = balls(i);
+    symbs.append(Literal::get(Symbol::get(MT::String("inside")), args, 1)); 
+  }
+  LiteralListReward *correctReward = new LiteralListReward(symbs);
+
+  // Wrong tray
+  LitL wrong_symbs;
+  args(0) = 21; // ball-tray
+  FOR1D(blocks, i) {
+    args(1) = blocks(i);
+    wrong_symbs.append(Literal::get(Symbol::get(MT::String("inside")), args, 1)); 
+  }
+  args(0) = 20; // blocks-tray
+  FOR1D(balls, i) {
+    args(1) = balls(i);
+    wrong_symbs.append(Literal::get(Symbol::get(MT::String("inside")), args, 1)); 
+  }
+  uintA objs;
+  objs.append(blocks); objs.append(balls);
+  args(0) = sim->getTableID();
+  FOR1D(objs, i) {
+    args(1) = objs(i);
+    wrong_symbs.append(Literal::get(Symbol::get(MT::String("on")), args, 1)); 
+  }
+  LiteralListReward *wrongReward = new LiteralListReward(wrong_symbs);
+
+  RewardL rewards;
+  rewards.append(correctReward); rewards.append(wrongReward);
+
+  arr weights = ARR(10, -10);
+
+  return new CombinedReward(rewards, weights);
+}
 
 Reward* RobotManipulationSymbols::RewardLibrary::stack() {
 //   ATTENTION:  Stack defined by sum (not max) over heights
