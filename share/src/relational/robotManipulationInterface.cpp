@@ -67,6 +67,12 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   FOR1D(boxes, i) {
     state->lits.append(Literal::get(Symbol::get("box"), TUP(boxes(i)), 1.));
   }
+  // CYLINDERS
+  uintA cylinders;
+  sim->getCylinders(cylinders);
+  FOR1D(cylinders, i) {
+    state->lits.append(Literal::get(Symbol::get("cylinder"), TUP(cylinders(i)), 1.));
+  }
   uintA all_objs;
   sim->getObjects(all_objs);
   // filter for logic
@@ -368,8 +374,8 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
     clearGuys.removeValueSafe(id_hand);
     nonClearGuys.setAppend(id_hand);
   }
-    // PRINT(clearGuys)
-    // PRINT(nonClearGuys)
+     PRINT(clearGuys)
+     PRINT(nonClearGuys)
   CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
   CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
             

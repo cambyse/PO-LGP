@@ -98,12 +98,9 @@ void relational::GroundedSymbol::calculateSymbols(LitL& lits, const uintA& objec
 			x.append(objects_data(lists(i)(0)));
 			x.append(objects_data(lists(i)(1)));
 
-      JK_DEBUG(x);
-
       if (DEBUG>1) {PRINT(x);}
       bool does_hold = holds(x);
 
-      JK_DEBUG(does_hold);
       if (DEBUG>1) {PRINT(does_hold);}
       uintA args;  args.append(objects_ids(lists(i)(0)));  args.append(objects_ids(lists(i)(1)));
       if (does_hold) {
@@ -369,7 +366,11 @@ void relational::getFeatureVector(arr& f, const ors::Graph& C, uint obj) {
   f(0) = C.bodies(obj)->X.pos.p[0];  // position
   f(1) = C.bodies(obj)->X.pos.p[1];  // position
   f(2) = C.bodies(obj)->X.pos.p[2];  // position
-  f(3) = C.bodies(obj)->shapes(0)->size[0];  // size
+  if(C.bodies(obj)->shapes.N == 6)
+    f(3) = 7;
+  else
+    f(3) = C.bodies(obj)->shapes(0)->type;
+  //f(3) = C.bodies(obj)->shapes(0)->size[0];  // size
 }
 
 
