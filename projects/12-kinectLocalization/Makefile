@@ -3,6 +3,6 @@ BASE = ../../share
 PCL = 1
 
 buildAndLink_HARDWARE = 1
-LIBS += -lmotion -lhardware -lperception -lbiros -lvtkCommon -lvtkFiltering -lvtkRendering 
+LIBS += -lmotion -lhardware -lperception -lbiros -lvtkCommon -lvtkFiltering -lvtkRendering -lstdc++ -lm
 
 include $(BASE)/make-generic
