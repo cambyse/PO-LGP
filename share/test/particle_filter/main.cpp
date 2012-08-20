@@ -20,10 +20,8 @@ void measure(arr& r) {
   z1 = r;
 }
 
+Gaussian g;
 double lin_weight(const arr &particle, const arr &measurement) {
-  Gaussian g;
-  g.c = measurement;
-  g.C = 0.001*eye(2);
   return g.evaluate(particle);
 }
 
@@ -32,6 +30,7 @@ void gaussian_control(arr &after, const arr &before) {
 }
 
 int main(int argc, char **argv) {
+  g.C = 0.001*eye(2);
   z1 = z2 = ARR(0., 0.);
   pos = ARR(0.5, 0.4);
   dir = ARR(.004, .005);
@@ -53,9 +52,10 @@ int main(int argc, char **argv) {
   f.control = &gaussian_control;
 
   gnuplot("set xrange [0:1.5]; set yrange [0:1.5]");
-  for(int i=0; i<10000; ++i) {
+  for(int i=0; i<1000; ++i) {
     arr z;
     measure(z);
+    g.c = z;
     f.add_measurement(z);
     f.threadStep();
     MT::wait(0.1);
@@ -72,4 +72,5 @@ int main(int argc, char **argv) {
     MT::IOraw=false;
     MT::wait(0.01);
   }
+  f.threadClose();
 }
