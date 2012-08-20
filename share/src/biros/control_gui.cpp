@@ -52,6 +52,45 @@ struct InsideOutGuiDemon{
   ~InsideOutGuiDemon(){ if(gui) delete gui; }
 } demon;
 
+
+GtkProcess *global_gtkProcess = NULL;
+
+GtkProcess* gtkProcess(){
+  if(!global_gtkProcess){
+    global_gtkProcess = new GtkProcess;
+    global_gtkProcess->threadLoopWithBeat(.1);
+  }
+  return global_gtkProcess;
+}
+
+void gtkProcessClose(){
+  if(!global_gtkProcess) return;
+  global_gtkProcess->threadClose();
+  global_gtkProcess=NULL;
+}
+
+GtkProcess::GtkProcess():Process("GlobalGtkProcess"){
+}
+
+void GtkProcess::open(){
+  gtkCheckInitialized();
+  gtkProcessEvents();
+}
+
+void GtkProcess::close(){
+  uint i;
+  GtkWidget *w;
+  for_list(i,w,wins) gtk_widget_destroy(w);
+  gtkProcessEvents();
+}
+
+void GtkProcess::step(){
+  uint i;
+  View *v;
+  for_list(i,v,views) v->gtkUpdate();
+  gtkProcessEvents();
+}
+
 //===========================================================================
 //
 // implementations of control.h methods
@@ -91,6 +130,7 @@ InsideOutGui::~InsideOutGui(){
 void InsideOutGui::open(){
   gtkCheckInitialized();
 
+  gtkLock();
   // const char *pwd = __FILE__;
   // char *path,*name;
   // MT::decomposeFilename(path, name, pwd);
@@ -112,6 +152,7 @@ void InsideOutGui::open(){
   
   //show
   gtk_widget_show(win);
+  gtkUnlock();
 
   gtkProcessEvents();
   
@@ -149,8 +190,10 @@ void InsideOutGui::open(){
 }
 
 void InsideOutGui::close(){
+  gtkLock();
   gtk_widget_destroy(win);
   g_object_unref(G_OBJECT(builder));
+  gtkUnlock();
 }
 
 void InsideOutGui::step(){

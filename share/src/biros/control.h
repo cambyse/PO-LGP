@@ -57,3 +57,17 @@ namespace b{
   void getGraph();
 
 }
+
+struct GtkProcess:Process{
+  MT::Array<View*> views;
+  MT::Array<GtkWidget*> wins;
+
+  GtkProcess();
+  
+  void open();
+  void step();
+  void close();
+};
+
+GtkProcess* gtkProcess();
+void gtkProcessClose();

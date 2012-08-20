@@ -36,22 +36,25 @@ int main(int argn,char** argv){
   v.mesh.setBox();
   v.deAccess(NULL);
   
-  gtkCheckInitialized();
-
   //create a container box
+  gtkLock();
   GtkWidget *win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(win), "big window");
   gtk_window_set_default_size(GTK_WINDOW(win), 100, 100);
   gtk_widget_show(win);
   GtkWidget *box = gtk_vbox_new (false, 5);
   gtk_container_add(GTK_CONTAINER(win), box);
+  gtkUnlock();
 
   
   v1->gtkNew(box);
   v2->gtkNew(box);
   v3->gtkNew(NULL);
   v4->gtkNew(box);
-  gtk_main();
+  
+  MT::wait(10.);
+  
+  gtkProcessClose();
   
   return 0;
 }

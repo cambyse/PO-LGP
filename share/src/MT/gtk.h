@@ -5,8 +5,10 @@
 
 typedef struct _GtkWidget GtkWidget;
 
-void gtkCheckInitialized();
-void gtkProcessEvents(bool waitForEvents=false);
+void gtkLock();
+void gtkUnlock();
+void gtkCheckInitialized(bool userHasLocked=false);
+void gtkProcessEvents(bool waitForEvents=false, bool userHasLocked=false);
 int gtkPopupMenuChoice(StringL& choices);
 GtkWidget *gtkTopWindow(const char* title);
 

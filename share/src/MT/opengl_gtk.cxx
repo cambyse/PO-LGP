@@ -28,12 +28,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 #include "opengl.h"
 #include "ors.h"
+#include "gtk.h"
 
-#include <biros/biros_internal.h>
-static Mutex globalOpenglLock;
-
-#define LOCK globalOpenglLock.lock();
-#define UNLOCK globalOpenglLock.unlock();
+#define LOCK gtkLock();
+#define UNLOCK gtkUnlock();
 
 
 //===========================================================================
@@ -102,27 +100,16 @@ int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &
 
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
-  static int argc=0;
-  if(!argc){
-    argc++;
-    char **argv = new char*[1];
-    argv[0] = (char*)"x.exe";
-    glutInit(&argc, argv);
-    
-    g_thread_init(NULL);
-    gdk_threads_init();
-    LOCK
-    gtk_init(&argc, &argv);
-    gtk_gl_init(&argc, &argv);
-    UNLOCK
-  }
+  gtkCheckInitialized();
 
+  LOCK
   win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(win), title);
   gtk_window_set_default_size(GTK_WINDOW(win), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(win), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(win));
   ownWin = true;
+  UNLOCK
   
   init(gl,win);
 }
@@ -133,9 +120,8 @@ sOpenGL::sOpenGL(OpenGL *gl, void *container){
 }
 
 void sOpenGL::init(OpenGL *gl, void *container){
-  win = GTK_WIDGET(container);
-  
   LOCK
+  win = GTK_WIDGET(container);
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
     
@@ -238,14 +224,18 @@ bool sOpenGL::button_release(GtkWidget *widget, GdkEventButton *event) {
 }
 
 bool sOpenGL::scroll_event(GtkWidget *widget, GdkEventScroll *event){
+  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->MouseWheel(0, event->direction, event->x, event->y);
+  unlock();
   return true;
 }
 
 bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
+  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Key(event->keyval, gl->mouseposx, gl->height()-gl->mouseposy);
+  unlock();
   return true;
 }
 
@@ -255,7 +245,9 @@ void sOpenGL::destroy(GtkWidget *widget) {
 }
 
 bool sOpenGL::size_allocate_event(GtkWidget *widget, GdkRectangle *allo){
+  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Reshape(allo->width, allo->height);
+  unlock();
   return true;
 }

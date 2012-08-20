@@ -52,17 +52,17 @@ struct ConditionVariable {
   void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
   void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
-  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userLock=true below!
+  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
   void unlock();
   
-  int  getState(bool userLock=false);
-  void waitForSignal(bool userLock=false);
-  void waitForSignal(double seconds, bool userLock=false);
-  void waitForStateEq(int i, bool userLock=false);    ///< return value is the state after the waiting
-  void waitForStateNotEq(int i, bool userLock=false); ///< return value is the state after the waiting
-  void waitForStateGreaterThan(int i, bool userLock=false); ///< return value is the state after the waiting
-  void waitForStateSmallerThan(int i, bool userLock=false); ///< return value is the state after the waiting
-  void waitUntil(double absTime, bool userLock=false);
+  int  getState(bool userHasLocked=false);
+  void waitForSignal(bool userHasLocked=false);
+  void waitForSignal(double seconds, bool userHasLocked=false);
+  void waitForStateEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForStateNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitUntil(double absTime, bool userHasLocked=false);
 };
 
 //===========================================================================

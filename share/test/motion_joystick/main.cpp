@@ -26,8 +26,7 @@ int main(int argn,char** argv){
 
   b::openInsideOut();
 
-  //View *v = new PoseView(hardwareReference.fields(0));
-  //v->gtkNew(NULL);
+  new PoseView(hardwareReference.fields(0), NULL); //example for creating views directly from code
 
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;

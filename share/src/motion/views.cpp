@@ -6,8 +6,9 @@ PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 
-PoseView::PoseView(FieldInfo* field):View(field) {
+PoseView::PoseView(FieldInfo* field, GtkWidget *container):View(field) {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
+  gtkNewGl(container);
 }
 
 void PoseView::glInit() {
