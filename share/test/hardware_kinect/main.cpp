@@ -17,7 +17,7 @@
 #include <hardware/kinect.h>
 #include <pcl/kdtree/kdtree.h>
 
-typedef pcl::PointXYZ PointT;
+#define DEBUG 1 
 
 int main(int argc, char **argv) {
 	KinectInterface k("Kinect"); 
@@ -28,12 +28,13 @@ int main(int argc, char **argv) {
   while (true) {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
   viewer->setBackgroundColor (0, 0, 0);
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> green(k.data_3d->get_point_cloud(NULL), 0, 255, 0);
+  pcl::visualization::PointCloudColorHandlerCustom<PointT> green(k.data_3d->get_point_cloud(NULL), 0, 255, 0);
   viewer->addCoordinateSystem (.1);
   viewer->initCameraParameters ();
 
-  pcl::PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT>);
-  cloud = k.data_3d->get_point_cloud(NULL);
+  pcl::PointCloud<PointT>::Ptr cloud = k.data_3d->get_point_cloud(NULL)->makeShared(); // TODO: perform copy in getter method!
+
+  pcl::PointCloud<PointT>::Ptr cloud_complete = cloud->makeShared();
 
   pcl::IndicesPtr inliers(new std::vector<int>);
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
   ransac.computeModel();
   ransac.getInliers(*inliers);
 
-  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  pcl::ExtractIndices<PointT> extract;
   extract.setInputCloud (cloud);
   extract.setIndices (inliers);
   extract.setNegative (true);
@@ -58,11 +59,11 @@ int main(int argc, char **argv) {
 
   passthrough.filter(*cloud);
   
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
   tree->setInputCloud (cloud);
 
   std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+  pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance (0.01); // 2cm
   ec.setMinClusterSize (500);
   ec.setMaxClusterSize (25000);
@@ -77,8 +78,10 @@ int main(int argc, char **argv) {
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
   int j = 0;
 
+  viewer->addPointCloud(cloud_complete);
+
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); pit++)
       cloud_cluster->points.push_back (cloud->points[*pit]); //*
     cloud_cluster->width = cloud_cluster->points.size ();
@@ -112,12 +115,14 @@ int main(int argc, char **argv) {
     std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
     double r, g, b;
     pcl::visualization::getRandomColors(r, g, b);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> blue(cloud_cluster, r*255, g*255 ,b*255);
+    pcl::visualization::PointCloudColorHandlerCustom<PointT> blue(cloud_cluster, r*255, g*255 ,b*255);
     std::stringstream name, cyl;
     name << "cloud_" << j;
     cyl << "cyl_" << j;
-    viewer->addPointCloud(cloud_cluster, blue, name.str());
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 0.1, name.str());
+    if (DEBUG >= 1) {
+      viewer->addPointCloud(cloud_cluster, blue, name.str());
+      viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 0.1, name.str());
+    }
     if ( inliers_cylinder->indices.size() / (double) cloud_cluster->points.size() > 0.6) {
       viewer->addCylinder(*coefficients_cylinder, cyl.str());
       viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 1, cyl.str());
