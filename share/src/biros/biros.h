@@ -202,8 +202,8 @@ struct BirosInfo:Variable {
     void* raw = listFindByName(variables, name); // NULL if not found
     v = dynamic_cast<T*>(listFindByName(variables, name)); // NULL if cast fails because of RTTI
     deAccess(p);
-    if (!v) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
-    if (!raw) {
+    if (!v && raw) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
+    else if (!raw) {
       if(required) { HALT("can't find required biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not work"); }
       else MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
     }
