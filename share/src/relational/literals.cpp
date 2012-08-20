@@ -34,6 +34,9 @@ namespace relational {
  * 
  ************************************************/
 
+//Maps non-binary symbols f(X)=[1..n] to their abstract counterpart f(X)=C
+std::map<Symbol*, Symbol> varEqualitySymbols;
+
 struct LiteralStorage {
   Symbol* s;
 #if 1
@@ -53,7 +56,7 @@ struct LiteralStorage {
   }
   LiteralStorage() {} // only for array_t.cpp
   ~LiteralStorage() {
-    uint i, k;
+    uint i;
     if (s->arity == 0) {listDelete(mem_arity0);}
     else {
       FOR_ALL(mem, i) {
@@ -299,6 +302,11 @@ Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType
 }
 #endif
 
+Literal* Literal::getVarComparison(Symbol* s, const uintA& args) {
+  Symbol *varSymbol = Symbol::get(s->name, s->arity, s->symbol_type, s->range_type);
+  return get(varSymbol, args, -1, Literal::comparison_variable);   //dummy value
+}
+
 
 Literal* Literal::get(const char* text) {
   uint DEBUG = 0;
@@ -368,6 +376,12 @@ Literal* Literal::get(const char* text) {
       }
       else
         comp_type = Literal::comparison_less;
+    }
+    else if (op == '+') {
+      if (MT::peerNextChar(mt_string) == '=') {
+        mt_string >> op;
+        comp_type = Literal::comparison_offset;
+      }
     }
     else
       comp_type = Literal::comparison_equal;
@@ -458,9 +472,12 @@ void Literal::write(ostream& os, bool withTypes) const {
       case Literal::comparison_lessEqual: os << "<="; break;
       case Literal::comparison_greater: os << ">"; break;
       case Literal::comparison_greaterEqual: os << ">="; break;
+      case Literal::comparison_offset: os << "+="; break;
+      case Literal::comparison_variable: os << "=?"; break;
       default: HALT("Unknown comparison type")
     }
-    os<<value;
+    if (comparison_type != Literal::comparison_variable)
+      os << value;
   }
 }
 
@@ -885,7 +902,7 @@ uint SymbolicState::getArgument(const SymbolicState& state, const Symbol& s) {
   if (args.N == 1)
     return args(0);
   else
-    return UINT_MAX;
+    return TL::UINT_NIL;
 }
 
 
@@ -963,22 +980,37 @@ StateTransition::~StateTransition() {}
 void StateTransition::calcChanges() {
   // only look at p_prim
   changedConstants.clear();
-  del.clear();
-  add.clear();
-  uint i;
-  // pre+, post-
+  changes.clear();
+  uint i,j;
+
+  //changed values from pre to post
   FOR1D(pre.lits, i) {
     if (pre.lits(i)->s->symbol_type != Symbol::primitive) continue;
-    if (post.lits.findValue(pre.lits(i)) < 0) {
-      del.append(pre.lits(i));
+    if (post.lits.findValue(pre.lits(i)) < 0) {     //Literal has changed
       changedConstants.setAppend(pre.lits(i)->args);
+      if (pre.lits(i)->s->range_type == Symbol::binary)
+        changes.append(pre.lits(i)->getNegated());      //predicate is negated in post state
+      else {    //search for symbol with same arguments
+        bool found = false;
+        FOR1D(post.lits, j) {
+          if (post.lits(j)->s == pre.lits(i)->s && post.lits(j)->args == pre.lits(i)->args) {
+              changes.append(post.lits(j));    
+              found = true;
+              break;
+          }
+        }
+        if (!found) { cout << "Warning: Undefined value for non-binary symbol: "; pre.lits(i)->s->write(); cout << endl; }
+      }
     }
+
   }
+
   // pre-, post+
+  //only consider binary symbols because we assume that other symbols are not added or removed but only change values
   FOR1D(post.lits, i) {
-    if (post.lits(i)->s->symbol_type != Symbol::primitive) continue;
+    if (post.lits(i)->s->symbol_type != Symbol::primitive || post.lits(i)->s->range_type != Symbol::binary) continue;
     if (pre.lits.findValue(post.lits(i)) < 0) {
-      add.append(post.lits(i));
+      changes.append(post.lits(i));
       changedConstants.setAppend(post.lits(i)->args);
     }
   }
@@ -993,15 +1025,14 @@ void StateTransition::write(ostream& os, bool with_details) const {
     os << "POST:   ";
     this->post.write(os, true);  os<<endl;
     os<<"Changed constants: "<<changedConstants<<endl;
-    os << "Diff: "<<(add.N + del.N)<<" (+"<<add.N<<", -"<<del.N<<")"<<endl;
+    os << "Diff: "<< changes.N << endl;
   }
-  os<<"ADD:    "<<add<<endl;
-  os<<"DEL:    "<<del<<endl;
+  os<<"Changed literals:    " << changes << endl;
 }
 
 
 bool StateTransition::noChange() {
-  return changedConstants.N == 0  &&  del.N == 0  &&  add.N == 0;
+  return changedConstants.N == 0  && changes.N == 0;
 }
 
 

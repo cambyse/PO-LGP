@@ -50,6 +50,10 @@ extern bool useLapack;
 extern const bool lapackSupported;
 extern uint64_t globalMemoryTotal, globalMemoryBound;
 extern bool globalMemoryStrict;
+extern const char* arrayElemsep;
+extern const char* arrayLinesep;
+extern const char* arrayBrackets;
+
 }
 
 //===========================================================================
@@ -267,7 +271,7 @@ public:
   void makeSparse();
   
   //!@name I/O
-  void write(std::ostream& os=std::cout, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="[]", bool dimTag=false, bool binary=false) const;
+  void write(std::ostream& os=std::cout, const char *ELEMSEP=NULL, const char *LINESEP=NULL, const char *BRACKETS=NULL, bool dimTag=false, bool binary=false) const;
   void read(std::istream& is);
   void read(const char* filename);
   void writeTagged(std::ostream& os, const char* tag, bool binary=false) const;
@@ -307,6 +311,9 @@ struct Any;
 typedef MT::Array<Any*>   AnyList;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
+
+namespace MT{ struct String; }
+typedef MT::Array<MT::String*> StringL;
 
 
 //===========================================================================
@@ -490,6 +497,7 @@ template<class T> T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>&
 template<class T> T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 
 template<class T> T sum(const MT::Array<T>& v);
+template<class T> T scalar(const MT::Array<T>& v);
 template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d);
 template<class T> T sumOfAbs(const MT::Array<T>& v);
 template<class T> T sumOfSqr(const MT::Array<T>& v);
@@ -736,7 +744,7 @@ template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type); /
 template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);
 
 //TODO obsolete?
-template<class T> MT::Array<T*> List(const MT::Array<T>& A) {
+template<class T> MT::Array<T*> LIST(const MT::Array<T>& A) {
   MT::Array<T*> L;
   resizeAs(L, A);
   for(uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);

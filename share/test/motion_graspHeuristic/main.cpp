@@ -1,7 +1,7 @@
 #include <MT/aico.h>
 #include <MT/util_t.cxx>
 
-#include <motion/ActionToMotionPrimitive.h>
+#include <motion/MotionPlanner.h>
 
 void testGraspHeuristic(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;

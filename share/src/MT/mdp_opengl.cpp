@@ -1,8 +1,9 @@
 #include "mdp.h"
 
-#ifdef MT_FREEGLUT
 #  include "opengl.h"
 #  include "plot.h"
+
+#ifdef MT_GL
 
 OpenGL *globalGL=NULL;
 
@@ -64,9 +65,10 @@ void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool w
   plot(wait);
 }
 
-#else
+#else //MT_GL
+
 #include "util.h"
-void mdp::showMaze(){ MT_MSG("display only implemented when compiling with freeglut"); }
+void mdp::showMaze(){ MT_MSG("display only implemented when compiling with some glut"); }
 void mdp::showAB(const arr& alpha, const arr& beta){}
 void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}
 void mdp::glDisplayGrey(const arr &x, uint d0, uint d1, bool wait, uint win){}

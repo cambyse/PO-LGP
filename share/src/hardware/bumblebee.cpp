@@ -1,3 +1,6 @@
+//TODO: Bumblebee -> sBumblebee
+//  fuse sCamera and Camera to struct Bumblebee:Process
+
 /*  Copyright 2010 Nils Plath
     email: nilsp@cs.tu-berlin.de
 
@@ -25,8 +28,6 @@
 #include <dc1394/dc1394.h>
 #include "pgr_registers.h"
 #include "pgr_stereocam.h"
-
-struct Bumblebee;
 
 //===========================================================================
 //
@@ -98,8 +99,8 @@ struct sCamera{
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
   s->cam = NULL;
-  birosInfo.getVariable(s->camL, "CameraL", this);
-  birosInfo.getVariable(s->camR, "CameraR", this);
+  birosInfo().getVariable(s->camL, "CameraL", this);
+  birosInfo().getVariable(s->camR, "CameraR", this);
 };
 
 Camera::~Camera(){
@@ -508,9 +509,9 @@ struct sCamera{
 
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
-  birosInfo.getVariable(s->camL, "CameraL", this);
-  birosInfo.getVariable(s->camR, "CameraR", this);
-  MT::String filename = birosInfo.getParameter<MT::String>("DummyCameraFile", this, STRING("DummyCameraImage_"));
+  birosInfo().getVariable(s->camL, "CameraL", this);
+  birosInfo().getVariable(s->camR, "CameraR", this);
+  MT::String filename = birosInfo().getParameter<MT::String>("DummyCameraFile", this, STRING("DummyCameraImage_"));
   read_ppm(s->dummyL, STRING(filename <<"L.ppm"));
   read_ppm(s->dummyR, STRING(filename <<"R.ppm"));
 };

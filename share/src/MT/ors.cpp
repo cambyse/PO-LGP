@@ -964,6 +964,7 @@ void Transformation::write(std::ostream& os) const {
 #else
   os <<pos.p[0] <<' ' <<pos.p[1] <<' ' <<pos.p[2] <<' '
      <<rot.p[0] <<' ' <<rot.p[1] <<' ' <<rot.p[2] <<' ' <<rot.p[3];
+  space=true;
 #endif
   if(!vel.isZero()) { if(space) os <<' ';  os <<"v" <<vel;  space=true; }
   if(!angvel.isZero()) { if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
@@ -1041,16 +1042,20 @@ std::istream& operator>>(std::istream& is, ors::Vector& x)    { x.read(is); retu
 std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Quaternion& x) { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
+#ifndef MT_ORS_ONLY_BASICS
 std::istream& operator>>(std::istream& is, ors::Body& x){ x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Joint& x){ x.read(is); return is; }
 //std::istream& operator>>(std::istream& is, ors::Proxy& x){ x.read(is); return is; }
+#endif
 std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
+#ifndef MT_ORS_ONLY_BASICS
 std::ostream& operator<<(std::ostream& os, const ors::Body& x){ x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Joint& x){ x.write(os); return os; }
 //std::ostream& operator<<(std::ostream& os, const ors::Proxy& x){ x.write(os); return os; }
+#endif
 
 
 //================================================================================
@@ -1304,6 +1309,15 @@ void ors::Mesh::addMesh(const ors::Mesh& mesh2) {
   T.append(mesh2.T);
   for(; t<T.d0; t++) {  T(t, 0)+=n;  T(t, 1)+=n;  T(t, 2)+=n;  }
 }
+
+void ors::Mesh::makeConvexHull(){
+#ifndef  MT_ORS_ONLY_BASICS
+  getTriangulatedHull(T, V);
+#else
+  NICO
+#endif
+}
+  
 
 /*!\brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
@@ -2342,8 +2356,9 @@ ors::Body::Body() { reset(); }
 
 ors::Body::Body(const Body& b) { reset(); *this=b; }
 
-ors::Body::Body(Graph& G) {
+ors::Body::Body(Graph& G, const Body* copyBody) {
   reset();
+  if(copyBody) *this=*copyBody;
   index=G.bodies.N;
   G.bodies.append(this);
 }
@@ -2353,7 +2368,7 @@ ors::Body::~Body() { reset(); }
 void ors::Body::reset() {
   listDelete(ats);
   X.setZero();
-  fixed=false;
+  type=dynamicBT;
   shapes.memMove=true;
   com.setZero();
   mass=1.;
@@ -2420,8 +2435,10 @@ void ors::Body::read(std::istream& is) {
 #endif
   }
   
-  
-  if(anyListGet<double>(ats, "fixed", 0))  fixed=true; else fixed=false;
+  type=dynamicBT;
+  if(anyListGet<double>(ats, "fixed", 0))  type=staticBT;
+  if(anyListGet<double>(ats, "static", 0))  type=staticBT;
+  if(anyListGet<double>(ats, "kinematic", 0))  type=kinematicBT;
   
 }
 
@@ -2435,7 +2452,7 @@ ors::Shape::Shape() { reset(); }
 
 ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
 
-ors::Shape::Shape(Graph& G, Body *b, Shape *copyShape) {
+ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
     reset();
     if(copyShape) *this = *copyShape;
     index=G.shapes.N;
@@ -2501,15 +2518,19 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 
 ors::Joint::Joint() { reset(); }
 
-ors::Joint::Joint(const Joint& j) { from=to=NULL; *this=j; }
+ors::Joint::Joint(const Joint& j) { reset(); *this=j; }
 
-ors::Joint::Joint(Graph& G, Body *f, Body *t) {
-    reset();
-    index=G.joints.N;
-    G.joints.append(this);
-    from=f;  ifrom=f->index;
-    to=t;    ito  =t->index;
-  }
+ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint) {
+  reset();
+  if(copyJoint) *this=*copyJoint;
+  index=G.joints.N;
+  G.joints.append(this);
+  from=f;  ifrom=f->index;
+  to=t;    ito  =t->index;
+  f->outLinks.append(this);
+  t-> inLinks.append(this);
+
+}
 
 void ors::Joint::write(std::ostream& os) const {
   os <<"from=" <<A <<' ';
@@ -2793,7 +2814,7 @@ uint ors::Graph::getFullStateDimension() const {
   Body *n;
   uint i=0, j;
   for_list(j, n, bodies) {
-    if(!n->inLinks.N && !n->fixed) i+=6;
+    if(!n->inLinks.N && n->type!=staticBT) i+=6;
     else if(n->inLinks.N) {
       switch(n->inLinks(0)->type) {
         case hingeJT: case sliderJT: n++;  break;
@@ -2845,7 +2866,7 @@ void ors::Graph::getFullState(arr& x) const {
   
   ors::Vector rot;
   for_list(j, n, bodies) {
-    if(!n->inLinks.N && !n->fixed) {
+    if(!n->inLinks.N && n->type!=staticBT) {
       memmove(&x(i), &(n->X), 13*sizeof(double));
       i+=13;
     }
@@ -2880,7 +2901,7 @@ void ors::Graph::getFullState(arr& x, arr& v) const {
   
   ors::Vector rot;
   ors::Quaternion q;
-  for_list(j, n, bodies) if(!n->fixed) {
+  for_list(j, n, bodies) if(n->type!=staticBT) {
     if(!n->inLinks.N) {
       n->X.rot.getVec(rot);
       memmove(&x(i)  , &(n->X.pos), 3*x.sizeT);
@@ -2937,7 +2958,7 @@ void ors::Graph::setFullState(const arr& x, bool clearJointErrors) {
   CHECK(x.N==sd, "state doesn't have right dimension (" <<x.N <<"!=" <<sd <<")");
   
   for_list(j, n, bodies) {
-    if(!n->inLinks.N && !n->fixed) {
+    if(!n->inLinks.N && n->type!=staticBT) {
       memmove(&(n->X), &x(i), 13*sizeof(double));
       if(!n->X.rot.isNormalized()) {
         MT_MSG("normalizing quaternion of input state");
@@ -2980,7 +3001,7 @@ void ors::Graph::setFullState(const arr& x, const arr& v, bool clearJointErrors)
   
   ors::Vector rot;
   ors::Quaternion q;
-  for_list(j, n, bodies) if(!n->fixed) {
+  for_list(j, n, bodies) if(n->type!=staticBT) {
     if(!n->inLinks.N) {
       memmove(&(n->X.pos), &x(i)  , 3*x.sizeT);
       memmove(&(rot)   , &x(i+3), 3*x.sizeT);
@@ -3045,7 +3066,7 @@ void ors::Graph::zeroGaugeJoints() {
   Joint *e;
   ors::Vector w;
   uint j;
-  for_list(j, n, bodies) if(!n->fixed) {
+  for_list(j, n, bodies) if(n->type!=staticBT) {
     e=n->inLinks(0);
     if(e) {
       w=e->Q.rot / e->Q.angvel; e->Q.angvel.setZero();
@@ -3867,19 +3888,21 @@ void ors::Graph::reportProxies(std::ostream *os) {
   uint i;
   int a, b;
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
-  for(i=0; i<proxies.N; i++) {
-    a=proxies(i)->a;
-    b=proxies(i)->b;
+  ors::Proxy *p;
+  for_list(i,p,proxies){
+    a=p->a;
+    b=p->b;
     (*os)
         <<i <<" ("
         <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
         <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
-        <<") [" <<proxies(i)->age
-        <<"] d=" <<proxies(i)->d
-        <<" d^2=" <<(proxies(i)->posB-proxies(i)->posA).lengthSqr()
-        <<" norm=" <<(proxies(i)->posB-proxies(i)->posA).length()
-        <<" posA=" <<proxies(i)->posA
-        <<" posB=" <<proxies(i)->posB
+        <<") [" <<p->age
+        <<"] d=" <<p->d
+        <<" |A-B|=" <<(p->posB-p->posA).length()
+        <<" d^2=" <<(p->posB-p->posA).lengthSqr()
+        <<" normal=" <<p->normal
+        <<" posA=" <<p->posA
+        <<" posB=" <<p->posB
         <<endl;
   }
 }
@@ -4464,6 +4487,7 @@ template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
 #  include "array_t.cxx"
+template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 #endif

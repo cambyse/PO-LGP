@@ -1,25 +1,10 @@
-NAME   = $(shell basename $(PWD))
+BASE   = $(shell realpath .)
+NAME   = $(shell basename $(BASE))
 
 ALL =	src/MT
 
-makeAll: $(ALL:%=make/%)
+makeAll: $(ALL:%=makePath/%) makeSubpaths/test
 
-cleanAll: $(ALL:%=clean/%) cleanTests
+cleanAll: $(ALL:%=cleanPath/%) cleanSubpaths/test
 
-make/%::
-	make -C $*
-
-clean/%::
-	make clean -C $*
-
-tests::
-	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
-
-cleanTests::
-	-@find -L test -maxdepth 1 -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
-
-doc::
-	make -C doc guide doxy
-
-zip::
-	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".kdev*" --exclude "*.svn" --exclude ".git*" --exclude "cudaSDK/*" --exclude "opencv-2.1/*" --exclude "cuda/*"
+include make-generic

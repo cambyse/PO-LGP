@@ -55,8 +55,27 @@ uint __so_choice_type = RULE_LEARNER__OP_CHOICE__RANDOM;
 // int __so_current;
 arr __so_priorWeights;
 
+//caches values for a symbol that occur accross all experiences
+std::map<relational::Symbol*, MT::Array<double> > __usedFunctionValues;
+
 }
 
+void __initUsedFunctionValues(StateTransitionL& experiences) {
+  learn::__usedFunctionValues.clear();
+
+  uint i, j;
+  //cache used function values
+  FOR1D(experiences, i) {
+    FOR1D(experiences(i)->pre.lits, j) {
+      if (experiences(i)->pre.lits(j)->s->range_type == Symbol::integers)
+       learn::__usedFunctionValues[experiences(i)->pre.lits(j)->s].setAppend(experiences(i)->pre.lits(j)->value);
+	  }
+    FOR1D(experiences(i)->post.lits, j) {
+      if (experiences(i)->post.lits(j)->s->range_type == Symbol::integers)
+        learn::__usedFunctionValues[experiences(i)->post.lits(j)->s].setAppend(experiences(i)->post.lits(j)->value);
+	  }
+  }
+}
 
 void __init_search_operators() {
   listDelete(learn::__searchOperators);
@@ -122,6 +141,7 @@ void __init_search_operators() {
   
   if (SO_WEIGHT__SPLIT_ON_EQS>0.0) {
       SplitOnEqualities* splitOnEqs = new SplitOnEqualities();
+      splitOnEqs->setUsedFunctionValues(learn::__usedFunctionValues);
       learn::__searchOperators.append(splitOnEqs);
       learn::__so_priorWeights.append(SO_WEIGHT__SPLIT_ON_EQS);
   }
@@ -134,12 +154,14 @@ void __init_search_operators() {
   
   if (SO_WEIGHT__CHANGE_RANGE>0.0) {
       ChangeRange* changeRange = new ChangeRange();
+      changeRange->setUsedFunctionValues(learn::__usedFunctionValues);
       learn::__searchOperators.append(changeRange);
       learn::__so_priorWeights.append(SO_WEIGHT__CHANGE_RANGE);
   }
   
   if (SO_WEIGHT__MAKE_INTVL>0.0) {
       MakeInterval* makeIntvl = new MakeInterval();
+      makeIntvl->setUsedFunctionValues(learn::__usedFunctionValues);
       learn::__searchOperators.append(makeIntvl);
       learn::__so_priorWeights.append(SO_WEIGHT__MAKE_INTVL);
   }
@@ -154,6 +176,18 @@ void __init_search_operators() {
       SplitOnCompareFunctionValues* split_compFVs = new SplitOnCompareFunctionValues();
       learn::__searchOperators.append(split_compFVs);
       learn::__so_priorWeights.append(SO_WEIGHT__SPLIT_ON_COMPARE_FUNCTIONVALUES);
+  }
+
+  if (SO_WEIGHT__ADD_ABSTRACT_EQS > 0.0) {
+      AddAbstractEquality* addAbstractEq = new AddAbstractEquality();
+      learn::__searchOperators.append(addAbstractEq);
+      learn::__so_priorWeights.append(SO_WEIGHT__ADD_ABSTRACT_EQS);
+  }
+
+  if (SO_WEIGHT__ABSTRACT_EQS > 0.0) {
+      AbstractEquality* abstractEq = new AbstractEquality();
+      learn::__searchOperators.append(abstractEq);
+      learn::__so_priorWeights.append(SO_WEIGHT__ABSTRACT_EQS);
   }
   
   learn::num_so_applied.resize(learn::__searchOperators.N);
@@ -210,6 +244,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
 // Algorithm in Pasula, Zettlemoyer, Kaelbling, JAIR (2007), Figure 2
 void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences, arr& experience_weights, const char* logfile) {
   uint DEBUG = 2; //  2 ist gut
+  __initUsedFunctionValues(experiences);
   __init_search_operators();
   rulesC.clear();
   uint i, k;
@@ -276,6 +311,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
     MT::Array< RuleSetContainer > set_of__rulesC_new;
     __searchOperators(op)->createRuleSets(rulesC, experiences, set_of__rulesC_new);
     if (set_of__rulesC_new.N == 0) {
+      if (DEBUG>1) {cout << "No new rules found." << endl;}
       op_applicable(op) = false;
       if (so_useAgain) {
         so_useAgain = false;
@@ -283,7 +319,6 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
       }
       //write log
       log << round << " " << op << " " << bestscore << " 0" << endl;
-      if (DEBUG>1) {cout << "No new rules found." << endl;}
       continue;
     }
 //     if (DEBUG>1) {cout<<"Sanity checks of "<<set_of__rulesC_new.N<<" new rule-sets"<<endl;}
@@ -475,7 +510,7 @@ double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, dou
 double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, double cutting_threshold, arr& experience_weights) {
   uint DEBUG = 0;
   if (DEBUG > 0) {cout << "SCORE [start]" << endl;}
-  if (DEBUG > 1) {cout<<"RULES:"<<endl;  rulesC.write(); }
+  if (DEBUG > 1) {PRINT(cutting_threshold);  rulesC.write(); }
   uint i;
   
   // (1) Penalty
@@ -488,6 +523,7 @@ double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, dou
   
   // (2) Log-Likelihood
   double loglikelihood = 0.0, exLik;
+  if (DEBUG> 0) {cout<<"Calculating likelihoods..."<<endl;}
   FOR1D(experiences, i) {
     if (DEBUG > 1) {cout << "+++ ex " << i << ": ";  experiences(i)->action->write(cout);  cout<<endl;}
     const uintA& covering_rules = rulesC.nonDefaultRules_per_experience(i);
@@ -507,12 +543,12 @@ double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, dou
         // Non-noise outcome
         if (o<exs_per_out.N-1  &&  exs_per_out(o).findValue(i) >= 0) {
           exLik += rule->probs(o);
-          if (DEBUG>2) {printf("o=%i:  %10.5f\n", o, exLik);}
+          if (DEBUG>2) {printf("after o=%i:  %10.5f\n", o, exLik);}
         }
         // Noise-outcome:  always covers
         if (o == exs_per_out.N-1) {
           exLik += __p_min * rule->probs(o);
-          if (DEBUG>2) {printf("o=%i:  %10.15f\n", o, exLik);}
+          if (DEBUG>2) {printf("after o=%i:  %10.15f\n", o, exLik);}
         }
       }
       CHECK(exLik>0., "bad referencing  exLik="<<exLik);
@@ -545,12 +581,13 @@ double learn::score(RuleSetContainer& rulesC, StateTransitionL& experiences, dou
     }
   }
 
+  double score = loglikelihood - penalty;
   if (DEBUG > 0) {
-    PRINT(loglikelihood - penalty)
+    PRINT(score);
     cout << "SCORE [end]" << endl;
   }
   
-  return loglikelihood - penalty;
+  return score;
 }
 
 
@@ -1093,14 +1130,39 @@ boolA __cf_coverage_outcome_experience;
 
 void learn::calcCoverage(StateTransitionL& covered_experiences, uintA& covered_experiences_ids, const Rule* r, const StateTransitionL& experiences) {
   uint DEBUG = 0;
-  if (DEBUG>0) cout<<"calcCoverage [START]"<<endl;
+  if (DEBUG>0) cout<<"learn::calcCoverage [START]"<<endl;
   if (DEBUG>0) r->write(cout);
   covered_experiences.clear();
   covered_experiences_ids.clear();
   uint i;
+  #ifdef NO_DEICTICREFS_BY_NONBINARY
+  //build rule that has the context of r with all non-binary symbols removed
+  Rule ruleWithoutNonBinaries;
+  ruleWithoutNonBinaries.action = r->action;
+  bool containsNonBinaries = false;
+  FOR1D(r->context, i) {
+    if (r->context(i)->s->range_type == Symbol::binary)
+      ruleWithoutNonBinaries.context.append(r->context(i));
+    else containsNonBinaries = true;
+  }
+  if (DEBUG>0) {cout<<"ruleWithoutNonBinaries:"<<endl<<ruleWithoutNonBinaries;}
+  #endif
+  
   FOR1D(experiences, i) {
-    if (DEBUG>0) cout<<"ex"<<i<< " " << endl;
+    if (DEBUG>0) cout<<"ex "<<i<< " " << endl;
     if (DEBUG>1) experiences(i)->write(cout);
+
+#ifdef NO_DEICTICREFS_BY_NONBINARY
+    //Deictic refs may be ambigous due to the missing non-binary symbols.
+    //If NO_DEICTICREFS_BY_NONBINARY is set these references are not permitted.
+    if (containsNonBinaries) {
+      SubstitutionSet subsNB;
+      if (!reason::calcSubstitutions_rule_groundAction(subsNB, experiences(i)->pre, experiences(i)->action, &ruleWithoutNonBinaries)) {
+        if (DEBUG>0) cout<<" --> 0  (NO_DEICTICREFS_BY_NONBINARY)"<<endl;
+        continue;
+      }
+    }
+#endif
     SubstitutionSet subs;
     if (reason::calcSubstitutions_rule_groundAction(subs, experiences(i)->pre, experiences(i)->action, r)) {
       covered_experiences.append(experiences(i));
@@ -1111,7 +1173,7 @@ void learn::calcCoverage(StateTransitionL& covered_experiences, uintA& covered_e
       if (DEBUG>0) cout<<" --> 0"<<endl;
     }
   }
-  if (DEBUG>0) cout<<"calcCoverage [END]"<<endl;
+  if (DEBUG>0) cout<<"learn::calcCoverage [END]"<<endl;
 }
 
 
@@ -1259,6 +1321,12 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
   CostFunction::setRuleCoveredExperiences(coveredExperiences);
   __pen_sum__final = __pen_sum__base * coveredExperiences.N;
   __pen_pos__final = __pen_pos__base * coveredExperiences.N;
+
+  MT::Array<Literal*> varComparisons;
+  FOR1D(r->context, i) {
+    if (r->context(i)->comparison_type == Literal::comparison_variable)
+      varComparisons.append(r->context(i));
+  }
     
   // (1) Determine basic outcomes = changes from pre to post = for each covered experience a separate outcome
   MT::Array< LitL > outcomes_basic;
@@ -1290,20 +1358,39 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
       cout<<"Substitution: "; subs.elem(subsId)->write(cout); cout << endl;
       cout<<"Inverse Substitution: "; invSub.write(cout);cout << endl;
     }
+
+    //compute substitutions for function value variables seperate, not very elegant but with the existing data structures the easiest solution
+    std::multimap<Symbol*, Literal*> functionValueSubs;
+    FOR1D(varComparisons, k) {
+      uint l;
+      FOR1D(coveredExperiences(i)->pre.lits, l) {
+        Literal *litInv = invSub.apply(coveredExperiences(i)->pre.lits(l));
+        if (varComparisons(k)->s == litInv->s && varComparisons(k)->args == litInv->args)
+          functionValueSubs.insert(std::make_pair(varComparisons(k)->s, litInv));
+      }
+    }
       
-    // insert add-predicates
-    FOR1D(coveredExperiences(i)->add, k) {
-      if (coveredExperiences(i)->add(k)->s->symbol_type == Symbol::primitive) {
-        nextOutcome.setAppend(invSub.apply(coveredExperiences(i)->add(k)));
+    // insert changed literals
+    FOR1D(coveredExperiences(i)->changes, k) {
+      if (coveredExperiences(i)->changes(k)->s->symbol_type == Symbol::primitive) {
+        Literal *litInv = invSub.apply(coveredExperiences(i)->changes(k));
+
+        std::multimap<Symbol*, Literal*>::iterator find = functionValueSubs.find(coveredExperiences(i)->changes(k)->s);
+        for (; find != functionValueSubs.end(); find++) {
+          if (find->second->args == litInv->args) {
+            //create Literal X + offset
+            double offset = litInv->value - find->second->value;
+            nextOutcome.append(Literal::get(Symbol::get(litInv->s->name, litInv->s->arity, Symbol::primitive, litInv->s->range_type), litInv->args, offset, Literal::comparison_offset));
+            break;
+          }
+        }
+
+        //default
+        if (find == functionValueSubs.end())
+          nextOutcome.setAppend(litInv);
       }
     }
-    // insert negations of del-predicates
-    FOR1D(coveredExperiences(i)->del, k) {
-      if (coveredExperiences(i)->del(k)->s->symbol_type == Symbol::primitive) {
-        Literal* lit = coveredExperiences(i)->del(k)->getNegated();
-        nextOutcome.setAppend(invSub.apply(lit));
-      }
-    }
+
     LitL nextOutcome_pureAbstract;
     FOR1D(nextOutcome, k) {
       if (reason::isPurelyAbstract(nextOutcome(k)))
@@ -1429,6 +1516,7 @@ void learn::learn_outcomes(Rule* r, MT::Array< uintA >& coveredExperiences_per_o
             break;
         }
         LitL unifiedOutcome;
+        unifiedOutcome.memMove = true;
         unifiedOutcome.append(outcomes(i));
         unifiedOutcome.append(outcomes(k));
         uint o, o2;

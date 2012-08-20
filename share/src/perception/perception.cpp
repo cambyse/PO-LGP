@@ -1,9 +1,11 @@
 #include "perception.h"
+
+#ifdef MT_OPENCV
+
 #include <MT/opencv.h>
 
 #undef COUNT
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 
@@ -62,14 +64,14 @@ HsvFilter::HsvFilter(Image& _hsv, FloatImage& _evi): Process("HsvFilter"), hsv(&
 }
 
 void HsvFilter::open(){
-  s->hsvMean      = birosInfo.getParameter<floatA>("hsvMean", this);
-  s->hsvDeviation = birosInfo.getParameter<floatA>("hsvDeviation", this);
+  s->hsvMean      = birosInfo().getParameter<floatA>("hsvMean", this);
+  s->hsvDeviation = birosInfo().getParameter<floatA>("hsvDeviation", this);
 }
 
 Mutex MTcfgLock;
 void HsvFilter::step(){
-  s->hsvMean      = birosInfo.getParameter<floatA>("hsvMean", this);
-  s->hsvDeviation = birosInfo.getParameter<floatA>("hsvDeviation", this);
+  s->hsvMean      = birosInfo().getParameter<floatA>("hsvMean", this);
+  s->hsvDeviation = birosInfo().getParameter<floatA>("hsvDeviation", this);
   /*MTcfgLock.lock();
   s->hsvMean      = MT::getParameter<floatA>("hsvMean");
   s->hsvDeviation = MT::getParameter<floatA>("hsvDeviation");
@@ -121,3 +123,6 @@ byteA evidence2RGB(const floatA& evidence){
 
   return tmp;
 }
+
+#else //MT_OPENCV
+#endif

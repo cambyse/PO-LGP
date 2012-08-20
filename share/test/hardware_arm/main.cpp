@@ -1,6 +1,8 @@
 #include <hardware/schunk.h>
+#include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
+#include <MT/ors.h>
 
 //this is usually not included -- only here to acess directly
 #include <lwa/Device/Device.h>

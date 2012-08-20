@@ -405,7 +405,7 @@ void testContactDynamics(){
 static void drawTrimesh(void* _mesh){
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
-  ors::glDraw(*mesh);
+  mesh->glDraw();
   glPopMatrix();
 }
 
@@ -426,12 +426,13 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  //testLoadSave();
-  //testPlayStateSequence();
-  //testKinematics();
-  //testFollowRedundantSequence();
-  //testDynamics();
-  //testContacts();
+  testLoadSave();
+  testPlayStateSequence();
+  return 0;
+  testKinematics();
+  testFollowRedundantSequence();
+  testDynamics();
+  testContacts();
 #ifdef MT_ODE
   testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

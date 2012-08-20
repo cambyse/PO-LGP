@@ -15,7 +15,7 @@ void ShapeFitter::open(){
   s->Pl.readTagged(fil, "PL");
   s->Pr.readTagged(fil, "PR");
   fil.close();
-  s->objectType = birosInfo.getParameter<uintA>("percObjectType", this);
+  s->objectType = birosInfo().getParameter<uintA>("percObjectType", this);
 }
 
 
@@ -218,8 +218,6 @@ struct ShapeFitProblem:public ScalarFunction {
   
   double fs(arr& grad, const arr& x){
     double cost=0.;
-    double c_x = x(0);
-    double c_y = x(1);
     arr weights, dfdpoints;
     generateShapePoints(points, weights, &grad, type, N, x);
     if(&grad){ dfdpoints.resizeAs(points);  dfdpoints.setZero();  }
@@ -241,10 +239,6 @@ struct ShapeFitProblem:public ScalarFunction {
           dfdpoints(i, 1) = weights(i)*(distImage(y+1, x+1) - distImage(y, x+1));
         }
       }
-      //Andreas: also include the distance to the center in our cost function
-      double xd = points(i,0);
-      double yd = points(i,1);
-      //if(radius)cost += 10*fabs(radius - sqrtf((xd-c_x)*(xd-c_x) + (yd-c_y)*(yd-c_y)));
     }
     if(&grad){
       dfdpoints.reshape(dfdpoints.N);
@@ -504,7 +498,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
     problem.type=type;
     problem.N=20;
     problem.distImage = pow(distImage, 2.f);
-    problem.display = birosInfo.getParameter<bool>("shapeFitter_display", NULL);;
+    problem.display = birosInfo().getParameter<bool>("shapeFitter_display", NULL);;
     if(type==0) problem.radius = params(0);
     else problem.radius = 0;
     
@@ -746,3 +740,7 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
     memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout <<" pos " <<ba->name <<" " <<ba->X.p <<endl;
   }
 }
+
+#ifndef MT_OPENCV
+void ShapeFitter::step(){ NICO }
+#endif

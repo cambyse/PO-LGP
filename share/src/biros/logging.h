@@ -1,77 +1,63 @@
-#ifndef LOGGING_H__
-#define LOGGING_H__
+#ifndef MT_logging_h
+#define MT_logging_h
 
-#include <iostream>
-#include <sstream>
-#include <ctime>
+#include "biros.h"
 
-#define SET_LOG(name, logLevel) \
-  struct _logger_with_name_ ## name {}; \
-  template<>\
-  struct Logger<_logger_with_name_ ## name> {\
-    static const LogLevel level = logLevel;\
-  };
+//===========================================================================
+//
+// information about a single access event
+//
 
-#define DEBUG_VAR(name, var) \
-  if(Logger<_logger_with_name_ ## name>::level >= DEBUG){\
-    std::stringstream _intern_logging_msg; \
-    _intern_logging_msg << #var << " = " << var;\
-    _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name,"DEBUG", DEBUG, __FILE__, __LINE__, _intern_logging_msg.str().c_str());\
-  }
-
-#define DEBUG(name, msg) \
-  _if<Logger<_logger_with_name_ ## name>::level >= DEBUG>::result.print(#name, "DEBUG", DEBUG, __FILE__, __LINE__, msg);
-
-#define INFO(name, msg) \
-  _if<Logger<_logger_with_name_ ## name>::level >= INFO>::result.print(#name, "INFO ", INFO, __FILE__, __LINE__, msg);
-
-#define WARN(name, msg) \
-  _if<Logger<_logger_with_name_ ## name>::level >= WARN>::result.print(#name, "WARN ", WARN, __FILE__, __LINE__, msg);
-
-#define ERROR(name, msg) \
-  _if<Logger<_logger_with_name_ ## name>::level >= ERROR>::result.print(#name, "ERROR", ERROR, __FILE__, __LINE__, msg);
-
-enum LogLevel {
-  ERROR = 0,
-  WARN = 1,
-  INFO = 2,
-  DEBUG = 3
+struct AccessEvent{
+  const Variable *var;
+  const Process *proc;
+  enum AccessType{ read, write } type;
+  uint revision;
+  uint procStep;
+  AccessEvent(const Variable *v, const Process *p, AccessType _type, uint _revision, uint _procStep):
+    var(v), proc(p), type(_type), revision(_revision), procStep(_procStep){}
 };
 
-template<class T>
-struct Logger;
+typedef MT::Array<AccessEvent*> AccessEventL;
 
-struct OutputReal {
-  inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) {
-    struct tm tm;
-    char current_time[32];
-    char current_date[32];
-    time_t tt = time(NULL);
-    tm = *localtime(&tt);
-    strftime(current_time, 31, "%H:%M:%S", &tm);
-    strftime(current_date, 31, "%Y-%m-%d", &tm);
-#ifndef LOG_STRING
-    (level != ERROR ? std::cout : std::cerr ) << "[@" << file << ":" << line << " | " << name << " | " << current_date << " " << current_time << " | " << level_str << " | "  << msg << " ]" <<  std::endl; };
-#else
-    LOG_STRING;
-    };
-#endif
-};
-struct OutputEmpty {
-  inline void print(const char *name, const char *level_str, const LogLevel level, const char *file, int line, const char *msg) { };
+//===========================================================================
+//
+// the logger (and blocker)
+//
+
+struct AccessController {
+  struct sAccessController *s;
+
+  //all accesses
+  AccessEventL events;
+  ofstream* eventsFile;
+  
+  //blocking accesses
+  AccessEventL blockedAccesses;
+  
+  AccessController();
+  ~AccessController();
+  
+  //methods called by the user
+  void blockAllAccesses();
+  void unblockAllAccesses();
+  void stepToNextAccess();
+  void stepToNextWriteAccess();
+  void setReplay(const bool replay = true);
+  bool getReplay() const;
+  
+  //methods called during write/read access from WITHIN biros
+  void queryReadAccess(Variable *v, const Process *p);
+  void queryWriteAccess(Variable *v, const Process *p);
+  void logReadAccess(const Variable *v, const Process *p);
+  void logReadDeAccess(const Variable *v, const Process *p);
+  void logWriteAccess(const Variable *v, const Process *p);
+  void logWriteDeAccess(const Variable *v, const Process *p);
+  
+  //writing into a file
+  void dumpEventList();
 };
 
-template <bool Condition>
-struct _if;
-
-template<>
-struct _if<true> {
-  static OutputReal result;  
-};
-
-template<>
-struct _if<false> {
-  static OutputEmpty result;  
-};
+extern AccessController accessController;
 
 #endif

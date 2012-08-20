@@ -1,7 +1,5 @@
 #include "motion.h"
-
-#define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+#include "motion_internal.h"
 
 void reattachShape(const char* objShape, const char* toBody);
 
@@ -32,12 +30,6 @@ void MotionPrimitive::setFeedbackTask(FeedbackControlTaskAbstraction& task, bool
   deAccess(p);
 }
 
-void waitForDoneMotionPrimitive2(MotionPrimitive *motionPrimitive){
-  int rev = 0;
-  while(motionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = motionPrimitive->waitForRevisionGreaterThan(rev);
-  }
-}
 
 void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p){
   
@@ -56,8 +48,8 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   //create new Variables
   Action *a = actions.append(new Action);
   MotionKeyframe *f0 = frames.last();
-  MotionKeyframe *f1 = frames.append(new MotionKeyframe);
-  MotionPrimitive *m = motions.append(new MotionPrimitive);
+  MotionKeyframe *f1 = frames.append(new MotionKeyframe);   //append a new frame
+  MotionPrimitive *m = motions.append(new MotionPrimitive); //append a new motion primitive
   done = false;
   
   //assign Variables
@@ -67,10 +59,10 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   m->set_frameCount(motions.N-1, p);
   
   //create new Processes
-  ActionToMotionPrimitive *planner = planners.append(new ActionToMotionPrimitive(*a, *f0, *f1, *m));
+  MotionPlanner *planner = planners.append(new MotionPlanner(*a, *f0, *f1, *m));
   
-  //loop the process
-  planner -> threadLoopWithBeat(0.01);
+  //start the process
+  planner -> threadStep();
   
   deAccess(p);
 
@@ -83,7 +75,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
     frames.append(new MotionKeyframe);
     actions.append(new Action);
     motions.append(new MotionPrimitive);
-    planners.append(new ActionToMotionPrimitive(*actions(0), *frames(0), *frames(1), *motions(0)));
+    planners.append(new MotionPlanner(*actions(0), *frames(0), *frames(1), *motions(0)));
     planners(0) -> threadLoopWithBeat(0.01);
   }
   
@@ -91,7 +83,7 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   MotionKeyframe *f0 = frames(0);
   MotionKeyframe *f1 = frames(1);
   MotionPrimitive *m = motions(0);
-  ActionToMotionPrimitive *planner = planners(0);
+  MotionPlanner *planner = planners(0);
   
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(p);
@@ -106,8 +98,13 @@ void MotionFuture::appendNewAction(const Action::ActionPredicate _action, const 
   
   deAccess(p);
   
-  if(_action == Action::grasp || _action==Action::place || _action == Action::home || _action == Action::reach)
-    waitForDoneMotionPrimitive2(m);
+  if(_action == Action::grasp || _action==Action::place || _action == Action::home || _action == Action::reach){
+    //wait for done motion primitive
+    int rev = 0;
+    while(m->get_mode(this)!=MotionPrimitive::done){
+      rev = m->waitForRevisionGreaterThan(rev);
+    }
+  }
 
   cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
 

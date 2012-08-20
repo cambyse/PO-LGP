@@ -926,7 +926,7 @@ void readSymbolsAndTypes(SymL& symbols, ArgumentTypeL& types, ifstream& in) {
       MT::skip(line);
       MT::skipUntil(line, " ");  // skip "<--"
       while (MT::skip(line,"\n\r\t ,") != -1) {
-        bool free_vars_all_quantified;
+        bool free_vars_all_quantified = false;
         while (isupper(MT::peerNextChar(line))) {
           if (MT::peerNextChar(line) == 'A') free_vars_all_quantified = true;
           else if (MT::peerNextChar(line) == 'E') free_vars_all_quantified = false;

@@ -118,6 +118,15 @@ struct optOptions {
   optOptions();
 };
 
+extern optOptions globalOptOptions;
+#define OPT0() (globalOptOptions)
+#define OPT1(a) (globalOptOptions.a, globalOptOptions)
+#define OPT2(a,b) (globalOptOptions.a, globalOptOptions.b, globalOptOptions)
+#define OPT3(a,b,c) (globalOptOptions.a, globalOptOptions.b, globalOptOptions.c, globalOptOptions)
+#define OPT4(a,b,c,d) (globalOptOptions.a, globalOptOptions.b, globalOptOptions.c, globalOptOptions.d, globalOptOptions)
+#define OPT5(a,b,c,d,e) (globalOptOptions.a, globalOptOptions.b, globalOptOptions.c, globalOptOptions.d, globalOptOptions.e, globalOptOptions)
+#define OPT6(a,b,c,d,e,f) (globalOptOptions.a, globalOptOptions.b, globalOptOptions.c, globalOptOptions.d, globalOptOptions.e, globalOptOptions.f, globalOptOptions)
+
 /// minimizes f(x) = phi(x)^T phi(x) using the Jacobian of phi
 /// the optional _user arguments specify, if f has already been evaluated at x (another initial evaluation is then omitted
 /// to increase performance) and the evaluation of the returned x is also returned
@@ -163,12 +172,6 @@ struct Rprop {
 
 optOptions* accessOpt();
 optOptions& deaccessOpt(optOptions*);
-// #define OPT(a) (opt=accessOpt(), opt-> a, deaccessOpt(opt))
-// #define OPT(a,b) (opt=accessOpt(), opt-> a, opt-> b, deaccessOpt(opt))
-// #define OPT(a,b,c) (opt=accessOpt(), opt-> a, opt-> b, opt-> c, deaccessOpt(opt))
-// #define OPT(a,b,c,d) (opt=accessOpt(), opt-> a, opt-> b, opt-> c, opt-> d, deaccessOpt(opt))
-// #define OPT(a,b,c,d,e) (opt=accessOpt(), opt-> a, opt-> b, opt-> c, opt-> d, opt-> e, deaccessOpt(opt))
-// #define OPT(a,b,c,d,e,f) (opt=accessOpt(), opt-> a, opt-> b, opt-> c, opt-> d, opt-> e, opt-> f, deaccessOpt(opt))
 
 
 

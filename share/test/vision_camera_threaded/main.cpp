@@ -1,30 +1,25 @@
-#include <MT/vision.h>
-#include <NP/camera.h>
-#include <NP/uvccamera.h>
+#include <perception/perception.h>
+#include <hardware/uvccamera.h>
 #include <MT/opengl.h>
 
 int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
-
-  //CameraModule camera;
-  camera::UVCCamera camera;
+  Image imgL("CameraL"), imgR("CameraR");
+  UVCCamera camera;
 
   byteA img;
   OpenGL gl;
   gl.img = &img;
   
-  camera.threadOpen();
-  camera.step();
   camera.threadLoop();
+  double time=MT::realTime();
+  int rev=0;
   for(;;){
-    camera.output.readAccess(NULL);
-    img=camera.output.rgbL;
-    camera.output.deAccess(NULL);
-    //if(cvShow(img,"1")==27) break;
-    if(gl.update()==27) break;
+    rev=imgL.waitForRevisionGreaterThan(rev);  //sets calling thread to sleep
+    img=imgL.get_img(NULL);
+    if(!gl.update()) break;
   }
+  cout <<"fps=" <<rev/(MT::realTime()-time) <<endl;
   cout <<"trying to close..." <<endl;
-  camera.threadStop();
   camera.threadClose();
   
   return 0;

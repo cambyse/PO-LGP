@@ -1,13 +1,17 @@
-//OpenCV (C++) wrappers
-
 #ifndef MT_opencv_h
 #define MT_opencv_h
 
+//OpenCV (C++) wrappers
+
+#ifdef MT_OPENCV
+
 #undef COUNT
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
+#include "array.h"
+#include "util.h"
 
 inline cv::Mat cvMAT(const byteA& img){
   if(img.nd==2) return cv::Mat(img.d0, img.d1, CV_8UC1, img.p);
@@ -38,5 +42,14 @@ inline byteA cvtMAT(const cv::Mat& mat){
   NIY;
   return byteA();
 }
+
+#else
+
+inline cv::Mat cvMAT(const byteA& img){ NICO }
+inline cv::Mat cvMAT(const floatA& img){ NICO }
+inline cv::Mat cvMAT(const doubleA& img){ NICO }
+inline byteA cvtMAT(const cv::Mat& mat){ NICO }
+
+#endif //MT_OPENCV
 
 #endif

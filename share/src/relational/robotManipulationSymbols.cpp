@@ -593,7 +593,7 @@ uint RobotManipulationSymbols::getBelow(uint id, const SymbolicState& state) {
         return state.lits(i)->args(1);
     }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 uint RobotManipulationSymbols::getAbove(uint id, const SymbolicState& state) {
@@ -605,7 +605,7 @@ uint RobotManipulationSymbols::getAbove(uint id, const SymbolicState& state) {
         return state.lits(i)->args(0);
     }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 void RobotManipulationSymbols::getBelowObjects(uintA& ids, uint id_top, const SymbolicState& state) {
@@ -624,7 +624,7 @@ uint RobotManipulationSymbols::getInhand(const SymbolicState& state) {
       return state.lits(i)->args(0);
     }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 void RobotManipulationSymbols::getBoxes(uintA& ids, const SymbolicState& state) {
@@ -648,7 +648,7 @@ uint RobotManipulationSymbols::getContainingBox(uint obj_id, const SymbolicState
         return state.lits(i)->args(0);
     }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 
@@ -661,7 +661,7 @@ uint RobotManipulationSymbols::getContainedObject(uint box_id, const SymbolicSta
         return state.lits(i)->args(1);
     }
   }
-  return UINT_MAX;
+  return TL::UINT_NIL;
 }
 
 
@@ -1069,13 +1069,13 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__stack(const uintA
     uintA used_objects;
     for (i=0; i<piles.d0; i++) {
       k=0;
-      while (k < piles.d1 && piles(i,k) != UINT_MAX) {
+      while (k < piles.d1 && piles(i,k) != TL::UINT_NIL) {
         k++;
       }
       if (k > 2) {
         uintA true_tower;
         k = 0;
-        while (k < piles.d1 && piles(i,k) != UINT_MAX) {
+        while (k < piles.d1 && piles(i,k) != TL::UINT_NIL) {
           true_tower.append(piles(i,k));
           used_objects.setAppend(piles(i,k));
           k++;
@@ -1282,14 +1282,14 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
 void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostream& out) {
   out<<"--"<<endl;
   uint i, k;
-  uint id_table = UINT_MAX;
+  uint id_table = TL::UINT_NIL;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s->name == "table") {
       id_table = state.lits(i)->args(0);
       break;
     }
   }   
-//   CHECK(id_table != UINT_MAX, "");
+//   CHECK(id_table != TL::UINT_NIL, "");
   // Piles
   uintA piles;
   calcPiles(state, piles, 2);
@@ -1297,7 +1297,7 @@ void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostrea
   
   for (i=0; i<piles.d0; i++) {
     k = 0;
-    while (k < piles.d1 && piles(i,k) != UINT_MAX) {
+    while (k < piles.d1 && piles(i,k) != TL::UINT_NIL) {
       if (k>0) out<<" ";
       if (isBox(piles(i,k), state))
         out << "b";
@@ -1307,7 +1307,7 @@ void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostrea
       else if (isBox(piles(i,k), state)) {
         out<<"[ ";
         uint obj = getContainedObject(piles(i,k), state);
-        if (obj != UINT_MAX) {
+        if (obj != TL::UINT_NIL) {
           out<<obj;
           if (isBall(obj, state))
             out<<"o";
@@ -1325,7 +1325,7 @@ void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostrea
   
   out<<"H ";
   uint id_inhand = getInhand(state);
-  if (id_inhand != UINT_MAX) {
+  if (id_inhand != TL::UINT_NIL) {
     out<<id_inhand;
     if (isBall(id_inhand, state))
       out<<"o";

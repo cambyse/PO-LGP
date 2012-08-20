@@ -29,6 +29,11 @@
 #  define MT_LogFileName "MT.log"
 #endif
 
+//TODO: move basic threading routines from biros to util!
+namespace MT{
+void parameterAccessGlobalLock(){}
+void parameterAccessGlobalUnLock(){}
+}
 
 //===========================================================================
 //
@@ -787,11 +792,11 @@ static FILE *MT_gp=NULL;
 void gnuplotClose() {
   if(MT_gp) { fflush(MT_gp); fclose(MT_gp); }
 }
-void gnuplot(const char *command, const char *PDFfile, bool persist) {
+void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDFfile) {
 #ifndef MT_MSVC
   if(!MT_gp) {
-    if(!persist) MT_gp=popen("env gnuplot -noraise", "w");
-    else         MT_gp=popen("env gnuplot -noraise -persist", "w");
+    if(!persist) MT_gp=popen("env gnuplot -noraise -geometry 400x300-0-0 -display :0.0", "w");
+    else         MT_gp=popen("env gnuplot -noraise -persist -geometry 400x300-0-0 -display :0.0", "w");
     CHECK(MT_gp, "could not open gnuplot pipe");
     fprintf(MT_gp, "set style data lines\n");
   }
@@ -809,6 +814,7 @@ void gnuplot(const char *command, const char *PDFfile, bool persist) {
         <<"set output '" <<PDFfile <<"'\n"
         <<command <<std::endl;
   }
+  if(pauseMouse) cmd <<"\n pause mouse" <<std::endl;
   fputs(cmd.p, MT_gp);
   fflush(MT_gp) ;
 #else

@@ -22,10 +22,12 @@
 #ifndef UTIL_TL_h
 #define UTIL_TL_h
 
-#include <limits.h>
+#include <limits>
 #include <float.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#ifndef MT_MSVC
+	#include <sys/time.h>
+	#include <sys/resource.h>
+#endif
 #ifndef MT_IMPLEMENT_TEMPLATES
 #define MT_IMPLEMENT_TEMPLATES
 #endif
@@ -56,14 +58,21 @@
 #  define CHECK_(cond,code,msg)
 #endif
 
-
+#ifdef MT_MSVC
+	#define pow(b, e) pow((double)b, (double)e)
+#endif
 
 namespace TL {
-const uint UINT_NIL = UINT_MAX;
+const uint UINT_NIL = std::numeric_limits<uint>::max();
 
 const double TL_DOUBLE_NIL = -98765.43211234589;
-const double TL_DOUBLE_MIN = DBL_MAX * (-1.);
-const double TL_INFINITY = INFINITY;
+const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
+
+#ifdef MT_MSVC
+    #define TL_INFINITY numeric_limits<double>::infinity();
+#else
+	const double TL_INFINITY = std::numeric_limits<double>::infinity();
+#endif
 
 inline int signOf(int a) { return (a == 0) ? 0 : (a<0 ? -1 : 1); }
 inline double signOf(double a) { return a<0 ? -1 : 1; }

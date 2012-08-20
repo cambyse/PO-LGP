@@ -1,0 +1,36 @@
+#! /bin/sh
+
+## parameters for this install
+NAME=PhysX
+URL=https://maserati.mi.fu-berlin.de/redmine/attachments/download/1694/PhysX-3.2_LINUX_SDK_Core.zip
+FILE=/tmp/PhysX-3.2_LINUX_SDK_Core.zip
+
+## check download
+if [ ! -f $FILE ] ; then
+  echo "You need to download " $URL " and store it in " $FILE
+  exit
+fi
+
+## check existance of lib path
+THIS_PATH=$PWD
+echo "Calling path:" $THIS_PATH
+[ -z "${MLR_EXLIB_PATH}" ] && MLR_EXLIB_PATH=$HOME/lib
+if [ ! -d $MLR_EXLIB_PATH ] ; then
+  echo "Creating lib directory: " $MLR_EXLIB_PATH
+  mkdir $MLR_EXLIB_PATH
+fi
+
+## delete everything
+cd $MLR_EXLIB_PATH
+rm -R $NAME
+mkdir $NAME
+cd $NAME
+
+## download & unpack
+echo "unpacking in path:" $PWD
+unzip -q $FILE
+
+## patch
+echo "patching"
+patch -p1 < $THIS_PATH/PHYSX_patch
+

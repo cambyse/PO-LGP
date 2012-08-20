@@ -1,40 +1,37 @@
-#include "motion.h"
+#include "motion_internal.h"
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody);
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive);
 
-struct sActionProgressor {
-  MotionFuture *motionFuture;
-};
-
-ActionProgressor::ActionProgressor():Process("ActionProgressor") {
-  s = new sActionProgressor();
-  birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+Process* newActionProgressor(MotionFuture& a){
+  return new ActionProgressor(a);
 }
 
-ActionProgressor::~ActionProgressor() {
-  delete s;
-}
-
-void ActionProgressor::open(){
+ActionProgressor::ActionProgressor(MotionFuture& a)
+:Process("ActionProgressor"), motionFuture(&a) {
+  if(!motionFuture) birosInfo().getVariable(motionFuture, "MotionFuture", this);
+  threadListenTo(motionFuture);
+  MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
+  if(motionPrimitive) threadListenTo(motionPrimitive);
 }
 
 void ActionProgressor::step(){
-#if 1
-  if(s->motionFuture->getTodoFrames(this) == 0) return;
-  MotionPrimitive *motionPrimitive = s->motionFuture->getCurrentMotionPrimitive(this);
-  Action *action = s->motionFuture->getCurrentAction(this);
+  //TODO: the progressor shouldn't wait itself - it should be triggered listening to the primitive and future
   
-  switch(action->get_action(this)){
+  if(motionFuture->getTodoFrames(this) <= 1) return; //no future to progress to
+  MotionPrimitive *motionPrimitive = motionFuture->getCurrentMotionPrimitive(this);
+  threadListenTo(motionPrimitive);
+  Action *action = motionFuture->getCurrentAction(this);
+  
+  switch(action->get_action(this)){ //wait, depending on current action
     case Action::grasp: {
-      waitForDoneMotionPrimitive(motionPrimitive);
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
       reattachShape(action->get_objectRef1(this), "m9");
     } break;
     case Action::place: {
-      waitForDoneMotionPrimitive(motionPrimitive);
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
       reattachShape(action->get_objectRef1(this), "OBJECTS");
     } break;
     case Action::closeHand:
@@ -45,20 +42,11 @@ void ActionProgressor::step(){
     default:
       HALT("");
   }
-  
-  if(s->motionFuture->getTodoFrames(this)==1)
-    s->motionFuture->set_done(true, this);
-  
-  //wait for somebody outside to append a new action
-  int rev = 0;
-  while(s->motionFuture->getTodoFrames(this)<=1){
-    rev = s->motionFuture->waitForRevisionGreaterThan(rev);
-  }
 
-  s->motionFuture->incrementFrame(this);
+  motionFuture->incrementFrame(this);
   
-  //reset the frame0 of the motion primitive!
-  MotionFuture *f = s->motionFuture;
+  //reset the frame0 of the motion primitive to the real hardware pose! -> triggers the MotionPlanner to refine!
+  MotionFuture *f = motionFuture;
   f->writeAccess(this);
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(this);
@@ -69,20 +57,8 @@ void ActionProgressor::step(){
   //f->frames(f->currentFrame)->set_converged(true, this);
   f->frames(f->currentFrame+1)->set_converged(false, this);
   f->motions(f->currentFrame)->set_planConverged(false, this);
-  
+  _HardwareReference->set_motionPrimitiveRelativeTime(0., this);
   f->deAccess(this);
-#endif
-}
-
-void ActionProgressor::close(){
-}
-
-
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive){
-  int rev = 0;
-  while(motionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = motionPrimitive->waitForRevisionGreaterThan(rev);
-  }
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
@@ -96,7 +72,7 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
 }
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody){
   VAR(GeometricState);

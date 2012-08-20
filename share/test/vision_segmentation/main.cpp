@@ -1,5 +1,4 @@
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 

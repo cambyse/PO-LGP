@@ -1,0 +1,14 @@
+# Control compiler options
+# Compile with debug information
+#OPTIM = debug
+# Compile with optimization
+OPTIM = fast
+
+OPTIM  = debug
+FREEGLUT = 1
+QHULL = 1
+SWIFT = 1
+ODE = 1
+ANN = 1
+
+CXXFLAGS  += -DMT_NO_THREADS

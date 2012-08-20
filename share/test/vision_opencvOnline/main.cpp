@@ -7,16 +7,8 @@
 #include <MT/BinaryBP.h>
 #include <MT/vision.h>
 
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+#include <MT/opencv.h>
 
-#include <NP/libcolorseg.h>
-//#include <NP/common.h>
-#include <NP/uvccamera.h>
-#include <NP/uvccamera.cpp>
-//#include <NP/camera/bumblebee2.h>
-
-//#include <ess.hh>
 
 #if 0//def MT_BUMBLE
 typedef camera::Bumblebee2 Camera;

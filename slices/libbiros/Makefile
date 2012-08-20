@@ -1,10 +1,12 @@
 NAME   = $(shell basename $(PWD))
 
-ALL =	src/MT src/biros use_cases/vision/extern/libcolorseg/src
+ALL =	src/MT \
+        src/biros \
+        use_cases/vision/extern/libcolorseg/src
 
-makeAll: $(ALL:%=make/%) useCases
+makeAll: $(ALL:%=make/%) makePaths/useCases
 
-cleanAll: $(ALL:%=clean/%) cleanUseCases
+cleanAll: $(ALL:%=clean/%) cleanPaths/UseCases
 
 make/%::
 	make -C $*
@@ -12,14 +14,14 @@ make/%::
 clean/%::
 	make clean -C $*
 
-useCases::
-	-@find -L use_cases -maxdepth 1 -follow -type d -not -name 'use_cases' -not -name 'SHARE' -exec make -C {} \;
+makePaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec make -C {} \;
 
-cleanUseCases::
-	-@find -L use_cases -maxdepth 1 -follow -type d -not -name 'use_cases' -not -name 'SHARE' -exec make -C {} clean \;
+cleanPaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec make -C {} clean \;
 
 doc::
-	make -C doc guide doxy
+	make -C doc doxy_array
 
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude

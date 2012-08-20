@@ -27,14 +27,17 @@
 SET_LOG(rmi, DEBUG);
 
 
-namespace RMSim {
+namespace relational {
 
 
-using namespace relational;
-  
-/* ---------------------
-    TOP-LEVEL LOGIC-SIMULATOR-INTERFACE
-  --------------------- */
+
+/************************************************
+  * 
+  *     High-level interface between
+  *     symbolic representations and
+  *     geometric simulator
+  * 
+  ************************************************/
 
 
 SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulationSimulator* sim) {
@@ -107,10 +110,9 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
     }
   }
   
-  
   // INHAND
   uint catchedID = sim->getInhand();
-  if (catchedID != UINT_MAX) {
+  if (catchedID != TL::UINT_NIL) {
     state->lits.append(Literal::get(Symbol::get("inhand"), TUP(sim->getInhand()), 1.));
   }
   
@@ -120,8 +122,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
     if (all_objs(i) != table_id) continue;
     sim->getObjectsOn(objects_on, all_objs(i));
     FOR1D(objects_on, j) {
-      
-      if (all_objs.findValue(objects_on(j)) >= 0)
+      if (all_objs.findValue(objects_on(j)) >= 0  &&  !sim->containedInBox(objects_on(j)))
         state->lits.append(Literal::get(Symbol::get("on"), TUP(objects_on(j), all_objs(i)), 1.));
     }
   }
@@ -143,7 +144,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   state->lits.memMove = true;
   FOR1D(boxes, i) {
     uint o = sim->getContainedObject(boxes(i));
-    if (o != UINT_MAX) {
+    if (o != TL::UINT_NIL) {
       if (table_id == TL::UINT_NIL) {
         state->lits.removeValueSafe(Literal::get(Symbol::get("on"), TUP(o, table_id), 1.));
       }
@@ -165,7 +166,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
 }
 
 
-void RobotManipulationInterface::performAction(Literal* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message) {
+void RobotManipulationInterface::executeAction(Literal* action, RobotManipulationSimulator* sim, uint secs_wait_after_action, const char* message) {
   if (action == NULL  ||  action->s->name == "doNothing"  ||  action == Literal::getLiteral_default_action()) {
     // don't do anything
     return;
@@ -188,7 +189,7 @@ void RobotManipulationInterface::performAction(Literal* action, RobotManipulatio
   else if (action->s->name == "puton"  ||  action->s->name == "puton_puton"  ||  action->s->name == "puton_grab") {
     if (sim->getOrsType(action->args(0)) == OBJECT_TYPE__BOX  // don't do anything if object = filled open box
           && !sim->isClosed(action->args(0))
-          &&  sim->getContainedObject(action->args(0)) != UINT_MAX) 
+          &&  sim->getContainedObject(action->args(0)) != TL::UINT_NIL) 
       sim->simulate(30, message); 
     else if (sim->containedInBox(action->args(0))) // don't do anything if object in box
       sim->simulate(30, message); 
@@ -214,7 +215,7 @@ void RobotManipulationInterface::performAction(Literal* action, RobotManipulatio
       sim->simulate(10); 
     else if (sim->getOrsType(action->args(1)) == OBJECT_TYPE__BOX  // don't do anything if 2nd object = filled open box
           && !sim->isClosed(action->args(1))
-          &&  sim->getContainedObject(action->args(1)) != UINT_MAX) 
+          &&  sim->getContainedObject(action->args(1)) != TL::UINT_NIL) 
       sim->simulate(10); 
     else
       sim->dropObjectAbove(action->args(0), action->args(1));
@@ -235,7 +236,7 @@ void RobotManipulationInterface::performAction(Literal* action, RobotManipulatio
     if (!sim->isBox(action->args(0)))
       sim->simulate(30, message);
     else {
-//     if (sim->getInhand() != UINT_MAX) // don't do anything if something inhand
+//     if (sim->getInhand() != TL::UINT_NIL) // don't do anything if something inhand
 //       sim->simulate(10);
 //     else
       sim->closeBox(action->args(0), message);
@@ -250,6 +251,64 @@ void RobotManipulationInterface::performAction(Literal* action, RobotManipulatio
 
 
 
+void RobotManipulationInterface::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types, RobotManipulationSimulator* sim) { //!< return list of all object types
+  objects_types.resize(objects.N);
+  uint i;
+  relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
+  FOR1D(types, i) {
+    if (types(i)->name == MT::String("block")) {
+      type_block = types(i);
+    }
+    else if (types(i)->name == MT::String("ball")) {
+      type_ball = types(i);
+    }
+    else if (types(i)->name == MT::String("table")) {
+      type_table = types(i);
+    }
+    else if (types(i)->name == MT::String("box")) {
+      type_box = types(i);
+    }
+  }
+  
+  CHECK(type_block != NULL, "");
+  CHECK(type_ball != NULL, "");
+  CHECK(type_table != NULL, "");
+  CHECK(type_box != NULL, "");
+//   type_block->writeNice(cout);  cout<<endl;
+//   type_ball->writeNice(cout);  cout<<endl;
+//   type_table->writeNice(cout);  cout<<endl;
+//   type_box->writeNice(cout);  cout<<endl;
+  
+  uint table_id = sim->getTableID();
+  uintA blocks;
+  sim->getBlocks(blocks);
+  uintA balls;
+  sim->getBalls(balls);
+  uintA boxes;
+  sim->getBoxes(boxes);
+  
+//   PRINT(table_id);
+//   PRINT(blocks);
+//   PRINT(balls);
+//   PRINT(boxes);
+  
+  FOR1D(objects, i) {
+    if (objects(i) == table_id) {
+      objects_types(i) = type_table;
+    }
+    else if (blocks.findValue(objects(i)) >= 0) {
+      objects_types(i) = type_block;
+    }
+    else if (balls.findValue(objects(i)) >= 0) {
+      objects_types(i) = type_ball;
+    }
+    else if (boxes.findValue(objects(i)) >= 0) {
+      objects_types(i) = type_box;
+    }
+    else
+      NIY;
+  }
+}
 
 
 
@@ -262,25 +321,11 @@ void RobotManipulationInterface::performAction(Literal* action, RobotManipulatio
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Sampling
-
+/************************************************
+* 
+*     Sampling actions
+* 
+************************************************/
 
 
 bool RobotManipulationInterface::SAMPLING__WATCH_AFTER_ACTION = false;
@@ -293,6 +338,31 @@ double RobotManipulationInterface::SAMPLING__PROB_PUTON_CLEARGUY = 0.8;
 Literal* RobotManipulationInterface::generateAction(const SymbolicState& s, uint id_table) {
   return generateAction_wellBiased(s, id_table);
 //   return generateAction_wellBiased_2Dactions(s, id_table);
+}
+
+
+
+Literal* RobotManipulationInterface::generateAction_trulyRandom(const SymbolicState& s, uint id_table) {
+  uint i;
+  
+  // choose action
+  HALT("funktioniertso nicht mit default action");
+  SymL syms_action;
+  Symbol::get_action(syms_action);
+  Symbol* action = syms_action(rnd.num(syms_action.N-1)+1); // omitting default action
+ 
+  uintA sa(action->arity);
+  FOR1D(sa, i) {
+    sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
+    // first should never be table
+    if (i==0) {
+      while( sa(i) != id_table ){
+        sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
+      }
+    }
+  }
+  
+  return Literal::get(action, sa, 1.);
 }
 
 
@@ -331,7 +401,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
   randNum = rnd.uni();
   Symbol* p_action;
   if (randNum < SAMPLING__PROB_SENSIBLE_ACTION) {
-    if (id_hand == UINT_MAX) {
+    if (id_hand == TL::UINT_NIL) {
       if (p_GRAB != NULL)
         p_action = p_GRAB;
       else
@@ -346,7 +416,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
     if (DEBUG>0) cout << "SENSIBLE action TYPE   " << p_action->name << endl;
   }
   else {
-    if (id_hand == UINT_MAX) {
+    if (id_hand == TL::UINT_NIL) {
       if (p_PUTON != NULL)
         p_action = p_PUTON;
       else
@@ -370,7 +440,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
       nonClearGuys.setAppend(state.lits(i)->args(1));
     }
   }
-  if (id_hand != UINT_MAX) {
+  if (id_hand != TL::UINT_NIL) {
     clearGuys.removeValueSafe(id_hand);
     nonClearGuys.setAppend(id_hand);
   }
@@ -561,7 +631,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
       nonClearGuys.setAppend(state.lits(i)->args(1));
     }
   }
-  if (id_hand != UINT_MAX) {
+  if (id_hand != TL::UINT_NIL) {
     clearGuys.removeValueSafe(id_hand);
     nonClearGuys.setAppend(id_hand);
   }
@@ -608,7 +678,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
     // Do something with other object
     if (rnd.uni() < 0.6) {
       args.resize(2);
-      if (id_hand != UINT_MAX) {
+      if (id_hand != TL::UINT_NIL) {
         args(0) = id_hand;
         args(1) = boxes(rnd.num(boxes.N));
         p_action = p_PLACE;
@@ -618,7 +688,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
         uintA boxedObjs;
         FOR1D(boxes, i) {
           uint obj = RobotManipulationSymbols::getContainedObject(boxes(i), state);
-          if (obj != UINT_MAX)
+          if (obj != TL::UINT_NIL)
             boxedObjs.append(obj);
         }
         if (boxedObjs.N > 0) {
@@ -656,7 +726,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   // --------------------------------
   //   (1) SENSIBLE Action
   if (sensible_action) {
-    if (id_hand == UINT_MAX) {
+    if (id_hand == TL::UINT_NIL) {
       p_action = p_LIFT;
     }
     else {
@@ -720,7 +790,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
           args(0) = sensibleFirstArgs(rnd.num(sensibleFirstArgs.N));
       }
       args(1) = RobotManipulationSymbols::getBelow(args(0), state);
-      if (UINT_MAX == args(1))
+      if (TL::UINT_NIL == args(1))
         args(1) = RobotManipulationSymbols::getContainingBox(args(0), state);
     }
     //  ------------------------------------------------------------------
@@ -819,7 +889,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
     // (2.1)
     if (p_action == p_PLACE) {
       // (2.1.1)   if inhand-nil:  place(a,b) with random a and b
-      if (id_hand == UINT_MAX) {
+      if (id_hand == TL::UINT_NIL) {
         args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
         do {
           args(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
@@ -838,11 +908,11 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
     // (2.2)
     else {
       // (2.2.1)  if inhand(a):  lift(b,c)   with b not inhand and on(b,c)
-      if (id_hand != UINT_MAX  && rnd.uni() < 0.95) {
+      if (id_hand != TL::UINT_NIL  && rnd.uni() < 0.95) {
         do {
           args(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
           args(1) = RobotManipulationSymbols::getBelow(args(0), state);
-        } while (args(0) == id_hand  ||  args(1) == UINT_MAX);
+        } while (args(0) == id_hand  ||  args(1) == TL::UINT_NIL);
       }
       // (2.2.2)  if inhand-nil:  lift(a,b)  with  a and b random, but _not_ on(a,b)
       else {
@@ -863,251 +933,6 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
   }
   
   return Literal::get(p_action, args, 1.);
-}
-
-
-
-#if 0
-Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const SymbolicState& s, uint id_table) {
-  uint DEBUG = 1;
-    // blocks on high towers have lower prob to be grabbed
-  double skyscraper_bias = 200; // 115.0;
-    
-  uint i;
-  // determine inhand object
-  uint id_hand = RobotManipulationInterface::getInhand(s);
-  
-  // determine number of non-out blocks
-  uint num_out_blocks = 0;
-  FOR1D(state.lits, i) {
-    if (state.lits(i)->s->name == "out") {
-      num_out_blocks++;
-    }
-  }
-  uint no_non_out_blocks = reason::getConstants().N-1-num_out_blocks;
-  if (no_non_out_blocks <= 1) {
-    MT_MSG("Too few objects left for sensible acting!");
-    return NULL;
-  }
-
-  Symbol* p_LIFT = Symbol::get(MT::String("lift"));
-  Symbol* p_PLACE = Symbol::get(MT::String("place"));
-  Symbol* p_ON = Symbol::get(MT::String("on"));
-  Symbol* p_OUT = Symbol::get(MT::String("out"));
-  
-  // calc clear and not-clear guys (out guys are not contained!)
-  uintA clearGuys = reason::getConstants();
-  uintA nonClearGuys;
-  FOR1D(state.lits, i) {
-    if (state.lits(i)->s == p_ON) {
-      clearGuys.removeValueSafe(state.lits(i)->args(1));
-      nonClearGuys.setAppend(state.lits(i)->args(1));
-    }
-  }
-  if (id_hand != UINT_MAX) {
-    clearGuys.removeValueSafe(id_hand);
-    nonClearGuys.setAppend(id_hand);
-  }
-  // PRINT(clearGuys)
-  // PRINT(nonClearGuys)
-  CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
-  CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
-  
-  // calc out-guys
-  uintA outGuys;
-  FOR1D(state.lits, i) {
-    if (state.lits(i)->s == p_OUT) {
-      outGuys.setAppend(state.lits(i)->args(0));
-    }
-  }
-  
-  
-  // determine action
-  double randNum;
-  bool sensible_action;
-  if (rnd.uni() < SAMPLING__PROB_SENSIBLE_ACTION)
-    sensible_action = true;
-  else
-    sensible_action = false;
-  Symbol* p_action;
-  if (sensible_action) {
-    if (id_hand == UINT_MAX) {
-      p_action = p_LIFT;
-    }
-    else {
-      p_action = p_PLACE;
-    }
-    if (DEBUG>0) cout << "SENSIBLE action TYPE   " << p_action->name << endl;
-  }
-  else {
-    if (id_hand == UINT_MAX) {
-      p_action = p_PLACE;
-    }
-    else {
-      p_action = p_LIFT;
-    }
-    if (DEBUG>0) cout << "STUPID action TYPE   " << p_action->name << endl;
-  }
-    
-  
-  // calc sensible targets
-  uintA sensibleGuys = clearGuys;
-  setMinus(sensibleGuys, outGuys);
-  uintA nonSensibleGuys = nonClearGuys;
-  nonSensibleGuys.setAppend(outGuys);
-    
-  // introduce bias for building high tower
-  uintA piles;
-  RobotManipulationInterface::calcPiles(s, piles, id_table);
-
-  uintA sa(2);
-  
-  // lift
-  if (p_action == p_LIFT) {
-    nonSensibleGuys.removeValue(id_table);
-    randNum = rnd.uni();
-    double fraction_sensible = (1.0 * sensibleGuys.N) / (sensibleGuys.N + nonSensibleGuys.N);
-    double limit = TL_MAX(SAMPLING__PROB_GRAB_CLEARGUY, 0.8*fraction_sensible);
-    if (nonSensibleGuys.N == 1 && nonSensibleGuys(0) == id_table) // don't perform stupid action if only table grabable candidate then
-      randNum = 0.;
-    if (DEBUG>1) {
-      PRINT(sensibleGuys);
-      PRINT(nonSensibleGuys);
-      PRINT(fraction_sensible);
-      PRINT(limit);
-      PRINT(randNum);
-    }
-    // -------------------------
-    //  Argument 1 = active lifted object
-    if (randNum < limit) {
-      if (DEBUG>0) cout<<"SENSIBLE ACTION TARGET"<<endl;
-      if (sensibleGuys.N>0) {
-        // take low one
-        arr weights(sensibleGuys.N);
-        weights.setUni(1.0);
-//         RobotManipulationInterface::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, false, id_table);
-        sa(0) = sensibleGuys(TL::basic_sample(weights));
-      }
-      else // must grab non_clear guy
-        sa(0) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-    }
-    else { 
-      if (DEBUG>0) cout<<"STUPID ACTION TARGET"<<endl;
-      if (numberSharedElements(nonSensibleGuys, outGuys) < nonSensibleGuys.N) {
-        do {
-          sa(0) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-        } while (outGuys.findValue(sa(0)) >= 0);
-      }
-      else // must pickup clear guy
-        sa(0) = sensibleGuys(rnd.num(sensibleGuys.N));
-    }
-    
-    // -------------------------
-    //  Argument 2 = passive object (where to lift from)
-    if (rnd.uni() > 0.9  ||  !sensible_action) {
-      sa(1) = reason::getConstants()(rnd.num(reason::getConstants().N));
-    }
-    else {
-      sa(1) = RobotManipulationInterface::getBelow(sa(0), s);
-    }
-  }
-  // place
-  else {
-    sensibleGuys.append(id_table); // table is always clear
-    sensibleGuys.append(id_hand);
-    nonSensibleGuys.removeValueSafe(id_table);
-    randNum = rnd.uni();
-    double fraction_sensible = (1.0 * sensibleGuys.N) / (sensibleGuys.N + nonSensibleGuys.N);
-    double limit = TL_MAX(SAMPLING__PROB_PUTON_CLEARGUY, fraction_sensible);
-    if (DEBUG>1) {
-      PRINT(sensibleGuys);
-      PRINT(nonSensibleGuys);
-      PRINT(fraction_sensible);
-      PRINT(limit);
-      PRINT(randNum);
-    }
-    // -------------------------
-    //  Argument 2 = target object, where object shall be placed
-    if (randNum < limit) {  // PUTTING ON CLEAR GUY
-      if (DEBUG>0) cout<<"SENSIBLE ACTION TARGET"<<endl;
-      if (sensibleGuys.N>0) {  // clear guy indeed available
-        // put on high guy, digga
-        arr weights;
-        RobotManipulationInterface::calcSkyscraperWeights(sensibleGuys, piles, skyscraper_bias, weights, true, id_table);
-                // bias for putting on blocks (instead of on balls)
-        FOR1D(sensibleGuys, i) {
-//                   cout<<sensibleGuys(i);
-          if (RobotManipulationInterface::isBlock(sensibleGuys(i), s)) {   // prefer blocks
-//                     cout<<" is block"<<endl;
-            weights(i) *= 3.;
-          }
-        }
-//                 cout<<"PUTON: ";PRINT(weights);cout<<endl;
-        sa(1) = sensibleGuys(TL::basic_sample(weights));
-        // lowering chance for table
-        if (sa(1) == id_table) {
-          sa(1) = sensibleGuys(TL::basic_sample(weights));
-        }
-      }
-      else // no clear guy available --> put on non-clear guy
-        sa(1) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-    }
-    else {   // PUTTING ON NON-CLEAR GUY
-      if (DEBUG>0) cout<<"STUPID ACTION TARGET"<<endl;
-      if (nonSensibleGuys.N>0) { // non-clear guy available
-        sa(1) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-        // artifically lower chance for putting on inhand- or out-object
-        // by sampling a second time
-        if (sa(1) == id_hand || outGuys.findValue(sa(1))>=0) {
-          sa(1) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-          if (sa(1) == id_hand || outGuys.findValue(sa(1))>=0) {
-            if (sa(1) == id_hand || outGuys.findValue(sa(1))>=0) {
-              sa(1) = nonSensibleGuys(rnd.num(nonSensibleGuys.N));
-            }
-          }
-        }
-      }
-      else // no non-clear guy available --> put on clear guy
-        sa(1) = sensibleGuys(rnd.num(sensibleGuys.N));
-    }
-    
-    // -------------------------
-    //  Argument 1 = moved object
-    if (rnd.uni() > 0.9  ||  !sensible_action) {
-      sa(0) = reason::getConstants()(rnd.num(reason::getConstants().N));
-    }
-    else {
-      sa(0) = id_hand;
-    }
-  }
-  
-  return logicObjectManager::getLiteral(p_action, true, sa);
-}
-#endif
-
-
-
-Literal* RobotManipulationInterface::generateAction_trulyRandom(const SymbolicState& s, uint id_table) {
-  uint i;
-  
-  // choose action
-  HALT("funktioniertso nicht mit default action");
-  SymL syms_action;
-  Symbol::get_action(syms_action);
-  Symbol* action = syms_action(rnd.num(syms_action.N-1)+1); // omitting default action
- 
-  uintA sa(action->arity);
-  FOR1D(sa, i) {
-    sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
-    // first should never be table
-    if (i==0) {
-      while( sa(i) != id_table ){
-        sa(i) = reason::getConstants()(rnd.num(reason::getConstants().N));
-      }
-    }
-  }
-  
-  return Literal::get(action, sa, 1.);
 }
 
 
@@ -1133,7 +958,7 @@ StateTransitionL& RobotManipulationInterface::generateSimulationSequence(RobotMa
       break;
     }
     if (DEBUG > 2) {action->write(cout); cout << endl;}
-    RobotManipulationInterface::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
+    RobotManipulationInterface::executeAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
     state = RobotManipulationInterface::calculateSymbolicState(sim);
@@ -1144,19 +969,13 @@ StateTransitionL& RobotManipulationInterface::generateSimulationSequence(RobotMa
       sim->watch();
     if (DEBUG > 2) {
       cout<<"CHANGE:  ";
-      cout<<"\tBefore: "<<experiences.last()->add<<endl;
-      cout<<"\tAfter: "<<experiences.last()->del<<endl;
+      cout<<"\t"<<experiences.last()->changes<<endl;
     }
   }
   if (DEBUG > 1)
     cout << "sampleSimulationSequence [END]" << endl;
   return experiences;
 }
-
-
-
-
-
 
 
 void RobotManipulationInterface::generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
@@ -1199,7 +1018,7 @@ void RobotManipulationInterface::generateSimulationSequence_realistic(std::ostre
       break;
     }
     if (DEBUG > 2) {cout<<"ACTION: "; action->write(cout); cout << endl;}
-    RobotManipulationInterface::performAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
+    RobotManipulationInterface::executeAction(action, sim, SAMPLING__WAIT_SEC_AFTER_ACTION);
 //     sim->relaxPosition(); // needed to have a observe correct subsequent state
 //     sim->simulate(SAMPLING__WAIT_SEC_AFTER_ACTION); // needed to have a observe correct subsequent state
     logic_state_old = logic_state;
@@ -1225,4 +1044,5 @@ void RobotManipulationInterface::generateSimulationSequence_realistic(std::ostre
     cout << "sampleSimulationSequence [END]" << endl;
 }
 
-}  // namespace PRADA
+
+}  // namespace relational

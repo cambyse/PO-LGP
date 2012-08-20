@@ -30,16 +30,16 @@
 
 SchunkArm::SchunkArm():Process("SchunkArm") {
   s = new sSchunkArm();
-  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
+  birosInfo().getVariable(hardwareReference, "HardwareReference", this);
 }
 
 SchunkArm::~SchunkArm() { delete s; }
 
 void SchunkArm::open() {
-  s->openArm = birosInfo.getParameter<bool>("openArm", this, false);
+  s->openArm = birosInfo().getParameter<bool>("openArm", this, false);
   
   GeometricState *geo;
-  birosInfo.getVariable(geo, "GeometricState", this);
+  birosInfo().getVariable(geo, "GeometricState", this);
   geo->readAccess(this);
   s->motorIndex.resize(7);
   s->motorIndex(0) = geo->ors.getBodyByName("m3")->inLinks(0)->index;
@@ -51,18 +51,22 @@ void SchunkArm::open() {
   s->motorIndex(6) = geo->ors.getBodyByName("m9")->inLinks(0)->index;
   geo->deAccess(this);
   
-  if(s->openArm) 
+  if(s->openArm){
     s->open();
+  }else{
+    s->q_real.resize(7);
+    s->q_real.setZero();
+  }
   
   hardwareReference->writeAccess(this);
   if (hardwareReference->q_real.N<7) hardwareReference->q_real.resizeCopy(7);
-	if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
-	if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
+  if (hardwareReference->q_reference.N<7) hardwareReference->q_reference.resizeCopy(7);
+  if (hardwareReference->v_reference.N<7) hardwareReference->v_reference.resizeCopy(7);
   for (uint m=0; m<7; m++) {
-    hardwareReference->q_real(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
-		hardwareReference->q_reference(s->motorIndex(m)) = s->openArm ? (float)s->q_real(m) : 0;
-		hardwareReference->v_reference(s->motorIndex(m)) =  0.;
-	}
+    hardwareReference->q_real(s->motorIndex(m)) = (float)s->q_real(m);
+    hardwareReference->q_reference(s->motorIndex(m)) = (float)s->q_real(m);
+    hardwareReference->v_reference(s->motorIndex(m)) =  0.;
+  }
   hardwareReference->deAccess(this);
 }
 
@@ -74,13 +78,12 @@ void SchunkArm::step() {
     hardwareReference->deAccess(this);
     
     s->step();
-
+  
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++)
       hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
     hardwareReference->deAccess(this);
-  }
-  else {
+  }else{
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++)
       hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
@@ -97,7 +100,7 @@ void SchunkArm::close() {
 
 SchunkHand::SchunkHand():Process("SchunkHand") {
   s = new sSchunkHand();
-  birosInfo.getVariable(hardwareReference, "HardwareReference", this);
+  birosInfo().getVariable(hardwareReference, "HardwareReference", this);
 }
 
 SchunkHand::~SchunkHand() {
@@ -105,7 +108,7 @@ SchunkHand::~SchunkHand() {
 }
 
 void SchunkHand::open() {
-  s->openHand = birosInfo.getParameter<bool>("openHand", this, false);
+  s->openHand = birosInfo().getParameter<bool>("openHand", this, false);
   
   s->motorIndex.resize(7);
   for (uint m=0; m<=6; m++) s->motorIndex(m) = m+7;
@@ -140,8 +143,7 @@ void SchunkHand::step() {
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
     hardwareReference->deAccess(this);
-  }
-  else {
+  } else {
     hardwareReference->writeAccess(this);
     for (uint m=0; m<7; m++)
       hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
@@ -158,7 +160,7 @@ void SchunkHand::close() {
 
 SchunkSkin::SchunkSkin():Process("SchunkSkin") {
   s = new sSchunkSkin();
-  birosInfo.getVariable(skinPressure, "SkinPressure", this);
+  birosInfo().getVariable(skinPressure, "SkinPressure", this);
 }
 
 SchunkSkin::~SchunkSkin() {
@@ -166,7 +168,7 @@ SchunkSkin::~SchunkSkin() {
 }
 
 void SchunkSkin::open() {
-  s->openSkin = birosInfo.getParameter<bool>("openSkin", this, false);
+  s->openSkin = birosInfo().getParameter<bool>("openSkin", this, false);
   if (!s->openSkin) return;
   
   s->open();
@@ -230,10 +232,10 @@ sSchunkArm::sSchunkArm() {
 
 void sSchunkArm::open() {
   //get parameters
-  stepHorizon=birosInfo.getParameter<float>("schunkStepHorizon", 50);
-  maxStep=birosInfo.getParameter<float>("schunkMaxStep", .03);
-  sendMotion=birosInfo.getParameter<bool>("schunkSendArmMotion", false);
-  readPositions=birosInfo.getParameter<bool>("schunkReadArmPositions", false);
+  stepHorizon=birosInfo().getParameter<float>("schunkStepHorizon", 50);
+  maxStep=birosInfo().getParameter<float>("schunkMaxStep", .03);
+  sendMotion=birosInfo().getParameter<bool>("schunkSendArmMotion", true);
+  readPositions=birosInfo().getParameter<bool>("schunkReadArmPositions", false);
   
   cout <<" -- sSchunkArm init .." <<std::flush;
   addShutdown(this, shutdownLWA);
@@ -433,7 +435,7 @@ sSchunkHand::sSchunkHand() {
 
 void sSchunkHand::open() {
   //read parameters
-  sendMotion=birosInfo.getParameter<bool>("schunkSendHandMotion", true);
+  sendMotion=birosInfo().getParameter<bool>("schunkSendHandMotion", true);
   
   cout <<" -- sSchunkHand init .." <<std::flush;
   addShutdown(this, shutdownSDH);
@@ -446,11 +448,18 @@ void sSchunkHand::open() {
   int  can_id_write = 42;
   //int  rs232_port = 9;
   //int  rs232_baudrate = 115200;
-  hand->OpenCAN_ESD(can_net,
-                    can_baudrate,
-                    can_timeout,
-                    can_id_read,
-                    can_id_write);
+  try {
+    hand->OpenCAN_ESD(can_net,
+		      can_baudrate,
+		      can_timeout,
+		      can_id_read,
+		      can_id_write);
+  } catch (SDH::cSDHLibraryException* e) {
+    cerr <<"\ndemo-dsa main(): Caught exception from SDHLibrary: " <<e->what() <<". Giving up!\n";
+    delete e;
+  } catch (...) {
+    cerr <<"\ncaught unknown exception, giving up\n";
+  }
                     
   fingers.push_back(0);
   fingers.push_back(1);
@@ -540,7 +549,6 @@ void sSchunkHand::getPos(arr &q) {
 }
 
 void sSchunkHand::step() {
-
   if (isOpen && sendMotion) {
     setVelocities(v_reference, 360.);
     getPos(q_real);
@@ -816,6 +824,8 @@ void sSchunkSkin::open() {}
 void sSchunkSkin::close() {}
 void sSchunkSkin::step() {}
 void sSchunkSkin::getImage(byteA&) {}
+void sSchunkSkin::getIntegrals(arr&) {}
+void sSchunkSkin::report() { NICO }
 void schunkEmergencyShutdown(int) {}
 
 #endif

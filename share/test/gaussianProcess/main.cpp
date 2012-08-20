@@ -4,9 +4,9 @@
 #include<MT/plot.h>
 #include<MT/gaussianProcess.h>
 
+bool pltPause=true;
 
 double noise=.1,priorVar=1.,kernelRange=.2;
-
 void randomData(doubleA& X,doubleA& Y){
   X.setGrid(1,-4.,4.,5);
   Y=sin(X);
@@ -30,7 +30,7 @@ void testGP(){
 
   randomData(X,Y);
   gp.recompute(X,Y);
-  plotBelief(gp,-5.,5.,false);
+  plotBelief(gp,-5.,5., pltPause);
 }
 
 void testDerivativeObservations(){
@@ -43,24 +43,24 @@ void testDerivativeObservations(){
   gp.covDD_F = GaussKernelDD_F; //for plotKernel1D
   gp.covD_D = GaussKernelD_D; //for GP
 
-  plotKernel1D(gp,-3.,3.);
+  plotKernel1D(gp,-3.,3., pltPause);
 
   gp.appendDerivativeObservation(ARR(0),1,0);
   gp.appendObservation(ARR(0),0);
   gp.recompute();
-  plotBelief(gp,-5.,5.,true);
+  plotBelief(gp,-5.,5., pltPause);
   gp.appendObservation(ARR(1),1);
   gp.recompute();
-  plotBelief(gp,-5.,5.,true);
+  plotBelief(gp,-5.,5., pltPause);
   gp.appendObservation(ARR(2),0);
   gp.recompute();
-  plotBelief(gp,-5.,5.,true);
+  plotBelief(gp,-5.,5., pltPause);
   gp.appendObservation(ARR(.5),2);
   gp.recompute();
-  plotBelief(gp,-5.,5.,true);
+  plotBelief(gp,-5.,5., pltPause);
   gp.appendDerivativeObservation(ARR(2),0,0);
   gp.recompute();
-  plotBelief(gp,-5.,5.,true);
+  plotBelief(gp,-5.,5., pltPause);
 }
 
 void randomFunctions(){
@@ -74,7 +74,7 @@ void randomFunctions(){
   Xbase.setGrid(1,-1.,1.,50);
   Xbase.permuteRandomly();
   for(k=0;k<10;k++){
-    randomFunction(gp,Xbase,true);
+    randomFunction(gp,Xbase,pltPause);
   }
   /*
     byteA img(H,W);
@@ -85,6 +85,8 @@ void randomFunctions(){
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
+
+  if(MT::checkCmdLineTag("test")) pltPause=false;
 
   testGP();
   

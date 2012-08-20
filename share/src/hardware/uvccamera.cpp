@@ -18,40 +18,53 @@ extern "C"
 #include "hardware.h"
 //#include "common.h"
 
-struct sCamera{
+struct Workspace;
+
+struct sUVCCamera{
   Image *camL,* camR;
-  UVC *cam;
+
+  const char* device_name;
+      
+  sUVCCamera();
+  ~sUVCCamera();
+  void open();
+  void close();
+  void grab(byteA& img);
+
+private:
+   Workspace*  workspace_;
+
 };
+
 
 UVCCamera::UVCCamera():Process("UVC"){
-  s = new sCamera;
-  birosInfo.getVariable(s->camL, "CameraL", this);
-  birosInfo.getVariable(s->camR, "CameraR", this);
+  s = new sUVCCamera;
+  birosInfo().getVariable(s->camL, "CameraL", this);
+  birosInfo().getVariable(s->camR, "CameraR", this);
 };
 
+UVCCamera::~UVCCamera(){
+  delete s;
+}
+
 void UVCCamera::open(){
-  s->cam = new UVC();
-  s->cam->open();
+  s->open();
 };
 
 void UVCCamera::step(){
   byteA tmp;
-  s->cam->grab(tmp);
+  s->grab(tmp);
   s->camR->set_img(tmp, this);
   s->camL->set_img(tmp, this);
 };
 
 void UVCCamera::close(){
-  s->cam->close();
-  delete s->cam;
+  s->close();
 };
 
 /******************************************************************************
  * common stuff
  ******************************************************************************/
-#define ERROR(msg) { std::cerr << "ERROR: " << __FILE__ << ':' \
-             << __LINE__ << " : " << msg << std::endl; \
-             throw STRING(msg);}
 inline int min(int a, int b) { return (a < b ? a : b); }
 //inline int clip(int v) { return (v>255) ? 255 : ((v<0) ? 0 : v); }
 inline byte clip(int v) { return (v&0xf00)?(byte)0xff:(byte)v; } //cheaper version
@@ -84,7 +97,7 @@ struct UVCCameraBuffer
    uint  length;
 };
 
-struct UVCCameraWorkspace
+struct Workspace
 {
    MT::Array<UVCCameraBuffer> buffers_;               // pointers to frame data (mmap'd)
    uint                 frame_size_;
@@ -103,17 +116,17 @@ struct UVCCameraWorkspace
    struct v4l2_requestbuffers req;                    // data transfer negotiations
 
    int *conv_rv, *conv_gv, *conv_gu, *conv_bu;
-   UVCCameraWorkspace();
-   ~UVCCameraWorkspace();
+   Workspace();
+   ~Workspace();
 };
 
 // -----------------------------------------------------------------------------
 //                                                            utility functions
 // -----------------------------------------------------------------------------
-void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace& ws, bool swap=false);
-inline int stat_device(const UVCCameraWorkspace* const ws);
+void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const Workspace& ws, bool swap=false);
+inline int stat_device(const Workspace* const ws);
 
-UVCCameraWorkspace::UVCCameraWorkspace()
+Workspace::Workspace()
 {
    // Look-up table w/ coefficients to convert YUV buffer to RGB
    conv_rv = new int[256];
@@ -130,7 +143,7 @@ UVCCameraWorkspace::UVCCameraWorkspace()
    }
 };
 
-UVCCameraWorkspace::~UVCCameraWorkspace()
+Workspace::~Workspace()
 {
    delete [] conv_rv;
    delete [] conv_gv;
@@ -142,19 +155,19 @@ UVCCameraWorkspace::~UVCCameraWorkspace()
 // -----------------------------------------------------------------------------
 //                                                                    UVC
 // -----------------------------------------------------------------------------
-UVC::UVC():
+sUVCCamera::sUVCCamera():
   workspace_(NULL){
   device_name = "/dev/video0";
 
-   workspace_ = new UVCCameraWorkspace();
+   workspace_ = new Workspace();
 }
 
-UVC::~UVC()
+sUVCCamera::~sUVCCamera()
 {
    delete workspace_;
 }
 
-void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace& ws, bool swap)
+void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const Workspace& ws, bool swap)
 {
   int len = min(frame.N, src.length);
   int half_img_size = len / 4;                       // 4 b/c of (Y0 U Y1 V)
@@ -235,7 +248,7 @@ void yuyv2rgb(byteA& frame, const UVCCameraBuffer& src, const UVCCameraWorkspace
   }
 }
 
-inline int stat_device(const UVCCameraWorkspace* const ws)
+inline int stat_device(const Workspace* const ws)
 {
    struct stat buf;
    int ret = fstat(ws->device_file_desc_, &buf);
@@ -244,11 +257,11 @@ inline int stat_device(const UVCCameraWorkspace* const ws)
       switch(errno)
       {
          case EIO:
-            ERROR("I/O error occurred while reading from the file system");
+            HALT("I/O error occurred while reading from the file system");
          case EBADF:
-            ERROR("The file descriptor argument is not a valid one");
+            HALT("The file descriptor argument is not a valid one");
          default:
-            ERROR("fstat() failed on device");
+            HALT("fstat() failed on device");
       }
    }
    else
@@ -258,27 +271,27 @@ inline int stat_device(const UVCCameraWorkspace* const ws)
 
 
 
-void UVC::open(){
+void sUVCCamera::open(){
    if (workspace_->is_initialized_)
-      ERROR("device has been initialized already");
+      HALT("device has been initialized already");
 
    workspace_->width_ = DEFAULT_WIDTH;
    workspace_->height_ = DEFAULT_HEIGHT;
 
    workspace_->device_file_desc_ = ::open(device_name, O_RDWR, 0);
    if (workspace_->device_file_desc_ == -1)
-      ERROR("device cannot be opened");
+      HALT("device cannot be opened");
 
    //
    // set up initial parameters
    //
    if (stat_device(workspace_) == -1)
-      ERROR("Cannot stat device");
+      HALT("Cannot stat device");
    // query camera capabilities
    if (ioctl(workspace_->device_file_desc_, VIDIOC_QUERYCAP, &workspace_->capability) == -1)
-      ERROR("Cannot query device: VIDIOC_QUERYCAP");  // not a V4L2 device
+      HALT("Cannot query device: VIDIOC_QUERYCAP");  // not a V4L2 device
    if (!(workspace_->capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
-      ERROR("this is not a video capture device");
+      HALT("this is not a video capture device");
 
    //
    // set up data format
@@ -296,11 +309,11 @@ void UVC::open(){
       switch(errno)
       {
          case EAGAIN:
-            ERROR("cannot set video format: VIDIOC_S_FMT + EAGAIN");
+            HALT("cannot set video format: VIDIOC_S_FMT + EAGAIN");
          case EIO:
-            ERROR("cannot set video format: VIDIOC_S_FMT + EIO");
+            HALT("cannot set video format: VIDIOC_S_FMT + EIO");
          default:
-            ERROR("cannot set video format: VIDIOC_S_FMT");
+            HALT("cannot set video format: VIDIOC_S_FMT");
             break;
       }
 
@@ -318,7 +331,7 @@ void UVC::open(){
          workspace_->frame_size_ = workspace_->width_ * workspace_->height_ * 2;
          break;
       default:
-         ERROR("Cannot set pixel format: unknown format");
+         HALT("Cannot set pixel format: unknown format");
          break;
    }
 
@@ -326,7 +339,7 @@ void UVC::open(){
    // set up memory buffers
    //
    if (!(workspace_->capability.capabilities & V4L2_CAP_STREAMING))
-      ERROR("Cannot initialize MMAP: device does not support streaming");
+      HALT("Cannot initialize MMAP: device does not support streaming");
 
    // requesting the default number of buffers for mmapping.
    memset(&workspace_->req, 0, sizeof(v4l2_requestbuffers));
@@ -335,9 +348,9 @@ void UVC::open(){
    workspace_->req.memory = V4L2_MEMORY_MMAP;
 
    if (ioctl(workspace_->device_file_desc_, VIDIOC_REQBUFS, &workspace_->req) == -1)
-      ERROR("Cannot initialize MMAP: VIDIOC_REQBUFS");
+      HALT("Cannot initialize MMAP: VIDIOC_REQBUFS");
    if (workspace_->req.count < 2)
-      ERROR("Cannot initialize MMAP: VIDIOC_REQBUFS + insufficient memory");
+      HALT("Cannot initialize MMAP: VIDIOC_REQBUFS + insufficient memory");
 
    // Enqueue the number of buffers which were requested (and granted), followed
    // by memory mapping them into the address space of our application.
@@ -352,7 +365,7 @@ void UVC::open(){
       buf.index       = i;
 
       if (ioctl(workspace_->device_file_desc_, VIDIOC_QUERYBUF, &buf) == -1)
-         ERROR("Cannot initialize MMAP: VIDIOC_QUERYBUF");
+         HALT("Cannot initialize MMAP: VIDIOC_QUERYBUF");
 
       void* start = mmap(
                          NULL,                        // let mmap choose address
@@ -364,7 +377,7 @@ void UVC::open(){
                         );
 
       if (start == MAP_FAILED)
-         ERROR("Cannot initialize MMAP: memory could not be mapped");
+         HALT("Cannot initialize MMAP: memory could not be mapped");
 
       workspace_->buffers_.p[i].start = start;
       workspace_->buffers_.p[i].length = buf.length;
@@ -372,7 +385,7 @@ void UVC::open(){
 
    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    if (ioctl(workspace_->device_file_desc_, VIDIOC_STREAMON, &type))
-      ERROR("cannot start streaming");
+      HALT("cannot start streaming");
 
    workspace_->is_initialized_ = true;
 
@@ -380,14 +393,14 @@ void UVC::open(){
    grab(tmp);
 }
 
-void UVC::close(){
+void sUVCCamera::close(){
    if(workspace_->is_initialized_)
    {
       // stop capturing
       enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       int ret = ioctl(workspace_->device_file_desc_, VIDIOC_STREAMOFF, &type);
       if(ret < 0)
-         ERROR("Cannot stop capturing: VIDIOC_STREAMOFF");
+         HALT("Cannot stop capturing: VIDIOC_STREAMOFF");
 
       // undo mmap
       for(uint i = 0; i < workspace_->buffers_.N; i++)
@@ -401,7 +414,7 @@ void UVC::close(){
    }
 }
 
-void UVC::grab(byteA& img)
+void sUVCCamera::grab(byteA& img)
 {
    int ret;                                           // return value of iotcl
    fd_set fds;                                        // FD set for select()
@@ -415,10 +428,9 @@ void UVC::grab(byteA& img)
    tv.tv_sec  = 2;                                    // Set the timeout to 2s
    tv.tv_usec = 0;
    ret = select(workspace_->device_file_desc_+1, &fds, NULL, NULL, &tv);
-   if (ret == 0)
-   {ERROR("Cannot capture rawframe: timeout");}
+   if (ret == 0){ HALT("Cannot capture rawframe: timeout"); }
    else if(ret < 0 && errno != EINTR)                 // Something bad happened
-     ERROR("Cannot capture rawframe: select(...) failed");
+     HALT("Cannot capture rawframe: select(...) failed");
 
    // retrieve frame data
    struct v4l2_buffer buf;
@@ -434,7 +446,7 @@ void UVC::grab(byteA& img)
    
    
    if (ioctl(workspace_->device_file_desc_, VIDIOC_QBUF, &buf) == -1)
-     ERROR("cannot queue buffer");
+     HALT("cannot queue buffer");
 }
 
 

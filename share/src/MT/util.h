@@ -72,6 +72,7 @@
 typedef unsigned char byte;            //!< byte
 typedef unsigned short int uint16;     //!< 2 bytes
 typedef unsigned int uint;             //!< unsigned integer
+typedef const char* charp;
 
 //----- macros to define the standard <<and >>operatos for most my classes:
 #define stdInPipe(type)\
@@ -218,8 +219,6 @@ private:
     char *getIpos();
   } buffer;
   void init();
-  void append(char x);
-  void resize(uint n, bool copy);
   
 public:
   //!@name data fields
@@ -248,6 +247,8 @@ public:
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
+  void resize(uint n, bool copy); //low-level resizing the string buffer - fully uninitialized but with final 0
+  void append(char x); //low-level append a char
   
   //!@name resetting
   String& clear();       //as with Array: resize(0)
@@ -263,7 +264,7 @@ public:
   
   //!@name misc
   bool contains(const String& substring) const;
-  
+
   //!@name I/O
   void write(std::ostream& os) const;
   void read(std::istream& is, const char* skipSymbols=NULL, const char *stopSymbols=NULL, int eatStopSymbol=-1);
@@ -496,7 +497,7 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command, const char* EPSfile=NULL, bool persist=false);
+void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
 void gnuplotClose();
 
 

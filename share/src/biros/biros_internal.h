@@ -6,7 +6,6 @@
 
 typedef unsigned int uint;
 
-
 //===========================================================================
 //
 // simple wrappers of basic threading ingredients
@@ -17,49 +16,53 @@ bool setNice(int);
 
 //! a basic mutex lock
 struct Mutex {
-  const char* msg;
-  pthread_mutex_t _lock;
+  pthread_mutex_t mutex;
+  int state; ///< 0=unlocked, 1=locked
   
   Mutex();
   ~Mutex();
   
-  void lock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
-  void unlock();                          ///< thread must unlock when they're done
+  void lock();
+  void unlock();
 };
 
 //! a basic read/write access lock
 struct Lock {
-  int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
-  const char* msg;
-  Mutex stateMutex;
   pthread_rwlock_t lock;
+  int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
+  Mutex stateMutex;
   
   Lock();
   ~Lock();
   
-  void readLock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
-  void writeLock(const char* _msg=NULL);  ///< only one thread may request 'lock for write'
-  void unlock();                          ///< thread must unlock when they're done
+  void readLock();   ///< multiple threads may request 'lock for read'
+  void writeLock();  ///< only one thread may request 'lock for write'
+  void unlock();     ///< thread must unlock when they're done
 };
 
 //! a basic condition variable
 struct ConditionVariable {
   int state;
-  pthread_mutex_t mutex;
+  Mutex stateMutex;
   pthread_cond_t  cond;
   
-  ConditionVariable();
+  ConditionVariable(int initialState=0);
   ~ConditionVariable();
   
-  int  getState();
-  int  setState(int i);
-  void broadcast();
-  void waitForSignal();
-  void waitForSignal(double seconds);
-  int  waitForStateEq(int i);    ///< return value is the state after the waiting
-  int  waitForStateNotEq(int i); ///< return value is the state after the waiting
-  int waitForStateGreaterThan(int i); ///< return value is the state after the waiting
-  void waitUntil(double absTime);
+  void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
+  
+  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
+  void unlock();
+  
+  int  getState(bool userHasLocked=false);
+  void waitForSignal(bool userHasLocked=false);
+  void waitForSignal(double seconds, bool userHasLocked=false);
+  void waitForStateEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForStateNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitUntil(double absTime, bool userHasLocked=false);
 };
 
 //===========================================================================
@@ -104,11 +107,11 @@ struct CycleTimer {
 
 //Variable's internal data
 struct sVariable {
-  Variable *p;
-  Lock lock;
+  Lock rwlock;
   ConditionVariable cond; //to broadcast write access to this variable
+  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
   
-  sVariable(Variable *_p) { p = _p; }
+  sVariable():loggerData(NULL){}
 };
 
 enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
@@ -123,14 +126,7 @@ struct sProcess {
   uint skips;                          ///< how often a step was requested but (because busy) skipped
   int threadPriority;                  ///< priority of this thread
   
-  sProcess() {
-    skips=0;
-    threadCondition.setState(tsCLOSE);
-    tid=0;
-    threadPriority=0;
-    thread=0;
-    metronome = NULL;
-  };
+  sProcess(): thread(0), tid(0), threadCondition(tsCLOSE), metronome(NULL), skips(0), threadPriority(0) {}
   
   static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
 };

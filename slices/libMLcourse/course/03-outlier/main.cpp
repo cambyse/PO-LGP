@@ -31,6 +31,7 @@ void testOutlier(){
     
     y_pred = Phi*beta;
     y_test = Phi_test*beta;
+    write(LIST(X, y), "train_pure");
     write(LIST(X, y, y_pred, q, e, w), "train");
     write(LIST(X_test, y_test), "model");
     //y_test = Phi_test*beta_true;  write(LIST(X_test, y_test), "true");

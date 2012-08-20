@@ -627,13 +627,16 @@ bool TL::isAcyclic(boolA adjMatrix) {
 
 
 double TL::getcputime() {
+  double t = 0;
+#ifndef MT_MSVC
   struct timeval tim;
   struct rusage ru;
   getrusage(RUSAGE_SELF, &ru);
   tim=ru.ru_utime;
-  double t=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
+  t=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
   tim=ru.ru_stime;
   t+=(double)tim.tv_sec + (double)tim.tv_usec / 1000000.0;
+#endif
   return t;
 }
 

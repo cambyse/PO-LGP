@@ -2,6 +2,9 @@
 #include <perception/perception.h>
 #include <hardware/hardware.h>
 
+#include <biros/biros_views.h>
+#include <biros/control.h>
+#include <MT/ors.h>
 
 /* What doesn't work yet:
  
@@ -27,13 +30,9 @@ int main(int argn,char** argv){
   JoystickState joystickState;
   
   // processes
-  Controller controller;
-  ActionProgressor actionProgressor;
+  Process* ctrl = newMotionController(&hardwareReference, NULL, &motions);
+  newActionProgressor(motions);
   
-  // viewers
-  OrsViewer<GeometricState>     view0(geometricState);
-  PoseViewer<HardwareReference> view8(hardwareReference);
-
   //-- hardware
   // variables
   //(none)
@@ -58,33 +57,14 @@ int main(int argn,char** argv){
   HsvFilter hsvFilterL(hsvL, hsvEviL);
   HsvFilter hsvFilterR(hsvR, hsvEviR);
   ShapeFitter shapeFitter(hsvEviL, hsvEviR, percOut);
-  // viewers
-  ImageViewer<Image> view1(camL), view2(camR);
-  ImageViewer<Image> view3(hsvL), view4(hsvR);
-  ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
 
-  P.append(LIST<Process>(controller));
-  //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
-  //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
+  /////////////////////////////////////////////////////////////////////////////
+  // inside-out
 
-  //views don't need to be started -- they now listen!
-  ProcessL PV;
-  PV.append(LIST<Process>(view0));
-  //PV.append(LIST<Process>(view));
-  PV.append(LIST<Process>(view8));
-  //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
-  
-  //step(PV);
-  loopWithBeat(PV,.1);
+  b::dump();
+  b::openInsideOut();
 
-  //cam.threadLoop();
-  loopWithBeat(P,.01);
-
-  actionProgressor.threadLoopWithBeat(0.01);
-  
-  
-  cout <<"arrange your windows..." <<endl;
-  MT::wait(1.);
+  ctrl->threadLoopWithBeat(.01);
   
   //pick-and-place loop
   for(uint k=0;k<2;k++){
@@ -110,7 +90,7 @@ int main(int argn,char** argv){
   cam.threadClose();
   close(P);
 
-  birosInfo.dump();
+  birosInfo().dump();
   cout <<"bye bye" <<endl;
   return 0;
 }

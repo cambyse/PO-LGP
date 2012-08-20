@@ -51,21 +51,23 @@ static void sleepForEvents(void) {
 #ifdef MT_Linux
   if (! XPending(fgDisplay.Display)) {
     fd_set fdset;
-    int err=0;
-    int socket;
     struct timeval wait;
     
-    socket = ConnectionNumber(fgDisplay.Display);
+    int socket = ConnectionNumber(fgDisplay.Display);
     FD_ZERO(&fdset);
     FD_SET(socket, &fdset);
     wait.tv_sec = 10000 / 1000;
     wait.tv_usec = (10000 % 1000) * 1000;
-    err = select(socket+1, &fdset, NULL, NULL, &wait);
+    int err = select(socket+1, &fdset, NULL, NULL, &wait);
     
+    if(-1 == err){
 #if HAVE_ERRNO
-    if ((-1 == err) && (errno != EINTR))
-      fgWarning("freeglut select() error: %d", errno);
+      if(errno != EINTR)
+	fgWarning("freeglut select() error: %d", errno);
+#else
+      MT_MSG("freeglut select() error");
 #endif
+    }
   }
 #elif defined MT_MSVC
   MsgWaitForMultipleObjects(0, NULL, FALSE, msec, QS_ALLINPUT);

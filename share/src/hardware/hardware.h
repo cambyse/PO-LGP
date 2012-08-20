@@ -3,28 +3,32 @@
 
 #include <biros/biros.h>
 
-struct HardwareReference;
-
 //===========================================================================
 //
 // Variables
 //
 
+struct HardwareReference;
+
 struct SkinPressure:public Variable {
   FIELD(arr, y_real);
   
   SkinPressure():Variable("SkinPressure") {
+    reg_y_real();
     y_real.resize(6);
     y_real.setZero();
   }
 };
 
-
 struct JoystickState: public Variable {
   FIELD(intA, state);
   FIELD(uint, n);
+  FIELD(bool, exitSignal);
   
-  JoystickState():Variable("JoystickState") {
+  JoystickState():Variable("JoystickState"), n(0), exitSignal(false) {
+    reg_state();
+    reg_n();
+    reg_exitSignal();
     state.resize(1);
     state(0)=0;
   }
@@ -36,6 +40,13 @@ struct JoystickState: public Variable {
 //
 // Processes
 //
+
+//TODO:
+// Process* newBumblebee(Image& left, Image& right);
+// Process* newJoystick(JoystickState &joy);
+// Process* newSchunkArm(HardwareReference &ref);
+// Process* newSchunkHand(HardwareReference &ref);
+// Process* newSchunkSkin(SkinPressure &skin);
 
 PROCESS(Camera)
 

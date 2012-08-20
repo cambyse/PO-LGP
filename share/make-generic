@@ -13,10 +13,10 @@ endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
-$(info ------------------------------------------------------------)
-$(info make $(shell pwd -L) )
-$(info BASE=$(BASE) )
-$(info ------------------------------------------------------------)
+# $(info ------------------------------------------------------------)
+# $(info make $(shell pwd -L) )
+# $(info BASE=$(BASE) )
+# $(info ------------------------------------------------------------)
 
 ################################################################################
 #
@@ -99,7 +99,6 @@ endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
-LIBS    += -lrt 
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -194,9 +193,9 @@ endif
 
 ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
+CPATH   := $(CPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/include:$(MLR_EXLIB_PATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
+LPATH   := $(LPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/lib:$(MLR_EXLIB_PATH)/schunkLWA/lib:$(MLR_EXLIB_PATH)/ntcan/lib
 LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -234,9 +233,14 @@ endif
 ifeq ($(GTK),1)
 #CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 #LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-CXXFLAGS += `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
-LIBS     += `pkg-config --libs gtk+-2.0 gtkglext-1.0`
+CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs  gtk+-2.0 gtkglext-1.0` -lgthread-2.0
 #LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+endif
+
+ifeq ($(GRAPHVIZ),1)
+CXXFLAGS += -DMT_GRAPHVIZ
+LIBS += -lgraph -lcgraph -lgvc
 endif
 
 ifeq ($(WX),1)
@@ -318,6 +322,12 @@ CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
 endif
 
+ifeq ($(OCTAVE),1)
+LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
+LIBS	+= -loctinterp -loctave
+# TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!
+endif
+
 ifeq ($(SOIL),1)
 CXXFLAGS  += -DTL_SOIL
 LIBS    += -lSOIL
@@ -334,6 +344,12 @@ MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
 #MSVCLibs += libcblas.a libclapack.a libcblaswr.a libatlas.a libF77.a libc.lib libcygwin.a
 endif
 
+ifeq ($(OPENCV),1)
+CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv`
+CXXFLAGS += `pkg-config --cflags-only-I opencv`
+%CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
+LIBS      += `pkg-config --libs opencv`
+endif
 
 # newer qhull version?
 ifeq ($(ARCH_LINUX),1)
@@ -376,13 +392,6 @@ ifeq ($(PCL),1)
 QHULL = 1
 CXXFLAGS  +=  -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
 LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
-endif
-
-ifeq ($(OPENCV),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv`
-CXXFLAGS += `pkg-config --cflags-only-I opencv`
-%CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
-LIBS      += `pkg-config --libs opencv`
 endif
 
 ifeq ($URGLASER),1)
@@ -433,6 +442,27 @@ CXXFLAGS  += -DMT_PTHREAD
 LIBS += -lpthread -lX11
 endif
 
+ifeq ($(PHYSX),1)
+CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/PhysX/Include:$(MLR_EXLIB_PATH)/PhysX/Include/extensions:$(MLR_EXLIB_PATH)/PhysX/Include/foundation:$(MLR_EXLIB_PATH)/PhysX/Include/deprecated
+LPATH := $(MLR_EXLIB_PATH)/PhysX/Lib/linux32/:$(LPATH)
+LIBS += -Wl,--start-group -lpthread -lrt\
+-lPhysX3CommonCHECKED \
+-lPvdRuntimeCHECKED \
+-lSimulationControllerCHECKED \
+-lSceneQueryCHECKED \
+-lLowLevelCHECKED \
+-lLowLevelClothCHECKED \
+-lPhysX3 \
+-lPhysX3VehicleCHECKED \
+-lPhysX3CookingCHECKED \
+-lPhysX3ExtensionsCHECKED \
+-lPhysX3CharacterKinematicCHECKED \
+-lRepX3CHECKED \
+-lRepXUpgrader3CHECKED \
+-lPhysXProfileSDKCHECKED \
+-lPxTaskCHECKED -Wl,--end-group
+endif
 
 ################################################################################
 #
@@ -492,7 +522,7 @@ export MSVC_LPATH
 
 ################################################################################
 #
-# make targets
+# concrete make targets
 #
 ################################################################################
 
@@ -620,5 +650,30 @@ generate_Makefile.dep: $(OBJS:%.o=%.cpp)
 
 includeAll.cxx: force
 	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
+
+################################################################################
+#
+# meta rules -- for calling make in other directories
+#
+################################################################################
+
+makePath/%::
+	$(MAKE) -C $*
+
+cleanPath/%::
+	$(MAKE) clean -C $*
+
+makeSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;
+
+cleanSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+
+doc::
+	$(MAKE) -C doc doxy_array
+
+zip::
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude
+
 
 force:	;

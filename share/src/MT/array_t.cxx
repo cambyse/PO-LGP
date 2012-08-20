@@ -379,6 +379,7 @@ template<class T> void MT::Array<T>::freeMEM() {
   pp=NULL;
   sparse=NULL;
   d=&d0;
+  reference=false;
 }
 
 //! reset the dimensionality pointer d to point to &d0
@@ -646,15 +647,9 @@ template<class T> T& MT::Array<T>::rndElem() const {
   return elem(rnd(N));
 }
 
-/* scalar reference (legal iff N==1) */
-/*operator T&() const{
-  CHECK(N==1, "scalar reference (" <<N <<"!=1)");
-  return *p;
-  }*/
-
 //! scalar reference (valid only for a 0-dim or 1-dim array of size 1)
 template<class T> T& MT::Array<T>::scalar() const {
-  CHECK(nd==0 && N==1, "scalar range error (N=" <<N <<")");
+  CHECK(nd<=1 && N==1, "scalar range error (N=" <<N <<", nd=" <<nd <<")");
   return *p;
 }
 
@@ -1405,7 +1400,11 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
-  
+
+  if(!ELEMSEP) ELEMSEP=MT::arrayElemsep;
+  if(!LINESEP) LINESEP=MT::arrayLinesep;
+  if(!BRACKETS) BRACKETS=MT::arrayBrackets;
+
   if(binary) {
     writeDim(os);
     os <<std::endl;
@@ -1892,6 +1891,10 @@ template<class T> T sum(const MT::Array<T>& v) {
   T t(0);
   for(uint i=v.N; i--; t+=v.p[i]) {};
   return t;
+}
+
+template<class T> T scalar(const MT::Array<T>& x) {
+  return x.scalar();
 }
 
 //! \f$\sum_i x_i\f$

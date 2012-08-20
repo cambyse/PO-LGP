@@ -111,7 +111,7 @@ void DecisionMakingModule::step() {
     if (DEBUG>0) {cout<<"Reward:  "; reward->write(); cout<<endl;}
     
     // ground rules
-    relational::SymbolicState* s_groundingHelper = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+    relational::SymbolicState* s_groundingHelper = relational::RobotManipulationInterface::calculateSymbolicState(&sim);
     if (DEBUG>0) {cout<<"s_groundingHelper:"<<endl;  s_groundingHelper->write();  cout<<endl;}
     relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), *s_groundingHelper);
     delete s_groundingHelper;
@@ -126,7 +126,7 @@ void DecisionMakingModule::step() {
   
   
   // Read state
-  relational::SymbolicState* s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+  relational::SymbolicState* s = relational::RobotManipulationInterface::calculateSymbolicState(&sim);
   if (DEBUG>0) {cout<<"STATE:"<<*s<<endl;}
   
   // Check if finished

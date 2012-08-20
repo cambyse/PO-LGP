@@ -3,6 +3,8 @@
 [ -z "${MLR_EXLIB_PATH}" ] && MLR_EXLIB_PATH=$HOME/lib
 THIS_PATH=$PWD
 URL=http://sourceforge.net/projects/ibds/files/ibds/IBDS%201.09/IBDS-1.09.tar.gz/download
+DOWNLOAD_PATH=ibds
+LIBNAME=ibds
 
 echo "Calling path:" $THIS_PATH
 
@@ -11,14 +13,17 @@ if [ ! -d $MLR_EXLIB_PATH ] ; then
   mkdir $MLR_EXLIB_PATH
 fi
 
-## download 
+## delete everything
 cd $MLR_EXLIB_PATH
-rm -R ibds
-wget $URL -O ibds.tgz
+rm -R $LIBNAME
+mkdir $LIBNAME
+cd $LIBNAME
 
-## unpack
-tar xvzf ibds.tgz
-cd ibds
+## download & unpack
+wget $URL -O $LIBNAME_sources.tgz
+tar xvzf $LIBNAME_sources.tgz
+mv $DOWNLOAD_PATH $LIBNAME_sources
+cd $LIBNAME_sources
 
 ## patch
 patch -p1 < $THIS_PATH/IBDS_patch
@@ -26,17 +31,17 @@ patch -p1 < $THIS_PATH/IBDS_patch
 ## make
 cd Linux_Make
 ./MakeIBDS.sh
-cd ..
+cd ../..
 
 ## arrange includes and libs
-mkdir include
+rm -Rf lib include
+mkdir lib include
 cd include
-ln -s ../DynamicSimulation
-ln -s ../CollisionDetection
-ln -s ../Math
+ln -s ../$LIBNAME_sources/DynamicSimulation
+ln -s ../$LIBNAME_sources/CollisionDetection
+ln -s ../$LIBNAME_sources/Math
 cd ..
+ln -s $LIBNAME_sources/lib
 
 ## clean
 find . -name '*.o' -delete
-rm ../ibds.tgz
-

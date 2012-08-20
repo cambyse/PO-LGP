@@ -5,6 +5,8 @@ OBJS = main.o behaviors.o
 #LIBS += -lhardware -lmotion -lperception
 
 OPENCV = 1
+GTK = 1
+GTKL = 1
 MAKEMODE = app
 
 include $(BASE)/make-generic

@@ -23,19 +23,9 @@
 #include <MT/plot.h>
 #include <relational/utilTL.h>
 
-#include <biros/logging.h>
-
-SET_LOG(simulator, DEBUG);
-
 #include "robotManipulationSimulator.h"
 #include <sstream>
 #include <limits>
-
-#if TL_SOIL
-#include <SOIL/SOIL.h>
-#endif
-
-MT::String ENDEFFECTOR = MT::getParameter<MT::String>("endeffector_name", MT::String("fing1c"));
 
 
 // SPECIFIC OBJECT KNOWLEDGE
@@ -47,39 +37,33 @@ MT::String ENDEFFECTOR = MT::getParameter<MT::String>("endeffector_name", MT::St
 #define NEUTRAL_HEIGHT_BONUS 0.5
 #define HARD_LIMIT_DIST_Y -0.8
 
-// !!!!!!!!!!!!!!!!!!!!!
-// ATTENTION: NOISE SPECIFICATIONS (noise of the robot actions) somewhere below.
-// !!!!!!!!!!!!!!!!!!!!!
+
+
+/************************************************
+* 
+*     Noise for actions
+* 
+*     THIS IS WHERE YOU CAN BRING IN YOUR OWN IDEAS OF "NOISE" ETC. !!!
+* 
+************************************************/
+
+double DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK = 0.001;
+double DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK = 0.003;
+double DROP_TARGET_NOISE__BALL_ON_BIG_BLOCK = 0.0066;
+double DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK = 0.02;
+double DROP_TARGET_NOISE__ON_BALL = 0.01;
+double GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0.4;
 
 
 
-
-
-
-
-
-
-
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-
-  // --------------------------------
-  // LOW LEVEL CONTROL
-  // --------------------------------
-  
+/************************************************
+* 
+*     Low-level control
+* 
+************************************************/
 
 uint gl_step = 0;
 uint revel_step = 0;
-
-
 
 void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,const char* text){
 #ifdef MT_ODE
@@ -87,8 +71,7 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
   C->calcBodyFramesFromJoints();
   if(ode){
     ode->exportStateToOde(*C);
-    ode->step(.005);
-    ode->step(.005);
+    ode->step(.01);
     ode->importStateFromOde(*C);
     //ode->importProxiesFromOde(*C);
   //C->getJointState(q);
@@ -134,17 +117,11 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+/************************************************
+* 
+*     Administration
+* 
+************************************************/
 
 // How many time-steps until action fails
 #define SEC_ACTION_ABORT 1000
@@ -163,24 +140,6 @@ RobotManipulationSimulator::~RobotManipulationSimulator(){
 }
 
 
-
-
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-
-// --------------------------------
-// ADMINISTRATION
-// --------------------------------
-
-
 arr q0, W;
 
 void drawEnv(void* horst){
@@ -189,23 +148,6 @@ void drawEnv(void* horst){
 //   glDrawFloor(4.,1,1,1);
   glDrawFloor(4., 108./255., 123./255., 139./255.);
 #endif
-}
-
-
-void RobotManipulationSimulator::calcObjectNumber() {
-  // determine number of objects
-  numObjects = 0;
-  // assuming that all objects start with "o"
-  std::stringstream ss;
-  uint i;
-  for (i=1;;i++) {
-    ss.str("");
-    ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n==0)
-      break;
-    numObjects++;
-  }
 }
 
 
@@ -255,14 +197,6 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
 }
 
 
-void RobotManipulationSimulator::write(const char* ors_filename){
-  NIY;
-//   MT::save(*C,ors_filename);
-}
-
-
-
-
 void RobotManipulationSimulator::startOde(double ode_coll_bounce, double ode_coll_erp, double ode_coll_cfm, double ode_friction) {
 #ifdef MT_ODE
   CHECK(C,"load a configuration first");
@@ -279,6 +213,7 @@ void RobotManipulationSimulator::startOde(double ode_coll_bounce, double ode_col
 #endif
 }
 
+
 void RobotManipulationSimulator::startSwift(){
 #ifdef MT_SWIFT
   if(swift) delete swift;
@@ -287,9 +222,6 @@ void RobotManipulationSimulator::startSwift(){
 #endif
 }
 
-void RobotManipulationSimulator::startIBDS(){
-  NIY;
-}
 
 void RobotManipulationSimulator::startRevel(const char* filename){
 #ifdef MT_REVEL
@@ -298,7 +230,6 @@ void RobotManipulationSimulator::startRevel(const char* filename){
   revel->open(gl->width(),gl->height(), filename);
 #endif
 }
-
 
 
 void RobotManipulationSimulator::shutdownAll(){
@@ -317,6 +248,15 @@ void RobotManipulationSimulator::shutdownAll(){
 #endif
 }
 
+
+
+
+
+/************************************************
+* 
+*     Standard simulation
+* 
+************************************************/
 
 
 void RobotManipulationSimulator::simulate(uint t, const char* message){
@@ -350,17 +290,498 @@ void RobotManipulationSimulator::watch(){
 }
 
 
-
 void RobotManipulationSimulator::indicateFailure(){
   // drop object
   ors::Joint* e;
   uint i;
-  for_list(i,e,C->getBodyByName(ENDEFFECTOR)->outLinks){
+  for_list(i,e,C->getBodyByName("fing1c")->outLinks){
     del_edge(e,C->bodies,C->joints,true); //otherwise: no object in hand
   }
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;
   relaxPosition();
 }
+
+
+
+
+
+
+
+/************************************************
+* 
+*     General object information (state-independent)
+* 
+************************************************/
+
+
+void RobotManipulationSimulator::calcObjectNumber() {
+  // determine number of objects
+  numObjects = 0;
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (n==0)
+      break;
+    numObjects++;
+  }
+}
+
+
+void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list all objects
+  objects.clear();
+  
+  objects.append(getTableID());
+  
+  uintA blocks;
+  getBlocks(blocks);
+  objects.append(blocks);
+  
+  uintA balls;
+  getBalls(balls);
+  objects.append(balls);
+  
+  uintA boxes;
+  getBoxes(boxes);
+  objects.append(boxes);
+}
+
+
+uint RobotManipulationSimulator::getTableID() {
+  ors::Body* n = C->getBodyByName("table");
+  return n->index;
+}
+
+
+void RobotManipulationSimulator::getBlocks(uintA& blocks) {
+  blocks.clear();
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;i<=numObjects;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (n->shapes.N == 1) {
+      if (n->shapes(0)->type == ors::boxST)
+        blocks.append(n->index);
+    }
+  }
+}
+
+
+void RobotManipulationSimulator::getBalls(uintA& balls) {
+  balls.clear();
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;i<=numObjects;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (n->shapes.N == 1) {
+      if (n->shapes(0)->type == ors::sphereST)
+        balls.append(n->index);
+    }
+  }
+}
+
+
+void RobotManipulationSimulator::getBoxes(uintA& boxes) {
+  boxes.clear();
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;i<=numObjects;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (isBox(n->index))
+      boxes.append(n->index);
+  }
+}
+
+
+void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
+  cylinders.clear();
+  // assuming that all objects start with "o"
+  std::stringstream ss;
+  uint i;
+  for (i=1;i<=numObjects;i++) {
+    ss.str("");
+    ss << "o" << i;
+    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    if (n->shapes.N == 1) {
+      if (n->shapes(0)->type == ors::cylinderST)
+        cylinders.append(n->index);
+    }
+  }
+}
+
+
+bool RobotManipulationSimulator::isBox(uint id) {
+  return C->bodies(id)->shapes.N == 6;
+}
+
+
+uint RobotManipulationSimulator::convertObjectName2ID(const char* name) {
+  return C->getBodyByName(name)->index;
+}
+
+
+const char* RobotManipulationSimulator::convertObjectID2name(uint ID) {
+  if (C->bodies.N > ID)
+    return C->bodies(ID)->name;
+  else
+    return "";
+}
+
+
+int RobotManipulationSimulator::getOrsType(uint id) {
+  if (C->bodies(id)->shapes.N == 1) {
+    return C->bodies(id)->shapes(0)->type;
+  }
+  else
+    return OBJECT_TYPE__BOX;
+}
+
+
+double* RobotManipulationSimulator::getSize(uint id) {
+  return C->bodies(id)->shapes(0)->size;
+}
+
+
+double* RobotManipulationSimulator::getColor(uint id) {
+  return C->bodies(id)->shapes(0)->color;
+}
+
+
+MT::String RobotManipulationSimulator::getColorString(uint obj) {
+  double red[3];  red[0]=1.0;  red[1]=0.0;   red[2]=0.0;
+  double green[3];  green[0]=0.2;  green[1]=1.0;   green[2]=0.0;
+  double orange[3];  orange[0]=1.0;  orange[1]=0.5;   orange[2]=0.0;
+  double yellow[3];  yellow[0]=1.0;  yellow[1]=1.0;   yellow[2]=0.0;
+  double blue[3];  blue[0]=.0;  blue[1]=.0;   blue[2]=1.0;
+  double brown[3];  brown[0]=.5;  brown[1]=.3;   brown[2]=.15;
+  double yellow_green[3];  yellow_green[0]=.8;  yellow_green[1]=1.;   yellow_green[2]=.0;
+  double grey[3];  grey[0]=.6;  grey[1]=.5;   grey[2]=.5;
+  double light_blue[3];  light_blue[0]=.4;  light_blue[1]=1.;   light_blue[2]=1.;
+  double purple[3];  purple[0]=.4;  purple[1]=0.;   purple[2]=.5;
+  double dark_red[3];  dark_red[0]=.7;  dark_red[1]=0.05;   dark_red[2]=.05;
+  double dark_blue[3];  dark_blue[0]=.05;  dark_blue[1]=0.;   dark_blue[2]=.7;
+  double rose[3];  rose[0]=1.0;  rose[1]=0.5;   rose[2]=.75;
+
+  uint i;
+  
+  double* color = getColor(obj);
+  MT::String name;
+
+  for (i=0; i<3; i++)
+  if(!TL::areEqual(color[i], red[i])) break;
+  if (i==3) {name = "red";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], green[i])) break;
+  if (i==3) {name = "green";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], orange[i])) break;
+  if (i==3) {name = "orange";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], yellow[i])) break;
+  if (i==3) {name = "yellow";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], blue[i])) break;
+  if (i==3) {name = "blue";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], brown[i])) break;
+  if (i==3) {name = "brown";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], yellow_green[i])) break;
+  if (i==3) {name = "yellow-green";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], grey[i])) break;
+  if (i==3) {name = "grey";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], light_blue[i])) break;
+  if (i==3) {name = "light blue";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], rose[i])) break;
+  if (i==3) {name = "rose";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], purple[i])) break;
+  if (i==3) {name = "purple";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], dark_red[i])) break;
+  if (i==3) {name = "dark red";}
+  
+  for (i=0; i<3; i++)
+    if(!TL::areEqual(color[i], dark_blue[i])) break;
+  if (i==3) {name = "dark blue";}
+  
+  return name;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************
+* 
+*     State information
+* 
+************************************************/
+
+double* RobotManipulationSimulator::getPosition(uint id) {
+  return C->bodies(id)->X.pos.p;
+}
+
+
+void RobotManipulationSimulator::getTablePosition(double& x1, double& x2, double& y1, double& y2) {
+  double* pos = getPosition(getTableID());
+  double* size = getSize(getTableID());
+  x1 = pos[0] - size[0]/2;
+  x2 = pos[0] + size[0]/2;
+  y1 = pos[1] - size[1]/2;
+  y1 = pos[1] + size[1]/2;
+}
+
+
+void RobotManipulationSimulator::getObjectPositions(arr& positions) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  positions.resize(objs.N, 3);
+  FOR1D(objs, i) {
+    double* local_position = getPosition(objs(i));
+    for (k=0; k<3; k++) {
+      positions(i, k) = local_position[k];
+    }
+  }
+}
+
+
+// orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
+void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
+  orientation.resize(2);
+  
+  if (getOrsType(id) == ors::sphereST) {
+    orientation.setUni(0.);
+    return;
+  }
+  
+//   cout<<C->bodies(id)->name<<endl;
+  
+  ors::Quaternion rot;
+  rot = C->bodies(id)->X.rot;
+  
+  ors::Vector upvec_z; double maxz=-2;
+  if((rot*VEC_x)(2)>maxz){ upvec_z=VEC_x; maxz=(rot*upvec_z)(2); }
+  if((rot*VEC_y)(2)>maxz){ upvec_z=VEC_y; maxz=(rot*upvec_z)(2); }
+  if((rot*VEC_z)(2)>maxz){ upvec_z=VEC_z; maxz=(rot*upvec_z)(2); }
+  if((rot*(-VEC_x))(2)>maxz){ upvec_z=-VEC_x; maxz=(rot*upvec_z)(2); }
+  if((rot*(-VEC_y))(2)>maxz){ upvec_z=-VEC_y; maxz=(rot*upvec_z)(2); }
+  if((rot*(-VEC_z))(2)>maxz){ upvec_z=-VEC_z; maxz=(rot*upvec_z)(2); }
+  double angle_z = acos(maxz);
+  if (angle_z < 0.0001)
+    angle_z = 0.;
+//   if (angle_z>MT_PI/4) {
+//     PRINT(MT_PI/4);
+//     PRINT((rot*VEC_x)(2));
+//     PRINT((rot*VEC_y)(2));
+//     PRINT((rot*VEC_z)(2));
+//     PRINT((rot*(-VEC_x))(2));
+//     PRINT((rot*(-VEC_y))(2));
+//     PRINT((rot*(-VEC_z))(2));
+//     PRINT(acos((rot*VEC_x)(2)));
+//     PRINT(acos((rot*VEC_y)(2)));
+//     PRINT(acos((rot*VEC_z)(2)));
+//     PRINT(acos((rot*(-VEC_x))(2)));
+//     PRINT(acos((rot*(-VEC_y))(2)));
+//     PRINT(acos((rot*(-VEC_z))(2)));
+//     watch();
+//   }
+//   CHECK((angle_z<=MT_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
+  orientation(0) = angle_z;
+  
+  ors::Vector upvec_x; double maxx=-2;
+  if((rot*VEC_x)(0)>maxx){ upvec_x=VEC_x; maxx=(rot*upvec_x)(0); }
+  if((rot*VEC_y)(0)>maxx){ upvec_x=VEC_y; maxx=(rot*upvec_x)(0); }
+  if((rot*VEC_z)(0)>maxx){ upvec_x=VEC_z; maxx=(rot*upvec_x)(0); }
+  if((rot*(-VEC_x))(0)>maxx){ upvec_x=-VEC_x; maxx=(rot*upvec_x)(0); }
+  if((rot*(-VEC_y))(0)>maxx){ upvec_x=-VEC_y; maxx=(rot*upvec_x)(0); }
+  if((rot*(-VEC_z))(0)>maxx){ upvec_x=-VEC_z; maxx=(rot*upvec_x)(0); }
+  double angle_xy = atan((rot*upvec_x)(1) / maxx);
+  if (angle_xy < 0.0001)
+    angle_xy = 0.;
+//   CHECK((angle_xy<=MT_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
+  orientation(1) = angle_xy;
+}
+
+
+void RobotManipulationSimulator::getObjectAngles(arr& angles) {
+  uint i, k;
+  uintA objs;
+  getObjects(objs);
+  angles.resize(objs.N, 2);
+  FOR1D(objs, i) {
+    arr orientation;
+    getOrientation(orientation, objs(i));
+    CHECK(orientation.N == 2, "too many angles");
+    FOR1D(orientation, k) {
+      angles(i, k) = orientation(k);
+      if (angles(i, k) < 0.00001)
+        angles(i, k) = 0.;
+    }
+  }
+}
+
+
+bool RobotManipulationSimulator::isUpright(uint id) {
+  // balls are always upright
+  if (getOrsType(id) == ors::sphereST)
+    return true;
+  
+  double TOLERANCE = 0.05; // in radians
+  
+  arr orientation;
+  getOrientation(orientation, id);
+//   cout << id << " angle = " << angle << endl;
+  if (fabs(orientation(0)) < TOLERANCE)
+    return true;
+  else
+    return false;
+}
+
+
+double RobotManipulationSimulator::getHeight(uint id) {
+  return getPosition(id)[2];
+}
+
+
+double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
+  uint i;
+  double height = 0.;
+  uint obj_inhand = getInhand();
+  double table_height = getHeight(getTableID());
+  cout<<"table "<<table_height<<endl;
+  FOR1D(objects, i) {
+    if (objects(i) == obj_inhand) {
+      cout << objects(i) << " 0 (inhand)"<<endl;
+      continue;
+    }
+    double o_height = (getHeight(objects(i)) - table_height);
+    cout<<objects(i)<<" "<<o_height<<endl;
+    height += o_height;
+  }
+//   height /= 1.0 * objects.N;
+  return height;
+}
+
+
+uint RobotManipulationSimulator::getInhand(uint man_id){
+  ors::Joint* e;
+  if(!C->bodies(man_id)->outLinks.N) return TL::UINT_NIL;
+  e=C->bodies(man_id)->outLinks(0);
+  return e->to->index;
+}
+
+
+uint RobotManipulationSimulator::getInhand() {
+  return getInhand(convertObjectName2ID("fing1c"));
+}
+
+
+uint RobotManipulationSimulator::getHandID() {
+  return convertObjectName2ID("fing1c");
+}
+
+
+void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
+  list.clear();
+  
+  ors::Body* obj_body = C->getBodyByName(obj_name);
+  double obj_rad = 0.5 * getSize(obj_body->index)[2];
+  
+  uint i;
+  uint body_id__a, body_id__b;
+  double TOL_COEFF = 0.8;
+  double other_rad;
+  
+  uintA others;
+  getObjects(others);
+  ors::Body* other_body;
+
+   //C->reportProxies();
+  
+  for(i=0;i<C->proxies.N;i++){
+    if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth
+      continue;
+    body_id__a = C->shapes(C->proxies(i)->a)->body->index;
+    body_id__b = C->shapes(C->proxies(i)->b)->body->index;
+    if (body_id__a == obj_body->index) {
+      other_body = C->bodies(body_id__b);
+    }
+    else if (body_id__b == obj_body->index) {
+      other_body = C->bodies(body_id__a);
+    }
+    else
+      continue;
+    
+    double MAX_DISTANCE = 0.02;
+
+    if (C->proxies(i)->d < MAX_DISTANCE) { // small enough distance
+      other_rad = 0.5 * getSize(other_body->index)[2];
+      // z-axis (height) difference big enough
+      if (other_body->shapes(0)->X.pos(2) - obj_body->shapes(0)->X.pos(2)   >   TOL_COEFF * (obj_rad + other_rad)) {
+        if (other_body->index == getTableID()  ||  obj_body->index == getTableID()) {
+          list.setAppend(other_body->index);
+        }
+        else {
+          // x-axis difference small enough
+          if (fabs(other_body->shapes(0)->X.pos(0) - obj_body->shapes(0)->X.pos(0))   <   0.9 * (obj_rad + other_rad)) {
+            // y-axis difference small enough
+            if (fabs(other_body->shapes(0)->X.pos(1) - obj_body->shapes(0)->X.pos(1))   <   0.9 * (obj_rad + other_rad)) {
+              list.setAppend(other_body->index);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+void RobotManipulationSimulator::getObjectsOn(uintA& list,const uint obj_id) {
+  getObjectsOn(list, convertObjectID2name(obj_id));
+}
+
+
+bool RobotManipulationSimulator::isClear(uint id) {
+  uintA above_objects;
+  getObjectsOn(above_objects, id);
+  return above_objects.N == 0;
+}
+
 
 // if z-value of objects is beneath THRESHOLD
 bool RobotManipulationSimulator::onGround(uint id) {
@@ -373,40 +794,210 @@ bool RobotManipulationSimulator::onGround(uint id) {
 }
 
 
+void RobotManipulationSimulator::getObjectsClose(uintA& list, uint obj){
+  list.clear();
+  double* pos = getPosition(obj);
+  uint i;
+  uintA objects;
+  getObjects(objects);
+  FOR1D(objects, i) {
+    if (objects(i) == obj) continue;
+    double* pos_other = getPosition(objects(i));
+    if (fabs(pos[2] - pos_other[2]) > 0.03) continue;
+//     PRINT(fabs(pos[0] - pos_other[0]));
+//     PRINT(fabs(pos[1] - pos_other[1]));
+    if (fabs(pos[0] - pos_other[0]) > 0.15) continue;
+    if (fabs(pos[1] - pos_other[1]) > 0.15) continue;
+    list.append(objects(i));
+  }
+}
+
+
+bool RobotManipulationSimulator::freePosition(double x, double y, double radius) {
+  uintA objects;
+  getObjects(objects);
+  objects.removeValue(getTableID());
+//     cout<<"Asking for pos "<<x<<"/"<<y<<" within radius "<<radius<<endl;
+  uint i;
+  FOR1D(objects, i) {
+    double* pos = getPosition(objects(i));
+    double local_radius = radius;
+    if (isBox(objects(i)))
+      local_radius = 0.1;
+    if (fabs(pos[0] - x) < local_radius)
+        return false;
+    if (fabs(pos[1] - y) < local_radius)
+        return false;
+  }
+  return true;
+}
+
+
+double RobotManipulationSimulator::highestPosition(double x, double y, double radius, uint id_ignored) {
+  uint DEBUG = 0;
+  uintA objects;
+  getObjects(objects);
+  objects.removeValue(getTableID());
+  if (DEBUG>0) {
+    cout << "highestPosition:"<<endl;
+    cout<<"Asking for pos "<<x<<"/"<<y<<" within radius "<<radius<<endl;
+  }
+  uint i;
+  double max_z;
+  double* table_pos = getPosition(getTableID());
+  max_z = table_pos[2];
+  if (DEBUG>0) {cout<<"table_z: "<<max_z<<endl;}
+  FOR1D(objects, i) {
+    if (objects(i) == id_ignored)
+      continue;
+    double* pos = getPosition(objects(i));
+//         cout<<manipObjs(i)<<" has pos "<<pos[0]<<"/"<<pos[1]<<endl;
+    if (fabs(pos[0] - x) < radius  &&  fabs(pos[1] - y) < radius) {
+      if (DEBUG>0) cout<<"Object "<<objects(i)<<" within radius at height "<<pos[2]<<endl;
+      if (pos[2] > max_z)
+        max_z = pos[2];
+    }
+  }
+  if (DEBUG>0) cout<<"max_z = "<<max_z<<endl;
+  return max_z;
+}
+
+
+uint RobotManipulationSimulator::getContainedObject(uint box_id) {
+  // inbox object has same position as box
+  uintA boxes;
+  getBoxes(boxes);
+  double* box_pos = getPosition(box_id);
+  uint i;
+  
+  uintA blocks;
+  getBlocks(blocks);
+  FOR1D(blocks, i) {
+    double* obj_pos = getPosition(blocks(i));
+    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
+         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
+         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
+      return blocks(i);
+    }
+  }
+  
+  uintA balls;
+  getBalls(balls);
+  FOR1D(balls, i) {
+    double* obj_pos = getPosition(balls(i));
+    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
+         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
+         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
+      return balls(i);
+         }
+  }
+  return TL::UINT_NIL;
+}
+
+
+bool RobotManipulationSimulator::isClosed(uint box_id) {
+  CHECK(C->bodies(box_id)->shapes.N == 6, "isn't a box");
+  if (TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(0))  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(1))
+      &&  C->bodies(box_id)->shapes(5)->rel.pos(0) < 0.1)
+    return true;
+  else
+    return false;
+}
+
+
+bool RobotManipulationSimulator::containedInBox(uint id) {
+  uintA boxes;
+  getBoxes(boxes);
+  uint i;
+  FOR1D(boxes, i) {
+    if (getContainedObject(boxes(i)) == id)
+      return true;
+  }
+  return false;
+}
+
+
+bool RobotManipulationSimulator::containedInClosedBox(uint id) {
+  uintA boxes;
+  getBoxes(boxes);
+  uint i;
+  FOR1D(boxes, i) {
+    if (!isClosed(boxes(i)))
+      continue;
+    if (getContainedObject(boxes(i)) == id)
+      return true;
+  }
+  return false;
+}
+
+
+bool RobotManipulationSimulator::inContact(uint a,uint b){
+  if(C->getContact(a,b)) return true;
+  return false;
+}
+
+void RobotManipulationSimulator::writeAllContacts(uint id) {
+//   C->reportProxies();
+//   void sortProxies(bool deleteMultiple=false,bool deleteOld=false);
+  
+  ors::Proxy *p;
+  uint obj=C->getBodyByName(convertObjectID2name(id))->index;
+  uint i;
+  cout << convertObjectID2name(id) << " is in contact with ";
+  for(i=0;i<C->proxies.N;i++)
+    if(!C->proxies(i)->age)  // PROXIES SIND LEER!
+      if (C->proxies(i)->d<0.02){
+        p=C->proxies(i);
+        if(p->a==(int)obj && p->b!=(int)obj) {
+          cout << C->bodies(p->b)->name << " ";
+        }
+        if(p->b==(int)obj && p->a!=(int)obj) {
+          cout << C->bodies(p->a)->name << " ";
+        }
+    }
+    cout << endl;
+}
+
+
+void RobotManipulationSimulator::printObjectInfo() {
+  uintA objects;
+  getObjects(objects);
+  uint i;
+  FOR1D(objects, i) {
+    cout << objects(i) << " " << convertObjectID2name(objects(i)) << endl;
+  }
+}
 
 
 
 
 
 
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-
-//   ***********  ACTIONS   **************
 
 
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-//   GRAB
 
-// ******************************************************************
-// THIS IS WHERE YOU CAN BRING IN YOUR OWN IDEAS OF "NOISE" ETC. !!!
 
-double GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0.4;
+
+
+/************************************************
+* 
+*     Actions - grab
+* 
+************************************************/
+  
 
 void RobotManipulationSimulator::grab_final(const char *manipulator,const char *obj_grabbed, const char* message){
   ors::Body *obj=C->getBodyByName(obj_grabbed);
   bool isTable = obj->index == getTableID();
-  if (isTable) return;
+  if (isTable) {
+    cout<<"Cannot grab table"<<endl;
+    return;
+  }
+  bool inClosedBox = containedInClosedBox(convertObjectName2ID(obj_grabbed));
+  if (inClosedBox) {
+    cout<<"Object "<<obj_grabbed<<" is inside of a closed box and cannot be grabbed."<<endl;
+    return;
+  }
   bool isHand = obj->index == getHandID();
   if (isHand) HALT("grab_final("<<obj_grabbed<<") --> cannot grab my own hand!");
 
@@ -433,7 +1024,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (1) drop object if one is in hand
   //   dropInhandObjectOnTable(message);
   uint id_grabbed = getInhand();
-  if (id_grabbed != UINT_MAX) {
+  if (id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0;t<10;t++){
       x.y_target.setCarray(obj->X.pos.p,3);
@@ -523,40 +1114,57 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if(t==Tabort) { indicateFailure(); return; }
 }
 
+
 void RobotManipulationSimulator::grab(uint ID, const char* message) {
   grab(convertObjectID2name(ID), message);
 }
 
+
 void RobotManipulationSimulator::grab(const char* obj, const char* message) {
-  grab_final(ENDEFFECTOR, obj, message);
+  grab_final("fing1c", obj, message);
+}
+
+
+void RobotManipulationSimulator::grabHere(const char* message) {
+  #ifdef MT_SWIFT
+  MT::String msg_string(message);
+  if (msg_string.N == 0) {
+    msg_string << "grabHere: ";
+  }
+
+  uint finger = convertObjectName2ID("fing1c");
+  // (1) drop object if one is in hand
+  dropObject(finger);
+  
+  double min_distance = std::numeric_limits<double>::max();
+  uint closest_object = 0;
+  for (uint i = 0; i< C->proxies.N; i++) {
+    if (C->proxies(i)->a == finger || C->proxies(i)->b == finger) {
+       if (C->proxies(i)->d < min_distance) {
+         min_distance = C->proxies(i)->d; 
+         closest_object = (C->proxies(i)->a == finger ? C->proxies(i)->b : C->proxies(i)->a );
+       }
+    }
+  }
+  if (min_distance > 10e-4) {
+    msg_string << "nothing to grab";
+  }
+  else {
+    C->glueBodies(C->getBodyByName("fing1c"), C->getBodyByName(convertObjectID2name(closest_object)));
+    msg_string << "Grabed obj " << convertObjectID2name(closest_object); 
+  }
+  
+  #endif
 }
 
 
 
 
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-//   DROP
-
-
-
-void RobotManipulationSimulator::dropObject(uint manipulator_id) {
-  if (C->bodies(manipulator_id)->outLinks.N == 0)
-    return;
-  CHECK(C->bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
-  del_edge(C->bodies(manipulator_id)->outLinks(0), C->bodies, C->joints, true);
-}
-
-void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
-  uint id_grabbed = getInhand();
-  if (UINT_MAX == id_grabbed)
-    return;
-  dropObjectAbove(id_grabbed, getTableID(), message);
-  relaxPosition(message);
-}
+/************************************************
+* 
+*     Actions - drop
+* 
+************************************************/
 
 void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message){
   MT::String msg_string(message);
@@ -571,7 +1179,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     obj_dropped1 = obj_dropped;
   }
   else
-    obj_dropped1 = ENDEFFECTOR;
+    obj_dropped1 = "fing1c";
   
   uint obj_dropped1_index=C->getBodyByName(obj_dropped1)->index;
   uint obj_below_id = convertObjectName2ID(obj_below);
@@ -675,7 +1283,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   
   // Phase 3: down
   // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
-  double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .05;
+  double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .03;
   if (getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
     Z_ADD_DIST += 0.05;
   }
@@ -711,23 +1319,33 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   }
 }
 
+
 void RobotManipulationSimulator::dropObjectAbove(uint obj_id, uint obj_below, const char* message) {
   dropObjectAbove_final(convertObjectID2name(obj_id), convertObjectID2name(obj_below), message);
 }
+
 
 void RobotManipulationSimulator::dropObjectAbove(uint obj_below, const char* message) {
   dropObjectAbove(getInhand(), obj_below, message);
 }
 
 
-// ******************************************************************
-// THIS IS WHERE YOU CAN BRING IN YOUR OWN IDEAS OF "NOISE" ETC. !!!
+void RobotManipulationSimulator::dropObject(uint manipulator_id) {
+  if (C->bodies(manipulator_id)->outLinks.N == 0)
+    return;
+  CHECK(C->bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
+  del_edge(C->bodies(manipulator_id)->outLinks(0), C->bodies, C->joints, true);
+}
 
-double DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK = 0.001;
-double DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK = 0.003;
-double DROP_TARGET_NOISE__BALL_ON_BIG_BLOCK = 0.0066;
-double DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK = 0.02;
-double DROP_TARGET_NOISE__ON_BALL = 0.01;
+
+void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
+  uint id_grabbed = getInhand();
+  if (TL::UINT_NIL == id_grabbed)
+    return;
+  dropObjectAbove(id_grabbed, getTableID(), message);
+  relaxPosition(message);
+}
+
 
 // Noise comes in here
 void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y, uint obj_dropped, uint obj_below) {
@@ -764,9 +1382,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     }
   }
   // Below = Block
-  else if (obj_below_type == ors::boxST || obj_below_type == ors::cylinderST) {
+  else if (obj_below_type == ors::boxST) {
     // (1) Dropping block
-    if (obj_dropped_type == ors::boxST || obj_dropped_type == ors::cylinderST) {
+    if (obj_dropped_type == ors::boxST) {
       // (1a) on small block
       if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
@@ -790,12 +1408,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
       else if (TL::areEqual(obj_below_size, BLOCK_BIG)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_BIG_BLOCK;
       }
-      else if (TL::areEqual(obj_below_size, BLOCK_VERY_BIG)) {
-        std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
-      }
-      else {
-        std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
-      }
+      else {NIY;}
     }
     else {NIY;}
     
@@ -804,31 +1417,6 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     
 //     PRINT(obj_below_size);
 //     PRINT(std_dev_noise);
-  }
-  else if (obj_below_type == OBJECT_TYPE__BOX) {
-    double DROP_TARGET_NOISE__ON_TRAY= 0.01;
-    std_dev_noise = DROP_TARGET_NOISE__ON_TRAY;
-    uint tries = 0;
-    while (true) {
-      tries++;
-      if (tries>20000) {
-          MT_MSG("Can't find empty position on tray, throw it whereever!");
-          break;
-      }
-      x_noise = 0.2 * rand()/(double) RAND_MAX - .1;
-      y_noise = 0.1 * rand()/(double) RAND_MAX - .05; // tisch ist nicht so breit wie lang
-
-      PRINT(x_noise);
-      PRINT(y_noise);
-//       if (x_noise>0.5 || y_noise>0.5) // stay on table
-      if (x_noise>0.5) // stay on table
-        continue;
-      break;
-      //if (C->bodies(obj_below)->X.pos.p[1] + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.p[1] + y_noise > -0.05)
-        //continue;
-      //if (freePosition(C->bodies(obj_below)->X.pos.p[0]+x_noise, C->bodies(obj_below)->X.pos.p[1]+y_noise, 0.05))
-        //break;
-    }
   }
   // Below = Ball
   else if (obj_below_type == ors::sphereST) {
@@ -843,82 +1431,16 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 
 
 
-void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
-#  ifdef MT_ODE
-	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
-  MT::String msg_string(message);
-  if (msg_string.N == 0) {
-    msg_string << "move to position "<< pos;
-  }
-  
-  ors::Body* obj = C->bodies(convertObjectName2ID(ENDEFFECTOR));
-  // move manipulator towards box
-  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
-  x.setGainsAsAttractor(20,.2);
-  x.y_prec=1000.;
-  TaskVariableList TVs;
-  TVs.append(&x);
-
-	double epsilon = 10e-3;
-
-  uint t;
-  arr q,dq;
-  C->getJointState(q);
-  for(t=0;t<Tabort;t++){
-    x.y_target.setCarray(pos.p,3);
-    MT::String send_string;
-    send_string << msg_string;
-    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-		if ((obj->X.pos - pos).length() < epsilon) break;
-  }
-  if(t==Tabort){ indicateFailure(); return; }
-  simulate(30, msg_string);
-  
-#ifdef MT_SWIFT
-  swift->initActivations(*C);
-#endif
-#endif
-}
-
-void RobotManipulationSimulator::grabHere(const char* message) {
-  #ifdef MT_SWIFT
-  MT::String msg_string(message);
-  if (msg_string.N == 0) {
-    msg_string << "grabHere: ";
-  }
-
-	uint finger = convertObjectName2ID(ENDEFFECTOR);
-  // (1) drop object if one is in hand
-  dropObject(finger);
-	
-	double min_distance = std::numeric_limits<double>::max();
-	uint closest_object = 0;
-  for (uint i = 0; i< C->proxies.N; i++) {
-	  if (C->proxies(i)->a == finger || C->proxies(i)->b == finger) {
-			 if (C->proxies(i)->d < min_distance) {
-				 min_distance = C->proxies(i)->d; 
-				 closest_object = (C->proxies(i)->a == finger ? C->proxies(i)->b : C->proxies(i)->a );
-			 }
-		}
-	}
-	if (min_distance > 10e-4) {
-		msg_string << "nothing to grab";
-	}
-	else {
-		C->glueBodies(C->getBodyByName(ENDEFFECTOR), C->getBodyByName(convertObjectID2name(closest_object)));
-		msg_string << "Grabed obj " << convertObjectID2name(closest_object); 
-  }
-  
-  #endif
-}
 
 
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
 
+
+
+/************************************************
+* 
+*     Actions - Posture control
+* 
+************************************************/
 
 void RobotManipulationSimulator::relaxPosition(const char* message){
   MT::String msg_string(message);
@@ -929,7 +1451,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
   uint inhand_id = getInhand();
   ors::Shape* s = NULL;
   // simplification: set off contacts for inhand-object
-  if (inhand_id != UINT_MAX) {
+  if (inhand_id != TL::UINT_NIL) {
     s = C->getBodyByName(convertObjectID2name(inhand_id))->shapes(0);
     s->cont = false;
   }
@@ -971,12 +1493,52 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
 }
 
 
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-//   BOX
+void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
+#  ifdef MT_ODE
+	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
+  MT::String msg_string(message);
+  if (msg_string.N == 0) {
+    msg_string << "move to position "<< pos;
+  }
+  
+  ors::Body* obj = C->bodies(convertObjectName2ID("fing1c"));
+  // move manipulator towards box
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  x.setGainsAsAttractor(20,.2);
+  x.y_prec=1000.;
+  TaskVariableList TVs;
+  TVs.append(&x);
+
+	double epsilon = 10e-3;
+
+  uint t;
+  arr q,dq;
+  C->getJointState(q);
+  for(t=0;t<Tabort;t++){
+    x.y_target.setCarray(pos.p,3);
+    MT::String send_string;
+    send_string << msg_string;
+    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
+		if ((obj->X.pos - pos).length() < epsilon) break;
+  }
+  if(t==Tabort){ indicateFailure(); return; }
+  simulate(30, msg_string);
+  
+#ifdef MT_SWIFT
+  swift->initActivations(*C);
+#endif
+#endif
+}
+
+
+
+
+
+/************************************************
+* 
+*     Actions - Boxes
+* 
+************************************************/
 
 
 #  ifdef MT_ODE
@@ -1002,7 +1564,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -1018,7 +1580,8 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.active==1 || C->getContact(x.i,obj->index)) break;
+    double diff = norm(x.y - x.y_target);
+    if (diff < 0.01) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
@@ -1046,7 +1609,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,ENDEFFECTOR,0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
@@ -1062,7 +1625,8 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    if(x.active==1 || C->getContact(x.i,obj->index)) break;
+    double diff = norm(x.y - x.y_target);
+    if (diff < 0.01) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
@@ -1087,715 +1651,11 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
 
 
 
-
-
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-
-// --------------------------------
-//   GENERAL OBJECT INFORMATION
-// --------------------------------
-
-void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list all objects
-  objects.clear();
-  
-  objects.append(getTableID());
-  
-  uintA blocks;
-  getBlocks(blocks);
-  objects.append(blocks);
-  
-  uintA balls;
-  getBalls(balls);
-  objects.append(balls);
-  
-  uintA boxes;
-  getBoxes(boxes);
-  objects.append(boxes);
-
-  uintA cylinder;
-  getCylinders(cylinder);
-  objects.append(cylinder);
-}
-
-
-void RobotManipulationSimulator::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types) { //!< return list of all object types
-  objects_types.resize(objects.N);
-  uint i;
-  relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;
-  FOR1D(types, i) {
-    if (types(i)->name == MT::String("block")) {
-      type_block = types(i);
-    }
-    else if (types(i)->name == MT::String("ball")) {
-      type_ball = types(i);
-    }
-    else if (types(i)->name == MT::String("table")) {
-      type_table = types(i);
-    }
-    else if (types(i)->name == MT::String("box")) {
-      type_box = types(i);
-    }
-  }
-  
-  CHECK(type_block != NULL, "");
-  CHECK(type_ball != NULL, "");
-  CHECK(type_table != NULL, "");
-  CHECK(type_box != NULL, "");
-//   type_block->writeNice(cout);  cout<<endl;
-//   type_ball->writeNice(cout);  cout<<endl;
-//   type_table->writeNice(cout);  cout<<endl;
-//   type_box->writeNice(cout);  cout<<endl;
-  
-  uint table_id = getTableID();
-  uintA blocks;
-  getBlocks(blocks);
-  uintA balls;
-  getBalls(balls);
-  uintA boxes;
-  getBoxes(boxes);
-  
-//   PRINT(table_id);
-//   PRINT(blocks);
-//   PRINT(balls);
-//   PRINT(boxes);
-  
-  FOR1D(objects, i) {
-    if (objects(i) == table_id) {
-      objects_types(i) = type_table;
-    }
-    else if (blocks.findValue(objects(i)) >= 0) {
-      objects_types(i) = type_block;
-    }
-    else if (balls.findValue(objects(i)) >= 0) {
-      objects_types(i) = type_ball;
-    }
-    else if (boxes.findValue(objects(i)) >= 0) {
-      objects_types(i) = type_box;
-    }
-    else
-      NIY;
-  }
-}
-
-
-
-uint RobotManipulationSimulator::getTableID() {
-  ors::Body* n = C->getBodyByName("table");
-  return n->index;
-}
-
-
-void RobotManipulationSimulator::getBlocks(uintA& blocks) {
-  blocks.clear();
-  // assuming that all objects start with "o"
-  std::stringstream ss;
-  uint i;
-  for (i=1;i<=numObjects;i++) {
-    ss.str("");
-    ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::boxST)
-        blocks.append(n->index);
-    }
-  }
-}
-
-void RobotManipulationSimulator::getBalls(uintA& balls) {
-  balls.clear();
-  // assuming that all objects start with "o"
-  std::stringstream ss;
-  uint i;
-  for (i=1;i<=numObjects;i++) {
-    ss.str("");
-    ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::sphereST)
-        balls.append(n->index);
-    }
-  }
-}
-
-void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
-  cylinders.clear();
-  // assuming that all objects start with "o"
-  std::stringstream ss;
-  uint i;
-  for (i=1;i<=numObjects;i++) {
-    ss.str("");
-    ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::cylinderST)
-        cylinders.append(n->index);
-    }
-  }
-}
-
-void RobotManipulationSimulator::getBoxes(uintA& boxes) {
-  boxes.clear();
-  // assuming that all objects start with "o"
-  std::stringstream ss;
-  uint i;
-  for (i=1;i<=numObjects;i++) {
-    ss.str("");
-    ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (isBox(n->index))
-      boxes.append(n->index);
-  }
-}
-
-bool RobotManipulationSimulator::isBox(uint id) {
-  return C->bodies(id)->shapes.N == 6;
-}
-
-
-uint RobotManipulationSimulator::convertObjectName2ID(const char* name) {
-  return C->getBodyByName(name)->index;
-}
-
-
-const char* RobotManipulationSimulator::convertObjectID2name(uint ID) {
-  if (C->bodies.N > ID)
-    return C->bodies(ID)->name;
-  else
-    return "";
-}
-
-
-int RobotManipulationSimulator::getOrsType(uint id) {
-  if (C->bodies(id)->shapes.N == 1) {
-    return C->bodies(id)->shapes(0)->type;
-  }
-  else
-    return OBJECT_TYPE__BOX;
-}
-
-double* RobotManipulationSimulator::getSize(uint id) {
-  return C->bodies(id)->shapes(0)->size;
-}
-
-double* RobotManipulationSimulator::getColor(uint id) {
-  return C->bodies(id)->shapes(0)->color;
-}
-
-MT::String RobotManipulationSimulator::getColorString(uint obj) {
-  double red[3];  red[0]=1.0;  red[1]=0.0;   red[2]=0.0;
-  double green[3];  green[0]=0.2;  green[1]=1.0;   green[2]=0.0;
-  double orange[3];  orange[0]=1.0;  orange[1]=0.5;   orange[2]=0.0;
-  double yellow[3];  yellow[0]=1.0;  yellow[1]=1.0;   yellow[2]=0.0;
-  double blue[3];  blue[0]=.0;  blue[1]=.0;   blue[2]=1.0;
-  double brown[3];  brown[0]=.5;  brown[1]=.3;   brown[2]=.15;
-  double yellow_green[3];  yellow_green[0]=.8;  yellow_green[1]=1.;   yellow_green[2]=.0;
-  double grey[3];  grey[0]=.6;  grey[1]=.5;   grey[2]=.5;
-  double light_blue[3];  light_blue[0]=.4;  light_blue[1]=1.;   light_blue[2]=1.;
-  double purple[3];  purple[0]=.4;  purple[1]=0.;   purple[2]=.5;
-  double dark_red[3];  dark_red[0]=.7;  dark_red[1]=0.05;   dark_red[2]=.05;
-  double dark_blue[3];  dark_blue[0]=.05;  dark_blue[1]=0.;   dark_blue[2]=.7;
-  double rose[3];  rose[0]=1.0;  rose[1]=0.5;   rose[2]=.75;
-
-  uint i;
-  
-  double* color = getColor(obj);
-  MT::String name;
-
-  for (i=0; i<3; i++)
-  if(!TL::areEqual(color[i], red[i])) break;
-  if (i==3) {name = "red";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], green[i])) break;
-  if (i==3) {name = "green";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], orange[i])) break;
-  if (i==3) {name = "orange";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], yellow[i])) break;
-  if (i==3) {name = "yellow";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], blue[i])) break;
-  if (i==3) {name = "blue";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], brown[i])) break;
-  if (i==3) {name = "brown";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], yellow_green[i])) break;
-  if (i==3) {name = "yellow-green";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], grey[i])) break;
-  if (i==3) {name = "grey";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], light_blue[i])) break;
-  if (i==3) {name = "light blue";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], rose[i])) break;
-  if (i==3) {name = "rose";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], purple[i])) break;
-  if (i==3) {name = "purple";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], dark_red[i])) break;
-  if (i==3) {name = "dark red";}
-  
-  for (i=0; i<3; i++)
-    if(!TL::areEqual(color[i], dark_blue[i])) break;
-  if (i==3) {name = "dark blue";}
-  
-  return name;
-}
-
-
-void RobotManipulationSimulator::getTablePosition(double& x1, double& x2, double& y1, double& y2) {
-  double* pos = getPosition(getTableID());
-  double* size = getSize(getTableID());
-  x1 = pos[0] - size[0]/2;
-  x2 = pos[0] + size[0]/2;
-  y1 = pos[1] - size[1]/2;
-  y1 = pos[1] + size[1]/2;
-}
-
-
-
-
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-// ==============================================================================
-
-// --------------------------------
-// STATE INFORMATION
-// --------------------------------
-
-
-double* RobotManipulationSimulator::getPosition(uint id) {
-  return C->bodies(id)->X.pos.p;
-}
-
-
-void RobotManipulationSimulator::getObjectAngles(arr& angles) {
-  uint i, k;
-  uintA objs;
-  getObjects(objs);
-  angles.resize(objs.N, 2);
-  FOR1D(objs, i) {
-    arr orientation;
-    getOrientation(orientation, objs(i));
-    CHECK(orientation.N == 2, "too many angles");
-    FOR1D(orientation, k) {
-      angles(i, k) = orientation(k);
-      if (angles(i, k) < 0.00001)
-        angles(i, k) = 0.;
-    }
-  }
-}
-
-
-void RobotManipulationSimulator::getObjectPositions(arr& positions) {
-  uint i, k;
-  uintA objs;
-  getObjects(objs);
-  positions.resize(objs.N, 3);
-  FOR1D(objs, i) {
-    double* local_position = getPosition(objs(i));
-    for (k=0; k<3; k++) {
-      positions(i, k) = local_position[k];
-    }
-  }
-}
-
-
-// orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
-void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
-  orientation.resize(2);
-  
-  if (getOrsType(id) == ors::sphereST) {
-    orientation.setUni(0.);
-    return;
-  }
-  
-//   cout<<C->bodies(id)->name<<endl;
-  
-  ors::Quaternion rot;
-  rot = C->bodies(id)->X.rot;
-  
-  ors::Vector upvec_z; double maxz=-2;
-  if((rot*VEC_x)(2)>maxz){ upvec_z=VEC_x; maxz=(rot*upvec_z)(2); }
-  if((rot*VEC_y)(2)>maxz){ upvec_z=VEC_y; maxz=(rot*upvec_z)(2); }
-  if((rot*VEC_z)(2)>maxz){ upvec_z=VEC_z; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_x))(2)>maxz){ upvec_z=-VEC_x; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_y))(2)>maxz){ upvec_z=-VEC_y; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_z))(2)>maxz){ upvec_z=-VEC_z; maxz=(rot*upvec_z)(2); }
-  double angle_z = acos(maxz);
-  if (angle_z < 0.0001)
-    angle_z = 0.;
-//   if (angle_z>MT_PI/4) {
-//     PRINT(MT_PI/4);
-//     PRINT((rot*VEC_x)(2));
-//     PRINT((rot*VEC_y)(2));
-//     PRINT((rot*VEC_z)(2));
-//     PRINT((rot*(-VEC_x))(2));
-//     PRINT((rot*(-VEC_y))(2));
-//     PRINT((rot*(-VEC_z))(2));
-//     PRINT(acos((rot*VEC_x)(2)));
-//     PRINT(acos((rot*VEC_y)(2)));
-//     PRINT(acos((rot*VEC_z)(2)));
-//     PRINT(acos((rot*(-VEC_x))(2)));
-//     PRINT(acos((rot*(-VEC_y))(2)));
-//     PRINT(acos((rot*(-VEC_z))(2)));
-//     watch();
-//   }
-//   CHECK((angle_z<=MT_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
-  orientation(0) = angle_z;
-  
-  ors::Vector upvec_x; double maxx=-2;
-  if((rot*VEC_x)(0)>maxx){ upvec_x=VEC_x; maxx=(rot*upvec_x)(0); }
-  if((rot*VEC_y)(0)>maxx){ upvec_x=VEC_y; maxx=(rot*upvec_x)(0); }
-  if((rot*VEC_z)(0)>maxx){ upvec_x=VEC_z; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_x))(0)>maxx){ upvec_x=-VEC_x; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_y))(0)>maxx){ upvec_x=-VEC_y; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_z))(0)>maxx){ upvec_x=-VEC_z; maxx=(rot*upvec_x)(0); }
-  double angle_xy = atan((rot*upvec_x)(1) / maxx);
-  if (angle_xy < 0.0001)
-    angle_xy = 0.;
-//   CHECK((angle_xy<=MT_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
-  orientation(1) = angle_xy;
-}
-
-
-bool RobotManipulationSimulator::isUpright(uint id) {
-  // balls are always upright
-  if (getOrsType(id) == ors::sphereST)
-    return true;
-  
-  double TOLERANCE = 0.05; // in radians
-  
-  arr orientation;
-  getOrientation(orientation, id);
-//   cout << id << " angle = " << angle << endl;
-  if (fabs(orientation(0)) < TOLERANCE)
-    return true;
-  else
-    return false;
-}
-
-uint RobotManipulationSimulator::getInhand(uint man_id){
-  ors::Joint* e;
-  if(!C->bodies(man_id)->outLinks.N) return UINT_MAX;
-  e=C->bodies(man_id)->outLinks(0);
-  return e->to->index;
-}
-
-uint RobotManipulationSimulator::getInhand() {
-  return getInhand(convertObjectName2ID(ENDEFFECTOR));
-}
-
-
-double RobotManipulationSimulator::getHeight(uint id) {
-  return getPosition(id)[2];
-}
-
-
-double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
-  uint i;
-  double height = 0.;
-  uint obj_inhand = getInhand();
-  double table_height = getHeight(getTableID());
-  cout<<"table "<<table_height<<endl;
-  FOR1D(objects, i) {
-    if (objects(i) == obj_inhand) {
-      cout << objects(i) << " 0 (inhand)"<<endl;
-      continue;
-    }
-    double o_height = (getHeight(objects(i)) - table_height);
-    cout<<objects(i)<<" "<<o_height<<endl;
-    height += o_height;
-  }
-//   height /= 1.0 * objects.N;
-  return height;
-}
-
-
-
-void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
-  list.clear();
-  
-  ors::Body* obj_body = C->getBodyByName(obj_name);
-  double obj_rad = 0.5 * getSize(obj_body->index)[2];
-  
-  uint i;
-  uint body_id__a, body_id__b;
-  double TOL_COEFF = 0.8;
-  double other_rad;
-  
-  uintA others;
-  getObjects(others);
-  ors::Body* other_body;
-
-   //C->reportProxies();
-  
-  for(i=0;i<C->proxies.N;i++){
-    if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth
-      continue;
-    body_id__a = C->shapes(C->proxies(i)->a)->body->index;
-    body_id__b = C->shapes(C->proxies(i)->b)->body->index;
-    if (body_id__a == obj_body->index) {
-      other_body = C->bodies(body_id__b);
-    }
-    else if (body_id__b == obj_body->index) {
-      other_body = C->bodies(body_id__a);
-    }
-    else
-      continue;
-    
-    double MAX_DISTANCE = 0.02;
-
-    if (C->proxies(i)->d < MAX_DISTANCE) { // small enough distance
-      other_rad = 0.5 * getSize(other_body->index)[2];
-      // z-axis (height) difference big enough
-      if (other_body->shapes(0)->X.pos(2) - obj_body->shapes(0)->X.pos(2)   >   TOL_COEFF * (obj_rad + other_rad)) {
-        if (other_body->index == getTableID()  ||  obj_body->index == getTableID()) {
-          list.setAppend(other_body->index);
-        }
-        else {
-          // x-axis difference small enough
-          if (fabs(other_body->shapes(0)->X.pos(0) - obj_body->shapes(0)->X.pos(0))   <   0.9 * (obj_rad + other_rad)) {
-            // y-axis difference small enough
-            if (fabs(other_body->shapes(0)->X.pos(1) - obj_body->shapes(0)->X.pos(1))   <   0.9 * (obj_rad + other_rad)) {
-              list.setAppend(other_body->index);
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-
-void RobotManipulationSimulator::getObjectsOn(uintA& list,const uint obj_id) {
-  getObjectsOn(list, convertObjectID2name(obj_id));
-}
-
-
-bool RobotManipulationSimulator::isClear(uint id) {
-  uintA above_objects;
-  getObjectsOn(above_objects, id);
-  return above_objects.N == 0;
-}
-
-
-void RobotManipulationSimulator::getObjectsClose(uintA& list, uint obj){
-  list.clear();
-  double* pos = getPosition(obj);
-  uint i;
-  uintA objects;
-  getObjects(objects);
-  FOR1D(objects, i) {
-    if (objects(i) == obj) continue;
-    double* pos_other = getPosition(objects(i));
-    if (fabs(pos[2] - pos_other[2]) > 0.03) continue;
-//     PRINT(fabs(pos[0] - pos_other[0]));
-//     PRINT(fabs(pos[1] - pos_other[1]));
-    if (fabs(pos[0] - pos_other[0]) > 0.15) continue;
-    if (fabs(pos[1] - pos_other[1]) > 0.15) continue;
-    list.append(objects(i));
-  }
-}
-
-
-bool RobotManipulationSimulator::freePosition(double x, double y, double radius) {
-  uintA objects;
-  getObjects(objects);
-  objects.removeValue(getTableID());
-//     cout<<"Asking for pos "<<x<<"/"<<y<<" within radius "<<radius<<endl;
-  uint i;
-  FOR1D(objects, i) {
-    double* pos = getPosition(objects(i));
-    double local_radius = radius;
-    if (isBox(objects(i)))
-      local_radius = 0.1;
-    if (fabs(pos[0] - x) < local_radius)
-        return false;
-    if (fabs(pos[1] - y) < local_radius)
-        return false;
-  }
-  return true;
-}
-
-
-double RobotManipulationSimulator::highestPosition(double x, double y, double radius, uint id_ignored) {
-  uint DEBUG = 0;
-  uintA objects;
-  getObjects(objects);
-  objects.removeValue(getTableID());
-  if (DEBUG>0) {
-    cout << "highestPosition:"<<endl;
-    cout<<"Asking for pos "<<x<<"/"<<y<<" within radius "<<radius<<endl;
-  }
-  uint i;
-  double max_z;
-  double* table_pos = getPosition(getTableID());
-  max_z = table_pos[2];
-  if (DEBUG>0) {cout<<"table_z: "<<max_z<<endl;}
-  FOR1D(objects, i) {
-    if (objects(i) == id_ignored)
-      continue;
-    double* pos = getPosition(objects(i));
-//         cout<<manipObjs(i)<<" has pos "<<pos[0]<<"/"<<pos[1]<<endl;
-    if (fabs(pos[0] - x) < radius  &&  fabs(pos[1] - y) < radius) {
-      if (DEBUG>0) cout<<"Object "<<objects(i)<<" within radius at height "<<pos[2]<<endl;
-      if (pos[2] > max_z)
-        max_z = pos[2];
-    }
-  }
-  if (DEBUG>0) cout<<"max_z = "<<max_z<<endl;
-  return max_z;
-}
-
-
-uint RobotManipulationSimulator::getContainedObject(uint box_id) {
-  // inbox object has same position as box
-  uintA boxes;
-  getBoxes(boxes);
-  double* box_pos = getPosition(box_id);
-  uint i;
-  
-  uintA blocks;
-  getBlocks(blocks);
-  FOR1D(blocks, i) {
-    double* obj_pos = getPosition(blocks(i));
-    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
-         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
-         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
-      return blocks(i);
-    }
-  }
-  
-  uintA balls;
-  getBalls(balls);
-  FOR1D(balls, i) {
-    double* obj_pos = getPosition(balls(i));
-    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
-         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
-         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
-      return balls(i);
-         }
-  }
-  return UINT_MAX;
-}
-
-
-bool RobotManipulationSimulator::isClosed(uint box_id) {
-  CHECK(C->bodies(box_id)->shapes.N == 6, "isn't a box");
-  if (TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(0))  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(1))
-      &&  C->bodies(box_id)->shapes(5)->rel.pos(0) < 0.1)
-    return true;
-  else
-    return false;
-}
-
-
-bool RobotManipulationSimulator::containedInBox(uint id) {
-  uintA boxes;
-  getBoxes(boxes);
-  uint i;
-  FOR1D(boxes, i) {
-    if (getContainedObject(boxes(i)) == id)
-      return true;
-  }
-  return false;
-}
-
-
-bool RobotManipulationSimulator::containedInClosedBox(uint id) {
-  uintA boxes;
-  getBoxes(boxes);
-  uint i;
-  FOR1D(boxes, i) {
-    if (!isClosed(boxes(i)))
-      continue;
-    if (getContainedObject(boxes(i)) == id)
-      return true;
-  }
-  return false;
-}
-
-
-bool RobotManipulationSimulator::inContact(uint a,uint b){
-  if(C->getContact(a,b)) return true;
-  return false;
-}
-
-void RobotManipulationSimulator::writeAllContacts(uint id) {
-//   C->reportProxies();
-//   void sortProxies(bool deleteMultiple=false,bool deleteOld=false);
-  
-  ors::Proxy *p;
-  uint obj=C->getBodyByName(convertObjectID2name(id))->index;
-  uint i;
-  cout << convertObjectID2name(id) << " is in contact with ";
-  for(i=0;i<C->proxies.N;i++)
-    if(!C->proxies(i)->age)  // PROXIES SIND LEER!
-      if (C->proxies(i)->d<0.02){
-        p=C->proxies(i);
-        if(p->a==(int)obj && p->b!=(int)obj) {
-          cout << C->bodies(p->b)->name << " ";
-        }
-        if(p->b==(int)obj && p->a!=(int)obj) {
-          cout << C->bodies(p->a)->name << " ";
-        }
-    }
-    cout << endl;
-}
-
-
-
-void RobotManipulationSimulator::printObjectInfo() {
-  uintA objects;
-  getObjects(objects);
-  uint i;
-  FOR1D(objects, i) {
-    cout << objects(i) << " " << convertObjectID2name(objects(i)) << endl;
-  }
-}
-
-
-
-uint RobotManipulationSimulator::getHandID() {
-  return convertObjectName2ID(ENDEFFECTOR);
-}
-
-
-
-// --------------------------------
-//  OpenGL Displaying
-// --------------------------------
+ /************************************************
+  * 
+  *     OpenGL Displaying
+  * 
+  ************************************************/
 
 void RobotManipulationSimulator::displayText(const char* text, uint t) {
   if(gl){
@@ -1807,122 +1667,50 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 }
 
 
-void RobotManipulationSimulator::takeFoto(const char* foto_file) {
-//   gl->saveEPS(foto_file);
-
-//   byteA img;
-//   gl->capture(img, gl->width(), gl->height(), &gl->camera);
-//   
-// //   byteA image(gl->width(), gl->height());
-// //   gl->offscreenGrab(image);
-//   
-//   ofstream out_file(foto_file);
-//   out_file << img << endl;
-  
-//   byteA image(gl->height(), gl->width(), 4);
-  byteA image(gl->height(), gl->width());
-  glGrabImage(image);
-//   PRINT(image(100,200,3));
-//   PRINT(image(100,20,3));
-  PRINT(image(100,200));
-  PRINT(image(100,20));
-  ofstream out_file(foto_file);
-  out_file << image << endl;
-  
-  
-#if 0
-#if TL_SOIL
-
-  unsigned char *pixel_data;
-
-  
-  /* Get the data from OpenGL */
-//   pixel_data = (unsigned char*)malloc( 3*gl->width()*gl->height() );
-//   pixel_data[10] = 'c';
-//   glBindFramebuffer(GL_FRAMEBUFFER, resolveFramebuffer);
-// glBindRenderbuffer(GL_RENDERBUFFER, gl);
-// glReadPixels(xpos, ypos, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelByteArray);
-// glBindFramebuffer(GL_FRAMEBUFFER, sampleFrameBuffer);
-//   glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
-  
-  GLubyte * buf = new GLubyte[4 * gl->width() * gl->height()];
-  glReadPixels(0, 0, gl->width(), gl->height(), GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
-  cout<<"buf[10]="<<"|"<<pixel_data[10]<<"|"<<endl;
-  PRINT(buf[10]);
-  PRINT(buf[200]);
-
-
-//   uint save_result = SOIL_save_screenshot
-//   (
-//     "awesomenessity.bmp",
-//     SOIL_SAVE_TYPE_BMP,
-//     0, 200, gl->width(), gl->height()
-//   );
-//   PRINT(save_result);
-#endif
-#endif
-}
 
 
 
-
-
-
-
+/************************************************
+  * 
+  *     Creating ORS-objects
+  * 
+  ************************************************/
 
 
 namespace relational {
+    
 void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
   MT::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
 	generateOrsFromSample(ors, pos);
 }
 
+
 void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
-  for (int i = ors.bodies.N - 1; i >= 0; --i) {
-    if (strncmp(ors.bodies(i)->name.p, "cylinder", 8)==0) {
-      ors::Body* b = ors.bodies(i);
-      ors.bodies.remove(i);  
-      delete b;
-    }
-  }
-  for (int i = ors.shapes.N - 1; i >= 0; --i) {
-    if (ors.shapes(i)->name.p && strncmp(ors.shapes(i)->name.p, "cylinder", 8)==0) {
-      ors::Shape* s = ors.shapes(i);
-      ors.shapes.remove(i);  
-      delete s;
-    }
-  }
+  //for (int i = ors.bodies.N - 1; i >= 0; --i) {
+    //if (ors.bodies(i)->name.p[0] == 'o') {
+      //ors.bodies.remove(i);  
+    //}
+  //}
   for (uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.)); 
-    ors.addObject(body);
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
+		MT::String name;
+		name << "o7" << i;
+		cout << name << endl;
+    body->name = name;
+    ors.bodies.append(body);
   }
 }
 
-void generateOrsFromTraySample(ors::Graph& ors, const MT::Array<arr>& sample) {
-  for (int i = ors.bodies.N - 1; i >= 0; --i) {
-    if(strncmp(ors.bodies(i)->name.p, "tray", 4)==0) {
-      ors.bodies(i)->X.pos = sample(0,0);
-    }
-    if(strncmp(ors.bodies(i)->name.p, "cube", 4)==0) {
-      ors.bodies(i)->X.pos= sample(0,2);
-    }
-  }
-}
 
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
-  arr center3d = ARR(10., 10.);
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr old_center = center3d;
-    while(norm(old_center.sub(0,1)-center3d.sub(0,1)) < 0.02) {
-       center3d = ARR(0., -.8) + randn(2,1) * 0.3; 
-    }
+    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
 
     int t = rand() % 100;
-    double blocksize = 0.108;// + (rand() % 100) / 100000.;
+    double blocksize = 0.08;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);
@@ -1933,7 +1721,7 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
     while (t < 50 && i < numOfBlocks-1) {
       i++;
       center3d = center3d + randn(3,1) * 0.02;
-      double blocksize = 0.108;// + (rand() % 100) / 1000.;
+      double blocksize = 0.08;// + (rand() % 100) / 1000.;
       center3d(2) = 0.5*blocksize + towersize;
       towersize += blocksize;
 
@@ -1948,10 +1736,12 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   //sample.reshape(1,numOfBlocks);
 }
 
+
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
   arr size = ARR(0.1, 0.1, 0.108, 0.0375);
   createCylinder(cyl, pos, color, size);
 }
+
 
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
   ors::Transformation t;
@@ -1962,14 +1752,9 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, co
   for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
   s->body = &cyl;
   
-  const char* name = "cylinder";
-  s->name = name;
-
-  cyl.name = name;
   cyl.shapes.append(s);
   cyl.X = t; 
 }
 
-}
-
+}  // namespace relational
 

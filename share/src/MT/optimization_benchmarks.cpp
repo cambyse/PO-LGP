@@ -1,5 +1,5 @@
 #include "optimization_benchmarks.h"
-#include "functions.h"
+//#include "functions.h"
 
 void generateConditionedRandomProjection(arr& M, uint n, double condition) {
   uint i,j;

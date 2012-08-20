@@ -1,11 +1,13 @@
 #ifndef MT_perception_h
 #define MT_perception_h
 
-#undef COUNT
-#include <opencv/highgui.h>
-#include <opencv2/opencv.hpp>
-#undef MIN
-#undef MAX
+#ifdef MT_OPENCV
+#  undef COUNT
+//#  include <opencv/highgui.h>
+#  include <opencv2/opencv.hpp>
+#  undef MIN
+#  undef MAX
+#endif
 
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
@@ -64,7 +66,9 @@ struct Colors:Variable {
 };
 
 struct HoughLines:Variable {
+#ifdef MT_OPENCV
   std::vector<cv::Vec4i> lines;
+#endif
   byteA display;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
   HoughLines():Variable("HoughLines") {}
@@ -81,8 +85,10 @@ struct Patching:Variable {
 };
 
 struct SURFfeatures:Variable {
+#ifdef MT_OPENCV
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
+#endif
   byteA display;
   void get_dispImg(byteA& img,Process *p) { readAccess(p); img=display; deAccess(p); }
   SURFfeatures():Variable("SURFfeatures") {};

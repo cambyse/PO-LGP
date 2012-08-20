@@ -17,6 +17,7 @@
 #ifdef MT_LAPACK
 
 #include "array.h"
+#include "util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -117,7 +118,7 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   CALL(, posv_)((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
   if(info) {
     HALT("lapack_Ainv_b_sym error info = " <<info
-         <<"\n typically this is because A is not invertible, A=" <<A);
+         <<"\n typically this is because A is not invertible,\nA=" <<A);
   }
   
 #if 0

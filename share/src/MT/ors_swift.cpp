@@ -17,9 +17,6 @@
 #include "ors.h"
 #include "ann.h"
 
-/* MT TODO: are prenetrations optimally handled? proper penetration depth+gradient? Would be useful also for grasp variable */
-
-
 #ifdef MT_SWIFT
 
 #ifdef MT_SINGLE
@@ -255,7 +252,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   if(dumpReport) {
     cout <<"contacts: np=" <<np <<endl;
     for(k=0, i=0; i<np; i++) {
-      cout <<"* Object " <<C.shapes(oids[i <<1])->name <<" vs. Object " <<C.shapes(oids[(i <<1)+1])->name <<endl;
+      cout <<"* Shape '" <<C.shapes(oids[i <<1])->name <<"' vs. Shape '" <<C.shapes(oids[(i <<1)+1])->name <<"'" <<endl;
       cout <<"  #contacts = " <<num_contacts[i] <<endl;
       for(j=0; j<num_contacts[i]; j++, k++) {
         cout <<"  - contact " <<j <<endl;

@@ -76,7 +76,9 @@ namespace learn {
   // Consideration horizon of previous successful search operator applications:
   #define SEARCH_OP_CHOICE__PAST_HORIZON 20
   #define SEARCH_OP_CHOICE__PAST_WEIGHT 0.5
-  
+
+  //If NO_DEICTICREFS_BY_NONBINARY is specified deictic references must have a unique covering substitution without considering non-binary symbols.
+  #define NO_DEICTICREFS_BY_NONBINARY
   
   // statistics
   extern uintA num_so_improvements;
@@ -200,7 +202,7 @@ namespace learn {
 
 #define SO_WEIGHT__SPLIT_ON_LITS 3.0
 #define SO_WEIGHT__ADD_LITS 2.0
-#define SO_WEIGHT__ADD_REFS 2.0
+#define SO_WEIGHT__ADD_REFS 3.0
 
 // constant bounds
 #define SO_WEIGHT__SPLIT_ON_EQS 2.0
@@ -210,7 +212,10 @@ namespace learn {
 #define SO_WEIGHT__COMPARE_FUNCTIONVALUES 0.0
 #define SO_WEIGHT__SPLIT_ON_COMPARE_FUNCTIONVALUES 0.0
 // both bounds
-#define SO_WEIGHT__GENERALIZE_EQS 5.0
+#define SO_WEIGHT__GENERALIZE_EQS 0//3.0
+
+#define SO_WEIGHT__ABSTRACT_EQS 2.0
+#define SO_WEIGHT__ADD_ABSTRACT_EQS 3.0
 
 
 
@@ -355,6 +360,28 @@ class GeneralizeEquality : public SearchOperator {
     void reset();
 };
 
+class AbstractEquality : public SearchOperator {
+  uint nextRule;
+  uint nextLiteral;
+
+  public:
+    AbstractEquality();
+    void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
+    void reset();
+};
+
+class AddAbstractEquality : public SearchOperator {
+  uint nextRule;
+  uint nextVar;
+  uint nextFunc;
+  uintA vars;
+  SymL usedFunctions;
+  
+  public:
+      AddAbstractEquality();
+      void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
+      void reset();
+};
 
 // for each variable v for each function f for which a comparison predicate with v is not
 // used yet, we introduce equality literals for all existing values for v.
@@ -364,11 +391,18 @@ class SplitOnEqualities : public SearchOperator {
   uint nextFunc;
   uintA vars;
   SymL usedFunctions;
+
+  bool tryRelativeTransition;
+
+  //cached used function values accross all experiences
+  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
   
   public:
       SplitOnEqualities();
       void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
       void reset();
+
+      void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 
@@ -379,10 +413,15 @@ class ChangeRange : public SearchOperator {
   uint nextPossibleValue;
   arr possibleValues;
 
+  //cached used function values accross all experiences
+  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+
   public:
     ChangeRange();
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
     void reset();
+
+    void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 
@@ -395,10 +434,15 @@ class MakeInterval : public SearchOperator {
   uint nextPossibleValue;
   arr possibleValues;
 
+  //cached used function values accross all experiences
+  std::map<relational::Symbol*, MT::Array<double> > *usedFVs;
+
   public:
     MakeInterval();
     void findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add);
     void reset();
+
+    void setUsedFunctionValues(std::map<relational::Symbol*, MT::Array<double> > &usedFunctionValues) { usedFVs = &usedFunctionValues; }
 };
 
 

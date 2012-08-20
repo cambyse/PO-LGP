@@ -13,10 +13,12 @@
 struct Variable;
 struct Process;
 struct Parameter;
+struct ViewInfo;
 
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
+typedef MT::Array<ViewInfo*> ViewInfoL;
 
 #define PROCESS(name) \
   struct name:Process { \
@@ -28,6 +30,9 @@ typedef MT::Array<Parameter*> ParameterL;
     void close();       \
   };
 
+#define VAR(Type) \
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
+
 
 //===========================================================================
 //
@@ -36,24 +41,26 @@ typedef MT::Array<Parameter*> ParameterL;
 
 struct FieldInfo {
   void *p;
+  Variable *var;
   const char* name;
   const char* userType;
   const char* sysType;
-  virtual void write_value(ostream& os) const = 0;
-  virtual void read_value(istream& os) const { NIY; }
+  virtual void writeValue(ostream& os) const = 0;
+  virtual void readValue(istream& os) const { NIY; }
   virtual MT::String type() const = 0;
 };
 
 template<class T>
 struct FieldInfo_typed:FieldInfo {
-  FieldInfo_typed(T *_p, const char* _name, const char* _userType) {
+  FieldInfo_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
     p = _p;
+    var = _var;
     name = _name;
     userType = _userType;
     sysType = typeid(T).name();
   }
-  void write_value(ostream& os) const { os <<*((T*)p); }
-//   void read_value(istream& is) const { is >>*((T*)p); }
+  void writeValue(ostream& os) const { os <<*((T*)p); }
+//   void readValue(istream& is) const { is >>*((T*)p); }
   MT::String type() const { MT::String s(typeid(T).name()); return s; }
 };
 
@@ -66,7 +73,7 @@ struct FieldInfo_typed:FieldInfo {
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
-    fields.append(new FieldInfo_typed<type>(&name,#name,#type)); }
+    fields.append(new FieldInfo_typed<type>(&name,this,#name,#type)); }
 
 
 //===========================================================================
@@ -79,7 +86,7 @@ struct Variable {
   uint id;              ///< unique identifyer
   MT::String name;      ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
-  MT::Array<FieldInfo*> fields;
+  MT::Array<FieldInfo*> fields; //? make static? not recreating for each variable?
   ProcessL listeners;
   //MT bool logValues;
   //MT bool dbDrivenReplay;
@@ -98,7 +105,8 @@ struct Variable {
   int deAccess(Process*);
   
   //-- syncing via a variable
-  int waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
+  void waitForNextWriteAccess();
+  uint waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
   
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
@@ -119,6 +127,8 @@ struct Process {
   int id;              ///< unique identifier
   uint step_count;     ///< step count
   MT::String name;     ///< Process name
+  VariableL listensTo;
+  ParameterL dependsOn;
   
   Process(const char* name);
   virtual ~Process();
@@ -127,6 +137,9 @@ struct Process {
   virtual void open() = 0;    ///< is called within the thread when the thread is created
   virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
   virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
+  
+  //-- info
+  int stepState(); // 0=idle, >0=steps-to-go, <0=special loop modes
   
   //-- a scalar function which may depend only on the referenced variables
   //   -- code correctness requires that a call of _step() may only decrease _f() !!
@@ -137,12 +150,11 @@ struct Process {
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
   
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-  void threadStepOrSkip(uint maxSkips); ///< trigger a step (idle -> working mode) or skip if still busy (counts skips.., maxSkip=0 -> no warnings)
-  void threadWait();                    ///< caller waits until step is done (working -> idle mode)
+  void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
   bool threadIsIdle();                  ///< check if in idle mode
   bool threadIsClosed();                ///< check if closed
   
-  void threadListenTo(Variable *var);
+  void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
   void threadListenTo(const VariableL &signalingVars);
   
   void threadLoop();                    ///< loop, stepping forever
@@ -162,7 +174,7 @@ struct Parameter {
   uint id;              ///< unique identifyer
   void *pvalue;
   const char* name;
-  ProcessL processes;
+  ProcessL dependers;
   Parameter();
   virtual void writeValue(ostream& os) const = 0;
   virtual const char* typeName() const = 0;
@@ -174,7 +186,7 @@ struct Parameter_typed:Parameter {
   Parameter_typed(const char* _name, const T& _default):Parameter() {
     name = _name;
     pvalue = &value;
-    if (&_default) MT::getParameter<T>(value, name, _default);
+    if(&_default) MT::getParameter<T>(value, name, _default);
     else          MT::getParameter<T>(value, name);
   }
   void writeValue(ostream& os) const { os <<value; }
@@ -192,12 +204,13 @@ struct BirosInfo:Variable {
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
+  ViewInfoL views;
+
+  BirosInfo():Variable("BirosInfo") {};
   
   Process *getProcessFromPID();
   
-  BirosInfo():Variable("BirosInfo") {};
-  
-  template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required=false) {
+  template<class T>  void getVariable(T*& v, const char* name, Process *p) {
     writeAccess(p);
     void* raw = listFindByName(variables, name); // NULL if not found
     v = dynamic_cast<T*>(listFindByName(variables, name)); // NULL if cast fails because of RTTI
@@ -213,7 +226,10 @@ struct BirosInfo:Variable {
     writeAccess(p);
     T *pname = (T*)listFindByName(processes, name);
     deAccess(p);
-    if (!pname) MT_MSG("can't find biros process '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    if (!pname) MT_MSG("can't find biros process '" <<name
+		       <<"' -- Process '" <<(p?p->name:STRING("NULL"))
+		       <<"' will not connect");
+    return pname;
   }
   template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)) {
     Parameter_typed<T> *par;
@@ -221,7 +237,7 @@ struct BirosInfo:Variable {
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
     if (!par) par = new Parameter_typed<T>(name, _default);
-    if (!par->processes.contains(p)) par->processes.append(p);
+    if (!par->dependers.contains(p)) par->dependers.append(p);
     return par->value;
   }
   template<class T> T getParameter(const char *name) {
@@ -230,20 +246,20 @@ struct BirosInfo:Variable {
   template<class T> T getParameter(const char *name, const T& _default) {
     return getParameter<T>(name, getProcessFromPID(), _default);
   }
-  template<class T>
-  void setParameter(const char *name, T value ) {
+  template<class T> void setParameter(const char *name, T value) {
     Process *p = getProcessFromPID();
     Parameter_typed<T> *par;
     writeAccess(p);
     par = (Parameter_typed<T>*)listFindByName(parameters, name);
     deAccess(p);
-    if (!par) MT_MSG("WARNING: cannot find " << name << " in parameters, nothing is changed.");
+    if (!par) MT_MSG("WARNING: cannot find " <<name
+		     <<" in parameters, nothing is changed.");
     par->value = value;
   }
   void dump(); //dump everything -- for debugging
 };
 
-extern BirosInfo birosInfo;
+BirosInfo& birosInfo(); //get access to the global info struct
 
 
 //===========================================================================
@@ -268,6 +284,7 @@ struct WorkingCopy {
     copy = *var;
     last_revision = var->revision;
     var->deAccess(p);
+    copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
   }
   void init(const char* var_name, Process *_p) {
     T *_v;
@@ -296,23 +313,6 @@ struct WorkingCopy {
 
 //===========================================================================
 //
-// very basic low-level X11 Monitor
-//
-
-struct ThreadInfoWin:public Process {
-  struct sThreadInfoWin *s;
-  
-  ThreadInfoWin();
-  ~ThreadInfoWin();
-  
-  void open();
-  void close();
-  void step();
-};
-
-
-//===========================================================================
-//
 // handling groups
 //
 
@@ -323,6 +323,18 @@ void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
+
+
+//===========================================================================
+//
+// helpers
+//
+
+void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
+void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
+void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
+void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
+void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
 
 
 #ifdef  MT_IMPLEMENTATION

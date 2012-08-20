@@ -1,8 +1,6 @@
-#ifdef MT_FELZ
-
-//#include "common.h"
-//#include "nputils.h"
 #include "libcolorseg.h"
+
+#ifdef MT_FELZ
 
 // Felzenszwalb's files
 #include <libcolorseg/misc.h>
@@ -353,5 +351,40 @@ void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){
 
 
 #else
+
+void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap){NIY};
+void random_colorMap(floatA& pch_colormap, uint np){NIY};
+uint incremental_patch_ids(uintA& pch){NIY};
+void get_patch_colors(floatA& pch_col, byteA& img, uintA& pch, uint np){NIY};
+void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){NIY};
+
+uint get_single_color_segmentation(uintA& segmentation,
+				   const byteA& image, 
+				   float sigma,
+				   float k,
+				   int min
+				   ){NIY};
+
+uint get_single_color_segmentation_rgb(uintA& segmentation,
+				       byteA& rgb,         
+				       const byteA& image, 
+				       float sigma,
+				       float k,
+				       int min){NIY};
+
+void get_patch_centers(arr& centers, const uintA& patches){NIY};
+
+void patch_color_statistics(arr& stats, const uintA& patches, const byteA& image){NIY};
+
+void colorize_patches(byteA& coloration, const uintA& patches, const arr& stats){NIY};
+
+typedef MT::Array<uintA> MultiSegmentations;
+void get_multiple_color_segmentations(MultiSegmentations& segmentations,
+				      const byteA& image,  
+				      const arr& sigma,
+				      const arr& k,
+				      const intA& min
+				      ){NIY}
+
 
 #endif

@@ -51,30 +51,41 @@ void testRprop(){
   uint t;
   
   doubleA x(2); x(0)=10.; x(1)=9.;
-  doubleA grad(2);
   Rprop gd;
   std::ofstream fout("z");
+
+  struct Function:ScalarFunction{
+    double fs(arr& grad, const arr& x){
+      double y=scalarProduct(x,x);
+      if(&grad) grad=2.*x;
+    }
+  } f;
   
   for(t=0;t<1000;t++){
-    grad=x;
-    gd.step(x,grad);
+    gd.step(x,f);
     fout <<x.ioraw() <<std::endl;  
   }
   gnuplot("plot [0:20] 'z' us 1,'z' us 2");
 }
 
-double df1(doubleA& x,doubleA& dx){
-  static doubleA a,A;
-  if(!A.N){ A.setId(2); rndGauss(A,.3,true); a.resize(2); a=0.; }
-  return dNNinv(x,a,A,dx);
-}
 void testMaximize(){
-  doubleA dx,x(2); x=10.; rndGauss(x,1.,true);
+
+  struct Function:ScalarFunction{
+    doubleA a,A;
+    Function(){
+      A.setId(2);
+      rndGauss(A,.3,true);
+      a.resize(2);
+      a=0.;
+    }
+    double fs(arr& grad, const arr& x){
+      if(&grad) return dNNinv(x,a,A,grad);
+      return NNinv(x,a,A);
+    }
+  } f;
+  doubleA x(2); x=10.; rndGauss(x,1.,true);
   Rprop rp;
-  for(uint t=0;t<100;t++){
-    df1(x,dx);
-    rp.step(x,dx);
-  }
+  for(uint t=0;t<100;t++) rp.step(x,f);
 }
 
 void testSymIndex(){

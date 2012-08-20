@@ -29,6 +29,7 @@ namespace ors {
 //! shape and joint type enums
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
 enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
+enum BodyType { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 
 //===========================================================================
 //! a 3D vector (double[3])
@@ -218,6 +219,7 @@ struct Mesh {
   void center();
   void box();
   void addMesh(const ors::Mesh& mesh2);
+  void makeConvexHull();
   
   //internal computations & cleanup
   void computeNormals();
@@ -242,6 +244,7 @@ struct Mesh {
   void readStlFile(const char* filename);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
+  void glDraw();
 };
 
 //===========================================================================
@@ -279,7 +282,7 @@ struct Body {
   AnyList ats;         //!< list of any-type attributes
   
   //dynamic properties
-  bool fixed;          //!< is globally fixed?
+  BodyType type;          //!< is globally fixed?
   double mass;           //!< its mass
   Matrix inertia;      //!< its inertia tensor
   Vector com;          //!< its center of gravity
@@ -289,11 +292,11 @@ struct Body {
   
   Body();
   explicit Body(const Body& b);
-  explicit Body(Graph& G);
+  explicit Body(Graph& G, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
     index=b.index; name=b.name; X=b.X; listClone(ats, b.ats);
-    fixed=b.fixed; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
+    type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
   void write(std::ostream& os) const;
@@ -316,7 +319,7 @@ struct Joint {
   
   Joint();
   explicit Joint(const Joint& j);
-  explicit Joint(Graph& G, Body *f, Body *t);
+  explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint() { reset(); }
   void operator=(const Joint& j) {
     index=j.index; ifrom=j.ifrom; ito=j.ito;
@@ -350,7 +353,7 @@ struct Shape {
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Graph& G, Body *b, Shape *copyShape=NULL);
+  explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape() { reset(); }
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
@@ -366,12 +369,12 @@ struct Shape {
 //===========================================================================
 //! proximity information (when two shapes become close)
 struct Proxy {
-  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ?
+  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              //!< index of shape B
-  Vector posA, velA;   //!< contact or closest point position on surface of shape A (in world coordinates)
-  Vector posB, velB;   //!< contact or closest point position on surface of shape B (in world coordinates)
-  Vector normal;      //!< contact normal, pointing from A to B
-  double d;             //!< distance (positive) or penetration (negative) between A and B
+  Vector posA, velA;  //!< contact or closest point position on surface of shape A (in world coordinates)
+  Vector posB, velB;  //!< contact or closest point position on surface of shape B (in world coordinates)
+  Vector normal;      //!< contact normal, pointing from B to A (proportional to posA-posB)
+  double d;           //!< distance (positive) or penetration (negative) between A and B
   Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
   uint age,colorCode;
   Proxy();
@@ -482,6 +485,7 @@ struct Graph {
   void write(std::ostream& os) const;
   void read(std::istream& is);
   void writePlyFile(const char* filename) const;
+  void glDraw();
 };
 #endif
 }
@@ -554,6 +558,7 @@ inline arr ARRAY(const ors::Vector& v) {     return arr(v.p, 3); }
 inline arr ARRAY(const ors::Quaternion& q) { return arr(q.p, 4); }
 inline arr ARRAY(const ors::Matrix& m) {     return arr(m.p, 9); }
 
+
 //===========================================================================
 //
 // constants
@@ -570,10 +575,8 @@ extern const ors::Vector VEC_z;
 //
 
 namespace ors {
-void glDraw(Mesh& mesh);
 void glDrawMesh(void *classP);
 #ifndef MT_ORS_ONLY_BASICS
-void glDraw(Graph& graph);
 void glDrawGraph(void *classP);
 #endif
 }
@@ -665,7 +668,7 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   //!@name updates
-  virtual void updateState(const ors::Graph &ors, double tau=1.) = 0;
+  virtual void updateState(const ors::Graph &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
   void updateChange(int t=-1, double tau=1.);
   virtual void getHessian(arr& H) { NIY; }
   
@@ -716,7 +719,7 @@ struct DefaultTaskVariable:public TaskVariable {
   //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
   void getHessian(const ors::Graph& ors, arr& H);
   
   //!@name virtual user update
@@ -763,7 +766,7 @@ struct ProxyTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyTaskVariable(*this); }
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
 };
 
 /*!\brief basic task variable */
@@ -785,7 +788,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyAlignTaskVariable(*this); }
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
 };
 
 
@@ -1006,6 +1009,8 @@ void plotQhullState(uint D);
 
 extern int QHULL_DEBUG_LEVEL;
 
+const char* qhullVersion();
+
 double distanceToConvexHull(const arr &X,        //points
                             const arr &y,        //query point
                             arr *projectedPoint, //return query point projected on closest facet
@@ -1020,11 +1025,13 @@ double distanceToConvexHullGradient(arr& dDdX,   //gradient (or same dim as X)
 double forceClosure(const arr& X,  //contact points (size Nx3)
                     const arr& Xn, //contact normals (size Nx3)
                     const ors::Vector& center, //object center
-                    float mu,     //friction coefficient
-                    float discountTorques,     //friction coefficient
-                    arr *dFdX);    //optional: also compute gradient
+                    double mu=.5,     //friction coefficient
+                    double discountTorques=1.,   //friction coefficient
+                    arr *dFdX=NULL);    //optional: also compute gradient
 
-double forceClosureFromProxies(ors::Graph& C, uint i);
+double forceClosureFromProxies(ors::Graph& C, uint bodyIndex, double distanceThreshold=0.01,
+			       double mu=.5,     //friction coefficient
+			       double discountTorques=1.);  //friction coefficient
 
 void getTriangulatedHull(uintA& T, arr& V);
 

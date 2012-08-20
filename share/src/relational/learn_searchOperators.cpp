@@ -186,8 +186,9 @@ void ExplainExperiences::findRules(const RuleSetContainer& rulesC_old, const Sta
       StateTransitionL covered_experiences;
       uintA covered_experiences_ids;
       learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+      if (DEBUG>2) {cout<<"Learned new rule without outcomes:"<<endl<<*newRule;}
       // Estimate new outcomes for r'
-      CHECK(covered_experiences.N>0, "At least the explained example should be covered.")
+      CHECK(covered_experiences.N>0  &&  covered_experiences_ids.findValue(i)>=0, "At least the explained example should be covered.")
       MT::Array< uintA > experiences_per_outcome;
       learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
       if (DEBUG>0) {cout<<"New Rule:"<<endl; newRule->write(cout);}
@@ -578,32 +579,50 @@ Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(StateTransition* ex)
     newInvSub.addSubs2Variable(ex->changedConstants(i));
 //     cout<<"newInvSub: "; newInvSub.write();  cout<<endl;
   }
+
+  LitL newContext;
+//   LitL newContext_ground;
+
+  FOR1D(ex->pre.lits, i) {
+    Literal *substituted = newInvSub.apply(ex->pre.lits(i));
+    if (reason::isPurelyAbstract(substituted)
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::count
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::avg
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::max
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::sum
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::function_change
+      &&  ex->pre.lits(i)->s->symbol_type != Symbol::function_reward
+    ) {
+      newContext.append(substituted);
+//       newContext_ground.append(ex->pre.lits(i));
+    }
+  }
   
+  //negated literals are not specified in the context, they must be added seperately
   uintA context_vars;  context_vars.setAppend(ex->action->args);  context_vars.setAppend(ex->changedConstants);
   TL::sort_asc(context_vars);
   if (DEBUG>1) {PRINT(context_vars);}
-  LitL ground_context_candidates, ground_context_candidates_pos, ground_context_candidates_neg;
-  Literal::getLiterals_state(ground_context_candidates_pos, context_vars, 1.0);
+  LitL ground_context_candidates_neg;
   Literal::getLiterals_state(ground_context_candidates_neg, context_vars, 0.0);
-  ground_context_candidates.append(ground_context_candidates_pos);
-  ground_context_candidates.append(ground_context_candidates_neg);
-  LitL newContext;
-  LitL newContext_ground;
-  FOR1D(ground_context_candidates, i) {
-    if (DEBUG>3) {cout<<"ground_context_candidates(k)="<<*ground_context_candidates(i)<<" accepted? ";}
-    if (reason::holds(ex->pre.lits, ground_context_candidates(i))) {
-      newContext.append(newInvSub.apply(ground_context_candidates(i)));
-      newContext_ground.append(ground_context_candidates(i));
+
+  FOR1D(ground_context_candidates_neg, i) {
+    if (DEBUG>3) {cout<<"ground_context_candidates_neg(k)="<<*ground_context_candidates_neg(i)<<" accepted? ";}
+    if (reason::holds(ex->pre.lits, ground_context_candidates_neg(i))) {
+      newContext.append(newInvSub.apply(ground_context_candidates_neg(i)));
+//       newContext_ground.append(ground_context_candidates_neg(i));
       if (DEBUG>3) {cout<<" yes"<<endl;}
     }
     else {
       if (DEBUG>3) {cout<<" no"<<endl;}
     }
   }
-  Literal::sort(newContext_ground);
+//   Literal::sort(newContext_ground);
   Literal::sort(newContext);
       
-  if (DEBUG>0) {PRINT(newContext_ground);  PRINT(newContext);}
+  if (DEBUG>0) {
+//     PRINT(newContext_ground);
+    PRINT(newContext);
+  }
 
   // check whether new variables refers uniquely to s
   SubstitutionSet subs;
@@ -614,9 +633,9 @@ Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(StateTransition* ex)
     Rule helper_rule;
     helper_rule.action = newRule->action;
     helper_rule.context = newContext;
-    uintA drefs_neg, drefs_pos;
-    helper_rule.getDeicticRefs(drefs_pos, drefs_neg);
-    if (drefs_neg.N == 0) {
+    uintA drefs_neg, drefs_pos, drefs_nonBinary;
+    helper_rule.getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+    if (drefs_neg.N == 0 && drefs_nonBinary.N == 0) {
       invSub = newInvSub;
       newRule->context = newContext;
       if (DEBUG>1) {cout<<"Rule accepted"<<endl;}
@@ -681,9 +700,9 @@ void DropContextLiterals::findRules(const RuleSetContainer& rulesC_old, const St
       }
       newRule->action = rulesC_old.rules.elem(r)->action;
       // check for neg free DRs
-      uintA drefs_neg, drefs_pos;
-      newRule->getDeicticRefs(drefs_pos, drefs_neg);
-      if (drefs_neg.N > 0) {
+      uintA drefs_neg, drefs_pos, drefs_nonBinary;
+      newRule->getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+      if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
         delete newRule;
         continue;
       }
@@ -822,9 +841,9 @@ void DropContextLiterals_approximativeVersion::findRules(const RuleSetContainer&
     if (DEBUG>1) {cout<<"Deletion of "<<*rulesC_old.rules.elem(id_rule)->context(id_contextLiteral)<<" executed."<<endl;}
     newRule->action = rulesC_old.rules.elem(id_rule)->action;
     // check for neg free DRs
-    uintA drefs_neg, drefs_pos;
-    newRule->getDeicticRefs(drefs_pos, drefs_neg);
-    if (drefs_neg.N > 0) {
+    uintA drefs_neg, drefs_pos, drefs_nonBinary;
+    newRule->getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+    if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
       delete newRule;
       continue;
     }
@@ -906,22 +925,18 @@ void DropReferences::findRules(const RuleSetContainer& rulesC_old, const StateTr
         Literal* lit = rulesC_old.rules.elem(r)->context(i);
         if (DEBUG>4) {PRINT(lit->args);}
         if (lit->s->range_type != Symbol::binary) {
-          NIY;
-//           ComparisonLiteral* ca = (ComparisonLiteral*) lit->atom;
-//           if (ca->fa1->args.findValue(drefs(nextReference)) < 0 ) {
-//             if (ca->fa2 == NULL  ||  ca->fa2->args.findValue(drefs(nextReference)) < 0 ) {
-//               newRule->context.append(rulesC_old.rules.elem(r)->context(i));
-//             }
-//           }
+          //(ANDREAS): Funktioniert hier nicht der selbe Code wie für Binaries?
+          if (lit->args.findValue(drefs(nextReference))<0)
+            newRule->context.append(rulesC_old.rules.elem(r)->context(i));
         }
         else if (lit->args.findValue(drefs(nextReference))<0)
           newRule->context.append(rulesC_old.rules.elem(r)->context(i));
       }
       if (DEBUG>0) {cout<<"Yielding the new context: "; write(newRule->context); cout<<endl;}
       // check for neg free DRs
-      uintA drefs_neg, drefs_pos;
-      newRule->getDeicticRefs(drefs_pos, drefs_neg);
-      if (drefs_neg.N > 0) {
+      uintA drefs_neg, drefs_pos, drefs_nonBinary;
+      newRule->getDeicticRefs(drefs_pos, drefs_neg, drefs_nonBinary);
+      if (drefs_neg.N > 0 || drefs_nonBinary.N > 0) {
         delete newRule;
         continue;
       }
@@ -1541,6 +1556,7 @@ SplitOnEqualities::SplitOnEqualities() : SearchOperator() {
   nextRule=1; // ignore default rule
   nextVar=0;
   nextFunc=0;
+  tryRelativeTransition = true;
   SymL function_symbols;
   Symbol::get_state_nonBinary(function_symbols) ;
   usedFunctions.append(function_symbols);
@@ -1576,21 +1592,55 @@ void SplitOnEqualities::findRules(const RuleSetContainer& rulesC_old, const Stat
               alreadyUsed = true;
           }
         }
-        if (DEBUG>1) PRINT(alreadyUsed)
+        if (DEBUG>1) { PRINT(alreadyUsed) }
         if (!alreadyUsed) {
-          arr usedValues;
-          // TODO this is not the perfect solution... need to find a clever way to store all used function values...
-          SymbolicState::getValues(usedValues, experiences(0)->pre, *usedFunctions(f), experiences(0)->pre.state_constants);
+          uintA tosplit_args;
+          tosplit_args.append(vars(v));
+
+          /********************************************
+          Try relative transition first
+          *********************************************/
+          /*if (tryRelativeTransition) {
+            if (DEBUG>0) {cout << "Trying relative transition..." << endl; }
+            Rule* newRule = new Rule;
+            newRule->action = rulesC_old.rules.elem(r)->action;
+            newRule->context = rulesC_old.rules.elem(r)->context;
+
+            Literal *newLit = Literal::getVarComparison(usedFunctions(f), tosplit_args);
+            newRule->insertContext(newLit);
+
+            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
+            StateTransitionL covered_experiences;
+            uintA covered_experiences_ids;
+            learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+            if (covered_experiences.N > 0) {      
+              MT::Array< uintA > experiences_per_outcome;
+              learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
+              if (newRule->existsInOutcome(newLit->s, tosplit_args)) {    //check whether newLit was used to predict something in the outcome
+                if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;                 
+                rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);   
+                tryRelativeTransition = false;
+                nextFunc = f;   //Consider function again with tryRelativeTransition=false
+                return;
+              }
+            }
+            if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
+            delete newRule;
+          }*/
+
+          /********************************************
+          Regular SplitOnEqualities
+          *********************************************/
+          tryRelativeTransition = true;
+          arr usedValues = (*usedFVs)[usedFunctions(f)];
           if (DEBUG>2) {cout<<"Using function values: "<<usedValues<<endl;}
           FOR1D(usedValues, i) {
             Rule* newRule = new Rule;
             newRule->action = rulesC_old.rules.elem(r)->action;
             newRule->context = rulesC_old.rules.elem(r)->context;
-            uintA tosplit_args;
-            tosplit_args.append(vars(v));
             Literal* lit_tosplit = Literal::get(usedFunctions(f), tosplit_args, usedValues(i), Literal::comparison_equal);
             newRule->insertContext(lit_tosplit);
-            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<newRule;}
+            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
             StateTransitionL covered_experiences;
             uintA covered_experiences_ids;
             learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
@@ -1605,10 +1655,11 @@ void SplitOnEqualities::findRules(const RuleSetContainer& rulesC_old, const Stat
               delete newRule;
             }
           }
-        }
-        if (rulesC_2add.rules.num() > 0) {
+          if (rulesC_2add.rules.num() > 0) {
             nextFunc = f+1;
             break;
+          }
+
         }
       }
       if (rulesC_2add.rules.num() > 0) {
@@ -1636,11 +1687,116 @@ void SplitOnEqualities::reset() {
   nextRule = 1;
   nextVar = 0;
   nextFunc = 0;
+  tryRelativeTransition = true;
 }
 
 
 
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+//    ADD ABSTRACT EQUALITY
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
+
+AddAbstractEquality::AddAbstractEquality() : SearchOperator() {
+  name = "AddAbstractEquality";
+  nextRule=1; // ignore default rule
+  nextVar=0;
+  nextFunc=0;
+  SymL function_symbols;
+  Symbol::get_state_nonBinary(function_symbols) ;
+  usedFunctions.append(function_symbols);
+}
+
+void AddAbstractEquality::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
+  uint DEBUG = 2;
+  if (DEBUG>0) cout<<"AddAbstractEquality::findRules [START]"<<endl;
+  rulesC_2add.clear();
+  uint r, v, f, i;
+  
+  for (r=nextRule; r<rulesC_old.rules.num(); r++) {
+    if (vars.N == 0) { // first round
+      // determine vars
+      rulesC_old.rules.elem(r)->getArguments(vars);
+      if (DEBUG>2) {
+        cout << "Inspecting rule:"<<endl;
+        rulesC_old.rules.elem(r)->write(cout);
+        cout<<"findValue the following vars: "<<vars<<endl;
+      }
+    }
+    for (v=nextVar; v<vars.d0; v++) {
+      for (f=nextFunc; f<usedFunctions.d0; f++) {
+        if (usedFunctions(f)->arity != 1)  // nur fuer unary functions!!
+          continue;
+        if (DEBUG>1) {cout<<"Checking var "<<v<<" with function "<<usedFunctions(f)->name<<endl;}
+        // check whether function has not been used with this variable
+        bool alreadyUsed = false;
+        FOR1D(rulesC_old.rules.elem(r)->context, i) {
+          if (rulesC_old.rules.elem(r)->context(i)->s == usedFunctions(f)) {
+            if (rulesC_old.rules.elem(r)->context(i)->args.findValue(vars(v)) >= 0)
+              alreadyUsed = true;
+          }
+        }
+        if (DEBUG>1) { PRINT(alreadyUsed) }
+        if (!alreadyUsed) {
+          uintA newLitArgs;
+          newLitArgs.append(vars(v));
+
+          if (DEBUG>0) {cout << "Trying relative transition..." << endl; }
+          Rule* newRule = new Rule;
+          newRule->action = rulesC_old.rules.elem(r)->action;
+          newRule->context = rulesC_old.rules.elem(r)->context;
+
+          Literal *newLit = Literal::getVarComparison(usedFunctions(f), newLitArgs);
+          newRule->insertContext(newLit);
+
+          if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
+          StateTransitionL covered_experiences;
+          uintA covered_experiences_ids;
+          learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+          if (covered_experiences.N > 0) {      
+            MT::Array< uintA > experiences_per_outcome;
+            learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
+            if (newRule->existsInOutcome(newLit->s, newLitArgs)) {    //check whether newLit was used to predict something in the outcome
+              if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;                 
+              rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);   
+              nextFunc = f+1;
+              break;
+            }
+          }
+          if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
+          delete newRule;
+
+        }
+      }
+      if (rulesC_2add.rules.num() > 0)
+        break;
+      else {
+        nextFunc = 0;
+        nextVar = v+1;
+      }
+    }
+    if (rulesC_2add.rules.num() > 0)
+      break;
+    else {
+      nextRule = r+1;
+      nextVar = 0;
+      nextFunc = 0;
+      vars.clear();
+    }
+  }
+  if (DEBUG>0) {if (rulesC_2add.rules.num() > 0) {write(rulesC_2add.rules);}}
+  if (DEBUG>0) cout<<"AddAbstractEquality::findRules [END]"<<endl;
+}
+
+void AddAbstractEquality::reset() {
+  nextRule = 1;
+  nextVar = 0;
+  nextFunc = 0;
+}
 
 
 
@@ -2170,21 +2326,77 @@ void SplitOnCompareFunctionValues::reset() {
 
 
 
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+//    AbstractEquality
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
+AbstractEquality::AbstractEquality() : SearchOperator() {
+  name = "AbstractEquality";
+  nextRule = 1; // ignore default rule
+  nextLiteral = 0;
+}
 
+void AbstractEquality::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add) {
+  uint DEBUG = 2;
+  if (DEBUG>0) cout<<"AbstractEquality::findRules [START]"<<endl;
+  uint r, p, i;
+  Rule* newRule;
+  for (r=nextRule; r<rulesC_old.rules.num(); r++) {
+    for (p=nextLiteral; p<rulesC_old.rules.elem(r)->context.N; p++) {
+      Literal *contextLit = rulesC_old.rules.elem(r)->context(p);
+      if (contextLit->comparison_type == Literal::comparison_equal 
+        && (contextLit->s->range_type == Symbol::integers || contextLit->s->range_type == Symbol::integer_set)
+        && (rulesC_old.rules.elem(r)->existsInOutcome(contextLit->s, contextLit->args))) {
+          if (DEBUG>1) {cout<<"Generalizing literal #" << p << ": " << *rulesC_old.rules.elem(r)->context(p) << " in rule:" << endl << *rulesC_old.rules.elem(r) << endl;}
+          newRule = new Rule();
+          newRule->action = rulesC_old.rules.elem(r)->action;
+          Literal *varComp = NULL;
+          FOR1D(rulesC_old.rules.elem(r)->context, i) {
+            if (i!=p)
+              newRule->insertContext(rulesC_old.rules.elem(r)->context(i));
+            else { // create new comparison literal of the form f(X)=C
+              varComp = Literal::getVarComparison(rulesC_old.rules.elem(r)->context(i)->s, rulesC_old.rules.elem(r)->context(i)->args);
+              newRule->insertContext(varComp);
+              if (DEBUG > 1) cout << "Inserting " << *varComp << endl;
+            }
+          }
+          if (DEBUG > 1) cout << "Generalized context: " << newRule->context << endl;
+          StateTransitionL covered_experiences;
+          uintA covered_experiences_ids;
+          learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+          if (covered_experiences.N > 0) {
+            MT::Array< uintA > experiences_per_outcome;
+            learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
+            if (newRule->existsInOutcome(varComp->s, varComp->args)) {
+              if (DEBUG > 0) { cout << "Keep rule" << endl << *newRule << endl; }
+              rules_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
+              break;
+            }
+            else cout << "No prediction learned, rule will be dropped" << endl;
+          }
+          delete newRule;
+      }
+    }
+    if (rules_2add.rules.num()>0) {
+      nextLiteral = p+1;
+      break;
+    }
+    else {
+      nextRule=r+1;
+      nextLiteral=0;
+    }
+  }
+  if (DEBUG>0) cout<<"AbstractEquality::findRules [END]"<<endl;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
+void AbstractEquality::reset() {
+    nextRule = 1;
+    nextLiteral = 0;
+}
 
 
 

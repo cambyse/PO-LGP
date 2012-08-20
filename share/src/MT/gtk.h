@@ -1,10 +1,15 @@
 #ifndef MT_gtk_h
 #define MT_gtk_h
 
-#include <gtk/gtk.h>
+#include <MT/array.h>
 
-inline void gtkProcessEvents(){
-  while (gtk_events_pending())  gtk_main_iteration();
-}
+typedef struct _GtkWidget GtkWidget;
+
+void gtkLock();
+void gtkUnlock();
+void gtkCheckInitialized(bool userHasLocked=false);
+void gtkProcessEvents(bool waitForEvents=false, bool userHasLocked=false);
+int gtkPopupMenuChoice(StringL& choices);
+GtkWidget *gtkTopWindow(const char* title);
 
 #endif

@@ -412,7 +412,7 @@ void NID_UCT::runEpisode(double& value, const SymbolicState& s, uint t) {
           UCB(i) = -11.;
         }
         else
-          UCB(i) = s_a_info->getQvalue(i)  +  c * sqrt(log(s_a_info->getVisits()) / (1.0 * s_a_info->getVisits(i)));
+          UCB(i) = s_a_info->getQvalue(i)  +  c * sqrt(log((double)s_a_info->getVisits()) / (1.0 * s_a_info->getVisits(i)));
       }
       else {
         rules.append(Rule::getDoNothingRule()); // just as a hack

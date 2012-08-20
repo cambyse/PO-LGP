@@ -11,7 +11,7 @@ struct sJoystick {
 
 Joystick::Joystick():Process("Joystick") {
   s = new sJoystick;
-  birosInfo.getVariable(joystickState, "JoystickState", this);
+  birosInfo().getVariable(joystickState, "JoystickState", this);
   s->n=0;
 }
 
@@ -27,7 +27,10 @@ void Joystick::open() {
 
 void Joystick::step() {
   s->step();
-  joystickState->set_state(s->state, this);
+  joystickState->writeAccess(this);
+  joystickState->state = s->state;
+  joystickState->exitSignal=(s->state(0)==16 || s->state(0)==32);
+  joystickState->deAccess(this);
 }
 
 void Joystick::close() {
@@ -58,7 +61,7 @@ void sJoystick::open() {
   */
   n=joy->getNumAxes();
   if (joy->notWorking()) n=0;
-  state.resize(10);
+  state.resize(n+1);
   state.setZero();
   step();
 }

@@ -17,9 +17,7 @@
 #include "plot.h"
 #include "array.h"
 #include "ors.h"
-#if defined MT_GL || defined MT_QTGLUT || defined MT_FREEGLUT
-#  include "opengl.h"
-#endif
+#include "opengl.h"
 
 //===========================================================================
 //
@@ -60,7 +58,7 @@ PlotModule::~PlotModule() {
 }
 
 void plotDrawOpenGL(void* data);
-void plotDrawGnuplot(void* data);
+void plotDrawGnuplot(void* data, bool pauseMouse);
 void glDrawPlot(void *module) { plotDrawOpenGL(((PlotModule*)module)->s); }
 
 //===========================================================================
@@ -241,7 +239,7 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 void plot(bool wait) {
   switch(plotModule.mode) {
     case gnupl:
-      plotDrawGnuplot(plotModule.s);
+      plotDrawGnuplot(plotModule.s, false);
       if(wait) MT::wait();
       break;
 #ifdef MT_GL
@@ -639,7 +637,7 @@ void plotDrawOpenGL(void *_data) {
           }
         data.mesh.computeNormals();
         glDisable(GL_CULL_FACE);
-        ors::glDraw(data.mesh);
+        data.mesh.glDraw();
         glEnable(GL_CULL_FACE);
       } else { //as a grid
         c.blacken(.5);
@@ -753,7 +751,7 @@ void plotDrawOpenGL(void *_data) {
 #define PLOTEVERY(block, with)  gnuplotcmd \
       <<"'z.plotdata' every :::" <<(block) <<"::" <<(block) <<(with);
 
-void plotDrawGnuplot(void *_data) {
+void plotDrawGnuplot(void *_data, bool pauseMouse) {
   sPlotModule& data=(*((sPlotModule*)_data));
   uint i, j, k;
   
@@ -828,7 +826,7 @@ void plotDrawGnuplot(void *_data) {
   //call gnuplot
   //if(wait) gnuplotcmd <<"\npause mouse" <<std::endl;
   ofstream gcmd("z.plotcmd"); gcmd <<gnuplotcmd; gcmd.close(); //for debugging...
-  gnuplot(gnuplotcmd);
+  gnuplot(gnuplotcmd, pauseMouse);
 }
 
 

@@ -10,18 +10,19 @@
 
 ### DEFAULT SETTINGS
 
-ifneq ($(MAKEMODE),mlrlib)
+ifndef MAKEMODE  ### app configuration
 #change the default application (test, etc) compilation mode here
 MAKEMODE = app
 endif
 
-ifeq ($(MAKEMODE),mlrlib)
-################ CHANGE THE DEFAULT lib-COMPILATION MODE HERE!! ###############
+ifeq ($(MAKEMODE),mlrlib)  ### lib configuration
 #MAKEMODE = mlrlib_full
 #MAKEMODE = mlrlib_minimal
 MAKEMODE = mlrlib_ubuntu
 endif
 
+ifeq ($(MAKEMODE),externlib)  ### external lib configuration
+endif
 
 
 ### MAKEMODE=app
@@ -29,16 +30,14 @@ endif
 ifeq ($(MAKEMODE),app)
 BUILDS += buildComponent/MT
 LIBS += -lMT
-BUILDS += buildComponent/biros
-LIBS += -lbiros
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 BUILDS += buildComponent/hardware
 LIBS += -lhardware
 BUILDS += buildComponent/perception
 LIBS += -lperception
-BUILDS += buildComponent/views
-LIBS += -lviews
+BUILDS += buildComponent/biros
+LIBS += -lbiros
 endif
 
 
@@ -48,19 +47,24 @@ ifeq ($(MAKEMODE),mlrlib_full)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
-FREEGLUT = 1
+FREEGLUT = 0
+GTKGL = 1
 ANN = 1
 QHULL = 1
 SWIFT = 1
 LAPACK = 1
 ODE = 1
 TONY = 1
+FELZ = 1
 OPENCV = 1
 SCHUNK = 1
 PLIB = 1
 BUMBLE = 1
 LEWINER = 1
 CUDA = 1
+GRAPHVIZ = 1
+GTK = 1
+PHYSX = 1
 endif
 
 
@@ -77,6 +81,7 @@ SWIFT = 0
 LAPACK = 0
 ODE = 0
 TONY = 0
+FELZ = 0
 OPENCV = 0
 SCHUNK = 0
 PLIB = 0
@@ -100,11 +105,15 @@ SWIFT = 1
 LAPACK = 1
 ODE = 0
 TONY = 1
-OPENCV = 1
+FELZ = 1
+OPENCV = 0
 SCHUNK = 0
 PLIB = 1
 BUMBLE = 0
 LEWINER = 0
 CUDA = 0
+GRAPHVIZ = 0
+GTK = 1
+PHYSX = 0
 endif
 

@@ -24,14 +24,14 @@ void dumpInfo(){
   Variable *v;
   Process *p;
   FieldInfo *vi;
-  birosInfo.readAccess(NULL);
-  for_list(i, v, birosInfo.variables){
+  birosInfo().readAccess(NULL);
+  for_list(i, v, birosInfo().variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();
     if(v->fields.N){
       cout <<'{' <<endl;
       for_list(j, vi, v->fields){
         cout <<"   field " <<j <<' ' <<vi->name <<' ' <<vi->p <<" value=";
-        vi->write_value(cout);
+        vi->writeValue(cout);
         cout <<endl;
       }
       cout <<"\n}";
@@ -41,7 +41,7 @@ void dumpInfo(){
   }
   cout <<endl;
   cout <<" +++ PROCESSES +++" <<endl;
-  for_list(i, p, birosInfo.processes){
+  for_list(i, p, birosInfo().processes){
     cout <<"Process " <<p->name <<" (";
     /*for_list(j, v, p->V){
       if(j) cout <<',';
@@ -65,5 +65,5 @@ void dumpInfo(){
       }
     cout <<"\n}" <<endl;
   }
-  birosInfo.deAccess(NULL);
+  birosInfo().deAccess(NULL);
 }

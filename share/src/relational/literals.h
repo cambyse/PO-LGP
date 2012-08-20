@@ -56,13 +56,14 @@ class Literal {
     uintA args;
     double value;
     
-    enum ComparisonType { comparison_equal, comparison_less, comparison_lessEqual, comparison_greater, comparison_greaterEqual };
+    enum ComparisonType { comparison_equal, comparison_less, comparison_lessEqual, comparison_greater, comparison_greaterEqual, comparison_variable, comparison_offset };
     ComparisonType comparison_type;
     
     // -----------------------------------
     // Convenience methods
     virtual ~Literal() {}
     static Literal* get(Symbol* s, const uintA& args, double value, ComparisonType comparison_type = comparison_equal);
+    static Literal* getVarComparison(Symbol* s, const uintA& args);
     static Literal* get(const char* text);
     static void get(MT::Array< Literal* >& lits, const char* text);
     bool operator==(Literal& lit) const;
@@ -145,7 +146,7 @@ struct StateTransition {
   // Essential data-fields
   SymbolicState pre, post;
   Literal* action;
-  MT::Array< Literal* > del, add;
+  MT::Array< Literal* > changes;
   uintA changedConstants;
   
   // -----------------------------------
