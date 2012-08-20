@@ -322,6 +322,12 @@ CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
 endif
 
+ifeq ($(OCTAVE),1)
+LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
+LIBS	+= -loctinterp -loctave
+# TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!
+endif
+
 ifeq ($(SOIL),1)
 CXXFLAGS  += -DTL_SOIL
 LIBS    += -lSOIL
