@@ -2,7 +2,7 @@ BASE = ../..
 
 CXXFLAGS += -w
 
-LIBS += -lmotion -lhardware -lperception -lmt
+LIBS += -lmotion -lhardware -lperception -lMT
 
 OBJ = \
   main.o
