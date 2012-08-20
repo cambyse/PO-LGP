@@ -14,12 +14,13 @@
 #include <relational/robotManipulationSimulator.h>
 #include <relational/robotManipulationSymbols.h>
 #include <relational/robotManipulationInterface.h>
-#include <relational/prada.h>
+#include <relational/literals.h>
 
 #include <MT/array_t.cxx>
 #include <MT/ors.h>
 
 #include <csignal>
+#include <iostream>
 SET_LOG(main, DEBUG);
 
 void shutdown(int) {
@@ -72,38 +73,6 @@ int main(int argc, char** argv) {
   double seed = MT::getParameter<double>("seed", time(NULL));
 	srand(seed);
   
-  
-  double discountFactor;
-  MT::getParameter(discountFactor, "discountFactor");
-  PRINT(discountFactor);
-
-  uint horizon;
-  MT::getParameter(horizon, "PRADA_horizon");
-  PRINT(horizon);
-  
-  uint PRADA_num_samples;
-  MT::getParameter(PRADA_num_samples, "PRADA_num_samples");
-  PRINT(PRADA_num_samples);
-  
-  double PRADA_noise_softener;
-  MT::getParameter(PRADA_noise_softener, "PRADA_noise_softener");
-  PRINT(PRADA_noise_softener);
-  
-  MT::String rulesFile_name;
-  MT::getParameter(rulesFile_name, "file_rules");
-  
-  MT::String stateFile_name;
-  MT::getParameter(stateFile_name, "file_state");
-  PRINT(stateFile_name);
-  
-  MT::String rewardFile_name;
-  MT::getParameter(rewardFile_name, "file_reward");
-  PRINT(rewardFile_name);
-  
-  MT::String symbolsFile_name;
-  MT::getParameter(symbolsFile_name, "file_symbols");
-  PRINT(symbolsFile_name);
-
   RobotManipulationSimulator sim;
   sim.shutdownAll();
   sim.loadConfiguration(MT::getParameter<MT::String>("orsFile"));
@@ -130,7 +99,8 @@ int main(int argc, char** argv) {
 	// -------------------------------------
   //  SET UP LOGIC
   // -------------------------------------
-  
+ 
+  MT::String symbolsFile_name("symbols.dat");
 	cout<<endl<<endl;
 	cout<<"SYMBOLS:"<<endl;
 	cout<<"Reading symbols from file \""<<symbolsFile_name<<"\"..."<<flush;
@@ -153,67 +123,45 @@ int main(int argc, char** argv) {
   cout<<"STARTING STATE:"<<endl;
   relational::SymbolicState *s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
   s->lits.append(lits);
-  relational::reason::derive(s);
+  //relational::reason::derive(s);
   
-  //cout<<endl<<endl;
-  //cout<<"Reading state from file \""<<stateFile_name<<"\"... "<<flush;
-  //relational::SymbolicState s;
-  //ifstream in_state(stateFile_name);
-  //s.read(in_state);
-  //cout<<"done!"<<endl<<endl;
   cout<<"State:"<<endl<<*s<<endl<<endl;
-  //relational::reason::setConstants(s.state_constants);
-  //cout<<"CONSTANTS:"<<endl;  PRINT(relational::reason::getConstants());
   PRINT(relational::reason::getConstants());
 
-  // ------------------------------------
-  // REWARD
-  // ------------------------------------
+  relational::StateTransitionL transL;
 
-  relational::Reward* reward = NULL;
-  reward = relational::RobotManipulationSymbols::RewardLibrary::cleanup(&sim);
-  //reward = relational::RobotManipulationSymbols::RewardLibrary::stack();
-	cout<<"REWARD: "<<endl;
-	reward->write();
+  //RMSim::RobotManipulationInterface::generateSimulationSequence_realistic(os, sim, 10, 19);
+  std::ofstream os("transition.dat");
+  os << *s <<std::endl;
+  relational::Symbol* p_GRAB = relational::Symbol::get(MT::String("grab"));
+  relational::Symbol* p_PUTON = relational::Symbol::get(MT::String("puton"));
 
-	
-  // -------------------------------------
-  // RULES
-  // -------------------------------------
-  
-	cout<<endl<<endl;
-	cout<<"RULES:"<<endl;
-  relational::RuleSet rules;
-  relational::RuleSet::read(rulesFile_name, rules);
-  cout<<"Rules successfully read from file \""<<rulesFile_name<<"\"."<<endl;
-  cout<<"Rules ("<<rules.num()<<"):"<<endl;   rules.write(cout);
+  relational::Symbol *ac;
+  uintA args;
+  args.resize(1);
+  for(int iter = 0; iter < 50; ++iter) {
 
-  relational::RuleSet coveringGroundRules;
-  relational::reason::calc_coveringRules(coveringGroundRules, rules, *s);
-  cout<<endl<<endl<<"Ground actions with unique covering rules:"<<endl;
-  uint i;
-  FOR1D_(coveringGroundRules, i) {
-    cout<<*coveringGroundRules.elem(i)->action<<" ";
-  }
-  cout<<endl;
+    relational::StateTransition *trans = new relational::StateTransition;
+    trans->pre = *s;
 
-  relational::RuleSet ground_rules;
-  relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), *s);
-  cout<<endl<<endl;
-  cout<<"GROUND RULES: (plenty!!)"<<endl;
-  cout<<"# = "<<ground_rules.num()<<endl;
+    relational::Literal* action = RMSim::RobotManipulationInterface::generateAction_wellBiased(*s, 19);
+    //if(iter % 2 == 0) {
+      //ac = p_GRAB;
+      //args(0) = rand()%4 + 21;
+    //}
+    //else {
+      //ac = p_PUTON;
+      //args(0) = 20;
+    //}
 
-  cout<<endl<<endl;
-  cout<<"PLANNER:"<<endl;
-  relational::NID_Planner* planner = new relational::PRADA_Planner();
-  ((relational::PRADA_Planner* ) planner)->setNumberOfSamples(PRADA_num_samples);
-  ((relational::PRADA_Planner* ) planner)->setNoiseSoftener(PRADA_noise_softener);
-  planner->setDiscount(discountFactor);
-  planner->setHorizon(horizon);
-  planner->setGroundRules(ground_rules);
-  planner->setReward(reward);
+    //relational::Literal *action = relational::Literal::get(ac, args, 1);
+    //perform the action
+    os << *action << std::endl;
+    DEBUG_VAR(main, *action);
+    RMSim::RobotManipulationInterface::performAction(action, &sim, 8);
+    trans->action = action;
 
-  for(int iter = 0; iter < 10; ++iter) {
+
     // calculate grounded symbols
     relational::calculateSymbols(lits, sgs, sim.C);
 
@@ -222,14 +170,16 @@ int main(int argc, char** argv) {
 
     // append grounded symbols
     s->lits.append(lits);
-    relational::reason::derive(s);
+    //relational::reason::derive(s);
+    trans->post = *s;
 
-    // actual plan the next action
-    relational::Literal* action = planner->plan_action(*s);
+    os << *s << std::endl;
 
-    //perform the action
-    RMSim::RobotManipulationInterface::performAction(action, &sim, 8);
+    transL.append(trans);
+    //DEBUG_VAR(main, transL);
+
   }
+  os.close();
 
 }
 

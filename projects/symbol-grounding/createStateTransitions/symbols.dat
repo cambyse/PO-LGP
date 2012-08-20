@@ -1,11 +1,12 @@
 grab 1 action binary 
 puton 1 action binary 
-inside 2 primitive binary 
 table 1 primitive binary 
 block 1 primitive binary 
 ball 1 primitive binary 
 box 1 primitive binary 
+cylinder 1 primitive binary 
 on 2 primitive binary 
+inside 2 primitive binary 
 inhand 1 primitive binary 
 upright 1 primitive binary 
 out 1 primitive binary 
@@ -16,4 +17,3 @@ above 2 transclosure binary  <-- + on
 aboveNotable 2 conjunction binary  <-- above(X Y) -table(Y) 
 height 1 count integers  <-- Num Y  aboveNotable(X Y)
 sum_height 0 sum integers  <--  Sum height
-
