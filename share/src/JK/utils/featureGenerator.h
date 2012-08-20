@@ -17,7 +17,7 @@ class DistanceFeatureGenerator : public FeatureGenerator<arr> {
 class TrayFeatureGenerator : public FeatureGenerator<arr> {
   public:
     virtual void makeFeatures(arr& features, const arr& data);
-    virtual void getSize(uintA& size) { size = TUP(1,3); }
+    virtual void getSize(uintA& size) { size = TUP(1,4); }
 };
 class CubicFeatureGenerator : public FeatureGenerator<arr> {
   public:

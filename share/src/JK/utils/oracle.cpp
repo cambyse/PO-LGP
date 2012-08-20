@@ -22,9 +22,10 @@ const int HigherOracle::classify(const MT::Array<arr>& data, const int set) cons
   else return 0;
 }
 const int InsideOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (data(set, 1)(2) - data(set, 0)(2) > 0 && 
-      fabs(data(set, 1)(0) - data(set, 0)(0)) < 0.215 &&
-      fabs(data(set, 1)(1) - data(set, 0)(1)) < 0.165
+  if (data(set, 2)(2) - data(set, 0)(2) > 0 && 
+      fabs(data(set, 2)(0) - data(set, 0)(0)) < 0.215 &&
+      fabs(data(set, 2)(1) - data(set, 0)(1)) < 0.165 &&
+      data(set, 1)(0) == 7
     ) 
     return 1;
   else return 0;

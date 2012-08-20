@@ -43,20 +43,37 @@ void TraySampler::sample(MT::Array<arr>& sample) {
     relational::generateBlocksSample(next_sample, numOfBlocks); 
     int o1 = (rand() % numOfBlocks) * 2;
     arr tray_center;
+    int type;
     if(inside) {
-      DEBUG_VAR(sampler, next_sample);
-      double x = 0.35*(rand()/RAND_MAX);
-      double y = 0.2*(rand()/RAND_MAX);
+      double x = 0.35*(rand()/(double) RAND_MAX);
+      double y = 0.2*(rand()/(double) RAND_MAX);
+
+
+      DEBUG_VAR(sampler, x);
+      DEBUG_VAR(sampler, y);
       
       tray_center = next_sample(0, o1).sub(0,1) + ARR(x, y);
+      tray_center.append(0.69);
+      type = 7;
     }
     else {
-      tray_center = ARR(0., -.8) + randn(2,1) * 0.3; 
+      type = rand() % 8;
+      if(type == 7) {
+        tray_center = ARR(0., -.8) + randn(2,1) * 0.3; 
+        tray_center.append(0.69);
+      }
+      else {
+        int o2;
+        do {
+          o2 = (rand() % numOfBlocks) * 2;
+        } while (o2 == o1);
+        tray_center = next_sample(0, o2);
+      }
     }
-    tray_center.append(0.69);
     sample.append(tray_center);
+    sample.append(ARR(type));
     sample.append(next_sample.sub(0, -1, o1, o1 + 1));
-    sample.reshape(1, 3);
+    sample.reshape(1, 4);
     DEBUG_VAR(sampler, sample);
     DEBUG_VAR(sampler, o.classify(sample));
   } while (inside != o.classify(sample));
