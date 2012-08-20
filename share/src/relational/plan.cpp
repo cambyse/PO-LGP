@@ -943,8 +943,75 @@ void DisjunctionReward::write(ostream& out) const {
 }
 
 
+/************************************************
+ * 
+ *     CombinedReward
+ * 
+ ************************************************/
+CombinedReward::CombinedReward(RewardL& rewards) : 
+Reward(reward_combined),
+sub_rewards(rewards) {
+  weights = ones(rewards.N, 1);
+  weights.reshape(rewards.N);
+}
 
 
+CombinedReward::CombinedReward(RewardL& rewards, arr& weights) : 
+Reward(reward_combined),
+sub_rewards(rewards),
+weights(weights) {
+  weights.reshape(rewards.N);
+}
+
+
+double CombinedReward::evaluate(const SymbolicState& state) const {
+  uint i; Reward *r; double e;
+  for_list(i, r, sub_rewards) {
+    e += weights(i) * r->evaluate(state);  
+  }
+  return e;
+}
+
+bool CombinedReward::satisfied(const SymbolicState& state) const {
+  uint i; Reward *r;
+  for_list(i, r, sub_rewards) {
+    if (weights(i) * r->evaluate(state) <= 0)  
+      return false;
+  }
+  return true;
+}
+
+bool CombinedReward::possible(const SymbolicState& state) const {
+  uint i; Reward *r;
+  for_list(i, r, sub_rewards) {
+    if (!r->possible(state))  
+      return false;
+  }
+  return true;
+}
+
+void CombinedReward::getRewardConstants(uintA& constants, const SymbolicState* state) const {
+  uint i; Reward *r;
+  for_list(i, r, sub_rewards) {
+    uintA sub_constants;
+    r->getRewardConstants(sub_constants, state);
+    constants.append(sub_constants);
+  }
+}
+
+void CombinedReward::write(ostream& out) const {
+  out << "reward_the_following {" << endl;
+  uint i; Reward *r;
+  for_list(i, r, sub_rewards) {
+    r->write(out);
+  }
+  out << "}" << endl;
+}
+
+void CombinedReward::write(const char* filename) const {
+  std::ofstream out(filename);
+  write(out);
+}
 
 /************************************************
  * 

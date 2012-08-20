@@ -173,7 +173,8 @@ class Reward {
                       reward_maximize_function,  // try to make function as big as possible
                                                  // --> Advantage: can work on expectations in case of beliefs over states
                       reward_not_these_states, 
-                      reward_one_of_literal_list
+                      reward_one_of_literal_list,
+                      reward_combined
     };
     
     Reward();
@@ -194,6 +195,7 @@ class Reward {
     static Reward* read(const char* filename);
 };
 
+typedef MT::Array<Reward*> RewardL;
 
 class LiteralReward : public Reward {
   public:
@@ -272,6 +274,25 @@ class NotTheseStatesReward : public Reward {
     
     NotTheseStatesReward(const SymbolicStateL& undesired_states); // --> maximize function
     ~NotTheseStatesReward() {}
+    
+    double evaluate(const SymbolicState& s) const ;
+    bool satisfied(const SymbolicState& s) const;
+    bool possible(const SymbolicState& s) const;
+    
+    void getRewardConstants(uintA& constants, const SymbolicState* s) const;
+    
+    void write(ostream& out = cout) const;
+    void write(const char* filename) const;
+};
+
+class CombinedReward : public Reward {
+  public:
+    RewardL sub_rewards;
+    arr weights;
+
+    CombinedReward(RewardL& lits);
+    CombinedReward(RewardL& lits, arr& weights);
+    ~CombinedReward() {}
     
     double evaluate(const SymbolicState& s) const ;
     bool satisfied(const SymbolicState& s) const;

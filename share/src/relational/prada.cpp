@@ -119,8 +119,13 @@ void PRADA_Planner::setReward(Reward* reward) {
           DisjunctionReward* dg = dynamic_cast<DisjunctionReward*>(reward);
           if (dg!= NULL)
             this->prada_reward = convert_reward((DisjunctionReward*) reward);
-          else
-            NIY;
+          else {
+           CombinedReward* cg = dynamic_cast<CombinedReward*>(reward);
+            if (cg!= NULL)
+              this->prada_reward = convert_reward((CombinedReward*) reward);
+            else
+              NIY;
+          }
         }
       }
     }
@@ -146,6 +151,7 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
     case Reward::reward_maximize_function: return convert_reward((MaximizeReward*) reward);
     case Reward::reward_not_these_states: return convert_reward((NotTheseStatesReward*) reward);
     case Reward::reward_one_of_literal_list: return convert_reward((DisjunctionReward*) reward);    
+    case Reward::reward_combined: return convert_reward((CombinedReward*) reward);    
     default: NIY;
   }
 }
@@ -658,6 +664,16 @@ void PRADA_Planner::calc_dbn_state_symbols() {
     }
   }
   // (ii) reward concepts
+  get_reward_symbols(reward);
+  Symbol::sort(dbn_state_symbols);
+  if (DEBUG>0) {
+    cout<<"(A-) PRADA's DBN will be built with random variables for the following state symbols:"<<endl;
+    writeSymbols(dbn_state_symbols);
+  }
+  if (DEBUG>0) {cout<<"PRADA_Planner::calc_dbn_state_symbols [END]"<<endl;}
+}
+
+void PRADA_Planner::get_reward_symbols(Reward* reward) {
   if (reward->reward_type == Reward::reward_literal) {
     dbn_state_symbols.setAppend(((LiteralReward*) reward)->lit->s);
     SymL defining_symbols;
@@ -665,6 +681,7 @@ void PRADA_Planner::calc_dbn_state_symbols() {
     dbn_state_symbols.setAppend(defining_symbols);
   }
   else if (reward->reward_type == Reward::reward_literalList) {
+    uint k;
     FOR1D(((LiteralListReward*) reward)->lits, k) {
       dbn_state_symbols.setAppend(((LiteralListReward*) reward)->lits(k)->s);
       SymL defining_symbols;
@@ -681,15 +698,15 @@ void PRADA_Planner::calc_dbn_state_symbols() {
       dbn_state_symbols.setAppend(defining_symbols);
     }
   }
+  else if (reward->reward_type == Reward::reward_combined) {
+    uint i; Reward *r;
+    for_list(i, r, ((CombinedReward*) reward)->sub_rewards ){
+       get_reward_symbols(r); 
+    }
+  }
   else {
     NIY;
   }
-  Symbol::sort(dbn_state_symbols);
-  if (DEBUG>0) {
-    cout<<"(A-) PRADA's DBN will be built with random variables for the following state symbols:"<<endl;
-    writeSymbols(dbn_state_symbols);
-  }
-  if (DEBUG>0) {cout<<"PRADA_Planner::calc_dbn_state_symbols [END]"<<endl;}
 }
 
 
@@ -956,6 +973,29 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     }
 };
 
+class PRADA_Reward_Combined : public PRADA_Reward {
+  MT::Array<PRADA_Reward*> PRADA_rewards;
+  arr weights;
+  
+  public:
+    PRADA_Reward_Combined(RewardL& rewards, arr& weights) {
+      int i; Reward *r;
+      for_list(i, r, rewards) {
+        PRADA_rewards.append(PRADA_Planner::create_PRADA_Reward(r));
+      }
+      this->weights = weights;
+    }
+    
+    double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
+      int i; PRADA_Reward* r;
+      double weighted_belief = 0.0;
+      for_list(i, r, PRADA_rewards) {
+          weighted_belief += weights(i) * r->evaluate_prada_reward(dbn, t);
+      }
+      return weighted_belief;
+    }
+};
+
 
 class PRADA_Reward_Maximize : public PRADA_Reward {
   Literal* fl;
@@ -1027,6 +1067,9 @@ PRADA_Reward* PRADA_Planner::convert_reward(DisjunctionReward* reward) {
   return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
 }
 
+PRADA_Reward* PRADA_Planner::convert_reward(CombinedReward* reward) {
+  return new PRADA_Reward_Combined(reward->sub_rewards, reward->weights);
+}
 
 
 /************************************************
