@@ -12,11 +12,14 @@
 bool gtkInitialized=false;
 Mutex global_gtkLock;
 
-void gtkLock(){ global_gtkLock.lock();  if(!gtkInitialized) gtkCheckInitialized(true); }
+void gtkLock(bool checkInitialized){
+  if(checkInitialized) gtkCheckInitialized(); 
+  global_gtkLock.lock();
+}
 void gtkUnlock(){ global_gtkLock.unlock(); }
 
-void gtkCheckInitialized(bool userHasLocked){
-  if(!userHasLocked) gtkLock(); else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
+void gtkCheckInitialized(){
+  gtkLock(false); // else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
   if(!gtkInitialized){
     int argc=1;
     char **argv = new char*[1];
@@ -30,7 +33,7 @@ void gtkCheckInitialized(bool userHasLocked){
     
     gtkInitialized = true;
   }
-  if(!userHasLocked) gtkUnlock();
+  gtkUnlock();
 }
 
 void gtkProcessEvents(bool waitForEvents, bool userHasLocked){

@@ -1177,6 +1177,8 @@ void OpenGL::clearKeyCalls() {
 
 void OpenGL::Draw(int w, int h, ors::Camera *cam) {
 #ifdef MT_GL
+  //s->beginGlContext();
+
   //clear bufferer
   GLint viewport[4] = {0, 0, w, h};
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1333,6 +1335,8 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
   if(s!=1) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in DRAW mode:" <<s);
   //CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
+
+  //this->s->endGlContext();
 #endif
 }
 
@@ -1340,6 +1344,8 @@ void OpenGL::Select(){
 #ifdef MT_GL
   uint i, j, k;
   
+  s->beginGlContext();
+
   glSelectBuffer(1000, selectionBuffer);
   glRenderMode(GL_SELECT);
   
@@ -1408,6 +1414,8 @@ void OpenGL::Select(){
   }
   
   if(reportSelects) reportSelection();
+
+  s->endGlContext();
 #endif
 }
 

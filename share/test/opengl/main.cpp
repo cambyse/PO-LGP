@@ -281,6 +281,8 @@ int main(int argc,char **argv){
   QApplication myapp(argc,argv);
 #endif
 
+  testTeapot();
+  return 0;
   testGrab();
   //return 0;
   testMultipleViews();
