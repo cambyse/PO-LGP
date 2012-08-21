@@ -152,9 +152,9 @@ void sOpenGL::init(OpenGL *gl, void *container){
   g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
   
-  if(GTK_IS_SCROLLED_WINDOW (win))
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
-  else
+//   if(GTK_IS_SCROLLED_WINDOW (win))
+//     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
+//   else
     gtk_container_add(GTK_CONTAINER(win), glArea);
   gtk_widget_show(win);
   gtk_widget_show(glArea);

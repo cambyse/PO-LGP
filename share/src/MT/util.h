@@ -100,8 +100,6 @@ typedef const char* charp;
 namespace MT {
 extern int argc;
 extern char** argv;
-extern std::ifstream cfgFile;
-extern bool cfgOpenFlag, cfgLock;
 extern bool IOraw;  //!< stream modifier for some classes (Mem in particular)
 extern bool noLog;  //!< no logfile: default=true, becomes false when MT::init is called
 extern uint lineCount;
@@ -499,6 +497,97 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 
 void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
 void gnuplotClose();
+
+
+//===========================================================================
+//
+// threading: pthread wrappers: Mutex, Lock, ConditionVariable
+//
+
+//! a basic mutex lock
+struct Mutex {
+  pthread_mutex_t mutex;
+  int state; ///< 0=unlocked, 1=locked
+  
+  Mutex();
+  ~Mutex();
+  
+  void lock();
+  void unlock();
+};
+
+//! a basic read/write access lock
+struct Lock {
+  pthread_rwlock_t lock;
+  int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
+  Mutex stateMutex;
+  
+  Lock();
+  ~Lock();
+  
+  void readLock();   ///< multiple threads may request 'lock for read'
+  void writeLock();  ///< only one thread may request 'lock for write'
+  void unlock();     ///< thread must unlock when they're done
+};
+
+//! a basic condition variable
+struct ConditionVariable {
+  int state;
+  Mutex stateMutex;
+  pthread_cond_t  cond;
+  
+  ConditionVariable(int initialState=0);
+  ~ConditionVariable();
+  
+  void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
+  
+  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
+  void unlock();
+  
+  int  getState(bool userHasLocked=false);
+  void waitForSignal(bool userHasLocked=false);
+  void waitForSignal(double seconds, bool userHasLocked=false);
+  void waitForStateEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForStateNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForStateSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitUntil(double absTime, bool userHasLocked=false);
+};
+
+//===========================================================================
+//
+// Timing helpers
+//
+
+//! a simple struct to realize a strict tic tac timing (call step() once in a loop)
+struct Metronome {
+  long targetDt;
+  timespec ticTime, lastTime;
+  uint tics;
+  const char* name;                   ///< name
+  
+  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
+  ~Metronome();
+  
+  void reset(long _targetDt);
+  void waitForTic();              //!< waits until the next tic
+  double getTimeSinceTic();       //!< time since last tic
+};
+
+//! a really simple thing to meassure cycle and busy times
+struct CycleTimer {
+  uint steps;
+  double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
+  double busyDt, busyDtMean, busyDtMax;  ///< internal variables to measure step time
+  timespec now, lastTime;
+  const char* name;                    ///< name
+  CycleTimer(const char *_name=NULL);
+  ~CycleTimer();
+  void reset();
+  void cycleStart();
+  void cycleDone();
+};
 
 
 //===========================================================================
