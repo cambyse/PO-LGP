@@ -1,12 +1,10 @@
 NAME   = $(shell basename $(PWD))
 
 MLR_LIBS = \
-	src/MT \
-	src/SD \
-	src/NJ \
+	src/MT src/SD src/NJ src/DZ src/JK \
+	src/biros src/devTools \
+	src/motion src/hardware src/perception \
 	src/relational \
-	src/DZ \
-	src/JK
 
 EXTERN = \
 	extern/libcolorseg/src \
@@ -30,23 +28,23 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 make/%::
-	make -C $*
+	$(MAKE) -C $*
 
 clean/%::
-	make clean -C $*
+	$(MAKE) clean -C $*
 
 tests::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
+	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec $(MAKE) -C {} \;
 
 demo::
-	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec make -C {} \;
+	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec $(MAKE) -C {} \;
 
 cleanProjects::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
-	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec make -C {} clean \;
+	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
 
 doc::
-	make -C doc guide doxy
+	$(MAKE) -C doc guide doxy
 
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".git" --exclude "*.kdev4" --exclude "xx-*" --exclude "MT.log" --exclude "*solution*" --exclude "course/*/main.cpp"  --exclude "pics" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"

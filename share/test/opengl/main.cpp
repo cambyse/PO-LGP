@@ -282,7 +282,7 @@ int main(int argc,char **argv){
 #endif
 
   testGrab();
-  return 0;
+  //return 0;
   testMultipleViews();
   //return 0;
   testTeapot();
