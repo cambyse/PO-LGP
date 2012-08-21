@@ -12,14 +12,15 @@ ControlledSystem_PointMass::ControlledSystem_PointMass(){
 ControlledSystem_PointMass::~ControlledSystem_PointMass(){
 }
 
-void ControlledSystem_PointMass::getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, uint t){
+void ControlledSystem_PointMass::getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, arr& Q, uint t){
   A.setDiag(1., 2); A(0,1) = tau;
-  B.resize(1,2); B(0,0)=0.; B(0,1)=1.;
+  B.resize(2,1); B(0,0)=0.; B(1,0)=1.;
   a.resize(2); a.setZero();
   if(&At){ At.setDiag(1.,2); At(1,0) = tau; }
   if(&Ainv){  Ainv.setDiag(1.,2); Ainv(1,0) = -tau;  }
   if(&Ainvt){  Ainvt.setDiag(1.,2); Ainvt(0,1) = -tau;  }
-  if(&Bt){ Bt.resize(2,1); B(0,0)=0.; B(1,0)=1.; }
+  if(&Bt){ Bt.resize(1,2); Bt(0,0)=0.; Bt(0,1)=1.; }
+  Q.setDiag(1e-6,2);
 }
 
 void ControlledSystem_PointMass::getControlCosts(arr& H, arr& Hinv, uint t){
@@ -28,20 +29,25 @@ void ControlledSystem_PointMass::getControlCosts(arr& H, arr& Hinv, uint t){
 }
 
 void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
-  if(t!=T){ phi.clear(); phiJ.clear(); return; }
+  if(t!=T){
+    phi.resize(x.N); phi.setZero();
+    if(&phiJ){ phiJ.resize(x.N,x.N); phiJ.setZero(); }
+    return;
+    //phi.clear(); phiJ.clear(); return;
+  }
   if(t==T){
     phi = prec*(x-x_target);
-    phiJ.setDiag(prec,x.N);
+    if(&phiJ) phiJ.setDiag(prec,x.N);
   }
 }
 
 
-void ControlledSystem_PointMass::displayCurrentState(bool reportOnTasks){
-  cout <<"gnuplot " <<MT_HERE <<endl;
+void ControlledSystem_PointMass::displayCurrentState(const char* title, bool pause, bool reportOnTasks){
+  cout <<"gnuplot " <<MT_HERE <<title <<endl;
   plotGnuplot();
   plotClear();
   plotPoint(x);
-  plot();
+  plot(pause);
 }
 
 void ControlledSystem_PointMass::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names){

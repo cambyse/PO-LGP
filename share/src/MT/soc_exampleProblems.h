@@ -22,13 +22,15 @@ struct ControlledSystem_PointMass: ControlledSystem{
   virtual uint get_uDim(){ return 1; }
   virtual uint get_phiDim(uint t){ NIY }
   virtual void get_x0(arr& x0){ x0 = this->x0; }
+  virtual bool isKinematic(){ return false; }
 
   virtual void setx(const arr& x){ this->x = x; }
-  virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, uint t);
+  virtual arr& getx(){ return this->x; }
+  virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, arr& Q, uint t);
   virtual void getControlCosts(arr& H, arr& Hinv, uint t);
   virtual void getTaskCosts(arr& phi, arr& phiJ, uint t);
 
-  virtual void displayCurrentState(bool reportOnTasks=false);
+  virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false);
   virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names);
 };
 

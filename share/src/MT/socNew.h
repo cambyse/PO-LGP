@@ -19,6 +19,7 @@ struct ControlledSystem {
   // access dynamics and task vector for given state x
   //NOTE: arguments may be @NoArr@ if they're not needed!!
   virtual void setx(const arr& x) = 0;
+  virtual arr& getx() = 0;             ///< get the current x!
   virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, arr& Q, uint t) = 0;
   virtual void getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){
     getDynamics(A, NoArr, NoArr, NoArr, a, B, NoArr, Q, t); }

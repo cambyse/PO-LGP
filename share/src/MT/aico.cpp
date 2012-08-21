@@ -399,7 +399,7 @@ void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   sys->getControlCosts(NoArr, Hinv[t](), t);
   if(sys->isKinematic()) Winv[t]() = Hinv[t];
   sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), Q[t](), t);
-   sys->getTaskCosts(R[t](), r[t](), t, &rhat(t));
+  sys->getTaskCosts(R[t](), r[t](), t, &rhat(t));
   //double C_alt = scalarProduct(R[t], xhat[t], xhat[t]) - 2.*scalarProduct(r[t], xhat[t]) + rhat(t);
   //cout <<t <<' ' <<C <<' ' <<C_alt <<endl;
 }

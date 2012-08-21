@@ -1,7 +1,14 @@
 #include "socNew.h"
 
 double ControlledSystem::getTaskCosts(arr& R, arr& r, uint t, double* rhat){
-  NIY;
+  arr phi, J;
+  getTaskCosts(phi, J, t);
+  //x is the curren state!
+  if(!phi.N){ R=zeros(get_xDim()); r=zeros(TUP(get_xDim())); return 0.; }
+  innerProduct(R, ~J, J);
+  innerProduct(r, ~J, J*getx() - phi);
+  if(rhat) *rhat = sumOfSqr(J*getx() - phi);
+  return sumOfSqr(phi);
 }
 
 void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& J0, arr& J1, const arr& x0, const arr& x1, uint t){
@@ -11,8 +18,8 @@ void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& 
     Psi = x1 - x0;
     lapack_cholesky(M, H);
     Psi = M*Psi;
-    J0 = -M;
-    J1 = M;
+    if(&J0) J0 = -M;
+    if(&J1) J1 = M;
   }else{
     arr Hinv, A, a, B, Q, W, Winv, M;
     sys.getDynamics(A, a, B, Q, t);
@@ -24,8 +31,8 @@ void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& 
     inverse_SymPosDef(W, Winv);
     lapack_cholesky(M, W);
     Psi = M*Psi;
-    J0 = -M*A;
-    J1 = M;
+    if(&J0) J0 = -M*A;
+    if(&J1) J1 = M;
   }
 };
 
