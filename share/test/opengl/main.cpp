@@ -292,7 +292,6 @@ int main(int argc,char **argv){
   testMesh();
   testUI();
   testTexture();
-  testSelect();
   testMenu();
   testImage();
 

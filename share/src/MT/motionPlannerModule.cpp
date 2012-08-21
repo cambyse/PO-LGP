@@ -13,7 +13,7 @@ void ReceedingHorizonProcess::open(){
   sys=sys_parent->newClone(true);
   sys->os = &cout;
   sys->setTimeInterval(4., MT::getParameter<uint>("reachPlanTrajectoryLength"));
-  planner.init(*sys);
+  NIY //planner.init(*sys); CHANGE THIS BACK as soon as socNew is finished
 }
 
 void ReceedingHorizonProcess::step(){
@@ -70,7 +70,7 @@ void ReceedingHorizonProcess::step(){
     planVar->writeAccess(this);
     planVar->bwdMsg_v   =planner.v();
     planVar->bwdMsg_Vinv=planner.Vinv();
-    planVar->q    = planner.q();
+    NIY //planVar->q    = planner.q();
     planVar->x    = planner.b();
     planVar->cost = planner.cost();
     planVar->tau  = sys->getTau();

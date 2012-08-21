@@ -20,20 +20,20 @@
 #ifndef MT_aico_h
 #define MT_aico_h
 
-#include "soc.h"
+#include "socNew.h"
 
 /** \brief Apprioximate Inference Control */
 struct AICO {
   struct sAICO *self;
   
   AICO();
-  AICO(soc::SocSystemAbstraction& sys);
+  AICO(ControlledSystem& sys);
   ~AICO();
 
   //initialization
-  void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
+  void init(ControlledSystem& sys); //!< reads parameters from cfg file
   void init_messages();
-  void init_trajectory(const arr& q_init);
+  void init_trajectory(const arr& x_init);
   void prepare_for_changed_task();
   void fix_initial_state(const arr& x_0);
   void fix_final_state(const arr& x_T);
@@ -44,7 +44,7 @@ struct AICO {
   void iterate_to_convergence();
 
   //access
-  arr& q();
+  //arr& q();
   arr& b();
   arr& v();
   arr& Vinv();
@@ -53,8 +53,8 @@ struct AICO {
 };
 
 
-void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
-                           arr& q,
+void AICO_multiScaleSolver(ControlledSystem& sys,
+                           arr& x,
                            double tolerance,
                            uint display,
                            uint scalePowers);
