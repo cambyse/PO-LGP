@@ -23,9 +23,6 @@
 #include "robotManipulationSymbols.h"
 #include "reason.h"
 
-#include <biros/logging.h>
-SET_LOG(rmi, DEBUG);
-
 
 namespace relational {
 

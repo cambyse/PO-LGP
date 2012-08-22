@@ -27,7 +27,7 @@ class ClassifyMaster : public Master<MT::Array<arr>, double> {
 class ClassifyIntegrator : public Integrator<double> {
   public:
     ClassifyIntegrator(int num_of_jobs) : Integrator<double>("Classify Integrator"){
-      birosInfo.getVariable<ClassifyData>(data, "Classify Data", this);
+      birosInfo().getVariable<ClassifyData>(data, "Classify Data", this);
     }
     virtual void integrateResult(const double& r);
     virtual void restart() { data->writeAccess(this); data->numOfJobs=data->numOfJobsToStart; data->numOfWorkingJobs = data->numOfJobsToStart; data->numOfResults = 0; data->sumOfCorrect = 0; data->deAccess(this); };
@@ -64,7 +64,7 @@ ClassifyMaster::ClassifyMaster(int numOfJobs, ClassificatorV* cl, int numOfWorke
   Master<MT::Array<arr>, double>((WorkerFactory<MT::Array<arr>, double>*) new ClassifyWorkerFactory(cl), (Integrator<double> *) new ClassifyIntegrator(numOfJobs), numOfWorkers) ,
   classificator(cl)
 {
-  birosInfo.getVariable<ClassifyData>(data, "Classify Data", NULL);
+  birosInfo().getVariable<ClassifyData>(data, "Classify Data", NULL);
   data->writeAccess(NULL);
   data->numOfJobs = numOfJobs;
   data->numOfWorkingJobs = numOfJobs;
@@ -130,7 +130,7 @@ const double Tester::test(ClassificatorV* l) {
 Tester::~Tester() {
   outfile.close();
   ClassifyData *d;
-  birosInfo.getVariable<ClassifyData>(d, "Classify Data", NULL);
+  birosInfo().getVariable<ClassifyData>(d, "Classify Data", NULL);
   delete d;
   m->pause();
   delete m;

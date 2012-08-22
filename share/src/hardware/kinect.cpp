@@ -31,8 +31,8 @@ void KinectInterface::close() {
 }
 
 KinectInterface::KinectInterface(const char* name) : Process(name), s(new sKinectInterface(this)) {
-  birosInfo.getVariable(data_3d, "KinectData3D", this);
-  birosInfo.getVariable(data_rgb, "KinectDataRGB", this);
+  birosInfo().getVariable(data_3d, "KinectData3D", this);
+  birosInfo().getVariable(data_rgb, "KinectDataRGB", this);
 }
 
 PointCloudVar::PointCloudVar(const char *name) : Variable(name), point_cloud(new pcl::PointCloud<PointT>()) { 

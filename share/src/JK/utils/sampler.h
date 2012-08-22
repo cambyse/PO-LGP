@@ -3,7 +3,7 @@
 
 #include <MT/array.h>
 #include <relational/robotManipulationSimulator.h>
-#include <biros/logging.h>
+#include <devTools/logging.h>
 SET_LOG(sampler, INFO);
 
 #include <limits>

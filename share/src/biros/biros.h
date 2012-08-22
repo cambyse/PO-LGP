@@ -210,7 +210,7 @@ struct BirosInfo:Variable {
   
   Process *getProcessFromPID();
   
-  template<class T>  void getVariable(T*& v, const char* name, Process *p) {
+  template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required = false) {
     writeAccess(p);
     void* raw = listFindByName(variables, name); // NULL if not found
     v = dynamic_cast<T*>(listFindByName(variables, name)); // NULL if cast fails because of RTTI
@@ -288,7 +288,7 @@ struct WorkingCopy {
   }
   void init(const char* var_name, Process *_p) {
     T *_v;
-    birosInfo.getVariable(_v, var_name, _p);
+    birosInfo().getVariable(_v, var_name, _p);
     init(_v, _p);
   }
   bool needsUpdate() {

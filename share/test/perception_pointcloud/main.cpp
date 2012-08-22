@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
   srand(time(NULL));
 
-  DEBUG_VAR(main, birosInfo.getParameter<arr>("kinect_trans_mat"));
+  DEBUG_VAR(main, birosInfo().getParameter<arr>("kinect_trans_mat"));
 
   // Variables
   PointCloudVar kinectData3d("KinectData3D");
@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
 
   ObjectTransformator transform("Object Transformator"); 
 
-  OrsViewer<GeometricState> ors_viewer(geo);
+  //OrsViewer<GeometricState> ors_viewer(geo);
 
-  ors_viewer.threadLoopWithBeat(0.1);
+  //ors_viewer.threadLoopWithBeat(0.1);
 
 
   kinect.threadLoop();

@@ -37,7 +37,7 @@ class ObjectClusterer : public Process {
   
 class ObjectFitterIntegrator : public Integrator<FittingResult> {
   public:
-    ObjectFitterIntegrator() : Integrator<FittingResult>("ObjectFitter (Integrator)") { birosInfo.getVariable(objects, "Objects", this); }
+    ObjectFitterIntegrator() : Integrator<FittingResult>("ObjectFitter (Integrator)") { birosInfo().getVariable(objects, "Objects", this); }
     PointCloudSet* point_clouds;
     ObjectSet* objects;
     void restart();
@@ -62,7 +62,7 @@ class ObjectFitter : public Master<FittingJob, FittingResult> {
   public:
     ObjectFitter(ObjectFitterWorkerFactory *factory, ObjectFitterIntegrator *integrator, int num_of_workers) :
       Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
-        birosInfo.getVariable(integrator->point_clouds, "ObjectClusters", integrator);
+        birosInfo().getVariable(integrator->point_clouds, "ObjectClusters", integrator);
       };
 };
 

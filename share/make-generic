@@ -8,7 +8,7 @@
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
 ifndef MLR_EXLIB_PATH
-MLR_EXLIB_PATH = $(HOME)/lib
+MLR_EXLIB_PATH = /home/lib
 endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)

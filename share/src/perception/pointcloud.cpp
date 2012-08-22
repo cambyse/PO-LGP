@@ -24,8 +24,8 @@
 #include <vtkTubeFilter.h>
 
 ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
-  birosInfo.getVariable(data_3d, "KinectData3D", this, true);
-  birosInfo.getVariable(point_clouds, "ObjectClusters", this, true);
+  birosInfo().getVariable(data_3d, "KinectData3D", this, true);
+  birosInfo().getVariable(point_clouds, "ObjectClusters", this, true);
 }
 
 void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::PointCloud<PointT>::Ptr &cloud, const arr &direction) {
@@ -66,10 +66,10 @@ struct sObjectFitterWorker {
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_CYLINDER);
     seg.setMethodType (pcl::SAC_RANSAC);
-    double ndw = birosInfo.getParameter<double>("CylNormalDistanceWeight", p, 0.07);
+    double ndw = birosInfo().getParameter<double>("CylNormalDistanceWeight", p, 0.07);
     seg.setNormalDistanceWeight (ndw);
     seg.setMaxIterations (100);
-    double dt = birosInfo.getParameter<double>("CylDistanceThreshold", p, 0.01);
+    double dt = birosInfo().getParameter<double>("CylDistanceThreshold", p, 0.01);
     seg.setDistanceThreshold (dt);
     seg.setRadiusLimits (0.01, 0.1);
     seg.setInputCloud (cloud);
@@ -79,7 +79,7 @@ struct sObjectFitterWorker {
     pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
     seg.segment (*inliers_cylinder, *coefficients_cylinder);
 
-    int minCloudSize = birosInfo.getParameter<int>("minCloudSize", p, 500);
+    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
     if (inliers_cylinder->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -98,10 +98,10 @@ struct sObjectFitterWorker {
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_SPHERE);
     seg.setMethodType (pcl::SAC_RANSAC);
-    double ndw = birosInfo.getParameter<double>("SphereNormalDistanceWeight", p, 10);
+    double ndw = birosInfo().getParameter<double>("SphereNormalDistanceWeight", p, 10);
     seg.setNormalDistanceWeight (ndw);
     seg.setMaxIterations (100);
-    double dt = birosInfo.getParameter<double>("SphereDistanceThreshold", p, .0005);
+    double dt = birosInfo().getParameter<double>("SphereDistanceThreshold", p, .0005);
     seg.setDistanceThreshold (dt);
     seg.setRadiusLimits (0.01, 0.1);
     seg.setInputCloud (cloud);
@@ -110,7 +110,7 @@ struct sObjectFitterWorker {
     pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
     seg.segment (*inliers_sphere, *coefficients_sphere);
-    int minCloudSize = birosInfo.getParameter<int>("minCloudSize", p, 500);
+    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
     if (inliers_sphere->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -175,7 +175,7 @@ void ObjectClusterer::step() {
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance(0.01);
-  int minCloudSize = birosInfo.getParameter<int>("minCloudSize", this, 500);
+  int minCloudSize = birosInfo().getParameter<int>("minCloudSize", this, 500);
   ec.setMinClusterSize(minCloudSize);
   ec.setMaxClusterSize(25000);
   ec.setSearchMethod(tree);
@@ -271,7 +271,7 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
   }
   //if rest points are enough create new job
  
-  int minCloudSize = birosInfo.getParameter<int>("minCloudSize", this, 500);
+  int minCloudSize = birosInfo().getParameter<int>("minCloudSize", this, 500);
   if (cloud->size() - inliers->indices.size() > minCloudSize) {
     s->createNewJob(cloud, inliers);
   }
@@ -302,7 +302,7 @@ struct sObjectFilter {
       measurement_.append(-measurement.sub(0,0,3,5));
       measurement_.append(measurement(0,6));
       measurement_.resize(1,7);
-      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      double epsilon = birosInfo().getParameter<double>("objectDistance", p);
       for (int j = 0; j<pos.d0; ++j) {
         if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break;}
         else if (filterShape(pos, nums, measurement_, j, epsilon)) {found = true; break; }
@@ -325,7 +325,7 @@ struct sObjectFilter {
       arr measurement;
       measurement.resize(1,4);
       std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
-      double epsilon = birosInfo.getParameter<double>("objectDistance", p);
+      double epsilon = birosInfo().getParameter<double>("objectDistance", p);
       for (int j = 0; j<pos.d0; ++j) {
         if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break; }
       }
@@ -343,8 +343,8 @@ ObjectFilter::ObjectFilter(const char* name) : Process(name) {
 }
 
 void ObjectFilter::open() {
-  birosInfo.getVariable(in_objects, "Objects", this, true);
-  birosInfo.getVariable(out_objects, "filteredObjects", this, true);
+  birosInfo().getVariable(in_objects, "Objects", this, true);
+  birosInfo().getVariable(out_objects, "filteredObjects", this, true);
 }
 
 void ObjectFilter::step() {
@@ -377,7 +377,7 @@ void ObjectFilter::step() {
 }
 
 void ObjectTransformator::open() {
-  birosInfo.getVariable(kinect_objects, "filteredObjects", this, true);
+  birosInfo().getVariable(kinect_objects, "filteredObjects", this, true);
   geo.init("GeometricState", this);
 }
 
@@ -405,7 +405,7 @@ void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& tra
 }
 
 void ObjectTransformator::step() {
-  arr transformation = birosInfo.getParameter<arr>("kinect_trans_mat", this);
+  arr transformation = birosInfo().getParameter<arr>("kinect_trans_mat", this);
   geo.pull();
   // remove all shape_num objects
   for (int i=geo().ors.bodies.N-1;i>=0;i--) {

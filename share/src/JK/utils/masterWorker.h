@@ -2,7 +2,7 @@
 #define _MASTERWORKER_H_
 
 #include <biros/biros.h>
-#include <biros/logging.h>
+#include <devTools/logging.h>
 #include <MT/array.h>
 #include <queue>
 

@@ -54,7 +54,7 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
   else if (MT::getParameter<bool>("cummulative", false)) {
     arr d, f;
     flatten(d, sample);
-    makeFeatures(f, d);
+    problem.generator->makeFeatures(f, d);
 
     GaussianProcess cp1, cp0;
     cp1.copyFrom(gp); cp0.copyFrom(gp);
@@ -69,7 +69,7 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
   else {
     arr d, f;
     flatten(d, sample);
-    makeFeatures(f, d);
+    problem.generator->makeFeatures(f, d);
 
     double y, sig;
     gp.evaluate(f[0], y, sig);
