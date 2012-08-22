@@ -58,15 +58,20 @@ namespace b{
 
 }
 
-struct GtkProcess:Process{
-  MT::Array<View*> views;
+struct GtkProcessVariable:Variable{
+  FIELD(MT::Array<View*>, views);
   MT::Array<GtkWidget*> wins;
+  GtkProcessVariable():Variable("GtkProcessVariable"){}
+};
 
+struct GtkProcess:Process{
   GtkProcess();
   
   void open();
   void step();
   void close();
+  
+  GtkProcessVariable *var;
 };
 
 GtkProcess* gtkProcess();
