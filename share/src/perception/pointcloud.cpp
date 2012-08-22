@@ -23,9 +23,24 @@
 #include <vtkLineSource.h>
 #include <vtkTubeFilter.h>
 
+ProcessL newPointcloudProcesses(uint num_of_workers) {
+  ProcessL processes;
+  processes.append(new KinectInterface("kinect"));
+  for (uint i=0; i<num_of_workers; ++i) {
+    processes.append(new ObjectFitterWorker);
+  }
+  processes.append(new ObjectClusterer);
+  processes.append(new ObjectFitter);
+
+  processes.append(new ObjectFilter("Object Filter"));
+  processes.append(new ObjectTransformator("Object Transformator")); 
+  return processes;
+}
+
 ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
   birosInfo().getVariable(data_3d, "KinectData3D", this, true);
   birosInfo().getVariable(point_clouds, "ObjectClusters", this, true);
+  threadListenTo(data_3d);
 }
 
 void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::PointCloud<PointT>::Ptr &cloud, const arr &direction) {
@@ -54,9 +69,9 @@ struct sObjectFitterWorker {
     extract.setIndices(inliers);
     extract.setNegative(true);
     extract.filter(*outliers);
-    p->jobs->writeAccess(p);
-    p->jobs->data.push(outliers);
-    p->jobs->deAccess(p);
+    p->workspace->writeAccess(p);
+    p->workspace->jobs.push(outliers);
+    p->workspace->deAccess(p);
   }
   
   double confidenceForCylinder(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
@@ -197,21 +212,65 @@ void ObjectClusterer::step() {
   point_clouds->set_point_clouds(_point_clouds, this);
 }
 
-void ObjectFitterIntegrator::restart() {
-  objects->writeAccess(this);
-  objects->objects.clear();
-  objects->deAccess(this);
+ObjectFitter::ObjectFitter() : Process("ObectFitter") {
+  birosInfo().getVariable<Workspace<FittingJob, FittingResult> >(workspace, "FittingWorkspace", this,true);
+  birosInfo().getVariable<PointCloudSet>(objectClusters, "ObjectClusters", this, true);
+  birosInfo().getVariable<ObjectSet>(objects, "Objects", this, true);
+  threadListenTo(objectClusters);
+  threadListenTo(workspace);
 }
 
-void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
-  // add to ObjectSet  
-  if (result.get() == 0) return;
-  objects->writeAccess(this);
-  objects->objects.append(result);
-  objects->deAccess(this);
-}
+void ObjectFitter::open() {}
+void ObjectFitter::step() {
+  DEBUG(pointcloud, "fitter: step");
+  workspace->readAccess(this);
+  if(workspace->jobs.size() == 0 && workspace->working_jobs == 0 && workspace->results.N > 0) {
+    DEBUG(pointcloud, "fitter: integrate result");
+    workspace->deAccess(this);
+    workspace->writeAccess(this);
+    objects->writeAccess(this);
+    objects->objects.append(workspace->results);
+    objects->deAccess(this);
+    workspace->results.clear();
+  }
+  workspace->deAccess(this);
 
-ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {}
+  workspace->readAccess(this);
+  if(workspace->jobs.size() == 0 && workspace->working_jobs == 0 && workspace->results.N == 0) {
+    DEBUG(pointcloud, "fitter: fill jobs");
+    workspace->deAccess(this);
+
+    PointCloudL plist = objectClusters->get_point_clouds(this);
+    std::queue<FittingJob> jobs;
+    for(int i = 1; i < plist.N; ++i) {
+      std::stringstream n;
+      jobs.push(plist(i));
+    }
+    workspace->writeAccess(this);
+    workspace->jobs = jobs;
+  }
+  workspace->deAccess(this);
+}
+void ObjectFitter::close() {}
+
+//void ObjectFitterIntegrator::restart() {
+  //objects->writeAccess(this);
+  //objects->objects.clear();
+  //objects->deAccess(this);
+//}
+
+//void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
+  //// add to ObjectSet  
+  //if (result.get() == 0) return;
+  //objects->writeAccess(this);
+  //objects->objects.append(result);
+  //objects->deAccess(this);
+//}
+
+ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {
+  birosInfo().getVariable<Workspace<FittingJob, FittingResult> >(workspace, "FittingWorkspace", this);
+  threadListenTo(workspace);
+}
 
 void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
   // Build kd-tree from cloud
@@ -292,6 +351,7 @@ struct sObjectFilter {
     nums.resize(0);
     pos.resize(0,7);
     for (int i = 0; i< objects.N; ++i) {
+      if (!objects(i)) continue; 
       if (objects(i)->values.size() != 7) continue;
       bool found = false;
       arr measurement;
@@ -320,6 +380,7 @@ struct sObjectFilter {
     nums.resize(0);
     pos.resize(0,4);
     for (int i = 0; i< objects.N; ++i) {
+      if (!objects(i)) continue;
       if (objects(i)->values.size() != 4) continue;
       bool found = false;
       arr measurement;
@@ -340,11 +401,12 @@ struct sObjectFilter {
 
 ObjectFilter::ObjectFilter(const char* name) : Process(name) {
   s = new sObjectFilter;  
+  birosInfo().getVariable(in_objects, "Objects", this, true);
+  birosInfo().getVariable(out_objects, "filteredObjects", this, true);
+  threadListenTo(in_objects);
 }
 
 void ObjectFilter::open() {
-  birosInfo().getVariable(in_objects, "Objects", this, true);
-  birosInfo().getVariable(out_objects, "filteredObjects", this, true);
 }
 
 void ObjectFilter::step() {
@@ -376,9 +438,13 @@ void ObjectFilter::step() {
   out_objects->deAccess(this);
 }
 
-void ObjectTransformator::open() {
+ObjectTransformator::ObjectTransformator(const char* name) : Process(name) {
   birosInfo().getVariable(kinect_objects, "filteredObjects", this, true);
   geo.init("GeometricState", this);
+  threadListenTo(kinect_objects);
+}
+
+void ObjectTransformator::open() {
 }
 
 void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& transformation) {

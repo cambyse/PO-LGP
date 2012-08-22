@@ -14,6 +14,8 @@ typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
 typedef MT::Array<FittingResult> FittingResultL;
 
+ProcessL newPointcloudProcesses(uint nom_of_workers);
+
 class PointCloudSet : public Variable {
   public:
     PointCloudSet(const char* name) : Variable(name) { reg_point_clouds(); }
@@ -24,6 +26,8 @@ class ObjectSet : public Variable {
     ObjectSet(const char *name) : Variable(name) { reg_objects(); }
     FIELD(FittingResultL, objects);
 };
+
+
 class ObjectClusterer : public Process {
   public:
     ObjectClusterer();
@@ -35,14 +39,14 @@ class ObjectClusterer : public Process {
     void close();
 };
   
-class ObjectFitterIntegrator : public Integrator<FittingResult> {
-  public:
-    ObjectFitterIntegrator() : Integrator<FittingResult>("ObjectFitter (Integrator)") { birosInfo().getVariable(objects, "Objects", this); }
-    PointCloudSet* point_clouds;
-    ObjectSet* objects;
-    void restart();
-    virtual void integrateResult(const FittingResult &r);
-};
+//class ObjectFitterIntegrator : public Integrator<FittingJob, FittingResult> {
+  //public:
+    //ObjectFitterIntegrator() : Integrator<FittingJob, FittingResult>("ObjectFitter (Integrator)") { birosInfo().getVariable(objects, "Objects", this); }
+    //PointCloudSet* point_clouds;
+    //ObjectSet* objects;
+    //void restart();
+    //virtual void integrateResult(const FittingResult &r);
+//};
 
 class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
   public:
@@ -53,18 +57,31 @@ class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
 
 };
 
-class ObjectFitterWorkerFactory : public WorkerFactory<FittingJob, FittingResult> {
+class ObjectFitter : public Process {
   public:
-    Worker<FittingJob, FittingResult>* createWorker() { return new ObjectFitterWorker(); }
+    ObjectFitter();
+
+    void open();
+    void step();
+    void close();
+
+    Workspace<FittingJob, FittingResult> *workspace;
+    PointCloudSet* objectClusters;
+    ObjectSet *objects;
 };
 
-class ObjectFitter : public Master<FittingJob, FittingResult> {
-  public:
-    ObjectFitter(ObjectFitterWorkerFactory *factory, ObjectFitterIntegrator *integrator, int num_of_workers) :
-      Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
-        birosInfo().getVariable(integrator->point_clouds, "ObjectClusters", integrator);
-      };
-};
+//class ObjectFitterWorkerFactory : public WorkerFactory<FittingJob, FittingResult> {
+  //public:
+    //Worker<FittingJob, FittingResult>* createWorker() { return new ObjectFitterWorker(); }
+//};
+
+//class ObjectFitter : public Master<FittingJob, FittingResult> {
+  //public:
+    //ObjectFitter(ObjectFitterWorkerFactory *factory, ObjectFitterIntegrator *integrator, int num_of_workers) :
+      //Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
+        //birosInfo().getVariable(integrator->point_clouds, "ObjectClusters", integrator);
+      //};
+//};
 
 struct ObjectBeliefSet;
 
@@ -84,7 +101,7 @@ class ObjectFilter : public Process {
 
 class ObjectTransformator : public Process {
   public:
-    ObjectTransformator(const char *name) : Process(name) {};
+    ObjectTransformator(const char *name);
     void open();
     void step();
     void close() {};

@@ -46,17 +46,24 @@ int main(int argn,char** argv){
 
   //-- perception
   // variables
-  Image camL("CameraL"), camR("CameraR");
-  Image hsvL("HsvL"), hsvR("HsvR");
-  FloatImage hsvEviL("hsvEviL"), hsvEviR("hsvEviR");
-  PerceptionOutput percOut;
+  PointCloudVar kinectData3d("KinectData3D");                               
+  PointCloudSet objectClusters("ObjectClusters");                           
+  ObjectSet objects("Objects");                                             
+  ObjectBeliefSet filteredObjects("filteredObjects");
+
+  //Image camL("CameraL"), camR("CameraR");
+  //Image hsvL("HsvL"), hsvR("HsvR");
+  //FloatImage hsvEviL("hsvEviL"), hsvEviR("hsvEviR");
+  //PerceptionOutput percOut;
   // processes
-  Camera cam;
-  CvtHsv cvtHsv1(camL, hsvL);
-  CvtHsv cvtHsv2(camR, hsvR);
-  HsvFilter hsvFilterL(hsvL, hsvEviL);
-  HsvFilter hsvFilterR(hsvR, hsvEviR);
-  ShapeFitter shapeFitter(hsvEviL, hsvEviR, percOut);
+  //
+  
+  //Camera cam;
+  //CvtHsv cvtHsv1(camL, hsvL);
+  //CvtHsv cvtHsv2(camR, hsvR);
+  //HsvFilter hsvFilterL(hsvL, hsvEviL);
+  //HsvFilter hsvFilterR(hsvR, hsvEviR);
+  //ShapeFitter shapeFitter(hsvEviL, hsvEviR, percOut);
 
   /////////////////////////////////////////////////////////////////////////////
   // inside-out

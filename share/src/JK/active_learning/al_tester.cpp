@@ -10,7 +10,7 @@
 #include <biros/logging.h>
 
 #include <relational/robotManipulationSimulator.h>
-
+#if 0
 class ClassifyMaster : public Master<MT::Array<arr>, double> {
   public:
     int testNumber;
@@ -135,3 +135,4 @@ Tester::~Tester() {
   m->pause();
   delete m;
 }
+#endif
