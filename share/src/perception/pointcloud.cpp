@@ -435,5 +435,5 @@ void ObjectTransformator::step() {
   }
   kinect_objects->deAccess(this);
   geo().ors.calcBodyFramesFromJoints();
-  geo.push();
+  geo.var->set_ors(geo().ors, this);
 }

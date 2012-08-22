@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   //OrsViewer<GeometricState> ors_viewer(geo);
 
   //ors_viewer.threadLoopWithBeat(0.1);
-
+  new OrsView(geo.fields(0), NULL); //example for creating vi    ews directly from code 
 
   kinect.threadLoop();
   clusterer.threadLoop();

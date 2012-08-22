@@ -165,6 +165,8 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
+  OrsView();
+  OrsView(struct FieldInfo* field, GtkWidget *container);
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

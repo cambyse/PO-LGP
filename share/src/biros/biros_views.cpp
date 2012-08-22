@@ -148,6 +148,13 @@ void MeshView::glDraw() {
 
 REGISTER_VIEW_TYPE(OrsView, ors::Graph, fieldVT);
 
+OrsView::OrsView():View() {
+}
+
+OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
+  gtkNewGl(container);
+}
+
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(10.,-15.,8.);
