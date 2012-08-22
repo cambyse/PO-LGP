@@ -44,16 +44,22 @@ struct sOpenGL{
   sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
   void init(OpenGL *gl, void *container);
-  
+  void beginGlContext();
+  void endGlContext();
+
   
   GtkWidget *win;
   GtkWidget *glArea;
+  GdkGLContext  *glcontext;
+  GdkGLDrawable *gldrawable;
+  GdkGLConfig  *glconfig;
+  Display *xdisplay;
   bool ownWin;
   
   //OpenGL *gl;
   ors::Vector downVec,downPos,downFoc;
   ors::Quaternion downRot;
-  
+
   static bool expose(GtkWidget *widget, GdkEventExpose *event);
   static bool motion_notify(GtkWidget *widget, GdkEventMotion *event);
   static bool button_press(GtkWidget *widget, GdkEventButton *event);
@@ -125,7 +131,7 @@ void sOpenGL::init(OpenGL *gl, void *container){
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
     
-  GdkGLConfig *glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
+  glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
   GDK_GL_MODE_DEPTH |
   GDK_GL_MODE_DOUBLE));
     
@@ -152,12 +158,17 @@ void sOpenGL::init(OpenGL *gl, void *container){
   g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
   
-  if(GTK_IS_SCROLLED_WINDOW (win))
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
-  else
+//   if(GTK_IS_SCROLLED_WINDOW (win))
+//     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
+//   else
     gtk_container_add(GTK_CONTAINER(win), glArea);
   gtk_widget_show(win);
   gtk_widget_show(glArea);
+
+  glcontext = gtk_widget_get_gl_context(glArea);
+  gldrawable = gtk_widget_get_gl_drawable(glArea);
+  xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
+
   UNLOCK
 }
 
@@ -172,31 +183,35 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
   lock();
   /* draw only last expose */
   if(event->count>0) return true;
-  GdkGLContext  *glcontext = gtk_widget_get_gl_context(widget);
-  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(widget);
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("");
+
+  gl->s->beginGlContext();
   
   gl->Draw(gl->width(), gl->height());
   
-  if (gdk_gl_drawable_is_double_buffered(gldrawable))
-    gdk_gl_drawable_swap_buffers(gldrawable);
+  if (gdk_gl_drawable_is_double_buffered(gl->s->gldrawable))
+    gdk_gl_drawable_swap_buffers(gl->s->gldrawable);
   else
     glFlush();
-  gdk_gl_drawable_gl_end(gldrawable);
+
+  gl->s->endGlContext();
   
-  //GdkGLConfig  *glconfig = gtk_widget_get_gl_config(widget);
-  //Display *display = gdk_x11_gl_config_get_xdisplay(glconfig);
-  //glXMakeCurrent(display, None, NULL);
+  unlock();
+  return true;
+}
+
+void sOpenGL::beginGlContext(){
+  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("");
+}
+
+void sOpenGL::endGlContext(){
+  gdk_gl_drawable_gl_end(gldrawable);
+  glXMakeCurrent(xdisplay, None, NULL);
   /*somehow this leads to the stack error and Select won't work
     perhaps solution: write proper switchThread routine; before
     entering code check if you need to switch the thread; only then
     release the context; check if you're not in the middle of
     something (mutex...) */
-
-  
-  unlock();
-  return true;
 }
 
 bool sOpenGL::motion_notify(GtkWidget *widget, GdkEventMotion *event) {

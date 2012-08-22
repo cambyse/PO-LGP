@@ -125,4 +125,11 @@ byteA evidence2RGB(const floatA& evidence){
 }
 
 #else //MT_OPENCV
+
+CvtHsv::CvtHsv(Image& _rgb, Image& _hsv):Process("CvtHsv"), rgb(&_rgb), hsv(&_hsv){ NICO }
+void CvtHsv::step() { NICO }
+HsvFilter::HsvFilter(Image& _hsv, FloatImage& _evi): Process("HsvFilter"), hsv(&_hsv), evi(&_evi){ NICO }
+void HsvFilter::open(){ NICO }
+void HsvFilter::step(){ NICO }
+
 #endif

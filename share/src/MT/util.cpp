@@ -29,11 +29,10 @@
 #  define MT_LogFileName "MT.log"
 #endif
 
+#include <errno.h>
+#include <sys/syscall.h>
+
 //TODO: move basic threading routines from biros to util!
-namespace MT{
-void parameterAccessGlobalLock(){}
-void parameterAccessGlobalUnLock(){}
-}
 
 //===========================================================================
 //
@@ -55,8 +54,8 @@ namespace MT {
 int argc;
 char** argv;
 std::ifstream cfgFile;
-bool cfgOpenFlag=false;
-bool cfgLock=false;
+bool cfgFileOpen=false;
+Mutex cfgFileMutex;
 bool IOraw=false;
 bool noLog=true;
 uint lineCount=0;
@@ -535,13 +534,13 @@ void openConfigFile(const char *name) {
   log() <<"opening config file ";
   if(!name) name=getCmdLineArgument("cfg");
   if(!name) name=MT_ConfigFileName;
-  if(cfgOpenFlag) {
+  if(cfgFileOpen) {
     cfgFile.close(); log() <<"(old config file closed) ";
   }
   log() <<"'" <<name <<"'";
   cfgFile.clear();
   cfgFile.open(name);
-  cfgOpenFlag=true;
+  cfgFileOpen=true;
   if(!cfgFile.good()) {
     //MT_MSG("couldn't open config file " <<name);
     log() <<" - failed";
@@ -820,6 +819,274 @@ void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDF
 #else
   NIY;
 #endif
+}
+
+
+//===========================================================================
+//
+// Mutex
+//
+
+#define MUTEX_DUMP(x) //x
+
+Mutex::Mutex() {
+  pthread_mutexattr_t atts;
+  int rc;
+  rc = pthread_mutexattr_init(&atts);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  rc = pthread_mutexattr_settype(&atts, PTHREAD_MUTEX_RECURSIVE_NP);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  rc = pthread_mutex_init(&mutex, &atts);
+  //mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  state=0;
+}
+
+Mutex::~Mutex() {
+  CHECK(!state, "Mutex destropyed without unlocking first");
+  int rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+void Mutex::lock() {
+  int rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  state=syscall(SYS_gettid);
+  MUTEX_DUMP(cout <<"Mutex-lock: " <<state <<endl);
+}
+
+void Mutex::unlock() {
+  MUTEX_DUMP(cout <<"Mutex-unlock: " <<state <<endl);
+  state=0;
+  int rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+
+//===========================================================================
+//
+// Access Lock
+//
+
+Lock::Lock() {
+  int rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  state=0;
+}
+
+Lock::~Lock() {
+  CHECK(!state, "");
+  int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+void Lock::readLock() {
+  int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  stateMutex.lock();
+  state++;
+  stateMutex.unlock();
+}
+
+void Lock::writeLock() {
+  int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  stateMutex.lock();
+  state=-1;
+  stateMutex.unlock();
+}
+
+void Lock::unlock() {
+  stateMutex.lock();
+  if(state>0) state--; else state=0;
+  stateMutex.unlock();
+  int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+
+//===========================================================================
+//
+// ConditionVariable
+//
+
+ConditionVariable::ConditionVariable(int initialState) {
+  int rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  state=initialState;
+}
+
+ConditionVariable::~ConditionVariable() {
+  int rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+void ConditionVariable::setState(int i, bool signalOnlyFirstInQueue) {
+  stateMutex.lock();
+  state=i;
+  broadcast();
+  stateMutex.unlock();
+}
+
+void ConditionVariable::broadcast(bool signalOnlyFirstInQueue) {
+  if(!signalOnlyFirstInQueue){
+    int rc = pthread_cond_signal(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }else{
+    int rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+}
+
+void ConditionVariable::lock() {
+  stateMutex.lock();
+}
+
+void ConditionVariable::unlock() {
+  stateMutex.unlock();
+}
+
+int ConditionVariable::getState(bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int i=state;
+  if(!userHasLocked) stateMutex.unlock();
+  return i;
+}
+
+void ConditionVariable::waitForSignal(bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForSignal(double seconds, bool userHasLocked) {
+  struct timespec timeout;
+  clock_gettime(CLOCK_MONOTONIC, &timeout);
+  timeout.tv_nsec+=1000000000l*seconds;
+  if(timeout.tv_nsec>1000000000l) {
+    timeout.tv_sec+=1;
+    timeout.tv_nsec-=1000000000l;
+  }
+  
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int rc = pthread_cond_timedwait(&cond, &stateMutex.mutex, &timeout);
+  if(rc && rc!=ETIMEDOUT) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForStateEq(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (state!=i) {
+    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForStateNotEq(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (state==i) {
+    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForStateGreaterThan(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (state<=i) {
+    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+void ConditionVariable::waitForStateSmallerThan(int i, bool userHasLocked) {
+  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (state>=i) {
+    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  }
+  if(!userHasLocked) stateMutex.unlock();
+}
+
+
+void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
+  NIY;
+  /*  int rc;
+    timespec ts;
+    ts.tv_sec  = tp.tv_sec;
+    ts.tv_nsec = tp.tv_usec * 1000;
+    ts.tv_sec += WAIT_TIME_SECONDS;
+  
+    rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    */
+}
+
+
+//===========================================================================
+//
+// Metronome
+//
+
+Metronome::Metronome(const char* _name, long _targetDt) {
+  name=_name;
+  reset(_targetDt);
+}
+
+Metronome::~Metronome() {
+}
+
+void Metronome::reset(long _targetDt=0) {
+  clock_gettime(CLOCK_MONOTONIC, &ticTime);
+  lastTime=ticTime;
+  tics=0;
+  targetDt = _targetDt;
+}
+
+void Metronome::waitForTic() {
+  //compute target time
+  ticTime.tv_nsec+=1000000l*targetDt;
+  while (ticTime.tv_nsec>1000000000l) {
+    ticTime.tv_sec+=1;
+    ticTime.tv_nsec-=1000000000l;
+  }
+  //wait for target time
+  int rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ticTime, NULL);
+  if(rc && errno) MT_MSG("clock_nanosleep() failed " <<rc <<" errno=" <<errno <<' ' <<strerror(errno));
+  
+  tics++;
+}
+
+double Metronome::getTimeSinceTic() {
+  timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  return double(now.tv_sec-ticTime.tv_sec) + 1e-9*(now.tv_nsec-ticTime.tv_nsec);
+}
+
+
+//===========================================================================
+//
+// CycleTimer
+//
+
+void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const timespec& now, const timespec& last, uint step) {
+  dt=double(now.tv_sec-last.tv_sec-1)*1000. +
+     double(1000000000l+now.tv_nsec-last.tv_nsec)/1000000.;
+  if(dt<0.) dt=0.;
+  double rate=.01;  if(step<100) rate=1./(1+step);
+  dtMean = (1.-rate)*dtMean    + rate*dt;
+  if(dt>dtMax || !(step%100)) dtMax = dt;
+}
+
+CycleTimer::CycleTimer(const char* _name) {
+  reset();
+  name=_name;
+}
+
+CycleTimer::~CycleTimer() {
+}
+
+void CycleTimer::reset() {
+  steps=0;
+  busyDt=busyDtMean=busyDtMax=1.;
+  cyclDt=cyclDtMean=cyclDtMax=1.;
+  clock_gettime(CLOCK_MONOTONIC, &lastTime);
+}
+
+void CycleTimer::cycleStart() {
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  updateTimeIndicators(cyclDt, cyclDtMean, cyclDtMax, now, lastTime, steps);
+  lastTime=now;
+}
+
+void CycleTimer::cycleDone() {
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  updateTimeIndicators(busyDt, busyDtMean, busyDtMax, now, lastTime, steps);
+  steps++;
 }
 
 

@@ -951,6 +951,7 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const T& v) {
 
 //! copy operator
 template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
+  CHECK(this!=&a, "never do this!!!");
   //if(a.temp){ takeOver(*((MT::Array<T>*)&a)); return *this; }
   resizeAs(a);
   uint i;

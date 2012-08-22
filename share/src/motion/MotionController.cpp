@@ -152,7 +152,7 @@ void MotionController::step() {
     hardwareReference->readAccess(this);
     arr q_old = hardwareReference->q_reference;
     arr v_old = hardwareReference->v_reference;
-    for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real skin state!!!
+    if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real skin state!!!
     hardwareReference->deAccess(this);
     
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
@@ -209,6 +209,9 @@ void MotionController::step() {
     hardwareReference->set_v_reference(v_reference, this);
     
     //push proxies to the geometric state
+    s->geo.var->writeAccess(this);
+    s->geo.var->ors = s->geo().ors;
+    s->geo.var->deAccess(this);
     //MT_MSG("TODO");
     /* Eigentlich spielt controller iM eine double role: als
        q_reference berechnen, und die kinematic/proxies/taskvariables
@@ -220,5 +223,5 @@ void MotionController::step() {
       proxiesVar->deAccess(this);
       } else MT_MSG("Variable pointer not set");*/
   }
-  
+
 }

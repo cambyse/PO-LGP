@@ -23,6 +23,12 @@
 #include <unistd.h>
 
 namespace MT {
+  extern std::ifstream cfgFile;
+  extern bool cfgFileOpen;
+  extern Mutex cfgFileMutex;
+}
+
+namespace MT {
 /*!\brief a standard method to save an object into a file. The same as
   std::ofstream file; MT::open(file, filename); file <<x;
   file.close(); */
@@ -73,21 +79,17 @@ bool getFromCmdLine(T& x, const char *tag) {
   return true;
 }
 
-void parameterAccessGlobalLock();
-void parameterAccessGlobalUnLock();
 
 /*!\brief Search the first occurence of a sequence '\c tag:'
 in the config file (opened automatically) and, if found, pipes
 it in \c value. Returns false if parameter is not found. */
 template<class T>
 bool getFromCfgFile(T& x, const char *tag) {
-  parameterAccessGlobalLock();
-  if(!cfgOpenFlag) openConfigFile();
-  CHECK(!cfgLock, "cfg file is locked");
-  cfgLock=true;
+  cfgFileMutex.lock();
+  if(!cfgFileOpen) openConfigFile();
   cfgFile.clear();
   cfgFile.seekg(std::ios::beg);
-  if(!cfgFile.good()) { cfgLock=false; parameterAccessGlobalUnLock(); return false; }
+  if(!cfgFile.good()) { cfgFileMutex.unlock(); return false; }
   unsigned n=strlen(tag);
   char *buf=new char [n+2]; memset(buf, 0, n+2);
   while(cfgFile.good()) {
@@ -97,14 +99,13 @@ bool getFromCfgFile(T& x, const char *tag) {
   };
   delete[] buf;
   
-  if(!cfgFile.good()) { cfgLock=false; parameterAccessGlobalUnLock(); return false; }
+  if(!cfgFile.good()) { cfgFileMutex.unlock(); return false; }
   
   skip(cfgFile, " :=\n\r\t");
   cfgFile >>x;
   
   if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
-  cfgLock=false;
-  parameterAccessGlobalUnLock();
+  cfgFileMutex.unlock(); 
   return true;
 }
 
