@@ -81,6 +81,28 @@ int main(int argn, char **argv) {
 
 //===========================================================================
 //
+// simple access tokens - for permanent reference access (via get() and set())
+//
+
+template<class T> struct ReadToken{
+  T *v;
+  Process *p;
+  ReadToken(T *_v,Process *_p):v(_v),p(_p){ v->readAccess(p); }
+  ~ReadToken(){ v->deAccess(p); }
+  const T& operator()(){ return *v; }
+};
+
+template<class T> struct WriteToken{
+  T *v;
+  Process *p;
+  WriteToken(T *_v,Process *_p):v(_v),p(_p){ v->writeAccess(p); }
+  ~WriteToken(){ v->deAccess(p); }
+  T& operator()(){ return *v; }
+};
+
+
+//===========================================================================
+//
 // VariableReference
 //
 
@@ -90,15 +112,9 @@ struct Ref{
   Process *p;         ///< pointer to the Process that might want to access the Variable
   uint last_revision; ///< last revision of a read/write access
 
-  struct ReadAccess{
-    Ref *r;
-    ReadAccess(Ref *_r){ r=_r; r->var->readAccess(r->p); }
-    ~ReadAccess(){ r->var->deAccess(r->p); }
-    T& operator()(){ return *r->var; }
-  };
 
   Ref(T& _var, Process *_p){ var=&_var; p=_p; p->threadListenTo(var); }
-  T& get(){ return ReadAccess(this)(); }
+  const T& get(){ return ReadToken<T>(var,p)(); }
   T& operator()(){ return *var; } //TODO ensure that it is locked
   void writeAccess(){ var->writeAccess(p); }
   void deAccess(){ var->deAccess(p); }

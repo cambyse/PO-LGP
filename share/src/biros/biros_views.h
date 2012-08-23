@@ -58,7 +58,7 @@ struct OpenGL;
 // A View,
 //
 
-struct View{
+struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
