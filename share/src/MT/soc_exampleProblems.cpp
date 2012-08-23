@@ -21,11 +21,13 @@ void ControlledSystem_PointMass::getDynamics(arr& A, arr& At, arr& Ainv, arr& Ai
   if(&Ainvt){  Ainvt.setDiag(1.,2); Ainvt(0,1) = -tau;  }
   if(&Bt){ Bt.resize(1,2); Bt(0,0)=0.; Bt(0,1)=1.; }
   Q.setDiag(1e-6,2);
+  cout <<A <<a <<B <<Q <<endl;
 }
 
 void ControlledSystem_PointMass::getControlCosts(arr& H, arr& Hinv, uint t){
-  if(&H) H.setDiag(tau,1);
-  if(&Hinv) Hinv.setDiag(1./tau,1);
+  if(&H) H.setDiag(tau,1.);
+  if(&Hinv) Hinv.setDiag(1./tau,1.);
+  cout <<Hinv <<endl;
 }
 
 void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
@@ -39,6 +41,7 @@ void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
     phi = prec*(x-x_target);
     if(&phiJ) phiJ.setDiag(prec,x.N);
   }
+  cout <<phi <<phiJ <<endl;
 }
 
 

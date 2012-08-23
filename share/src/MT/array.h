@@ -284,6 +284,7 @@ public:
   void readRaw(std::istream& is);
   void writeWithIndex(std::ostream& os=std::cout) const;
   const Array<T>& ioraw() const;
+  const char* prt(); //gdb pretty print
   
   //!@name kind of private
   void resizeMEM(uint n, bool copy);

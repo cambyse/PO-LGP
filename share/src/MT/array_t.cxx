@@ -1414,7 +1414,8 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os.put(0);
     os <<std::endl;
   } else {
-    if(dimTag) { writeDim(os); if(nd>=2) os <<'\n'; else os <<' '; }
+    if(dimTag) { writeDim(os); os <<' '; }
+    if(nd>=2) os <<'\n';
     os <<BRACKETS[0];
     if(nd==0 && N==0) { os <<']'; return; }
     if(nd==0 && N==1) { os <<scalar() <<']'; return; }
@@ -1639,6 +1640,17 @@ template<class T> bool MT::Array<T>::readTagged(const char* filename, const char
   ifstream fil;
   MT::open(fil, filename);
   return readTagged(fil, tag);
+}
+
+//! gdb pretty printing
+template<class T> const char* MT::Array<T>::prt() {
+  static MT::String tmp;
+  tmp.clear();
+  tmp <<"GDB Array<" <<typeid(T).name() <<"> dim=";
+  writeDim(tmp);
+  write(tmp);
+  tmp <<endl;
+  return tmp.p;
 }
 
 
