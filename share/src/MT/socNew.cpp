@@ -25,8 +25,8 @@ void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& 
     sys.getDynamics(A, a, B, Q, t);
     sys.getControlCosts(NoArr, Hinv, t);
     Psi = x1 - (A*x0+a);
-    for(uint i=0;i<Q.d0/2;i++)
-      Q(i,i) += 1e-4; //allow for noise in the position transitions!
+    //for(uint i=0;i<Q.d0/2;i++)
+      //Q(i,i) += 1e-4; //allow for noise in the position transitions!
     Winv = B*Hinv*~B + Q;
     inverse_SymPosDef(W, Winv);
     lapack_cholesky(M, W);
@@ -51,7 +51,7 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
 
     if(t<T){
       getTransitionCostTerms(sys, true, psi, NoArr, NoArr, x[t], x[t+1], t);
-      ctrlC(t)=sumOfSqr(phi);
+      ctrlC(t)=sumOfSqr(psi);
     }else{
       ctrlC(t)=0.;
     }
@@ -61,6 +61,7 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
     MT::open(fil, "z.trana");
     for(t=0; t<=T; t++){
       fil <<"time_step " <<t
+      <<"  ctrlCrate " <<ctrlC(t)*T
       <<"  ctrlC " <<ctrlC(t)
       <<"  taskC " <<taskC(t);
       /*      fil <<"  taskCi "; taskCi[t].writeRaw(fil);

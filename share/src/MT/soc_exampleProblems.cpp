@@ -2,10 +2,10 @@
 #include "plot.h"
 
 ControlledSystem_PointMass::ControlledSystem_PointMass(){
-  T=100;
-  tau = .01;
-  x0 = ARR(0., 0.);
-  x_target = ARR(1., 0.);
+  T = MT::getParameter<uint>("T",100);
+  tau = 1./get_T();
+  x0 = ARR(1., 1.);
+  x_target = ARR(0., 1.);
   prec = 1e2;
 }
 
@@ -14,34 +14,34 @@ ControlledSystem_PointMass::~ControlledSystem_PointMass(){
 
 void ControlledSystem_PointMass::getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, arr& Q, uint t){
   A.setDiag(1., 2); A(0,1) = tau;
-  B.resize(2,1); B(0,0)=0.; B(1,0)=1.;
+  B.resize(2,1); B(0,0)=tau*tau/2.; B(1,0)=tau;
   a.resize(2); a.setZero();
   if(&At){ At.setDiag(1.,2); At(1,0) = tau; }
   if(&Ainv){  Ainv.setDiag(1.,2); Ainv(1,0) = -tau;  }
   if(&Ainvt){  Ainvt.setDiag(1.,2); Ainvt(0,1) = -tau;  }
-  if(&Bt){ Bt.resize(1,2); Bt(0,0)=0.; Bt(0,1)=1.; }
+  if(&Bt){ transpose(Bt, B); }
   Q.setDiag(1e-6,2);
-  cout <<A <<a <<B <<Q <<endl;
 }
 
 void ControlledSystem_PointMass::getControlCosts(arr& H, arr& Hinv, uint t){
   if(&H) H.setDiag(tau,1.);
   if(&Hinv) Hinv.setDiag(1./tau,1.);
-  cout <<Hinv <<endl;
 }
 
 void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
-  if(t!=T){
+  if(t!=0 && t!=get_T()-1){
     phi.resize(x.N); phi.setZero();
     if(&phiJ){ phiJ.resize(x.N,x.N); phiJ.setZero(); }
     return;
-    //phi.clear(); phiJ.clear(); return;
   }
-  if(t==T){
+  if(t==0){
+    phi = prec*(x-x0);
+    if(&phiJ) phiJ.setDiag(prec,x.N);
+  }
+  if(t==get_T()-1){
     phi = prec*(x-x_target);
     if(&phiJ) phiJ.setDiag(prec,x.N);
   }
-  cout <<phi <<phiJ <<endl;
 }
 
 

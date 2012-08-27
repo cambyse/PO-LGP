@@ -1,4 +1,4 @@
-#include "kOrderMarkovProblem.h"
+#include <MT/kOrderMarkovProblem.h>
 #include <MT/functions.h>
 
 #define DIM 3
@@ -7,7 +7,7 @@ struct ParticleAroundWalls:KOrderMarkovFunction {
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
   uint get_T(){ return 100; }
-  uint get_k(){ return 3; }
+  uint get_k(){ return 2; }
   uint get_n(){ return DIM; }
   uint get_m(uint t){ return 2*DIM; }
 };

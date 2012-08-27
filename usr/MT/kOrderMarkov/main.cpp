@@ -1,7 +1,8 @@
 #include <MT/util.h>
 #include <MT/optimization.h>
-#include "kOrderMarkovProblem.h"
+#include <MT/kOrderMarkovProblem.h>
 #include "exampleProblem.h"
+#include <MT/soc_exampleProblems.h>
 
 struct conv_KOrderMarkovFunction:VectorFunction {
   KOrderMarkovFunction *f;
@@ -12,8 +13,13 @@ struct conv_KOrderMarkovFunction:VectorFunction {
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
+#if 1
+  ControlledSystem_PointMass sys;
+  KOrderMarkovFunction_ControlledSystem problem(sys);
+#else
   ParticleAroundWalls problem;
-
+#endif
+  
   conv_KOrderMarkovFunction P(problem);
 
   uint T=problem.get_T();
@@ -29,17 +35,25 @@ int main(int argn,char** argv){
   arr x(T+1,n);
   rndUniform(x,-1.,1.);
   
-  for(uint k=0;k<10;k++){
+  for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobian(P, x, 1e-6);
+    checkJacobian(P, x, 1e-5);
   }
+  arr phi,J;
+  P.fv(phi, J, x);
+//   cout <<"x=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J <<endl;
   
   rndUniform(x,-10.,-1.);
+  //for(uint t=0;t<x.d0;t++){ x(t,0) = double(t)/T; x(t,1)=1.; }
+  //for(uint t=0;t<x.d0;t++){ double tt=double(t)/T;  x(t,1) = 2.*tt; x(t,0) = tt*tt; }
+  //analyzeTrajectory(sys, x, true, &cout);
+  //return 0;
   optGaussNewton(x, P, OPT1(verbose=2));
 
   write(LIST<arr>(x),"z.output");
   gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3");
   
+  analyzeTrajectory(sys, x, true, &cout);
   return 0;
 }
 
@@ -62,9 +76,11 @@ void conv_KOrderMarkovFunction::fv(arr& phi, arr& J, const arr& x) {
     m_t = f->get_m(t);
     arr phi_t,J_t;
     f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t, t+k) );
-    J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
     phi.setVectorBlock(phi_t, M);
-    if(&J) J  .setMatrixBlock(J_t, M, t*n);
+    if(&J){
+      J_t.reshape(J_t.d0,J_t.N/J_t.d0);
+      J.setMatrixBlock(J_t, M, t*n);
+    }
     M += m_t;
   }
 }

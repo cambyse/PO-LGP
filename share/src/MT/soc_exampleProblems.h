@@ -20,7 +20,7 @@ struct ControlledSystem_PointMass: ControlledSystem{
   virtual uint get_T(){ return T; }
   virtual uint get_xDim(){ return 2; }
   virtual uint get_uDim(){ return 1; }
-  virtual uint get_phiDim(uint t){ NIY }
+  virtual uint get_phiDim(uint t){ return get_xDim(); }
   virtual void get_x0(arr& x0){ x0 = this->x0; }
   virtual bool isKinematic(){ return false; }
 

@@ -48,7 +48,7 @@ struct sAICO{
   arr dampingReference;
   double cost, cost_old;            //!< cost of MAP trajectory
   double b_step;
-  arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; //!< processes...
+  arr A, tA, Ainv, invtA, a, B, tB, Hinv, Q; //!< processes...
   uint sweep;                       //!< #sweeps so far
   uint scale;                       //!< scale of this AICO in a multi-scale approach
 
@@ -178,18 +178,15 @@ void sAICO::init_messages(){
   if(!sys->isKinematic()){
     B.resize(T+1, n, n/2);  tB.resize(T+1, n/2, n); //fwd dynamics
     Hinv.resize(T+1, n/2, n/2);
-    Winv.resize(T+1, n/2, n/2);
   }else{
     B.resize(T+1, n, n);  tB.resize(T+1, n, n); //fwd dynamics
     Hinv.resize(T+1, n, n);
-    Winv.resize(T+1, n, n);
   }
   Q.resize(T+1, n, n);
   
   //initialize system matrices at time 0
   sys->setx(x0);
   sys->getControlCosts(NoArr, Hinv[0](), 0);
-  if(sys->isKinematic()) Winv[0]() = Hinv[0];
   sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), Q[0](), 0);
   
   //delete all task cost terms
@@ -229,7 +226,7 @@ void sAICO::init_trajectory(const arr& x_init){
     
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
-  cost = evaluateTrajectory(b, display>0);
+  cost = analyzeTrajectory(*sys, b, display>0, &cout); //TODO: !! evaluateTrajectory(b, display>0);
   displayCurrentSolution();
   rememberOldState();
 }
@@ -332,7 +329,7 @@ void sAICO::updateFwdMessage(uint t){
   }else{
     inverse_SymPosDef(barS, Sinv[t-1] + R[t-1]);
     s[t] = barS * (Sinv[t-1]*s[t-1] + r[t-1]);
-    St = Winv[t-1] + barS;
+    St = Hinv[t-1] + barS;
     inverse_SymPosDef(Sinv[t](), St);
   }
 }
@@ -369,7 +366,7 @@ void sAICO::updateBwdMessage(uint t){
     if(t<T){
       inverse_SymPosDef(barV, Vinv[t+1] + R[t+1]);   //eq (*)
       v[t] = barV * (Vinv[t+1]*v[t+1] + r[t+1]);
-      Vt = Winv[t] + barV;
+      Vt = Hinv[t] + barV;
       inverse_SymPosDef(Vinv[t](), Vt);
     }
     if(t==T){ //last time slice
@@ -397,7 +394,6 @@ void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   
   //get system matrices
   sys->getControlCosts(NoArr, Hinv[t](), t);
-  if(sys->isKinematic()) Winv[t]() = Hinv[t];
   sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), Q[t](), t);
   sys->getTaskCosts(R[t](), r[t](), t, &rhat(t));
   //double C_alt = scalarProduct(R[t], xhat[t], xhat[t]) - 2.*scalarProduct(r[t], xhat[t]) + rhat(t);
@@ -530,7 +526,6 @@ void sAICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, ui
   optGaussNewton(xhat[t](), f, (o.stopTolerance=tolerance, o.stopEvals=maxRelocationIterations, o.maxStep=maxStepSize, o) );
   
   sys->getControlCosts(NoArr, Hinv[t](), t);
-  if(sys->isKinematic()) Winv[t]() = Hinv[t];
   sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), Q[t](), t);
   //R and r should be up-to-date!
   

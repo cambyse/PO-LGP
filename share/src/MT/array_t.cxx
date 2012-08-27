@@ -407,6 +407,7 @@ template<class T> T& MT::Array<T>::append(const T& x) { append()=x; return p[N-1
 //! append another array to the array (by copying it) -- the array might become 1D!
 template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
   uint oldN=N, xN=x.N, i;
+  if(!xN) return;
   if(!oldN)
     resizeAs(x);
   else if(nd==2 && x.nd==1 && d1==x.d0)

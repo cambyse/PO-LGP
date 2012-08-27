@@ -43,28 +43,34 @@ void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int
 struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   ControlledSystem *sys;
 
-  KOrderMarkovFunction_ControlledSystem(ControlledSystem& sys);
+  KOrderMarkovFunction_ControlledSystem(ControlledSystem& _sys):sys(&_sys){}
 
   uint get_T(){ return sys->get_T(); }
-  uint get_k(){ return 2; }
+  uint get_k(){ return 1; }
   uint get_n(){ return sys->get_xDim(); }
-  uint get_m(uint t){ return sys->get_phiDim(t); }
+  uint get_m(uint t){ return sys->get_phiDim(t) + sys->get_xDim(); }
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     arr x0(x_bar,0);
     arr x1(x_bar,1);
 
+    sys->setx(x0);
+    
     //dynamics
     arr J0, J1;
     getTransitionCostTerms(*sys, true, phi, J0, J1, x0, x1, t);
-    J.resize(J0.d0, J0.d1+J1.d1);
-    J.setMatrixBlock(J0,0,0);
-    J.setMatrixBlock(J1,0,J0.d1);
+    if(&J){
+      J.resize(J0.d0, J0.d1+J1.d1);
+      J.setMatrixBlock(J0,0,0);
+      J.setMatrixBlock(J1,0,J0.d1);
+    }
 
     //tasks
     arr _phi, _J;
     sys->getTaskCosts(_phi, _J, t);
+    _J.insColumns(_J.d0, x1.N);
+    for(uint i=0;i<_J.d0;i++) for(uint j=x0.N;j<_J.d1;j++) _J(i,j) = 0.;
     phi.append(_phi);
-    J.append(_J);
+    if(&J) J.append(_J);
   }
 };
 
