@@ -53,7 +53,7 @@ void ControlledSystem_PointMass::displayCurrentState(const char* title, bool pau
   plot(pause);
 }
 
-void ControlledSystem_PointMass::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names){
+void ControlledSystem_PointMass::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t){
   dims.resize(2); dims=1;
   names.resize(2);
   names(0)="position_cost";

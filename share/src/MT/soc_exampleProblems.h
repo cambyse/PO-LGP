@@ -18,6 +18,7 @@ struct ControlledSystem_PointMass: ControlledSystem{
 
   // implementation of virtuals
   virtual uint get_T(){ return T; }
+  virtual double get_tau(){ return tau; }
   virtual uint get_xDim(){ return 2; }
   virtual uint get_uDim(){ return 1; }
   virtual uint get_phiDim(uint t){ return get_xDim(); }
@@ -31,7 +32,7 @@ struct ControlledSystem_PointMass: ControlledSystem{
   virtual void getTaskCosts(arr& phi, arr& phiJ, uint t);
 
   virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false);
-  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names);
+  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t);
 };
 
 

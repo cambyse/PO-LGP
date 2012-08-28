@@ -25,8 +25,8 @@ void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& 
     sys.getDynamics(A, a, B, Q, t);
     sys.getControlCosts(NoArr, Hinv, t);
     Psi = x1 - (A*x0+a);
-    //for(uint i=0;i<Q.d0/2;i++)
-      //Q(i,i) += 1e-4; //allow for noise in the position transitions!
+    for(uint i=0;i<Q.d0/2;i++)
+      Q(i,i) += 1e-4; //allow for noise in the position transitions!
     Winv = B*Hinv*~B + Q;
     inverse_SymPosDef(W, Winv);
     lapack_cholesky(M, W);
@@ -108,6 +108,50 @@ void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int
   }
   if(steps==1)
     sys.displayCurrentState(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p, true);
+}
+
+//! \brief get the velocity vt of a trajectory q at time t
+void getVelocity(arr& vt, const arr& q, uint t, double tau){
+  if(!t) vt = (q[0]-q[0])/tau;
+  else   vt = (q[t]-q[t-1])/tau;
+}
+
+//! compute the full (q, v) trajectory from a trajectory q
+void getPhaseTrajectory(arr& x, const arr& q, double tau){
+  uint T=q.d0-1, n=q.d1, t;
+  x.resize(T+1, 2, n);
+  for(t=0; t<=T; t++){
+    x.subDim(t, 0)=q[t];
+    if(t<T) x.subDim(t, 1)=(q[t+1]-q[t])/tau;
+    else  x.subDim(t, 1)=0.;
+  }
+  x.reshape(T+1, 2*n);
+}
+
+//! simply get the q-trajectory from a (q, v)-trajectory
+void getPositionTrajectory(arr& q, const arr& _q){
+  uint T=_q.d0, n=_q.d1/2, i, t;
+  CHECK(2*n==_q.d1, "")
+  q.resize(T, n);
+  for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
+}
+
+/*! \brief use regularized Inverse Kinematics to compute a joint
+    trajectory from the task trajectory previously specifies for the
+    taskid-th task variable */
+void straightTaskTrajectory(ControlledSystem& sys, arr& x){
+  uint t, T= sys.get_T(), n= sys.get_xDim();
+  arr phi, J, Jinv, Winv;
+  x.resize(T+1, n);
+  sys.get_x0(x[0]());
+  for(t=1; t<=T; t++){
+    sys.getControlCosts(NoArr, Winv, t);
+    sys.setx(x[t-1]);
+    sys.getTaskCosts(phi, J, t);
+    if(Winv.d0 != J.d1) Winv.setDiag(1.,J.d1);
+    pseudoInverse(Jinv, J, Winv, 1e-5);
+    x[t]() = x[t-1] - Jinv*phi;
+  }
 }
 
 void KOrderMarkovFunction_ControlledSystem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){

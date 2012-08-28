@@ -1,5 +1,6 @@
 #include <MT/socNew.h>
 #include <MT/soc_exampleProblems.h>
+#include <MT/soc_orsSystem.h>
 #include <MT/aico.h>
 
 void test(){
