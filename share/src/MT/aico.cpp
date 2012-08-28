@@ -18,6 +18,7 @@
 #include "aico.h"
 #include "optimization.h"
 
+#define ControlledSystem soc::SocSystemAbstraction
 
 struct sAICO{
   //parameters
@@ -229,6 +230,7 @@ void sAICO::init_trajectory(const arr& x_init){
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
   cost = analyzeTrajectory(*sys, b, display>0, &cout); //TODO: !! evaluateTrajectory(b, display>0);
+MT_MSG("TODO!");
   displayCurrentSolution();
   rememberOldState();
 }
@@ -397,7 +399,7 @@ void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   //get system matrices
   sys->getControlCosts(NoArr, Hinv[t](), t);
   sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), Q[t](), t);
-  sys->getTaskCosts(R[t](), r[t](), t, &rhat(t));
+  sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
   //double C_alt = scalarProduct(R[t], xhat[t], xhat[t]) - 2.*scalarProduct(r[t], xhat[t]) + rhat(t);
   //cout <<t <<' ' <<C <<' ' <<C_alt <<endl;
 }
@@ -489,7 +491,7 @@ void sAICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, ui
       }else{
         countSetq++;
         sys->setx(x);
-        sys->getTaskCosts(phi, J, t);
+        sys->getTaskCosts(phi, J, x, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }
       

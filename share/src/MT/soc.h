@@ -58,39 +58,34 @@ struct SocSystemAbstraction:VectorChainFunction {
   ///@name low level access routines: need to be implemented by the simulator
   
   // access general problem information
-  virtual uint nTime() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
+  bool isKinematic(){ return !dynamic; }
+  virtual uint get_T() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
   virtual uint nTasks() = 0;           ///< number of task variables
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
   virtual uint yDim(uint i) = 0;       ///< dimensionality of the i-th task
   virtual void getq0(arr& q0) = 0;      ///< start joint configuration
   virtual void getv0(arr& v0) = 0;      ///< start joint velocity
-  virtual void getx0(arr& x0);          ///< start joint configuration and velocity
+  virtual void get_x0(arr& x0);          ///< start joint configuration and velocity
   virtual void getqv0(arr& q0, arr& v0); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   virtual void setTau(double tau) = 0;
-  virtual double getDuration(){ return getTau()*nTime(); }
+  virtual double getDuration(){ return getTau()*get_T(); }
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setx0ToCurrent() = 0;
-  virtual void setTox0(){ arr x; getx0(x); setx(x); }
+  virtual void setTox0(){ arr x; get_x0(x); setx(x); }
   virtual void setq(const arr& q, uint t=0) = 0;
   //virtual void setq0(const arr& q);
   virtual void setx(const arr& x, uint t=0);
   virtual void setqv(const arr& q, const arr& qd, uint t=0);
   
   //motion prior, or control cost PER STEP unless rate is explicitly indicated [t indicates the step]
-  virtual void getW(arr& W, uint t) = 0;          ///< kinematic step cost metric: step cost = dq^T W dq, with W = tau*W_rate where tau is step size
-  virtual void getWinv(arr& Winv, uint t){ throw("NIY"); } ///< kinematic step cost metric: cost = dq^T W dq
-  virtual void getH(arr& H, uint t);              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
-  virtual void getHinv(arr& H, uint t);           ///< inverse of H
-  virtual void getHrateInv(arr& HrateInv);
-  virtual void getQ(arr& Q, uint t);              ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
-  virtual void getQrate(arr& Qrate);      ///< process stochasticity or integration noise Q (e.g., setDiag(1e-10, qDim()) )
+  virtual void getControlCosts(arr& H, arr& Hinv, uint t);              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
   
   // dynamic model
-  virtual void getMF(arr& M, arr& F, uint t);
-  virtual void getMinvF(arr& Minv, arr& F, uint t);
+  virtual void getMF(arr& M, arr& F, arr& Q, uint t);
+  virtual void getMinvF(arr& Minv, arr& F, arr& Q, uint t);
   
   // task coupling
   virtual bool isConditioned(uint i, uint t) = 0;
@@ -111,8 +106,8 @@ struct SocSystemAbstraction:VectorChainFunction {
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt, const arr& xt1, uint t);
-  virtual void getProcess(arr& A, arr& a, arr& B, uint t, arr* Winv=NULL);
-  virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
+  virtual void getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t, arr* Winv=NULL);
+  virtual void getDynamics(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, arr& Q, uint t);
   virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t, double* rhat=NULL);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
   void getTaskInfo(MT::Array<const char*>& names, uintA& dims, uint t);

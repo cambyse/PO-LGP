@@ -35,7 +35,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   if(testFeedbackControl){
     //-- feedback control (kinematic or dynamic) to reach the targets
     sys.getq0(q);
-    sys.getx0(x);
+    sys.get_x0(x);
     pos->setGainsAsNatural(20,.2);
     pos->targetType=positionGainsTT;
     col->setGains(.5,.0);
