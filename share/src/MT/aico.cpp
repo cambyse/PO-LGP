@@ -218,7 +218,9 @@ void sAICO::init_trajectory(const arr& x_init){
   //if(!sys->isKinematic() && x_init.d1!=2*sys->qDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());  else
   b=x_init;
   CHECK(b.nd==2 && b.d0==T+1 && (b.d1==sys->get_xDim()) , "initial trajectory was wrong dimensionality");
-  sys->get_x0(b[0]()); //overwrite with x0
+  arr x0;
+  sys->get_x0(x0); //overwrite with x0
+  if(maxDiff(x0,b[0])>1e-6) MT_MSG("WARNING: init_trajectory has different x(t=0) than the system's setting");
   //q=x_init;
   xhat = b;
   s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }

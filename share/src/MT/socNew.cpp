@@ -48,6 +48,12 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
     arr phi,psi;
     sys.getTaskCosts(phi, NoArr, t);
     taskC(t)=sumOfSqr(phi);
+    
+#if 1
+    arr R,r;
+    double rhat,tc;
+    tc = sys.getTaskCosts(R,r,t,&rhat);
+#endif
 
     if(t<T){
       getTransitionCostTerms(sys, true, psi, NoArr, NoArr, x[t], x[t+1], t);
@@ -102,4 +108,30 @@ void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int
   }
   if(steps==1)
     sys.displayCurrentState(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p, true);
+}
+
+void KOrderMarkovFunction_ControlledSystem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
+  arr x0(x_bar,0);
+  arr x1(x_bar,1);
+  
+  sys->setx(x0);
+  
+  //dynamics
+  arr J0, J1;
+  getTransitionCostTerms(*sys, true, phi, J0, J1, x0, x1, t);
+  if(&J){
+    J.resize(J0.d0, J0.d1+J1.d1);
+    J.setMatrixBlock(J0,0,0);
+    J.setMatrixBlock(J1,0,J0.d1);
+  }
+
+  //TODO: the last factor ignores costs we should take from the 2nd x1!!!
+  
+  //tasks
+  arr _phi, _J;
+  sys->getTaskCosts(_phi, _J, t);
+  _J.insColumns(_J.d0, x1.N);
+  for(uint i=0;i<_J.d0;i++) for(uint j=x0.N;j<_J.d1;j++) _J(i,j) = 0.;
+  phi.append(_phi);
+  if(&J) J.append(_J);
 }

@@ -10,9 +10,11 @@ void test(){
 
   uint T=sys.get_T();
   arr x(T+1,sys.get_xDim());
-  for(uint t=0;t<=T;t++) x(t,0) = (double)t/T;
-//   x.setZero();
+  //-- test cost on a simple deterministic trajectory
+  for(uint t=0;t<x.d0;t++){ x(t,0) = double(t)/T; x(t,1)=1.; }
+  for(uint t=0;t<x.d0;t++){ double tt=double(t)/T;  x(t,1) = 2.*tt; x(t,0) = tt*tt; }
   analyzeTrajectory(sys, x, true, &cout);
+  //return;
   
   AICO aico(sys);
   //soc::straightTaskTrajectory(sys, q, 0);

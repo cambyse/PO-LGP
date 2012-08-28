@@ -7,6 +7,12 @@
 
 extern uint countMsg, countSetq;
 
+
+//===========================================================================
+//
+// ControlledSystem
+//
+
 struct ControlledSystem {
   // access general problem information
   virtual uint get_T() = 0;  ///< total time steps of the trajectory (that's time_slices - 1)
@@ -36,9 +42,20 @@ struct ControlledSystem {
 };
 
 
+//===========================================================================
+//
+// helpers to analyze and handle trajectories (->move to soc_helpers)
+//
+
 void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& J0, arr& J1, const arr& x0, const arr& x1, uint t);
 double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::ostream* os);
 void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int steps, const char *tag);
+
+
+//===========================================================================
+//
+// Converting a DOC problem into a k-order optimization problem
+//
 
 struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   ControlledSystem *sys;
@@ -49,29 +66,7 @@ struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   uint get_k(){ return 1; }
   uint get_n(){ return sys->get_xDim(); }
   uint get_m(uint t){ return sys->get_phiDim(t) + sys->get_xDim(); }
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
-    arr x0(x_bar,0);
-    arr x1(x_bar,1);
-
-    sys->setx(x0);
-    
-    //dynamics
-    arr J0, J1;
-    getTransitionCostTerms(*sys, true, phi, J0, J1, x0, x1, t);
-    if(&J){
-      J.resize(J0.d0, J0.d1+J1.d1);
-      J.setMatrixBlock(J0,0,0);
-      J.setMatrixBlock(J1,0,J0.d1);
-    }
-
-    //tasks
-    arr _phi, _J;
-    sys->getTaskCosts(_phi, _J, t);
-    _J.insColumns(_J.d0, x1.N);
-    for(uint i=0;i<_J.d0;i++) for(uint j=x0.N;j<_J.d1;j++) _J(i,j) = 0.;
-    phi.append(_phi);
-    if(&J) J.append(_J);
-  }
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 };
 
 #endif

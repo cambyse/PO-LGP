@@ -20,7 +20,9 @@
 #ifndef MT_aico_h
 #define MT_aico_h
 
-#include "socNew.h"
+#include "soc.h"
+
+#define ControlledSystem soc::SocSystemAbstraction
 
 /** \brief Apprioximate Inference Control */
 struct AICO {

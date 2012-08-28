@@ -2,7 +2,7 @@
 #include "plot.h"
 
 ControlledSystem_PointMass::ControlledSystem_PointMass(){
-  T = MT::getParameter<uint>("T",100);
+  T = MT::getParameter<uint>("T",10);
   tau = 1./get_T();
   x0 = ARR(1., 1.);
   x_target = ARR(0., 1.);
