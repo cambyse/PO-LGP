@@ -29,8 +29,13 @@ struct OrsSystem: ControlledSystem {
   void setTau(double tau);
   void setTimeInterval(double trajectory_time, uint trajectory_steps);
   void setTaskVariables(const TaskVariableList& CVlist);
+  void setx0ToCurrent();
+  void setTox0();
+  void setx0(const arr& x0);
   uint get_qDim();
   ors::Graph& getOrs();
+  SwiftInterface& getSwift();
+  MT::Array<TaskVariable*>& vars();
   
   //-- implementations of virtual methods
   uint get_T();

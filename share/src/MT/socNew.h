@@ -14,6 +14,8 @@ extern uint countMsg, countSetq;
 //
 
 struct ControlledSystem {
+  ControlledSystem():os(&std::cout), gl(NULL) {}
+  
   // access general problem information
   virtual uint get_T() = 0;  ///< total time steps of the trajectory (that's time_slices - 1)
   virtual double get_tau() = 0;

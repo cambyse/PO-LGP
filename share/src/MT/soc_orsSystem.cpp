@@ -111,6 +111,7 @@ void OrsSystem::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
   }
+  s->dynamic = _dynamic;
   setTimeInterval(trajectory_duration, trajectory_steps);
   s->getCurrentStateFromOrs();
   s->x0 = s->x;
@@ -130,7 +131,6 @@ void OrsSystem::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl
   static MT::Parameter<double> hr("Hrate");
   static MT::Parameter<double> qr("Qrate", 1e-10);
   s->H_rate = hr()*W_rate;     //u-metric for torque control
-  s->dynamic = _dynamic;
   s->Q_rate.setDiag(qr, get_xDim());  //covariance \dot q-update
   if(s->dynamic) s->pseudoDynamic=true;
 }
@@ -266,6 +266,18 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
 
 void OrsSystem::setTau(double tau){
   s->tau = tau;
+}
+
+void OrsSystem::setx0ToCurrent(){
+  s->x0 = s->x;
+}
+
+void OrsSystem::setTox0(){
+  setx(s->x0);
+}
+
+void OrsSystem::setx0(const arr& x0){
+  s->x0 = x0;
 }
 
 void OrsSystem::setTimeInterval(double trajectory_duration,  uint trajectory_steps){
@@ -538,3 +550,7 @@ void OrsSystem::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint
 }
 
 ors::Graph& OrsSystem::getOrs(){ return *s->ors; }
+
+SwiftInterface& OrsSystem::getSwift(){ return *s->swift; }
+
+MT::Array<TaskVariable*>& OrsSystem::vars(){ return s->vars; }
