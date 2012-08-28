@@ -18,8 +18,6 @@
 #include "aico.h"
 #include "optimization.h"
 
-#define ControlledSystem soc::SocSystemAbstraction
-
 struct sAICO{
   //parameters
   ControlledSystem *sys;
@@ -98,7 +96,7 @@ void AICO::init(ControlledSystem& _sys){ self->init(_sys); }
 void AICO::init_messages(){ self->init_messages(); }
 void AICO::init_trajectory(const arr& x_init){ self->init_trajectory(x_init); }
 double AICO::step(){ return self->step(); }
-arr AICO::q(){ if(!self->sys->dynamic) return self->b; arr q; soc::getPositionTrajectory(q, self->b); return q; }
+arr AICO::q(){ if(self->sys->isKinematic()) return self->b; arr q; getPositionTrajectory(q, self->b); return q; }
 arr& AICO::b(){ return self->b; }
 arr& AICO::v(){ return self->v; }
 arr& AICO::Vinv(){ return self->Vinv; }
@@ -217,7 +215,7 @@ void sAICO::init_trajectory(const arr& x_init){
   init_messages();
   uint t, T=sys->get_T();
   b=x_init;
-  if(!sys->isKinematic() && 2*b.d1==sys->get_xDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());
+  if(!sys->isKinematic() && 2*b.d1==sys->get_xDim()) getPhaseTrajectory(b, x_init, sys->get_tau());
   CHECK(b.nd==2 && b.d0==T+1 && (b.d1==sys->get_xDim()) , "initial trajectory was wrong dimensionality");
 #if 1
   sys->get_x0(b[0]()); //overwrite with x0
@@ -233,7 +231,7 @@ void sAICO::init_trajectory(const arr& x_init){
     
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
-  cost = sys->analyzeTrajectory( b, display>0); //TODO: !! evaluateTrajectory(b, display>0);
+  cost = analyzeTrajectory(*sys, b, display>0, &cout); //TODO: !! evaluateTrajectory(b, display>0);
 MT_MSG("TODO!");
   displayCurrentSolution();
   rememberOldState();
@@ -403,7 +401,7 @@ void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   //get system matrices
   sys->getControlCosts(NoArr, Hinv[t](), t);
   sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), Q[t](), t);
-  sys->getTaskCosts(R[t](), r[t](), xhat[t], t, &rhat(t));
+  sys->getTaskCosts(R[t](), r[t](), t, &rhat(t));
   //double C_alt = scalarProduct(R[t], xhat[t], xhat[t]) - 2.*scalarProduct(r[t], xhat[t]) + rhat(t);
   //cout <<t <<' ' <<C <<' ' <<C_alt <<endl;
 }
@@ -495,7 +493,7 @@ void sAICO::updateTimeStepGaussNewton(uint t, bool updateFwd, bool updateBwd, ui
       }else{
         countSetq++;
         sys->setx(x);
-        sys->getTaskCosts(phi, J, x, t);
+        sys->getTaskCosts(phi, J, t);
         aico->phiBar(t) = phi;  aico->JBar(t) = J;
       }
       
@@ -615,7 +613,7 @@ void sAICO::perhapsUndoStep(){
 void sAICO::displayCurrentSolution(){
   MT::timerPause();
   if(sys->gl){
-    sys->displayTrajectory( b, NULL, display, STRING("AICO - iteration " <<sweep));
+    displayTrajectory(*sys, b, NULL, display, STRING("AICO - iteration " <<sweep));
   }
   MT::timerResume();
 }
@@ -679,7 +677,7 @@ double sAICO::step(){
     //sys->costChecks(b);
     //cout <<"DIFF=" <<fabs(cost-exact_cost) <<endl;
   }else{
-    cost = sys->analyzeTrajectory( b, display>0); //this routine calles the simulator again for each time step
+    cost = analyzeTrajectory(*sys, b, display>0, &cout); //this routine calles the simulator again for each time step
   }
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)

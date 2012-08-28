@@ -1,6 +1,6 @@
 #include <MT/soc.h>
 #include <MT/ors.h>
-#include <MT/socSystem_ors.h>
+#include <MT/soc_orsSystem.h> //socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
 #include <MT/util.h>
@@ -14,23 +14,24 @@ void testRobotSystem(bool testFeedbackControl=false){
   
   double D=MT::getParameter<double>("time_duration",4.);
   uint T=MT::getParameter<uint>("time_steps",200);
-  soc::SocSystem_Ors sys;
+  OrsSystem sys;
   sys.initBasics(NULL, NULL, &gl, T, D, MT::getParameter<bool>("dynamic",false), NULL);
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new DefaultTaskVariable("position", *sys.ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
-  pos->y_target = arr(sys.ors->getBodyByName("target")->X.pos.p,3);
+  TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
+  pos->y_target = arr(sys.getOrs().getBodyByName("target")->X.pos.p,3);
   
-  TaskVariable *col = new DefaultTaskVariable("collision", *sys.ors, collTVT,0,0,0,0,ARR(.15));
+  TaskVariable *col = new DefaultTaskVariable("collision", sys.getOrs(), collTVT,0,0,0,0,ARR(.15));
   col->y_prec=1e-0;
   col->y_target = ARR(0.);
 
-  TaskVariable *qtv = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  TaskVariable *qtv = new DefaultTaskVariable("qitself", sys.getOrs(), qItselfTVT, 0, 0, 0, 0, 0);
   qtv->y_target.setZero();
 
   sys.setTaskVariables(ARRAY(pos,col,qtv));
   
+#if 0
   arr q,dq,x;
   if(testFeedbackControl){
     //-- feedback control (kinematic or dynamic) to reach the targets
@@ -55,27 +56,35 @@ void testRobotSystem(bool testFeedbackControl=false){
     }
     //sys.gl->watch("IK solution <press ENTER>");
   }
+#endif
   
   //-- planning (AICO) to generate an optimal (kinematic) trajectory
-  sys.getq0(q);
-  sys.setq(q);
+  arr x;
+  sys.get_x0(x);
+  sys.setx(x);
   pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
   col->setInterpolatedTargetsConstPrecisions(T, 1e-2, 0.);
   qtv->setInterpolatedTargetsEndPrecisions(T, 0., 0., 1e-2, 1e4);
 
-  q.clear();
+  x.clear();
 
   //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
+  arr q;
+  MT::load(q, "z.q");
+  getPhaseTrajectory(x, q, sys.get_tau());
+  analyzeTrajectory(sys, x, true, &cout);
+  //straightTaskTrajectory(sys, x);
+  //return;
+  
   AICO aico(sys);
-  soc::straightTaskTrajectory(sys, q, 0);
   aico.init_messages();
-  aico.init_trajectory(q);
+  aico.init_trajectory(x);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
-  sys.analyzeTrajectory(aico.b(),true);
-  q = aico.q();
-  ofstream os("z.traj"); q.writeRaw(os); os.close();
-  sys.displayTrajectory(q,NULL,1,"AICO (planned trajectory)");
+  analyzeTrajectory(sys, aico.b(),true, &cout);
+  x = aico.b();
+  ofstream os("z.traj"); x.writeRaw(os); os.close();
+  displayTrajectory(sys, x, NULL,1,"AICO (planned trajectory)");
 
   //test iterated optimization with changing goals/initial condition
   for(uint k=0;k<10;k++){
@@ -83,17 +92,17 @@ void testRobotSystem(bool testFeedbackControl=false){
     pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
     aico.prepare_for_changed_task();
     aico.iterate_to_convergence();
-    q = aico.q();
-    sys.analyzeTrajectory(aico.b(),true);
-    sys.displayTrajectory(aico.q(),NULL,1,"AICO_replanned (planned trajectory)");
+    x = aico.b();
+    analyzeTrajectory(sys, aico.b(), true, &cout);
+    displayTrajectory(sys, aico.b(), NULL,1,"AICO_replanned (planned trajectory)");
     //from scratch
     arr qalt;
     AICO aic(sys);
-    soc::straightTaskTrajectory(sys, qalt, 0);
+    straightTaskTrajectory(sys, qalt);
     aico.init_trajectory(qalt);
     aic.iterate_to_convergence();
-    sys.analyzeTrajectory(aic.b(),true);
-    sys.displayTrajectory(aic.q(),NULL,1,"AICO (planned trajectory)");
+    analyzeTrajectory(sys, aic.b(), true, &cout);
+    displayTrajectory(sys, aic.q(),NULL,1,"AICO (planned trajectory)");
   }
 }
 

@@ -16,6 +16,7 @@ extern uint countMsg, countSetq;
 struct ControlledSystem {
   // access general problem information
   virtual uint get_T() = 0;  ///< total time steps of the trajectory (that's time_slices - 1)
+  virtual double get_tau() = 0;
   virtual uint get_xDim() = 0; //the dimensionality of $x_t$
   virtual uint get_uDim() = 0;                 ///< dimensionality of control
   virtual uint get_phiDim(uint t) = 0; //the dimensionality of the task vector $\phi_t$
@@ -35,7 +36,7 @@ struct ControlledSystem {
 
   // display and info
   virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false) = 0;
-  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names) = 0;
+  virtual void getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint t) = 0;
 
   std::ostream *os;
   struct OpenGL *gl;
@@ -50,6 +51,10 @@ struct ControlledSystem {
 void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& J0, arr& J1, const arr& x0, const arr& x1, uint t);
 double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::ostream* os);
 void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int steps, const char *tag);
+void getVelocity(arr& vt, const arr& q, uint t, double tau);
+void getPhaseTrajectory(arr& x, const arr& q, double tau);
+void getPositionTrajectory(arr& q, const arr& x);
+void straightTaskTrajectory(ControlledSystem& sys, arr& q);
 
 
 //===========================================================================
