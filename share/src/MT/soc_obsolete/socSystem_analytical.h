@@ -23,7 +23,7 @@ struct SocSystem_Analytical: public virtual SocSystemAbstraction{
 
   
   //implementations of virtual methods
-  uint nTime();
+  uint get_T();
   uint nTasks();
   uint qDim();
   uint uDim();
@@ -31,7 +31,7 @@ struct SocSystem_Analytical: public virtual SocSystemAbstraction{
   void getq0(arr& q);
   void setq0(const arr& q);
   void getv0(arr& v);
-  void getx0(arr& x);
+  void get_x0(arr& x);
   void getqv0(arr& q, arr& qd);
   bool isDynamic();
   void setq(const arr& q, uint t=0);

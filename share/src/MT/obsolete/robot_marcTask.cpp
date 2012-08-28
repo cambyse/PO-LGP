@@ -32,7 +32,7 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
       ctrl->useBwdMsg=true;
     }
     planVar->deAccess(ctrl);
-    //if(motion.recho.planner.cost < 1.) if(counter<motion.recho.sys->nTime()-1) counter++;
+    //if(motion.recho.planner.cost < 1.) if(counter<motion.recho.sys->get_T()-1) counter++;
   }
   
   //TaskVariable * t = listFindByName(recho.sys->vars, "endeffector");

@@ -213,7 +213,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
   
   //-- access necessary information
   arr A, a, B, tB;
-  sys.getProcess(A, a, B, t);
+  sys.getDynamics(A, a, B, t);
   transpose(tB, B);
   
   arr Q, H, Hinv;
@@ -264,7 +264,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
     IK steps are repeated until they converge up to tolerance eps (see
     \ref bayesianIterateIKControl) */
 void soc::bayesianIKTrajectory(SocSystemAbstraction& sys, arr& q, double eps){
-  uint t, T=sys.nTime(), n=sys.qDim();
+  uint t, T=sys.get_T(), n=sys.qDim();
   q.resize(T+1, n);
   arr dq;
   sys.getq0(q[0]());
@@ -281,7 +281,7 @@ void soc::bayesianIKTrajectory(SocSystemAbstraction& sys, arr& q, double eps){
 
 /*
 void bayesianIterateIKTrajectory(SocSystemAbstraction& sys, arr& q, double eps, uint maxIter){
-  uint t, T=sys.nTime(), n=sys.qDim();
+  uint t, T=sys.get_T(), n=sys.qDim();
   q.resize(T, n);
   arr dq;
   sys.getq0(q[0]());
@@ -317,7 +317,7 @@ void soc::AICO::init(SocSystemAbstraction& _sys,
                      
 void soc::AICO::initMessages(){
   uint n=sys->qDim();
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   arr q0;
   if(!sys->dynamic){
     sys->getq0(q0);
@@ -444,7 +444,7 @@ void soc::AICO_multiScaleSolver(SocSystemAbstraction& sys,
 double soc::AICO::stepKinematic(){
   CHECK(!sys->dynamic, "assumed dynamic SOC abstraction");
   uint n=sys->qDim();
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t, t0=0;
   int dt;
 
@@ -690,7 +690,7 @@ double soc::AICO::stepKinematic(){
 }
 
 void soc::AICO::initMessagesWithReferenceQ(arr& qref){
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   CHECK(qref.nd==2 && qref.d0==T+1 && qref.d1==sys->qDim(), "initial trajectory was wrong dimensionality");
   getPhaseTrajectory(qhat, qref, sys->getTau());
   q=qref;
@@ -707,7 +707,7 @@ void soc::AICO::initMessagesWithReferenceQ(arr& qref){
 }
 
 void soc::AICO::initMessagesFromScaleParent(AICO *A){
-  uint t, T=sys->nTime();
+  uint t, T=sys->get_T();
   for(t=0;t<=T;t+=2){
     s[t] = A->s[t>>1]; Sinv[t] = A->Sinv[t>>1];  if(t<T){ s[t+1]=A->s[t>>1];     Sinv[t+1]=A->Sinv[t>>1];     }
     v[t] = A->v[t>>1]; Vinv[t] = A->Vinv[t>>1];  if(t<T){ v[t+1]=A->v[(t>>1)+1]; Vinv[t+1]=A->Vinv[(t>>1)+1]; }
@@ -760,7 +760,7 @@ void soc::AICO::updateFwdMessage(uint t){
 }
 
 void soc::AICO::updateBwdMessage(uint t){
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   arr barV, Vt;
   if(sys->dynamic){
     if(t<T){
@@ -800,13 +800,13 @@ void soc::AICO::updateBwdMessage(uint t){
 //! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double soc::AICO::stepDynamic(){
   //CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t;
   int dt;
 
   //get state info for t=0
   arr q0;
-  sys->getx0(q0);
+  sys->get_x0(q0);
   if(sys->dynamic){
     CHECK(q0.N==2*sys->qDim(), "");
   }else{
@@ -819,7 +819,7 @@ double soc::AICO::stepDynamic(){
   sys->getQ(Q[0](), 0);
   sys->getHinv(Hinv[0](), 0);
   sys->getWinv(Winv[0](), 0);
-  sys->getProcess(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
+  sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
 
   //OPTIONAL: take account of optional externally given bwd messages
   if(useBwdMsg){
@@ -859,7 +859,7 @@ double soc::AICO::stepDynamic(){
       sys->getQ(Q[t](), t);
       sys->getHinv(Hinv[t](), t);
       sys->getWinv(Winv[t](), t);
-      sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
+      sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
       
       //compute (r, R)
       arr Rt, rt;
@@ -964,7 +964,7 @@ double soc::AICO::stepDynamic(){
 //==============================================================================
 
 double soc::AICO::stepGaussNewton(){
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t;
   int dt;
 
@@ -978,7 +978,7 @@ double soc::AICO::stepGaussNewton(){
   sys->getQ(Q[0](), 0);
   sys->getWinv(Winv[0](), 0);
   sys->getHinv(Hinv[0](), 0);
-  sys->getProcess(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
+  sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
 
   //OPTIONAL: take account of optional externally given bwd messages
   if(useBwdMsg){
@@ -1063,7 +1063,7 @@ double soc::AICO::stepGaussNewton(){
     sys->getQ(Q[t](), t);
     sys->getWinv(Winv[t](), t);
     sys->getHinv(Hinv[t](), t);
-    sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
+    sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
     //if(t<T){
     //  arr tmp;
     //  sys->getTransitionCostTerms(Psi[t+1](), tmp, tmp, qhat[t], qhat[t+1], t+1);
@@ -1133,7 +1133,7 @@ double soc::AICO::stepGaussNewton(){
 
 double soc::AICO::stepMinSum(){
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){
@@ -1172,7 +1172,7 @@ double soc::AICO::stepMinSum(){
         if(sys->dynamic){
           arr Hinv, A, a, B, Q, W, Winv, M;
           sys->getHinv(Hinv, j);
-          sys->getProcess(A, a, B, j);
+          sys->getDynamics(A, a, B, j);
           sys->getQ(Q, j);
           psi = x_i - (A*x_j+a);
           Winv = B*Hinv*~B + Q;
@@ -1201,7 +1201,7 @@ double soc::AICO::stepMinSum(){
   if(first){
     f.sys=sys;
     f.aico=this;
-    f.set(sys->nTime(), b.d1);
+    f.set(sys->get_T(), b.d1);
     f.tolerance = 1e-3;
     f.maxStep = 1e-1;
     if(sys->dynamic) sys->getqv0(f.x0); else sys->getq0(f.x0);
@@ -1223,7 +1223,7 @@ double soc::AICO::stepMinSum(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     cost = sys->analyzeTrajectory(q, display>0);
   }
   if(sys->gl){

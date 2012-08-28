@@ -15,7 +15,7 @@ void setOldGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   }
   
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK(T==sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);
