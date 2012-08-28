@@ -46,7 +46,7 @@ struct AICO {
   void iterate_to_convergence();
 
   //access
-  //arr& q();
+  arr q();
   arr& b();
   arr& v();
   arr& Vinv();

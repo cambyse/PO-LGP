@@ -402,6 +402,7 @@ void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char 
 
 
 uint soc::SocSystem_Ors::get_T(){  return s->T>>scalePower; }
+uint soc::SocSystem_Ors::get_xDim(){ if(dynamic) return 2.*qDim(); return qDim(); }
 uint soc::SocSystem_Ors::nTasks(){ return vars.N; }
 uint soc::SocSystem_Ors::qDim(){   return s->q0.N; }
 uint soc::SocSystem_Ors::uDim(){   return qDim(); }

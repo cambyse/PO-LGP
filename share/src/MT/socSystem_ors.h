@@ -40,6 +40,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
 
   //implementations of virtual methods
   uint get_T();
+  uint get_xDim();
   uint nTasks();
   uint qDim();
   uint uDim();

@@ -98,7 +98,7 @@ void AICO::init(ControlledSystem& _sys){ self->init(_sys); }
 void AICO::init_messages(){ self->init_messages(); }
 void AICO::init_trajectory(const arr& x_init){ self->init_trajectory(x_init); }
 double AICO::step(){ return self->step(); }
-//arr& AICO::q(){ return self->q; }
+arr AICO::q(){ if(!self->sys->dynamic) return self->b; arr q; soc::getPositionTrajectory(q, self->b); return q; }
 arr& AICO::b(){ return self->b; }
 arr& AICO::v(){ return self->v; }
 arr& AICO::Vinv(){ return self->Vinv; }
@@ -216,12 +216,16 @@ void AICO::fix_final_state(const arr& x_T){
 void sAICO::init_trajectory(const arr& x_init){
   init_messages();
   uint t, T=sys->get_T();
-  //if(!sys->isKinematic() && x_init.d1!=2*sys->qDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());  else
   b=x_init;
+  if(!sys->isKinematic() && 2*b.d1==sys->get_xDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());
   CHECK(b.nd==2 && b.d0==T+1 && (b.d1==sys->get_xDim()) , "initial trajectory was wrong dimensionality");
+#if 1
+  sys->get_x0(b[0]()); //overwrite with x0
+#else
   arr x0;
   sys->get_x0(x0); //overwrite with x0
   if(maxDiff(x0,b[0])>1e-6) MT_MSG("WARNING: init_trajectory has different x(t=0) than the system's setting");
+#endif
   //q=x_init;
   xhat = b;
   s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }
@@ -229,7 +233,7 @@ void sAICO::init_trajectory(const arr& x_init){
     
   dampingReference = b;
   for(t=0; t<=T; t++) updateTaskMessage(t, b[t]()); //compute task message at reference!
-  cost = analyzeTrajectory(*sys, b, display>0, &cout); //TODO: !! evaluateTrajectory(b, display>0);
+  cost = sys->analyzeTrajectory( b, display>0); //TODO: !! evaluateTrajectory(b, display>0);
 MT_MSG("TODO!");
   displayCurrentSolution();
   rememberOldState();
@@ -611,7 +615,7 @@ void sAICO::perhapsUndoStep(){
 void sAICO::displayCurrentSolution(){
   MT::timerPause();
   if(sys->gl){
-    displayTrajectory(*sys, b, NULL, display, STRING("AICO - iteration " <<sweep));
+    sys->displayTrajectory( b, NULL, display, STRING("AICO - iteration " <<sweep));
   }
   MT::timerResume();
 }
@@ -675,7 +679,7 @@ double sAICO::step(){
     //sys->costChecks(b);
     //cout <<"DIFF=" <<fabs(cost-exact_cost) <<endl;
   }else{
-    cost = analyzeTrajectory(*sys, b, display>0, &cout); //this routine calles the simulator again for each time step
+    cost = sys->analyzeTrajectory( b, display>0); //this routine calles the simulator again for each time step
   }
   
   //-- analyze whether to reject the step and increase damping (to guarantee convergence)

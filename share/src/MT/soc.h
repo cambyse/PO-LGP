@@ -60,6 +60,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   // access general problem information
   bool isKinematic(){ return !dynamic; }
   virtual uint get_T() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
+  virtual uint get_xDim() = 0;            ///< total time steps of the trajectory (that's time_slices - 1)
   virtual uint nTasks() = 0;           ///< number of task variables
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
