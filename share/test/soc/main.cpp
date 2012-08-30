@@ -66,8 +66,9 @@ void testRobotSystem(bool testFeedbackControl=false){
   q.clear();
 
   //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
-  AICO aico(sys);
   soc::straightTaskTrajectory(sys, q, 0);
+
+  AICO aico(sys);
   aico.init_messages();
   aico.init_trajectory(q);
   aico.iterate_to_convergence();
