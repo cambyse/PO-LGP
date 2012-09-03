@@ -1,8 +1,6 @@
 #include "biros_views.h"
 #include "control.h"
 
-MT::Array<ViewInfo*> birosViews;
-
 GenericInfoView_CPP(Process, GenericProcessView, processVT);
 GenericInfoView_CPP(Variable, GenericVariableView, variableVT);
 GenericInfoView_CPP(FieldInfo, GenericFieldInfoView, fieldVT);
