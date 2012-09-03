@@ -15,12 +15,13 @@
 #include <relational/robotManipulationSymbols.h>
 #include <relational/robotManipulationInterface.h>
 #include <relational/prada.h>
+#include <relational/literals.h>
 
 #include <MT/array_t.cxx>
 #include <MT/ors.h>
 
 #include <csignal>
-SET_LOG(main, DEBUG);
+SET_LOG(main, ERROR);
 
 void shutdown(int) {
   std::cout << "Signal cought. Stop process." << std::endl;
@@ -96,10 +97,6 @@ int main(int argc, char** argv) {
   MT::getParameter(stateFile_name, "file_state");
   PRINT(stateFile_name);
   
-  MT::String rewardFile_name;
-  MT::getParameter(rewardFile_name, "file_reward");
-  PRINT(rewardFile_name);
-  
   MT::String symbolsFile_name;
   MT::getParameter(symbolsFile_name, "file_symbols");
   PRINT(symbolsFile_name);
@@ -117,10 +114,22 @@ int main(int argc, char** argv) {
   //  -----------------------------------
 
   MT::String relation("inside");
-  AL_GroundedSymbol gs(relation, 2, false);
-  init_grounded_symbol(gs);
+  relational::GroundedSymbol *ogs;
+  ActiveLearningProblem problem;
+  problem.sampler   = new TraySampler;
+  problem.oracle    = new InsideOracle;
+  problem.generator = new TrayFeatureGenerator;
+
+  ogs = new Oracle_GroundedSymbol(problem, relation, 2, false);
+
+
+  AL_GroundedSymbol *ags = new AL_GroundedSymbol(relation, 2, false);
+  init_grounded_symbol(*ags);
+  
   MT::Array<relational::GroundedSymbol*> sgs;
-  sgs.append(&gs);
+  sgs.append(ags);
+  MT::Array<relational::GroundedSymbol*> osgs;
+  osgs.append(ogs);
   relational::LitL lits;
   relational::calculateSymbols(lits, sgs, sim.C);
   DEBUG(main, "test");
@@ -212,25 +221,79 @@ int main(int argc, char** argv) {
   planner->setHorizon(horizon);
   planner->setGroundRules(ground_rules);
   planner->setReward(reward);
+  //((relational::PRADA_Planner* ) planner)->setThresholdReward(0.00);
+  relational::Literal* action; 
 
-  for(int iter = 0; iter < 10; ++iter) {
+  std::ofstream rewards("rewards.dat");
+  for(int iter = 0; iter < 15; ++iter) {
+  //do {
     // calculate grounded symbols
     relational::calculateSymbols(lits, sgs, sim.C);
 
     // calculate handcrafted symbols
     s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+    s->lits.append(relational::Literal::get("red(20)"));
+    s->lits.append(relational::Literal::get("blue(21)"));
+
 
     // append grounded symbols
     s->lits.append(lits);
     relational::reason::derive(s);
 
+    relational::RuleSet::ground_with_filtering(ground_rules, rules, relational::reason::getConstants(), *s);
+    planner->setGroundRules(ground_rules);
+
+    relational::reason::calc_coveringRules(coveringGroundRules, rules, *s);
+    FOR1D_(coveringGroundRules, i) {
+      cout<<*coveringGroundRules.elem(i)->action<<" ";
+    }
+
+    //DEBUG_VAR(main, *s);
+
+    relational::LitL plan;
+    double value;
+
+    ((relational::PRADA_Planner* ) planner)->plan_full(plan, value, *s);
+
+    //DEBUG_VAR(main, plan);
+    //DEBUG_VAR(main, value);
+
     // actual plan the next action
-    relational::Literal* action = planner->plan_action(*s);
+    //action = planner->plan_action(*s);
+    //
+    //if (iter == 0) action = relational::Literal::get("grab(26)");
+    //else if (iter == 1) action = relational::Literal::get("puton(20)");
+    //else if (iter == 2) action = relational::Literal::get("grab(26)");
+    //else if (iter == 3) action = relational::Literal::get("grab(26)");
+
+    action = plan(0);
+    if(action) {
+      DEBUG_VAR(main, *action);
+    }
+
 
     //perform the action
     RMSim::RobotManipulationInterface::performAction(action, &sim, 8);
-  }
 
+    //DEBUG_VAR(main, reward->evaluate(*s));
+    // calculate oracle symbols
+    relational::calculateSymbols(lits, osgs, sim.C);
+
+    // calculate handcrafted symbols
+    s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
+    s->lits.append(relational::Literal::get("red(20)"));
+    s->lits.append(relational::Literal::get("blue(21)"));
+
+    // append grounded symbols
+    s->lits.append(lits);
+    relational::reason::derive(s);
+
+    DEBUG_VAR(main, *s);
+    DEBUG_VAR(main, reward->evaluate(*s));
+
+    rewards << reward->evaluate(*s) << std::endl;
+
+  }
 }
 
 

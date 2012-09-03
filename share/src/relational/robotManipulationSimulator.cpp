@@ -45,7 +45,7 @@ MT::String ENDEFFECTOR = MT::getParameter<MT::String>("endeffector_name", MT::St
 #define SMALL_HEIGHT_STEP 0.05
 // table + neutralHeightBonus = NEUTRAL_HEIGHT
 #define NEUTRAL_HEIGHT_BONUS 0.5
-#define HARD_LIMIT_DIST_Y -0.8
+#define HARD_LIMIT_DIST_Y -1.2
 
 // !!!!!!!!!!!!!!!!!!!!!
 // ATTENTION: NOISE SPECIFICATIONS (noise of the robot actions) somewhere below.
@@ -147,7 +147,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
 
 
 // How many time-steps until action fails
-#define SEC_ACTION_ABORT 1000
+#define SEC_ACTION_ABORT 300
 
 RobotManipulationSimulator::RobotManipulationSimulator(){
   C=0;
@@ -601,7 +601,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
   
   r.setGainsAsAttractor(50,.1);
-  r.y_prec=1.;
+  r.y_prec=1000.;
   r.y_target=q0;
   r.active=false;
   o.setGainsAsAttractor(20,.2);
@@ -699,7 +699,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
     double diff = norm(o.y - o.y_target);
-    if (diff < 0.001) break;
+    if (diff < 0.01) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
   
@@ -815,11 +815,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
           MT_MSG("Can't find empty position on tray, throw it whereever!");
           break;
       }
-      x_noise = 0.2 * rand()/(double) RAND_MAX - .1;
+      x_noise = .2 * rand()/(double) RAND_MAX - .1;
       y_noise = 0.1 * rand()/(double) RAND_MAX - .05; // tisch ist nicht so breit wie lang
 
-      PRINT(x_noise);
-      PRINT(y_noise);
 //       if (x_noise>0.5 || y_noise>0.5) // stay on table
       if (x_noise>0.5) // stay on table
         continue;
@@ -835,6 +833,8 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     x_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
     y_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
   }
+  PRINT(x_noise);
+  PRINT(y_noise);
   // noise [END]
   
   x = C->bodies(obj_below)->X.pos.p[0] + x_noise;

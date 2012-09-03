@@ -48,13 +48,13 @@ double cummulativeApproxVariance(int i, arr& x, GaussianProcess& gp0, GaussianPr
 
 
 double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
-  if (MT::getParameter<bool>("random", false)) {
+  if (MT::getParameter<bool>("random_al", false)) {
     return 0.;
   }
   else if (MT::getParameter<bool>("cummulative", false)) {
     arr d, f;
     flatten(d, sample);
-    makeFeatures(f, d);
+    problem.generator->makeFeatures(f, d);
 
     GaussianProcess cp1, cp0;
     cp1.copyFrom(gp); cp0.copyFrom(gp);
@@ -62,14 +62,14 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
     cp1.recompute(); cp0.recompute();
 
     arr x;
-    x.resize(3);
+    x.resize(4);
 
     return - cummulativeApproxVariance(0, x, cp1, cp0);
   }
   else {
     arr d, f;
     flatten(d, sample);
-    makeFeatures(f, d);
+    problem.generator->makeFeatures(f, d);
 
     double y, sig;
     gp.evaluate(f[0], y, sig);

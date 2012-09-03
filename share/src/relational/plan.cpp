@@ -767,11 +767,14 @@ MaximizeReward::MaximizeReward(Literal* _function_literal) : Reward(reward_maxim
 double MaximizeReward::evaluate(const SymbolicState& state) const {
   uint i;
   FOR1D(state.lits, i) {
-    if (state.lits(i)->s == literal_to_be_maximized->s
-      &&  state.lits(i)->args == literal_to_be_maximized->args) {
+    if (state.lits(i)->s == literal_to_be_maximized->s) {
+      //&&  state.lits(i)->args == literal_to_be_maximized->args) {
       return state.lits(i)->value;
     }
   }
+  cout << "---" <<endl;
+  cout << state << endl;
+  write();
   HALT("failed");
   return -10000.;
 }
