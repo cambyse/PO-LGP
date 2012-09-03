@@ -15,11 +15,10 @@ SET_LOG(masterworker, WARN);
 
 template<class Job, class Result> class Workspace : public Variable {
   public:
-    Workspace<Job, Result>(const char* name) : Variable(name) {};
+    Workspace<Job, Result>(const char* name) : Variable(name) { reg_working_jobs(); reg_jobs(); reg_results(); working_jobs = 0; };
     Workspace<Job, Result>();
-    std::queue<Job> jobs; // Not a FIELD, since then we need operator<< for every T
-    MT::Array<Result> results;
-    FIELD(int, jobs_to_do);
+    FIELD(MT::Array<Job>, jobs);
+    FIELD(MT::Array<Result>, results);
     FIELD(int, working_jobs);
 };
 

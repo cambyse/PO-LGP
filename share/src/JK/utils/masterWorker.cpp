@@ -26,19 +26,14 @@ template<class Job, class Result> void Worker<Job, Result>::open() {
 
 
 template<class Job, class Result> void Worker<Job, Result>::step() {
-  Job j;
   for(;;){
-    workspace->readAccess(this);
-    uint jobs = workspace->jobs.size();
-    workspace->deAccess(this);
-    
-    if(!jobs) break;
-    
     workspace->writeAccess(this);
-    j = workspace->jobs.front();
-    workspace->jobs.pop();
+    if (workspace->jobs.N == 0) {
+      workspace->deAccess(this);
+      break;
+    }
+    Job j = workspace->jobs.popFirst();
     workspace->working_jobs++;
-    workspace->jobs_to_do--;
     workspace->deAccess(this);
     
     Result r;
@@ -66,7 +61,7 @@ template<class Job, class Result> Master<Job, Result>::Master(WorkerFactory<Job,
 
   s->paused = true;
   
-  for (uint i = 0; i < s->numOfWorkers; ++i) {
+ for (uint i = 0; i < s->numOfWorkers; ++i) {
     Worker<Job, Result>* w = s->workerFactory->createWorker();
     s->workers.push_back(w);
     w->workspace = workspace;
