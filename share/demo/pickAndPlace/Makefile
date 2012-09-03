@@ -7,6 +7,7 @@ OBJS = main.o behaviors.o
 OPENCV = 1
 GTK = 1
 GTKL = 1
+PCL = 1
 MAKEMODE = app
 
 include $(BASE)/make-generic

@@ -176,22 +176,28 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
+body  OBJECTS2{ X=<t(.0 -.8 .69)> }
 
-shape table(OBJECTS){ contact, type=0, rel=<t(0 0 -.02)>, size=[.52 .52 .04 .5], color=[.0 .0 .0] }
+shape table(OBJECTS){ contact, type=0, rel=<t(0.16 0.1 -.02)>, size=[1.04 .52 .04 .5], color=[.0 .0 .0] }
 
-shape cyl1(OBJECTS) { contact, type=4, rel=<t( .2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-shape box1(OBJECTS) { contact, type=0, rel=<t( .0 .2 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
-shape box2(OBJECTS) { contact, type=0, rel=<t( .0 .0 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+#shape cyl1(OBJECTS) { contact, type=4, rel=<t( .2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape box1(OBJECTS) { contact, type=0, rel=<t( .0 .2 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+#shape box2(OBJECTS) { contact, type=0, rel=<t( .0 .0 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
 
-body  o1{ X=<t(-.4 -.8 .8)> } ##are these really used ?? or remove?  Nikolay: used in gui module realize objects
-shape S1(o1){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+shape thing1(OBJECTS2) { contact, type=4, rel=<t( .0 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape thing2(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .045], color=[.3 .9 .1] }
+#shape thing3(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape thing4(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
-body  o2{ X=<t(-.4 -.8 .8)> }
-shape S2(o2){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+#body  o1{ X=<t(-.4 -.8 .8)> } ##are these really used ?? or remove?  Nikolay: used in gui module realize objects
+#shape S1(o1){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
 
-body  o3{ X=<t(-.4 -.8 .8)> }
-shape S3(o3){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+#body  o2{ X=<t(-.4 -.8 .8)> }
+#shape S2(o2){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+
+#body  o3{ X=<t(-.4 -.8 .8)> }
+#shape S3(o3){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
 
 
 ###########
@@ -201,3 +207,5 @@ shape S3(o3){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
 ##shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
 ##shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
 ##shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+#
+#body pointclouds { type=6 }
