@@ -270,7 +270,15 @@ struct Spline {
 #ifndef MT_ORS_ONLY_BASICS
 struct Joint;
 struct Shape;
+struct Body;
 struct Graph;
+
+} // namespace
+
+typedef MT::Array<ors::Shape*> ShapeL;
+typedef MT::Array<ors::Body*> BodyL;
+
+namespace ors {
 //===========================================================================
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
