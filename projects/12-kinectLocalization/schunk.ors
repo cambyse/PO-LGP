@@ -27,7 +27,7 @@ shape wheelB1 (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<t(.0 
 ## camera
 ###########
 
-#shape camera(base){ contact, rel=<t(.40 .10 .95) d(90 1 0 0) d(165 0 1 0) d(-35 1 0 0)>, type=0, size=[.157 .035 .056 .01], color=[1 0 0] }
+shape camera(base){ contact, rel=<t(.40 .10 .95) d(90 1 0 0) d(165 0 1 0) d(-35 1 0 0)>, type=0, size=[.157 .035 .056 .01], color=[1 0 0] }
 
 
 
@@ -143,17 +143,18 @@ shape tip3Shape(tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 
 ## grasp references
 ###########
 
-shape marker(tip1)   { rel=<t(0 0.008 .028) d(0 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
-#shape tipPoint2(tip2)   { rel=<t(0 0 .035) d(0 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [0 1 0] }
-#shape tipPoint3(tip3)   { rel=<t(0 0 .035) d(0 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [0 0 1]}
+shape tipNormal1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipNormal3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
-#shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
-#shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
-#shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
 shape graspCenter(m9)     { rel=<t(0 -.006 -.32)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }
+shape marker(m9) { rel=<t(-.055 -.033 -.12)>, type=1, size=[.0 .0 .0 .02] color=[.7 .3 .3] } 
 
 
 
@@ -176,6 +177,6 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape target1(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+shape target1(OBJECTS){ type=1, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .02], color=[.3 .9 .1] } 
 shape target2(OBJECTS){ contact, type=4, rel=<t( .25 -.2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
