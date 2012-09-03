@@ -9,6 +9,8 @@
 #  undef MAX
 #endif
 
+#include <pcl/ModelCoefficients.h>
+
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
 #include <MT/opengl.h>
@@ -284,6 +286,8 @@ struct ObjectBelief {
   // primitive shapes
   ors::ShapeType shapeType;
   arr shapeParams;
+
+  pcl::ModelCoefficients::Ptr pcl_object;
 
   //pcl::PointCloud<PointT>* pointCloud;
   arr veritces;

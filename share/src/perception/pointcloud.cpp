@@ -17,6 +17,7 @@
 #include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/common/transforms.h>
 
 #include <vtkSmartPointer.h>
 #include <vtkDataSet.h>
@@ -70,7 +71,7 @@ struct sObjectFitterWorker {
     extract.setNegative(true);
     extract.filter(*outliers);
     p->workspace->writeAccess(p);
-    p->workspace->jobs.push(outliers);
+    p->workspace->jobs.append(outliers);
     p->workspace->deAccess(p);
   }
   
@@ -86,7 +87,9 @@ struct sObjectFitterWorker {
     seg.setMaxIterations (100);
     double dt = birosInfo().getParameter<double>("CylDistanceThreshold", p, 0.01);
     seg.setDistanceThreshold (dt);
-    seg.setRadiusLimits (0.01, 0.1);
+    double minRadius = birosInfo().getParameter<double>("MinSphereRadius", p, 0.01);
+    double maxRadius = birosInfo().getParameter<double>("MaxSphereRadius", p, 0.1);
+    seg.setRadiusLimits (minRadius, maxRadius);
     seg.setInputCloud (cloud);
     seg.setInputNormals (normals);
 
@@ -152,8 +155,9 @@ void ObjectClusterer::step() {
   pcl::PointCloud<PointT>::Ptr cloud(data_3d->get_point_cloud_copy(this));
   if(cloud->points.size() == 0) return;
 
+  //DEBUG_VAR(pointcloud, cloud->points.size());
+
   // filter all points too far away
-  // TODO: filter also points too far left/right/up/down
   pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>());
   pcl::PassThrough<PointT> passthrough;
   passthrough.setInputCloud(cloud);
@@ -206,7 +210,17 @@ void ObjectClusterer::step() {
     cloud_cluster->width = cloud_cluster->points.size ();
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
-    _point_clouds.append(cloud_cluster);
+    pcl::PointCloud<PointT>::Ptr cluster_transformed(new pcl::PointCloud<PointT>);
+    Eigen::Matrix4f transform(birosInfo().getParameter<floatA>("kinect_trans_mat", this).p);
+    transform.transposeInPlace();
+    //DEBUG_VAR(pointcloud, transform);
+    //DEBUG_VAR(pointcloud, birosInfo().getParameter<floatA>("kinect_trans_mat", this));
+    pcl::transformPointCloud(*cloud_cluster, *cluster_transformed, transform);
+
+    //Eigen::Vector3f translation(birosInfo().getParameter<floatA>("kinect_translation", this).p);
+    //Eigen::Quaternionf rotation(birosInfo().getParameter<floatA>("kinect_rotation", this).p);
+    //pcl::transformPointCloud(*cloud_cluster, *cluster_transformed, translation, rotation);
+    _point_clouds.append(cluster_transformed);
   }
 
   point_clouds->set_point_clouds(_point_clouds, this);
@@ -222,32 +236,31 @@ ObjectFitter::ObjectFitter() : Process("ObectFitter") {
 
 void ObjectFitter::open() {}
 void ObjectFitter::step() {
-  DEBUG(pointcloud, "fitter: step");
-  workspace->readAccess(this);
-  if(workspace->jobs.size() == 0 && workspace->working_jobs == 0 && workspace->results.N > 0) {
-    DEBUG(pointcloud, "fitter: integrate result");
-    workspace->deAccess(this);
-    workspace->writeAccess(this);
+  workspace->writeAccess(this);
+  if(workspace->jobs.N == 0 && workspace->working_jobs == 0 && workspace->results.N > 0) {
+    //DEBUG(pointcloud, "fitter: integrate result");
     objects->writeAccess(this);
-    objects->objects.append(workspace->results);
+    objects->objects = workspace->results;
     objects->deAccess(this);
     workspace->results.clear();
   }
   workspace->deAccess(this);
 
-  workspace->readAccess(this);
-  if(workspace->jobs.size() == 0 && workspace->working_jobs == 0 && workspace->results.N == 0) {
-    DEBUG(pointcloud, "fitter: fill jobs");
-    workspace->deAccess(this);
+  workspace->writeAccess(this);
+  if(workspace->jobs.N == 0 && workspace->working_jobs == 0 && workspace->results.N == 0) {
+    //DEBUG(pointcloud, "fitter: fill jobs");
 
     PointCloudL plist = objectClusters->get_point_clouds(this);
-    std::queue<FittingJob> jobs;
-    for(int i = 1; i < plist.N; ++i) {
+    //DEBUG_VAR(pointcloud, plist.N);
+    //std::queue<FittingJob> jobs;
+    workspace->jobs.clear();
+
+    for(int i = 0; i < plist.N; ++i) {
       std::stringstream n;
-      jobs.push(plist(i));
+      //DEBUG_VAR(pointcloud, plist(i)->size());
+      workspace->jobs.append(plist(i));
     }
-    workspace->writeAccess(this);
-    workspace->jobs = jobs;
+    //workspace->jobs = jobs;
   }
   workspace->deAccess(this);
 }
@@ -323,6 +336,8 @@ void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) 
     object->values[3] = direction(0);
     object->values[4] = direction(1);
     object->values[5] = direction(2);
+
+    //DEBUG_VAR(pointcloud, st);
   }
   else {
     object.reset();  
@@ -345,7 +360,7 @@ struct sObjectFilter {
     return false;
   }
 
-  void filterCylinders(arr& pos, const FittingResultL& objects, Process *p) {
+  void filterCylinders(arr& pos, FittingResultL& cylinders, const FittingResultL& objects, Process *p) {
     intA nums;
     pos.clear();
     nums.resize(0);
@@ -353,12 +368,19 @@ struct sObjectFilter {
     for (int i = 0; i< objects.N; ++i) {
       if (!objects(i)) continue; 
       if (objects(i)->values.size() != 7) continue;
+      cylinders.append(objects(i));
       bool found = false;
       arr measurement;
       measurement.resize(1,7);
       std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
       arr measurement_;
-      measurement_.append(measurement.sub(0,0,0,2)+measurement.sub(0,0,3,5));
+      //DEBUG_VAR(pointcloud, measurement);
+      arr pos_ = measurement.sub(0,0,0,2)+0.5*measurement.sub(0,0,3,5);
+      measurement(0,0) = pos_(0,0);
+      measurement(0,1) = pos_(0,1);
+      measurement(0,2) = pos_(0,2);
+      //DEBUG_VAR(pointcloud, measurement);
+      measurement_.append(measurement.sub(0,0,0,2));
       measurement_.append(-measurement.sub(0,0,3,5));
       measurement_.append(measurement(0,6));
       measurement_.resize(1,7);
@@ -374,7 +396,7 @@ struct sObjectFilter {
     }
 
   }
-  void filterSpheres(arr& pos, const FittingResultL& objects, Process* p) {
+  void filterSpheres(arr& pos, FittingResultL& spheres, const FittingResultL& objects, Process* p) {
     intA nums;
     pos.clear();
     nums.resize(0);
@@ -382,6 +404,7 @@ struct sObjectFilter {
     for (int i = 0; i< objects.N; ++i) {
       if (!objects(i)) continue;
       if (objects(i)->values.size() != 4) continue;
+      spheres.append(objects(i));
       bool found = false;
       arr measurement;
       measurement.resize(1,4);
@@ -413,26 +436,37 @@ void ObjectFilter::step() {
   arr cyl_pos, sph_pos;
   cyl_pos.resize(0,7);
   sph_pos.resize(0,7);
+  FittingResultL pcl_cyls, pcl_sph;
   in_objects->readAccess(this);
-  s->filterCylinders( cyl_pos,in_objects->objects, this);
-  s->filterSpheres( sph_pos,in_objects->objects, this);
+  int i; FittingResult o;
+  //for_list(i, o, in_objects->objects) {
+     //if (o)
+       //DEBUG_VAR(pointcloud, *o); 
+  //}
+  s->filterCylinders( cyl_pos, pcl_cyls, in_objects->objects, this);
+  s->filterSpheres( sph_pos, pcl_sph, in_objects->objects, this);
   in_objects->deAccess(this);
   out_objects->writeAccess(this);
   out_objects->objects.clear();
   for (int i = 0; i<cyl_pos.d0; i++) {
     ObjectBelief *cyl = new ObjectBelief();
     cyl->position = ARR(cyl_pos(i,0), cyl_pos(i,1), cyl_pos(i,2));
+    //DEBUG_VAR(pointcloud, cyl->position);
     cyl->rotation.setDiff(ARR(0,0,1), ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
+    //DEBUG_VAR(pointcloud, cyl->rotation);
     cyl->shapeParams(RADIUS) = cyl_pos(i,6);//.025;
     cyl->shapeParams(HEIGHT) = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
     cyl->shapeType = ors::cylinderST;
+    cyl->pcl_object = pcl_cyls(i);
     out_objects->objects.append(cyl);
   }
   for (int i = 0; i<sph_pos.d0; i++) {
     ObjectBelief *sph = new ObjectBelief;
     sph->position = ARR(sph_pos(i,0), sph_pos(i,1), sph_pos(i,2));
+    //DEBUG_VAR(pointcloud, sph->position);
     sph->shapeParams(RADIUS) = sph_pos(i,3);
     sph->shapeType = ors::sphereST;
+    sph->pcl_object = pcl_sph(i);
     out_objects->objects.append(sph);
   }
   out_objects->deAccess(this);
@@ -471,35 +505,38 @@ void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& tra
 }
 
 void ObjectTransformator::step() {
-  arr transformation = birosInfo().getParameter<arr>("kinect_trans_mat", this);
   geo.pull();
-  // remove all shape_num objects
-  for (int i=geo().ors.bodies.N-1;i>=0;i--) {
-    if (strncmp(geo().ors.bodies(i)->name, "pointcloud_object", 16) == 0) {
-      ors::Body *b = geo().ors.bodies(i);
-      geo().ors.bodies.remove(i);  
-      delete b;
-    }
-  }
+
+  ShapeL cylinders;
+  ShapeL spheres;
   for (int i=geo().ors.shapes.N-1;i>=0;i--) {
-    if (strncmp(geo().ors.shapes(i)->name, "pointcloud_shapes", 16) == 0) {
+    if (strncmp(geo().ors.shapes(i)->name, "thing", 5) == 0 && geo().ors.shapes(i)->type == ors::cylinderST) {
       ors::Shape *s = geo().ors.shapes(i);
-      geo().ors.shapes.remove(i);  
-      delete s;
+      cylinders.append(s);
+    }
+    else if (strncmp(geo().ors.shapes(i)->name, "thing", 5) == 0 && geo().ors.shapes(i)->type == ors::sphereST) {
+      ors::Shape *s = geo().ors.shapes(i);
+      spheres.append(s);
     }
   }
   kinect_objects->readAccess(this);
-  for(int i=0;i<kinect_objects->objects.N;i++){
-    //add new body  
-    ors::Body *b = new ors::Body();
-    MT::String name;
-    name << "pointcloud_object" << i;
-    b->name = name;
-
-    createOrsObject(*b, kinect_objects->objects(i), transformation );  
-    geo().ors.addObject(b);
+  int c = 0, s = 0;
+  for(int i=0;i<kinect_objects->objects.N && i<spheres.N + cylinders.N;i++){
+    if (kinect_objects->objects(i)->shapeType == ors::cylinderST && c < cylinders.N) {
+      cylinders(c)->X.pos = kinect_objects->objects(i)->position;
+      cylinders(c)->X.rot = kinect_objects->objects(i)->rotation;
+      cylinders(c)->rel.setDifference(cylinders(c)->body->X, cylinders(c)->X);
+      ++c;
+    }
+    else if (kinect_objects->objects(i)->shapeType == ors::sphereST && s < spheres.N) {
+      spheres(s)->X.pos = kinect_objects->objects(i)->position;
+      spheres(s)->X.rot = kinect_objects->objects(i)->rotation;
+      spheres(s)->rel.setDifference(spheres(s)->body->X, spheres(s)->X);
+      ++s;
+    }
   }
   kinect_objects->deAccess(this);
+
   geo().ors.calcBodyFramesFromJoints();
   geo.var->set_ors(geo().ors, this);
 }
