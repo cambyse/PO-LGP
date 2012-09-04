@@ -29,6 +29,23 @@ void BlocksWorldSampler::sample(MT::Array<arr>& sample) {
   } while (on != o.classify(sample));
   //JK_DEBUG(sample);
 }
+
+void OutOfReachSampler::sample(MT::Array<arr>& sample) { 
+  MT::Array<arr> next_sample;
+  
+  OutOfReachOracle o;
+
+  int out = rand() % 2;
+
+  do {
+    sample.clear();
+    relational::generateBlocksSample(next_sample, 1); 
+    sample.append(next_sample(0, 0));
+    sample.append(next_sample(0, 1));
+    sample.reshape(1, 2);
+  } while (out != o.classify(sample));
+}
+
 void TraySampler::sample(MT::Array<arr>& sample) { 
   MT::Array<arr> next_sample;
 

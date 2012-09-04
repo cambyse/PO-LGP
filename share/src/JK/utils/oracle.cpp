@@ -30,6 +30,10 @@ const int InsideOracle::classify(const MT::Array<arr>& data, const int set) cons
     return 1;
   else return 0;
 }
+const int OutOfReachOracle::classify(const MT::Array<arr>& data, const int set) const {
+  if (norm(data(set, 0) - ARR(0., 0., 0.8)) > 1.0) return 1;
+  else return 0;
+}
 
 HumanOracle::HumanOracle(const char* predicate) {
   this->predicate = predicate;  

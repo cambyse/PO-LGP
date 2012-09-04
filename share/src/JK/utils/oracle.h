@@ -30,6 +30,10 @@ class InsideOracle : public Oracle {
   public:
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
+class OutOfReachOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
 
 class HumanOracle : public Oracle {
 	private:

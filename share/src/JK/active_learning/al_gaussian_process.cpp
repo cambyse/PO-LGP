@@ -29,7 +29,7 @@ class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
     const ActiveLearningProblem problem;
 };
 
-double cummulativeApproxVariance(int i, arr& x, GaussianProcess& gp0, GaussianProcess& gp1) {
+double cummulativeApproxVariance(uint i, arr& x, GaussianProcess& gp0, GaussianProcess& gp1) {
   if ( i == x.N) {
     double sig0, sig1, y;
     gp0.evaluate(x, y, sig0);

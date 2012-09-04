@@ -46,17 +46,27 @@ int main(int argc, char** argv) {
     prob.sampler = new TraySampler;
     prob.oracle  = new InsideOracle;
     prob.generator = new TrayFeatureGenerator;
+    INFO(main, "Start tray problem.");
   }
-  if(problem_name == "tower") {
+  else if(problem_name == "tower") {
     prob.sampler = new BlocksWorldSampler;
     prob.oracle  = new OnOracle;
     prob.generator = new DistanceFeatureGenerator;
+    INFO(main, "Start stack problem.");
   }
-  if(problem_name == "close") {
+  else if(problem_name == "close") {
     prob.sampler = new BlocksWorldSampler;
     prob.oracle  = new CloseOracle;
     prob.generator = new DistanceFeatureGenerator;
+    INFO(main, "Start distance problem.");
   }
+  else if(problem_name == "outOfReach") {
+    prob.sampler = new OutOfReachSampler;
+    prob.oracle  = new OutOfReachOracle;
+    prob.generator = new SimpleFeatureGenerator;
+    INFO(main, "Start out of reach problem.");
+  }
+  
 
   Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
   GuiDataV guiData;
