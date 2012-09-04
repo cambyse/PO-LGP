@@ -324,7 +324,7 @@ optOptions::optOptions() {
   stopTolerance=1e-2;
   stopEvals=1000;
   stopIters=100;
-  initialDamping=1.;
+  useAdaptiveDamping=1.;
   initStep=1.;
   minStep=-1.;
   maxStep=-1.;
@@ -409,7 +409,7 @@ uint optDynamicProgramming(arr& x, SqrChainFunction& f, optOptions o) {
   uint T=x.d0-1,n=x.d1;
   uint evals=0;
   arr y(x);
-  double damping=o.initialDamping;
+  double damping=o.useAdaptiveDamping;
   
   MT::Array<SqrPotential> V(T+1);
   MT::Array<SqrPotential> fi(T+1), fi_at_y(T+1);
@@ -508,8 +508,9 @@ uint optRprop(arr& x, ScalarFunction& f, optOptions o) {
 }
 
 uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *Jx_user) {
-  double a=1.;
+  double alpha=1.;
   double lambda = 1e-10;
+  if(o.useAdaptiveDamping) lambda = o.useAdaptiveDamping;
   double fx, fy;
   arr Delta, y;
   arr R(x.N, x.N), r(x.N);
@@ -521,48 +522,61 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   arr phi, J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
-  if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" a=" <<a <<endl;
+  if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl; 
   ofstream fil;
   if(o.verbose>0) fil.open("z.gaussNewton");
-  if(o.verbose>0) fil <<0 <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<endl;
+  if(o.verbose>0) fil <<0 <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha <<endl;
+
   
-  for(;;) {
+  for(uint it=1;;it++) { //iterations and lambda adaptation loop
+    if(o.verbose>1) cout <<"optGaussNewton it=" <<it << " alpha=" <<alpha <<" lambda=" <<lambda <<flush;
     //compute Delta
     innerProduct(R, ~J, J);  R.reshape(x.N, x.N);
     innerProduct(r, ~J, phi);
 
     if(lambda) for(uint i=0;i<R.d0;i++) R(i,i) += lambda;  //Levenberg Marquardt damping
     lapack_Ainv_b_sym(Delta, R, -r);
-    if(o.maxStep>0. && norm(Delta)>o.maxStep)  Delta *= o.maxStep/norm(Delta);
-    
-    for(;;) {
-      y = x + a*Delta;
+    if(o.maxStep>0. && Delta.absMax()>o.maxStep)  Delta *= o.maxStep/Delta.absMax();
+    if(o.verbose>1) cout <<" \t|Delta|=" <<Delta.absMax() <<flush;
+
+    for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
+      y = x + alpha*Delta;
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
-      if(o.verbose>1) cout <<"optGaussNewton evals=" <<evals <<" eval_cost=" <<eval_cost;
       if(o.verbose>2) cout <<" \tprobing y=" <<y;
-      if(o.verbose>1) cout <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \ta=" <<a;
+      if(o.verbose>1) cout <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
       if(fy <= fx) {
         if(o.verbose>1) cout <<" - ACCEPT" <<endl;
         //adopt new point and adapt stepsize
         x = y;
         fx = fy;
-        a = pow(a, 0.5);
+	alpha = pow(alpha, 0.5);
+	if(o.useAdaptiveDamping){ //Levenberg-Marquardt type damping
+  	  lambda = .2*lambda;
+	}
         break;
       } else {
         if(o.verbose>1) cout <<" - reject" <<endl;
         //decrease stepsize
-        a = .1*a;
-        if(a*norm(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+	alpha = .1*alpha;
+	if(o.useAdaptiveDamping){ //Levenberg-Marquardt type damping
+  	  lambda = 10.*lambda;
+	  break;
+	}else{
+	  if(alpha*Delta.absMax()<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+	}
       }
     }
     
-    if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<endl;
+    if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha <<endl;
     
     //stopping criterion
-    if(norm(Delta)<o.stopTolerance || a*norm(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break;
+    if(Delta.absMax()<o.stopTolerance ||
+       alpha*Delta.absMax()<1e-3*o.stopTolerance ||
+       evals>=o.stopEvals ||
+       it>=o.stopIters) break;
   }
   if(o.fmin_return) *o.fmin_return=fx;
   if(o.verbose>0) fil.close();
@@ -740,7 +754,7 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
   uint T=x.d0-1,n=x.d1;
   uint evals=0;
   arr y(x);
-  double damping=o.initialDamping;
+  double damping=o.useAdaptiveDamping;
   uint rejects=0;
   
   MT::Array<SqrPotential> V(T+1); //bwd messages

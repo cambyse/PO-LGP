@@ -109,7 +109,7 @@ struct optOptions {
   double stopTolerance;
   uint   stopEvals;
   uint   stopIters;
-  double initialDamping;
+  double useAdaptiveDamping;
   double initStep;
   double minStep;
   double maxStep;

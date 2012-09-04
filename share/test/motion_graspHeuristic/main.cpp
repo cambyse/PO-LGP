@@ -37,7 +37,7 @@ void testGraspHeuristic(){
     solver.fix_final_state(x);
     solver.iterate_to_convergence();
     
-    displayTrajectory(sys, solver.q(),NULL,1,"solution");
+    displayTrajectory(sys, solver.b(), NULL, 1, "solution");
 #else
     setNewGraspGoals(sys, T, s->index, side, 1);
     AICO solver(sys);

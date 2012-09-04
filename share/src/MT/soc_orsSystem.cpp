@@ -491,6 +491,8 @@ uint OrsSystem::get_phiDim(uint t){
   for(uint i=0; i<s->vars.N; i++) if(s->isConditioned(i, t)){
     m+=s->vars(i)->y.N;
   }
+  if(s->dynamic) return 2*m;
+  return m;
 }
 
 void sOrsSystem::getPhi(arr& phiq_i, uint i){

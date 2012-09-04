@@ -29,7 +29,7 @@ void ControlledSystem_PointMass::getControlCosts(arr& H, arr& Hinv, uint t){
 }
 
 void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
-  if(t!=0 && t!=get_T()-1){
+  if(t!=0 && t!=get_T()){
     phi.resize(x.N); phi.setZero();
     if(&phiJ){ phiJ.resize(x.N,x.N); phiJ.setZero(); }
     return;
@@ -38,7 +38,7 @@ void ControlledSystem_PointMass::getTaskCosts(arr& phi, arr& phiJ, uint t){
     phi = prec*(x-x0);
     if(&phiJ) phiJ.setDiag(prec,x.N);
   }
-  if(t==get_T()-1){
+  if(t==get_T()){
     phi = prec*(x-x_target);
     if(&phiJ) phiJ.setDiag(prec,x.N);
   }

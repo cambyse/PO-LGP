@@ -169,13 +169,36 @@ void KOrderMarkovFunction_ControlledSystem::phi_t(arr& phi, arr& J, uint t, cons
     J.setMatrixBlock(J1,0,J0.d1);
   }
 
-  //TODO: the last factor ignores costs we should take from the 2nd x1!!!
-  
-  //tasks
+  //task phi w.r.t. x0
   arr _phi, _J;
   sys->getTaskCosts(_phi, _J, t);
-  _J.insColumns(_J.d0, x1.N);
+  _J.insColumns(x0.N, x1.N);
   for(uint i=0;i<_J.d0;i++) for(uint j=x0.N;j<_J.d1;j++) _J(i,j) = 0.;
   phi.append(_phi);
   if(&J) J.append(_J);
+
+  if(t==get_T()-1){ //second task phi w.r.t. x1 in the final factor
+    sys->setx(x1);
+    sys->getTaskCosts(_phi, _J, t+1);
+    phi.append(_phi);
+    if(&J){
+      _J.insColumns(0, x0.N);
+      for(uint i=0;i<_J.d0;i++) for(uint j=0;j<x1.N;j++) _J(i,j) = 0.;
+      J.append(_J);
+    }
+  }
+  
+  if(t==0){ //initial x0 constraint
+    double prec=1e4;
+    arr sys_x0;
+    sys->get_x0(sys_x0);
+    phi.append(prec*(x0-sys_x0));
+    if(&J){
+      _J.setDiag(prec,x0.N);
+      _J.insColumns(0, x0.N);
+      for(uint i=0;i<_J.d0;i++) for(uint j=0;j<x1.N;j++) _J(i,j) = 0.;
+      J.append(_J);
+    }
+  }
+
 }

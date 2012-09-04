@@ -45,7 +45,7 @@ int main(int argn,char** argv){
   for(uint t=0;t<x.d0;t++){ x(t,0) = double(t)/T; x(t,1)=1.; }
   for(uint t=0;t<x.d0;t++){ double tt=double(t)/T;  x(t,1) = 2.*tt; x(t,0) = tt*tt; }
   analyzeTrajectory(sys, x, true, &cout);
-  return 0;
+  //return 0;
 #endif
 
   //-- optimize
@@ -54,7 +54,7 @@ int main(int argn,char** argv){
 
   analyzeTrajectory(sys, x, true, &cout);
   write(LIST<arr>(x),"z.output");
-  gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3");
+  gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
   
   return 0;
 }

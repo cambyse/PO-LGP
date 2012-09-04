@@ -29,12 +29,13 @@ struct ControlledSystem {
   //NOTE: arguments may be @NoArr@ if they're not needed!!
   virtual void setx(const arr& x) = 0;
   virtual arr& getx() = 0;             ///< get the current x!
-  virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a, arr& B, arr& Bt, arr& Q, uint t) = 0;
+  virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a,
+			   arr& B, arr& Bt, arr& Q, uint t) = 0;
   virtual void getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){
     getDynamics(A, NoArr, NoArr, NoArr, a, B, NoArr, Q, t); }
   virtual void getControlCosts(arr& H, arr& Hinv, uint t) = 0;              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
   virtual void getTaskCosts(arr& phi, arr& phiJ, uint t) = 0; ///< the general vector and its Jacobian
-  virtual double getTaskCosts(arr& R, arr& r, uint t, double* rhat);
+  virtual double getTaskCosts(arr& R, arr& r, uint t, double* rhat); //REMOVE THIS!
 
   // display and info
   virtual void displayCurrentState(const char* title=NULL, bool pause=false, bool reportOnTasks=false) = 0;
@@ -72,7 +73,12 @@ struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   uint get_T(){ return sys->get_T(); }
   uint get_k(){ return 1; }
   uint get_n(){ return sys->get_xDim(); }
-  uint get_m(uint t){ return sys->get_phiDim(t) + sys->get_xDim(); }
+  uint get_m(uint t){
+    uint T=get_T();
+    if(t==0)   return sys->get_xDim() + sys->get_phiDim(t) + sys->get_xDim();
+    if(t==T-1) return sys->get_xDim() + sys->get_phiDim(t) + sys->get_phiDim(T);
+    return sys->get_xDim() + sys->get_phiDim(t);
+  } //dynamic gap plus task costs
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 };
 
