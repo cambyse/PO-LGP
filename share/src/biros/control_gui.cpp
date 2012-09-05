@@ -300,14 +300,14 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
   for(uint b=0;b<VIEWBOXES;b++) if(iog->view[b]){
     View *v=iog->view[b];
     os <<b <<' ' <<v->info->name;
-    switch (v->info->type) {
+    /*switch (v->info->type) {
     case ViewInfo::fieldVT:    os <<" field " <<((FieldInfo*)v->object)->var->name <<' ' <<((FieldInfo*)v->object)->name;  break;
       case ViewInfo::variableVT: os <<" variable " <<((Variable*)v->object)->name;  break;
       case ViewInfo::processVT:  os <<" process " <<((Process*)v->object)->name;  break;
       case ViewInfo::parameterVT:os <<" parameter " <<((Parameter*)v->object)->name;  break;
       case ViewInfo::globalVT:   os <<" global";  break;
     }
-    os <<endl;
+    os <<endl;*/
   }
   os.close();
 }
@@ -363,7 +363,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
     case 'V':{
-      ViewInfoL vis = b::getViews(ViewInfo::variableVT, typeid(*birosInfo().variables(id)).name() );
+      ViewInfoL vis = b::getViews(/*ViewInfo::variableVT,*/ typeid(*birosInfo().variables(id)).name() );
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
         iog->view[iog->box] = b::newView(*birosInfo().variables(id), vis(0));
@@ -389,7 +389,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
       FieldInfo *field = birosInfo().variables(varid)->fields(id);
       
-      ViewInfoL vis = b::getViews(ViewInfo::fieldVT, field->sysType );
+      ViewInfoL vis = b::getViews(/*ViewInfo::fieldVT, */field->sysType );
       if(!vis.N) break;
       int choice=0;
       if(vis.N>1){ //multiple choices -> menu
@@ -474,14 +474,14 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
 }
 
 void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
-  os <<"type=";
+  /*os <<"type=";
   switch (vi.type) {
     case ViewInfo::fieldVT:    os <<"field";  break;
     case ViewInfo::variableVT: os <<"variable";  break;
     case ViewInfo::processVT:  os <<"process";  break;
     case ViewInfo::parameterVT:os <<"parameter";  break;
     case ViewInfo::globalVT:   os <<"global";  break;
-  }
+  }*/
   os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
 }
 
@@ -534,13 +534,13 @@ GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIte
 void setBoxView(View *v, GtkBuilder *builder, uint box){
   if(!v){ MT_MSG("setting box view failed"); return; }
   MT::String label;
-  switch (v->info->type) {
+  /*switch (v->info->type) {
     case ViewInfo::fieldVT:    label <<"F " <<((FieldInfo*)v->object)->var->name <<' ' <<((FieldInfo*)v->object)->name;  break;
-  case ViewInfo::variableVT: label <<"V " <<((Variable*)v->object)->name;  break;
-  case ViewInfo::processVT:  label <<"P " <<((Process*)v->object)->name;  break;
-  case ViewInfo::parameterVT:label <<"p " <<((Parameter*)v->object)->name;  break;
+    case ViewInfo::variableVT: label <<"V " <<((Variable*)v->object)->name;  break;
+    case ViewInfo::processVT:  label <<"P " <<((Process*)v->object)->name;  break;
+    case ViewInfo::parameterVT:label <<"p " <<((Parameter*)v->object)->name;  break;
     case ViewInfo::globalVT:   label <<"gobal";  break;
-  }
+  }*/
   label <<" [" <<v->info->name <<']';
   GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<box)));
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxView" <<box)));

@@ -42,7 +42,7 @@ namespace b{
 
   //-- query available views for specific objects
   ViewInfoL getViews();
-  ViewInfoL getViews(ViewInfo::ViewType viewType, const char* appliesOn_sysType);
+  ViewInfoL getViews(/*ViewInfo::ViewType viewType,*/ const char* appliesOn_sysType);
   ViewInfoL getGlobalViews();
   ViewInfo* getView(const char *name);
   

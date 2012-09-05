@@ -1,10 +1,11 @@
 #include "biros_views.h"
 #include "control.h"
 
-GenericInfoView_CPP(Process, GenericProcessView, processVT);
-GenericInfoView_CPP(Variable, GenericVariableView, variableVT);
-GenericInfoView_CPP(FieldInfo, GenericFieldInfoView, fieldVT);
-GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
+//GenericInfoView_CPP(Process, GenericView);
+//GenericInfoView_CPP(Process, GenericProcessView/*, processVT*/);
+GenericInfoView_CPP(Variable, GenericVariableView/*, variableVT*/);
+//GenericInfoView_CPP(FieldInfo, GenericFieldInfoView/*, fieldVT*/);
+//GenericInfoView_CPP(Parameter, GenericParameterView/*, parameterVT*/);
 
 #undef GenericInfoView_CPP
 
@@ -86,7 +87,7 @@ void View::gtkUpdate(){
 // specific views
 //
 
-REGISTER_VIEW_TYPE(ImageView, byteA, fieldVT);
+REGISTER_VIEW_TYPE(ImageView, byteA);
 
 void ImageView::glInit() {
   gl->img = ((byteA*) ((FieldInfo*)object)->p);
@@ -100,7 +101,7 @@ void ImageView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(RgbView, byteA, fieldVT);
+REGISTER_VIEW_TYPE(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
   byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
@@ -134,7 +135,7 @@ void RgbView::gtkUpdate(){
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(MeshView, ors::Mesh, fieldVT);
+REGISTER_VIEW_TYPE(MeshView, ors::Mesh);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
@@ -144,7 +145,7 @@ void MeshView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(OrsView, ors::Graph, fieldVT);
+REGISTER_VIEW_TYPE(OrsView, ors::Graph);
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
