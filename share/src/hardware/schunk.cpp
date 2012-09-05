@@ -115,6 +115,7 @@ void SchunkHand::open() {
   
   hardwareReference->writeAccess(this);
   if(hardwareReference->q_real.N < 14) hardwareReference->q_real.resizeCopy(14);
+  if(hardwareReference->v_real.N < 14) hardwareReference->v_real.resizeCopy(14);
   if(hardwareReference->q_reference.N < 14) hardwareReference->q_reference.resizeCopy(14);
   if (hardwareReference->v_reference.N < 14) hardwareReference->v_reference.resizeCopy(14);
   hardwareReference->deAccess(this);
@@ -125,8 +126,9 @@ void SchunkHand::open() {
   hardwareReference->writeAccess(this);
   for (uint m=0; m<7; m++) { 
     hardwareReference->q_real(s->motorIndex(m)) = s->openHand ? s->q_real(m) : 0;
+    hardwareReference->v_real(s->motorIndex(m)) = s->openHand ? s->v_real(m) : 0;
     hardwareReference->q_reference(s->motorIndex(m)) = s->openHand ? s->q_real(m) : 0;
-    hardwareReference->v_reference(s->motorIndex(m)) = 0;
+    hardwareReference->v_reference(s->motorIndex(m)) = s->openHand ? s->v_real(m) : 0;
   }
   hardwareReference->deAccess(this);
 }
@@ -141,12 +143,17 @@ void SchunkHand::step() {
     s->step();
 
     hardwareReference->writeAccess(this);
-    for (uint m=0; m<7; m++) hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+    for (uint m=0; m<7; m++){
+      hardwareReference->q_real(s->motorIndex(m)) = s->q_real(m);
+      hardwareReference->v_real(s->motorIndex(m)) = s->v_real(m);
+    }
     hardwareReference->deAccess(this);
   } else {
     hardwareReference->writeAccess(this);
-    for (uint m=0; m<7; m++)
+    for (uint m=0; m<7; m++){
       hardwareReference->q_real(s->motorIndex(m)) = hardwareReference->q_reference(s->motorIndex(m));
+      hardwareReference->v_real(s->motorIndex(m)) = hardwareReference->v_reference(s->motorIndex(m));
+    }
     hardwareReference->deAccess(this);
   }
 }
@@ -476,6 +483,7 @@ void sSchunkHand::open() {
   hand->SetAxisEnable(hand->All, true);
   
   getPos(q_real);
+  getVel(v_real);
   
   isOpen=true;
   cout <<" done" <<endl;
@@ -548,10 +556,17 @@ void sSchunkHand::getPos(arr &q) {
   for (uint i=0; i<7; i++) q(i) = handq[i]/180.*MT_PI;
 }
 
+void sSchunkHand::getVel(arr &v) {
+  std::vector<double> handv = hand->GetAxisActualVelocity(fingers);
+  v.resize(7);
+  for (uint i=0; i<7; i++) v(i) = handv[i]*MT_PI/180.;
+}
+
 void sSchunkHand::step() {
   if (isOpen && sendMotion) {
     setVelocities(v_reference, 360.);
     getPos(q_real);
+    getVel(v_real);
   } else {
     MT::wait(.001*(40)); //+rnd(2))); //randomized dummy duration
   }

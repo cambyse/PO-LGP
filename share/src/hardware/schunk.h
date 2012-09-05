@@ -68,6 +68,7 @@ struct sSchunkHand {
   arr v_reference;
   //OUTPUT
   arr q_real;
+  arr v_real;
   
   //Parameter
   bool openHand;
@@ -86,6 +87,7 @@ struct sSchunkHand {
   void setVelocities(const arr& v, double a);
   void setZeroVelocities(double a);
   void getPos(arr &q);
+  void getVel(arr &v);
   
   //obsolete...
   void stop();
