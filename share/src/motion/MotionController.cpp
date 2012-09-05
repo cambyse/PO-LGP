@@ -70,11 +70,12 @@ void MotionController::step() {
 
   if(motionFuture){ //this is hooked to a motionFuture...
     motionFuture->readAccess(this);
-    if(motionFuture->motions.N)
+    if(motionFuture->motions.N) {
       motionPrimitive = motionFuture->motions(motionFuture->currentFrame);
+    }
     motionFuture->deAccess(this);
   }
-  
+
   if (!motionPrimitive){ //no motion primitive is set! don't do anything
     hardwareReference->writeAccess(this);
     hardwareReference->v_reference.setZero();
@@ -105,7 +106,17 @@ void MotionController::step() {
       hardwareReference->deAccess(this);
       return;
     }
-    
+
+    //-- get current robot state
+    hardwareReference->readAccess(this);
+    arr q_old = hardwareReference->q_reference;
+    arr v_old = hardwareReference->v_reference;
+    arr q_real = q_old;
+    arr v_real = v_old;
+    if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_real(i) = hardwareReference->q_real(i);
+    if(hardwareReference->v_real.N)  for(uint i=7;i<14;i++) v_real(i) = hardwareReference->v_real(i);
+    hardwareReference->deAccess(this);
+
     //-- first compute the interpolated
     double realTime = hardwareReference->get_motionPrimitiveRelativeTime(this);
     arr q_plan = motionPrimitive->get_q_plan(this);
@@ -133,10 +144,24 @@ void MotionController::step() {
     //-- now test for collision
     //MT_MSG("TODO");
     
+    //-- test for large step
+    double step=euclideanDistance(q_reference, q_old);
+    if (step>s->maxJointStep) {
+      MT_MSG(" *** WARNING *** too large step -> step |dq|=" <<step);
+      q_reference = q_old + (q_reference-q_old)*s->maxJointStep/step;
+      step=euclideanDistance(q_reference, q_old);
+      MT_MSG(" *** WARNING *** too large step -> scaling to |dq_new|=" <<step);
+    }
+
+    //-- compute v_reference
+    double Kp = .1/s->tau, Kd = 1e-3;
+    arr v_reference = Kp*(q_reference-q_real) - Kd*v_real;
+
     //-- pass to MotionReference
     //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
     hardwareReference->writeAccess(this);
     hardwareReference->q_reference = q_reference;
+    hardwareReference->v_reference = v_reference;
     hardwareReference->motionPrimitiveRelativeTime = realTime;
     hardwareReference->deAccess(this);
   }
@@ -152,7 +177,7 @@ void MotionController::step() {
     hardwareReference->readAccess(this);
     arr q_old = hardwareReference->q_reference;
     arr v_old = hardwareReference->v_reference;
-    if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real skin state!!!
+    if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real hand state!!!
     hardwareReference->deAccess(this);
     
     s->sys.vars.clear(); //unset the task variables -- they're set and updated later
@@ -166,6 +191,14 @@ void MotionController::step() {
     FeedbackControlTaskAbstraction *task = motionPrimitive->get_feedbackControlTask(this);
     CHECK(task,"");
     if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
+    if (task->done){
+      motionPrimitive->set_mode(MotionPrimitive::done, this);
+      hardwareReference->writeAccess(this);
+      hardwareReference->v_reference.setZero();
+      hardwareReference->motionPrimitiveRelativeTime = 0.;
+      hardwareReference->deAccess(this);
+      return;
+    }
     s->sys.setTaskVariables(task->TVs);
     task->updateTaskVariableGoals(*s->sys.ors);
     

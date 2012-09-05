@@ -15,7 +15,8 @@ struct SkinPressure;
 struct FeedbackControlTaskAbstraction {
   TaskVariableList TVs;
   bool requiresInit;
-  FeedbackControlTaskAbstraction():requiresInit(true) {}
+  bool done;
+  FeedbackControlTaskAbstraction():requiresInit(true), done(false) {}
   virtual void initTaskVariables(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
   virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
 };

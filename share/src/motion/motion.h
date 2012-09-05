@@ -108,13 +108,14 @@ struct HardwareReference:Variable {
   FIELD(arr, q_reference);
   FIELD(arr, v_reference);
   FIELD(arr, q_real);
+  FIELD(arr, v_real);
   FIELD(double, hardwareRealTime);
   FIELD(double, motionPrimitiveRelativeTime);
   
   FIELD(bool, readHandFromReal);
   
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), motionPrimitiveRelativeTime(0.), readHandFromReal(true) {
-    reg_q_reference(); reg_q_real(); reg_hardwareRealTime(); reg_readHandFromReal(); reg_motionPrimitiveRelativeTime();
+    reg_q_reference(); reg_q_real(); reg_v_real(); reg_hardwareRealTime(); reg_readHandFromReal(); reg_motionPrimitiveRelativeTime();
   };
   void get_poseView(arr& q) { q=q_reference; }
 };

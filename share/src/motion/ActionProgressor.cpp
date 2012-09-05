@@ -31,10 +31,14 @@ void ActionProgressor::step(){
       reattachShape(action->get_objectRef1(this), "m9");
     } break;
     case Action::place: {
-      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) {
+        return;
+      } //motion primitive is not done yet -> go to sleep again
       reattachShape(action->get_objectRef1(this), "OBJECTS");
     } break;
-    case Action::closeHand:
+    case Action::closeHand: 
+      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return;
+      break;
     case Action::openHand: {
       MT::wait(3.);
       motionPrimitive->set_mode(MotionPrimitive::done, this);
@@ -44,6 +48,8 @@ void ActionProgressor::step(){
   }
 
   motionFuture->incrementFrame(this);
+  MotionPrimitive *mp = motionFuture->getCurrentMotionPrimitive(this);
+  threadListenTo(mp);
   
   //reset the frame0 of the motion primitive to the real hardware pose! -> triggers the MotionPlanner to refine!
   MotionFuture *f = motionFuture;
