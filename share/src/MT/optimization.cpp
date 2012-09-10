@@ -518,7 +518,8 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   if(fx_user) NIY;
   
   //compute initial costs
-  arr phi, J;
+  arr phi;
+  RowShiftedPackedMatrix J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
   if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
@@ -531,11 +532,16 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   for(uint it=1;;it++) { //iterations and lambda adaptation loop
     if(o.verbose>1) cout <<"optGaussNewton it=" <<it << " alpha=" <<alpha <<" lambda=" <<lambda <<flush;
     //compute Delta
-#if 1
+#if 0
     arr R;
-    blas_AtA(R, J);  R.reshape(x.N, x.N);
+    blas_At_A(R, J);  R.reshape(x.N, x.N);
     if(lambda) for(uint i=0;i<R.d0;i++) R(i,i) += lambda;  //Levenberg Marquardt damping
     lapack_Ainv_b_sym(Delta, R, -(~J*phi));
+#elif 1 //uses RowShiftedPackedMatrix
+    //RowShiftedPackedMatrix Jpack(J);
+    RowShiftedPackedMatrix R=J.At_A();
+    if(lambda) for(uint i=0;i<R.d0;i++) R(i,0) += lambda;  //Levenberg Marquardt damping (R(i,0) is the diagonal in the packed matrix!!)
+    lapack_Ainv_b_symband(Delta, R, -J.At_x(phi));
 #else //this uses lapack's LLS minimizer - but is really slow!!
     x.reshape(x.N);
     if(lambda){

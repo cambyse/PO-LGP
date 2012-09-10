@@ -68,7 +68,7 @@ void blas_MM(arr& X, const arr& A, const arr& B) {
 #endif
 }
 
-void blas_AAt(arr& X, const arr& A) {
+void blas_A_At(arr& X, const arr& A) {
   X.resize(A.d0, A.d0);
   cblas_dsyrk(CblasRowMajor, CblasUpper, CblasNoTrans,
 	     X.d0, A.d1,
@@ -82,7 +82,7 @@ void blas_AAt(arr& X, const arr& A) {
 #endif
 }
 
-void blas_AtA(arr& X, const arr& A) {
+void blas_At_A(arr& X, const arr& A) {
   X.resize(A.d1, A.d1);
   cblas_dsyrk(CblasRowMajor, CblasUpper, CblasTrans,
 	     X.d0, A.d0,
@@ -151,18 +151,18 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
 #endif
 }
 
-/*void lapack_Ainv_b_sym(arr& x, const SymmetricBandMatrix& B, const arr& b){
-  arr Acol;
-  integer n=A.d0, m=1;
-  integer info;
+void lapack_Ainv_b_symband(arr& x, const RowShiftedPackedMatrix& A, const arr& b){
+  for(uint i=0;i<A.d0;i++) if(A.rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
+  integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
   x=b;
-  Acol=A;
-  dposv_((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
-  if(info) {
-    HALT("lapack_Ainv_b_sym error info = " <<info
+  arr Acol=A;
+  dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
+  if(INFO) {
+    HALT("lapack_Ainv_b_sym error info = " <<INFO
          <<"\n typically this is because A is not invertible,\nA=" <<A);
   }
-  }*/
+}
+
 
 uint lapack_SVD(
   arr& U,

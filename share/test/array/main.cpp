@@ -441,6 +441,12 @@ void testSymBandMatrix(){
   cout <<A <<endl <<B <<endl;
 }
 
+void write(RowShiftedPackedMatrix& PM){
+  cout <<"RowShiftedPackedMatrix: real:" <<PM.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.d0 <<'x' <<PM.d1 <<endl;
+  cout <<"packed numbers =";  PM.write(cout);
+  cout <<"rowShifts=" <<PM.rowShift <<"  colPaches=" <<PM.colPatches <<endl;
+}
+
 void testRowShiftedPackedMatrix(){
   RowShiftedPackedMatrix J;
   J.resize(10,4);
@@ -449,17 +455,25 @@ void testRowShiftedPackedMatrix(){
   J.real_d1=12;
   J.rowShift.resize(J.d0);
   for(uint i=0;i<J.d0;i++) J.rowShift(i) = i/3;
-  J.computeColPatches();
+  J.computeColPatches(false);
   cout <<J <<'\n' <<J.rowShift <<'\n' <<J.colPatches <<'\n' <<J.unpack() <<endl;
 
   //constructor compressing an array
   RowShiftedPackedMatrix K(J.unpack());
   cout <<K <<'\n' <<K.rowShift <<'\n' <<K.colPatches <<'\n' <<K.unpack() <<endl;
   
+  //--randomized check
+  for(uint k=0;k<20;k++){
+    arr X(rnd(20),rnd(20));
+    rndInteger(X,0,1);
+    RowShiftedPackedMatrix Y(X);
+    arr x(X.d0);
+    rndInteger(x,0,9);
+    cout <<"unpacking errors = " <<maxDiff(X,Y.unpack()) <<' ' <<maxDiff(~X*X,Y.At_A()) <<' ' <<maxDiff(~X*x,Y.At_x(x)) <<endl;
+  }
+  
   arr R=~J.unpack()*J.unpack();
-  cout <<J.AtA() <<R <<J.AtA()-R <<endl;
-  
-  
+  cout <<J.At_A() <<R <<"\nerror = " <<maxDiff(J.At_A(),R) <<endl;
 }
 
 //--------------------------------------------------------------------------------

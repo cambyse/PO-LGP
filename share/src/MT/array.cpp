@@ -1126,6 +1126,113 @@ void scanArrFile(const char* name) {
   }
 }
 
+
+//===========================================================================
+//
+// RowShiftedPackedMatrix
+//
+
+RowShiftedPackedMatrix::RowShiftedPackedMatrix(){
+  special = RowShiftedPackedMatrixST;
+};
+RowShiftedPackedMatrix::RowShiftedPackedMatrix(const arr& X){
+  special = RowShiftedPackedMatrixST;
+  real_d1 = X.d1;
+  rowShift.resize(X.d0);
+  //-- compute rowShifts and d0:
+  uint len=0;
+  for(uint i=0;i<X.d0;i++){
+    uint j=0;
+    while(j<X.d1 && X(i,j)==0.) j++;
+    rowShift(i)=j;
+    j=X.d1;
+    while(j>rowShift(i) && X(i,j-1)==0.) j--;
+    if(j-rowShift(i)>len) len = j-rowShift(i);
+  }
+  
+  resize(X.d0,len);
+  for(uint i=0;i<d0;i++) for(uint j=0;j<d1 && rowShift(i)+j<X.d1;j++)
+    operator()(i,j) = X(i,rowShift(i)+j);
+  computeColPatches(false);
+};
+double RowShiftedPackedMatrix::acc(uint i, uint j){
+  uint rs=rowShift(i);
+  if(j<rs || j>=rs+d1) return 0.;
+  return operator()(i, j-rs);
+}
+arr RowShiftedPackedMatrix::unpack(){
+  arr X(d0,real_d1);
+  X.setZero();
+  for(uint i=0;i<d0;i++) for(uint j=0;j<d1 && rowShift(i)+j<X.d1;j++)
+    X(i,j+rowShift(i)) = operator()(i,j);
+  return X;
+}
+void RowShiftedPackedMatrix::computeColPatches(bool assumeMonotonic){
+  colPatches.resize(real_d1,2);
+  uint a=0,b=d0;
+  if(!assumeMonotonic){
+    for(uint j=0;j<real_d1;j++){
+      a=0;
+      while(a<d0 && acc(a,j)==0) a++;
+      b=d0;
+      while(b>0 && acc(b-1,j)==0) b--;
+      colPatches(j,0)=a;
+      colPatches(j,1)=b;
+    }
+  }else{
+    for(uint j=0;j<real_d1;j++){
+      while(a<d0 && j>=rowShift(a)+d1) a++;
+      colPatches(j,0)=a;
+    }
+    for(uint j=real_d1;j--;){
+      while(b>0 && j<rowShift(b-1)) b--;
+      colPatches(j,1)=b;
+    }
+  }
+}
+
+RowShiftedPackedMatrix RowShiftedPackedMatrix::At_A(){
+  RowShiftedPackedMatrix R;
+  R.resize(real_d1,d1);
+  R.setZero();
+  R.rowShift.resize(real_d1);
+  for(uint i=0;i<real_d1;i++) R.rowShift(i)=i;
+  for(uint j=0;j<real_d1;j++) for(uint k=j;k<j+d1 && k<real_d1;k++){
+    double sum=0.;
+    //product of two columns of this:
+    uint a=MT::MAX(colPatches(j,0),colPatches(k,0));
+    uint b=MT::MIN(colPatches(j,1),colPatches(k,1));
+    for(uint i=a;i<b;i++){
+      uint rs=rowShift.p[i];
+      if(j<rs || k>=rs+d1) continue;
+      double *poff = p + (i*d1-rs);
+      sum += poff[j]*poff[k]; // sum += acc(i,j)*acc(i,k);
+    }
+    R(j,k-j) = sum;
+  }
+  return R;
+}
+
+arr RowShiftedPackedMatrix::At_x(const arr& x){
+  CHECK(x.N==d0,"");
+  arr y(real_d1);
+  y.setZero();
+  for(uint j=0;j<real_d1;j++){
+    double sum=0.;
+    uint a=colPatches(j,0);
+    uint b=colPatches(j,1);
+    for(uint i=a;i<b;i++){
+      uint rs=rowShift.p[i];
+      if(j<rs || j-rs>=d1) continue;
+      sum += p[i*d1+j-rs]*x.p[i]; // sum += acc(i,j)*x(i);
+    }
+    y(j) = sum;
+  }
+  return y;
+  
+}
+
+
 //===========================================================================
 //
 // lists
