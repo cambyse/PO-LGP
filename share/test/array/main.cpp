@@ -469,11 +469,13 @@ void testRowShiftedPackedMatrix(){
     RowShiftedPackedMatrix Y(X);
     arr x(X.d0);
     rndInteger(x,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,Y.unpack()) <<' ' <<maxDiff(~X*X,Y.At_A()) <<' ' <<maxDiff(~X*x,Y.At_x(x)) <<endl;
+    RowShiftedPackedMatrix R = Y.At_A();
+    cout <<R.unpack(true) <<endl;
+    cout <<"unpacking errors = " <<maxDiff(X,Y.unpack()) <<' ' <<maxDiff(~X*X,Y.At_A().unpack(true)) <<' ' <<maxDiff(~X*x,Y.At_x(x)) <<endl;
   }
   
   arr R=~J.unpack()*J.unpack();
-  cout <<J.At_A() <<R <<"\nerror = " <<maxDiff(J.At_A(),R) <<endl;
+  cout <<J.At_A().unpack(true) <<R <<"\nerror = " <<maxDiff(J.At_A().unpack(true),R) <<endl;
 }
 
 //--------------------------------------------------------------------------------

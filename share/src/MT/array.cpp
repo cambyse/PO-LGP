@@ -1160,11 +1160,17 @@ double RowShiftedPackedMatrix::acc(uint i, uint j){
   if(j<rs || j>=rs+d1) return 0.;
   return operator()(i, j-rs);
 }
-arr RowShiftedPackedMatrix::unpack(){
+arr RowShiftedPackedMatrix::unpack(bool assumeSymmetric){
   arr X(d0,real_d1);
+  CHECK(!assumeSymmetric || d0==real_d1,"cannot be symmetric!");
   X.setZero();
-  for(uint i=0;i<d0;i++) for(uint j=0;j<d1 && rowShift(i)+j<X.d1;j++)
-    X(i,j+rowShift(i)) = operator()(i,j);
+  for(uint i=0;i<d0;i++){
+    uint rs=rowShift(i);
+    for(uint j=0;j<d1 && rs+j<X.d1;j++){
+      X(i,j+rs) = operator()(i,j);
+      if(assumeSymmetric) X(j+rs,i) = operator()(i,j);
+    }
+  }
   return X;
 }
 void RowShiftedPackedMatrix::computeColPatches(bool assumeMonotonic){
@@ -1194,22 +1200,23 @@ void RowShiftedPackedMatrix::computeColPatches(bool assumeMonotonic){
 RowShiftedPackedMatrix RowShiftedPackedMatrix::At_A(){
   RowShiftedPackedMatrix R;
   R.resize(real_d1,d1);
+  R.real_d1=real_d1;
   R.setZero();
   R.rowShift.resize(real_d1);
   for(uint i=0;i<real_d1;i++) R.rowShift(i)=i;
-  for(uint j=0;j<real_d1;j++) for(uint k=j;k<j+d1 && k<real_d1;k++){
-    double sum=0.;
-    //product of two columns of this:
-    uint a=MT::MAX(colPatches(j,0),colPatches(k,0));
-    uint b=MT::MIN(colPatches(j,1),colPatches(k,1));
-    for(uint i=a;i<b;i++){
-      uint rs=rowShift.p[i];
-      if(j<rs || k>=rs+d1) continue;
-      double *poff = p + (i*d1-rs);
-      sum += poff[j]*poff[k]; // sum += acc(i,j)*acc(i,k);
+  for(uint i=0;i<d0;i++){
+    uint rs=rowShift(i);
+    double* Ji=&operator()(i,0);
+    for(uint j=0;j<d1;j++){
+      uint jj=j+rs;
+      if(jj>=real_d1) break;
+      double Jij=Ji[j];
+      double* Rp=R.p + jj*d1;
+      double* Jp=Ji+j;
+      double* Jpstop=Ji+d1;
+      for(;Jp!=Jpstop; Rp++,Jp++) *Rp += Jij * *Jp;
     }
-    R(j,k-j) = sum;
-  }
+  }    
   return R;
 }
 
