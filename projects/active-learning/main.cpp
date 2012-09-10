@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
   int n_steps = MT::getParameter<int>("steps", 20);
   MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
   bool gaussproc = MT::getParameter<bool>("gauss", true);
+  bool guistart= MT::getParameter<bool>("gui", true);
   bool pause = MT::getParameter<bool>("pause", false);
   MT::String problem_name = MT::getParameter<MT::String>("problem", MT::String("tray"));
 
@@ -68,9 +69,9 @@ int main(int argc, char** argv) {
   }
   
 
-  Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
-  GuiDataV guiData;
-  gui.guiData = &guiData;
+  //Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
+  //GuiDataV guiData;
+  //gui.guiData = &guiData;
 
   TrainingsDataV train;
 
@@ -104,10 +105,10 @@ int main(int argc, char** argv) {
   classes.append(prob.oracle->classify(train.data, 0));
   train.classes = classes;
 
-  guiData.sample = &train.data;
+  //guiData.sample = &train.data;
 
-  gui.threadOpen();
-  gui.threadLoop();
+  //gui.threadOpen();
+  //gui.threadLoop();
 
   char unused;
   if (pause)
@@ -127,7 +128,7 @@ int main(int argc, char** argv) {
   ActiveLearningP alp;
   alp.traindata = &train;
   alp.classificator = &cl;
-  alp.guiData = &guiData;
+  //alp.guiData = &guiData;
  
   alp.threadOpen();
   if (pause) {
@@ -139,7 +140,7 @@ int main(int argc, char** argv) {
   else alp.threadStep(n_steps);
 
   alp.threadClose();
-  gui.threadClose();
+  //gui.threadClose();
 }
 
 

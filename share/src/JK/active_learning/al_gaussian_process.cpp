@@ -82,7 +82,8 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
     //
 
     //DEBUG_VAR(algp, -10*fabs(y));
-    return -10*fabs(y) + norm(grad)*sig;
+    //return -10*fabs(y) + norm(grad)*sig;
+    return sig;
     //return 1a // random
   }
 }
