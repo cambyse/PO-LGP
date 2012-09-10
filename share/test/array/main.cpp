@@ -13,8 +13,8 @@ void testBasics(){
   intA ints; //a macro for MT::Array<int>
 
   a.resize(7,10);
-  double* i;
-  for(i=a.p;i!=a.pstop;i++) *i=i-a.p; //assign pointer offsets to entries
+  double *ap=a.p, *astop=ap+a.N;
+  for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a;
   cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1);
 
@@ -469,8 +469,6 @@ void testRowShiftedPackedMatrix(){
     RowShiftedPackedMatrix Y(X);
     arr x(X.d0);
     rndInteger(x,0,9);
-    RowShiftedPackedMatrix R = Y.At_A();
-    cout <<R.unpack(true) <<endl;
     cout <<"unpacking errors = " <<maxDiff(X,Y.unpack()) <<' ' <<maxDiff(~X*X,Y.At_A().unpack(true)) <<' ' <<maxDiff(~X*x,Y.At_x(x)) <<endl;
   }
   

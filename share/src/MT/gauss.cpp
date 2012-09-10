@@ -816,7 +816,8 @@ double reduceIterated(GaussianA& g, uint m, const GaussianA& f, const arr& P, ui
     S.append(s);
     if(s!=-1.) if(best==-1. || s<best){ best=s; g=gk; }
   }
-  std::sort(S.p, S.pstop);
+  double *Sstop=S.p+S.N;
+  std::sort(S.p, Sstop);
   cout <<"scores = " <<S <<endl;
   cout <<"best   = " <<best <<endl;
   return best;

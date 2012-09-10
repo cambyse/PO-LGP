@@ -1495,7 +1495,8 @@ void ors::Mesh::fuseNearVertices(double tol) {
   //sort vertices lexically
   p.setStraightPerm(V.d0);
   COMP_V=&V;
-  std::sort(p.p, p.pstop, COMP);
+  uint *pstop=p.p+p.N;
+  std::sort(p.p, pstop, COMP);
   permuteVertices(*this, p);
   
   cout <<"permuting.." <<std::flush;
@@ -2782,7 +2783,7 @@ void ors::Graph::revertJoint(ors::Joint *e) {
   the root of the configuration */
 void ors::Graph::reconfigureRoot(Body *n) {
   MT::Array<Body*> list, list2;
-  Body **m;
+  Body **m,**mstop;
   Joint *e;
   list.append(n);
   uintA level(bodies.N);
@@ -2793,7 +2794,8 @@ void ors::Graph::reconfigureRoot(Body *n) {
   while(list.N>0) {
     i++;
     list2.clear();
-    for(m=list.p; m!=list.pstop; m++) {
+    mstop=list.p+list.N;
+    for(m=list.p; m!=mstop; m++) {
       level((*m)->index)=i;
       for_list(j, e, (*m)->inLinks) {
         //for_in_edges_save(e, es, (*m))
@@ -3921,7 +3923,8 @@ void ors::Graph::sortProxies(bool deleteMultiple, bool deleteOld) {
       }
   }
   
-  std::sort(proxies.p, proxies.pstop, ProxySortComp);
+  ors::Proxy **proxiesstop=proxies.p+proxies.N;
+  std::sort(proxies.p, proxiesstop, ProxySortComp);
   
   for(i=0; i<proxies.N; i++) if(proxies(i)->age) {
       if(

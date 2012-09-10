@@ -1060,7 +1060,7 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     y.resize(A.d0); y.setZero();
     double *Ap=A.p;
     uintA* elems = (uintA*)A.auxData;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++) {
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; Ap++) {
       i=*k; k++;
       j=*k; k++;
       y.p[i] += (*Ap) * x.p[j];
@@ -1077,10 +1077,10 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     uintA *elems, *col;
     elems = (uintA*)x.auxData;
     uint *slot;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; xp++) {
       j=*k; k++;
       col = (uintA*)A.auxData+(1+j);
-      for(l=col->p, lstop=col->pstop; l!=lstop;) {
+      for(l=col->p, lstop=col->p+col->N; l!=lstop;) {
         i =*l; l++;
         n =*l; l++;
         slot=&y_sparse[1](i);
@@ -1102,7 +1102,7 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     double *xp=x.p;
     uintA *elems;
     elems = (uintA*)x.auxData;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; xp++) {
       j=*k; k++;
       for(i=0; i<A.d0; i++) {
         y.p[i] += A.p[i*d1+j] * (*xp);
