@@ -20,7 +20,7 @@ void testSqrProblem(){
   MT::wait();
 */
   x=x0;
-  optGaussNewton(x, P, OPT4(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=.1, verbose=2));
+  optGaussNewton(x, P, OPT4(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0.1, verbose=2));
   //MT::wait();
 
   gnuplot("plot 'z.gaussNewton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);

@@ -108,15 +108,15 @@ public:
   
   //! stores the sizeof(T)
   static int sizeT;
+
+  static char memMoveInit;
   
 #if 1//? garbage
-  Array<uint> *sparse; //!< to allocate element, column and row index lists (1+d0+d1 lists)
-  enum MatrixType { fullMT, diagMT };
-  MatrixType mtype;
-  T *p_device;
+  enum SpecialType { noneST, symmetricBandMatrixST, sparseST, diagST, RowShiftedPackedMatrixST };
+  SpecialType special;
+  void *auxData;
 #endif
   
-  static char memMoveInit;
 private:
   void init();
   
@@ -293,6 +293,11 @@ public:
 };
 }
 
+
+//===========================================================================
+//
+//!@name special case arrays (Matrices)
+// @{
 
 //===========================================================================
 //
@@ -709,9 +714,13 @@ bool samedim(const MT::Array<T>& a, const MT::Array<S>& b) {
 //!@name lapack interfaces
 // @{
 
+struct SymmetricBandMatrix;
+
 void blas_Mv(arr& y, const arr& A, const arr& x);
 void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
+void blas_AAt(arr& X, const arr& A);
+void blas_AtA(arr& X, const arr& A);
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
 void lapack_mldivide(arr& X, const arr& A, const arr& b);
@@ -722,7 +731,100 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA);
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A);
 double lapack_determinantSymPosDef(const arr& A);
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b);
+void lapack_Ainv_b_sym(arr& x, const SymmetricBandMatrix& B, const arr& b);
+void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
 
+//===========================================================================
+// @}
+//!@name special matrices
+// @{
+
+struct SymmetricBandMatrix:MT::Array<double>{
+  SymmetricBandMatrix(uint superDiagonals, uint n):MT::Array<double>(superDiagonals,n){
+    special = symmetricBandMatrixST;
+  };
+};
+
+inline arr unpack(const SymmetricBandMatrix& x){
+  uint n=x.d1,k=x.d0;
+  arr z(n,n);
+  z.setZero();
+  for(uint i=0;i<n;i++){
+    z(i,i) = x(0,i);
+    for(uint j=1;j<k && i+j<n;j++) z(i+j,i) = z(i,i+j) = x(j,i);
+  }
+  return z;
+}
+
+struct RowShiftedPackedMatrix:arr{
+  uint real_d1;
+  uintA rowShift;
+  uintA colPatches; //column-patch: range of non-zeros in a column; starts with 'a', ends with 'b'-1
+  
+  RowShiftedPackedMatrix(){
+    special = RowShiftedPackedMatrixST;
+  };
+  RowShiftedPackedMatrix(const arr& X){
+    special = RowShiftedPackedMatrixST;
+    real_d1 = X.d1;
+    rowShift.resize(X.d0);
+    //-- compute rowShifts and d0:
+    uint len=0;
+    for(uint i=0;i<X.d0;i++){
+      uint j=0;
+      while(j<X.d1 && X(i,j)==0.) j++;
+      rowShift(i)=j;
+      j=X.d1;
+      while(j>rowShift(i) && X(i,j-1)==0.) j--;
+      if(j-rowShift(i)>len) len = j-rowShift(i);
+    }
+    
+    resize(X.d0,len);
+    for(uint i=0;i<d0;i++) for(uint j=0;j<d1;j++){
+      operator()(i,j) = X(i,rowShift(i)+j);
+    }
+    computeColPatches();
+  };
+  double acc(uint i, uint j){
+    uint rs=rowShift(i);
+    if(j<rs || j>=rs+d1) return 0.;
+    return operator()(i, j-rs);
+  }
+  arr unpack(){
+    arr X(d0,real_d1);
+    X.setZero();
+    for(uint i=0;i<d0;i++) for(uint j=0;j<d1;j++) X(i,j+rowShift(i)) = operator()(i,j);
+    return X;
+  }
+  void computeColPatches(){ //currently presumes monotonous rowShifts
+    colPatches.resize(real_d1,2);
+    uint a=0,b;
+    for(uint j=0;j<real_d1;j++){
+      uint i=a;
+      while(i<d0 && rowShift(i)+d1<=j) i++;
+      while(i<d0 && acc(i,j)==0) i++;
+      a=i;
+      while(i<d0 && rowShift(i)<=j) i++;
+      while(i>0  && acc(i-1,j)==0) i--;
+      b=i;
+      colPatches(j,0)=a;
+      colPatches(j,1)=b;
+    }
+  }
+  
+  arr AtA(){
+    arr R(real_d1,real_d1);
+    R.setZero();
+    for(uint j=0;j<real_d1;j++) for(uint k=0;k<real_d1;k++){
+      //product of two columns of this:
+      uint a=MT::MAX(colPatches(j,0),colPatches(k,0));
+      uint b=MT::MIN(colPatches(j,1),colPatches(k,1));
+      for(uint i=a;i<b;i++) R(j,k) += acc(i,j)*acc(i,k);
+    }
+    return R;
+  }
+  
+};
 
 //===========================================================================
 // @}

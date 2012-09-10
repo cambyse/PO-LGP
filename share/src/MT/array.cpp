@@ -1051,15 +1051,15 @@ void lognormScale(arr& P, double& logP, bool force) {
 
 void sparseProduct(arr& y, arr& A, const arr& x) {
   CHECK(x.nd==1 && A.nd==2 && x.d0==A.d1, "not a proper matrix multiplication");
-  if(!A.sparse && !x.sparse) {
+  if(A.special!=arr::sparseST && x.special!=arr::sparseST) {
     innerProduct(y, A, x);
     return;
   }
-  if(A.sparse && !x.sparse) {
+  if(A.special==arr::sparseST && x.special!=arr::sparseST) {
     uint i, j, *k, *kstop;
     y.resize(A.d0); y.setZero();
     double *Ap=A.p;
-    uintA *elems=A.sparse;
+    uintA* elems = (uintA*)A.auxData;
     for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++) {
       i=*k; k++;
       j=*k; k++;
@@ -1067,25 +1067,28 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     }
     return;
   }
-  if(A.sparse && x.sparse) {
+  if(A.special==arr::sparseST && x.special==arr::sparseST) {
     uint i, j, n, *k, *kstop, *l, *lstop;
-    y.clear(); y.nd=1; y.d0=A.d0; y.sparse=new uintA [2]; y.sparse[1].resize(y.d0); y.sparse[1]=(uint)-1;
+    y.clear(); y.nd=1; y.d0=A.d0;
+    uintA *y_sparse;
+    y.auxData=y_sparse=new uintA [2];
+    y_sparse[1].resize(y.d0); y_sparse[1]=(uint)-1;
     double *xp=x.p;
     uintA *elems, *col;
-    elems=x.sparse;
+    elems = (uintA*)x.auxData;
     uint *slot;
     for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
       j=*k; k++;
-      col=A.sparse+(1+j);
+      col = (uintA*)A.auxData+(1+j);
       for(l=col->p, lstop=col->pstop; l!=lstop;) {
         i =*l; l++;
         n =*l; l++;
-        slot=&y.sparse[1](i);
+        slot=&y_sparse[1](i);
         if(*slot==(uint)-1) {
           *slot=y.N;
           y.resizeMEM(y.N+1, true); y(y.N-1)=0.;
-          y.sparse[0].append(i);
-          CHECK(y.sparse[0].N==y.N, "");
+          y_sparse[0].append(i);
+          CHECK(y_sparse[0].N==y.N, "");
         }
         i=*slot;
         y(i) += A.elem(n) * (*xp);
@@ -1093,12 +1096,12 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     }
     return;
   }
-  if(!A.sparse && x.sparse) {
+  if(A.special!=arr::sparseST && x.special==arr::sparseST) {
     uint i, j, *k, *kstop, d1=A.d1;
     y.resize(A.d0); y.setZero();
     double *xp=x.p;
     uintA *elems;
-    elems=x.sparse;
+    elems = (uintA*)x.auxData;
     for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
       j=*k; k++;
       for(i=0; i<A.d0; i++) {

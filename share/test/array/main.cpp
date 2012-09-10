@@ -1,6 +1,6 @@
 #include<algorithm>
-#include<MT/array.h>
 #include<MT/util.h>
+#include<MT/array.h>
 //#include<MT/algos.h>
 
 using namespace std;
@@ -433,6 +433,37 @@ void testTensor(){
 
 //--------------------------------------------------------------------------------
 
+void testSymBandMatrix(){
+  uint k=3,n=10;
+  SymmetricBandMatrix A(k,n);
+  rndInteger(A, 0, 9);
+  arr B = unpack(A);
+  cout <<A <<endl <<B <<endl;
+}
+
+void testRowShiftedPackedMatrix(){
+  RowShiftedPackedMatrix J;
+  J.resize(10,4);
+  rndInteger(J,0,9);
+  
+  J.real_d1=12;
+  J.rowShift.resize(J.d0);
+  for(uint i=0;i<J.d0;i++) J.rowShift(i) = i/3;
+  J.computeColPatches();
+  cout <<J <<'\n' <<J.rowShift <<'\n' <<J.colPatches <<'\n' <<J.unpack() <<endl;
+
+  //constructor compressing an array
+  RowShiftedPackedMatrix K(J.unpack());
+  cout <<K <<'\n' <<K.rowShift <<'\n' <<K.colPatches <<'\n' <<K.unpack() <<endl;
+  
+  arr R=~J.unpack()*J.unpack();
+  cout <<J.AtA() <<R <<J.AtA()-R <<endl;
+  
+  
+}
+
+//--------------------------------------------------------------------------------
+
 char* gdb(MT::Array<double>& a){
   static MT::String buf;
   buf.clear();
@@ -450,6 +481,10 @@ char* gdb(MT::Array<int>& a){
 
 int main(int argc, char *argv[]){
   
+  testRowShiftedPackedMatrix();
+//   testSymBandMatrix();
+  return 0;
+
   testBasics();
   testMatlab();
   testException();

@@ -67,11 +67,10 @@ template<class T> void MT::Array<T>::init() {
   flexiMem=true;
   p=pstop=NULL;
   M=N=nd=d0=d1=d2=0;
-  pp=NULL;
-  sparse=NULL;
-  p_device=NULL;
   d=&d0;
-  mtype=fullMT;
+  pp=NULL;
+  special=noneST;
+  auxData=NULL;
 }
 
 
@@ -268,11 +267,12 @@ template<class T> double MT::Array<T>::sparsity() {
 
 //! make sparse: create the \ref sparse index
 template<class T> void MT::Array<T>::makeSparse() {
-  CHECK(!sparse, "only once yet");
+  CHECK(special!=sparseST, "only once yet");
+  uintA* sparse;
   uint n=0;
   if(nd==1) {
     uint i;
-    sparse=new Array<uint> [2];
+    auxData=sparse=new Array<uint> [2];
     sparse[1].resize(d0); sparse[1]=-1;
     for(i=0; i<d0; i++) if(p[i]) {
         sparse[0].append(i); //list of entries (maps n->i)
@@ -286,7 +286,7 @@ template<class T> void MT::Array<T>::makeSparse() {
   if(nd==2) {
     uint i, j;
     Array<uint> pair(2);
-    sparse=new Array<uint> [1+d1+d0];
+    auxData=sparse=new Array<uint> [1+d1+d0];
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) if(p[i*d1+j]) {
           pair(0)=i; pair(1)=j; sparse[0].append(pair);   sparse[0].reshape(n+1, 2);
           permute(i*d1+j, n);
@@ -372,13 +372,13 @@ template<class T> void MT::Array<T>::freeMEM() {
   if(M) delete[] p;
   //if(M) free(p);
   if(pp) delete[] pp;
-  if(sparse) delete[] sparse;
+  //if(auxData) delete[] auxData;
   if(d && d!=&d0) delete[] d;
   p=pstop=NULL;
   M=N=nd=d0=d1=d2=0;
-  pp=NULL;
-  sparse=NULL;
   d=&d0;
+  pp=NULL;
+  //auxData=NULL;
   reference=false;
 }
 
@@ -669,14 +669,14 @@ template<class T> T& MT::Array<T>::operator()(uint i) const {
 
 //! 2D access
 template<class T> T& MT::Array<T>::operator()(uint i, uint j) const {
-  CHECK(nd==2 && i<d0 && j<d1 && !sparse,
+  CHECK(nd==2 && i<d0 && j<d1 && special!=sparseST,
         "2D range error (" <<nd <<"=2, " <<i <<"<" <<d0 <<", " <<j <<"<" <<d1 <<")");
   return p[i*d1+j];
 }
 
 //! 3D access
 template<class T> T& MT::Array<T>::operator()(uint i, uint j, uint k) const {
-  CHECK(nd==3 && i<d0 && j<d1 && k<d2 && !sparse,
+  CHECK(nd==3 && i<d0 && j<d1 && k<d2 && special!=sparseST,
         "3D range error (" <<nd <<"=3, " <<i <<"<" <<d0 <<", " <<j <<"<" <<d1 <<", " <<k <<"<" <<d2 <<")");
   return p[(i*d1+j)*d2+k];
 }

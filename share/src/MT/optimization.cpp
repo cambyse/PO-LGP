@@ -513,7 +513,6 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   if(o.useAdaptiveDamping) lambda = o.useAdaptiveDamping;
   double fx, fy;
   arr Delta, y;
-  arr R(x.N, x.N), r(x.N);
   uint evals=0;
   
   if(fx_user) NIY;
@@ -532,11 +531,21 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   for(uint it=1;;it++) { //iterations and lambda adaptation loop
     if(o.verbose>1) cout <<"optGaussNewton it=" <<it << " alpha=" <<alpha <<" lambda=" <<lambda <<flush;
     //compute Delta
-    innerProduct(R, ~J, J);  R.reshape(x.N, x.N);
-    innerProduct(r, ~J, phi);
-
+#if 1
+    arr R;
+    blas_AtA(R, J);  R.reshape(x.N, x.N);
     if(lambda) for(uint i=0;i<R.d0;i++) R(i,i) += lambda;  //Levenberg Marquardt damping
-    lapack_Ainv_b_sym(Delta, R, -r);
+    lapack_Ainv_b_sym(Delta, R, -(~J*phi));
+#else //this uses lapack's LLS minimizer - but is really slow!!
+    x.reshape(x.N);
+    if(lambda){
+      arr D; D.setDiag(sqrt(lambda),x.N);
+      J.append(D);
+      phi.append(zeros(x.N,1));
+    }
+    lapack_min_Ax_b(Delta, J, J*x - phi);
+    Delta -= x;
+#endif
     if(o.maxStep>0. && Delta.absMax()>o.maxStep)  Delta *= o.maxStep/Delta.absMax();
     if(o.verbose>1) cout <<" \t|Delta|=" <<Delta.absMax() <<flush;
 
