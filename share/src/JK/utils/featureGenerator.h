@@ -29,6 +29,11 @@ class SimpleFeatureGenerator : public FeatureGenerator<arr> {
     virtual void makeFeatures(arr& features, const arr& data);
     virtual void getSize(uintA& size) { size = TUP(1,2); }
 };
+class UprightFeatureGenerator : public FeatureGenerator<arr> {
+  public:
+    virtual void makeFeatures(arr& features, const arr& data);
+    virtual void getSize(uintA& size) { size = TUP(1,1); }
+};
 
 #endif
 

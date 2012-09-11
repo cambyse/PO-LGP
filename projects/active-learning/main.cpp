@@ -66,11 +66,17 @@ int main(int argc, char** argv) {
     prob.generator = new SimpleFeatureGenerator;
     INFO(main, "Start out of reach problem.");
   }
+  else if(problem_name == "upright") {
+    prob.sampler = new UprightSampler;
+    prob.oracle  = new UprightOracle;
+    prob.generator = new UprightFeatureGenerator;
+    INFO(main, "Start out of reach problem.");
+  }
   
 
-  Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
-  GuiDataV guiData;
-  gui.guiData = &guiData;
+  //Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
+  //GuiDataV guiData;
+  //gui.guiData = &guiData;
 
   TrainingsDataV train;
 
@@ -104,10 +110,10 @@ int main(int argc, char** argv) {
   classes.append(prob.oracle->classify(train.data, 0));
   train.classes = classes;
 
-  guiData.sample = &train.data;
+  //guiData.sample = &train.data;
 
-  gui.threadOpen();
-  gui.threadLoop();
+  //gui.threadOpen();
+  //gui.threadLoop();
 
   char unused;
   if (pause)
@@ -127,7 +133,7 @@ int main(int argc, char** argv) {
   ActiveLearningP alp;
   alp.traindata = &train;
   alp.classificator = &cl;
-  alp.guiData = &guiData;
+  //alp.guiData = &guiData;
  
   alp.threadOpen();
   if (pause) {
@@ -139,7 +145,7 @@ int main(int argc, char** argv) {
   else alp.threadStep(n_steps);
 
   alp.threadClose();
-  gui.threadClose();
+  //gui.threadClose();
 }
 
 
