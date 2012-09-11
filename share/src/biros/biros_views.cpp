@@ -1,11 +1,10 @@
 #include "biros_views.h"
 #include "control.h"
 
-//GenericInfoView_CPP(Process, GenericView);
-//GenericInfoView_CPP(Process, GenericProcessView/*, processVT*/);
-GenericInfoView_CPP(Variable, GenericVariableView/*, variableVT*/);
-//GenericInfoView_CPP(FieldInfo, GenericFieldInfoView/*, fieldVT*/);
-//GenericInfoView_CPP(Parameter, GenericParameterView/*, parameterVT*/);
+GenericInfoView_CPP(Process);
+GenericInfoView_CPP(Variable);
+GenericInfoView_CPP(FieldInfo);
+GenericInfoView_CPP(Parameter);
 
 #undef GenericInfoView_CPP
 

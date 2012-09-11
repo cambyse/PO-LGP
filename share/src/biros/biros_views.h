@@ -118,7 +118,7 @@ struct ViewInfo_typed:ViewInfo{
 // specific views -> perhaps move somewhere else
 //
 
-#define GenericInfoView(_what, _arg, _type) \
+#define GenericInfoView(_what) \
 \
 struct Generic##_what##View:View{ \
   Generic##_what##View():View() {} \
@@ -126,13 +126,13 @@ struct Generic##_what##View:View{ \
   virtual void write(std::ostream& os) { writeInfo(os, *((_what*)object), false); } \
 };
 
-#define GenericInfoView_CPP(_what, _name) \
-  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy(#_name, "ALL");
+#define GenericInfoView_CPP(_what) \
+  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy("Generic"#_what"View");
 
-GenericInfoView(Process, proc, processVT);
-GenericInfoView(Variable, var, variableVT);
-GenericInfoView(FieldInfo, field, fieldVT);
-GenericInfoView(Parameter, param, parameterVT);
+GenericInfoView(Process);
+GenericInfoView(Variable);
+GenericInfoView(FieldInfo);
+GenericInfoView(Parameter);
 
 #undef GenericInfoView
 
