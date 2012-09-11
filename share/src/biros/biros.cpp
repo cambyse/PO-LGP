@@ -92,6 +92,7 @@ Variable::Variable(const char *_name) {
   name = _name;
   revision = 0U;
   id = 0U;
+  listeners.memMove=true;
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
@@ -220,6 +221,7 @@ void Variable::deSerializeFromString(const MT::String &string) {
 
 Process::Process(const char *_name) {
   s = new sProcess();
+  listensTo.memMove=true;
   name = _name;
   step_count = 0U;
   birosInfo().writeAccess(this);
@@ -287,7 +289,14 @@ void Process::threadListenTo(Variable *v) {
   v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->listeners.setAppend(this);
   v->s->rwlock.unlock();
-  listensTo.append(v);
+  listensTo.setAppend(v);
+}
+
+void Process::threadStopListenTo(Variable *v){
+  v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
+  v->listeners.removeValue(this);
+  v->s->rwlock.unlock();
+  listensTo.removeValue(v);
 }
 
 bool Process::threadIsIdle() {

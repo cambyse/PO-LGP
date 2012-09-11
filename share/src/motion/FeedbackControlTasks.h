@@ -16,7 +16,8 @@ struct FeedbackControlTaskAbstraction {
   TaskVariableList TVs;
   bool requiresInit;
   bool done;
-  FeedbackControlTaskAbstraction():requiresInit(true), done(false) {}
+  uint count;
+  FeedbackControlTaskAbstraction():requiresInit(true), done(false), count(0) {}
   virtual void initTaskVariables(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
   virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
 };

@@ -90,7 +90,7 @@ int main(int argn,char** argv){
   // inside-out
 
   //b::dump();
-  //b::openInsideOut();
+  b::openInsideOut();
   //
 
   loopWithBeat(hardware, .01);
@@ -137,6 +137,10 @@ int main(int argn,char** argv){
     pickOrPlaceObject(Action::grasp, "thing2", NULL);
     pickOrPlaceObject(Action::place, "thing2", "thing1");
 
+
+    pickOrPlaceObject(Action::grasp, "thing1", NULL);
+    pickOrPlaceObject(Action::place, "thing1", "thing2");
+
     //pickOrPlaceObject(Action::grasp, "box2", NULL);
     //pickOrPlaceObject(Action::place, "box2", "cyl2");
     
@@ -154,6 +158,7 @@ int main(int argn,char** argv){
   }
 #endif
 
+  MT::wait(1300);
   //cam.threadClose();
   ctrl->threadClose();
   close(hardware);

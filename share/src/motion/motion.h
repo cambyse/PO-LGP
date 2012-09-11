@@ -27,19 +27,20 @@ struct GeometricState:Variable {
 struct Action:Variable {
   //grasp: goto object, close hand, attach shape to hand
   //reach: goto object or move to location, but do not attach shape
-  enum ActionPredicate { noAction, reach, grasp, place, openHand, closeHand, home };
+  enum ActionPredicate { noAction, reach, grasp, place, place_location, openHand, closeHand, homing };
   
   FIELD(uint, frameCount);
   FIELD(ActionPredicate, action);
   FIELD(bool, executed);
   FIELD(charp, objectRef1);  //arguments to the relational predicates
   FIELD(charp, objectRef2);
+  FIELD(arr, locationRef);
   
   Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(""), objectRef2("") {
-    reg_frameCount(); reg_action(); reg_executed(); reg_objectRef1(); reg_objectRef2();
+    reg_frameCount(); reg_action(); reg_executed(); reg_objectRef1(); reg_objectRef2(); reg_locationRef();
   };
   
-  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
 };
 
 
@@ -136,7 +137,7 @@ struct MotionFuture:Variable {
     reg_currentFrame(); reg_actions(); reg_motions(); reg_frames(); reg_planners();
   };
   
-  void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, Process *p);
+  void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
   void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
   uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
   MotionPrimitive *getCurrentMotionPrimitive(Process *p){ if(!getTodoFrames(p)) return NULL; readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }

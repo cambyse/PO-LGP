@@ -162,7 +162,7 @@ void ObjectClusterer::step() {
   pcl::PassThrough<PointT> passthrough;
   passthrough.setInputCloud(cloud);
   passthrough.setFilterFieldName("z");
-  passthrough.setFilterLimits(0,1.5);
+  passthrough.setFilterLimits(0,1.0);
   passthrough.filter(*cloud_filtered);
   passthrough.setInputCloud(cloud_filtered);
   passthrough.setFilterFieldName("x");

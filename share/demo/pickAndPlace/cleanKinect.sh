@@ -1,1 +1,1 @@
-killall XnSensorServer
+killall -9 XnSensorServer

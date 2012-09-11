@@ -25,26 +25,15 @@ void ActionProgressor::step(){
   threadListenTo(motionPrimitive);
   Action *action = motionFuture->getCurrentAction(this);
   
+  if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return;
   switch(action->get_action(this)){ //wait, depending on current action
-    case Action::grasp: {
-      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return; //motion primitive is not done yet -> go to sleep again
+    case Action::grasp: 
       reattachShape(action->get_objectRef1(this), "m9");
-    } break;
-    case Action::place: {
-      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) {
-        return;
-      } //motion primitive is not done yet -> go to sleep again
-      reattachShape(action->get_objectRef1(this), "OBJECTS");
-    } break;
-    case Action::closeHand: 
-      if(motionPrimitive->get_mode(this) != MotionPrimitive::done) return;
       break;
-    case Action::openHand: {
-      MT::wait(3.);
-      motionPrimitive->set_mode(MotionPrimitive::done, this);
-    } break;
-    default:
-      HALT("");
+    case Action::place_location: 
+    case Action::place:
+      reattachShape(action->get_objectRef1(this), "OBJECTS");
+      break;
   }
 
   motionFuture->incrementFrame(this);

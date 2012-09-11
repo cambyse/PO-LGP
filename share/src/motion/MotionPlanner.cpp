@@ -89,20 +89,20 @@ void MotionPlanner::step() {
     motionPrimitive->deAccess(this);
   }
   
-  if (actionSymbol==Action::grasp || actionSymbol==Action::place || actionSymbol == Action::home || actionSymbol == Action::reach){
-    
+  if (actionSymbol==Action::grasp || actionSymbol==Action::place_location || actionSymbol==Action::place || actionSymbol == Action::homing || actionSymbol == Action::reach){
+
     if (!frame0->get_converged(this)) {
       frame0->readAccess(this);
       if(frame0->frameCount==0 && frame0->x_estimate.N==0){ //assume this is the FIRST frame of all
         VAR(HardwareReference);
         arr x0 =  _HardwareReference->get_q_reference(NULL);
-	x0.append(_HardwareReference->get_v_reference(NULL));
-	frame0->x_estimate = x0;
-	frame0->converged = true;
+        x0.append(_HardwareReference->get_v_reference(NULL));
+        frame0->x_estimate = x0;
+        frame0->converged = true;
       }else{
-	//can't do anything with frame0 not converged
-	frame0->deAccess(this);
-	return;
+        //can't do anything with frame0 not converged
+        frame0->deAccess(this);
+        return;
       }
       frame0->deAccess(this);
     }
@@ -130,13 +130,19 @@ void MotionPlanner::step() {
         listDelete(s->sys.vars);
         uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
         uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId);
+        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId, NoArr);
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
-      else if (actionSymbol==Action::home) {
+      else if (actionSymbol==Action::place_location) {
+        s->sys.setx0(x0);
+        listDelete(s->sys.vars);
         uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-        uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-        setHomingGoals(s->sys, s->sys.nTime(), shapeId, toId);
+        arr location = action->get_locationRef(this);
+        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, -1, location);
+        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+      }
+      else if (actionSymbol==Action::homing) {
+        setHomingGoals(s->sys, s->sys.nTime());
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       
@@ -412,7 +418,8 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 
-void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
+void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){
+  CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   sys.setTox0();
   
   double midPrec          = birosInfo().getParameter<double>("placeMidPrec");
@@ -433,21 +440,28 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToSh
   
   //activate collision testing with target shape
   ors::Shape *obj  = sys.ors->shapes(shapeId);
-  ors::Shape *onto = sys.ors->shapes(belowToShapeId);
+  ors::Shape *onto = NULL;
+  if(belowToShapeId != -1)
+     onto = sys.ors->shapes(belowToShapeId);
   if (obj->body!=sys.ors->getBodyByName("m9")){
     reattachShape(*sys.ors, NULL, obj->name, "m9");
   }
   CHECK(obj->body==sys.ors->getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
-  onto->cont=false;
+  if(onto) onto->cont=false;
   sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
   
   //general target
   arr xtarget;
-  xtarget.setCarray(onto->X.pos.p, 3);
-  xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  if(onto) {
+    xtarget.setCarray(onto->X.pos.p, 3);
+    xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  }
+  else {
+    xtarget = locationTo;  
+  }
   
   //endeff
   V = new DefaultTaskVariable("graspCenter", *sys.ors, posTVT, "graspCenter", NULL, NoArr);
@@ -511,16 +525,12 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToSh
   sys.vars.append(V);
 }
 
-void setHomingGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint belowToShapeId){
+void setHomingGoals(soc::SocSystem_Ors& sys, uint T){
   sys.setTox0();
   
   //deactivate all variables
   activateAll(sys.vars, false);
   
-  ors::Shape *obj = sys.ors->shapes(shapeId);
-  ors::Shape *onto = sys.ors->shapes(belowToShapeId);
-  obj->cont=true;
-  onto->cont=true;
   sys.swift->initActivations(*sys.ors);
   
   TaskVariable *V;

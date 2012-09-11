@@ -156,6 +156,7 @@ struct Process {
   
   void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
   void threadListenTo(const VariableL &signalingVars);
+  void threadStopListenTo(Variable *var);
   
   void threadLoop();                    ///< loop, stepping forever
   void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
