@@ -67,6 +67,12 @@ int main(int argc, char** argv) {
     prob.generator = new SimpleFeatureGenerator;
     INFO(main, "Start out of reach problem.");
   }
+  else if(problem_name == "upright") {
+    prob.sampler = new UprightSampler;
+    prob.oracle  = new UprightOracle;
+    prob.generator = new UprightFeatureGenerator;
+    INFO(main, "Start out of reach problem.");
+  }
   
 
   //Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));

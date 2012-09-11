@@ -34,6 +34,10 @@ class OutOfReachOracle : public Oracle {
   public:
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
+class UprightOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
 
 class HumanOracle : public Oracle {
 	private:

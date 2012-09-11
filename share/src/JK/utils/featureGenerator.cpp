@@ -32,6 +32,13 @@ void CubicFeatureGenerator::makeFeatures(arr&Z, const arr& X) {
 }
 
 void SimpleFeatureGenerator::makeFeatures(arr &Z, const arr& X) {
-  Z.append(X.sub(0, -1, 0, 3));
+  Z.append(X.sub(0, -1, 0, 2) - ARR(0,0,1));
+  Z.append(X.sub(0,-1,3,3));
   Z.reshape(1,4);
+}
+
+void UprightFeatureGenerator::makeFeatures(arr& Z, const arr& X) {
+  double sinus = sin((double) X(0,0)*MT_PI/180.) ;
+  Z.append(sinus);
+  Z.reshape(1,1);
 }

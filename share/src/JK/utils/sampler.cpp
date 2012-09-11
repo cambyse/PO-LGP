@@ -45,6 +45,20 @@ void OutOfReachSampler::sample(MT::Array<arr>& sample) {
     sample.reshape(1, 2);
   } while (out != o.classify(sample));
 }
+void UprightSampler::sample(MT::Array<arr>& sample) { 
+  MT::Array<arr> next_sample;
+  
+  UprightOracle o;
+
+  int out = rand() % 2;
+
+  do {
+    sample.clear();
+    double  angle = (rand() % 5760)/16.;
+    sample.append(ARR(angle));
+    sample.reshape(1, 1);
+  } while (out != o.classify(sample));
+}
 
 void TraySampler::sample(MT::Array<arr>& sample) { 
   MT::Array<arr> next_sample;

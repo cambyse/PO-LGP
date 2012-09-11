@@ -32,6 +32,10 @@ class OutOfReachSampler : public Sampler<MT::Array<arr> > {
   public:
     virtual void sample(MT::Array<arr>& sample);
 };
+class UprightSampler : public Sampler<MT::Array<arr> > {
+  public:
+    virtual void sample(MT::Array<arr>& sample);
+};
 
 template<class Data> void rejectionSampling(Data& sample, Sampler<Data>* s, Evaluator<Data>* e, const uint nSamples = 10000) {
   Data testSample;

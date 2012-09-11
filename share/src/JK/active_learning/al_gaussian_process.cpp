@@ -108,8 +108,10 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
     //
 
     //DEBUG_VAR(algp, -10*fabs(y));
-    //return -10*fabs(y) + norm(grad)*sig;
-    return sig;
+    return -10*fabs(y) + norm(grad)*sig;
+    //return -10*fabs(y) +sig;
+    //return -10*fabs(y) + norm(grad);
+    //return sig;
     //return 1a // random
   }
 }
@@ -120,7 +122,7 @@ GaussianProcessAL::GaussianProcessAL(ActiveLearningProblem& prob) :
   this->problem = prob;
   s->p = new GaussKernelParams();
   s->p->obsVar = 10e-6;
-  s->p->widthVar = 0.01;
+  s->p->widthVar = 0.05;
   s->p->priorVar = 0.1;
 	s->gp.mu = -1.0;
 
