@@ -12,7 +12,8 @@
 
 #include <biros/logging.h>
 
-SET_LOG(algp, INFO);
+
+SET_LOG(algp, DEBUG);
 
 struct sGaussianProcessAL {
   GaussianProcess gp;   
@@ -29,27 +30,51 @@ class GaussianProcessEvaluator : public Evaluator<MT::Array<arr> > {
     const ActiveLearningProblem problem;
 };
 
-double cummulativeApproxVariance(uint i, arr& x, GaussianProcess& gp0, GaussianProcess& gp1) {
-  if ( i == x.N) {
-    double sig0, sig1, y;
-    gp0.evaluate(x, y, sig0);
-    gp1.evaluate(x, y, sig1);
-    return sig0 + sig1;
+//double cummulativeApproxVariance(uint i, arr& x, GaussianProcess& gp) {
+  //if ( i == x.N) {
+    //double sig, y;
+    //sig = 0.;
+    //gp.evaluate(x, y, sig);
+
+
+    ////DEBUG_VAR(algp, x);
+    ////DEBUG_VAR(algp, y);
+    ////DEBUG_VAR(algp, sig);
+    //return sig;
+  //}
+  //else {
+    //double r;
+    //for (double j = -1.; j < 1.; j += .1) {
+      //if (i != 4)
+        //x(i) = j;
+      //else
+        //x(i) = ;
+      //r += cummulativeApproxVariance(i+1, x, gp);
+    //}
+    //return r;
+  //}
+  //}
+double cummulativeApproxVariance(const ActiveLearningProblem &problem, GaussianProcess& gp) {
+  double cum_sig = 0;
+  MT::Array<arr> sample;
+  std::ifstream samples("samples.data");
+  for(int i=0; i<100; ++i) {
+    samples >> sample;
+    arr d, f;
+    flatten(d, sample);
+    problem.generator->makeFeatures(f, d);
+    double y, sig;
+    gp.evaluate(f[0], y, sig);
+    cum_sig += sig;
   }
-  else {
-    double r;
-    for (double j = -.5; j < .5; j += .1) {
-      x(i) = j;
-      r += cummulativeApproxVariance(i+1, x, gp0, gp1);
-    }
-    return r;
-  }
+
+  return cum_sig;
 }
 
 
 double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
   if (MT::getParameter<bool>("random_al", false)) {
-    return 0.;
+    return rand();
   }
   else if (MT::getParameter<bool>("cummulative", false)) {
     arr d, f;
@@ -64,7 +89,8 @@ double GaussianProcessEvaluator::evaluate(MT::Array<arr>& sample) {
     arr x;
     x.resize(4);
 
-    return - cummulativeApproxVariance(0, x, cp1, cp0);
+    //return - cummulativeApproxVariance(0, x, cp0) - cummulativeApproxVariance(0, x, cp1);
+    return - cummulativeApproxVariance(problem, cp0) - cummulativeApproxVariance(problem, cp1);
   }
   else {
     arr d, f;
@@ -96,7 +122,7 @@ GaussianProcessAL::GaussianProcessAL(ActiveLearningProblem& prob) :
   s->p->obsVar = 10e-6;
   s->p->widthVar = 0.01;
   s->p->priorVar = 0.1;
-	s->gp.mu = -0.01;
+	s->gp.mu = -1.0;
 
   s->gp.setGaussKernelGP(s->p, 0);
 }
@@ -116,21 +142,33 @@ void GaussianProcessAL::addData(const MT::Array<arr>& data, const int class_) {
   flatten(d, data);
   problem.generator->makeFeatures(f, d);
   DEBUG_VAR(algp, f);
+
   s->gp.appendObservation(f[0], class_ * 2 - 1);  
   s->gp.recompute();
+  
+  //std::ofstream cum("cum.data", std::ios::app);
+
+  //arr x;
+  //x.resize(4);
+  //double y, sig;
+  //s->gp.evaluate(ARR(0., 0., 0., 7.), y, sig);
+  //DEBUG_VAR(algp, sig);
+
+  //cum << cummulativeApproxVariance(problem, s->gp) << endl;
+
 }
 
 int GaussianProcessAL::nextSample(MT::Array<arr>& sample) const {
   rejectionSampling(sample, problem.sampler, new GaussianProcessEvaluator(s->gp, problem), 10000);
-	arr d, f;
-	flatten(d, sample);
-  problem.generator->makeFeatures(f, d);
+	//arr d, f;
+	//flatten(d, sample);
+  //problem.generator->makeFeatures(f, d);
 	
-   double y, sig;
-   s->gp.evaluate(f[0], y, sig);
+   //double y, sig;
+   //s->gp.evaluate(f[0], y, sig);
 
-   arr grad;
-   s->gp.gradient(grad, f[0]);
+   //arr grad;
+   //s->gp.gradient(grad, f[0]);
 
    //JK_DEBUG(sig);
    //JK_DEBUG(y);

@@ -224,7 +224,12 @@ int main(int argc, char** argv) {
   //((relational::PRADA_Planner* ) planner)->setThresholdReward(0.00);
   relational::Literal* action; 
 
-  std::ofstream rewards("rewards.dat");
+  MT::String dir = MT::getParameter<MT::String>("directory");
+  int run = MT::getParameter<int>("run");
+
+  std::stringstream filename;
+  filename << dir <<"/rewards-"<< run <<".data";
+  std::ofstream rewards(filename.str().c_str());
   for(int iter = 0; iter < 15; ++iter) {
   //do {
     // calculate grounded symbols

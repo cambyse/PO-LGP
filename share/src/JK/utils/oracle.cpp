@@ -13,7 +13,7 @@ const int OnOracle::classify(const MT::Array<arr>& data, const int set) const {
 }
 
 const int CloseOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (norm(data(set, 2) - data(set, 0)) < 0.5) return 1;
+  if (norm(data(set, 2) - data(set, 0)) < 0.15) return 1;
   else return 0;
 }
 
@@ -31,7 +31,7 @@ const int InsideOracle::classify(const MT::Array<arr>& data, const int set) cons
   else return 0;
 }
 const int OutOfReachOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (norm(data(set, 0) - ARR(0., 0., 0.8)) > 1.0) return 1;
+  if (norm(data(set, 0) - ARR(0., 0., 0.8)) > 0.9) return 1;
   else return 0;
 }
 
