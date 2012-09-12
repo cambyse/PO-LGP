@@ -14,7 +14,7 @@ uint infer::VarCount=0;
 
 //dummy to encorde pre-main initialization
 struct infer_Init {
-  infer_Init(){ infer::VariableList::memMoveInit=1; infer::FactorList::memMoveInit=1; infer::MessagePairList::memMoveInit=1; }
+  infer_Init(){ infer::VariableList::memMove=1; infer::FactorList::memMove=1; infer::MessagePairList::memMove=1; }
 } infer_init;
 
 
@@ -180,9 +180,6 @@ void iSpace::writeVariables(std::ostream& os) const {
 //
 
 infer::Variable::Variable(){
-  infer::VariableList::memMoveInit=1;
-  infer::FactorList::memMoveInit=1;
-  MessagePairList::memMoveInit=1;
   factors.memMove=true;
   messages.memMove=true;
   id=-1;

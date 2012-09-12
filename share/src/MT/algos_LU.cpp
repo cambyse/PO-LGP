@@ -33,8 +33,7 @@ double determinant_LU(const arr& X){
   LU=X;
   int *idx=new int[n];
   double *d=new double[n];
-  LU.getCarray();
-  ludcmp(LU.pp, n, idx, d);
+  ludcmp(LU.getCarray(), n, idx, d);
   double det=1.;
   for(i=0; i<n; i++) det *= LU(i, i);
   delete[] idx;
@@ -53,16 +52,15 @@ void inverse_LU(arr& Xinv, const arr& X){
   if(n==n && n==2){ inverse2d(Xinv, X); return; }
   arr LU;
   LU=X;
-  LU.getCarray();
   int *idx=new int[n];
   double *d=new double[n];
-  ludcmp(LU.pp, n, idx, d);
+  ludcmp(LU.getCarray(), n, idx, d);
   //--
   arr col(n);
   for(j=0; j<n; j++){
     col.setZero();
     col(j)=1.0;
-    lubksb(LU.pp, n, idx, col.p);
+    lubksb(LU.getCarray(), n, idx, col.p);
     for(i=0; i<n; i++) Xinv(i, j)=col(i);
   }
   
@@ -85,9 +83,8 @@ void LU_decomposition(arr& L, arr& U, const arr& X){
   LU=X;
   intA idx(n);
   doubleA d(n);
-  LU.getCarray();
   
-  ludcmp(LU.pp, n, idx.p, d.p);
+  ludcmp(LU.getCarray(), n, idx.p, d.p);
   
   L.resizeAs(LU);  L.setZero();
   U.resizeAs(LU);  U.setZero();

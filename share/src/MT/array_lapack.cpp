@@ -134,14 +134,20 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
 #endif
 
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
-  arr Acol;
-  integer n=A.d0, m=1;
-  integer info;
+  if(A.special==arr::RowShiftedPackedMatrixST){
+    RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
+    for(uint i=0;i<A.d0;i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
+  }
   x=b;
-  Acol=A;
-  dposv_((char*)"L", &n, &m, Acol.p, &n, x.p, &n, &info);
-  if(info) {
-    HALT("lapack_Ainv_b_sym error info = " <<info
+  arr Acol=A;
+  integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
+  if(A.special!=arr::RowShiftedPackedMatrixST){
+    dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
+  }else{
+    dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
+  }
+  if(INFO) {
+    HALT("lapack_Ainv_b_sym error info = " <<INFO
          <<"\n typically this is because A is not invertible,\nA=" <<A);
   }
   
@@ -150,19 +156,6 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   std::cout  <<"lapack_Ainv_b_sym error = " <<sqrDistance(x, y) <<std::endl;
 #endif
 }
-
-void lapack_Ainv_b_symband(arr& x, const RowShiftedPackedMatrix& A, const arr& b){
-  for(uint i=0;i<A.d0;i++) if(A.rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
-  integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
-  x=b;
-  arr Acol=A;
-  dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
-  if(INFO) {
-    HALT("lapack_Ainv_b_sym error info = " <<INFO
-         <<"\n typically this is because A is not invertible,\nA=" <<A);
-  }
-}
-
 
 uint lapack_SVD(
   arr& U,

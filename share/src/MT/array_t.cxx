@@ -23,14 +23,19 @@
 #include <algorithm>
 
 #define maxRank 30
-
+  /*!\brief if flexiMem is true (which is default!) the resize method will
+    (1) at the first call allocate the exact amount of memory, (2)
+    at further calls of increasing memory allocate twice the memory
+    needed or (3) at further calls of decreasing memory only free
+    the memory if the new size is smaller than a fourth */
+#define ARRAY_flexiMem true
 
 //===========================================================================
 //
 // Array class
 //
 
-template<class T> char MT::Array<T>::memMoveInit=-1;
+template<class T> char MT::Array<T>::memMove=-1;
 template<class T> int MT::Array<T>::sizeT=-1;
 
 /*!\brief Simple array container to store arbitrary-dimensional arrays
@@ -47,11 +52,10 @@ template<class T> int MT::Array<T>::sizeT=-1;
 
 template<class T> void MT::Array<T>::init() {
   reference=false;
-  memMove=false;
   if(sizeT==-1) sizeT=sizeof(T);
-  if(memMoveInit==-1) {
-    memMoveInit=0;
-    if(typeid(T)==typeid(bool) ||
+  if(memMove==-1) {
+    memMove=0;
+    if (typeid(T)==typeid(bool) ||
         typeid(T)==typeid(char) ||
         typeid(T)==typeid(unsigned char) ||
         typeid(T)==typeid(int) ||
@@ -61,16 +65,13 @@ template<class T> void MT::Array<T>::init() {
         typeid(T)==typeid(long) ||
         typeid(T)==typeid(unsigned long) ||
         typeid(T)==typeid(float) ||
-        typeid(T)==typeid(double)) memMoveInit=1;
+        typeid(T)==typeid(double)) memMove=1;
   }
-  memMove=(memMoveInit==1);
-  flexiMem=true;
   p=NULL;
   M=N=nd=d0=d1=d2=0;
   d=&d0;
-  pp=NULL;
   special=noneST;
-  auxData=NULL;
+  aux=NULL;
 }
 
 
@@ -272,7 +273,7 @@ template<class T> void MT::Array<T>::makeSparse() {
   uint n=0;
   if(nd==1) {
     uint i;
-    auxData=sparse=new Array<uint> [2];
+    aux=sparse=new Array<uint> [2];
     sparse[1].resize(d0); sparse[1]=-1;
     for(i=0; i<d0; i++) if(p[i]) {
         sparse[0].append(i); //list of entries (maps n->i)
@@ -286,7 +287,7 @@ template<class T> void MT::Array<T>::makeSparse() {
   if(nd==2) {
     uint i, j;
     Array<uint> pair(2);
-    auxData=sparse=new Array<uint> [1+d1+d0];
+    aux=sparse=new Array<uint> [1+d1+d0];
     for(i=0; i<d0; i++) for(j=0; j<d1; j++) if(p[i*d1+j]) {
           pair(0)=i; pair(1)=j; sparse[0].append(pair);   sparse[0].reshape(n+1, 2);
           permute(i*d1+j, n);
@@ -311,7 +312,7 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
   T *pold=p;
   uint Mold=M, Mnew;
   //determine a new M (number of allocated items)
-  if(!flexiMem) {
+  if(!ARRAY_flexiMem) {
     Mnew=n;
   } else {
     if(n>0 && Mold==0) {
@@ -351,8 +352,8 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
       if(!p) { p=pold; M=Mold; HALT("memory allocation failed! Wanted size = " <<Mnew*sizeT <<"bytes"); }
       M=Mnew;
-      if(copy && !memMove) for(i=N<n?N:n; i--;) p[i]=pold[i];
-      if(copy && memMove) memmove(p, pold, sizeT*(N<n?N:n));
+      if(copy && memMove==0) for(i=N<n?N:n; i--;) p[i]=pold[i];
+      if(copy && memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
     } else {
       p=0;
     }
@@ -360,7 +361,6 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
     if(Mold) delete[] pold;  //if(Mold) free(pold);
   }
   N=n;
-  if(pp) { delete[] pp; pp=0; }
 }
 
 //! free all memory and reset all pointers and sizes
@@ -370,14 +370,12 @@ template<class T> void MT::Array<T>::freeMEM() {
 #endif
   if(M) delete[] p;
   //if(M) free(p);
-  if(pp) delete[] pp;
-  //if(auxData) delete[] auxData;
+  //if(aux) delete[] aux;
   if(d && d!=&d0) delete[] d;
   p=NULL;
   M=N=nd=d0=d1=d2=0;
   d=&d0;
-  pp=NULL;
-  //auxData=NULL;
+  //aux=NULL;
   reference=false;
 }
 
@@ -415,9 +413,8 @@ template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
     resizeCopy(d0+x.d0, d1);
   else
     resizeCopy(N+xN);
-  if(!memMove) {
-    for(i=0; i<xN; i++) p[oldN+i]=x.p[i];
-  } else memmove(p+oldN, x.p, sizeT*xN);
+  if(memMove==1) memmove(p+oldN, x.p, sizeT*xN);
+  else for(i=0; i<xN; i++) p[oldN+i]=x.p[i];
 }
 
 //! append a C array to the array (by copying it) -- the array might become 1D!
@@ -427,9 +424,8 @@ template<class T> void MT::Array<T>::append(const T *q, uint n) {
     resizeCopy(d0+1, d1);
   else
     resizeCopy(N+n);
-  if(!memMove) {
-    for(i=0; i<n; i++) p[n+i]=q[i];
-  } else memmove(p+oldN, q, sizeT*n);
+  if(memMove==1) memmove(p+oldN, q, sizeT*n);
+  else for(i=0; i<n; i++) p[n+i]=q[i];
 }
 
 //! append an element to the array if it is not included yet -- the array becomes 1D! [TL]
@@ -466,10 +462,10 @@ template<class T> void MT::Array<T>::replicate(uint copies) {
   if(copies<2) return;
   uint i, oldN=N;
   resizeCopy(copies*N);
-  if(!memMove) {
-    NIY;
-  } else {
+  if(memMove==1) {
     for(i=0; i<copies; i++) memmove(p+i*oldN, p, sizeT*oldN);
+  } else {
+    NIY;
   }
 }
 
@@ -899,8 +895,10 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
 //! allocates, sets and returns the \c Array::pp pointer (of type \c T**)
 template<class T> T** MT::Array<T>::getCarray() const {
   CHECK(nd>=2, "only 2D or higher-D arrays gives C-array of type T**");
-  if(pp) return pp;
-  ((MT::Array<T>*)this)->pp=new T* [d0];
+  if(special==hasCarrayST) return (T**) aux;
+  T** pp;
+  ((MT::Array<T>*)this)->special = hasCarrayST;
+  ((MT::Array<T>*)this)->aux = pp = new T* [d0];
   uint skip;
   if(nd==2) skip=d1; else skip=N/d0;
   for(uint i=0; i<d0; i++) pp[i]=p+i*skip;
@@ -1160,7 +1158,7 @@ template<class T> void MT::Array<T>::copyInto2D(T **buffer) const {
 //! make this array a reference to the array \c a
 template<class T> void MT::Array<T>::referTo(const MT::Array<T>& a) {
   freeMEM();
-  reference=true; memMove=a.memMove; flexiMem=a.flexiMem;
+  reference=true; memMove=a.memMove;
   N=a.N; nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
   p=a.p;
 }
@@ -1170,7 +1168,7 @@ template<class T> void MT::Array<T>::referToSubRange(const MT::Array<T>& a, uint
   CHECK(a.nd<=3, "not implemented yet");
   freeMEM();
   resetD();
-  reference=true; memMove=a.memMove; flexiMem=a.flexiMem;
+  reference=true; memMove=a.memMove;
   if(I==-1) I=a.d0-1;
   CHECK(i<a.d0 && (uint)I<a.d0, "SubRange range error (" <<i <<"<" <<a.d0 <<", " <<I <<"<" <<a.d0 <<")");
   if(a.nd==1) {
@@ -1192,7 +1190,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint d
   CHECK(a.nd>1, "can't create subarray of array less than 2 dimensions");
   CHECK(dim<a.d0, "SubDim range error (" <<dim <<"<" <<a.d0 <<")");
   freeMEM();
-  reference=true; memMove=a.memMove; flexiMem=a.flexiMem;
+  reference=true; memMove=a.memMove;
   if(a.nd==2) {
     nd=1; d0=a.d1; d1=d2=0; N=d0;
   }
@@ -1212,7 +1210,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
   CHECK(a.nd>2, "can't create subsubarray of array less than 3 dimensions");
   CHECK(i<a.d0 && j<a.d1, "SubDim range error (" <<i <<"<" <<a.d0 <<", " <<j <<"<" <<a.d1 <<")");
   freeMEM();
-  reference=true; memMove=a.memMove; flexiMem=a.flexiMem;
+  reference=true; memMove=a.memMove;
   if(a.nd==3) {
     nd=1; d0=a.d2; d1=0; d2=0; N=d0;
     p=&a(i, j, 0);
@@ -1226,7 +1224,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
   memory */
 template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
   freeMEM();
-  memMove=a.memMove; flexiMem=a.flexiMem;
+  memMove=a.memMove;
   N=a.N; nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
   p=a.p;
   M=a.M;
@@ -3065,13 +3063,13 @@ for(i=0;i<n;i++) x.p[i]=a*y.p[i]+b*z.p[i];
 #define IMPLEMENT_Array(x) void implement_Array_##x(){ MT::Array<x> dummy; }
 #define IMPLEMENT_Array_(x, key) void implement_Array_##key(){ MT::Array<x> dummy; }
 
-template class MT::Array<double>;
-template class MT::Array<int>;
-template class MT::Array<uint>;
-template class MT::Array<float>;
-template class MT::Array<byte>;
-template class MT::Array<char>;
-template class MT::Array<bool>;
+template struct MT::Array<double>;
+template struct MT::Array<int>;
+template struct MT::Array<uint>;
+template struct MT::Array<float>;
+template struct MT::Array<byte>;
+template struct MT::Array<char>;
+template struct MT::Array<bool>;
 #define T double
 #  include "array_instantiate.cpp"
 #define T int

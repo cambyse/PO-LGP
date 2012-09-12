@@ -39,13 +39,8 @@ void conv_KOrderMarkovFunction::fv(arr& phi, arr& J, const arr& x) {
   
   //resizing things:
   phi.resize(M);   phi.setZero();
-  if(&J){
-    CHECK(J.special==arr::RowShiftedPackedMatrixST,"");
-    J.resize(M,(k+1)*n);
-    J.setZero();
-    castRowShiftedPackedMatrix(J).real_d1 = x.N;
-    castRowShiftedPackedMatrix(J).rowShift.resize(J.d0);
-  }
+  RowShiftedPackedMatrix* Jaux;
+  if(&J) Jaux = auxRowShifted(J, M, (k+1)*n, x.N);
   M=0;
   uint m_t;
   for(uint t=0;t<=T-k;t++){
@@ -58,11 +53,11 @@ void conv_KOrderMarkovFunction::fv(arr& phi, arr& J, const arr& x) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
       CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
       J.setMatrixBlock(J_t, M, 0);
-      for(uint i=0;i<J_t.d0;i++) castRowShiftedPackedMatrix(J).rowShift(M+i) = t*n;
+      for(uint i=0;i<J_t.d0;i++) Jaux->rowShift(M+i) = t*n;
     }
     M += m_t;
   }
-  if(&J) castRowShiftedPackedMatrix(J).computeColPatches(true);
-  //if(&J) J=castRowShiftedPackedMatrix(J).unpack();
+  if(&J) Jaux->computeColPatches(true);
+  //if(&J) J=Jaux->unpack();
 #endif
 }

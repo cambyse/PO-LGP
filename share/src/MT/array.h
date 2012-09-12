@@ -72,53 +72,25 @@ namespace MT {
   header, which contains lots of functions that can be applied on
   Arrays. */
 
-template<class T> class Array {  //template <class T> class Array
-public:
+template<class T> struct Array {
   typedef bool (*ElemCompare)(const T& a, const T& b);
   
   T *p;     //!< the pointer on the linear memory allocated
   uint N;   //!< number of elements
   uint nd;  //!< number of dimensions
-  uint d0;  //!< 0th dim
-  uint d1;  //!< 1st dim
-  uint d2;  //!< 2nd dim
+  uint d0,d1,d2;  //!< 0th, 1st, 2nd dim
   uint *d;  //!< pointer to dimensions (for nd<=3 points to d0)
   uint M;   //!< size of actually allocated memory (may be greater than N)
   bool reference;//!< true if this refers to some external memory
-  T **pp;   //!< C-style 2D pointer (only valid if \c Array::getCarray was called)
   
-  
-  //options
-  /*!\brief be careful!!!; this option will modify the \c
-    Array::resizeCopy : instead of calling the copy operator= for
-    each element, the memory is moved with the \c memmove command -
-    works only if you know what you do ... [default is true for
-    simple types (like double, int, etc) and false for unknown
-    ones] */
-  bool memMove;
-  
-  /*!\brief if flexiMem is true (which is default!) the resize method will
-    (1) at the first call allocate the exact amount of memory, (2)
-    at further calls of increasing memory allocate twice the memory
-    needed or (3) at further calls of decreasing memory only free
-    the memory if the new size is smaller than a fourth */
-  bool flexiMem;
-  
-  //! stores the sizeof(T)
-  static int sizeT;
+  static int  sizeT;   //! constant for each type T: stores the sizeof(T)
+  static char memMove; //! constant for each type T: decides whether memmove can be used instead of individual copies
 
-  static char memMoveInit;
-  
-#if 1//? garbage
-  enum SpecialType { noneST, symmetricBandMatrixST, sparseST, diagST, RowShiftedPackedMatrixST };
+  //-- special: arrays can be sparse/packed/etc and augmented with aux data to support this
+  enum SpecialType { noneST, hasCarrayST, sparseST, diagST, RowShiftedPackedMatrixST, CpointerST };
   SpecialType special;
-  void *auxData;
-#endif
+  void *aux;
   
-private:
-  void init();
-  
-public:
   //!@name constructors
   Array();
   Array(const Array<T>& a);
@@ -177,7 +149,7 @@ public:
   void referToSubRange(const Array<T>& a, uint i, int I);
   void referToSubDim(const Array<T>& a, uint dim);
   void referToSubDim(const Array<T>& a, uint i, uint j);
-  void takeOver(Array<T>& a);                   //a becomes a reference on its previously owned memory!
+  void takeOver(Array<T>& a);                   //a becomes a reference to its previously owned memory!
   void setGrid(uint dim, T lo, T hi, uint steps);
   void setText(const char* str);
   
@@ -194,6 +166,7 @@ public:
   Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
   Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
+  T** getCarray() const;
   
   //!@name access by copy
   uint dim(uint k) const;
@@ -204,7 +177,6 @@ public:
   Array<T> sub(int i, int I, Array<uint> cols) const;
   void getMatrixBlock(Array<T>& B, uint lo0, uint lo1) const;
   void getVectorBlock(Array<T>& B, uint lo) const;
-  T** getCarray() const;
   void copyInto(T *buffer) const;
   void copyInto2D(T **buffer) const;
   T& min() const;
@@ -263,7 +235,7 @@ public:
   void permuteRandomly();
   void shift(int offset, bool wrapAround=true);
   
-  //!@name sparse matrices [to be moved outside]
+  //!@name sparse matrices [TODO: move outside, use 'special']
   double sparsity();
   void makeSparse();
   
@@ -288,14 +260,10 @@ public:
   void resizeMEM(uint n, bool copy);
   void freeMEM();
   void resetD();
+  void init();
 };
 }
 
-
-//===========================================================================
-//
-//!@name special case arrays (Matrices)
-// @{
 
 //===========================================================================
 //
@@ -712,9 +680,6 @@ bool samedim(const MT::Array<T>& a, const MT::Array<S>& b) {
 //!@name lapack interfaces
 // @{
 
-struct SymmetricBandMatrix;
-struct RowShiftedPackedMatrix;
-
 void blas_Mv(arr& y, const arr& A, const arr& x);
 void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
@@ -730,42 +695,25 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA);
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A);
 double lapack_determinantSymPosDef(const arr& A);
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b);
-void lapack_Ainv_b_symband(arr& x, const RowShiftedPackedMatrix& A, const arr& b);
 void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
 
 //===========================================================================
 // @}
-//!@name special matrices
+//!@name special agumentations
 // @{
 
-struct SymmetricBandMatrix:MT::Array<double>{
-  SymmetricBandMatrix(uint superDiagonals, uint n):MT::Array<double>(superDiagonals,n){
-    special = symmetricBandMatrixST;
-  };
-};
-
-inline arr unpack(const SymmetricBandMatrix& x){
-  uint n=x.d1,k=x.d0;
-  arr z(n,n);
-  z.setZero();
-  for(uint i=0;i<n;i++){
-    z(i,i) = x(0,i);
-    for(uint j=1;j<k && i+j<n;j++) z(i+j,i) = z(i,i+j) = x(j,i);
-  }
-  return z;
-}
-
-struct RowShiftedPackedMatrix:arr{
+struct RowShiftedPackedMatrix{
+  arr& Z;
   uint real_d1;
   uintA rowShift;
   uintA colPatches; //column-patch: range of non-zeros in a column; starts with 'a', ends with 'b'-1
+  bool symmetric;
   
-  RowShiftedPackedMatrix();
-  RowShiftedPackedMatrix(const arr& X);
+  RowShiftedPackedMatrix(arr& X);
+  ~RowShiftedPackedMatrix();
   double acc(uint i, uint j);
-  arr unpack(bool assumeSymmetric=false);
   void computeColPatches(bool assumeMonotonic); //currently presumes monotonous rowShifts
-  RowShiftedPackedMatrix At_A();
+  arr At_A();
   arr At_x(const arr& x);
 };
 
@@ -773,6 +721,14 @@ inline RowShiftedPackedMatrix& castRowShiftedPackedMatrix(arr& X){
   ///CHECK(X.special==X.RowShiftedPackedMatrixST,"can't cast like this!");
   return *((RowShiftedPackedMatrix*)&X);
 }
+
+arr unpack(const arr& Z); //returns an unpacked matrix in case this is packed
+arr packRowShifted(const arr& X);
+arr unpackRowShifted(const arr& Z);
+RowShiftedPackedMatrix *auxRowShifted(arr& Z, uint d0, uint pack_d1, uint real_d1);
+arr comp_At_A(arr& A);
+arr comp_At_x(arr& A, const arr& x);
+
 
 //===========================================================================
 // @}

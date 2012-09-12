@@ -16,7 +16,7 @@
 
 // this requires T to be defined!!!
 
-template class MT::Array<T>;
+template struct MT::Array<T>;
 
 template MT::Array<T> MT::operator~(const Array<T>& y);
 template MT::Array<T> MT::operator-(const Array<T>& y, const Array<T>& z);

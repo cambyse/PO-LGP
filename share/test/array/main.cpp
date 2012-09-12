@@ -203,6 +203,7 @@ void testGnuplot(){
   X.resize(100,2);
   for(i=0;i<X.d0;i++){ X(i,0)=MT_PI*(2./(X.d0-1)*i-1.); X(i,1)=sin(X(i,0)); }
   gnuplot(X);
+  MT::wait(1.);
 }
 
 void testDeterminant(){
@@ -433,47 +434,41 @@ void testTensor(){
 
 //--------------------------------------------------------------------------------
 
-void testSymBandMatrix(){
-  uint k=3,n=10;
-  SymmetricBandMatrix A(k,n);
-  rndInteger(A, 0, 9);
-  arr B = unpack(A);
-  cout <<A <<endl <<B <<endl;
-}
-
 void write(RowShiftedPackedMatrix& PM){
-  cout <<"RowShiftedPackedMatrix: real:" <<PM.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.d0 <<'x' <<PM.d1 <<endl;
-  cout <<"packed numbers =";  PM.write(cout);
-  cout <<"rowShifts=" <<PM.rowShift <<"  colPaches=" <<PM.colPatches <<endl;
+  cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
+  cout <<"packed numbers =";  PM.Z.write(cout);
+  cout <<"unpacked =";  unpackRowShifted(PM.Z).write(cout);
+  cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
 }
 
 void testRowShiftedPackedMatrix(){
-  RowShiftedPackedMatrix J;
-  J.resize(10,4);
-  rndInteger(J,0,9);
+  cout <<"\n*** RowShiftedPackedMatrix\n";
   
-  J.real_d1=12;
-  J.rowShift.resize(J.d0);
-  for(uint i=0;i<J.d0;i++) J.rowShift(i) = i/3;
-  J.computeColPatches(false);
-  cout <<J <<'\n' <<J.rowShift <<'\n' <<J.colPatches <<'\n' <<J.unpack() <<endl;
+  arr J;
+  RowShiftedPackedMatrix *Jaux = auxRowShifted(J,10,4,12);
+  rndInteger(J,0,9);
+  for(uint i=0;i<J.d0;i++) Jaux->rowShift(i) = i/3;
+  Jaux->computeColPatches(false);
+  write(*Jaux);
 
   //constructor compressing an array
-  RowShiftedPackedMatrix K(J.unpack());
-  cout <<K <<'\n' <<K.rowShift <<'\n' <<K.colPatches <<'\n' <<K.unpack() <<endl;
+  arr K =  packRowShifted(unpack(J));
+  write(*((RowShiftedPackedMatrix*)K.aux));
   
+  cout <<"-----------------------" <<endl;
+
   //--randomized check
   for(uint k=0;k<20;k++){
-    arr X(rnd(20),rnd(20));
+    arr X(1+rnd(20),1+rnd(20));
     rndInteger(X,0,1);
-    RowShiftedPackedMatrix Y(X);
+    arr Y = packRowShifted(X);
     arr x(X.d0);
     rndInteger(x,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,Y.unpack()) <<' ' <<maxDiff(~X*X,Y.At_A().unpack(true)) <<' ' <<maxDiff(~X*x,Y.At_x(x)) <<endl;
+    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y)) <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y))) <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+    //cout <<X <<endl;
+    //write(*((RowShiftedPackedMatrix*)Y.aux));
+    //cout <<comp_At_A(Y).unpack() <<~X*X <<endl;
   }
-  
-  arr R=~J.unpack()*J.unpack();
-  cout <<J.At_A().unpack(true) <<R <<"\nerror = " <<maxDiff(J.At_A().unpack(true),R) <<endl;
 }
 
 //--------------------------------------------------------------------------------
@@ -495,10 +490,6 @@ char* gdb(MT::Array<int>& a){
 
 int main(int argc, char *argv[]){
   
-  testRowShiftedPackedMatrix();
-//   testSymBandMatrix();
-  return 0;
-
   testBasics();
   testMatlab();
   testException();
@@ -508,6 +499,7 @@ int main(int argc, char *argv[]){
   testPermutation();
   testGnuplot();
   testDeterminant();
+  testRowShiftedPackedMatrix();
   testInverse();
   testMM();
   testSVD();
