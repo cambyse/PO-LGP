@@ -81,7 +81,7 @@ void MotionController::step() {
     hardwareReference->v_reference.setZero();
     hardwareReference->motionPrimitiveRelativeTime = 0.;
     hardwareReference->deAccess(this);
-    MT_MSG("no motion primitive set -> controller stays put");
+    //MT_MSG("no motion primitive set -> controller stays put");
     return;
   }
 
@@ -98,6 +98,8 @@ void MotionController::step() {
   if (mode==MotionPrimitive::followPlan) {
     CHECK(motionPrimitive, "please set motionPrimitive before launching MotionPlanner");
     
+    bool fixFingers = motionPrimitive->get_fixFingers(this);
+
     //-- check if converged
     if (motionPrimitive->get_planConverged(this)==false) {
       hardwareReference->writeAccess(this);
@@ -144,6 +146,7 @@ void MotionController::step() {
     //-- now test for collision
     //MT_MSG("TODO");
     
+
     //-- test for large step
     double step=euclideanDistance(q_reference, q_old);
     if (step>s->maxJointStep) {
@@ -157,6 +160,10 @@ void MotionController::step() {
     double Kp = .1/s->tau, Kd = 1e-3;
     arr v_reference = Kp*(q_reference-q_real) - Kd*v_real;
 
+    //perhaps fix fingers
+    if (fixFingers) for (uint j=7; j<14; j++) {
+      v_reference(j)=0.; q_reference(j)=q_old(j); 
+    }
     //-- pass to MotionReference
     //cout <<"Following trajectory: realTime=" <<realTime <<" step=" <<timeStep <<'+' <<inter <<endl;
     hardwareReference->writeAccess(this);

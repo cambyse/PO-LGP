@@ -1707,10 +1707,10 @@ void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+    arr center3d = ARR(0.2, -.8) + randn(2,1) * 0.1;
 
     int t = rand() % 100;
-    double blocksize = 0.08;// + (rand() % 100) / 100000.;
+    double blocksize = 0.108;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);

@@ -37,7 +37,8 @@ HumanOracle::HumanOracle(const char* predicate) {
 
 const int HumanOracle::classify(const MT::Array<arr>& data, const int set) const {
 
-  std::cout << "Does the predicate " << predicate << " hold?" << std::endl;
+  std::ofstream out("output", std::ios::app);
+  out << "Does the predicate " << predicate << " hold?" << std::endl;
   char answer;
   std::cin >> answer;
   if (answer == 'y') return 1;

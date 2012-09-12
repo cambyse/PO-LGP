@@ -29,9 +29,9 @@ void Gui::step() {
   MT::String problem = birosInfo().getParameter<MT::String>("problem", this, MT::String("tray"));
   guiData->readAccess(this);
   if(guiData->sample) {
-    if (problem == "tray")
-      relational::generateOrsFromTraySample(s->ors, *guiData->sample);
-    else
+    //if (problem == "tray")
+      //relational::generateOrsFromTraySample(s->ors, *guiData->sample);
+    //else
       relational::generateOrsFromSample(s->ors, *guiData->sample);
     s->ors.calcBodyFramesFromJoints();
   }

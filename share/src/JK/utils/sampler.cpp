@@ -8,7 +8,7 @@
 void BlocksWorldSampler::sample(MT::Array<arr>& sample) { 
   MT::Array<arr> next_sample;
   
-  int numOfBlocks = 5;
+  int numOfBlocks = 2;
 
   OnOracle o;
 

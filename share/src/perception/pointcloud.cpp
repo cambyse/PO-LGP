@@ -448,6 +448,25 @@ void ObjectFilter::step() {
   in_objects->deAccess(this);
   out_objects->writeAccess(this);
   out_objects->objects.clear();
+  // HACK! We assume max two cylinders
+  for (int i = 0; i<cyl_pos.d0; i++) {
+    double height = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
+    // if cylinder is higher then real cylinder there are probably two...
+    if (height > 0.15) {
+      int oldd0 = cyl_pos.d0;
+      cyl_pos(i, 3) *= .5;
+      cyl_pos(i, 4) *= .5;
+      cyl_pos(i, 5) *= .5;
+      cyl_pos(i, 0) += .5*cyl_pos(i, 3);
+      cyl_pos(i, 1) += .5*cyl_pos(i, 4);
+      cyl_pos(i, 2) += .5*cyl_pos(i, 5);
+      cyl_pos.append(cyl_pos.sub(i,i,0,-1));
+      cyl_pos.reshape(oldd0+1, 7);
+      cyl_pos(oldd0, 0) -= cyl_pos(i, 3);
+      cyl_pos(oldd0, 1) -= cyl_pos(i, 4);
+      cyl_pos(oldd0, 2) -= cyl_pos(i, 5);
+    }
+  }
   for (int i = 0; i<cyl_pos.d0; i++) {
     ObjectBelief *cyl = new ObjectBelief();
     cyl->position = ARR(cyl_pos(i,0), cyl_pos(i,1), cyl_pos(i,2));
@@ -457,7 +476,8 @@ void ObjectFilter::step() {
     cyl->shapeParams(RADIUS) = cyl_pos(i,6);//.025;
     cyl->shapeParams(HEIGHT) = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
     cyl->shapeType = ors::cylinderST;
-    cyl->pcl_object = pcl_cyls(i);
+    // TODO: what to do when large cyls?
+    //cyl->pcl_object = pcl_cyls(i);
     out_objects->objects.append(cyl);
   }
   for (int i = 0; i<sph_pos.d0; i++) {
@@ -504,8 +524,27 @@ void createOrsObject(ors::Body& body, const ObjectBelief *object, const arr& tra
   body.X = t; 
 }
 
+void moveObject(intA& used, const ShapeL& objects, const ors::Vector& pos, const ors::Quaternion& rot) {
+  double max = std::numeric_limits<double>::max();
+  int max_index = -1;
+  for(uint i=0; i<objects.N; ++i) {
+    if(used.contains(i)) continue;
+    double diff = norm(arr((objects(i)->X.pos - pos).p, 3));
+    if(diff < max) {
+      max = diff;
+      max_index = i;
+    }
+  }
+  objects(max_index)->X.pos = pos;
+  objects(max_index)->X.rot = rot;
+  objects(max_index)->rel.setDifference(objects(max_index)->body->X, objects(max_index)->X);
+  used.append(max_index);
+}
+
 void ObjectTransformator::step() {
+  DEBUG(pointcloud, "geo pull");
   geo.pull();
+  DEBUG(pointcloud, "done");
 
   ShapeL cylinders;
   ShapeL spheres;
@@ -519,13 +558,18 @@ void ObjectTransformator::step() {
       spheres.append(s);
     }
   }
+
+  DEBUG(pointcloud, "filteredObject mutex");
   kinect_objects->readAccess(this);
   int c = 0, s = 0;
+  intA used;
+  used.clear();
   for(int i=0;i<kinect_objects->objects.N && i<spheres.N + cylinders.N;i++){
     if (kinect_objects->objects(i)->shapeType == ors::cylinderST && c < cylinders.N) {
-      cylinders(c)->X.pos = kinect_objects->objects(i)->position;
-      cylinders(c)->X.rot = kinect_objects->objects(i)->rotation;
-      cylinders(c)->rel.setDifference(cylinders(c)->body->X, cylinders(c)->X);
+      //cylinders(c)->X.pos = kinect_objects->objects(i)->position;
+      //cylinders(c)->X.rot = kinect_objects->objects(i)->rotation;
+      //cylinders(c)->rel.setDifference(cylinders(c)->body->X, cylinders(c)->X);
+      moveObject(used, cylinders, kinect_objects->objects(i)->position, kinect_objects->objects(i)->rotation);
       ++c;
     }
     else if (kinect_objects->objects(i)->shapeType == ors::sphereST && s < spheres.N) {
@@ -536,7 +580,10 @@ void ObjectTransformator::step() {
     }
   }
   kinect_objects->deAccess(this);
+  DEBUG(pointcloud, "filtered Objects mutex unlock");
 
   geo().ors.calcBodyFramesFromJoints();
+  DEBUG(pointcloud, "set ors");
   geo.var->set_ors(geo().ors, this);
+  DEBUG(pointcloud, "done.");
 }
