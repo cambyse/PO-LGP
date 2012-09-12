@@ -1,4 +1,3 @@
-#include <perception/perception.h>
 #include <biros/control.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
@@ -9,7 +8,7 @@ struct ExampleVar:Variable{
   FIELD( int, i );
   FIELD( byteA, rgb );
   FIELD( ors::Mesh, mesh );
-  ExampleVar():Variable("IntVar"){ reg_i(); reg_rgb(); reg_mesh(); }
+  ExampleVar():Variable("ExampleVar"){ reg_i(); reg_rgb(); reg_mesh(); }
 };
 
 
@@ -45,11 +44,10 @@ int main(int argn,char** argv){
   GtkWidget *box = gtk_vbox_new (false, 5);
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
-
   
   v1->gtkNew(box);
   v2->gtkNew(box);
-  v3->gtkNew(NULL);
+  //v3->gtkNew(NULL);
   v4->gtkNew(box);
   
   MT::wait(10.);

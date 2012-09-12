@@ -363,7 +363,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
     case 'V':{
-      ViewInfoL vis = b::getViews(/*ViewInfo::variableVT,*/ typeid(*birosInfo().variables(id)).name() );
+      ViewInfoL vis = b::getViews(typeid(*birosInfo().variables(id)).name(), typeid(Variable).name());
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
         iog->view[iog->box] = b::newView(*birosInfo().variables(id), vis(0));
@@ -389,7 +389,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
       FieldInfo *field = birosInfo().variables(varid)->fields(id);
       
-      ViewInfoL vis = b::getViews(/*ViewInfo::fieldVT, */field->sysType );
+      ViewInfoL vis = b::getViews(field->sysType, typeid(FieldInfo).name());
       if(!vis.N) break;
       int choice=0;
       if(vis.N>1){ //multiple choices -> menu

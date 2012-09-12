@@ -4,15 +4,29 @@ void b::dump(){
   birosInfo().dump();
 }
 
-ViewInfoL b::getViews(const char* appliesOn_sysType){
-  uint i;
+//call getViews for a list of possible sysTypes
+ViewInfoL b::getViews(const CharAL appliesOn_sysTypeL){
+  uint i, j;
+  const char* appliesOn_sysType;
   ViewInfo *vi;
   ViewInfoL vis;
-  for_list(i,vi,birosInfo().views){
-    if(!strcmp(vi->appliesOn_sysType,"ALL") || !strcmp(vi->appliesOn_sysType, appliesOn_sysType))
+  for_list_rev(i,vi,birosInfo().views){
+    if(!strcmp(vi->appliesOn_sysType,"ALL"))
       vis.append(vi);
+    else
+    	for_list(j, appliesOn_sysType, appliesOn_sysTypeL)
+				if(!strcmp(vi->appliesOn_sysType, appliesOn_sysType))
+					vis.append(vi);
   }
   return vis;
+}
+
+ViewInfoL b::getViews(const char* appliesOn_sysType){
+  return b::getViews(ARRAY(appliesOn_sysType));
+}
+
+ViewInfoL b::getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1){
+	return b::getViews(ARRAY(appliesOn_sysType0, appliesOn_sysType1));
 }
 
 ViewInfo* b::getView(const char *name){
@@ -22,8 +36,7 @@ ViewInfo* b::getView(const char *name){
 
 View* b::newView(Process& proc, ViewInfo *vi){
   if(!vi){
-    ViewInfoL vis=getViews(typeid(proc).name());
-    vis.append(getViews(typeid(Process).name()));
+  	ViewInfoL vis=getViews(typeid(proc).name(), typeid(Process).name());
     if(!vis.N){
       MT_MSG("No View for process sysType '" <<typeid(proc).name() <<"' found");
       return NULL;
@@ -39,8 +52,7 @@ View* b::newView(Process& proc, ViewInfo *vi){
 
 View* b::newView(Parameter& param, ViewInfo *vi){
   if(!vi){
-    ViewInfoL vis=getViews(param.typeName());
-    vis.append(getViews(typeid(Parameter).name()));
+  	ViewInfoL vis=getViews(param.typeName(), typeid(Parameter).name());
     if(!vis.N){
       MT_MSG("No View for paramater sysType '" <<param.typeName() <<"' found");
       return NULL;
@@ -56,8 +68,7 @@ View* b::newView(Parameter& param, ViewInfo *vi){
 
 View* b::newView(Variable& var, ViewInfo *vi){
   if(!vi){
-    ViewInfoL vis=getViews(typeid(var).name());
-    vis.append(getViews(typeid(Variable).name()));
+  	ViewInfoL vis=getViews(typeid(var).name(), typeid(Variable).name());
     if(!vis.N){
       MT_MSG("No View for variable sysType '" <<typeid(var).name() <<"' found");
       return NULL;
@@ -73,8 +84,7 @@ View* b::newView(Variable& var, ViewInfo *vi){
 
 View* b::newView(FieldInfo& field, ViewInfo *vi){
   if(!vi){
-    ViewInfoL vis=getViews(field.sysType);
-    vis.append(getViews(typeid(FieldInfo).name()));
+  	ViewInfoL vis=getViews(field.sysType, typeid(FieldInfo).name());
     if(!vis.N){
       MT_MSG("No View for field sysType '" <<field.sysType <<"' found");
       return NULL;

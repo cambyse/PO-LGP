@@ -11,6 +11,7 @@ typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
 typedef MT::Array<ViewInfo*> ViewInfoL;
+typedef MT::Array<const char*> CharAL;
 //? have lists of all Info structs? -> full introspection?
 
 namespace b{
@@ -42,11 +43,13 @@ namespace b{
 
   //-- query available views for specific objects
   ViewInfoL getViews();
-  ViewInfoL getViews(/*ViewInfo::ViewType viewType,*/ const char* appliesOn_sysType);
+  ViewInfoL getViews(const CharAL appliesOn_sysTypeL);
+  ViewInfoL getViews(const char* appliesOn_sysType);
+  ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
   ViewInfoL getGlobalViews();
   ViewInfo* getView(const char *name);
   
-  //! creat a new view; if ViewInfo==NULL the first available
+  //! create a new view; if ViewInfo==NULL the first available
   View* newView(Process&,ViewInfo *vi=NULL);
   View* newView(Variable&,ViewInfo *vi=NULL);
   View* newView(FieldInfo&,ViewInfo *vi=NULL);
