@@ -62,7 +62,7 @@ void straightTaskTrajectory(ControlledSystem& sys, arr& q);
 
 //===========================================================================
 //
-// Converting a DOC problem into a k-order optimization problem
+// Converting a SOC problem into a k-order optimization problem
 //
 
 struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
@@ -73,13 +73,22 @@ struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   uint get_T(){ return sys->get_T(); }
   uint get_k(){ return 1; }
   uint get_n(){ return sys->get_xDim(); }
-  uint get_m(uint t){
-    uint T=get_T();
-    if(t==0)   return sys->get_xDim() + sys->get_phiDim(t) + sys->get_xDim();
-    if(t==T-1) return sys->get_xDim() + sys->get_phiDim(t) + sys->get_phiDim(T);
-    return sys->get_xDim() + sys->get_phiDim(t);
-  } //dynamic gap plus task costs
+  uint get_m(uint t);
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 };
+
+#if 0
+struct ControlledSystem_as_KOrderMarkovFunction:KOrderMarkovFunction {
+  ControlledSystem *sys;
+
+  KOrderMarkovFunction_ControlledSystem(ControlledSystem& _sys):sys(&_sys){}
+
+  uint get_T(){ return sys->get_T(); }
+  uint get_k(){ return 2; }
+  uint get_n(){ return sys->get_xDim(); }
+  uint get_m(uint t);
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+};
+#endif
 
 #endif
