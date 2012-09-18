@@ -80,7 +80,10 @@ void ors::Mesh::glDraw() {
   }
 #if 1
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
-    glShadeModel(GL_SMOOTH);
+    bool turnOnLight=false;
+    if(C.N){ turnOnLight = glGet(GL_LIGHTING); glDisable(GL_LIGHTING); }
+    
+    glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
@@ -89,6 +92,8 @@ void ors::Mesh::glDraw() {
     glNormalPointer(GL_DOUBLE, 0, Vn.p);
     
     glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
+
+    if(turnOnLight){ glEnable(GL_LIGHTING); }
   } else {
     int g;
     uint v, t, i, j;
@@ -160,20 +165,22 @@ void ors::Mesh::glDraw() {
   glShadeModel(GL_SMOOTH);
   glBegin(GL_TRIANGLES);
   for(i=0; i<T.d0; i++) {
-    v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
   }
   glEnd();
 #else //simple with triangle normals
-  uint i, v;
+  uint t, v;
   computeNormals();
   glBegin(GL_TRIANGLES);
-  for(i=0; i<T.d0; i++) {
-    glNormal3dv(&Tn(i, 0));
-    v=T(i, 0);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 1);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 2);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+  for(t=0; t<T.d0; t++) {
+    glNormal3dv(&Tn(t, 0));
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(t, 0);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 1);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 2);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
   }
   glEnd();
 #if 0 //draw normals
