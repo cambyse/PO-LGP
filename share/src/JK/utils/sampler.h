@@ -3,6 +3,8 @@
 
 #include <MT/array.h>
 #include <relational/robotManipulationSimulator.h>
+#include <devTools/logging.h>
+SET_LOG(sampler, INFO);
 
 #include <limits>
 
@@ -18,6 +20,11 @@ template<class S> class Evaluator {
 
 class BlocksWorldSampler : public Sampler<MT::Array<arr> > {
   public: 
+    virtual void sample(MT::Array<arr>& sample);
+};
+
+class TraySampler : public Sampler<MT::Array<arr> > {
+  public:
     virtual void sample(MT::Array<arr>& sample);
 };
 

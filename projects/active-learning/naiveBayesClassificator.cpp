@@ -1,7 +1,7 @@
 #include "naiveBayesClassificator.h"
-#include "sampler.h"
-#include <relational/blocksWorld.h>
-#include <JK/util.h>
+#include <JK/utils/sampler.h>
+#include <JK/utils/util.h>
+#include <relational/robotManipulationSimulator.h>
 
 #include <inttypes.h>
 #include <cmath>

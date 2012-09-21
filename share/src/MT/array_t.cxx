@@ -489,7 +489,7 @@ template<class T> void MT::Array<T>::remove(uint i, uint n) {
     if(N>i+n) memmove(p+i, p+i+n, sizeT*(N-i-n));
     resizeCopy(N-n);
   } else {
-    HALT("shouldn't use this, says Marc ;-)");
+    //MT_MSG("don't use this!");
     reshape(N);
     for(uint j=i+n; j<N; j++) p[j-n] = p[j];
     resizeCopy(N-n);

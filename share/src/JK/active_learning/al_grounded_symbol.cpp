@@ -2,6 +2,9 @@
 
 #include "al_process.h"
 #include <JK/utils/oracle.h>
+#include <devTools/logging.h>
+
+SET_LOG(al_gs, INFO);
 
 AL_GroundedSymbol::AL_GroundedSymbol(MT::String& name, uint arity, bool build_derived_predicates) :
   GroundedSymbol(name, arity, build_derived_predicates) 
@@ -19,5 +22,7 @@ AL_GroundedSymbol::AL_GroundedSymbol(ActiveLearner* al, MT::String& name, uint a
 bool AL_GroundedSymbol::holds(arr& x) const {
   MT::Array<arr> f;
   f.append(x);
+  DEBUG_VAR(al_gs, x);
+
   return classificator->classify(f);
 }

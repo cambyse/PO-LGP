@@ -1,6 +1,7 @@
 sudo mknod --mode=a+rw /dev/can0 c 54 0
 sudo mknod --mode=a+rw /dev/can1 c 54 1
 sudo insmod /home/lib/driver/esdcan-pci200-linux-2.6.x-x86_64-3.9.2/src/esdcan-pci200.ko
+sudo rm /dev/ttyS9
 sudo ln -s /dev/ttyUSB0 /dev/ttyS9
 sudo ln -s /dev/ttyACM0 /dev/ttyURG
 sudo chmod a+rw /dev/video1394/0 /dev/raw1394 /dev/ttyUSB0

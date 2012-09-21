@@ -2,8 +2,8 @@
 #define NAIVEBAYESCLASSIFICATOR_H_
 
 #include <MT/array.h>
-#include "activeLearner.h"
-#include "sampler.h"
+#include <JK/active_learning/al.h>
+#include <JK/utils/sampler.h>
 
 class sNaiveBayesClassificator;
 

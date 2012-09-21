@@ -58,6 +58,8 @@ GtkProcess *global_gtkProcess = NULL;
 GtkProcess* gtkProcess(){
   if(!global_gtkProcess){
     global_gtkProcess = new GtkProcess;
+    global_gtkProcess->var = new GtkProcessVariable;
+    global_gtkProcess->var->views.memMove=true;
     global_gtkProcess->threadLoopWithBeat(.1);
   }
   return global_gtkProcess;
@@ -80,14 +82,18 @@ void GtkProcess::open(){
 void GtkProcess::close(){
   uint i;
   GtkWidget *w;
-  for_list(i,w,wins) gtk_widget_destroy(w);
+  var->writeAccess(this);
+  for_list(i,w,var->wins) gtk_widget_destroy(w);
+  var->deAccess(this);
   gtkProcessEvents();
 }
 
 void GtkProcess::step(){
   uint i;
   View *v;
-  for_list(i,v,views) v->gtkUpdate();
+//   var->writeAccess(this);
+  for_list(i,v,var->get_views(this)) v->gtkUpdate();
+//   var->deAccess(this);
   gtkProcessEvents();
 }
 
@@ -276,21 +282,26 @@ void InsideOutGui::updateViewStore(){
 //
 
 extern "C" G_MODULE_EXPORT void toggle_expand(GtkTreeView *view, GtkTreePath *path){
+  gtkLock();
   if(gtk_tree_view_row_expanded(view, path)){
     gtk_tree_view_collapse_row(view, path);
   }else{
     gtk_tree_view_expand_row(view, path, false);
   }
+  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_refresh_clicked(GtkWidget* caller){
+  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   iog->update();
   cout <<"GUI: refresh" <<endl;
+  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
+  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   iog->update();
@@ -310,23 +321,28 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
     os <<endl;
   }
   os.close();
+  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_pushView_clicked(GtkWidget* caller){
+  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   iog->update();
   iog->box++;
   if(iog->box>=VIEWBOXES) iog->box=0;
   cout <<"GUI: push view" <<iog->box <<endl;
+  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
+  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   long b = (long)g_object_get_data(G_OBJECT(caller), "id");
   iog->box = b;
   cout <<"GUI: box select " <<b <<endl;
+  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
@@ -342,6 +358,7 @@ extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
 }
 
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
+  gtkLock();
   uint id;
   char tag;
   GtkTreeSelection *tsel = gtk_tree_view_get_selection(caller);
@@ -405,6 +422,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   }
 
   setBoxView(iog->view[iog->box], iog->builder, iog->box);
+  gtkUnlock();
 }
 
 

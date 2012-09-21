@@ -67,6 +67,12 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   FOR1D(boxes, i) {
     state->lits.append(Literal::get(Symbol::get("box"), TUP(boxes(i)), 1.));
   }
+  // CYLINDERS
+  uintA cylinders;
+  sim->getCylinders(cylinders);
+  FOR1D(cylinders, i) {
+    state->lits.append(Literal::get(Symbol::get("cylinder"), TUP(cylinders(i)), 1.));
+  }
   uintA all_objs;
   sim->getObjects(all_objs);
   // filter for logic
@@ -110,6 +116,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   // ON relations
   uintA objects_on;
   FOR1D(all_objs, i) {
+    if (all_objs(i) != table_id) continue;
     sim->getObjectsOn(objects_on, all_objs(i));
     FOR1D(objects_on, j) {
       if (all_objs.findValue(objects_on(j)) >= 0  &&  !sim->containedInBox(objects_on(j)))
@@ -151,7 +158,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
 
   state->state_constants = all_objs;
  
-  reason::derive(state);
+  //reason::derive(state);
   return state;
 }
 
@@ -434,8 +441,8 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
     clearGuys.removeValueSafe(id_hand);
     nonClearGuys.setAppend(id_hand);
   }
-    // PRINT(clearGuys)
-    // PRINT(nonClearGuys)
+     PRINT(clearGuys)
+     PRINT(nonClearGuys)
   CHECK(nonClearGuys.N + clearGuys.N == reason::getConstants().N, "Clear guy calculation failed");
   CHECK(numberSharedElements(nonClearGuys, clearGuys) == 0, "Clear guy calculation failed");
             

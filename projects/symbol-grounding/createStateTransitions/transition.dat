@@ -1,0 +1,6 @@
+table(19) block(21) block(22) ball(23) ball(24) box(20) size(19)=5 size(21)=3 size(22)=3 size(23)=3 size(24)=3 size(20)=5 on(20 19) on(21 19) on(22 19) on(23 19) on(24 19) upright(19) upright(21) upright(22) upright(23) upright(24) upright(20) inside(20 22) 
+grab(20)
+table(19) block(21) block(22) ball(23) ball(24) box(20) size(19)=5 size(21)=3 size(22)=3 size(23)=3 size(24)=3 size(20)=5 on(20 19) on(21 19) on(22 19) on(23 19) on(24 19) upright(19) upright(21) upright(22) upright(23) upright(24) upright(20) inside(20 22) 
+grab(24)
+table(19) block(21) block(22) ball(23) ball(24) box(20) size(19)=5 size(21)=3 size(22)=3 size(23)=3 size(24)=3 size(20)=5 inhand(24) on(20 19) on(21 19) on(22 19) on(23 19) upright(19) upright(21) upright(22) upright(23) upright(24) upright(20) inside(20 22) 
+puton(22)

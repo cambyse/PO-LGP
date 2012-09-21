@@ -9,9 +9,16 @@
 #  undef MAX
 #endif
 
+#ifdef PCL
+#include <pcl/ModelCoefficients.h>
+#endif
+
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
 #include <MT/opengl.h>
+#include <MT/ors.h>
+
+#include <MT/array_t.cxx>
 
 //===========================================================================
 //
@@ -257,6 +264,45 @@ struct ImageViewer:Process {
   }
 };
 
+namespace pcl {
+  template <class T>
+  struct PointCloud;
+};
+
+//TODO: where should this go?
+const int RADIUS = 2;
+const int HEIGHT = 3;
+
+
+struct ObjectBelief {
+
+  ObjectBelief() {
+    shapeParams.resize(4);  
+  }
+  //pose
+  // TODO: make pointers
+  ors::Vector position;
+  ors::Quaternion rotation;
+
+  arr poseCov;
+
+  // primitive shapes
+  ors::ShapeType shapeType;
+  arr shapeParams;
+
+  // TODO: make pointer, such that the using app does not need to implicitly
+  // include half of the PCL?
+  //pcl::ModelCoefficients::Ptr pcl_object;
+
+  //pcl::PointCloud<PointT>* pointCloud;
+  arr vertices;
+  uintA triangles;
+};
+
+struct ObjectBeliefSet : Variable {
+  FIELD(MT::Array<ObjectBelief*>, objects);
+  ObjectBeliefSet(const char *name) : Variable(name) { reg_objects(); }
+};
 #endif
 
 

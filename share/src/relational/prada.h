@@ -111,6 +111,8 @@ class PRADA_Planner : public NID_Planner {
     
     // for statistics
     uintA action_choices;
+
+    void get_reward_symbols(Reward* reward);
     
     PRADA_Reward* prada_reward;
     static PRADA_Reward* convert_reward(LiteralReward* reward);
@@ -118,6 +120,7 @@ class PRADA_Planner : public NID_Planner {
     static PRADA_Reward* convert_reward(LiteralListReward* reward);
     static PRADA_Reward* convert_reward(DisjunctionReward* reward);
     static PRADA_Reward* convert_reward(NotTheseStatesReward* reward);
+    static PRADA_Reward* convert_reward(CombinedReward* reward);
     
     void setState(const SymbolicState& s, uint t);
     

@@ -19,7 +19,6 @@ class ClassificatorV: public Variable {
   public:
     ClassificatorV();
     ActiveLearner* classificator;
-    Oracle* oracle;
     Tester* tester;
 };
 

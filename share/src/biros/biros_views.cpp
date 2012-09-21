@@ -22,18 +22,25 @@ GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
 
 View::View():object(NULL), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->views.append(this);
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.append(this);
+  gtkProcess()->var->deAccess(NULL);
   gtkUnlock();
 }
 
 View::View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->views.append(this);
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.append(this);
+  gtkProcess()->var->deAccess(NULL);
   gtkUnlock();
 }
 
 View::~View(){
   gtkLock();
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.removeValue(this);
+  gtkProcess()->var->deAccess(NULL);
   if(widget) gtk_widget_destroy(widget);
   if(gl) delete gl;
   gtkUnlock();
@@ -145,6 +152,13 @@ void MeshView::glDraw() {
 //===========================================================================
 
 REGISTER_VIEW_TYPE(OrsView, ors::Graph, fieldVT);
+
+OrsView::OrsView():View() {
+}
+
+OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
+  gtkNewGl(container);
+}
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);

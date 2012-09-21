@@ -79,6 +79,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
         s->mesh.scale(s->size[3], s->size[3], s->size[3]);
         break;
       case ors::cylinderST:
+	CHECK(s->size[3]>1e-10,"");
         s->mesh.setCylinder(s->size[3], s->size[2]);
         break;
       case ors::cappedCylinderST:
@@ -219,6 +220,7 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
 }
 
 void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
+  CHECK(swift.INDEXshape2swift.N==C.shapes.N,"the number of shapes has changed");
   ors::Shape *s;
   uint k;
   arr rot(3, 3);
