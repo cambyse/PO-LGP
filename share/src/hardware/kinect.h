@@ -1,6 +1,8 @@
 #ifndef _KINECT_H_
 #define _KINECT_H_
 
+#ifdef PCL 
+
 #include <biros/biros.h>
 #include <perception/perception.h>
 #include <pcl/io/openni_grabber.h>
@@ -35,5 +37,6 @@ class KinectInterface : public Process {
 
     KinectInterface(const char *name);
 };
+#endif
 
 #endif
