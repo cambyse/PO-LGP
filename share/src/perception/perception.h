@@ -9,7 +9,9 @@
 #  undef MAX
 #endif
 
+#ifdef PCL
 #include <pcl/ModelCoefficients.h>
+#endif
 
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
@@ -290,7 +292,7 @@ struct ObjectBelief {
 
   // TODO: make pointer, such that the using app does not need to implicitly
   // include half of the PCL?
-  pcl::ModelCoefficients::Ptr pcl_object;
+  //pcl::ModelCoefficients::Ptr pcl_object;
 
   //pcl::PointCloud<PointT>* pointCloud;
   arr vertices;
