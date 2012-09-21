@@ -130,7 +130,7 @@ void MotionPlanner::step() {
         listDelete(s->sys.vars);
         uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
         uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, toId, NoArr);
+        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId, NoArr);
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       else if (actionSymbol==Action::place_location) {
@@ -138,11 +138,11 @@ void MotionPlanner::step() {
         listDelete(s->sys.vars);
         uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
         arr location = action->get_locationRef(this);
-        setPlaceGoals(s->sys, s->sys.nTime(), shapeId, -1, location);
+        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, -1, location);
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       else if (actionSymbol==Action::homing) {
-        setHomingGoals(s->sys, s->sys.nTime());
+        setHomingGoals(s->sys, s->sys.get_T());
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       
