@@ -49,14 +49,14 @@ void soc::SocSystem_Analytical::initDynamic(uint dim, double trajectory_time, ui
 }
 
 //implementations of virtual methods
-uint soc::SocSystem_Analytical::nTime(){ return s->T; }
+uint soc::SocSystem_Analytical::get_T(){ return s->T; }
 uint soc::SocSystem_Analytical::nTasks(){ return 2; }
 uint soc::SocSystem_Analytical::qDim(){ return s->x0.N; }
 uint soc::SocSystem_Analytical::uDim(){ return s->x0.N; }
 uint soc::SocSystem_Analytical::yDim(uint i){ if(!i) return s->x0.N; else return 1; }
 void soc::SocSystem_Analytical::getq0(arr& q){ q=s->x0; }
 void soc::SocSystem_Analytical::getv0(arr& v){ NIY; }
-void soc::SocSystem_Analytical::getx0(arr& x){ NIY; }
+void soc::SocSystem_Analytical::get_x0(arr& x){ NIY; }
 void soc::SocSystem_Analytical::getqv0(arr& q, arr& qd){ NIY; }
 bool soc::SocSystem_Analytical::isDynamic(){ return false; }
 void soc::SocSystem_Analytical::setq(const arr& q, uint t){ s->x=q; }
@@ -79,14 +79,14 @@ void soc::SocSystem_Analytical::getPhi(arr& phiq_i, uint i){
   }
 }
 
-void soc::SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B);
+void soc::SocSystem_Analytical::getDynamics(arr& A, arr& a, arr& B);
 double soc::SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr& qt);
 void soc::SocSystem_Analytical::getConstraints(arr& c, arr& coff, uint t, const arr& qt);
 
 void soc::SocSystem_Analytical::displayState(const arr& q, const arr *Qinv, const char *text=NULL);
 void soc::SocSystem_Analytical::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag=NULL);
 
-void soc::SocSystem_Analytical::getProcess(arr& A, arr& a, arr& B){
+void soc::SocSystem_Analytical::getDynamics(arr& A, arr& a, arr& B){
   uint N=x.N;
   A.setDiag(1., N);
   B.setDiag(1., N);

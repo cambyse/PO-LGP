@@ -53,7 +53,7 @@ soc::SocSystem_Toy::~SocSystem_Toy(){
   delete s;
 }
 
-uint soc::SocSystem_Toy::nTime(){  return s->T; }
+uint soc::SocSystem_Toy::get_T(){  return s->T; }
 uint soc::SocSystem_Toy::nTasks(){ return 1; }
 uint soc::SocSystem_Toy::qDim(){   return 1; }
 uint soc::SocSystem_Toy::uDim(){   return 1; }

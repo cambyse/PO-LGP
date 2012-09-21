@@ -371,6 +371,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   //iog->update();
   
   if(iog->view[iog->box]){
+    HALT("DONT"); //you should indicate that the view should be deleted next time
+    //why? the callback could be called from within gtkupdate of the view you want to delete here
     delete iog->view[iog->box];
     iog->view[iog->box]=NULL;
   }

@@ -33,7 +33,7 @@ struct AICO {
   //initialization
   void init(soc::SocSystemAbstraction& sys); //!< reads parameters from cfg file
   void init_messages();
-  void init_trajectory(const arr& q_init);
+  void init_trajectory(const arr& x_init);
   void prepare_for_changed_task();
   void fix_initial_state(const arr& x_0);
   void fix_final_state(const arr& x_T);
@@ -54,7 +54,7 @@ struct AICO {
 
 
 void AICO_multiScaleSolver(soc::SocSystemAbstraction& sys,
-                           arr& q,
+                           arr& x,
                            double tolerance,
                            uint display,
                            uint scalePowers);

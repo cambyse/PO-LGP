@@ -15,6 +15,7 @@ EXTERN = \
 
 
 makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
+	find . -maxdepth 2 -name 'Makefile.dep' --delete
 
 cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
 
@@ -28,9 +29,11 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 make/%::
+	-$(MAKE) -C $* depend
 	$(MAKE) -C $*
 
 clean/%::
+	-rm -f $*/Makefile.dep
 	$(MAKE) clean -C $*
 
 tests::

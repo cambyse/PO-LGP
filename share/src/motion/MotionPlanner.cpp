@@ -157,7 +157,7 @@ void MotionPlanner::step() {
     }
     
     //-- optimize the plan
-    uint T = s->sys.nTime();
+    uint T = s->sys.get_T();
     double tau = s->sys.getDuration()/double(T);
     arr q;
     switch (s->planningAlgo) {
@@ -246,7 +246,7 @@ void MotionPlanner::step() {
 //
 
 void threeStepGraspHeuristic(arr& x, soc::SocSystem_Ors& sys, const arr& x0, uint shapeId, uint verbose) {
-  uint T = sys.nTime();
+  uint T = sys.get_T();
   //double duration = sys.getTau() * T;
   
   sys.setx0(x0);
@@ -309,7 +309,7 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   double zeroQPrec = birosInfo().getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK(T==sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -433,7 +433,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToSha
 
   
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK(T==sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);
@@ -599,20 +599,26 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
   
   if (!sys.dynamic) {
     arr W;
-    sys.getW(W,0);
+    sys.getControlCosts(W, NoArr, 0);
     arr wdiag;
     getDiag(wdiag, W);
-    wdiag *= double(sys.nTime());
+    wdiag *= double(sys.get_T());
     for (uint i=0; i<wdiag.N; i++) wdiag(i) = 1./sqrt(wdiag(i));
     sqrtWinv = diag(wdiag);
   } else {
     //From Dmitry
-    double T = sys.nTime();
-    arr H1,Q,Q1,Q2;
-    sys.getHrateInv(H1);
-    sys.getQrate(Q);
-    
+    double T = sys.get_T();
+    //control costs
+    arr Hinv,HrateInv;
+    sys.getControlCosts(NoArr, Hinv, 0);
+    HrateInv = Hinv*sys.getTau();
+
+    //dynamics noise
+    arr A,a,B,Q,Qrate,Q1,Q2;
+    sys.getDynamics(A,a,B,Q,0);
+    Qrate = Q/sys.getTau();
     decomposeMatrix(Q1,Q2,Q);
+
     double tau = sys.getDuration();// tau is basically = time
     double tau2=tau*tau;
     int dim=sqrt(Q.N)/2;
@@ -623,10 +629,10 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
     
     double S0 = SumOfRow(T,0); double S1 = SumOfRow(T-1,1); double S2 = SumOfRow(T-1,2);  // sums of geometric series
     arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
-    sigma1 = tau2*tau*H1*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
-    sigma2 = tau2*H1*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
+    sigma1 = tau2*tau*HrateInv*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
+    sigma2 = tau2*HrateInv*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
     sigma3 = sigma2;
-    sigma4 = tau*S0*(H1 + Q2)/T;
+    sigma4 = tau*S0*(HrateInv + Q2)/T;
     
     arr sumA,sumAinv;
     sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
@@ -635,7 +641,7 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
     lapack_cholesky(sqrtWinv, sumAinv);
   }
   
-  sys.getx0(x0);
+  sys.get_x0(x0);
   if (!x_is_initialized) x=x0;
   
   struct MyOptimizationProblem:VectorFunction {
@@ -649,7 +655,7 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
         sys->displayState(NULL, NULL, "posture", true);
         sys->gl->watch();
       }
-      sys->getTaskCostTerms(Phi, J, x, sys->nTime());
+      sys->getTaskCostTerms(Phi, J, x, sys->get_T());
       Phi.append(sqrtWinv*(x-x0));
       if (&J) J.append(sqrtWinv);
     }

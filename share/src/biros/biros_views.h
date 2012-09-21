@@ -58,7 +58,7 @@ struct OpenGL;
 // A View,
 //
 
-struct View{
+struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
@@ -72,7 +72,7 @@ struct View{
   virtual void read (std::istream& is) {} //reading from a stream
   virtual void glInit() {} //a generic GL draw routine
   virtual void glDraw() {} //a generic GL draw routine
-  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view crates a new gtk widget within the container
+  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view creates a new gtk widget within the container
   virtual void gtkUpdate(); //let the view update the gtk widget
   void gtkNewGl(GtkWidget *container);  //implementation of gtkNew using the gl routines
   void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read routines
@@ -84,10 +84,10 @@ struct View{
 // ViewInfo: a little struct that describes an existing view and
 // will be accessible in a global list 'birosViews'
 //
-// ViewInfos will only every be instantiated as static members of a real View
+// ViewInfos will only ever be instantiated as static members of a real View
 //
 
-/* A common pattern: to store a list of heterogeneous things, all elements derive from a virtual base class ('ViewInfo') via a typed template classe ('ViewInfo_typed') */
+/* A common pattern: to store a list of heterogeneous things, all elements derive from a virtual base class ('ViewInfo') via a typed template class ('ViewInfo_typed') */
 
 struct ViewInfo{
   MT::String name;
@@ -99,8 +99,8 @@ struct ViewInfo{
 template<class ViewT, class AppliesOnT>
 struct ViewInfo_typed:ViewInfo{
   ViewInfo_typed(const char *_name,
-		 ViewType _type,
-		 const char* _appliesOn_sysType=NULL){
+		ViewType _type,
+		const char* _appliesOn_sysType=NULL){
     name = _name;
     type = _type;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();

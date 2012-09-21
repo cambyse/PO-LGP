@@ -23,17 +23,17 @@ void ReceedingHorizonProcess::step(){
     sys->ors->copyShapesAndJoints(*sys_parent->ors);
     planner.init_messages();
     if(goalVar->goalType==FutureMotionGoal::graspGoalT){
-      setGraspGoals(*sys, sys->nTime(), goalVar->graspShape);
+      setGraspGoals(*sys, sys->get_T(), goalVar->graspShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
     } else if(goalVar->goalType==FutureMotionGoal::placeGoalT){
-      setPlaceGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
+      setPlaceGoals(*sys, sys->get_T(), goalVar->graspShape, goalVar->belowFromShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 0);
       //planner.init_trajectory(q);
     } else if(goalVar->goalType==FutureMotionGoal::homingGoalT){
-      setHomingGoals(*sys, sys->nTime(), goalVar->graspShape, goalVar->belowToShape);
+      setHomingGoals(*sys, sys->get_T(), goalVar->graspShape, goalVar->belowToShape);
       //arr q;
       //soc::straightTaskTrajectory(*sys, q, 1); //task id is q!!!
       //planner.init_trajectory(q);
@@ -74,7 +74,7 @@ void ReceedingHorizonProcess::step(){
     planVar->x    = planner.b();
     planVar->cost = planner.cost();
     planVar->tau  = sys->getTau();
-    planVar->totalTime = planVar->tau*sys->nTime();
+    planVar->totalTime = planVar->tau*sys->get_T();
     planVar->converged=(d<planner.tolerance());// NIKOLAY : enssure reasonable plans
     planVar->deAccess(this);
   }
@@ -100,7 +100,7 @@ void MotionPlannerModuleGroup::step(){
   if(recho.threadIsIdle() && first){
     //ors::Shape *s = recho.sys->ors->bodies(graspTargetBodyId)->shapes(0);
     cout <<"*** triggering motion planning to shape " <<graspShapeName <<endl;
-    setGraspGoals(*recho.sys, recho.sys->nTime(), graspShapeName); ///HERE IS THE LINK TO THE BRAIN!
+    setGraspGoals(*recho.sys, recho.sys->get_T(), graspShapeName); ///HERE IS THE LINK TO THE BRAIN!
     arr q;
     soc::straightTaskTrajectory(*recho.sys, q, 0);
     recho.planner.initMessagesWithReferenceQ(q);

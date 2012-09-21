@@ -97,7 +97,7 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
                                 bool checkGradient,
                                 uint display){
 
-  uint T=soci.nTime();
+  uint T=soci.get_T();
   
   MT::timerStart();
   

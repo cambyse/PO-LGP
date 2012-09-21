@@ -8,8 +8,8 @@ MAKEMODE = mlrlib
 #if in doubt, you actually want to change make-config!
 #otherwise ask Marc
 
-BUILDS += buildComponent/NJ buildComponent/DZ buildComponent/SD buildComponent/biros
-LIBS += -lNJ -lDZ -lSD -lbiros
+BUILDS += buildComponent/NJ buildComponent/biros
+LIBS += -lNJ -lbiros
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)

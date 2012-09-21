@@ -101,7 +101,7 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid){
-  uint t, T=soci.nTime(), n=soci.qDim();
+  uint t, T=soci.get_T(), n=soci.qDim();
   arr phiq, xt, J, Jt, Jinv, W, Winv;
   double prec;
   q.resize(T+1, n);
@@ -156,7 +156,7 @@ bool soc::SocSystemAbstraction::isConstrained(uint i, uint t){ NIY; return false
 void soc::SocSystemAbstraction::getMF(arr& M, arr& F, uint t){ NIY; }
 void soc::SocSystemAbstraction::getMinvF(arr& Minv, arr& F, uint t){ NIY; }
 
-void soc::SocSystemAbstraction::getProcess(arr& A, arr& a, arr& B, uint t){
+void soc::SocSystemAbstraction::getDynamics(arr& A, arr& a, arr& B, uint t){
   uint n=qDim();
   if(!dynamic){
     A.setId(n);
@@ -192,8 +192,8 @@ void soc::SocSystemAbstraction::getProcess(arr& A, arr& a, arr& B, uint t){
   }
 }
 
-void soc::SocSystemAbstraction::getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t){
-  getProcess(A, a, B, t);
+void soc::SocSystemAbstraction::getDynamics(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t){
+  getDynamics(A, a, B, t);
   //A^{-1} is A transpose and the lower-left matrix negative.. BLOCKMATRIX(Id, -2^scale*tau*Id, 0, Id)
   Ainv=A;
   if(dynamic){
@@ -262,7 +262,7 @@ double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, ui
       r += ri;
     }
   }
-  /*if(t!=nTime()){ //don't multiply task costs for the final time slice!!
+  /*if(t!=get_T()){ //don't multiply task costs for the final time slice!!
     for(uint i=0;i<scalePower;i++){
       r *= 2.;
       R *= 2.;
@@ -307,7 +307,7 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
     }
   }
   JBar.reshape(phiBar.N, xt.N);
-  if(t!=nTime()){ //don't multiply task costs for the final time slice!!
+  if(t!=get_T()){ //don't multiply task costs for the final time slice!!
     phiBar *= sqrt(double(1 <<scalePower));
     JBar   *= sqrt(double(1 <<scalePower));
   }
@@ -325,7 +325,7 @@ void soc::SocSystemAbstraction::getTransitionCostTerms(arr& Psi, arr& PsiI, arr&
   }else{
     arr Hinv, A, a, B, Q, W, Winv, M;
     getHinv(Hinv, t-1);
-    getProcess(A, a, B, t-1);
+    getDynamics(A, a, B, t-1);
     getQ(Q, t-1);
     Psi = xt - (A*xt_1+a);
     Winv = B*Hinv*~B + Q;
@@ -373,14 +373,14 @@ void soc::SocSystemAbstraction::getConstraints(arr& cdir, arr& coff, const arr& 
 
 void soc::SocSystemAbstraction::constantTrajectory(arr& q){
   CHECK(!dynamic, "");
-  uint t, T=nTime(), n=qDim();
+  uint t, T=get_T(), n=qDim();
   q.resize(T, n);
   getq0(q[0]());
   for(t=1;t<T;t++) q[t]() = q[0];
 }
 
 void soc::SocSystemAbstraction::passiveDynamicTrajectory(arr& q){
-  uint t, T=nTime(), n=qDim();
+  uint t, T=get_T(), n=qDim();
   double tau=getTau();
   arr qd, Minv, F;
   qd.resize(T, n);
@@ -395,7 +395,7 @@ void soc::SocSystemAbstraction::passiveDynamicTrajectory(arr& q){
 }
 
 void soc::SocSystemAbstraction::controlledDynamicTrajectory(arr& q, const arr& u){
-  uint t, T=nTime(), n=qDim();
+  uint t, T=get_T(), n=qDim();
   if(!dynamic){
     q.resize(T, n);
     getq0(q[0]());
@@ -423,7 +423,7 @@ void soc::SocSystemAbstraction::controlledDynamicTrajectory(arr& q, const arr& u
 }
 
 void soc::SocSystemAbstraction::getControlFromTrajectory(arr& u, const arr& q){
-  uint t, T=nTime(), n=qDim();
+  uint t, T=get_T(), n=qDim();
   if(!dynamic){
     u.resize(T, n);
     u[T-1]().setZero();
@@ -483,7 +483,7 @@ double soc::SocSystemAbstraction::taskCost(arr* grad, int t, int i){
 }
 
 double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
-  uint t, T=nTime();
+  uint t, T=get_T();
   CHECK(q.nd==2 && q.d0==T+1 && q.d1==qDim(), "q has wrong dimension: " <<q.getDim());
   arr W, H, M, Mt, F;
   double tau=getTau();
@@ -563,7 +563,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
 }
 
 void soc::SocSystemAbstraction::costChecks(const arr& x){
-  uint t, T=nTime();
+  uint t, T=get_T();
   arr Phi, PhiJ, Psi, PsiI, PsiJ;
   arr R, r;
   double c1, c2, c3;
@@ -579,7 +579,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     
     taskCsum+=c2;
     if(t){
-      //getProcess(arr& A, arr& a, arr& B, uint t);
+      //getDynamics(arr& A, arr& a, arr& B, uint t);
       getTransitionCostTerms(Psi, PsiI, PsiJ, x[t-1], x[t], t);
       c1=sumOfSqr(Psi);
       c2=0.;
@@ -625,7 +625,7 @@ void soc::SocSystemAbstraction::displayState(const arr& q, const arr *Qinv, cons
 }
 
 void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv, int steps, const char *tag){
-  uint k, t, T=nTime();
+  uint k, t, T=get_T();
   if(!gl || !steps) return;
   uint num;
   if(steps==1 || steps==-1) num=T; else num=steps;
@@ -640,7 +640,7 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
 
 //! computes separate costs for each ctrl variable
 double soc::SocSystemAbstraction::analyzeTrajectory(const arr& q, bool plot){
-  uint t, T=nTime(), i, m=nTasks();
+  uint t, T=get_T(), i, m=nTasks();
   CHECK(q.nd==2 && q.d0==T+1 && q.d1==qDim(), "");
   arr W, H, M, F;
   double tau=getTau();

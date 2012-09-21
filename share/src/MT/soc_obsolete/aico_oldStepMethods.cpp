@@ -19,7 +19,7 @@ NOTE: the stepKinematic includes still the code for the truncated Gaussians
 double AICO_clean::stepKinematic(){
   CHECK(!sys->dynamic, "assumed dynamic SOC abstraction");
   uint n=sys->qDim();
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t, t0=0;
   int dt;
 
@@ -267,13 +267,13 @@ double AICO_clean::stepKinematic(){
 //! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double AICO_clean::stepClean(){
   //CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t;
   int dt;
 
   //get state info for t=0
   arr q0;
-  sys->getx0(q0);
+  sys->get_x0(q0);
   if(sys->dynamic){  CHECK(q0.N==2*sys->qDim(), "");  }else{  CHECK(q0.N==sys->qDim(), "");  }
   
   s[0]=q0;      Sinv[0].setDiag(1e10);
@@ -283,7 +283,7 @@ double AICO_clean::stepClean(){
   sys->getQ(Q[0](), 0);
   sys->getHinv(Hinv[0](), 0);
   if(!sys->dynamic) sys->getWinv(Winv[0](), 0);
-  sys->getProcess(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
+  sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
 
   //OPTIONAL: take account of optional externally given bwd messages
   if(useBwdMsg){
@@ -324,7 +324,7 @@ double AICO_clean::stepClean(){
       sys->getQ(Q[t](), t);
       sys->getHinv(Hinv[t](), t);
       if(!sys->dynamic) sys->getWinv(Winv[t](), t);
-      sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
+      sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
       
       //compute (r, R)
       sys->getTaskCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
@@ -402,13 +402,13 @@ double AICO_clean::stepClean(){
 //! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double AICO_clean::stepDynamic(){
   //CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t;
   int dt;
 
   //get state info for t=0
   arr q0;
-  sys->getx0(q0);
+  sys->get_x0(q0);
   if(sys->dynamic){
     CHECK(q0.N==2*sys->qDim(), "");
   }else{
@@ -421,7 +421,7 @@ double AICO_clean::stepDynamic(){
   sys->getQ(Q[0](), 0);
   sys->getHinv(Hinv[0](), 0);
   if(!sys->dynamic) sys->getWinv(Winv[0](), 0);
-  sys->getProcess(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
+  sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
 
   //OPTIONAL: take account of optional externally given bwd messages
   if(useBwdMsg){
@@ -461,7 +461,7 @@ double AICO_clean::stepDynamic(){
       sys->getQ(Q[t](), t);
       sys->getHinv(Hinv[t](), t);
       if(!sys->dynamic) sys->getWinv(Winv[t](), t);
-      sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
+      sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
       
       //compute (r, R)
       sys->getTaskCosts(R[t](), r[t](), qhat[t].sub(0, sys->qDim()-1), t, &rhat(t));
@@ -565,7 +565,7 @@ double AICO_clean::stepDynamic(){
 //==============================================================================
 
 double AICO_clean::stepGaussNewton(){
-  uint T=sys->nTime();
+  uint T=sys->get_T();
   uint t;
   int dt;
 
@@ -579,7 +579,7 @@ double AICO_clean::stepGaussNewton(){
   sys->getQ(Q[0](), 0);
   if(!sys->dynamic) sys->getWinv(Winv[0](), 0);
   sys->getHinv(Hinv[0](), 0);
-  sys->getProcess(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
+  sys->getDynamics(A[0](), tA[0](), Ainv[0](), invtA[0](), a[0](), B[0](), tB[0](), 0);
 
   //OPTIONAL: take account of optional externally given bwd messages
   if(useBwdMsg){
@@ -665,7 +665,7 @@ double AICO_clean::stepGaussNewton(){
     sys->getQ(Q[t](), t);
     if(!sys->dynamic) sys->getWinv(Winv[t](), t);
     sys->getHinv(Hinv[t](), t);
-    sys->getProcess(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
+    sys->getDynamics(A[t](), tA[t](), Ainv[t](), invtA[t](), a[t](), B[t](), tB[t](), t);
     //if(t<T){
     //  arr tmp;
     //  sys->getTransitionCostTerms(Psi[t+1](), tmp, tmp, qhat[t], qhat[t+1], t+1);
@@ -735,7 +735,7 @@ double AICO_clean::stepGaussNewton(){
 
 double AICO_clean::stepMinSum(){
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" before";
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
@@ -774,7 +774,7 @@ double AICO_clean::stepMinSum(){
         if(sys->dynamic){
           arr Hinv, A, a, B, Q, W, Winv, M;
           sys->getHinv(Hinv, j);
-          sys->getProcess(A, a, B, j);
+          sys->getDynamics(A, a, B, j);
           sys->getQ(Q, j);
           psi = x_i - (A*x_j+a);
           Winv = B*Hinv*~B + Q;
@@ -803,7 +803,7 @@ double AICO_clean::stepMinSum(){
   if(first){
     f.sys=sys;
     f.aico=this;
-    f.set(sys->nTime(), b.d1);
+    f.set(sys->get_T(), b.d1);
     f.tolerance = 1e-3;
     f.maxStep = 1e-1;
     if(sys->dynamic) sys->getqv0(f.x0); else sys->getq0(f.x0);
@@ -825,7 +825,7 @@ double AICO_clean::stepMinSum(){
   //display or evaluate
   MT::timerPause();
   if(sys->os){
-    *sys->os <<"AICOgn(" <<sys->nTime() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
+    *sys->os <<"AICOgn(" <<sys->get_T() <<") " <<std::setw(3) <<sweep <<" time " <<MT::timerRead(false) <<" setq " <<countSetq <<" diff " <<diff;
     cost = sys->analyzeTrajectory(b, display>0);
   }
   if(sys->gl){
