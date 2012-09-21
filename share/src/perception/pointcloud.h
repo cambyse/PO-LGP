@@ -5,7 +5,10 @@
 #include <biros/logging.h>
 #include <hardware/kinect.h>
 #include <motion/motion.h>
+
+#ifdef PCL
 #include <pcl/ModelCoefficients.h>
+#endif
 
 SET_LOG(pointcloud, INFO);
 

@@ -8,6 +8,7 @@
 #include <biros/logging.h>
 #include <MT/array.h>
 
+#ifdef PCL
 #include <pcl/point_cloud.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/passthrough.h>
@@ -18,6 +19,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/transforms.h>
+#endif
 
 #include <vtkSmartPointer.h>
 #include <vtkDataSet.h>
