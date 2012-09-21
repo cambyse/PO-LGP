@@ -1,3 +1,4 @@
+#ifdef PCL
 #include "pointcloud.h"
 #include "perception.h"
 
@@ -486,7 +487,7 @@ void ObjectFilter::step() {
     //DEBUG_VAR(pointcloud, sph->position);
     sph->shapeParams(RADIUS) = sph_pos(i,3);
     sph->shapeType = ors::sphereST;
-    sph->pcl_object = pcl_sph(i);
+    //sph->pcl_object = pcl_sph(i);
     out_objects->objects.append(sph);
   }
   out_objects->deAccess(this);
@@ -587,3 +588,5 @@ void ObjectTransformator::step() {
   geo.var->set_ors(geo().ors, this);
   DEBUG(pointcloud, "done.");
 }
+
+#endif

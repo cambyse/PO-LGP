@@ -1,6 +1,6 @@
 #ifndef _PERCEPTION_H_
 #define _PERCEPTION_H_
-
+#ifdef PCL
 #include <JK/utils/masterWorker.h>
 #include <biros/logging.h>
 #include <hardware/kinect.h>
@@ -87,5 +87,5 @@ class ObjectTransformator : public Process {
     ObjectBeliefSet* kinect_objects;
     WorkingCopy<GeometricState> geo;
 };
-
+#endif
 #endif
