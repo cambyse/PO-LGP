@@ -66,12 +66,14 @@ void __initUsedFunctionValues(StateTransitionL& experiences) {
   uint i, j;
   //cache used function values
   FOR1D(experiences, i) {
+    reason::derive(&experiences(i)->pre);
+    reason::derive(&experiences(i)->post);
     FOR1D(experiences(i)->pre.lits, j) {
-      if (experiences(i)->pre.lits(j)->s->range_type == Symbol::integers)
+      if (experiences(i)->pre.lits(j)->s->range_type == Symbol::integers || experiences(i)->pre.lits(j)->s->range_type == Symbol::integer_set)
        learn::__usedFunctionValues[experiences(i)->pre.lits(j)->s].setAppend(experiences(i)->pre.lits(j)->value);
 	  }
     FOR1D(experiences(i)->post.lits, j) {
-      if (experiences(i)->post.lits(j)->s->range_type == Symbol::integers)
+      if (experiences(i)->post.lits(j)->s->range_type == Symbol::integers || experiences(i)->post.lits(j)->s->range_type == Symbol::integer_set)
         learn::__usedFunctionValues[experiences(i)->post.lits(j)->s].setAppend(experiences(i)->post.lits(j)->value);
 	  }
   }
@@ -145,6 +147,13 @@ void __init_search_operators() {
       learn::__searchOperators.append(splitOnEqs);
       learn::__so_priorWeights.append(SO_WEIGHT__SPLIT_ON_EQS);
   }
+
+  if (SO_WEIGHT__SPLIT_ON_INEQUALITIES > 0.0) {
+      SplitOnInequalities* splitOnIeqs = new SplitOnInequalities();
+      splitOnIeqs->setUsedFunctionValues(learn::__usedFunctionValues);
+      learn::__searchOperators.append(splitOnIeqs);
+      learn::__so_priorWeights.append(SO_WEIGHT__SPLIT_ON_INEQUALITIES);
+  }
   
   if (SO_WEIGHT__GENERALIZE_EQS>0.0) {
       GeneralizeEquality* generalizeEq = new GeneralizeEquality();
@@ -188,6 +197,17 @@ void __init_search_operators() {
       AbstractEquality* abstractEq = new AbstractEquality();
       learn::__searchOperators.append(abstractEq);
       learn::__so_priorWeights.append(SO_WEIGHT__ABSTRACT_EQS);
+  }
+
+  if (SO_WEIGHT__ADD_REFS_AND_ADD_LITS > 0.0) {
+      AddReferencesAndAddLits* addReferencesAndAddLits = new AddReferencesAndAddLits();
+      learn::__searchOperators.append(addReferencesAndAddLits);
+      learn::__so_priorWeights.append(SO_WEIGHT__ADD_REFS_AND_ADD_LITS);
+  }
+  if (SO_WEIGHT__ADD_REFS_INDIRECT > 0.0) {
+      AddIndirectReferences* addIndirectReferencesAndSplit = new AddIndirectReferences();
+      learn::__searchOperators.append(addIndirectReferencesAndSplit);
+      learn::__so_priorWeights.append(SO_WEIGHT__ADD_REFS_INDIRECT);
   }
   
   learn::num_so_applied.resize(learn::__searchOperators.N);
@@ -243,9 +263,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
 
 // Algorithm in Pasula, Zettlemoyer, Kaelbling, JAIR (2007), Figure 2
 void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences, arr& experience_weights, const char* logfile) {
-  uint DEBUG = 2; //  2 ist gut
-  __initUsedFunctionValues(experiences);
-  __init_search_operators();
+  uint DEBUG = 2; //  2 is a good choice
   rulesC.clear();
   uint i, k;
   FOR1D(experiences, i) {
@@ -255,6 +273,9 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
   
   rulesC.init(&experiences);
   
+__initUsedFunctionValues(experiences);
+__init_search_operators();
+
   // Init default rule
   rulesC.rules.append(Rule::generateDefaultRule());
   rulesC.recomputeDefaultRule();
@@ -311,7 +332,6 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
     MT::Array< RuleSetContainer > set_of__rulesC_new;
     __searchOperators(op)->createRuleSets(rulesC, experiences, set_of__rulesC_new);
     if (set_of__rulesC_new.N == 0) {
-      if (DEBUG>1) {cout << "No new rules found." << endl;}
       op_applicable(op) = false;
       if (so_useAgain) {
         so_useAgain = false;
@@ -319,6 +339,7 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
       }
       //write log
       log << round << " " << op << " " << bestscore << " 0" << endl;
+      if (DEBUG>1) {cout << "No new rules found." << endl;}
       continue;
     }
 //     if (DEBUG>1) {cout<<"Sanity checks of "<<set_of__rulesC_new.N<<" new rule-sets"<<endl;}
@@ -371,9 +392,9 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
     if (DEBUG > 0) {
       if (betterRulesFound_thisSearchOperator) {
         cout << "A new best rule-set was found:" << endl;
-        rulesC.write();
+        rulesC.write(cout, false, false);
         cout << "SCORE = " << bestscore << endl;
-        rulesC.sanityCheck();  // TODO remove
+        //rulesC.sanityCheck();  // TODO remove
         cout<<"Sanity check successful."<<endl;
       }
       else {cout << "No better rule-set was found (although I did my very best)." << endl;}
@@ -396,6 +417,8 @@ void learn::learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences,
       }
     }
     scores.append(bestscore);
+    
+    if (round % 50 == 0) rulesC.write("current_learned_rules.dat", false, false);
   }
 //   rulesC.sanityCheck();
   rulesC.recomputeDefaultRule();
@@ -823,6 +846,7 @@ void RuleSetContainer::sort() {
 }
 
 
+// takes into account that 2 or more non-default rules may cover an experience
 void RuleSetContainer::getResponsibilities(arr& responsibilities, MT::Array< uintA >& covered_experiences, uintA& covered_experiences_num) const {
   responsibilities.clear();
   covered_experiences.clear();
@@ -891,8 +915,8 @@ void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool wit
     }
     if (i==rule->outcomes.N-1)
 //       os<<rule->noise_changes;
-      os<<"noise";
-    os<<"    [";
+      os<<"<noise>";
+    os<<"    # [";
     FOR1D(outcome_tripletts(i), k) {
       if (k > 10) {
         os<<"...";
@@ -911,24 +935,27 @@ void rule_write_hack(Rule* rule, MT::Array< uintA >& outcome_tripletts, bool wit
 }
 
 
-void RuleSetContainer::write(ostream& out, bool only_action) const {
+void RuleSetContainer::write(ostream& out, bool only_action, bool additional_experience_info) const {
   uint i, k;
-  out<<"RULES:"<<endl;
+  out<<"# *** RULES ***"<<endl;
   Literal* last_action = NULL;
   FOR1D_(rules, i) {
     if (last_action != rules.elem(i)->action) {
       last_action = rules.elem(i)->action;
       out<<"##### ";  rules.elem(i)->action->write(out, true);  out<<endl;
     }
-    out<<"# "<<i<<"  covering "<<experiences_per_rule(i).N<<" experiences [";
-    FOR1D(experiences_per_rule(i), k) {
-      out<<experiences_per_rule(i)(k)<<" ";
-      if (k > 10) {
-        out<<"...";
-        break;
-      }
-    }
-    out << "]" <<endl;
+    out<<"# "<<i<<"    ("<<(100. * experiences_per_rule(i).N) / nonDefaultRules_per_experience.N
+                <<"%, "<<experiences_per_rule(i).N<<"/"<<nonDefaultRules_per_experience.N<<")";
+//     " experiences [";
+//     FOR1D(experiences_per_rule(i), k) {
+//       out<<experiences_per_rule(i)(k)<<" ";
+//       if (k > 10) {
+//         out<<"...";
+//         break;
+//       }
+//     }
+//     out << "]";
+    out<<endl;
     if (only_action) {
       rules.elem(i)->action->write(out); out<<endl;
     }
@@ -936,12 +963,39 @@ void RuleSetContainer::write(ostream& out, bool only_action) const {
       rule_write_hack(rules.elem(i), experiences_per_ruleOutcome(i), false, out);
     }
   }
-  out<<"EXPERIENCES:"<<endl;
-  FOR1D(nonDefaultRules_per_experience, i) {
-    if (nonDefaultRules_per_experience(i).N > 0)
-    out<<i<<":"<<nonDefaultRules_per_experience(i)<<"  ";
+  
+  if (additional_experience_info) {
+    uint num_explanations = p_experiences->N;
+    uint num_explanations_by_default_rule = experiences_per_rule(0).N;
+    uint num_explanations_by_nonDefault_rule = num_explanations - num_explanations_by_default_rule;
+    uint num_explanations_as_noise = 0;
+    FOR1D(experiences_per_ruleOutcome, k) {
+      num_explanations_as_noise += experiences_per_ruleOutcome(k).last().N;
+    }
+    uint num_explanations_as_nonNoise = num_explanations - num_explanations_as_noise;
+    out<<endl<<"#  *** "<<nonDefaultRules_per_experience.N<<" EXPERIENCES (experience:rule-id) ***"<<endl;
+    out<<"#  NON-default rules explain: "<<(100. * num_explanations_by_nonDefault_rule) / num_explanations
+              <<"% ("<<num_explanations_by_nonDefault_rule<<"/"<<num_explanations<<")"<<endl;
+    out<<"#  NON-noise outcomes explain: "<<(100. * num_explanations_as_nonNoise) / num_explanations
+              <<"% ("<<num_explanations_as_nonNoise<<"/"<<num_explanations<<")"<<endl;          
+    FOR1D(nonDefaultRules_per_experience, i) {
+      out<<"# "<<i<<":";
+      if (nonDefaultRules_per_experience(i).N > 1)
+        out<<nonDefaultRules_per_experience(i)<<"  ";
+      else if (nonDefaultRules_per_experience(i).N == 1)
+        out<<nonDefaultRules_per_experience(i)(0)<<"  ";
+      else
+        out<<"default  ";
+      out << endl;
+    }
+    out<<endl;
   }
-  out<<endl;
+}
+
+
+void RuleSetContainer::write(const char* filename, bool only_action, bool additional_experience_info) const {
+  ofstream out(filename);
+  write(out, only_action, additional_experience_info);
 }
 
 
@@ -1030,7 +1084,7 @@ void RuleSetContainer::sanityCheck(bool ignore_default_rule) const {
         PRINT(supposed_to_cover__1);
         PRINT(covers);
         cout<<"Rule:"<<endl;  rules.elem(i)->write();  cout<<endl;
-        cout<<"StateTransition:"<<endl;  (*p_experiences)(k)->write();  cout<<endl;
+        cout<<"StateTransition:"<<endl;  (*p_experiences)(k)->write(cout,true);  cout<<endl;
         HALT("sanity check failed 2");
       }
     }
@@ -1917,7 +1971,12 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   
   // In the end, ensure that noise outcome (= last outcome) has non-zero prob.
   probs.last() += 1e-5;
-  probs(0) -= 1e-5;
+  FOR1D(probs, i) {
+    if (probs(i) > 1e-5) {
+      probs(i) -= 1e-5;
+      break;
+    }
+  }
 
   if (DEBUG > 0) {
     cout << "Learned params: " << probs << endl;

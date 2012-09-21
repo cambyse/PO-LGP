@@ -180,7 +180,7 @@ void ExplainExperiences::findRules(const RuleSetContainer& rulesC_old, const Sta
     if (covering_rules.N == 0) {
       // Create new rule by explaining current example (sets context and action)
       if (DEBUG>0) cout << "findRules: let's explain #" << i << endl;
-      if (DEBUG>2) {experiences(i)->write(cout);}
+      if (DEBUG>2) {experiences(i)->write(cout, true);}
       Rule* newRule = explainExperience(experiences(i));
       // calc experience coverage
       StateTransitionL covered_experiences;
@@ -188,7 +188,7 @@ void ExplainExperiences::findRules(const RuleSetContainer& rulesC_old, const Sta
       learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
       if (DEBUG>2) {cout<<"Learned new rule without outcomes:"<<endl<<*newRule;}
       // Estimate new outcomes for r'
-      CHECK(covered_experiences.N>0  &&  covered_experiences_ids.findValue(i)>=0, "At least the explained example should be covered.")
+      CHECK(covered_experiences.N>0  &&  covered_experiences_ids.findValue(i)>=0, "At least the explained example should be covered."<<endl<<*newRule)
       MT::Array< uintA > experiences_per_outcome;
       learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
       if (DEBUG>0) {cout<<"New Rule:"<<endl; newRule->write(cout);}
@@ -574,10 +574,11 @@ Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(StateTransition* ex)
     PRINT(sub_action);
   }
   
-  FOR1D(ex->changedConstants, i) {
-    if (newInvSub.hasSubs(ex->changedConstants(i))) continue;
-    newInvSub.addSubs2Variable(ex->changedConstants(i));
-//     cout<<"newInvSub: "; newInvSub.write();  cout<<endl;
+  if (ex->changedConstants.N < 6) {
+    FOR1D(ex->changedConstants, i) {
+      if (newInvSub.hasSubs(ex->changedConstants(i))) continue;
+      newInvSub.addSubs2Variable(ex->changedConstants(i));
+    }
   }
 
   LitL newContext;
@@ -599,7 +600,8 @@ Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(StateTransition* ex)
   }
   
   //negated literals are not specified in the context, they must be added seperately
-  uintA context_vars;  context_vars.setAppend(ex->action->args);  context_vars.setAppend(ex->changedConstants);
+  uintA context_vars;  context_vars.setAppend(ex->action->args);
+  if (ex->changedConstants.N < 6) context_vars.setAppend(ex->changedConstants);
   TL::sort_asc(context_vars);
   if (DEBUG>1) {PRINT(context_vars);}
   LitL ground_context_candidates_neg;
@@ -623,6 +625,25 @@ Rule* ExplainExperiences::explainExperience_deictic_ALL_DRs(StateTransition* ex)
 //     PRINT(newContext_ground);
     PRINT(newContext);
   }
+
+#ifdef NO_DEICTICREFS_BY_NONBINARY
+  SubstitutionSet subsNB;
+  //build rule that has the context of r with all non-binary symbols removed
+  relational::LitL contextWithoutNonBinaries;
+  bool containsNonBinaries = false;
+  FOR1D(newContext, i) {
+    if (newContext(i)->s->range_type == Symbol::binary)
+      contextWithoutNonBinaries.append(newContext(i));
+    else containsNonBinaries = true;
+  }
+  if (containsNonBinaries) {
+    bool covers = reason::calcSubstitutions(subsNB, ex->pre.lits, contextWithoutNonBinaries, true, &sub_action);
+    if (covers && subsNB.num() > 1) {
+      if (DEBUG>1) { cout << "Rule not accepted because NO_DEICTICREFS_BY_NONBINARY is specified!" << endl; }
+      return newRule;
+    }
+  }
+#endif
 
   // check whether new variables refers uniquely to s
   SubstitutionSet subs;
@@ -1066,10 +1087,11 @@ void SplitOnLiterals::findRules(const RuleSetContainer& rulesC_old, const StateT
       // use refs [START]
       uintA rule_args;
       rulesC_old.rules.elem(r)->getArguments(rule_args);
-      uint newVar = 0;
-      FOR1D(rule_args, k)
+      newVar = 0;
+      FOR1D(rule_args, k) {
         if (rule_args(k) == newVar)
           newVar++;
+      }
       uintA lit_args;
       lit_args.append(rule_args);
       lit_args.append(newVar);
@@ -1145,8 +1167,21 @@ void SplitOnLiterals::findRules(const RuleSetContainer& rulesC_old, const StateT
         cout<<"Trying to insert ";nextLiteral_neg->write(cout);cout<<"   into   ";
         write(rulesC_old.rules.elem(r)->context);cout<<endl;
       }
+      // check that negated literal does not introduce a negative deictic reference
+      uintA args;
+      rulesC_old.rules.elem(r)->getArguments(args);
+      bool no_negated_dref = true;
+      FOR1D(nextLiteral_neg->args, k) {
+        if (args.findValue(nextLiteral_neg->args(k)) < 0) {
+          no_negated_dref = false;
+          break;
+        }
+      }
+      // insert
       if (Literal::nonContradicting(wrapper, rulesC_old.rules.elem(r)->context)
-             && rulesC_old.rules.elem(r)->context.findValue(nextLiteral_neg) < 0) {
+             && rulesC_old.rules.elem(r)->context.findValue(nextLiteral_neg) < 0
+             && no_negated_dref
+             && nextLiteral_neg->args.findValue(newVar) < 0) {    //don't add negated deictic references
         if (DEBUG>1) cout<<" --> Feasible and will be done."<<endl;
         newRule_neg = new Rule;
         newRule_neg->action = rulesC_old.rules.elem(r)->action;
@@ -1343,9 +1378,10 @@ void AddReferences::findRules(const RuleSetContainer& rulesC_old, const StateTra
       uintA rule_args;
       rulesC_old.rules.elem(r)->getArguments(rule_args);
       uint newVar = 0;
-      FOR1D(rule_args, i)
+      FOR1D(rule_args, i) {
         if (rule_args(i) == newVar)
           newVar++;
+      }
       uintA arguments;
       arguments.append(rule_args);
       arguments.append(newVar);
@@ -1556,7 +1592,6 @@ SplitOnEqualities::SplitOnEqualities() : SearchOperator() {
   nextRule=1; // ignore default rule
   nextVar=0;
   nextFunc=0;
-  tryRelativeTransition = true;
   SymL function_symbols;
   Symbol::get_state_nonBinary(function_symbols) ;
   usedFunctions.append(function_symbols);
@@ -1597,41 +1632,6 @@ void SplitOnEqualities::findRules(const RuleSetContainer& rulesC_old, const Stat
           uintA tosplit_args;
           tosplit_args.append(vars(v));
 
-          /********************************************
-          Try relative transition first
-          *********************************************/
-          /*if (tryRelativeTransition) {
-            if (DEBUG>0) {cout << "Trying relative transition..." << endl; }
-            Rule* newRule = new Rule;
-            newRule->action = rulesC_old.rules.elem(r)->action;
-            newRule->context = rulesC_old.rules.elem(r)->context;
-
-            Literal *newLit = Literal::getVarComparison(usedFunctions(f), tosplit_args);
-            newRule->insertContext(newLit);
-
-            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
-            StateTransitionL covered_experiences;
-            uintA covered_experiences_ids;
-            learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
-            if (covered_experiences.N > 0) {      
-              MT::Array< uintA > experiences_per_outcome;
-              learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
-              if (newRule->existsInOutcome(newLit->s, tosplit_args)) {    //check whether newLit was used to predict something in the outcome
-                if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;                 
-                rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);   
-                tryRelativeTransition = false;
-                nextFunc = f;   //Consider function again with tryRelativeTransition=false
-                return;
-              }
-            }
-            if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
-            delete newRule;
-          }*/
-
-          /********************************************
-          Regular SplitOnEqualities
-          *********************************************/
-          tryRelativeTransition = true;
           arr usedValues = (*usedFVs)[usedFunctions(f)];
           if (DEBUG>2) {cout<<"Using function values: "<<usedValues<<endl;}
           FOR1D(usedValues, i) {
@@ -1687,10 +1687,145 @@ void SplitOnEqualities::reset() {
   nextRule = 1;
   nextVar = 0;
   nextFunc = 0;
-  tryRelativeTransition = true;
 }
 
 
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+//    S P L I T   O N   I N E Q U A L I T I E S
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+
+
+SplitOnInequalities::SplitOnInequalities() : SearchOperator() {
+  name = "SplitOnInequalities";
+  nextRule=1; // ignore default rule
+  nextVar=0;
+  nextFunc=0;
+  nextValue = 0;
+  SymL function_symbols;
+  Symbol::get_state_nonBinary(function_symbols) ;
+  usedFunctions.append(function_symbols);
+  // Achtung DON'T used derived: usedFunctions.append(logicObjectManager::f_derived);!!!!
+}
+
+void SplitOnInequalities::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
+  uint DEBUG = 0;
+  if (DEBUG>0) cout<<"SplitOnInequalities::findRules [START]"<<endl;
+  rulesC_2add.clear();
+  uint i;
+  
+  for (; nextRule<rulesC_old.rules.num(); nextRule++) {
+    if (vars.N == 0) { // first round
+      // determine vars
+      rulesC_old.rules.elem(nextRule)->getArguments(vars);
+      if (DEBUG>2) {
+        cout << "Inspecting rule:"<<endl;
+        rulesC_old.rules.elem(nextRule)->write(cout);
+        cout<<"findValue the following vars: "<<vars<<endl;
+      }
+    }
+    for (; nextVar<vars.d0; nextVar++) {
+      for (; nextFunc<usedFunctions.d0; nextFunc++) {
+        if (usedFunctions(nextFunc)->arity != 1)  // nur fuer unary functions!!
+          continue;
+        if (DEBUG>1) {cout<<"Checking var "<<nextVar<<" with function "<<usedFunctions(nextFunc)->name<<endl;}
+        // check whether function has not been used with this variable
+        bool alreadyUsed = false;
+        FOR1D(rulesC_old.rules.elem(nextRule)->context, i) {
+          if (rulesC_old.rules.elem(nextRule)->context(i)->s == usedFunctions(nextFunc)) {
+            if (rulesC_old.rules.elem(nextRule)->context(i)->args.findValue(vars(nextVar)) >= 0)
+              alreadyUsed = true;
+          }
+        }
+        if (DEBUG>1) { PRINT(alreadyUsed) }
+        if (!alreadyUsed) {
+          uintA tosplit_args;
+          tosplit_args.append(vars(nextVar));
+
+          arr usedValues = (*usedFVs)[usedFunctions(nextFunc)];
+          if (DEBUG>2) {cout<<"Using function values: "<<usedValues<<endl;}
+          for (; nextValue < usedValues.d0; nextValue++) {
+            //Rule with <=
+            Rule* newRule = new Rule;
+            newRule->action = rulesC_old.rules.elem(nextRule)->action;
+            newRule->context = rulesC_old.rules.elem(nextRule)->context;
+            Literal* lit_tosplit = Literal::get(usedFunctions(nextFunc), tosplit_args, usedValues(nextValue), Literal::comparison_lessEqual);
+            newRule->insertContext(lit_tosplit);
+            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
+            StateTransitionL covered_experiences;
+            uintA covered_experiences_ids;
+            learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+            if (covered_experiences.N > 0) {
+              if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
+              MT::Array< uintA > experiences_per_outcome;
+              learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
+              rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
+            }
+            else {
+              if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
+              delete newRule;
+            }
+
+            //Rule with >
+            newRule = new Rule;
+            newRule->action = rulesC_old.rules.elem(nextRule)->action;
+            newRule->context = rulesC_old.rules.elem(nextRule)->context;
+            lit_tosplit = Literal::get(usedFunctions(nextFunc), tosplit_args, usedValues(nextValue), Literal::comparison_greater);
+            newRule->insertContext(lit_tosplit);
+            if (DEBUG>0) {cout<<"Potential new rule:"<<endl<<*newRule;}
+            covered_experiences.clear();
+            covered_experiences_ids.clear();
+            learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+            if (covered_experiences.N > 0) {
+              if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
+              MT::Array< uintA > experiences_per_outcome;
+              learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
+              rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
+            }
+            else {
+              if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
+              delete newRule;
+            }
+
+            if (rulesC_2add.rules.num() > 0) {
+              nextValue++;
+              if (nextValue == usedValues.d0) {
+                nextValue = 0;
+                nextFunc++;
+                if (nextFunc == usedFunctions.d0) {
+                  nextFunc = 0;
+                  nextVar++;
+                  if (nextVar == vars.d0) {
+                    nextVar = 0;
+                    vars.clear();
+                    nextRule++;
+                  }
+                }
+              }
+              if (DEBUG>0) { write(rulesC_2add.rules); }
+              return;
+            }
+          }
+          nextValue = 0;
+        }
+      }
+      nextFunc = 0;
+    }
+    vars.clear();
+    nextVar = 0;
+  }
+  if (DEBUG>0) cout<<"SplitOnInequalities::findRules [END]"<<endl;
+}
+
+void SplitOnInequalities::reset() {
+  nextRule = 1;
+  nextVar = 0;
+  nextFunc = 0;
+  nextValue = 0;
+}
 
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
@@ -1712,7 +1847,7 @@ AddAbstractEquality::AddAbstractEquality() : SearchOperator() {
 }
 
 void AddAbstractEquality::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
-  uint DEBUG = 2;
+  uint DEBUG = 0;
   if (DEBUG>0) cout<<"AddAbstractEquality::findRules [START]"<<endl;
   rulesC_2add.clear();
   uint r, v, f, i;
@@ -1745,7 +1880,6 @@ void AddAbstractEquality::findRules(const RuleSetContainer& rulesC_old, const St
           uintA newLitArgs;
           newLitArgs.append(vars(v));
 
-          if (DEBUG>0) {cout << "Trying relative transition..." << endl; }
           Rule* newRule = new Rule;
           newRule->action = rulesC_old.rules.elem(r)->action;
           newRule->context = rulesC_old.rules.elem(r)->context;
@@ -1766,6 +1900,7 @@ void AddAbstractEquality::findRules(const RuleSetContainer& rulesC_old, const St
               nextFunc = f+1;
               break;
             }
+            else if (DEBUG>1) cout<<"Nothing useful was predicted, rule will be dropped."<<endl;
           }
           if (DEBUG>1) cout<<"Covers 0 experiences and will be dropped."<<endl;
           delete newRule;
@@ -1821,20 +1956,17 @@ ChangeRange::ChangeRange() : SearchOperator() {
 void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"ChangeRange::findRules [START]"<<endl;
-#if 0
   uint r, p, v;
   Rule* newRule;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     for (p=nextLiteral; p<rulesC_old.rules.elem(r)->context.N; p++) {
-      if (rulesC_old.rules.elem(r)->context(p)->s->symbol_type == Predicate::predicate_comparison) {
-        ComparisonLiteral* clit = dynamic_cast<ComparisonLiteral*>(rulesC_old.rules.elem(r)->context(p));
-        if (!((ComparisonLiteral*)clit->atom)->hasConstantBound()) break;
-        CHECK(clit!=NULL, "Cast failed");
+      Literal* clit = rulesC_old.rules.elem(r)->context(p);
+      if (clit->s->range_type == Symbol::integers || clit->s->range_type == Symbol::integer_set) {
         if (DEBUG>1) {cout<<"Changing range of literal #"<<p<<": ";clit->write(cout);cout<<endl;}
         if (nextPossibleValue == 0) {
           // collect possibleValues 
-          reason::usedValues(*(((ComparisonLiteral*)clit->atom)->fa1->f), experiences(0)->pre, possibleValues); // TODO this is not the perfect solution... need to find a clever way to store all used function values...
-          possibleValues.removeValueSafe(((ComparisonLiteral*)clit->atom)->bound);
+          possibleValues = (*usedFVs)[clit->s];
+          possibleValues.removeValueSafe(clit->value);
         }
         if (DEBUG>2) {cout<<"Using values: "<<possibleValues<<endl;}
         
@@ -1848,14 +1980,14 @@ void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTrans
             }
             else {
               // create new context literal
-              ComparisonLiteral* eq = logicObjectManager::getCompLiteral_constant(((ComparisonLiteral*)clit->atom)->fa1->f, ((ComparisonLiteral*)clit->atom)->comparisonType, possibleValues(v), ((ComparisonLiteral*)clit->atom)->fa1->args);
-              reason::insert(*newRule, *eq);
+              Literal* eq = Literal::get(clit->s, clit->args, possibleValues(v), clit->comparison_type);
+              newRule->insertContext(eq);
             }
           }
           if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
           StateTransitionL covered_experiences;
           uintA covered_experiences_ids;
-          calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+          learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
             if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
             if (DEBUG>3) {
@@ -1866,7 +1998,7 @@ void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTrans
               }
             }
             MT::Array< uintA > experiences_per_outcome;
-            learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids, alpha_PEN, p_min, pen_sum, pen_pos);
+            learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             nextPossibleValue = v+1;
             break;
@@ -1895,7 +2027,6 @@ void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTrans
     }
   } // for rules
   if (DEBUG>0) cout<<"ChangeRange::findRules [END]"<<endl;
-#endif
 }
 
 
@@ -1929,38 +2060,34 @@ MakeInterval::MakeInterval() : SearchOperator() {
 void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rulesC_2add) {
   uint DEBUG = 0;
   if (DEBUG>0) cout<<"MakeInterval::findRules [START]"<<endl;
-#if 0
   uint r, p, v;
   Rule* newRule;
   for (r=nextRule; r<rulesC_old.rules.num(); r++) {
     for (p=nextLiteral; p<rulesC_old.rules.elem(r)->context.N; p++) {
-      if (rulesC_old.rules.elem(r)->context(p)->s->symbol_type == Predicate::predicate_comparison) {
-        ComparisonLiteral* clit = dynamic_cast<ComparisonLiteral*>(rulesC_old.rules.elem(r)->context(p));
-        if (!((ComparisonLiteral*)clit->atom)->hasConstantBound()) { // only defined for constant bounds
-          continue;
-        }
-        CHECK(clit!=NULL, "Cast failed")
+      Literal *clit = rulesC_old.rules.elem(r)->context(p);
+      if (clit->s->range_type == Symbol::integer_set || clit->s->range_type == Symbol::integers) {
         // TODO CHECK FOR DOUBLE INTERVALS!!!!!!!!!!!!
         // omit equality literals
-        if (((ComparisonLiteral*)clit->atom)->comparisonType == comparison_equal)
+        if (!(clit->comparison_type == Literal::comparison_less || clit->comparison_type == Literal::comparison_lessEqual
+          || clit->comparison_type == Literal::comparison_greater || clit->comparison_type == Literal::comparison_greaterEqual))
           continue;
         if (DEBUG>1) {cout<<"Making interval for literal #"<<p<<": ";clit->write(cout);cout<<endl;}
         if (nextPossibleValue == 0) {
           // collect possibleValues 
-          reason::usedValues(*(((ComparisonLiteral*)clit->atom)->fa1->f), experiences(0)->pre, possibleValues); // TODO this is not the perfect solution... need to find a clever way to store all used function values...
-          if (((ComparisonLiteral*)clit->atom)->comparisonType == comparison_less 
-              || ((ComparisonLiteral*)clit->atom)->comparisonType == comparison_lessEqual) {
+          possibleValues = (*usedFVs)[clit->s];
+          if (clit->comparison_type == Literal::comparison_less 
+              || clit->comparison_type == Literal::comparison_lessEqual) {
             uint pv;
             FOR1D_DOWN(possibleValues, pv) {
-              if (possibleValues(pv) >= ((ComparisonLiteral*)clit->atom)->bound)
+              if (possibleValues(pv) >= clit->value)
                 possibleValues.remove(pv);
             }
           }
-          else if (((ComparisonLiteral*)clit->atom)->comparisonType == comparison_greater 
-                    || ((ComparisonLiteral*)clit->atom)->comparisonType == comparison_greaterEqual) {
+          else if (clit->comparison_type == Literal::comparison_greater 
+                    || clit->comparison_type == Literal::comparison_greaterEqual) {
             uint pv;
             FOR1D_DOWN(possibleValues, pv) {
-              if (possibleValues(pv) <= ((ComparisonLiteral*)clit->atom)->bound)
+              if (possibleValues(pv) <= clit->value)
                 possibleValues.remove(pv);
             }
           }
@@ -1974,24 +2101,24 @@ void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTran
           newRule->context = rulesC_old.rules.elem(r)->context;
           
           // create new context literal
-          ComparisonType newCompType;
-          if (((ComparisonLiteral*)clit->atom)->comparisonType == comparison_less 
-              || ((ComparisonLiteral*)clit->atom)->comparisonType == comparison_lessEqual) {
-            newCompType = comparison_greaterEqual;
+          Literal::ComparisonType newCompType;
+          if (clit->comparison_type == Literal::comparison_less 
+              || clit->comparison_type == Literal::comparison_lessEqual) {
+            newCompType = Literal::comparison_greaterEqual;
           }
-          else if (((ComparisonLiteral*)clit->atom)->comparisonType == comparison_greater 
-                      || ((ComparisonLiteral*)clit->atom)->comparisonType == comparison_greaterEqual) {
-            newCompType = comparison_lessEqual;
+          else if (clit->comparison_type == Literal::comparison_greater 
+                      || clit->comparison_type == Literal::comparison_greaterEqual) {
+            newCompType = Literal::comparison_lessEqual;
           }
           else
               HALT("Don't know this comparison type, digger.")
-          ComparisonLiteral* new_clit = logicObjectManager::getCompLiteral_constant(((ComparisonLiteral*)clit->atom)->fa1->f, newCompType, possibleValues(v), ((ComparisonLiteral*)clit->atom)->fa1->args);
-          reason::insert(*newRule, *new_clit);
+          Literal* new_clit = Literal::get(clit->s, clit->args, possibleValues(v), newCompType);
+          newRule->insertContext(new_clit);
 
           if (DEBUG>0) {cout<<"Potential new rule:"<<endl;newRule->write(cout);}
           StateTransitionL covered_experiences;
           uintA covered_experiences_ids;
-          calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
+          learn::calcCoverage(covered_experiences, covered_experiences_ids, newRule, experiences);
           if (covered_experiences.N > 0) {
             if (DEBUG>1) cout<<"Covers "<<covered_experiences.N<<" experiences and will be kept."<<endl;
             if (DEBUG>3) {
@@ -2002,7 +2129,7 @@ void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTran
                 }
             }
             MT::Array< uintA > experiences_per_outcome;
-            learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids, alpha_PEN, p_min, pen_sum, pen_pos);
+            learn::learn_outcomes(newRule, experiences_per_outcome, covered_experiences, covered_experiences_ids);
             rulesC_2add.append(newRule, covered_experiences_ids, experiences_per_outcome);
             nextPossibleValue = v+1;
             break;
@@ -2030,7 +2157,6 @@ void MakeInterval::findRules(const RuleSetContainer& rulesC_old, const StateTran
       nextLiteral=0;
     }
   } // for rules
-#endif
   if (DEBUG>0) cout<<"MakeInterval::findRules [END]"<<endl;
 }
 
@@ -2341,7 +2467,7 @@ AbstractEquality::AbstractEquality() : SearchOperator() {
 }
 
 void AbstractEquality::findRules(const RuleSetContainer& rulesC_old, const StateTransitionL& experiences, RuleSetContainer& rules_2add) {
-  uint DEBUG = 2;
+  uint DEBUG = 0;
   if (DEBUG>0) cout<<"AbstractEquality::findRules [START]"<<endl;
   uint r, p, i;
   Rule* newRule;

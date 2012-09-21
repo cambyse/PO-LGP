@@ -1,0 +1,35 @@
+support for FIELD macro
+-----------------------
+
+if yougenerate a tags file for use in vim or emacs with ctags, you most
+probably do something along the lines of 
+
+	for i in include src;
+	do
+		find $i -type f -name '*.cpp'
+		find $i -type f -name '*.h'
+		find $i -type f -name '*.c'
+	done |\
+		xargs ctags 
+
+
+For some time now we use the `FIELD` macro for defining fields of
+`struct`s.
+	FIELD(Type, var);
+
+ctags only has access to the plain sources (as you see them)  before
+preprocessing, so it can't resolve these macros and consequently fails
+to recognize var as a field. 
+
+adding the following argument to ctags fixes this:
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/set_\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/get_\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/reg_\1/"
+
+Take a look at ./ctags-ext.sh
+Enjoy.
+
+TODO: specify kinds (as in 
+	--regex-C++="/FIELD\(.*,([^)]*)\)/\1/m, struct member/"
+)

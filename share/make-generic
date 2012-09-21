@@ -339,10 +339,17 @@ MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
 endif
 
 ifeq ($(OPENCV),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv-2.3.1`
-CXXFLAGS += `pkg-config --cflags-only-I opencv-2.3.1`
-%CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
-LIBS      += `pkg-config --libs opencv-2.3.1`
+  ifeq ($(OLDUBUNTU),1)
+    CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv-2.3.1`
+    CXXFLAGS += `pkg-config --cflags-only-I opencv-2.3.1`
+    %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
+    LIBS      += `pkg-config --libs opencv-2.3.1`
+  else 
+    CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv`
+    CXXFLAGS += `pkg-config --cflags-only-I opencv`
+    %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
+    LIBS      += `pkg-config --libs opencv`
+  endif
 endif
 
 # newer qhull version?

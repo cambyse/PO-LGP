@@ -136,7 +136,14 @@ void reason::calcSuccessorState(SymbolicState& suc, const SymbolicState& pre, co
       if (outcome(k)->s == pre.lits(i)->s
       && outcome(k)->args == pre.lits(i)->args) {
         if (outcome(k)->s->range_type != Symbol::binary && outcome(k)->comparison_type == Literal::comparison_offset) {    //apply offset
-          suc.lits.append(Literal::get(pre.lits(i)->s, pre.lits(i)->args, pre.lits(i)->value+outcome(k)->value));
+          double sumValue = pre.lits(i)->value + outcome(k)->value;
+          if (outcome(k)->s->range_type == Symbol::integer_set) {   //clamp   
+            uint rangeMin = outcome(k)->s->range.min();
+            uint rangeMax = outcome(k)->s->range.max();  
+            if (sumValue < rangeMin) sumValue = rangeMin;
+            if (sumValue > rangeMax) sumValue = rangeMax;
+          }
+          suc.lits.append(Literal::get(pre.lits(i)->s, pre.lits(i)->args, sumValue));
         }
         break;
       }
@@ -608,6 +615,7 @@ void reason::calc_coveringOutcomes(uintA& covering_outcomes, Rule* abstractRule,
   CHECK(subs.num()==1, "rule coverage only in case of exactly one sub");
   Rule* r_ground = subs.elem(0)->apply(*abstractRule);
   calc_coveringOutcomes(covering_outcomes, r_ground, pre, post);
+  delete r_ground;
 }
 
 
@@ -625,6 +633,7 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
   uint noise_predictions = 0;
   FOR1D(experiences, i) {
     if (DEBUG>1) {cout<<"+++++ Ex "<<i<<" +++++"<<endl;}
+    if (DEBUG>2) {experiences(i)->write(cout, true);}
     if (DEBUG>1) {cout<<"Ex-Changed: "<<experiences(i)->changes<<endl;}
     RuleSet coveringGroundRules;
     calc_coveringRules_groundAction(coveringGroundRules, rules, experiences(i)->pre, experiences(i)->action);
@@ -632,22 +641,12 @@ double reason::log_likelihood(const RuleSet& rules, const StateTransitionL& expe
     if (DEBUG>1) {PRINT(coveringGroundRules.num());}
     Rule* explaining_rule = NULL;
     double lik = 0.;
+    CHECK(Rule::isDefaultRule(coveringGroundRules.elem(0)), "first covering rule needs to be default rule");
     // Explain as non-noise
-    if (coveringGroundRules.num() == 2) {
-      // erste sollte default regel sein, oder?
-      NIY;
-//       CHECK(coveringGroundRules.elem(0)->action->s->id == DEFAULT_ACTION_PRED__ID, "");
-      explaining_rule = coveringGroundRules.elem(1);
-      lik = probability_groundRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
-    }
+    if (coveringGroundRules.num() == 2) {explaining_rule = coveringGroundRules.elem(1);}
     // Explain as noise
-    else {
-      explaining_rule = coveringGroundRules.elem(0);
-      NIY;
-//       CHECK(explaining_rule->action->s->id == DEFAULT_ACTION_PRED__ID, "");
-      lik = probability_defaultRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
-      noise_predictions++;
-    }
+    else {explaining_rule = coveringGroundRules.elem(0);  noise_predictions++;}
+    lik = probability_groundRule(explaining_rule, experiences(i)->pre, experiences(i)->post, p_min);
     if (DEBUG>1) {cout<<"Explaining rule:"<<endl<<*explaining_rule;  PRINT(lik);  PRINT(log(lik));}
     loglik += log(lik);
   }

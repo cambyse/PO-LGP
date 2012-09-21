@@ -200,6 +200,10 @@ Literal* Literal::get(Symbol* s, const uintA& args, double value, ComparisonType
   }
   CHECK(l!=NULL, "literal could not be made");
   if (DEBUG>0) {cout<<"getting:  "<<*l<<" "<<l<<endl;}
+  if (l->s->range_type == Symbol::binary) {
+    if (!TL::areEqual(l->value, 0)  &&  !TL::areEqual(l->value, 1))
+      HALT("Literal "<<*l<<" is defined for a binary symbol "<<*l->s<<", but has value "<<l->value);
+  }
   if (DEBUG>0) {CHECK(l->args.N==0 || l->args == args, "");}
   if (DEBUG>0) {cout<<"Literal::get[END]"<<endl;}
   return l;
@@ -351,6 +355,8 @@ Literal* Literal::get(const char* text) {
       else HALT("unknown variable "<<arg);
     }
   }
+
+  Literal* l = NULL;
   
   // Value
   Literal::ComparisonType comp_type;
@@ -385,11 +391,15 @@ Literal* Literal::get(const char* text) {
     }
     else
       comp_type = Literal::comparison_equal;
-    mt_string >> value;
+
+    if (MT::peerNextChar(mt_string) == '?')
+      l = Literal::getVarComparison(s, args);
+    else
+      mt_string >> value;
     if (DEBUG>0) {PRINT(value);}
   }
 
-  Literal* l = Literal::get(s, args, value, comp_type);
+  if (!l)  l = Literal::get(s, args, value, comp_type);
   if (DEBUG>0) {cout<<"==> "<<*l<<endl;}
   if (DEBUG>0) {cout<<"Literal::get [END]"<<endl;}
   return l;
@@ -409,7 +419,7 @@ void Literal::get(LitL& lits, const char* text) {
     if (MT::peerNextChar(mt_string) == ',') MT::skipOne(mt_string);
 //     MT::skip(std::istream& is,const char *skipchars=" \n\r\t",bool skipCommentLines=true);
     char c = MT::peerNextChar(mt_string);
-    if (c == '='  ||  c == '>'  ||  c == '<') {
+    if (c == '='  ||  c == '>'  ||  c == '<' || c == '+') {
       MT::String comparison;
       comparison.read(mt_string, NULL, " \n", 1);
       lit_text << ")" << comparison;
@@ -541,6 +551,17 @@ bool Literal::nonContradicting(const LitL& l1, const LitL& l2) {
   return true;
 }
 
+bool Literal::typeCheck() {
+  if (s->arg_types.N == 0) return true;   //no types specified
+  CHECK(args.N == s->arg_types.N, "Unexpected nmber of arguments!");
+  uint i;
+  FOR1D(args, i) {
+    if (!s->arg_types(i)->subsumes(*reason::getArgumentTypeOfObject(args(i))))
+      return false;
+  }
+  return true;
+}
+
 
 void Literal::getLiterals(LitL& lits, Symbol* s, const uintA& constants, double value, bool withRepeatingArguments) {
   lits.clear();
@@ -575,7 +596,7 @@ void Literal::getLiterals_state(LitL& lits, const uintA& constants, const uintA&
   Literal::getLiterals_state(lits_total, constants, value, binaryOnly);
   uint i;
   FOR1D(lits_total, i) {
-    if (numberSharedElements(lits_total(i)->args, constants_mustBeContained) == 0) {
+    if (numberSharedElements(lits_total(i)->args, constants_mustBeContained) == constants_mustBeContained.N) {
       lits.append(lits_total(i));
     }
   }
@@ -643,7 +664,8 @@ void Literal::sort(LitL& lits) {
   // literals with small keys first
   // Stellen 1-4: arguments
   // Stellen 5-6: symbol
-  // Stelle 7: negative
+  // Stelle 7: non-binary
+  // Stelle 8: negative
   FOR1D(lits, i) {
     uint key = 0;
     // Stellen 1-4: arguments
@@ -658,9 +680,15 @@ void Literal::sort(LitL& lits) {
     CHECK(lits(i)->s->arity <= 2, "");
     // Stellen 5-6: symbols
     key += 10e4 * symbols.findValue(lits(i)->s);
-    // Stelle 7: negated literals last
-    if (lits(i)->isNegated()) {
+
+    // Stelle 7: non-binary?
+    if (lits(i)->s->range_type != Symbol::binary) {
       key += 10e7;
+    }
+
+    // Stelle 8: negated literals last
+    if (lits(i)->isNegated()) {
+      key += 10e8;
     }
     keys(i) = key;
     if (DEBUG>1) {cout<<"("<<i<<") "<<*lits(i)<<"\t"<<keys(i)<<endl;}
@@ -775,6 +803,7 @@ void SymbolicState::read(ifstream& in, bool read_constants) {
   if (!read_constants) {
     Literal::getArguments(state_constants, lits);
   }
+  lits.memMove = true;
   uint i;
   FOR1D_DOWN(lits, i) {
     if (lits(i)->s->symbol_type != Symbol::primitive)
@@ -963,10 +992,11 @@ void SymbolicState::getRelatedConstants(uintA& constants_related, uint id, bool 
  ************************************************/
 
 
-StateTransition::StateTransition(const SymbolicState& pre, Literal* action, const SymbolicState& post) {
+StateTransition::StateTransition(const SymbolicState& pre, Literal* action, const SymbolicState& post, double reward) {
   this->pre = pre;
   this->action = action;
   this->post = post;
+  this->reward = reward;
   calcChanges();
 }
 
@@ -978,11 +1008,10 @@ StateTransition::~StateTransition() {}
 
 
 void StateTransition::calcChanges() {
-  // only look at p_prim
+  // only look at primitives
   changedConstants.clear();
   changes.clear();
   uint i,j;
-
   //changed values from pre to post
   FOR1D(pre.lits, i) {
     if (pre.lits(i)->s->symbol_type != Symbol::primitive) continue;
@@ -1002,9 +1031,7 @@ void StateTransition::calcChanges() {
         if (!found) { cout << "Warning: Undefined value for non-binary symbol: "; pre.lits(i)->s->write(); cout << endl; }
       }
     }
-
   }
-
   // pre-, post+
   //only consider binary symbols because we assume that other symbols are not added or removed but only change values
   FOR1D(post.lits, i) {
@@ -1027,6 +1054,7 @@ void StateTransition::write(ostream& os, bool with_details) const {
     os<<"Changed constants: "<<changedConstants<<endl;
     os << "Diff: "<< changes.N << endl;
   }
+  os<<reward<<endl;
   os<<"Changed literals:    " << changes << endl;
 }
 
@@ -1050,9 +1078,9 @@ void StateTransition::write(const StateTransitionL& exs, ostream& os) {
 }
 
 
-StateTransitionL& StateTransition::read(const char* filename) {
+StateTransitionL& StateTransition::read_SASAS(const char* filename) {
   uint DEBUG = 0;
-  if (DEBUG>0) {cout<<"StateTransition::read [START]"<<endl;}
+  if (DEBUG>0) {cout<<"StateTransition::read_SASAS [START]"<<endl;}
   if (DEBUG>0) {PRINT(filename);}
   static StateTransitionL experiences;
   ifstream in(filename);
@@ -1081,7 +1109,42 @@ StateTransitionL& StateTransition::read(const char* filename) {
     read_state = !read_state;
   }
   if (DEBUG>0) {PRINT(experiences.N);}
-  if (DEBUG>0) {cout<<"StateTransition::read [END]"<<endl;}
+  if (DEBUG>0) {cout<<"StateTransition::read_SASAS [END]"<<endl;}
+  return experiences;
+}
+
+
+StateTransitionL& StateTransition::read_SAS_SAS(const char* filename) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"StateTransition::read_SAS_SAS [START]"<<endl;}
+  if (DEBUG>0) {PRINT(filename);}
+  static StateTransitionL experiences;
+  ifstream in(filename);
+  if (!in.is_open()) {HALT("File not found: "<<filename);}
+  MT::skip(in);
+  SymbolicState* state_pre, *state_post = NULL;
+  Literal* action = NULL;
+  while (MT::skip(in) != -1) {
+    if (DEBUG>2) {PRINT(MT::peerNextChar(in));}
+    state_pre = new SymbolicState;
+    state_pre->read(in);
+    MT::String line;
+    line.read(in, NULL, "\n");
+    if (DEBUG>1) {cout<<"READING ACTION:"<<endl; PRINT(line);}
+    action = Literal::get(line);
+    state_post = new SymbolicState;
+    state_post->read(in);
+    double reward = 0.;
+    char c = MT::skip(in);
+    if (isdigit(c) || c == '-') {
+      in >> reward;
+    }
+    experiences.append(new StateTransition(*state_pre, action, *state_post, reward));
+    if (DEBUG>0) {cout<<"Read StateTransition #"<<experiences.N-1<<":"<<endl; experiences.last()->write(cout,false);}
+    if (!reason::isGround(*experiences.last())) HALT("Attention! Experience is not ground!");
+  }
+  if (DEBUG>0) {PRINT(experiences.N);}
+  if (DEBUG>0) {cout<<"StateTransition::read_SAS_SAS [END]"<<endl;}
   return experiences;
 }
 
@@ -1091,6 +1154,16 @@ void write(const StateTransitionL& exs, ostream& os) {
   FOR1D(exs, k) {
             os << "[" << k << "] ("<<(k+1)<<"/"<<exs.N<<")"<<endl;
     exs(k)->write(os);
+  }
+}
+
+
+void getConstants(uintA& constants, const StateTransitionL& transitions) {
+  constants.clear();
+  uint i;
+  FOR1D(transitions, i) {
+    constants.setAppend(transitions(i)->pre.state_constants);
+    constants.setAppend(transitions(i)->post.state_constants);
   }
 }
 

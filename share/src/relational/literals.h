@@ -71,6 +71,9 @@ class Literal {
     virtual void write(ostream& os = cout, bool withTypes = false) const;
     bool compareValueTo(Literal::ComparisonType compType, double a);
     static bool compare(double a, Literal::ComparisonType compType, double b);
+
+    ///Checks whether all arguments have correct types according to the symbol
+    bool typeCheck();
     
     bool isNegated() const;
     
@@ -146,12 +149,13 @@ struct StateTransition {
   // Essential data-fields
   SymbolicState pre, post;
   Literal* action;
+  double reward;
   MT::Array< Literal* > changes;
   uintA changedConstants;
   
   // -----------------------------------
   // Convenience methods
-  StateTransition(const SymbolicState& pre, Literal* action, const SymbolicState& post);
+  StateTransition(const SymbolicState& pre, Literal* action, const SymbolicState& post, double reward = 0);
   StateTransition();
   ~StateTransition();
   bool noChange();
@@ -159,11 +163,13 @@ struct StateTransition {
   void write(ostream& os = cout, bool with_details = false) const;
   
   static void write(const StateTransitionL& exs, ostream& os = cout);
-  static StateTransitionL& read(const char* filename);
+  static StateTransitionL& read_SASAS(const char* filename);  // file: state1 action1 state2 action2 state3...
+  static StateTransitionL& read_SAS_SAS(const char* filename);  // file: state1 action1 state1' state2 action2 state2'...
 };
 
 
 void write(const StateTransitionL& exs, ostream& os = cout);
+void getConstants(uintA& constants, const StateTransitionL& transitions);
 
 
 

@@ -59,6 +59,21 @@ bool reason::isGround(const Literal* lit) {
 }
 
 
+bool reason::isGround(const SymbolicState& state) {
+  uint i;
+  FOR1D(state.lits, i) {
+    if (!isGround(state.lits(i)))
+      return false;
+  }
+  return true;
+}
+
+
+bool reason::isGround(const StateTransition& trans) {
+  return isGround(trans.pre)  &&  isGround(trans.action)  &&  isGround(trans.post);
+}
+
+
 bool reason::isPurelyAbstract(const Literal* lit) {
   uint i;
   FOR1D(lit->args, i) {
@@ -70,7 +85,7 @@ bool reason::isPurelyAbstract(const Literal* lit) {
 
 
 void reason::setConstants(uintA& _constants) {
-  ArgumentType* default_type = ArgumentType::get(MT::String("any"), ArgumentType::simple);
+  ArgumentType* default_type = ArgumentType::get(MT::String("any"));
   ArgumentTypeL _constants_types;
   uint i;
   FOR1D(_constants, i) {_constants_types.append(default_type);}
@@ -102,7 +117,7 @@ ArgumentType* reason::getArgumentTypeOfObject(uint object_id) {
     return mem__constants_types(idx);
   }
   else {
-    return ArgumentType::get(MT::String("any"), ArgumentType::simple);
+    return ArgumentType::get(MT::String("any"));
   }
 }
 
@@ -122,12 +137,24 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
   if (DEBUG>1) {cout<<"ConjunctionSymbol: "<<s<<endl<<"lits_given: "<<lits_given<<endl;}
   uint i, j, k;
   lits_derived.clear();
+
+  //filter lits_given
+  LitL lits_filtered;
+  FOR1D(lits_given, i) {
+    FOR1D(s.base_literals, j) {
+      if (lits_given(i)->s == s.base_literals(j)->s && TL::areEqual(lits_given(i)->value, s.base_literals(j)->value)) {
+        lits_filtered.append(lits_given(i));
+        break;
+      }
+    }
+  }
+
   // Existential
   if (!s.free_vars_all_quantified) {
     if (DEBUG>1) {cout<<"existential"<<endl;}
     // simply call cover
     SubstitutionSet subs;
-    if (calcSubstitutions(subs, lits_given, s.base_literals, false)) {
+    if (calcSubstitutions(subs, lits_filtered, s.base_literals, false)) {
       FOR1D_(subs, j) {
         if (s.arity == 2  &&  !subs.elem(j)->mapsToDistinct()) continue;
         uintA args;
@@ -168,7 +195,7 @@ bool reason::derive_conjunction(LitL& lits_derived, ConjunctionSymbol& s, const 
           sub_args__incl_freePos.addSubs(freeVars_pos(k), args_freePos_lists(j)(k));
         }
         if (DEBUG>2) {cout<<"sub_args__incl_freePos: "<<endl;  sub_args__incl_freePos.write();}
-        if (!covers(lits_given, s.base_literals, true, &sub_args__incl_freePos)) {
+        if (!covers(lits_filtered, s.base_literals, true, &sub_args__incl_freePos)) {
           if (DEBUG>2) {cout<<"Fails."<<endl;}
           break;
         }
@@ -261,13 +288,36 @@ bool reason::derive_count(LitL& lits_derived, CountSymbol& s, const LitL& lits_g
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"derive_count [START]"<<endl;}
   if (DEBUG>0) {cout<<s<<endl;  PRINT(lits_given);  PRINT(constants);}
-  uint i, k;
+  uint i, j, k;
   MT::Array< uintA > args_lists;
   TL::allPermutations(args_lists, constants, s.arity, true, true);
+
+  uintA freeVarsPos(s.arity);
+  FOR1D(s.base_literal->args, i) {
+    if (s.base_literal->args(i) < s.arity)
+      freeVarsPos(s.base_literal->args(i)) = i;
+  }
+  //filter lits_given
+  LitL lits_filtered;
+  FOR1D(lits_given, i) {
+    if (lits_given(i)->s == s.base_literal->s && lits_given(i)->value == s.base_literal->value)
+      lits_filtered.append(lits_given(i));
+  }
+
+  if (DEBUG>0) {cout<<s<<endl;  PRINT(lits_given); PRINT(lits_filtered); PRINT(constants); PRINT(freeVarsPos); }
+
   FOR1D(args_lists, i) {
     if (DEBUG>1) {PRINT(args_lists(i))}
     uint counter = 0;
-    Substitution sub_countsymbol;
+    
+    FOR1D(lits_filtered, j) {
+      FOR1D(args_lists(i), k) {
+        if (lits_filtered(j)->args(freeVarsPos(k)) == args_lists(i)(k))
+          counter++;
+      }
+    }    
+
+    /*Substitution sub_countsymbol;
     FOR1D(args_lists(i), k) {
       sub_countsymbol.addSubs(k, args_lists(i)(k));
     }
@@ -283,14 +333,49 @@ bool reason::derive_count(LitL& lits_derived, CountSymbol& s, const LitL& lits_g
       Substitution* sub_total = Substitution::combine(sub_countsymbol, *subs_free_vars.elem(k));
       if (DEBUG>1) {PRINT(*sub_total);}
       Literal* lit_test = sub_total->apply(s.base_literal);
-      if (holds(lits_given, lit_test)) counter++;
+      if (holds(lits_filtered, lit_test)) counter++;
       delete sub_total;
-    }
+    }*/
     lits_derived.append(Literal::get(&s, args_lists(i), counter));
     if (DEBUG>0) {cout<<" "<<*lits_derived.last()<<endl;}
   }
   if (DEBUG>0) {cout<<"derive_count [END]"<<endl;}
   return true; // always holds
+}
+
+
+bool reason::derive_functiondiff(LitL& lits_derived, DifferenceFunction& s, const LitL& lits_given, const uintA& constants) {
+  uint DEBUG = 0;
+  if (DEBUG>0) {cout<<"derive_functiondiff [START]"<<endl;}
+
+  SubstitutionSet subs;
+  calcSubstitutions(subs, lits_given, s.restrictionLits, false);
+
+  uint i,j;
+  LitL baseSymbolLits;
+  FOR1D(lits_given, i) {
+    if (lits_given(i)->s == s.baseSymbol)
+      baseSymbolLits.append(lits_given(i));
+  }
+  
+  FOR1D_(subs, i) {
+    double val1 = 0;
+    FOR1D(baseSymbolLits, j) {
+      if (baseSymbolLits(j)->args(0) == subs.elem(i)->getSubs(s.baseFunctionLit1->args(0)))
+        val1 = baseSymbolLits(j)->value;
+    }
+    double val2 = 0;
+    FOR1D(baseSymbolLits, j) {
+      if (baseSymbolLits(j)->args(0) == subs.elem(i)->getSubs(s.baseFunctionLit2->args(0)))
+        val2 = baseSymbolLits(j)->value;
+    }
+    double diff = val2-val1;
+    //if (diff < 0) diff = 0;
+    uintA args;
+    args.append(subs.elem(i)->getSubs(0));
+    lits_derived.append(Literal::get(&s, args, diff));
+  }
+  return true;
 }
 
 
@@ -494,6 +579,13 @@ void reason::derive(LitL& lits_derived, const LitL& lits_given, const uintA& con
       CHECK(s!=NULL, "cast failed");
       LitL lits_derived_local;
       derive_reward(lits_derived_local, *s, lits_all, constants);
+      lits_derived.append(lits_derived_local);
+    }
+    else if (symbols(i)->symbol_type == Symbol::function_difference) {
+      DifferenceFunction *s = dynamic_cast<DifferenceFunction*>(symbols(i));
+      CHECK(s!=NULL, "cast failed");
+      LitL lits_derived_local;
+      derive_functiondiff(lits_derived_local, *s, lits_all, constants);
       lits_derived.append(lits_derived_local);
     }
     else
@@ -711,10 +803,9 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
     if (DEBUG>0) {cout<<"Positive"<<endl;}
     bool literalTrue;
     FOR1D(lits_ground, i) {
-      Substitution* sub1 = new Substitution;
-      literalTrue = calcSubstitution(*sub1, lits_ground(i), lit_input__ground_init);
-      if (literalTrue) {subs.append(Substitution::combine(*sub1, *initSub));}
-      delete sub1;
+      Substitution sub1;
+      literalTrue = calcSubstitution(sub1, lits_ground(i), lit_input__ground_init);
+      if (literalTrue) {subs.append(Substitution::combine(sub1, *initSub));}
     }
   }
   else {
@@ -726,13 +817,11 @@ bool reason::calcSubstitutions(SubstitutionSet& subs, const LitL& lits_ground, L
       if (DEBUG>0) {cout<<"All quantification"<<endl;}
       bool literalTrue = false;
       uint i;
-      Substitution* sub1;
       Literal* lit_input__ground_init_pos = lit_input__ground_init->getNegated();
       FOR1D(lits_ground, i) {
-        sub1 = new Substitution;
-        if (initSub != NULL) *sub1 = *initSub;
-        literalTrue = calcSubstitution(*sub1, lits_ground(i), lit_input__ground_init_pos);
-        delete sub1;
+        Substitution sub1;
+        if (initSub != NULL) sub1 = *initSub;
+        literalTrue = calcSubstitution(sub1, lits_ground(i), lit_input__ground_init_pos);
         if (literalTrue) break;
       }
       if (lits_ground.N == i) {  // lit_pos cannot be unified

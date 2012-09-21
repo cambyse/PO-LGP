@@ -64,6 +64,8 @@ struct Rule {
   void getAbsentLiterals(LitL& literals, bool positiveOnly = false) const;
   bool usesAtom(Literal* lit) const;
   uint numberLiterals() const;
+  uint getNegStartPos();
+  uint getNonBinaryStartPos();
   void insertContext(Literal* literal);
   void cleanup();  // order context and outcomes, clean-up DRs
   void copyBody(const Rule& other);
@@ -129,6 +131,7 @@ class RuleSet {
     
     static void ground(RuleSet& rules_ground, const RuleSet& rules_abstract, const uintA& constants);
     static void ground_with_filtering(RuleSet& rules_ground, const RuleSet& rules_abstract, const uintA& constants, const SymbolicState& s, bool delete_nonchanging_concepts = false);
+    static void groundFunctionVars(const RuleSet& rules, RuleSet& rules_expanded);
 };
 
 
