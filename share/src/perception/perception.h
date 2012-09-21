@@ -278,6 +278,7 @@ struct ObjectBelief {
     shapeParams.resize(4);  
   }
   //pose
+  // TODO: make pointers
   ors::Vector position;
   ors::Quaternion rotation;
 
@@ -287,10 +288,12 @@ struct ObjectBelief {
   ors::ShapeType shapeType;
   arr shapeParams;
 
+  // TODO: make pointer, such that the using app does not need to implicitly
+  // include half of the PCL?
   pcl::ModelCoefficients::Ptr pcl_object;
 
   //pcl::PointCloud<PointT>* pointCloud;
-  arr veritces;
+  arr vertices;
   uintA triangles;
 };
 

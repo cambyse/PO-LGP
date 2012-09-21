@@ -7,7 +7,7 @@
 #include <motion/motion.h>
 #include <pcl/ModelCoefficients.h>
 
-SET_LOG(pointcloud, DEBUG);
+SET_LOG(pointcloud, INFO);
 
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
@@ -38,15 +38,6 @@ class ObjectClusterer : public Process {
     void step();
     void close();
 };
-  
-//class ObjectFitterIntegrator : public Integrator<FittingJob, FittingResult> {
-  //public:
-    //ObjectFitterIntegrator() : Integrator<FittingJob, FittingResult>("ObjectFitter (Integrator)") { birosInfo().getVariable(objects, "Objects", this); }
-    //PointCloudSet* point_clouds;
-    //ObjectSet* objects;
-    //void restart();
-    //virtual void integrateResult(const FittingResult &r);
-//};
 
 class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
   public:
@@ -69,19 +60,6 @@ class ObjectFitter : public Process {
     PointCloudSet* objectClusters;
     ObjectSet *objects;
 };
-
-//class ObjectFitterWorkerFactory : public WorkerFactory<FittingJob, FittingResult> {
-  //public:
-    //Worker<FittingJob, FittingResult>* createWorker() { return new ObjectFitterWorker(); }
-//};
-
-//class ObjectFitter : public Master<FittingJob, FittingResult> {
-  //public:
-    //ObjectFitter(ObjectFitterWorkerFactory *factory, ObjectFitterIntegrator *integrator, int num_of_workers) :
-      //Master<FittingJob, FittingResult>(factory, integrator, num_of_workers) {
-        //birosInfo().getVariable(integrator->point_clouds, "ObjectClusters", integrator);
-      //};
-//};
 
 struct ObjectBeliefSet;
 
