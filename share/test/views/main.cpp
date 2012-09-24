@@ -16,6 +16,7 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   
   b::dump(); //before anything has been done!
+  b::openInsideOut();
   
   ExampleVar v;
   View *v0 = b::newView(*v.fields(0));

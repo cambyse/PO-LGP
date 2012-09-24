@@ -98,7 +98,7 @@ struct ViewInfo{
 template<class ViewT, class AppliesOnT>
 struct ViewInfo_typed:ViewInfo{
   ViewInfo_typed(const char *_name,
-		const char* _appliesOn_sysType=NULL){
+		 const char* _appliesOn_sysType=NULL){
     name = _name;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     birosInfo().views.append(this);
