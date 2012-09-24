@@ -36,7 +36,4 @@ KinectInterface::KinectInterface(const char* name) : Process(name), s(new sKinec
   birosInfo().getVariable(data_rgb, "KinectDataRGB", this);
 }
 
-PointCloudVar::PointCloudVar(const char *name) : Variable(name), point_cloud(new pcl::PointCloud<PointT>()) { 
-  reg_point_cloud();
-}
 #endif

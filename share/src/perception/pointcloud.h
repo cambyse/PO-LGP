@@ -18,6 +18,15 @@ typedef MT::Array<FittingResult> FittingResultL;
 
 //ProcessL newPointcloudProcesses(uint nom_of_workers);
 
+
+class PointCloudVar : public Variable {
+  public:
+    PointCloudVar(const char* name);
+    FIELD(pcl::PointCloud<PointT>::ConstPtr, point_cloud);
+    pcl::PointCloud<PointT>::Ptr get_point_cloud_copy(Process *p) { readAccess(p); pcl::PointCloud<PointT>::Ptr tmp = point_cloud->makeShared(); deAccess(p); return tmp; }
+};
+
+
 class PointCloudSet : public Variable {
   public:
     PointCloudSet(const char* name) : Variable(name) { reg_point_clouds(); }

@@ -578,4 +578,7 @@ void ObjectTransformator::step() {
   DEBUG(pointcloud, "done.");
 }
 
+PointCloudVar::PointCloudVar(const char *name) : Variable(name), point_cloud(new pcl::PointCloud<PointT>()) { 
+  reg_point_cloud();
+}
 #endif
