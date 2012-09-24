@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <stdint.h>
+#include <cstring>
 
 #define FOR1D(x, i)   for(i=0;i<x.d0;i++)
 #define FOR1D_DOWN(x, i)   for(i=x.d0;i--;)

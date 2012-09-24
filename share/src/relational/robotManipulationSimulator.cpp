@@ -35,7 +35,7 @@
 #define SMALL_HEIGHT_STEP 0.05
 // table + neutralHeightBonus = NEUTRAL_HEIGHT
 #define NEUTRAL_HEIGHT_BONUS 0.5
-#define HARD_LIMIT_DIST_Y -0.8
+#define HARD_LIMIT_DIST_Y -1.2
 
 
 
@@ -124,7 +124,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
 ************************************************/
 
 // How many time-steps until action fails
-#define SEC_ACTION_ABORT 1000
+#define SEC_ACTION_ABORT 300
 
 RobotManipulationSimulator::RobotManipulationSimulator(){
   C=0;
@@ -1707,10 +1707,10 @@ void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
   for (uint i = 0; i < numOfBlocks; ++i) {
-    arr center3d = ARR(0., -.8) + randn(2,1) * 0.3;
+    arr center3d = ARR(0.2, -.8) + randn(2,1) * 0.1;
 
     int t = rand() % 100;
-    double blocksize = 0.08;// + (rand() % 100) / 100000.;
+    double blocksize = 0.108;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);

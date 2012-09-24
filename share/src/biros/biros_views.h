@@ -91,7 +91,6 @@ struct View {
 
 struct ViewInfo{
   MT::String name;
-  enum ViewType{ fieldVT, variableVT, processVT, parameterVT, globalVT } type;
   MT::String appliesOn_sysType;
   virtual View *newInstance() = 0;
 };
@@ -99,18 +98,16 @@ struct ViewInfo{
 template<class ViewT, class AppliesOnT>
 struct ViewInfo_typed:ViewInfo{
   ViewInfo_typed(const char *_name,
-		ViewType _type,
 		const char* _appliesOn_sysType=NULL){
     name = _name;
-    type = _type;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     birosInfo().views.append(this);
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };
 
-#define REGISTER_VIEW_TYPE(ViewT, AppliesOnT, viewKind)\
-  ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT, ViewInfo:: viewKind);
+#define REGISTER_VIEW_TYPE(ViewT, AppliesOnT)\
+  ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
 
 
 //===========================================================================
@@ -118,7 +115,7 @@ struct ViewInfo_typed:ViewInfo{
 // specific views -> perhaps move somewhere else
 //
 
-#define GenericInfoView(_what, _arg, _type) \
+#define GenericInfoView(_what) \
 \
 struct Generic##_what##View:View{ \
   Generic##_what##View():View() {} \
@@ -126,15 +123,15 @@ struct Generic##_what##View:View{ \
   virtual void write(std::ostream& os) { writeInfo(os, *((_what*)object), false); } \
 };
 
-#define GenericInfoView_CPP(_what, _name, viewKind) \
-  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy(#_name, ViewInfo::viewKind, "ALL");
-
-GenericInfoView(Process, proc, processVT);
-GenericInfoView(Variable, var, variableVT);
-GenericInfoView(FieldInfo, field, fieldVT);
-GenericInfoView(Parameter, param, parameterVT);
+GenericInfoView(Process);
+GenericInfoView(Variable);
+GenericInfoView(FieldInfo);
+GenericInfoView(Parameter);
 
 #undef GenericInfoView
+
+#define GenericInfoView_CPP(_what) \
+  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy("Generic"#_what"View");
 
 //===========================================================================
 
@@ -165,6 +162,8 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
+  OrsView();
+  OrsView(struct FieldInfo* field, GtkWidget *container);
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

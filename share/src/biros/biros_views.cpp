@@ -1,10 +1,10 @@
 #include "biros_views.h"
 #include "control.h"
 
-GenericInfoView_CPP(Process, GenericProcessView, processVT);
-GenericInfoView_CPP(Variable, GenericVariableView, variableVT);
-GenericInfoView_CPP(FieldInfo, GenericFieldInfoView, fieldVT);
-GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
+GenericInfoView_CPP(Process);
+GenericInfoView_CPP(Variable);
+GenericInfoView_CPP(FieldInfo);
+GenericInfoView_CPP(Parameter);
 
 #undef GenericInfoView_CPP
 
@@ -22,18 +22,25 @@ GenericInfoView_CPP(Parameter, GenericParameterView, parameterVT);
 
 View::View():object(NULL), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->views.append(this);
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.append(this);
+  gtkProcess()->var->deAccess(NULL);
   gtkUnlock();
 }
 
 View::View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->views.append(this);
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.append(this);
+  gtkProcess()->var->deAccess(NULL);
   gtkUnlock();
 }
 
 View::~View(){
   gtkLock();
+  gtkProcess()->var->writeAccess(NULL);
+  gtkProcess()->var->views.removeValue(this);
+  gtkProcess()->var->deAccess(NULL);
   if(widget) gtk_widget_destroy(widget);
   if(gl) delete gl;
   gtkUnlock();
@@ -86,7 +93,7 @@ void View::gtkUpdate(){
 // specific views
 //
 
-REGISTER_VIEW_TYPE(ImageView, byteA, fieldVT);
+REGISTER_VIEW_TYPE(ImageView, byteA);
 
 void ImageView::glInit() {
   gl->img = ((byteA*) ((FieldInfo*)object)->p);
@@ -100,7 +107,7 @@ void ImageView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(RgbView, byteA, fieldVT);
+REGISTER_VIEW_TYPE(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
   byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
@@ -134,7 +141,7 @@ void RgbView::gtkUpdate(){
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(MeshView, ors::Mesh, fieldVT);
+REGISTER_VIEW_TYPE(MeshView, ors::Mesh);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
@@ -144,7 +151,14 @@ void MeshView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(OrsView, ors::Graph, fieldVT);
+REGISTER_VIEW_TYPE(OrsView, ors::Graph);
+
+OrsView::OrsView():View() {
+}
+
+OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
+  gtkNewGl(container);
+}
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);

@@ -13,19 +13,23 @@ void test_learn() {
   cout<<"********************************"<<endl;
 	
   // Rule learning algorithm is heuristic and makes some random choices.
-  rnd.seed(12345);
+  rnd.seed(time(NULL));
 	
 	
   // -------------------------------------
   //  PARAMETERS
   // -------------------------------------
   // Regularizer
-  double alpha_pen = 0.5;
+  double alpha_pen = MT::getParameter<double>("alpha", 0.5);
   // Lower bounds for probabilities of states in case of noise outcome
-  double prob_state_given_NoisyOutcome = 1e-8; // p_min
+  double prob_state_given_NoisyOutcome = MT::getParameter<double>("pmin", 1e-8); // p_min
   // ... same, only for noisy default rule
   double prob_state_given_NoisyOutcome__in_noisyDefaultRule = 1e-9;
   // Log-file
+  //
+  PRINT(alpha_pen);
+  PRINT(prob_state_given_NoisyOutcome);
+
   MT::String logfile("learn.log");
 	
   // Symbols
@@ -34,7 +38,7 @@ void test_learn() {
   relational::readSymbolsAndTypes(symbols, types, "symbols.dat");
 	
   // Data
-  relational::StateTransitionL transitions = relational::StateTransition::read("data.dat");
+  relational::StateTransitionL transitions = relational::StateTransition::read("transition.dat");
   PRINT(transitions.N);
 //   write(transitions);
 	
@@ -56,6 +60,7 @@ void test_learn() {
 
 
 int main(int argc, char** argv){
+  MT::initCmdLine(argc,argv);
   cout.precision(2);
   test_learn();
   

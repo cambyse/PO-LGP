@@ -109,9 +109,9 @@ shape (fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>,
 shape (fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 shape (fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 
-shape (tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
-shape (tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
-shape (tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
+shape tip1Shape(tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape tip2Shape(tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape tip3Shape(tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
 
 
 #basic shapes
@@ -143,9 +143,9 @@ shape (tip3)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, 
 ## grasp references
 ###########
 
-shape tipNormal1(tip1)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
-shape tipNormal2(tip2)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
-shape tipNormal3(tip3)   { rel=<t(0 -.014 .009) d(80 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal1(tip1)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
+shape tipNormal2(tip2)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
+shape tipNormal3(tip3)   { rel=<t(0 -.015 -.005) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
 shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
@@ -153,7 +153,8 @@ shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 
 #shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
-shape palmCenter(m9)     { rel=<t(0 0 -.3)>, type=1, size=[.0 .0 .0 .005] color = [1 0 0] }
+shape graspCenter(m9)     { rel=<t(0 -.006 -.32)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }
+shape marker(m9) { rel=<t(-.055 -.033 -.12)>, type=1, size=[.0 .0 .0 .02] color=[.7 .3 .3] } 
 
 
 
@@ -176,52 +177,6 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
 
-shape table(OBJECTS){ type=4, rel=<t(0 0 -.02)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
-#shape S1(OBJECTS){ type=4, rel=<t( .25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-#shape S2(OBJECTS){ type=4, rel=<t(-.25 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-#shape S3(OBJECTS){ type=4, rel=<t( .25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-#shape S4(OBJECTS){ type=4, rel=<t(-.25 .2 .055) t(0 0 .108)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-#shape S0(OBJECTS){ type=4, rel=<t(-.0  .2 .04) >, size=[.0 .0 .08 .04], color=[.9 .3 .1] }
+shape target1(OBJECTS){ type=1, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .02], color=[.3 .9 .1] } 
+shape target2(OBJECTS){ contact, type=4, rel=<t( .25 -.2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
 
-###########
-## objects
-###########
-
-#body  o1{ X=<t(-.4 -.8 .8)> }
-#shape S1(o1){ contact, type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
-
-#body  o2{ X=<t(-.2 -.8 .8)> }
-#shape S2(o2){ contact, type=4,  size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
-#
-#body  o3{ X=<t(-.0 -.8 .8)> }
-#shape S3(o3){ contact, type=0,size=[.1 .1 .108 .0375], color=[.1 .9 .1] }
-#
-##body  o4{ X=<t( .2 -.8 .8)> }
-#shape S4(o4){ contact, type=0,  size=[.1 .1 .108 .0375], color=[.3 .9 .7] }
-#
-#body  o5{ X=<t( .4 -.8 .8)> }
-#shape S5(o5){ contact, type=1,  size=[.0 .0 .108 .0375], color=[.7 .9 .1] }
-#
-#body  o6{ X=<t( .6 -.8 .8)> }
-#shape S6(o6){ contact, type=1,  size=[.0 .0 .108 .0375], color=[.7 .9 .1] }
-#
-#body table{ contact, type=4, rel=<t(0 -.8 .66)>, size=[.0 .0 .04 .5], color=[.8 .5 .3] }
-
-
-
-# #shape camera(OBJECTS){ contact, rel=<t(.0 +.83 -.67) t(0.296 -0.211 0.824) d(90 1 0 0) d(147 0 1 0)>, type=0, size=[.157 .035 .046 .01] color=[1 0 0]}
-
-
-# #shape S3(OBJECTS){ type=4, rel=<t( .0 .0 .055)>, size=[.0 .0 .108 .0375], color=[.9 .3 .1] }
-# body  TARO{ X=<t(10 -.8 .69)> }
-# shape target(TARO){ type=1, size=[.01 .01 .108 .0375], color=[.1 .5 .5] }
-
-
-###########
-## marker
-###########
-
-shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
-
-shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }

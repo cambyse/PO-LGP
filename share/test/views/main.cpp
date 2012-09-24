@@ -1,4 +1,3 @@
-#include <perception/perception.h>
 #include <biros/control.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
@@ -9,7 +8,7 @@ struct ExampleVar:Variable{
   FIELD( int, i );
   FIELD( byteA, rgb );
   FIELD( ors::Mesh, mesh );
-  ExampleVar():Variable("IntVar"){ reg_i(); reg_rgb(); reg_mesh(); }
+  ExampleVar():Variable("ExampleVar"){ reg_i(); reg_rgb(); reg_mesh(); }
 };
 
 
@@ -19,16 +18,16 @@ int main(int argn,char** argv){
   b::dump(); //before anything has been done!
   
   ExampleVar v;
-  View *v1 = b::newView(*v.fields(0));
-  View *v2 = b::newView(*v.fields(1));
-  View *v3 = new RgbView; v3->object = v.fields(1); //, &RgbView::staticInfo);
-  View *v4 = b::newView(*v.fields(2)); //, &MeshView::staticInfo);
+  View *v0 = b::newView(*v.fields(0));
+  View *v1 = b::newView(*v.fields(1));
+  View *v2 = b::newView(*v.fields(2)); //, &MeshView::staticInfo);
+  //View *v3 = new RgbView; v3->object = v.fields(1); //, &RgbView::staticInfo);
 
   //set some values for the variables
   v.set_i(1, NULL);
-  v1->write(cout);  cout <<endl;
+  v0->write(cout);  cout <<endl;
   v.set_i(2, NULL);
-  v1->write(cout);  cout <<endl;
+  v0->write(cout);  cout <<endl;
   
   v.set_rgb(ARRAY<byte>(100,200,80), NULL);
   
@@ -45,12 +44,11 @@ int main(int argn,char** argv){
   GtkWidget *box = gtk_vbox_new (false, 5);
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
-
   
+  v0->gtkNew(box);
   v1->gtkNew(box);
   v2->gtkNew(box);
-  v3->gtkNew(NULL);
-  v4->gtkNew(box);
+  //v3->gtkNew(NULL);
   
   MT::wait(10.);
   

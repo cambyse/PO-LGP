@@ -1,0 +1,542 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 29.42      0.05     0.05  3766522     0.00     0.00  MT::Array<double>::freeMEM()
+ 17.65      0.08     0.03  3268943     0.00     0.00  MT::Array<double>::init()
+ 11.77      0.10     0.02  2675281     0.00     0.00  MT::Array<double>::resizeMEM(unsigned int, bool)
+ 11.77      0.12     0.02  1292722     0.00     0.00  MT::Array<double>::resizeAs(MT::Array<double> const&)
+  5.88      0.13     0.01  2872964     0.00     0.00  MT::Array<double>::resetD()
+  5.88      0.14     0.01   201100     0.00     0.00  MT::Array<double>& plusA<double>(MT::Array<double>&, MT::Array<double> const&, MT::Array<double> const&)
+  5.88      0.15     0.01   200100     0.00     0.00  MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&)
+  5.88      0.16     0.01   101206     0.00     0.00  MT::Array<unsigned int>::freeMEM()
+  5.88      0.17     0.01   100201     0.00     0.00  MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&)
+  0.00      0.17     0.00   895149     0.00     0.00  MT::Array<double>::Array()
+  0.00      0.17     0.00   693638     0.00     0.00  MT::Array<double>& multS<double>(MT::Array<double>&, double, MT::Array<double> const&)
+  0.00      0.17     0.00   400912     0.00     0.00  MT::Array<double>::~Array()
+  0.00      0.17     0.00   400803     0.00     0.00  MT::Array<double>::operator()(unsigned int, unsigned int) const
+  0.00      0.17     0.00   202400     0.00     0.00  MT::Array<unsigned int>::operator()(unsigned int) const
+  0.00      0.17     0.00   200208     0.00     0.00  MT::Array<double>::operator()(unsigned int) const
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&)
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::init()
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::resetD()
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::resize(unsigned int)
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::resizeMEM(unsigned int, bool)
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::Array(unsigned int)
+  0.00      0.17     0.00   101200     0.00     0.00  MT::Array<unsigned int>::~Array()
+  0.00      0.17     0.00   100405     0.00     0.00  MT::Array<double>::operator=(MT::Array<double> const&)
+  0.00      0.17     0.00   100000     0.00     0.00  rand(unsigned int, unsigned int)
+  0.00      0.17     0.00      400     0.00     0.00  MT::Array<double>::write(std::ostream&, char const*, char const*, char const*, bool, bool) const
+  0.00      0.17     0.00      200     0.00     0.00  randn(unsigned int, unsigned int)
+  0.00      0.17     0.00      200     0.00     0.00  MT::Array<double>& MT::operator+=<double>(MT::Array<double>&, MT::Array<double> const&)
+  0.00      0.17     0.00      104     0.00     0.02  MT::Array<double>::resize(unsigned int)
+  0.00      0.17     0.00      103     0.00     0.01  MT::Array<double>::reshape(unsigned int, unsigned int)
+  0.00      0.17     0.00      101     0.00     0.00  MT::Array<double>::setZero(unsigned char)
+  0.00      0.17     0.00      100     0.00     0.03  MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int)
+  0.00      0.17     0.00      100     0.00     0.00  MT::Array<double>& multS<double>(MT::Array<double>&, MT::Array<double> const&, double)
+  0.00      0.17     0.00      100     0.00     0.00  measure(MT::Array<double>&)
+  0.00      0.17     0.00      100     0.00     0.00  MT::Array<double>::referTo(MT::Array<double> const&)
+  0.00      0.17     0.00      100     0.00     0.00  MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double)
+  0.00      0.17     0.00       16     0.00     0.00  std::type_info::operator==(std::type_info const&) const
+  0.00      0.17     0.00        4     0.00     0.02  MT::Array<double> ARRAY<double>(double const&, double const&)
+  0.00      0.17     0.00        4     0.00     0.02  MT::Array<double>::Array(unsigned int)
+  0.00      0.17     0.00        2     0.00     0.00  FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*)
+  0.00      0.17     0.00        2     0.00     0.00  MT::Array<FieldInfo*>::resizeCopy(unsigned int)
+  0.00      0.17     0.00        2     0.00     0.00  MT::Array<FieldInfo*>::append(FieldInfo* const&)
+  0.00      0.17     0.00        2     0.00     0.00  MT::Array<FieldInfo*>::append()
+  0.00      0.17     0.00        2     0.00     0.00  MT::Array<FieldInfo*>::resetD()
+  0.00      0.17     0.00        2     0.00     0.00  MT::Array<FieldInfo*>::resizeMEM(unsigned int, bool)
+  0.00      0.17     0.00        2     0.00     0.00  FieldInfo::FieldInfo()
+  0.00      0.17     0.00        2     0.00     0.00  std::type_info::name() const
+  0.00      0.17     0.00        1     0.00     0.00  global constructors keyed to pos
+  0.00      0.17     0.00        1     0.00     6.49  eye(unsigned int)
+  0.00      0.17     0.00        1     0.00     6.49  eye(unsigned int, unsigned int)
+  0.00      0.17     0.00        1     0.00     0.00  __static_initialization_and_destruction_0(int, int)
+  0.00      0.17     0.00        1     0.00     0.00  Measurement::reg_measurement()
+  0.00      0.17     0.00        1     0.00     0.00  Measurement::Measurement(char const*)
+  0.00      0.17     0.00        1     0.00     0.00  Measurement::~Measurement()
+  0.00      0.17     0.00        1     0.00     0.00  MT::Array<double>::setId(int)
+  0.00      0.17     0.00        1     0.00     6.49  MT::Array<double>::resize(unsigned int, unsigned int)
+  0.00      0.17     0.00        1     0.00     0.00  Gaussian::setCU(bool, bool)
+  0.00      0.17     0.00        1     0.00     0.00  Gaussian::Gaussian()
+  0.00      0.17     0.00        1     0.00     0.00  Particles::reg_particles()
+  0.00      0.17     0.00        1     0.00     0.00  Particles::Particles(char const*)
+  0.00      0.17     0.00        1     0.00     0.00  Particles::~Particles()
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 5.88% of 0.17 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     94.3    0.00    0.16                 gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+                0.01    0.04  100000/100201      MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+                0.00    0.05  400000/400912      MT::Array<double>::~Array() [4]
+                0.01    0.02  200000/200100      MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&) [6]
+                0.00    0.01  100000/100405      MT::Array<double>::operator=(MT::Array<double> const&) [12]
+                0.00    0.01  100000/100000      rand(unsigned int, unsigned int) [16]
+-----------------------------------------------
+                0.00    0.00       1/100201      main [17]
+                0.00    0.00     200/100201      measure(MT::Array<double>&) [24]
+                0.01    0.04  100000/100201      gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+[2]     32.4    0.01    0.05  100201         MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+                0.00    0.02  693638/895149      MT::Array<double>::Array() [8]
+                0.00    0.02  693638/693638      MT::Array<double>& multS<double>(MT::Array<double>&, double, MT::Array<double> const&) [9]
+-----------------------------------------------
+                0.00    0.00     100/3766522     MT::Array<double>::referTo(MT::Array<double> const&) [30]
+                0.05    0.00 3766422/3766522     MT::Array<double>::~Array() [4]
+[3]     29.4    0.05    0.00 3766522         MT::Array<double>::freeMEM() [3]
+-----------------------------------------------
+                0.00    0.00       1/400912      Measurement::~Measurement() [36]
+                0.00    0.00       1/400912      Particles::~Particles() [37]
+                0.00    0.00       4/400912      Gaussian::~Gaussian() [31]
+                0.00    0.00     100/400912      MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+                0.00    0.00     306/400912      main [17]
+                0.00    0.00     500/400912      measure(MT::Array<double>&) [24]
+                0.00    0.05  400000/400912      gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+[4]     29.4    0.00    0.05  400912         MT::Array<double>::~Array() [4]
+                0.05    0.00 3766422/3766522     MT::Array<double>::freeMEM() [3]
+-----------------------------------------------
+                0.00    0.00     100/1292722     MT::Array<double>& multS<double>(MT::Array<double>&, MT::Array<double> const&, double) [29]
+                0.00    0.00  201100/1292722     MT::Array<double>& plusA<double>(MT::Array<double>&, MT::Array<double> const&, MT::Array<double> const&) [11]
+                0.01    0.01  397884/1292722     MT::Array<double>::operator=(MT::Array<double> const&) [12]
+                0.01    0.01  693638/1292722     MT::Array<double>& multS<double>(MT::Array<double>&, double, MT::Array<double> const&) [9]
+[5]     23.9    0.02    0.02 1292722         MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+                0.01    0.00 1885260/2675281     MT::Array<double>::resizeMEM(unsigned int, bool) [10]
+                0.01    0.00 1885260/2872964     MT::Array<double>::resetD() [13]
+-----------------------------------------------
+                0.00    0.00     100/200100      measure(MT::Array<double>&) [24]
+                0.01    0.02  200000/200100      gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+[6]     19.4    0.01    0.02  200100         MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&) [6]
+                0.01    0.01  201100/201100      MT::Array<double>& plusA<double>(MT::Array<double>&, MT::Array<double> const&, MT::Array<double> const&) [11]
+                0.00    0.01  201100/895149      MT::Array<double>::Array() [8]
+-----------------------------------------------
+                0.00    0.00       4/3268943     MT::Array<double>::Array(unsigned int) [27]
+                0.03    0.00 3268939/3268943     MT::Array<double>::Array() [8]
+[7]     17.6    0.03    0.00 3268943         MT::Array<double>::init() [7]
+                0.00    0.00      11/16          std::type_info::operator==(std::type_info const&) const [56]
+-----------------------------------------------
+                0.00    0.00       1/895149      eye(unsigned int, unsigned int) [19]
+                0.00    0.00       1/895149      Particles::Particles(char const*) [39]
+                0.00    0.00       1/895149      Measurement::Measurement(char const*) [38]
+                0.00    0.00       4/895149      __static_initialization_and_destruction_0(int, int) [33]
+                0.00    0.00       4/895149      Gaussian::Gaussian() [35]
+                0.00    0.00     100/895149      main [17]
+                0.00    0.00     100/895149      MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double) [28]
+                0.00    0.00     200/895149      MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+                0.00    0.01  201100/895149      MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&) [6]
+                0.00    0.02  693638/895149      MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+[8]     17.6    0.00    0.03  895149         MT::Array<double>::Array() [8]
+                0.03    0.00 3268939/3268943     MT::Array<double>::init() [7]
+-----------------------------------------------
+                0.00    0.02  693638/693638      MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+[9]     12.8    0.00    0.02  693638         MT::Array<double>& multS<double>(MT::Array<double>&, double, MT::Array<double> const&) [9]
+                0.01    0.01  693638/1292722     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+-----------------------------------------------
+                0.00    0.00  197583/2675281     MT::Array<double>::resize(unsigned int) [22]
+                0.00    0.00  592438/2675281     MT::Array<double>::resize(unsigned int, unsigned int) [20]
+                0.01    0.00 1885260/2675281     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+[10]    11.8    0.02    0.00 2675281         MT::Array<double>::resizeMEM(unsigned int, bool) [10]
+-----------------------------------------------
+                0.01    0.01  201100/201100      MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&) [6]
+[11]     9.6    0.01    0.01  201100         MT::Array<double>& plusA<double>(MT::Array<double>&, MT::Array<double> const&, MT::Array<double> const&) [11]
+                0.00    0.00  201100/1292722     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+-----------------------------------------------
+                0.00    0.00     105/100405      main [17]
+                0.00    0.00     300/100405      measure(MT::Array<double>&) [24]
+                0.00    0.01  100000/100405      gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+[12]     7.4    0.00    0.01  100405         MT::Array<double>::operator=(MT::Array<double> const&) [12]
+                0.01    0.01  397884/1292722     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+-----------------------------------------------
+                0.00    0.00  197583/2872964     MT::Array<double>::resize(unsigned int) [22]
+                0.00    0.00  197683/2872964     MT::Array<double>::reshape(unsigned int, unsigned int) [23]
+                0.00    0.00  592438/2872964     MT::Array<double>::resize(unsigned int, unsigned int) [20]
+                0.01    0.00 1885260/2872964     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+[13]     5.9    0.01    0.00 2872964         MT::Array<double>::resetD() [13]
+-----------------------------------------------
+                0.01    0.00  101206/101206      MT::Array<unsigned int>::~Array() [15]
+[14]     5.9    0.01    0.00  101206         MT::Array<unsigned int>::freeMEM() [14]
+-----------------------------------------------
+                0.00    0.00    1200/101200      randn(unsigned int, unsigned int) [25]
+                0.00    0.01  100000/101200      rand(unsigned int, unsigned int) [16]
+[15]     5.9    0.00    0.01  101200         MT::Array<unsigned int>::~Array() [15]
+                0.01    0.00  101206/101206      MT::Array<unsigned int>::freeMEM() [14]
+-----------------------------------------------
+                0.00    0.01  100000/100000      gaussian_control(MT::Array<double>&, MT::Array<double> const&) [1]
+[16]     5.8    0.00    0.01  100000         rand(unsigned int, unsigned int) [16]
+                0.00    0.01  100000/101200      MT::Array<unsigned int>::~Array() [15]
+                0.00    0.00  100000/101200      MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [47]
+-----------------------------------------------
+                                                 <spontaneous>
+[17]     5.7    0.00    0.01                 main [17]
+                0.00    0.01       1/1           eye(unsigned int) [18]
+                0.00    0.00     100/100         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+                0.00    0.00     100/100         measure(MT::Array<double>&) [24]
+                0.00    0.00       4/4           MT::Array<double> ARRAY<double>(double const&, double const&) [26]
+                0.00    0.00     306/400912      MT::Array<double>::~Array() [4]
+                0.00    0.00       3/103         MT::Array<double>::reshape(unsigned int, unsigned int) [23]
+                0.00    0.00     105/100405      MT::Array<double>::operator=(MT::Array<double> const&) [12]
+                0.00    0.00     100/100         MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double) [28]
+                0.00    0.00     100/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/100201      MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+                0.00    0.00       1/1           Particles::~Particles() [37]
+                0.00    0.00       1/1           Measurement::~Measurement() [36]
+                0.00    0.00       1/1           Measurement::Measurement(char const*) [38]
+                0.00    0.00       1/1           Particles::Particles(char const*) [39]
+-----------------------------------------------
+                0.00    0.01       1/1           main [17]
+[18]     3.8    0.00    0.01       1         eye(unsigned int) [18]
+                0.00    0.01       1/1           eye(unsigned int, unsigned int) [19]
+-----------------------------------------------
+                0.00    0.01       1/1           eye(unsigned int) [18]
+[19]     3.8    0.00    0.01       1         eye(unsigned int, unsigned int) [19]
+                0.00    0.01       1/1           MT::Array<double>::resize(unsigned int, unsigned int) [20]
+                0.00    0.00       1/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/1           MT::Array<double>::setId(int) [66]
+-----------------------------------------------
+                0.00    0.01       1/1           eye(unsigned int, unsigned int) [19]
+[20]     3.8    0.00    0.01       1         MT::Array<double>::resize(unsigned int, unsigned int) [20]
+                0.00    0.00  592438/2675281     MT::Array<double>::resizeMEM(unsigned int, bool) [10]
+                0.00    0.00  592438/2872964     MT::Array<double>::resetD() [13]
+-----------------------------------------------
+                0.00    0.00     100/100         main [17]
+[21]     1.6    0.00    0.00     100         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+                0.00    0.00     100/104         MT::Array<double>::resize(unsigned int) [22]
+                0.00    0.00     100/103         MT::Array<double>::reshape(unsigned int, unsigned int) [23]
+                0.00    0.00     100/400912      MT::Array<double>::~Array() [4]
+                0.00    0.00     200/895149      MT::Array<double>::Array() [8]
+                0.00    0.00     100/100         MT::Array<double>::referTo(MT::Array<double> const&) [30]
+                0.00    0.00  200000/200208      MT::Array<double>::operator()(unsigned int) const [46]
+                0.00    0.00  200000/400803      MT::Array<double>::operator()(unsigned int, unsigned int) const [44]
+                0.00    0.00     100/101         MT::Array<double>::setZero(unsigned char) [55]
+-----------------------------------------------
+                0.00    0.00       4/104         MT::Array<double>::Array(unsigned int) [27]
+                0.00    0.00     100/104         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+[22]     1.3    0.00    0.00     104         MT::Array<double>::resize(unsigned int) [22]
+                0.00    0.00  197583/2675281     MT::Array<double>::resizeMEM(unsigned int, bool) [10]
+                0.00    0.00  197583/2872964     MT::Array<double>::resetD() [13]
+-----------------------------------------------
+                0.00    0.00       3/103         main [17]
+                0.00    0.00     100/103         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+[23]     0.4    0.00    0.00     103         MT::Array<double>::reshape(unsigned int, unsigned int) [23]
+                0.00    0.00  197683/2872964     MT::Array<double>::resetD() [13]
+-----------------------------------------------
+                0.00    0.00     100/100         main [17]
+[24]     0.2    0.00    0.00     100         measure(MT::Array<double>&) [24]
+                0.00    0.00     200/200         randn(unsigned int, unsigned int) [25]
+                0.00    0.00     200/100201      MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&) [2]
+                0.00    0.00     500/400912      MT::Array<double>::~Array() [4]
+                0.00    0.00     300/100405      MT::Array<double>::operator=(MT::Array<double> const&) [12]
+                0.00    0.00     100/200100      MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&) [6]
+                0.00    0.00     401/400803      MT::Array<double>::operator()(unsigned int, unsigned int) const [44]
+                0.00    0.00     200/200         MT::Array<double>& MT::operator+=<double>(MT::Array<double>&, MT::Array<double> const&) [54]
+-----------------------------------------------
+                0.00    0.00     200/200         measure(MT::Array<double>&) [24]
+[25]     0.1    0.00    0.00     200         randn(unsigned int, unsigned int) [25]
+                0.00    0.00    1200/101200      MT::Array<unsigned int>::~Array() [15]
+                0.00    0.00    1200/101200      MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [47]
+-----------------------------------------------
+                0.00    0.00       4/4           main [17]
+[26]     0.0    0.00    0.00       4         MT::Array<double> ARRAY<double>(double const&, double const&) [26]
+                0.00    0.00       4/4           MT::Array<double>::Array(unsigned int) [27]
+                0.00    0.00       8/200208      MT::Array<double>::operator()(unsigned int) const [46]
+-----------------------------------------------
+                0.00    0.00       4/4           MT::Array<double> ARRAY<double>(double const&, double const&) [26]
+[27]     0.0    0.00    0.00       4         MT::Array<double>::Array(unsigned int) [27]
+                0.00    0.00       4/104         MT::Array<double>::resize(unsigned int) [22]
+                0.00    0.00       4/3268943     MT::Array<double>::init() [7]
+-----------------------------------------------
+                0.00    0.00     100/100         main [17]
+[28]     0.0    0.00    0.00     100         MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double) [28]
+                0.00    0.00     100/895149      MT::Array<double>::Array() [8]
+                0.00    0.00     100/100         MT::Array<double>& multS<double>(MT::Array<double>&, MT::Array<double> const&, double) [29]
+-----------------------------------------------
+                0.00    0.00     100/100         MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double) [28]
+[29]     0.0    0.00    0.00     100         MT::Array<double>& multS<double>(MT::Array<double>&, MT::Array<double> const&, double) [29]
+                0.00    0.00     100/1292722     MT::Array<double>::resizeAs(MT::Array<double> const&) [5]
+-----------------------------------------------
+                0.00    0.00     100/100         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+[30]     0.0    0.00    0.00     100         MT::Array<double>::referTo(MT::Array<double> const&) [30]
+                0.00    0.00     100/3766522     MT::Array<double>::freeMEM() [3]
+-----------------------------------------------
+                                                 <spontaneous>
+[31]     0.0    0.00    0.00                 Gaussian::~Gaussian() [31]
+                0.00    0.00       4/400912      MT::Array<double>::~Array() [4]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [34]
+[32]     0.0    0.00    0.00       1         global constructors keyed to pos [32]
+                0.00    0.00       1/1           __static_initialization_and_destruction_0(int, int) [33]
+-----------------------------------------------
+                0.00    0.00       1/1           global constructors keyed to pos [32]
+[33]     0.0    0.00    0.00       1         __static_initialization_and_destruction_0(int, int) [33]
+                0.00    0.00       4/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/1           Gaussian::Gaussian() [35]
+-----------------------------------------------
+                                                 <spontaneous>
+[34]     0.0    0.00    0.00                 __libc_csu_init [34]
+                0.00    0.00       1/1           global constructors keyed to pos [32]
+-----------------------------------------------
+                0.00    0.00       1/1           __static_initialization_and_destruction_0(int, int) [33]
+[35]     0.0    0.00    0.00       1         Gaussian::Gaussian() [35]
+                0.00    0.00       4/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/1           Gaussian::setCU(bool, bool) [67]
+-----------------------------------------------
+                0.00    0.00       1/1           main [17]
+[36]     0.0    0.00    0.00       1         Measurement::~Measurement() [36]
+                0.00    0.00       1/400912      MT::Array<double>::~Array() [4]
+-----------------------------------------------
+                0.00    0.00       1/1           main [17]
+[37]     0.0    0.00    0.00       1         Particles::~Particles() [37]
+                0.00    0.00       1/400912      MT::Array<double>::~Array() [4]
+-----------------------------------------------
+                0.00    0.00       1/1           main [17]
+[38]     0.0    0.00    0.00       1         Measurement::Measurement(char const*) [38]
+                0.00    0.00       1/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/1           Measurement::reg_measurement() [65]
+-----------------------------------------------
+                0.00    0.00       1/1           main [17]
+[39]     0.0    0.00    0.00       1         Particles::Particles(char const*) [39]
+                0.00    0.00       1/895149      MT::Array<double>::Array() [8]
+                0.00    0.00       1/1           Particles::reg_particles() [68]
+-----------------------------------------------
+                0.00    0.00       2/400803      MT::Array<double>::setId(int) [66]
+                0.00    0.00     401/400803      measure(MT::Array<double>&) [24]
+                0.00    0.00  200000/400803      MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+                0.00    0.00  200400/400803      MT::Array<double>::write(std::ostream&, char const*, char const*, char const*, bool, bool) const [53]
+[44]     0.0    0.00    0.00  400803         MT::Array<double>::operator()(unsigned int, unsigned int) const [44]
+-----------------------------------------------
+                0.00    0.00  202400/202400      MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [47]
+[45]     0.0    0.00    0.00  202400         MT::Array<unsigned int>::operator()(unsigned int) const [45]
+-----------------------------------------------
+                0.00    0.00       8/200208      MT::Array<double> ARRAY<double>(double const&, double const&) [26]
+                0.00    0.00     200/200208      MT::Array<double>::write(std::ostream&, char const*, char const*, char const*, bool, bool) const [53]
+                0.00    0.00  200000/200208      MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+[46]     0.0    0.00    0.00  200208         MT::Array<double>::operator()(unsigned int) const [46]
+-----------------------------------------------
+                0.00    0.00    1200/101200      randn(unsigned int, unsigned int) [25]
+                0.00    0.00  100000/101200      rand(unsigned int, unsigned int) [16]
+[47]     0.0    0.00    0.00  101200         MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [47]
+                0.00    0.00  202400/202400      MT::Array<unsigned int>::operator()(unsigned int) const [45]
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::Array(unsigned int) [52]
+-----------------------------------------------
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::Array(unsigned int) [52]
+[48]     0.0    0.00    0.00  101200         MT::Array<unsigned int>::init() [48]
+                0.00    0.00       5/16          std::type_info::operator==(std::type_info const&) const [56]
+-----------------------------------------------
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::resize(unsigned int) [50]
+[49]     0.0    0.00    0.00  101200         MT::Array<unsigned int>::resetD() [49]
+-----------------------------------------------
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::Array(unsigned int) [52]
+[50]     0.0    0.00    0.00  101200         MT::Array<unsigned int>::resize(unsigned int) [50]
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::resetD() [49]
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::resizeMEM(unsigned int, bool) [51]
+-----------------------------------------------
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::resize(unsigned int) [50]
+[51]     0.0    0.00    0.00  101200         MT::Array<unsigned int>::resizeMEM(unsigned int, bool) [51]
+-----------------------------------------------
+                0.00    0.00  101200/101200      MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [47]
+[52]     0.0    0.00    0.00  101200         MT::Array<unsigned int>::Array(unsigned int) [52]
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::init() [48]
+                0.00    0.00  101200/101200      MT::Array<unsigned int>::resize(unsigned int) [50]
+-----------------------------------------------
+                0.00    0.00     400/400         std::ostream& operator<< <double>(std::ostream&, MT::Array<double> const&) [80]
+[53]     0.0    0.00    0.00     400         MT::Array<double>::write(std::ostream&, char const*, char const*, char const*, bool, bool) const [53]
+                0.00    0.00  200400/400803      MT::Array<double>::operator()(unsigned int, unsigned int) const [44]
+                0.00    0.00     200/200208      MT::Array<double>::operator()(unsigned int) const [46]
+-----------------------------------------------
+                0.00    0.00     200/200         measure(MT::Array<double>&) [24]
+[54]     0.0    0.00    0.00     200         MT::Array<double>& MT::operator+=<double>(MT::Array<double>&, MT::Array<double> const&) [54]
+-----------------------------------------------
+                0.00    0.00       1/101         MT::Array<double>::setId(int) [66]
+                0.00    0.00     100/101         MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [21]
+[55]     0.0    0.00    0.00     101         MT::Array<double>::setZero(unsigned char) [55]
+-----------------------------------------------
+                0.00    0.00       5/16          MT::Array<unsigned int>::init() [48]
+                0.00    0.00      11/16          MT::Array<double>::init() [7]
+[56]     0.0    0.00    0.00      16         std::type_info::operator==(std::type_info const&) const [56]
+-----------------------------------------------
+                0.00    0.00       1/2           Particles::reg_particles() [68]
+                0.00    0.00       1/2           Measurement::reg_measurement() [65]
+[57]     0.0    0.00    0.00       2         FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [57]
+                0.00    0.00       2/2           FieldInfo::FieldInfo() [63]
+                0.00    0.00       2/2           std::type_info::name() const [64]
+-----------------------------------------------
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::append() [60]
+[58]     0.0    0.00    0.00       2         MT::Array<FieldInfo*>::resizeCopy(unsigned int) [58]
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::resetD() [61]
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::resizeMEM(unsigned int, bool) [62]
+-----------------------------------------------
+                0.00    0.00       1/2           Particles::reg_particles() [68]
+                0.00    0.00       1/2           Measurement::reg_measurement() [65]
+[59]     0.0    0.00    0.00       2         MT::Array<FieldInfo*>::append(FieldInfo* const&) [59]
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::append() [60]
+-----------------------------------------------
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::append(FieldInfo* const&) [59]
+[60]     0.0    0.00    0.00       2         MT::Array<FieldInfo*>::append() [60]
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::resizeCopy(unsigned int) [58]
+-----------------------------------------------
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::resizeCopy(unsigned int) [58]
+[61]     0.0    0.00    0.00       2         MT::Array<FieldInfo*>::resetD() [61]
+-----------------------------------------------
+                0.00    0.00       2/2           MT::Array<FieldInfo*>::resizeCopy(unsigned int) [58]
+[62]     0.0    0.00    0.00       2         MT::Array<FieldInfo*>::resizeMEM(unsigned int, bool) [62]
+-----------------------------------------------
+                0.00    0.00       2/2           FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [57]
+[63]     0.0    0.00    0.00       2         FieldInfo::FieldInfo() [63]
+-----------------------------------------------
+                0.00    0.00       2/2           FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [57]
+[64]     0.0    0.00    0.00       2         std::type_info::name() const [64]
+-----------------------------------------------
+                0.00    0.00       1/1           Measurement::Measurement(char const*) [38]
+[65]     0.0    0.00    0.00       1         Measurement::reg_measurement() [65]
+                0.00    0.00       1/2           FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [57]
+                0.00    0.00       1/2           MT::Array<FieldInfo*>::append(FieldInfo* const&) [59]
+-----------------------------------------------
+                0.00    0.00       1/1           eye(unsigned int, unsigned int) [19]
+[66]     0.0    0.00    0.00       1         MT::Array<double>::setId(int) [66]
+                0.00    0.00       2/400803      MT::Array<double>::operator()(unsigned int, unsigned int) const [44]
+                0.00    0.00       1/101         MT::Array<double>::setZero(unsigned char) [55]
+-----------------------------------------------
+                0.00    0.00       1/1           Gaussian::Gaussian() [35]
+[67]     0.0    0.00    0.00       1         Gaussian::setCU(bool, bool) [67]
+-----------------------------------------------
+                0.00    0.00       1/1           Particles::Particles(char const*) [39]
+[68]     0.0    0.00    0.00       1         Particles::reg_particles() [68]
+                0.00    0.00       1/2           FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [57]
+                0.00    0.00       1/2           MT::Array<FieldInfo*>::append(FieldInfo* const&) [59]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+  [32] global constructors keyed to pos (main.cpp) [61] MT::Array<FieldInfo*>::resetD() [14] MT::Array<unsigned int>::freeMEM()
+  [18] eye(unsigned int)      [62] MT::Array<FieldInfo*>::resizeMEM(unsigned int, bool) [51] MT::Array<unsigned int>::resizeMEM(unsigned int, bool)
+  [19] eye(unsigned int, unsigned int) [7] MT::Array<double>::init() [52] MT::Array<unsigned int>::Array(unsigned int)
+  [21] MT::Array<double> sum<double>(MT::Array<double> const&, unsigned int) [66] MT::Array<double>::setId(int) [15] MT::Array<unsigned int>::~Array()
+  [33] __static_initialization_and_destruction_0(int, int) (main.cpp) [13] MT::Array<double>::resetD() [28] MT::Array<double> MT::operator*<double>(MT::Array<double> const&, double)
+  [16] rand(unsigned int, unsigned int) [22] MT::Array<double>::resize(unsigned int) [2] MT::Array<double> MT::operator*<double>(double, MT::Array<double> const&)
+  [26] MT::Array<double> ARRAY<double>(double const&, double const&) [20] MT::Array<double>::resize(unsigned int, unsigned int) [54] MT::Array<double>& MT::operator+=<double>(MT::Array<double>&, MT::Array<double> const&)
+  [47] MT::Array<unsigned int> ARRAY<unsigned int>(unsigned int const&, unsigned int const&) [3] MT::Array<double>::freeMEM() [6] MT::Array<double> MT::operator+<double>(MT::Array<double> const&, MT::Array<double> const&)
+  [29] MT::Array<double>& multS<double>(MT::Array<double>&, MT::Array<double> const&, double) [30] MT::Array<double>::referTo(MT::Array<double> const&) [67] Gaussian::setCU(bool, bool)
+   [9] MT::Array<double>& multS<double>(MT::Array<double>&, double, MT::Array<double> const&) [23] MT::Array<double>::reshape(unsigned int, unsigned int) [35] Gaussian::Gaussian()
+  [11] MT::Array<double>& plusA<double>(MT::Array<double>&, MT::Array<double> const&, MT::Array<double> const&) [55] MT::Array<double>::setZero(unsigned char) [63] FieldInfo::FieldInfo()
+  [25] randn(unsigned int, unsigned int) [5] MT::Array<double>::resizeAs(MT::Array<double> const&) [68] Particles::reg_particles()
+  [24] measure(MT::Array<double>&) [10] MT::Array<double>::resizeMEM(unsigned int, bool) [39] Particles::Particles(char const*)
+  [65] Measurement::reg_measurement() [27] MT::Array<double>::Array(unsigned int) [37] Particles::~Particles()
+  [38] Measurement::Measurement(char const*) [8] MT::Array<double>::Array() [53] MT::Array<double>::write(std::ostream&, char const*, char const*, char const*, bool, bool) const
+  [36] Measurement::~Measurement() [4] MT::Array<double>::~Array() [46] MT::Array<double>::operator()(unsigned int) const
+  [57] FieldInfo_typed<MT::Array<double> >::FieldInfo_typed(MT::Array<double>*, char const*, char const*) [12] MT::Array<double>::operator=(MT::Array<double> const&) [44] MT::Array<double>::operator()(unsigned int, unsigned int) const
+  [58] MT::Array<FieldInfo*>::resizeCopy(unsigned int) [48] MT::Array<unsigned int>::init() [45] MT::Array<unsigned int>::operator()(unsigned int) const
+  [59] MT::Array<FieldInfo*>::append(FieldInfo* const&) [49] MT::Array<unsigned int>::resetD() [64] std::type_info::name() const
+  [60] MT::Array<FieldInfo*>::append() [50] MT::Array<unsigned int>::resize(unsigned int) [56] std::type_info::operator==(std::type_info const&) const

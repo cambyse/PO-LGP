@@ -13,6 +13,7 @@
 z.*
 
 *_doc
+*data
 
 *_moc.cpp
 *_ui.h
@@ -21,6 +22,7 @@ z.*
 
 MT.log
 Makefile.dep
+*.swp
 
 %% IMPORTANT: individual compilation modes:
 share/make-config
