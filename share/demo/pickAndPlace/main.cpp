@@ -4,8 +4,9 @@
 #include <hardware/kinect.h>
 #include <hardware/hardware.h>
 
+#ifdef PCL
 #include <pcl/visualization/pcl_visualizer.h>
-
+#endif
 
 #include <devTools/logging.h>
 
