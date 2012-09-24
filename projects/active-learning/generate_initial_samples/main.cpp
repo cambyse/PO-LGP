@@ -4,8 +4,8 @@
 #include <iostream>
 int main(int, const char**) {
   ofstream os("samples.data");
-  BlocksWorldSampler sampler;
-  OnOracle o;
+  Traysampler;
+  InsideOracle o;
 	MT::Array<arr> sample;
   for (int i=0; i<1000; ++i) {
     do {

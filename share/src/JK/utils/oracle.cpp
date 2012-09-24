@@ -13,7 +13,7 @@ const int OnOracle::classify(const MT::Array<arr>& data, const int set) const {
 }
 
 const int CloseOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (norm(data(set, 2) - data(set, 0)) < 0.5) return 1;
+  if (norm(data(set, 2) - data(set, 0)) < 0.15) return 1;
   else return 0;
 }
 
@@ -23,14 +23,22 @@ const int HigherOracle::classify(const MT::Array<arr>& data, const int set) cons
 }
 const int InsideOracle::classify(const MT::Array<arr>& data, const int set) const {
   if (data(set, 2)(2) - data(set, 0)(2) > 0 && 
-      fabs(data(set, 2)(0) - data(set, 0)(0)) < 0.215 &&
-      fabs(data(set, 2)(1) - data(set, 0)(1)) < 0.165 &&
+      fabs(data(set, 2)(0) - data(set, 0)(0)) < 0.12 &&
+      fabs(data(set, 2)(1) - data(set, 0)(1)) < 0.17 &&
       data(set, 1)(0) == 7
     ) 
     return 1;
   else return 0;
 }
+const int OutOfReachOracle::classify(const MT::Array<arr>& data, const int set) const {
+  if (norm(data(set, 0) - ARR(0., 0., 1.)) > 1.2) return 1;
+  else return 0;
+}
 
+const int UprightOracle::classify(const MT::Array<arr>& data, const int set) const {
+  if (data(set,0)(0) < 10 || data(set,0)(0) > 350) return 1;
+  else return 0;
+}
 HumanOracle::HumanOracle(const char* predicate) {
   this->predicate = predicate;  
 }
@@ -45,10 +53,3 @@ const int HumanOracle::classify(const MT::Array<arr>& data, const int set) const
   else return 0;
 }
 
-bool Oracle_GroundedSymbol::holds(arr& x) const {
-	double epsilon = 10e-3;
-	if (x(6) - x(2) >= (x(3) + x(7))*0.5 - epsilon&& 
-			x(6) - x(2) < (x(3) + x(7))*0.5 + epsilon && 
-			norm( x.subRange(4,5) - x.subRange(0,1)) < 0.5 ) return 1;
-  else return 0;
-}

@@ -145,7 +145,7 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 ## table
 ###########
 
-body table{ fixed, contact, type=4, X=<t(0 -.8 .66)>, size=[.0 .0 .04 .7], color=[.8 .5 .3] }
+body table{ fixed, contact, type=0, X=<t(0 -.8 .66)>, size=[1.1 .9 .04 .5], color=[.8 .5 .3] }
 shape leg1(table) { rel=<t(-.3 -.3 -.37)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
 shape leg2(table) { rel=<t(-.3 .3 -.37)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
 shape leg3(table) { rel=<t(.3 .3 -.37)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }

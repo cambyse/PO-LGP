@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
   int n_steps = MT::getParameter<int>("steps", 20);
   MT::String filename =  MT::getParameter<MT::String>("dataFile", MT::String("classification.data"));
   bool gaussproc = MT::getParameter<bool>("gauss", true);
+  bool guistart= MT::getParameter<bool>("gui", true);
   bool pause = MT::getParameter<bool>("pause", false);
   MT::String problem_name = MT::getParameter<MT::String>("problem", MT::String("tray"));
 
@@ -45,21 +46,37 @@ int main(int argc, char** argv) {
     prob.sampler = new TraySampler;
     prob.oracle  = new InsideOracle;
     prob.generator = new TrayFeatureGenerator;
+    INFO(main, "Start tray problem.");
   }
-  if(problem_name == "tower") {
+  else if(problem_name == "tower") {
     prob.sampler = new BlocksWorldSampler;
     prob.oracle  = new OnOracle;
     prob.generator = new DistanceFeatureGenerator;
+    INFO(main, "Start stack problem.");
   }
-  if(problem_name == "close") {
+  else if(problem_name == "close") {
     prob.sampler = new BlocksWorldSampler;
     prob.oracle  = new CloseOracle;
     prob.generator = new DistanceFeatureGenerator;
+    INFO(main, "Start distance problem.");
   }
+  else if(problem_name == "outOfReach") {
+    prob.sampler = new OutOfReachSampler;
+    prob.oracle  = new OutOfReachOracle;
+    prob.generator = new SimpleFeatureGenerator;
+    INFO(main, "Start out of reach problem.");
+  }
+  else if(problem_name == "upright") {
+    prob.sampler = new UprightSampler;
+    prob.oracle  = new UprightOracle;
+    prob.generator = new UprightFeatureGenerator;
+    INFO(main, "Start out of reach problem.");
+  }
+  
 
-  Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
-  GuiDataV guiData;
-  gui.guiData = &guiData;
+  //Gui gui(MT::getParameter<MT::String>("orsFile", MT::String("schunk-armani.ors")));
+  //GuiDataV guiData;
+  //gui.guiData = &guiData;
 
   TrainingsDataV train;
 
@@ -93,10 +110,10 @@ int main(int argc, char** argv) {
   classes.append(prob.oracle->classify(train.data, 0));
   train.classes = classes;
 
-  guiData.sample = &train.data;
+  //guiData.sample = &train.data;
 
-  gui.threadOpen();
-  gui.threadLoop();
+  //gui.threadOpen();
+  //gui.threadLoop();
 
   char unused;
   if (pause)
@@ -127,7 +144,7 @@ int main(int argc, char** argv) {
   else alp.threadStep(n_steps);
 
   alp.threadClose();
-  gui.threadClose();
+  //gui.threadClose();
 }
 
 

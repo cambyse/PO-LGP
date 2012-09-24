@@ -7,6 +7,9 @@ MAKEMODE = externlib
 
 CXXFLAGS += -fPIC
 
+LEWINER=0
+PCL=0
+
 #CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 OBJS  = $(shell find . \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS := $(OBJS:%.cpp=%.o)
