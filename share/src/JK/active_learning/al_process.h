@@ -5,8 +5,7 @@
 #include <MT/ors.h>
 
 class ActiveLearner;
-class Oracle;
-class Tester;
+class ActiveLearningProblem;
 class GuiDataV;
 class TrainingsDataV: public Variable {
   public:
@@ -15,11 +14,11 @@ class TrainingsDataV: public Variable {
     intA classes;
 };
 
-class ClassificatorV: public Variable {
+class ActiveLearningV: public Variable {
   public:
-    ClassificatorV();
+    ActiveLearningV();
     ActiveLearner* classificator;
-    Tester* tester;
+    ActiveLearningProblem* problem;
 };
 
 
@@ -33,7 +32,7 @@ class ActiveLearningP: public Process {
 
     ors::Graph* ors; 
     TrainingsDataV* traindata;
-    ClassificatorV* classificator;
+    ActiveLearningV* al;
     GuiDataV* guiData;
 
 };

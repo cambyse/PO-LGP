@@ -1,3 +1,4 @@
+#ifdef DYNAMIXEL
 #include "dynamixel_interface.h"
 #include <dynamixel.h>
 #include <iostream>
@@ -139,5 +140,4 @@ double Dynamixel::getAngle(int id) {
 
 //void Dynamixel::setLED(int id, bool on);
 //bool Dynamixel::getLED(int id);
-
-
+#endif
