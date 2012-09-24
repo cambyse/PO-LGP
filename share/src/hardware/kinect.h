@@ -5,8 +5,6 @@
 
 #include <biros/biros.h>
 
-typedef pcl::PointXYZRGBA PointT;
-
 class KinectSettings : public Variable {
   public:
     KinectSettings() : Variable("KinectSettings") { reg_capture_3d(); reg_capture_rgb(); }
@@ -14,12 +12,15 @@ class KinectSettings : public Variable {
     FIELD(bool, capture_3d);
 };
 
+class PointCloudVar;
+//class Image;
+
 class KinectInterface : public Process {
   private:
     class sKinectInterface *s;
   public:
     PointCloudVar *data_3d;
-    Image *data_rgb;
+    //Image *data_rgb;
 
     void open();
     void step();

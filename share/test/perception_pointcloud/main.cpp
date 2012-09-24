@@ -1,32 +1,25 @@
-#include <perception/pointcloud.h>
-#include <biros/control.h>
-#include <JK/utils/util.h>
-
-SET_LOG(main, DEBUG);
+#include <perception/perception.h>
+#include <hardware/kinect.h>
+#include <motion/motion.h>
 
 int main(int argc, char **argv) {
   MT::initCmdLine(argc,argv);
 
   srand(time(NULL));
 
-  DEBUG_VAR(main, birosInfo().getParameter<arr>("kinect_trans_mat"));
 
   // Variables
-  PointCloudVar kinectData3d("KinectData3D");
-  PointCloudSet objectClusters("ObjectClusters");
-  ObjectSet objects("Objects");
-  ObjectBeliefSet filteredObjects("filteredObjects");
-  Workspace<FittingJob, FittingResult> fittingWorkspace("FittingWorkspace");
+  VariableL V = newPointcloudVariables();
   GeometricState geo;
 
   // Processes
+  KinectInterface kinect("KinectInterface");
   ProcessL P = newPointcloudProcesses(1);
 
-  P(0)->threadLoop();
+  kinect.threadOpen();
 
-  new OrsView(geo.fields(0), NULL); //example for creating vi    ews directly from code 
-  b::openInsideOut();
+  new OrsView(geo.fields(0), NULL); //example for creating views directly from code 
 
-  MT::wait(100000);
+  MT::wait();
 
 }

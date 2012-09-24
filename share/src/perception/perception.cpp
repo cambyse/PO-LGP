@@ -153,6 +153,7 @@ ProcessL newPointcloudProcesses(uint num_of_workers) {
 
 VariableL newPointcloudVariables() {
   VariableL variables;
+  variables.append(new PointCloudVar("KinectData3D"));
   variables.append(new PointCloudSet("ObjectClusters"));
   variables.append(new ObjectSet("Objects"));
   variables.append(new Workspace<FittingJob, FittingResult>("FittingWorkspace"));

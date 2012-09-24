@@ -1,5 +1,6 @@
 #ifdef PCL
 #include "kinect.h"
+#include <perception/pointcloud.h>
 #include <pcl/io/openni_grabber.h>
 
 
@@ -33,7 +34,7 @@ void KinectInterface::close() {
 
 KinectInterface::KinectInterface(const char* name) : Process(name), s(new sKinectInterface(this)) {
   birosInfo().getVariable(data_3d, "KinectData3D", this);
-  birosInfo().getVariable(data_rgb, "KinectDataRGB", this);
+  //birosInfo().getVariable(data_rgb, "KinectDataRGB", this);
 }
 
 #endif

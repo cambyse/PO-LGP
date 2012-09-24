@@ -8,8 +8,8 @@ double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstrac
   int steps = sys.get_T();
   arr R,r,H,Q,Winv,W;
   arr q0,q_old,tp,Binv;
-  sys.getH(H,0); //H_step
-  sys.getQ(Q,0); //Q_step
+  sys.geth(H,0); //H_step
+  sys.getq(Q,0); //Q_step
   
   sys.getq0(q0);
   if(!q_is_initialized) q=q0;
