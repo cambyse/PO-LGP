@@ -76,4 +76,4 @@ model.lever_length     = 0.03;  % B
 model.pin_displacement = 0.125; % C 
 model.drum_radius      = 0.01;  % r
 
-
+model.alpha=[50 50]; % added by MT

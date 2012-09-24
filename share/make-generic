@@ -323,6 +323,7 @@ LIBS      += -lgsl
 endif
 
 ifeq ($(OCTAVE),1)
+CXXFLAGS += -DMT_OCTAVE
 LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
 LIBS	+= -loctinterp -loctave
 # TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!

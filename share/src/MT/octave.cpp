@@ -2,7 +2,8 @@
 
 #ifdef MT_OCTAVE
 
-#include <octave/toplev.h> /* do_octave_atexit */
+//#include <octave/toplev.h> /* do_octave_atexit */
+#include <octave/octave.h>
 
 bool octaveInitialized=false;
 

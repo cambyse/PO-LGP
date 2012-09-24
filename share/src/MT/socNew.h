@@ -12,6 +12,7 @@ extern uint countMsg, countSetq;
 //
 // ControlledSystem
 //
+struct KOrderMarkovFunction_ControlledSystem;
 
 struct ControlledSystem {
   ControlledSystem():os(&std::cout), gl(NULL) {}
@@ -76,6 +77,16 @@ struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
   uint get_m(uint t);
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 };
+
+inline KOrderMarkovFunction_ControlledSystem& KOrderMarkovFunction_(ControlledSystem& sys){
+  KOrderMarkovFunction_ControlledSystem a(sys);
+  return a;
+}
+
+inline conv_KOrderMarkovFunction& VectorFunction_(ControlledSystem& sys){
+  conv_KOrderMarkovFunction a((KOrderMarkovFunction&)KOrderMarkovFunction_(sys));
+  return a;
+}
 
 #if 0
 struct ControlledSystem_as_KOrderMarkovFunction:KOrderMarkovFunction {

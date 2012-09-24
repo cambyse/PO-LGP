@@ -530,7 +530,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
 
   
   for(uint it=1;;it++) { //iterations and lambda adaptation loop
-    if(o.verbose>1) cout <<"optGaussNewton it=" <<it << " alpha=" <<alpha <<" lambda=" <<lambda <<flush;
+    if(o.verbose>1) cout <<"optGaussNewton it=" <<it << " lambda=" <<lambda <<flush;
     //compute Delta
 #if 1
     arr R=comp_At_A(J);
@@ -557,27 +557,28 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
       if(o.verbose>2) cout <<" \tprobing y=" <<y;
-      if(o.verbose>1) cout <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
+      if(o.verbose>1) cout <<" \talpha=" <<alpha <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
       if(fy <= fx) {
         if(o.verbose>1) cout <<" - ACCEPT" <<endl;
-        //adopt new point and adapt stepsize
+        //adopt new point and adapt stepsize|damping
         x = y;
         fx = fy;
-	alpha = pow(alpha, 0.5);
 	if(o.useAdaptiveDamping){ //Levenberg-Marquardt type damping
   	  lambda = .2*lambda;
+	}else{
+	  alpha = pow(alpha, 0.5);
 	}
         break;
       } else {
         if(o.verbose>1) cout <<" - reject" <<endl;
-        //decrease stepsize
-	alpha = .1*alpha;
+        //reject new points and adapte stepsize|damping
 	if(o.useAdaptiveDamping){ //Levenberg-Marquardt type damping
   	  lambda = 10.*lambda;
 	  break;
 	}else{
 	  if(alpha*Delta.absMax()<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+          alpha = .1*alpha;
 	}
       }
     }

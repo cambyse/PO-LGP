@@ -1650,6 +1650,7 @@ template<class T> const char* MT::Array<T>::prt() {
 
 //! x = y^T
 template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
+  CHECK(&x!=&y,"can't transpose matrix into itself");
   CHECK(y.nd<=3, "can only transpose up to 3D arrays");
   if(y.nd==3) {
     uint i, j, k, d0=y.d2, d1=y.d1, d2=y.d0;

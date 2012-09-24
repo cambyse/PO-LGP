@@ -50,7 +50,7 @@ l = [l2 l1]';
 lc = [l2-lc2 l1-lc1]';
 Ic = [Ic2_l Ic1_l+Im2]'; % moment of inertia
 
-D = [0.0 0;0 0.0]; % viscous damping coefficient
+D = [0.01 0;0 0.01]; % viscous damping coefficient
 
 g = 9.80665;       % gravity
 %g = 0;             % no gravity

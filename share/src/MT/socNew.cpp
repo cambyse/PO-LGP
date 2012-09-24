@@ -49,7 +49,7 @@ double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::os
     sys.getTaskCosts(phi, NoArr, t);
     taskC(t)=sumOfSqr(phi);
     
-#if 1
+#if 0
     arr R,r;
     double rhat,tc;
     tc = sys.getTaskCosts(R,r,t,&rhat);

@@ -422,6 +422,7 @@ double cofactor(const arr& A, uint i, uint j);
 void lognormScale(arr& P, double& logP, bool force=true);
 
 void gnuplot(const arr& X);
+void write(const arr& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 
 

@@ -1,5 +1,6 @@
-function [y] = ...
-    func ( x )
+function AB = func (A, B)
 
-y = x'*x;
+A
+B
+AB = A*B
 

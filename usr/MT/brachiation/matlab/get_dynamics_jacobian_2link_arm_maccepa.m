@@ -31,7 +31,7 @@ qd = x(3:4);
 tau = zeros(2,1);
 %tau = get_torque_sea_aug(x, u);
 xtmp = [x(2);x(4)]; % xtmp = [q2, q2dot]';
-utmp = x(5:6,1);      % utmp = [qm1, qm2]';
+utmp = x(5:6,1);    % utmp = [qm1, qm2]';
 tau(2) = get_torque_maccepa(xtmp, utmp, model);
 
 % sine and cosine

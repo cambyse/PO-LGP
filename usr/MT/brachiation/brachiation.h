@@ -2,16 +2,16 @@
 #include <MT/socNew.h>
 
 struct BrachiationSystem:ControlledSystem {
-  arr x0,u,x;
+  arr x0,xT,QT,u,x;
   octave_value model;
   
   BrachiationSystem();
 
-  uint get_T(){ return 100; }
-  double get_tau(){ return .01; }
+  uint get_T(){ return 61; }
+  double get_tau(){ return 9.9300e-03; }
   uint get_xDim(){ return 8; }
   uint get_uDim(){ return 2; }
-  uint get_phiDim(uint t){ return 0; }
+  uint get_phiDim(uint t){ if(t<get_T()) return 1; else return get_xDim(); }
   void get_x0(arr& x0){ x0 = this->x0; }
   bool isKinematic(){ return false; }
   void setx(const arr& x);

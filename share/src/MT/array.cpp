@@ -784,6 +784,12 @@ void gnuplot(const arr& X) {
   }
 }
 
+void write(const arr& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) {
+  std::ofstream fil(filename);
+  X.write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
+  fil.close();
+}
+
 void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) {
   std::ofstream fil(filename);
   catCol(X).write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
