@@ -13,7 +13,7 @@
 #include <JK/utils/sampler.h>
 #include <JK/utils/featureGenerator.h>
 
-#include <biros/logging.h>
+#include <devTools/logging.h>
 
 #include <MT/opengl.h>
 #include <MT/array_t.cxx>
@@ -28,7 +28,6 @@ void shutdown(int) {
   exit(0);
 }
 int main(int argc, char** argv) {
-  ClassifyData d;
   MT::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
 
@@ -104,19 +103,18 @@ int main(int argc, char** argv) {
     std::cin >> unused;
 
 
-  ClassificatorV cl;
+  ActiveLearningV cl;
   if(gaussproc) 
     cl.classificator = new GaussianProcessAL(prob);
   else
     cl.classificator = new LogisticRegression(prob);
-  cl.tester = new Tester(5000, filename, 24, prob.sampler);
 
-  DEBUG_VAR(classify, d.get_numOfWorkingJobs(NULL));
-  DEBUG_VAR(classify, &d);
+  cl.problem = &prob;
+
 
   ActiveLearningP alp;
   alp.traindata = &train;
-  alp.classificator = &cl;
+  alp.al = &cl;
   alp.guiData = &guiData;
  
   alp.threadOpen();
