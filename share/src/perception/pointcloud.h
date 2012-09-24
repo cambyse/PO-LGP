@@ -8,9 +8,10 @@
 #include <hardware/kinect.h>
 #include <motion/motion.h>
 #include <pcl/ModelCoefficients.h>
+#include <pcl/point_types.h>
 
 SET_LOG(pointcloud, INFO);
-
+typedef pcl::PointXYZRGBA PointT;
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
