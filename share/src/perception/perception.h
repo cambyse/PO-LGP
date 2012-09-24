@@ -9,10 +9,6 @@
 #  undef MAX
 #endif
 
-#ifdef PCL
-#include <pcl/ModelCoefficients.h>
-#endif
-
 #include <biros/biros.h>
 #include <biros/biros_internal.h>
 #include <MT/opengl.h>
@@ -264,12 +260,11 @@ struct ImageViewer:Process {
   }
 };
 
-namespace pcl {
-  template <class T>
-  struct PointCloud;
-};
 
-//TODO: where should this go?
+ProcessL newPointcloudProcesses(uint nom_of_workers);
+VariableL newPointcloudVariables();
+
+//TODO: where should this go? maybe ors?
 const int RADIUS = 2;
 const int HEIGHT = 3;
 

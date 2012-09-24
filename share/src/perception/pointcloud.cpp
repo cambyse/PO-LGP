@@ -27,19 +27,6 @@
 #include <vtkLineSource.h>
 #include <vtkTubeFilter.h>
 
-ProcessL newPointcloudProcesses(uint num_of_workers) {
-  ProcessL processes;
-  processes.append(new KinectInterface("kinect"));
-  for (uint i=0; i<num_of_workers; ++i) {
-    processes.append(new ObjectFitterWorker);
-  }
-  processes.append(new ObjectClusterer);
-  processes.append(new ObjectFitter);
-
-  processes.append(new ObjectFilter("Object Filter"));
-  processes.append(new ObjectTransformator("Object Transformator")); 
-  return processes;
-}
 
 ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
   birosInfo().getVariable(data_3d, "KinectData3D", this, true);

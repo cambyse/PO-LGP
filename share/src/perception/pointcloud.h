@@ -1,14 +1,13 @@
-#ifndef _PERCEPTION_H_
-#define _PERCEPTION_H_
+#ifndef _POINTCLOUD_H__
+#define _POINTCLOUD_H__
+
 #ifdef PCL
+
 #include <JK/utils/masterWorker.h>
 #include <biros/logging.h>
 #include <hardware/kinect.h>
 #include <motion/motion.h>
-
-#ifdef PCL
 #include <pcl/ModelCoefficients.h>
-#endif
 
 SET_LOG(pointcloud, INFO);
 
@@ -17,7 +16,7 @@ typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
 typedef MT::Array<FittingResult> FittingResultL;
 
-ProcessL newPointcloudProcesses(uint nom_of_workers);
+//ProcessL newPointcloudProcesses(uint nom_of_workers);
 
 class PointCloudSet : public Variable {
   public:
@@ -90,5 +89,5 @@ class ObjectTransformator : public Process {
     ObjectBeliefSet* kinect_objects;
     WorkingCopy<GeometricState> geo;
 };
-#endif
-#endif
+#endif // PCL
+#endif // _POINTCLOUD_H__
