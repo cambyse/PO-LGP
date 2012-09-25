@@ -261,7 +261,7 @@ struct ImageViewer:Process {
 };
 
 
-ProcessL newPointcloudProcesses(uint nom_of_workers);
+ProcessL newPointcloudProcesses();
 VariableL newPointcloudVariables();
 
 //TODO: where should this go? maybe ors?

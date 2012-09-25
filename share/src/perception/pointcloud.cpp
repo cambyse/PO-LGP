@@ -47,7 +47,7 @@ void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::Point
 }
 
 struct sObjectFitter{
-  sObjectFitter(ObjectFitter*p) : p(p) {}
+  sObjectFitter(ObjectFitter* p) : p(p) {}
   ObjectFitter *p;
 
   FittingJob createNewJob(const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointIndices::Ptr &inliers){ 
@@ -266,25 +266,18 @@ void ObjectClusterer::step() {
     pcl::PointCloud<PointT>::Ptr cluster_transformed(new pcl::PointCloud<PointT>);
     Eigen::Matrix4f transform(birosInfo().getParameter<floatA>("kinect_trans_mat", this).p);
     transform.transposeInPlace();
-    //DEBUG_VAR(pointcloud, transform);
-    //DEBUG_VAR(pointcloud, birosInfo().getParameter<floatA>("kinect_trans_mat", this));
     pcl::transformPointCloud(*cloud_cluster, *cluster_transformed, transform);
 
-    //Eigen::Vector3f translation(birosInfo().getParameter<floatA>("kinect_translation", this).p);
-    //Eigen::Quaternionf rotation(birosInfo().getParameter<floatA>("kinect_rotation", this).p);
-    //pcl::transformPointCloud(*cloud_cluster, *cluster_transformed, translation, rotation);
     _point_clouds.append(cluster_transformed);
   }
 
   point_clouds->set_point_clouds(_point_clouds, this);
 }
 
-ObjectFitter::ObjectFitter() : Process("ObectFitter") {
-  birosInfo().getVariable<Workspace<FittingJob, FittingResult> >(workspace, "FittingWorkspace", this,true);
+ObjectFitter::ObjectFitter() : Process("ObectFitter"), s(new sObjectFitter(this)) {
   birosInfo().getVariable<PointCloudSet>(objectClusters, "ObjectClusters", this, true);
   birosInfo().getVariable<ObjectSet>(objects, "Objects", this, true);
   threadListenTo(objectClusters);
-  threadListenTo(workspace);
 }
 
 void ObjectFitter::open() {}
@@ -300,7 +293,7 @@ void ObjectFitter::step() {
       FittingResult result;
       FittingJob anotherJob;
       bool put = s->doWork(result, anotherJob, plist(i));
-#pragma omp critical section
+#pragma omp critical
       {
         if(put) next.append(anotherJob);
         results.append(result);
@@ -309,6 +302,11 @@ void ObjectFitter::step() {
     plist = next;
     next.clear();
   }
+
+  //write back
+  objects->writeAccess(this);
+  objects->objects = results;
+  objects->deAccess(this);
 }
 void ObjectFitter::close() {}
 
@@ -400,10 +398,6 @@ void ObjectFilter::step() {
   FittingResultL pcl_cyls, pcl_sph;
   in_objects->readAccess(this);
   FittingResult o;
-  //for_list(i, o, in_objects->objects) {
-     //if (o)
-       //DEBUG_VAR(pointcloud, *o); 
-  //}
   s->filterCylinders( cyl_pos, pcl_cyls, in_objects->objects, this);
   s->filterSpheres( sph_pos, pcl_sph, in_objects->objects, this);
   in_objects->deAccess(this);
@@ -431,20 +425,16 @@ void ObjectFilter::step() {
   for (uint i = 0; i<cyl_pos.d0; i++) {
     ObjectBelief *cyl = new ObjectBelief();
     cyl->position = ARR(cyl_pos(i,0), cyl_pos(i,1), cyl_pos(i,2));
-    //DEBUG_VAR(pointcloud, cyl->position);
     cyl->rotation.setDiff(ARR(0,0,1), ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
-    //DEBUG_VAR(pointcloud, cyl->rotation);
     cyl->shapeParams(RADIUS) = cyl_pos(i,6);//.025;
     cyl->shapeParams(HEIGHT) = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
     cyl->shapeType = ors::cylinderST;
-    // TODO: what to do when large cyls?
     //cyl->pcl_object = pcl_cyls(i);
     out_objects->objects.append(cyl);
   }
   for (uint i = 0; i<sph_pos.d0; i++) {
     ObjectBelief *sph = new ObjectBelief;
     sph->position = ARR(sph_pos(i,0), sph_pos(i,1), sph_pos(i,2));
-    //DEBUG_VAR(pointcloud, sph->position);
     sph->shapeParams(RADIUS) = sph_pos(i,3);
     sph->shapeType = ors::sphereST;
     //sph->pcl_object = pcl_sph(i);
@@ -527,9 +517,6 @@ void ObjectTransformator::step() {
   used.clear();
   for(uint i=0;i<kinect_objects->objects.N && i<spheres.N + cylinders.N;i++){
     if (kinect_objects->objects(i)->shapeType == ors::cylinderST && c < cylinders.N) {
-      //cylinders(c)->X.pos = kinect_objects->objects(i)->position;
-      //cylinders(c)->X.rot = kinect_objects->objects(i)->rotation;
-      //cylinders(c)->rel.setDifference(cylinders(c)->body->X, cylinders(c)->X);
       moveObject(used, cylinders, kinect_objects->objects(i)->position, kinect_objects->objects(i)->rotation);
       ++c;
     }

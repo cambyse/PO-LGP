@@ -138,11 +138,8 @@ void HsvFilter::step(){ NICO }
 #ifdef PCL
 // Pointcloud stuff
 //
-ProcessL newPointcloudProcesses(uint num_of_workers) {
+ProcessL newPointcloudProcesses() {
   ProcessL processes;
-  for (uint i=0; i<num_of_workers; ++i) {
-    processes.append(new ObjectFitterWorker);
-  }
   processes.append(new ObjectClusterer);
   processes.append(new ObjectFitter);
 
@@ -156,7 +153,6 @@ VariableL newPointcloudVariables() {
   variables.append(new PointCloudVar("KinectData3D"));
   variables.append(new PointCloudSet("ObjectClusters"));
   variables.append(new ObjectSet("Objects"));
-  variables.append(new Workspace<FittingJob, FittingResult>("FittingWorkspace"));
   variables.append(new ObjectBeliefSet("filteredObjects"));
   return variables;
 }

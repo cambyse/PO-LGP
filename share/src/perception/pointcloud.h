@@ -3,22 +3,24 @@
 
 #ifdef PCL
 
-#include <JK/utils/masterWorker.h>
-#include <biros/logging.h>
+#include <biros/biros.h>
+#include <devTools/logging.h>
 #include <hardware/kinect.h>
 #include <motion/motion.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 
 SET_LOG(pointcloud, INFO);
+
 typedef pcl::PointXYZRGBA PointT;
 typedef MT::Array<pcl::PointCloud<PointT>::Ptr> PointCloudL;
 typedef pcl::PointCloud<PointT>::Ptr FittingJob;
 typedef pcl::ModelCoefficients::Ptr FittingResult;
 typedef MT::Array<FittingResult> FittingResultL;
 
-//ProcessL newPointcloudProcesses(uint nom_of_workers);
+struct ObjectBeliefSet;
 
+// -- Variables
 
 class PointCloudVar : public Variable {
   public:
@@ -27,18 +29,19 @@ class PointCloudVar : public Variable {
     pcl::PointCloud<PointT>::Ptr get_point_cloud_copy(Process *p) { readAccess(p); pcl::PointCloud<PointT>::Ptr tmp = point_cloud->makeShared(); deAccess(p); return tmp; }
 };
 
-
 class PointCloudSet : public Variable {
   public:
     PointCloudSet(const char* name) : Variable(name) { reg_point_clouds(); }
     FIELD(PointCloudL, point_clouds);
 };
+
 class ObjectSet : public Variable {
   public:
     ObjectSet(const char *name) : Variable(name) { reg_objects(); }
     FIELD(FittingResultL, objects);
 };
 
+// -- Processes
 
 class ObjectClusterer : public Process {
   public:
@@ -51,15 +54,6 @@ class ObjectClusterer : public Process {
     void close();
 };
 
-class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
-  public:
-    ObjectFitterWorker();
-    void doWork(FittingResult &r, const FittingJob &j);
-  private:
-    class sObjectFitterWorker *s;
-
-};
-
 class ObjectFitter : public Process {
   struct sObjectFitter* s;
   public:
@@ -69,12 +63,10 @@ class ObjectFitter : public Process {
     void step();
     void close();
 
-    Workspace<FittingJob, FittingResult> *workspace;
     PointCloudSet* objectClusters;
     ObjectSet *objects;
 };
 
-struct ObjectBeliefSet;
 
 class ObjectFilter : public Process {
   public:
@@ -86,8 +78,6 @@ class ObjectFilter : public Process {
 
     ObjectSet* in_objects;
     ObjectBeliefSet* out_objects;
-
-    
 };
 
 class ObjectTransformator : public Process {
@@ -100,5 +90,6 @@ class ObjectTransformator : public Process {
     ObjectBeliefSet* kinect_objects;
     WorkingCopy<GeometricState> geo;
 };
+
 #endif // PCL
 #endif // _POINTCLOUD_H__
