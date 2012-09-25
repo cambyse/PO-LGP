@@ -256,19 +256,6 @@ void ObjectFitter::step() {
 }
 void ObjectFitter::close() {}
 
-//void ObjectFitterIntegrator::restart() {
-  //objects->writeAccess(this);
-  //objects->objects.clear();
-  //objects->deAccess(this);
-//}
-
-//void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
-  //// add to ObjectSet  
-  //if (result.get() == 0) return;
-  //objects->writeAccess(this);
-  //objects->objects.append(result);
-  //objects->deAccess(this);
-//}
 
 ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {
   birosInfo().getVariable<Workspace<FittingJob, FittingResult> >(workspace, "FittingWorkspace", this);
