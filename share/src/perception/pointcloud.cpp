@@ -49,20 +49,18 @@ void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::Point
   }
 }
 
-struct sObjectFitterWorker {
-  sObjectFitterWorker(ObjectFitterWorker *p) : p(p) {}
-  ObjectFitterWorker *p;
+struct sObjectFitter{
+  sObjectFitter(ObjectFitter*p) : p(p) {}
+  ObjectFitter *p;
 
-  void createNewJob(const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointIndices::Ptr &inliers){ 
+  FittingJob createNewJob(const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointIndices::Ptr &inliers){ 
     FittingJob outliers(new pcl::PointCloud<PointT>());
     pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
     extract.setNegative(true);
     extract.filter(*outliers);
-    p->workspace->writeAccess(p);
-    p->workspace->jobs.append(outliers);
-    p->workspace->deAccess(p);
+    return outliers;
   }
   
   double confidenceForCylinder(pcl::PointIndices::Ptr &inliers, FittingResult& object, const pcl::PointCloud<PointT>::Ptr &cloud, const pcl::PointCloud<pcl::Normal>::Ptr &normals) {
@@ -133,6 +131,74 @@ struct sObjectFitterWorker {
       //}
       return 1./(1 + cloud->size() - inliers->indices.size());
     }
+  }
+
+  bool doWork(FittingResult &object, FittingJob &anotherJob, const FittingJob &cloud) {
+    // Build kd-tree from cloud
+    pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+    tree->setInputCloud (cloud);
+
+    // Estimate point normals
+    pcl::NormalEstimation<PointT, pcl::Normal> ne;
+    ne.setSearchMethod (tree);
+    ne.setInputCloud (cloud);
+    ne.setKSearch (50);
+
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+    ne.compute (*cloud_normals);
+
+    FittingResult cyl_object;
+    pcl::PointIndices::Ptr cyl_inliers;
+    double cylinder_confidence = s->confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
+    FittingResult sphere_object;
+    pcl::PointIndices::Ptr sphere_inliers;
+    double sphere_confidence = s->confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
+
+    double threshold = 0.;
+
+    pcl::PointIndices::Ptr inliers;
+    if (sphere_confidence > threshold && sphere_confidence > cylinder_confidence) {
+      object = sphere_object; 
+      inliers = sphere_inliers;
+    }
+    else if (cylinder_confidence > threshold) {
+      object = cyl_object;  
+      inliers = cyl_inliers;
+      double min, max;
+      arr direction = ARR(object->values[3], object->values[4], object->values[5]);
+      pcl::PointCloud<PointT>::Ptr cylinder(new pcl::PointCloud<PointT>());
+      pcl::ExtractIndices<PointT> extract;
+      extract.setInputCloud(cloud);
+      extract.setIndices(inliers);
+      extract.setNegative(false);
+      extract.filter(*cylinder);
+      arr start;
+      findMinMaxOfCylinder(min, max, start, cylinder, direction);
+      arr s = ARR(object->values[0], object->values[1], object->values[2]);
+      direction = direction/norm(direction);
+      arr st = s+scalarProduct(direction, (start-s))*direction;
+      direction = (max - min) * direction;
+      object->values[0] = st(0);
+      object->values[1] = st(1);
+      object->values[2] = st(2);
+      object->values[3] = direction(0);
+      object->values[4] = direction(1);
+      object->values[5] = direction(2);
+
+      //DEBUG_VAR(pointcloud, st);
+    }
+    else {
+      object.reset();  
+      return false;
+    }
+    //if rest points are enough create new job
+
+    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", this, 500);
+    if (cloud->size() - inliers->indices.size() > minCloudSize) {
+      anotherJob = s->createNewJob(cloud, inliers);
+      return true;
+    }
+    return false;
   }
 };
 
@@ -225,121 +291,32 @@ ObjectFitter::ObjectFitter() : Process("ObectFitter") {
 }
 
 void ObjectFitter::open() {}
+
 void ObjectFitter::step() {
-  workspace->writeAccess(this);
-  if(workspace->jobs.N == 0 && workspace->working_jobs == 0 && workspace->results.N > 0) {
-    //DEBUG(pointcloud, "fitter: integrate result");
-    objects->writeAccess(this);
-    objects->objects = workspace->results;
-    objects->deAccess(this);
-    workspace->results.clear();
+  MT::Array<FittingResult> results;
+
+  PointCloudL plist = objectClusters->get_point_clouds(this);
+  PointCloudL next;
+  while (plist.N) {
+#pragma omp parallel for
+    for(uint i=0; i<plist.N; ++i) {
+      FittingResult result;
+      Fitting Job anotherJob;
+      bool put = s->doWork(plist(i), anotherJob, result);
+#pragma omp critical section
+      {
+        if(put) next.append(job);
+        results.append(result);
+      }
+    } 
+    alsdkhj
+    plist = next;
+    next.clear();
   }
-  workspace->deAccess(this);
-
-  workspace->writeAccess(this);
-  if(workspace->jobs.N == 0 && workspace->working_jobs == 0 && workspace->results.N == 0) {
-    //DEBUG(pointcloud, "fitter: fill jobs");
-
-    PointCloudL plist = objectClusters->get_point_clouds(this);
-    //DEBUG_VAR(pointcloud, plist.N);
-    //std::queue<FittingJob> jobs;
-    workspace->jobs.clear();
-
-    for(int i = 0; i < plist.N; ++i) {
-      std::stringstream n;
-      //DEBUG_VAR(pointcloud, plist(i)->size());
-      workspace->jobs.append(plist(i));
-    }
-    //workspace->jobs = jobs;
-  }
-  workspace->deAccess(this);
 }
+
 void ObjectFitter::close() {}
 
-//void ObjectFitterIntegrator::restart() {
-  //objects->writeAccess(this);
-  //objects->objects.clear();
-  //objects->deAccess(this);
-//}
-
-//void ObjectFitterIntegrator::integrateResult(const FittingResult &result) {
-  //// add to ObjectSet  
-  //if (result.get() == 0) return;
-  //objects->writeAccess(this);
-  //objects->objects.append(result);
-  //objects->deAccess(this);
-//}
-
-ObjectFitterWorker::ObjectFitterWorker() : Worker<FittingJob, FittingResult>("ObjectFitter (Worker)"), s(new sObjectFitterWorker(this)) {
-  birosInfo().getVariable<Workspace<FittingJob, FittingResult> >(workspace, "FittingWorkspace", this);
-  threadListenTo(workspace);
-}
-
-void ObjectFitterWorker::doWork(FittingResult &object, const FittingJob &cloud) {
-  // Build kd-tree from cloud
-  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-  tree->setInputCloud (cloud);
-  
-  // Estimate point normals
-  pcl::NormalEstimation<PointT, pcl::Normal> ne;
-  ne.setSearchMethod (tree);
-  ne.setInputCloud (cloud);
-  ne.setKSearch (50);
-  
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-  ne.compute (*cloud_normals);
-
-  FittingResult cyl_object;
-  pcl::PointIndices::Ptr cyl_inliers;
-  double cylinder_confidence = s->confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
-  FittingResult sphere_object;
-  pcl::PointIndices::Ptr sphere_inliers;
-  double sphere_confidence = s->confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
-
-  double threshold = 0.;
-
-  pcl::PointIndices::Ptr inliers;
-  if (sphere_confidence > threshold && sphere_confidence > cylinder_confidence) {
-     object = sphere_object; 
-     inliers = sphere_inliers;
-  }
-  else if (cylinder_confidence > threshold) {
-    object = cyl_object;  
-    inliers = cyl_inliers;
-    double min, max;
-    arr direction = ARR(object->values[3], object->values[4], object->values[5]);
-    pcl::PointCloud<PointT>::Ptr cylinder(new pcl::PointCloud<PointT>());
-    pcl::ExtractIndices<PointT> extract;
-    extract.setInputCloud(cloud);
-    extract.setIndices(inliers);
-    extract.setNegative(false);
-    extract.filter(*cylinder);
-    arr start;
-    findMinMaxOfCylinder(min, max, start, cylinder, direction);
-    arr s = ARR(object->values[0], object->values[1], object->values[2]);
-    direction = direction/norm(direction);
-    arr st = s+scalarProduct(direction, (start-s))*direction;
-    direction = (max - min) * direction;
-    object->values[0] = st(0);
-    object->values[1] = st(1);
-    object->values[2] = st(2);
-    object->values[3] = direction(0);
-    object->values[4] = direction(1);
-    object->values[5] = direction(2);
-
-    //DEBUG_VAR(pointcloud, st);
-  }
-  else {
-    object.reset();  
-    return;
-  }
-  //if rest points are enough create new job
- 
-  int minCloudSize = birosInfo().getParameter<int>("minCloudSize", this, 500);
-  if (cloud->size() - inliers->indices.size() > minCloudSize) {
-    s->createNewJob(cloud, inliers);
-  }
-}
 struct sObjectFilter {
   bool filterShape(arr& pos, intA& nums, const arr& measurement, const int i, const double epsilon ) {
     if (norm(measurement - pos[i]) < epsilon)  {
