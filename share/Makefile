@@ -1,8 +1,8 @@
 NAME   = $(shell basename $(PWD))
 
 MLR_LIBS = \
-	src/MT src/SD src/NJ src/DZ src/JK \
-	src/biros src/devTools \
+	src/MT src/JK \
+	src/biros \
 	src/motion src/hardware src/perception \
 	src/relational \
 
@@ -15,9 +15,11 @@ EXTERN = \
 
 
 makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
-	find . -maxdepth 2 -name 'Makefile.dep' --delete
+
+dependAll: $(MLR_LIBS:%=depend/%)
 
 cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
+	find . -maxdepth 2 -name 'Makefile.dep' -delete
 
 makeEXTERN: $(EXTERN:%=make/%)
 
@@ -29,8 +31,10 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 make/%::
-	-$(MAKE) -C $* depend
 	$(MAKE) -C $*
+
+depend/%::
+	$(MAKE) -C $* depend
 
 clean/%::
 	-rm -f $*/Makefile.dep

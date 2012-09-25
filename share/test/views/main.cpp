@@ -16,6 +16,7 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);
   
   b::dump(); //before anything has been done!
+  b::openInsideOut();
   
   ExampleVar v;
   View *v0 = b::newView(*v.fields(0));
@@ -41,7 +42,7 @@ int main(int argn,char** argv){
   gtk_window_set_title(GTK_WINDOW(win), "big window");
   gtk_window_set_default_size(GTK_WINDOW(win), 100, 100);
   gtk_widget_show(win);
-  GtkWidget *box = gtk_vbox_new (false, 5);
+  GtkWidget *box = gtk_vbox_new (true, 5);
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   

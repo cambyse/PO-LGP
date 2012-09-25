@@ -4,10 +4,6 @@ OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib
 
-#NOBODY MAKES CHANGES HERE ANYMORE OTHER THAN MARC :-)
-#if in doubt, you actually want to change make-config!
-#otherwise ask Marc
-
 BUILDS += buildComponent/NJ buildComponent/biros
 LIBS += -lNJ -lbiros
 
