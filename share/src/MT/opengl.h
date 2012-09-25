@@ -241,7 +241,7 @@ struct OpenGL {
   //!@name to display image data (kind of misuse)
   void watchImage(const byteA &img, bool wait, float zoom);
   void watchImage(const floatA &img, bool wait, float zoom);
-  void displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win);
+  void displayGrey(const arr &x, bool wait, float zoom);
   void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
   
   //!@name capture routines

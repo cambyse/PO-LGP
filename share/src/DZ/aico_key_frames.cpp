@@ -8,8 +8,8 @@ double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstrac
   int steps = sys.get_T();
   arr R,r,H,Q,Winv,W;
   arr q0,q_old,tp,Binv;
-  sys.geth(H,0); //H_step
-  sys.getq(Q,0); //Q_step
+  //sys.getH(H,0); //H_step
+  //sys.getQ(Q,0); //Q_step
   
   sys.getq0(q0);
   if(!q_is_initialized) q=q0;
@@ -104,8 +104,8 @@ double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
   if(!b_is_initialized) b=x0;
   double old_r;
   counter = 0; // number of iterations
-  sys.getHrateInv(H1);
-  sys.getQrate(Q);
+  //sys.getHrateInv(H1);
+  //sys.getQrate(Q);
 
   decomposeMatrix(Q1,Q2,Q);
   double tau = time;// tau is basically = time
@@ -173,8 +173,8 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
   double T = sys.get_T();
   double tau = time; // tau is basically = time
   double tau2=tau*tau;
-  sys.getHrateInv(H1);
-  sys.getQrate(Q);
+  //sys.getHrateInv(H1);
+  //sys.getQrate(Q);
   
   decomposeMatrix(Q1,Q2,Q);
   

@@ -140,5 +140,4 @@ double Dynamixel::getAngle(int id) {
 
 //void Dynamixel::setLED(int id, bool on);
 //bool Dynamixel::getLED(int id);
-
 #endif

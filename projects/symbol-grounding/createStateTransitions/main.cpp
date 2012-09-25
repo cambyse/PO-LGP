@@ -29,6 +29,7 @@ void shutdown(int) {
 }
 
 void init_grounded_symbol(AL_GroundedSymbol& gs) {
+  srand(MT::getParameter<int>("seed", time(NULL)));
   bool gaussproc = MT::getParameter<bool>("gauss", true);
   int n_steps = MT::getParameter<int>("steps", 20);
 
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
   cout<<"STARTING STATE:"<<endl;
   relational::SymbolicState *s = RMSim::RobotManipulationInterface::calculateSymbolicState(&sim);
   s->lits.append(lits);
-  //relational::reason::derive(s);
+  relational::reason::derive(s);
   
   cout<<"State:"<<endl<<*s<<endl<<endl;
   PRINT(relational::reason::getConstants());
@@ -139,26 +140,29 @@ int main(int argc, char** argv) {
   relational::Symbol *ac;
   uintA args;
   args.resize(1);
-  for(int iter = 0; iter < 50; ++iter) {
+  for(int iter = 0; iter < MT::getParameter<int>("actions", 50); ++iter) {
 
     relational::StateTransition *trans = new relational::StateTransition;
     trans->pre = *s;
 
-    relational::Literal* action = RMSim::RobotManipulationInterface::generateAction_wellBiased(*s, 19);
-    //if(iter % 2 == 0) {
-      //ac = p_GRAB;
-      //args(0) = rand()%4 + 21;
-    //}
-    //else {
-      //ac = p_PUTON;
-      //args(0) = 20;
-    //}
+    //relational::Literal* action = RMSim::RobotManipulationInterface::generateAction_wellBiased(*s, 19);
+    if(iter % 2 == 0) {
+      ac = p_GRAB;
+      args(0) = rand()%4 + 21;
+    }
+    else {
+      ac = p_PUTON;
+      if(rand() % 4 == 1)
+        args(0) = 20;
+      else
+        args(0) = rand()%4 + 21;
+    }
 
-    //relational::Literal *action = relational::Literal::get(ac, args, 1);
+    relational::Literal *action = relational::Literal::get(ac, args, 1);
     //perform the action
     os << *action << std::endl;
     DEBUG_VAR(main, *action);
-    RMSim::RobotManipulationInterface::performAction(action, &sim, 8);
+    RMSim::RobotManipulationInterface::performAction(action, &sim, 2);
     trans->action = action;
 
 
@@ -170,7 +174,7 @@ int main(int argc, char** argv) {
 
     // append grounded symbols
     s->lits.append(lits);
-    //relational::reason::derive(s);
+    relational::reason::derive(s);
     trans->post = *s;
 
     os << *s << std::endl;

@@ -35,7 +35,7 @@
 #define SMALL_HEIGHT_STEP 0.05
 // table + neutralHeightBonus = NEUTRAL_HEIGHT
 #define NEUTRAL_HEIGHT_BONUS 0.5
-#define HARD_LIMIT_DIST_Y -0.8
+#define HARD_LIMIT_DIST_Y -1.2
 
 
 
@@ -124,7 +124,7 @@ void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface
 ************************************************/
 
 // How many time-steps until action fails
-#define SEC_ACTION_ABORT 1000
+#define SEC_ACTION_ABORT 300
 
 RobotManipulationSimulator::RobotManipulationSimulator(){
   C=0;
