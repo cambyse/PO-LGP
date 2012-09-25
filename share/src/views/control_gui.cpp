@@ -1,7 +1,7 @@
 #ifdef MT_GTK
 
 #include "control.h"
-#include "biros_internal.h"
+#include "biros/biros_internal.h"
 #include "../motion/motion.h"
 #include <MT/gtk.h>
 #include <gtk/gtk.h>

@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main-wish.o
+OBJS = main.o
 
 OPENCV = 0 1
 GTK = 1

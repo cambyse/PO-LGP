@@ -10,8 +10,8 @@
 
 #include <devTools/logging.h>
 
-#include <biros/biros_views.h>
-#include <biros/control.h>
+#include <views/biros_views.h>
+#include <views/control.h>
 #include <MT/ors.h>
 
 SET_LOG(main, DEBUG);
