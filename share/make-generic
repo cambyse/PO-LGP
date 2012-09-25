@@ -171,6 +171,10 @@ endif
 ################################################################################
 # (a tag like `FREEGLUT = 1' can be defined in the make-config as needed)
 
+ifeq ($(OPENMP),1)
+CXXFLAGS += -fopenmp -DOPENMP
+endif
+
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
 NXX = $(LIBPATH)/cuda/bin/nvcc
