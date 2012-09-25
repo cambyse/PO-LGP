@@ -6,10 +6,8 @@
 #include <limits>
 
 #include <biros/biros.h>
-#include <biros/logging.h>
 #include <MT/array.h>
 
-#ifdef PCL
 #include <pcl/point_cloud.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/passthrough.h>
@@ -20,7 +18,6 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/transforms.h>
-#endif
 
 #include <vtkSmartPointer.h>
 #include <vtkDataSet.h>
@@ -38,7 +35,7 @@ void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::Point
   arr dir = direction/norm(direction);
   min = std::numeric_limits<double>::max();
   max = -std::numeric_limits<double>::max();
-  for(int i=0; i<cloud->size(); ++i) {
+  for(uint i=0; i<cloud->size(); ++i) {
     arr point = ARR((*cloud)[i].x, (*cloud)[i].y, (*cloud)[i].z);
     double p = scalarProduct(dir, point);
     if(p < min) {
@@ -85,7 +82,7 @@ struct sObjectFitter{
     pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
     seg.segment (*inliers_cylinder, *coefficients_cylinder);
 
-    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
+    uint minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
     if (inliers_cylinder->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -116,7 +113,7 @@ struct sObjectFitter{
     pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
     seg.segment (*inliers_sphere, *coefficients_sphere);
-    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
+    uint minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
     if (inliers_sphere->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -149,10 +146,10 @@ struct sObjectFitter{
 
     FittingResult cyl_object;
     pcl::PointIndices::Ptr cyl_inliers;
-    double cylinder_confidence = s->confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
+    double cylinder_confidence = confidenceForCylinder(cyl_inliers, cyl_object, cloud, cloud_normals);
     FittingResult sphere_object;
     pcl::PointIndices::Ptr sphere_inliers;
-    double sphere_confidence = s->confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
+    double sphere_confidence = confidenceForSphere(sphere_inliers, sphere_object, cloud, cloud_normals);
 
     double threshold = 0.;
 
@@ -193,9 +190,9 @@ struct sObjectFitter{
     }
     //if rest points are enough create new job
 
-    int minCloudSize = birosInfo().getParameter<int>("minCloudSize", this, 500);
+    uint minCloudSize = birosInfo().getParameter<int>("minCloudSize", p, 500);
     if (cloud->size() - inliers->indices.size() > minCloudSize) {
-      anotherJob = s->createNewJob(cloud, inliers);
+      anotherJob = createNewJob(cloud, inliers);
       return true;
     }
     return false;
@@ -301,20 +298,21 @@ void ObjectFitter::step() {
 #pragma omp parallel for
     for(uint i=0; i<plist.N; ++i) {
       FittingResult result;
-      Fitting Job anotherJob;
-      bool put = s->doWork(plist(i), anotherJob, result);
+      FittingJob anotherJob;
+      bool put = s->doWork(result, anotherJob, plist(i));
 #pragma omp critical section
       {
-        if(put) next.append(job);
+        if(put) next.append(anotherJob);
         results.append(result);
       }
     } 
-    alsdkhj
     plist = next;
     next.clear();
   }
 }
 void ObjectFitter::close() {}
+
+struct sObjectFilter {
   bool filterShape(arr& pos, intA& nums, const arr& measurement, const int i, const double epsilon ) {
     if (norm(measurement - pos[i]) < epsilon)  {
       pos[i] = pos[i] * ((nums(i)-1.)/nums(i)) + measurement * (1./nums(i));
@@ -329,7 +327,7 @@ void ObjectFitter::close() {}
     pos.clear();
     nums.resize(0);
     pos.resize(0,7);
-    for (int i = 0; i< objects.N; ++i) {
+    for (uint i = 0; i< objects.N; ++i) {
       if (!objects(i)) continue; 
       if (objects(i)->values.size() != 7) continue;
       cylinders.append(objects(i));
@@ -349,7 +347,7 @@ void ObjectFitter::close() {}
       measurement_.append(measurement(0,6));
       measurement_.resize(1,7);
       double epsilon = birosInfo().getParameter<double>("objectDistance", p);
-      for (int j = 0; j<pos.d0; ++j) {
+      for (uint j = 0; j<pos.d0; ++j) {
         if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break;}
         else if (filterShape(pos, nums, measurement_, j, epsilon)) {found = true; break; }
       }
@@ -365,7 +363,7 @@ void ObjectFitter::close() {}
     pos.clear();
     nums.resize(0);
     pos.resize(0,4);
-    for (int i = 0; i< objects.N; ++i) {
+    for (uint i = 0; i< objects.N; ++i) {
       if (!objects(i)) continue;
       if (objects(i)->values.size() != 4) continue;
       spheres.append(objects(i));
@@ -374,7 +372,7 @@ void ObjectFitter::close() {}
       measurement.resize(1,4);
       std::copy(objects(i)->values.begin(), objects(i)->values.end(), measurement.p);
       double epsilon = birosInfo().getParameter<double>("objectDistance", p);
-      for (int j = 0; j<pos.d0; ++j) {
+      for (uint j = 0; j<pos.d0; ++j) {
         if(filterShape(pos, nums, measurement, j, epsilon)) { found = true; break; }
       }
       if(!found) {
@@ -382,7 +380,6 @@ void ObjectFitter::close() {}
         nums.append(1);
       }
     }
-
   }
 };
 
@@ -402,7 +399,7 @@ void ObjectFilter::step() {
   sph_pos.resize(0,7);
   FittingResultL pcl_cyls, pcl_sph;
   in_objects->readAccess(this);
-  int i; FittingResult o;
+  FittingResult o;
   //for_list(i, o, in_objects->objects) {
      //if (o)
        //DEBUG_VAR(pointcloud, *o); 
@@ -413,7 +410,7 @@ void ObjectFilter::step() {
   out_objects->writeAccess(this);
   out_objects->objects.clear();
   // HACK! We assume max two cylinders
-  for (int i = 0; i<cyl_pos.d0; i++) {
+  for (uint i = 0; i<cyl_pos.d0; i++) {
     double height = norm(ARR(cyl_pos(i,3), cyl_pos(i,4), cyl_pos(i,5)));
     // if cylinder is higher then real cylinder there are probably two...
     if (height > 0.15) {
@@ -431,7 +428,7 @@ void ObjectFilter::step() {
       cyl_pos(oldd0, 2) -= cyl_pos(i, 5);
     }
   }
-  for (int i = 0; i<cyl_pos.d0; i++) {
+  for (uint i = 0; i<cyl_pos.d0; i++) {
     ObjectBelief *cyl = new ObjectBelief();
     cyl->position = ARR(cyl_pos(i,0), cyl_pos(i,1), cyl_pos(i,2));
     //DEBUG_VAR(pointcloud, cyl->position);
@@ -444,7 +441,7 @@ void ObjectFilter::step() {
     //cyl->pcl_object = pcl_cyls(i);
     out_objects->objects.append(cyl);
   }
-  for (int i = 0; i<sph_pos.d0; i++) {
+  for (uint i = 0; i<sph_pos.d0; i++) {
     ObjectBelief *sph = new ObjectBelief;
     sph->position = ARR(sph_pos(i,0), sph_pos(i,1), sph_pos(i,2));
     //DEBUG_VAR(pointcloud, sph->position);
@@ -525,10 +522,10 @@ void ObjectTransformator::step() {
 
   DEBUG(pointcloud, "filteredObject mutex");
   kinect_objects->readAccess(this);
-  int c = 0, s = 0;
+  uint c = 0, s = 0;
   intA used;
   used.clear();
-  for(int i=0;i<kinect_objects->objects.N && i<spheres.N + cylinders.N;i++){
+  for(uint i=0;i<kinect_objects->objects.N && i<spheres.N + cylinders.N;i++){
     if (kinect_objects->objects(i)->shapeType == ors::cylinderST && c < cylinders.N) {
       //cylinders(c)->X.pos = kinect_objects->objects(i)->position;
       //cylinders(c)->X.rot = kinect_objects->objects(i)->rotation;

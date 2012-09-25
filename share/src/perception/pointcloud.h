@@ -61,6 +61,7 @@ class ObjectFitterWorker : public Worker<FittingJob, FittingResult> {
 };
 
 class ObjectFitter : public Process {
+  struct sObjectFitter* s;
   public:
     ObjectFitter();
 
