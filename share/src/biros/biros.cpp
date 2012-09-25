@@ -1,6 +1,6 @@
 #include "biros.h"
 #include "biros_internal.h"
-#include "biros_views.h"
+#include "views/biros_views.h"
 #include "logging.h"
 //#include "biros_logger.h"
 //#include "biros_threadless.h"

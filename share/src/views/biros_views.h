@@ -45,7 +45,7 @@ Views:
 -- point cloud
 */
 
-#include "biros.h"
+#include "biros/biros.h"
 #include <MT/gtk.h>
 
 typedef struct _GtkWidget GtkWidget;

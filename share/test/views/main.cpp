@@ -1,4 +1,4 @@
-#include <biros/control.h>
+#include <views/control.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>

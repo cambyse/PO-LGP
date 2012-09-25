@@ -1,6 +1,6 @@
-#include "biros.h"
+#include "biros/biros.h"
 #include "biros_views.h"
-#include "logging.h"
+#include "biros/logging.h"
 
 struct Variable;
 struct Process;

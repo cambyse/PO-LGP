@@ -1,5 +1,5 @@
 #include "logging.h"
-#include "control.h"
+#include "views/control.h"
 #include "biros_internal.h"
 #include "../hardware/hardware.h"
 

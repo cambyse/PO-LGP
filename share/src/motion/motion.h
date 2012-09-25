@@ -2,7 +2,7 @@
 #define MT_motion_h
 
 #include <biros/biros.h>
-#include <biros/biros_views.h>
+#include <views/biros_views.h>
 #include <MT/ors.h>
 #include <MT/opengl.h>
 
