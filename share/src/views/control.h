@@ -59,6 +59,23 @@ namespace b{
   //! get a hypergraph of communicating processes-variables-parameters
   void getGraph();
 
+  // generic newView
+  template<class T> View* newView(T& data, ViewInfo *vi=NULL, GtkWidget *container=NULL){
+  	if(!vi){
+			ViewInfoL vis=getViews(typeid(T).name());
+			if(!vis.N){
+				MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
+				return NULL;
+			}
+			vi = vis(0);
+		}
+		cout << "Creating new view '" << vi->name << endl;
+		View *v = vi->newInstance();
+		v->object = &data;
+		v->gtkNew(container);
+		return v;
+  }
+
   // specifying container, but not ViewInfo
   template<class T> View* newView(T& data, GtkWidget *container) {
   	return newView(data, NULL, container);

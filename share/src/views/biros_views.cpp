@@ -93,6 +93,17 @@ void View::gtkUpdate(){
 // specific views
 //
 
+REGISTER_VIEW_TYPE(ArrView, arr);
+
+void ArrView::glInit() {
+  gl->displayGrey(*((arr*) object), false, 10);
+}
+
+void ArrView::glDraw() {
+  gl->displayGrey(*((arr*) object), false, 10);
+}
+
+
 REGISTER_VIEW_TYPE(ImageView, byteA);
 
 void ImageView::glInit() {

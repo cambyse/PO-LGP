@@ -48,10 +48,21 @@ int main(int argn,char** argv){
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  View *v4 = b::newView(*v.fields(0), "GenericFieldInfoView", box);
-  View *v5 = b::newView(*v.fields(1), box);
-  View *v6 = b::newView(*v.fields(2), "MeshView", box);
+  //View *v4 = b::newView(*v.fields(0), "GenericFieldInfoView", box);
+  //View *v5 = b::newView(*v.fields(1), box);
+  //View *v6 = b::newView(*v.fields(2), "MeshView", box);
   
+  arr X = randn(5,3);
+
+  View *v7 = b::newView(X, "ArrView");
+
+  for(uint t=0;t<100;t++){
+		//while looping, the view should autonomously update its content,
+		//with the update frequency of the gtkProcess()
+		X += .1*randn(5,3);
+		MT::wait(.1);
+  }
+
   MT::wait(10.);
   
   gtkProcessClose();
