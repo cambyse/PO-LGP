@@ -33,7 +33,7 @@ ViewInfo* b::getView(const char *name){
   return listFindByName(birosInfo().views, name);
 }
 
-View* b::newView(Process& proc, ViewInfo *vi){
+View* b::newView(Process& proc, ViewInfo *vi, GtkWidget *container){
   if(!vi){
   	ViewInfoL vis=getViews(typeid(proc).name(), typeid(Process).name());
     if(!vis.N){
@@ -46,10 +46,11 @@ View* b::newView(Process& proc, ViewInfo *vi){
     <<"Creating new view '" <<vi->name <<"' for process '" <<proc.name <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = &proc;
+  v->gtkNew(container);
   return v;
 }
 
-View* b::newView(Parameter& param, ViewInfo *vi){
+View* b::newView(Parameter& param, ViewInfo *vi, GtkWidget *container){
   if(!vi){
   	ViewInfoL vis=getViews(param.typeName(), typeid(Parameter).name());
     if(!vis.N){
@@ -62,10 +63,11 @@ View* b::newView(Parameter& param, ViewInfo *vi){
     <<"Creating new view '" <<vi->name <<"' for parameter '" <<param.name <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = &param;
+  v->gtkNew(container);
   return v;
 }
 
-View* b::newView(Variable& var, ViewInfo *vi){
+View* b::newView(Variable& var, ViewInfo *vi, GtkWidget *container){
   if(!vi){
   	ViewInfoL vis=getViews(typeid(var).name(), typeid(Variable).name());
     if(!vis.N){
@@ -78,10 +80,11 @@ View* b::newView(Variable& var, ViewInfo *vi){
     <<"Creating new view '" <<vi->name <<"' for variable '" <<var.name <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = &var;
+  v->gtkNew(container);
   return v;
 }
 
-View* b::newView(FieldInfo& field, ViewInfo *vi){
+View* b::newView(FieldInfo& field, ViewInfo *vi, GtkWidget *container){
   if(!vi){
   	ViewInfoL vis=getViews(field.sysType, typeid(FieldInfo).name());
     if(!vis.N){
@@ -95,5 +98,6 @@ View* b::newView(FieldInfo& field, ViewInfo *vi){
     <<"' (type '" <<field.sysType <<"') of Variable '" <<field.var->name <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = &field;
+  v->gtkNew(container);
   return v;
 }

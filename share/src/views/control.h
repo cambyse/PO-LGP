@@ -50,18 +50,23 @@ namespace b{
   ViewInfo* getView(const char *name);
 
   //! create a new view; if ViewInfo==NULL the first available
-  View* newView(Process&,ViewInfo *vi=NULL);
-  View* newView(Variable&,ViewInfo *vi=NULL);
-  View* newView(FieldInfo&,ViewInfo *vi=NULL);
-  View* newView(Parameter&,ViewInfo *vi=NULL);
+  View* newView(Process&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+  View* newView(Variable&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+  View* newView(FieldInfo&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+  View* newView(Parameter&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
   View* newGlobalView(ViewInfo*);
 
   //! get a hypergraph of communicating processes-variables-parameters
   void getGraph();
 
+  // specifying container, but not ViewInfo
+  template<class T> View* newView(T& data, GtkWidget *container) {
+  	return newView(data, NULL, container);
+  }
+
   // generating a specific view with the given name
-  template<class T> View* newView(T& data, const char *name) {
-  	return newView(data, getView(name));
+  template<class T> View* newView(T& data, const char *name, GtkWidget *container=NULL) {
+  	return newView(data, getView(name), container);
   }
 }
 

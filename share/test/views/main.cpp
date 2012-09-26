@@ -19,10 +19,12 @@ int main(int argn,char** argv){
   b::openInsideOut();
   
   ExampleVar v;
-  View *v0 = b::newView(*v.fields(0));
+  // must set rgb, because view doesn't work without it
+  v.set_rgb(ARRAY<byte>(0,0,0), NULL);
+
+  View *v0 = b::newView(*v.fields(0), "GenericFieldInfoView");
   View *v1 = b::newView(*v.fields(1));
-  View *v2 = b::newView(*v.fields(2), "GenericFieldInfoView");
-  //View *v3 = new RgbView; v3->object = v.fields(1); //, &RgbView::staticInfo);
+  View *v2 = b::newView(*v.fields(2), "MeshView");
 
   //set some values for the variables
   v.set_i(1, NULL);
@@ -46,10 +48,9 @@ int main(int argn,char** argv){
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  v0->gtkNew(box);
-  v1->gtkNew(box);
-  v2->gtkNew(box);
-  //v3->gtkNew(NULL);
+  View *v4 = b::newView(*v.fields(0), "GenericFieldInfoView", box);
+  View *v5 = b::newView(*v.fields(1), box);
+  View *v6 = b::newView(*v.fields(2), "MeshView", box);
   
   MT::wait(10.);
   
