@@ -33,7 +33,6 @@ ViewInfo* b::getView(const char *name){
   return listFindByName(birosInfo().views, name);
 }
 
-
 View* b::newView(Process& proc, ViewInfo *vi){
   if(!vi){
   	ViewInfoL vis=getViews(typeid(proc).name(), typeid(Process).name());

@@ -48,7 +48,7 @@ namespace b{
   ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
   ViewInfoL getGlobalViews();
   ViewInfo* getView(const char *name);
-  
+
   //! create a new view; if ViewInfo==NULL the first available
   View* newView(Process&,ViewInfo *vi=NULL);
   View* newView(Variable&,ViewInfo *vi=NULL);
@@ -59,6 +59,10 @@ namespace b{
   //! get a hypergraph of communicating processes-variables-parameters
   void getGraph();
 
+  // generating a specific view with the given name
+  template<class T> View* newView(T& data, const char *name) {
+  	return newView(data, getView(name));
+  }
 }
 
 struct GtkProcessVariable:Variable{

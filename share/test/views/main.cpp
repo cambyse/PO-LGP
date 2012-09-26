@@ -21,7 +21,7 @@ int main(int argn,char** argv){
   ExampleVar v;
   View *v0 = b::newView(*v.fields(0));
   View *v1 = b::newView(*v.fields(1));
-  View *v2 = b::newView(*v.fields(2)); //, &MeshView::staticInfo);
+  View *v2 = b::newView(*v.fields(2), "GenericFieldInfoView");
   //View *v3 = new RgbView; v3->object = v.fields(1); //, &RgbView::staticInfo);
 
   //set some values for the variables
