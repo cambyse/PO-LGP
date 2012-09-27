@@ -93,14 +93,18 @@ void View::gtkUpdate(){
 // specific views
 //
 
-REGISTER_VIEW_TYPE(ArrView, arr);
+REGISTER_VIEW_TYPE(MatrixView, arr);
 
-void ArrView::glInit() {
+void MatrixView::glInit() {
   gl->displayGrey(*((arr*) object), false, 10);
+	//arr X = randn(5,3);
+	//gl->displayGrey(X, false, 10);
 }
 
-void ArrView::glDraw() {
+void MatrixView::glDraw() {
   gl->displayGrey(*((arr*) object), false, 10);
+  //arr X = randn(5,3);
+  //gl->displayGrey(X, false, 10);
 }
 
 

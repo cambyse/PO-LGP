@@ -54,7 +54,7 @@ int main(int argn,char** argv){
   
   arr X = randn(5,3);
 
-  View *v7 = b::newView(X, "ArrView");
+  View *v7 = b::newView(X, "MatrixView");
 
   for(uint t=0;t<100;t++){
 		//while looping, the view should autonomously update its content,
