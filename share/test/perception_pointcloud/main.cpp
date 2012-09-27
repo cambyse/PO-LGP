@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   KinectInterface kinect("KinectInterface");
   ProcessL P = newPointcloudProcesses();
 
-  kinect.threadOpen();
+  kinect.threadLoopWithBeat(0.3);
 
   new OrsView(geo.fields(0), NULL); //example for creating views directly from code 
   b::openInsideOut();

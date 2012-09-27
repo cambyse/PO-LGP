@@ -175,6 +175,7 @@ ifeq ($(OPENMP),1)
 CXXFLAGS += -fopenmp -DOPENMP
 endif
 
+
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
 NXX = $(LIBPATH)/cuda/bin/nvcc
@@ -403,6 +404,13 @@ ifeq ($(PCL),1)
 QHULL = 1
 CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
 LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
+FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/libfreenect/lib
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/libfreenect/include
+LIBS += -lfreenect
 endif
 
 ifeq ($URGLASER),1)
