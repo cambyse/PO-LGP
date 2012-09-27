@@ -142,9 +142,6 @@ sKinectInterface::convertToXYZRGBPointCloud (const std::vector<uint8_t>& rgb, co
   register int centerX = (image_width >> 1);
   int centerY = (image_height >> 1);
 
-  //register const XnDepthPixel* depth_map = depth_image->getDepthMetaData ().Data ();
-
-  //image->fillRGB (image_width_, image_height_, rgb_buffer, image_width_ * 3);
   float bad_point = std::numeric_limits<float>::quiet_NaN ();
 
   int value_idx = 0;
