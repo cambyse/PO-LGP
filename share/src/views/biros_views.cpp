@@ -93,6 +93,20 @@ void View::gtkUpdate(){
 // specific views
 //
 
+REGISTER_VIEW_TYPE(MatrixView, arr);
+
+void MatrixView::glDraw() {
+	arr x = *((arr*) object);
+	static byteA img;
+	resizeAs(img, x);
+	double mi=x.min(), ma=x.max();
+	for(uint i=0; i<x.N; i++) {
+		img.elem(i)=(byte)(255.*(x.elem(i)-mi)/(ma-mi));
+	}
+  gl->img = &img;
+}
+
+
 REGISTER_VIEW_TYPE(ImageView, byteA);
 
 void ImageView::glInit() {

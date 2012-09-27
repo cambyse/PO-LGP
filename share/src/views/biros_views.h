@@ -131,7 +131,14 @@ GenericInfoView(Parameter);
 #undef GenericInfoView
 
 #define GenericInfoView_CPP(_what) \
-  ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy("Generic"#_what"View");
+ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy("Generic"#_what"View");
+
+//===========================================================================
+
+struct MatrixView:View{
+  void glDraw();
+  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
+};
 
 //===========================================================================
 
