@@ -90,10 +90,21 @@ namespace b{
   	return newView(data, NULL, container);
   }
 
-  // generating a specific view with the given name
+  // generate a specific view with the given name
   template<class T> View* newView(T& data, const char *name, GtkWidget *container=NULL) {
   	return newView(data, getView(name), container);
   }
+
+
+  // generate a specific view with the given type
+	#define STR(arg) #arg
+
+  template<class V, class T> View* newView(T& data, GtkWidget *container=NULL) {
+  	return newView(data, STR(V), container);
+  }
+
+	#undef STR
+
 }
 
 struct GtkProcessVariable:Variable{
