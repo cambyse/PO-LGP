@@ -3,6 +3,7 @@
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
+#include <MT/opengl.h>
 
 struct ExampleVar:Variable{
   FIELD( int, i );
@@ -22,15 +23,15 @@ int main(int argn,char** argv){
   // must set rgb, because view doesn't work without it
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
 
-  View *v0 = b::newView(*v.fields(0), "GenericFieldInfoView");
-  View *v1 = b::newView(*v.fields(1));
-  View *v2 = b::newView(*v.fields(2), "MeshView");
+  //View *v0 = b::newView(*v.fields(0), "GenericFieldInfoView");
+  //View *v1 = b::newView(*v.fields(1));
+  //View *v2 = b::newView(*v.fields(2), "MeshView");
 
   //set some values for the variables
   v.set_i(1, NULL);
-  v0->write(cout);  cout <<endl;
+  //v0->write(cout);  cout <<endl;
   v.set_i(2, NULL);
-  v0->write(cout);  cout <<endl;
+  //v0->write(cout);  cout <<endl;
   
   v.set_rgb(ARRAY<byte>(100,200,80), NULL);
   
@@ -53,13 +54,27 @@ int main(int argn,char** argv){
   //View *v6 = b::newView(*v.fields(2), "MeshView", box);
   
   arr X = randn(5,3);
+  byteA img;
+
+  img.resize(640,480);
+  for(int x=0; x<640;++x) {
+  	for(int y=0; y<480;++y) {
+  	  img(x,y) = (x+y)%255;
+  	}
+  }
+
+  //b::newView(img, "ImageView");
 
   View *v7 = b::newView(X, "MatrixView");
+  cout << "done" << endl;
+
+  //OpenGL gl;
 
   for(uint t=0;t<100;t++){
 		//while looping, the view should autonomously update its content,
 		//with the update frequency of the gtkProcess()
 		X += .1*randn(5,3);
+		//gl.displayGrey(X, false, 10);
 		MT::wait(.1);
   }
 

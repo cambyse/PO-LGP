@@ -136,7 +136,6 @@ ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDum
 //===========================================================================
 
 struct MatrixView:View{
-  void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };

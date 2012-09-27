@@ -16,7 +16,16 @@ typedef MT::Array<const char*> CharAL;
 
 namespace b{
   //-- basic control of processes
-  void blockAllAccesses();
+  void blockAllAccesses();//===========================================================================
+  //
+  // helpers
+  //
+
+  void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
+  void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
+  void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
+  void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
+  void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
   void unblockAllAccesses();
   void stepToNextAccess();
   void stepToNextWriteAccess();

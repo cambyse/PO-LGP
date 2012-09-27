@@ -95,16 +95,15 @@ void View::gtkUpdate(){
 
 REGISTER_VIEW_TYPE(MatrixView, arr);
 
-void MatrixView::glInit() {
-  gl->displayGrey(*((arr*) object), false, 10);
-	//arr X = randn(5,3);
-	//gl->displayGrey(X, false, 10);
-}
-
 void MatrixView::glDraw() {
-  gl->displayGrey(*((arr*) object), false, 10);
-  //arr X = randn(5,3);
-  //gl->displayGrey(X, false, 10);
+	arr x = *((arr*) object);
+	static byteA img;
+	resizeAs(img, x);
+	double mi=x.min(), ma=x.max();
+	for(uint i=0; i<x.N; i++) {
+		img.elem(i)=(byte)(255.*(x.elem(i)-mi)/(ma-mi));
+	}
+  gl->img = &img;
 }
 
 
