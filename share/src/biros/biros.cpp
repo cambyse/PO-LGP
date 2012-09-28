@@ -485,11 +485,6 @@ void BirosInfo::dump() {
     }
     cout <<"\n}" <<endl;
   }
-  cout <<"\n +++ VIEWS +++" <<endl;
-  for_list(i, vi, views) {
-    cout <<"ViewInfo " <<i <<' ' <<vi->name <<' ';
-    writeInfo(cout, *vi, false, ' ');
-  }
   deAccess(NULL);
 }
 
@@ -559,7 +554,7 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
   }
 }
 
-void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
+//void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
   /*os <<"type=";
   switch (vi.type) {
     case ViewInfo::fieldVT:    os <<"field";  break;
@@ -568,6 +563,6 @@ void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
     case ViewInfo::parameterVT:os <<"parameter";  break;
     case ViewInfo::globalVT:   os <<"global";  break;
   }*/
-  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
-}
+//  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
+//}
 

@@ -1,5 +1,17 @@
 #include "views.h"
 
+//===========================================================================
+//
+// global singleton
+//
+
+ViewInfoL *global_viewInfos=NULL;
+
+ViewInfoL& viewInfos(){
+  if(!global_viewInfos) global_viewInfos = new ViewInfoL();
+  return *global_viewInfos;
+}
+
 #ifdef MT_GTK
 
 #include <MT/gtk.h>
@@ -86,7 +98,7 @@ ViewInfoL getViews(const CharAL appliesOn_sysTypeL){
   const char* appliesOn_sysType;
   ViewInfo *vi;
   ViewInfoL vis;
-  for_list_rev(i,vi,birosInfo().views){
+  for_list_rev(i,vi,viewInfos()){
     if(!strcmp(vi->appliesOn_sysType,"ALL"))
       vis.append(vi);
     else
@@ -106,7 +118,7 @@ ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType
 }
 
 ViewInfo* getView(const char *name){
-  return listFindByName(birosInfo().views, name);
+  return listFindByName(viewInfos(), name);
 }
 
 View* newView(Process& proc, ViewInfo *vi, GtkWidget *container){

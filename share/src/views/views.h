@@ -48,11 +48,15 @@ Views:
 #include "biros/biros.h"
 #include <MT/gtk.h>
 
-typedef struct _GtkWidget GtkWidget;
-typedef MT::Array<const char*> CharAL;
 struct ViewInfo;
 struct OpenGL;
+typedef struct _GtkWidget GtkWidget;
+typedef MT::Array<ViewInfo*> ViewInfoL;
+typedef MT::Array<const char*> CharAL;
 
+// acces to global singleton viewInfo
+
+ViewInfoL& viewInfos();
 
 //===========================================================================
 //
@@ -102,7 +106,7 @@ struct ViewInfo_typed:ViewInfo{
 		 const char* _appliesOn_sysType=NULL){
     name = _name;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
-    birosInfo().views.append(this);
+    viewInfos().append(this);
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };

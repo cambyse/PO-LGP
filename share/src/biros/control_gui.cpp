@@ -268,11 +268,11 @@ void InsideOutGui::updateViewStore(){
   uint i;
   //GtkTreeIter it;
   ViewInfo *vi;
-  birosInfo().readAccess(NULL);
-  for_list(i, vi, birosInfo().views) {
+  //birosInfo().readAccess(NULL);
+  for_list(i, vi, viewInfos()) {
     appendToStore(viewStore, vi, i, NULL);
   }
-  birosInfo().deAccess(NULL);
+  //birosInfo().deAccess(NULL);
 }
 
 
@@ -464,7 +464,7 @@ GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par){
 GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIter* par){
   GtkTreeIter it;
   MT::String info;
-  writeInfo(info.clear(), *vi, true);
+  //writeInfo(info.clear(), *vi, true);
   gtk_tree_store_append(store, &it, NULL);
   gtk_tree_store_set(store, &it, 0, id, 1, 'I', 2, vi->name.p, 3, info.p, -1);
   return it;
