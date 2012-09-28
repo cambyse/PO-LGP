@@ -10,7 +10,8 @@
 
 #include <devTools/logging.h>
 
-#include <views/biros_views.h>
+#include <views/views.h>
+#include <views/specificViews.h>
 #include <views/control.h>
 #include <MT/ors.h>
 

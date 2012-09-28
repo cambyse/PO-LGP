@@ -1,5 +1,5 @@
-#ifndef MT_view_h
-#define MT_view_h
+#ifndef VIEWS_H_
+#define VIEWS_H_
 
 /*
 
@@ -63,11 +63,11 @@ struct View {
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
   ViewInfo *info;       //
-  
+
   View();
   View(void* _object);
   ~View();
-  
+
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
   virtual void glInit() {} //a generic GL draw routine
@@ -110,71 +110,4 @@ struct ViewInfo_typed:ViewInfo{
   ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
 
 
-//===========================================================================
-//
-// specific views -> perhaps move somewhere else
-//
-
-#define GenericInfoView(_what) \
-\
-struct Generic##_what##View:View{ \
-  Generic##_what##View():View() {} \
-\
-  virtual void write(std::ostream& os) { writeInfo(os, *((_what*)object), false); } \
-};
-
-GenericInfoView(Process);
-GenericInfoView(Variable);
-GenericInfoView(FieldInfo);
-GenericInfoView(Parameter);
-
-#undef GenericInfoView
-
-#define GenericInfoView_CPP(_what) \
-ViewInfo_typed<Generic##_what##View, _what> Generic##_what##View_registrationDummy("Generic"#_what"View");
-
-//===========================================================================
-
-struct MatrixView:View{
-  void glDraw();
-  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
-};
-
-//===========================================================================
-
-struct ImageView:View{
-  void glInit();
-  void glDraw();
-  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
-};
-
-//===========================================================================
-
-struct RgbView:View{
-  void gtkNew(GtkWidget *container);
-  void gtkUpdate();
-};
-
-//===========================================================================
-
-namespace ors{ struct Mesh; }
-
-struct MeshView:View{
-  void glDraw();
-  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
-};
-
-//===========================================================================
-
-namespace ors{ struct Graph; }
-
-struct OrsView:View {
-  OrsView();
-  OrsView(struct FieldInfo* field, GtkWidget *container);
-  void glInit();
-  void glDraw();
-  void gtkNew(GtkWidget *container){ gtkNewGl(container); }
-};
-
-
-#endif
+#endif /* VIEWS_H_ */

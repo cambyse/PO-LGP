@@ -1,5 +1,6 @@
 #include "biros/biros.h"
-#include "biros_views.h"
+#include "views/views.h"
+#include "views/specificViews.h"
 #include "biros/logging.h"
 
 struct Variable;
