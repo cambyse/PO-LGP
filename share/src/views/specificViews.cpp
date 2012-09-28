@@ -1,5 +1,4 @@
-#include "views.h"
-#include "control.h"
+#include "specificViews.h"
 
 GenericInfoView_CPP(Process);
 GenericInfoView_CPP(Variable);

@@ -1,6 +1,10 @@
 #ifndef SPECIFICVIEWS_H_
 #define SPECIFICVIEWS_H_
 
+#include "biros/biros.h"
+#include "views.h"
+#include <MT/gtk.h>
+
 #define GenericInfoView(_what) \
 \
 struct Generic##_what##View:View{ \

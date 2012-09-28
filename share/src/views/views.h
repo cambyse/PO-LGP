@@ -49,6 +49,7 @@ Views:
 #include <MT/gtk.h>
 
 typedef struct _GtkWidget GtkWidget;
+typedef MT::Array<const char*> CharAL;
 struct ViewInfo;
 struct OpenGL;
 
@@ -109,5 +110,72 @@ struct ViewInfo_typed:ViewInfo{
 #define REGISTER_VIEW_TYPE(ViewT, AppliesOnT)\
   ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
 
+//-- query available views for specific objects
+ViewInfoL getViews();
+ViewInfoL getViews(const CharAL appliesOn_sysTypeL);
+ViewInfoL getViews(const char* appliesOn_sysType);
+ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
+ViewInfoL getGlobalViews();
+ViewInfo* getView(const char *name);
+
+//! create a new view; if ViewInfo==NULL the first available
+View* newView(Process&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+View* newView(Variable&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+View* newView(FieldInfo&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+View* newView(Parameter&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
+View* newGlobalView(ViewInfo*);
+
+// generic newView
+template<class T> View* newView(T& data, ViewInfo *vi=NULL, GtkWidget *container=NULL){
+	if(!vi){
+		ViewInfoL vis=getViews(typeid(T).name());
+		if(!vis.N){
+			MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
+			return NULL;
+		}
+		vi = vis(0);
+	}
+	cout << "Creating new view '" << vi->name << endl;
+	View *v = vi->newInstance();
+	v->object = &data;
+	v->gtkNew(container);
+	return v;
+}
+
+// specifying container, but not ViewInfo
+template<class T> View* newView(T& data, GtkWidget *container) {
+	return newView(data, NULL, container);
+}
+
+// generate a specific view with the given name
+template<class T> View* newView(T& data, const char *name, GtkWidget *container=NULL) {
+	return newView(data, getView(name), container);
+}
+
+// generate a specific view with the given type
+#define STR(arg) #arg
+template<class V, class T> View* newView(T& data, GtkWidget *container=NULL) {
+	return newView(data, STR(V), container);
+}
+#undef STR
+
+struct GtkProcessVariable:Variable{
+  FIELD(MT::Array<View*>, views);
+  MT::Array<GtkWidget*> wins;
+  GtkProcessVariable():Variable("GtkProcessVariable"){}
+};
+
+struct GtkProcess:Process{
+  GtkProcess();
+
+  void open();
+  void step();
+  void close();
+
+  GtkProcessVariable *var;
+};
+
+GtkProcess* gtkProcess();
+void gtkProcessClose();
 
 #endif /* VIEWS_H_ */
