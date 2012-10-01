@@ -67,7 +67,7 @@ void testSchunk(){
 void testControl(){
   OpenGL gl;
   
-  soc::SocSystem_Ors sys;
+  OrsSystem sys;
   sys.initBasics(NULL,NULL,&gl,100,4.,false,NULL);
 
   uint t;

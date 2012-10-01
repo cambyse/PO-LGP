@@ -1,4 +1,4 @@
-void setOldGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase){
+void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase){
   sys.setx0ToCurrent();
   
   //load parameters only once!

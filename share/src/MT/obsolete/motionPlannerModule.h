@@ -12,7 +12,7 @@ struct ReceedingHorizonProcess:public Process {
   
   AICO planner;
   //soc::iLQG planner;
-  soc::SocSystem_Ors *sys, *sys_parent;
+  OrsSystem *sys, *sys_parent;
   
   bool active;
   const char *graspShapeName;

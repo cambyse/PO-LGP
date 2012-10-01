@@ -7,7 +7,7 @@ struct ParticleAroundWalls:KOrderMarkovFunction {
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
   uint get_T(){ return 100; }
-  uint get_k(){ return 2; }
+  uint get_k(){ return 3; }
   uint get_n(){ return DIM; }
   uint get_m(uint t){
     uint T=get_T();
@@ -30,9 +30,9 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     
   double eps=.1, power=2.;
   for(uint i=0;i<n;i++){ //add barrier costs to each dimension
-    if(t==0)   phi.append(barrier(x_bar(0,i)+i, eps, power));    //first factor: ``lower than -i''
-    if(t==T/2) phi.append(barrier(1.+i-x_bar(0,i), eps, power)); //middle factor: ``greater than i''
-    if(t==T-k) phi.append(barrier(x_bar(k,i)+i, eps, power));    //last factor: ``lower than -i''
+    if(t==0)   phi.append(barrier(x_bar(0,i)+i+1., eps, power));    //first factor: ``lower than -i''
+    if(t==T/2) phi.append(barrier(i+1.-x_bar(0,i), eps, power)); //middle factor: ``greater than i''
+    if(t==T-k) phi.append(barrier(x_bar(k,i)+i+1., eps, power));    //last factor: ``lower than -i''
   }
 
   uint m=phi.N;
@@ -50,9 +50,9 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     }
 
     for(uint i=0;i<n;i++){ //add barrier costs to each dimension
-      if(t==0)   J(n+i,0,i) = d_barrier(x_bar(0,i)+i, eps, power);
-      if(t==T/2) J(n+i,0,i) = -d_barrier(1.+i-x_bar(0,i), eps, power);
-      if(t==T-k) J(n+i,k,i) = d_barrier(x_bar(k,i)+i, eps, power);
+      if(t==0)   J(n+i,0,i) =  d_barrier(x_bar(0,i)+i+1., eps, power);
+      if(t==T/2) J(n+i,0,i) = -d_barrier(i+1.-x_bar(0,i), eps, power);
+      if(t==T-k) J(n+i,k,i) =  d_barrier(x_bar(k,i)+i+1., eps, power);
     }
   }
 }

@@ -202,8 +202,8 @@ void KOrderMarkovFunction_ControlledSystem::phi_t(arr& phi, arr& J, uint t, cons
     phi.append(prec*(x0-sys_x0));
     if(&J){
       _J.setDiag(prec,x0.N);
-      _J.insColumns(0, x0.N);
-      for(uint i=0;i<_J.d0;i++) for(uint j=0;j<x1.N;j++) _J(i,j) = 0.;
+      _J.insColumns(x0.N, x1.N);
+      for(uint i=0;i<_J.d0;i++) for(uint j=0;j<x1.N;j++) _J(i,x0.N+j) = 0.;
       J.append(_J);
     }
   }

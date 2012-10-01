@@ -285,6 +285,7 @@ bool checkJacobian(VectorFunction &f,
                    const arr& x, double tolerance) {
   arr y, J, dx, dy, JJ;
   f.fv(y, J, x);
+  if(J.special==arr::RowShiftedPackedMatrixST) J = unpackRowShifted(J);
   
   JJ.resize(y.N, x.N);
   double eps=CHECK_EPS;

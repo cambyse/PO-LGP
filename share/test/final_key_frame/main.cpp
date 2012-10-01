@@ -11,7 +11,7 @@ void problem1(){
   cout <<"\n= one step kinematic estimation test =\n" <<endl;
 
   //setup the system
-  soc::SocSystem_Ors sys;
+  OrsSystem sys;
   OpenGL gl;
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);

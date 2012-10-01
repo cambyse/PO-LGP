@@ -9,7 +9,7 @@ void testGraspHeuristic(){
   double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
 
   //setup the problem
-  //soc::SocSystem_Ors sys;
+  //OrsSystem sys;
   OrsSystem sys;
   OpenGL gl;
   uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");

@@ -419,7 +419,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase) 
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 
-void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){
+void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){
   CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   sys.setTox0();
   
@@ -526,7 +526,7 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToSha
   sys.vars().append(V);
 }
 
-void setHomingGoals(soc::SocSystem_Ors& sys, uint T){
+void setHomingGoals(OrsSystem& sys, uint T){
   sys.setTox0();
   
   //deactivate all variables

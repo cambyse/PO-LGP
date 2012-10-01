@@ -1,7 +1,7 @@
 #include "motion_internal.h"
 #include "FeedbackControlTasks.h"
 
-#include <MT/soc.h>
+#include <MT/socNew.h>
 #include <MT/soc_inverseKinematics.h>
 #include <hardware/hardware.h>
 
@@ -13,7 +13,7 @@ struct sMotionController {
   WorkingCopy<GeometricState> geo;
   
   //ors::Graph *ors;
-  soc::SocSystem_Ors sys;
+  OrsSystem sys;
   
   double tau;
   double maxJointStep;

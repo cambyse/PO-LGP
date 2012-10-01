@@ -1,5 +1,5 @@
 //cleaned version
-void setNewGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase){
+void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase){
   sys.setTox0();
   
   //load parameters only once!
