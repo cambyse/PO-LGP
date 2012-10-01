@@ -952,24 +952,18 @@ void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {
   glWatchImage(img, wait, 20);
 }*/
 
-#ifdef MT_FREEGLUT
-void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win) {
-  if(!d0) d0=x.d0;
-  if(!d1) d1=x.d1;
-  glutSetWindow(s->windowID);
-  double ma=x.max();
-  text.clear() <<"display" <<win <<" max=" <<ma <<endl;
-  byteA img;
-  img.resize(d0*d1);
-  img.setZero();
+void OpenGL::displayGrey(const arr &x, bool wait, float _zoom) {
+  static byteA img;
+  resizeAs(img, x);
+  double mi=x.min(), ma=x.max();
+  text.clear() <<"displayGrey" <<" max=" <<ma <<"min=" <<mi <<endl;
   for(uint i=0; i<x.N; i++) {
-    if(x.elem(i)>0.) img(i)=(byte)(255.*x.elem(i)/ma);
-    if(x.elem(i)<0.) MT_MSG("warning: negative entry");
+    img.elem(i)=(byte)(255.*(x.elem(i)-mi)/(ma-mi));
   }
-  img.reshape(d0, d1);
-  watchImage(img, wait, 20);
+  watchImage(img, wait, _zoom);
 }
 
+#ifdef MT_FREEGLUT
 void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win) {
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;

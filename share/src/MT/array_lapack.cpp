@@ -34,6 +34,7 @@ extern "C" {
 #undef large
 #ifdef ARCH_LINUX
 #  include <lapack/lapacke.h>
+#define integer int
 #else
 #  include <lapack/clapack.h>
 #endif

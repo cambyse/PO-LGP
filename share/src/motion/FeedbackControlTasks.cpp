@@ -40,7 +40,7 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   TVs = ARRAY<TaskVariable*>(q, col, lim);
   activateAll(TVs, true);
   q->y_prec=0;
-  q->v_prec=10.*birosInfo().getParameter<double>("TV_q_vprec", 1e-1);
+  q->v_prec=birosInfo().getParameter<double>("TV_q_vprec", 1e0);
   q->y_target.setZero();
   q->v_target.setZero();
   col->y_prec=birosInfo().getParameter<double>("TV_col_yprec", 1e0);
@@ -56,12 +56,13 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
 
 void Homing_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
   TaskVariable *q = TVs(0);
-  q->v_target = -q->y; //assumes q=0 is home!!
-  double vmax=.3, v=norm(q->v_target);
+  q->v_target = -5.*q->y;
+  double vmax=.3, v=q->v_target.absMax();
   if (v>vmax) q->v_target*=vmax/v;
 }
 
 void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+  count=0;
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TVs = ARRAY<TaskVariable*>(q);
@@ -77,12 +78,18 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
 }
 
 void OpenHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+  count ++;
+  if(count > 300) {
+    done = true;
+  }
 }
 
 void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   birosInfo().getVariable(skinPressure, "SkinPressure", NULL);
+
+  count = 0;
   
-  double pressure = birosInfo().getParameter<double>("closeHandPressure", .03);
+  //double pressure = birosInfo().getParameter<double>("closeHandPressure", .03);
   listDelete(TVs);
   arr skinIndex(6);
   skinIndex(0) = ors.getBodyByName("tip3")->index;
@@ -96,12 +103,12 @@ void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   TVs = ARRAY<TaskVariable*>(q, skin);
   activateAll(TVs, true);
   q->y_prec=0;
-  q->v_prec=birosInfo().getParameter<double>("TV_q_vprec", 1e-1);
+  q->v_prec=birosInfo().getParameter<double>("TV_q_vprec", 1e-2);
   q->y_target.setZero();
   q->v_target.setZero();
   skin->y_prec=birosInfo().getParameter<double>("TV_skin_yprec", 1e3);
   skin->v_prec=0;
-  skin->y_target=ARR(pressure, 0, pressure, 0, pressure, 0);
+  skin->y_target=ARR(.007, 0, .02, 0, .007, 0);//pressure, 0, pressure, 0, pressure, 0);
   skin->v_target.setZero();
   requiresInit = false;
 }
@@ -110,6 +117,13 @@ void CloseHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& or
   TaskVariable *skin = TVs(1);
   arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
   prepare_skin(skin, skinState, true);
+
+  count ++;
+  //decide if done
+  //cout << max(skin->y_target - skinState) << " (max) " << endl;
+  if(max(skin->y_target - skinState)<.0071 || count > 600) {
+    done = true;
+  }
 }
 
 void Reach_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {

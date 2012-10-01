@@ -1,22 +1,11 @@
 #ifndef _TESTER_H_
 #define _TESTER_H_
 
-#include <MT/array.h>
-#include <iostream>
+#include "al_problem.h"
 
-class ClassifyMaster;
-class ClassificatorV;
-template<class S> class Sampler;
-class Tester {
-  public:
-    Tester(const int testNumber = 5000, const char* filename = "classification.data");
-    virtual ~Tester();
-    const double test(ClassificatorV* l);
+class ActiveLearner;
 
-    ClassifyMaster* m;
-    Sampler<MT::Array<arr> >* sampler;
+double test(const uint numTests, const ActiveLearner* al, const ActiveLearningProblem* problem, const MT::String filename);
 
-    std::ofstream outfile;
-};
 
 #endif

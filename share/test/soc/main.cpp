@@ -75,7 +75,6 @@ void testRobotSystem(bool testFeedbackControl=false){
   analyzeTrajectory(sys, x, true, &cout);
   //straightTaskTrajectory(sys, x);
   //return;
-  
   AICO aico(sys);
   aico.init_messages();
   aico.init_trajectory(x);

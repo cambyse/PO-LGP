@@ -8,7 +8,7 @@
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
 ifndef MLR_EXLIB_PATH
-MLR_EXLIB_PATH = $(HOME)/lib
+MLR_EXLIB_PATH = /home/lib
 endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
@@ -170,6 +170,11 @@ endif
 #
 ################################################################################
 # (a tag like `FREEGLUT = 1' can be defined in the make-config as needed)
+
+ifeq ($(OPENMP),1)
+CXXFLAGS += -fopenmp -DOPENMP
+endif
+
 
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
@@ -346,10 +351,17 @@ MinGWLibs += -lcblas -lclapack -lcblaswr -latlas -lI77 -lF77 -lcygwin
 endif
 
 ifeq ($(OPENCV),1)
-CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv`
-CXXFLAGS += `pkg-config --cflags-only-I opencv`
-%CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
-LIBS      += `pkg-config --libs opencv`
+  ifeq ($(OLDUBUNTU),1)
+    CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv-2.3.1`
+    CXXFLAGS += `pkg-config --cflags-only-I opencv-2.3.1`
+    %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
+    LIBS      += `pkg-config --libs opencv-2.3.1`
+  else 
+    CXXFLAGS  += -DMT_OPENCV `pkg-config --cflags-only-other opencv`
+    CXXFLAGS += `pkg-config --cflags-only-I opencv`
+    %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
+    LIBS      += `pkg-config --libs opencv`
+  endif
 endif
 
 # newer qhull version?
@@ -389,8 +401,20 @@ LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
 LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
-ifeq ($(URGLASER),1)
-CXXFLAGS  += -DMT_LASER
+ifeq ($(PCL),1)
+QHULL = 1
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
+LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
+FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/libfreenect/lib
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/libfreenect/include
+LIBS += -lfreenect
+endif
+
+ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
 LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/urg/.libs

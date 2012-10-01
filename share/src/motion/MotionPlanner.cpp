@@ -90,20 +90,20 @@ void MotionPlanner::step() {
     motionPrimitive->deAccess(this);
   }
   
-  if (actionSymbol==Action::grasp || actionSymbol==Action::place || actionSymbol == Action::home || actionSymbol == Action::reach){
-    
+  if (actionSymbol==Action::grasp || actionSymbol==Action::place_location || actionSymbol==Action::place || actionSymbol == Action::homing || actionSymbol == Action::reach){
+
     if (!frame0->get_converged(this)) {
       frame0->readAccess(this);
       if(frame0->frameCount==0 && frame0->x_estimate.N==0){ //assume this is the FIRST frame of all
         VAR(HardwareReference);
         arr x0 =  _HardwareReference->get_q_reference(NULL);
-	x0.append(_HardwareReference->get_v_reference(NULL));
-	frame0->x_estimate = x0;
-	frame0->converged = true;
+        x0.append(_HardwareReference->get_v_reference(NULL));
+        frame0->x_estimate = x0;
+        frame0->converged = true;
       }else{
-	//can't do anything with frame0 not converged
-	frame0->deAccess(this);
-	return;
+        //can't do anything with frame0 not converged
+        frame0->deAccess(this);
+        return;
       }
       frame0->deAccess(this);
     }
@@ -128,16 +128,22 @@ void MotionPlanner::step() {
       }
       else if (actionSymbol==Action::place) {
         s->sys.setx0(x0);
-        listDelete(s->sys.vars());
-        uint shapeId = s->sys.getOrs().getShapeByName(action->get_objectRef1(this))->index;
-        uint toId = s->sys.getOrs().getShapeByName(action->get_objectRef2(this))->index;
-        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId);
+        listDelete(s->sys.vars);
+        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+        uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
+        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId, NoArr);
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
-      else if (actionSymbol==Action::home) {
-        uint shapeId = s->sys.getOrs().getShapeByName(action->get_objectRef1(this))->index;
-        uint toId = s->sys.getOrs().getShapeByName(action->get_objectRef2(this))->index;
-        setHomingGoals(s->sys, s->sys.get_T(), shapeId, toId);
+      else if (actionSymbol==Action::place_location) {
+        s->sys.setx0(x0);
+        listDelete(s->sys.vars);
+        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
+        arr location = action->get_locationRef(this);
+        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, -1, location);
+        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+      }
+      else if (actionSymbol==Action::homing) {
+        setHomingGoals(s->sys, s->sys.get_T());
         keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
       }
       
@@ -194,8 +200,8 @@ void MotionPlanner::step() {
     motionPrimitive->tau = tau;
     motionPrimitive->planConverged = true;
     motionPrimitive->mode = MotionPrimitive::followPlan;
-    if (actionSymbol==Action::place) motionPrimitive->fixFingers = true;
-    if (actionSymbol==Action::grasp || actionSymbol==Action::reach) motionPrimitive->fixFingers = false;
+    if (actionSymbol==Action::place || actionSymbol==Action::place_location) motionPrimitive->fixFingers = true;
+    if (actionSymbol==Action::homing || actionSymbol==Action::grasp || actionSymbol==Action::reach) motionPrimitive->fixFingers = false;
     motionPrimitive->deAccess(this);
 
   }
@@ -413,7 +419,8 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase) 
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 
-void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, uint belowToShapeId){
+void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){
+  CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   sys.setTox0();
   
   double midPrec          = birosInfo().getParameter<double>("placeMidPrec");
@@ -433,22 +440,29 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, uint belowToShapeId){
   activateAll(sys.vars(), false);
   
   //activate collision testing with target shape
-  ors::Shape *obj  = sys.getOrs().shapes(shapeId);
-  ors::Shape *onto = sys.getOrs().shapes(belowToShapeId);
-  if (obj->body!=sys.getOrs().getBodyByName("m9")){
-    reattachShape(sys.getOrs(), NULL, obj->name, "m9");
+  ors::Shape *obj  = sys.ors->shapes(shapeId);
+  ors::Shape *onto = NULL;
+  if(belowToShapeId != -1)
+     onto = sys.ors->shapes(belowToShapeId);
+  if (obj->body!=sys.ors->getBodyByName("m9")){
+    reattachShape(*sys.ors, NULL, obj->name, "m9");
   }
   CHECK(obj->body==sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
-  onto->cont=false;
-  sys.getSwift().initActivations(sys.getOrs(), 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
+  if(onto) onto->cont=false;
+  sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
   
   //general target
   arr xtarget;
-  xtarget.setCarray(onto->X.pos.p, 3);
-  xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  if(onto) {
+    xtarget.setCarray(onto->X.pos.p, 3);
+    xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  }
+  else {
+    xtarget = locationTo;  
+  }
   
   //endeff
   V = new DefaultTaskVariable("graspCenter", sys.getOrs(), posTVT, "graspCenter", NULL, NoArr);
@@ -512,66 +526,46 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, uint belowToShapeId){
   sys.vars().append(V);
 }
 
-void setHomingGoals(OrsSystem& sys, uint T, uint shapeId, uint belowToShapeId){
+void setHomingGoals(soc::SocSystem_Ors& sys, uint T){
   sys.setTox0();
   
   //deactivate all variables
   activateAll(sys.vars(), false);
   
-  ors::Shape *obj = sys.getOrs().shapes(shapeId);
-  ors::Shape *onto = sys.getOrs().shapes(belowToShapeId);
-  obj->cont=true;
-  onto->cont=true;
-  sys.getSwift().initActivations(sys.getOrs());
+  sys.swift->initActivations(*sys.ors);
   
   TaskVariable *V;
   
   //general target
-  double midPrec, endPrec, limPrec;
+  double midPrec, endPrec, limPrec, colPrec;
   MT::getParameter(midPrec, "homingPlanMidPrec");
   MT::getParameter(endPrec, "homingPlanEndPrec");
   MT::getParameter(limPrec, "homingPlanLimPrec");
+  MT::getParameter(colPrec, "homingPlanColPrec");
 
-  //endeff
-  //V=listFindByName(sys.vars, "endeffector");
-  V = new DefaultTaskVariable("graspCenter", sys.getOrs(), posTVT, "graspCenter", NULL, NoArr);
-  //((DefaultTaskVariable*)V)->irel = obj->rel;
-  //V->irel = obj->rel;
-  V->updateState(sys.getOrs());
-  V->setInterpolatedTargetsEndPrecisions(T, 0, 0, 0., 0.);
-  //special: condition effector velocities: move above object
-  uint t, M=T/8;
-  for(t=0; t<M; t++){
-    V -> v_trajectory[t]() = (1./M*t)*ARR(0., 0., .2);
-    V -> v_prec_trajectory(t) = midPrec;
-  }
-  sys.vars().append(V);
-
-  //for(t=M;t<T;t++){
-  //  V -> v_trajectory[t]() = 0;
-  //  V -> v_prec_trajectory(t) = 0;
-  //}
   
-  //col lim and relax
+  //-- limits
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  //TODO: limits as parameter!
-  V = new DefaultTaskVariable("limits", sys.getOrs(), qLimitsTVT, 0, 0, 0, 0, limits);
+  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
   V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
-  sys.vars().append(V);
-  V = new DefaultTaskVariable("qitself", sys.getOrs(), qItselfTVT, 0, 0, 0, 0, 0);
-  V->y_prec=endPrec;
-  V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setConstTargetsConstPrecisions(T);
-  sys.vars().append(V);
+  sys.vars.append(V);
 
-  //deprecated task variable assignment
-  //V=listFindByName(sys.vars, "collision");  V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanColPrec"), 0.);
-  //V=listFindByName(sys.vars, "limits");     V->y=0.;  V->y_target=0.;  V->setInterpolatedTargetsConstPrecisions(T, MT::getParameter<double>("reachPlanLimPrec"), 0.);
-  //V=listFindByName(sys.vars, "qitself");    V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;
-  //V->setInterpolatedTargetsEndPrecisions(T,
-                                         //midPrec, endPrec,
-                                         //midPrec, MT::getParameter<double>("reachPlanEndVelPrec"));
+  //-- standard collisions
+  double margin = .05;
+  V = new DefaultTaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(margin));
+  V->y=0.;  V->y_target=0.;  V->y_prec=colPrec;  V->setConstTargetsConstPrecisions(T);
+  sys.vars.append(V);
+
+  //-- qitself
+  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
+  V->updateState(*sys.ors);
+  V->y_target.resizeAs(V->y);  V->y_target.setZero();
+  V->v=0.;  V->v_target=V->v; 
+  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
+  sys.vars.append(V);
+  
 }
 
 //From Dmitry

@@ -20,6 +20,7 @@
 #include "util.h"
 #include <map>
 #include <string>
+#include <unistd.h>
 
 namespace MT {
   extern std::ifstream cfgFile;

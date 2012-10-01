@@ -26,6 +26,7 @@
 #include "relational/plan.h"
 
 
+class RobotManipulationSimulator;
 namespace relational {
   
 namespace RobotManipulationSymbols {
@@ -87,9 +88,11 @@ namespace RobotManipulationSymbols {
   *     Reward
   * 
   ************************************************/
+
   
   namespace RewardLibrary {
     Reward* stack();
+    Reward* cleanup(RobotManipulationSimulator *sim);
     Reward* on(uint o1, uint o2);
     Reward* inhand(uint o1);
     Reward* tower(uintA& tower_objects);

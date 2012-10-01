@@ -156,6 +156,7 @@ struct Process {
   
   void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
   void threadListenTo(const VariableL &signalingVars);
+  void threadStopListenTo(Variable *var);
   
   void threadLoop();                    ///< loop, stepping forever
   void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
@@ -210,13 +211,17 @@ struct BirosInfo:Variable {
   
   Process *getProcessFromPID();
   
-  template<class T>  void getVariable(T*& v, const char* name, Process *p) {
+  template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required = false) {
     writeAccess(p);
-    v = (T*)listFindByName(variables, name);
+    void* raw = listFindByName(variables, name); // NULL if not found
+    v = dynamic_cast<T*>(listFindByName(variables, name)); // NULL if cast fails because of RTTI
     deAccess(p);
-    if (!v) MT_MSG("can't find biros variable '" <<name
-		   <<"' -- Process '" <<(p?p->name:STRING("NULL"))
-		   <<"' will not connect");
+    if (!v && raw) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
+    else if (!raw) {
+      if(required) { HALT("can't find required biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not work"); }
+      else MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
+    }
+    else {MT_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
   }
   template<class T>  T* getProcess(const char* name, Process *p) {
     writeAccess(p);
@@ -284,7 +289,7 @@ struct WorkingCopy {
   }
   void init(const char* var_name, Process *_p) {
     T *_v;
-    birosInfo().getVariable(_v, "GeometricState", _p);
+    birosInfo().getVariable(_v, var_name, _p);
     init(_v, _p);
   }
   bool needsUpdate() {
@@ -320,7 +325,6 @@ void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
-
 
 //===========================================================================
 //

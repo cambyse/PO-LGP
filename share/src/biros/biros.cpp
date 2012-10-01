@@ -1,6 +1,6 @@
 #include "biros.h"
 #include "biros_internal.h"
-#include "biros_views.h"
+#include "views/biros_views.h"
 #include "logging.h"
 //#include "biros_logger.h"
 //#include "biros_threadless.h"
@@ -92,6 +92,7 @@ Variable::Variable(const char *_name) {
   name = _name;
   revision = 0U;
   id = 0U;
+  listeners.memMove=true;
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
@@ -220,6 +221,7 @@ void Variable::deSerializeFromString(const MT::String &string) {
 
 Process::Process(const char *_name) {
   s = new sProcess();
+  listensTo.memMove=true;
   name = _name;
   step_count = 0U;
   birosInfo().writeAccess(this);
@@ -287,7 +289,14 @@ void Process::threadListenTo(Variable *v) {
   v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->listeners.setAppend(this);
   v->s->rwlock.unlock();
-  listensTo.append(v);
+  listensTo.setAppend(v);
+}
+
+void Process::threadStopListenTo(Variable *v){
+  v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
+  v->listeners.removeValue(this);
+  v->s->rwlock.unlock();
+  listensTo.removeValue(v);
 }
 
 bool Process::threadIsIdle() {
@@ -483,4 +492,81 @@ void BirosInfo::dump() {
   deAccess(NULL);
 }
 
+
+//===========================================================================
+//
+// implementation of helpers
+//
+
+void writeInfo(ostream& os, Process& p, bool brief, char nl){
+#define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
+  if(brief){
+    os <<p.s->timer.steps <<" [" <<std::setprecision(2) <<TEXTTIME(p.s->timer.busyDt)<<':' <<TEXTTIME(p.s->timer.cyclDt) <<']';
+  }else{
+    os <<"tid=" <<p.s->tid <<nl
+       <<"priority=" <<p.s->threadPriority <<nl
+       <<"steps=" <<p.s->timer.steps <<nl
+       <<"busyDt=" <<TEXTTIME(p.s->timer.busyDt) <<nl
+       <<"cycleDt=" <<TEXTTIME(p.s->timer.cyclDt) <<nl
+       <<"state=";
+    int state=p.stepState();
+    if (state>0) os <<state; else switch (state) {
+      case tsCLOSE:   os <<"close";  break;
+      case tsLOOPING: os <<"loop";   break;
+      case tsBEATING: os <<"beat";   break;
+      case tsIDLE:    os <<"idle";   break;
+      default: os <<"undefined:";
+    }
+#undef TEXTTIME
+  }
+}
+
+void writeInfo(ostream& os, Variable& v, bool brief, char nl){
+  if(brief){
+    os <<v.revision;
+  }else{
+    os <<"revision=" <<v.revision <<nl
+       <<"type=" <<typeid(v).name() <<nl
+       <<"lock-state=" <<v.lockState();
+  }
+}
+
+void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl){
+  if(brief){
+    MT::String str;
+    f.writeValue(str);
+    if(str.N>20) str.resize(20,true);
+    os <<str;
+  }else{
+    os <<"value=";
+    f.writeValue(os);
+    os <<nl <<"type=" <<f.userType;
+  }
+}
+
+void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
+  if(brief){
+    MT::String str;
+    pa.writeValue(str);
+    if(str.N>20) str.resize(20,true);
+    for(uint i=0;i<str.N;i++) if(str(i)=='\n') str(i)=' ';
+    os <<str;
+  }else{
+    os <<"value=";
+    pa.writeValue(os);
+    os <<nl <<"type=" <<pa.typeName();
+  }
+}
+
+void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
+  /*os <<"type=";
+  switch (vi.type) {
+    case ViewInfo::fieldVT:    os <<"field";  break;
+    case ViewInfo::variableVT: os <<"variable";  break;
+    case ViewInfo::processVT:  os <<"process";  break;
+    case ViewInfo::parameterVT:os <<"parameter";  break;
+    case ViewInfo::globalVT:   os <<"global";  break;
+  }*/
+  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
+}
 

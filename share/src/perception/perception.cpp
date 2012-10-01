@@ -1,4 +1,5 @@
 #include "perception.h"
+#include "pointcloud.h"
 
 #ifdef MT_OPENCV
 
@@ -9,7 +10,7 @@
 #undef MIN
 #undef MAX
 
-Mutex gllock;
+Mutex gllock; //TODO
 
 
 //===========================================================================
@@ -132,4 +133,27 @@ HsvFilter::HsvFilter(Image& _hsv, FloatImage& _evi): Process("HsvFilter"), hsv(&
 void HsvFilter::open(){ NICO }
 void HsvFilter::step(){ NICO }
 
+#endif
+
+#ifdef PCL
+// Pointcloud stuff
+//
+ProcessL newPointcloudProcesses() {
+  ProcessL processes;
+  processes.append(new ObjectClusterer);
+  processes.append(new ObjectFitter);
+
+  processes.append(new ObjectFilter("Object Filter"));
+  processes.append(new ObjectTransformator("Object Transformator")); 
+  return processes;
+}
+
+VariableL newPointcloudVariables() {
+  VariableL variables;
+  variables.append(new PointCloudVar("KinectData3D"));
+  variables.append(new PointCloudSet("ObjectClusters"));
+  variables.append(new ObjectSet("Objects"));
+  variables.append(new ObjectBeliefSet("filteredObjects"));
+  return variables;
+}
 #endif
