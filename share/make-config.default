@@ -38,6 +38,8 @@ BUILDS += buildComponent/perception
 LIBS += -lperception
 BUILDS += buildComponent/biros
 LIBS += -lbiros
+BUILDS += buildComponent/views
+LIBS += -lviews
 endif
 
 
@@ -115,5 +117,6 @@ CUDA = 0
 GRAPHVIZ = 1
 GTK = 1
 PHYSX = 0
+OCTAVE = 0
 endif
 

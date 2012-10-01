@@ -2,7 +2,7 @@ NAME   = $(shell basename $(PWD))
 
 MLR_LIBS = \
 	src/MT src/JK \
-	src/biros \
+	src/biros src/views \
 	src/motion src/hardware src/perception \
 	src/relational \
 
@@ -14,16 +14,19 @@ EXTERN = \
 #	extern/SWIFT++_1.2/decomposer/src \
 
 
-makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
+all: makeEXTERN $(MLR_LIBS:%=make/%)
 
-dependAll: $(MLR_LIBS:%=depend/%)
+depend: $(MLR_LIBS:%=depend/%)
+
+extern: $(EXTERN:%=make/%)
 
 cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
-	find . -maxdepth 2 -name 'Makefile.dep' -delete
+	find . -maxdepth 3 -name 'Makefile.dep' -delete
 
-makeEXTERN: $(EXTERN:%=make/%)
+cleanDepend:
+	find . -maxdepth 3 -name 'Makefile.dep' -delete
 
-cleanEXTERN: $(EXTERN:%=clean/%)
+cleanExtern: $(EXTERN:%=clean/%)
 
 
 reformatSources:

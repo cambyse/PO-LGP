@@ -1,9 +1,6 @@
 #include <views/control.h>
 #include <MT/ors.h>
-#include <MT/gtk.h>
 #include <gtk/gtk.h>
-#include <gtk/gtkgl.h>
-#include <MT/opengl.h>
 
 struct ExampleVar:Variable{
   FIELD( int, i );
