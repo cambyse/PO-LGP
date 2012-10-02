@@ -153,6 +153,10 @@ void PhysXInterface::create() {
 	case ors::sphereST:{
 	  geometry = new PxSphereGeometry(s->size[3]);
 	}  break;
+	case ors::cappedCylinderST:
+	  {
+	  geometry = new PxCapsuleGeometry(s->size[3],s->size[2]);
+	}  break;
 	case ors::cylinderST:
 	case ors::meshST:{
 	  //PxSimpleTriangleMesh *me = new PxSimpleTriangleMesh();
@@ -192,6 +196,39 @@ void PhysXInterface::create() {
     this->s->actors.append(actor);
       //WARNING: actors must be aligned (indexed) exactly as G->bodies
   }
+  //! ADD joints here!
+  
+  ors::Joint *jj;
+   for_list(i,jj,G->joints) { 
+      PxTransform A = OrsTrans2PxTrans(jj->A);
+      PxTransform B = OrsTrans2PxTrans(jj->B);
+     switch(jj->type){
+    case ors::hingeJT:
+    {
+      PxRevoluteJoint* desc; //= new 
+    //  CHECK(A.p!=B.p,"Something is horribly wrong!");
+      desc =PxRevoluteJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
+   /*
+      PxJointLimitPair limit(0.,1., 0.01f);
+      limit.restitution = 0.5;
+      desc->setLimit(limit);
+      desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
+      desc->setProjectionAngularTolerance(3.14);
+*/
+      }break;
+    case ors::fixedJT:
+    {
+      PxFixedJoint* desc; //= new 
+      desc =PxFixedJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
+   //   desc->setProjectionLinearTolerance(1e10);
+   //    desc->setProjectionAngularTolerance(3.14);
+    }break;
+    default: NIY;
+   }
+   
+   }
+   
+   //! end of joints
 }
 
 void PhysXInterface::pullState() {
@@ -236,6 +273,11 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
 	PxSphereGeometry g;
 	shape->getSphereGeometry(g);
 	glutSolidSphere(g.radius, 10, 10);
+      } break;
+      case PxGeometryType::eCAPSULE:{
+	PxCapsuleGeometry g;
+	shape->getCapsuleGeometry(g);
+	glDrawCappedCylinder(g.radius, g.halfHeight*2);
       } break;
       case PxGeometryType::eCONVEXMESH:{
 #if 1
