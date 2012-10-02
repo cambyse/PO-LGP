@@ -1,0 +1,35 @@
+# kinematic graph
+#body stem { X=<t(0 0 1)>  type=1 mass=.1 size=[0.1 0.1 2 .1] fixed }
+
+body arm1 { X=<t(0 1 1.9) d(45 1 0 0)> type=1 mass=.1 size=[0.05 0.05 .1 .05] contact }
+body arm2 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm3 { type=2 mass=.1 size=[0.05 0.05 .1 .05] contact }
+body arm4 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm5 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm6 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm7 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact }
+body arm8 { type=2 mass=.1 size=[0.05 0.05 .1 .05] contact}
+body arm9 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm10 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm11 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm12 {type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm13 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact}
+body arm14 { type=2 mass=.1 size=[0.05 0.05 .1 .05]  contact }
+
+
+body center{ X=<t(0.3 0.0 1) d(90 1 0 0)>  type=1 mass=.1 size=[0.1 0.1 2 .03]  color=[.1 .7 .1] fixed contact}
+
+#joint (stem arm1) { type=0 A=< t(0 0 1) d(90 1 0 0) > B=< t(0 0 0.1) >   }
+joint (arm1 arm2) { type=0  A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >  }
+joint (arm2 arm3) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >  }
+joint (arm3 arm4) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm4 arm5) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm5 arm6) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm6 arm7) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm7 arm8) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm8 arm9) { type=0 A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm9 arm10) {type=0  A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm10 arm11) { A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm11 arm12) { A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm12 arm13) { A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
+joint (arm13 arm14) { A=< t(0 0 0.1) d(45 0 0 1) > B=< t(0 0 0.1) >   }
