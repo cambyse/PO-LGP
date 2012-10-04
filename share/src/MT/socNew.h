@@ -88,15 +88,15 @@ inline conv_KOrderMarkovFunction& VectorFunction_(ControlledSystem& sys){
   return a;
 }
 
-#if 0
+#if 1
 struct ControlledSystem_as_KOrderMarkovFunction:KOrderMarkovFunction {
   ControlledSystem *sys;
 
-  KOrderMarkovFunction_ControlledSystem(ControlledSystem& _sys):sys(&_sys){}
+  ControlledSystem_as_KOrderMarkovFunction(ControlledSystem& _sys):sys(&_sys){}
 
   uint get_T(){ return sys->get_T(); }
   uint get_k(){ return 2; }
-  uint get_n(){ return sys->get_xDim(); }
+  uint get_n(){ return sys->get_xDim()/2; }
   uint get_m(uint t);
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 };

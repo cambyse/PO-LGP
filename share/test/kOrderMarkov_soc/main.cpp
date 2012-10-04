@@ -37,14 +37,17 @@ int main(int argn,char** argv){
   col->setInterpolatedTargetsConstPrecisions(_T, 1e-2, 0.);
   qtv->setInterpolatedTargetsEndPrecisions(_T, 0., 0., 1e-2, 1e4);
   
-  KOrderMarkovFunction_ControlledSystem problem(sys);
+  //KOrderMarkovFunction_ControlledSystem problem(sys);
+  ControlledSystem_as_KOrderMarkovFunction problem(sys);
   conv_KOrderMarkovFunction P(problem);
 
   // cost checks
-  arr q,x;
+  arr q,x,xx;
   MT::load(q, "z.q");
-  getPhaseTrajectory(x, q, sys.get_tau());
-  analyzeTrajectory(sys, x, true, &cout);
+  getPhaseTrajectory(xx, q, sys.get_tau());
+  analyzeTrajectory(sys, xx, true, &cout);
+  
+  x=q;
   
   arr phi;
   P.fv(phi, NoArr, x);
@@ -64,7 +67,7 @@ int main(int argn,char** argv){
 
   //-- gradient check
   //arr x(T+1,n);
-  for(uint k=0;k<0;k++){
+  for(uint k=0;k<2;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(P, x, 1e-5);
   }
@@ -87,11 +90,12 @@ int main(int argn,char** argv){
   //-- optimize
   //rndUniform(x,-10.,-1.);
   for(;;){
-    optGaussNewton(x, P, OPT4(verbose=2, stopIters=10, useAdaptiveDamping=.1, maxStep=100.));
-    analyzeTrajectory(sys, x, true, &cout);
+    optGaussNewton(x, P, OPT4(verbose=2, stopIters=10, useAdaptiveDamping=.0, maxStep=100.));
+    getPhaseTrajectory(xx, x, sys.get_tau());
+    analyzeTrajectory(sys, xx, true, &cout);
     write(LIST<arr>(x),"z.output");
-    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
-    displayTrajectory(sys, x, NULL, 1, "planned trajectory");
+    gnuplot("set term x11 1; plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
+    displayTrajectory(sys, xx, NULL, 1, "planned trajectory");
     MT::wait();
   }
   

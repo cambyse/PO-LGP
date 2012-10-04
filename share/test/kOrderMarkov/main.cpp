@@ -9,7 +9,8 @@ int main(int argn,char** argv){
 
 #if 1
   ControlledSystem_PointMass sys;
-  KOrderMarkovFunction_ControlledSystem problem(sys);
+  //KOrderMarkovFunction_ControlledSystem problem(sys);
+  ControlledSystem_as_KOrderMarkovFunction problem(sys);
 #else
   ParticleAroundWalls problem;
 #endif
@@ -28,7 +29,7 @@ int main(int argn,char** argv){
 
   //-- gradient check
   arr x(T+1,n);
-  for(uint k=0;k<4;k++){
+  for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(P, x, 1e-4);
   }
@@ -41,7 +42,7 @@ int main(int argn,char** argv){
   return 0.;
 #endif
   
-#if 1
+#if 0
   //-- test cost on a simple deterministic trajectory
   for(uint t=0;t<x.d0;t++){ x(t,0) = double(t)/T; x(t,1)=1.; }
   for(uint t=0;t<x.d0;t++){ double tt=double(t)/T;  x(t,1) = 2.*tt; x(t,0) = tt*tt; }

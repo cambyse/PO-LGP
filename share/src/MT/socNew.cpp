@@ -209,13 +209,14 @@ void KOrderMarkovFunction_ControlledSystem::phi_t(arr& phi, arr& J, uint t, cons
   }
 }
 
-#if 0
+#if 1
 uint ControlledSystem_as_KOrderMarkovFunction::get_m(uint t){
   uint T=get_T();
-  if(t==0)   return sys->get_xDim() + sys->get_phiDim(t) + sys->get_xDim();
-  if(t==T-1) return sys->get_xDim() + sys->get_phiDim(t) + sys->get_phiDim(T);
-  return sys->get_xDim() + sys->get_phiDim(t);
-} //dynamic gap plus task costs
+  uint nq = get_n();
+  if(t==0)     return 3*nq + sys->get_phiDim(0) + sys->get_phiDim(1);
+  if(t==T-2)   return nq + sys->get_phiDim(t+1) + sys->get_phiDim(T);
+  return nq + sys->get_phiDim(t+1);
+} //dynamic-gap task-costs
 
 void ControlledSystem_as_KOrderMarkovFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   uint n=get_n();
@@ -225,48 +226,73 @@ void ControlledSystem_as_KOrderMarkovFunction::phi_t(arr& phi, arr& J, uint t, c
   arr q2(x_bar,2);
   double tau=sys->get_tau();
   double _tau2=1./(tau*tau);
+  arr x0=q0; x0.append((q1-q0)/tau);
+  arr x1=q1; x1.append((q2-q0)/(2.*tau));
+  arr x2=q2; x2.append((q2-q1)/tau);
 
-  arr x2=q2; x2.append(q2-q1)/tau;
-  sys->setx(x2);
-  
   //dynamics
-  phi = _tau2*(q2-2.*q1+q0); //penalize acceleration
-  if(&J){ //we also need to return the Jacobian
+  double h=1e-1;
+  phi = h*_tau2*(q2-2.*q1+q0); //penalize acceleration
+  if(&J){ //we todoalso need to return the Jacobian
     J.resize(n,3,n);
     J.setZero();
     for(uint i=0;i<n;i++){  J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
     J.reshape(n,3*n);
-    J *= _tau2;
+    J *= h*_tau2;
   }
-    
-  //task phi w.r.t. x0
+  
+  //task phi w.r.t. x2
   arr _phi, _J;
-  sys->getTaskCosts(_phi, _J, t+2);
+  sys->setx(x1);
+  sys->getTaskCosts(_phi, _J, t+1);
   phi.append(_phi);
   if(&J) {
     arr Japp(_J.d0,3*n);
     Japp.setZero();
-    Japp.setMatrixBlock(_J.sub(0,-1,0,n-1), 2*n, 0);
-    Japp.setMatrixBlock((+1./tau)*_J.sub(0,-1,n,-1), 2*n, 0);
-    Japp.setMatrixBlock((-1./tau)*_J.sub(0,-1,n,-1), 1*n, 0);
+    Japp.setMatrixBlock(_J.sub(0,-1,0,n-1), 0, 1*n); //w.r.t. q1
+    Japp.setMatrixBlock((-0.5/tau)*_J.sub(0,-1,n,-1), 0, 0); //w.r.t. q0
+    Japp.setMatrixBlock(( 0.5/tau)*_J.sub(0,-1,n,-1), 0, 2*n); //w.r.t. q2
     J.append(Japp);
   }
 
-  if(!t){
+  if(t==0){
     double prec=1e4;
-    phi.append(prec*q0);
+    arr sys_x0;
+    sys->get_x0(sys_x0);
+    phi.append(prec*(x0-sys_x0));
+    _J = diag(prec,x0.N);
     if(&J){
-      _J.setDiag(prec,q0.N);
+      arr Japp(_J.d0,3*n);
       Japp.setZero();
-      Japp.setMatrixBlock(_J, 0, 0);
+      Japp.setMatrixBlock(_J.sub(0,-1,0,n-1) - (1./tau)*_J.sub(0,-1,n,-1), 0, 0); //w.r.t. q0
+      Japp.setMatrixBlock((1./tau)*_J.sub(0,-1,n,-1), 0, 1*n); //w.r.t. q1
       J.append(Japp);
     }
-
-    phi.append(prec*q1);
-    if(&J){
-      _J.setDiag(prec,q0.N);
+  }
+  
+  if(t==0){ //also add costs w.r.t. q0 and (q1-q0)/tau
+    sys->setx(x0);
+    sys->getTaskCosts(_phi, _J, 0);
+    phi.append(_phi);
+    if(&J) {
+      arr Japp(_J.d0,3*n);
       Japp.setZero();
-      Japp.setMatrixBlock(_J, n, 0);
+      Japp.setMatrixBlock(_J.sub(0,-1,0,n-1) - (1./tau)*_J.sub(0,-1,n,-1), 0, 0); //w.r.t. q0
+      Japp.setMatrixBlock((1./tau)*_J.sub(0,-1,n,-1), 0, 1*n); //w.r.t. q1
+      J.append(Japp);
+    }
+  }
+  
+  uint T=get_T();
+  if(t==T-2){
+    sys->setx(x2);
+    sys->getTaskCosts(_phi, _J, T);
+    phi.append(_phi);
+    if(&J) {
+      arr Japp(_J.d0,3*n);
+      Japp.setZero();
+      Japp.setMatrixBlock(_J.sub(0,-1,0,n-1) + (1./tau)*_J.sub(0,-1,n,-1), 0, 2*n); //w.r.t. q2
+      Japp.setMatrixBlock((-1./tau)*_J.sub(0,-1,n,-1), 0, 1*n); //w.r.t. q1
       J.append(Japp);
     }
   }
