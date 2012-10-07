@@ -75,7 +75,7 @@ void View::gtkNewGl(GtkWidget *container){
   gl->add(glDrawView, this);
   glInit();
   gl->update();
-  widget = GTK_WIDGET(gl->s);
+  widget = GTK_WIDGET(*((GtkWidget**)gl->s)); //WARNING: knows that sOpenGL has GtkWidget as first member!!
 }
 
 void View::gtkUpdate(){

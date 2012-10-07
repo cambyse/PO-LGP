@@ -49,7 +49,7 @@ struct sOpenGL{
 
   
   GtkWidget *glArea;
-  GtkWidget *win;
+  GtkWidget *container;
   GdkGLContext  *glcontext;
   GdkGLDrawable *gldrawable;
   GdkGLConfig  *glconfig;
@@ -109,15 +109,15 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
   LOCK
-  win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(win), title);
-  gtk_window_set_default_size(GTK_WINDOW(win), w, h);
-  gtk_container_set_reallocate_redraws(GTK_CONTAINER(win), TRUE);
-  gtk_quit_add_destroy(1, GTK_OBJECT(win));
+  container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(container), title);
+  gtk_window_set_default_size(GTK_WINDOW(container), w, h);
+  gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
+  gtk_quit_add_destroy(1, GTK_OBJECT(container));
   ownWin = true;
   UNLOCK
   
-  init(gl,win);
+  init(gl,container);
 }
 
 sOpenGL::sOpenGL(OpenGL *gl, void *container){
@@ -125,9 +125,9 @@ sOpenGL::sOpenGL(OpenGL *gl, void *container){
   init(gl,container);
 }
 
-void sOpenGL::init(OpenGL *gl, void *container){
+void sOpenGL::init(OpenGL *gl, void *_container){
   LOCK
-  win = GTK_WIDGET(container);
+  container = GTK_WIDGET(_container);
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
     
@@ -155,14 +155,14 @@ void sOpenGL::init(OpenGL *gl, void *container){
   g_signal_connect(G_OBJECT(glArea), "destroy",             G_CALLBACK(destroy), NULL);
   g_signal_connect(G_OBJECT(glArea), "size_allocate",       G_CALLBACK(size_allocate_event), NULL);
   
-  g_signal_connect_swapped(G_OBJECT(win), "key_press_event",G_CALLBACK(key_press_event), glArea);
+  g_signal_connect_swapped(G_OBJECT(container), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
   
 //   if(GTK_IS_SCROLLED_WINDOW (win))
 //     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
 //   else
-  gtk_container_add(GTK_CONTAINER(win), glArea);
-  gtk_widget_show(win);
+  gtk_container_add(GTK_CONTAINER(container), glArea);
+  gtk_widget_show(container);
   gtk_widget_show(glArea);
 
   glcontext = gtk_widget_get_gl_context(glArea);
@@ -175,7 +175,7 @@ void sOpenGL::init(OpenGL *gl, void *container){
 sOpenGL::~sOpenGL(){
   lock();
   gtk_widget_destroy(glArea);
-  if(ownWin) gtk_widget_destroy(win);
+  if(ownWin) gtk_widget_destroy(container);
   unlock();
 }
 
