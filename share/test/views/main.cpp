@@ -22,7 +22,7 @@ int main(int argn,char** argv) {
   
   View *v0 = newView(*v.fields(0), "GenericFieldInfoView");
   View *v1 = newView(*v.fields(1));
-  //View *v2 = newView(*v.fields(2), "MeshView");
+  View *v2 = newView(*v.fields(2), "MeshView");
   
   //set some values for the variables
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
@@ -47,11 +47,11 @@ int main(int argn,char** argv) {
   
   View *v4 = newView<GenericFieldInfoView>(*v.fields(0), box);
   View *v5 = newView(*v.fields(1), box);
-  //View *v6 = newView(*v.fields(2), "MeshView", box);
+  View *v6 = newView(*v.fields(2), "MeshView", box);
   
   arr X = randn(5,3);
   
-  //View *v7 = newView<MatrixView>(X);
+  View *v7 = newView<MatrixView>(X);
   
   for(uint t=0; t<1000; t++) {
     //while looping, the view should autonomously update its content,

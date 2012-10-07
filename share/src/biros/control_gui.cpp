@@ -370,12 +370,15 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
   //iog->update();
   
+  GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
   if(iog->view[iog->box]){
-    HALT("DONT"); //you should indicate that the view should be deleted next time
+    //HALT("DONT"); //you should indicate that the view should be deleted next time
     //why? the callback could be called from within gtkupdate of the view you want to delete here
-    delete iog->view[iog->box];
+    //delete iog->view[iog->box]; //TODO:garbage collection!!  
+    gtk_container_remove(GTK_CONTAINER(container), iog->view[iog->box]->widget);
     iog->view[iog->box]=NULL;
   }
+  
   if(gtk_tree_selection_get_selected(tsel , &tm , &it)) {
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
@@ -383,20 +386,20 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       ViewInfoL vis = getViews(typeid(*birosInfo().variables(id)).name(), typeid(Variable).name());
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
-        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(0));
+        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(0), container);
       }else{ //multiple choices -> open menu
 	ViewInfo *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(choice));
+        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(choice), container);
       }
     }  break;
     case 'P':
-      iog->view[iog->box] = newView(*birosInfo().processes(id), NULL);
+      iog->view[iog->box] = newView(*birosInfo().processes(id), NULL, container);
       break;
     case 'p':
-      iog->view[iog->box] = newView(*birosInfo().parameters(id), NULL);
+      iog->view[iog->box] = newView(*birosInfo().parameters(id), NULL, container);
       break;
     case 'F':{
       //get variable id first by accessing
@@ -416,7 +419,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	choice = gtkPopupMenuChoice(choices);
 	listDelete(choices);
       }
-      iog->view[iog->box] = newView(*field, vis(choice));
+      iog->view[iog->box] = newView(*field, vis(choice), container);
     }  break;
     }
   }
@@ -473,18 +476,9 @@ GtkTreeIter appendToStore(GtkTreeStore *store, ViewInfo *vi, uint id, GtkTreeIte
 void setBoxView(View *v, GtkBuilder *builder, uint box){
   if(!v){ MT_MSG("setting box view failed"); return; }
   MT::String label;
-  /*switch (v->info->type) {
-    case ViewInfo::fieldVT:    label <<"F " <<((FieldInfo*)v->object)->var->name <<' ' <<((FieldInfo*)v->object)->name;  break;
-    case ViewInfo::variableVT: label <<"V " <<((Variable*)v->object)->name;  break;
-    case ViewInfo::processVT:  label <<"P " <<((Process*)v->object)->name;  break;
-    case ViewInfo::parameterVT:label <<"p " <<((Parameter*)v->object)->name;  break;
-    case ViewInfo::globalVT:   label <<"gobal";  break;
-  }*/
   label <<" [" <<v->info->name <<']';
   GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<box)));
-  GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxView" <<box)));
   gtk_label_set_text(l, label.p);
-  v->gtkNew(container);
 }
 
 /*

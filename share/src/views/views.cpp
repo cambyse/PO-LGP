@@ -75,6 +75,7 @@ void View::gtkNewGl(GtkWidget *container){
   gl->add(glDrawView, this);
   glInit();
   gl->update();
+  widget = GTK_WIDGET(gl->s);
 }
 
 void View::gtkUpdate(){
@@ -102,9 +103,9 @@ ViewInfoL getViews(const CharAL appliesOn_sysTypeL){
     if(!strcmp(vi->appliesOn_sysType,"ALL"))
       vis.append(vi);
     else
-    	for_list(j, appliesOn_sysType, appliesOn_sysTypeL)
-				if(!strcmp(vi->appliesOn_sysType, appliesOn_sysType))
-					vis.append(vi);
+      for_list(j, appliesOn_sysType, appliesOn_sysTypeL)
+	if(!strcmp(vi->appliesOn_sysType, appliesOn_sysType))
+	  vis.append(vi);
   }
   return vis;
 }
