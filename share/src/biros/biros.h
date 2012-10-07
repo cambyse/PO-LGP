@@ -13,12 +13,11 @@
 struct Variable;
 struct Process;
 struct Parameter;
-struct ViewInfo;
 
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
-typedef MT::Array<ViewInfo*> ViewInfoL;
+
 
 #define PROCESS(name) \
   struct name:Process { \
@@ -205,7 +204,6 @@ struct BirosInfo:Variable {
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
-  ViewInfoL views;
 
   BirosInfo():Variable("BirosInfo") {};
   
@@ -335,7 +333,7 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
 void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
-void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
+//void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
 
 
 #ifdef  MT_IMPLEMENTATION

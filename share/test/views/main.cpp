@@ -1,6 +1,11 @@
-#include <views/control.h>
+//TODO: remove unnecessary headers!
+#include <biros/control.h>
+#include <views/views.h>
+#include <views/specificViews.h>
 #include <MT/ors.h>
+#include <MT/gtk.h>
 #include <gtk/gtk.h>
+#include <gtk/gtkgl.h>
 
 struct ExampleVar:Variable{
   FIELD( int, i );
@@ -20,9 +25,9 @@ int main(int argn,char** argv){
   // must set rgb, because view doesn't work without it
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
 
-  View *v0 = b::newView(*v.fields(0), "GenericFieldInfoView");
-  View *v1 = b::newView(*v.fields(1));
-  View *v2 = b::newView(*v.fields(2), "MeshView");
+  View *v0 = newView(*v.fields(0), "GenericFieldInfoView");
+  View *v1 = newView(*v.fields(1));
+  View *v2 = newView(*v.fields(2), "MeshView");
 
   //set some values for the variables
   v.set_i(1, NULL);
@@ -46,9 +51,9 @@ int main(int argn,char** argv){
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  View *v4 = b::newView<GenericFieldInfoView>(*v.fields(0), box);
-  View *v5 = b::newView(*v.fields(1), box);
-  View *v6 = b::newView(*v.fields(2), "MeshView", box);
+  View *v4 = newView<GenericFieldInfoView>(*v.fields(0), box);
+  View *v5 = newView(*v.fields(1), box);
+  View *v6 = newView(*v.fields(2), "MeshView", box);
 
   
   /*byteA img;
@@ -60,11 +65,11 @@ int main(int argn,char** argv){
   	}
   }
 
-  b::newView(img, "ImageView");*/
+  newView(img, "ImageView");*/
 
   arr X = randn(5,3);
 
-  View *v7 = b::newView<MatrixView>(X);
+  View *v7 = newView<MatrixView>(X);
 
   for(uint t=0;t<100;t++){
 		//while looping, the view should autonomously update its content,
