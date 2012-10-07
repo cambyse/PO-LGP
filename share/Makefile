@@ -14,7 +14,7 @@ EXTERN = \
 #	extern/SWIFT++_1.2/decomposer/src \
 
 
-all: makeEXTERN $(MLR_LIBS:%=make/%)
+all: extern $(MLR_LIBS:%=make/%)
 
 depend: $(MLR_LIBS:%=depend/%)
 
