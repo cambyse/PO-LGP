@@ -24,7 +24,7 @@ struct View {
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
   ViewInfo *info;
-
+  
   View();
   View(void* _object);
   ~View();

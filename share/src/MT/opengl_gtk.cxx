@@ -48,8 +48,8 @@ struct sOpenGL{
   void endGlContext();
 
   
-  GtkWidget *win;
   GtkWidget *glArea;
+  GtkWidget *win;
   GdkGLContext  *glcontext;
   GdkGLDrawable *gldrawable;
   GdkGLConfig  *glconfig;
@@ -161,7 +161,7 @@ void sOpenGL::init(OpenGL *gl, void *container){
 //   if(GTK_IS_SCROLLED_WINDOW (win))
 //     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
 //   else
-    gtk_container_add(GTK_CONTAINER(win), glArea);
+  gtk_container_add(GTK_CONTAINER(win), glArea);
   gtk_widget_show(win);
   gtk_widget_show(glArea);
 
