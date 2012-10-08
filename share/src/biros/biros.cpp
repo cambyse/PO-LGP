@@ -450,8 +450,8 @@ void BirosInfo::dump() {
   Variable *v;
   Process *p;
   Parameter *par;
-  FieldInfo *f;
-  ViewInfo *vi;
+  FieldRegistration *f;
+  ViewRegistration *vi;
   readAccess(NULL);
   for_list(i, v, variables) {
     cout <<"Variable " <<v->id <<' ' <<v->name <<" {\n  ";
@@ -527,7 +527,7 @@ void writeInfo(ostream& os, Variable& v, bool brief, char nl){
   }
 }
 
-void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl){
+void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl){
   if(brief){
     MT::String str;
     f.writeValue(str);
@@ -554,14 +554,14 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
   }
 }
 
-//void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl){
+//void writeInfo(ostream& os, ViewRegistration& vi, bool brief, char nl){
   /*os <<"type=";
   switch (vi.type) {
-    case ViewInfo::fieldVT:    os <<"field";  break;
-    case ViewInfo::variableVT: os <<"variable";  break;
-    case ViewInfo::processVT:  os <<"process";  break;
-    case ViewInfo::parameterVT:os <<"parameter";  break;
-    case ViewInfo::globalVT:   os <<"global";  break;
+    case ViewRegistration::fieldVT:    os <<"field";  break;
+    case ViewRegistration::variableVT: os <<"variable";  break;
+    case ViewRegistration::processVT:  os <<"process";  break;
+    case ViewRegistration::parameterVT:os <<"parameter";  break;
+    case ViewRegistration::globalVT:   os <<"global";  break;
   }*/
 //  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
 //}

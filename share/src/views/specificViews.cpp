@@ -11,7 +11,7 @@
 // specific views
 //
 
-REGISTER_VIEW_TYPE(MatrixView, arr);
+REGISTER_VIEW(MatrixView, arr);
 
 void MatrixView::glDraw() {
   arr x = *((arr*) object); //copy for safety
@@ -26,7 +26,7 @@ void MatrixView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(ImageView, byteA);
+REGISTER_VIEW(ImageView, byteA);
 
 void ImageView::glInit() {
   gl->img = (byteA*) object;
@@ -39,10 +39,10 @@ void ImageView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(RgbView, byteA);
+REGISTER_VIEW(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
-  if(!container) container = gtkTopWindow(info?info->name:((FieldInfo*)object)->name);
+  if(!container) container = gtkTopWindow(info?info->name:((FieldRegistration*)object)->name);
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
 
@@ -65,7 +65,7 @@ void RgbView::gtkUpdate(){
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(MeshView, ors::Mesh);
+REGISTER_VIEW(MeshView, ors::Mesh);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
@@ -75,12 +75,12 @@ void MeshView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW_TYPE(OrsView, ors::Graph);
+REGISTER_VIEW(OrsView, ors::Graph);
 
 OrsView::OrsView():View() {
 }
 
-// OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
+// OrsView::OrsView(FieldRegistration* field, GtkWidget *container):View(field) {
 //   gtkNewGl(container);
 // }
 

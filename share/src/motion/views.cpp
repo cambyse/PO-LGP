@@ -1,12 +1,12 @@
 #include "motion.h"
 
-REGISTER_VIEW_TYPE(PoseView, arr/*, fieldVT*/);
+REGISTER_VIEW(PoseView, arr/*, fieldVT*/);
 
 PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 
-PoseView::PoseView(FieldInfo* field, GtkWidget *container):View(field) {
+PoseView::PoseView(FieldRegistration* field, GtkWidget *container):View(field) {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
   gtkNewGl(container);
 }
@@ -20,7 +20,7 @@ void PoseView::glInit() {
 }
 
 void PoseView::glDraw() {
-  arr q = *(arr*) ((FieldInfo*)object)->p; //copy!
+  arr q = *(arr*) ((FieldRegistration*)object)->p; //copy!
   geo.pull();
   uint n=geo().ors.getJointStateDimension();
   if(q.nd==1){

@@ -40,7 +40,7 @@ namespace ors{ struct Graph; }
 
 struct OrsView:View {
   OrsView();
-  OrsView(struct FieldInfo* field, GtkWidget *container);
+  OrsView(struct FieldRegistration* field, GtkWidget *container);
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

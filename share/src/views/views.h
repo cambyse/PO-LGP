@@ -4,15 +4,15 @@
 #include "biros/biros.h" //TODO: why including biros??
 #include <MT/gtk.h>
 
-struct ViewInfo;
+struct ViewRegistration;
 struct OpenGL;
 typedef struct _GtkWidget GtkWidget;
-typedef MT::Array<ViewInfo*> ViewInfoL;
+typedef MT::Array<ViewRegistration*> ViewRegistrationL;
 typedef MT::Array<const char*> CharAL;
 
 // access to global singleton viewInfo
 
-ViewInfoL& viewInfos();
+ViewRegistrationL& viewRegistrations();
 
 //===========================================================================
 //
@@ -23,7 +23,7 @@ struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   OpenGL *gl;           //which gl has this view created?
-  ViewInfo *info;
+  ViewRegistration *info;
   
   View();
   View(void* _object);
@@ -42,30 +42,30 @@ struct View {
 
 //===========================================================================
 //
-// ViewInfo: a little struct that describes an existing view type and
+// ViewRegistration: a little struct that describes an existing view type and
 // will be accessible in a global list 'ViewRegistry'
 //
 
-struct ViewInfo{
+struct ViewRegistration{
   MT::String name;  ///typeid(View-class).name()
   MT::String appliesOn_sysType;
   virtual View *newInstance() = 0;
 };
 
 template<class ViewT, class AppliesOnT>
-struct ViewInfo_typed:ViewInfo{
-  ViewInfo_typed(const char *_name,
+struct ViewRegistration_typed:ViewRegistration{
+  ViewRegistration_typed(const char *_name,
 		 const char* _appliesOn_sysType=NULL){
     name = _name;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
-    viewInfos().append(this);
+    viewRegistrations().append(this);
     //cout <<"registrating a view!" <<endl;
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };
 
-#define REGISTER_VIEW_TYPE(ViewT, AppliesOnT)\
-  ViewInfo_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
+#define REGISTER_VIEW(ViewT, AppliesOnT)\
+  ViewRegistration_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
 
 
 //===========================================================================
@@ -73,19 +73,21 @@ struct ViewInfo_typed:ViewInfo{
 // access to available views (that have been registered globally)
 //
 
-//-- query available views for specific objects
-ViewInfoL getViews();
-//ViewInfoL getViews(const CharAL appliesOn_sysTypeL);
-ViewInfoL getViews(const char* appliesOn_sysType);
-//ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
-ViewInfo* getViewBySysName(const char *name);
-
+//dump all registered views to cout
 void dumpViews();
+//-- query available views for specific objects
+
+ViewRegistrationL getViews();
+ViewRegistrationL getViews(const char* appliesOn_sysType);
+ViewRegistration* getViewBySysName(const char *name);
+
+
+//-- create new views
 
 // base generic newView
-template<class T> View* newView(T* data, ViewInfo *vi, GtkWidget *container){
+template<class T> View* newView(T* data, ViewRegistration *vi, GtkWidget *container){
   if(!vi){
-    ViewInfoL vis=getViews(typeid(T).name());
+    ViewRegistrationL vis=getViews(typeid(T).name());
     if(!vis.N){
       MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
       return NULL;
@@ -99,7 +101,7 @@ template<class T> View* newView(T* data, ViewInfo *vi, GtkWidget *container){
   return v;
 }
 
-// specifying container, but not ViewInfo
+// specifying container, but not ViewRegistration
 template<class T> View* newView(T& data, GtkWidget *container=NULL) {
   return newView(&data, NULL, container);
 }

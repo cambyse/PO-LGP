@@ -38,7 +38,7 @@ typedef MT::Array<Parameter*> ParameterL;
 // automatic setters and getters and info for Variable fields
 //
 
-struct FieldInfo {
+struct FieldRegistration {
   void *p;
   Variable *var;
   const char* name;
@@ -50,8 +50,8 @@ struct FieldInfo {
 };
 
 template<class T>
-struct FieldInfo_typed:FieldInfo {
-  FieldInfo_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
+struct FieldRegistration_typed:FieldRegistration {
+  FieldRegistration_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
     p = _p;
     var = _var;
     name = _name;
@@ -72,7 +72,7 @@ struct FieldInfo_typed:FieldInfo {
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
-    fields.append(new FieldInfo_typed<type>(&name,this,#name,#type)); }
+    fields.append(new FieldRegistration_typed<type>(&name,this,#name,#type)); }
 
 
 //===========================================================================
@@ -85,7 +85,7 @@ struct Variable {
   uint id;              ///< unique identifyer
   MT::String name;      ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
-  MT::Array<FieldInfo*> fields; //? make static? not recreating for each variable?
+  MT::Array<FieldRegistration*> fields; //? make static? not recreating for each variable?
   ProcessL listeners;
   //MT bool logValues;
   //MT bool dbDrivenReplay;
@@ -331,9 +331,9 @@ void close(const ProcessL& P);
 
 void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
-void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
+void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
-//void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
+//void writeInfo(ostream& os, ViewRegistration& vi, bool brief, char nl='\n');
 
 
 #ifdef  MT_IMPLEMENTATION

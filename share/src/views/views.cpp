@@ -5,11 +5,11 @@
 // global singleton
 //
 
-ViewInfoL *global_viewInfos=NULL;
+ViewRegistrationL *global_viewRegistrations=NULL;
 
-ViewInfoL& viewInfos(){
-  if(!global_viewInfos) global_viewInfos = new ViewInfoL();
-  return *global_viewInfos;
+ViewRegistrationL& viewRegistrations(){
+  if(!global_viewRegistrations) global_viewRegistrations = new ViewRegistrationL();
+  return *global_viewRegistrations;
 }
 
 #ifdef MT_GTK
@@ -93,11 +93,11 @@ void View::gtkUpdate(){
 
 #endif
 
-ViewInfoL getViews(const char* appliesOn_sysType){
+ViewRegistrationL getViews(const char* appliesOn_sysType){
   uint i;
-  ViewInfo *vi;
-  ViewInfoL vis;
-  for_list_rev(i,vi,viewInfos()){
+  ViewRegistration *vi;
+  ViewRegistrationL vis;
+  for_list_rev(i,vi,viewRegistrations()){
     if(!strcmp(vi->appliesOn_sysType,"ALL"))
       vis.append(vi);
     else
@@ -107,18 +107,18 @@ ViewInfoL getViews(const char* appliesOn_sysType){
   return vis;
 }
 
-ViewInfo* getViewBySysName(const char *name){
+ViewRegistration* getViewBySysName(const char *name){
   uint i;
-  ViewInfo *vi;
-  for_list(i,vi,viewInfos()) if(!strcmp(vi->name, name)) return vi;
+  ViewRegistration *vi;
+  for_list(i,vi,viewRegistrations()) if(!strcmp(vi->name, name)) return vi;
   return NULL;
 }
 
 void dumpViews(){
   cout <<"\n +++ VIEWS +++" <<endl;
   uint i;
-  ViewInfo *vi;
-  for_list_rev(i,vi,viewInfos()){
+  ViewRegistration *vi;
+  for_list_rev(i,vi,viewRegistrations()){
     cout
       <<"View name=" <<vi->name
       <<" applies_on=" <<vi->appliesOn_sysType <<endl;

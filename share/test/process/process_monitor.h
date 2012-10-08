@@ -2,7 +2,7 @@
 
 #define BIR_VARIABLE \
 static int bir_typeId; \
-static MT::Array<FieldInfo*> bir_fields;
+static MT::Array<FieldRegistration*> bir_fields;
 
 #define BIR_FIELD(type, name) \
   type name; \
@@ -23,7 +23,7 @@ void dumpInfo(){
   uint i, j;
   Variable *v;
   Process *p;
-  FieldInfo *vi;
+  FieldRegistration *vi;
   birosInfo().readAccess(NULL);
   for_list(i, v, birosInfo().variables){
     cout <<"Variable " <<v->id <<'_' <<v->name <<" lock-state=" <<v->lockState();

@@ -48,7 +48,7 @@ void addVariablesToTree(GtkTreeStore *store){
 
   uint i,j;
   Variable *v;
-  FieldInfo *vi;
+  FieldRegistration *vi;
   birosInfo().readAccess(NULL);
   for_list(i, v, birosInfo().variables){
     gtk_tree_store_append (store, &iter1, NULL);  /* Acquire a top-level iterator */
