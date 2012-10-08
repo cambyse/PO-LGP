@@ -1,6 +1,6 @@
 #include "biros/biros.h"
-#include "views/views.h"
-#include "views/specificViews.h"
+//#include "views/views.h"
+//#include "views/specificViews.h"
 #include "biros/logging.h"
 
 struct Variable;
@@ -11,7 +11,7 @@ struct View;
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
-typedef MT::Array<ViewInfo*> ViewInfoL;
+//typedef MT::Array<ViewInfo*> ViewInfoL;
 //? have lists of all Info structs? -> full introspection?
 
 namespace b{
@@ -25,7 +25,7 @@ namespace b{
   void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
   void writeInfo(ostream& os, FieldInfo& f, bool brief, char nl='\n');
   void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
-  void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
+  //void writeInfo(ostream& os, ViewInfo& vi, bool brief, char nl='\n');
   void unblockAllAccesses();
   void stepToNextAccess();
   void stepToNextWriteAccess();

@@ -42,16 +42,12 @@ struct View {
 
 //===========================================================================
 //
-// ViewInfo: a little struct that describes an existing view and
-// will be accessible in a global list 'birosViews'
+// ViewInfo: a little struct that describes an existing view type and
+// will be accessible in a global list 'ViewRegistry'
 //
-// ViewInfos will only ever be instantiated as static members of a real View
-//
-
-/* A common pattern: to store a list of heterogeneous things, all elements derive from a virtual base class ('ViewInfo') via a typed template class ('ViewInfo_typed') */
 
 struct ViewInfo{
-  MT::String name;
+  MT::String name;  ///typeid(View-class).name()
   MT::String appliesOn_sysType;
   virtual View *newInstance() = 0;
 };
@@ -63,6 +59,7 @@ struct ViewInfo_typed:ViewInfo{
     name = _name;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     viewInfos().append(this);
+    //cout <<"registrating a view!" <<endl;
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };
@@ -78,21 +75,15 @@ struct ViewInfo_typed:ViewInfo{
 
 //-- query available views for specific objects
 ViewInfoL getViews();
-ViewInfoL getViews(const CharAL appliesOn_sysTypeL);
+//ViewInfoL getViews(const CharAL appliesOn_sysTypeL);
 ViewInfoL getViews(const char* appliesOn_sysType);
-ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
-ViewInfoL getGlobalViews();
-ViewInfo* getView(const char *name);
+//ViewInfoL getViews(const char* appliesOn_sysType0, const char* appliesOn_sysType1);
+ViewInfo* getViewBySysName(const char *name);
 
-//! create a new view; if ViewInfo==NULL the first available
-View* newView(Process&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
-View* newView(Variable&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
-View* newView(FieldInfo&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
-View* newView(Parameter&,ViewInfo *vi=NULL, GtkWidget *container=NULL);
-View* newGlobalView(ViewInfo*);
+void dumpViews();
 
-// generic newView
-template<class T> View* newView(T& data, ViewInfo *vi=NULL, GtkWidget *container=NULL){
+// base generic newView
+template<class T> View* newView(T* data, ViewInfo *vi, GtkWidget *container){
   if(!vi){
     ViewInfoL vis=getViews(typeid(T).name());
     if(!vis.N){
@@ -101,30 +92,24 @@ template<class T> View* newView(T& data, ViewInfo *vi=NULL, GtkWidget *container
     }
     vi = vis(0);
   }
-  cout << "Creating new view '" << vi->name << endl;
+  cout << "Creating new view '" << vi->name <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
   View *v = vi->newInstance();
-  v->object = &data;
+  v->object = data;
   v->gtkNew(container);
   return v;
 }
 
 // specifying container, but not ViewInfo
-template<class T> View* newView(T& data, GtkWidget *container) {
-  return newView(data, NULL, container);
-}
-
-// generate a specific view with the given name
-template<class T> View* newView(T& data, const char *name, GtkWidget *container=NULL) {
-  return newView(data, getView(name), container);
+template<class T> View* newView(T& data, GtkWidget *container=NULL) {
+  return newView(&data, NULL, container);
 }
 
 // generate a specific view with the given type
-#define STR(arg) #arg
+#define STR(T) #T
 template<class V, class T> View* newView(T& data, GtkWidget *container=NULL) {
-	return newView(data, STR(V), container);
+  return newView(&data, getViewBySysName(STR(V)), container);
 }
 #undef STR
-
 
 //===========================================================================
 //

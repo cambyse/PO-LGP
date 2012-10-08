@@ -1,4 +1,5 @@
 #include <biros/control.h>
+#include <biros/biros_views.h>
 #include <views/views.h>
 #include <views/specificViews.h>
 #include <MT/ors.h>
@@ -15,14 +16,14 @@ struct ExampleVar:Variable {
 int main(int argn,char** argv) {
   MT::initCmdLine(argn, argv);
   
-  b::dump(); //before anything has been done!
+  dumpViews(); //before anything has been done!
   b::openInsideOut();
   
   ExampleVar v;
   
-  View *v0 = newView(*v.fields(0), "GenericFieldInfoView");
-  View *v1 = newView(*v.fields(1));
-  View *v2 = newView(*v.fields(2), "MeshView");
+  View *v0 = newView<GenericTextView_FieldInfo>(*v.fields(0));
+  View *v1 = newView(v.rgb);
+  View *v2 = newView<MeshView>(v.mesh);
   
   //set some values for the variables
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
@@ -45,9 +46,9 @@ int main(int argn,char** argv) {
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  View *v4 = newView<GenericFieldInfoView>(*v.fields(0), box);
-  View *v5 = newView(*v.fields(1), box);
-  View *v6 = newView(*v.fields(2), "MeshView", box);
+  View *v4 = newView<GenericTextView_FieldInfo>(*v.fields(0), box);
+  View *v5 = newView(v.rgb, box);
+  View *v6 = newView<MeshView>(v.mesh, box);
   
   arr X = randn(5,3);
   

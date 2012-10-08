@@ -1,12 +1,5 @@
 #include "specificViews.h"
 
-GenericInfoView_CPP(Process);
-GenericInfoView_CPP(Variable);
-GenericInfoView_CPP(FieldInfo);
-GenericInfoView_CPP(Parameter);
-
-#undef GenericInfoView_CPP
-
 #ifdef MT_GTK
 
 #include <MT/gtk.h>
@@ -21,7 +14,7 @@ GenericInfoView_CPP(Parameter);
 REGISTER_VIEW_TYPE(MatrixView, arr);
 
 void MatrixView::glDraw() {
-  arr x = *((arr*) object);
+  arr x = *((arr*) object); //copy for safety
   static byteA img;
   resizeAs(img, x);
   double mi=x.min(), ma=x.max();
@@ -36,11 +29,11 @@ void MatrixView::glDraw() {
 REGISTER_VIEW_TYPE(ImageView, byteA);
 
 void ImageView::glInit() {
-  gl->img = ((byteA*) ((FieldInfo*)object)->p);
+  gl->img = (byteA*) object;
 }
 
 void ImageView::glDraw() {
-  gl->img = ((byteA*) ((FieldInfo*)object)->p);
+  gl->img = (byteA*) object;
 }
 
 
@@ -49,8 +42,6 @@ void ImageView::glDraw() {
 REGISTER_VIEW_TYPE(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
-  byteA& rgb = *((byteA*) ((FieldInfo*)object)->p);
-  
   if(!container) container = gtkTopWindow(info?info->name:((FieldInfo*)object)->name);
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
@@ -61,14 +52,13 @@ void RgbView::gtkNew(GtkWidget *container){
 }; //the view crates a new gtk widget within the container
 
 void RgbView::gtkUpdate(){
-  FieldInfo *f=(FieldInfo*)object;
-  f->var->readAccess(NULL);
-  byteA& rgb = *((byteA*)f->p);
+  //f->var->readAccess(NULL);
+  byteA rgb = *((byteA*) object); //copy for safety
+  //f->var->deAccess(NULL);
   if(rgb.N==3) {
     GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
     gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
   }
-  f->var->deAccess(NULL);
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget
 
@@ -79,7 +69,7 @@ REGISTER_VIEW_TYPE(MeshView, ors::Mesh);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
-  ((ors::Mesh*)((FieldInfo*)object)->p)->glDraw();
+  ((ors::Mesh*)object)->glDraw();
 }
 
 
@@ -90,9 +80,9 @@ REGISTER_VIEW_TYPE(OrsView, ors::Graph);
 OrsView::OrsView():View() {
 }
 
-OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
-  gtkNewGl(container);
-}
+// OrsView::OrsView(FieldInfo* field, GtkWidget *container):View(field) {
+//   gtkNewGl(container);
+// }
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
@@ -103,7 +93,7 @@ void OrsView::glInit() {
 }
 
 void OrsView::glDraw() {
-  ors::Graph *ors = (ors::Graph*) ((FieldInfo*)object)->p;
+  ors::Graph *ors = (ors::Graph*) object;
   glStandardScene(NULL);
   ors->glDraw();
 }

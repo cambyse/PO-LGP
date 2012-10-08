@@ -5,7 +5,7 @@
 #include "../motion/motion.h"
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
-
+#include "biros_views.h"
 
 //===========================================================================
 //
@@ -176,16 +176,16 @@ void InsideOutGui::open(){
       if(!is.good() || _b!=b) break;
       name.read(is," "," \n\r");
       type.read(is," "," \n\r");
-      vi = getView(name);
+      vi = getViewBySysName(name);
       if(type=="field"){
 	name.read(is," "," \n\r");
 	birosInfo().getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
 	f = listFindByName(v->fields, fld);
-	view[b] = newView(*f, vi); view[b]->object=f;
+	view[b] = newView(f->p, vi, NULL); view[b]->object=f;
       }
-      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newView(*v, vi); view[b]->object=v; }
-      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = newView(*((Process*)view[b]->object), vi);  }
+      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newView(v, vi, NULL); view[b]->object=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = newView(((Process*)view[b]->object), vi, NULL);  }
       //if(type=="parameter"){view[b] = newView(ViewInfo::parameterVT, vi);is >>name; birosInfo().getParameter(view[b]->param, name); }
       //if(type=="global"){   view[b] = b::newGlobalView(vi); }
 
@@ -383,23 +383,24 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
     case 'V':{
-      ViewInfoL vis = getViews(typeid(*birosInfo().variables(id)).name(), typeid(Variable).name());
+      ViewInfoL vis = getViews(typeid(*birosInfo().variables(id)).name());
+      vis.append(getViews(typeid(Variable).name()));
       if(!vis.N) break;
       if(vis.N==1){ //only one choice
-        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(0), container);
+        iog->view[iog->box] = newView(birosInfo().variables(id), vis(0), container);
       }else{ //multiple choices -> open menu
 	ViewInfo *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = newView(*birosInfo().variables(id), vis(choice), container);
+        iog->view[iog->box] = newView(birosInfo().variables(id), vis(choice), container);
       }
     }  break;
     case 'P':
-      iog->view[iog->box] = newView(*birosInfo().processes(id), NULL, container);
+      iog->view[iog->box] = newView<GenericTextView_Process, Process>(*birosInfo().processes(id), container);
       break;
     case 'p':
-      iog->view[iog->box] = newView(*birosInfo().parameters(id), NULL, container);
+      iog->view[iog->box] = newView<GenericTextView_Parameter, Parameter>(*birosInfo().parameters(id), container);
       break;
     case 'F':{
       //get variable id first by accessing
@@ -409,7 +410,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
       FieldInfo *field = birosInfo().variables(varid)->fields(id);
       
-      ViewInfoL vis = getViews(field->sysType, typeid(FieldInfo).name());
+      ViewInfoL vis = getViews(field->sysType);
+      vis.append(getViews(typeid(FieldInfo).name()));
       if(!vis.N) break;
       int choice=0;
       if(vis.N>1){ //multiple choices -> menu
@@ -419,7 +421,10 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	choice = gtkPopupMenuChoice(choices);
 	listDelete(choices);
       }
-      iog->view[iog->box] = newView(*field, vis(choice), container);
+      if(vis(choice)->appliesOn_sysType==typeid(FieldInfo).name())
+	iog->view[iog->box] = newView(field, vis(choice), container);
+      else
+	iog->view[iog->box] = newView(field->p, vis(choice), container);
     }  break;
     }
   }
