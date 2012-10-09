@@ -53,49 +53,6 @@ struct InsideOutGuiDemon{
 } demon;
 
 
-GtkProcess *global_gtkProcess = NULL;
-
-GtkProcess* gtkProcess(){
-  if(!global_gtkProcess){
-    global_gtkProcess = new GtkProcess;
-    global_gtkProcess->var = new GtkProcessVariable;
-    global_gtkProcess->var->views.memMove=true;
-    global_gtkProcess->threadLoopWithBeat(.1);
-  }
-  return global_gtkProcess;
-}
-
-void gtkProcessClose(){
-  if(!global_gtkProcess) return;
-  global_gtkProcess->threadClose();
-  global_gtkProcess=NULL;
-}
-
-GtkProcess::GtkProcess():Process("GlobalGtkProcess"){
-}
-
-void GtkProcess::open(){
-  gtkCheckInitialized();
-  gtkProcessEvents();
-}
-
-void GtkProcess::close(){
-  uint i;
-  GtkWidget *w;
-  var->writeAccess(this);
-  for_list(i,w,var->wins) gtk_widget_destroy(w);
-  var->deAccess(this);
-  gtkProcessEvents();
-}
-
-void GtkProcess::step(){
-  uint i;
-  View *v;
-//   var->writeAccess(this);
-  for_list(i,v,var->get_views(this)) v->gtkUpdate();
-//   var->deAccess(this);
-  gtkProcessEvents();
-}
 
 //===========================================================================
 //
@@ -176,7 +133,7 @@ void InsideOutGui::open(){
       if(!is.good() || _b!=b) break;
       name.read(is," "," \n\r");
       type.read(is," "," \n\r");
-      vi = getViewBySysName(name);
+      vi = getViewByName(name);
       if(type=="field"){
 	name.read(is," "," \n\r");
 	birosInfo().getVariable(v, name, NULL);
@@ -372,10 +329,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
   if(iog->view[iog->box]){
-    //HALT("DONT"); //you should indicate that the view should be deleted next time
-    //why? the callback could be called from within gtkupdate of the view you want to delete here
-    //delete iog->view[iog->box]; //TODO:garbage collection!!  
     gtk_container_remove(GTK_CONTAINER(container), iog->view[iog->box]->widget);
+    deleteView(iog->view[iog->box]);
     iog->view[iog->box]=NULL;
   }
   

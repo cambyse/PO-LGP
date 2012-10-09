@@ -1,8 +1,7 @@
-#include <biros/control.h>
-#include <biros/biros_views.h>
+#include <biros/biros.h>
 #include <views/views.h>
-#include <views/specificViews.h>
 #include <MT/ors.h>
+#include <MT/gtk.h>
 #include <gtk/gtk.h>
 
 struct ExampleVar:Variable {
@@ -60,8 +59,6 @@ int main(int argn,char** argv) {
     X += .1*randn(5,3);
     MT::wait(.1);
   }
-  
-  gtkProcessClose();
   
   return 0;
 }

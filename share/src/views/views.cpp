@@ -1,22 +1,88 @@
 #include "views.h"
-
-//===========================================================================
-//
-// global singleton
-//
-
-ViewRegistrationL *global_viewRegistrations=NULL;
-
-ViewRegistrationL& viewRegistrations(){
-  if(!global_viewRegistrations) global_viewRegistrations = new ViewRegistrationL();
-  return *global_viewRegistrations;
-}
+#include <biros/biros.h>
 
 #ifdef MT_GTK
 
 #include <MT/gtk.h>
 #include <MT/ors.h>
 #include <MT/opengl_gtk.h>
+
+
+//===========================================================================
+//
+// global singleton ViewPrivateSpace
+//
+
+struct ViewPrivateSpace:Variable{
+  FIELD(ViewRegistrationL, viewRegistrations);
+  FIELD(MT::Array<View*>, views);
+  FIELD(MT::Array<GtkWidget*>, wins);
+  ViewPrivateSpace():Variable("ViewPrivateSpace"){
+    reg_viewRegistrations(); reg_views(); reg_wins();
+    views.memMove=true;
+  }
+};
+
+ViewPrivateSpace *global_viewPrivateSpace=NULL;
+
+ViewPrivateSpace* viewPrivateSpace(){
+  if(!global_viewPrivateSpace) global_viewPrivateSpace = new ViewPrivateSpace();
+  return global_viewPrivateSpace;
+}
+
+ViewRegistrationL& viewRegistrations(){
+  return viewPrivateSpace()->viewRegistrations;
+}
+
+//===========================================================================
+//
+// singleton: the latent ViewGtkProcess, which loops continuously, and its data structure
+//
+
+struct ViewGtkProcess:Process{
+  ViewPrivateSpace *var;
+
+  ViewGtkProcess():Process("GlobalViewGtkProcess"){}
+
+  void open(){
+    gtkCheckInitialized();
+    gtkProcessEvents();
+  }
+  void step(){
+    uint i;
+    View *v;
+    //var->writeAccess(this);
+    for_list(i,v,var->get_views(this)) v->gtkUpdate();
+    //var->deAccess(this);
+    gtkProcessEvents();
+  }
+  void close(){
+    uint i;
+    GtkWidget *w;
+    var->writeAccess(this);
+    for_list(i,w,var->wins) gtk_widget_destroy(w);
+    var->deAccess(this);
+    gtkProcessEvents();
+  }
+};
+
+ViewGtkProcess *global_gtkProcess = NULL;
+
+ViewGtkProcess* ensureGtkProcess(){
+  if(!global_gtkProcess){
+    global_gtkProcess = new ViewGtkProcess;
+    global_gtkProcess->var = viewPrivateSpace();
+    global_gtkProcess->threadLoopWithBeat(.1);
+  }
+  return global_gtkProcess;
+}
+
+void gtkProcessClose(){
+  if(!global_gtkProcess) return;
+  global_gtkProcess->threadClose();
+  global_gtkProcess=NULL;
+}
+
 
 //===========================================================================
 //
@@ -25,25 +91,27 @@ ViewRegistrationL& viewRegistrations(){
 
 View::View():object(NULL), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->var->writeAccess(NULL);
-  gtkProcess()->var->views.append(this);
-  gtkProcess()->var->deAccess(NULL);
+  ensureGtkProcess();
+  viewPrivateSpace()->writeAccess(NULL);
+  viewPrivateSpace()->views.append(this);
+  viewPrivateSpace()->deAccess(NULL);
   gtkUnlock();
 }
 
 View::View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {
   gtkLock();
-  gtkProcess()->var->writeAccess(NULL);
-  gtkProcess()->var->views.append(this);
-  gtkProcess()->var->deAccess(NULL);
+  ensureGtkProcess();
+  viewPrivateSpace()->writeAccess(NULL);
+  viewPrivateSpace()->views.append(this);
+  viewPrivateSpace()->deAccess(NULL);
   gtkUnlock();
 }
 
 View::~View(){
   gtkLock();
-  gtkProcess()->var->writeAccess(NULL);
-  gtkProcess()->var->views.removeValue(this);
-  gtkProcess()->var->deAccess(NULL);
+  viewPrivateSpace()->writeAccess(NULL);
+  viewPrivateSpace()->views.removeValue(this);
+  viewPrivateSpace()->deAccess(NULL);
   if(widget) gtk_widget_destroy(widget);
   if(gl) delete gl;
   gtkUnlock();
@@ -107,7 +175,7 @@ ViewRegistrationL getViews(const char* appliesOn_sysType){
   return vis;
 }
 
-ViewRegistration* getViewBySysName(const char *name){
+ViewRegistration* getViewByName(const char *name){
   uint i;
   ViewRegistration *vi;
   for_list(i,vi,viewRegistrations()) if(!strcmp(vi->name, name)) return vi;
@@ -123,4 +191,17 @@ void dumpViews(){
       <<"View name=" <<vi->name
       <<" applies_on=" <<vi->appliesOn_sysType <<endl;
   }
+}
+
+void deleteView(View* v){
+  gtkLock();
+  viewPrivateSpace()->writeAccess(NULL);
+  viewPrivateSpace()->views.removeValue(v);
+  viewPrivateSpace()->deAccess(NULL);
+  /*if(v->widget) gtk_widget_destroy(v->widget);
+  if(v->gl) delete v->gl;
+  v->widget=NULL;
+  v->gl=NULL;*/
+  gtkUnlock();
+  //TODO: garbage collection!
 }

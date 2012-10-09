@@ -1,18 +1,10 @@
 #ifndef VIEWS_H_
 #define VIEWS_H_
 
-#include "biros/biros.h" //TODO: why including biros??
-#include <MT/gtk.h>
+#include <MT/util.h>
+#include <MT/array.h>
 
-struct ViewRegistration;
-struct OpenGL;
 typedef struct _GtkWidget GtkWidget;
-typedef MT::Array<ViewRegistration*> ViewRegistrationL;
-typedef MT::Array<const char*> CharAL;
-
-// access to global singleton viewInfo
-
-ViewRegistrationL& viewRegistrations();
 
 //===========================================================================
 //
@@ -22,8 +14,8 @@ ViewRegistrationL& viewRegistrations();
 struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
-  OpenGL *gl;           //which gl has this view created?
-  ViewRegistration *info;
+  struct OpenGL *gl;    //which gl has this view created?
+  struct ViewRegistration *info; //the registration info for this view type
   
   View();
   View(void* _object);
@@ -31,12 +23,13 @@ struct View {
 
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream
-  virtual void glInit() {} //a generic GL draw routine
+  virtual void glInit() {} //a generic GL init routine
   virtual void glDraw() {} //a generic GL draw routine
-  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view creates a new gtk widget within the container
+  virtual void gtkNew(GtkWidget *container){ gtkNewText(container); }; //the view creates a new gtk widget within the container. default: textview
   virtual void gtkUpdate(); //let the view update the gtk widget
-  void gtkNewGl(GtkWidget *container);   //implementation of gtkNew using the gl routines
-  void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read routines
+
+  void gtkNewGl(GtkWidget *container);   //implementation of gtkNew using the glInit/glDraw virtuals
+  void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read virtuals
 };
 
 
@@ -52,10 +45,14 @@ struct ViewRegistration{
   virtual View *newInstance() = 0;
 };
 
+//-- singleton list of view registrations:
+typedef MT::Array<ViewRegistration*> ViewRegistrationL;
+ViewRegistrationL& viewRegistrations(); //should actually be private
+
 template<class ViewT, class AppliesOnT>
 struct ViewRegistration_typed:ViewRegistration{
   ViewRegistration_typed(const char *_name,
-		 const char* _appliesOn_sysType=NULL){
+			 const char* _appliesOn_sysType=NULL){
     name = _name;
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     viewRegistrations().append(this);
@@ -73,19 +70,20 @@ struct ViewRegistration_typed:ViewRegistration{
 // access to available views (that have been registered globally)
 //
 
-//dump all registered views to cout
+//-- dump all registered views to cout
 void dumpViews();
-//-- query available views for specific objects
 
+//-- query available views for specific objects
 ViewRegistrationL getViews();
 ViewRegistrationL getViews(const char* appliesOn_sysType);
-ViewRegistration* getViewBySysName(const char *name);
+ViewRegistration* getViewByName(const char *name);
 
 
 //-- create new views
 
-// base generic newView
-template<class T> View* newView(T* data, ViewRegistration *vi, GtkWidget *container){
+// general generation of a new view (all others call this)
+template<class T>
+View* newView(T* data, ViewRegistration *vi, GtkWidget *container){
   if(!vi){
     ViewRegistrationL vis=getViews(typeid(T).name());
     if(!vis.N){
@@ -94,7 +92,8 @@ template<class T> View* newView(T* data, ViewRegistration *vi, GtkWidget *contai
     }
     vi = vis(0);
   }
-  cout << "Creating new view '" << vi->name <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
+  cout <<"Creating new view '" <<vi->name
+       <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = data;
   v->gtkNew(container);
@@ -109,32 +108,16 @@ template<class T> View* newView(T& data, GtkWidget *container=NULL) {
 // generate a specific view with the given type
 #define STR(T) #T
 template<class V, class T> View* newView(T& data, GtkWidget *container=NULL) {
-  return newView(&data, getViewBySysName(STR(V)), container);
+  return newView(&data, getViewByName(STR(V)), container);
 }
 #undef STR
 
-//===========================================================================
-//
-// the latent GtkProcess, which loops continuously, and its data structure
-//
 
-struct GtkProcessVariable:Variable{
-  FIELD(MT::Array<View*>, views);
-  MT::Array<GtkWidget*> wins;
-  GtkProcessVariable():Variable("GtkProcessVariable"){}
-};
+//-- destroy views
 
-struct GtkProcess:Process{
-  GtkProcess();
+void deleteView(View*);
 
-  void open();
-  void step();
-  void close();
 
-  GtkProcessVariable *var;
-};
-
-GtkProcess* gtkProcess();
-void gtkProcessClose();
+#include "specificViews.h"
 
 #endif /* VIEWS_H_ */

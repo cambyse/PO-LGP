@@ -1,4 +1,5 @@
 #include "biros_views.h"
+#include "biros.h"
 
 void GenericTextView_Process  ::write(std::ostream& os) { writeInfo(os, *((Process*)object), false); }
 void GenericTextView_Variable ::write(std::ostream& os) { writeInfo(os, *((Variable*)object), false); }
