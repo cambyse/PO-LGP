@@ -341,6 +341,5 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
 #endif
 
 #include "biros_views.h"
-#include "control.h"
 
 #endif
