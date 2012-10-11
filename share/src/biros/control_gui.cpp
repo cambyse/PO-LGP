@@ -138,7 +138,7 @@ void InsideOutGui::open(){
 	name.read(is," "," \n\r");
 	birosInfo().getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
-	f = listFindByName(v->fields, fld);
+	f = listFindByName(v->s->fields, fld);
 	view[b] = newView(f->p, vi, NULL); view[b]->object=f;
       }
       if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newView(v, vi, NULL); view[b]->object=v; }
@@ -181,8 +181,8 @@ void InsideOutGui::updateVarStore(){
   birosInfo().readAccess(NULL);
   for_list(i, v, birosInfo().variables) {
     it = appendToStore(varStore, v, NULL);
-    for_list(j, f, v->fields) appendToStore(varStore, f, j, &it);
-    for_list(j, p, v->listeners) appendToStore(varStore, p, &it);
+    for_list(j, f, v->s->fields) appendToStore(varStore, f, j, &it);
+    for_list(j, p, v->s->listeners) appendToStore(varStore, p, &it);
   }
   birosInfo().deAccess(NULL);
 }
@@ -196,11 +196,11 @@ void InsideOutGui::updateProcStore(){
   birosInfo().readAccess(NULL);
   for_list(i, p, birosInfo().processes) {
     i_it = appendToStore(procStore, p, NULL);
-    for_list(j, v, p->listensTo) {
+    for_list(j, v, p->s->listensTo) {
       j_it = appendToStore(procStore, v, &i_it);
-      for_list(k, f, v->fields) appendToStore(procStore, f, k, &j_it);
+      for_list(k, f, v->s->fields) appendToStore(procStore, f, k, &j_it);
     }
-    for_list(j, pa, p->dependsOn) appendToStore(procStore, pa, &i_it);
+    for_list(j, pa, p->s->dependsOn) appendToStore(procStore, pa, &i_it);
   }
   birosInfo().deAccess(NULL);
 }
@@ -303,15 +303,15 @@ extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_
 }
 
 extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
-  accessController.blockAllAccesses();
+  birosInfo().blockAllAccesses();
 }
 
 extern "C" G_MODULE_EXPORT void on_run_clicked(GtkWidget* caller){
-  accessController.unblockAllAccesses();
+  birosInfo().unblockAllAccesses();
 }
 
 extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
-  accessController.stepToNextWriteAccess();
+  birosInfo().stepToNextWriteAccess();
 }
 
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
@@ -363,7 +363,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       GtkTreeIter var;
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
-      FieldRegistration *field = birosInfo().variables(varid)->fields(id);
+      FieldRegistration *field = birosInfo().variables(varid)->s->fields(id);
       
       ViewRegistrationL vis = getViews(field->sysType);
       vis.append(getViews(typeid(FieldRegistration).name()));

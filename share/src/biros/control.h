@@ -1,31 +1,15 @@
-#include "biros/biros.h"
-//#include "views/views.h"
-//#include "views/specificViews.h"
-#include "biros/logging.h"
+#include "biros_internal.h"
 
 struct Variable;
 struct Process;
 struct Parameter;
-struct View;
-
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
-//typedef MT::Array<ViewRegistration*> ViewRegistrationL;
-//? have lists of all Info structs? -> full introspection?
 
 namespace b{
   //-- basic control of processes
-  void blockAllAccesses();//===========================================================================
-  //
-  // helpers
-  //
-
-  void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
-  void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
-  void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
-  void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
-  //void writeInfo(ostream& os, ViewRegistration& vi, bool brief, char nl='\n');
+  void blockAllAccesses();
   void unblockAllAccesses();
   void stepToNextAccess();
   void stepToNextWriteAccess();

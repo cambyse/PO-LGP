@@ -13,29 +13,90 @@
 struct Variable;
 struct Process;
 struct Parameter;
-
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
 
 
-#define PROCESS(name) \
-  struct name:Process { \
-    struct s##name *s;  \
-    name();             \
-    virtual ~name();    \
-    void open();        \
-    void step();        \
-    void close();       \
-  };
+//===========================================================================
+//
+// Variable
+//
 
-#define VAR(Type) \
-  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
+struct Variable {
+  struct sVariable *s;  ///< private
+  uint id;              ///< unique identifyer
+  MT::String name;      ///< Variable name
+  uint revision;        ///< revision (= number of write accesses) number //TODO: make the revision and the s->cond ONE thing!
+  
+  Variable(const char* name);
+  ~Variable();
+  
+  //-- access control, to be called by a processes before access
+  int readAccess(Process*);  //might set the caller to sleep
+  int writeAccess(Process*); //might set the caller to sleep
+  int deAccess(Process*);
+  
+  //-- syncing via a variable
+  void waitForNextWriteAccess(); //sets caller to sleep
+  uint waitForRevisionGreaterThan(uint rev);  //sets caller to sleep
+  
+  //-- info
+  int lockState(); // 0=no lock, -1=write access, positive=#readers
+  uint get_revision(){ readAccess(NULL); uint r=revision; deAccess(NULL); return r; }
+};
 
 
 //===========================================================================
 //
-// automatic setters and getters and info for Variable fields
+// Process
+//
+
+struct Process {
+  struct sProcess *s;  ///< private
+  int id;              ///< unique identifier
+  uint step_count;     ///< step count
+  MT::String name;     ///< Process name
+  ConditionVariable state;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
+  
+  Process(const char* name);
+  virtual ~Process();
+  
+  //-- to be overloaded by the specific implementation
+  virtual void open() = 0;    ///< is called within the thread when the thread is created
+  virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
+  virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
+  
+  //-- info
+  int stepState(); // 0=idle, >0=steps-to-go, <0=special loop modes
+  
+  //-- a scalar function which may depend only on the referenced variables
+  //code correctness requires that a call of _step() may only decrease _f() !!
+  //virtual double _f(){ return 0.; }
+  
+  //-- to be called from `outside' (e.g. the main) to start/step/close the thread
+  void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
+  void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
+  
+  void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
+  void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
+  bool threadIsIdle();                  ///< check if in idle mode
+  bool threadIsClosed();                ///< check if closed
+  
+  void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
+  void threadListenTo(const VariableL &signalingVars);
+  void threadStopListenTo(Variable *var);
+  
+  void threadLoop();                    ///< loop, stepping forever
+  void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
+  void threadStop();                    ///< stop looping
+};
+
+
+//===========================================================================
+//
+// registration of variable fields
+// macro for automatic setters and getters
 //
 
 struct FieldRegistration {
@@ -63,6 +124,8 @@ struct FieldRegistration_typed:FieldRegistration {
   MT::String type() const { MT::String s(typeid(T).name()); return s; }
 };
 
+void registerField(Variable *v, FieldRegistration* f);
+
 #define FIELD(type, name) \
   type name; \
   inline int set_##name(const type& _x, Process *p){ \
@@ -72,95 +135,7 @@ struct FieldRegistration_typed:FieldRegistration {
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
-    fields.append(new FieldRegistration_typed<type>(&name,this,#name,#type)); }
-
-
-//===========================================================================
-//
-// Variable
-//
-
-struct Variable {
-  struct sVariable *s;  ///< private
-  uint id;              ///< unique identifyer
-  MT::String name;      ///< Variable name
-  uint revision;        ///< revision (= number of write accesses) number //TODO: the revision should become a condition variable? (mutexed and broadcasting)
-  MT::Array<FieldRegistration*> fields; //? make static? not recreating for each variable?
-  ProcessL listeners;
-  //MT bool logValues;
-  //MT bool dbDrivenReplay;
-  //MT pthread_mutex_t replay_mutex; //TODO: move to sVariable! (that's the point of private..)
-  
-  Variable(const char* name);
-  ~Variable();
-  
-  //-- to be overloaded by the specific implementation
-  //virtual void write(ostream& os){ os <<name; }
-  //virtual void read(istream& is){ }
-  
-  //-- access control, to be called by a processes before access
-  int readAccess(Process*);  //might set the caller to sleep
-  int writeAccess(Process*); //might set the caller to sleep
-  int deAccess(Process*);
-  
-  //-- syncing via a variable
-  void waitForNextWriteAccess();
-  uint waitForRevisionGreaterThan(uint rev);  //sets calling thread to sleep
-  
-  //-- info
-  int lockState(); // 0=no lock, -1=write access, positive=#readers
-  
-  uint get_revision() { readAccess(NULL); uint r = revision; deAccess(NULL); return r; }
-  virtual void serializeToString(MT::String &string) const;
-  virtual void deSerializeFromString(const MT::String &string);
-};
-
-
-//===========================================================================
-//
-// Process
-//
-
-struct Process {
-  struct sProcess *s;  ///< private
-  int id;              ///< unique identifier
-  uint step_count;     ///< step count
-  MT::String name;     ///< Process name
-  VariableL listensTo;
-  ParameterL dependsOn;
-  
-  Process(const char* name);
-  virtual ~Process();
-  
-  //-- to be overloaded by the specific implementation
-  virtual void open() = 0;    ///< is called within the thread when the thread is created
-  virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
-  virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
-  
-  //-- info
-  int stepState(); // 0=idle, >0=steps-to-go, <0=special loop modes
-  
-  //-- a scalar function which may depend only on the referenced variables
-  //   -- code correctness requires that a call of _step() may only decrease _f() !!
-  //virtual double _f(){ return 0.; }
-  
-  //-- to be called from `outside' (e.g. the main) to start/step/close the thread
-  void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
-  void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
-  
-  void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-  void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
-  bool threadIsIdle();                  ///< check if in idle mode
-  bool threadIsClosed();                ///< check if closed
-  
-  void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
-  void threadListenTo(const VariableL &signalingVars);
-  void threadStopListenTo(Variable *var);
-  
-  void threadLoop();                    ///< loop, stepping forever
-  void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
-  void threadStop();                    ///< stop looping
-};
+    registerField(this, new FieldRegistration_typed<type>(&name,this,#name,#type)); }
 
 
 //===========================================================================
@@ -196,30 +171,51 @@ struct Parameter_typed:Parameter {
 
 //===========================================================================
 //
+// macros to simplify code
+//
+
+#define PROCESS(name)   \
+  struct name:Process { \
+    struct s##name *s;  \
+    name();             \
+    virtual ~name();    \
+    void open();        \
+    void step();        \
+    void close();       \
+  };
+
+#define VAR(Type) \
+  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
+
+
+
+//===========================================================================
+//
 // basic access to global system info
 //
 
 struct BirosInfo:Variable {
+  struct sAccessController *acc;
 
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
 
-  BirosInfo():Variable("BirosInfo") {};
+  BirosInfo();
   
   Process *getProcessFromPID();
   
   template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required = false) {
     writeAccess(p);
-    void* raw = listFindByName(variables, name); // NULL if not found
-    v = dynamic_cast<T*>(listFindByName(variables, name)); // NULL if cast fails because of RTTI
+    Variable *raw = listFindByName(variables, name); // NULL if not found
+    v = dynamic_cast<T*>(raw); // NULL if cast fails because of RTTI
     deAccess(p);
     if (!v && raw) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
     else if (!raw) {
       if(required) { HALT("can't find required biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not work"); }
       else MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
     }
-    else {MT_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
+    else { MT_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
   }
   template<class T>  T* getProcess(const char* name, Process *p) {
     writeAccess(p);
@@ -256,6 +252,12 @@ struct BirosInfo:Variable {
     par->value = value;
   }
   void dump(); //dump everything -- for debugging
+
+  //methods called by the user
+  void blockAllAccesses();
+  void unblockAllAccesses();
+  void stepToNextAccess();
+  void stepToNextWriteAccess();
 };
 
 BirosInfo& birosInfo(); //get access to the global info struct
@@ -333,7 +335,6 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
 void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
-//void writeInfo(ostream& os, ViewRegistration& vi, bool brief, char nl='\n');
 
 
 #ifdef  MT_IMPLEMENTATION

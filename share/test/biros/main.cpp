@@ -1,8 +1,7 @@
-#define MT_IMPLEMENT_TEMPLATES
 #include <biros/biros.h>
+#include <biros/control.h>
 #include <MT/util.h>
-
-#include "process_monitor.h"
+#include <MT/array_t.cxx>
 
 //===========================================================================
 //
@@ -29,10 +28,6 @@ struct TestThread:public Process{
 
 
 void testLoop(){
-  //Fl::lock();
-//   ThreadInfoWin win;
-//   win.threadLoopWithBeat(.1);
-
   TestThread A("A loop (self=.08)",.08);
   TestThread E("E slave of B (self=.0)",.0);
   TestThread B("B loop beat (self=.02)",.02);
@@ -152,6 +147,9 @@ void testMultiAccess(){
   uint n=MT::getParameter<uint>("n",100);
   MT::Array<ExampleVar> vars(n);
   MT::Array<Maxxer> procs(2*n);
+  //Fl::lock();
+  // ThreadInfoWin win;
+  // win.threadLoopWithBeat(.1);
 
   for(uint i=0;i<procs.N;i++){
     procs(i).a = &vars.rndElem();
@@ -162,17 +160,24 @@ void testMultiAccess(){
   MT::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
-  dumpInfo();
+  b::dump();
   
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
   cout <<endl;
 }
 
+
+//===========================================================================
+//
+//
+//
+
 int main(int argc, char *argv[]){
   MT::initCmdLine(argc,argv);
-  testLoop();
+
+  //testLoop();
   testScheduling();
-  testMultiAccess();
+  //testMultiAccess();
   
   return 0;
 }

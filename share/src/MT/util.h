@@ -532,26 +532,26 @@ struct Lock {
 
 //! a basic condition variable
 struct ConditionVariable {
-  int state;
-  Mutex stateMutex;
+  int value;
+  Mutex mutex;
   pthread_cond_t  cond;
   
   ConditionVariable(int initialState=0);
   ~ConditionVariable();
   
-  void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  void setValue(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
   void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
   void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
   void unlock();
   
-  int  getState(bool userHasLocked=false);
+  int  getValue(bool userHasLocked=false);
   void waitForSignal(bool userHasLocked=false);
   void waitForSignal(double seconds, bool userHasLocked=false);
-  void waitForStateEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
-  void waitForStateNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
-  void waitForStateGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
-  void waitForStateSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForValueNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
   void waitUntil(double absTime, bool userHasLocked=false);
 };
 

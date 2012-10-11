@@ -1,8 +1,8 @@
 #include "biros.h"
 #include "biros_internal.h"
 #include "views/views.h"
-#include "views/specificViews.h"
-#include "logging.h"
+//#include "views/specificViews.h"
+//#include "logging.h"
 //#include "biros_logger.h"
 //#include "biros_threadless.h"
 
@@ -39,6 +39,10 @@ BirosInfo& birosInfo(){
 //
 
 Mutex parameterAccessGlobalMutex;
+
+void registerField(Variable *v, FieldRegistration* f){
+  v->s->fields.append(f);
+}
 
 void reportNice() {
   pid_t tid = syscall(SYS_gettid);
@@ -93,7 +97,7 @@ Variable::Variable(const char *_name) {
   name = _name;
   revision = 0U;
   id = 0U;
-  listeners.memMove=true;
+  s->listeners.memMove=true;
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
@@ -112,7 +116,7 @@ Variable::~Variable() {
     birosInfo().variables.removeValue(this);
     birosInfo().deAccess(NULL);
   }
-  for (uint i=0; i<fields.N; i++) delete fields(i);
+  for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
   
   //MT pthread_mutex_destroy(&replay_mutex);
   
@@ -120,20 +124,20 @@ Variable::~Variable() {
 }
 
 int Variable::readAccess(Process *p) {
-  accessController.queryReadAccess(this, p);
+  birosInfo().acc->queryReadAccess(this, p);
   s->rwlock.readLock();
-  accessController.logReadAccess(this, p);
+  birosInfo().acc->logReadAccess(this, p);
   return revision;
 }
 
 int Variable::writeAccess(Process *p) {
-  accessController.queryWriteAccess(this, p);
+  birosInfo().acc->queryWriteAccess(this, p);
   s->rwlock.writeLock();
   revision++;
-  accessController.logWriteAccess(this, p);
-  uint i;  Process *l;
-  s->cond.setState(revision);
-  for_list(i, l, listeners) if(l!=p) l->threadStep();
+  s->cond.setValue(revision);
+  birosInfo().acc->logWriteAccess(this, p);
+  uint i; Process *l;
+  for_list(i, l, s->listeners) if(l!=p) l->threadStep();
   return revision;
 }
 
@@ -141,9 +145,9 @@ int Variable::deAccess(Process *p) {
   if(s->rwlock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
-    accessController.logWriteDeAccess(this,p);
+    birosInfo().acc->logWriteDeAccess(this,p);
   } else {
-    accessController.logReadDeAccess(this,p);
+    birosInfo().acc->logReadDeAccess(this,p);
   }
   int rev=revision;
   s->rwlock.unlock();
@@ -156,8 +160,8 @@ void Variable::waitForNextWriteAccess(){
 
 uint Variable::waitForRevisionGreaterThan(uint rev) {
   s->cond.lock();
-  s->cond.waitForStateGreaterThan(rev, true);
-  rev=s->cond.state;
+  s->cond.waitForValueGreaterThan(rev, true);
+  rev=s->cond.value;
   s->cond.unlock();
   return rev;
 }
@@ -166,7 +170,7 @@ int Variable::lockState() {
   return s->rwlock.state;
 }
 
-void Variable::serializeToString(MT::String &string) const {
+void sVariable::serializeToString(MT::String &string) const {
   string.clear();
   MT::String field_string;
   field_string.clear();
@@ -188,7 +192,7 @@ void Variable::serializeToString(MT::String &string) const {
   }
 }
 
-void Variable::deSerializeFromString(const MT::String &string) {
+void sVariable::deSerializeFromString(const MT::String &string) {
   MT::String string_copy(string), field_string;
   field_string.clear();
   uint j = 0;
@@ -220,11 +224,9 @@ void Variable::deSerializeFromString(const MT::String &string) {
 //
 
 
-Process::Process(const char *_name) {
+Process::Process(const char *_name): s(0), id(0), step_count(0), name(_name), state(tsCLOSE)  {
   s = new sProcess();
-  listensTo.memMove=true;
-  name = _name;
-  step_count = 0U;
+  s->listensTo.memMove=true;
   birosInfo().writeAccess(this);
   id = birosInfo().processes.N;
   birosInfo().processes.memMove=true;
@@ -233,7 +235,7 @@ Process::Process(const char *_name) {
 }
 
 Process::~Process() {
-  if(s->thread || s->threadCondition.state!=tsCLOSE) threadClose();
+  if(s->thread || state.value!=tsCLOSE) threadClose();
   birosInfo().writeAccess(this);
   birosInfo().processes.removeValue(this);
   birosInfo().deAccess(this);
@@ -241,12 +243,12 @@ Process::~Process() {
 }
 
 int Process::stepState() {
-  return s->threadCondition.getState();
+  return state.getValue();
 }
 
 void Process::threadOpen(int priority) {
-  s->threadCondition.lock();
-  if(s->thread){ s->threadCondition.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
+  state.lock();
+  if(s->thread){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
   s->threadPriority = priority;
   int rc;
   pthread_attr_t atts;
@@ -261,13 +263,13 @@ void Process::threadOpen(int priority) {
     rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
   rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  s->threadCondition.state=tsIDLE;
-  s->threadCondition.unlock();
+  state.value=tsIDLE;
+  state.unlock();
 }
 
 void Process::threadClose() {
   if(!s->thread) return; // we were here already
-  s->threadCondition.setState(tsCLOSE);
+  state.setValue(tsCLOSE);
   int rc;
   CHECK(s->thread, "parallel call to threadClose -> NIY");
   rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
@@ -277,8 +279,8 @@ void Process::threadClose() {
 void Process::threadStep(uint steps, bool wait) {
   if(!s->thread) threadOpen();
   if(wait) threadWaitIdle();
-  //CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
-  s->threadCondition.setState(steps);
+  //CHECK(state.value==tsIDLE, "never step while thread is busy!");
+  state.setValue(steps);
 }
 
 void Process::threadListenTo(const VariableL &signalingVars) {
@@ -288,33 +290,33 @@ void Process::threadListenTo(const VariableL &signalingVars) {
 
 void Process::threadListenTo(Variable *v) {
   v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
-  v->listeners.setAppend(this);
+  v->s->listeners.setAppend(this);
   v->s->rwlock.unlock();
-  listensTo.setAppend(v);
+  s->listensTo.setAppend(v);
 }
 
 void Process::threadStopListenTo(Variable *v){
   v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
-  v->listeners.removeValue(this);
+  v->s->listeners.removeValue(this);
   v->s->rwlock.unlock();
-  listensTo.removeValue(v);
+  s->listensTo.removeValue(v);
 }
 
 bool Process::threadIsIdle() {
-  return s->threadCondition.getState()==tsIDLE;
+  return state.getValue()==tsIDLE;
 }
 
 bool Process::threadIsClosed() {
-  return s->threadCondition.getState()==tsCLOSE;
+  return state.getValue()==tsCLOSE;
 }
 
 void Process::threadWaitIdle() {
-  s->threadCondition.waitForStateEq(tsIDLE);
+  state.waitForValueEq(tsIDLE);
 }
 
 void Process::threadLoop() {
   if(!s->thread) threadOpen();
-  s->threadCondition.setState(tsLOOPING);
+  state.setValue(tsLOOPING);
 }
 
 void Process::threadLoopWithBeat(double sec) {
@@ -323,12 +325,12 @@ void Process::threadLoopWithBeat(double sec) {
   else
     s->metronome->reset(1000.*sec);
   if(!s->thread) threadOpen();
-  s->threadCondition.setState(tsBEATING);
+  state.setValue(tsBEATING);
 }
 
 void Process::threadStop() {
   CHECK(s->thread, "called stop to closed thread");
-  s->threadCondition.setState(tsIDLE);
+  state.setValue(tsIDLE);
 }
 
 void* sProcess::staticThreadMain(void *_self) {
@@ -350,12 +352,12 @@ void* sProcess::staticThreadMain(void *_self) {
   s->timer.reset();
   for(;;){
     bool waitForTic=false;
-    s->threadCondition.lock();
-    s->threadCondition.waitForStateNotEq(tsIDLE, true);
-    if(s->threadCondition.state==tsCLOSE) break;
-    if(s->threadCondition.state==tsBEATING) waitForTic=true;
-    if(s->threadCondition.state>0) s->threadCondition.state--; //count down
-    s->threadCondition.unlock();
+    proc->state.lock();
+    proc->state.waitForValueNotEq(tsIDLE, true);
+    if(proc->state.value==tsCLOSE) break;
+    if(proc->state.value==tsBEATING) waitForTic=true;
+    if(proc->state.value>0) proc->state.value--; //count down
+    proc->state.unlock();
     
     if(waitForTic) s->metronome->waitForTic();
     
@@ -364,7 +366,7 @@ void* sProcess::staticThreadMain(void *_self) {
     proc->step_count++;
     s->timer.cycleDone();
   };
-  s->threadCondition.unlock();
+  proc->state.unlock();
   
   proc->close(); //virtual close routine
   
@@ -433,6 +435,10 @@ void close(const ProcessL& P) {
 // Global information
 //
 
+BirosInfo::BirosInfo():Variable("Biros") {
+  acc = new sAccessController;
+};
+
 Process *BirosInfo::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
   uint i;  Process *p;
@@ -451,12 +457,11 @@ void BirosInfo::dump() {
   Process *p;
   Parameter *par;
   FieldRegistration *f;
-  ViewRegistration *vi;
   readAccess(NULL);
   for_list(i, v, variables) {
     cout <<"Variable " <<v->id <<' ' <<v->name <<" {\n  ";
     writeInfo(cout, *v, false, ' ');
-    for_list(j, f, v->fields) {
+    for_list(j, f, v->s->fields) {
       cout <<"\n  Field " <<j <<' ' <<f->name <<' ';
       writeInfo(cout, *f, false, ' ');
     }
