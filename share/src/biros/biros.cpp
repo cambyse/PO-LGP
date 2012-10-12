@@ -28,10 +28,20 @@
 BirosInfo *global_birosInfo=NULL;
 
 BirosInfo& birosInfo(){
-  if(!global_birosInfo) global_birosInfo = new BirosInfo();
+  static Mutex lockBirosInfo;
+  static bool currentlyCreating=false;
+  if(currentlyCreating) return *((BirosInfo*) NULL);
+  if(!global_birosInfo) {
+    lockBirosInfo.lock();
+    if(!global_birosInfo) {
+      currentlyCreating=true;   
+      global_birosInfo = new BirosInfo();
+      currentlyCreating=false;
+    }  
+    lockBirosInfo.unlock();
+  }
   return *global_birosInfo;
 }
-
 
 //===========================================================================
 //
@@ -83,6 +93,7 @@ void setRRscheduling(int priority) {
 
 
 
+
 //===========================================================================
 //
 // Variable
@@ -97,7 +108,7 @@ Variable::Variable(const char *_name) {
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
-  if(global_birosInfo) { //-> birosInfo itself will not be registered!
+  if(&(birosInfo()) != NULL) { //-> birosInfo itself will not be registered!
     birosInfo().writeAccess(NULL);
     id = birosInfo().variables.N;
     birosInfo().variables.memMove = true;
@@ -276,9 +287,9 @@ void Process::threadClose() {
 
 void Process::threadStep(uint steps, bool wait) {
   if(!s->thread) threadOpen();
-  if(wait) threadWaitIdle();
   //CHECK(s->threadCondition.state==tsIDLE, "never step while thread is busy!");
   s->threadCondition.setState(steps);
+  if(wait) threadWaitIdle();
 }
 
 void Process::threadListenTo(const VariableL &signalingVars) {
@@ -352,7 +363,10 @@ void* sProcess::staticThreadMain(void *_self) {
     bool waitForTic=false;
     s->threadCondition.lock();
     s->threadCondition.waitForStateNotEq(tsIDLE, true);
-    if(s->threadCondition.state==tsCLOSE) break;
+    if(s->threadCondition.state==tsCLOSE) { 
+      s->threadCondition.unlock();
+      break;
+    }
     if(s->threadCondition.state==tsBEATING) waitForTic=true;
     if(s->threadCondition.state>0) s->threadCondition.state--; //count down
     s->threadCondition.unlock();
@@ -363,8 +377,10 @@ void* sProcess::staticThreadMain(void *_self) {
     proc->step(); //virtual step routine
     proc->step_count++;
     s->timer.cycleDone();
+    s->threadCondition.lock();
+    s->threadCondition.broadcast();
+    s->threadCondition.unlock();
   };
-  s->threadCondition.unlock();
   
   proc->close(); //virtual close routine
   
