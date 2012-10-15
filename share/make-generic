@@ -224,8 +224,8 @@ CXXFLAGS  += -DMT_FLTK
 LIBS += -lfltk -lfltk_gl -lGLU -lGL
 endif
 
-ifeq ($(QTGLUT),1)
-CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL# -DNOUNICODE
+ifeq ($(QTGL),1)
+CXXFLAGS  += -DMT_QTGL -DMT_QT -DQT_DLL# -DNOUNICODE
 LIBS += -lglut -lGLU -lGL -lX11
 QT := 1
 endif
@@ -648,6 +648,9 @@ endif
 
 %_moc.cpp: %.h
 	$(MOC) -o $*_moc.cpp $*.h
+
+%_moc.cxx: %.h
+	$(MOC) -o $*_moc.cxx $*.h
 
 %_$(SYS).moccpp: %.h
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)

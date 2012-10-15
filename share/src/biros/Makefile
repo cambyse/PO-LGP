@@ -8,6 +8,8 @@ MAKEMODE = mlrlib
 #if in doubt, you actually want to change make-config!
 #otherwise ask Marc
 
+LIBS += -lviews
+
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)
 

@@ -29,11 +29,11 @@
 #  include "opengl_fltk.cxx"
 #endif
 
-#ifdef MT_QTGLUT
+#ifdef MT_QTGL
 #  include "opengl_qt.cxx"
 #endif
 
-#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
+#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGL
 #  include "opengl_void.cxx"
 #else
 #  define MT_GLUT
@@ -1439,7 +1439,7 @@ int OpenGL::timedupdate(double sec) {
   if(lasttime>0. && now-lasttime<sec) MT::wait(lasttime+sec-now);
   lasttime=now;
   return update();
-#if 0//def MT_QTGLUT
+#if 0//def MT_QTGL
   int i;
   quitLoopOnTimer=true;
   i=startTimer(msec);
@@ -1582,7 +1582,7 @@ void OpenGL::saveEPS(const char*) {
 }
 #endif
 
-#ifndef MT_QTGLUT
+#ifndef MT_QTGL
 /*!\brief report on the OpenGL capabilities (the QGLFormat) */
 void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 #endif
@@ -1846,7 +1846,7 @@ bool glUI::checkMouse(int _x, int _y) {
   return true;
 }
 
-#ifdef MT_QTGLUT
+#ifdef MT_QTGL
 #if   defined MT_MSVC
 #  include"opengl_MSVC.moccpp"
 #elif defined MT_SunOS

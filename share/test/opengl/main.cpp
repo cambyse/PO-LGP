@@ -277,12 +277,7 @@ void testImage(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-#ifdef MT_QT
-  QApplication myapp(argc,argv);
-#endif
-
   testTeapot();
-  return 0;
   testGrab();
   //return 0;
   testMultipleViews();

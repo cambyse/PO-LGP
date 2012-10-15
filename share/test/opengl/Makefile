@@ -1,6 +1,6 @@
 BASE = ../..
 
-GTKGL = 1
+QT = 1
 
 include $(BASE)/make-generic
 

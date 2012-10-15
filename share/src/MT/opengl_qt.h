@@ -30,21 +30,24 @@
 #  undef max
 #endif
 
+struct QtCheckInitialized{
+  QtCheckInitialized();
+};
 
-struct sOpenGL:public QGLWidget {
+struct sOpenGL:QtCheckInitialized, QGLWidget {
   Q_OBJECT
 public:
   OpenGL *gl;
-  static uint nrWins;
   ors::Vector downVec,downPos,downFoc;
   ors::Quaternion downRot;
   bool quitLoopOnTimer;
   
-  sOpenGL(OpenGL *_gl, const char* title,int w=400,int h=400,int posx=-1,int posy=-1); //when creating its own window
-  sOpenGL(QDialog*& parent); //when part of a QT window
+  sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy);
+  sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
-  
   void init();
+  void beginGlContext(){};
+  void endGlContext(){};
   
   //hooks for Qt (overloading virtuals of QGLWidget)
   void paintGL() { gl->Draw(width(),height()); }
@@ -53,7 +56,7 @@ public:
   void keyPressEvent(QKeyEvent *e) { gl->pressedkey=e->text().toAscii()[0]; gl->Key(gl->pressedkey,gl->mouseposx,gl->mouseposy); }
   void timerEvent(QTimerEvent*) { if(quitLoopOnTimer) gl->exitEventLoop(); }
   void mouseMoveEvent(QMouseEvent* e) {
-    if(!gl->mouseIsDown) gl->PassiveMotion(e->x(),e->y()); else gl->Motion(e->x(),e->y());
+    if(!gl->mouseIsDown) gl->Motion(e->x(),e->y()); else gl->Motion(e->x(),e->y());
   }
   void mousePressEvent(QMouseEvent* e) {
     if(e->button()==Qt::LeftButton) { gl->Mouse(0,0,e->x(),e->y()); }

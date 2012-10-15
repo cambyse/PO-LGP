@@ -46,7 +46,6 @@ struct sOpenGL{
   void init(OpenGL *gl, void *container);
   void beginGlContext();
   void endGlContext();
-
   
   GtkWidget *glArea;
   GtkWidget *container;
