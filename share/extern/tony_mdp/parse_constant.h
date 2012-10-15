@@ -29,7 +29,7 @@
 
 typedef enum { CONST_INT, CONST_STRING, CONST_FLOAT } Const_Type;
 
-typedef struct Constant_Block
+struct Constant_Block
       {
 	Const_Type	theTag;		/* Type of constant it is */
 	union {

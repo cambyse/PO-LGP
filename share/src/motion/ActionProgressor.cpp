@@ -34,6 +34,7 @@ void ActionProgressor::step(){
     case Action::place:
       reattachShape(action->get_objectRef1(this), "OBJECTS");
       break;
+  default: NIY;
   }
 
   motionFuture->incrementFrame(this);

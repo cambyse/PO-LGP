@@ -49,7 +49,7 @@ Problem_Type gProblemType = UNKNOWN_problem_type;
    */
 double gDiscount = DEFAULT_DISCOUNT_FACTOR;
 
-char *value_type_str[] = VALUE_TYPE_STRINGS;
+const char *value_type_str[] = VALUE_TYPE_STRINGS;
 
 Value_Type gValueType = DEFAULT_VALUE_TYPE;
 

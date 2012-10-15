@@ -74,7 +74,7 @@ void sJoystick::close() {
 
 void sJoystick::step() {
   if (!n) return;
-  static int B, _B;
+  static int B; //, _B;
   static floatA A, _A;
   uint i;
   A.resize(n);
@@ -86,7 +86,7 @@ void sJoystick::step() {
   //cout <<"\rjoy state=" <<state <<std::flush;
   //bool change;
   //if(B!=_B || A!=_A) change=true; else change=false;
-  _B=B;
+  //_B=B;
   _A=A;
   //return change;
 }

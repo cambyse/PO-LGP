@@ -1,4 +1,5 @@
 #include <biros/biros.h>
+#include <biros/control.h>
 #include <views/views.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
@@ -20,7 +21,7 @@ int main(int argn,char** argv) {
   
   ExampleVar v;
   
-  View *v0 = newView<GenericTextView_FieldInfo>(*v.fields(0));
+  //View *v0 = newView<GenericTextView_FieldInfo>(*v.fields(0));
   View *v1 = newView(v.rgb);
   View *v2 = newView<MeshView>(v.mesh);
   
@@ -45,7 +46,7 @@ int main(int argn,char** argv) {
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  View *v4 = newView<GenericTextView_FieldInfo>(*v.fields(0), box);
+  //View *v4 = newView<GenericTextView_FieldInfo>(*v.fields(0), box);
   View *v5 = newView(v.rgb, box);
   View *v6 = newView<MeshView>(v.mesh, box);
   

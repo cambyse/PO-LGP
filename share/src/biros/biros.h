@@ -30,7 +30,7 @@ struct Variable {
   uint revision;        ///< revision (= number of write accesses) number //TODO: make the revision and the s->cond ONE thing!
   
   Variable(const char* name);
-  ~Variable();
+  virtual ~Variable();
   
   //-- access control, to be called by a processes before access
   int readAccess(Process*);  //might set the caller to sleep
