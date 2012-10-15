@@ -597,11 +597,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="boxView0">
+                      <object class="GtkViewport" id="boxView0">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">automatic</property>
-                        <property name="vscrollbar_policy">automatic</property>
+                        <property name="can_focus">False</property>
                         <child>
                           <placeholder/>
                         </child>
@@ -664,11 +662,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="boxView1">
+                      <object class="GtkViewport" id="boxView1">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">automatic</property>
-                        <property name="vscrollbar_policy">automatic</property>
+                        <property name="can_focus">False</property>
                         <child>
                           <placeholder/>
                         </child>
@@ -731,11 +727,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="boxView2">
+                      <object class="GtkViewport" id="boxView2">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">automatic</property>
-                        <property name="vscrollbar_policy">automatic</property>
+                        <property name="can_focus">False</property>
                         <child>
                           <placeholder/>
                         </child>

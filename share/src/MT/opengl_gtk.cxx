@@ -54,7 +54,7 @@ struct sOpenGL{
   GdkGLDrawable *gldrawable;
   GdkGLConfig  *glconfig;
   Display *xdisplay;
-  bool ownWin;
+  bool ownWin,ownViewport;
   
   //OpenGL *gl;
   ors::Vector downVec,downPos,downFoc;
@@ -158,10 +158,13 @@ void sOpenGL::init(OpenGL *gl, void *_container){
   g_signal_connect_swapped(G_OBJECT(container), "key_press_event",G_CALLBACK(key_press_event), glArea);
   //g_signal_connect(G_OBJECT(window), "destroy",             G_CALLBACK(window_destroy), NULL);
   
-//   if(GTK_IS_SCROLLED_WINDOW (win))
-//     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), glArea);
-//   else
-  gtk_container_add(GTK_CONTAINER(container), glArea);
+  //if(GTK_IS_SCROLLED_WINDOW(container)){
+  //  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(container), glArea);
+  //  ownViewport = true;
+  //}else{
+    gtk_container_add(GTK_CONTAINER(container), glArea);
+    ownViewport = false;
+  //}
   gtk_widget_show(container);
   gtk_widget_show(glArea);
 
@@ -175,6 +178,7 @@ void sOpenGL::init(OpenGL *gl, void *_container){
 sOpenGL::~sOpenGL(){
   lock();
   gtk_widget_destroy(glArea);
+  //if(ownViewport) gtk_widget_destroy(GTK_WIDGET(gtk_container_get_children(GTK_CONTAINER(container))->data));
   if(ownWin) gtk_widget_destroy(container);
   unlock();
 }
