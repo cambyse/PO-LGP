@@ -33,6 +33,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/> */
 #define LOCK gtkLock();
 #define UNLOCK gtkUnlock();
 
+void initGlEngine(){
+  gtkCheckInitialized();
+}
 
 //===========================================================================
 //

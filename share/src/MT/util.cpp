@@ -859,34 +859,34 @@ void Mutex::unlock() {
 
 //===========================================================================
 //
-// Access Lock
+// Access RWLock
 //
 
-Lock::Lock() {
+RWLock::RWLock() {
   int rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   state=0;
 }
 
-Lock::~Lock() {
+RWLock::~RWLock() {
   CHECK(!state, "");
   int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void Lock::readLock() {
+void RWLock::readLock() {
   int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   stateMutex.lock();
   state++;
   stateMutex.unlock();
 }
 
-void Lock::writeLock() {
+void RWLock::writeLock() {
   int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   stateMutex.lock();
   state=-1;
   stateMutex.unlock();
 }
 
-void Lock::unlock() {
+void RWLock::unlock() {
   stateMutex.lock();
   if(state>0) state--; else state=0;
   stateMutex.unlock();
@@ -1004,6 +1004,30 @@ void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
     rc = pthread_cond_timedwait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
     rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
     */
+}
+
+
+//===========================================================================
+//
+// Thread
+//
+
+static void *util_ThreadMain(void *_self){
+  Thread *th=(Thread*)_self;
+  th->main();
+  return NULL;
+}
+
+Thread::Thread(){
+  int rc;
+  pthread_attr_t atts;
+  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_create(&thread, &atts, util_ThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+}
+
+Thread::~Thread(){
+  int rc;
+  rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 

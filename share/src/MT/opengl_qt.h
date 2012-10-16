@@ -30,11 +30,7 @@
 #  undef max
 #endif
 
-struct QtCheckInitialized{
-  QtCheckInitialized();
-};
-
-struct sOpenGL:QtCheckInitialized, QGLWidget {
+struct sOpenGL: QGLWidget {
   Q_OBJECT
 public:
   OpenGL *gl;

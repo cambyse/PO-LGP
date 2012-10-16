@@ -86,7 +86,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
  
   //INPUT
   TaskAbstraction *task;
-  Lock taskLock; //lock this if you change the task!!
+  RWLock taskLock; //lock this if you change the task!!
   bool useBwdMsg, forceColLimTVs, fixFingers;
   arr bwdMsg_v, bwdMsg_Vinv; //optional: backward messages from a planner
   double maxJointStep; //computeMotionFromTaskVariables will generate a null-step if this limit is exceeded

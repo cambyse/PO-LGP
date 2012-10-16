@@ -14,13 +14,13 @@ int main(int argn,char** argv){
   View *v = newView<MatrixView>(X, (GtkWidget*)box);
 
   //allow to give a RW-Lock?
-  View *v = newView<MatrixView>(X, (GtkWidget*)box, (Lock&)lock);
+  View *v = newView<MatrixView>(X, (GtkWidget*)box, (RWLock&)lock);
 
 
   //-- accessing a list of available views
   ViewRegistrationL views = getAvailableViews<arr>();
   //using this to instantiate a new view
-  View *v = newView(views(2), X, (GtkWidget*)box, (Lock&)lock);
+  View *v = newView(views(2), X, (GtkWidget*)box, (RWLock&)lock);
 #endif
 
   OpenGL gl;

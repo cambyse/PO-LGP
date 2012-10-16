@@ -501,30 +501,26 @@ void gnuplotClose();
 
 //===========================================================================
 //
-// threading: pthread wrappers: Mutex, Lock, ConditionVariable
+// threading: pthread wrappers: Mutex, RWLock, ConditionVariable
 //
 
 //! a basic mutex lock
 struct Mutex {
   pthread_mutex_t mutex;
   int state; ///< 0=unlocked, 1=locked
-  
   Mutex();
   ~Mutex();
-  
   void lock();
   void unlock();
 };
 
 //! a basic read/write access lock
-struct Lock {
+struct RWLock {
   pthread_rwlock_t lock;
   int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
   Mutex stateMutex;
-  
-  Lock();
-  ~Lock();
-  
+  RWLock();
+  ~RWLock();
   void readLock();   ///< multiple threads may request 'lock for read'
   void writeLock();  ///< only one thread may request 'lock for write'
   void unlock();     ///< thread must unlock when they're done
@@ -535,10 +531,10 @@ struct ConditionVariable {
   int value;
   Mutex mutex;
   pthread_cond_t  cond;
-  
+
   ConditionVariable(int initialState=0);
   ~ConditionVariable();
-  
+
   void setValue(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
   void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
@@ -554,6 +550,15 @@ struct ConditionVariable {
   void waitForValueSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
   void waitUntil(double absTime, bool userHasLocked=false);
 };
+
+//! a basic thread
+struct Thread {
+  pthread_t thread;
+  Thread();
+  ~Thread();
+  virtual void main() = 0;
+};
+
 
 //===========================================================================
 //

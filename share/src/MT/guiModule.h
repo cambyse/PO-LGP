@@ -28,7 +28,7 @@ struct GuiModule:public Process {
   MT::Array<arr> linesToDisplay;
   
   //OUTPUT (none)
-  Lock processLock;
+  RWLock processLock;
   
   //INTERNAL
   bool useOpengl, logData, plotData;

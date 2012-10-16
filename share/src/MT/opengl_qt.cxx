@@ -8,7 +8,7 @@
 bool qtInitialized=false;
 QApplication *qtApp;
 
-void qtCheckInitialized(){
+void initGlEngine(){
   if(!qtInitialized){
     int argc=1;
     char **argv = new char*[1];
@@ -20,19 +20,8 @@ void qtCheckInitialized(){
   }
 }
 
-QtCheckInitialized::QtCheckInitialized(){
-  qtCheckInitialized();
-}
-
-// sOpenGL::sOpenGL(OQDialog*& parent):QGLWidget(QGLFormat(GLformat),parent){
-//   gl = new OpenGL(this);
-//   QWidget::setMouseTracking(true);
-//   init();
-// }
-
 sOpenGL::sOpenGL(OpenGL *_gl, void *container)
-  :QtCheckInitialized(),
-   QGLWidget(QGLFormat(GLformat),(QWidget*)container){
+  :QGLWidget(QGLFormat(GLformat),(QWidget*)container){
   gl=_gl;
   //ownWin = false;
   init();
@@ -40,8 +29,7 @@ sOpenGL::sOpenGL(OpenGL *_gl, void *container)
 
 
 sOpenGL::sOpenGL(OpenGL *_gl, const char* title,int width,int height,int posx,int posy)
-  :QtCheckInitialized(),
-   QGLWidget(QGLFormat(GLformat)){
+  :QGLWidget(QGLFormat(GLformat)){
   gl = _gl;
   QGLWidget::move(posx,posy);
   QGLWidget::resize(width,height);
@@ -69,9 +57,9 @@ sOpenGL::~sOpenGL(){
 //
 
 void OpenGL::postRedrawEvent(){ s->QGLWidget::update(); } 
-void OpenGL::processEvents(){  qApp->processEvents(); }
-void OpenGL::enterEventLoop(){ qApp->exec(); }
-void OpenGL::exitEventLoop(){  qApp->exit(); }
+void OpenGL::processEvents(){  qtApp->processEvents(); }
+void OpenGL::enterEventLoop(){ qtApp->exec(); }
+void OpenGL::exitEventLoop(){  qtApp->exit(); }
 
 
 int OpenGL::width(){  return s->QGLWidget::width(); }

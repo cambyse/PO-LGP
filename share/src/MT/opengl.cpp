@@ -1054,12 +1054,14 @@ void glDrawDots(arr& dots) {
 //
 
 OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy) {
+  initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();
   processEvents();
 }
 
 OpenGL::OpenGL(void *container) {
+  initGlEngine();
   s=new sOpenGL(this,container);
   init();
   processEvents();

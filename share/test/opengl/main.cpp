@@ -274,9 +274,13 @@ void testImage(){
   gl.watchImage(img,true,2);
 }
 
+//extern void qtCheckInitialized();
+
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
+  //qtCheckInitialized();
+  
   testTeapot();
   testGrab();
   //return 0;

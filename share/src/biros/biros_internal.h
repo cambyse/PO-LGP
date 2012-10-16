@@ -20,7 +20,7 @@ bool setNice(int);
 struct sVariable {
   MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
   ProcessL listeners;
-  Lock rwlock;
+  RWLock rwlock;
   ConditionVariable cond; //to broadcast write access to this variable
   struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
 
@@ -72,7 +72,7 @@ struct sAccessController{
   bool enableAccessLog;
   bool enableDataLog;
   bool replay;
-  Lock eventsLock;
+  RWLock eventsLock;
 
   AccessEventL blockedAccesses;
   AccessEventL events;

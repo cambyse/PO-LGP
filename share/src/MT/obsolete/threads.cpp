@@ -80,10 +80,10 @@ void updateTimeIndicators(double& dt, double& dtMean, double& dtMax, const times
 
 //===========================================================================
 //
-// Lock
+// RWLock
 //
 
-Lock::Lock(){
+RWLock::RWLock(){
 //   pthread_rwlockattr_t   att;
   int rc;
 //   rc = pthread_rwlockattr_init(&att);  if(rc) HALT("pthread failed with err " <<rc);
@@ -93,26 +93,26 @@ Lock::Lock(){
   state=0;
 }
 
-Lock::~Lock(){
+RWLock::~RWLock(){
   CHECK(!state, "");
   int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc);
 }
   
-void Lock::readLock(const char* _msg){
+void RWLock::readLock(const char* _msg){
   int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
   if(_msg) msg=_msg; else msg=NULL;
   //CHECK(state>=0, "");
   state++;
 }
   
-void Lock::writeLock(const char* _msg){
+void RWLock::writeLock(const char* _msg){
   int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   if(_msg) msg=_msg; else msg=NULL;
   //CHECK(!state, "");
   state=-1;
 }
   
-void Lock::unlock(){
+void RWLock::unlock(){
   int rc = pthread_rwlock_unlock(&lock);  if(rc) HALT("pthread failed with err " <<rc);
   msg=NULL;
   //CHECK(state, "");
