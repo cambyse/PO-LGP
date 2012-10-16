@@ -556,6 +556,7 @@ struct Thread {
   pthread_t thread;
   Thread();
   ~Thread();
+  void launch();
   virtual void main() = 0;
 };
 

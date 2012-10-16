@@ -998,7 +998,7 @@ bool glUI::hoverCallback(OpenGL& gl) {
 
 bool glUI::clickCallback(OpenGL& gl) {
   bool b=checkMouse(gl.mouseposx, gl.mouseposy);
-  if(b) gl.postRedrawEvent();
+  if(b) gl.postRedrawEvent(true);
   int t=top;
   if(t!=-1) {
     cout <<"CLICK! on button #" <<t <<endl;
@@ -1428,7 +1428,7 @@ int OpenGL::watch(const char *txt) {
 bool OpenGL::update(const char *txt) {
   pressedkey=0;
   if(txt) text.clear() <<txt;
-  postRedrawEvent();
+  postRedrawEvent(false);
   processEvents();
   return !pressedkey;
 }
@@ -1617,7 +1617,7 @@ void OpenGL::Reshape(int width, int height) {
   CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
   camera.setWHRatio((double)width/height);
   for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  //postRedrawEvent();
+  postRedrawEvent(true);
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y) {
@@ -1683,7 +1683,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   if(!downPressed) {
     for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if(!cont) { postRedrawEvent(); return; }
+  if(!cont) { postRedrawEvent(true); return; }
   
   //mouse scroll wheel:
   if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
@@ -1694,15 +1694,14 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
     if(topSelection)
       cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
-  
-  postRedrawEvent();
+  postRedrawEvent(true);
 }
 
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {
   CALLBACK_DEBUG(printf("Window %d Mouse Wheel Callback:  %d %d %d %d\n", 0, wheel, direction, x, y));
   if(direction>0) camera.X->pos += camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
   else            camera.X->pos -= camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
-  postRedrawEvent();
+  postRedrawEvent(true);
 }
 
 
@@ -1732,7 +1731,7 @@ void OpenGL::Motion(int _x, int _y) {
     mouseposx=_x; mouseposy=_y;
     bool ud=false;
     for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-    if(ud) postRedrawEvent();
+    if(ud) postRedrawEvent(true);
     return;
   }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
@@ -1753,7 +1752,7 @@ void OpenGL::Motion(int _x, int _y) {
     cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
 #endif
-    postRedrawEvent();
+    postRedrawEvent(true);
     if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3) {  //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
@@ -1761,13 +1760,13 @@ void OpenGL::Motion(int _x, int _y) {
         trans(2)=0.;
         trans = s->downRot*trans;
         cam->X->pos = s->downPos + trans;
-        postRedrawEvent();*/
+        postRedrawEvent(true);*/
   }
   if(mouse_button==2) {  //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
-    postRedrawEvent();
+    postRedrawEvent(true);
   }
 #else
   NICO;

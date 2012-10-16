@@ -30,11 +30,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/> */
 #include "ors.h"
 #include "gtk.h"
 
-#define LOCK gtkLock();
-#define UNLOCK gtkUnlock();
-
 void initGlEngine(){
-  gtkCheckInitialized();
+  //gtkCheckInitialized();
+  gtkLaunch();
 }
 
 //===========================================================================
@@ -70,9 +68,6 @@ struct sOpenGL{
   static bool key_press_event(GtkWidget *widget, GdkEventKey *event);
   static void destroy(GtkWidget *widget);
   static bool size_allocate_event(GtkWidget *widget, GdkRectangle *allocation);
-  
-  static void lock(){ LOCK } //globalOpenglLock.lock(); }
-  static void unlock(){ UNLOCK } //globalOpenglLock.unlock(); }
 };
 
 //===========================================================================
@@ -82,25 +77,27 @@ struct sOpenGL{
 
 //! constructor
 
-void OpenGL::postRedrawEvent(){
-  LOCK
+void OpenGL::postRedrawEvent(bool fromWithinCallback){
+  if(!fromWithinCallback) gtkLock();
   gtk_widget_queue_draw(s->glArea);
-  UNLOCK
+  if(!fromWithinCallback) gtkUnlock();
 }
 
 void OpenGL::processEvents(){
-  LOCK
-  while (gtk_events_pending())  gtk_main_iteration();
-  UNLOCK
+  //gtkLock();
+  //while (gtk_events_pending())  gtk_main_iteration();
+  //gtkUnlock();
 }
 
-void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit){ LOCK gtk_main_iteration(); UNLOCK } }
-void OpenGL::exitEventLoop(){  loopExit=true; }
+void OpenGL::enterEventLoop(){ watching.setValue(1); watching.waitForValueEq(0); } //loopExit=false; while(!loopExit){ gtkLock(); gtk_main_iteration(); gtkUnlock(); } }
+void OpenGL::exitEventLoop(){  watching.setValue(0); }
 
 //! resize the window
 void OpenGL::resize(int w,int h){
+  gtkLock();
   gtk_widget_set_size_request(s->glArea, w, h);
-  processEvents();
+  gtkUnlock();
+//   processEvents();
 }
 
 int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
@@ -110,14 +107,14 @@ int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
-  LOCK
+  gtkLock();
   container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(container), title);
   gtk_window_set_default_size(GTK_WINDOW(container), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(container));
   ownWin = true;
-  UNLOCK
+  gtkUnlock();
   
   init(gl,container);
 }
@@ -128,7 +125,7 @@ sOpenGL::sOpenGL(OpenGL *gl, void *container){
 }
 
 void sOpenGL::init(OpenGL *gl, void *_container){
-  LOCK
+  gtkLock();
   container = GTK_WIDGET(_container);
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
@@ -174,20 +171,24 @@ void sOpenGL::init(OpenGL *gl, void *_container){
   gldrawable = gtk_widget_get_gl_drawable(glArea);
   xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
 
-  UNLOCK
+  gtkUnlock();
 }
 
 sOpenGL::~sOpenGL(){
-  lock();
+  gtkLock();
   gtk_widget_destroy(glArea);
   //if(ownViewport) gtk_widget_destroy(GTK_WIDGET(gtk_container_get_children(GTK_CONTAINER(container))->data));
   if(ownWin) gtk_widget_destroy(container);
-  unlock();
+  gtkUnlock();
 }
 
+//===========================================================================
+//
+// sOpenGL callbacks
+//
+
 bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
-  lock();
-  /* draw only last expose */
+   /* draw only last expose */
   if(event->count>0) return true;
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
 
@@ -202,7 +203,6 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
 
   gl->s->endGlContext();
   
-  unlock();
   return true;
 }
 
@@ -221,42 +221,32 @@ void sOpenGL::endGlContext(){
 }
 
 bool sOpenGL::motion_notify(GtkWidget *widget, GdkEventMotion *event) {
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Motion(event->x, event->y);
-  unlock();
   return true;
 }
 
 bool sOpenGL::button_press(GtkWidget *widget, GdkEventButton *event) {
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Mouse(event->button-1, false, event->x, event->y);
-  unlock();
   return true;
 }
 
 bool sOpenGL::button_release(GtkWidget *widget, GdkEventButton *event) {
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Mouse(event->button-1, true, event->x, event->y);
-  unlock();
   return true;
 }
 
 bool sOpenGL::scroll_event(GtkWidget *widget, GdkEventScroll *event){
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->MouseWheel(0, event->direction, event->x, event->y);
-  unlock();
   return true;
 }
 
 bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Key(event->keyval, gl->mouseposx, gl->height()-gl->mouseposy);
-  unlock();
   return true;
 }
 
@@ -266,9 +256,7 @@ void sOpenGL::destroy(GtkWidget *widget) {
 }
 
 bool sOpenGL::size_allocate_event(GtkWidget *widget, GdkRectangle *allo){
-  lock();
   OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
   gl->Reshape(allo->width, allo->height);
-  unlock();
   return true;
 }

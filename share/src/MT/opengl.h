@@ -261,8 +261,8 @@ private:
 #endif
   
 public: //driver dependent methods
-  bool loopExit;
-  void postRedrawEvent();
+  ConditionVariable watching;
+  void postRedrawEvent(bool fromWithinCallback);
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();

@@ -1012,23 +1012,27 @@ void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
 // Thread
 //
 
-static void *util_ThreadMain(void *_self){
+void* Thread_staticMain(void *_self){
   Thread *th=(Thread*)_self;
   th->main();
   return NULL;
 }
 
-Thread::Thread(){
+Thread::Thread():thread(0){
+}
+
+void Thread::launch(){
   int rc;
   pthread_attr_t atts;
   rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  rc = pthread_create(&thread, &atts, util_ThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_create(&thread, &atts, Thread_staticMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 Thread::~Thread(){
   int rc;
   rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
+
 
 
 //===========================================================================

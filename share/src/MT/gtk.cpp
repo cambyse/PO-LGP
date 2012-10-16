@@ -11,12 +11,18 @@
 
 bool gtkInitialized=false;
 Mutex global_gtkLock;
+struct GtkThread *global_gtkThread=NULL;
 
 void gtkLock(bool checkInitialized){
   if(checkInitialized) gtkCheckInitialized(); 
   global_gtkLock.lock();
+  gdk_threads_enter();
 }
-void gtkUnlock(){ global_gtkLock.unlock(); }
+
+void gtkUnlock(){
+  gdk_threads_leave();
+  global_gtkLock.unlock();
+}
 
 void gtkCheckInitialized(){
   gtkLock(false); // else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
@@ -32,6 +38,25 @@ void gtkCheckInitialized(){
     gtk_gl_init(&argc, &argv);
     
     gtkInitialized = true;
+  }
+  gtkUnlock();
+}
+
+struct GtkThread:Thread{
+  void main(){
+    gtkCheckInitialized();
+    gdk_threads_enter();
+    gtk_main();
+    gdk_threads_leave();
+  }
+};
+
+
+void gtkLaunch(){
+  gtkLock(false);
+  if(!global_gtkThread){
+    global_gtkThread = new GtkThread();
+    global_gtkThread -> launch();
   }
   gtkUnlock();
 }
