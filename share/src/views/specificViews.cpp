@@ -43,21 +43,26 @@ REGISTER_VIEW(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
   if(!container) container = gtkTopWindow(info?info->name:STRING("RgbView"));
+  gtkLock();
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);
 
   gtk_container_add(GTK_CONTAINER(container), widget);
   gtk_widget_show(container);
   gtk_widget_show(widget);
+  gtkUnlock();
 }; //the view crates a new gtk widget within the container
 
 void RgbView::gtkUpdate(){
+  if(!object) return;
   //f->var->readAccess(NULL);
   byteA rgb = *((byteA*) object); //copy for safety
   //f->var->deAccess(NULL);
   if(rgb.N==3) {
     GdkColor col = {0, guint16(rgb(0))<<8, guint16(rgb(1))<<8, guint16(rgb(2))<<8 };
+    gtkLock();
     gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
+    gtkUnlock();
   }
   //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
 }; //let the view update the gtk widget

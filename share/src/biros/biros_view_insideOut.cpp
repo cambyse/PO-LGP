@@ -1,11 +1,12 @@
 #ifdef MT_GTK
 
-#include "control.h"
-#include "biros/biros_internal.h"
-#include "../motion/motion.h"
-#include <MT/gtk.h>
-#include <gtk/gtk.h>
+#include "biros.h"
 #include "biros_views.h"
+#include "biros_internal.h"
+#include <gtk/gtk.h>
+#include <MT/gtk.h>
+
+REGISTER_VIEW(InsideOut, void)
 
 //===========================================================================
 //
@@ -27,51 +28,22 @@ void setBoxView(View *v, GtkBuilder *builder, uint box);
 
 #define VIEWBOXES 3
 
-struct InsideOutGui:Process{
+struct sInsideOut{
   GtkBuilder *builder;
   GtkWidget *win;
   uint box;
   View *view [VIEWBOXES];
 
-  InsideOutGui();
-  ~InsideOutGui();
-  
+  sInsideOut();
+
   void open();
-  void step();
   void close();
-  void update();
+  void update(bool fromWithinCallback);
   void updateVarStore();
   void updateProcStore();
   void updateParamStore();
   void updateViewStore();
 };
-
-struct InsideOutGuiDemon{
-  InsideOutGui *gui;
-  InsideOutGuiDemon():gui(NULL){}
-  ~InsideOutGuiDemon(){ if(gui) delete gui; }
-} demon;
-
-
-
-//===========================================================================
-//
-// implementations of control.h methods
-//
-
-void b::openInsideOut(){
-  if(!demon.gui) demon.gui=new InsideOutGui();
-  demon.gui->threadLoopWithBeat(.1);
-}
-
-void b::updateInsideOut(){
-  demon.gui->update();
-} //gui.threadStep(); }
-
-void b::closeInsideOut(){
-  if(!demon.gui) demon.gui=new InsideOutGui();
-  demon.gui->threadClose();
-}
 
 
 //===========================================================================
@@ -79,20 +51,29 @@ void b::closeInsideOut(){
 // implementations of the InsideOutGui
 //
 
-InsideOutGui::InsideOutGui():Process("InsideOutGui"){
-  birosInfo().processes.removeValue(this); //don't include THIS in the process list
+sInsideOut::sInsideOut(){
   for(uint b=0;b<VIEWBOXES;b++) view[b]=NULL;
   box=0;
 }
 
-InsideOutGui::~InsideOutGui(){
-  birosInfo().processes.append(this); //to avoid crash
-  threadClose();
+InsideOut::InsideOut():View(){
+  s = new sInsideOut;
 }
 
-void InsideOutGui::open(){
-  gtkCheckInitialized();
+InsideOut::~InsideOut(){
+  s->close();
+  delete s;
+}
 
+void InsideOut::gtkNew(GtkWidget *container){
+  s->open();
+}
+
+void InsideOut::gtkUpdate(){
+  s->update(false);
+}
+
+void sInsideOut::open(){
   gtkLock();
   // const char *pwd = __FILE__;
   // char *path,*name;
@@ -104,21 +85,19 @@ void InsideOutGui::open(){
   gtk_builder_add_from_file(builder, gladeFile.p, NULL);
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
   gtk_builder_connect_signals(builder, NULL);
-  g_object_set_data(G_OBJECT(win), "InsideOutGui", this);
+  g_object_set_data(G_OBJECT(win), "sInsideOut", this);
   for(uint i=0;i<VIEWBOXES;i++){
     GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(builder, STRING("boxToggle"<<i).p));
     g_object_set_data(G_OBJECT(widget), "id", (void*)(long)i);
   }
-  
-  //add data
-  update();
-  
   //show
   gtk_widget_show(win);
   gtkUnlock();
-
-  gtkProcessEvents();
   
+  //add data
+  update(false);
+  
+
   //try to open config file
   ifstream is("ino.cfg");
   if(is.good()){
@@ -139,11 +118,11 @@ void InsideOutGui::open(){
 	birosInfo().getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
 	f = listFindByName(v->s->fields, fld);
-	view[b] = newView(f->p, vi, NULL); view[b]->object=f;
+	view[b] = newViewBase(f->p, vi, NULL); view[b]->object=f;
       }
-      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newView(v, vi, NULL); view[b]->object=v; }
-      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = newView(((Process*)view[b]->object), vi, NULL);  }
-      //if(type=="parameter"){view[b] = newView(ViewRegistration::parameterVT, vi);is >>name; birosInfo().getParameter(view[b]->param, name); }
+      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newViewBase(v, vi, NULL); view[b]->object=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = newViewBase(((Process*)view[b]->object), vi, NULL);  }
+      //if(type=="parameter"){view[b] = newViewBase(ViewRegistration::parameterVT, vi);is >>name; birosInfo().getParameter(view[b]->param, name); }
       //if(type=="global"){   view[b] = b::newGlobalView(vi); }
 
       setBoxView(view[b], builder, b);
@@ -152,27 +131,23 @@ void InsideOutGui::open(){
   }
 }
 
-void InsideOutGui::close(){
+void sInsideOut::close(){
   gtkLock();
   gtk_widget_destroy(win);
   g_object_unref(G_OBJECT(builder));
   gtkUnlock();
 }
 
-void InsideOutGui::step(){
-  for(uint b=0;b<VIEWBOXES;b++) if(view[b]) view[b]->gtkUpdate();
-  gtkProcessEvents();
-}
-
-void InsideOutGui::update(){
+void sInsideOut::update(bool fromWithinCallback){
+  if(!fromWithinCallback) gtkLock();
   updateVarStore();
   updateProcStore();
   updateParamStore();
   updateViewStore();
-  gtkProcessEvents();
+  if(!fromWithinCallback) gtkUnlock();
 }
 
-void InsideOutGui::updateVarStore(){
+void sInsideOut::updateVarStore(){
   GtkTreeStore *varStore = (GtkTreeStore*) gtk_builder_get_object(builder, "variableTreeStore");
   gtk_tree_store_clear(varStore);
   uint i,j;
@@ -187,7 +162,7 @@ void InsideOutGui::updateVarStore(){
   birosInfo().deAccess(NULL);
 }
 
-void InsideOutGui::updateProcStore(){
+void sInsideOut::updateProcStore(){
   GtkTreeStore *procStore = (GtkTreeStore*) gtk_builder_get_object(builder, "processTreeStore");
   gtk_tree_store_clear(procStore);
   uint i,j,k;
@@ -205,7 +180,7 @@ void InsideOutGui::updateProcStore(){
   birosInfo().deAccess(NULL);
 }
 
-void InsideOutGui::updateParamStore(){
+void sInsideOut::updateParamStore(){
   GtkTreeStore *paramStore = (GtkTreeStore*) gtk_builder_get_object(builder, "parameterTreeStore");
   gtk_tree_store_clear(paramStore);
   uint i,j;
@@ -219,7 +194,7 @@ void InsideOutGui::updateParamStore(){
   birosInfo().deAccess(NULL);
 }
 
-void InsideOutGui::updateViewStore(){
+void sInsideOut::updateViewStore(){
   GtkTreeStore *viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
   gtk_tree_store_clear(viewStore);
   uint i;
@@ -239,29 +214,24 @@ void InsideOutGui::updateViewStore(){
 //
 
 extern "C" G_MODULE_EXPORT void toggle_expand(GtkTreeView *view, GtkTreePath *path){
-  gtkLock();
   if(gtk_tree_view_row_expanded(view, path)){
     gtk_tree_view_collapse_row(view, path);
   }else{
     gtk_tree_view_expand_row(view, path, false);
   }
-  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_refresh_clicked(GtkWidget* caller){
-  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  iog->update();
+  sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
+  iog->update(true);
   cout <<"GUI: refresh" <<endl;
-  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
-  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  iog->update();
+  sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
+  iog->update(true);
   cout <<"GUI: save" <<endl;
   ofstream os;
   MT::open(os,"ino.cfg");
@@ -278,28 +248,23 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
     os <<endl;*/
   }
   os.close();
-  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_pushView_clicked(GtkWidget* caller){
-  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  iog->update();
+  sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
+  iog->update(true);
   iog->box++;
   if(iog->box>=VIEWBOXES) iog->box=0;
   cout <<"GUI: push view" <<iog->box <<endl;
-  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_data){
-  gtkLock();
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
+  sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
   long b = (long)g_object_get_data(G_OBJECT(caller), "id");
   iog->box = b;
   cout <<"GUI: box select " <<b <<endl;
-  gtkUnlock();
 }
 
 extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
@@ -315,17 +280,17 @@ extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
 }
 
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
-  gtkLock();
+  gtkEnterCallback();
   uint id;
   char tag;
   GtkTreeSelection *tsel = gtk_tree_view_get_selection(caller);
   GtkTreeIter it;
   GtkTreeModel *tm;
 
-  //retrieve InsideOutGui data structure
+  //retrieve sInsideOut data structure
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
-  InsideOutGui *iog = (InsideOutGui*)g_object_get_data(G_OBJECT(widget), "InsideOutGui");
-  //iog->update();
+  sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
+  //iog->update(true);
   
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
   if(iog->view[iog->box]){
@@ -341,14 +306,14 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       ViewRegistrationL vis = getViews(typeid(*birosInfo().variables(id)).name());
       vis.append(getViews(typeid(Variable).name()));
       if(!vis.N) break;
-      if(vis.N==1){ //only one choice
-        iog->view[iog->box] = newView(birosInfo().variables(id), vis(0), container);
+      if(true || vis.N==1){ //only one choice
+        iog->view[iog->box] = newViewBase(birosInfo().variables(id), vis(0), container);
       }else{ //multiple choices -> open menu
 	ViewRegistration *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
 	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = newView(birosInfo().variables(id), vis(choice), container);
+        iog->view[iog->box] = newViewBase(birosInfo().variables(id), vis(choice), container);
       }
     }  break;
     case 'P':
@@ -369,7 +334,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       vis.append(getViews(typeid(FieldRegistration).name()));
       if(!vis.N) break;
       int choice=0;
-      if(vis.N>1){ //multiple choices -> menu
+      if(false && vis.N>1){ //multiple choices -> menu
 	ViewRegistration *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
@@ -377,15 +342,15 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 	listDelete(choices);
       }
       if(vis(choice)->appliesOn_sysType==typeid(FieldRegistration).name())
-	iog->view[iog->box] = newView(field, vis(choice), container);
+	iog->view[iog->box] = newViewBase(field, vis(choice), container);
       else
-	iog->view[iog->box] = newView(field->p, vis(choice), container);
+	iog->view[iog->box] = newViewBase(field->p, vis(choice), container);
     }  break;
     }
   }
 
   setBoxView(iog->view[iog->box], iog->builder, iog->box);
-  gtkUnlock();
+  gtkLeaveCallback();
 }
 
 GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par){

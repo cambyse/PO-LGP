@@ -53,7 +53,7 @@ template<class ViewT, class AppliesOnT>
 struct ViewRegistration_typed:ViewRegistration{
   ViewRegistration_typed(const char *_name,
 			 const char* _appliesOn_sysType=NULL){
-    name = _name;
+    name = typeid(ViewT).name();
     appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
     viewRegistrations().append(this);
     //cout <<"registrating a view!" <<endl;
@@ -83,7 +83,7 @@ ViewRegistration* getViewByName(const char *name);
 
 // general generation of a new view (all others call this)
 template<class T>
-View* newView(T* data, ViewRegistration *vi, GtkWidget *container){
+View* newViewBase(T* data, ViewRegistration *vi, GtkWidget *container){
   if(!vi){
     ViewRegistrationL vis=getViews(typeid(T).name());
     if(!vis.N){
@@ -102,15 +102,17 @@ View* newView(T* data, ViewRegistration *vi, GtkWidget *container){
 
 // specifying container, but not ViewRegistration
 template<class T> View* newView(T& data, GtkWidget *container=NULL) {
-  return newView(&data, NULL, container);
+  return newViewBase<T>(&data, NULL, container);
 }
 
 // generate a specific view with the given type
-#define STR(T) #T
 template<class V, class T> View* newView(T& data, GtkWidget *container=NULL) {
-  return newView(&data, getViewByName(STR(V)), container);
+  return newViewBase<T>(&data, getViewByName(typeid(V).name()), container);
 }
-#undef STR
+
+template<class V> View* newView(GtkWidget *container=NULL) {
+  return newViewBase<void>(NULL, getViewByName(typeid(V).name()), container);
+}
 
 
 //-- destroy views

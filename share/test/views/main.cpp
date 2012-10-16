@@ -17,14 +17,19 @@ int main(int argn,char** argv) {
   MT::initCmdLine(argn, argv);
   
   dumpViews(); //before anything has been done!
-  b::openInsideOut();
+  //b::openInsideOut();
+  birosInfo();
+  gtkCheckInitialized();
   
   ExampleVar v;
-  
+
+  b::dump();
+
   //View *v0 = newView<GenericTextView_FieldInfo>(*v.fields(0));
+  newView<InsideOut>();
   View *v1 = newView(v.rgb);
   View *v2 = newView<MeshView>(v.mesh);
-  
+
   //set some values for the variables
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
   v.set_i(1, NULL);

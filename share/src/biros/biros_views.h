@@ -8,4 +8,12 @@ struct GenericTextView_Variable :View{ void write(std::ostream& os);  };
 struct GenericTextView_FieldInfo:View{ void write(std::ostream& os);  };
 struct GenericTextView_Parameter:View{ void write(std::ostream& os);  };
 
+struct InsideOut:View{
+  struct sInsideOut *s;
+  InsideOut();
+  ~InsideOut();
+  void gtkNew(GtkWidget *container);
+  void gtkUpdate();
+};
+
 #endif
