@@ -32,12 +32,10 @@ void gtkUnlock(){
 
 struct GtkThread:Thread{
   void main(){
-    gdk_threads_enter();
     gtk_main();
     gdk_threads_leave();
   }
 };
-
 
 void gtkCheckInitialized(){
   if(!global_gtkThread){
@@ -50,9 +48,10 @@ void gtkCheckInitialized(){
       
       g_thread_init(NULL);
       gdk_threads_init();
+      gdk_threads_enter();
       gtk_init(&argc, &argv);
       gtk_gl_init(&argc, &argv);
-      
+
       global_gtkThread = new GtkThread();
       global_gtkThread -> launch();
     }

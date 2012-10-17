@@ -428,7 +428,6 @@ int main(int argc,char **argv){
 
   testLoadSave();
   testPlayStateSequence();
-  return 0;
   testKinematics();
   testFollowRedundantSequence();
   testDynamics();

@@ -5,6 +5,7 @@
 *.swp
 
 *.kdev4
+vc60.idb
 
 *~
 

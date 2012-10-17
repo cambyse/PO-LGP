@@ -46,7 +46,12 @@ struct sOpenGL{
   void init(OpenGL *gl, void *container);
   void beginGlContext();
   void endGlContext();
-  
+
+  //-- private OpenGL data
+  ors::Vector downVec,downPos,downFoc;
+  ors::Quaternion downRot;
+
+  //-- engine specific data
   GtkWidget *glArea;
   GtkWidget *container;
   GdkGLContext  *glcontext;
@@ -55,10 +60,7 @@ struct sOpenGL{
   Display *xdisplay;
   bool ownWin,ownViewport;
   
-  //OpenGL *gl;
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
-
+  //-- callbacks
   static bool expose(GtkWidget *widget, GdkEventExpose *event);
   static bool motion_notify(GtkWidget *widget, GdkEventMotion *event);
   static bool button_press(GtkWidget *widget, GdkEventButton *event);
