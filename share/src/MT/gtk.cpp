@@ -8,18 +8,29 @@
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <GL/glut.h>
+#include <X11/Xlib.h>
 
 struct GtkThread *global_gtkThread=NULL;
 Mutex global_gtkMutex;
 uint gtkMutexCount=0;
 bool inCallback=false;
 
-void gtkEnterCallback(){ CHECK(!inCallback,""); inCallback=true; }
-void gtkLeaveCallback(){ CHECK( inCallback,""); inCallback=false; }
+void gtkEnterCallback(){
+  global_gtkMutex.lock();
+  CHECK(!inCallback,"");
+  inCallback=true;
+}
+
+void gtkLeaveCallback(){
+  CHECK(inCallback,"");
+  inCallback=false;
+  global_gtkMutex.unlock();
+}
 
 void gtkLock(bool checkInitialized){
   if(checkInitialized) gtkCheckInitialized(); 
   if(inCallback) return;
+  //global_gtkMutex.lock();
   gdk_threads_enter();
   gtkMutexCount++;
 }
@@ -28,6 +39,7 @@ void gtkUnlock(){
   if(inCallback) return;
   gtkMutexCount--;
   gdk_threads_leave();
+  //global_gtkMutex.unlock();
 }
 
 struct GtkThread:Thread{
@@ -41,6 +53,9 @@ void gtkCheckInitialized(){
   if(!global_gtkThread){
     global_gtkMutex.lock();
     if(!global_gtkThread){
+      
+      XInitThreads();
+
       int argc=1;
       char **argv = new char*[1];
       argv[0] = (char*)"x.exe";
@@ -54,6 +69,10 @@ void gtkCheckInitialized(){
 
       global_gtkThread = new GtkThread();
       global_gtkThread -> launch();
+
+      //wait until main loop gives access for the first time
+      gdk_threads_enter();
+      gdk_threads_leave();
     }
     global_gtkMutex.unlock();
   }

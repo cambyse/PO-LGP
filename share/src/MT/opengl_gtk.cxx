@@ -130,7 +130,8 @@ void sOpenGL::init(OpenGL *gl, void *_container){
   container = GTK_WIDGET(_container);
   glArea = gtk_drawing_area_new();
   g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
-    
+
+  
   glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
   GDK_GL_MODE_DEPTH |
   GDK_GL_MODE_DOUBLE));
