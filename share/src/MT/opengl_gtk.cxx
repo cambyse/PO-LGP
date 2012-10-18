@@ -22,10 +22,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/> */
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
-//#include <GL/freeglut.h>
-//#include <X11/Xlib.h>
-//#include <GL/glx.h>
-
 #include "opengl.h"
 #include "ors.h"
 #include "gtk.h"
@@ -214,12 +210,8 @@ void sOpenGL::beginGlContext(){
 
 void sOpenGL::endGlContext(){
   gdk_gl_drawable_gl_end(gldrawable);
-  glXMakeCurrent(xdisplay, None, NULL);
-  /*somehow this leads to the stack error and Select won't work
-    perhaps solution: write proper switchThread routine; before
-    entering code check if you need to switch the thread; only then
-    release the context; check if you're not in the middle of
-    something (mutex...) */
+  //glXMakeCurrent(xdisplay, None, NULL);
+  //this is not necessary anymore, since the main loop is running in one thread now
 }
 
 bool sOpenGL::motion_notify(GtkWidget *widget, GdkEventMotion *event) {

@@ -11,35 +11,20 @@
 #include <X11/Xlib.h>
 
 struct GtkThread *global_gtkThread=NULL;
-Mutex global_gtkMutex;
-uint gtkMutexCount=0;
-bool inCallback=false;
+Mutex callbackMutex;
 
-void gtkEnterCallback(){
-  global_gtkMutex.lock();
-  CHECK(!inCallback,"");
-  inCallback=true;
-}
-
-void gtkLeaveCallback(){
-  CHECK(inCallback,"");
-  inCallback=false;
-  global_gtkMutex.unlock();
-}
+void gtkEnterCallback(){  callbackMutex.lock();  }
+void gtkLeaveCallback(){  callbackMutex.unlock();  }
 
 void gtkLock(bool checkInitialized){
   if(checkInitialized) gtkCheckInitialized(); 
-  if(inCallback) return;
-  //global_gtkMutex.lock();
+  if(callbackMutex.state && callbackMutex.state==syscall(SYS_gettid)) return;
   gdk_threads_enter();
-  gtkMutexCount++;
 }
 
 void gtkUnlock(){
-  if(inCallback) return;
-  gtkMutexCount--;
+  if(callbackMutex.state && callbackMutex.state==syscall(SYS_gettid)) return;
   gdk_threads_leave();
-  //global_gtkMutex.unlock();
 }
 
 struct GtkThread:Thread{
@@ -50,31 +35,26 @@ struct GtkThread:Thread{
 };
 
 void gtkCheckInitialized(){
+  static Mutex m;
   if(!global_gtkThread){
-    global_gtkMutex.lock();
+    m.lock();
     if(!global_gtkThread){
-      
-      XInitThreads();
-
       int argc=1;
       char **argv = new char*[1];
       argv[0] = (char*)"x.exe";
-      glutInit(&argc, argv);
       
+      XInitThreads();
       g_thread_init(NULL);
       gdk_threads_init();
       gdk_threads_enter();
       gtk_init(&argc, &argv);
       gtk_gl_init(&argc, &argv);
+      glutInit(&argc, argv);
 
       global_gtkThread = new GtkThread();
       global_gtkThread -> launch();
-
-      //wait until main loop gives access for the first time
-      gdk_threads_enter();
-      gdk_threads_leave();
     }
-    global_gtkMutex.unlock();
+    m.unlock();
   }
 }
 

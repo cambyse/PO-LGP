@@ -507,7 +507,7 @@ void gnuplotClose();
 //! a basic mutex lock
 struct Mutex {
   pthread_mutex_t mutex;
-  int state; ///< 0=unlocked, 1=locked
+  int state; ///< 0=unlocked, otherwise=syscall(SYS_gettid)
   Mutex();
   ~Mutex();
   void lock();
