@@ -23,6 +23,7 @@ private:
 private slots:
     void render();
     void random_action();
+    void process_console_input();
 
 };
 

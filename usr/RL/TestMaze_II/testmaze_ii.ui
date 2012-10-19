@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
-    <height>417</height>
+    <width>547</width>
+    <height>539</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,47 @@
    <item row="0" column="0">
     <widget class="QGraphicsView" name="graphicsView"/>
    </item>
+   <item row="1" column="0">
+    <widget class="QDockWidget" name="_wConsoleWidget">
+     <widget class="QWidget" name="dockWidgetContents">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="1" column="0">
+        <widget class="QLineEdit" name="_wConsoleInput"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QPlainTextEdit" name="_wConsoleOutput">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>_wConsoleInput</sender>
+   <signal>returnPressed()</signal>
+   <receiver>TestMaze_IIClass</receiver>
+   <slot>process_console_input()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>472</x>
+     <y>509</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>544</x>
+     <y>492</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>process_console_input()</slot>
+ </slots>
 </ui>
