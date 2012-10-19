@@ -56,8 +56,9 @@ sInsideOut::sInsideOut(){
   box=0;
 }
 
-InsideOut::InsideOut():View(){
+InsideOut::InsideOut(GtkWidget* container):View(){
   s = new sInsideOut;
+  gtkNew(container);
 }
 
 InsideOut::~InsideOut(){
@@ -294,8 +295,8 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
   if(iog->view[iog->box]){
-    gtk_container_remove(GTK_CONTAINER(container), iog->view[iog->box]->widget);
-    deleteView(iog->view[iog->box]);
+    //gtk_container_remove(GTK_CONTAINER(container), iog->view[iog->box]->widget);
+    delete iog->view[iog->box]; //View(iog->view[iog->box]);
     iog->view[iog->box]=NULL;
   }
   

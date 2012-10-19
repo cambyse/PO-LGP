@@ -28,7 +28,8 @@ struct Variable {
   uint id;              ///< unique identifyer
   MT::String name;      ///< Variable name
   uint revision;        ///< revision (= number of write accesses) number //TODO: make the revision and the s->cond ONE thing!
-  
+  RWLock rwlock;        ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
+
   Variable(const char* name);
   virtual ~Variable();
   
@@ -44,6 +45,7 @@ struct Variable {
   //-- info
   int lockState(); // 0=no lock, -1=write access, positive=#readers
   uint get_revision(){ readAccess(NULL); uint r=revision; deAccess(NULL); return r; }
+  struct FieldRegistration& get_field(uint i) const;
 };
 
 

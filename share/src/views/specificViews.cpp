@@ -82,13 +82,6 @@ void MeshView::glDraw() {
 
 REGISTER_VIEW(OrsView, ors::Graph);
 
-OrsView::OrsView():View() {
-}
-
-// OrsView::OrsView(FieldRegistration* field, GtkWidget *container):View(field) {
-//   gtkNewGl(container);
-// }
-
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(10.,-15.,8.);
@@ -98,9 +91,11 @@ void OrsView::glInit() {
 }
 
 void OrsView::glDraw() {
-  ors::Graph *ors = (ors::Graph*) object;
+  if(objectLock) objectLock->readLock();
+  orsCopy = *( (ors::Graph*) object );
+  if(objectLock) objectLock->unlock();
   glStandardScene(NULL);
-  ors->glDraw();
+  orsCopy.glDraw();
 }
 
 #endif

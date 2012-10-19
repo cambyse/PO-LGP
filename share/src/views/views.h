@@ -12,13 +12,14 @@ typedef struct _GtkWidget GtkWidget;
 //
 
 struct View {
+  struct sView *s;
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   struct OpenGL *gl;    //which gl has this view created?
   struct ViewRegistration *info; //the registration info for this view type
+  RWLock *objectLock;
   
   View();
-  View(void* _object);
   ~View();
 
   virtual void write(std::ostream& os) {} //writing into a stream
@@ -83,7 +84,7 @@ ViewRegistration* getViewByName(const char *name);
 
 // general generation of a new view (all others call this)
 template<class T>
-View* newViewBase(T* data, ViewRegistration *vi, GtkWidget *container){
+View* newViewBase(T* object, ViewRegistration *vi, GtkWidget *container){
   if(!vi){
     ViewRegistrationL vis=getViews(typeid(T).name());
     if(!vis.N){
@@ -95,7 +96,7 @@ View* newViewBase(T* data, ViewRegistration *vi, GtkWidget *container){
   cout <<"Creating new view '" <<vi->name
        <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
   View *v = vi->newInstance();
-  v->object = data;
+  v->object = object;
   v->gtkNew(container);
   return v;
 }

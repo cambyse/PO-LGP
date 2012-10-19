@@ -28,17 +28,17 @@
 BirosInfo *global_birosInfo=NULL;
 
 BirosInfo& birosInfo(){
-  static Mutex lockBirosInfo;
   static bool currentlyCreating=false;
   if(currentlyCreating) return *((BirosInfo*) NULL);
   if(!global_birosInfo) {
-    lockBirosInfo.lock();
+    static Mutex m;
+    m.lock();
     if(!global_birosInfo) {
       currentlyCreating=true;   
       global_birosInfo = new BirosInfo();
       currentlyCreating=false;
     }  
-    lockBirosInfo.unlock();
+    m.unlock();
   }
   return *global_birosInfo;
 }
@@ -136,14 +136,14 @@ Variable::~Variable() {
 
 int Variable::readAccess(Process *p) {
   birosInfo().acc->queryReadAccess(this, p);
-  s->rwlock.readLock();
+  rwlock.readLock();
   birosInfo().acc->logReadAccess(this, p);
   return revision;
 }
 
 int Variable::writeAccess(Process *p) {
   birosInfo().acc->queryWriteAccess(this, p);
-  s->rwlock.writeLock();
+  rwlock.writeLock();
   revision++;
   s->cond.setValue(revision);
   birosInfo().acc->logWriteAccess(this, p);
@@ -153,7 +153,7 @@ int Variable::writeAccess(Process *p) {
 }
 
 int Variable::deAccess(Process *p) {
-  if(s->rwlock.state == -1) { //log a revision after write access
+  if(rwlock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
     birosInfo().acc->logWriteDeAccess(this,p);
@@ -161,7 +161,7 @@ int Variable::deAccess(Process *p) {
     birosInfo().acc->logReadDeAccess(this,p);
   }
   int rev=revision;
-  s->rwlock.unlock();
+  rwlock.unlock();
   return rev;
 }
 
@@ -178,7 +178,11 @@ uint Variable::waitForRevisionGreaterThan(uint rev) {
 }
 
 int Variable::lockState() {
-  return s->rwlock.state;
+  return rwlock.state;
+}
+
+FieldRegistration& Variable::get_field(uint i) const{
+  return *s->fields(i);
 }
 
 void sVariable::serializeToString(MT::String &string) const {
@@ -300,16 +304,16 @@ void Process::threadListenTo(const VariableL &signalingVars) {
 }
 
 void Process::threadListenTo(Variable *v) {
-  v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
+  v->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->s->listeners.setAppend(this);
-  v->s->rwlock.unlock();
+  v->rwlock.unlock();
   s->listensTo.setAppend(v);
 }
 
 void Process::threadStopListenTo(Variable *v){
-  v->s->rwlock.writeLock(); //don't want to increase revision and broadcast!
+  v->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->s->listeners.removeValue(this);
-  v->s->rwlock.unlock();
+  v->rwlock.unlock();
   s->listensTo.removeValue(v);
 }
 

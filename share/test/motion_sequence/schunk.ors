@@ -5,7 +5,7 @@
 ## Qlin file
 ###########
 
-QlinFile schunk.ors.qlin
+QlinFile ../../configurations/schunk.ors.qlin
 
 ###########
 ## base
@@ -86,7 +86,7 @@ shape (m5){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306920_p
 shape (m6){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306920_prl_10010_x.tri' color=[.5 .5 .5] }
 shape (m7){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306915_prl_8010_x.tri' color=[.5 .5 .5] }
 shape (m8){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306915_prl_8010_x.tri' color=[.5 .5 .5] }
-shape (m9){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306910_prl_6010_x.tri' color=[.5 .5 .5] }
+shape m9_mesh(m9){ rel=<d(90 0 0 1)>, contact, type=3, mesh='schunk_3d/schunk_0306910_prl_6010_x.tri' color=[.5 .5 .5] }
 
 shape (m3){ rel=<t(0 0 .11)    d(180 0 1 0)>, contact, type=3, mesh='schunk_3d/3385031117_vbe_1212_x.tri' }
 shape (m4){ rel=<t(-.08 .0 .0) d(-90 0 1 0)>, contact, type=3, mesh='schunk_3d/3385038117_vbe_1210_x.tri' }
@@ -94,7 +94,7 @@ shape (m5){ rel=<t(0 0 .1)     d(180 0 1 0)>, contact, type=3, mesh='schunk_3d/3
 shape (m6){ rel=<t(-.07 .0 .0) d(-90 0 1 0)>, contact, type=3, mesh='schunk_3d/3385038417_vbe_1008_x.tri' }
 shape (m7){ rel=<t(0 0 -.08)    d(180 0 0 1)>, contact, type=3, mesh='schunk_3d/3385031517_vbe_0808_x.tri' }
 shape (m8){ rel=<t(-.055 .0 .00) d(90 0 1 0) d(180 1 0 0)>, contact, type=3, mesh='schunk_3d/3385038717_vbe_0806_x.tri' }
-shape (m9){ rel=<t(.0 .0 -.08)  d(180 0 0 1)>, contact, type=3, mesh='schunk_3d/3385031717_vbe_0606_x.tri' }
+shape m9_2ndmesh(m9){ rel=<t(.0 .0 -.08)  d(180 0 0 1)>, contact, type=3, mesh='schunk_3d/3385031717_vbe_0606_x.tri' }
 
 
 shape ring   (m9) { rel=<d(180 1 0 0) t(0 0 0.1034) d(-90 0 0 1)>, contact, type=4, size=[0 0 .008 .04], color=[.1 .1 .1] }
@@ -105,9 +105,9 @@ shape wrist  (m9) { rel=<d(180 1 0 0) t(0 0 0.1525) d(-90 0 0 1)>, contact, type
 #shape (knuck2) { type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(90 0 1 0)>, mesh='schunk_3d/SDH_Gelenk_Finger1_x.tri' color=[.5 .5 .5] }
 #shape (knuck3) { type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(90 0 1 0)>, mesh='schunk_3d/SDH_Gelenk_Finger1_x.tri' color=[.5 .5 .5] }
 
-shape (fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
-shape (fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
-shape (fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape fing1(fing1)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape fing2(fing2)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape fing3(fing3)  { contact, type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
 
 shape tip1Shape(tip1)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
 shape tip2Shape(tip2)   { contact, type=3, rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
@@ -151,9 +151,9 @@ shape fingNormal1(fing1)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.0
 shape fingNormal2(fing2)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0]}
 shape fingNormal3(fing3)   { rel=<t(0 -.014 .055) d(90 1 0 0)>, type=5, size=[.01 .0 .0 .0] color = [1 0 0] }
 
-#shape fingNor(fing2)   { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
+#shape fingNor(fing2)      { rel=<t(0 -.016 .04) d(90 1 0 0)>, type=1, size=[.0 .0 .05 .003] color = [0 0 0] }
 
-shape graspCenter(m9)     { rel=<t(0 -.006 -.32)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }
+shape graspCenter(m9)      { rel=<t(0 -.006 -.32)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }
 
 
 
@@ -161,8 +161,8 @@ shape graspCenter(m9)     { rel=<t(0 -.006 -.32)>, type=5, size=[.05 .0 .0 .5] c
 ## poles
 ###########
 
-shape pole1 (base){ contact, type=0, size=[.05 .05 .60 .05], rel=<t(.30 -.25 0) d(25 0 0 1) d(-40 1 0 0) t(0 .0 .3)> }
-shape pole2 (base){ contact, type=0, size=[.05 .05 .7 .03], rel=<t(-.30 -.25 0) d(-45 0 0 1) d(-43 1 0 0) t(0 .0 .35)> }
+shape pole1 (base) { contact, type=0, size=[.05 .05 .60 .05], rel=<t(.30 -.25 0) d(25 0 0 1) d(-40 1 0 0) t(0 .0 .3)> }
+shape pole2 (base) { contact, type=0, size=[.05 .05 .7 .03], rel=<t(-.30 -.25 0) d(-45 0 0 1) d(-43 1 0 0) t(0 .0 .35)> }
 
 shape back1 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(-.0565  .0565 0) t(0 0 .425)> }
 shape back2 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(25 0 0 1) d(15 1 0 0) t(-.0565 -.0565 0) t(0 0 .425)> }
@@ -171,11 +171,41 @@ shape back4 (base) { contact, type=0, size=[.05 .05 .85 .05], rel=<t(0 .25 0) d(
 
 
 ###########
-## old objects
+## objects
 ###########
 
+
 body  OBJECTS{ X=<t(.0 -.8 .69)> }
+body  OBJECTS2{ X=<t(.0 -.8 .69)> }
 
-shape target1(OBJECTS){ contact, type=0, rel=<t( .25 .2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
-shape target2(OBJECTS){ contact, type=4, rel=<t( .25 -.2 .055) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape table(OBJECTS){ contact, type=0, rel=<t(0.16 0.1 -.02)>, size=[1.04 .52 .04 .5], color=[.0 .0 .0] }
 
+#shape cyl1(OBJECTS) { contact, type=4, rel=<t( .2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape cyl2(OBJECTS) { contact, type=4, rel=<t( -.2 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape box1(OBJECTS) { contact, type=0, rel=<t( .0 .2 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+#shape box2(OBJECTS) { contact, type=0, rel=<t( .0 .0 .055)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] } 
+
+shape thing1(OBJECTS2) { contact, type=4, rel=<t( .0 .2 .055)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+shape thing2(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .045], color=[.3 .9 .1] }
+#shape thing3(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+#shape thing4(OBJECTS) { contact, type=4, rel=<t( .2 .2 .255)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }
+
+#body  o1{ X=<t(-.4 -.8 .8)> } ##are these really used ?? or remove?  Nikolay: used in gui module realize objects
+#shape S1(o1){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+
+#body  o2{ X=<t(-.4 -.8 .8)> }
+#shape S2(o2){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+
+#body  o3{ X=<t(-.4 -.8 .8)> }
+#shape S3(o3){ type=4,  size=[.0 .0 .108 .0375], color=[.3 .2 .1] }
+
+
+###########
+## marker
+###########
+
+##shape tennisBall  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+##shape tennisBall2  (m9) { rel=<d(180 1 0 0) t(0 .078 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+##shape marker2  (m9) { rel=<d(180 1 0 0) t(0 -.065 0.123)>, contact, type=1, size=[0 0 0 .02] color=[1 .7 .0] }
+#
+#body pointclouds { type=6 }

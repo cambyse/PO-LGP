@@ -1,6 +1,6 @@
 #include <motion/motion.h>
 #include <motion/FeedbackControlTasks.h>
-#include <biros/control.h>
+#include <biros/biros_views.h>
 
 struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
@@ -33,10 +33,10 @@ int main(int argn, char** argv){
   // processes
   Process* ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
 
-  b::openInsideOut();
+  new OrsView(geometricState.ors, &geometricState.rwlock);
+  new PoseView(hardwareReference.q_reference, &hardwareReference.rwlock);
+  //new InsideOut();
 
-  MT::wait(10.);
-  
   MyTask myTask;
   motionPrimitive.writeAccess(NULL);
   motionPrimitive.mode = MotionPrimitive::feedback;

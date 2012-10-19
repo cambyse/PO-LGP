@@ -6,9 +6,11 @@ PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
 }
 
-PoseView::PoseView(FieldRegistration* field, GtkWidget *container):View(field) {
+PoseView::PoseView(arr& q, RWLock *lock, GtkWidget *container):View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors
-  gtkNewGl(container);
+  object = &q;
+  objectLock = lock;
+  gtkNew(container);
 }
 
 void PoseView::glInit() {
@@ -20,7 +22,9 @@ void PoseView::glInit() {
 }
 
 void PoseView::glDraw() {
-  arr q = *(arr*) ((FieldRegistration*)object)->p; //copy!
+  if(objectLock) objectLock->readLock();
+  arr q = *(arr*) object;
+  if(objectLock) objectLock->unlock();
   geo.pull();
   uint n=geo().ors.getJointStateDimension();
   if(q.nd==1){

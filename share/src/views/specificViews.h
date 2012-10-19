@@ -2,6 +2,7 @@
 #define SPECIFICVIEWS_H_
 
 #include "views.h"
+#include <MT/ors.h>
 
 //===========================================================================
 
@@ -30,6 +31,8 @@ struct RgbView:View{
 namespace ors{ struct Mesh; }
 
 struct MeshView:View{
+  MeshView():View(){}
+  MeshView(ors::Mesh& mesh, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&mesh; gtkNew(container); }
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
@@ -39,7 +42,9 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
-  OrsView();
+  ors::Graph orsCopy;
+  OrsView():View(){}
+  OrsView(ors::Graph& ors, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&ors; objectLock=_lock; gtkNew(container); }
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

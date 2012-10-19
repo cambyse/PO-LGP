@@ -1,8 +1,6 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
-//#include <views/views.h>
-#include <MT/gtk.h>
-#include <biros/control.h>
+#include <biros/biros_views.h>
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
@@ -19,7 +17,9 @@ int main(int argn, char** argv){
   Process *planner = newMotionPlanner(action, frame0, frame1, motionPrimitive);
 
 //   b::dump();  MT::wait();
-  b::openInsideOut();
+  new OrsView(geometricState.ors, &geometricState.rwlock);
+  new PoseView(hardwareReference.q_reference, &hardwareReference.rwlock);
+  new InsideOut();
   
   cout <<"** setting grasp action" <<endl;
   action.writeAccess(NULL);

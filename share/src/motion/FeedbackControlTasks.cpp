@@ -115,7 +115,8 @@ void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
 
 void CloseHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
   TaskVariable *skin = TVs(1);
-  arr skinState = skinPressure->get_y_real(NULL); //TODO specify process
+  arr skinState = ARR(.01,.01,.01,.01,.01,.01);
+  if(skinPressure) skinPressure->get_y_real(NULL); //TODO specify process
   prepare_skin(skin, skinState, true);
 
   count ++;

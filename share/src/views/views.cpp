@@ -40,13 +40,19 @@ ViewRegistrationL& viewRegistrations(){
 // View
 //
 
-View::View():object(NULL), widget(NULL), gl(NULL), info(NULL) {
-  viewPrivateSpace()->lock.writeLock();
-  viewPrivateSpace()->views.append(this);
-  viewPrivateSpace()->lock.unlock();
+struct sView{
+  gint timeoutTag;
+  sView():timeoutTag(0){}
+};
+
+int viewTimeout(void *v){
+  ((View*)v)->gtkUpdate();
+  return 1;
 }
 
-View::View(void* _object):object(_object), widget(NULL), gl(NULL), info(NULL) {
+
+View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) {
+  s = new sView;
   viewPrivateSpace()->lock.writeLock();
   viewPrivateSpace()->views.append(this);
   viewPrivateSpace()->lock.unlock();
@@ -58,8 +64,12 @@ View::~View(){
   viewPrivateSpace()->lock.unlock();
   gtkLock();
   if(widget) gtk_widget_destroy(widget);
-  if(gl) delete gl;
+  if(gl){
+    gtk_timeout_remove(s->timeoutTag);
+    delete gl;
+  }
   gtkUnlock();
+  delete s;
 }
 
 void View::gtkNewText(GtkWidget *container){
@@ -75,7 +85,6 @@ void View::gtkNewText(GtkWidget *container){
   gtkUpdate();
 }
 
-
 void glDrawView(void *classP){
   View *v = (View*) classP;
   v->glDraw();
@@ -87,8 +96,9 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gl->add(glDrawView, this);
   glInit();
-  gl->update();
-  widget = GTK_WIDGET(*((GtkWidget**)gl->s)); //WARNING: knows that sOpenGL has GtkWidget as first member!!
+  gtkLock();
+  s->timeoutTag = gtk_timeout_add(50, viewTimeout, this);
+  gtkUnlock();
 }
 
 void View::gtkUpdate(){

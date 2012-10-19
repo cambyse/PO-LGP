@@ -170,7 +170,7 @@ struct PoseView:View{
   WorkingCopy<GeometricState> geo;
   uint t;
   PoseView();
-  PoseView(struct FieldRegistration* field, GtkWidget *container);
+  PoseView(arr& q, RWLock *lock=NULL, GtkWidget *container=NULL);
   void glInit();
   void glDraw();
   virtual void gtkNew(GtkWidget *container){ gtkNewGl(container); }

@@ -1,5 +1,7 @@
 BASE = ../..
 
+OBJS = main.o behaviors.o
+
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 

@@ -25,10 +25,10 @@ int main(int argn,char** argv) {
 
   b::dump();
 
-  //View *v0 = newView<GenericTextView_FieldInfo>(*v.fields(0));
-  newView<InsideOut>();
-  View *v1 = newView(v.rgb);
-  View *v2 = newView<MeshView>(v.mesh);
+  new InsideOut();                 //create an explicit view
+  View *v2 = new MeshView(v.mesh); //create an explicit view
+  View *v0 = newView<GenericTextView_FieldInfo>(v.get_field(0));  //try to use given template as view
+  View *v1 = newView(v.rgb);       //find a view from the list
 
   //set some values for the variables
   v.set_rgb(ARRAY<byte>(0,0,0), NULL);
@@ -51,9 +51,9 @@ int main(int argn,char** argv) {
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  //View *v4 = newView<GenericTextView_FieldInfo>(*v.fields(0), box);
+  View *v4 = newView<GenericTextView_FieldInfo>(v.get_field(0), box);
   View *v5 = newView(v.rgb, box);
-  View *v6 = newView<MeshView>(v.mesh, box);
+  View *v6 = new MeshView(v.mesh, &v.rwlock, box);
   
   arr X = randn(5,3);
   
@@ -65,6 +65,8 @@ int main(int argn,char** argv) {
     X += .1*randn(5,3);
     MT::wait(.1);
   }
+
+  MT::wait();
   
   return 0;
 }
