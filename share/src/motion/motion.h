@@ -24,55 +24,29 @@ struct GeometricState:Variable {
 };
 
 
-/** \brief Represents single symbolic action. Is associated one-to-one with a MotionPrimitive. */
-struct Action:Variable {
-  //grasp: goto object, close hand, attach shape to hand
-  //reach: goto object or move to location, but do not attach shape
-  enum ActionPredicate { noAction, reach, grasp, place, place_location, openHand, closeHand, homing };
-  
-  FIELD(uint, frameCount);
-  FIELD(ActionPredicate, action);
-  FIELD(bool, executed);
-  FIELD(charp, objectRef1);  //arguments to the relational predicates
-  FIELD(charp, objectRef2);
-  FIELD(arr, locationRef);
-  
-  Action():Variable("Action"), frameCount(0), action(noAction), executed(false), objectRef1(""), objectRef2("") {
-    reg_frameCount(); reg_action(); reg_executed(); reg_objectRef1(); reg_objectRef2(); reg_locationRef();
-  };
-  
-  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
-};
-
-
-/** \brief A keyframe represents a pose at the beginning and end of a motion primitive, that is, in between two symbolic actions. */
-struct MotionKeyframe:Variable {
-  FIELD(uint, frameCount);
-  FIELD(arr, x_estimate);
-  FIELD(double, duration_estimate);
-  FIELD(bool, converged);
-  
-  MotionKeyframe():Variable("MotionKeyFrame"), frameCount(0), converged(false) {
-    reg_frameCount(); reg_x_estimate(); reg_duration_estimate(); reg_converged();
-  };
-  void get_poseView(arr& x) { x=x_estimate; }
-};
-
-
 /** \brief A motion primitive is the motion-grounding of a symbolic action. It can be a feedback control task, or a planned motion.
  In the first case, the MotionPrimitive is given a FeedbackControlTaskAbstraction, which implements the necessary task variable updates for a feedback controller.
  In the planned case, a motion planner first generates a trajectroy (q_plan), then this is followed by the controller */
 struct MotionPrimitive:Variable {
-  enum MotionMode{ stop=0, followPlan, feedback, done  };
+  enum MotionMode{ none=0, planned, feedback, done  };
+  enum ActionPredicate { noAction, reach, grasp, place, place_location, openHand, closeHand, homing };
 
-  FIELD(uint, frameCount);
+  FIELD(uint, count);
   FIELD(MotionMode, mode);
-  
-  //in case of followPlan
-  FIELD(MotionKeyframe*, frame0);
-  FIELD(MotionKeyframe*, frame1);
+
+  //-- symbolic action
+  FIELD(ActionPredicate, action);
+  FIELD(charp, objectRef1);  //arguments to the relational predicates
+  FIELD(charp, objectRef2);
+  FIELD(arr, locationRef);
+
+  //-- motion
+  //in case of planned
+  FIELD(arr, frame0);
+  FIELD(arr, frame1);
   FIELD(arr, q_plan);
   FIELD(double, tau);
+  FIELD(double, duration);
   FIELD(bool, planConverged);
   FIELD(uint, iterations_till_convergence);
   FIELD(double, cost);
@@ -87,20 +61,24 @@ struct MotionPrimitive:Variable {
   //only for info - to enable a view
   //FIELD(TaskVariableList, TVs);
   
-  MotionPrimitive():Variable("MotionPrimitive"),
-      frameCount(0), 
-      mode(stop),
-      frame0(NULL), frame1(NULL), planConverged(false),
+  MotionPrimitive()
+    :Variable("MotionPrimitive"),
+      count(0),
+      mode(none),
+      action(noAction), objectRef1(""), objectRef2(""),
+      planConverged(false),
       feedbackControlTask(NULL),
       forceColLimTVs(true) {
-	reg_frameCount(); reg_mode(); reg_frame0(); reg_frame1(); reg_q_plan(); reg_tau(); reg_planConverged();
-	reg_iterations_till_convergence(); reg_cost();
-	reg_feedbackControlTask(); reg_fixFingers(); reg_forceColLimTVs();
-      };
+    reg_count(); reg_mode();
+    reg_action(); reg_objectRef1(); reg_objectRef2(); reg_locationRef();
+    reg_frame0(); reg_frame1(); reg_q_plan(); reg_tau(); reg_duration(); reg_planConverged();
+    reg_iterations_till_convergence(); reg_cost();
+    reg_feedbackControlTask(); reg_fixFingers(); reg_forceColLimTVs();
+  };
   
-  void get_poseView(arr& q) { q=q_plan; }
   void setClearPlanTask(const arr& frame0_pose, Process *p);
   void setFeedbackTask(FeedbackControlTaskAbstraction& task, bool _forceColLimTVs, bool _fixFingers, Process *p);
+  void setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
 };
 
 
@@ -119,7 +97,6 @@ struct HardwareReference:Variable {
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), motionPrimitiveRelativeTime(0.), readHandFromReal(true) {
     reg_q_reference(); reg_q_real(); reg_v_real(); reg_hardwareRealTime(); reg_readHandFromReal(); reg_motionPrimitiveRelativeTime();
   };
-  void get_poseView(arr& q) { q=q_reference; }
 };
 
 
@@ -129,20 +106,17 @@ struct HardwareReference:Variable {
 struct MotionFuture:Variable {
   FIELD(uint, currentFrame);
   FIELD(bool, done);
-  FIELD(MT::Array<Action*>, actions)
   FIELD(MT::Array<MotionPrimitive*>, motions);
-  FIELD(MT::Array<MotionKeyframe*>, frames);
   FIELD(MT::Array<MotionPlanner*>, planners);
   
   MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {
-    reg_currentFrame(); reg_actions(); reg_motions(); reg_frames(); reg_planners();
+    reg_currentFrame(); reg_motions(); reg_planners();
   };
   
-  void appendNewAction(const Action::ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
+  void appendNewAction(const MotionPrimitive::ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
   void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
   uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
   MotionPrimitive *getCurrentMotionPrimitive(Process *p){ if(!getTodoFrames(p)) return NULL; readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
-  Action *getCurrentAction(Process *p){ readAccess(p); Action *a=actions(currentFrame); deAccess(p); return a; }
 };
 
 
@@ -154,7 +128,7 @@ struct MotionFuture:Variable {
 //either MotionFuture or MotionPrimitive must be set, one can be zero;
 Process* newMotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
 
-Process* newMotionPlanner(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
+Process* newMotionPlanner(MotionPrimitive&);
 
 Process* newActionProgressor(MotionFuture&);
 

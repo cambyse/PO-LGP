@@ -23,7 +23,7 @@ Some behaviors are sequential like a finite state machine.
 void wait(double sec){
   VAR(MotionPrimitive);
   VAR(JoystickState);
-  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::none, NULL);
   
   double time=MT::realTime();
   for(;;){
@@ -44,7 +44,7 @@ void joystick(){
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
   
-  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::none, NULL);
 }
 
 void homing(bool fixFingers){
@@ -66,7 +66,7 @@ void homing(bool fixFingers){
     if(_JoystickState->get_state(NULL)(0)&0x30) break;
   }
   
-  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::none, NULL);
 }
 
 void reach(const char* shapeName, const arr& posGoal, double maxVel){
@@ -167,7 +167,7 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
   VAR(PerceptionOutput);
   VAR(GeometricState);
   VAR(JoystickState);
-  _MotionPrimitive->set_mode(MotionPrimitive::stop, NULL);
+  _MotionPrimitive->set_mode(MotionPrimitive::none, NULL);
 
   for(;;){
     _PerceptionOutput->readAccess(NULL);
@@ -217,7 +217,7 @@ void waitForEmptyQueue(MotionFuture *motionFuture){
   }
 }
 
-void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, const char* belowToShape){
+void pickOrPlaceObject(MotionPrimitive::ActionPredicate action, const char* objShape, const char* belowToShape){
   VAR(MotionFuture);
   
   waitForSmallMotionQueue(_MotionFuture, 1);
@@ -227,8 +227,8 @@ void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, con
   //waitForSmallMotionQueue(_MotionFuture, 1);
   //waitForEmptyQueue(_MotionFuture);
   
-  if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NoArr, NULL);
-  if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NoArr, NULL);
+  if(action==MotionPrimitive::grasp) _MotionFuture->appendNewAction(MotionPrimitive::closeHand, NULL, NULL, NoArr, NULL);
+  if(action==MotionPrimitive::place) _MotionFuture->appendNewAction(MotionPrimitive::openHand, NULL, NULL, NoArr, NULL);
   
   //waitForEmptyQueue(_MotionFuture);
 }

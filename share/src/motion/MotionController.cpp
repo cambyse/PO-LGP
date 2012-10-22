@@ -87,7 +87,7 @@ void MotionController::step() {
 
   MotionPrimitive::MotionMode mode=motionPrimitive->get_mode(this);
   
-  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) { //nothing to do -> stop
+  if (mode==MotionPrimitive::none || mode==MotionPrimitive::done) { //nothing to do -> stop
     hardwareReference->writeAccess(this);
     hardwareReference->v_reference.setZero();
     hardwareReference->motionPrimitiveRelativeTime = 0.;
@@ -95,7 +95,7 @@ void MotionController::step() {
     return;
   }
   
-  if (mode==MotionPrimitive::followPlan) {
+  if (mode==MotionPrimitive::planned) {
     CHECK(motionPrimitive, "please set motionPrimitive before launching MotionPlanner");
     
     bool fixFingers = motionPrimitive->get_fixFingers(this);

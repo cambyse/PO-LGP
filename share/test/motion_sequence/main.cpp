@@ -24,12 +24,12 @@ int main(int argn,char** argv){
 
   //pick-and-place loop
   for(uint k=0;k<2;k++){
-    pickOrPlaceObject(Action::grasp, "thing2", NULL);
-    pickOrPlaceObject(Action::place, "thing2", "thing1");
+    pickOrPlaceObject(MotionPrimitive::grasp, "thing2", NULL);
+    pickOrPlaceObject(MotionPrimitive::place, "thing2", "thing1");
 
 
-    pickOrPlaceObject(Action::grasp, "thing1", NULL);
-    pickOrPlaceObject(Action::place, "thing1", "thing2");
+    pickOrPlaceObject(MotionPrimitive::grasp, "thing1", NULL);
+    pickOrPlaceObject(MotionPrimitive::place, "thing1", "thing2");
   }
 
   MT::wait(1300);

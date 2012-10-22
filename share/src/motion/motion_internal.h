@@ -19,11 +19,9 @@ struct MotionController:Process {
 struct MotionPlanner:Process {
   struct sMotionPlanner *s;
   
-  //ActionPlan *actionPlan; TODO: in future use an action plan instead of just the next action
-  Action *action;
   MotionPrimitive *motionPrimitive;
   
-  MotionPlanner(Action&, MotionKeyframe&, MotionKeyframe&, MotionPrimitive&);
+  MotionPlanner(MotionPrimitive&);
   ~MotionPlanner();
   void open();
   void step();
