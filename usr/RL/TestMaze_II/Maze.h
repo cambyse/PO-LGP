@@ -9,6 +9,7 @@
 #define MAZE_H_
 
 #include <QtGui/QGraphicsView>
+#include <QtSvg/QGraphicsSvgItem>
 #include <map>
 #include <tuple>
 
@@ -24,9 +25,10 @@ public:
 
     Maze(const int& x_dimension, const int& y_dimension);
 
-    virtual ~Maze() {}
+    virtual ~Maze();
 
-    void render(QGraphicsView * view); ///< Renders the complete maze.
+    void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
+    void render_update(QGraphicsView * view);
 
     void perform_transition(const action& a);
 
@@ -38,6 +40,8 @@ private:
     int y_dim; ///< y dimension.
     state current_state;
     std::map< std::tuple<state,action>, std::tuple<state,double> > transition_map;
+
+    QGraphicsSvgItem *agent, *button, *smiley;
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);

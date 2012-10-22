@@ -2,7 +2,8 @@ TEMPLATE = app
 TARGET = TestMaze_II
 QT += core \
     gui
-HEADERS += util.h \
+HEADERS += ValueIteration.h \
+    util.h \
     Maze.h \
     testmaze_ii.h
 SOURCES += Maze.cpp \

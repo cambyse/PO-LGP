@@ -12,12 +12,20 @@
 using std::make_tuple;
 using std::get;
 
-Maze::Maze(const int& x_dimension, const int& y_dimension): x_dim(x_dimension), y_dim(y_dimension) {
+Maze::Maze(const int& x_dimension, const int& y_dimension):
+        x_dim(x_dimension), y_dim(y_dimension),
+        agent(NULL), button(NULL), smiley(NULL) {
     create_transitions(0);
     current_state = make_tuple(x_dim/2,y_dim/2);
 }
 
-void Maze::render(QGraphicsView * view) {
+Maze::~Maze() {
+    delete agent;
+    delete button;
+    delete smiley;
+}
+
+void Maze::render_initialize(QGraphicsView * view) {
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
     if(scene==NULL) {
@@ -34,8 +42,40 @@ void Maze::render(QGraphicsView * view) {
         }
     }
 
-    scene->addEllipse( get<0>(current_state) + 0.1, get<1>(current_state)+ 0.1, 0.7, 0.7, QPen(QColor(0,0,0)), QBrush(QColor(0,230,0)) );
+    // render button
+    if(!button) {
+        button = new QGraphicsSvgItem("./button.svg");
+        button->setScale(0.3);
+        if(x_dim>0 || y_dim>0) {
+            button->setPos(x_dim-1, y_dim-1);
+        } else {
+            button->setPos(0, 0);
+        }
+    }
+    scene->addItem(button);
 
+    // render smiley
+    if(!smiley) {
+        smiley = new QGraphicsSvgItem("./smiley.svg");
+        smiley->setScale(0.3);
+        smiley->setPos(0, 0);
+    }
+    scene->addItem(smiley);
+
+    // render agent
+    if(!agent) {
+        agent = new QGraphicsSvgItem("./agent.svg");
+        agent->setScale(0.3);
+    }
+    agent->setPos(get<0>(current_state), get<1>(current_state));
+    scene->addItem(agent);
+//    scene->addEllipse( get<0>(current_state) + 0.1, get<1>(current_state)+ 0.1, 0.7, 0.7, QPen(QColor(0,0,0)), QBrush(QColor(0,230,0)) );
+
+    rescale_scene(view);
+}
+
+void Maze::render_update(QGraphicsView * view) {
+    agent->setPos(get<0>(current_state), get<1>(current_state));
     rescale_scene(view);
 }
 
