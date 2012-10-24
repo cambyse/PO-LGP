@@ -43,6 +43,10 @@ BirosInfo& birosInfo(){
   return *global_birosInfo;
 }
 
+struct BirosInfoDestructorDemon{
+  ~BirosInfoDestructorDemon(){ if(global_birosInfo) delete global_birosInfo; global_birosInfo=NULL; }
+};
+
 //===========================================================================
 //
 // helpers
@@ -378,11 +382,14 @@ void* sProcess::staticThreadMain(void *_self) {
     proc->state.unlock();
     
     if(waitForTic) s->metronome->waitForTic();
-    
+
+    birosInfo().acc->logStepBegin(proc);
     s->timer.cycleStart();
     proc->step(); //virtual step routine
     proc->step_count++;
     s->timer.cycleDone();
+    birosInfo().acc->logStepEnd(proc);
+
     proc->state.lock();
     proc->state.broadcast();
     proc->state.unlock();
@@ -456,8 +463,13 @@ void close(const ProcessL& P) {
 //
 
 BirosInfo::BirosInfo():Variable("Biros") {
-  acc = new sAccessController;
+  acc = new sBirosEventController;
 };
+
+BirosInfo::~BirosInfo(){
+  //acc -> dumpEventList();
+  delete acc;
+}
 
 Process *BirosInfo::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);

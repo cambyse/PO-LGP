@@ -21,4 +21,12 @@ template<class V, class T> V* newBirosView(Variable& v, T& object, GtkWidget* co
   return new V(object, &v.rwlock, container);
 }
 
+struct EventControlView:View{
+  struct sEventControl *s;
+  EventControlView(GtkWidget* container=NULL);
+  ~EventControlView();
+  void gtkNew(GtkWidget *container=NULL);
+  void gtkUpdate();
+};
+
 #endif

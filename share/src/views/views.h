@@ -31,6 +31,7 @@ struct View {
 
   void gtkNewGl(GtkWidget *container);   //implementation of gtkNew using the glInit/glDraw virtuals
   void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read virtuals
+  void loop(uint msec);
 };
 
 

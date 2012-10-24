@@ -11,7 +11,7 @@
 //
 
 struct AccessController {
-  struct sAccessController *s;
+  struct sBirosEventController *s;
 
   //all accesses
   ofstream* eventsFile;

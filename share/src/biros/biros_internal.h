@@ -52,38 +52,41 @@ struct sProcess {
 
 //===========================================================================
 //
-// information about a single access event
+// logging and blocking events
 //
 
-struct AccessEvent{
+struct BirosEvent{
   const Variable *var;
   const Process *proc;
-  enum AccessType{ read, write } type;
+  enum EventType{ read, write, stepBegin, stepEnd } type;
   uint revision;
   uint procStep;
-  AccessEvent(const Variable *v, const Process *p, AccessType _type, uint _revision, uint _procStep):
-    var(v), proc(p), type(_type), revision(_revision), procStep(_procStep){}
+  double time;
+  BirosEvent(const Variable *v, const Process *p, EventType _type, uint _revision, uint _procStep, double _time):
+    var(v), proc(p), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
-typedef MT::Array<AccessEvent*> AccessEventL;
+typedef MT::Array<BirosEvent*> BirosEventL;
 
-struct sAccessController{
-  bool enableAccessLog;
+struct sBirosEventController{
+  bool enableEventLog;
   bool enableDataLog;
-  bool replay;
-  RWLock eventsLock;
+  bool enableReplay;
 
-  AccessEventL blockedAccesses;
-  AccessEventL events;
-  ConditionVariable blockMode;
+  BirosEventL events;
+  RWLock eventsLock;
+  ConditionVariable blockMode; //0=all_run, 1=next_runs, 2=none_runs
+  BirosEventL blockedEvents;
+
   ofstream* eventsFile;
 
-  sAccessController();
-  ~sAccessController();
+  sBirosEventController();
+  ~sBirosEventController();
 
   struct LoggerVariableData* getVariableData(const Variable *v);
 
   //writing into a file
+  void writeEventList(ostream& os, bool blockedEvents, uint max=0, bool clear=false);
   void dumpEventList();
 
   //methods called during write/read access from WITHIN biros
@@ -93,7 +96,9 @@ struct sAccessController{
   void logReadDeAccess(const Variable *v, const Process *p);
   void logWriteAccess(const Variable *v, const Process *p);
   void logWriteDeAccess(const Variable *v, const Process *p);
-  
+  void logStepBegin(const Process *p);
+  void logStepEnd(const Process *p);
+
   MT::Array<ConditionVariable*> breakpointQueue;
   Mutex breakpointMutex;
   void breakpointSleep(); //the caller goes to sleep

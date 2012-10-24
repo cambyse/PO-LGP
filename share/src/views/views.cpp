@@ -96,8 +96,12 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gl->add(glDrawView, this);
   glInit();
+  loop(50);
+}
+
+void View::loop(uint msec){
   gtkLock();
-  s->timeoutTag = gtk_timeout_add(50, viewTimeout, this);
+  s->timeoutTag = gtk_timeout_add(msec, viewTimeout, this);
   gtkUnlock();
 }
 

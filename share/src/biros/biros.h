@@ -197,14 +197,15 @@ struct Parameter_typed:Parameter {
 //
 
 struct BirosInfo:Variable {
-  struct sAccessController *acc;
+  struct sBirosEventController *acc;
 
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
 
   BirosInfo();
-  
+  ~BirosInfo();
+
   Process *getProcessFromPID();
   
   template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required = false) {
@@ -256,6 +257,8 @@ struct BirosInfo:Variable {
   void dump(); //dump everything -- for debugging
 
   //methods called by the user
+  void enableAccessLog();
+  void dumpAccessLog();
   void blockAllAccesses();
   void unblockAllAccesses();
   void stepToNextAccess();

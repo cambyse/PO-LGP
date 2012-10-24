@@ -1,5 +1,4 @@
 #include <biros/biros.h>
-#include <biros/control.h>
 #include <MT/util.h>
 #include <MT/array_t.cxx>
 
@@ -62,7 +61,7 @@ void testLoop(){
 
 //===========================================================================
 //
-// test scheduling via variables
+// test listening to variables
 //
 
 struct Int:Variable{
@@ -91,11 +90,14 @@ struct Adder:public Process{
   }
 };
 
-void testScheduling(){
+void testListening(){
+  birosInfo().enableAccessLog();
+  EventControlView v;
+
   Int i1,i2,i3;
-  Adder a1("1", &i1, NULL);
-  Adder a2("2", &i1, &i2);
-  Adder a3("3", &i2, &i3);
+  Adder a1("adder1", &i1, NULL);
+  Adder a2("adder2", &i1, &i2);
+  Adder a3("adder3", &i2, &i3);
   
   a1.threadLoopWithBeat(.5);
   a2.threadListenTo(LIST<Variable>(i1));
@@ -106,7 +108,10 @@ void testScheduling(){
   a1.threadClose();
   a2.threadClose();
   a3.threadClose();
+
+  birosInfo().dumpAccessLog();
 }
+
 
 
 //===========================================================================
@@ -160,8 +165,6 @@ void testMultiAccess(){
   MT::wait(1.);
   for(uint i=0;i<procs.N;i++) procs(i).threadClose();
 
-  b::dump();
-  
   for(uint i=0;i<vars.N;i++) cout <<vars(i).x <<' ';
   cout <<endl;
 }
@@ -175,10 +178,13 @@ void testMultiAccess(){
 int main(int argc, char *argv[]){
   MT::initCmdLine(argc,argv);
 
-  //testLoop();
-  testScheduling();
-  //testMultiAccess();
-  
+  uint mode = MT::getParameter("mode",1);
+  switch(mode){
+  case 0: testLoop(); break;
+  case 1: testListening(); break;
+  case 2: testMultiAccess(); break;
+  }
+
   return 0;
 }
 
