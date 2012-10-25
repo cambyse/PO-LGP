@@ -91,7 +91,7 @@ struct Adder:public Process{
 };
 
 void testListening(){
-  birosInfo().enableAccessLog();
+  biros().enableAccessLog();
   EventControlView v;
 
   Int i1,i2,i3;
@@ -109,7 +109,7 @@ void testListening(){
   a2.threadClose();
   a3.threadClose();
 
-  birosInfo().dumpAccessLog();
+  biros().dumpAccessLog();
 }
 
 

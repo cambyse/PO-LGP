@@ -1,5 +1,4 @@
 #include <biros/biros.h>
-#include <biros/control.h>
 #include <views/views.h>
 #include <MT/ors.h>
 #include <MT/gtk.h>
@@ -18,12 +17,12 @@ int main(int argn,char** argv) {
   
   dumpViews(); //before anything has been done!
   //b::openInsideOut();
-  birosInfo();
+  biros();
   gtkCheckInitialized();
   
   ExampleVar v;
 
-  b::dump();
+  biros().dump();
 
   new InsideOut();                 //create an explicit view
   View *v2 = new MeshView(v.mesh); //create an explicit view

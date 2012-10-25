@@ -33,10 +33,10 @@ MotionPlanner::~MotionPlanner() {
 }
 
 void MotionPlanner::open() {
-  s->verbose = birosInfo().getParameter<uint>("MotionPlanner_verbose", this);
-  arr W = birosInfo().getParameter<arr>("MotionPlanner_W", this);
-  uint T = birosInfo().getParameter<uint>("MotionPlanner_TrajectoryLength", this);
-  double duration = birosInfo().getParameter<double>("MotionPlanner_TrajectoryDuration", this);
+  s->verbose = biros().getParameter<uint>("MotionPlanner_verbose", this);
+  arr W = biros().getParameter<arr>("MotionPlanner_W", this);
+  uint T = biros().getParameter<uint>("MotionPlanner_TrajectoryLength", this);
+  double duration = biros().getParameter<double>("MotionPlanner_TrajectoryDuration", this);
   
   //clone the geometric state
   s->geo.pull();
@@ -256,13 +256,13 @@ void setGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uin
   sys.setTox0();
   
   //load parameters only once!
-  double positionPrec = birosInfo().getParameter<double>("graspPlanPositionPrec");
-  double oppositionPrec = birosInfo().getParameter<double>("graspPlanOppositionPrec");
-  double alignmentPrec = birosInfo().getParameter<double>("graspPlanAlignmentPrec");
-  double fingerDistPrec = birosInfo().getParameter<double>("graspPlanFingerDistPrec");
-  double colPrec = birosInfo().getParameter<double>("graspPlanColPrec");
-  double limPrec = birosInfo().getParameter<double>("graspPlanLimPrec");
-  double zeroQPrec = birosInfo().getParameter<double>("graspPlanZeroQPrec");
+  double positionPrec = biros().getParameter<double>("graspPlanPositionPrec");
+  double oppositionPrec = biros().getParameter<double>("graspPlanOppositionPrec");
+  double alignmentPrec = biros().getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = biros().getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = biros().getParameter<double>("graspPlanColPrec");
+  double limPrec = biros().getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = biros().getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
   CHECK(T==sys.get_T(), "");
@@ -378,14 +378,14 @@ void setPlaceGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, int belowToSha
   CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   sys.setTox0();
   
-  double midPrec          = birosInfo().getParameter<double>("placeMidPrec");
-  double alignmentPrec    = birosInfo().getParameter<double>("placeAlignmentPrec");
-  double limPrec          = birosInfo().getParameter<double>("placePlanLimPrec");
-  double colPrec          = birosInfo().getParameter<double>("placePlanColPrec");
-  double zeroQPrec        = birosInfo().getParameter<double>("placePlanZeroQPrec");
-  double positionPrec     = birosInfo().getParameter<double>("placePositionPrec");
-  double upDownVelocity   = birosInfo().getParameter<double>("placeUpDownVelocity");
-  double upDownVelocityPrec = birosInfo().getParameter<double>("placeUpDownVelocityPrec");
+  double midPrec          = biros().getParameter<double>("placeMidPrec");
+  double alignmentPrec    = biros().getParameter<double>("placeAlignmentPrec");
+  double limPrec          = biros().getParameter<double>("placePlanLimPrec");
+  double colPrec          = biros().getParameter<double>("placePlanColPrec");
+  double zeroQPrec        = biros().getParameter<double>("placePlanZeroQPrec");
+  double positionPrec     = biros().getParameter<double>("placePositionPrec");
+  double upDownVelocity   = biros().getParameter<double>("placeUpDownVelocity");
+  double upDownVelocityPrec = biros().getParameter<double>("placeUpDownVelocityPrec");
 
   
   //set the time horizon

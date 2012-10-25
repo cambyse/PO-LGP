@@ -911,8 +911,17 @@ ConditionVariable::~ConditionVariable() {
 void ConditionVariable::setValue(int i, bool signalOnlyFirstInQueue) {
   mutex.lock();
   value=i;
-  broadcast();
+  broadcast(signalOnlyFirstInQueue);
   mutex.unlock();
+}
+
+int ConditionVariable::incrementValue(bool signalOnlyFirstInQueue) {
+  mutex.lock();
+  value++;
+  broadcast(signalOnlyFirstInQueue);
+  int i=value;
+  mutex.unlock();
+  return i;
 }
 
 void ConditionVariable::broadcast(bool signalOnlyFirstInQueue) {
@@ -931,10 +940,11 @@ void ConditionVariable::unlock() {
   mutex.unlock();
 }
 
-int ConditionVariable::getValue(bool userHasLocked) {
-  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+int ConditionVariable::getValue(bool userHasLocked) const {
+  Mutex *m = (Mutex*)&mutex; //sorry: to allow for 'const' access
+  if(!userHasLocked) m->lock(); else CHECK(m->state==syscall(SYS_gettid),"user must have locked before calling this!");
   int i=value;
-  if(!userHasLocked) mutex.unlock();
+  if(!userHasLocked) m->unlock();
   return i;
 }
 
@@ -1026,6 +1036,15 @@ void Thread::launch(){
   pthread_attr_t atts;
   rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   rc = pthread_create(&thread, &atts, Thread_staticMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  /*if(priority){ //doesn't work - but setpriority does work!!
+    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+    sched_param  param;
+    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
+    param.sched_priority += priority;
+    std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
+    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  }*/
 }
 
 Thread::~Thread(){

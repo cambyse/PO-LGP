@@ -168,7 +168,7 @@ int main(int argn,char** argv){
 
   Perception(0)->threadClose();
 
-  //birosInfo().dump();
+  //biros().dump();
   cout <<"bye bye" <<endl;
   return 0;
 }

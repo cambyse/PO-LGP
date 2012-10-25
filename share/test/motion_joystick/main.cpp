@@ -36,7 +36,7 @@ int main(int argn,char** argv){
   motionPrimitive.deAccess(NULL);
   
   loopWithBeat(hardware, .01); // hardware must be started before the controller// WHY??
-//   if(birosInfo().getParameter<bool>("openArm", NULL, false))
+//   if(biros().getParameter<bool>("openArm", NULL, false))
 //     controller->threadListenTo(&hardwareReference);
 //   else
     controller->threadLoopWithBeat(.01);

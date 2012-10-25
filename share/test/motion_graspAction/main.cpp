@@ -43,8 +43,8 @@ int main(int argn, char** argv){
   } break;
   }
 
-  close(birosInfo().processes);
-  birosInfo().dump();
+  close(biros().processes);
+  biros().dump();
   
   cout <<"bye bye" <<endl;
 };

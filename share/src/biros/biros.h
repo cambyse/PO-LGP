@@ -24,27 +24,24 @@ typedef MT::Array<Parameter*> ParameterL;
 //
 
 struct Variable {
-  struct sVariable *s;  ///< private
-  uint id;              ///< unique identifyer
-  MT::String name;      ///< Variable name
-  uint revision;        ///< revision (= number of write accesses) number //TODO: make the revision and the s->cond ONE thing!
-  RWLock rwlock;        ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
+  struct sVariable *s;        ///< private
+  MT::String name;            ///< Variable name
+  ConditionVariable revision; ///< revision (= number of write accesses) number
+  RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
 
   Variable(const char* name);
   virtual ~Variable();
   
-  //-- access control, to be called by a processes before access
+  //-- access control, to be called by a processes before access, returns the revision
   int readAccess(Process*);  //might set the caller to sleep
   int writeAccess(Process*); //might set the caller to sleep
   int deAccess(Process*);
   
-  //-- syncing via a variable
-  void waitForNextWriteAccess(); //sets caller to sleep
-  uint waitForRevisionGreaterThan(uint rev);  //sets caller to sleep
+  //-- syncing via a variable - the caller is set to sleep
+  void waitForNextWriteAccess();
+  int  waitForRevisionGreaterThan(int rev); //returns the revision
   
   //-- info
-  int lockState(); // 0=no lock, -1=write access, positive=#readers
-  uint get_revision(){ readAccess(NULL); uint r=revision; deAccess(NULL); return r; }
   struct FieldRegistration& get_field(uint i) const;
 };
 
@@ -55,12 +52,11 @@ struct Variable {
 //
 
 struct Process {
-  struct sProcess *s;  ///< private
-  int id;              ///< unique identifier
-  uint step_count;     ///< step count
-  MT::String name;     ///< Process name
-  ConditionVariable state;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
-  
+  struct sProcess *s;      ///< private
+  MT::String name;         ///< Process name
+  ConditionVariable state; ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
+  uint step_count;         ///< step count
+
   Process(const char* name);
   virtual ~Process();
   
@@ -79,8 +75,8 @@ struct Process {
   //-- to be called from `outside' (e.g. the main) to start/step/close the thread
   void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
-  
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
+
   void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
   bool threadIsIdle();                  ///< check if in idle mode
   bool threadIsClosed();                ///< check if closed
@@ -102,28 +98,26 @@ struct Process {
 //
 
 struct FieldRegistration {
-  void *p;
-  Variable *var;
   const char* name;
   const char* userType;
   const char* sysType;
+  void *p;           /// pointer to object
+  Variable *var;     /// pointer to the containing variable
   virtual void writeValue(ostream& os) const = 0;
   virtual void readValue(istream& os) const { NIY; }
-  virtual MT::String type() const = 0;
 };
 
 template<class T>
 struct FieldRegistration_typed:FieldRegistration {
   FieldRegistration_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
-    p = _p;
-    var = _var;
     name = _name;
     userType = _userType;
     sysType = typeid(T).name();
+    p = _p;
+    var = _var;
   }
   void writeValue(ostream& os) const { os <<*((T*)p); }
-//   void readValue(istream& is) const { is >>*((T*)p); }
-  MT::String type() const { MT::String s(typeid(T).name()); return s; }
+  //void readValue(istream& is) const { is >>*((T*)p); }
 };
 
 void registerField(Variable *v, FieldRegistration* f);
@@ -148,7 +142,6 @@ void registerField(Variable *v, FieldRegistration* f);
 //
 
 struct Parameter {
-  uint id;              ///< unique identifyer
   void *pvalue;
   const char* name;
   ProcessL dependers;
@@ -187,76 +180,38 @@ struct Parameter_typed:Parameter {
   };
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo().getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  _##Type = biros().getVariable<Type>(#Type, NULL);
 
 
 
 //===========================================================================
 //
-// basic access to global system info
+// basic access/step control and access to global system info
 //
 
-struct BirosInfo:Variable {
+struct Biros:Variable {
   struct sBirosEventController *acc;
 
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
 
-  BirosInfo();
-  ~BirosInfo();
+  Biros();
+  ~Biros();
 
+  //-- access existing processes, variables and parameters
   Process *getProcessFromPID();
-  
-  template<class T>  void getVariable(T*& v, const char* name, Process *p, bool required = false) {
-    writeAccess(p);
-    Variable *raw = listFindByName(variables, name); // NULL if not found
-    v = dynamic_cast<T*>(raw); // NULL if cast fails because of RTTI
-    deAccess(p);
-    if (!v && raw) { HALT(name << " which is asked for by " << (p?p->name:STRING("NULL")) << " is of wrong type."); }
-    else if (!raw) {
-      if(required) { HALT("can't find required biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not work"); }
-      else MT_MSG("can't find biros variable '" <<name <<"' -- Process '" <<(p?p->name:STRING("NULL")) <<"' will not connect");
-    }
-    else { MT_MSG("Autoconnect Process '" << (p?p->name:STRING("NULL")) <<"' with biros variable '" << name << "'.");}
-  }
-  template<class T>  T* getProcess(const char* name, Process *p) {
-    writeAccess(p);
-    T *pname = (T*)listFindByName(processes, name);
-    deAccess(p);
-    if (!pname) MT_MSG("can't find biros process '" <<name
-		       <<"' -- Process '" <<(p?p->name:STRING("NULL"))
-		       <<"' will not connect");
-    return pname;
-  }
-  template<class T> T getParameter(const char *name, Process *p, const T &_default=*((T*)NULL)) {
-    Parameter_typed<T> *par;
-    writeAccess(p);
-    par = (Parameter_typed<T>*)listFindByName(parameters, name);
-    deAccess(p);
-    if (!par) par = new Parameter_typed<T>(name, _default);
-    if (!par->dependers.contains(p)) par->dependers.append(p);
-    return par->value;
-  }
-  template<class T> T getParameter(const char *name) {
-    return getParameter<T>(name, getProcessFromPID());
-  }
-  template<class T> T getParameter(const char *name, const T& _default) {
-    return getParameter<T>(name, getProcessFromPID(), _default);
-  }
-  template<class T> void setParameter(const char *name, T value) {
-    Process *p = getProcessFromPID();
-    Parameter_typed<T> *par;
-    writeAccess(p);
-    par = (Parameter_typed<T>*)listFindByName(parameters, name);
-    deAccess(p);
-    if (!par) MT_MSG("WARNING: cannot find " <<name
-		     <<" in parameters, nothing is changed.");
-    par->value = value;
-  }
-  void dump(); //dump everything -- for debugging
+  template<class T> T* getVariable(const char* name, Process *p, bool required = false);
+  template<class T> void getVariable(T*& v, const char* name, Process *p, bool required = false);
+  template<class T> T* getProcess (const char* name, Process *p, bool required = false);
+  template<class T> T getParameter(const char *name, Process *p=NULL);
+  template<class T> T getParameter(const char *name, const T& _default, Process *p=NULL);
+  template<class T> void setParameter(const char *name, T value);
 
-  //methods called by the user
+  //-- dump ALL available information
+  void dump();
+
+  //-- system control
   void enableAccessLog();
   void dumpAccessLog();
   void blockAllAccesses();
@@ -265,12 +220,12 @@ struct BirosInfo:Variable {
   void stepToNextWriteAccess();
 };
 
-BirosInfo& birosInfo(); //get access to the global info struct
+Biros& biros(); //get access to the global info struct
 
 
 //===========================================================================
 //
-// WorkingCopy
+// WorkingCopy TODO: remove this!
 //
 
 template<class T>
@@ -278,7 +233,7 @@ struct WorkingCopy {
   T *var;             ///< pointer to the Variable (T must be derived from Variable)
   T copy;
   Process *p;         ///< pointer to the Process that might want to access the Variable
-  uint last_revision; ///< last revision of a read/write access
+  int last_revision; ///< last revision of a read/write access
   
   WorkingCopy() { p=NULL; var=NULL; last_revision = 0;  }
   T& operator()() { return copy; }
@@ -288,13 +243,12 @@ struct WorkingCopy {
     var=_v;
     var->readAccess(p);
     copy = *var;
-    last_revision = var->revision;
+    last_revision = var->revision.getValue();
     var->deAccess(p);
     copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
   }
   void init(const char* var_name, Process *_p) {
-    T *_v;
-    birosInfo().getVariable(_v, var_name, _p);
+    T *_v = biros().getVariable<T>(var_name, _p);
     init(_v, _p);
   }
   bool needsUpdate() {
@@ -309,10 +263,10 @@ struct WorkingCopy {
     var->deAccess(p);
   }
   void pull() {
-    if (last_revision == var->get_revision()) return;
+    if (last_revision == var->revision.getValue()) return;
     var->readAccess(p);
     copy = *var;
-    last_revision = var->revision;
+    last_revision = var->revision.getValue();
     var->deAccess(p);
   }
 };
@@ -342,10 +296,11 @@ void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
 
 
+#include "biros_views.h"
+#include "biros_t.cxx"
+
 #ifdef  MT_IMPLEMENTATION
 #  include "biros.cpp"
 #endif
-
-#include "biros_views.h"
 
 #endif

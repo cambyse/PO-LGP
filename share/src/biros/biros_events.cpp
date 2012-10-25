@@ -45,7 +45,7 @@ void sBirosEventController::breakpointNext(){ //first in the queue is being woke
 void sBirosEventController::queryReadAccess(Variable *v, const Process *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    BirosEvent *e = new BirosEvent(v, p, BirosEvent::read, v->revision, p?p->step_count:0, 0.);
+    BirosEvent *e = new BirosEvent(v, p, BirosEvent::read, v->revision.getValue(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
     blockMode.waitForValueSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
@@ -58,7 +58,7 @@ void sBirosEventController::queryReadAccess(Variable *v, const Process *p){
 void sBirosEventController::queryWriteAccess(Variable *v, const Process *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    BirosEvent *e = new BirosEvent(v, p, BirosEvent::write, v->revision, p?p->step_count:0, 0.);
+    BirosEvent *e = new BirosEvent(v, p, BirosEvent::write, v->revision.getValue(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
     blockMode.waitForValueSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
@@ -70,7 +70,7 @@ void sBirosEventController::queryWriteAccess(Variable *v, const Process *p){
   
 void sBirosEventController::logReadAccess(const Variable *v, const Process *p) {
   if(!enableEventLog || enableReplay) return;
-  BirosEvent *e = new BirosEvent(v, p, BirosEvent::read, v->revision, p?p->step_count:0, MT::realTime());
+  BirosEvent *e = new BirosEvent(v, p, BirosEvent::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -79,7 +79,7 @@ void sBirosEventController::logReadAccess(const Variable *v, const Process *p) {
 
 void sBirosEventController::logWriteAccess(const Variable *v, const Process *p) {
   if(!enableEventLog || enableReplay) return;
-  BirosEvent *e = new BirosEvent(v, p, BirosEvent::write, v->revision, p?p->step_count:0, MT::realTime());
+  BirosEvent *e = new BirosEvent(v, p, BirosEvent::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -149,7 +149,7 @@ void sBirosEventController::writeEventList(ostream& os, bool blocked, uint max, 
 
     os
       <<' ' <<(e->proc?e->proc->name:STRING("NULL"))
-      <<' ' <<(e->var?e->var->name:STRING("NULL")) <<'_' <<(e->var?e->var->id:0)
+      <<' ' <<(e->var?e->var->name:STRING("NULL"))
       <<' ' <<e->revision
       <<' ' <<e->procStep
       <<' ' <<e->time
@@ -170,27 +170,27 @@ void sBirosEventController::dumpEventList(){
 
 //==============================================================================
 
-void BirosInfo::enableAccessLog(){
+void Biros::enableAccessLog(){
   acc->enableEventLog = true;
 }
 
-void BirosInfo::dumpAccessLog(){
+void Biros::dumpAccessLog(){
   acc->dumpEventList();
 }
 
-void BirosInfo::blockAllAccesses(){
+void Biros::blockAllAccesses(){
   acc->blockMode.setValue(2);
 }
 
-void BirosInfo::unblockAllAccesses(){
+void Biros::unblockAllAccesses(){
   acc->blockMode.setValue(0);
 }
 
-void BirosInfo::stepToNextAccess(){
+void Biros::stepToNextAccess(){
   acc->blockMode.setValue(1, true);
 }
 
-void BirosInfo::stepToNextWriteAccess(){
+void Biros::stepToNextWriteAccess(){
   acc->blockMode.setValue(1, true);
 }
 

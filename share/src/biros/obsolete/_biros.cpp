@@ -165,8 +165,8 @@ void ThreadInfoWin::step() {
   if((len=sprintf(s->outputbuf, form, val))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
-  birosInfo().readAccess(this);
-  for_list(i, pr, birosInfo().processes) {
+  biros().readAccess(this);
+  for_list(i, pr, biros().processes) {
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -185,7 +185,7 @@ void ThreadInfoWin::step() {
     TEXTTIME(th->timer.busyDt); x+=130;
     y+=20;
   }
-  birosInfo().deAccess(this);
+  biros().deAccess(this);
   y+=10;
   for_list(i, ct, globalCycleTimers) {
     x=5;

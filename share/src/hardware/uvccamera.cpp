@@ -39,8 +39,8 @@ private:
 
 UVCCamera::UVCCamera():Process("UVC"){
   s = new sUVCCamera;
-  birosInfo().getVariable(s->camL, "CameraL", this);
-  birosInfo().getVariable(s->camR, "CameraR", this);
+  biros().getVariable(s->camL, "CameraL", this);
+  biros().getVariable(s->camR, "CameraR", this);
 };
 
 UVCCamera::~UVCCamera(){

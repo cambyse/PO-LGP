@@ -33,9 +33,9 @@ struct sMotionController {
 MotionController::MotionController(HardwareReference* a, MotionPrimitive* b, MotionFuture* c)
 :Process("MotionController"), hardwareReference(a), motionPrimitive(b), motionFuture(c) {
   s = new sMotionController();
-  if(!hardwareReference) birosInfo().getVariable(hardwareReference, "HardwareReference", this);
-  if(!motionPrimitive)   birosInfo().getVariable(motionPrimitive, "MotionPrimitive", this);
-  if(!motionFuture)      birosInfo().getVariable(motionFuture, "MotionFuture", this);
+  if(!hardwareReference) biros().getVariable(hardwareReference, "HardwareReference", this);
+  if(!motionPrimitive)   biros().getVariable(motionPrimitive, "MotionPrimitive", this);
+  if(!motionFuture)      biros().getVariable(motionFuture, "MotionFuture", this);
   s->geo.init("GeometricState", this);
   hardwareReference->writeAccess(this);
   s->geo().ors.getJointState(hardwareReference->q_reference,
@@ -48,10 +48,10 @@ MotionController::~MotionController() {
 }
 
 void MotionController::open() {
-  arr W = birosInfo().getParameter<arr>("MotionController_W", this);
-  s->tau = birosInfo().getParameter<double>("MotionController_tau", this);
-  s->maxJointStep = birosInfo().getParameter<double>("MotionController_maxJointStep", this);
-  s->followTrajectoryTimeScale = birosInfo().getParameter<double>("MotionController_followTrajectoryTimeScale", this);
+  arr W = biros().getParameter<arr>("MotionController_W", this);
+  s->tau = biros().getParameter<double>("MotionController_tau", this);
+  s->maxJointStep = biros().getParameter<double>("MotionController_maxJointStep", this);
+  s->followTrajectoryTimeScale = biros().getParameter<double>("MotionController_followTrajectoryTimeScale", this);
     
   
   //clone the geometric state

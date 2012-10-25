@@ -536,12 +536,13 @@ struct ConditionVariable {
   ~ConditionVariable();
 
   void setValue(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  int  incrementValue(bool signalOnlyFirstInQueue=false);   ///< increase value by 1
   void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
   void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
   void unlock();
   
-  int  getValue(bool userHasLocked=false);
+  int  getValue(bool userHasLocked=false) const;
   void waitForSignal(bool userHasLocked=false);
   void waitForSignal(double seconds, bool userHasLocked=false);
   void waitForValueEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting

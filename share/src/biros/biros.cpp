@@ -25,17 +25,17 @@
 // global singleton
 //
 
-BirosInfo *global_birosInfo=NULL;
+Biros *global_birosInfo=NULL;
 
-BirosInfo& birosInfo(){
+Biros& biros(){
   static bool currentlyCreating=false;
-  if(currentlyCreating) return *((BirosInfo*) NULL);
+  if(currentlyCreating) return *((Biros*) NULL);
   if(!global_birosInfo) {
     static Mutex m;
     m.lock();
     if(!global_birosInfo) {
       currentlyCreating=true;   
-      global_birosInfo = new BirosInfo();
+      global_birosInfo = new Biros();
       currentlyCreating=false;
     }  
     m.unlock();
@@ -43,8 +43,8 @@ BirosInfo& birosInfo(){
   return *global_birosInfo;
 }
 
-struct BirosInfoDestructorDemon{
-  ~BirosInfoDestructorDemon(){ if(global_birosInfo) delete global_birosInfo; global_birosInfo=NULL; }
+struct BirosDestructorDemon{
+  ~BirosDestructorDemon(){ if(global_birosInfo) delete global_birosInfo; global_birosInfo=NULL; }
 };
 
 //===========================================================================
@@ -107,29 +107,25 @@ void setRRscheduling(int priority) {
 // Variable
 //
 
-Variable::Variable(const char *_name) {
+Variable::Variable(const char *_name): s(NULL), name(_name), revision(0) {
   s = new sVariable();
-  name = _name;
-  revision = 0U;
-  id = 0U;
   s->listeners.memMove=true;
   //MT logValues = false;
   //MT dbDrivenReplay = false;
   //MT pthread_mutex_init(&replay_mutex, NULL);
-  if(&(birosInfo()) != NULL) { //-> birosInfo itself will not be registered!
-    birosInfo().writeAccess(NULL);
-    id = birosInfo().variables.N;
-    birosInfo().variables.memMove = true;
-    birosInfo().variables.append(this);
-    birosInfo().deAccess(NULL);
+  if(&(biros()) != NULL) { //-> birosInfo itself will not be registered!
+    biros().writeAccess(NULL);
+    biros().variables.memMove = true;
+    biros().variables.append(this);
+    biros().deAccess(NULL);
   }
 }
 
 Variable::~Variable() {
   if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
-    birosInfo().writeAccess(NULL);
-    birosInfo().variables.removeValue(this);
-    birosInfo().deAccess(NULL);
+    biros().writeAccess(NULL);
+    biros().variables.removeValue(this);
+    biros().deAccess(NULL);
   }
   for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
   
@@ -139,50 +135,45 @@ Variable::~Variable() {
 }
 
 int Variable::readAccess(Process *p) {
-  birosInfo().acc->queryReadAccess(this, p);
+  biros().acc->queryReadAccess(this, p);
   rwlock.readLock();
-  birosInfo().acc->logReadAccess(this, p);
-  return revision;
+  biros().acc->logReadAccess(this, p);
+  return revision.getValue();
 }
 
 int Variable::writeAccess(Process *p) {
-  birosInfo().acc->queryWriteAccess(this, p);
+  biros().acc->queryWriteAccess(this, p);
   rwlock.writeLock();
-  revision++;
-  s->cond.setValue(revision);
-  birosInfo().acc->logWriteAccess(this, p);
+  int r = revision.incrementValue();
+  biros().acc->logWriteAccess(this, p);
   uint i; Process *l;
   for_list(i, l, s->listeners) if(l!=p) l->threadStep();
-  return revision;
+  return r;
 }
 
 int Variable::deAccess(Process *p) {
   if(rwlock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
-    birosInfo().acc->logWriteDeAccess(this,p);
+    biros().acc->logWriteDeAccess(this,p);
   } else {
-    birosInfo().acc->logReadDeAccess(this,p);
+    biros().acc->logReadDeAccess(this,p);
   }
-  int rev=revision;
+  int rev=revision.getValue();
   rwlock.unlock();
   return rev;
 }
 
 void Variable::waitForNextWriteAccess(){
-  s->cond.waitForSignal();
+  revision.waitForSignal();
 }
 
-uint Variable::waitForRevisionGreaterThan(uint rev) {
-  s->cond.lock();
-  s->cond.waitForValueGreaterThan(rev, true);
-  rev=s->cond.value;
-  s->cond.unlock();
+int Variable::waitForRevisionGreaterThan(int rev) {
+  revision.lock();
+  revision.waitForValueGreaterThan(rev, true);
+  rev = revision.value;
+  revision.unlock();
   return rev;
-}
-
-int Variable::lockState() {
-  return rwlock.state;
 }
 
 FieldRegistration& Variable::get_field(uint i) const{
@@ -243,21 +234,20 @@ void sVariable::deSerializeFromString(const MT::String &string) {
 //
 
 
-Process::Process(const char *_name): s(0), id(0), step_count(0), name(_name), state(tsCLOSE)  {
-  s = new sProcess();
+Process::Process(const char *_name): s(NULL), name(_name), state(tsCLOSE), step_count(0U)  {
+  s = new sProcess(this);
   s->listensTo.memMove=true;
-  birosInfo().writeAccess(this);
-  id = birosInfo().processes.N;
-  birosInfo().processes.memMove=true;
-  birosInfo().processes.append(this);
-  birosInfo().deAccess(this);
+  biros().writeAccess(this);
+  biros().processes.memMove=true;
+  biros().processes.append(this);
+  biros().deAccess(this);
 }
 
 Process::~Process() {
   if(s->thread || state.value!=tsCLOSE) threadClose();
-  birosInfo().writeAccess(this);
-  birosInfo().processes.removeValue(this);
-  birosInfo().deAccess(this);
+  biros().writeAccess(this);
+  biros().processes.removeValue(this);
+  biros().deAccess(this);
   delete s;
 }
 
@@ -268,20 +258,7 @@ int Process::stepState() {
 void Process::threadOpen(int priority) {
   state.lock();
   if(s->thread){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
-  s->threadPriority = priority;
-  int rc;
-  pthread_attr_t atts;
-  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  /*if(priority){ //doesn't work - but setpriority does work!!
-    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
-    sched_param  param;
-    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-    std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
-    param.sched_priority += priority;
-    std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
-    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
-  }*/
-  rc = pthread_create(&s->thread, &atts, s->staticThreadMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  s->launch();
   state.value=tsIDLE;
   state.unlock();
 }
@@ -352,23 +329,21 @@ void Process::threadStop() {
   state.setValue(tsIDLE);
 }
 
-void* sProcess::staticThreadMain(void *_self) {
-  Process  *proc=(Process*)_self;
-  sProcess *s   =proc->s;
+void sProcess::main() {
   //std::cout <<" +++ entering staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
   
-  s->tid = syscall(SYS_gettid);
+  tid = syscall(SYS_gettid);
   
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   
-  if(s->threadPriority) setNice(s->threadPriority);
+  //if(s->threadPriority) setNice(s->threadPriority);
   prctl(PR_SET_NAME, proc->name.p);
   //pthread_setname_np(proc->thread, proc->name);
   
   proc->open(); //virtual initialization routine
 
-  s->timer.reset();
+  //s->timer.reset();
   for(;;){
     bool waitForTic=false;
     proc->state.lock();
@@ -381,14 +356,14 @@ void* sProcess::staticThreadMain(void *_self) {
     if(proc->state.value>0) proc->state.value--; //count down
     proc->state.unlock();
     
-    if(waitForTic) s->metronome->waitForTic();
+    if(waitForTic) metronome->waitForTic();
 
-    birosInfo().acc->logStepBegin(proc);
-    s->timer.cycleStart();
+    biros().acc->logStepBegin(proc);
+    //s->timer.cycleStart();
     proc->step(); //virtual step routine
     proc->step_count++;
-    s->timer.cycleDone();
-    birosInfo().acc->logStepEnd(proc);
+    //s->timer.cycleDone();
+    biros().acc->logStepEnd(proc);
 
     proc->state.lock();
     proc->state.broadcast();
@@ -398,7 +373,6 @@ void* sProcess::staticThreadMain(void *_self) {
   proc->close(); //virtual close routine
   
   //std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
-  return NULL;
 }
 
 
@@ -408,11 +382,10 @@ void* sProcess::staticThreadMain(void *_self) {
 //
 
 Parameter::Parameter() {
-  birosInfo().writeAccess(NULL);
-  id = birosInfo().parameters.N;
-  birosInfo().parameters.memMove=true;
-  birosInfo().parameters.append(this);
-  birosInfo().deAccess(NULL);
+  biros().writeAccess(NULL);
+  biros().parameters.memMove=true;
+  biros().parameters.append(this);
+  biros().deAccess(NULL);
 };
 
 
@@ -462,16 +435,16 @@ void close(const ProcessL& P) {
 // Global information
 //
 
-BirosInfo::BirosInfo():Variable("Biros") {
+Biros::Biros():Variable("Biros") {
   acc = new sBirosEventController;
 };
 
-BirosInfo::~BirosInfo(){
+Biros::~Biros(){
   //acc -> dumpEventList();
   delete acc;
 }
 
-Process *BirosInfo::getProcessFromPID() {
+Process *Biros::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
   uint i;  Process *p;
   for_list(i, p, processes) {
@@ -482,7 +455,7 @@ Process *BirosInfo::getProcessFromPID() {
 }
 
 //TODO: move this to the b:dump control.h
-void BirosInfo::dump() {
+void Biros::dump() {
   cout <<" +++ VARIABLES +++" <<endl;
   uint i, j;
   Variable *v;
@@ -491,7 +464,7 @@ void BirosInfo::dump() {
   FieldRegistration *f;
   readAccess(NULL);
   for_list(i, v, variables) {
-    cout <<"Variable " <<v->id <<' ' <<v->name <<" {\n  ";
+    cout <<"Variable " <<v->name <<" {\n  ";
     writeInfo(cout, *v, false, ' ');
     for_list(j, f, v->s->fields) {
       cout <<"\n  Field " <<j <<' ' <<f->name <<' ';
@@ -501,7 +474,7 @@ void BirosInfo::dump() {
   }
   cout <<"\n +++ PROCESSES +++" <<endl;
   for_list(i, p, processes) {
-    cout <<"Process " <<p->id <<' ' <<p->name <<" {\n  ";
+    cout <<"Process " <<p->name <<" {\n  ";
     writeInfo(cout, *p, false, ' ');
     cout <<"\n}" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
@@ -513,7 +486,7 @@ void BirosInfo::dump() {
   }
   cout <<"\n +++ PARAMETERS +++" <<endl;
   for_list(i, par, parameters) {
-    cout <<"Parameter " <<par->id <<' ' <<par->name <<" {\n  ";
+    cout <<"Parameter " <<par->name <<" {\n  ";
     writeInfo(cout, *par, false, ' ');
     cout <<"\n  accessed by=";
     for_list(j, p, par->dependers) {
@@ -532,15 +505,11 @@ void BirosInfo::dump() {
 //
 
 void writeInfo(ostream& os, Process& p, bool brief, char nl){
-#define TEXTTIME(dt) dt<<'|'<<dt##Mean <<'|' <<dt##Max
   if(brief){
-    os <<p.s->timer.steps <<" [" <<std::setprecision(2) <<TEXTTIME(p.s->timer.busyDt)<<':' <<TEXTTIME(p.s->timer.cyclDt) <<']';
+    os <<p.step_count <<endl;
   }else{
     os <<"tid=" <<p.s->tid <<nl
-       <<"priority=" <<p.s->threadPriority <<nl
-       <<"steps=" <<p.s->timer.steps <<nl
-       <<"busyDt=" <<TEXTTIME(p.s->timer.busyDt) <<nl
-       <<"cycleDt=" <<TEXTTIME(p.s->timer.cyclDt) <<nl
+       <<"steps=" <<p.step_count
        <<"state=";
     int state=p.stepState();
     if (state>0) os <<state; else switch (state) {
@@ -550,17 +519,16 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl){
       case tsIDLE:    os <<"idle";   break;
       default: os <<"undefined:";
     }
-#undef TEXTTIME
   }
 }
 
 void writeInfo(ostream& os, Variable& v, bool brief, char nl){
   if(brief){
-    os <<v.revision;
+    os <<v.revision.getValue();
   }else{
-    os <<"revision=" <<v.revision <<nl
+    os <<"revision=" <<v.revision.getValue() <<nl
        <<"type=" <<typeid(v).name() <<nl
-       <<"lock-state=" <<v.lockState();
+       <<"lock-state=" <<v.rwlock.state;
   }
 }
 

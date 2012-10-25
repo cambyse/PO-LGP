@@ -15,7 +15,7 @@ void ShapeFitter::open(){
   s->Pl.readTagged(fil, "PL");
   s->Pr.readTagged(fil, "PR");
   fil.close();
-  s->objectType = birosInfo().getParameter<uintA>("percObjectType", this);
+  s->objectType = biros().getParameter<uintA>("percObjectType", this);
 }
 
 
@@ -498,7 +498,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
     problem.type=type;
     problem.N=20;
     problem.distImage = pow(distImage, 2.f);
-    problem.display = birosInfo().getParameter<bool>("shapeFitter_display", NULL);;
+    problem.display = biros().getParameter<bool>("shapeFitter_display", NULL);;
     if(type==0) problem.radius = params(0);
     else problem.radius = 0;
     

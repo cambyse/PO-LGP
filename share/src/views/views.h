@@ -42,29 +42,33 @@ struct View {
 //
 
 struct ViewRegistration{
-  MT::String name;  ///typeid(View-class).name()
-  MT::String appliesOn_sysType;
+  const char* userType;
+  const char* sysType;
+  const char* appliesOn_userType;
+  const char* appliesOn_sysType;
   virtual View *newInstance() = 0;
 };
 
-//-- singleton list of view registrations:
-typedef MT::Array<ViewRegistration*> ViewRegistrationL;
-ViewRegistrationL& viewRegistrations(); //should actually be private
+void registerView(ViewRegistration* v);
 
 template<class ViewT, class AppliesOnT>
 struct ViewRegistration_typed:ViewRegistration{
-  ViewRegistration_typed(const char *_name,
-			 const char* _appliesOn_sysType=NULL){
-    name = typeid(ViewT).name();
-    appliesOn_sysType = _appliesOn_sysType?_appliesOn_sysType:typeid(AppliesOnT).name();
-    viewRegistrations().append(this);
+  ViewRegistration_typed(const char *_userType,
+                         const char* _appliesOn_userType){
+    userType = _userType;
+    sysType = typeid(ViewT).name();
+    appliesOn_userType = _appliesOn_userType;
+    appliesOn_sysType = typeid(AppliesOnT).name();
+    registerView(this);
     //cout <<"registrating a view!" <<endl;
   }
   View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
 };
 
 #define REGISTER_VIEW(ViewT, AppliesOnT)\
-  ViewRegistration_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT);
+  ViewRegistration_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT,#AppliesOnT);
+
+typedef MT::Array<ViewRegistration*> ViewRegistrationL;
 
 
 //===========================================================================
@@ -94,7 +98,7 @@ View* newViewBase(T* object, ViewRegistration *vi, GtkWidget *container){
     }
     vi = vis(0);
   }
-  cout <<"Creating new view '" <<vi->name
+  cout <<"Creating new view '" <<vi->sysType
        <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
   View *v = vi->newInstance();
   v->object = object;

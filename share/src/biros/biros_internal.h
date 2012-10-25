@@ -20,12 +20,8 @@ bool setNice(int);
 struct sVariable {
   MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
   ProcessL listeners;
-  ConditionVariable cond; //to broadcast write access to this variable
   struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
 
-  //MT bool logValues;
-  //MT bool dbDrivenReplay;
-  //MT pthread_mutex_t replay_mutex; //TODO: move to sVariable! (that's the point of private..)
   virtual void serializeToString(MT::String &string) const;
   virtual void deSerializeFromString(const MT::String &string);
   
@@ -35,20 +31,18 @@ struct sVariable {
 enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
 
 //Process' internal data
-struct sProcess {
-  pthread_t thread;                    ///< pthread pointer
+struct sProcess: Thread{
+  Process *proc;
   pid_t tid;                           ///< system thread id
   VariableL listensTo;
   ParameterL dependsOn;
-  CycleTimer timer;                    ///< measures cycle and busy times
   Metronome *metronome;                ///< used for beat-looping
-  uint skips;                          ///< how often a step was requested but (because busy) skipped
-  int threadPriority;                  ///< priority of this thread
   
-  sProcess(): thread(0), tid(0), metronome(NULL), skips(0), threadPriority(0) {}
+  sProcess(Process *p): proc(p), tid(0), metronome(NULL) {}
   
-  static void *staticThreadMain(void *_self); ///< internal use: 'main' routine of the thread
+  void main(); //virtual method for Thread
 };
+
 
 //===========================================================================
 //

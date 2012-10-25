@@ -34,6 +34,11 @@ ViewRegistrationL& viewRegistrations(){
   return viewPrivateSpace()->viewRegistrations;
 }
 
+//-- singleton list of view registrations:
+
+void registerView(ViewRegistration* v){
+  viewRegistrations().append(v);
+}
 
 //===========================================================================
 //
@@ -137,7 +142,7 @@ ViewRegistrationL getViews(const char* appliesOn_sysType){
 ViewRegistration* getViewByName(const char *name){
   uint i;
   ViewRegistration *vi;
-  for_list(i,vi,viewRegistrations()) if(!strcmp(vi->name, name)) return vi;
+  for_list(i,vi,viewRegistrations()) if(!strcmp(vi->userType, name)) return vi;
   return NULL;
 }
 
@@ -147,7 +152,7 @@ void dumpViews(){
   ViewRegistration *vi;
   for_list_rev(i,vi,viewRegistrations()){
     cout
-      <<"View name=" <<vi->name
+      <<"View name=" <<vi->userType
       <<" applies_on=" <<vi->appliesOn_sysType <<endl;
   }
 }

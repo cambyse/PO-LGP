@@ -11,7 +11,7 @@ struct sJoystick {
 
 Joystick::Joystick():Process("Joystick") {
   s = new sJoystick;
-  birosInfo().getVariable(joystickState, "JoystickState", this);
+  joystickState = biros().getVariable<JoystickState>("JoystickState", this);
   s->n=0;
 }
 

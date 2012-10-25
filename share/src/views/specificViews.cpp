@@ -42,7 +42,7 @@ void ImageView::glDraw() {
 REGISTER_VIEW(RgbView, byteA);
 
 void RgbView::gtkNew(GtkWidget *container){
-  if(!container) container = gtkTopWindow(info?info->name:STRING("RgbView"));
+  if(!container) container = gtkTopWindow(info?info->userType:STRING("RgbView"));
   gtkLock();
   widget = gtk_color_selection_new();
   g_object_set_data(G_OBJECT(widget), "View", this);

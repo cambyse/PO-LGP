@@ -13,10 +13,10 @@ REGISTER_VIEW(InsideOut, void)
 // helpers
 //
 
-GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par);
-GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, uint id, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, uint id, GtkTreeIter* par);
 GtkTreeIter appendToStore(GtkTreeStore *store, FieldRegistration *f, uint id, GtkTreeIter* par);
-GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par);
+GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, uint id, GtkTreeIter* par);
 GtkTreeIter appendToStore(GtkTreeStore *store, ViewRegistration *vi, uint id, GtkTreeIter* par);
 void setBoxView(View *v, GtkBuilder *builder, uint box);
 
@@ -116,14 +116,14 @@ void sInsideOut::open(){
       vi = getViewByName(name);
       if(type=="field"){
 	name.read(is," "," \n\r");
-	birosInfo().getVariable(v, name, NULL);
+	biros().getVariable(v, name, NULL);
         fld.read(is," "," \n\r");
 	f = listFindByName(v->s->fields, fld);
 	view[b] = newViewBase(f->p, vi, NULL); view[b]->object=f;
       }
-      if(type=="variable"){ name.read(is," "," \n\r"); birosInfo().getVariable(v, name, NULL); view[b] = newViewBase(v, vi, NULL); view[b]->object=v; }
-      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = birosInfo().getProcess<Process>(name, NULL);       view[b] = newViewBase(((Process*)view[b]->object), vi, NULL);  }
-      //if(type=="parameter"){view[b] = newViewBase(ViewRegistration::parameterVT, vi);is >>name; birosInfo().getParameter(view[b]->param, name); }
+      if(type=="variable"){ name.read(is," "," \n\r"); biros().getVariable(v, name, NULL); view[b] = newViewBase(v, vi, NULL); view[b]->object=v; }
+      if(type=="process"){  name.read(is," "," \n\r"); view[b]->object = biros().getProcess<Process>(name, NULL);       view[b] = newViewBase(((Process*)view[b]->object), vi, NULL);  }
+      //if(type=="parameter"){view[b] = newViewBase(ViewRegistration::parameterVT, vi);is >>name; biros().getParameter(view[b]->param, name); }
       //if(type=="global"){   view[b] = b::newGlobalView(vi); }
 
       setBoxView(view[b], builder, b);
@@ -154,13 +154,13 @@ void sInsideOut::updateVarStore(){
   uint i,j;
   GtkTreeIter it;
   Variable *v;  FieldRegistration *f;  Process *p;
-  birosInfo().readAccess(NULL);
-  for_list(i, v, birosInfo().variables) {
-    it = appendToStore(varStore, v, NULL);
+  biros().readAccess(NULL);
+  for_list(i, v, biros().variables) {
+    it = appendToStore(varStore, v, i, NULL);
     for_list(j, f, v->s->fields) appendToStore(varStore, f, j, &it);
-    for_list(j, p, v->s->listeners) appendToStore(varStore, p, &it);
+    for_list(j, p, v->s->listeners) appendToStore(varStore, p, j, &it);
   }
-  birosInfo().deAccess(NULL);
+  biros().deAccess(NULL);
 }
 
 void sInsideOut::updateProcStore(){
@@ -169,16 +169,16 @@ void sInsideOut::updateProcStore(){
   uint i,j,k;
   GtkTreeIter i_it, j_it;
   Variable *v;  FieldRegistration *f;  Process *p;  Parameter *pa;
-  birosInfo().readAccess(NULL);
-  for_list(i, p, birosInfo().processes) {
-    i_it = appendToStore(procStore, p, NULL);
+  biros().readAccess(NULL);
+  for_list(i, p, biros().processes) {
+    i_it = appendToStore(procStore, p, i, NULL);
     for_list(j, v, p->s->listensTo) {
-      j_it = appendToStore(procStore, v, &i_it);
+      j_it = appendToStore(procStore, v, j, &i_it);
       for_list(k, f, v->s->fields) appendToStore(procStore, f, k, &j_it);
     }
-    for_list(j, pa, p->s->dependsOn) appendToStore(procStore, pa, &i_it);
+    for_list(j, pa, p->s->dependsOn) appendToStore(procStore, pa, j, &i_it);
   }
-  birosInfo().deAccess(NULL);
+  biros().deAccess(NULL);
 }
 
 void sInsideOut::updateParamStore(){
@@ -187,13 +187,15 @@ void sInsideOut::updateParamStore(){
   uint i,j;
   GtkTreeIter it;
   Process *p;  Parameter *pa;
-  birosInfo().readAccess(NULL);
-  for_list(i, pa, birosInfo().parameters) {
-    it = appendToStore(paramStore, pa, NULL);
-    for_list(j, p, pa->dependers) if(p) appendToStore(paramStore, p, &it);
+  biros().readAccess(NULL);
+  for_list(i, pa, biros().parameters) {
+    it = appendToStore(paramStore, pa, i, NULL);
+    for_list(j, p, pa->dependers) if(p) appendToStore(paramStore, p, j, &it);
   }
-  birosInfo().deAccess(NULL);
+  biros().deAccess(NULL);
 }
+
+ViewRegistrationL& viewRegistrations();
 
 void sInsideOut::updateViewStore(){
   GtkTreeStore *viewStore = (GtkTreeStore*) gtk_builder_get_object(builder, "viewTreeStore");
@@ -201,11 +203,11 @@ void sInsideOut::updateViewStore(){
   uint i;
   //GtkTreeIter it;
   ViewRegistration *vi;
-  //birosInfo().readAccess(NULL);
+  //biros().readAccess(NULL);
   for_list(i, vi, viewRegistrations()) {
     appendToStore(viewStore, vi, i, NULL);
   }
-  //birosInfo().deAccess(NULL);
+  //biros().deAccess(NULL);
 }
 
 
@@ -238,7 +240,7 @@ extern "C" G_MODULE_EXPORT void on_save_clicked(GtkWidget* caller){
   MT::open(os,"ino.cfg");
   for(uint b=0;b<VIEWBOXES;b++) if(iog->view[b]){
     View *v=iog->view[b];
-    os <<b <<' ' <<v->info->name;
+    os <<b <<' ' <<v->info->userType;
     /*switch (v->info->type) {
     case ViewRegistration::fieldVT:    os <<" field " <<((FieldRegistration*)v->object)->var->name <<' ' <<((FieldRegistration*)v->object)->name;  break;
       case ViewRegistration::variableVT: os <<" variable " <<((Variable*)v->object)->name;  break;
@@ -269,15 +271,15 @@ extern "C" G_MODULE_EXPORT void on_toggled(GtkWidget* caller, gpointer callback_
 }
 
 extern "C" G_MODULE_EXPORT void on_pause_clicked(GtkWidget* caller){
-  birosInfo().blockAllAccesses();
+  biros().blockAllAccesses();
 }
 
 extern "C" G_MODULE_EXPORT void on_run_clicked(GtkWidget* caller){
-  birosInfo().unblockAllAccesses();
+  biros().unblockAllAccesses();
 }
 
 extern "C" G_MODULE_EXPORT void on_stepNextWrite_clicked(GtkWidget* caller){
-  birosInfo().stepToNextWriteAccess();
+  biros().stepToNextWriteAccess();
 }
 
 extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
@@ -304,24 +306,24 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
     case 'V':{
-      ViewRegistrationL vis = getViews(typeid(*birosInfo().variables(id)).name());
+      ViewRegistrationL vis = getViews(typeid(*biros().variables(id)).name());
       vis.append(getViews(typeid(Variable).name()));
       if(!vis.N) break;
       if(true || vis.N==1){ //only one choice
-        iog->view[iog->box] = newViewBase(birosInfo().variables(id), vis(0), container);
+        iog->view[iog->box] = newViewBase(biros().variables(id), vis(0), container);
       }else{ //multiple choices -> open menu
 	ViewRegistration *vi;  uint i;
 	StringL choices;
-	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
+	for_list(i, vi, vis) choices.append(new MT::String(vi->userType));
 	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = newViewBase(birosInfo().variables(id), vis(choice), container);
+        iog->view[iog->box] = newViewBase(biros().variables(id), vis(choice), container);
       }
     }  break;
     case 'P':
-      iog->view[iog->box] = newView<GenericTextView_Process, Process>(*birosInfo().processes(id), container);
+      iog->view[iog->box] = newView<GenericTextView_Process, Process>(*biros().processes(id), container);
       break;
     case 'p':
-      iog->view[iog->box] = newView<GenericTextView_Parameter, Parameter>(*birosInfo().parameters(id), container);
+      iog->view[iog->box] = newView<GenericTextView_Parameter, Parameter>(*biros().parameters(id), container);
       break;
     case 'F':{
       //get variable id first by accessing
@@ -329,7 +331,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       GtkTreeIter var;
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
-      FieldRegistration *field = birosInfo().variables(varid)->s->fields(id);
+      FieldRegistration *field = biros().variables(varid)->s->fields(id);
       
       ViewRegistrationL vis = getViews(field->sysType);
       vis.append(getViews(typeid(FieldRegistration).name()));
@@ -338,7 +340,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       if(false && vis.N>1){ //multiple choices -> menu
 	ViewRegistration *vi;  uint i;
 	StringL choices;
-	for_list(i, vi, vis) choices.append(new MT::String(vi->name));
+	for_list(i, vi, vis) choices.append(new MT::String(vi->userType));
 	choice = gtkPopupMenuChoice(choices);
 	listDelete(choices);
       }
@@ -354,21 +356,21 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   gtkLeaveCallback();
 }
 
-GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, GtkTreeIter* par){
+GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, uint id, GtkTreeIter* par){
   GtkTreeIter it;
   MT::String info;
   writeInfo(info.clear(), *p, true);
   gtk_tree_store_append(store, &it, par);
-  gtk_tree_store_set(store, &it, 0, p->id, 1, 'P', 2, p->name.p, 3, info.p, -1);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'P', 2, p->name.p, 3, info.p, -1);
   return it;
 }
     
-GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, GtkTreeIter* par){
+GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, uint id, GtkTreeIter* par){
   GtkTreeIter it;
   MT::String info;
   writeInfo(info.clear(), *v, true);
   gtk_tree_store_append(store, &it, par);
-  gtk_tree_store_set(store, &it, 0, v->id, 1, 'V', 2, v->name.p, 3, info.p, -1);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'V', 2, v->name.p, 3, info.p, -1);
   return it;
 }
 
@@ -381,12 +383,12 @@ GtkTreeIter appendToStore(GtkTreeStore *store, FieldRegistration *f, uint id, Gt
   return it;
 }
 
-GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, GtkTreeIter* par){
+GtkTreeIter appendToStore(GtkTreeStore *store, Parameter *pa, uint id, GtkTreeIter* par){
   GtkTreeIter it;
   MT::String info;
   writeInfo(info.clear(), *pa, true);
   gtk_tree_store_append(store, &it, par);
-  gtk_tree_store_set(store, &it, 0, pa->id, 1, 'p', 2, pa->name, 3, info.p, -1);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'p', 2, pa->name, 3, info.p, -1);
   return it;
 }
 
@@ -395,14 +397,14 @@ GtkTreeIter appendToStore(GtkTreeStore *store, ViewRegistration *vi, uint id, Gt
   MT::String info;
   //writeInfo(info.clear(), *vi, true);
   gtk_tree_store_append(store, &it, NULL);
-  gtk_tree_store_set(store, &it, 0, id, 1, 'I', 2, vi->name.p, 3, info.p, -1);
+  gtk_tree_store_set(store, &it, 0, id, 1, 'I', 2, vi->userType, 3, info.p, -1);
   return it;
 }
 
 void setBoxView(View *v, GtkBuilder *builder, uint box){
   if(!v){ MT_MSG("setting box view failed"); return; }
   MT::String label;
-  label <<" [" <<v->info->name <<']';
+  label <<" [" <<v->info->userType <<']';
   GtkLabel *l = GTK_LABEL(gtk_builder_get_object(builder, STRING("boxLabel" <<box)));
   gtk_label_set_text(l, label.p);
 }
