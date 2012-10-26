@@ -17,7 +17,8 @@ public:
 
 private:
     Ui::TestMaze_IIClass ui;
-    Maze maze;
+    typedef Maze<> maze_t;
+    maze_t maze;
     QTimer * random_action_timer;
 
 private slots:

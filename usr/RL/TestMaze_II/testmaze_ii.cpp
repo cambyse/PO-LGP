@@ -2,7 +2,7 @@
 #include "debug.h"
 
 TestMaze_II::TestMaze_II(QWidget *parent)
-    : QWidget(parent), maze(3,3), random_action_timer(NULL)
+    : QWidget(parent), maze(2,2), random_action_timer(NULL)
 {
     // initialize UI
     ui.setupUi(this);
@@ -36,7 +36,7 @@ void TestMaze_II::render() {
 }
 
 void TestMaze_II::random_action() {
-    maze.perform_transition(Maze::action(rand()%Maze::NUMBER_OF_ACTIONS));
+    maze.perform_transition(maze_t::action_t(rand()%maze_t::NUMBER_OF_ACTIONS));
     maze.render_update(ui.graphicsView);
 }
 
@@ -57,19 +57,19 @@ void TestMaze_II::process_console_input() {
         random [int,stop] -> start/stop random move";
         ui._wConsoleOutput->appendPlainText(help_text);
     } else if(input=="left" || input=="l") { // left
-        maze.perform_transition(Maze::LEFT);
+        maze.perform_transition(maze_t::LEFT);
         maze.render_update(ui.graphicsView);
     } else if(input=="right" || input=="r") { // right
-        maze.perform_transition(Maze::RIGHT);
+        maze.perform_transition(maze_t::RIGHT);
         maze.render_update(ui.graphicsView);
     } else if(input=="up" || input=="u") { // up
-        maze.perform_transition(Maze::UP);
+        maze.perform_transition(maze_t::UP);
         maze.render_update(ui.graphicsView);
     } else if(input=="down" || input=="d") { // down
-        maze.perform_transition(Maze::DOWN);
+        maze.perform_transition(maze_t::DOWN);
         maze.render_update(ui.graphicsView);
     } else if(input=="stay" || input=="s") { // stay
-        maze.perform_transition(Maze::STAY);
+        maze.perform_transition(maze_t::STAY);
         maze.render_update(ui.graphicsView);
     } else if(input.startsWith("random")) { // start/stop random actions
         bool invalid_argument = true;
@@ -94,6 +94,25 @@ void TestMaze_II::process_console_input() {
             .append("'.");
             ui._wConsoleOutput->appendPlainText(error_text);
         }
+    } else if(input.startsWith("delay")) { // set time delay for rewards
+        bool invalid_argument = true;
+        QString arg = input.remove("delay");
+        arg.remove(" ");
+        bool ok;
+        int delay = arg.toInt(&ok);
+        if( ok && delay>=0 ) {
+            invalid_argument = false;
+            maze.set_time_delay(delay);
+        }
+        if(invalid_argument) {
+            QString error_text;
+            error_text.append("    Invalid argument to 'delay'. Expecting non-negative integer.")
+            .append(arg)
+            .append("'.");
+            ui._wConsoleOutput->appendPlainText(error_text);
+        }
+    } else if(input=="exit" || input=="quit") { // start/stop random actions
+        QApplication::quit();
     } else {
         ui._wConsoleOutput->appendPlainText("    unknown command");
     }
