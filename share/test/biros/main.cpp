@@ -100,8 +100,8 @@ void testListening(){
   Adder a3("adder3", &i2, &i3);
   
   a1.threadLoopWithBeat(.5);
-  a2.threadListenTo(LIST<Variable>(i1));
-  a3.threadListenTo(LIST<Variable>(i2));
+  a2.listenTo(LIST<Variable>(i1));
+  a3.listenTo(LIST<Variable>(i2));
   
   MT::wait(2.);
   

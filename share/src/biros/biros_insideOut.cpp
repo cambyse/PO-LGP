@@ -101,7 +101,8 @@ void sInsideOut::open(){
 
   //try to open config file
   ifstream is("ino.cfg");
-  if(is.good()){
+  /*
+if(is.good()){
     MT::String name,type, fld;
     uint _b;
     ViewRegistration *vi;
@@ -130,6 +131,7 @@ void sInsideOut::open(){
     }
     is.close();
   }
+  */
 }
 
 void sInsideOut::close(){
@@ -309,15 +311,15 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       ViewRegistrationL vis = getViews(typeid(*biros().variables(id)).name());
       vis.append(getViews(typeid(Variable).name()));
       if(!vis.N) break;
-      if(true || vis.N==1){ //only one choice
-        iog->view[iog->box] = newViewBase(biros().variables(id), vis(0), container);
-      }else{ //multiple choices -> open menu
+      int choice=0;
+      if(false && vis.N>1){ //multiple choices -> open menu
 	ViewRegistration *vi;  uint i;
 	StringL choices;
 	for_list(i, vi, vis) choices.append(new MT::String(vi->userType));
-	int choice = gtkPopupMenuChoice(choices);
-        iog->view[iog->box] = newViewBase(biros().variables(id), vis(choice), container);
+	choice = gtkPopupMenuChoice(choices);
+	listDelete(choices);
       }
+      iog->view[iog->box] = newViewBase(biros().variables(id), vis(choice), container);
     }  break;
     case 'P':
       iog->view[iog->box] = newView<GenericTextView_Process, Process>(*biros().processes(id), container);

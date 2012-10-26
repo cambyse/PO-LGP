@@ -25,7 +25,7 @@ MotionPlanner::MotionPlanner(MotionPrimitive& m):Process("MotionPlanner"),
   s->gl=NULL;
   s->planningAlgo=sMotionPlanner::AICO_noinit;
   s->aico=NULL;
-  threadListenTo(&m);
+  listenTo(&m);
 }
 
 MotionPlanner::~MotionPlanner() {

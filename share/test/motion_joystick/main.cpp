@@ -1,7 +1,6 @@
 #include <hardware/hardware.h>
 #include <motion/motion.h>
 #include <motion/FeedbackControlTasks.h>
-#include <biros/control.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -15,18 +14,18 @@ int main(int argn,char** argv){
 
   // processes
   Process *controller = newMotionController(&hardwareReference, &motionPrimitive, NULL);
-  Joystick joystick;
+  Process *joystick = newJoystick(joystickState);
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
 
-  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, joystick);
+  ProcessL hardware=LIST<Process>(schunkArm, schunkHand, schunkSkin, *joystick);
 
   ProcessL P=ARRAY(controller);
 
-  b::openInsideOut();
+  new InsideOut;
 
-  new PoseView(hardwareReference.fields(0), NULL); //example for creating views directly from code
+  new PoseView(hardwareReference.q_reference, NULL); //example for creating views directly from code
 
   cout <<"** setting controller to joystick mode" <<endl;
   Joystick_FeedbackControlTask joyTask;
@@ -37,7 +36,7 @@ int main(int argn,char** argv){
   
   loopWithBeat(hardware, .01); // hardware must be started before the controller// WHY??
 //   if(biros().getParameter<bool>("openArm", NULL, false))
-//     controller->threadListenTo(&hardwareReference);
+//     controller->listenTo(&hardwareReference);
 //   else
     controller->threadLoopWithBeat(.01);
 
@@ -48,7 +47,6 @@ int main(int argn,char** argv){
   }
   close(P);
   close(hardware);
-  b::closeInsideOut();
   
   cout <<" *** bye bye" <<endl;
 

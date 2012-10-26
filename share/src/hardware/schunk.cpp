@@ -36,7 +36,7 @@ SchunkArm::SchunkArm():Process("SchunkArm") {
 SchunkArm::~SchunkArm() { delete s; }
 
 void SchunkArm::open() {
-  s->openArm = biros().getParameter<bool>("openArm", this, false);
+  s->openArm = biros().getParameter<bool>("openArm", false, this);
   
   GeometricState *geo;
   biros().getVariable(geo, "GeometricState", this);
@@ -108,7 +108,7 @@ SchunkHand::~SchunkHand() {
 }
 
 void SchunkHand::open() {
-  s->openHand = biros().getParameter<bool>("openHand", this, false);
+  s->openHand = biros().getParameter<bool>("openHand", false, this);
   
   s->motorIndex.resize(7);
   for (uint m=0; m<=6; m++) s->motorIndex(m) = m+7;
@@ -175,7 +175,7 @@ SchunkSkin::~SchunkSkin() {
 }
 
 void SchunkSkin::open() {
-  s->openSkin = biros().getParameter<bool>("openSkin", this, false);
+  s->openSkin = biros().getParameter<bool>("openSkin", false, this);
   if (!s->openSkin) return;
   
   s->open();

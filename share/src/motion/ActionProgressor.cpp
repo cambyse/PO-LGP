@@ -9,9 +9,9 @@ Process* newActionProgressor(MotionFuture& a){
 ActionProgressor::ActionProgressor(MotionFuture& a)
 :Process("ActionProgressor"), motionFuture(&a) {
   if(!motionFuture) biros().getVariable(motionFuture, "MotionFuture", this);
-  threadListenTo(motionFuture);
+  listenTo(motionFuture);
   MotionPrimitive *mp = motionFuture->getCurrentMotionPrimitive(this);
-  if(mp) threadListenTo(mp);
+  if(mp) listenTo(mp);
 }
 
 void ActionProgressor::step(){
@@ -19,7 +19,7 @@ void ActionProgressor::step(){
   
   if(motionFuture->getTodoFrames(this) <= 1) return; //no future to progress to
   MotionPrimitive *mp = motionFuture->getCurrentMotionPrimitive(this);
-  threadListenTo(mp);
+  listenTo(mp);
   
   if(mp->get_mode(this) != MotionPrimitive::done) return;
   switch(mp->get_action(this)){ //wait, depending on current action
@@ -36,7 +36,7 @@ void ActionProgressor::step(){
 
   motionFuture->incrementFrame(this);
   mp = motionFuture->getCurrentMotionPrimitive(this);
-  threadListenTo(mp);
+  listenTo(mp);
   
   //reset the frame0 of the motion primitive to the real hardware pose! -> triggers the MotionPlanner to refine!
   VAR(HardwareReference);

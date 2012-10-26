@@ -4,9 +4,10 @@
 
 int main(int argc, char** argv){
   Image imgL("CameraL"), imgR("CameraR");
-  UVCCamera camera;
+
+  Process* camera = newUVCCamera();
   
-  camera.open();
+  camera->open();
   OpenGL gl;
    
   byteA frame, right_frame;
@@ -14,7 +15,7 @@ int main(int argc, char** argv){
   uint i;
   for(i=0;i<100;i++){
     //MT::wait(.5);
-    camera.step();
+    camera->step();
     gl.img=&imgL.img;
     gl.update();
   }
@@ -23,7 +24,7 @@ int main(int argc, char** argv){
   write_ppm(imgL.img,"z.left.ppm");
   write_ppm(imgR.img,"z.right.ppm");
 
-  camera.close();
+  camera->close();
 
   return 0;
 }

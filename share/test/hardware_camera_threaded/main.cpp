@@ -4,23 +4,24 @@
 
 int main(int argn,char** argv){
   Image imgL("CameraL"), imgR("CameraR");
-  UVCCamera camera;
+
+  Process *camera = newUVCCamera();
 
   byteA img;
   OpenGL gl;
   gl.img = &img;
   
-  camera.threadLoop();
+  camera->threadLoop();
   double time=MT::realTime();
   int rev=0;
-  for(;;){
+  for(;rev<100;){
     rev=imgL.waitForRevisionGreaterThan(rev);  //sets calling thread to sleep
     img=imgL.get_img(NULL);
     if(!gl.update()) break;
   }
   cout <<"fps=" <<rev/(MT::realTime()-time) <<endl;
   cout <<"trying to close..." <<endl;
-  camera.threadClose();
+  camera->threadClose();
   
   return 0;
 }

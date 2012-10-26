@@ -558,6 +558,7 @@ struct Thread {
   Thread();
   ~Thread();
   void launch();
+  void join();
   virtual void main() = 0;
 };
 

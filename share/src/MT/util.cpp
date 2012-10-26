@@ -1048,8 +1048,14 @@ void Thread::launch(){
 }
 
 Thread::~Thread(){
+  join();
+}
+
+void Thread::join(){
+  if(!thread) return;
   int rc;
   rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  thread=0;
 }
 
 

@@ -28,7 +28,7 @@
 ObjectClusterer::ObjectClusterer() : Process("ObjectClusterer") {
   biros().getVariable(data_3d, "KinectData3D", this, true);
   biros().getVariable(point_clouds, "ObjectClusters", this, true);
-  threadListenTo(data_3d);
+  listenTo(data_3d);
 }
 
 void findMinMaxOfCylinder(double &min, double &max, arr &start, const pcl::PointCloud<PointT>::Ptr &cloud, const arr &direction) {
@@ -277,7 +277,7 @@ void ObjectClusterer::step() {
 ObjectFitter::ObjectFitter() : Process("ObectFitter"), s(new sObjectFitter(this)) {
   biros().getVariable<PointCloudSet>(objectClusters, "ObjectClusters", this, true);
   biros().getVariable<ObjectSet>(objects, "Objects", this, true);
-  threadListenTo(objectClusters);
+  listenTo(objectClusters);
 }
 
 void ObjectFitter::open() {}
@@ -385,7 +385,7 @@ ObjectFilter::ObjectFilter(const char* name) : Process(name) {
   s = new sObjectFilter;  
   biros().getVariable(in_objects, "Objects", this, true);
   biros().getVariable(out_objects, "filteredObjects", this, true);
-  threadListenTo(in_objects);
+  listenTo(in_objects);
 }
 
 void ObjectFilter::open() {
@@ -446,7 +446,7 @@ void ObjectFilter::step() {
 ObjectTransformator::ObjectTransformator(const char* name) : Process(name) {
   biros().getVariable(kinect_objects, "filteredObjects", this, true);
   geo.init("GeometricState", this);
-  threadListenTo(kinect_objects);
+  listenTo(kinect_objects);
 }
 
 void ObjectTransformator::open() {

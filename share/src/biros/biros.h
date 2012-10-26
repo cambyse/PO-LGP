@@ -59,14 +59,11 @@ struct Process {
 
   Process(const char* name);
   virtual ~Process();
-  
+
   //-- to be overloaded by the specific implementation
   virtual void open() = 0;    ///< is called within the thread when the thread is created
   virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
   virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
-  
-  //-- info
-  int stepState(); // 0=idle, >0=steps-to-go, <0=special loop modes
   
   //-- a scalar function which may depend only on the referenced variables
   //code correctness requires that a call of _step() may only decrease _f() !!
@@ -76,18 +73,17 @@ struct Process {
   void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-
-  void threadWaitIdle();                ///< caller waits until step is done (working -> idle mode)
-  bool threadIsIdle();                  ///< check if in idle mode
-  bool threadIsClosed();                ///< check if closed
-  
-  void threadListenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
-  void threadListenTo(const VariableL &signalingVars);
-  void threadStopListenTo(Variable *var);
-  
   void threadLoop();                    ///< loop, stepping forever
   void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
   void threadStop();                    ///< stop looping
+
+  void waitForIdle();                ///< caller waits until step is done (working -> idle mode)
+  bool isIdle();                  ///< check if in idle mode
+  bool isClosed();                ///< check if closed
+  
+  void listenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
+  void listenTo(const VariableL &signalingVars);
+  void stopListeningTo(Variable *var);
 };
 
 

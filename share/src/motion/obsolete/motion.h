@@ -11,7 +11,7 @@ struct PoseViewer:Process {
   
   PoseViewer(T& v):Process("PoseViewer"), var(&v), gl(NULL) {
     geo.init("GeometricState", this);
-    threadListenTo(var);
+    listenTo(var);
   }
   void open() {
     geo.pull();
@@ -63,7 +63,7 @@ struct OrsViewer:Process {
   
   OrsViewer(T& v):Process("OrsViewer"), var(&v), gl(NULL) {
     geo.init("GeometricState", this);
-    threadListenTo(var);
+    listenTo(var);
   }
   void open() {
     geo.pull();

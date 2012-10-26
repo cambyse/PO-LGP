@@ -49,7 +49,7 @@ int main(int argn, char **argv) {
     while(!allClosed) {
       MT::wait(1.);
       allClosed = true;
-      for_list(i, p, P)  if(!p->threadIsClosed())
+      for_list(i, p, P)  if(!p->isClosed())
           allClosed = false;
       cout << step << endl;
       step++;
@@ -112,7 +112,7 @@ struct Ref{
   uint last_revision; ///< last revision of a read/write access
 
 
-  Ref(T& _var, Process *_p){ var=&_var; p=_p; p->threadListenTo(var); }
+  Ref(T& _var, Process *_p){ var=&_var; p=_p; p->listenTo(var); }
   const T& get(){ return ReadToken<T>(var,p)(); }
   T& operator()(){ return *var; } //TODO ensure that it is locked
   void writeAccess(){ var->writeAccess(p); }

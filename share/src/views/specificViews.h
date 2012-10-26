@@ -14,6 +14,8 @@ struct MatrixView:View{
 //===========================================================================
 
 struct ImageView:View{
+  ImageView():View(){}
+  ImageView(byteA& image, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&image; objectLock=_lock; gtkNew(container); }
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
@@ -32,7 +34,7 @@ namespace ors{ struct Mesh; }
 
 struct MeshView:View{
   MeshView():View(){}
-  MeshView(ors::Mesh& mesh, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&mesh; gtkNew(container); }
+  MeshView(ors::Mesh& mesh, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&mesh; objectLock=_lock; gtkNew(container); }
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };

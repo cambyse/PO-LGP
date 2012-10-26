@@ -251,10 +251,6 @@ Process::~Process() {
   delete s;
 }
 
-int Process::stepState() {
-  return state.getValue();
-}
-
 void Process::threadOpen(int priority) {
   state.lock();
   if(s->thread){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
@@ -264,49 +260,45 @@ void Process::threadOpen(int priority) {
 }
 
 void Process::threadClose() {
-  if(!s->thread) return; // we were here already
   state.setValue(tsCLOSE);
-  int rc;
-  CHECK(s->thread, "parallel call to threadClose -> NIY");
-  rc = pthread_join(s->thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  s->thread = 0;
+  s->join();
 }
 
 void Process::threadStep(uint steps, bool wait) {
   if(!s->thread) threadOpen();
   //CHECK(state.value==tsIDLE, "never step while thread is busy!");
   state.setValue(steps);
-  if(wait) threadWaitIdle();
+  if(wait) waitForIdle();
 }
 
-void Process::threadListenTo(const VariableL &signalingVars) {
+void Process::listenTo(const VariableL &signalingVars) {
   uint i;  Variable *v;
-  for_list(i, v, signalingVars) threadListenTo(v);
+  for_list(i, v, signalingVars) listenTo(v);
 }
 
-void Process::threadListenTo(Variable *v) {
+void Process::listenTo(Variable *v) {
   v->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->s->listeners.setAppend(this);
   v->rwlock.unlock();
   s->listensTo.setAppend(v);
 }
 
-void Process::threadStopListenTo(Variable *v){
+void Process::stopListeningTo(Variable *v){
   v->rwlock.writeLock(); //don't want to increase revision and broadcast!
   v->s->listeners.removeValue(this);
   v->rwlock.unlock();
   s->listensTo.removeValue(v);
 }
 
-bool Process::threadIsIdle() {
+bool Process::isIdle() {
   return state.getValue()==tsIDLE;
 }
 
-bool Process::threadIsClosed() {
+bool Process::isClosed() {
   return state.getValue()==tsCLOSE;
 }
 
-void Process::threadWaitIdle() {
+void Process::waitForIdle() {
   state.waitForValueEq(tsIDLE);
 }
 
@@ -421,7 +413,7 @@ void stop(const ProcessL& P) {
 
 void wait(const ProcessL& P) {
   Process *p; uint i;
-  for_list(i, p, P) p->threadWaitIdle();
+  for_list(i, p, P) p->waitForIdle();
 }
 
 void close(const ProcessL& P) {
@@ -511,7 +503,7 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl){
     os <<"tid=" <<p.s->tid <<nl
        <<"steps=" <<p.step_count
        <<"state=";
-    int state=p.stepState();
+    int state=p.state.getValue();
     if (state>0) os <<state; else switch (state) {
       case tsCLOSE:   os <<"close";  break;
       case tsLOOPING: os <<"loop";   break;
