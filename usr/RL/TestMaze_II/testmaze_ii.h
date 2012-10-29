@@ -4,6 +4,7 @@
 #include <QtGui/QWidget>
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
+#include "TransitionModel.h"
 #include <QTimer>
 
 
@@ -16,9 +17,11 @@ public:
     ~TestMaze_II();
 
 private:
-    Ui::TestMaze_IIClass ui;
     typedef Maze<> maze_t;
+    typedef TransitionModel<maze_t::state_t,maze_t::action_t> transition_model_t;
+    Ui::TestMaze_IIClass ui;
     maze_t maze;
+    transition_model_t transition_model;
     QTimer * random_action_timer;
 
 private slots:

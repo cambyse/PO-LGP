@@ -6,7 +6,8 @@ QT += core \
 HEADERS += ValueIteration.h \
     util.h \
     Maze.h \
-    testmaze_ii.h
+    testmaze_ii.h \
+    TransitionModel.h
 SOURCES += main.cpp \
     testmaze_ii.cpp
 FORMS += testmaze_ii.ui

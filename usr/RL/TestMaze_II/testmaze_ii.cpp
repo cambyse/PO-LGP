@@ -2,10 +2,13 @@
 #include "debug.h"
 
 TestMaze_II::TestMaze_II(QWidget *parent)
-    : QWidget(parent), maze(2,2), random_action_timer(NULL)
+    : QWidget(parent), maze(2,2,1,0.0), transition_model(2,2), random_action_timer(NULL)
 {
     // initialize UI
     ui.setupUi(this);
+
+    // focus on command line
+    ui._wConsoleInput->setFocus();
 
     // seed random generator
     srand(time(NULL));
@@ -17,8 +20,8 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     random_action_timer = new QTimer(this);
     connect(random_action_timer, SIGNAL(timeout()), this, SLOT(random_action()));
 
-    // focus on command line
-    ui._wConsoleInput->setFocus();
+    // initialize transition model
+    maze.initialize_transition_model(transition_model);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
