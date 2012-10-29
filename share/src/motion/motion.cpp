@@ -1,5 +1,4 @@
 #include "motion.h"
-#include "motion_internal.h"
 
 void reattachShape(const char* objShape, const char* toBody);
 
@@ -51,8 +50,9 @@ void MotionFuture::appendNewAction(const MotionPrimitive::ActionPredicate _actio
 
   m->setNewAction(_action, ref1, ref2, locref, p);
   
-  MotionPlanner *planner = planners.append(new MotionPlanner(*m));
-  planner -> threadStep();
+  Process *planner = newMotionPlanner(*m);
+  planners.append((MotionPlanner*)planner);
+  planner->threadStep();
   
   deAccess(p);
 }

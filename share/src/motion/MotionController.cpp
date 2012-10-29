@@ -1,9 +1,23 @@
-#include "motion_internal.h"
+#include "motion.h"
 #include "FeedbackControlTasks.h"
 
 #include <MT/soc.h>
 #include <MT/soc_inverseKinematics.h>
+#include <MT/socSystem_ors.h>
 #include <hardware/hardware.h>
+
+struct MotionController:Process {
+  struct sMotionController *s;
+  HardwareReference *hardwareReference;
+  MotionPrimitive *motionPrimitive;
+  MotionFuture *motionFuture;
+  
+  MotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
+  ~MotionController();
+  void open();
+  void step();
+  void close();
+};
 
 Process* newMotionController(HardwareReference* hw, MotionPrimitive* mp, MotionFuture* mf){
   return new MotionController(hw, mp, mf);

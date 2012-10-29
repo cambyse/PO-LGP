@@ -1,6 +1,8 @@
 #include "motion.h"
 
-REGISTER_VIEW(PoseView, arr/*, fieldVT*/);
+#include <MT/opengl.h>
+
+REGISTER_VIEW(PoseView, arr);
 
 PoseView::PoseView():View() {
   geo.init("GeometricState", NULL); //the pose view gets itself a copy of the central ors

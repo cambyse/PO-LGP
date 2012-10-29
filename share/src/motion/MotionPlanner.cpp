@@ -1,8 +1,8 @@
 #include "MotionPlanner.h"
 #include "FeedbackControlTasks.h"
-#include "motion_internal.h"
 
 #include <MT/aico.h>
+#include <MT/opengl.h>
 #include <unistd.h>
 
 Process* newMotionPlanner(MotionPrimitive& m){

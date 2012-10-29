@@ -1,5 +1,6 @@
 #include <MT/aico.h>
 #include <MT/util_t.cxx>
+#include <MT/opengl.h>
 
 #include <motion/MotionPlanner.h>
 

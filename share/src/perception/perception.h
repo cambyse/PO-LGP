@@ -3,17 +3,13 @@
 
 #ifdef MT_OPENCV
 #  undef COUNT
-//#  include <opencv/highgui.h>
 #  include <opencv2/opencv.hpp>
 #  undef MIN
 #  undef MAX
 #endif
 
 #include <biros/biros.h>
-//#include <biros/biros_internal.h>
-//#include <MT/opengl.h>
 #include <MT/ors.h>
-
 #include <MT/array_t.cxx>
 
 //===========================================================================

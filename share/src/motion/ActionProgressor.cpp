@@ -1,6 +1,16 @@
-#include "motion_internal.h"
+#include "motion.h"
 
 void reattachShape(const char* objShape, const char* toBody);
+
+struct ActionProgressor:Process {
+  MotionFuture *motionFuture;
+  
+  ActionProgressor(MotionFuture&);
+  ~ActionProgressor(){};
+  void open(){};
+  void step();
+  void close(){};
+};
 
 Process* newActionProgressor(MotionFuture& a){
   return new ActionProgressor(a);

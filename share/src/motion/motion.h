@@ -2,15 +2,29 @@
 #define MT_motion_h
 
 #include <biros/biros.h>
-#include "views/views.h"
-#include "views/specificViews.h"
-#include <MT/ors.h>
-#include <MT/opengl.h>
 
+//===========================================================================
+//
+// fwd declarations
+//
+
+//-- Variables
+struct GeometricState;
+struct MotionPrimitive;
+struct HardwareReference;
+struct MotionFuture;
 struct SkinPressure;
 struct JoystickState;
-struct FeedbackControlTaskAbstraction;
+
+//-- Process creators
+//either MotionFuture or MotionPrimitive must be set, one can be zero;
+Process* newMotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
+Process* newMotionPlanner(MotionPrimitive&);
+Process* newActionProgressor(MotionFuture&);
+
 struct MotionPlanner;
+struct FeedbackControlTaskAbstraction;
+
 
 //===========================================================================
 //
@@ -122,21 +136,6 @@ struct MotionFuture:Variable {
 
 //===========================================================================
 //
-// Processes
-//
-
-//either MotionFuture or MotionPrimitive must be set, one can be zero;
-Process* newMotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
-
-Process* newMotionPlanner(MotionPrimitive&);
-
-Process* newActionProgressor(MotionFuture&);
-
-
-
-
-//===========================================================================
-//
 // Views
 //
 
@@ -149,8 +148,5 @@ struct PoseView:View{
   void glDraw();
   virtual void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
-
-
-#include "MotionPlanner.h"
 
 #endif
