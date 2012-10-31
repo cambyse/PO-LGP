@@ -28,6 +28,9 @@ private:
 
     QTimer * random_action_timer, * value_iteration_timer;
 
+    void collect_episode(const int& length);
+    int arg_int(QString& string, const int& n, bool * ok);
+
 private slots:
     void render();
     void random_action();

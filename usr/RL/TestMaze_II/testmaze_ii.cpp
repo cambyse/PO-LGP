@@ -4,7 +4,7 @@
 #include "debug.h"
 
 #define XDIM 2
-#define YDIM 1
+#define YDIM 2
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
@@ -41,8 +41,9 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     // initialize display
     maze.render_initialize(ui.graphicsView);
 
-    crf.check_derivative(10,10);
-    crf.optimize();
+//    crf.check_derivative(10,10,1e-10,1e-3);
+//    crf.optimize();
+    collect_episode(100);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -51,6 +52,23 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 TestMaze_II::~TestMaze_II() {
     delete random_action_timer;
     delete value_iteration_timer;
+}
+
+void TestMaze_II::collect_episode(const int& length) {
+    for(int idx=0; idx<length; ++idx) {
+        maze_t::action_t action = (maze_t::action_t)(rand()%maze_t::NUMBER_OF_ACTIONS);
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+    }
+}
+
+int TestMaze_II::arg_int(QString& string, const int& n, bool * ok) {
+    QString arg = string.section(QRegExp("\\s+"),n,n);
+    int ret = arg.toInt(ok);
+    if(!ok) ret = 0;
+    return ret;
 }
 
 void TestMaze_II::render() {
@@ -168,6 +186,18 @@ void TestMaze_II::process_console_input() {
         }
     } else if(input=="exit" || input=="quit") { // start/stop random actions
         QApplication::quit();
+    } else if(input.startsWith("arg")) { // parse arguments
+        int counter = 0;
+        input.remove("arg");
+        bool ok = true;
+        while(ok) {
+            int arg = arg_int(input,counter+1,&ok);
+            if(ok) {
+                ++counter;
+                DEBUG_OUT(0,"    argument nr. " << counter << ": " << arg);
+            }
+        }
+        DEBUG_OUT(0,"    Parsed " << counter << " arguments." );
     } else {
         ui._wConsoleOutput->appendPlainText("    unknown command");
     }
