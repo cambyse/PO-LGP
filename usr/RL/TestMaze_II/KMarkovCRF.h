@@ -24,26 +24,7 @@ public:
     template < class DataGiven, class DataPredict >
     class Feature {
     public:
-        virtual double evaluate(DataGiven data_given, DataPredict data_predict) {
-            double ret = 0;
-            ret += std::get<0>(data_given);
-            ret += data_predict;
-            return ret;
-        }
-    };
-
-    template < class DataGiven, class DataPredict >
-    class Factor {
-    public:
-        double evaluate(DataGiven data_given, DataPredict data_predict) {
-            double sum = 0;
-            for(unsigned int k_idx=0; k_idx<features.size(); ++k_idx) {
-                sum += lambda[k_idx]*features[k_idx].evaluate(data_given,data_predict);
-            }
-            return exp(sum);
-        }
-        std::vector<Feature<DataGiven,DataPredict> > features;
-        lbfgsfloatval_t * lambda;
+        virtual double evaluate(DataGiven data_given, DataPredict data_predict) = 0;
     };
 
     KMarkovCRF(const int& kk, const int& dim_x, const int& dim_y, const int& action_n);
@@ -92,24 +73,18 @@ public:
     int optimize();
 
     void add_action_state_reward_tripel(
-            const int& state,
             const int& action,
+            const int& state,
             const double& reward
     );
 
-    void check_derivative(const int& number_of_samples, const double& range = 1, const double& max_difference = 1e-6 );
+    void check_derivative(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
 private:
-    int k, lambda_size;;
-    double z;
-    bool z_up_to_date;
-    episode_t episode_data;
-    lbfgsfloatval_t * lambda;
-    std::vector<Factor<std::tuple<int,int>, int> > state_factors;
 
-    class SimpleMDPFeature: public Feature<std::tuple<int,int>,int> {
+    class MDPFeature: public Feature<std::tuple<int,int>,int> {
     public:
-        SimpleMDPFeature(const int& s_from, const int& a, const int& s_to):
+        MDPFeature(const int& s_from, const int& a, const int& s_to):
             state_from(s_from), action(a), state_to(s_to) {}
         virtual double evaluate(std::tuple<int,int> data_given, int data_predict) {
             if( std::get<0>(data_given)==state_from && std::get<1>(data_given)==action && data_predict==state_to) {
@@ -122,7 +97,11 @@ private:
         int state_from, action, state_to;
     };
 
-    double update_z();
+    int k, lambda_size;;
+    episode_t episode_data;
+    lbfgsfloatval_t * lambda;
+    std::vector<int> state_parameter_indices;
+    std::vector<MDPFeature> state_features;
 
     double raw_state_probability(const int& state_from, const int& action, const int& state_to);
 };
