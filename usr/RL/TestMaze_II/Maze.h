@@ -15,7 +15,7 @@
 #include <deque>
 #include <vector>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 class Maze_default_renderer {
@@ -40,7 +40,7 @@ public:
         bool operator==(const state_t& other) const { return this->index==other.index; }
         bool operator!=(const state_t& other) const { return !(*this)==other; }
         bool operator<(const state_t& other) const { return this->index<other.index; }
-        int idx() const { return idx; }
+        int idx() const { return index; }
         int x(const int& x_dim) const { return index%x_dim; }
         int y(const int& x_dim) const { return index/x_dim; }
     private:
