@@ -1,8 +1,18 @@
 #include "testmaze_ii.h"
+
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
+#define XDIM 2
+#define YDIM 1
+
 TestMaze_II::TestMaze_II(QWidget *parent)
-    : QWidget(parent), maze(2,2,1,0.0), transition_model(2,2), random_action_timer(NULL)
+    : QWidget(parent),
+      maze(XDIM,YDIM,1,0.0),
+      value_iteration_object(),
+      crf(0,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
+      random_action_timer(NULL),
+      value_iteration_timer(NULL)
 {
     // initialize UI
     ui.setupUi(this);
@@ -20,11 +30,19 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     random_action_timer = new QTimer(this);
     connect(random_action_timer, SIGNAL(timeout()), this, SLOT(random_action()));
 
+    // initialize value iteration timer
+    value_iteration_timer = new QTimer(this);
+    connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
+
     // initialize transition model
-    maze.initialize_transition_model(transition_model);
+    maze.initialize_transition_model(value_iteration_object);
+    value_iteration_object.set_expected_reward(maze_t::state_t(0,0,XDIM),1);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
+
+    crf.check_derivative(10,10);
+    crf.optimize();
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -32,6 +50,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
 TestMaze_II::~TestMaze_II() {
     delete random_action_timer;
+    delete value_iteration_timer;
 }
 
 void TestMaze_II::render() {
@@ -41,6 +60,16 @@ void TestMaze_II::render() {
 void TestMaze_II::random_action() {
     maze.perform_transition(maze_t::action_t(rand()%maze_t::NUMBER_OF_ACTIONS));
     maze.render_update(ui.graphicsView);
+}
+
+void TestMaze_II::value_iteration() {
+    value_iteration_object.iterate();
+    DEBUG_OUT(1,"State values:");
+    for(int x_idx=0; x_idx<XDIM; ++x_idx) {
+        for(int y_idx=0; y_idx<YDIM; ++y_idx) {
+            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << value_iteration_object.get_value(maze_t::state_t(x_idx,y_idx,XDIM)));
+        }
+    }
 }
 
 void TestMaze_II::process_console_input() {
@@ -109,9 +138,32 @@ void TestMaze_II::process_console_input() {
         }
         if(invalid_argument) {
             QString error_text;
-            error_text.append("    Invalid argument to 'delay'. Expecting non-negative integer.")
+            error_text.append("    Invalid argument to 'delay'. Expecting non-negative integer, got '")
             .append(arg)
             .append("'.");
+            ui._wConsoleOutput->appendPlainText(error_text);
+        }
+    } else if(input.startsWith("iterate")) { // value iteration
+        QString arg = input.remove("iterate");
+        arg.remove(" ");
+        bool invalid_argument = true;
+        if(arg=="stop") {
+            invalid_argument = false;
+            value_iteration_timer->stop();
+        } else {
+            bool ok;
+            int delay = arg.toInt(&ok);
+            if( ok && delay>=0 ) {
+                invalid_argument = false;
+                value_iteration_timer->stop();
+                value_iteration_timer->start(delay);
+            }
+        }
+        if(invalid_argument) {
+            QString error_text;
+            error_text.append("    Invalid argument to 'iterate'. Expecting non-negative integer got '")
+                            .append(arg)
+                            .append("'.");
             ui._wConsoleOutput->appendPlainText(error_text);
         }
     } else if(input=="exit" || input=="quit") { // start/stop random actions

@@ -7,9 +7,11 @@ HEADERS += ValueIteration.h \
     util.h \
     Maze.h \
     testmaze_ii.h \
-    TransitionModel.h
+    KMarkovCRF.h
 SOURCES += main.cpp \
-    testmaze_ii.cpp
+    testmaze_ii.cpp \
+    KMarkovCRF.cpp
+LIBS += -llbfgs
 FORMS += testmaze_ii.ui
 RESOURCES += 
 QMAKE_CXXFLAGS+=-std=c++11

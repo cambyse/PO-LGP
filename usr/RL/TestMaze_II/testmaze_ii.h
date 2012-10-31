@@ -4,7 +4,8 @@
 #include <QtGui/QWidget>
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
-#include "TransitionModel.h"
+#include "ValueIteration.h"
+#include "KMarkovCRF.h"
 #include <QTimer>
 
 
@@ -18,15 +19,19 @@ public:
 
 private:
     typedef Maze<> maze_t;
-    typedef TransitionModel<maze_t::state_t,maze_t::action_t> transition_model_t;
+    typedef ValueIteration<maze_t::state_t,maze_t::action_t> value_iterationt;
+
     Ui::TestMaze_IIClass ui;
     maze_t maze;
-    transition_model_t transition_model;
-    QTimer * random_action_timer;
+    value_iterationt value_iteration_object;
+    KMarkovCRF crf;
+
+    QTimer * random_action_timer, * value_iteration_timer;
 
 private slots:
     void render();
     void random_action();
+    void value_iteration();
     void process_console_input();
 
 };
