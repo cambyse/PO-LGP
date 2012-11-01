@@ -27,7 +27,7 @@ public:
         virtual double evaluate(DataGiven data_given, DataPredict data_predict) = 0;
     };
 
-    KMarkovCRF(const int& kk, const int& dim_x, const int& dim_y, const int& action_n);
+    KMarkovCRF(const int& kk, const int& x, const int& y, const int& a_n);
 
     virtual ~KMarkovCRF();
 
@@ -70,7 +70,7 @@ public:
             int ls
     );
 
-    int optimize();
+    void optimize();
 
     void add_action_state_reward_tripel(
             const int& action,
@@ -78,7 +78,11 @@ public:
             const double& reward
     );
 
+    void clear_data() { episode_data.clear(); }
+
     void check_derivative(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
+
+    double state_probability(const int& state_from, const int& action, const int& state_to, lbfgsfloatval_t const * x = nullptr);
 
 private:
 
@@ -93,17 +97,22 @@ private:
                 return 0;
             }
         }
+        int get_state_from() const { return state_from; }
+        int get_action()     const { return action;     }
+        int get_state_to()   const { return state_to;   }
     private:
         int state_from, action, state_to;
     };
 
-    int k, lambda_size;;
+    int k, lambda_size, x_dim, y_dim, action_n;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
     std::vector<int> state_parameter_indices;
     std::vector<MDPFeature> state_features;
 
-    double raw_state_probability(const int& state_from, const int& action, const int& state_to);
+    double raw_state_probability(const int& state_from, const int& action, const int& state_to, lbfgsfloatval_t const * x = nullptr);
+    double partition_function(const int& state_from, const int& action, lbfgsfloatval_t const * x = nullptr);
+
 };
 
 #endif /* KMARKOVCRF_H_ */
