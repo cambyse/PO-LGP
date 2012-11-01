@@ -29,7 +29,9 @@ private:
     QTimer * random_action_timer, * value_iteration_timer;
 
     void collect_episode(const int& length);
-    int arg_int(QString& string, const int& n, bool * ok);
+    bool arg_int(const QString& string, const int& n, int& i);
+    bool arg_double(const QString& string, const int& n, double& d);
+    bool arg_string(const QString& string, const int& n, QString& s);
 
 private slots:
     void render();

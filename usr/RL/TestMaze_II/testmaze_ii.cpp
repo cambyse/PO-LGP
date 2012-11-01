@@ -8,13 +8,14 @@
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-      maze(XDIM,YDIM,1,0.0),
+      maze(XDIM,YDIM,2,0.0),
       value_iteration_object(),
-      crf(0,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
+      crf(1,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
       random_action_timer(NULL),
       value_iteration_timer(NULL)
 {
     // initialize UI
+//    ui._wConsoleWidget->setTitleBarWidget(tmp);
     ui.setupUi(this);
 
     // focus on command line
@@ -43,7 +44,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
 //    crf.check_derivative(10,10,1e-10,1e-3);
 //    crf.optimize();
-    collect_episode(100);
+//    collect_episode(100);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -64,11 +65,23 @@ void TestMaze_II::collect_episode(const int& length) {
     }
 }
 
-int TestMaze_II::arg_int(QString& string, const int& n, bool * ok) {
+bool TestMaze_II::arg_int(const QString& string, const int& n, int& i) {
     QString arg = string.section(QRegExp("\\s+"),n,n);
-    int ret = arg.toInt(ok);
-    if(!ok) ret = 0;
-    return ret;
+    bool ok;
+    i = arg.toInt(&ok);
+    return ok;
+}
+
+bool TestMaze_II::arg_double(const QString& string, const int& n, double& d) {
+    QString arg = string.section(QRegExp("\\s+"),n,n);
+    bool ok;
+    d = arg.toDouble(&ok);
+    return ok;
+}
+
+bool TestMaze_II::arg_string(const QString& string, const int& n, QString& s) {
+    s = string.section(QRegExp("\\s+"),n,n);
+    return true;
 }
 
 void TestMaze_II::render() {
@@ -95,17 +108,34 @@ void TestMaze_II::process_console_input() {
     ui._wConsoleInput->setText("");
     ui._wConsoleOutput->appendPlainText(input);
 
+    QString help_s(     "    help                           -> this help");
+    QString left_s(     "    left  / l                      -> move left");
+    QString right_s(    "    right / r                      -> move right");
+    QString up_s(       "    up    / u                      -> move up");
+    QString down_s(     "    down  / d                      -> move down");
+    QString stay_s(     "    stay  / s                      -> stay-action");
+    QString random_s(   "    random         [<int>,stop]    -> start/stop random move");
+    QString delay_s(    "    delay           <int>          -> set reward delay");
+    QString iterate_s(  "    iterate / i    [<int>,stop]    -> start/stop value iteration");
+    QString episode_s(  "    episode / e    [<int>,clear]   -> record length <int> episode or clear data");
+    QString optimize_s( "    optimize / o   [check,c]       -> optimize CRF [check derivatives]");
+    QString epsilon_s(  "    epsilon         <double>       -> set exploration rate epsilon");
+
     // process input
     if(input=="help") { // help
-        const char * help_text = "    Available commands:\n\
-        help              -> this help\n\
-        left  / l         -> move left\n\
-        right / r         -> move right\n\
-        up    / u         -> move up\n\
-        down  / d         -> move down\n\
-        stay  / s         -> stay-action\n\
-        random [int,stop] -> start/stop random move";
-        ui._wConsoleOutput->appendPlainText(help_text);
+        ui._wConsoleOutput->appendPlainText("    Available commands:");
+        ui._wConsoleOutput->appendPlainText( help_s );
+        ui._wConsoleOutput->appendPlainText( left_s );
+        ui._wConsoleOutput->appendPlainText( right_s );
+        ui._wConsoleOutput->appendPlainText( up_s );
+        ui._wConsoleOutput->appendPlainText( down_s );
+        ui._wConsoleOutput->appendPlainText( stay_s );
+        ui._wConsoleOutput->appendPlainText( random_s );
+        ui._wConsoleOutput->appendPlainText( delay_s );
+        ui._wConsoleOutput->appendPlainText( iterate_s );
+        ui._wConsoleOutput->appendPlainText( episode_s );
+        ui._wConsoleOutput->appendPlainText( optimize_s );
+        ui._wConsoleOutput->appendPlainText( epsilon_s );
     } else if(input=="left" || input=="l") { // left
         maze.perform_transition(maze_t::LEFT);
         maze.render_update(ui.graphicsView);
@@ -121,83 +151,77 @@ void TestMaze_II::process_console_input() {
     } else if(input=="stay" || input=="s") { // stay
         maze.perform_transition(maze_t::STAY);
         maze.render_update(ui.graphicsView);
-    } else if(input.startsWith("random")) { // start/stop random actions
-        bool invalid_argument = true;
-        QString arg = input.remove("random");
-        arg.remove(" ");
-        if(arg=="stop") {
-            invalid_argument = false;
+    } else if(input.startsWith("random ") || input=="random") { // start/stop random actions
+        QString s;
+        int i;
+        if(input=="random") {
+            random_action();
+        } else if(arg_string(input,1,s) && s=="stop") {
             random_action_timer->stop();
+        } else if(arg_int(input,1,i) && i>=0){
+            random_action_timer->stop();
+            random_action_timer->start(i);
         } else {
-            bool ok;
-            int delay = arg.toInt(&ok);
-            if( ok && delay>=0 ) {
-                invalid_argument = false;
-                random_action_timer->stop();
-                random_action_timer->start(delay);
-            }
-        }
-        if(invalid_argument) {
-            QString error_text;
-            error_text.append("    Invalid argument to 'random'. Expecting non-negative integer or 'stop', got '")
-            .append(arg)
-            .append("'.");
-            ui._wConsoleOutput->appendPlainText(error_text);
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'random'. Expecting non-negative integer or 'stop', got '" + s + "'.");
         }
     } else if(input.startsWith("delay")) { // set time delay for rewards
-        bool invalid_argument = true;
-        QString arg = input.remove("delay");
-        arg.remove(" ");
-        bool ok;
-        int delay = arg.toInt(&ok);
-        if( ok && delay>=0 ) {
-            invalid_argument = false;
-            maze.set_time_delay(delay);
-        }
-        if(invalid_argument) {
-            QString error_text;
-            error_text.append("    Invalid argument to 'delay'. Expecting non-negative integer, got '")
-            .append(arg)
-            .append("'.");
-            ui._wConsoleOutput->appendPlainText(error_text);
-        }
-    } else if(input.startsWith("iterate")) { // value iteration
-        QString arg = input.remove("iterate");
-        arg.remove(" ");
-        bool invalid_argument = true;
-        if(arg=="stop") {
-            invalid_argument = false;
-            value_iteration_timer->stop();
+        QString s;
+        int i;
+        if(input=="delay") {
+            ui._wConsoleOutput->appendPlainText(delay_s);
+        } else if(arg_int(input,1,i) && i>=0){
+            maze.set_time_delay(i);
         } else {
-            bool ok;
-            int delay = arg.toInt(&ok);
-            if( ok && delay>=0 ) {
-                invalid_argument = false;
-                value_iteration_timer->stop();
-                value_iteration_timer->start(delay);
-            }
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'delay'. Expecting non-negative integer, got '" + s + "'.");
         }
-        if(invalid_argument) {
-            QString error_text;
-            error_text.append("    Invalid argument to 'iterate'. Expecting non-negative integer got '")
-                            .append(arg)
-                            .append("'.");
-            ui._wConsoleOutput->appendPlainText(error_text);
+    } else if(input.startsWith("iterate ") || input.startsWith("i ") || input=="iterate" || input=="i") { // value iteration
+        QString s;
+        int i;
+        if(input=="iterate" || input=="i") {
+            value_iteration();
+        } else if(arg_string(input,1,s) && s=="stop") {
+            value_iteration_timer->stop();
+        } else if(arg_int(input,1,i) && i>=0){
+            value_iteration_timer->stop();
+            value_iteration_timer->start(i);
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'iterate'. Expecting non-negative integer or 'stop', got '" + s + "'.");
         }
-    } else if(input=="exit" || input=="quit") { // start/stop random actions
+    } else if(input.startsWith("episode ") || input.startsWith("e ") || input=="episode" || input=="e") { // record episode
+        QString s;
+        int i;
+        if(input=="episode" || input=="e") {
+            ui._wConsoleOutput->appendPlainText( episode_s );
+        } else if(arg_string(input,1,s) && s=="clear") {
+            crf.clear_data();
+        } else if(arg_int(input,1,i) && i>=0){
+            collect_episode(i);
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'episode'. Expecting non-negative integer or 'clear', got '" + s + "'.");
+        }
+    } else if(input.startsWith("optimize ") || input.startsWith("o ") || input=="optimize" || input=="o") { // optimize CRF
+        QString s;
+        if(input=="optimize" || input=="o") {
+            crf.optimize();
+        } else if(arg_string(input,1,s) && ( s=="clear" || s=="c") ) {
+            crf.check_derivative(3,10,1e-6,1e-3);
+            crf.optimize();
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimize'. Expecting no argument, 'check', or 'c', got '" + s + "'.");
+        }
+    } else if(input.startsWith("epsilon ") || input=="epsilon") {
+        QString s;
+        arg_string(input,1,s);
+        double eps;
+        if(input=="epsilon") {
+            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_epsilong()));
+        } else if(arg_double(input,1,eps) && eps>=0 && eps<=1) {
+            maze.set_epsilong(eps);
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
+        }
+    } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
         QApplication::quit();
-    } else if(input.startsWith("arg")) { // parse arguments
-        int counter = 0;
-        input.remove("arg");
-        bool ok = true;
-        while(ok) {
-            int arg = arg_int(input,counter+1,&ok);
-            if(ok) {
-                ++counter;
-                DEBUG_OUT(0,"    argument nr. " << counter << ": " << arg);
-            }
-        }
-        DEBUG_OUT(0,"    Parsed " << counter << " arguments." );
     } else {
         ui._wConsoleOutput->appendPlainText("    unknown command");
     }

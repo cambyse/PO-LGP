@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>545</width>
-    <height>533</height>
+    <width>848</width>
+    <height>554</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,12 +19,15 @@
    </item>
    <item row="1" column="0">
     <widget class="QDockWidget" name="_wConsoleWidget">
+     <property name="features">
+      <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+     </property>
      <widget class="QWidget" name="dockWidgetContents">
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
         <widget class="QWidget" name="widget" native="true">
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
+          <item row="0" column="0" rowspan="2" colspan="2">
            <widget class="QPlainTextEdit" name="_wConsoleOutput">
             <property name="font">
              <font>
@@ -36,7 +39,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLineEdit" name="_wConsoleInput"/>
           </item>
          </layout>
