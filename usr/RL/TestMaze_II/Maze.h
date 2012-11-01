@@ -15,7 +15,7 @@
 #include <deque>
 #include <vector>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 class Maze_default_renderer {
@@ -64,11 +64,15 @@ public:
 
     int number_of_states() const { return x_dim*y_dim; }
 
+    void set_epsilong(const double& e);
+    double get_epsilong() const { return epsilon; }
+
 private:
 
     int x_dim; ///< x dimension.
     int y_dim; ///< y dimension.
     int time_delay;
+    static const double state_size;
     std::deque<bool> reward_timer;
     double epsilon;
     Renderer renderer;
@@ -94,6 +98,9 @@ private:
         return value;
     }
 };
+
+template< class Renderer>
+const double Maze<Renderer>::state_size = 0.9;
 
 template< class Renderer>
 Maze<Renderer>::Maze(const int& x_dimension, const int& y_dimension, const int& td, const double& eps, Renderer r):
@@ -137,19 +144,18 @@ void Maze<Renderer>::render_initialize(QGraphicsView * view) {
         view->setScene(scene);
     }
 
-//    QPen wall_pen(QBrush(QColor(0,0,0)),0.1,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
-//    QPen action_pen(QBrush(QColor(0,0,0,100)),0.06,Qt::SolidLine,Qt::RoundCap,Qt::MiterJoin);
-//    QPen max_action_pen(QBrush(QColor(0,0,0)),0.06,Qt::SolidLine,Qt::RoundCap,Qt::MiterJoin);
     for(int idx=0; idx<x_dim*y_dim; ++idx) {
         state_t state(idx);
-        scene->addRect( state.x(x_dim), state.y(x_dim), 0.9, 0.9, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
+        scene->addRect( state.x(x_dim)-state_size/2, state.y(x_dim)-state_size/2, state_size, state_size, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
     }
 
     // initialize and render button state
     if(!button) {
         button = new QGraphicsSvgItem("./button.svg");
-        button->setScale(0.3);
-        button->setPos(button_state.x(x_dim), button_state.y(x_dim));
+        QSizeF s = button->boundingRect().size();
+        button->setTransformOriginPoint(s.width()/2,s.height()/2);
+        button->setScale(0.2);
+        button->setPos(button_state.x(x_dim)-s.width()/2,button_state.y(x_dim)-s.height()/2);
     }
     button->setElementId(current_state==button_state ? "active" : "passive");
     scene->addItem(button);
@@ -157,8 +163,10 @@ void Maze<Renderer>::render_initialize(QGraphicsView * view) {
     // initialize and render smiley state
     if(!smiley) {
         smiley = new QGraphicsSvgItem("./smiley.svg");
-        smiley->setScale(0.3);
-        smiley->setPos(smiley_state.x(x_dim), smiley_state.y(x_dim));
+        QSizeF s = smiley->boundingRect().size();
+        smiley->setTransformOriginPoint(s.width()/2,s.height()/2);
+        smiley->setScale(0.2);
+        smiley->setPos(smiley_state.x(x_dim)-s.width()/2, smiley_state.y(x_dim)-s.height()/2);
     }
     smiley->setElementId(reward_timer.back() ? "active" : "passive");
     scene->addItem(smiley);
@@ -169,11 +177,13 @@ void Maze<Renderer>::render_initialize(QGraphicsView * view) {
     // render agent
     if(!agent) {
         agent = new QGraphicsSvgItem("./agent.svg");
-        agent->setScale(0.3);
+        QSizeF s = agent->boundingRect().size();
+        agent->setTransformOriginPoint(s.width()/2,s.height()/2);
+        agent->setScale(0.2);
+        agent->setPos(current_state.x(x_dim)-s.width()/2, current_state.y(x_dim)-s.height()/2);
     }
-    agent->setPos(current_state.x(x_dim), current_state.y(x_dim));
+
     scene->addItem(agent);
-//    scene->addEllipse( current_state.x(x_dim) + 0.1, current_state.y(x_dim)+ 0.1, 0.7, 0.7, QPen(QColor(0,0,0)), QBrush(QColor(0,230,0)) );
 
     rescale_scene(view);
 }
@@ -183,7 +193,8 @@ void Maze<Renderer>::render_update(QGraphicsView * view) {
     button->setElementId(current_state==button_state ? "active" : "passive");
     smiley->setElementId(reward_timer.back() ? "active" : "passive");
     renderer.render_update();
-    agent->setPos(current_state.x(x_dim), current_state.y(x_dim));
+    QSizeF s = agent->boundingRect().size();
+    agent->setPos(current_state.x(x_dim)-s.width()/2, current_state.y(x_dim)-s.height()/2);
     rescale_scene(view);
 }
 
@@ -278,6 +289,12 @@ void Maze<Renderer>::set_time_delay(const int& new_time_delay) {
 template< class Renderer>
 void Maze<Renderer>::set_current_state(const state_t& s) {
     current_state = s;
+}
+
+template< class Renderer>
+void Maze<Renderer>::set_epsilong(const double& e) {
+    epsilon = e;
+    create_transitions();
 }
 
 template< class Renderer>
