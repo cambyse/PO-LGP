@@ -10,9 +10,9 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
       maze(XDIM,YDIM,2,0.0),
       value_iteration_object(),
-      crf(1,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
-      random_action_timer(NULL),
-      value_iteration_timer(NULL)
+      crf(1,3,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
+      random_action_timer(nullptr),
+      value_iteration_timer(nullptr)
 {
     // initialize UI
 //    ui._wConsoleWidget->setTitleBarWidget(tmp);
@@ -22,7 +22,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     ui._wConsoleInput->setFocus();
 
     // seed random generator
-    srand(time(NULL));
+    srand(time(nullptr));
 
     // set console welcome message
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
@@ -108,22 +108,24 @@ void TestMaze_II::process_console_input() {
     ui._wConsoleInput->setText("");
     ui._wConsoleOutput->appendPlainText(input);
 
-    QString help_s(     "    help                           -> this help");
-    QString left_s(     "    left  / l                      -> move left");
-    QString right_s(    "    right / r                      -> move right");
-    QString up_s(       "    up    / u                      -> move up");
-    QString down_s(     "    down  / d                      -> move down");
-    QString stay_s(     "    stay  / s                      -> stay-action");
-    QString random_s(   "    random         [<int>,stop]    -> start/stop random move");
-    QString delay_s(    "    delay           <int>          -> set reward delay");
-    QString iterate_s(  "    iterate / i    [<int>,stop]    -> start/stop value iteration");
-    QString episode_s(  "    episode / e    [<int>,clear]   -> record length <int> episode or clear data");
-    QString optimize_s( "    optimize / o   [check,c]       -> optimize CRF [check derivatives]");
-    QString epsilon_s(  "    epsilon         <double>       -> set exploration rate epsilon");
+    QString headline_s( "    COMMAND . . .  ARGUMENTS  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> ACTION\n");
+    QString help_s(     "    help  / h . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> this help");
+    QString left_s(     "    left  / l . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move left");
+    QString right_s(    "    right / r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move right");
+    QString up_s(       "    up    / u . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move up");
+    QString down_s(     "    down  / d . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move down");
+    QString stay_s(     "    stay  / s . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> stay-action");
+    QString random_s(   "    random  . . . .[<int>,stop] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> start/stop random move");
+    QString delay_s(    "    delay . . . . . <int> . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> set reward delay");
+    QString iterate_s(  "    iterate / i . .[<int>,stop] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> start/stop value iteration");
+    QString episode_s(  "    episode / e . .[<int>,clear]. . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> record length <int> episode or clear data");
+    QString optimize_s( "    optimize / o   [check [reward,r,state,s], c [reward,r,state,s], reward, r, state, s]  -> optimize CRF [check derivatives]");
+    QString epsilon_s(  "    epsilon . . . . <double>  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> set exploration rate epsilon");
 
     // process input
-    if(input=="help") { // help
-        ui._wConsoleOutput->appendPlainText("    Available commands:");
+    if(input=="help" || input=="h") { // help
+        ui._wConsoleOutput->appendPlainText("    Available commands:\n");
+        ui._wConsoleOutput->appendPlainText( headline_s );
         ui._wConsoleOutput->appendPlainText( help_s );
         ui._wConsoleOutput->appendPlainText( left_s );
         ui._wConsoleOutput->appendPlainText( right_s );
@@ -200,14 +202,25 @@ void TestMaze_II::process_console_input() {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'episode'. Expecting non-negative integer or 'clear', got '" + s + "'.");
         }
     } else if(input.startsWith("optimize ") || input.startsWith("o ") || input=="optimize" || input=="o") { // optimize CRF
-        QString s;
+        QString s1, s2;
         if(input=="optimize" || input=="o") {
-            crf.optimize();
-        } else if(arg_string(input,1,s) && ( s=="clear" || s=="c") ) {
-            crf.check_derivative(3,10,1e-6,1e-3);
-            crf.optimize();
+            crf.optimize_reward_model();
+            crf.optimize_state_model();
+        } else if(arg_string(input,1,s1) && ( s1=="check" || s1=="c") ) {
+            if(arg_string(input,2,s2) && ( s2=="reward" || s2=="r" ) ) {
+                crf.check_reward_derivatives(3,10,1e-6,1e-3);
+            } else if(arg_string(input,2,s2) && ( s2=="state" || s2=="s" ) ) {
+                crf.check_state_derivatives(3,10,1e-6,1e-3);
+            } else {
+                crf.check_reward_derivatives(3,10,1e-6,1e-3);
+                crf.check_state_derivatives(3,10,1e-6,1e-3);
+            }
+        } else if(arg_string(input,1,s1) && ( s1=="state" || s1=="s") ) {
+            crf.optimize_state_model();
+        } else if(arg_string(input,1,s1) && ( s1=="reward" || s1=="r") ) {
+            crf.optimize_reward_model();
         } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimize'. Expecting no argument, 'check', or 'c', got '" + s + "'.");
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimize'. Expecting no argument, [check [reward,r,state,s], c [reward,r,state,s], reward, r, state, s], got '" + s1 + " " + s2 + "'.");
         }
     } else if(input.startsWith("epsilon ") || input=="epsilon") {
         QString s;
