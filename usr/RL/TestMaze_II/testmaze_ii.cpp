@@ -10,7 +10,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
       maze(XDIM,YDIM,2,0.0),
       value_iteration_object(),
-      crf(1,3,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
+      crf(1,3,3,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
       random_action_timer(nullptr),
       value_iteration_timer(nullptr)
 {
@@ -204,16 +204,14 @@ void TestMaze_II::process_console_input() {
     } else if(input.startsWith("optimize ") || input.startsWith("o ") || input=="optimize" || input=="o") { // optimize CRF
         QString s1, s2;
         if(input=="optimize" || input=="o") {
-            crf.optimize_reward_model();
-            crf.optimize_state_model();
+            crf.optimize_model();
         } else if(arg_string(input,1,s1) && ( s1=="check" || s1=="c") ) {
             if(arg_string(input,2,s2) && ( s2=="reward" || s2=="r" ) ) {
                 crf.check_reward_derivatives(3,10,1e-6,1e-3);
             } else if(arg_string(input,2,s2) && ( s2=="state" || s2=="s" ) ) {
                 crf.check_state_derivatives(3,10,1e-6,1e-3);
             } else {
-                crf.check_reward_derivatives(3,10,1e-6,1e-3);
-                crf.check_state_derivatives(3,10,1e-6,1e-3);
+                crf.check_derivatives(3,10,1e-6,1e-3);
             }
         } else if(arg_string(input,1,s1) && ( s1=="state" || s1=="s") ) {
             crf.optimize_state_model();

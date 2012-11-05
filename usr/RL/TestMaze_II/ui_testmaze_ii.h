@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'testmaze_ii.ui'
 **
-** Created: Mon Oct 22 15:14:40 2012
+** Created: Mon Nov 5 17:42:07 2012
 **      by: Qt User Interface Compiler version 4.8.3
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -41,7 +41,7 @@ public:
     {
         if (TestMaze_IIClass->objectName().isEmpty())
             TestMaze_IIClass->setObjectName(QString::fromUtf8("TestMaze_IIClass"));
-        TestMaze_IIClass->resize(545, 533);
+        TestMaze_IIClass->resize(1183, 852);
         gridLayout = new QGridLayout(TestMaze_IIClass);
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
@@ -53,6 +53,7 @@ public:
 
         _wConsoleWidget = new QDockWidget(TestMaze_IIClass);
         _wConsoleWidget->setObjectName(QString::fromUtf8("_wConsoleWidget"));
+        _wConsoleWidget->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
         dockWidgetContents = new QWidget();
         dockWidgetContents->setObjectName(QString::fromUtf8("dockWidgetContents"));
         gridLayout_3 = new QGridLayout(dockWidgetContents);
@@ -72,12 +73,12 @@ public:
         _wConsoleOutput->setFont(font);
         _wConsoleOutput->setReadOnly(true);
 
-        gridLayout_2->addWidget(_wConsoleOutput, 0, 0, 1, 1);
+        gridLayout_2->addWidget(_wConsoleOutput, 0, 0, 2, 2);
 
         _wConsoleInput = new QLineEdit(widget);
         _wConsoleInput->setObjectName(QString::fromUtf8("_wConsoleInput"));
 
-        gridLayout_2->addWidget(_wConsoleInput, 1, 0, 1, 1);
+        gridLayout_2->addWidget(_wConsoleInput, 2, 0, 1, 1);
 
 
         gridLayout_3->addWidget(widget, 0, 0, 1, 1);
