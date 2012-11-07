@@ -108,19 +108,19 @@ void TestMaze_II::process_console_input() {
     ui._wConsoleInput->setText("");
     ui._wConsoleOutput->appendPlainText(input);
 
-    QString headline_s( "    COMMAND . . .  ARGUMENTS  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> ACTION\n");
-    QString help_s(     "    help  / h . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> this help");
-    QString left_s(     "    left  / l . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move left");
-    QString right_s(    "    right / r . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move right");
-    QString up_s(       "    up    / u . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move up");
-    QString down_s(     "    down  / d . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> move down");
-    QString stay_s(     "    stay  / s . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> stay-action");
-    QString random_s(   "    random  . . . .[<int>,stop] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> start/stop random move");
-    QString delay_s(    "    delay . . . . . <int> . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> set reward delay");
-    QString iterate_s(  "    iterate / i . .[<int>,stop] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> start/stop value iteration");
-    QString episode_s(  "    episode / e . .[<int>,clear]. . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> record length <int> episode or clear data");
-    QString optimize_s( "    optimize / o   [check [reward,r,state,s], c [reward,r,state,s], reward, r, state, s]  -> optimize CRF [check derivatives]");
-    QString epsilon_s(  "    epsilon . . . . <double>  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . -> set exploration rate epsilon");
+    QString headline_s( "    COMMAND . . .  ARGUMENTS . . . . . . . . -> ACTION\n");
+    QString help_s(     "    help  / h. . . . . . . . . . . . . . . . -> this help");
+    QString left_s(     "    left  / l. . . . . . . . . . . . . . . . -> move left");
+    QString right_s(    "    right / r. . . . . . . . . . . . . . . . -> move right");
+    QString up_s(       "    up    / u. . . . . . . . . . . . . . . . -> move up");
+    QString down_s(     "    down  / d. . . . . . . . . . . . . . . . -> move down");
+    QString stay_s(     "    stay  / s. . . . . . . . . . . . . . . . -> stay-action");
+    QString random_s(   "    random  . . . .[<int>,stop]. . . . . . . -> start/stop random move");
+    QString delay_s(    "    delay . . . . . <int>. . . . . . . . . . -> set reward delay");
+    QString iterate_s(  "    iterate / i . .[<int>,stop]. . . . . . . -> start/stop value iteration");
+    QString episode_s(  "    episode / e . .[<int>,clear] . . . . . . -> record length <int> episode or clear data");
+    QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
+    QString epsilon_s(  "    epsilon . . . . <double> . . . . . . . . -> set exploration rate epsilon");
 
     // process input
     if(input=="help" || input=="h") { // help
@@ -206,17 +206,7 @@ void TestMaze_II::process_console_input() {
         if(input=="optimize" || input=="o") {
             crf.optimize_model();
         } else if(arg_string(input,1,s1) && ( s1=="check" || s1=="c") ) {
-            if(arg_string(input,2,s2) && ( s2=="reward" || s2=="r" ) ) {
-                crf.check_reward_derivatives(3,10,1e-6,1e-3);
-            } else if(arg_string(input,2,s2) && ( s2=="state" || s2=="s" ) ) {
-                crf.check_state_derivatives(3,10,1e-6,1e-3);
-            } else {
                 crf.check_derivatives(3,10,1e-6,1e-3);
-            }
-        } else if(arg_string(input,1,s1) && ( s1=="state" || s1=="s") ) {
-            crf.optimize_state_model();
-        } else if(arg_string(input,1,s1) && ( s1=="reward" || s1=="r") ) {
-            crf.optimize_reward_model();
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimize'. Expecting no argument, [check [reward,r,state,s], c [reward,r,state,s], reward, r, state, s], got '" + s1 + " " + s2 + "'.");
         }
