@@ -8,17 +8,17 @@ void getTaskVector(arr& Phi, arr& PhiJ,  Simulator& S, const arr& pos_target, co
   Phi.clear();
   PhiJ.clear();
   
-  //1st task: pin positioned within hole
-  S.kinematicsPos(y,"pin");
-  S.jacobianPos  (J,"pin");
+  //1st task: peg positioned within hole
+  S.kinematicsPos(y,"peg");
+  S.jacobianPos  (J,"peg");
   y_target = pos_target; //exponentially approach the hole
   y_deviation = 1e-2; //(deviation is 1/precision^2)
   Phi .append((y - y_target) / y_deviation);
   PhiJ.append(J / y_deviation);
   
   //2nd task: orientation
-  S.kinematicsVec(y, "pin");
-  S.jacobianVec(J, "pin");
+  S.kinematicsVec(y, "peg");
+  S.jacobianVec(J, "peg");
   y_target = dir_target;
   y_deviation = 1e-2;
   Phi .append((y - y_target) / y_deviation);
@@ -74,8 +74,8 @@ void taskSpaceInterpolation(const arr& q0, Simulator& S, uint T, const arr& pos_
   S.setJointAngles(q0);
   q=q0;
   arr pos0, dir0;
-  S.kinematicsPos(pos0,"pin");
-  S.kinematicsVec(dir0,"pin");
+  S.kinematicsPos(pos0,"peg");
+  S.kinematicsVec(dir0,"peg");
 
   for(uint t=0;t<=T;t++){
     getTaskVector(Phi, PhiJ, S,
@@ -89,8 +89,8 @@ void taskSpaceInterpolation(const arr& q0, Simulator& S, uint T, const arr& pos_
   }
 }
 
-void pin_in_a_hole(){
-  Simulator S("pin_in_a_hole.ors");
+void peg_in_a_hole(){
+  Simulator S("peg_in_a_hole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
 
   arr q,q0,qT;
@@ -137,7 +137,7 @@ void pin_in_a_hole(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  pin_in_a_hole();
+  peg_in_a_hole();
 
   return 0;
 }

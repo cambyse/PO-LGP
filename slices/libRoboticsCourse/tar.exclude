@@ -1,7 +1,5 @@
 course/*/main.cpp
-02-pinInAHole
-03-rrt
-04-dynamics
+04-rrt
 05-car
 06-kalmanSLAM
 07-cartPole

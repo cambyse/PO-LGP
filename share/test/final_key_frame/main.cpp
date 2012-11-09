@@ -23,7 +23,7 @@ void problem1(){
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
 
   arr xt;
-  sys.get_x0(xt);
+  sys.getx0(xt);
   arr b,Binv;
  
   OneStepKinematic(b,Binv,sys,1e-3,1e-4);

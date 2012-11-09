@@ -35,7 +35,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   if(testFeedbackControl){
     //-- feedback control (kinematic or dynamic) to reach the targets
     sys.getq0(q);
-    sys.get_x0(x);
+    sys.getx0(x);
     pos->setGainsAsNatural(20,.2);
     pos->targetType=positionGainsTT;
     col->setGains(.5,.0);
@@ -65,7 +65,7 @@ void testRobotSystem(bool testFeedbackControl=false){
 
   q.clear();
 
-  //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
+//  sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
   soc::straightTaskTrajectory(sys, q, 0);
 
   AICO aico(sys);
@@ -82,11 +82,12 @@ void testRobotSystem(bool testFeedbackControl=false){
   for(uint k=0;k<10;k++){
     pos->y_target(2) += .1;
     pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
-    aico.prepare_for_changed_task();
+/*    aico.prepare_for_changed_task();
     aico.iterate_to_convergence();
     q = aico.q();
     sys.analyzeTrajectory(aico.b(),true);
     sys.displayTrajectory(aico.q(),NULL,1,"AICO_replanned (planned trajectory)");
+    */
     //from scratch
     arr qalt;
     AICO aic(sys);

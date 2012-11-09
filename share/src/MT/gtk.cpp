@@ -52,7 +52,7 @@ void gtkCheckInitialized(){
       glutInit(&argc, argv);
 
       global_gtkThread = new GtkThread();
-      global_gtkThread -> launch();
+      global_gtkThread -> open("--GTK-loop");
     }
     m.unlock();
   }

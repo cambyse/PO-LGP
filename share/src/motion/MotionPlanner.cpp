@@ -597,7 +597,7 @@ double keyframeOptimizer(arr& x, soc::SocSystemAbstraction& sys, double stopTole
     lapack_cholesky(sqrtWinv, sumAinv);
   }
   
-  sys.get_x0(x0);
+  sys.getx0(x0);
   if (!x_is_initialized) x=x0;
   
   struct MyOptimizationProblem:VectorFunction {

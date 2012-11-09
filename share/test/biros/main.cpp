@@ -103,7 +103,7 @@ void testListening(){
   a2.listenTo(LIST<Variable>(i1));
   a3.listenTo(LIST<Variable>(i2));
   
-  MT::wait(2.);
+  MT::wait(20.);
   
   a1.threadClose();
   a2.threadClose();

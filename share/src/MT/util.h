@@ -554,11 +554,16 @@ struct ConditionVariable {
 
 //! a basic thread
 struct Thread {
+#if 1 //ndef MT_QT
   pthread_t thread;
+#else
+  struct sThread *s;
+#endif
   Thread();
   ~Thread();
-  void launch();
-  void join();
+  void open(const char* name=NULL);
+  void close();
+  bool isOpen();
   virtual void main() = 0;
 };
 

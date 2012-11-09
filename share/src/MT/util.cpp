@@ -22,6 +22,7 @@
 #  include <Qt/qmetatype.h>
 #  include <Qt/qdatastream.h>
 #  include <Qt/qapplication.h>
+#  include <QThread>
 #endif
 
 #ifndef MT_ConfigFileName
@@ -31,8 +32,6 @@
 
 #include <errno.h>
 #include <sys/syscall.h>
-
-//TODO: move basic threading routines from biros to util!
 
 //===========================================================================
 //
@@ -1022,6 +1021,7 @@ void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
 // Thread
 //
 
+#if 1//ndef MT_QT
 void* Thread_staticMain(void *_self){
   Thread *th=(Thread*)_self;
   th->main();
@@ -1031,7 +1031,7 @@ void* Thread_staticMain(void *_self){
 Thread::Thread():thread(0){
 }
 
-void Thread::launch(){
+void Thread::open(const char* name){
   int rc;
   pthread_attr_t atts;
   rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
@@ -1045,19 +1045,46 @@ void Thread::launch(){
     std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
     rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
   }*/
+  //prctl(PR_SET_NAME, proc->name.p);
+  if(name) pthread_setname_np(thread, name);
 }
 
 Thread::~Thread(){
-  join();
+  close();
 }
 
-void Thread::join(){
+void Thread::close(){
   if(!thread) return;
   int rc;
   rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   thread=0;
 }
 
+bool Thread::isOpen(){
+  return thread!=0;
+}
+
+#else
+
+struct sThread:QThread{
+  Thread *th;
+  void run(){  th->main();  }
+};
+
+Thread::Thread():s(NULL){
+  s = new sThread;
+  s->th=this;
+}
+
+void Thread::open(){ s->setObjectName("hallo");  s->start(); }
+
+Thread::~Thread(){ close(); delete s; }
+
+void Thread::close(){ s->quit(); }
+
+bool Thread::isOpen(){ return s->isRunning(); }
+
+#endif
 
 
 //===========================================================================

@@ -244,7 +244,7 @@ Process::Process(const char *_name): s(NULL), name(_name), state(tsCLOSE), step_
 }
 
 Process::~Process() {
-  if(s->thread || state.value!=tsCLOSE) threadClose();
+  if(s->isOpen() || state.value!=tsCLOSE) threadClose();
   biros().writeAccess(this);
   biros().processes.removeValue(this);
   biros().deAccess(this);
@@ -253,19 +253,19 @@ Process::~Process() {
 
 void Process::threadOpen(int priority) {
   state.lock();
-  if(s->thread){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
-  s->launch();
+  if(s->isOpen()){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
+  s->open(STRING("--"<<name));
   state.value=tsIDLE;
   state.unlock();
 }
 
 void Process::threadClose() {
   state.setValue(tsCLOSE);
-  s->join();
+  s->close();
 }
 
 void Process::threadStep(uint steps, bool wait) {
-  if(!s->thread) threadOpen();
+  if(!s->isOpen()) threadOpen();
   //CHECK(state.value==tsIDLE, "never step while thread is busy!");
   state.setValue(steps);
   if(wait) waitForIdle();
@@ -303,7 +303,7 @@ void Process::waitForIdle() {
 }
 
 void Process::threadLoop() {
-  if(!s->thread) threadOpen();
+  if(!s->isOpen()) threadOpen();
   state.setValue(tsLOOPING);
 }
 
@@ -312,59 +312,50 @@ void Process::threadLoopWithBeat(double sec) {
     s->metronome=new Metronome("threadTiccer", 1000.*sec);
   else
     s->metronome->reset(1000.*sec);
-  if(!s->thread) threadOpen();
+  if(!s->isOpen()) threadOpen();
   state.setValue(tsBEATING);
 }
 
 void Process::threadStop() {
-  CHECK(s->thread, "called stop to closed thread");
+  CHECK(s->isOpen(), "called stop to closed thread");
   state.setValue(tsIDLE);
 }
 
 void sProcess::main() {
-  //std::cout <<" +++ entering staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
-  
   tid = syscall(SYS_gettid);
   
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
-  
   //if(s->threadPriority) setNice(s->threadPriority);
-  prctl(PR_SET_NAME, proc->name.p);
-  //pthread_setname_np(proc->thread, proc->name);
-  
+
   proc->open(); //virtual initialization routine
 
   //s->timer.reset();
+  bool waitForTic=false;
   for(;;){
-    bool waitForTic=false;
+    //-- wait for a non-idle state
     proc->state.lock();
     proc->state.waitForValueNotEq(tsIDLE, true);
-    if(proc->state.value==tsCLOSE) { 
-      proc->state.unlock();
-      break;
-    }
-    if(proc->state.value==tsBEATING) waitForTic=true;
+    if(proc->state.value==tsCLOSE) { proc->state.unlock();  break; }
+    if(proc->state.value==tsBEATING) waitForTic=true; else waitForTic=false;
     if(proc->state.value>0) proc->state.value--; //count down
     proc->state.unlock();
     
     if(waitForTic) metronome->waitForTic();
 
+    //-- make a step
     biros().acc->logStepBegin(proc);
-    //s->timer.cycleStart();
     proc->step(); //virtual step routine
     proc->step_count++;
-    //s->timer.cycleDone();
     biros().acc->logStepEnd(proc);
 
+    //-- broadcast in case somebody was waiting for a finished step
     proc->state.lock();
     proc->state.broadcast();
     proc->state.unlock();
   };
   
   proc->close(); //virtual close routine
-  
-  //std::cout <<" +++ exiting staticThreadMain of '" <<proc->name <<'\'' <<std::endl;
 }
 
 

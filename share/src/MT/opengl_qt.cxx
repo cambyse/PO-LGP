@@ -56,7 +56,7 @@ sOpenGL::~sOpenGL(){
 // OpenGL implementations
 //
 
-void OpenGL::postRedrawEvent(){ s->QGLWidget::update(); } 
+void OpenGL::postRedrawEvent(bool fromWithinCallback){ s->QGLWidget::update(); }
 void OpenGL::processEvents(){  qtApp->processEvents(); }
 void OpenGL::enterEventLoop(){ qtApp->exec(); }
 void OpenGL::exitEventLoop(){  qtApp->exit(); }

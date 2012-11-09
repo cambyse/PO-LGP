@@ -66,7 +66,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual uint yDim(uint i) = 0;       ///< dimensionality of the i-th task
   virtual void getq0(arr& q0) = 0;      ///< start joint configuration
   virtual void getv0(arr& v0) = 0;      ///< start joint velocity
-  virtual void get_x0(arr& x0);          ///< start joint configuration and velocity
+  virtual void getx0(arr& x0);          ///< start joint configuration and velocity
   virtual void getqv0(arr& q0, arr& v0); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
   virtual void setTau(double tau) = 0;
@@ -74,11 +74,10 @@ struct SocSystemAbstraction:VectorChainFunction {
   
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setx0ToCurrent() = 0;
-  virtual void setTox0(){ arr x; get_x0(x); setx(x); }
+  virtual void setTox0(){ arr x; getx0(x); setx(x); }
   virtual void setq(const arr& q, uint t=0) = 0;
-  //virtual void setq0(const arr& q);
-  virtual void setx(const arr& x, uint t=0);
-  virtual void setqv(const arr& q, const arr& qd, uint t=0);
+  virtual void setx(const arr& x, uint t=0) = 0;
+  virtual void setqv(const arr& q, const arr& qd, uint t=0){ setx(cat(q,qd),t); }
   
   //motion prior, or control cost PER STEP unless rate is explicitly indicated [t indicates the step]
   virtual void getControlCosts(arr& H, arr& Hinv, uint t);              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size

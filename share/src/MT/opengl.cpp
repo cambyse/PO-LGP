@@ -332,7 +332,7 @@ void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_L
 void glPopLight() { if(glLightIsOn) glEnable(GL_LIGHTING); }
 
 void glDrawText(const char* txt, float x, float y, float z) {
-#if defined MT_FREEGLUT
+#if 1 //defined MT_FREEGLUT
   glDisable(GL_DEPTH_TEST);
   glPushLightOff();
   glRasterPos3f(x, y, z);
