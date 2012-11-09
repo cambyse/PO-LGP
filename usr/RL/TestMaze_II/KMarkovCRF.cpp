@@ -6,23 +6,19 @@
 #include "debug.h"
 
 
-const char* KMarkovCRF::ActionFeature::action_strings[5] = { " STAY", "   UP", " DOWN", " LEFT", "RIGHT" };
-
-template < class Data, class DataPredict>
-int KMarkovCRF::Feature<Data,DataPredict>::field_width[2] = {0,0};
-
 KMarkovCRF::KMarkovCRF(
-        const int& ,
-        const int& ,
         const int& k_,
-        const int& x,
-        const int& y,
-        const int& a_n):
-        k(k_), x_dim(x), y_dim(y), action_n(a_n) {
+        const int& a_n,
+        const int& s_n):
+        k(k_), action_n(a_n), state_n(s_n), min_reward(0.0), max_reward(1.0), reward_increment(1.0) {
 
-    number_of_features = (k+1)*(x_dim*y_dim + action_n + 2);
-    number_of_features += 1; // todo for the combined feature below...
-    lambda = lbfgs_malloc(number_of_features);
+    reward_n = floor((max_reward-min_reward)/reward_increment)+1;
+
+    data_features_n = k*(action_n + state_n + reward_n) + action_n;
+    predict_features_n = state_n + reward_n;
+    combined_features_n = state_n*action_n*state_n + (k+1)*state_n*reward_n;
+
+    lambda = lbfgs_malloc(data_features_n+predict_features_n+combined_features_n);
     if (lambda == nullptr) {
         printf("ERROR: Failed to allocate a memory block for variables.\n");
         lbfgs_free(lambda);
@@ -30,48 +26,100 @@ KMarkovCRF::KMarkovCRF(
     }
 
     int linear_idx = 0;
-    feature_t  *reward_1_0, *state_3_2;
     // delayed action, state, and reward features
-    for(int k_idx = 0; k_idx<=k; ++k_idx) {
+    for(int k_idx = 0; k_idx>=-k; --k_idx) {
         // actions
         for(action_t action=0; action<action_n; ++action) {
+            ActionFeature * action_feature = new ActionFeature(action,k_idx);
             lambda[linear_idx] = 0;
-            features.push_back(std::unique_ptr<feature_t>(new ActionFeature(action,k_idx)));
             parameter_indices.push_back(linear_idx);
+            features.push_back(std::unique_ptr<Feature>(action_feature));
+            data_features.push_back(action_feature);
             ++linear_idx;
         }
         // states
-        for(state_t state=0; state<x_dim*y_dim; ++state) {
+        for(state_t state=0; state<state_n; ++state) {
+            StateFeature * state_feature = new StateFeature(state,k_idx);
             lambda[linear_idx] = 0;
-            features.push_back(std::unique_ptr<feature_t>(new StateFeature(state,k_idx)));
             parameter_indices.push_back(linear_idx);
-            ++linear_idx;
-            if(state==3 && k_idx==2) {
-                state_3_2 = &(*(features.back()));
-                DEBUG_OUT(0,"Identified " << state_3_2->identifier() );
+            features.push_back(std::unique_ptr<Feature>(state_feature));
+            if(k_idx==0) {
+                predict_features.push_back(state_feature);
+            } else {
+                data_features.push_back(state_feature);
             }
+            ++linear_idx;
         }
         // reward
-        for(reward_t reward = 0.0; reward<=1.0; ++reward) {
+        for(reward_t reward = min_reward; reward<=max_reward; reward+=reward_increment) {
+            RewardFeature * reward_feature = new RewardFeature(reward,k_idx);
             lambda[linear_idx] = 0;
-            features.push_back(std::unique_ptr<feature_t>(new RewardFeature(reward,k_idx)));
             parameter_indices.push_back(linear_idx);
+            features.push_back(std::unique_ptr<Feature>(reward_feature));
+            if(k_idx==0) {
+                predict_features.push_back(reward_feature);
+            } else {
+                data_features.push_back(reward_feature);
+            }
             ++linear_idx;
-            if(reward==1.0 && k_idx==0) {
-                reward_1_0 = &((*features.back()));
-                DEBUG_OUT(0,"Identified " << reward_1_0->identifier() );
+        }
+    }
+    // check number of features
+    if((int)features.size()!=data_features_n+predict_features_n) {
+        DEBUG_OUT(0,"Error: Number of data and prediction features not as expected!");
+        DEBUG_OUT(0,"    #features            = " << features.size());
+        DEBUG_OUT(0,"    #data features       = " << data_features.size()    << " (" << data_features_n    << ")" );
+        DEBUG_OUT(0,"    #prediction features = " << predict_features.size() << " (" << predict_features_n << ")" );
+    }
+
+    for(state_t state_from=0; state_from<state_n; ++state_from) {
+        for(action_t action=0; action<action_n; ++action) {
+            for(state_t state_to=0; state_to<state_n; ++state_to) {
+                StateFeature * state_from_feature = new StateFeature(state_from,-1);
+                ActionFeature * action_feature = new ActionFeature(action,0);
+                StateFeature * state_to_feature = new StateFeature(state_to,0);
+                AndFeature * and_feature_state = new AndFeature((*state_from_feature),(*action_feature),(*state_to_feature));
+                lambda[linear_idx] = 0;
+                parameter_indices.push_back(linear_idx);
+                features.push_back(std::unique_ptr<Feature>(and_feature_state));
+                combined_features.push_back(and_feature_state);
+                subfeatures.push_back(std::unique_ptr<Feature>(state_from_feature));
+                subfeatures.push_back(std::unique_ptr<Feature>(action_feature));
+                subfeatures.push_back(std::unique_ptr<Feature>(state_to_feature));
+                ++linear_idx;
             }
         }
     }
 
-    lambda[linear_idx] = 0;
-    features.push_back(std::unique_ptr<feature_t>(new AndFeature((*reward_1_0),(*state_3_2))));
-    parameter_indices.push_back(linear_idx);
-    DEBUG_OUT(0,"Added " << features.back()->identifier() );
-    ++linear_idx;
+    RewardFeature * reward_yes_feature = new RewardFeature(1.0,0);
+    RewardFeature * reward_no_feature = new RewardFeature(0.0,0);
+    subfeatures.push_back(std::unique_ptr<Feature>(reward_yes_feature));
+    subfeatures.push_back(std::unique_ptr<Feature>(reward_no_feature));
+    for(int k_idx=0; k_idx>=-k; --k_idx) {
+        for(state_t state=0; state<state_n; ++state) {
+            StateFeature * state_feature = new StateFeature(state,k_idx);
+            subfeatures.push_back(std::unique_ptr<Feature>(state_feature));
 
-    if(linear_idx!=number_of_features) {
-        DEBUG_OUT(0,"Error number of features and number of parameters do not match.");
+            AndFeature * and_feature_reward_yes = new AndFeature((*state_feature),(*reward_yes_feature));
+            lambda[linear_idx] = 0;
+            parameter_indices.push_back(linear_idx);
+            features.push_back(std::unique_ptr<Feature>(and_feature_reward_yes));
+            combined_features.push_back(and_feature_reward_yes);
+            ++linear_idx;
+
+            AndFeature * and_feature_reward_no = new AndFeature((*state_feature),(*reward_no_feature));
+            lambda[linear_idx] = 0;
+            parameter_indices.push_back(linear_idx);
+            features.push_back(std::unique_ptr<Feature>(and_feature_reward_no));
+            combined_features.push_back(and_feature_reward_no);
+            ++linear_idx;
+        }
+    }
+
+    // check number of features
+    if((int)combined_features.size()!=combined_features_n) {
+        DEBUG_OUT(0,"Error: Number of combined features not as expected!");
+        DEBUG_OUT(0,"    #combined features = " << combined_features.size() << " (" << combined_features_n << ")" );
     }
 }
 
@@ -114,18 +162,18 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             ++episode_iterator) {
 
         // calculate sumF(x(n),y(n))
-        for(int f_idx=0; f_idx<number_of_features; ++f_idx) { // sum over features
+        for(uint f_idx=0; f_idx<features.size(); ++f_idx) { // sum over features
             sumFNN[data_idx] += x[parameter_indices[f_idx]]*features[f_idx]->evaluate(episode_iterator);
         }
 
         // calculate sumExp(x(n))
-        for(state_t state=0; state<x_dim*y_dim; ++state) { // sum over y' (states and rewards)
-            for(reward_t reward=0.0; reward<=1.0; ++reward) {
+        for(state_t state=0; state<state_n; ++state) { // sum over y' (states and rewards)
+            for(reward_t reward=min_reward; reward<=max_reward; reward+=reward_increment) {
                 data_point_t data_predict = std::make_tuple(action_t(),state,reward); // y'
 
                 // calculate sumF(x(n),y')
                 double sumFN = 0;
-                for(int f_idx=0; f_idx<number_of_features; ++f_idx) { // sum over features
+                for(uint f_idx=0; f_idx<features.size(); ++f_idx) { // sum over features
                     sumFN += x[parameter_indices[f_idx]]*features[f_idx]->evaluate(episode_iterator,data_predict);
                 }
 
@@ -220,7 +268,7 @@ void KMarkovCRF::optimize_model() {
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
-    int ret = lbfgs(number_of_features, lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
+    int ret = lbfgs(features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
 
     // Report the result.
     DEBUG_OUT(0, "L-BFGS optimization terminated with status code = " << ret);
@@ -248,10 +296,10 @@ void KMarkovCRF::add_action_state_reward_tripel(
 void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {
 
     // initialize arrays
-    lbfgsfloatval_t * x = lbfgs_malloc(number_of_features);
-    lbfgsfloatval_t * dx = lbfgs_malloc(number_of_features);
-    lbfgsfloatval_t * grad = lbfgs_malloc(number_of_features);
-    lbfgsfloatval_t * grad_dummy = lbfgs_malloc(number_of_features);
+    lbfgsfloatval_t * x = lbfgs_malloc(features.size());
+    lbfgsfloatval_t * dx = lbfgs_malloc(features.size());
+    lbfgsfloatval_t * grad = lbfgs_malloc(features.size());
+    lbfgsfloatval_t * grad_dummy = lbfgs_malloc(features.size());
 
     // remember deviations
     lbfgsfloatval_t relative_deviation = 0;
@@ -260,21 +308,21 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
     for(int count=0; count<number_of_samples; ++count) {
 
         // set test point
-        for(int x_idx=0; x_idx<number_of_features; ++x_idx) {
+        for(uint x_idx=0; x_idx<features.size(); ++x_idx) {
             x[x_idx] = range * (2*drand48()-1);
             dx[x_idx] = (2*drand48()-1)*max_variation;
         }
 
-        lbfgsfloatval_t fx = evaluate_model(x,grad,number_of_features);
+        lbfgsfloatval_t fx = evaluate_model(x,grad,features.size());
         DEBUG_OUT(1, "fx = " << fx );
-        for(int x_idx=0; x_idx<number_of_features; ++x_idx) {
+        for(uint x_idx=0; x_idx<features.size(); ++x_idx) {
 
             // go in positive direction
             x[x_idx] += dx[x_idx]/2.;
-            lbfgsfloatval_t fx_plus = evaluate_model(x,grad_dummy,number_of_features);
+            lbfgsfloatval_t fx_plus = evaluate_model(x,grad_dummy,features.size());
             // go in negative direction
             x[x_idx] -= dx[x_idx];
-            lbfgsfloatval_t fx_minus = evaluate_model(x,grad_dummy,number_of_features);
+            lbfgsfloatval_t fx_minus = evaluate_model(x,grad_dummy,features.size());
             // reset x
             x[x_idx] += dx[x_idx]/2.;
 
@@ -305,4 +353,17 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
     lbfgs_free(dx);
     lbfgs_free(grad);
     lbfgs_free(grad_dummy);
+}
+
+void KMarkovCRF::evaluate_features() {
+    int number_of_data_points = episode_data.size()-k;
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to evaluate model.");
+        return;
+    }
+
+    DEBUG_OUT(0,"Evaluating features:");
+    for(uint f_idx=0; f_idx<features.size(); ++f_idx) {
+        DEBUG_OUT(0, "    " << features[f_idx]->identifier() << " = " << features[f_idx]->evaluate(episode_data.end()-1) );
+    }
 }

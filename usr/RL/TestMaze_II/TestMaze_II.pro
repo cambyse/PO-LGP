@@ -7,10 +7,14 @@ HEADERS += ValueIteration.h \
     util.h \
     Maze.h \
     testmaze_ii.h \
-    KMarkovCRF.h
+    KMarkovCRF.h \
+    Feature.h \
+    Data.h
 SOURCES += main.cpp \
+    Maze.cpp \
     testmaze_ii.cpp \
-    KMarkovCRF.cpp
+    KMarkovCRF.cpp \
+    Feature.cpp
 LIBS += -llbfgs
 FORMS += testmaze_ii.ui
 RESOURCES += 

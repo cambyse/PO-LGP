@@ -10,12 +10,12 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
       maze(XDIM,YDIM,2,0.0),
       value_iteration_object(),
-      crf(1,3,3,XDIM,YDIM,maze_t::NUMBER_OF_ACTIONS),
+      crf(2,maze_t::NUMBER_OF_ACTIONS,XDIM*YDIM),
+      record(false),
       random_action_timer(nullptr),
       value_iteration_timer(nullptr)
 {
     // initialize UI
-//    ui._wConsoleWidget->setTitleBarWidget(tmp);
     ui.setupUi(this);
 
     // focus on command line
@@ -41,10 +41,6 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
-
-//    crf.check_derivative(10,10,1e-10,1e-3);
-//    crf.optimize();
-//    collect_episode(100);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -89,7 +85,11 @@ void TestMaze_II::render() {
 }
 
 void TestMaze_II::random_action() {
-    maze.perform_transition(maze_t::action_t(rand()%maze_t::NUMBER_OF_ACTIONS));
+    maze_t::action_t action = (maze_t::action_t)(rand()%maze_t::NUMBER_OF_ACTIONS);
+    maze_t::state_t state_to;
+    double reward;
+    maze.perform_transition(action,state_to,reward);
+    if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
     maze.render_update(ui.graphicsView);
 }
 
@@ -115,12 +115,14 @@ void TestMaze_II::process_console_input() {
     QString up_s(       "    up    / u. . . . . . . . . . . . . . . . -> move up");
     QString down_s(     "    down  / d. . . . . . . . . . . . . . . . -> move down");
     QString stay_s(     "    stay  / s. . . . . . . . . . . . . . . . -> stay-action");
-    QString random_s(   "    random  . . . .[<int>,stop]. . . . . . . -> start/stop random move");
-    QString delay_s(    "    delay . . . . . <int>. . . . . . . . . . -> set reward delay");
-    QString iterate_s(  "    iterate / i . .[<int>,stop]. . . . . . . -> start/stop value iteration");
-    QString episode_s(  "    episode / e . .[<int>,clear] . . . . . . -> record length <int> episode or clear data");
+    QString random_s(   "    random  . . . .[<int>|stop]. . . . . . . -> start/stop random move");
+    QString delay_s(    "    delay . . . . .[<int>] . . . . . . . . . -> get [set] reward delay");
+    QString iterate_s(  "    iterate / i . .[<int>|stop]. . . . . . . -> start/stop value iteration");
+    QString episode_s(  "    episode / e . .[<int>|clear,c] . . . . . -> record length <int> episode or clear data");
     QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
-    QString epsilon_s(  "    epsilon . . . . <double> . . . . . . . . -> set exploration rate epsilon");
+    QString epsilon_s(  "    epsilon . . . .[<double>]. . . . . . . . -> get [set] exploration rate epsilon");
+    QString record_s(   "    record. . . . .[start|s|end|e] . . . . . -> toggle [start/end] recording movements");
+    QString evaluate_s( "    evaluate. . . . . . . . . . . .  . . . . -> evaluate features at current point");
 
     // process input
     if(input=="help" || input=="h") { // help
@@ -138,20 +140,42 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( episode_s );
         ui._wConsoleOutput->appendPlainText( optimize_s );
         ui._wConsoleOutput->appendPlainText( epsilon_s );
+        ui._wConsoleOutput->appendPlainText( record_s );
+        ui._wConsoleOutput->appendPlainText( evaluate_s );
     } else if(input=="left" || input=="l") { // left
-        maze.perform_transition(maze_t::LEFT);
+        maze_t::action_t action = maze_t::LEFT;
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="right" || input=="r") { // right
-        maze.perform_transition(maze_t::RIGHT);
+        maze_t::action_t action = maze_t::RIGHT;
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="up" || input=="u") { // up
-        maze.perform_transition(maze_t::UP);
+        maze_t::action_t action = maze_t::UP;
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="down" || input=="d") { // down
-        maze.perform_transition(maze_t::DOWN);
+        maze_t::action_t action = maze_t::DOWN;
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="stay" || input=="s") { // stay
-        maze.perform_transition(maze_t::STAY);
+        maze_t::action_t action = maze_t::STAY;
+        maze_t::state_t state_to;
+        double reward;
+        maze.perform_transition(action,state_to,reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
         maze.render_update(ui.graphicsView);
     } else if(input.startsWith("random ") || input=="random") { // start/stop random actions
         QString s;
@@ -170,7 +194,7 @@ void TestMaze_II::process_console_input() {
         QString s;
         int i;
         if(input=="delay") {
-            ui._wConsoleOutput->appendPlainText(delay_s);
+            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_time_delay()));
         } else if(arg_int(input,1,i) && i>=0){
             maze.set_time_delay(i);
         } else {
@@ -194,7 +218,7 @@ void TestMaze_II::process_console_input() {
         int i;
         if(input=="episode" || input=="e") {
             ui._wConsoleOutput->appendPlainText( episode_s );
-        } else if(arg_string(input,1,s) && s=="clear") {
+        } else if(arg_string(input,1,s) && ( s=="clear" || s=="c" ) ) {
             crf.clear_data();
         } else if(arg_int(input,1,i) && i>=0){
             collect_episode(i);
@@ -221,6 +245,29 @@ void TestMaze_II::process_console_input() {
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
         }
+    } else if(input.startsWith("record") || input=="record" ) {
+        QString s;
+        if(input=="record") {
+            record = !record;
+            if(record) {
+                ui._wConsoleOutput->appendPlainText("    record on");
+            } else {
+                ui._wConsoleOutput->appendPlainText("    record off");
+            }
+        } else if(arg_string(input,1,s) && ( s=="start" || s=="s" || s=="end" || s=="e" )) {
+            if(s=="start" || s=="s") {
+                record = true;
+            } else if(s=="end" || s=="e") {
+                record = false;
+            } else {
+                DEBUG_OUT(0,"Autsch! This should never happen...");
+                ui._wConsoleOutput->appendPlainText("    Autsch! This should never happen...");
+            }
+        } else {
+            ui._wConsoleOutput->appendPlainText(record_s);
+        }
+    } else if(input=="evaluate") {
+        crf.evaluate_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
         QApplication::quit();
     } else {
