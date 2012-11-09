@@ -135,7 +135,7 @@ void sAICO::init(ControlledSystem& _sys){
 void AICO::prepare_for_changed_task(){
   self->cost=-1;
   MT::getParameter(self->damping, "aico_damping");
-  self->damping /= 10.;
+//  self->damping /= 10.;
 }
 
 void AICO::iterate_to_convergence(){
@@ -343,11 +343,7 @@ void sAICO::updateBwdMessage(uint t){
     if(t==T){  //last time slice
       if(!useBwdMsg){
         v[t] = b[t]; //alternative: qhat
-#ifndef TightMode
         Vinv[t].setDiag(1e-4); //regularization, makes eq (*) above robust
-#else
-        Vinv[t].setDiag(1e-1); //regularization, makes eq (*) above robust
-#endif
       }else{
         v[T] = bwdMsg_v;
         Vinv[T] = bwdMsg_Vinv;
@@ -581,13 +577,13 @@ void sAICO::rememberOldState(){
 
 void sAICO::perhapsUndoStep(){
   if(cost_old>0 && cost>cost_old){
-    //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+    //cout <<"\b AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
     damping *= 10.;
     dampingReference = b_old;
     cost = cost_old;  b = b_old;  q = q_old;  xhat = xhat_old;
     s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
   }else{
-    //cout <<" AICO ACCEPT" <<endl;
+    //cout <<"\b AICO ACCEPT" <<endl;
     damping /= 5.;
   }
 }
