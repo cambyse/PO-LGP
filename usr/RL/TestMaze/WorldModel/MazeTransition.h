@@ -10,12 +10,13 @@
 
 #include "MazeState.h"
 #include "MazeAction.h"
-#include "../Utils/Identifier.h"
+
+#include <vector>
 
 namespace WorldModel
 {
 
-template <class State = MazeState<>, class Action = MazeAction>
+template <class State = MazeState, class Action = MazeAction>
 class MazeTransition
 {
 
@@ -24,27 +25,72 @@ public:
     MazeTransition() {}
     virtual ~MazeTransition() {}
 
-private:
+    double transition_probability(const State& initial_state, const Action& action, const State& final_state) const {
+        switch(action.get_action()) {
+        case Action::LEFT:
+            if( final_state.is_left_of(initial_state) ) return 1;
+            else return 0;
+            break;
+        case Action::RIGHT:
+            if( final_state.is_right_of(initial_state) ) return 1;
+            else return 0;
+            break;
+        case Action::UP:
+            if( final_state.is_above(initial_state) ) return 1;
+            else return 0;
+            break;
+        case Action::DOWN:
+            if( final_state.is_below(initial_state) ) return 1;
+            else return 0;
+            break;
+        case Action::STAY:
+            if( final_state.equal_x_y(initial_state) ) return 1;
+            else return 0;
+            break;
+        default:
+            return 0;
+        }
+    }
 
-    /* Use 2D grid position as identifyer */
-    class Location2D: public Utils::Identifier2D<int> {
-        Location2D(const Utils::Identifier2D<int> i): Utils::Identifier2D<int>(i) {}
-        int get_x_pos() const { return type1; }
-        int get_y_pos() const { return type2; }
-        Location2D shift_left()  { --(this->type1); return *this; }
-        Location2D shift_right() { ++(this->type1); return *this; }
-        Location2D shift_up()    { --(this->type2); return *this; }
-        Location2D shift_down()  { ++(this->type2); return *this; }
-    };
-
-public:
-
-    State perform_transition(const State& initial_state, const Action& action) {
-        if(     action == Action('l')) return State( Location2D(initial_state.get_id()).shift_left(),  initial_state.get_walls());
-        else if(action == Action('r')) return State( Location2D(initial_state.get_id()).shift_right(), initial_state.get_walls());
-        else if(action == Action('u')) return State( Location2D(initial_state.get_id()).shift_up(),    initial_state.get_walls());
-        else if(action == Action('d')) return State( Location2D(initial_state.get_id()).shift_down(),  initial_state.get_walls());
-        else return initial_state;
+    std::vector<State>  get_target_states(const State& initial_state, const int& x_max = -1, const int& y_max = -1) const {
+        std::vector<State> ret;
+        int x, y;
+        initial_state.get_x_y_pos(x,y);
+        if(x_max==-1 || x<x_max) ret.push_back(State(x+1,y  ));
+        if(y_max==-1 || y<y_max) ret.push_back(State(x  ,y+1));
+        if(x>0                 ) ret.push_back(State(x-1,y  ));
+        if(y>0                 ) ret.push_back(State(x  ,y-1));
+        return ret;
+    }
+    std::vector<State>  get_source_states(const State& final_state, const int& x_max = -1, const int& y_max = -1) const {
+        std::vector<State> ret;
+        int x, y;
+        final_state.get_x_y_pos(x,y);
+        if(x_max==-1 || x<x_max) ret.push_back(State(x+1,y  ));
+        if(y_max==-1 || y<y_max) ret.push_back(State(x  ,y+1));
+        if(x>0                 ) ret.push_back(State(x-1,y  ));
+        if(y>0                 ) ret.push_back(State(x  ,y-1));
+        return ret;
+    }
+    std::vector<Action> get_actions_from_state(const State& initial_state, const int& x_max = -1, const int& y_max = -1) const {
+        std::vector<Action> ret;
+        int x, y;
+        initial_state.get_x_y_pos(x,y);
+        if(x_max==-1 || x<x_max) ret.push_back(Action('r'));
+        if(y_max==-1 || y<y_max) ret.push_back(Action('d'));
+        if(x>0                 ) ret.push_back(Action('l'));
+        if(y>0                 ) ret.push_back(Action('u'));
+        return ret;
+    }
+    std::vector<Action> get_actions_to_state(const State& final_state, const int& x_max = -1, const int& y_max = -1) const {
+        std::vector<Action> ret;
+        int x, y;
+        final_state.get_x_y_pos(x,y);
+        if(x_max==-1 || x<x_max) ret.push_back(Action('l'));
+        if(y_max==-1 || y<y_max) ret.push_back(Action('u'));
+        if(x>0                 ) ret.push_back(Action('r'));
+        if(y>0                 ) ret.push_back(Action('d'));
+        return ret;
     }
 
 private:
