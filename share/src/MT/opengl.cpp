@@ -994,7 +994,7 @@ void glDrawUI(void *p) {
 bool glUI::hoverCallback(OpenGL& gl) {
   //bool b=
   checkMouse(gl.mouseposx, gl.mouseposy);
-  //if(b) glutPostRedisplay();
+  //if(b) postRedrawEvent(false);
   return true;
 }
 
@@ -1489,7 +1489,7 @@ void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   img.resize(h, w, 3);
@@ -1502,7 +1502,7 @@ void OpenGL::captureDepth(byteA &depth, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   depth.resize(h, w);
@@ -1515,7 +1515,7 @@ void OpenGL::captureDepth(floatA &depth, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   depth.resize(h, w);
@@ -1528,7 +1528,7 @@ void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  glutPostRedisplay();
+  postRedrawEvent(false);
   processEvents();
   Draw(w, h, cam);
   imgR.resize(h, w, 3);
@@ -1843,7 +1843,7 @@ bool glUI::checkMouse(int _x, int _y) {
     if(_x>=x && _x <=x+w && _y>=y && _y<=y+h) top = i;
   }
   if(otop==top) return false;
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   return true;
 }
 
