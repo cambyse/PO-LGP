@@ -80,11 +80,10 @@ public:
     virtual double evaluate(input_data_t data, output_data_t) const {
         return evaluate(data);
     }
-    virtual std::string identifier() const { return ("a("+QString(5-this->field_width[0],' ')+QString(action_strings[action])+", "+QString("%1").arg(delay,this->field_width[1])+")").toStdString()+Feature::identifier(); }
+    virtual std::string identifier() const { return ("a("+QString(5-this->field_width[0],' ')+QString(Data::action_strings[action])+", "+QString("%1").arg(delay,this->field_width[1])+")").toStdString()+Feature::identifier(); }
 private:
     action_t action;
     int delay;
-    static const char* action_strings[5];
 };
 
 class StateFeature: public Feature {

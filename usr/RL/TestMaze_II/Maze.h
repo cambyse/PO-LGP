@@ -15,6 +15,8 @@
 #include <deque>
 #include <vector>
 
+#include "Data.h"
+
 class Maze_default_renderer {
 //    friend class Maze;
 public:
@@ -25,18 +27,18 @@ public:
 class Maze {
 public:
 
-    enum ACTION { STAY, UP, DOWN, LEFT, RIGHT, NUMBER_OF_ACTIONS };
-    typedef ACTION action_t;
-    typedef double reward_t;
+    typedef Data::action_t        action_t;
+    typedef Data::state_t         state_t;
+    typedef Data::reward_t        reward_t;
     typedef Maze_default_renderer renderer_t;
 
-    class state_t {
+    class State {
     public:
-        state_t(const int& idx = 0): index(idx) {}
-        state_t(const int& x, const int& y, const int& x_dim): index(x+x_dim*y) {}
-        bool operator==(const state_t& other) const { return this->index==other.index; }
-        bool operator!=(const state_t& other) const { return !((*this)==other); }
-        bool operator<(const state_t& other) const { return this->index<other.index; }
+        State(const int& idx = 0): index(idx) {}
+        State(const int& x, const int& y, const int& x_dim): index(x+x_dim*y) {}
+        bool operator==(const State& other) const { return this->index==other.index; }
+        bool operator!=(const State& other) const { return !((*this)==other); }
+        bool operator<(const State& other) const { return this->index<other.index; }
         int idx() const { return index; }
         int x(const int& x_dim) const { return index%x_dim; }
         int y(const int& x_dim) const { return index/x_dim; }
@@ -52,7 +54,7 @@ public:
     void render_update(QGraphicsView * view);
 
     void perform_transition(const action_t& action);
-    void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
+    void perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r );
 
     template< class TransitionModel >
     void initialize_transition_model(TransitionModel& model);
@@ -74,12 +76,12 @@ private:
     std::deque<bool> reward_timer;
     double epsilon;
     renderer_t renderer;
-    state_t current_state;
-    std::map< std::tuple<state_t,action_t>, std::vector<std::tuple<state_t,double> > > transition_map;
-    state_t button_state, smiley_state;
+    State current_state;
+    std::map< std::tuple<State,action_t>, std::vector<std::tuple<State,double> > > transition_map;
+    State button_state, smiley_state;
     QGraphicsSvgItem *agent, *button, *smiley;
 
-    void set_current_state(const state_t& s);
+    void set_current_state(const State& s);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);
@@ -99,11 +101,11 @@ private:
 
 template< class TransitionModel >
 void Maze::initialize_transition_model(TransitionModel& model) {
-    for(int state_from=0; state_from<x_dim*y_dim; ++state_from) {
-        for(int action = 0; action<NUMBER_OF_ACTIONS; ++action) {
-            std::vector<std::tuple<state_t,double> > state_vector = transition_map[std::make_tuple(state_from,(ACTION)action)];
+    for(Data::state_t state_from=0; state_from<x_dim*y_dim; ++state_from) {
+        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+            std::vector<std::tuple<State,double> > state_vector = transition_map[std::make_tuple(state_from,action)];
             for(uint idx=0; idx<state_vector.size(); ++idx) {
-                model.set_transition_probability(state_t(state_from),(ACTION)action,std::get<0>(state_vector[idx]),std::get<1>(state_vector[idx]));
+                model.set_transition_probability(state_from,action,Data::state_t(std::get<0>(state_vector[idx]).idx()),std::get<1>(state_vector[idx]));
             }
         }
     }

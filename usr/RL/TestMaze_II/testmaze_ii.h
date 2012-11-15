@@ -18,14 +18,12 @@ public:
     ~TestMaze_II();
 
 private:
-    typedef Maze maze_t;
-    typedef ValueIteration<maze_t::state_t,maze_t::action_t> value_iterationt;
-
     Ui::TestMaze_IIClass ui;
-    maze_t maze;
-    value_iterationt value_iteration_object;
+    Maze maze;
+    ValueIteration value_iteration_object;
     KMarkovCRF crf;
     bool record;
+    double l1_factor;
 
     QTimer * random_action_timer, * value_iteration_timer;
 

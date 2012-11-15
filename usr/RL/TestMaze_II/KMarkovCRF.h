@@ -24,22 +24,14 @@ class KMarkovCRF
 {
 public:
 
-//    typedef int state_t;
-//    typedef int action_t;
-//    typedef double reward_t;
-//    typedef double probability_t;
-//    typedef std::tuple<action_t,state_t,reward_t> data_point_t;
-//    typedef std::vector<data_point_t> episode_t;
-//    typedef episode_t::const_iterator const_episode_iterator_t;
-
     typedef Data::action_t                 action_t;
     typedef Data::state_t                  state_t;
     typedef Data::reward_t                 reward_t;
-    typedef Data::data_point_t             data_point_t;
     typedef Data::episode_t                episode_t;
     typedef Data::const_episode_iterator_t const_episode_iterator_t;
+    typedef Data::data_point_t             data_point_t;
 
-    KMarkovCRF(const int& k, const int& a_n, const int& s_n);
+    KMarkovCRF(const int& k);
 
     virtual ~KMarkovCRF();
 
@@ -82,7 +74,7 @@ public:
             int ls
     );
 
-    void optimize_model();
+    void optimize_model(lbfgsfloatval_t l1 = 0);
 
     void add_action_state_reward_tripel(
             const action_t& action,
@@ -96,21 +88,15 @@ public:
 
     void evaluate_features();
 
+    void rank_pair_features();
+
 private:
 
-//    typedef       Feature< const_episode_iterator_t, const data_point_t          >        feature_t;
-//    typedef   NullFeature< const_episode_iterator_t, const data_point_t          >   null_feature_t;
-//    typedef ActionFeature< const_episode_iterator_t, const data_point_t, action_t> action_feature_t;
-//    typedef  StateFeature< const_episode_iterator_t, const data_point_t, state_t >  state_feature_t;
-//    typedef RewardFeature< const_episode_iterator_t, const data_point_t, reward_t> reward_feature_t;
-//    typedef    AndFeature< const_episode_iterator_t, const data_point_t          >    and_feature_t;
-
-    int k, data_features_n, predict_features_n, combined_features_n, action_n, state_n, reward_n;
-    double min_reward, max_reward, reward_increment;
+    int k, data_features_n, predict_features_n, combined_features_n;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
     std::vector<int> parameter_indices;
-    std::vector<std::unique_ptr<Feature> > features, subfeatures;
+    std::vector<std::unique_ptr<Feature> > features, output_features, subfeatures;
     std::vector<Feature*> data_features, predict_features, combined_features;
 
 };

@@ -1,17 +1,20 @@
 #include "testmaze_ii.h"
+#include "Data.h"
 
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
-#define XDIM 2
-#define YDIM 2
+typedef Data::action_t action_t;
+typedef Data::state_t  state_t;
+typedef Data::reward_t reward_t;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-      maze(XDIM,YDIM,2,0.0),
+      maze(Data::maze_x_dim,Data::maze_y_dim,2,0.0),
       value_iteration_object(),
-      crf(2,maze_t::NUMBER_OF_ACTIONS,XDIM*YDIM),
+      crf(2),
       record(false),
+      l1_factor(0),
       random_action_timer(nullptr),
       value_iteration_timer(nullptr)
 {
@@ -37,7 +40,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initialize transition model
     maze.initialize_transition_model(value_iteration_object);
-    value_iteration_object.set_expected_reward(maze_t::state_t(0,0,XDIM),1);
+    value_iteration_object.set_expected_reward(Maze::State(0,0,Data::maze_x_dim).idx(),1);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
@@ -53,11 +56,11 @@ TestMaze_II::~TestMaze_II() {
 
 void TestMaze_II::collect_episode(const int& length) {
     for(int idx=0; idx<length; ++idx) {
-        maze_t::action_t action = (maze_t::action_t)(rand()%maze_t::NUMBER_OF_ACTIONS);
-        maze_t::state_t state_to;
+        action_t action = (action_t)(rand()%Data::action_n);
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        crf.add_action_state_reward_tripel(action,state_to,reward);
     }
 }
 
@@ -85,20 +88,20 @@ void TestMaze_II::render() {
 }
 
 void TestMaze_II::random_action() {
-    maze_t::action_t action = (maze_t::action_t)(rand()%maze_t::NUMBER_OF_ACTIONS);
-    maze_t::state_t state_to;
+    action_t action = (action_t)(rand()%Data::action_n);
+    state_t state_to;
     double reward;
     maze.perform_transition(action,state_to,reward);
-    if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+    if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
 }
 
 void TestMaze_II::value_iteration() {
     value_iteration_object.iterate();
     DEBUG_OUT(1,"State values:");
-    for(int x_idx=0; x_idx<XDIM; ++x_idx) {
-        for(int y_idx=0; y_idx<YDIM; ++y_idx) {
-            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << value_iteration_object.get_value(maze_t::state_t(x_idx,y_idx,XDIM)));
+    for(int x_idx=0; x_idx<Data::maze_x_dim; ++x_idx) {
+        for(int y_idx=0; y_idx<Data::maze_y_dim; ++y_idx) {
+            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << value_iteration_object.get_value(Maze::State(x_idx,y_idx,Data::maze_x_dim).idx()));
         }
     }
 }
@@ -122,7 +125,9 @@ void TestMaze_II::process_console_input() {
     QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
     QString epsilon_s(  "    epsilon . . . .[<double>]. . . . . . . . -> get [set] exploration rate epsilon");
     QString record_s(   "    record. . . . .[start|s|end|e] . . . . . -> toggle [start/end] recording movements");
-    QString evaluate_s( "    evaluate. . . . . . . . . . . .  . . . . -> evaluate features at current point");
+    QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
+    QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
+    QString rank_s(     "    rank . . . . . . . . . . . . . . . . . . -> rank pairwise features by mutual information");
 
     // process input
     if(input=="help" || input=="h") { // help
@@ -142,40 +147,42 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( epsilon_s );
         ui._wConsoleOutput->appendPlainText( record_s );
         ui._wConsoleOutput->appendPlainText( evaluate_s );
+        ui._wConsoleOutput->appendPlainText( l1_s );
+        ui._wConsoleOutput->appendPlainText( rank_s );
     } else if(input=="left" || input=="l") { // left
-        maze_t::action_t action = maze_t::LEFT;
-        maze_t::state_t state_to;
+        action_t action = Data::LEFT;
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="right" || input=="r") { // right
-        maze_t::action_t action = maze_t::RIGHT;
-        maze_t::state_t state_to;
+        action_t action = Data::RIGHT;
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="up" || input=="u") { // up
-        maze_t::action_t action = maze_t::UP;
-        maze_t::state_t state_to;
+        action_t action = Data::UP;
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="down" || input=="d") { // down
-        maze_t::action_t action = maze_t::DOWN;
-        maze_t::state_t state_to;
+        action_t action = Data::DOWN;
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="stay" || input=="s") { // stay
-        maze_t::action_t action = maze_t::STAY;
-        maze_t::state_t state_to;
+        action_t action = Data::STAY;
+        state_t state_to;
         double reward;
         maze.perform_transition(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to.idx(),reward);
+        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input.startsWith("random ") || input=="random") { // start/stop random actions
         QString s;
@@ -228,7 +235,7 @@ void TestMaze_II::process_console_input() {
     } else if(input.startsWith("optimize ") || input.startsWith("o ") || input=="optimize" || input=="o") { // optimize CRF
         QString s1, s2;
         if(input=="optimize" || input=="o") {
-            crf.optimize_model();
+            crf.optimize_model(l1_factor);
         } else if(arg_string(input,1,s1) && ( s1=="check" || s1=="c") ) {
                 crf.check_derivatives(3,10,1e-6,1e-3);
         } else {
@@ -268,6 +275,16 @@ void TestMaze_II::process_console_input() {
         }
     } else if(input=="evaluate") {
         crf.evaluate_features();
+    } else if(input.startsWith("l1")) {
+        QString s;
+        double c;
+        if(input=="l1") {
+            ui._wConsoleOutput->appendPlainText(QString("    %1").arg(l1_factor));
+        } else if(arg_double(input,1,c) && c>=0) {
+            l1_factor = c;
+        }
+    } else if(input=="rank") {
+        crf.rank_pair_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
         QApplication::quit();
     } else {
