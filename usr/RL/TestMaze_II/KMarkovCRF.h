@@ -10,6 +10,8 @@
 
 #include <math.h>
 #include <memory>
+#include <vector>
+#include <set>
 
 #include <QtCore/QString>
 
@@ -17,8 +19,6 @@
 
 #include "Data.h"
 #include "Feature.h"
-
-#include "debug.h"
 
 class KMarkovCRF
 {
@@ -90,17 +90,23 @@ public:
 
     void rank_pair_features();
 
+    void score_features();
+
 private:
 
-    int k, data_features_n, predict_features_n, combined_features_n;
+    typedef std::unique_ptr<Feature> unique_feature_ptr;
+
+    int k;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
     std::vector<int> parameter_indices;
-    std::vector<std::unique_ptr<Feature> > features, output_features, subfeatures;
+    std::set<unique_feature_ptr> feature_set;
+    std::vector<Feature*> basic_features, active_features;
+
+    int data_features_n, predict_features_n, combined_features_n;
+    std::vector<unique_feature_ptr> features, output_features, subfeatures;
     std::vector<Feature*> data_features, predict_features, combined_features;
 
 };
-
-#include "debug_exclude.h"
 
 #endif /* KMARKOVCRF_H_ */

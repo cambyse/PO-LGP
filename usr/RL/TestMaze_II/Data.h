@@ -3,11 +3,15 @@
 
 #include <vector>
 #include <tuple>
-
+#include <math.h>
 
 class Data {
 
 public:
+
+    //--------------------------//
+    //  Typedefs and Constants  //
+    //--------------------------//
 
     //---actions---//
     enum ACTION {   STAY,      UP,    DOWN,    LEFT,   RIGHT, NUMBER_OF_ACTIONS };
@@ -33,8 +37,16 @@ public:
     typedef std::tuple<action_t,state_t,reward_t> data_point_t;
     typedef std::vector<data_point_t>             episode_t;
     typedef episode_t::const_iterator             const_episode_iterator_t;
-    typedef const_episode_iterator_t input_data_t;
-    typedef const data_point_t       output_data_t;
+    typedef const_episode_iterator_t              input_data_t;
+    typedef const data_point_t                    output_data_t;
+    static const int output_n;
+
+    //-------------//
+    //  Functions  //
+    //-------------//
+
+    static int output_idx(input_data_t data);
+    static int output_idx(input_data_t, output_data_t data_predict);
 
 };
 
