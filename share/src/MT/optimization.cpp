@@ -324,7 +324,7 @@ optOptions::optOptions() {
   fmin_return=NULL;
   stopTolerance=1e-2;
   stopEvals=1000;
-  stopIters=100;
+  stopIters=1000;
   useAdaptiveDamping=1.;
   initStep=1.;
   minStep=-1.;
@@ -587,8 +587,8 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
     if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha <<endl;
     
     //stopping criterion
-    if(Delta.absMax()<o.stopTolerance ||
-       alpha*Delta.absMax()<1e-3*o.stopTolerance ||
+    if((lambda<1. && Delta.absMax()<o.stopTolerance) ||
+       (lambda<1. && alpha*Delta.absMax()<1e-3*o.stopTolerance) ||
        evals>=o.stopEvals ||
        it>=o.stopIters) break;
   }

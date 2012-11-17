@@ -14,7 +14,7 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
   uint get_T(){ return T; }
-  uint get_k(){ return 1; }
+  uint get_k(){ return 2; }
   uint get_n(){ return S->getJointDimension(); }
   uint get_m(uint t){
     if(t==0 || t==get_T()-get_k()) return 2*get_n();
@@ -68,6 +68,17 @@ public:
   arr getNode(uint i){ return ann.X[i]; }
   void getRandomNode(arr& q){ q = ann.X[rnd(ann.X.d0)]; }
 };
+
+void plotEffTraj(Simulator &S, const arr& q){
+  arr y,line;
+  for(uint t=0;t<q.d0;t++){
+    S.setJointAngles(q[t],false);
+    S.kinematicsPos(y,"peg");
+    line.append(y);
+  }
+  line.reshape(line.N/y.N,y.N);
+  plotLine(line);
+}
 
 void RTTplan(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
@@ -179,12 +190,14 @@ void RTTplan(){
 
 void optim(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
-  S.setContactMargin(.02); //this is 2 cm (all units are in meter)
+  S.setContactMargin(.01); //this is 2 cm (all units are in meter)
   
   arr x,x0;
   MT::load(x0,"q.rrt");
   x=x0;
-  
+  plotEffTraj(S, x);
+  S.watch();
+
   TrajectoryOptimizationProblem P;
   P.S=&S;
   P.T=x.d0-1;
@@ -198,15 +211,24 @@ void optim(){
        <<endl;
 
   conv_KOrderMarkovFunction P_conv(P);
-  optGaussNewton(x, P_conv, OPT3(verbose=2, stopEvals=1000, maxStep=.5));
+#if 1
+  optGaussNewton(x, P_conv, OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+#else
+  for(;;){
+    optGaussNewton(x, P_conv, OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+    plotEffTraj(S, x);
+    S.watch();
+  }
+#endif
+  //optGaussNewton(x, P_conv, OPT5(stopEvals=10, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+  MT::save(x,"q.optim");
 
   //display
-  for(uint t=0;t<=P.get_T();t++) S.setJointAngles(x[t], true);
-  S.watch();
-  for(uint t=0;t<=P.get_T();t++) S.setJointAngles(x[t], true);
-  S.watch();
-
-  MT::save(x,"q.optim");
+  plotEffTraj(S, x);
+  for(;;){
+    for(uint t=0;t<=P.get_T();t++) S.setJointAngles(x[t], true);
+    S.watch();
+  }
 }
 
 int main(int argc,char **argv){
