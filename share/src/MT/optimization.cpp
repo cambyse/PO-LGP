@@ -510,6 +510,7 @@ uint optRprop(arr& x, ScalarFunction& f, optOptions o) {
 uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *Jx_user) {
   double a=1.;
   double lambda = 1e-10;
+  if(o.initialDamping) lambda=o.initialDamping;
   double fx, fy;
   arr Delta, y;
   arr R(x.N, x.N), r(x.N);

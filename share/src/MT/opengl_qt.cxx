@@ -27,6 +27,12 @@ sOpenGL::sOpenGL(OpenGL *_gl, void *container)
   init();
 }
 
+sOpenGL::sOpenGL(QWidget *container)
+  :QGLWidget(QGLFormat(GLformat),container){
+  gl = new OpenGL;
+  //ownWin = false;
+  init();
+}
 
 sOpenGL::sOpenGL(OpenGL *_gl, const char* title,int width,int height,int posx,int posy)
   :QGLWidget(QGLFormat(GLformat)){

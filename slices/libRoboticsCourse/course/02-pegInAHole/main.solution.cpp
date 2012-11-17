@@ -1,6 +1,11 @@
 #include <MT/roboticsCourse.h>
 #include "../../../../share/src/MT/array.h"
 
+void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
+  q.resize(T+1,q0.N);
+  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+}
+
 void getTaskVector(arr& Phi, arr& PhiJ,  Simulator& S, const arr& pos_target, const arr& dir_target, bool collisions){
   arr y_target,y,J;
   double y_deviation;
@@ -45,24 +50,28 @@ void findPosture(arr& qT, const arr& q0, Simulator& S, uint T, const arr& pos_ta
   
   S.setJointAngles(q0);
   qT = q0;
-  
+  double cost=-1.,lastCost;
+
   for(;;){
     getTaskVector(Phi, PhiJ, S, pos_target, dir_target, collisions);
-    
+
     //evaluate:
-    double cost = (~(qT-q0)*W*(qT-q0))(0) + sumOfSqr(Phi);
-    cout <<"qT optimization cost = " <<cost <<endl;
+    lastCost = cost;
+    cost = (~(qT-q0)*W*(qT-q0))(0) + sumOfSqr(Phi);
+    cout <<"qT optimization cost = " <<cost <<" [max_step_length=" <<max_step_length <<"]" <<endl;
+
+    //step-size adaptation:
+    if(cost>lastCost && lastCost!=-1)  max_step_length *=.5;
 
     //make a step:
     step = inverse(~PhiJ*PhiJ + W)*(W*(qT-q0) + ~PhiJ* Phi);
     if(norm(step) > max_step_length) step *= max_step_length/norm(step);
     qT -= step;
-    
-    //compute joint updates
+
+    //update simulator
     S.setJointAngles(qT);
 
-    
-    if(step.absMax()<1e-2) break; //stopping criterion
+    if(norm(step)<1e-2) break; //stopping criterion
   }
 }
 
@@ -90,10 +99,10 @@ void taskSpaceInterpolation(const arr& q0, Simulator& S, uint T, const arr& pos_
 }
 
 void peg_in_a_hole(){
-  Simulator S("peg_in_a_hole.ors");
+  Simulator S("pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
 
-  arr q,q0,qT;
+  arr q,q0,q1,q2;
   S.getJointAngles(q0);
   q = q0;
   uint T=100;
@@ -102,34 +111,32 @@ void peg_in_a_hole(){
   S.kinematicsPos(pos_hole,"hole");
   
   // a)
-  findPosture(qT, q0, S, T, pos_hole, ARR(0,0,-1.), false);
-  cout <<"optimized qT:" <<qT <<endl;
+  //q1 = pose 30 cm above hole:
+  findPosture(q1, q0, S, T, pos_hole+ARR(0,0,.6), ARR(0,0,-1.), false);
+  cout <<"optimized q1:" <<q1 <<endl;
+  S.watch();
+
+  //q2 = pose in hole:
+  findPosture(q2, q1, S, T, pos_hole, ARR(0,0,-1.), false);
+  cout <<"optimized q2:" <<q2 <<endl;
   S.watch();
   
   // b)
   cout <<"q-space interpolation:" <<endl;
   for(uint t=0;t<=T;t++){
-    q = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+    q = q0 + .5 * (1.-cos(MT_PI*t/T)) * (q1-q0);
+    S.setJointAngles(q);
+  }
+  for(uint t=0;t<=T;t++){
+    q = q1 + .5 * (1.-cos(MT_PI*t/T)) * (q2-q1);
     S.setJointAngles(q);
   }
   S.watch();
 
   cout <<"y-space interpolation:" <<endl;
-  taskSpaceInterpolation(q0, S, T, pos_hole, ARR(0,0,-1.), false);
-  S.watch();
-
-  // c)
-  arr q1;
-  findPosture(q1, q0, S, T, pos_hole+ARR(0,0,.6), ARR(0,0,-1.), true);
-  cout <<"collision intermediate pose:" <<endl;
-  S.watch();
-
-  cout <<"q-space & task space interpolation:" <<endl;
-  for(uint t=0;t<=T;t++){
-    q = q0 + .5 * (1.-cos(MT_PI*t/T)) * (q1-q0);
-    S.setJointAngles(q);
-  }
-  taskSpaceInterpolation(q1, S, T, pos_hole, ARR(0,0,-1.), true);
+  taskSpaceInterpolation(q0, S, T, pos_hole+ARR(0,0,.6), ARR(0,0,-1.), false);
+  S.getJointAngles(q);
+  taskSpaceInterpolation(q, S, T, pos_hole, ARR(0,0,-1.), true);
   S.watch();
 
 }

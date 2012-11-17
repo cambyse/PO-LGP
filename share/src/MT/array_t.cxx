@@ -411,6 +411,8 @@ template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
     resizeCopy(d0+1, d1);
   else if(nd==2 && x.nd==2 && d1==x.d1)
     resizeCopy(d0+x.d0, d1);
+  else if(!N)
+    resizeAs(x);
   else
     resizeCopy(N+xN);
   if(!memMove) {

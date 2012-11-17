@@ -30,11 +30,15 @@ void TestPD(double xi, double waveLength){
 
 //for 500 steps gravity effects, than control back to home position
 void testDynamicSimulation(){
-  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
+  Simulator S("../02-pegInAHole/pegInAHole.ors");
+  S.setDynamicSimulationNoise(2.);
+  S.setDynamicGravity(true);
   
   arr q,qdot,qddot;
   arr M,Minv,F,u;
   S.getJointAngles(q);
+  q(2) = 1.;
+  S.setJointAngles(q);
   qdot.resizeAs(q);
   qdot = 0.;
   u=qdot;
@@ -43,7 +47,7 @@ void testDynamicSimulation(){
   S.watch();        //pause and watch initial posture
   
   double tau = .01; //duration of one time step = .01sec
-  bool control = 0;
+  bool control = 1;
   
   for(uint i=0;i<1000;i++){
     //** CONTROLLER part
@@ -55,24 +59,19 @@ void testDynamicSimulation(){
       if(i > 500)control = 1;
     }else{
       //separate PDs in each joint separately:
-      double lambda = 1./MT_2PI; //corresponds to 1 second period
-      double xi = 1.;
+      double lambda = .5/MT_2PI; //corresponds to 1 second period
+      double xi = .2;
       double Kp,Kd;
       Kp = 1./(lambda*lambda);
       Kd = 2.*xi/lambda;
-      u = Kp * (0. - q) + Kd * (0. - qdot);
+      arr qddot_desired = Kp * (0. - q) + Kd * (0. - qdot);
       //compute coordinated u so that each joint behaves like a PD:
       //(the u given above is now the desired qddot; see slide 21)
-      u = M*u + F;
+      u = M*qddot_desired + F;
     }
-    //** SIMULATOR part (you could replace this with the real robot)
-    //integrate the system equation (that's all you need as a dynamics engine!!)
-    inverse(Minv,M);
-    qddot = Minv * (u - F);
-    //Euler integration (Runge-Kutte4 would be much more precise...)
-    q    += tau * qdot;
-    qdot += tau * qddot;
-    S.setJointAnglesAndVels(q,qdot);
+
+    S.stepDynamic(u, tau);
+    S.getJointAnglesAndVels(q, qdot);
     //output
     cout <<" t = " <<.01*i
     <<" E = " <<S.getEnergy()
@@ -103,13 +102,14 @@ void getAcc(arr& a, const arr& q, double tau){
 
 
 void followReferenceTrajectory(){
-  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
-  S.setDynamicSimulationNoise(2.);
+  Simulator S("../02-pegInAHole/pegInAHole.ors");
+  S.setDynamicSimulationNoise(.0);
   S.setDynamicGravity(true);
 
   double tau=.01;
-  uint T=500; //we simulate for 5 seconds
-  
+  uint T=100; //we simulate for 5 seconds
+
+  //-- compute a stupid reference trajectory
   arr q0(7); q0.setZero();
   arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
   arr q_ref,v_ref,a_ref;
@@ -127,14 +127,14 @@ void followReferenceTrajectory(){
 
   S.watch();        //pause and watch initial posture
 
-  arr joint2(T+1);
+  arr plot;
   
   for(uint t=0;t<=T;t++){
     //get system equation
     S.getDynamics(M,F);
 
     //PD parameters
-    double lambda = 1./MT_2PI; //corresponds to 1 second wavelength
+    double lambda = .2/MT_2PI; //corresponds to 1 second wavelength
     double xi = .2; //oscillatory or critically damped
     double Kp,Kd;
     Kp = 1./(lambda*lambda);
@@ -152,9 +152,9 @@ void followReferenceTrajectory(){
     S.getJointAnglesAndVels(q, qdot);
 
     cout  <<" t = " <<tau*t  <<"sec   q = " <<q <<endl;
-    joint2(t) = q(2);
+    plot.append(q(2));
   }
-  gnuplot(joint2);
+  gnuplot(plot);
   S.watch();
 }
 

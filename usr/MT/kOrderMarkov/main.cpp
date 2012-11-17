@@ -1,13 +1,7 @@
 #include <MT/util.h>
 #include <MT/optimization.h>
-#include "kOrderMarkovProblem.h"
+#include <MT/kOrderMarkovProblem.h>
 #include "exampleProblem.h"
-
-struct conv_KOrderMarkovFunction:VectorFunction {
-  KOrderMarkovFunction *f;
-  conv_KOrderMarkovFunction(KOrderMarkovFunction& _f):f(&_f) {}
-  void   fv(arr& y, arr& J, const arr& x);
-};
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -41,30 +35,4 @@ int main(int argn,char** argv){
   gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3");
   
   return 0;
-}
-
-
-void conv_KOrderMarkovFunction::fv(arr& phi, arr& J, const arr& x) {
-  //probing dimensionality
-  uint T=f->get_T();
-  uint k=f->get_k();
-  uint n=f->get_n();
-  uint M=0;
-  for(uint t=0;t<=T-k;t++) M+=f->get_m(t);
-  CHECK((T+1)*n==x.N,"");
-
-  //resizing things:
-  phi.resize(M);   phi.setZero();
-  if(&J){ J  .resize(M,x.N); J  .setZero(); }
-  M=0;
-  uint m_t;
-  for(uint t=0;t<=T-k;t++){
-    m_t = f->get_m(t);
-    arr phi_t,J_t;
-    f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t, t+k) );
-    J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
-    phi.setVectorBlock(phi_t, M);
-    if(&J) J  .setMatrixBlock(J_t, M, t*n);
-    M += m_t;
-  }
 }
