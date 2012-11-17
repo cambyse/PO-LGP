@@ -39,8 +39,8 @@ public:
     //But I can draw a projected edge in 3D endeffector position space:
     arr y_from,y_to;
     arr line;
-    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"pin");
-    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"pin");
+    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"peg");
+    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"peg");
     line.append(y_from); line.reshape(1,line.N);
     line.append(y_to);
     plotLine(line); //add a line to the plot
@@ -55,8 +55,7 @@ public:
 };
 
 void RTTplan(){
-  //Simulator S("arm7.ors");
-  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
+  Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
   arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
@@ -77,6 +76,7 @@ void RTTplan(){
     rndUniform(q,-MT_2PI,MT_2PI,false);
     rrt.getProposalTowards(q);
     S.setJointAngles(q,false);
+
     S.kinematicsContacts(y_col);
     if(y_col(0)<.5){
       rrt.add(q);
@@ -87,6 +87,7 @@ void RTTplan(){
     if(!(i%1000)) S.setJointAngles(q); //updates diplay (makes it slow)
     cout <<"\rRRT sizes = " <<rrt.getNumberNodes() <<std::flush;
   }
+  S.watch();
 }
 
 int main(int argc,char **argv){

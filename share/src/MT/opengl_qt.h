@@ -40,6 +40,7 @@ public:
   
   sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy);
   sOpenGL(OpenGL *gl, void *container);
+  sOpenGL(QWidget *container);
   ~sOpenGL();
   void init();
   void beginGlContext(){};

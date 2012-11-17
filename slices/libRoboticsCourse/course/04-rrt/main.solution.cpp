@@ -7,7 +7,6 @@
 struct TrajectoryOptimizationProblem:VectorChainFunction {
   Simulator *S;
   arr x0,xT;
-  uint T;
   
   TrajectoryOptimizationProblem(Simulator& _S, uint _T, const arr& _x0, const arr& _xT){
     S = &_S;
@@ -15,34 +14,42 @@ struct TrajectoryOptimizationProblem:VectorChainFunction {
     x0=_x0;
     xT=_xT;
   }
-  virtual void fi (arr& y, arr* J, uint i, const arr& x_i){ //tasks: only collision
+  
+  virtual void fvi (arr& y, arr* J, uint i, const arr& x_i){ //tasks: only collision
     S->setJointAngles(x_i,false);
     S->kinematicsContacts(y);
     if(J) S->jacobianContacts(*J);
-    double rho=1e5;
+    double rho=1e3;
     if(i==0){
       y.append(rho*(x_i-x0));
       if(J) J->append(rho*eye(xT.N));
-    }
-    if(i==T-1){
+    }else{
+    if(i==T){
       y.append(rho*(x_i-xT));
       if(J) J->append(rho*eye(xT.N));
-    }
+    }else{
+      y.append(zeros(1,xT.N));
+      if(J) J->append(zeros(xT.N,xT.N));
+    }}
   }
-  virtual void fij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){ //transitions: simple distance
+  
+  virtual void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j){ //transitions: simple distance
     CHECK(i==j-1,"");
-    y = x_i-x_j;
-    if(Ji) Ji->setDiag( 1.,y.N);
-    if(Jj) Jj->setDiag(-1.,y.N);
+    double w=1.;
+    y = w*(x_i-x_j);
+    if(Ji) Ji->setDiag( w,y.N);
+    if(Jj) Jj->setDiag(-w,y.N);
   }
 };
 
 struct RRT{
-  ANN ann;      //ann also stores all points added to the tree in ann.X
+private:
+  ANN ann;      //ann stores all points added to the tree in ann.X
   uintA parent; //for each point we also store the index of the parent node
   double stepsize;
   uint last_parent;
   
+public:
   RRT(const arr& q0, double _stepsize){
     ann   .append(q0); //append q as the root of the tree
     parent.append(0);    //q has itself as parent
@@ -68,21 +75,22 @@ struct RRT{
     //But I can draw a projected edge in 3D endeffector position space:
     arr y_from,y_to;
     arr line;
-    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"pin");
-    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"pin");
+    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"peg");
+    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"peg");
     line.append(y_from); line.reshape(1,line.N);
     line.append(y_to);
     plotLine(line); //add a line to the plot
 
   }
-  void getRandomNode(arr& q){
-    q = ann.X[rnd(ann.X.d0)];
-  }
+  //some access routines
+  uint getParent(uint i){ return parent(i); }
+  uint getNumberNodes(){ return ann.X.d0; }
+  arr& getNode(uint i){ return ann.X[i](); }
+  void getRandomNode(arr& q){ q = ann.X[rnd(ann.X.d0)]; }
 };
 
 void RTTplan(){
-  //Simulator S("arm7.ors");
-  Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
+  Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
   arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
@@ -105,7 +113,7 @@ void RTTplan(){
   
   for(uint i=0;i<100000;i++){
     //let rrt0 grow
-    if(rnd.uni()<.9) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
     else rrtT.getRandomNode(q);
     rrt0.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -123,7 +131,7 @@ void RTTplan(){
     }
 
     //let rrtT grow
-    if(rnd.uni()<.9) rndUniform(q,-MT_2PI,MT_2PI,false);
+    if(rnd.uni()<.5) rndUniform(q,-MT_2PI,MT_2PI,false);
     else rrt0.getRandomNode(q);
     rrtT.getProposalTowards(q);
     S.setJointAngles(q,false);
@@ -186,21 +194,28 @@ void optim(){
   Simulator S("../02-pinInAHole/pin_in_a_hole.ors");
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
-  arr q;
-  MT::load(q,"q.rrt");
+  arr x,x0;
+  MT::load(x0,"q.rrt");
+  x=x0;
+  uint T=x.d0-1;
   
-  TrajectoryOptimizationProblem problem(S, q.d0, q[0], q[q.d0-1]);
-  ConvertVector2SqrChainFunction problem2(problem);
-  ConvertVectorChain2ScalarFunction problem3(problem);
+  TrajectoryOptimizationProblem P(S, T, x[0], x[T]);
+  conv_VectorChainFunction P2(P);
   
   // optimize
-  //checkGradient(problem3, q, 1e-4);
-  optRprop(q, problem3, .1, NULL, 1e-3, 1000, 2);
+  //checkGradient((VectorFunction&)P2, x, 1e-4);
+
+  //eval_cost=0;  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 1000, 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;  x=x0;  optGaussNewton(x, P2, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optDynamicProgramming(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
+  eval_cost=0;  x=x0;  optMinSumGaussNewton(x, P2, NULL, 1e-3, 1e-4, 100, -1., 2 );  cout <<"-- evals=" <<eval_cost <<endl;
+  //eval_cost=0;    optNodewise(x, P, NULL, 1e-3, 1000, -1., 2);  cout <<"-- evals=" <<eval_cost <<endl;
 
   //display
-  for(uint t=0;t<q.d0;t++) S.setJointAngles(q[t], true);
+  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
   S.watch();
-  for(uint t=0;t<q.d0;t++) S.setJointAngles(q[t], true);
+  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
   S.watch();
 }
 
