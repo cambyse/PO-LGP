@@ -3,6 +3,7 @@
 
 #include <MT/aico.h>
 #include <MT/socNew.h>
+#include <MT/opengl.h>
 #include <unistd.h>
 
 Process* newMotionPlanner(MotionPrimitive& m){
@@ -90,7 +91,7 @@ void MotionPlanner::step() {
       x0.append(_HardwareReference->get_v_reference(NULL));
       m->set_frame0(x0, this);
     }
-    CHECK(x0.N==2*s->sys.qDim(),"You need to initialize frame0 to start pose!");
+    CHECK(x0.N==s->sys.get_xDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
     //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<x0->frameCount <<' ' <<frame1->frameCount <<' ' <<m->frameCount <<endl;
 
@@ -98,19 +99,19 @@ void MotionPlanner::step() {
     arr xT;
 //    if (!xT->get_converged(this)){
     if (actionSymbol==MotionPrimitive::grasp || actionSymbol == MotionPrimitive::reach) {
-      uint shapeId = s->sys.ors->getShapeByName(m->get_objectRef1(this))->index;
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
       threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
     }
     else if (actionSymbol==MotionPrimitive::place) {
-      listDelete(s->sys.vars);
-      uint shapeId = s->sys.ors->getShapeByName(m->get_objectRef1(this))->index;
-      uint toId = s->sys.ors->getShapeByName(m->get_objectRef2(this))->index;
+      listDelete(s->sys.vars());
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
+      uint toId = s->sys.getOrs().getShapeByName(m->get_objectRef2(this))->index;
       setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId, NoArr);
       keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
     }
     else if (actionSymbol==MotionPrimitive::place_location) {
-      listDelete(s->sys.vars);
-      uint shapeId = s->sys.ors->getShapeByName(m->get_objectRef1(this))->index;
+      listDelete(s->sys.vars());
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
       arr location = m->get_locationRef(this);
       setPlaceGoals(s->sys, s->sys.get_T(), shapeId, -1, location);
       keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
@@ -122,11 +123,11 @@ void MotionPlanner::step() {
 
     //--push it
     m->set_frame1(xT, this);
-    m->set_duration(s->sys.getDuration(), this);
-    
-    //-- optimize the plan
     uint T = s->sys.get_T();
     double tau = s->sys.get_tau();
+    m->set_duration(tau*T, this);
+    
+    //-- optimize the plan
     arr q;
     switch (s->planningAlgo) {
       case sMotionPlanner::interpolation: {
@@ -134,8 +135,8 @@ void MotionPlanner::step() {
       } break;
       case sMotionPlanner::AICO_noinit: {
         //enforce zero velocity start/end vel
-        if (s->sys.dynamic) x0.subRange(x0.N/2,-1) = 0.;
-        if (s->sys.dynamic) xT.subRange(xT.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) x0.subRange(x0.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) xT.subRange(xT.N/2,-1) = 0.;
 
         if(!s->aico){
           s->aico = new AICO(s->sys);
@@ -395,17 +396,17 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, con
   activateAll(sys.vars(), false);
   
   //activate collision testing with target shape
-  ors::Shape *obj  = sys.ors->shapes(shapeId);
+  ors::Shape *obj  = sys.getOrs().shapes(shapeId);
   ors::Shape *onto = NULL;
   if(belowToShapeId != -1)
-     onto = sys.ors->shapes(belowToShapeId);
-  if (obj->body!=sys.ors->getBodyByName("m9")){
-    reattachShape(*sys.ors, NULL, obj->name, "m9");
+     onto = sys.getOrs().shapes(belowToShapeId);
+  if (obj->body!=sys.getOrs().getBodyByName("m9")){
+    reattachShape(sys.getOrs(), NULL, obj->name, "m9");
   }
   CHECK(obj->body==sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   if(onto) onto->cont=false;
-  sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
+  sys.getSwift().initActivations(sys.getOrs(), 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
   
@@ -487,7 +488,7 @@ void setHomingGoals(OrsSystem& sys, uint T){
   //deactivate all variables
   activateAll(sys.vars(), false);
   
-  sys.swift->initActivations(*sys.ors);
+  sys.getSwift().initActivations(sys.getOrs());
   
   TaskVariable *V;
   
@@ -503,23 +504,23 @@ void setHomingGoals(OrsSystem& sys, uint T){
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  V = new DefaultTaskVariable("limits", sys.getOrs(),qLimitsTVT, 0, 0, 0, 0, limits);
   V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
-  sys.vars.append(V);
+  sys.vars().append(V);
 
   //-- standard collisions
   double margin = .05;
-  V = new DefaultTaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(margin));
+  V = new DefaultTaskVariable("collision", sys.getOrs(), collTVT, 0, 0, 0, 0, ARR(margin));
   V->y=0.;  V->y_target=0.;  V->y_prec=colPrec;  V->setConstTargetsConstPrecisions(T);
-  sys.vars.append(V);
+  sys.vars().append(V);
 
   //-- qitself
-  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
-  V->updateState(*sys.ors);
+  V = new DefaultTaskVariable("qitself", sys.getOrs(), qItselfTVT, 0, 0, 0, 0, 0);
+  V->updateState(sys.getOrs());
   V->y_target.resizeAs(V->y);  V->y_target.setZero();
   V->v=0.;  V->v_target=V->v; 
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
-  sys.vars.append(V);
+  sys.vars().append(V);
   
 }
 
@@ -597,7 +598,7 @@ double keyframeOptimizer(arr& x, ControlledSystem& sys, double stopTolerance, bo
     lapack_cholesky(sqrtWinv, sumAinv);
   }
   
-  sys.getx0(x0);
+  sys.get_x0(x0);
   if (!x_is_initialized) x=x0;
   
   struct MyOptimizationProblem:VectorFunction {
@@ -628,7 +629,7 @@ double keyframeOptimizer(arr& x, ControlledSystem& sys, double stopTolerance, bo
   opt.fmin_return=&cost;
   opt.stopTolerance=1e-2;
   opt.stopEvals=100;
-  opt.initialDamping=1.;
+  opt.useAdaptiveDamping=1.;
   opt.maxStep=.5;
   opt.verbose=verbose?verbose-1:0;
   optGaussNewton(x, F, opt);

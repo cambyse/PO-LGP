@@ -3,7 +3,7 @@
 
 #include <MT/socNew.h>
 #include <MT/soc_inverseKinematics.h>
-#include <MT/socSystem_ors.h>
+#include <MT/soc_orsSystem.h>
 #include <hardware/hardware.h>
 
 struct MotionController:Process {
@@ -201,17 +201,22 @@ void MotionController::step() {
     if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real hand state!!!
     hardwareReference->deAccess(this);
     
-    s->sys.vars.clear(); //unset the task variables -- they're set and updated later
+    s->sys.vars().clear(); //unset the task variables -- they're set and updated later
     if (q_old.N >= 14) { 
       if(q_old.N == 2*s->geo().ors.getJointStateDimension()) q_old = q_old.sub(0, q_old.N/2 - 1);
-      s->sys.setqv(q_old, v_old);
-    } else 
-      s->sys.getqv0(q_old, v_old);
+      s->sys.setx(cat(q_old, v_old));
+    } else {
+      arr x0;
+      s->sys.get_x0(x0);
+      uint n=x0.N/2;
+      q_old = x0.sub(0,n);
+      v_old = x0.sub(n,-1);
+    }
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = motionPrimitive->get_feedbackControlTask(this);
     CHECK(task,"");
-    if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
+    if (task->requiresInit) task->initTaskVariables(s->sys.getOrs());
     if (task->done){
       motionPrimitive->set_mode(MotionPrimitive::done, this);
       hardwareReference->writeAccess(this);
@@ -221,13 +226,13 @@ void MotionController::step() {
       return;
     }
     s->sys.setTaskVariables(task->TVs);
-    task->updateTaskVariableGoals(*s->sys.ors);
+    task->updateTaskVariableGoals(s->sys.getOrs());
     
     //=== compute motion from the task variables
     //check if a collition and limit variable are active
     bool colActive=false, limActive=false;
     uint i; TaskVariable *v;
-    for_list(i, v, s->sys.vars) if (v->active) {
+    for_list(i, v, s->sys.vars()) if (v->active) {
       //?? ist sys.vars und task->vars eigentlich das gleiche??
       if (v->type==collTVT) colActive=true;
       if (v->type==qLimitsTVT) limActive=true;
@@ -240,7 +245,7 @@ void MotionController::step() {
     //dynamic control using SOC
     x_1=q_old; x_1.append(v_old);
     arr q_reference, v_reference;
-    soc::bayesianDynamicControl(s->sys, x, x_1, 0);
+    dynamicControl(s->sys, x, x_1, 0);
     q_reference = x.sub(0, q_old.N-1);
     v_reference = x.sub(v_old.N, -1);
     

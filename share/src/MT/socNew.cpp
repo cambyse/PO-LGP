@@ -154,6 +154,53 @@ void straightTaskTrajectory(ControlledSystem& sys, arr& x){
   }
 }
 
+void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v, arr *Vinv){
+  CHECK(!sys.isKinematic(), "assumed dynamic SOC abstraction");
+  uint n=sys.get_xDim();
+
+  //-- access necessary information
+  arr A, a, B, tB, Q;
+  sys.getDynamics(A, a, B, Q, t);
+  transpose(tB, B);
+
+  arr H, Hinv;
+  sys.getControlCosts(H, Hinv, t);
+
+  //fwd message
+  arr s(n), S(n, n), Sinv(n, n);
+  S = Q;
+  S += B*Hinv*tB;
+  s = a + A*x0;
+  inverse_SymPosDef(Sinv, S);
+
+  //task message
+  arr R, r;
+  //q_1.referToSubRange(x_1, 0, n-1);
+  sys.getTaskCosts(R, r, t, NULL);
+
+  //v, Vinv are optional bwd messages!
+
+  //belief
+  arr Binv, b;
+  if(!v){
+    Binv = Sinv + R;
+    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+  }else{
+    if(v->N== x.N){ //bwd msg given as fully dynamic
+      Binv = Sinv + (*Vinv) + R;
+      lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+    }else{
+      arr _Vinv(n, n), _v(n);
+      _Vinv.setZero();  _Vinv.setMatrixBlock(*Vinv, 0, 0);
+      _v   .setZero();  _v   .setVectorBlock(*v, 0);
+      Binv = Sinv + _Vinv + R;
+      lapack_Ainv_b_sym(b, Binv, Sinv*s + _Vinv*_v + r);
+    }
+  }
+
+  x=b;
+}
+
 uint KOrderMarkovFunction_ControlledSystem::get_m(uint t){
   uint T=get_T();
   if(t==0)   return sys->get_xDim() + sys->get_phiDim(t) + sys->get_xDim();

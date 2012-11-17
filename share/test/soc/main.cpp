@@ -1,4 +1,4 @@
-#include <MT/soc.h>
+#include <MT/socNew.h>
 #include <MT/ors.h>
 #include <MT/soc_orsSystem.h> //socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
@@ -96,8 +96,8 @@ void testRobotSystem(bool testFeedbackControl=false){
     cout <<"** updated" <<endl;
     aico.prepare_for_changed_task();
     aico.iterate_to_convergence();
-    sys.analyzeTrajectory(aico.b(),true);
-    sys.displayTrajectory(aico.q(),NULL,2,"AICO_replanned (planned trajectory)");
+    analyzeTrajectory(sys, aico.b(), true, &cout);
+    displayTrajectory(sys, aico.q(), NULL, 2, "AICO_replanned (planned trajectory)");
 
 //    cout <<"** from scratch" <<endl;
 //    //from scratch

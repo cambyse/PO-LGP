@@ -87,8 +87,8 @@ void ors::Mesh::glDraw() {
   }
 #if 1
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
-    bool turnOnLight=false;
-    if(C.N){ turnOnLight = glGet(GL_LIGHTING); glDisable(GL_LIGHTING); }
+    GLboolean turnOnLight=false;
+    if(C.N){ glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
     
     glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);

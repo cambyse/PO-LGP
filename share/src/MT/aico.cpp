@@ -150,7 +150,7 @@ void AICO::iterate_to_convergence(){
 void sAICO::init_messages(){
   uint T=sys->get_T();
   arr x0;
-  sys->getx0(x0);
+  sys->get_x0(x0);
   uint n=x0.N;
   //messages
   s.resize(T+1, n);  Sinv.resize(T+1, n, n);
@@ -214,10 +214,10 @@ void AICO::fix_final_state(const arr& x_T){
 void sAICO::init_trajectory(const arr& x_init){
   init_messages();
   uint t, T=sys->get_T();
-  if(!sys->isKinematic() && x_init.d1!=sys->xDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());  else  b=x_init;
-  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==(sys->dynamic?2:1)*sys->qDim()) , "initial trajectory was wrong dimensionality");
-  sys->getx0(b[0]()); //overwrite with x0
-  q=x_init;
+  if(!sys->isKinematic() && x_init.d1!=sys->get_xDim()) getPhaseTrajectory(b, x_init, sys->get_tau());  else  b=x_init;
+  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==sys->get_xDim()) , "initial trajectory was wrong dimensionality");
+  sys->get_x0(b[0]()); //overwrite with x0
+  //q=x_init;
   xhat = b;
   s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }
   v=b;  for(uint t=0; t<=T; t++){ Vinv[t].setDiag(damping);  }

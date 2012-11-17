@@ -63,6 +63,14 @@ void straightTaskTrajectory(ControlledSystem& sys, arr& q);
 
 //===========================================================================
 //
+// basic control
+//
+
+void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v=NULL, arr *Vinv=NULL);
+
+
+//===========================================================================
+//
 // Converting a SOC problem into a k-order optimization problem
 //
 
