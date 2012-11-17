@@ -160,9 +160,15 @@ void PhysXInterface::create() {
 	  //s->mesh.makeConvexHull();
 	  Vfloat.clear();
 	  copy(Vfloat,s->mesh.V); //convert vertices to float array..
-	  //PxTriangleMesh* triangleMesh = PxToolkit::createTriangleMesh32(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, s->mesh.T.p, s->mesh.T.d0);
+#if 0
+	  // Physx doesn't support triangle meshes in dynamic objects! See:
+	  // file:///home/mtoussai/lib/PhysX/Documentation/PhysXGuide/Manual/Shapes.html
+	  PxTriangleMesh* triangleMesh = PxToolkit::createTriangleMesh32(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, s->mesh.T.p, s->mesh.T.d0);
+	  geometry = new PxTriangleMeshGeometry(triangleMesh);
+#else
 	  PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(*mPhysics, *mCooking, (PxVec3*)Vfloat.p, s->mesh.V.d0, PxConvexFlag::eCOMPUTE_CONVEX|PxConvexFlag::eINFLATE_CONVEX);
 	  geometry = new PxConvexMeshGeometry(triangleMesh);
+#endif
 	}  break;
 	case ors::markerST:{
 	  geometry=NULL;

@@ -10,15 +10,6 @@
 namespace WorldModel
 {
 
-MazeModel::MazeModel()
-{
-    // TODO Auto-generated constructor stub
 
-}
-
-MazeModel::~MazeModel()
-{
-    // TODO Auto-generated destructor stub
-}
 
 } /* namespace WorldModel */

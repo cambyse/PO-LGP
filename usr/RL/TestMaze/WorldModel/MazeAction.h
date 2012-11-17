@@ -53,6 +53,8 @@ public:
     bool operator> (const MazeAction& other) const { return !(*this<=other); }
     bool operator>=(const MazeAction& other) const { return !(*this>other || *this==other); }
 
+    ACTION get_action() { return action; }
+
 private:
     ACTION action;
 };

@@ -25,13 +25,13 @@ struct GraspMotionParameters{
 GraspMotionParameters graspMotionParameters;
 
 void getGraspMotionParameters(){
-  graspMotionParameters.positionPrec = birosInfo().getParameter<double>("graspPlanPositionPrec");
-  graspMotionParameters.oppositionPrec = birosInfo().getParameter<double>("graspPlanOppositionPrec");
-  graspMotionParameters.alignmentPrec = birosInfo().getParameter<double>("graspPlanAlignmentPrec");
-  graspMotionParameters.fingerDistPrec = birosInfo().getParameter<double>("graspPlanFingerDistPrec");
-  graspMotionParameters.colPrec = birosInfo().getParameter<double>("graspPlanColPrec");
-  graspMotionParameters.limPrec = birosInfo().getParameter<double>("graspPlanLimPrec");
-  graspMotionParameters.zeroQPrec = birosInfo().getParameter<double>("graspPlanZeroQPrec");
+  graspMotionParameters.positionPrec = biros().getParameter<double>("graspPlanPositionPrec");
+  graspMotionParameters.oppositionPrec = biros().getParameter<double>("graspPlanOppositionPrec");
+  graspMotionParameters.alignmentPrec = biros().getParameter<double>("graspPlanAlignmentPrec");
+  graspMotionParameters.fingerDistPrec = biros().getParameter<double>("graspPlanFingerDistPrec");
+  graspMotionParameters.colPrec = biros().getParameter<double>("graspPlanColPrec");
+  graspMotionParameters.limPrec = biros().getParameter<double>("graspPlanLimPrec");
+  graspMotionParameters.zeroQPrec = biros().getParameter<double>("graspPlanZeroQPrec");
 }
 void printGraspMotionParameters(){
   printf("GRASPMOTION PARAMETERS ------------------\n");
@@ -134,7 +134,7 @@ int main(int argn,char** argv){
     oldPosPrec = newPosPrec;
     //pickOrPlaceObject(Action::grasp, "box1", NULL);
 
-    birosInfo().setParameter<double>("graspPlanPositionPrec", oldPosPrec);
+    biros().setParameter<double>("graspPlanPositionPrec", oldPosPrec);
 
     //average the cost over Ntrials
     uint Ntrials = 1;
@@ -163,6 +163,6 @@ int main(int argn,char** argv){
   cam.threadClose();
   close(P);
 
-  //birosInfo().dump();
+  //biros().dump();
   return 0;
 }

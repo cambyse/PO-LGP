@@ -1,8 +1,7 @@
 #ifndef kOrderMarkovProblem_h
 #define kOrderMarkovProblem_h
 
-#include <MT/array.h>
-#include <MT/optimization.h>
+#include "optimization.h"
 
 //A $k$-order Markov problems is fully defined by the following functions:
 struct KOrderMarkovFunction {

@@ -987,7 +987,7 @@ class PRADA_Reward_Combined : public PRADA_Reward {
     }
     
     double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
-      int i; PRADA_Reward* r;
+      uint i; PRADA_Reward* r;
       double weighted_belief = 0.0;
       for_list(i, r, PRADA_rewards) {
           weighted_belief += weights(i) * r->evaluate_prada_reward(dbn, t);

@@ -43,7 +43,7 @@ struct JoystickState: public Variable {
 
 //TODO:
 // Process* newBumblebee(Image& left, Image& right);
-// Process* newJoystick(JoystickState &joy);
+Process* newJoystick(JoystickState &joy);
 // Process* newSchunkArm(HardwareReference &ref);
 // Process* newSchunkHand(HardwareReference &ref);
 // Process* newSchunkSkin(SkinPressure &skin);
@@ -92,17 +92,6 @@ struct SchunkSkin:public Process {
   void close();
 };
 
-struct Joystick:public Process {
-  struct sJoystick *s;
-  
-  JoystickState *joystickState;
-  
-  Joystick();
-  ~Joystick();
-  void open();
-  void step();
-  void close();
-};
 
 #ifdef  MT_IMPLEMENTATION
 #  include "schunk.cpp"

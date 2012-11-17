@@ -1,6 +1,6 @@
 #include <MT/aico.h>
 #include <MT/util_t.cxx>
-#include <MT/soc_orsSystem.h>
+#include <MT/opengl.h>
 
 #include <motion/MotionPlanner.h>
 
@@ -27,7 +27,7 @@ void testGraspHeuristic(){
 
 #if 1
     arr x,x0;
-    sys.get_x0(x0);
+    sys.getx0(x0);
     threeStepGraspHeuristic(x, sys, x0, s->index, 2);
     
     //set velocities to zero

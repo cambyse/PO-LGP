@@ -29,14 +29,14 @@
 #  include <GL/freeglut.h>
 #endif
 
-#if defined MT_GTKGL || defined MT_QTGLUT
+#if defined MT_GTKGL || defined MT_QTGL
 #  ifdef MT_CUDA
 #    undef APIENTRY
 #  endif
 #  include <GL/glut.h>
 #endif
 
-#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGL
 #  define MT_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
@@ -261,8 +261,8 @@ private:
 #endif
   
 public: //driver dependent methods
-  bool loopExit;
-  void postRedrawEvent();
+  ConditionVariable watching;
+  void postRedrawEvent(bool fromWithinCallback);
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();

@@ -234,7 +234,7 @@ void RobotProcessGroup::open(){
   ctrl.proxiesVar = &currentProxies;
   ctrl.joyVar = &joy;
   ctrl.threadOpen();
-  ctrl.threadWaitIdle();
+  ctrl.waitForIdle();
   motorIndex.resize(7);
   motorIndex(0) = ctrl.ors.getBodyByName("m3")->inLinks(0)->index;
   motorIndex(1) = ctrl.ors.getBodyByName("m4")->inLinks(0)->index;
@@ -290,7 +290,7 @@ void RobotProcessGroup::open(){
     HALT("don't open the arm without threads!");
 #endif
     arm.threadOpen(MT::getParameter<int>("armThreadNice", -10));
-    arm.threadWaitIdle();
+    arm.waitForIdle();
 #ifdef MT_SCHUNK
     uint m;  float f;
     for(m=3; m<=9; m++){ arm.pDev->getPos(m, &f); ctrl.q_reference(motorIndex(m-3))=(double)f; } //IMPORTANT: READ IN THE CURRENT ARM POSTURE

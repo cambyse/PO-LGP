@@ -1,13 +1,13 @@
 #include "MotionPlanner.h"
 #include "FeedbackControlTasks.h"
-#include "motion_internal.h"
 
 #include <MT/aico.h>
 #include <MT/socNew.h>
+#include <MT/opengl.h>
 #include <unistd.h>
 
-Process* newMotionPlanner(Action& a, MotionKeyframe& b, MotionKeyframe& c, MotionPrimitive& d){
-  return new MotionPlanner(a,b,c,d);
+Process* newMotionPlanner(MotionPrimitive& m){
+  return new MotionPlanner(m);
 }
 
 struct sMotionPlanner {
@@ -19,19 +19,14 @@ struct sMotionPlanner {
   AICO *aico;
 };
 
-MotionPlanner::MotionPlanner(Action& a, MotionKeyframe& f0, MotionKeyframe& f1, MotionPrimitive& p):Process("MotionPlanner"),
-    action(&a), motionPrimitive(&p){
+MotionPlanner::MotionPlanner(MotionPrimitive& m):Process("MotionPlanner"),
+    motionPrimitive(&m){
   s = new sMotionPlanner;
   s->geo.init("GeometricState", this);
   s->gl=NULL;
   s->planningAlgo=sMotionPlanner::AICO_noinit;
   s->aico=NULL;
-  motionPrimitive->writeAccess(this);
-  motionPrimitive->frame0 = &f0;
-  motionPrimitive->frame1 = &f1;
-  motionPrimitive->deAccess(this);
-  threadListenTo(action);
-  threadListenTo(&f0);
+  listenTo(&m);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -39,10 +34,10 @@ MotionPlanner::~MotionPlanner() {
 }
 
 void MotionPlanner::open() {
-  s->verbose = birosInfo().getParameter<uint>("MotionPlanner_verbose", this);
-  arr W = birosInfo().getParameter<arr>("MotionPlanner_W", this);
-  uint T = birosInfo().getParameter<uint>("MotionPlanner_TrajectoryLength", this);
-  double duration = birosInfo().getParameter<double>("MotionPlanner_TrajectoryDuration", this);
+  s->verbose = biros().getParameter<uint>("MotionPlanner_verbose", this);
+  arr W = biros().getParameter<arr>("MotionPlanner_W", this);
+  uint T = biros().getParameter<uint>("MotionPlanner_TrajectoryLength", this);
+  double duration = biros().getParameter<double>("MotionPlanner_TrajectoryDuration", this);
   
   //clone the geometric state
   s->geo.pull();
@@ -69,172 +64,133 @@ void MotionPlanner::step() {
   s->geo.pull();
   
   CHECK(motionPrimitive,"");
+  MotionPrimitive *m = motionPrimitive;
   
-  MotionKeyframe *frame0 = motionPrimitive->get_frame0(this);
-  MotionKeyframe *frame1 = motionPrimitive->get_frame1(this);
-
-  Action::ActionPredicate actionSymbol = action->get_action(this);
+  MotionPrimitive::ActionPredicate actionSymbol = m->get_action(this);
   
-  if (actionSymbol==Action::noAction) {
-    frame1->writeAccess(this);
-    frame1->x_estimate = frame0->get_x_estimate(this);
-    frame1->duration_estimate = 0.;
-    frame1->converged = false;
-    frame1->deAccess(this);
-    
-    motionPrimitive->writeAccess(this);
-    motionPrimitive->q_plan.clear();
-    motionPrimitive->tau = 0.;
-    //listDelete(motionPrimitive->TVs);
-    motionPrimitive->planConverged=false;
-    motionPrimitive->deAccess(this);
+  if (actionSymbol==MotionPrimitive::noAction) {
+    m->writeAccess(this);
+    m->frame1 = m->frame0;
+    m->q_plan.clear();
+    m->tau = 0.;
+    m->duration=0.;
+    m->planConverged=false;
+    m->deAccess(this);
   }
   
-  if (actionSymbol==Action::grasp || actionSymbol==Action::place_location || actionSymbol==Action::place || actionSymbol == Action::homing || actionSymbol == Action::reach){
+  if (actionSymbol==MotionPrimitive::grasp || actionSymbol==MotionPrimitive::place_location || actionSymbol==MotionPrimitive::place || actionSymbol == MotionPrimitive::homing || actionSymbol == MotionPrimitive::reach){
 
-    if (!frame0->get_converged(this)) {
-      frame0->readAccess(this);
-      if(frame0->frameCount==0 && frame0->x_estimate.N==0){ //assume this is the FIRST frame of all
-        VAR(HardwareReference);
-        arr x0 =  _HardwareReference->get_q_reference(NULL);
-        x0.append(_HardwareReference->get_v_reference(NULL));
-        frame0->x_estimate = x0;
-        frame0->converged = true;
-      }else{
-        //can't do anything with frame0 not converged
-        frame0->deAccess(this);
-        return;
-      }
-      frame0->deAccess(this);
-    }
-    
-    if (frame1->get_converged(this) && motionPrimitive->get_planConverged(this)) { // nothing to do anymore
-      return;
-    }
+    if(m->get_planConverged(this)) return; // nothing to do anymore
     
     //pull start condition
     arr x0;
-    frame0->get_x_estimate(x0, this);
+    m->get_frame0(x0, this);
+    if(m->count==0 && !x0.N){ //assume this is the FIRST frame of all
+      VAR(HardwareReference);
+      x0 = _HardwareReference->get_q_reference(NULL);
+      x0.append(_HardwareReference->get_v_reference(NULL));
+      m->set_frame0(x0, this);
+    }
     CHECK(x0.N==s->sys.get_xDim(),"You need to initialize frame0 to start pose!");
     s->sys.setx0(x0);
-    //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<frame0->frameCount <<' ' <<frame1->frameCount <<' ' <<motionPrimitive->frameCount <<endl;
+    //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<x0->frameCount <<' ' <<frame1->frameCount <<' ' <<m->frameCount <<endl;
 
     //-- estimate the keyframe
     arr xT;
-    if (!frame1->get_converged(this)){
-      if (actionSymbol==Action::grasp || actionSymbol == Action::reach) {
-        uint shapeId = s->sys.getOrs().getShapeByName(action->get_objectRef1(this))->index;
-        threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
-      }
-      else if (actionSymbol==Action::place) {
-        s->sys.setx0(x0);
-        listDelete(s->sys.vars);
-        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-        uint toId = s->sys.ors->getShapeByName(action->get_objectRef2(this))->index;
-        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId, NoArr);
-        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
-      }
-      else if (actionSymbol==Action::place_location) {
-        s->sys.setx0(x0);
-        listDelete(s->sys.vars);
-        uint shapeId = s->sys.ors->getShapeByName(action->get_objectRef1(this))->index;
-        arr location = action->get_locationRef(this);
-        setPlaceGoals(s->sys, s->sys.get_T(), shapeId, -1, location);
-        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
-      }
-      else if (actionSymbol==Action::homing) {
-        setHomingGoals(s->sys, s->sys.get_T());
-        keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
-      }
-      
-      //--push it
-      frame1->writeAccess(this);
-      frame1->x_estimate = xT;
-      frame1->duration_estimate = s->sys.get_T()*s->sys.get_tau();
-      frame1->converged = true;
-      frame1->deAccess(this);
-    }else{
-      frame1->get_x_estimate(xT, this);
+//    if (!xT->get_converged(this)){
+    if (actionSymbol==MotionPrimitive::grasp || actionSymbol == MotionPrimitive::reach) {
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
+      threeStepGraspHeuristic(xT, s->sys, x0, shapeId, s->verbose);
     }
-    
-    //-- optimize the plan
+    else if (actionSymbol==MotionPrimitive::place) {
+      listDelete(s->sys.vars());
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
+      uint toId = s->sys.getOrs().getShapeByName(m->get_objectRef2(this))->index;
+      setPlaceGoals(s->sys, s->sys.get_T(), shapeId, toId, NoArr);
+      keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+    }
+    else if (actionSymbol==MotionPrimitive::place_location) {
+      listDelete(s->sys.vars());
+      uint shapeId = s->sys.getOrs().getShapeByName(m->get_objectRef1(this))->index;
+      arr location = m->get_locationRef(this);
+      setPlaceGoals(s->sys, s->sys.get_T(), shapeId, -1, location);
+      keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+    }
+    else if (actionSymbol==MotionPrimitive::homing) {
+      setHomingGoals(s->sys, s->sys.get_T());
+      keyframeOptimizer(xT, s->sys, 1e-2, false, s->verbose);
+    }
+
+    //--push it
+    m->set_frame1(xT, this);
     uint T = s->sys.get_T();
     double tau = s->sys.get_tau();
+    m->set_duration(tau*T, this);
+    
+    //-- optimize the plan
     arr q;
     switch (s->planningAlgo) {
       case sMotionPlanner::interpolation: {
-	interpolate_trajectory(q,x0,xT,T);
+        interpolate_trajectory(q,x0,xT,T);
       } break;
       case sMotionPlanner::AICO_noinit: {
-          //enforce zero velocity start/end vel
-          if (!s->sys.isKinematic()) x0.subRange(x0.N/2,-1) = 0.;
-          if (!s->sys.isKinematic()) xT.subRange(xT.N/2,-1) = 0.;
+        //enforce zero velocity start/end vel
+        if (!s->sys.isKinematic()) x0.subRange(x0.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) xT.subRange(xT.N/2,-1) = 0.;
 
-	  if(!s->aico){
-            s->aico = new AICO(s->sys);
-            s->aico->fix_initial_state(x0);
-            s->aico->fix_final_state(xT);
-	    interpolate_trajectory(q,x0,xT,T);
-	    s->aico->init_trajectory(q);
-          } else { //we've been optimizing this before!!
-            s->aico->fix_initial_state(x0);
-            s->aico->fix_final_state(xT);
-	    s->aico->prepare_for_changed_task();
-          }
-          s->aico->iterate_to_convergence();
-          //cout << s->aico->cost() << endl;
-          motionPrimitive->writeAccess(this);
-          motionPrimitive->cost = s->aico->cost();
-          motionPrimitive->deAccess(this);
+        if(!s->aico){
+          s->aico = new AICO(s->sys);
+          s->aico->fix_initial_state(x0);
+          s->aico->fix_final_state(xT);
+          interpolate_trajectory(q,x0,xT,T);
+          s->aico->init_trajectory(q);
+        } else { //we've been optimizing this before!!
+          s->aico->fix_initial_state(x0);
+          s->aico->fix_final_state(xT);
+          s->aico->prepare_for_changed_task();
+        }
+        s->aico->iterate_to_convergence();
+        //cout << s->aico->cost() << endl;
+        m->writeAccess(this);
+        m->cost = s->aico->cost();
+        m->deAccess(this);
 
-          q = s->aico->q();
-	  //delete s->aico;
+        q = s->aico->q();
+        //delete s->aico;
       } break;
       default:
-      HALT("no mode set!");
+        HALT("no mode set!");
     }
     
     //-- output the motion primitive -- for the controller to go
-    motionPrimitive->writeAccess(this);
-    motionPrimitive->q_plan = q;
-    motionPrimitive->tau = tau;
-    motionPrimitive->planConverged = true;
-    motionPrimitive->mode = MotionPrimitive::followPlan;
-    if (actionSymbol==Action::place || actionSymbol==Action::place_location) motionPrimitive->fixFingers = true;
-    if (actionSymbol==Action::homing || actionSymbol==Action::grasp || actionSymbol==Action::reach) motionPrimitive->fixFingers = false;
-    motionPrimitive->deAccess(this);
+    m->writeAccess(this);
+    m->q_plan = q;
+    m->tau = tau;
+    m->planConverged = true;
+    m->mode = MotionPrimitive::planned;
+    if (actionSymbol==MotionPrimitive::place || actionSymbol==MotionPrimitive::place_location) m->fixFingers = true;
+    if (actionSymbol==MotionPrimitive::homing || actionSymbol==MotionPrimitive::grasp || actionSymbol==MotionPrimitive::reach) m->fixFingers = false;
+    m->deAccess(this);
 
   }
   
-  if (actionSymbol==Action::openHand || actionSymbol==Action::closeHand) {
-    if (!frame0->get_converged(this)) { //can't do anything with frame0 not converged
+  if (actionSymbol==MotionPrimitive::openHand || actionSymbol==MotionPrimitive::closeHand) {
+    if (m->get_planConverged(this)) { // nothing to do anymore
       return;
     }
 
-    if (frame1->get_converged(this) && motionPrimitive->get_planConverged(this)) { // nothing to do anymore
-      return;
-    }
-    
-    //pull start condition
-    arr x0;
-    frame0->get_x_estimate(x0, this);
-    frame1->writeAccess(this);
-    frame1->x_estimate = x0;
-    frame1->duration_estimate = 3.; //TODO
-    frame1->converged = true;
-    frame1->deAccess(this);
-    
     //-- set the motion primitive -- for the controller to go
-    motionPrimitive->writeAccess(this);
-    motionPrimitive->q_plan.clear();
-    motionPrimitive->planConverged = true;
-    motionPrimitive->mode = MotionPrimitive::feedback;
-    if (actionSymbol==Action::closeHand) motionPrimitive->feedbackControlTask = new CloseHand_FeedbackControlTask;
-    if (actionSymbol==Action::openHand) motionPrimitive->feedbackControlTask = new OpenHand_FeedbackControlTask;
-    motionPrimitive->forceColLimTVs = false;
-    motionPrimitive->fixFingers = false;
-    motionPrimitive->deAccess(this);
-    
+    m->writeAccess(this);
+    m->frame1 = m->frame0;
+    m->duration = 3.; //TODO
+    m->q_plan.clear();
+    m->planConverged = true;
+    m->mode = MotionPrimitive::feedback;
+    if (actionSymbol==MotionPrimitive::closeHand) m->feedbackControlTask = new CloseHand_FeedbackControlTask;
+    if (actionSymbol==MotionPrimitive::openHand) m->feedbackControlTask = new OpenHand_FeedbackControlTask;
+    m->forceColLimTVs = false;
+    m->fixFingers = false;
+    m->deAccess(this);
   }
   
   //FUTURE: collaps all the task variable stuff to a single Phi
@@ -301,13 +257,13 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase) 
   sys.setTox0();
   
   //load parameters only once!
-  double positionPrec = birosInfo().getParameter<double>("graspPlanPositionPrec");
-  double oppositionPrec = birosInfo().getParameter<double>("graspPlanOppositionPrec");
-  double alignmentPrec = birosInfo().getParameter<double>("graspPlanAlignmentPrec");
-  double fingerDistPrec = birosInfo().getParameter<double>("graspPlanFingerDistPrec");
-  double colPrec = birosInfo().getParameter<double>("graspPlanColPrec");
-  double limPrec = birosInfo().getParameter<double>("graspPlanLimPrec");
-  double zeroQPrec = birosInfo().getParameter<double>("graspPlanZeroQPrec");
+  double positionPrec = biros().getParameter<double>("graspPlanPositionPrec");
+  double oppositionPrec = biros().getParameter<double>("graspPlanOppositionPrec");
+  double alignmentPrec = biros().getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = biros().getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = biros().getParameter<double>("graspPlanColPrec");
+  double limPrec = biros().getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = biros().getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
   CHECK(T==sys.get_T(), "");
@@ -423,14 +379,14 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, con
   CHECK(belowToShapeId == -1 || &locationTo == NULL, "Only one thing at a time");
   sys.setTox0();
   
-  double midPrec          = birosInfo().getParameter<double>("placeMidPrec");
-  double alignmentPrec    = birosInfo().getParameter<double>("placeAlignmentPrec");
-  double limPrec          = birosInfo().getParameter<double>("placePlanLimPrec");
-  double colPrec          = birosInfo().getParameter<double>("placePlanColPrec");
-  double zeroQPrec        = birosInfo().getParameter<double>("placePlanZeroQPrec");
-  double positionPrec     = birosInfo().getParameter<double>("placePositionPrec");
-  double upDownVelocity   = birosInfo().getParameter<double>("placeUpDownVelocity");
-  double upDownVelocityPrec = birosInfo().getParameter<double>("placeUpDownVelocityPrec");
+  double midPrec          = biros().getParameter<double>("placeMidPrec");
+  double alignmentPrec    = biros().getParameter<double>("placeAlignmentPrec");
+  double limPrec          = biros().getParameter<double>("placePlanLimPrec");
+  double colPrec          = biros().getParameter<double>("placePlanColPrec");
+  double zeroQPrec        = biros().getParameter<double>("placePlanZeroQPrec");
+  double positionPrec     = biros().getParameter<double>("placePositionPrec");
+  double upDownVelocity   = biros().getParameter<double>("placeUpDownVelocity");
+  double upDownVelocityPrec = biros().getParameter<double>("placeUpDownVelocityPrec");
 
   
   //set the time horizon
@@ -440,17 +396,17 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, con
   activateAll(sys.vars(), false);
   
   //activate collision testing with target shape
-  ors::Shape *obj  = sys.ors->shapes(shapeId);
+  ors::Shape *obj  = sys.getOrs().shapes(shapeId);
   ors::Shape *onto = NULL;
   if(belowToShapeId != -1)
-     onto = sys.ors->shapes(belowToShapeId);
-  if (obj->body!=sys.ors->getBodyByName("m9")){
-    reattachShape(*sys.ors, NULL, obj->name, "m9");
+     onto = sys.getOrs().shapes(belowToShapeId);
+  if (obj->body!=sys.getOrs().getBodyByName("m9")){
+    reattachShape(sys.getOrs(), NULL, obj->name, "m9");
   }
   CHECK(obj->body==sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   if(onto) onto->cont=false;
-  sys.swift->initActivations(*sys.ors, 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
+  sys.getSwift().initActivations(sys.getOrs(), 3); //the '4' means to deactivate collisions between object and fingers (which have joint parents on level 4)
   
   TaskVariable *V;
   
@@ -532,7 +488,7 @@ void setHomingGoals(OrsSystem& sys, uint T){
   //deactivate all variables
   activateAll(sys.vars(), false);
   
-  sys.swift->initActivations(*sys.ors);
+  sys.getSwift().initActivations(sys.getOrs());
   
   TaskVariable *V;
   
@@ -548,23 +504,23 @@ void setHomingGoals(OrsSystem& sys, uint T){
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  V = new DefaultTaskVariable("limits", *sys.ors, qLimitsTVT, 0, 0, 0, 0, limits);
+  V = new DefaultTaskVariable("limits", sys.getOrs(),qLimitsTVT, 0, 0, 0, 0, limits);
   V->y=0.;  V->y_target=0.;  V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
-  sys.vars.append(V);
+  sys.vars().append(V);
 
   //-- standard collisions
   double margin = .05;
-  V = new DefaultTaskVariable("collision", *sys.ors, collTVT, 0, 0, 0, 0, ARR(margin));
+  V = new DefaultTaskVariable("collision", sys.getOrs(), collTVT, 0, 0, 0, 0, ARR(margin));
   V->y=0.;  V->y_target=0.;  V->y_prec=colPrec;  V->setConstTargetsConstPrecisions(T);
-  sys.vars.append(V);
+  sys.vars().append(V);
 
   //-- qitself
-  V = new DefaultTaskVariable("qitself", *sys.ors, qItselfTVT, 0, 0, 0, 0, 0);
-  V->updateState(*sys.ors);
+  V = new DefaultTaskVariable("qitself", sys.getOrs(), qItselfTVT, 0, 0, 0, 0, 0);
+  V->updateState(sys.getOrs());
   V->y_target.resizeAs(V->y);  V->y_target.setZero();
   V->v=0.;  V->v_target=V->v; 
   V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
-  sys.vars.append(V);
+  sys.vars().append(V);
   
 }
 
@@ -673,7 +629,7 @@ double keyframeOptimizer(arr& x, ControlledSystem& sys, double stopTolerance, bo
   opt.fmin_return=&cost;
   opt.stopTolerance=1e-2;
   opt.stopEvals=100;
-  opt.initialDamping=1.;
+  opt.useAdaptiveDamping=1.;
   opt.maxStep=.5;
   opt.verbose=verbose?verbose-1:0;
   optGaussNewton(x, F, opt);

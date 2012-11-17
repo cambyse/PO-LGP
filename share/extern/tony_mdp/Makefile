@@ -33,7 +33,7 @@
 
 
 # The compiler
-CC = g++ -fPIC
+CC = g++ -fPIC -Wno-write-strings
 
 # For scanning
 LEX = flex

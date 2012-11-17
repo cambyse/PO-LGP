@@ -71,23 +71,16 @@ void reach(){
     y_target = ARR(-0.2, -0.4, 1.1); 
     S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
     S.jacobianPos  (J,"handR");
-    Phi  = (y - y_target)/1e-2;  //build the big Phi (sigma = 0.01)
-    PhiJ = J/1e-2;               //and the big Jacobian
-
-    //report on error in the first task
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
+    Phi  = (y - y_target)/1e-2;  //build the task vector Phi (sigma = 0.01)
+    PhiJ = J/1e-2;               //build the Jacobian
 
     //optional: append a second task
     //...compute y and J for second task
     //Phi .append((y - y_target)/sigma);  //append to big Phi
     //PhiJ.append( J / sigma );           //and the big Jacobian
 
-    //optional: append third task, etc...
-
     //compute joint updates
     q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
-    //NOTE: for 1 task only, the following would be equivalent:
-    //q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
     
     //sets joint angles AND computes all frames AND updates display
     S.setJointAngles(q);

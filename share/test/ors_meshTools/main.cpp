@@ -6,6 +6,7 @@
 #include <MT/opengl.h>
 
 #include "swift_decomposer.cpp"
+#include <MT/color.h>
 
 const char *USAGE=
 "\n\
@@ -93,6 +94,18 @@ int main(int argn, char** argv){
     cout <<"swift: " <<cmd <<endl;
     if(system(cmd)) MT_MSG("system call failed");
   }
+  if(MT::checkCmdLineTag("decomp")){
+    cout <<"decomposing..." <<endl;
+    intA triangleAssignments;
+    MT::Array<MT::Array<uint> > shapes;
+    decompose(mesh, STRING(file<<"_x.dcp"), triangleAssignments, shapes);
+    mesh.C.resize(mesh.T.d0,3);
+    for(uint t=0;t<mesh.T.d0;t++){
+      MT::Color col;
+      col.setIndex(triangleAssignments(t));
+      mesh.C(t,0) = col.r;  mesh.C(t,1) = col.g;  mesh.C(t,2) = col.b;
+    }
+  }
   if(MT::checkCmdLineTag("view")){
     cout <<"viewing..." <<endl;
     if(!gl) gl=new OpenGL;
@@ -105,10 +118,6 @@ int main(int argn, char** argv){
     cout <<"saving..." <<endl;
     mesh.writeTriFile(STRING(file<<"_x.tri"));
     mesh.writeOffFile(STRING(file<<"_x.off"));
-  }
-  if(MT::checkCmdLineTag("decomp")){
-    cout <<"decomposing..." <<endl;
-    decompose(mesh,STRING(file<<"_x.dcp"));
   }
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;

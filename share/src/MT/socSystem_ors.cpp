@@ -416,7 +416,7 @@ double soc::SocSystem_Ors::getTau(bool scaled){
 void soc::SocSystem_Ors::getq0(arr& q){ q=s->q0; }
 void soc::SocSystem_Ors::setq0(const arr& q){ s->q0=q; }
 void soc::SocSystem_Ors::getv0(arr& v){ v=s->v0; }
-void soc::SocSystem_Ors::get_x0(arr& x){
+void soc::SocSystem_Ors::getx0(arr& x){
   if(!dynamic){
     x=s->q0;
   }else{

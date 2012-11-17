@@ -527,7 +527,7 @@ uint TupleIndex::index(uintA i) {
     CHECK(i(u)>i(u-1) && i(u) < n, "wrong symmetic index!");
     a+=tri(n-i(u-1)-1, k-u)-tri(n-i(u), k-u);
   }
-  std::cout <<a <<std::endl;
+  //std::cout <<a <<std::endl;
   return a;
 }
 

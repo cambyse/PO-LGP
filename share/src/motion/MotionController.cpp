@@ -1,9 +1,23 @@
-#include "motion_internal.h"
+#include "motion.h"
 #include "FeedbackControlTasks.h"
 
 #include <MT/socNew.h>
 #include <MT/soc_inverseKinematics.h>
+#include <MT/soc_orsSystem.h>
 #include <hardware/hardware.h>
+
+struct MotionController:Process {
+  struct sMotionController *s;
+  HardwareReference *hardwareReference;
+  MotionPrimitive *motionPrimitive;
+  MotionFuture *motionFuture;
+  
+  MotionController(HardwareReference*, MotionPrimitive*, MotionFuture*);
+  ~MotionController();
+  void open();
+  void step();
+  void close();
+};
 
 Process* newMotionController(HardwareReference* hw, MotionPrimitive* mp, MotionFuture* mf){
   return new MotionController(hw, mp, mf);
@@ -33,9 +47,9 @@ struct sMotionController {
 MotionController::MotionController(HardwareReference* a, MotionPrimitive* b, MotionFuture* c)
 :Process("MotionController"), hardwareReference(a), motionPrimitive(b), motionFuture(c) {
   s = new sMotionController();
-  if(!hardwareReference) birosInfo().getVariable(hardwareReference, "HardwareReference", this);
-  if(!motionPrimitive)   birosInfo().getVariable(motionPrimitive, "MotionPrimitive", this);
-  if(!motionFuture)      birosInfo().getVariable(motionFuture, "MotionFuture", this);
+  if(!hardwareReference) biros().getVariable(hardwareReference, "HardwareReference", this);
+  if(!motionPrimitive)   biros().getVariable(motionPrimitive, "MotionPrimitive", this);
+  if(!motionFuture)      biros().getVariable(motionFuture, "MotionFuture", this);
   s->geo.init("GeometricState", this);
   hardwareReference->writeAccess(this);
   s->geo().ors.getJointState(hardwareReference->q_reference,
@@ -48,10 +62,10 @@ MotionController::~MotionController() {
 }
 
 void MotionController::open() {
-  arr W = birosInfo().getParameter<arr>("MotionController_W", this);
-  s->tau = birosInfo().getParameter<double>("MotionController_tau", this);
-  s->maxJointStep = birosInfo().getParameter<double>("MotionController_maxJointStep", this);
-  s->followTrajectoryTimeScale = birosInfo().getParameter<double>("MotionController_followTrajectoryTimeScale", this);
+  arr W = biros().getParameter<arr>("MotionController_W", this);
+  s->tau = biros().getParameter<double>("MotionController_tau", this);
+  s->maxJointStep = biros().getParameter<double>("MotionController_maxJointStep", this);
+  s->followTrajectoryTimeScale = biros().getParameter<double>("MotionController_followTrajectoryTimeScale", this);
     
   
   //clone the geometric state
@@ -87,7 +101,7 @@ void MotionController::step() {
 
   MotionPrimitive::MotionMode mode=motionPrimitive->get_mode(this);
   
-  if (mode==MotionPrimitive::stop || mode==MotionPrimitive::done) { //nothing to do -> stop
+  if (mode==MotionPrimitive::none || mode==MotionPrimitive::done) { //nothing to do -> stop
     hardwareReference->writeAccess(this);
     hardwareReference->v_reference.setZero();
     hardwareReference->motionPrimitiveRelativeTime = 0.;
@@ -95,7 +109,7 @@ void MotionController::step() {
     return;
   }
   
-  if (mode==MotionPrimitive::followPlan) {
+  if (mode==MotionPrimitive::planned) {
     CHECK(motionPrimitive, "please set motionPrimitive before launching MotionPlanner");
     
     bool fixFingers = motionPrimitive->get_fixFingers(this);
@@ -187,17 +201,22 @@ void MotionController::step() {
     if(hardwareReference->q_real.N)  for(uint i=7;i<14;i++) q_old(i) = hardwareReference->q_real(i); //copy real hand state!!!
     hardwareReference->deAccess(this);
     
-    s->sys.vars.clear(); //unset the task variables -- they're set and updated later
+    s->sys.vars().clear(); //unset the task variables -- they're set and updated later
     if (q_old.N >= 14) { 
       if(q_old.N == 2*s->geo().ors.getJointStateDimension()) q_old = q_old.sub(0, q_old.N/2 - 1);
-      s->sys.setqv(q_old, v_old);
-    } else 
-      s->sys.getqv0(q_old, v_old);
+      s->sys.setx(cat(q_old, v_old));
+    } else {
+      arr x0;
+      s->sys.get_x0(x0);
+      uint n=x0.N/2;
+      q_old = x0.sub(0,n);
+      v_old = x0.sub(n,-1);
+    }
     
     //update all task variables using this ors state
     FeedbackControlTaskAbstraction *task = motionPrimitive->get_feedbackControlTask(this);
     CHECK(task,"");
-    if (task->requiresInit) task->initTaskVariables(*s->sys.ors);
+    if (task->requiresInit) task->initTaskVariables(s->sys.getOrs());
     if (task->done){
       motionPrimitive->set_mode(MotionPrimitive::done, this);
       hardwareReference->writeAccess(this);
@@ -207,13 +226,13 @@ void MotionController::step() {
       return;
     }
     s->sys.setTaskVariables(task->TVs);
-    task->updateTaskVariableGoals(*s->sys.ors);
+    task->updateTaskVariableGoals(s->sys.getOrs());
     
     //=== compute motion from the task variables
     //check if a collition and limit variable are active
     bool colActive=false, limActive=false;
     uint i; TaskVariable *v;
-    for_list(i, v, s->sys.vars) if (v->active) {
+    for_list(i, v, s->sys.vars()) if (v->active) {
       //?? ist sys.vars und task->vars eigentlich das gleiche??
       if (v->type==collTVT) colActive=true;
       if (v->type==qLimitsTVT) limActive=true;
@@ -226,7 +245,7 @@ void MotionController::step() {
     //dynamic control using SOC
     x_1=q_old; x_1.append(v_old);
     arr q_reference, v_reference;
-    soc::bayesianDynamicControl(s->sys, x, x_1, 0);
+    dynamicControl(s->sys, x, x_1, 0);
     q_reference = x.sub(0, q_old.N-1);
     v_reference = x.sub(v_old.N, -1);
     
