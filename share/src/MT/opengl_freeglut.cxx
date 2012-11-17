@@ -22,15 +22,6 @@
 #include "opengl.h"
 #include "ors.h"
 
-#ifndef MT_NO_THREADS
-#  include <biros/biros_internal.h>
-#else
-struct Mutex {
-  void lock(const char* _msg=NULL) {};
-  void unlock() {};
-};
-#endif
-
 static Mutex globalOpenglLock;
 
 
@@ -84,6 +75,8 @@ struct sOpenGL {
   sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy);
   sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
+  void beginGlContext(){}
+  void endGlContext(){}
   
   static uint nrWins;
   static MT::Array<OpenGL*> glwins;    //!< global window list
