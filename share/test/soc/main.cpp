@@ -35,7 +35,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   if(testFeedbackControl){
     //-- feedback control (kinematic or dynamic) to reach the targets
     sys.getq0(q);
-    sys.get_x0(x);
+    sys.getx0(x);
     pos->setGainsAsNatural(20,.2);
     pos->targetType=positionGainsTT;
     col->setGains(.5,.0);
@@ -65,12 +65,12 @@ void testRobotSystem(bool testFeedbackControl=false){
 
   q.clear();
 
-  //sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
-  soc::straightTaskTrajectory(sys, q, 0);
+//  sys.checkGrad = 1.; //force gradient checks in each call of getTaskCost[Terms]
+  //soc::straightTaskTrajectory(sys, q, 0);
 
   AICO aico(sys);
   aico.init_messages();
-  aico.init_trajectory(q);
+  //aico.init_trajectory(q);
   aico.iterate_to_convergence();
   //sys.costChecks(aico.b);
   sys.analyzeTrajectory(aico.b(),true);
@@ -82,19 +82,31 @@ void testRobotSystem(bool testFeedbackControl=false){
   for(uint k=0;k<10;k++){
     pos->y_target(2) += .1;
     pos->setInterpolatedTargetsEndPrecisions(T, 1e-3, 1e3, 0., 1e-3);
+
+//    cout <<"** from scratch with previous" <<endl;
+//    AICO aico2(sys);
+//    aico2.init_trajectory(q);
+//    aico2.iterate_to_convergence();
+//    sys.analyzeTrajectory(aico2.b(),true);
+//    sys.displayTrajectory(aico2.q(),NULL,1,"AICO (planned trajectory)");
+
+    cout <<"** updated" <<endl;
     aico.prepare_for_changed_task();
     aico.iterate_to_convergence();
-    q = aico.q();
     sys.analyzeTrajectory(aico.b(),true);
-    sys.displayTrajectory(aico.q(),NULL,1,"AICO_replanned (planned trajectory)");
-    //from scratch
-    arr qalt;
-    AICO aic(sys);
-    soc::straightTaskTrajectory(sys, qalt, 0);
-    aico.init_trajectory(qalt);
-    aic.iterate_to_convergence();
-    sys.analyzeTrajectory(aic.b(),true);
-    sys.displayTrajectory(aic.q(),NULL,1,"AICO (planned trajectory)");
+    sys.displayTrajectory(aico.q(),NULL,2,"AICO_replanned (planned trajectory)");
+
+//    cout <<"** from scratch" <<endl;
+//    //from scratch
+//    //arr tmp;
+//    AICO aico1(sys);
+//    //soc::straightTaskTrajectory(sys, tmp, 0);
+//    //aico1.init_trajectory(tmp);
+//    aico1.iterate_to_convergence();
+//    sys.analyzeTrajectory(aico1.b(),true);
+//    sys.displayTrajectory(aico1.q(),NULL,1,"AICO (planned trajectory)");
+
+//    q=aico1.q();
   }
 }
 

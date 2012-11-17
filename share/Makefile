@@ -1,8 +1,8 @@
 NAME   = $(shell basename $(PWD))
 
 MLR_LIBS = \
-	src/MT src/SD src/NJ src/DZ src/JK \
-	src/biros src/devTools \
+	src/MT src/JK \
+	src/biros src/views \
 	src/motion src/hardware src/perception \
 	src/relational \
 
@@ -14,14 +14,19 @@ EXTERN = \
 	extern/SWIFT++_1.2/decomposer/src \
 
 
-makeAll: makeEXTERN $(MLR_LIBS:%=make/%)
-	find . -maxdepth 2 -name 'Makefile.dep' --delete
+all: extern $(MLR_LIBS:%=make/%)
+
+depend: $(MLR_LIBS:%=depend/%)
+
+extern: $(EXTERN:%=make/%)
 
 cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
+	find . -maxdepth 3 -name 'Makefile.dep' -delete
 
-makeEXTERN: $(EXTERN:%=make/%)
+cleanDepend:
+	find . -maxdepth 3 -name 'Makefile.dep' -delete
 
-cleanEXTERN: $(EXTERN:%=clean/%)
+cleanExtern: $(EXTERN:%=clean/%)
 
 
 reformatSources:
@@ -29,8 +34,10 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 make/%::
-	-$(MAKE) -C $* depend
 	$(MAKE) -C $*
+
+depend/%::
+	$(MAKE) -C $* depend
 
 clean/%::
 	-rm -f $*/Makefile.dep

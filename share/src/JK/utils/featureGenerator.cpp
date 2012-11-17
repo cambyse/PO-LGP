@@ -12,9 +12,9 @@ void TrayFeatureGenerator::makeFeatures(arr& Z, const arr& X){
 }
 
 void CubicFeatureGenerator::makeFeatures(arr&Z, const arr& X) {
-  uint n=X.d0, d=X.d1;
+  uint n=X.d0;
   Z.resize(n, 9);// 1 + d + d*(d+1)/2 + d*(d+1)*(d+2)/6);
-  uint i, j, k, l, m;
+  uint i, j, k, l;
   for(i=0; i<n; i++){
     arr x=X[i];
     arr z=Z[i];
@@ -29,4 +29,16 @@ void CubicFeatureGenerator::makeFeatures(arr&Z, const arr& X) {
     for(j=0; j<3; j++) for(k=0; k<=j; k++) z(l++) = (x(j)-x(j+4))*(x(k)-x(k+4));
     //for(j=0; j<d; j++) for(k=0; k<=j; k++) for(m=0; m<=k; m++) z(l++) = x(j)*x(k)*x(m);
   }
+}
+
+void SimpleFeatureGenerator::makeFeatures(arr &Z, const arr& X) {
+  Z.append(X.sub(0, -1, 0, 2) - ARR(0,0,1));
+  Z.append(X.sub(0,-1,3,3));
+  Z.reshape(1,4);
+}
+
+void UprightFeatureGenerator::makeFeatures(arr& Z, const arr& X) {
+  double sinus = sin((double) X(0,0)*MT_PI/180.) ;
+  Z.append(sinus);
+  Z.reshape(1,1);
 }

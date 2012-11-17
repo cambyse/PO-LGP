@@ -92,7 +92,7 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 }
 #endif
 
-void plot(bool wait) {
+void plot(bool wait, const char* txt) {
   switch(plotModule.mode) {
     case gnupl:
       plotDrawGnuplot(plotModule.s, false);
@@ -100,6 +100,7 @@ void plot(bool wait) {
       break;
 #ifdef MT_GL
     case opengl:
+      if(txt) plotModule.gl->text = txt;
       plotInitGL();
       if(wait) plotModule.gl->watch();
       break;

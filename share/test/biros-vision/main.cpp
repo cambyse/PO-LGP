@@ -1,37 +1,38 @@
-#include "birosOpencv.h"
-#include <biros/control.h>
+#include <perception/perception.h>
+#include <views/views.h>
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
   
   // Variables
-  RgbImage cameraI("camera");
-  RgbImage backgroundI("background");
-  RgbImage diffI("difference");
-  GrayImage motionI("motion");
-  GrayImage grayI("gray");
-  GrayImage cannyI("canny");
-  PatchImage patchI("patches");
+  Image cameraI("camera");
+  Image backgroundI("background");
+  Image diffI("difference");
+  Image motionI("motion");
+  Image grayI("gray");
+  Image cannyI("canny");
+  Patching patchI("patches");
   SURFfeatures features("SURF_features");
   HoughLines houghLines("hough_lines");
   
   // Processes
-  Process *cam=newCamera(cameraI);
-  newGrayMaker(cameraI, grayI);
-  //newMotionFilter(cameraI, motionI);
-  //newDifferenceFilter(cameraI, backgroundI, diffI);
+  Process *cam=newOpencvCamera(cameraI);
+  newCvtGray(cameraI, grayI);
+  newMotionFilter(cameraI, motionI);
+  newDifferenceFilter(cameraI, backgroundI, diffI);
   newCannyFilter(grayI, cannyI);
-  //newPatcher(cameraI, patchI);
-  newSURFer(grayI, features);
-  newHoughLineFilter(cannyI, houghLines);
+  newPatcher(cameraI, patchI);
+  //newSURFer(grayI, features);
+  //newHoughLineFilter(cannyI, houghLines);
   
-  
-  b::dump();
-  b::openInsideOut();
-  
+  biros().dump();
+  new InsideOut();
+
+  new ImageView(grayI.img);
+  new Image_View(cameraI);
+
   cam->threadLoop();
-  MT::wait(20.);
-  close(birosInfo().processes);
+  MT::wait(50.);
   
   return 0;
 }

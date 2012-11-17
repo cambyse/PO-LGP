@@ -16,13 +16,13 @@ void reportNice();
 bool setNice(int);
 
 //! a basic read/write access lock
-struct Lock{
+struct RWLock{
   int state;
   const char* msg;
   pthread_rwlock_t lock;
     
-  Lock();
-  ~Lock();
+  RWLock();
+  ~RWLock();
 
   void readLock(const char* _msg=NULL);   ///< multiple threads may request 'lock for read'
   void writeLock(const char* _msg=NULL);  ///< only one thread may request 'lock for write' 
@@ -92,7 +92,7 @@ struct StepThread{
   uint skips;                          ///< how often a step was requested but (because busy) skipped
   int threadPriority;                  ///< priority of this thread
   const char* threadName;              ///< name of the thread
-  //Lock lock;                           ///< default mutex lock - to coordinate access
+  //RWLock lock;                           ///< default mutex lock - to coordinate access
   bool broadCastDone;
   ConditionVariable *syncCondition;
 

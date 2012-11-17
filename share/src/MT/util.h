@@ -501,30 +501,26 @@ void gnuplotClose();
 
 //===========================================================================
 //
-// threading: pthread wrappers: Mutex, Lock, ConditionVariable
+// threading: pthread wrappers: Mutex, RWLock, ConditionVariable
 //
 
 //! a basic mutex lock
 struct Mutex {
   pthread_mutex_t mutex;
-  int state; ///< 0=unlocked, 1=locked
-  
+  int state; ///< 0=unlocked, otherwise=syscall(SYS_gettid)
   Mutex();
   ~Mutex();
-  
   void lock();
   void unlock();
 };
 
 //! a basic read/write access lock
-struct Lock {
+struct RWLock {
   pthread_rwlock_t lock;
   int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
   Mutex stateMutex;
-  
-  Lock();
-  ~Lock();
-  
+  RWLock();
+  ~RWLock();
   void readLock();   ///< multiple threads may request 'lock for read'
   void writeLock();  ///< only one thread may request 'lock for write'
   void unlock();     ///< thread must unlock when they're done
@@ -532,28 +528,45 @@ struct Lock {
 
 //! a basic condition variable
 struct ConditionVariable {
-  int state;
-  Mutex stateMutex;
+  int value;
+  Mutex mutex;
   pthread_cond_t  cond;
-  
+
   ConditionVariable(int initialState=0);
   ~ConditionVariable();
-  
-  void setState(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+
+  void setValue(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  int  incrementValue(bool signalOnlyFirstInQueue=false);   ///< increase value by 1
   void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
   
   void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
   void unlock();
   
-  int  getState(bool userHasLocked=false);
+  int  getValue(bool userHasLocked=false) const;
   void waitForSignal(bool userHasLocked=false);
   void waitForSignal(double seconds, bool userHasLocked=false);
-  void waitForStateEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
-  void waitForStateNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
-  void waitForStateGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
-  void waitForStateSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForValueNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
   void waitUntil(double absTime, bool userHasLocked=false);
 };
+
+//! a basic thread
+struct Thread {
+#if 1 //ndef MT_QT
+  pthread_t thread;
+#else
+  struct sThread *s;
+#endif
+  Thread();
+  ~Thread();
+  void open(const char* name=NULL);
+  void close();
+  bool isOpen();
+  virtual void main() = 0;
+};
+
 
 //===========================================================================
 //

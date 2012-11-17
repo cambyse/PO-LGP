@@ -17,7 +17,7 @@ struct SHMinfoBlock {
   pthread_rwlock_t blockLocks[shmMaxBlocks];
 };
 
-struct Lock {
+struct RWLock {
   //documentation: http://cs.pub.ro/~apc/2003/resources/pthreads/uguide/document.htm
   pthread_rwlock_t lock;
   void init(bool process_shared=true){

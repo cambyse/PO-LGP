@@ -99,8 +99,8 @@ struct sCamera{
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
   s->cam = NULL;
-  birosInfo().getVariable(s->camL, "CameraL", this);
-  birosInfo().getVariable(s->camR, "CameraR", this);
+  biros().getVariable(s->camL, "CameraL", this);
+  biros().getVariable(s->camR, "CameraR", this);
 };
 
 Camera::~Camera(){
@@ -509,9 +509,9 @@ struct sCamera{
 
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
-  birosInfo().getVariable(s->camL, "CameraL", this);
-  birosInfo().getVariable(s->camR, "CameraR", this);
-  MT::String filename = birosInfo().getParameter<MT::String>("DummyCameraFile", this, STRING("DummyCameraImage_"));
+  biros().getVariable(s->camL, "CameraL", this);
+  biros().getVariable(s->camR, "CameraR", this);
+  MT::String filename = biros().getParameter<MT::String>("DummyCameraFile", STRING("DummyCameraImage_"), this);
   read_ppm(s->dummyL, STRING(filename <<"L.ppm"));
   read_ppm(s->dummyR, STRING(filename <<"R.ppm"));
 };

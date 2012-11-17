@@ -38,6 +38,8 @@ BUILDS += buildComponent/perception
 LIBS += -lperception
 BUILDS += buildComponent/biros
 LIBS += -lbiros
+BUILDS += buildComponent/views
+LIBS += -lviews
 endif
 
 
@@ -99,6 +101,7 @@ LIBS   += -lrt
 OPTIM  = debug
 FREEGLUT = 0
 GTKGL = 1
+QTGL = 0
 ANN = 1
 QHULL = 1
 SWIFT = 1
@@ -106,14 +109,15 @@ LAPACK = 1
 ODE = 0
 TONY = 1
 FELZ = 1
-OPENCV = 0
+OPENCV = 1
 SCHUNK = 0
 PLIB = 1
 BUMBLE = 0
 LEWINER = 0
 CUDA = 0
-GRAPHVIZ = 0
+GRAPHVIZ = 1
 GTK = 1
 PHYSX = 0
+OCTAVE = 0
 endif
 

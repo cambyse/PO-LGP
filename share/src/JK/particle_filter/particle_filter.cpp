@@ -12,7 +12,7 @@ class sParticleFilter {
     void reset_drawing(const arr &particles, const arr& measurement) {
       cur_particle = 0;
       double sum = 0;
-      for(int i=0; i<particles.d0; ++i) {
+      for(uint i=0; i<particles.d0; ++i) {
          sum += p->weight(particles[i], measurement);
       }
       step = sum / (particles.d0 + 1);
@@ -64,14 +64,14 @@ void ParticleFilter::step() {
   particles->deAccess(this);
 
   // compute particle filter
-  for (int i=0; i<particles_.d0; ++i) {
+  for (uint i=0; i<particles_.d0; ++i) {
     arr x;
     control(x, particles_[i]);
     particles_[i] = x;
   }
   s->reset_drawing(particles_, measurement_);
   arr next;
-  for (int i=0; i<particles_.d0; ++i) {
+  for (uint i=0; i<particles_.d0; ++i) {
     next.append(s->draw(particles_, measurement_));
   }
   next.reshape(particles_.d0, particles_.d1);

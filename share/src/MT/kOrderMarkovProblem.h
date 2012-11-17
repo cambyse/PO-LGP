@@ -1,7 +1,7 @@
 #ifndef kOrderMarkovProblem_h
 #define kOrderMarkovProblem_h
 
-#include <MT/array.h>
+#include "optimization.h"
 
 //A $k$-order Markov problems is fully defined by the following functions:
 struct KOrderMarkovFunction {
@@ -18,6 +18,12 @@ struct KOrderMarkovFunction {
   virtual uint get_k() = 0;
   virtual uint get_n() = 0; //the dimensionality of $x_t$
   virtual uint get_m(uint t) = 0; //the dimensionality of $\phi_t$
+};
+
+struct conv_KOrderMarkovFunction:VectorFunction {
+  KOrderMarkovFunction *f;
+  conv_KOrderMarkovFunction(KOrderMarkovFunction& _f):f(&_f) {}
+  void   fv(arr& y, arr& J, const arr& x);
 };
 
 #endif

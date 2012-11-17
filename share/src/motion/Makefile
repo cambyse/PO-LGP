@@ -11,7 +11,7 @@ MAKEMODE = mlrlib
 buildAndLink_MT = 1
 buildAndLink_NIKOLAY = 1
 
-OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
+OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)
 
 include $(BASE)/make-generic

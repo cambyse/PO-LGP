@@ -25,12 +25,19 @@ int main(int argn,char **argv){
 
   ors::Graph C;
   OpenGL gl;
+  init(C, gl,file );
   gl.add(drawBase,0);
   gl.add(ors::glDrawGraph,&C);
   //gl.reportEvents=true;
   //gl.reportSelects=true;
 
-  editConfiguration(file,C,gl);
+  //editConfiguration(file,C,gl);
+  //
+  
+  while(true) {
+    gl.update();
+    MT::wait(0.001);
+  }
 
   return 0;
 }

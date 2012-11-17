@@ -987,7 +987,7 @@ class PRADA_Reward_Combined : public PRADA_Reward {
     }
     
     double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
-      int i; PRADA_Reward* r;
+      uint i; PRADA_Reward* r;
       double weighted_belief = 0.0;
       for_list(i, r, PRADA_rewards) {
           weighted_belief += weights(i) * r->evaluate_prada_reward(dbn, t);
@@ -2236,6 +2236,7 @@ void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DB
               LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
               int val_idx = var->range.findValue(base_lit_ground->value);
               prob *= var->P(t,val_idx);
+              //cout << *base_lit_ground << " --- " << prob << endl;
               if (prob < 0.01)
                 break;
             }

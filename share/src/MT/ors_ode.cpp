@@ -16,10 +16,6 @@
 
 #include "ors.h"
 
-#include <devTools/logging.h>
-
-SET_LOG(ode, DEBUG);
-
 #ifdef MT_ODE
 
 #ifndef dDOUBLE
@@ -722,11 +718,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           
           dBodySetMass(b, &odeMass);
 #else //don't care about mass...
-<<<<<<< HEAD
           n->mass = .001;
-          DEBUG_VAR(ode, n->mass);
-=======
->>>>>>> newArchitecture
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
 #endif

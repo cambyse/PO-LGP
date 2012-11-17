@@ -1,35 +1,33 @@
 #include <motion/motion.h>
 #include <hardware/hardware.h>
-//#include <views/views.h>
-#include <MT/gtk.h>
-#include <biros/control.h>
+#include <biros/biros_views.h>
 
 int main(int argn, char** argv){
   MT::initCmdLine(argn, argv);
 
   // variables
   GeometricState geometricState;
-  Action action;
   MotionPrimitive motionPrimitive;
-  MotionKeyframe frame0,frame1;
   HardwareReference hardwareReference;
 
   // processes
   Process *ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
-  Process *planner = newMotionPlanner(action, frame0, frame1, motionPrimitive);
+  Process *planner = newMotionPlanner(motionPrimitive);
 
 //   b::dump();  MT::wait();
-  b::openInsideOut();
+  new OrsView(geometricState.ors, &geometricState.rwlock);
+  new PoseView(hardwareReference.q_reference, &hardwareReference.rwlock);
+  new InsideOut();
   
   cout <<"** setting grasp action" <<endl;
-  action.writeAccess(NULL);
-  action.action = Action::grasp;
-  action.objectRef1 = (char*)"target1";
-  action.executed = false;
-  action.deAccess(NULL);
+  motionPrimitive.writeAccess(NULL);
+  motionPrimitive.action = MotionPrimitive::grasp;
+  motionPrimitive.objectRef1 = (char*)"target1";
+  motionPrimitive.planConverged = false;
+  motionPrimitive.deAccess(NULL);
 
   cout <<"** setting controller to follow" <<endl;
-  motionPrimitive.set_mode(MotionPrimitive::followPlan, NULL);
+  motionPrimitive.set_mode(MotionPrimitive::planned, NULL);
 
   uint mode=2;
   switch(mode){
@@ -45,8 +43,8 @@ int main(int argn, char** argv){
   } break;
   }
 
-  close(birosInfo().processes);
-  birosInfo().dump();
+  close(biros().processes);
+  biros().dump();
   
   cout <<"bye bye" <<endl;
 };

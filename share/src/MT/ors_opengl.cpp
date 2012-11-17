@@ -375,28 +375,28 @@ void ors::Graph::glDraw() {
   
   //proxies
   if(orsDrawProxies) for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
-        proxy = proxies(i);
-        glLoadIdentity();
-        if(!proxy->colorCode) glColor(.75,.75,.75);
-        else glColor(proxy->colorCode);
-        glBegin(GL_LINES);
-        glVertex3dv(proxy->posA.p);
-        glVertex3dv(proxy->posB.p);
-        glEnd();
-        ors::Transformation f;
-        f.pos=proxy->posA;
-        f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
-        f.getAffineMatrixGL(GLmatrix);
-        glLoadMatrixd(GLmatrix);
-        glDisable(GL_CULL_FACE);
-        glDrawDisk(.02);
-        glEnable(GL_CULL_FACE);
-        
-        f.pos=proxy->posB;
-        f.getAffineMatrixGL(GLmatrix);
-        glLoadMatrixd(GLmatrix);
-        glDrawDisk(.02);
-      }
+    proxy = proxies(i);
+    glLoadIdentity();
+    if(!proxy->colorCode) glColor(.75,.75,.75);
+    else glColor(proxy->colorCode);
+    glBegin(GL_LINES);
+    glVertex3dv(proxy->posA.p);
+    glVertex3dv(proxy->posB.p);
+    glEnd();
+    ors::Transformation f;
+    f.pos=proxy->posA;
+    f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDisable(GL_CULL_FACE);
+    glDrawDisk(.02);
+    glEnable(GL_CULL_FACE);
+
+    f.pos=proxy->posB;
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawDisk(.02);
+  }
       
   glPopMatrix();
 }
