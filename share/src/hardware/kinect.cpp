@@ -116,7 +116,7 @@ KinectInterface::KinectInterface(const char* name) : Process(name) {
   s = &freenect.createDevice<sKinectInterface>(0);
   s->data = new FreenectData;
   s->p = this;
-  birosInfo().getVariable(data_3d, "KinectData3D", this);
+  biros().getVariable(data_3d, "KinectData3D", this);
 }
 
 KinectInterface::~KinectInterface() {

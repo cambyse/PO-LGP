@@ -30,7 +30,7 @@ void loopSerialized(const ProcessL& P) {
       if ((int) p->id == pID) {
         cout << "step by process " << pID << endl;
         if (p->s->threadCondition.state==tsCLOSE) p->threadOpen();
-        while (!p->threadIsIdle()) sleep(0.000001);
+        while (!p->isIdle()) sleep(0.000001);
         p->threadStep();
       }
     }

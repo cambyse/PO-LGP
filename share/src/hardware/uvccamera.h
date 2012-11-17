@@ -5,17 +5,7 @@
 #include <biros/biros.h>
 #include <perception/perception.h>
 
-struct sUVCCamera;
-
-struct UVCCamera:public Process {
-  sUVCCamera* s;
-
-  UVCCamera();
-  ~UVCCamera();
-  void open();
-  void step();
-  void close();
-};
+Process *newUVCCamera();
 
 #endif
 

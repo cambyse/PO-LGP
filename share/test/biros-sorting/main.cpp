@@ -1,8 +1,7 @@
 #include <biros/biros.h>
 #include <MT/util.h>
 #include <MT/gtk.h>
-//#include <biros/biros_logger.h>
-#include <biros/control.h>
+#include <biros/biros_views.h>
 #include <gtk/gtk.h>
 
 //-- standard Variable containing only an integer
@@ -27,17 +26,17 @@ int main(int argn, char **argv) {
 
   for(uint i=1; i<N; i++) newPairSorter(ints(i-1), ints(i));
 
-  b::dump();
-  b::openInsideOut();
+  biros().dump();
+  new InsideOut;
   MT::wait(1.);
   
   //run
   //loopSerialized(P);
-  step(birosInfo().processes);
+  step(biros().processes);
   
 #if 1
   MT::wait(1.);
-  close(birosInfo().processes);
+  close(biros().processes);
 #else
   if(!logService.getReplay()) {
     MT::wait(1.);
@@ -50,7 +49,7 @@ int main(int argn, char **argv) {
     while(!allClosed) {
       MT::wait(1.);
       allClosed = true;
-      for_list(i, p, P)  if(!p->threadIsClosed())
+      for_list(i, p, P)  if(!p->isClosed())
           allClosed = false;
       cout << step << endl;
       step++;
@@ -66,7 +65,7 @@ int main(int argn, char **argv) {
   }
   cout <<endl;
 
-  b::updateInsideOut();
+  //b::updateInsideOut();
   
   MT::wait();
 
@@ -113,7 +112,7 @@ struct Ref{
   uint last_revision; ///< last revision of a read/write access
 
 
-  Ref(T& _var, Process *_p){ var=&_var; p=_p; p->threadListenTo(var); }
+  Ref(T& _var, Process *_p){ var=&_var; p=_p; p->listenTo(var); }
   const T& get(){ return ReadToken<T>(var,p)(); }
   T& operator()(){ return *var; } //TODO ensure that it is locked
   void writeAccess(){ var->writeAccess(p); }
@@ -128,7 +127,7 @@ struct PairSorter:public Process {
   PairSorter(Integer& _a, Integer& _b):Process("PairSorter"), a(_a, this), b(_b, this) {
     //a = &_a;
     //b = &_b;
-    delay = birosInfo().getParameter<double>("stepDelay", this);
+    delay = biros().getParameter<double>("stepDelay", this);
   };
   
   void open() {}

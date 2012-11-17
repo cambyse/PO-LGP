@@ -8,43 +8,61 @@
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <GL/glut.h>
+#include <X11/Xlib.h>
 
-bool gtkInitialized=false;
-Mutex global_gtkLock;
+struct GtkThread *global_gtkThread=NULL;
+Mutex callbackMutex;
+
+void gtkEnterCallback(){  callbackMutex.lock();  }
+void gtkLeaveCallback(){  callbackMutex.unlock();  }
 
 void gtkLock(bool checkInitialized){
   if(checkInitialized) gtkCheckInitialized(); 
-  global_gtkLock.lock();
+  if(callbackMutex.state && callbackMutex.state==syscall(SYS_gettid)) return;
+  gdk_threads_enter();
 }
-void gtkUnlock(){ global_gtkLock.unlock(); }
+
+void gtkUnlock(){
+  if(callbackMutex.state && callbackMutex.state==syscall(SYS_gettid)) return;
+  gdk_threads_leave();
+}
+
+struct GtkThread:Thread{
+  void main(){
+    gtk_main();
+    gdk_threads_leave();
+  }
+};
 
 void gtkCheckInitialized(){
-  gtkLock(false); // else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  if(!gtkInitialized){
-    int argc=1;
-    char **argv = new char*[1];
-    argv[0] = (char*)"x.exe";
-    glutInit(&argc, argv);
-    
-    g_thread_init(NULL);
-    gdk_threads_init();
-    gtk_init(&argc, &argv);
-    gtk_gl_init(&argc, &argv);
-    
-    gtkInitialized = true;
+  static Mutex m;
+  if(!global_gtkThread){
+    m.lock();
+    if(!global_gtkThread){
+      int argc=1;
+      char **argv = new char*[1];
+      argv[0] = (char*)"x.exe";
+      
+      XInitThreads();
+      g_thread_init(NULL);
+      gdk_threads_init();
+      gdk_threads_enter();
+      gtk_init(&argc, &argv);
+      gtk_gl_init(&argc, &argv);
+      glutInit(&argc, argv);
+
+      global_gtkThread = new GtkThread();
+      global_gtkThread -> open("--GTK-loop");
+    }
+    m.unlock();
   }
-  gtkUnlock();
 }
 
-void gtkProcessEvents(bool waitForEvents, bool userHasLocked){
-  if(!userHasLocked) gtkLock(); else CHECK(global_gtkLock.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  if(waitForEvents) gtk_main_iteration();
-  while (gtk_events_pending())  gtk_main_iteration();
-  if(!userHasLocked) gtkUnlock();
-}
 
-static int menuChoice=-1;
-static void menuitem_response(int choice){ menuChoice = choice; }
+
+
+ConditionVariable menuChoice(-1);
+static void menuitem_response(int choice){ menuChoice.setValue(choice); }
 
 int gtkPopupMenuChoice(StringL& choices){
   //create menu
@@ -57,12 +75,13 @@ int gtkPopupMenuChoice(StringL& choices){
     gtk_signal_connect_object(GTK_OBJECT (item), "activate",
 			      GTK_SIGNAL_FUNC (menuitem_response), (gpointer) i);
   }
-  menuChoice=-1;
+  menuChoice.setValue(-1);
   gtk_widget_show_all(menu);
   gtk_menu_shell_select_first(GTK_MENU_SHELL(menu), false);
-  while(menuChoice==-1) gtkProcessEvents(true); //wait for choice;
+  menuChoice.waitForValueNotEq(-1);
   gtk_widget_destroy(menu);
-  return menuChoice>=0?menuChoice:0;
+  int choice = menuChoice.getValue();
+  return choice>=0?choice:0;
 }
 
 GtkWidget *gtkTopWindow(const char* name){

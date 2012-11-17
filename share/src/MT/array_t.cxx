@@ -405,7 +405,7 @@ template<class T> T& MT::Array<T>::append(const T& x) { append()=x; return p[N-1
 template<class T> void MT::Array<T>::append(const MT::Array<T>& x) {
   uint oldN=N, xN=x.N, i;
   if(!xN) return;
-  if(!oldN)
+  if(!nd)
     resizeAs(x);
   else if(nd==2 && x.nd==1 && d1==x.d0)
     resizeCopy(d0+1, d1);
@@ -3141,7 +3141,7 @@ template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
   uint i;
   T *e;
   for_list(i, e, L) if(!strcmp(e->name, name)) return e;
-  //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
+  std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
 

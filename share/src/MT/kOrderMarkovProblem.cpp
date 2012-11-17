@@ -9,7 +9,6 @@ void conv_KOrderMarkovFunction::fv(arr& phi, arr& J, const arr& x) {
   uint M=0;
   for(uint t=0;t<=T-k;t++) M+=f->get_m(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
-  
   //resizing things:
   phi.resize(M);   phi.setZero();
   if(&J){ J  .resize(M,x.N); J  .setZero(); }

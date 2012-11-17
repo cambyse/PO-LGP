@@ -4424,7 +4424,7 @@ double ors::Graph::getEnergy() const {
 void ors::Graph::addObject(ors::Body *b) {
   bodies.append(b);
   int ibody = bodies.N - 1;
-  int i; ors::Shape *s;
+  uint i; ors::Shape *s;
   for_list(i, s, b->shapes) {
     s->ibody = ibody;
     s->index = shapes.N;

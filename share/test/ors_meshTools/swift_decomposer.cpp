@@ -4,7 +4,7 @@
 #include <../decomposer/include/convex.h>
 #include <../decomposer/include/io.h>
 
-void decompose(ors::Mesh& mesh,const char* filename){
+uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments, MT::Array<MT::Array<uint> >& shapes){
   SWIFT_Scene swift;
   SWIFT_Tri_Mesh smesh;
   smesh.Create(mesh.V.p, (int*)mesh.T.p,
@@ -28,6 +28,10 @@ void decompose(ors::Mesh& mesh,const char* filename){
   */
   Convex_Initialize( &smesh );
   Decompose_Cresting_BFS(&smesh, piece_ids, model_faces, virtual_faces );
+
+  triangleAssignments.resize(piece_ids.Length());
+  memmove(triangleAssignments.p, piece_ids.Data(), triangleAssignments.sizeT*triangleAssignments.N);
+			 
 
   Save_Decomposition_File( filename, &smesh, piece_ids,
                            model_faces, virtual_faces );

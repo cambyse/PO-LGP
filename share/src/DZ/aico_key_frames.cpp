@@ -100,7 +100,7 @@ double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
   arr x0; 
   double T = sys.get_T();
   //initial state
-  sys.get_x0(x0);
+  sys.getx0(x0);
   if(!b_is_initialized) b=x0;
   double old_r;
   counter = 0; // number of iterations
@@ -179,7 +179,7 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
   decomposeMatrix(Q1,Q2,Q);
   
   int dim =sqrt(Q.N)/2;;
-  sys.get_x0(x0);
+  sys.getx0(x0);
   sys.getqv0(q0,v0);
  
   arr I,Z,AT,dAT,Zv;
@@ -231,7 +231,7 @@ void GetOptimalDynamicTime(double& time, int& counter,
   old_time*=T;
   arr lk;
   double gr=1e10;
-  sys.get_x0(x0);
+  sys.getx0(x0);
   arr b0=x0;  arr b_old=b0; 
   double old_r = 1e6;
   double old_llk = -1e6;

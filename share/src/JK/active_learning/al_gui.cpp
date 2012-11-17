@@ -26,7 +26,7 @@ Gui::Gui(const char* orsFile) : Process("Gui Process"),
 void Gui::open() {}
 
 void Gui::step() {
-  MT::String problem = birosInfo().getParameter<MT::String>("problem", this, MT::String("tray"));
+  MT::String problem = biros().getParameter<MT::String>("problem", MT::String("tray"), this);
   guiData->readAccess(this);
   if(guiData->sample) {
     //if (problem == "tray")

@@ -8,4 +8,7 @@ GTKGL = 1
 
 CXXFLAGS += -D MT_IMPLEMENT_TEMPLATES
 
+BUILDS += buildComponent/views
+LIBS += -lviews
+
 include $(BASE)/make-generic

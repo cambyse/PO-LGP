@@ -14,13 +14,13 @@ int main(int argn,char** argv){
   View *v = newView<MatrixView>(X, (GtkWidget*)box);
 
   //allow to give a RW-Lock?
-  View *v = newView<MatrixView>(X, (GtkWidget*)box, (Lock&)lock);
+  View *v = newView<MatrixView>(X, (GtkWidget*)box, (RWLock&)lock);
 
 
   //-- accessing a list of available views
-  ViewInfoL views = getAvailableViews<arr>();
+  ViewRegistrationL views = getAvailableViews<arr>();
   //using this to instantiate a new view
-  View *v = newView(views(2), X, (GtkWidget*)box, (Lock&)lock);
+  View *v = newView(views(2), X, (GtkWidget*)box, (RWLock&)lock);
 #endif
 
   OpenGL gl;
@@ -39,11 +39,11 @@ int main(int argn,char** argv){
 /*
 Further points:
 
-1) Can one get rid of the AppliesOnT template parameter for ViewInfo_typed ?
+1) Can one get rid of the AppliesOnT template parameter for ViewRegistration_typed ?
 
 2) remove all view related stuff from biros/control.*
 
-3) rename 'ViewInfo' to something more descriptive? E.g. ViewRegistration?
+3) rename 'ViewRegistration' to something more descriptive? E.g. ViewRegistration?
 
-4) Is it ever necessary, given the ViewerType (e.g., MeshView), to access its global ViewInfo_typed struct? If not, leave as is. If yes, there should be some static points within ViewInfo_typed
+4) Is it ever necessary, given the ViewerType (e.g., MeshView), to access its global ViewRegistration_typed struct? If not, leave as is. If yes, there should be some static points within ViewRegistration_typed
 */

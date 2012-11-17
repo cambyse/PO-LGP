@@ -11,10 +11,10 @@ EXTERN = \
 	extern/Lewiner \
 	extern/tony_mdp \
 	extern/SWIFT++_1.2/src \
-#	extern/SWIFT++_1.2/decomposer/src \
+	extern/SWIFT++_1.2/decomposer/src \
 
 
-all: makeEXTERN $(MLR_LIBS:%=make/%)
+all: extern $(MLR_LIBS:%=make/%)
 
 depend: $(MLR_LIBS:%=depend/%)
 

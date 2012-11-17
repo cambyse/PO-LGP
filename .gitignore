@@ -5,6 +5,12 @@
 *.swp
 
 *.kdev4
+vc60.idb
+.*.config
+.*.creator
+.*.creator.user
+.*.files
+.*.includes
 
 *~
 

@@ -4,6 +4,18 @@
 #include "motion.h"
 #include <MT/soc_orsSystem.h>
 
+struct MotionPlanner:Process {
+  struct sMotionPlanner *s;
+  
+  MotionPrimitive *motionPrimitive;
+  
+  MotionPlanner(MotionPrimitive&);
+  ~MotionPlanner();
+  void open();
+  void step();
+  void close();
+};
+
 //additional lower-level routines for direct testing
 //see test/motion_graspHeuristic
 
@@ -13,6 +25,5 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, con
 void setHomingGoals(OrsSystem& sys, uint T);
 double keyframeOptimizer(arr& x, ControlledSystem& sys, double stopTolerance, bool x_is_initialized, uint verbose);
 void interpolate_trajectory(arr &q, const arr& q0, const arr& qT, uint T);
-
 
 #endif

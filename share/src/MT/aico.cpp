@@ -133,7 +133,7 @@ void sAICO::init(ControlledSystem& _sys){
 void AICO::prepare_for_changed_task(){
   self->cost=-1;
   MT::getParameter(self->damping, "aico_damping");
-  self->damping /= 10.;
+//  self->damping /= 10.;
 }
 
 void AICO::iterate_to_convergence(){
@@ -150,7 +150,7 @@ void AICO::iterate_to_convergence(){
 void sAICO::init_messages(){
   uint T=sys->get_T();
   arr x0;
-  sys->get_x0(x0);
+  sys->getx0(x0);
   uint n=x0.N;
   //messages
   s.resize(T+1, n);  Sinv.resize(T+1, n, n);
@@ -214,17 +214,10 @@ void AICO::fix_final_state(const arr& x_T){
 void sAICO::init_trajectory(const arr& x_init){
   init_messages();
   uint t, T=sys->get_T();
-  b=x_init;
-  if(!sys->isKinematic() && 2*b.d1==sys->get_xDim()) getPhaseTrajectory(b, x_init, sys->get_tau());
-  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==sys->get_xDim()) , "initial trajectory was wrong dimensionality");
-#if 1
-  sys->get_x0(b[0]()); //overwrite with x0
-#else
-  arr x0;
-  sys->get_x0(x0); //overwrite with x0
-  if(maxDiff(x0,b[0])>1e-6) MT_MSG("WARNING: init_trajectory has different x(t=0) than the system's setting");
-#endif
-  //q=x_init;
+  if(!sys->isKinematic() && x_init.d1!=sys->xDim()) soc::getPhaseTrajectory(b, x_init, sys->getTau());  else  b=x_init;
+  CHECK(b.nd==2 && b.d0==T+1 && (b.d1==(sys->dynamic?2:1)*sys->qDim()) , "initial trajectory was wrong dimensionality");
+  sys->getx0(b[0]()); //overwrite with x0
+  q=x_init;
   xhat = b;
   s=b;  for(uint t=1; t<=T; t++){ Sinv[t].setDiag(damping);  }
   v=b;  for(uint t=0; t<=T; t++){ Vinv[t].setDiag(damping);  }
@@ -358,11 +351,7 @@ void sAICO::updateBwdMessage(uint t){
     if(t==T){  //last time slice
       if(!useBwdMsg){
         v[t] = b[t]; //alternative: qhat
-#ifndef TightMode
         Vinv[t].setDiag(1e-4); //regularization, makes eq (*) above robust
-#else
-        Vinv[t].setDiag(1e-1); //regularization, makes eq (*) above robust
-#endif
       }else{
         v[T] = bwdMsg_v;
         Vinv[T] = bwdMsg_Vinv;
@@ -599,13 +588,13 @@ void sAICO::rememberOldState(){
 
 void sAICO::perhapsUndoStep(){
   if(cost_old>0 && cost>cost_old){
-    //cout <<" AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
+    //cout <<"\b AICO REJECT: cost=" <<cost <<" cost_old=" <<cost_old <<endl;
     damping *= 10.;
     dampingReference = b_old;
     cost = cost_old;  b = b_old;  xhat = xhat_old;
     s=s_old; Sinv=Sinv_old; v=v_old; Vinv=Vinv_old; r=r_old; R=R_old;
   }else{
-    //cout <<" AICO ACCEPT" <<endl;
+    //cout <<"\b AICO ACCEPT" <<endl;
     damping /= 5.;
   }
 }

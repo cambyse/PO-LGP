@@ -22,6 +22,7 @@
 #  include <Qt/qmetatype.h>
 #  include <Qt/qdatastream.h>
 #  include <Qt/qapplication.h>
+#  include <QThread>
 #endif
 
 #ifndef MT_ConfigFileName
@@ -31,8 +32,6 @@
 
 #include <errno.h>
 #include <sys/syscall.h>
-
-//TODO: move basic threading routines from biros to util!
 
 //===========================================================================
 //
@@ -859,34 +858,34 @@ void Mutex::unlock() {
 
 //===========================================================================
 //
-// Access Lock
+// Access RWLock
 //
 
-Lock::Lock() {
+RWLock::RWLock() {
   int rc = pthread_rwlock_init(&lock, NULL);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   state=0;
 }
 
-Lock::~Lock() {
+RWLock::~RWLock() {
   CHECK(!state, "");
   int rc = pthread_rwlock_destroy(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void Lock::readLock() {
+void RWLock::readLock() {
   int rc = pthread_rwlock_rdlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   stateMutex.lock();
   state++;
   stateMutex.unlock();
 }
 
-void Lock::writeLock() {
+void RWLock::writeLock() {
   int rc = pthread_rwlock_wrlock(&lock);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   stateMutex.lock();
   state=-1;
   stateMutex.unlock();
 }
 
-void Lock::unlock() {
+void RWLock::unlock() {
   stateMutex.lock();
   if(state>0) state--; else state=0;
   stateMutex.unlock();
@@ -899,20 +898,29 @@ void Lock::unlock() {
 // ConditionVariable
 //
 
-ConditionVariable::ConditionVariable(int initialState) {
+ConditionVariable::ConditionVariable(int initialValue) {
   int rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  state=initialState;
+  value=initialValue;
 }
 
 ConditionVariable::~ConditionVariable() {
   int rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
-void ConditionVariable::setState(int i, bool signalOnlyFirstInQueue) {
-  stateMutex.lock();
-  state=i;
-  broadcast();
-  stateMutex.unlock();
+void ConditionVariable::setValue(int i, bool signalOnlyFirstInQueue) {
+  mutex.lock();
+  value=i;
+  broadcast(signalOnlyFirstInQueue);
+  mutex.unlock();
+}
+
+int ConditionVariable::incrementValue(bool signalOnlyFirstInQueue) {
+  mutex.lock();
+  value++;
+  broadcast(signalOnlyFirstInQueue);
+  int i=value;
+  mutex.unlock();
+  return i;
 }
 
 void ConditionVariable::broadcast(bool signalOnlyFirstInQueue) {
@@ -924,24 +932,25 @@ void ConditionVariable::broadcast(bool signalOnlyFirstInQueue) {
 }
 
 void ConditionVariable::lock() {
-  stateMutex.lock();
+  mutex.lock();
 }
 
 void ConditionVariable::unlock() {
-  stateMutex.unlock();
+  mutex.unlock();
 }
 
-int ConditionVariable::getState(bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  int i=state;
-  if(!userHasLocked) stateMutex.unlock();
+int ConditionVariable::getValue(bool userHasLocked) const {
+  Mutex *m = (Mutex*)&mutex; //sorry: to allow for 'const' access
+  if(!userHasLocked) m->lock(); else CHECK(m->state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int i=value;
+  if(!userHasLocked) m->unlock();
   return i;
 }
 
 void ConditionVariable::waitForSignal(bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int rc = pthread_cond_wait(&cond, &mutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(!userHasLocked) mutex.unlock();
 }
 
 void ConditionVariable::waitForSignal(double seconds, bool userHasLocked) {
@@ -953,42 +962,42 @@ void ConditionVariable::waitForSignal(double seconds, bool userHasLocked) {
     timeout.tv_nsec-=1000000000l;
   }
   
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  int rc = pthread_cond_timedwait(&cond, &stateMutex.mutex, &timeout);
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  int rc = pthread_cond_timedwait(&cond, &mutex.mutex, &timeout);
   if(rc && rc!=ETIMEDOUT) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.unlock();
 }
 
-void ConditionVariable::waitForStateEq(int i, bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  while (state!=i) {
-    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+void ConditionVariable::waitForValueEq(int i, bool userHasLocked) {
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (value!=i) {
+    int rc = pthread_cond_wait(&cond, &mutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.unlock();
 }
 
-void ConditionVariable::waitForStateNotEq(int i, bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  while (state==i) {
-    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+void ConditionVariable::waitForValueNotEq(int i, bool userHasLocked) {
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (value==i) {
+    int rc = pthread_cond_wait(&cond, &mutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.unlock();
 }
 
-void ConditionVariable::waitForStateGreaterThan(int i, bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  while (state<=i) {
-    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+void ConditionVariable::waitForValueGreaterThan(int i, bool userHasLocked) {
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (value<=i) {
+    int rc = pthread_cond_wait(&cond, &mutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.unlock();
 }
 
-void ConditionVariable::waitForStateSmallerThan(int i, bool userHasLocked) {
-  if(!userHasLocked) stateMutex.lock(); else CHECK(stateMutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
-  while (state>=i) {
-    int rc = pthread_cond_wait(&cond, &stateMutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+void ConditionVariable::waitForValueSmallerThan(int i, bool userHasLocked) {
+  if(!userHasLocked) mutex.lock(); else CHECK(mutex.state==syscall(SYS_gettid),"user must have locked before calling this!");
+  while (value>=i) {
+    int rc = pthread_cond_wait(&cond, &mutex.mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
   }
-  if(!userHasLocked) stateMutex.unlock();
+  if(!userHasLocked) mutex.unlock();
 }
 
 
@@ -1005,6 +1014,77 @@ void ConditionVariable::waitUntil(double absTime, bool userHasLocked) {
     rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
     */
 }
+
+
+//===========================================================================
+//
+// Thread
+//
+
+#if 1//ndef MT_QT
+void* Thread_staticMain(void *_self){
+  Thread *th=(Thread*)_self;
+  th->main();
+  return NULL;
+}
+
+Thread::Thread():thread(0){
+}
+
+void Thread::open(const char* name){
+  int rc;
+  pthread_attr_t atts;
+  rc = pthread_attr_init(&atts); if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  rc = pthread_create(&thread, &atts, Thread_staticMain, this);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  /*if(priority){ //doesn't work - but setpriority does work!!
+    rc = pthread_attr_setschedpolicy(&atts, SCHED_RR);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+    sched_param  param;
+    rc = pthread_attr_getschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    std::cout <<"standard priority = " <<param.sched_priority <<std::endl;
+    param.sched_priority += priority;
+    std::cout <<"modified priority = " <<param.sched_priority <<std::endl;
+    rc = pthread_attr_setschedparam(&atts, &param);  if(rc) HALT("pthread failed with err " <<rc <<strerror(rc));
+  }*/
+  //prctl(PR_SET_NAME, proc->name.p);
+  if(name) pthread_setname_np(thread, name);
+}
+
+Thread::~Thread(){
+  close();
+}
+
+void Thread::close(){
+  if(!thread) return;
+  int rc;
+  rc = pthread_join(thread, NULL);     if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  thread=0;
+}
+
+bool Thread::isOpen(){
+  return thread!=0;
+}
+
+#else
+
+struct sThread:QThread{
+  Thread *th;
+  void run(){  th->main();  }
+};
+
+Thread::Thread():s(NULL){
+  s = new sThread;
+  s->th=this;
+}
+
+void Thread::open(){ s->setObjectName("hallo");  s->start(); }
+
+Thread::~Thread(){ close(); delete s; }
+
+void Thread::close(){ s->quit(); }
+
+bool Thread::isOpen(){ return s->isRunning(); }
+
+#endif
 
 
 //===========================================================================

@@ -16,10 +16,6 @@
 
 #include "ors.h"
 
-#include <devTools/logging.h>
-
-SET_LOG(ode, DEBUG);
-
 #ifdef MT_ODE
 
 #ifndef dDOUBLE

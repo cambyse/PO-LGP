@@ -150,7 +150,7 @@ void ERR_initialize();
 void ERR_cleanUp();
 
 extern int ERR_dump();
-extern void ERR_enter(char *source, int lineno, int errorid, char *modificationString);
+extern void ERR_enter(const char *source, int lineno, int errorid, const char *modificationString);
 extern void ERR_inititalize();
 
 #endif

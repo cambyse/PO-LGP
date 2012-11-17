@@ -3,7 +3,8 @@
 #include <motion/motion.h>
 #include <biros/biros.h>
 #include <views/control.h>
-#include <views/biros_views.h>
+#include <views/views.h>
+#include <views/specificViews.h>
 
 #include <omp.h>
 

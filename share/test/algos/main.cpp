@@ -32,7 +32,7 @@ void testSVD(){
   a.resize(7,10);
   rndGauss(a,1.,false);
   
-  cout <<"matrix rank: " <<svd(a,u,w,v,true) <<endl;
+  cout <<"matrix rank: " <<svd(u,w,v,a,true) <<endl;
   W.setDiag(w);
   cout <<norm(a - u * W * ~v) <<endl;
 }
@@ -52,19 +52,21 @@ void testRprop(){
   
   doubleA x(2); x(0)=10.; x(1)=9.;
   Rprop gd;
-  std::ofstream fout("z");
 
   struct Function:ScalarFunction{
     double fs(arr& grad, const arr& x){
       double y=scalarProduct(x,x);
       if(&grad) grad=2.*x;
+      return y;
     }
   } f;
-  
+
+  arr X((uint)0,2);
   for(t=0;t<1000;t++){
     gd.step(x,f);
-    fout <<x.ioraw() <<std::endl;  
+    X.append(x);
   }
+  write(LIST<arr>(X),"z");
   gnuplot("plot [0:20] 'z' us 1,'z' us 2");
 }
 
@@ -90,16 +92,16 @@ void testMaximize(){
 
 void testSymIndex(){
   TupleIndex I;
-  I.init(8,12);
+  I.init(2,4);
   
-  std::cout <<I;
+  std::cout <<I <<endl;
   I.checkValid();
 }
 
 
 extern void glDrawRect(float x,float y,float z,float rad);
 
-#ifdef MT_GL
+#if 0
 class Phase{
 public:
   double x,v,a;
@@ -231,7 +233,7 @@ void testRKswitch(){
   for(t=1;t<T;t++){
     MT::rk4dd_switch(x[t](),v[t](),s[t](),x[t-1],v[t-1],s[t-1],
       testRKswitch_ddf,testRKswitch_sf,dt,1e-4);
-    cout <<t <<": stepsize " <<dt <<endl;
+    //cout <<t <<": stepsize " <<dt <<endl;
     dt=.01;
   }
   plotFunction(x);
