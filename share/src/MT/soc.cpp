@@ -307,14 +307,14 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
   if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
 }
 
-void soc::SocSystemAbstraction::fvi (arr& y, arr& J, uint i, const arr& x_i){
+void soc::SocSystemAbstraction::fv_i (arr& y, arr& J, uint i, const arr& x_i){
   arr JBar;
   setx(x_i,i);  eval_cost++;
   getTaskCostTerms(y, JBar, x_i, i);
   if(&J) J = JBar;
 }
 
-void soc::SocSystemAbstraction::fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j){
+void soc::SocSystemAbstraction::fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j){
   arr PsiI, PsiJ;
   getTransitionCostTerms(y, PsiI, PsiJ, x_i, x_j, i);
   if(&Ji) Ji = PsiI;

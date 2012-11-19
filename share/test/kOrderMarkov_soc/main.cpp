@@ -30,46 +30,38 @@ int main(int argn,char** argv){
 
   sys.setTaskVariables(ARRAY(pos,col,qtv));
 
-
   //-- planning (AICO) to generate an optimal (kinematic) trajectory
   sys.setTox0();
   pos->setInterpolatedTargetsEndPrecisions(_T, 1e-3, 1e3, 0., 1e-3);
   col->setInterpolatedTargetsConstPrecisions(_T, 1e-2, 0.);
   qtv->setInterpolatedTargetsEndPrecisions(_T, 0., 0., 1e-2, 1e4);
   
-  //KOrderMarkovFunction_ControlledSystem problem(sys);
-  ControlledSystem_as_KOrderMarkovFunction problem(sys);
-  conv_KOrderMarkovFunction P(problem);
-
   // cost checks
-  arr q,x,xx;
-  MT::load(q, "z.q");
-  getPhaseTrajectory(xx, q, sys.get_tau());
-  analyzeTrajectory(sys, xx, true, &cout);
+//  arr q,x,xx;
+//  MT::load(q, "z.q");
+//  getPhaseTrajectory(xx, q, sys.get_tau());
+//  analyzeTrajectory(sys, xx, true, &cout);
   
-  x=q;
-  
-  arr phi;
-  P.fv(phi, NoArr, x);
-  double fx = sumOfSqr(phi);
-  cout <<"fx = " <<fx <<endl;
-  //return 0.;
-
   //-- print some info on the problem
-  uint T=problem.get_T();
-  uint k=problem.get_k();
-  uint n=problem.get_n();
+  KOrderMarkovFunction& kom = Convert(sys);
+  uint T=kom.get_T();
+  uint k=kom.get_k();
+  uint n=kom.get_n();
   cout <<"Problem parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
        <<"\n n=" <<n
        <<endl;
 
+  arr x(T+1,n);
+  x.setZero();
+  cout <<"fx = " <<evaluateVF(Convert(sys), x) <<endl;
+
   //-- gradient check
   //arr x(T+1,n);
-  for(uint k=0;k<2;k++){
+  for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobian(P, x, 1e-5);
+    checkJacobian(Convert(sys), x, 1e-5);
   }
   
 #if 0
@@ -90,8 +82,9 @@ int main(int argn,char** argv){
   //-- optimize
   //rndUniform(x,-10.,-1.);
   for(;;){
-    optGaussNewton(x, P, OPT4(verbose=2, stopIters=10, useAdaptiveDamping=.0, maxStep=100.));
-    getPhaseTrajectory(xx, x, sys.get_tau());
+    optGaussNewton(x, Convert(sys), OPT4(verbose=2, stopIters=10, useAdaptiveDamping=.0, maxStep=1.));
+    arr xx;
+    if(sys.get_xDim()>x.d1) getPhaseTrajectory(xx, x, sys.get_tau()); else xx=x;
     analyzeTrajectory(sys, xx, true, &cout);
     write(LIST<arr>(x),"z.output");
     gnuplot("set term x11 1; plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);

@@ -118,8 +118,8 @@ struct SocSystemAbstraction:VectorChainFunction {
   void costChecks(const arr& x); //computes the costs in many different ways - check if they're equal - code is instructive...
 
   //VectorChainFunction optimization interface
-  virtual void fvi (arr& y, arr& J, uint i, const arr& x_i);
-  virtual void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  virtual void fv_i (arr& y, arr& J, uint i, const arr& x_i);
+  virtual void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
   
   ///@name utilities:
   

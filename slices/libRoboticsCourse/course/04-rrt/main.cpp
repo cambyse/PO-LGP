@@ -184,7 +184,7 @@ void RTTplan(){
   for(uint t=0;t<q.d0;t++){
     S.setJointAngles(q[t], true);
   }
-  
+
   MT::save(q,"q.rrt");
 }
 
@@ -196,6 +196,7 @@ void optim(){
   MT::load(x0,"q.rrt");
   x=x0;
   plotEffTraj(S, x);
+  for(uint t=0;t<x.d0;t++) S.setJointAngles(x[t], true);
   S.watch();
 
   TrajectoryOptimizationProblem P;
@@ -210,17 +211,16 @@ void optim(){
        <<"\n n=" <<P.get_n()
        <<endl;
 
-  conv_KOrderMarkovFunction P_conv(P);
 #if 1
-  optGaussNewton(x, P_conv, OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+  optGaussNewton(x, Convert(P), OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
 #else
   for(;;){
-    optGaussNewton(x, P_conv, OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+    optGaussNewton(x, Convert(P), OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
     plotEffTraj(S, x);
     S.watch();
   }
 #endif
-  //optGaussNewton(x, P_conv, OPT5(stopEvals=10, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+  //optGaussNewton(x, Convert(P), OPT5(stopEvals=10, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
   MT::save(x,"q.optim");
 
   //display

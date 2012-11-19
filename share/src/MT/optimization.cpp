@@ -19,6 +19,36 @@ optOptions globalOptOptions;
 void init(SqrPotential &V, uint n) { V.A.resize(n,n); V.a.resize(n); V.A.setZero(); V.a.setZero(); V.c=0.; }
 
 
+//documentations... TODO: move! but not in header!
+
+/// return type for a function that returns a square potential $f(x) = x^T A x - 2 a^T x + c
+struct     SqrPotential;
+/// return type for a function that returns a square potential $f(x,y) = [x,y]^T [A,C; C^T,B] [x,y] - 2 [a,b]^T [x,y] + c$
+struct PairSqrPotential;
+
+/// A scalar function $y = f(x)$, if @grad@ is not NoGrad, gradient is returned
+struct ScalarFunction;
+
+/// A vector function $y = f(x)$, if @J@ is not NoGrad, Jacobian is returned
+/// This also implies an optimization problem $\hat f(y) = y^T(x) y(x)$ of (iterated)
+/// Gauss-Newton type where the Hessian is approximated by J^T J
+struct VectorFunction;
+
+/// A scalar function $y = f(x)$, if @S@ is non-NULL, local quadratic approximation is returned
+/// This also implies an optimization problem of (iterated) Newton
+/// type with the given Hessian
+struct QuadraticFunction;
+
+/// Given a chain $x_{0:T}$ of variables, implies a cost function
+/// $f(x) = \sum_{i=0}^T f_i(x_i)^T f_i(x_i) + \sum_{i=1}^T f_{ij}(x_i,x_j)^T f_{ij}(x_i,x_j)$
+/// and we can access local Jacobians of f_i and f_{ij}
+struct VectorChainFunction;
+
+/// Given a chain $x_{0:T}$ of variables, implies a cost function
+/// $f(x) = \sum_{i=0}^T f_i(x_i) + \sum_{i=1}^T f_{ij}(x_i,x_j)$
+/// and we can access local SqrPotential approximations of f_i and f_{ij}
+struct QuadraticChainFunction;
+
 //===========================================================================
 //
 // checks, evaluation and converters
@@ -49,19 +79,19 @@ double evaluateCSP(const MT::Array<SqrPotential>& fi, const MT::Array<PairSqrPot
   return f;
 }
 
-void recomputeChainSquarePotentials(MT::Array<SqrPotential>& fi, MT::Array<PairSqrPotential>& fij, SqrChainFunction& f, const arr& x, uint& evals) {
+void recomputeChainSquarePotentials(MT::Array<SqrPotential>& fi, MT::Array<PairSqrPotential>& fij, QuadraticChainFunction& f, const arr& x, uint& evals) {
   uint T=fi.N-1;
   for(uint t=0; t<=T; t++) {
-    f.fqi(fi(t) , t, x[t]);  evals++;
-    if(t<T) f.fqij(fij(t), t, t+1, x[t], x[t+1]);
+    f.fq_i(fi(t) , t, x[t]);  evals++;
+    if(t<T) f.fq_ij(fij(t), t, t+1, x[t], x[t+1]);
   }
 }
 
-void sanityCheckUptodatePotentials(const MT::Array<SqrPotential>& R, SqrChainFunction& f, const arr& x) {
+void sanityCheckUptodatePotentials(const MT::Array<SqrPotential>& R, QuadraticChainFunction& f, const arr& x) {
   if(!sanityCheck) return;
   SqrPotential R_tmp;
   for(uint t=0; t<R.N; t++) {
-    f.fqi(R_tmp, t, x[t]);
+    f.fq_i(R_tmp, t, x[t]);
     CHECK((maxDiff(R(t).A,R_tmp.A) + maxDiff(R(t).a,R_tmp.a) + fabs(R(t).c-R_tmp.c))<1e-6,"potentials not up-to-date");
   }
 }
@@ -76,13 +106,13 @@ double evaluateVF(VectorFunction& f, const arr& x) {
   return sumOfSqr(y);
 }
 
-double evaluateQCF(SqrChainFunction& f, const arr& x) {
+double evaluateQCF(QuadraticChainFunction& f, const arr& x) {
   double cost=0.;
   uint T=x.d0-1;
-  cost += f.fqi(NoPot, 0, x[0]);
+  cost += f.fq_i(NoPot, 0, x[0]);
   for(uint t=1; t<=T; t++) {
-    cost += f.fqi(NoPot, t, x[t]);
-    cost += f.fqij(NoPairPot, t-1, t, x[t-1], x[t]);
+    cost += f.fq_i(NoPot, t, x[t]);
+    cost += f.fq_ij(NoPairPot, t-1, t, x[t-1], x[t]);
   }
   return cost;
 }
@@ -91,123 +121,17 @@ double evaluateVCF(VectorChainFunction& f, const arr& x) {
   double ncost=0.,pcost=0.;
   uint T=x.d0-1;
   arr y;
-  f.fvi(y, NoGrad, 0, x[0]);  ncost += sumOfSqr(y);
+  f.fv_i(y, NoGrad, 0, x[0]);  ncost += sumOfSqr(y);
   for(uint t=1; t<=T; t++) {
-    f.fvi(y, NoGrad, t, x[t]);  ncost += sumOfSqr(y);
-    f.fvij(y, NoGrad, NoGrad, t-1, t, x[t-1], x[t]);  pcost += sumOfSqr(y);
-    cout <<t <<' ' <<sumOfSqr(y) <<endl;
+    f.fv_i(y, NoGrad, t, x[t]);  ncost += sumOfSqr(y);
+    f.fv_ij(y, NoGrad, NoGrad, t-1, t, x[t-1], x[t]);  pcost += sumOfSqr(y);
+    //cout <<t <<' ' <<sumOfSqr(y) <<endl;
   }
-  cout <<"node costs=" <<ncost <<" pair costs=" <<pcost <<endl;
+  //cout <<"node costs=" <<ncost <<" pair costs=" <<pcost <<endl;
   return ncost+pcost;
 }
 
 
-conv_VectorChainFunction::conv_VectorChainFunction(VectorChainFunction& _f) {
-  f=&_f;
-  T = f->T; //this is the T of the SqrChainFunction!
-}
-
-double conv_VectorChainFunction::fs(arr& grad, const arr& x) {
-  arr z;  z.referTo(x);
-  z.reshape(T+1,z.N/(T+1)); //x as chain representation (splitted in nodes assuming each has same dimensionality!)
-  
-  double cost=0.;
-  arr y,J,Ji,Jj;
-  if(&grad) {
-    grad.resizeAs(x);
-    grad.setZero();
-  }
-  for(uint t=0; t<=T; t++) { //node potentials
-    f->fvi(y, (&grad?J:NoGrad), t, z[t]);
-    cost += sumOfSqr(y);
-    if(&grad) {
-      grad[t]() += 2.*(~y)*J;
-    }
-  }
-  for(uint t=0; t<T; t++) {
-    f->fvij(y, (&grad?Ji:NoGrad), (&grad?Jj:NoGrad), t, t+1, z[t], z[t+1]);
-    cost += sumOfSqr(y);
-    if(&grad) {
-      grad[t]()   += 2.*(~y)*Ji;
-      grad[t+1]() += 2.*(~y)*Jj;
-    }
-  }
-  return cost;
-}
-
-void conv_VectorChainFunction::fv(arr& y, arr& J, const arr& x) {
-  arr z;  z.referTo(x);
-  z.reshape(T+1,z.N/(T+1)); //x as chain representation (splitted in nodes assuming each has same dimensionality!)
-  
-  //probing dimensionality (ugly..)
-  arr tmp;
-  f->fvi(tmp, NoGrad, 0, z[0]);
-  uint di=tmp.N; //dimensionality at nodes
-  if(T>0) f->fvij(tmp, NoGrad, NoGrad, 0, 1, z[0], z[1]);
-  uint dij=tmp.N; //dimensionality at pairs
-  
-  //resizing things:
-  arr yi(T+1,di);  //the part of y which will collect all node potentials
-  arr yij(T  ,dij); //the part of y which will collect all pair potentials
-  arr Ji;  Ji .resize(TUP(T+1, di, z.d0, z.d1)); //first indices as yi, last: gradient w.r.t. x
-  arr Jij; Jij.resize(TUP(T  , dij, z.d0, z.d1)); //first indices as yi, last: gradient w.r.t. x
-  Ji.setZero();
-  Jij.setZero();
-  
-  arr y_loc,J_loc,Ji_loc,Jj_loc;
-  uint t,i,j;
-  //first collect all node potentials
-  for(t=0; t<=T; t++) {
-    f->fvi(y_loc, (&J?J_loc:NoGrad), t, z[t]);
-    yi[t] = y_loc;
-    if(&J) {
-      for(i=0; i<di; i++) for(j=0; j<z.d1; j++) //copy into the right place...
-          Ji(TUP(t,i,t,j)) = J_loc(i,j);
-    }
-  }
-  //then collect all pair potentials
-  for(t=0; t<T; t++) {
-    f->fvij(y_loc, (&J?Ji_loc:NoGrad), (&J?Jj_loc:NoGrad), t, t+1, z[t], z[t+1]);
-    yij[t] = y_loc;
-    if(&J) {
-      for(i=0; i<dij; i++) for(j=0; j<z.d1; j++) //copy into the right place...
-          Jij(TUP(t,i,t  ,j)) = Ji_loc(i,j);
-      for(i=0; i<dij; i++) for(j=0; j<z.d1; j++) //copy into the right place...
-          Jij(TUP(t,i,t+1,j)) = Jj_loc(i,j);
-    }
-  }
-  yi.reshape((T+1)*di);
-  Ji.reshape((T+1)*di, x.N);
-  yij.reshape(T*dij);
-  Jij.reshape(T*dij, x.N);
-  y=yi;  y.append(yij);
-  if(&J) { J=Ji;  J.append(Jij); }
-}
-
-double conv_VectorChainFunction::fqi(SqrPotential& S, uint i, const arr& x_i) {
-  arr y,J;
-  f->fvi(y, (&S?J:NoGrad), i, x_i);
-  if(&S) {
-    S.A=~J * J;
-    S.a=~J * (J*x_i - y);
-    S.c=sumOfSqr(J*x_i - y);
-  }
-  return sumOfSqr(y);
-}
-
-double conv_VectorChainFunction::fqij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) {
-  arr y,Ji,Jj;
-  f->fvij(y, (&S?Ji:NoGrad), (&S?Jj:NoGrad), i, j, x_i, x_j);
-  if(&S) {
-    S.A=~Ji*Ji;
-    S.B=~Jj*Jj;
-    S.C=~Ji*Jj;
-    S.a=~Ji*(Ji*x_i + Jj*x_j - y);
-    S.b=~Jj*(Ji*x_i + Jj*x_j - y);
-    S.c=sumOfSqr(Ji*x_i + Jj*x_j - y);
-  }
-  return sumOfSqr(y);
-}
 
 /*double ScalarGraphFunction::f_total(const arr& X){
   uint n=X.d0;
@@ -348,14 +272,14 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
     uint *evals;
     void fv(arr& y, arr& J, const arr& x) {
       arr yij,Ji,Jj;
-      f->fvi(y, J, t, x);  (*evals)++;
+      f->fv_i(y, J, t, x);  (*evals)++;
       if(t>0) {
-        f->fvij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t-1, t, x_ref[t-1], x);
+        f->fv_ij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t-1, t, x_ref[t-1], x);
         y.append(yij);
         if(&J) J.append(Jj);
       }
-      if(t<f->T) {
-        f->fvij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t, t+1, x, x_ref[t+1]);
+      if(t<f->get_T()) {
+        f->fv_ij(yij, (&J?Ji:NoGrad), (&J?Jj:NoGrad), t, t+1, x, x_ref[t+1]);
         y.append(yij);
         if(&J) J.append(Ji);
       }
@@ -380,14 +304,14 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
   uint k;
   for(k=0; k<o.stopIters; k++) {
     arr x_old=x;
-    for(uint t=0; t<=f.T; t++) {
+    for(uint t=0; t<=f.get_T(); t++) {
       f_loc.x_ref = x;
       f_loc.t = t;
       //checkGradient(loc_f, x[t], 1e-4);
       optGaussNewton(x[t](), f_loc, op);
       if(o.verbose>1) cout <<"optNodewise " <<k <<" > " <<t <<' ' <<evaluateVCF(f, x) <<endl;
     }
-    for(uint t=f.T-1; t>0; t--) {
+    for(uint t=f.get_T()-1; t>0; t--) {
       f_loc.x_ref = x;
       f_loc.t=t;
       //checkGradient(loc_f, x[t], 1e-4);
@@ -405,7 +329,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
   return evals;
 }
 
-uint optDynamicProgramming(arr& x, SqrChainFunction& f, optOptions o) {
+uint optDynamicProgramming(arr& x, QuadraticChainFunction& f, optOptions o) {
 
   uint T=x.d0-1,n=x.d1;
   uint evals=0;
@@ -744,10 +668,10 @@ void updateBwdMessage(SqrPotential& Vi, PairSqrPotential& fij, const SqrPotentia
   Vi.A = fij.A - C_Vbarinv * ~fij.C;
 }
 
-uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
+uint optMinSumGaussNewton(arr& x, QuadraticChainFunction& f, optOptions o) {
 
   struct LocalQuadraticFunction:QuadraticFunction {
-    SqrChainFunction *f;
+    QuadraticChainFunction *f;
     uint t;
     arr x;
     SqrPotential *S,*V,*R;
@@ -756,7 +680,7 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
     double fq(SqrPotential& S_loc, const arr& x) {
       CHECK(&S_loc,"");
       if(updateR) {
-        f->fqi(*R , t, x); (*evals)++;
+        f->fq_i(*R , t, x); (*evals)++;
       } else updateR = true;
       S_loc.A = V->A+S->A+R->A;
       S_loc.a = V->a+S->a+R->a;
@@ -812,11 +736,11 @@ uint optMinSumGaussNewton(arr& x, SqrChainFunction& f, optOptions o) {
       
       //update fwd & bwd messages
       if(t>0) {
-        f.fqij(fij(t-1), t-1, t, y[t-1], y[t]);
+        f.fq_ij(fij(t-1), t-1, t, y[t-1], y[t]);
         updateFwdMessage(S(t), fij(t-1), Ry(t-1), S(t-1), damping, x[t-1]);
       }
       if(t<T) {
-        f.fqij(fij(t), t, t+1, y[t], y[t+1]);
+        f.fq_ij(fij(t), t, t+1, y[t], y[t+1]);
         updateBwdMessage(V(t), fij(t), Ry(t+1), V(t+1), damping, x[t+1]);
       }
       

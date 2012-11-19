@@ -32,10 +32,9 @@ struct ControlledSystem {
   virtual arr& getx() = 0;             ///< get the current x!
   virtual void getDynamics(arr& A, arr& At, arr& Ainv, arr& Ainvt, arr& a,
 			   arr& B, arr& Bt, arr& Q, uint t) = 0;
-  virtual void getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){
-    getDynamics(A, NoArr, NoArr, NoArr, a, B, NoArr, Q, t); }
-  virtual void getControlCosts(arr& H, arr& Hinv, uint t) = 0;              ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
-  virtual void getTaskCosts(arr& phi, arr& phiJ, uint t) = 0; ///< the general vector and its Jacobian
+  virtual void getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){ getDynamics(A, NoArr, NoArr, NoArr, a, B, NoArr, Q, t); }
+  virtual void getControlCosts(arr& H, arr& Hinv, uint t) = 0; ///< dynamic control cost metric: step cost = u^T H u, with H = tau*H_rate where tau is step size
+  virtual void getTaskCosts(arr& phi, arr& phiJ, uint t) = 0;  ///< the general vector and its Jacobian
   virtual double getTaskCosts(arr& R, arr& r, uint t, double* rhat); //REMOVE THIS!
 
   // display and info
@@ -68,46 +67,5 @@ void straightTaskTrajectory(ControlledSystem& sys, arr& q);
 
 void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v=NULL, arr *Vinv=NULL);
 
-
-//===========================================================================
-//
-// Converting a SOC problem into a k-order optimization problem
-//
-
-struct KOrderMarkovFunction_ControlledSystem:KOrderMarkovFunction {
-  ControlledSystem *sys;
-
-  KOrderMarkovFunction_ControlledSystem(ControlledSystem& _sys):sys(&_sys){}
-
-  uint get_T(){ return sys->get_T(); }
-  uint get_k(){ return 1; }
-  uint get_n(){ return sys->get_xDim(); }
-  uint get_m(uint t);
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
-};
-
-inline KOrderMarkovFunction_ControlledSystem& KOrderMarkovFunction_(ControlledSystem& sys){
-  KOrderMarkovFunction_ControlledSystem a(sys);
-  return a;
-}
-
-inline conv_KOrderMarkovFunction& VectorFunction_(ControlledSystem& sys){
-  conv_KOrderMarkovFunction a((KOrderMarkovFunction&)KOrderMarkovFunction_(sys));
-  return a;
-}
-
-#if 1
-struct ControlledSystem_as_KOrderMarkovFunction:KOrderMarkovFunction {
-  ControlledSystem *sys;
-
-  ControlledSystem_as_KOrderMarkovFunction(ControlledSystem& _sys):sys(&_sys){}
-
-  uint get_T(){ return sys->get_T(); }
-  uint get_k(){ return 2; }
-  uint get_n(){ return sys->get_xDim()/2; }
-  uint get_m(uint t);
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
-};
-#endif
 
 #endif

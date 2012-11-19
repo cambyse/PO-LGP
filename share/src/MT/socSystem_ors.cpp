@@ -127,7 +127,6 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     s->Q_rate.setDiag(qr, 2*s->q0.N);  //covariance \dot q-update
   }
   stepScale.resize(s->T+1);  stepScale.setZero();
-  VectorChainFunction::T = s->T;
 }
 
 void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){

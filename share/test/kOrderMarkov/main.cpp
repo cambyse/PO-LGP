@@ -7,21 +7,19 @@
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
-#if 1
+#if 0
   ControlledSystem_PointMass sys;
   //KOrderMarkovFunction_ControlledSystem problem(sys);
-  ControlledSystem_as_KOrderMarkovFunction problem(sys);
+  ControlledSystem_as_KOrderMarkovFunction P(sys);
 #else
-  ParticleAroundWalls problem;
+  ParticleAroundWalls P;
 #endif
   
-  conv_KOrderMarkovFunction P(problem);
-
-  //-- print some info on the problem
-  uint T=problem.get_T();
-  uint k=problem.get_k();
-  uint n=problem.get_n();
-  cout <<"Problem parameters:"
+  //-- print some info on the P
+  uint T=P.get_T();
+  uint k=P.get_k();
+  uint n=P.get_n();
+  cout <<"P parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
        <<"\n n=" <<n
@@ -31,7 +29,7 @@ int main(int argn,char** argv){
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobian(P, x, 1e-4);
+    checkJacobian(Convert(P), x, 1e-4);
   }
   
 #if 0
@@ -52,7 +50,7 @@ int main(int argn,char** argv){
 
   //-- optimize
   rndUniform(x,-10.,-1.);
-  optGaussNewton(x, P, OPT2(verbose=2, useAdaptiveDamping=0));
+  optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0));
 
   //analyzeTrajectory(sys, x, true, &cout);
   write(LIST<arr>(x),"z.output");

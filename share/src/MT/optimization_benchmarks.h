@@ -31,23 +31,25 @@ struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction {
 //===========================================================================
 
 struct VectorChainCost:VectorChainFunction {
-  uint n;
+  uint T,n;
   arr A,a;
   arr Wi,Wj,w;
   bool nonlinear;
   
   VectorChainCost(uint _T,uint _n);
-  void fvi(arr& y, arr* J, uint i, const arr& x_i);
-  void fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  uint get_T(){ return T; }
+  void fv_i(arr& y, arr* J, uint i, const arr& x_i);
+  void fv_ij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
 };
 
 //===========================================================================
 
 struct SlalomProblem:VectorChainFunction {
-  uint K,n;
+  uint T,K,n;
   double margin,w,power;
   
   SlalomProblem(uint _T, uint _K, double _margin, double _w, double _power);
-  void fvi(arr& y, arr& J, uint i, const arr& x_i);
-  void fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+  uint get_T(){ return T; }
+  void fv_i(arr& y, arr& J, uint i, const arr& x_i);
+  void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
 };
