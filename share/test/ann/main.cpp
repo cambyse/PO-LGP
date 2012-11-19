@@ -77,7 +77,7 @@ void testANNIncremental(){
 int main(int argn,char** argv){
 
   testANN();
-  //testANNIncremental();
+  testANNIncremental();
   //testANNregression();
 
   return 0;

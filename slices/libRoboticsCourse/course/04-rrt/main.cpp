@@ -197,7 +197,7 @@ void optim(){
   x=x0;
   plotEffTraj(S, x);
   for(uint t=0;t<x.d0;t++) S.setJointAngles(x[t], true);
-  S.watch();
+  //S.watch();
 
   TrajectoryOptimizationProblem P;
   P.S=&S;
@@ -211,16 +211,15 @@ void optim(){
        <<"\n n=" <<P.get_n()
        <<endl;
 
-#if 1
-  optGaussNewton(x, Convert(P), OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
-#else
-  for(;;){
+#if 1 //only if you want to see some steps...
+  for(uint k=0;k<20;k++){
     optGaussNewton(x, Convert(P), OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
     plotEffTraj(S, x);
     S.watch();
   }
 #endif
-  //optGaussNewton(x, Convert(P), OPT5(stopEvals=10, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+
+  optGaussNewton(x, Convert(P), OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
   MT::save(x,"q.optim");
 
   //display
