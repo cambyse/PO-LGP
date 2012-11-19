@@ -2,7 +2,7 @@
 #include "KMarkovCRF.h"
 
 #include "list"
-#include "utility"
+#include "tuple"
 
 #define DEBUG_STRING ""
 #define DEBUG_LEVEL 2
@@ -10,8 +10,11 @@
 
 using std::vector;
 using std::list;
+using std::tuple;
+using std::make_tuple;
+using std::get;
 using std::pair;
-using std::make_pair;
+using std::set;
 
 KMarkovCRF::KMarkovCRF( const int& k_ ): k(k_) {
 
@@ -195,14 +198,15 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         }
 
         // calculate sumExp(x(n))
-        for(state_t state=0; state<Data::state_n; ++state) { // sum over y' (states and rewards)
-            for(reward_t reward=Data::min_reward; reward<=Data::max_reward; reward+=Data::reward_increment) {
-                data_point_t data_predict = std::make_tuple(action_t(),state,reward); // y'
+        for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+//        for(state_t state=0; state<Data::state_n; ++state) { // sum over y' (states and rewards)
+//            for(reward_t reward=Data::min_reward; reward<=Data::max_reward; reward+=Data::reward_increment) {
+//                data_point_t data_predict = std::make_tuple(action_t(),state,reward); // y'
 
                 // calculate sumF(x(n),y')
                 double sumFN = 0;
                 for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                    sumFN += x[parameter_indices[f_idx]]*active_features[f_idx]->evaluate(episode_iterator,data_predict);
+                    sumFN += x[parameter_indices[f_idx]]*active_features[f_idx]->evaluate(episode_iterator,*output_iterator);
                 }
 
                 // increment sumExp(x(n))
@@ -214,11 +218,12 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                     if(parameter_indices[lambda_idx]!=lambda_idx) {
                         DEBUG_OUT(0,"Not the correct feature for this parameter, check parameter binding.");
                     } else {
-                        sumFExpNF[data_idx][lambda_idx] += active_features[lambda_idx]->evaluate(episode_iterator,data_predict) * exp( sumFN );
+                        sumFExpNF[data_idx][lambda_idx] += active_features[lambda_idx]->evaluate(episode_iterator,*output_iterator) * exp( sumFN );
                     }
                 }
 
-            }
+//            }
+//        }
         }
 
         // increment fx
@@ -388,6 +393,23 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
     lbfgs_free(grad_dummy);
 }
 
+//KMarkovCRF::probability_t KMarkovCRF::probability(input_data_t input_data) {
+//    probability_t raw_log_probability = 0;
+//
+//    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+//        double f_value = active_features[f_idx]->evaluate(input_data);
+//        raw_log_probability += lambda[parameter_indices[f_idx]]*f_value;
+//    }
+//
+//    probability_t normalization = 0;
+//
+//    return exp(raw_log_probability)/normalization;
+//}
+//
+//KMarkovCRF::probability_t KMarkovCRF::probability(input_data_t input_data, output_data_t output_data) {
+//
+//}
+
 void KMarkovCRF::evaluate_features() {
     int number_of_data_points = episode_data.size()-k;
     if(number_of_data_points<=0) {
@@ -401,114 +423,114 @@ void KMarkovCRF::evaluate_features() {
     }
 }
 
-void KMarkovCRF::rank_pair_features() {
-    int number_of_data_points = episode_data.size()-k;
-    if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model.");
-        return;
-    }
-
-    // construct pair features
-    DEBUG_OUT(0,"Constructing pair features");
-    vector<unique_feature_ptr > pair_features;
-    for(uint f1_idx=0; f1_idx<features.size(); ++f1_idx) {
-        for(uint f2_idx=0; f2_idx<features.size(); ++f2_idx) {
-            if(f1_idx!=f2_idx) {
-                AndFeature * and_feature = new AndFeature((*features[f1_idx]),(*features[f2_idx]));
-                pair_features.push_back(unique_feature_ptr(and_feature));
-                DEBUG_OUT(1,"    added " << and_feature->identifier() );
-            }
-        }
-    }
-    int pair_feature_n = pair_features.size();
-    int output_feature_n = output_features.size();
-
-    // determine relative frequencies
-    vector<int> pair_feature_counts(pair_feature_n,0);
-    vector<int> output_feature_counts(output_feature_n,0);
-    vector<int> joint_counts(pair_feature_n*output_feature_n,0);
-    DEBUG_OUT(0,"Determining relative frequencies");
-    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
-                episode_iterator!=episode_data.end();
-                ++episode_iterator) {
-        for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
-            if(output_features[output_feature_idx]->evaluate(episode_iterator)==1) {
-                ++output_feature_counts[output_feature_idx];
-            }
-        }
-        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
-            if(pair_features[pair_feature_idx]->evaluate(episode_iterator)==1) {
-                ++pair_feature_counts[pair_feature_idx];
-            }
-        }
-        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
-            for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
-                if(pair_features[pair_feature_idx]->evaluate(episode_iterator)==1 &&
-                        output_features[output_feature_idx]->evaluate(episode_iterator)==1) {
-                    ++joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx];
-                }
-            }
-        }
-    }
-
-    // print counts
-    DEBUG_OUT(0,"Relative counts:");
-    DEBUG_OUT(0,"    output feature counts");
-    for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
-        DEBUG_OUT(0, "        " <<
-                output_features[output_feature_idx]->identifier() << ": " <<
-                output_feature_counts[output_feature_idx] << " (" <<
-                (double)output_feature_counts[output_feature_idx]/number_of_data_points << ")"
-        );
-    }
-    DEBUG_OUT(0,"    pair feature counts");
-    for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
-        DEBUG_OUT(0, "        " <<
-                pair_features[pair_feature_idx]->identifier() << ": " <<
-                pair_feature_counts[pair_feature_idx] << " (" <<
-                (double)pair_feature_counts[pair_feature_idx]/number_of_data_points << ")"
-        );
-    }
-    DEBUG_OUT(0,"    joint counts");
-    for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
-        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
-            DEBUG_OUT(0, "        [" <<
-                    output_features[output_feature_idx]->identifier() << "," <<
-                    pair_features[pair_feature_idx]->identifier() << "]: " <<
-                    joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx] << " (" <<
-                    (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points << ")"
-            );
-        }
-    }
-
-    // determine rank
-    vector<double> pair_feature_rank(pair_feature_n,0);
-    for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
-        for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
-            if(joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx] == 0) continue;
-            if(pair_feature_counts[pair_feature_idx]                              == 0) continue;
-            if(output_feature_counts[output_feature_idx]                          == 0) continue;
-            double frac = (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points;
-            frac /= (double)pair_feature_counts[pair_feature_idx]/number_of_data_points;
-            frac /= (double)output_feature_counts[output_feature_idx]/number_of_data_points;
-            pair_feature_rank[pair_feature_idx] += (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points * log(frac);
-//            DEBUG_OUT(0,"====Increment==== frac=" << frac <<
-//                    ", log(frac)=" << log(frac) <<
-//                    ", rank=" << pair_feature_rank[pair_feature_idx] <<
-//                    ", joint/N=" << (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points
-//            );
-        }
-    }
-
-    // print rank
-    DEBUG_OUT(0,"Ranking features:");
-    for(int f_idx=0; f_idx<pair_feature_n; ++f_idx) {
-//        if(pair_feature_rank[f_idx]!=0) {
-            DEBUG_OUT(0, "    " << pair_features[f_idx]->identifier() << ": " << pair_feature_rank[f_idx]);
+//void KMarkovCRF::rank_pair_features() {
+//    int number_of_data_points = episode_data.size()-k;
+//    if(number_of_data_points<=0) {
+//        DEBUG_OUT(0,"Not enough data to evaluate model.");
+//        return;
+//    }
+//
+//    // construct pair features
+//    DEBUG_OUT(0,"Constructing pair features");
+//    vector<unique_feature_ptr > pair_features;
+//    for(uint f1_idx=0; f1_idx<features.size(); ++f1_idx) {
+//        for(uint f2_idx=0; f2_idx<features.size(); ++f2_idx) {
+//            if(f1_idx!=f2_idx) {
+//                AndFeature * and_feature = new AndFeature((*features[f1_idx]),(*features[f2_idx]));
+//                pair_features.push_back(unique_feature_ptr(and_feature));
+//                DEBUG_OUT(1,"    added " << and_feature->identifier() );
+//            }
 //        }
-    }
-
-}
+//    }
+//    int pair_feature_n = pair_features.size();
+//    int output_feature_n = output_features.size();
+//
+//    // determine relative frequencies
+//    vector<int> pair_feature_counts(pair_feature_n,0);
+//    vector<int> output_feature_counts(output_feature_n,0);
+//    vector<int> joint_counts(pair_feature_n*output_feature_n,0);
+//    DEBUG_OUT(0,"Determining relative frequencies");
+//    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
+//                episode_iterator!=episode_data.end();
+//                ++episode_iterator) {
+//        for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
+//            if(output_features[output_feature_idx]->evaluate(episode_iterator)==1) {
+//                ++output_feature_counts[output_feature_idx];
+//            }
+//        }
+//        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
+//            if(pair_features[pair_feature_idx]->evaluate(episode_iterator)==1) {
+//                ++pair_feature_counts[pair_feature_idx];
+//            }
+//        }
+//        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
+//            for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
+//                if(pair_features[pair_feature_idx]->evaluate(episode_iterator)==1 &&
+//                        output_features[output_feature_idx]->evaluate(episode_iterator)==1) {
+//                    ++joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx];
+//                }
+//            }
+//        }
+//    }
+//
+//    // print counts
+//    DEBUG_OUT(0,"Relative counts:");
+//    DEBUG_OUT(0,"    output feature counts");
+//    for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
+//        DEBUG_OUT(0, "        " <<
+//                output_features[output_feature_idx]->identifier() << ": " <<
+//                output_feature_counts[output_feature_idx] << " (" <<
+//                (double)output_feature_counts[output_feature_idx]/number_of_data_points << ")"
+//        );
+//    }
+//    DEBUG_OUT(0,"    pair feature counts");
+//    for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
+//        DEBUG_OUT(0, "        " <<
+//                pair_features[pair_feature_idx]->identifier() << ": " <<
+//                pair_feature_counts[pair_feature_idx] << " (" <<
+//                (double)pair_feature_counts[pair_feature_idx]/number_of_data_points << ")"
+//        );
+//    }
+//    DEBUG_OUT(0,"    joint counts");
+//    for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
+//        for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
+//            DEBUG_OUT(0, "        [" <<
+//                    output_features[output_feature_idx]->identifier() << "," <<
+//                    pair_features[pair_feature_idx]->identifier() << "]: " <<
+//                    joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx] << " (" <<
+//                    (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points << ")"
+//            );
+//        }
+//    }
+//
+//    // determine rank
+//    vector<double> pair_feature_rank(pair_feature_n,0);
+//    for(int pair_feature_idx=0; pair_feature_idx<pair_feature_n; ++pair_feature_idx) { // all pair features
+//        for(int output_feature_idx=0; output_feature_idx<output_feature_n; ++output_feature_idx) { // all output features
+//            if(joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx] == 0) continue;
+//            if(pair_feature_counts[pair_feature_idx]                              == 0) continue;
+//            if(output_feature_counts[output_feature_idx]                          == 0) continue;
+//            double frac = (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points;
+//            frac /= (double)pair_feature_counts[pair_feature_idx]/number_of_data_points;
+//            frac /= (double)output_feature_counts[output_feature_idx]/number_of_data_points;
+//            pair_feature_rank[pair_feature_idx] += (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points * log(frac);
+////            DEBUG_OUT(0,"====Increment==== frac=" << frac <<
+////                    ", log(frac)=" << log(frac) <<
+////                    ", rank=" << pair_feature_rank[pair_feature_idx] <<
+////                    ", joint/N=" << (double)joint_counts[pair_feature_idx + pair_feature_n*output_feature_idx]/number_of_data_points
+////            );
+//        }
+//    }
+//
+//    // print rank
+//    DEBUG_OUT(0,"Ranking features:");
+//    for(int f_idx=0; f_idx<pair_feature_n; ++f_idx) {
+////        if(pair_feature_rank[f_idx]!=0) {
+//            DEBUG_OUT(0, "    " << pair_features[f_idx]->identifier() << ": " << pair_feature_rank[f_idx]);
+////        }
+//    }
+//
+//}
 
 void KMarkovCRF::score_features() {
 
@@ -590,24 +612,50 @@ void KMarkovCRF::score_features() {
         }
     }
 
-    //--------------------------------//
-    // Sort and Print Feature Scores  //
-    //--------------------------------//
+    //----------------------//
+    // Sort Feature Scores  //
+    //----------------------//
 
-    DEBUG_OUT(0,"Feature Scores:")
-    typedef list<pair<double,Feature*> > score_list;
+    typedef list<tuple<double,unsigned int,Feature*> > score_list;
     score_list sorted_feature_scores(feature_scores.size());
     int f_idx = 0;
     for(score_list::iterator it = sorted_feature_scores.begin();
             it!=sorted_feature_scores.end();
             ++it) {
-        (*it) = make_pair(feature_scores[f_idx],compound_features[f_idx].get());
+//        (*it) = make_tuple(feature_scores[f_idx],compound_features[f_idx].get()); // mutual information
+        unsigned int complexity = compound_features[f_idx].get()->get_complexity();
+        (*it) = make_tuple(feature_scores[f_idx]/complexity,complexity,compound_features[f_idx].get()); // mutual information / complexity
         ++f_idx;
     }
     sorted_feature_scores.sort();
+
+    //----------------------//
+    // Print Feature Scores //
+    //----------------------//
+
+    DEBUG_OUT(0,"Feature Scores:")
     for(score_list::const_iterator it = sorted_feature_scores.begin();
             it!=sorted_feature_scores.end();
             ++it) {
-        DEBUG_OUT(0,"    " << it->first << " <-- " << it->second->identifier() );
+        DEBUG_OUT(0,"    " << QString("%1 (%2) <-- ").arg(get<0>(*it),7,'f',5).arg(get<1>(*it),2).toStdString() << get<2>(*it)->identifier() );
+    }
+
+    //------------------------//
+    // Add to Active Features //
+    //------------------------//
+
+    for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
+        if(feature_scores[f_idx]>0) {
+            Feature * f_ptr = compound_features[f_idx].release(); // deletion must now be explicitly handled
+            DEBUG_OUT(0,"Released " << f_ptr->identifier() );
+            pair< set<unique_feature_ptr>::iterator, bool > ret = feature_set.insert(unique_feature_ptr(f_ptr));
+            if(ret.second==true) { // was inserted --> deletion is handled automatically again
+                active_features.push_back(f_ptr);
+                DEBUG_OUT(0,"    Adding " << f_ptr->identifier() << " to active features");
+            } else { // was not inserted (identical feature found) --> delete manually
+                delete f_ptr;
+                DEBUG_OUT(0,"    Deleting " << f_ptr->identifier() );
+            }
+        }
     }
 }

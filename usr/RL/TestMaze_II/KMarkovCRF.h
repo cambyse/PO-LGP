@@ -27,9 +27,13 @@ public:
     typedef Data::action_t                 action_t;
     typedef Data::state_t                  state_t;
     typedef Data::reward_t                 reward_t;
+    typedef Data::probability_t            probability_t;
     typedef Data::episode_t                episode_t;
     typedef Data::const_episode_iterator_t const_episode_iterator_t;
     typedef Data::data_point_t             data_point_t;
+    typedef Data::input_data_t             input_data_t;
+    typedef Data::output_data_t            output_data_t;
+    typedef Data::OutputIterator           OutputIterator;
 
     KMarkovCRF(const int& k);
 
@@ -86,9 +90,12 @@ public:
 
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
+//    probability_t probability(input_data_t input_data);
+//    probability_t probability(input_data_t input_data, output_data_t output_data);
+
     void evaluate_features();
 
-    void rank_pair_features();
+//    void rank_pair_features();
 
     void score_features();
 
@@ -103,9 +110,9 @@ private:
     std::set<unique_feature_ptr> feature_set;
     std::vector<Feature*> basic_features, active_features;
 
-    int data_features_n, predict_features_n, combined_features_n;
-    std::vector<unique_feature_ptr> features, output_features, subfeatures;
-    std::vector<Feature*> data_features, predict_features, combined_features;
+//    int data_features_n, predict_features_n, combined_features_n;
+//    std::vector<unique_feature_ptr> features, output_features, subfeatures;
+//    std::vector<Feature*> data_features, predict_features, combined_features;
 
 };
 
