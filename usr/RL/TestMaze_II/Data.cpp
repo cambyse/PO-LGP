@@ -69,3 +69,25 @@ int Data::output_idx(input_data_t, output_data_t data_predict) {
     int i_reward_idx = floor(d_reward_idx);
     return state*reward_n + i_reward_idx;
 }
+
+Data::OutputIterator::OutputIterator(): current_action(), current_state(), current_reward(min_reward) {}
+
+Data::OutputIterator::~OutputIterator() {}
+
+Data::OutputIterator& Data::OutputIterator::operator++() {
+    // action stays the same...
+    ++current_state;
+    if(current_state>=state_n) {
+        current_state=state_t();
+        current_reward += reward_increment;
+    }
+    return (*this);
+}
+
+Data::output_data_t Data::OutputIterator::operator*() const {
+    return std::make_tuple(current_action,current_state,current_reward);
+}
+
+bool Data::OutputIterator::end() const {
+    return current_reward > max_reward;
+}
