@@ -13,7 +13,7 @@
 int Feature::field_width[2] = {0,0};
 long Feature::id_counter = 0;
 
-Feature::Feature(): id(id_counter) {
+Feature::Feature(): id(id_counter), complexity(0) {
     ++id_counter;
 }
 
@@ -27,8 +27,12 @@ std::string Feature::identifier() const {
     return std::string("");
 }
 
-int Feature::get_id() {
+int Feature::get_id() const{
     return id;
+}
+
+unsigned int Feature::get_complexity() const{
+    return complexity;
 }
 
 bool Feature::operator==(const Feature& other) const {
@@ -56,7 +60,9 @@ bool Feature::pComp(Feature const * first, Feature const * second) {
     return first->id<second->id;
 }
 
-NullFeature::NullFeature() {}
+NullFeature::NullFeature(){
+    complexity = 0;
+}
 
 NullFeature::~NullFeature() {}
 
@@ -77,6 +83,7 @@ std::string NullFeature::identifier() const {
 }
 
 ActionFeature::ActionFeature(const action_t& a, const int& d): action(a), delay(d) {
+    complexity = 1;
     if( field_width[0] < 5 ) {
         field_width[0]=5;
     }
@@ -112,6 +119,7 @@ std::string ActionFeature::identifier() const {
 }
 
 StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
+    complexity = 1;
     if( field_width[0] < log10(abs(state)) ) {
         field_width[0]=log10(abs(state));
     }
@@ -158,6 +166,7 @@ std::string StateFeature::identifier() const {
 }
 
 RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(d) {
+    complexity = 1;
     if( field_width[0] < 2 ) {
         field_width[0]=2;
     }
@@ -210,6 +219,7 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
     subfeatures.insert(subfeatures.begin(),f4.subfeatures.begin(),f4.subfeatures.end());
     subfeatures.insert(subfeatures.begin(),f5.subfeatures.begin(),f5.subfeatures.end());
     subfeatures.sort(&(pComp));
+    complexity = subfeatures.size();
 }
 
 AndFeature::~AndFeature() {}

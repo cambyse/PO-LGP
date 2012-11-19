@@ -36,13 +36,15 @@ public:
     virtual double evaluate(input_data_t, output_data_t) const = 0;
     virtual std::string identifier() const;
 
-    int get_id();
+    int get_id() const;
+    unsigned int get_complexity() const;
     bool operator==(const Feature& other) const;
     bool operator<(const Feature& other);
     static bool pComp(Feature const * first, Feature const * second);
 
 protected:
     long id;
+    unsigned int complexity;
     static int field_width[2];
     static long id_counter;
 };
