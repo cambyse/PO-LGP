@@ -211,7 +211,7 @@ void optim(){
        <<"\n n=" <<P.get_n()
        <<endl;
 
-#if 1 //only if you want to see some steps...
+#if 0 //only if you want to see some steps...
   for(uint k=0;k<20;k++){
     optGaussNewton(x, Convert(P), OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
     plotEffTraj(S, x);
@@ -233,7 +233,7 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",0)){
+  switch(MT::getParameter<int>("mode",1)){
   case 0: RTTplan(); break;
   case 1: optim(); break;
   }
