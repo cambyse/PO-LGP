@@ -92,7 +92,7 @@ void RTTplan(){
   S.setJointAngles(qT);
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
-  S.watch();        //pause and watch initial posture
+  //S.watch();        //pause and watch initial posture
 
   double stepsize = .1;
   RRT rrt0(q0, stepsize);
@@ -195,6 +195,7 @@ void optim(){
   arr x,x0;
   MT::load(x0,"q.rrt");
   x=x0;
+  plotClear();
   plotEffTraj(S, x);
   for(uint t=0;t<x.d0;t++) S.setJointAngles(x[t], true);
   //S.watch();
@@ -233,8 +234,8 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",1)){
-  case 0: RTTplan(); break;
+  switch(MT::getParameter<int>("mode",0)){
+  case 0: RTTplan(); //break;
   case 1: optim(); break;
   }
 

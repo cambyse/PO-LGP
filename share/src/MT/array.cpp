@@ -408,9 +408,10 @@ uint own_SVD(
   U.resize(m, n);
   V.resize(n, n);
   w.resize(n);
-  double **a = A.getCarray(); //Pointers(Apointers); /* input matrix */
-  double **u = U.getCarray(); //Pointers(Upointers); /* left vectors */
-  double **v = V.getCarray(); //Pointers(Vpointers); /* right vectors */
+  MT::Array<double*> Ap, Up, Vp;
+  double **a = A.getCarray(Ap); //Pointers(Apointers); /* input matrix */
+  double **u = U.getCarray(Up); //Pointers(Upointers); /* left vectors */
+  double **v = V.getCarray(Vp); //Pointers(Vpointers); /* right vectors */
   
   int flag;
   unsigned i, its, j, jj, k, l, nm(0), r;
@@ -719,7 +720,8 @@ double determinantSubroutine(double **A, uint n) {
 
 double determinant(const arr& A) {
   CHECK(A.nd==2 && A.d0==A.d1, "determinants require a squared 2D matrix");
-  return determinantSubroutine(A.getCarray(), A.d0);
+  MT::Array<double*> tmp;
+  return determinantSubroutine(A.getCarray(tmp), A.d0);
 }
 
 double cofactor(const arr& A, uint i, uint j) {

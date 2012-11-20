@@ -67,9 +67,8 @@ namespace MT {
   memove for elementary types; implements many standard
   array/matrix/tensor operations. Please see the fully public attributes at the
   bottom of this page -- everthing is meant to be perfectly
-  transparent. Interfacing with ordinary C-buffers is simple,
-  e.g. via \c Array::referTo (Cbuffer, size) and \c Array::p and \c
-  Array::pp. Please see also the reference for the \ref array.h
+  transparent. Interfacing with ordinary C-buffers is simple.
+  Please see also the reference for the \ref array.h
   header, which contains lots of functions that can be applied on
   Arrays. */
 
@@ -167,7 +166,7 @@ template<class T> struct Array {
   Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
   Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
-  T** getCarray() const;
+  T** getCarray(Array<T*>& Cpointers) const;
   
   //!@name access by copy
   uint dim(uint k) const;

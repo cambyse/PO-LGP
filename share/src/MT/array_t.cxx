@@ -894,9 +894,11 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
 
 //***** C-array interfacing
 
+#if 0
 //! allocates, sets and returns the \c Array::pp pointer (of type \c T**)
 template<class T> T** MT::Array<T>::getCarray() const {
   CHECK(nd>=2, "only 2D or higher-D arrays gives C-array of type T**");
+  HALT("I think this is buggy");
   if(special==hasCarrayST) return (T**) aux;
   T** pp;
   ((MT::Array<T>*)this)->special = hasCarrayST;
@@ -906,6 +908,7 @@ template<class T> T** MT::Array<T>::getCarray() const {
   for(uint i=0; i<d0; i++) pp[i]=p+i*skip;
   return pp;
 }
+#endif
 
 //! makes this array a reference to the C buffer
 template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
@@ -915,16 +918,16 @@ template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
   p=(T*)buffer;
 }
 
-#if 0
 /*!\brief returns an ordinary 2-dimensional C-pointer to the Array content.
   Requires the Array<T*> as buffer. */
-template<class T> T** MT::Array<T>::getPointers(Array<T*>& array2d) const {
+template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
   CHECK(nd==2, "only 2D array gives C-array of type T**");
-  array2d.resize(d0);
-  for(uint i=0; i<d0; i++) array2d(i)=p+i*d1;
-  return array2d.p;
+  Cpointers.resize(d0);
+  for(uint i=0; i<d0; i++) Cpointers(i)=p+i*d1;
+  return Cpointers.p;
 }
 
+#if 0
 //! returns an ordinary 3-dimensional C-pointer-array
 template<class T> T*** MT::Array<T>::getPointers(Array<T**>& array3d, Array<T*>& array2d) const {
   CHECK(nd==3, "only 3D array gives C-array of type T*** ");

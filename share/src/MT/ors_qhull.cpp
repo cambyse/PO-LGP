@@ -185,7 +185,8 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
     CHECK(l==vertices.N-2, "");
     W[l]() = v-w;
     W[l+1]() = p-y; //not important (is already orthogonal to the full facet)
-    qh_gram_schmidt(X.d1, W.getCarray()); //orthogonalize local basis vectors
+    MT::Array<double*> tmp;
+    qh_gram_schmidt(X.d1, W.getCarray(tmp)); //orthogonalize local basis vectors
     subn = W[l]; //this entry should now be orthogonal to the sub-facet
     
     //f: axis point: projection of v along p onto the sub-facet (``Dreisatz'')
