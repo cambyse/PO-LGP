@@ -127,8 +127,8 @@ void TestMaze_II::process_console_input() {
     QString record_s(   "    record. . . . .[start|s|end|e] . . . . . -> toggle [start/end] recording movements");
     QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
     QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
-//    QString rank_s(     "    rank . . . . . . . . . . . . . . . . . . -> rank pairwise features by mutual information");
     QString score_s(    "    score. . . . . . . . . . . . . . . . . . -> score compound features by mutual information");
+    QString erase_s(    "    erase. . . . . . . . . . . . . . . . . . -> erase features with zero weight");
 
     // process input
     if(input=="help" || input=="h") { // help
@@ -149,8 +149,8 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( record_s );
         ui._wConsoleOutput->appendPlainText( evaluate_s );
         ui._wConsoleOutput->appendPlainText( l1_s );
-//        ui._wConsoleOutput->appendPlainText( rank_s );
         ui._wConsoleOutput->appendPlainText( score_s );
+        ui._wConsoleOutput->appendPlainText( erase_s );
     } else if(input=="left" || input=="l") { // left
         action_t action = Data::LEFT;
         state_t state_to;
@@ -285,10 +285,10 @@ void TestMaze_II::process_console_input() {
         } else if(arg_double(input,1,c) && c>=0) {
             l1_factor = c;
         }
-//    } else if(input=="rank") {
-//        crf.rank_pair_features();
     } else if(input=="score") {
         crf.score_features();
+    } else if(input=="erase") {
+        crf.erase_zero_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
         QApplication::quit();
     } else {

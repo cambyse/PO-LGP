@@ -95,24 +95,18 @@ public:
 
     void evaluate_features();
 
-//    void rank_pair_features();
-
     void score_features();
+
+    void erase_zero_features();
 
 private:
 
-    typedef std::unique_ptr<Feature> unique_feature_ptr;
-
-    int k;
+    int k, old_active_features_size;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
-    std::vector<int> parameter_indices;
-    std::set<unique_feature_ptr> feature_set;
     std::vector<Feature*> basic_features, active_features;
 
-//    int data_features_n, predict_features_n, combined_features_n;
-//    std::vector<unique_feature_ptr> features, output_features, subfeatures;
-//    std::vector<Feature*> data_features, predict_features, combined_features;
+    void check_lambda_size();
 
 };
 
