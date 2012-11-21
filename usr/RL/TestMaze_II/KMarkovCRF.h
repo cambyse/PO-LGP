@@ -95,7 +95,8 @@ public:
 
     void evaluate_features();
 
-    void score_features();
+    void score_features_by_mutual_information();
+    void score_features_by_gradient();
 
     void erase_zero_features();
 
@@ -104,7 +105,8 @@ private:
     int k, old_active_features_size;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
-    std::vector<Feature*> basic_features, active_features;
+    std::vector<Feature*> basis_features;
+    std::vector<AndFeature> active_features;
 
     void check_lambda_size();
 

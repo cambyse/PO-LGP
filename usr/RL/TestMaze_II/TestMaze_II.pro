@@ -3,7 +3,8 @@ TARGET = TestMaze_II
 QT += core \
     gui \
     svg
-HEADERS += Data.h \
+HEADERS += lbfgs_codes.h \
+    Data.h \
     ValueIteration.h \
     util.h \
     Maze.h \

@@ -286,7 +286,7 @@ void TestMaze_II::process_console_input() {
             l1_factor = c;
         }
     } else if(input=="score") {
-        crf.score_features();
+        crf.score_features_by_mutual_information();
     } else if(input=="erase") {
         crf.erase_zero_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions

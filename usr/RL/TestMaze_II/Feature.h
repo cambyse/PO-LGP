@@ -11,23 +11,22 @@
 #include <QtCore/QString>
 
 #include <list>
+#include <set>
 #include <string>
 
 #include "Data.h"
 
 class Feature {
 
-protected:
+public:
     typedef std::list<Feature * >                  subfeature_container_t;
     typedef subfeature_container_t::const_iterator subfeature_iterator;
+    typedef std::set<Feature * >                   basis_feature_container_t;
     typedef Data::input_data_t                     input_data_t;
     typedef Data::output_data_t                    output_data_t;
     typedef Data::action_t                         action_t;
     typedef Data::state_t                          state_t;
     typedef Data::reward_t                         reward_t;
-
-public:
-    subfeature_container_t subfeatures;
 
     Feature();
     virtual ~Feature();
@@ -39,14 +38,19 @@ public:
     int get_id() const;
     unsigned int get_complexity() const;
     bool operator==(const Feature& other) const;
-    bool operator<(const Feature& other);
+    bool operator<(const Feature& other) const;
     static bool pComp(Feature const * first, Feature const * second);
+
+    subfeature_iterator get_subfeatures_begin() const;
+    subfeature_iterator get_subfeatures_end() const;
 
 protected:
     long id;
     unsigned int complexity;
     static int field_width[2];
     static long id_counter;
+    subfeature_container_t subfeatures;
+    static basis_feature_container_t basis_features;
 };
 
 class NullFeature: public Feature {
@@ -54,7 +58,6 @@ class NullFeature: public Feature {
 public:
     NullFeature();
     virtual ~NullFeature();
-
     virtual double evaluate(input_data_t) const;
     virtual double evaluate(input_data_t, output_data_t) const;
     virtual std::string identifier() const;
@@ -62,9 +65,12 @@ public:
 
 class ActionFeature: public Feature {
 
-public:
+private:
     ActionFeature(const action_t& a, const int& d);
     virtual ~ActionFeature();
+
+public:
+    static ActionFeature * create(const action_t& a, const int& d);
     virtual double evaluate(input_data_t data) const;
     virtual double evaluate(input_data_t data, output_data_t) const;
     virtual std::string identifier() const;
@@ -74,9 +80,13 @@ private:
 };
 
 class StateFeature: public Feature {
-public:
+
+private:
     StateFeature(const state_t& s, const int& d);
     virtual ~StateFeature();
+
+public:
+    static StateFeature * create(const state_t& s, const int& d);
     virtual double evaluate(input_data_t data) const;
     virtual double evaluate(input_data_t data, output_data_t data_predict) const;
     virtual std::string identifier() const;
@@ -86,9 +96,13 @@ private:
 };
 
 class RewardFeature: public Feature {
-public:
+
+private:
     RewardFeature(const reward_t& r, const int& d);
     virtual ~RewardFeature();
+
+public:
+    static RewardFeature * create(const reward_t& r, const int& d);
     virtual double evaluate(input_data_t data) const;
     virtual double evaluate(input_data_t data, output_data_t data_predict) const;
     virtual std::string identifier() const;
@@ -99,7 +113,7 @@ private:
 
 class AndFeature: public Feature {
 public:
-    AndFeature(const Feature& f1, const Feature& f2 = NullFeature(), const Feature& f3 = NullFeature(), const Feature& f4 = NullFeature(), const Feature& f5 = NullFeature());
+    AndFeature(const Feature& f1 = NullFeature(), const Feature& f2 = NullFeature(), const Feature& f3 = NullFeature(), const Feature& f4 = NullFeature(), const Feature& f5 = NullFeature());
     virtual ~AndFeature();
     virtual double evaluate(input_data_t data) const;
     virtual double evaluate(input_data_t data, output_data_t data_predict) const;

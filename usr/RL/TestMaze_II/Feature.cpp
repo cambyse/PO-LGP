@@ -12,6 +12,7 @@
 
 int Feature::field_width[2] = {0,0};
 long Feature::id_counter = 0;
+Feature::basis_feature_container_t Feature::basis_features = Feature::basis_feature_container_t();
 
 Feature::Feature(): id(id_counter), complexity(0) {
     ++id_counter;
@@ -52,12 +53,20 @@ bool Feature::operator==(const Feature& other) const {
     return true;
 }
 
-bool Feature::operator<(const Feature& other) {
+bool Feature::operator<(const Feature& other) const {
     return id<other.id;
 }
 
 bool Feature::pComp(Feature const * first, Feature const * second) {
-    return first->id<second->id;
+    return (*first)<(*second);
+}
+
+Feature::subfeature_iterator Feature::get_subfeatures_begin() const {
+    return subfeatures.begin();
+}
+
+Feature::subfeature_iterator Feature::get_subfeatures_end() const {
+    return subfeatures.end();
 }
 
 NullFeature::NullFeature(){
@@ -95,6 +104,12 @@ ActionFeature::ActionFeature(const action_t& a, const int& d): action(a), delay(
 
 ActionFeature::~ActionFeature() {}
 
+ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
+    ActionFeature * new_feature = new ActionFeature(a,d);
+    basis_features.insert(new_feature);
+    return new_feature;
+}
+
 double ActionFeature::evaluate(input_data_t data) const {
     if( std::get<0>(*(data+=delay))==action ) {
         return 1;
@@ -130,6 +145,12 @@ StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
 }
 
 StateFeature::~StateFeature() {}
+
+StateFeature * StateFeature::create(const state_t& s, const int& d) {
+    StateFeature * new_feature = new StateFeature(s,d);
+    basis_features.insert(new_feature);
+    return new_feature;
+}
 
 double StateFeature::evaluate(input_data_t data) const {
     if( std::get<1>(*(data+=delay))==state ) {
@@ -178,6 +199,12 @@ RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(
 
 RewardFeature::~RewardFeature() {}
 
+RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
+    RewardFeature * new_feature = new RewardFeature(r,d);
+    basis_features.insert(new_feature);
+    return new_feature;
+}
+
 double RewardFeature::evaluate(input_data_t data) const {
     if( std::get<2>(*(data+=delay))==reward ) {
         return 1;
@@ -213,11 +240,11 @@ std::string RewardFeature::identifier() const {
 }
 
 AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, const Feature& f4, const Feature& f5) {
-    subfeatures.insert(subfeatures.begin(),f1.subfeatures.begin(),f1.subfeatures.end());
-    subfeatures.insert(subfeatures.begin(),f2.subfeatures.begin(),f2.subfeatures.end());
-    subfeatures.insert(subfeatures.begin(),f3.subfeatures.begin(),f3.subfeatures.end());
-    subfeatures.insert(subfeatures.begin(),f4.subfeatures.begin(),f4.subfeatures.end());
-    subfeatures.insert(subfeatures.begin(),f5.subfeatures.begin(),f5.subfeatures.end());
+    subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
+    subfeatures.insert(subfeatures.begin(),f2.get_subfeatures_begin(),f2.get_subfeatures_end());
+    subfeatures.insert(subfeatures.begin(),f3.get_subfeatures_begin(),f3.get_subfeatures_end());
+    subfeatures.insert(subfeatures.begin(),f4.get_subfeatures_begin(),f4.get_subfeatures_end());
+    subfeatures.insert(subfeatures.begin(),f5.get_subfeatures_begin(),f5.get_subfeatures_end());
     subfeatures.sort(&(pComp));
     complexity = subfeatures.size();
 }
