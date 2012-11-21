@@ -85,17 +85,20 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         }
     }
 
-    vector<double> sumFNN(number_of_data_points,0.0);
-    vector<double> sumExpN(number_of_data_points,0.0);
-    vector<vector<double> > sumFExpNF(number_of_data_points,vector<double>(n,0.0));
-    int data_idx = 0;
+    double sumFNN;
+    double sumExpN;
+    vector<double> sumFExpNF(n,0.0);
     for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
             episode_iterator!=episode_data.end();
             ++episode_iterator) {
 
+        sumFNN = 0;
+        sumExpN = 0;
+        sumFExpNF.assign(n,0.0);
+
         // calculate sumF(x(n),y(n))
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-            sumFNN[data_idx] += x[f_idx]*active_features[f_idx]->evaluate(episode_iterator);
+            sumFNN += x[f_idx]*active_features[f_idx]->evaluate(episode_iterator);
         }
 
         // calculate sumExp(x(n))
@@ -108,27 +111,25 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             }
 
             // increment sumExp(x(n))
-            sumExpN[data_idx] += exp( sumFN );
+            sumExpN += exp( sumFN );
 
             // increment sumFExp(x(n),F)
             for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
                 // in case of parameter binding additionally sum over all features belonging to this parameter
-                sumFExpNF[data_idx][lambda_idx] += active_features[lambda_idx]->evaluate(episode_iterator,*output_iterator) * exp( sumFN );
+                sumFExpNF[lambda_idx] += active_features[lambda_idx]->evaluate(episode_iterator,*output_iterator) * exp( sumFN );
             }
         }
 
         // increment fx
-        fx += sumFNN[data_idx] - log( sumExpN[data_idx] );
+        fx += sumFNN - log( sumExpN );
 
         // increment gradient
         for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
-            g[lambda_idx] -= sumFExpNF[data_idx][lambda_idx]/sumExpN[data_idx];
+            g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter
             g[lambda_idx] += active_features[lambda_idx]->evaluate(episode_iterator);
         }
-
-        ++data_idx;
     }
 
     // use NEGATIVE log likelihood (blfgs minimizes the objective)
