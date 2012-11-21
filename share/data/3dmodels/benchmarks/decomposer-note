@@ -1,0 +1,3 @@
+ors_fileConverter.exe file.obj file.tri
+decomposer_c-vs6d.exe -h
+decomposer_c-vs6d.exe -df file.dcp -hf file.chr xfile.tri

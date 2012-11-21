@@ -13,6 +13,8 @@ int main(int argn,char** argv){
   ControlledSystem_as_KOrderMarkovFunction P(sys);
 #else
   ParticleAroundWalls P;
+  P.k=2;
+  P.kernel=true;
 #endif
   
   //-- print some info on the P
@@ -27,7 +29,7 @@ int main(int argn,char** argv){
 
   //-- gradient check
   arr x(T+1,n);
-  for(uint k=0;k<0;k++){
+  for(uint k=0;k<2;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(Convert(P), x, 1e-4);
   }

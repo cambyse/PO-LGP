@@ -19,12 +19,9 @@ vc60.idb
 z.*
 
 *_doc
-*data
 
 *_moc.cpp
 *_ui.h
-
-*.swp
 
 MT.log
 Makefile.dep

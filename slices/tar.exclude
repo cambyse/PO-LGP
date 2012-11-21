@@ -15,6 +15,11 @@ SHARE
 PROJ
 .git*
 *.kdev4
+*.files
+*.creator
+*.creator.user
+*.config
+*.includes
 *solution*
 *ODE_0.11/ode-0.11
 *ODE_0.11/include
