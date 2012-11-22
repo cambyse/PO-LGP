@@ -1,6 +1,6 @@
 #include "optimization.h"
 
-//#define SOC
+#define SOC
 
 #ifdef SOC
 #include "socNew.h"

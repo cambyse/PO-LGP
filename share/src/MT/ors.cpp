@@ -3691,7 +3691,8 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   for_list(j, n, bodies) {
     if(strcmp(n->name, name)==0) return n;
   }
-  MT_MSG("cannot find Body named '" <<name <<"' in Graph");
+  if(strcmp("glCamera", name)!=0)
+    MT_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 

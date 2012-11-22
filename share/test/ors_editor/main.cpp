@@ -31,13 +31,7 @@ int main(int argn,char **argv){
   //gl.reportEvents=true;
   //gl.reportSelects=true;
 
-  //editConfiguration(file,C,gl);
-  //
-  
-  while(true) {
-    gl.update();
-    MT::wait(0.001);
-  }
+  editConfiguration(file,C,gl);
 
   return 0;
 }

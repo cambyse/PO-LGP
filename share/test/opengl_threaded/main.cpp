@@ -29,7 +29,7 @@ int main(int argc, char **argv){
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
   gl1.threadOpen();
   gl2.threadOpen();
-  MT::wait(5.);
+  MT::wait(2.);
   gl1.threadClose();
   gl2.threadClose();
 

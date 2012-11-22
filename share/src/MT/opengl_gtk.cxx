@@ -44,6 +44,7 @@ struct sOpenGL{
   void endGlContext();
 
   //-- private OpenGL data
+  OpenGL *gl;
   ors::Vector downVec,downPos,downFoc;
   ors::Quaternion downRot;
 
@@ -99,11 +100,11 @@ void OpenGL::resize(int w,int h){
 //   processEvents();
 }
 
-int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
-int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
+//int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
+//int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
 
-sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
+sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
 
   gtkLock();
@@ -114,20 +115,21 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy){
   gtk_quit_add_destroy(1, GTK_OBJECT(container));
   ownWin = true;
   gtkUnlock();
-  
-  init(gl,container);
+
+  init(_gl, container);
 }
 
-sOpenGL::sOpenGL(OpenGL *gl, void *container){
+sOpenGL::sOpenGL(OpenGL *_gl, void *container){
   ownWin = false;
-  init(gl,container);
+  init(_gl, container);
 }
 
-void sOpenGL::init(OpenGL *gl, void *_container){
+void sOpenGL::init(OpenGL *_gl, void *_container){
+  gl=_gl;
   gtkLock();
   container = GTK_WIDGET(_container);
   glArea = gtk_drawing_area_new();
-  g_object_set_data(G_OBJECT(glArea), "OpenGL", gl);
+  g_object_set_data(G_OBJECT(glArea), "sOpenGL", this);
 
   
   glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB |
@@ -170,15 +172,23 @@ void sOpenGL::init(OpenGL *gl, void *_container){
   glcontext = gtk_widget_get_gl_context(glArea);
   gldrawable = gtk_widget_get_gl_drawable(glArea);
   xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
+  GtkAllocation allo;
+  gtk_widget_get_allocation(glArea, &allo);
+  gl->width=allo.width;
+  gl->height=allo.height;
 
   gtkUnlock();
+//  MT_MSG("creating sOpenGL OpenGL="<<gl <<" sOpenGL=" <<this <<" glArea="<<glArea);
 }
 
 sOpenGL::~sOpenGL(){
+//  MT_MSG("destructing sOpenGL sOpenGL=" <<this <<" glArea="<<glArea);
   gtkLock();
   gtk_widget_destroy(glArea);
   //if(ownViewport) gtk_widget_destroy(GTK_WIDGET(gtk_container_get_children(GTK_CONTAINER(container))->data));
   if(ownWin) gtk_widget_destroy(container);
+  gl->s = NULL;
+  gl = NULL;
   gtkUnlock();
 }
 
@@ -190,24 +200,25 @@ sOpenGL::~sOpenGL(){
 bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
    /* draw only last expose */
   if(event->count>0) return true;
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  if(!s || !s->gl) return true;
 
-  gl->s->beginGlContext();
+  s->beginGlContext();
   
-  gl->Draw(gl->width(), gl->height());
+  s->gl->Draw(s->gl->width, s->gl->height);
   
-  if (gdk_gl_drawable_is_double_buffered(gl->s->gldrawable))
-    gdk_gl_drawable_swap_buffers(gl->s->gldrawable);
+  if (gdk_gl_drawable_is_double_buffered(s->gldrawable))
+    gdk_gl_drawable_swap_buffers(s->gldrawable);
   else
     glFlush();
 
-  gl->s->endGlContext();
+  s->endGlContext();
   
   return true;
 }
 
 void sOpenGL::beginGlContext(){
-  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("");
+  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("failed to open context: sOpenGL="<<this);
 }
 
 void sOpenGL::endGlContext(){
@@ -217,32 +228,32 @@ void sOpenGL::endGlContext(){
 }
 
 bool sOpenGL::motion_notify(GtkWidget *widget, GdkEventMotion *event) {
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->Motion(event->x, event->y);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->Motion(event->x, event->y);
   return true;
 }
 
 bool sOpenGL::button_press(GtkWidget *widget, GdkEventButton *event) {
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->Mouse(event->button-1, false, event->x, event->y);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->Mouse(event->button-1, false, event->x, event->y);
   return true;
 }
 
 bool sOpenGL::button_release(GtkWidget *widget, GdkEventButton *event) {
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->Mouse(event->button-1, true, event->x, event->y);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->Mouse(event->button-1, true, event->x, event->y);
   return true;
 }
 
 bool sOpenGL::scroll_event(GtkWidget *widget, GdkEventScroll *event){
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->MouseWheel(0, event->direction, event->x, event->y);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->MouseWheel(0, event->direction, event->x, event->y);
   return true;
 }
 
 bool sOpenGL::key_press_event(GtkWidget *widget, GdkEventKey *event){
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->Key(event->keyval, gl->mouseposx, gl->height()-gl->mouseposy);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->Key(event->keyval, s->gl->mouseposx, s->gl->height-s->gl->mouseposy);
   return true;
 }
 
@@ -252,7 +263,7 @@ void sOpenGL::destroy(GtkWidget *widget) {
 }
 
 bool sOpenGL::size_allocate_event(GtkWidget *widget, GdkRectangle *allo){
-  OpenGL *gl = (OpenGL*)g_object_get_data(G_OBJECT(widget), "OpenGL");
-  gl->Reshape(allo->width, allo->height);
+  sOpenGL *s = (sOpenGL*)g_object_get_data(G_OBJECT(widget), "sOpenGL");
+  s->gl->Reshape(allo->width, allo->height);
   return true;
 }

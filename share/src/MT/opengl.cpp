@@ -1055,14 +1055,15 @@ void glDrawDots(arr& dots) {
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy) {
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0), height(0) {
+  MT_MSG("creating OpenGL=" <<this);
   initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();
   processEvents();
 }
 
-OpenGL::OpenGL(void *container) {
+OpenGL::OpenGL(void *container):s(NULL), width(0), height(0) {
   initGlEngine();
   s=new sOpenGL(this,container);
   init();
@@ -1071,6 +1072,8 @@ OpenGL::OpenGL(void *container) {
 
 OpenGL::~OpenGL() {
   delete s;
+  s=NULL;
+//  MT_MSG("destructing OpenGL=" <<this);
 }
 
 OpenGL* OpenGL::newClone() const {
@@ -1082,6 +1085,7 @@ OpenGL* OpenGL::newClone() const {
 }
 
 void OpenGL::init() {
+  CHECK(width && height,"");
   camera.setPosition(0., 0., 10.);
   camera.focus(0, 0, 0);
   camera.setZRange(.1, 1000.);
@@ -1346,7 +1350,7 @@ void OpenGL::Select(){
   glRenderMode(GL_SELECT);
   
 #if 1
-  GLint w=width(), h=height();
+  GLint w=width, h=height;
   
   //projection
   glMatrixMode(GL_PROJECTION);
@@ -1465,7 +1469,7 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
   if(resetCamera) {
-    GLint viewport[4] = {0, 0, width(), height()};
+    GLint viewport[4] = {0, 0, width, height};
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1596,7 +1600,7 @@ void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 //
 
 #if 1
-#  define CALLBACK_DEBUG(x) if(reportEvents) x
+#  define CALLBACK_DEBUG(x) if(reportEvents) { cout <<MT_HERE <<s <<':'; x; }
 #else
 #  define CALLBACK_DEBUG(x)
 #endif
@@ -1613,15 +1617,17 @@ void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, i
   if(vec(2)<0.) vec(2)=0.;
 }
 
-void OpenGL::Reshape(int width, int height) {
-  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
+void OpenGL::Reshape(int _width, int _height) {
+  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, _width, _height));
+  width=_width;
+  height=_height;
   camera.setWHRatio((double)width/height);
   for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  postRedrawEvent(true);
+  //postRedrawEvent(true);
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y) {
-  _y = height()-_y;
+  _y = height-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y));
   mouseposx=_x; mouseposy=_y;
   pressedkey=key;
@@ -1635,7 +1641,7 @@ void OpenGL::Key(unsigned char key, int _x, int _y) {
 }
 
 void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
-  int w=width(), h=height();
+  int w=width, h=height;
   _y = h-_y;
   CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, downPressed, _x, _y));
   mouse_button=1+button;
@@ -1707,7 +1713,7 @@ void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {
 
 void OpenGL::Motion(int _x, int _y) {
 #ifdef MT_GL
-  int w=width(), h=height();
+  int w=width, h=height;
   _y = h-_y;
   CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", 0, _x, _y));
   mouseposx=_x; mouseposy=_y;

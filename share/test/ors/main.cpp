@@ -16,6 +16,12 @@ void testLoadSave(){
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
+
+  for(uint i=0;i<0;i++){
+    OpenGL gl;
+    init(G,gl,"arm3.ors");
+//    MT::wait(.1)
+  }
 }
 
 

@@ -4,7 +4,8 @@
 
 #include <MT/gtk.h>
 #include <MT/ors.h>
-#include <MT/opengl_gtk.h>
+#include <MT/opengl.h>
+#include <gtk/gtk.h>
 
 //===========================================================================
 //

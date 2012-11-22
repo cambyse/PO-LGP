@@ -185,6 +185,7 @@ struct OpenGL {
   bool reportEvents, reportSelects;    //!< flags for verbosity
   int pressedkey;         //!< stores the key pressed
   const char *exitkeys;   //!< additional keys to exit watch mode
+  uint width,height;
   int mouse_button;       //!< stores which button was pressed
   int mouseposx, mouseposy;  //!< current x- and y-position of mouse
   int mouseView;
@@ -233,8 +234,6 @@ struct OpenGL {
   
   //!@name info & I/O
   void reportSelection();
-  int width();
-  int height();
   void saveEPS(const char *filename);
   void about(std::ostream& os=std::cout);
   
