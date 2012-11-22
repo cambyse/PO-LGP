@@ -90,13 +90,15 @@ public:
 
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
-//    probability_t probability(input_data_t input_data);
-//    probability_t probability(input_data_t input_data, output_data_t output_data);
-
     void evaluate_features();
 
     void score_features_by_mutual_information();
+
     void score_features_by_gradient();
+
+    void sort_scored_features(bool divide_by_complexity = true);
+
+    void add_compound_features_to_active(const int& n = 0);
 
     void erase_zero_features();
 
@@ -106,10 +108,12 @@ private:
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
     std::vector<Feature*> basis_features;
-    std::vector<AndFeature> active_features;
+    std::vector<AndFeature> active_features, compound_features;
+    std::vector<double> compound_feature_scores;
+    bool compound_features_sorted;
 
     void check_lambda_size();
-
+    void construct_compound_features();
 };
 
 #endif /* KMARKOVCRF_H_ */

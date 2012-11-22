@@ -16,9 +16,10 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 using std::pair;
+using std::make_pair;
 using std::set;
 
-KMarkovCRF::KMarkovCRF( const int& k_ ): k(k_), old_active_features_size(0), lambda(nullptr) {
+KMarkovCRF::KMarkovCRF( const int& k_ ): k(k_), old_active_features_size(0), lambda(nullptr), compound_features_sorted(false) {
 
     //----------------------------------------//
     // Constructing basis indicator features  //
@@ -81,9 +82,9 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         }
     }
 
-    double sumFNN;
-    double sumExpN;
-    vector<double> sumFExpNF(n,0.0);
+    double sumFNN; // sumF(x(n),y(n))
+    double sumExpN; // normalization Z(x)
+    vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F)
     for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
             episode_iterator!=episode_data.end();
             ++episode_iterator) {
@@ -280,23 +281,6 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
     lbfgs_free(grad_dummy);
 }
 
-//KMarkovCRF::probability_t KMarkovCRF::probability(input_data_t input_data) {
-//    probability_t raw_log_probability = 0;
-//
-//    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-//        double f_value = active_features[f_idx]->evaluate(input_data);
-//        raw_log_probability += lambda[parameter_indices[f_idx]]*f_value;
-//    }
-//
-//    probability_t normalization = 0;
-//
-//    return exp(raw_log_probability)/normalization;
-//}
-//
-//KMarkovCRF::probability_t KMarkovCRF::probability(input_data_t input_data, output_data_t output_data) {
-//
-//}
-
 void KMarkovCRF::evaluate_features() {
     int number_of_data_points = episode_data.size()-k;
     if(number_of_data_points<=0) {
@@ -312,6 +296,8 @@ void KMarkovCRF::evaluate_features() {
 
 void KMarkovCRF::score_features_by_mutual_information() {
 
+    DEBUG_OUT(1, "Scoring features by mutual information...");
+
     //------------------//
     //  Check for Data  //
     //------------------//
@@ -326,35 +312,7 @@ void KMarkovCRF::score_features_by_mutual_information() {
     // Construct Features  //
     //---------------------//
 
-    vector<AndFeature> compound_features;
-
-    // from basis features //
-    for(uint f1_idx=0; f1_idx<basis_features.size(); ++f1_idx) {
-        AndFeature and_feature(*basis_features[f1_idx]);
-        compound_features.push_back(and_feature); // include single basis features
-        for(uint f2_idx=f1_idx+1; f2_idx<basis_features.size(); ++f2_idx) { // order does not matter
-            AndFeature and_feature(*basis_features[f1_idx],*basis_features[f2_idx]);
-            compound_features.push_back(and_feature);
-        }
-    }
-
-    // from basis and active features //
-    for(uint f1_idx=0; f1_idx<basis_features.size(); ++f1_idx) {
-        for(uint f2_idx=0; f2_idx<active_features.size(); ++f2_idx) { // order DOES not matter
-            AndFeature and_feature(*basis_features[f1_idx],active_features[f2_idx]);
-            compound_features.push_back(and_feature);
-        }
-    }
-
-    // from active features //
-    for(uint f1_idx=0; f1_idx<active_features.size(); ++f1_idx) {
-        AndFeature and_feature(active_features[f1_idx]);
-        compound_features.push_back(and_feature); // include single active features
-        for(uint f2_idx=f1_idx+1; f2_idx<active_features.size(); ++f2_idx) { // order does not matter
-            AndFeature and_feature(active_features[f1_idx],active_features[f2_idx]);
-            compound_features.push_back(and_feature);
-        }
-    }
+    construct_compound_features();
 
     //---------------------------------//
     // Determine Relative Frequencies  //
@@ -377,18 +335,16 @@ void KMarkovCRF::score_features_by_mutual_information() {
         }
     }
 
-    //---------------------------//
-    // Determine Feature Scores  //
-    //---------------------------//
+    //----------------------------------------------------------//
+    // Compute Mutual Information for all Features with Outputs //
+    //----------------------------------------------------------//
 
-    vector<double> feature_scores(compound_features.size(),0);
-
-    for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
+    for(uint cf_idx=0; cf_idx<compound_features.size(); ++cf_idx) {
         for(int output_idx=0; output_idx<Data::output_n; ++output_idx) {
             double po, pof1, pf1, d1, p1, p2, q1, q2, l1, l2;
             po = (double)output_counts[output_idx]/N;         // p(o)
-            pof1 = (double)joint_counts[output_idx][f_idx]/N; // p(o,f=1)
-            pf1 = (double)feature_counts[f_idx]/N;            // p(f=1)
+            pof1 = (double)joint_counts[output_idx][cf_idx]/N; // p(o,f=1)
+            pf1 = (double)feature_counts[cf_idx]/N;            // p(f=1)
             d1 = p1 = p2 = po;
             d1 -= pof1;
             p1 *= 1 - pf1;
@@ -404,64 +360,226 @@ void KMarkovCRF::score_features_by_mutual_information() {
             if(pof1==0) {
                 l2 = 0;
             }
-            feature_scores[f_idx] += l1 + l2;
+            compound_feature_scores[cf_idx] += l1 + l2;
         }
     }
+
+    compound_features_sorted = false;
 
     //----------------------//
     // Sort Feature Scores  //
     //----------------------//
 
-    typedef list<tuple<double,unsigned int,AndFeature> > score_list;
-    score_list sorted_feature_scores(feature_scores.size());
-    int f_idx = 0;
-    for(score_list::iterator it = sorted_feature_scores.begin();
-            it!=sorted_feature_scores.end();
-            ++it) {
-        unsigned int complexity = compound_features[f_idx].get_complexity();
-        (*it) = make_tuple(feature_scores[f_idx]/complexity,complexity,compound_features[f_idx]); // mutual information divided by feature complexity
-        ++f_idx;
+    //    typedef list<tuple<double,unsigned int,AndFeature> > score_list;
+    //    score_list sorted_feature_scores(feature_scores.size());
+    //    int f_idx = 0;
+    //    for(score_list::iterator it = sorted_feature_scores.begin();
+    //            it!=sorted_feature_scores.end();
+    //            ++it) {
+    //        unsigned int complexity = compound_features[f_idx].get_complexity();
+    //        (*it) = make_tuple(feature_scores[f_idx]/complexity,complexity,compound_features[f_idx]); // mutual information divided by feature complexity
+    //        ++f_idx;
+    //    }
+    //    sorted_feature_scores.sort();
+    //
+    //    //----------------------//
+    //    // Print Feature Scores //
+    //    //----------------------//
+    //
+    //    DEBUG_OUT(0,"Feature Scores:");
+    //    for(score_list::const_iterator it = sorted_feature_scores.begin();
+    //            it!=sorted_feature_scores.end();
+    //            ++it) {
+    //        DEBUG_OUT(0,"    " << QString("%1 (%2) <-- ").arg(get<0>(*it),7,'f',5).arg(get<1>(*it),2).toStdString() << get<2>(*it).identifier() );
+    //    }
+    //
+    //    //------------------------//
+    //    // Add to Active Features //
+    //    //------------------------//
+    //    active_features.clear();
+    //    lbfgs_free(lambda);
+    //    lambda = nullptr;
+    //    old_active_features_size = 0;
+    //
+    //    for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
+    //        if(feature_scores[f_idx]>0) {
+    //            active_features.push_back(compound_features[f_idx]);
+    //            DEBUG_OUT(0, "added   (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
+    //        } else {
+    //            DEBUG_OUT(0, "ignored (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
+    //        }
+    //    }
+}
+
+void KMarkovCRF::score_features_by_gradient() {
+
+    DEBUG_OUT(1, "Scoring features by gradient...");
+
+    //------------------//
+    //  Check for Data  //
+    //------------------//
+
+    int N = episode_data.size()-k;
+    if(N<=0) {
+        DEBUG_OUT(0,"Not enough data to score features.");
+        return;
     }
-    sorted_feature_scores.sort();
 
-    //----------------------//
-    // Print Feature Scores //
-    //----------------------//
+    //---------------------//
+    // Construct Features  //
+    //---------------------//
 
-    DEBUG_OUT(0,"Feature Scores:")
-    for(score_list::const_iterator it = sorted_feature_scores.begin();
-            it!=sorted_feature_scores.end();
-            ++it) {
-        DEBUG_OUT(0,"    " << QString("%1 (%2) <-- ").arg(get<0>(*it),7,'f',5).arg(get<1>(*it),2).toStdString() << get<2>(*it).identifier() );
+    construct_compound_features();
+
+    //--------------------------------------------//
+    // Compute Gradient for all Compound Features //
+    //--------------------------------------------//
+
+    int n = compound_features.size();
+
+    // to make the code more readable and comparable to evaluate_model() function
+    vector<double> &g = compound_feature_scores;
+
+    int number_of_data_points = episode_data.size()-k;
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to evaluate features.");
+        return;
     }
 
-    //------------------------//
-    // Add to Active Features //
-    //------------------------//
+    // Print parameter vector //
+    if(DEBUG_LEVEL>=2) {
+        DEBUG_OUT(2, "Parameter vector:");
+        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+            DEBUG_OUT(2, "    t[" << f_idx << "] = " << lambda[f_idx] );
+        }
+    }
+
+
+    double sumFN; // sumF(x(n),y') is independent of compound features since they have zero coefficient (no parameter binding!)
+    double sumExpN; // normalization Z(x) is independent of compound features since sumF(x(n),y') is independent
+    vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F) for all compound features F
+    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
+            episode_iterator!=episode_data.end();
+            ++episode_iterator) {
+
+        sumExpN = 0.0;
+        sumFExpNF.assign(n,0.0);
+
+        // calculate sumExp(x(n))
+        for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+
+            // calculate sumF(x(n),y')
+            sumFN = 0.0;
+            for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                sumFN += lambda[f_idx]*active_features[f_idx].evaluate(episode_iterator,*output_iterator);
+                // compound features have zero coefficient (no parameter binding possible)!
+            }
+
+            // increment sumExp(x(n))
+            sumExpN += exp( sumFN );
+
+            // increment sumFExp(x(n),F)
+            for(int lambda_cf_idx=0; lambda_cf_idx<n; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all compound features)
+                // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
+                sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(episode_iterator,*output_iterator) * exp( sumFN );
+            }
+        }
+
+        // increment gradient
+        for(int lambda_cf_idx=0; lambda_cf_idx<n; ++lambda_cf_idx) { // for all parameters/gradient components
+            g[lambda_cf_idx] -= sumFExpNF[lambda_cf_idx]/sumExpN;
+
+            // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
+            g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(episode_iterator);
+        }
+    }
+
+    // use mean value per data point
+    for(int i=0; i<n; i++) {
+        g[i] /= number_of_data_points;
+    }
+
+    compound_features_sorted = false;
+}
+
+void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
+
+    DEBUG_OUT(1, "Sorting scored features...");
+
+    // number of compound features;
+    int n = compound_features.size();
+
+    // sort indices by score
+    list<pair<double,int> > scored_indices;
+    for(int cf_idx=0; cf_idx<n; ++cf_idx) {
+        if(divide_by_complexity) {
+            scored_indices.push_back(make_pair(compound_feature_scores[cf_idx]/compound_features[cf_idx].get_complexity(),cf_idx));
+        } else {
+            scored_indices.push_back(make_pair(compound_feature_scores[cf_idx],cf_idx));
+        }
+    }
+    scored_indices.sort();
+
+    // construct new feature and score lists
+    vector<AndFeature> new_compound_features(n);
+    vector<double> new_compound_feature_scores(n);
+    int new_idx = 0;
+    DEBUG_OUT(1, "Feature Scores:")
+    for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
+        int old_idx = it->second;
+        new_compound_features[new_idx]       = compound_features[old_idx];
+        new_compound_feature_scores[new_idx] = compound_feature_scores[old_idx];
+        DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(compound_feature_scores[old_idx],7,'f',5).arg(compound_features[old_idx].get_complexity(),2).toStdString() << compound_features[old_idx].identifier() );
+        ++new_idx;
+    }
+
+    // swap lists
+    compound_features.swap(new_compound_features);
+    compound_feature_scores.swap(new_compound_feature_scores);
+
+    compound_features_sorted = true;
+}
+
+void KMarkovCRF::add_compound_features_to_active(const int& n) {
+
+    if(n==0) {
+        DEBUG_OUT(1, "Adding all non-zero scored compound features to active...");
+    } else {
+        DEBUG_OUT(1, "Adding " << n << " highest scored compound features to active...");
+    }
+
     active_features.clear();
     lbfgs_free(lambda);
     lambda = nullptr;
     old_active_features_size = 0;
 
-    for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
-        if(feature_scores[f_idx]>0) {
-            active_features.push_back(compound_features[f_idx]);
-            DEBUG_OUT(0, "added   (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
+    if(!compound_features_sorted) sort_scored_features();
+
+    int counter = 0;
+    for(uint cf_idx=0; cf_idx<compound_features.size(); ++cf_idx) {
+        if(compound_feature_scores[cf_idx]>0) {
+            active_features.push_back(compound_features[cf_idx]);
+            DEBUG_OUT(1, "added   (idx = " << cf_idx << ", score = " << compound_feature_scores[cf_idx] << "): " << compound_features[cf_idx].identifier());
+            if(++counter>=n && n>0) break;
         } else {
-            DEBUG_OUT(0, "ignored (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
+            DEBUG_OUT(1, "ignored (idx = " << cf_idx << ", score = " << compound_feature_scores[cf_idx] << "): " << compound_features[cf_idx].identifier());
         }
     }
 }
 
 void KMarkovCRF::erase_zero_features() {
 
+    DEBUG_OUT(1, "Erasing zero weighted features from active...");
+
     // Count features to erase //
-    int new_size = active_features.size();
+    uint new_size = active_features.size();
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
         if(lambda[f_idx]==0) {
             --new_size;
         }
     }
+
+    if( new_size == active_features.size() ) return;
 
     // Create new active_features, parameter_indices, and parameters (lambda)
     lbfgsfloatval_t * new_lambda = lbfgs_malloc(new_size);
@@ -511,4 +629,45 @@ void KMarkovCRF::check_lambda_size() {
     } else {
         DEBUG_OUT(1, "    OK");
     }
+}
+
+void KMarkovCRF::construct_compound_features() {
+
+    compound_features.clear();
+
+    // from basis features //
+    for (uint f1_idx = 0; f1_idx < basis_features.size(); ++f1_idx) {
+        compound_features.push_back(AndFeature(*basis_features[f1_idx])); // single basis features
+        for (uint f2_idx = f1_idx + 1; f2_idx < basis_features.size(); ++f2_idx) { // don't include identical features or permutations
+            compound_features.push_back(AndFeature(*basis_features[f1_idx],*basis_features[f2_idx])); // pair features
+            for (uint f3_idx = f2_idx + 1; f3_idx < basis_features.size(); ++f3_idx) { // don't include identical features or permutations
+                compound_features.push_back(AndFeature(*basis_features[f1_idx],*basis_features[f2_idx],*basis_features[f3_idx])); // triplet features
+            }
+        }
+    }
+
+//    // from basis and active features //
+//    for (uint f1_idx = 0; f1_idx < basis_features.size(); ++f1_idx) {
+//        for (uint f2_idx = 0; f2_idx < active_features.size(); ++f2_idx) {
+//            // order DOES not matter
+//            AndFeature and_feature(*basis_features[f1_idx],
+//                    active_features[f2_idx]);
+//            compound_features.push_back(and_feature);
+//        }
+//    }
+//
+//    // from active features //
+//    for (uint f1_idx = 0; f1_idx < active_features.size(); ++f1_idx) {
+//        AndFeature and_feature(active_features[f1_idx]);
+//        compound_features.push_back(and_feature); // include single active features
+//        for (uint f2_idx = f1_idx + 1; f2_idx < active_features.size();
+//                ++f2_idx) {
+//            // order does not matter
+//            AndFeature and_feature(active_features[f1_idx],
+//                    active_features[f2_idx]);
+//            compound_features.push_back(and_feature);
+//        }
+//    }
+
+    compound_feature_scores.assign(compound_features.size(),0.0);
 }

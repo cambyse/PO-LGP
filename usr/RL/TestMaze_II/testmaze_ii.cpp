@@ -64,22 +64,22 @@ void TestMaze_II::collect_episode(const int& length) {
     }
 }
 
-bool TestMaze_II::arg_int(const QString& string, const int& n, int& i) {
-    QString arg = string.section(QRegExp("\\s+"),n,n);
+bool TestMaze_II::arg_int(const QString& string_in, const int& n, int& i_arg_out) {
+    QString arg = string_in.section(QRegExp("\\s+"),n,n);
     bool ok;
-    i = arg.toInt(&ok);
+    i_arg_out = arg.toInt(&ok);
     return ok;
 }
 
-bool TestMaze_II::arg_double(const QString& string, const int& n, double& d) {
-    QString arg = string.section(QRegExp("\\s+"),n,n);
+bool TestMaze_II::arg_double(const QString& string_in, const int& n, double& d_arg_out) {
+    QString arg = string_in.section(QRegExp("\\s+"),n,n);
     bool ok;
-    d = arg.toDouble(&ok);
+    d_arg_out = arg.toDouble(&ok);
     return ok;
 }
 
-bool TestMaze_II::arg_string(const QString& string, const int& n, QString& s) {
-    s = string.section(QRegExp("\\s+"),n,n);
+bool TestMaze_II::arg_string(const QString& string_in, const int& n, QString& s_arg_out) {
+    s_arg_out = string_in.section(QRegExp("\\s+"),n,n);
     return true;
 }
 
@@ -127,7 +127,8 @@ void TestMaze_II::process_console_input() {
     QString record_s(   "    record. . . . .[start|s|end|e] . . . . . -> toggle [start/end] recording movements");
     QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
     QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
-    QString score_s(    "    score. . . . . . . . . . . . . . . . . . -> score compound features by mutual information");
+    QString score_s(    "    score. . . . . [m|g] . . . . . . . . . . -> score compound features by mutual information (m) or gradient (g)");
+    QString add_s(      "    add. . . . . . .<int>. . . . . . . . . . -> add <int> highest scored compound features to active (give 0 for all non-zero scored)");
     QString erase_s(    "    erase. . . . . . . . . . . . . . . . . . -> erase features with zero weight");
 
     // process input
@@ -150,6 +151,7 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( evaluate_s );
         ui._wConsoleOutput->appendPlainText( l1_s );
         ui._wConsoleOutput->appendPlainText( score_s );
+        ui._wConsoleOutput->appendPlainText( add_s );
         ui._wConsoleOutput->appendPlainText( erase_s );
     } else if(input=="left" || input=="l") { // left
         action_t action = Data::LEFT;
@@ -285,8 +287,29 @@ void TestMaze_II::process_console_input() {
         } else if(arg_double(input,1,c) && c>=0) {
             l1_factor = c;
         }
-    } else if(input=="score") {
-        crf.score_features_by_mutual_information();
+    } else if(input.startsWith("score") || input=="score") {
+        QString s;
+        if(input=="score") {
+            ui._wConsoleOutput->appendPlainText(score_s);
+        } else if(arg_string(input,1,s) && ( s=="m" || s=="g") ) {
+            if(s=="m") {
+                crf.score_features_by_mutual_information();
+            } else {
+                crf.score_features_by_gradient();
+            }
+            crf.sort_scored_features();
+        } else {
+            ui._wConsoleOutput->appendPlainText(score_s);
+        }
+    } else if(input.startsWith("add") || input=="add") {
+        int n;
+        if(input=="add") {
+            ui._wConsoleOutput->appendPlainText(add_s);
+        } else if(arg_int(input,1,n) && n>=0 ) {
+            crf.add_compound_features_to_active(n);
+        } else {
+            ui._wConsoleOutput->appendPlainText(score_s);
+        }
     } else if(input=="erase") {
         crf.erase_zero_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
