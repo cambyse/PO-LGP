@@ -49,7 +49,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #ifdef DECOMP_GRAPHICS
-#include <iostream.h>
+#include <iostream>
 #ifdef WIN32
 #include <windows.h>
 #endif
