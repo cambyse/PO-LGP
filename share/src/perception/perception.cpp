@@ -8,6 +8,9 @@
 
 #undef COUNT
 #include <opencv2/opencv.hpp>
+#ifdef ARCH_LINUX
+#include <opencv2/nonfree/nonfree.hpp>
+#endif
 #undef MIN
 #undef MAX
 
