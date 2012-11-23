@@ -1,88 +1,64 @@
 #include "motion.h"
 
-#define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
-
 void reattachShape(const char* objShape, const char* toBody);
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive);
 
-struct sActionProgressor {
+struct ActionProgressor:Process {
   MotionFuture *motionFuture;
+  
+  ActionProgressor(MotionFuture&);
+  ~ActionProgressor(){};
+  void open(){};
+  void step();
+  void close(){};
 };
 
-ActionProgressor::ActionProgressor():Process("ActionProgressor") {
-  s = new sActionProgressor();
-  birosInfo.getVariable(s->motionFuture, "MotionFuture", this);
+Process* newActionProgressor(MotionFuture& a){
+  return new ActionProgressor(a);
 }
 
-ActionProgressor::~ActionProgressor() {
-  delete s;
-}
-
-void ActionProgressor::open(){
+ActionProgressor::ActionProgressor(MotionFuture& a)
+:Process("ActionProgressor"), motionFuture(&a) {
+  if(!motionFuture) biros().getVariable(motionFuture, "MotionFuture", this);
+  listenTo(motionFuture);
+  MotionPrimitive *mp = motionFuture->getCurrentMotionPrimitive(this);
+  if(mp) listenTo(mp);
 }
 
 void ActionProgressor::step(){
-#if 1
-  if(s->motionFuture->getTodoFrames(this) == 0) return;
-  MotionPrimitive *motionPrimitive = s->motionFuture->getCurrentMotionPrimitive(this);
-  Action *action = s->motionFuture->getCurrentAction(this);
+  //TODO: the progressor shouldn't wait itself - it should be triggered listening to the primitive and future
   
-  switch(action->get_action(this)){
-    case Action::grasp: {
-      waitForDoneMotionPrimitive(motionPrimitive);
-      reattachShape(action->get_objectRef1(this), "m9");
-    } break;
-    case Action::place: {
-      waitForDoneMotionPrimitive(motionPrimitive);
-      reattachShape(action->get_objectRef1(this), "OBJECTS");
-    } break;
-    case Action::closeHand:
-    case Action::openHand: {
-      MT::wait(3.);
-      motionPrimitive->set_mode(MotionPrimitive::done, this);
-    } break;
-    default:
-      HALT("");
-  }
+  if(motionFuture->getTodoFrames(this) <= 1) return; //no future to progress to
+  MotionPrimitive *mp = motionFuture->getCurrentMotionPrimitive(this);
+  listenTo(mp);
   
-  if(s->motionFuture->getTodoFrames(this)==1)
-    s->motionFuture->set_done(true, this);
-  
-  //wait for somebody outside to append a new action
-  int rev = 0;
-  while(s->motionFuture->getTodoFrames(this)<=1){
-    rev = s->motionFuture->waitForRevisionGreaterThan(rev);
+  if(mp->get_mode(this) != MotionPrimitive::done) return;
+  switch(mp->get_action(this)){ //wait, depending on current action
+    case MotionPrimitive::grasp:
+      reattachShape(mp->get_objectRef1(this), "m9");
+      break;
+    case MotionPrimitive::place_location:
+    case MotionPrimitive::place:
+      reattachShape(mp->get_objectRef1(this), "OBJECTS");
+      break;
+    default: //don't do anything
+      break;
   }
 
-  s->motionFuture->incrementFrame(this);
+  motionFuture->incrementFrame(this);
+  mp = motionFuture->getCurrentMotionPrimitive(this);
+  listenTo(mp);
   
-  //reset the frame0 of the motion primitive!
-  MotionFuture *f = s->motionFuture;
-  f->writeAccess(this);
+  //reset the frame0 of the motion primitive to the real hardware pose! -> triggers the MotionPlanner to refine!
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(this);
   x0.append(_HardwareReference->get_v_reference(this));
   x0.subRange(x0.N/2,-1) = 0.;
   //cout <<"0-state! in motion progressor\n" <<x0 <<"\n ...frame=" <<f->currentFrame <<endl;
-  f->frames(f->currentFrame)->set_x_estimate(x0, this);
-  //f->frames(f->currentFrame)->set_converged(true, this);
-  f->frames(f->currentFrame+1)->set_converged(false, this);
-  f->motions(f->currentFrame)->set_planConverged(false, this);
-  
-  f->deAccess(this);
-#endif
-}
-
-void ActionProgressor::close(){
-}
-
-
-void waitForDoneMotionPrimitive(MotionPrimitive *motionPrimitive){
-  int rev = 0;
-  while(motionPrimitive->get_mode(NULL)!=MotionPrimitive::done){
-    rev = motionPrimitive->waitForRevisionGreaterThan(rev);
-  }
+  mp->writeAccess(this);
+  mp->frame0 = x0;
+  mp->planConverged = false;
+  _HardwareReference->set_motionPrimitiveRelativeTime(0., this);
+  mp->deAccess(this);
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
@@ -94,9 +70,6 @@ void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape,
   obj->rel.setDifference(obj->body->X, obj->X);
   if(swift) swift->initActivations(ors);
 }
-
-#define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
 
 void reattachShape(const char* objShape, const char* toBody){
   VAR(GeometricState);

@@ -8,3 +8,5 @@ $(OUTPUT): $(OBJS)
 
 clean::
 	rm -f *.o $(OUTPUT)
+
+depend:

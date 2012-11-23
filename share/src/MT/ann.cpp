@@ -9,19 +9,19 @@ struct sANN {
   ANNbd_tree *tree;
   //PartialLeastSquares pls;
   MT::Array<double*> cpointers;
-  uint done; //for how many entries in X have we build the tree?
-  void clear() { if(tree) delete tree;   tree=NULL;  cpointers.clear();  done=0; }
+  uint treeSize;   //for how many entries in X have we build the tree?
+  void clear() { if(tree) delete tree;   tree=NULL;  cpointers.clear();  treeSize=0; }
 };
 
 ANN::ANN() {
-  buffer = 1 <<10;
+  bufferSize = 1 <<10;
   s = new sANN;
-  s->tree=NULL;
-  s->done = 0;
+  s->tree = NULL;
+  s->treeSize = 0;
 }
 
 ANN::~ANN() {
-  if(s->tree) delete s->tree;
+  s->clear();
   delete s;
   //annClose(); //mt09-07-29 this would close down the ANN lib completely
 }
@@ -32,9 +32,8 @@ void ANN::clear() {
 }
 
 void ANN::setX(const arr& _XX) {
-  double *p=X.p;
+  s->clear();
   X=_XX;
-  if(X.p!=p) s->clear(); //when the memory location changed clear the tree! (implies recomputation)
 }
 
 void ANN::append(const arr& x) {
@@ -45,27 +44,27 @@ void ANN::append(const arr& x) {
 }
 
 void ANN::calculate() {
-  if(s->done == X.d0) return;
-  if(s->tree) delete s->tree;
-  s->cpointers.setCarray(X.getCarray(), X.d0); //memorize the Cpointers in a own array...
+  if(s->treeSize == X.d0) return;
+  s->clear();
+  X.getCarray(s->cpointers);
   s->tree = new ANNbd_tree(s->cpointers.p, X.d0, X.d1);
-  s->done = X.d0;
+  s->treeSize = X.d0;
 }
 
 void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) {
   CHECK(X.d0>=k, "data has less (" <<X.d0 <<") than k=" <<k <<" points");
   CHECK(x.N==X.d1, "query point has wrong dimension");
   
-  if(X.d0-s->done>buffer) {
+  if(X.d0-s->treeSize>bufferSize) {
+    if(verbose) std::cout <<"ANN recomputing: X.d0=" <<X.d0 <<" treeSize=" <<s->treeSize <<std::endl;
     calculate();
-    if(verbose) std::cout <<"ANN recomputing: X.d0=" <<X.d0 <<" done=" <<s->done <<std::endl;
   }
   uint restStartsAt;
-  if(s->done>=k) {
+  if(s->treeSize>=k) {
     dists.resize(k);
     idx.resize(k);
     s->tree->annkSearch(x.p, k, idx.p, dists.p, eps);
-    restStartsAt=s->done;
+    restStartsAt=s->treeSize;
   } else {
     dists.clear();
     idx.clear();
@@ -91,7 +90,7 @@ void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool ve
   if(verbose) {
     std::cout
         <<"ANN query:"
-        <<"\n data size = " <<X.d0 <<"  data dim = " <<X.d1 <<"  done = " <<s->done
+        <<"\n data size = " <<X.d0 <<"  data dim = " <<X.d1 <<"  treeSize = " <<s->treeSize
         <<"\n query point " <<x
         <<"\n found neighbors:\n";
     for(uint i=0; i<idx.N; i++) {
@@ -111,7 +110,7 @@ uint ANN::getNN(const arr& x, double eps, bool verbose) {
   return idx(0);
 }
 
-void ANN::getNN(intA& idx           , const arr& x, uint k, double eps, bool verbose) {
+void ANN::getNN(intA& idx, const arr& x, uint k, double eps, bool verbose) {
   arr dists(k);
   getNN(dists, idx, x, k, eps, verbose);
 }

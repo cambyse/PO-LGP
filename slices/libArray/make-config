@@ -1,5 +1,12 @@
-#CXXFLAGS += -DMT_IMPLEMENTATION
+## these are the options for compiling the lib
+ifeq ($(CONFIGMODE),mlrlib)
+  CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+  OPTIM  = debug
+  LAPACK = 1
+endif
 
-ifndef NAME
-LIBS += -lArray
+
+## these are the options for compiling the applications
+ifneq ($(CONFIGMODE),mlrlib)
+  LIBS += -lrt -lArray
 endif

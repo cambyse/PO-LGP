@@ -32,7 +32,7 @@ void testSVD(){
   a.resize(7,10);
   rndGauss(a,1.,false);
   
-  cout <<"matrix rank: " <<svd(a,u,w,v,true) <<endl;
+  cout <<"matrix rank: " <<svd(u,w,v,a,true) <<endl;
   W.setDiag(w);
   cout <<norm(a - u * W * ~v) <<endl;
 }
@@ -51,44 +51,57 @@ void testRprop(){
   uint t;
   
   doubleA x(2); x(0)=10.; x(1)=9.;
-  doubleA grad(2);
   Rprop gd;
-  std::ofstream fout("z");
-  
+
+  struct Function:ScalarFunction{
+    double fs(arr& grad, const arr& x){
+      double y=scalarProduct(x,x);
+      if(&grad) grad=2.*x;
+      return y;
+    }
+  } f;
+
+  arr X((uint)0,2);
   for(t=0;t<1000;t++){
-    grad=x;
-    gd.step(x,grad);
-    fout <<x.ioraw() <<std::endl;  
+    gd.step(x,f);
+    X.append(x);
   }
+  write(LIST<arr>(X),"z");
   gnuplot("plot [0:20] 'z' us 1,'z' us 2");
 }
 
-double df1(doubleA& x,doubleA& dx){
-  static doubleA a,A;
-  if(!A.N){ A.setId(2); rndGauss(A,.3,true); a.resize(2); a=0.; }
-  return dNNinv(x,a,A,dx);
-}
 void testMaximize(){
-  doubleA dx,x(2); x=10.; rndGauss(x,1.,true);
+
+  struct Function:ScalarFunction{
+    doubleA a,A;
+    Function(){
+      A.setId(2);
+      rndGauss(A,.3,true);
+      a.resize(2);
+      a=0.;
+    }
+    double fs(arr& grad, const arr& x){
+      if(&grad) return dNNinv(x,a,A,grad);
+      return NNinv(x,a,A);
+    }
+  } f;
+  doubleA x(2); x=10.; rndGauss(x,1.,true);
   Rprop rp;
-  for(uint t=0;t<100;t++){
-    df1(x,dx);
-    rp.step(x,dx);
-  }
+  for(uint t=0;t<100;t++) rp.step(x,f);
 }
 
 void testSymIndex(){
   TupleIndex I;
-  I.init(8,12);
+  I.init(2,4);
   
-  std::cout <<I;
+  std::cout <<I <<endl;
   I.checkValid();
 }
 
 
 extern void glDrawRect(float x,float y,float z,float rad);
 
-#ifdef MT_GL
+#if 0
 class Phase{
 public:
   double x,v,a;
@@ -220,7 +233,7 @@ void testRKswitch(){
   for(t=1;t<T;t++){
     MT::rk4dd_switch(x[t](),v[t](),s[t](),x[t-1],v[t-1],s[t-1],
       testRKswitch_ddf,testRKswitch_sf,dt,1e-4);
-    cout <<t <<": stepsize " <<dt <<endl;
+    //cout <<t <<": stepsize " <<dt <<endl;
     dt=.01;
   }
   plotFunction(x);

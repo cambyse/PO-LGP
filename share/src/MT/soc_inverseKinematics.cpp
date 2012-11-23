@@ -8,7 +8,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   
   //-- access necessary information
   arr W;
-  sys.getW(W, t);
+  sys.getControlCosts(W, NoArr, t);
   
   //fwd message
   arr s(n), Sinv(n, n);
@@ -63,14 +63,12 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
   uint n=sys.qDim();
   
   //-- access necessary information
-  arr A, a, B, tB;
-  sys.getProcess(A, a, B, t);
+  arr A, a, B, tB, Q;
+  sys.getDynamics(A, a, B, Q, t);
   transpose(tB, B);
   
-  arr Q, H, Hinv;
-  sys.getQ(Q, t);
-  sys.getH(H, t);
-  inverse_SymPosDef(Hinv, H);
+  arr H, Hinv;
+  sys.getControlCosts(H, Hinv, t);
   
   //fwd message
   arr s(2*n), S(2*n, 2*n), Sinv(2*n, 2*n);

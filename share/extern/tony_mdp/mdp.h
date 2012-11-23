@@ -59,7 +59,7 @@ typedef enum {REWARD_value_type, COST_value_type } Value_Type;
 #ifndef MDP_C
 
 /* Exported variables */
-extern char *value_type_str[];
+extern const char *value_type_str[];
 extern double gDiscount;
 extern Problem_Type gProblemType;
 extern Value_Type gValueType;

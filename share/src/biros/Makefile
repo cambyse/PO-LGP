@@ -4,7 +4,13 @@ OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib
 
-OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
+#NOBODY MAKES CHANGES HERE ANYMORE OTHER THAN MARC :-)
+#if in doubt, you actually want to change make-config!
+#otherwise ask Marc
+
+LIBS += -lviews
+
+OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)
 
 include $(BASE)/make-generic

@@ -1,29 +1,11 @@
-NAME   = $(shell basename $(PWD))
+BASE   = $(shell realpath .)
+NAME   = $(shell basename $(BASE))
 
 ALL =	src/MT
 
-makeAll: $(ALL:%=make/%) tests courses doc
+makeAll: $(ALL:%=makePath/%) makeSubpaths/test makeSubpaths/course
 
-cleanAll: $(ALL:%=clean/%) cleanProjects
+cleanAll: $(ALL:%=cleanPath/%) cleanSubpaths/test cleanSubpaths/course
 
-make/%::
-	make -C $*
 
-clean/%::
-	make clean -C $*
-
-tests::
-	-@find -L test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} \;
-
-courses::
-	-@find -L course -maxdepth 1 -follow -type d -not -name 'course' -not -name 'SHARE' -exec make -C {} \;
-
-cleanProjects::
-	-@find -L test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec make -C {} clean \;
-	-@find -L course -maxdepth 1 -follow -type d -not -name 'course' -not -name 'SHARE' -exec make -C {} clean \;
-
-doc::
-	make -C doc doxy_array
-
-zip::
-	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude
+include make-generic

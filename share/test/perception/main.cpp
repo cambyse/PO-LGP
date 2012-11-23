@@ -3,7 +3,7 @@
 #include <signal.h>
 #define REALCAMERA
 
-#include <NP/camera.h>
+#include <hardware/hardware.h>
 #include <MT/earlyVisionModule.h>
 #include <MT/perceptionModule.h>
 #include <MT/guiModule.h>

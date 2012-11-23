@@ -174,7 +174,7 @@ class Reward {
                                                  // --> Advantage: can work on expectations in case of beliefs over states
                       reward_not_these_states, 
                       reward_one_of_literal_list,
-                      conjunction_of_rewards
+                      reward_combined
     };
     
     Reward();
@@ -195,6 +195,7 @@ class Reward {
     static Reward* read(const char* filename);
 };
 
+typedef MT::Array<Reward*> RewardL;
 
 class LiteralReward : public Reward {
   public:
@@ -285,8 +286,7 @@ class NotTheseStatesReward : public Reward {
     void write(const char* filename) const;
 };
 
-
-class RewardConjunction : public Reward {
+class CombinedReward : public Reward {
   public:
     MT::Array<Reward*> rewards;
 
@@ -304,7 +304,6 @@ class RewardConjunction : public Reward {
     void write(ostream& out = cout) const;
     void write(const char* filename) const;
 };
-
 
 }
 

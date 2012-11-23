@@ -20,6 +20,7 @@
 */
 
 #include "robotManipulationSymbols.h"
+#include "robotManipulationSimulator.h"
 #include "reason.h"
 
 
@@ -413,6 +414,27 @@ Reward* RobotManipulationSymbols::RewardLibrary::inhand(uint o1) {
   return new LiteralReward(pt);
 }
 
+Reward* RobotManipulationSymbols::RewardLibrary::cleanup(RobotManipulationSimulator *sim) {
+  uintA empty;
+  //SymL symbols2add;
+  //if (!Symbol::get(MT::String("above"))) {
+    //TransClosureSymbol* p_ABOVE1 = getSymbol_above();
+    //p_ABOVE1->base_symbol = Symbol::get(MT::String("on")); // HACK da in regelfiles bis juni 2009 on andere id hat
+    //symbols2add.append(p_ABOVE1);
+  //}
+  //if (!Symbol::get(MT::String("aboveNotable"))) {
+    //symbols2add.append(getSymbol_aboveNotable());
+  //}
+  //if (!Symbol::get(MT::String("height"))) {
+    //symbols2add.append(getSymbol_height());
+  //}
+  //if (!Symbol::get(MT::String("sum_height"))) {
+    //symbols2add.append(getFunction_sumheight());
+  //}
+  Literal* fa = Literal::get(Symbol::get(MT::String("sumcleaned")), empty, 1.);
+  Reward* reward = new MaximizeReward(fa);
+  return reward;
+}
 
 Reward* RobotManipulationSymbols::RewardLibrary::stack() {
 //   ATTENTION:  Stack defined by sum (not max) over heights

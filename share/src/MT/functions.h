@@ -40,6 +40,14 @@ double dNNNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA
 double NNsdv(const doubleA& a, const doubleA& b, double sdv);
 double NNzerosdv(const doubleA& x, double sdv);
 
+double smoothRamp(double x, double eps, double power);
+double d_smoothRamp(double x, double eps, double power);
+
+double barrier(double x, double margin, double power);
+double d_barrier(double x, double margin, double power);
+
+double potential(double x, double margin, double power);
+double d_potential(double x, double margin, double power);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "functions.cpp"

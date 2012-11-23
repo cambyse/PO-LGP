@@ -1,6 +1,6 @@
 #include<algorithm>
-#include<MT/array.h>
 #include<MT/util.h>
+#include<MT/array.h>
 //#include<MT/algos.h>
 
 using namespace std;
@@ -13,8 +13,8 @@ void testBasics(){
   intA ints; //a macro for MT::Array<int>
 
   a.resize(7,10);
-  double* i;
-  for(i=a.p;i!=a.pstop;i++) *i=i-a.p; //assign pointer offsets to entries
+  double *ap=a.p, *astop=ap+a.N;
+  for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a;
   cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1);
 
@@ -203,6 +203,7 @@ void testGnuplot(){
   X.resize(100,2);
   for(i=0;i<X.d0;i++){ X(i,0)=MT_PI*(2./(X.d0-1)*i-1.); X(i,1)=sin(X(i,0)); }
   gnuplot(X);
+  MT::wait(1.);
 }
 
 void testDeterminant(){
@@ -433,6 +434,45 @@ void testTensor(){
 
 //--------------------------------------------------------------------------------
 
+void write(RowShiftedPackedMatrix& PM){
+  cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
+  cout <<"packed numbers =";  PM.Z.write(cout);
+  cout <<"unpacked =";  unpackRowShifted(PM.Z).write(cout);
+  cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
+}
+
+void testRowShiftedPackedMatrix(){
+  cout <<"\n*** RowShiftedPackedMatrix\n";
+  
+  arr J;
+  RowShiftedPackedMatrix *Jaux = auxRowShifted(J,10,4,12);
+  rndInteger(J,0,9);
+  for(uint i=0;i<J.d0;i++) Jaux->rowShift(i) = i/3;
+  Jaux->computeColPatches(false);
+  write(*Jaux);
+
+  //constructor compressing an array
+  arr K =  packRowShifted(unpack(J));
+  write(*((RowShiftedPackedMatrix*)K.aux));
+  
+  cout <<"-----------------------" <<endl;
+
+  //--randomized check
+  for(uint k=0;k<20;k++){
+    arr X(1+rnd(20),1+rnd(20));
+    rndInteger(X,0,1);
+    arr Y = packRowShifted(X);
+    arr x(X.d0);
+    rndInteger(x,0,9);
+    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y)) <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y))) <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+    //cout <<X <<endl;
+    //write(*((RowShiftedPackedMatrix*)Y.aux));
+    //cout <<comp_At_A(Y).unpack() <<~X*X <<endl;
+  }
+}
+
+//--------------------------------------------------------------------------------
+
 char* gdb(MT::Array<double>& a){
   static MT::String buf;
   buf.clear();
@@ -459,6 +499,7 @@ int main(int argc, char *argv[]){
   testPermutation();
   testGnuplot();
   testDeterminant();
+  testRowShiftedPackedMatrix();
   testInverse();
   testMM();
   testSVD();

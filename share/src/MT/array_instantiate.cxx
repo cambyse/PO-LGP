@@ -16,7 +16,7 @@
 
 // this requires T to be defined!!!
 
-template class MT::Array<T>;
+template struct MT::Array<T>;
 
 template MT::Array<T> MT::operator~(const Array<T>& y);
 template MT::Array<T> MT::operator-(const Array<T>& y, const Array<T>& z);
@@ -67,6 +67,7 @@ template T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w);
 template T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 
 template T sum(const MT::Array<T>& v);
+template T scalar(const MT::Array<T>& v);
 template MT::Array<T> sum(const MT::Array<T>& v, uint d);
 template T sumOfAbs(const MT::Array<T>& v);
 template T sumOfSqr(const MT::Array<T>& v);

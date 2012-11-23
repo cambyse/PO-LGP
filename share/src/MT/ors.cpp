@@ -1311,7 +1311,11 @@ void ors::Mesh::addMesh(const ors::Mesh& mesh2) {
 }
 
 void ors::Mesh::makeConvexHull(){
+#ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
+#else
+  NICO
+#endif
 }
   
 
@@ -1491,7 +1495,8 @@ void ors::Mesh::fuseNearVertices(double tol) {
   //sort vertices lexically
   p.setStraightPerm(V.d0);
   COMP_V=&V;
-  std::sort(p.p, p.pstop, COMP);
+  uint *pstop=p.p+p.N;
+  std::sort(p.p, pstop, COMP);
   permuteVertices(*this, p);
   
   cout <<"permuting.." <<std::flush;
@@ -2778,7 +2783,7 @@ void ors::Graph::revertJoint(ors::Joint *e) {
   the root of the configuration */
 void ors::Graph::reconfigureRoot(Body *n) {
   MT::Array<Body*> list, list2;
-  Body **m;
+  Body **m,**mstop;
   Joint *e;
   list.append(n);
   uintA level(bodies.N);
@@ -2789,7 +2794,8 @@ void ors::Graph::reconfigureRoot(Body *n) {
   while(list.N>0) {
     i++;
     list2.clear();
-    for(m=list.p; m!=list.pstop; m++) {
+    mstop=list.p+list.N;
+    for(m=list.p; m!=mstop; m++) {
       level((*m)->index)=i;
       for_list(j, e, (*m)->inLinks) {
         //for_in_edges_save(e, es, (*m))
@@ -3685,7 +3691,8 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   for_list(j, n, bodies) {
     if(strcmp(n->name, name)==0) return n;
   }
-  MT_MSG("cannot find Body named '" <<name <<"' in Graph");
+  if(strcmp("glCamera", name)!=0)
+    MT_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 
@@ -3917,7 +3924,8 @@ void ors::Graph::sortProxies(bool deleteMultiple, bool deleteOld) {
       }
   }
   
-  std::sort(proxies.p, proxies.pstop, ProxySortComp);
+  ors::Proxy **proxiesstop=proxies.p+proxies.N;
+  std::sort(proxies.p, proxiesstop, ProxySortComp);
   
   for(i=0; i<proxies.N; i++) if(proxies(i)->age) {
       if(
@@ -4414,6 +4422,17 @@ double ors::Graph::getEnergy() const {
   return E;
 }
 
+void ors::Graph::addObject(ors::Body *b) {
+  bodies.append(b);
+  int ibody = bodies.N - 1;
+  uint i; ors::Shape *s;
+  for_list(i, s, b->shapes) {
+    s->ibody = ibody;
+    s->index = shapes.N;
+    shapes.append(s);
+  }
+}
+
 // ------------------ end slGraph ---------------------
 
 
@@ -4469,10 +4488,10 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 #include "util_t.cxx"
 template void MT::Parameter<ors::Vector>::initialize();
-template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 
 #ifndef  MT_ORS_ONLY_BASICS
 #  include "array_t.cxx"
+template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 #endif

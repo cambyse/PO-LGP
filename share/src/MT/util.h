@@ -72,6 +72,7 @@
 typedef unsigned char byte;            //!< byte
 typedef unsigned short int uint16;     //!< 2 bytes
 typedef unsigned int uint;             //!< unsigned integer
+typedef const char* charp;
 
 //----- macros to define the standard <<and >>operatos for most my classes:
 #define stdInPipe(type)\
@@ -99,8 +100,6 @@ typedef unsigned int uint;             //!< unsigned integer
 namespace MT {
 extern int argc;
 extern char** argv;
-extern std::ifstream cfgFile;
-extern bool cfgOpenFlag, cfgLock;
 extern bool IOraw;  //!< stream modifier for some classes (Mem in particular)
 extern bool noLog;  //!< no logfile: default=true, becomes false when MT::init is called
 extern uint lineCount;
@@ -218,8 +217,6 @@ private:
     char *getIpos();
   } buffer;
   void init();
-  void append(char x);
-  void resize(uint n, bool copy);
   
 public:
   //!@name data fields
@@ -248,6 +245,8 @@ public:
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
+  void resize(uint n, bool copy); //low-level resizing the string buffer - fully uninitialized but with final 0
+  void append(char x); //low-level append a char
   
   //!@name resetting
   String& clear();       //as with Array: resize(0)
@@ -263,7 +262,7 @@ public:
   
   //!@name misc
   bool contains(const String& substring) const;
-  
+
   //!@name I/O
   void write(std::ostream& os) const;
   void read(std::istream& is, const char* skipSymbols=NULL, const char *stopSymbols=NULL, int eatStopSymbol=-1);
@@ -496,8 +495,112 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command, const char* EPSfile=NULL, bool persist=false);
+void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
 void gnuplotClose();
+
+
+//===========================================================================
+//
+// threading: pthread wrappers: Mutex, RWLock, ConditionVariable
+//
+
+//! a basic mutex lock
+struct Mutex {
+  pthread_mutex_t mutex;
+  int state; ///< 0=unlocked, otherwise=syscall(SYS_gettid)
+  Mutex();
+  ~Mutex();
+  void lock();
+  void unlock();
+};
+
+//! a basic read/write access lock
+struct RWLock {
+  pthread_rwlock_t lock;
+  int state; ///< -1==write locked, positive=numer of readers, 0=unlocked
+  Mutex stateMutex;
+  RWLock();
+  ~RWLock();
+  void readLock();   ///< multiple threads may request 'lock for read'
+  void writeLock();  ///< only one thread may request 'lock for write'
+  void unlock();     ///< thread must unlock when they're done
+};
+
+//! a basic condition variable
+struct ConditionVariable {
+  int value;
+  Mutex mutex;
+  pthread_cond_t  cond;
+
+  ConditionVariable(int initialState=0);
+  ~ConditionVariable();
+
+  void setValue(int i, bool signalOnlyFirstInQueue=false); ///< sets state and broadcasts
+  int  incrementValue(bool signalOnlyFirstInQueue=false);   ///< increase value by 1
+  void broadcast(bool signalOnlyFirstInQueue=false);       ///< just broadcast
+  
+  void lock();   //the user can manually lock/unlock, if he needs atomic state access for longer -> use userHasLocked=true below!
+  void unlock();
+  
+  int  getValue(bool userHasLocked=false) const;
+  void waitForSignal(bool userHasLocked=false);
+  void waitForSignal(double seconds, bool userHasLocked=false);
+  void waitForValueEq(int i, bool userHasLocked=false);    ///< return value is the state after the waiting
+  void waitForValueNotEq(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueGreaterThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitForValueSmallerThan(int i, bool userHasLocked=false); ///< return value is the state after the waiting
+  void waitUntil(double absTime, bool userHasLocked=false);
+};
+
+//! a basic thread
+struct Thread {
+#if 1 //ndef MT_QT
+  pthread_t thread;
+#else
+  struct sThread *s;
+#endif
+  Thread();
+  ~Thread();
+  void open(const char* name=NULL);
+  void close();
+  bool isOpen();
+  virtual void main() = 0;
+};
+
+
+//===========================================================================
+//
+// Timing helpers
+//
+
+//! a simple struct to realize a strict tic tac timing (call step() once in a loop)
+struct Metronome {
+  long targetDt;
+  timespec ticTime, lastTime;
+  uint tics;
+  const char* name;                   ///< name
+  
+  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
+  ~Metronome();
+  
+  void reset(long _targetDt);
+  void waitForTic();              //!< waits until the next tic
+  double getTimeSinceTic();       //!< time since last tic
+};
+
+//! a really simple thing to meassure cycle and busy times
+struct CycleTimer {
+  uint steps;
+  double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
+  double busyDt, busyDtMean, busyDtMax;  ///< internal variables to measure step time
+  timespec now, lastTime;
+  const char* name;                    ///< name
+  CycleTimer(const char *_name=NULL);
+  ~CycleTimer();
+  void reset();
+  void cycleStart();
+  void cycleDone();
+};
 
 
 //===========================================================================

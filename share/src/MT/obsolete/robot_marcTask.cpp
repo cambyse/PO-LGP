@@ -32,7 +32,7 @@ void TrivialBwdMsgTask::updateTaskVariables(ControllerProcess *ctrl){
       ctrl->useBwdMsg=true;
     }
     planVar->deAccess(ctrl);
-    //if(motion.recho.planner.cost < 1.) if(counter<motion.recho.sys->nTime()-1) counter++;
+    //if(motion.recho.planner.cost < 1.) if(counter<motion.recho.sys->get_T()-1) counter++;
   }
   
   //TaskVariable * t = listFindByName(recho.sys->vars, "endeffector");
@@ -204,7 +204,7 @@ void MarcsRobotTask::planGraspTrajectory(const char* objShape){
   if(signalStop) return;
   
   //create your own system
-  soc::SocSystem_Ors *planSys;
+  OrsSystem *planSys;
   planSys=ctrl.sys.newClone(true);
   
   uint T=384>>plan_scale;
@@ -236,7 +236,7 @@ void MarcsRobotTask::planGraspTrajectory(const char* objShape){
 #endif
 }
 
-void transferBetweenDifferentQlin(arr& xTo, const arr& xFrom, soc::SocSystem_Ors& sysFrom, soc::SocSystem_Ors& sysTo){
+void transferBetweenDifferentQlin(arr& xTo, const arr& xFrom, OrsSystem& sysFrom, OrsSystem& sysTo){
   uint T=xFrom.d0, nFrom = sysFrom.ors->Qlin.d1, nTo=sysTo.ors->Qlin.d1;
   arr Tlin, Toff, Qbig, Qbigoff;
   Tlin = sysTo.ors->Qinv * sysFrom.ors->Qlin;
@@ -272,7 +272,7 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape, const char* below
   if(signalStop) return;
   
   //create your own system
-  soc::SocSystem_Ors *planSys;
+  OrsSystem *planSys;
   planSys=ctrl.sys.newClone(true);
   //planSys = &sys;
   

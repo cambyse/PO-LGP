@@ -22,6 +22,7 @@
 #  define dDOUBLE
 #endif
 
+
 #  include <ode/ode.h>
 #  include <ode/../internal/objects.h>
 #  include <ode/../internal/joints/joints.h>
@@ -40,6 +41,7 @@
 #define CP3(x, y) memmove(x, y, 3*sizeof(double));
 
 static bool ODEinitialized=false;
+
 
 //===========================================================================
 //
@@ -652,28 +654,32 @@ void OdeInterface::createOde(ors::Graph &C) {
       }
       
       switch(s->type) {
-      default: case ors::boxST:
-          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
-          break;
-        case ors::sphereST:
-          dMassSetSphere(&odeMass, n->mass, s->size[3]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateSphere(myspace, s->size[3]);
-          break;
-        case ors::cylinderST:
-          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
-          break;
-        case ors::cappedCylinderST:
-          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-//                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
-          dBodySetMass(b, &odeMass);
-          geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
-          break;
-        case ors::meshST:{
+      default: 
+        for (int i=0; i<3; ++i) {
+          if (s->size[i] == 0) s->size[i] = 0.001;
+        }
+      case ors::boxST:
+        dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
+        dBodySetMass(b, &odeMass);
+        geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
+        break;
+      case ors::sphereST:
+        dMassSetSphere(&odeMass, n->mass, s->size[3]);
+        dBodySetMass(b, &odeMass);
+        geom=dCreateSphere(myspace, s->size[3]);
+        break;
+      case ors::cylinderST:
+        dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+        dBodySetMass(b, &odeMass);
+        geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
+        break;
+      case ors::cappedCylinderST:
+        dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+        //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
+        dBodySetMass(b, &odeMass);
+        geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
+        break;
+      case ors::meshST:{
 #if 0
           NIY;
 #else
@@ -712,6 +718,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           
           dBodySetMass(b, &odeMass);
 #else //don't care about mass...
+          n->mass = .001;
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
 #endif

@@ -5,6 +5,12 @@
 *.swp
 
 *.kdev4
+vc60.idb
+.*.config
+.*.creator
+.*.creator.user
+.*.files
+.*.includes
 
 *~
 
@@ -17,10 +23,9 @@ z.*
 *_moc.cpp
 *_ui.h
 
-*.swp
-
 MT.log
 Makefile.dep
+*.swp
 
 %% IMPORTANT: individual compilation modes:
 share/make-config

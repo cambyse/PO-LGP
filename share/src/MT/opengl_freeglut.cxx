@@ -22,15 +22,7 @@
 #include "opengl.h"
 #include "ors.h"
 
-#ifndef MT_NO_THREADS
-#  include <biros/biros_internal.h>
-#else
-struct Mutex {
-  void lock(const char* _msg=NULL) {};
-  void unlock() {};
-};
-#endif
-
+void initGlEngine(){}
 static Mutex globalOpenglLock;
 
 
@@ -51,21 +43,23 @@ static void sleepForEvents(void) {
 #ifdef MT_Linux
   if (! XPending(fgDisplay.Display)) {
     fd_set fdset;
-    int err=0;
-    int socket;
     struct timeval wait;
     
-    socket = ConnectionNumber(fgDisplay.Display);
+    int socket = ConnectionNumber(fgDisplay.Display);
     FD_ZERO(&fdset);
     FD_SET(socket, &fdset);
     wait.tv_sec = 10000 / 1000;
     wait.tv_usec = (10000 % 1000) * 1000;
-    err = select(socket+1, &fdset, NULL, NULL, &wait);
+    int err = select(socket+1, &fdset, NULL, NULL, &wait);
     
+    if(-1 == err){
 #if HAVE_ERRNO
-    if ((-1 == err) && (errno != EINTR))
-      fgWarning("freeglut select() error: %d", errno);
+      if(errno != EINTR)
+	fgWarning("freeglut select() error: %d", errno);
+#else
+      MT_MSG("freeglut select() error");
 #endif
+    }
   }
 #elif defined MT_MSVC
   MsgWaitForMultipleObjects(0, NULL, FALSE, msec, QS_ALLINPUT);
@@ -82,13 +76,19 @@ struct sOpenGL {
   sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy);
   sOpenGL(OpenGL *gl, void *container);
   ~sOpenGL();
+  void beginGlContext(){}
+  void endGlContext(){}
   
+  //-- private OpenGL data
+  ors::Vector downVec,downPos,downFoc;
+  ors::Quaternion downRot;
+
+  //-- engine specific data
   static uint nrWins;
   static MT::Array<OpenGL*> glwins;    //!< global window list
   int windowID;                        //!< id of this window in the global glwins list
   
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
+  //-- callbacks
   
   static void _Void() { }
   static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); unlock(); }
@@ -114,10 +114,10 @@ MT::Array<OpenGL*> sOpenGL::glwins;
 // OpenGL implementations
 //
 
-void OpenGL::postRedrawEvent() {s->lock_win(); glutSetWindow(s->windowID); glutPostRedisplay(); s->unlock_win(); }
+void OpenGL::postRedrawEvent(bool fromWithinCallback) {s->lock_win(); glutSetWindow(s->windowID); glutPostRedisplay(); s->unlock_win(); }
 void OpenGL::processEvents() {  s->lock_win(); glutSetWindow(s->windowID); glutMainLoopEvent(); s->unlock_win(); }
-void OpenGL::enterEventLoop() { loopExit=false;  while (!loopExit) {  processEvents();  sleepForEvents();  } }
-void OpenGL::exitEventLoop() { loopExit=true; }
+void OpenGL::enterEventLoop() { watching.setValue(1);  while (watching.getValue()==1) {  processEvents();  sleepForEvents();  } }
+void OpenGL::exitEventLoop() { watching.setValue(0); }
 
 void OpenGL::resize(int w,int h) {
   s->lock_win();

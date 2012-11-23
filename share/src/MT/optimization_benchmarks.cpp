@@ -1,5 +1,5 @@
 #include "optimization_benchmarks.h"
-#include "functions.h"
+//#include "functions.h"
 
 void generateConditionedRandomProjection(arr& M, uint n, double condition) {
   uint i,j;
@@ -81,7 +81,7 @@ VectorChainCost::VectorChainCost(uint _T,uint _n) {
   nonlinear=false;
 }
 
-void VectorChainCost::fvi(arr& y, arr* J, uint i, const arr& x_i) {
+void VectorChainCost::fv_i(arr& y, arr* J, uint i, const arr& x_i) {
   if(!nonlinear) {
     y = A[i]*x_i + a[i];
     if(J) *J = A[i];
@@ -96,7 +96,7 @@ void VectorChainCost::fvi(arr& y, arr* J, uint i, const arr& x_i) {
   }
 }
 
-void VectorChainCost::fvij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) {
+void VectorChainCost::fv_ij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j) {
   if(!nonlinear) {
     y=Wi[i]*x_i + Wj[i]*x_j + w[i];
     if(Ji) *Ji = Wi[i];
@@ -140,7 +140,7 @@ double tannenbaum(double *grad, double x, double power=8.) {
 }
 
 
-void SlalomProblem::fvi(arr& y, arr& J, uint i, const arr& x_i) {
+void SlalomProblem::fv_i(arr& y, arr& J, uint i, const arr& x_i) {
   eval_cost++;
   CHECK(x_i.N==2,"");
   y.resize(1);  y(0)=0.;
@@ -161,7 +161,7 @@ void SlalomProblem::fvi(arr& y, arr& J, uint i, const arr& x_i) {
   }
 }
 
-void SlalomProblem::fvij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j) {
+void SlalomProblem::fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j) {
   y.resize(1);
   double tau=.01;
   arr A=ARRAY(1., tau, 0., 1.);  A.reshape(2,2);

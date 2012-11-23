@@ -5,11 +5,11 @@
 #include <aico_key_frames.h>
 
 double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized){
-  int steps = sys.nTime();
+  int steps = sys.get_T();
   arr R,r,H,Q,Winv,W;
   arr q0,q_old,tp,Binv;
-  sys.getH(H,0); //H_step
-  sys.getQ(Q,0); //Q_step
+  //sys.getH(H,0); //H_step
+  //sys.getQ(Q,0); //Q_step
   
   sys.getq0(q0);
   if(!q_is_initialized) q=q0;
@@ -98,14 +98,14 @@ double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
   //CHECK(sys.dynamic,"call this function only for dynamic systems");
   arr H1,R,Rinv,r,Q,B,sumA,Q1,Q2,sumAinv,suma;
   arr x0; 
-  double T = sys.nTime();
+  double T = sys.get_T();
   //initial state
   sys.getx0(x0);
   if(!b_is_initialized) b=x0;
   double old_r;
   counter = 0; // number of iterations
-  sys.getHrateInv(H1);
-  sys.getQrate(Q);
+  //sys.getHrateInv(H1);
+  //sys.getQrate(Q);
 
   decomposeMatrix(Q1,Q2,Q);
   double tau = time;// tau is basically = time
@@ -170,11 +170,11 @@ void OneStepDynamicGradientFull(double& grad,double& likelihood,soc::SocSystemAb
   arr x0,q0,q_old,qv0,v0,bq,bv;
 
   arr H1,Q1,Q2;
-  double T = sys.nTime();
+  double T = sys.get_T();
   double tau = time; // tau is basically = time
   double tau2=tau*tau;
-  sys.getHrateInv(H1);
-  sys.getQrate(Q);
+  //sys.getHrateInv(H1);
+  //sys.getQrate(Q);
   
   decomposeMatrix(Q1,Q2,Q);
   
@@ -227,7 +227,7 @@ void GetOptimalDynamicTime(double& time, int& counter,
 			   double min_step, uint verbose){
   arr  R,r,q0,x0;
   double old_time=sys.getTau(false);//+1e-1;
-  double T = sys.nTime();
+  double T = sys.get_T();
   old_time*=T;
   arr lk;
   double gr=1e10;

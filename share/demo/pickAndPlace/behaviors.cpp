@@ -18,7 +18,7 @@ Some behaviors are sequential like a finite state machine.
 #include <motion/FeedbackControlTasks.h>
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  biros().getVariable<Type>(_##Type, #Type, NULL);
 
 void wait(double sec){
   VAR(MotionPrimitive);
@@ -222,13 +222,13 @@ void pickOrPlaceObject(Action::ActionPredicate action, const char* objShape, con
   
   waitForSmallMotionQueue(_MotionFuture, 1);
 
-  _MotionFuture->appendNewAction(action, objShape, belowToShape, NULL);
+  _MotionFuture->appendNewAction(action, objShape, belowToShape, NoArr, NULL);
   
   //waitForSmallMotionQueue(_MotionFuture, 1);
   //waitForEmptyQueue(_MotionFuture);
   
-  if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NULL);
-  if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NULL);
+  if(action==Action::grasp) _MotionFuture->appendNewAction(Action::closeHand, NULL, NULL, NoArr, NULL);
+  if(action==Action::place) _MotionFuture->appendNewAction(Action::openHand, NULL, NULL, NoArr, NULL);
   
   //waitForEmptyQueue(_MotionFuture);
 }

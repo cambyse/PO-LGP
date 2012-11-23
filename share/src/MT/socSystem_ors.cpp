@@ -25,7 +25,7 @@
 //
 
 struct soc::sSocSystem_Ors {
-  arr q0, v0, W, H_rate, Q_rate, v_act;
+  arr q0, v0, H_rate, Q_rate, v_act;
   arr q_external;
   
   uint T;
@@ -79,7 +79,6 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   
   sys->s->q0 = s->q0;
   sys->s->v0 = s->v0;
-  sys->s->W = s->W;
   sys->s->H_rate = s->H_rate;
   sys->s->Q_rate = s->Q_rate;
   sys->s->v_act = s->v_act;
@@ -116,11 +115,9 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     //cout <<"automatic W initialization =" <<s->W <<endl;
     //graphWriteDirected(cout, ors->bodies, ors->joints);
   }
-  static MT::Parameter<double> wr("Wrate");
   static MT::Parameter<double> hr("Hrate");
   static MT::Parameter<double> qr("Qrate", 1e-10);
   s->H_rate = hr()*W_rate;     //u-metric for torque control
-  s->W = wr()*W_rate;
   if(!_dynamic){
     dynamic=false;
     s->Q_rate.setDiag(qr, s->q0.N);  //covariance \dot q-update
@@ -130,7 +127,6 @@ void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, Op
     s->Q_rate.setDiag(qr, 2*s->q0.N);  //covariance \dot q-update
   }
   stepScale.resize(s->T+1);  stepScale.setZero();
-  VectorChainFunction::T = s->T;
 }
 
 void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
@@ -357,7 +353,7 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 
 //! DZ: write trajectory of task variable into the file
 void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
-  uint i, k, m, T=nTime();
+  uint i, k, m, T=get_T();
   uint ind = -1;
   uint num=T; m=nTasks();
    for(i=0; i<m; i++)
@@ -404,7 +400,8 @@ void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char 
 }
 
 
-uint soc::SocSystem_Ors::nTime(){  return s->T>>scalePower; }
+uint soc::SocSystem_Ors::get_T(){  return s->T>>scalePower; }
+uint soc::SocSystem_Ors::get_xDim(){ if(dynamic) return 2.*qDim(); return qDim(); }
 uint soc::SocSystem_Ors::nTasks(){ return vars.N; }
 uint soc::SocSystem_Ors::qDim(){   return s->q0.N; }
 uint soc::SocSystem_Ors::uDim(){   return qDim(); }
@@ -427,42 +424,16 @@ void soc::SocSystem_Ors::getx0(arr& x){
 }
 void soc::SocSystem_Ors::setx0(const arr& x0){ setx(x0); setx0ToCurrent(); }
 void soc::SocSystem_Ors::getqv0(arr& q, arr& qd){ q=s->q0; qd=s->v0; }
-void soc::SocSystem_Ors::getW(arr& W, uint t){
-  W=s->W;
-  if(stepScale(t)){
-    arr Winv;
-    inverse_SymPosDef(Winv, W);
-    for(uint i=0; i<stepScale(t); i++) Winv = Winv+Winv;
-    inverse_SymPosDef(W, Winv);
-  }
-}
-void soc::SocSystem_Ors::getWinv(arr& Winv, uint t){
-  if(dynamic){
-    HALT("use getProcess");
-  }else{
-    arr W;
-    W=s->W;
-    inverse_SymPosDef(Winv, W);
-    for(uint i=0; i<stepScale(t); i++) Winv = Winv+Winv;
-  }
-}
-void soc::SocSystem_Ors::getH(arr& H, uint t){
-  H=s->H_rate*getTau(); // control cost rate
-  if(stepScale(t)) H *= double(1 <<stepScale(t));
-}
-void soc::SocSystem_Ors::getHrateInv(arr& HrateInv){
-   inverse_SymPosDef(HrateInv, s->H_rate);
-}
-void soc::SocSystem_Ors::getHinv(arr& Hinv, uint t){
+void soc::SocSystem_Ors::getControlCosts(arr& _H, arr& Hinv, uint t){
   arr H;
-  getH(H, t); //cout <<"H=" <<H <<endl;
-  inverse_SymPosDef(Hinv, H);
-}
-void soc::SocSystem_Ors::getQ(arr& Q, uint t){
-  Q=s->Q_rate*getTau();// cost rate
-}
-void soc::SocSystem_Ors::getQrate(arr& Qrate){
-  Qrate=s->Q_rate;
+  if(!dynamic){
+    H = s->H_rate;
+  }else{
+    H=s->H_rate*getTau(); // control cost rate
+  }
+  if(stepScale(t)) H *= double(1 <<stepScale(t));
+  if(&_H) _H = H;
+  if(&Hinv) inverse_SymPosDef(Hinv, H);
 }
 
 void soc::SocSystem_Ors::setq(const arr& q, uint t){
@@ -508,7 +479,7 @@ void soc::SocSystem_Ors::setx0ToCurrent(){
   s->v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
 }
 
-void soc::SocSystem_Ors::getMF(arr& M, arr& F, uint t){
+void soc::SocSystem_Ors::getMF(arr& M, arr& F, arr& Q, uint t){
   if(!s->pseudoDynamic){
     ors->clearForces();
     ors->gravityToForces();
@@ -521,12 +492,13 @@ void soc::SocSystem_Ors::getMF(arr& M, arr& F, uint t){
     M.setId(n);
     F.resize(n); F.setZero();
   }
+  if(&Q) Q = s->Q_rate*getTau();
   //CHECK(!stepScale(t), "NIY"); //this is taken care of in getProcess!!
 }
 
-void soc::SocSystem_Ors::getMinvF(arr& Minv, arr& F, uint t){
+void soc::SocSystem_Ors::getMinvF(arr& Minv, arr& F, arr& Q, uint t){
   arr M;
-  getMF(M, F, t);
+  getMF(M, F, Q, t);
   inverse(Minv, M);
 }
 

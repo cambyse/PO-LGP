@@ -4,19 +4,27 @@
 #include <MT/ors.h>
 #include <MT/calibration.h>
 
-ShapeFitter::ShapeFitter(FloatImage& _eviL, FloatImage& _eviR, PerceptionOutput &_perc): Process("ShapeFitter"), eviL(&_eviL), eviR(&_eviR), percOut(&_perc){
-  s = new sShapeFitter;
+struct ShapeFitter: Process {
+  FloatImage *eviL, *eviR;
+  PerceptionOutput *percOut;
 
-}
+  uintA objectType;
+  arr Pl, Pr;
+  MT::Array<RigidObjectRepresentation> objs;
 
-void ShapeFitter::open(){
-  ifstream fil;
-  MT::open(fil, "../../configurations/calib_P");
-  s->Pl.readTagged(fil, "PL");
-  s->Pr.readTagged(fil, "PR");
-  fil.close();
-  s->objectType = birosInfo.getParameter<uintA>("percObjectType", this);
-}
+  ShapeFitter(FloatImage& _eviL, FloatImage& _eviR, PerceptionOutput &_perc): Process("ShapeFitter"), eviL(&_eviL), eviR(&_eviR), percOut(&_perc){}
+  void open(){
+    ifstream fil;
+    MT::open(fil, "../../configurations/calib_P");
+    Pl.readTagged(fil, "PL");
+    Pr.readTagged(fil, "PR");
+    fil.close();
+    objectType = biros().getParameter<uintA>("percObjectType", this);
+  }
+  void step();
+  void close() {}
+};
+
 
 
 //===========================================================================
@@ -218,8 +226,6 @@ struct ShapeFitProblem:public ScalarFunction {
   
   double fs(arr& grad, const arr& x){
     double cost=0.;
-    double c_x = x(0);
-    double c_y = x(1);
     arr weights, dfdpoints;
     generateShapePoints(points, weights, &grad, type, N, x);
     if(&grad){ dfdpoints.resizeAs(points);  dfdpoints.setZero();  }
@@ -241,10 +247,6 @@ struct ShapeFitProblem:public ScalarFunction {
           dfdpoints(i, 1) = weights(i)*(distImage(y+1, x+1) - distImage(y, x+1));
         }
       }
-      //Andreas: also include the distance to the center in our cost function
-      double xd = points(i,0);
-      double yd = points(i,1);
-      //if(radius)cost += 10*fabs(radius - sqrtf((xd-c_x)*(xd-c_x) + (yd-c_y)*(yd-c_y)));
     }
     if(&grad){
       dfdpoints.reshape(dfdpoints.N);
@@ -279,7 +281,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
 				const uint& type, const floatA& theta,
 				byteA *disp=NULL, bool reuseParams=false){
   ENABLE_CVMAT
-  if(disp){
+      if(disp){
     *disp=evi2rgb(theta);
     //cvShow(*disp, "getShapeParamsFromEvidence", false);
     //write_ppm(*disp, "earlyvision.ppm");
@@ -304,99 +306,99 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
   bool found = false;
 
   while(!found){
-      //flood fill tolerance (upper and lower threshold with respect to
-      //start pixel)
-      float tolerance = 0.5f;
+    //flood fill tolerance (upper and lower threshold with respect to
+    //start pixel)
+    float tolerance = 0.5f;
 
-      //search for maximum value in current image
-      uint peakIndex = img.maxIndex();
-      float peak = img.elem(peakIndex);
+    //search for maximum value in current image
+    uint peakIndex = img.maxIndex();
+    float peak = img.elem(peakIndex);
 
-      //printf("max value: %d: %f\n", peakIndex, peak);
-      if(peak < 0.5) return false;
+    //printf("max value: %d: %f\n", peakIndex, peak);
+    if(peak < 0.5) return false;
 
-      byteA mask(img.d0+2, img.d1+2);
-      mask.setZero();
+    byteA mask(img.d0+2, img.d1+2);
+    mask.setZero();
 
-      uint img_width = img.d1;
-      CvPoint peak_cvPoint;
+    uint img_width = img.d1;
+    CvPoint peak_cvPoint;
 
-      //linear allocated array
-      peak_cvPoint.x = peakIndex%img_width;
-      peak_cvPoint.y = peakIndex/img_width;
+    //linear allocated array
+    peak_cvPoint.x = peakIndex%img_width;
+    peak_cvPoint.y = peakIndex/img_width;
 
-      //printf("%d %d peak\n", peak_cvPoint.x, peak_cvPoint.y);
+    //printf("%d %d peak\n", peak_cvPoint.x, peak_cvPoint.y);
 
-      cvFloodFill(CVMAT(img),
-                  peak_cvPoint,
-                  cvScalar(1), //ignored if mask_only is set
-                  cvScalar(tolerance), //tolerance up
-                  cvScalar(tolerance), //tolerance down
-                  &component,
-                  CV_FLOODFILL_FIXED_RANGE|CV_FLOODFILL_MASK_ONLY,
-                  CVMAT(mask));
+    cvFloodFill(CVMAT(img),
+                peak_cvPoint,
+                cvScalar(1), //ignored if mask_only is set
+                cvScalar(tolerance), //tolerance up
+                cvScalar(tolerance), //tolerance down
+                &component,
+                CV_FLOODFILL_FIXED_RANGE|CV_FLOODFILL_MASK_ONLY,
+                CVMAT(mask));
 
-      //cvShow(byte(255)*mask, "mask");
-      cvFindContours(CVMAT(mask),
-                     storage,
-                     &contour,
-                     sizeof(CvContour),
-                     CV_RETR_EXTERNAL,
-                     CV_CHAIN_APPROX_SIMPLE,
-                     cvPoint(-1, -1));
+    //cvShow(byte(255)*mask, "mask");
+    cvFindContours(CVMAT(mask),
+                   storage,
+                   &contour,
+                   sizeof(CvContour),
+                   CV_RETR_EXTERNAL,
+                   CV_CHAIN_APPROX_SIMPLE,
+                   cvPoint(-1, -1));
 
 
 
-      CvRect bRect = cvBoundingRect(contour, 1); //CvContour*, bool update
+    CvRect bRect = cvBoundingRect(contour, 1); //CvContour*, bool update
 
-      //currently, we only discriminate between sphere and cylinder
-      //and use the width and height of a bounding box
+    //currently, we only discriminate between sphere and cylinder
+    //and use the width and height of a bounding box
 
-      //\TODO: use shape fitting problem below to determine the most likely
-      // type of shape (cyl,sphere,box)
+    //\TODO: use shape fitting problem below to determine the most likely
+    // type of shape (cyl,sphere,box)
 
-      switch(type){
-        case 0: //sphere
-        {
-          if( fabs(bRect.width-bRect.height) < 4 || bRect.width > bRect.height){
-            //printf("detected sphere! %dx%d\n", bRect.width, bRect.height);
-            found=true;
-          }else{
-                //printf("NO SPHERE: %dx%d", bRect.width, bRect.height);
-          }
-          break;
-        }
-        case 1: //cylinder
-        {
-          if(bRect.width < bRect.height){
-            found=true;
-          }
-          break;
-        }
-        case 7: //capped cylinder
-                {
-                  if(bRect.width < bRect.height){
-                    found=true;
-                  }
-                  break;
-                }
-        default:
-          printf( "perceptionModule can at the moment only discriminate "
-                  "between cylinder(type 1) and sphere(type 0)\n");
-          NIY;
-          break;
+    switch(type){
+    case 0: //sphere
+    {
+      if( fabs(bRect.width-bRect.height) < 4 || bRect.width > bRect.height){
+        //printf("detected sphere! %dx%d\n", bRect.width, bRect.height);
+        found=true;
+      }else{
+        //printf("NO SPHERE: %dx%d", bRect.width, bRect.height);
       }
-
-      //draw a black filled rectangle on top of the found contour
-      //this will remove the peak values for the next iteration
-      cvRectangle(  CVMAT(img),
-                      cvPoint(bRect.x,bRect.y),
-                      cvPoint(bRect.x+bRect.width, bRect.y+bRect.height),
-                      CV_RGB(0,0,0),CV_FILLED,8,0);
-                      //color, line thickness, line type, shift
-      if(!found){
-        cvClearSeq(contour);
+      break;
+    }
+    case 1: //cylinder
+    {
+      if(bRect.width < bRect.height){
+        found=true;
       }
+      break;
+    }
+    case 7: //capped cylinder
+    {
+      if(bRect.width < bRect.height){
+        found=true;
+      }
+      break;
+    }
+    default:
+    printf( "perceptionModule can at the moment only discriminate "
+            "between cylinder(type 1) and sphere(type 0)\n");
+    NIY;
+      break;
+    }
+
+    //draw a black filled rectangle on top of the found contour
+    //this will remove the peak values for the next iteration
+    cvRectangle(  CVMAT(img),
+                  cvPoint(bRect.x,bRect.y),
+                  cvPoint(bRect.x+bRect.width, bRect.y+bRect.height),
+                  CV_RGB(0,0,0),CV_FILLED,8,0);
+    //color, line thickness, line type, shift
+    if(!found){
+      cvClearSeq(contour);
+    }
 
   }
   byteA contourImage; resizeAs(contourImage, theta); contourImage.setZero(255);
@@ -415,9 +417,9 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
   }
   cvClearMemStorage(storage);
   cvClearSeq(contour);
-//------------------------------------------------------------
+  //------------------------------------------------------------
 
-/*
+  /*
   //write_ppm(camera.output->rgbL,"left.ppm");
 #if 1
   //flood fill
@@ -436,7 +438,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
   byteA mask(theta.d0, theta.d1);
   cvThreshold(CVMAT(theta), CVMAT(mask), max1-.3f, 1.f, CV_THRESH_BINARY);
 #endif
-              
+
   //cvShow(byte(255)*mask, "mask", true);
   
   //draw a contour image
@@ -464,47 +466,47 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
   ShapeFitProblem problem;
   for(uint k=0; k<2; k++){
     if(k || !reuseParams) switch(type){
-        case 0: //sphere
-          params = ARR(component.rect.x + 0.5*component.rect.width,
-                       component.rect.y + 0.5*component.rect.height,
-                       (component.rect.width+component.rect.width)/4.);
-          break;
-        case 1: //cylinder
-          params = ARR(component.rect.x + 0.5*component.rect.width,
-                       component.rect.y + 0.5*component.rect.height,
-                       component.rect.width,
-                       .7*component.rect.height,
-                       .2*component.rect.height);
-          break;
-        case 2: //box
-          params = ARR(component.rect.x + .5*component.rect.width,
-                       component.rect.y,
-                       .5*component.rect.width, .2*component.rect.height,
-                       0, .8*component.rect.height,
-                       -.5*component.rect.width, .2*component.rect.height);
-          break;
-        case 3: //polygon
-          params.setText("[ 0, 0, .5, -.2,  1, 0,  1, 1,  .5, 1.2,  0, 1]");
-          for(uint k=0; k<6; k++){
-            params(2*k+0) = component.rect.x + component.rect.width *params(2*k+0);
-            params(2*k+1) = component.rect.y + component.rect.height*params(2*k+1);
-          }
-        case 7: //capped cylinder
-                 params = ARR(component.rect.x + 0.5*component.rect.width,
-                              component.rect.y + 0.5*component.rect.height,
-                              component.rect.width,
-                              .7*component.rect.height,
-                              .2*component.rect.height);
-                 break;
-        default: HALT("");
-      }
-      
+    case 0: //sphere
+    params = ARR(component.rect.x + 0.5*component.rect.width,
+                 component.rect.y + 0.5*component.rect.height,
+                 (component.rect.width+component.rect.width)/4.);
+      break;
+    case 1: //cylinder
+    params = ARR(component.rect.x + 0.5*component.rect.width,
+                 component.rect.y + 0.5*component.rect.height,
+                 component.rect.width,
+                 .7*component.rect.height,
+                 .2*component.rect.height);
+      break;
+    case 2: //box
+    params = ARR(component.rect.x + .5*component.rect.width,
+                 component.rect.y,
+                 .5*component.rect.width, .2*component.rect.height,
+                 0, .8*component.rect.height,
+                 -.5*component.rect.width, .2*component.rect.height);
+      break;
+    case 3: //polygon
+    params.setText("[ 0, 0, .5, -.2,  1, 0,  1, 1,  .5, 1.2,  0, 1]");
+    for(uint k=0; k<6; k++){
+      params(2*k+0) = component.rect.x + component.rect.width *params(2*k+0);
+      params(2*k+1) = component.rect.y + component.rect.height*params(2*k+1);
+    }
+    case 7: //capped cylinder
+    params = ARR(component.rect.x + 0.5*component.rect.width,
+                 component.rect.y + 0.5*component.rect.height,
+                 component.rect.width,
+                 .7*component.rect.height,
+                 .2*component.rect.height);
+      break;
+    default: HALT("");
+    }
+
     rndUniform(params, -5., 5., true);//Andreas: was -5,5
     
     problem.type=type;
     problem.N=20;
     problem.distImage = pow(distImage, 2.f);
-    problem.display = birosInfo.getParameter<bool>("shapeFitter_display", NULL);;
+    problem.display = biros().getParameter<bool>("shapeFitter_display", NULL);;
     if(type==0) problem.radius = params(0);
     else problem.radius = 0;
     
@@ -523,16 +525,16 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
       bestCost=cost;  bestParams=params;
     }
   }
-  
+
   //cout <<"best cost=" <<bestCost <<" params=" <<bestParams <<endl;
   //type=2;
   params=bestParams;
   points=problem.points;
   if(disp){
-      cvRectangle(  CVMAT(*disp),
-                      cvPoint(component.rect.x,component.rect.y),
-                      cvPoint(component.rect.x+component.rect.width, component.rect.y+component.rect.height),
-                      CV_RGB(0,255,0),1,8,0);
+    cvRectangle(CVMAT(*disp),
+                cvPoint(component.rect.x,component.rect.y),
+                cvPoint(component.rect.x+component.rect.width, component.rect.y+component.rect.height),
+                CV_RGB(0,255,0),1,8,0);
     cvDrawPoints(*disp, problem.points);
     //cvShow(*disp, "getShapeParamsFromEvidence", false);
   }
@@ -563,13 +565,13 @@ void ShapeFitter::step(){
   bool suc;
   byteA disp = evi2rgb(hsvL[0]);
 
-  s->objs.resize(hsvL.d0);
+  objs.resize(hsvL.d0);
 
 
   //\todo iterate over all colors and over all objects inside those colors
   for(uint h=0; h<hsvL.d0; h++){
-    obj=&s->objs(h);
-    obj->shapeType = (uint)s->objectType(h);
+    obj=&objs(h);
+    obj->shapeType = (uint)objectType(h);
     
     arr oldshapePointsL(obj->shapePointsL), oldshapePointsR(obj->shapePointsR);
     
@@ -604,7 +606,7 @@ void ShapeFitter::step(){
         vision(1) = obj->shapePointsL(i, 1);
         vision(2) = obj->shapePointsR(i, 0);
         vision(3) = obj->shapePointsR(i, 1);
-        stereoTriangulation_nonhom(obj->shapePoints3d[i](), vision, s->Pl, s->Pr);
+        stereoTriangulation_nonhom(obj->shapePoints3d[i](), vision, Pl, Pr);
         //obj->shapePoints3d[i] =  Find3dPoint(Pl, Pr, vision);
       }
       
@@ -673,14 +675,14 @@ void ShapeFitter::step(){
         vision(1) = obj->shapePointsL(0, 1);
         vision(2) = obj->shapePointsR(0, 0);
         vision(3) = obj->shapePointsR(0, 1);
-        stereoTriangulation_nonhom(obj->center3d, vision, s->Pl, s->Pr);
+        stereoTriangulation_nonhom(obj->center3d, vision, Pl, Pr);
       }
     }
   }
   
   percOut->writeAccess(this);
-  percOut->disp = disp;
-  percOut->objects = s->objs; //this guy is not stateless!! Make all state stuff part of the percOut variable
+  percOut->display = disp;
+  percOut->objects = objs; //this guy is not stateless!! Make all state stuff part of the percOut variable
   percOut->deAccess(this);
 }
 #endif
@@ -746,3 +748,7 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
     memmove(sa->size, s->size, 4*sizeof(double));   // if(b->index >= 17) cout <<" pos " <<ba->name <<" " <<ba->X.p <<endl;
   }
 }
+
+#ifndef MT_OPENCV
+void ShapeFitter::step(){ NICO }
+#endif

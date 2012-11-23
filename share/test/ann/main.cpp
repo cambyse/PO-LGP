@@ -31,7 +31,7 @@ void testANNIncremental(){
   uint N=1000,dim=2;
 
   ANN ann;
-  ann.buffer=20;
+  ann.bufferSize=20;
   doubleA x(dim),q(dim),Q;
   intA idx;
   
@@ -41,7 +41,7 @@ void testANNIncremental(){
     ann.append(x);
     if(i>10){
       ann.getNN(Q,q,10,.0, true);
-      MT::wait();
+      //MT::wait();
     }
   }
 }
@@ -77,7 +77,7 @@ void testANNIncremental(){
 int main(int argn,char** argv){
 
   testANN();
-  //testANNIncremental();
+  testANNIncremental();
   //testANNregression();
 
   return 0;

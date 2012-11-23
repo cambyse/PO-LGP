@@ -5,11 +5,32 @@
 // sOpenGL implementations
 //
 
-uint sOpenGL::nrWins=0;
+bool qtInitialized=false;
+QApplication *qtApp;
 
-sOpenGL::sOpenGL(QDialog*& parent):QGLWidget(QGLFormat(GLformat),parent){
-  gl = new OpenGL(this);
-  QWidget::setMouseTracking(true);
+void initGlEngine(){
+  if(!qtInitialized){
+    int argc=1;
+    char **argv = new char*[1];
+    argv[0] = (char*)"x.exe";
+    glutInit(&argc, argv);
+    
+    qtApp = new QApplication(argc, argv);
+    qtInitialized = true;
+  }
+}
+
+sOpenGL::sOpenGL(OpenGL *_gl, void *container)
+  :QGLWidget(QGLFormat(GLformat),(QWidget*)container){
+  gl=_gl;
+  //ownWin = false;
+  init();
+}
+
+sOpenGL::sOpenGL(QWidget *container)
+  :QGLWidget(QGLFormat(GLformat),container){
+  gl = new OpenGL;
+  //ownWin = false;
   init();
 }
 
@@ -18,12 +39,13 @@ sOpenGL::sOpenGL(OpenGL *_gl, const char* title,int width,int height,int posx,in
   gl = _gl;
   QGLWidget::move(posx,posy);
   QGLWidget::resize(width,height);
-  QWidget::setMouseTracking(true);
   QWidget::setWindowTitle(title);
   init();
 }
 
 void sOpenGL::init(){
+  QWidget::setMouseTracking(true);
+  QGLWidget::show();
   //osPixmap=0;
   //osContext=0;
   quitLoopOnTimer=gl->reportEvents=false;
@@ -40,42 +62,10 @@ sOpenGL::~sOpenGL(){
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int width,int height,int posx,int posy){
-  s=new sOpenGL(this,title,width,height,posx,posy);
-
-  if(!s->nrWins){
-    int argc=1;
-    char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
-  }
-  s->nrWins++;
-
-  init();
-
-  s->QGLWidget::show();
-}
-
-OpenGL::OpenGL(sOpenGL *_s){
-  s=_s;
-  if(!s->nrWins){
-    int argc=1;
-    char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
-  }
-  s->nrWins++;
-  init();
-}
-
-//! destructor
-OpenGL::~OpenGL(){
-  s->nrWins--;
-  delete s;
-};
-
-void OpenGL::postRedrawEvent(){ s->QGLWidget::update(); } 
-void OpenGL::processEvents(){  qApp->processEvents(); }
-void OpenGL::enterEventLoop(){ qApp->exec(); }
-void OpenGL::exitEventLoop(){  qApp->exit(); }
+void OpenGL::postRedrawEvent(bool fromWithinCallback){ s->QGLWidget::update(); }
+void OpenGL::processEvents(){  qtApp->processEvents(); }
+void OpenGL::enterEventLoop(){ qtApp->exec(); }
+void OpenGL::exitEventLoop(){  qtApp->exit(); }
 
 
 int OpenGL::width(){  return s->QGLWidget::width(); }

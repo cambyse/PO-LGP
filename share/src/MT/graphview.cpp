@@ -1,6 +1,7 @@
 #include "gtk.h"
 
-#ifdef MT_GTK
+#if defined MT_GTK and defined MT_GRAPHVIZ
+
 
 #include <gtk/gtk.h>
 //#define WITH_CGRAPH
@@ -71,24 +72,25 @@ void GraphView::watch(){
   gtk_main();
 }
 
+#define STR(s) (char*)s
 
 void sGraphView::updateGraphvizGraph(){
   aginit();
-  //gvGraph = agopen("new_graph", Agdirected, NULL);
-  gvGraph = agopen("new_graph", AGDIGRAPH);
-  agraphattr(gvGraph, "rankdir", "LR");
-  agraphattr(gvGraph, "ranksep", "0.05");
+  //gvGraph = agopen(STR("new_graph"), Agdirected, NULL);
+  gvGraph = agopen(STR("new_graph"), AGDIGRAPH);
+  agraphattr(gvGraph, STR("rankdir"), STR("LR"));
+  agraphattr(gvGraph, STR("ranksep"), STR("0.05"));
 
-  agnodeattr(gvGraph, "label", "");
-  agnodeattr(gvGraph, "shape", "");
-  agnodeattr(gvGraph, "fontsize", "11");
-  agnodeattr(gvGraph, "width", ".3");
-  agnodeattr(gvGraph, "height", ".3");
+  agnodeattr(gvGraph, STR("label"), STR(""));
+  agnodeattr(gvGraph, STR("shape"), STR(""));
+  agnodeattr(gvGraph, STR("fontsize"), STR("11"));
+  agnodeattr(gvGraph, STR("width"), STR(".3"));
+  agnodeattr(gvGraph, STR("height"), STR(".3"));
   
-  agedgeattr(gvGraph, "label", "");
-  agedgeattr(gvGraph, "arrowhead", "none");
-  agedgeattr(gvGraph, "arrowsize", ".5");
-  agedgeattr(gvGraph, "fontsize", "6");
+  agedgeattr(gvGraph, STR("label"), STR(""));
+  agedgeattr(gvGraph, STR("arrowhead"), STR("none"));
+  agedgeattr(gvGraph, STR("arrowsize"), STR(".5"));
+  agedgeattr(gvGraph, STR("fontsize"), STR("6"));
 
   uint i,j;
   Element *e, *n;
@@ -98,12 +100,12 @@ void sGraphView::updateGraphvizGraph(){
     CHECK(i==e->id,"");
     //if(e->links.N!=2){ //not an edge
       gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name)); //, true);
-      if(e->name.N) agset(gvNodes(i), "label", e->name.p);
+      if(e->name.N) agset(gvNodes(i), STR("label"), e->name.p);
       if(e->links.N){
-	agset(gvNodes(i), "shape", "box");
-	agset(gvNodes(i), "fontsize", "6");
-	agset(gvNodes(i), "width", ".1");
-	agset(gvNodes(i), "height", ".1");
+	agset(gvNodes(i), STR("shape"), STR("box"));
+	agset(gvNodes(i), STR("fontsize"), STR("6"));
+	agset(gvNodes(i), STR("width"), STR(".1"));
+	agset(gvNodes(i), STR("height"), STR(".1"));
       }
    // }
   }
@@ -118,7 +120,7 @@ void sGraphView::updateGraphvizGraph(){
 	  ge=agedge(gvGraph, gvNodes(n->id), gvNodes(e->id)); //, STRING(n->name <<"--" <<e->name), true);
 	else
 	  ge=agedge(gvGraph, gvNodes(e->id), gvNodes(n->id)); //, STRING(e->name <<"--" <<n->name), true);
-	agset(ge, "label", STRING(j));
+	agset(ge, STR("label"), STRING(j));
       }
     }
   }
@@ -128,7 +130,7 @@ void sGraphView::updateGraphvizGraph(){
 
 void sGraphView::init() {
   gvContext = ::gvContext();
-  char *bla[] = {"dot", "-Tx11", NULL};
+  char *bla[] = {STR("dot"), STR("-Tx11"), NULL};
   gvParseArgs(gvContext, 2, bla);
 
   if(!container) {
@@ -165,12 +167,12 @@ bool sGraphView::on_drawingarea_expose_event(GtkWidget       *widget,           
   
   gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
-  cr = gdk_cairo_create(widget->window);
+  cr = gdk_cairo_create(gtk_widget_get_window(widget));
   
   job->context = (void *)cr;
   job->external_context = TRUE;
-  job->width = widget->allocation.width;
-  job->height = widget->allocation.height;
+  job->width = widget->allocation.width; //gtk_widget_get_allocated_width(widget);
+  job->height = widget->allocation.height; //gtk_widget_get_allocated_height(widget);
   if(job->has_been_rendered) {
     (job->callbacks->refresh)(job);
   } else {
@@ -208,7 +210,7 @@ bool sGraphView::on_drawingarea_expose_event(GtkWidget       *widget,           
 bool sGraphView::on_drawingarea_motion_notify_event(GtkWidget       *widget,                   GdkEventMotion  *event,                   gpointer         user_data) {
   sGraphView *gv;
   GVJ_t *job;
-  pointf pointer;
+  //pointf pointer;
   
   //INFO(on_drawingarea_motion_notify_event);
   
@@ -257,7 +259,7 @@ bool sGraphView::on_drawingarea_configure_event(GtkWidget       *widget,        
     zoom_to_fit = MT::MIN((double) event->width / (double) job->width, (double) event->height / (double) job->height);
     job->zoom *= zoom_to_fit;
   }
-  if(event->width > job->width || event->height > job->height)
+  if(event->width > (int)job->width || event->height > (int)job->height)
     job->has_grown = TRUE;
   job->width = event->width;
   job->height = event->height;
@@ -333,6 +335,8 @@ bool sGraphView::on_drawingarea_scroll_event(GtkWidget       *widget,           
   
   return FALSE;
 }
+
+#undef STR
 
 #else //MT_GTK
 

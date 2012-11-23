@@ -18,7 +18,7 @@ Some behaviors are sequential like a finite state machine.
 #include <motion/FeedbackControlTasks.h>
 
 #define VAR(Type) \
-  Type *_##Type;  birosInfo.getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  biros().getVariable<Type>(_##Type, #Type, NULL);
 
 void wait(double sec){
   VAR(MotionPrimitive);
@@ -238,7 +238,7 @@ double reach2(const char* objShape, const char* belowToShape){
 
   _MotionFuture->appendNewAction(Action::reach, objShape, belowToShape, NULL);
 
-  ActionToMotionPrimitive *planner = _MotionFuture->planners(0);
+  MotionPlanner *planner = _MotionFuture->planners(0);
   //cout << "COSTS: " << planner->motionPrimitive->cost << " AND " << planner->motionPrimitive->iterations_till_convergence << endl;
 
   waitForSmallMotionQueue(_MotionFuture, 1);

@@ -1,8 +1,6 @@
 BASE = ../..
 
-GTKGL = 1
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
-
-LIBS += -lmotion -lhardware -lperception -lmt
+BUILDS += buildComponent/motion
+LIBS += -lmotion
 
 include $(BASE)/make-generic

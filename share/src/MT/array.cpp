@@ -408,9 +408,10 @@ uint own_SVD(
   U.resize(m, n);
   V.resize(n, n);
   w.resize(n);
-  double **a = A.getCarray(); //Pointers(Apointers); /* input matrix */
-  double **u = U.getCarray(); //Pointers(Upointers); /* left vectors */
-  double **v = V.getCarray(); //Pointers(Vpointers); /* right vectors */
+  MT::Array<double*> Ap, Up, Vp;
+  double **a = A.getCarray(Ap); //Pointers(Apointers); /* input matrix */
+  double **u = U.getCarray(Up); //Pointers(Upointers); /* left vectors */
+  double **v = V.getCarray(Vp); //Pointers(Vpointers); /* right vectors */
   
   int flag;
   unsigned i, its, j, jj, k, l, nm(0), r;
@@ -719,9 +720,8 @@ double determinantSubroutine(double **A, uint n) {
 
 double determinant(const arr& A) {
   CHECK(A.nd==2 && A.d0==A.d1, "determinants require a squared 2D matrix");
-  //MT::Array<double*> B;
-  A.getCarray(); //Pointers(B);
-  return determinantSubroutine(A.pp, A.d0);
+  MT::Array<double*> tmp;
+  return determinantSubroutine(A.getCarray(tmp), A.d0);
 }
 
 double cofactor(const arr& A, uint i, uint j) {
@@ -784,6 +784,12 @@ void gnuplot(const arr& X) {
     MT::IOraw=false;
     return;
   }
+}
+
+void write(const arr& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) {
+  std::ofstream fil(filename);
+  X.write(fil, ELEMSEP, LINESEP, BRACKETS, dimTag, binary);
+  fil.close();
 }
 
 void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) {
@@ -1051,41 +1057,44 @@ void lognormScale(arr& P, double& logP, bool force) {
 
 void sparseProduct(arr& y, arr& A, const arr& x) {
   CHECK(x.nd==1 && A.nd==2 && x.d0==A.d1, "not a proper matrix multiplication");
-  if(!A.sparse && !x.sparse) {
+  if(A.special!=arr::sparseST && x.special!=arr::sparseST) {
     innerProduct(y, A, x);
     return;
   }
-  if(A.sparse && !x.sparse) {
+  if(A.special==arr::sparseST && x.special!=arr::sparseST) {
     uint i, j, *k, *kstop;
     y.resize(A.d0); y.setZero();
     double *Ap=A.p;
-    uintA *elems=A.sparse;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; Ap++) {
+    uintA* elems = (uintA*)A.aux;
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; Ap++) {
       i=*k; k++;
       j=*k; k++;
       y.p[i] += (*Ap) * x.p[j];
     }
     return;
   }
-  if(A.sparse && x.sparse) {
+  if(A.special==arr::sparseST && x.special==arr::sparseST) {
     uint i, j, n, *k, *kstop, *l, *lstop;
-    y.clear(); y.nd=1; y.d0=A.d0; y.sparse=new uintA [2]; y.sparse[1].resize(y.d0); y.sparse[1]=(uint)-1;
+    y.clear(); y.nd=1; y.d0=A.d0;
+    uintA *y_sparse;
+    y.aux=y_sparse=new uintA [2];
+    y_sparse[1].resize(y.d0); y_sparse[1]=(uint)-1;
     double *xp=x.p;
     uintA *elems, *col;
-    elems=x.sparse;
+    elems = (uintA*)x.aux;
     uint *slot;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; xp++) {
       j=*k; k++;
-      col=A.sparse+(1+j);
-      for(l=col->p, lstop=col->pstop; l!=lstop;) {
+      col = (uintA*)A.aux+(1+j);
+      for(l=col->p, lstop=col->p+col->N; l!=lstop;) {
         i =*l; l++;
         n =*l; l++;
-        slot=&y.sparse[1](i);
+        slot=&y_sparse[1](i);
         if(*slot==(uint)-1) {
           *slot=y.N;
           y.resizeMEM(y.N+1, true); y(y.N-1)=0.;
-          y.sparse[0].append(i);
-          CHECK(y.sparse[0].N==y.N, "");
+          y_sparse[0].append(i);
+          CHECK(y_sparse[0].N==y.N, "");
         }
         i=*slot;
         y(i) += A.elem(n) * (*xp);
@@ -1093,13 +1102,13 @@ void sparseProduct(arr& y, arr& A, const arr& x) {
     }
     return;
   }
-  if(!A.sparse && x.sparse) {
+  if(A.special!=arr::sparseST && x.special==arr::sparseST) {
     uint i, j, *k, *kstop, d1=A.d1;
     y.resize(A.d0); y.setZero();
     double *xp=x.p;
     uintA *elems;
-    elems=x.sparse;
-    for(k=elems->p, kstop=elems->pstop; k!=kstop; xp++) {
+    elems = (uintA*)x.aux;
+    for(k=elems->p, kstop=elems->p+elems->N; k!=kstop; xp++) {
       j=*k; k++;
       for(i=0; i<A.d0; i++) {
         y.p[i] += A.p[i*d1+j] * (*xp);
@@ -1121,6 +1130,169 @@ void scanArrFile(const char* name) {
     x.writeTagged(cout, tag);  cout <<endl;
     if(!is.good()) return;
   }
+}
+
+
+//===========================================================================
+//
+// RowShiftedPackedMatrix
+//
+
+RowShiftedPackedMatrix::RowShiftedPackedMatrix(arr& X):Z(X),real_d1(0), symmetric(false){
+  Z.special = arr::RowShiftedPackedMatrixST;
+  Z.aux = this;
+}
+
+RowShiftedPackedMatrix *auxRowShifted(arr& Z, uint d0, uint pack_d1, uint real_d1){
+  RowShiftedPackedMatrix *Zaux;
+  if(Z.special==arr::noneST){
+    Zaux = new RowShiftedPackedMatrix(Z);
+  }else{
+    CHECK(Z.special==arr::RowShiftedPackedMatrixST,"");
+    Zaux = (RowShiftedPackedMatrix*) Z.aux;
+  }
+  Z.resize(d0, pack_d1);
+  Z.setZero();
+  Zaux->real_d1=real_d1;
+  Zaux->rowShift.resize(d0);
+  Zaux->rowShift.setZero();
+  Zaux->colPatches.resize(real_d1, 2);
+  for(uint i=0;i<real_d1;i++){
+    Zaux->colPatches(i,0)=0;
+    Zaux->colPatches(i,1)=d0;
+  }
+  return Zaux;
+}
+
+RowShiftedPackedMatrix::~RowShiftedPackedMatrix(){
+  Z.special = arr::noneST;
+  Z.aux = NULL;
+}
+
+double RowShiftedPackedMatrix::acc(uint i, uint j){
+  uint rs=rowShift(i);
+  if(j<rs || j>=rs+Z.d1) return 0.;
+  return Z(i, j-rs);
+}
+
+arr packRowShifted(const arr& X){
+  arr Z;
+  RowShiftedPackedMatrix *Zaux = auxRowShifted(Z, X.d0, 0, X.d1);
+  //-- compute rowShifts and d0:
+  uint len=0;
+  for(uint i=0;i<X.d0;i++){
+    uint j=0,rs;
+    while(j<X.d1 && X(i,j)==0.) j++;
+    Zaux->rowShift(i)=rs=j;
+    j=X.d1;
+    while(j>rs && X(i,j-1)==0.) j--;
+    if(j-rs>len) len=j-rs;
+  }
+  
+  Z.resize(X.d0,len);
+  Z.setZero();
+  for(uint i=0;i<Z.d0;i++) for(uint j=0;j<Z.d1 && Zaux->rowShift(i)+j<X.d1;j++)
+    Z(i,j) = X(i,Zaux->rowShift(i)+j);
+  Zaux->computeColPatches(false);
+  return Z;
+}
+
+arr unpackRowShifted(const arr& Z){
+  CHECK(Z.special==arr::RowShiftedPackedMatrixST,"");
+  RowShiftedPackedMatrix *Zaux = (RowShiftedPackedMatrix*)Z.aux;
+  arr X(Z.d0, Zaux->real_d1);
+  CHECK(!Zaux->symmetric || Z.d0==Zaux->real_d1,"cannot be symmetric!");
+  X.setZero();
+  for(uint i=0;i<Z.d0;i++){
+    uint rs=Zaux->rowShift(i);
+    for(uint j=0;j<Z.d1 && rs+j<X.d1;j++){
+      X(i,j+rs) = Z(i,j);
+      if(Zaux->symmetric) X(j+rs,i) = Z(i,j);
+    }
+  }
+  return X;
+}
+
+void RowShiftedPackedMatrix::computeColPatches(bool assumeMonotonic){
+  colPatches.resize(real_d1,2);
+  uint a=0,b=Z.d0;
+  if(!assumeMonotonic){
+    for(uint j=0;j<real_d1;j++){
+      a=0;
+      while(a<Z.d0 && acc(a,j)==0) a++;
+      b=Z.d0;
+      while(b>0 && acc(b-1,j)==0) b--;
+      colPatches(j,0)=a;
+      colPatches(j,1)=b;
+    }
+  }else{
+    for(uint j=0;j<real_d1;j++){
+      while(a<Z.d0 && j>=rowShift(a)+Z.d1) a++;
+      colPatches(j,0)=a;
+    }
+    for(uint j=real_d1;j--;){
+      while(b>0 && j<rowShift(b-1)) b--;
+      colPatches(j,1)=b;
+    }
+  }
+}
+
+arr RowShiftedPackedMatrix::At_A(){
+  arr R;
+  RowShiftedPackedMatrix *Raux = auxRowShifted(R, real_d1, Z.d1, real_d1);
+  for(uint i=0;i<R.d0;i++) Raux->rowShift(i) = i;
+  Raux->symmetric=true;
+  for(uint i=0;i<Z.d0;i++){
+    uint rs=rowShift(i);
+    double* Zi=&Z(i,0);
+    for(uint j=0;j<Z.d1;j++){
+      uint real_j=j+rs;
+      if(real_j>=real_d1) break;
+      double Zij=Zi[j];
+      double* Rp=R.p + real_j*R.d1;
+      double* Jp=Zi+j;
+      double* Jpstop=Zi+Z.d1;
+      for(;Jp!=Jpstop; Rp++,Jp++) *Rp += Zij * *Jp;
+    }
+  }    
+  return R;
+}
+
+arr RowShiftedPackedMatrix::At_x(const arr& x){
+  CHECK(x.N==Z.d0,"");
+  arr y(real_d1);
+  y.setZero();
+  for(uint j=0;j<real_d1;j++){
+    double sum=0.;
+    uint a=colPatches(j,0);
+    uint b=colPatches(j,1);
+    for(uint i=a;i<b;i++){
+      uint rs=rowShift.p[i];
+      if(j<rs || j-rs>=Z.d1) continue;
+      sum += Z.p[i*Z.d1+j-rs]*x.p[i]; // sum += acc(i,j)*x(i);
+    }
+    y(j) = sum;
+  }
+  return y;
+  
+}
+
+arr unpack(const arr& X){
+  if(X.special==arr::noneST) HALT("this is not special");
+  if(X.special==arr::RowShiftedPackedMatrixST) return unpackRowShifted(X);
+  return NoArr;
+}
+
+arr comp_At_A(arr& A){
+  if(A.special==arr::noneST){ arr X; blas_At_A(X,A); return X; }
+  if(A.special==arr::RowShiftedPackedMatrixST) return ((RowShiftedPackedMatrix*)A.aux)->At_A();
+  return NoArr;
+}
+
+arr comp_At_x(arr& A, const arr& x){
+  if(A.special==arr::noneST){ arr y; innerProduct(y, ~A, x); return y; }
+  if(A.special==arr::RowShiftedPackedMatrixST) return ((RowShiftedPackedMatrix*)A.aux)->At_x(x);
+  return NoArr;
 }
 
 //===========================================================================

@@ -83,7 +83,7 @@ struct ControllerProcess{ //--non-threaded!!
   //INTERNAL
   ors::Graph ors;
   SwiftInterface swift;
-  soc::SocSystem_Ors sys;
+  OrsSystem sys;
   CycleTimer timer;
   
   ControllerProcess();

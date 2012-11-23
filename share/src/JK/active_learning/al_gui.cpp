@@ -15,15 +15,8 @@ class sGui {
 
 void drawEnv(void*){  glStandardLight(NULL); }
 
-sGui::sGui(const char* orsFile){
-  ors.init(orsFile);
-  gl.add(drawEnv,0);
-  gl.add(ors::glDrawGraph,&ors);
-  gl.setClearColors(1.,1.,1.,1.);
-  gl.camera.setPosition(10.,-15.,8.);
-  gl.camera.focus(0,0,1.);
-  gl.camera.upright();
-  gl.update();
+sGui::sGui(const char* orsFile) {
+  init(ors, gl, orsFile);  
 }
 
 Gui::Gui(const char* orsFile) : Process("Gui Process"), 
@@ -33,9 +26,15 @@ Gui::Gui(const char* orsFile) : Process("Gui Process"),
 void Gui::open() {}
 
 void Gui::step() {
+  MT::String problem = biros().getParameter<MT::String>("problem", MT::String("tray"), this);
   guiData->readAccess(this);
-  if(guiData->sample)
-    relational::generateOrsFromSample(s->ors, *guiData->sample);
+  if(guiData->sample) {
+    //if (problem == "tray")
+      //relational::generateOrsFromTraySample(s->ors, *guiData->sample);
+    //else
+      relational::generateOrsFromSample(s->ors, *guiData->sample);
+    s->ors.calcBodyFramesFromJoints();
+  }
   guiData->deAccess(this);
   s->gl.timedupdate(0.01);
 }

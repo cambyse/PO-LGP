@@ -40,9 +40,16 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   gl.add(glStandardScene,0);
   gl.add(ors::glDrawGraph,&G);
   gl.setClearColors(1.,1.,1.,1.);
-  gl.camera.setPosition(10.,-15.,8.);
-  gl.camera.focus(0,0,1.);
-  gl.camera.upright();
+ 
+  ors::Body* glCamera = G.getBodyByName("glCamera");
+  if(glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  }
+  else { 
+    gl.camera.setPosition(10.,-15.,8.);
+    gl.camera.focus(0,0,1.);
+    gl.camera.upright();
+  }
   gl.update();
 }
 #endif
@@ -80,7 +87,10 @@ void ors::Mesh::glDraw() {
   }
 #if 1
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
-    glShadeModel(GL_SMOOTH);
+    GLboolean turnOnLight=false;
+    if(C.N){ glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+    
+    glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
@@ -89,6 +99,8 @@ void ors::Mesh::glDraw() {
     glNormalPointer(GL_DOUBLE, 0, Vn.p);
     
     glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
+
+    if(turnOnLight){ glEnable(GL_LIGHTING); }
   } else {
     int g;
     uint v, t, i, j;
@@ -160,20 +172,22 @@ void ors::Mesh::glDraw() {
   glShadeModel(GL_SMOOTH);
   glBegin(GL_TRIANGLES);
   for(i=0; i<T.d0; i++) {
-    v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
   }
   glEnd();
 #else //simple with triangle normals
-  uint i, v;
+  uint t, v;
   computeNormals();
   glBegin(GL_TRIANGLES);
-  for(i=0; i<T.d0; i++) {
-    glNormal3dv(&Tn(i, 0));
-    v=T(i, 0);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 1);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(i, 2);  if(C.N) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+  for(t=0; t<T.d0; t++) {
+    glNormal3dv(&Tn(t, 0));
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(t, 0);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 1);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 2);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
   }
   glEnd();
 #if 0 //draw normals
@@ -304,7 +318,7 @@ void ors::Graph::glDraw() {
   double GLmatrix[16];
   
   glPushMatrix();
-  
+
   //bodies
   if(orsDrawBodies) for_list(k, s, shapes){
     glDrawShape(s);
@@ -361,28 +375,28 @@ void ors::Graph::glDraw() {
   
   //proxies
   if(orsDrawProxies) for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
-        proxy = proxies(i);
-        glLoadIdentity();
-        if(!proxy->colorCode) glColor(.75,.75,.75);
-        else glColor(proxy->colorCode);
-        glBegin(GL_LINES);
-        glVertex3dv(proxy->posA.p);
-        glVertex3dv(proxy->posB.p);
-        glEnd();
-        ors::Transformation f;
-        f.pos=proxy->posA;
-        f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
-        f.getAffineMatrixGL(GLmatrix);
-        glLoadMatrixd(GLmatrix);
-        glDisable(GL_CULL_FACE);
-        glDrawDisk(.02);
-        glEnable(GL_CULL_FACE);
-        
-        f.pos=proxy->posB;
-        f.getAffineMatrixGL(GLmatrix);
-        glLoadMatrixd(GLmatrix);
-        glDrawDisk(.02);
-      }
+    proxy = proxies(i);
+    glLoadIdentity();
+    if(!proxy->colorCode) glColor(.75,.75,.75);
+    else glColor(proxy->colorCode);
+    glBegin(GL_LINES);
+    glVertex3dv(proxy->posA.p);
+    glVertex3dv(proxy->posB.p);
+    glEnd();
+    ors::Transformation f;
+    f.pos=proxy->posA;
+    f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDisable(GL_CULL_FACE);
+    glDrawDisk(.02);
+    glEnable(GL_CULL_FACE);
+
+    f.pos=proxy->posB;
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawDisk(.02);
+  }
       
   glPopMatrix();
 }
@@ -616,15 +630,19 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       selpos = s->body->X.pos;
       movingBody=s->body;
     }
+    if(j){
+      cout <<"selected joint " <<j->index <<" connecting " <<j->from->name <<"--" <<j->to->name <<endl;
+    }
     return true;
   }
 };
 
 void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
-  gl.exitkeys="1234567890hjklias, "; //TODO: move the key handling to the keyCall!
+  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   gl.addHoverCall(new EditConfigurationHoverCall(C));
   gl.addKeyCall(new EditConfigurationKeyCall(C));
-  for(;;) {
+  bool exit=false;
+  for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
@@ -636,7 +654,7 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
     }
     animateConfiguration(C, gl);
     gl.watch();
-    while(MT::contains(gl.exitkeys, gl.pressedkey)) {
+    while(!exit && MT::contains(gl.exitkeys, gl.pressedkey)) {
       switch(gl.pressedkey) {
         case '1':  orsDrawBodies^=1;  break;
         case '2':  orsDrawShapes^=1;  break;
@@ -651,19 +669,23 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
         case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
         case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
         case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
-        case 'a':  gl.camera.focus( //TODO
+        case 'a':  gl.camera.focus(
             (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
              ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
             + *gl.camera.foc);
           break;
-        case 's':  gl.camera.X->pos += //TODO
+        case 's':  gl.camera.X->pos +=
             (
               gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
               ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
             ) * .01;
           break;
+        case 'q' :
+	  cout <<"EXITING" <<endl;
+	  exit=true;
+	  break;
       }
-      gl.watch();
+      if(!exit) gl.watch();
     }
   }
 }

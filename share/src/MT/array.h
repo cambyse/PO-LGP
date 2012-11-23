@@ -22,16 +22,16 @@
 
 #include <iostream>
 #include <stdint.h>
+#include <cstring>
 
 #define FOR1D(x, i)   for(i=0;i<x.d0;i++)
 #define FOR1D_DOWN(x, i)   for(i=x.d0;i--;)
 #define FOR2D(x, i, j) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++)
 #define FOR3D(x, i, j, k) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++) for(k=0;k<x.d2;k++)
 #define FOR_ALL(x, i)   for(i=0;i<x.N;i++)
-#define forAll(i, A)  for(i=A.p;i!=A.pstop;i++)
 
 #define for_index(i, X)  for(i=0;i<X.N;i++)
-#define for_elem(e, X)   for(e=X.p;e!=X.pstop;e++)
+#define for_elem(e, X)   for(e=X.p;e!=X.p+X.N;e++)
 #define for_list(i, e, X) for(i=0;i<X.N && ((e=X(i)) || true);i++)
 #define for_list_rev(i, e, X) for(i=X.N;i-- && ((e=X(i)) || true);)
 #define for_list_(e, X) for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
@@ -67,60 +67,30 @@ namespace MT {
   memove for elementary types; implements many standard
   array/matrix/tensor operations. Please see the fully public attributes at the
   bottom of this page -- everthing is meant to be perfectly
-  transparent. Interfacing with ordinary C-buffers is simple,
-  e.g. via \c Array::referTo (Cbuffer, size) and \c Array::p and \c
-  Array::pp. Please see also the reference for the \ref array.h
+  transparent. Interfacing with ordinary C-buffers is simple.
+  Please see also the reference for the \ref array.h
   header, which contains lots of functions that can be applied on
   Arrays. */
 
-template<class T> class Array {  //template <class T> class Array
-public:
+template<class T> struct Array {
   typedef bool (*ElemCompare)(const T& a, const T& b);
   
   T *p;     //!< the pointer on the linear memory allocated
   uint N;   //!< number of elements
   uint nd;  //!< number of dimensions
-  uint d0;  //!< 0th dim
-  uint d1;  //!< 1st dim
-  uint d2;  //!< 2nd dim
+  uint d0,d1,d2;  //!< 0th, 1st, 2nd dim
   uint *d;  //!< pointer to dimensions (for nd<=3 points to d0)
-  T *pstop; //!< end of memory (pstop is already out of the bound)
   uint M;   //!< size of actually allocated memory (may be greater than N)
   bool reference;//!< true if this refers to some external memory
-  T **pp;   //!< C-style 2D pointer (only valid if \c Array::getCarray was called)
   
+  static int  sizeT;   //! constant for each type T: stores the sizeof(T)
+  static char memMove; //! constant for each type T: decides whether memmove can be used instead of individual copies
+
+  //-- special: arrays can be sparse/packed/etc and augmented with aux data to support this
+  enum SpecialType { noneST, hasCarrayST, sparseST, diagST, RowShiftedPackedMatrixST, CpointerST };
+  SpecialType special;
+  void *aux;
   
-  //options
-  /*!\brief be careful!!!; this option will modify the \c
-    Array::resizeCopy : instead of calling the copy operator= for
-    each element, the memory is moved with the \c memmove command -
-    works only if you know what you do ... [default is true for
-    simple types (like double, int, etc) and false for unknown
-    ones] */
-  bool memMove;
-  
-  /*!\brief if flexiMem is true (which is default!) the resize method will
-    (1) at the first call allocate the exact amount of memory, (2)
-    at further calls of increasing memory allocate twice the memory
-    needed or (3) at further calls of decreasing memory only free
-    the memory if the new size is smaller than a fourth */
-  bool flexiMem;
-  
-  //! stores the sizeof(T)
-  static int sizeT;
-  
-#if 1//? garbage
-  Array<uint> *sparse; //!< to allocate element, column and row index lists (1+d0+d1 lists)
-  enum MatrixType { fullMT, diagMT };
-  MatrixType mtype;
-  T *p_device;
-#endif
-  
-  static char memMoveInit;
-private:
-  void init();
-  
-public:
   //!@name constructors
   Array();
   Array(const Array<T>& a);
@@ -179,7 +149,7 @@ public:
   void referToSubRange(const Array<T>& a, uint i, int I);
   void referToSubDim(const Array<T>& a, uint dim);
   void referToSubDim(const Array<T>& a, uint i, uint j);
-  void takeOver(Array<T>& a);                   //a becomes a reference on its previously owned memory!
+  void takeOver(Array<T>& a);                   //a becomes a reference to its previously owned memory!
   void setGrid(uint dim, T lo, T hi, uint steps);
   void setText(const char* str);
   
@@ -196,6 +166,7 @@ public:
   Array<T> subDim(uint i, uint j) const; // calls referToSubDim(*this, i, j)
   Array<T> subRange(uint i, int I) const; // calls referToSubRange(*this, i, I)
   Array<T>& operator()();
+  T** getCarray(Array<T*>& Cpointers) const;
   
   //!@name access by copy
   uint dim(uint k) const;
@@ -206,7 +177,6 @@ public:
   Array<T> sub(int i, int I, Array<uint> cols) const;
   void getMatrixBlock(Array<T>& B, uint lo0, uint lo1) const;
   void getVectorBlock(Array<T>& B, uint lo) const;
-  T** getCarray() const;
   void copyInto(T *buffer) const;
   void copyInto2D(T **buffer) const;
   T& min() const;
@@ -265,7 +235,7 @@ public:
   void permuteRandomly();
   void shift(int offset, bool wrapAround=true);
   
-  //!@name sparse matrices [to be moved outside]
+  //!@name sparse matrices [TODO: move outside, use 'special']
   double sparsity();
   void makeSparse();
   
@@ -284,11 +254,13 @@ public:
   void readRaw(std::istream& is);
   void writeWithIndex(std::ostream& os=std::cout) const;
   const Array<T>& ioraw() const;
+  const char* prt(); //gdb pretty print
   
   //!@name kind of private
   void resizeMEM(uint n, bool copy);
   void freeMEM();
   void resetD();
+  void init();
 };
 }
 
@@ -310,6 +282,9 @@ struct Any;
 typedef MT::Array<Any*>   AnyList;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
+
+namespace MT{ struct String; }
+typedef MT::Array<MT::String*> StringL;
 
 
 //===========================================================================
@@ -447,6 +422,7 @@ double cofactor(const arr& A, uint i, uint j);
 void lognormScale(arr& P, double& logP, bool force=true);
 
 void gnuplot(const arr& X);
+void write(const arr& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 void write(const MT::Array<arr*>& X, const char *filename, const char *ELEMSEP=" ", const char *LINESEP="\n ", const char *BRACKETS="  ", bool dimTag=false, bool binary=false);
 
 
@@ -493,6 +469,7 @@ template<class T> T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>&
 template<class T> T metricDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w);
 
 template<class T> T sum(const MT::Array<T>& v);
+template<class T> T scalar(const MT::Array<T>& v);
 template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d);
 template<class T> T sumOfAbs(const MT::Array<T>& v);
 template<class T> T sumOfSqr(const MT::Array<T>& v);
@@ -707,6 +684,8 @@ bool samedim(const MT::Array<T>& a, const MT::Array<S>& b) {
 void blas_Mv(arr& y, const arr& A, const arr& x);
 void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
+void blas_A_At(arr& X, const arr& A);
+void blas_At_A(arr& X, const arr& A);
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
 void lapack_mldivide(arr& X, const arr& A, const arr& b);
@@ -717,6 +696,39 @@ bool lapack_isPositiveSemiDefinite(const arr& symmA);
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A);
 double lapack_determinantSymPosDef(const arr& A);
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b);
+void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
+
+//===========================================================================
+// @}
+//!@name special agumentations
+// @{
+
+struct RowShiftedPackedMatrix{
+  arr& Z;
+  uint real_d1;
+  uintA rowShift;
+  uintA colPatches; //column-patch: range of non-zeros in a column; starts with 'a', ends with 'b'-1
+  bool symmetric;
+  
+  RowShiftedPackedMatrix(arr& X);
+  ~RowShiftedPackedMatrix();
+  double acc(uint i, uint j);
+  void computeColPatches(bool assumeMonotonic); //currently presumes monotonous rowShifts
+  arr At_A();
+  arr At_x(const arr& x);
+};
+
+inline RowShiftedPackedMatrix& castRowShiftedPackedMatrix(arr& X){
+  ///CHECK(X.special==X.RowShiftedPackedMatrixST,"can't cast like this!");
+  return *((RowShiftedPackedMatrix*)&X);
+}
+
+arr unpack(const arr& Z); //returns an unpacked matrix in case this is packed
+arr packRowShifted(const arr& X);
+arr unpackRowShifted(const arr& Z);
+RowShiftedPackedMatrix *auxRowShifted(arr& Z, uint d0, uint pack_d1, uint real_d1);
+arr comp_At_A(arr& A);
+arr comp_At_x(arr& A, const arr& x);
 
 
 //===========================================================================
@@ -739,7 +751,7 @@ template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type); /
 template<class T, class LowerOperator> void listSort(MT::Array<T*>& L, LowerOperator lowerop);
 
 //TODO obsolete?
-template<class T> MT::Array<T*> List(const MT::Array<T>& A) {
+template<class T> MT::Array<T*> LIST(const MT::Array<T>& A) {
   MT::Array<T*> L;
   resizeAs(L, A);
   for(uint i=0; i<A.N; i++) L.elem(i) = &A.elem(i);

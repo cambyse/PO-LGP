@@ -29,11 +29,14 @@
 #  include <GL/freeglut.h>
 #endif
 
-#if defined MT_GTKGL || defined MT_QTGLUT
+#if defined MT_GTKGL || defined MT_QTGL
+#  ifdef MT_CUDA
+#    undef APIENTRY
+#  endif
 #  include <GL/glut.h>
 #endif
 
-#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGLUT
+#if defined MT_FREEGLUT || defined MT_GTKGL || defined MT_FLTK || defined MT_QTGL
 #  define MT_GL
 #  include <GL/gl.h>
 #  include <GL/glu.h>
@@ -182,6 +185,7 @@ struct OpenGL {
   bool reportEvents, reportSelects;    //!< flags for verbosity
   int pressedkey;         //!< stores the key pressed
   const char *exitkeys;   //!< additional keys to exit watch mode
+  uint width,height;
   int mouse_button;       //!< stores which button was pressed
   int mouseposx, mouseposy;  //!< current x- and y-position of mouse
   int mouseView;
@@ -230,15 +234,13 @@ struct OpenGL {
   
   //!@name info & I/O
   void reportSelection();
-  int width();
-  int height();
   void saveEPS(const char *filename);
   void about(std::ostream& os=std::cout);
   
   //!@name to display image data (kind of misuse)
   void watchImage(const byteA &img, bool wait, float zoom);
   void watchImage(const floatA &img, bool wait, float zoom);
-  void displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win);
+  void displayGrey(const arr &x, bool wait, float zoom);
   void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
   
   //!@name capture routines
@@ -258,8 +260,8 @@ private:
 #endif
   
 public: //driver dependent methods
-  bool loopExit;
-  void postRedrawEvent();
+  ConditionVariable watching;
+  void postRedrawEvent(bool fromWithinCallback);
   void processEvents();
   void enterEventLoop();
   void exitEventLoop();

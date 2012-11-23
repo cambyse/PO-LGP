@@ -4,74 +4,41 @@
 
 #include <MT/gtk.h>
 #include <MT/ors.h>
-#include <MT/opengl_gtk.h>
+#include <MT/opengl.h>
+#include <gtk/gtk.h>
 
-struct sGtkViewWindow{
-  GtkWidget *win;
-  GtkWidget *box;
+
+//===========================================================================
+//
+// global singleton ViewPrivateSpace
+//
+
+struct ViewPrivateSpace{
+  ViewRegistrationL viewRegistrations;
+  RWLock lock;
+  MT::Array<View*> views;
+  //MT::Array<GtkWidget*> wins;
+  ViewPrivateSpace(){
+    viewRegistrations.memMove=true;
+    views.memMove=true;
+  }
 };
 
-GtkViewWindow::GtkViewWindow():Process("GtkViewWindow"){
-  s = new sGtkViewWindow;
-  s->win = NULL;
-  s->box = NULL;
-  
-  s->win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(s->win), "big window");
-  gtk_window_set_default_size(GTK_WINDOW(s->win), 100, 100);
-  gtk_widget_show(s->win);
-  
-  s->box = gtk_vbox_new (false, 5);
-  gtk_container_add(GTK_CONTAINER(s->win), s->box);
+ViewPrivateSpace *global_viewPrivateSpace=NULL;
+
+ViewPrivateSpace* viewPrivateSpace(){
+  if(!global_viewPrivateSpace) global_viewPrivateSpace = new ViewPrivateSpace();
+  return global_viewPrivateSpace;
 }
 
-GtkViewWindow::~GtkViewWindow(){
-  delete s;
+ViewRegistrationL& viewRegistrations(){
+  return viewPrivateSpace()->viewRegistrations;
 }
 
-void GtkViewWindow::newView(Variable& var,uint fieldId){
-  View *v = ::newView(var,fieldId);
-  v->gtkNew(s->box);
-}
+//-- singleton list of view registrations:
 
-void GtkViewWindow::open(){
-}
-
-void GtkViewWindow::step(){
-  while (gtk_events_pending())  gtk_main_iteration();
-}
-
-void GtkViewWindow::close(){
-}
-
-  
-MT::Array<ViewInfo*> birosViews;
-
-View *newView(Variable& var,uint fieldId){
-  uint i;
-  ViewInfo *v;
-  MT::String type(var.fields(fieldId)->sysType);
-  for_list(i,v,birosViews){
-    if(v->applicableOnType == type) break;
-  }
-  if(i==birosViews.N){
-    MT_MSG("No View for field type '" <<type <<"' found");
-    return NULL;
-  }
-  cout
-    <<"Creating new view '" <<v->name <<"' for field #" <<fieldId <<" named '"
-    <<var.fields(fieldId)->name <<"' (type '" <<type <<"') of Variable '" <<var.name <<"'" <<endl;
-  return v->newInstance(var,fieldId);
-}
-
-void dumpViews(){
-  uint i;
-  ViewInfo *v;
-  cout <<" *** Views:" <<endl;
-  for_list(i, v, birosViews){
-    cout
-      <<"View '" <<v->name <<"' applies to fields of type '" <<v->applicableOnType <<"'" <<endl;
-  }
+void registerView(ViewRegistration* v){
+  viewRegistrations().append(v);
 }
 
 //===========================================================================
@@ -79,21 +46,49 @@ void dumpViews(){
 // View
 //
 
+struct sView{
+  gint timeoutTag;
+  sView():timeoutTag(0){}
+};
+
+int viewTimeout(void *v){
+  ((View*)v)->gtkUpdate();
+  return 1;
+}
+
+
+View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) {
+  s = new sView;
+  viewPrivateSpace()->lock.writeLock();
+  viewPrivateSpace()->views.append(this);
+  viewPrivateSpace()->lock.unlock();
+}
+
+View::~View(){
+  viewPrivateSpace()->lock.writeLock();
+  viewPrivateSpace()->views.removeValue(this);
+  viewPrivateSpace()->lock.unlock();
+  gtkLock();
+  if(widget) gtk_widget_destroy(widget);
+  if(gl){
+    gtk_timeout_remove(s->timeoutTag);
+    delete gl;
+  }
+  gtkUnlock();
+  delete s;
+}
+
 void View::gtkNewText(GtkWidget *container){
-  CHECK(container,"");
+  if(!container) container=gtkTopWindow("text view");
+  CHECK(!widget,"");
+  gtkLock();
   widget = gtk_text_view_new ();
-
-  GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
-
-  MT::String str;
-  write(str);
-  gtk_text_buffer_set_text (buffer, str, -1);
-    
   gtk_container_add(GTK_CONTAINER(container), widget);
   gtk_widget_show(container);
   gtk_widget_show(widget);
+  gtkUnlock();
+  loop(100);
 }
-
 
 void glDrawView(void *classP){
   View *v = (View*) classP;
@@ -101,83 +96,76 @@ void glDrawView(void *classP){
 }
 
 void View::gtkNewGl(GtkWidget *container){
-  CHECK(container,"");
-  OpenGL *gl = new OpenGL(container);
-  gtk_widget_set_size_request(gl->s->glArea, 100, 100);
+  if(!container) container=gtkTopWindow("GL view");
+  CHECK(!gl,"");
+  gl = new OpenGL(container);
   gl->add(glDrawView, this);
-  gl->update();
+  glInit();
+  loop(100);
 }
 
-
-//===========================================================================
-//
-// specific views
-//
-
-//explicit instantiation! triggers the creation of the static _info
-template class BasicTypeView<byte>;
-template class BasicTypeView<int>;
-template class BasicTypeView<uint>;
-template class BasicTypeView<float>;
-template class BasicTypeView<double>;
-
-//===========================================================================
-
-RgbView::RgbView(Variable& var,uint fieldId):View(var, fieldId) {
-  rgb = (byteA*) var.fields(fieldId)->p;
+void View::loop(uint msec){
+  gtkLock();
+  s->timeoutTag = gtk_timeout_add(msec, viewTimeout, this);
+  gtkUnlock();
 }
 
-void RgbView::gtkNew(GtkWidget *container){
-  if(!container){
-    container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(container), info.name);
-    gtk_window_set_default_size(GTK_WINDOW(container), 100, 100);
-    //gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
+void View::gtkUpdate(){
+  if(gl){
+    gl->update();
+  }else if(widget){
+    gtkLock();
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
+    MT::String str;
+    write(str);
+    gtk_text_buffer_set_text (buffer, str, -1);
+    gtkUnlock();
   }
-  widget = gtk_color_selection_new();
-  g_object_set_data(G_OBJECT(widget), "View", this);
-  
-  GdkColor col = {0, guint16((*rgb)(0))<<8, guint16((*rgb)(1))<<8, guint16((*rgb)(2))<<8 };
-  gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
-  //set events...
-  
-  gtk_container_add(GTK_CONTAINER(container), widget);
-  gtk_widget_show(container);
-  gtk_widget_show(widget);
-}; //the view crates a new gtk widget within the container
-
-void RgbView::gtkUpdate(){
-  GdkColor col = {0, guint16((*rgb)(0))<<8, guint16((*rgb)(1))<<8, guint16((*rgb)(2))<<8 };
-  gtk_color_selection_set_current_color((GtkColorSelection*)widget, &col);
-  //CHECK: gtk_color_selection_is_adjusting((GtkColorSelection*)widget);
-}; //let the view update the gtk widget
-
-ViewInfo_typed<RgbView, byteA> RgbView::info("RgbView", ViewInfo::fieldVT);
-
-//===========================================================================
-
-MeshView::MeshView(Variable& var,uint fieldId):View(var, fieldId) {
-  mesh = (ors::Mesh*) var.fields(fieldId)->p;
 }
-
-void MeshView::glDraw() {
-  glStandardLight(NULL);
-  ors::glDraw(*mesh);
-}
-
-ViewInfo_typed<MeshView, ors::Mesh> MeshView::info("MeshView", ViewInfo::fieldVT);
-
-//===========================================================================
-
-OrsView::OrsView(Variable& var,uint fieldId):View(var, fieldId) {
-  ors = (ors::Graph*) var.fields(fieldId)->p;
-}
-
-void OrsView::glDraw() {
-  glStandardScene(NULL);
-  ors::glDraw(*ors);
-}
-
-ViewInfo_typed<OrsView, ors::Graph> OrsView::info("OrsView", ViewInfo::fieldVT);
 
 #endif
+
+ViewRegistrationL getViews(const char* appliesOn_sysType){
+  uint i;
+  ViewRegistration *vi;
+  ViewRegistrationL vis;
+  for_list_rev(i,vi,viewRegistrations()){
+    if(!strcmp(vi->appliesOn_sysType,"ALL"))
+      vis.append(vi);
+    else
+      if(!strcmp(vi->appliesOn_sysType, appliesOn_sysType))
+	vis.append(vi);
+  }
+  return vis;
+}
+
+ViewRegistration* getViewByName(const char *name){
+  uint i;
+  ViewRegistration *vi;
+  for_list(i,vi,viewRegistrations()) if(!strcmp(vi->userType, name)) return vi;
+  return NULL;
+}
+
+void dumpViews(){
+  cout <<"\n +++ VIEWS +++" <<endl;
+  uint i;
+  ViewRegistration *vi;
+  for_list_rev(i,vi,viewRegistrations()){
+    cout
+      <<"View name=" <<vi->userType
+      <<" applies_on=" <<vi->appliesOn_sysType <<endl;
+  }
+}
+
+void deleteView(View* v){
+  viewPrivateSpace()->lock.writeLock();
+  viewPrivateSpace()->views.removeValue(v);
+  viewPrivateSpace()->lock.unlock();
+  /*gtkLock();
+  if(v->widget) gtk_widget_destroy(v->widget);
+  if(v->gl) delete v->gl;
+  v->widget=NULL;
+  v->gl=NULL;
+  gtkUnlock();*/
+  //TODO: garbage collection!
+}

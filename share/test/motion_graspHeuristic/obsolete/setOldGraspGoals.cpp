@@ -1,4 +1,4 @@
-void setOldGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, uint phase){
+void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase){
   sys.setx0ToCurrent();
   
   //load parameters only once!
@@ -15,7 +15,7 @@ void setOldGraspGoals(soc::SocSystem_Ors& sys, uint T, uint shapeId, uint side, 
   }
   
   //set the time horizon
-  CHECK(T==sys.nTime(), "");
+  CHECK(T==sys.get_T(), "");
   
   //deactivate all variables
   activateAll(sys.vars, false);

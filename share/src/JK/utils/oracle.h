@@ -26,6 +26,19 @@ class HigherOracle : public Oracle {
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
 
+class InsideOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
+class OutOfReachOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
+class UprightOracle : public Oracle {
+  public:
+    virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
+};
+
 class HumanOracle : public Oracle {
 	private:
 		const char* predicate;
@@ -34,9 +47,4 @@ class HumanOracle : public Oracle {
     virtual const int classify(const MT::Array<arr>& data, const int set = 0) const;
 };
 
-class Oracle_GroundedSymbol : public relational::GroundedSymbol {
-	public:
-		Oracle_GroundedSymbol(MT::String name, uint arity, bool build_derived_predicates = false) : GroundedSymbol(name, arity, build_derived_predicates) {};
-		virtual bool holds(arr& x) const;
-};
 #endif //_ORACLE_H_

@@ -31,14 +31,12 @@ double determinant_LU(const arr& X){
   uint n=X.d0, i;
   arr LU;
   LU=X;
-  int *idx=new int[n];
-  double *d=new double[n];
-  LU.getCarray();
-  ludcmp(LU.pp, n, idx, d);
+  intA idx(n);
+  doubleA d(n);
+  MT::Array<double*> tmp;
+  ludcmp(LU.getCarray(tmp), n, idx.p, d.p);
   double det=1.;
   for(i=0; i<n; i++) det *= LU(i, i);
-  delete[] idx;
-  delete[] d;
   
   //double ddet=determinant(X); CHECK(det==ddet, "");
   return det;
@@ -53,21 +51,18 @@ void inverse_LU(arr& Xinv, const arr& X){
   if(n==n && n==2){ inverse2d(Xinv, X); return; }
   arr LU;
   LU=X;
-  LU.getCarray();
-  int *idx=new int[n];
-  double *d=new double[n];
-  ludcmp(LU.pp, n, idx, d);
+  intA idx(n);
+  doubleA d(n);
+  MT::Array<double*> tmp;
+  ludcmp(LU.getCarray(tmp), n, idx.p, d.p);
   //--
   arr col(n);
   for(j=0; j<n; j++){
     col.setZero();
     col(j)=1.0;
-    lubksb(LU.pp, n, idx, col.p);
+    lubksb(LU.getCarray(tmp), n, idx.p, col.p);
     for(i=0; i<n; i++) Xinv(i, j)=col(i);
   }
-  
-  delete[] idx;
-  delete[] d;
   
 #ifdef MT_CHECK_INVERSE
   arr D, _D; D.setId(n);
@@ -85,9 +80,9 @@ void LU_decomposition(arr& L, arr& U, const arr& X){
   LU=X;
   intA idx(n);
   doubleA d(n);
-  LU.getCarray();
-  
-  ludcmp(LU.pp, n, idx.p, d.p);
+  MT::Array<double*> tmp;
+
+  ludcmp(LU.getCarray(tmp), n, idx.p, d.p);
   
   L.resizeAs(LU);  L.setZero();
   U.resizeAs(LU);  U.setZero();

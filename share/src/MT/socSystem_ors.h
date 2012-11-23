@@ -39,7 +39,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void recordTrajectory(const arr& q,const char *variable,const char *file);
 
   //implementations of virtual methods
-  uint nTime();
+  uint get_T();
+  uint get_xDim();
   uint nTasks();
   uint qDim();
   uint uDim();
@@ -56,13 +57,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   void setqv(const arr& q, const arr& qd, uint t=0);
   void setx0ToCurrent();
   //void geth  (arr& h);
-  void getW(arr& W, uint t);
-  void getWinv(arr& Winv, uint t);
-  void getH(arr& H, uint t);
-  void getHinv(arr& Hinv, uint t);
-  void getQ(arr& Q, uint t);
+  virtual void getControlCosts(arr& H, arr& Hinv, uint t);
   void getHrateInv(arr& HrateInv);
-  void getQrate(arr& Qrate);      
   bool isConditioned(uint i, uint t);
   bool isConstrained(uint i, uint t);
   const char* taskName(uint i);
@@ -76,8 +72,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   //void getC   (arr& C_i, uint i, uint t);
   //void getCV  (arr& D_i, uint i, uint t);
   double getTau(bool scaled=true);
-  void getMF(arr& M, arr& F, uint t);
-  void getMinvF(arr& Minv, arr& F, uint t);
+  void getMF(arr& M, arr& F, arr& Q, uint t);
+  void getMinvF(arr& Minv, arr& F, arr& Q, uint t);
   virtual void setTau(double tau);
 };
 

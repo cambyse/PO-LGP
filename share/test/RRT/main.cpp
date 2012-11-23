@@ -1,4 +1,4 @@
-#include <MT/algos.h>
+#include <MT/util.h>
 #include <MT/plot.h>
 #include <MT/ann.h>
 
@@ -21,11 +21,11 @@ void testRRT(){
   ANN ann[2];      //ann[fb] also stores all points added to the tree in ann[fb].X
   uintA parent[2]; //for each point we also store the index of the parent node
 
-  ann   [0].append(q_start); //append q as the root of the tree
-  parent[0].append(0);    //q has itself as parent
+  ann   [0].append(q_start); //append q as the root of the fwd tree
+  parent[0].append(0);       //q has itself as parent
   
-  ann   [1].append(q_goal); //append q as the root of the tree
-  parent[1].append(0);   //q has itself as parent
+  ann   [1].append(q_goal);  //append q as the root of the bwd tree
+  parent[1].append(0);       //q has itself as parent
   
   plotOpengl();
   plotModule.colors=false;
@@ -37,16 +37,15 @@ void testRRT(){
     if(rnd.uni()<beta) q = q_goal;
     else rndUniform(q,-1.,1.,false);
 
-    for(int fb=0;fb<2;fb++){
+    for(int fb=0;fb<2;fb++){ //fwd and bwd growth
       //find NN
       uint k=ann[fb].getNN(q);
-      cout <<"\r avg time to get NN = " <<MT::timerRead(false)/(i+1) <<"  points = " <<ann[fb].X.d0;
 
       //compute little step
       d = q - ann[fb].X[k]; //difference vector between q and nearest neighbor
       qnew = ann[fb].X[k] + stepsize/norm(d) * d;
 
-      //check collision (here: simple shere)
+      //check collision (here: simple sphere)
       if(norm(qnew)<.5) collision=true;
       else collision=false;
 
@@ -63,8 +62,18 @@ void testRRT(){
         line.append(ann[fb].X[k]); line.reshape(1,line.N);
         line.append(qnew);
         plotLine(line); //add a line to the plot
-        if(!fb && !(i%100))
-          plot(false); //update the plot
+      }
+
+      //output
+      if(i<20 || !(i%100)){
+        MT::String str;
+        str
+	  <<"i=" <<i
+	  <<"  fwd-tree#=" <<ann[0].X.d0
+	  <<"  bwd-tree#=" <<ann[1].X.d0
+	  <<endl;
+	plot(false,str); //update the plot
+	//MT::wait(.1);
       }
     }
   }

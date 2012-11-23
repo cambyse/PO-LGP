@@ -16,6 +16,12 @@ void testLoadSave(){
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
+
+  for(uint i=0;i<0;i++){
+    OpenGL gl;
+    init(G,gl,"arm3.ors");
+//    MT::wait(.1)
+  }
 }
 
 
@@ -405,7 +411,7 @@ void testContactDynamics(){
 static void drawTrimesh(void* _mesh){
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
-  ors::glDraw(*mesh);
+  mesh->glDraw();
   glPopMatrix();
 }
 
@@ -426,12 +432,12 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  //testLoadSave();
-  //testPlayStateSequence();
-  //testKinematics();
-  //testFollowRedundantSequence();
-  //testDynamics();
-  //testContacts();
+  testLoadSave();
+  testPlayStateSequence();
+  testKinematics();
+  testFollowRedundantSequence();
+  testDynamics();
+  testContacts();
 #ifdef MT_ODE
   testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

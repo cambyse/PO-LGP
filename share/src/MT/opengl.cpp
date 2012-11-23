@@ -29,11 +29,11 @@
 #  include "opengl_fltk.cxx"
 #endif
 
-#ifdef MT_QTGLUT
+#ifdef MT_QTGL
 #  include "opengl_qt.cxx"
 #endif
 
-#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGLUT
+#if !defined MT_FREEGLUT && !defined MT_GTKGL && !defined MT_FLTK && !defined MT_QTGL
 #  include "opengl_void.cxx"
 #else
 #  define MT_GLUT
@@ -332,7 +332,8 @@ void glPushLightOff() { glGetBooleanv(GL_LIGHTING, &glLightIsOn); glDisable(GL_L
 void glPopLight() { if(glLightIsOn) glEnable(GL_LIGHTING); }
 
 void glDrawText(const char* txt, float x, float y, float z) {
-#if defined MT_GLUT
+#if 1 //defined MT_FREEGLUT
+  glDisable(GL_DEPTH_TEST);
   glPushLightOff();
   glRasterPos3f(x, y, z);
   void *font=GLUT_BITMAP_HELVETICA_12;
@@ -352,6 +353,7 @@ void glDrawText(const char* txt, float x, float y, float z) {
     txt++;
   }
   glPopLight();
+  glEnable(GL_DEPTH_TEST);
 #endif
 }
 
@@ -952,24 +954,18 @@ void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {
   glWatchImage(img, wait, 20);
 }*/
 
-#ifdef MT_FREEGLUT
-void OpenGL::displayGrey(const arr &x, uint d0, uint d1, bool wait, uint win) {
-  if(!d0) d0=x.d0;
-  if(!d1) d1=x.d1;
-  glutSetWindow(s->windowID);
-  double ma=x.max();
-  text.clear() <<"display" <<win <<" max=" <<ma <<endl;
-  byteA img;
-  img.resize(d0*d1);
-  img.setZero();
+void OpenGL::displayGrey(const arr &x, bool wait, float _zoom) {
+  static byteA img;
+  resizeAs(img, x);
+  double mi=x.min(), ma=x.max();
+  text.clear() <<"displayGrey" <<" max=" <<ma <<"min=" <<mi <<endl;
   for(uint i=0; i<x.N; i++) {
-    if(x.elem(i)>0.) img(i)=(byte)(255.*x.elem(i)/ma);
-    if(x.elem(i)<0.) MT_MSG("warning: negative entry");
+    img.elem(i)=(byte)(255.*(x.elem(i)-mi)/(ma-mi));
   }
-  img.reshape(d0, d1);
-  watchImage(img, wait, 20);
+  watchImage(img, wait, _zoom);
 }
 
+#ifdef MT_FREEGLUT
 void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win) {
   if(!d0) d0=x.d0;
   if(!d1) d1=x.d1;
@@ -998,13 +994,13 @@ void glDrawUI(void *p) {
 bool glUI::hoverCallback(OpenGL& gl) {
   //bool b=
   checkMouse(gl.mouseposx, gl.mouseposy);
-  //if(b) glutPostRedisplay();
+  //if(b) postRedrawEvent(false);
   return true;
 }
 
 bool glUI::clickCallback(OpenGL& gl) {
   bool b=checkMouse(gl.mouseposx, gl.mouseposy);
-  if(b) gl.postRedrawEvent();
+  if(b) gl.postRedrawEvent(true);
   int t=top;
   if(t!=-1) {
     cout <<"CLICK! on button #" <<t <<endl;
@@ -1059,13 +1055,16 @@ void glDrawDots(arr& dots) {
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy) {
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0), height(0) {
+  //MT_MSG("creating OpenGL=" <<this);
+  initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();
   processEvents();
 }
 
-OpenGL::OpenGL(void *container) {
+OpenGL::OpenGL(void *container):s(NULL), width(0), height(0) {
+  initGlEngine();
   s=new sOpenGL(this,container);
   init();
   processEvents();
@@ -1073,6 +1072,8 @@ OpenGL::OpenGL(void *container) {
 
 OpenGL::~OpenGL() {
   delete s;
+  s=NULL;
+//  MT_MSG("destructing OpenGL=" <<this);
 }
 
 OpenGL* OpenGL::newClone() const {
@@ -1084,6 +1085,7 @@ OpenGL* OpenGL::newClone() const {
 }
 
 void OpenGL::init() {
+  CHECK(width && height,"");
   camera.setPosition(0., 0., 10.);
   camera.focus(0, 0, 0);
   camera.setZRange(.1, 1000.);
@@ -1333,6 +1335,8 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &s);
   if(s!=1) MT_MSG("OpenGL name stack has not depth 1 (pushs>pops) in DRAW mode:" <<s);
   //CHECK(s<=1, "OpenGL matrix stack has not depth 1 (pushs>pops)");
+
+  //this->s->endGlContext();
 #endif
 }
 
@@ -1340,11 +1344,13 @@ void OpenGL::Select(){
 #ifdef MT_GL
   uint i, j, k;
   
+  s->beginGlContext();
+
   glSelectBuffer(1000, selectionBuffer);
   glRenderMode(GL_SELECT);
   
 #if 1
-  GLint w=width(), h=height();
+  GLint w=width, h=height;
   
   //projection
   glMatrixMode(GL_PROJECTION);
@@ -1408,6 +1414,8 @@ void OpenGL::Select(){
   }
   
   if(reportSelects) reportSelection();
+
+  s->endGlContext();
 #endif
 }
 
@@ -1424,7 +1432,7 @@ int OpenGL::watch(const char *txt) {
 bool OpenGL::update(const char *txt) {
   pressedkey=0;
   if(txt) text.clear() <<txt;
-  postRedrawEvent();
+  postRedrawEvent(false);
   processEvents();
   return !pressedkey;
 }
@@ -1437,7 +1445,7 @@ int OpenGL::timedupdate(double sec) {
   if(lasttime>0. && now-lasttime<sec) MT::wait(lasttime+sec-now);
   lasttime=now;
   return update();
-#if 0//def MT_QTGLUT
+#if 0//def MT_QTGL
   int i;
   quitLoopOnTimer=true;
   i=startTimer(msec);
@@ -1461,7 +1469,7 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
   if(resetCamera) {
-    GLint viewport[4] = {0, 0, width(), height()};
+    GLint viewport[4] = {0, 0, width, height};
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1485,7 +1493,7 @@ void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   img.resize(h, w, 3);
@@ -1498,7 +1506,7 @@ void OpenGL::captureDepth(byteA &depth, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   depth.resize(h, w);
@@ -1511,7 +1519,7 @@ void OpenGL::captureDepth(floatA &depth, int w, int h, ors::Camera *cam) {
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   depth.resize(h, w);
@@ -1524,7 +1532,7 @@ void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
 #endif
-  glutPostRedisplay();
+  postRedrawEvent(false);
   processEvents();
   Draw(w, h, cam);
   imgR.resize(h, w, 3);
@@ -1580,7 +1588,7 @@ void OpenGL::saveEPS(const char*) {
 }
 #endif
 
-#ifndef MT_QTGLUT
+#ifndef MT_QTGL
 /*!\brief report on the OpenGL capabilities (the QGLFormat) */
 void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 #endif
@@ -1592,7 +1600,7 @@ void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 //
 
 #if 1
-#  define CALLBACK_DEBUG(x) if(reportEvents) x
+#  define CALLBACK_DEBUG(x) if(reportEvents) { cout <<MT_HERE <<s <<':'; x; }
 #else
 #  define CALLBACK_DEBUG(x)
 #endif
@@ -1609,15 +1617,17 @@ void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, i
   if(vec(2)<0.) vec(2)=0.;
 }
 
-void OpenGL::Reshape(int width, int height) {
-  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, width, height));
+void OpenGL::Reshape(int _width, int _height) {
+  CALLBACK_DEBUG(printf("Window %d Reshape Callback:  %d %d\n", 0, _width, _height));
+  width=_width;
+  height=_height;
   camera.setWHRatio((double)width/height);
   for(uint v=0; v<views.N; v++) views(v).camera.setWHRatio((views(v).ri-views(v).le)*width/((views(v).to-views(v).bo)*height));
-  //postRedrawEvent();
+  //postRedrawEvent(true);
 }
 
 void OpenGL::Key(unsigned char key, int _x, int _y) {
-  _y = height()-_y;
+  _y = height-_y;
   CALLBACK_DEBUG(printf("Window %d Keyboard Callback:  %d (`%c') %d %d\n", 0, key, (char)key, _x, _y));
   mouseposx=_x; mouseposy=_y;
   pressedkey=key;
@@ -1631,7 +1641,7 @@ void OpenGL::Key(unsigned char key, int _x, int _y) {
 }
 
 void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
-  int w=width(), h=height();
+  int w=width, h=height;
   _y = h-_y;
   CALLBACK_DEBUG(printf("Window %d Mouse Click Callback:  %d %d %d %d\n", 0, button, downPressed, _x, _y));
   mouse_button=1+button;
@@ -1679,7 +1689,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   if(!downPressed) {
     for(uint i=0; i<clickCalls.N; i++) cont=cont && clickCalls(i)->clickCallback(*this);
   }
-  if(!cont) { postRedrawEvent(); return; }
+  if(!cont) { postRedrawEvent(true); return; }
   
   //mouse scroll wheel:
   if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
@@ -1690,21 +1700,20 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
     if(topSelection)
       cam->focus(topSelection->x, topSelection->y, topSelection->z);
   }
-  
-  postRedrawEvent();
+  postRedrawEvent(true);
 }
 
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {
   CALLBACK_DEBUG(printf("Window %d Mouse Wheel Callback:  %d %d %d %d\n", 0, wheel, direction, x, y));
   if(direction>0) camera.X->pos += camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
   else            camera.X->pos -= camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
-  postRedrawEvent();
+  postRedrawEvent(true);
 }
 
 
 void OpenGL::Motion(int _x, int _y) {
 #ifdef MT_GL
-  int w=width(), h=height();
+  int w=width, h=height;
   _y = h-_y;
   CALLBACK_DEBUG(printf("Window %d Mouse Motion Callback:  %d %d\n", 0, _x, _y));
   mouseposx=_x; mouseposy=_y;
@@ -1728,7 +1737,7 @@ void OpenGL::Motion(int _x, int _y) {
     mouseposx=_x; mouseposy=_y;
     bool ud=false;
     for(uint i=0; i<hoverCalls.N; i++) ud=ud || hoverCalls(i)->hoverCallback(*this);
-    if(ud) postRedrawEvent();
+    if(ud) postRedrawEvent(true);
     return;
   }
   //CHECK(mouseIsDown, "I thought the mouse is down...");
@@ -1749,7 +1758,7 @@ void OpenGL::Motion(int _x, int _y) {
     cam->X->pos = s->downFoc + rot * (s->downPos - s->downFoc);   //rotate camera's position
     //cam->focus();
 #endif
-    postRedrawEvent();
+    postRedrawEvent(true);
     if(immediateExitLoop) exitEventLoop();
   }
   if(mouse_button==3) {  //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
@@ -1757,13 +1766,13 @@ void OpenGL::Motion(int _x, int _y) {
         trans(2)=0.;
         trans = s->downRot*trans;
         cam->X->pos = s->downPos + trans;
-        postRedrawEvent();*/
+        postRedrawEvent(true);*/
   }
   if(mouse_button==2) {  //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec(1) - vec(1);
     if(dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
-    postRedrawEvent();
+    postRedrawEvent(true);
   }
 #else
   NICO;
@@ -1840,11 +1849,11 @@ bool glUI::checkMouse(int _x, int _y) {
     if(_x>=x && _x <=x+w && _y>=y && _y<=y+h) top = i;
   }
   if(otop==top) return false;
-  //glutPostRedisplay();
+  //postRedrawEvent(false);
   return true;
 }
 
-#ifdef MT_QTGLUT
+#ifdef MT_QTGL
 #if   defined MT_MSVC
 #  include"opengl_MSVC.moccpp"
 #elif defined MT_SunOS

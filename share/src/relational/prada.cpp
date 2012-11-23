@@ -120,10 +120,10 @@ void PRADA_Planner::setReward(Reward* reward) {
           if (dg!= NULL)
             this->prada_reward = convert_reward((DisjunctionReward*) reward);
           else {
-            RewardConjunction *rc = dynamic_cast<RewardConjunction*>(reward);
-            if (rc != NULL)
-              this->prada_reward = convert_reward(rc);
-            else 
+           CombinedReward* cg = dynamic_cast<CombinedReward*>(reward);
+            if (cg!= NULL)
+              this->prada_reward = convert_reward((CombinedReward*) reward);
+            else
               NIY;
           }
         }
@@ -151,7 +151,7 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
     case Reward::reward_maximize_function: return convert_reward((MaximizeReward*) reward);
     case Reward::reward_not_these_states: return convert_reward((NotTheseStatesReward*) reward);
     case Reward::reward_one_of_literal_list: return convert_reward((DisjunctionReward*) reward);    
-    case Reward::conjunction_of_rewards: return convert_reward((RewardConjunction*) reward);    
+    case Reward::reward_combined: return convert_reward((CombinedReward*) reward);    
     default: NIY;
   }
 }
@@ -704,10 +704,7 @@ void PRADA_Planner::calc_dbn_state_symbols() {
     }
   }
   // (ii) reward concepts
-  SymL symbols_reward;
-  calc_dbn_state_symbols_for_rewards(symbols_reward, reward);
-  dbn_state_symbols.setAppend(symbols_reward);
-
+  get_reward_symbols(reward);
   Symbol::sort(dbn_state_symbols);
   if (DEBUG>0) {
     cout<<"(A-) PRADA's DBN will be built with random variables for the following state symbols:"<<endl;
@@ -994,8 +991,9 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     }
 };
 
-class PRADA_Reward_ConjunctionOfRewards : public PRADA_Reward {
-  MT::Array<PRADA_Reward*> pradaRewards;
+class PRADA_Reward_Combined : public PRADA_Reward {
+  MT::Array<PRADA_Reward*> PRADA_rewards;
+  arr weights;
   
   public:
     PRADA_Reward_ConjunctionOfRewards(const MT::Array<PRADA_Reward*> &rewards) {
@@ -1084,6 +1082,9 @@ PRADA_Reward* PRADA_Planner::convert_reward(DisjunctionReward* reward) {
   return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
 }
 
+PRADA_Reward* PRADA_Planner::convert_reward(CombinedReward* reward) {
+  return new PRADA_Reward_Combined(reward->sub_rewards, reward->weights);
+}
 
 PRADA_Reward* PRADA_Planner::convert_reward(RewardConjunction* reward) {
   MT::Array<PRADA_Reward*> pradaRewards;
@@ -2268,6 +2269,7 @@ void calcDerived1(ConjunctionSymbol* s, uint t, const uintA& constants, PRADA_DB
               LiteralRV* var = dbn->RVefficiency__atom2var(base_lit_ground);
               int val_idx = var->range.findValue(base_lit_ground->value);
               prob *= var->P(t,val_idx);
+              //cout << *base_lit_ground << " --- " << prob << endl;
               if (prob < 0.01)
                 break;
             }

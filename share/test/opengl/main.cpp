@@ -274,15 +274,16 @@ void testImage(){
   gl.watchImage(img,true,2);
 }
 
+//extern void qtCheckInitialized();
+
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-#ifdef MT_QT
-  QApplication myapp(argc,argv);
-#endif
-
+  //qtCheckInitialized();
+  
+  testTeapot();
   testGrab();
-  return 0;
+  //return 0;
   testMultipleViews();
   //return 0;
   testTeapot();
@@ -290,7 +291,6 @@ int main(int argc,char **argv){
   testMesh();
   testUI();
   testTexture();
-  testSelect();
   testMenu();
   testImage();
 

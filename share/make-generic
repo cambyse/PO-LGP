@@ -8,15 +8,15 @@
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
 ifndef MLR_EXLIB_PATH
-MLR_EXLIB_PATH = $(HOME)/lib
+MLR_EXLIB_PATH = /home/lib
 endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
 
-$(info ------------------------------------------------------------)
-$(info make $(shell pwd -L) )
-$(info BASE=$(BASE) )
-$(info ------------------------------------------------------------)
+# $(info ------------------------------------------------------------)
+# $(info make $(shell pwd -L) )
+# $(info BASE=$(BASE) )
+# $(info ------------------------------------------------------------)
 
 ################################################################################
 #
@@ -51,10 +51,10 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall -Wunused-but-set-variable $(CXXFLAGS)
+CXXFLAGS := -g -Wall $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),fast_debug)
-CXXFLAGS := -g -O3 -Wall -Wunused-but-set-variable $(CXXFLAGS)
+CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
 endif
 ifeq ($(OPTIM),penibel)
 CXXFLAGS := -g -Wall -Wextra $(CXXFLAGS)
@@ -99,7 +99,6 @@ endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
 LPATH	:= $(BASE)/lib:$(LPATH)
-LIBS    += -lrt 
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -172,6 +171,11 @@ endif
 ################################################################################
 # (a tag like `FREEGLUT = 1' can be defined in the make-config as needed)
 
+ifeq ($(OPENMP),1)
+CXXFLAGS += -fopenmp -DOPENMP
+endif
+
+
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
 NXX = $(LIBPATH)/cuda/bin/nvcc
@@ -194,9 +198,9 @@ endif
 
 ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(LIBPATH)/schunkSDH-11-05-11/include:$(LIBPATH)/schunkLWA/include
+CPATH   := $(CPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/include:$(MLR_EXLIB_PATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(LIBPATH)/schunkSDH-11-05-11/lib:$(LIBPATH)/schunkLWA/lib:$(LIBPATH)/ntcan/lib
+LPATH   := $(LPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/lib:$(MLR_EXLIB_PATH)/schunkLWA/lib:$(MLR_EXLIB_PATH)/ntcan/lib
 LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -220,8 +224,8 @@ CXXFLAGS  += -DMT_FLTK
 LIBS += -lfltk -lfltk_gl -lGLU -lGL
 endif
 
-ifeq ($(QTGLUT),1)
-CXXFLAGS  += -DMT_QTGLUT -DMT_QT -DQT_DLL# -DNOUNICODE
+ifeq ($(QTGL),1)
+CXXFLAGS  += -DMT_QTGL -DMT_QT -DQT_DLL# -DNOUNICODE
 LIBS += -lglut -lGLU -lGL -lX11
 QT := 1
 endif
@@ -234,12 +238,13 @@ endif
 ifeq ($(GTK),1)
 #CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 #LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gthread-2.0 gtkglext-1.0`
-LIBS     += `pkg-config --libs gtk+-2.0 gthread-2.0 gtkglext-1.0`
+CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
+LIBS     += `pkg-config --libs  gtk+-2.0 gtkglext-1.0` -lgthread-2.0
 #LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
 endif
 
 ifeq ($(GRAPHVIZ),1)
+CXXFLAGS += -DMT_GRAPHVIZ
 LIBS += -lgraph -lcgraph -lgvc
 endif
 
@@ -322,6 +327,13 @@ CXXFLAGS  += -DMT_GSL
 LIBS      += -lgsl
 endif
 
+ifeq ($(OCTAVE),1)
+CXXFLAGS += -DMT_OCTAVE
+LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
+LIBS	+= -loctinterp -loctave
+# TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!
+endif
+
 ifeq ($(SOIL),1)
 CXXFLAGS  += -DTL_SOIL
 LIBS    += -lSOIL
@@ -389,8 +401,20 @@ LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
 LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
-ifeq ($(URGLASER),1)
-CXXFLAGS  += -DMT_LASER
+ifeq ($(PCL),1)
+QHULL = 1
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
+LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
+FREENECT = 1
+endif
+
+ifeq ($(FREENECT),1)
+LPATH := $(LPATH):$(MLR_EXLIB_PATH)/libfreenect/lib
+CPATH := $(CPATH):$(MLR_EXLIB_PATH)/libfreenect/include
+LIBS += -lfreenect
+endif
+
+ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
 LPATH     := $(LPATH):$(LIBPATH)/urg-0.8.16/src/c/urg/.libs
@@ -518,7 +542,7 @@ export MSVC_LPATH
 
 ################################################################################
 #
-# make targets
+# concrete make targets
 #
 ################################################################################
 
@@ -626,6 +650,9 @@ endif
 %_moc.cpp: %.h
 	$(MOC) -o $*_moc.cpp $*.h
 
+%_moc.cxx: %.h
+	$(MOC) -o $*_moc.cxx $*.h
+
 %_$(SYS).moccpp: %.h
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
@@ -646,5 +673,30 @@ generate_Makefile.dep: $(OBJS:%.o=%.cpp)
 
 includeAll.cxx: force
 	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
+
+################################################################################
+#
+# meta rules -- for calling make in other directories
+#
+################################################################################
+
+makePath/%::
+	$(MAKE) -C $*
+
+cleanPath/%::
+	$(MAKE) clean -C $*
+
+makeSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;
+
+cleanSubpaths/%::
+	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+
+doc::
+	$(MAKE) -C doc doxy_array
+
+zip::
+	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude
+
 
 force:	;

@@ -2,6 +2,7 @@
 #define motion_FeedbackControlTasks_h
 
 #include <MT/ors.h>
+
 struct JoystickState;
 struct SkinPressure;
 
@@ -10,10 +11,14 @@ struct SkinPressure;
 // FeedbackControlTasks
 //
 
+//TODO: feedback controllers must have a stopping condition: when to stop the feedback motion primitive!
+
 struct FeedbackControlTaskAbstraction {
   TaskVariableList TVs;
   bool requiresInit;
-  FeedbackControlTaskAbstraction():requiresInit(true) {}
+  bool done;
+  uint count;
+  FeedbackControlTaskAbstraction():requiresInit(true), done(false), count(0) {}
   virtual void initTaskVariables(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
   virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
 };
@@ -47,7 +52,7 @@ struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
 struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   JoystickState *joyState;
   SkinPressure *skinPressure;
-  double joyRate;
+  double joyRate, defaultEff_vprec;
   ~Joystick_FeedbackControlTask() { listDelete(TVs); }
   virtual void initTaskVariables(const ors::Graph& ors);
   virtual void updateTaskVariableGoals(const ors::Graph& ors);

@@ -270,7 +270,15 @@ struct Spline {
 #ifndef MT_ORS_ONLY_BASICS
 struct Joint;
 struct Shape;
+struct Body;
 struct Graph;
+
+} // namespace
+
+typedef MT::Array<ors::Shape*> ShapeL;
+typedef MT::Array<ors::Body*> BodyL;
+
+namespace ors {
 //===========================================================================
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
@@ -369,12 +377,12 @@ struct Shape {
 //===========================================================================
 //! proximity information (when two shapes become close)
 struct Proxy {
-  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ?
+  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              //!< index of shape B
-  Vector posA, velA;   //!< contact or closest point position on surface of shape A (in world coordinates)
-  Vector posB, velB;   //!< contact or closest point position on surface of shape B (in world coordinates)
+  Vector posA, velA;  //!< contact or closest point position on surface of shape A (in world coordinates)
+  Vector posB, velB;  //!< contact or closest point position on surface of shape B (in world coordinates)
   Vector normal;      //!< contact normal, pointing from B to A (proportional to posA-posB)
-  double d;             //!< distance (positive) or penetration (negative) between A and B
+  double d;           //!< distance (positive) or penetration (negative) between A and B
   Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
   uint age,colorCode;
   Proxy();
@@ -411,6 +419,7 @@ struct Graph {
   void makeLinkTree(); //modify transformations so that B's become identity
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
+  void addObject(Body *b);
   
   //!@name computations on the DoFs
   void calcBodyFramesFromJoints();
@@ -667,7 +676,7 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   //!@name updates
-  virtual void updateState(const ors::Graph &ors, double tau=1.) = 0;
+  virtual void updateState(const ors::Graph &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
   void updateChange(int t=-1, double tau=1.);
   virtual void getHessian(arr& H) { NIY; }
   
@@ -718,7 +727,7 @@ struct DefaultTaskVariable:public TaskVariable {
   //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
   void getHessian(const ors::Graph& ors, arr& H);
   
   //!@name virtual user update
@@ -765,7 +774,7 @@ struct ProxyTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyTaskVariable(*this); }
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
 };
 
 /*!\brief basic task variable */
@@ -787,7 +796,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyAlignTaskVariable(*this); }
   
   //!@name updates
-  void updateState(const ors::Graph& ors, double tau=1.); //MT TODO don't distinguish between updateState and updateJacobian! (state update requires Jacobian to estimate velocities)
+  void updateState(const ors::Graph& ors, double tau=1.);
 };
 
 

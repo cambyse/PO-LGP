@@ -83,6 +83,9 @@ template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
 #define T int
 #  include "array_instantiate.cxx"
 #undef T
+#define T long
+#  include "array_instantiate.cxx"
+#undef T
 #define T byte
 #  include "array_instantiate.cxx"
 #undef T
@@ -93,6 +96,7 @@ template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;
 //template MT::Array<ors::Transformation*>::~Array();
 
 template MT::Array<MT::String>::Array();
+template MT::Array<MT::String>::~Array();
 
 template MT::Array<arr*>::Array();
 template MT::Array<arr*>::Array(uint);

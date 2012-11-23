@@ -1,7 +1,21 @@
 #include <motion/motion.h>
 #include <perception/perception.h>
+#include <perception/pointcloud.h>
+#include <hardware/kinect.h>
 #include <hardware/hardware.h>
 
+#ifdef PCL
+#include <pcl/visualization/pcl_visualizer.h>
+#endif
+
+#include <devTools/logging.h>
+
+#include <views/views.h>
+#include <views/specificViews.h>
+#include <biros/control.h>
+#include <MT/ors.h>
+
+SET_LOG(main, DEBUG);
 
 /* What doesn't work yet:
  
@@ -27,90 +41,134 @@ int main(int argn,char** argv){
   JoystickState joystickState;
   
   // processes
-  Controller controller;
-  ActionProgressor actionProgressor;
-  
-  // viewers
-  OrsViewer<GeometricState>     view0(geometricState);
-  PoseViewer<HardwareReference> view8(hardwareReference);
+  Process* ctrl = newMotionController(&hardwareReference, NULL, &motions);
+  newActionProgressor(motions);
+ 
+  // Perception
+  //Variables                                  
+  PointCloudVar kinectData3d("KinectData3D");   
+  PointCloudSet objectClusters("ObjectClusters");
+  ObjectSet objects("Objects"); 
+  ObjectBeliefSet filteredObjects("filteredObjects");
+  Workspace<FittingJob, FittingResult>
+    fittingWorkspace("FittingWorkspace");    
+  // Processes
+  ProcessL Perception = newPointcloudProcesses(1);
+  Perception(0)->threadOpen();
+ 
+  while(objectClusters.get_point_clouds(NULL).N == 0) MT::wait(0.1);
 
-  //-- hardware
+
+
+//-- hardware
   // variables
   //(none)
   // processes
-  Joystick joystick;
   SchunkArm schunkArm;
   SchunkHand schunkHand;
   SchunkSkin schunkSkin;
-  // viewers
-  //(none)
+  ProcessL hardware = LIST<Process>(schunkArm, schunkHand, schunkSkin);
 
-  //-- perception
-  // variables
-  Image camL("CameraL"), camR("CameraR");
-  Image hsvL("HsvL"), hsvR("HsvR");
-  FloatImage hsvEviL("hsvEviL"), hsvEviR("hsvEviR");
-  PerceptionOutput percOut;
+  // viewers
+  //PoseView pose_view(hardwareReference.fields(0), NULL);
+  //OrsView ors_view(geometricState.fields(0), NULL);
+
+  // -- camera perception
+  //Image camL("CameraL"), camR("CameraR");
+  //Image hsvL("HsvL"), hsvR("HsvR");
+  //FloatImage hsvEviL("hsvEviL"), hsvEviR("hsvEviR");
+  //PerceptionOutput percOut;
   // processes
-  Camera cam;
-  CvtHsv cvtHsv1(camL, hsvL);
-  CvtHsv cvtHsv2(camR, hsvR);
-  HsvFilter hsvFilterL(hsvL, hsvEviL);
-  HsvFilter hsvFilterR(hsvR, hsvEviR);
-  ShapeFitter shapeFitter(hsvEviL, hsvEviR, percOut);
-  // viewers
-  ImageViewer<Image> view1(camL), view2(camR);
-  ImageViewer<Image> view3(hsvL), view4(hsvR);
-  ImageViewer<FloatImage> view5(hsvEviL), view6(hsvEviR);
-
-  P.append(LIST<Process>(controller));
-  //P.append(LIST<Process>(joystick, schunkArm, schunkHand, schunkSkin));
-  //P.append(LIST<Process>(cvtHsv1, cvtHsv2, hsvFilterL, hsvFilterR, shapeFitter));
-
-  //views don't need to be started -- they now listen!
-  ProcessL PV;
-  PV.append(LIST<Process>(view0));
-  //PV.append(LIST<Process>(view));
-  PV.append(LIST<Process>(view8));
-  //PV.append(LIST<Process>(view1, view2, view5, view6)); //view3, view4, 
+  //
   
-  //step(PV);
-  loopWithBeat(PV,.1);
+  //Camera cam;
+  //CvtHsv cvtHsv1(camL, hsvL);
+  //CvtHsv cvtHsv2(camR, hsvR);
+  //HsvFilter hsvFilterL(hsvL, hsvEviL);
+  //HsvFilter hsvFilterR(hsvR, hsvEviR);
+  //ShapeFitter shapeFitter(hsvEviL, hsvEviR, percOut);
 
-  //cam.threadLoop();
-  loopWithBeat(P,.01);
+  /////////////////////////////////////////////////////////////////////////////
+  // inside-out
 
-  actionProgressor.threadLoopWithBeat(0.01);
-  
-  
-  cout <<"arrange your windows..." <<endl;
-  MT::wait(1.);
-  
+  //b::dump();
+  b::openInsideOut();
+  //
+
+  loopWithBeat(hardware, .01);
+  ctrl->threadLoopWithBeat(.01);
+
+#if 0
+  pcl::visualization::PCLVisualizer viewer ("3D Viewer");
+  viewer.setBackgroundColor (0, 0, 0);
+  viewer.addCoordinateSystem (.1);
+  viewer.initCameraParameters ();
+  PointCloudL plist = objectClusters.get_point_clouds(NULL);
+
+  for(int j = 0; j<20; j++) {
+    std::stringstream s;
+    s << "cl_" << j;
+    pcl::PointCloud<PointT>::Ptr tmp(new pcl::PointCloud<PointT>());
+    viewer.addPointCloud(tmp,
+        pcl::visualization::PointCloudColorHandlerRandom<PointT>(tmp), s.str());
+  }
+
+  for(uint l=0; l<100; ++l) {
+    MT::wait(1.);
+    //viewer.updatePointCloud(kinectData3d.get_point_cloud(NULL), "cluster");
+    plist = objectClusters.get_point_clouds(NULL);
+    for(int i = 0; i < plist.N; ++i) {
+      std::stringstream n;
+      //DEBUG_VAR(main, plist(i)->size());
+      n << "cl_" << i;
+      viewer.updatePointCloud(plist(i), pcl::visualization::PointCloudColorHandlerRandom<PointT>(plist(i)), n.str());
+    }
+    viewer.removeAllShapes();
+    filteredObjects.readAccess(NULL);
+    for(int i = 0; i < filteredObjects.objects.N; ++i) {
+      std::stringstream name;
+      name << "shape_" << i;
+      viewer.addCylinder(*(filteredObjects.objects(i)->pcl_object), name.str());
+    }
+    filteredObjects.deAccess(NULL);
+    viewer.spinOnce();
+  }
+#else
   //pick-and-place loop
   for(uint k=0;k<2;k++){
-    pickOrPlaceObject(Action::grasp, "box1", NULL);
-    pickOrPlaceObject(Action::place, "box1", "cyl1");
+    pickOrPlaceObject(Action::grasp, "thing2", NULL);
+    pickOrPlaceObject(Action::place, "thing2", "thing1");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL);
-    pickOrPlaceObject(Action::place, "box2", "cyl2");
+
+    pickOrPlaceObject(Action::grasp, "thing1", NULL);
+    pickOrPlaceObject(Action::place, "thing1", "thing2");
+
+    //pickOrPlaceObject(Action::grasp, "box2", NULL);
+    //pickOrPlaceObject(Action::place, "box2", "cyl2");
     
-    pickOrPlaceObject(Action::grasp, "box1", NULL);
-    pickOrPlaceObject(Action::place, "box1", "table");
+    //pickOrPlaceObject(Action::grasp, "box1", NULL);
+    //pickOrPlaceObject(Action::place, "box1", "table");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL);
-    pickOrPlaceObject(Action::place, "box2", "cyl1");
+    //pickOrPlaceObject(Action::grasp, "box2", NULL);
+    //pickOrPlaceObject(Action::place, "box2", "cyl1");
     
-    pickOrPlaceObject(Action::grasp, "box1", NULL);
-    pickOrPlaceObject(Action::place, "box1", "cyl2");
+    //pickOrPlaceObject(Action::grasp, "box1", NULL);
+    //pickOrPlaceObject(Action::place, "box1", "cyl2");
 
-    pickOrPlaceObject(Action::grasp, "box2", NULL);
-    pickOrPlaceObject(Action::place, "box2", "table");
+    //pickOrPlaceObject(Action::grasp, "box2", NULL);
+    //pickOrPlaceObject(Action::place, "box2", "table");
   }
-  
-  cam.threadClose();
+#endif
+
+  MT::wait(1300);
+  //cam.threadClose();
+  ctrl->threadClose();
+  close(hardware);
   close(P);
 
-  birosInfo.dump();
+  Perception(0)->threadClose();
+
+  //biros().dump();
   cout <<"bye bye" <<endl;
   return 0;
 }

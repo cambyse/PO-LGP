@@ -27,20 +27,19 @@ int main(int argc, char **argv){
   //int mode = MT::getParameter<int>("mode",3);
   
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
-  gl1.threadLoop();
-  gl2.threadLoop();
-  MT::wait(5.);
+  gl1.threadOpen();
+  gl2.threadOpen();
+  MT::wait(2.);
   gl1.threadClose();
   gl2.threadClose();
 
-  
   Proc *gli;
   MT::Array<MT::String> names;
   ProcessL procs;
   for (int i=0; i<20; ++i){
     names.append(STRING("many_"<<i));
     gli = new Proc(names(i));
-    gli->threadLoop();
+    gli->threadOpen();
     procs.append(gli);
   }
   MT::wait(5.);

@@ -51,7 +51,7 @@ void soc::LQG::shiftSolution(int offset){
     (corresponding directly to the q-space metric). The quadratic cost
     terms are computed from the tast constraints */
 double soc::LQG::stepKinematic(){
-  uint t, T=sys->nTime(), n=sys->qDim();
+  uint t, T=sys->get_T(), n=sys->qDim();
 
   //arr Vbar(T+1, n, n), vbar(T+1, n);
   //arr R(T+1, n, n), r(T+1, n);
@@ -154,7 +154,7 @@ double soc::LQG::stepKinematic(){
     Stochastic Optimal Control case */
 double soc::LQG::stepGeneral(){
   CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
-  uint t, T=sys->nTime(), n=sys->qDim(), n2;
+  uint t, T=sys->get_T(), n=sys->qDim(), n2;
 
   n2=2*n;
   arr A(T+1, n2, n2), a(T+1, n2), B(T+1, n2, n);
@@ -190,7 +190,7 @@ double soc::LQG::stepGeneral(){
     countSetq++;
     sys->setx(q_phase[t]);
     sys->getCosts  (R[t](), r[t](), q[t], t);
-    sys->getProcess(A[t](), a[t](), B[t](), t);
+    sys->getDynamics(A[t](), a[t](), B[t](), t);
     //cout <<"t=" <<t <<" A=" <<A[t] <<" a=" <<a[t] <<" B=" <<B[t] <<endl;
     //cout <<"t=" <<t <<" R=" <<R[t] <<" r=" <<r[t] <<endl;
   }
@@ -217,7 +217,7 @@ double soc::LQG::stepGeneral(){
     countSetq++;
     sys->setx(q_phase[t]);
     sys->getH(H, t);
-    sys->getProcess(A[t](), a[t](), B[t](), t);
+    sys->getDynamics(A[t](), a[t](), B[t](), t);
     //if(t>T-10) cout <<"t=" <<t <<"\nqhat=" <<q_phase[t] <<endl;
 
     transpose(Bt, B[t]);

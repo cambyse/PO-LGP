@@ -65,7 +65,7 @@ struct SocSystemAbstraction{
   ///@name low level access routines: need to be implemented by the simulator
 
   // access general problem information
-  virtual uint nTime() = 0;            ///< total time steps of the trajectory
+  virtual uint get_T() = 0;            ///< total time steps of the trajectory
   virtual uint nTasks() = 0;           ///< number of task variables
   virtual uint qDim() = 0;             ///< dimensionality of q-space
   virtual uint uDim();                 ///< dimensionality of control
@@ -75,7 +75,7 @@ struct SocSystemAbstraction{
   virtual void getqv0(arr& x);        ///< start joint configuration and velocity
   virtual void getqv0(arr& q, arr& qd); ///< start joint configuration and velocity
   virtual double getTau(bool scaled=true);    ///< time step size (for dynamic problems)
-  void getx0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
+  void get_x0(arr& x){ if(dynamic) getqv0(x); else getq0(x); }
 
   // set x-state (following calls to getPhi and getJ are w.r.t. this x)
   virtual void setq  (const arr& q, uint t=0) = 0;
@@ -115,8 +115,8 @@ struct SocSystemAbstraction{
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
   virtual void getTransitionCostTerms(arr& Psi, arr& PsiI, arr& PsiJ, const arr& xt_1, const arr& xt, uint t);
-  virtual void getProcess(arr& A, arr& a, arr& B, uint t);
-  virtual void getProcess(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
+  virtual void getDynamics(arr& A, arr& a, arr& B, uint t);
+  virtual void getDynamics(arr& A, arr& tA, arr& Ainv, arr& invtA, arr& a, arr& B, arr& tB, uint t);
   virtual double getTaskCosts(arr& R, arr& r, const arr& qt, uint t);
   virtual void getConstraints(arr& c, arr& coff, const arr& qt, uint t);
 
@@ -365,7 +365,7 @@ inline void getController(arr& G, arr& g, const soc::AICO& aico){
 }
 
 inline void forwardSimulateTrajectory(arr& q, const arr& G, const arr& g, soc::SocSystemAbstraction& sys, const soc::AICO& aico){
-  uint t, T=sys.nTime(), n=sys.qDim();
+  uint t, T=sys.get_T(), n=sys.qDim();
   if(!aico.sys->dynamic){
     q.resize(T+1, n);
     sys.getq0(q[0]());
@@ -457,7 +457,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
   void displayState(const arr& q, const arr *Q, const char *text=NULL);
 
   //implementations of virtual methods
-  uint nTime();
+  uint get_T();
   uint nTasks();
   uint qDim();
   uint uDim();
@@ -512,7 +512,7 @@ struct SocSystem_Toy: public virtual SocSystemAbstraction{
   virtual ~SocSystem_Toy();
 
   //implementations of virtual methods
-  uint nTime();
+  uint get_T();
   uint nTasks();
   uint qDim();
   uint uDim();

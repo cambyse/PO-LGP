@@ -4,7 +4,7 @@
 
 
 void testPlot(){
-  plotGnuplot();
+  //plotGnuplot();
   plotOpengl();
   doubleA mean(2),A;
 
@@ -16,7 +16,7 @@ void testPlot(){
   plot();
 
   mean=0.;
-  A.setDiag(1.,2); A(0,1)=A(1,0)=.99; //A(1,1)=2.;
+  A.setDiag(1.,2); A(0,1)=A(1,0)=-.5; //A(1,1)=2.;
   plotCovariance(mean,A);
   plot();
 

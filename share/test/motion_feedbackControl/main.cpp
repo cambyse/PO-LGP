@@ -1,6 +1,6 @@
 #include <motion/motion.h>
-#include <hardware/hardware.h>
 #include <motion/FeedbackControlTasks.h>
+#include <biros/biros_views.h>
 
 struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
@@ -27,41 +27,40 @@ int main(int argn, char** argv){
 
   // variables
   GeometricState geometricState;
-  ControllerTask controllerTask;
+  MotionPrimitive motionPrimitive;
   HardwareReference hardwareReference;
 
   // processes
-  Controller controller;
+  Process* ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
 
-  // viewers
-  PoseViewer<HardwareReference> view(hardwareReference);
-  
-  ProcessL P=LIST<Process>(controller/*, view*/);
+  new OrsView(geometricState.ors, &geometricState.rwlock);
+  new PoseView(hardwareReference.q_reference, &hardwareReference.rwlock);
+  //new InsideOut();
 
   MyTask myTask;
-  controllerTask.writeAccess(NULL);
-  controllerTask.mode = ControllerTask::feedback;
-  controllerTask.feedbackControlTask = &myTask;
-  controllerTask.forceColLimTVs = false;
-  controllerTask.deAccess(NULL);
+  motionPrimitive.writeAccess(NULL);
+  motionPrimitive.mode = MotionPrimitive::feedback;
+  motionPrimitive.feedbackControlTask = &myTask;
+  motionPrimitive.forceColLimTVs = false;
+  motionPrimitive.deAccess(NULL);
 
   uint mode=MT::getParameter<uint>("mode", 1);
-  if(mode==0){
-    controller.open();
+  if(mode==0){ //non-threaded
+    ctrl->open();
 //  view.open();
     for(;;){
-      controller.step();
+      ctrl->step();
 //    view.step(); the view is automatially opened as thread and stepsOnListen...
       MT::wait();
     }
   }
   if(mode==1){
-    loopWithBeat(P,.01);
+    ctrl->threadLoopWithBeat(.01);
     MT::wait(30.);
   }
 
-  close(P);
-  birosInfo.dump();
+  close(biros().processes);
+  biros().dump();
   
   cout <<"bye bye" <<endl;
 };

@@ -2,8 +2,8 @@
 #undef COUNT
 #undef True
 #undef False
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv2/highgui.h>
+#include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
 #endif
@@ -222,8 +222,8 @@ void EarlyVisionModule::close(){
 }
 
 #else //def MT_CUDA
-void EarlyVisionModule::step(){ NIY; }
-void EarlyVisionModule::open(){ NIY; }
-void EarlyVisionModule::close(){ NIY; }
+void EarlyVisionModule::step(){ NICO; }
+void EarlyVisionModule::open(){ NICO; }
+void EarlyVisionModule::close(){ NICO; }
 #endif //def MT_CUDA
 

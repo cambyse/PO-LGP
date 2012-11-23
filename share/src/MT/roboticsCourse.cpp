@@ -1,6 +1,5 @@
 #include "roboticsCourse.h"
 #include "ors.h"
-#include "algos.h"
 #include "opengl.h"
 #include "plot.h"
 
