@@ -120,7 +120,7 @@ class PRADA_Planner : public NID_Planner {
     static PRADA_Reward* convert_reward(LiteralListReward* reward);
     static PRADA_Reward* convert_reward(DisjunctionReward* reward);
     static PRADA_Reward* convert_reward(NotTheseStatesReward* reward);
-    static PRADA_Reward* convert_reward(RewardConjunction* reward);
+    static PRADA_Reward* convert_reward(CombinedReward* reward);
     
     void setState(const SymbolicState& s, uint t);
     

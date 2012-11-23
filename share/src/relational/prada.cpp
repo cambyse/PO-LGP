@@ -120,7 +120,11 @@ void PRADA_Planner::setReward(Reward* reward) {
           if (dg!= NULL)
             this->prada_reward = convert_reward((DisjunctionReward*) reward);
           else {
-            NIY;
+           CombinedReward* cg = dynamic_cast<CombinedReward*>(reward);
+            if (cg!= NULL)
+              this->prada_reward = convert_reward((CombinedReward*) reward);
+            else
+              NIY;
           }
         }
       }
@@ -147,6 +151,7 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
     case Reward::reward_maximize_function: return convert_reward((MaximizeReward*) reward);
     case Reward::reward_not_these_states: return convert_reward((NotTheseStatesReward*) reward);
     case Reward::reward_one_of_literal_list: return convert_reward((DisjunctionReward*) reward);    
+    case Reward::reward_combined: return convert_reward((CombinedReward*) reward);    
     default: NIY;
   }
 }
@@ -986,19 +991,19 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     }
 };
 
-class PRADA_Reward_ConjunctionOfRewards: public PRADA_Reward {
+class PRADA_Reward_Combined : public PRADA_Reward {
   MT::Array<PRADA_Reward*> PRADA_rewards;
   arr weights;
   
   public:
     PRADA_Reward_ConjunctionOfRewards(const MT::Array<PRADA_Reward*> &rewards) {
-      PRADA_rewards = rewards;
+      pradaRewards = rewards;
     }
     
     double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
       double product = 1;
-      for (uint i = 0; i < PRADA_rewards.N; i++) {
-        product *= PRADA_rewards(i)->evaluate_prada_reward(dbn, t);
+      for (uint i = 0; i < pradaRewards.N; i++) {
+        product *= pradaRewards(i)->evaluate_prada_reward(dbn, t);
       }
       return product;
     }
@@ -1075,6 +1080,10 @@ PRADA_Reward* PRADA_Planner::convert_reward(NotTheseStatesReward* reward) {
 
 PRADA_Reward* PRADA_Planner::convert_reward(DisjunctionReward* reward) {
   return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
+}
+
+PRADA_Reward* PRADA_Planner::convert_reward(CombinedReward* reward) {
+  return new PRADA_Reward_Combined(reward->sub_rewards, reward->weights);
 }
 
 PRADA_Reward* PRADA_Planner::convert_reward(RewardConjunction* reward) {
