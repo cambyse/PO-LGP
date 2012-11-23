@@ -948,75 +948,8 @@ void DisjunctionReward::write(ostream& out) const {
 }
 
 
-/************************************************
- * 
- *     CombinedReward
- * 
- ************************************************/
-CombinedReward::CombinedReward(RewardL& rewards) : 
-Reward(reward_combined),
-sub_rewards(rewards) {
-  weights = ones(rewards.N, 1);
-  weights.reshape(rewards.N);
-}
 
 
-CombinedReward::CombinedReward(RewardL& rewards, arr& weights) : 
-Reward(reward_combined),
-sub_rewards(rewards),
-weights(weights) {
-  weights.reshape(rewards.N);
-}
-
-
-double CombinedReward::evaluate(const SymbolicState& state) const {
-  uint i; Reward *r; double e;
-  for_list(i, r, sub_rewards) {
-    e += weights(i) * r->evaluate(state);  
-  }
-  return e;
-}
-
-bool CombinedReward::satisfied(const SymbolicState& state) const {
-  uint i; Reward *r;
-  for_list(i, r, sub_rewards) {
-    if (weights(i) * r->evaluate(state) <= 0)  
-      return false;
-  }
-  return true;
-}
-
-bool CombinedReward::possible(const SymbolicState& state) const {
-  uint i; Reward *r;
-  for_list(i, r, sub_rewards) {
-    if (!r->possible(state))  
-      return false;
-  }
-  return true;
-}
-
-void CombinedReward::getRewardConstants(uintA& constants, const SymbolicState* state) const {
-  uint i; Reward *r;
-  for_list(i, r, sub_rewards) {
-    uintA sub_constants;
-    r->getRewardConstants(sub_constants, state);
-    constants.append(sub_constants);
-  }
-}
-
-void CombinedReward::write(ostream& out) const {
-  out << "reward_the_following {" << endl;
-  uint i; Reward *r;
-  for_list(i, r, sub_rewards) {
-    r->write(out);
-  }
-  out << "}" << endl;
-}
-
-void CombinedReward::write(const char* filename) const {
-  std::ofstream out(filename);
-  write(out);
-}
 
 /************************************************
  * 
@@ -1084,60 +1017,6 @@ void NotTheseStatesReward::write(const char* filename) const {
   }
   out.close();
 }
-
-
-
-
-/************************************************
- * 
- *     RewardConjunction
- * 
- ************************************************/
-
-void RewardConjunction::addReward(Reward *reward) {
-  rewards.append(reward);
-}
-
-double RewardConjunction::evaluate(const SymbolicState& s) const {
-  double product = 1;
-  for (uint i = 0; i < rewards.N; i++) {
-    product *= rewards(i)->evaluate(s);
-  }
-  return product;
-}
-
-bool RewardConjunction::satisfied(const SymbolicState& s) const {
-  for (uint i = 0; i < rewards.N; i++) {
-    if (!rewards(i)->satisfied(s)) return false;
-  }
-  return true;
-}
-bool RewardConjunction::possible(const SymbolicState& s) const {
-  for (uint i = 0; i < rewards.N; i++) {
-    if (!rewards(i)->possible(s)) return false;
-  }
-  return true;
-}
-
-void RewardConjunction::getRewardConstants(uintA& constants, const SymbolicState* s) const {
-  for (uint i = 0; i < rewards.N; i++) {
-    uintA rewardConstants;
-    rewards(i)->getRewardConstants(rewardConstants, s);
-    constants.setAppend(rewardConstants);
-  }
-}
-
-void RewardConjunction::write(ostream& out) const {
-  cout << "Conjunction of rewards:" << endl;
-  for (uint i = 0; i < rewards.N; i++)
-    rewards(i)->write(out);
-}
-void RewardConjunction::write(const char* filename) const {
-}
-
-
-
-
 
 
 }  // namespace PRADA

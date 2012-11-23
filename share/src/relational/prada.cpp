@@ -119,13 +119,8 @@ void PRADA_Planner::setReward(Reward* reward) {
           DisjunctionReward* dg = dynamic_cast<DisjunctionReward*>(reward);
           if (dg!= NULL)
             this->prada_reward = convert_reward((DisjunctionReward*) reward);
-          else {
-           CombinedReward* cg = dynamic_cast<CombinedReward*>(reward);
-            if (cg!= NULL)
-              this->prada_reward = convert_reward((CombinedReward*) reward);
-            else
-              NIY;
-          }
+          else
+            NIY;
         }
       }
     }
@@ -151,7 +146,6 @@ PRADA_Reward* PRADA_Planner::create_PRADA_Reward(Reward* reward) {
     case Reward::reward_maximize_function: return convert_reward((MaximizeReward*) reward);
     case Reward::reward_not_these_states: return convert_reward((NotTheseStatesReward*) reward);
     case Reward::reward_one_of_literal_list: return convert_reward((DisjunctionReward*) reward);    
-    case Reward::reward_combined: return convert_reward((CombinedReward*) reward);    
     default: NIY;
   }
 }
@@ -653,13 +647,6 @@ void calc_dbn_state_symbols_for_rewards(SymL& reward_symbols, Reward *r) {
       reward_symbols.setAppend(defining_symbols);
     }
   }
-  else if (r->reward_type == Reward::conjunction_of_rewards) {
-    for (uint i = 0; i < ((RewardConjunction*)r)->rewards.N; i++) {
-      SymL reward_symbols__inner;
-      calc_dbn_state_symbols_for_rewards(reward_symbols__inner, ((RewardConjunction*)r)->rewards(i));
-      reward_symbols.setAppend(reward_symbols__inner);
-    }
-  }
   else
     NIY;
 }
@@ -704,7 +691,32 @@ void PRADA_Planner::calc_dbn_state_symbols() {
     }
   }
   // (ii) reward concepts
-  get_reward_symbols(reward);
+  if (reward->reward_type == Reward::reward_literal) {
+    dbn_state_symbols.setAppend(((LiteralReward*) reward)->lit->s);
+    SymL defining_symbols;
+    dbn_state_symbols.last()->getDefiningSymbols(defining_symbols, false);
+    dbn_state_symbols.setAppend(defining_symbols);
+  }
+  else if (reward->reward_type == Reward::reward_literalList) {
+    FOR1D(((LiteralListReward*) reward)->lits, k) {
+      dbn_state_symbols.setAppend(((LiteralListReward*) reward)->lits(k)->s);
+      SymL defining_symbols;
+      dbn_state_symbols.last()->getDefiningSymbols(defining_symbols, false);
+      dbn_state_symbols.setAppend(defining_symbols);
+    }
+  }
+  else if (reward->reward_type == Reward::reward_maximize_function) {
+    MaximizeReward* mfr = (MaximizeReward*) reward;
+    if (mfr->literal_to_be_maximized != NULL) {
+      dbn_state_symbols.setAppend(mfr->literal_to_be_maximized->s);
+      SymL defining_symbols;
+      mfr->literal_to_be_maximized->s->getDefiningSymbols(defining_symbols, false);
+      dbn_state_symbols.setAppend(defining_symbols);
+    }
+  }
+  else {
+    NIY;
+  }
   Symbol::sort(dbn_state_symbols);
   if (DEBUG>0) {
     cout<<"(A-) PRADA's DBN will be built with random variables for the following state symbols:"<<endl;
@@ -991,24 +1003,6 @@ class PRADA_Reward_Disjunction : public PRADA_Reward {
     }
 };
 
-class PRADA_Reward_Combined : public PRADA_Reward {
-  MT::Array<PRADA_Reward*> PRADA_rewards;
-  arr weights;
-  
-  public:
-    PRADA_Reward_ConjunctionOfRewards(const MT::Array<PRADA_Reward*> &rewards) {
-      pradaRewards = rewards;
-    }
-    
-    double evaluate_prada_reward(const PRADA_DBN& dbn, uint t) {
-      double product = 1;
-      for (uint i = 0; i < pradaRewards.N; i++) {
-        product *= pradaRewards(i)->evaluate_prada_reward(dbn, t);
-      }
-      return product;
-    }
-};
-
 
 class PRADA_Reward_Maximize : public PRADA_Reward {
   Literal* fl;
@@ -1081,19 +1075,6 @@ PRADA_Reward* PRADA_Planner::convert_reward(NotTheseStatesReward* reward) {
 PRADA_Reward* PRADA_Planner::convert_reward(DisjunctionReward* reward) {
   return new PRADA_Reward_Disjunction(reward->lits, reward->weights);
 }
-
-PRADA_Reward* PRADA_Planner::convert_reward(CombinedReward* reward) {
-  return new PRADA_Reward_Combined(reward->sub_rewards, reward->weights);
-}
-
-PRADA_Reward* PRADA_Planner::convert_reward(RewardConjunction* reward) {
-  MT::Array<PRADA_Reward*> pradaRewards;
-  for (uint i = 0; i < reward->rewards.N; i++) {
-    pradaRewards.append(create_PRADA_Reward(reward->rewards(i)));
-  }
-  return new PRADA_Reward_ConjunctionOfRewards(pradaRewards);
-}
-
 
 
 /************************************************
