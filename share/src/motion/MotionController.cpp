@@ -85,7 +85,7 @@ void MotionController::step() {
   if(motionFuture){ //this is hooked to a motionFuture...
     motionFuture->readAccess(this);
     if(motionFuture->motions.N) {
-      motionPrimitive = motionFuture->motions(motionFuture->currentFrame);
+      motionPrimitive = motionFuture->motions(motionFuture->currentPrimitive);
     }
     motionFuture->deAccess(this);
   }

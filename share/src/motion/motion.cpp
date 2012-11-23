@@ -33,6 +33,8 @@ void MotionPrimitive::setFeedbackTask(FeedbackControlTaskAbstraction& task, bool
 
 void MotionFuture::appendNewAction(const MotionPrimitive::ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p){
   
+
+#if 0
   writeAccess(p);
 
   MotionPrimitive *m = motions.append(new MotionPrimitive); //append a new motion primitive
@@ -53,6 +55,36 @@ void MotionFuture::appendNewAction(const MotionPrimitive::ActionPredicate _actio
   Process *planner = newMotionPlanner(*m);
   planners.append((MotionPlanner*)planner);
   planner->threadStep();
-  
+
   deAccess(p);
+#else
+  MotionPrimitive *m = get_motions(p)(nextFreePrimitive);
+  while(m->get_action(p)!=MotionPrimitive::toBeAssigned)
+    m->waitForNextWriteAccess();
+
+  writeAccess(p);
+  m->writeAccess(p);
+  m->count = nextFreePrimitive;
+  if(!m->frame0.N){
+      //check if at least 1 keyframe exists
+    VAR(HardwareReference);
+    arr x0 =  _HardwareReference->get_q_reference(NULL);
+    x0.append(_HardwareReference->get_v_reference(NULL));
+    m->frame0 = x0;
+  }
+  m->frame1.clear();
+  m->planConverged = false;
+  m->deAccess(p);
+
+  m->setNewAction(_action, ref1, ref2, locref, p);
+
+  /*Process *planner = newMotionPlanner(*m);
+  planners.append((MotionPlanner*)planner);
+  planner->threadStep();*/
+
+  nextFreePrimitive++;
+  if(nextFreePrimitive>=motions.N) nextFreePrimitive=0;
+
+  deAccess(p);
+#endif
 }

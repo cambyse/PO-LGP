@@ -217,7 +217,7 @@ void waitForEmptyQueue(MotionFuture *motionFuture){
 void pickOrPlaceObject(MotionPrimitive::ActionPredicate action, const char* objShape, const char* belowToShape){
   VAR(MotionFuture);
   
-  waitForSmallMotionQueue(_MotionFuture, 1);
+  //waitForSmallMotionQueue(_MotionFuture, 1);
 
   _MotionFuture->appendNewAction(action, objShape, belowToShape, NoArr, NULL);
   

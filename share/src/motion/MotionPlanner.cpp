@@ -68,7 +68,7 @@ void MotionPlanner::step() {
   
   MotionPrimitive::ActionPredicate actionSymbol = m->get_action(this);
   
-  if (actionSymbol==MotionPrimitive::noAction) {
+  if (actionSymbol==MotionPrimitive::toBeAssigned) {
     m->writeAccess(this);
     m->frame1 = m->frame0;
     m->q_plan.clear();
@@ -78,7 +78,9 @@ void MotionPlanner::step() {
     m->deAccess(this);
   }
   
-  if (actionSymbol==MotionPrimitive::grasp || actionSymbol==MotionPrimitive::place_location || actionSymbol==MotionPrimitive::place || actionSymbol == MotionPrimitive::homing || actionSymbol == MotionPrimitive::reach){
+  if (actionSymbol==MotionPrimitive::grasp || actionSymbol==MotionPrimitive::place_location
+      || actionSymbol==MotionPrimitive::place || actionSymbol == MotionPrimitive::homing
+      || actionSymbol == MotionPrimitive::reach){
 
     if(m->get_planConverged(this)) return; // nothing to do anymore
     
@@ -137,6 +139,12 @@ void MotionPlanner::step() {
         //enforce zero velocity start/end vel
         if (!s->sys.isKinematic()) x0.subRange(x0.N/2,-1) = 0.;
         if (!s->sys.isKinematic()) xT.subRange(xT.N/2,-1) = 0.;
+
+        //don't reuse AICO when plan in motion primitive has been cleared
+        if(s->aico && m->get_q_plan(this).N==0){
+          delete s->aico;
+          s->aico=NULL;
+        }
 
         if(!s->aico){
           s->aico = new AICO(s->sys);

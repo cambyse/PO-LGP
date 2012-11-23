@@ -43,7 +43,7 @@ struct GeometricState:Variable {
  In the planned case, a motion planner first generates a trajectroy (q_plan), then this is followed by the controller */
 struct MotionPrimitive:Variable {
   enum MotionMode{ none=0, planned, feedback, done  };
-  enum ActionPredicate { noAction, reach, grasp, place, place_location, openHand, closeHand, homing };
+  enum ActionPredicate { toBeAssigned, reach, grasp, place, place_location, openHand, closeHand, homing };
 
   FIELD(uint, count);
   FIELD(MotionMode, mode);
@@ -79,7 +79,7 @@ struct MotionPrimitive:Variable {
     :Variable("MotionPrimitive"),
       count(0),
       mode(none),
-      action(noAction), objectRef1(""), objectRef2(""),
+      action(toBeAssigned), objectRef1(""), objectRef2(""),
       planConverged(false),
       feedbackControlTask(NULL),
       forceColLimTVs(true) {
@@ -118,19 +118,29 @@ struct HardwareReference:Variable {
  * planning of the motion primitives even when the action will only be in the future. The ActionProgressor takes care to point
  * the controller to the next motion primitive when the previous one was executed */
 struct MotionFuture:Variable {
-  FIELD(uint, currentFrame);
+  FIELD(uint, currentPrimitive);
+  FIELD(uint, nextFreePrimitive);
   FIELD(bool, done);
   FIELD(MT::Array<MotionPrimitive*>, motions);
   FIELD(MT::Array<MotionPlanner*>, planners);
   
-  MotionFuture():Variable("MotionFuture"), currentFrame(0), done(true) {
-    reg_currentFrame(); reg_motions(); reg_planners();
+  MotionFuture():Variable("MotionFuture"), currentPrimitive(0), nextFreePrimitive(0), done(true) {
+    reg_currentPrimitive();  reg_nextFreePrimitive(); reg_motions();
+#if 1
+    motions.append(new MotionPrimitive); //append a new motion primitive
+    motions.append(new MotionPrimitive); //append a new motion primitive
+    planners.append((MotionPlanner*)newMotionPlanner(*motions(0)));
+    planners.append((MotionPlanner*)newMotionPlanner(*motions(1)));
+#endif
   };
   
   void appendNewAction(const MotionPrimitive::ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p);
-  void incrementFrame(Process *p){ writeAccess(p); currentFrame++; deAccess(p); }
-  uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentFrame; deAccess(p); return n; }
-  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ if(!getTodoFrames(p)) return NULL; readAccess(p); MotionPrimitive *m=motions(currentFrame); deAccess(p); return m; }
+  void incrementFrame(Process *p){ writeAccess(p); currentPrimitive++; if(currentPrimitive>=motions.N) currentPrimitive=0; deAccess(p); }
+  uint getTodoFrames(Process *p){ readAccess(p); uint n=motions.N-currentPrimitive; deAccess(p); return n; }
+  MotionPrimitive *getCurrentMotionPrimitive(Process *p){ if(!getTodoFrames(p)) return NULL; readAccess(p); MotionPrimitive *m=motions(currentPrimitive); deAccess(p); return m; }
+  MotionPrimitive *getNextMotionPrimitive(Process *p){
+    //if(!(getTodoFrames(p)>=2)) return NULL;
+    readAccess(p); MotionPrimitive *m=motions((currentPrimitive+1)%motions.N); deAccess(p); return m; }
 };
 
 
