@@ -458,7 +458,7 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
     for( i = 0, k = 0; i < bvq.Length(); i++ ) {
         for( j = 0; j < m->BVs()[bvq[i]].Num_Other_Faces(); j++, k++ ) {
             // Global id is simply stored in the face
-            fs[k] = (int)(m->BVs()[bvq[i]].Other_Faces()[j]->
+            fs[k] = ( intptr_t)(m->BVs()[bvq[i]].Other_Faces()[j]->
                                                         Edge1().Next());
         }
     }
@@ -471,17 +471,17 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
     for( i = 0, l = 0; i < m->Num_Faces(); i++, l += 3 ) {
         e = m->Faces()[i].Edge1().Twin();
         fs[l] = (e == NULL ? -1 :
-                            ((int)(e->Adj_Face()->Edge1().Next())<<2) +
+                            (( intptr_t)(e->Adj_Face()->Edge1().Next())<<2) +
                              e->Adj_Face()->Edge_Id( e ));
 
         e = m->Faces()[i].Edge2().Twin();
         fs[l+1] = (e == NULL ? -1 :
-                            ((int)(e->Adj_Face()->Edge1().Next())<<2) +
+                            (( intptr_t)(e->Adj_Face()->Edge1().Next())<<2) +
                              e->Adj_Face()->Edge_Id( e ));
 
         e = m->Faces()[i].Edge3().Twin();
         fs[l+2] = (e == NULL ? -1 :
-                            ((int)(e->Adj_Face()->Edge1().Next())<<2) +
+                            (( intptr_t)(e->Adj_Face()->Edge1().Next())<<2) +
                              e->Adj_Face()->Edge_Id( e ));
     }
 
@@ -492,13 +492,13 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
     // twins which point to edges in the main mesh.
     fs = new int[st_faces.Length()+st_twins.Length()];
     for( i = 0, j = 0, k = 0; i < st_faces.Length(); i++, j += 3, k += 4 ) {
-        fs[k] = (int)(st_faces[i]->Edge1().Next());
+        fs[k] = ( intptr_t)(st_faces[i]->Edge1().Next());
         f = st_twins[j]->Adj_Face();
-        fs[k+1] = ((int)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j] );
+        fs[k+1] = (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j] );
         f = st_twins[j+1]->Adj_Face();
-        fs[k+2] = ((int)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j+1] );
+        fs[k+2] = (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j+1] );
         f = st_twins[j+2]->Adj_Face();
-        fs[k+3] = ((int)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j+2] );
+        fs[k+3] = (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( st_twins[j+2] );
     }
 
     fout.write( (char*)fs, (st_faces.Length()+st_twins.Length())*sizeof(int) );
@@ -519,17 +519,17 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
             e = m->Faces()[i].Edge1().Twin( k );
             f = e->Adj_Face();
             fs[first_base+k-face_level] =
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
 
             e = m->Faces()[i].Edge2().Twin( k );
             f = e->Adj_Face();
             fs[second_base+k-face_level] =
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
 
             e = m->Faces()[i].Edge3().Twin( k );
             f = e->Adj_Face();
             fs[third_base+k-face_level] = 
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
         }
     }
 
@@ -550,17 +550,17 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
                 e = m->BVs()[bvq[i]].Faces()[j].Edge1().Twin( k );
                 f = e->Adj_Face();
                 fs[first_base+k-face_level] =
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
 
                 e = m->BVs()[bvq[i]].Faces()[j].Edge2().Twin( k );
                 f = e->Adj_Face();
                 fs[second_base+k-face_level] =
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
 
                 e = m->BVs()[bvq[i]].Faces()[j].Edge3().Twin( k );
                 f = e->Adj_Face();
                 fs[third_base+k-face_level] = 
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            (( intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
             }
         }
     }
@@ -622,7 +622,7 @@ bool Save_Hierarchy_File( const char* filename, SWIFT_Tri_Mesh* m,
             e = m->BVs()[bvq[i]].Lookup_Table().Table()[k];
             f = e->Adj_Face();
             ((int*)(cs+cs_off))[k] =
-                            ((int)(f->Edge1().Next())<<2) + f->Edge_Id( e );
+                            ((intptr_t)(f->Edge1().Next())<<2) + f->Edge_Id( e );
         }
 
         fout.write( cs, BV_bytes );
