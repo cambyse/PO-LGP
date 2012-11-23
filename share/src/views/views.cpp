@@ -87,8 +87,7 @@ void View::gtkNewText(GtkWidget *container){
   gtk_widget_show(container);
   gtk_widget_show(widget);
   gtkUnlock();
-
-  gtkUpdate();
+  loop(100);
 }
 
 void glDrawView(void *classP){
@@ -102,7 +101,7 @@ void View::gtkNewGl(GtkWidget *container){
   gl = new OpenGL(container);
   gl->add(glDrawView, this);
   glInit();
-  loop(50);
+  loop(100);
 }
 
 void View::loop(uint msec){

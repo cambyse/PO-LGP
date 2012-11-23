@@ -1056,7 +1056,7 @@ void glDrawDots(arr& dots) {
 //
 
 OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0), height(0) {
-  MT_MSG("creating OpenGL=" <<this);
+  //MT_MSG("creating OpenGL=" <<this);
   initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy);
   init();

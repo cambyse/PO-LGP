@@ -43,6 +43,6 @@ void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), 
 
 #else
 void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res) {
-  NIY;
+  NICO;
 }
 #endif

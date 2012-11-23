@@ -1,5 +1,5 @@
 #include <biros/biros.h>
-#include <biros/control.h>
+#include <biros/biros_views.h>
 
 //-- standard Variable containing only an integer
 struct Integer:public Variable {
@@ -11,11 +11,12 @@ struct Integer:public Variable {
 
 int main(int argn, char **argv) {
 
-  b::dump();
+  biros().dump();
 
   Integer Int;
 
-  b::openInsideOut();
+  new InsideOut();
+
 
   for(uint t=0; t<1000; t++){
     MT::wait(.1);
