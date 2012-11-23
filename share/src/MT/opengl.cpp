@@ -1055,7 +1055,7 @@ void glDrawDots(arr& dots) {
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0), height(0) {
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0), height(0), img(NULL) {
   //MT_MSG("creating OpenGL=" <<this);
   initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy);
@@ -1063,7 +1063,7 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), width(0
   processEvents();
 }
 
-OpenGL::OpenGL(void *container):s(NULL), width(0), height(0) {
+OpenGL::OpenGL(void *container):s(NULL), width(0), height(0), img(NULL) {
   initGlEngine();
   s=new sOpenGL(this,container);
   init();
@@ -1104,7 +1104,6 @@ void OpenGL::init() {
   immediateExitLoop=false;
   exitkeys="";
   
-  img=NULL;
   zoom=1;
 };
 
@@ -1492,12 +1491,17 @@ void OpenGL::capture(byteA &img, int w, int h, ors::Camera *cam) {
 #ifdef MT_GLUT
 #ifdef MT_FREEGLUT
   glutSetWindow(s->windowID);
+#elif defined MT_GTKGL
+  gtkLock();
 #endif
   //postRedrawEvent(false);
   //processEvents();
   Draw(w, h, cam);
   img.resize(h, w, 3);
   glGrabImage(img);
+#if defined MT_GTKGL
+  gtkUnlock();
+#endif
 #endif
 }
 

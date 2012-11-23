@@ -8,29 +8,27 @@
 #include <MT/vision.h>
 
 #include <MT/opencv.h>
+#include <perception/perception.h>
+#include <hardware/uvccamera.h>
 
-
-#if 0//def MT_BUMBLE
-typedef camera::Bumblebee2 Camera;
-#else
-typedef camera::UVCCamera Camera;
-#endif
-Camera *cam;
 ENABLE_CVMAT
 
+Process* camera = NULL;
 
 void test(){
-  Camera uvc; cam=&uvc;
-  uvc.open();
+  Image imgL("CameraL"), imgR("CameraR");
+  camera = newUVCCamera();
+
+  camera->open();
 
   byteA img,tmp;
   floatA rgb,hsv,phi,last,diff;
   BinaryBPGrid bp;
   for(uint t=0;;t++){
     last = rgb;
-    uvc.step();
-    img.resize(uvc.output.rgbL.d0/2,uvc.output.rgbL.d1/2,3);
-    cvResize(CVMAT(uvc.output.rgbL), CVMAT(img));
+    camera->step();
+    img.resize(imgL.img.d0/2,imgL.img.d1/2,3);
+    cvResize(CVMAT(imgL.img), CVMAT(img));
 
     cvShow(img,"1");
     
@@ -64,7 +62,7 @@ void test(){
 }
 
 void shutdown(int){
-   cam->close();
+   camera->close();
    HALT("");
 }
 
