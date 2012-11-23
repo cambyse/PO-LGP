@@ -1,8 +1,10 @@
 #ifndef MT_octave_h
 #define MT_octave_h
 
+#ifdef MT_OCTAVE
 #include <octave/oct.h>
 #include <octave/parse.h>
+#endif
 
 #include <MT/array.h>
 #include <MT/util.h>
@@ -32,5 +34,6 @@ inline arr octave(const Matrix& x){
   memmove(y.p, (double*)x.transpose().data(), y.sizeT*y.N);
   return y;
 }
+
 
 #endif

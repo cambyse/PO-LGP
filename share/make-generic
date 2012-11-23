@@ -329,7 +329,12 @@ endif
 
 ifeq ($(OCTAVE),1)
 CXXFLAGS += -DMT_OCTAVE
+ifeq ($(ARCH_LINUX),1)
+LPATH	:= $(LPATH):/usr/lib/octave/3.6.2
+CPATH := $(CPATH):/usr/include/octave-3.6.2
+else
 LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
+endif
 LIBS	+= -loctinterp -loctave
 # TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!
 endif
