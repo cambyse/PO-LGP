@@ -4,7 +4,6 @@
 #ifdef MT_OCTAVE
 #include <octave/oct.h>
 #include <octave/parse.h>
-#endif
 
 #include <MT/array.h>
 #include <MT/util.h>
@@ -35,5 +34,6 @@ inline arr octave(const Matrix& x){
   return y;
 }
 
+#endif
 
 #endif
