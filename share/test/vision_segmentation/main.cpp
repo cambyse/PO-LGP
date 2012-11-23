@@ -12,19 +12,12 @@
 #include <MT/vision.h>
 #include <MT/libcolorseg.h>
 
-//#include <NP/common.h>
-#include <NP/uvccamera.h>
-#include <NP/uvccamera.cpp>
-//#include <NP/camera/bumblebee2.h>
+#include <perception/perception.h>
+#include <hardware/uvccamera.h>
 
-#if 0//def MT_BUMBLE
-typedef camera::Bumblebee2 Camera;
-#else
-typedef camera::UVCCamera Camera;
-#endif
-Camera *cam;
 ENABLE_CVMAT
 
+Process* camera = NULL;
 
 
 #if 0
@@ -67,8 +60,8 @@ void test(){
   BinaryBPGrid bp;
   for(uint t=0;;t++){
     uvc.step();
-    img.resize(uvc.output.rgbL.d0/2,uvc.output.rgbL.d1/2,3);
-    cvResize(CVMAT(uvc.output.rgbL), CVMAT(img));
+    img.resize(imgL.img.d0/2,imgL.img.d1/2,3);
+    cvResize(CVMAT(imgL.img), CVMAT(img));
 
     //cvShow(img,"1");  continue;
     
@@ -112,16 +105,18 @@ void testESS(){
   BinaryBPGrid bp;
   for(;;){
     uvc.step();
-    img.resize(uvc.output.rgbL.d0/3, uvc.output.rgbL.d1/3,3);
-    cvResize(CVMAT(uvc.output.rgbL), CVMAT(img));
+    img.resize(imgL.img.d0/3, imgL.img.d1/3,3);
+    cvResize(CVMAT(imgL.img), CVMAT(img));
     cvShow(img,"1");
   }
 }
 #endif
 
 void testFelz(){
-  Camera uvc; cam = &uvc;
-  uvc.open();
+  Image imgL("CameraL"), imgR("CameraR");
+  camera = newUVCCamera();
+
+  camera->open();
 
   byteA img,tmp;
   uintA pch;
@@ -131,9 +126,9 @@ void testFelz(){
   floatA pch_evid,pch_grey;
   uint np;
   for(uint t=0;;t++){
-    uvc.step();
-    img.resize(uvc.output.rgbL.d0/2,uvc.output.rgbL.d1/2,3);
-    cvResize(CVMAT(uvc.output.rgbL), CVMAT(img));
+    camera->step();
+    img.resize(imgL.img.d0/2,imgL.img.d1/2,3);
+    cvResize(CVMAT(imgL.img), CVMAT(img));
     np=get_single_color_segmentation(pch,img,1.25,100,100);
     np=incremental_patch_ids(pch);
                           
@@ -165,7 +160,7 @@ void testFelz(){
 
 
 void shutdown(int){
-   cam->close();
+   camera->close();
    exit(0);
 }
 

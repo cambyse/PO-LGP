@@ -113,6 +113,7 @@ sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtk_window_set_default_size(GTK_WINDOW(container), w, h);
   gtk_container_set_reallocate_redraws(GTK_CONTAINER(container), TRUE);
   gtk_quit_add_destroy(1, GTK_OBJECT(container));
+  gtk_widget_show(container);
   ownWin = true;
   gtkUnlock();
 
@@ -173,7 +174,7 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
   gldrawable = gtk_widget_get_gl_drawable(glArea);
   xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
   GtkAllocation allo;
-  gtk_widget_get_allocation(glArea, &allo);
+  gtk_widget_get_allocation(container, &allo);
   gl->width=allo.width;
   gl->height=allo.height;
 

@@ -96,6 +96,7 @@ Convert::operator VectorFunction&(){
   if(!s->vf){
     if(s->cs) operator KOrderMarkovFunction&();
     if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
+    if(s->vcf) s->vf = new sConvert::VectorChainFunction_VectorFunction(*s->vcf);
   }
   if(!s->vf) HALT("");
   return *s->vf;
