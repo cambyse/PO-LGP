@@ -1,12 +1,12 @@
-NAME   = lewiner
-BASE   = ../..
+OUTPUT    = liblewiner.a
+CXXFLAGS += -O3 -fPIC
+OBJS = ply.o MarchingCubes.o 
 
-OUTPUT = lib$(NAME).so
 
-MAKEMODE = externlib
+$(OUTPUT): $(OBJS)
+	ar ruvs $(OUTPUT) $(OBJS)
 
-CXXFLAGS += -fPIC
+clean::
+	rm -f *.o $(OUTPUT)
 
-OBJS  = ply.o MarchingCubes.o 
-
-include $(BASE)/make-generic
+depend:
