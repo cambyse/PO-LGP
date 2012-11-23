@@ -13,6 +13,7 @@
 #include <list>
 #include <set>
 #include <string>
+#include <memory>
 
 #include "Data.h"
 
@@ -20,13 +21,15 @@ class Feature {
 
 public:
     typedef std::list<Feature * >                  subfeature_container_t;
-    typedef subfeature_container_t::const_iterator subfeature_iterator;
-    typedef std::set<Feature * >                   basis_feature_container_t;
+    typedef subfeature_container_t::iterator       subfeature_iterator_t;
+    typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
+    typedef std::set<std::unique_ptr<Feature> >    basis_feature_container_t;
     typedef Data::input_data_t                     input_data_t;
     typedef Data::output_data_t                    output_data_t;
     typedef Data::action_t                         action_t;
     typedef Data::state_t                          state_t;
     typedef Data::reward_t                         reward_t;
+    enum TYPE { ABSTRACT, NULL_FEATURE, ACTION, STATE, REWARD, AND };
 
     Feature();
     virtual ~Feature();
@@ -35,22 +38,29 @@ public:
     virtual double evaluate(input_data_t, output_data_t) const = 0;
     virtual std::string identifier() const;
 
+    TYPE get_type() const;
     int get_id() const;
     unsigned int get_complexity() const;
     bool operator==(const Feature& other) const;
+    bool operator!=(const Feature& other) const;
     bool operator<(const Feature& other) const;
     static bool pComp(Feature const * first, Feature const * second);
 
-    subfeature_iterator get_subfeatures_begin() const;
-    subfeature_iterator get_subfeatures_end() const;
+    subfeature_const_iterator_t get_subfeatures_begin() const;
+    subfeature_const_iterator_t get_subfeatures_end() const;
+    uint get_subfeatures_size() const;
 
 protected:
+    TYPE type;
     long id;
     unsigned int complexity;
     static int field_width[2];
     static long id_counter;
     subfeature_container_t subfeatures;
     static basis_feature_container_t basis_features;
+
+    void clean_up_subfeatures();
+
 };
 
 class NullFeature: public Feature {

@@ -46,7 +46,7 @@ public:
         int index;
     };
 
-    Maze(const int& x_dimension, const int& y_dimension, const int& td = 1, const double& eps = 0, renderer_t r = renderer_t());
+    Maze(const int& x_dimension, const int& y_dimension, const double& eps = 0, renderer_t r = renderer_t());
 
     virtual ~Maze();
 

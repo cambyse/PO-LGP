@@ -6,9 +6,9 @@
 
 const double Maze::state_size = 0.9;
 
-Maze::Maze(const int& x_dimension, const int& y_dimension, const int& td, const double& eps, renderer_t r):
+Maze::Maze(const int& x_dimension, const int& y_dimension, const double& eps, renderer_t r):
         x_dim(x_dimension), y_dim(y_dimension),
-        time_delay(td), reward_timer(),
+        time_delay(Data::k), reward_timer(),
         epsilon(eps), renderer(r),
         agent(NULL), button(NULL), smiley(NULL) {
 

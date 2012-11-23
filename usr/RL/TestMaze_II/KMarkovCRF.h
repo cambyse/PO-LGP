@@ -35,7 +35,7 @@ public:
     typedef Data::output_data_t            output_data_t;
     typedef Data::OutputIterator           OutputIterator;
 
-    KMarkovCRF(const int& k);
+    KMarkovCRF();
 
     virtual ~KMarkovCRF();
 
@@ -92,13 +92,13 @@ public:
 
     void evaluate_features();
 
-    void score_features_by_mutual_information();
+//    void score_features_by_mutual_information();
 
-    void score_features_by_gradient();
+    void score_features_by_gradient(const int& n = 1);
 
-    void sort_scored_features(bool divide_by_complexity = true);
+    void sort_scored_features(bool divide_by_complexity = false);
 
-    void add_compound_features_to_active(const int& n = 0);
+    void add_compound_features_to_active(const int& n);
 
     void erase_zero_features();
 
@@ -113,7 +113,7 @@ private:
     bool compound_features_sorted;
 
     void check_lambda_size();
-    void construct_compound_features();
+    void construct_compound_features(const int& n);
 };
 
 #endif /* KMARKOVCRF_H_ */

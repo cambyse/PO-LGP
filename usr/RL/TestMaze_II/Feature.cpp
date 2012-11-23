@@ -10,11 +10,13 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
+typedef std::unique_ptr<Feature> unique_f_ptr;
+
 int Feature::field_width[2] = {0,0};
 long Feature::id_counter = 0;
 Feature::basis_feature_container_t Feature::basis_features = Feature::basis_feature_container_t();
 
-Feature::Feature(): id(id_counter), complexity(0) {
+Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0) {
     ++id_counter;
 }
 
@@ -26,6 +28,10 @@ Feature::~Feature() {}
 
 std::string Feature::identifier() const {
     return std::string("");
+}
+
+Feature::TYPE Feature::get_type() const {
+    return type;
 }
 
 int Feature::get_id() const{
@@ -53,23 +59,69 @@ bool Feature::operator==(const Feature& other) const {
     return true;
 }
 
+bool Feature::operator!=(const Feature& other) const {
+    return !(*this==other);
+}
+
 bool Feature::operator<(const Feature& other) const {
-    return id<other.id;
+    if(subfeatures.size()==other.get_subfeatures_size()) {
+        subfeature_const_iterator_t this_it  = subfeatures.begin();
+        subfeature_const_iterator_t other_it = other.get_subfeatures_begin();
+        while(this_it!=subfeatures.end() && other_it!=other.get_subfeatures_end()) {
+            if((*this_it)->id==(*other_it)->get_id()) {
+                ++this_it;
+                ++other_it;
+            }
+            else {
+                return (*this_it)->id < (*other_it)->get_id();
+            }
+        }
+        if(this_it!=subfeatures.end() || other_it!=other.get_subfeatures_end()) {
+            DEBUG_OUT(0, "Autsch! This should never happen!");
+        }
+    } else {
+        return subfeatures.size()<other.subfeatures.size();
+    }
+    return false;
 }
 
 bool Feature::pComp(Feature const * first, Feature const * second) {
     return (*first)<(*second);
 }
 
-Feature::subfeature_iterator Feature::get_subfeatures_begin() const {
-    return subfeatures.begin();
+Feature::subfeature_const_iterator_t Feature::get_subfeatures_begin() const {
+    if(subfeatures.size()==0) {
+        return subfeatures.end();
+    } else {
+        return subfeatures.begin();
+    }
 }
 
-Feature::subfeature_iterator Feature::get_subfeatures_end() const {
+Feature::subfeature_const_iterator_t Feature::get_subfeatures_end() const {
     return subfeatures.end();
 }
 
+uint Feature::get_subfeatures_size() const {
+    return subfeatures.size();
+}
+
+void Feature::clean_up_subfeatures() {
+    subfeature_const_iterator_t it_1;
+    subfeature_iterator_t it_2;
+    it_1 = it_2 = subfeatures.begin();
+    ++it_2;
+    while(it_2!=subfeatures.end()) {
+        if(**it_2==**it_1 || (*it_2)->get_type()==NULL_FEATURE) {
+            it_2 = subfeatures.erase(it_2);
+        } else {
+            ++it_1;
+            ++it_2;
+        }
+    }
+}
+
 NullFeature::NullFeature(){
+    type = NULL_FEATURE;
     complexity = 0;
 }
 
@@ -92,6 +144,7 @@ std::string NullFeature::identifier() const {
 }
 
 ActionFeature::ActionFeature(const action_t& a, const int& d): action(a), delay(d) {
+    type = ACTION;
     complexity = 1;
     if( field_width[0] < 5 ) {
         field_width[0]=5;
@@ -106,7 +159,7 @@ ActionFeature::~ActionFeature() {}
 
 ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     ActionFeature * new_feature = new ActionFeature(a,d);
-    basis_features.insert(new_feature);
+    basis_features.insert(unique_f_ptr(new_feature));
     return new_feature;
 }
 
@@ -134,6 +187,7 @@ std::string ActionFeature::identifier() const {
 }
 
 StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
+    type = STATE;
     complexity = 1;
     if( field_width[0] < log10(abs(state)) ) {
         field_width[0]=log10(abs(state));
@@ -148,7 +202,7 @@ StateFeature::~StateFeature() {}
 
 StateFeature * StateFeature::create(const state_t& s, const int& d) {
     StateFeature * new_feature = new StateFeature(s,d);
-    basis_features.insert(new_feature);
+    basis_features.insert(unique_f_ptr(new_feature));
     return new_feature;
 }
 
@@ -187,6 +241,7 @@ std::string StateFeature::identifier() const {
 }
 
 RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(d) {
+    type = REWARD;
     complexity = 1;
     if( field_width[0] < 2 ) {
         field_width[0]=2;
@@ -201,7 +256,7 @@ RewardFeature::~RewardFeature() {}
 
 RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     RewardFeature * new_feature = new RewardFeature(r,d);
-    basis_features.insert(new_feature);
+    basis_features.insert(unique_f_ptr(new_feature));
     return new_feature;
 }
 
@@ -240,12 +295,14 @@ std::string RewardFeature::identifier() const {
 }
 
 AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, const Feature& f4, const Feature& f5) {
+    type = AND;
     subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f2.get_subfeatures_begin(),f2.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f3.get_subfeatures_begin(),f3.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f4.get_subfeatures_begin(),f4.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f5.get_subfeatures_begin(),f5.get_subfeatures_end());
     subfeatures.sort(&(pComp));
+    clean_up_subfeatures();
     complexity = subfeatures.size();
 }
 
@@ -253,7 +310,7 @@ AndFeature::~AndFeature() {}
 
 double AndFeature::evaluate(input_data_t data) const {
     double prod = 1;
-    for(subfeature_iterator feature_iterator=subfeatures.begin();
+    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
         prod *= (*feature_iterator)->evaluate(data);
@@ -263,7 +320,7 @@ double AndFeature::evaluate(input_data_t data) const {
 
 double AndFeature::evaluate(input_data_t data, output_data_t data_predict) const {
     double prod = 1;
-    for(subfeature_iterator feature_iterator=subfeatures.begin();
+    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
         prod *= (*feature_iterator)->evaluate(data, data_predict);
@@ -272,9 +329,9 @@ double AndFeature::evaluate(input_data_t data, output_data_t data_predict) const
 }
 
 std::string AndFeature::identifier() const {
-    std::string id_string;
+    std::string id_string("^(");
     bool first = true;
-    for(subfeature_iterator feature_iterator=subfeatures.begin();
+    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
         if(!first) {
@@ -283,5 +340,5 @@ std::string AndFeature::identifier() const {
         first = false;
         id_string += (*feature_iterator)->identifier();
     }
-    return id_string+Feature::identifier();
+    return id_string+")"+Feature::identifier();
 };

@@ -13,6 +13,9 @@ public:
     //  Typedefs and Constants  //
     //--------------------------//
 
+    //------k-Markov horizon----//
+    static const int k;
+
     //---actions---//
     typedef int action_t;
     enum ACTION {   STAY,      UP,    DOWN,    LEFT,   RIGHT, NUMBER_OF_ACTIONS };
