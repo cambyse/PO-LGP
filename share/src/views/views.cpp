@@ -69,11 +69,9 @@ View::~View(){
   viewPrivateSpace()->views.removeValue(this);
   viewPrivateSpace()->lock.unlock();
   gtkLock();
+  if(s->timeoutTag) gtk_timeout_remove(s->timeoutTag);
+  if(gl) delete gl;
   if(widget) gtk_widget_destroy(widget);
-  if(gl){
-    gtk_timeout_remove(s->timeoutTag);
-    delete gl;
-  }
   gtkUnlock();
   delete s;
 }

@@ -559,14 +559,21 @@ double sAICO::evaluateTrajectory(const arr& x, bool plot){
       sys->getControlCosts(W, NoArr, t);
       if(t<T) Cctrl(t) = sqrDistance(W, x[t+1], x[t]);
     }else{
+#if 0
       arr H, M, F;
       sys->getControlCosts(H, NoArr, t);
-      NIY;
-#if 0
       sys->getMF(M, F, t);
         
       if(t<T && t>0) Cctrl(t) = sqrDistance(H, tau_2*M*(q[t+1]+q[t-1]-(double)2.*q[t]), F);
       if(t==0)       Cctrl(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
+#else
+      arr psi;
+      if(t<T){
+        getTransitionCostTerms(*sys, true, psi, NoArr, NoArr, x[t], x[t+1], t);
+        Cctrl(t)=sumOfSqr(psi);
+      }else{
+        Cctrl(t)=0.;
+      }
 #endif
     }
   }

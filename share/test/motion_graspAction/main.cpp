@@ -14,38 +14,26 @@ int main(int argn, char** argv){
   Process *ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
   Process *planner = newMotionPlanner(motionPrimitive);
 
-//   b::dump();  MT::wait();
+  //views
   new OrsView(geometricState.ors, &geometricState.rwlock);
   new PoseView(hardwareReference.q_reference, &hardwareReference.rwlock);
+  new PoseView(motionPrimitive.q_plan, &hardwareReference.rwlock);
   new InsideOut();
   
   cout <<"** setting grasp action" <<endl;
   motionPrimitive.writeAccess(NULL);
   motionPrimitive.action = MotionPrimitive::grasp;
   motionPrimitive.objectRef1 = (char*)"target1";
-  motionPrimitive.planConverged = false;
   motionPrimitive.deAccess(NULL);
 
-  cout <<"** setting controller to follow" <<endl;
-  motionPrimitive.set_mode(MotionPrimitive::planned, NULL);
-
-  uint mode=2;
-  switch(mode){
-  case 1:{ //serial mode
-    planner->open();
-    planner->step();
-  } break;
-  case 2:{ //threaded mode
-    ctrl->threadLoopWithBeat(.01);
-    //step(P);
-    //controller.threadLoopWithBeat(.01);
-    MT::wait();
-  } break;
-  }
+  //-- do the job!!
+  ctrl->threadLoopWithBeat(.01);
+  while(motionPrimitive.get_mode(NULL)!=MotionPrimitive::done)
+    motionPrimitive.waitForNextWriteAccess();
 
   close(biros().processes);
-  biros().dump();
-  
+  //biros().dump();
+
   cout <<"bye bye" <<endl;
 };
 

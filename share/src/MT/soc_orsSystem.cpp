@@ -446,7 +446,7 @@ void OrsSystem::setx(const arr& x){
 void sOrsSystem::getCurrentStateFromOrs(){
   arr q0,v0;
   ors->getJointState(q0, v0);
-  v0.setZero(); MT_MSG("evil speed v0=0 hack"); //TODO
+  v0.setZero(); //MT_MSG("evil speed v0=0 hack"); //TODO
   x.setBlockVector(q0, v0);
 }
 

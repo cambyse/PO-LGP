@@ -12,7 +12,7 @@
 
 #include <views/views.h>
 #include <views/specificViews.h>
-#include <biros/control.h>
+#include <biros/biros.h>
 #include <MT/ors.h>
 
 SET_LOG(main, DEBUG);
