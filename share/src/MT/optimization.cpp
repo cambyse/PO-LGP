@@ -209,7 +209,7 @@ bool checkJacobian(VectorFunction &f,
                    const arr& x, double tolerance) {
   arr y, J, dx, dy, JJ;
   f.fv(y, J, x);
-  if(J.special==arr::RowShiftedPackedMatrixST) J = unpackRowShifted(J);
+  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
   
   JJ.resize(y.N, x.N);
   double eps=CHECK_EPS;
@@ -432,7 +432,7 @@ uint optRprop(arr& x, ScalarFunction& f, optOptions o) {
   return Rprop().loop(x, f, o.fmin_return, o.stopTolerance, o.initStep, o.stopEvals, o.verbose);
 }
 
-uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *Jx_user) {
+uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer, arr *fx_user, arr *Jx_user) {
   double alpha=1.;
   double lambda = 1e-10;
   if(o.useAdaptiveDamping) lambda = o.useAdaptiveDamping;
@@ -447,6 +447,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
   arr J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
+  if(addRegularizer) fx += scalarProduct(x,(*addRegularizer)*x);
   if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl; 
   ofstream fil;
@@ -459,11 +460,17 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
     //compute Delta
 #if 1
     arr R=comp_At_A(J);
-    if(lambda){ //Levenberg Marquardt damping 
+    if(lambda){ //Levenberg Marquardt damping
       if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0;i<R.d0;i++) R(i,0) += lambda;  //(R(i,0) is the diagonal in the packed matrix!!)
       else for(uint i=0;i<R.d0;i++) R(i,i) += lambda;
     }
-    lapack_Ainv_b_sym(Delta, R, -comp_At_x(J, phi));
+    if(addRegularizer){
+      if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
+//      cout <<*addRegularizer <<R <<endl;
+      lapack_Ainv_b_sym(Delta, R + (*addRegularizer), -(comp_At_x(J, phi)+(*addRegularizer)*x));
+    }else{
+      lapack_Ainv_b_sym(Delta, R, -comp_At_x(J, phi));
+    }
 #else //this uses lapack's LLS minimizer - but is really slow!!
     x.reshape(x.N);
     if(lambda){
@@ -481,6 +488,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *fx_user, arr *
       y = x + alpha*Delta;
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
+      if(addRegularizer) fy += scalarProduct(y,(*addRegularizer)*y);
       if(o.verbose>2) cout <<" \tprobing y=" <<y;
       if(o.verbose>1) cout <<" \talpha=" <<alpha <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);

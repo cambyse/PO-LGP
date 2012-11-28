@@ -247,7 +247,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
   //resizing things:
   phi.resize(M);   phi.setZero();
-  if(&J){ J  .resize(M,x.N); J  .setZero(); }
+  if(&J){ J.resize(M,x.N); J.setZero(); }
   M=0;
   uint m_t;
   for(uint t=0;t<=T-k;t++){
@@ -280,6 +280,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint m_t;
   for(uint t=0;t<=T-k;t++){
     m_t = f->get_m(t);
+    if(!m_t) continue;
     arr phi_t,J_t;
     f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t, t+k) );
     CHECK(phi_t.N==m_t,"");

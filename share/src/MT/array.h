@@ -725,7 +725,6 @@ inline RowShiftedPackedMatrix& castRowShiftedPackedMatrix(arr& X){
 
 arr unpack(const arr& Z); //returns an unpacked matrix in case this is packed
 arr packRowShifted(const arr& X);
-arr unpackRowShifted(const arr& Z);
 RowShiftedPackedMatrix *auxRowShifted(arr& Z, uint d0, uint pack_d1, uint real_d1);
 arr comp_At_A(arr& A);
 arr comp_At_x(arr& A, const arr& x);

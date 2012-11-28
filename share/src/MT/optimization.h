@@ -46,6 +46,10 @@ struct KOrderMarkovFunction {
   virtual uint get_k() = 0;
   virtual uint get_n() = 0; //the dimensionality of $x_t$
   virtual uint get_m(uint t) = 0; //the dimensionality of $\phi_t$
+
+  //optional: kernel costs
+  virtual bool hasKernel(){ return false; }
+  virtual double kernel(uint t0,uint t1){ NIY; }
 };
 
 /*
@@ -132,7 +136,7 @@ extern optOptions globalOptOptions;
 /// minimizes f(x) = phi(x)^T phi(x) using the Jacobian of phi
 /// the optional _user arguments specify, if f has already been evaluated at x (another initial evaluation is then omitted
 /// to increase performance) and the evaluation of the returned x is also returned
-uint optGaussNewton(arr& x, VectorFunction& phi, optOptions opt, arr *fx_user=NULL, arr *Jx_user=NULL);
+uint optGaussNewton(arr& x, VectorFunction& phi, optOptions opt, arr *addRegularizer=NULL, arr *fx_user=NULL, arr *Jx_user=NULL);
 
 /// minimizes f(x) = A(x)^T x A^T(x) - 2 a(x)^T x + c(x)
 /// the optional _user arguments specify, if f has already been evaluated at x (another initial evaluation is then omitted

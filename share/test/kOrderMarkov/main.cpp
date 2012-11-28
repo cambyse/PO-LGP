@@ -1,8 +1,28 @@
 #include <MT/util.h>
 #include <MT/optimization.h>
-#include <MT/kOrderMarkovProblem.h>
 #include "exampleProblem.h"
 #include <MT/soc_exampleProblems.h>
+
+arr buildKernelMatrix(KOrderMarkovFunction& P){
+  CHECK(P.hasKernel(),"");
+  uint T = P.get_T();
+  uint n = P.get_n();
+  arr K((T+1)*n,(T+1)*n);
+  K.setZero();
+  for(uint t=0;t<=T;t++){
+    for(uint s=t;s<=T;s++){
+      double kts=P.kernel(t,s);
+      for(uint i=0;i<n;i++){
+        K(t*n+i,s*n+i) = kts;
+        K(s*n+i,t*n+i) = kts;
+      }
+    }
+  }
+  for(uint i=0;i<K.d0;i++) K(i,i) += 1e-10;
+  arr Kinv;
+  inverse_SymPosDef(Kinv, K);
+  return Kinv;
+}
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -13,8 +33,8 @@ int main(int argn,char** argv){
   ControlledSystem_as_KOrderMarkovFunction P(sys);
 #else
   ParticleAroundWalls P;
-  P.k=2;
-  P.kernel=true;
+  P.k=1;
+  P.kern=true;
 #endif
   
   //-- print some info on the P
@@ -52,7 +72,12 @@ int main(int argn,char** argv){
 
   //-- optimize
   rndUniform(x,-10.,-1.);
-  optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0));
+  if(P.hasKernel()){
+    arr K=buildKernelMatrix(P);
+    optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0), &K);
+  }else{
+    optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0));
+  }
 
   //analyzeTrajectory(sys, x, true, &cout);
   write(LIST<arr>(x),"z.output");

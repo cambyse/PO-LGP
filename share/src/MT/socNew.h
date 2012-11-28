@@ -3,7 +3,7 @@
 
 #include "util.h"
 #include "array.h"
-#include "kOrderMarkovProblem.h"
+#include "optimization.h"
 
 extern uint countMsg, countSetq;
 

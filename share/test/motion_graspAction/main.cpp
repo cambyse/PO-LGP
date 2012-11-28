@@ -13,6 +13,7 @@ int main(int argn, char** argv){
   // processes
   Process *ctrl = newMotionController(&hardwareReference, &motionPrimitive, NULL);
   Process *planner = newMotionPlanner(motionPrimitive);
+  ctrl->threadLoopWithBeat(.01);
 
   //views
   new OrsView(geometricState.ors, &geometricState.rwlock);
@@ -26,8 +27,17 @@ int main(int argn, char** argv){
   motionPrimitive.objectRef1 = (char*)"target1";
   motionPrimitive.deAccess(NULL);
 
-  //-- do the job!!
-  ctrl->threadLoopWithBeat(.01);
+  // wait for the job done
+  while(motionPrimitive.get_mode(NULL)!=MotionPrimitive::done)
+    motionPrimitive.waitForNextWriteAccess();
+
+  cout <<"** setting grasp action" <<endl;
+  motionPrimitive.writeAccess(NULL);
+  motionPrimitive.action = MotionPrimitive::closeHand;
+  motionPrimitive.planConverged=false;
+  motionPrimitive.deAccess(NULL);
+
+  // wait for the job done
   while(motionPrimitive.get_mode(NULL)!=MotionPrimitive::done)
     motionPrimitive.waitForNextWriteAccess();
 
