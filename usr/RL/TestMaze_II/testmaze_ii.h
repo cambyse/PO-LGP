@@ -4,7 +4,7 @@
 #include <QtGui/QWidget>
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
-#include "ValueIteration.h"
+#include "QIteration.h"
 #include "KMarkovCRF.h"
 #include <QTimer>
 
@@ -20,7 +20,7 @@ public:
 private:
     Ui::TestMaze_IIClass ui;
     Maze maze;
-    ValueIteration value_iteration_object;
+    QIteration q_iteration_object;
     KMarkovCRF crf;
     bool record;
     double l1_factor;

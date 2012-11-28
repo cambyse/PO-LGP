@@ -17,28 +17,22 @@
 
 #include "Data.h"
 
-class Maze_default_renderer {
-//    friend class Maze;
-public:
-    void render_initialize() {}
-    void render_update() {}
-};
-
 class Maze {
 public:
 
     typedef Data::action_t        action_t;
     typedef Data::state_t         state_t;
     typedef Data::reward_t        reward_t;
-    typedef Maze_default_renderer renderer_t;
+    typedef Data::input_data_t    input_data_t;
+    typedef Data::output_data_t   output_data_t;
 
-    class State {
+    class MazeState {
     public:
-        State(const int& idx = 0): index(idx) {}
-        State(const int& x, const int& y, const int& x_dim): index(x+x_dim*y) {}
-        bool operator==(const State& other) const { return this->index==other.index; }
-        bool operator!=(const State& other) const { return !((*this)==other); }
-        bool operator<(const State& other) const { return this->index<other.index; }
+        MazeState(const int& idx = 0): index(idx) {}
+        MazeState(const int& x, const int& y, const int& x_dim): index(x+x_dim*y) {}
+        bool operator==(const MazeState& other) const { return this->index==other.index; }
+        bool operator!=(const MazeState& other) const { return !((*this)==other); }
+        bool operator<(const MazeState& other) const { return this->index<other.index; }
         int idx() const { return index; }
         int x(const int& x_dim) const { return index%x_dim; }
         int y(const int& x_dim) const { return index/x_dim; }
@@ -46,7 +40,7 @@ public:
         int index;
     };
 
-    Maze(const int& x_dimension, const int& y_dimension, const double& eps = 0, renderer_t r = renderer_t());
+    Maze(const int& x_dimension, const int& y_dimension, const double& eps = 0);
 
     virtual ~Maze();
 
@@ -56,8 +50,11 @@ public:
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r );
 
-    template< class TransitionModel >
-    void initialize_transition_model(TransitionModel& model);
+//    template< class TransitionProbabilities >
+//    void initialize_transition_probabilities(TransitionProbabilities&);
+//
+//    template< class RewardProbabilities >
+//    void initialize_reward_probabilities(RewardProbabilities&);
 
     void set_time_delay(const int& new_time_delay);
     int get_time_delay() { return time_delay; }
@@ -75,13 +72,12 @@ private:
     static const double state_size;
     std::deque<bool> reward_timer;
     double epsilon;
-    renderer_t renderer;
-    State current_state;
-    std::map< std::tuple<State,action_t>, std::vector<std::tuple<State,double> > > transition_map;
-    State button_state, smiley_state;
+    MazeState current_state;
+    std::map< std::tuple<MazeState,action_t>, std::vector<std::tuple<MazeState,double> > > transition_map;
+    MazeState button_state, smiley_state;
     QGraphicsSvgItem *agent, *button, *smiley;
 
-    void set_current_state(const State& s);
+    void set_current_state(const MazeState& s);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);
@@ -99,16 +95,21 @@ private:
     }
 };
 
-template< class TransitionModel >
-void Maze::initialize_transition_model(TransitionModel& model) {
-    for(Data::state_t state_from=0; state_from<x_dim*y_dim; ++state_from) {
-        for(Data::action_t action = 0; action<Data::action_n; ++action) {
-            std::vector<std::tuple<State,double> > state_vector = transition_map[std::make_tuple(state_from,action)];
-            for(uint idx=0; idx<state_vector.size(); ++idx) {
-                model.set_transition_probability(state_from,action,Data::state_t(std::get<0>(state_vector[idx]).idx()),std::get<1>(state_vector[idx]));
-            }
-        }
-    }
-}
+//template< class TransitionProbabilities >
+//void Maze::initialize_transition_probabilities(TransitionProbabilities& transition_probabilities) {
+//    for(Data::state_t state_from=0; state_from<x_dim*y_dim; ++state_from) {
+//        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+//            std::vector<std::tuple<MazeState,double> > state_vector = transition_map[std::make_tuple(state_from,action)];
+//            for(uint idx=0; idx<state_vector.size(); ++idx) {
+//                transition_probabilities.set_transition_probability(state_from,action,Data::state_t(std::get<0>(state_vector[idx]).idx()),std::get<1>(state_vector[idx]));
+//            }
+//        }
+//    }
+//}
+
+//template< class RewardProbabilities >
+//void Maze::initialize_reward_probabilities(RewardProbabilities& reward_probabilities) {
+//    reward_probabilities.set_reward_probability();
+//}
 
 #endif /* MAZE_H_ */

@@ -219,7 +219,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const int& state,
         const double& reward
 ) {
-    episode_data.push_back(std::make_tuple(action,state,reward));
+    episode_data.push_back(data_point_t(action,state,reward));
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 

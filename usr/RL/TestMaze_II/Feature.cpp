@@ -10,6 +10,9 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
+using std::get;
+using std::string;
+
 typedef std::unique_ptr<Feature> unique_f_ptr;
 
 int Feature::field_width[2] = {0,0};
@@ -22,12 +25,12 @@ Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0
 
 Feature::~Feature() {}
 
-//std::string Feature::identifier() const {
+//string Feature::identifier() const {
 //    return QString("(%1)").arg(id).toStdString();
 //}
 
-std::string Feature::identifier() const {
-    return std::string("");
+string Feature::identifier() const {
+    return string("");
 }
 
 Feature::TYPE Feature::get_type() const {
@@ -135,7 +138,7 @@ double NullFeature::evaluate(input_data_t, output_data_t) const {
     return 0;
 }
 
-std::string NullFeature::identifier() const {
+string NullFeature::identifier() const {
     QString id_string("n("
             +QString(field_width[0]+field_width[1]+1,' ')
             +")"
@@ -163,19 +166,19 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-double ActionFeature::evaluate(input_data_t data) const {
-    if( std::get<0>(*(data+=delay))==action ) {
+double ActionFeature::evaluate(input_data_t input_data) const {
+    if( (input_data+=delay)->action==action ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double ActionFeature::evaluate(input_data_t data, output_data_t) const {
-    return evaluate(data);
+double ActionFeature::evaluate(input_data_t input_data, output_data_t) const {
+    return evaluate(input_data);
 }
 
-std::string ActionFeature::identifier() const {
+string ActionFeature::identifier() const {
     QString id_string("a("
             +QString(5-field_width[0],' ')
             +QString(Data::action_strings[action])
@@ -206,23 +209,23 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-double StateFeature::evaluate(input_data_t data) const {
-    if( std::get<1>(*(data+=delay))==state ) {
+double StateFeature::evaluate(input_data_t input_data) const {
+    if( (input_data+=delay)->state==state ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double StateFeature::evaluate(input_data_t data, output_data_t data_predict) const {
+double StateFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
     if( delay==0 ) {
-        if( std::get<1>(data_predict)==state ) {
+        if( output_data.state==state ) {
             return 1;
         } else {
             return 0;
         }
     } else {
-        if( std::get<1>(*(data+=delay))==state ) {
+        if( (input_data+=delay)->state==state ) {
             return 1;
         } else {
             return 0;
@@ -230,7 +233,7 @@ double StateFeature::evaluate(input_data_t data, output_data_t data_predict) con
     }
 }
 
-std::string StateFeature::identifier() const {
+string StateFeature::identifier() const {
     QString id_string("s("
             +QString("%1").arg(state,field_width[0])
             +", "
@@ -260,23 +263,23 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-double RewardFeature::evaluate(input_data_t data) const {
-    if( std::get<2>(*(data+=delay))==reward ) {
+double RewardFeature::evaluate(input_data_t input_data) const {
+    if( (input_data+=delay)->reward==reward ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double RewardFeature::evaluate(input_data_t data, output_data_t data_predict) const {
+double RewardFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
     if( delay==0 ) {
-        if( std::get<2>(data_predict)==reward ) {
+        if( output_data.reward==reward ) {
             return 1;
         } else {
             return 0;
         }
     } else {
-        if( std::get<2>(*(data+=delay))==reward ) {
+        if( (input_data+=delay)->reward==reward ) {
             return 1;
         } else {
             return 0;
@@ -284,7 +287,7 @@ double RewardFeature::evaluate(input_data_t data, output_data_t data_predict) co
     }
 }
 
-std::string RewardFeature::identifier() const {
+string RewardFeature::identifier() const {
     QString id_string("r("
             +QString("%1").arg(reward,field_width[0])
             +", "
@@ -308,28 +311,28 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
 
 AndFeature::~AndFeature() {}
 
-double AndFeature::evaluate(input_data_t data) const {
+double AndFeature::evaluate(input_data_t input_data) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(data);
+        prod *= (*feature_iterator)->evaluate(input_data);
     }
     return prod;
 }
 
-double AndFeature::evaluate(input_data_t data, output_data_t data_predict) const {
+double AndFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(data, data_predict);
+        prod *= (*feature_iterator)->evaluate(input_data, output_data);
     }
     return prod;
 }
 
-std::string AndFeature::identifier() const {
-    std::string id_string("^(");
+string AndFeature::identifier() const {
+    string id_string("^(");
     bool first = true;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();

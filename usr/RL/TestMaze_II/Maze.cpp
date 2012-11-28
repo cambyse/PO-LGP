@@ -6,10 +6,10 @@
 
 const double Maze::state_size = 0.9;
 
-Maze::Maze(const int& x_dimension, const int& y_dimension, const double& eps, renderer_t r):
+Maze::Maze(const int& x_dimension, const int& y_dimension, const double& eps):
         x_dim(x_dimension), y_dim(y_dimension),
         time_delay(Data::k), reward_timer(),
-        epsilon(eps), renderer(r),
+        epsilon(eps),
         agent(NULL), button(NULL), smiley(NULL) {
 
     // initializing transitions
@@ -17,14 +17,14 @@ Maze::Maze(const int& x_dimension, const int& y_dimension, const double& eps, re
 
     // setting button and smiley state
     if(x_dim>0 || y_dim>0) {
-        button_state = State(x_dim-1,y_dim-1,x_dim);
+        button_state = MazeState(x_dim-1,y_dim-1,x_dim);
     } else {
-        button_state = State(0,0,x_dim);
+        button_state = MazeState(0,0,x_dim);
     }
-    smiley_state = State(0,0,x_dim);
+    smiley_state = MazeState(0,0,x_dim);
 
     // setting current state
-    current_state = State(x_dim/2,y_dim/2,x_dim);
+    current_state = MazeState(x_dim/2,y_dim/2,x_dim);
 
     // initialize reward timer and update reward function
     for(int t=0; t<time_delay; ++t) { reward_timer.push_front(false); }
@@ -48,7 +48,7 @@ void Maze::render_initialize(QGraphicsView * view) {
     }
 
     for(int idx=0; idx<x_dim*y_dim; ++idx) {
-        State state(idx);
+        MazeState state(idx);
         scene->addRect( state.x(x_dim)-state_size/2, state.y(x_dim)-state_size/2, state_size, state_size, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
     }
 
@@ -74,9 +74,6 @@ void Maze::render_initialize(QGraphicsView * view) {
     smiley->setElementId(reward_timer.back() ? "active" : "passive");
     scene->addItem(smiley);
 
-    // initialize renderer
-    renderer.render_initialize();
-
     // render agent
     if(!agent) {
         agent = new QGraphicsSvgItem("./agent.svg");
@@ -95,7 +92,6 @@ void Maze::render_initialize(QGraphicsView * view) {
 void Maze::render_update(QGraphicsView * view) {
     button->setElementId(current_state==button_state ? "active" : "passive");
     smiley->setElementId(reward_timer.back() ? "active" : "passive");
-    renderer.render_update();
     QSizeF s = agent->boundingRect().size();
     agent->setPos(current_state.x(x_dim)-s.width()/2, current_state.y(x_dim)-s.height()/2);
     rescale_scene(view);
@@ -103,17 +99,17 @@ void Maze::render_update(QGraphicsView * view) {
 
 
 void Maze::perform_transition(const action_t& action) {
-    State old_state = current_state; // remember current (old) state
+    MazeState old_state = current_state; // remember current (old) state
     reward_timer.pop_back(); // pop current (old) reward
 
     // perform transition
-    std::vector< std::tuple<State,double> > state_vector = transition_map[std::make_tuple(current_state,action)];
+    std::vector< std::tuple<MazeState,double> > state_vector = transition_map[std::make_tuple(current_state,action)];
     double r = drand48();
     bool was_set = false;
     DEBUG_OUT(2,"r = " << r);
     for(uint idx=0; idx<state_vector.size(); ++idx) {
         r -= std::get<1>(state_vector[idx]);
-        State state_to = std::get<0>(state_vector[idx]);
+        MazeState state_to = std::get<0>(state_vector[idx]);
         DEBUG_OUT(2,"r = " << r << ", (" << state_to.x(x_dim) << "," << state_to.y(x_dim) << ")" );
         if(r<0) {
             current_state = state_to;
@@ -154,7 +150,7 @@ void Maze::set_time_delay(const int& new_time_delay) {
 }
 
 
-void Maze::set_current_state(const State& s) {
+void Maze::set_current_state(const MazeState& s) {
     current_state = s;
 }
 
@@ -177,14 +173,14 @@ void Maze::create_transitions() {
     for(int idx=0; idx<x_dim*y_dim; ++idx) {
 
         // reachable states
-        State state_from(idx);
-        State state_left( clamp(0,x_dim-1,state_from.x(x_dim)-1),clamp(0,y_dim-1,state_from.y(x_dim)  ),x_dim);
-        State state_right(clamp(0,x_dim-1,state_from.x(x_dim)+1),clamp(0,y_dim-1,state_from.y(x_dim)  ),x_dim);
-        State state_up(   clamp(0,x_dim-1,state_from.x(x_dim)  ),clamp(0,y_dim-1,state_from.y(x_dim)-1),x_dim);
-        State state_down( clamp(0,x_dim-1,state_from.x(x_dim)  ),clamp(0,y_dim-1,state_from.y(x_dim)+1),x_dim);
+        MazeState state_from(idx);
+        MazeState state_left( clamp(0,x_dim-1,state_from.x(x_dim)-1),clamp(0,y_dim-1,state_from.y(x_dim)  ),x_dim);
+        MazeState state_right(clamp(0,x_dim-1,state_from.x(x_dim)+1),clamp(0,y_dim-1,state_from.y(x_dim)  ),x_dim);
+        MazeState state_up(   clamp(0,x_dim-1,state_from.x(x_dim)  ),clamp(0,y_dim-1,state_from.y(x_dim)-1),x_dim);
+        MazeState state_down( clamp(0,x_dim-1,state_from.x(x_dim)  ),clamp(0,y_dim-1,state_from.y(x_dim)+1),x_dim);
 
         // stay
-        std::vector< std::tuple<State,double> > stay_vector;
+        std::vector< std::tuple<MazeState,double> > stay_vector;
         stay_vector.push_back(std::make_tuple(state_from,1-epsilon));
         stay_vector.push_back(std::make_tuple(state_left,epsilon/4));
         stay_vector.push_back(std::make_tuple(state_right,epsilon/4));
@@ -193,7 +189,7 @@ void Maze::create_transitions() {
         transition_map[std::make_tuple(state_from,Data::STAY)] = stay_vector;
 
         // left
-        std::vector< std::tuple<State,double> > left_vector;
+        std::vector< std::tuple<MazeState,double> > left_vector;
         left_vector.push_back(std::make_tuple(state_from,epsilon/4));
         left_vector.push_back(std::make_tuple(state_left,1-epsilon));
         left_vector.push_back(std::make_tuple(state_right,epsilon/4));
@@ -202,7 +198,7 @@ void Maze::create_transitions() {
         transition_map[std::make_tuple(state_from,Data::LEFT)] = left_vector;
 
         // right
-        std::vector< std::tuple<State,double> > right_vector;
+        std::vector< std::tuple<MazeState,double> > right_vector;
         right_vector.push_back(std::make_tuple(state_from,epsilon/4));
         right_vector.push_back(std::make_tuple(state_left,epsilon/4));
         right_vector.push_back(std::make_tuple(state_right,1-epsilon));
@@ -211,7 +207,7 @@ void Maze::create_transitions() {
         transition_map[std::make_tuple(state_from,Data::RIGHT)] = right_vector;
 
         // up
-        std::vector< std::tuple<State,double> > up_vector;
+        std::vector< std::tuple<MazeState,double> > up_vector;
         up_vector.push_back(std::make_tuple(state_from,epsilon/4));
         up_vector.push_back(std::make_tuple(state_left,epsilon/4));
         up_vector.push_back(std::make_tuple(state_right,epsilon/4));
@@ -220,7 +216,7 @@ void Maze::create_transitions() {
         transition_map[std::make_tuple(state_from,Data::UP)] = up_vector;
 
         // down
-        std::vector< std::tuple<State,double> > down_vector;
+        std::vector< std::tuple<MazeState,double> > down_vector;
         down_vector.push_back(std::make_tuple(state_from,epsilon/4));
         down_vector.push_back(std::make_tuple(state_left,epsilon/4));
         down_vector.push_back(std::make_tuple(state_right,epsilon/4));
@@ -232,9 +228,9 @@ void Maze::create_transitions() {
             DEBUG_OUT(2,"From state (" << state_from.x(x_dim) << "," << state_from.y(x_dim) << "):");
             for(int action=0; action<Data::action_n; ++action) {
                 DEBUG_OUT(2,"    given Action = " << action);
-                std::vector< std::tuple<State,double> > state_vector = transition_map[std::make_tuple(state_from,(action_t)action)];
+                std::vector< std::tuple<MazeState,double> > state_vector = transition_map[std::make_tuple(state_from,(action_t)action)];
                 for(uint idx=0; idx<state_vector.size(); ++idx) {
-                    State state_to = std::get<0>(state_vector[idx]);
+                    MazeState state_to = std::get<0>(state_vector[idx]);
                     double prob = std::get<1>(state_vector[idx]);
                     DEBUG_OUT(2,"        to state (" << state_to.x(x_dim) << "," << state_to.y(x_dim) << ") with probability " << prob);
                 }

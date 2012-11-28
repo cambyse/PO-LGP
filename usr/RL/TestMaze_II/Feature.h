@@ -81,8 +81,8 @@ private:
 
 public:
     static ActionFeature * create(const action_t& a, const int& d);
-    virtual double evaluate(input_data_t data) const;
-    virtual double evaluate(input_data_t data, output_data_t) const;
+    virtual double evaluate(input_data_t) const;
+    virtual double evaluate(input_data_t, output_data_t) const;
     virtual std::string identifier() const;
 private:
     action_t action;
@@ -97,8 +97,8 @@ private:
 
 public:
     static StateFeature * create(const state_t& s, const int& d);
-    virtual double evaluate(input_data_t data) const;
-    virtual double evaluate(input_data_t data, output_data_t data_predict) const;
+    virtual double evaluate(input_data_t) const;
+    virtual double evaluate(input_data_t, output_data_t data_predict) const;
     virtual std::string identifier() const;
 private:
     state_t state;
@@ -113,8 +113,8 @@ private:
 
 public:
     static RewardFeature * create(const reward_t& r, const int& d);
-    virtual double evaluate(input_data_t data) const;
-    virtual double evaluate(input_data_t data, output_data_t data_predict) const;
+    virtual double evaluate(input_data_t) const;
+    virtual double evaluate(input_data_t, output_data_t) const;
     virtual std::string identifier() const;
 private:
     reward_t reward;
@@ -125,8 +125,8 @@ class AndFeature: public Feature {
 public:
     AndFeature(const Feature& f1 = NullFeature(), const Feature& f2 = NullFeature(), const Feature& f3 = NullFeature(), const Feature& f4 = NullFeature(), const Feature& f5 = NullFeature());
     virtual ~AndFeature();
-    virtual double evaluate(input_data_t data) const;
-    virtual double evaluate(input_data_t data, output_data_t data_predict) const;
+    virtual double evaluate(input_data_t) const;
+    virtual double evaluate(input_data_t, output_data_t) const;
     virtual std::string identifier() const;
 };
 

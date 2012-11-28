@@ -5,21 +5,24 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
-const int    Data::k                 = 4;
+using std::get;
+using std::make_tuple;
+
+
 const char*  Data::action_strings[5] = { " STAY", "   UP", " DOWN", " LEFT", "RIGHT" };
 const int    Data::action_n          = NUMBER_OF_ACTIONS;
-const int    Data::maze_x_dim        = 3;
-const int    Data::maze_y_dim        = 3;
+const int    Data::maze_x_dim        = 2;
+const int    Data::maze_y_dim        = 2;
+const int    Data::k                 = maze_x_dim+maze_y_dim-2;
 const int    Data::state_n           = maze_x_dim*maze_y_dim;
 const double Data::min_reward        = 0.0;
 const double Data::max_reward        = 1.0;
 const double Data::reward_increment  = 1.0;
 const int    Data::reward_n          = floor((max_reward-min_reward)/reward_increment)+1;
+const int    Data::input_n           = (k+1)*action_n*state_n*reward_n;
 const int    Data::output_n          = state_n*reward_n;
 
-int Data::output_idx(input_data_t data) {
-    state_t state = std::get<1>((*data));
-    reward_t reward = std::get<2>((*data));
+unsigned long Data::reward_idx(reward_t reward) {
     if(reward<min_reward) {
         DEBUG_OUT(0,"Encountered too low reward."                );
         DEBUG_OUT(0,"    reward           = " << reward          );
@@ -40,38 +43,41 @@ int Data::output_idx(input_data_t data) {
         DEBUG_OUT(0,"    reward_increment = " << reward_increment);
         DEBUG_OUT(0,"    reward_n         = " << reward_n        );
     }
-    int i_reward_idx = floor(d_reward_idx);
-    return state*reward_n + i_reward_idx;
+    return floor(d_reward_idx);
 }
 
-int Data::output_idx(input_data_t, output_data_t data_predict) {
-    state_t state = std::get<1>(data_predict);
-    reward_t reward = std::get<2>(data_predict);
-    if(reward<min_reward) {
-        DEBUG_OUT(0,"Encountered too low reward."                );
-        DEBUG_OUT(0,"    reward           = " << reward          );
-        DEBUG_OUT(0,"    min_reward       = " << min_reward      );
+unsigned long Data::input_idx(input_data_t input_data) {
+    unsigned long idx = 0;
+    unsigned long block_size = 1;
+    int counter = k;
+    while(counter>=0) {
+
+        idx += block_size*reward_idx(input_data->reward);
+        block_size *= reward_n;
+
+        idx += block_size*input_data->state;
+        block_size *= state_n;
+
+        idx += block_size*input_data->action;
+        block_size *= action_n;
+
+        --input_data;
+        --counter;
     }
-    if(reward>max_reward) {
-        DEBUG_OUT(0,"Encountered too high reward."               );
-        DEBUG_OUT(0,"    reward           = " << reward          );
-        DEBUG_OUT(0,"    max_reward       = " << max_reward      );
-    }
-    double d_reward_idx = (reward-min_reward)/reward_increment;
-    if(d_reward_idx != floor(d_reward_idx)) {
-        DEBUG_OUT(0,"Encountered fractional reward index."       );
-        DEBUG_OUT(0,"    reward           = " << reward          );
-        DEBUG_OUT(0,"    reward_idx       = " << d_reward_idx    );
-        DEBUG_OUT(0,"    min_reward       = " << min_reward      );
-        DEBUG_OUT(0,"    max_reward       = " << max_reward      );
-        DEBUG_OUT(0,"    reward_increment = " << reward_increment);
-        DEBUG_OUT(0,"    reward_n         = " << reward_n        );
-    }
-    int i_reward_idx = floor(d_reward_idx);
-    return state*reward_n + i_reward_idx;
+    return idx;
 }
 
-Data::OutputIterator::OutputIterator(): current_action(), current_state(), current_reward(min_reward) {}
+unsigned long Data::output_idx(input_data_t input_data) {
+    state_t state = input_data->state;
+    return state*reward_n + reward_idx(input_data->reward);
+}
+
+unsigned long Data::output_idx(output_data_t output_data) {
+    state_t state = output_data.state;
+    return state*reward_n + reward_idx(output_data.reward);
+}
+
+Data::OutputIterator::OutputIterator(): current_state(), current_reward(min_reward) {}
 
 Data::OutputIterator::~OutputIterator() {}
 
@@ -86,7 +92,7 @@ Data::OutputIterator& Data::OutputIterator::operator++() {
 }
 
 Data::output_data_t Data::OutputIterator::operator*() const {
-    return std::make_tuple(current_action,current_state,current_reward);
+    return output_data_t(current_state,current_reward);
 }
 
 bool Data::OutputIterator::end() const {

@@ -31,8 +31,6 @@ public:
     typedef Data::episode_t                episode_t;
     typedef Data::const_episode_iterator_t const_episode_iterator_t;
     typedef Data::data_point_t             data_point_t;
-    typedef Data::input_data_t             input_data_t;
-    typedef Data::output_data_t            output_data_t;
     typedef Data::OutputIterator           OutputIterator;
 
     KMarkovCRF();

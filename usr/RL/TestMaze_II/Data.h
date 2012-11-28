@@ -35,21 +35,37 @@ public:
     static const double reward_increment;
     static const int    reward_n;
 
-    //---other---//
+
+    //---probability---//
     typedef double                                probability_t;
-    typedef std::tuple<action_t,state_t,reward_t> data_point_t;
+
+    //---input/output---//
+    struct data_point_t {
+        data_point_t(action_t a, state_t  s, reward_t r): action(a), state(s), reward(r) {}
+        action_t action;
+        state_t  state;
+        reward_t reward;
+    };
+    struct output_data_t {
+        output_data_t(state_t  s, reward_t r): state(s), reward(r) {}
+        state_t  state;
+        reward_t reward;
+    };
     typedef std::vector<data_point_t>             episode_t;
+    typedef episode_t::iterator                   episode_iterator_t;
     typedef episode_t::const_iterator             const_episode_iterator_t;
     typedef const_episode_iterator_t              input_data_t;
-    typedef const data_point_t                    output_data_t;
+    static const int input_n;
     static const int output_n;
 
     //-------------//
     //  Functions  //
     //-------------//
 
-    static int output_idx(input_data_t data);
-    static int output_idx(input_data_t, output_data_t data_predict);
+    static unsigned long reward_idx(reward_t);
+    static unsigned long input_idx(input_data_t);
+    static unsigned long output_idx(input_data_t);
+    static unsigned long output_idx(output_data_t);
 
     //-----------//
     //  Classes  //
@@ -62,7 +78,6 @@ public:
         output_data_t operator*() const;
         bool end() const;
     private:
-        action_t current_action;
         state_t current_state;
         reward_t current_reward;
     };

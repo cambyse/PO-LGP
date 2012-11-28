@@ -11,7 +11,7 @@ typedef Data::reward_t reward_t;
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
       maze(Data::maze_x_dim,Data::maze_y_dim,0.0),
-      value_iteration_object(),
+      q_iteration_object(),
       record(false),
       l1_factor(0),
       random_action_timer(nullptr),
@@ -38,8 +38,8 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
 
     // initialize transition model
-    maze.initialize_transition_model(value_iteration_object);
-    value_iteration_object.set_expected_reward(Maze::State(0,0,Data::maze_x_dim).idx(),1);
+//    maze.initialize_transition_probabilities(q_iteration_object);
+//    maze.initialize_reward_probabilities(q_iteration_object);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
@@ -96,13 +96,13 @@ void TestMaze_II::random_action() {
 }
 
 void TestMaze_II::value_iteration() {
-    value_iteration_object.iterate();
-    DEBUG_OUT(1,"State values:");
-    for(int x_idx=0; x_idx<Data::maze_x_dim; ++x_idx) {
-        for(int y_idx=0; y_idx<Data::maze_y_dim; ++y_idx) {
-            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << value_iteration_object.get_value(Maze::State(x_idx,y_idx,Data::maze_x_dim).idx()));
-        }
-    }
+//    q_iteration_object.iterate();
+//    DEBUG_OUT(1,"State values:");
+//    for(int x_idx=0; x_idx<Data::maze_x_dim; ++x_idx) {
+//        for(int y_idx=0; y_idx<Data::maze_y_dim; ++y_idx) {
+//            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << q_iteration_object.get_value(Maze::MazeState(x_idx,y_idx,Data::maze_x_dim).idx()));
+//        }
+//    }
 }
 
 void TestMaze_II::process_console_input() {

@@ -17,10 +17,10 @@
 class ValueIteration
 {
 public:
-    typedef std::map<Data::state_t,double> state_value_table_t;
-    typedef std::map<std::tuple<Data::state_t,Data::action_t>,double> state_action_value_table_t;
+    typedef std::map<Data::state_t,double>                                          state_value_table_t;
+    typedef std::map<std::tuple<Data::state_t,Data::action_t>,double>               state_action_value_table_t;
     typedef std::map<std::tuple<Data::state_t,Data::action_t,Data::state_t>,double> probability_table_t;
-    typedef std::map<Data::state_t,Data::action_t> state_action_table_t;
+    typedef std::map<Data::state_t,Data::action_t>                                  state_action_table_t;
 
     ValueIteration(const double& disc = 0.9): discount(disc) {
         state_action_value_table = new state_action_value_table_t;
