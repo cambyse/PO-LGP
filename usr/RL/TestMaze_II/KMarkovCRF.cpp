@@ -215,9 +215,9 @@ void KMarkovCRF::optimize_model(lbfgsfloatval_t l1) {
 }
 
 void KMarkovCRF::add_action_state_reward_tripel(
-        const int& action,
-        const int& state,
-        const double& reward
+        const action_t& action,
+        const state_t& state,
+        const reward_t& reward
 ) {
     episode_data.push_back(data_point_t(action,state,reward));
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );

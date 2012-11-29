@@ -50,11 +50,11 @@ public:
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r );
 
-//    template< class TransitionProbabilities >
-//    void initialize_transition_probabilities(TransitionProbabilities&);
-//
-//    template< class RewardProbabilities >
-//    void initialize_reward_probabilities(RewardProbabilities&);
+    template< class TransitionProbabilities >
+    void initialize_transition_probabilities(TransitionProbabilities&);
+
+    template< class RewardProbabilities >
+    void initialize_reward_probabilities(RewardProbabilities&);
 
     void set_time_delay(const int& new_time_delay);
     int get_time_delay() { return time_delay; }
@@ -95,21 +95,21 @@ private:
     }
 };
 
-//template< class TransitionProbabilities >
-//void Maze::initialize_transition_probabilities(TransitionProbabilities& transition_probabilities) {
-//    for(Data::state_t state_from=0; state_from<x_dim*y_dim; ++state_from) {
-//        for(Data::action_t action = 0; action<Data::action_n; ++action) {
-//            std::vector<std::tuple<MazeState,double> > state_vector = transition_map[std::make_tuple(state_from,action)];
-//            for(uint idx=0; idx<state_vector.size(); ++idx) {
-//                transition_probabilities.set_transition_probability(state_from,action,Data::state_t(std::get<0>(state_vector[idx]).idx()),std::get<1>(state_vector[idx]));
-//            }
-//        }
-//    }
-//}
+template< class TransitionProbabilities >
+void Maze::initialize_transition_probabilities(TransitionProbabilities& transition_probabilities) {
+    for(Data::state_t state_from=0; state_from<x_dim*y_dim; ++state_from) {
+        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+            std::vector<std::tuple<MazeState,double> > state_vector = transition_map[std::make_tuple(state_from,action)];
+            for(uint idx=0; idx<state_vector.size(); ++idx) {
+                transition_probabilities.set_transition_probability(state_from,action,Data::state_t(std::get<0>(state_vector[idx]).idx()),std::get<1>(state_vector[idx]));
+            }
+        }
+    }
+}
 
-//template< class RewardProbabilities >
-//void Maze::initialize_reward_probabilities(RewardProbabilities& reward_probabilities) {
-//    reward_probabilities.set_reward_probability();
-//}
+template< class RewardProbabilities >
+void Maze::initialize_reward_probabilities(RewardProbabilities& reward_probabilities) {
+    reward_probabilities.set_reward_probability();
+}
 
 #endif /* MAZE_H_ */

@@ -8,7 +8,7 @@
 #ifndef FEATURE_H_
 #define FEATURE_H_
 
-#include <QtCore/QString>
+#include <QString>
 
 #include <list>
 #include <set>

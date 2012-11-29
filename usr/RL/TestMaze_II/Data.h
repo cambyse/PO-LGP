@@ -30,18 +30,19 @@ public:
 
     //---rewards---//
     typedef double reward_t;
-    static const double min_reward;
-    static const double max_reward;
-    static const double reward_increment;
-    static const int    reward_n;
+    static const reward_t min_reward;
+    static const reward_t max_reward;
+    static const reward_t reward_increment;
+    static const int      reward_n;
 
 
     //---probability---//
-    typedef double                                probability_t;
+    typedef double probability_t;
 
     //---input/output---//
     struct data_point_t {
-        data_point_t(action_t a, state_t  s, reward_t r): action(a), state(s), reward(r) {}
+        data_point_t(action_t a = action_t(), state_t  s = state_t(), reward_t r = min_reward):
+            action(a), state(s), reward(r) {}
         action_t action;
         state_t  state;
         reward_t reward;
@@ -51,10 +52,10 @@ public:
         state_t  state;
         reward_t reward;
     };
-    typedef std::vector<data_point_t>             episode_t;
-    typedef episode_t::iterator                   episode_iterator_t;
-    typedef episode_t::const_iterator             const_episode_iterator_t;
-    typedef const_episode_iterator_t              input_data_t;
+    typedef std::vector<data_point_t> episode_t;
+    typedef episode_t::iterator       episode_iterator_t;
+    typedef episode_t::const_iterator const_episode_iterator_t;
+    typedef const_episode_iterator_t  input_data_t;
     static const int input_n;
     static const int output_n;
 
@@ -62,10 +63,12 @@ public:
     //  Functions  //
     //-------------//
 
-    static unsigned long reward_idx(reward_t);
-    static unsigned long input_idx(input_data_t);
-    static unsigned long output_idx(input_data_t);
-    static unsigned long output_idx(output_data_t);
+    static unsigned long idx_from_reward(reward_t);
+    static reward_t reward_from_idx(unsigned long);
+    static unsigned long idx_from_input(input_data_t);
+    static episode_t input_from_idx(unsigned long);
+    static unsigned long idx_from_output(input_data_t);
+    static unsigned long idx_from_output(output_data_t);
 
     //-----------//
     //  Classes  //

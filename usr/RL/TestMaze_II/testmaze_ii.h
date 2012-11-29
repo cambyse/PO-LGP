@@ -1,7 +1,7 @@
 #ifndef TESTMAZE_II_H
 #define TESTMAZE_II_H
 
-#include <QtGui/QWidget>
+#include <QWidget>
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
 #include "QIteration.h"

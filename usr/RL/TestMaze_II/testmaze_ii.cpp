@@ -46,6 +46,48 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
+
+    //--------------------------------//
+    //    Testing index conversion    //
+    //--------------------------------//
+
+    DEBUG_OUT(0,"input_n = " << Data::input_n );
+    DEBUG_OUT(0,"");
+    for(uint i=0; i<10; ++i) {
+        unsigned long input_idx_in = rand()%Data::input_n;
+        Data::episode_t episode_in = Data::input_from_idx(input_idx_in);
+        Data::input_data_t input_data_in = --episode_in.end();
+
+        unsigned long input_idx_out = Data::idx_from_input(input_data_in);
+        Data::episode_t episode_out = Data::input_from_idx(input_idx_out);
+        Data::input_data_t input_data_out = --episode_out.end();
+
+        if(episode_in.size()!=episode_out.size()) {
+            DEBUG_OUT(0,"Unequal length!");
+        }
+
+        DEBUG_OUT(0,"idx_in  = " << input_idx_in);
+        DEBUG_OUT(0,"idx_out = " << input_idx_out);
+
+        DEBUG_OUT(0,"");
+
+        int counter = Data::k;
+        while( counter>= 0 ) {
+
+            DEBUG_OUT(0, input_data_in->action << "/" << input_data_out->action <<"     action_in / action_out");
+            DEBUG_OUT(0, input_data_in->state  << "/" << input_data_out->state  <<"     state_in  / state_out");
+            DEBUG_OUT(0, input_data_in->reward << "/" << input_data_out->reward <<"     reward_in / reward_out");
+
+            --counter;
+            --input_data_in;
+            --input_data_out;;
+        }
+
+        DEBUG_OUT(0,"");
+        DEBUG_OUT(0,"-----------------------------------------------------------------------------");
+        DEBUG_OUT(0,"");
+    }
+
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -57,7 +99,7 @@ void TestMaze_II::collect_episode(const int& length) {
     for(int idx=0; idx<length; ++idx) {
         action_t action = (action_t)(rand()%Data::action_n);
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         crf.add_action_state_reward_tripel(action,state_to,reward);
     }
@@ -89,7 +131,7 @@ void TestMaze_II::render() {
 void TestMaze_II::random_action() {
     action_t action = (action_t)(rand()%Data::action_n);
     state_t state_to;
-    double reward;
+    reward_t reward;
     maze.perform_transition(action,state_to,reward);
     if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
@@ -155,35 +197,35 @@ void TestMaze_II::process_console_input() {
     } else if(input=="left" || input=="l") { // left
         action_t action = Data::LEFT;
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="right" || input=="r") { // right
         action_t action = Data::RIGHT;
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="up" || input=="u") { // up
         action_t action = Data::UP;
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="down" || input=="d") { // down
         action_t action = Data::DOWN;
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="stay" || input=="s") { // stay
         action_t action = Data::STAY;
         state_t state_to;
-        double reward;
+        reward_t reward;
         maze.perform_transition(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
