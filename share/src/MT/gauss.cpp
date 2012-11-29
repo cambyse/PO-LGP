@@ -236,20 +236,22 @@ void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N){
   estimateWeighted(g, X, W);
 };
 
-void sample(arr& x, const Gaussian& g){
+arr sample(const Gaussian& g){
   g.makeC();
-  x.resize(g.C.d0);
+  arr x(g.C.d0);
   rndGauss(x, 1., false);
   arr U, V;
   svd(U, V, g.C);
   x = U*x;
   x += g.c;
+  return x;
 }
 
 void sample(arr& X, uint N, const Gaussian& g){
   uint i;
-  X.resize(N, g.c.N);
-  for(i=0; i<N; i++) sample(X[i](), g);
+  g.makeC();
+  X.resize(N, g.C.d0);
+  for(i=0; i<N; i++) X[i] = sample(g);
 }
 
 void systematicWeightedSamples(arr& X, arr& W, const Gaussian& g){

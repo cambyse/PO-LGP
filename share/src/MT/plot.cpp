@@ -289,7 +289,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     }
     svd(U, w, V, Cov);
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
-    for(i=0; i<d.d0; i++) { mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
+    for(i=0; i<d.d0; i++) { d[i]()*=w; d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
     
     plotModule.s->lines.append(d);
   }
@@ -314,7 +314,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     //lapack_cholesky(V, cov);
     svd(U, w, V, cov);
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
-    for(i=0; i<d.d0; i++) { mult(d[i](), d[i], w); d[i]=V*d[i]; d[i]()+=mean; }
+    for(i=0; i<d.d0; i++) { d[i]()*=w; d[i]=V*d[i]; d[i]()+=mean; }
     d.reshape(3, 101, 3);
     plotModule.s->lines.append(d[0]);
     plotModule.s->lines.append(d[1]);

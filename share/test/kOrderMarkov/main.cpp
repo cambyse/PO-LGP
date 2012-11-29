@@ -2,6 +2,8 @@
 #include <MT/optimization.h>
 #include "exampleProblem.h"
 #include <MT/soc_exampleProblems.h>
+#include <MT/gauss.h>
+#include <MT/plot.h>
 
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");
@@ -22,6 +24,19 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   arr Kinv;
   inverse_SymPosDef(Kinv, K);
   return Kinv;
+}
+
+void createRandom(arr& x,const arr& kernel){
+  Gaussian G;
+  G.setU(zeros(kernel.d0,1),kernel);
+  arr X;
+  sample(X,20,G);
+
+  plotGnuplot();
+  plotFunctions(~X);
+  plot(true);
+  //write(LIST<arr>(~X),"z.output");
+  //gnuplot("plot 'z.output' us 1,'z.output' us 1", true, true);
 }
 
 int main(int argn,char** argv){
@@ -74,6 +89,7 @@ int main(int argn,char** argv){
   rndUniform(x,-10.,-1.);
   if(P.hasKernel()){
     arr K=buildKernelMatrix(P);
+//    createRandom(x, K);  //return 0;
     optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0), &K);
   }else{
     optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0));

@@ -1,7 +1,7 @@
 #include <MT/optimization.h>
 #include <MT/functions.h>
 
-#define DIM 1
+#define DIM 3
 
 struct ParticleAroundWalls:KOrderMarkovFunction {
   uint k;
@@ -24,7 +24,7 @@ struct ParticleAroundWalls:KOrderMarkovFunction {
   bool hasKernel(){ return kern; }
   double kernel(uint t0, uint t1){
     //if(t0==t1) return 1e3;
-    return 1e0*::exp(-.0001*MT::sqr((double)t0-t1));
+    return 1e0*::exp(-.001*MT::sqr((double)t0-t1));
   }
 };
 

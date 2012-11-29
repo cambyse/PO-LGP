@@ -1873,12 +1873,10 @@ template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T t
   }*/
 
 
-template<class T> MT::Array<T>& minusA(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
-
 //! \f$\sqrt{\sum_{ij} g_{ij} (v^i-w^i) (v^j-w^j)}\f$
 template<class T> T sqrDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> d;
-  ::minusA(d, v, w);
+  MT::Array<T> d(v);
+  d -= w;
   return scalarProduct(g, d, d);
 }
 
@@ -2779,26 +2777,14 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z) { Arr
 //! inner product
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z) { Array<T> x; innerProduct(x, y, z); return x; }
 //! scalar multiplication
-template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x; multS(x, y, z); return x; }
+  template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x(y); x*=z; return x; }
 //! scalar multiplication
-template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x; multS(x, y, z); return x; }
+  template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
 
 
-#define BinaryOperator( op, name)         \
-  template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x; name(x, y, z); return x; } \
-  template<class T> Array<T> operator op(T y, const Array<T>& z){             Array<T> x; name##S(x, y, z); return x; } \
-  template<class T> Array<T> operator op(const Array<T>& y, T z){             Array<T> x; name##S(x, y, z); return x; } \
-   
-BinaryOperator(+ , plusA)
-BinaryOperator(- , minusA)
-BinaryOperator(% , mult)
-BinaryOperator(/ , div)
-#undef BinaryOperator
-
-#define CompoundAssignmentOperator( op )        \
+#define UpdateOperator( op )        \
   template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y){ \
-    CHECK(x.N==y.N,             \
-          "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
+    CHECK(x.N==y.N, "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
     T *xp=x.p, *xstop=xp+x.N;              \
     const T *yp=y.p;              \
     for(; xp!=xstop; xp++, yp++) *xp op *yp;       \
@@ -2811,15 +2797,28 @@ BinaryOperator(/ , div)
     return x;           \
   }
 
-CompoundAssignmentOperator(|=)
-CompoundAssignmentOperator(^=)
-CompoundAssignmentOperator(&=)
-CompoundAssignmentOperator(+=)
-CompoundAssignmentOperator(-=)
-CompoundAssignmentOperator(*=)
-CompoundAssignmentOperator(/=)
-CompoundAssignmentOperator(%=)
-#undef CompoundAssignmentOperator
+UpdateOperator(|=)
+UpdateOperator(^=)
+UpdateOperator(&=)
+UpdateOperator(+=)
+UpdateOperator(-=)
+UpdateOperator(*=)
+UpdateOperator(/=)
+UpdateOperator(%=)
+#undef UpdateOperator
+
+
+#define BinaryOperator( op, updateOp)         \
+  template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x(y); x updateOp z; return x; } \
+  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x(z); x updateOp y; return x; } \
+  template<class T> Array<T> operator op(const Array<T>& y, T z){               Array<T> x(y); x updateOp z; return x; }
+
+BinaryOperator(+ , +=);
+BinaryOperator(- , -=);
+BinaryOperator(% , *=);
+BinaryOperator(/ , /=);
+#undef BinaryOperator
+
 }
 
 
@@ -2882,93 +2881,12 @@ template<class T> bool operator<(const MT::Array<T>& v, const MT::Array<T>& w) {
 //!@name arithmetic operators
 //
 
-
-//---------- unary operators
-
-#define UnaryOperation( name, op )          \
-  template<class T>             \
-  MT::Array<T>& name (MT::Array<T>& x, const MT::Array<T>& y){ \
-    x.resizeAs(y);              \
-    T *xp=x.p;                \
-    const T *yp=y.p, *ystop=yp+y.N;              \
-    for(; yp!=ystop; yp++, xp++) *xp= op *yp;        \
-    return x;               \
-  }
-
-UnaryOperation(negative, -);
-#undef UnaryOperator
-
-//---------- binary function
-
-#define BinaryOperation( name, op )         \
-  template<class T>             \
-  MT::Array<T>& name(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z){ \
-    CHECK(y.N==z.N,             \
-          "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")"); \
-    if(&x!=&y) x.resizeAs(y);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *zp=z.p, *yp=y.p;            \
-    for(; xp!=xstop; xp++, yp++, zp++) *xp = *yp op *zp;    \
-    return x;               \
-  }                 \
-  \
-  template<class T>             \
-  MT::Array<T>& name##S(MT::Array<T>& x, const MT::Array<T>& y, T z){ \
-    if(&x!=&y) x.resizeAs(y);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *yp=y.p;              \
-    for(; xp!=xstop; xp++, yp++) *xp = *yp op z;     \
-    return x;               \
-  }                 \
-  \
-  template<class T>             \
-  MT::Array<T>& name##S(MT::Array<T>& x, T y, const MT::Array<T>& z){ \
-    if(&x!=&z) x.resizeAs(z);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *zp=z.p;              \
-    for(; xp!=xstop; xp++, zp++) *xp = y op *zp;     \
-    return x;               \
-  }
-
-BinaryOperation(plusA , +);
-BinaryOperation(minusA , -);
-BinaryOperation(mult , *);
-//     BinaryOperation( div , / )
-#undef BinaryOperation
-
-
-// To be able to cope with division by 0, we need to take the div out of the preprocessor-templates.
-template<class T> MT::Array<T>& div(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
-  CHECK(y.N==z.N, "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")");
-  if(&x!=&y) x.resizeAs(y);
-  T *xp=x.p, *xstop=xp+x.N;
-  const T *zp=z.p, *yp=y.p;
-  for(; xp!=xstop; xp++, yp++, zp++) *xp = MT::DIV(*yp, *zp, true);
-  return x;
-}
-
-template<class T> MT::Array<T>& divS(MT::Array<T>& x, const MT::Array<T>& y, T z) {
+template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y){
   if(&x!=&y) x.resizeAs(y);
   T *xp=x.p, *xstop=xp+x.N;
   const T *yp=y.p;
-  for(; xp!=xstop; xp++, yp++) *xp = MT::DIV(*yp, z, true);
-  return x;
+  for(; xp!=xstop; xp++, yp++) *xp = - ( *yp );
 }
-
-template<class T> MT::Array<T>& divS(MT::Array<T>& x, T y, const MT::Array<T>& z) {
-  if(&x!=&z) x.resizeAs(z);
-  T *xp=x.p, *xstop=xp+x.N;
-  const T *zp=z.p;
-  for(; xp!=xstop; xp++, zp++) *xp = MT::DIV(y, *zp, true);
-  return x;
-}
-
-
-
-
-
-//---------- compound assignment operators
-
 
 
 //---------- unary functions

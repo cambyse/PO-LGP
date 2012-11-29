@@ -24,7 +24,8 @@ struct Gaussian {
   
   //! okC=okU=false
   Gaussian(){ setCU(false, false); }
-  
+  Gaussian(const arr& mean, const arr& cov){ setC(mean, cov); }
+
   //! dimensionality
   uint N() const { CHECK(okC || okU, "non-initialized Gaussian (no C or U)"); if(okC) return c.N; else return u.N; }
   //! make canonical representation available
@@ -37,7 +38,7 @@ struct Gaussian {
   void operator=(const Gaussian& x);
   
   void setC(const arr& cc, const arr& CC){ c=cc; C=CC; setCU(true, false); }
-  void setU(const arr& uu, const arr& UU){ u=uu; U=UU; setCU(false, true); NIY; }
+  void setU(const arr& uu, const arr& UU){ u=uu; U=UU; setCU(false, true); }
   void setUniform(uint n){
     if(useC){
       setDiagonal(n, 1e10);
@@ -131,7 +132,7 @@ void collapseMoG(Gaussian& g, const arr& P, const GaussianL& G, bool zeroMean=fa
 void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N);
 
 //! generate a single sample from a gaussian \ingroup infer1
-void sample(arr& x, const Gaussian &g);
+arr sample(const Gaussian &g);
 
 //! generate a table of N samples from a gaussian \ingroup infer1
 void sample(arr& X, uint N, const Gaussian &g);

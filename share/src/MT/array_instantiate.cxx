@@ -44,8 +44,6 @@ template std::istream& operator>>(std::istream& is, MT::Array<T>& x);
 template std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 
 //BinaryOperation
-template MT::Array<T>& mult(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
-
 template void transpose(MT::Array<T>& x, const MT::Array<T>& y);
 template void inverse2d(MT::Array<T>& invA, const MT::Array<T>& A);
 

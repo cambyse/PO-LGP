@@ -93,7 +93,7 @@ template<class T> struct Array {
   
   //!@name constructors
   Array();
-  Array(const Array<T>& a);
+  Array(const Array<T>& a);                 //copy constructor
   Array(const Array<T>& a, uint i);         //reference constructor
   Array(const Array<T>& a, uint i, uint j); //reference constructor
   Array(uint D0);
@@ -385,6 +385,7 @@ inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
 inline arr linspace(double base, double limit, uint n) {  arr z;  z.setGrid(1, base, limit, n);  return z;  }
 arr logspace(double base, double limit, uint n);
 
+
 //===========================================================================
 // @}
 //!@name non-template functions //? needs most cleaning
@@ -441,7 +442,14 @@ void scanArrFile(const char* name);
 //!@name template functions
 // @{
 
+
+//NOTES:
+// -- past-tense names do not modify the array, but return variants
+// -- more methods should return an array instead of have a returned parameter...
+
+template<class T> MT::Array<T> vectorShaped(const MT::Array<T>& x) {  MT::Array<T> y;  y.referTo(x);  y.reshape(y.N);  return y;  }
 template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y);
+template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void getDiag(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> MT::Array<T> diag(const MT::Array<T>& x) {  MT::Array<T> y;  y.setDiag(x);  return y;  }
 template<class T> MT::Array<T> skew(const MT::Array<T>& x) {  MT::Array<T> y;  y.setSkew(x);  return y;  }
@@ -552,57 +560,47 @@ namespace MT {
 //===========================================================================
 //!@name basic Array operators
 // @{
-template<class T> Array<T> operator~(const Array<T>& y);
-template<class T> Array<T> operator-(const Array<T>& y);
-template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z);
-template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
+template<class T> Array<T> operator~(const Array<T>& y); //transpose
+template<class T> Array<T> operator-(const Array<T>& y); //negative
+template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z); //outer product
+template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z); //inner product
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
 
-#define BinaryOperator( op, name)         \
+//element-wise update operators
+#ifndef SWIG
+#define UpdateOperator( op )        \
+  template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y); \
+  template<class T> Array<T>& operator op ( Array<T>& x, T y )
+UpdateOperator(|=);
+UpdateOperator(^=);
+UpdateOperator(&=);
+UpdateOperator(+=);
+UpdateOperator(-=);
+UpdateOperator(*=);
+UpdateOperator(/=);
+UpdateOperator(%=);
+#undef UpdateOperator
+#endif
+
+//element-wise operators
+#define BinaryOperator( op, updateOp)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
   template<class T> Array<T> operator op(T y, const Array<T>& z);  \
   template<class T> Array<T> operator op(const Array<T>& y, T z)
-BinaryOperator(+ , plusA);
-BinaryOperator(- , minusA);
-BinaryOperator(% , mult);
-BinaryOperator(/ , div);
+BinaryOperator(+ , +=);
+BinaryOperator(- , -=);
+BinaryOperator(% , *=);
+BinaryOperator(/ , /=);
 #undef BinaryOperator
 
-#ifndef SWIG
-#define CompoundAssignmentOperator( op )        \
-  template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y); \
-  template<class T> Array<T>& operator op ( Array<T>& x, T y )
-CompoundAssignmentOperator(|=);
-CompoundAssignmentOperator(^=);
-CompoundAssignmentOperator(&=);
-CompoundAssignmentOperator(+=);
-CompoundAssignmentOperator(-=);
-CompoundAssignmentOperator(*=);
-CompoundAssignmentOperator(/=);
-CompoundAssignmentOperator(%=);
-#undef CompoundAssignmentOperator
-#endif
-// @}
 }
+// @}
+
 
 //===========================================================================
 //!@name basic Array functions
 // @{
-#define UnaryOperation( name, op )          \
-  template<class T> MT::Array<T>& name (MT::Array<T>& x, const MT::Array<T>& y);
-UnaryOperation(negative, -)
-#undef UnaryOperation
-
-#define BinaryOperation( name, op )         \
-  template<class T> MT::Array<T>& name(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z); \
-  template<class T> MT::Array<T>& name##S(MT::Array<T>& x, const MT::Array<T>& y, T z); \
-  template<class T> MT::Array<T>& name##S(MT::Array<T>& x, T y, const MT::Array<T>& z)
-BinaryOperation(plusA , +);
-BinaryOperation(minusA , -);
-BinaryOperation(mult , *);
-BinaryOperation(div , /);
-#undef BinaryOperation
 
 #ifndef SWIG
 #define UnaryFunction( func )           \

@@ -1315,7 +1315,7 @@ void infer::tensorMaxMarginal(infer::Factor& m, const infer::Factor& f, const in
 
 void infer::tensorMultiply(infer::Factor& f, const infer::Factor& m){
   if(m.variables==f.variables){
-    mult(f.P, f.P, m.P);
+    f.P *= m.P;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);
@@ -1327,7 +1327,7 @@ void infer::tensorMultiply(infer::Factor& f, const infer::Factor& m){
 
 void infer::tensorDivide(infer::Factor& f, const infer::Factor& m){
   if(m.variables==f.variables){
-    div(f.P, f.P, m.P);
+    f.P /= m.P;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);
@@ -1343,7 +1343,7 @@ void infer::tensorAdd(infer::Factor& f, const infer::Factor& m){
   arr mP=m.P;
   mP *= ::exp(m.logP-f.logP); //get m.P on the same log scale as f!
   if(m.variables==f.variables){
-    plusA(f.P, f.P, mP);
+    f.P += mP;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);

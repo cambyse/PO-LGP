@@ -441,13 +441,13 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
   uint evals=0;
   
   if(fx_user) NIY;
-  
+
   //compute initial costs
   arr phi;
   arr J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
-  if(addRegularizer) fx += scalarProduct(x,(*addRegularizer)*x);
+  if(addRegularizer)  fx += scalarProduct(x,(*addRegularizer)*vectorShaped(x));
   if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl; 
   ofstream fil;
@@ -467,7 +467,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     if(addRegularizer){
       if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
 //      cout <<*addRegularizer <<R <<endl;
-      lapack_Ainv_b_sym(Delta, R + (*addRegularizer), -(comp_At_x(J, phi)+(*addRegularizer)*x));
+      lapack_Ainv_b_sym(Delta, R + (*addRegularizer), -(comp_At_x(J, phi)+(*addRegularizer)*vectorShaped(x)));
     }else{
       lapack_Ainv_b_sym(Delta, R, -comp_At_x(J, phi));
     }
@@ -488,7 +488,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
       y = x + alpha*Delta;
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
-      if(addRegularizer) fy += scalarProduct(y,(*addRegularizer)*y);
+      if(addRegularizer) fy += scalarProduct(y,(*addRegularizer)*vectorShaped(y));
       if(o.verbose>2) cout <<" \tprobing y=" <<y;
       if(o.verbose>1) cout <<" \talpha=" <<alpha <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
