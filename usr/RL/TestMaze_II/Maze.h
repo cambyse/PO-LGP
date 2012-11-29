@@ -109,7 +109,7 @@ void Maze::initialize_transition_probabilities(TransitionProbabilities& transiti
 
 template< class RewardProbabilities >
 void Maze::initialize_reward_probabilities(RewardProbabilities& reward_probabilities) {
-    reward_probabilities.set_reward_probability();
+    reward_probabilities.set_reward_probability(input_data_t());
 }
 
 #endif /* MAZE_H_ */

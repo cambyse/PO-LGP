@@ -20,6 +20,7 @@ public:
     typedef Data::state_t       state_t;
     typedef Data::reward_t      reward_t;
     typedef Data::probability_t probability_t;
+    typedef Data::input_data_t  input_data_t;
 
     QIteration();
 
@@ -27,7 +28,7 @@ public:
 
     void set_transition_probability(state_t, action_t, state_t, probability_t) {}
 
-    void set_reward_probability() {}
+    void set_reward_probability(input_data_t) {}
 };
 
 #endif /* QITERATION_H_ */

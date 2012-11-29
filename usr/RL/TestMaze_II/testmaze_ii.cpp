@@ -38,56 +38,14 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
 
     // initialize transition model
-//    maze.initialize_transition_probabilities(q_iteration_object);
-//    maze.initialize_reward_probabilities(q_iteration_object);
+    maze.initialize_transition_probabilities(q_iteration_object);
+    maze.initialize_reward_probabilities(q_iteration_object);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
-
-    //--------------------------------//
-    //    Testing index conversion    //
-    //--------------------------------//
-
-    DEBUG_OUT(0,"input_n = " << Data::input_n );
-    DEBUG_OUT(0,"");
-    for(uint i=0; i<10; ++i) {
-        unsigned long input_idx_in = rand()%Data::input_n;
-        Data::episode_t episode_in = Data::input_from_idx(input_idx_in);
-        Data::input_data_t input_data_in = --episode_in.end();
-
-        unsigned long input_idx_out = Data::idx_from_input(input_data_in);
-        Data::episode_t episode_out = Data::input_from_idx(input_idx_out);
-        Data::input_data_t input_data_out = --episode_out.end();
-
-        if(episode_in.size()!=episode_out.size()) {
-            DEBUG_OUT(0,"Unequal length!");
-        }
-
-        DEBUG_OUT(0,"idx_in  = " << input_idx_in);
-        DEBUG_OUT(0,"idx_out = " << input_idx_out);
-
-        DEBUG_OUT(0,"");
-
-        int counter = Data::k;
-        while( counter>= 0 ) {
-
-            DEBUG_OUT(0, input_data_in->action << "/" << input_data_out->action <<"     action_in / action_out");
-            DEBUG_OUT(0, input_data_in->state  << "/" << input_data_out->state  <<"     state_in  / state_out");
-            DEBUG_OUT(0, input_data_in->reward << "/" << input_data_out->reward <<"     reward_in / reward_out");
-
-            --counter;
-            --input_data_in;
-            --input_data_out;;
-        }
-
-        DEBUG_OUT(0,"");
-        DEBUG_OUT(0,"-----------------------------------------------------------------------------");
-        DEBUG_OUT(0,"");
-    }
-
 }
 
 TestMaze_II::~TestMaze_II() {
