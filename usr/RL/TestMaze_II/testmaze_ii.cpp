@@ -10,7 +10,7 @@ typedef Data::reward_t reward_t;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-      maze(Data::maze_x_dim,Data::maze_y_dim,0.0),
+      maze(0.0),
       q_iteration_object(),
       record(false),
       l1_factor(0),
@@ -39,13 +39,14 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initialize transition model
     maze.initialize_transition_probabilities(q_iteration_object);
-    maze.initialize_reward_probabilities(q_iteration_object);
+    maze.initialize_expected_rewards(q_iteration_object);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
+
 }
 
 TestMaze_II::~TestMaze_II() {
