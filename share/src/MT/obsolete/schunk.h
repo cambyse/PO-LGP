@@ -1,4 +1,4 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
     email: mtoussai@cs.tu-berlin.de
 
     This file is part of libSOC.

@@ -1,0 +1,7 @@
+The code should compile with MSVC. For this, add compiler flags
+
+MT_MSVC,MT_IMPLEMENT_TEMPLATES
+
+in the MSVC project settings (C++, precompiler flags).
+
+Good luck!
