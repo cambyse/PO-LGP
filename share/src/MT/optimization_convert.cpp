@@ -1,8 +1,6 @@
 #include "optimization.h"
 
-#define SOC
-
-#ifdef SOC
+#ifndef libRoboticsCourse
 #include "socNew.h"
 #endif
 
@@ -41,7 +39,7 @@ struct sConvert{
     void fv(arr& y, arr& J, const arr& x);
   };
 
-#ifdef SOC
+#ifndef libRoboticsCourse
   struct ControlledSystem_1OrderMarkovFunction:KOrderMarkovFunction {
     ControlledSystem *sys;
     ControlledSystem_1OrderMarkovFunction(ControlledSystem& _sys):sys(&_sys){}
@@ -71,7 +69,7 @@ Convert::Convert(VectorFunction& p){ s=new sConvert(); s->vf=&p; }
 Convert::Convert(VectorChainFunction& p){ s=new sConvert(); s->vcf=&p; }
 Convert::Convert(QuadraticChainFunction& p){ s=new sConvert(); s->qcf=&p; }
 Convert::Convert(KOrderMarkovFunction& p){ s=new sConvert(); s->kom=&p; }
-#ifdef SOC
+#ifndef libRoboticsCourse
 Convert::Convert(ControlledSystem& p){ s=new sConvert(); s->cs=&p; }
 #endif
 
@@ -119,7 +117,7 @@ Convert::operator QuadraticChainFunction&(){
 
 Convert::operator KOrderMarkovFunction&(){
   if(!s->kom){
-#ifdef SOC
+#ifndef libRoboticsCourse
     if(s->cs) s->kom = new sConvert::ControlledSystem_2OrderMarkovFunction(*s->cs);
 #endif
   }
@@ -298,7 +296,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
 #endif
 }
 
-#ifdef SOC
+#ifndef libRoboticsCourse
 uint sConvert::ControlledSystem_1OrderMarkovFunction::get_m(uint t){
   uint T=get_T();
   if(t==0)   return sys->get_xDim() + sys->get_phiDim(t) + sys->get_xDim();

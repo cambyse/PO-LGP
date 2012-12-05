@@ -109,15 +109,14 @@ void GuiModule::step(){
   for(uint i=0; i<6; i++) if(img[i].N) gl->views(i).img=&img[i];
   
   if(objects.N && img[1].N){
-    Object *obj;
-    for_elem(obj, objects){//draw 2d percepetion shapes
+    for_elem(Object, obj, objects){//draw 2d percepetion shapes
       if(!obj->found) continue;
       cvDrawPoints(img[1], obj->shapePointsL);
       cvDrawPoints(img[1], obj->shapePointsR);
     }
     
     plotClear();
-    for_elem(obj, objects){//draw estimated shapes from perception as simple points
+    for_elem(Object, obj, objects){//draw estimated shapes from perception as simple points
       if(!obj->found) continue;
       plotPoints(obj->shapePoints3d);
       plotPoints(obj->center3d);

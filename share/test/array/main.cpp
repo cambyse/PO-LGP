@@ -15,8 +15,13 @@ void testBasics(){
   a.resize(7,10);
   double *ap=a.p, *astop=ap+a.N;
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
-  cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a;
-  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1);
+  cout <<"\narray filled with pointer offsets (-> memory is linear):" <<a <<endl;
+  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)" <<a.sub(2,4,0,-1) <<endl;
+
+  //easier looping:
+  cout <<"\neasier looping:";
+  for_elem(double, e, a) (*e)++;
+  cout <<a <<endl;
 
   //fancy writing:
   cout <<"\nfancy writing with dimensionality tag:" <<endl;
@@ -24,24 +29,24 @@ void testBasics(){
   
   //deleting rows/columns
   a.delRows(1);
-  cout <<"\nrow 1 deleted:\n" <<a;
+  cout <<"\n\nrow 1 deleted:" <<a <<endl;
   a.delColumns(1,2);
-  cout <<"\n2 columns deleted at 1:\n" <<a;
+  cout <<"\n2 columns deleted at 1:" <<a <<endl;
   a.insColumns(1,3);
-  cout <<"\n3 columns inserted at 1:\n" <<a;
+  cout <<"\n3 columns inserted at 1:" <<a <<endl;
 
   //access:
-  cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
+  cout <<"\n3rd line:" <<a[2] <<endl; //gets a const-version of the []-subarray
   a[2](1)=7.; //same as a(2,1)=7 (but much slower)
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
-  cout <<"\nrows manipulated:\n" <<a;
+  cout <<"\nrows manipulated:" <<a <<endl;
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
-  cout <<"\nset by hand:\n" <<a <<endl;
+  cout <<"\nset by hand: " <<a <<endl;
   ints = ARRAY<int>(0, -1, -2, -3, -4);
-  cout <<"set by hand:\n" <<ints <<endl;
+  cout <<"\nset by hand: " <<ints <<endl;
 
   //TRY DEBUGGING with GDB:
   //set a breakpoint here
@@ -50,7 +55,7 @@ void testBasics(){
   //randomization
   rndUniform(a,-1.,1,false); //same as   forall(i,a) *i=rnd.uni(-1,1);
   cout <<"\nrandom double array:\n" <<a <<endl;
-  cout <<"multiplied by 2:\n" <<2.*a <<endl;
+  cout <<"\nmultiplied by 2:\n" <<2.*a <<endl;
 
   //sorting
   a.sort(DoubleComp);
@@ -63,7 +68,7 @@ void testBasics(){
   a.resize(3,7);
   arr b;
   rndInteger(a,1,9,false);
-  cout <<"\nbefore save/load:\n" <<a;
+  cout <<"\nbefore save/load:" <<a <<endl;
 
   ofstream of("z.tmp");
   of <<a;
@@ -73,24 +78,24 @@ void testBasics(){
   inf >>b;
   inf.close();
 
-  cout <<"\nafter saved and loaded from a file:\n" <<b <<endl;
+  cout <<"\nafter saved and loaded from a file:" <<b <<endl;
   CHECK(a==b,"save-load failed");
 }
 
 void testMatlab(){
   arr x = randn(5);
-  cout <<"randn(5)" <<x <<endl;
+  cout <<"\nrandn(5)" <<x <<endl;
 
   x = eye(5);
-  cout <<"eye(5)" <<x <<endl;
+  cout <<"\neye(5)" <<x <<endl;
 
   uintA p = randperm(5);
-  cout <<"randperm(5)" <<p <<endl;
+  cout <<"\nrandperm(5)" <<p <<endl;
 
   arr A = ARR(1,2,3,4);  A.reshape(2,2);
   arr B = repmat(A,2,3);
-  cout <<"A=" <<A <<endl;
-  cout <<"repmat(A,2,3)" <<B <<endl;
+  cout <<"\nA=" <<A <<endl;
+  cout <<"\nrepmat(A,2,3)" <<B <<endl;
 }
 
 void testException(){
@@ -368,7 +373,7 @@ public:
       return;
     case elemProduct:
       cout <<"element-wise Product between " <<*left <<" and " <<*right <<endl;
-      mult(x,*left,*right);
+      x = *left % *right;
       return;
     }
     left=right=0;
@@ -437,7 +442,7 @@ void testTensor(){
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
   cout <<"packed numbers =";  PM.Z.write(cout);
-  cout <<"unpacked =";  unpackRowShifted(PM.Z).write(cout);
+  cout <<"unpacked =";  unpack(PM.Z).write(cout);
   cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
 }
 

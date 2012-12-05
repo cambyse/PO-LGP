@@ -465,10 +465,10 @@ struct Graph {
   ors::Proxy* getContact(uint a, uint b) const;
   
   //!@name set state
-  void setJointState(const arr& x, const arr& v, bool clearJointErrors=true);
-  void setJointState(const arr& x, bool clearJointErrors=true);
-  void setFullState(const arr& x, bool clearJointErrors=true);
-  void setFullState(const arr& x, const arr& v, bool clearJointErrors=true);
+  void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
+  void setJointState(const arr& x, bool clearJointErrors=false);
+  void setFullState(const arr& x, bool clearJointErrors=false);
+  void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
   
   //!@name forces and gravity

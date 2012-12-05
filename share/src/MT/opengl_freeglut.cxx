@@ -91,7 +91,7 @@ struct sOpenGL {
   //-- callbacks
   
   static void _Void() { }
-  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); unlock(); }
+  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); unlock(); }
   static void _Key(unsigned char key, int x, int y) { lock(); glwins(glutGetWindow())->Key(key,x,y); unlock(); }
   static void _Mouse(int button, int updown, int x, int y) { lock(); glwins(glutGetWindow())->Mouse(button,updown,x,y); unlock(); }
   static void _Motion(int x, int y) { lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
@@ -126,8 +126,8 @@ void OpenGL::resize(int w,int h) {
   s->unlock_win();
 }
 
-int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
-int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
+// int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
+// int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   lock();
@@ -155,7 +155,10 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   glutPassiveMotionFunc(_PassiveMotion) ;
   glutReshapeFunc(_Reshape);
   glutMouseWheelFunc(_MouseWheel) ;
-  
+
+  gl->width = glutGet(GLUT_WINDOW_WIDTH);
+  gl->height = glutGet(GLUT_WINDOW_HEIGHT);
+
   unlock_win();
 }
 

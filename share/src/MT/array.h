@@ -30,8 +30,8 @@
 #define FOR3D(x, i, j, k) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++) for(k=0;k<x.d2;k++)
 #define FOR_ALL(x, i)   for(i=0;i<x.N;i++)
 
-#define for_index(i, X)  for(i=0;i<X.N;i++)
-#define for_elem(e, X)   for(e=X.p;e!=X.p+X.N;e++)
+#define for_index(i, X)  for(uint i=0;i<X.N;i++)
+#define for_elem(T, e, X)   for(T *e=X.p+X.N;(e--)!=X.p;)
 #define for_list(i, e, X) for(i=0;i<X.N && ((e=X(i)) || true);i++)
 #define for_list_rev(i, e, X) for(i=X.N;i-- && ((e=X(i)) || true);)
 #define for_list_(e, X) for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)

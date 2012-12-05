@@ -1,6 +1,6 @@
 ## these are the options for compiling the lib
 ifeq ($(CONFIGMODE),mlrlib)
-CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES -DlibRoboticsCourse
 LIBS   += -lrt
 OPTIM  = debug
 ANN = 1

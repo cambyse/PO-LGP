@@ -3150,12 +3150,14 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   if(Qlin.N) {
     CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
     q = Qlin*_q + Qoff;
-    v = Qlin*_v;
-    v.reshape(v.N);
-  } else { q=_q; v=_v; }
+    if(&_v){ v = Qlin*_v;  v.reshape(v.N); }
+  } else {
+    q=_q;
+    if(&_v) v=_v;
+  }
   
   if(!jd) jd = getJointStateDimension(true);
-  CHECK(q.N==jd && v.N==jd, "wrong joint state dimensionalities");
+  CHECK(q.N==jd && (!(&_v) || v.N==jd), "wrong joint state dimensionalities");
   
   for_list(i, e, joints) {
     switch(e->type) {
@@ -3176,7 +3178,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         }*/
         
         //velocity
-        e->Q.angvel.set(v(n), 0., 0.);
+        if(&_v) e->Q.angvel.set(v(n), 0., 0.);
         //if(e->Q.w.isZero()) e->Q.w=VEC_x;
         //if(e->Q.w*VEC_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
         
@@ -3252,9 +3254,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 /*!\brief sets the joint angles with velocity zero - e.g. for kinematic
   simulation only */
 void ors::Graph::setJointState(const arr& x, bool clearJointErrors) {
-  arr v;
-  v.resizeAs(x); v.setZero();
-  setJointState(x, v, clearJointErrors);
+  setJointState(x, NoArr, clearJointErrors);
 }
 
 //===========================================================================

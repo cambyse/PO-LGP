@@ -49,7 +49,6 @@ void testKinematics(){
   arr x(n);
   T1::axis.set(1,0,0);
   T1::G = &G;
-  MT::timerStart();
   for(uint k=0;k<100;k++){
     T1::i=rnd.num(0,G.bodies.N-1);
     T1::rel.setRandom();
@@ -60,6 +59,26 @@ void testKinematics(){
     MT::checkGradient(T1::f1,NULL,x,1e-5);
     MT::checkGradient(T1::f2,NULL,x,1e-5);
     //MT::checkGradient(T1::f3,T1::df3,NULL,x,1e-5);
+  }
+}
+
+//===========================================================================
+//
+// Kinematic speed test
+//
+
+void testKinematicSpeed(){
+  ors::Graph G;
+  OpenGL gl;
+  init(G,gl,"arm3.ors");
+  G.makeLinkTree();
+  uint n=G.getJointStateDimension();
+  arr x(n);
+  MT::timerStart();
+  for(uint k=0;k<1000000;k++){
+    rndUniform(x,-.5,.5,false);
+    G.setJointState(x);
+    G.calcBodyFramesFromJoints();
   }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
 }
@@ -432,6 +451,8 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testKinematicSpeed();
+  return 0;
   testLoadSave();
   testPlayStateSequence();
   testKinematics();
