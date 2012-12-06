@@ -124,8 +124,8 @@ void np::init_OrsStereoCamera
 )
 {
   cam.pos.resize(3); cam.foc.resize(3); cam.up.resize(3);
-  cam.pos(0) = x; cam.pos(1) = y; cam.pos(2) = z;
-  cam.foc(0) = fx; cam.foc(1) = fy; cam.foc(2) = fz;
+  cam.pos.x = x; cam.pos.y = y; cam.pos.z = z;
+  cam.foc(0) = fx; cam.foc(1) = fy; cam.foc.z = fz;
   cam.up(0) = ux; cam.up(1) = uy; cam.up(2) = uz;
 
   cam.baseline = baseline;

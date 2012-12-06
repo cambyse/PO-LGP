@@ -315,7 +315,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   arr q, dq;
   C->getJointState(q);
   for(t=0; t<Tabort; t++) {
-    x.y_target.setCarray(obj->X.pos.p, 3);
+    x.y_target = ARRAY(obj->X.pos);
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
     gl->update();
@@ -332,7 +332,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
   
   // (4) move upwards (to avoid collisions)
   for(t=0; t<Tabort; t++) {
-    x.y_target.setCarray(obj->X.pos.p, 3);
+    x.y_target = ARRAY(obj->X.pos);
     x.y_target(2) = 1.2;
     controlledStep(q, W, C, ode, swift, TVs);
     gl->text.clear() <<"catchObject --  time " <<t <<endl;
@@ -370,12 +370,12 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   ors::Quaternion rot;
   rot = C->bodies(obj_index)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x)(2)>maxz) { upvec=VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*VEC_y)(2)>maxz) { upvec=VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*VEC_z)(2)>maxz) { upvec=VEC_z; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_x))(2)>maxz) { upvec=-VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_y))(2)>maxz) { upvec=-VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_z))(2)>maxz) { upvec=-VEC_z; maxz=(rot*upvec)(2); }
+  if((rot*VEC_x).z>maxz) { upvec=VEC_x; maxz=(rot*upvec).z; }
+  if((rot*VEC_y).z>maxz) { upvec=VEC_y; maxz=(rot*upvec).z; }
+  if((rot*VEC_z).z>maxz) { upvec=VEC_z; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_x)).z>maxz) { upvec=-VEC_x; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_y)).z>maxz) { upvec=-VEC_y; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_z)).z>maxz) { upvec=-VEC_z; maxz=(rot*upvec).z; }
   ors::Transformation f;
   f.rot.setDiff(VEC_z, upvec);
   z.set("obj-z-align", *C, zalignTVT, obj_index, f, -1, ors::Transformation(), ARR());
@@ -421,7 +421,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
       y_noise = std_dev_noise * rnd.gauss();
       if(x_noise>0.5 || y_noise>0.5) // stay on table
         continue;
-      if(freePosition(C->getBodyByName(rel_id)->X.pos.p[0]+x_noise, C->getBodyByName(rel_id)->X.pos.p[1]+y_noise, 0.05))
+      if(freePosition(C->getBodyByName(rel_id)->X.pos.x+x_noise, C->getBodyByName(rel_id)->X.pos.y+y_noise, 0.05))
         break;
     }
   } else {
@@ -449,7 +449,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   
   double z_target;
   for(t=0; t<Tabort; t++) {
-    x.y_target.setCarray(C->getBodyByName(rel_id)->X.pos.p, 3);
+    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl
@@ -472,7 +472,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   //phase 3: down
   double* obj_shape = getShape(obj_index);
   for(t=0; t<Tabort; t++) {
-    x.y_target.setCarray(C->getBodyByName(rel_id)->X.pos.p, 3);
+    x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
     // BRING IN NOISE HERE
     x.y_target(0) += x_noise; // tl
     x.y_target(1) += y_noise; // tl
@@ -595,12 +595,12 @@ void ActionInterface::getObjectsAbove(uintA& list, const char *obj_id) {
       if(p->a==(int)obj) {
         other_rad = 0.5 * getShape(p->b)[2];
         dist = TOL_COEFF * (obj_rad + other_rad);
-        if(C->bodies(p->b)->X.pos(2) - C->bodies(obj)->X.pos(2) > dist)
+        if(C->bodies(p->b)->X.pos.z - C->bodies(obj)->X.pos.z > dist)
           list.setAppend(p->b);
       } else if(p->b==(int)obj) {
         other_rad = 0.5 * getShape(p->a)[2];
         dist = TOL_COEFF * (obj_rad + other_rad);
-        if(C->bodies(p->a)->X.pos(2) - C->bodies(obj)->X.pos(2) > dist)
+        if(C->bodies(p->a)->X.pos.z - C->bodies(obj)->X.pos.z > dist)
           list.setAppend(p->a);
       }
     }
@@ -670,12 +670,12 @@ bool ActionInterface::isUpright(uint id) {
   ors::Quaternion rot;
   rot = C->bodies(id)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x)(2)>maxz) { upvec=VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*VEC_y)(2)>maxz) { upvec=VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*VEC_z)(2)>maxz) { upvec=VEC_z; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_x))(2)>maxz) { upvec=-VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_y))(2)>maxz) { upvec=-VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_z))(2)>maxz) { upvec=-VEC_z; maxz=(rot*upvec)(2); }
+  if((rot*VEC_x).z>maxz) { upvec=VEC_x; maxz=(rot*upvec).z; }
+  if((rot*VEC_y).z>maxz) { upvec=VEC_y; maxz=(rot*upvec).z; }
+  if((rot*VEC_z).z>maxz) { upvec=VEC_z; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_x)).z>maxz) { upvec=-VEC_x; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_y)).z>maxz) { upvec=-VEC_y; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_z)).z>maxz) { upvec=-VEC_z; maxz=(rot*upvec).z; }
   double angle;
   angle = acos(maxz);
   
@@ -714,7 +714,7 @@ double* ActionInterface::getColor(uint id) {
 }
 
 double* ActionInterface::getPosition(uint id) {
-  return C->bodies(id)->X.pos.p;
+  return C->bodies(id)->X.pos.p();
 }
 
 
@@ -758,7 +758,7 @@ void ActionInterface::indicateFailure() {
 bool ActionInterface::onBottom(uint id) {
   double THRESHOLD = 0.15;
   ors::Body *obj=C->bodies(id);
-  if(obj->X.pos.p[2] < THRESHOLD)
+  if(obj->X.pos.z < THRESHOLD)
     return true;
   else
     return false;

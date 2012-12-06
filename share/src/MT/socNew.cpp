@@ -19,6 +19,8 @@
 
 #include "socNew.h"
 
+uint countMsg=0, countSetq=0;
+
 double ControlledSystem::getTaskCosts(arr& R, arr& r, uint t, double* rhat){
   arr phi, J;
   getTaskCosts(phi, J, t);

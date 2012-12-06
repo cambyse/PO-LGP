@@ -49,7 +49,7 @@ void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose){
 }
 
 PxTransform OrsTrans2PxTrans(const ors::Transformation& f){
-  return PxTransform(PxVec3(f.pos(0), f.pos(1), f.pos(2)), PxQuat(f.rot.p[1], f.rot.p[2], f.rot.p[3], f.rot.p[0]));
+  return PxTransform(PxVec3(f.pos.x, f.pos.y, f.pos.z), PxQuat(f.rot.x, f.rot.y, f.rot.z, f.rot.w));
 }
 
 struct sPhysXInterface {
@@ -207,8 +207,8 @@ void PhysXInterface::create() {
     if(b->type==ors::dynamicBT){
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
       actor->setAngularDamping(0.75);
-      actor->setLinearVelocity(PxVec3(b->X.vel(0), b->X.vel(1), b->X.vel(2)));
-      actor->setAngularVelocity(PxVec3(b->X.angvel(0), b->X.angvel(1), b->X.angvel(2)));
+      actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
+      actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
     }
     this->s->gScene->addActor(*actor);
       

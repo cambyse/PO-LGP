@@ -592,10 +592,10 @@ void plotDrawOpenGL(void *_data) {
     glColor(c.r, c.g, c.b);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_POLYGON);
-    glVertex3f(data.planes(i)(0), data.planes(i)(1), data.planes(i)(2));
-    glVertex3f(data.planes(i+1)(0), data.planes(i+1)(1), data.planes(i+1)(2));
-    glVertex3f(data.planes(i+2)(0), data.planes(i+2)(1), data.planes(i+2)(2));
-    glVertex3f(data.planes(i+3)(0), data.planes(i+3)(1), data.planes(i+3)(2));
+    glVertex3f(data.planes(i).x, data.planes(i).y, data.planes(i).z);
+    glVertex3f(data.planes(i+1).x, data.planes(i+1).y, data.planes(i+1).z);
+    glVertex3f(data.planes(i+2).x, data.planes(i+2).y, data.planes(i+2).z);
+    glVertex3f(data.planes(i+3).x, data.planes(i+3).y, data.planes(i+3).z);
     glEnd();
   }
 #else

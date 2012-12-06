@@ -44,9 +44,9 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
    rope1[0] = ty;
    
   for (int i=0;i<rope_points2;i++) {// start with second body part
-  rope2(i,0)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[0]; 
-  rope2(i,1)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[1] - _ors.getBodyByName(obj_name)->shapes(0)->size[2]* (i/(rope_points2-1.0) -0.5) ; 
-  rope2(i,2)=_ors.getBodyByName(obj_name)->shapes(0)->X.pos.p[2]; 
+  rope2(i,0)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.x; 
+  rope2(i,1)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.y - _ors.getBodyByName(obj_name)->shapes(0)->size[2]* (i/(rope_points2-1.0) -0.5) ; 
+  rope2(i,2)=_ors.getBodyByName(obj_name)->shapes(0)->X.pos.z; 
   }
   r1=rope1;
   r2=rope2;

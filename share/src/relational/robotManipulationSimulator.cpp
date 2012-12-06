@@ -553,7 +553,7 @@ MT::String RobotManipulationSimulator::getColorString(uint obj) {
 ************************************************/
 
 double* RobotManipulationSimulator::getPosition(uint id) {
-  return C->bodies(id)->X.pos.p;
+  return C->bodies(id)->X.pos.p();
 }
 
 
@@ -596,42 +596,42 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   rot = C->bodies(id)->X.rot;
   
   ors::Vector upvec_z; double maxz=-2;
-  if((rot*VEC_x)(2)>maxz){ upvec_z=VEC_x; maxz=(rot*upvec_z)(2); }
-  if((rot*VEC_y)(2)>maxz){ upvec_z=VEC_y; maxz=(rot*upvec_z)(2); }
-  if((rot*VEC_z)(2)>maxz){ upvec_z=VEC_z; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_x))(2)>maxz){ upvec_z=-VEC_x; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_y))(2)>maxz){ upvec_z=-VEC_y; maxz=(rot*upvec_z)(2); }
-  if((rot*(-VEC_z))(2)>maxz){ upvec_z=-VEC_z; maxz=(rot*upvec_z)(2); }
+  if((rot*VEC_x).z>maxz){ upvec_z=VEC_x; maxz=(rot*upvec_z).z; }
+  if((rot*VEC_y).z>maxz){ upvec_z=VEC_y; maxz=(rot*upvec_z).z; }
+  if((rot*VEC_z).z>maxz){ upvec_z=VEC_z; maxz=(rot*upvec_z).z; }
+  if((rot*(-VEC_x)).z>maxz){ upvec_z=-VEC_x; maxz=(rot*upvec_z).z; }
+  if((rot*(-VEC_y)).z>maxz){ upvec_z=-VEC_y; maxz=(rot*upvec_z).z; }
+  if((rot*(-VEC_z)).z>maxz){ upvec_z=-VEC_z; maxz=(rot*upvec_z).z; }
   double angle_z = acos(maxz);
   if (angle_z < 0.0001)
     angle_z = 0.;
 //   if (angle_z>MT_PI/4) {
 //     PRINT(MT_PI/4);
-//     PRINT((rot*VEC_x)(2));
-//     PRINT((rot*VEC_y)(2));
-//     PRINT((rot*VEC_z)(2));
-//     PRINT((rot*(-VEC_x))(2));
-//     PRINT((rot*(-VEC_y))(2));
-//     PRINT((rot*(-VEC_z))(2));
-//     PRINT(acos((rot*VEC_x)(2)));
-//     PRINT(acos((rot*VEC_y)(2)));
-//     PRINT(acos((rot*VEC_z)(2)));
-//     PRINT(acos((rot*(-VEC_x))(2)));
-//     PRINT(acos((rot*(-VEC_y))(2)));
-//     PRINT(acos((rot*(-VEC_z))(2)));
+//     PRINT((rot*VEC_x).z);
+//     PRINT((rot*VEC_y).z);
+//     PRINT((rot*VEC_z).z);
+//     PRINT((rot*(-VEC_x)).z);
+//     PRINT((rot*(-VEC_y)).z);
+//     PRINT((rot*(-VEC_z)).z);
+//     PRINT(acos((rot*VEC_x).z));
+//     PRINT(acos((rot*VEC_y).z));
+//     PRINT(acos((rot*VEC_z).z));
+//     PRINT(acos((rot*(-VEC_x)).z));
+//     PRINT(acos((rot*(-VEC_y)).z));
+//     PRINT(acos((rot*(-VEC_z)).z));
 //     watch();
 //   }
 //   CHECK((angle_z<=MT_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
   orientation(0) = angle_z;
   
   ors::Vector upvec_x; double maxx=-2;
-  if((rot*VEC_x)(0)>maxx){ upvec_x=VEC_x; maxx=(rot*upvec_x)(0); }
-  if((rot*VEC_y)(0)>maxx){ upvec_x=VEC_y; maxx=(rot*upvec_x)(0); }
-  if((rot*VEC_z)(0)>maxx){ upvec_x=VEC_z; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_x))(0)>maxx){ upvec_x=-VEC_x; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_y))(0)>maxx){ upvec_x=-VEC_y; maxx=(rot*upvec_x)(0); }
-  if((rot*(-VEC_z))(0)>maxx){ upvec_x=-VEC_z; maxx=(rot*upvec_x)(0); }
-  double angle_xy = atan((rot*upvec_x)(1) / maxx);
+  if((rot*VEC_x).x>maxx){ upvec_x=VEC_x; maxx=(rot*upvec_x).x; }
+  if((rot*VEC_y).x>maxx){ upvec_x=VEC_y; maxx=(rot*upvec_x).x; }
+  if((rot*VEC_z).x>maxx){ upvec_x=VEC_z; maxx=(rot*upvec_x).x; }
+  if((rot*(-VEC_x)).x>maxx){ upvec_x=-VEC_x; maxx=(rot*upvec_x).x; }
+  if((rot*(-VEC_y)).x>maxx){ upvec_x=-VEC_y; maxx=(rot*upvec_x).x; }
+  if((rot*(-VEC_z)).x>maxx){ upvec_x=-VEC_z; maxx=(rot*upvec_x).x; }
+  double angle_xy = atan((rot*upvec_x).y / maxx);
   if (angle_xy < 0.0001)
     angle_xy = 0.;
 //   CHECK((angle_xy<=MT_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
@@ -753,15 +753,15 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
     if (C->proxies(i)->d < MAX_DISTANCE) { // small enough distance
       other_rad = 0.5 * getSize(other_body->index)[2];
       // z-axis (height) difference big enough
-      if (other_body->shapes(0)->X.pos(2) - obj_body->shapes(0)->X.pos(2)   >   TOL_COEFF * (obj_rad + other_rad)) {
+      if (other_body->shapes(0)->X.pos.z - obj_body->shapes(0)->X.pos.z   >   TOL_COEFF * (obj_rad + other_rad)) {
         if (other_body->index == getTableID()  ||  obj_body->index == getTableID()) {
           list.setAppend(other_body->index);
         }
         else {
           // x-axis difference small enough
-          if (fabs(other_body->shapes(0)->X.pos(0) - obj_body->shapes(0)->X.pos(0))   <   0.9 * (obj_rad + other_rad)) {
+          if (fabs(other_body->shapes(0)->X.pos.x - obj_body->shapes(0)->X.pos.x)   <   0.9 * (obj_rad + other_rad)) {
             // y-axis difference small enough
-            if (fabs(other_body->shapes(0)->X.pos(1) - obj_body->shapes(0)->X.pos(1))   <   0.9 * (obj_rad + other_rad)) {
+            if (fabs(other_body->shapes(0)->X.pos.y - obj_body->shapes(0)->X.pos.y)   <   0.9 * (obj_rad + other_rad)) {
               list.setAppend(other_body->index);
             }
           }
@@ -788,7 +788,7 @@ bool RobotManipulationSimulator::isClear(uint id) {
 bool RobotManipulationSimulator::onGround(uint id) {
     double THRESHOLD = 0.4;
     ors::Body* obj=C->bodies(id);
-    if (obj->X.pos.p[2] < THRESHOLD)
+    if (obj->X.pos.z < THRESHOLD)
         return true;
     else
         return false;
@@ -898,8 +898,8 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
 
 bool RobotManipulationSimulator::isClosed(uint box_id) {
   CHECK(C->bodies(box_id)->shapes.N == 6, "isn't a box");
-  if (TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(0))  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos(1))
-      &&  C->bodies(box_id)->shapes(5)->rel.pos(0) < 0.1)
+  if (TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.x)  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.y)
+      &&  C->bodies(box_id)->shapes(5)->rel.pos.x < 0.1)
     return true;
   else
     return false;
@@ -1028,7 +1028,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if (id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
     for(t=0;t<10;t++){
-      x.y_target.setCarray(obj->X.pos.p,3);
+      x.y_target = ARRAY(obj->X.pos);
       if (isTable) {x.y_target(2) = neutralHeight-0.1;}
       MT::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
@@ -1046,7 +1046,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (2) move towards new object
   C->getJointState(q);
   for(t=0; t<Tabort; t++){
-    x.y_target.setCarray(obj->X.pos.p, 3);
+    x.y_target = ARRAY(obj->X.pos);
     if (isTable) {x.y_target(2) = neutralHeight-0.1;}
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
@@ -1080,7 +1080,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   }
    
   for(t=0; t<Tabort; t++){
-    x.y_target.setCarray(obj->X.pos.p, 3);
+    x.y_target = ARRAY(obj->X.pos);
 //     if (x.y_target(2) < neutralHeight)       // ALTE LOESUNG -- TOBIAS
 //       x.y_target(2) += SMALL_HEIGHT_STEP;    // ALTE LOESUNG -- TOBIAS
     x.y_target(2) = 1.2;
@@ -1196,12 +1196,12 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   ors::Quaternion rot;
   rot = C->bodies(obj_dropped1_index)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x)(2)>maxz){ upvec=VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*VEC_y)(2)>maxz){ upvec=VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*VEC_z)(2)>maxz){ upvec=VEC_z; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_x))(2)>maxz){ upvec=-VEC_x; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_y))(2)>maxz){ upvec=-VEC_y; maxz=(rot*upvec)(2); }
-  if((rot*(-VEC_z))(2)>maxz){ upvec=-VEC_z; maxz=(rot*upvec)(2); }
+  if((rot*VEC_x).z>maxz){ upvec=VEC_x; maxz=(rot*upvec).z; }
+  if((rot*VEC_y).z>maxz){ upvec=VEC_y; maxz=(rot*upvec).z; }
+  if((rot*VEC_z).z>maxz){ upvec=VEC_z; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_x)).z>maxz){ upvec=-VEC_x; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_y)).z>maxz){ upvec=-VEC_y; maxz=(rot*upvec).z; }
+  if((rot*(-VEC_z)).z>maxz){ upvec=-VEC_z; maxz=(rot*upvec).z; }
   ors::Transformation tf;
   tf.rot.setDiff(VEC_z, upvec);
   z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,ors::Transformation(),0);
@@ -1238,8 +1238,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   if (obj_is_inhand)
     calcTargetPositionForDrop(x_target, y_target, obj_dropped1_index, obj_below_id);
   else {
-    x_target = C->bodies(obj_below_id)->X.pos.p[0];
-    y_target = C->bodies(obj_below_id)->X.pos.p[1];
+    x_target = C->bodies(obj_below_id)->X.pos.x;
+    y_target = C->bodies(obj_below_id)->X.pos.z;
   }
   
   // Hard limit on y-distance to robot
@@ -1292,11 +1292,11 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   if (getTableID() == obj_below_id)
     z_target += 0.05;
   // we slowly approach z_target
-  o.y_target(2) = C->bodies(obj_dropped1_index)->X.pos.p[2] - 0.05;
+  o.y_target(2) = C->bodies(obj_dropped1_index)->X.pos.z - 0.05;
   for(t=0;t<Tabort;t++){
-//     cout<<"C->bodies(obj_dropped1_index)->X.pos.p[2] = "<<C->bodies(obj_dropped1_index)->X.pos.p[2]<<endl;
+//     cout<<"C->bodies(obj_dropped1_index)->X.pos.z = "<<C->bodies(obj_dropped1_index)->X.pos.z<<endl;
 //     cout<<"z_target = "<<z_target<<endl;
-    if (C->bodies(obj_dropped1_index)->X.pos.p[2] - o.y_target(2) < 0.05) {
+    if (C->bodies(obj_dropped1_index)->X.pos.z - o.y_target(2) < 0.05) {
       // slowly go down
       if (o.y_target(2) - z_target > 0.1)
         o.y_target(2) -= 0.02;
@@ -1376,9 +1376,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 //       if (x_noise>0.5 || y_noise>0.5) // stay on table
       if (x_noise>0.5) // stay on table
         continue;
-      if (C->bodies(obj_below)->X.pos.p[1] + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.p[1] + y_noise > -0.05)
+      if (C->bodies(obj_below)->X.pos.y + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.y + y_noise > -0.05)
         continue;
-      if (freePosition(C->bodies(obj_below)->X.pos.p[0]+x_noise, C->bodies(obj_below)->X.pos.p[1]+y_noise, 0.05))
+      if (freePosition(C->bodies(obj_below)->X.pos.x+x_noise, C->bodies(obj_below)->X.pos.y+y_noise, 0.05))
         break;
     }
   }
@@ -1426,8 +1426,8 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
   }
   // noise [END]
   
-  x = C->bodies(obj_below)->X.pos.p[0] + x_noise;
-  y = C->bodies(obj_below)->X.pos.p[1] + y_noise;
+  x = C->bodies(obj_below)->X.pos.x + x_noise;
+  y = C->bodies(obj_below)->X.pos.y + y_noise;
 }
 
 
@@ -1600,7 +1600,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   dGeomID geom;
   geom = ode->geoms(s->index);
   dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p));
-  dGeomSetPosition(geom,s->rel.pos(0),s->rel.pos(1),s->rel.pos(2));
+  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
 #endif
 }
 
@@ -1645,7 +1645,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   dGeomID geom;
   geom = ode->geoms(s->index);
   dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p));
-  dGeomSetPosition(geom,s->rel.pos(0),s->rel.pos(1),s->rel.pos(2));
+  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
 #endif
 }
 

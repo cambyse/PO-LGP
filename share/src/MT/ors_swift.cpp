@@ -231,7 +231,7 @@ void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
   for_list(k, s, C.shapes) {
     s->X.rot.getMatrix(rot.p);
     if(swift.INDEXshape2swift(s->index)!=-1) {
-      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p, s->X.pos.p);
+      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p, s->X.pos.p());
       if(!s->cont) swift.scene->Deactivate(swift.INDEXshape2swift(s->index));
       //else         swift.scene->Activate( swift.INDEXshape2swift(s->index) );
     }
@@ -356,7 +356,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       ors::Transformation rel;
       rel.setDifference(global_ANN_shape->X, s->X);
       rel.rot.getMatrix(R.p);
-      t.setCarray(rel.pos.p, 3);
+      t = ARRAY(rel.pos);
       
       //check for each vertex
       for(i=0; i<s->mesh.V.d0; i++) {

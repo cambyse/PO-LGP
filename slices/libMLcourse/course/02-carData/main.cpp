@@ -86,8 +86,8 @@ void exercise(){
   arr y_pred = Phi*beta;
   cout <<"error = "<<sumOfSqr(y_pred-y)/y.N <<endl;
 
-  write(LIST(X, y, y_pred), "z.pred");
-  gnuplot("plot 'z.pred' us 1:7 w l title 'data','z.pred' us 1:8 w l title 'prediction'","z.pdf",true);
+  write(LIST<arr>(X, y, y_pred), "z.pred");
+  gnuplot("plot 'z.pred' us 1:7 w l title 'data','z.pred' us 1:8 w l title 'prediction'", false, true, "z.pdf");
 
   //-- cross validation
   struct myCrossValidation:public CrossValidation{

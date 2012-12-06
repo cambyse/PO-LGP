@@ -84,7 +84,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   
   //general target
   arr xtarget;
-  xtarget.setCarray(obj->X.pos.p, 3);
+  xtarget = ARRAY(obj->X.pos);
   xtarget(2) += .02; //grasp it 2cm above center
   
   //endeff
@@ -143,7 +143,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   MT::getParameter(midPrec, "reachPlanMidPrec");
   MT::getParameter(endPrec, "reachPlanEndPrec");
   arr xtarget;
-  xtarget.setCarray(onto->X.pos.p, 3);
+  xtarget = ARRAY(onto->X.pos);
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   
   //endeff

@@ -19,7 +19,7 @@ void computeEvidences(arr& rho, const arr& y, const arr& mu, double sigma){
   
   if(plot){
     MT::save(rho,"z.rho");
-    gnuplot("plot 'z.y' w p title 'data', 'z.rho' us 0:2 w l title 'evidences'","z.pdf",true);
+    gnuplot("plot 'z.y' w p title 'data', 'z.rho' us 0:2 w l title 'evidences'", false, true, "z.pdf");
     MT::wait();
   }
 }
@@ -43,7 +43,7 @@ void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho){
   if(plot){
     MT::save(a,"z.alpha");
     MT::save(b,"z.beta");
-    gnuplot("plot 'z.y' w p title 'data', 'z.alpha' us 0:2 w l title 'filtering', 'z.beta' us 0:2 w l title 'betas', 'z.x' w l title 'true state' lw 1","z.pdf",true);
+    gnuplot("plot 'z.y' w p title 'data', 'z.alpha' us 0:2 w l title 'filtering', 'z.beta' us 0:2 w l title 'betas', 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
     MT::wait();
   }
 }
@@ -66,7 +66,7 @@ void EstepQ(arr& q, arr& q_pair, const arr& P0, const arr& P, const arr& rho){
 
   if(plot){
     MT::save(q,"z.q");
-    gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1","z.pdf",true);
+    gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
     MT::wait();
   }
 }
@@ -107,9 +107,9 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
   x.reshape(T,1);  MT::save(x,"z.x");  x.reshape(T);
   y.reshape(T,1);  MT::save(y,"z.y");  y.reshape(T);
   if(plot){
-    gnuplot("plot 'z.y' w p title 'data'","z.pdf",true);
+    gnuplot("plot 'z.y' w p title 'data'", false, true, "z.pdf");
     MT::wait();
-    gnuplot("plot 'z.y' w p title 'data', 'z.x' w l title 'true state' lw 4","z.pdf",true);
+    gnuplot("plot 'z.y' w p title 'data', 'z.x' w l title 'true state' lw 4", false, true, "z.pdf");
     MT::wait();
   }
 }
@@ -155,5 +155,5 @@ int main(int argc,char** argv){
   }
   
   MT::save(q,"z.q");
-  gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1","z.pdf",true);
+  gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
 }

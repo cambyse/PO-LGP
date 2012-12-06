@@ -38,14 +38,15 @@ enum BodyType { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 //===========================================================================
 //! a 3D vector (double[3])
 struct Vector {
-  double p[3];
+  double x, y, z;
   
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
-  double& operator()(int);
-  const double& operator()(int) const;
-  
+//  double& operator()(int);
+//  const double& operator()(int) const;
+  double *p() { return &x; }
+
   void set(double, double, double);
   void set(double*);
   void setZero();
@@ -74,15 +75,17 @@ struct Vector {
 //===========================================================================
 //! a matrix in 3D (double[9])
 struct Matrix {
-  double p[9];
+  double p0, p1, p2, p3 ,p4 ,p5 ,p6 ,p7 ,p8;
   
   Matrix() {};
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
-  double& operator()(int, int);
-  const double& operator()(int, int) const;
-  
+//  double& operator()(int, int);
+//  const double& operator()(int, int) const;
+  double *p() { return &p0; }
+
   void set(double* m);
   void setZero();
+  void setRandom(double range=1.);
   void setId();
   void setFrame(Vector&, Vector&, Vector&);
   void setInvFrame(Vector&, Vector&, Vector&);
@@ -99,13 +102,14 @@ struct Matrix {
 //===========================================================================
 //! a quaterion (double[4])
 struct Quaternion {
-  double p[4];
+  double w, x, y, z;
   
-  Quaternion();
+  Quaternion() {};
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
-  
-  void set(double q0, double x, double y, double z);
-  void set(double* q);
+  double *p() { return &w; }
+
+  void set(double w, double x, double y, double z);
+  void set(double* p);
   void setZero();
   void setRandom();
   void setDeg(double degree , double axis0, double axis1, double axis2);
@@ -115,7 +119,6 @@ struct Quaternion {
   void setRad(double angle);
   void setRadX(double angle);
   void setRadY(double angle);
-  void setQuat(double s, double x, double y, double z);
   void setVec(Vector w);
   void setMatrix(double* m);
   void setDiff(const Vector& from, const Vector& to);
@@ -566,9 +569,9 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 // conversions to arr
 //
 
-inline arr ARRAY(const ors::Vector& v) {     return arr(v.p, 3); }
-inline arr ARRAY(const ors::Quaternion& q) { return arr(q.p, 4); }
-inline arr ARRAY(const ors::Matrix& m) {     return arr(m.p, 9); }
+inline arr ARRAY(const ors::Vector& v) {     return arr(&v.x, 3); }
+inline arr ARRAY(const ors::Quaternion& q) { return arr(&q.w, 4); }
+inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.p0, 9); }
 
 
 //===========================================================================

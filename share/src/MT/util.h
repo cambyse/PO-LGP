@@ -499,7 +499,7 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
+void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* PDFfile=NULL);
 void gnuplotClose();
 
 

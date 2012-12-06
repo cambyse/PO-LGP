@@ -57,14 +57,14 @@ void testUsps(){
   for(uint i=0;i<p_pred.N;i++){
     p_pred(i) = 1./(1.+exp(-p_pred(i)));
   }
-  write(LIST(y, p_pred), "train");
+  write(LIST<arr>(y, p_pred), "train");
 
   makeFeatures(Phi,X_test,X);
   p_pred = Phi*beta;
   for(uint i=0;i<p_pred.N;i++){
     p_pred(i) = 1./(1.+exp(-p_pred(i)));
   }
-  write(LIST(y_test, p_pred), "test");
+  write(LIST<arr>(y_test, p_pred), "test");
 }
 
 

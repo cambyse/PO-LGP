@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   for(uint k=0;k<20;k++){
     ors::Body *b = new ors::Body(ors);
     b->X.setRandom();
-    b->X.pos(2) += 1.;
+    b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
     ors::Shape *s = new ors::Shape(ors, b);
     s->type=(ors::ShapeType)1;

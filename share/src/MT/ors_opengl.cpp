@@ -119,11 +119,11 @@ void ors::Mesh::glDraw() {
           if(G.N) g=G(v); else g=-1;
           w.set(&Vn(v, 0));
           if(g!=-1) w=GF(g)->rot*w;
-          glNormal3dv(w.p);
+          glNormal3dv(w.p());
           if(C.N) glColor3dv(&C(v, 0));
           w.set(&V(v, 0));
           if(g!=-1) w=GF(g)->pos+GF(g)->rot*w;
-          glVertex3dv(w.p);
+          glVertex3dv(w.p());
         }
         glEnd();
         glPopName();
@@ -154,9 +154,9 @@ void ors::Mesh::glDraw() {
         for(j=0; j<3; j++) {
           v=T(t, j);
           g=G(v);
-          w.set(&Vn(v, 0));  if(g!=-1) w=GF(g)->rot*w;  glNormal3dv(w.p);
+          w.set(&Vn(v, 0));  if(g!=-1) w=GF(g)->rot*w;  glNormal3dv(w.p());
           if(C.N) glColor3dv(&C(v, 0));
-          w.set(&V(v, 0));  if(g!=-1) w=GF(g)->pos+GF(g)->rot*w;  glVertex3dv(w.p);
+          w.set(&V(v, 0));  if(g!=-1) w=GF(g)->pos+GF(g)->rot*w;  glVertex3dv(w.p());
         }
       }
       glEnd();
@@ -297,7 +297,7 @@ void glDrawShape(ors::Shape *s) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
-    glVertex3d(0., 0., -s->X.pos(2));
+    glVertex3d(0., 0., -s->X.pos.z);
     glEnd();
   }
   if(!s->contactOrientation.isZero()) {
@@ -306,7 +306,7 @@ void glDrawShape(ors::Shape *s) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
-    glVertex3d(.1*s->contactOrientation(0), .1*s->contactOrientation(1), .1*s->contactOrientation(2));
+    glVertex3d(.1*s->contactOrientation.x, .1*s->contactOrientation.y, .1*s->contactOrientation.z);
     glEnd();
   }
   glPopName();
@@ -346,7 +346,7 @@ void ors::Graph::glDraw() {
     //glDrawSphere(.1*s);
     glBegin(GL_LINES);
     glVertex3f(0, 0, 0);
-    glVertex3f(e->A.pos(0), e->A.pos(1), e->A.pos(2));
+    glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
     glEnd();
     
     //joint frame A
@@ -367,9 +367,9 @@ void ors::Graph::glDraw() {
     glColor(1, 0, 1);
     glBegin(GL_LINES);
     glVertex3f(0, 0, 0);
-    glVertex3f(e->B.pos(0), e->B.pos(1), e->B.pos(2));
+    glVertex3f(e->B.pos.x, e->B.pos.y, e->B.pos.z);
     glEnd();
-    glTranslatef(e->B.pos(0), e->B.pos(1), e->B.pos(2));
+    glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
     //glDrawSphere(.1*s);
     
     glPopName();
@@ -384,8 +384,8 @@ void ors::Graph::glDraw() {
     if(!proxy->colorCode) glColor(.75,.75,.75);
     else glColor(proxy->colorCode);
     glBegin(GL_LINES);
-    glVertex3dv(proxy->posA.p);
-    glVertex3dv(proxy->posB.p);
+    glVertex3dv(proxy->posA.p());
+    glVertex3dv(proxy->posB.p());
     glEnd();
     ors::Transformation f;
     f.pos=proxy->posA;

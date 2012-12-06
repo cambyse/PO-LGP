@@ -9,7 +9,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   for(uint k=0; k<3; k++) {
     ors::Body *b = new ors::Body(ors);
     b->X.setRandom();
-    b->X.pos(2) += 1.;
+    b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
     ors::Shape *s = new ors::Shape(ors, b);
     s->type=ors::boxST;
@@ -18,7 +18,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   for(uint k=0; k<3; k++) {
     ors::Body *b = new ors::Body(ors);
     b->X.setRandom();
-    b->X.pos(2) += 1.;
+    b->X.pos.z += 1.;
     b->name <<"thing_" <<k;
     ors::Shape *s = new ors::Shape(ors, b);
     s->type=ors::sphereST;
@@ -28,7 +28,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   for(uint k=0; k<10; k++) {
     ors::Body *b = new ors::Body(ors);
     b->X.pos.setRandom();
-    b->X.pos(2) += .5;
+    b->X.pos.z += .5;
     b->name <<"thing_" <<k;
     ors::Shape *s = new ors::Shape(ors, b);
     s->type=ors::meshST;

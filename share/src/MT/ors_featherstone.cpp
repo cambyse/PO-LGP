@@ -227,8 +227,8 @@ const arr Featherstone::Robot::force(uint i) const {
   if(e) to = g.r/(n->torque + (g.r*e->B.p)^n->force);
   else  to = g.r/(n->torque);
   arr f(6);
-  f(0)=to(0);  f(1)=to(1);  f(2)=to(2);
-  f(3)=fo(0);  f(4)=fo(1);  f(5)=fo(2);
+  f(0)=to.x;  f(1)=to.y;  f(2)=to.z;
+  f(3)=fo.x;  f(4)=fo.y;  f(5)=fo.z;
   return f;
 }
 
@@ -245,7 +245,7 @@ arr Featherstone::skew(const double *v) { arr X; skew(X, v); return X; }
 
 void FrameToMatrix(arr &X, const ors::Transformation& f) {
   arr z(3, 3);  z.setZero();
-  arr r(3, 3);  Featherstone::skew(r, f.pos.p);
+  arr r(3, 3);  Featherstone::skew(r, &f.pos.x);
   arr R(3, 3);  f.rot.getMatrix(R.p);
   transpose(R);
   X.resize(6, 6);  X.setBlockMatrix(R, z, R*~r, R); //[[unklar!!]]
@@ -258,7 +258,7 @@ void ors::Link::setFeatherstones() {
     case hingeJT: _h.resize(6); _h.setZero(); _h(0)=1.; break;
     default: NIY;
   }
-  Featherstone::RBmci(_I, mass, com.p, inertia);
+  Featherstone::RBmci(_I, mass, com.p(), inertia);
   
   updateFeatherstones();
 }
@@ -273,8 +273,8 @@ void ors::Link::updateFeatherstones() {
   ors::Vector fo = XQ.rot/force;
   ors::Vector to = XQ.rot/(torque + ((XQ.rot*com)^force));
   _f.resize(6);
-  _f(0)=to(0);  _f(1)=to(1);  _f(2)=to(2);
-  _f(3)=fo(0);  _f(4)=fo(1);  _f(5)=fo(2);
+  _f(0)=to.x;  _f(1)=to.y;  _f(2)=to.z;
+  _f(3)=fo.x;  _f(4)=fo.y;  _f(5)=fo.z;
 }
 
 void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
@@ -477,7 +477,7 @@ void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I) {
   skew(C, c);
   //C = [ 0, -c(3), c(2); c(3), 0, -c(1); -c(2), c(1), 0 ];
   arr II;
-  II.referTo(I.p, 9);
+  II.referTo(&I.p0, 9);
   II.reshape(3, 3);
   
   rbi.setBlockMatrix(II + m*C*~C, m*C, m*~C, m*eye(3));

@@ -1,6 +1,3 @@
-# Objective Caml source 
-  ".*\\.ml[il]?" -> frame open:"(*" line:"*" close:"*)"
-| ".*\\.mly"     -> frame open:"/*" line:"*" close:"*/"
 # C source
 | ".*\\.[ch][xp]?[xp]?" -> lines open:"/*  " line:"-" close:"  */" begin:"    " last:"    "
 # Misc

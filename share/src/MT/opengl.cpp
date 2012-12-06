@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-
+#include "array_t.cxx"
 #include "opengl.h"
 #include "ors.h"
 
@@ -116,9 +116,9 @@ void ors::Camera::focus() { watchDirection((*foc)-X->pos); } //X->Z=X->pos; X->Z
 //! rotate the frame to watch in the direction vector D
 void ors::Camera::watchDirection(const Vector& d) {
   Vector tmp;
-  if(d(0)==0. && d(1)==0.) {
+  if(d.x==0. && d.y==0.) {
     X->rot.setZero();
-    if(d(2)>0) X->rot.setDeg(180, 1, 0, 0);
+    if(d.z>0) X->rot.setDeg(180, 1, 0, 0);
     return;
   }
   Quaternion r;
@@ -132,7 +132,7 @@ void ors::Camera::upright() {
   Vector v(0, 0, -1), x(1, 0, 0), dx, up;
   x=X->rot*x; //true X
   v=X->rot*v;
-  if(fabs(v(2))<1.) up.set(0, 0, 1); else up.set(0, 1, 0);
+  if(fabs(v.z)<1.) up.set(0, 0, 1); else up.set(0, 1, 0);
   dx=up^v; //desired X
   if(dx*x<=0) dx=-dx;
   Quaternion r;
@@ -1265,7 +1265,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   if(drawFocus && mode!=GL_SELECT) {
     glColor(1., .7, .3);
     double size = .005 * (camera.X->pos-*camera.foc).length();
-    glDrawDiamond((*camera.foc)(0), (*camera.foc)(1), (*camera.foc)(2), size, size, size);
+    glDrawDiamond((*camera.foc).x, (*camera.foc).y, (*camera.foc).z, size, size, size);
   }
   /*if(topSelection && mode!=GL_SELECT){
     glColor(1., .7, .3);
@@ -1315,7 +1315,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
     if(drawFocus) {
       glColor(1., .7, .3);
       double size = .005 * (camera.X->pos-*camera.foc).length();
-      glDrawDiamond((*vi->camera.foc)(0), (*vi->camera.foc)(1), (*vi->camera.foc)(2), size, size, size);
+      glDrawDiamond((*vi->camera.foc).x, (*vi->camera.foc).y, (*vi->camera.foc).z, size, size, size);
     }
     for(uint i=0; i<vi->drawers.N; i++)(*vi->drawers(i).call)(vi->drawers(i).classP);
     if(vi->text.N) {
@@ -1545,12 +1545,12 @@ void OpenGL::captureStereo(byteA &imgL, byteA &imgR, int w, int h, ors::Camera *
   Draw(w, h, cam);
   imgR.resize(h, w, 3);
   glGrabImage(imgR);
-  double xorg=cam->X->pos(0);
-  cam->X->pos(0) -= baseline;
+  double xorg=cam->X->pos.x;
+  cam->X->pos.x -= baseline;
   Draw(w, h, cam);
   imgL.resize(h, w, 3);
   glGrabImage(imgL);
-  cam->X->pos(0) = xorg;
+  cam->X->pos.x = xorg;
 #endif
 }
 
@@ -1619,10 +1619,10 @@ void getSphereVector(ors::Vector& vec, int _x, int _y, int le, int ri, int bo, i
   double x, y;
   x=(double)_x;  x=x-le-.5*w;   x*= 2./minwh;
   y=(double)_y;  y=y-bo-.5*h; y*= 2./minwh;
-  vec(0)=x;
-  vec(1)=y;
-  vec(2)=.5-(x*x+y*y);
-  if(vec(2)<0.) vec(2)=0.;
+  vec.x=x;
+  vec.y=y;
+  vec.z=.5-(x*x+y*y);
+  if(vec.z<0.) vec.z=0.;
 }
 
 void OpenGL::Reshape(int _width, int _height) {
@@ -1669,7 +1669,7 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
     }
   }
   if(mouseView==-1) getSphereVector(vec, _x, _y, 0, w, 0, h);
-  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
+  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec.x <<" y=" <<vec.y <<endl);
   
   if(!downPressed) {  //down press
     if(mouseIsDown) return;  //the button is already down (another button was pressed...)
@@ -1734,8 +1734,8 @@ void OpenGL::Motion(int _x, int _y) {
     cam=&views(mouseView).camera;
     getSphereVector(vec, _x, _y, views(mouseView).le*w, views(mouseView).ri*w, views(mouseView).bo*h, views(mouseView).to*h);
   }
-  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec(0) <<" y=" <<vec(1) <<endl);
-  lastEvent.set(mouse_button, -1, _x, _y, vec(0)-s->downVec(0), vec(1)-s->downVec(1));
+  CALLBACK_DEBUG(cout <<"associated to view " <<mouseView <<" x=" <<vec.x <<" y=" <<vec.y <<endl);
+  lastEvent.set(mouse_button, -1, _x, _y, vec.x-s->downVec.x, vec.y-s->downVec.y);
 #ifndef MT_Linux
   int modifiers=glutGetModifiers();
 #else
@@ -1751,7 +1751,7 @@ void OpenGL::Motion(int _x, int _y) {
   //CHECK(mouseIsDown, "I thought the mouse is down...");
   if(mouse_button==1) {  //rotation // && !(modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL)){
     ors::Quaternion rot;
-    if(s->downVec(2)<.1) {
+    if(s->downVec.z<.1) {
       rot.setDiff(vec, s->downVec);  //consider imagined sphere rotation of mouse-move
     } else {
       rot.setVec((vec-s->downVec) ^ VEC_z); //consider only xy-mouse-move
@@ -1771,13 +1771,13 @@ void OpenGL::Motion(int _x, int _y) {
   }
   if(mouse_button==3) {  //translation || (mouse_button==1 && (modifiers&GLUT_ACTIVE_SHIFT) && !(modifiers&GLUT_ACTIVE_CTRL))){
     /*    ors::Vector trans = s->downVec - vec;
-        trans(2)=0.;
+        trans.z=0.;
         trans = s->downRot*trans;
         cam->X->pos = s->downPos + trans;
         postRedrawEvent(true);*/
   }
   if(mouse_button==2) {  //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
-    double dy = s->downVec(1) - vec(1);
+    double dy = s->downVec.y - vec.y;
     if(dy<-.99) dy = -.99;
     cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
     postRedrawEvent(true);

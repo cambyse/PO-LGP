@@ -426,7 +426,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
       y_noise = std_dev_noise * rnd.gauss();
       if (x_noise>0.5 || y_noise>0.5) // stay on table
         continue;
-      if (freePosition(C->getBodyByName(rel_id)->X.pos.p[0]+x_noise, C->getBodyByName(rel_id)->X.pos.p[1]+y_noise, 0.05))
+      if (freePosition(C->getBodyByName(rel_id)->X.pos.x+x_noise, C->getBodyByName(rel_id)->X.pos.y+y_noise, 0.05))
         break;
     }
   }
@@ -606,13 +606,13 @@ void ActionInterface::getObjectsAbove(uintA& list,const char *obj_id){
     if(p->a==(int)obj) {
       other_rad = 0.5 * getShape(p->b)[2];
       dist = TOL_COEFF * (obj_rad + other_rad);
-      if (C->bodies(p->b)->X.pos(2) - C->bodies(obj)->X.pos(2) > dist)
+      if (C->bodies(p->b)->X.pos.z - C->bodies(obj)->X.pos.z > dist)
         list.setAppend(p->b);
     }
     else if(p->b==(int)obj) {
       other_rad = 0.5 * getShape(p->a)[2];
       dist = TOL_COEFF * (obj_rad + other_rad);
-      if (C->bodies(p->a)->X.pos(2) - C->bodies(obj)->X.pos(2) > dist)
+      if (C->bodies(p->a)->X.pos.z - C->bodies(obj)->X.pos.z > dist)
         list.setAppend(p->a);
     }
   }
@@ -770,7 +770,7 @@ void ActionInterface::indicateFailure(){
 bool ActionInterface::onBottom(uint id) {
   double THRESHOLD = 0.15;
   ors::Body *obj=C->bodies(id);
-  if (obj->X.pos.p[2] < THRESHOLD)
+  if (obj->X.pos.z < THRESHOLD)
     return true;
   else
     return false;

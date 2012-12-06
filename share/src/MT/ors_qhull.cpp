@@ -257,23 +257,23 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
       
       //what about different scales in force vs torque??!!
       if(torqueWeights>=0.){ //forceClosure
-	X(i*S+j, 0) = f(0);
-	X(i*S+j, 1) = f(1);
-	X(i*S+j, 2) = f(2);
+        X(i*S+j, 0) = f.x;
+        X(i*S+j, 1) = f.y;
+        X(i*S+j, 2) = f.z;
       }else{ //torqueClosure
-	X(i*S+j, 0) = c_f(0);
-	X(i*S+j, 1) = c_f(1);
-	X(i*S+j, 2) = c_f(2);
+        X(i*S+j, 0) = c_f.x;
+        X(i*S+j, 1) = c_f.y;
+        X(i*S+j, 2) = c_f.z;
       }
       if(torqueWeights>0.){ //both (wrench)
-	X(i*S+j, 3) = torqueWeights * c_f(0);
-	X(i*S+j, 4) = torqueWeights * c_f(1);
-	X(i*S+j, 5) = torqueWeights * c_f(2);
+        X(i*S+j, 3) = torqueWeights * c_f.x;
+        X(i*S+j, 4) = torqueWeights * c_f.y;
+        X(i*S+j, 5) = torqueWeights * c_f.z;
       }
       if(dFdC) {
-        dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f(2);  dXdC(i*S+j, 3, 2) = -f(1);
-        dXdC(i*S+j, 4, 0) = -f(2);  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f(0);
-        dXdC(i*S+j, 5, 0) =  f(1);  dXdC(i*S+j, 5, 1) = -f(0);  dXdC(i*S+j, 5, 2) =  0   ;
+        dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f.z;  dXdC(i*S+j, 3, 2) = -f.y;
+        dXdC(i*S+j, 4, 0) = -f.z;  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f.x;
+        dXdC(i*S+j, 5, 0) =  f.y;  dXdC(i*S+j, 5, 1) = -f.x;  dXdC(i*S+j, 5, 2) =  0   ;
       }
       /*if(dFdCn){
       HALT("");
@@ -322,8 +322,8 @@ double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceT
         c = p->posB;
         cn= p->normal;
       }
-      C.append(arr(c.p,3));
-      Cn.append(arr(cn.p,3));
+      C.append(ARRAY(c));
+      Cn.append(ARRAY(cn));
     }
   }
   C .reshape(C.N/3, 3);

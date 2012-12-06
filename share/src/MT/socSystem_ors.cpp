@@ -147,9 +147,9 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
   if(rand_seed>0){
     rnd.seed(rand_seed);
     ors::Body &t=*ors->getBodyByName("target");
-    t.X.pos(0) += .05*rnd.gauss();
-    t.X.pos(1) += .05*rnd.gauss();
-    t.X.pos(2) += .05*rnd.gauss();
+    t.X.pos.x += .05*rnd.gauss();
+    t.X.pos.y += .05*rnd.gauss();
+    t.X.pos.z += .05*rnd.gauss();
   }
   
   //standard task variables and problem definition
@@ -169,7 +169,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
   TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables(ARRAY(pos, col, com));
   
-  pos->y_target = arr(ors->getShapeByName("target")->X.pos.p, 3);
+  pos->y_target = ARRAY(ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -235,8 +235,8 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   
   if(rand_seed>0){
     rnd.seed(rand_seed);
-    target->X.pos(0) += .05*rnd.gauss();
-    target->X.pos(1) += .05*rnd.gauss();
+    target->X.pos.x += .05*rnd.gauss();
+    target->X.pos.y += .05*rnd.gauss();
     //target->X.p(2) += .05*rnd.gauss();
   }
   
@@ -253,7 +253,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   else               col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables(ARRAY(pos, col));
   
-  pos->y_target = arr(ors->getBodyByName("target")->X.pos.p, 3);
+  pos->y_target = ARRAY(ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -622,7 +622,7 @@ void drawOrsSocEnv(void*){
   MT::getParameter(midPrec, "midPrec");
   MT::getParameter(endPrec, "endPrec");
 
-  x0->y_target.setCarray(sys.ors->getBodyByName("target")->X.pos.p, 3);
+  x0->y_target = ARRAY(sys.ors->getBodyByName("target")->X.pos);
   x0->v_target <<"[2 0 0]";
   x0->setInterpolatedTargetTrajectory(sys.s->T);
   x0->setPrecisionTrajectoryFinal (sys.s->T, midPrec, endPrec);

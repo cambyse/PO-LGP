@@ -143,7 +143,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){
   pos.set(avg_c3d.p);
   cout <<pos <<endl;
   //adding dosen radius
-  pos(2) += .02;
+  pos.z += .02;
   pos = ors.getShapeByName("camera")->X*pos;
   cout <<pos <<endl;
   objectPosition.setCarray(pos.v, 3);
@@ -193,9 +193,9 @@ void MarcsRobotTask::reachObject(){
 
 void MarcsRobotTask::positionObjectRandomlyInSimulation(){
   ors::Body *target = ctrl.ors.getBodyByName("target");
-  target->X.pos(0) = 0.  + (rnd.uni()-0.5)*0.5;
-  target->X.pos(1) = -.5 + rnd.uni()*0.2-0.2;
-  target->X.pos(2) = .9  + (rnd.uni()-0.5)*0.35;
+  target->X.pos.x = 0.  + (rnd.uni()-0.5)*0.5;
+  target->X.pos.y = -.5 + rnd.uni()*0.2-0.2;
+  target->X.pos.z = .9  + (rnd.uni()-0.5)*0.35;
 }
 
 void MarcsRobotTask::planGraspTrajectory(const char* objShape){

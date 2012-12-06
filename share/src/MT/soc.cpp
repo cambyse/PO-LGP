@@ -24,8 +24,6 @@
 #include "ors.h"
 #include "optimization.h"
 
-uint countMsg=0, countSetq=0;
-
 //===========================================================================
 //
 // general documentation
