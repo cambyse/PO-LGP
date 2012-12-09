@@ -1,0 +1,9 @@
+BASE = ../../../share
+OBJS = main.o
+
+STANIMIR = 1
+DMITRY = 1
+TRIM64 =1
+
+include $(BASE)/make-generic
+
