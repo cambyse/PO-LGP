@@ -622,6 +622,135 @@ void KMarkovCRF::erase_zero_features() {
     DEBUG_OUT(1, "DONE");
 }
 
+KMarkovCRF::probability_t KMarkovCRF::prediction(
+        const k_mdp_state_t& state_from,
+        const action_t& action,
+        const state_t& state_to,
+        const reward_t& reward) {
+
+    episode_t episode(state_from.size());
+    for(unsigned int idx=0; idx<state_from.size(); ++idx) {
+        episode[state_from.size()-idx-1] = state_from[idx];
+    }
+    episode.push_back(data_point_t(action,state_to,reward));
+
+    input_data_t input_data = episode.end();
+    --input_data;
+
+    // calculate sumF(x,y)
+    probability_t sumFXY = 0;
+    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+        sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(input_data);
+    }
+
+    // calculate sumExp(x)
+    probability_t sumExpX = 0;
+    for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+
+        // calculate sumF(x,y')
+        probability_t sumFXYs = 0;
+        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+            sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(input_data,*output_iterator);
+        }
+
+        // increment sumExp(x(n))
+        sumExpX += exp( sumFXYs );
+    }
+
+    return exp( sumFXY )/sumExpX;
+}
+
+void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
+
+    unsigned long counter = 0;
+
+    for(Data::k_mdp_state_idx_t state_from_idx=0;
+            state_from_idx<Data::k_mdp_state_n;
+            ++state_from_idx) {
+
+        k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
+
+        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+
+            for(OutputIterator it; !it.end(); ++it) {
+
+                state_t state_to = (*it).state;
+                reward_t reward  = (*it).reward;
+
+                predictions.set_prediction(
+                        state_from,
+                        action,
+                        state_to,
+                        reward,
+                        prediction(state_from,action,state_to,reward)
+                );
+
+                ++counter;
+            }
+
+        }
+    }
+    DEBUG_OUT(1,"Initialized " << counter << " predictions");
+}
+
+void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
+
+    int number_of_data_points = episode_data.size()-k;
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to evaluate model.");
+    }
+
+    //--------------------------------//
+    // determine relative frequencies //
+    //--------------------------------//
+    std::vector<unsigned long> counts(Data::k_mdp_state_n*Data::action_n*Data::state_n*Data::reward_n,0);
+    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
+            episode_iterator!=episode_data.end();
+            ++episode_iterator) {
+
+        k_mdp_state_t k_mdp_state(Data::k);
+        for(unsigned int idx=0; idx<k_mdp_state.size(); ++idx) {
+            k_mdp_state[idx] = *(episode_iterator-idx-1);
+        }
+        action_t action = episode_iterator->action;
+        state_t state = episode_iterator->state;
+        reward_t reward = episode_iterator->reward;
+        counts[Data::prediction_idx(k_mdp_state,action,state,reward)] += 1;
+    }
+
+    //-----------------------------//
+    // assign relative frequencies //
+    //-----------------------------//
+    unsigned long counter = 0;
+    for(Data::k_mdp_state_idx_t state_from_idx=0;
+            state_from_idx<Data::k_mdp_state_n;
+            ++state_from_idx) {
+
+        k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
+
+        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+
+            for(OutputIterator it; !it.end(); ++it) {
+
+                state_t state_to = (*it).state;
+                reward_t reward  = (*it).reward;
+
+                predictions.set_prediction(
+                        state_from,
+                        action,
+                        state_to,
+                        reward,
+                        (probability_t)counts[Data::prediction_idx(state_from,action,state_to,reward)]/number_of_data_points
+                );
+
+                ++counter;
+            }
+
+        }
+    }
+    DEBUG_OUT(1,"Initialized " << counter << " predictions");
+}
+
 void KMarkovCRF::check_lambda_size() {
 
     DEBUG_OUT(1, "Checking size of parameter vector...");

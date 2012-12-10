@@ -1,7 +1,7 @@
 
 #include "Maze.h"
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 const double Maze::state_size = 0.9;
@@ -132,6 +132,51 @@ void Maze::perform_transition(const action_t& a, Data::state_t& final_state, rew
     r = reward_timer.back() && current_state==smiley_state ? Data::max_reward : Data::min_reward;
 }
 
+void Maze::initialize_predictions(QIteration& predictions) {
+    if(time_delay<=0) {
+        DEBUG_OUT(0,"Error: Time delay must be larger than zero (is " << time_delay << ")");
+        return;
+    }
+    unsigned long counter = 0;
+    for(Data::k_mdp_state_idx_t state_from=0; state_from<Data::k_mdp_state_n; ++state_from) {
+        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+
+            Data::k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(state_from);
+
+            MazeState maze_state_from(k_mdp_state_from[0].state);
+            std::vector<std::tuple<MazeState,probability_t> > state_vector = transition_map[std::make_tuple(maze_state_from,action)];
+
+            for(uint idx=0; idx<state_vector.size(); ++idx) {
+                state_t state_to = std::get<0>(state_vector[idx]).state_idx();
+
+                reward_t reward;
+                if(k_mdp_state_from[time_delay-1].state==button_state.state_idx()) {
+                    if(state_to==smiley_state.state_idx()) {
+                        reward = Data::max_reward;
+                    } else {
+                        reward = Data::min_reward;
+                    }
+                } else {
+                    reward = Data::min_reward;
+                }
+
+                predictions.set_prediction(
+                        k_mdp_state_from,
+                        action,
+                        state_to,
+                        reward,
+                        std::get<1>(state_vector[idx])
+                );
+
+                ++counter;
+            }
+
+        }
+    }
+    DEBUG_OUT(1,"Initialized " << counter << " predictions");
+}
+
+
 void Maze::set_time_delay(const int& new_time_delay) {
     if( new_time_delay > time_delay ) {
         // increase reward memory
@@ -166,7 +211,6 @@ void Maze::rescale_scene(QGraphicsView * view) {
     view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
     view->scale(0.95,0.95);
 }
-
 
 void Maze::create_transitions() {
     for(state_t state=0; state<Data::state_n; ++state) {

@@ -7,7 +7,7 @@
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
       action_type(RANDOM),
-      iteration_type(INT),
+      iteration_type(INT), iteration_number(0), iteration_counter(0), iteration_threshold(1),
       maze(0.0),
       q_iteration_object(),
       record(false), plot(false),
@@ -41,10 +41,6 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
-
-    // open plot file
-    plot_file.open("plot_file.txt");
-    plot_file << "# action state reward" << std::endl;
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -392,11 +388,29 @@ void TestMaze_II::process_console_input() {
             ui._wConsoleOutput->appendPlainText( set_s );
         } else if(arg_string(input,1,s_arg)) {
             if(s_arg=="optimaliteration") {
-                DEBUG_OUT(0,"Sorry, not implemented!");
+                if(s_set_unset=="unset") {
+                    ui._wConsoleOutput->appendPlainText("    use 'set [kmdpiteration|sparseiteration]' to unset 'optimaliteration'");
+                } else {
+                    q_iteration_object.clear();
+                    maze.initialize_predictions(q_iteration_object);
+                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix with true values");
+                }
             } else if(s_arg=="sparseiteration") {
-                DEBUG_OUT(0,"Sorry, not implemented!");
+                if(s_set_unset=="unset") {
+                    ui._wConsoleOutput->appendPlainText("    use 'set [optimaliteration|kmdpiteration]' to unset 'sparseiteration'");
+                } else {
+                    q_iteration_object.clear();
+                    crf.initialize_sparse_predictions(q_iteration_object);
+                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values from sparse model");
+                }
             } else if(s_arg=="kmdpiteration") {
-                DEBUG_OUT(0,"Sorry, not implemented!");
+                if(s_set_unset=="unset") {
+                    ui._wConsoleOutput->appendPlainText("    use 'set [optimaliteration|sparseiteration]' to unset 'kmdpiteration'");
+                } else {
+                    q_iteration_object.clear();
+                    crf.initialize_kmdp_predictions(q_iteration_object);
+                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values with relative frequencies");
+                }
             } else if(s_arg=="record") {
                 record = s_set_unset=="set";
                 if(record) {
@@ -407,8 +421,13 @@ void TestMaze_II::process_console_input() {
             } else if(s_arg=="plot") {
                 plot = s_set_unset=="set";
                 if(plot) {
+                    // open plot file
+                    plot_file.open("plot_file.txt");
+                    plot_file << "# action state reward" << std::endl;
                     ui._wConsoleOutput->appendPlainText( "    plot on" );
                 } else {
+                    // close plot file
+                    plot_file.close();
                     ui._wConsoleOutput->appendPlainText( "    plot off" );
                 }
             } else {

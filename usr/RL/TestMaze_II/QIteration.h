@@ -28,6 +28,8 @@ public:
 
     virtual ~QIteration();
 
+    void clear();
+
     void set_prediction(k_mdp_state_t,action_t,state_t,reward_t,probability_t);
 
     void set_discount(const double& d);
@@ -38,9 +40,6 @@ public:
     action_t optimal_action(const k_mdp_state_t&);
 
 protected:
-
-    idx_t get_prediction_idx(k_mdp_state_t,action_t,state_t,reward_t);
-    idx_t get_state_action_idx(k_mdp_state_t,action_t);
 
     double discount;
     std::vector<probability_t> prediction;

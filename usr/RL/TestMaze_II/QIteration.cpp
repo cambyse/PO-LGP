@@ -25,8 +25,14 @@ QIteration::QIteration(const double& d):
 
 QIteration::~QIteration() {}
 
+void QIteration::clear() {
+    prediction.assign(prediction.size(),0);
+    state_value.assign(state_value.size(),0);
+    state_action_value.assign(state_action_value.size(),0);
+}
+
 void QIteration::set_prediction(k_mdp_state_t state_from, action_t action, state_t state_to, reward_t reward, probability_t prob) {
-    prediction[get_prediction_idx(state_from,action,state_to,reward)] = prob;
+    prediction[Data::prediction_idx(state_from,action,state_to,reward)] = prob;
 }
 
 void QIteration::set_discount(const double& d) {
@@ -49,7 +55,7 @@ QIteration::value_t QIteration::iterate() {
             ++k_mdp_state_from_idx) {
         k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(k_mdp_state_from_idx);
         for(action_t action=0; action<Data::action_n; ++action) {
-            idx_t state_action_idx = get_state_action_idx(k_mdp_state_from,action);
+            idx_t state_action_idx = Data::state_action_idx(k_mdp_state_from,action);
             state_action_value[state_action_idx] = 0;
 
             // for all outputs
@@ -59,7 +65,7 @@ QIteration::value_t QIteration::iterate() {
                     k_mdp_state_to.push_back(k_mdp_state_from[idx]);
                 }
                 Data::k_mdp_state_idx_t k_mdp_state_to_idx = Data::idx_from_k_mdp_state(k_mdp_state_to);
-                idx_t prediction_idx = get_prediction_idx(k_mdp_state_from,action,(*out_it).state,(*out_it).reward);
+                idx_t prediction_idx = Data::prediction_idx(k_mdp_state_from,action,(*out_it).state,(*out_it).reward);
                 state_action_value[state_action_idx] +=
                         prediction[prediction_idx] * (
                                 (*out_it).reward + discount * state_value[k_mdp_state_to_idx]
@@ -82,8 +88,8 @@ QIteration::value_t QIteration::iterate() {
         value_t old_value = state_value[k_mdp_state_idx];
         state_value[k_mdp_state_idx] = -DBL_MAX;
         for(action_t action=0; action<Data::action_n; ++action) {
-            if(state_action_value[get_state_action_idx(k_mdp_state,action)]>state_value[k_mdp_state_idx]) {
-                state_value[k_mdp_state_idx] = state_action_value[get_state_action_idx(k_mdp_state,action)];
+            if(state_action_value[Data::state_action_idx(k_mdp_state,action)]>state_value[k_mdp_state_idx]) {
+                state_value[k_mdp_state_idx] = state_action_value[Data::state_action_idx(k_mdp_state,action)];
             }
         }
         if(fabs(old_value-state_value[k_mdp_state_idx])>max_value_diff) {
@@ -103,23 +109,12 @@ QIteration::action_t QIteration::optimal_action(const k_mdp_state_t& k_mdp_state
     std::vector<action_t> optimal_action;
     value_t max_value = -DBL_MAX;
     for(action_t action=0; action<Data::action_n; ++action) {
-        if(state_action_value[get_state_action_idx(k_mdp_state,action)]>max_value) {
-            max_value = state_action_value[get_state_action_idx(k_mdp_state,action)];
+        if(state_action_value[Data::state_action_idx(k_mdp_state,action)]>max_value) {
+            max_value = state_action_value[Data::state_action_idx(k_mdp_state,action)];
             optimal_action.assign(1,action);
-        } else if(state_action_value[get_state_action_idx(k_mdp_state,action)]==max_value) {
+        } else if(state_action_value[Data::state_action_idx(k_mdp_state,action)]==max_value) {
             optimal_action.push_back(action);
         }
     }
     return optimal_action[rand()%optimal_action.size()];
-}
-
-QIteration::idx_t QIteration::get_prediction_idx(k_mdp_state_t state_from, action_t action, state_t state_to, reward_t reward) {
-    return Data::idx_from_k_mdp_state(state_from) +
-            Data::k_mdp_state_n*action +
-            Data::k_mdp_state_n*Data::action_n*state_to +
-            Data::k_mdp_state_n*Data::action_n*Data::state_n*Data::idx_from_reward(reward);
-}
-
-QIteration::idx_t QIteration::get_state_action_idx(k_mdp_state_t state, action_t action) {
-    return Data::idx_from_k_mdp_state(state) + Data::k_mdp_state_n*action;
 }

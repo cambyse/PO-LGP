@@ -19,6 +19,7 @@
 
 #include "Data.h"
 #include "Feature.h"
+#include "QIteration.h"
 
 class KMarkovCRF
 {
@@ -32,6 +33,8 @@ public:
     typedef Data::const_episode_iterator_t const_episode_iterator_t;
     typedef Data::data_point_t             data_point_t;
     typedef Data::OutputIterator           OutputIterator;
+    typedef Data::k_mdp_state_t            k_mdp_state_t;
+    typedef Data::input_data_t             input_data_t;
 
     KMarkovCRF();
 
@@ -99,6 +102,11 @@ public:
     void add_compound_features_to_active(const int& n);
 
     void erase_zero_features();
+
+    probability_t prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&);
+
+    void initialize_sparse_predictions(QIteration&);
+    void initialize_kmdp_predictions(QIteration&);
 
 private:
 

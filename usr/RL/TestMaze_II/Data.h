@@ -13,6 +13,11 @@ public:
     //  Typedefs and Constants  //
     //==========================//
 
+    //-------------//
+    //   general   //
+    //-------------//
+    typedef unsigned long idx_t;
+
     //----------------------//
     //   k-Markov horizon   //
     //----------------------//
@@ -24,7 +29,7 @@ public:
     //-------------//
 
     typedef unsigned long action_t;
-    typedef unsigned long action_idx_t;
+    typedef idx_t         action_idx_t;
     enum ACTION {   STAY,      UP,    DOWN,    LEFT,   RIGHT, NUMBER_OF_ACTIONS };
     static const char* action_strings[5];
     static const unsigned long action_n;
@@ -34,7 +39,7 @@ public:
     //-------------//
 
     typedef unsigned long state_t;
-    typedef unsigned long state_idx_t;
+    typedef idx_t         state_idx_t;
     static const unsigned long maze_x_dim;
     static const unsigned long maze_y_dim;
     static const unsigned long state_n;
@@ -44,7 +49,7 @@ public:
     //-------------//
 
     typedef double reward_t;
-    typedef unsigned long reward_idx_t;
+    typedef idx_t  reward_idx_t;
     static const reward_t      min_reward;
     static const reward_t      max_reward;
     static const reward_t      reward_increment;
@@ -92,13 +97,13 @@ public:
     typedef episode_t::const_iterator const_episode_iterator_t;
     typedef const_episode_iterator_t  input_data_t;
 
-    typedef unsigned long input_data_idx_t;
-    typedef unsigned long output_data_idx_t;
+    typedef idx_t input_data_idx_t;
+    typedef idx_t output_data_idx_t;
     static const unsigned long input_n;
     static const unsigned long output_n;
 
     typedef std::vector<data_point_t> k_mdp_state_t; ///< [0] is present [k] is k time steps in the past
-    typedef unsigned long k_mdp_state_idx_t;
+    typedef idx_t                     k_mdp_state_idx_t;
     static const unsigned long k_mdp_state_n;
 
     //=============//
@@ -116,6 +121,9 @@ public:
 
     static k_mdp_state_idx_t idx_from_k_mdp_state(k_mdp_state_t);
     static k_mdp_state_t     k_mdp_state_from_idx(k_mdp_state_idx_t);
+
+    static idx_t             prediction_idx(k_mdp_state_t,action_t,state_t,reward_t);
+    static idx_t             state_action_idx(k_mdp_state_t,action_t);
 
 };
 

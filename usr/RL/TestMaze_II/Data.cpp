@@ -23,6 +23,28 @@ const unsigned long  Data::input_n           = pow(action_n*state_n*reward_n,k+1
 const unsigned long  Data::output_n          = state_n*reward_n;
 const unsigned long  Data::k_mdp_state_n     = pow(action_n*state_n*reward_n,k);
 
+Data::OutputIterator::OutputIterator(): current_state(), current_reward(min_reward) {}
+
+Data::OutputIterator::~OutputIterator() {}
+
+Data::OutputIterator& Data::OutputIterator::operator++() {
+    // action stays the same...
+    ++current_state;
+    if(current_state>=state_n) {
+        current_state=state_t();
+        current_reward += reward_increment;
+    }
+    return (*this);
+}
+
+Data::output_data_t Data::OutputIterator::operator*() const {
+    return output_data_t(current_state,current_reward);
+}
+
+bool Data::OutputIterator::end() const {
+    return current_reward > max_reward;
+}
+
 Data::reward_idx_t Data::idx_from_reward(reward_t reward) {
     if(reward<min_reward) {
         DEBUG_OUT(0,"Error while calculating idx_from_reward. Too low reward." );
@@ -163,24 +185,13 @@ Data::k_mdp_state_t Data::k_mdp_state_from_idx(k_mdp_state_idx_t idx) {
     return k_mdp_state;
 }
 
-Data::OutputIterator::OutputIterator(): current_state(), current_reward(min_reward) {}
-
-Data::OutputIterator::~OutputIterator() {}
-
-Data::OutputIterator& Data::OutputIterator::operator++() {
-    // action stays the same...
-    ++current_state;
-    if(current_state>=state_n) {
-        current_state=state_t();
-        current_reward += reward_increment;
-    }
-    return (*this);
+Data::idx_t Data::prediction_idx(k_mdp_state_t state_from, action_t action, state_t state_to, reward_t reward) {
+    return idx_from_k_mdp_state(state_from) +
+            k_mdp_state_n*action +
+            k_mdp_state_n*action_n*state_to +
+            k_mdp_state_n*action_n*state_n*idx_from_reward(reward);
 }
 
-Data::output_data_t Data::OutputIterator::operator*() const {
-    return output_data_t(current_state,current_reward);
-}
-
-bool Data::OutputIterator::end() const {
-    return current_reward > max_reward;
+Data::idx_t Data::state_action_idx(k_mdp_state_t state, action_t action) {
+    return idx_from_k_mdp_state(state) + k_mdp_state_n*action;
 }
