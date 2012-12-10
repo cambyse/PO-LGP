@@ -17,6 +17,7 @@
 
 #include "Data.h"
 
+#define DEBUG_LEVEL 2
 #include "debug.h"
 
 class Maze {
@@ -40,11 +41,11 @@ public:
         bool operator==(const MazeState& other) const { return this->index==other.index; }
         bool operator!=(const MazeState& other) const { return !((*this)==other); }
         bool operator<(const MazeState& other) const { return this->index<other.index; }
-        int idx() const { return index; }
-        int x() const { return index%Data::maze_x_dim; }
-        int y() const { return index/Data::maze_x_dim; }
+        unsigned long state_idx() const { return index; }
+        unsigned long x() const { return index%Data::maze_x_dim; }
+        unsigned long y() const { return index/Data::maze_x_dim; }
     private:
-        int index;
+        unsigned long index;
     };
 
     void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
@@ -53,11 +54,8 @@ public:
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r );
 
-    template< class TransitionProbabilities >
-    void initialize_transition_probabilities(TransitionProbabilities&);
-
-    template< class ExpectedRewards >
-    void initialize_expected_rewards(ExpectedRewards&);
+    template< class Predictions >
+    void initialize_predictions(Predictions&);
 
     void set_time_delay(const int& new_time_delay);
     int get_time_delay() { return time_delay; }
@@ -94,58 +92,49 @@ private:
     }
 };
 
-template< class TransitionProbabilities >
-void Maze::initialize_transition_probabilities(TransitionProbabilities& transition_probabilities) {
-    for(Data::state_t state_from=0; state_from<Data::state_n; ++state_from) {
+template< class Predictions >
+void Maze::initialize_predictions(Predictions& predictions) {
+    if(time_delay<=0) {
+        DEBUG_OUT(0,"Error: Time delay must be larger than zero (is " << time_delay << ")");
+        return;
+    }
+    unsigned long counter = 0;
+    for(Data::k_mdp_state_idx_t state_from=0; state_from<Data::k_mdp_state_n; ++state_from) {
         for(Data::action_t action = 0; action<Data::action_n; ++action) {
 
-            std::vector<std::tuple<MazeState,probability_t> > state_vector = transition_map[std::make_tuple(state_from,action)];
+            Data::k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(state_from);
+
+            MazeState maze_state_from(k_mdp_state_from[0].state);
+            std::vector<std::tuple<MazeState,probability_t> > state_vector = transition_map[std::make_tuple(maze_state_from,action)];
 
             for(uint idx=0; idx<state_vector.size(); ++idx) {
-                transition_probabilities.set_transition_probability(
-                        state_from,
+                state_t state_to = std::get<0>(state_vector[idx]).state_idx();
+
+                reward_t reward;
+                if(k_mdp_state_from[time_delay-1].state==button_state.state_idx()) {
+                    if(state_to==smiley_state.state_idx()) {
+                        reward = Data::max_reward;
+                    } else {
+                        reward = Data::min_reward;
+                    }
+                } else {
+                    reward = Data::min_reward;
+                }
+
+                predictions.set_prediction(
+                        k_mdp_state_from,
                         action,
-                        std::get<0>(state_vector[idx]).idx(),
+                        state_to,
+                        reward,
                         std::get<1>(state_vector[idx])
                 );
+
+                ++counter;
             }
 
         }
     }
-}
-
-template< class ExpectedRewards >
-void Maze::initialize_expected_rewards(ExpectedRewards& expected_rewards) {
-    if(time_delay<=0) { // check for zero delay
-        // reward would depend on state_to and not on k-MDP state
-        DEBUG_OUT(0, "Error: A reward delay smaller of equal zero is not handled correctly.");
-        return;
-    } else {
-        for(Data::k_mdp_state_idx_t k_mdp_state_idx=0; k_mdp_state_idx<Data::k_mdp_state_n; ++k_mdp_state_idx) {
-            Data::k_mdp_state_t k_mdp_state = Data::k_mdp_state_from_idx(k_mdp_state_idx);
-            if(k_mdp_state.size()==0) { // check for zero size k-MDP states
-                DEBUG_OUT(0, "Error: Zero-size k-MDP states are not handled correctly.");
-                return;
-            } else {
-                state_t state_from = k_mdp_state.back().state;
-                for(action_t action=0; action<Data::action_n; ++action) {
-                    std::vector< std::tuple<MazeState,probability_t> > state_vector = transition_map[std::make_tuple(state_from,action)];
-                    for(uint state_vector_idx=0; state_vector_idx<state_vector.size(); ++state_vector_idx) {
-                        state_t state_to = std::get<0>(state_vector[state_vector_idx]).idx();
-                        probability_t prob = std::get<1>(state_vector[state_vector_idx]);
-                        if(MazeState(state_to)==smiley_state && prob!=0) { // finite probability for smiley state
-                            // Rewards are deterministic, so no expectation value needs to be computed.
-                            if(MazeState(k_mdp_state[k_mdp_state.size()-time_delay].state)==button_state) { // visited button state
-                                expected_rewards.set_expected_reward(k_mdp_state,action,state_to,Data::max_reward);
-                            } else {
-                                expected_rewards.set_expected_reward(k_mdp_state,action,state_to,Data::min_reward);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    DEBUG_OUT(1,"Initialized " << counter << " predictions");
 }
 
 #include "debug_exclude.h"

@@ -9,7 +9,7 @@
 #define QITERATION_H_
 
 #include "Data.h"
-#include <armadillo>
+#include <vector>
 
 class QIteration
 {
@@ -22,21 +22,30 @@ public:
     typedef reward_t            value_t;
     typedef Data::probability_t probability_t;
     typedef Data::k_mdp_state_t k_mdp_state_t;
+    typedef unsigned long       idx_t;
 
-    typedef std::vector<arma::SpMat<probability_t> > sparse_probability_cube_t;
-    typedef std::vector<arma::SpMat<reward_t> >      sparse_reward_cube_t;
-    typedef arma::Mat<value_t>                       q_table_t;
-    typedef arma::Col<value_t>                       value_vector_t;
-
-    QIteration();
+    QIteration(const double& d = 0.9);
 
     virtual ~QIteration();
 
-    void set_transition_probability(state_t, action_t, state_t, probability_t);
-    void set_transition_probability(k_mdp_state_t, action_t, state_t, probability_t);
-    void set_expected_reward(k_mdp_state_t, action_t, state_t, reward_t);
+    void set_prediction(k_mdp_state_t,action_t,state_t,reward_t,probability_t);
+
+    void set_discount(const double& d);
+    double get_discount();
+
+    value_t iterate();
+
+    action_t optimal_action(const k_mdp_state_t&);
 
 protected:
+
+    idx_t get_prediction_idx(k_mdp_state_t,action_t,state_t,reward_t);
+    idx_t get_state_action_idx(k_mdp_state_t,action_t);
+
+    double discount;
+    std::vector<probability_t> prediction;
+    std::vector<value_t>       state_value;
+    std::vector<value_t>       state_action_value;
 
 };
 

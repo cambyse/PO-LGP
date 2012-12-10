@@ -128,7 +128,7 @@ void Maze::perform_transition(const action_t& action) {
 
 void Maze::perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r) {
     perform_transition(a);
-    final_state = current_state.idx();
+    final_state = current_state.state_idx();
     r = reward_timer.back() && current_state==smiley_state ? Data::max_reward : Data::min_reward;
 }
 

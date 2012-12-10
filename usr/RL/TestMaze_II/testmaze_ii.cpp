@@ -4,17 +4,16 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
-typedef Data::action_t action_t;
-typedef Data::state_t  state_t;
-typedef Data::reward_t reward_t;
-
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
+      action_type(RANDOM),
+      iteration_type(INT),
       maze(0.0),
       q_iteration_object(),
-      record(false),
+      record(false), plot(false),
       l1_factor(0),
-      random_action_timer(nullptr),
+      current_k_mdp_state_deque(Data::k),
+      action_timer(nullptr),
       value_iteration_timer(nullptr)
 {
     // initialize UI
@@ -30,19 +29,22 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
 
     // initialize random action timer
-    random_action_timer = new QTimer(this);
-    connect(random_action_timer, SIGNAL(timeout()), this, SLOT(random_action()));
+    action_timer = new QTimer(this);
+    connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
 
     // initialize value iteration timer
     value_iteration_timer = new QTimer(this);
     connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
 
     // initialize transition model
-    maze.initialize_transition_probabilities(q_iteration_object);
-    maze.initialize_expected_rewards(q_iteration_object);
+    maze.initialize_predictions(q_iteration_object);
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
+
+    // open plot file
+    plot_file.open("plot_file.txt");
+    plot_file << "# action state reward" << std::endl;
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -50,8 +52,9 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 }
 
 TestMaze_II::~TestMaze_II() {
-    delete random_action_timer;
+    delete action_timer;
     delete value_iteration_timer;
+    plot_file.close();
 }
 
 void TestMaze_II::collect_episode(const int& length) {
@@ -60,6 +63,7 @@ void TestMaze_II::collect_episode(const int& length) {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         crf.add_action_state_reward_tripel(action,state_to,reward);
     }
 }
@@ -83,27 +87,70 @@ bool TestMaze_II::arg_string(const QString& string_in, const int& n, QString& s_
     return true;
 }
 
+void TestMaze_II::update_current_k_mdp_state(action_t action, state_t state, reward_t reward) {
+    current_k_mdp_state_deque.pop_back();
+    current_k_mdp_state_deque.push_front(data_point_t(action,state,reward));
+    if(plot) {
+        plot_file << action << " " << state << " " << reward << std::endl;
+    }
+}
+
+TestMaze_II::k_mdp_state_t TestMaze_II::current_k_mdp_state() {
+    k_mdp_state_t k_mdp_state;
+    for(std::deque<data_point_t>::const_iterator it=current_k_mdp_state_deque.begin();
+            it!=current_k_mdp_state_deque.end();
+            ++it) {
+        k_mdp_state.push_back(*it);
+    }
+    if(k_mdp_state.size()!=Data::k) {
+        DEBUG_OUT(0,"Error: something is wrong with the k-MDP state size.");
+    }
+    return k_mdp_state;
+}
+
 void TestMaze_II::render() {
     maze.render_update(ui.graphicsView);
 }
 
-void TestMaze_II::random_action() {
-    action_t action = (action_t)(rand()%Data::action_n);
+void TestMaze_II::choose_action() {
+    action_t action;
+    switch(action_type) {
+    case RANDOM:
+        action = (action_t)(rand()%Data::action_n);
+        break;
+    case OPTIMAL:
+        action = q_iteration_object.optimal_action(current_k_mdp_state());
+        break;
+    default:
+        DEBUG_OUT(0,"Error: undefined action type");
+        break;
+    }
     state_t state_to;
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
+    update_current_k_mdp_state(action,state_to,reward);
     if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
 }
 
 void TestMaze_II::value_iteration() {
-//    q_iteration_object.iterate();
-//    DEBUG_OUT(1,"State values:");
-//    for(int x_idx=0; x_idx<Data::maze_x_dim; ++x_idx) {
-//        for(int y_idx=0; y_idx<Data::maze_y_dim; ++y_idx) {
-//            DEBUG_OUT(1,"    (" << x_idx << "," << y_idx << ") --> " << q_iteration_object.get_value(Maze::MazeState(x_idx,y_idx,Data::maze_x_dim).idx()));
-//        }
-//    }
+    reward_t max_value_diff = q_iteration_object.iterate();
+    switch(iteration_type) {
+    case INT:
+        ++iteration_counter;
+        if(iteration_counter>=iteration_number) {
+            value_iteration_timer->stop();
+        }
+        break;
+    case DOUBLE:
+        if(max_value_diff<iteration_threshold) {
+            value_iteration_timer->stop();
+        }
+        break;
+    default:
+        DEBUG_OUT(0,"Error: invalid iteration type");
+        break;
+    }
 }
 
 void TestMaze_II::process_console_input() {
@@ -118,18 +165,31 @@ void TestMaze_II::process_console_input() {
     QString up_s(       "    up    / u. . . . . . . . . . . . . . . . -> move up");
     QString down_s(     "    down  / d. . . . . . . . . . . . . . . . -> move down");
     QString stay_s(     "    stay  / s. . . . . . . . . . . . . . . . -> stay-action");
-    QString random_s(   "    random  . . . .[<int>|stop]. . . . . . . -> start/stop random move");
+    QString random_s(   "    random  . . . .[<int>|stop]. . . . . . . -> start/stop random moves");
+    QString optimal_s(  "    optimal . . . .[<int>|stop]. . . . . . . -> start/stop optimal moves");
     QString delay_s(    "    delay . . . . .[<int>] . . . . . . . . . -> get [set] reward delay");
-    QString iterate_s(  "    iterate / i . .[<int>|stop]. . . . . . . -> start/stop value iteration");
+    QString iterate_s(  "    iterate / i . .[<int>|<double>,stop] . . -> run value iteration <int> times / until max diff small than <double> / stop running");
     QString episode_s(  "    episode / e . .[<int>|clear,c] . . . . . -> record length <int> episode or clear data");
     QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
     QString epsilon_s(  "    epsilon . . . .[<double>]. . . . . . . . -> get [set] exploration rate epsilon");
-    QString record_s(   "    record. . . . .[start|s|end|e] . . . . . -> toggle [start/end] recording movements");
     QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
     QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
     QString score_s(    "    score. . . . . .<int>. . . . . . . . . . -> score compound features with distance <int> by gradient");
     QString add_s(      "    add. . . . . . .<int>. . . . . . . . . . -> add <int> highest scored compound features to active (give 0 for all non-zero scored)");
     QString erase_s(    "    erase. . . . . . . . . . . . . . . . . . -> erase features with zero weight");
+    QString exit_s(     "    exit/quit/q. . . . . . . . . . . . . . . -> quit application");
+    QString set_s(      "    set/unset. . . . . . <string>. . . . . . -> set/unset option:");
+    QString option_1_s( "                   optimaliteration. . . . . -> use known predictions for value iteration");
+    QString option_2_s( "                   sparseiteration . . . . . -> use sparse model for value iteration");
+    QString option_3_s( "                   kmdpiteration . . . . . . -> use k-MDP model for value iteration");
+    QString option_4_s( "                   record. . . . . . . . . . -> start/stop recording movements");
+    QString option_5_s( "                   plot. . . . . . . . . . . -> write transitions into data file for plotting");
+
+    set_s += "\n" + option_1_s;
+    set_s += "\n" + option_2_s;
+    set_s += "\n" + option_3_s;
+    set_s += "\n" + option_4_s;
+    set_s += "\n" + option_5_s;
 
     // process input
     if(input=="help" || input=="h") { // help
@@ -142,22 +202,25 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( down_s );
         ui._wConsoleOutput->appendPlainText( stay_s );
         ui._wConsoleOutput->appendPlainText( random_s );
+        ui._wConsoleOutput->appendPlainText( optimal_s );
         ui._wConsoleOutput->appendPlainText( delay_s );
         ui._wConsoleOutput->appendPlainText( iterate_s );
         ui._wConsoleOutput->appendPlainText( episode_s );
         ui._wConsoleOutput->appendPlainText( optimize_s );
         ui._wConsoleOutput->appendPlainText( epsilon_s );
-        ui._wConsoleOutput->appendPlainText( record_s );
         ui._wConsoleOutput->appendPlainText( evaluate_s );
         ui._wConsoleOutput->appendPlainText( l1_s );
         ui._wConsoleOutput->appendPlainText( score_s );
         ui._wConsoleOutput->appendPlainText( add_s );
         ui._wConsoleOutput->appendPlainText( erase_s );
+        ui._wConsoleOutput->appendPlainText( exit_s );
+        ui._wConsoleOutput->appendPlainText( set_s );
     } else if(input=="left" || input=="l") { // left
         action_t action = Data::LEFT;
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="right" || input=="r") { // right
@@ -165,6 +228,7 @@ void TestMaze_II::process_console_input() {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="up" || input=="u") { // up
@@ -172,6 +236,7 @@ void TestMaze_II::process_console_input() {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="down" || input=="d") { // down
@@ -179,6 +244,7 @@ void TestMaze_II::process_console_input() {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input=="stay" || input=="s") { // stay
@@ -186,20 +252,38 @@ void TestMaze_II::process_console_input() {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
+        update_current_k_mdp_state(action,state_to,reward);
         if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
         maze.render_update(ui.graphicsView);
     } else if(input.startsWith("random ") || input=="random") { // start/stop random actions
         QString s;
         int i;
         if(input=="random") {
-            random_action();
+            action_type = RANDOM;
+            choose_action();
         } else if(arg_string(input,1,s) && s=="stop") {
-            random_action_timer->stop();
+            action_timer->stop();
         } else if(arg_int(input,1,i) && i>=0){
-            random_action_timer->stop();
-            random_action_timer->start(i);
+            action_timer->stop();
+            action_type = RANDOM;
+            action_timer->start(i);
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'random'. Expecting non-negative integer or 'stop', got '" + s + "'.");
+        }
+    } else if(input.startsWith("optimal ") || input=="optimal") { // start/stop optimal actions
+        QString s;
+        int i;
+        if(input=="optimal") {
+            action_type = OPTIMAL;
+            choose_action();
+        } else if(arg_string(input,1,s) && s=="stop") {
+            action_timer->stop();
+        } else if(arg_int(input,1,i) && i>=0){
+            action_timer->stop();
+            action_type = OPTIMAL;
+            action_timer->start(i);
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimal'. Expecting non-negative integer or 'stop', got '" + s + "'.");
         }
     } else if(input.startsWith("delay")) { // set time delay for rewards
         QString s;
@@ -214,13 +298,22 @@ void TestMaze_II::process_console_input() {
     } else if(input.startsWith("iterate ") || input.startsWith("i ") || input=="iterate" || input=="i") { // value iteration
         QString s;
         int i;
+        double d;
         if(input=="iterate" || input=="i") {
             value_iteration();
         } else if(arg_string(input,1,s) && s=="stop") {
             value_iteration_timer->stop();
         } else if(arg_int(input,1,i) && i>=0){
             value_iteration_timer->stop();
-            value_iteration_timer->start(i);
+            iteration_type = INT;
+            iteration_number = i;
+            iteration_counter = 0;
+            value_iteration_timer->start();
+        } else if(arg_double(input,1,d) && d>=0){
+            value_iteration_timer->stop();
+            iteration_type = DOUBLE;
+            iteration_threshold = d;
+            value_iteration_timer->start();
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'iterate'. Expecting non-negative integer or 'stop', got '" + s + "'.");
         }
@@ -256,27 +349,6 @@ void TestMaze_II::process_console_input() {
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
         }
-    } else if(input.startsWith("record") || input=="record" ) {
-        QString s;
-        if(input=="record") {
-            record = !record;
-            if(record) {
-                ui._wConsoleOutput->appendPlainText("    record on");
-            } else {
-                ui._wConsoleOutput->appendPlainText("    record off");
-            }
-        } else if(arg_string(input,1,s) && ( s=="start" || s=="s" || s=="end" || s=="e" )) {
-            if(s=="start" || s=="s") {
-                record = true;
-            } else if(s=="end" || s=="e") {
-                record = false;
-            } else {
-                DEBUG_OUT(0,"Autsch! This should never happen...");
-                ui._wConsoleOutput->appendPlainText("    Autsch! This should never happen...");
-            }
-        } else {
-            ui._wConsoleOutput->appendPlainText(record_s);
-        }
     } else if(input=="evaluate") {
         crf.evaluate_features();
     } else if(input.startsWith("l1")) {
@@ -308,8 +380,46 @@ void TestMaze_II::process_console_input() {
         }
     } else if(input=="erase") {
         crf.erase_zero_features();
-    } else if(input=="exit" || input=="quit" || input=="q") { // start/stop random actions
+    } else if(input=="exit" || input=="quit" || input=="q") { // quit application
         QApplication::quit();
+    } else if(input.startsWith("set") || input=="set" || input.startsWith("unset") || input=="unset") { // quit application
+        QString s_set_unset;
+        if(!arg_string(input,0,s_set_unset) || (s_set_unset!="set" && s_set_unset!="unset") ) {
+            DEBUG_OUT(0,"Error: something went wrong parsing the 'set' command");
+        }
+        QString s_arg;
+        if(input=="set" || input=="unset") {
+            ui._wConsoleOutput->appendPlainText( set_s );
+        } else if(arg_string(input,1,s_arg)) {
+            if(s_arg=="optimaliteration") {
+                DEBUG_OUT(0,"Sorry, not implemented!");
+            } else if(s_arg=="sparseiteration") {
+                DEBUG_OUT(0,"Sorry, not implemented!");
+            } else if(s_arg=="kmdpiteration") {
+                DEBUG_OUT(0,"Sorry, not implemented!");
+            } else if(s_arg=="record") {
+                record = s_set_unset=="set";
+                if(record) {
+                    ui._wConsoleOutput->appendPlainText( "    record on" );
+                } else {
+                    ui._wConsoleOutput->appendPlainText( "    record off" );
+                }
+            } else if(s_arg=="plot") {
+                plot = s_set_unset=="set";
+                if(plot) {
+                    ui._wConsoleOutput->appendPlainText( "    plot on" );
+                } else {
+                    ui._wConsoleOutput->appendPlainText( "    plot off" );
+                }
+            } else {
+                ui._wConsoleOutput->appendPlainText( "    unknown option" );
+                ui._wConsoleOutput->appendPlainText( set_s );
+
+            }
+        } else {
+            ui._wConsoleOutput->appendPlainText( "    unknown option (must be string)" );
+            ui._wConsoleOutput->appendPlainText( set_s );
+        }
     } else {
         ui._wConsoleOutput->appendPlainText("    unknown command");
     }

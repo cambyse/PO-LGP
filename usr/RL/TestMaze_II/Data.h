@@ -87,7 +87,7 @@ public:
         reward_t current_reward;
     };
 
-    typedef std::vector<data_point_t> episode_t;
+    typedef std::vector<data_point_t> episode_t; ///< [0] is present [-k] is k time steps in the past
     typedef episode_t::iterator       episode_iterator_t;
     typedef episode_t::const_iterator const_episode_iterator_t;
     typedef const_episode_iterator_t  input_data_t;
@@ -97,7 +97,7 @@ public:
     static const unsigned long input_n;
     static const unsigned long output_n;
 
-    typedef std::vector<data_point_t> k_mdp_state_t;
+    typedef std::vector<data_point_t> k_mdp_state_t; ///< [0] is present [k] is k time steps in the past
     typedef unsigned long k_mdp_state_idx_t;
     static const unsigned long k_mdp_state_n;
 
