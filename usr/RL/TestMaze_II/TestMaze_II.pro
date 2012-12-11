@@ -23,4 +23,4 @@ SOURCES += QIteration.cpp \
 LIBS += -llbfgs
 FORMS += testmaze_ii.ui
 RESOURCES += 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++0x

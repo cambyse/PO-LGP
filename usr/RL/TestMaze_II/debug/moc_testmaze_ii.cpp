@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'testmaze_ii.h'
 **
-** Created: Fri Oct 12 15:43:42 2012
+** Created: Tue Dec 11 15:35:51 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.3)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_TestMaze_II[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+       4,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -33,12 +33,15 @@ static const uint qt_meta_data_TestMaze_II[] = {
  // slots: signature, parameters, type, tag, flags
       13,   12,   12,   12, 0x08,
       22,   12,   12,   12, 0x08,
+      38,   12,   12,   12, 0x08,
+      56,   12,   12,   12, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_TestMaze_II[] = {
-    "TestMaze_II\0\0render()\0random_action()\0"
+    "TestMaze_II\0\0render()\0choose_action()\0"
+    "value_iteration()\0process_console_input()\0"
 };
 
 void TestMaze_II::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -48,7 +51,9 @@ void TestMaze_II::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         TestMaze_II *_t = static_cast<TestMaze_II *>(_o);
         switch (_id) {
         case 0: _t->render(); break;
-        case 1: _t->random_action(); break;
+        case 1: _t->choose_action(); break;
+        case 2: _t->value_iteration(); break;
+        case 3: _t->process_console_input(); break;
         default: ;
         }
     }
@@ -87,9 +92,9 @@ int TestMaze_II::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 2)
+        if (_id < 4)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 2;
+        _id -= 4;
     }
     return _id;
 }
