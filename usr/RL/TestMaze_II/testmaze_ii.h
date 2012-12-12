@@ -5,6 +5,7 @@
 #include "Maze.h"
 #include "QIteration.h"
 #include "KMarkovCRF.h"
+#include "KMDPState.h"
 
 #include <QWidget>
 #include <QTimer>
@@ -40,17 +41,13 @@ private:
     KMarkovCRF crf;
     bool record, plot;
     double l1_factor;
-    std::deque<data_point_t> current_k_mdp_state_deque;
+    KMDPState current_k_mdp_state;
     std::ofstream plot_file;
 
     QTimer * action_timer, * value_iteration_timer;
 
     void collect_episode(const int& length);
-    bool arg_int(const QString& string, const int& n, int& i);
-    bool arg_double(const QString& string, const int& n, double& d);
-    bool arg_string(const QString& string, const int& n, QString& s);
     void update_current_k_mdp_state(action_t,state_t,reward_t);
-    k_mdp_state_t current_k_mdp_state();
 
 private slots:
     void render();

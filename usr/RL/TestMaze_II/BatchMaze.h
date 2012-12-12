@@ -12,7 +12,7 @@ class BatchMaze {
 public:
     BatchMaze();
     virtual ~BatchMaze();
-    void run();
+    int run(int argc, char *argv[]);
 };
 
 #endif /* BATCHMAZE_H_ */

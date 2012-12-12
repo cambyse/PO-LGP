@@ -8,10 +8,13 @@
 
 int main(int argc, char *argv[])
 {
+
+    // seed random generator
+    srand(time(nullptr));
+
 #ifdef BATCH_MODE
     BatchMaze batchmaze;
-    batchmaze.run();
-    return 0;
+    return batchmaze.run(argc,argv);
 #else
     QApplication a(argc, argv);
     TestMaze_II w;

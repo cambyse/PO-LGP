@@ -9,7 +9,7 @@
 
 #include "float.h"
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 typedef Data::k_mdp_state_idx_t k_mdp_state_idx_t;

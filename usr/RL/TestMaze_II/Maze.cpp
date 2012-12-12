@@ -1,7 +1,7 @@
 
 #include "Maze.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 const double Maze::state_size = 0.9;
@@ -193,17 +193,18 @@ void Maze::set_time_delay(const int& new_time_delay) {
     time_delay = new_time_delay;
 }
 
-
-void Maze::set_current_state(const MazeState& s) {
-    current_state = s;
-}
-
-
-void Maze::set_epsilong(const double& e) {
+void Maze::set_epsilon(const double& e) {
     epsilon = e;
     create_transitions();
 }
 
+void Maze::set_current_state(const state_t& state) {
+    current_state = MazeState(state);
+}
+
+void Maze::set_current_state(const MazeState& s) {
+    current_state = s;
+}
 
 void Maze::rescale_scene(QGraphicsView * view) {
     QGraphicsScene * scene = view->scene();
