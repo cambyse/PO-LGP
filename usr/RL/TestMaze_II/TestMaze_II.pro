@@ -3,7 +3,8 @@ TARGET = TestMaze_II
 QT += core \
     gui \
     svg
-HEADERS += QIteration.h \
+HEADERS += BatchMaze.h \
+    QIteration.h \
     lbfgs_codes.h \
     Data.h \
     ValueIteration.h \
@@ -12,7 +13,8 @@ HEADERS += QIteration.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     Feature.h
-SOURCES += QIteration.cpp \
+SOURCES += BatchMaze.cpp \
+    QIteration.cpp \
     Data.cpp \
     ValueIteration.cpp \
     main.cpp \
