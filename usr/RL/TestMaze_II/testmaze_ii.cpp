@@ -1,8 +1,13 @@
 #include "testmaze_ii.h"
 #include "Data.h"
+#include "util.h"
 
 #define DEBUG_LEVEL 1
 #include "debug.h"
+
+using util::arg_int;
+using util::arg_double;
+using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
@@ -12,7 +17,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       q_iteration_object(),
       record(false), plot(false),
       l1_factor(0),
-      current_k_mdp_state_deque(Data::k),
+      current_k_mdp_state(),
       action_timer(nullptr),
       value_iteration_timer(nullptr)
 {
@@ -21,9 +26,6 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // focus on command line
     ui._wConsoleInput->setFocus();
-
-    // seed random generator
-    srand(time(nullptr));
 
     // set console welcome message
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
@@ -64,44 +66,11 @@ void TestMaze_II::collect_episode(const int& length) {
     }
 }
 
-bool TestMaze_II::arg_int(const QString& string_in, const int& n, int& i_arg_out) {
-    QString arg = string_in.section(QRegExp("\\s+"),n,n);
-    bool ok;
-    i_arg_out = arg.toInt(&ok);
-    return ok;
-}
-
-bool TestMaze_II::arg_double(const QString& string_in, const int& n, double& d_arg_out) {
-    QString arg = string_in.section(QRegExp("\\s+"),n,n);
-    bool ok;
-    d_arg_out = arg.toDouble(&ok);
-    return ok;
-}
-
-bool TestMaze_II::arg_string(const QString& string_in, const int& n, QString& s_arg_out) {
-    s_arg_out = string_in.section(QRegExp("\\s+"),n,n);
-    return true;
-}
-
 void TestMaze_II::update_current_k_mdp_state(action_t action, state_t state, reward_t reward) {
-    current_k_mdp_state_deque.pop_back();
-    current_k_mdp_state_deque.push_front(data_point_t(action,state,reward));
+    current_k_mdp_state.new_state(action,state,reward);
     if(plot) {
         plot_file << action << " " << state << " " << reward << std::endl;
     }
-}
-
-TestMaze_II::k_mdp_state_t TestMaze_II::current_k_mdp_state() {
-    k_mdp_state_t k_mdp_state;
-    for(std::deque<data_point_t>::const_iterator it=current_k_mdp_state_deque.begin();
-            it!=current_k_mdp_state_deque.end();
-            ++it) {
-        k_mdp_state.push_back(*it);
-    }
-    if(k_mdp_state.size()!=Data::k) {
-        DEBUG_OUT(0,"Error: something is wrong with the k-MDP state size.");
-    }
-    return k_mdp_state;
 }
 
 void TestMaze_II::render() {
@@ -115,7 +84,7 @@ void TestMaze_II::choose_action() {
         action = (action_t)(rand()%Data::action_n);
         break;
     case OPTIMAL:
-        action = q_iteration_object.optimal_action(current_k_mdp_state());
+        action = q_iteration_object.optimal_action(current_k_mdp_state.get_k_mdp_state());
         break;
     default:
         DEBUG_OUT(0,"Error: undefined action type");
@@ -339,9 +308,9 @@ void TestMaze_II::process_console_input() {
         arg_string(input,1,s);
         double eps;
         if(input=="epsilon") {
-            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_epsilong()));
+            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_epsilon()));
         } else if(arg_double(input,1,eps) && eps>=0 && eps<=1) {
-            maze.set_epsilong(eps);
+            maze.set_epsilon(eps);
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
         }

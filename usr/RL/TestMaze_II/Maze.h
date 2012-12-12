@@ -57,8 +57,10 @@ public:
     void set_time_delay(const int& new_time_delay);
     int get_time_delay() { return time_delay; }
 
-    void set_epsilong(const double& e);
-    double get_epsilong() const { return epsilon; }
+    void set_epsilon(const double& e);
+    double get_epsilon() const { return epsilon; }
+
+    void set_current_state(const state_t&);
 
 private:
 
