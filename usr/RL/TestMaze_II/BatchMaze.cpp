@@ -22,7 +22,7 @@
 #include "debug.h"
 
 #define OUTPUT(x) std::cout << std::endl << x;
-#define OUTPUT_LOG(x) std::cout << std::endl << x; log_file << std::endl << x;
+//#define OUTPUT_LOG(x) std::cout << std::endl << x; log_file << std::endl << x;
 #define OUTPUT_SAME_LINE(x) std::cout << '\xd' << x;
 
 typedef Data::action_t action_t;
@@ -77,9 +77,9 @@ int BatchMaze::run(int argc, char *argv[]) {
 
             OUTPUT("");
 
-            OUTPUT_LOG("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
-            OUTPUT_LOG("epsilon  = " << maze.get_epsilon() );
-            OUTPUT_LOG("discount = " << qiteration.get_discount() );
+            OUTPUT("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
+            OUTPUT("epsilon  = " << maze.get_epsilon() );
+            OUTPUT("discount = " << qiteration.get_discount() );
 
             OUTPUT("");
 
@@ -100,7 +100,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             unsigned long max_transition = 1000;
             unsigned long total_transition_counter = 0;
             double reward_sum = 0;
-            OUTPUT_LOG("Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal policy");
+            OUTPUT("Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal policy");
             OUTPUT("");
             for(unsigned long episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
 
@@ -126,7 +126,8 @@ int BatchMaze::run(int argc, char *argv[]) {
                 }
             }
 
-            OUTPUT_LOG("The mean reward was " << reward_sum/total_transition_counter);
+            OUTPUT("The mean reward was " << reward_sum/total_transition_counter);
+            log_file << epsilon << " " << discount << " " << reward_sum/total_transition_counter << std::endl;
 
             OUTPUT("");
             OUTPUT("DONE");
