@@ -18,12 +18,8 @@
 
 #include <QString>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
-
-#define OUTPUT(x) //std::cout << std::endl << x;
-//#define OUTPUT_LOG(x) std::cout << std::endl << x; log_file << std::endl << x;
-#define OUTPUT_SAME_LINE(x) //std::cout << '\xd' << x;
 
 typedef Data::action_t action_t;
 typedef Data::state_t state_t;
@@ -35,7 +31,7 @@ BatchMaze::~BatchMaze() {}
 
 int BatchMaze::run(int argc, char *argv[]) {
     if(argc <= 1) {
-        DEBUG_OUT(0, "No arguments, terminating...");
+        DEBUG_OUT(1, "No arguments, terminating...");
         return 1;
     } else {
         QString arg_1(argv[1]);
@@ -48,7 +44,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                 if(util::arg_double(argv[2],0,tmp_epsilon)) {
                     epsilon = tmp_epsilon;
                 } else {
-                    DEBUG_OUT(0, "Could not use second argument as epsilon");
+                    DEBUG_OUT(1, "Could not use second argument as epsilon");
                 }
             }
             if(argc > 3) {
@@ -56,13 +52,14 @@ int BatchMaze::run(int argc, char *argv[]) {
                 if(util::arg_double(argv[3],0,tmp_discount)) {
                     discount = tmp_discount;
                 } else {
-                    DEBUG_OUT(0, "Could not use third argument as discout");
+                    DEBUG_OUT(1, "Could not use third argument as discout");
                 }
             }
 
-            QString log_file_name;
-            log_file_name.setNum(rand());
-            log_file_name.prepend("log_file_");
+            QString log_file_name("log_file_");
+            log_file_name.append(QString::number(epsilon));
+            log_file_name.append("_");
+            log_file_name.append(QString::number(discount));
             log_file_name.append(".txt");
             std::ofstream log_file;
             log_file.open((const char*)log_file_name.toAscii());
@@ -71,37 +68,37 @@ int BatchMaze::run(int argc, char *argv[]) {
             QIteration qiteration(discount);
             KMDPState current_k_mdp_state;
 
-            OUTPUT("------------------------------------");
-            OUTPUT("Running episodes with optimal policy");
-            OUTPUT("------------------------------------");
+            DEBUG_OUT(1,"------------------------------------");
+            DEBUG_OUT(1,"Running episodes with optimal policy");
+            DEBUG_OUT(1,"------------------------------------");
 
-            OUTPUT("");
+            DEBUG_OUT(1,"");
 
-            OUTPUT("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
-            OUTPUT("epsilon  = " << maze.get_epsilon() );
-            OUTPUT("discount = " << qiteration.get_discount() );
+            DEBUG_OUT(1,"Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
+            DEBUG_OUT(1,"epsilon  = " << maze.get_epsilon() );
+            DEBUG_OUT(1,"discount = " << qiteration.get_discount() );
 
-            OUTPUT("");
+            DEBUG_OUT(1,"");
 
             double max_change_threshold = 0.0001, max_change;
-            OUTPUT("Running Q-Iteration (max change threshold = " << max_change_threshold << ")");
-            OUTPUT("");
+            DEBUG_OUT(1,"Running Q-Iteration (max change threshold = " << max_change_threshold << ")");
+            DEBUG_OUT(1,"");
             unsigned long iteration_counter = 0;
             maze.initialize_predictions(qiteration);
             do {
                 max_change = qiteration.iterate();
                 ++iteration_counter;
-                OUTPUT_SAME_LINE( "Iteration " << iteration_counter << ": max_change = " << max_change << "               ");
+                DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
             } while (max_change>max_change_threshold);
 
-            OUTPUT("");
+            DEBUG_OUT(1,"");
 
             unsigned long max_episodes = 100;
             unsigned long max_transition = 1000;
             unsigned long total_transition_counter = 0;
             double reward_sum = 0;
-            OUTPUT("Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal policy");
-            OUTPUT("");
+            DEBUG_OUT(1,"Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal policy");
+            DEBUG_OUT(1,"");
             for(unsigned long episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
 
                 maze.set_current_state(rand()%Data::state_n);
@@ -119,23 +116,23 @@ int BatchMaze::run(int argc, char *argv[]) {
                     reward_t reward;
                     maze.perform_transition(action,state,reward);
                     current_k_mdp_state.new_state(action,state,reward);
-                    //                OUTPUT("Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
+                    //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                     reward_sum += reward;
                     ++total_transition_counter;
-                    OUTPUT_SAME_LINE("Episode " << episode_counter << ", transition " << transition_counter << ": mean reward = " << reward_sum/total_transition_counter);
+                    DEBUG_OUT(2, "Episode " << episode_counter << ", transition " << transition_counter << ": mean reward = " << reward_sum/total_transition_counter);
                 }
             }
 
-            OUTPUT("The mean reward was " << reward_sum/total_transition_counter);
+            DEBUG_OUT(1,"The mean reward was " << reward_sum/total_transition_counter);
             log_file << epsilon << " " << discount << " " << reward_sum/total_transition_counter << std::endl;
 
-            OUTPUT("");
-            OUTPUT("DONE");
-            OUTPUT("");
+            DEBUG_OUT(1,"");
+            DEBUG_OUT(1,"DONE");
+            DEBUG_OUT(1,"");
 
             log_file.close();
         } else {
-            DEBUG_OUT(0, "Unknown command, terminating...");
+            DEBUG_OUT(1, "Unknown command, terminating...");
             return 1;
         }
     }
