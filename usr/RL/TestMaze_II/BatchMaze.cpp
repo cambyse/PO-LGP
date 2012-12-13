@@ -21,9 +21,9 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
-#define OUTPUT(x) std::cout << std::endl << x;
+#define OUTPUT(x) //std::cout << std::endl << x;
 //#define OUTPUT_LOG(x) std::cout << std::endl << x; log_file << std::endl << x;
-#define OUTPUT_SAME_LINE(x) std::cout << '\xd' << x;
+#define OUTPUT_SAME_LINE(x) //std::cout << '\xd' << x;
 
 typedef Data::action_t action_t;
 typedef Data::state_t state_t;
