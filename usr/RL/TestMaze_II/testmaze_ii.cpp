@@ -137,6 +137,7 @@ void TestMaze_II::process_console_input() {
     QString episode_s(  "    episode / e . .[<int>|clear,c] . . . . . -> record length <int> episode or clear data");
     QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
     QString epsilon_s(  "    epsilon . . . .[<double>]. . . . . . . . -> get [set] exploration rate epsilon");
+    QString discount_s( "    discount. . . .[<double>]. . . . . . . . -> get [set] discount rate for value iteration");
     QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
     QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
     QString score_s(    "    score. . . . . .<int>. . . . . . . . . . -> score compound features with distance <int> by gradient");
@@ -173,6 +174,7 @@ void TestMaze_II::process_console_input() {
         ui._wConsoleOutput->appendPlainText( episode_s );
         ui._wConsoleOutput->appendPlainText( optimize_s );
         ui._wConsoleOutput->appendPlainText( epsilon_s );
+        ui._wConsoleOutput->appendPlainText( discount_s );
         ui._wConsoleOutput->appendPlainText( evaluate_s );
         ui._wConsoleOutput->appendPlainText( l1_s );
         ui._wConsoleOutput->appendPlainText( score_s );
@@ -250,7 +252,7 @@ void TestMaze_II::process_console_input() {
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimal'. Expecting non-negative integer or 'stop', got '" + s + "'.");
         }
-    } else if(input.startsWith("delay")) { // set time delay for rewards
+    } else if(input.startsWith("delay ") || input=="delay") { // set time delay for rewards
         QString s;
         int i;
         if(input=="delay") {
@@ -314,9 +316,20 @@ void TestMaze_II::process_console_input() {
         } else {
             ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
         }
+    } else if(input.startsWith("discount ") || input=="discount") {
+        QString s;
+        arg_string(input,1,s);
+        double disc;
+        if(input=="discount") {
+            ui._wConsoleOutput->appendPlainText("    " + QString::number(q_iteration_object.get_discount()));
+        } else if(arg_double(input,1,disc) && disc>=0 && disc<=1) {
+            q_iteration_object.set_discount(disc);
+        } else {
+            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'discount'. Expecting double in [0,1], got '" + s + "'.");
+        }
     } else if(input=="evaluate") {
         crf.evaluate_features();
-    } else if(input.startsWith("l1")) {
+    } else if(input.startsWith("l1 ") || input=="l1") {
         QString s;
         double c;
         if(input=="l1") {
@@ -324,7 +337,7 @@ void TestMaze_II::process_console_input() {
         } else if(arg_double(input,1,c) && c>=0) {
             l1_factor = c;
         }
-    } else if(input.startsWith("score") || input=="score") {
+    } else if(input.startsWith("score ") || input=="score") {
         int n;
         if(input=="score") {
             ui._wConsoleOutput->appendPlainText(score_s);
@@ -334,7 +347,7 @@ void TestMaze_II::process_console_input() {
         } else {
             ui._wConsoleOutput->appendPlainText(score_s);
         }
-    } else if(input.startsWith("add") || input=="add") {
+    } else if(input.startsWith("add ") || input=="add") {
         int n;
         if(input=="add") {
             ui._wConsoleOutput->appendPlainText(add_s);
@@ -347,7 +360,7 @@ void TestMaze_II::process_console_input() {
         crf.erase_zero_features();
     } else if(input=="exit" || input=="quit" || input=="q") { // quit application
         QApplication::quit();
-    } else if(input.startsWith("set") || input=="set" || input.startsWith("unset") || input=="unset") { // quit application
+    } else if(input.startsWith("set ") || input=="set" || input.startsWith("unset ") || input=="unset") { // quit application
         QString s_set_unset;
         if(!arg_string(input,0,s_set_unset) || (s_set_unset!="set" && s_set_unset!="unset") ) {
             DEBUG_OUT(0,"Error: something went wrong parsing the 'set' command");

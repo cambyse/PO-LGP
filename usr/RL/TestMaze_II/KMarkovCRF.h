@@ -79,7 +79,7 @@ public:
             int ls
     );
 
-    void optimize_model(lbfgsfloatval_t l1 = 0);
+    int optimize_model(lbfgsfloatval_t l1 = 0, unsigned int max_iter = 0, lbfgsfloatval_t * mean_likelihood = nullptr);
 
     void add_action_state_reward_tripel(
             const action_t& action,
@@ -102,6 +102,12 @@ public:
     void add_compound_features_to_active(const int& n);
 
     void erase_zero_features();
+
+    void erase_all_features();
+
+    unsigned long get_number_of_features();
+
+    unsigned long get_training_data_length();
 
     probability_t prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&);
 

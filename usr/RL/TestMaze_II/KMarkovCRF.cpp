@@ -7,7 +7,7 @@
 #include "lbfgs_codes.h"
 
 #define DEBUG_STRING "CRF: "
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 using std::vector;
@@ -169,7 +169,7 @@ int KMarkovCRF::progress_model(
         int k,
         int /*ls*/
 ) {
-    DEBUG_OUT(0,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
         DEBUG_OUT(1, "    " <<
                 active_features[f_idx].identifier() <<
@@ -177,13 +177,13 @@ int KMarkovCRF::progress_model(
                 f_idx << "] = " <<
                 x[f_idx]);
     }
-    DEBUG_OUT(0,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
     DEBUG_OUT(1,"");
 
     return 0;
 }
 
-void KMarkovCRF::optimize_model(lbfgsfloatval_t l1) {
+int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsfloatval_t * mean_likelihood) {
 
     // Check size of parameter vector //
     check_lambda_size();
@@ -193,15 +193,17 @@ void KMarkovCRF::optimize_model(lbfgsfloatval_t l1) {
     lbfgs_parameter_init(&param);
     param.orthantwise_c = l1;
     param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-    param.max_iterations = 20;
+    if(max_iter>0) {
+        param.max_iterations = max_iter;
+    }
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
     int ret = lbfgs(active_features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
 
     // Report the result.
-    DEBUG_OUT(0, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    DEBUG_OUT(0,"mean likelihood = " << exp(-fx) );
+    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
+    DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
         DEBUG_OUT(1, "    " <<
                 active_features[f_idx].identifier() <<
@@ -209,9 +211,15 @@ void KMarkovCRF::optimize_model(lbfgsfloatval_t l1) {
                 f_idx << "] = " <<
                 lambda[f_idx]);
     }
-    DEBUG_OUT(0, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    DEBUG_OUT(0,"mean likelihood = " << exp(-fx) );
-    DEBUG_OUT(0,"");
+    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
+    DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
+    DEBUG_OUT(1,"");
+
+    if(mean_likelihood!=nullptr) {
+        *mean_likelihood = exp(-fx);
+    }
+
+    return ret;
 }
 
 void KMarkovCRF::add_action_state_reward_tripel(
@@ -622,6 +630,21 @@ void KMarkovCRF::erase_zero_features() {
     DEBUG_OUT(1, "DONE");
 }
 
+void KMarkovCRF::erase_all_features() {
+    DEBUG_OUT(1, "Erasing all features from active...");
+
+    lbfgs_free(lambda);
+    lambda = lbfgs_malloc(0);
+    active_features.clear();
+    old_active_features_size = 0;
+
+    DEBUG_OUT(1, "DONE");
+}
+
+unsigned long KMarkovCRF::get_number_of_features() {
+    return active_features.size();
+}
+
 KMarkovCRF::probability_t KMarkovCRF::prediction(
         const k_mdp_state_t& state_from,
         const action_t& action,
@@ -658,6 +681,15 @@ KMarkovCRF::probability_t KMarkovCRF::prediction(
     }
 
     return exp( sumFXY )/sumExpX;
+}
+
+unsigned long KMarkovCRF::get_training_data_length() {
+    long n = episode_data.size()-k;
+    if(n<=0) {
+        return 0;
+    } else {
+        return n;
+    }
 }
 
 void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
