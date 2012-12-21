@@ -216,37 +216,34 @@ int BatchMaze::run(int argc, char *argv[]) {
                     DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
                 } while (max_change>max_change_threshold);
 
-                unsigned long max_episodes = 100;
                 unsigned long max_transition = 1000;
-                LOG_COMMENT("Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal kmdp policy");
-                for(unsigned long episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
+                LOG_COMMENT("Running episode of length " << max_transition << " from random starting state with optimal kmdp policy");
 
-                    double reward_sum = 0;
+                double reward_sum = 0;
 
-                    // random starting state
-                    maze.set_current_state(rand()%Data::state_n);
-                    for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                        action_t random_action = rand()%Data::action_n;
-                        state_t state;
-                        reward_t reward;
-                        maze.perform_transition(random_action,state,reward);
-                        current_k_mdp_state.new_state(random_action,state,reward);
-                    }
-
-                    for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
-                        action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
-                        state_t state;
-                        reward_t reward;
-                        maze.perform_transition(action,state,reward);
-                        current_k_mdp_state.new_state(action,state,reward);
-                        //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
-                        reward_sum += reward;
-                        DEBUG_OUT(2, "Episode " << episode_counter << ", transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
-                    }
-
-                    LOG( epsilon << " " << discount << " " << " " << crf.get_training_data_length() << " " << max_transition << " " << reward_sum/max_transition );
-
+                // random starting state
+                maze.set_current_state(rand()%Data::state_n);
+                for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
+                    action_t random_action = rand()%Data::action_n;
+                    state_t state;
+                    reward_t reward;
+                    maze.perform_transition(random_action,state,reward);
+                    current_k_mdp_state.new_state(random_action,state,reward);
                 }
+
+                for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
+                    action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
+                    state_t state;
+                    reward_t reward;
+                    maze.perform_transition(action,state,reward);
+                    current_k_mdp_state.new_state(action,state,reward);
+                    //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
+                    reward_sum += reward;
+                    DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
+                }
+
+                LOG( epsilon << " " << discount << " " << " " << crf.get_training_data_length() << " " << max_transition << " " << reward_sum/max_transition );
+
             }
 
             DEBUG_OUT(1,"");
@@ -256,9 +253,9 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file.close();
         } else if(arg_1=="sparse") {
 
-            //---------------------------------//
-            //    Learned k-MDP transitions    //
-            //---------------------------------//
+            //----------------------------------//
+            //    Learned sparse transitions    //
+            //----------------------------------//
 
             QString log_file_name("log_file_sparse_");
             log_file_name.append(QString::number(epsilon));
@@ -324,24 +321,26 @@ int BatchMaze::run(int argc, char *argv[]) {
                 crf.score_features_by_gradient(1);              // score pairs
                 crf.add_compound_features_to_active(0);         // add pairs
 
-                if(ret!=0) {
+                if(ret!=0 && ret!=2) {
                     LOG_COMMENT("Error: lbfgs returned " << ret);
                 }
 
                 // increase l1 regularization to decrease number of features
-                for(double l1=0; l1<=0.05; l1+=0.001) {
+                for(double l1=0.0; l1<=0.05; l1*=1.25) {
+
+                    LOG_COMMENT("Using l1-factor of " << l1);
 
                     ret = crf.optimize_model(l1,0); // optimize with l1 reqularization
-                    if(ret!=0) {
+                    if(ret!=0 && ret!=2) {
                         LOG_COMMENT("Error: lbfgs returned " << ret);
                     }
 
                     crf.erase_zero_features();      // erase zero features
                     unsigned int number_of_features = crf.get_number_of_features();
 
-                    double mean_likelihood;
+                    double mean_likelihood = 0;
                     ret = crf.optimize_model(0,0,&mean_likelihood); // optimize WITHOUT l1 reqularization
-                    if(ret!=0) {
+                    if(ret!=0 && ret!=2) {
                         LOG_COMMENT("Error: lbfgs returned " << ret);
                     }
 
@@ -356,37 +355,35 @@ int BatchMaze::run(int argc, char *argv[]) {
                         DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
                     } while (max_change>max_change_threshold);
 
-                    unsigned long max_episodes = 100;
                     unsigned long max_transition = 1000;
-                    LOG_COMMENT("Running " << max_episodes << " episodes of length " << max_transition << " from random starting state with optimal sparse policy");
-                    for(unsigned long episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
+                    LOG_COMMENT("Running episode of length " << max_transition << " from random starting state with optimal sparse policy");
 
-                        double reward_sum = 0;
+                    double reward_sum = 0;
 
-                        // random starting state
-                        maze.set_current_state(rand()%Data::state_n);
-                        for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                            action_t random_action = rand()%Data::action_n;
-                            state_t state;
-                            reward_t reward;
-                            maze.perform_transition(random_action,state,reward);
-                            current_k_mdp_state.new_state(random_action,state,reward);
-                        }
-
-                        for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
-                            action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
-                            state_t state;
-                            reward_t reward;
-                            maze.perform_transition(action,state,reward);
-                            current_k_mdp_state.new_state(action,state,reward);
-                            //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
-                            reward_sum += reward;
-                            DEBUG_OUT(2, "Episode " << episode_counter << ", transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
-                        }
-
-                        LOG( epsilon << " " << discount << " " << " " << crf.get_training_data_length() << " " << max_transition << " " << " " << l1 << " " << number_of_features << " " << mean_likelihood << " " << reward_sum/max_transition );
-
+                    // random starting state
+                    maze.set_current_state(rand()%Data::state_n);
+                    for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
+                        action_t random_action = rand()%Data::action_n;
+                        state_t state;
+                        reward_t reward;
+                        maze.perform_transition(random_action,state,reward);
+                        current_k_mdp_state.new_state(random_action,state,reward);
                     }
+
+                    for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
+                        action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
+                        state_t state;
+                        reward_t reward;
+                        maze.perform_transition(action,state,reward);
+                        current_k_mdp_state.new_state(action,state,reward);
+                        //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
+                        reward_sum += reward;
+                        DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
+                    }
+
+                    LOG( epsilon << " " << discount << " " << " " << crf.get_training_data_length() << " " << max_transition << " " << " " << l1 << " " << number_of_features << " " << mean_likelihood << " " << reward_sum/max_transition );
+
+                    if(l1==0.0) l1=0.001;
                 }
             }
 
