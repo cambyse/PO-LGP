@@ -209,7 +209,7 @@ template<class T> struct Any_typed:public Any {
   Any_typed(const char* _tag, const T *_p, uint _n, char _delim) { tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
   virtual void write(std::ostream &os) const {
     if(!p) { os <<tag; return; }  //boolean
-    os <<tag <<"="; // <<"[" <<type <<"] = ";
+    os <<tag <<"[" <<type <<"] = ";
     if(!n) {
       if(typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os <<'\'' <<*((T*)p) <<'\'';
       else os <<*((T*)p);

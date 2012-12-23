@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -24,6 +24,7 @@
 #ifndef MT_ORS_ONLY_BASICS
 #  include "plot.h"
 #endif
+#include "ply.h"
 
 #define ORS_NO_DYNAMICS_IN_FRAMES
 
@@ -285,45 +286,45 @@ Vector operator-(const Vector& b) {
 
 //! reset to zero
 void Matrix::setZero() {
-  p0=p4=p8=0.;
-  p1=p2=p3=p5=p6=p7=0.;
+  m00=m11=m22=0.;
+  m01=m02=m10=m12=m20=m21=0.;
 }
 
 void Matrix::setRandom(double range) {
-  for(uint i=0;i<9;i++) p()[i]=rnd.uni(-range, range);
+  for(uint i=0; i<9; i++) p()[i]=rnd.uni(-range, range);
 }
 
 //! reset to identity
 void Matrix::setId() {
-  p0=p4=p8=1.;
-  p1=p2=p3=p5=p6=p7=0.;
+  m00=m11=m22=1.;
+  m01=m02=m10=m12=m20=m21=0.;
 }
 
 //! assign the matrix to the transformation from unit frame to given XYZ frame
 void Matrix::setFrame(Vector& X, Vector& Y, Vector& Z) {
-  p0=X.x; p1=Y.x; p2=Z.x;
-  p3=X.y; p4=Y.y; p5=Z.y;
-  p6=X.z; p7=Y.z; p8=Z.z;
+  m00=X.x; m01=Y.x; m02=Z.x;
+  m10=X.y; m11=Y.y; m12=Z.y;
+  m20=X.z; m21=Y.z; m22=Z.z;
 }
 
 //! assign the matrix to the transformation from the ORTHOGONAL XYZ frame to the unit frame
 void Matrix::setInvFrame(Vector& X, Vector& Y, Vector& Z) {
-  p0=X.x; p1=X.y; p2=X.z;
-  p3=Y.x; p4=Y.y; p5=Y.z;
-  p6=Z.x; p7=Z.y; p8=Z.z;
+  m00=X.x; m01=X.y; m02=X.z;
+  m10=Y.x; m11=Y.y; m12=Y.z;
+  m20=Z.x; m21=Z.y; m22=Z.z;
 }
 
 //! assign the matrix to a rotation around the X-axis with angle a (in rad units)
 void Matrix::setXrot(double a) {
-  p0=1.; p1=0.;     p2=0.;
-  p3=0.; p4=cos(a); p5=-sin(a);
-  p6=0.; p7=sin(a); p8= cos(a);
+  m00=1.; m01=0.;     m02=0.;
+  m10=0.; m11=cos(a); m12=-sin(a);
+  m20=0.; m21=sin(a); m22= cos(a);
 }
 
 void Matrix::setSkew(const Vector& a) {
-  p0=  0.; p1=-a.z; p2= a.y;
-  p3= a.z; p4=  0.; p5=-a.x;
-  p6=-a.y; p7= a.x; p8=  0.;
+  m00=  0.; m01=-a.z; m02= a.y;
+  m10= a.z; m11=  0.; m12=-a.x;
+  m20=-a.y; m21= a.x; m22=  0.;
 }
 
 void Matrix::setExponential(const Vector& a) {
@@ -332,25 +333,25 @@ void Matrix::setExponential(const Vector& a) {
   if(phi<1e-10) { setId(); return; }
   S.setSkew(a/phi);
   *this = sin(phi)*S + (1.-cos(phi))*S*S;
-  p0+=1.; p4+=1.; p8+=1.;
+  m00+=1.; m11+=1.; m22+=1.;
 }
 
 void Matrix::setOdeMatrix(double* o) {
-  p0=o[0]; p1=o[1]; p2=o[2];
-  p3=o[4]; p4=o[5]; p5=o[6];
-  p6=o[8]; p7=o[9]; p8=o[10];
+  m00=o[0]; m01=o[1]; m02=o[2];
+  m10=o[4]; m11=o[5]; m12=o[6];
+  m20=o[8]; m21=o[9]; m22=o[10];
 }
 
 void Matrix::setTensorProduct(const Vector& b, const Vector& c) {
-  p0=b.x*c.x; p1=b.x*c.y; p2=b.x*c.z;
-  p3=b.y*c.x; p4=b.y*c.y; p5=b.y*c.z;
-  p6=b.z*c.x; p7=b.z*c.y; p8=b.z*c.z;
+  m00=b.x*c.x; m01=b.x*c.y; m02=b.x*c.z;
+  m10=b.y*c.x; m11=b.y*c.y; m12=b.y*c.z;
+  m20=b.z*c.x; m21=b.z*c.y; m22=b.z*c.z;
 }
 
 void Matrix::write(std::ostream& os) const {
-  os <<"\n " <<p0 <<' ' <<p1 <<' ' <<p2;
-  os <<"\n " <<p3 <<' ' <<p4 <<' ' <<p5;
-  os <<"\n " <<p6 <<' ' <<p7 <<' ' <<p8;
+  os <<"\n " <<m00 <<' ' <<m01 <<' ' <<m02;
+  os <<"\n " <<m10 <<' ' <<m11 <<' ' <<m12;
+  os <<"\n " <<m20 <<' ' <<m21 <<' ' <<m22;
   os <<endl;
 }
 void Matrix::read(std::istream& is) {
@@ -361,40 +362,40 @@ void Matrix::read(std::istream& is) {
 //! multiplication of two matrices
 Matrix operator*(const Matrix& b, const Matrix& c) {
   Matrix a;
-  a.p0=b.p0*c.p0+b.p1*c.p3+b.p2*c.p6;
-  a.p1=b.p0*c.p1+b.p1*c.p4+b.p2*c.p7;
-  a.p2=b.p0*c.p2+b.p1*c.p5+b.p2*c.p8;
+  a.m00=b.m00*c.m00+b.m01*c.m10+b.m02*c.m20;
+  a.m01=b.m00*c.m01+b.m01*c.m11+b.m02*c.m21;
+  a.m02=b.m00*c.m02+b.m01*c.m12+b.m02*c.m22;
   
-  a.p3=b.p3*c.p0+b.p4*c.p3+b.p5*c.p6;
-  a.p4=b.p3*c.p1+b.p4*c.p4+b.p5*c.p7;
-  a.p5=b.p3*c.p2+b.p4*c.p5+b.p5*c.p8;
+  a.m10=b.m10*c.m00+b.m11*c.m10+b.m12*c.m20;
+  a.m11=b.m10*c.m01+b.m11*c.m11+b.m12*c.m21;
+  a.m12=b.m10*c.m02+b.m11*c.m12+b.m12*c.m22;
   
-  a.p6=b.p6*c.p0+b.p7*c.p3+b.p8*c.p6;
-  a.p7=b.p6*c.p1+b.p7*c.p4+b.p8*c.p7;
-  a.p8=b.p6*c.p2+b.p7*c.p5+b.p8*c.p8;
+  a.m20=b.m20*c.m00+b.m21*c.m10+b.m22*c.m20;
+  a.m21=b.m20*c.m01+b.m21*c.m11+b.m22*c.m21;
+  a.m22=b.m20*c.m02+b.m21*c.m12+b.m22*c.m22;
   return a;
 }
 //! sum of two matrices
 Matrix operator+(const Matrix& b, const Matrix& c) {
   Matrix a;
-  a.p0=b.p0+c.p0; a.p1=b.p1+c.p1; a.p2=b.p2+c.p2;
-  a.p3=b.p3+c.p3; a.p4=b.p4+c.p4; a.p5=b.p5+c.p5;
-  a.p6=b.p6+c.p6; a.p7=b.p7+c.p7; a.p8=b.p8+c.p8;
+  a.m00=b.m00+c.m00; a.m01=b.m01+c.m01; a.m02=b.m02+c.m02;
+  a.m10=b.m10+c.m10; a.m11=b.m11+c.m11; a.m12=b.m12+c.m12;
+  a.m20=b.m20+c.m20; a.m21=b.m21+c.m21; a.m22=b.m22+c.m22;
   return a;
 }
 //! transformation of a vector
 Vector operator*(const Matrix& b, const Vector& c) {
   Vector a;
-  a.x=b.p0*c.x+b.p1*c.y+b.p2*c.z;
-  a.y=b.p3*c.x+b.p4*c.y+b.p5*c.z;
-  a.z=b.p6*c.x+b.p7*c.y+b.p8*c.z;
+  a.x=b.m00*c.x+b.m01*c.y+b.m02*c.z;
+  a.y=b.m10*c.x+b.m11*c.y+b.m12*c.z;
+  a.z=b.m20*c.x+b.m21*c.y+b.m22*c.z;
   return a;
 }
 //! multiplication with a scalar
 Matrix& operator*=(Matrix& a, double c) {
-  a.p0*=c; a.p1*=c; a.p2*=c;
-  a.p3*=c; a.p4*=c; a.p5*=c;
-  a.p6*=c; a.p7*=c; a.p8*=c;
+  a.m00*=c; a.m01*=c; a.m02*=c;
+  a.m10*=c; a.m11*=c; a.m12*=c;
+  a.m20*=c; a.m21*=c; a.m22*=c;
   return a;
 }
 //! multiplication with scalar
@@ -406,9 +407,9 @@ Matrix operator*(double b, const Matrix& c) {
 }
 //! sum of two matrices
 Matrix& operator+=(Matrix& a, const Matrix& b) {
-  a.p0+=b.p0; a.p1+=b.p1; a.p2+=b.p2;
-  a.p3+=b.p3; a.p4+=b.p4; a.p5+=b.p5;
-  a.p6+=b.p6; a.p7+=b.p7; a.p8+=b.p8;
+  a.m00+=b.m00; a.m01+=b.m01; a.m02+=b.m02;
+  a.m10+=b.m10; a.m11+=b.m11; a.m12+=b.m12;
+  a.m20+=b.m20; a.m21+=b.m21; a.m22+=b.m22;
   return a;
 }
 
@@ -624,6 +625,24 @@ void Quaternion::setMatrix(double* m) {
 }
 
 //! exports the rotation to a double[9] matrix, row-by-row
+Matrix Quaternion::getMatrix() const {
+  Matrix M;
+  double P1=2.*x, P2=2.*y, P3=2.*z;
+  double q11 = x*P1;
+  double q22 = y*P2;
+  double q33 = z*P3;
+  double q12 = x*P2;
+  double q13 = x*P3;
+  double q23 = y*P3;
+  double q01 = w*P1;
+  double q02 = w*P2;
+  double q03 = w*P3;
+  M.m00=1.-q22-q33; M.m01=q12-q03;     M.m02=q13+q02;
+  M.m10=q12+q03;    M.m11=1.-q11-q33;  M.m12=q23-q01;
+  M.m20=q13-q02;    M.m21=q23+q01;     M.m22=1.-q11-q22;
+  return M;
+}
+
 double* Quaternion::getMatrix(double* m) const {
   double P1=2.*x, P2=2.*y, P3=2.*z;
   double q11 = x*P1;
@@ -635,9 +654,9 @@ double* Quaternion::getMatrix(double* m) const {
   double q01 = w*P1;
   double q02 = w*P2;
   double q03 = w*P3;
-  m[0]=1.-q22-q33; m[1]=q12-q03;    m[2]=q13+q02;
-  m[3]=q12+q03;   m[4]=1.-q11-q33;  m[5]=q23-q01;
-  m[6]=q13-q02;   m[7]=q23+q01;    m[8]=1.-q11-q22;
+  m[0]=1.-q22-q33; m[1]=q12-q03;    m[2] =q13+q02;
+  m[3]=q12+q03;    m[4]=1.-q11-q33; m[5] =q23-q01;
+  m[6]=q13-q02;    m[7]=q23+q01;    m[8]=1.-q11-q22;
   return m;
 }
 
@@ -653,12 +672,13 @@ double* Quaternion::getMatrixOde(double* m) const {
   double q01 = w*P1;
   double q02 = w*P2;
   double q03 = w*P3;
-  m[0]=1.-q22-q33; m[1]=q12-q03;   m[2] =q13+q02;
-  m[4]=q12+q03;   m[5]=1.-q11-q33; m[6] =q23-q01;
-  m[8]=q13-q02;   m[9]=q23+q01;   m[10]=1.-q11-q22;
+  m[0]=1.-q22-q33; m[1]=q12-q03;    m[2] =q13+q02;
+  m[4]=q12+q03;    m[5]=1.-q11-q33; m[6] =q23-q01;
+  m[8]=q13-q02;    m[9]=q23+q01;    m[10]=1.-q11-q22;
   m[3]=m[7]=m[11]=0.;
   return m;
 }
+
 //! exports the rotation to an OpenGL format matrix of type double[16]
 double* Quaternion::getMatrixGL(double* m) const {
   double P1=2.*x, P2=2.*y, P3=2.*z;
@@ -671,9 +691,9 @@ double* Quaternion::getMatrixGL(double* m) const {
   double q01 = w*P1;
   double q02 = w*P2;
   double q03 = w*P3;
-  m[0]=1.-q22-q33; m[4]=q12-q03;  m[8] =q13+q02;
-  m[1]=q12+q03;   m[5]=1.-q11-q33; m[9] =q23-q01;
-  m[2]=q13-q02;   m[6]=q23+q01;  m[10]=1.-q11-q22;
+  m[0]=1.-q22-q33; m[4]=q12-q03;    m[8] =q13+q02;
+  m[1]=q12+q03;    m[5]=1.-q11-q33; m[9] =q23-q01;
+  m[2]=q13-q02;    m[6]=q23+q01;    m[10]=1.-q11-q22;
   m[3]=m[7]=m[11]=m[12]=m[13]=m[14]=0.;
   m[15]=1.;
   return m;
@@ -709,6 +729,7 @@ Quaternion operator/(const Quaternion& b, const Quaternion& c) {
 
 //! transform of a vector by a rotation
 Vector operator*(const Quaternion& b, const Vector& c) {
+#if 1
   double P1=2.*b.x, P2=2.*b.y, P3=2.*b.z;
   double q11 = b.x*P1;
   double q22 = b.y*P2;
@@ -727,16 +748,18 @@ Vector operator*(const Quaternion& b, const Vector& c) {
   a.y=m3*c.x+m4*c.y+m5*c.z;
   a.z=m6*c.x+m7*c.y+m8*c.z;
   return a;
+#else
+  return b.getMatrix()*c;
+#endif
 }
 
 //! inverse transform of a vector by a rotation
 Vector operator/(const Quaternion& b, const Vector& c) {
-  double m[9];
-  b.getMatrix(m);
+  Matrix M = b.getMatrix();
   Vector a;
-  a.x=m[0]*c.x+m[3]*c.y+m[6]*c.z;
-  a.y=m[1]*c.x+m[4]*c.y+m[7]*c.z;
-  a.z=m[2]*c.x+m[5]*c.y+m[8]*c.z;
+  a.x = M.m00*c.x + M.m10*c.y + M.m20*c.z;
+  a.y = M.m01*c.x + M.m11*c.y + M.m21*c.z;
+  a.z = M.m02*c.x + M.m12*c.y + M.m22*c.z;
   return a;
 }
 
@@ -751,7 +774,7 @@ Transformation operator/(const Transformation& X, const Transformation& c) {
   f.appendInvTransformation(c);
   return f;
 }
-  
+
 //! transform of a vector by a frame
 Vector operator*(const Transformation& X, const Vector& c) {
   Vector a;
@@ -869,8 +892,7 @@ void Transformation::appendTransformation(const Transformation& f) {
 #else
   //Vector P(r*(s*f.p)); //relative offset in global coords
   //Vector V(r*(s*f.v)); //relative vel in global coords
-  Matrix R;
-  rot.getMatrix(R.p);
+  Matrix R = rot.getMatrix();
   Vector P(R*f.pos); //relative offset in global coords
   Vector V(R*f.vel); //relative vel in global coords
   Vector W(R*f.angvel); //relative ang vel in global coords
@@ -931,8 +953,8 @@ void Transformation::setAffineMatrix(const double *m) {
 
 //!  to = new * from
 void Transformation::setDifference(const Transformation& from, const Transformation& to) {
-  //s=to.s/from.s;
-  rot=Quaternion()/from.rot *to.rot;
+  //rot=Quaternion()/from.rot *to.rot;
+  rot=to.rot / from.rot;
   angvel=from.rot/(to.angvel-from.angvel);
   /*v=(1./from.s) * (from.r/(to.v-from.v));
   v-=(1./from.s) * (from.r/(from.w^(to.p-from.p)));
@@ -944,42 +966,42 @@ void Transformation::setDifference(const Transformation& from, const Transformat
 
 //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
 double* Transformation::getAffineMatrix(double *m) const {
-  double M[9]; rot.getMatrix(M);
-  m[0] =M[0]; m[1] =M[1]; m[2] =M[2]; m[3] =pos.x;
-  m[4] =M[3]; m[5] =M[4]; m[6] =M[5]; m[7] =pos.y;
-  m[8] =M[6]; m[9] =M[7]; m[10]=M[8]; m[11]=pos.z;
-  m[12]=0.;   m[13]=0.;   m[14]=0.;   m[15]=1.;
+  Matrix M = rot.getMatrix();
+  m[0] = M.m00; m[1] = M.m01; m[2] = M.m02; m[3] =pos.x;
+  m[4] = M.m10; m[5] = M.m11; m[6] = M.m12; m[7] =pos.y;
+  m[8] = M.m20; m[9] = M.m21; m[10]= M.m22; m[11]=pos.z;
+  m[12]=0.;    m[13]=0.;    m[14]=0.;    m[15]=1.;
   return m;
 }
 
 //! get inverse OpenGL matrix for this frame (of type double[16])
 double* Transformation::getInverseAffineMatrix(double *m) const {
-  double M[9]; rot.getMatrix(M);
+  Matrix M = rot.getMatrix();
   Vector pinv; pinv=rot/pos;
-  m[0] =M[0]; m[1] =M[3]; m[2] =M[6]; m[3] =-pinv.x;
-  m[4] =M[1]; m[5] =M[4]; m[6] =M[7]; m[7] =-pinv.y;
-  m[8] =M[2]; m[9] =M[5]; m[10]=M[8]; m[11]=-pinv.z;
+  m[0] =M.m00; m[1] =M.m10; m[2] =M.m20; m[3] =-pinv.x;
+  m[4] =M.m01; m[5] =M.m11; m[6] =M.m21; m[7] =-pinv.y;
+  m[8] =M.m02; m[9] =M.m12; m[10]=M.m22; m[11]=-pinv.z;
   m[12]=0.;   m[13]=0.;   m[14]=0.;   m[15]=1.;
   return m;
 }
 
 //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
 double* Transformation::getAffineMatrixGL(double *m) const {
-  double M[9]; rot.getMatrix(M);
-  m[0]=M[0]; m[4]=M[1]; m[8] =M[2]; m[12]=pos.x;
-  m[1]=M[3]; m[5]=M[4]; m[9] =M[5]; m[13]=pos.y;
-  m[2]=M[6]; m[6]=M[7]; m[10]=M[8]; m[14]=pos.z;
+  Matrix M = rot.getMatrix();
+  m[0]=M.m00; m[4]=M.m01; m[8] =M.m02; m[12]=pos.x;
+  m[1]=M.m10; m[5]=M.m11; m[9] =M.m12; m[13]=pos.y;
+  m[2]=M.m20; m[6]=M.m21; m[10]=M.m22; m[14]=pos.z;
   m[3]=0.;   m[7]=0.;   m[11]=0.;   m[15]=1.;
   return m;
 }
 
 //! get inverse OpenGL matrix for this frame (of type double[16]) */
 double* Transformation::getInverseAffineMatrixGL(double *m) const {
-  double M[9]; rot.getMatrix(M);
+  Matrix M = rot.getMatrix();
   Vector pinv; pinv=rot/pos;
-  m[0]=M[0]; m[4]=M[3]; m[8] =M[6]; m[12]=-pinv.x;
-  m[1]=M[1]; m[5]=M[4]; m[9] =M[7]; m[13]=-pinv.y;
-  m[2]=M[2]; m[6]=M[5]; m[10]=M[8]; m[14]=-pinv.z;
+  m[0]=M.m00; m[4]=M.m10; m[8] =M.m20; m[12]=-pinv.x;
+  m[1]=M.m01; m[5]=M.m11; m[9] =M.m21; m[13]=-pinv.y;
+  m[2]=M.m02; m[6]=M.m12; m[10]=M.m22; m[14]=-pinv.z;
   m[3]=0.;   m[7]=0.;   m[11]=0.;   m[15]=1.;
   return m;
 }
@@ -1073,8 +1095,8 @@ std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); retu
 std::istream& operator>>(std::istream& is, ors::Quaternion& x) { x.read(is); return is; }
 std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
 #ifndef MT_ORS_ONLY_BASICS
-std::istream& operator>>(std::istream& is, ors::Body& x){ x.read(is); return is; }
-std::istream& operator>>(std::istream& is, ors::Joint& x){ x.read(is); return is; }
+std::istream& operator>>(std::istream& is, ors::Body& x) { x.read(is); return is; }
+std::istream& operator>>(std::istream& is, ors::Joint& x) { x.read(is); return is; }
 //std::istream& operator>>(std::istream& is, ors::Proxy& x){ x.read(is); return is; }
 #endif
 std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
@@ -1082,8 +1104,8 @@ std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os
 std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
 #ifndef MT_ORS_ONLY_BASICS
-std::ostream& operator<<(std::ostream& os, const ors::Body& x){ x.write(os); return os; }
-std::ostream& operator<<(std::ostream& os, const ors::Joint& x){ x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Body& x) { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const ors::Joint& x) { x.write(os); return os; }
 //std::ostream& operator<<(std::ostream& os, const ors::Proxy& x){ x.write(os); return os; }
 #endif
 
@@ -1340,14 +1362,14 @@ void ors::Mesh::addMesh(const ors::Mesh& mesh2) {
   for(; t<T.d0; t++) {  T(t, 0)+=n;  T(t, 1)+=n;  T(t, 2)+=n;  }
 }
 
-void ors::Mesh::makeConvexHull(){
+void ors::Mesh::makeConvexHull() {
 #ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
 #else
   NICO
 #endif
 }
-  
+
 
 /*!\brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
@@ -1844,7 +1866,7 @@ void ors::Mesh::readFile(const char* filename) {
   //cout <<"reading mesh file '" <<filename <<"' of type '" <<type <<"'" <<endl;
   if(!strcmp(type, "obj")) { readObjFile(filename); loaded=true; }
   if(!strcmp(type, "off")) { readOffFile(filename); loaded=true; }
-  if(!strcmp(type, "ply")) { readPlyFile(filename); loaded=true; }
+  if(!strcmp(type, "ply")) { readPLY(filename); loaded=true; }
   if(!strcmp(type, "tri")) { readTriFile(filename); loaded=true; }
   if(!strcmp(type, "stl")) { readStlFile(filename); loaded=true; }
   if(!loaded) HALT("can't read file type '" <<type <<"'");
@@ -1902,22 +1924,167 @@ void ors::Mesh::readPlyFile(const char* filename) {
   ifstream is;
   MT::open(is, filename);
   uint i, k, nVertices, nFaces;
-  is >>"ply" >>"format ascii 1.0";
-  is >>"element vertex" >>nVertices;
-  is >>"property float32 x" >>"property float32 y" >>"property float32 z";
-  is >>"property float32 nx" >>"property float32 ny" >>"property float32 nz";
-  is >>"element face" >>nFaces;
-  is >>"property list uint8 int32 vertex_indices" >>"end_header";
-  V.resize(nVertices, 3);
-  T.resize(nFaces   , 3);
-  double nx, ny, nz;
-  for(i=0; i<V.d0; i++) {
-    is >>V(i, 0) >>V(i, 1) >>V(i, 2) >>nx >>ny >>nz;
+  MT::String str;
+  is >>"ply" >>"format" >>str;
+  if(str=="ascii") {
+    is >>"1.0";
+    is >>"element vertex" >>nVertices;
+    is >>"property float32 x" >>"property float32 y" >>"property float32 z";
+    is >>"property float32 nx" >>"property float32 ny" >>"property float32 nz";
+    is >>"element face" >>nFaces;
+    is >>"property list uint8 int32 vertex_indices" >>"end_header";
+    V.resize(nVertices, 3);
+    T.resize(nFaces   , 3);
+    double nx, ny, nz;
+    for(i=0; i<V.d0; i++) {
+      is >>V(i, 0) >>V(i, 1) >>V(i, 2) >>nx >>ny >>nz;
+    }
+    for(i=0; i<T.d0; i++) {
+      is >>k >>T(i, 0) >>T(i, 1) >>T(i, 2);
+      CHECK(k==3, "can only read triangles from ply");
+    }
   }
-  for(i=0; i<T.d0; i++) {
-    is >>k >>T(i, 0) >>T(i, 1) >>T(i, 2);
-    CHECK(k==3, "can only read triangles from ply");
+}
+
+void ors::Mesh::writePLY(const char *fn, bool bin) {
+  struct PlyFace { unsigned char nverts;  int *verts; };
+  struct Vertex { float x,  y,  z ;  };
+  uint _nverts = V.d0;
+  floatA Vfloat; copy(Vfloat, V);
+  Vertex *_vertices  = (Vertex*) Vfloat.p;
+  
+  PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
+    {"x", Float32, Float32, offsetof(Vertex,x), 0, 0, 0, 0},
+    {"y", Float32, Float32, offsetof(Vertex,y), 0, 0, 0, 0},
+    {"z", Float32, Float32, offsetof(Vertex,z), 0, 0, 0, 0}
+//    {"nx", Float64, Float64, offsetof( Vertex,nx ), 0, 0, 0, 0},
+//    {"ny", Float64, Float64, offsetof( Vertex,ny ), 0, 0, 0, 0},
+//    {"nz", Float64, Float64, offsetof( Vertex,nz ), 0, 0, 0, 0}
+  };
+  
+  PlyProperty face_props[]  = { /* list of property information for a PlyFace */
+    {"vertex_indices", Int32, Int32, offsetof(PlyFace,verts), 1, Uint8, Uint8, offsetof(PlyFace,nverts)},
+  };
+  
+  PlyFile    *ply;
+  FILE       *fp = fopen(fn, "w");
+  
+  const char  *elem_names[]  = { "vertex", "face" };
+  ply = write_ply(fp, 2, elem_names, bin? PLY_BINARY_LE : PLY_ASCII);
+  
+  /* describe what properties go into the PlyVertex elements */
+  describe_element_ply(ply, "vertex", _nverts);
+  describe_property_ply(ply, &vert_props[0]);
+  describe_property_ply(ply, &vert_props[1]);
+  describe_property_ply(ply, &vert_props[2]);
+//  describe_property_ply(ply, &vert_props[3]);
+//  describe_property_ply(ply, &vert_props[4]);
+//  describe_property_ply(ply, &vert_props[5]);
+
+  /* describe PlyFace properties (just list of PlyVertex indices) */
+  describe_element_ply(ply, "face", T.d0);
+  describe_property_ply(ply, &face_props[0]);
+  
+  header_complete_ply(ply);
+  
+  //-- put vertices
+  put_element_setup_ply(ply, "vertex");
+  for(uint i = 0; i < _nverts; i++)  put_element_ply(ply, (void *) &(_vertices[i]));
+  
+  //-- put tris
+  put_element_setup_ply(ply, "face");
+  int verts[3] ;
+  PlyFace     face ;
+  face.nverts = 3 ;
+  face.verts  = verts ;
+  for(uint i = 0; i < T.d0; i++) {
+    face.verts[0] = T(i,0);
+    face.verts[1] = T(i,1);
+    face.verts[2] = T(i,2);
+    put_element_ply(ply, (void *) &face);
   }
+  
+  close_ply(ply); //calls fclose
+  free_ply(ply);
+}
+
+void ors::Mesh::readPLY(const char *fn) {
+  struct PlyFace {    unsigned char nverts;  int *verts; };
+  struct Vertex {    double x,  y,  z ;  };
+  uint _nverts, _ntrigs;
+  Vertex   *_vertices   ;  /**< vertex   buffer */
+  
+  PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
+    {"x", Float64, Float64, offsetof(Vertex,x), 0, 0, 0, 0},
+    {"y", Float64, Float64, offsetof(Vertex,y), 0, 0, 0, 0},
+    {"z", Float64, Float64, offsetof(Vertex,z), 0, 0, 0, 0}
+//    {"nx", Float64, Float64, offsetof( Vertex,nx ), 0, 0, 0, 0},
+//    {"ny", Float64, Float64, offsetof( Vertex,ny ), 0, 0, 0, 0},
+//    {"nz", Float64, Float64, offsetof( Vertex,nz ), 0, 0, 0, 0}
+  };
+  
+  PlyProperty face_props[]  = { /* list of property information for a PlyFace */
+    {"vertex_indices", Int32, Int32, offsetof(PlyFace,verts), 1, Uint8, Uint8, offsetof(PlyFace,nverts)},
+  };
+  
+  FILE    *fp  = fopen(fn, "r");
+  if(!fp) return ;
+  PlyFile *ply = read_ply(fp);
+  
+  //-- get the number of faces and vertices
+  for(uint i = 0; i < (uint)ply->num_elem_types; ++i) {
+    int elem_count ;
+    char *elem_name = setup_element_read_ply(ply, i, &elem_count);
+    if(equal_strings("vertex", elem_name)) _nverts = elem_count;
+    if(equal_strings("face",   elem_name)) _ntrigs = elem_count;
+  }
+  _vertices  = new Vertex  [_nverts] ;
+  T.resize(_ntrigs,3) ;
+  
+  //-- examine each element type that is in the file (PlyVertex, PlyFace)
+  for(int i = 0; i < ply->num_elem_types; ++i)  {
+    int elem_count ;
+    char *elem_name = setup_element_read_ply(ply, i, &elem_count);
+    
+    if(equal_strings("vertex", elem_name))   {
+      /* set up for getting PlyVertex elements */
+      setup_property_ply(ply, &vert_props[0]);
+      setup_property_ply(ply, &vert_props[1]);
+      setup_property_ply(ply, &vert_props[2]);
+//      setup_property_ply(ply, &vert_props[3]);
+//      setup_property_ply(ply, &vert_props[4]);
+//      setup_property_ply(ply, &vert_props[5]);
+
+      for(uint j = 0; j < _nverts; ++j)  get_element_ply(ply, (void *)(_vertices + j));
+    }
+    else if(equal_strings("face", elem_name))  {
+      /* set up for getting PlyFace elements */
+      /* (all we need are PlyVertex indices) */
+      setup_property_ply(ply, &face_props[0]) ;
+      PlyFace     face ;
+      for(uint j = 0; j < _ntrigs; ++j)   {
+        get_element_ply(ply, (void *) &face);
+        if(face.nverts != 3)
+          HALT("not a triangulated surface: polygon " <<j <<" has " <<face.nverts <<" sides") ;
+          
+        T(j,0) = face.verts[0] ;
+        T(j,1) = face.verts[1] ;
+        T(j,2) = face.verts[2] ;
+        
+        free(face.verts) ;
+      }
+    }
+    else /* all non-PlyVertex and non-PlyFace elements are grabbed here */
+      get_other_element_ply(ply);
+  }
+  
+  close_ply(ply); //calls fclose
+  free_ply(ply);
+  
+  //-- copy to mesh
+  doubleA Verts((double*)_vertices, _nverts*3);
+  V.takeOver(Verts);
+  V.reshape(V.N/3,3);
 }
 
 void ors::Mesh::readStlFile(const char* filename) {
@@ -2446,6 +2613,7 @@ void ors::Body::read(std::istream& is) {
   dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(shapes(0)->color, dval, 3*sizeof(double));
   sval=anyListGet<MT::String>(ats, "rel", 1);  if(sval) shapes(0)->rel.setText(*sval);
   sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) shapes(0)->mesh.readFile(*sval);
+  dval=anyListGet<double>(ats, "meshscale", 1); if(dval) shapes(0)->mesh.scale(*dval);
   if(anyListGet<double>(ats, "contact", 0))    shapes(0)->cont=true;
   
   //mass properties
@@ -2484,14 +2652,14 @@ ors::Shape::Shape() { reset(); }
 ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
 
 ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
-    reset();
-    if(copyShape) *this = *copyShape;
-    index=G.shapes.N;
-    G.shapes.append(this);
-    body=b;
-    b->shapes.append(this);
-    ibody=b->index;
-  }
+  reset();
+  if(copyShape) *this = *copyShape;
+  index=G.shapes.N;
+  G.shapes.append(this);
+  body=b;
+  b->shapes.append(this);
+  ibody=b->index;
+}
 
 void ors::Shape::read(std::istream& is) {
   reset();
@@ -2505,8 +2673,8 @@ void ors::Shape::read(std::istream& is) {
   dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(color, dval, 3*sizeof(double));
   dval=anyListGet<double>(ats, "size", 4);     if(dval) memmove(size, dval, 4*sizeof(double));
   dval=anyListGet<double>(ats, "type", 1);     if(dval) type=(ShapeType)((int)*dval);
-  
   sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) mesh.readFile(*sval);
+  dval=anyListGet<double>(ats, "meshscale", 1); if(dval) mesh.scale(*dval);
   if(anyListGet<double>(ats, "contact", 0))    cont=true;
 }
 
@@ -2560,7 +2728,6 @@ ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint) {
   to=t;    ito  =t->index;
   f->outLinks.append(this);
   t-> inLinks.append(this);
-
 }
 
 void ors::Joint::write(std::ostream& os) const {
@@ -2593,10 +2760,12 @@ void ors::Joint::read(std::istream& is) {
   MT::String *sval;
   sval=anyListGet<MT::String>(ats, "A", 1);  if(sval) A.setText(*sval);
   sval=anyListGet<MT::String>(ats, "from", 1); if(sval) A.setText(*sval);
+  dval=anyListGet<double>(ats, "BinvA", 0);  if(dval) B.setInverse(A);
   sval=anyListGet<MT::String>(ats, "B", 1);  if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats, "to", 1); if(sval) B.setText(*sval);
   sval=anyListGet<MT::String>(ats, "Q", 1);  if(sval) Q.setText(*sval);
   sval=anyListGet<MT::String>(ats, "q", 1);  if(sval) Q.setText(*sval);
+  sval=anyListGet<MT::String>(ats, "X", 1);  if(sval) Xworld.setText(*sval);
   dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)((int)*dval); else type=hingeJT;
 }
 
@@ -2618,8 +2787,7 @@ void ors::Graph::init(const char* filename) {
 void ors::Graph::clear() {
   sd=jd=td=0;
   listDelete(proxies);
-  listDelete(joints);
-  listDelete(shapes);
+  listDelete(joints);  listDelete(shapes);
   listDelete(bodies);
 }
 
@@ -2718,6 +2886,24 @@ void ors::Graph::calcBodyFramesFromJoints() {
     }
   }
   calcShapeFramesFromBodies();
+}
+
+void ors::Graph::fillInRelativeTransforms() {
+  Joint *e;
+  uint i;
+  ors::Transformation f;
+  for_list(i, e, joints) {
+    if(!e->Xworld.isZero() && e->A.isZero() && e->B.isZero()){
+      e->A.setDifference(e->from->X, e->Xworld);
+      e->B.setDifference(e->Xworld, e->to->X);
+      ors::Transformation t=e->from->X;
+      t.appendTransformation(e->A);
+      cout <<e->from->X <<e->Xworld <<e->to->X <<endl;
+      cout <<t;
+      t.appendTransformation(e->B);
+      cout <<t <<endl;
+    }
+  }
 }
 
 void ors::Graph::calcShapeFramesFromBodies() {
@@ -3180,7 +3366,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   if(Qlin.N) {
     CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
     q = Qlin*_q + Qoff;
-    if(&_v){ v = Qlin*_v;  v.reshape(v.N); }
+    if(&_v) { v = Qlin*_v;  v.reshape(v.N); }
   } else {
     q=_q;
     if(&_v) v=_v;
@@ -3863,16 +4049,17 @@ void ors::Graph::read(std::istream& is) {
   }
   is.clear();
   graphMakeLists(bodies, joints);
+  fillInRelativeTransforms();
 }
 
-void ors::Graph::writePlyFile(const char* filename) const{
+void ors::Graph::writePlyFile(const char* filename) const {
   ofstream os;
   MT::open(os, filename);
   uint nT=0,nV=0;
   uint i,j;
   ors::Shape *s;
   ors::Mesh *m;
-  for_list(i,s,shapes){ nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
+  for_list(i,s,shapes) { nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
   
   os <<"\
 ply\n\
@@ -3891,10 +4078,10 @@ end_header\n";
   uint k=0;
   ors::Transformation t;
   ors::Vector v;
-  for_list(i,s,shapes){
+  for_list(i,s,shapes) {
     m = &s->mesh;
     t = s->X;
-    if(m->C.d0!=m->V.d0){
+    if(m->C.d0!=m->V.d0) {
       m->C.resizeAs(m->V);
       for(j=0; j<m->C.d0; j++) { m->C(j, 0)=s->color[0]; m->C(j, 1)=s->color[1]; m->C(j, 2)=s->color[2]; }
     }
@@ -3907,7 +4094,7 @@ end_header\n";
     k+=j;
   }
   uint offset=0;
-  for_list(i,s,shapes){
+  for_list(i,s,shapes) {
     m=&s->mesh;
     for(j=0; j<m->T.d0; j++) {
       os <<"3 " <<offset+m->T(j, 0) <<' ' <<offset+m->T(j, 1) <<' ' <<offset+m->T(j, 2) <<endl;
@@ -3922,7 +4109,7 @@ void ors::Graph::reportProxies(std::ostream *os) {
   int a, b;
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   ors::Proxy *p;
-  for_list(i,p,proxies){
+  for_list(i,p,proxies) {
     a=p->a;
     b=p->b;
     (*os)

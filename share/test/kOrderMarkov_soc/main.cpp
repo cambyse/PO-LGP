@@ -18,7 +18,7 @@ int main(int argn,char** argv){
  
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
-  pos->y_target = arr(sys.getOrs().getBodyByName("target")->X.pos.p,3);
+  pos->y_target = ARRAY(sys.getOrs().getBodyByName("target")->X.pos);
   
   TaskVariable *col = new DefaultTaskVariable("collision", sys.getOrs(), collTVT,0,0,0,0,ARR(.15));
   col->y_prec=1e-0;

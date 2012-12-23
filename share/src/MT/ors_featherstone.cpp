@@ -477,7 +477,7 @@ void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I) {
   skew(C, c);
   //C = [ 0, -c(3), c(2); c(3), 0, -c(1); -c(2), c(1), 0 ];
   arr II;
-  II.referTo(&I.p0, 9);
+  II.referTo(&I.m00, 9);
   II.reshape(3, 3);
   
   rbi.setBlockMatrix(II + m*C*~C, m*C, m*~C, m*eye(3));

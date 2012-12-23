@@ -272,6 +272,7 @@ endif
 
 ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
+CPATH := $(CPATH):$(BASE)/extern/Lewiner
 LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
 endif

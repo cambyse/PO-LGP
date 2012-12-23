@@ -33,7 +33,7 @@ namespace ors {
 //! shape and joint type enums
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
 enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
-enum BodyType { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
+enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 
 //===========================================================================
 //! a 3D vector (double[3])
@@ -43,8 +43,6 @@ struct Vector {
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
-//  double& operator()(int);
-//  const double& operator()(int) const;
   double *p() { return &x; }
 
   void set(double, double, double);
@@ -75,13 +73,11 @@ struct Vector {
 //===========================================================================
 //! a matrix in 3D (double[9])
 struct Matrix {
-  double p0, p1, p2, p3 ,p4 ,p5 ,p6 ,p7 ,p8;
+  double m00, m01, m02, m10, m11, m12, m20, m21, m22;
   
   Matrix() {};
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
-//  double& operator()(int, int);
-//  const double& operator()(int, int) const;
-  double *p() { return &p0; }
+  double *p() { return &m00; }
 
   void set(double* m);
   void setZero();
@@ -138,6 +134,7 @@ struct Quaternion {
   Vector& getX(Vector& Rx) const;
   Vector& getY(Vector& Ry) const;
   Vector& getZ(Vector& Rz) const;
+  Matrix getMatrix() const;
   double* getMatrix(double* m) const;
   double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
   double* getMatrixGL(double* m) const;  //in OpenGL format: transposed 4x4 memory storage
@@ -251,6 +248,8 @@ struct Mesh {
   void readStlFile(const char* filename);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
+  void writePLY(const char *fn, bool bin );
+  void readPLY(const char *fn );
   void glDraw();
 };
 
@@ -435,7 +434,8 @@ struct Graph {
   void clearJointErrors();
   void invertTime();
   void computeNaturalQmetric(arr& W);
-  
+  void fillInRelativeTransforms();
+
   //!@name kinematics & dynamics
   void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
   void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
@@ -571,7 +571,7 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 
 inline arr ARRAY(const ors::Vector& v) {     return arr(&v.x, 3); }
 inline arr ARRAY(const ors::Quaternion& q) { return arr(&q.w, 4); }
-inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.p0, 9); }
+inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 
 
 //===========================================================================

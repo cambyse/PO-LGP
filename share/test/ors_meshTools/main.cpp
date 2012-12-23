@@ -118,6 +118,7 @@ int main(int argn, char** argv){
     cout <<"saving..." <<endl;
     mesh.writeTriFile(STRING(file<<"_x.tri"));
     mesh.writeOffFile(STRING(file<<"_x.off"));
+    mesh.writePLY(STRING(file<<"_x.ply"), true);
   }
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;

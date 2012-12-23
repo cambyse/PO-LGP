@@ -8,7 +8,12 @@ Usage:  ors_edit <ors-filename>\n\
 Iterate between editing the file (with an external editor) and\n\
 viewing the model in the OpenGL window (after pressing ENTER).\n\
 \n\
-Use the number keys 1 2 3 4 5 to toggle display options.\n";
+Use the number keys 1 2 3 4 5 to toggle display options.\n\
+\n\
+enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST }; \n\
+enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };\n\
+enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };\n\
+";
 
 void drawBase(void*){
   glStandardLight(NULL);

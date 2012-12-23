@@ -227,11 +227,11 @@ void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
   CHECK(swift.INDEXshape2swift.N==C.shapes.N,"the number of shapes has changed");
   ors::Shape *s;
   uint k;
-  arr rot(3, 3);
+  ors::Matrix rot;
   for_list(k, s, C.shapes) {
-    s->X.rot.getMatrix(rot.p);
+    rot = s->X.rot.getMatrix();
     if(swift.INDEXshape2swift(s->index)!=-1) {
-      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p, s->X.pos.p());
+      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
       if(!s->cont) swift.scene->Deactivate(swift.INDEXshape2swift(s->index));
       //else         swift.scene->Activate( swift.INDEXshape2swift(s->index) );
     }

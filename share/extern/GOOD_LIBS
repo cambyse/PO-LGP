@@ -1,0 +1,8 @@
+Notes on useful libraries:
+
+** MAP inference using LP relaxation:
+
+David Sontag
+mplp
+http://cs.nyu.edu/~dsontag/code/mplp_ver2.tgz
+

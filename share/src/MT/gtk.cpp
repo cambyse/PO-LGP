@@ -54,6 +54,23 @@ struct GtkThread:Thread{
 };
 
 void gtkCheckInitialized(){
+#if 0
+  static bool isInitialized=false;
+  if(!isInitialized){
+    isInitialized=true;
+    int argc=1;
+    char **argv = new char*[1];
+    argv[0] = (char*)"x.exe";
+
+    XInitThreads();
+    g_thread_init(NULL);1
+    gdk_threads_init();
+//    gdk_threads_enter();
+    gtk_init(&argc, &argv);
+    gtk_gl_init(&argc, &argv);
+    glutInit(&argc, argv);
+  }
+#else
   static Mutex m;
   if(!global_gtkThread){
     m.lock();
@@ -75,6 +92,7 @@ void gtkCheckInitialized(){
     }
     m.unlock();
   }
+#endif
 }
 
 

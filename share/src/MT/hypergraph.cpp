@@ -22,12 +22,12 @@
 void Element::write(std::ostream& os) const {
   uint i;  Element *e;
   if(type.N) os <<type <<' ';
-  if(name.N) os <<name <<' '; else os <<id <<' ';
-  if(links.N){
+  if(name.N) os <<name <<' '; else os <<index <<' ';
+  if(parents.N){
     os <<" (";
-    for_list(i, e, links){
+    for_list(i, e, parents){
       if(i) os <<' ';
-      if(e->name.N) os <<e->name; else os <<e->id;
+      if(e->name.N) os <<e->name; else os <<e->index;
     }
     os <<") ";
   }
@@ -51,9 +51,9 @@ void Element::read(std::istream& is, ElementL& list){
       if(!link.N) break;
       e=listFindByName(list, link);
       if(e){ //sucessfully found
-        links.append(e);
-        linksIds.append(e->id);
-        e->elemof[j].append(this);
+        parents.append(e);
+//        linkIds.append(e->index);
+        e->parentOf[j].append(this);
       }else{//this element is not known!!
         HALT("line:" <<MT::lineCount <<" reading element '" <<name <<"': unknown " <<j <<"th linked element '" <<link <<"'"); //DON'T DO THIS YET
         //check if this is a derived element (notationally: new_name = old_name+'one_char')
@@ -66,11 +66,11 @@ void Element::read(std::istream& is, ElementL& list){
           e2->name=link;
           e2->type=e->type;
           e2->ats=e->ats;
-          e2->id=list.N;
+          e2->index=list.N;
           list.append(e2);
-          links.append(e2);
-          linksIds.append(e2->id);
-          e2->elemof[j].append(this);
+          parents.append(e2);
+//          linkIds.append(e2->index);
+          e2->parentOf[j].append(this);
         }else{
           HALT("reading element '" <<name <<"': unknown " <<j <<"th contained element '" <<link <<"'");
         }
@@ -87,7 +87,7 @@ void Element::read(std::istream& is, ElementL& list){
 
 
 ElementL& HyperGraph::getOutEdges(uint i){
-  return elem(i)->elemof[0];
+  return elem(i)->parentOf[0];
 }
 
 Element *HyperGraph::add(const uintA& tuple){
@@ -95,33 +95,33 @@ Element *HyperGraph::add(const uintA& tuple){
   uint i;
   Element *e = new Element;
   if(unused.N){
-    e->id=unused.popLast();
-    elem(e->id)=e;
+    e->index=unused.popLast();
+    elem(e->index)=e;
     
   }else{
-    e->id=N;
+    e->index=N;
     append(e); }
-  e->linksIds=tuple;
+//  e->linkIds=tuple;
   //N[tuple.N]++;
   for(i=0; i<tuple.N; i++){
-    elem(tuple(i))->elemof[i].append(e);
-    e->links.append(elem(tuple(i)));
+    elem(tuple(i))->parentOf[i].append(e);
+    e->parents.append(elem(tuple(i)));
   }
   return e;
 }
 
 void HyperGraph::del(Element *e){
-  CHECK(elem(e->id)==e, "this is not an element of the hypergraph")
+  CHECK(elem(e->index)==e, "this is not an element of the hypergraph")
   uint i;
   for(i=0; i<maxDegree; i++){
-    if(e->elemof[i].N){
-      HALT("can't delete element " <<e->id <<" - it is containted in others:\n");
+    if(e->parentOf[i].N){
+      HALT("can't delete element " <<e->index <<" - it is containted in others:\n");
       e->write(cerr);
     }
   }
   //N[e->links.N]--;
-  unused.append(e->id);
-  elem(e->id) = NULL;
+  unused.append(e->index);
+  elem(e->index) = NULL;
   delete e;
 }
 
@@ -154,10 +154,10 @@ void HyperGraph::read(std::istream &is){
     if(c=='#'){ MT::skipLine(is); continue; }
     e=new Element;
     e->read(is, *this);
-    e->id=N;
+    e->index=N;
     append(e);
     if(!is.good()){
-      MT_MSG("reading failed at " <<e->id <<"th element");
+      MT_MSG("reading failed at " <<e->index <<"th element");
       break;
     }
   }
