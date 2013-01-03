@@ -95,7 +95,7 @@ fi
 # cd $DIR_GIT/share/extern/libcolorseg/src/
 
 
-echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
+echo "Building symbolic links in " $DIR_GIT/share/extern/ "to libraries
 directory " $DIR_EXTERNAL_LIBS "..."
 
 cd $DIR_GIT
