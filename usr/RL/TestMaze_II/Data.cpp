@@ -10,18 +10,18 @@ using std::make_tuple;
 
 
 const char*          Data::action_strings[5] = { " STAY", "   UP", " DOWN", " LEFT", "RIGHT" };
-const unsigned long  Data::action_n          = NUMBER_OF_ACTIONS;
-const unsigned long  Data::maze_x_dim        = 2;
-const unsigned long  Data::maze_y_dim        = 2;
-const unsigned long  Data::k                 = maze_x_dim+maze_y_dim-2;
-const unsigned long  Data::state_n           = maze_x_dim*maze_y_dim;
+const Data::size_t   Data::action_n          = NUMBER_OF_ACTIONS;
+const Data::size_t   Data::maze_x_dim        = 3;
+const Data::size_t   Data::maze_y_dim        = 3;
+const Data::size_t   Data::k                 = maze_x_dim+maze_y_dim-2;
+const Data::size_t   Data::state_n           = maze_x_dim*maze_y_dim;
 const Data::reward_t Data::min_reward        = 0.0;
 const Data::reward_t Data::max_reward        = 1.0;
 const Data::reward_t Data::reward_increment  = 1.0;
-const unsigned long  Data::reward_n          = floor((max_reward-min_reward)/reward_increment)+1;
-const unsigned long  Data::input_n           = pow(action_n*state_n*reward_n,k+1);
-const unsigned long  Data::output_n          = state_n*reward_n;
-const unsigned long  Data::k_mdp_state_n     = pow(action_n*state_n*reward_n,k);
+const Data::size_t   Data::reward_n          = floor((max_reward-min_reward)/reward_increment)+1;
+const Data::size_t   Data::input_n           = pow(action_n*state_n*reward_n,k+1);
+const Data::size_t   Data::output_n          = state_n*reward_n;
+const Data::size_t   Data::k_mdp_state_n     = pow(action_n*state_n*reward_n,k);
 
 Data::OutputIterator::OutputIterator(): current_state(), current_reward(min_reward) {}
 
@@ -82,7 +82,7 @@ Data::reward_t Data::reward_from_idx(reward_idx_t idx) {
 
 Data::input_data_idx_t Data::idx_from_input(input_data_t input_data) {
     input_data_idx_t idx = 0;
-    unsigned long block_size = 1;
+    size_t block_size = 1;
     int counter = k;
     while(counter>=0) {
 
@@ -104,7 +104,7 @@ Data::input_data_idx_t Data::idx_from_input(input_data_t input_data) {
 Data::episode_t Data::input_from_idx(input_data_idx_t idx) {
     episode_t episode(k+1);
     episode_iterator_t input_data = episode.begin();
-    unsigned long block_size = pow(action_n*state_n*reward_n,k+1);
+    size_t block_size = pow(action_n*state_n*reward_n,k+1);
     while(input_data!=episode.end()) {
 
         block_size /= action_n;
@@ -140,7 +140,7 @@ Data::output_data_idx_t Data::idx_from_output(output_data_t output_data) {
 Data::k_mdp_state_idx_t Data::idx_from_k_mdp_state(k_mdp_state_t k_mdp_state) {
     k_mdp_state_t::iterator k_mdp_state_iterator = --k_mdp_state.end();
     k_mdp_state_idx_t idx = 0;
-    unsigned long block_size = 1;
+    size_t block_size = 1;
     int counter = k;
     while(counter>0) {
 
@@ -162,7 +162,7 @@ Data::k_mdp_state_idx_t Data::idx_from_k_mdp_state(k_mdp_state_t k_mdp_state) {
 Data::k_mdp_state_t Data::k_mdp_state_from_idx(k_mdp_state_idx_t idx) {
     k_mdp_state_t k_mdp_state(k);
     k_mdp_state_t::iterator k_mdp_state_iterator = k_mdp_state.begin();
-    unsigned long block_size = pow(action_n*state_n*reward_n,k);
+    size_t block_size = pow(action_n*state_n*reward_n,k);
     while(k_mdp_state_iterator!=k_mdp_state.end()) {
 
         block_size /= action_n;
