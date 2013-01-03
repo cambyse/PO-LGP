@@ -112,11 +112,10 @@ echo "\n\n\n+++ make-config +++\n\n"
 
 echo "Creating make-config (specify individual profiles here)..."
 
-cd share/
-mv make-config make-config.BAK
-mv make-config.default make-config
+cd $DIR_GIT/share/
+cp make-config make-config.BAK
+cp make-config.default make-config
 cd $DIR_GIT
-
 
 
 # ----------------------------
