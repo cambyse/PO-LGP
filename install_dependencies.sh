@@ -32,6 +32,7 @@ doxygen \
 libgtkglext1-dev \
 tcl8.5-dev\
 tk8.5-dev\
+graphviz-dev\
 \
 regexxer \
 meld
