@@ -9,7 +9,7 @@ gcc \
 gfortran \
 git-core \
 gnuplot \
-graphviz-dev\
+graphviz-dev \
 libann-dev \
 libcv-dev \
 libcvaux-dev \
@@ -30,8 +30,8 @@ libx11-dev \
 libxi-dev \
 libxmu-dev \
 make \
-meld
+meld \
 realpath \
 regexxer \
-tcl8.5-dev\
-tk8.5-dev\
+tcl8.5-dev \
+tk8.5-dev \
