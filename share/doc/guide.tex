@@ -539,7 +539,7 @@ LINK to my notes on the CV system
 \subsection{git}\label{secGit}
 
 Check the \textbf{man pages} of git and git subcommands. Usually,
-|git foo help| is synonym for |man git foo|.
+|git help foo| is synonym for |man git foo|.
 
 As a preliminary to using git, please take an hour to read the two
 \textbf{tutorials} on git provided in the man pages. In your terminal
@@ -550,6 +550,7 @@ systems there might be better approaches to introduce git, but at any
 rate, these two tutorials give basic insight into git's concepts.
 
 For deeper understanding |man gitcore-tutorial| is your friend.
+There are also countless tutorials on the internet.
 
 
 \subsubsection{Getting git started}
@@ -560,6 +561,13 @@ For deeper understanding |man gitcore-tutorial| is your friend.
 
 \item Optional: define the ssh key of your local machine in maserati
 (more details below) (only for convenience)
+\item Introduce yourself to git. The email should match the redmine email so that redmine can identify the commits!
+\begin{code}
+\begin{verbatim}
+git config --global user.name "Your Name"
+git config --global user.email "your_email@whatever.com"
+\end{verbatim}
+\end{code}
 
 \item Get git clone
 \begin{code}
