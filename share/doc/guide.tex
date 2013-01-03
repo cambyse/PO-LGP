@@ -1,5 +1,5 @@
 \input{guides/doc.sty}
- 
+
 \title{The MLR Guide}
 \author{Marc Toussaint}
 
@@ -20,39 +20,52 @@ This is the central hub for information. Goals of this document:
 \end{itemize}
 
 
-\subsection{Guide to MLR coding}
+\subsection{Guide to MLR coding / Getting Started}
 
 \begin{itemize}
-\item Set up \textbf{accounts} on achtauge and redmine
-   (https://maserati.mi.fu-berlin.de/redmine/projects/mlr)
+\item Set up an \textbf{account} for redmine
+   (https://maserati.mi.fu-berlin.de/redmine/projects/mlr).
+   Contact Marc for this.
 
-\item The default directory layout:
+\item Install git :-) Detail in Sec.~\ref{secGit}.
+\begin{code}
+\begin{verbatim}
+sudo apt-get install git
+\end{verbatim}
+\end{code}
+
+\item Optional: set up your SSH-key for git on Maserati via Wiki; described in
+detail in Sec.~\ref{secGit}
+
+\item The default directory layout (Use it! Otherwise it gets tricky!):
 \bi
 \item |~/git/<dir>| for your git repository (e.g., |~/git/mlr| or
 |~/git/one|)
 \item |~/lib| for your external lib installations
 \ei
-
-\item Install the following \textbf{Ubuntu packages}:
 \begin{code}
 \begin{verbatim}
-liblapack-dev
-freeglut3-dev
-libqhull-dev
-libf2c2-dev
-libann-dev
-libplib-dev
-gnuplot
-meld
-libdc1394-22-dev
+mkdir ~/git
+mkdir ~/lib
 \end{verbatim}
 \end{code}
 
+\item \textbf{Clone MLR git repository}
+\begin{code}
+\begin{verbatim}
+cd ~/git
+# clone via https
+git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr
+# OR clone via ssh
+git clone git@maserati.mi.fu-berlin.de:mlr
+\end{verbatim}
+\end{code}
 
-\item Download the \textbf{tar-Ball} with all other required
-\textbf{external libs} (don't extract for now!)
+\item Install the \textbf{Ubuntu dependencies} by executing |install_dependencies.sh| in the main folder of the MLR project (|~/git/mlr/install_dependencies.sh|).
 
-|mlrLibs.tar.gz|, in Wiki (Maserati), Main, MLR, Documents
+\item Download the required \textbf{external libs} (|mlrLibs.tgz|) from Maserati |https://maserati.mi.fu-berlin.de/redmine/documents/29| into the mlr root folder.
+Redmine, Documents, mlrLibs.
+Don't extract it for now!
 
 The external libs are:
 \begin{code}
@@ -75,33 +88,12 @@ When using Ubuntu, packages can be obtained from
 |http://packages.ros.org/ros/ubuntu/|. For convenience, the gpg-key
 is in the root folder.
 
-
-\item Optional: set up your SSH-key in Maserati via Wiki; described in
-detail in Sec.~\ref{secGit}
-
-
-\item Install git :-)
-
-
-\item Create your \textbf{git repository} clone
-\begin{code}
-\begin{verbatim}
-cd ~/git
-git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr <dir>
-OR
-git clone git@maserati.mi.fu-berlin.de:mlr <dir>
-\end{verbatim}
-\end{code}
-This puts a clone in the directory |<dir>|. See section \ref{secGit} on
-how to use git.
-
-
-\item \textbf{Run INSTALL script} in the repository root folder. You
-need to provide the tarball with the external libs.
+\item Run the \textbf{INSTALL script} in the repository root folder.
+  It automatically selects the tarball in the root folder.
 \begin{code}
 \begin{verbatim}
 ./INSTALL
-or
+# or specify the localtion of the file
 FILE_TARBALL=mlrLibs.tar.gz ./INSTALL
 \end{verbatim}
 \end{code}
@@ -112,10 +104,8 @@ This script does several things for you:
 \item It makes \textbf{external} libs in a lib-directory and builds
 symbolic links to them in |git/share/extern|.
 
-
 \item Builds a \textbf{make-config} file. Here, you can specify your
 individual compiler options (e.g., in-/excluding libs).
-
 
 \item Makes all \textbf{MLR-libs} in |share/lib/|. These are:
 \begin{code}
@@ -129,21 +119,20 @@ librelational
 \end{verbatim}
 \end{code}
 
-If problems occur, try to comment the following lines in the
-|src/MT/Makefile|:
-\begin{code}
-\begin{verbatim}
-#FREEGLUT = 1
-#ANN = 1
-#LAPACK = 1
-\end{verbatim}
-\end{code}
-This reduces functionality of the code, but should at least compile.
-
+% FIXME the path of the makefile is wrong.
+% If problems occur, try to comment the following lines in the
+% |src/MT/Makefile|:
+% \begin{code}
+% \begin{verbatim}
+% #FREEGLUT = 1
+% #ANN = 1
+% #LAPACK = 1
+% \end{verbatim}
+% \end{code}
+% This reduces functionality of the code, but should at least compile.
 
 
 \item Makes the \textbf{tests} in |share/test/|
-
 
 \item Try |test/array/x.exe|
 
@@ -153,7 +142,7 @@ This reduces functionality of the code, but should at least compile.
 
 
 
-\subsubsection{Guide to the Makefile system}
+\subsubsection{Guide to the Makefile System}
 
 \begin{itemize}
 
@@ -305,9 +294,9 @@ headers will be smaller, so the user will only see the relevant data. Second, we
 not need to include or forward classes in the primary one, which makes
 compilation faster. And third, if we change internal variables in the private
 class, the primary header stays the same. All files, which include this header,
-do not have to be recompiled either. 
+do not have to be recompiled either.
 
-see also \ref{pimpl example} and  
+see also \ref{pimpl example} and
 
 \url{http://c2.com/cgi/wiki?PimplIdiom}\newline
 \url{http://en.wikipedia.org/wiki/Opaque_pointer}
@@ -315,8 +304,8 @@ see also \ref{pimpl example} and
 In principle, the interface initializes all neccessary processes, connects
 the inputs and outputs together, and finally starts every process as a seperate
 thread. This is provided by the ``open()'' command. It will automatically load
-all the standard processes like the vision, planner and controller. You can also 
-specify processes manually via the MT.cfg config file. 
+all the standard processes like the vision, planner and controller. You can also
+specify processes manually via the MT.cfg config file.
 \subsubsection{Execution Motions}
 The core of the interface is the controller, which is responsible for
 executing trajectories on the robot, stopping the motors or moving the hand.
@@ -328,7 +317,7 @@ specific position, you could define that there is a TV for reaching this point, 
 TV to avoid motor limits and a TV to follow the shortest path. We have already
 defined several releant tasks. (see robot.h/.cpp for
 implementation details) The list below shows our set of tasks and what the
-should accomplish. 
+should accomplish.
 \begin{itemize}
 \item BasicRobotTask(DoNothing): Deactivate all TV's
 \item BasicRobotTask(Stop): Set TV's, so that all motors stop immediately
@@ -354,7 +343,7 @@ should accomplish.
 
 This is a standard Array lib -- just like many others. (It actually
 evolved from a lib started in Bochum, 15 years ago...) The main design
-goals are: 
+goals are:
 
 \begin{itemize}
 \item compatibility with typical mathematical notation when coding
@@ -588,7 +577,6 @@ git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
 \end{itemize}
 
 
-
 \subsubsection{Setting up maserati as git server}
 
 Most steps are only required if your local git used a different git
@@ -596,7 +584,7 @@ server before.
 \\
 First type
 \begin{verbatim}
-git remote -v 
+git remote -v
 \end{verbatim}
 to see which git server you use. In case it is not maserati you should
 change this!
@@ -615,13 +603,13 @@ computer, here we use gedit for example:
 \begin{verbatim}
 cd .ssh    // in home-folder of your local machine
 gedit id_rsa.pub
-\end{verbatim} 
+\end{verbatim}
 copy everything for key value and activate it on the server
 \item type in your computer to add maserati as server:
 \begin{verbatim}
-git remote add maserati git@maserati.mi.fu-berlin.de:mlr 
+git remote add maserati git@maserati.mi.fu-berlin.de:mlr
 \end{verbatim}
-\item 
+\item
 go to your main git folder and type
 \begin{verbatim}
 gedit .git/config
@@ -692,14 +680,14 @@ git update-index --assume-unchanged <files>
 \begin{itemize}
 
 
-\item{init} 
+\item{init}
 
 - |git init|  just inits the |\$PWD|, nothing added, nothing
 
 - create central repo for current development\begin{enumerate}
-	
+
 	\item at home, |cd ~/dev/mpcdzen|, |git init|
-	\item |git add mpcdzen.sh mpcdzen.conf|  
+	\item |git add mpcdzen.sh mpcdzen.conf|
 	\item |git commit -m initial|
 	\item |ssh my.server.there| go to where my 'central' repos are.
 	\item |cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen|
@@ -719,10 +707,10 @@ git update-index --assume-unchanged <files>
 
 - |git commit -a | : add all modified tracked files from the *whole
   working copy* and commit
-  	
+
 
 \item{diff}
-  	
+
 - |git diff| : how current files and HEAD differ
 
 - |git diff --cached | : diff staged files against HEAD
@@ -734,7 +722,7 @@ git update-index --assume-unchanged <files>
 
 - if |file| is not tracked you can use .gitignore or .git/info/exclude
   to tell git not to take care of it. If it is already tracked, this is
-  the way to say the same: |git update-index --assume-unchanged ../file|  
+  the way to say the same: |git update-index --assume-unchanged ../file|
 
 \item{remote}
 
@@ -745,14 +733,14 @@ git update-index --assume-unchanged <files>
 \item{refs' naming}
 
 - |HEAD\^| addresses the parent of |HEAD|, e.g., assuming I've
-  merged 2 branches and committed 3 times on the current branch, 
+  merged 2 branches and committed 3 times on the current branch,
   %
   |git show HEAD\^2| shows the second branch before merging. In
   other words, direct after merge and commit, the parents of HEAD are
-  |HEAD\^1|  and |HEAD\^2|  
-   
+  |HEAD\^1|  and |HEAD\^2|
+
    illustration from man git-rev-parse:
-   
+
    \begin{code} \begin{verbatim}
            G   H   I   J
             \ /     \ /
@@ -780,7 +768,7 @@ git update-index --assume-unchanged <files>
 
 \item{fork file with history}
 
-git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is 
+git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is
 \begin{code}\begin{verbatim}
 cp a b
 git add b
@@ -804,7 +792,7 @@ git config --global http.proxy http://proxydomain:proxyport
 \end{verbatim} \end{code}
 and to inspect a configured option:
 \begin{code}\begin{verbatim}
-git config --get http.proxy 
+git config --get http.proxy
 \end{verbatim} \end{code}
 
 \end{itemize}
@@ -845,7 +833,7 @@ dump all possible info (git branch -a, git status, git info etc..)
 
 \paragraph{Merging individual local branch with remote branch}
 
-Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge 
+Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge
 with the \verb+master+ branch in the remote repository. Here, \verb+origin+ is a variable
 for the remote git repository server (i.e., maserati in our case).
 \begin{verbatim}
@@ -1160,7 +1148,7 @@ the most-penetrating two points of convex shapes.
   motion. Ideally there should be parallel planners optimizing already
   future motions $\to$ Dmitry's keyframe approach.
 
-\item Make a Variable out of the TaskVariableList!! 
+\item Make a Variable out of the TaskVariableList!!
 
 \item All variables should have setters and getters of the format
 
