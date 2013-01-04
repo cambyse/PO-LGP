@@ -1026,6 +1026,8 @@ void glColor(float, float, float, float) { NICO; }
 void glDrawDiamond(float, float, float, float, float, float) { NICO; }
 // void glStandardLight(void*) { NICO; }   // TOBIAS: das hier wird doch schon ueber opengl_void.cxx definiert
 void glStandardScene(void*) { NICO; };
+void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom) {NICO}
+void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {NICO}
 #endif
 
 

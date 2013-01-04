@@ -191,10 +191,17 @@ void skipOne(std::istream& is) {
 }
 
 //! tell you about the next char (after skip()) but puts it back in the stream
-char peerNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
+char getNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
   char c;
   skip(is, skipchars, skipCommentLines);
   is.get(c);
+  if(!is.good()) return 0;
+  return c;
+}
+
+//! tell you about the next char (after skip()) but puts it back in the stream
+char peerNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
+  char c=getNextChar(is, skipchars, skipCommentLines);
   if(!is.good()) return 0;
   is.putback(c);
   return c;
@@ -684,7 +691,7 @@ void MT::String::write(std::ostream& os) const { if(N) os <<p; }
 
 /*!\brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */
-void MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol) {
+uint MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol) {
   if(!skipSymbols) skipSymbols=readSkipSymbols;
   if(!stopSymbols) stopSymbols=readStopSymbols;
   if(eatStopSymbol==-1) eatStopSymbol=readEatStopSymbol;
@@ -697,6 +704,7 @@ void MT::String::read(std::istream& is, const char* skipSymbols, const char *sto
   }
   if(c==-1) is.clear();
   if(c!=-1 && !eatStopSymbol) is.putback(c);
+  return N;
 }
 
 

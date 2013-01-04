@@ -24,7 +24,9 @@
 #ifndef MT_ORS_ONLY_BASICS
 #  include "plot.h"
 #endif
-#include "ply.h"
+#ifdef MT_PLY
+#  include <ply/ply.h>
+#endif
 
 #define ORS_NO_DYNAMICS_IN_FRAMES
 
@@ -1946,6 +1948,7 @@ void ors::Mesh::readPlyFile(const char* filename) {
   }
 }
 
+#ifdef MT_PLY
 void ors::Mesh::writePLY(const char *fn, bool bin) {
   struct PlyFace { unsigned char nverts;  int *verts; };
   struct Vertex { float x,  y,  z ;  };
@@ -2086,6 +2089,10 @@ void ors::Mesh::readPLY(const char *fn) {
   V.takeOver(Verts);
   V.reshape(V.N/3,3);
 }
+#else
+void ors::Mesh::writePLY(const char *fn, bool bin ){ NICO }
+void ors::Mesh::readPLY(const char *fn ){ NICO }
+#endif
 
 void ors::Mesh::readStlFile(const char* filename) {
   ifstream is;

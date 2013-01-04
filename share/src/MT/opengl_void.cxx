@@ -34,10 +34,10 @@ struct sOpenGL {
   ors::Quaternion downRot;
 };
 
-void OpenGL::postRedrawEvent(){}
+void OpenGL::postRedrawEvent(bool){}
 void OpenGL::processEvents(){}
 void OpenGL::enterEventLoop(){}
 void OpenGL::exitEventLoop(){}
 void OpenGL::resize(int w,int h){}
-int OpenGL::width(){ return 0; }
-int OpenGL::height(){ return 0; }
+
+void initGlEngine(){}

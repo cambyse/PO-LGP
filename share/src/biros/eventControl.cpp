@@ -2,6 +2,8 @@
 #include "biros.h"
 #include "biros_internal.h"
 
+#ifdef MT_GTK
+
 #include <gtk/gtk.h>
 #include <MT/gtk.h>
 
@@ -71,3 +73,5 @@ extern "C" G_MODULE_EXPORT void eventControl_next(GtkWidget* caller){
   s->gtkUpdate();
   gtkLeaveCallback();
 }
+
+#endif

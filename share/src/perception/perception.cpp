@@ -442,11 +442,7 @@ byteA evidence2RGB(const floatA& evidence){
   return tmp;
 }
 
-#else //MT_OPENCV
-
-NICO
-
-#endif
+#endif //MT_OPENCV
 
 #ifdef PCL
 // Pointcloud stuff
@@ -477,6 +473,7 @@ VariableL newPointcloudVariables() {
 // process creators
 //
 
+#ifdef MT_OPENCV
 Process *newOpencvCamera(Image& image){
   return new OpencvCamera(image);
 }
@@ -508,3 +505,6 @@ Process* newSURFer(Image& grayImage, SURFfeatures& features){
 Process* newHoughLineFilter(Image& grayImage, HoughLines& houghLines){
   return new HoughLineFilter(grayImage, houghLines);
 }
+
+#else
+#endif

@@ -322,6 +322,8 @@ dlauum = multiply L'*L
 #include "array.h"
 void blas_MM(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
 void blas_MsymMsym(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
+void blas_A_At(arr& X, const arr& A) {NICO}
+void blas_At_A(arr& X, const arr& A) {NICO}
 void lapack_cholesky(arr& C, const arr& A) {NICO;}
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A) {NICO};
 void lapack_LU(arr& LU, const arr& A) {NICO};

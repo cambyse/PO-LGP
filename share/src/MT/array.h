@@ -39,8 +39,8 @@
 #define for_elem(T, e, X)   for(T *e=X.p+X.N;(e--)!=X.p;)
 #define for_list(i, e, X) for(i=0;i<X.N && ((e=X(i)) || true);i++)
 #define for_list_rev(i, e, X) for(i=X.N;i-- && ((e=X(i)) || true);)
-#define for_list_(e, X) for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
-#define for_list_rev_(e, X) for(uint LIST_COUNT_REV=X.N;LIST_COUNT_REV-- && ((e=X(LIST_COUNT_REV)) || true);)
+#define for_list_(T, e, X) T *e=NULL;  for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
+#define for_list_rev_(T, e, X) for(uint LIST_COUNT_REV=X.N, T *e=NULL;LIST_COUNT_REV-- && ((e=X(LIST_COUNT_REV)) || true);)
 
 #define ARR ARRAY<double> //!< write ARR(1., 4., 5., 7.) to generate a double-Array
 #define TUP ARRAY<uint> //!< write TUP(1, 2, 3) to generate a uint-Array
