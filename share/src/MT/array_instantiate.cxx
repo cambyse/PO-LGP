@@ -51,6 +51,8 @@ template std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 template void transpose(MT::Array<T>& x, const MT::Array<T>& y);
 template void inverse2d(MT::Array<T>& invA, const MT::Array<T>& A);
 
+template T absMax(const MT::Array<T>& v);
+template T absMin(const MT::Array<T>& v);
 template T entropy(const MT::Array<T>& v);
 template T normalizeDist(MT::Array<T>& v);
 template void makeConditional(MT::Array<T>& P);

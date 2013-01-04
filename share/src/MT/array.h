@@ -138,7 +138,6 @@ template<class T> struct Array {
   void setId(int d=-1);
   void setDiag(const T& scalar, int d=-1);
   void setDiag(const Array<T>& vector);
-  void setSkew(const Array<T>& vector);
   void setBlockMatrix(const Array<T>& A, const Array<T>& B, const Array<T>& C, const Array<T>& D);
   void setBlockMatrix(const Array<T>& A, const Array<T>& B);
   void setBlockVector(const Array<T>& a, const Array<T>& b);
@@ -186,8 +185,6 @@ template<class T> struct Array {
   void copyInto2D(T **buffer) const;
   T& min() const;
   T& max() const;
-  T absMax() const;
-  T absMin() const;
   void minmax(T& minVal, T& maxVal) const;
   uint minIndex() const;
   uint maxIndex() const;
@@ -457,7 +454,7 @@ template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void getDiag(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> MT::Array<T> diag(const MT::Array<T>& x) {  MT::Array<T> y;  y.setDiag(x);  return y;  }
-template<class T> MT::Array<T> skew(const MT::Array<T>& x) {  MT::Array<T> y;  y.setSkew(x);  return y;  }
+template<class T> MT::Array<T> skew(const MT::Array<T>& x);
 template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A);
 
 template<class T> uintA size(const MT::Array<T>& x) { return x.getDim(); }
@@ -493,6 +490,8 @@ template<class T> T product(const MT::Array<T>& v);
 template<class T> T trace(const MT::Array<T>& v);
 template<class T> T var(const MT::Array<T>& v);
 template<class T> T minDiag(const MT::Array<T>& v);
+template<class T> T absMax(const MT::Array<T>& x);
+template<class T> T absMin(const MT::Array<T>& x);
 
 template<class T> void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
@@ -780,6 +779,7 @@ template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphRandomUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, double connectivity);
 template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, uint degree);
+template<class vert, class edge> void graphRandomLinear(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N);
 template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Array<edge*>& E, const uintA& layers, bool interConnections);
 template<class vert, class edge> edge *newEdge(vert *a, vert *b, MT::Array<edge*>& E);

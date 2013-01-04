@@ -703,13 +703,13 @@ double infer::FactorGraph::computeBeliefs(){
   FOR1D(F, i){
     P_old = B_c(i)->P;
     collectBelief(*B_c(i), *F(i), 0);
-    change = (B_c(i)->P - P_old).absMax();
+    change = absMax(B_c(i)->P - P_old);
     if(change > maxChange) maxChange = change;
   }
   FOR1D(F_v, i){
     P_old = B_v(i)->P;
     collectBelief(*B_v(i), *F_v(i), 0);
-    change = (B_v(i)->P - P_old).absMax();
+    change = absMax(B_v(i)->P - P_old);
     if(change > maxChange) maxChange = change;
   }
   return maxChange;
@@ -1161,11 +1161,11 @@ double infer::passMessage(infer::Factor& f_from, infer::Factor& f_to, infer::Fac
     cout <<"Message:" <<endl;
     writeMessage(&f_from, &f_to, cout); cout <<endl;
     cout <<"Updated b_to:" <<endl <<b_to <<endl;
-    cout <<" --> " <<(b_to.P - p_old).absMax() <<endl;
+    cout <<" --> " <<absMax(b_to.P - p_old) <<endl;
   }
   
   // calc change (and ignore log_P !)
-  return (b_to.P - p_old).absMax();
+  return absMax(b_to.P - p_old);
 }
 
 #endif
@@ -2870,3 +2870,6 @@ void infer::inferMixLengthStructured(
   PR    *= (1.-gamma);
 }
 
+
+
+#include "array_t.cxx"

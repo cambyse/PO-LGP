@@ -500,8 +500,8 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     lapack_min_Ax_b(Delta, J, J*x - phi);
     Delta -= x;
 #endif
-    if(o.maxStep>0. && Delta.absMax()>o.maxStep)  Delta *= o.maxStep/Delta.absMax();
-    if(o.verbose>1) cout <<" \t|Delta|=" <<Delta.absMax() <<flush;
+    if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
+    if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
 
     for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
       y = x + alpha*Delta;
@@ -529,7 +529,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
   	  lambda = 10.*lambda;
 	  break;
 	}else{
-	  if(alpha*Delta.absMax()<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+	  if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
           alpha = .1*alpha;
 	}
       }
@@ -538,8 +538,8 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha <<endl;
     
     //stopping criterion
-    if((lambda<1. && Delta.absMax()<o.stopTolerance) ||
-       (lambda<1. && alpha*Delta.absMax()<1e-3*o.stopTolerance) ||
+    if((lambda<1. && absMax(Delta)<o.stopTolerance) ||
+       (lambda<1. && alpha*absMax(Delta)<1e-3*o.stopTolerance) ||
        evals>=o.stopEvals ||
        it>=o.stopIters) break;
   }

@@ -101,7 +101,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
       beta -= alpha*beta_update;
       alpha *= .1;
       beta += alpha*beta_update;
-      if(alpha*beta_update.absMax()<1e-5) break;
+      if(alpha*absMax(beta_update)<1e-5) break;
       continue;
     }else{
       alpha = pow(alpha, .8);
@@ -128,7 +128,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
     
     beta += alpha*beta_update;
     
-    if(alpha*beta_update.absMax()<1e-3) break;
+    if(alpha*absMax(beta_update)<1e-3) break;
   }
   cout << time(NULL) - t << " secs. ( " << invtime << " for inversion)" << std::endl;
   std::cout << "done." <<std::endl;

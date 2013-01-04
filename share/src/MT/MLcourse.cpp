@@ -86,7 +86,7 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
       beta -= alpha*beta_update;
       alpha *= .1;
       beta += alpha*beta_update;
-      if(alpha*beta_update.absMax()<1e-5) break;
+      if(alpha*absMax(beta_update)<1e-5) break;
       continue;
     } else {
       alpha = pow(alpha, .8);
@@ -97,9 +97,9 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
     beta_update = XtWXinv * (Xt*(y-p) - 2.*I*beta);   //beta update equation
     beta += alpha*beta_update;
     
-    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<beta_update.absMax() <<" alpha= " <<alpha <<endl;
+    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
     
-    if(alpha*beta_update.absMax()<1e-5) break;
+    if(alpha*absMax(beta_update)<1e-5) break;
   }
 }
 
@@ -133,7 +133,7 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
       beta -= alpha*beta_update;
       alpha *= .1;
       beta += alpha*beta_update;
-      if(alpha*beta_update.absMax()<1e-5) break;
+      if(alpha*absMax(beta_update)<1e-5) break;
       continue;
     } else {
       alpha = pow(alpha, .8);
@@ -158,8 +158,8 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
     
     beta += alpha*beta_update;
     
-    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<beta_update.absMax() <<" alpha= " <<alpha <<endl;
-    if(alpha*beta_update.absMax()<1e-5) break;
+    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
+    if(alpha*absMax(beta_update)<1e-5) break;
   }
 }
 

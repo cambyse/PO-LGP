@@ -4718,8 +4718,13 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
-#  include "array_t.cxx"
 template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 #endif
+
+#include "array_t.cxx"
+template MT::Array<ors::Joint*>::Array();
+inline std::istream& operator>>(std::istream& is, TaskVariable*&){NIY}
+inline std::ostream& operator<<(std::ostream& os, const TaskVariable*&){NIY}
+template struct MT::Array<TaskVariable*>;

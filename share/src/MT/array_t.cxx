@@ -712,25 +712,6 @@ template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
   }
 }
 
-//! get absolute min (using fabs)
-template<class T> T MT::Array<T>::absMin() const {
-  CHECK(N, "");
-  uint i;
-  T t((T)::fabs((double)p[0]));
-  for(i=1; i<N; i++) if(fabs((double)p[i])<t) t=(T)::fabs((double)p[i]);
-  return t;
-}
-
-
-//! get absolute maximum (using fabs)
-template<class T> T MT::Array<T>::absMax() const {
-  CHECK(N, "");
-  uint i;
-  T t((T)::fabs((double)p[0]));
-  for(i=1; i<N; i++) if(fabs((double)p[i])>t) t=(T)::fabs((double)p[i]);
-  return t;
-}
-
 
 /*
 //! also returns the index (argmin) \c ind
@@ -1026,15 +1007,6 @@ template<class T> void MT::Array<T>::setDiag(const MT::Array<T>& v) {
   uint i;
   for(i=0; i<v.d0; i++) operator()(i, i)=v(i);
   //mtype=diagMT;
-}
-
-//! sets x to be the diagonal matrix with diagonal v
-template<class T> void MT::Array<T>::setSkew(const MT::Array<T>& v) {
-  CHECK(v.nd==1 && v.N==3, "can only give diagonal of 1D array");
-  resize(3, 3);
-  p[0]=   0.; p[1]=-v(2); p[2]= v(1);
-  p[3]= v(2); p[4]=   0.; p[5]=-v(0);
-  p[6]=-v(1); p[7]= v(0); p[8]=   0.;
 }
 
 //! constructs the block matrix X=[A, B ; C, D]
@@ -1700,6 +1672,17 @@ template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A) {
   Ainv/=(T)(A(0, 0)*A(1, 1)-A(0, 1)*A(1, 0));
 }
 
+//! sets x to be the diagonal matrix with diagonal v
+template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
+  MT::Array<T> y;
+  CHECK(v.nd==1 && v.N==3, "can only give diagonal of 1D array");
+  y.resize(3, 3);
+  y.p[0]=   0.; y.p[1]=-v(2); y.p[2]= v(1);
+  y.p[3]= v(2); y.p[4]=   0.; y.p[5]=-v(0);
+  y.p[6]=-v(1); y.p[7]= v(0); y.p[8]=   0.;
+  return y;
+}
+
 
 
 //===========================================================================
@@ -1969,6 +1952,24 @@ template<class T> T minDiag(const MT::Array<T>& v) {
   CHECK(v.nd==2 && v.d0==v.d1, "only for squared matrix");
   T t=v(0, 0);
   for(uint i=1; i<v.d0; i++) if(v(i, i)<t) t=v(i, i);
+  return t;
+}
+
+//! get absolute min (using fabs)
+template<class T> T absMin(const MT::Array<T>& x) {
+  CHECK(x.N, "");
+  uint i;
+  T t((T)::fabs((double)x.p[0]));
+  for(i=1; i<x.N; i++) if(fabs((double)x.p[i])<t) t=(T)::fabs((double)x.p[i]);
+  return t;
+}
+
+//! get absolute maximum (using fabs)
+template<class T> T absMax(const MT::Array<T>& x) {
+  CHECK(x.N, "");
+  uint i;
+  T t((T)::fabs((double)x.p[0]));
+  for(i=1; i<x.N; i++) if(fabs((double)x.p[i])>t) t=(T)::fabs((double)x.p[i]);
   return t;
 }
 

@@ -371,6 +371,7 @@ void get_patch_centroids(doubleA& pch_cen, byteA& img, uintA& pch, uint np){
 
 #else
 
+#include "util.h"
 void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap){NIY};
 void random_colorMap(floatA& pch_colormap, uint np){NIY};
 uint incremental_patch_ids(uintA& pch){NIY};

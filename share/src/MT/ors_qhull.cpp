@@ -477,6 +477,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #endif
 
 #else //!MT_QHULL
+#include "util.h"
 #include "array.h"
 void getTriangulatedHull(uintA& T, arr& V) { NICO }
 #endif

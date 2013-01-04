@@ -19,6 +19,7 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
 #include <MT/opengl.h>
 #include <MT/plot.h>
 #include <relational/utilTL.h>

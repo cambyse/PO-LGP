@@ -26,12 +26,9 @@
 //the above two flags cause the following headers to
 //include their implementations...
 #include "util.h"
-//#include <MT/opengl.h>
 #include "array.h"
-//#include "ors.h"
-//#include <MT/algos.h>
-//explicit template instantiations
 
+//explicit template instantiations
 //-- from util.h
 template void MT::getParameter(double&, const char*);
 template float MT::getParameter<float>(const char*);

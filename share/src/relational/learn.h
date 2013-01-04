@@ -22,6 +22,7 @@
 #ifndef RELATIONAL_learn_h
 #define RELATIONAL_learn_h
 
+#include <map>
 #include <relational/reason.h>
 
 

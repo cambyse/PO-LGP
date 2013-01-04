@@ -24,6 +24,7 @@
 #ifndef MT_gauss_h
 #define MT_gauss_h
 
+#include "util.h"
 #include "array.h"
 #include "functions.h"
 

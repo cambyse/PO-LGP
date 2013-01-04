@@ -20,6 +20,7 @@
 #ifndef MT_data_h
 #define MT_data_h
 
+#include "util.h"
 #include "array.h"
 
 struct Data {
