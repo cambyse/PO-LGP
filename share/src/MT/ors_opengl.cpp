@@ -717,10 +717,13 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
 #endif
 
 #else //!MT_GL
-void ors::glDrawMesh(void *classP) { NICO; }
+void ors::Mesh::glDraw(){NICO}
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
+  if(orsFile) G.init(orsFile);
+}
+void animateConfiguration(ors::Graph& C, OpenGL& gl){NICO}
 #ifndef MT_ORS_ONLY_BASICS
 void ors::glDrawGraph(void *classP) { NICO; }
 void editConfiguration(const char* filename, ors::Graph *C, OpenGL *gl) { NICO; }
-void animateConfiguration(ors::Graph *C, OpenGL *gl) {}
 #endif
 #endif

@@ -449,10 +449,12 @@ void testContactDynamics(){
 //
 
 static void drawTrimesh(void* _mesh){
+#if MT_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
   mesh->glDraw();
   glPopMatrix();
+#endif
 }
 
 void testBlenderImport(){

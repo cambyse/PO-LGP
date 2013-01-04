@@ -1091,7 +1091,7 @@ OpenGL* OpenGL::newClone() const {
 }
 
 void OpenGL::init() {
-  CHECK(width && height,"");
+  CHECK(width && height,"width and height are not set -- perhaps not initialized");
   camera.setPosition(0., 0., 10.);
   camera.focus(0, 0, 0);
   camera.setZRange(.1, 1000.);

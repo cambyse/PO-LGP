@@ -24,11 +24,15 @@ void glDrawAxes(double){}
 //void OpenGL::watchImage(MT::Array<unsigned char> const&, bool, float){}
 
 struct sOpenGL {
-  sOpenGL(OpenGL *_gl, const char* title, int w, int h, int posx, int posy){
+  sOpenGL(OpenGL *gl, const char* title, int w, int h, int posx, int posy){
     MT_MSG("creating dummy OpenGL object");
+    gl->width=1;
+    gl->height=1;
   }
   sOpenGL(OpenGL *gl, void *container){
     MT_MSG("creating dummy OpenGL object");
+    gl->width=1;
+    gl->height=1;
   }
   ors::Vector downVec, downPos, downFoc;
   ors::Quaternion downRot;
