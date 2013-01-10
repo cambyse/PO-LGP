@@ -91,6 +91,12 @@ void PhysXInterface::step() {
   
 }
 
+/**
+ * @brief Create the PhysX interface which then can be used by OpenGL.
+ *
+ * - setup some physx stuff
+ * - create PhysX equivalent to the ors graph
+ */
 void PhysXInterface::create() {
   CHECK(G, "");
   if (!mFoundation) {
