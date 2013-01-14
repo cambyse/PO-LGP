@@ -29,8 +29,8 @@ ors::Body* createRobot(ors::Graph& graph) {
   robot->X.pos.z += 1.;
   robot->name << "robot";
   robot->type = ors::kinematicBT;
-  cout << "robot: " << robot->X << endl;
-  cout << "robot.pos.pos: " << robot->X.pos << endl;
+  /* cout << "robot: " << robot->X << endl; */
+  /* cout << "robot.pos.pos: " << robot->X.pos << endl; */
 
   ors::Shape* robotShape = new ors::Shape(graph, robot);
   robotShape->type = ors::sphereST;
@@ -41,46 +41,65 @@ ors::Body* createRobot(ors::Graph& graph) {
   return robot;
 }
 
+/*----------------------------------------------------------------------------*/
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
+  physx.G = &graph;
+  physx.create();
+
+  gl.add(glStandardScene, NULL);
+  gl.add(glPhysXInterface, &physx);
+  gl.setClearColors(1., 1., 1., 1.);
+
+  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  if (glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  } else {
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
+    gl.camera.upright();
+  }
+  gl.watch();
+  /* gl.update(); */
+}
 
 /*----------------------------------------------------------------------------*/
 int main(int argc, char** argv) {
   // SETUP
-  ors::Graph graph;
-  OpenGL glMy;
-  OpenGL glPh("PhysX");
-
   // load ors file
-  if (argc == 1) {
-    std::string file("test.ors");
-    cout << file << endl;
-    init(graph, glMy, file.c_str());
-  } else if (argc == 2) {
-    std::string file(argv[1]);
-    cout << file << endl;
-    init(graph, glMy, file.c_str());
+  std::string file("test.ors");
+  if (argc == 2) {
+    file = std::string(argv[1]);
   }
+  cout << "Loading " << file << endl;
+  ors::Graph graph;
+  graph.init(file.c_str());
 
   // add simple robot to graph
   ors::Body* robot = createRobot(graph);
   graph.calcBodyFramesFromJoints();
 
-  // PhysX
+  OpenGL glMy;
+  OpenGL glPh("PhysX");
   PhysXInterface physx;
-  physx.G = &graph;
-  physx.create();
 
-  glPh.add(glStandardScene, NULL);
-  glPh.add(glPhysXInterface, &physx);
-  glPh.setClearColors(1., 1., 1., 1.);
-  glPh.camera.setPosition(10., -15., 8.);
-  glPh.camera.focus(0, 0, 1.);
-  glPh.watch();
+  /* init(graph, glMy, file.c_str()); */
+  bindOrsToOpenGL(graph, glMy);
+  bindOrsToPhysX(graph, glPh, physx);
 
+  /* physx.G = &graph; */
+  /* physx.create(); */
+  /* glPh.add(glStandardScene, NULL); */
+  /* glPh.add(glPhysXInterface, &physx); */
+  /* glPh.setClearColors(1., 1., 1., 1.); */
+  /* glPh.camera.setPosition(10., -15., 8.); */
+  /* glPh.camera.focus(0, 0, 1.); */
+  /* glPh.camera.upright(); */
+  /* glPh.watch(); */
 
   // WORK
   double robotSpeedX = 0.002;
   double robotSpeedY = 0.005;
-  for (uint t = 0; t < 1000; t++) {
+  for (uint t = 0; t < 500; t++) {
     cout << "\r t=" << t << std::flush;
 
     // move the robot
