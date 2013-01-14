@@ -22,6 +22,8 @@ struct GaussianProcess {
   double mu; //!< const bias of the GP
   double(*mu_func)(const arr &x, const void *param);  //!< prior of the GP (variable bias)
   void *priorP;
+
+  double obsVar;
   
   //-- new covariance function naming
   // kernelF  = cov = covF_F
@@ -48,6 +50,15 @@ struct GaussianProcess {
   
   GaussianProcess();
   
+  GaussianProcess(const GaussianProcess &f){
+    X=f.X; Y=f.Y; dX=f.dX; dY=f.dY; dI=f.dI;
+    Ginv=f.Ginv; GinvY=f.GinvY; ig2=f.ig2;
+    mu=f.mu; mu_func=f.mu_func; priorP=f.priorP;
+    cov=f.cov; dcov=f.dcov; covF_D=f.covF_D;
+    covD_D=f.covD_D; covDD_F=f.covDD_F; covDD_D=f.covDD_D;
+    kernelP=f.kernelP; obsVar=f.obsVar;
+  }
+
   void clear(){ X.clear(); Y.clear(); dX.clear(); dY.clear(); dI.clear(); Ginv.clear(); GinvY.clear(); ig2.clear(); }
   
   void copyFrom(GaussianProcess &f){
@@ -56,7 +67,7 @@ struct GaussianProcess {
     mu=f.mu; mu_func=f.mu_func; priorP=f.priorP;
     cov=f.cov; dcov=f.dcov; covF_D=f.covF_D;
     covD_D=f.covD_D; covDD_F=f.covDD_F; covDD_D=f.covDD_D;
-    kernelP=f.kernelP;
+    kernelP=f.kernelP; obsVar=f.obsVar;
   }
   
   /*! set an arbitrary covariance function,
@@ -123,16 +134,17 @@ struct GaussianProcess {
 //
 
 struct GaussKernelParams {
-  double obsVar, priorVar, widthVar, derivVar;
-  GaussKernelParams(){ obsVar=.01; priorVar=.01; widthVar=.04; derivVar=.01; }
-  GaussKernelParams(double _noiseSDV, double _priorSDV, double _widthSDV, double _derivSDV){ obsVar=_noiseSDV*_noiseSDV; priorVar=_priorSDV*_priorSDV; widthVar=_widthSDV*_widthSDV; derivVar=_derivSDV*_derivSDV;}
+  double priorVar, widthVar, derivVar;
+  GaussKernelParams(){ priorVar=.01; widthVar=.04; derivVar=.01; }
+  GaussKernelParams(double _priorSDV, double _widthSDV, double _derivSDV){ priorVar=_priorSDV*_priorSDV; widthVar=_widthSDV*_widthSDV; derivVar=_derivSDV*_derivSDV;}
 };
 
 //! you can also pass a double[3] as parameters
 /* covariance between functionvalues at \vec a and \vec b */
 inline double GaussKernel(void *P, const arr& a, const arr& b){
   GaussKernelParams& K = *((GaussKernelParams*)P);
-  if((&a==&b) || operator==(a, b)) return K.priorVar+K.obsVar;
+  if((&a==&b) || operator==(a, b)) 
+    return K.priorVar; 
   double d;
   if(a.N!=1) d=sqrDistance(a, b); else { d=b(0)-a(0); d=d*d; }
   return K.priorVar*::exp(-.5 * d/K.widthVar);
@@ -155,7 +167,7 @@ inline void dGaussKernel(arr& grad, void *P, const arr& a, const arr& b){
   you can also pass a double[3] as parameters */
 inline double GaussKernelF_D(uint e, void *P, const arr& a, const arr& b){
   GaussKernelParams& K = *((GaussKernelParams*)P);
-  if(&a==&b){ HALT("this shouldn't happen, I think"); return K.obsVar; }
+  if(&a==&b){ HALT("this shouldn't happen, I think"); }
   double gauss=GaussKernel(P, a, b), gamma=1./K.widthVar;
   double de=a(e)-b(e);
   return gamma * de * gauss;
@@ -223,7 +235,7 @@ inline void plotBelief(GaussianProcess& gp, double lo, double hi, bool pause=tru
   dim = gp.X.d1 ? gp.X.d1 : gp.dX.d1;
   CHECK(dim > 0, "still no data here. I have no clue about dimensionality!?!");
   
-  X.setGrid(dim, lo, hi, 100);
+  X.setGrid(dim, lo, hi, 10000);
   gp.evaluate(X, Y, S);
   plotClear();
   switch(dim){
@@ -251,7 +263,7 @@ inline void plotBelief(GaussianProcess& gp, double lo, double hi, bool pause=tru
 
 inline void plotKernel1D(GaussianProcess& gp, double lo, double hi, bool pause=true){
   arr X, K, KD1, KD2;
-  X.setGrid(1, lo, hi, 1000);
+  X.setGrid(1, lo, hi, 600);
   K.resize(X.d0);
   KD1.resize(X.d0);
   KD2.resize(X.d0);
@@ -290,9 +302,8 @@ inline void plotKernel2D(GaussianProcess& gp, double lo, double hi, bool pause=t
 }
 
 inline void randomFunction(GaussianProcess& gp, arr& Xbase, bool illustrate, bool fromPosterior=false){
-  GaussKernelParams& K = *((GaussKernelParams*)gp.kernelP);
-  double orgObsVar=K.obsVar;
-  K.obsVar=1e-6;
+  double orgObsVar=gp.obsVar; 
+  gp.obsVar=1e-6;
   
   arr x;
   double y, sig;
@@ -314,7 +325,7 @@ inline void randomFunction(GaussianProcess& gp, arr& Xbase, bool illustrate, boo
     gp.recompute();
   }
   
-  K.obsVar=orgObsVar;
+  gp.obsVar=orgObsVar;
 }
 
 
