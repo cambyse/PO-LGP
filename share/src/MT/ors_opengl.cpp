@@ -56,6 +56,29 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   }
   gl.update();
 }
+
+/**
+ * @brief Bind ors to OpenGL.
+ * Afterwards OpenGL can show the ors graph.
+ *
+ * @param graph the ors graph.
+ * @param gl OpenGL which shows the ors graph.
+ */
+void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
+  gl.add(glStandardScene, 0);
+  gl.add(ors::glDrawGraph, &graph);
+  gl.setClearColors(1., 1., 1., 1.);
+
+  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  if (glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  } else {
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
+    gl.camera.upright();
+  }
+  gl.update();
+}
 #endif
 
 //! static GL routine to draw a ors::Mesh

@@ -892,6 +892,7 @@ extern uint orsDrawLimit;
 void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
+void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 
 
 //===========================================================================
