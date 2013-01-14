@@ -2626,7 +2626,6 @@ void ors::Body::read(std::istream& is) {
   uintA subMeshSizes;
   dval = anyListGetVector<double>(subMeshSizes, ats, "submeshsizes");
   if (dval) {
-    cout << subMeshSizes << endl;
     shapes(0)->mesh.subMeshSizes = subMeshSizes;
   }
 
