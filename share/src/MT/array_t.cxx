@@ -3477,6 +3477,37 @@ template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n) {
   return NULL;
 }
 
+/**
+ * @brief Dirty helper function to get an array result.
+ *
+ * TODO remove me and use a cleaner way!
+ */
+template<class T> T* anyListGetVector(uintA& result, const AnyList& L, const char* tag) {
+  for (uint i = 0; i < L.N; i++) {
+    if (!strcmp(tag, L(i)->tag)) {
+      if (strcmp(typeid(T).name(), L(i)->type)) {
+        HALT("ABORT GETTING ATTRIBUTE -- found tag (" << tag << ") but with different type (" << typeid(T).name() << ") than requested (" << L(i)->type << ")");
+        return NULL;
+      }
+
+      // save in result
+      result.clear();
+      result.resize(L(i)->n);
+      T* tmp = (T*)(L(i)->p);
+      for (uint l = 0; l < L(i)->n; l++) {
+        /* cout << "\t" << *tmp << endl; */
+        result(l) = uint(*tmp);
+        tmp++;
+      }
+
+      if (!L(i)->p) return (T*)1; //boolean return - tag found but no data
+      return (T*)(L(i)->p);
+    }
+  }
+  //HALT("ABORT GETTING ATTRIBUTE -- couldn't find tag (" <<tag <<") in anylist");
+  return NULL;
+}
+
 
 
 #endif

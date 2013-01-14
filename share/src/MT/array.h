@@ -764,6 +764,9 @@ template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.ap
 //-- AnyLists
 void anyListRead(AnyList& ats, std::istream& is);
 template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
+/* template<class T> T* anyListGetVector(const AnyList& L, const char* tag); */
+template<class T> T* anyListGetVector(uintA& result, const AnyList& L, const char* tag);
+
 //template<class T> MT::Array<T> get(const AnyList& L, const char* tag); //TODO obsolete?
 
 //===========================================================================
