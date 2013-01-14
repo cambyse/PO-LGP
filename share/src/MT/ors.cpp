@@ -2622,7 +2622,14 @@ void ors::Body::read(std::istream& is) {
   sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) shapes(0)->mesh.readFile(*sval);
   dval=anyListGet<double>(ats, "meshscale", 1); if(dval) shapes(0)->mesh.scale(*dval);
   if(anyListGet<double>(ats, "contact", 0))    shapes(0)->cont=true;
-  
+
+  uintA subMeshSizes;
+  dval = anyListGetVector<double>(subMeshSizes, ats, "submeshsizes");
+  if (dval) {
+    cout << subMeshSizes << endl;
+    shapes(0)->mesh.subMeshSizes = subMeshSizes;
+  }
+
   //mass properties
   dval=anyListGet<double>(ats, "mass", 1);     if(dval) {
     mass=*dval;
