@@ -175,6 +175,9 @@ void PhysXInterface::create() {
       actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
       break;
+    case ors::noneBT:
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      break;
     }
     CHECK(actor, "create actor failed!");
     for_list(j, s, b->shapes) {
