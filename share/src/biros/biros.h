@@ -42,12 +42,14 @@ struct Variable {
   Variable(const char* name);
   virtual ~Variable();
   
-  /// @name access control, to be called by a processes before access, returns the revision
+  /// @name access control
+  /// to be called by a processes before access, returns the revision
   int readAccess(Process*);  //might set the caller to sleep
   int writeAccess(Process*); //might set the caller to sleep
   int deAccess(Process*);
   
-  /// @name syncing via a variable - the caller is set to sleep
+  /// @name syncing via a variable
+  /// the caller is set to sleep
   void waitForNextWriteAccess();
   int  waitForRevisionGreaterThan(int rev); //returns the revision
   
