@@ -6,11 +6,11 @@ joint (door0, door1){ A=<t(.46 0 0) d(90 0 1 0)> BinvA }
 joint (door1, door2){ A=<t(-.39 0 1) d(90 0 0 1)> BinvA }
 
 # MICROWAVE
-body microwave0{ type=3 mesh="plys/microwave-0_hacd.ply" meshscale=.01 submeshsizes=[21 18] X=<t(1 0 .8)>}
+body microwave0{ type=3 mesh="plys/microwave-0_hacd.ply" meshscale=.01 submeshsizes=[21 18] X=<t(1 0 .8)> fixed}
 body microwave1{ type=3 mesh="plys/microwave-1_hacd.ply" meshscale=.01 submeshsizes=[20 8] color=[1 0 0] }
 joint (microwave0, microwave1){ A=<t(.2 -.1 0) d(90 0 1 0)> BinvA }
 
-#body oven0{ type=3 mesh="plys/oven-0.ply" meshscale=.01 X=<t(-1 0 0)>}
+body oven0{ type=3 mesh="plys/oven-0_hacd.ply" meshscale=.01 X=<t(-1 0 0)>}
 #body oven1{ type=3 mesh="plys/oven-1.ply" meshscale=.01 color=[1 0 0]}
 #body oven2{ type=3 mesh="plys/oven-2.ply" meshscale=.01 color=[1 0 0]}
 #body oven8{ type=3 mesh="plys/oven-8.ply" meshscale=.01 color=[1 0 0]}
