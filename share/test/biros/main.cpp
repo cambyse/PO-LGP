@@ -4,7 +4,8 @@
 
 //===========================================================================
 //
-// test looping multiple threads on beat or sync
+// test looping multiple threads on beat or sync.
+// Processes only print out some information. Noting else happens.
 //
 
 struct TestThread:public Process{
@@ -27,12 +28,15 @@ struct TestThread:public Process{
 
 
 void testLoop(){
+  // create processes
   TestThread A("A loop (self=.08)",.08);
   TestThread E("E slave of B (self=.0)",.0);
   TestThread B("B loop beat (self=.02)",.02);
   TestThread C("C step (self=.07)",.07);
   TestThread D("D step (self=.03)",.03);
   //TestThread E("E loop slave of A (self=.0)",.0);
+
+  // execute processes with different methods
   A.threadLoop();
   B.threadLoopWithBeat(.11);
   E.threadLoopWithBeat(.12); //SyncWithDone(B);
@@ -47,6 +51,7 @@ void testLoop(){
     ticcer.waitForTic();
   }
 
+  // close processes
   A.threadClose();
   B.threadClose();
   C.threadClose();
@@ -79,21 +84,23 @@ struct Adder:public Process{
   void close(){ }
   void step (){
     int x=int1->get_x(this);
-    cout <<name <<": reading " <<x <<endl;
+    cout <<name <<": reading   " <<x <<endl;
     if(int2){
       int2->set_x(x, this);
-      cout <<name <<": writing" <<x <<endl;
+      cout <<name <<": writing   " <<x <<endl;
     }else{
       int1->set_x(x+1, this);
-      cout <<name <<": rewriting" <<x+1 <<endl;
+      cout <<name <<": rewriting " <<x+1 <<endl;
     }
   }
 };
 
 void testListening(){
   biros().enableAccessLog();
+  // create and open the biros EventControlView
   EventControlView v;
 
+  // create Adder processes with access to the Variables
   Int i1,i2,i3;
   Adder a1("adder1", &i1, NULL);
   Adder a2("adder2", &i1, &i2);
@@ -103,6 +110,7 @@ void testListening(){
   a2.listenTo(LIST<Variable>(i1));
   a3.listenTo(LIST<Variable>(i2));
   
+  // run for 20 sec and close everything
   MT::wait(20.);
   
   a1.threadClose();
@@ -121,9 +129,7 @@ void testListening(){
 
 struct ExampleVar:public Variable{
   //BIR_VARIABLE;
-  
   FIELD(int, x);
-
   //BIR_FIELD(bool, mybool);
   
   ExampleVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
@@ -131,7 +137,7 @@ struct ExampleVar:public Variable{
 
 //int IntVar::bir_typeId=-1;
 
-uint PC=0;
+//uint PC=0;
 
 struct Maxxer:public Process{
   ExampleVar *a,*b;
