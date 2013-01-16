@@ -17,7 +17,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton5</property>
+                <property name="label" translatable="yes">Pause</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-pause</property>
                 <signal name="clicked" handler="eventControl_pause" swapped="no"/>
@@ -32,7 +32,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton7</property>
+                <property name="label" translatable="yes">Step</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-next</property>
                 <signal name="clicked" handler="eventControl_next" swapped="no"/>
@@ -47,7 +47,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton6</property>
+                <property name="label" translatable="yes">Resume</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-play</property>
                 <signal name="clicked" handler="eventControl_play" swapped="no"/>
@@ -65,9 +65,25 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTextView" id="pastEvents">
+          <object class="GtkFrame" id="frame1">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
+            <property name="can_focus">False</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">none</property>
+            <child>
+              <object class="GtkTextView" id="pastEvents">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">&lt;b&gt;Past Events&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -76,9 +92,25 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTextView" id="blockedEvents">
+          <object class="GtkFrame" id="frame2">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
+            <property name="can_focus">False</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">none</property>
+            <child>
+              <object class="GtkTextView" id="blockedEvents">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">&lt;b&gt;Blocked Events&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
