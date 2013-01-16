@@ -277,6 +277,11 @@ LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
 endif
 
+ifeq ($(PLY),1)
+CXXFLAGS += -DMT_PLY
+LIBS += -lply
+endif
+
 ifeq ($(SOLID),1)
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include

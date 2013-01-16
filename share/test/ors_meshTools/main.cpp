@@ -30,7 +30,7 @@ int main(int argn, char** argv){
 
   MT::initCmdLine(argn,argv);
   MT::String file(argv[1]);
-  
+
   OpenGL *gl=NULL;
 
   ors::Mesh mesh;
@@ -73,7 +73,7 @@ int main(int argn, char** argv){
     MT::getParameter(f,"fuse");
     cout <<"fuse " <<f <<endl;
     mesh.fuseNearVertices(f);
-  } 
+  }
   if(MT::checkCmdLineTag("clean")){
     cout <<"clean" <<endl;
     mesh.clean();
@@ -116,8 +116,11 @@ int main(int argn, char** argv){
   }
   if(MT::checkCmdLineTag("save")){
     cout <<"saving..." <<endl;
+    cout << "\tto " << file <<"_x.tri" << endl;
     mesh.writeTriFile(STRING(file<<"_x.tri"));
+    cout << "\tto " << file <<"_x.off" << endl;
     mesh.writeOffFile(STRING(file<<"_x.off"));
+    cout << "\tto " << file <<"_x.ply" << endl;
     mesh.writePLY(STRING(file<<"_x.ply"), true);
   }
 
