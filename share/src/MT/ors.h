@@ -882,7 +882,7 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
-void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);
+void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 

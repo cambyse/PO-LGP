@@ -1,4 +1,8 @@
-#include "mapGraph.h"
+#include <MT/mapGraph.h>
+#include <MT/ors.h>
+#include <MT/typeRegistry.h>
+
+REGISTER_TYPE_Key(T, ors::Transformation)
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
   MapGraph G;
@@ -20,6 +24,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 }
 
 int main(int argc, char** argv){
+  reportRegisteredTypes();
   testRead("test.g");
   return 0;
 }

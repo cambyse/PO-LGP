@@ -7,6 +7,8 @@ template<class T>
 struct Item_typed:Item {
   T value;
 
+  Item_typed(const T& _value):value(_value){}
+
   Item_typed(const StringL& _keys, const ItemL& _parents, const T& _value):value(_value){
     keys=_keys;
     parents=_parents;
@@ -42,7 +44,7 @@ template<class T> const T& Item::value() const{
 
 
 template<class T> T& MapGraph::value(const char *key){
-  Item& it = getItem(key);
-  if(!&it) return *((T*)NULL);
-  return it.value<T>();
+  Item *it = item(key);
+  if(!it) return *((T*)NULL);
+  return it->value<T>();
 }

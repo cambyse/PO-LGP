@@ -1,6 +1,20 @@
 #include <map>
 
+#include "mapGraph.h"
+#include "typeRegistry.h"
 
+/*struct Parser{
+  virtual ~Parser(){};
+  virtual Item* readItem (std::istream& is) = 0;
+};
+
+struct TransformationParser:Parser{
+  Item* readItem(std::istream& is){
+    ors::Transformation t;
+    is >>t;
+    return new Item_typed<ors::Transformation>(t);
+  }
+};*/
 
 //===========================================================================
 //
@@ -58,13 +72,13 @@ MapGraph::~MapGraph(){
   delete s;
 }
 
-Item& MapGraph::getItem(const char* key){
+Item* MapGraph::item(const char* key){
   uint i;
   MT::String *k;
   for_list_(Item, e, (*this))
     for_list(i, k, e->keys)
-      if(*k==key) return *e;
-  return *((Item*)NULL);
+      if(*k==key) return e;
+  return NULL;
 }
 
 void sortByDotOrder(ItemL& G){
@@ -134,10 +148,10 @@ bool readItem(MapGraph& list, std::istream& is){
   if(c=='('){
     for(uint j=0;;j++){
       if(!str.read(is, " \t\n\r,", " \t\n\r,)", false)) break;
-      Item& e=list.getItem(str);
-      if(&e){ //sucessfully found
-        parents.append(&e);
-        e.parentOf.append(list);
+      Item *e=list.item(str);
+      if(e){ //sucessfully found
+        parents.append(e);
+        e->parentOf.append(list);
       }else{//this element is not known!!
         HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown " <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
       }
@@ -164,9 +178,17 @@ bool readItem(MapGraph& list, std::istream& is){
     item = new Item_typed<arr>(keys, parents, reals);
   } break;
   case '<': { //any type parser
-    str.read(is, " \t\n\r", ">", false);
-    MT_MSG("NIY: reading a generic type with id " <<str);
-    item = new Item_typed<MT::String>(keys, parents, str);
+    str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
+    item = readTypeIntoItem(str,is);
+    if(!item){
+      is.clear();
+      MT_MSG("could not parse value of type '" <<str <<"' -- no such type has been registered");
+      str.read(is,"",">",false);
+      MT_MSG("ignoring: '"<<str<<"'");
+    }else{
+      item->keys = keys;
+      item->parents = parents;
+    }
     MT::parse(is, ">");
   } break;
   case '{': { //
@@ -180,9 +202,9 @@ bool readItem(MapGraph& list, std::istream& is){
     for(uint j=0;;j++){
       str.read(is, " , ", " , )", false);
       if(!str.N) break;
-      Item& e=list.getItem(str);
-      if(&e){ //sucessfully found
-        refs.append(&e);
+      Item *e=list.item(str);
+      if(e){ //sucessfully found
+        refs.append(e);
       }else{ //this element is not known!!
         HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
 <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
@@ -202,7 +224,7 @@ bool readItem(MapGraph& list, std::istream& is){
     }
   } break;
   }
-  list.append(item);
+  if(item) list.ItemL::append(item);
   return true;
 }
 

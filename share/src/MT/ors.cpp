@@ -1049,7 +1049,7 @@ void Transformation::read(std::istream& is) {
         case 'w': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeAngVelocityRad(x[0], x[1], x[2]); break;
           //case 's': is>>"(">>x[0]>>")";                   scale(x[0]); break;
         case '|': is.putback('<'); return;
-        case '>': return; //those symbols finish the reading without error
+        case '>': is.putback(c); return; //those symbols finish the reading without error
         default: MT_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
       }
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");

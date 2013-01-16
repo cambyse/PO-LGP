@@ -1,6 +1,7 @@
+#include "biros.h"
+
 #ifdef MT_GTK
 
-#include "biros.h"
 #include "biros_views.h"
 #include "biros_internal.h"
 #include <gtk/gtk.h>
@@ -433,4 +434,10 @@ notes:
  */
 
 #else //MT_GTK
+
+InsideOut::InsideOut(GtkWidget* container):View(){NICO}
+InsideOut::~InsideOut(){}
+void InsideOut::gtkNew(GtkWidget *container){NICO}
+void InsideOut::gtkUpdate(){NICO}
+
 #endif

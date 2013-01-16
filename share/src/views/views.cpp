@@ -124,9 +124,10 @@ void View::gtkUpdate(){
 #else //MT_GTK
 
 View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) { s=NULL; }
+View::~View(){}
+void View::gtkNewGl(GtkWidget *container){NICO}
 void View::gtkUpdate(){NICO}
 void View::gtkNewText(GtkWidget *container){NICO}
-
 
 #endif
 

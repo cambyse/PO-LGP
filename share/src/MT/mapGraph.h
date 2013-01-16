@@ -1,3 +1,6 @@
+#ifndef MT_mapGraph_h
+#define MT_mapGraph_h
+
 #include <MT/array.h>
 #include <MT/util.h>
 
@@ -25,8 +28,8 @@ struct MapGraph:ItemL{
   MapGraph();
   ~MapGraph();
 
-  Item& item(const char*);
-  Item& operator[](const char *key){ return item(key); }
+  Item* item(const char*);
+  Item& operator[](const char *key){ return *item(key); }
   template<class T> T& value(const char*);
 
   template<class T> void append(const char *key,T& value);
@@ -40,5 +43,5 @@ struct MapGraph:ItemL{
 stdPipes(MapGraph);
 
 #include "mapGraph_t.cxx"
-#include "mapGraph.cpp"
-#include "con.cpp"
+
+#endif
