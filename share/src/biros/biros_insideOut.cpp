@@ -76,14 +76,16 @@ void InsideOut::gtkUpdate(){
 
 void sInsideOut::open(){
   gtkLock();
-  // const char *pwd = __FILE__;
-  // char *path,*name;
-  // MT::decomposeFilename(path, name, pwd);
-  // MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
-  MT::String gladeFile;
-  gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
+
+  const char* gladeFile = "insideOut.glade";
+
+  // TODO find a better way to locate and read the glade file
+  ifstream myFile(gladeFile);
+  CHECK(myFile.good(), "EVENTCONTROL VIEW: Create a hardlink to the share/src/biros/insideOut.glade to use the InsideOutView.");
+  myFile.close();
+
   builder = gtk_builder_new();
-  gtk_builder_add_from_file(builder, gladeFile.p, NULL);
+  gtk_builder_add_from_file(builder, gladeFile, NULL);
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
   gtk_builder_connect_signals(builder, NULL);
   g_object_set_data(G_OBJECT(win), "sInsideOut", this);
