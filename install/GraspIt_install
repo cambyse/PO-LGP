@@ -1,0 +1,26 @@
+#! /bin/sh
+
+#http://sourceforge.net/projects/graspit/files/releases/graspit-2.2.tar.gz/download
+
+tar xvzf $RAWLIBS/graspit-2.2.tar.gz
+
+cd Graspit
+
+sudo apt-get install \
+libqt4-dev \
+libqt4-opengl-dev \
+libqt4-sql-psql \
+libcoin60-dev \
+libsoqt4-dev \
+libblas-dev \
+liblapack-dev
+
+make -C qhull
+
+qmake graspit.pro 
+
+make
+
+export GRASPIT=$PWD
+
+bin/graspit

@@ -40,6 +40,7 @@ patch -p1 < $THIS_PATH/PHYSX_patch
 cd $MLR_LIBPATH
 mkdir include/physx
 cp -R $NAME/Include/* include/physx
+cp -R $NAME/Samples/PxToolkit/include include/physx/toolkit
 if [ "$(uname -m)" = "x86_64" ] ; then
   cp $NAME/Lib/linux64/* lib
 else

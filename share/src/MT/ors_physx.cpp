@@ -19,17 +19,17 @@
 
 #ifdef MT_PHYSX
 
-#include <PxPhysicsAPI.h>
-#include <PxExtensionsAPI.h>
-#include <PxDefaultErrorCallback.h>
-#include <PxDefaultAllocator.h>
-#include <PxDefaultSimulationFilterShader.h>
-#include <PxDefaultCpuDispatcher.h>
-#include <PxShapeExt.h>
-#include <PxMat33.h>
+#include <physx/PxPhysicsAPI.h>
+#include <physx/extensions/PxExtensionsAPI.h>
+#include <physx/extensions/PxDefaultErrorCallback.h>
+#include <physx/extensions/PxDefaultAllocator.h>
+#include <physx/extensions/PxDefaultSimulationFilterShader.h>
+#include <physx/extensions/PxDefaultCpuDispatcher.h>
+#include <physx/extensions/PxShapeExt.h>
+#include <physx/foundation/PxMat33.h>
 //#include <PxMat33Legacy.h>
-#include <PxSimpleFactory.h>
-#include <PxTkStream.h>
+#include <physx/extensions/PxSimpleFactory.h>
+#include <physx/toolkit/PxTkStream.h>
 
 #include "ors_physx.h"
 #include "opengl.h"

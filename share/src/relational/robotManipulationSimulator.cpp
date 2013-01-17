@@ -1549,10 +1549,10 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 #  ifdef MT_ODE
 
 #  include <ode/ode.h>
-#  include <ode/../internal/objects.h>
-#  include <ode/../internal/joints/joints.h>
-#  include <ode/../internal/collision_kernel.h>
-#  include <ode/../internal/collision_transform.h>
+#  include <ode/internal/objects.h>
+#  include <ode/internal/joints/joints.h>
+#  include <ode/internal/collision_kernel.h>
+#  include <ode/internal/collision_transform.h>
 #  ifdef MT_MSVC
 #    undef HAVE_UNISTD_H
 #    undef HAVE_SYS_TIME_H
@@ -1579,7 +1579,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   arr q,dq;
   C->getJointState(q);
   for(t=0;t<Tabort;t++){
-    x.y_target.setCarray(obj->X.pos.p,3);
+    x.y_target.setCarray(obj->X.pos.p(), 3);
     x.y_target.p[2] += 0.15;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
@@ -1600,7 +1600,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   
   dGeomID geom;
   geom = ode->geoms(s->index);
-  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p));
+  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
   dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
 #endif
 }
@@ -1624,7 +1624,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   arr q,dq;
   C->getJointState(q);
   for(t=0;t<Tabort;t++){
-    x.y_target.setCarray(obj->X.pos.p,3);
+    x.y_target.setCarray(obj->X.pos.p(),3);
     x.y_target.p[2] += 0.15;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
@@ -1645,7 +1645,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
 
   dGeomID geom;
   geom = ode->geoms(s->index);
-  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p));
+  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
   dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
 #endif
 }
