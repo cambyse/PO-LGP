@@ -92,9 +92,9 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
       case ors::meshST:
         //check if there is a specific swiftfile!
         MT::String *filename;
-        filename=anyListGet<MT::String>(s->ats, "swiftfile", 1);
+        filename=s->ats.get<MT::String>("swiftfile");
         if(!filename)
-          filename=anyListGet<MT::String>(s->body->ats, "swiftfile", 1);
+          filename=s->body->ats.get<MT::String>("swiftfile");
         if(filename) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");

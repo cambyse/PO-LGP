@@ -9,7 +9,7 @@ struct Item_typed:Item {
 
   Item_typed(const T& _value):value(_value){}
 
-  Item_typed(const StringL& _keys, const ItemL& _parents, const T& _value):value(_value){
+  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value):value(_value){
     keys=_keys;
     parents=_parents;
   }
@@ -27,7 +27,7 @@ struct Item_typed:Item {
 template<class T> T& Item::value(){
   Item_typed<T>* typed = dynamic_cast<Item_typed<T>*>(this);
   if(!typed){
-    MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
+    MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
     return *((T*)NULL);
   }
   return typed->value;
@@ -43,8 +43,8 @@ template<class T> const T& Item::value() const{
 }
 
 
-template<class T> T& MapGraph::value(const char *key){
+template<class T> T* MapGraph::get(const char *key){
   Item *it = item(key);
-  if(!it) return *((T*)NULL);
-  return it->value<T>();
+  if(!it) return NULL;
+  return &it->value<T>();
 }

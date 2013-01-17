@@ -1392,7 +1392,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
   } else {
     if(dimTag) { writeDim(os); os <<' '; }
     if(nd>=2) os <<'\n';
-    os <<BRACKETS[0];
+    if(BRACKETS[0]) os <<BRACKETS[0];
     if(nd==0 && N==0) { os <<']'; return; }
     if(nd==0 && N==1) { os <<scalar() <<']'; return; }
     if(nd==1) {
@@ -1426,7 +1426,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
         os <<ELEMSEP <<elem(i);
       }
     }
-    os <<ELEMSEP <<BRACKETS[1];
+    if(BRACKETS[1]) os <<ELEMSEP <<BRACKETS[1];
   }
 }
 
@@ -3448,35 +3448,6 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
   if(!a->n) return MT::Array<T>((T*)a->p, 1);
   return MT::Array<T>((T*)a->p, a->n);
 }*/
-
-template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n) {
-  uint i;
-  for(i=0; i<L.N; i++) {
-    if(!strcmp(tag, L(i)->tag)) {
-      if(strcmp(typeid(T).name(), L(i)->type)) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with different type (" <<typeid(T).name() <<") than requested (" <<L(i)->type <<")");
-        return NULL;
-      }
-      if(n>1 && n!=L(i)->n) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with different size (" <<L(i)->n <<") than requested (" <<n <<")");
-        return NULL;
-      }
-      if(n==1 && !L(i)->p) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but as boolean flag instead of size 1)");
-        return NULL;
-      }
-      if(n==0 && L(i)->p) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with size (" <<L(i)->n <<") instead fo boolean flag)");
-        return NULL;
-      }
-      if(!L(i)->p) return (T*)1;  //boolean return - tag found but no data
-      return (T*)(L(i)->p);
-    }
-  }
-  //HALT("ABORT GETTING ATTRIBUTE -- couldn't find tag (" <<tag <<") in anylist");
-  return NULL;
-}
-
 
 
 #endif

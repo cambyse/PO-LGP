@@ -20,7 +20,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   cout <<G <<endl;
   cout <<G["edge"] <<endl;
   cout <<G["edge"].value<MapGraph>() <<endl;
-  cout <<G.value<MapGraph>("edge").value<arr>("v") <<endl;
+  cout <<*G.get<MapGraph>("edge")->get<arr>("v") <<endl;
   //cout <<I;
 }
 

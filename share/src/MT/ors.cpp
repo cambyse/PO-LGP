@@ -21,6 +21,8 @@
 #undef abs
 #include <algorithm>
 #include "ors.h"
+#include "registry.h"
+
 #ifndef MT_ORS_ONLY_BASICS
 #  include "plot.h"
 #endif
@@ -33,8 +35,9 @@
 #define SL_DEBUG_LEVEL 1
 #define SL_DEBUG(l, x) if(l<=SL_DEBUG_LEVEL) x;
 
-
 #define Qstate
+
+REGISTER_TYPE_Key(T, ors::Transformation);
 
 const ors::Vector VEC_x(1, 0, 0);
 const ors::Vector VEC_y(0, 1, 0);
@@ -2583,10 +2586,10 @@ void ors::Body::reset() {
 
 void ors::Body::write(std::ostream& os) const {
   os <<"pose=" <<X <<' ';
-  uint i; Any *a;
-  for_list(i,a,ats)
-  if(strcmp(a->tag,"X") && strcmp(a->tag,"pose")) os <<*a <<' ';
-  //listWrite(ats, os);
+  uint i; Item *a;
+  for_list(i, a, ats)
+      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
+  //listWrite(os);
 }
 
 #define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
@@ -2600,31 +2603,33 @@ void ors::Body::read(std::istream& is) {
     if(!is.good()) RERR("READING ABORT - body '" <<name <<"' read error: could not read Transformation tag properly");
   }
   
-  anyListRead(ats, is);
+  ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   
   //interpret some of the attributes
+  arr *arrval;
   double *dval;
-  MT::String *sval;
-  sval=anyListGet<MT::String>(ats, "X", 1);    if(sval) X.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "pose", 1); if(sval) X.setText(*sval);
+  double d;
+  MT::String str;
+  ats.get<Transformation>(X, "X");
+  ats.get<Transformation>(X, "pose");
   
   //shape declared in body attributes..
-  dval=anyListGet<double>(ats, "type", 1);     if(dval) {
+  dval=ats.get<double>("type");     if(dval) {
     if(!shapes.N) shapes.append(new Shape());
     shapes(0)->body=this;
     shapes(0)->ibody=index;
     shapes(0)->type=(ShapeType)((int)*dval);
   }
-  dval=anyListGet<double>(ats, "size", 4);     if(dval) memmove(shapes(0)->size, dval, 4*sizeof(double));
-  dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(shapes(0)->color, dval, 3*sizeof(double));
-  sval=anyListGet<MT::String>(ats, "rel", 1);  if(sval) shapes(0)->rel.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) shapes(0)->mesh.readFile(*sval);
-  dval=anyListGet<double>(ats, "meshscale", 1); if(dval) shapes(0)->mesh.scale(*dval);
-  if(anyListGet<double>(ats, "contact", 0))    shapes(0)->cont=true;
+  arrval=ats.get<arr>("size");     if(arrval){ CHECK(arrval->N==4,""); memmove(shapes(0)->size, arrval->p, 4*sizeof(double)); }
+  arrval=ats.get<arr>("color");    if(arrval){ CHECK(arrval->N==3,""); memmove(shapes(0)->color, arrval->p, 3*sizeof(double)); }
+  if(shapes.N) ats.get<Transformation>(shapes(0)->rel, "rel");
+  if(ats.get<MT::String>(str,"mesh")) shapes(0)->mesh.readFile(str);
+  if(ats.get<double>(d, "meshscale")) shapes(0)->mesh.scale(d);
+  if(shapes.N) ats.get<bool>(shapes(0)->cont, "contact");
   
   //mass properties
-  dval=anyListGet<double>(ats, "mass", 1);     if(dval) {
+  dval=ats.get<double>("mass");     if(dval) {
     mass=*dval;
 #if 1
     inertia.setId();
@@ -2642,9 +2647,9 @@ void ors::Body::read(std::istream& is) {
   }
   
   type=dynamicBT;
-  if(anyListGet<double>(ats, "fixed", 0))  type=staticBT;
-  if(anyListGet<double>(ats, "static", 0))  type=staticBT;
-  if(anyListGet<double>(ats, "kinematic", 0))  type=kinematicBT;
+  if(ats.get<bool>("fixed"))      type=staticBT;
+  if(ats.get<bool>("static"))     type=staticBT;
+  if(ats.get<bool>("kinematic"))  type=kinematicBT;
   
 }
 
@@ -2670,28 +2675,28 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
 
 void ors::Shape::read(std::istream& is) {
   reset();
-  anyListRead(ats, is);
+  ats.read(is);
   if(!is.good()) HALT("shape read error");
   //listWrite(ats, cout); cout <<endl;
   
-  double *dval;
-  MT::String *sval;
-  sval=anyListGet<MT::String>(ats, "rel", 1);  if(sval) rel.setText(*sval);
-  dval=anyListGet<double>(ats, "color", 3);    if(dval) memmove(color, dval, 3*sizeof(double));
-  dval=anyListGet<double>(ats, "size", 4);     if(dval) memmove(size, dval, 4*sizeof(double));
-  dval=anyListGet<double>(ats, "type", 1);     if(dval) type=(ShapeType)((int)*dval);
-  sval=anyListGet<MT::String>(ats, "mesh", 1); if(sval) mesh.readFile(*sval);
-  dval=anyListGet<double>(ats, "meshscale", 1); if(dval) mesh.scale(*dval);
-  if(anyListGet<double>(ats, "contact", 0))    cont=true;
+  double d;
+  arr x;
+  MT::String str;
+  ats.get<Transformation>(rel, "rel");
+  if(ats.get<arr>(x, "size")) { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.get<arr>(x, "color")){ CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.get<double>(d, "type")) type=(ShapeType)d;
+  if(ats.get<MT::String>(str, "mesh")) mesh.readFile(str);
+  if(ats.get<double>(d, "meshscale")) mesh.scale(d);
+  if(ats.get<bool>("contact"))    cont=true;
 }
 
 void ors::Shape::write(std::ostream& os) const {
   os <<"rel=" <<rel <<' ';
   os <<"type=" <<type <<' ';
-  uint i; Any *a;
+  uint i; Item *a;
   for_list(i,a,ats)
-  if(strcmp(a->tag,"rel")
-      && strcmp(a->tag,"type")) os <<*a <<' ';
+      if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
   //listWrite(ats, os);
 }
 
@@ -2741,11 +2746,11 @@ void ors::Joint::write(std::ostream& os) const {
   os <<"from=" <<A <<' ';
   os <<"to=" <<B <<' ';
   if(!Q.isZero()) os <<"q=" <<Q <<' ';
-  uint i; Any *a;
+  uint i; Item *a;
   for_list(i,a,ats)
-  if(strcmp(a->tag,"A") && strcmp(a->tag,"from")
-      && strcmp(a->tag,"B") && strcmp(a->tag,"to")
-      && strcmp(a->tag,"Q") && strcmp(a->tag,"q")) os <<*a <<' ';
+  if(a->keys(0)!="A" && a->keys(0)!="from"
+      && a->keys(0)!="B" && a->keys(0)!="to"
+      && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
   //listWrite(ats, os);
 }
 
@@ -2759,21 +2764,20 @@ void ors::Joint::read(std::istream& is) {
   }
   
   //read all generic attributes
-  anyListRead(ats, is);
+  ats.read(is);
   if(!is.good()) HALT("joint (" <<from->name <<' ' <<to->name <<") read read error");
   
   //interpret some of the attributes
-  double *dval;
-  MT::String *sval;
-  sval=anyListGet<MT::String>(ats, "A", 1);  if(sval) A.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "from", 1); if(sval) A.setText(*sval);
-  dval=anyListGet<double>(ats, "BinvA", 0);  if(dval) B.setInverse(A);
-  sval=anyListGet<MT::String>(ats, "B", 1);  if(sval) B.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "to", 1); if(sval) B.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "Q", 1);  if(sval) Q.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "q", 1);  if(sval) Q.setText(*sval);
-  sval=anyListGet<MT::String>(ats, "X", 1);  if(sval) Xworld.setText(*sval);
-  dval=anyListGet<double>(ats, "type", 1);   if(dval) type=(JointType)((int)*dval); else type=hingeJT;
+  double d;
+  ats.get<Transformation>(A, "A");
+  ats.get<Transformation>(A, "from");
+  if(ats.get<bool>("BinvA")) B.setInverse(A);
+  ats.get<Transformation>(B, "B");
+  ats.get<Transformation>(B, "to");
+  ats.get<Transformation>(Q, "Q");
+  ats.get<Transformation>(Q, "q");
+  ats.get<Transformation>(Xworld, "X");
+  if(ats.get<double>(d, "type")) type=(JointType)d; else type=hingeJT;
 }
 
 
@@ -3994,7 +3998,7 @@ void ors::Graph::read(std::istream& is) {
       if(MT::peerNextChar(is)=='(') { MT::parse(is, "("); MT::parse(is, ")"); }
       MT::parse(is, "{");
       if(is.fail()) RERR("can't read opening brace for body (" <<n->name <<")");
-      try { n->read(is); } catch(...) RERR("error in parsing body (" <<n->name <<")");
+      n->read(is); //try { n->read(is); } catch(...) RERR("error in parsing body (" <<n->name <<")");
       MT::parse(is, "}");
       if(is.fail()) RERR("can't read closing brace for body (" <<n->name <<")");
       if(n->shapes.N==1) {  //parsing has implicitly added a shape...
@@ -4185,8 +4189,8 @@ void ors::Graph::reportGlue(std::ostream *os) {
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=anyListGet<double>(a->ats, "glue", 0);
-    bg=anyListGet<double>(b->ats, "glue", 0);
+    ag=a->ats.get<bool>("glue");
+    bg=b->ats.get<bool>("glue");
     
     if(ag || bg) {
       (*os)
@@ -4224,8 +4228,8 @@ void ors::Graph::glueTouchingBodies() {
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=anyListGet<double>(a->ats, "glue", 0);
-    bg=anyListGet<double>(b->ats, "glue", 0);
+    ag=a->ats.get<bool>("glue");
+    bg=b->ats.get<bool>("glue");
     
     if(ag || bg) {
       //if(a->index > b->index){ c=a; a=b; b=c; } //order them topolgically
@@ -4604,7 +4608,7 @@ uint ors::Graph::getTouchDimension() {
   uint i=0, j;
   
   // count touchsensors
-  for_list(j, n, bodies) if(anyListGet<double>(n->ats, "touchsensor", 0)) i++;
+  for_list(j, n, bodies) if(ats.get<double>(n->ats, "touchsensor", 0)) i++;
   
   td=i;
   return i;
@@ -4618,7 +4622,7 @@ void ors::Graph::getTouchState(arr& touch) {
   Body *n;
   uint i=0, j;
   for_list(j, n, bodies) {
-    if(anyListGet<double>(n->ats, "touchsensor", 0)) {
+    if(ats.get<double>(n->ats, "touchsensor", 0)) {
       touch(i)=pen(n->index);
       i++;
     }

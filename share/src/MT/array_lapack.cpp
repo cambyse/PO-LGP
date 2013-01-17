@@ -300,7 +300,7 @@ void lapack_min_Ax_b(arr& x,const arr& A, const arr& b){
   CHECK(A.d0>=A.d1 && A.d0==b.N && b.nd==1 && A.nd==2, "");
   arr At = ~A;
   x=b;
-  integer M=A.d0, N=A.d1, NRHS=1, D=M<N?M:N, LWORK=2*M*N, info;
+  integer M=A.d0, N=A.d1, NRHS=1, LWORK=2*M*N, info;
   arr work(LWORK);
   dgels_((char*)"N", &M, &N, &NRHS, At.p, &M, x.p, &M, work.p, &LWORK, &info );
   CHECK(!info, "dgels_ error info = " <<info);

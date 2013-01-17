@@ -105,9 +105,6 @@ template MT::Array<arr*>::~Array();
 
 template MT::Array<MT::Array<uint> >::~Array();
 
-template MT::Array<Any*>::Array();
-template MT::Array<Any*>::~Array();
-
 template MT::Array<char const*>::Array();
 template MT::Array<char const*>::Array(uint);
 template MT::Array<char const*>::~Array();

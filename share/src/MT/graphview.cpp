@@ -38,7 +38,7 @@ extern "C"{
 }
 
 struct sGraphView {
-  ElementL *G;
+  MapGraph *G;
   GraphView *p;
   MT::String title;
   
@@ -50,7 +50,7 @@ struct sGraphView {
   MT::Array<Agnode_t *> gvNodes;
   GVC_t *gvContext;
   GVJ_t *gvJob(){ return gvjobs_first(gvContext); }
-  
+
   void init();
   void updateGraphvizGraph();
   
@@ -64,7 +64,7 @@ struct sGraphView {
   
 };
 
-GraphView::GraphView(ElementL& G, const char* title, void *container) {
+GraphView::GraphView(MapGraph& G, const char* title, void *container) {
   gtkCheckInitialized();
   
   s = new sGraphView;
@@ -114,14 +114,15 @@ void sGraphView::updateGraphvizGraph(){
   agedgeattr(gvGraph, STR("fontsize"), STR("6"));
 
   uint i,j;
-  Element *e, *n;
+  Item *e, *n;
   gvNodes.resize(G->N);
   //first add `nodes' (elements without links)
   for_list(i, e, (*G)){
+    e->index=i;
     CHECK(i==e->index,"");
     //if(e->parents.N!=2){ //not an edge
-      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name)); //, true);
-      if(e->name.N) agset(gvNodes(i), STR("label"), e->name.p);
+      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->keys(0))); //, true);
+      if(e->keys.N) agset(gvNodes(i), STR("label"), e->keys(0).p);
       if(e->parents.N){
 	agset(gvNodes(i), STR("shape"), STR("box"));
 	agset(gvNodes(i), STR("fontsize"), STR("6"));

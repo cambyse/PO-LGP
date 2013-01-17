@@ -1,15 +1,15 @@
-#include <MT/hypergraph.h>
+#include <MT/mapGraph.h>
 #include <MT/graphview.h>
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
-  HyperGraph H;
+  MapGraph H;
 
   cout <<"reading graph..." <<endl;
   MT::load(H,filename);
   //cout <<H <<endl;
-  sortByDotOrder(H);
+  H.sortByDotOrder();
   cout <<H <<endl;
-  writeDot(H);
+  H.writeDot();
 
   GraphView gv(H);
   //MT::wait(2.);
@@ -17,7 +17,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 }
 
 void testBasic(){
-  HyperGraph G;
+  MapGraph G;
   G.add(TUP());
   G.write(cout);
   cout <<"--------------------------" <<endl;
@@ -34,9 +34,9 @@ void testBasic(){
   G.write(cout);
   cout <<"--------------------------" <<endl;
 
-  listWrite(G.getOutEdges(0),cout);
+  listWrite(G.getParents(0),cout);
   cout <<"--------------------------" <<endl;
-  listWrite(G.getOutEdges(1),cout);
+  listWrite(G.getParents(1),cout);
   cout <<"--------------------------" <<endl;
 }
 

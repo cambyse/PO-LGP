@@ -7,11 +7,13 @@
 struct Item;
 struct MapGraph;
 typedef MT::Array<Item*> ItemL;
+typedef MT::Array<MT::String> StringA;
 
 struct Item {
-  StringL keys;
+  StringA keys;
   ItemL parents;
   ItemL parentOf;
+  uint index;
   virtual ~Item() {};
   template<class T> T& value();    //access the value
   template<class T> const T& value() const;
@@ -28,17 +30,23 @@ struct MapGraph:ItemL{
   MapGraph();
   ~MapGraph();
 
+  MapGraph& operator=(const MapGraph&);
+
   Item* item(const char*);
   Item& operator[](const char *key){ return *item(key); }
-  template<class T> T& value(const char*);
+  template<class T> T* get(const char *key);
+  template<class T> bool get(T& x, const char *key){ T* y=get<T>(key); if(y){ x=*y; return true; } return false; }
 
-  template<class T> void append(const char *key,T& value);
+  template<class T> void append(const char *key,T& get);
 
-  inline void sortByDotOrder(ItemL& items);
+  Item *add(const uintA& tuple);
+  ItemL& getParents(uint i);
+
+  void sortByDotOrder();
 
   void read(std::istream& is);
-  void write(std::ostream& os, const char *ELEMSEP="\n", const char *delim=NULL) const;
-  void writeDot(ItemL& items);
+  void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
+  void writeDot(std::ostream& os=std::cout);
 };
 stdPipes(MapGraph);
 

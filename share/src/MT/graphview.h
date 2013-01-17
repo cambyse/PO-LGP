@@ -17,12 +17,12 @@
     -----------------------------------------------------------------  */
 
 
-#include <MT/hypergraph.h>
+#include <MT/mapGraph.h>
 
 struct GraphView{
   struct sGraphView *s;
   
-  GraphView(ElementL& G, const char* title="MT::GraphvizGtk", void *container=NULL);
+  GraphView(MapGraph& G, const char* title="MT::GraphvizGtk", void *container=NULL);
   ~GraphView();
   
   void update();

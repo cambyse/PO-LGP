@@ -476,27 +476,6 @@ extern Rnd rnd;
 
 //===========================================================================
 //
-// generic any container
-//
-
-struct Any {
-  char *tag;
-  const char *type;
-  void *p;
-  uint n;
-  char delim;
-  virtual ~Any() {};
-  virtual void write(std::ostream &os) const = 0;
-  virtual Any *newClone() = 0;
-};
-stdOutPipe(Any)
-
-template<class T> Any* anyNew(const char* tag, const T &x);
-template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
-
-
-//===========================================================================
-//
 // gnuplot calls
 //
 

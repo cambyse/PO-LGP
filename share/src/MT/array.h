@@ -280,8 +280,6 @@ typedef MT::Array<int>    intA;
 typedef MT::Array<char>   charA;
 typedef MT::Array<byte>   byteA;
 typedef MT::Array<bool>   boolA;
-struct Any;
-typedef MT::Array<Any*>   AnyList;
 typedef MT::Array<const char*>  CstrList;
 typedef MT::Array<arr*>   arrL;
 
@@ -760,11 +758,6 @@ template<class T> MT::Array<T*> LIST(const MT::Array<T>& A) {
 }
 template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.append(e); return e; }
 
-
-//-- AnyLists
-void anyListRead(AnyList& ats, std::istream& is);
-template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
-//template<class T> MT::Array<T> get(const AnyList& L, const char* tag); //TODO obsolete?
 
 //===========================================================================
 // @}

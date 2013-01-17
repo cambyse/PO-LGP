@@ -23,10 +23,7 @@ struct TransformationParser:Parser{
 
 void Item::write(std::ostream& os) const {
   //-- write keys
-  for_list_(MT::String, key, keys){
-    if(LIST_COUNT) os <<' ';
-    os <<*key;
-  }
+  keys.write(os, " ", "", "\0\0");
 
   //-- write parents
   if(parents.N){
@@ -34,7 +31,7 @@ void Item::write(std::ostream& os) const {
     for_list_(Item, i, parents){
       if(LIST_COUNT) os <<' ';
       CHECK(i->keys.N,"");
-      os <<*keys.last();
+      os <<keys.last();
     }
     os <<")";
   }
@@ -66,7 +63,7 @@ void Item::write(std::ostream& os) const {
 
 bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
   MT::String str;
-  StringL keys;
+  StringA keys;
   ItemL parents;
   Item *item;
 
@@ -74,12 +71,12 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
 
   //-- read keys
   for(;;){
-    if(!str.read(is, " \t\n\r,", " \t\n\r,(={", false)) break;
-    keys.append(new MT::String(str));
+    if(!str.read(is, " \t\n\r,", " \t\n\r,()={};", false)) break;
+    keys.append(str);
   }
   if(!keys.N) return false;
 
-  if(verbose){ cout <<" keys:"; listWrite(keys,cout," ","()"); cout <<flush; }
+  if(verbose){ cout <<" keys:" <<keys <<flush; }
 
   //-- read parents
   char c=MT::getNextChar(is);
@@ -165,14 +162,15 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
   } break;
   }
 
-  if(verbose)
+  if(verbose){
     if(item){ cout <<" value:"; item->writeValue(cout); cout <<endl; }
     else{ cout <<"FAILED" <<endl; }
+  }
 
   if(item) list.ItemL::append(item);
   else{
     cout <<"FAILED reading item with keys ";
-    listWrite(keys,cout," ","()");
+    keys.write(cout, " ", NULL, "()");
     cout <<" and parents ";
     listWrite(parents,cout," ","()");
     cout <<endl;
@@ -200,10 +198,8 @@ MapGraph::~MapGraph(){
 
 Item* MapGraph::item(const char* key){
   uint i;
-  MT::String *k;
   for_list_(Item, e, (*this))
-    for_list(i, k, e->keys)
-      if(*k==key) return e;
+    for(i=0;i<e->keys.N;i++) if(e->keys(i)==key) return e;
   return NULL;
 }
 
@@ -256,6 +252,11 @@ void writeDot(ItemL& G){
 #endif
 }
 
+MapGraph& MapGraph::operator=(const MapGraph& G){
+  NIY;
+  return *this;
+}
+
 void MapGraph::read(std::istream& is) {
   //read all generic attributes
   for(;;) {
@@ -270,4 +271,19 @@ void MapGraph::write(std::ostream& os, const char *ELEMSEP, const char *delim) c
   if(delim) os <<delim[0];
   for(i=0; i<N; i++) { if(i) os <<ELEMSEP;  if(elem(i)) os <<*elem(i); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
+}
+
+void MapGraph::writeDot(std::ostream& os){
+}
+
+Item *MapGraph::add(const uintA& tuple){
+  NIY;
+}
+
+ItemL& MapGraph::getParents(uint i){
+  NIY;
+}
+
+void MapGraph::sortByDotOrder(){
+  NIY;
 }

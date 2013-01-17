@@ -187,7 +187,7 @@ void generateSequence(arr &X,arr &V,uint n){
 void testPlayStateSequence(){
   ors::Graph G;
   OpenGL gl;
-  init(G,gl,"arm7.ors");
+  init(G, gl, "arm7.ors");
   uint n=G.getJointStateDimension();
   arr X,V;
   generateSequence(X,V,n);

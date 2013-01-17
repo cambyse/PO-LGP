@@ -26,6 +26,7 @@
 
 #include "array.h"
 #include "util.h"
+#include "mapGraph.h"
 
 namespace ors {
 
@@ -293,7 +294,7 @@ struct Body {
   
   MT::String name;     //!< name
   Transformation X;    //!< body's absolute pose
-  AnyList ats;         //!< list of any-type attributes
+  MapGraph ats;         //!< list of any-type attributes
   
   //dynamic properties
   BodyType type;          //!< is globally fixed?
@@ -309,7 +310,7 @@ struct Body {
   explicit Body(Graph& G, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
-    index=b.index; name=b.name; X=b.X; listClone(ats, b.ats);
+    index=b.index; name=b.name; X=b.X; ats=b.ats;
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
@@ -329,7 +330,7 @@ struct Joint {
   Transformation Q;             //!< transformation within the joint (usually dynamic)
   Transformation B;             //!< transformation from joint to child body (attachment, usually static)
   Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
-  AnyList ats;         //!< list of any-type attributes
+  MapGraph ats;         //!< list of any-type attributes
   
   Joint();
   explicit Joint(const Joint& j);
@@ -338,7 +339,7 @@ struct Joint {
   void operator=(const Joint& j) {
     index=j.index; ifrom=j.ifrom; ito=j.ito;
     type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
-    listClone(ats, j.ats);
+    ats=j.ats;
   }
   void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
   void write(std::ostream& os) const;
@@ -363,7 +364,7 @@ struct Shape {
   bool cont;      //!< are contacts registered (or filtered in the callback)
   Vector contactOrientation;
   
-  AnyList ats;    //!< list of any-type attributes
+  MapGraph ats;    //!< list of any-type attributes
   
   Shape();
   explicit Shape(const Shape& s);
@@ -373,7 +374,7 @@ struct Shape {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
     mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
-    listClone(ats, s.ats);
+    ats=s.ats;
   }
   void reset();
   void write(std::ostream& os) const;
