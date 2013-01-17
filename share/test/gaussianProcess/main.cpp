@@ -25,7 +25,8 @@ void testGP(){
 
   doubleA X,Y,Xp,Yp,Sp;
   GaussianProcess gp;
-  GaussKernelParams gpp(.1, 1., 1., .1);
+  GaussKernelParams gpp(1., 1., .1);
+  gp.obsVar = 0.05;
   gp.setKernel(GaussKernel,&gpp);
 
   randomData(X,Y);
@@ -37,7 +38,9 @@ void testDerivativeObservations(){
   cout <<"*** test derivative observations" <<endl;
 
   GaussianProcess gp;
-  GaussKernelParams gpp(.05, 10., .3, .05);
+  //GaussKernelParams gpp(10., .3, .05);
+  GaussKernelParams gpp(10., .3, .05);
+  gp.obsVar = 0.05;
   gp.setKernel(GaussKernel,&gpp);
   gp.covF_D = GaussKernelF_D;   //for GP
   gp.covDD_F = GaussKernelDD_F; //for plotKernel1D
@@ -66,7 +69,8 @@ void testDerivativeObservations(){
 void randomFunctions(){
   cout <<"*** generate random functions by sampling from the GP itself..." <<endl;
   GaussianProcess gp;
-  GaussKernelParams gpp(.001, 1., .2, .001);
+  GaussKernelParams gpp(1., .2, .001);
+  gp.obsVar = .1;
   gp.setKernel(GaussKernel,&gpp);
 
   uint k;
