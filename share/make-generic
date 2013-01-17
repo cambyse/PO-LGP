@@ -123,7 +123,7 @@ CXX	= g++
 CC	= g++
 LINK	= g++
 CPATH	:= $(CPATH):../../include:$(LIBPATH)/include:/usr/X11R6/include
-LPATH	:= $(LPATH):$(LIBPATH)/lib_$(SYS):$(LIBPATH)/lib:/usr/X11R6/lib
+LPATH	:= $(LPATH):$(BASE)/lib:/usr/X11R6/lib
 QTDIR 	= /usr/lib/qt3
 LDFLAGS	+= -o $(OUTPUT)
 SHAREFLAG = -shared
@@ -264,7 +264,7 @@ endif
 ifeq ($(SWIFT),1)
 CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
-LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
+#LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LIBS += -lSWIFT++
 QHULL := 1
 ANN := 1
@@ -273,7 +273,7 @@ endif
 ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
 CPATH := $(CPATH):$(BASE)/extern/Lewiner
-LPATH := $(LPATH):$(BASE)/extern/Lewiner
+#LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
 endif
 
@@ -285,7 +285,7 @@ endif
 ifeq ($(SOLID),1)
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
-LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
+#LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
 LIBS += -lFreeSOLID
 endif
 

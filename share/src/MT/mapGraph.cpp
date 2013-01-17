@@ -1,7 +1,7 @@
 #include <map>
 
 #include "mapGraph.h"
-#include "typeRegistry.h"
+#include "registry.h"
 
 /*struct Parser{
   virtual ~Parser(){};
@@ -48,10 +48,136 @@ void Item::write(std::ostream& os) const {
     os <<"='";
     value<MT::String>().write(os);
     os <<'\'';
-  }else{
+  }else if(valueType()==typeid(arr)){
     os <<'=';
-    writeValue(os);
+    value<arr>().write(os);
+  }else{
+    TypeRegistration *t = reg_find(valueType().name());
+    if(t && t->key){
+      os <<"=<" <<t->key <<' ';
+      writeValue(os);
+      os <<'>';
+    }else{
+      os <<'=';
+      writeValue(os);
+    }
   }
+}
+
+bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
+  MT::String str;
+  StringL keys;
+  ItemL parents;
+  Item *item;
+
+  if(verbose) cout <<"ITEM" <<flush;
+
+  //-- read keys
+  for(;;){
+    if(!str.read(is, " \t\n\r,", " \t\n\r,(={", false)) break;
+    keys.append(new MT::String(str));
+  }
+  if(!keys.N) return false;
+
+  if(verbose){ cout <<" keys:"; listWrite(keys,cout," ","()"); cout <<flush; }
+
+  //-- read parents
+  char c=MT::getNextChar(is);
+  if(c=='('){
+    for(uint j=0;;j++){
+      if(!str.read(is, " \t\n\r,", " \t\n\r,)", false)) break;
+      Item *e=list.item(str);
+      if(e){ //sucessfully found
+        parents.append(e);
+        e->parentOf.append(list);
+      }else{//this element is not known!!
+        HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown " <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
+      }
+    }
+    MT::parse(is, ")");
+    c=MT::getNextChar(is);
+  }
+
+  if(verbose){ cout <<" parents:"; if(!parents.N) cout <<"none"; else listWrite(parents,cout," ","()"); cout <<flush; }
+
+  //-- read value
+  if(c=='=') c=MT::getNextChar(is);
+  switch(c) {
+  case '\'': { //MT::String
+    str.read(is, "", "\'", true);
+    item = new Item_typed<MT::String>(keys, parents, str);
+  } break;
+  case '\"': { //MT::String
+    str.read(is, "", "\"", true);
+    item = new Item_typed<MT::String>(keys, parents, str);
+  } break;
+  case '[': { //arr
+    is.putback(c);
+    arr reals;
+    is >>reals;
+    item = new Item_typed<arr>(keys, parents, reals);
+  } break;
+  case '<': { //any type parser
+    str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
+    item = readTypeIntoItem(str,is);
+    if(!item){
+      is.clear();
+      MT_MSG("could not parse value of type '" <<str <<"' -- no such type has been registered");
+      str.read(is,"",">",false);
+      MT_MSG("ignoring: '"<<str<<"'");
+    }else{
+      item->keys = keys;
+      item->parents = parents;
+    }
+    MT::parse(is, ">");
+  } break;
+  case '{': { // MapGraph (e.g., attribute list)
+    MapGraph subList;
+    subList.read(is);
+    MT::parse(is, "}");
+    item = new Item_typed<MapGraph>(keys, parents, subList);
+  } break;
+  case '(': { // of strings
+    ItemL refs;
+    for(uint j=0;;j++){
+      str.read(is, " , ", " , )", false);
+      if(!str.N) break;
+      Item *e=list.item(str);
+      if(e){ //sucessfully found
+        refs.append(e);
+      }else{ //this element is not known!!
+        HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
+<<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
+      }
+    }
+    MT::parse(is, ")");
+    item = new Item_typed<ItemL>(keys, parents, refs);
+  } break;
+  default: { //single double or nothing
+    is.putback(c);
+    if(MT::contains("-.0123456789", c)) {  //single double
+      double d;
+      is >>d;
+      item = new Item_typed<double>(keys, parents, d);
+    } else { //bool
+      item = new Item_typed<bool>(keys, parents, true);
+    }
+  } break;
+  }
+
+  if(verbose)
+    if(item){ cout <<" value:"; item->writeValue(cout); cout <<endl; }
+    else{ cout <<"FAILED" <<endl; }
+
+  if(item) list.ItemL::append(item);
+  else{
+    cout <<"FAILED reading item with keys ";
+    listWrite(keys,cout," ","()");
+    cout <<" and parents ";
+    listWrite(parents,cout," ","()");
+    cout <<endl;
+  }
+  return true;
 }
 
 
@@ -128,104 +254,6 @@ void writeDot(ItemL& G){
   fil <<"}" <<endl;
   fil.close();
 #endif
-}
-
-bool readItem(MapGraph& list, std::istream& is){
-  MT::String str;
-  StringL keys;
-  ItemL parents;
-  Item *item;
-
-  //-- read keys
-  for(;;){
-    if(!str.read(is, " \t\n\r,", " \t\n\r,(={", false)) break;
-    keys.append(new MT::String(str));
-  }
-  if(!keys.N) return false;
-
-  //-- read parents
-  char c=MT::getNextChar(is);
-  if(c=='('){
-    for(uint j=0;;j++){
-      if(!str.read(is, " \t\n\r,", " \t\n\r,)", false)) break;
-      Item *e=list.item(str);
-      if(e){ //sucessfully found
-        parents.append(e);
-        e->parentOf.append(list);
-      }else{//this element is not known!!
-        HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown " <<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
-      }
-    }
-    MT::parse(is, ")");
-    c=MT::getNextChar(is);
-  }
-
-  //-- read value
-  if(c=='=') c=MT::getNextChar(is);
-  switch(c) {
-  case '\'': { //string
-    str.read(is, "", "\'", true);
-    item = new Item_typed<MT::String>(keys, parents, str);
-  } break;
-  case '\"': { //string
-    str.read(is, "", "\"", true);
-    item = new Item_typed<MT::String>(keys, parents, str);
-  } break;
-  case '[': { //vector of reals
-    is.putback(c);
-    arr reals;
-    is >>reals;
-    item = new Item_typed<arr>(keys, parents, reals);
-  } break;
-  case '<': { //any type parser
-    str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
-    item = readTypeIntoItem(str,is);
-    if(!item){
-      is.clear();
-      MT_MSG("could not parse value of type '" <<str <<"' -- no such type has been registered");
-      str.read(is,"",">",false);
-      MT_MSG("ignoring: '"<<str<<"'");
-    }else{
-      item->keys = keys;
-      item->parents = parents;
-    }
-    MT::parse(is, ">");
-  } break;
-  case '{': { //
-    MapGraph subList;
-    subList.read(is);
-    MT::parse(is, "}");
-    item = new Item_typed<MapGraph>(keys, parents, subList);
-  } break;
-  case '(': { // of strings
-    ItemL refs;
-    for(uint j=0;;j++){
-      str.read(is, " , ", " , )", false);
-      if(!str.N) break;
-      Item *e=list.item(str);
-      if(e){ //sucessfully found
-        refs.append(e);
-      }else{ //this element is not known!!
-        HALT("line:" <<MT::lineCount <<" reading item '" <<keys <<"': unknown "
-<<j <<"th linked element '" <<str <<"'"); //DON'T DO THIS YET
-      }
-    }
-    MT::parse(is, ")");
-    item = new Item_typed<ItemL>(keys, parents, refs);
-  } break;
-  default: { //single double or nothing
-    is.putback(c);
-    if(MT::contains("-.0123456789", c)) {  //single double
-      double d;
-      is >>d;
-      item = new Item_typed<double>(keys, parents, d);
-    } else { //bool
-      item = new Item_typed<bool>(keys, parents, true);
-    }
-  } break;
-  }
-  if(item) list.ItemL::append(item);
-  return true;
 }
 
 void MapGraph::read(std::istream& is) {

@@ -76,20 +76,6 @@ ifeq ($(MAKEMODE),mlrlib_minimal)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
 OPTIM  = debug
-FREEGLUT = 0
-ANN = 0
-QHULL = 0
-SWIFT = 0
-LAPACK = 0
-ODE = 0
-TONY = 0
-FELZ = 0
-OPENCV = 0
-SCHUNK = 0
-PLIB = 0
-BUMBLE = 0
-LEWINER = 0
-CUDA = 0
 endif
 
 
@@ -120,5 +106,6 @@ GRAPHVIZ = 1
 GTK = 1
 PHYSX = 0
 OCTAVE = 0
+PLY = 1
 endif
 

@@ -1,4 +1,4 @@
-OUTPUT    = libRAPID.a
+OUTPUT    = ../../../../../lib/libRAPID.a
 CXXFLAGS += -O3 -fPIC -Wno-deprecated
 OBJS      = $(shell find . \( -name '*.cpp' \) )
 OBJS     := $(OBJS:%.cpp=%.o)

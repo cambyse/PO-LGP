@@ -1011,7 +1011,7 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
 //! operator<<
 void Transformation::write(std::ostream& os) const {
   bool space=false;
-  os <<"<";
+  //os <<"<";
 #if 0
   if(!pos.isZero()) { os <<"t" <<pos;  space=true; }
   if(!rot.isZero()) { if(space) os <<' ';  os <<"q" <<rot;  space=true; }
@@ -1022,14 +1022,14 @@ void Transformation::write(std::ostream& os) const {
 #endif
   if(!vel.isZero()) { if(space) os <<' ';  os <<"v" <<vel;  space=true; }
   if(!angvel.isZero()) { if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
-  os <<">";
+  //os <<">";
 }
 //! operator>>
 void Transformation::read(std::istream& is) {
   setZero();
   char c;
   double x[4];
-  MT::skip(is, " \n\r\t<");
+  MT::skip(is, " \n\r\t<|");
   for(;;) {
     is >>c;
     if(is.fail()) return;  //EOF I guess
@@ -1048,7 +1048,7 @@ void Transformation::read(std::istream& is) {
         case 'v': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeVelocity(x[0], x[1], x[2]); break;
         case 'w': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeAngVelocityRad(x[0], x[1], x[2]); break;
           //case 's': is>>"(">>x[0]>>")";                   scale(x[0]); break;
-        case '|': is.putback('<'); return;
+        case '|':
         case '>': is.putback(c); return; //those symbols finish the reading without error
         default: MT_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
       }

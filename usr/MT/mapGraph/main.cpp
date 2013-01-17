@@ -1,14 +1,15 @@
 #include <MT/mapGraph.h>
 #include <MT/ors.h>
-#include <MT/typeRegistry.h>
+#include <MT/registry.h>
 
 REGISTER_TYPE_Key(T, ors::Transformation)
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
   MapGraph G;
 
-  cout <<"reading graph..." <<endl;
+  cout <<"reading graph..." <<flush;
   MT::load(G, filename);
+  cout <<"done" <<endl;
   //sortByDotOrder(H);
   //cout <<H <<endl;
   //writeDot(H);
@@ -24,7 +25,8 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 }
 
 int main(int argc, char** argv){
-  reportRegisteredTypes();
-  testRead("test.g");
+  reg_report();
+
+  testRead(argc<2?"test.g":argv[1]);
   return 0;
 }
