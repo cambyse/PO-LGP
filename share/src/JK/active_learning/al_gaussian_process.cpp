@@ -121,10 +121,10 @@ GaussianProcessAL::GaussianProcessAL(ActiveLearningProblem& prob) :
   s(new sGaussianProcessAL) {
   this->problem = prob;
   s->p = new GaussKernelParams();
-  s->p->obsVar = 10e-6;
   s->p->widthVar = 0.05;
   s->p->priorVar = 0.1;
 	s->gp.mu = -1.0;
+  s->gp.obsVar = 10e-6;
 
   s->gp.setGaussKernelGP(s->p, 0);
 }

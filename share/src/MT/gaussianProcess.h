@@ -135,6 +135,7 @@ struct GaussianProcess {
   void appendGradientObservation(const arr& x, const arr& dydx);
   void evaluate(const arr& x, double& y, double& sig);   //!< evaluate the GP at some point - returns y and sig (=standard deviation)
   void evaluate(const arr& X, arr& Y, arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
+  double log_likelihood();
   double max_var(); // the variance when no data present
   void gradient(arr& grad, const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
   void hessian(arr& hess, const arr& x);           //!< evaluate the hessian dy/dx1dx2 of the mean at some point
