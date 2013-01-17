@@ -1,0 +1,140 @@
+#! /bin/sh
+#
+#  INSTALLING YOUR MLR-SYSTEM
+#  (c) Machine Learning and Robotics Lab, FU Berlin, Germany, 2011
+#  http://www.inf.fu-berlin.de/en/groups/mlr
+#  Tobias Lang
+#
+#
+#  Parameters:
+#
+#  - Directory where the external libraries get installed
+#    DIR_EXTERNAL_LIBS=<directory>
+#    Default: ~/lib/
+#
+#  - Tar-ball of the external libraries
+#    FILE_TARBALL=<file>
+#    Default ./mlrLibs.tgz
+#    You can get this tarball from
+#    https://maserati.mi.fu-berlin.de/redmine/attachments/922/mlrLibs.tar.gz
+#
+#  Example Call:
+#    FILE_TARBALL=mlrLibs.tar.gz  ./INSTALL
+
+
+[ -z "${DIR_EXTERNAL_LIBS}" ] && DIR_EXTERNAL_LIBS=~/lib/
+[ -z "${FILE_TARBALL}" ] && FILE_TARBALL=mlrLibs.tgz
+
+FILE_SCRIPT=`readlink -f $0`
+DIR_GIT=`dirname $FILE_SCRIPT`
+ARCH=`uname -m`
+
+
+
+
+# ----------------------------
+# (1) External Libraries
+
+echo "+++ EXTERNAL LIBS +++\n\n"
+echo "Setting up external libraries in: " $DIR_EXTERNAL_LIBS
+echo "Using tar-ball: " $FILE_TARBALL
+
+if [ ! -d "${DIR_EXTERNAL_LIBS}" ] ; then
+  echo "Creating lib directory: " $DIR_EXTERNAL_LIBS
+  mkdir $DIR_EXTERNAL_LIBS
+fi
+
+if [ ! -f "${FILE_TARBALL}" ] ; then
+  echo "ERROR: Tar-ball '"$FILE_TARBALL"' does not exist."
+  exit
+fi
+
+echo 'cp' $FILE_TARBALL $DIR_EXTERNAL_LIBS
+cp $FILE_TARBALL $DIR_EXTERNAL_LIBS
+
+echo "Changing directory..."
+cd $DIR_EXTERNAL_LIBS
+pwd
+echo "Unpacking tar-ball..."
+echo 'tar xfz' $FILE_TARBALL
+tar xfz $FILE_TARBALL
+
+echo "Setting library links to libraries appropriate for the architecture..."
+echo "Architecture=" $ARCH
+
+# SWIFT (MT: removed because should stay in extern)
+# if [ "${ARCH}" = "x86_64" ] ; then
+#   cp SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-gcc432r-64.a"
+# else
+#   cp SWIFT++_1.2/lib/libswiftpp12-debr.a SWIFT++_1.2/lib/libSWIFT++.a
+#   echo "Using SWIFT++_1.2/lib/libswiftpp12-debr.a"
+# fi
+
+# NTCAN
+cd $DIR_EXTERNAL_LIBS/ntcan/lib/
+if [ "${ARCH}" = "x86_64" ] ; then
+  ln -s -f libntcan_x86_64.a libntcan.a
+  echo "Using libntcan_x86_64.a"
+else
+  ln -s -f libntcan_i686.a libntcan.a
+  echo "Using libntcan_i686.a"
+fi
+
+
+# MT: removed since this is included in makeAll
+# echo "Making libcolorseg (Felzenswalb-adaptation of Nils Plath)..."
+# cd $DIR_GIT/share/extern/libcolorseg/src/
+
+
+echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
+directory " $DIR_EXTERNAL_LIBS "..."
+
+cd $DIR_GIT
+cd share/extern
+./LINK $DIR_EXTERNAL_LIBS
+cd $DIR_GIT
+
+
+
+# ----------------------------
+# (2) Create make-config
+
+echo "\n\n\n+++ make-config +++\n\n"
+
+echo "Creating make-config (specify individual profiles here)..."
+
+cd share/
+mv make-config make-config.BAK
+mv make-config.default make-config
+cd $DIR_GIT
+
+
+
+# ----------------------------
+# (3) Install our libs
+
+echo "\n\n\n+++ MLR-LIBS +++\n\n"
+
+cd $DIR_GIT/share/
+pwd
+echo "Installing MLR-libs (libmt, librelational etc.)..."
+
+make makeAll
+
+
+
+# ----------------------------
+# (4) Tests
+
+echo "\n\n\n+++ TESTS +++\n\n"
+
+make tests
+
+echo "\n\n\n\nTo test the code, go to share/test/."
+
+
+
+echo "\n\nInstallation successful!"
+
+

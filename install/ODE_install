@@ -1,0 +1,48 @@
+#! /bin/sh
+
+NAME=ode-0.11
+FILE=ode-0.11.tar.gz
+THIS_PATH=$PWD
+
+[ -z $MLR_URL ] && MLR_URL=http://userpage.fu-berlin.de/mtoussai/smScpB076X
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing" $NAME "into" $MLR_LIBPATH
+echo
+
+## download file
+wget -O /tmp/$FILE $MLR_URL/$FILE
+if [ ! -f /tmp/$FILE ] ; then
+  echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
+  exit
+fi
+
+## check existance of lib path
+if [ ! -d $MLR_LIBPATH ] ; then
+  exit
+fi
+
+## delete & unpack
+cd $MLR_LIBPATH
+echo "unpacking in path:" $PWD
+rm -R $NAME
+tar xvzf /tmp/$FILE
+cd $NAME
+
+## make
+cd $MLR_LIBPATH/$NAME
+sh autogen.sh
+#./configure --help
+./configure --prefix=$MLR_LIBPATH --enable-double-precision --with-trimesh=opcode --with-pic
+make -j2
+make install
+
+## cp internal includes
+cd $MLR_LIBPATH
+mkdir include/ode/internal include/ode/internal/joints
+cp ode-0.11/ode/src/*.h include/ode/internal
+cp ode-0.11/ode/src/joints/*.h include/ode/internal/joints
+
+## clean
+cd $MLR_LIBPATH/$NAME
+find . -name '*.o' -delete
