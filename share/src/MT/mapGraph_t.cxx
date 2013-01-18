@@ -22,6 +22,8 @@ struct Item_typed:Item {
   virtual const std::type_info& valueType() const {
     return typeid(T);
   }
+
+  virtual Item* newClone() const { return new Item_typed<T>(keys, parents, value); }
 };
 
 template<class T> T& Item::value(){
@@ -44,7 +46,7 @@ template<class T> const T& Item::value() const{
 
 
 template<class T> T* MapGraph::get(const char *key){
-  Item *it = item(key);
+  Item *it = getItem(key);
   if(!it) return NULL;
   return &it->value<T>();
 }

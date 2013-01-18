@@ -20,6 +20,7 @@ struct Item {
   void write(std::ostream &os) const;
   virtual void writeValue(std::ostream &os) const = 0;
   virtual const std::type_info& valueType() const = 0;
+  virtual Item *newClone() const = 0;
 };
 stdOutPipe(Item);
 
@@ -32,12 +33,14 @@ struct MapGraph:ItemL{
 
   MapGraph& operator=(const MapGraph&);
 
-  Item* item(const char*);
-  Item& operator[](const char *key){ return *item(key); }
+  Item* getItem(const char*);
+  Item& operator[](const char *key){ return *getItem(key); }
+  ItemL getItems(const char*);
   template<class T> T* get(const char *key);
   template<class T> bool get(T& x, const char *key){ T* y=get<T>(key); if(y){ x=*y; return true; } return false; }
 
-  template<class T> void append(const char *key,T& get);
+  template<class T> void append(const char *key,T& x);
+  void append(Item* it){ ItemL::append(it); }
 
   Item *add(const uintA& tuple);
   ItemL& getParents(uint i);

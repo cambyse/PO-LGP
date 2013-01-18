@@ -2584,56 +2584,49 @@ void ors::Body::reset() {
   inertia*=.2;
 }
 
-void ors::Body::write(std::ostream& os) const {
-  os <<"pose=" <<X <<' ';
-  uint i; Item *a;
-  for_list(i, a, ats)
-      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
-  //listWrite(os);
-}
-
-#define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
-
-void ors::Body::read(std::istream& is) {
-  reset();
-  
-  //old convention: the first frame is X
-  if(MT::peerNextChar(is)=='<') {
-    is >>X;
-    if(!is.good()) RERR("READING ABORT - body '" <<name <<"' read error: could not read Transformation tag properly");
-  }
-  
-  ats.read(is);
-  if(!is.good()) HALT("body '" <<name <<"' read error: in ");
-  
+void ors::Body::parseAts() {
   //interpret some of the attributes
-  arr *arrval;
-  double *dval;
+  arr x;
   double d;
   MT::String str;
   ats.get<Transformation>(X, "X");
   ats.get<Transformation>(X, "pose");
-  
-  //shape declared in body attributes..
-  dval=ats.get<double>("type");     if(dval) {
-    if(!shapes.N) shapes.append(new Shape());
-    shapes(0)->body=this;
-    shapes(0)->ibody=index;
-    shapes(0)->type=(ShapeType)((int)*dval);
+
+  //move shape attributes to shape
+  Shape *s=NULL;
+  Item *it;
+  if(ats.getItem("type")){
+    CHECK(!shapes.N,"");
+    s=new Shape();
+    shapes.append(s);
+    s->body=this;
+    s->ibody=index;
   }
-  arrval=ats.get<arr>("size");     if(arrval){ CHECK(arrval->N==4,""); memmove(shapes(0)->size, arrval->p, 4*sizeof(double)); }
-  arrval=ats.get<arr>("color");    if(arrval){ CHECK(arrval->N==3,""); memmove(shapes(0)->color, arrval->p, 3*sizeof(double)); }
+#if 1
+  if(it=ats.getItem("type"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("size"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("color"))    { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("rel"))      { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("mesh"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("meshscale")){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(it=ats.getItem("contact"))  { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(s) s->parseAts();
+#else
+  if(ats.get<double>(d, "type")){ shapes(0)->type=(ShapeType)d; }
+  if(ats.get<arr>(x, "size")){ CHECK(x.N==4,""); memmove(shapes(0)->size, x.p, 4*sizeof(double)); }
+  if(ats.get<arr>(x, "color")){ CHECK(x.N==3,""); memmove(shapes(0)->color, x.p, 3*sizeof(double)); }
   if(shapes.N) ats.get<Transformation>(shapes(0)->rel, "rel");
   if(ats.get<MT::String>(str,"mesh")) shapes(0)->mesh.readFile(str);
   if(ats.get<double>(d, "meshscale")) shapes(0)->mesh.scale(d);
   if(shapes.N) ats.get<bool>(shapes(0)->cont, "contact");
-  
+#endif
+
   //mass properties
-  dval=ats.get<double>("mass");     if(dval) {
-    mass=*dval;
+  if(ats.get<double>(d, "mass")){
+    mass=d;
 #if 1
     inertia.setId();
-    inertia *= .2*(*dval);
+    inertia *= .2*d;
 #else
     switch(shapes(0)->type) {
       case sphereST:   inertiaSphere(inertia.m, mass, 1000., shapes(0)->size[3]);  break;
@@ -2645,12 +2638,27 @@ void ors::Body::read(std::istream& is) {
     }
 #endif
   }
-  
+
   type=dynamicBT;
   if(ats.get<bool>("fixed"))      type=staticBT;
   if(ats.get<bool>("static"))     type=staticBT;
   if(ats.get<bool>("kinematic"))  type=kinematicBT;
-  
+
+}
+
+void ors::Body::write(std::ostream& os) const {
+  os <<"pose=<T " <<X <<" > ";
+  uint i; Item *a;
+  for_list(i, a, ats)
+      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
+  //listWrite(os);
+}
+
+void ors::Body::read(std::istream& is) {
+  reset();
+  ats.read(is);
+  if(!is.good()) HALT("body '" <<name <<"' read error: in ");
+  parseAts();
 }
 
 
@@ -2673,12 +2681,7 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
   ibody=b->index;
 }
 
-void ors::Shape::read(std::istream& is) {
-  reset();
-  ats.read(is);
-  if(!is.good()) HALT("shape read error");
-  //listWrite(ats, cout); cout <<endl;
-  
+void ors::Shape::parseAts() {
   double d;
   arr x;
   MT::String str;
@@ -2691,15 +2694,6 @@ void ors::Shape::read(std::istream& is) {
   if(ats.get<bool>("contact"))    cont=true;
 }
 
-void ors::Shape::write(std::ostream& os) const {
-  os <<"rel=" <<rel <<' ';
-  os <<"type=" <<type <<' ';
-  uint i; Item *a;
-  for_list(i,a,ats)
-      if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
-  //listWrite(ats, os);
-}
-
 void ors::Shape::reset() {
   type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
@@ -2709,6 +2703,22 @@ void ors::Shape::reset() {
   rel.setZero();
   mesh.V.clear();
   cont=false;
+}
+
+void ors::Shape::write(std::ostream& os) const {
+  os <<"type=" <<type <<' ';
+  os <<"rel=<T " <<rel <<" > ";
+  uint i; Item *a;
+  for_list(i,a,ats)
+      if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
+  //listWrite(ats, os);
+}
+
+void ors::Shape::read(std::istream& is) {
+  reset();
+  ats.read(is);
+  if(!is.good()) HALT("shape read error");
+  parseAts();
 }
 
 uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes) {
@@ -2742,31 +2752,7 @@ ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint) {
   t-> inLinks.append(this);
 }
 
-void ors::Joint::write(std::ostream& os) const {
-  os <<"from=" <<A <<' ';
-  os <<"to=" <<B <<' ';
-  if(!Q.isZero()) os <<"q=" <<Q <<' ';
-  uint i; Item *a;
-  for_list(i,a,ats)
-  if(a->keys(0)!="A" && a->keys(0)!="from"
-      && a->keys(0)!="B" && a->keys(0)!="to"
-      && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
-  //listWrite(ats, os);
-}
-
-void ors::Joint::read(std::istream& is) {
-  reset();
-  
-  //old convention: the first frame is A | Q | B
-  if(MT::peerNextChar(is)=='<') {
-    is >>A >>Q >>B;
-    if(!is.good()) RERR("READING ABORT - joint read error: could not read Transformation tag properly");
-  }
-  
-  //read all generic attributes
-  ats.read(is);
-  if(!is.good()) HALT("joint (" <<from->name <<' ' <<to->name <<") read read error");
-  
+void ors::Joint::parseAts() {
   //interpret some of the attributes
   double d;
   ats.get<Transformation>(A, "A");
@@ -2778,6 +2764,25 @@ void ors::Joint::read(std::istream& is) {
   ats.get<Transformation>(Q, "q");
   ats.get<Transformation>(Xworld, "X");
   if(ats.get<double>(d, "type")) type=(JointType)d; else type=hingeJT;
+}
+
+void ors::Joint::write(std::ostream& os) const {
+  os <<"from=<T " <<A <<" > ";
+  os <<"to=<T " <<B <<" > ";
+  if(!Q.isZero()) os <<"q=<T " <<Q <<" > ";
+  uint i; Item *a;
+  for_list(i,a,ats)
+  if(a->keys(0)!="A" && a->keys(0)!="from"
+      && a->keys(0)!="B" && a->keys(0)!="to"
+      && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
+  //listWrite(ats, os);
+}
+
+void ors::Joint::read(std::istream& is) {
+  reset();
+  ats.read(is);
+  if(!is.good()) HALT("joint (" <<from->name <<' ' <<to->name <<") read read error");
+  parseAts();
 }
 
 
@@ -3978,6 +3983,75 @@ void ors::Graph::write(std::ostream& os) const {
 
 /*!\brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
+#if 1
+  uint i; Item *it;
+  MapGraph G;
+
+  G.read(is);
+  //cout <<"***MAPGRAPH\n" <<G <<endl;
+
+  clear();
+
+  ItemL bs = G.getItems("body");
+  for_list(i, it, bs){
+    CHECK(it->keys(0)=="body","");
+    CHECK(it->valueType()==typeid(MapGraph),"bodies must have value MapGraph");
+
+    Body *b=new Body(*this);
+    b->name = it->keys(1);
+    b->ats = it->value<MapGraph>();
+    b->parseAts();
+    if(b->shapes.N==1) {  //parsing has implicitly added a shape...
+      Shape *s=b->shapes(0);
+      s->index=shapes.N;
+      shapes.append(s);
+      s->parseAts();
+    }
+  }
+
+  ItemL ss = G.getItems("shape");
+  for_list(i, it, ss){
+    CHECK(it->keys(0)=="shape","");
+    CHECK(it->parents.N==1,"shapes must have one parent");
+    CHECK(it->valueType()==typeid(MapGraph),"shape must have value MapGraph");
+
+    Body *b=listFindByName(bodies, it->parents(0)->keys(1));
+    CHECK(b,"");
+    Shape *s=new Shape(*this, b);
+    if(it->keys.N>1) s->name=it->keys(1);
+    s->ats = it->value<MapGraph>();
+    s->parseAts();
+  }
+
+  ItemL js = G.getItems("joint");
+  for_list(i, it, js){
+    CHECK(it->keys(0)=="joint","");
+    CHECK(it->parents.N==2,"joints must have two parents");
+    CHECK(it->valueType()==typeid(MapGraph),"joints must have value MapGraph");
+
+    Body *from=listFindByName(bodies, it->parents(0)->keys(1));
+    Body *to=listFindByName(bodies, it->parents(1)->keys(1));
+    Joint *j=new Joint(*this, from, to);
+    j->ats = it->value<MapGraph>();
+    j->parseAts();
+  }
+
+  MT::String str;
+  if(G.get<MT::String>(str, "QlinFile")) {
+    ifstream qlinfile;
+    MT::open(qlinfile, str);
+    Qlin.readTagged(qlinfile, "Qlin");
+    Qoff.readTagged(qlinfile, "Qoff");
+    Qinv.readTagged(qlinfile, "Qinv");
+    //cout <<Qlin <<Qoff <<Qinv <<endl;
+  }
+
+  graphMakeLists(bodies, joints);
+  fillInRelativeTransforms();
+
+  //cout <<"***ORSGRAPH\n" <<*this <<endl;
+#else
+#define RERR(x) {}
   MT::lineCount=1;
   Body *n=NULL, *f=NULL, *t=NULL; Joint *e;
   Shape *s;
@@ -4061,6 +4135,7 @@ void ors::Graph::read(std::istream& is) {
   is.clear();
   graphMakeLists(bodies, joints);
   fillInRelativeTransforms();
+#endif
 }
 
 void ors::Graph::writePlyFile(const char* filename) const {

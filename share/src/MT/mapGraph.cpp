@@ -28,18 +28,18 @@ void Item::write(std::ostream& os) const {
   //-- write parents
   if(parents.N){
     os <<" (";
-    for_list_(Item, i, parents){
+    for_list_(Item, it, parents){
       if(LIST_COUNT) os <<' ';
-      CHECK(i->keys.N,"");
-      os <<keys.last();
+      CHECK(it->keys.N,"");
+      os <<it->keys.last();
     }
     os <<")";
   }
 
   //-- write value
   if(valueType()==typeid(MapGraph)){
-    os <<" { ";
-    value<MapGraph>().write(os, " ");
+    os <<" {";
+    value<MapGraph>().write(os, ",");
     os <<" }";
   }else if(valueType()==typeid(MT::String)){
     os <<"='";
@@ -71,7 +71,7 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
 
   //-- read keys
   for(;;){
-    if(!str.read(is, " \t\n\r,", " \t\n\r,()={};", false)) break;
+    if(!str.read(is, " \t\n\r", " \t\n\r,()={};", false)) break;
     keys.append(str);
   }
   if(!keys.N) return false;
@@ -83,7 +83,7 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
   if(c=='('){
     for(uint j=0;;j++){
       if(!str.read(is, " \t\n\r,", " \t\n\r,)", false)) break;
-      Item *e=list.item(str);
+      Item *e=list.getItem(str);
       if(e){ //sucessfully found
         parents.append(e);
         e->parentOf.append(list);
@@ -134,12 +134,12 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
     MT::parse(is, "}");
     item = new Item_typed<MapGraph>(keys, parents, subList);
   } break;
-  case '(': { // of strings
+  case '(': { // ItemL
     ItemL refs;
     for(uint j=0;;j++){
       str.read(is, " , ", " , )", false);
       if(!str.N) break;
-      Item *e=list.item(str);
+      Item *e=list.getItem(str);
       if(e){ //sucessfully found
         refs.append(e);
       }else{ //this element is not known!!
@@ -163,7 +163,7 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=false){
   }
 
   if(verbose){
-    if(item){ cout <<" value:"; item->writeValue(cout); cout <<endl; }
+    if(item){ cout <<" value:"; item->writeValue(cout); cout <<"FULL:"; item->write(cout); cout <<endl; }
     else{ cout <<"FAILED" <<endl; }
   }
 
@@ -189,6 +189,7 @@ struct sMapGraph{
 };
 
 MapGraph::MapGraph():s(NULL){
+  ItemL::memMove=true;
   s = new sMapGraph;
 }
 
@@ -196,11 +197,20 @@ MapGraph::~MapGraph(){
   delete s;
 }
 
-Item* MapGraph::item(const char* key){
+Item* MapGraph::getItem(const char* key){
   uint i;
-  for_list_(Item, e, (*this))
-    for(i=0;i<e->keys.N;i++) if(e->keys(i)==key) return e;
+  for_list_(Item, it, (*this))
+    for(i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
   return NULL;
+}
+
+ItemL MapGraph::getItems(const char* key){
+  uint i;
+  ItemL ret;
+  for_list_(Item, it, (*this)){
+    for(i=0;i<it->keys.N;i++) if(it->keys(i)==key){ ret.append(it); break; }
+  }
+  return ret;
 }
 
 void sortByDotOrder(ItemL& G){
@@ -253,14 +263,17 @@ void writeDot(ItemL& G){
 }
 
 MapGraph& MapGraph::operator=(const MapGraph& G){
-  NIY;
+  listDelete(*this);
+  this->resize(G.N);
+  uint i;
+  for(i=0; i<G.N; i++) elem(i)=G.elem(i)->newClone();
   return *this;
 }
 
 void MapGraph::read(std::istream& is) {
   //read all generic attributes
   for(;;) {
-    char c=MT::peerNextChar(is);
+    char c=MT::peerNextChar(is, " \n\r\t,");
     if(!is.good() || c=='}'){ is.clear(); break; }
     if(!readItem(*this, is)) break;
   }

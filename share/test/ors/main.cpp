@@ -12,7 +12,7 @@
 
 void testLoadSave(){
   ors::Graph G;
-  ifstream fil("my.ors");
+  ifstream fil("test.ors");
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
@@ -475,6 +475,7 @@ void testBlenderImport(){
 int main(int argc,char **argv){
 
   testLoadSave();
+  return 0;
   testPlayStateSequence();
   testKinematics();
   testFollowRedundantSequence();

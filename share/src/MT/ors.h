@@ -314,6 +314,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -342,6 +343,7 @@ struct Joint {
     ats=j.ats;
   }
   void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }
@@ -377,6 +379,7 @@ struct Shape {
     ats=s.ats;
   }
   void reset();
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
