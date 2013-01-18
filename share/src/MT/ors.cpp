@@ -2602,7 +2602,6 @@ void ors::Body::parseAts() {
     s->body=this;
     s->ibody=index;
   }
-#if 1
   if(it=ats.getItem("type"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(it=ats.getItem("size"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(it=ats.getItem("color"))    { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
@@ -2611,15 +2610,6 @@ void ors::Body::parseAts() {
   if(it=ats.getItem("meshscale")){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(it=ats.getItem("contact"))  { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(s) s->parseAts();
-#else
-  if(ats.get<double>(d, "type")){ shapes(0)->type=(ShapeType)d; }
-  if(ats.get<arr>(x, "size")){ CHECK(x.N==4,""); memmove(shapes(0)->size, x.p, 4*sizeof(double)); }
-  if(ats.get<arr>(x, "color")){ CHECK(x.N==3,""); memmove(shapes(0)->color, x.p, 3*sizeof(double)); }
-  if(shapes.N) ats.get<Transformation>(shapes(0)->rel, "rel");
-  if(ats.get<MT::String>(str,"mesh")) shapes(0)->mesh.readFile(str);
-  if(ats.get<double>(d, "meshscale")) shapes(0)->mesh.scale(d);
-  if(shapes.N) ats.get<bool>(shapes(0)->cont, "contact");
-#endif
 
   //mass properties
   if(ats.get<double>(d, "mass")){
@@ -3671,12 +3661,6 @@ void ors::Graph::equationOfMotion(arr& M, arr& F, const arr& qd) {
 /*!\brief return the joint accelerations \f$\ddot q\f$ given the
   joint torques \f$\tau\f$ (computed via Featherstone's Articulated Body Algorithm in O(n)) */
 void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
-#if 0
-  Featherstone::Robot r;
-  r.C = this;
-  arr dummy;
-  Featherstone::fwdDynamics_old(qdd, r, qd, tau, dummy);
-#else
   static ors::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
@@ -3684,23 +3668,15 @@ void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
   //ors::fwdDynamics_aba_1D(qdd, tree, qd, tau);
   //ors::fwdDynamics_aba_nD(qdd, tree, qd, tau);
   ors::fwdDynamics_MF(qdd, tree, qd, tau);
-#endif
 }
 
 /*!\brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
   \f$\ddot q\f$ (computed via the Recursive Newton-Euler Algorithm in O(n)) */
 void ors::Graph::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
-#if 0
-  Featherstone::Robot r;
-  r.C = this;
-  arr dummy;
-  Featherstone::invdyn_old(tau, r, qd, qdd, dummy);
-#else
   static ors::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   ors::invDynamics(tau, tree, qd, qdd);
-#endif
 }
 
 /*void ors::Graph::impulsePropagation(arr& qd1, const arr& qd0){
@@ -3983,7 +3959,6 @@ void ors::Graph::write(std::ostream& os) const {
 
 /*!\brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
-#if 1
   uint i; Item *it;
   MapGraph G;
 
@@ -4050,92 +4025,6 @@ void ors::Graph::read(std::istream& is) {
   fillInRelativeTransforms();
 
   //cout <<"***ORSGRAPH\n" <<*this <<endl;
-#else
-#define RERR(x) {}
-  MT::lineCount=1;
-  Body *n=NULL, *f=NULL, *t=NULL; Joint *e;
-  Shape *s;
-  String tag, name, node1, node2;
-  ifstream qlinfile;
-  uint j;
-  MT::peerNextChar(is);
-  clear();
-  for(;;) {
-    tag.read(is, " \t\n\r", " \t\n\r({", false);
-    if(!tag.N) break;  //end of file
-    DEBUG(cout <<"tag=" <<tag <<endl);
-    if(tag=="body") {  //node
-      name.read(is, " \t\n\r", " \t\n\r({", false);
-      DEBUG(cout <<"name=" <<name <<endl);
-      n=new Body(*this);
-      n->name = name;
-      if(MT::peerNextChar(is)=='(') { MT::parse(is, "("); MT::parse(is, ")"); }
-      MT::parse(is, "{");
-      if(is.fail()) RERR("can't read opening brace for body (" <<n->name <<")");
-      n->read(is); //try { n->read(is); } catch(...) RERR("error in parsing body (" <<n->name <<")");
-      MT::parse(is, "}");
-      if(is.fail()) RERR("can't read closing brace for body (" <<n->name <<")");
-      if(n->shapes.N==1) {  //parsing has implicitly added a shape...
-        s=n->shapes(0);
-        s->index=shapes.N;
-        shapes.append(s);
-      }
-      continue;
-    }
-    if(tag=="joint") {  //edge
-      name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
-      DEBUG(cout <<"name=" <<name <<endl);
-      t=f=NULL;
-      MT::parse(is, "(");
-      node1.read(is, " ", " , )", true);
-      DEBUG(cout <<"node1=" <<node1 <<endl);
-      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
-      if(!f) RERR("reading edge: don't know from-name " <<node1);
-      node2.read(is, " ", " , )", true);
-      DEBUG(cout <<"node2=" <<node2 <<endl);
-      for_list(j, n, bodies) if(n->name==node2) { t=n; break; }
-      if(!t) RERR("reading edge: don't know to-name " <<node2);
-      e=new Joint(*this, f, t);
-      MT::parse(is, "{");
-      if(is.fail()) RERR("can't read opening brace for edge (" <<e->from->name <<' ' <<e->to->name <<")");
-      try { e->read(is); } catch(...) RERR("error in parsing edge (" <<e->from->name <<' ' <<e->to->name <<")");
-      MT::parse(is, "}");
-      if(is.fail()) RERR("can't read closing brace for edge (" <<e->from->name <<' ' <<e->to->name <<")");
-      continue;
-    }
-    if(tag=="shape") {  //edge
-      name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
-      DEBUG(cout <<"name=" <<name <<endl);
-      f=NULL;
-      MT::parse(is, "(");
-      node1.read(is, " ", " )", true);
-      DEBUG(cout <<"node1=" <<node1 <<endl);
-      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
-      if(!f) RERR("reading shape: don't know from-name " <<node1);
-      s=new Shape(*this, f);
-      s->name=name;
-      MT::parse(is, "{");
-      if(is.fail()) RERR("can't read opening brace for shape (" <<f->name <<'-' <<name <<")");
-      try { s->read(is); } catch(...) RERR("error in parsing shape (" <<f->name <<'-' <<name <<")");
-      MT::parse(is, "}");
-      if(is.fail()) RERR("can't read closing brace for shape (" <<f->name <<'-' <<name <<")");
-      continue;
-    }
-    if(tag=="QlinFile") {
-      name.read(is, " \t\n\r", " \t\n\r({", false);
-      MT::open(qlinfile, name);
-      Qlin.readTagged(qlinfile, "Qlin");
-      Qoff.readTagged(qlinfile, "Qoff");
-      Qinv.readTagged(qlinfile, "Qinv");
-      //cout <<Qlin <<Qoff <<Qinv <<endl;
-      continue;
-    }
-    RERR("can't parse element of type '" <<tag <<"'");
-  }
-  is.clear();
-  graphMakeLists(bodies, joints);
-  fillInRelativeTransforms();
-#endif
 }
 
 void ors::Graph::writePlyFile(const char* filename) const {
