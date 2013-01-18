@@ -99,7 +99,7 @@ struct Process {
   bool isClosed();                      ///< check if closed
   
   /// @name lisetn to variable
-  void listenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
+  void listenTo(Variable *var);
   void listenTo(const VariableL &signalingVars);
   void stopListeningTo(Variable *var);
 };
@@ -107,7 +107,7 @@ struct Process {
 
 //===========================================================================
 /**
- * Registration of fields in a Variable.
+ * Helper to register FIELDs in a Variable.
  */
 struct FieldRegistration {
   const char* name;
@@ -119,6 +119,9 @@ struct FieldRegistration {
   virtual void readValue(istream& os) const { NIY; }
 };
 
+/**
+ * Helper to register FIELDs in a Variable.
+ */
 template<class T>
 struct FieldRegistration_typed:FieldRegistration {
   FieldRegistration_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
@@ -135,7 +138,10 @@ struct FieldRegistration_typed:FieldRegistration {
 void registerField(Variable *v, FieldRegistration* f);
 
 /**
- * Macro for automatic setters and getters of members in Variables.
+ * \def FIELD(type, name)
+ * A macro to create a member of a Variable.
+ *
+ * Creates setters/getters and a register function.
  */
 #define FIELD(type, name) \
   type name; \
@@ -151,9 +157,11 @@ void registerField(Variable *v, FieldRegistration* f);
 
 //===========================================================================
 /**
- * Parameters.
- * TODO what do they actually do?
- * (these are usually not created directly by the user,
+ * Parameters similar to MT:getParameter.
+ *
+ * You can access parameters with `biros().getParameter()' functions.
+ *
+ * Parameterhs are usually not created directly by the user,
  * they are created automatically by a call of `getParameter')
  */
 struct Parameter {
@@ -249,7 +257,7 @@ struct Biros:Variable {
   void stepToNextWriteAccess();
 };
 
-Biros& biros(); //get access to the global info struct
+Biros& biros();
 
 
 //===========================================================================
@@ -302,25 +310,31 @@ struct WorkingCopy {
 
 
 //===========================================================================
-//
-// handling groups of processes
-//
+/**
+ * @name Handle lists of processes
+ * @{
+ */
 void open(const ProcessL& P);
 void step(const ProcessL& P);
+void stepInSequence(const ProcessL& P);
+void stepInSequenceThreaded(const ProcessL& P);
 void loop(const ProcessL& P);
 void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
+/**  @} */
 
 //===========================================================================
-//
-// helpers
-//
+/**
+ * @name  Helpers to print out information
+ * @{
+ */
 void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
 void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
+/** @} */
 
 
 #include "biros_views.h"
