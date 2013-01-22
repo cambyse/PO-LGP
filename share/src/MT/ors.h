@@ -499,8 +499,13 @@ struct Graph {
   //!@name managing the data
   void sortProxies(bool deleteMultiple=false, bool deleteOld=false);
   bool checkUniqueNames() const;
-  Body  *getBodyByName(const char* name) const;
+
+  Body *getBodyByName(const char* name) const;
+  uint getBodyIndexByName(const char* name) const;
+
   Shape *getShapeByName(const char* name) const;
+  uint getShapeIndexByName(const char* name) const;
+
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   void prefixNames();
   

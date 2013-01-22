@@ -3925,7 +3925,19 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   return 0;
 }
 
-//! find body with specific name
+//! find body index with specific name
+uint ors::Graph::getBodyIndexByName(const char* name) const {
+  Body *n;
+  uint j;
+  for_list(j, n, bodies) {
+    if(strcmp(n->name, name)==0) return n->index;
+  }
+  if(strcmp("glCamera", name)!=0)
+    MT_MSG("cannot find Body named '" <<name <<"' in Graph");
+  return 0;
+}
+
+//! find shape with specific name
 ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   Shape *s;
   uint j;
@@ -3934,6 +3946,17 @@ ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   }
   MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
+}
+
+//! find shape index with specific name
+uint ors::Graph::getShapeIndexByName(const char* name) const {
+  Shape *s;
+  uint j;
+  for_list(j, s, shapes) {
+    if(strcmp(s->name, name)==0) return s->index;
+  }
+  MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
+  return 0;
 }
 
 //! find joint connecting two bodies with specific names
