@@ -299,6 +299,7 @@ void PhysXInterface::pullState() {
   uint i;
   for_index(i,s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
   G->calcShapeFramesFromBodies();
+  G->calcJointsFromBodyFrames();
 }
 
 void PhysXInterface::ShutdownPhysX() {
