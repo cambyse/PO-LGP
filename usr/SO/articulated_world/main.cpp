@@ -11,8 +11,16 @@
 
 
 /*----------------------------------------------------------------------------*/
+#include "Variables.h"
+#include "Processes.h"
+
+#include <biros/biros.h>
+#include <biros/biros_views.h>
+
 #include <MT/ors_physx.h>
 #include <MT/opengl.h>
+
+#include <motion/motion.h>
 
 
 /*----------------------------------------------------------------------------*/
@@ -26,6 +34,8 @@
 ors::Body* createRobot(ors::Graph& graph) {
   ors::Body* robot = new ors::Body(graph);
   robot->X.setRandom();
+  robot->X.pos.x -= .5;
+  robot->X.pos.y -= .5;
   robot->X.pos.z += 1.;
   robot->name << "robot";
   robot->type = ors::kinematicBT;
@@ -38,6 +48,7 @@ ors::Body* createRobot(ors::Graph& graph) {
   robotShape->size[1] = .1;
   robotShape->size[2] = .1;
   robotShape->size[3] = .1;
+
   return robot;
 }
 
@@ -64,53 +75,73 @@ void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
 
 /*----------------------------------------------------------------------------*/
 int main(int argc, char** argv) {
-  // SETUP
-  // load ors file
-  std::string file("test.ors");
-  if (argc == 2) {
-    file = std::string(argv[1]);
-  }
-  cout << "Loading " << file << endl;
-  ors::Graph graph;
-  graph.init(file.c_str());
+  MT::initCmdLine(argc, argv);
+
+  // Load ORS into a varbiable
+  GeometricState geometricState;
+  ors::Graph& graph = geometricState.get_ors();
 
   // add simple robot to graph
   ors::Body* robot = createRobot(graph);
-  graph.calcBodyFramesFromJoints();
+  /* createRobot(graph); */
+  // graph.calcBodyFramesFromJoints();
 
   OpenGL glMy;
   OpenGL glPh("PhysX");
   PhysXInterface physx;
-
-  /* init(graph, glMy, file.c_str()); */
   bindOrsToOpenGL(graph, glMy);
   bindOrsToPhysX(graph, glPh, physx);
 
-  /* physx.G = &graph; */
-  /* physx.create(); */
-  /* glPh.add(glStandardScene, NULL); */
-  /* glPh.add(glPhysXInterface, &physx); */
-  /* glPh.setClearColors(1., 1., 1., 1.); */
-  /* glPh.camera.setPosition(10., -15., 8.); */
-  /* glPh.camera.focus(0, 0, 1.); */
-  /* glPh.camera.upright(); */
-  /* glPh.watch(); */
+  // SETUP BIROS
+  biros().dump();
+  InsideOut insideOutView();
+  cout << " view cereated" << endl;
+
+
+  // VARBIABLES
+  // GeometricState was already created. See above.
+  PerceptsVar perceptsVar;
+  RobotPosVar robotPosVar;
+  /* WorldStateVar worldStateVar("world state"); */
+  MovementRequestVar movementRequstVar;
+
+  // PROCESSES
+  FakePerceptionP fakePerceptionP;
+  CognitionP cognitionP;
+
+  // CONNECT Processes with Variables
+  fakePerceptionP.geometricState = &geometricState;
+  fakePerceptionP.percepts = &perceptsVar;
+  fakePerceptionP.robot = &robotPosVar;
+
+  cognitionP.percepts = &perceptsVar;
+  cognitionP.movementRequest = &movementRequstVar;
+  cognitionP.robotPos = &robotPosVar;
+
+
+  ProcessL processes;
+  processes.append(&fakePerceptionP);
+  processes.append(&cognitionP);
 
   // WORK
-  double robotSpeedX = 0.002;
-  double robotSpeedY = 0.005;
-  for (uint t = 0; t < 500; t++) {
-    cout << "\r t=" << t << std::flush;
+  double robotSpeed = 0.01;
+  Metronome ticcer("ticcer", 100);
+  for (uint i = 0; i < 1000; i++) {
+    stepInSequenceThreaded(processes);
 
-    // move the robot
-    robot->X.pos.y += robotSpeedY;
-    robot->X.pos.x -= robotSpeedX;
+    robot->X.pos += movementRequstVar.control_u;
+
+    /* graph.calcBodyFramesFromJoints(); */
+    graph.calcShapeFramesFromBodies();
 
     // update sim
     physx.step();
-    glPh.update();
     glMy.update();
+    glPh.update();
+
+    /* ticcer.waitForTic(); */
   }
+
   return 0;
 }
 
@@ -135,4 +166,4 @@ int main(int argc, char** argv) {
 
 
 
-// vim: ts=2:sw=2:noexpandtab
+// vim: ts=2:sw=2:expandtab
