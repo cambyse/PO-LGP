@@ -24,27 +24,59 @@ void FakePerceptionP::step() {
 // ============================================================================
 // COGNITION
 void CognitionP::step() {
-  // select a destination from the percepts
-  ::srand(time(NULL));
-  uint N = percepts->objects.N;
-  if (N > 0) {
-    ors::Vector destination = *percepts->objects(::rand() % N);
-    ors::Vector control = destination - robotPos->pos;
-
-    cout << "Destination    " << destination   << endl;
-    cout << "Robot pos      " << robotPos->pos << endl;
-    cout << "Control        " << control       << endl;
-
-    double Kp = 0.01;
-    control.x = MT::sign(control.x) * Kp;
-    control.y = MT::sign(control.y) * Kp;
-    control.z = 0 * MT::sign(control.z) * Kp;
-
-    cout << "Control scaled " << control       << endl;
-    cout << endl;
-
-    movementRequest->control_u = control;
+  if (worldState->changed) {
+    // wait :)
+    movementRequest->control_u = zeroControl;
   } else {
-    cout << "Too few (" << N << ") objects in the world" << endl;
+    // select a destination from the percepts
+    ::srand(time(NULL));
+    uint N = percepts->objects.N;
+    if (N > 0) {
+      ors::Vector destination = *percepts->objects(::rand() % N);
+      ors::Vector control = destination - robotPos->pos;
+
+      cout << "Destination    " << destination   << endl;
+      cout << "Robot pos      " << robotPos->pos << endl;
+      cout << "Control        " << control       << endl;
+
+      double Kp = 0.01;
+      control.x = MT::sign(control.x) * Kp;
+      control.y = MT::sign(control.y) * Kp;
+      control.z = 0 * MT::sign(control.z) * Kp;
+
+      cout << "Control scaled " << control       << endl;
+      cout << endl;
+
+      movementRequest->control_u = control;
+    } else {
+      cout << "Too few (" << N << ") objects in the world" << endl;
+    }
   }
+}
+
+
+// ============================================================================
+// WorldStateProvider
+void WorldStateProvider::step() {
+  arr current;
+  geometricState->get_ors().getJointState(current);
+
+  /* cout << "joint dim " << geometricState->get_ors().getJointStateDimension(true) << endl; */
+  /* cout << "current " << current.N << " " << current << endl; */
+
+  if (firstRun) {
+    previous = current;
+    worldState->changed = false;
+    firstRun = false;
+    cout << "IN firstRun" << endl;
+    cout << "setting..." << previous << endl;
+  }
+
+  // if world is changed
+  cout << "prev " << previous << endl;
+  cout << "curr " << current  << endl;
+
+  // did world change?
+  worldState->changed = norm(previous - current) > 0.01;
+  previous = current;
 }

@@ -25,20 +25,47 @@ struct FakePerceptionP : public Process {
 
 // ============================================================================
 // Cognition
-struct CognitionP : public Process {
+class CognitionP : public Process {
+public:
   PerceptsVar* percepts;
-  /* WorldStateVar* worldState; */
+  WorldStateVar* worldState;
   MovementRequestVar* movementRequest;
   RobotPosVar* robotPos;
 
-  CognitionP() : Process("Cognition") {};
-
+  CognitionP()
+    : Process("Cognition")
+    , zeroControl(0, 0, 0)
+  {};
   virtual ~CognitionP() {};
 
   void open() {};
   void close() {};
   void step();
+
+private:
+  ors::Vector zeroControl;
 };
 
+// ============================================================================
+// WorldStateProvider
+class WorldStateProvider : public Process {
+public:
+  GeometricState* geometricState;
+  WorldStateVar* worldState;
+
+  WorldStateProvider()
+    : Process("WorldStateProvider")
+    , firstRun(true)
+  {};
+  virtual ~WorldStateProvider() {};
+
+  void open() {};
+  void close() {};
+  void step();
+
+private:
+  bool firstRun;
+  arr previous;
+};
 
 #endif /* end of include guard: PROCESSES_H__ */

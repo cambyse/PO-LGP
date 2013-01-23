@@ -43,8 +43,9 @@ class WorldStateVar : public Variable {
 public:
   /// list of DOFs (degree of freedom)
   FIELD(arr,  dofs);
+  FIELD(bool, changed);
 
-  WorldStateVar(const char* name) : Variable(name) {
+  WorldStateVar() : Variable("WorldState") {
     reg_dofs();
   }
 };

@@ -44,10 +44,10 @@ ors::Body* createRobot(ors::Graph& graph) {
 
   ors::Shape* robotShape = new ors::Shape(graph, robot);
   robotShape->type = ors::sphereST;
-  robotShape->size[0] = .1;
-  robotShape->size[1] = .1;
-  robotShape->size[2] = .1;
-  robotShape->size[3] = .1;
+  robotShape->size[0] = .05;
+  robotShape->size[1] = .05;
+  robotShape->size[2] = .05;
+  robotShape->size[3] = .05;
 
   return robot;
 }
@@ -102,12 +102,13 @@ int main(int argc, char** argv) {
   // GeometricState was already created. See above.
   PerceptsVar perceptsVar;
   RobotPosVar robotPosVar;
-  /* WorldStateVar worldStateVar("world state"); */
+  WorldStateVar worldStateVar;
   MovementRequestVar movementRequstVar;
 
   // PROCESSES
   FakePerceptionP fakePerceptionP;
   CognitionP cognitionP;
+  WorldStateProvider worldStateProviderP;
 
   // CONNECT Processes with Variables
   fakePerceptionP.geometricState = &geometricState;
@@ -115,24 +116,30 @@ int main(int argc, char** argv) {
   fakePerceptionP.robot = &robotPosVar;
 
   cognitionP.percepts = &perceptsVar;
-  cognitionP.movementRequest = &movementRequstVar;
   cognitionP.robotPos = &robotPosVar;
+  cognitionP.worldState = &worldStateVar;
+
+  cognitionP.movementRequest = &movementRequstVar;
+
+  worldStateProviderP.geometricState = &geometricState;
+  worldStateProviderP.worldState = &worldStateVar;
 
 
   ProcessL processes;
   processes.append(&fakePerceptionP);
   processes.append(&cognitionP);
+  processes.append(&worldStateProviderP);
 
   // WORK
-  double robotSpeed = 0.01;
   Metronome ticcer("ticcer", 100);
-  for (uint i = 0; i < 1000; i++) {
+  for (uint i = 0; i < 10000; i++) {
     stepInSequenceThreaded(processes);
 
     robot->X.pos += movementRequstVar.control_u;
 
     /* graph.calcBodyFramesFromJoints(); */
     graph.calcShapeFramesFromBodies();
+    /* graph.calcJointsFromBodies(); */
 
     // update sim
     physx.step();
