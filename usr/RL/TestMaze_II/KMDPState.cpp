@@ -22,7 +22,15 @@ void KMDPState::new_state(const Data::action_t& action, const Data::state_t& sta
     new_state(Data::data_point_t(action,state,reward));
 }
 
-Data::k_mdp_state_t KMDPState::get_k_mdp_state() {
+bool KMDPState::operator==(const KMDPState& other) const {
+    return k_mdp_state_deque == other.k_mdp_state_deque;
+}
+
+bool KMDPState::operator!=(const KMDPState& other) const {
+    return !(*this==other);
+}
+
+Data::k_mdp_state_t KMDPState::get_k_mdp_state() const {
     Data::k_mdp_state_t k_mdp_state;
     for(std::deque<Data::data_point_t>::const_iterator it=k_mdp_state_deque.begin(); it!=k_mdp_state_deque.end(); ++it) {
         k_mdp_state.push_back(*it);
@@ -31,4 +39,19 @@ Data::k_mdp_state_t KMDPState::get_k_mdp_state() {
         DEBUG_OUT(0,"Error: something is wrong with the k-MDP state size.");
     }
     return k_mdp_state;
+}
+
+std::string KMDPState::print() const {
+    std::stringstream ss;
+    ss << "{";
+    bool first = true;
+    for(std::deque<Data::data_point_t>::const_iterator it=k_mdp_state_deque.begin(); it!=k_mdp_state_deque.end(); ++it) {
+        if(!first) {
+            ss << "<--";
+        }
+        first = false;
+        ss << "(" << Data::action_strings[it->action] << "," << it->state << "," << it->reward << ")";
+    }
+    ss << "}";
+    return ss.str();
 }

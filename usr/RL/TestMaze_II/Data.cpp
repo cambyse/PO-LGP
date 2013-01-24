@@ -45,6 +45,22 @@ bool Data::OutputIterator::end() const {
     return current_reward > max_reward;
 }
 
+Data::action_idx_t Data::idx_from_action(action_t action) {
+    return action;
+}
+
+Data::action_t Data::action_from_idx(action_idx_t idx) {
+    return idx;
+}
+
+Data::state_idx_t Data::idx_from_state(state_t state) {
+    return state;
+}
+
+Data::state_t Data::state_from_idx(state_idx_t idx) {
+    return idx;
+}
+
 Data::reward_idx_t Data::idx_from_reward(reward_t reward) {
     if(reward<min_reward) {
         DEBUG_OUT(0,"Error while calculating idx_from_reward. Too low reward." );
@@ -70,14 +86,14 @@ Data::reward_idx_t Data::idx_from_reward(reward_t reward) {
 }
 
 Data::reward_t Data::reward_from_idx(reward_idx_t idx) {
-	reward_t reward = min_reward;
-	reward += idx*reward_increment;
-	if(reward>max_reward) {
-		DEBUG_OUT(0, "Error while calculating reward_from_idx. Too high reward:");
-		DEBUG_OUT(0,"    reward     = " << reward          );
-		DEBUG_OUT(0,"    max_reward = " << max_reward      );
-	}
-	return reward;
+    reward_t reward = min_reward;
+    reward += idx*reward_increment;
+    if(reward>max_reward) {
+        DEBUG_OUT(0, "Error while calculating reward_from_idx. Too high reward:");
+        DEBUG_OUT(0,"    reward     = " << reward          );
+        DEBUG_OUT(0,"    max_reward = " << max_reward      );
+    }
+    return reward;
 }
 
 Data::input_data_idx_t Data::idx_from_input(input_data_t input_data) {

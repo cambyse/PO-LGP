@@ -10,6 +10,8 @@
 
 #include <deque>
 #include "Data.h"
+#include <string>
+#include <sstream>
 
 class KMDPState {
 
@@ -22,7 +24,12 @@ public:
     void new_state(const Data::data_point_t&);
     void new_state(const Data::action_t&, const Data::state_t&, const Data::reward_t&);
 
-    Data::k_mdp_state_t get_k_mdp_state();
+    bool operator==(const KMDPState& other) const;
+    bool operator!=(const KMDPState& other) const;
+
+    Data::k_mdp_state_t get_k_mdp_state() const;
+
+    std::string print() const;
 
 protected:
 

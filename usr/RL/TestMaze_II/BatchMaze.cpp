@@ -13,6 +13,7 @@
 #include "KMDPState.h"
 #include "KMarkovCRF.h"
 #include "util.h"
+#include "MCTS.h"
 
 #include <iostream>
 #include <fstream>
@@ -35,7 +36,25 @@ BatchMaze::~BatchMaze() {}
 
 int BatchMaze::run(int argc, char *argv[]) {
     if(argc <= 1) {
-        DEBUG_OUT(1, "No arguments, terminating...");
+
+        Maze maze(0);
+        KMDPState current_k_mdp_state;
+        MCTS mcts;
+
+        // random initial history
+        maze.set_current_state(rand()%Data::state_n);
+        for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
+            action_t random_action = rand()%Data::action_n;
+            state_t state;
+            reward_t reward;
+            maze.perform_transition(random_action,state,reward);
+            current_k_mdp_state.new_state(random_action,state,reward);
+        }
+
+        mcts.build_tree(current_k_mdp_state.get_k_mdp_state(),3,5,maze);
+        mcts.print_tree(2);
+
+//        DEBUG_OUT(1, "No arguments, terminating...");
         return 1;
     } else {
 

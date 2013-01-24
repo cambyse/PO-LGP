@@ -3,7 +3,8 @@ TARGET = TestMaze_II
 QT += core \
     gui \
     svg
-HEADERS += KMDPState.h \
+HEADERS += MCTS.h \
+    KMDPState.h \
     BatchMaze.h \
     QIteration.h \
     lbfgs_codes.h \
@@ -14,7 +15,8 @@ HEADERS += KMDPState.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     Feature.h
-SOURCES += KMDPState.cpp \
+SOURCES += MCTS.cpp \
+    KMDPState.cpp \
     util.cpp \
     BatchMaze.cpp \
     QIteration.cpp \

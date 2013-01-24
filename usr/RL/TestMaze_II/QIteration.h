@@ -19,7 +19,7 @@ public:
     typedef Data::action_t      action_t;
     typedef Data::state_t       state_t;
     typedef Data::reward_t      reward_t;
-    typedef reward_t            value_t;
+    typedef Data::value_t            value_t;
     typedef Data::probability_t probability_t;
     typedef Data::k_mdp_state_t k_mdp_state_t;
     typedef unsigned long       idx_t;

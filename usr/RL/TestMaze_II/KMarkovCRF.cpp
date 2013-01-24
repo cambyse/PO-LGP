@@ -7,7 +7,7 @@
 #include "lbfgs_codes.h"
 
 #define DEBUG_STRING "CRF: "
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 using std::vector;
@@ -645,11 +645,11 @@ unsigned long KMarkovCRF::get_number_of_features() {
     return active_features.size();
 }
 
-KMarkovCRF::probability_t KMarkovCRF::prediction(
+KMarkovCRF::probability_t KMarkovCRF::get_prediction(
         const k_mdp_state_t& state_from,
         const action_t& action,
         const state_t& state_to,
-        const reward_t& reward) {
+        const reward_t& reward) const {
 
     episode_t episode(state_from.size());
     for(unsigned int idx=0; idx<state_from.size(); ++idx) {
@@ -714,7 +714,7 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
                         action,
                         state_to,
                         reward,
-                        prediction(state_from,action,state_to,reward)
+                        get_prediction(state_from,action,state_to,reward)
                 );
 
                 ++counter;

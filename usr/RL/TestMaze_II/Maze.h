@@ -17,6 +17,7 @@
 
 #include "Data.h"
 #include "QIteration.h"
+#include "KMDPState.h"
 
 class Maze {
 public:
@@ -27,6 +28,9 @@ public:
     typedef Data::probability_t   probability_t;
     typedef Data::input_data_t    input_data_t;
     typedef Data::output_data_t   output_data_t;
+    typedef Data::k_mdp_state_t   k_mdp_state_t;
+    typedef Data::idx_t           idx_t;
+    typedef Data::size_t          size_t;
 
     Maze(const double& eps = 0);
 
@@ -53,6 +57,7 @@ public:
     void perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r );
 
     void initialize_predictions(QIteration&);
+    probability_t get_prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const;
 
     void set_time_delay(const int& new_time_delay);
     int get_time_delay() { return time_delay; }
@@ -65,23 +70,18 @@ public:
 private:
 
     int time_delay;
+    bool reward_active;
+    KMDPState current_k_mdp_state;
     static const double state_size;
-    std::deque<bool> reward_timer;
     double epsilon;
     MazeState current_state;
-    std::map< std::tuple<MazeState,action_t>, std::vector<std::tuple<MazeState,probability_t> > > transition_map;
     MazeState button_state, smiley_state;
     QGraphicsSvgItem *agent, *button, *smiley;
-
-    void set_current_state(const MazeState& s);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);
 
-    /*! \brief Initialize all transitions. */
-    void create_transitions();
-
-    int clamp(const int& lower, const int& upper, const int& value) {
+    static int clamp(const int& lower, const int& upper, const int& value) {
         if(value<lower) {
             return lower;
         } else if(value>upper) {

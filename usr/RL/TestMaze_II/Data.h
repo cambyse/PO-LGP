@@ -16,8 +16,8 @@ public:
     //-------------//
     //   general   //
     //-------------//
-    typedef unsigned long long idx_t;
-    typedef unsigned long long size_t;
+    typedef long long idx_t;
+    typedef long long size_t;
 
     //----------------------//
     //   k-Markov horizon   //
@@ -56,6 +56,8 @@ public:
     static const reward_t reward_increment;
     static const size_t reward_n;
 
+    typedef double value_t;
+
 
     //------------------//
     //   probability   //
@@ -70,6 +72,17 @@ public:
     struct data_point_t {
         data_point_t(action_t a = action_t(), state_t  s = state_t(), reward_t r = min_reward):
             action(a), state(s), reward(r) {}
+        bool operator==(const data_point_t& other) const { return (action==other.action && state==other.state && reward==other.reward); }
+        bool operator!=(const data_point_t& other) const { return !(*this==other); }
+        bool operator<(const data_point_t& other) const {
+            if(action<other.action) return true;
+            else if(action>other.action) return false;
+            else if(state<other.state) return true;
+            else if(state>other.state) return false;
+            else if(reward<other.reward) return true;
+            else if(reward>other.reward) return false;
+            else return false;
+        }
         action_t action;
         state_t  state;
         reward_t reward;
@@ -110,6 +123,12 @@ public:
     //=============//
     //  Functions  //
     //=============//
+
+    static action_idx_t      idx_from_action(action_t);
+    static action_t          action_from_idx(action_idx_t);
+
+    static state_idx_t       idx_from_state(state_t);
+    static state_t           state_from_idx(state_idx_t);
 
     static reward_idx_t      idx_from_reward(reward_t);
     static reward_t          reward_from_idx(reward_idx_t);
