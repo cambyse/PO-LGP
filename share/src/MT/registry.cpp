@@ -37,22 +37,13 @@ void registerType(TypeRegistration* v){
 
 void reg_report(){
   cout <<"\n +++ TYPES +++" <<endl;
-  uint i;
-  TypeRegistration *vi;
-  for_list_rev(i,vi,typeRegistrations()){
-    cout
-      <<"Type ";
-    if(vi->key) cout <<" key=" <<vi->key;
-    cout <<" username=" <<vi->userType
-        <<" sysname=" <<vi->sysType <<endl;
-  }
+  for_list_(TypeRegistration, it, typeRegistrations()) cout <<*it;
 }
 
 TypeRegistration* reg_find(const char* type){
-  uint i;
-  TypeRegistration *vi;
-  for_list_rev(i,vi,typeRegistrations()){
-    if(!strcmp(vi->key,type) || !strcmp(vi->sysType,type) || !strcmp(vi->userType,type)) return vi;
+  for_list_rev_(TypeRegistration, vi, typeRegistrations()){
+    if(!strcmp(vi->typeinfo().name(),type)) return vi;
+    for(uint j=0;j<vi->keys.N;j++) if(vi->keys(j)==type) return vi;
   }
   return NULL;
 }

@@ -251,14 +251,12 @@ void PhysXInterface::create() {
 }
 
 void PhysXInterface::pullState() {
-  uint i;
-  for_index(i,s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
+  for_index(i, s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
   G->calcShapeFramesFromBodies();
 }
 
 void PhysXInterface::ShutdownPhysX() {
-  uint i;
-  for_index(i,s->actors) {
+  for_index(i, s->actors) {
     s->gScene->removeActor(*s->actors(i));
     s->actors(i)->release();
   }
@@ -321,8 +319,7 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
 }
 
 void PhysXInterface::glDraw() {
-  uint i;
-  for_index(i,s->actors)  DrawActor(s->actors(i), G->bodies(i));
+  for_index(i, s->actors)  DrawActor(s->actors(i), G->bodies(i));
 }
 
 void glPhysXInterface(void *classP) {

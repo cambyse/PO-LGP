@@ -1,4 +1,4 @@
-#ifndef MT_typeRegistry_h
+#ifndef MT_ztypeRegistry_h
 #define MT_typeRegistry_h
 
 #include <MT/util.h>
@@ -14,15 +14,21 @@ struct TypeRegistration;
 typedef MT::Array<TypeRegistration*> TypeRegistrationL;
 
 struct TypeRegistration{
-  const char *key, *userType, *sysType;
+  MT::Array<MT::String> keys;
   TypeRegistrationL parents;
   virtual const std::type_info& typeinfo() const = 0;
-  virtual const std::type_info& baseinfo() const = 0;
-  void write(ostream& os) const{ cout <<userType <<endl; }
   virtual struct Item* read(istream&) const = 0;
+  void write(std::ostream& os) const{
+    os <<"Type '" <<keys <<"' [" <<typeinfo().name() <<"] ";
+    if(parents.N){
+      cout <<"parents=[";
+      for_list_(TypeRegistration, p, parents) cout <<' ' <<p->typeinfo().name();
+      cout <<" ]";
+    }
+    cout <<endl;
+  }
 };
 stdOutPipe(TypeRegistration);
-
 
 
 //===========================================================================
@@ -48,7 +54,7 @@ inline Item* readTypeIntoItem(const char* type, std::istream& is){
 #define REGISTER_TYPE(Type)\
   TypeRegistration_typed<Type,void> Type##_registrationDummy(#Type,NULL,NULL);
 
-#define REGISTER_DERIVED_TYPE(Type,Base)\
+#define REGISTER_DERIVED_TYPE(Type, Base)\
   TypeRegistration_typed<Type,Base> Type##_registrationDummy(#Type,NULL,#Base);
 
 

@@ -11,9 +11,8 @@ TypeRegistrationL& typeRegistrations();
 template<class Type, class Base>
 struct TypeRegistration_typed:TypeRegistration{
   TypeRegistration_typed(const char *_userType, const char *_key, const char *userBase ){
-    key = _key;
-    userType= _userType;
-    sysType = typeid(Type).name();
+    keys.append(MT::String(_userType));
+    if(_key) keys.append(MT::String(_key));
     if(userBase){
       TypeRegistration* t = reg_find(userBase);
       if(t) parents.append(t);
@@ -21,17 +20,18 @@ struct TypeRegistration_typed:TypeRegistration{
     registerType(this);
   }
   virtual const std::type_info& typeinfo() const { return typeid(Type); }
-  virtual const std::type_info& baseinfo() const { return typeid(Base); }
   virtual Item* read(istream& is) const{ Type x; is >>x; return new Item_typed<Type>(x); }
 };
 
 template <class T>
 TypeRegistrationL reg_findDerived(){
   TypeRegistrationL results;
-  TypeRegistration *t;
-  uint i;
+  TypeRegistration *t, *p;
+  uint i,j;
   for_list(i, t, typeRegistrations()){
-    if(t->baseinfo()==typeid(T)){ results.append(t); }
+    for_list(j, p, t->parents){
+      if(p->typeinfo()==typeid(T)){ results.append(t); }
+    }
   }
   return results;
 }

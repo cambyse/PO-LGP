@@ -222,3 +222,90 @@ void anyListRead(AnyList& ats, std::istream& is) {
     MT::skip(is, " \n\t, ");
   }
 }
+
+#else
+#define RERR(x){ HALT("ORS FILE ERROR (LINE=" <<MT::lineCount <<"): " <<x); is.clear(); return; }
+  MT::lineCount=1;
+  Body *n=NULL, *f=NULL, *t=NULL; Joint *e;
+  Shape *s;
+  String tag, name, node1, node2;
+  ifstream qlinfile;
+  uint j;
+  MT::peerNextChar(is);
+  clear();
+  for(;;) {
+    tag.read(is, " \t\n\r", " \t\n\r({", false);
+    if(!tag.N) break;  //end of file
+    DEBUG(cout <<"tag=" <<tag <<endl);
+    if(tag=="body") {  //node
+      name.read(is, " \t\n\r", " \t\n\r({", false);
+      DEBUG(cout <<"name=" <<name <<endl);
+      n=new Body(*this);
+      n->name = name;
+      if(MT::peerNextChar(is)=='(') { MT::parse(is, "("); MT::parse(is, ")"); }
+      MT::parse(is, "{");
+      if(is.fail()) RERR("can't read opening brace for body (" <<n->name <<")");
+      n->read(is); //try { n->read(is); } catch(...) RERR("error in parsing body (" <<n->name <<")");
+      MT::parse(is, "}");
+      if(is.fail()) RERR("can't read closing brace for body (" <<n->name <<")");
+      if(n->shapes.N==1) {  //parsing has implicitly added a shape...
+        s=n->shapes(0);
+        s->index=shapes.N;
+        shapes.append(s);
+      }
+      continue;
+    }
+    if(tag=="joint") {  //edge
+      name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
+      DEBUG(cout <<"name=" <<name <<endl);
+      t=f=NULL;
+      MT::parse(is, "(");
+      node1.read(is, " ", " , )", true);
+      DEBUG(cout <<"node1=" <<node1 <<endl);
+      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
+      if(!f) RERR("reading edge: don't know from-name " <<node1);
+      node2.read(is, " ", " , )", true);
+      DEBUG(cout <<"node2=" <<node2 <<endl);
+      for_list(j, n, bodies) if(n->name==node2) { t=n; break; }
+      if(!t) RERR("reading edge: don't know to-name " <<node2);
+      e=new Joint(*this, f, t);
+      MT::parse(is, "{");
+      if(is.fail()) RERR("can't read opening brace for edge (" <<e->from->name <<' ' <<e->to->name <<")");
+      try { e->read(is); } catch(...) RERR("error in parsing edge (" <<e->from->name <<' ' <<e->to->name <<")");
+      MT::parse(is, "}");
+      if(is.fail()) RERR("can't read closing brace for edge (" <<e->from->name <<' ' <<e->to->name <<")");
+      continue;
+    }
+    if(tag=="shape") {  //edge
+      name.read(is, " \t\n\r", " \t\n\r({", false); //potential name - not used
+      DEBUG(cout <<"name=" <<name <<endl);
+      f=NULL;
+      MT::parse(is, "(");
+      node1.read(is, " ", " )", true);
+      DEBUG(cout <<"node1=" <<node1 <<endl);
+      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
+      if(!f) RERR("reading shape: don't know from-name " <<node1);
+      s=new Shape(*this, f);
+      s->name=name;
+      MT::parse(is, "{");
+      if(is.fail()) RERR("can't read opening brace for shape (" <<f->name <<'-' <<name <<")");
+      try { s->read(is); } catch(...) RERR("error in parsing shape (" <<f->name <<'-' <<name <<")");
+      MT::parse(is, "}");
+      if(is.fail()) RERR("can't read closing brace for shape (" <<f->name <<'-' <<name <<")");
+      continue;
+    }
+    if(tag=="QlinFile") {
+      name.read(is, " \t\n\r", " \t\n\r({", false);
+      MT::open(qlinfile, name);
+      Qlin.readTagged(qlinfile, "Qlin");
+      Qoff.readTagged(qlinfile, "Qoff");
+      Qinv.readTagged(qlinfile, "Qinv");
+      //cout <<Qlin <<Qoff <<Qinv <<endl;
+      continue;
+    }
+    RERR("can't parse element of type '" <<tag <<"'");
+  }
+  is.clear();
+  graphMakeLists(bodies, joints);
+  fillInRelativeTransforms();
+#endif

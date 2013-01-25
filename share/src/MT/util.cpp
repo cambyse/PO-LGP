@@ -61,7 +61,7 @@ bool cfgFileOpen=false;
 Mutex cfgFileMutex;
 bool IOraw=false;
 bool noLog=true;
-uint lineCount=0;
+uint lineCount=1;
 int verboseLevel=-1;
 
 #ifndef MT_TIMEB
@@ -630,7 +630,7 @@ MT::String::String():std::iostream(&buffer) { init(); clearStream(); }
 MT::String::String(const String& s):std::iostream(&buffer) { init(); this->operator=(s); }
 
 //! copy constructor for an ordinary C-string (needs to be 0-terminated)
-MT::String::String(const char *s):std::iostream(&buffer) { init(); this->operator=(s); }
+MT::String::String(const char *s):std::iostream(&buffer) { init(); CHECK(s,"initializing String with NULL"); this->operator=(s); }
 
 MT::String::~String() { if(M) delete[] p; }
 
