@@ -39,8 +39,10 @@ struct MapGraph:ItemL{
   template<class T> T* get(const char *key);
   template<class T> bool get(T& x, const char *key){ T* y=get<T>(key); if(y){ x=*y; return true; } return false; }
 
-  template<class T> void append(const char *key,T& x);
-  void append(Item* it){ ItemL::append(it); }
+  Item *append(Item* it){ ItemL::append(it); return it; }
+  template<class T> Item *append(const StringA& keys, const ItemL& parents, const T& x);
+  template<class T> Item *append(const StringA& keys, const T& x){ return append(keys, ItemL(), x); }
+  template<class T> Item *append(const char *key,T& x); //{ append(STRINGS(key), ItemL(), x); }
 
   Item *add(const uintA& tuple);
   ItemL& getParents(uint i);

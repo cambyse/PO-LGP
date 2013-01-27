@@ -41,13 +41,10 @@ void Item::write(std::ostream& os) const {
     os <<" {";
     value<MapGraph>().write(os, ",");
     os <<" }";
-  }else if(valueType()==typeid(MT::String)){
-    os <<"='";
-    value<MT::String>().write(os);
-    os <<'\'';
-  }else if(valueType()==typeid(arr)){
-    os <<'=';
-    value<arr>().write(os);
+  }else if(valueType()==typeid(MT::String)){ os <<"='" <<value<MT::String>() <<'\'';
+  }else if(valueType()==typeid(arr)){        os <<'=' <<value<arr>();
+  }else if(valueType()==typeid(double)){     os <<'=' <<value<double>();
+  }else if(valueType()==typeid(bool)){       os <<',';
   }else{
     TypeRegistration *t = reg_find(valueType().name());
     if(t && t->keys.N>1){
@@ -55,8 +52,9 @@ void Item::write(std::ostream& os) const {
       writeValue(os);
       os <<'>';
     }else{
-      os <<'=';
+      os <<"=<" <<valueType().name() <<' ';
       writeValue(os);
+      os <<'>';
     }
   }
 }
@@ -130,7 +128,8 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
       item = new Item_typed<arr>(keys, parents, reals);
     } break;
     case '<': { //any type parser
-      str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
+      str.read(is, " \t", " \t\n\r()`-=~!@#$%^&*()+[]{};'\\:|,./<>?", false);
+//      str.read(is, " \t", " \t\n\r()`1234567890-=~!@#$%^&*()_+[]{};'\\:|,./<>?", false);
       item = readTypeIntoItem(str,is);
       if(!item){
         is.clear();

@@ -4,30 +4,24 @@
 //-- this is how the developer should provide a module
 
 struct ComputeSum:Module{
-  VAR(arr, x);
-  VAR(double, s);
-  //PARAM(double, y, 2.);
+  VAR(arr, x);   //input
+  VAR(double, s); //output
 
-  ComputeSum():x_access(this), s_access(this) {}
+  ComputeSum(): VARc(x), VARc(s) {} //constructors of access objects
 
   void step(){
     set_s(sum(get_x()));
   }
-
-  void read(std::istream& is){}
-  void write(std::ostream& os) const{}
 };
-stdPipes(ComputeSum);
 
-REGISTER_DERIVED_TYPE(ComputeSum, Module);
-
+REGISTER_MODULE(ComputeSum);
 
 
 //-- this is how the top-level manager should get access
 
 int main(int argc, char** argv){
 
-  dumpAllRegisteredModules();
+  cout <<registry() <<endl;
 
   return 0;
 }

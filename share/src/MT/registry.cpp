@@ -6,6 +6,7 @@
 //
 
 struct TypeRegistrationSpace{
+  MapGraph registry;
   TypeRegistrationL types;
   RWLock lock;
   TypeRegistrationSpace(){ types.memMove=true; }
@@ -27,21 +28,21 @@ TypeRegistrationSpace& typeRegistrationSpace(){
   return *global_TypeRegistrationSpace;
 }
 
-TypeRegistrationL& typeRegistrations(){
-  return typeRegistrationSpace().types;
+MapGraph& registry(){
+  return typeRegistrationSpace().registry;
 }
 
-void registerType(TypeRegistration* v){
-  typeRegistrations().append(v);
+TypeRegistrationL& typeRegistry(){
+  return typeRegistrationSpace().types;
 }
 
 void reg_report(){
   cout <<"\n +++ TYPES +++" <<endl;
-  for_list_(TypeRegistration, it, typeRegistrations()) cout <<*it;
+  for_list_(TypeRegistration, it, typeRegistry()) cout <<*it;
 }
 
 TypeRegistration* reg_find(const char* type){
-  for_list_rev_(TypeRegistration, vi, typeRegistrations()){
+  for_list_rev_(TypeRegistration, vi, typeRegistry()){
     if(!strcmp(vi->typeinfo().name(),type)) return vi;
     for(uint j=0;j<vi->keys.N;j++) if(vi->keys(j)==type) return vi;
   }

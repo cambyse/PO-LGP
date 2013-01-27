@@ -9,9 +9,10 @@ struct Item_typed:Item {
 
   Item_typed(const T& _value):value(_value){}
 
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value):value(_value){
+  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, MapGraph *container=NULL):value(_value){
     keys=_keys;
     parents=_parents;
+    if(container) container->append(this);
   }
 
   virtual void writeValue(std::ostream &os) const {
@@ -49,4 +50,8 @@ template<class T> T* MapGraph::get(const char *key){
   Item *it = getItem(key);
   if(!it) return NULL;
   return &it->value<T>();
+}
+
+template<class T> Item *MapGraph::append(const StringA& keys, const ItemL& parents, const T& x){
+  return append(new Item_typed<T>(keys, parents, x, NULL));
 }

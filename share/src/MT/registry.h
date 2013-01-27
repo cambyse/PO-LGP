@@ -1,9 +1,23 @@
-#ifndef MT_ztypeRegistry_h
-#define MT_typeRegistry_h
+#ifndef MT_registry_h
+#define MT_registry_h
 
-#include <MT/util.h>
-#include <MT/array.h>
+#include "util.h"
+#include "array.h"
+#include "mapGraph.h"
 
+
+//===========================================================================
+//
+// global registry of anything
+//
+
+MapGraph& registry();
+
+#define REGISTER_ITEM(Type, key, value) \
+  Item_typed<Type > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
+
+#define REGISTER_ITEM2(Type, key1, key2, value) \
+  Item_typed<Type > key1##_##key2##_RegistryEntry(ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, &registry());
 
 //===========================================================================
 //
@@ -12,9 +26,10 @@
 
 struct TypeRegistration;
 typedef MT::Array<TypeRegistration*> TypeRegistrationL;
+TypeRegistrationL& typeRegistry();
 
 struct TypeRegistration{
-  MT::Array<MT::String> keys;
+  StringA keys;
   TypeRegistrationL parents;
   virtual const std::type_info& typeinfo() const = 0;
   virtual struct Item* read(istream&) const = 0;
@@ -25,7 +40,6 @@ struct TypeRegistration{
       for_list_(TypeRegistration, p, parents) cout <<' ' <<p->typeinfo().name();
       cout <<" ]";
     }
-    cout <<endl;
   }
 };
 stdOutPipe(TypeRegistration);
@@ -49,13 +63,20 @@ inline Item* readTypeIntoItem(const char* type, std::istream& is){
 //-- use these macros to register types in cpp files
 
 #define REGISTER_TYPE_Key(Key, Type)\
-  TypeRegistration_typed<Type,void> Key##_registrationDummy(#Type,#Key,NULL);
+  TypeRegistration_typed<Type,void> Key##_registrationDummy(#Type, #Key, NULL, &typeRegistry());
 
 #define REGISTER_TYPE(Type)\
-  TypeRegistration_typed<Type,void> Type##_registrationDummy(#Type,NULL,NULL);
+  TypeRegistration_typed<Type,void> Type##_registrationDummy(#Type, NULL, NULL, &typeRegistry());
 
 #define REGISTER_DERIVED_TYPE(Type, Base)\
-  TypeRegistration_typed<Type,Base> Type##_registrationDummy(#Type,NULL,#Base);
+  TypeRegistration_typed<Type,Base> Type##_registrationDummy(#Type, NULL, #Base, &typeRegistry());
+
+#define KO ,
+#define REGISTER_TYPE_(Type) \
+  REGISTER_ITEM2(TypeRegistration_typed<Type KO void>, type, Type, TypeRegistration_typed<Type KO void>(#Type,NULL,NULL,NULL));
+
+#define REGISTER_TYPE_DERIVED(Type, Base) \
+  REGISTER_ITEM2(TypeRegistration_typed<Type KO Base>, type, Type, TypeRegistration_typed<Type KO Base>(#Type,NULL,#Base,NULL));
 
 
 

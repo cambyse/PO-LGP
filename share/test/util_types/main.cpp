@@ -16,12 +16,19 @@ REGISTER_TYPE(NewType)
 REGISTER_TYPE(double)
 REGISTER_DERIVED_TYPE(Derived,NewType)
 
+REGISTER_ITEM(double, mykey, 3.)
+REGISTER_TYPE_(NewType)
+REGISTER_TYPE_DERIVED(Derived,NewType)
+
 int main(int argn,char** argv){
 
   reg_report();
 
   cout <<"derived = ";
   listWrite(reg_findDerived<NewType>(), cout);
+  cout <<endl;
+
+  cout <<registry() <<endl;
 
   return 0;
 }
