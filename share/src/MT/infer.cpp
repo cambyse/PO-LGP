@@ -1,6 +1,22 @@
-/*  Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
-under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
-see the `util.h' file for a full copyright statement  */
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "infer.h"
 #include <algorithm>
@@ -687,13 +703,13 @@ double infer::FactorGraph::computeBeliefs(){
   FOR1D(F, i){
     P_old = B_c(i)->P;
     collectBelief(*B_c(i), *F(i), 0);
-    change = (B_c(i)->P - P_old).absMax();
+    change = absMax(B_c(i)->P - P_old);
     if(change > maxChange) maxChange = change;
   }
   FOR1D(F_v, i){
     P_old = B_v(i)->P;
     collectBelief(*B_v(i), *F_v(i), 0);
-    change = (B_v(i)->P - P_old).absMax();
+    change = absMax(B_v(i)->P - P_old);
     if(change > maxChange) maxChange = change;
   }
   return maxChange;
@@ -1145,11 +1161,11 @@ double infer::passMessage(infer::Factor& f_from, infer::Factor& f_to, infer::Fac
     cout <<"Message:" <<endl;
     writeMessage(&f_from, &f_to, cout); cout <<endl;
     cout <<"Updated b_to:" <<endl <<b_to <<endl;
-    cout <<" --> " <<(b_to.P - p_old).absMax() <<endl;
+    cout <<" --> " <<absMax(b_to.P - p_old) <<endl;
   }
   
   // calc change (and ignore log_P !)
-  return (b_to.P - p_old).absMax();
+  return absMax(b_to.P - p_old);
 }
 
 #endif
@@ -1315,7 +1331,7 @@ void infer::tensorMaxMarginal(infer::Factor& m, const infer::Factor& f, const in
 
 void infer::tensorMultiply(infer::Factor& f, const infer::Factor& m){
   if(m.variables==f.variables){
-    mult(f.P, f.P, m.P);
+    f.P *= m.P;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);
@@ -1327,7 +1343,7 @@ void infer::tensorMultiply(infer::Factor& f, const infer::Factor& m){
 
 void infer::tensorDivide(infer::Factor& f, const infer::Factor& m){
   if(m.variables==f.variables){
-    div(f.P, f.P, m.P);
+    f.P /= m.P;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);
@@ -1343,7 +1359,7 @@ void infer::tensorAdd(infer::Factor& f, const infer::Factor& m){
   arr mP=m.P;
   mP *= ::exp(m.logP-f.logP); //get m.P on the same log scale as f!
   if(m.variables==f.variables){
-    plusA(f.P, f.P, mP);
+    f.P += mP;
   }else{
     uintA pick;
     getPick(pick, f.variables, m.variables);
@@ -2854,3 +2870,6 @@ void infer::inferMixLengthStructured(
   PR    *= (1.-gamma);
 }
 
+
+
+#include "array_t.cxx"

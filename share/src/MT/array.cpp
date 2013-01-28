@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "array.h"
 #include "util.h"
@@ -1293,88 +1297,6 @@ arr comp_At_x(arr& A, const arr& x){
   if(A.special==arr::noneST){ arr y; innerProduct(y, ~A, x); return y; }
   if(A.special==arr::RowShiftedPackedMatrixST) return ((RowShiftedPackedMatrix*)A.aux)->At_x(x);
   return NoArr;
-}
-
-//===========================================================================
-//
-// lists
-//
-
-void anyListRead(AnyList& ats, std::istream& is) {
-  char c, delim;
-  MT::String tag, str;
-  double d;
-  arr reals;
-  MT::Array<MT::String> strings;
-  
-  //read all generic attributes
-  for(;;) {
-    tag.read(is, " \t\r\n", " \t=}, ;([\n\r", false);
-    if(!tag.N) {
-      MT::skip(is, " \t\r\n;");
-      is.clear();
-      break;
-    }
-    MT::skip(is);  is.get(c);
-    if(c=='=') { MT::skip(is); is.get(c); }
-    switch(c) {
-      case '(': { //vector of strings
-        delim=c;
-        strings.clear();
-        for(;;) {
-          MT::skip(is);
-          is.get(c);
-          if(c==')') break; else is.putback(c);
-          str.read(is, "", "), \t\r\n", false);
-          strings.append(str);
-        }
-        if(strings.N==1) {  //not nice - one should clearly distinguish between a vector and scalar...
-          ats.append(anyNew<MT::String>(tag, strings(0)));
-        } else {
-          ats.append(anyNew<MT::String>(tag, strings.p, strings.N, delim));
-        }
-      } break;
-      case '[': { //vector of reals
-        delim=c;
-        reals.clear();
-        for(;;) {
-          MT::skip(is);
-          is.get(c);
-          if(c==']' || c==')') break; else is.putback(c);
-          is >>d;
-          reals.append(d);
-          if(!is.good()) HALT("ERROR");
-        }
-        if(reals.N==1) {  //not nice - one should clearly distinguish between a vector and scalar...
-          ats.append(anyNew<double>(tag, reals(0)));
-        } else {
-          ats.append(anyNew<double>(tag, reals.p, reals.N, delim));
-        }
-      } break;
-      case '\'': { //string
-        str.read(is, "", "\'", true);
-        ats.append(anyNew<MT::String>(tag, str));
-      } break;
-      case '\"': { //string
-        str.read(is, "", "\"", true);
-        ats.append(anyNew<MT::String>(tag, str));
-      } break;
-      case '<': { //string
-        str.read(is, "", ">", true);
-        ats.append(anyNew<MT::String>(tag, str));
-      } break;
-      default: { //single double or nothing
-        is.putback(c);
-        if(MT::contains("-.0123456789", c)) {  //single double
-          is >>d;
-          ats.append(anyNew<double>(tag, d));
-        } else { //bool
-          ats.append(anyNew<double>(tag, (double*)0, 0, 0));
-        }
-      } break;
-    }
-    MT::skip(is, " \n\t, ");
-  }
 }
 
 

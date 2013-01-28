@@ -12,7 +12,7 @@
 
 void testLoadSave(){
   ors::Graph G;
-  ifstream fil("my.ors");
+  ifstream fil("test.ors");
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
@@ -187,7 +187,7 @@ void generateSequence(arr &X,arr &V,uint n){
 void testPlayStateSequence(){
   ors::Graph G;
   OpenGL gl;
-  init(G,gl,"arm7.ors");
+  init(G, gl, "arm7.ors");
   uint n=G.getJointStateDimension();
   arr X,V;
   generateSequence(X,V,n);
@@ -449,10 +449,12 @@ void testContactDynamics(){
 //
 
 static void drawTrimesh(void* _mesh){
+#if MT_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
   mesh->glDraw();
   glPopMatrix();
+#endif
 }
 
 void testBlenderImport(){
@@ -475,11 +477,13 @@ int main(int argc,char **argv){
   testKinematicSpeed();
   return 0;
   testLoadSave();
+  return 0;
   testPlayStateSequence();
   testKinematics();
   testFollowRedundantSequence();
   testDynamics();
   testContacts();
+  testKinematicSpeed();
 #ifdef MT_ODE
   testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

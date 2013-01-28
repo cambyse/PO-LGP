@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "roboticsCourse.h"
 #include "ors.h"
 #include "opengl.h"
@@ -270,9 +289,7 @@ void VisionSimulator::getRandomWorldPoints(arr& X, uint N){
 }
 
 arr VisionSimulator::getCameraTranslation(){
-  arr t;
-  t.setCarray(s->gl.camera.X->pos.p, 3);
-  return t;
+  return ARRAY(s->gl.camera.X->pos);
 }
 
 void VisionSimulator::projectWorldPointsToImagePoints(arr& x, const arr& X, double noiseInPixel){

@@ -1,6 +1,6 @@
-OUTPUT    = liblewiner.a
-CXXFLAGS += -O3 -fPIC
-OBJS = ply.o MarchingCubes.o 
+OUTPUT    = ../../lib/liblewiner.a
+CXXFLAGS += -O3 -fPIC -I../ply
+OBJS = MarchingCubes.o 
 
 
 $(OUTPUT): $(OBJS)

@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #ifndef MT_array_t_cpp
 #define MT_array_t_cpp
@@ -708,25 +712,6 @@ template<class T> void MT::Array<T>::minmax(T& minVal, T& maxVal) const {
   }
 }
 
-//! get absolute min (using fabs)
-template<class T> T MT::Array<T>::absMin() const {
-  CHECK(N, "");
-  uint i;
-  T t((T)::fabs((double)p[0]));
-  for(i=1; i<N; i++) if(fabs((double)p[i])<t) t=(T)::fabs((double)p[i]);
-  return t;
-}
-
-
-//! get absolute maximum (using fabs)
-template<class T> T MT::Array<T>::absMax() const {
-  CHECK(N, "");
-  uint i;
-  T t((T)::fabs((double)p[0]));
-  for(i=1; i<N; i++) if(fabs((double)p[i])>t) t=(T)::fabs((double)p[i]);
-  return t;
-}
-
 
 /*
 //! also returns the index (argmin) \c ind
@@ -1022,15 +1007,6 @@ template<class T> void MT::Array<T>::setDiag(const MT::Array<T>& v) {
   uint i;
   for(i=0; i<v.d0; i++) operator()(i, i)=v(i);
   //mtype=diagMT;
-}
-
-//! sets x to be the diagonal matrix with diagonal v
-template<class T> void MT::Array<T>::setSkew(const MT::Array<T>& v) {
-  CHECK(v.nd==1 && v.N==3, "can only give diagonal of 1D array");
-  resize(3, 3);
-  p[0]=   0.; p[1]=-v(2); p[2]= v(1);
-  p[3]= v(2); p[4]=   0.; p[5]=-v(0);
-  p[6]=-v(1); p[7]= v(0); p[8]=   0.;
 }
 
 //! constructs the block matrix X=[A, B ; C, D]
@@ -1416,7 +1392,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
   } else {
     if(dimTag) { writeDim(os); os <<' '; }
     if(nd>=2) os <<'\n';
-    os <<BRACKETS[0];
+    if(BRACKETS[0]) os <<BRACKETS[0];
     if(nd==0 && N==0) { os <<']'; return; }
     if(nd==0 && N==1) { os <<scalar() <<']'; return; }
     if(nd==1) {
@@ -1450,7 +1426,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
         os <<ELEMSEP <<elem(i);
       }
     }
-    os <<ELEMSEP <<BRACKETS[1];
+    if(BRACKETS[1]) os <<ELEMSEP <<BRACKETS[1];
   }
 }
 
@@ -1696,6 +1672,17 @@ template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A) {
   Ainv/=(T)(A(0, 0)*A(1, 1)-A(0, 1)*A(1, 0));
 }
 
+//! sets x to be the diagonal matrix with diagonal v
+template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
+  MT::Array<T> y;
+  CHECK(v.nd==1 && v.N==3, "can only give diagonal of 1D array");
+  y.resize(3, 3);
+  y.p[0]=   0.; y.p[1]=-v(2); y.p[2]= v(1);
+  y.p[3]= v(2); y.p[4]=   0.; y.p[5]=-v(0);
+  y.p[6]=-v(1); y.p[7]= v(0); y.p[8]=   0.;
+  return y;
+}
+
 
 
 //===========================================================================
@@ -1873,12 +1860,10 @@ template<class T> T maxRelDiff(const MT::Array<T>& v, const MT::Array<T>& w, T t
   }*/
 
 
-template<class T> MT::Array<T>& minusA(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
-
 //! \f$\sqrt{\sum_{ij} g_{ij} (v^i-w^i) (v^j-w^j)}\f$
 template<class T> T sqrDistance(const MT::Array<T>& g, const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> d;
-  ::minusA(d, v, w);
+  MT::Array<T> d(v);
+  d -= w;
   return scalarProduct(g, d, d);
 }
 
@@ -1967,6 +1952,24 @@ template<class T> T minDiag(const MT::Array<T>& v) {
   CHECK(v.nd==2 && v.d0==v.d1, "only for squared matrix");
   T t=v(0, 0);
   for(uint i=1; i<v.d0; i++) if(v(i, i)<t) t=v(i, i);
+  return t;
+}
+
+//! get absolute min (using fabs)
+template<class T> T absMin(const MT::Array<T>& x) {
+  CHECK(x.N, "");
+  uint i;
+  T t((T)::fabs((double)x.p[0]));
+  for(i=1; i<x.N; i++) if(fabs((double)x.p[i])<t) t=(T)::fabs((double)x.p[i]);
+  return t;
+}
+
+//! get absolute maximum (using fabs)
+template<class T> T absMax(const MT::Array<T>& x) {
+  CHECK(x.N, "");
+  uint i;
+  T t((T)::fabs((double)x.p[0]));
+  for(i=1; i<x.N; i++) if(fabs((double)x.p[i])>t) t=(T)::fabs((double)x.p[i]);
   return t;
 }
 
@@ -2779,26 +2782,14 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z) { Arr
 //! inner product
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z) { Array<T> x; innerProduct(x, y, z); return x; }
 //! scalar multiplication
-template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x; multS(x, y, z); return x; }
+  template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x(y); x*=z; return x; }
 //! scalar multiplication
-template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x; multS(x, y, z); return x; }
+  template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
 
 
-#define BinaryOperator( op, name)         \
-  template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x; name(x, y, z); return x; } \
-  template<class T> Array<T> operator op(T y, const Array<T>& z){             Array<T> x; name##S(x, y, z); return x; } \
-  template<class T> Array<T> operator op(const Array<T>& y, T z){             Array<T> x; name##S(x, y, z); return x; } \
-   
-BinaryOperator(+ , plusA)
-BinaryOperator(- , minusA)
-BinaryOperator(% , mult)
-BinaryOperator(/ , div)
-#undef BinaryOperator
-
-#define CompoundAssignmentOperator( op )        \
+#define UpdateOperator( op )        \
   template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y){ \
-    CHECK(x.N==y.N,             \
-          "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
+    CHECK(x.N==y.N, "binary operator on different array dimensions (" <<x.N <<", " <<y.N <<")"); \
     T *xp=x.p, *xstop=xp+x.N;              \
     const T *yp=y.p;              \
     for(; xp!=xstop; xp++, yp++) *xp op *yp;       \
@@ -2811,15 +2802,28 @@ BinaryOperator(/ , div)
     return x;           \
   }
 
-CompoundAssignmentOperator(|=)
-CompoundAssignmentOperator(^=)
-CompoundAssignmentOperator(&=)
-CompoundAssignmentOperator(+=)
-CompoundAssignmentOperator(-=)
-CompoundAssignmentOperator(*=)
-CompoundAssignmentOperator(/=)
-CompoundAssignmentOperator(%=)
-#undef CompoundAssignmentOperator
+UpdateOperator(|=)
+UpdateOperator(^=)
+UpdateOperator(&=)
+UpdateOperator(+=)
+UpdateOperator(-=)
+UpdateOperator(*=)
+UpdateOperator(/=)
+UpdateOperator(%=)
+#undef UpdateOperator
+
+
+#define BinaryOperator( op, updateOp)         \
+  template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x(y); x updateOp z; return x; } \
+  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x(z); x updateOp y; return x; } \
+  template<class T> Array<T> operator op(const Array<T>& y, T z){               Array<T> x(y); x updateOp z; return x; }
+
+BinaryOperator(+ , +=);
+BinaryOperator(- , -=);
+BinaryOperator(% , *=);
+BinaryOperator(/ , /=);
+#undef BinaryOperator
+
 }
 
 
@@ -2882,93 +2886,12 @@ template<class T> bool operator<(const MT::Array<T>& v, const MT::Array<T>& w) {
 //!@name arithmetic operators
 //
 
-
-//---------- unary operators
-
-#define UnaryOperation( name, op )          \
-  template<class T>             \
-  MT::Array<T>& name (MT::Array<T>& x, const MT::Array<T>& y){ \
-    x.resizeAs(y);              \
-    T *xp=x.p;                \
-    const T *yp=y.p, *ystop=yp+y.N;              \
-    for(; yp!=ystop; yp++, xp++) *xp= op *yp;        \
-    return x;               \
-  }
-
-UnaryOperation(negative, -);
-#undef UnaryOperator
-
-//---------- binary function
-
-#define BinaryOperation( name, op )         \
-  template<class T>             \
-  MT::Array<T>& name(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z){ \
-    CHECK(y.N==z.N,             \
-          "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")"); \
-    if(&x!=&y) x.resizeAs(y);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *zp=z.p, *yp=y.p;            \
-    for(; xp!=xstop; xp++, yp++, zp++) *xp = *yp op *zp;    \
-    return x;               \
-  }                 \
-  \
-  template<class T>             \
-  MT::Array<T>& name##S(MT::Array<T>& x, const MT::Array<T>& y, T z){ \
-    if(&x!=&y) x.resizeAs(y);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *yp=y.p;              \
-    for(; xp!=xstop; xp++, yp++) *xp = *yp op z;     \
-    return x;               \
-  }                 \
-  \
-  template<class T>             \
-  MT::Array<T>& name##S(MT::Array<T>& x, T y, const MT::Array<T>& z){ \
-    if(&x!=&z) x.resizeAs(z);             \
-    T *xp=x.p, *xstop=xp+x.N;                \
-    const T *zp=z.p;              \
-    for(; xp!=xstop; xp++, zp++) *xp = y op *zp;     \
-    return x;               \
-  }
-
-BinaryOperation(plusA , +);
-BinaryOperation(minusA , -);
-BinaryOperation(mult , *);
-//     BinaryOperation( div , / )
-#undef BinaryOperation
-
-
-// To be able to cope with division by 0, we need to take the div out of the preprocessor-templates.
-template<class T> MT::Array<T>& div(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
-  CHECK(y.N==z.N, "binary operator on different array dimensions (" <<y.N <<", " <<z.N <<")");
-  if(&x!=&y) x.resizeAs(y);
-  T *xp=x.p, *xstop=xp+x.N;
-  const T *zp=z.p, *yp=y.p;
-  for(; xp!=xstop; xp++, yp++, zp++) *xp = MT::DIV(*yp, *zp, true);
-  return x;
-}
-
-template<class T> MT::Array<T>& divS(MT::Array<T>& x, const MT::Array<T>& y, T z) {
+template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y){
   if(&x!=&y) x.resizeAs(y);
   T *xp=x.p, *xstop=xp+x.N;
   const T *yp=y.p;
-  for(; xp!=xstop; xp++, yp++) *xp = MT::DIV(*yp, z, true);
-  return x;
+  for(; xp!=xstop; xp++, yp++) *xp = - ( *yp );
 }
-
-template<class T> MT::Array<T>& divS(MT::Array<T>& x, T y, const MT::Array<T>& z) {
-  if(&x!=&z) x.resizeAs(z);
-  T *xp=x.p, *xstop=xp+x.N;
-  const T *zp=z.p;
-  for(; xp!=xstop; xp++, zp++) *xp = MT::DIV(y, *zp, true);
-  return x;
-}
-
-
-
-
-
-//---------- compound assignment operators
-
 
 
 //---------- unary functions
@@ -3525,35 +3448,6 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
   if(!a->n) return MT::Array<T>((T*)a->p, 1);
   return MT::Array<T>((T*)a->p, a->n);
 }*/
-
-template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n) {
-  uint i;
-  for(i=0; i<L.N; i++) {
-    if(!strcmp(tag, L(i)->tag)) {
-      if(strcmp(typeid(T).name(), L(i)->type)) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with different type (" <<typeid(T).name() <<") than requested (" <<L(i)->type <<")");
-        return NULL;
-      }
-      if(n>1 && n!=L(i)->n) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with different size (" <<L(i)->n <<") than requested (" <<n <<")");
-        return NULL;
-      }
-      if(n==1 && !L(i)->p) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but as boolean flag instead of size 1)");
-        return NULL;
-      }
-      if(n==0 && L(i)->p) {
-        HALT("ABORT GETTING ATTRIBUTE -- found tag (" <<tag <<") but with size (" <<L(i)->n <<") instead fo boolean flag)");
-        return NULL;
-      }
-      if(!L(i)->p) return (T*)1;  //boolean return - tag found but no data
-      return (T*)(L(i)->p);
-    }
-  }
-  //HALT("ABORT GETTING ATTRIBUTE -- couldn't find tag (" <<tag <<") in anylist");
-  return NULL;
-}
-
 
 
 #endif

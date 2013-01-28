@@ -56,29 +56,6 @@ void testBag(){
 }
 #endif
 
-#include <MT/array.h>
-void testAny(){
-  AnyList bag;
-  bag.append(anyNew<double>("bla",.125));
-  bag.append(anyNew<const char*>("bla","blublu"));
-  bag.append(anyNew<double>("bla",ARR(.1,.2,3.,.4).p,4,'['));
-
-  listWrite(bag,cout); cout <<endl;
-  AnyList B;
-  listClone(B,bag);
-  listWrite(B,cout); cout <<endl;
-  listDelete(B);
-
-  MT::String buf;
-  listWrite(bag,buf);
-  cout <<buf <<endl;
-  anyListRead(B,buf);
-  listWrite(B,cout); cout <<endl;
-  
-  listDelete(bag);
-  listDelete(B);
-}
-
 void testParameter(){
   String p1;
   MT::getParameter(p1,"par",String("default1"));
@@ -109,7 +86,6 @@ int main(int argn,char** argv){
   testString();
   testParameter();
   testTimer();
-  testAny();
 
   return 0;
 }

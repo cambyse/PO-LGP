@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #ifndef MT_util_t_cpp
 #define MT_util_t_cpp
@@ -191,62 +195,5 @@ template<class T> void Parameter<T>::initialize() {
   }
 }
 }
-
-
-//===========================================================================
-//
-// generic any container
-//
-
-//this is a typed instance of the general Any struct
-template<class T> struct Any_typed:public Any {
-  virtual ~Any_typed() { free(); };
-  Any_typed(const char* _tag, const T &x) {                      tag=NULL; p=NULL; set(_tag, &x, 0, 0);  }
-  Any_typed(const char* _tag, const T *_p, uint _n, char _delim) { tag=NULL; p=NULL; set(_tag, _p, _n, _delim); }
-  virtual void write(std::ostream &os) const {
-    if(!p) { os <<tag; return; }  //boolean
-    os <<tag <<"="; // <<"[" <<type <<"] = ";
-    if(!n) {
-      if(typeid(T)==typeid(const char*) || typeid(T)==typeid(char*) || typeid(T)==typeid(MT::String)) os <<'\'' <<*((T*)p) <<'\'';
-      else os <<*((T*)p);
-    } else {
-      T *t=(T*)p;
-      os <<delim <<t[0];
-      for(uint i=1; i<n; i++) os <<' ' <<t[i];
-      if(delim=='(') os <<')';
-      else if(delim=='[') os <<']';
-      else if(delim=='{') os <<'}';
-      else os <<delim;
-    }
-  }
-  virtual void free() {
-    if(!tag) { CHECK(!p, ""); return; }
-    delete[] tag;
-    if(!p) return;
-    if(!n) delete((T*)p);
-    else   delete[]((T*)p);
-    p=NULL;
-  }
-  virtual void set(const char* _tag, const T *_p, uint _n, char _delim) {
-    free();
-    type=typeid(T).name();
-    tag=new char[strlen(_tag)+1];
-    strcpy(tag, _tag);
-    if(!_p) { p=NULL; n=0; delim=0; return; }  //assume this is a ``boolean tag'' without data
-    n=_n;
-    delim=_delim;
-    if(!n) {
-      p = new T(_p[0]);
-    } else {
-      p = new T[n];
-      T *t=(T*)p;
-      for(uint i=0; i<n; i++) t[i]=_p[i];
-    }
-  }
-  virtual Any* newClone() { return new Any_typed<T>(tag, (T*)p, n, delim); }
-};
-
-template<class T> Any* anyNew(const char* tag, const T &x) {        return new Any_typed<T>(tag, x); }
-template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim) { return new Any_typed<T>(tag, x, n, delim); }
 
 #endif

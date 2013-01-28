@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "ors.h"
 
@@ -24,10 +28,10 @@
 
 
 #  include <ode/ode.h>
-#  include <ode/../internal/objects.h>
-#  include <ode/../internal/joints/joints.h>
-#  include <ode/../internal/collision_kernel.h>
-#  include <ode/../internal/collision_transform.h>
+#  include <ode/internal/objects.h>
+#  include <ode/internal/joints/joints.h>
+#  include <ode/internal/collision_kernel.h>
+#  include <ode/internal/collision_transform.h>
 
 #  ifdef MT_MSVC
 #    undef HAVE_UNISTD_H
@@ -170,7 +174,7 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
       double v=d1.length();
       if(v>1e-4) {
         d1 /= v;
-        CP3(contacts[i].fdir1, d1.p);
+        CP3(contacts[i].fdir1, d1.p());
         contacts[i].surface.mode = contacts[i].surface.mode | dContactMotion1 | dContactFDir1;
         contacts[i].surface.motion1 = v;
       }
@@ -286,16 +290,16 @@ void OdeInterface::contactForces() {
     vrel.makeColinear(normal);
     //spring force
     force = .03*d*d*d;
-    if(b2) dBodyAddForceAtPos(b2, force*normal(0), force*normal(1), force*normal(2), pos(0), pos(1), pos(2));
+    if(b2) dBodyAddForceAtPos(b2, force*normal.x, force*normal.y, force*normal.z, pos.x, pos.y, pos.z);
     force *= -1.; //invert on other body
-    if(b1) dBodyAddForceAtPos(b1, force*normal(0), force*normal(1), force*normal(2), pos(0), pos(1), pos(2));
+    if(b1) dBodyAddForceAtPos(b1, force*normal.x, force*normal.y, force*normal.z, pos.x, pos.y, pos.z);
     
     //inward viscosity
     if(vrel * normal <= 0) {
       force += 10.*vrel.length();
-      if(b2) dBodyAddForceAtPos(b2, force*m2*normal(0), force*m2*normal(1), force*m2*normal(2), pos(0), pos(1), pos(2));
+      if(b2) dBodyAddForceAtPos(b2, force*m2*normal.x, force*m2*normal.y, force*m2*normal.z, pos.x, pos.y, pos.z);
       force *= -1.; //invert on other body
-      if(b1) dBodyAddForceAtPos(b1, force*m1*normal(0), force*m1*normal(1), force*m1*normal(2), pos(0), pos(1), pos(2));
+      if(b1) dBodyAddForceAtPos(b1, force*m1*normal.x, force*m1*normal.y, force*m1*normal.z, pos.x, pos.y, pos.z);
     }
     
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
@@ -310,9 +314,9 @@ void OdeInterface::contactForces() {
     
     vrel.normalize();
     force *= -1.;
-    if(b2) dBodyAddForceAtPos(b2, force*m2*vrel(0), force*m2*vrel(1), force*m2*vrel(2), pos(0), pos(1), pos(2));
+    if(b2) dBodyAddForceAtPos(b2, force*m2*vrel.x, force*m2*vrel.y, force*m2*vrel.z, pos.x, pos.y, pos.z);
     force *= -1.;
-    if(b1) dBodyAddForceAtPos(b1, force*m1*vrel(0), force*m1*vrel(1), force*m1*vrel(2), pos(0), pos(1), pos(2));
+    if(b1) dBodyAddForceAtPos(b1, force*m1*vrel.x, force*m1*vrel.y, force*m1*vrel.z, pos.x, pos.y, pos.z);
     
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
     std::cout <<"slip force " <<force <<std::endl;
@@ -338,10 +342,10 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
   for_list(i, n, C.bodies) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     b = bodies(n->index);
-    CP3(b->posr.pos, n->X.pos.p);                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
-    CP4(b->q, n->X.rot.p); dQtoR(b->q, b->posr.R);
-    CP3(b->lvel, n->X.vel.p);
-    CP3(b->avel, n->X.angvel.p);
+    CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
+    CP4(b->q, n->X.rot.p()); dQtoR(b->q, b->posr.R);
+    CP3(b->lvel, n->X.vel.p());
+    CP3(b->avel, n->X.angvel.p());
     //n->copyFrameToOde();
 #ifndef MT_ode_nojoints
     for_list(j, e, n->inLinks) if(e->type!=ors::glueJT) {
@@ -352,25 +356,25 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
         case ors::fixedJT:
           break;
         case ors::hingeJT:
-          CP4(hj->qrel, (e->A.rot*e->B.rot).p);
-          CP3(hj->anchor1, (e->A.pos).p);
-          CP3(hj->anchor2, (-(e->B.rot/e->B.pos)).p);
-          CP3(hj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p);
-          CP3(hj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p);
+          CP4(hj->qrel, (e->A.rot*e->B.rot).p());
+          CP3(hj->anchor1, (e->A.pos).p());
+          CP3(hj->anchor2, (-(e->B.rot/e->B.pos)).p());
+          CP3(hj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
+          CP3(hj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p());
           break;
         case ors::universalJT:
-          CP4(uj->qrel1, (e->A.rot).p);
-          CP4(uj->qrel2, (e->B.rot).p);
-          CP3(uj->anchor1, (e->A.pos).p);
-          CP3(uj->anchor2, (-(e->B.rot/e->B.pos)).p);
-          CP3(uj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p);
-          CP3(uj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p);
+          CP4(uj->qrel1, (e->A.rot).p());
+          CP4(uj->qrel2, (e->B.rot).p());
+          CP3(uj->anchor1, (e->A.pos).p());
+          CP3(uj->anchor2, (-(e->B.rot/e->B.pos)).p());
+          CP3(uj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
+          CP3(uj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p());
           break;
         case ors::sliderJT:
-          CP4(sj->qrel, (e->A.rot*e->B.rot).p);
-          CP3(sj->offset, (e->Q.pos).p);
+          CP4(sj->qrel, (e->A.rot*e->B.rot).p());
+          CP3(sj->offset, (e->Q.pos).p());
           //printf("offset: (%lf; %lf; %lf)\n", (e->X.pos)[0], (e->X.pos)[1], (e->X.pos)[2]);
-          CP3(sj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p);
+          CP3(sj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
           break;
         default: HALT("");
       }
@@ -385,8 +389,8 @@ void OdeInterface::exportForcesToOde(ors::Graph &C) {
   dBodyID b;
   for_list(j, n, C.bodies) {
     b=bodies(n->index);
-    CP3(b->facc, n->force.p);
-    CP3(b->tacc, n->torque.p);
+    CP3(b->facc, n->force.p());
+    CP3(b->tacc, n->torque.p());
   }
 }
 
@@ -397,10 +401,10 @@ void OdeInterface::importStateFromOde(ors::Graph &C) {
   for_list(j, n, C.bodies) {
     //n->getFrameFromOde();
     b=bodies(n->index);
-    CP3(n->X.pos.p, b->posr.pos);
-    CP4(n->X.rot.p, b->q);
-    CP3(n->X.vel.p, b->lvel);
-    CP3(n->X.angvel.p, b->avel);
+    CP3(n->X.pos.p(), b->posr.pos);
+    CP4(n->X.rot.p(), b->q);
+    CP3(n->X.vel.p(), b->lvel);
+    CP3(n->X.angvel.p(), b->avel);
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
   }
   C.calcJointsFromBodyFrames();
@@ -550,7 +554,7 @@ void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f) {
   dJointFeedback* fb=dJointGetFeedback(motors(e->index));
   CHECK(fb, "no feedback buffer set for this joint");
   //std::cout <<OUTv(fb->f1) <<' ' <<OUTv(fb->t1) <<' ' <<OUTv(fb->f2) <<' ' <<OUTv(fb->t2) <<std::endl;
-  ors::Vector t; t(0)=fb->t1[0]; t(1)=fb->t1[1]; t(2)=fb->t1[2];
+  ors::Vector t; t.x=fb->t1[0]; t.y=fb->t1[1]; t.z=fb->t1[2];
   f=t * (e->from->X.rot*(e->A.rot*ors::Vector(1, 0, 0)));
   f=-f;
 }
@@ -637,10 +641,10 @@ void OdeInterface::createOde(ors::Graph &C) {
     
     //n->copyFrameToOde();
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
-    CP3(b->posr.pos, n->X.pos.p);                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
-    CP4(b->q, n->X.rot.p); dQtoR(b->q, b->posr.R);
-    CP3(b->lvel, n->X.vel.p);
-    CP3(b->avel, n->X.angvel.p);
+    CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
+    CP4(b->q, n->X.rot.p()); dQtoR(b->q, b->posr.R);
+    CP3(b->lvel, n->X.vel.p());
+    CP3(b->avel, n->X.angvel.p());
     
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
     ors::Shape *s;
@@ -741,8 +745,8 @@ void OdeInterface::createOde(ors::Graph &C) {
       if(trans) {
         //geoms(s->index) = trans;
         dGeomTransformSetGeom(trans, geom);
-        dGeomSetPosition(geom, s->rel.pos(0), s->rel.pos(1), s->rel.pos(2));
-        dGeomSetQuaternion(geom, s->rel.rot.p);
+        dGeomSetPosition(geom, s->rel.pos.x, s->rel.pos.y, s->rel.pos.z);
+        dGeomSetQuaternion(geom, s->rel.rot.p());
         dGeomSetBody(trans, b); //attaches the geom to the body
       } else {
         dGeomSetBody(geom, b); //attaches the geom to the body
@@ -798,7 +802,7 @@ void OdeInterface::createOde(ors::Graph &C) {
         dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
         motors(e->index)=jointM;
         a=e->from->X.rot*e->A.rot*ors::Vector(1, 0, 0);
-        dJointSetAMotorAxis(jointM, 0, 1, a(0), a(1), a(2));
+        dJointSetAMotorAxis(jointM, 0, 1, a.x, a.y, a.z);
         //dJointSetAMotorParam(jointM, dParamFMax, 1.);
         jointFB = new dJointFeedback;
         dJointSetFeedback(jointM, jointFB);
@@ -932,7 +936,7 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
   dContactGeom* c;
   ors::Vector y;
   
-  x(2)=0.;
+  x.z=0.;
   
   MT::Array<ors::Vector> v;
   //collect list of floor contacts
@@ -941,7 +945,7 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
     b1=dGeomGetBody(c->g1);
     b2=dGeomGetBody(c->g2);
     if((!b1 && b2) || (b1 &&!b2)) {
-      y.set(c->pos);  y(2)=0.;
+      y.set(c->pos);  y.z=0.;
       v.append(y);
     }
   }

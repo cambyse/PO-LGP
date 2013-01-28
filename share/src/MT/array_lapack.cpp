@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 // file:///usr/share/doc/liblapack-doc/lug/index.html
 
@@ -296,7 +300,7 @@ void lapack_min_Ax_b(arr& x,const arr& A, const arr& b){
   CHECK(A.d0>=A.d1 && A.d0==b.N && b.nd==1 && A.nd==2, "");
   arr At = ~A;
   x=b;
-  integer M=A.d0, N=A.d1, NRHS=1, D=M<N?M:N, LWORK=2*M*N, info;
+  integer M=A.d0, N=A.d1, NRHS=1, LWORK=2*M*N, info;
   arr work(LWORK);
   dgels_((char*)"N", &M, &N, &NRHS, At.p, &M, x.p, &M, work.p, &LWORK, &info );
   CHECK(!info, "dgels_ error info = " <<info);
@@ -318,6 +322,8 @@ dlauum = multiply L'*L
 #include "array.h"
 void blas_MM(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
 void blas_MsymMsym(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
+void blas_A_At(arr& X, const arr& A) {NICO}
+void blas_At_A(arr& X, const arr& A) {NICO}
 void lapack_cholesky(arr& C, const arr& A) {NICO;}
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A) {NICO};
 void lapack_LU(arr& LU, const arr& A) {NICO};

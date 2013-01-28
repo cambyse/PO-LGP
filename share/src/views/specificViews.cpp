@@ -99,4 +99,7 @@ void OrsView::glDraw() {
   orsCopy.glDraw();
 }
 
+#else //MT_GTK
+void OrsView::glInit() {NICO}
+void OrsView::glDraw() {NICO}
 #endif

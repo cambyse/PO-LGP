@@ -18,15 +18,15 @@ void testLinReg(){
   ridgeRegression(beta, Phi, y, MT::getParameter<double>("ridge",1e-10));
   cout <<"estimated beta = "<< beta <<endl;
 
-  write(LIST(X, y), "z.train");
+  write(LIST<arr>(X, y), "z.train");
 
   arr X_test,y_test;
   X_test.setGrid(X.d1,-3,3,100);
   makeFeatures(Phi,X_test,X);
   y_test = Phi*beta;
 
-  write(LIST(X_test, y_test), "z.model");
-  gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l","z.pdf",true);
+  write(LIST<arr>(X_test, y_test), "z.model");
+  gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l",false,true,"z.pdf");
   //MT::wait();
 }
 
@@ -51,10 +51,10 @@ void test2Class(){
   y_test.reshape(101,101);
   p_test.reshape(101,101);
   
-  write(LIST(X, y), "z.train");
-  write(LIST(y_test), "z.model");
-  write(LIST(p_test), "z.model2");
-  gnuplot("load 'plt.contour'","z.pdf",true);
+  write(LIST<arr>(X, y), "z.train");
+  write(LIST<arr>(y_test), "z.model");
+  write(LIST<arr>(p_test), "z.model2");
+  gnuplot("load 'plt.contour'", false, true, "z.pdf");
 }
 
 void testMultiClass(){
@@ -72,7 +72,7 @@ void testMultiClass(){
     p_pred[i]() /= sum(p_pred[i]);
     label(i) = y[i].maxIndex();
   }
-  write(LIST(X, label, y, p_pred), "z.train");
+  write(LIST<arr>(X, label, y, p_pred), "z.train");
   
   arr X_test,p_test;
   X_test.setGrid(2,-2,3,50);
@@ -82,10 +82,10 @@ void testMultiClass(){
   p_test = ~p_test;
   p_test.reshape(p_test.d0,51,51);
   
-  write(LIST(p_test[0]), "z.model");
-  write(LIST(p_test[1]), "z.model2");
-  if(p_test.d1>2) write(LIST(p_test[2]), "z.model3");
-  gnuplot("load 'plt.contourMulti'","z.pdf",true);
+  write(LIST<arr>(p_test[0]), "z.model");
+  write(LIST<arr>(p_test[1]), "z.model2");
+  if(p_test.d1>2) write(LIST<arr>(p_test[2]), "z.model3");
+  gnuplot("load 'plt.contourMulti'", false, true, "z.pdf");
 }
 
 void testCV(){
@@ -95,7 +95,7 @@ void testCV(){
       ridgeRegression(beta, X,y,param);
 
       //arr y_pred = X*beta;
-      //write(LIST(X, y, y_pred), "data");
+      //write(LIST<arr>(X, y, y_pred), "data");
       //gnuplot("plot 'data' us 2:3 w p,'data' us 2:4 w l");
       //MT::wait();
     };
@@ -139,12 +139,12 @@ void exercise(){
   makeFeatures(Phi,X_test,X);
   y_test = Phi*beta;
 
-  write(LIST(X, y), "z.train");
-  write(LIST(X_test, y_test), "z.model");
+  write(LIST<arr>(X, y), "z.train");
+  write(LIST<arr>(X_test, y_test), "z.model");
   if(X.d1==1){
-    gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l","z.pdf",true);
+    gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true, "z.pdf");
   }else{
-    gnuplot("splot 'z.train' w p,'z.model' w l","z.pdf",true);
+    gnuplot("splot 'z.train' w p,'z.model' w l", false, true, "z.pdf");
   }
   //MT::wait();
 }

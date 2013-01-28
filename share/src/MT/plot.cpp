@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "plot.h"
 #include "array.h"
@@ -289,7 +293,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     }
     svd(U, w, V, Cov);
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
-    for(i=0; i<d.d0; i++) { mult(d[i](), d[i], w); d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
+    for(i=0; i<d.d0; i++) { d[i]()*=w; d[i]=V*d[i]; d(i, 0)+=mean(0); d(i, 1)+=mean(1); }
     
     plotModule.s->lines.append(d);
   }
@@ -314,7 +318,7 @@ void plotCovariance(const arr& mean, const arr& cov) {
     //lapack_cholesky(V, cov);
     svd(U, w, V, cov);
     for(i=0; i<w.N; i++) w(i)=sqrt(w(i)); //trace of eig^2 becomes N!
-    for(i=0; i<d.d0; i++) { mult(d[i](), d[i], w); d[i]=V*d[i]; d[i]()+=mean; }
+    for(i=0; i<d.d0; i++) { d[i]()*=w; d[i]=V*d[i]; d[i]()+=mean; }
     d.reshape(3, 101, 3);
     plotModule.s->lines.append(d[0]);
     plotModule.s->lines.append(d[1]);
@@ -588,10 +592,10 @@ void plotDrawOpenGL(void *_data) {
     glColor(c.r, c.g, c.b);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_POLYGON);
-    glVertex3f(data.planes(i)(0), data.planes(i)(1), data.planes(i)(2));
-    glVertex3f(data.planes(i+1)(0), data.planes(i+1)(1), data.planes(i+1)(2));
-    glVertex3f(data.planes(i+2)(0), data.planes(i+2)(1), data.planes(i+2)(2));
-    glVertex3f(data.planes(i+3)(0), data.planes(i+3)(1), data.planes(i+3)(2));
+    glVertex3f(data.planes(i).x, data.planes(i).y, data.planes(i).z);
+    glVertex3f(data.planes(i+1).x, data.planes(i+1).y, data.planes(i+1).z);
+    glVertex3f(data.planes(i+2).x, data.planes(i+2).y, data.planes(i+2).z);
+    glVertex3f(data.planes(i+3).x, data.planes(i+3).y, data.planes(i+3).z);
     glEnd();
   }
 #else

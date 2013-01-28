@@ -13,9 +13,7 @@ doxygen
 make
 
 ** Test
-cd test/array
-./x.exe
+cd test/array;  ./x.exe
 
 ** Read
-cd doc/array_doc
-firefox array_8h.html
+cd doc/array_doc;  firefox array_8h.html

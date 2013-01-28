@@ -7,8 +7,8 @@
 
 BASE := $(shell cd $(BASE);pwd -L)
 LIBPATH = $(BASE)/extern
-ifndef MLR_EXLIB_PATH
-MLR_EXLIB_PATH = /home/lib
+ifndef MLR_LIBPATH
+MLR_LIBPATH = /home/lib
 endif
 KERNEL_RELEASE = $(shell uname -r)
 ARCH = $(shell uname -m)
@@ -97,8 +97,8 @@ CXX	= g++
 CC	= gcc
 endif
 LINK	= $(CXX)
-CPATH	:= $(BASE)/include:$(BASE)/src:$(CPATH)
-LPATH	:= $(BASE)/lib:$(LPATH)
+CPATH	:= $(BASE)/include:$(BASE)/src:$(MLR_LIBPATH)/include:$(CPATH)
+LPATH	:= $(BASE)/lib:$(MLR_LIBPATH)/lib:$(LPATH)
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -123,7 +123,7 @@ CXX	= g++
 CC	= g++
 LINK	= g++
 CPATH	:= $(CPATH):../../include:$(LIBPATH)/include:/usr/X11R6/include
-LPATH	:= $(LPATH):$(LIBPATH)/lib_$(SYS):$(LIBPATH)/lib:/usr/X11R6/lib
+LPATH	:= $(LPATH):$(BASE)/lib:/usr/X11R6/lib
 QTDIR 	= /usr/lib/qt3
 LDFLAGS	+= -o $(OUTPUT)
 SHAREFLAG = -shared
@@ -198,9 +198,9 @@ endif
 
 ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/include:$(MLR_EXLIB_PATH)/schunkLWA/include
+CPATH   := $(CPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/include:$(MLR_LIBPATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(MLR_EXLIB_PATH)/schunkSDH-11-05-11/lib:$(MLR_EXLIB_PATH)/schunkLWA/lib:$(MLR_EXLIB_PATH)/ntcan/lib
+LPATH   := $(LPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/lib:$(MLR_LIBPATH)/schunkLWA/lib:$(MLR_LIBPATH)/ntcan/lib
 LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -256,15 +256,15 @@ endif
 
 ifeq ($(ODE),1)
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
-CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ode/include
-LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ode/lib
+#CPATH := $(CPATH):$(MLR_LIBPATH)/ode/include
+#LPATH := $(LPATH):$(MLR_LIBPATH)/ode/lib
 LIBS += -lode
 endif
 
 ifeq ($(SWIFT),1)
 CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
-LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
+#LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LIBS += -lSWIFT++
 QHULL := 1
 ANN := 1
@@ -272,14 +272,20 @@ endif
 
 ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
-LPATH := $(LPATH):$(BASE)/extern/Lewiner
+CPATH := $(CPATH):$(BASE)/extern/Lewiner
+#LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
+endif
+
+ifeq ($(PLY),1)
+CXXFLAGS += -DMT_PLY
+LIBS += -lply
 endif
 
 ifeq ($(SOLID),1)
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
-LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
+#LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
 LIBS += -lFreeSOLID
 endif
 
@@ -401,8 +407,8 @@ LIBS += -ldai
 endif
 
 ifeq ($(IBDS),1)
-CPATH := $(CPATH):$(MLR_EXLIB_PATH)/ibds/include
-LPATH := $(LPATH):$(MLR_EXLIB_PATH)/ibds/lib
+CPATH := $(CPATH):$(MLR_LIBPATH)/ibds/include
+LPATH := $(LPATH):$(MLR_LIBPATH)/ibds/lib
 LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
@@ -414,8 +420,8 @@ FREENECT = 1
 endif
 
 ifeq ($(FREENECT),1)
-LPATH := $(LPATH):$(MLR_EXLIB_PATH)/libfreenect/lib
-CPATH := $(CPATH):$(MLR_EXLIB_PATH)/libfreenect/include
+LPATH := $(LPATH):$(MLR_LIBPATH)/libfreenect/lib
+CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
 LIBS += -lfreenect
 endif
 
@@ -469,8 +475,9 @@ endif
 
 ifeq ($(PHYSX),1)
 CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
-CPATH := $(CPATH):$(MLR_EXLIB_PATH)/PhysX/Include:$(MLR_EXLIB_PATH)/PhysX/Include/extensions:$(MLR_EXLIB_PATH)/PhysX/Include/foundation:$(MLR_EXLIB_PATH)/PhysX/Include/deprecated
-LPATH := $(MLR_EXLIB_PATH)/PhysX/Lib/linux32/:$(LPATH)
+CPATH := $(CPATH):$(MLR_LIBPATH)/include/physx
+#PhysX/Include:$(MLR_LIBPATH)/PhysX/Include/extensions:$(MLR_LIBPATH)/PhysX/Include/foundation:$(MLR_LIBPATH)/PhysX/Include/deprecated
+#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux32/:$(LPATH)
 LIBS += -Wl,--start-group -lpthread -lrt\
 -lPhysX3CommonCHECKED \
 -lPvdRuntimeCHECKED \

@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 /* Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
 under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
 see the `util.h' file for a full copyright statement  */
@@ -7,6 +26,7 @@ see the `util.h' file for a full copyright statement  */
 
 #include "array.h"
 #include "util.h"
+#include "mapGraph.h"
 #include <map>
 //#include <set>
 
@@ -50,7 +70,7 @@ struct Variable {
   MT::String name;  //!< up to you...
   infer::FactorList factors;    //!< each variable knows all factors it is part of
   MessagePairList messages;  //!< each variable knows all the messages it directly connects to
-  AnyList ats; //any convenience information (e.g. for dot);
+  MapGraph ats; //any convenience information (e.g. for dot);
   
   Variable();
   Variable(uint _dim, const char *_name);
@@ -81,7 +101,7 @@ struct Factor {
   infer::VariableList variables;
   infer::FactorList factors;
   MessagePairList messages;          //!< each factor knows all the msg_pairs it connects to
-  AnyList ats; //any convenience information (e.g. for dot);
+  MapGraph ats; //any convenience information (e.g. for dot);
   
   Factor();
   ~Factor();

@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "gtk.h"
 #include <sys/syscall.h>
 
@@ -35,6 +54,23 @@ struct GtkThread:Thread{
 };
 
 void gtkCheckInitialized(){
+#if 0
+  static bool isInitialized=false;
+  if(!isInitialized){
+    isInitialized=true;
+    int argc=1;
+    char **argv = new char*[1];
+    argv[0] = (char*)"x.exe";
+
+    XInitThreads();
+    g_thread_init(NULL);1
+    gdk_threads_init();
+//    gdk_threads_enter();
+    gtk_init(&argc, &argv);
+    gtk_gl_init(&argc, &argv);
+    glutInit(&argc, argv);
+  }
+#else
   static Mutex m;
   if(!global_gtkThread){
     m.lock();
@@ -56,6 +92,7 @@ void gtkCheckInitialized(){
     }
     m.unlock();
   }
+#endif
 }
 
 

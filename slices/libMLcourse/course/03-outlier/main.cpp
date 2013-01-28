@@ -31,11 +31,11 @@ void testOutlier(){
     
     y_pred = Phi*beta;
     y_test = Phi_test*beta;
-    write(LIST(X, y), "train_pure");
-    write(LIST(X, y, y_pred, q, e, w), "train");
-    write(LIST(X_test, y_test), "model");
-    //y_test = Phi_test*beta_true;  write(LIST(X_test, y_test), "true");
-    gnuplot("plot 'train' us 1:2 w p, 'model' us 1:2 w l, 'train' us 1:2:(3*$4) w p pt 6 ps variable","z.pdf",true);
+    write(LIST<arr>(X, y), "train_pure");
+    write(LIST<arr>(X, y, y_pred, q, e, w), "train");
+    write(LIST<arr>(X_test, y_test), "model");
+    //y_test = Phi_test*beta_true;  write(LIST<arr>(X_test, y_test), "true");
+    gnuplot("plot 'train' us 1:2 w p, 'model' us 1:2 w l, 'train' us 1:2:(3*$4) w p pt 6 ps variable", false, true, "z.pdf");
     MT::wait();
 
     for(uint i=0;i<n;i++){

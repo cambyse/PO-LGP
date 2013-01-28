@@ -121,7 +121,7 @@ void IbdsModule::create(ors::Graph& C) {
     mat[1][0]=rot[1]; mat[1][1]=rot[4]; mat[1][2]=rot[7];
     mat[2][0]=rot[2]; mat[2][1]=rot[5]; mat[2][2]=rot[8];
     b->setRotationMatrix(mat);
-    b->setCenterOfMass(Vector3D(n->X.pos(0),n->X.pos(1),n->X.pos(2)));
+    b->setCenterOfMass(Vector3D(n->X.pos.x,n->X.pos.y,n->X.pos.z));
     //b->setAngularVelocity (Vector3D (vx,0.0,vz));
     b->setDynamic(true);
     //b->setRestitution(0.8);

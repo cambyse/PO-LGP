@@ -20,6 +20,8 @@
 */
 
 #include <stdlib.h>
+#include <map>
+
 #include "symbols.h"
 #include "reason.h" // for derive in state
 

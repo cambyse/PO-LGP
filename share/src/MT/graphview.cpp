@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "gtk.h"
 
 #if defined MT_GTK and defined MT_GRAPHVIZ
@@ -19,7 +38,7 @@ extern "C"{
 }
 
 struct sGraphView {
-  ElementL *G;
+  MapGraph *G;
   GraphView *p;
   MT::String title;
   
@@ -31,7 +50,7 @@ struct sGraphView {
   MT::Array<Agnode_t *> gvNodes;
   GVC_t *gvContext;
   GVJ_t *gvJob(){ return gvjobs_first(gvContext); }
-  
+
   void init();
   void updateGraphvizGraph();
   
@@ -45,7 +64,7 @@ struct sGraphView {
   
 };
 
-GraphView::GraphView(ElementL& G, const char* title, void *container) {
+GraphView::GraphView(MapGraph& G, const char* title, void *container) {
   gtkCheckInitialized();
   
   s = new sGraphView;
@@ -62,9 +81,11 @@ GraphView::~GraphView() {
 
 
 void GraphView::update(){
+  gtkLock();
   s->updateGraphvizGraph();
   gvLayoutJobs(s->gvContext, s->gvGraph);
   gvRenderJobs(s->gvContext, s->gvGraph);
+  gtkUnlock();
 }
 
 void GraphView::watch(){
@@ -93,15 +114,16 @@ void sGraphView::updateGraphvizGraph(){
   agedgeattr(gvGraph, STR("fontsize"), STR("6"));
 
   uint i,j;
-  Element *e, *n;
+  Item *e, *n;
   gvNodes.resize(G->N);
   //first add `nodes' (elements without links)
   for_list(i, e, (*G)){
-    CHECK(i==e->id,"");
-    //if(e->links.N!=2){ //not an edge
-      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->name)); //, true);
-      if(e->name.N) agset(gvNodes(i), STR("label"), e->name.p);
-      if(e->links.N){
+    e->index=i;
+    CHECK(i==e->index,"");
+    //if(e->parents.N!=2){ //not an edge
+      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->keys(0))); //, true);
+      if(e->keys.N) agset(gvNodes(i), STR("label"), e->keys(0).p);
+      if(e->parents.N){
 	agset(gvNodes(i), STR("shape"), STR("box"));
 	agset(gvNodes(i), STR("fontsize"), STR("6"));
 	agset(gvNodes(i), STR("width"), STR(".1"));
@@ -111,15 +133,15 @@ void sGraphView::updateGraphvizGraph(){
   }
   //now all others
   for_list(i, e, (*G)){
-    /*if(e->links.N==2){ //is an edge
-      gvNodes(i) = (Agnode_t*)agedge(gvGraph, gvNodes(e->links(0)->id), gvNodes(e->links(1)->id)); //, STRING(i <<"_" <<e->name), true);
-    }else*/ if(e->links.N){
-      for_list(j, n, e->links){
+    /*if(e->parents.N==2){ //is an edge
+      gvNodes(i) = (Agnode_t*)agedge(gvGraph, gvNodes(e->parents(0)->id), gvNodes(e->parents(1)->id)); //, STRING(i <<"_" <<e->name), true);
+    }else*/ if(e->parents.N){
+      for_list(j, n, e->parents){
 	Agedge_t *ge;
-	if(n->id<e->id)
-	  ge=agedge(gvGraph, gvNodes(n->id), gvNodes(e->id)); //, STRING(n->name <<"--" <<e->name), true);
+	if(n->index<e->index)
+	  ge=agedge(gvGraph, gvNodes(n->index), gvNodes(e->index)); //, STRING(n->name <<"--" <<e->name), true);
 	else
-	  ge=agedge(gvGraph, gvNodes(e->id), gvNodes(n->id)); //, STRING(e->name <<"--" <<n->name), true);
+	  ge=agedge(gvGraph, gvNodes(e->index), gvNodes(n->index)); //, STRING(e->name <<"--" <<n->name), true);
 	agset(ge, STR("label"), STRING(j));
       }
     }
@@ -129,6 +151,7 @@ void sGraphView::updateGraphvizGraph(){
 }
 
 void sGraphView::init() {
+  gtkLock();
   gvContext = ::gvContext();
   char *bla[] = {STR("dot"), STR("-Tx11"), NULL};
   gvParseArgs(gvContext, 2, bla);
@@ -155,29 +178,28 @@ void sGraphView::init() {
   g_signal_connect((gpointer) drawingarea, "scroll_event",  G_CALLBACK(on_drawingarea_scroll_event),  NULL);
   
   gtk_widget_show(container);
+  gtkUnlock();
 }
 
-
-bool sGraphView::on_drawingarea_expose_event(GtkWidget       *widget,            GdkEventExpose  *event,            gpointer         user_data) {
+bool sGraphView::on_drawingarea_expose_event(GtkWidget *widget, GdkEventExpose  *event, gpointer user_data) {
   sGraphView *gv;
   GVJ_t *job;
   cairo_t *cr;
   
-  //INFO(on_drawingarea_expose_event);
+  INFO(on_drawingarea_expose_event);
   
   gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   cr = gdk_cairo_create(gtk_widget_get_window(widget));
   
-  job->context = (void *)cr;
+  job->context = (void*)cr;
   job->external_context = TRUE;
   job->width = widget->allocation.width; //gtk_widget_get_allocated_width(widget);
   job->height = widget->allocation.height; //gtk_widget_get_allocated_height(widget);
-  if(job->has_been_rendered) {
+  if(job->has_been_rendered)
     (job->callbacks->refresh)(job);
-  } else {
+  else
     (job->callbacks->refresh)(job);
-  }
   
   cairo_destroy(cr);
   
@@ -212,7 +234,7 @@ bool sGraphView::on_drawingarea_motion_notify_event(GtkWidget       *widget,    
   GVJ_t *job;
   //pointf pointer;
   
-  //INFO(on_drawingarea_motion_notify_event);
+  INFO(on_drawingarea_motion_notify_event);
   
   gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
@@ -251,10 +273,11 @@ bool sGraphView::on_drawingarea_configure_event(GtkWidget       *widget,        
   gv = (sGraphView*)g_object_get_data(G_OBJECT(widget),"GraphvizGtk");
   job = gv->gvJob();
   if(!job) return false;
-  if(! job->has_been_rendered) {
-    zoom_to_fit = MT::MIN((double) event->width / (double) job->width, (double) event->height / (double) job->height);
-    if(zoom_to_fit < 1.0)  /* don't make bigger */
-      job->zoom *= zoom_to_fit;
+  if(!job->has_been_rendered) {
+    zoom_to_fit = 1.0;
+//    MT::MIN((double) event->width / (double) job->width, (double) event->height / (double) job->height);
+//    if(zoom_to_fit < 1.0)  /* don't make bigger */
+//      job->zoom *= zoom_to_fit;
   } else if(job->fit_mode) {
     zoom_to_fit = MT::MIN((double) event->width / (double) job->width, (double) event->height / (double) job->height);
     job->zoom *= zoom_to_fit;

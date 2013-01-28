@@ -1,13 +1,34 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "gaussianProcess.h"
 
 /** prior of 0 */
 double const_0(const arr &x, const void *p){return 0.;}
 
-GaussianProcess::GaussianProcess(){
-  kernelP=priorP=NULL;
-  mu_func=const_0;
-  mu=0.;
-}
+GaussianProcess::GaussianProcess() :
+  mu(0.),
+  mu_func(const_0),
+  priorP(NULL),
+  obsVar(.1),
+  kernelP(NULL)
+{}
 
 /*! set Gauss cov function, its parameters, and GP prior
  */
@@ -82,6 +103,7 @@ void GaussianProcess::recompute(){
       }
     }
   }
+  gram = gram + obsVar * eye(gram.d0);
   inverse_SymPosDef(Ginv, gram);
   if(!dN){
     if(N) GinvY = Ginv * (Y-Mu_func-mu); else GinvY.clear();
@@ -132,7 +154,7 @@ void GaussianProcess::evaluate(const arr& x, double& y, double& sig){
   if(N+dN==0){ //no data
     y = mu_func(x, priorP) + mu;
     sig=::sqrt(cov(kernelP, x, x));
-    return;
+    return; 
   }
   if(k.N!=N+dN) k.resize(N+dN);
   for(i=0; i<N; i++){ xi.referToSubDim(X, i); k(i)=cov(kernelP, x, xi); }
@@ -142,7 +164,23 @@ void GaussianProcess::evaluate(const arr& x, double& y, double& sig){
   y = scalarProduct(k, GinvY) + mu_func(x, priorP) + mu;
   innerProduct(Ginvk, Ginv, k);
   sig = cov(kernelP, x, x) - scalarProduct(k, Ginvk);
-  if(sig<0) sig=0.; else sig = ::sqrt(sig);
+  //if(sig<=10e-10) {
+    //cout << "---" << endl;
+    //cout << "x==" << x << endl;
+    //cout << "k==" << k << endl;
+    //cout << "Ginv==" << Ginv << endl;
+    //cout << "kGinvk==" << scalarProduct(k, Ginvk) << endl;
+    //sig=::sqrt(sig); 
+    //cout << "sig==" << sig << endl; 
+  //}
+  //else 
+  sig = ::sqrt(sig);
+}
+
+double GaussianProcess::log_likelihood() {
+  arr gram;
+  inverse_SymPosDef(gram, Ginv);
+  return (-.5*~Y*GinvY - .5*log(norm(gram)) - (X.N+dX.N)/2 * log(2*MT_PI))(0); // actually a degenerated array of size 1x1
 }
 
 /** vector of covariances between test point and N+dN observation points */

@@ -24,7 +24,7 @@ void Test(){
   for(uint t=0;t<1000;t++){
     u = ARR(.1, .2); //control signal
     S.step(u);
-    S.meassureCurrentLandmarks(y_meassured);
+    S.getRealNoisyObservation(y_meassured);
 
     //1) resample weighted particles
     
@@ -46,7 +46,7 @@ void Test(){
 
 double likelihood(const arr& y_meassured, const arr& x, CarSimulator& S){
   arr y;
-  S.getTrueLandmarksInState(y, x(0), x(1), x(2));
+  S.getMeanObservationAtState(y, x);
   double sig=10*S.observationNoise;
   return exp(-.5*sumOfSqr(y_meassured-y)/(sig*sig));
 }
@@ -65,7 +65,7 @@ void Filter(){
   for(uint t=0;t<1000;t++){
     u = ARR(.1, .2); //control signal
     S.step(u);
-    S.meassureCurrentLandmarks(Y);
+    S.getRealNoisyObservation(Y);
     
     resample(X,W);
     

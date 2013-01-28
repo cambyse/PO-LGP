@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "soc_orsSystem.h"
 #include "ors.h"
@@ -149,9 +153,9 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
   if(rand_seed>0){
     rnd.seed(rand_seed);
     ors::Body &t=*s->ors->getBodyByName("target");
-    t.X.pos(0) += .05*rnd.gauss();
-    t.X.pos(1) += .05*rnd.gauss();
-    t.X.pos(2) += .05*rnd.gauss();
+    t.X.pos.x += .05*rnd.gauss();
+    t.X.pos.y += .05*rnd.gauss();
+    t.X.pos.z += .05*rnd.gauss();
   }
   
   //standard task variables and problem definition
@@ -171,7 +175,7 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
   TaskVariable *com = new DefaultTaskVariable("balance", *s->ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables(ARRAY(pos, col, com));
   
-  pos->y_target = arr(s->ors->getShapeByName("target")->X.pos.p, 3);
+  pos->y_target = ARRAY(s->ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);
@@ -237,8 +241,8 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   
   if(rand_seed>0){
     rnd.seed(rand_seed);
-    target->X.pos(0) += .05*rnd.gauss();
-    target->X.pos(1) += .05*rnd.gauss();
+    target->X.pos.x += .05*rnd.gauss();
+    target->X.pos.y += .05*rnd.gauss();
     //target->X.p(2) += .05*rnd.gauss();
   }
   
@@ -255,7 +259,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   else               col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables(ARRAY(pos, col));
   
-  pos->y_target = arr(s->ors->getBodyByName("target")->X.pos.p, 3);
+  pos->y_target = ARRAY(s->ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
     col->y        = ARR(0.);

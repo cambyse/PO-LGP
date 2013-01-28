@@ -4,6 +4,13 @@
 #include <MT/array.h>
 #include <MT/util.h>
 
+/* NOTES:
+
+  -- derive all biros objects from bObject -> specific lists become generic lists
+  -- insideOut -> one view with all bObjects
+
+  -- flow chart: x-axis=time, rows=processes&variables, transactions=vertical arrows, on each row: bars indicate duration of step of process / duration of revision of variable; arrow onto variable -> change of revision/color/bar of that variable; each process bar is labeled by step number and process name; each variable bar by revision and variable name.
+  */
 
 //===========================================================================
 //

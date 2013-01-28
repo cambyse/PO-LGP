@@ -1,0 +1,21 @@
+#! /bin/sh
+
+MLR_LIBPATH=/home/lib
+BASE=$PWD/../share
+
+# clean up git
+git reset HEAD
+git clean -f -x -d
+
+# remove installed libs
+sudo rm -Rf $MLR_LIBPATH
+
+# install all external libs
+./INSTALL
+
+# compile our stuff
+cd $BASE
+make
+make  # twice because of stupid dependencies
+
+

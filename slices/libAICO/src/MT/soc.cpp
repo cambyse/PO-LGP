@@ -1,1 +1,0 @@
-SHARE/soc.cpp

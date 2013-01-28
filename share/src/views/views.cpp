@@ -1,12 +1,5 @@
 #include "views.h"
 
-#ifdef MT_GTK
-
-#include <MT/gtk.h>
-#include <MT/ors.h>
-#include <MT/opengl.h>
-#include <gtk/gtk.h>
-
 
 //===========================================================================
 //
@@ -40,6 +33,13 @@ ViewRegistrationL& viewRegistrations(){
 void registerView(ViewRegistration* v){
   viewRegistrations().append(v);
 }
+
+#ifdef MT_GTK
+
+#include <MT/gtk.h>
+#include <MT/ors.h>
+#include <MT/opengl.h>
+#include <gtk/gtk.h>
 
 //===========================================================================
 //
@@ -120,6 +120,14 @@ void View::gtkUpdate(){
     gtkUnlock();
   }
 }
+
+#else //MT_GTK
+
+View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) { s=NULL; }
+View::~View(){}
+void View::gtkNewGl(GtkWidget *container){NICO}
+void View::gtkUpdate(){NICO}
+void View::gtkNewText(GtkWidget *container){NICO}
 
 #endif
 

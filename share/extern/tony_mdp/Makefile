@@ -92,7 +92,7 @@ LIB_OBJS =  \
 lib: lib_shared
 
 lib_shared: $(LIB_OBJS)
-	gcc -shared -Wl,-soname,libmdp.so -o libmdp.so $(LIB_OBJS) 
+	gcc -shared -Wl,-soname,libmdp.so -o ../../lib/libmdp.so $(LIB_OBJS) 
 
 libmdp.a: $(LIB_OBJS)
 	$(AR) lib$(LIB_NAME).a $(LIB_OBJS)

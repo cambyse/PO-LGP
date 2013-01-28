@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #define FREEGLUT_STATIC
 #include <GL/freeglut.h>
@@ -91,7 +95,7 @@ struct sOpenGL {
   //-- callbacks
   
   static void _Void() { }
-  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width(),gl->height()); glutSwapBuffers(); unlock(); }
+  static void _Draw() { lock(); OpenGL *gl=glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); unlock(); }
   static void _Key(unsigned char key, int x, int y) { lock(); glwins(glutGetWindow())->Key(key,x,y); unlock(); }
   static void _Mouse(int button, int updown, int x, int y) { lock(); glwins(glutGetWindow())->Mouse(button,updown,x,y); unlock(); }
   static void _Motion(int x, int y) { lock(); glwins(glutGetWindow())->Motion(x,y); unlock(); }
@@ -126,8 +130,8 @@ void OpenGL::resize(int w,int h) {
   s->unlock_win();
 }
 
-int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
-int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
+// int OpenGL::width() {  s->lock(); int w=glutGet(GLUT_WINDOW_WIDTH); s->unlock(); return w; }
+// int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   lock();
@@ -155,7 +159,10 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   glutPassiveMotionFunc(_PassiveMotion) ;
   glutReshapeFunc(_Reshape);
   glutMouseWheelFunc(_MouseWheel) ;
-  
+
+  gl->width = glutGet(GLUT_WINDOW_WIDTH);
+  gl->height = glutGet(GLUT_WINDOW_HEIGHT);
+
   unlock_win();
 }
 

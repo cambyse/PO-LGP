@@ -23,7 +23,7 @@ void generateSpiralData(){
     X[n+i] = ARR(-r*cos(phi),-r*sin(phi));     y(n+i)=1;
   }
   rndGauss(X,MT::getParameter<double>("sigma",.004),true);
-  write(LIST(X,y),"spiral.dat");
+  write(LIST<arr>(X,y),"spiral.dat");
   gnuplot("plot [-2:2][-2:2] 'spiral.dat' us 1:2:3 with points pt 2 lc variable",NULL,true);
   //MT::wait();
 }
@@ -113,7 +113,7 @@ void testEmbedding(){
   laplacianEmbedding(Z,W);
   //kernelPCAEmbedding(Z,W);
 
-  write(LIST(Z,y),"embedded.dat"); //(D*U).sub(0,-1,0,1),
+  write(LIST<arr>(Z,y),"embedded.dat"); //(D*U).sub(0,-1,0,1),
   gnuplot("plot 'embedded.dat' us 1:2:3 with points pt 2 lc variable",NULL,true);
 }
 

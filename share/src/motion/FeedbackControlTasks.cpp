@@ -57,7 +57,7 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
 void Homing_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
   TaskVariable *q = TVs(0);
   q->v_target = -5.*q->y;
-  double vmax=.3, v=q->v_target.absMax();
+  double vmax=.3, v=absMax(q->v_target);
   if (v>vmax) q->v_target*=vmax/v;
 }
 
@@ -235,7 +235,7 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
     }
     case 1: { //(1) homing
       q->v_target = -5.*q->y;
-      double vmax=.3, v=q->v_target.absMax();
+      double vmax=.3, v=absMax(q->v_target);
       if (v>vmax) q->v_target*=vmax/v;
       break;
     }
@@ -269,7 +269,7 @@ void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors
       target(8)=target(10)=target(12)=-.8;
       target(9)=target(11)=target(13)= .6;
       q->v_target = 1.*(target - q->y);
-      double vmax=.5, v=q->v_target.absMax();
+      double vmax=.5, v=absMax(q->v_target);
       if (v>vmax) q->v_target*=vmax/v;
       break;
     }

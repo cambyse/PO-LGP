@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "ors.h"
 
@@ -336,7 +340,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       pi = ors.bodies(i)->X.pos + ors.bodies(i)->X.rot * irel.pos;
       pj = ors.bodies(j)->X.pos + ors.bodies(j)->X.rot * jrel.pos;
       c = ors.bodies(j)->X.rot / (pi-pj);
-      y.resize(3); y.setCarray(c.p, 3);
+      y.resize(3); y = ARRAY(c);
       ors.jacobian(Ji, i, &irel.pos);
       ors.jacobian(Jj, j, &jrel.pos);
       ors.jacobianR(JRj, j);
@@ -347,7 +351,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
         r .set(JRj(0, k), JRj(1, k), JRj(2, k));
         jk =  ors.bodies(j)->X.rot / (vi - vj);
         jk -= ors.bodies(j)->X.rot / (r ^(pi - pj));
-        J(0, k)=jk(0); J(1, k)=jk(1); J(2, k)=jk(2);
+        J(0, k)=jk.x; J(1, k)=jk.y; J(2, k)=jk.z;
       }
       
       break;
@@ -363,7 +367,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       fj = ors.bodies(j)->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
       f.rot.getZ(c);
-      y.setCarray(c.p, 3);
+      y = ARRAY(c);
       NIY; //TODO: Jacobian?
       break;
     case rotTVT:       y.resize(3);  ors.jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
@@ -398,7 +402,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
         ors.jacobian(Ji, l, NULL);
         ors.bodies(l)->X.rot.getY(vi);
         vi *= -1.;
-        zi.setCarray(vi.p, 3);
+        zi = ARRAY(vi);
         J.append(~zi*Ji);
       }
       J.reshape(params.N, J.N/params.N);
@@ -409,7 +413,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
-        zj.setCarray((jrel*world_z).p, 3);
+        zj = ARRAY((jrel*world_z));
         Jj.resizeAs(Ji);
         Jj.setZero();
       } else {
@@ -587,7 +591,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
   
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
-  dnormal.referTo(p->normal.p, 3); dnormal.reshape(1, 3);
+  dnormal.referTo(&p->normal.x, 3); dnormal.reshape(1, 3);
   if(!linear) {
     ors.jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
     ors.jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);

@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "ors.h"
 #include "ann.h"
@@ -88,9 +92,9 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
       case ors::meshST:
         //check if there is a specific swiftfile!
         MT::String *filename;
-        filename=anyListGet<MT::String>(s->ats, "swiftfile", 1);
+        filename=s->ats.get<MT::String>("swiftfile");
         if(!filename)
-          filename=anyListGet<MT::String>(s->body->ats, "swiftfile", 1);
+          filename=s->body->ats.get<MT::String>("swiftfile");
         if(filename) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");
@@ -223,11 +227,11 @@ void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
   CHECK(swift.INDEXshape2swift.N==C.shapes.N,"the number of shapes has changed");
   ors::Shape *s;
   uint k;
-  arr rot(3, 3);
+  ors::Matrix rot;
   for_list(k, s, C.shapes) {
-    s->X.rot.getMatrix(rot.p);
+    rot = s->X.rot.getMatrix();
     if(swift.INDEXshape2swift(s->index)!=-1) {
-      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p, s->X.pos.p);
+      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
       if(!s->cont) swift.scene->Deactivate(swift.INDEXshape2swift(s->index));
       //else         swift.scene->Activate( swift.INDEXshape2swift(s->index) );
     }
@@ -352,7 +356,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       ors::Transformation rel;
       rel.setDifference(global_ANN_shape->X, s->X);
       rel.rot.getMatrix(R.p);
-      t.setCarray(rel.pos.p, 3);
+      t = ARRAY(rel.pos);
       
       //check for each vertex
       for(i=0; i<s->mesh.V.d0; i++) {

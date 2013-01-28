@@ -1,0 +1,21 @@
+Tips for installation from zero (from a fresh ubuntu platform)
+
+** Install some packages:
+gnuplot
+libf2c2-dev
+libqhull-dev
+liblapack-dev
+freeglut3-dev
+libann-dev
+doxygen
+
+** Compile
+make
+
+** Test
+cd test/ors;   ./x.exe
+cd test/array; ./x.exe
+
+** Read
+cd doc/ors_doc;   firefox namespaceors.html
+cd doc/array_doc; firefox array_8h.html

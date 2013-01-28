@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "util.h"
 
@@ -187,10 +191,17 @@ void skipOne(std::istream& is) {
 }
 
 //! tell you about the next char (after skip()) but puts it back in the stream
-char peerNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
+char getNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
   char c;
   skip(is, skipchars, skipCommentLines);
   is.get(c);
+  if(!is.good()) return 0;
+  return c;
+}
+
+//! tell you about the next char (after skip()) but puts it back in the stream
+char peerNextChar(std::istream& is, const char *skipchars, bool skipCommentLines) {
+  char c=getNextChar(is, skipchars, skipCommentLines);
   if(!is.good()) return 0;
   is.putback(c);
   return c;
@@ -680,7 +691,7 @@ void MT::String::write(std::ostream& os) const { if(N) os <<p; }
 
 /*!\brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */
-void MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol) {
+uint MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol) {
   if(!skipSymbols) skipSymbols=readSkipSymbols;
   if(!stopSymbols) stopSymbols=readStopSymbols;
   if(eatStopSymbol==-1) eatStopSymbol=readEatStopSymbol;
@@ -693,6 +704,7 @@ void MT::String::read(std::istream& is, const char* skipSymbols, const char *sto
   }
   if(c==-1) is.clear();
   if(c!=-1 && !eatStopSymbol) is.putback(c);
+  return N;
 }
 
 

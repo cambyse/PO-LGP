@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #ifdef MT_QHULL
 
@@ -253,23 +257,23 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
       
       //what about different scales in force vs torque??!!
       if(torqueWeights>=0.){ //forceClosure
-	X(i*S+j, 0) = f(0);
-	X(i*S+j, 1) = f(1);
-	X(i*S+j, 2) = f(2);
+        X(i*S+j, 0) = f.x;
+        X(i*S+j, 1) = f.y;
+        X(i*S+j, 2) = f.z;
       }else{ //torqueClosure
-	X(i*S+j, 0) = c_f(0);
-	X(i*S+j, 1) = c_f(1);
-	X(i*S+j, 2) = c_f(2);
+        X(i*S+j, 0) = c_f.x;
+        X(i*S+j, 1) = c_f.y;
+        X(i*S+j, 2) = c_f.z;
       }
       if(torqueWeights>0.){ //both (wrench)
-	X(i*S+j, 3) = torqueWeights * c_f(0);
-	X(i*S+j, 4) = torqueWeights * c_f(1);
-	X(i*S+j, 5) = torqueWeights * c_f(2);
+        X(i*S+j, 3) = torqueWeights * c_f.x;
+        X(i*S+j, 4) = torqueWeights * c_f.y;
+        X(i*S+j, 5) = torqueWeights * c_f.z;
       }
       if(dFdC) {
-        dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f(2);  dXdC(i*S+j, 3, 2) = -f(1);
-        dXdC(i*S+j, 4, 0) = -f(2);  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f(0);
-        dXdC(i*S+j, 5, 0) =  f(1);  dXdC(i*S+j, 5, 1) = -f(0);  dXdC(i*S+j, 5, 2) =  0   ;
+        dXdC(i*S+j, 3, 0) =  0   ;  dXdC(i*S+j, 3, 1) =  f.z;  dXdC(i*S+j, 3, 2) = -f.y;
+        dXdC(i*S+j, 4, 0) = -f.z;  dXdC(i*S+j, 4, 1) =  0   ;  dXdC(i*S+j, 4, 2) =  f.x;
+        dXdC(i*S+j, 5, 0) =  f.y;  dXdC(i*S+j, 5, 1) = -f.x;  dXdC(i*S+j, 5, 2) =  0   ;
       }
       /*if(dFdCn){
       HALT("");
@@ -318,8 +322,8 @@ double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceT
         c = p->posB;
         cn= p->normal;
       }
-      C.append(arr(c.p,3));
-      Cn.append(arr(cn.p,3));
+      C.append(ARRAY(c));
+      Cn.append(ARRAY(cn));
     }
   }
   C .reshape(C.N/3, 3);
@@ -473,4 +477,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #endif
 
 #else //!MT_QHULL
+#include "util.h"
+#include "array.h"
+void getTriangulatedHull(uintA& T, arr& V) { NICO }
 #endif

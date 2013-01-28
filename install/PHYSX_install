@@ -1,0 +1,48 @@
+#! /bin/sh
+
+## parameters for this install
+NAME=PhysX
+FILE=PhysX-3.2_LINUX_SDK_Core.zip
+THIS_PATH=$PWD
+
+[ -z $MLR_URL ] && MLR_URL=http://userpage.fu-berlin.de/mtoussai/smScpB076X
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing" $NAME "into" $MLR_LIBPATH
+echo
+
+## download file
+wget -O /tmp/$FILE $MLR_URL/$FILE
+if [ ! -f /tmp/$FILE ] ; then
+  echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
+  exit
+fi
+
+## check existance of lib path
+if [ ! -d $MLR_LIBPATH ] ; then
+  exit
+fi
+
+## delete & unpack
+cd $MLR_LIBPATH
+rm -R $NAME
+mkdir $NAME
+cd $NAME
+echo "unpacking in path:" $PWD
+unzip -q /tmp/$FILE
+
+## patch
+cd $MLR_LIBPATH/$NAME
+echo "patching"
+patch -p1 < $THIS_PATH/PHYSX_patch
+
+## installing to $MLR_LIBPATH
+cd $MLR_LIBPATH
+mkdir include/physx
+cp -R $NAME/Include/* include/physx
+cp -R $NAME/Samples/PxToolkit/include include/physx/toolkit
+if [ "$(uname -m)" = "x86_64" ] ; then
+  cp $NAME/Lib/linux64/* lib
+else
+  cp $NAME/Lib/linux32/* lib
+fi

@@ -1,16 +1,35 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #ifdef MT_PHYSX
 
-#include <PxPhysicsAPI.h>
-#include <PxExtensionsAPI.h>
-#include <PxDefaultErrorCallback.h>
-#include <PxDefaultAllocator.h>
-#include <PxDefaultSimulationFilterShader.h>
-#include <PxDefaultCpuDispatcher.h>
-#include <PxShapeExt.h>
-#include <PxMat33.h>
+#include <physx/PxPhysicsAPI.h>
+#include <physx/extensions/PxExtensionsAPI.h>
+#include <physx/extensions/PxDefaultErrorCallback.h>
+#include <physx/extensions/PxDefaultAllocator.h>
+#include <physx/extensions/PxDefaultSimulationFilterShader.h>
+#include <physx/extensions/PxDefaultCpuDispatcher.h>
+#include <physx/extensions/PxShapeExt.h>
+#include <physx/foundation/PxMat33.h>
 //#include <PxMat33Legacy.h>
-#include <PxSimpleFactory.h>
-#include <PxTkStream.h>
+#include <physx/extensions/PxSimpleFactory.h>
+#include <physx/toolkit/PxTkStream.h>
 
 #include "ors_physx.h"
 #include "opengl.h"
@@ -30,7 +49,7 @@ void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose){
 }
 
 PxTransform OrsTrans2PxTrans(const ors::Transformation& f){
-  return PxTransform(PxVec3(f.pos(0), f.pos(1), f.pos(2)), PxQuat(f.rot.p[1], f.rot.p[2], f.rot.p[3], f.rot.p[0]));
+  return PxTransform(PxVec3(f.pos.x, f.pos.y, f.pos.z), PxQuat(f.rot.x, f.rot.y, f.rot.z, f.rot.w));
 }
 
 struct sPhysXInterface {
@@ -188,8 +207,8 @@ void PhysXInterface::create() {
     if(b->type==ors::dynamicBT){
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
       actor->setAngularDamping(0.75);
-      actor->setLinearVelocity(PxVec3(b->X.vel(0), b->X.vel(1), b->X.vel(2)));
-      actor->setAngularVelocity(PxVec3(b->X.angvel(0), b->X.angvel(1), b->X.angvel(2)));
+      actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
+      actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
     }
     this->s->gScene->addActor(*actor);
       

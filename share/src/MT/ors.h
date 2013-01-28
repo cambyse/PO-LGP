@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 /*! \file ors.h
     \brief Robot Simulation tools */
@@ -22,6 +26,7 @@
 
 #include "array.h"
 #include "util.h"
+#include "mapGraph.h"
 
 namespace ors {
 
@@ -29,19 +34,18 @@ namespace ors {
 //! shape and joint type enums
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
 enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
-enum BodyType { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
+enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 
 //===========================================================================
 //! a 3D vector (double[3])
 struct Vector {
-  double p[3];
+  double x, y, z;
   
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
-  double& operator()(int);
-  const double& operator()(int) const;
-  
+  double *p() { return &x; }
+
   void set(double, double, double);
   void set(double*);
   void setZero();
@@ -70,13 +74,12 @@ struct Vector {
 //===========================================================================
 //! a matrix in 3D (double[9])
 struct Matrix {
-  double p[9];
+  double m00, m01, m02, m10, m11, m12, m20, m21, m22;
   
   Matrix() {};
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
-  double& operator()(int, int);
-  const double& operator()(int, int) const;
-  
+  double *p() { return &m00; }
+
   void set(double* m);
   void setZero();
   void setRandom(double range=1.);
@@ -96,13 +99,14 @@ struct Matrix {
 //===========================================================================
 //! a quaterion (double[4])
 struct Quaternion {
-  double p[4];
+  double w, x, y, z;
   
-  Quaternion();
+  Quaternion() {};
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
-  
-  void set(double q0, double x, double y, double z);
-  void set(double* q);
+  double *p() { return &w; }
+
+  void set(double w, double x, double y, double z);
+  void set(double* p);
   void setZero();
   void setRandom();
   void setDeg(double degree , double axis0, double axis1, double axis2);
@@ -112,7 +116,6 @@ struct Quaternion {
   void setRad(double angle);
   void setRadX(double angle);
   void setRadY(double angle);
-  void setQuat(double s, double x, double y, double z);
   void setVec(Vector w);
   void setMatrix(double* m);
   void setDiff(const Vector& from, const Vector& to);
@@ -132,6 +135,7 @@ struct Quaternion {
   Vector& getX(Vector& Rx) const;
   Vector& getY(Vector& Ry) const;
   Vector& getZ(Vector& Rz) const;
+  Matrix getMatrix() const;
   double* getMatrix(double* m) const;
   double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
   double* getMatrixGL(double* m) const;  //in OpenGL format: transposed 4x4 memory storage
@@ -245,6 +249,8 @@ struct Mesh {
   void readStlFile(const char* filename);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
+  void writePLY(const char *fn, bool bin );
+  void readPLY(const char *fn );
   void glDraw();
 };
 
@@ -288,7 +294,7 @@ struct Body {
   
   MT::String name;     //!< name
   Transformation X;    //!< body's absolute pose
-  AnyList ats;         //!< list of any-type attributes
+  MapGraph ats;         //!< list of any-type attributes
   
   //dynamic properties
   BodyType type;          //!< is globally fixed?
@@ -304,10 +310,11 @@ struct Body {
   explicit Body(Graph& G, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
-    index=b.index; name=b.name; X=b.X; listClone(ats, b.ats);
+    index=b.index; name=b.name; X=b.X; ats=b.ats;
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -324,7 +331,7 @@ struct Joint {
   Transformation Q;             //!< transformation within the joint (usually dynamic)
   Transformation B;             //!< transformation from joint to child body (attachment, usually static)
   Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
-  AnyList ats;         //!< list of any-type attributes
+  MapGraph ats;         //!< list of any-type attributes
   
   Joint();
   explicit Joint(const Joint& j);
@@ -333,9 +340,10 @@ struct Joint {
   void operator=(const Joint& j) {
     index=j.index; ifrom=j.ifrom; ito=j.ito;
     type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
-    listClone(ats, j.ats);
+    ats=j.ats;
   }
   void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }
@@ -358,7 +366,7 @@ struct Shape {
   bool cont;      //!< are contacts registered (or filtered in the callback)
   Vector contactOrientation;
   
-  AnyList ats;    //!< list of any-type attributes
+  MapGraph ats;    //!< list of any-type attributes
   
   Shape();
   explicit Shape(const Shape& s);
@@ -368,9 +376,10 @@ struct Shape {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
     mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
-    listClone(ats, s.ats);
+    ats=s.ats;
   }
   void reset();
+  void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -429,7 +438,8 @@ struct Graph {
   void clearJointErrors();
   void invertTime();
   void computeNaturalQmetric(arr& W);
-  
+  void fillInRelativeTransforms();
+
   //!@name kinematics & dynamics
   void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
   void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
@@ -466,10 +476,10 @@ struct Graph {
   ors::Proxy* getContact(uint a, uint b) const;
   
   //!@name set state
-  void setJointState(const arr& x, const arr& v, bool clearJointErrors=true);
-  void setJointState(const arr& x, bool clearJointErrors=true);
-  void setFullState(const arr& x, bool clearJointErrors=true);
-  void setFullState(const arr& x, const arr& v, bool clearJointErrors=true);
+  void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
+  void setJointState(const arr& x, bool clearJointErrors=false);
+  void setFullState(const arr& x, bool clearJointErrors=false);
+  void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
   
   //!@name forces and gravity
@@ -563,9 +573,9 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 // conversions to arr
 //
 
-inline arr ARRAY(const ors::Vector& v) {     return arr(v.p, 3); }
-inline arr ARRAY(const ors::Quaternion& q) { return arr(q.p, 4); }
-inline arr ARRAY(const ors::Matrix& m) {     return arr(m.p, 9); }
+inline arr ARRAY(const ors::Vector& v) {     return arr(&v.x, 3); }
+inline arr ARRAY(const ors::Quaternion& q) { return arr(&q.w, 4); }
+inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 
 
 //===========================================================================
@@ -876,7 +886,7 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
-void editConfiguration(const char* dcFile, ors::Graph& C, OpenGL& gl);
+void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 
