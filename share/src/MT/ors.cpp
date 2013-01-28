@@ -282,6 +282,10 @@ void Matrix::setZero() {
   p[1]=p[2]=p[3]=p[5]=p[6]=p[7]=0.;
 }
 
+void Matrix::setRandom(double range) {
+  for(uint i=0;i<9;i++) p[i]=rnd.uni(-range, range);
+}
+
 //! reset to identity
 void Matrix::setId() {
   p[0]=p[4]=p[8]=1.;

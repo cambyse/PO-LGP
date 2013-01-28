@@ -79,6 +79,7 @@ struct Matrix {
   
   void set(double* m);
   void setZero();
+  void setRandom(double range=1.);
   void setId();
   void setFrame(Vector&, Vector&, Vector&);
   void setInvFrame(Vector&, Vector&, Vector&);

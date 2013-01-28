@@ -1,4 +1,3 @@
-#include <MT/kOrderMarkovProblem.h>
 #include <MT/functions.h>
 
 #define DIM 3

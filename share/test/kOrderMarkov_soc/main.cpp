@@ -1,6 +1,5 @@
 #include <MT/util.h>
 #include <MT/optimization.h>
-#include <MT/kOrderMarkovProblem.h>
 #include "exampleProblem.h"
 #include <MT/soc_exampleProblems.h>
 #include <MT/soc_orsSystem.h>
