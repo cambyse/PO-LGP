@@ -30,6 +30,10 @@ bool KMDPState::operator!=(const KMDPState& other) const {
     return !(*this==other);
 }
 
+bool KMDPState::operator<(const KMDPState& other) const {
+    return k_mdp_state_deque<other.k_mdp_state_deque;
+}
+
 Data::k_mdp_state_t KMDPState::get_k_mdp_state() const {
     Data::k_mdp_state_t k_mdp_state;
     for(std::deque<Data::data_point_t>::const_iterator it=k_mdp_state_deque.begin(); it!=k_mdp_state_deque.end(); ++it) {

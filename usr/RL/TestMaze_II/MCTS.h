@@ -28,15 +28,21 @@ public:
     typedef Data::state_t       state_t;
     typedef Data::action_t      action_t;
     typedef Data::reward_t      reward_t;
+    typedef Data::value_t       value_t;
     typedef Data::probability_t probability_t;
 
-    typedef Data::k_mdp_state_t graph_state_t;
-    typedef Data::action_t      graph_action_t;
+    typedef KMDPState graph_state_t;
 
     enum NODE_TYPE { NONE, STATE, ACTION };
 
     struct NodeInfo {
-        NodeInfo(NODE_TYPE t = NONE): type(t), counter(0), reward_sum(0), value(0), state(), action() {}
+        NodeInfo(NODE_TYPE t = NONE):
+            type(t),
+            counter(0),
+            reward_sum(0),
+            value(0),
+            state(),
+            action(Data::NUMBER_OF_ACTIONS) {}
         NODE_TYPE type;
         size_t counter;
         Data::reward_t reward_sum;
@@ -52,26 +58,32 @@ public:
 
     typedef Maze predictive_model_t;
 
-    typedef std::map<graph_state_t,node_t> state_to_node_map_t;
-    typedef std::map<graph_action_t,node_t> action_to_node_map_t;
     typedef std::vector<node_t> node_vector;
 
-    MCTS();
+    MCTS(const double& d);
     virtual ~MCTS();
 
-    void build_tree(const graph_state_t& s0, const size_t& depth, const size_t& sample_size, const predictive_model_t& model);
-    void add_subtree(const node_t& n0, const size_t& depth, const size_t& sample_size, const predictive_model_t& model);
+    void build_tree(const graph_state_t& s0, const size_t& depth, const predictive_model_t& model, const size_t& sample_size = 1);
+
+    value_t root_state_value() const;
+    value_t action_value(const action_t& action) const;
+    action_t best_action() const;
+
+    void print_tree(const size_t& depth) const;
+
+    void set_discount(const double& d);
+
     void clear_tree();
-    void print_tree(const size_t& depth);
-    void print_node(const node_t& node);
 
 protected:
+
     graph_t tree;
     node_info_map_t node_info_map;
-    state_to_node_map_t state_to_node_map;
-    action_to_node_map_t action_to_node_map;
     node_t root_node;
+    double discount;
 
+    void print_node(const node_t& node) const;
+    void add_subtree(const node_t& n0, const size_t& depth, const size_t& sample_size, const predictive_model_t& model);
 };
 
 #endif /* MCTS_H_ */

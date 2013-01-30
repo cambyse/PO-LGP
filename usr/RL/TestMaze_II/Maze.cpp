@@ -1,13 +1,14 @@
 
 #include "Maze.h"
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 const double Maze::state_size = 0.9;
 
 Maze::Maze(const double& eps):
         time_delay(Data::k),
+        reward_active(false),
         epsilon(eps),
         agent(NULL), button(NULL), smiley(NULL) {
 
@@ -101,6 +102,7 @@ void Maze::perform_transition(const action_t& action) {
 
     // perform transition
     probability_t prob_threshold = drand48();
+    DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
     probability_t prob_accum = 0;
     bool was_set = false;
     for(Data::state_idx_t state_idx_to=0; state_idx_to<Data::state_n && !was_set; ++state_idx_to) {
@@ -108,12 +110,14 @@ void Maze::perform_transition(const action_t& action) {
         for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n && !was_set; ++reward_idx) {
             reward_t reward = Data::reward_from_idx(reward_idx);
             probability_t prob = get_prediction(current_k_mdp_state.get_k_mdp_state(), action, state_to, reward);
+            DEBUG_OUT(2,"state(" << state_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
                 reward_active = current_k_mdp_state.get_k_mdp_state()[time_delay-1].state==button_state.state_idx();
                 current_state = state_to;
                 current_k_mdp_state.new_state(action, state_to, reward);
                 was_set = true;
+                DEBUG_OUT(2,"CHOOSE");
             }
         }
     }
@@ -178,51 +182,34 @@ Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, 
 
     probability_t prob = 0;
 
+    if(maze_state_to==state_from ) prob += epsilon/5;
+    if(maze_state_to==state_left ) prob += epsilon/5;
+    if(maze_state_to==state_right) prob += epsilon/5;
+    if(maze_state_to==state_up   ) prob += epsilon/5;
+    if(maze_state_to==state_down ) prob += epsilon/5;
+
     switch(action) {
     case Data::STAY:
         if(maze_state_to==state_from ) prob += 1-epsilon;
-        if(maze_state_to==state_left ) prob += epsilon/4;
-        if(maze_state_to==state_right) prob += epsilon/4;
-        if(maze_state_to==state_up   ) prob += epsilon/4;
-        if(maze_state_to==state_down ) prob += epsilon/4;
-        return prob;
         break;
     case Data::LEFT:
-        if(maze_state_to==state_from ) prob += epsilon/4;
         if(maze_state_to==state_left ) prob += 1-epsilon;
-        if(maze_state_to==state_right) prob += epsilon/4;
-        if(maze_state_to==state_up   ) prob += epsilon/4;
-        if(maze_state_to==state_down ) prob += epsilon/4;
-        return prob;
         break;
     case Data::RIGHT:
-        if(maze_state_to==state_from ) prob += epsilon/4;
-        if(maze_state_to==state_left ) prob += epsilon/4;
         if(maze_state_to==state_right) prob += 1-epsilon;
-        if(maze_state_to==state_up   ) prob += epsilon/4;
-        if(maze_state_to==state_down ) prob += epsilon/4;
-        return prob;
         break;
     case Data::UP:
-        if(maze_state_to==state_from ) prob += epsilon/4;
-        if(maze_state_to==state_left ) prob += epsilon/4;
-        if(maze_state_to==state_right) prob += epsilon/4;
         if(maze_state_to==state_up   ) prob += 1-epsilon;
-        if(maze_state_to==state_down ) prob += epsilon/4;
-        return prob;
         break;
     case Data::DOWN:
-        if(maze_state_to==state_from ) prob += epsilon/4;
-        if(maze_state_to==state_left ) prob += epsilon/4;
-        if(maze_state_to==state_right) prob += epsilon/4;
-        if(maze_state_to==state_up   ) prob += epsilon/4;
         if(maze_state_to==state_down ) prob += 1-epsilon;
-        return prob;
         break;
+    default:
+        DEBUG_OUT(0,"Error: unknown action");
+        return 0;
     }
 
-    DEBUG_OUT(0,"Error: Prediction failed");
-    return 0;
+    return prob;
 }
 
 void Maze::set_time_delay(const int& new_time_delay) {

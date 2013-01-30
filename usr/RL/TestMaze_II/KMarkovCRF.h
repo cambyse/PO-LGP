@@ -110,6 +110,9 @@ public:
     unsigned long get_training_data_length();
 
     probability_t get_prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_prediction_ptr())(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const {
+        return &KMarkovCRF::get_prediction;
+    }
 
     void initialize_sparse_predictions(QIteration&);
     void initialize_kmdp_predictions(QIteration&);

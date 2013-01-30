@@ -11,15 +11,18 @@ using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-      action_type(RANDOM),
-      iteration_type(INT), iteration_number(0), iteration_counter(0), iteration_threshold(1),
+      action_type(NONE),
       maze(0.0),
-      q_iteration_object(),
       record(false), plot(false),
-      l1_factor(0),
       current_k_mdp_state(),
-      action_timer(nullptr),
-      value_iteration_timer(nullptr)
+      random_timer(nullptr), action_timer(nullptr), value_iteration_timer(nullptr),
+      l1_factor(0),
+      discount(0.9),
+      q_iteration_object(nullptr), q_iteration_available(false),
+      iteration_number(0), iteration_threshold(1), iteration_type(INT),
+      look_ahead_tree(discount),
+      probability_threshold(0),
+      tree_depth(2*(Data::maze_x_dim-1)+2*(Data::maze_y_dim-1))
 {
     // initialize UI
     ui.setupUi(this);
@@ -30,16 +33,23 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     // set console welcome message
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
 
-    // initialize random action timer
+    // initialize timers
+    random_timer = new QTimer(this);
+    connect(random_timer, SIGNAL(timeout()), this, SLOT(random_action()));
     action_timer = new QTimer(this);
     connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
-
-    // initialize value iteration timer
     value_iteration_timer = new QTimer(this);
     connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
 
-    // initialize transition model
-    maze.initialize_predictions(q_iteration_object);
+    // initialize model for model selection
+    if(Data::maze_x_dim<3 && Data::maze_y_dim<3) {
+        q_iteration_object = new QIteration();
+        maze.initialize_predictions(*q_iteration_object);
+        q_iteration_object->set_discount(discount);
+        q_iteration_available = true;
+    } else {
+        q_iteration_available = false;
+    }
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
@@ -50,8 +60,10 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 }
 
 TestMaze_II::~TestMaze_II() {
+    delete random_timer;
     delete action_timer;
     delete value_iteration_timer;
+    delete q_iteration_object;
     plot_file.close();
 }
 
@@ -77,17 +89,56 @@ void TestMaze_II::render() {
     maze.render_update(ui.graphicsView);
 }
 
+void TestMaze_II::random_action() {
+    action_t action = (action_t)(rand()%Data::action_n);
+    state_t state_to;
+    reward_t reward;
+    maze.perform_transition(action,state_to,reward);
+    update_current_k_mdp_state(action,state_to,reward);
+    if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+    maze.render_update(ui.graphicsView);
+}
+
 void TestMaze_II::choose_action() {
     action_t action;
     switch(action_type) {
-    case RANDOM:
-        action = (action_t)(rand()%Data::action_n);
+    case OPTIMAL_Q_ITERATION:
+    case SPARSE_Q_ITERATION:
+    case KMDP_Q_ITERATION:
+        if(q_iteration_available) {
+            action = q_iteration_object->optimal_action(current_k_mdp_state.get_k_mdp_state());
+        } else {
+            DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes --> choosing STAY");
+            action = Data::STAY;
+        }
         break;
-    case OPTIMAL:
-        action = q_iteration_object.optimal_action(current_k_mdp_state.get_k_mdp_state());
+    case OPTIMAL_LOOK_AHEAD_TREE:
+        look_ahead_tree.build_tree<Maze>(
+                current_k_mdp_state,
+                tree_depth,
+                maze,
+                maze.get_prediction_ptr()
+        );
+        action = look_ahead_tree.get_best_action();
+        look_ahead_tree.clear_tree();
+        break;
+    case SPARSE_LOOK_AHEAD_TREE:
+        look_ahead_tree.build_tree<KMarkovCRF>(
+                current_k_mdp_state,
+                tree_depth,
+                crf,
+                crf.get_prediction_ptr()
+        );
+        action = look_ahead_tree.get_best_action();
+        look_ahead_tree.clear_tree();
+        break;
+    case KMDP_LOOK_AHEAD_TREE:
+        action = Data::STAY;
+        DEBUG_OUT(0, "Not implemented as yet --> choosing STAY");
         break;
     default:
-        DEBUG_OUT(0,"Error: undefined action type");
+        action = Data::STAY;
+        DEBUG_OUT(0,"Error: undefined action type --> choosing stay");
         break;
     }
     state_t state_to;
@@ -99,22 +150,26 @@ void TestMaze_II::choose_action() {
 }
 
 void TestMaze_II::value_iteration() {
-    reward_t max_value_diff = q_iteration_object.iterate();
-    switch(iteration_type) {
-    case INT:
-        ++iteration_counter;
-        if(iteration_counter>=iteration_number) {
-            value_iteration_timer->stop();
+    if(q_iteration_available) {
+        reward_t max_value_diff = q_iteration_object->iterate();
+        switch(iteration_type) {
+        case INT:
+            --iteration_number;
+            if(iteration_number<=0) {
+                value_iteration_timer->stop();
+            }
+            break;
+        case DOUBLE:
+            if(max_value_diff<iteration_threshold) {
+                value_iteration_timer->stop();
+            }
+            break;
+        default:
+            DEBUG_OUT(0,"Error: invalid iteration type");
+            break;
         }
-        break;
-    case DOUBLE:
-        if(max_value_diff<iteration_threshold) {
-            value_iteration_timer->stop();
-        }
-        break;
-    default:
-        DEBUG_OUT(0,"Error: invalid iteration type");
-        break;
+    } else {
+        DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes.");
     }
 }
 
@@ -123,285 +178,385 @@ void TestMaze_II::process_console_input() {
     ui._wConsoleInput->setText("");
     ui._wConsoleOutput->appendPlainText(input);
 
-    QString headline_s( "    COMMAND . . .  ARGUMENTS . . . . . . . . -> ACTION\n");
-    QString help_s(     "    help  / h. . . . . . . . . . . . . . . . -> this help");
-    QString left_s(     "    left  / l. . . . . . . . . . . . . . . . -> move left");
-    QString right_s(    "    right / r. . . . . . . . . . . . . . . . -> move right");
-    QString up_s(       "    up    / u. . . . . . . . . . . . . . . . -> move up");
-    QString down_s(     "    down  / d. . . . . . . . . . . . . . . . -> move down");
-    QString stay_s(     "    stay  / s. . . . . . . . . . . . . . . . -> stay-action");
-    QString random_s(   "    random  . . . .[<int>|stop]. . . . . . . -> start/stop random moves");
-    QString optimal_s(  "    optimal . . . .[<int>|stop]. . . . . . . -> start/stop optimal moves");
-    QString delay_s(    "    delay . . . . .[<int>] . . . . . . . . . -> get [set] reward delay");
-    QString iterate_s(  "    iterate / i . .[<int>|<double>,stop] . . -> run value iteration <int> times / until max diff small than <double> / stop running");
-    QString episode_s(  "    episode / e . .[<int>|clear,c] . . . . . -> record length <int> episode or clear data");
-    QString optimize_s( "    optimize / o   [check, c]. . . . . . . . -> optimize CRF [check derivatives]");
-    QString epsilon_s(  "    epsilon . . . .[<double>]. . . . . . . . -> get [set] exploration rate epsilon");
-    QString discount_s( "    discount. . . .[<double>]. . . . . . . . -> get [set] discount rate for value iteration");
-    QString evaluate_s( "    evaluate . . . . . . . . . . . . . . . . -> evaluate features at current point");
-    QString l1_s(       "    l1 . . . . . . . <double>. . . . . . . . -> coefficient for L1 regularization");
-    QString score_s(    "    score. . . . . .<int>. . . . . . . . . . -> score compound features with distance <int> by gradient");
-    QString add_s(      "    add. . . . . . .<int>. . . . . . . . . . -> add <int> highest scored compound features to active (give 0 for all non-zero scored)");
-    QString erase_s(    "    erase. . . . . . . . . . . . . . . . . . -> erase features with zero weight");
-    QString exit_s(     "    exit/quit/q. . . . . . . . . . . . . . . -> quit application");
-    QString set_s(      "    set/unset. . . . . . <string>. . . . . . -> set/unset option:");
-    QString option_1_s( "                   optimaliteration. . . . . -> use known predictions for value iteration");
-    QString option_2_s( "                   sparseiteration . . . . . -> use sparse model for value iteration");
-    QString option_3_s( "                   kmdpiteration . . . . . . -> use k-MDP model for value iteration");
-    QString option_4_s( "                   record. . . . . . . . . . -> start/stop recording movements");
-    QString option_5_s( "                   plot. . . . . . . . . . . -> write transitions into data file for plotting");
+    // help strings
+    QString headline_s(                 "Available commands:\n    COMMAND . . .  ARGUMENTS . . . . . . . . . . . . . . . . -> ACTION");
+
+    QString general_s(                "\n    -------------------------General---------------------------");
+    QString help_s(                     "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . -> this help");
+    QString exit_s(                     "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . -> quit application");
+    QString set_s(                      "    set/unset. . . . . . <string>. . . . . . . . . . . . . . -> set/unset options:");
+    QString option_1_s(                 "                          record . . . . . . . . . . . . . . -> start/stop recording movements");
+    QString option_2_s(                 "                          plot . . . . . . . . . . . . . . . -> write transitions into data file for plotting");
+
+    QString maze_s(                   "\n    ---------------------------Maze---------------------------");
+    QString left_s(                     "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . -> move left");
+    QString right_s(                    "    right / r. . . . . . . . . . . . . . . . . . . . . . . . -> move right");
+    QString up_s(                       "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . -> move up");
+    QString down_s(                     "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . -> move down");
+    QString stay_s(                     "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . -> stay-action");
+    QString move_s(                     "    move  . . . . .[<int>|stop]. . . . . . . . . . . . . . . -> start/stop moving using planner");
+    QString random_s(                   "    random. . . . .[<int>|stop]. . . . . . . . . . . . . . . -> start/stop moving randomly");
+    QString delay_s(                    "    delay . . . . .[<int>] . . . . . . . . . . . . . . . . . -> get [set] reward delay");
+    QString epsilon_s(                  "    epsilon . . . .[<double>]. . . . . . . . . . . . . . . . -> get [set] random transition probability");
+
+    QString learning_s(               "\n    ----------------------Model Learning----------------------");
+    QString episode_s(                  "    episode / e . .[<int>|clear,c] . . . . . . . . . . . . . -> record length <int> episode or clear data");
+    QString optimize_s(                 "    optimize / o   [check, c]. . . . . . . . . . . . . . . . -> optimize CRF [check derivatives]");
+    QString score_s(                    "    score. . . . . .<int>. . . . . . . . . . . . . . . . . . -> score compound features with distance <int> by gradient");
+    QString add_s(                      "    add. . . . . . .<int>. . . . . . . . . . . . . . . . . . -> add <int> highest scored compound features to active (0 for all non-zero scored)");
+    QString erase_s(                    "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . -> erase features with zero weight");
+    QString l1_s(                       "    l1 . . . . . . . <double>. . . . . . . . . . . . . . . . -> coefficient for L1 regularization");
+    QString evaluate_s(                 "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . -> evaluate features at current point");
+    QString validate_s(                 "    validate / v. . . {crf,kmdp}[exact|mc <int>] . . . . . . -> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+
+    QString planning_s(               "\n    -------------------------Planning--------------------------");
+    QString iterate_s(                  "    iterate / i . .[<int>|<double>,stop] . . . . . . . . . . -> run value iteration <int> times / until max diff small than <double> / stop running");
+    QString discount_s(                 "    discount. . . .[<double>]. . . . . . . . . . . . . . . . -> get [set] discount");
+    QString optimal_iteration_s(        "    optimal-iteration. . . . . . . . . . . . . . . . . . . . -> use known predictions for value iteration");
+    QString sparse_iteration_s(         "    sparse-iteration . . . . . . . . . . . . . . . . . . . . -> use sparse model for value iteration");
+    QString kmdp_iteration_s(           "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . -> use k-MDP model for value iteration");
+    QString optimal_look_ahead_tree_s(  "    optimal-look-ahead-tree. . . . . . . . . . . . . . . . . -> use known predictions for Look-Ahead-Tree");
+    QString sparse_look_ahead_tree_s(   "    sparse-look-ahead-tree . . . . . . . . . . . . . . . . . -> use sparse model for Look-Ahead-Tree");
+    QString kmdp_look_ahead_tree_s(     "    kmdp-look-ahead-tree . . . . . . . . . . . . . . . . . . -> use k-MDP model for Look-Ahead-Tree");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
-    set_s += "\n" + option_3_s;
-    set_s += "\n" + option_4_s;
-    set_s += "\n" + option_5_s;
+
+    QString invalid_s( "    invalid arguments" );
+
+    // getting input arguments
+    std::vector<QString> str_args;
+    QString tmp_s;
+    std::vector<int> int_args;
+    std::vector<bool> int_args_ok;
+    int tmp_i;
+    std::vector<double> double_args;
+    std::vector<bool> double_args_ok;
+    double tmp_d;
+    for(int arg_idx=0; arg_string(input,arg_idx,tmp_s) && tmp_s!=""; ++arg_idx) {
+
+        str_args.push_back(tmp_s);
+
+        int_args_ok.push_back( arg_int(input,arg_idx,tmp_i) );
+        int_args.push_back( tmp_i );
+
+        double_args_ok.push_back( arg_double(input,arg_idx,tmp_d) );
+        double_args.push_back( tmp_d );
+    }
 
     // process input
-    if(input=="help" || input=="h") { // help
-        ui._wConsoleOutput->appendPlainText("    Available commands:\n");
-        ui._wConsoleOutput->appendPlainText( headline_s );
-        ui._wConsoleOutput->appendPlainText( help_s );
-        ui._wConsoleOutput->appendPlainText( left_s );
-        ui._wConsoleOutput->appendPlainText( right_s );
-        ui._wConsoleOutput->appendPlainText( up_s );
-        ui._wConsoleOutput->appendPlainText( down_s );
-        ui._wConsoleOutput->appendPlainText( stay_s );
-        ui._wConsoleOutput->appendPlainText( random_s );
-        ui._wConsoleOutput->appendPlainText( optimal_s );
-        ui._wConsoleOutput->appendPlainText( delay_s );
-        ui._wConsoleOutput->appendPlainText( iterate_s );
-        ui._wConsoleOutput->appendPlainText( episode_s );
-        ui._wConsoleOutput->appendPlainText( optimize_s );
-        ui._wConsoleOutput->appendPlainText( epsilon_s );
-        ui._wConsoleOutput->appendPlainText( discount_s );
-        ui._wConsoleOutput->appendPlainText( evaluate_s );
-        ui._wConsoleOutput->appendPlainText( l1_s );
-        ui._wConsoleOutput->appendPlainText( score_s );
-        ui._wConsoleOutput->appendPlainText( add_s );
-        ui._wConsoleOutput->appendPlainText( erase_s );
-        ui._wConsoleOutput->appendPlainText( exit_s );
-        ui._wConsoleOutput->appendPlainText( set_s );
-    } else if(input=="left" || input=="l") { // left
-        action_t action = Data::LEFT;
-        state_t state_to;
-        reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
-        maze.render_update(ui.graphicsView);
-    } else if(input=="right" || input=="r") { // right
-        action_t action = Data::RIGHT;
-        state_t state_to;
-        reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
-        maze.render_update(ui.graphicsView);
-    } else if(input=="up" || input=="u") { // up
-        action_t action = Data::UP;
-        state_t state_to;
-        reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
-        maze.render_update(ui.graphicsView);
-    } else if(input=="down" || input=="d") { // down
-        action_t action = Data::DOWN;
-        state_t state_to;
-        reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
-        maze.render_update(ui.graphicsView);
-    } else if(input=="stay" || input=="s") { // stay
-        action_t action = Data::STAY;
-        state_t state_to;
-        reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
-        if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
-        maze.render_update(ui.graphicsView);
-    } else if(input.startsWith("random ") || input=="random") { // start/stop random actions
-        QString s;
-        int i;
-        if(input=="random") {
-            action_type = RANDOM;
-            choose_action();
-        } else if(arg_string(input,1,s) && s=="stop") {
-            action_timer->stop();
-        } else if(arg_int(input,1,i) && i>=0){
-            action_timer->stop();
-            action_type = RANDOM;
-            action_timer->start(i);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'random'. Expecting non-negative integer or 'stop', got '" + s + "'.");
-        }
-    } else if(input.startsWith("optimal ") || input=="optimal") { // start/stop optimal actions
-        QString s;
-        int i;
-        if(input=="optimal") {
-            action_type = OPTIMAL;
-            choose_action();
-        } else if(arg_string(input,1,s) && s=="stop") {
-            action_timer->stop();
-        } else if(arg_int(input,1,i) && i>=0){
-            action_timer->stop();
-            action_type = OPTIMAL;
-            action_timer->start(i);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimal'. Expecting non-negative integer or 'stop', got '" + s + "'.");
-        }
-    } else if(input.startsWith("delay ") || input=="delay") { // set time delay for rewards
-        QString s;
-        int i;
-        if(input=="delay") {
-            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_time_delay()));
-        } else if(arg_int(input,1,i) && i>=0){
-            maze.set_time_delay(i);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'delay'. Expecting non-negative integer, got '" + s + "'.");
-        }
-    } else if(input.startsWith("iterate ") || input.startsWith("i ") || input=="iterate" || input=="i") { // value iteration
-        QString s;
-        int i;
-        double d;
-        if(input=="iterate" || input=="i") {
-            value_iteration();
-        } else if(arg_string(input,1,s) && s=="stop") {
-            value_iteration_timer->stop();
-        } else if(arg_int(input,1,i) && i>=0){
-            value_iteration_timer->stop();
-            iteration_type = INT;
-            iteration_number = i;
-            iteration_counter = 0;
-            value_iteration_timer->start();
-        } else if(arg_double(input,1,d) && d>=0){
-            value_iteration_timer->stop();
-            iteration_type = DOUBLE;
-            iteration_threshold = d;
-            value_iteration_timer->start();
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'iterate'. Expecting non-negative integer or 'stop', got '" + s + "'.");
-        }
-    } else if(input.startsWith("episode ") || input.startsWith("e ") || input=="episode" || input=="e") { // record episode
-        QString s;
-        int i;
-        if(input=="episode" || input=="e") {
-            ui._wConsoleOutput->appendPlainText( episode_s );
-        } else if(arg_string(input,1,s) && ( s=="clear" || s=="c" ) ) {
-            crf.clear_data();
-        } else if(arg_int(input,1,i) && i>=0){
-            collect_episode(i);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'episode'. Expecting non-negative integer or 'clear', got '" + s + "'.");
-        }
-    } else if(input.startsWith("optimize ") || input.startsWith("o ") || input=="optimize" || input=="o") { // optimize CRF
-        QString s1, s2;
-        if(input=="optimize" || input=="o") {
-            crf.optimize_model(l1_factor);
-        } else if(arg_string(input,1,s1) && ( s1=="check" || s1=="c") ) {
-                crf.check_derivatives(3,10,1e-6,1e-3);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'optimize'. Expecting no argument, [check [reward,r,state,s], c [reward,r,state,s], reward, r, state, s], got '" + s1 + " " + s2 + "'.");
-        }
-    } else if(input.startsWith("epsilon ") || input=="epsilon") {
-        QString s;
-        arg_string(input,1,s);
-        double eps;
-        if(input=="epsilon") {
-            ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_epsilon()));
-        } else if(arg_double(input,1,eps) && eps>=0 && eps<=1) {
-            maze.set_epsilon(eps);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'epsilon'. Expecting double in [0,1], got '" + s + "'.");
-        }
-    } else if(input.startsWith("discount ") || input=="discount") {
-        QString s;
-        arg_string(input,1,s);
-        double disc;
-        if(input=="discount") {
-            ui._wConsoleOutput->appendPlainText("    " + QString::number(q_iteration_object.get_discount()));
-        } else if(arg_double(input,1,disc) && disc>=0 && disc<=1) {
-            q_iteration_object.set_discount(disc);
-        } else {
-            ui._wConsoleOutput->appendPlainText("    Invalid argument to 'discount'. Expecting double in [0,1], got '" + s + "'.");
-        }
-    } else if(input=="evaluate") {
-        crf.evaluate_features();
-    } else if(input.startsWith("l1 ") || input=="l1") {
-        QString s;
-        double c;
-        if(input=="l1") {
-            ui._wConsoleOutput->appendPlainText(QString("    %1").arg(l1_factor));
-        } else if(arg_double(input,1,c) && c>=0) {
-            l1_factor = c;
-        }
-    } else if(input.startsWith("score ") || input=="score") {
-        int n;
-        if(input=="score") {
-            ui._wConsoleOutput->appendPlainText(score_s);
-        } else if(arg_int(input,1,n) && n>=0 ) {
-            crf.score_features_by_gradient(n);
-            crf.sort_scored_features();
-        } else {
-            ui._wConsoleOutput->appendPlainText(score_s);
-        }
-    } else if(input.startsWith("add ") || input=="add") {
-        int n;
-        if(input=="add") {
-            ui._wConsoleOutput->appendPlainText(add_s);
-        } else if(arg_int(input,1,n) && n>=0 ) {
-            crf.add_compound_features_to_active(n);
-        } else {
-            ui._wConsoleOutput->appendPlainText(add_s);
-        }
-    } else if(input=="erase") {
-        crf.erase_zero_features();
-    } else if(input=="exit" || input=="quit" || input=="q") { // quit application
-        QApplication::quit();
-    } else if(input.startsWith("set ") || input=="set" || input.startsWith("unset ") || input=="unset") { // quit application
-        QString s_set_unset;
-        if(!arg_string(input,0,s_set_unset) || (s_set_unset!="set" && s_set_unset!="unset") ) {
-            DEBUG_OUT(0,"Error: something went wrong parsing the 'set' command");
-        }
-        QString s_arg;
-        if(input=="set" || input=="unset") {
+    if(str_args.size()>0) {
+        if(str_args[0]=="help" || str_args[0]=="h") { // help
+            // Headline
+            ui._wConsoleOutput->appendPlainText( headline_s );
+            // General
+            ui._wConsoleOutput->appendPlainText( general_s );
+            ui._wConsoleOutput->appendPlainText( help_s );
+            ui._wConsoleOutput->appendPlainText( exit_s );
             ui._wConsoleOutput->appendPlainText( set_s );
-        } else if(arg_string(input,1,s_arg)) {
-            if(s_arg=="optimaliteration") {
-                if(s_set_unset=="unset") {
-                    ui._wConsoleOutput->appendPlainText("    use 'set [kmdpiteration|sparseiteration]' to unset 'optimaliteration'");
-                } else {
-                    q_iteration_object.clear();
-                    maze.initialize_predictions(q_iteration_object);
-                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix with true values");
+            // Maze
+            ui._wConsoleOutput->appendPlainText( maze_s );
+            ui._wConsoleOutput->appendPlainText( left_s );
+            ui._wConsoleOutput->appendPlainText( right_s );
+            ui._wConsoleOutput->appendPlainText( up_s );
+            ui._wConsoleOutput->appendPlainText( down_s );
+            ui._wConsoleOutput->appendPlainText( stay_s );
+            ui._wConsoleOutput->appendPlainText( move_s );
+            ui._wConsoleOutput->appendPlainText( random_s );
+            ui._wConsoleOutput->appendPlainText( delay_s );
+            ui._wConsoleOutput->appendPlainText( epsilon_s );
+            // Learning
+            ui._wConsoleOutput->appendPlainText( learning_s );
+            ui._wConsoleOutput->appendPlainText( episode_s );
+            ui._wConsoleOutput->appendPlainText( optimize_s );
+            ui._wConsoleOutput->appendPlainText( score_s );
+            ui._wConsoleOutput->appendPlainText( add_s );
+            ui._wConsoleOutput->appendPlainText( erase_s );
+            ui._wConsoleOutput->appendPlainText( l1_s );
+            ui._wConsoleOutput->appendPlainText( evaluate_s );
+            ui._wConsoleOutput->appendPlainText( validate_s );
+            // Planning
+            ui._wConsoleOutput->appendPlainText( planning_s );
+            ui._wConsoleOutput->appendPlainText( iterate_s );
+            ui._wConsoleOutput->appendPlainText( discount_s );
+            ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
+            ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
+            ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
+            ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
+            ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
+            ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
+        } else if(str_args[0]=="left" || str_args[0]=="l") { // left
+            action_t action = Data::LEFT;
+            state_t state_to;
+            reward_t reward;
+            maze.perform_transition(action,state_to,reward);
+            update_current_k_mdp_state(action,state_to,reward);
+            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            maze.render_update(ui.graphicsView);
+        } else if(str_args[0]=="right" || str_args[0]=="r") { // right
+            action_t action = Data::RIGHT;
+            state_t state_to;
+            reward_t reward;
+            maze.perform_transition(action,state_to,reward);
+            update_current_k_mdp_state(action,state_to,reward);
+            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            maze.render_update(ui.graphicsView);
+        } else if(str_args[0]=="up" || str_args[0]=="u") { // up
+            action_t action = Data::UP;
+            state_t state_to;
+            reward_t reward;
+            maze.perform_transition(action,state_to,reward);
+            update_current_k_mdp_state(action,state_to,reward);
+            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            maze.render_update(ui.graphicsView);
+        } else if(str_args[0]=="down" || str_args[0]=="d") { // down
+            action_t action = Data::DOWN;
+            state_t state_to;
+            reward_t reward;
+            maze.perform_transition(action,state_to,reward);
+            update_current_k_mdp_state(action,state_to,reward);
+            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            maze.render_update(ui.graphicsView);
+        } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
+            action_t action = Data::STAY;
+            state_t state_to;
+            reward_t reward;
+            maze.perform_transition(action,state_to,reward);
+            update_current_k_mdp_state(action,state_to,reward);
+            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            maze.render_update(ui.graphicsView);
+        } else if(str_args[0]=="move") { // start/stop moving
+            if(str_args.size()==1) {
+                choose_action();
+            } else if(str_args[1]=="stop") {
+                action_timer->stop();
+            } else if(int_args_ok[1] && int_args[1]>=0){
+                action_timer->stop();
+                action_timer->start(int_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( move_s );
+            }
+        } else if(str_args[0]=="random") { // start/stop moving
+            if(str_args.size()==1) {
+                random_action();
+            } else if(str_args[1]=="stop") {
+                random_timer->stop();
+            } else if(int_args_ok[1] && int_args[1]>=0){
+                random_timer->stop();
+                random_timer->start(int_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( random_s );
+            }
+        } else if(str_args[0]=="delay") { // set time delay for rewards
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_time_delay()));
+            } else if(int_args_ok[1] && int_args[1]>=0){
+                maze.set_time_delay(int_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( delay_s );
+            }
+        } else if(str_args[0]=="iterate" || str_args[0]=="i") { // value iteration
+            if(str_args.size()==1) {
+                value_iteration();
+            } else if(str_args[1]=="stop") {
+                value_iteration_timer->stop();
+            } else if(int_args_ok[1] && int_args[1]>=0){
+                value_iteration_timer->stop();
+                iteration_type = INT;
+                iteration_number = int_args[1];
+                value_iteration_timer->start();
+            } else if(double_args_ok[1] && double_args[1]>=0){
+                value_iteration_timer->stop();
+                iteration_type = DOUBLE;
+                iteration_threshold = double_args[1];
+                value_iteration_timer->start();
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( iterate_s );
+            }
+        } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( episode_s );
+            } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
+                crf.clear_data();
+            } else if(int_args_ok[1] && int_args[1]>=0){
+                collect_episode(int_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( episode_s );
+            }
+        } else if(str_args[0]=="optimize" || str_args[0]=="o") { // optimize CRF
+            if(str_args.size()==1) {
+                crf.optimize_model(l1_factor);
+            } else if(str_args[1]=="check" || str_args[1]=="c") {
+                crf.check_derivatives(3,10,1e-6,1e-3);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( optimize_s );
+            }
+        } else if(str_args[0]=="epsilon") {
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_epsilon()));
+            } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
+                maze.set_epsilon(double_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( epsilon_s );
+            }
+        } else if(str_args[0]=="discount") {
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText("    " + QString::number(discount));
+            } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
+                discount = double_args[1];
+                look_ahead_tree.set_discount(discount);
+                if(q_iteration_available) {
+                    q_iteration_object->set_discount(discount);
                 }
-            } else if(s_arg=="sparseiteration") {
-                if(s_set_unset=="unset") {
-                    ui._wConsoleOutput->appendPlainText("    use 'set [optimaliteration|kmdpiteration]' to unset 'sparseiteration'");
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( discount_s );
+            }
+        } else if(str_args[0]=="evaluate") {
+            crf.evaluate_features();
+        } else if(str_args[0]=="validate" || str_args[0]=="v") {
+            if(str_args.size()==1 ) {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( validate_s );
+            } else if(str_args[1]=="crf") {
+                if(str_args.size()==2 || str_args[2]=="exact") {
+                    probability_t kl = maze.validate_model<KMarkovCRF>(
+                            crf,
+                            crf.get_prediction_ptr(),
+                            Maze::EXACT_VALIDATION
+                    );
+                    ui._wConsoleOutput->appendPlainText(QString("    Exact KL-Divergence = %1").arg(kl));
+                } else if(str_args[2]=="mc") {
+                    if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
+                        probability_t kl = maze.validate_model<KMarkovCRF>(
+                                crf,
+                                crf.get_prediction_ptr(),
+                                Maze::MONTE_CARLO_VALIDATION,
+                                int_args[3]
+                        );
+                        ui._wConsoleOutput->appendPlainText(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+                    } else {
+                        ui._wConsoleOutput->appendPlainText( "    Please specify a valid sample size" );
+                    }
                 } else {
-                    q_iteration_object.clear();
-                    crf.initialize_sparse_predictions(q_iteration_object);
-                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values from sparse model");
+                    ui._wConsoleOutput->appendPlainText( invalid_s );
+                    ui._wConsoleOutput->appendPlainText( validate_s );
                 }
-            } else if(s_arg=="kmdpiteration") {
-                if(s_set_unset=="unset") {
-                    ui._wConsoleOutput->appendPlainText("    use 'set [optimaliteration|sparseiteration]' to unset 'kmdpiteration'");
+            } else if(str_args[1]=="kmdp") {
+                if(str_args.size()==2 || str_args[2]=="exact") {
+                    probability_t kl = maze.validate_model<KMarkovCRF>(
+                            crf,
+                            crf.get_prediction_ptr(),
+                            Maze::EXACT_VALIDATION
+                    );
+                    ui._wConsoleOutput->appendPlainText(QString("    Exact KL-Divergence = %1").arg(kl));
+                } else if(str_args[2]=="mc") {
+                    if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
+                        probability_t kl = maze.validate_model<KMarkovCRF>(
+                                crf,
+                                crf.get_prediction_ptr(),
+                                Maze::MONTE_CARLO_VALIDATION,
+                                int_args[3]
+                        );
+                        ui._wConsoleOutput->appendPlainText(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+                    } else {
+                        ui._wConsoleOutput->appendPlainText( "    Please specify a valid sample size" );
+                    }
                 } else {
-                    q_iteration_object.clear();
-                    crf.initialize_kmdp_predictions(q_iteration_object);
-                    ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values with relative frequencies");
+                    ui._wConsoleOutput->appendPlainText( invalid_s );
+                    ui._wConsoleOutput->appendPlainText( validate_s );
                 }
-            } else if(s_arg=="record") {
-                record = s_set_unset=="set";
-                if(record) {
-                    ui._wConsoleOutput->appendPlainText( "    record on" );
-                } else {
-                    ui._wConsoleOutput->appendPlainText( "    record off" );
-                }
-            } else if(s_arg=="plot") {
-                plot = s_set_unset=="set";
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( validate_s );
+            }
+        } else if(str_args[0]=="l1") {
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText(QString("    %1").arg(l1_factor));
+            } else if(double_args_ok[1] && double_args[1]>=0) {
+                l1_factor = double_args[1];
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( l1_s );
+            }
+        } else if(str_args[0]=="score") {
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText(score_s);
+            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+                crf.score_features_by_gradient(int_args[1]);
+                crf.sort_scored_features();
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( score_s );
+            }
+        } else if(str_args[0]=="add") {
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( add_s );
+            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+                crf.add_compound_features_to_active(int_args[1]);
+            } else {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( add_s );
+            }
+        } else if(str_args[0]=="erase") {
+            crf.erase_zero_features();
+        } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
+            QApplication::quit();
+        } else if(str_args[0]=="optimal-look-ahead-tree") {
+            action_type = OPTIMAL_LOOK_AHEAD_TREE;
+        } else if(str_args[0]=="sparse-look-ahead-tree") {
+            action_type = SPARSE_LOOK_AHEAD_TREE;
+        } else if(str_args[0]=="kmdp-look-ahead-tree") {
+            action_type = KMDP_LOOK_AHEAD_TREE;
+        } else if(str_args[0]=="optimal-iteration") {
+            if(q_iteration_available) {
+                q_iteration_object->clear();
+                maze.initialize_predictions(*q_iteration_object);
+                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix with true values");
+                action_type = OPTIMAL_Q_ITERATION;
+            } else {
+                DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes.");
+            }
+        } else if(str_args[0]=="sparse-iteration") {
+            if(q_iteration_available) {
+                q_iteration_object->clear();
+                crf.initialize_sparse_predictions(*q_iteration_object);
+                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values from sparse model");
+                action_type = SPARSE_Q_ITERATION;
+            } else {
+                DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes.");
+            }
+        } else if(str_args[0]=="kmdp-iteration") {
+            if(q_iteration_available) {
+                q_iteration_object->clear();
+                crf.initialize_kmdp_predictions(*q_iteration_object);
+                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values with relative frequencies");
+                action_type = KMDP_Q_ITERATION;
+            } else {
+                DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes.");
+            }
+        } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
+            if(str_args.size()==1) {
+                ui._wConsoleOutput->appendPlainText( invalid_s );
+                ui._wConsoleOutput->appendPlainText( set_s );
+            } else if(str_args[1]=="record") {
+                    record = str_args[0]=="set";
+                    if(record) {
+                        ui._wConsoleOutput->appendPlainText( "    record on" );
+                    } else {
+                        ui._wConsoleOutput->appendPlainText( "    record off" );
+                    }
+            } else if(str_args[1]=="plot") {
+                plot = str_args[0]=="set";
                 if(plot) {
                     // open plot file
                     plot_file.open("plot_file.txt");
@@ -413,15 +568,11 @@ void TestMaze_II::process_console_input() {
                     ui._wConsoleOutput->appendPlainText( "    plot off" );
                 }
             } else {
-                ui._wConsoleOutput->appendPlainText( "    unknown option" );
+                ui._wConsoleOutput->appendPlainText( invalid_s );
                 ui._wConsoleOutput->appendPlainText( set_s );
-
             }
         } else {
-            ui._wConsoleOutput->appendPlainText( "    unknown option (must be string)" );
-            ui._wConsoleOutput->appendPlainText( set_s );
+            ui._wConsoleOutput->appendPlainText("    unknown command");
         }
-    } else {
-        ui._wConsoleOutput->appendPlainText("    unknown command");
     }
 }

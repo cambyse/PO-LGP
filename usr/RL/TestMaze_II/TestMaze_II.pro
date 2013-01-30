@@ -3,7 +3,10 @@ TARGET = TestMaze_II
 QT += core \
     gui \
     svg
-HEADERS += MCTS.h \
+HEADERS += LoopyLookAhead.h \
+    LookAheadGraph.h \
+    LookAheadTree.h \
+    MCTS.h \
     KMDPState.h \
     BatchMaze.h \
     QIteration.h \
@@ -15,7 +18,10 @@ HEADERS += MCTS.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     Feature.h
-SOURCES += MCTS.cpp \
+SOURCES += LoopyLookAhead.cpp \
+    LookAheadGraph.cpp \
+    LookAheadTree.cpp \
+    MCTS.cpp \
     KMDPState.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -27,7 +33,8 @@ SOURCES += MCTS.cpp \
     testmaze_ii.cpp \
     KMarkovCRF.cpp \
     Feature.cpp
-LIBS += -llbfgs
+LIBS += -llbfgs \
+    -lemon
 FORMS += testmaze_ii.ui
 RESOURCES += 
 QMAKE_CXXFLAGS += -std=c++0x

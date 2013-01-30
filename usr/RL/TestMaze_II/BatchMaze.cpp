@@ -14,6 +14,7 @@
 #include "KMarkovCRF.h"
 #include "util.h"
 #include "MCTS.h"
+#include "LookAheadTree.h"
 
 #include <iostream>
 #include <fstream>
@@ -39,20 +40,49 @@ int BatchMaze::run(int argc, char *argv[]) {
 
         Maze maze(0);
         KMDPState current_k_mdp_state;
-        MCTS mcts;
+        LookAheadTree look_ahead_tree(0.9);
 
         // random initial history
-        maze.set_current_state(rand()%Data::state_n);
-        for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-            action_t random_action = rand()%Data::action_n;
-            state_t state;
-            reward_t reward;
-            maze.perform_transition(random_action,state,reward);
-            current_k_mdp_state.new_state(random_action,state,reward);
+//        maze.set_current_state(rand()%Data::state_n);
+//        for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
+//            action_t random_action = rand()%Data::action_n;
+//            state_t state;
+//            reward_t reward;
+//            maze.perform_transition(random_action,state,reward);
+//            current_k_mdp_state.new_state(random_action,state,reward);
+//        }
+
+        // specific initial history
+//        state_t state;
+//        reward_t reward;
+//        maze.set_current_state(8);
+//        maze.perform_transition(Data::STAY,state,reward);
+//        current_k_mdp_state.new_state(Data::STAY,state,reward);
+//        maze.perform_transition(Data::STAY,state,reward);
+//        current_k_mdp_state.new_state(Data::STAY,state,reward);
+
+        for(int i=0; i<Data::k; ++i) {
+            current_k_mdp_state.new_state(Data::STAY,Data::state_n-1,Data::min_reward);
         }
 
-        mcts.build_tree(current_k_mdp_state.get_k_mdp_state(),3,5,maze);
-        mcts.print_tree(2);
+        look_ahead_tree.build_tree<Maze>(current_k_mdp_state, 4, maze, maze.get_prediction_ptr());
+//        look_ahead_tree.print_tree(2,true);
+
+        DEBUG_OUT(0, "Action values for state");
+        DEBUG_OUT(0, "    " << current_k_mdp_state.print());
+
+        for(Data::action_idx_t action_idx=0; action_idx<Data::action_n; ++action_idx) {
+            action_t action = Data::action_from_idx(action_idx);
+            DEBUG_OUT(0,
+                    Data::action_strings[action_idx] << " --> " <<
+                    look_ahead_tree.get_action_value(action)
+                    );
+        }
+
+        DEBUG_OUT(0,"Best action:");
+        for(int i=0; i<10; ++i) {
+            DEBUG_OUT(0, Data::action_strings[look_ahead_tree.get_best_action()]);
+        }
 
 //        DEBUG_OUT(1, "No arguments, terminating...");
         return 1;

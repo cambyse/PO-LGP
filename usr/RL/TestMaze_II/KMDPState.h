@@ -26,6 +26,7 @@ public:
 
     bool operator==(const KMDPState& other) const;
     bool operator!=(const KMDPState& other) const;
+    bool operator<(const KMDPState& other) const;
 
     Data::k_mdp_state_t get_k_mdp_state() const;
 

@@ -2,7 +2,7 @@
 #include "BatchMaze.h"
 #include "Data.h"
 
-#define BATCH_MODE
+//#define BATCH_MODE
 
 #include <QtGui>
 #include <QApplication>
@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 
     // seed random generator
     srand(time(nullptr));
+    srand48(time(nullptr));
 
 #ifdef BATCH_MODE
     BatchMaze batchmaze;
