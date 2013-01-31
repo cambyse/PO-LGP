@@ -11,9 +11,10 @@ using std::make_tuple;
 
 const char*          Data::action_strings[5] = { " STAY", "   UP", " DOWN", " LEFT", "RIGHT" };
 const Data::size_t   Data::action_n          = NUMBER_OF_ACTIONS;
-const Data::size_t   Data::maze_x_dim        = 3;
-const Data::size_t   Data::maze_y_dim        = 3;
-const Data::size_t   Data::k                 = maze_x_dim+maze_y_dim-2;
+const Data::size_t   Data::maze_x_dim        = 4;
+const Data::size_t   Data::maze_y_dim        = 4;
+//const Data::size_t   Data::k                 = maze_x_dim+maze_y_dim-2;
+const Data::size_t   Data::k                 = 2;
 const Data::size_t   Data::state_n           = maze_x_dim*maze_y_dim;
 const Data::reward_t Data::min_reward        = 0.0;
 const Data::reward_t Data::max_reward        = 1.0;

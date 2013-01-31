@@ -47,11 +47,11 @@ public:
         bool operator==(const MazeState& other) const { return this->index==other.index; }
         bool operator!=(const MazeState& other) const { return !((*this)==other); }
         bool operator<(const MazeState& other) const { return this->index<other.index; }
-        unsigned long state_idx() const { return index; }
-        unsigned long x() const { return index%Data::maze_x_dim; }
-        unsigned long y() const { return index/Data::maze_x_dim; }
+        idx_t state_idx() const { return index; }
+        idx_t x() const { return index%Data::maze_x_dim; }
+        idx_t y() const { return index/Data::maze_x_dim; }
     private:
-        unsigned long index;
+        idx_t index;
     };
 
     void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
@@ -92,6 +92,19 @@ private:
     MazeState current_state;
     MazeState button_state, smiley_state;
     QGraphicsSvgItem *agent, *button, *smiley;
+
+    const idx_t walls[4][2] = {
+            { 0, 1},
+            { 4, 5},
+            { 5, 9},
+            { 1, 9}
+    };
+    const size_t walls_n = sizeof(walls)/sizeof(idx_t);
+    const idx_t rewards[2][3] = {
+            { 0, 4, 2},
+            { 1,10, 5}
+    };
+    const size_t rewards_n = sizeof(rewards)/sizeof(idx_t);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);

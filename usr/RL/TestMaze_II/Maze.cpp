@@ -73,6 +73,29 @@ void Maze::render_initialize(QGraphicsView * view) {
     smiley->setElementId( reward_active ? "active" : "passive");
     scene->addItem(smiley);
 
+
+
+    // walls
+    for(idx_t idx=0; idx<walls_n; ++idx) {
+        MazeState maze_state_1(Data::state_from_idx(walls[idx][0]));
+        MazeState maze_state_2(Data::state_from_idx(walls[idx][1]));
+        if(
+                abs(maze_state_1.x()-maze_state_2.x())>1 ||
+                abs(maze_state_1.y()-maze_state_2.y())>1 ||
+                abs(maze_state_1.x()-maze_state_2.x())+abs(maze_state_1.y()-maze_state_2.y())>1
+        ) {
+            DEBUG_OUT(0,"Error: No wall possible between (" <<
+                    maze_state_1.x() << "," << maze_state_1.y() << ") and (" <<
+                    maze_state_2.y() << "," << maze_state_2.y() << ")" );
+
+        }
+    }
+
+
+
+
+
+
     // render agent
     if(!agent) {
         agent = new QGraphicsSvgItem("./agent.svg");
