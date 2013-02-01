@@ -112,7 +112,7 @@ void LookAheadTree::print_tree(const size_t& depth, const bool& eps_export) cons
         DEBUG_OUT(0,"---layer " << current_depth << "---");
         int state_node_sign = -1;
 
-        for(idx_t state_idx=0; state_idx<current_state_layer->size(); ++state_idx) {
+        for(idx_t state_idx=0; state_idx<(idx_t)current_state_layer->size(); ++state_idx) {
             node_t current_state_node = (*current_state_layer)[state_idx];
             if(node_info_map[current_state_node].type!=STATE) DEBUG_OUT(0,"Error: non-STATE node in state layer");
 

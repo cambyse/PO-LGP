@@ -38,6 +38,8 @@ BatchMaze::~BatchMaze() {}
 int BatchMaze::run(int argc, char *argv[]) {
     if(argc <= 1) {
 
+        typedef Data::idx_t idx_t;
+
         Maze maze(0);
         KMDPState current_k_mdp_state;
         LookAheadTree look_ahead_tree(0.9);
@@ -61,7 +63,7 @@ int BatchMaze::run(int argc, char *argv[]) {
 //        maze.perform_transition(Data::STAY,state,reward);
 //        current_k_mdp_state.new_state(Data::STAY,state,reward);
 
-        for(int i=0; i<Data::k; ++i) {
+        for(int i=0; i<(idx_t)Data::k; ++i) {
             current_k_mdp_state.new_state(Data::STAY,Data::state_n-1,Data::min_reward);
         }
 
@@ -71,7 +73,7 @@ int BatchMaze::run(int argc, char *argv[]) {
         DEBUG_OUT(0, "Action values for state");
         DEBUG_OUT(0, "    " << current_k_mdp_state.print());
 
-        for(Data::action_idx_t action_idx=0; action_idx<Data::action_n; ++action_idx) {
+        for(Data::action_idx_t action_idx=0; action_idx<(idx_t)Data::action_n; ++action_idx) {
             action_t action = Data::action_from_idx(action_idx);
             DEBUG_OUT(0,
                     Data::action_strings[action_idx] << " --> " <<

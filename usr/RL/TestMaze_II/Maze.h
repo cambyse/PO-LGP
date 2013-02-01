@@ -141,13 +141,13 @@ Maze::probability_t Maze::validate_model(
         }
         return kl_divergence/samples;
     case EXACT_VALIDATION:
-        for(Data::k_mdp_state_idx_t k_mdp_state_idx=0; k_mdp_state_idx<Data::k_mdp_state_n; ++k_mdp_state_idx) {
+        for(Data::k_mdp_state_idx_t k_mdp_state_idx=0; k_mdp_state_idx<(idx_t)Data::k_mdp_state_n; ++k_mdp_state_idx) {
             k_mdp_state_t k_mdp_state = Data::k_mdp_state_from_idx(k_mdp_state_idx);
-            for(Data::action_idx_t action_idx=0; action_idx<Data::action_n; ++action_idx) {
+            for(Data::action_idx_t action_idx=0; action_idx<(idx_t)Data::action_n; ++action_idx) {
                 action_t action = Data::action_from_idx(action_idx);
-                for(Data::state_idx_t state_idx=0; state_idx<Data::state_n; ++state_idx) {
+                for(Data::state_idx_t state_idx=0; state_idx<(idx_t)Data::state_n; ++state_idx) {
                     state_t state = Data::state_from_idx(state_idx);
-                    for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
+                    for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
                         reward_t reward = Data::reward_from_idx(reward_idx);
                         probability_t p_maze = get_prediction(k_mdp_state,action,state,reward);
                         probability_t p_model = (model.*prediction)(k_mdp_state,action,state,reward);

@@ -28,13 +28,13 @@ KMarkovCRF::KMarkovCRF(): k(Data::k), old_active_features_size(0), lambda(nullpt
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-k; --k_idx) {
         // actions
-        for(action_t action=0; action<Data::action_n; ++action) {
+        for(action_t action=0; action<(idx_t)Data::action_n; ++action) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
             basis_features.push_back(action_feature);
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // states
-        for(state_t state=0; state<Data::state_n; ++state) {
+        for(state_t state=0; state<(idx_t)Data::state_n; ++state) {
             StateFeature * state_feature = StateFeature::create(state,k_idx);
             basis_features.push_back(state_feature);
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
@@ -697,12 +697,12 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
     unsigned long counter = 0;
 
     for(Data::k_mdp_state_idx_t state_from_idx=0;
-            state_from_idx<Data::k_mdp_state_n;
+            state_from_idx<(idx_t)Data::k_mdp_state_n;
             ++state_from_idx) {
 
         k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
 
-        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+        for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
 
             for(OutputIterator it; !it.end(); ++it) {
 
@@ -755,12 +755,12 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
     //-----------------------------//
     unsigned long counter = 0;
     for(Data::k_mdp_state_idx_t state_from_idx=0;
-            state_from_idx<Data::k_mdp_state_n;
+            state_from_idx<(idx_t)Data::k_mdp_state_n;
             ++state_from_idx) {
 
         k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
 
-        for(Data::action_t action = 0; action<Data::action_n; ++action) {
+        for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
 
             for(OutputIterator it; !it.end(); ++it) {
 

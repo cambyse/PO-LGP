@@ -31,7 +31,7 @@ Data::OutputIterator::~OutputIterator() {}
 Data::OutputIterator& Data::OutputIterator::operator++() {
     // action stays the same...
     ++current_state;
-    if(current_state>=state_n) {
+    if(current_state>=(idx_t)state_n) {
         current_state=state_t();
         current_reward += reward_increment;
     }

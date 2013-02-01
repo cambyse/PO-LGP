@@ -138,7 +138,7 @@ void LoopyLookAhead::print_tree(const size_t& depth, const bool& eps_export) con
         DEBUG_OUT(0,"---layer " << current_depth << "---");
         int state_node_sign = -1;
 
-        for(idx_t state_idx=0; state_idx<current_state_layer->size(); ++state_idx) {
+        for(idx_t state_idx=0; state_idx<(idx_t)current_state_layer->size(); ++state_idx) {
             node_t current_state_node = (*current_state_layer)[state_idx];
             if(node_info_map[current_state_node].type!=STATE) DEBUG_OUT(0,"Error: non-STATE node in state layer");
 
@@ -240,7 +240,7 @@ void LoopyLookAhead::add_subtree(const node_t& n0, const size_t& depth, const pr
 
     DEBUG_OUT(1,"Determine possible transitions from state " << node_info_map[n0].state.print());
 
-    for(action_idx_t action_idx = 0; action_idx<Data::action_n; ++action_idx) {
+    for(action_idx_t action_idx = 0; action_idx<(idx_t)Data::action_n; ++action_idx) {
 
         action_t action = Data::action_from_idx(action_idx);
 
@@ -263,10 +263,10 @@ void LoopyLookAhead::add_subtree(const node_t& n0, const size_t& depth, const pr
 
         graph_state_t new_state;
 
-        for(state_idx_t state_idx=0; state_idx<Data::state_n; ++state_idx) {
+        for(state_idx_t state_idx=0; state_idx<(idx_t)Data::state_n; ++state_idx) {
             state_t state = Data::state_from_idx(state_idx);
 
-            for(reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
+            for(reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
                 reward_t reward = Data::reward_from_idx(reward_idx);
                 new_state = node_info_map[n0].state;
                 new_state.new_state(action,state,reward);

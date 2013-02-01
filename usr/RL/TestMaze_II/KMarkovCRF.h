@@ -25,6 +25,8 @@ class KMarkovCRF
 {
 public:
 
+    typedef Data::idx_t                    idx_t;
+    typedef Data::size_t                   size_t;
     typedef Data::action_t                 action_t;
     typedef Data::state_t                  state_t;
     typedef Data::reward_t                 reward_t;

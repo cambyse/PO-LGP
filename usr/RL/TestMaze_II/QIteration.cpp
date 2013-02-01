@@ -51,10 +51,10 @@ QIteration::value_t QIteration::iterate() {
 
     // for all state action pairs
     for(Data::k_mdp_state_idx_t k_mdp_state_from_idx=0;
-            k_mdp_state_from_idx<Data::k_mdp_state_n;
+            k_mdp_state_from_idx<(idx_t)Data::k_mdp_state_n;
             ++k_mdp_state_from_idx) {
         k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(k_mdp_state_from_idx);
-        for(action_t action=0; action<Data::action_n; ++action) {
+        for(action_t action=0; action<(idx_t)Data::action_n; ++action) {
             idx_t state_action_idx = Data::state_action_idx(k_mdp_state_from,action);
             state_action_value[state_action_idx] = 0;
 
@@ -82,12 +82,12 @@ QIteration::value_t QIteration::iterate() {
     value_t max_value_diff = -DBL_MAX;
     value_t max_value = -DBL_MAX;
     for(Data::k_mdp_state_idx_t k_mdp_state_idx=0;
-            k_mdp_state_idx<Data::k_mdp_state_n;
+            k_mdp_state_idx<(idx_t)Data::k_mdp_state_n;
             ++k_mdp_state_idx) {
         k_mdp_state_t k_mdp_state = Data::k_mdp_state_from_idx(k_mdp_state_idx);
         value_t old_value = state_value[k_mdp_state_idx];
         state_value[k_mdp_state_idx] = -DBL_MAX;
-        for(action_t action=0; action<Data::action_n; ++action) {
+        for(action_t action=0; action<(idx_t)Data::action_n; ++action) {
             if(state_action_value[Data::state_action_idx(k_mdp_state,action)]>state_value[k_mdp_state_idx]) {
                 state_value[k_mdp_state_idx] = state_action_value[Data::state_action_idx(k_mdp_state,action)];
             }
@@ -108,7 +108,7 @@ QIteration::value_t QIteration::iterate() {
 QIteration::action_t QIteration::optimal_action(const k_mdp_state_t& k_mdp_state) {
     std::vector<action_t> optimal_action;
     value_t max_value = -DBL_MAX;
-    for(action_t action=0; action<Data::action_n; ++action) {
+    for(action_t action=0; action<(idx_t)Data::action_n; ++action) {
         if(state_action_value[Data::state_action_idx(k_mdp_state,action)]>max_value) {
             max_value = state_action_value[Data::state_action_idx(k_mdp_state,action)];
             optimal_action.assign(1,action);

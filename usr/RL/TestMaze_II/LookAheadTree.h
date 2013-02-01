@@ -112,7 +112,7 @@ void LookAheadTree::add_subtree(
 
     DEBUG_OUT(1,"Determine possible transitions from state " << node_info_map[n0].state.print());
 
-    for(action_idx_t action_idx = 0; action_idx<Data::action_n; ++action_idx) {
+    for(action_idx_t action_idx = 0; action_idx<(idx_t)Data::action_n; ++action_idx) {
 
         action_t action = Data::action_from_idx(action_idx);
 
@@ -135,10 +135,10 @@ void LookAheadTree::add_subtree(
 
         graph_state_t new_state;
 
-        for(state_idx_t state_idx=0; state_idx<Data::state_n; ++state_idx) {
+        for(state_idx_t state_idx=0; state_idx<(idx_t)Data::state_n; ++state_idx) {
             state_t state = Data::state_from_idx(state_idx);
 
-            for(reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
+            for(reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
                 reward_t reward = Data::reward_from_idx(reward_idx);
                 new_state = node_info_map[n0].state;
                 new_state.new_state(action,state,reward);

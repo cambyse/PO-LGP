@@ -27,7 +27,7 @@ Maze::Maze(const double& eps):
 
     // setting current state
     current_state = MazeState(Data::maze_x_dim/2, Data::maze_y_dim/2);
-    for(idx_t k_idx=0; k_idx<Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
 }
 
 
@@ -46,7 +46,7 @@ void Maze::render_initialize(QGraphicsView * view) {
         view->setScene(scene);
     }
 
-    for(state_t state=0; state<Data::state_n; ++state) {
+    for(state_t state=0; state<(idx_t)Data::state_n; ++state) {
         MazeState maze_state(state);
         scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
     }
@@ -76,7 +76,8 @@ void Maze::render_initialize(QGraphicsView * view) {
 
 
     // walls
-    for(idx_t idx=0; idx<walls_n; ++idx) {
+    DEBUG_OUT(1,"Initializing " << walls_n << " walls" );
+    for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
         MazeState maze_state_1(Data::state_from_idx(walls[idx][0]));
         MazeState maze_state_2(Data::state_from_idx(walls[idx][1]));
         if(
@@ -128,9 +129,9 @@ void Maze::perform_transition(const action_t& action) {
     DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
     probability_t prob_accum = 0;
     bool was_set = false;
-    for(Data::state_idx_t state_idx_to=0; state_idx_to<Data::state_n && !was_set; ++state_idx_to) {
+    for(Data::state_idx_t state_idx_to=0; state_idx_to<(idx_t)Data::state_n && !was_set; ++state_idx_to) {
         state_t state_to = Data::state_from_idx(state_idx_to);
-        for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n && !was_set; ++reward_idx) {
+        for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n && !was_set; ++reward_idx) {
             reward_t reward = Data::reward_from_idx(reward_idx);
             probability_t prob = get_prediction(current_k_mdp_state.get_k_mdp_state(), action, state_to, reward);
             DEBUG_OUT(2,"state(" << state_to << "), reward(" << reward << ") --> prob=" << prob);
@@ -160,13 +161,13 @@ void Maze::perform_transition(const action_t& a, Data::state_t& final_state, rew
 
 void Maze::initialize_predictions(QIteration& predictions) {
     unsigned long counter = 0;
-    for(Data::k_mdp_state_idx_t k_mdp_state_idx_from=0; k_mdp_state_idx_from<Data::k_mdp_state_n; ++k_mdp_state_idx_from) {
+    for(Data::k_mdp_state_idx_t k_mdp_state_idx_from=0; k_mdp_state_idx_from<(idx_t)Data::k_mdp_state_n; ++k_mdp_state_idx_from) {
         Data::k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(k_mdp_state_idx_from);
-        for(Data::action_idx_t action_idx = 0; action_idx<Data::action_n; ++action_idx) {
+        for(Data::action_idx_t action_idx = 0; action_idx<(idx_t)Data::action_n; ++action_idx) {
             action_t action = Data::action_from_idx(action_idx);
-            for(Data::state_idx_t state_to_idx=0; state_to_idx<Data::state_n; ++state_to_idx) {
+            for(Data::state_idx_t state_to_idx=0; state_to_idx<(idx_t)Data::state_n; ++state_to_idx) {
                 state_t state_to = Data::state_from_idx(state_to_idx);
-                for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
+                for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
                     reward_t reward = Data::reward_from_idx(reward_idx);
                     predictions.set_prediction(
                             k_mdp_state_from,
@@ -236,7 +237,7 @@ Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, 
 }
 
 void Maze::set_time_delay(const int& new_time_delay) {
-    if(new_time_delay>Data::k) {
+    if(new_time_delay>(idx_t)Data::k) {
         DEBUG_OUT(0,"Error: Reward time delays larger than history length 'k' not allowed");
     } else if(new_time_delay<0){
         DEBUG_OUT(0,"Error: Time delay must be larger than zero --> keeping old value");
@@ -251,7 +252,7 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
 

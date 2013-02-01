@@ -107,7 +107,7 @@ void MCTS::print_tree(const size_t& depth) const {
 
     for(size_t current_depth = 0; current_depth<=depth; ++current_depth) {
         DEBUG_OUT(0,"---layer " << current_depth << "---");
-        for(idx_t state_idx=0; state_idx<current_state_layer->size(); ++state_idx) {
+        for(idx_t state_idx=0; state_idx<(idx_t)current_state_layer->size(); ++state_idx) {
             node_t current_state_node = (*current_state_layer)[state_idx];
             if(node_info_map[current_state_node].type!=STATE) DEBUG_OUT(0,"Error: non-STATE node in state layer");
             print_node(current_state_node);
@@ -175,7 +175,7 @@ void MCTS::add_subtree(const node_t& n0, const size_t& depth, const size_t& samp
     // go through all actions //
     //------------------------//
 
-    for(Data::action_idx_t action_idx = 0; action_idx<Data::action_n; ++action_idx) {
+    for(Data::action_idx_t action_idx = 0; action_idx<(idx_t)Data::action_n; ++action_idx) {
 
         //--------------------------------//
         // find action node or create new //
@@ -216,8 +216,8 @@ void MCTS::add_subtree(const node_t& n0, const size_t& depth, const size_t& samp
             probability_t prob_threshold = drand48();
             probability_t prob_accum = 0;
             bool found = false;
-            for(Data::state_idx_t state_idx=0; state_idx<Data::state_n && !found; ++state_idx) {
-                for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n && !found; ++reward_idx) {
+            for(Data::state_idx_t state_idx=0; state_idx<(idx_t)Data::state_n && !found; ++state_idx) {
+                for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n && !found; ++reward_idx) {
                     state_t state = Data::state_from_idx(state_idx);
                     reward_t reward = Data::reward_from_idx(reward_idx);
                     DEBUG_OUT(2,"    Checking state(" << state << "), reward(" << reward << ")");

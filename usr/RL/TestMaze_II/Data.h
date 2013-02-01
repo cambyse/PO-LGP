@@ -17,7 +17,7 @@ public:
     //   general   //
     //-------------//
     typedef long long idx_t;
-    typedef long long size_t;
+    typedef unsigned long long size_t;
 
     //----------------------//
     //   k-Markov horizon   //
