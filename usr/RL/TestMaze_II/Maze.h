@@ -88,23 +88,23 @@ private:
     bool reward_active;
     KMDPState current_k_mdp_state;
     static const double state_size;
+    static const double wall_width;
     double epsilon;
     MazeState current_state;
     MazeState button_state, smiley_state;
     QGraphicsSvgItem *agent, *button, *smiley;
 
-    const idx_t walls[4][2] = {
+    static const size_t walls_n = 2;
+    const idx_t walls[walls_n][2] = {
             { 0, 1},
-            { 4, 5},
+//            { 4, 5},
             { 5, 9},
-            { 1, 9}
     };
-    const size_t walls_n = sizeof(walls)/sizeof(idx_t);
-    const idx_t rewards[2][3] = {
+    static const size_t rewards_n = 2;
+    const idx_t rewards[rewards_n][3] = {
             { 0, 4, 2},
             { 1,10, 5}
     };
-    const size_t rewards_n = sizeof(rewards)/sizeof(idx_t);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);

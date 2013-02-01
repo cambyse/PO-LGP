@@ -1,10 +1,15 @@
 
 #include "Maze.h"
+#include "util.h"
 
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
 const double Maze::state_size = 0.9;
+const double Maze::wall_width = 0.05;
+
+using util::min;
+using util::max;
 
 Maze::Maze(const double& eps):
         time_delay(Data::k),
@@ -78,16 +83,29 @@ void Maze::render_initialize(QGraphicsView * view) {
     // walls
     DEBUG_OUT(1,"Initializing " << walls_n << " walls" );
     for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
+        QColor color(50,50,50);
         MazeState maze_state_1(Data::state_from_idx(walls[idx][0]));
         MazeState maze_state_2(Data::state_from_idx(walls[idx][1]));
-        if(
-                abs(maze_state_1.x()-maze_state_2.x())>1 ||
-                abs(maze_state_1.y()-maze_state_2.y())>1 ||
-                abs(maze_state_1.x()-maze_state_2.x())+abs(maze_state_1.y()-maze_state_2.y())>1
-        ) {
+        idx_t x_1 = maze_state_1.x();
+        idx_t y_1 = maze_state_1.y();
+        idx_t x_2 = maze_state_2.x();
+        idx_t y_2 = maze_state_2.y();
+        if( abs(x_1-x_2)==1 && abs(y_1-y_2)==0 ) {
+            idx_t x_min = min<idx_t>(x_1,x_2);
+            idx_t y = y_1;
+            scene->addRect( x_min+0.5-wall_width/2, y-0.5, wall_width, 1, QPen(color), QBrush(color) );
+            scene->addEllipse( x_min+0.5-wall_width/2, y-0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+            scene->addEllipse( x_min+0.5-wall_width/2, y+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+        } else if( abs(x_1-x_2)==0 && abs(y_1-y_2)==1 ) {
+            idx_t x = x_1;
+            idx_t y_min = min<idx_t>(y_1,y_2);
+            scene->addRect( x-0.5, y_min+0.5-wall_width/2, 1, wall_width, QPen(color), QBrush(color) );
+            scene->addEllipse( x-0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+            scene->addEllipse( x+0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+        } else {
             DEBUG_OUT(0,"Error: No wall possible between (" <<
-                    maze_state_1.x() << "," << maze_state_1.y() << ") and (" <<
-                    maze_state_2.y() << "," << maze_state_2.y() << ")" );
+                    x_1 << "," << y_1 << ") and (" <<
+                    x_2 << "," << y_2 << ")" );
 
         }
     }
