@@ -85,25 +85,34 @@ public:
 private:
 
     int time_delay;
-    bool reward_active;
+//    bool reward_active;
     KMDPState current_k_mdp_state;
     static const double state_size;
     static const double wall_width;
+    static const double reward_start_size;
     double epsilon;
     MazeState current_state;
-    MazeState button_state, smiley_state;
-    QGraphicsSvgItem *agent, *button, *smiley;
+//    MazeState button_state, smiley_state;
+//    QGraphicsSvgItem *button, *smiley;
+    QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 2;
+    static const size_t walls_n = 5;
     const idx_t walls[walls_n][2] = {
-            { 0, 1},
-//            { 4, 5},
-            { 5, 9},
+            { 6, 7},
+            {12,13},
+            { 4, 5},
+            { 6,10},
+            {10,11}
     };
-    static const size_t rewards_n = 2;
-    const idx_t rewards[rewards_n][3] = {
-            { 0, 4, 2},
-            { 1,10, 5}
+    static const size_t rewards_n = 5;
+    const idx_t rewards[rewards_n][6] = {
+    /* {  activation state,  receive state, r, g, b} */
+            {  4,  2,  3, 200,   0,   0},
+            {  6,  7,  3, 200, 200,   0},
+            { 11, 14,  2,   0, 200,   0},
+            { 13,  8,  2,   0, 200, 200},
+            {  8,  1,  3,   0,   0, 200}
+//            {  8,  4,  4, 200,   0, 200}
     };
 
     /*! \brief Rescale the scene to fit into view. */

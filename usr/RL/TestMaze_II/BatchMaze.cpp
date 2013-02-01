@@ -67,7 +67,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             current_k_mdp_state.new_state(Data::STAY,Data::state_n-1,Data::min_reward);
         }
 
-        look_ahead_tree.build_tree<Maze>(current_k_mdp_state, 4, maze, maze.get_prediction_ptr());
+        look_ahead_tree.build_tree<Maze>(current_k_mdp_state, 4, 0, maze, maze.get_prediction_ptr());
 //        look_ahead_tree.print_tree(2,true);
 
         DEBUG_OUT(0, "Action values for state");
