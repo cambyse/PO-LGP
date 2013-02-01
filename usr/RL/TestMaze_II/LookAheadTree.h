@@ -29,6 +29,7 @@ public:
     void build_tree(
             const graph_state_t& s0,
             const size_t& depth,
+            const probability_t threshold,
             const Model& model,
             probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
     );
@@ -45,6 +46,7 @@ protected:
     void add_subtree(
             const node_t& n0,
             const size_t& depth,
+            const probability_t threshold,
             const Model& model,
             probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
     );
@@ -58,6 +60,7 @@ template < class Model >
 void LookAheadTree::build_tree(
         const graph_state_t& s0,
         const size_t& depth,
+        const probability_t threshold,
         const Model& model,
         probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
 ) {
@@ -77,7 +80,7 @@ void LookAheadTree::build_tree(
         DEBUG_OUT(1,"Building tree:");
         DEBUG_OUT(1,"    root state " << s0.print());
         DEBUG_OUT(1,"    depth      " << depth);
-        add_subtree(root_node, depth, model, prediction);
+        add_subtree(root_node, depth, threshold, model, prediction);
     }
 
     // update root state node
@@ -88,6 +91,7 @@ template < class Model >
 void LookAheadTree::add_subtree(
         const node_t& n0,
         const size_t& depth,
+        const probability_t threshold,
         const Model& model,
         probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
 ) {
@@ -154,7 +158,7 @@ void LookAheadTree::add_subtree(
                 node_info_map[state_node].expected_reward = reward;
 
                 // add subtree
-                add_subtree(state_node, depth-1, model, prediction);
+                add_subtree(state_node, depth-1, threshold, model, prediction);
 
                 // update action value
                 node_info_map[action_node].value += prob*node_info_map[state_node].value;
