@@ -1,11 +1,24 @@
-tag-value list/graph
 
--- (hyper-)graph: every item can have list of parents
+A MapGraph is.. (three ways to describe what a MapGraph is):
 
--- value is optional, may be another tag-value (sub-)graph
+-- a graph, where each item (node/edge) has some keys and can store a
+   value of any type
 
--- multiple tags allowed
+   [Actually a hyper graph: items can be nodes, edges (linking two
+   nodes), or higher-order objects (linking arbitrary other items)]
 
+-- a key-value list, where items can have parent/child relations and
+   values can be of any type an
+
+   [Actually a multi-map: items can have multiple keys, but at most
+   one value]
+
+-- the data structure which is one-to-one with the following file
+   format
+
+===
+
+File format:
 
 item:
 tag [more tags] [(parent-names)] [=] [value]

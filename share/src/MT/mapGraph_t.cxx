@@ -1,3 +1,18 @@
+//////////// taken from http://stackoverflow.com/questions/4532281/how-to-test-whether-class-b-is-derived-from-class-a
+typedef char (&yes)[1];
+typedef char (&no)[2];
+template <typename B, typename D> struct Host {
+  operator B*() const;
+  operator D*();
+};
+template <typename B, typename D> struct is_base_of {
+  template <typename T>
+  static yes check(D*, T);
+  static no check(B*, int);
+  static const bool value = sizeof(check(Host<B,D>(), int())) == sizeof(yes);
+};
+///////////////STOP
+
 //===========================================================================
 //
 //  typed Item
@@ -24,7 +39,11 @@ struct Item_typed:Item {
     return typeid(T);
   }
 
-  virtual Item* newClone() const { return new Item_typed<T>(keys, parents, value); }
+  virtual bool is_derived_from_TypeBase() const {
+    return is_base_of<TypeBase, T>::value;
+  }
+
+  virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
 };
 
 template<class T> T& Item::value(){
@@ -52,6 +71,24 @@ template<class T> T* MapGraph::get(const char *key){
   return &it->value<T>();
 }
 
+template<class T> Item* MapGraph::getTypedItem(const char* key){
+  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T))
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
+  return NULL;
+}
+
 template<class T> Item *MapGraph::append(const StringA& keys, const ItemL& parents, const T& x){
   return append(new Item_typed<T>(keys, parents, x, NULL));
 }
+
+template <class T> MT::Array<T*> MapGraph::getDerivedItems(){
+  MT::Array<T*> ret;
+  for_list_(Item, it, (*this)){
+    if(it->is_derived_from_TypeBase()){
+      T *val= dynamic_cast<T*>(&(((Item_typed<TypeBase>*)it)->value));
+      if(val) ret.append(val);
+    }
+  }
+  return ret;
+}
+

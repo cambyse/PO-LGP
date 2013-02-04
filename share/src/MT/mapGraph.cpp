@@ -46,7 +46,7 @@ void Item::write(std::ostream& os) const {
   }else if(valueType()==typeid(double)){     os <<'=' <<value<double>();
   }else if(valueType()==typeid(bool)){       os <<',';
   }else{
-    TypeRegistration *t = reg_find(valueType().name());
+    TypeRegistration *t = reg_findType(valueType().name());
     if(t && t->keys.N>1){
       os <<"=<" <<t->keys(1) <<' ';
       writeValue(os);
@@ -210,17 +210,15 @@ MapGraph::~MapGraph(){
 }
 
 Item* MapGraph::getItem(const char* key){
-  uint i;
   for_list_(Item, it, (*this))
-    for(i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
   return NULL;
 }
 
 ItemL MapGraph::getItems(const char* key){
-  uint i;
   ItemL ret;
   for_list_(Item, it, (*this)){
-    for(i=0;i<it->keys.N;i++) if(it->keys(i)==key){ ret.append(it); break; }
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key){ ret.append(it); break; }
   }
   return ret;
 }

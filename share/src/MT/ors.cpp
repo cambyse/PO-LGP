@@ -2602,13 +2602,13 @@ void ors::Body::parseAts() {
     s->body=this;
     s->ibody=index;
   }
-  if(it=ats.getItem("type"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("size"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("color"))    { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("rel"))      { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("mesh"))     { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("meshscale")){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(it=ats.getItem("contact"))  { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("type");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("size");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("color");    if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("rel");      if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("mesh");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("meshscale");if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("contact");  if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(s) s->parseAts();
 
   //mass properties

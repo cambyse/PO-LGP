@@ -150,17 +150,18 @@ void PhysXInterface::create() {
   for_list(i,b,G->bodies) {
     PxRigidDynamic *actor;
     switch(b->type){
-      case ors::staticBT:
-	actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
-	break;
-      case ors::dynamicBT:
-	actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
-	break;
-      case ors::kinematicBT:
-	actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
-	actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-	break;
-    }	
+    case ors::staticBT:{
+      actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
+    } break;
+    case ors::dynamicBT:{
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+    } break;
+    case ors::kinematicBT:{
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+    } break;
+    default: HALT("");
+    }
     CHECK(actor, "create actor failed!");
     for_list(j,s,b->shapes) {
       PxGeometry *geometry;
@@ -218,36 +219,33 @@ void PhysXInterface::create() {
   //! ADD joints here!
   
   ors::Joint *jj;
-   for_list(i,jj,G->joints) { 
-      PxTransform A = OrsTrans2PxTrans(jj->A);
-      PxTransform B = OrsTrans2PxTrans(jj->B);
-     switch(jj->type){
-    case ors::hingeJT:
-    {
-      PxRevoluteJoint* desc; //= new 
-    //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-      desc =PxRevoluteJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
-   /*
+  for_list(i,jj,G->joints) {
+    PxTransform A = OrsTrans2PxTrans(jj->A);
+    PxTransform B = OrsTrans2PxTrans(jj->B);
+    switch(jj->type){
+    case ors::hingeJT: {
+      //  CHECK(A.p!=B.p,"Something is horribly wrong!");
+      //  PxRevoluteJoint *desc =
+      PxRevoluteJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
+      /*
       PxJointLimitPair limit(0.,1., 0.01f);
       limit.restitution = 0.5;
       desc->setLimit(limit);
       desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
       desc->setProjectionAngularTolerance(3.14);
-*/
-      }break;
-    case ors::fixedJT:
-    {
-      PxFixedJoint* desc; //= new 
-      desc =PxFixedJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
-   //   desc->setProjectionLinearTolerance(1e10);
-   //    desc->setProjectionAngularTolerance(3.14);
-    }break;
+      */
+    } break;
+    case ors::fixedJT:{
+      // PxFixedJoint *desc=
+      PxFixedJointCreate(*mPhysics,this->s->actors(jj->ifrom),A,this->s->actors(jj->ito),B.getInverse());
+      // desc->setProjectionLinearTolerance(1e10);
+      // desc->setProjectionAngularTolerance(3.14);
+    } break;
     default: NIY;
-   }
-   
-   }
-   
-   //! end of joints
+    }
+  }
+
+  //! end of joints
 }
 
 void PhysXInterface::pullState() {

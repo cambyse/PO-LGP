@@ -14,21 +14,24 @@ struct Derived:NewType{
 
 REGISTER_TYPE(NewType)
 REGISTER_TYPE(double)
-REGISTER_DERIVED_TYPE(Derived,NewType)
-
 REGISTER_ITEM(double, mykey, 3.)
-REGISTER_TYPE_(NewType)
 REGISTER_TYPE_DERIVED(Derived,NewType)
+
+// minimalistic explicit example for using the registrator tool
+
+struct Container:Registrator<Container,void>{
+  //void *dummy1(){ return reg.force(); } //don't need this if we also call forceSub
+  void *dummy2(){ return staticRegistrator.forceSub<double>(); }
+};
+
 
 int main(int argn,char** argv){
 
-  reg_report();
+  cout <<"** REGISTRY:\n" <<registry() <<endl;
 
-  cout <<"derived = ";
-  listWrite(reg_findDerived<NewType>(), cout);
+  cout <<"** derived from TypeRegistration:\n";
+  listWrite(registry().getDerivedItems<TypeRegistration>(), cout, "\n");
   cout <<endl;
-
-  cout <<registry() <<endl;
 
   return 0;
 }

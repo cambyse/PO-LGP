@@ -5,46 +5,19 @@
 // global singleton TypeRegistrationSpace
 //
 
-struct TypeRegistrationSpace{
-  MapGraph registry;
-  TypeRegistrationL types;
-  RWLock lock;
-  TypeRegistrationSpace(){ types.memMove=true; }
-} *global_TypeRegistrationSpace=NULL;
-
-TypeRegistrationSpace& typeRegistrationSpace(){
-  static bool currentlyCreating=false;
-  if(currentlyCreating) return *((TypeRegistrationSpace*) NULL);
-  if(!global_TypeRegistrationSpace) {
-    static Mutex m;
-    m.lock();
-    if(!global_TypeRegistrationSpace) {
-      currentlyCreating=true;
-      global_TypeRegistrationSpace = new TypeRegistrationSpace();
-      currentlyCreating=false;
+TypeRegistration* reg_findType(const char* type){
+  ItemL items = registry().getItems(type);
+  for_list_(Item, it, items){
+    if(it->is_derived_from_TypeBase()){ //check if it is a type registration
+      TypeRegistration *t= dynamic_cast<TypeRegistration*>(&(((Item_typed<TypeBase>*)it)->value));
+      if(t) return t;
     }
-    m.unlock();
-  }
-  return *global_TypeRegistrationSpace;
-}
-
-MapGraph& registry(){
-  return typeRegistrationSpace().registry;
-}
-
-TypeRegistrationL& typeRegistry(){
-  return typeRegistrationSpace().types;
-}
-
-void reg_report(){
-  cout <<"\n +++ TYPES +++" <<endl;
-  for_list_(TypeRegistration, it, typeRegistry()) cout <<*it;
-}
-
-TypeRegistration* reg_find(const char* type){
-  for_list_rev_(TypeRegistration, vi, typeRegistry()){
-    if(!strcmp(vi->typeinfo().name(),type)) return vi;
-    for(uint j=0;j<vi->keys.N;j++) if(vi->keys(j)==type) return vi;
   }
   return NULL;
+}
+
+Singleton<MapGraph> single_registry;
+
+MapGraph& registry(){
+  return single_registry.obj();
 }

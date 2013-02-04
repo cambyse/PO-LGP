@@ -347,6 +347,8 @@ template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T
 template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o) {      MT::Array<T*> z(7); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; return z; }
 template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T& l, const T& m, const T& n, const T& o, const T& p) { MT::Array<T*> z(8); z(0)=(T*)&i; z(1)=(T*)&j; z(2)=(T*)&k; z(3)=(T*)&l; z(4)=(T*)&m; z(5)=(T*)&n; z(6)=(T*)&o; z(7)=(T*)&p; return z; }
 
+#define STRINGS(s0, s1) ARRAY<MT::String>(MT::String(s0), MT::String(s1))
+
 
 //===========================================================================
 // @}
