@@ -299,6 +299,10 @@ void Matrix::setRandom(double range) {
   for(uint i=0; i<9; i++) p()[i]=rnd.uni(-range, range);
 }
 
+void Matrix::setRandom(double range) {
+  for(uint i=0;i<9;i++) p[i]=rnd.uni(-range, range);
+}
+
 //! reset to identity
 void Matrix::setId() {
   m00=m11=m22=1.;

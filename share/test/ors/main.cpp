@@ -68,7 +68,7 @@ void testKinematics(){
 //
 
 void testKinematicSpeed(){
-#define NUM 1000000
+#define NUM 100000
 #if 1
   ors::Graph G;
   OpenGL gl;
@@ -474,6 +474,8 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testKinematicSpeed();
+  return 0;
   testLoadSave();
   return 0;
   testPlayStateSequence();
