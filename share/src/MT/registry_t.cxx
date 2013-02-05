@@ -22,7 +22,6 @@ struct TypeRegistration_typed:TypeRegistration{
   }
   virtual const std::type_info& typeinfo() const { return typeid(Type); }
   virtual Item* read(istream& is) const{ Type x; is >>x; return new Item_typed<Type>(x); }
-  virtual TypeBase* newInstance() const{ return new Type(); }
 };
 
 /*

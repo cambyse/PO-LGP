@@ -11,20 +11,27 @@ struct DoubleRepresentation:arr,TypeBase{};
 
 //-- this is how the developer should provide a module
 struct ComputeSum: MODULE_BASE(ComputeSum){
-  VAR(ArrRepresentation, x);    //input
-  VAR(DoubleRepresentation, s); //output
+  VAR(arr, x);    //input
+  VAR(double, s); //output
 
   ComputeSum(){}          //replaces old 'open'
   virtual ~ComputeSum(){} //replaces old 'close'
 
   virtual void step();
-  virtual bool test(){ return true; }
+  virtual bool test();
 };
 
 void ComputeSum::step(){
-  get_s().resize(1); // = ARR( sum(get_x()) );
+  set_s( sum(get_x()) );
 }
 
+bool ComputeSum::test(){
+  set_x( ARR(1., 2., 3.) );
+  step();
+  double S = get_s();
+  CHECK(S==6.,"");
+  cout <<"*** TEST SUCCESS ***" <<endl;
+}
 
 //===========================================================================
 //
@@ -33,28 +40,13 @@ void ComputeSum::step(){
 
 template<class T>
 void testModule(){
-  Item *modit = registry().getTypedItem<TypeRegistration_typed<T, void> >("unit");
-  ItemL children = modit->parentOf;
-  cout <<"testModule: " <<*modit <<endl;
-
-  T *mod = dynamic_cast<T*>(modit->value<TypeRegistration_typed<T, void> >().newInstance());
-
-  MapGraph container;
-
-  for_list_(Item, it, children){
-    CHECK(it->keys(0)=="unit","??");
-    TypeRegistration *val = NULL;
-    if(it->is_derived_from_TypeBase()){
-      val = dynamic_cast<TypeRegistration*>(&(((Item_typed<TypeBase>*)it)->value));
-    }
-    if(val){
-      cout <<"element:" <<*val <<endl;
-    }else{
-      MT_MSG("strange element:" <<*it);
-    }
-
-    void *var = val->newInstance();
-  }
+  Item *modit = registry().getItem("module", typeid(T).name());
+  //create the module
+  T *mod = (T*)modit->newInstance();
+  //create the variables
+  for_list_(VariableAccess, var, mod->accesses) var->createOwnVariable();
+  //test
+  mod->test();
 }
 
 //-- this is how the top-level manager should get access

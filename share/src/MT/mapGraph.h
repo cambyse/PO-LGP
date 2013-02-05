@@ -22,7 +22,8 @@ struct Item {
   virtual void writeValue(std::ostream &os) const = 0;
   virtual const std::type_info& valueType() const = 0;
   virtual bool is_derived_from_TypeBase() const = 0;
-  virtual Item *newClone() const = 0;
+  virtual Item *newClone() const { NIY }
+  virtual void *newInstance() const { NIY }
 };
 stdOutPipe(Item);
 
@@ -35,9 +36,10 @@ struct MapGraph:ItemL{
 
   MapGraph& operator=(const MapGraph&);
 
-  Item* getItem(const char*);
-  Item& operator[](const char *key){ return *getItem(key); }
+  Item* getItem(const char *key);
+  Item* getItem(const char *key1, const char *key2);
   ItemL getItems(const char*);
+  Item* operator[](const char *key){ return getItem(key); }
 
   template<class T> Item* getTypedItem(const char*);
 

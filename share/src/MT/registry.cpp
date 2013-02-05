@@ -6,6 +6,7 @@
 //
 
 TypeRegistration* reg_findType(const char* type){
+  return NULL;
   ItemL items = registry().getItems(type);
   for_list_(Item, it, items){
     if(it->is_derived_from_TypeBase()){ //check if it is a type registration

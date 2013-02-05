@@ -64,7 +64,7 @@ struct TypeRegistration:TypeBase{
   MT::Array<TypeRegistration*> parents;
   virtual const std::type_info& typeinfo() const = 0;
   virtual struct Item* read(istream&) const = 0;
-  virtual TypeBase* newInstance() const = 0;
+  virtual void* newInstance() const { NIY }
   void write(std::ostream& os) const{
     os <<"Type '" <<keys <<"' [" <<typeinfo().name() <<"] ";
     if(parents.N){
@@ -111,40 +111,6 @@ inline Item* readTypeIntoItem(const char* type, std::istream& is){
 // registrator -- helper to call registration code for classes & members
 //
 
-/* This class is a registration tool: For any type T (and parent type P, default void)
-   it instantiates a static object. The constructor of this object can contain arbitrary
-   code which is called during __static_init... before main. Classes should derive from Registrator<classType, void> and somewhere
-   (doesn't matter where) call force(); members can register by somewhere calling forceSub<memberType>();
-
-   Here, we append a type registration to the global registry() */
-template<class T, class P> struct Registrator{
-  struct StaticRegistrator{
-    StaticRegistrator(){
-      //** this is the code executed during registration (__static_init...)
-      ItemL parents;
-      Item *parent = NULL;
-      if(typeid(P)!=typeid(void)){ //dependence registry
-        parent = registry().getTypedItem<TypeRegistration_typed<P, void> >("unit");
-        CHECK(parent,"");
-        parents.append(parent);
-      }
-      Item *it = new Item_typed<TypeRegistration_typed<T,P> >(
-            STRINGS("unit",typeid(T).name()),
-            parents,
-            TypeRegistration_typed<T,P>("noUserName",NULL,NULL,NULL),
-            &registry());
-      if(parent) parent->parentOf.append(it);
-    }
-    void* force(){ return &staticRegistrator; }
-    template<class S> void* forceSub(){ return &Registrator<S,T>::staticRegistrator; }
-  };
-  static StaticRegistrator staticRegistrator;
-  void write(std::ostream& os) const{};
-  void read(std::istream& os){};
-};
-template<class T,class P> typename Registrator<T,P>::StaticRegistrator Registrator<T,P>::staticRegistrator;
-template<class T,class P> stdInPipe(Registrator<T KO P>);
-template<class T,class P> stdOutPipe(Registrator<T KO P>);
 
 // stuff that needs to be included by the header to enable macros and templates
 

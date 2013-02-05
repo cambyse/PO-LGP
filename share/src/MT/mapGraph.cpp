@@ -209,9 +209,19 @@ MapGraph::~MapGraph(){
   delete s;
 }
 
-Item* MapGraph::getItem(const char* key){
+Item* MapGraph::getItem(const char *key){
   for_list_(Item, it, (*this))
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
+  return NULL;
+}
+
+Item* MapGraph::getItem(const char *key1, const char *key2){
+  for_list_(Item, it, (*this)){
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key1){
+      for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key2)
+        return it;
+    }
+  }
   return NULL;
 }
 
