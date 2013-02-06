@@ -31,7 +31,7 @@ public:
 
     typedef idx_t action_t;
     typedef idx_t action_idx_t;
-    enum ACTION { STAY, UP, DOWN, LEFT, RIGHT, NUMBER_OF_ACTIONS };
+    enum ACTION { NULL_ACTION = -1, STAY, UP, DOWN, LEFT, RIGHT, NUMBER_OF_ACTIONS };
     static const char* action_strings[5];
     static const size_t action_n;
 

@@ -6,7 +6,7 @@
 #include "QIteration.h"
 #include "KMarkovCRF.h"
 #include "KMDPState.h"
-#include "LookAheadTree.h"
+#include "LookAheadSearch.h"
 #include "MCTS.h"
 
 #include <QWidget>
@@ -80,9 +80,9 @@ private:
     double iteration_threshold;
     enum ITERATION_TYPE { INT, DOUBLE } iteration_type;
 
-    LookAheadTree look_ahead_tree;
-    probability_t probability_threshold;
-    size_t tree_depth;
+    LookAheadSearch look_ahead_search;
+//    probability_t probability_threshold;
+//    size_t tree_depth;
 
     //==================//
     // Member Functions //

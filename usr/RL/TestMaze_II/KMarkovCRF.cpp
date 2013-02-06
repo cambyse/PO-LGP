@@ -197,6 +197,10 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
         param.max_iterations = max_iter;
     }
 
+    // todo what values
+    param.delta = 1e-4;
+    param.epsilon = 1e-5;
+
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
     int ret = lbfgs(active_features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);

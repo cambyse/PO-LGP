@@ -14,7 +14,7 @@
 #include "KMarkovCRF.h"
 #include "util.h"
 #include "MCTS.h"
-#include "LookAheadTree.h"
+#include "LookAheadSearch.h"
 
 #include <iostream>
 #include <fstream>
@@ -42,7 +42,7 @@ int BatchMaze::run(int argc, char *argv[]) {
 
         Maze maze(0);
         KMDPState current_k_mdp_state;
-        LookAheadTree look_ahead_tree(0.9);
+        LookAheadSearch look_ahead_search(0.9);
 
         // random initial history
 //        maze.set_current_state(rand()%Data::state_n);
@@ -67,23 +67,23 @@ int BatchMaze::run(int argc, char *argv[]) {
             current_k_mdp_state.new_state(Data::STAY,Data::state_n-1,Data::min_reward);
         }
 
-        look_ahead_tree.build_tree<Maze>(current_k_mdp_state, 4, 0, maze, maze.get_prediction_ptr());
+        look_ahead_search.build_tree<Maze>(current_k_mdp_state, maze, maze.get_prediction_ptr());
 //        look_ahead_tree.print_tree(2,true);
 
         DEBUG_OUT(0, "Action values for state");
         DEBUG_OUT(0, "    " << current_k_mdp_state.print());
 
-        for(Data::action_idx_t action_idx=0; action_idx<(idx_t)Data::action_n; ++action_idx) {
-            action_t action = Data::action_from_idx(action_idx);
-            DEBUG_OUT(0,
-                    Data::action_strings[action_idx] << " --> " <<
-                    look_ahead_tree.get_action_value(action)
-                    );
-        }
+//        for(Data::action_idx_t action_idx=0; action_idx<(idx_t)Data::action_n; ++action_idx) {
+//            action_t action = Data::action_from_idx(action_idx);
+//            DEBUG_OUT(0,
+//                    Data::action_strings[action_idx] << " --> " <<
+//                    look_ahead_search.get_action_value(action)
+//                    );
+//        }
 
         DEBUG_OUT(0,"Best action:");
         for(int i=0; i<10; ++i) {
-            DEBUG_OUT(0, Data::action_strings[look_ahead_tree.get_best_action()]);
+            DEBUG_OUT(0, Data::action_strings[look_ahead_search.get_optimal_action()]);
         }
 
 //        DEBUG_OUT(1, "No arguments, terminating...");

@@ -2,7 +2,7 @@
 #include "Maze.h"
 #include "util.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 const double Maze::state_size = 0.9;

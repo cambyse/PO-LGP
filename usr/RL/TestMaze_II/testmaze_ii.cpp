@@ -11,18 +11,19 @@ using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-      action_type(NONE),
+//      action_type(NONE),
+      action_type(OPTIMAL_LOOK_AHEAD_TREE), // todo remove
       maze(0.0),
       record(false), plot(false),
       current_k_mdp_state(),
       random_timer(nullptr), action_timer(nullptr), value_iteration_timer(nullptr),
       l1_factor(0),
-      discount(0.9),
+      discount(0.5),
       q_iteration_object(nullptr), q_iteration_available(false),
       iteration_number(0), iteration_threshold(1), iteration_type(INT),
-      look_ahead_tree(discount),
-      probability_threshold(0),
-      tree_depth(2*(Data::maze_x_dim-1)+2*(Data::maze_y_dim-1))
+      look_ahead_search(discount)
+//      probability_threshold(0),
+//      tree_depth(2*(Data::maze_x_dim-1)+2*(Data::maze_y_dim-1))
 {
     // initialize UI
     ui.setupUi(this);
@@ -113,26 +114,22 @@ void TestMaze_II::choose_action() {
         }
         break;
     case OPTIMAL_LOOK_AHEAD_TREE:
-        look_ahead_tree.build_tree<Maze>(
+        look_ahead_search.clear_tree();
+        look_ahead_search.build_tree<Maze>(
                 current_k_mdp_state,
-                tree_depth,
-                probability_threshold,
                 maze,
                 maze.get_prediction_ptr()
         );
-        action = look_ahead_tree.get_best_action();
-        look_ahead_tree.clear_tree();
+        action = look_ahead_search.get_optimal_action();
         break;
     case SPARSE_LOOK_AHEAD_TREE:
-        look_ahead_tree.build_tree<KMarkovCRF>(
+        look_ahead_search.clear_tree();
+        look_ahead_search.build_tree<KMarkovCRF>(
                 current_k_mdp_state,
-                tree_depth,
-                probability_threshold,
                 crf,
                 crf.get_prediction_ptr()
         );
-        action = look_ahead_tree.get_best_action();
-        look_ahead_tree.clear_tree();
+        action = look_ahead_search.get_optimal_action();
         break;
     case KMDP_LOOK_AHEAD_TREE:
         action = Data::STAY;
@@ -140,7 +137,7 @@ void TestMaze_II::choose_action() {
         break;
     default:
         action = Data::STAY;
-        DEBUG_OUT(0,"Error: undefined action type --> choosing stay");
+        DEBUG_OUT(0,"Error: undefined action type --> choosing STAY");
         break;
     }
     state_t state_to;
@@ -220,6 +217,7 @@ void TestMaze_II::process_console_input() {
     QString optimal_look_ahead_tree_s(  "    optimal-look-ahead-tree. . [<int>[<double>]] . . . . . . -> use known predictions for Look-Ahead-Tree [ depth [ threshold ] ]");
     QString sparse_look_ahead_tree_s(   "    sparse-look-ahead-tree . . [<int>[<double>]] . . . . . . -> use sparse model for Look-Ahead-Tree [ depth [ threshold ] ]");
     QString kmdp_look_ahead_tree_s(     "    kmdp-look-ahead-tree . . . [<int>[<double>]] . . . . . . -> use k-MDP model for Look-Ahead-Tree [ depth [ threshold ] ]");
+    QString print_look_ahead_tree_s(    "    print-tree . . . . . . . . . . . . . . . . . . . . . . . -> print Look-Ahead-Tree");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -287,6 +285,7 @@ void TestMaze_II::process_console_input() {
             ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
+            ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             action_t action = Data::LEFT;
             state_t state_to;
@@ -414,7 +413,7 @@ void TestMaze_II::process_console_input() {
                 ui._wConsoleOutput->appendPlainText("    " + QString::number(discount));
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
-                look_ahead_tree.set_discount(discount);
+                look_ahead_search.set_discount(discount);
                 if(q_iteration_available) {
                     q_iteration_object->set_discount(discount);
                 }
@@ -438,13 +437,17 @@ void TestMaze_II::process_console_input() {
                     ui._wConsoleOutput->appendPlainText(QString("    Exact KL-Divergence = %1").arg(kl));
                 } else if(str_args[2]=="mc") {
                     if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
+                        probability_t model_l, maze_l;
                         probability_t kl = maze.validate_model<KMarkovCRF>(
                                 crf,
                                 crf.get_prediction_ptr(),
                                 Maze::MONTE_CARLO_VALIDATION,
-                                int_args[3]
+                                int_args[3],
+                                &model_l,
+                                &maze_l
                         );
                         ui._wConsoleOutput->appendPlainText(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+                        ui._wConsoleOutput->appendPlainText(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
                     } else {
                         ui._wConsoleOutput->appendPlainText( "    Please specify a valid sample size" );
                     }
@@ -453,29 +456,7 @@ void TestMaze_II::process_console_input() {
                     ui._wConsoleOutput->appendPlainText( validate_s );
                 }
             } else if(str_args[1]=="kmdp") {
-                if(str_args.size()==2 || str_args[2]=="exact") {
-                    probability_t kl = maze.validate_model<KMarkovCRF>(
-                            crf,
-                            crf.get_prediction_ptr(),
-                            Maze::EXACT_VALIDATION
-                    );
-                    ui._wConsoleOutput->appendPlainText(QString("    Exact KL-Divergence = %1").arg(kl));
-                } else if(str_args[2]=="mc") {
-                    if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
-                        probability_t kl = maze.validate_model<KMarkovCRF>(
-                                crf,
-                                crf.get_prediction_ptr(),
-                                Maze::MONTE_CARLO_VALIDATION,
-                                int_args[3]
-                        );
-                        ui._wConsoleOutput->appendPlainText(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-                    } else {
-                        ui._wConsoleOutput->appendPlainText( "    Please specify a valid sample size" );
-                    }
-                } else {
-                    ui._wConsoleOutput->appendPlainText( invalid_s );
-                    ui._wConsoleOutput->appendPlainText( validate_s );
-                }
+                ui._wConsoleOutput->appendPlainText( "    Sorry, not implemented" );
             } else {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
                 ui._wConsoleOutput->appendPlainText( validate_s );
@@ -515,40 +496,40 @@ void TestMaze_II::process_console_input() {
             QApplication::quit();
         } else if(str_args[0]=="optimal-look-ahead-tree") {
             action_type = OPTIMAL_LOOK_AHEAD_TREE;
-            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-                tree_depth = int_args[1];
-                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-                    probability_threshold = double_args[2];
-                } else {
-                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-                }
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-            }
+//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+//                tree_depth = int_args[1];
+//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+//                    probability_threshold = double_args[2];
+//                } else {
+//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+//                }
+//            } else {
+//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+//            }
         } else if(str_args[0]=="sparse-look-ahead-tree") {
             action_type = SPARSE_LOOK_AHEAD_TREE;
-            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-                tree_depth = int_args[1];
-                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-                    probability_threshold = double_args[2];
-                } else {
-                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-                }
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-            }
+//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+//                tree_depth = int_args[1];
+//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+//                    probability_threshold = double_args[2];
+//                } else {
+//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+//                }
+//            } else {
+//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+//            }
         } else if(str_args[0]=="kmdp-look-ahead-tree") {
             action_type = KMDP_LOOK_AHEAD_TREE;
-            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-                tree_depth = int_args[1];
-                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-                    probability_threshold = double_args[2];
-                } else {
-                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-                }
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-            }
+//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+//                tree_depth = int_args[1];
+//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+//                    probability_threshold = double_args[2];
+//                } else {
+//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+//                }
+//            } else {
+//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+//            }
         } else if(str_args[0]=="optimal-iteration") {
             if(q_iteration_available) {
                 q_iteration_object->clear();
@@ -576,6 +557,8 @@ void TestMaze_II::process_console_input() {
             } else {
                 ui._wConsoleOutput->appendPlainText( "    Q-Iteration only available for 2x2 mazes.");
             }
+        } else if(str_args[0]=="print-tree") { // print tree
+            look_ahead_search.print_tree(true,true);
         } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
             if(str_args.size()==1) {
                 ui._wConsoleOutput->appendPlainText( invalid_s );

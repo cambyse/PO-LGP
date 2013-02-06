@@ -3,7 +3,7 @@ TARGET = TestMaze_II
 QT += core \
     gui \
     svg
-HEADERS += LoopyLookAhead.h \
+HEADERS += LookAheadSearch.h \
     LookAheadGraph.h \
     LookAheadTree.h \
     MCTS.h \
@@ -18,7 +18,7 @@ HEADERS += LoopyLookAhead.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     Feature.h
-SOURCES += LoopyLookAhead.cpp \
+SOURCES += LookAheadSearch.cpp \
     LookAheadGraph.cpp \
     LookAheadTree.cpp \
     MCTS.cpp \

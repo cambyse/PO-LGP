@@ -14,6 +14,8 @@
 #include <tuple>
 #include <deque>
 #include <vector>
+#include <string>
+#include <sstream>
 
 #include "Data.h"
 #include "QIteration.h"
@@ -50,6 +52,11 @@ public:
         idx_t state_idx() const { return index; }
         idx_t x() const { return index%Data::maze_x_dim; }
         idx_t y() const { return index/Data::maze_x_dim; }
+        std::string print() {
+            std::stringstream ss;
+            ss << "(" << x() << "," << y() << ")";
+            return ss.str();
+        }
     private:
         idx_t index;
     };
@@ -71,7 +78,9 @@ public:
             const Model& model,
             probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
             VALIDATION_TYPE type,
-            size_t samples = 0
+            size_t samples = 0,
+            probability_t * mean_model_likelihood = nullptr,
+            probability_t * mean_maze_likelihood = nullptr
     );
 
     void set_time_delay(const int& new_time_delay);
@@ -133,9 +142,17 @@ Maze::probability_t Maze::validate_model(
         const Model& model,
         probability_t(Model::*prediction)(const Data::k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
         VALIDATION_TYPE type,
-        size_t samples
+        size_t samples,
+        probability_t * mean_model_likelihood,
+        probability_t * mean_maze_likelihood
 ) {
     probability_t kl_divergence = 0;
+    if(mean_model_likelihood!=nullptr) {
+        *mean_model_likelihood = 0;
+    }
+    if(mean_maze_likelihood!=nullptr) {
+        *mean_maze_likelihood = 0;
+    }
     switch(type) {
     case MONTE_CARLO_VALIDATION:
         for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
@@ -147,6 +164,18 @@ Maze::probability_t Maze::validate_model(
             probability_t p_maze = get_prediction(k_mdp_state,action,state,reward);
             probability_t p_model = (model.*prediction)(k_mdp_state,action,state,reward);
             kl_divergence += log(p_maze/p_model);
+            if(mean_model_likelihood!=nullptr) {
+                *mean_model_likelihood += p_model;
+            }
+            if(mean_maze_likelihood!=nullptr) {
+                *mean_maze_likelihood += p_maze;
+            }
+        }
+        if(mean_model_likelihood!=nullptr) {
+            *mean_model_likelihood/=samples;
+        }
+        if(mean_maze_likelihood!=nullptr) {
+            *mean_maze_likelihood/=samples;
         }
         return kl_divergence/samples;
     case EXACT_VALIDATION:
