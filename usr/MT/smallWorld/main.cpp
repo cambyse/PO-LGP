@@ -10,11 +10,16 @@ struct ArrRepresentation:arr,TypeBase{};
 struct DoubleRepresentation:arr,TypeBase{};
 
 //-- this is how the developer should provide a module
-struct ComputeSum: MODULE_BASE(ComputeSum){
+DECLARE_MODULE(ComputeSum);
+
+struct ComputeSum:ComputeSum_Base {
   VAR(arr, x);    //input
   VAR(double, s); //output
 
-  ComputeSum(){}          //replaces old 'open'
+  ComputeSum(){
+
+    int i = 5-3;
+  }          //replaces old 'open'
   virtual ~ComputeSum(){} //replaces old 'close'
 
   virtual void step();
@@ -40,7 +45,9 @@ bool ComputeSum::test(){
 
 template<class T>
 void testModule(){
-  Item *modit = registry().getItem("module", typeid(T).name());
+  Item *modit = registry().getItem("moduledecl", typeid(T).name());
+  CHECK(modit,"");
+
   //create the module
   T *mod = (T*)modit->newInstance();
   //create the variables
@@ -57,6 +64,8 @@ int main(int argc, char** argv){
   cout <<registry() <<endl;
 
   testModule<ComputeSum>();
+
+  cout <<registry() <<endl;
 
   return 0;
 }

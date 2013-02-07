@@ -19,10 +19,10 @@ REGISTER_TYPE_DERIVED(Derived,NewType)
 
 // minimalistic explicit example for using the registrator tool
 
-struct Container:Registrator<Container,void>{
-  //void *dummy1(){ return reg.force(); } //don't need this if we also call forceSub
-  void *dummy2(){ return staticRegistrator.forceSub<double>(); }
-};
+//struct Container:Registrator<Container,void>{
+//  //void *dummy1(){ return reg.force(); } //don't need this if we also call forceSub
+//  void *dummy2(){ return staticRegistrator.forceSub<double>(); }
+//};
 
 
 int main(int argn,char** argv){

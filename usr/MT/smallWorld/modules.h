@@ -23,7 +23,10 @@ enum UnitKind { none=0, module, varaccess };
 template<class T, class P>
 struct UnitRegistry:Item{
   UnitKind kind;
-  UnitRegistry(const StringA& _keys, const ItemL& _parents, UnitKind _kind, MapGraph *container=NULL):kind(_kind){
+  T *instantiatedObject;
+  UnitRegistry(const StringA& _keys, const ItemL& _parents, UnitKind _kind, T *_obj, MapGraph *container):
+    kind(_kind),
+    instantiatedObject(_obj){
     keys=_keys;
     parents=_parents;
     if(container) container->append(this);
@@ -34,6 +37,27 @@ struct UnitRegistry:Item{
   virtual void *newInstance() const { return new T; }
 };
 
+template<class T, class P>
+Item* registerUnit(T *instance, const char *name, UnitKind kind, Item *parent1=NULL, Item *parent2=NULL){
+  ItemL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
+  if(!name) name=typeid(T).name();
+  if(!instance){
+    if(kind==module)
+      return new UnitRegistry<T, void>(
+            STRINGS("moduledecl", name), parents, kind, instance, &registry());
+    if(kind==varaccess)
+      return new UnitRegistry<T, void>(
+            STRINGS("accdecl", name), parents, kind, instance, &registry());
+  }else{
+    if(kind==module)
+      return new UnitRegistry<T, void>(
+            STRINGS("module", name), parents, kind, instance, &registry());
+    if(kind==varaccess)
+      return new UnitRegistry<T, void>(
+            STRINGS("acc", name), parents, kind, instance, &registry());
+  }
+}
+
 
 //===========================================================================
 //
@@ -41,10 +65,11 @@ struct UnitRegistry:Item{
 //
 
 struct VariableAccess{
+  Module *module;
   const char* name;
   const std::type_info* typeinfo;
-  VariableAccess(const char* _name, const std::type_info* _typeinfo):name(_name), typeinfo(_typeinfo) {}
-  void write(ostream& os) const{ os <<name <<' ' <<typeinfo->name(); }
+  VariableAccess(const char* _name, const std::type_info* _typeinfo):module(NULL), name(_name), typeinfo(_typeinfo) {}
+  void write(ostream& os) const{ os <<name; }
   virtual void createOwnVariable() = 0;
 };
 stdOutPipe(VariableAccess);
@@ -54,7 +79,13 @@ typedef MT::Array<VariableAccess*> VariableAccessL;
 template<class T>
 struct VariableAccess_typed:VariableAccess{
   T *var;
-  VariableAccess_typed(const char* name):VariableAccess(name,&typeid(T)), var(NULL){ }
+  VariableAccess_typed(const char* name=NULL):VariableAccess(name,&typeid(T)), var(NULL){ //called at INSTANTIATION of a module
+//    Item *it = new UnitRegistry<T,void>(
+//          STRINGS("acc", name),
+//          ARRAY<Item*>(), //staticRegistrator.regItem),
+//          varaccess,
+//          &registry());
+  }
   T& get(Module *m){ CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized"); return *var; }
   int set(const T& x, Module *m){ CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized"); *var=x; return 0; }
   virtual void createOwnVariable(){ CHECK(!var,""); var = new T; }
@@ -67,13 +98,12 @@ struct VariableAccess_typed:VariableAccess{
 //
 
 struct Module{
-  static VariableAccessL accesses;
-  Module(){}
+  const char *name;
+  VariableAccessL accesses;
+  Module(const char *_name):name(_name){}
   virtual ~Module(){};
   virtual void step() = 0;
 };
-
-VariableAccessL Module::accesses;
 
 
 //===========================================================================
@@ -90,28 +120,35 @@ VariableAccessL Module::accesses;
    Here, we append a type registration to the global registry() */
 template<class T, class P> struct Registrator{
   struct StaticRegistrator{
-    StaticRegistrator(){
+    Item *regItem;
+    UnitKind kind;
+    StaticRegistrator(){ //called whenever a module is DECLARED
       //** this is the code executed during registration (__static_init...)
-      ItemL parents;
+      regItem = NULL;
+      kind = module;
       Item *parent = NULL;
-      UnitKind kind=module;
       if(typeid(P)!=typeid(void)){ //dependence registry
-        parent = registry().getItem("module", typeid(P).name());
+        parent = registry().getItem("moduledecl", typeid(P).name());
         CHECK(parent,"");
-        parents.append(parent);
         kind=varaccess;
       }
-      Item *it = new UnitRegistry<T,P>(
-            STRINGS((kind==module?"module":"var"), typeid(T).name()),
-            parents,
-            kind,
-            &registry());
-      if(parent) parent->parentOf.append(it);
+      regItem = registerUnit<T,P>(NULL, NULL, kind, parent);
+      if(parent) parent->parentOf.append(regItem);
     }
     void* force(){ return &staticRegistrator; }
-    template<class S> void* forceSub(){ return &Registrator<S,T>::staticRegistrator; }
   };
   static StaticRegistrator staticRegistrator;
+  Item *regItem;
+  T *instantiatedObject;
+  Registrator(T *obj):regItem(NULL), instantiatedObject(obj){ //called whenever a module is INSTANTIATED
+  }
+  void regis(const char *name, Item *parentItem){
+    regItem = registerUnit<T,P>(instantiatedObject,
+                                name,
+                                staticRegistrator.kind,
+                                parentItem,
+                                staticRegistrator.regItem);
+  }
   void write(std::ostream& os) const{};
   void read(std::istream& os){};
 };
@@ -129,16 +166,33 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
 // and its constructor executed, which does the registration
 
 #define VAR(type, name) \
-  struct name##_Access:VariableAccess_typed<type>{ \
-    name##_Access():VariableAccess_typed<type>(#name){ accesses.append(this); } \
+  struct name##_Access:VariableAccess_typed<type>, Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>{ \
+  name##_Access():VariableAccess_typed<type>(#name),  Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>(this){ \
+      uint offset = (uint)&((__MODULE_TYPE__*)NULL)->name##_access; \
+      __MODULE_TYPE__ *thisModule = (__MODULE_TYPE__*)((char*)this - (char*)offset); \
+      thisModule->accesses.append(this); \
+      Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>::regis(#name, thisModule->regItem); \
+      module = thisModule; \
+    } \
   } name##_access; \
-  inline void name##_forceRegistration(){ staticRegistrator.forceSub<type>(); } \
-  inline type& get_##name(){ return name##_access.get(this); } \
-  inline int  set_##name(const type& _x){ return name##_access.set(_x,this); }
+  inline type& get_##name(){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.get(this); } \
+  inline int  set_##name(const type& _x){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.set(_x,this); }
 
+//inline void name##_Access_forceRegistration(){ staticRegistrator.force(); } \
+//inline void name##_forceRegistration(){ staticRegistrator.forceSub<type>(); } \
 
 //#define PARAM (type, name, default) \
 //  ParameterAccess_typed<type, default> name##_access; \
 //  inline type get_##name(){ return name##_access.get(); }
 
-#define MODULE_BASE(name)  Registrator<name, void>, Module
+
+#define DECLARE_MODULE(name) \
+  struct name; \
+  struct name##_Base: Module, Registrator<name, void> { \
+    typedef name __MODULE_TYPE__; \
+    inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
+    name##_Base(): Module(#name), Registrator<name, void>((name*)this) { \
+      Registrator<name, void>::regis(#name, NULL); \
+    } \
+  };
+
