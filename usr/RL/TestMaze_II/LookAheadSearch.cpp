@@ -54,9 +54,7 @@ root_node(INVALID),
 node_info_map(graph),
 arc_info_map(graph),
 discount(d),
-optimal_action_selection_type(MAX_LOWER_BOUND),
-tree_action_selection_type(MAX_UPPER_BOUND),
-tree_state_selection_type(MAX_UNCERTAINTY)
+number_of_nodes(0)
 {}
 
 LookAheadSearch::~LookAheadSearch() {}
@@ -64,6 +62,7 @@ LookAheadSearch::~LookAheadSearch() {}
 void LookAheadSearch::clear_tree() {
     DEBUG_OUT(1,"Clearing graph");
     graph.clear();
+    number_of_nodes = 0;
     root_node = INVALID;
 }
 
@@ -104,8 +103,8 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
 
     if(text) {
         DEBUG_OUT(0,"Print all nodes:");
-        std::vector<node_t> * current_nodes = new std::vector<node_t>();
-        std::vector<node_t> * next_nodes = new std::vector<node_t>();
+        node_vector_t * current_nodes = new node_vector_t();
+        node_vector_t * next_nodes = new node_vector_t();
         current_nodes->push_back(root_node);
         while(current_nodes->size()>0) {
             for(idx_t idx=0; idx<current_nodes->size(); ++idx) {
@@ -116,7 +115,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
                 }
             }
             DEBUG_OUT(0,"--------------------");
-            std::vector<node_t> * tmp = next_nodes;
+            node_vector_t * tmp = next_nodes;
             current_nodes->clear();
             next_nodes = current_nodes;
             current_nodes = tmp;
@@ -175,7 +174,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         }
 
         // node indices for randomization
-        std::vector<node_t> node_vector;
+        node_vector_t node_vector;
         for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
             node_vector.push_back(node);
         }
@@ -251,6 +250,74 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
     }
 }
 
+void LookAheadSearch::print_tree_statistics() const {
+    node_vector_t * current_level = new node_vector_t();
+    node_vector_t * next_level = new node_vector_t();
+    size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0;
+    current_level->push_back(root_node);
+    DEBUG_OUT(0,"Printing tree statistics");
+    while(current_level->size()>0) {
+        DEBUG_OUT(0,"    Level " << level_counter << ": " << current_level->size() << " nodes");
+        for(idx_t idx=0; idx<current_level->size(); ++idx) {
+            ++total_node_counter;
+            for(graph_t::OutArcIt out_arc(graph,(*current_level)[idx]); out_arc!=INVALID; ++out_arc) {
+                ++total_arc_counter;
+                next_level->push_back(graph.target(out_arc));
+            }
+        }
+        current_level->clear();
+        node_vector_t * tmp = current_level;
+        current_level = next_level;
+        next_level = tmp;
+        ++level_counter;
+    }
+    delete current_level;
+    delete next_level;
+
+    if(total_node_counter!=number_of_nodes) {
+        DEBUG_OUT(0,"Error: Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes);
+    }
+
+    DEBUG_OUT(0,"    Tree has a total of " << total_node_counter << " nodes and " << total_arc_counter << " arcs");
+
+    DEBUG_OUT(0,"    Values at root node:");
+    value_t min_lower_bound = DBL_MAX, max_upper_bound = -DBL_MAX;
+    for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
+        node_t action_node = graph.target(out_arc);
+        value_t lower_bound = node_info_map[action_node].lower_value_bound;
+        value_t upper_bound = node_info_map[action_node].upper_value_bound;
+        if(lower_bound<min_lower_bound) {
+            min_lower_bound=lower_bound;
+        }
+        if(upper_bound>max_upper_bound) {
+            max_upper_bound=upper_bound;
+        }
+    }
+    int width = 60;
+    DEBUG_OUT(0,QString("    |%1%2%3|")
+            .arg(min_lower_bound,11,'e',5,'0')
+            .arg(QString(' ').repeated(width-22))
+            .arg(max_upper_bound,11,'e',5,'0')
+            .toStdString()
+    );
+    for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
+        node_t action_node = graph.target(out_arc);
+        value_t lower_bound = node_info_map[action_node].lower_value_bound;
+        value_t upper_bound = node_info_map[action_node].upper_value_bound;
+        lower_bound -= min_lower_bound;
+        upper_bound -= min_lower_bound;
+        lower_bound /= (max_upper_bound-min_lower_bound);
+        upper_bound /= (max_upper_bound-min_lower_bound);
+        DEBUG_OUT(0, QString("    %1|%2|%3%4")
+                .arg(QString(' ').repeated(round(width*lower_bound)))
+                .arg(QString('-').repeated(round(width*(upper_bound-lower_bound))))
+                .arg(QString(' ').repeated(round(width*(1-upper_bound))))
+                .arg(Data::action_strings[Data::idx_from_action(node_info_map[action_node].action)])
+                .toStdString()
+        );
+    }
+}
+
 LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_node) {
     DEBUG_OUT(1,"Selecting next action");
     node_t action_node = INVALID;
@@ -265,6 +332,21 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
             current_upper_bound = node_info_map[current_action_node].upper_value_bound;
             if(current_upper_bound>max_upper_bound) { // todo randomize?
                 max_upper_bound = current_upper_bound;
+                action_node = current_action_node;
+            }
+        }
+        break;
+    }
+    case MAX_LOWER_BOUND:
+    {
+        DEBUG_OUT(2,"    using maximum lower bound as criterion");
+        value_t max_lower_bound = -DBL_MAX, current_lower_bound;
+        node_t current_action_node;
+        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+            current_action_node = graph.target(out_arc);
+            current_lower_bound = node_info_map[current_action_node].lower_value_bound;
+            if(current_lower_bound>max_lower_bound) { // todo randomize?
+                max_lower_bound = current_lower_bound;
                 action_node = current_action_node;
             }
         }
@@ -288,7 +370,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
     DEBUG_OUT(1,"Selecting next state");
     node_t state_node = INVALID;
     switch(tree_state_selection_type) {
-    case MAX_UNCERTAINTY:
+    case MAX_WEIGHTED_UNCERTAINTY:
     {
         DEBUG_OUT(2,"    using maximum uncertainty as criterion");
         value_t max_uncertainty = -DBL_MAX, current_uncertainty;
@@ -297,7 +379,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
             current_state_node = graph.target(out_arc);
             current_uncertainty = node_info_map[current_state_node].upper_value_bound - node_info_map[state_node].lower_value_bound;
             current_uncertainty *= arc_info_map[out_arc].prob;
-            if(current_uncertainty>max_uncertainty) { // randomize?
+            if(current_uncertainty>max_uncertainty) { // todo randomize?
                 max_uncertainty = current_uncertainty;
                 state_node = current_state_node;
             }
@@ -319,19 +401,28 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
 }
 
 LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) {
-    probability_t prob_sum = 0;
-    node_info_map[action_node].upper_value_bound = 0;
-    node_info_map[action_node].lower_value_bound = 0;
-    for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
-        node_t state_node = graph.target(out_arc);
-        probability_t state_prob = arc_info_map[out_arc].prob;
-        prob_sum += state_prob;
-        reward_t expected_transition_reward = arc_info_map[out_arc].expected_reward;
-        node_info_map[action_node].upper_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].upper_value_bound);
-        node_info_map[action_node].lower_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].lower_value_bound);
+    switch(action_back_propagation_type) {
+    case EXPECTED_BOUNDS:
+    {
+        probability_t prob_sum = 0;
+        node_info_map[action_node].upper_value_bound = 0;
+        node_info_map[action_node].lower_value_bound = 0;
+        for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
+            node_t state_node = graph.target(out_arc);
+            probability_t state_prob = arc_info_map[out_arc].prob;
+            prob_sum += state_prob;
+            reward_t expected_transition_reward = arc_info_map[out_arc].expected_reward;
+            node_info_map[action_node].upper_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].upper_value_bound);
+            node_info_map[action_node].lower_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].lower_value_bound);
+        }
+        if(fabs(prob_sum-1)>1e-10) {
+            DEBUG_OUT(0,"Error: Unnormalized state transition probabilities (p_sum=" << prob_sum << ")");
+        }
+        break;
     }
-    if(fabs(prob_sum-1)>1e-10) {
-        DEBUG_OUT(0,"Error: Unnormalized state transition probabilities (p_sum=" << prob_sum << ")");
+    default:
+        DEBUG_OUT(0,"Error: Action back-propagation type not implemented.");
+        break;
     }
 
     DEBUG_OUT(1,"Updated action node");
@@ -359,23 +450,24 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
 }
 
 LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
-    switch(tree_action_selection_type) {
-    case MAX_UPPER_BOUND:
+    switch(state_back_propagation_type) {
+    case MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER:
     {
-        value_t max_upper_bound= -DBL_MAX, current_upper_bound;
+        value_t max_upper_bound= -DBL_MAX, current_upper_bound, current_lower_bound;
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             node_t action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[action_node].upper_value_bound;
+            current_lower_bound = node_info_map[action_node].lower_value_bound;
             if(current_upper_bound>max_upper_bound) { // todo randomize?
                 max_upper_bound=current_upper_bound;
                 node_info_map[state_node].upper_value_bound = current_upper_bound;
-                node_info_map[state_node].lower_value_bound = node_info_map[action_node].lower_value_bound;
+                node_info_map[state_node].lower_value_bound = current_lower_bound;
             }
         }
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Action selection type (state update) not implemented.");
+        DEBUG_OUT(0,"Error: State back-propagation type not implemented.");
         break;
     }
 

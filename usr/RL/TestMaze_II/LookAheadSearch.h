@@ -1,10 +1,3 @@
-/*
- * LookAheadSearch.h
- *
- *  Created on: Feb 4, 2013
- *      Author: robert
- */
-
 #ifndef LOOKAHEADSEARCH_H_
 #define LOOKAHEADSEARCH_H_
 
@@ -80,7 +73,8 @@ public:
     void build_tree(
             const graph_state_t& root,
             const Model& model,
-            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
+            const size_t& max_node_counter = 0
     );
 
     /*! \brief Expand current tree by expanding one leaf
@@ -98,8 +92,11 @@ public:
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
 
-    /*! \brief Print the tree, optionally also as eps file. */
+    /*! \brief Print the tree to console and/or as eps file. */
     void print_tree(const bool& text, const bool& eps_export) const;
+
+    /*! \brief Print the tree statistics to console. */
+    void print_tree_statistics() const;
 
 protected:
 
@@ -110,11 +107,57 @@ protected:
     node_info_map_t node_info_map;
     arc_info_map_t arc_info_map;
     double discount;
+    size_t number_of_nodes;
 
-    enum NODE_SELECTION_TYPE { MAX_UPPER_BOUND, MAX_LOWER_BOUND, MAX_UNCERTAINTY };
-    NODE_SELECTION_TYPE optimal_action_selection_type;
-    NODE_SELECTION_TYPE tree_action_selection_type;
-    NODE_SELECTION_TYPE tree_state_selection_type;
+    /*! \brief Sets the way the upper and lower bounds
+     * are used for node selection and back-propagation. */
+    enum BOUND_USAGE_TYPE {
+
+        /*! Use maximum upper bound. */
+        MAX_UPPER_BOUND,
+
+        /*! Use maximum lower bound. */
+        MAX_LOWER_BOUND,
+
+        /*! Use maximum weighted uncertainty. */
+        MAX_WEIGHTED_UNCERTAINTY,
+
+        /*! Use expected lower and upper bounds. */
+        EXPECTED_BOUNDS,
+
+        /*! Use maximum upper bound for the upper bound and maximum lower bound for lower bound. */
+        MAX_UPPER_FOR_UPPER_MAX_LOWER_FOR_LOWER,
+
+        /*! Use maximum upper bound for the upper bound and the corresponding lower bound for lower bound. */
+        MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER
+    };
+
+    /*! \brief Defines how the optimal action is determined.
+     *
+     * Currently only LookAheadSearch::MAX_LOWER_BOUND is supported. */
+    const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_LOWER_BOUND;
+
+    /*! \brief Defines how action nodes are selected for further examination.
+     *
+     * Currently LookAheadSearch::MAX_UPPER_BOUND and LookAheadSearch::MAX_LOWER_BOUND are supported. */
+    const BOUND_USAGE_TYPE tree_action_selection_type    = MAX_UPPER_BOUND;
+
+    /*! \brief Defines how state nodes are selected for further examination.
+     *
+     * Currently only LookAheadSearch::MAX_WEIGHTED_UNCERTAINTY is supported. */
+    const BOUND_USAGE_TYPE tree_state_selection_type     = MAX_WEIGHTED_UNCERTAINTY;
+
+    /*! \brief Defines how state bounds are used for calculating
+     * action bounds in back-propagation.
+     *
+     * Currently only LookAheadSearch::EXPECTED_BOUNDS is supported. */
+    const BOUND_USAGE_TYPE action_back_propagation_type  = EXPECTED_BOUNDS;
+
+    /*! \brief Defines how action bounds are used for calculating
+     * state bounds in back-propagation.
+     *
+     * Currently only LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER is supported. */
+    const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */
     node_t select_next_action_node(node_t state_node);
@@ -171,7 +214,8 @@ template < class Model >
 void LookAheadSearch::build_tree(
         const graph_state_t& root,
         const Model& model,
-        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
+        const size_t& max_node_counter
 ) {
 
     DEBUG_OUT(1,"Building new search tree");
@@ -181,6 +225,7 @@ void LookAheadSearch::build_tree(
 
     // add root node
     root_node = graph.addNode();
+    ++number_of_nodes;
     node_info_map[root_node] = NodeInfo(
             STATE,
             NOT_EXPANDED,
@@ -195,12 +240,10 @@ void LookAheadSearch::build_tree(
     update_state_node(root_node);
 
     // fully expand tree
-    size_t counter = 0;
     if(tree_needs_further_expansion()) {
         while(expand_tree(model,prediction)) {
-            ++counter;
-            if(counter>1000) {
-                DEBUG_OUT(0,"Abort: Tree was extended 1000 times");
+            if(max_node_counter>0 && number_of_nodes>max_node_counter) {
+                DEBUG_OUT(0,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
                 break;
             }
         }
@@ -267,6 +310,7 @@ void LookAheadSearch::expand_leaf_node(
 
         // create new action node
         node_t action_node = graph.addNode();
+        ++number_of_nodes;
         node_info_map[action_node] = NodeInfo(
                 ACTION,
                 NOT_EXPANDED,
@@ -336,6 +380,7 @@ void LookAheadSearch::expand_action_node(
             probability_t prob = (model.*prediction)(k_mdp_state_from, action, new_state, new_reward);
             if(prob>0) {
                 new_state_node = graph.addNode();
+                ++number_of_nodes;
                 node_info_map[new_state_node] = NodeInfo(
                         STATE,
                         NOT_EXPANDED,

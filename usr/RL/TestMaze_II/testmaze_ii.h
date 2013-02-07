@@ -61,6 +61,9 @@ private:
 
     QTimer * random_timer, * action_timer, * value_iteration_timer;
 
+    std::vector<QString> console_history;
+    size_t history_position;
+
     //--------//
     // Models //
     //--------//
@@ -83,6 +86,7 @@ private:
     LookAheadSearch look_ahead_search;
 //    probability_t probability_threshold;
 //    size_t tree_depth;
+    size_t max_tree_size;
 
     //==================//
     // Member Functions //
@@ -97,6 +101,8 @@ private slots:
     void choose_action();
     void value_iteration();
     void process_console_input();
+    void back_in_history();
+    void forward_in_history();
 
 };
 

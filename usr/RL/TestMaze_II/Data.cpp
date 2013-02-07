@@ -9,7 +9,7 @@ using std::get;
 using std::make_tuple;
 
 
-const char*          Data::action_strings[5] = { " STAY", "   UP", " DOWN", " LEFT", "RIGHT" };
+const char*          Data::action_strings[5] = { "STAY ", "UP   ", "DOWN ", "LEFT ", "RIGHT" };
 const Data::size_t   Data::action_n          = NUMBER_OF_ACTIONS;
 const Data::size_t   Data::maze_x_dim        = 4;
 const Data::size_t   Data::maze_y_dim        = 4;
