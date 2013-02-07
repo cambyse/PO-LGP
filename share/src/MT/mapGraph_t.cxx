@@ -20,19 +20,26 @@ template <typename B, typename D> struct is_base_of {
 
 template<class T>
 struct Item_typed:Item {
-  T value;
+  T *value;
 
-  Item_typed(const T& _value):value(_value){}
+  Item_typed():value(NULL){}
+  Item_typed(T *_value):value(_value){}
+  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, MapGraph *container=NULL):value(NULL){
+    value = new T(_value);
+    keys=_keys;
+    parents=_parents;
+    if(container) container->append(this);
+  }
 
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, MapGraph *container=NULL):value(_value){
+  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, MapGraph *container=NULL):value(_value){
     keys=_keys;
     parents=_parents;
     if(container) container->append(this);
   }
 
   virtual void writeValue(std::ostream &os) const {
-    if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(&value), os, " ");
-    else os <<value;
+    if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
+    else os <<*value;
   }
 
   virtual const std::type_info& valueType() const {
@@ -46,46 +53,47 @@ struct Item_typed:Item {
   virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
 };
 
-template<class T> T& Item::value(){
+template<class T> T *Item::value(){
   Item_typed<T>* typed = dynamic_cast<Item_typed<T>*>(this);
   if(!typed){
     MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
-    return *((T*)NULL);
+    return NULL;
   }
   return typed->value;
 }
 
-template<class T> const T& Item::value() const{
+template<class T> const T *Item::value() const{
   const Item_typed<T>* typed = dynamic_cast<const Item_typed<T>*>(this);
   if(!typed){
     MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
-    return *((T*)NULL);
+    return NULL;
   }
   return typed->value;
 }
 
 
-template<class T> T* MapGraph::get(const char *key){
+template<class T> T* MapGraph::getValue(const char *key){
   Item *it = getItem(key);
   if(!it) return NULL;
-  return &it->value<T>();
+  return it->value<T>();
 }
 
-template<class T> Item* MapGraph::getTypedItem(const char* key){
+template<class T> MapGraph MapGraph::getTypedItems(const char* key){
+  MapGraph ret;
   for_list_(Item, it, (*this)) if(it->valueType()==typeid(T))
-    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
-  return NULL;
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return ret.append(it);
+  return ret;
 }
 
-template<class T> Item *MapGraph::append(const StringA& keys, const ItemL& parents, const T& x){
+template<class T> Item *MapGraph::append(const StringA& keys, const ItemL& parents, T *x){
   return append(new Item_typed<T>(keys, parents, x, NULL));
 }
 
-template <class T> MT::Array<T*> MapGraph::getDerivedItems(){
+template <class T> MT::Array<T*> MapGraph::getDerivedValues(){
   MT::Array<T*> ret;
   for_list_(Item, it, (*this)){
     if(it->is_derived_from_TypeBase()){
-      T *val= dynamic_cast<T*>(&(((Item_typed<TypeBase>*)it)->value));
+      T *val= dynamic_cast<T*>(((Item_typed<TypeBase>*)it)->value);
       if(val) ret.append(val);
     }
   }

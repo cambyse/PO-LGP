@@ -30,7 +30,7 @@ int main(int argn,char** argv){
   cout <<"** REGISTRY:\n" <<registry() <<endl;
 
   cout <<"** derived from TypeRegistration:\n";
-  listWrite(registry().getDerivedItems<TypeRegistration>(), cout, "\n");
+  listWrite(registry().getDerivedItems<TypeInfo>(), cout, "\n");
   cout <<endl;
 
   return 0;

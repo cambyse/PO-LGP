@@ -39,14 +39,14 @@ void Item::write(std::ostream& os) const {
   //-- write value
   if(valueType()==typeid(MapGraph)){
     os <<" {";
-    value<MapGraph>().write(os, ",");
+    value<MapGraph>()->write(os, ",");
     os <<" }";
-  }else if(valueType()==typeid(MT::String)){ os <<"='" <<value<MT::String>() <<'\'';
-  }else if(valueType()==typeid(arr)){        os <<'=' <<value<arr>();
-  }else if(valueType()==typeid(double)){     os <<'=' <<value<double>();
+  }else if(valueType()==typeid(MT::String)){ os <<"='" <<*value<MT::String>() <<'\'';
+  }else if(valueType()==typeid(arr)){        os <<'=' <<*value<arr>();
+  }else if(valueType()==typeid(double)){     os <<'=' <<*value<double>();
   }else if(valueType()==typeid(bool)){       os <<',';
   }else{
-    TypeRegistration *t = reg_findType(valueType().name());
+    TypeInfo *t = reg_findType(valueType().name());
     if(t && t->keys.N>1){
       os <<"=<" <<t->keys(1) <<' ';
       writeValue(os);
@@ -100,32 +100,32 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
 
   //-- read value
   if(c==',' || c==';'){ //boolean
-    item = new Item_typed<bool>(keys, parents, true);
+    item = new Item_typed<bool>(keys, parents, new bool(true));
   }else if(c=='=' || c=='{'){
     if(c=='=') c=MT::getNextChar(is);
     if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String
       is.putback(c);
       str.read(is, "", " \n\r\t,;}", false);
-      item = new Item_typed<MT::String>(keys, parents, str);
+      item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
     }else if(MT::contains("-.0123456789", c)) {  //single double
       is.putback(c);
       double d;
       try { is >>d; } catch(...) PARSERR("can't parse double");
-      item = new Item_typed<double>(keys, parents, d);
+      item = new Item_typed<double>(keys, parents, new double(d));
     }else switch(c) {
     case '\'': { //MT::String
       str.read(is, "", "\'", true);
-      item = new Item_typed<MT::String>(keys, parents, str);
+      item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
     } break;
     case '\"': { //MT::String
       str.read(is, "", "\"", true);
-      item = new Item_typed<MT::String>(keys, parents, str);
+      item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
     } break;
     case '[': { //arr
       is.putback(c);
       arr reals;
       is >>reals;
-      item = new Item_typed<arr>(keys, parents, reals);
+      item = new Item_typed<arr>(keys, parents, new arr(reals));
     } break;
     case '<': { //any type parser
       str.read(is, " \t", " \t\n\r()`-=~!@#$%^&*()+[]{};'\\:|,./<>?", false);
@@ -143,8 +143,8 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
       MT::parse(is, ">");
     } break;
     case '{': { // MapGraph (e.g., attribute list)
-      MapGraph subList;
-      subList.read(is);
+      MapGraph *subList = new MapGraph;
+      subList->read(is);
       MT::parse(is, "}");
       item = new Item_typed<MapGraph>(keys, parents, subList);
     } break;
@@ -162,7 +162,7 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
         }
       }
       MT::parse(is, ")");
-      item = new Item_typed<ItemL>(keys, parents, refs);
+      item = new Item_typed<ItemL>(keys, parents, new ItemL(refs));
     } break;
     default: { //boolean
       is.putback(c);
@@ -225,8 +225,8 @@ Item* MapGraph::getItem(const char *key1, const char *key2){
   return NULL;
 }
 
-ItemL MapGraph::getItems(const char* key){
-  ItemL ret;
+MapGraph MapGraph::getItems(const char* key){
+  MapGraph ret;
   for_list_(Item, it, (*this)){
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key){ ret.append(it); break; }
   }
@@ -303,7 +303,7 @@ void MapGraph::read(std::istream& is) {
 void MapGraph::write(std::ostream& os, const char *ELEMSEP, const char *delim) const{
   uint i;
   if(delim) os <<delim[0];
-  for(i=0; i<N; i++) { if(i) os <<ELEMSEP;  if(elem(i)) os <<*elem(i); else os <<"<NULL>"; }
+  for(i=0; i<N; i++) { if(i) os <<ELEMSEP;  if(elem(i)) os <<*elem(i) <<flush; else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
 

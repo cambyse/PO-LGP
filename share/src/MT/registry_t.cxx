@@ -8,27 +8,30 @@
 template<class T> typename Singleton<T>::SingletonFields *Singleton<T>::singleton=NULL;
 
 template<class Type, class Base>
-struct TypeRegistration_typed:TypeRegistration{
-  TypeRegistration_typed(const char *_userType, const char *_key, const char *userBase, TypeRegistrationL *container ){
-    keys.append(MT::String(_userType));
-    if(_key) keys.append(MT::String(_key));
+struct TypeInfo_typed:TypeInfo{
+  TypeInfo_typed(){}
+  TypeInfo_typed(const char *key1, const char *key2, const char *userBase, TypeInfoL *container ){
+    if(key1) keys.append(MT::String(key1));
+    if(key2) keys.append(MT::String(key2));
+    keys.append(MT::String(typeid(Type).name()));
     if(userBase){
-      TypeRegistration* t = reg_findType(userBase);
+      TypeInfo *t=reg_findType<Base>();
       if(t) parents.append(t);
     }
     if(container){
       container->append(this);
     }
   }
-  virtual const std::type_info& typeinfo() const { return typeid(Type); }
-  virtual Item* read(istream& is) const{ Type x; is >>x; return new Item_typed<Type>(x); }
+  virtual const std::type_info& type_info() const { return typeid(Type); }
+  virtual Item* readItem(istream& is) const{ Type *x=new Type(); is >>*x; return new Item_typed<Type>(x); }
+  virtual void* newInstance() const { return new Type(); }
 };
 
 /*
 template <class T>
-TypeRegistrationL reg_findDerived(){
-  TypeRegistrationL results;
-  TypeRegistration *t, *p;
+TypeInfoL reg_findDerived(){
+  TypeInfoL results;
+  TypeInfo *t, *p;
   uint i,j;
   for_list(i, t, typeRegistry.get()){
     for_list(j, p, t->parents){

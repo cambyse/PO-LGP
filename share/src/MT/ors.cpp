@@ -2589,8 +2589,8 @@ void ors::Body::parseAts() {
   arr x;
   double d;
   MT::String str;
-  ats.get<Transformation>(X, "X");
-  ats.get<Transformation>(X, "pose");
+  ats.getValue<Transformation>(X, "X");
+  ats.getValue<Transformation>(X, "pose");
 
   //move shape attributes to shape
   Shape *s=NULL;
@@ -2612,7 +2612,7 @@ void ors::Body::parseAts() {
   if(s) s->parseAts();
 
   //mass properties
-  if(ats.get<double>(d, "mass")){
+  if(ats.getValue<double>(d, "mass")){
     mass=d;
 #if 1
     inertia.setId();
@@ -2630,9 +2630,9 @@ void ors::Body::parseAts() {
   }
 
   type=dynamicBT;
-  if(ats.get<bool>("fixed"))      type=staticBT;
-  if(ats.get<bool>("static"))     type=staticBT;
-  if(ats.get<bool>("kinematic"))  type=kinematicBT;
+  if(ats.getValue<bool>("fixed"))      type=staticBT;
+  if(ats.getValue<bool>("static"))     type=staticBT;
+  if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
 
 }
 
@@ -2675,13 +2675,13 @@ void ors::Shape::parseAts() {
   double d;
   arr x;
   MT::String str;
-  ats.get<Transformation>(rel, "rel");
-  if(ats.get<arr>(x, "size")) { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.get<arr>(x, "color")){ CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
-  if(ats.get<double>(d, "type")) type=(ShapeType)d;
-  if(ats.get<MT::String>(str, "mesh")) mesh.readFile(str);
-  if(ats.get<double>(d, "meshscale")) mesh.scale(d);
-  if(ats.get<bool>("contact"))    cont=true;
+  ats.getValue<Transformation>(rel, "rel");
+  if(ats.getValue<arr>(x, "size")) { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.getValue<arr>(x, "color")){ CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.getValue<double>(d, "type")) type=(ShapeType)d;
+  if(ats.getValue<MT::String>(str, "mesh")) mesh.readFile(str);
+  if(ats.getValue<double>(d, "meshscale")) mesh.scale(d);
+  if(ats.getValue<bool>("contact"))    cont=true;
 }
 
 void ors::Shape::reset() {
@@ -2745,15 +2745,15 @@ ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint) {
 void ors::Joint::parseAts() {
   //interpret some of the attributes
   double d;
-  ats.get<Transformation>(A, "A");
-  ats.get<Transformation>(A, "from");
-  if(ats.get<bool>("BinvA")) B.setInverse(A);
-  ats.get<Transformation>(B, "B");
-  ats.get<Transformation>(B, "to");
-  ats.get<Transformation>(Q, "Q");
-  ats.get<Transformation>(Q, "q");
-  ats.get<Transformation>(Xworld, "X");
-  if(ats.get<double>(d, "type")) type=(JointType)d; else type=hingeJT;
+  ats.getValue<Transformation>(A, "A");
+  ats.getValue<Transformation>(A, "from");
+  if(ats.getValue<bool>("BinvA")) B.setInverse(A);
+  ats.getValue<Transformation>(B, "B");
+  ats.getValue<Transformation>(B, "to");
+  ats.getValue<Transformation>(Q, "Q");
+  ats.getValue<Transformation>(Q, "q");
+  ats.getValue<Transformation>(Xworld, "X");
+  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=hingeJT;
 }
 
 void ors::Joint::write(std::ostream& os) const {
@@ -3974,7 +3974,7 @@ void ors::Graph::read(std::istream& is) {
 
     Body *b=new Body(*this);
     b->name = it->keys(1);
-    b->ats = it->value<MapGraph>();
+    b->ats = *it->value<MapGraph>();
     b->parseAts();
     if(b->shapes.N==1) {  //parsing has implicitly added a shape...
       Shape *s=b->shapes(0);
@@ -3994,7 +3994,7 @@ void ors::Graph::read(std::istream& is) {
     CHECK(b,"");
     Shape *s=new Shape(*this, b);
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats = it->value<MapGraph>();
+    s->ats = *it->value<MapGraph>();
     s->parseAts();
   }
 
@@ -4007,12 +4007,12 @@ void ors::Graph::read(std::istream& is) {
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
     Joint *j=new Joint(*this, from, to);
-    j->ats = it->value<MapGraph>();
+    j->ats = *it->value<MapGraph>();
     j->parseAts();
   }
 
   MT::String str;
-  if(G.get<MT::String>(str, "QlinFile")) {
+  if(G.getValue<MT::String>(str, "QlinFile")) {
     ifstream qlinfile;
     MT::open(qlinfile, str);
     Qlin.readTagged(qlinfile, "Qlin");
@@ -4153,8 +4153,8 @@ void ors::Graph::reportGlue(std::ostream *os) {
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=a->ats.get<bool>("glue");
-    bg=b->ats.get<bool>("glue");
+    ag=a->ats.getValue<bool>("glue");
+    bg=b->ats.getValue<bool>("glue");
     
     if(ag || bg) {
       (*os)
@@ -4192,8 +4192,8 @@ void ors::Graph::glueTouchingBodies() {
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=a->ats.get<bool>("glue");
-    bg=b->ats.get<bool>("glue");
+    ag=a->ats.getValue<bool>("glue");
+    bg=b->ats.getValue<bool>("glue");
     
     if(ag || bg) {
       //if(a->index > b->index){ c=a; a=b; b=c; } //order them topolgically
@@ -4572,7 +4572,7 @@ uint ors::Graph::getTouchDimension() {
   uint i=0, j;
   
   // count touchsensors
-  for_list(j, n, bodies) if(ats.get<double>(n->ats, "touchsensor", 0)) i++;
+  for_list(j, n, bodies) if(ats.getValue<double>(n->ats, "touchsensor", 0)) i++;
   
   td=i;
   return i;
@@ -4586,7 +4586,7 @@ void ors::Graph::getTouchState(arr& touch) {
   Body *n;
   uint i=0, j;
   for_list(j, n, bodies) {
-    if(ats.get<double>(n->ats, "touchsensor", 0)) {
+    if(ats.getValue<double>(n->ats, "touchsensor", 0)) {
       touch(i)=pen(n->index);
       i++;
     }

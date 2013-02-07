@@ -59,33 +59,50 @@ struct Singleton{
 // define a type registry
 //
 
-struct TypeRegistration:TypeBase{
+struct TypeInfo:TypeBase{
   StringA keys;
-  MT::Array<TypeRegistration*> parents;
-  virtual const std::type_info& typeinfo() const = 0;
-  virtual struct Item* read(istream&) const = 0;
-  virtual void* newInstance() const { NIY }
+  MT::Array<TypeInfo*> parents;
+  virtual const std::type_info& type_info() const {NIY};
+  virtual struct Item* readItem(istream&) const {NIY};
+  virtual void* newInstance() const {NIY}
   void write(std::ostream& os) const{
-    os <<"Type '" <<keys <<"' [" <<typeinfo().name() <<"] ";
+    os <<"Type '" <<keys <<"' [" <<type_info().name() <<"] ";
     if(parents.N){
       cout <<"parents=[";
-      for_list_(TypeRegistration, p, parents) cout <<' ' <<p->typeinfo().name();
+      for_list_(TypeInfo, p, parents) cout <<' ' <<p->type_info().name();
       cout <<" ]";
     }
   }
+  void read(std::istream& is) const{ NIY; }
 };
-stdOutPipe(TypeRegistration);
+stdPipes(TypeInfo);
 
-typedef MT::Array<TypeRegistration*> TypeRegistrationL;
+typedef MT::Array<TypeInfo*> TypeInfoL;
 
 // user interface
 
 //-- query existing types
-TypeRegistration* reg_findType(const char* type);
-template <class T> TypeRegistrationL reg_findDerived();
-inline Item* readTypeIntoItem(const char* type, std::istream& is){
-  TypeRegistration *it = reg_findType(type);
-  if(it) return it->read(is);
+template <class T> TypeInfoL reg_findDerived();
+inline TypeInfo *reg_findType(const char* key){
+  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
+  for_list_(TypeInfo, ti, types){
+    for(uint i=0;i<ti->keys.N;i++) if(ti->keys(i)==key) return ti;
+  }
+  return NULL;
+}
+template<class T>
+TypeInfo *reg_findType(){
+  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
+  for_list_(TypeInfo, ti, types){
+    if(ti->type_info()==typeid(T)) return ti;
+  }
+  return NULL;
+}
+
+inline Item* readTypeIntoItem(const char* key, std::istream& is){
+  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
+  TypeInfo *ti = reg_findType(key);
+  if(ti) return ti->readItem(is);
   return NULL;
 }
 
@@ -93,15 +110,15 @@ inline Item* readTypeIntoItem(const char* type, std::istream& is){
 
 #define KO ,
 #define REGISTER_TYPE(Type) \
-  REGISTER_ITEM2(TypeRegistration_typed<Type KO void>, type, Type, TypeRegistration_typed<Type KO void>(#Type,NULL,NULL,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, type, Type, new TypeInfo_typed<Type KO void>(#Type,NULL,NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Type, NULL)
 
 #define REGISTER_TYPE_Key(Key, Type) \
-  REGISTER_ITEM2(TypeRegistration_typed<Type KO void>, type, Key, TypeRegistration_typed<Type KO void>(#Type,NULL,NULL,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, type, Key, new TypeInfo_typed<Type KO void>(#Type,#Key,NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Key, NULL);
 
 #define REGISTER_TYPE_DERIVED(Type, Base) \
-  REGISTER_ITEM2(TypeRegistration_typed<Type KO Base>, type, Type, TypeRegistration_typed<Type KO Base>(#Type,NULL,#Base,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO Base>, type, Type, new TypeInfo_typed<Type KO Base>(#Type,NULL,#Base,NULL));
 
 #include "registry_t.cxx"
 

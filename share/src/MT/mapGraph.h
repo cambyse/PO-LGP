@@ -9,6 +9,8 @@ struct MapGraph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
 struct TypeBase{ virtual ~TypeBase(){}; }; //if types derive from TypeBase, more tricks are possible
+inline std::istream& operator>>(std::istream&, TypeBase&){ NIY; }
+inline std::ostream& operator<<(std::ostream&, const TypeBase&){ NIY; }
 
 struct Item {
   StringA keys;
@@ -16,14 +18,13 @@ struct Item {
   ItemL parentOf;
   uint index;
   virtual ~Item() {};
-  template<class T> T& value();    //access the value
-  template<class T> const T& value() const;
+  template<class T> T *value();    //access the value
+  template<class T> const T *value() const;
   void write(std::ostream &os) const;
-  virtual void writeValue(std::ostream &os) const = 0;
-  virtual const std::type_info& valueType() const = 0;
-  virtual bool is_derived_from_TypeBase() const = 0;
-  virtual Item *newClone() const { NIY }
-  virtual void *newInstance() const { NIY }
+  virtual void writeValue(std::ostream &os) const {NIY}
+  virtual const std::type_info& valueType() const {NIY}
+  virtual bool is_derived_from_TypeBase() const {NIY}
+  virtual Item *newClone() const {NIY}
 };
 stdOutPipe(Item);
 
@@ -36,23 +37,26 @@ struct MapGraph:ItemL{
 
   MapGraph& operator=(const MapGraph&);
 
+  //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
-  ItemL getItems(const char*);
   Item* operator[](const char *key){ return getItem(key); }
 
-  template<class T> Item* getTypedItem(const char*);
+  //-- get values directly
+  template<class T> T* getValue(const char *key);
+  template<class T> bool getValue(T& x, const char *key){ T* y=getValue<T>(key); if(y){ x=*y; return true; } return false; }
 
-  template<class T> MT::Array<T*> getDerivedItems();
+  //-- get lists of items
+  MapGraph getItems(const char*);
+  template<class T> MapGraph getTypedItems(const char*);
 
-  template<class T> T* get(const char *key);
-  template<class T> bool get(T& x, const char *key){ T* y=get<T>(key); if(y){ x=*y; return true; } return false; }
+  //-- get lists of values
+  template<class T> MT::Array<T*> getDerivedValues();
 
   Item *append(Item* it){ ItemL::append(it); return it; }
-  template<class T> Item *append(const StringA& keys, const ItemL& parents, const T& x);
-  template<class T> Item *append(const StringA& keys, const T& x){ return append(keys, ItemL(), x); }
-  template<class T> Item *append(const char *key,T& x); //{ append(STRINGS(key), ItemL(), x); }
-
+  template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
+  template<class T> Item *append(const StringA& keys, T *x){ return append(keys, ItemL(), x); }
+  template<class T> Item *append(const char *key, T *x){ return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
 
   Item *add(const uintA& tuple);
   ItemL& getParents(uint i);

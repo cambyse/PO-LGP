@@ -49,7 +49,7 @@ void testModule(){
   CHECK(modit,"");
 
   //create the module
-  T *mod = (T*)modit->newInstance();
+  T *mod = (T*)modit->value<MapGraph>()->getItem("type")->value<TypeInfo>()->newInstance();
   //create the variables
   for_list_(VariableAccess, var, mod->accesses) var->createOwnVariable();
   //test

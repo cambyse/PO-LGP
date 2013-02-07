@@ -474,12 +474,10 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testKinematicSpeed();
-  return 0;
   testLoadSave();
-  return 0;
   testPlayStateSequence();
   testKinematics();
+  testKinematicSpeed();
   testFollowRedundantSequence();
   testDynamics();
   testContacts();

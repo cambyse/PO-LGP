@@ -21,41 +21,19 @@ struct Module;
 enum UnitKind { none=0, module, varaccess };
 
 template<class T, class P>
-struct UnitRegistry:Item{
-  UnitKind kind;
-  T *instantiatedObject;
-  UnitRegistry(const StringA& _keys, const ItemL& _parents, UnitKind _kind, T *_obj, MapGraph *container):
-    kind(_kind),
-    instantiatedObject(_obj){
-    keys=_keys;
-    parents=_parents;
-    if(container) container->append(this);
-  }
-  virtual void writeValue(std::ostream &os) const { os <<"REGISTRY " <<typeid(T).name() <<' ' <<typeid(P).name(); }
-  virtual const std::type_info& valueType() const { return typeid(UnitRegistry<T,P>); }
-  virtual bool is_derived_from_TypeBase() const { return is_base_of<TypeBase, T>::value; }
-  virtual void *newInstance() const { return new T; }
-};
-
-template<class T, class P>
 Item* registerUnit(T *instance, const char *name, UnitKind kind, Item *parent1=NULL, Item *parent2=NULL){
   ItemL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
+  StringA keys;
   if(!name) name=typeid(T).name();
-  if(!instance){
-    if(kind==module)
-      return new UnitRegistry<T, void>(
-            STRINGS("moduledecl", name), parents, kind, instance, &registry());
-    if(kind==varaccess)
-      return new UnitRegistry<T, void>(
-            STRINGS("accdecl", name), parents, kind, instance, &registry());
-  }else{
-    if(kind==module)
-      return new UnitRegistry<T, void>(
-            STRINGS("module", name), parents, kind, instance, &registry());
-    if(kind==varaccess)
-      return new UnitRegistry<T, void>(
-            STRINGS("acc", name), parents, kind, instance, &registry());
-  }
+  if(!instance && kind==module) keys=STRINGS("moduledecl", name);
+  if(!instance && kind==varaccess) keys=STRINGS("accdecl", name);
+  if(instance && kind==module) keys=STRINGS("module", name);
+  if(instance && kind==varaccess) keys=STRINGS("acc", name);
+  MapGraph *ats = new MapGraph();
+  ats->append<MT::String>("name", new MT::String(name));
+  ats->append<TypeInfo>("type", new TypeInfo_typed<T,P>(name, name, NULL, NULL));
+  return  new Item_typed<MapGraph>(keys, parents, ats, &registry());
+//  return new UnitRegistry<T, void>(keys, parents, kind, instance, &registry());
 }
 
 
@@ -70,9 +48,10 @@ struct VariableAccess{
   const std::type_info* typeinfo;
   VariableAccess(const char* _name, const std::type_info* _typeinfo):module(NULL), name(_name), typeinfo(_typeinfo) {}
   void write(ostream& os) const{ os <<name; }
+  void read(istream&) { NIY; }
   virtual void createOwnVariable() = 0;
 };
-stdOutPipe(VariableAccess);
+stdPipes(VariableAccess);
 
 typedef MT::Array<VariableAccess*> VariableAccessL;
 
@@ -128,8 +107,9 @@ template<class T, class P> struct Registrator{
       kind = module;
       Item *parent = NULL;
       if(typeid(P)!=typeid(void)){ //dependence registry
+        //cout <<registry() <<endl;
         parent = registry().getItem("moduledecl", typeid(P).name());
-        CHECK(parent,"");
+        //CHECK(parent,"");
         kind=varaccess;
       }
       regItem = registerUnit<T,P>(NULL, NULL, kind, parent);

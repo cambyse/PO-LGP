@@ -19,13 +19,13 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   //gv.watch();
   cout <<G <<endl;
   cout <<G["edge"] <<endl;
-  cout <<G["edge"].value<MapGraph>() <<endl;
+  cout <<G["edge"]->value<MapGraph>() <<endl;
   cout <<*G.get<MapGraph>("edge")->get<arr>("v") <<endl;
   //cout <<I;
 }
 
 int main(int argc, char** argv){
-  reg_report();
+  cout <<registry() <<endl;
 
   testRead(argc<2?"test.g":argv[1]);
   return 0;
