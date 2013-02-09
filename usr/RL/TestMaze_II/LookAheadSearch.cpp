@@ -107,7 +107,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         node_vector_t * next_nodes = new node_vector_t();
         current_nodes->push_back(root_node);
         while(current_nodes->size()>0) {
-            for(idx_t idx=0; idx<current_nodes->size(); ++idx) {
+            for(idx_t idx=0; idx<(idx_t)current_nodes->size(); ++idx) {
                 node_t node = (*current_nodes)[idx];
                 print_node(node);
                 for(graph_t::OutArcIt out_arc(graph,node); out_arc!=INVALID; ++out_arc) {
@@ -258,7 +258,7 @@ void LookAheadSearch::print_tree_statistics() const {
     DEBUG_OUT(0,"Printing tree statistics");
     while(current_level->size()>0) {
         DEBUG_OUT(0,"    Level " << level_counter << ": " << current_level->size() << " nodes");
-        for(idx_t idx=0; idx<current_level->size(); ++idx) {
+        for(idx_t idx=0; idx<(idx_t)current_level->size(); ++idx) {
             ++total_node_counter;
             for(graph_t::OutArcIt out_arc(graph,(*current_level)[idx]); out_arc!=INVALID; ++out_arc) {
                 ++total_arc_counter;
