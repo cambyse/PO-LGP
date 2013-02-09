@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>542</width>
-    <height>260</height>
+    <width>805</width>
+    <height>385</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ExpectedRewardGenerator</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0" colspan="3">
+   <item row="1" column="0" colspan="2">
     <widget class="QSlider" name="_wMinR">
      <property name="maximum">
       <number>1000</number>
@@ -24,29 +24,64 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="3">
-    <widget class="QLineEdit" name="_wMinRValue">
-     <property name="minimumSize">
-      <size>
-       <width>60</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>60</width>
-       <height>80</height>
-      </size>
-     </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>0</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
+      <string>Min R</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="5" colspan="3">
+   <item row="12" column="0" colspan="2">
+    <widget class="QSlider" name="_wResolution">
+     <property name="minimum">
+      <number>10</number>
+     </property>
+     <property name="maximum">
+      <number>2000</number>
+     </property>
+     <property name="value">
+      <number>200</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Resolution</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QSlider" name="_wDiscount">
+     <property name="maximum">
+      <number>1000</number>
+     </property>
+     <property name="value">
+      <number>900</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Discount</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Max R</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
     <widget class="QSlider" name="_wMaxR">
      <property name="maximum">
       <number>1000</number>
@@ -59,77 +94,34 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="8">
-    <widget class="QLineEdit" name="_wMaxRValue">
-     <property name="minimumSize">
-      <size>
-       <width>60</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>60</width>
-       <height>80</height>
-      </size>
-     </property>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>1</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
+      <string>Depth</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="0" colspan="3">
-    <widget class="QSlider" name="_wPMin">
+   <item row="14" column="0" colspan="2">
+    <widget class="QSlider" name="_wDepth">
      <property name="maximum">
-      <number>1000</number>
+      <number>20</number>
      </property>
      <property name="value">
-      <number>500</number>
+      <number>8</number>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="4" column="5" colspan="3">
-    <widget class="QSlider" name="_wPMax">
-     <property name="maximum">
-      <number>1000</number>
-     </property>
-     <property name="value">
-      <number>500</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="8">
-    <widget class="QLineEdit" name="_wPMaxValue">
-     <property name="minimumSize">
-      <size>
-       <width>60</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>60</width>
-       <height>80</height>
-      </size>
-     </property>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>0.5</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
+      <string>P min</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="3">
+   <item row="5" column="0">
     <widget class="QLineEdit" name="_wPMinValue">
      <property name="minimumSize">
       <size>
@@ -151,155 +143,105 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="4">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Minimum Reward</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>P(Min Reward)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="5">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Maximum Reward</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="5">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>P(Max Reward)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="3">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="0">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="2">
-    <spacer name="horizontalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="5">
-    <spacer name="horizontalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="7">
-    <spacer name="horizontalSpacer_5">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="1">
-    <spacer name="horizontalSpacer_6">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="6">
-    <spacer name="horizontalSpacer_7">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="10" column="0" colspan="3">
-    <widget class="QSlider" name="_wResolution">
-     <property name="minimum">
-      <number>10</number>
-     </property>
+   <item row="5" column="1">
+    <widget class="QSlider" name="_wPMax">
      <property name="maximum">
-      <number>2000</number>
+      <number>1000</number>
      </property>
      <property name="value">
-      <number>200</number>
+      <number>500</number>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="10" column="3">
+   <item row="5" column="2">
+    <widget class="QLineEdit" name="_wPMaxValue">
+     <property name="minimumSize">
+      <size>
+       <width>60</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>80</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>0.5</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QLineEdit" name="_wMaxRValue">
+     <property name="minimumSize">
+      <size>
+       <width>60</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>80</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>1</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLineEdit" name="_wMinRValue">
+     <property name="minimumSize">
+      <size>
+       <width>60</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>80</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="2">
+    <widget class="QLineEdit" name="_wDiscountValue">
+     <property name="minimumSize">
+      <size>
+       <width>60</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>80</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>0.9</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="2">
     <widget class="QLineEdit" name="_wResolutionValue">
      <property name="minimumSize">
       <size>
@@ -321,34 +263,7 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Resolution</string>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="5" colspan="3">
-    <widget class="QSlider" name="_wDepth">
-     <property name="maximum">
-      <number>20</number>
-     </property>
-     <property name="value">
-      <number>8</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="5">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Sample Depth</string>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="8">
+   <item row="14" column="2">
     <widget class="QLineEdit" name="_wDepthValue">
      <property name="minimumSize">
       <size>
@@ -367,51 +282,19 @@
      </property>
     </widget>
    </item>
-   <item row="11" column="9">
-    <widget class="QPushButton" name="pushButton">
+   <item row="4" column="2">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Plot</string>
+      <string>P max</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="5">
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+   <item row="15" column="0" colspan="3">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>&amp;Plot</string>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="6" column="5">
-    <spacer name="verticalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="7" column="5">
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
+    </widget>
    </item>
   </layout>
  </widget>
@@ -426,7 +309,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>87</x>
-     <y>41</y>
+     <y>57</y>
     </hint>
     <hint type="destinationlabel">
      <x>132</x>
@@ -441,28 +324,12 @@
    <slot>maxR_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>346</x>
-     <y>40</y>
+     <x>518</x>
+     <y>115</y>
     </hint>
     <hint type="destinationlabel">
-     <x>348</x>
-     <y>57</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>_wPMin</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>ExpectedRewardGeneratorClass</receiver>
-   <slot>minR_P_changed(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>109</x>
-     <y>108</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>112</x>
-     <y>131</y>
+     <x>393</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -473,12 +340,12 @@
    <slot>maxR_P_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>350</x>
-     <y>110</y>
+     <x>584</x>
+     <y>172</y>
     </hint>
     <hint type="destinationlabel">
-     <x>363</x>
-     <y>137</y>
+     <x>428</x>
+     <y>275</y>
     </hint>
    </hints>
   </connection>
@@ -489,8 +356,8 @@
    <slot>resolution_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>112</x>
-     <y>216</y>
+     <x>174</x>
+     <y>287</y>
     </hint>
     <hint type="destinationlabel">
      <x>117</x>
@@ -505,8 +372,8 @@
    <slot>depth_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>352</x>
-     <y>216</y>
+     <x>518</x>
+     <y>344</y>
     </hint>
     <hint type="destinationlabel">
      <x>363</x>
@@ -521,12 +388,28 @@
    <slot>plot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>520</x>
-     <y>243</y>
+     <x>739</x>
+     <y>375</y>
     </hint>
     <hint type="destinationlabel">
-     <x>518</x>
-     <y>183</y>
+     <x>691</x>
+     <y>384</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wDiscount</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>ExpectedRewardGeneratorClass</receiver>
+   <slot>discount_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>138</x>
+     <y>229</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>133</x>
+     <y>310</y>
     </hint>
    </hints>
   </connection>
@@ -539,5 +422,6 @@
   <slot>resolution_changed(int)</slot>
   <slot>depth_changed(int)</slot>
   <slot>plot()</slot>
+  <slot>discount_changed(int)</slot>
  </slots>
 </ui>
