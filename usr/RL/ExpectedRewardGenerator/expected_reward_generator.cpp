@@ -177,11 +177,14 @@ void ExpectedRewardGenerator::plot() {
     double step_size = ( (maxR - minR)/(1 - discount) ) / (p_values.size()-1);
 
     // write unscaled probability density values to file
+    double unscaled_mean = 0;
     for(unsigned int idx=0; idx<p_values.size(); ++idx) {
+        unscaled_mean += (minR + idx*step_size)*p_values[idx]*step_size;
         plot_file << minR + idx*step_size << " " << p_values[idx] << std::endl;
         prob_sum += p_values[idx];
     }
 
+    std::cout << "Unscaled mean = " << unscaled_mean << std::endl;
     if(fabs(prob_sum*step_size-1)>1e-10) {
         std::cout << "Error: Probability densities do not sum to one (prob_sum=" << prob_sum*step_size << std::endl;
     }
@@ -194,9 +197,13 @@ void ExpectedRewardGenerator::plot() {
     double scale_factor = (maxR - minR)/(1 - discount);
 
     // write scaled probability density values to file
+    double scaled_mean = 0;
     for(unsigned int idx=0; idx<p_values.size(); ++idx) {
+        scaled_mean += ( (minR + idx*step_size - scale_offset)/scale_factor ) * p_values[idx]*step_size;
         plot_file << (minR + idx*step_size - scale_offset)/scale_factor << " " << p_values[idx]*scale_factor << std::endl;
     }
+
+    std::cout << "Scaled mean = " << scaled_mean << std::endl;
 
     plot_file.close();
 }

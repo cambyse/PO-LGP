@@ -104,7 +104,7 @@
    <item row="14" column="0" colspan="2">
     <widget class="QSlider" name="_wDepth">
      <property name="maximum">
-      <number>20</number>
+      <number>30</number>
      </property>
      <property name="value">
       <number>8</number>
