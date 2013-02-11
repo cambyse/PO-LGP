@@ -12,6 +12,24 @@ const double Maze::reward_start_size = 0.1;
 using util::min;
 using util::max;
 
+const Maze::idx_t Maze::walls[walls_n][2] = {
+  { 6, 7},
+  {12,13},
+  { 4, 5},
+  { 6,10},
+  {10,11}
+};
+
+const Maze::idx_t Maze::rewards[rewards_n][6] = {
+  /* {  activation state,  receive state, r, g, b} */
+  {  4,  2,  3, 200,   0,   0},
+  {  6,  7,  3, 200, 200,   0},
+  { 11, 14,  2,   0, 200,   0},
+  { 13,  8,  2,   0, 200, 200},
+  {  8,  1,  3,   0,   0, 200}
+  //            {  8,  4,  4, 200,   0, 200}                                                                                    
+};
+
 Maze::Maze(const double& eps):
         time_delay(Data::k),
 //        reward_active(false),

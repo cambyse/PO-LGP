@@ -135,29 +135,29 @@ protected:
     /*! \brief Defines how the optimal action is determined.
      *
      * Currently only LookAheadSearch::MAX_LOWER_BOUND is supported. */
-    const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_LOWER_BOUND;
+    static const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_LOWER_BOUND;
 
     /*! \brief Defines how action nodes are selected for further examination.
      *
      * Currently LookAheadSearch::MAX_UPPER_BOUND and LookAheadSearch::MAX_LOWER_BOUND are supported. */
-    const BOUND_USAGE_TYPE tree_action_selection_type    = MAX_UPPER_BOUND;
+    static const BOUND_USAGE_TYPE tree_action_selection_type    = MAX_UPPER_BOUND;
 
     /*! \brief Defines how state nodes are selected for further examination.
      *
      * Currently only LookAheadSearch::MAX_WEIGHTED_UNCERTAINTY is supported. */
-    const BOUND_USAGE_TYPE tree_state_selection_type     = MAX_WEIGHTED_UNCERTAINTY;
+    static const BOUND_USAGE_TYPE tree_state_selection_type     = MAX_WEIGHTED_UNCERTAINTY;
 
     /*! \brief Defines how state bounds are used for calculating
      * action bounds in back-propagation.
      *
      * Currently only LookAheadSearch::EXPECTED_BOUNDS is supported. */
-    const BOUND_USAGE_TYPE action_back_propagation_type  = EXPECTED_BOUNDS;
+    static const BOUND_USAGE_TYPE action_back_propagation_type  = EXPECTED_BOUNDS;
 
     /*! \brief Defines how action bounds are used for calculating
      * state bounds in back-propagation.
      *
      * Currently only LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER is supported. */
-    const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
+    static const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */
     node_t select_next_action_node(node_t state_node);
