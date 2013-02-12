@@ -30,18 +30,6 @@ double ExpectedRewardGenerator::get_value(const std::vector<bool>& rewards, cons
     return value;
 }
 
-double ExpectedRewardGenerator::probability(const std::vector<bool>& rewards, const double& pMin, const double& pMax) {
-    double prob = 1;
-    for(unsigned int idx=0; idx<rewards.size(); ++idx) {
-        if(rewards[idx]) {
-            prob *= pMax;
-        } else {
-            prob *= pMin;
-        }
-    }
-    return prob;
-}
-
 void ExpectedRewardGenerator::add_density(std::vector<double>& p_values, const double& value, const double& discount, const int& depth, const double& minR, const double& maxR, const double& prob) {
     double step_size = ( (maxR - minR)/(1 - discount) ) / (p_values.size()-1);
     double new_min = value + minR*pow(discount,depth)/(1-discount);
@@ -143,7 +131,7 @@ void ExpectedRewardGenerator::plot() {
 
             // calculate value and probability
             double value = get_value(rewards, minR, maxR, discount);
-            double prob = probability(rewards, pMin, pMax);
+            double prob = pow(pMin,depth-number_of_rewards)*pow(pMax,number_of_rewards);
 
             // add up probability over possible value range
             add_density(p_values, value, discount, depth, minR, maxR, prob);

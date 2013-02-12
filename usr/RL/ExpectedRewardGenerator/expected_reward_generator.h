@@ -19,7 +19,6 @@ private:
     Ui::ExpectedRewardGeneratorClass ui;
 
     double get_value(const std::vector<bool>& rewards, const double& minR, const double& maxR, const double& discount);
-    double probability(const std::vector<bool>& rewards, const double& pMin, const double& pMax);
     void add_density(std::vector<double>& p_values, const double& value, const double& discount, const int& depth, const double& minR, const double& maxR, const double& prob);
 
 private slots:
