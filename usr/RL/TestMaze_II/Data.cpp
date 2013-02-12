@@ -11,10 +11,10 @@ using std::make_tuple;
 
 const char*          Data::action_strings[5] = { "STAY ", "UP   ", "DOWN ", "LEFT ", "RIGHT" };
 const Data::size_t   Data::action_n          = NUMBER_OF_ACTIONS;
-const Data::size_t   Data::maze_x_dim        = 4;
-const Data::size_t   Data::maze_y_dim        = 4;
-//const Data::size_t   Data::k                 = maze_x_dim+maze_y_dim-2;
-const Data::size_t   Data::k                 = 4;
+const Data::size_t   Data::maze_x_dim        = 2;
+const Data::size_t   Data::maze_y_dim        = 2;
+const Data::size_t   Data::k                 = maze_x_dim+maze_y_dim-2; // maze diagonal
+//const Data::size_t   Data::k                 = 4; // set manually
 const Data::size_t   Data::state_n           = maze_x_dim*maze_y_dim;
 const Data::reward_t Data::min_reward        = 0.0;
 const Data::reward_t Data::max_reward        = 1.0;
@@ -44,6 +44,15 @@ Data::output_data_t Data::OutputIterator::operator*() const {
 
 bool Data::OutputIterator::end() const {
     return current_reward > max_reward;
+}
+
+Data::k_mdp_state_t Data::k_mdp_state_from_episode_it(episode_t::const_iterator episode_it) {
+    k_mdp_state_t k_mdp_state(k);
+    for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
+        k_mdp_state[k_idx] = (*episode_it);
+        --episode_it;
+    }
+    return k_mdp_state;
 }
 
 Data::action_idx_t Data::idx_from_action(action_t action) {

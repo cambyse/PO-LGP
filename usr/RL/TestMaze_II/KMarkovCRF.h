@@ -12,6 +12,8 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <map>
+#include <tuple>
 
 #include <QtCore/QString>
 
@@ -116,10 +118,20 @@ public:
         return &KMarkovCRF::get_prediction;
     }
 
+    probability_t get_kmdp_prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const {
+        return &KMarkovCRF::get_kmdp_prediction;
+    }
+
     void initialize_sparse_predictions(QIteration&);
     void initialize_kmdp_predictions(QIteration&);
 
+    void update_prediction_map();
+
 private:
+
+    typedef std::tuple<k_mdp_state_t, action_t, state_t, reward_t> prediction_tuple_t;
+    typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
     int k, old_active_features_size;
     episode_t episode_data;
@@ -127,7 +139,8 @@ private:
     std::vector<Feature*> basis_features;
     std::vector<AndFeature> active_features, compound_features;
     std::vector<double> compound_feature_scores;
-    bool compound_features_sorted;
+    bool compound_features_sorted, kmdp_prediction_up_to_data;
+    prediction_map_t prediction_map;
 
     void check_lambda_size();
     void construct_compound_features(const int& n);

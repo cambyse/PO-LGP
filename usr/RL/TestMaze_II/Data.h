@@ -106,7 +106,15 @@ public:
         reward_t current_reward;
     };
 
-    typedef std::vector<data_point_t> episode_t; ///< [0] is present [-k] is k time steps in the past
+    /*! \brief Stores an episode of entries.
+     *
+     * Entries are stored in order of their
+     * occurrence (the episode "looks ahead").
+     * That is [0] is the first entry, [k] is
+     * the entry k time steps later, and back()
+     * returns the most recent entry.
+     */
+    typedef std::vector<data_point_t> episode_t;
     typedef episode_t::iterator       episode_iterator_t;
     typedef episode_t::const_iterator const_episode_iterator_t;
     typedef const_episode_iterator_t  input_data_t;
@@ -116,13 +124,23 @@ public:
     static const size_t input_n;
     static const size_t output_n;
 
-    typedef std::vector<data_point_t> k_mdp_state_t; ///< [0] is present [k] is k time steps in the past
+    /*! \brief Stores a k-MDP state.
+     *
+     * Entries are stored in reverse order
+     * (k-MDP state "looks behind"). That
+     * is [0] is the present (most recent)
+     * entry while [k] is the entry k time
+     * steps in the past.
+     */
+    typedef std::vector<data_point_t> k_mdp_state_t;
     typedef idx_t                     k_mdp_state_idx_t;
     static const size_t k_mdp_state_n;
 
     //=============//
     //  Functions  //
     //=============//
+
+    static k_mdp_state_t     k_mdp_state_from_episode_it(episode_t::const_iterator episode_it);
 
     static action_idx_t      idx_from_action(action_t);
     static action_t          action_from_idx(action_idx_t);

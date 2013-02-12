@@ -19,7 +19,13 @@ using std::pair;
 using std::make_pair;
 using std::set;
 
-KMarkovCRF::KMarkovCRF(): k(Data::k), old_active_features_size(0), lambda(nullptr), compound_features_sorted(false) {
+KMarkovCRF::KMarkovCRF():
+        k(Data::k),
+        old_active_features_size(0),
+        lambda(nullptr),
+        compound_features_sorted(false),
+        kmdp_prediction_up_to_data(false)
+{
 
     //----------------------------------------//
     // Constructing basis indicator features  //
@@ -655,6 +661,7 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
         const state_t& state_to,
         const reward_t& reward) const {
 
+    // construct input data
     episode_t episode(state_from.size());
     for(unsigned int idx=0; idx<state_from.size(); ++idx) {
         episode[state_from.size()-idx-1] = state_from[idx];
@@ -685,6 +692,23 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
     }
 
     return exp( sumFXY )/sumExpX;
+}
+
+KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
+        const k_mdp_state_t& state_from,
+        const action_t& action,
+        const state_t& state_to,
+        const reward_t& reward)
+const {
+
+    prediction_tuple_t t = std::make_tuple(state_from, action, state_to, reward);
+
+    auto it = prediction_map.find(t);
+    if(it!=prediction_map.end()) {
+        return it->second;
+    } else {
+        return 0; // prior for unseen transitions is zero
+    }
 }
 
 unsigned long KMarkovCRF::get_training_data_length() {
@@ -785,6 +809,58 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
         }
     }
     DEBUG_OUT(1,"Initialized " << counter << " predictions");
+}
+
+void KMarkovCRF::update_prediction_map() {
+
+    // clear old value
+    prediction_map.clear();
+
+    // store count for different inputs for later normalization
+    std::map<std::tuple<k_mdp_state_t,action_t>, size_t > counts;
+
+    // go through episode and count frequencies for transitions
+    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k+1;
+            episode_iterator!=episode_data.end();
+            ++episode_iterator) {
+
+        // get data
+        action_t action = episode_iterator->action;
+        state_t state = episode_iterator->state;
+        reward_t reward = episode_iterator->reward;
+        --episode_iterator;
+        k_mdp_state_t k_mdp_state = Data::k_mdp_state_from_episode_it(episode_iterator);
+        ++episode_iterator;
+
+        // increment frequency
+        prediction_tuple_t predict_tuple = std::make_tuple(k_mdp_state, action, state, reward);
+        auto ret = prediction_map.insert(std::make_pair(predict_tuple,1.));
+        if(!ret.second) { // element already exists
+            ret.first->second += 1;
+        }
+
+        // increment counter
+        auto input_tuple = std::make_tuple(k_mdp_state, action);
+        auto ret = counts.insert(std::make_pair(input_tuple,1));
+        if(!ret.second) { // element already exists
+            ret.first->second += 1;
+        }
+
+    }
+
+    // todo
+
+    // normalize to get a probability distribution
+
+    for(Data::state_idx_t state_idx=0; state_idx<Data::state_n; ++state_idx) {
+        state_t state = Data::state_from_idx(state_idx);
+        for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
+            reward_t reward = Data::reward_from_idx(reward_idx);
+        }
+    }
+    for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
+        it->second /= counter;
+    }
 }
 
 void KMarkovCRF::check_lambda_size() {

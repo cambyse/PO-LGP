@@ -137,8 +137,15 @@ void TestMaze_II::choose_action() {
         action = look_ahead_search.get_optimal_action();
         break;
     case KMDP_LOOK_AHEAD_TREE:
-        action = Data::STAY;
-        DEBUG_OUT(0, "Not implemented as yet --> choosing STAY");
+        crf.update_prediction_map();
+        look_ahead_search.clear_tree();
+        look_ahead_search.build_tree<KMarkovCRF>(
+                current_k_mdp_state,
+                crf,
+                crf.get_kmdp_prediction_ptr(),
+                max_tree_size
+        );
+        action = look_ahead_search.get_optimal_action();
         break;
     default:
         action = Data::STAY;

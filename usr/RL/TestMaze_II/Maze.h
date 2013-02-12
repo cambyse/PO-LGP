@@ -105,10 +105,10 @@ private:
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 5;
+    static const size_t walls_n = 1;
     static const idx_t walls[walls_n][2];
 
-    static const size_t rewards_n = 5;
+    static const size_t rewards_n = 1;
     static const idx_t rewards[rewards_n][6];
 
     /*! \brief Rescale the scene to fit into view. */
