@@ -1,0 +1,18 @@
+/** \page howto_convex_meshes How to build convex meshes
+
+A common problem of physic engines is that they cannot do collision checking of
+non-convex objects/meshes efficiently.  Therefore it is necessary to divide
+non-convex meshes into convex sup-parts.  This document gives a step by step
+instruction to create convex sub-parts.
+
+\section step_by_step Step by Step
+TODO add me ;D
+
+
+\section more more
+
+
+\subsection moresub even more
+
+*/
+// vim: syntax=cpp.doxygen:ts=2:sw=2

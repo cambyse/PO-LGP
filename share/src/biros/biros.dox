@@ -1,6 +1,7 @@
-/** @mainpage Biros
+/**
+@defgroup module_biros Biros
 
-Biros is a communication framework for application in robotics.
+Biros is a communication framework for robotics.
 
 
 @section biros_intro Introduction
