@@ -13,7 +13,7 @@ vc60.idb
 .*.includes
 
 *~
-
+*.pyc
 *.tgz
 
 z.*

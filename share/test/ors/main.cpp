@@ -49,7 +49,6 @@ void testKinematics(){
   arr x(n);
   T1::axis.set(1,0,0);
   T1::G = &G;
-  MT::timerStart();
   for(uint k=0;k<100;k++){
     T1::i=rnd.num(0,G.bodies.N-1);
     T1::rel.setRandom();
@@ -61,7 +60,48 @@ void testKinematics(){
     MT::checkGradient(T1::f2,NULL,x,1e-5);
     //MT::checkGradient(T1::f3,T1::df3,NULL,x,1e-5);
   }
+}
+
+//===========================================================================
+//
+// Kinematic speed test
+//
+
+void testKinematicSpeed(){
+#define NUM 1000000
+#if 1
+  ors::Graph G;
+  OpenGL gl;
+  init(G,gl,"arm3.ors");
+  G.makeLinkTree();
+  uint n=G.getJointStateDimension();
+  arr x(n);
+  MT::timerStart();
+  for(uint k=0;k<NUM;k++){
+    rndUniform(x,-.5,.5,false);
+    G.setJointState(x);
+    G.calcBodyFramesFromJoints();
+  }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
+#endif
+
+  ors::Transformation t,s; t.setRandom(); s.setRandom();
+  MT::timerStart();
+  for(uint k=0;k<NUM;k++){
+    t.appendTransformation(s);
+  }
+  cout <<"transformation appending: "<< MT::timerRead() <<"sec" <<endl;
+
+  ors::Matrix A,B,Y; A.setRandom(); B.setRandom();
+  ors::Vector a,b,y; a.setRandom(); b.setRandom();
+  MT::timerStart();
+  for(uint k=0;k<NUM;k++){
+    Y=A*B;
+    y=a+A*b;
+    a=y;
+    A=Y;
+  }
+  cout <<"matrix timing: "<< MT::timerRead() <<"sec" <<endl;
 }
 
 //===========================================================================
@@ -409,10 +449,12 @@ void testContactDynamics(){
 //
 
 static void drawTrimesh(void* _mesh){
+#if MT_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
   glPushMatrix();
   mesh->glDraw();
   glPopMatrix();
+#endif
 }
 
 void testBlenderImport(){
@@ -432,6 +474,8 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testKinematicSpeed();
+  return 0;
   testLoadSave();
   testPlayStateSequence();
   testKinematics();

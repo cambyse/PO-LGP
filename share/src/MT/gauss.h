@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 /*  Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
     under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
     see the `util.h' file for a full copyright statement  */
@@ -5,6 +24,7 @@
 #ifndef MT_gauss_h
 #define MT_gauss_h
 
+#include "util.h"
 #include "array.h"
 #include "functions.h"
 
@@ -24,7 +44,8 @@ struct Gaussian {
   
   //! okC=okU=false
   Gaussian(){ setCU(false, false); }
-  
+  Gaussian(const arr& mean, const arr& cov){ setC(mean, cov); }
+
   //! dimensionality
   uint N() const { CHECK(okC || okU, "non-initialized Gaussian (no C or U)"); if(okC) return c.N; else return u.N; }
   //! make canonical representation available
@@ -37,7 +58,7 @@ struct Gaussian {
   void operator=(const Gaussian& x);
   
   void setC(const arr& cc, const arr& CC){ c=cc; C=CC; setCU(true, false); }
-  void setU(const arr& uu, const arr& UU){ u=uu; U=UU; setCU(false, true); NIY; }
+  void setU(const arr& uu, const arr& UU){ u=uu; U=UU; setCU(false, true); }
   void setUniform(uint n){
     if(useC){
       setDiagonal(n, 1e10);
@@ -131,7 +152,7 @@ void collapseMoG(Gaussian& g, const arr& P, const GaussianL& G, bool zeroMean=fa
 void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N);
 
 //! generate a single sample from a gaussian \ingroup infer1
-void sample(arr& x, const Gaussian &g);
+arr sample(const Gaussian &g);
 
 //! generate a table of N samples from a gaussian \ingroup infer1
 void sample(arr& X, uint N, const Gaussian &g);

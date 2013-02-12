@@ -28,7 +28,7 @@ void testSetFit(){
     x -= beta_ * (  (beta(0)+scalarProduct(x,beta_)) / sumOfSqr(beta_) );
     X[i]=x;
   }
-  write(LIST(X),"data");
+  write(LIST<arr>(X),"data");
 }
 
 

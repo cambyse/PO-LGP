@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "optimization.h"
 
 #ifndef CHECK_EPS
@@ -441,13 +460,13 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
   uint evals=0;
   
   if(fx_user) NIY;
-  
+
   //compute initial costs
   arr phi;
   arr J;
   f.fv(phi, J, x);  evals++;
   fx = sumOfSqr(phi);
-  if(addRegularizer) fx += scalarProduct(x,(*addRegularizer)*x);
+  if(addRegularizer)  fx += scalarProduct(x,(*addRegularizer)*vectorShaped(x));
   if(o.verbose>1) cout <<"*** optGaussNewton: starting point f(x)=" <<fx <<" alpha=" <<alpha <<" lambda=" <<lambda <<endl;
   if(o.verbose>2) cout <<"\nx=" <<x <<endl; 
   ofstream fil;
@@ -467,7 +486,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     if(addRegularizer){
       if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
 //      cout <<*addRegularizer <<R <<endl;
-      lapack_Ainv_b_sym(Delta, R + (*addRegularizer), -(comp_At_x(J, phi)+(*addRegularizer)*x));
+      lapack_Ainv_b_sym(Delta, R + (*addRegularizer), -(comp_At_x(J, phi)+(*addRegularizer)*vectorShaped(x)));
     }else{
       lapack_Ainv_b_sym(Delta, R, -comp_At_x(J, phi));
     }
@@ -481,14 +500,14 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     lapack_min_Ax_b(Delta, J, J*x - phi);
     Delta -= x;
 #endif
-    if(o.maxStep>0. && Delta.absMax()>o.maxStep)  Delta *= o.maxStep/Delta.absMax();
-    if(o.verbose>1) cout <<" \t|Delta|=" <<Delta.absMax() <<flush;
+    if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
+    if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
 
     for(;;) { //stepsize adaptation loop -- doesn't iterate for useDamping option
       y = x + alpha*Delta;
       f.fv(phi, J, y);  evals++;
       fy = sumOfSqr(phi);
-      if(addRegularizer) fy += scalarProduct(y,(*addRegularizer)*y);
+      if(addRegularizer) fy += scalarProduct(y,(*addRegularizer)*vectorShaped(y));
       if(o.verbose>2) cout <<" \tprobing y=" <<y;
       if(o.verbose>1) cout <<" \talpha=" <<alpha <<" \tevals=" <<evals <<" \tf(y)=" <<fy <<flush;
       CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
@@ -510,7 +529,7 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
   	  lambda = 10.*lambda;
 	  break;
 	}else{
-	  if(alpha*Delta.absMax()<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+	  if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
           alpha = .1*alpha;
 	}
       }
@@ -519,8 +538,8 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
     if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<alpha <<endl;
     
     //stopping criterion
-    if((lambda<1. && Delta.absMax()<o.stopTolerance) ||
-       (lambda<1. && alpha*Delta.absMax()<1e-3*o.stopTolerance) ||
+    if((lambda<1. && absMax(Delta)<o.stopTolerance) ||
+       (lambda<1. && alpha*absMax(Delta)<1e-3*o.stopTolerance) ||
        evals>=o.stopEvals ||
        it>=o.stopIters) break;
   }

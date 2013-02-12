@@ -1,6 +1,5 @@
 #include <MT/util.h>
 #include <MT/optimization.h>
-#include <MT/kOrderMarkovProblem.h>
 #include "exampleProblem.h"
 #include <MT/soc_exampleProblems.h>
 #include <MT/soc_orsSystem.h>
@@ -19,7 +18,7 @@ int main(int argn,char** argv){
  
   //-- setup the control variables (problem definition)
   TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
-  pos->y_target = arr(sys.getOrs().getBodyByName("target")->X.pos.p,3);
+  pos->y_target = ARRAY(sys.getOrs().getBodyByName("target")->X.pos);
   
   TaskVariable *col = new DefaultTaskVariable("collision", sys.getOrs(), collTVT,0,0,0,0,ARR(.15));
   col->y_prec=1e-0;
@@ -82,7 +81,7 @@ int main(int argn,char** argv){
   //-- optimize
   //rndUniform(x,-10.,-1.);
   for(;;){
-    optGaussNewton(x, Convert(sys), OPT4(verbose=2, stopIters=10, useAdaptiveDamping=.0, maxStep=1.));
+    optGaussNewton(x, Convert(sys), OPT4(verbose=2, stopIters=20, useAdaptiveDamping=.0, maxStep=1.));
     arr xx;
     if(sys.get_xDim()>x.d1) getPhaseTrajectory(xx, x, sys.get_tau()); else xx=x;
     analyzeTrajectory(sys, xx, true, &cout);

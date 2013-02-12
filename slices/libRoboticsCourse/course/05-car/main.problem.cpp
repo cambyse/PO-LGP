@@ -4,7 +4,7 @@
 
 //resample a set of particles to become a set of unit-weight particles
 void resample(arr& X, arr& W){
-  uintA s;       // resample indices
+  uintA s;          // resample indices
   SUS(W,X.d0,s);    // Stochastic Universal Sampling
   arr Xnew(X.d0,3); // memorize old particles
   for(uint i=0;i<X.d0;i++) Xnew[i] = X[s(i)];

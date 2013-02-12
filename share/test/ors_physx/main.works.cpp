@@ -221,7 +221,7 @@ void addOrs(ors::Graph& ors){
   for_list(i,b,ors.bodies){
     for_list(j,s,b->shapes){
       //2) Create cube	 
-      PxTransform transform(PxVec3(s->X.pos(0), s->X.pos(1), s->X.pos(2)), PxQuat(s->X.rot.p[1], s->X.rot.p[2], s->X.rot.p[3], s->X.rot.p[0]));
+      PxTransform transform(PxVec3(s->X.pos.x, s->X.pos.y, s->X.pos.z), PxQuat(s->X.rot.p[1], s->X.rot.p[2], s->X.rot.p[3], s->X.rot.p[0]));
       PxBoxGeometry geometry(PxVec3(s->size[0], s->size[1], s->size[2]));
     
       PxRigidDynamic *actor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *mMaterial, 1.f);
@@ -432,8 +432,8 @@ void createOrs(ors::Graph& ors, OpenGL& gl){
   for(uint k=0;k<10;k++){
     ors::Body *b = new ors::Body(ors);
     b->X.setRandom();
-    //b->X.pos(2) += 1.;
-    b->X.pos(1) += 1.;
+    //b->X.pos.z += 1.;
+    b->X.pos.y += 1.;
     b->name <<"rndSphere_" <<k;
     ors::Shape *s = new ors::Shape(ors, b);
     s->type=(ors::ShapeType)0;

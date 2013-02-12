@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "guiModule.h"
 #include "ors.h"
 #include "perceptionModule.h"
@@ -109,15 +128,14 @@ void GuiModule::step(){
   for(uint i=0; i<6; i++) if(img[i].N) gl->views(i).img=&img[i];
   
   if(objects.N && img[1].N){
-    Object *obj;
-    for_elem(obj, objects){//draw 2d percepetion shapes
+    for_elem(Object, obj, objects){//draw 2d percepetion shapes
       if(!obj->found) continue;
       cvDrawPoints(img[1], obj->shapePointsL);
       cvDrawPoints(img[1], obj->shapePointsR);
     }
     
     plotClear();
-    for_elem(obj, objects){//draw estimated shapes from perception as simple points
+    for_elem(Object, obj, objects){//draw estimated shapes from perception as simple points
       if(!obj->found) continue;
       plotPoints(obj->shapePoints3d);
       plotPoints(obj->center3d);

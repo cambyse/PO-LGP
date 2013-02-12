@@ -1,3 +1,23 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+#include <algorithm>
+
 #include "gauss.h"
 #include "util.h"
 
@@ -236,20 +256,22 @@ void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N){
   estimateWeighted(g, X, W);
 };
 
-void sample(arr& x, const Gaussian& g){
+arr sample(const Gaussian& g){
   g.makeC();
-  x.resize(g.C.d0);
+  arr x(g.C.d0);
   rndGauss(x, 1., false);
   arr U, V;
   svd(U, V, g.C);
   x = U*x;
   x += g.c;
+  return x;
 }
 
 void sample(arr& X, uint N, const Gaussian& g){
   uint i;
-  X.resize(N, g.c.N);
-  for(i=0; i<N; i++) sample(X[i](), g);
+  g.makeC();
+  X.resize(N, g.C.d0);
+  for(i=0; i<N; i++) X[i] = sample(g);
 }
 
 void systematicWeightedSamples(arr& X, arr& W, const Gaussian& g){

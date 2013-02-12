@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 /*! \file util.h
     \brief many utilities: contains a bunch of standard includes, macros, operators,
@@ -118,6 +122,7 @@ bool contains(const char *s, char c);
 char skip(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 void skipLine(std::istream& is);
 void skipOne(std::istream& is);
+char getNextChar(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 char peerNextChar(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 void parse(std::istream& is, const char *str);
 bool skipUntil(std::istream& is, const char *tag);
@@ -265,7 +270,7 @@ public:
 
   //!@name I/O
   void write(std::ostream& os) const;
-  void read(std::istream& is, const char* skipSymbols=NULL, const char *stopSymbols=NULL, int eatStopSymbol=-1);
+  uint read(std::istream& is, const char* skipSymbols=NULL, const char *stopSymbols=NULL, int eatStopSymbol=-1);
 };
 }
 stdPipes(MT::String)
@@ -495,7 +500,7 @@ template<class T> Any* anyNew(const char* tag, const T *x, uint n, char delim);
 // gnuplot calls
 //
 
-void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* EPSfile=NULL);
+void gnuplot(const char *command, bool pauseMouse=false, bool persist=false, const char* PDFfile=NULL);
 void gnuplotClose();
 
 

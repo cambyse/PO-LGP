@@ -1,5 +1,4 @@
 OUTPUT    = liblewiner.a
-CXXFLAGS += -O3 -fPIC
 CFLAGS += -O3 -fPIC
 OBJS = ply.o MarchingCubes.o 
 

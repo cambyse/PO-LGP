@@ -3,7 +3,7 @@ LH = latex2html -split 0 -no_navigation
 
 PWD := $(shell pwd)
 
-default: doxy_ors doxy_array doxy_soc
+default: doxy_ors doxy_array doxy_soc doxy_biros
 
 doxy_%::
 	doxygen doxy/$*.doxy

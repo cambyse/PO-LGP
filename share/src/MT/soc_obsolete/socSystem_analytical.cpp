@@ -1,4 +1,4 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
     email: mtoussai@cs.tu-berlin.de
 
     This program is free software: you can redistribute it and/or modify
@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    -----------------------------------------------------------------  */
 
 #include "socSystem_analytical.h"
 #include "plot.h"

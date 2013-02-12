@@ -1,0 +1,43 @@
+body door0{ type=3 mesh="plys/door-0.ply" meshscale=.01 }
+body door1{ type=3 mesh="plys/door-1.ply" meshscale=.01 color=[1 0 0] }
+body door2{ type=3 mesh="plys/door-2.ply" meshscale=.01 }
+
+joint (door0, door1){ A=<t(.46 0 0) d(90 0 1 0)> BinvA }
+joint (door1, door2){ A=<t(-.39 0 1) d(90 0 0 1)> BinvA }
+
+
+body microwave0{ type=3 mesh="plys/microwave-0.ply" meshscale=.01 X=<t(1 0 .8)>}
+body microwave1{ type=3 mesh="plys/microwave-1.ply" meshscale=.01 color=[1 0 0] }
+
+joint (microwave0, microwave1){ A=<t(.2 -.1 0) d(90 0 1 0)> BinvA }
+
+body oven0{ type=3 mesh="plys/oven-0.ply" meshscale=.01 X=<t(-1 0 0)>}
+body oven1{ type=3 mesh="plys/oven-1.ply" meshscale=.01 color=[1 0 0]}
+body oven2{ type=3 mesh="plys/oven-2.ply" meshscale=.01 color=[1 0 0]}
+body oven8{ type=3 mesh="plys/oven-8.ply" meshscale=.01 color=[1 0 0]}
+body oven9{ type=3 mesh="plys/oven-9.ply" meshscale=.01 color=[1 0 0]}
+body oven10{ type=3 mesh="plys/oven-10.ply" meshscale=.01 color=[1 0 0]}
+body oven11{ type=3 mesh="plys/oven-11.ply" meshscale=.01 color=[1 0 0]}
+body oven12{ type=3 mesh="plys/oven-12.ply" meshscale=.01 color=[1 0 0]}
+body oven13{ type=3 mesh="plys/oven-13.ply" meshscale=.01 color=[1 0 0]}
+
+joint (oven0, oven1){ A=<t(0 .57 .95)> BinvA }
+joint (oven0, oven2){ A=<t(0 .01 .32)> BinvA }
+joint (oven0, oven8){ A=<t(.107 0 .83) d(90 0 0 1)> BinvA }
+joint (oven0, oven9){ A=<t(-.17 0 .83) d(90 0 0 1)> BinvA }
+joint (oven0, oven10){ A=<t(.17 0 .83) d(90 0 0 1)> BinvA }
+joint (oven0, oven11){ A=<t(-.107 0 .83) d(90 0 0 1)> BinvA }
+joint (oven0, oven12){ A=<t(-.03 0 .87) d(90 0 0 1)> BinvA }
+joint (oven0, oven13){ A=<t(.03 0 .87) d(90 0 0 1)> BinvA }
+
+body faucet0{ type=3 mesh="plys/faucet-0.ply" meshscale=.005 X=<t(1 0 1.3)>}
+body faucet1{ type=3 mesh="plys/faucet-1.ply" meshscale=.005 color=[1 0 0]}
+body faucet2{ type=3 mesh="plys/faucet-2.ply" meshscale=.005 color=[1 0 0]}
+joint (faucet0, faucet1){ A=<t(.142 0 .128) d(90 0 0 1)> BinvA }
+joint (faucet0, faucet2){ A=<t(-.117 0 .128) d(90 0 0 1)> BinvA }
+
+body deluxe{ type=3 mesh="plys/1092-Deluxe-CT.ply" meshscale=.001 X=<t(1 1 0)>}
+body shelf{ type=3 mesh="plys/topdeq_montanthaut.ply" meshscale=.001 X=<t(-1 1 0)>}
+
+body spray0{ type=3 mesh="plys/spray-0.ply" meshscale=.005 X=<t(1 -.5 0) d(90 1 0 0)>}
+body spray1{ type=3 mesh="plys/spray-1.ply" meshscale=.005 X=<t(1 -.5 0) d(90 1 0 0)> color=[1 0 0]}

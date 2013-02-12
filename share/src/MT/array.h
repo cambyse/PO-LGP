@@ -1,18 +1,23 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
+
 
 /*! \file array.h
     \brief defines the MT::Array class */
@@ -30,12 +35,12 @@
 #define FOR3D(x, i, j, k) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++) for(k=0;k<x.d2;k++)
 #define FOR_ALL(x, i)   for(i=0;i<x.N;i++)
 
-#define for_index(i, X)  for(i=0;i<X.N;i++)
-#define for_elem(e, X)   for(e=X.p;e!=X.p+X.N;e++)
+#define for_index(i, X)  for(uint i=0;i<X.N;i++)
+#define for_elem(T, e, X)   for(T *e=X.p+X.N;(e--)!=X.p;)
 #define for_list(i, e, X) for(i=0;i<X.N && ((e=X(i)) || true);i++)
 #define for_list_rev(i, e, X) for(i=X.N;i-- && ((e=X(i)) || true);)
-#define for_list_(e, X) for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
-#define for_list_rev_(e, X) for(uint LIST_COUNT_REV=X.N;LIST_COUNT_REV-- && ((e=X(LIST_COUNT_REV)) || true);)
+#define for_list_(T, e, X) T *e=NULL;  for(uint LIST_COUNT=0;LIST_COUNT<X.N && ((e=X(LIST_COUNT)) || true);LIST_COUNT++)
+#define for_list_rev_(T, e, X) for(uint LIST_COUNT_REV=X.N, T *e=NULL;LIST_COUNT_REV-- && ((e=X(LIST_COUNT_REV)) || true);)
 
 #define ARR ARRAY<double> //!< write ARR(1., 4., 5., 7.) to generate a double-Array
 #define TUP ARRAY<uint> //!< write TUP(1, 2, 3) to generate a uint-Array
@@ -93,7 +98,7 @@ template<class T> struct Array {
   
   //!@name constructors
   Array();
-  Array(const Array<T>& a);
+  Array(const Array<T>& a);                 //copy constructor
   Array(const Array<T>& a, uint i);         //reference constructor
   Array(const Array<T>& a, uint i, uint j); //reference constructor
   Array(uint D0);
@@ -133,7 +138,6 @@ template<class T> struct Array {
   void setId(int d=-1);
   void setDiag(const T& scalar, int d=-1);
   void setDiag(const Array<T>& vector);
-  void setSkew(const Array<T>& vector);
   void setBlockMatrix(const Array<T>& A, const Array<T>& B, const Array<T>& C, const Array<T>& D);
   void setBlockMatrix(const Array<T>& A, const Array<T>& B);
   void setBlockVector(const Array<T>& a, const Array<T>& b);
@@ -181,8 +185,6 @@ template<class T> struct Array {
   void copyInto2D(T **buffer) const;
   T& min() const;
   T& max() const;
-  T absMax() const;
-  T absMin() const;
   void minmax(T& minVal, T& maxVal) const;
   uint minIndex() const;
   uint maxIndex() const;
@@ -385,6 +387,7 @@ inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
 inline arr linspace(double base, double limit, uint n) {  arr z;  z.setGrid(1, base, limit, n);  return z;  }
 arr logspace(double base, double limit, uint n);
 
+
 //===========================================================================
 // @}
 //!@name non-template functions //? needs most cleaning
@@ -441,10 +444,17 @@ void scanArrFile(const char* name);
 //!@name template functions
 // @{
 
+
+//NOTES:
+// -- past-tense names do not modify the array, but return variants
+// -- more methods should return an array instead of have a returned parameter...
+
+template<class T> MT::Array<T> vectorShaped(const MT::Array<T>& x) {  MT::Array<T> y;  y.referTo(x);  y.reshape(y.N);  return y;  }
 template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y);
+template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> void getDiag(MT::Array<T>& x, const MT::Array<T>& y);
 template<class T> MT::Array<T> diag(const MT::Array<T>& x) {  MT::Array<T> y;  y.setDiag(x);  return y;  }
-template<class T> MT::Array<T> skew(const MT::Array<T>& x) {  MT::Array<T> y;  y.setSkew(x);  return y;  }
+template<class T> MT::Array<T> skew(const MT::Array<T>& x);
 template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A);
 
 template<class T> uintA size(const MT::Array<T>& x) { return x.getDim(); }
@@ -480,6 +490,8 @@ template<class T> T product(const MT::Array<T>& v);
 template<class T> T trace(const MT::Array<T>& v);
 template<class T> T var(const MT::Array<T>& v);
 template<class T> T minDiag(const MT::Array<T>& v);
+template<class T> T absMax(const MT::Array<T>& x);
+template<class T> T absMin(const MT::Array<T>& x);
 
 template<class T> void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
@@ -552,57 +564,47 @@ namespace MT {
 //===========================================================================
 //!@name basic Array operators
 // @{
-template<class T> Array<T> operator~(const Array<T>& y);
-template<class T> Array<T> operator-(const Array<T>& y);
-template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z);
-template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z);
+template<class T> Array<T> operator~(const Array<T>& y); //transpose
+template<class T> Array<T> operator-(const Array<T>& y); //negative
+template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z); //outer product
+template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z); //inner product
 template<class T> Array<T> operator*(const Array<T>& y, T z);
 template<class T> Array<T> operator*(T y, const Array<T>& z);
 
-#define BinaryOperator( op, name)         \
+//element-wise update operators
+#ifndef SWIG
+#define UpdateOperator( op )        \
+  template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y); \
+  template<class T> Array<T>& operator op ( Array<T>& x, T y )
+UpdateOperator(|=);
+UpdateOperator(^=);
+UpdateOperator(&=);
+UpdateOperator(+=);
+UpdateOperator(-=);
+UpdateOperator(*=);
+UpdateOperator(/=);
+UpdateOperator(%=);
+#undef UpdateOperator
+#endif
+
+//element-wise operators
+#define BinaryOperator( op, updateOp)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z); \
   template<class T> Array<T> operator op(T y, const Array<T>& z);  \
   template<class T> Array<T> operator op(const Array<T>& y, T z)
-BinaryOperator(+ , plusA);
-BinaryOperator(- , minusA);
-BinaryOperator(% , mult);
-BinaryOperator(/ , div);
+BinaryOperator(+ , +=);
+BinaryOperator(- , -=);
+BinaryOperator(% , *=);
+BinaryOperator(/ , /=);
 #undef BinaryOperator
 
-#ifndef SWIG
-#define CompoundAssignmentOperator( op )        \
-  template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y); \
-  template<class T> Array<T>& operator op ( Array<T>& x, T y )
-CompoundAssignmentOperator(|=);
-CompoundAssignmentOperator(^=);
-CompoundAssignmentOperator(&=);
-CompoundAssignmentOperator(+=);
-CompoundAssignmentOperator(-=);
-CompoundAssignmentOperator(*=);
-CompoundAssignmentOperator(/=);
-CompoundAssignmentOperator(%=);
-#undef CompoundAssignmentOperator
-#endif
-// @}
 }
+// @}
+
 
 //===========================================================================
 //!@name basic Array functions
 // @{
-#define UnaryOperation( name, op )          \
-  template<class T> MT::Array<T>& name (MT::Array<T>& x, const MT::Array<T>& y);
-UnaryOperation(negative, -)
-#undef UnaryOperation
-
-#define BinaryOperation( name, op )         \
-  template<class T> MT::Array<T>& name(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z); \
-  template<class T> MT::Array<T>& name##S(MT::Array<T>& x, const MT::Array<T>& y, T z); \
-  template<class T> MT::Array<T>& name##S(MT::Array<T>& x, T y, const MT::Array<T>& z)
-BinaryOperation(plusA , +);
-BinaryOperation(minusA , -);
-BinaryOperation(mult , *);
-BinaryOperation(div , /);
-#undef BinaryOperation
 
 #ifndef SWIG
 #define UnaryFunction( func )           \
@@ -762,6 +764,9 @@ template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.ap
 //-- AnyLists
 void anyListRead(AnyList& ats, std::istream& is);
 template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n);
+/* template<class T> T* anyListGetVector(const AnyList& L, const char* tag); */
+template<class T> T* anyListGetVector(uintA& result, const AnyList& L, const char* tag);
+
 //template<class T> MT::Array<T> get(const AnyList& L, const char* tag); //TODO obsolete?
 
 //===========================================================================
@@ -777,6 +782,7 @@ template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to);
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphRandomUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, double connectivity);
 template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N, uint degree);
+template<class vert, class edge> void graphRandomLinear(MT::Array<vert*>& V, MT::Array<edge*>& E, uint N);
 template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Array<edge*>& E, const uintA& layers, bool interConnections);
 template<class vert, class edge> edge *newEdge(vert *a, vert *b, MT::Array<edge*>& E);

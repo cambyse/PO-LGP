@@ -272,8 +272,14 @@ endif
 
 ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
+CPATH := $(CPATH):$(BASE)/extern/Lewiner
 LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
+endif
+
+ifeq ($(PLY),1)
+CXXFLAGS += -DMT_PLY
+LIBS += -lply
 endif
 
 ifeq ($(SOLID),1)

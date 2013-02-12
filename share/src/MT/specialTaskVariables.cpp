@@ -1,3 +1,22 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 #include "specialTaskVariables.h"
 
 
@@ -65,7 +84,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   
   //general target
   arr xtarget;
-  xtarget.setCarray(obj->X.pos.p, 3);
+  xtarget = ARRAY(obj->X.pos);
   xtarget(2) += .02; //grasp it 2cm above center
   
   //endeff
@@ -124,7 +143,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   MT::getParameter(midPrec, "reachPlanMidPrec");
   MT::getParameter(endPrec, "reachPlanEndPrec");
   arr xtarget;
-  xtarget.setCarray(onto->X.pos.p, 3);
+  xtarget = ARRAY(onto->X.pos);
   xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   
   //endeff

@@ -1,18 +1,22 @@
-/*  Copyright 2009 Marc Toussaint
+/*  ---------------------------------------------------------------------
+    Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/> */
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+
 
 #include "ors.h"
 
@@ -286,16 +290,16 @@ void OdeInterface::contactForces() {
     vrel.makeColinear(normal);
     //spring force
     force = .03*d*d*d;
-    if(b2) dBodyAddForceAtPos(b2, force*normal(0), force*normal(1), force*normal(2), pos(0), pos(1), pos(2));
+    if(b2) dBodyAddForceAtPos(b2, force*normal(0), force*normal(1), force*normal(2), pos.x, pos.y, pos.z);
     force *= -1.; //invert on other body
-    if(b1) dBodyAddForceAtPos(b1, force*normal(0), force*normal(1), force*normal(2), pos(0), pos(1), pos(2));
+    if(b1) dBodyAddForceAtPos(b1, force*normal(0), force*normal(1), force*normal(2), pos.x, pos.y, pos.z);
     
     //inward viscosity
     if(vrel * normal <= 0) {
       force += 10.*vrel.length();
-      if(b2) dBodyAddForceAtPos(b2, force*m2*normal(0), force*m2*normal(1), force*m2*normal(2), pos(0), pos(1), pos(2));
+      if(b2) dBodyAddForceAtPos(b2, force*m2*normal(0), force*m2*normal(1), force*m2*normal(2), pos.x, pos.y, pos.z);
       force *= -1.; //invert on other body
-      if(b1) dBodyAddForceAtPos(b1, force*m1*normal(0), force*m1*normal(1), force*m1*normal(2), pos(0), pos(1), pos(2));
+      if(b1) dBodyAddForceAtPos(b1, force*m1*normal(0), force*m1*normal(1), force*m1*normal(2), pos.x, pos.y, pos.z);
     }
     
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
@@ -310,9 +314,9 @@ void OdeInterface::contactForces() {
     
     vrel.normalize();
     force *= -1.;
-    if(b2) dBodyAddForceAtPos(b2, force*m2*vrel(0), force*m2*vrel(1), force*m2*vrel(2), pos(0), pos(1), pos(2));
+    if(b2) dBodyAddForceAtPos(b2, force*m2*vrel(0), force*m2*vrel(1), force*m2*vrel(2), pos.x, pos.y, pos.z);
     force *= -1.;
-    if(b1) dBodyAddForceAtPos(b1, force*m1*vrel(0), force*m1*vrel(1), force*m1*vrel(2), pos(0), pos(1), pos(2));
+    if(b1) dBodyAddForceAtPos(b1, force*m1*vrel(0), force*m1*vrel(1), force*m1*vrel(2), pos.x, pos.y, pos.z);
     
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
     std::cout <<"slip force " <<force <<std::endl;
@@ -741,7 +745,7 @@ void OdeInterface::createOde(ors::Graph &C) {
       if(trans) {
         //geoms(s->index) = trans;
         dGeomTransformSetGeom(trans, geom);
-        dGeomSetPosition(geom, s->rel.pos(0), s->rel.pos(1), s->rel.pos(2));
+        dGeomSetPosition(geom, s->rel.pos.x, s->rel.pos.y, s->rel.pos.z);
         dGeomSetQuaternion(geom, s->rel.rot.p);
         dGeomSetBody(trans, b); //attaches the geom to the body
       } else {

@@ -12,6 +12,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   writeDot(H);
 
   GraphView gv(H);
+  //MT::wait(2.);
   gv.watch();
 }
 

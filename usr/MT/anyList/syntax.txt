@@ -1,0 +1,107 @@
+tag-value list/graph
+
+-- (hyper-)graph: every item can have list of parents
+
+-- value is optional, may be another tag-value (sub-)graph
+
+-- multiple tags allowed
+
+
+item:
+tag [more tags] [(parent-names)] [=] [value]
+
+value:
+none -> boolean
+number -> double
+'string' -> MT::String
+[doubles] -> arr
+<TypeKey ...> -> arbitrary type
+(item-names) -> AnyList (subset of previously defined items)
+{ item-list } -> AnyList (new subgraph of this item)
+
+predefined TypeKeys:
+<T ...> -> Transformation
+<d ...> -> arr
+<u ...> -> uintA
+
+
+\subsection{10-08-06 relational graph format}
+
+== Graph syntax without relations or ranges/templates:
+
+entity-type name(parent-names){ properties as key value pairs }
+
+name, parent-names, and description are optional
+
+Example 1:
+
+node a
+node b
+edge (a,b)
+
+A minimalistic graph. a and b have no parents (do not connect
+anything) and no properties. The edge has no name (not necessary since
+no entity referes to it as parent/no hyper edges in this case) and no
+properties. The edge is internally stored as directed (parent ordering
+matters) but an attribute or type could label it as undirected.
+
+
+Example 2:
+
+node A{ color=blue }
+node B{ color=red, value=5 }
+edge (A,B){ width=2 }
+
+with attributes...
+
+
+Example 3:
+
+Variable X { dim=2 }
+Variable Y { dim=4 }
+Factor f(X,Y){ f=[1 2 3 4 5 6 7 8] }
+
+A factor graph (with strange coupling matrix of 8 entries).
+
+
+
+== Syntax to define a range of entities (relational entities):
+
+entity-type name[range-variables](parent-names){ properties }
+
+Example 4:
+
+Variable x[t] { dim=2 }
+
+reads ``create a //Variable// named //x[t]// for each instantiation of
+//t//''
+
+
+Example 5:
+
+Variable x[t] { dim=2 }
+Factor f[t](x[t],x[t+1]) { f=[.9 .1 .1 .9] }
+Factor evidence(x[0]) { f=[1 0] }
+
+reads ``create a //Variable// named //x[t]// for each time slice;
+create a //Factor f[t]// for each time slice coupling to //x[t]// and
+//x[t+1]// with the specified Markov kernel; create a single factor
+coupling to x[0] with the specified evidence'' -- this defines a
+simple Markov chain!
+
+
+Example 6:
+
+Variable on[a,b]
+Variable ball[a]
+Variable table[a]
+Variable free[a]
+
+Variable move[a,b,c]
+
+Factor move-condition[a,b,c](on[a,b],free[c]) { coupling... }
+
+defines a relational factor graph with predicates for different
+instantiations of the logical variables a,b,c (somewhere one has to
+specify that a,b,c are instances of the \emph{same} domain!
+

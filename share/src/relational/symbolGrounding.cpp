@@ -363,9 +363,9 @@ void relational::RBF_Grounding::write() const {
 void relational::getFeatureVector(arr& f, const ors::Graph& C, uint obj) {
   f.clear();
   f.resize(4);
-  f(0) = C.bodies(obj)->X.pos.p[0];  // position
-  f(1) = C.bodies(obj)->X.pos.p[1];  // position
-  f(2) = C.bodies(obj)->X.pos.p[2];  // position
+  f(0) = C.bodies(obj)->X.pos.x;  // position
+  f(1) = C.bodies(obj)->X.pos.y;  // position
+  f(2) = C.bodies(obj)->X.pos.z;  // position
   if(C.bodies(obj)->shapes.N == 6)
     f(3) = 7;
   else

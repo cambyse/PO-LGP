@@ -4,6 +4,13 @@
 #include <MT/array.h>
 #include <MT/util.h>
 
+/* NOTES:
+
+  -- derive all biros objects from bObject -> specific lists become generic lists
+  -- insideOut -> one view with all bObjects
+
+  -- flow chart: x-axis=time, rows=processes&variables, transactions=vertical arrows, on each row: bars indicate duration of step of process / duration of revision of variable; arrow onto variable -> change of revision/color/bar of that variable; each process bar is labeled by step number and process name; each variable bar by revision and variable name.
+  */
 
 //===========================================================================
 //
@@ -19,48 +26,58 @@ typedef MT::Array<Parameter*> ParameterL;
 
 
 //===========================================================================
-//
-// Variable
-//
-
+/**
+ * A Variable is a dumb data holder which is used to exchange information
+ * between processes.
+ *
+ * Inherit from the class Variable to create your own variable.
+ */
 struct Variable {
   struct sVariable *s;        ///< private
   MT::String name;            ///< Variable name
   ConditionVariable revision; ///< revision (= number of write accesses) number
   RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
 
+  /// @name c'tor/d'tor
   Variable(const char* name);
   virtual ~Variable();
   
-  //-- access control, to be called by a processes before access, returns the revision
+  /// @name access control
+  /// to be called by a processes before access, returns the revision
   int readAccess(Process*);  //might set the caller to sleep
   int writeAccess(Process*); //might set the caller to sleep
   int deAccess(Process*);
   
-  //-- syncing via a variable - the caller is set to sleep
+  /// @name syncing via a variable
+  /// the caller is set to sleep
   void waitForNextWriteAccess();
   int  waitForRevisionGreaterThan(int rev); //returns the revision
   
-  //-- info
+  /// @name info
   struct FieldRegistration& get_field(uint i) const;
 };
 
 
 //===========================================================================
-//
-// Process
-//
-
+/**
+ * A Process does some calculation and shares the result via a Variable.
+ *
+ * Inherit from the class Process to create your own variable.
+ * You need to implement open(), close(), and step().
+ * step() should contain the actual calculation.
+ */
 struct Process {
   struct sProcess *s;      ///< private
   MT::String name;         ///< Process name
   ConditionVariable state; ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
   uint step_count;         ///< step count
 
+  /// @name c'tor/d'tor
   Process(const char* name);
   virtual ~Process();
 
-  //-- to be overloaded by the specific implementation
+  /// @name to be overloaded by the specific implementation
+  // TODO is it really necessary that open() and close() are pure virtual? the implementation normally does nothing.
   virtual void open() = 0;    ///< is called within the thread when the thread is created
   virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
   virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
@@ -69,7 +86,7 @@ struct Process {
   //code correctness requires that a call of _step() may only decrease _f() !!
   //virtual double _f(){ return 0.; }
   
-  //-- to be called from `outside' (e.g. the main) to start/step/close the thread
+  /// @name to be called from `outside' (e.g. the main) to start/step/close the thread
   void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
   void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
@@ -77,22 +94,21 @@ struct Process {
   void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
   void threadStop();                    ///< stop looping
 
-  void waitForIdle();                ///< caller waits until step is done (working -> idle mode)
-  bool isIdle();                  ///< check if in idle mode
-  bool isClosed();                ///< check if closed
+  void waitForIdle();                   ///< caller waits until step is done (working -> idle mode)
+  bool isIdle();                        ///< check if in idle mode
+  bool isClosed();                      ///< check if closed
   
-  void listenTo(Variable *var); //TODO: rename to 'listenTo' (because this is not doing anything WITHIN the thread)
+  /// @name lisetn to variable
+  void listenTo(Variable *var);
   void listenTo(const VariableL &signalingVars);
   void stopListeningTo(Variable *var);
 };
 
 
 //===========================================================================
-//
-// registration of variable fields
-// macro for automatic setters and getters
-//
-
+/**
+ * Helper to register FIELDs in a Variable.
+ */
 struct FieldRegistration {
   const char* name;
   const char* userType;
@@ -103,6 +119,9 @@ struct FieldRegistration {
   virtual void readValue(istream& os) const { NIY; }
 };
 
+/**
+ * Helper to register FIELDs in a Variable.
+ */
 template<class T>
 struct FieldRegistration_typed:FieldRegistration {
   FieldRegistration_typed(T *_p, Variable *_var, const char* _name, const char* _userType) {
@@ -118,6 +137,12 @@ struct FieldRegistration_typed:FieldRegistration {
 
 void registerField(Variable *v, FieldRegistration* f);
 
+/**
+ * \def FIELD(type, name)
+ * A macro to create a member of a Variable.
+ *
+ * Creates setters/getters and a register function.
+ */
 #define FIELD(type, name) \
   type name; \
   inline int set_##name(const type& _x, Process *p){ \
@@ -131,12 +156,14 @@ void registerField(Variable *v, FieldRegistration* f);
 
 
 //===========================================================================
-//
-// Parameters
-// (these are usually not created directly by the user,
-//  they are created automatically by a call of `getParameter')
-//
-
+/**
+ * Parameters similar to MT:getParameter.
+ *
+ * You can access parameters with `biros().getParameter()' functions.
+ *
+ * Parameterhs are usually not created directly by the user,
+ * they are created automatically by a call of `getParameter')
+ */
 struct Parameter {
   void *pvalue;
   const char* name;
@@ -146,6 +173,12 @@ struct Parameter {
   virtual const char* typeName() const = 0;
 };
 
+
+/**
+ * @brief Like Parameter but with type T.
+ *
+ * @tparam T the type of the parameter.
+ */
 template<class T>
 struct Parameter_typed:Parameter {
   T value;
@@ -161,10 +194,11 @@ struct Parameter_typed:Parameter {
 
 
 //===========================================================================
-//
-// macros to simplify code
-//
-
+/**
+ * Macro to create a Processs.
+ *
+ * TODO This is actually only used in motion.h. Do we really need it?
+ */
 #define PROCESS(name)   \
   struct name:Process { \
     struct s##name *s;  \
@@ -175,16 +209,22 @@ struct Parameter_typed:Parameter {
     void close();       \
   };
 
+
+//===========================================================================
+/**
+ * Macro to easily acess a Variable.
+ */
 #define VAR(Type) \
   Type *_##Type;  _##Type = biros().getVariable<Type>(#Type, NULL);
 
 
 
 //===========================================================================
-//
-// basic access/step control and access to global system info
-//
-
+/**
+ * The class Biros allows basic access/step control and access to global system info.
+ *
+ * Biros reprents the graph of variables and processes.
+ */
 struct Biros:Variable {
   struct sBirosEventController *acc;
 
@@ -192,10 +232,11 @@ struct Biros:Variable {
   ProcessL processes;
   ParameterL parameters;
 
+  /// @name c'tor/d'tor
   Biros();
   ~Biros();
 
-  //-- access existing processes, variables and parameters
+  /// @name access existing processes, variables and parameters.
   Process *getProcessFromPID();
   template<class T> T* getVariable(const char* name, Process *p, bool required = false);
   template<class T> void getVariable(T*& v, const char* name, Process *p, bool required = false);
@@ -204,10 +245,10 @@ struct Biros:Variable {
   template<class T> T getParameter(const char *name, const T& _default, Process *p=NULL);
   template<class T> void setParameter(const char *name, T value);
 
-  //-- dump ALL available information
+  /// @name dump ALL available information
   void dump();
 
-  //-- system control
+  /// @name system control
   void enableAccessLog();
   void dumpAccessLog();
   void blockAllAccesses();
@@ -216,7 +257,7 @@ struct Biros:Variable {
   void stepToNextWriteAccess();
 };
 
-Biros& biros(); //get access to the global info struct
+Biros& biros();
 
 
 //===========================================================================
@@ -269,27 +310,31 @@ struct WorkingCopy {
 
 
 //===========================================================================
-//
-// handling groups
-//
-
+/**
+ * @name Handle lists of processes
+ * @{
+ */
 void open(const ProcessL& P);
 void step(const ProcessL& P);
+void stepInSequence(const ProcessL& P);
+void stepInSequenceThreaded(const ProcessL& P);
 void loop(const ProcessL& P);
 void loopWithBeat(const ProcessL& P, double sec);
 void stop(const ProcessL& P);
 void wait(const ProcessL& P);
 void close(const ProcessL& P);
+/**  @} */
 
 //===========================================================================
-//
-// helpers
-//
-
+/**
+ * @name  Helpers to print out information
+ * @{
+ */
 void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
 void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
+/** @} */
 
 
 #include "biros_views.h"

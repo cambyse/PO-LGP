@@ -287,7 +287,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phase) 
   TaskVariable *V;
   
   //general target
-  arr xtarget(obj->X.pos.p, 3);
+  arr xtarget = ARRAY(obj->X.pos);
   //xtarget(2) += .02; //grasp it 2cm above center
   
   // graspCenter -> predefined point (xtarget)
@@ -421,7 +421,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, uint shapeId, int belowToShapeId, con
   //general target
   arr xtarget;
   if(onto) {
-    xtarget.setCarray(onto->X.pos.p, 3);
+    xtarget = ARRAY(onto->X.pos);
     xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
   }
   else {
