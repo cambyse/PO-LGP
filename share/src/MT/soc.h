@@ -29,7 +29,7 @@
 #include "optimization.h"
 
 //-- fwd declarations
-class OpenGL;
+struct OpenGL;
 extern uint countMsg, countSetq;
 
 

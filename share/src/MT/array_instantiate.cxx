@@ -44,8 +44,8 @@ template MT::Array<T>& MT::operator*=(Array<T>& y, T);
 template MT::Array<T>& MT::operator/=(Array<T>& y, T);
 template bool operator==(const MT::Array<T>& v, const MT::Array<T>& w);
 template bool operator==(const MT::Array<T>& v, const T *w);
-template std::istream& operator>>(std::istream& is, MT::Array<T>& x);
-template std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
+template std::istream& MT::operator>>(std::istream& is, Array<T>& x);
+template std::ostream& MT::operator<<(std::ostream& os, const Array<T>& x);
 
 //BinaryOperation
 template void transpose(MT::Array<T>& x, const MT::Array<T>& y);

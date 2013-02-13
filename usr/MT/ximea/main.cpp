@@ -7,7 +7,7 @@
 
 #include <MT/util.h>
 #include <MT/array.h>
-#include <MT/opengl.h>
+//#include <MT/opengl.h>
 
 #define HandleResult(res,place) if (res!=XI_OK) {printf("Error after %s (%d)",place,res);goto finish;}
 
@@ -18,10 +18,9 @@ int main(int argc, char** argv){
   image.bp = NULL;
   image.bp_size = 0;
 
-  byteA img;
-  OpenGL gl;
-  gl.img = &img;
   ofstream file("video.raw", std::ios::out | std::ios::binary);
+  //OpenGL gl;
+  //gl.img = &img;
 
   // Sample for XIMEA API V2.10
   HANDLE xiH = NULL;
@@ -32,25 +31,22 @@ int main(int argc, char** argv){
   stat = xiGetNumberDevices(&dwNumberOfDevices);
   HandleResult(stat,"xiGetNumberDevices (no camera found)");
 
-  if (!dwNumberOfDevices)
-  {
+  if (!dwNumberOfDevices){
     printf("No camera found\n");
     goto finish;
   }
 
-  // Retrieving a handle to the camera device
   stat = xiOpenDevice(0, &xiH);
   HandleResult(stat,"xiOpenDevice");
 
-  // Setting "exposure" parameter (10ms=10000us)
   stat = xiSetParamInt(xiH, XI_PRM_EXPOSURE, 10000);
   HandleResult(stat,"xiSetParam (exposure set)");
 
-  stat = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
+  stat = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_RGB24);
   HandleResult(stat,"xiSetParam (format)");
 
-  stat = xiSetParamInt(xiH, XI_PRM_DOWNSAMPLING, 2);
-  HandleResult(stat,"xiSetParam (downsampling)");
+  // stat = xiSetParamInt(xiH, XI_PRM_DOWNSAMPLING, 2);
+  // HandleResult(stat,"xiSetParam (downsampling)");
 
   float min_fps,max_fps;
   xiGetParamFloat(xiH, XI_PRM_FRAMERATE XI_PRM_INFO_MIN, &min_fps);
@@ -74,9 +70,36 @@ int main(int argc, char** argv){
     stat = xiGetImage(xiH, 5000, &image);
     HandleResult(stat,"xiGetImage");
     cout <<"image received: height=" <<image.height <<" width=" <<image.width <<" bp=" <<image.bp <<" bp_size=" <<image.bp_size <<" nframe=" <<image.nframe <<" format=" <<image.frm <<endl;
+
+    //write to raw video
     if(image.frm==XI_MONO8) file.write((char*)image.bp, image.height*image.width);
     if(image.frm==XI_RAW8)  file.write((char*)image.bp, image.height*image.width);
     if(image.frm==XI_RGB24)  file.write((char*)image.bp, 3*image.height*image.width);
+
+    //write single image
+    if(images==10){
+      byteA img;
+      if(image.frm==XI_MONO8){
+	img.referTo((byte*)image.bp,image.height*image.width);
+	img.reshape(image.height,image.width);
+	write_ppm(img, "pic.ppm");
+
+	FILE * pFile; 
+	pFile = fopen ( "pic.raw" , "wb" );
+	fwrite (image.bp , 1 , image.height*image.width , pFile );  
+	fclose (pFile);
+      }
+      if(image.frm==XI_RGB24){
+	img.referTo((byte*)image.bp, 3*image.height*image.width);
+	img.reshape(image.height, image.width, 3);
+	write_ppm(img, "pic.ppm");
+
+	FILE * pFile; 
+	pFile = fopen ( "pic.raw" , "wb" );
+	fwrite (image.bp , 1 , 3*image.height*image.width , pFile );  
+	fclose (pFile);
+      }
+    }
 //      img.referTo((byte*)image.bp,image.height*image.width);
 //      img.reshape(image.height,image.width);
 //      gl.update();

@@ -60,7 +60,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
     if(tag=="frames") {     frames.readTagged(is, 0);     continue;  }
     if(tag=="tailsHeads") { tailsHeads.readTagged(is, 0); continue;  }
     if(tag=="groups") {
-      is >>(const char*)"<" >>j >>(const char*)">";
+      is >>PARSE("<") >>j >>PARSE(">");
       G.resize(j);
       for(i=0; i<j; i++) {
         is >>G(i).name;
@@ -69,7 +69,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
       continue;
     }
     if(tag=="graph") {
-      is >>(const char*)"{" >>i >>j >>(const char*)"}";
+      is >>PARSE("{") >>i >>j >>PARSE("}");
       graph.resize(j, 2);
       c=is.get(); CHECK(c=='\n', "couldn't read newline after ascii tag :-(");
       is.read((char*)graph.p, graph.sizeT*graph.N);
@@ -77,7 +77,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
       continue;
     }
     if(tag=="names") {
-      is >>(const char*)"<" >>j >>(const char*)">";
+      is >>PARSE("<") >>j >>PARSE(">");
       //fscanf(is.rdbuf()->_File, "<%d>", &j);
       names.resize(j);
       for(i=0; i<j; i++) is >>names(i);

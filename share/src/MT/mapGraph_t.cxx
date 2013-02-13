@@ -81,7 +81,7 @@ template<class T> T* MapGraph::getValue(const char *key){
 template<class T> MapGraph MapGraph::getTypedItems(const char* key){
   MapGraph ret;
   for_list_(Item, it, (*this)) if(it->valueType()==typeid(T))
-    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return ret.append(it);
+    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) ret.append(it);
   return ret;
 }
 

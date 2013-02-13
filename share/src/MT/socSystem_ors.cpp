@@ -356,14 +356,15 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
 }
 
 //! DZ: write trajectory of task variable into the file
-void soc::SocSystem_Ors::recordTrajectory(const arr& q,const char *variable,const char *file){
+void soc::SocSystem_Ors::recordTrajectory(const arr& q, const char *variable, const char *file){
   uint i, k, m, T=get_T();
-  uint ind = -1;
-  uint num=T; m=nTasks();
-   for(i=0; i<m; i++)
-     if(strcmp(vars(i)->name, variable)==0) {ind = i;break;}
+  int ind = -1;
+  uint num=T;
+  m=nTasks();
+  for(i=0; i<m; i++)
+    if(strcmp(vars(i)->name, variable)==0){ ind=i; break; }
 
-  if (ind<0) return;
+  if(ind<0) return;
   arr y_traj;
   y_traj.resize(T,vars(ind)->y.N);
   for(k=0; k<(uint)num; k++){
@@ -539,7 +540,7 @@ void soc::SocSystem_Ors::getJJt(arr& J_i, arr& Jt_i, uint i){
 }
 
 void soc::SocSystem_Ors::getHessian(arr& H_i, uint i){
-  vars(i)->getHessian(H_i);
+  vars(i)->getHessian(*ors, H_i);
 }
 
 void soc::SocSystem_Ors::getTarget(arr& y_target, double& y_prec, uint i, uint t){

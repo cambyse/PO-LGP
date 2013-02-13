@@ -51,8 +51,8 @@ void inverse_LU(arr& Xinv, const arr& X){
   uint n=X.d0, i, j;
   Xinv.resize(n, n);
   if(n==0) return;
-  if(n==n && n==1){ Xinv(0, 0)=1./X(0, 0); return; }
-  if(n==n && n==2){ inverse2d(Xinv, X); return; }
+  if(n==1){ Xinv(0, 0)=1./X(0, 0); return; }
+  if(n==2){ inverse2d(Xinv, X); return; }
   arr LU;
   LU=X;
   intA idx(n);

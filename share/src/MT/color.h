@@ -160,7 +160,7 @@ public:
   void write(std::ostream& os) const { os <<"(" <<r <<":" <<g <<":" <<b <<")"; }
   
   //! prototype for operator>>
-  void read(std::istream& is) { is >>"(" >>r >>":" >>g >>":" >>b >>")"; }
+  void read(std::istream& is) { is >>PARSE("(") >>r >>PARSE(":") >>g >>PARSE(":") >>b >>PARSE(")"); }
 };
 }
 stdPipes(MT::Color);

@@ -79,7 +79,7 @@ ors::Camera::~Camera() {
 
 ors::Camera& ors::Camera::operator=(const ors::Camera& c) {
   //MEM_COPY_OPERATOR(c);
-  memmove(this, &c, sizeof(this));
+  memmove(this, &c, sizeof(*this));
   foc = new ors::Vector(*c.foc);
   X = new ors::Transformation(*c.X);
   return *this;

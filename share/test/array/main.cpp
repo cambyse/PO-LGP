@@ -20,7 +20,7 @@ void testBasics(){
 
   //easier looping:
   cout <<"\neasier looping:";
-  for_elem(double, e, a) (*e)++;
+  for_(double, e, a) (*e)++;
   cout <<a <<endl;
 
   //fancy writing:

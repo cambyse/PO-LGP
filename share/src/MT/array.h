@@ -300,6 +300,17 @@ extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional argumen
 
 //===========================================================================
 // @}
+//!@name std in/out pipes
+// @{
+
+namespace MT{
+template<class T> std::istream& operator>>(std::istream& is, Array<T>& x);
+template<class T> std::ostream& operator<<(std::ostream& os, const Array<T>& x);
+}
+
+
+//===========================================================================
+// @}
 //!@name shorthand to specify arrays and lists (list=array of pointers)
 // @{
 
@@ -644,9 +655,7 @@ BinaryFunction(pow);
 BinaryFunction(fmod);
 #undef BinaryFunction
 
-template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x);
 template<class T> MT::Array<T>& operator<<(MT::Array<T>& x, const char* str);
-template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 template<class T> void checkNan(const MT::Array<T>& x);
 template<class T> bool operator==(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> bool operator==(const MT::Array<T>& v, const T *w);

@@ -1441,12 +1441,12 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       readDim(is);
       c=MT::peerNextChar(is);
       if(c=='[') {  //fast ascii read
-        is >>"[";
+        is >>PARSE("[");
         for(i=0; i<N; i++) {
           if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
           is >>p[i];
         }
-        is >>"]";
+        is >>PARSE("]");
         if(is.fail()) HALT("could not read array end tag");
       } else if(c==0) {  //binary read
         c=is.get(); CHECK(c==0, "couldn't read newline before binary data block :-(");
@@ -1461,7 +1461,7 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       }
       break;
     case '[': //slow read
-      is >>"[";
+      is >>PARSE("[");
     default:
       uint i=0;
       d=0;
@@ -1504,23 +1504,23 @@ template<class T> void MT::Array<T>::readOld(std::istream& is){
   case '[':
     is >>d;
     if(is.fail()) HALT ("could not read array tag");
-    if(d==0){ is >>">"; return; }
+    if(d==0){ is >>PARSE(">"); return; }
     if(d==1){
-      is >>":" >>i;
+      is >>PARSE(":") >>i;
       if(is.fail()) HALT ("could not read array's dimensions");
       resize(i);
     }
     if(d==2){
-      is >>":" >>i >>", " >>j;
+      is >>PARSE(":") >>i >>PARSE(", ") >>j;
       if(is.fail()) HALT ("could not read array's dimensions");
       resize(i, j);
     }
     if(d==3){
-      is >>":" >>i >>", " >>j >>", " >>k;
+      is >>PARSE(":") >>i >>PARSE(", ") >>j >>PARSE(", ") >>k;
       if(is.fail()) HALT ("could not read array's dimensions");
       resize(i, j, k);
     }
-    is >>"]";
+    is >>PARSE("]");
     if(is.fail()) HALT ("could not read array end tag");
     for(i=0;i<N;i++){
       if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
@@ -1546,7 +1546,7 @@ template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
 template<class T> void MT::Array<T>::readDim(std::istream& is) {
   char c;
   uint ND, dim[10];
-  is >>"<";
+  is >>PARSE("<");
   for(ND=0;; ND++) {
     is >>dim[ND];
     is.get(c);
@@ -2186,7 +2186,6 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
 //!@name tensor operations
 //
 
-template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x);
 void getIndexTuple(uintA &I, uint i, const uintA &d);
 
 #define DEBUG_TENSOR(x) //x
@@ -2827,15 +2826,17 @@ BinaryOperator(/ , /=);
 }
 
 
-//! calls MT::Array<T>::read
-template<class T> std::istream& operator>>(std::istream& is, MT::Array<T>& x) { x.read(is); return is; }
 
 //! allows a notation such as x <<"[0 1; 2 3]"; to initialize an array x
 template<class T> MT::Array<T>& operator<<(MT::Array<T>& x, const char* str) { std::istringstream ss(str); ss >>x; return x; }
 
+namespace MT{
+//! calls MT::Array<T>::read
+template<class T> std::istream& operator>>(std::istream& is, Array<T>& x) { x.read(is); return is; }
 //! calls MT::Array<T>::write
-template<class T> std::ostream& operator<<(std::ostream& os, const MT::Array<T>& x) {
+template<class T> std::ostream& operator<<(std::ostream& os, const Array<T>& x) {
   x.write(os); return os;
+}
 }
 
 //! check for Nans in the array (checks x.elem(i)==x.elem(i) for all elements)

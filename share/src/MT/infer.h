@@ -220,16 +220,16 @@ struct LoopyBP {
 };
 void connectThemUp(infer::VariableList& V, infer::FactorList& F);
 void getVariableBeliefs(MT::Array<arr>& post, const infer::VariableList& vars);
-}
 
 //-- pipes
 //inline ostream& operator<<(ostream& os, const iSpace& s)      { s.write(os); return os; }
-inline ostream& operator<<(ostream& os, const infer::Variable& v)    { v.write(os); return os; }
-inline ostream& operator<<(ostream& os, const infer::Factor& f)      { f.write(os); return os; }
-inline ostream& operator<<(ostream& os, const infer::MessagePair& s){ s.write(os); return os; }
-inline ostream& operator<<(ostream& os, const infer::VariableList& list)   { listWrite(list, os, "\n"); return os; }
-inline ostream& operator<<(ostream& os, const infer::FactorList& list)     { listWrite(list, os, "\n"); return os; }
-inline ostream& operator<<(ostream& os, const infer::MessagePairList& list){ listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const Variable& v)    { v.write(os); return os; }
+inline ostream& operator<<(ostream& os, const Factor& f)      { f.write(os); return os; }
+inline ostream& operator<<(ostream& os, const MessagePair& s) { s.write(os); return os; }
+inline ostream& operator<<(ostream& os, const VariableList& list)   { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const FactorList& list)     { listWrite(list, os, "\n"); return os; }
+inline ostream& operator<<(ostream& os, const MessagePairList& list){ listWrite(list, os, "\n"); return os; }
+}
 
 // =======================================================================
 //
@@ -331,6 +331,7 @@ struct FactorGraph {
   void addV2Fmap(infer::Factor* f);
   void setV2Fv();
 };
+stdOutPipe(FactorGraph);
 }
 
 
@@ -345,7 +346,6 @@ void writeNice(const infer::FactorList& individual_factors);
 void writeEdges(const infer::FactorList& individual_factors, bool withProbs = false);
 void writeExtremelyNice(const infer::FactorList& facs);
 
-inline ostream& operator<<(ostream& os, const infer::FactorGraph& fg){ fg.write(os); return os; }
 
 // calculates marginal for given variables
 void getMarginal(infer::Factor& marginal, const uintA& marginalVars, infer::FactorGraph& fg);

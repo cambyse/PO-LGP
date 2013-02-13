@@ -23,9 +23,9 @@
 
 //===========================================================================
 
-class OpenGL;
+struct OpenGL;
 struct Gaussian;
-namespace MT {  template<class T> class Array;  }
+namespace MT {  template<class T> struct Array;  }
 
 typedef unsigned int uint;
 typedef MT::Array<double> arr;

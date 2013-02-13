@@ -50,8 +50,8 @@
 #  include<gl2ps.h>
 #endif
 
-#include "util.h"
 #include "array.h"
+#include "util.h"
 
 
 //===========================================================================

@@ -195,8 +195,9 @@ template <class T> bool getFromMap(T& x, const char* tag);
 uint getVerboseLevel();
 }
 
-std::istream& operator>>(std::istream& is, const char *str);
-std::istream& operator>>(std::istream& is, char *str);
+//----- stream parsing
+struct PARSE{ const char *str; PARSE(const char* _str):str(_str){} };
+std::istream& operator>>(std::istream& is, const PARSE&);
 
 
 //===========================================================================
@@ -212,7 +213,7 @@ namespace MT {
 istream, but also can be send to an ostream or read from an
 istream. It is based on a simple streambuf derived from the
 MT::Mem class */
-class String:public std::iostream {
+struct String:public std::iostream {
 private:
   struct StringBuf:std::streambuf {
     String *string;
@@ -272,8 +273,8 @@ public:
   void write(std::ostream& os) const;
   uint read(std::istream& is, const char* skipSymbols=NULL, const char *stopSymbols=NULL, int eatStopSymbol=-1);
 };
+stdPipes(String)
 }
-stdPipes(MT::String)
 
 
 //===========================================================================

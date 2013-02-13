@@ -568,8 +568,8 @@ uint getVerboseLevel() {
 }
 
 //! a global operator to scan (parse) strings from a stream
-std::istream& operator>>(std::istream& is, const char *str) {
-  MT::parse(is, str); return is;
+std::istream& operator>>(std::istream& is, const PARSE& x) {
+  MT::parse(is, x.str); return is;
 }
 
 //! the same global operator for non-const string

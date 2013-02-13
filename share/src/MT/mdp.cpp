@@ -137,7 +137,7 @@ void mdp::clearFSC(FSC_structured& fsc){
 void readStringList(MT::Array<MT::String>& strings, istream& is){
   char c;
   MT::String str;
-  is >>"(";
+  is >>PARSE("(");
   strings.clear();
   for(;;){
     MT::skip(is);
@@ -202,7 +202,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
     if(!tag.N) break; //end of file
     if(tag=="variable"){
       name.read(is, " \t\n\r", " \t\n\r<({", false);
-      is >>"<" >>d >>">";
+      is >>PARSE("<") >>d >>PARSE(">");
       mdp.vars.append(new infer::Variable(d, name));
     }
     if(tag=="factor"){
@@ -217,7 +217,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
     }
     if(tag=="mdp"){
       name.read(is, " \t\n\r", " \t\n\r({", false);
-      is >>"{";
+      is >>PARSE("{");
       insidePomdp=true;
       continue;
     }
@@ -234,7 +234,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
     if(tag=="transFacs"){ CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.transFacs, strings, mdp.facs); continue; }
     if(tag=="obsFacs"){   CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.obsFacs, strings, mdp.facs); continue; }
     if(tag=="rewardFacs"){CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.rewardFacs, strings, mdp.facs); continue; }
-    if(tag=="gamma"){     CHECK(insidePomdp, "");  is >>"[" >>mdp.gamma >>"]";  continue; }
+    if(tag=="gamma"){     CHECK(insidePomdp, "");  is >>PARSE("[") >>mdp.gamma >>PARSE("]");  continue; }
     HALT("something's wrong: don't know tag '" <<tag <<"' inside mdp declaration");
   }
   
@@ -334,8 +334,8 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     if(tag=="controllable"){ CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.ctrlVars, strings, mdp.vars); continue; }
     if(tag=="utility"){      CHECK(insidePomdp, "");  readStringList(strings, is);  for(i=0; i<strings.N; i++) strings(i) <<'\''; /*APPEND A PRIME!*/ namesToSublist(rewardVars, strings, mdp.vars); continue; }
     //if(tag=="separators"){   CHECK(insidePomdp, "");  readStringList(strings, is);  namesToSublist(mdp.leftVars, strings, mdp.vars); continue; }
-    if(tag=="discount"){     CHECK(insidePomdp, "");  is >>"(" >>mdp.gamma >>")";  continue; }
-    if(tag=="horizon"){      CHECK(insidePomdp, "");  double z; is >>"(" >>z >>")";  continue; }
+    if(tag=="discount"){     CHECK(insidePomdp, "");  is >>PARSE("(") >>mdp.gamma >>PARSE(")");  continue; }
+    if(tag=="horizon"){      CHECK(insidePomdp, "");  double z; is >>PARSE("(") >>z >>PARSE(")");  continue; }
     //a CPT declaration:
     name.read(is, " \t\n\r(", ")", true);
     v=listFindByName(mdp.vars, tag);  CHECK(v, "");

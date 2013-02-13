@@ -544,26 +544,26 @@ Transformation operator*(const Transformation& b, const Transformation& c);
 Transformation operator/(const Transformation& b, const Transformation& c);
 Vector operator*(const Transformation& b, const Vector& c);
 Vector operator/(const Transformation& b, const Vector& c);
-}
-std::istream& operator>>(std::istream&, ors::Vector&);
-std::istream& operator>>(std::istream&, ors::Matrix&);
-std::istream& operator>>(std::istream&, ors::Quaternion&);
-std::istream& operator>>(std::istream&, ors::Transformation&);
-std::ostream& operator<<(std::ostream&, const ors::Vector&);
-std::ostream& operator<<(std::ostream&, const ors::Matrix&);
-std::ostream& operator<<(std::ostream&, const ors::Quaternion&);
-std::ostream& operator<<(std::ostream&, const ors::Transformation&);
-stdOutPipe(ors::Mesh);
+std::istream& operator>>(std::istream&, Vector&);
+std::istream& operator>>(std::istream&, Matrix&);
+std::istream& operator>>(std::istream&, Quaternion&);
+std::istream& operator>>(std::istream&, Transformation&);
+std::ostream& operator<<(std::ostream&, const Vector&);
+std::ostream& operator<<(std::ostream&, const Matrix&);
+std::ostream& operator<<(std::ostream&, const Quaternion&);
+std::ostream& operator<<(std::ostream&, const Transformation&);
+stdOutPipe(Mesh);
 
 #ifndef MT_ORS_ONLY_BASICS
-std::istream& operator>>(std::istream&, ors::Body&);
-std::istream& operator>>(std::istream&, ors::Joint&);
-std::istream& operator>>(std::istream&, ors::Proxy&);
-std::ostream& operator<<(std::ostream&, const ors::Body&);
-std::ostream& operator<<(std::ostream&, const ors::Joint&);
-std::ostream& operator<<(std::ostream&, const ors::Proxy&);
-stdPipes(ors::Graph);
+std::istream& operator>>(std::istream&, Body&);
+std::istream& operator>>(std::istream&, Joint&);
+std::istream& operator>>(std::istream&, Proxy&);
+std::ostream& operator<<(std::ostream&, const Body&);
+std::ostream& operator<<(std::ostream&, const Joint&);
+std::ostream& operator<<(std::ostream&, const Proxy&);
+stdPipes(Graph);
 #endif
+}
 
 double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 
@@ -689,10 +689,11 @@ struct TaskVariable {
   //!@name updates
   virtual void updateState(const ors::Graph &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
   void updateChange(int t=-1, double tau=1.);
-  virtual void getHessian(arr& H) { NIY; }
+  virtual void getHessian(const ors::Graph& ors, arr& H) { NIY; }
   
   //!@name I/O
-  virtual void write(ostream& os) const;
+  virtual void write(ostream& os, const ors::Graph& ors) const;
+  void write(ostream& os) const {NIY};
 };
 stdOutPipe(TaskVariable);
 

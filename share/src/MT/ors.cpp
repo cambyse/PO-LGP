@@ -200,7 +200,7 @@ void Vector::write(std::ostream& os) const {
 }
 
 void Vector::read(std::istream& is) {
-  if(!MT::IOraw) is >>"(" >>x >>y >>z >>")";
+  if(!MT::IOraw) is >>PARSE("(") >>x >>y >>z >>PARSE(")");
   else is >>x >>y >>z;
 }
 //}
@@ -709,7 +709,7 @@ void Quaternion::write(std::ostream& os) const {
   if(!MT::IOraw) os <<'(' <<w <<' ' <<x <<' ' <<y <<' ' <<z <<')';
   else os <<' ' <<w <<' ' <<x <<' ' <<y <<' ' <<z;
 }
-void Quaternion::read(std::istream& is) { is >>"(" >>w >>x >>y  >>z >>")"; normalize();}
+void Quaternion::read(std::istream& is) { is >>PARSE("(") >>w >>x >>y  >>z >>PARSE(")"); normalize();}
 //}
 
 //! compound of two rotations (A=B*C)
@@ -1044,13 +1044,13 @@ void Transformation::read(std::istream& is) {
       is>>x[0]>>x[1]>>x[2]>>x[3]; addRelativeRotationQuat(x[0], x[1], x[2], x[3]);
     } else switch(c) {
           //case '<': break; //do nothing -- assume this is an opening tag
-        case 't': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeTranslation(x[0], x[1], x[2]); break;
-        case 'q': is>>"(">>x[0]>>x[1]>>x[2]>>x[3]>>")"; addRelativeRotationQuat(x[0], x[1], x[2], x[3]); break;
-        case 'r': is>>"(">>x[0]>>x[1]>>x[2]>>x[3]>>")"; addRelativeRotationRad(x[0], x[1], x[2], x[3]); break;
-        case 'd': is>>"(">>x[0]>>x[1]>>x[2]>>x[3]>>")"; addRelativeRotationDeg(x[0], x[1], x[2], x[3]); break;
-        case 'v': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeVelocity(x[0], x[1], x[2]); break;
-        case 'w': is>>"(">>x[0]>>x[1]>>x[2]>>")";       addRelativeAngVelocityRad(x[0], x[1], x[2]); break;
-          //case 's': is>>"(">>x[0]>>")";                   scale(x[0]); break;
+        case 't': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")");       addRelativeTranslation(x[0], x[1], x[2]); break;
+        case 'q': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationQuat(x[0], x[1], x[2], x[3]); break;
+        case 'r': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationRad(x[0], x[1], x[2], x[3]); break;
+        case 'd': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationDeg(x[0], x[1], x[2], x[3]); break;
+        case 'v': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")");       addRelativeVelocity(x[0], x[1], x[2]); break;
+        case 'w': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")");       addRelativeAngVelocityRad(x[0], x[1], x[2]); break;
+          //case 's': is>>PARSE("(")>>x[0]>>PARSE(")");                   scale(x[0]); break;
         case '|':
         case '>': is.putback(c); return; //those symbols finish the reading without error
         default: MT_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
@@ -1095,23 +1095,23 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b) {
   return a.w*b.w+a.x*b.x+a.y*b.y+a.z*b.z;
 }
 
-std::istream& operator>>(std::istream& is, ors::Vector& x)    { x.read(is); return is; }
-std::istream& operator>>(std::istream& is, ors::Matrix& x)    { x.read(is); return is; }
-std::istream& operator>>(std::istream& is, ors::Quaternion& x) { x.read(is); return is; }
-std::istream& operator>>(std::istream& is, ors::Transformation& x)     { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Vector& x)    { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Matrix& x)    { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Quaternion& x) { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Transformation& x)     { x.read(is); return is; }
 #ifndef MT_ORS_ONLY_BASICS
-std::istream& operator>>(std::istream& is, ors::Body& x) { x.read(is); return is; }
-std::istream& operator>>(std::istream& is, ors::Joint& x) { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Body& x) { x.read(is); return is; }
+std::istream& ors::operator>>(std::istream& is, Joint& x) { x.read(is); return is; }
 //std::istream& operator>>(std::istream& is, ors::Proxy& x){ x.read(is); return is; }
 #endif
-std::ostream& operator<<(std::ostream& os, const ors::Vector& x)    { x.write(os); return os; }
-std::ostream& operator<<(std::ostream& os, const ors::Matrix& x)    { x.write(os); return os; }
-std::ostream& operator<<(std::ostream& os, const ors::Quaternion& x) { x.write(os); return os; }
-std::ostream& operator<<(std::ostream& os, const ors::Transformation& x)     { x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Vector& x)    { x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Matrix& x)    { x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Quaternion& x) { x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Transformation& x)     { x.write(os); return os; }
 #ifndef MT_ORS_ONLY_BASICS
-std::ostream& operator<<(std::ostream& os, const ors::Body& x) { x.write(os); return os; }
-std::ostream& operator<<(std::ostream& os, const ors::Joint& x) { x.write(os); return os; }
-//std::ostream& operator<<(std::ostream& os, const ors::Proxy& x){ x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Body& x) { x.write(os); return os; }
+std::ostream& ors::operator<<(std::ostream& os, const Joint& x) { x.write(os); return os; }
+//std::ostream& ors::operator<<(std::ostream& os, const Proxy& x){ x.write(os); return os; }
 #endif
 
 
@@ -1893,7 +1893,7 @@ void ors::Mesh::readTriFile(const char* filename) {
   ifstream is;
   MT::open(is, filename);
   uint i, nV, nT;
-  is >>(const char*)"TRI" >>nV >>nT;
+  is >>PARSE("TRI") >>nV >>nT;
   V.resize(nV, 3);
   T.resize(nT, 3);
   for(i=0; i<V.N; i++) is >>V.elem(i);
@@ -1913,7 +1913,7 @@ void ors::Mesh::readOffFile(const char* filename) {
   ifstream is;
   MT::open(is, filename);
   uint i, k, nVertices, nFaces, nEdges;
-  is >>(const char*)"OFF" >>nVertices >>nFaces >>nEdges;
+  is >>PARSE("OFF") >>nVertices >>nFaces >>nEdges;
   CHECK(!nEdges, "can't read edges in off file");
   V.resize(nVertices, 3);
   T.resize(nFaces   , 3);
@@ -1930,14 +1930,14 @@ void ors::Mesh::readPlyFile(const char* filename) {
   MT::open(is, filename);
   uint i, k, nVertices, nFaces;
   MT::String str;
-  is >>"ply" >>"format" >>str;
+  is >>PARSE("ply") >>PARSE("format") >>str;
   if(str=="ascii") {
-    is >>"1.0";
-    is >>"element vertex" >>nVertices;
-    is >>"property float32 x" >>"property float32 y" >>"property float32 z";
-    is >>"property float32 nx" >>"property float32 ny" >>"property float32 nz";
-    is >>"element face" >>nFaces;
-    is >>"property list uint8 int32 vertex_indices" >>"end_header";
+    is >>PARSE("1.0");
+    is >>PARSE("element vertex") >>nVertices;
+    is >>PARSE("property float32 x") >>PARSE("property float32 y") >>PARSE("property float32 z");
+    is >>PARSE("property float32 nx") >>PARSE("property float32 ny") >>PARSE("property float32 nz");
+    is >>PARSE("element face") >>nFaces;
+    is >>PARSE("property list uint8 int32 vertex_indices") >>PARSE("end_header");
     V.resize(nVertices, 3);
     T.resize(nFaces   , 3);
     double nx, ny, nz;
@@ -2101,7 +2101,7 @@ void ors::Mesh::readStlFile(const char* filename) {
   ifstream is;
   MT::open(is, filename);
   MT::String name;
-  is >>"solid" >>name;
+  is >>PARSE("solid") >>name;
   uint i, k=0, k0;
   double x, y, z;
   cout <<"reading STL file '" <<filename <<"' object name '" <<name <<"'..." <<endl;
@@ -2112,14 +2112,14 @@ void ors::Mesh::readStlFile(const char* filename) {
     if(k>V.N-10) V.resizeCopy(2*V.N);
     if(!(i%100)) cout <<"\r" <<i <<' ' <<i*7;
     if(MT::peerNextChar(is)!='f') break;
-    is >>(const char*)"facet";
-    is >>(const char*)"normal" >>x >>y >>z;  MT::skip(is);
-    is >>(const char*)"outer" >>(const char*)"loop";      MT::skip(is);
-    is >>(const char*)"vertex">>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>(const char*)"vertex">>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>(const char*)"vertex">>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>(const char*)"endloop";             MT::skip(is);
-    is >>(const char*)"endfacet";            MT::skip(is);
+    is >>PARSE("facet");
+    is >>PARSE("normal") >>x >>y >>z;  MT::skip(is);
+    is >>PARSE("outer") >>PARSE("loop");      MT::skip(is);
+    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+    is >>PARSE("endloop");             MT::skip(is);
+    is >>PARSE("endfacet");            MT::skip(is);
     if(!is.good()) {
       MT_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
       is.clear();
@@ -2129,7 +2129,7 @@ void ors::Mesh::readStlFile(const char* filename) {
       k=k0;
     }
   }
-  is >>"endsolid";
+  is >>PARSE("endsolid");
   if(!is.good()) MT_MSG("couldn't read STL end tag (line" <<i*7+2);
   cout <<"... STL file read: #tris=" <<i <<" #lines=" <<i*7+2 <<endl;
   CHECK(!(k%9), "not mod 9..");

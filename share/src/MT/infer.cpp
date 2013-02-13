@@ -564,7 +564,7 @@ void infer::FactorGraph::write(std::ostream& os, bool writeBeliefs, bool writeMe
   //os <<g.variables <<endl;
   os <<"Original factors (" <<this->F.N <<"):" <<endl;
   for(i=0; i<this->F.N; i++){
-    os <<"[" <<i <<"] " <<this->F(i)->varIds<<"  " <<this->F(i) <<endl;
+    os <<"[" <<i <<"] " <<this->F(i)->varIds <<"  " <<this->F(i) <<endl;
 //     os <<*F(i);
     F(i)->writeExtremelyNice(os);
 //     os <<"msg: " <<F(i)->messages <<endl;

@@ -1,3 +1,4 @@
+CXX=clang++
 # this is a generic make file
 # supposed to be called from lib, test and projects Makefiles
 #
@@ -98,7 +99,8 @@ CC	= gcc
 endif
 LINK	= $(CXX)
 CPATH	:= $(BASE)/include:$(BASE)/src:$(MLR_LIBPATH)/include:$(CPATH)
-LPATH	:= $(BASE)/lib:$(MLR_LIBPATH)/lib:$(LPATH)
+LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib
+LIBS += -lrt
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 MOC = moc
@@ -178,12 +180,12 @@ endif
 
 ifeq ($(CUDA),1)
 CXXFLAGS += -DMT_CUDA
-NXX = $(LIBPATH)/cuda/bin/nvcc
-CPATH   := $(CPATH):$(LIBPATH)/cuda/include:$(LIBPATH)/cudaSDK/C/common/inc
+NXX = $(MLR_LIBPATH)/cuda/bin/nvcc
+CPATH   := $(CPATH):$(MLR_LIBPATH)/cuda/include:$(MLR_LIBPATH)/cudaSDK/C/common/inc
 ifeq ($(ARCH),x86_64)
-LPATH   := $(LPATH):$(LIBPATH)/cuda/lib64:$(LIBPATH)/cudaSDK/lib
+LPATHS += $(MLR_LIBPATH)/cuda/lib64 $(MLR_LIBPATH)/cudaSDK/lib
 else
-LPATH   := $(LPATH):$(LIBPATH)/cuda/lib32:$(LIBPATH)/cudaSDK/lib
+LPATHS += $(MLR_LIBPATH)/cuda/lib32 $(MLR_LIBPATH)/cudaSDK/lib
 CUDA_EMU = 1
 #$(warning WARNING: using cuda EMULATION mode)
 endif
@@ -200,7 +202,7 @@ ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
 CPATH   := $(CPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/include:$(MLR_LIBPATH)/schunkLWA/include
 CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATH   := $(LPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/lib:$(MLR_LIBPATH)/schunkLWA/lib:$(MLR_LIBPATH)/ntcan/lib
+LPATHS  += $(MLR_LIBPATH)/schunkSDH-11-05-11/lib $(MLR_LIBPATH)/schunkLWA/lib $(MLR_LIBPATH)/ntcan/lib
 LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
 endif
 
@@ -236,11 +238,13 @@ LIBS      += `pkg-config --libs  QtCore QtGui QtOpenGL`
 endif
 
 ifeq ($(GTK),1)
-#CXXFLAGS += `pkg-config --cflags /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
-#LIBS     += `pkg-config --libs /home/mtoussai/tmp/gtk/lib/pkgconfig/gtk+-2.0.pc /home/mtoussai/tmp/gtk/lib/pkgconfig/gtkglext-1.0.pc`
 CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-2.0 gtkglext-1.0`
 LIBS     += `pkg-config --libs  gtk+-2.0 gtkglext-1.0` -lgthread-2.0
-#LPATH := /home/mtoussai/tmp/gtk/lib:$(LPATH)
+endif
+
+ifeq ($(GTK3),1)
+CXXFLAGS += -DMT_GTK `pkg-config --cflags gtk+-3.0`
+LIBS     += `pkg-config --libs  gtk+-3.0`
 endif
 
 ifeq ($(GRAPHVIZ),1)
@@ -256,15 +260,12 @@ endif
 
 ifeq ($(ODE),1)
 CXXFLAGS  += -DMT_ODE -DdDOUBLE
-#CPATH := $(CPATH):$(MLR_LIBPATH)/ode/include
-#LPATH := $(LPATH):$(MLR_LIBPATH)/ode/lib
 LIBS += -lode
 endif
 
 ifeq ($(SWIFT),1)
 CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
-#LPATH	  := $(LPATH):$(LIBPATH)/SWIFT++_1.2/lib
 LIBS += -lSWIFT++
 QHULL := 1
 ANN := 1
@@ -273,7 +274,6 @@ endif
 ifeq ($(LEWINER),1)
 CXXFLAGS += -DMT_Lewiner
 CPATH := $(CPATH):$(BASE)/extern/Lewiner
-#LPATH := $(LPATH):$(BASE)/extern/Lewiner
 LIBS += -llewiner
 endif
 
@@ -285,15 +285,11 @@ endif
 ifeq ($(SOLID),1)
 CXXFLAGS  += -DMT_SOLID
 CPATH     := $(CPATH):$(LIBPATH)/FreeSOLID-2.1.1/include
-#LPATH     := $(LPATH):$(LIBPATH)/FreeSOLID-2.1.1/lib
 LIBS += -lFreeSOLID
 endif
 
 ifeq ($(ANN),1)
 CXXFLAGS  += -DMT_ANN
-#CPATH	  := $(CPATH):$(LIBPATH)/ANN_1.1/include
-#LPATH	  := $(LPATH):$(LIBPATH)/ANN_1.1/lib
-#MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/ANN_1.1/include
 LIBS += -lann
 endif
 
@@ -336,10 +332,10 @@ endif
 ifeq ($(OCTAVE),1)
 CXXFLAGS += -DMT_OCTAVE
 ifeq ($(ARCH_LINUX),1)
-LPATH	:= $(LPATH):/usr/lib/octave/3.6.2
 CPATH := $(CPATH):/usr/include/octave-3.6.2
+LPATHS += /usr/lib/octave/3.6.2
 else
-LPATH	:= $(LPATH):/usr/lib/octave-3.2.4
+LPATHS += /usr/lib/octave-3.2.4
 endif
 LIBS	+= -loctinterp -loctave
 # TIP!!!: run 'mkoctfile --verbose main.cpp' and have a look at the compile options!
@@ -395,20 +391,19 @@ endif
 ifeq ($(TONY),1)
 CXXFLAGS  += -DMT_TONY
 CPATH   := $(CPATH):$(LIBPATH)/tony_mdp/include
-LPATH   := $(LPATH):$(LIBPATH)/tony_mdp/lib
 LIBS += -lmdp
 endif
 
 ifeq ($(DAI),1)
 CXXFLAGS  += -DMT_DAI
 CPATH   := $(CPATH):$(LIBPATH)/libDAI-0.2.2/include
-LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
+#LPATH   := $(LPATH):$(LIBPATH)/libDAI-0.2.2/lib
 LIBS += -ldai
 endif
 
 ifeq ($(IBDS),1)
 CPATH := $(CPATH):$(MLR_LIBPATH)/ibds/include
-LPATH := $(LPATH):$(MLR_LIBPATH)/ibds/lib
+LPATHS += $(MLR_LIBPATH)/ibds/lib
 LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lLibLinearMath -lqhull
 endif
 
@@ -420,8 +415,8 @@ FREENECT = 1
 endif
 
 ifeq ($(FREENECT),1)
-LPATH := $(LPATH):$(MLR_LIBPATH)/libfreenect/lib
 CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
+LPATHS += $(MLR_LIBPATH)/libfreenect/lib
 LIBS += -lfreenect
 endif
 
@@ -544,10 +539,14 @@ endif
 # export Linux/MSVC include/lib paths
 #
 ################################################################################
-LD_RUN_PATH += $(LPATH)
+LPATH = $(LPATHS:%=:%:)
+LDFLAGS += $(LPATHS:%=-L%)
+LD_RUN_PATH := $(LD_RUN_PATH):$(LPATH)
+LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(LPATH)
 export CPATH
 export LPATH
 export LD_RUN_PATH
+export LD_LIBRARY_PATH
 export MSVC_CPATH
 export MSVC_LPATH
 
@@ -580,6 +579,7 @@ info: force
 	@echo "  LINK =" "$(LINK)"
 	@echo "  LDFLAGS =" "$(LDFLAGS)"
 	@echo "  CPATH =" "$(CPATH)"
+	@echo "  LPATHS =" "$(LPATHS)"
 	@echo "  LPATH =" "$(LPATH)"
 	@echo "  LD_RUN_PATH =" "$(LD_RUN_PATH)"
 	@echo "  MSVC_CPATH =" "$(MSVC_CPATH)"

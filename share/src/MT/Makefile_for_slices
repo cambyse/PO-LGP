@@ -1,3 +1,4 @@
+CXX=clang++
 BASE   = $(shell realpath ../..)
 NAME   = $(shell basename $(BASE))
 OUTPUT = $(BASE)/lib/$(NAME).so

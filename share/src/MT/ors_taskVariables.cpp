@@ -515,7 +515,7 @@ void TaskVariable::updateChange(int t, double tau) {
   }
     */
 
-void TaskVariable::write(ostream &os) const {
+void TaskVariable::write(ostream &os, const ors::Graph& ors) const {
   os <<"TaskVariable '" <<name <<'\'';
   os
       <<"\n  y=" <<y
@@ -1104,7 +1104,7 @@ void SMAC::readCVdef(std::istream& is) {
     cv=&CVs.append();
     switch(c) {
       case 'p':
-        is >>name >>ref1 >>"<" >>f >>">";
+        is >>name >>ref1 >>PARSE("<") >>f >>PARSE(">");
         cv->initPos(name, *ors, ors->getBodyByName(ref1)->index, f);
         break;
       case 'j':
@@ -1138,7 +1138,7 @@ void SMAC::readCVdef(std::istream& is) {
         cv->initGrip(name, *ors, ors->getBodyByName(ref1)->index);
         break;
       case 'o':
-        is >>name >>ref1 >>ref2 >>"<" >>f >>">";
+        is >>name >>ref1 >>ref2 >>PARSE("<") >>f >>PARSE(">");
         if(ref2=="*")
           cv->initOri(name, *ors, ors->getBodyByName(ref1)->index, -1, f);
         else

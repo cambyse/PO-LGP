@@ -25,8 +25,8 @@
 
 //the above two flags cause the following headers to
 //include their implementations...
-#include "util.h"
 #include "array.h"
+#include "util.h"
 
 //explicit template instantiations
 //-- from util.h

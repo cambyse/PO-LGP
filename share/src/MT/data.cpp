@@ -59,8 +59,8 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
     labels.clear();
     is >>l; labels.append(l); if(l>max) max=l;
     if(!is.good()){  is.clear();  break;  }
-    while(MT::peerNextChar(is, "")==','){        is >>", " >>l; labels.append(l); if(l>max) max=l; }
-    while(MT::peerNextChar(is, " \t\r")!='\n'){  is >>idx >>":" >>f; features.append(f);      }
+    while(MT::peerNextChar(is, "")==','){        is >>PARSE(", ") >>l; labels.append(l); if(l>max) max=l; }
+    while(MT::peerNextChar(is, " \t\r")!='\n'){  is >>idx >>PARSE(":") >>f; features.append(f);      }
     L.append(labels);
     X.append(features);
     X.reshape(i+1, features.N);
