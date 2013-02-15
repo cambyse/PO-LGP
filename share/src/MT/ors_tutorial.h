@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -20,6 +20,15 @@
 /*  Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
     under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
     see the `util.h' file for a full copyright statement  */
+
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @ingroup group_ors
+ * @{
+ */
 
 #ifndef MT_ors_actionInterface_h
 #define MT_ors_actionInterface_h
@@ -30,29 +39,29 @@
 class OrsTutorial {
 public:
   struct sOrsTutorial *s;
-  
+
   OrsTutorial();
   ~OrsTutorial();
-  
+
   //initialization
   void loadConfiguration(const char* ors_filename);
-  
-  
-  
+
+
+
   //physical (dynamic) simulation
   void startOde();
   void startSwift();
   void startIBDS();
   void simulate(uint t);
   void shutdownAll();
-  
+
   //etc
   void watch();
-  
+
   //posture control
   void relaxPosition();   //!< move into a relaxed position
   void moveTo(const char *man_id, const arr& target);      //!< move into a relaxed position
-  
+
   //object manipulation
   //void catchObject(const char *man_id, const char *obj_id);  //!< catch obj_id with the body part man_id
   //void catchObject(const char *obj_id); //!< catch obj with finger of right hand
@@ -63,7 +72,7 @@ public:
   void grab(const char *man_id, const char *obj_id);
   void grab(uint ID);
   void grab(const char* obj);
-  
+
   //state information
   bool partOfBody(uint id);     //!< check if id is ``part of the body'' (i.e., also grasped)
   uint getCatched(uint man_id); //!< get id of the object catched by man_id
@@ -84,20 +93,20 @@ public:
   bool isUpright(uint id);        //!< check if id is upright
   uint convertObjectName2ID(const char* name); //!< returns the graph-index of the object named "name"
   const char* convertObjectID2name(uint ID); //!< returns the name of the object with index "ID" in graph
-  
+
   bool freePosition(double x, double y, double radius);
   double highestPosition(double x, double y, double radius, uint id_ignored);
-  
+
   // object attributes
   int getType(uint id);
   // Box: shape[0]=x, shape[1]=y, shape[2]=z, shape[3]=nix
   double* getShape(uint id);
   double* getColor(uint id);
   double* getPosition(uint id);
-  
+
   //void printAboveBelowInfos();
   void printObjectInfo();
-  
+
   OpenGL *gl;
 //private:
   ors::Graph *C;
@@ -108,7 +117,7 @@ public:
   //IBDSModule *ibds;
   uint noObjects;
   uint Tabort; //abortion time when attractors fail
-  
+
   void indicateFailure();
 };
 
@@ -117,3 +126,4 @@ public:
 #endif
 
 #endif
+/** @} */

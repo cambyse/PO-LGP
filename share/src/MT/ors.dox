@@ -1,5 +1,7 @@
 /**
-\defgroup ors ors -- Open Robot Simulation Toolkit
+\defgroup group_ors ors -- Open Robot Simulation Toolkit
+
+The simulator toolkit of MLR.
 
 \todo ors::Frame does not exist anymore. Update the doc accordingly.
 

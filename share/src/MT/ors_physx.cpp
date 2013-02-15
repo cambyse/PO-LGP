@@ -1,20 +1,29 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @ingroup group_ors
+ * @{
+ */
 
 
 #ifdef MT_PHYSX
@@ -56,7 +65,7 @@ struct sPhysXInterface {
   PxScene* gScene;
   PxReal timestep;
   MT::Array<PxRigidActor*> actors;
-  
+
   sPhysXInterface() {
     gScene = NULL;
     timestep = 1.0f/60.0f;
@@ -81,14 +90,14 @@ void PhysXInterface::step() {
 
   //-- dynamic simulation
   s->gScene->simulate(s->timestep);
-  
+
   //...perform useful work here using previous frame's state data
   while(!s->gScene->fetchResults()) {
   }
-    
+
   //-- pull state of all objects
   pullState();
-  
+
 }
 
 /**
@@ -316,7 +325,7 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
   PxU32 nShapes = actor->getNbShapes();
   PxShape** shapes=new PxShape*[nShapes];
   //cout <<"#shapes=" <<nShapes;
-  
+
   actor->getShapes(shapes, nShapes);
   while(nShapes--) {
     PxShape *shape = shapes[nShapes];
@@ -358,7 +367,7 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
         s->mesh.glDraw();
 #endif
       } break;
-      
+
       default:
 	MT_MSG("can't draw this type");
     }
@@ -506,5 +515,4 @@ void PhysXInterface::ShutdownPhysX(){ NICO }
 void glPhysXInterface(void *classP){ NICO }
 
 #endif
-
-
+/** @} */
