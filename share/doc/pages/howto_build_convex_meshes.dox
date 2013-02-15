@@ -1,18 +1,47 @@
-/** \page howto_convex_meshes How to build convex meshes
+/** \page howto_convex_meshes How to Build Convex Meshes
+
+\note Work in Progress!
+ 
+\note This is Stefans version. Dimi has one which works a bit differntly. It's
+not clear which is going to be the final version.
 
 A common problem of physic engines is that they cannot do collision checking of
 non-convex objects/meshes efficiently.  Therefore it is necessary to divide
 non-convex meshes into convex sup-parts.  This document gives a step by step
 instruction to create convex sub-parts.
 
-\section step_by_step Step by Step
-TODO add me ;D
 
 
-\section more more
+\section why What and Why
+
+The hacd_decomposer can divide non-convex meshes (given as .off files) into
+convex sub-meshes (.wrl files).
+The .wrl fileformat has sub-groups, whereas the ply fileformat doesn't.
+Because we use .ply for all meshes, we convert the .wrl files into ply and save the
+infos about the sub-meshes in the ors-file.
+
+\note The decompositon with the hacd_decomposer can take a while (several hours) depending on
+the number of vertices of the mesh.
+
+\section how How
+
+To decompose a mesh file just call in bin/
+\code
+decompose_ply.py MESHFILE
+\endcode
+
+For more infos call decompose_ply.py --help or read the source.
 
 
-\subsection moresub even more
+\section ref References
+
+HACD - Hierarchical Approximate Convex Decomposition of 3D Meshes.
+- http://sourceforge.net/projects/hacd/
+- http://kmamou.blogspot.de/2011/10/hacd-optimization.html
+- http://kmamou.blogspot.de/2011/11/hacd-parameters.html
+
+meshconv - 3d model converter
+- http://www.cs.princeton.edu/~min/meshconv/
 
 */
-// vim: syntax=cpp.doxygen:ts=2:sw=2
+// vim: syntax=cpp.doxygen:ts=6:sw=2

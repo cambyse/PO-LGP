@@ -1,7 +1,13 @@
 """
 Simple script to decompose a ply file in its convex parts.
 
-Make sure meshconv and hacd_decomposer are in PATH.
+Make sure meshconv and hacd_decomposer are in your PATH.
+
+What happens:
+- convert the file into the .off format
+- decompose the off file and spit out a wrl file
+- convert wrt to ply
+- parse wrt and extract infos about sub-grops for the ors file
 """
 
 import sys
