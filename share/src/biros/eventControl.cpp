@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros_views.h"
 #include "biros.h"
 #include "biros_internal.h"
@@ -81,3 +89,4 @@ extern "C" G_MODULE_EXPORT void eventControl_next(GtkWidget* caller){
 }
 
 #endif
+/** @} */

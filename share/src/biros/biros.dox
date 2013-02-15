@@ -1,8 +1,7 @@
 /**
-@defgroup module_biros Biros
+@defgroup group_biros biros -- the communication framework for applications around robotics
 
-Biros is a communication framework for robotics.
-
+Create a graph of computing nodes (Process) that exchange the results of the computation (via Variable).
 
 @section biros_intro Introduction
 
@@ -43,3 +42,4 @@ See share/src/birso_insideout.cpp and share/src/biros_views.h for more on that.
 More examples can be found under share/src/biros*
 
 */
+// vim: ts=2:sw=2:set expandtab:

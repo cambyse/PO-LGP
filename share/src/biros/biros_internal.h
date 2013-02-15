@@ -1,5 +1,13 @@
 #ifndef MT_biros_internal_h
 #define MT_biros_internal_h
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 
 #include <pthread.h>
 #include <biros/biros.h>
@@ -24,7 +32,7 @@ struct sVariable {
 
   virtual void serializeToString(MT::String &string) const;
   virtual void deSerializeFromString(const MT::String &string);
-  
+
   sVariable():loggerData(NULL){}
 };
 
@@ -37,9 +45,9 @@ struct sProcess: Thread{
   VariableL listensTo;
   ParameterL dependsOn;
   Metronome *metronome;                ///< used for beat-looping
-  
+
   sProcess(Process *p): proc(p), tid(0), metronome(NULL) {}
-  
+
   void main(); //virtual method for Thread
 };
 
@@ -101,3 +109,4 @@ struct sBirosEventController{
 
 
 #endif
+/** @} */

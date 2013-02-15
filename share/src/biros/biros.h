@@ -4,6 +4,14 @@
 #include <MT/array.h>
 #include <MT/util.h>
 
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 /* NOTES:
 
   -- derive all biros objects from bObject -> specific lists become generic lists
@@ -41,18 +49,18 @@ struct Variable {
   /// @name c'tor/d'tor
   Variable(const char* name);
   virtual ~Variable();
-  
+
   /// @name access control
   /// to be called by a processes before access, returns the revision
   int readAccess(Process*);  //might set the caller to sleep
   int writeAccess(Process*); //might set the caller to sleep
   int deAccess(Process*);
-  
+
   /// @name syncing via a variable
   /// the caller is set to sleep
   void waitForNextWriteAccess();
   int  waitForRevisionGreaterThan(int rev); //returns the revision
-  
+
   /// @name info
   struct FieldRegistration& get_field(uint i) const;
 };
@@ -81,11 +89,11 @@ struct Process {
   virtual void open() = 0;    ///< is called within the thread when the thread is created
   virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
   virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
-  
+
   //-- a scalar function which may depend only on the referenced variables
   //code correctness requires that a call of _step() may only decrease _f() !!
   //virtual double _f(){ return 0.; }
-  
+
   /// @name to be called from `outside' (e.g. the main) to start/step/close the thread
   void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
   void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
@@ -97,7 +105,7 @@ struct Process {
   void waitForIdle();                   ///< caller waits until step is done (working -> idle mode)
   bool isIdle();                        ///< check if in idle mode
   bool isClosed();                      ///< check if closed
-  
+
   /// @name lisetn to variable
   void listenTo(Variable *var);
   void listenTo(const VariableL &signalingVars);
@@ -271,10 +279,10 @@ struct WorkingCopy {
   T copy;
   Process *p;         ///< pointer to the Process that might want to access the Variable
   int last_revision; ///< last revision of a read/write access
-  
+
   WorkingCopy() { p=NULL; var=NULL; last_revision = 0;  }
   T& operator()() { return copy; }
-  
+
   void init(T *_v, Process *_p) {
     p=_p;
     var=_v;
@@ -344,4 +352,5 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
 #  include "biros.cpp"
 #endif
 
+/** @} */
 #endif

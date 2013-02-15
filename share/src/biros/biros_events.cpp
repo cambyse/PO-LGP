@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros.h"
 #include "biros_internal.h"
 
@@ -5,13 +13,13 @@
 struct LoggerVariableData {
   //-- the contoller (user interface) may block accesses (AFTER they're done to allow inspection)
   bool controllerBlocksRead, controllerBlocksWrite;
-  
+
   //-- or replay may block access to ensure right revision
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
   ConditionVariable readCondVar;
   /* here everyone sleeps who wants to have write access */
   ConditionVariable writeCondVar;
-  
+
   LoggerVariableData(): controllerBlocksRead(false), controllerBlocksWrite(false){}
 };
 
@@ -67,7 +75,7 @@ void sBirosEventController::queryWriteAccess(Variable *v, const Process *p){
   }
   blockMode.unlock();
 }
-  
+
 void sBirosEventController::logReadAccess(const Variable *v, const Process *p) {
   if(!enableEventLog || enableReplay) return;
   BirosEvent *e = new BirosEvent(v, p, BirosEvent::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
@@ -201,3 +209,4 @@ LoggerVariableData* sBirosEventController::getVariableData(const Variable* v){
   if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
   return v->s->loggerData;
 }
+/** @} */

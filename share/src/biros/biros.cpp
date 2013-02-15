@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros.h"
 #include "biros_internal.h"
 #include "views/views.h"
@@ -38,7 +46,7 @@ Biros& biros(){
     static Mutex m;
     m.lock();
     if(!global_birosInfo) {
-      currentlyCreating=true;   
+      currentlyCreating=true;
       global_birosInfo = new Biros();
       currentlyCreating=false;
     }
@@ -132,9 +140,9 @@ Variable::~Variable() {
     biros().deAccess(NULL);
   }
   for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
-  
+
   //MT pthread_mutex_destroy(&replay_mutex);
-  
+
   delete s;
 }
 
@@ -188,19 +196,19 @@ void sVariable::serializeToString(MT::String &string) const {
   string.clear();
   MT::String field_string;
   field_string.clear();
-  
+
   // go through fields
   for (uint i=0; i < fields.N; i++) {
-  
+
     fields(i)->writeValue(field_string);
-    
+
     // replace every occurence of "\" by "\\"
     for (uint j=0; j < field_string.N; j++) {
       char c = field_string(j);
       if('\\' == c) string << '\\';
       string << c;
     }
-    
+
     // add seperator after field
     string << "\\,";
   }
@@ -326,7 +334,7 @@ void Process::threadStop() {
 
 void sProcess::main() {
   tid = syscall(SYS_gettid);
-  
+
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   //if(s->threadPriority) setNice(s->threadPriority);
@@ -343,7 +351,7 @@ void sProcess::main() {
     if(proc->state.value==tsBEATING) waitForTic=true; else waitForTic=false;
     if(proc->state.value>0) proc->state.value--; //count down
     proc->state.unlock();
-    
+
     if(waitForTic) metronome->waitForTic();
 
     //-- make a step
@@ -357,7 +365,7 @@ void sProcess::main() {
     proc->state.broadcast();
     proc->state.unlock();
   };
-  
+
   proc->close(); //virtual close routine
 }
 
@@ -585,3 +593,4 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
 //  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
 //}
 
+/** @} */
