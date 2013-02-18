@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -25,16 +25,17 @@
 #include "optimization.h"
 
 //===========================================================================
-//
-// general documentation
-//
-
-/*! \brief libSOC -- Stochastic Optimal Control library
-
-    This is the core namespace of libSOC.  See the <a
-    href="../guide.pdf">guide</a> for an introduction.
-
-    Please see also the header <a href="soc_8h-source.html">MT/soc.h</a> . */
+/**
+ * @file
+ * @ingroup group_soc
+ */
+/**
+ * @addtogroup group_soc
+ * @{
+ */
+/**
+ * namespace of Stochastic Optimal Control library -- libSOC
+ */
 namespace soc {};
 
 
@@ -171,18 +172,18 @@ void soc::SocSystemAbstraction::getDynamics(arr& A, arr& a, arr& B, arr& Q, uint
     arr I, Z, Minv, F;
     I.setId(n);
     Z.resize(n, n); Z.setZero();
-    
+
     getMinvF(Minv, F, Q, t);
-    
+
     A.setBlockMatrix(I, tau*I, Z, I);
     //double alpha = .1; //with fricion
     //A.setBlockMatrix(I, tau*I-tau*alpha*Minv, Z, I-tau*alpha*Minv);
-    
+
     B.resize(2*n, n);
     B.setZero();
     B.setMatrixBlock(.5*tau*tau*Minv, 0, 0);
     B.setMatrixBlock(tau*Minv, n, 0);
-    
+
     a.resize(2*n);
     a.setZero();
     a.setVectorBlock(.5*tau*tau*Minv*F, 0);
@@ -265,7 +266,7 @@ double soc::SocSystemAbstraction::getTaskCosts(arr& R, arr& r, const arr& xt, ui
       R *= 2.;
     }
   }*/
-  
+
   if(checkGrad && rnd.uni()<checkGrad) testGradientsInCurrentState(xt,t);
   return C;
 }
@@ -287,7 +288,7 @@ void soc::SocSystemAbstraction::getTaskCostTerms(arr& phiBar, arr& JBar, const a
       //CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
       //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
-      
+
       if(&JBar){
         arr tmp;
         tmp.resize(2*y.N, 2*Jac.d1);  tmp.setZero();
@@ -328,7 +329,7 @@ void soc::SocSystemAbstraction::fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, 
 void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint t){
   double checkGrad_old = checkGrad;
   checkGrad=0.;
-  
+
   struct GradientFunction:VectorFunction{
     soc::SocSystemAbstraction *sys;
     uint t;
@@ -339,7 +340,7 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
       if(&J){ J=JBar; cout <<J<<endl; }
     }
   } f;
-  
+
   f.sys=this;
   f.t = t;
 
@@ -350,7 +351,7 @@ void soc::SocSystemAbstraction::testGradientsInCurrentState(const arr& xt, uint 
     getTaskInfo(names, dims, t);
     cout <<names <<dims <<endl;
   }
-  
+
   setx(xt);
   checkGrad = checkGrad_old;
 }
@@ -575,7 +576,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
         ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]+q[t-1]-(double)2.*q[t]), F);
       if(t==0)
         ctrlC(t) = sqrDistance(H, tau_2*M*(q[t+1]-q[t]), F);
-        
+
       if(grad){
         transpose(Mt, M);
         if(t<T && t>0){
@@ -605,7 +606,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     }
     gnuplot("plot 'z.trana' us 0:4 title 'ctrl costs','z.trana' us 0:6 title 'task costs','z.trana' us 0:8 title 'tot costs'");
   }
-  
+
 #ifdef NIKOLAY
   if(os) *os
     <<" " <<taskCsum
@@ -617,7 +618,7 @@ double soc::SocSystemAbstraction::totalCost(arr *grad, const arr& q, bool plot){
     <<"  control-cost " <<ctrlCsum
     <<"  total-cost " <<taskCsum+ctrlCsum <<endl;
 #endif
-    
+
   return taskCsum+ctrlCsum;
 }
 
@@ -641,7 +642,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
     c2=taskCost(NULL, t, -1);
     cout <<" tasks: " <<c1 <<' ' <<c2 <<' ' <<c3 <<endl;
     if(fabs(c1-c2)>1e-6 || fabs(c1-c3)>1e-6) MT_MSG("cost match error:"  <<c1 <<' ' <<c2 <<' ' <<c3);
-    
+
     taskCsum+=c2;
     if(t<T){
       getTransitionCostTerms(Psi, PsiI, PsiJ, x[t], x[t+1], t);
@@ -666,7 +667,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
           qdd = tau_2*(q[t+1]-q[t]);
           c2 = sqrDistance(H, M*qdd, F);
         }
-        
+
         arr A, a, B, Q, W, Winv;
         getDynamics(A, a, B, Q, t, &Winv);
         //uint n = q.d1;
@@ -676,10 +677,10 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
         //c3 = sqrDistance(Winv, x[t+1], A*x[t] + a); //this is the same as Psi above!
         //cout <<W <<Winv <<endl;
         c3 = sqrDistance(W, xx[t+1], A*xx[t] + a); //this approximates c2 - why?
-        
+
         //compare the accelerations:
         //cout <<qdd <<endl <<tau_1*(x.sub(t+1, t+1, n, -1) - x.sub(t, t, n, -1)) <<endl;
-        
+
         //c3 = sqrDistance(tmp, x[t+1], A*x[t]+a);
         //cout <<W <<endl <<inverse(B*inverse(H)*(~B)) <<endl;
       }
@@ -726,12 +727,12 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
   arr W, H, M, F;
   double tau=getTau();
   double tau_1 = 1./tau, tau_2 = tau_1*tau_1;
-  
+
   arr q;
   if(dynamic) soc::getPositionTrajectory(q, x); else q=x;
   arr phi_qhat, y, v, Jqd, u;
   double dy, dv, prec, precv;
-  
+
   double taskCsum=0., ctrlCsum=0.;
   arr taskC(T+1);  taskC.setZero();
   arr ctrlC(T+1);  ctrlC.setZero();
@@ -740,7 +741,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
   arr taskDv(T+1, m); taskDv.setZero();
   for(t=0; t<=T; t++){
     setx(x[t]);
-    
+
     for(i=0; i<m; i++){
       if(isConditioned(i, t <<scalePower)){
         getPhi(phi_qhat, i);
@@ -750,7 +751,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
         taskC(t) += prec*dy;
         taskCi(t, i)=prec*dy;
         taskDx(t, i)=prec*dy; //sqrt(dy);
-        
+
         if(dynamic){
           getJqd(Jqd, i);
           getTargetV(v, precv, i, t <<scalePower);
@@ -769,7 +770,7 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
         taskDx(t, i)=sum(phi_qhat);
       }
     }
-    
+
     if(!dynamic){
       getControlCosts(W, NoArr, t);
       if(t>0) ctrlC(t) = sqrDistance(W, q[t-1], q[t]);
@@ -831,3 +832,4 @@ double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
 
 
 
+/** @} */
