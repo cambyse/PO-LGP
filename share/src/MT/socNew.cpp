@@ -230,4 +230,4 @@ void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v
   x=b;
 }
 
-/** @} * /
+/** @} */
