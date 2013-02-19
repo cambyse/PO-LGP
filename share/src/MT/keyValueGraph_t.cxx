@@ -24,14 +24,14 @@ struct Item_typed:Item {
 
   Item_typed():value(NULL){}
   Item_typed(T *_value):value(_value){}
-  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, MapGraph *container=NULL):value(NULL){
+  Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *container=NULL):value(NULL){
     value = new T(_value);
     keys=_keys;
     parents=_parents;
     if(container) container->append(this);
   }
 
-  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, MapGraph *container=NULL):value(_value){
+  Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *container=NULL):value(_value){
     keys=_keys;
     parents=_parents;
     if(container) container->append(this);
@@ -72,24 +72,24 @@ template<class T> const T *Item::value() const{
 }
 
 
-template<class T> T* MapGraph::getValue(const char *key){
+template<class T> T* KeyValueGraph::getValue(const char *key){
   Item *it = getItem(key);
   if(!it) return NULL;
   return it->value<T>();
 }
 
-template<class T> MapGraph MapGraph::getTypedItems(const char* key){
-  MapGraph ret;
+template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key){
+  KeyValueGraph ret;
   for_list_(Item, it, (*this)) if(it->valueType()==typeid(T))
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) ret.append(it);
   return ret;
 }
 
-template<class T> Item *MapGraph::append(const StringA& keys, const ItemL& parents, T *x){
+template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x){
   return append(new Item_typed<T>(keys, parents, x, NULL));
 }
 
-template <class T> MT::Array<T*> MapGraph::getDerivedValues(){
+template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues(){
   MT::Array<T*> ret;
   for_list_(Item, it, (*this)){
     if(it->is_derived_from_TypeBase()){

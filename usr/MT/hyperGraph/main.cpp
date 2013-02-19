@@ -1,8 +1,8 @@
-#include <MT/mapGraph.h>
+#include <MT/keyValueGraph.h>
 #include <MT/graphview.h>
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
-  MapGraph H;
+  KeyValueGraph H;
 
   cout <<"reading graph..." <<endl;
   MT::load(H,filename);
@@ -17,7 +17,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
 }
 
 void testBasic(){
-  MapGraph G;
+  KeyValueGraph G;
   G.add(TUP());
   G.write(cout);
   cout <<"--------------------------" <<endl;

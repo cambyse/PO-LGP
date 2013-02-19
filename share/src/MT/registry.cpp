@@ -5,8 +5,8 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<MapGraph> single_registry;
+Singleton<KeyValueGraph> single_registry;
 
-MapGraph& registry(){
+KeyValueGraph& registry(){
   return single_registry.obj();
 }

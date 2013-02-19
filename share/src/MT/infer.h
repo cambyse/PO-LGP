@@ -26,7 +26,7 @@ see the `util.h' file for a full copyright statement  */
 
 #include "array.h"
 #include "util.h"
-#include "mapGraph.h"
+#include "keyValueGraph.h"
 #include <map>
 //#include <set>
 
@@ -70,7 +70,7 @@ struct Variable {
   MT::String name;  //!< up to you...
   infer::FactorList factors;    //!< each variable knows all factors it is part of
   MessagePairList messages;  //!< each variable knows all the messages it directly connects to
-  MapGraph ats; //any convenience information (e.g. for dot);
+  KeyValueGraph ats; //any convenience information (e.g. for dot);
   
   Variable();
   Variable(uint _dim, const char *_name);
@@ -101,7 +101,7 @@ struct Factor {
   infer::VariableList variables;
   infer::FactorList factors;
   MessagePairList messages;          //!< each factor knows all the msg_pairs it connects to
-  MapGraph ats; //any convenience information (e.g. for dot);
+  KeyValueGraph ats; //any convenience information (e.g. for dot);
   
   Factor();
   ~Factor();

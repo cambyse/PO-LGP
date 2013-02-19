@@ -37,7 +37,7 @@ struct Element {
   ElementL parents;        //!< this element has a set of parents (e.g., an edge has two parents)
   ElementL parentOf[maxDegree]; //!< this elememt is the parent of ... in a certain 'slot'
 
-  MapGraph ats;             //!< list of any-type attributes
+  KeyValueGraph ats;             //!< list of any-type attributes
   
   void write(std::ostream& os) const;
   void read(std::istream& is, ElementL& list);

@@ -1,6 +1,6 @@
 #include <map>
 
-#include "mapGraph.h"
+#include "keyValueGraph.h"
 #include "registry.h"
 
 /*struct Parser{
@@ -37,9 +37,9 @@ void Item::write(std::ostream& os) const {
   }
 
   //-- write value
-  if(valueType()==typeid(MapGraph)){
+  if(valueType()==typeid(KeyValueGraph)){
     os <<" {";
-    value<MapGraph>()->write(os, ",");
+    value<KeyValueGraph>()->write(os, ",");
     os <<" }";
   }else if(valueType()==typeid(MT::String)){ os <<"='" <<*value<MT::String>() <<'\'';
   }else if(valueType()==typeid(arr)){        os <<'=' <<*value<arr>();
@@ -59,7 +59,7 @@ void Item::write(std::ostream& os) const {
   }
 }
 
-bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
+bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=true){
   MT::String str;
   StringA keys;
   ItemL parents;
@@ -67,7 +67,7 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
 
   if(verbose){ cout <<"\nITEM (line="<<MT::lineCount <<")"; }
 
-#define PARSERR(x) { cout <<"[[error in parsing MapGraph file (line=" <<MT::lineCount <<"):\n"\
+#define PARSERR(x) { cout <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
   <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); return false; }
 
   //-- read keys
@@ -142,11 +142,11 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
       }
       MT::parse(is, ">");
     } break;
-    case '{': { // MapGraph (e.g., attribute list)
-      MapGraph *subList = new MapGraph;
+    case '{': { // KeyValueGraph (e.g., attribute list)
+      KeyValueGraph *subList = new KeyValueGraph;
       subList->read(is);
       MT::parse(is, "}");
-      item = new Item_typed<MapGraph>(keys, parents, subList);
+      item = new Item_typed<KeyValueGraph>(keys, parents, subList);
     } break;
     case '(': { // ItemL
       ItemL refs;
@@ -193,29 +193,29 @@ bool readItem(MapGraph& list, std::istream& is, bool verbose=true){
 
 //===========================================================================
 //
-//  MapGraph methods
+//  KeyValueGraph methods
 //
 
-struct sMapGraph{
+struct sKeyValueGraph{
   std::map<std::string, Item*> keyMap;
 };
 
-MapGraph::MapGraph():s(NULL){
+KeyValueGraph::KeyValueGraph():s(NULL){
   ItemL::memMove=true;
-  s = new sMapGraph;
+  s = new sKeyValueGraph;
 }
 
-MapGraph::~MapGraph(){
+KeyValueGraph::~KeyValueGraph(){
   delete s;
 }
 
-Item* MapGraph::getItem(const char *key){
+Item* KeyValueGraph::getItem(const char *key){
   for_list_(Item, it, (*this))
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) return it;
   return NULL;
 }
 
-Item* MapGraph::getItem(const char *key1, const char *key2){
+Item* KeyValueGraph::getItem(const char *key1, const char *key2){
   for_list_(Item, it, (*this)){
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key1){
       for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key2)
@@ -225,8 +225,8 @@ Item* MapGraph::getItem(const char *key1, const char *key2){
   return NULL;
 }
 
-MapGraph MapGraph::getItems(const char* key){
-  MapGraph ret;
+KeyValueGraph KeyValueGraph::getItems(const char* key){
+  KeyValueGraph ret;
   for_list_(Item, it, (*this)){
     for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key){ ret.append(it); break; }
   }
@@ -282,7 +282,7 @@ void writeDot(ItemL& G){
 #endif
 }
 
-MapGraph& MapGraph::operator=(const MapGraph& G){
+KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G){
   listDelete(*this);
   this->resize(G.N);
   uint i;
@@ -290,7 +290,7 @@ MapGraph& MapGraph::operator=(const MapGraph& G){
   return *this;
 }
 
-void MapGraph::read(std::istream& is) {
+void KeyValueGraph::read(std::istream& is) {
   //read all generic attributes
   //MT::lineCount=1;
   for(;;) {
@@ -300,24 +300,24 @@ void MapGraph::read(std::istream& is) {
   }
 }
 
-void MapGraph::write(std::ostream& os, const char *ELEMSEP, const char *delim) const{
+void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *delim) const{
   uint i;
   if(delim) os <<delim[0];
   for(i=0; i<N; i++) { if(i) os <<ELEMSEP;  if(elem(i)) os <<*elem(i) <<flush; else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void MapGraph::writeDot(std::ostream& os){
+void KeyValueGraph::writeDot(std::ostream& os){
 }
 
-Item *MapGraph::add(const uintA& tuple){
+Item *KeyValueGraph::add(const uintA& tuple){
   NIY;
 }
 
-ItemL& MapGraph::getParents(uint i){
+ItemL& KeyValueGraph::getParents(uint i){
   NIY;
 }
 
-void MapGraph::sortByDotOrder(){
+void KeyValueGraph::sortByDotOrder(){
   NIY;
 }

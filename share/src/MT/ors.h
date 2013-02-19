@@ -26,7 +26,7 @@
 
 #include "array.h"
 #include "util.h"
-#include "mapGraph.h"
+#include "keyValueGraph.h"
 
 namespace ors {
 
@@ -294,7 +294,7 @@ struct Body {
   
   MT::String name;     //!< name
   Transformation X;    //!< body's absolute pose
-  MapGraph ats;         //!< list of any-type attributes
+  KeyValueGraph ats;         //!< list of any-type attributes
   
   //dynamic properties
   BodyType type;          //!< is globally fixed?
@@ -331,7 +331,7 @@ struct Joint {
   Transformation Q;             //!< transformation within the joint (usually dynamic)
   Transformation B;             //!< transformation from joint to child body (attachment, usually static)
   Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
-  MapGraph ats;         //!< list of any-type attributes
+  KeyValueGraph ats;         //!< list of any-type attributes
   
   Joint();
   explicit Joint(const Joint& j);
@@ -366,7 +366,7 @@ struct Shape {
   bool cont;      //!< are contacts registered (or filtered in the callback)
   Vector contactOrientation;
   
-  MapGraph ats;    //!< list of any-type attributes
+  KeyValueGraph ats;    //!< list of any-type attributes
   
   Shape();
   explicit Shape(const Shape& s);

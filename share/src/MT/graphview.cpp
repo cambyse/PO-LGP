@@ -38,7 +38,7 @@ extern "C"{
 }
 
 struct sGraphView {
-  MapGraph *G;
+  KeyValueGraph *G;
   GraphView *p;
   MT::String title;
   
@@ -64,7 +64,7 @@ struct sGraphView {
   
 };
 
-GraphView::GraphView(MapGraph& G, const char* title, void *container) {
+GraphView::GraphView(KeyValueGraph& G, const char* title, void *container) {
   gtkCheckInitialized();
   
   s = new sGraphView;

@@ -29,10 +29,10 @@ Item* registerUnit(T *instance, const char *name, UnitKind kind, Item *parent1=N
   if(!instance && kind==varaccess) keys=STRINGS("accdecl", name);
   if(instance && kind==module) keys=STRINGS("module", name);
   if(instance && kind==varaccess) keys=STRINGS("acc", name);
-  MapGraph *ats = new MapGraph();
+  KeyValueGraph *ats = new KeyValueGraph();
   ats->append<MT::String>("name", new MT::String(name));
   ats->append<TypeInfo>("type", new TypeInfo_typed<T,P>(name, name, NULL, NULL));
-  return  new Item_typed<MapGraph>(keys, parents, ats, &registry());
+  return  new Item_typed<KeyValueGraph>(keys, parents, ats, &registry());
 //  return new UnitRegistry<T, void>(keys, parents, kind, instance, &registry());
 }
 

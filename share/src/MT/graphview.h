@@ -17,12 +17,12 @@
     -----------------------------------------------------------------  */
 
 
-#include <MT/mapGraph.h>
+#include <MT/keyValueGraph.h>
 
 struct GraphView{
   struct sGraphView *s;
   
-  GraphView(MapGraph& G, const char* title="MT::GraphvizGtk", void *container=NULL);
+  GraphView(KeyValueGraph& G, const char* title="MT::GraphvizGtk", void *container=NULL);
   ~GraphView();
   
   void update();

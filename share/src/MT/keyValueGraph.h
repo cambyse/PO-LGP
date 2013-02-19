@@ -1,11 +1,11 @@
-#ifndef MT_mapGraph_h
-#define MT_mapGraph_h
+#ifndef MT_keyValueGraph_h
+#define MT_keyValueGraph_h
 
 #include <MT/array.h>
 #include <MT/util.h>
 
 struct Item;
-struct MapGraph;
+struct KeyValueGraph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
 struct TypeBase{ virtual ~TypeBase(){}; }; //if types derive from TypeBase, more tricks are possible
@@ -29,13 +29,13 @@ struct Item {
 stdOutPipe(Item);
 
 
-struct MapGraph:ItemL{
-  struct sMapGraph *s;
+struct KeyValueGraph:ItemL{
+  struct sKeyValueGraph *s;
 
-  MapGraph();
-  ~MapGraph();
+  KeyValueGraph();
+  ~KeyValueGraph();
 
-  MapGraph& operator=(const MapGraph&);
+  KeyValueGraph& operator=(const KeyValueGraph&);
 
   //-- get items
   Item* getItem(const char *key);
@@ -47,8 +47,8 @@ struct MapGraph:ItemL{
   template<class T> bool getValue(T& x, const char *key){ T* y=getValue<T>(key); if(y){ x=*y; return true; } return false; }
 
   //-- get lists of items
-  MapGraph getItems(const char*);
-  template<class T> MapGraph getTypedItems(const char*);
+  KeyValueGraph getItems(const char*);
+  template<class T> KeyValueGraph getTypedItems(const char*);
 
   //-- get lists of values
   template<class T> MT::Array<T*> getDerivedValues();
@@ -67,8 +67,8 @@ struct MapGraph:ItemL{
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
   void writeDot(std::ostream& os=std::cout);
 };
-stdPipes(MapGraph);
+stdPipes(KeyValueGraph);
 
-#include "mapGraph_t.cxx"
+#include "keyValueGraph_t.cxx"
 
 #endif

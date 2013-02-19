@@ -3960,7 +3960,7 @@ void ors::Graph::write(std::ostream& os) const {
 /*!\brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;
-  MapGraph G;
+  KeyValueGraph G;
 
   G.read(is);
   //cout <<"***MAPGRAPH\n" <<G <<endl;
@@ -3970,11 +3970,11 @@ void ors::Graph::read(std::istream& is) {
   ItemL bs = G.getItems("body");
   for_list(i, it, bs){
     CHECK(it->keys(0)=="body","");
-    CHECK(it->valueType()==typeid(MapGraph),"bodies must have value MapGraph");
+    CHECK(it->valueType()==typeid(KeyValueGraph),"bodies must have value KeyValueGraph");
 
     Body *b=new Body(*this);
     b->name = it->keys(1);
-    b->ats = *it->value<MapGraph>();
+    b->ats = *it->value<KeyValueGraph>();
     b->parseAts();
     if(b->shapes.N==1) {  //parsing has implicitly added a shape...
       Shape *s=b->shapes(0);
@@ -3988,13 +3988,13 @@ void ors::Graph::read(std::istream& is) {
   for_list(i, it, ss){
     CHECK(it->keys(0)=="shape","");
     CHECK(it->parents.N==1,"shapes must have one parent");
-    CHECK(it->valueType()==typeid(MapGraph),"shape must have value MapGraph");
+    CHECK(it->valueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
 
     Body *b=listFindByName(bodies, it->parents(0)->keys(1));
     CHECK(b,"");
     Shape *s=new Shape(*this, b);
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats = *it->value<MapGraph>();
+    s->ats = *it->value<KeyValueGraph>();
     s->parseAts();
   }
 
@@ -4002,12 +4002,12 @@ void ors::Graph::read(std::istream& is) {
   for_list(i, it, js){
     CHECK(it->keys(0)=="joint","");
     CHECK(it->parents.N==2,"joints must have two parents");
-    CHECK(it->valueType()==typeid(MapGraph),"joints must have value MapGraph");
+    CHECK(it->valueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
 
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
     Joint *j=new Joint(*this, from, to);
-    j->ats = *it->value<MapGraph>();
+    j->ats = *it->value<KeyValueGraph>();
     j->parseAts();
   }
 

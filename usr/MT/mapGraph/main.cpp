@@ -1,11 +1,11 @@
-#include <MT/mapGraph.h>
+#include <MT/keyValueGraph.h>
 #include <MT/ors.h>
 #include <MT/registry.h>
 
 REGISTER_TYPE_Key(T, ors::Transformation)
 
 void testRead(const char *filename="../rules/coffee_shop.fg"){
-  MapGraph G;
+  KeyValueGraph G;
 
   cout <<"reading graph..." <<flush;
   MT::load(G, filename);
@@ -19,8 +19,8 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   //gv.watch();
   cout <<G <<endl;
   cout <<G["edge"] <<endl;
-  cout <<G["edge"]->value<MapGraph>() <<endl;
-  cout <<*G.get<MapGraph>("edge")->get<arr>("v") <<endl;
+  cout <<G["edge"]->value<KeyValueGraph>() <<endl;
+  cout <<*G.get<KeyValueGraph>("edge")->get<arr>("v") <<endl;
   //cout <<I;
 }
 

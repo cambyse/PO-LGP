@@ -3,7 +3,7 @@
 
 #include "util.h"
 #include "array.h"
-#include "mapGraph.h"
+#include "keyValueGraph.h"
 
 
 //===========================================================================
@@ -11,7 +11,7 @@
 // global registry of anything
 //
 
-MapGraph& registry();
+KeyValueGraph& registry();
 
 #define REGISTER_ITEM(Type, key, value) \
   Item_typed<Type > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
