@@ -2,5 +2,5 @@ body door0{ type=3 mesh="plys/door-0.ply" meshscale=.01 }
 body door1{ type=3 mesh="plys/door-1.ply" meshscale=.01 color=[1 0 0] }
 body door2{ type=3 mesh="plys/door-2.ply" meshscale=.01 }
 
-joint (door0, door1){ X=<t(.46 0 0) d(90 0 1 0)> }
-joint (door1, door2){ X=<t(-.39 0 1) d(90 0 0 1)> }
+joint (door0, door1){ X=<T t(.46 0 0) d(90 0 1 0)> }
+joint (door1, door2){ X=<T t(-.39 0 1) d(90 0 0 1)> }

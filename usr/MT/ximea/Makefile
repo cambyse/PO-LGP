@@ -1,7 +1,9 @@
 BASE = ../../../share
 
+OPENCV=1
+
 CXXFLAGS += -I/opt/XIMEA/include -DMT_IMPLEMENT_TEMPLATES
-LPATH := $(LPATH):/opt/XIMEA/lib
+LPATHS += /opt/XIMEA/lib
 
 LIBS += -lXIMEA_GenTL
 

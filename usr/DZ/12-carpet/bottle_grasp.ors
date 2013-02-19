@@ -1,61 +1,61 @@
-body palm { pose=<0.135632 -0.0867857 0.956005 -0.877027 0.000883967 -0.000834102 0.48044>  }
-body index0 { pose=<0.0697569 0.0373049 0.99248 -0.280429 0.00121486 3.52599e-05 0.959874>  }
-body index1 { pose=<0.0296852 0.0534177 0.992561 -0.396133 0.586715 0.395657 0.585064>  }
-body index2 { pose=<0.000202484 0.0555535 0.992628 -0.481962 0.518526 0.481236 0.516968>  }
-body index3 { pose=<-0.0250608 0.0534598 0.992688 -0.52066 0.479655 0.519816 0.478158>  }
-body mid0 { pose=<0.0666761 0.0420051 0.964472 -0.280429 0.00121486 3.52599e-05 0.959874>  }
-body mid1 { pose=<0.0223051 0.0548755 0.964565 -0.424962 0.566184 0.424403 0.564558>  }
-body mid2 { pose=<-0.00859138 0.0524705 0.964638 -0.51946 0.480955 0.518619 0.479456>  }
-body mid3 { pose=<-0.0368272 0.045029 0.964709 -0.560585 0.432321 0.559613 0.430903>  }
-body ring0 { pose=<0.0618902 0.0389682 0.936473 -0.280429 0.00121486 3.52599e-05 0.959874>  }
-body ring1 { pose=<0.0253099 0.0528338 0.936547 -0.401981 0.582725 0.401488 0.581078>  }
-body ring2 { pose=<-0.00297466 0.0540314 0.936612 -0.489685 0.511239 0.488936 0.509692>  }
-body ring3 { pose=<-0.0272853 0.0511571 0.93667 -0.528974 0.470471 0.528104 0.468989>  }
-body pinky0 { pose=<0.0560674 0.0219687 0.91409 -0.280429 0.00121486 3.52599e-05 0.959874>  }
-body pinky1 { pose=<0.0324813 0.0403617 0.914131 -0.310386 0.636253 0.310144 0.634551>  }
-body pinky2 { pose=<0.0138871 0.0503349 0.914166 -0.363281 0.607604 0.362896 0.605929>  }
-body pinky3 { pose=<-0.00737811 0.0595097 0.914208 -0.388769 0.591621 0.388313 0.589964>  }
-body thumb0 { pose=<0.098724 -0.0503051 0.974995 -0.516593 -0.324772 -0.139767 -0.779821>  }
-body thumb1 { pose=<0.0513013 -0.0564567 0.995724 -0.638604 -0.475864 0.18213 -0.576687>  }
-body thumb2 { pose=<0.0123892 -0.0545488 1.00772 -0.238793 0.555623 -0.682921 -0.409733>  }
-body thumb3 { pose=<0.0123892 -0.0545488 1.00772 -0.572232 0.195678 -0.762002 0.231547>  }
+body palm { pose=<T 0.135632 -0.0867857 0.956005 -0.877027 0.000883967 -0.000834102 0.48044>  }
+body index0 { pose=<T 0.0697569 0.0373049 0.99248 -0.280429 0.00121486 3.52599e-05 0.959874>  }
+body index1 { pose=<T 0.0296852 0.0534177 0.992561 -0.396133 0.586715 0.395657 0.585064>  }
+body index2 { pose=<T 0.000202484 0.0555535 0.992628 -0.481962 0.518526 0.481236 0.516968>  }
+body index3 { pose=<T -0.0250608 0.0534598 0.992688 -0.52066 0.479655 0.519816 0.478158>  }
+body mid0 { pose=<T 0.0666761 0.0420051 0.964472 -0.280429 0.00121486 3.52599e-05 0.959874>  }
+body mid1 { pose=<T 0.0223051 0.0548755 0.964565 -0.424962 0.566184 0.424403 0.564558>  }
+body mid2 { pose=<T -0.00859138 0.0524705 0.964638 -0.51946 0.480955 0.518619 0.479456>  }
+body mid3 { pose=<T -0.0368272 0.045029 0.964709 -0.560585 0.432321 0.559613 0.430903>  }
+body ring0 { pose=<T 0.0618902 0.0389682 0.936473 -0.280429 0.00121486 3.52599e-05 0.959874>  }
+body ring1 { pose=<T 0.0253099 0.0528338 0.936547 -0.401981 0.582725 0.401488 0.581078>  }
+body ring2 { pose=<T -0.00297466 0.0540314 0.936612 -0.489685 0.511239 0.488936 0.509692>  }
+body ring3 { pose=<T -0.0272853 0.0511571 0.93667 -0.528974 0.470471 0.528104 0.468989>  }
+body pinky0 { pose=<T 0.0560674 0.0219687 0.91409 -0.280429 0.00121486 3.52599e-05 0.959874>  }
+body pinky1 { pose=<T 0.0324813 0.0403617 0.914131 -0.310386 0.636253 0.310144 0.634551>  }
+body pinky2 { pose=<T 0.0138871 0.0503349 0.914166 -0.363281 0.607604 0.362896 0.605929>  }
+body pinky3 { pose=<T -0.00737811 0.0595097 0.914208 -0.388769 0.591621 0.388313 0.589964>  }
+body thumb0 { pose=<T 0.098724 -0.0503051 0.974995 -0.516593 -0.324772 -0.139767 -0.779821>  }
+body thumb1 { pose=<T 0.0513013 -0.0564567 0.995724 -0.638604 -0.475864 0.18213 -0.576687>  }
+body thumb2 { pose=<T 0.0123892 -0.0545488 1.00772 -0.238793 0.555623 -0.682921 -0.409733>  }
+body thumb3 { pose=<T 0.0123892 -0.0545488 1.00772 -0.572232 0.195678 -0.762002 0.231547>  }
 
 
-shape (palm){ rel=<0 0 0 1 0 0 0> type=3 contact mesh='human_original_hand/palm_full.tri'  }
-shape (index1){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index1.tri'  }
-shape (index2){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index2.tri'  }
-shape (index3){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index3.tri'  }
-shape (mid1){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid1.tri'  }
-shape (mid2){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid2.tri'  }
-shape (mid3){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid3.tri'  }
-shape (ring1){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring1.tri'  }
-shape (ring2){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring2.tri'  }
-shape (ring3){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring3.tri'  }
-shape (pinky1){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky1.tri'  }
-shape (pinky2){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky2.tri'  }
-shape (pinky3){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky3.tri'  }
-shape (thumb1){ rel=<0 0 0 0.5 -0.5 -0.5 0.5> type=3 contact mesh='human_original_hand/thumb1.tri'  }
-shape (thumb2){ rel=<0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/thumb2.tri'  }
-shape (thumb3){ rel=<0 0 0 4.32978e-17 -0.707107 -0.707107 -4.32978e-17> type=3 contact mesh='human_original_hand/thumb3.tri'  }
+shape (palm){ rel=<T 0 0 0 1 0 0 0> type=3 contact mesh='human_original_hand/palm_full.tri'  }
+shape (index1){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index1.tri'  }
+shape (index2){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index2.tri'  }
+shape (index3){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/index3.tri'  }
+shape (mid1){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid1.tri'  }
+shape (mid2){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid2.tri'  }
+shape (mid3){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/mid3.tri'  }
+shape (ring1){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring1.tri'  }
+shape (ring2){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring2.tri'  }
+shape (ring3){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/ring3.tri'  }
+shape (pinky1){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky1.tri'  }
+shape (pinky2){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky2.tri'  }
+shape (pinky3){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/pinky3.tri'  }
+shape (thumb1){ rel=<T 0 0 0 0.5 -0.5 -0.5 0.5> type=3 contact mesh='human_original_hand/thumb1.tri'  }
+shape (thumb2){ rel=<T 0 0 0 0.5 0.5 0.5 0.5> type=3 contact mesh='human_original_hand/thumb2.tri'  }
+shape (thumb3){ rel=<T 0 0 0 4.32978e-17 -0.707107 -0.707107 -4.32978e-17> type=3 contact mesh='human_original_hand/thumb3.tri'  }
 
 
-joint (palm index0){ from=<-0.14006 0.0112048 0.0364156 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0> type=0  }
-joint (index0 index1){ from=<0 0 0 0.707107 0 -0.707107 0> to=<0 -0.04319 0 1 0 0 0> q=<0 0 0 0.952334 0.305059 0 0> type=0  }
-joint (index1 index2){ from=<0 0 0 1 0 0 0> to=<0 -0.02956 0 1 0 0 0> q=<0 0 0 0.988012 0.15438 0 0> type=0  }
-joint (index2 index3){ from=<0 0 0 1 0 0 0> to=<0 -0.02535 0 1 0 0 0> q=<0 0 0 0.996998 0.0774224 0 0> type=0  }
-joint (palm mid0){ from=<-0.145662 0.0112048 0.0084036 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0> type=0  }
-joint (mid0 mid1){ from=<0 0 0 0.707107 0 -0.707107 0> to=<0 -0.0462 0 1 0 0 0> q=<0 0 0 0.935897 0.352274 0 0> type=0  }
-joint (mid1 mid2){ from=<0 0 0 1 0 0 0> to=<0 -0.03099 0 1 0 0 0> q=<0 0 0 0.983844 0.17903 0 0> type=0  }
-joint (mid2 mid3){ from=<0 0 0 1 0 0 0> to=<0 -0.0292 0 1 0 0 0> q=<0 0 0 0.995953 0.0898785 0 0> type=0  }
-joint (palm ring0){ from=<-0.145662 0.0056025 -0.0196084 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0> type=0  }
-joint (ring0 ring1){ from=<0 0 0 0.707107 0 -0.707107 0> to=<0 -0.03912 0 1 0 0 0> q=<0 0 0 0.949235 0.314567 0 0> type=0  }
-joint (ring1 ring2){ from=<0 0 0 1 0 0 0> to=<0 -0.02831 0 1 0 0 0> q=<0 0 0 0.987227 0.159318 0 0> type=0  }
-joint (ring2 ring3){ from=<0 0 0 1 0 0 0> to=<0 -0.02448 0 1 0 0 0> q=<0 0 0 0.996802 0.0799147 0 0> type=0  }
-joint (palm pinky0){ from=<-0.134458 -0.0084035 -0.042018 0.707107 0 0 -0.707107> to=<0 0 0 1 0 0 0> type=0  }
-joint (pinky0 pinky1){ from=<0 0 0 0.707107 0 -0.707107 0> to=<0 -0.02991 0 1 0 0 0> q=<0 0 0 0.985585 0.169182 0 0> type=0  }
-joint (pinky1 pinky2){ from=<0 0 0 1 0 0 0> to=<0 -0.0211 0 1 0 0 0> q=<0 0 0 0.99639 0.0848977 0 0> type=0  }
-joint (pinky2 pinky3){ from=<0 0 0 1 0 0 0> to=<0 -0.02316 0 1 0 0 0> q=<0 0 0 0.999097 0.0424872 0 0> type=0  }
-joint (palm thumb0){ from=<-0.0506241 -0.0115082 0.0189317 -0.058231 0.223679 0.755559 0.612949> to=<0 0 0 1 0 0 0> q=<0 0 0 0.825336 -0.564642 0 0> type=0  }
-joint (thumb0 thumb1){ from=<0 0 0 0.927184 0 -0.374607 0> to=<0 0.0521193 0 1 0 0 0> q=<0 0 0 0.980067 -0.198669 0 0> type=0  }
-joint (thumb1 thumb2){ from=<0 0 0 6.12323e-17 0 1 0> to=<0 0.0407638 0 1 0 0 0> q=<0 0 0 0.995004 0.0998334 0 0> type=0  }
-joint (thumb2 thumb3){ from=<0 0 0 0.707107 0.707107 0 0> to=<0 0 0 1 0 0 0> q=<0 0 0 0.99875 0.0499792 0 0> type=0  }
+joint (palm index0){ from=<T -0.14006 0.0112048 0.0364156 0.707107 0 0 -0.707107> to=<T 0 0 0 1 0 0 0> type=0  }
+joint (index0 index1){ from=<T 0 0 0 0.707107 0 -0.707107 0> to=<T 0 -0.04319 0 1 0 0 0> q=<T 0 0 0 0.952334 0.305059 0 0> type=0  }
+joint (index1 index2){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.02956 0 1 0 0 0> q=<T 0 0 0 0.988012 0.15438 0 0> type=0  }
+joint (index2 index3){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.02535 0 1 0 0 0> q=<T 0 0 0 0.996998 0.0774224 0 0> type=0  }
+joint (palm mid0){ from=<T -0.145662 0.0112048 0.0084036 0.707107 0 0 -0.707107> to=<T 0 0 0 1 0 0 0> type=0  }
+joint (mid0 mid1){ from=<T 0 0 0 0.707107 0 -0.707107 0> to=<T 0 -0.0462 0 1 0 0 0> q=<T 0 0 0 0.935897 0.352274 0 0> type=0  }
+joint (mid1 mid2){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.03099 0 1 0 0 0> q=<T 0 0 0 0.983844 0.17903 0 0> type=0  }
+joint (mid2 mid3){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.0292 0 1 0 0 0> q=<T 0 0 0 0.995953 0.0898785 0 0> type=0  }
+joint (palm ring0){ from=<T -0.145662 0.0056025 -0.0196084 0.707107 0 0 -0.707107> to=<T 0 0 0 1 0 0 0> type=0  }
+joint (ring0 ring1){ from=<T 0 0 0 0.707107 0 -0.707107 0> to=<T 0 -0.03912 0 1 0 0 0> q=<T 0 0 0 0.949235 0.314567 0 0> type=0  }
+joint (ring1 ring2){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.02831 0 1 0 0 0> q=<T 0 0 0 0.987227 0.159318 0 0> type=0  }
+joint (ring2 ring3){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.02448 0 1 0 0 0> q=<T 0 0 0 0.996802 0.0799147 0 0> type=0  }
+joint (palm pinky0){ from=<T -0.134458 -0.0084035 -0.042018 0.707107 0 0 -0.707107> to=<T 0 0 0 1 0 0 0> type=0  }
+joint (pinky0 pinky1){ from=<T 0 0 0 0.707107 0 -0.707107 0> to=<T 0 -0.02991 0 1 0 0 0> q=<T 0 0 0 0.985585 0.169182 0 0> type=0  }
+joint (pinky1 pinky2){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.0211 0 1 0 0 0> q=<T 0 0 0 0.99639 0.0848977 0 0> type=0  }
+joint (pinky2 pinky3){ from=<T 0 0 0 1 0 0 0> to=<T 0 -0.02316 0 1 0 0 0> q=<T 0 0 0 0.999097 0.0424872 0 0> type=0  }
+joint (palm thumb0){ from=<T -0.0506241 -0.0115082 0.0189317 -0.058231 0.223679 0.755559 0.612949> to=<T 0 0 0 1 0 0 0> q=<T 0 0 0 0.825336 -0.564642 0 0> type=0  }
+joint (thumb0 thumb1){ from=<T 0 0 0 0.927184 0 -0.374607 0> to=<T 0 0.0521193 0 1 0 0 0> q=<T 0 0 0 0.980067 -0.198669 0 0> type=0  }
+joint (thumb1 thumb2){ from=<T 0 0 0 6.12323e-17 0 1 0> to=<T 0 0.0407638 0 1 0 0 0> q=<T 0 0 0 0.995004 0.0998334 0 0> type=0  }
+joint (thumb2 thumb3){ from=<T 0 0 0 0.707107 0.707107 0 0> to=<T 0 0 0 1 0 0 0> q=<T 0 0 0 0.99875 0.0499792 0 0> type=0  }

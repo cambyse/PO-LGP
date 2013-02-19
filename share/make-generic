@@ -1,4 +1,4 @@
-CXX=clang++
+# CXX=clang++
 # this is a generic make file
 # supposed to be called from lib, test and projects Makefiles
 #

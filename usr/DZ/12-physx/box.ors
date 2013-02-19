@@ -1,40 +1,40 @@
 
 ######## Articulated object 1
-body art1{ X=<t(0.5 -.5 1.5)>  type=0 mass=.1 size=[0.2 0.2 0.01 .05] fixed}
+body art1{ X=<T t(0.5 -.5 1.5)>  type=0 mass=.1 size=[0.2 0.2 0.01 .05] fixed}
 body art2 {  type=0 mass=.1 size=[0.2 .2 .01 .05] contact }
 body art3 {  type=0 mass=.1 size=[0.2 .2 .01 .05] contact}
 body art4 {  type=0 mass=.1 size=[0.2 .2 .01 .05]  contact}
 body art5 {  type=0 mass=.1 size=[0.2 .2 .01 .05]  contact}
 body art6 {  type=0 mass=.1 size=[0.2 .2 .01 .05]  contact}
 body art7 {  type=0 mass=.1 size=[0.2 .2 .01 .05]  contact}
-#body glue1{ X=<t(0.5 -.7 0.3)>  type=0 mass=.1 size=[0.2 0.2 0.01 .05]  }
+#body glue1{ X=<T t(0.5 -.7 0.3)>  type=0 mass=.1 size=[0.2 0.2 0.01 .05]  }
 #shape tip(glue1){ type=0 size=[0.2 0.2 0.01 .05]}
 #body glue2{   type=0 mass=.1 size=[0.2 0.2 0.01 .05] }
 
-joint (art1 art2)  {type=0 A=<t(0 -0.1 0)> B=<t(0 -0.1 0)> Q=<d(0 0 1 0)>}
-joint (art2 art3)  {type=0 A=<t(0 -0.1 0)> B=<t(0 -0.1 0)> Q=<d(0 0 1 0)>}
-joint (art3 art7)  {type=0 A=<t(0 -0.1 0)> B=<t(0 -0.1 0)> Q=<d(0 0 1 0)>}
-joint (art1 art4)  {type=0 A=<t(0.1 0 0) d(90 0 0 1)> B=<t(0 0.1 0)> Q=<d(180 1 0 0)>}
-joint (art1 art5)  {type=0 A=<t(-0.1 0 0) d(90 0 0 1)> B=<t(0 -0.1 0)> Q=<d(180 1 0 0)>}
-joint (art1 art6)  {type=0 A=<t(0 0.1 0)> B=<t(0 0.1 0)> Q=<d(0 0 1 0)>}
-#joint (glue1 glue2)  {type=0 A=<t(0 -0.1 0)> B=<t(0 -0.1 0)> Q=<d(0 0 1 0)>} 
+joint (art1 art2)  {type=0 A=<T t(0 -0.1 0)> B=<T t(0 -0.1 0)> Q=<T d(0 0 1 0)>}
+joint (art2 art3)  {type=0 A=<T t(0 -0.1 0)> B=<T t(0 -0.1 0)> Q=<T d(0 0 1 0)>}
+joint (art3 art7)  {type=0 A=<T t(0 -0.1 0)> B=<T t(0 -0.1 0)> Q=<T d(0 0 1 0)>}
+joint (art1 art4)  {type=0 A=<T t(0.1 0 0) d(90 0 0 1)> B=<T t(0 0.1 0)> Q=<T d(180 1 0 0)>}
+joint (art1 art5)  {type=0 A=<T t(-0.1 0 0) d(90 0 0 1)> B=<T t(0 -0.1 0)> Q=<T d(180 1 0 0)>}
+joint (art1 art6)  {type=0 A=<T t(0 0.1 0)> B=<T t(0 0.1 0)> Q=<T d(0 0 1 0)>}
+#joint (glue1 glue2)  {type=0 A=<T t(0 -0.1 0)> B=<T t(0 -0.1 0)> Q=<T d(0 0 1 0)>} 
 
-shape hinge1 (art1) { type=1, rel=<t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
-shape hinge2 (art1) { type=1, rel=<t(0.1 0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
-shape hinge3 (art1) { type=1, rel=<t(-0.1 0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
-shape hinge4 (art2) { type=1, rel=<t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
-shape hinge5 (art1) { type=1, rel=<t(0 0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
-shape hinge6 (art3) { type=1, rel=<t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge1 (art1) { type=1, rel=<T t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge2 (art1) { type=1, rel=<T t(0.1 0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge3 (art1) { type=1, rel=<T t(-0.1 0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge4 (art2) { type=1, rel=<T t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge5 (art1) { type=1, rel=<T t(0 0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
+shape hinge6 (art3) { type=1, rel=<T t(0 -0.1 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .1 .1] }
 
-shape hinge6 (art3) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
-shape hinge26 (art7) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
-shape hinge61 (art2) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
-shape hinge64 (art1) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
-shape hinge65 (art6) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
+shape hinge6 (art3) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
+shape hinge26 (art7) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
+shape hinge61 (art2) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
+shape hinge64 (art1) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
+shape hinge65 (art6) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.9 .1 .1] }
 
 
-shape hinge465 (art1) { type=1, rel=<t(0 -0 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
-shape hinge3265 (art4) { type=1, rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
-shape hinge165 (art5) { type=1 rel=<t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
+shape hinge465 (art1) { type=1, rel=<T t(0 -0 0) d(90 0 1 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
+shape hinge3265 (art4) { type=1, rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
+shape hinge165 (art5) { type=1 rel=<T t(0 -0 0) d(90 1 0 0)> size=[.1 .1 .2 .01], color=[.1 .9 .1] }
 
 

@@ -1,7 +1,7 @@
 
 ## torso & arms
 
-body waist { X=<t(0 0 .7) d(90 0 1 0)>  type=2 mass=1 size=[0. 0. .15 .1] }
+body waist { X=<T t(0 0 .7) d(90 0 1 0)>  type=2 mass=1 size=[0. 0. .15 .1] }
 
 body back     { type=2 mass=1 size=[0. 0. .1 .1] }
 body chest    { type=2 mass=1 size=[0. 0. .2 .1] }
@@ -18,21 +18,21 @@ body upWristR { type=2 mass=.1 size=[.1 .1 .1 .045] }
 body neck { type=2 mass=.1 size=[.0 .0 .1 .05] }
 body head { type=1 mass=.1 size=[0 0 0 .14] }
 
-joint (waist back) { A=<d(-90 0 1 0) t(0 0 .05)> B=<t(0 0 .05)>  }
-joint (back chest) { A=<t(0 0 .05) d(90 0 0 1)> B=<d(-90 0 0 1) t(0 0 .1)>  }
-joint (chest shoulders) { A=<t(0 0 .1) d(90 0 1 0)> B=<t(-.05 0 0)>  }
-joint (shoulders shoulderL) { A=<t(-.02 0 .15) d(-90 0 0 1) d(30 1 0 0)> B=<d(90 0 0 1)>  }
-joint (shoulders shoulderR) { A=<d(180 0 1 0) t(.02 0 .15) d(90 0 0 1) d(30 1 0 0)> B=<d(-90 0 0 1)>  }
+joint (waist back) { A=<T d(-90 0 1 0) t(0 0 .05)> B=<T t(0 0 .05)>  }
+joint (back chest) { A=<T t(0 0 .05) d(90 0 0 1)> B=<T d(-90 0 0 1) t(0 0 .1)>  }
+joint (chest shoulders) { A=<T t(0 0 .1) d(90 0 1 0)> B=<T t(-.05 0 0)>  }
+joint (shoulders shoulderL) { A=<T t(-.02 0 .15) d(-90 0 0 1) d(30 1 0 0)> B=<T d(90 0 0 1)>  }
+joint (shoulders shoulderR) { A=<T d(180 0 1 0) t(.02 0 .15) d(90 0 0 1) d(30 1 0 0)> B=<T d(-90 0 0 1)>  }
 
-joint (shoulderL upArmL){ A=<d(90 0 1 0) t(-.02 0 .05)> B=<t(0 0 .05)>  }
-joint (shoulderR upArmR){ A=<d(-90 0 1 0) t(.02 0 .05)> B=<t(0 0 .05)>  }
-joint (upArmL dnArmL)   { A=<t(0 0 .05) d(-90 0 1 0) d(30 1 0 0)> B=<d(90 0 1 0) t(0 0 .05)>  }
-joint (upArmR dnArmR)   { A=<t(0 0 .05) d( 90 0 1 0) d(30 1 0 0)> B=<d(-90 0 1 0) t(0 0 .05)>  }
-joint (dnArmL upWristL) { A=<t(0 0 .05) d(80 1 0 0)> B=<t(0 0 .05)>  }
-joint (dnArmR upWristR) { A=<t(0 0 .05) d(80 1 0 0)> B=<t(0 0 .05)>  }
+joint (shoulderL upArmL){ A=<T d(90 0 1 0) t(-.02 0 .05)> B=<T t(0 0 .05)>  }
+joint (shoulderR upArmR){ A=<T d(-90 0 1 0) t(.02 0 .05)> B=<T t(0 0 .05)>  }
+joint (upArmL dnArmL)   { A=<T t(0 0 .05) d(-90 0 1 0) d(30 1 0 0)> B=<T d(90 0 1 0) t(0 0 .05)>  }
+joint (upArmR dnArmR)   { A=<T t(0 0 .05) d( 90 0 1 0) d(30 1 0 0)> B=<T d(-90 0 1 0) t(0 0 .05)>  }
+joint (dnArmL upWristL) { A=<T t(0 0 .05) d(80 1 0 0)> B=<T t(0 0 .05)>  }
+joint (dnArmR upWristR) { A=<T t(0 0 .05) d(80 1 0 0)> B=<T t(0 0 .05)>  }
 
-joint (shoulders neck) { A=<t(-.05 0 0)> B=<d(-90 0 1 0) t(0 0 .05)>  }
-joint (neck head) { A=<t(0 0 .05)> B=<t(0 0 .1)>  }
+joint (shoulders neck) { A=<T t(-.05 0 0)> B=<T d(-90 0 1 0) t(0 0 .05)>  }
+joint (neck head) { A=<T t(0 0 .05)> B=<T t(0 0 .1)>  }
 
 
 ## left & right hand
@@ -44,12 +44,12 @@ body ddnWristL{ type=2 mass=.01 size=[.5 .5 .04 .03] }
 body handR    { type=0 mass=.01 size=[.05 .02 .05 .05] }
 body handL    { type=0 mass=.01 size=[.05 .02 .05 .05] }
 
-joint (upWristR dnWristR) { A=<t(0 0 .05) d( 90 0 1 0) d(140 1 0 0)> B=<d(-90 0 1 0) t(0 0 .05)>  }
-joint (upWristL dnWristL) { A=<t(0 0 .05) d(-90 0 1 0) d(140 1 0 0)> B=<d( 90 0 1 0) t(0 0 .05)>  }
-joint (dnWristR ddnWristR){ A=<t(0 0 .05) d( 90 0 0 1)> B=<d(-90 0 0 1) t(0 0 .02)>  }
-joint (dnWristL ddnWristL){ A=<t(0 0 .05) d(-90 0 0 1)> B=<d( 90 0 0 1) t(0 0 .02)>  }
-joint (ddnWristR handR)   { A=<t(0 0 .03)> B=<t(0 0 .05)>  }
-joint (ddnWristL handL)   { A=<t(0 0 .03)> B=<t(0 0 .05)>  }
+joint (upWristR dnWristR) { A=<T t(0 0 .05) d( 90 0 1 0) d(140 1 0 0)> B=<T d(-90 0 1 0) t(0 0 .05)>  }
+joint (upWristL dnWristL) { A=<T t(0 0 .05) d(-90 0 1 0) d(140 1 0 0)> B=<T d( 90 0 1 0) t(0 0 .05)>  }
+joint (dnWristR ddnWristR){ A=<T t(0 0 .05) d( 90 0 0 1)> B=<T d(-90 0 0 1) t(0 0 .02)>  }
+joint (dnWristL ddnWristL){ A=<T t(0 0 .05) d(-90 0 0 1)> B=<T d( 90 0 0 1) t(0 0 .02)>  }
+joint (ddnWristR handR)   { A=<T t(0 0 .03)> B=<T t(0 0 .05)>  }
+joint (ddnWristL handL)   { A=<T t(0 0 .03)> B=<T t(0 0 .05)>  }
 
 
 ## legs
@@ -67,16 +67,16 @@ body rankle{ mass=.01 size=[.1 .3 .05 .04] type=1 }
 body lfoot{ mass=.1 size=[.25 .3 .05 .05] type=0 } 
 body rfoot{ mass=.1 size=[.25 .3 .05 .05] type=0 }
 
-joint (waist lprehip) { A=<d(-90 0 1 0) t(-.1 0 -.05) d(90 0 1 0)> B=<d(-90 0 1 0)>  }
-joint (waist rprehip) { A=<d(-90 0 1 0) t(+.1 0 -.05) d(90 0 1 0)> B=<d(-90 0 1 0)>  }
-joint (lprehip lhip)  { A=<d(90 0 0 1)> B=<d(90 0 0 1) t(0 0 -.01)>  }
-joint (rprehip rhip)  { A=<d(90 0 0 1)> B=<d(90 0 0 1) t(0 0 -.01)>  }
-joint (lhip lup) { A=<t(0 0 -.01) d(20  1 0 0)> B=<t(0 0 -.13)>  }
-joint (rhip rup) { A=<t(0 0 -.01) d(20  1 0 0)> B=<t(0 0 -.13)>  }
-joint (lup ldn)  { A=<t(0 0 -.13) d(-40 1 0 0)> B=<t(0 .01 -.15)>  }
-joint (rup rdn)  { A=<t(0 0 -.13) d(-40 1 0 0)> B=<t(0 .01 -.15)>  }
-joint (ldn lankle){ A=<t(0 0 -.17) d(90 0 0 1)> }
-joint (rdn rankle){ A=<t(0 0 -.17) d(90 0 0 1)> }
-joint (lankle lfoot){ A=<d(-90 0 0 1) d(20  1 0 0) t(.05 0 0)> B=<t(0 .04 -.025)>  }
-joint (rankle rfoot){ A=<d(-90 0 0 1) d(20  1 0 0) t(-.05 0 0)> B=<t(0 .04 -.025)>  }
+joint (waist lprehip) { A=<T d(-90 0 1 0) t(-.1 0 -.05) d(90 0 1 0)> B=<T d(-90 0 1 0)>  }
+joint (waist rprehip) { A=<T d(-90 0 1 0) t(+.1 0 -.05) d(90 0 1 0)> B=<T d(-90 0 1 0)>  }
+joint (lprehip lhip)  { A=<T d(90 0 0 1)> B=<T d(90 0 0 1) t(0 0 -.01)>  }
+joint (rprehip rhip)  { A=<T d(90 0 0 1)> B=<T d(90 0 0 1) t(0 0 -.01)>  }
+joint (lhip lup) { A=<T t(0 0 -.01) d(20  1 0 0)> B=<T t(0 0 -.13)>  }
+joint (rhip rup) { A=<T t(0 0 -.01) d(20  1 0 0)> B=<T t(0 0 -.13)>  }
+joint (lup ldn)  { A=<T t(0 0 -.13) d(-40 1 0 0)> B=<T t(0 .01 -.15)>  }
+joint (rup rdn)  { A=<T t(0 0 -.13) d(-40 1 0 0)> B=<T t(0 .01 -.15)>  }
+joint (ldn lankle){ A=<T t(0 0 -.17) d(90 0 0 1)> }
+joint (rdn rankle){ A=<T t(0 0 -.17) d(90 0 0 1)> }
+joint (lankle lfoot){ A=<T d(-90 0 0 1) d(20  1 0 0) t(.05 0 0)> B=<T t(0 .04 -.025)>  }
+joint (rankle rfoot){ A=<T d(-90 0 0 1) d(20  1 0 0) t(-.05 0 0)> B=<T t(0 .04 -.025)>  }
 

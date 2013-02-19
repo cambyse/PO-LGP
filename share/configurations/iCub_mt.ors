@@ -6,7 +6,7 @@
 ## base
 ###########
 
-body base { X=<t(0 0 0.25) d(-90 0 1 0)> }
+body base { X=<T t(0 0 0.25) d(-90 0 1 0)> }
 
 
 ###########
@@ -25,17 +25,17 @@ body w9 {}
 body w10 {}
 
 
-shape sbase (base){type=0,  size=[.2 .4 .4 .01], color=[1 0 1], rel=<t (-0.25 0 0)> }
-shape st1 (t1) {type=4, size=[0 0 0.2 .2], color=[.7 .7 .7], rel=<d(90 0 1 0) t(-00 0 -0.75)>}
-shape st2 (t2) {type=0, size=[0.1 0.1 .2 .1], color=[0 1 0], rel=<t(0 0 -0.1) d(0 0 1 0)> }
-shape (t2){ type=1 size=[0 0 0 .06] rel=<t(0 0 -.27)> }
-shape st3 (t3) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<d(90 0 1 0)> }
-shape st4 (s4) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<d(0 0 1 0)> }
-shape st5 (s5){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<d(90 0 1 0) t(0 0 0.08)> }
+shape sbase (base){type=0,  size=[.2 .4 .4 .01], color=[1 0 1], rel=<T t (-0.25 0 0)> }
+shape st1 (t1) {type=4, size=[0 0 0.2 .2], color=[.7 .7 .7], rel=<T d(90 0 1 0) t(-00 0 -0.75)>}
+shape st2 (t2) {type=0, size=[0.1 0.1 .2 .1], color=[0 1 0], rel=<T t(0 0 -0.1) d(0 0 1 0)> }
+shape (t2){ type=1 size=[0 0 0 .06] rel=<T t(0 0 -.27)> }
+shape st3 (t3) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<T d(90 0 1 0)> }
+shape st4 (s4) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<T d(0 0 1 0)> }
+shape st5 (s5){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<T d(90 0 1 0) t(0 0 0.08)> }
 shape se6 (e6){type=1, size=[0 0 .2 .015], color=[1 1 1] }
-shape se7 (e7){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<d(90 0 1 0) t(0 0 0.065)> }
+shape se7 (e7){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<T d(90 0 1 0) t(0 0 0.065)> }
 shape sw8 (w8){ type=1, size=[0 0 .10 .015], color=[0.5 .5 .5] }
-shape sw10 (w10){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<t(0 0 -0.02)> }
+shape sw10 (w10){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<T t(0 0 -0.02)> }
 #shape sw10 (w10){ type=1, size=[0 0 .10 .01], color=[1 .5 1] }
 
 
@@ -66,13 +66,13 @@ body w9r {}
 body w10r {}
 
 
-shape st3r (t3r) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<d(90 0 1 0)> }
-shape st4r (s4r) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<d(0 0 1 0)> }
-shape st5r (s5r){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<d(90 0 1 0) t(0 0 0.08)> }
+shape st3r (t3r) { type=4, size=[0 0 0.2 .02], color=[0 0 1], rel=<T d(90 0 1 0)> }
+shape st4r (s4r) { type=1, size=[0 0 0 .02], color=[.5 .5 .5], rel=<T d(0 0 1 0)> }
+shape st5r (s5r){  type=4, size=[0 0 .13 .01], color=[1 1 0], rel=<T d(90 0 1 0) t(0 0 0.08)> }
 shape se6r (e6r){type=1, size=[0 0 .2 .015], color=[1 1 1] }
-shape se7r (e7r){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<d(90 0 1 0) t(0 0 0.065)> }
+shape se7r (e7r){ type=4, size=[0 0 .12 .01], color=[0 0 0],rel=<T d(90 0 1 0) t(0 0 0.065)> }
 shape sw8r (w8r){ type=1, size=[0 0 .10 .015], color=[0.5 .5 .5] }
-shape sw10r (w10r){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<t(0 0 -0.02)> }
+shape sw10r (w10r){ type=0, size=[0.04 0.005 .040 .01], color=[0.5 1 1],rel=<T t(0 0 -0.02)> }
 #shape sw10r (w10r){ type=1, size=[0 0 .10 .01], color=[1 .5 1] }
 
 

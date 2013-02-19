@@ -5,13 +5,13 @@
 ## table
 ###########
 
-body table { X=<t(0 -.7 .6)>    type=0 mass=.001 size=[1.5 1.1 .1 0] color=[0.5 0.3 0.15] fixed contact }
-body leg1 { X=<t(.35 -.35 .3)>    type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
-body leg2 { X=<t(.35 -1.05 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
-body leg3 { X=<t(-.35 -.35 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
-body leg4 { X=<t(-.35 -1.05 .3)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body table { X=<T t(0 -.7 .6)>    type=0 mass=.001 size=[1.5 1.1 .1 0] color=[0.5 0.3 0.15] fixed contact }
+body leg1 { X=<T t(.35 -.35 .3)>    type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg2 { X=<T t(.35 -1.05 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg3 { X=<T t(-.35 -.35 .3)>   type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
+body leg4 { X=<T t(-.35 -1.05 .3)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.5 0.3 0.15] fixed }
 
-#body target { X=<t(-.0 -.5 1.2)>     type=1 mass=.001 size=[0 0 0 .02] color=[0 0 0] fixed }
+#body target { X=<T t(-.0 -.5 1.2)>     type=1 mass=.001 size=[0 0 0 .02] color=[0 0 0] fixed }
 
 
 
@@ -22,15 +22,15 @@ body leg4 { X=<t(-.35 -1.05 .3)>  type=0 mass=.001 size=[.04 .04 .7 0] color=[0.
 # ******************* THIS IS WHERE YOU MIGHT WANT TO APPLY CHANGES *****************************
 
 # lila
-body o1 { X=<t(-0.3 -0.7 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .03] color=[0.4 0 .5] contact }
+body o1 { X=<T t(-0.3 -0.7 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .03] color=[0.4 0 .5] contact }
 # orange
-body o2 { X=<t(0. -0.6 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .045] color=[1 .5 0] contact }
+body o2 { X=<T t(0. -0.6 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .045] color=[1 .5 0] contact }
 # grau
-body o3 { X=<t(-0.45 -0.4 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .06] color=[0.6 0.5 0.5] contact }
+body o3 { X=<T t(-0.45 -0.4 0.8)>  type=0 mass=.1 size=[.08 .08 .08 .06] color=[0.6 0.5 0.5] contact }
 # gruen
-body o4 { X=<t(0.3 -0.5 0.8)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[.2 1 0] contact }
+body o4 { X=<T t(0.3 -0.5 0.8)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[.2 1 0] contact }
 # 
-body o5 { X=<t(0.3 -0.5 0.9)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[1 1 0] contact }
+body o5 { X=<T t(0.3 -0.5 0.9)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[1 1 0] contact }
 # 
-body o6 { X=<t(0.3 -0.5 1.0)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[0 0 1] contact }
+body o6 { X=<T t(0.3 -0.5 1.0)>  type=0 mass=1. size=[.08 .08 .08 .06] color=[0 0 1] contact }
 

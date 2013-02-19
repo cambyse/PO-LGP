@@ -19,7 +19,7 @@ shape wheelB1 (base) { type=4, size=[.1 .1 .04 .1], color=[.5 .5 .5], rel=<T t(.
 ###########
 
 #body camera { type=2, mass=.1, size=[0 0 .1 .05] }
-#joint (back1 camera) { A=<T t(0 0 .8)>, B=<T  d(-60 1 0 0)> }
+#joint (back1 camera) { A=<T t(0 0 .8)>, B=<T d(-60 1 0 0)> }
 
 
 ###########

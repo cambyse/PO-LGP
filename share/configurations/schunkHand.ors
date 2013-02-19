@@ -1,5 +1,5 @@
 
-body last-motor { X=<t(0 0 .5) d(90 0 1 0)> }
+body last-motor { X=<T t(0 0 .5) d(90 0 1 0)> }
 body knuck1 {}
 body knuck2 {}
 body knuck3 {}
@@ -11,44 +11,44 @@ body tip2   {}
 body tip3   {}
 
 joint (last-motor knuck1) {
-  A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t(-.038105    0   .086) d(-90 0 1 0)>
-  B=<d(90 0 1 0)>
+  A=<T d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t(-.038105    0   .086) d(-90 0 1 0)>
+  B=<T d(90 0 1 0)>
 }
 
 joint (last-motor knuck2) {
-  A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525  .033 .086) d(-90 0 1 0)>
-  B=<d(90 0 1 0)>
+  A=<T d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525  .033 .086) d(-90 0 1 0)>
+  B=<T d(90 0 1 0)>
 }
 joint (last-motor knuck3) {
-  A=<d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525 -.033 .086) d(-90 0 1 0)>
-  B=<d(90 0 1 0)>
+  A=<T d(180 1 0 0) t(0 0 0.1074) d(-90 0 0 1) t( .0190525 -.033 .086) d(-90 0 1 0)>
+  B=<T d(90 0 1 0)>
 }
 
 joint (knuck3 fing3) {
-  A=<d(-90 0 0 1)>
+  A=<T d(-90 0 0 1)>
 }
 
 joint (fing3 tip3) {
-  A=<t(0 0 .0865)>
-  B=<t(0 0 0.035)>
+  A=<T t(0 0 .0865)>
+  B=<T t(0 0 0.035)>
 }
 
 joint (knuck1 fing1) {
-  A=<d( 90 0 0 1)>
+  A=<T d( 90 0 0 1)>
 }
 
 joint (fing1 tip1) {
-  A=<t(0 0 .0865)>
-  B=<t(0 0 0.035)>
+  A=<T t(0 0 .0865)>
+  B=<T t(0 0 0.035)>
 }
 
 joint (knuck2 fing2) {
-  A=<d(-90 0 0 1)>
+  A=<T d(-90 0 0 1)>
 }
 
 joint (fing2 tip2) {
-  A=<t(0 0 .0865)>
-  B=<t(0 0 0.035)>
+  A=<T t(0 0 .0865)>
+  B=<T t(0 0 0.035)>
 }
 
 
@@ -56,14 +56,14 @@ joint (fing2 tip2) {
 ### mesh shapes
 
 shape ring   (last-motor) {
- rel=<d(180 1 0 0) t(0 0 0.1034) d(-90 0 0 1)>
+ rel=<T d(180 1 0 0) t(0 0 0.1034) d(-90 0 0 1)>
  type=4
  size=[0 0 .008 .04]
  color=[.1 .1 .1]
 }
 
 shape wrist  (last-motor) {
- rel=<d(180 1 0 0) t(0 0 0.1525) d(-90 0 0 1)>
+ rel=<T d(180 1 0 0) t(0 0 0.1525) d(-90 0 0 1)>
  type=3
  mesh='schunk_3d/SDH_Gehaeuse_x.tri'
  color=[.55 .55 .55]
@@ -71,38 +71,38 @@ shape wrist  (last-motor) {
 
 
 shape (fing1)  {
-  type=3, rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
+  type=3, rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
   mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri'
   color=[.55 .55 .55]
 }
 shape (fing2)  {
   type=3
-  rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
+  rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
   mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri'
   color=[.55 .55 .55]
 }
 shape (fing3)  {
   type=3
-  rel=<t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
+  rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>
   mesh='schunk_3d/SDH_Mittelteil_Finger1_x.tri'
   color=[.55 .55 .55]
 }
 
 shape (tip1)   {
   type=3
-  rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>
+  rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>
   mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'
   color=[.5 .5 .5]
 }
 shape (tip2)   {
   type=3
-  rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>
+  rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>
   mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'
   color=[.5 .5 .5]
 }
 shape (tip3)   {
   type=3
-  rel=<t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>,
+  rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>,
   mesh='schunk_3d/SDH_Kuppe_Finger1_x.tri'
   color=[.5 .5 .5]
 }

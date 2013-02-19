@@ -12,7 +12,7 @@
 
 void testLoadSave(){
   ors::Graph G;
-  ifstream fil("test.ors");
+  ifstream fil("arm7.ors");
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
@@ -20,6 +20,7 @@ void testLoadSave(){
   for(uint i=0;i<0;i++){
     OpenGL gl;
     init(G,gl,"arm3.ors");
+    gl.watch();
 //    MT::wait(.1)
   }
 }

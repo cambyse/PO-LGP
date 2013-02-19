@@ -8,6 +8,7 @@
 #include <MT/util.h>
 #include <MT/array.h>
 //#include <MT/opengl.h>
+#include <MT/opencv.h>
 
 #define HandleResult(res,place) if (res!=XI_OK) {printf("Error after %s (%d)",place,res);goto finish;}
 
@@ -42,7 +43,7 @@ int main(int argc, char** argv){
   stat = xiSetParamInt(xiH, XI_PRM_EXPOSURE, 10000);
   HandleResult(stat,"xiSetParam (exposure set)");
 
-  stat = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_RGB24);
+  stat = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
   HandleResult(stat,"xiSetParam (format)");
 
   // stat = xiSetParamInt(xiH, XI_PRM_DOWNSAMPLING, 2);
@@ -65,7 +66,7 @@ int main(int argc, char** argv){
   stat = xiStartAcquisition(xiH);
   HandleResult(stat,"xiStartAcquisition");
 
-  for (int images=0; images<100 ;images++){
+  for (int images=0; images<20 ;images++){
     // getting image from camera
     stat = xiGetImage(xiH, 5000, &image);
     HandleResult(stat,"xiGetImage");
@@ -97,6 +98,20 @@ int main(int argc, char** argv){
 	FILE * pFile; 
 	pFile = fopen ( "pic.raw" , "wb" );
 	fwrite (image.bp , 1 , 3*image.height*image.width , pFile );  
+	fclose (pFile);
+      }
+
+      if(image.frm=XI_RAW8){
+        img.referTo((byte*)image.bp,image.height*image.width);
+        img.reshape(image.height, image.width);
+        byteA rgb(img.d0, img.d1, 3);
+        cv::Mat dst=cvMAT(rgb);
+        cv::Mat src=cvMAT(img);
+        cv::cvtColor(src, dst, CV_BayerBG2RGB);
+
+	FILE * pFile;
+	pFile = fopen ( "pic.raw" , "wb" );
+	fwrite (rgb.p , 1 , rgb.N, pFile );
 	fclose (pFile);
       }
     }
