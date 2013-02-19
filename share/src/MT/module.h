@@ -178,3 +178,7 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
     } \
   };
 
+
+#define MODULE(name) \
+  DECLARE_MODULE(name) \
+  struct name:name##_Base

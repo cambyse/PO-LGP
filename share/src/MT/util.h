@@ -552,6 +552,36 @@ struct Thread {
   virtual void main() = 0;
 };
 
+//! a generic singleton
+template<class T>
+struct Singleton{
+  struct SingletonFields{ //class cannot have own members: everything in the singleton which is created on first demand
+    T obj;
+    RWLock lock;
+  };
+
+  static SingletonFields *singleton;
+
+  SingletonFields& getSingleton() const{
+    static bool currentlyCreating=false;
+    if(currentlyCreating) return *((SingletonFields*) NULL);
+    if(!singleton) {
+      static Mutex m;
+      m.lock();
+      if(!singleton) {
+        currentlyCreating=true;
+        singleton = new SingletonFields();
+        currentlyCreating=false;
+      }
+      m.unlock();
+    }
+    return *singleton;
+  }
+
+  T& obj(){ return getSingleton().obj; }
+};
+template<class T> typename Singleton<T>::SingletonFields *Singleton<T>::singleton=NULL;
+
 
 //===========================================================================
 //

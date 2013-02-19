@@ -4,7 +4,7 @@
 
 //===========================================================================
 //
-// declaration of a module
+// declaration of a module -- FIRST STYLE
 //
 
 //-- this is how the developer should provide a module
@@ -33,7 +33,6 @@ struct ComputeSum:ComputeSum_Base {
     return true;
   }
 };
-
 
 
 //===========================================================================

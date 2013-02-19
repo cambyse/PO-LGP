@@ -22,40 +22,6 @@ KeyValueGraph& registry();
 
 //===========================================================================
 //
-// a generic singleton registry (list) of things (usually Base_typed deriving from a common Base)
-//
-
-template<class T>
-struct Singleton{
-  struct SingletonFields{ //class cannot have own members: everything in the singleton which is created on first demand
-    T obj;
-    RWLock lock;
-  };
-
-  static SingletonFields *singleton;
-
-  SingletonFields& getSingleton() const{
-    static bool currentlyCreating=false;
-    if(currentlyCreating) return *((SingletonFields*) NULL);
-    if(!singleton) {
-      static Mutex m;
-      m.lock();
-      if(!singleton) {
-        currentlyCreating=true;
-        singleton = new SingletonFields();
-        currentlyCreating=false;
-      }
-      m.unlock();
-    }
-    return *singleton;
-  }
-
-  T& obj(){ return getSingleton().obj; }
-};
-
-
-//===========================================================================
-//
 // define a type registry
 //
 
@@ -106,6 +72,27 @@ inline Item* readTypeIntoItem(const char* key, std::istream& is){
   return NULL;
 }
 
+template<class Type, class Base>
+struct TypeInfo_typed:TypeInfo{
+  TypeInfo_typed(){}
+  TypeInfo_typed(const char *key1, const char *key2, const char *userBase, TypeInfoL *container ){
+    if(key1) keys.append(MT::String(key1));
+    if(key2) keys.append(MT::String(key2));
+    keys.append(MT::String(typeid(Type).name()));
+    if(userBase){
+      TypeInfo *t=reg_findType<Base>();
+      if(t) parents.append(t);
+    }
+    if(container){
+      container->append(this);
+    }
+  }
+  virtual const std::type_info& type_info() const { return typeid(Type); }
+  virtual Item* readItem(istream& is) const{ Type *x=new Type(); is >>*x; return new Item_typed<Type>(x); }
+  virtual void* newInstance() const { return new Type(); }
+};
+
+
 //-- use these macros to register types in cpp files
 
 #define KO ,
@@ -119,16 +106,5 @@ inline Item* readTypeIntoItem(const char* key, std::istream& is){
 
 #define REGISTER_TYPE_DERIVED(Type, Base) \
   REGISTER_ITEM2(TypeInfo_typed<Type KO Base>, type, Type, new TypeInfo_typed<Type KO Base>(#Type,NULL,#Base,NULL));
-
-#include "registry_t.cxx"
-
-
-//===========================================================================
-//
-// registrator -- helper to call registration code for classes & members
-//
-
-
-// stuff that needs to be included by the header to enable macros and templates
 
 #endif
