@@ -701,13 +701,31 @@ KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
         const reward_t& reward)
 const {
 
-    prediction_tuple_t t = std::make_tuple(state_from, action, state_to, reward);
+    // check if data for input exist
+    input_tuple_t input_tuple = std::make_tuple(state_from, action);
+    auto input_ret = input_set.find(input_tuple);
 
-    auto it = prediction_map.find(t);
-    if(it!=prediction_map.end()) {
-        return it->second;
+    if(input_ret==input_set.end()) { // no data for this input
+
+        if(reward==Data::min_reward) {
+            // uniform probability for zero reward
+            return 1./Data::state_n;
+        } else {
+            // zero probability else
+            return 0;
+        }
+
     } else {
-        return 0; // prior for unseen transitions is zero
+
+        // check for counts in prediction map
+        prediction_tuple_t prediction_tuple = std::make_tuple(state_from, action, state_to, reward);
+        auto it = prediction_map.find(prediction_tuple);
+        if(it==prediction_map.end()) { // no counts --> zero probability
+            return 0;
+        } else {
+            return it->second; // probability calculated by relative counts
+        }
+
     }
 }
 
@@ -813,11 +831,14 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
 
 void KMarkovCRF::update_prediction_map() {
 
+    DEBUG_OUT(1,"Updating prediction map...");
+
     // clear old value
     prediction_map.clear();
+    input_set.clear();
 
     // store count for different inputs for later normalization
-    std::map<std::tuple<k_mdp_state_t,action_t>, size_t > counts;
+    std::map<input_tuple_t, size_t > counts;
 
     // go through episode and count frequencies for transitions
     for(const_episode_iterator_t episode_iterator=episode_data.begin()+k+1;
@@ -834,33 +855,37 @@ void KMarkovCRF::update_prediction_map() {
 
         // increment frequency
         prediction_tuple_t predict_tuple = std::make_tuple(k_mdp_state, action, state, reward);
-        auto ret = prediction_map.insert(std::make_pair(predict_tuple,1.));
-        if(!ret.second) { // element already exists
-            ret.first->second += 1;
+        auto ret_predict = prediction_map.insert(std::make_pair(predict_tuple,1)); // initialize with one count
+        if(!ret_predict.second) { // if element already existed increment instead
+            ret_predict.first->second += 1;
         }
 
-        // increment counter
+        // increment counter for input
         auto input_tuple = std::make_tuple(k_mdp_state, action);
-        auto ret = counts.insert(std::make_pair(input_tuple,1));
-        if(!ret.second) { // element already exists
-            ret.first->second += 1;
+        auto ret_input = counts.insert(std::make_pair(input_tuple,1)); // initialize with one count
+        if(!ret_input.second) { // if element already existed increment instead
+            ret_input.first->second += 1;
         }
 
+        // update input set
+        input_set.insert(input_tuple);
     }
-
-    // todo
 
     // normalize to get a probability distribution
+    for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
 
-    for(Data::state_idx_t state_idx=0; state_idx<Data::state_n; ++state_idx) {
-        state_t state = Data::state_from_idx(state_idx);
-        for(Data::reward_idx_t reward_idx=0; reward_idx<Data::reward_n; ++reward_idx) {
-            reward_t reward = Data::reward_from_idx(reward_idx);
+        k_mdp_state_t k_mdp_state = std::get<0>(it->first);
+        action_t action = std::get<1>(it->first);
+        auto input_tuple = std::make_tuple(k_mdp_state, action);
+        auto ret_input = counts.find(input_tuple);
+        if(ret_input==counts.end()) {
+            DEBUG_OUT(0,"Error: Item from prediction map not found within count-map");
+        } else {
+            it->second /= ret_input->second;
         }
     }
-    for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
-        it->second /= counter;
-    }
+
+    DEBUG_OUT(1,"    DONE");
 }
 
 void KMarkovCRF::check_lambda_size() {

@@ -133,6 +133,9 @@ private:
     typedef std::tuple<k_mdp_state_t, action_t, state_t, reward_t> prediction_tuple_t;
     typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
+    typedef std::tuple<k_mdp_state_t, action_t> input_tuple_t;
+    typedef std::set<input_tuple_t> input_set_t;
+
     int k, old_active_features_size;
     episode_t episode_data;
     lbfgsfloatval_t * lambda;
@@ -141,6 +144,7 @@ private:
     std::vector<double> compound_feature_scores;
     bool compound_features_sorted, kmdp_prediction_up_to_data;
     prediction_map_t prediction_map;
+    input_set_t input_set;
 
     void check_lambda_size();
     void construct_compound_features(const int& n);
