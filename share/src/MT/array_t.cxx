@@ -1393,7 +1393,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     if(dimTag) { writeDim(os); os <<' '; }
     if(nd>=2) os <<'\n';
     if(BRACKETS[0]) os <<BRACKETS[0];
-    if(nd==0 && N==0) { os <<']'; return; }
+    if(nd==0 && N==0) { if(BRACKETS[1]) os <<BRACKETS[1]; return; }
     if(nd==0 && N==1) { os <<scalar() <<']'; return; }
     if(nd==1) {
       //os <<' ';

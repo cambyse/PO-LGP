@@ -42,8 +42,8 @@
 #define for_index(i, X) for(uint i=0; i<X.N; i++)
 #define for_(Type, it, X)      for(Type *it=X.p, *it##_stop=X.p+X.N; it!=it##_stop; it++)
 #define for_rev_(Type, it, X)  for(Type *it=X.p+X.N;  (it--)!=X.p; )
-#define for_list_(Type, it, X)     Type *it=NULL; for(uint it##_COUNT=0;      it##_COUNT<X.N && ((it=X(it##_COUNT)) || true); it##_COUNT++)
-#define for_list_rev_(Type, it, X) Type *it=NULL; for(uint it##_COUNT=X.N; it##_COUNT--      && ((it=X(it##_COUNT)) || true); )
+#define for_list_(Type, it, X)     Type *it=NULL; for(uint it##_COUNT=0;   it##_COUNT<X.N && ((it=X(it##_COUNT)) || true); it##_COUNT++)
+#define for_list_rev_(Type, it, X) Type *it=NULL; for(uint it##_COUNT=X.N; it##_COUNT--   && ((it=X(it##_COUNT)) || true); )
 
 #define ARR ARRAY<double> //!< write ARR(1., 4., 5., 7.) to generate a double-Array
 #define TUP ARRAY<uint> //!< write TUP(1, 2, 3) to generate a uint-Array

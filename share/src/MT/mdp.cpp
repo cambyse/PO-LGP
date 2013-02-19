@@ -240,7 +240,7 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   
 #else //old code depending on hypergraph
   clearMDP(mdp);
-  HyperGraph H;
+  KeyValueGraph H;
   MT::load(H, filename);
   //cout <<"read hypergraph: " <<H <<endl;
   Element *e;

@@ -39,7 +39,7 @@ void Item::write(std::ostream& os) const {
   //-- write value
   if(valueType()==typeid(KeyValueGraph)){
     os <<" {";
-    value<KeyValueGraph>()->write(os, ",");
+    value<KeyValueGraph>()->write(os, " ");
     os <<" }";
   }else if(valueType()==typeid(MT::String)){ os <<"='" <<*value<MT::String>() <<'\'';
   }else if(valueType()==typeid(arr)){        os <<'=' <<*value<arr>();
@@ -52,7 +52,7 @@ void Item::write(std::ostream& os) const {
       writeValue(os);
       os <<'>';
     }else{
-      os <<"=<" <<valueType().name() <<' ';
+      os <<"=< ";
       writeValue(os);
       os <<'>';
     }
@@ -71,16 +71,17 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=true){
   <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); return false; }
 
   //-- read keys
+  MT::skip(is," \t\n\r");
   for(;;){
-    if(!str.read(is, " \t\n\r", " \t\n\r,;({=", false)) break;
+    if(!str.read(is, " \t", " \t\n\r,;({}=", false)) break;
     keys.append(str);
   }
-  if(!keys.N) return false;
+  //if(!keys.N) return false;
 
   if(verbose){ cout <<" keys:" <<keys <<flush; }
 
   //-- read parents
-  char c=MT::getNextChar(is);
+  char c=MT::getNextChar(is," \t"); //don't skip new lines
   if(c=='('){
     for(uint j=0;;j++){
       if(!str.read(is, " \t\n\r,", " \t\n\r,)", false)) break;
@@ -99,9 +100,7 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=true){
   if(verbose){ cout <<" parents:"; if(!parents.N) cout <<"none"; else listWrite(parents,cout," ","()"); cout <<flush; }
 
   //-- read value
-  if(c==',' || c==';'){ //boolean
-    item = new Item_typed<bool>(keys, parents, new bool(true));
-  }else if(c=='=' || c=='{'){
+  if(c=='=' || c=='{'){
     if(c=='=') c=MT::getNextChar(is);
     if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String
       is.putback(c);
@@ -169,7 +168,11 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=true){
       PARSERR("unknown value indicator '" <<c <<"' (booleans need comma or semicolon)");
     }
     }
+  }else{ //boolean
+    is.putback(c);
+    item = new Item_typed<bool>(keys, parents, new bool(true));
   }
+
   if(verbose){
     if(item){ cout <<" value:"; item->writeValue(cout); cout <<" FULL:"; item->write(cout); cout <<endl; }
     else{ cout <<"FAILED" <<endl; }
@@ -233,55 +236,6 @@ KeyValueGraph KeyValueGraph::getItems(const char* key){
   return ret;
 }
 
-void sortByDotOrder(ItemL& G){
-  NIY;
-#if 0
-  uintA perm(G.N);
-  Item *e;
-  double *order;
-  uint i;
-  for_list(i,e,G){
-    order = anyListGet<double>(e->ats, "dot_order", 1);
-    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
-    perm(i) = (uint)*order;
-  }
-  G.permuteInv(perm);
-  for_list(i,e,G) e->index=i;
-#endif
-}
-
-void writeDot(ItemL& G){
-  NIY;
-#if 0
-  ofstream fil;
-  MT::open(fil, "z.dot");
-  fil <<"graph G{" <<endl;
-  fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
-  fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
-  fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
-  uint i, j;
-  Item *e, *n;
-  for_list(i, e, G){
-    fil <<e->index <<" [ ";
-    if(e->name.N) fil <<"label=\"" <<e->name <<"\", ";
-    if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil <<"shape=box";
-    else if(e->type=="shape") fil <<"shape=diamond";
-    else fil <<"shape=ellipse";
-    fil <<" ];" <<endl;
-    for_list(j, n, e->parents){
-      if(n->index<e->index)
-        fil <<n->index <<" -- " <<e->index <<" [ ";
-      else
-        fil <<e->index <<" -- " <<n->index <<" [ ";
-      fil <<"label=" <<j;
-      fil <<" ];" <<endl;
-    }
-  }
-  fil <<"}" <<endl;
-  fil.close();
-#endif
-}
-
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G){
   listDelete(*this);
   this->resize(G.N);
@@ -307,7 +261,30 @@ void KeyValueGraph::write(std::ostream& os, const char *ELEMSEP, const char *del
   if(delim) os <<delim[1] <<std::flush;
 }
 
-void KeyValueGraph::writeDot(std::ostream& os){
+void KeyValueGraph::writeDot(const char *filename){
+  ofstream fil;
+  MT::open(fil, filename);
+  fil <<"graph G{" <<endl;
+  fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
+  fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
+  fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
+  for_list_(Item, it, list()){
+    fil <<it->index <<" [ ";
+    if(it->keys.N) fil <<"label=\"" <<it->keys.last() <<"\", ";
+    if(it->parents.N) fil <<"shape=box";
+    else fil <<"shape=ellipse";
+    fil <<" ];" <<endl;
+    for_list_(Item, pa, it->parents){
+      if(pa->index<it->index)
+        fil <<pa->index <<" -- " <<it->index <<" [ ";
+      else
+        fil <<it->index <<" -- " <<pa->index <<" [ ";
+      fil <<"label=" <<pa_COUNT;
+      fil <<" ];" <<endl;
+    }
+  }
+  fil <<"}" <<endl;
+  fil.close();
 }
 
 Item *KeyValueGraph::add(const uintA& tuple){
@@ -319,5 +296,12 @@ ItemL& KeyValueGraph::getParents(uint i){
 }
 
 void KeyValueGraph::sortByDotOrder(){
-  NIY;
+  uintA perm(N);
+  for_list_(Item, it, list()){
+    double *order = it->value<KeyValueGraph>()->getValue<double>("dot_order");
+    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
+    perm(it_COUNT) = (uint)*order;
+  }
+  permuteInv(perm);
+  for_list_(Item, it2, list()) it2->index=it2_COUNT;
 }

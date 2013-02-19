@@ -116,21 +116,23 @@ void sGraphView::updateGraphvizGraph(){
   uint i,j;
   Item *e, *n;
   gvNodes.resize(G->N);
-  //first add `nodes' (elements without links)
+
+  //first add `nodes' (items without links)
   for_list(i, e, (*G)){
     e->index=i;
     CHECK(i==e->index,"");
-    //if(e->parents.N!=2){ //not an edge
-      gvNodes(i) = agnode(gvGraph, STRING(i <<"_" <<e->keys(0))); //, true);
-      if(e->keys.N) agset(gvNodes(i), STR("label"), e->keys(0).p);
-      if(e->parents.N){
-	agset(gvNodes(i), STR("shape"), STR("box"));
-	agset(gvNodes(i), STR("fontsize"), STR("6"));
-	agset(gvNodes(i), STR("width"), STR(".1"));
-	agset(gvNodes(i), STR("height"), STR(".1"));
-      }
-   // }
+    gvNodes(i) = agnode(gvGraph, STRING(e->index <<"_" <<(e->keys.N?e->keys.last():STRING("-")))); //, true);
+    if(e->keys.N) agset(gvNodes(i), STR("label"), (e->keys.N?e->keys.last():STRING("-")));
+    if(e->parents.N){
+      agset(gvNodes(i), STR("shape"), STR("box"));
+      agset(gvNodes(i), STR("fontsize"), STR("6"));
+      agset(gvNodes(i), STR("width"), STR(".1"));
+      agset(gvNodes(i), STR("height"), STR(".1"));
+    }else{
+      agset(gvNodes(i), STR("shape"), STR("ellipse"));
+    }
   }
+
   //now all others
   for_list(i, e, (*G)){
     /*if(e->parents.N==2){ //is an edge

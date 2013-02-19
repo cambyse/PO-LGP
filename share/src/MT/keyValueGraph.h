@@ -36,6 +36,7 @@ struct KeyValueGraph:ItemL{
   ~KeyValueGraph();
 
   KeyValueGraph& operator=(const KeyValueGraph&);
+  ItemL& list(){ return *this; }
 
   //-- get items
   Item* getItem(const char *key);
@@ -65,7 +66,7 @@ struct KeyValueGraph:ItemL{
 
   void read(std::istream& is);
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
-  void writeDot(std::ostream& os=std::cout);
+  void writeDot(const char* filename="z.dot");
 };
 stdPipes(KeyValueGraph);
 

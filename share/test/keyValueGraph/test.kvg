@@ -1,0 +1,30 @@
+
+## a trivial graph:
+a
+b
+(a b)
+
+## a bit more verbose graph
+node A{ color=blue }
+node B{ color=red, value=5 }
+edge (A,B){ width=2 }
+
+## key value pairs
+a=string   #string
+b='string'   #string
+c="string"   #string
+d=-0.1234   #double
+e=[1 2 3 0.5]   #arr
+f=(c d e)   #tuple of other items (referred to by their key)
+g={ a, b=0.2, x="hallo"   #keyValueGraph
+  y=filename.org
+  z } 
+
+## any types
+trans=<T t(10 0 0)>  #'T' is the tag for an arbitrary, an ors::Transformation here
+
+## strange notations
+a()   #empty parents
+()   #empty keys and parents
+
+
