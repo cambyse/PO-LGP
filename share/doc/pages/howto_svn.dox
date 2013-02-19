@@ -1,0 +1,12 @@
+/** @page svn_workflow SVN workflow
+SVN is used only for papers.
+
+\verbatim
+svn co --username=<YOUR ZEDAT LOGIN> --password=<YOUR ZEDAT PW> https://svn.imp.fu-berlin.de/mlr
+svn add|del|mv <files>
+svn up
+svn commit -m 'message'
+\endverbatim
+
+
+*/

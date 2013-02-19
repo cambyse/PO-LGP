@@ -1,0 +1,247 @@
+/** @page git Howto: git
+
+This is supposet to be a very quick intro to git.
+
+\todo replace maserti/fu with the current redmine accout.
+
+Check the \c man \c pages of git and git subcommands. Usually,
+|git help foo| is synonym for |man git foo|.
+
+As a preliminary to using git, please take an hour to read the two
+\e tutorials on git provided in the man pages. In your terminal
+write 
+@verbatim
+man gittutorial
+@endverbatim
+When done with it read on with
+@verbatim
+|man gittutorial-2|
+@endverbatim
+Depending on your background and experience with other revision control
+systems there might be better approaches to introduce git, but at any
+rate, these two tutorials give basic insight into git's concepts.
+
+For deeper understanding \c man \c gitcore-tutorial is your friend.
+There are also countless tutorials on the internet.
+
+
+\section git_getting_started Getting git started
+
+- install git :-)
+- Optional: define the ssh key of your local machine in maserati
+(more details below) (only for convenience)
+- Introduce yourself to git. The email should match the redmine email so that redmine can identify the commits!
+  \verbatim
+  git config --global user.name "Your Name"
+  git config --global user.email "your_email@whatever.com"
+  \endverbatim
+- Get git clone
+  \verbatim
+  cd git  // go to git directory
+  git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr <dir>
+  $ OR
+  git clone git@maserati.mi.fu-berlin.de:mlr <DIR>
+  // where <DIR> is your local target root directory for the GIT-clone
+  \endverbatim
+- that's already it!
+
+
+\section git_setup_server Setting up maserati as git server
+Most steps are only required if your local git used a different git
+server before.
+First type
+\verbatim
+git remote -v
+\endverbatim
+to see which git server you use. In case it is not maserati you should
+change this!
+
+- in your web browser go to
+  \verbatim
+  https://maserati.mi.fu-berlin.de/redmine/
+  \endverbatim
+  and login with your account on maserati
+- Browse to "My account" (up right), "Public
+  keys" (almost up right) and click "new value".
+  Create a sshkey in the webpage, e.g. by copying some ssh file from your
+  computer, here we use gedit for example:
+  \verbatim
+  cd ~/.ssh
+  gedit id_rsa.pub
+  \endverbatim
+  copy everything for key value and activate it on the server
+- type in your computer to add maserati as server:
+  \verbatim
+  git remote add maserati git@maserati.mi.fu-berlin.de:mlr
+  \endverbatim
+- go to your main git folder and type
+  \verbatim
+  gedit .git/config
+  \endverbatim
+  then change all your remotes to maserati, remove any old/conflicting
+  origins entries, it should look like this:
+  \verbatim
+  [branch "master"]
+    remote = maserati
+    merge = refs/heads/master
+  [remote "maserati"]
+    url = git@maserati.mi.fu-berlin.de:mlr
+    fetch = +refs/heads/*:refs/remotes/maserati/*
+  \endverbatim
+
+
+
+\section git_cmds git commands
+
+\verbatim
+git remote add maserati https://mtoussai@maserati.mi.fu-berlin.de/git/mlr
+
+git clone ssh://<achtauge-user>@achtauge.imp.fu-berlin.de/mnt/data/git/share mlr
+git config --global diff.external git-diff.sh
+git config --global push.default tracking
+git config --global diff.external git-diff.sh
+// with a git-diff.sh file (in your local bin)
+// #!/bin/bash
+// /usr/bin/meld "$2" "$5" > /dev/null 2>&1
+
+git status
+git diff
+git add|mv|rm|... <files>
+git commit -am 'message'  (or --all --message 'message')
+git pull --all //DON'T do this! fetch --all is ok, but pull might
+               //merge EVERYTHING in the current working branch
+git push --all
+
+git branch -a
+// overview over all branches and configs for push and pull
+git remote show maserati
+git checkout <branch>
+git branch <new-branch>
+git branch --track <new-branch> <existing-remote-branch>
+// set branch to pull from some remote branch
+git branch --set-upstream <existing-branch> <remote-branch-to-be-tracked>
+// Example: git branch --set-upstream branch123 origin/branch123
+git merge <other-branch>
+
+.gitignore
+git update-index --assume-unchanged <files>
+\endverbatim
+
+
+- init
+  - |git init|  just inits the |\$PWD|, nothing added, nothing
+  - create central repo for current development
+    - at home, |cd ~/dev/mpcdzen|, |git init|
+    - |git add mpcdzen.sh mpcdzen.conf|
+    - |git commit -m initial|
+    - |ssh my.server.there| go to where my 'central' repos are.
+    - |cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen|
+    - everywhere: |git clone ssh://my.home.here/home/me/dev/mpcdzen| \end{enumerate}
+  - when cloning on the same machine:
+    - |git clone --bare --no-hardlinks -l ~/dev/mpcdzen|  can be helpful
+- commit
+  - |git add -u ../path/| : add all *tracked* files under path
+  - |git add ../path/| : add *all* files under path to staging area
+  - |git commit -a | : add all modified tracked files from the *whole
+    working copy* and commit
+- diff
+  - |git diff| : how current files and HEAD differ
+  - |git diff --cached | : diff staged files against HEAD
+- status
+  - |git status| : list staged, modified tracked, untracked files
+  - if |file| is not tracked you can use .gitignore or .git/info/exclude
+    to tell git not to take care of it. If it is already tracked, this is
+    the way to say the same: |git update-index --assume-unchanged ../file|
+- remote
+  - |git add remote mhmgr ssh://my.homemachine/git/repo| kinda introduces
+    my home machine's repo to this one. Then, |git fetch mhmgr| and I'm
+    set to go for comparing, merging etc.
+- refs' naming
+  - |HEAD\^| addresses the parent of |HEAD|, e.g., assuming I've
+    merged 2 branches and committed 3 times on the current branch,
+    |git show HEAD\^2| shows the second branch before merging. In
+    other words, direct after merge and commit, the parents of HEAD are
+    |HEAD\^1|  and |HEAD\^2|
+    illustration from man git-rev-parse:
+    \verbatim
+   \begin{code} \begin{verbatim}
+           G   H   I   J
+            \ /     \ /
+             D   E   F
+              \  |  / \
+               \ | /   |
+                \|/    |
+                 B     C
+                  \   /
+                   \ /
+                    A
+
+           A =      = A^0
+           B = A^   = A^1     = A~1
+           C = A^2  = A^2
+           D = A^^  = A^1^1   = A~2
+           E = B^2  = A^^2
+           F = B^3  = A^^3
+           G = A^^^ = A^1^1^1 = A~3
+           H = D^2  = B^^2    = A^^^2  = A~2^2
+           I = F^   = B^3^    = A^^3^
+           J = F^2  = B^3^2   = A^^3^2
+\endverbatim
+- fork file with history
+  - git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is
+    \verbatim
+    cp a b
+    git add b
+    \endverbatim
+    git doesn't have means to track hisory of files. It tracks |blobs|.
+    See gitcore-tutorial for details. The history is available in, e.g.
+    |git log|, through |-C| option (Then git tries to find copies.
+    It is good idea to commit forked files together -- then -C has clue
+    where to search. If you would not, |-C -C| (double -C) or
+    --find-copies-harder (or so) does the trick)
+    http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
+- proxy
+  if you clone via \verb+https+ and happen to be behind a proxy, here is how
+  you go:
+  \verbatim
+  git config --global http.proxy http://proxydomain:proxyport
+  \endverbatim
+  and to inspect a configured option:
+  \verbatim
+  git config --get http.proxy
+  \endverbatim
+
+
+\section git_simplification Proposal for simplifying mlr git macros!
+DONE - is included in share/bin!
+
+- GIT-newBranch $1: create a new local branch; also push the branch to maserati; set the
+default tracking (the remote branch will always be named equally)
+- GIT-getBranch $1: create a local branch tracking an existing remote one called
+maserati/$1; ensures that the branch will always be named equally;
+ensure that the default tracking/mergin paths are set properly
+- GIT-delBranch $1: remove the local! branch; ensure that everything has been pushed to
+maserati;
+- GIT-info: dump all possible info (git branch -a, git status, git info etc..)
+
+
+\subsubsection git_workflow Standard git workflows
+
+Merging individual local branch with remote branch
+
+Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge
+with the \verb+master+ branch in the remote repository. Here, \verb+origin+ is a variable
+for the remote git repository server (i.e., maserati in our case).
+\verbatim
+// You are in the individual branch branch123 on your local machine.
+git fetch origin master     // fetch from remote master
+git merge origin master     // merge from remote master
+git push                    // push local branch123 to remote branch123
+git checkout master         // switch to master branch
+git fetch origin branch123  // fetch from remote branch123
+git merge origin branch123  // merge from remote branch123
+git push                    // push local master to remote master
+\endverbatim
+
+
+*/
