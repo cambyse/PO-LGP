@@ -1,5 +1,5 @@
 
-A MapGraph is.. (three ways to describe what a MapGraph is):
+A KeyValueGraph is.. (three ways to describe what a KeyValueGraph is):
 
 -- a graph, where each item (node/edge) has some keys and can store a
    value of any type
@@ -16,12 +16,10 @@ A MapGraph is.. (three ways to describe what a MapGraph is):
 -- the data structure which is one-to-one with the following file
    format
 
-===
-
-File format:
+=== File format:
 
 item:
-tag [more tags] [(parent-names)] [=] [value]
+[multiple tags] [(multiple parents)] [=] [value]
 
 value:
 none -> boolean
@@ -29,8 +27,8 @@ number -> double
 'string' -> MT::String
 [doubles] -> arr
 <TypeKey ...> -> arbitrary type
-(item-names) -> AnyList (subset of previously defined items)
-{ item-list } -> AnyList (new subgraph of this item)
+(item-names) -> ItemL (subset of previously defined items)
+{ item-list } -> KeyValueGraph (new subgraph of this item)
 
 predefined TypeKeys:
 <T ...> -> Transformation
@@ -38,51 +36,27 @@ predefined TypeKeys:
 <u ...> -> uintA
 
 
-\subsection{10-08-06 relational graph format}
+=== Examples
 
-== Graph syntax without relations or ranges/templates:
+see the test.kvg for examples
 
-entity-type name(parent-names){ properties as key value pairs }
 
-name, parent-names, and description are optional
+=== FUTURE features:
+
+* values from files
+
+<Mesh:meshfile.off>
+
+* include
+
+#include "..."
+
+
+=== relational graphs
+
+item-name[range-variables](parent-names){ properties }
 
 Example 1:
-
-node a
-node b
-edge (a,b)
-
-A minimalistic graph. a and b have no parents (do not connect
-anything) and no properties. The edge has no name (not necessary since
-no entity referes to it as parent/no hyper edges in this case) and no
-properties. The edge is internally stored as directed (parent ordering
-matters) but an attribute or type could label it as undirected.
-
-
-Example 2:
-
-node A{ color=blue }
-node B{ color=red, value=5 }
-edge (A,B){ width=2 }
-
-with attributes...
-
-
-Example 3:
-
-Variable X { dim=2 }
-Variable Y { dim=4 }
-Factor f(X,Y){ f=[1 2 3 4 5 6 7 8] }
-
-A factor graph (with strange coupling matrix of 8 entries).
-
-
-
-== Syntax to define a range of entities (relational entities):
-
-entity-type name[range-variables](parent-names){ properties }
-
-Example 4:
 
 Variable x[t] { dim=2 }
 
@@ -90,7 +64,7 @@ reads ``create a //Variable// named //x[t]// for each instantiation of
 //t//''
 
 
-Example 5:
+Example 2:
 
 Variable x[t] { dim=2 }
 Factor f[t](x[t],x[t+1]) { f=[.9 .1 .1 .9] }
@@ -103,7 +77,7 @@ coupling to x[0] with the specified evidence'' -- this defines a
 simple Markov chain!
 
 
-Example 6:
+Example 3:
 
 Variable on[a,b]
 Variable ball[a]

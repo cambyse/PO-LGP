@@ -1,13 +1,11 @@
-#include "modules.h"
+#include <MT/module.h>
 #include <MT/keyValueGraph.h>
+#include <MT/graphview.h>
 
 //===========================================================================
 //
 // declaration of a module
 //
-
-struct ArrRepresentation:arr,TypeBase{};
-struct DoubleRepresentation:arr,TypeBase{};
 
 //-- this is how the developer should provide a module
 DECLARE_MODULE(ComputeSum);
@@ -17,26 +15,26 @@ struct ComputeSum:ComputeSum_Base {
   VAR(double, s); //output
 
   ComputeSum(){
-
     int i = 5-3;
+    i++;
   }          //replaces old 'open'
   virtual ~ComputeSum(){} //replaces old 'close'
 
-  virtual void step();
-  virtual bool test();
+  virtual void step(){
+    set_s( sum(get_x()) );
+  }
+
+  virtual bool test(){
+    set_x( ARR(1., 2., 3.) );
+    step();
+    double S = get_s();
+    CHECK(S==6.,"");
+    cout <<"*** TEST SUCCESS ***" <<endl;
+    return true;
+  }
 };
 
-void ComputeSum::step(){
-  set_s( sum(get_x()) );
-}
 
-bool ComputeSum::test(){
-  set_x( ARR(1., 2., 3.) );
-  step();
-  double S = get_s();
-  CHECK(S==6.,"");
-  cout <<"*** TEST SUCCESS ***" <<endl;
-}
 
 //===========================================================================
 //
@@ -66,6 +64,8 @@ int main(int argc, char** argv){
   testModule<ComputeSum>();
 
   cout <<registry() <<endl;
+  GraphView gv(registry());
+  gv.watch();
 
   return 0;
 }

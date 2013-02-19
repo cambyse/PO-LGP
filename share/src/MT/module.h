@@ -10,6 +10,7 @@
 
 #include <MT/array.h>
 #include <MT/registry.h>
+#include <stddef.h>
 
 struct Module;
 
@@ -148,7 +149,7 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
 #define VAR(type, name) \
   struct name##_Access:VariableAccess_typed<type>, Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>{ \
   name##_Access():VariableAccess_typed<type>(#name),  Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>(this){ \
-      uint offset = (uint)&((__MODULE_TYPE__*)NULL)->name##_access; \
+      uint offset = offsetof(__MODULE_TYPE__, name##_access); \
       __MODULE_TYPE__ *thisModule = (__MODULE_TYPE__*)((char*)this - (char*)offset); \
       thisModule->accesses.append(this); \
       Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>::regis(#name, thisModule->regItem); \
@@ -158,11 +159,12 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
   inline type& get_##name(){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.get(this); } \
   inline int  set_##name(const type& _x){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.set(_x,this); }
 
-//inline void name##_Access_forceRegistration(){ staticRegistrator.force(); } \
-//inline void name##_forceRegistration(){ staticRegistrator.forceSub<type>(); } \
+//  (uint)&((__MODULE_TYPE__*)NULL)->name##_access;
+//inline void name##_Access_forceRegistration(){ staticRegistrator.force(); }
+//inline void name##_forceRegistration(){ staticRegistrator.forceSub<type>(); }
 
-//#define PARAM (type, name, default) \
-//  ParameterAccess_typed<type, default> name##_access; \
+//#define PARAM (type, name, default)
+//  ParameterAccess_typed<type, default> name##_access;
 //  inline type get_##name(){ return name##_access.get(); }
 
 
