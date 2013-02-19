@@ -13,7 +13,7 @@ vc60.idb
 .*.includes
 
 *~
-
+*.pyc
 *.tgz
 
 z.*
@@ -25,10 +25,19 @@ z.*
 
 MT.log
 Makefile.dep
-*.swp
+
+
+%% LATEX
+*.aux
+*.dvi
+*.log
+*.out
+*.toc
+
 
 %% IMPORTANT: individual compilation modes:
 share/make-config
+
 
 %% special:
 share/extern/tony_mdp/parser.tab.cpp
@@ -45,8 +54,8 @@ share/extern/schunkSDH-11-05-11
 share/extern/urg-0.0.2
 share/extern/esdcan-*
 
-% Eclipse Files
+
+%% Eclipse Files
 .cproject
 .project
 *eclipse*
-

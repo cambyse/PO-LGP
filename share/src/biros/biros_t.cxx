@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros.h"
 
 template<class T> T* Biros::getVariable(const char* name, Process *p, bool required) {
@@ -55,3 +63,4 @@ template<class T> void Biros::setParameter(const char *name, T value) {
                    <<" in parameters, nothing is changed.");
   par->value = value;
 }
+/** @} */

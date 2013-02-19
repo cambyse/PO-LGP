@@ -16,6 +16,15 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @ingroup group_ors
+ * @{
+ */
+
 
 #include "opengl.h"
 #include "plot.h"
@@ -828,3 +837,4 @@ double ActionInterface::highestPosition(double x, double y, double radius, uint 
   if (DEBUG>0) cout<<"max_z = "<<max_z<<endl;
   return max_z;
 }
+/** @} */

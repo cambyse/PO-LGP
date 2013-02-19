@@ -1,21 +1,29 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/**
+ * @file
+ * @ingroup group_soc
+ */
+/**
+ * @addtogroup group_soc
+ * @{
+ */
 
 #include "socNew.h"
 
@@ -60,16 +68,16 @@ void getTransitionCostTerms(ControlledSystem& sys, bool dynamic, arr& Psi, arr& 
 double analyzeTrajectory(ControlledSystem& sys, const arr& x, bool plot, std::ostream* os){
   uint t, T=sys.get_T();
   CHECK(x.nd==2 && x.d0==T+1 && x.d1==sys.get_xDim(), "");
- 
+
   arr taskC(T+1);  taskC.setZero();
   arr ctrlC(T+1);  ctrlC.setZero();
   for(t=0; t<=T; t++){
     sys.setx(x[t]);
-    
+
     arr phi,psi;
     sys.getTaskCosts(phi, NoArr, t);
     taskC(t)=sumOfSqr(phi);
-    
+
 #if 0
     arr R,r;
     double rhat,tc;
@@ -222,3 +230,4 @@ void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v
   x=b;
 }
 
+/** @} * /

@@ -1,20 +1,29 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
+/**
+ * @file
+ * @ingroup group_soc
+ */
+/**
+ * @addtogroup group_soc
+ * @{
+ */
 
 
 
@@ -35,7 +44,7 @@ struct sOrsSystem {
   arr x, x0;
   arr v_act, H_rate, Q_rate;
   arr q_external;
-  
+
   uint T;
   double tau;
   bool pseudoDynamic;
@@ -43,7 +52,7 @@ struct sOrsSystem {
   bool dynamic;
 
   sOrsSystem():ors(NULL), swift(NULL) {}
-  
+
   void getCurrentStateFromOrs();
   void setq(const arr& q);
   void setqv(const arr& q, const arr& qd);
@@ -76,7 +85,7 @@ OrsSystem::~OrsSystem(){
 OrsSystem* OrsSystem::newClone(bool deep) const {
   OrsSystem *sys=new OrsSystem();
   sys->os = os;
-  
+
   if(!deep){
     sys->s->ors   = s->ors;
     sys->s->swift = s->swift;
@@ -92,9 +101,9 @@ OrsSystem* OrsSystem::newClone(bool deep) const {
     }
     sys->s->newedOrs = true;
   }
-  
+
   listClone(sys->s->vars, s->vars); //deep copy the task variables!
-  
+
   sys->s->H_rate = s->H_rate;
   sys->s->Q_rate = s->Q_rate;
   sys->s->T = s->T;
@@ -141,15 +150,15 @@ void OrsSystem::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl
 
 void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
   if(!T) T = MT::getParameter<uint>("trajectoryLength");
-  
+
   initBasics(NULL, NULL, NULL, T, 3., _dynamic, NULL);
   os=&std::cout;
-  
+
   if(MT::getParameter<bool>("standOnFoot")){
     s->ors->reconfigureRoot(s->ors->getBodyByName("rfoot"));
     s->ors->calcBodyFramesFromJoints();
   }
-  
+
   if(rand_seed>0){
     rnd.seed(rand_seed);
     ors::Body &t=*s->ors->getBodyByName("target");
@@ -157,9 +166,9 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
     t.X.pos.y += .05*rnd.gauss();
     t.X.pos.z += .05*rnd.gauss();
   }
-  
+
   //standard task variables and problem definition
-  
+
   MT::String endeffShapeName= MT::getParameter<MT::String>("endeffShapeName");
   double endPrec=MT::getParameter<double>("endPrec");
   double midPrec=MT::getParameter<double>("midPrec");
@@ -174,7 +183,7 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
   else col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   TaskVariable *com = new DefaultTaskVariable("balance", *s->ors, comTVT, 0, 0, 0, 0, ARR());
   setTaskVariables(ARRAY(pos, col, com));
-  
+
   pos->y_target = ARRAY(s->ors->getShapeByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
@@ -194,7 +203,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   s->dynamic = MT::getParameter<bool>("isDynamic");
   double margin = MT::getParameter<double>("margin");
   bool useTruncation = MT::getParameter<bool>("useTruncation");
-  
+
   //generate the configuration
   ors::Body *b, *target, *endeff;  ors::Shape *sh;  ors::Joint *j;
   MT::String str;
@@ -238,17 +247,17 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   graphMakeLists(s->ors->bodies, s->ors->joints);
   s->ors->calcBodyFramesFromJoints();
   target=b;
-  
+
   if(rand_seed>0){
     rnd.seed(rand_seed);
     target->X.pos.x += .05*rnd.gauss();
     target->X.pos.y += .05*rnd.gauss();
     //target->X.p(2) += .05*rnd.gauss();
   }
-  
+
   initBasics(s->ors, NULL, NULL, T, 3., MT::getParameter<bool>("isDynamic"), NULL);
   os=&std::cout;
-  
+
   double endPrec=MT::getParameter<double>("endPrec");
   double midPrec=MT::getParameter<double>("midPrec");
   double colPrec=MT::getParameter<double>("colPrec");
@@ -258,7 +267,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   if(!useTruncation) col = new DefaultTaskVariable("collision", *s->ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else               col = new DefaultTaskVariable("collision", *s->ors, colConTVT, 0, 0, 0, 0, ARR(margin));
   setTaskVariables(ARRAY(pos, col));
-  
+
   pos->y_target = ARRAY(s->ors->getBodyByName("target")->X.pos);
   pos->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 10*endPrec);
   if(col->type==collTVT){
@@ -364,18 +373,18 @@ void OrsSystem::getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){
     arr I, Z, Minv, F;
     I.setId(n);
     Z.resize(n, n); Z.setZero();
-    
+
     s->getMinvF(Minv, F, Q, t);
-    
+
     A.setBlockMatrix(I, tau*I, Z, I);
     //double alpha = .1; //with fricion
     //A.setBlockMatrix(I, tau*I-tau*alpha*Minv, Z, I-tau*alpha*Minv);
-    
+
     B.resize(2*n, n);
     B.setZero();
     B.setMatrixBlock(.5*tau*tau*Minv, 0, 0);
     B.setMatrixBlock(tau*Minv, n, 0);
-    
+
     a.resize(2*n);
     a.setZero();
     a.setVectorBlock(.5*tau*tau*Minv*F, 0);
@@ -413,7 +422,7 @@ void OrsSystem::getTaskCosts(arr& phiBar, arr& JBar, uint t){
       //CHECK(xt.N==2*Jac.d1, ""); //x is a dynamic state
       //phi_v = Jac * xt.sub(Jac.d1, -1); //task velocity is J*q_vel;
       phiBar.append(sqrt(precv)*(phi_v - v));
-      
+
       if(&JBar){
         arr tmp;
         tmp.resize(2*y.N, 2*Jac.d1);  tmp.setZero();
@@ -560,3 +569,5 @@ ors::Graph& OrsSystem::getOrs(){ return *s->ors; }
 SwiftInterface& OrsSystem::getSwift(){ return *s->swift; }
 
 MT::Array<TaskVariable*>& OrsSystem::vars(){ return s->vars; }
+
+/** @} */

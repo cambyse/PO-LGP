@@ -1,20 +1,29 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @ingroup group_ors
+ * @{
+ */
 
 
 
@@ -44,14 +53,37 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
   gl.add(glStandardScene,0);
   gl.add(ors::glDrawGraph,&G);
   gl.setClearColors(1.,1.,1.,1.);
- 
+
   ors::Body* glCamera = G.getBodyByName("glCamera");
   if(glCamera) {
     *(gl.camera.X) = glCamera->X;
   }
-  else { 
+  else {
     gl.camera.setPosition(10.,-15.,8.);
     gl.camera.focus(0,0,1.);
+    gl.camera.upright();
+  }
+  gl.update();
+}
+
+/**
+ * @brief Bind ors to OpenGL.
+ * Afterwards OpenGL can show the ors graph.
+ *
+ * @param graph the ors graph.
+ * @param gl OpenGL which shows the ors graph.
+ */
+void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
+  gl.add(glStandardScene, 0);
+  gl.add(ors::glDrawGraph, &graph);
+  gl.setClearColors(1., 1., 1., 1.);
+
+  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  if (glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  } else {
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
   }
   gl.update();
@@ -93,7 +125,7 @@ void ors::Mesh::glDraw() {
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
     GLboolean turnOnLight=false;
     if(C.N){ glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
-    
+
     glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -101,7 +133,7 @@ void ors::Mesh::glDraw() {
     glVertexPointer(3, GL_DOUBLE, 0, V.p);
     if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
     glNormalPointer(GL_DOUBLE, 0, Vn.p);
-    
+
     glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
 
     if(turnOnLight){ glEnable(GL_LIGHTING); }
@@ -221,15 +253,15 @@ void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
-  
+
   double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
   if(!scale) scale=1.;
   scale*=.3;
-  
+
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
-  
+
   if(!orsDrawShapes) {
     glDrawAxes(scale);
     glColor(0, 0, .5);
@@ -320,7 +352,7 @@ void ors::Graph::glDraw() {
   uint i=0, j, k;
   ors::Transformation f;
   double GLmatrix[16];
-  
+
   glPushMatrix();
 
   //bodies
@@ -329,15 +361,15 @@ void ors::Graph::glDraw() {
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
-  
+
   //joints
   if(orsDrawJoints) for_list(j, e, joints) {
     //set name (for OpenGL selection)
     glPushName((e->index <<2) | 2);
-    
+
     double s=e->A.pos.length()+e->B.pos.length(); //some scale
     s*=.25;
-    
+
     //from body to joint
     f=e->from->X;
     f.getAffineMatrixGL(GLmatrix);
@@ -348,7 +380,7 @@ void ors::Graph::glDraw() {
     glVertex3f(0, 0, 0);
     glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
     glEnd();
-    
+
     //joint frame A
     f.appendTransformation(e->A);
     f.getAffineMatrixGL(GLmatrix);
@@ -356,13 +388,13 @@ void ors::Graph::glDraw() {
     glDrawAxes(s);
     glColor(1, 0, 0);
     glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
-    
+
     //joint frame B
     f.appendTransformation(e->Q);
     f.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
     glDrawAxes(s);
-    
+
     //from joint to body
     glColor(1, 0, 1);
     glBegin(GL_LINES);
@@ -371,12 +403,12 @@ void ors::Graph::glDraw() {
     glEnd();
     glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
     //glDrawSphere(.1*s);
-    
+
     glPopName();
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
-  
+
   //proxies
   if(orsDrawProxies) for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
     proxy = proxies(i);
@@ -401,7 +433,7 @@ void ors::Graph::glDraw() {
     glLoadMatrixd(GLmatrix);
     glDrawDisk(.02);
   }
-      
+
   glPopMatrix();
 }
 
@@ -703,12 +735,12 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
   ors->getJointState(x, v);
   for(t=0; t<T; t++) {
     ode->step();
-    
+
     importStateFromOde(*C, *ode);
     ors->setJointState(x, v);
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
-    
+
     gl.text.clear() <<"time " <<t;
     gl.timedupdate(10);
   }
@@ -729,3 +761,4 @@ void ors::glDrawGraph(void *classP) { NICO; }
 void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl){ NICO; }
 #endif
 #endif
+/** @} */

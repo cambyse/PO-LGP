@@ -1,6 +1,14 @@
 #include "biros.h"
 
 #ifdef MT_GTK
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 
 #include "biros_views.h"
 #include "biros_internal.h"
@@ -77,14 +85,16 @@ void InsideOut::gtkUpdate(){
 
 void sInsideOut::open(){
   gtkLock();
-  // const char *pwd = __FILE__;
-  // char *path,*name;
-  // MT::decomposeFilename(path, name, pwd);
-  // MT::String gladeFile; gladeFile <<path <<"/insideOut.glade";
-  MT::String gladeFile;
-  gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
+
+  const char* gladeFile = "insideOut.glade";
+
+  // TODO find a better way to locate and read the glade file
+  ifstream myFile(gladeFile);
+  CHECK(myFile.good(), "EVENTCONTROL VIEW: Create a hardlink to the share/src/biros/insideOut.glade to use the InsideOutView.");
+  myFile.close();
+
   builder = gtk_builder_new();
-  gtk_builder_add_from_file(builder, gladeFile.p, NULL);
+  gtk_builder_add_from_file(builder, gladeFile, NULL);
   win = GTK_WIDGET(gtk_builder_get_object(builder, "insideOut"));
   gtk_builder_connect_signals(builder, NULL);
   g_object_set_data(G_OBJECT(win), "sInsideOut", this);
@@ -95,10 +105,10 @@ void sInsideOut::open(){
   //show
   gtk_widget_show(win);
   gtkUnlock();
-  
+
   //add data
   update(false);
-  
+
 
   //try to open config file
   ifstream is("ino.cfg");
@@ -297,14 +307,14 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
   GtkWidget* widget = gtk_widget_get_toplevel(GTK_WIDGET(caller));
   sInsideOut *iog = (sInsideOut*)g_object_get_data(G_OBJECT(widget), "sInsideOut");
   //iog->update(true);
-  
+
   GtkWidget *container = GTK_WIDGET(gtk_builder_get_object(iog->builder, STRING("boxView" <<iog->box)));
   if(iog->view[iog->box]){
     //gtk_container_remove(GTK_CONTAINER(container), iog->view[iog->box]->widget);
     delete iog->view[iog->box]; //View(iog->view[iog->box]);
     iog->view[iog->box]=NULL;
   }
-  
+
   if(gtk_tree_selection_get_selected(tsel , &tm , &it)) {
     gtk_tree_model_get(tm, &it, 0, &id, 1, &tag, -1);
     switch(tag){
@@ -335,7 +345,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
       gtk_tree_model_iter_parent(tm, &var, &it);
       gtk_tree_model_get(tm, &var, 0, &varid, -1);
       FieldRegistration *field = biros().variables(varid)->s->fields(id);
-      
+
       ViewRegistrationL vis = getViews(field->sysType);
       vis.append(getViews(typeid(FieldRegistration).name()));
       if(!vis.N) break;
@@ -367,7 +377,7 @@ GtkTreeIter appendToStore(GtkTreeStore *store, Process *p, uint id, GtkTreeIter*
   gtk_tree_store_set(store, &it, 0, id, 1, 'P', 2, p->name.p, 3, info.p, -1);
   return it;
 }
-    
+
 GtkTreeIter appendToStore(GtkTreeStore *store, Variable *v, uint id, GtkTreeIter* par){
   GtkTreeIter it;
   MT::String info;
@@ -413,14 +423,14 @@ void setBoxView(View *v, GtkBuilder *builder, uint box){
 }
 
 /*
- 
+
 notes:
 
 -- clean clean clean!
 
 -- recode process declarations as merely newProcess functions
 
--- 
+--
 
 -- add generic views for variable: historyView, logView
 
@@ -441,3 +451,4 @@ void InsideOut::gtkNew(GtkWidget *container){NICO}
 void InsideOut::gtkUpdate(){NICO}
 
 #endif
+/** @} */

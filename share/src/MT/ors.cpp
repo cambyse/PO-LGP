@@ -17,6 +17,15 @@
     -----------------------------------------------------------------  */
 
 
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @addtogroup group_ors
+ * @{
+ */
+
 
 #undef abs
 #include <algorithm>
@@ -44,23 +53,12 @@ const ors::Vector VEC_y(0, 1, 0);
 const ors::Vector VEC_z(0, 0, 1);
 
 //===========================================================================
-//
-// general documentation
-//
-
-/*! \brief Open Robot Simulation Toolkit
-
-    This namespace defines some core data structures for robot
-    simulation and linking to external simulation engines. In
-    particular, using ors we can implement a soc::SocSystemAbstraction. See
-    the <a href="../guide.pdf">guide</a> for an introduction.
-
-    Please see also the header <a
-    href="ors_8h-source.html">MT/ors.h</a> -- it gives a good
-    overview. */
-namespace ors {};
-
-
+/** @brief The ors namespace contains the main data structures of ors.
+ *
+ * This namespace defines some core data structures for robot
+ * simulation and linking to external simulation engines. In
+ * particular, using ors we can implement a soc::SocSystemAbstraction.
+ */
 namespace ors {
 
 //! copy operator
@@ -370,11 +368,11 @@ Matrix operator*(const Matrix& b, const Matrix& c) {
   a.m00=b.m00*c.m00+b.m01*c.m10+b.m02*c.m20;
   a.m01=b.m00*c.m01+b.m01*c.m11+b.m02*c.m21;
   a.m02=b.m00*c.m02+b.m01*c.m12+b.m02*c.m22;
-  
+
   a.m10=b.m10*c.m00+b.m11*c.m10+b.m12*c.m20;
   a.m11=b.m10*c.m01+b.m11*c.m11+b.m12*c.m21;
   a.m12=b.m10*c.m02+b.m11*c.m12+b.m12*c.m22;
-  
+
   a.m20=b.m20*c.m00+b.m21*c.m10+b.m22*c.m20;
   a.m21=b.m20*c.m01+b.m21*c.m11+b.m22*c.m21;
   a.m22=b.m20*c.m02+b.m21*c.m12+b.m22*c.m22;
@@ -1259,15 +1257,15 @@ void ors::Mesh::setCylinder(double r, double l, uint fineness) {
     T(4*i  , 0)=i;
     T(4*i  , 1)=j+div;
     T(4*i  , 2)=j;
-    
+
     T(4*i+2, 0)=i;
     T(4*i+2, 1)=j;
     T(4*i+2, 2)=2*div+0;
-    
+
     T(4*i+1, 0)=i;
     T(4*i+1, 1)=i+div;
     T(4*i+1, 2)=j+div;
-    
+
     T(4*i+3, 0)=j+div;
     T(4*i+3, 1)=i+div;
     T(4*i+3, 2)=2*div+1;
@@ -1516,20 +1514,20 @@ void ors::Mesh::deleteUnusedVertices() {
   uintA p;
   uintA u;
   uint i, Nused;
-  
+
   deleteZeroTriangles(*this);
-  
+
   //count vertex usage
   u.resize(V.d0);
   u.setZero();
   for(i=0; i<T.d0; i++) { u(T(i, 0))++; u(T(i, 1))++; u(T(i, 2))++; }
   //for(i=0;i<strips.N;i++) for(j=0;j<strips(i).N;j++) u(strips(i)(j))=true;
-  
+
   //find proper permutation of vertex list
   p.setStraightPerm(V.d0);
   Nused=p.N;
   for(i=0; i<Nused; i++) if(!u(i)) { Nused--; p.permute(i, Nused); u.permute(i, Nused); i--; }
-  
+
   permuteVertices(*this, p);
   V.resizeCopy(Nused, 3);
 }
@@ -1546,7 +1544,7 @@ void ors::Mesh::fuseNearVertices(double tol) {
   if(!V.N) return;
   uintA p;
   uint i, j;
-  
+
   cout <<"fusing vertices: #V=" <<V.d0 <<", sorting.." <<std::flush;
   //cout <<V <<endl;
   //sort vertices lexically
@@ -1555,7 +1553,7 @@ void ors::Mesh::fuseNearVertices(double tol) {
   uint *pstop=p.p+p.N;
   std::sort(p.p, pstop, COMP);
   permuteVertices(*this, p);
-  
+
   cout <<"permuting.." <<std::flush;
   //cout <<V <<endl;
   p.setStraightPerm(V.d0);
@@ -1569,17 +1567,17 @@ void ors::Mesh::fuseNearVertices(double tol) {
       }
     }
   }
-  
+
   uintA y(T.d0, 3);
   for(i=0; i<T.d0; i++) { y(i, 0)=p(T(i, 0)); y(i, 1)=p(T(i, 1)); y(i, 2)=p(T(i, 2)); }
   T=y;
-  
+
   cout <<"deleting tris.." <<std::flush;
   deleteZeroTriangles(*this);
-  
+
   cout <<"deleting verts.." <<std::flush;
   deleteUnusedVertices();
-  
+
   cout <<"#V=" <<V.d0 <<", done" <<endl;
 }
 
@@ -1623,27 +1621,27 @@ void ors::Mesh::clean() {
   uintA Vt(V.d0);
   intA VT(V.d0, 100); //tri-neighbors to a vertex
   Vt.setZero(); VT=-1;
-  
+
   for(i=0; i<T.d0; i++) {
     a.set(&V(T(i, 0), 0)); b.set(&V(T(i, 1), 0)); c.set(&V(T(i, 2), 0));
-    
+
     //tri center
     m=(a+b+c)/3.;
     Tc(i, 0)=m.x;  Tc(i, 1)=m.y;  Tc(i, 2)=m.z;
-    
+
     //farthest tri
     if(m.length()>mdist) { mdist=m.length(); idist=i; }
-    
+
     //tri normal
     b-=a; c-=a; a=b^c; a.normalize();
     Tn(i, 0)=a.x;  Tn(i, 1)=a.y;  Tn(i, 2)=a.z;
-    
+
     //vertex neighbor count
     j=T(i, 0);  VT(j, Vt(j))=i;  Vt(j)++;
     j=T(i, 1);  VT(j, Vt(j))=i;  Vt(j)++;
     j=T(i, 2);  VT(j, Vt(j))=i;  Vt(j)++;
   }
-  
+
   //step through tri list and flip them if necessary
   boolA Tisok(T.d0); Tisok=false;
   uintA Tok; //contains the list of all tris that are ok oriented
@@ -1656,19 +1654,19 @@ void ors::Mesh::clean() {
   for(k=0; k<Tok.N; k++) {
     i=Tok(k);
     Tnew(k, 0)=T(i, 0); Tnew(k, 1)=T(i, 1); Tnew(k, 2)=T(i, 2);
-    
+
     for(r=0; r<3; r++) {
       if(r==0) { A=T(i, 0);  B=T(i, 1);  /*C=T(i, 2);*/ }
       if(r==1) { A=T(i, 1);  B=T(i, 2);  /*C=T(i, 0);*/ }
       if(r==2) { A=T(i, 2);  B=T(i, 0);  /*C=T(i, 1);*/ }
-      
+
       //check all triangles that share A & B
       setSection(neighbors, VT[A], VT[B]);
       neighbors.removeAllValues(-1);
       if(neighbors.N>2) MT_MSG("edge shared by more than 2 triangles " <<neighbors);
       neighbors.removeValue(i);
       //if(!neighbors.N) cout <<"mesh.clean warning: edge has only one triangle that shares it" <<endl;
-      
+
       //orient them correctly
       for(l=0; l<neighbors.N; l++) {
         j=neighbors(l); //j is a neighboring triangle sharing A & B
@@ -1690,7 +1688,7 @@ void ors::Mesh::clean() {
           //check if consistent!
         }
       }
-      
+
 #if 0
       //compute their rotation
       if(neighbors.N>1) {
@@ -1699,21 +1697,21 @@ void ors::Mesh::clean() {
         Vector ni, nj;
         for(l=0; l<neighbors.N; l++) {
           j=neighbors(l); //j is a neighboring triangle sharing A & B
-          
+
           a.set(&V(T(i, 0), 0)); b.set(&V(T(i, 1), 0)); c.set(&V(T(i, 2), 0));
           b-=a; c-=a; a=b^c; a.normalize();
           ni = a;
-          
+
           a.set(&V(T(j, 0), 0)); b.set(&V(T(j, 1), 0)); c.set(&V(T(j, 2), 0));
           b-=a; c-=a; a=b^c; a.normalize();
           nj = a;
-          
+
           Quaternion q;
           q.setDiff(ni, -nj);
           q.getDeg(phi, c);
           a.set(&V(A, 0)); b.set(&V(B, 0));
           if(c*(a-b) < 0.) phi+=180.;
-          
+
           if(jmax==-1 || phi>phimax) { jmax=j; phimax=phi; }
         }
         if(!Tisok(jmax)) {
@@ -1743,7 +1741,7 @@ void ors::Mesh::clean() {
 void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
   intA Vt, VT;
   getVertexNeighorsList(m, Vt, VT);
-  
+
   uint A=0, B=0, t, tt, i, r, k;
   //build edge list
   EV.resize(m.T.d0*3, 2);   EV=0;     //edge vert neighbors
@@ -1755,7 +1753,7 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
       if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  }
       if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  }
       if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  }
-      
+
       //has AB already been taken care of?
       bool yes=false;
       for(i=0; i<(uint)Vt(A); i++) {
@@ -1765,7 +1763,7 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
         }
       }
       if(yes) continue;
-      
+
       //if not, then do it
       EV(k, 0)=A;
       EV(k, 1)=B;
@@ -1780,11 +1778,11 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
     }
     done(t)=true;
   }
-  
+
   EV.resizeCopy(k, 2);
   ET.resizeCopy(k, 10);
   Et.resizeCopy(k);
-  
+
   cout <<"\n#edges=" <<k
        <<"\nedge=\n" <<EV
        <<"\n@neighs=\n" <<Et
@@ -1794,7 +1792,7 @@ void getEdgeNeighborsList(const ors::Mesh& m, uintA& EV, uintA& Et, intA& ET) {
 void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT) {
   intA Vt, VT;
   getVertexNeighorsList(m, Vt, VT);
-  
+
   uint A=0, B=0, t, tt, r, i;
   Tt.resize(m.T.d0, 3);     Tt.setZero();
   TT.resize(m.T.d0, 3, 100); TT=-1;
@@ -1803,7 +1801,7 @@ void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT) {
       if(r==0) { A=m.T(t, 0);  B=m.T(t, 1);  }
       if(r==1) { A=m.T(t, 1);  B=m.T(t, 2);  }
       if(r==2) { A=m.T(t, 2);  B=m.T(t, 0);  }
-      
+
       for(i=0; i<(uint)Vt(A); i++) {
         tt=VT(A, i);
         if(tt!=t && (m.T(tt, 0)==B || m.T(tt, 1)==B || m.T(tt, 2)==B)) {
@@ -1813,7 +1811,7 @@ void getTriNeighborsList(const ors::Mesh& m, uintA& Tt, intA& TT) {
       }
     }
   }
-  
+
   //cout <<Tt <<TT <<endl;
 }
 
@@ -1823,7 +1821,7 @@ void ors::Mesh::skin(uint start) {
   getTriNeighborsList(*this, Tt, TT);
   arr Tn;
   getTriNormals(*this, Tn);
-  
+
   uintA goodTris;
   boolA added(T.d0);
   goodTris.append(start);
@@ -1845,7 +1843,7 @@ void ors::Mesh::skin(uint start) {
       if(m!=-1 && !added(m)) { goodTris.append(m); added(m)=true; }
     }
   }
-  
+
   uintA Tnew(k, 3);
   for(k=0; k<goodTris.N; k++) {
     t=goodTris(k);
@@ -1883,7 +1881,7 @@ void ors::Mesh::writeTriFile(const char* filename) {
   os <<"TRI" <<endl <<endl
      <<V.d0 <<endl
      <<T.d0 <<endl <<endl;
-     
+
   V.write(os, " ", "\n ", "  ");
   os <<endl <<endl;
   T.write(os, " ", "\n ", "  ");
@@ -1958,7 +1956,7 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
   uint _nverts = V.d0;
   floatA Vfloat; copy(Vfloat, V);
   Vertex *_vertices  = (Vertex*) Vfloat.p;
-  
+
   PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
     {"x", Float32, Float32, offsetof(Vertex,x), 0, 0, 0, 0},
     {"y", Float32, Float32, offsetof(Vertex,y), 0, 0, 0, 0},
@@ -1967,17 +1965,17 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
 //    {"ny", Float64, Float64, offsetof( Vertex,ny ), 0, 0, 0, 0},
 //    {"nz", Float64, Float64, offsetof( Vertex,nz ), 0, 0, 0, 0}
   };
-  
+
   PlyProperty face_props[]  = { /* list of property information for a PlyFace */
     {"vertex_indices", Int32, Int32, offsetof(PlyFace,verts), 1, Uint8, Uint8, offsetof(PlyFace,nverts)},
   };
-  
+
   PlyFile    *ply;
   FILE       *fp = fopen(fn, "w");
-  
+
   const char  *elem_names[]  = { "vertex", "face" };
   ply = write_ply(fp, 2, elem_names, bin? PLY_BINARY_LE : PLY_ASCII);
-  
+
   /* describe what properties go into the PlyVertex elements */
   describe_element_ply(ply, "vertex", _nverts);
   describe_property_ply(ply, &vert_props[0]);
@@ -1990,13 +1988,13 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
   /* describe PlyFace properties (just list of PlyVertex indices) */
   describe_element_ply(ply, "face", T.d0);
   describe_property_ply(ply, &face_props[0]);
-  
+
   header_complete_ply(ply);
-  
+
   //-- put vertices
   put_element_setup_ply(ply, "vertex");
   for(uint i = 0; i < _nverts; i++)  put_element_ply(ply, (void *) &(_vertices[i]));
-  
+
   //-- put tris
   put_element_setup_ply(ply, "face");
   int verts[3] ;
@@ -2009,7 +2007,7 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
     face.verts[2] = T(i,2);
     put_element_ply(ply, (void *) &face);
   }
-  
+
   close_ply(ply); //calls fclose
   free_ply(ply);
 }
@@ -2019,7 +2017,7 @@ void ors::Mesh::readPLY(const char *fn) {
   struct Vertex {    double x,  y,  z ;  };
   uint _nverts, _ntrigs;
   Vertex   *_vertices   ;  /**< vertex   buffer */
-  
+
   PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
     {"x", Float64, Float64, offsetof(Vertex,x), 0, 0, 0, 0},
     {"y", Float64, Float64, offsetof(Vertex,y), 0, 0, 0, 0},
@@ -2028,15 +2026,15 @@ void ors::Mesh::readPLY(const char *fn) {
 //    {"ny", Float64, Float64, offsetof( Vertex,ny ), 0, 0, 0, 0},
 //    {"nz", Float64, Float64, offsetof( Vertex,nz ), 0, 0, 0, 0}
   };
-  
+
   PlyProperty face_props[]  = { /* list of property information for a PlyFace */
     {"vertex_indices", Int32, Int32, offsetof(PlyFace,verts), 1, Uint8, Uint8, offsetof(PlyFace,nverts)},
   };
-  
+
   FILE    *fp  = fopen(fn, "r");
   if(!fp) return ;
   PlyFile *ply = read_ply(fp);
-  
+
   //-- get the number of faces and vertices
   for(uint i = 0; i < (uint)ply->num_elem_types; ++i) {
     int elem_count ;
@@ -2046,12 +2044,12 @@ void ors::Mesh::readPLY(const char *fn) {
   }
   _vertices  = new Vertex  [_nverts] ;
   T.resize(_ntrigs,3) ;
-  
+
   //-- examine each element type that is in the file (PlyVertex, PlyFace)
   for(int i = 0; i < ply->num_elem_types; ++i)  {
     int elem_count ;
     char *elem_name = setup_element_read_ply(ply, i, &elem_count);
-    
+
     if(equal_strings("vertex", elem_name))   {
       /* set up for getting PlyVertex elements */
       setup_property_ply(ply, &vert_props[0]);
@@ -2072,21 +2070,21 @@ void ors::Mesh::readPLY(const char *fn) {
         get_element_ply(ply, (void *) &face);
         if(face.nverts != 3)
           HALT("not a triangulated surface: polygon " <<j <<" has " <<face.nverts <<" sides") ;
-          
+
         T(j,0) = face.verts[0] ;
         T(j,1) = face.verts[1] ;
         T(j,2) = face.verts[2] ;
-        
+
         free(face.verts) ;
       }
     }
     else /* all non-PlyVertex and non-PlyFace elements are grabbed here */
       get_other_element_ply(ply);
   }
-  
+
   close_ply(ply); //calls fclose
   free_ply(ply);
-  
+
   //-- copy to mesh
   doubleA Verts((double*)_vertices, _nverts*3);
   V.takeOver(Verts);
@@ -2162,11 +2160,11 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 /*!\ initialises the ascii-obj file "filename"*/
 void ors::Mesh::readObjFile(const char* filename) {
   FILE* file;
-  
+
   // open the file
   file = fopen(filename, "r");
   if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
-  
+
   // make a first pass through the file to get a count of the number
   // of vertices, normals, texcoords & triangles
   uint nV;
@@ -2175,9 +2173,9 @@ void ors::Mesh::readObjFile(const char* filename) {
   uint nT;
   int v, n, t;
   char buf[128];
-  
+
   nV = nN = nTex = nT = 0;
-  
+
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // comment
@@ -2227,11 +2225,11 @@ void ors::Mesh::readObjFile(const char* filename) {
           while(fscanf(file, "%d", &v) > 0) nT++;
         }
         break;
-        
+
       default:  MT_MSG("unsupported .obj file tag '" <<buf[0] <<"'");  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;
     }
   }
-  
+
   //allocate memory
   V.resize(nV, 3);
   Vn.resize(nN, 3);
@@ -2239,16 +2237,16 @@ void ors::Mesh::readObjFile(const char* filename) {
   Tn.resize(nT, 3);
   //if(nVN) N.resize(nVN, 3);
   //if(nTex) Tex.tesize(nTex, 2);
-  
-  
+
+
   // rewind to beginning of file and read in the data this pass
   rewind(file);
-  
+
   /* on the second pass through the file, read all the data into the
      allocated arrays */
   nV = nN = nTex = nT = 0;
   ////_material = 0;
-  
+
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  //comment
@@ -2271,7 +2269,7 @@ void ors::Mesh::readObjFile(const char* filename) {
         if(strstr(buf, "//")) {
           // v//n
           sscanf(buf, "%d//%d", &v, &n);
-          
+
           T(nT, 0) = v < 0 ? v + nV : v;
           Tni(nT, 0) = n < 0 ? n + nN : n;
           CHECK(fscanf(file, "%d//%d", &v, &n), "fscan failed");
@@ -2322,7 +2320,7 @@ void ors::Mesh::readObjFile(const char* filename) {
           }
         } else if(sscanf(buf, "%d/%d", &v, &t) == 2) {
           // v/t
-          
+
           T(nT, 0) = v < 0 ? v + nV : v;
           Tti(nT, 0) = t < 0 ? t + nTex : t;
           CHECK(fscanf(file, "%d/%d", &v, &t), "fscan failed");
@@ -2362,14 +2360,14 @@ void ors::Mesh::readObjFile(const char* filename) {
           }
         }
         break;
-        
+
       default:  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;
     }
   }
-  
+
   //CONVENTION!: start counting vertex indices from 0!!
   T -= (uint)1;
-  
+
   // close the file
   fclose(file);
 }
@@ -2609,6 +2607,7 @@ void ors::Body::parseAts() {
   it=ats.getItem("mesh");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   it=ats.getItem("meshscale");if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   it=ats.getItem("contact");  if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("submeshsizes"); if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
   if(s) s->parseAts();
 
   //mass properties
@@ -3012,7 +3011,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
   level=0;
   int i=0;
   uint j;
-  
+
   while(list.N>0) {
     i++;
     list2.clear();
@@ -3027,7 +3026,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
     }
     list=list2;
   }
-  
+
   graphTopsort(bodies, joints);
 }
 
@@ -3057,7 +3056,7 @@ uint ors::Graph::getFullStateDimension() const {
 uint ors::Graph::getJointStateDimension(bool internal) const {
   Joint *e;
   uint i;
-  
+
   if(!jd) {
     uint n=0;
     for_list(i, e, joints) {
@@ -3070,7 +3069,7 @@ uint ors::Graph::getJointStateDimension(bool internal) const {
     }
     ((Graph*)this)->jd = n; //hack to work around const declaration
   }
-  
+
   if(internal || !Qlin.N) return jd;
   else {
     CHECK(Qlin.d0==jd, "");
@@ -3084,10 +3083,10 @@ void ors::Graph::getFullState(arr& x) const {
   Body *n;
   Joint *e;
   uint i=0, j;
-  
+
   if(!sd)((ors::Graph*)this)->sd=getFullStateDimension();
   x.resize(sd);
-  
+
   ors::Vector rot;
   for_list(j, n, bodies) {
     if(!n->inLinks.N && n->type!=staticBT) {
@@ -3118,11 +3117,11 @@ void ors::Graph::getFullState(arr& x, arr& v) const {
   Body *n;
   Joint *e;
   uint i=0, j;
-  
+
   if(!sd)((ors::Graph*)this)->sd=getFullStateDimension();
   x.resize(sd);
   v.resize(sd);
-  
+
   ors::Vector rot;
   ors::Quaternion q;
   for_list(j, n, bodies) if(n->type!=staticBT) {
@@ -3177,10 +3176,10 @@ void ors::Graph::setFullState(const arr& x, bool clearJointErrors) {
   Body *n;
   Joint *e;
   uint i=0, j;
-  
+
   if(!sd) sd=getFullStateDimension();
   CHECK(x.N==sd, "state doesn't have right dimension (" <<x.N <<"!=" <<sd <<")");
-  
+
   for_list(j, n, bodies) {
     if(!n->inLinks.N && n->type!=staticBT) {
       memmove(&(n->X), &x(i), 13*sizeof(double));
@@ -3219,10 +3218,10 @@ void ors::Graph::setFullState(const arr& x, const arr& v, bool clearJointErrors)
   Body *n;
   Joint *e;
   uint i=0, j;
-  
+
   if(!sd) sd=getFullStateDimension();
   CHECK(x.N==sd, "state doesn't have right dimension (" <<x.N <<"!=" <<sd <<")");
-  
+
   ors::Vector rot;
   ors::Quaternion q;
   for_list(j, n, bodies) if(n->type!=staticBT) {
@@ -3308,10 +3307,10 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
   uint n=0, i;
   ors::Vector rotv;
   ors::Quaternion rot;
-  
+
   if(!jd)((ors::Graph*)this)->jd = getJointStateDimension(true);
   x.resize(jd); v.resize(jd);
-  
+
   for_list(i, e, joints) {
     switch(e->type) {
       case hingeJT:
@@ -3334,9 +3333,9 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
           x(n) = MT_PI;
           x(n+1) = MT_PI;
         }
-        
+
         // velocity: need to fix
-        
+
         n+=2;
         break;
       case sliderJT:
@@ -3350,7 +3349,7 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
       default: NIY;
     }
   }
-  
+
   if(Qlin.N) {
     x=Qinv*(x-Qoff);
     v=Qinv*v;
@@ -3367,8 +3366,8 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   uint n=0, i;
   ors::Quaternion rot1, rot2;
   arr q, v;
-  
-  
+
+
   if(Qlin.N) {
     CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
     q = Qlin*_q + Qoff;
@@ -3377,16 +3376,16 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
     q=_q;
     if(&_v) v=_v;
   }
-  
+
   if(!jd) jd = getJointStateDimension(true);
   CHECK(q.N==jd && (!(&_v) || v.N==jd), "wrong joint state dimensionalities");
-  
+
   for_list(i, e, joints) {
     switch(e->type) {
       case hingeJT:
         //angle
         e->Q.rot.setRadX(q(n));
-        
+
         // check boundaries
         /*if(e->p[0] < e->p[1]){
         tempAngleDeg = q(n); //dm *180.0/MT_PI;
@@ -3398,12 +3397,12 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         //  cout <<"upper clipping " <<tempAngleDeg <<endl;
         }
         }*/
-        
+
         //velocity
         if(&_v) e->Q.angvel.set(v(n), 0., 0.);
         //if(e->Q.w.isZero()) e->Q.w=VEC_x;
         //if(e->Q.w*VEC_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
-        
+
         if(clearJointErrors) {
           e->Q.pos.setZero();
           e->Q.vel.setZero();
@@ -3411,12 +3410,12 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         }
         n++;
         break;
-        
+
       case universalJT:
         //angle
         rot1.setRadX(q(n));
         rot2.setRadY(q(n+1));
-        
+
         //check boundaries
         /*if(e->p[0] < e->p[1]){
         // TODO: both angles are restricted to the same boundaries. Could be enhanced
@@ -3432,11 +3431,11 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         //  cout <<"upper clipping " <<tempAngleDeg <<endl;
         }
         }*/
-        
+
         e->Q.rot = rot1*rot2;
         //velocity
         // need to fix
-        
+
         if(clearJointErrors) {
           e->Q.pos.setZero();
           e->Q.vel.setZero();
@@ -3445,7 +3444,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         break;
       case sliderJT:
         e->Q.pos = q(n)*VEC_x;
-        
+
         // check boundaries
         /*if(e->p[0] < e->p[1]){
         tempDeflection = q(n);
@@ -3457,7 +3456,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         cout <<"upper clipping " <<tempDeflection <<endl;
         }
         }*/
-        
+
         //velocity
         e->Q.vel = v(n)*VEC_x;
         e->Q.rot.setZero();
@@ -3503,17 +3502,17 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Vector *rel) const {
   ors::Transformation Xi;
   Joint *ei;
   ors::Vector tmp, ti;
-  
+
   if(!jd)((ors::Graph*)this)->jd = getJointStateDimension(true);
-  
+
   //initialize Jacobian
   J.resize(3, jd);
   J.setZero();
-  
+
   //get reference frame
   ors::Vector pos = bodies(a)->X.pos;
   if(rel) pos += bodies(a)->X.rot*(*rel);
-  
+
   if(!bodies(a)->inLinks.N) { if(Qlin.N) J=J*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei) {
@@ -3525,7 +3524,7 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Vector *rel) const {
       continue;
     }
     CHECK(ei->type!=glueJT && ei->type!=fixedJT, "resort joints so that fixed and glued are last");
-    
+
 #if 0
     Xi = ei->from->X;
     Xi.addRelativeFrame(ei->A);
@@ -3533,13 +3532,13 @@ void ors::Graph::jacobian(arr& J, uint a, ors::Vector *rel) const {
     Xi = ei->Xworld;
 #endif
     Xi.rot.getX(ti);
-    
+
     tmp = ti ^(pos-Xi.pos);
-    
+
     J(0, i) = tmp.x;
     J(1, i) = tmp.y;
     J(2, i) = tmp.z;
-    
+
     if(!ei->from->inLinks.N) break;
     ei=ei->from->inLinks(0);
   }
@@ -3553,40 +3552,40 @@ void ors::Graph::hessian(arr& H, uint a, ors::Vector *rel) const {
   ors::Transformation Xi, Xj;
   Joint *ei, *ej;
   ors::Vector r, ti, tj;
-  
+
   if(!jd)((ors::Graph*)this)->jd = getJointStateDimension(true);
-  
+
   //initialize Jacobian
   H.resize(3, jd, jd);
   H.setZero();
-  
+
   //get reference frame
   ors::Vector pos = bodies(a)->X.pos;
   if(rel) pos += bodies(a)->X.rot*(*rel);
-  
+
   if(!bodies(a)->inLinks.N) { if(Qlin.N) H=~Qlin*H*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei) {
     i=ei->index;
-    
+
     Xi = ei->from->X;
     Xi.appendTransformation(ei->A);
     Xi.rot.getX(ti);
-    
+
     ej=ei;
     while(ej) {
       j=ej->index;
-      
+
       Xj = ej->from->X;
       Xj.appendTransformation(ej->A);
       Xj.rot.getX(tj);
-      
+
       r = tj ^(ti ^(pos-Xi.pos));
-      
+
       H(0, i, j) = H(0, j, i) = r.x;
       H(1, i, j) = H(1, j, i) = r.y;
       H(2, i, j) = H(2, j, i) = r.z;
-      
+
       if(!ej->from->inLinks.N) break;
       ej=ej->from->inLinks(0);
     }
@@ -3603,42 +3602,42 @@ void ors::Graph::inertia(arr& M) {
   Joint *ei, *ej;
   ors::Vector vi, vj, ti, tj;
   double tmp;
-  
+
   if(!jd) jd = getJointStateDimension(true);
-  
+
   //initialize Jacobian
   M.resize(jd, jd);
   M.setZero();
-  
+
   for(a=0; a<bodies.N; a++) {
     //get reference frame
     Xa = bodies(a)->X;
-    
+
     ei=bodies(a)->inLinks(0);
     while(ei) {
       i=ei->index;
-      
+
       Xi = ei->from->X;
       Xi.appendTransformation(ei->A);
       Xi.rot.getX(ti);
-      
+
       vi = ti ^(Xa.pos-Xi.pos);
-      
+
       ej=ei;
       while(ej) {
         j=ej->index;
-        
+
         Xj = ej->from->X;
         Xj.appendTransformation(ej->A);
         Xj.rot.getX(tj);
-        
+
         vj = tj ^(Xa.pos-Xj.pos);
-        
+
         tmp = bodies(a)->mass * (vi*vj);
         //tmp += scalarProduct(bodies(a)->a.inertia, ti, tj);
-        
+
         M(i, j) += tmp;
-        
+
         if(!ej->from->inLinks.N) break;
         ej=ej->from->inLinks(0);
       }
@@ -3703,18 +3702,18 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
   ors::Transformation Xa, Xi;
   Joint *ei;
   ors::Vector r, ta, ti;
-  
+
   if(!jd)((ors::Graph*)this)->jd = getJointStateDimension(true);
-  
+
   //initialize Jacobian
   J.resize(3, jd);
   J.setZero();
-  
+
   //get reference frame
   Xa = bodies(a)->X;
   if(vec) ta = Xa.rot*(*vec);
   else    Xa.rot.getZ(ta);
-  
+
   if(!bodies(a)->inLinks.N) { if(Qlin.N) J=J*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei) {
@@ -3726,16 +3725,16 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
       continue;
     }
     CHECK(ei->type!=glueJT && ei->type!=fixedJT, "resort joints so that fixed and glued are last");
-    
+
     Xi = ei->Xworld;
     Xi.rot.getX(ti);
-    
+
     r = ti ^ ta;
-    
+
     J(0, i) = r.x;
     J(1, i) = r.y;
     J(2, i) = r.z;
-    
+
     if(!ei->from->inLinks.N) break;
     ei=ei->from->inLinks(0);
   }
@@ -3749,19 +3748,19 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
   ors::Transformation Xi;
   Joint *ei;
   ors::Vector ti;
-  
+
   if(!jd)((ors::Graph*)this)->jd = getJointStateDimension(true);
-  
+
   //initialize Jacobian
   J.resize(3, jd);
   J.setZero();
-  
+
   //get reference frame -- in this case we always take
   //the Z and X-axis of the world system as references
   // -> don't need to compute explicit reference for object a
   //  object a is relevant in the sense that only the tree-down
   //  joints contribute to this rotation
-  
+
   if(!bodies(a)->inLinks.N) { if(Qlin.N) J=J*Qlin;  return; }
   ei=bodies(a)->inLinks(0);
   while(ei) {
@@ -3773,14 +3772,14 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
       continue;
     }
     CHECK(ei->type!=glueJT && ei->type!=fixedJT, "resort joints so that fixed and glued are last");
-    
+
     Xi = ei->Xworld;
     Xi.rot.getX(ti);
-    
+
     J(0, i) = ti.x;
     J(1, i) = ti.y;
     J(2, i) = ti.z;
-    
+
     if(!ei->from->inLinks.N) break;
     ei=ei->from->inLinks(0);
   }
@@ -3875,9 +3874,9 @@ double ors::Graph::getJointErrors() const {
   Joint *e;
   double err=0.0;
   uint i;
-  
+
   for_list(i, e, joints) err+=e->Q.pos.lengthSqr();
-  
+
   return ::sqrt(err);
 }
 
@@ -3904,7 +3903,19 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   return 0;
 }
 
-//! find body with specific name
+//! find body index with specific name
+uint ors::Graph::getBodyIndexByName(const char* name) const {
+  Body *n;
+  uint j;
+  for_list(j, n, bodies) {
+    if(strcmp(n->name, name)==0) return n->index;
+  }
+  if(strcmp("glCamera", name)!=0)
+    MT_MSG("cannot find Body named '" <<name <<"' in Graph");
+  return 0;
+}
+
+//! find shape with specific name
 ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   Shape *s;
   uint j;
@@ -3913,6 +3924,17 @@ ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   }
   MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
+}
+
+//! find shape index with specific name
+uint ors::Graph::getShapeIndexByName(const char* name) const {
+  Shape *s;
+  uint j;
+  for_list(j, s, shapes) {
+    if(strcmp(s->name, name)==0) return s->index;
+  }
+  MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
+  return 0;
 }
 
 //! find joint connecting two bodies with specific names
@@ -4035,7 +4057,7 @@ void ors::Graph::writePlyFile(const char* filename) const {
   ors::Shape *s;
   ors::Mesh *m;
   for_list(i,s,shapes) { nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
-  
+
   os <<"\
 ply\n\
 format ascii 1.0\n\
@@ -4115,10 +4137,10 @@ void ors::Graph::sortProxies(bool deleteMultiple, bool deleteOld) {
         i--;
       }
   }
-  
+
   ors::Proxy **proxiesstop=proxies.p+proxies.N;
   std::sort(proxies.p, proxiesstop, ProxySortComp);
-  
+
   for(i=0; i<proxies.N; i++) if(proxies(i)->age) {
       if(
         (i+1==proxies.N) || //this is the last one
@@ -4131,7 +4153,7 @@ void ors::Graph::sortProxies(bool deleteMultiple, bool deleteOld) {
         i--;
       }
     }
-    
+
   if(deleteMultiple) {
     for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
         if(i && !proxies(i-1)->age && proxies(i)->a==proxies(i-1)->a && proxies(i)->b==proxies(i-1)->b) {
@@ -4155,7 +4177,6 @@ void ors::Graph::reportGlue(std::ostream *os) {
     if(!a || !b) continue;
     ag=a->ats.getValue<bool>("glue");
     bg=b->ats.getValue<bool>("glue");
-    
     if(ag || bg) {
       (*os)
           <<i <<' '
@@ -4194,7 +4215,6 @@ void ors::Graph::glueTouchingBodies() {
     if(!a || !b) continue;
     ag=a->ats.getValue<bool>("glue");
     bg=b->ats.getValue<bool>("glue");
-    
     if(ag || bg) {
       //if(a->index > b->index){ c=a; a=b; b=c; } //order them topolgically
       if(graphGetEdge<Body, Joint>(a, b)) continue;  //they are already connected
@@ -4232,10 +4252,10 @@ void ors::Graph::frictionToForces(double coeff) {
     X = e->from->X;
     X.appendTransformation(e->A);
     X.rot.getX(a);//rotation axis
-    
+
     v=e->Q.angvel.length();
     if(e->Q.angvel*VEC_x<0.) v=-v;
-    
+
     e->from->torque -= (coeff*v)*a;
     e->to->torque   += (coeff*v)*a;
   }
@@ -4255,18 +4275,18 @@ void ors::Graph::contactsToForces(double hook, double damp) {
   int a, b;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
       a=proxies(i)->a; b=proxies(i)->b;
-      
+
       //if(!i || proxies(i-1).a!=a || proxies(i-1).b!=b) continue; //no old reference sticking-frame
       //trans = proxies(i)->rel.p - proxies(i-1).rel.p; //translation relative to sticking-frame
       trans    = proxies(i)->posB-proxies(i)->posA;
       transvel = proxies(i)->velB-proxies(i)->velA;
       //d=trans.length();
-      
+
       force.setZero();
       force += (hook) * trans; //*(1.+ hook*hook*d*d)
       force += damp * transvel;
       SL_DEBUG(1, cout <<"applying force: [" <<a <<':' <<b <<"] " <<force <<endl);
-      
+
       if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
       if(b!=-1) addForce(-force, shapes(b)->body, proxies(i)->posB);
     }
@@ -4334,10 +4354,10 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
       }
       if(!linear) cost += discount*d*d;
       else        cost += discount*d;
-      
+
       arel.setZero();  arel=a->X.rot/(proxies(i)->posA-a->X.pos);
       brel.setZero();  brel=b->X.rot/(proxies(i)->posB-b->X.pos);
-      
+
       CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
       dnormal.referTo(proxies(i)->normal.p(), 3); dnormal.reshape(1, 3);
       if(!linear) {
@@ -4348,7 +4368,7 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
         jacobian(J, b->body->index, &brel); grad += discount/margin*(dnormal*J);
       }
     }
-    
+
   return cost;
 }
 
@@ -4371,10 +4391,10 @@ void ors::Graph::getContactConstraintsGradient(arr &dydq) const {
   ors::Vector arel, brel;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-      
+
       arel.setZero();  arel=a->X.rot/(proxies(i)->posA-a->X.pos);
       brel.setZero();  brel=b->X.rot/(proxies(i)->posB-b->X.pos);
-      
+
       CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
       dnormal.referTo(proxies(i)->normal.p(), 3); dnormal.reshape(1, 3);
       grad.setZero();
@@ -4419,16 +4439,16 @@ double ors::Graph::getContactGradient(arr &grad, double margin) {
       d=1.-proxies(i)->d/marg;
       if(d<0.) continue;
       cost += d*d;
-      
+
       arel.setZero();  arel.p=a->X.r/(proxies(i)->posA-a->X.p);
       brel.setZero();  brel.p=b->X.r/(proxies(i)->posB-b->X.p);
-      
+
       CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
       dnormal.referTo(proxies(i)->normal.v, 3); dnormal.reshape(1, 3);
       jacobian(J, a->body->index, &arel); grad -= (2.*d/marg)*(dnormal*J);
       jacobian(J, b->body->index, &brel); grad += (2.*d/marg)*(dnormal*J);
     }
-    
+
   return cost;
 }
 #endif
@@ -4507,7 +4527,7 @@ void ors::Graph::getPenetrationState(arr &vec) const {
   uint i;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
       d=proxies(i)->posB - proxies(i)->posA;
-      
+
       if(proxies(i)->a!=-1) vec(proxies(i)->a) += d.length();
       if(proxies(i)->b!=-1) vec(proxies(i)->b) += d.length();
     }
@@ -4529,14 +4549,14 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
   ors::Vector torque; torque.setZero();
   double sumOfAbsD = 0.;
   double varOfD = 0.;
-  
+
   p.setZero();
   uint i, n=0;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
       if(proxies(i)->a!=(int)j && proxies(i)->b!=(int)j) continue;
-      
+
       n++;
-      
+
       if(proxies(i)->a==(int)j) {
         d=proxies(i)->posB - proxies(i)->posA;
         p=proxies(i)->posA;
@@ -4545,15 +4565,15 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
         d=proxies(i)->posA - proxies(i)->posB;
         p=proxies(i)->posB;
       }
-      
+
       sumOfAbsD += d.length();
       sumOfD    += d;
       varOfD    += d.lengthSqr();
       torque    += (p - bodies(j)->X.pos) ^ d;
-      
+
     }
   if(n) { varOfD = (varOfD - sumOfD*sumOfD) / n; }
-  
+
   grip.resize(8);
   grip(0)=sumOfAbsD;
   grip(1)=varOfD;
@@ -4570,10 +4590,9 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
 uint ors::Graph::getTouchDimension() {
   Body *n;
   uint i=0, j;
-  
+
   // count touchsensors
   for_list(j, n, bodies) if(ats.getValue<double>(n->ats, "touchsensor", 0)) i++;
-  
   td=i;
   return i;
 }
@@ -4602,7 +4621,7 @@ double ors::Graph::getEnergy() const {
   double m, v, E;
   ors::Matrix I;
   ors::Vector w;
-  
+
   E=0.;
   for_list(j, n, bodies) {
     m=n->mass;
@@ -4614,7 +4633,7 @@ double ors::Graph::getEnergy() const {
     E += 9.81 * m * n->X.pos.z;
     E += .5*(w*(I*w));
   }
-  
+
   return E;
 }
 
@@ -4644,12 +4663,12 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
   Body *n;
   uint j;
   double m, M;
-  
+
   //dMass mass;
   ors::Matrix ID;
   //ors::Matrix TP;
   ors::Vector r, o;
-  
+
   ID.setId();
   c.setZero();
   v.setZero();
@@ -4661,11 +4680,11 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
     l+=n->inertia*n->X.angvel;
     //TP.setTensorProduct(n->X.p, n->X.p);
     //Iall+=m*((n->X.p*n->X.p)*ID + TP);
-    
+
     m=n->mass;
     l+=m*(n->X.pos ^ n->X.vel);
     o+=m*n->X.rot.getVec(r);
-    
+
     M+=m;
     c+=m*n->X.pos;
     v+=m*n->X.vel;
@@ -4696,3 +4715,4 @@ template MT::Array<ors::Joint*>::Array();
 inline std::istream& operator>>(std::istream& is, TaskVariable*&){NIY}
 inline std::ostream& operator<<(std::ostream& os, const TaskVariable*&){NIY}
 template struct MT::Array<TaskVariable*>;
+/** @} */

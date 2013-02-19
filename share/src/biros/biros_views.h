@@ -1,3 +1,12 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @defgroup biros_views view different kinds of biros information.
+ * @ingroup group_biros
+ * @{
+ */
 #ifndef MT_biros_views_h
 #define MT_biros_views_h
 
@@ -30,3 +39,4 @@ struct EventControlView:View{
 };
 
 #endif
+/** @} */

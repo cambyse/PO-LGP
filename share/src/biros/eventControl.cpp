@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros_views.h"
 #include "biros.h"
 #include "biros_internal.h"
@@ -23,10 +31,16 @@ EventControlView::~EventControlView(){
 
 void EventControlView::gtkNew(GtkWidget *container){
   gtkLock();
-  MT::String gladeFile;
-  gladeFile = "/home/mtoussai/git/mlr/share/src/biros/insideOut.glade";
+
+  const char* gladeFile = "eventControl.glade";
+
+  // TODO find a better way to locate and read the glade file
+  ifstream myFile(gladeFile);
+  CHECK(myFile.good(), "EVENTCONTROL VIEW: Create a hardlink to the gui file share/src/biros/eventControl.glade to use the EventControlView.");
+  myFile.close();
+
   s->builder = gtk_builder_new();
-  gtk_builder_add_from_file(s->builder, gladeFile.p, NULL);
+  gtk_builder_add_from_file(s->builder, gladeFile, NULL);
   s->win = GTK_WIDGET(gtk_builder_get_object(s->builder, "eventControl"));
   gtk_builder_connect_signals(s->builder, NULL);
   g_object_set_data(G_OBJECT(s->win), "EventControlView", this);
@@ -75,3 +89,4 @@ extern "C" G_MODULE_EXPORT void eventControl_next(GtkWidget* caller){
 }
 
 #endif
+/** @} */

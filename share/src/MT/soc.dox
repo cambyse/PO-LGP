@@ -1,0 +1,389 @@
+/**
+@defgroup group_soc soc -- Stochastic Optimal Control
+
+Stochastic Optimal Control.
+
+\section Installation 
+
+The README file has more detailed installation instructions.
+
+The super quick way: on Ubuntu/Debian copy this to your console:
+\verbatim
+sudo apt-get install liblapack-dev freeglut3-dev libqhull-dev libf2c2-dev
+wget http://user.cs.tu-berlin.de/~mtoussai/source-code/soc.09.2.tgz
+tar xvzf soc.09.2.tgz
+cd libSOC
+make
+cd test/soc
+./x.exe
+\endverbatim
+
+\section soc_scope Scope and overview
+
+The \e primary scope of this lib is the implementation of
+Stochastic Optimal Control (SOC) methods (namespace \link soc \endlink) --
+that is, methods to compute (approximatly) optimal controllers and
+trajectories, typically in the context of robot motion. In particular,
+this includes
+- <em>Approximate Inference Control</em>
+- iLQG (iterative Linear-Quadratic-Gaussian)
+- gradient/spline trajectory optimization
+- methods for 1-step control (optimal dynamic control, regularized/Bayesian motion rate control, etc)
+
+The \e secondary scope of this lib is a robot simulator
+(namespace \link ors \endlink) that provides the necessary inputs to the
+methods above. Using this simulator is optional -- it is provided only
+for completeness of the lib (and I use it in my work). But all the
+methods above can also be linked to your own simulation
+environment. My ors imlementation tries to be minimalistic in its
+core, but can link to many conventient external libraries and engines:
+it defines basic data structures to describe robot configurations
+(trees/graphs of rigid bodies), implements the basic computation of
+kinematic/Jacobian/Hessian functions, and of course implements the
+SocAbstraction. It uses:
+- SWIFT++ to compute shape distances/collisions
+- Featherstone's Articulated Body Dynamics as an implementation of exact
+  dynamics on articulated tree structures (much more precise than IBDS or ODE)
+- IBDS (a rather robust impuls-based physical simulator)
+- ODE (I don't like it)
+- OpenGL for display
+- read/write of file formats for robot configurations, shape/mesh files (e.g.,
+  obj files), etc
+
+The interface between the SOC methods and the simulator is
+the soc::SocAbstraction: a class that defines functions that the SOC
+methods need access to and that need to be provided by the
+simulator. This SocAbstraction tries to be as close as possible to the
+typical mathematical notation used for Stochastic Optimal Control
+problems. If you're only interested in the SOC methods and not in the
+ORS simulator, you should start reading from section XXX.
+
+*/
+
+\section soc_programmes_guide Programmer's guide 
+There are three headers which, in the end, you should understand:
+- array.h TODO add link to group
+- ors.h TODO add link to group
+- soc.h TODO add link to group
+
+
+\subsection soc_soc Stochastic Optimal Control
+You should read this when you want to use your own simulator and
+thereby have to implement the SocAbstration. Otherwise, when you use
+ORS, you may skip this section (although it's interesting in
+itself :-) ).
+
+We consider a discrete time stochastic controlled system of the form
+\f$
+P(x_{t po} \mid u_t,x_t) = NN(x_{t po} \mid f_t(x_t,u_t) , Q_t)
+\f$
+with time step \f$t\f$, state \f$x_t \in  RRR^n\f$, control \f$u_t \in  RRR^m\f$,
+and Gaussian noise \f$\xi\f$ of covariance \f$Q\f$;
+ where
+\f$
+NN(x \mid a,A)  propto \exp\{- half (x-a)^T A^{1~} (x-a)\}
+\f$
+is a Gaussian over \f$x\f$ with mean \f$a\f$ and covariance \f$A\f$.
+For a given state-control sequence \f$x_{0:T}, u_{0:T}\f$ we define the
+cost as
+\f$
+  C(x_{0:T},u_{0:T}) = \sum_{t\=0}^T c_t(x_t,u_t) ~.
+\f$
+
+The optimal value function \f$J_t(x)\f$ gives the expected future cost
+when in state \f$x\f$ at time \f$t\f$ for the best controls and obeys the
+Bellman optimality equation
+\f$
+J_t(x)
+ &= \min_u \[c_t(x,u) + \int_{x'} P(x' \mid u,x)~ J_{t po}(x') \] ~.
+\f$
+The closed-loop (feedback) control problem is to find a control policy
+\f$\pi_t^*: x_t \mid u_t\f$
+(that uses the true state observation in each time step and maps it to
+a feedback control signal) that minimizes the expected cost.
+
+The linear quadratic gaussian (LQG) case plays an important role as a
+local approximation model. LQG is a linear control process with
+Gaussian noise,
+\f$
+P(x_{t po} \mid x_t, u_t ) = NN(x_{t po} \mid A_t x_t + a_t + B_t u_t , Q_t) ~,
+\f$
+and quadratic costs,
+\f$
+c_t(x_t,u_t) = x_t^\T R_t x_t -2 r^\T_t x_t + u_t^\T H_t u_t ~.
+\f$
+The LQG process is defined by matrices and vectors \f$A_{0:T}, a_{0:T},
+B_{0:T}, Q_{0:T}, R_{0:T}, r_{0:T}, H_{0:T}\f$. In the LQG case, the
+optimal controller can be computed exactly using the Ricatti
+equation -- and the optimal controller will always be a linear
+controller in the form
+\f$
+u^*_t(x_t) &= G_t~ (x_t-g_t)
+\f$
+and we can also compute the most likely trajectory \f$x^*_{0:T}\f$, which
+is also the optimal (cost minimal) trajectory in the zero-noise case
+\f$Q=0\f$.
+
+Robotic systems are typically non-LQG. Nevertheless, we can
+approximate the system locally (i.e., around a current robot state) as
+LQG. This is exactly what the robot simulator has to provide and what the
+SocAbstraction defines. In other terms, a simulator needs to provide a
+mapping
+\f$
+x_t \mapsto (A_t, a_t, B_t, Q_t, R_t, r_t, H_t)
+\f$
+which gives the approximate system matrices for a current robot state
+\f$x_t\f$.
+
+(NOTE: future implementations will also provide non-Gaussian
+messages/approximations of task constraints...)
+
+In the following we list how to compute these matrices for typical
+robot motion optimization scenarios:
+
+
+\subsection soc_kinematic Kinematic motion rate control
+
+The robot state is simply the posture
+\f$x_t\equiv q_t \in RRR^n\f$ (not velocities).
+We assume direct motion rate control. The process is simply
+\f$
+q_{t po} = q_t + u_t + \xi
+\f$
+and therefore
+\f$
+A_t=1 \comma B_t=1 \comma a_t=0
+\f$
+
+
+\subsection soc_dynamic Dynamic torque control
+
+The robot state is \f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$.
+We assume torque control where the system process is given (approximately) in terms of the local mass
+matrix \f$M\f$ and force vector \f$F\f$,
+\f$
+&P(q_{t po} \| \dot q_t, q_t)
+ = NN(q_{t po} \| q_t + \tau \dot q_{t po}, W^1) ~,\\
+&P(\dot q_{t po} \| \dot q_t, u_t)
+ = NN(\dot q_{t po} \| \dot q_t + \tau M^1(u_t+F), Q) ~,\\
+%
+&\mat{c}{q_{t po}\\ \dot q_{t po}}
+ = \mat{c@{~}c}{1&\tau\\0&1}~ \mat{c}{q_t\\ \dot q_t} +
+ \mat{c}{\tau^2\\\tau} M^1 (u_t+F) + \xi
+\feed&\qquad \<d\xi d\xi^\T\> = \mat{c@{~}c}{W^1&0\\0&Q} \\
+%
+& A=\mat{c@{~}c}{1&\tau\\0&1}
+  \comma B=\mat{c}{\tau^2 M^1\\\tau M^1}
+  \comma a=\mat{c}{\tau^2 M^1 F\\\tau M^1 F}
+\f$
+
+
+\subsection ors_pdc Pseudo-dynamic control 
+A simplification of dynamic control which still yields nice and dynamically
+smooth trajectories is this: The robot state is
+\f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$.
+And we assume the control directly determines accelerations,
+\f$
+&P(q_{t po} \| \dot q_t, q_t)
+ = NN(q_{t po} \| q_t + \tau \dot q_{t po}, W^1) ~,\\
+&P(\dot q_{t po} \| \dot q_t, u_t)
+ = NN(\dot q_{t po} \| \dot q_t + \tau u_t, Q) ~,\\
+%
+&\mat{c}{q_{t po}\\ \dot q_{t po}}
+ = \mat{c@{~}c}{1&\tau\\0&1}~ \mat{c}{q_t\\ \dot q_t} +
+ \mat{c}{\tau^2\\\tau} u_t + \xi
+\feed&\qquad \<d\xi d\xi^\T\> = \mat{c@{~}c}{W^1&0\\0&Q} \\
+%
+& A=\mat{c@{~}c}{1&\tau\\0&1}
+  \comma B=\mat{c}{\tau^2 1}
+  \comma a=0
+\f$
+
+
+\subsection soc_kin_costs Kinematic task costs
+The robot state \f$x_t\equiv q_t\in RRR^n\f$ is kinematic. We have \f$m\f$ task
+variables \f$y_i \in  RRR^{\dim(y_i)}\f$.
+For isntance, these could be the 3D endeffector position, the 2D horizontal
+balance, a 1D collision cost variable, a 1D joint limit cost variable, etc.
+For each we have a kinematic function \f$\phi_i(q) = y_i\f$ and a Jacobian
+\f$J_i(q) = \del_q \phi_i(q)\f$.
+We are given task targets \f$y^*_{i,0:T}\f$ and want to follow them with
+(time-dependent) precisions \f$\r_{i,0:T}\f$.
+We have
+\f$
+&c_t(q_t,u_t)
+ = \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2 + u_t^\T H_t u_t \feed
+ &\approx \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t - J_iq_t]^2
+  + u_t^\T H_t u_t
+ \comma J_i = J_i(\hat q_t) \feed
+ &= \sum_{i=1}^m \r_{i,t} [q_t^\T J_i^\T J_i q_t
+ - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^\T J_i q_t
+ + \text{const}]
+\feed&\quad + u_t^\T H_t u_t \\
+&R_t
+ = \sum_{i=1}^m \r_{i,t} J_i^\T J_i \label{Rt}\\
+&r_t
+ = - 2 \sum_{i=1}^m \r_{i,t} J_i^\T (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t) \label{rt}
+\f$
+
+
+\subsection soc_dyn_task_costs Dynamic task costs
+The robot state \f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$ is dynamic.
+We have \f$m\f$ task variables \f$y_i \in  RRR^{\dim(y_i)}\f$ with kinematic
+function \f$\phi_i(q) = y_i\f$ and Jacobian \f$J_i(q) = \del_q \phi_i(q)\f$.
+We are given task targets \f$y^*_{i,0:T}\f$ and \f$\dot y^*_{i,0:T}\f$ and want
+to follow them with (time-dependent) precisions \f$\r_{i,0:T}\f$ and
+\f$\nu_{i,0:T}\f$.
+We have
+\f$
+&c(q_t,\dot q_t,u_t)
+ = \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2
+               + \nu_{i,t} [\dot y^*_{i,t} - J_i \dot q_t]^2
+    + u_t^\T H_t u_t \feed
+ &\approx
+  \sum_{i=1}^m \r_{i,t} [q_t^\T J_i^\T J_i q_t
+ - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^\T J_i q_t + \textit{const}]
+\feed& + \nu_{i,t} [\dot q_t^\T J_i^\T J_i \dot q_t 
+ - 2 (\dot y^*_{i,t})^\T J_i \dot q_t + \textit{const}] + u_t^\T H_t u_t\\
+&R_t
+ = \sum_{i=1}^m \mat{cc}{\r_{i,t} J_i^\T J_i & 0\\0 & \nu_{i,t} J_i^\T J_i} \label{Rt2}\\
+&r_t
+ = - 2 \sum_{i=1}^m
+\mat{c}{ \r_{i,t} J_i^\T (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t) \\
+  \nu_{i,t} J_i^\T \dot y^*_{i,t} } \label{rt2}
+\f$
+
+The SocAbstraction should implement exactly these computations of the
+system matrices.
+
+
+\subsection soc_ctlr_variable Control (task) variables 
+
+\note IT'S ALL ABOUT COUPLED VARIABLES!
+
+The whole philosophy of my approaches is that we are faced with a
+problem of coupled (random) variables, which refer to goals,
+constraints, observations, states, etc, and the problem is to find
+values for these variables consistent with all given information (a
+posterior distribution over undetermined variables conditioned on the
+determined variables).
+
+So, the central aspect of using this code is to define such variables,
+and define whether/how they should be constrained to desired target
+values and by which precision these constraints should be fulfilled.
+
+The ORS simulator includes a number of ways to declare task variables
+-- which in the code are called \c ControlVariable (sorry for this
+overload of names...). Defining such \c ControlVariables means to specify
+the actual motion problem and objectives. Let's start with an example.
+
+In test/soc/main.cpp there is an example program. The test.ors file
+defines a really simple configuration with a 7DoF arm, a green target
+ball, and a red obstacle ball. The interesting parts of the code are:
+\code
+  // ...
+  // [setup the ORS simulator, swift, opengl, and the SocAbstraction]
+
+  //-- setup the control variables (problem definition)
+  ControlVariable *pos = new ControlVariable(
+           "position",ors, posCVT,"arm7","<t(0 0 .2)>",0,0,ARR());
+  pos->x_target = arr(ors.getName("ball")->X.p.v,3);
+  pos->setInterpolatedTargetTrajectory(T);
+  pos->setPrecisionTrajectoryFinal(T,1e-2,1e4);
+  
+  ControlVariable *col = new ControlVariable(
+           "collision",ors, collCVT,0,0,0,0,ARR(.1));
+  col->x_target = ARR(0.);
+  col->setInterpolatedTargetTrajectory(T);
+  col->setPrecisionTrajectoryConstant(T,1e6);
+  
+  soc.setControlVariables(TUPLE(pos,col));
+
+  // [use inverse kinematics or planning to compute the motion]
+  // ...
+\endcode
+This code defines two control variables. See the constructor of the
+first variable, \c pos: it is named \c "position", it is
+associated to the simulator \c ors, its type is a kinematic
+position variable (enum \c posCVT), it refers to the body
+named \c "arm7", and it assumes an additional relative transformation
+<tt>"<t(0 0 .2)>"</tt> of the actual reference point relative to the body
+coordinate system. This is a 3D variable and conditioning this
+variable corresponds to controlling this point of reference during the
+motion (corresponds to standard inverse endeffector kinematics of the
+7th arm body).
+
+The second control variable, \c col, is named \c "collision", is
+computed from \c ors , has the type \c collCVT, and gets as last
+parameter an array <tt>{[0.1]}</tt> which specifies the distance threshold
+(margin) for collision costs. This is a 1D variable that measures the
+sum of cost of collisions (or shape-shape distances below the
+threshold) summed over all shape pairs that are below the
+threshold. Conditioning this variable to zero means that we'll avoid
+collisions.
+
+For both variables we first define a (far future) target \c x_target
+and then specify a target trajectory (including precisions) over a
+time interval of $T=200$ time steps. For \c pos, the future target is
+the position of the green ball (the body called \c "ball"), the
+target (endeffector) trajectory interpolates linearly from the initial
+position to the target -- but the precision along the target
+trajectory is such that we only require for the last time step high
+precision (1e4 \f$\sim\f$ 1 centimeter standard deviation) whereas time
+steps \f$0..T-1\f$ low precision (1e-2 \f$\sim\f$ 10 meters standard
+deviation). For the collision variable we require high precision (1e-6)
+throughout the time interval \f$0..T\f$.
+
+Specifying such control variables and their target
+trajectories/precisions is the core of defining the motion
+problem. Once they are specified, the algorithms (Bayesian IK, AICO
+approximate inference control, or gradient methods) should do the rest
+of the job.
+
+\subsection soc_implementation The OrsSocImplementation
+
+\todo There is no OrsSocImplementation and no appropriate functions
+
+The soc::OrsSocImplementation is the connecting interface between
+the ORS simulator and the control variables on the one hand, and the
+SocAbstraction on the other hand. It is very instructive to have a
+look at the implementation of the routines -- in particular when you
+want to implement another SocAbstraction based on your own
+simulator. For instance, consider soc::OrsSocImplementation.setq:
+the \f$q\f$ array contains all joint angles, we first set them in the
+ors::Graph data structure and recompute all body positions according
+to these joint angles. Then we update all ControlVariables by
+recomputing their state and their Jacobian w.r.t. the current
+state. After we've set the state using setq, we can easily access all
+necessary information from the SocAbstraction. For instance,
+soc::OrsSocImplementation.getJtJ simply accesses the Jacobian of a
+particular ControlVariable -- the algorithm behind the SocAbstraction
+doesn't need to know any semantics or meaning of that ControlVariable,
+it only needs to know its current state, target/precicion, and the
+Jacobian. For instance, an easy algorithm for motion computation is
+the soc::bayesianIKControl -- have a look at its code: it
+simply loops through all existing ControlVariables, queries their
+state, target/precision, and Jacobian, adds things up (following
+equations (TODO \f$\ref{Rt},\ref{rt}\f$\), which implicitly computes a task
+constraints message), and returns the maximum aposteriori step \f$dq\f$ in
+joint space.
+
+
+\subsection soc_motion_algo Motion algorithms
+
+See the documentation of soc.h for a list of all motion
+algorithms. All of them are implemented on the basis of the
+SocAbstraction.
+
+
+\section soc_user_guide User's guide
+
+\subsection ors_editor and the ors-file format
+TODO reference to the ors description. maybe turn that into a seperate page?
+
+
+\subsection \c ors_fileConverter
+TODO reference to the ors description. maybe turn that into a seperate page?
+
+*/
+// vim: ts=2:sw=2:set expandtab:

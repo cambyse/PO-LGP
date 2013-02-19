@@ -1,0 +1,15 @@
+/**
+@mainpage MLR - Machine Learning and Robotics Lab
+
+This is going to become the main page for the mlr documentation.
+
+The documentation of code modules can be found under "Modules".
+Documentation which is not directly connected to the source code (like howtos, tutorials, etc.) is under "Related Pages"
+
+
+\todo convert all guides
+
+\todo add overview of the mlr code here. use the guide.(tex|pdf) for this.
+
+*/
+// vim: noai:ts=2:sw=2:set expandtab:

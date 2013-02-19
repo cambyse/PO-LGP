@@ -1,63 +1,68 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
-
 #ifndef MT_socSystem_ors_h
 #define MT_socSystem_ors_h
+/**
+ * @file
+ * @ingroup group_soc
+ */
+/**
+ * @addtogroup group_soc
+ * @{
+ */
 
+//===========================================================================
 #include "soc.h"
 #include "ors.h"
 
 //===========================================================================
-//
-// ORS simulator implementation of the SocAbstration
-//
-
 namespace soc {
-
-/** \brief an implementation of the SocSystemAbstraction using the \ref ors
-    simulator */
+/**
+ * An implementation of the SocSystemAbstraction using the \ref ors simulator.
+ * @addtogroup group_soc
+ * @{
+ */
 struct SocSystem_Ors: public virtual SocSystemAbstraction {
   ors::Graph *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
   struct sSocSystem_Ors *s;
-  
+
   SocSystem_Ors();
   virtual ~SocSystem_Ors();
   SocSystem_Ors* newClone(bool deep) const;
-  
-  //initialization methods
+
+  /// @name initialization methods
   void initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
                   uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
   void setTimeInterval(double trajectory_time, uint trajectory_steps);
   void setTaskVariables(const TaskVariableList& CVlist);
-  
-  //--exemplary problem setups: read specifications from MT.cfg
+
+  /// @name exemplary problem setups: read specifications from MT.cfg
   void initStandardReachProblem(uint rand_seed=0, uint T=0, bool _dynamic=false);
   void initStandardBenchmark(uint rand_seed=0);
-  
-  //info
+
+  /// @name info
   void reportOnState(std::ostream& os);
   void displayState(const arr *x, const arr *Q=NULL, const char *text=NULL, bool reportVariables=false);
   void recordTrajectory(const arr& q,const char *variable,const char *file);
 
-  //implementations of virtual methods
+  /// @name implementations of virtual methods
   uint get_T();
   uint get_xDim();
   uint nTasks();
@@ -96,6 +101,8 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   virtual void setTau(double tau);
 };
 
+/** @} */
 }
+/** @} */ // END of namespace group
 
 #endif

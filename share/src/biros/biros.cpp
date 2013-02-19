@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
+/**
+ * @addtogroup group_biros
+ * @{
+ */
 #include "biros.h"
 #include "biros_internal.h"
 #include "views/views.h"
@@ -27,6 +35,10 @@
 
 Biros *global_birosInfo=NULL;
 
+/**
+ * Access biros from everywhere.
+ * It is a global singleton.
+ */
 Biros& biros(){
   static bool currentlyCreating=false;
   if(currentlyCreating) return *((Biros*) NULL);
@@ -34,10 +46,10 @@ Biros& biros(){
     static Mutex m;
     m.lock();
     if(!global_birosInfo) {
-      currentlyCreating=true;   
+      currentlyCreating=true;
       global_birosInfo = new Biros();
       currentlyCreating=false;
-    }  
+    }
     m.unlock();
   }
   return *global_birosInfo;
@@ -128,9 +140,9 @@ Variable::~Variable() {
     biros().deAccess(NULL);
   }
   for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
-  
+
   //MT pthread_mutex_destroy(&replay_mutex);
-  
+
   delete s;
 }
 
@@ -184,19 +196,19 @@ void sVariable::serializeToString(MT::String &string) const {
   string.clear();
   MT::String field_string;
   field_string.clear();
-  
+
   // go through fields
   for (uint i=0; i < fields.N; i++) {
-  
+
     fields(i)->writeValue(field_string);
-    
+
     // replace every occurence of "\" by "\\"
     for (uint j=0; j < field_string.N; j++) {
       char c = field_string(j);
       if('\\' == c) string << '\\';
       string << c;
     }
-    
+
     // add seperator after field
     string << "\\,";
   }
@@ -232,7 +244,6 @@ void sVariable::deSerializeFromString(const MT::String &string) {
 //
 // Process
 //
-
 
 Process::Process(const char *_name): s(NULL), name(_name), state(tsCLOSE), step_count(0U)  {
   s = new sProcess(this);
@@ -323,7 +334,7 @@ void Process::threadStop() {
 
 void sProcess::main() {
   tid = syscall(SYS_gettid);
-  
+
   //http://linux.die.net/man/3/setpriority
   //if(s->threadPriority) setRRscheduling(s->threadPriority);
   //if(s->threadPriority) setNice(s->threadPriority);
@@ -340,7 +351,7 @@ void sProcess::main() {
     if(proc->state.value==tsBEATING) waitForTic=true; else waitForTic=false;
     if(proc->state.value>0) proc->state.value--; //count down
     proc->state.unlock();
-    
+
     if(waitForTic) metronome->waitForTic();
 
     //-- make a step
@@ -354,7 +365,7 @@ void sProcess::main() {
     proc->state.broadcast();
     proc->state.unlock();
   };
-  
+
   proc->close(); //virtual close routine
 }
 
@@ -392,6 +403,33 @@ void loop(const ProcessL& P) {
   for_list(i, p, P) p->threadLoop();
 }
 
+/**
+ * @brief Execute the step function of all processes in the given order.
+ *
+ * @note This does not use any thread functionality, i.e. the processes are not
+ * executed in parallel.
+ *
+ * @param P list of processes.
+ */
+void stepInSequence(const ProcessL& P) {
+  Process *p; uint i;
+  for_list(i, p, P) p->step();
+}
+
+/**
+ * @brief Execute the step function of all processes in the given order but
+ * treat the processes as threads.
+ *
+ * @param P list of processes.
+ */
+void stepInSequenceThreaded(const ProcessL& P) {
+  Process *p; uint i;
+  for_list(i, p, P) {
+    p->threadStep();
+    p->waitForIdle();
+  }
+}
+
 void loopWithBeat(const ProcessL& P, double sec) {
   Process *p; uint i;
   for_list(i, p, P) p->threadLoopWithBeat(sec);
@@ -411,7 +449,6 @@ void close(const ProcessL& P) {
   Process *p; uint i;
   for_list(i, p, P) p->threadClose();
 }
-
 
 //===========================================================================
 //
@@ -437,7 +474,9 @@ Process *Biros::getProcessFromPID() {
   return p;
 }
 
-//TODO: move this to the b:dump control.h
+/**
+ * @brief Spit out/print all infos about the current biros state.
+ */
 void Biros::dump() {
   cout <<" +++ VARIABLES +++" <<endl;
   uint i, j;
@@ -554,3 +593,4 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl){
 //  os <<nl <<"applies_on=" <<vi.appliesOn_sysType <<endl;
 //}
 
+/** @} */

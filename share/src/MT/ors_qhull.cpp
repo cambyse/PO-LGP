@@ -1,21 +1,30 @@
 /*  ---------------------------------------------------------------------
     Copyright 2012 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+
+/**
+ * @file
+ * @ingroup group_ors
+ */
+/**
+ * @ingroup group_ors
+ * @{
+ */
 
 
 #ifdef MT_QHULL
@@ -47,24 +56,24 @@ void plotQhullState(uint D) {
   vertexT *vertex, **vertexp;
   facetT *facet;
   arr x, line;
-  
+
   plotOpengl();
   plotClear();
-  
+
   cout <<"\n** points:";
   FORALLpoints {
     x.setCarray(point, D);
     cout <<"\n  " <<x;
     plotPoints(x);
   }
-  
+
   cout <<"\n** vertices:";
   FORALLvertices {
     x.setCarray(vertex->point, D);
     i = (vertex->point - (qh first_point))/D;
     cout <<"\n  " <<vertex->id <<"(" <<i <<")" <<":" <<x;
   }
-  
+
   cout <<"\n** facets:";
   FORALLfacets {
     cout <<"\n  " <<facet->id <<":";
@@ -90,34 +99,34 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
   static char* cmd = (char*) "qhull ";
   exitcode = qh_new_qhull(X.d1, X.d0, X.p, false, cmd, NULL, stderr);
   if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
-  
+
   uint i;
   facetT *bestfacet;
   double bestdist;
   boolT isoutside;
   int totpart;
-  
+
   bestfacet = qh_findbest(y.p, qh facet_list,
                           !qh_ALL, !qh_ISnewfacets, !qh_ALL,
                           &bestdist, &isoutside, &totpart);
-                          
+
   /*alternatives??
   //qh_findbestfacet(origin0, qh_ALL, &bestdist, &isoutside);
-  
+
   //bestfacet= qh_findbest (origin0, qh facet_list,
    //  qh_ALL, !qh_ISnewfacets, qh_ALL , // qh_NOupper
   //        &bestdist, &isoutside, &totpart);
   */
-  
+
   CHECK(norm(y)>1e-10 || fabs(bestdist-bestfacet->offset)<1e-10, "inconsistent!");
   CHECK((isoutside && bestdist>-1e-10) || (!isoutside && bestdist<1e-10), "");
-  
+
   if(projectedPoint) {
     *projectedPoint=y;
     double *normal=bestfacet->normal;
     for(i=X.d1; i--;)(*projectedPoint)(i) -= bestdist * normal[i];
   }
-  
+
   if(faceVertices) {
     faceVertices->clear();
     vertexT *vertex, **vertexp;
@@ -126,7 +135,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
       faceVertices->append(i);
     }
   }
-  
+
   if(QHULL_DEBUG_LEVEL>1) {
     arr line;
     plotQhullState(X.d1);
@@ -140,11 +149,11 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
       plotLine(line);
     }
     plot();
-    
+
     //cout <<"**best facet: " <<bestfacet->id <<endl;
     //FOREACHvertex_(facet->vertices) cout <<vertex->id <<' ';
   }
-  
+
   if(freeqhull) {
     qh_freeqhull(!qh_ALL);
     int curlong, totlong;
@@ -152,7 +161,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
     if(curlong || totlong)
       MT_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
   }
-  
+
   return bestdist;
 }
 
@@ -164,18 +173,18 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
   arr p;
   uintA vertices;
   double d;
-  
+
   d=distanceToConvexHull(X, y, &p, &vertices, freeqhull);
-  
+
   dDdX.resizeAs(X);
   dDdX.setZero();
-  
+
   uint i, j, k, l;
   arr v, f, w, v_f, y_f, dv, subn, wk, W;
   double dd;
   for(i=0; i<vertices.N; i++) {
     v.referToSubDim(X, vertices(i)); //v is the vertex in question
-    
+
     // subn: normal of the sub-facet opposit to v
     if(i) j=0; else j=1;
     w.referToSubDim(X, vertices(j)); //take w as origin of local frame
@@ -192,11 +201,11 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
     MT::Array<double*> tmp;
     qh_gram_schmidt(X.d1, W.getCarray(tmp)); //orthogonalize local basis vectors
     subn = W[l]; //this entry should now be orthogonal to the sub-facet
-    
+
     //f: axis point: projection of v along p onto the sub-facet (``Dreisatz'')
     double alpha = scalarProduct(w-v, subn)/scalarProduct(p-v, subn);
     f = v + alpha*(p-v);
-    
+
     v_f = v-f;
     y_f = y-f;
     double yf_vf=scalarProduct(y_f, v_f);
@@ -204,16 +213,16 @@ double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool 
     // check pythagoras
     dd = sumOfSqr(y_f) - yf_vf * yf_vf_norm;
     CHECK(fabs(dd - d*d)<1e-8, "");
-    
+
     //compute gradient
     dv.referToSubDim(dDdX, vertices(i));
     dv = f - y + yf_vf_norm*v_f;
     dv *= 2.*yf_vf_norm;
     dv *= .5/d;
   }
-  
+
   return d;
-  
+
 }
 
 //===========================================================================
@@ -222,10 +231,10 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
 		    double mu, double torqueWeights, arr *dFdC) { //, arr *dFdCn
   CHECK(C.d0==Cn.d0, "different number of points and normals");
   CHECK(C.d1==3, "");
-  
+
   uint i, j, S=7;
   ors::Vector c, n;
-  
+
   arr X;
   if(torqueWeights>0.)  X.resize(C.d0*S, 6);  //store 6d points for convex wrench hull
   else X.resize(C.d0*S, 3);                //store 3d points for convex force hull
@@ -239,22 +248,22 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
     dXdCn.resize(C.d0*S, 6, 3);
     dXdCn.setZero();
   }*/
-  
+
   for(i=0; i<C.d0; i++) {  //each contact point contributes a friction cone
     c.set(&C(i, 0));                    //contact point
     n.set(&Cn(i, 0));                   //contact normal
     c -= center;
-    
+
     ors::Quaternion r;
     r.setDiff(VEC_z, n);//rotate cone's z-axis into contact normal n
-    
+
     for(j=0; j<S; j++) {   //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;
       ors::Vector f(cos(angle)*mu, sin(angle)*mu, 1.);  //force point sampled from cone
-      
+
       f = r*f;                         //rotate
       ors::Vector c_f = c^f;
-      
+
       //what about different scales in force vs torque??!!
       if(torqueWeights>=0.){ //forceClosure
         X(i*S+j, 0) = f.x;
@@ -283,9 +292,9 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
       }*/
     }
   }
-  
+
   if(dFdC)  dXdC *= (double)torqueWeights;
-  
+
   double d;
   arr origin(X.d1);
   origin.setZero();
@@ -340,11 +349,11 @@ void getTriangulatedHull(uintA& T, arr& V) {
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
   if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
   qh_triangulate();
-  
+
   facetT *facet;
   vertexT *vertex, **vertexp;
   uint f, i, v;
-  
+
   arr Vnew;
 #ifdef ARCH_LINUX
   Vnew.resize(qh_qh.num_vertices, 3);
@@ -372,13 +381,13 @@ void getTriangulatedHull(uintA& T, arr& V) {
     f++;
   }
   CHECK(f==T.d0, "");
-  
+
   qh_freeqhull(!qh_ALL);
   int curlong, totlong;
   qh_memfreeshort(&curlong, &totlong);
   if(curlong || totlong)
     MT_MSG("qhull internal warning (main): did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)\n");
-    
+
   V=Vnew;
 }
 
@@ -388,11 +397,11 @@ void getDelaunayEdges(uintA& E, const arr& V) {
   static char* cmd = (char*) "qhull d Qbb Qt ";
   exitcode = qh_new_qhull(V.d1, V.d0, V.p, false, cmd, NULL, stderr);
   if(exitcode) HALT("qh_new_qhull error - exitcode " <<exitcode);
-  
+
   facetT *facet;
   vertexT *vertex, **vertexp;
   uint i, j, k, dim=V.d1;
-  
+
   E.clear();
   uint face[dim+1];
   FORALLfacets {
@@ -406,7 +415,7 @@ void getDelaunayEdges(uintA& E, const arr& V) {
     }
   }
   E.reshape(E.N/2,2);
-  
+
   qh_freeqhull(!qh_ALL);
   int curlong, totlong;
   qh_memfreeshort(&curlong, &totlong);
@@ -432,9 +441,9 @@ void getDelaunayEdges(uintA& E, const arr& V) {
 template<class N, class E>
 void delaunay(Graph<N, E>& g, uint dim=2) {
   uint i;
-  
+
   g.clear_edges();
-  
+
   doubleA P;
   P.resize(g.N, dim);
   for(i=0; i<g.N; i++) {
@@ -444,13 +453,13 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
     //P(i, 1)=g.nodes(i)->feat.y;
     //P(i, 2)=g.nodes(i)->feat.z;
   }
-  
+
   if(!qh_new_qhull(dim, g.N, P.p, false, "qhull d Qbb T0", NULL, stderr)) {
     facetT *facet;
     vertexT *vertex, **vertexp;
     uint *face, k, l;
     face=new uint[dim+1];
-    
+
     FORALLfacets {
       if(!facet->upperdelaunay) {
         uint j=0;
@@ -462,14 +471,14 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
         i++;
       }
     }
-    
+
     delete[] face;
   }
-  
+
   int curlong, totlong;
   qh_freeqhull(!qh_ALL);                 //free long memory
   qh_memfreeshort(&curlong, &totlong);   //free short memory and memory allocator
-  
+
   if(curlong || totlong)
     MT_MSG("qhull did not free " <<totlong <<" bytes of long memory (" <<curlong <<" pieces)");
 }
@@ -481,3 +490,4 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #include "array.h"
 void getTriangulatedHull(uintA& T, arr& V) { NICO }
 #endif
+/** @} */

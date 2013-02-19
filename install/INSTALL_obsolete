@@ -3,7 +3,15 @@
 #  INSTALLING YOUR MLR-SYSTEM
 #  (c) Machine Learning and Robotics Lab, FU Berlin, Germany, 2011
 #  http://www.inf.fu-berlin.de/en/groups/mlr
-#  Tobias Lang
+#  author: Tobias Lang
+#
+#
+#  What does this scirpt do?
+#
+#  (1) External Libraries
+#  (2) Create make-config
+#  (3) Install our libs
+#  (4) Tests
 #
 #
 #  Parameters:
@@ -19,7 +27,7 @@
 #    https://maserati.mi.fu-berlin.de/redmine/attachments/922/mlrLibs.tar.gz
 #
 #  Example Call:
-#    FILE_TARBALL=mlrLibs.tar.gz  ./INSTALL
+#    FILE_TARBALL=mlrLibs.tgz  ./INSTALL
 
 
 [ -z "${DIR_EXTERNAL_LIBS}" ] && DIR_EXTERNAL_LIBS=~/lib/
@@ -87,7 +95,7 @@ fi
 # cd $DIR_GIT/share/extern/libcolorseg/src/
 
 
-echo "Building symbolic links in " $DIR_GIT "share/extern/ to libraries
+echo "Building symbolic links in " $DIR_GIT/share/extern/ "to libraries
 directory " $DIR_EXTERNAL_LIBS "..."
 
 cd $DIR_GIT
@@ -104,11 +112,10 @@ echo "\n\n\n+++ make-config +++\n\n"
 
 echo "Creating make-config (specify individual profiles here)..."
 
-cd share/
-mv make-config make-config.BAK
-mv make-config.default make-config
+cd $DIR_GIT/share/
+cp make-config make-config.BAK
+cp make-config.default make-config
 cd $DIR_GIT
-
 
 
 # ----------------------------

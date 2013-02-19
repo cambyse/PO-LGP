@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @ingroup group_biros
+ */
 #include "biros_views.h"
 #include "biros.h"
 
@@ -11,3 +15,4 @@ REGISTER_VIEW(GenericTextView_Variable, Variable)
 REGISTER_VIEW(GenericTextView_FieldInfo, FieldRegistration)
 REGISTER_VIEW(GenericTextView_Parameter, Parameter)
 
+/** @} */
