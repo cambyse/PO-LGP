@@ -1,31 +1,26 @@
 /** @page coding_conventions Coding Conventions
 
+@note There is share/src/style.astyle for <a href="http://astyle.sourceforge.net/">astyle</a>.
+
 - Take the Google C++ style as default:
-  \url{http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml}.
+  http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml.
   The rules below overwrite Google conventions.
-
 - Output parameters before input parameters in function declarations.
-
-- Naming convention |name\_of\_a\_routine(ouput,input);| is
-  perhaps better than my old |nameOfARoutine(..);| style.
-
+- Naming convention <tt>name_of_a_routine(ouput,input)</tt>; is
+  perhaps better than my old <tt>nameOfARoutine(..);</tt> style.
 - Make headers as clean and short and concise as possible!
-
-- Try to avoid |\#includes| in header files as much as possible!!
+- Try to avoid #includes in header files as much as possible!!
   In particular, when a class's methods require an external library;
   this external library should be included only in the cpp-file.
-
- $\to$ In particular, try to avoid |\#includes <external\_lib>| in headers!! (I
- tried to get rid of them as much as possible in all my *.h)
-
-- Try to avoid |\#includes| in header files as much as possible!!
+  In particular, try to avoid <tt>#includes <external_lib></tt> in headers!!
+  (I tried to get rid of them as much as possible in all my *.h)
+- Try to avoid #includes in header files as much as possible!!
   If you think the class needs to contain members/data structures defined
   in an external library and therefore you need to include its header
   in your header --- that's often not true. Instead, hide all members
   in a \e hidden_self.
 
 Bad example:
-
 \code
 //h-file:
 #include <OpenCV> //BAD
@@ -37,8 +32,8 @@ struct MyClass{
 Good example:
 \code
 //h-file:
-struct sMyClass; //forward declaration of a 'hidden self' that will
-contain all members hidden from the header
+// forward declaration of a 'hidden self' that will contain all members hidden from the header
+struct sMyClass;
 
 struct MyClass{
   sMyClass *s; //maybe call it 'self' instead
@@ -50,7 +45,6 @@ struct MyClass{
 struct sMyClass{
   OpenCV_DataStructure data;
 };
-
 MyClass::MyClass(){
   s = new sMyClass;
 }
@@ -72,10 +66,10 @@ MyClass::MyClass(){
   fine. But when the user accesses members of the class, he actually
   refers to different memory addesses as your routines in your
   library.
-  Therefore try to avoid \#ifdefs in headers as much as possible! Move
+  Therefore try to avoid #ifdefs in headers as much as possible! Move
   them to the cpp file!
 - If you don't have a preferred IDE, use kdevelop.
-  - K\&R formatting conventions!
+  - K&R formatting conventions!
   - Editing: use spaces instead of tabs. 2 characters. Identation with 2
     characters.
   - Keys: F10,11,12: step, step in, step out, F9: toggle break; F8 clean, F7
