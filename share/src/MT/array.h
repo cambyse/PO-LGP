@@ -15,12 +15,13 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
-
-
-
-/*! \file array.h
-    \brief defines the MT::Array class */
+/** @file
+ * @ingroup group_array
+ */
+/**@addtogroup group_array
+ * @{
+ */
+//===========================================================================
 
 #ifndef MT_array_h
 #define MT_array_h
@@ -69,8 +70,11 @@ extern const char* arrayBrackets;
 //
 
 namespace MT {
-/*!\brief Simple array container to store arbitrary-dimensional arrays
-  (tensors); can buffer more memory than necessary for faster
+/// @addtogroup group_array
+/// @{
+
+/** Simple array container to store arbitrary-dimensional arrays (tensors).
+  Can buffer more memory than necessary for faster
   resize; enables non-const reference of subarrays; enables fast
   memove for elementary types; implements many standard
   array/matrix/tensor operations. Please see the fully public attributes at the
@@ -267,13 +271,13 @@ template<class T> struct Array {
   void resetD();
   void init();
 };
+///@}
 }
 
 
 //===========================================================================
-//
-//!@name standard types
-// @{
+///@name standard types
+///@{
 
 typedef MT::Array<double> arr;
 typedef MT::Array<double> doubleA;
@@ -291,17 +295,17 @@ typedef MT::Array<MT::String*> StringL;
 
 
 //===========================================================================
-//
-//!@name constant arrays
-// @{
+///@}
+///@name constant arrays
+///@{
 
 extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional arguments
 
 
 //===========================================================================
-// @}
-//!@name std in/out pipes
-// @{
+///@}
+///@name std in/out pipes
+///@{
 
 namespace MT{
 template<class T> std::istream& operator>>(std::istream& is, Array<T>& x);
@@ -310,15 +314,15 @@ template<class T> std::ostream& operator<<(std::ostream& os, const Array<T>& x);
 
 
 //===========================================================================
-// @}
-//!@name shorthand to specify arrays and lists (list=array of pointers)
-// @{
+///@}
+///@name shorthand to specify arrays and lists (list=array of pointers)
+///@{
 
 // Andreas: this is a generic array builder via recursive variadic templates:
 // uses C++0x specification. Tested with gcc 4.4.6, should work with >4.3
 // according to http://gcc.gnu.org/gcc-4.3/cxx0x_status.html
 
-//	enable this by adding -std=c++0x to your CXXFLAGS variable
+// enable this by adding -std=c++0x to your CXXFLAGS variable
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
   template<class T>
   void ahelper(MT::Array<T> &z, T t){ z(z.N-1)=t; }
@@ -363,34 +367,43 @@ template<class T> MT::Array<T*> LIST(const T& i, const T& j, const T& k, const T
 
 
 //===========================================================================
-// @}
-//!@name Octave/Matlab functions to generate special arrays
-// @{
+///@}
+///@name Octave/Matlab functions to generate special arrays
+///@{
 
-//! return identity matrix
+/// return identity matrix
 inline arr eye(uint d0, uint d1) { arr z;  z.resize(d0, d1);  z.setId();  return z; }
+/// return identity matrix
 inline arr eye(uint n) { return eye(n, n); }
 
 //! return matrix of ones
 inline arr ones(const uintA& d) {  arr z;  z.resize(d);  z=1.;  return z;  }
+//! return matrix of ones
 inline arr ones(uint n) { return ones(TUP(n, n)); }
+//! return matrix of ones
 inline arr ones(uint d0, uint d1) { return ones(TUP(d0, d1)); }
 
 //! return matrix of zeros
 inline arr zeros(const uintA& d) {  arr z;  z.resize(d);  z.setZero();  return z; }
+//! return matrix of zeros
 inline arr zeros(uint n) { return zeros(TUP(n, n)); }
+//! return matrix of zeros
 inline arr zeros(uint d0, uint d1) { return zeros(TUP(d0, d1)); }
 
 arr repmat(const arr& A, uint m, uint n);
 
 //! return array with random numbers in [0, 1]
 arr rand(const uintA& d);
+//! return array with random numbers in [0, 1]
 inline arr rand(uint n) { return rand(TUP(n, n)); }
+//! return array with random numbers in [0, 1]
 inline arr rand(uint d0, uint d1) { return rand(TUP(d0, d1)); }
 
 //! return array with normal (Gaussian) random numbers
 arr randn(const uintA& d);
+//! return array with normal (Gaussian) random numbers
 inline arr randn(uint n) { return randn(TUP(n, n)); }
+//! return array with normal (Gaussian) random numbers
 inline arr randn(uint d0, uint d1) { return randn(TUP(d0, d1)); }
 
 inline double max(const arr& x){ return x.max(); }
@@ -404,9 +417,9 @@ arr logspace(double base, double limit, uint n);
 
 
 //===========================================================================
-// @}
-//!@name non-template functions //? needs most cleaning
-// @{
+///@}
+///@name non-template functions //? needs most cleaning
+///@{
 
 arr diag(double d, uint n);
 void makeSymmetric(arr& A);
@@ -455,10 +468,9 @@ void scanArrFile(const char* name);
 
 
 //===========================================================================
-// @}
-//!@name template functions
-// @{
-
+///@}
+///@name template functions
+///@{
 
 //NOTES:
 // -- past-tense names do not modify the array, but return variants
@@ -473,7 +485,6 @@ template<class T> MT::Array<T> skew(const MT::Array<T>& x);
 template<class T> void inverse2d(MT::Array<T>& Ainv, const MT::Array<T>& A);
 
 template<class T> uintA size(const MT::Array<T>& x) { return x.getDim(); }
-
 
 template<class T> T entropy(const MT::Array<T>& v);
 template<class T> T normalizeDist(MT::Array<T>& v);
@@ -518,9 +529,9 @@ template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Arra
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w);
 
 //===========================================================================
-// @}
-//!@name concatenating arrays together
-// @{
+///@}
+///@name concatenating arrays together
+///@{
 
 template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z) { MT::Array<T> x; x.append(y); x.append(z); return x; }
 template<class T> MT::Array<T> cat(const MT::Array<T>& y, const MT::Array<T>& z, const MT::Array<T>& w) { MT::Array<T> x; x.append(y); x.append(z); x.append(w); return x; }
@@ -528,10 +539,11 @@ template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b,
 template<class T> MT::Array<T> cat(const MT::Array<T>& a, const MT::Array<T>& b, const MT::Array<T>& c, const MT::Array<T>& d, const MT::Array<T>& e) { MT::Array<T> x; x.append(a); x.append(b); x.append(c); x.append(d); x.append(e); return x; }
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X);
 
+
 //===========================================================================
-// @}
-//!@name arrays interpreted as a set (container)
-// @{
+///@}
+///@name arrays interpreted as a set (container)
+///@{
 
 template<class T> void setUnion(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
 template<class T> void setSection(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z);
@@ -550,9 +562,9 @@ template<class T> MT::Array<T> sqr(const MT::Array<T>& y) { MT::Array<T> x; x.re
 
 
 //===========================================================================
-// @}
-//!@name tensor functions
-// @{
+///@}
+///@name tensor functions
+///@{
 
 template<class T> void tensorCondNormalize(MT::Array<T> &X, int left);
 template<class T> void tensorCondMax(MT::Array<T> &X, uint left);
@@ -572,13 +584,17 @@ template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y
 template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid);
 template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid);
 
-// @}
+///@}
 
 
 namespace MT {
 //===========================================================================
-//!@name basic Array operators
-// @{
+///@addtogroup group_array
+///@{
+
+//===========================================================================
+///@name basic Array operators
+///@{
 template<class T> Array<T> operator~(const Array<T>& y); //transpose
 template<class T> Array<T> operator-(const Array<T>& y); //negative
 template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z); //outer product
@@ -613,13 +629,14 @@ BinaryOperator(% , *=);
 BinaryOperator(/ , /=);
 #undef BinaryOperator
 
-}
-// @}
+///@} // end of name
+///@} // end of addtogroup
+} // end of namespace MT
 
 
 //===========================================================================
 //!@name basic Array functions
-// @{
+///@{
 
 #ifndef SWIG
 #define UnaryFunction( func )           \
@@ -663,12 +680,11 @@ template<class T> bool operator!=(const MT::Array<T>& v, const MT::Array<T>& w);
 template<class T> bool operator<(const MT::Array<T>& v, const MT::Array<T>& w);
 #endif
 
-// @}
 
 //===========================================================================
-// @}
-//!@name double template functions
-// @{
+///@}
+///@name double template functions
+///@{
 
 #ifndef SWIG
 template<class T, class S> void resizeAs(MT::Array<T>& x, const MT::Array<S>& a) {
@@ -692,9 +708,9 @@ bool samedim(const MT::Array<T>& a, const MT::Array<S>& b) {
 
 
 //===========================================================================
-// @}
-//!@name lapack interfaces
-// @{
+///@}
+///@name lapack interfaces
+///@{
 
 void blas_Mv(arr& y, const arr& A, const arr& x);
 void blas_MM(arr& X, const arr& A, const arr& B);
@@ -714,9 +730,9 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b);
 void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
 
 //===========================================================================
-// @}
-//!@name special agumentations
-// @{
+///@}
+///@name special agumentations
+///@{
 
 struct RowShiftedPackedMatrix{
   arr& Z;
@@ -746,9 +762,9 @@ arr comp_At_x(arr& A, const arr& x);
 
 
 //===========================================================================
-// @}
-//!@name lists
-// @{
+///@}
+///@name lists
+///@{
 
 /*  TODO: realize list simpler: let the Array class have a 'listMode' flag. When this flag is true, the read, write, resize, find etc routines
 will simply be behave differently */
@@ -775,9 +791,9 @@ template<class T> T* new_elem(MT::Array<T*>& L) { T *e=new T; e->index=L.N; L.ap
 
 
 //===========================================================================
-// @}
-//!@name graphs
-// @{
+///@}
+///@name graphs
+///@{
 
 void graphRandomUndirected(uintA& E, uint n, double connectivity);
 void graphRandomFixedDegree(uintA& E, uint N, uint degree);
@@ -798,9 +814,8 @@ template<class vert, class edge> void graphWriteUndirected(std::ostream& os, con
 template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Array<edge*>& E);
 template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array<edge*>& E);
 
-
+///@}
 //===========================================================================
-// @}
 // implementations
 //
 
@@ -818,3 +833,4 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 
 // (note: http://www.informit.com/articles/article.aspx?p=31783&seqNum=2)
 
+/** @} */

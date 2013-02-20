@@ -15,7 +15,12 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
+/** @file
+ * @ingroup group_array
+ */
+//===========================================================================
+/// @addtogroup group_array
+/// @{
 
 
 #include "array.h"
@@ -31,6 +36,10 @@ static double MT_SIGN_SVD(double a, double b) { return b>0 ? ::fabs(a) : -::fabs
 
 
 namespace MT {
+//===========================================================================
+/// @addtogroup group_array
+/// @{
+
 bool useLapack=true;
 #ifdef MT_LAPACK
 const bool lapackSupported=true;
@@ -42,6 +51,9 @@ bool globalMemoryStrict=false;
 const char* arrayElemsep=" ";
 const char* arrayLinesep="\n ";
 const char* arrayBrackets="[]";
+
+///@}
+//===========================================================================
 }
 
 arr& NoArr = *((arr*)NULL);
@@ -1390,3 +1402,4 @@ void graphRandomFixedDegree(uintA& E, uint N, uint d) {
   E.reshape(E.N/2,2);
 }
 
+///@}
