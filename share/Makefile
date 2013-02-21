@@ -14,6 +14,7 @@ MLR_LIBS = \
 EXTERN = \
 	extern/libcolorseg/src \
 	extern/Lewiner \
+	extern/ply \
 	extern/tony_mdp \
 	extern/SWIFT++_1.2/src \
 	extern/SWIFT++_1.2/decomposer/src \
