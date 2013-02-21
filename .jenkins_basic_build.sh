@@ -9,7 +9,7 @@
 cd share
 rm -r lib/*
 make cleanAll
-make
+make 2> ../gcc_warnings.log
 
 # test the basic building blocks
 cd test/array
