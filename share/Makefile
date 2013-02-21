@@ -1,9 +1,14 @@
 NAME   = $(shell basename $(PWD))
 
+# The order of the libs matters!
 MLR_LIBS = \
-	src/MT src/JK \
-	src/biros src/views \
-	src/motion src/hardware src/perception \
+	src/MT \
+	src/JK \
+	src/views \
+	src/biros \
+	src/motion \
+	src/hardware \
+	src/perception \
 	src/relational \
 
 EXTERN = \
