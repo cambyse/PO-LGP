@@ -35,4 +35,5 @@ meld \
 realpath \
 regexxer \
 tcl8.5-dev \
-tk8.5-dev
+tk-dev
+tk8.5-dev \
