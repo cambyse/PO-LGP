@@ -27,11 +27,17 @@
 #include <MT/array.h>
 
 
+struct DummyForceGlobal{
+  DummyForceGlobal(){
+    cout <<"BIROS!" <<endl;
+  }
+} dummy;
 
 //===========================================================================
 //
 // global singleton
 //
+
 
 Biros *global_birosInfo=NULL;
 
@@ -119,7 +125,7 @@ void setRRscheduling(int priority) {
 // Variable
 //
 
-Variable::Variable(const char *_name): s(NULL), name(_name), revision(0) {
+Variable::Variable(const char *_name): AccessGuard(_name), s(NULL) {
   s = new sVariable();
   s->listeners.memMove=true;
   //MT logValues = false;
@@ -266,7 +272,7 @@ void Process::threadOpen(int priority) {
   state.lock();
   if(s->isOpen()){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
   s->open(STRING("--"<<name));
-  state.value=tsIDLE;
+  state.value=tsOPENING;
   state.unlock();
 }
 
@@ -340,6 +346,9 @@ void sProcess::main() {
   //if(s->threadPriority) setNice(s->threadPriority);
 
   proc->open(); //virtual initialization routine
+
+  CHECK(proc->state.value==tsOPENING,"");
+  proc->state.setValue(tsIDLE);
 
   //s->timer.reset();
   bool waitForTic=false;

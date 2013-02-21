@@ -9,6 +9,7 @@
 #endif
 
 #include <biros/biros.h>
+#include <MT/module.h>
 #include <MT/ors.h>
 #include <MT/array_t.cxx>
 
@@ -27,7 +28,7 @@ struct SURFfeatures;
 struct PerceptionOutput;
 
 //-- Process creators
-Process *newOpencvCamera(Image& rgb);
+Process *newOpencvCamera();
 Process* newCvtGray(Image& rgb, Image& gray);
 Process* newCvtHsv(Image& rgb, Image& hsv);
 Process* newHsvFilter(Image& hsv, FloatImage& evi);

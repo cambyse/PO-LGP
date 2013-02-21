@@ -1,5 +1,6 @@
 #include "perception.h"
 #include "pointcloud.h"
+#include <biros/biros_module.h>
 
 #ifdef MT_OPENCV
 
@@ -20,27 +21,34 @@
 // Camera
 //
 
-struct OpencvCamera:Process {
+DECLARE_MODULE(OpencvCamera);
+
+struct OpencvCamera:OpencvCamera_Base {
   cv::VideoCapture capture;
   
-  Image *image;
+  VARI(byteA, cameraOutputRgb);
   
-  OpencvCamera(Image& _image):Process("Camera"), image(&_image) {};
-  void open(){
+  OpencvCamera(){
     capture.open(0);
-    //capture.set(CV_CAP_PROP_CONVERT_RGB, 1);
-    //cout <<"FPS of opened OpenCV VideoCapture = " <<capture.get(CV_CAP_PROP_FPS) <<endl;;
+//    capture.set(CV_CAP_PROP_CONVERT_RGB, 1);
+//    cout <<"FPS of opened OpenCV VideoCapture = " <<capture.get(CV_CAP_PROP_FPS) <<endl;;
   }
-  void close(){
+
+  ~OpencvCamera(){
     capture.release();
   }
+
   void step(){
     cv::Mat img,imgRGB;
     capture.read(img);
-    cv::cvtColor(img, imgRGB, CV_BGR2RGB);
-    image->writeAccess(this);
-    image->img = cvtMAT(imgRGB);
-    image->deAccess(this);
+    if(!img.empty()){
+      cv::cvtColor(img, imgRGB, CV_BGR2RGB);
+      set_cameraOutputRgb(cvtMAT(imgRGB));
+    }
+  }
+
+  bool test(){
+    return true;
   }
 };
 
@@ -474,8 +482,8 @@ VariableL newPointcloudVariables() {
 //
 
 #ifdef MT_OPENCV
-Process *newOpencvCamera(Image& image){
-  return new OpencvCamera(image);
+Process *newOpencvCamera(){
+  return new Module_Process("OpencvCamera");
 }
 
 Process* newCvtGray(Image& rgbImage, Image& grayImage){

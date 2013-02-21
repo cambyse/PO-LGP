@@ -7,6 +7,8 @@
   -- this should be independent of the ``middleware''/biros/ROS/whatever
 
  */
+#ifndef MT_module_h
+#define MT_module_h
 
 #include <MT/array.h>
 #include <MT/registry.h>
@@ -43,32 +45,57 @@ Item* registerUnit(T *instance, const char *name, UnitKind kind, Item *parent1=N
 // objects to handle r/w access to variables -- may implement locking and versioning later
 //
 
-struct VariableAccess{
+struct AccessGuard{
+  MT::String name;            ///< Variable name
+  ConditionVariable revision; ///< revision (= number of write accesses) number
+  AccessGuard(const char* _name):name(_name), revision(0){}
+  virtual ~AccessGuard(){}
+  virtual int readAccess(struct Process*){ cout <<"R " <<name <<endl; return 0; }
+  virtual int writeAccess(struct Process*){ cout <<"W " <<name <<endl; return 0; }
+  virtual int deAccess(struct Process*){ return 0; }
+};
+
+struct Access{
   Module *module;
+  struct Process *process;
+  AccessGuard *guard;
   const char* name;
   const std::type_info* typeinfo;
-  VariableAccess(const char* _name, const std::type_info* _typeinfo):module(NULL), name(_name), typeinfo(_typeinfo) {}
+  Access(const char* _name, const std::type_info* _typeinfo):module(NULL), guard(NULL), name(_name), typeinfo(_typeinfo) {}
   void write(ostream& os) const{ os <<name; }
   void read(istream&) { NIY; }
-  virtual void createOwnVariable() = 0;
+  virtual void* createOwnData() = 0;
+  virtual void setData(void*) = 0;
 };
-stdPipes(VariableAccess);
+stdPipes(Access);
 
-typedef MT::Array<VariableAccess*> VariableAccessL;
+typedef MT::Array<Access*> AccessL;
 
 template<class T>
-struct VariableAccess_typed:VariableAccess{
+struct Access_typed:Access{
   T *var;
-  VariableAccess_typed(const char* name=NULL):VariableAccess(name,&typeid(T)), var(NULL){ //called at INSTANTIATION of a module
+  Access_typed(const char* name=NULL):Access(name,&typeid(T)), var(NULL){ //called at INSTANTIATION of a module
 //    Item *it = new UnitRegistry<T,void>(
 //          STRINGS("acc", name),
 //          ARRAY<Item*>(), //staticRegistrator.regItem),
 //          varaccess,
 //          &registry());
   }
-  T& get(Module *m){ CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized"); return *var; }
-  int set(const T& x, Module *m){ CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized"); *var=x; return 0; }
-  virtual void createOwnVariable(){ CHECK(!var,""); var = new T; }
+  T& get(Module *m){
+    CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized");
+    guard->readAccess(process);
+    guard->deAccess(process);
+    return *var;
+  }
+  int set(const T& x, Module *m){
+    CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized");
+    guard->writeAccess(process);
+    *var=x;
+    guard->deAccess(process);
+    return 0;
+  }
+  virtual void* createOwnData(){ if(!guard) guard=new AccessGuard(name); if(!var) var=new T; return var; }
+  virtual void setData(void* data){ var = (T*)data; }
 };
 
 
@@ -79,10 +106,11 @@ struct VariableAccess_typed:VariableAccess{
 
 struct Module{
   const char *name;
-  VariableAccessL accesses;
+  AccessL accesses;
   Module(const char *_name):name(_name){}
   virtual ~Module(){};
   virtual void step() = 0;
+  virtual bool test() = 0;
 };
 
 
@@ -146,26 +174,18 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
 // the force...() forces the staticRegistrator to be created in pre-main
 // and its constructor executed, which does the registration
 
-#define VAR(type, name) \
-  struct name##_Access:VariableAccess_typed<type>, Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>{ \
-  name##_Access():VariableAccess_typed<type>(#name),  Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>(this){ \
-      uint offset = offsetof(__MODULE_TYPE__, name##_access); \
+#define VARI(type, name) \
+  struct name##_Access:Access_typed<type>, Registrator<Access_typed<type>, __MODULE_TYPE__>{ \
+  name##_Access():Access_typed<type>(#name),  Registrator<Access_typed<type>, __MODULE_TYPE__>(this){ \
+      uint offset = offsetof(__MODULE_TYPE__, name); \
       __MODULE_TYPE__ *thisModule = (__MODULE_TYPE__*)((char*)this - (char*)offset); \
       thisModule->accesses.append(this); \
-      Registrator<VariableAccess_typed<type>, __MODULE_TYPE__>::regis(#name, thisModule->regItem); \
+      Registrator<Access_typed<type>, __MODULE_TYPE__>::regis(#name, thisModule->regItem); \
       module = thisModule; \
     } \
-  } name##_access; \
-  inline type& get_##name(){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.get(this); } \
-  inline int  set_##name(const type& _x){ CHECK(name##_access.module==this,"OUCH!"); return name##_access.set(_x,this); }
-
-//  (uint)&((__MODULE_TYPE__*)NULL)->name##_access;
-//inline void name##_Access_forceRegistration(){ staticRegistrator.force(); }
-//inline void name##_forceRegistration(){ staticRegistrator.forceSub<type>(); }
-
-//#define PARAM (type, name, default)
-//  ParameterAccess_typed<type, default> name##_access;
-//  inline type get_##name(){ return name##_access.get(); }
+  } name; \
+  inline type& get_##name(){ CHECK(name.module==this,"OUCH!"); return name.get(this); } \
+  inline int  set_##name(const type& _x){ CHECK(name.module==this,"OUCH!"); return name.set(_x,this); }
 
 
 #define DECLARE_MODULE(name) \
@@ -178,7 +198,15 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
     } \
   };
 
-
 #define MODULE(name) \
-  DECLARE_MODULE(name) \
-  struct name:name##_Base
+  struct name: Module, Registrator<name, void> { \
+    typedef name __MODULE_TYPE__; \
+    inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
+    name(): Module(#name), Registrator<name, void>((name*)this) { \
+      Registrator<name, void>::regis(#name, NULL); \
+    } \
+    virtual ~name(){}; \
+    virtual void step(); \
+    virtual bool test();
+
+#endif

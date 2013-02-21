@@ -2,6 +2,13 @@
 
 void reattachShape(const char* objShape, const char* toBody);
 
+struct MDummyForceGlobal{
+  MDummyForceGlobal(){
+    cout <<"MOTION!" <<endl;
+  }
+} Mdummy;
+
+
 void MotionPrimitive::setNewAction(const ActionPredicate _action, const char *ref1, const char *ref2, const arr& locref, Process *p){
   writeAccess(p);
   action = _action;

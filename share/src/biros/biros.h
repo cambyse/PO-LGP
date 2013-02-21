@@ -3,6 +3,7 @@
 
 #include <MT/array.h>
 #include <MT/util.h>
+#include <MT/module.h>
 
 /**
  * @file
@@ -40,10 +41,10 @@ typedef MT::Array<Parameter*> ParameterL;
  *
  * Inherit from the class Variable to create your own variable.
  */
-struct Variable {
+struct Variable:AccessGuard {
   struct sVariable *s;        ///< private
-  MT::String name;            ///< Variable name
-  ConditionVariable revision; ///< revision (= number of write accesses) number
+//  MT::String name;            ///< Variable name
+//  ConditionVariable revision; ///< revision (= number of write accesses) number
   RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
 
   /// @name c'tor/d'tor
@@ -247,6 +248,7 @@ struct Biros:Variable {
   /// @name access existing processes, variables and parameters.
   Process *getProcessFromPID();
   template<class T> T* getVariable(const char* name, Process *p, bool required = false);
+  template<class T> T* getOrCreateVariable(const char* name, Process *p);
   template<class T> void getVariable(T*& v, const char* name, Process *p, bool required = false);
   template<class T> T* getProcess (const char* name, Process *p, bool required = false);
   template<class T> T getParameter(const char *name, Process *p=NULL);

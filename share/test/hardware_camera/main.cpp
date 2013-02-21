@@ -9,7 +9,7 @@ int main(int argc, char** argv){
   
   camera->open();
   OpenGL gl;
-   
+
   byteA frame, right_frame;
   double time=MT::realTime();
   uint i;

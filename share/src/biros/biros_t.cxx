@@ -22,6 +22,12 @@ template<class T> T* Biros::getVariable(const char* name, Process *p, bool requi
   return v;
 }
 
+template<class T> T* Biros::getOrCreateVariable(const char* name, Process *p){
+  T *v = getVariable<T>(name, p, false);
+  if(!v) v = new T(name);
+  return v;
+}
+
 template<class T> void Biros::getVariable(T*& v, const char* name, Process *p, bool required){
   v = getVariable<T>(name, p, required);
 }

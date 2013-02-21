@@ -36,7 +36,7 @@ struct sVariable {
   sVariable():loggerData(NULL){}
 };
 
-enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
+enum ThreadState { tsIDLE=0, tsCLOSE=-1, tsOPENING=-2, tsLOOPING=-3, tsBEATING=-4 }; //positive states indicate steps-to-go
 
 //Process' internal data
 struct sProcess: Thread{
