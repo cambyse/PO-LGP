@@ -68,13 +68,8 @@ def jenkins_clean_build_main():
 
 
 def jenkins_clean_build_test():
-    """Jenkins builds share/ and share/test/ from sratch"""
+    """Jenkins builds everything and creates a JUnit file for Jenkins"""
     jenkins_clean_build_main()
     clean_test()
-    make_test()
-
-
-def jenkins_test_stats():
-    """Run all tests and create a JUnit file for jenkins"""
     with lcd("share/test/"):
         local("python jenkins_run_tests.py")
