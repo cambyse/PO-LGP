@@ -1,8 +1,6 @@
 BASE = ../../../share
 
-OBJS = main.o
-
-LIBS += -ldummy -lperception
+OBJS = main.o ComputeSum_Module.o
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 

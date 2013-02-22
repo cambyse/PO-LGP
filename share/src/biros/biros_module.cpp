@@ -8,10 +8,10 @@ void Module_Process::open(){
 #else
   Item *modReg = registry().getItem("moduledecl", STRING(strlen(name)<<name)); //OpencvCamera::staticRegistrator.regItem;
   if(!modReg) HALT("could not find moduledcl" <<name)
-      mod = (Module*)modReg->value<KeyValueGraph>()->getItem("type")->value<TypeInfo>()->newInstance();
+      mod = (Module*)modReg->value<TypeInfo>()->newInstance();
 
   //create the variables
-  for_list_(VariableAccess, var, mod->accesses){
+  for_list_(Access, var, mod->accesses){
     GenericVariable *v = biros().getOrCreateVariable<GenericVariable>(var->name, this);
     var->process = this;
     var->guard = v;

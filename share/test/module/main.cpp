@@ -1,5 +1,4 @@
-#include <dummy/dummy.h>
-#include <dummy/ComputeSum_Module.h>
+#include "ComputeSum_Module.h"
 #include <perception/perception.h>
 
 //===========================================================================
@@ -12,9 +11,9 @@ void testModule(const char* name){
   CHECK(modReg,"");
 
   //create the module
-  Module *mod = (Module*)modReg->value<KeyValueGraph>()->getItem("type")->value<TypeInfo>()->newInstance();
+  Module *mod = (Module*)modReg->value<TypeInfo>()->newInstance();
   //create the variables
-  for_list_(VariableAccess, var, mod->accesses) var->createOwnData();
+  for_list_(Access, var, mod->accesses) var->createOwnData();
   //test
   mod->test();
 }

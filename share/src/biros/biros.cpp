@@ -27,12 +27,6 @@
 #include <MT/array.h>
 
 
-struct DummyForceGlobal{
-  DummyForceGlobal(){
-    cout <<"BIROS!" <<endl;
-  }
-} dummy;
-
 //===========================================================================
 //
 // global singleton
