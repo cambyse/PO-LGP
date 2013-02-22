@@ -3,6 +3,7 @@ sudo apt-get install \
 bison \
 build-essential \
 doxygen \
+fabric \
 flex \
 freeglut3-dev \
 g++ \
@@ -35,5 +36,5 @@ meld \
 realpath \
 regexxer \
 tcl8.5-dev \
-tk-dev
+tk-dev \
 tk8.5-dev \
