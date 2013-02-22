@@ -51,7 +51,7 @@ def clean_test():
 def make_src():
     """Make share/src/"""
     with lcd("share"):
-        local("make")
+        local("make > ../gcc_warnings.log")
 
 
 def make_test():
@@ -73,3 +73,13 @@ def jenkins_clean_build_test():
     clean_test()
     with lcd("share/test/"):
         local("python jenkins_run_tests.py")
+
+
+def jenkins_stats():
+    """Collect some stats for Jenkins."""
+    # cccc
+    local("cccc share/src/*/*.cpp share/src/*/*.h share/src/*/*.cxx")
+
+    # doxygen
+    with lcd('share/doc/'):
+        local('doxygen doxy/MLR.doxy')
