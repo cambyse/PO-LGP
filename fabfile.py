@@ -18,17 +18,17 @@ from fabric.api import lcd
 
 def set_build_ubuntu():
     """Set MAKEMODE in make-generic to 'mlrlib_ubuntu' """
-    local("sed -e '21s/^.*$/MAKEMODE = mrllib_ubuntu/g' share/make-config.default > share/make-config")
+    local("sed -e '21s/^.*$/MAKEMODE = mlrlib_ubuntu/g' share/make-config.default > share/make-config")
 
 
 def set_build_minimal():
     """Set MAKEMODE in make-generic to 'mlrlib_minimal' """
-    local("sed -e '21s/^.*$/MAKEMODE = mrllib_minimal/g' share/make-config.default > share/make-config")
+    local("sed -e '21s/^.*$/MAKEMODE = mlrlib_minimal/g' share/make-config.default > share/make-config")
 
 
 def set_build_full():
     """Set MAKEMODE in make-generic to 'mlrlib_full' """
-    local("sed -e '21s/^.*$/MAKEMODE = mrllib_full/g' share/make-config.default > share/make-config")
+    local("sed -e '21s/^.*$/MAKEMODE = mlrlib_full/g' share/make-config.default > share/make-config")
 
 
 def rm_lib():
