@@ -43,7 +43,7 @@ struct OpencvCamera:OpencvCamera_Base {
     capture.read(img);
     if(!img.empty()){
       cv::cvtColor(img, imgRGB, CV_BGR2RGB);
-      set_cameraOutputRgb(cvtMAT(imgRGB));
+      cameraOutputRgb.set()=cvtMAT(imgRGB);
     }
   }
 

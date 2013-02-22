@@ -16,6 +16,8 @@
 
 struct Module;
 
+//TODO: the order of these declarations is not intuitive... should start with Module, then Access,...
+
 //===========================================================================
 //
 // entries in a global pre-main instantiated registry
@@ -66,6 +68,9 @@ struct Access{
   void read(istream&) { NIY; }
   virtual void* createOwnData() = 0;
   virtual void setData(void*) = 0;
+  void readAccess(){ guard->readAccess(process); }
+  void writeAccess(){ guard->writeAccess(process); }
+  void deAccess(){ guard->deAccess(process); }
 };
 stdPipes(Access);
 
@@ -74,26 +79,22 @@ typedef MT::Array<Access*> AccessL;
 template<class T>
 struct Access_typed:Access{
   T *var;
-  Access_typed(const char* name=NULL):Access(name,&typeid(T)), var(NULL){ //called at INSTANTIATION of a module
-//    Item *it = new UnitRegistry<T,void>(
-//          STRINGS("acc", name),
-//          ARRAY<Item*>(), //staticRegistrator.regItem),
-//          varaccess,
-//          &registry());
-  }
-  T& get(Module *m){
-    CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized");
-    guard->readAccess(process);
-    guard->deAccess(process);
-    return *var;
-  }
-  int set(const T& x, Module *m){
-    CHECK(var,"access to variable "<<typeid(T).name()<<" uninitialized");
-    guard->writeAccess(process);
-    *var=x;
-    guard->deAccess(process);
-    return 0;
-  }
+  struct ReadToken{
+    Access_typed<T> *a;
+    ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
+    ~ReadToken(){ a->deAccess(); }
+    const T& operator()(){ return *a->var; }
+  };
+  struct WriteToken{
+    Access_typed<T> *a;
+    WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
+    ~WriteToken(){ a->deAccess(); }
+    T& operator()(){ return *a->var; }
+  };
+
+  Access_typed(const char* name=NULL):Access(name,&typeid(T)), var(NULL){}
+  const T& get(){ return ReadToken(this)(); }
+  T& set(){ return WriteToken(this)(); }
   virtual void* createOwnData(){ if(!guard) guard=new AccessGuard(name); if(!var) var=new T; return var; }
   virtual void setData(void* data){ var = (T*)data; }
 };
@@ -184,8 +185,8 @@ template<class T,class P> stdOutPipe(Registrator<T KO P>);
       module = thisModule; \
     } \
   } name; \
-  inline type& get_##name(){ CHECK(name.module==this,"OUCH!"); return name.get(this); } \
-  inline int  set_##name(const type& _x){ CHECK(name.module==this,"OUCH!"); return name.set(_x,this); }
+  inline const type& get_##name(){ return name.get(); } \
+  inline void  set_##name(const type& _x){ name.set()=_x; }
 
 
 #define DECLARE_MODULE(name) \
