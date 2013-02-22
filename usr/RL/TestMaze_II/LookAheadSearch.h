@@ -129,12 +129,31 @@ protected:
         MAX_UPPER_FOR_UPPER_MAX_LOWER_FOR_LOWER,
 
         /*! Use maximum upper bound for the upper bound and the corresponding lower bound for lower bound. */
-        MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER
+        MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
+
+        /*! Use weighted bounds for calculating value:
+         * \f$ value = \alpha \cdot bound_{lower} + (1-\alpha) \cdot bound_{upper} \f$
+         * with \f$\alpha = \f$ LookAheadSearch::lower_bound_weight.\n\n
+         * For binary rewards \f$ r_{min} \f$ and \f$ r_{max} \f$ with
+         * probabilities \f$ p_{min} \f$ and \f$ p_{max} \f$,
+         * \f$ p_{min} \cdot r_{min} + p_{max} \cdot r_{max} \f$
+         * corresponds to the the expected reward in every time step.
+         * Given upper and lower bounds
+         * \f$value = p_{min} \cdot bound_{lower} + (1-p_{min}) \cdot bound_{upper}\f$
+         * equals the reinforcement value i.e. the expected reward discounted over time.*/
+        WEIGHTED_BOUNDS,
+
+        /*! Use the same strategy as is used for optimal action selection (defined by LookAheadSearch::optimal_action_selection_type). */
+        SAME_AS_OPTIMAL_ACTION_SELECTION
     };
+
+    /*! \brief Weight for lower bound in strategy LookAheadSearch::WEIGHTED_BOUNDS. */
+    static const double lower_bound_weight;
 
     /*! \brief Defines how the optimal action is determined.
      *
      * Currently only LookAheadSearch::MAX_LOWER_BOUND is supported. */
+    // todo Implement WEIGHTED_BOUNDS.
     static const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_LOWER_BOUND;
 
     /*! \brief Defines how action nodes are selected for further examination.
@@ -157,6 +176,7 @@ protected:
      * state bounds in back-propagation.
      *
      * Currently only LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER is supported. */
+    // todo Implement SAME_AS_OPTIMAL_SCTION_SELECTION.
     static const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */

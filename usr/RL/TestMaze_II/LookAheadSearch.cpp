@@ -19,6 +19,7 @@
 
 using lemon::INVALID;
 
+const double LookAheadSearch::lower_bound_weight = 0.8;
 
 LookAheadSearch::NodeInfo::NodeInfo():
         type(NONE),
