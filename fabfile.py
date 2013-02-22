@@ -51,7 +51,8 @@ def clean_test():
 def make_src():
     """Make share/src/"""
     with lcd("share"):
-        local("make > ../gcc_warnings.log")
+        # write errors to file and to stdout
+        local("make 2> ../gcc_warnings.log 2>&1")
 
 
 def make_test():
