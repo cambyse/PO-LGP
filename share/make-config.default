@@ -111,3 +111,4 @@ OCTAVE = 0
 PLY = 1
 endif
 
+# vim: filetype=make
