@@ -87,7 +87,7 @@ public:
     );
 
     /*! \brief Returns the best action for the root state. */
-    action_t get_optimal_action();
+    action_t get_optimal_action() const;
 
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -141,20 +141,23 @@ protected:
          * Given upper and lower bounds
          * \f$value = p_{min} \cdot bound_{lower} + (1-p_{min}) \cdot bound_{upper}\f$
          * equals the reinforcement value i.e. the expected reward discounted over time.*/
-        WEIGHTED_BOUNDS,
+        MAX_WEIGHTED_BOUNDS,
 
         /*! Use the same strategy as is used for optimal action selection (defined by LookAheadSearch::optimal_action_selection_type). */
         SAME_AS_OPTIMAL_ACTION_SELECTION
     };
 
-    /*! \brief Weight for lower bound in strategy LookAheadSearch::WEIGHTED_BOUNDS. */
+    /*! \brief Weight for lower bound in strategy
+     * LookAheadSearch::MAX_WEIGHTED_BOUNDS.
+     *
+     * For binary rewards this corresponds to the
+     * prior probability of obtaining the lower reward. */
     static const double lower_bound_weight;
 
     /*! \brief Defines how the optimal action is determined.
      *
-     * Currently only LookAheadSearch::MAX_LOWER_BOUND is supported. */
-    // todo Implement WEIGHTED_BOUNDS.
-    static const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_LOWER_BOUND;
+     * Currently LookAheadSearch::MAX_LOWER_BOUND and MAX_WEIGHTED_BOUNDS are supported. */
+    static const BOUND_USAGE_TYPE optimal_action_selection_type = MAX_WEIGHTED_BOUNDS;
 
     /*! \brief Defines how action nodes are selected for further examination.
      *
@@ -175,8 +178,10 @@ protected:
     /*! \brief Defines how action bounds are used for calculating
      * state bounds in back-propagation.
      *
-     * Currently only LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER is supported. */
-    // todo Implement SAME_AS_OPTIMAL_SCTION_SELECTION.
+     * Currently LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
+     * LookAheadSearch::MAX_WEIGHTED_BOUNDS, and
+     * SAME_AS_OPTIMAL_SCTION_SELECTION (LookAheadSearch::optimal_action_selection_type
+     * must match) is supported. */
     static const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */
