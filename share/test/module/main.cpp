@@ -1,5 +1,4 @@
-#include "ComputeSum_Module.h"
-#include <perception/perception.h>
+#include <MT/module.h>
 #include <MT/graphview.h>
 
 //===========================================================================
@@ -21,7 +20,7 @@ void testModule(const char* name){
 
 //-- this is how the top-level manager should get access
 int main(int argc, char** argv){
-  Image a("A"),b("B");  newCvtGray(a,b); //only if this is done the OpencvCamera module is registered...
+  //Image a("A"),b("B");  newCvtGray(a,b); //only if this is done the OpencvCamera module is registered...
 
   cout <<"**** ENTER_MAIN" <<endl;
 
