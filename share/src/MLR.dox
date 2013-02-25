@@ -6,20 +6,69 @@ This is going to become the main page for the mlr documentation.
 The documentation of code modules can be found under "Modules".
 Documentation which is not directly connected to the source code (like howtos, tutorials, etc.) is under "Related Pages"
 
+@note If you're new goto @ref install
 
 @todo convert all guides
+ - soc guide is incomplete
+ - finish main page.
 
-@todo add overview of the mlr code here. use the guide.(tex|pdf) for this.
+
+@section intro Overview
+
+The most important folders are listed here to give you an overview about the project.
+@verbatim
+.
+├── install               # everything that relates to installing mlr
+├── projects              # TODO obsolete? mv this?
+├── share                 # stuff that is important to everyone
+│   ├── bin               # common binaries and helper scripts belong here
+│   ├── configurations
+│   ├── data
+│   ├── demo
+│   ├── doc               # documentation related stuff
+│   ├── extern            # extern libraries we use in mlr
+│   ├── include
+│   ├── lib               # the libs we compile end up here
+│   ├── src               # the actual code that can be used by everyone lives here.
+│   │   │                 # - each user has its own folder
+│   │   │                 # - each package/lib has its own folder
+│   │   ├── biros
+│   │   ├── devTools
+│   │   ├── DZ
+│   │   ├── hardware
+│   │   ├── JK
+│   │   ├── motion
+│   │   ├── MT            # Marc's stuff: array, ors and much more
+│   │   ├── NJ
+│   │   ├── NP
+│   │   ├── perception
+│   │   ├── relational
+│   │   ├── SD
+│   │   └── views
+│   └── test              # tests (not unittests) of parts of the code
+├── slices                # parts/libs of mlr are distributed as "slices"
+├── tools                 # random stuff that can helpful when working with mlr
+└── usr                   # each user has its folder here to try out stuff
+    ├── ...
+    ├── MT
+    └── ...
+@endverbatim
 
 
-@section intro General Intro
-
-@todo add me :)
+@subsection dev_principal general principle when developing stuff
+We have a tree staged development process:
+-# develop your code isolated under usr/USER
+-# once it works put your code under share/USER, then it can be used by everyone.
+   USER is still responsible for the code.
+-# useful packages can be extracted to share/PACKAGE.
+   Then they belong to everybody.
 
 
 @section misc Misc
 
 @subsection misc_hardware Guide to the robot hardware (Marc)
+@note This is only valid for the Schunk arm.
+
 - Startup hardware
   - turn on robot
   - mlrMountHardware
