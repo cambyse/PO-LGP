@@ -2,7 +2,7 @@
 
 #include <MT/util.h>
 #include <MT/array.h>
-#include <FL/fl_draw.H>
+//#include <FL/fl_draw.H>
 #include <MT/opengl.h>
 #include <biros/biros.h>
 #include <unistd.h>

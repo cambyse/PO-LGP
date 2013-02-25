@@ -53,11 +53,11 @@ int main(int argn,char** argv){
       readMDP(sol.mdps,sol.problemFile);
       cout <<"\n*** MDP:" <<endl;    mdp::writeMDP_fg(sol.mdps,cout,true);
       cout <<"\nfull normalization of MDP = " << checkNormalization(sol.mdps) <<" (should be cardinality of action variables)" <<endl;
-      ofstream z1(sol.problemFile+".mdp_fg");
+      ofstream z1(STRING(sol.problemFile<<".mdp_fg"));
       mdp::writeMDP_fg(sol.mdps,z1,false);
       mdp::MDP mdp_flat;
       mdp::collapseToFlat(mdp_flat,sol.mdps);
-      mdp::writeMDP_arr(mdp_flat,sol.problemFile+".mdp_arr");
+      mdp::writeMDP_arr(mdp_flat, STRING(sol.problemFile<<".mdp_arr"));
     } break;
   case 2: NIY; break;
   case 3:
