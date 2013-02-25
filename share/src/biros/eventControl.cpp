@@ -88,5 +88,11 @@ extern "C" G_MODULE_EXPORT void eventControl_next(GtkWidget* caller){
   gtkLeaveCallback();
 }
 
+
+#else //MT_GTK
+EventControlView::EventControlView(GtkWidget* container){ NICO }
+EventControlView::~EventControlView(){ NICO }
+void EventControlView::gtkNew(GtkWidget *container){ NICO }
+void EventControlView::gtkUpdate(){ NICO }
 #endif
 /** @} */

@@ -506,5 +506,15 @@ Process* newHoughLineFilter(Image& grayImage, HoughLines& houghLines){
   return new HoughLineFilter(grayImage, houghLines);
 }
 
-#else
+#else //MT_OPENCV
+
+Process *newOpencvCamera(Image& image){ NICO }
+Process* newCvtGray(Image& rgbImage, Image& grayImage){ NICO }
+Process* newMotionFilter(Image& rgbImage,Image& motion){ NICO }
+Process* newDifferenceFilter(Image& i1,Image& i2, Image& diff){ NICO }
+Process* newCannyFilter(Image& grayImage, Image& cannyImage, float cannyThreshold){ NICO }
+Process* newPatcher(Image& rgbImage, Patching& patchImage){ NICO }
+Process* newSURFer(Image& grayImage, SURFfeatures& features){ NICO }
+Process* newHoughLineFilter(Image& grayImage, HoughLines& houghLines){ NICO }
+
 #endif

@@ -180,7 +180,7 @@ void ors::Camera::glSetProjectionMatrix() {
     glMultMatrixd(X->getInverseAffineMatrixGL(m));
   }
 #else
-  NICO;
+  NICO
 #endif
 }
 
@@ -880,7 +880,7 @@ void glGrabImage(byteA& image) {
   }
 }
 #else
-void glGrabImage(byteA& image) { NICO; }
+void glGrabImage(byteA& image) { NICO }
 #endif
 
 /*!\brief return the depth map of the scenery drawn just before; the depth
@@ -1022,12 +1022,20 @@ void glSelectWin(uint win) {
 #endif
 
 #else //! MT_GL
-void glColor(float, float, float, float) { NICO; }
-void glDrawDiamond(float, float, float, float, float, float) { NICO; }
-// void glStandardLight(void*) { NICO; }   // TOBIAS: das hier wird doch schon ueber opengl_void.cxx definiert
-void glStandardScene(void*) { NICO; };
-void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom) {NICO}
-void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {NICO}
+void glColor(float, float, float, float) { NICO }
+void glDrawDiamond(float, float, float, float, float, float) { NICO }
+// void glStandardLight(void*) { NICO }   // TOBIAS: das hier wird doch schon ueber opengl_void.cxx definiert
+void glStandardScene(void*) { NICO }
+uint glImageTexture(const byteA &img) { NICO }
+void glDrawTexQuad(uint texture,
+                   float x1, float y1, float z1, float x2, float y2, float z2,
+                   float x3, float y3, float z3, float x4, float y4, float z4,
+                   float mulX, float mulY) { NICO }
+void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom) { NICO }
+void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) { NICO }
+void glDrawUI(void *p) { NICO }
+bool glUI::hoverCallback(OpenGL& gl) { NICO }
+bool glUI::clickCallback(OpenGL& gl) { NICO }
 #endif
 
 
@@ -1488,7 +1496,7 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
   gluUnProject(x, y, z, modelMatrix, projMatrix, viewPort, &_x, &_y, &_z);
   x=_x; y=_y; z=_z;
 #else
-  NICO;
+  NICO
 #endif
 }
 
@@ -1785,7 +1793,7 @@ void OpenGL::Motion(int _x, int _y) {
     postRedrawEvent(true);
   }
 #else
-  NICO;
+  NICO
 #endif
 }
 
@@ -1841,7 +1849,7 @@ void glUI::glDraw() {
     else      glRasterImage((int)x, (int)y, b->img1);
   }
 #else
-  NICO;
+  NICO
 #endif
 }
 

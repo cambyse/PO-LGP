@@ -488,6 +488,15 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #else //!MT_QHULL
 #include "util.h"
 #include "array.h"
+#include "ors.h"
+int QHULL_DEBUG_LEVEL=0;
+const char* qhullVersion(){ return "NONE"; }
 void getTriangulatedHull(uintA& T, arr& V) { NICO }
+double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
+		    double mu, double torqueWeights, arr *dFdC) { NICO }
+double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) { NICO }
+double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uintA *faceVertices, bool freeqhull) { NICO }
+double distanceToConvexHullGradient(arr& dDdX, const arr &X, const arr &y, bool freeqhull) { NICO }
+void getDelaunayEdges(uintA& E, const arr& V) { NICO }
 #endif
 /** @} */

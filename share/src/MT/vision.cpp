@@ -141,18 +141,19 @@ void cvDrawPoints(byteA& img, const arr& points){
   }
 }
 #else
+
 #include "util.h"
-CvMatDonor::CvMatDonor(){ NIY; }
-CvMat* CvMatDonor::get(){ NIY; }
-CvMat* arr2cvmat(CvMat *mat, const byteA& img){ NIY; return NULL; }
-CvMat* arr2cvmat(CvMat *mat, const floatA& img){ NIY; return NULL; }
-CvMat* arr2cvmat(CvMat *mat, const doubleA& img){ NIY; return NULL; }
-char cvShow(const byteA& img, const char *window,bool wait){ NIY; return 0; }
-char cvShow(const floatA& img, const char *window){ NIY; return 0; }
-char cvShowEvidence(const floatA& phi, const char *window){ NIY; return 0; }
-void cvDrawGraph(byteA& img, doubleA& V, uintA& E){ NIY; }
-void cvDrawBox(byteA& img, const floatA& box){ NIY; }
-void cvDrawPoints(byteA& img, const arr& points){ NIY; }
+CvMatDonor::CvMatDonor(){ NICO }
+CvMat* CvMatDonor::get(){ NICO }
+CvMat* arr2cvmat(CvMat *mat, const byteA& img){ NICO return NULL; }
+CvMat* arr2cvmat(CvMat *mat, const floatA& img){ NICO return NULL; }
+CvMat* arr2cvmat(CvMat *mat, const doubleA& img){ NICO return NULL; }
+char cvShow(const byteA& img, const char *window,bool wait){ NICO return 0; }
+char cvShow(const floatA& img, const char *window,bool wait){ NICO return 0; }
+char cvShowEvidence(const floatA& phi, const char *window){ NICO return 0; }
+void cvDrawGraph(byteA& img, doubleA& V, uintA& E){ NICO }
+void cvDrawBox(byteA& img, const floatA& box){ NICO }
+void cvDrawPoints(byteA& img, const arr& points){ NICO }
 #endif
 
 void boxConvolution(arr& out, const arr& in, uint width){
@@ -392,6 +393,8 @@ void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSd
   for(uint i=0; i<smoothed.N; i++) smoothed.p[i] = student3(smoothed.p[i]);
   diff = smoothed;
 }
+#else
+void getDiffProb(floatA& diff, const byteA& img0, const byteA& img1, float pixSdv, uint range){ NICO }
 #endif
 
 void getHsvCenter(arr& cen, byteA &img, uint iter, const floatA& hsvTarget, const floatA& hsvTol){
@@ -427,7 +430,7 @@ void imagePointPair2WorldPoint(arr& worldPoint, const arr& left, const arr& righ
 #ifdef MT_NILS
   vision::image2world(worldPoint, camera_calibration, image_points, disparity);
 #else
-  NIY;
+  NICO
 #endif
   worldPoint.reshape(3);
   worldPoint(0) *= -1.;

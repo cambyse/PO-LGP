@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <relational/decisionMakingModule.h>
 #include <relational/robotManipulationSimulator.h>
-
+#include <relational/utilTL.h>
 
 
 RobotManipulationSimulator sim;

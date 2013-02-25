@@ -1,5 +1,5 @@
 #include "graspEvaluation.h"
-#include "../../src/MT/array.h"
+#include <MT/ors.h>
 
 #include <MT/ors_physx.h>
 
@@ -175,3 +175,6 @@ void GraspEvaluation::simulateInPhysX(){
     grasp.calcBodyFramesFromJoints();
   }
 }
+
+#include <MT/array_t.cxx>
+template MT::Array<ors::Body*>::Array(uint);

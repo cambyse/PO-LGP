@@ -100,6 +100,6 @@ void OrsView::glDraw() {
 }
 
 #else //MT_GTK
-void OrsView::glInit() {NICO}
-void OrsView::glDraw() {NICO}
+void OrsView::glInit() { NICO }
+void OrsView::glDraw() { NICO }
 #endif

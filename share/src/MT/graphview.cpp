@@ -365,5 +365,10 @@ bool sGraphView::on_drawingarea_scroll_event(GtkWidget       *widget,           
 
 #else //MT_GTK
 
+#include "graphview.h"
+GraphView::GraphView(KeyValueGraph& G, const char* title, void *container) { NICO }
+GraphView::~GraphView(){ NICO }
+void GraphView::watch(){ NICO }
+
 #endif
 
