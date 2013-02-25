@@ -335,11 +335,11 @@ struct Patcher:Process {
 struct SURFer:Process {
   Image *grayImage;
   SURFfeatures *features;
-  cv::SURF *surf;
+  //cv::SURF *surf;
 
   SURFer(Image& gray, SURFfeatures& feat)
   :Process("SURFer"), grayImage(&gray), features(&feat) {
-    surf = new cv::SURF(500);
+    //surf = new cv::SURF(500);
     listenTo(grayImage);
   }
   void open() {}
@@ -351,7 +351,7 @@ struct SURFer:Process {
 
     std::vector<cv::KeyPoint> keypoints;
     std::vector<float> descriptors;
-    (*surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
+    //(*surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
 
     display=gray;
     cv::Mat ref = cvMAT(display);
