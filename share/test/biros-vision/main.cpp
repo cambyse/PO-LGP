@@ -1,16 +1,11 @@
 #include <perception/perception.h>
 #include <views/views.h>
 
-struct GenericVariable:Variable{
-  void *data;
-  GenericVariable(const char* name):Variable(name), data(NULL) {}
-};
-
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
 
   biros().enableAccessLog();
-  //cout <<OpencvCamera_Base::staticRegistrator.regItem <<endl;
+  //cout <<OpencvCamera_Base::staticRegistrator.reg <<endl;
   cout <<registry() <<endl;
 
   // Variables
@@ -42,7 +37,7 @@ int main(int argn,char **argv) {
   biros().dumpAccessLog();
 //  new InsideOut();
 
-  GenericVariable *var = biros().getVariable<GenericVariable>("cameraOutputRgb", NULL);
+  Variable *var = biros().getVariable<Variable>("cameraOutputRgb", NULL);
 
   new ImageView(*((byteA*)var->data));
 //  new Image_View(cameraI);

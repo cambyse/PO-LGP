@@ -100,3 +100,13 @@ template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues(){
   return ret;
 }
 
+template <class T> ItemL KeyValueGraph::getDerivedItems(){
+  ItemL ret;
+  for_list_(Item, it, (*this)){
+    if(it->is_derived_from_TypeBase()){
+      T *val= dynamic_cast<T*>(((Item_typed<TypeBase>*)it)->value);
+      if(val) ret.append(it);
+    }
+  }
+  return ret;
+}

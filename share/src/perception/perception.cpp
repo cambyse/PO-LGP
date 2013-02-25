@@ -26,7 +26,7 @@ DECLARE_MODULE(OpencvCamera);
 struct OpencvCamera:OpencvCamera_Base {
   cv::VideoCapture capture;
   
-  VARI(byteA, cameraOutputRgb);
+  ACCESS(byteA, cameraOutputRgb);
   
   OpencvCamera(){
     capture.open(0);

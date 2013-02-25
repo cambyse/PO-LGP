@@ -26,13 +26,12 @@ KeyValueGraph& registry();
 //
 
 struct TypeInfo:TypeBase{
-  StringA keys;
   MT::Array<TypeInfo*> parents;
   virtual const std::type_info& type_info() const {NIY};
   virtual struct Item* readItem(istream&) const {NIY};
   virtual void* newInstance() const {NIY}
   void write(std::ostream& os) const{
-    os <<"Type '" <<keys <<"' [" <<type_info().name() <<"] ";
+    os <<"Type '" <<type_info().name() <<"'] ";
     if(parents.N){
       cout <<"parents=[";
       for_list_(TypeInfo, p, parents) cout <<' ' <<p->type_info().name();
@@ -49,39 +48,36 @@ typedef MT::Array<TypeInfo*> TypeInfoL;
 
 //-- query existing types
 template <class T> TypeInfoL reg_findDerived();
-inline TypeInfo *reg_findType(const char* key){
-  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
-  for_list_(TypeInfo, ti, types){
+inline Item *reg_findType(const char* key){
+  ItemL types = registry().getDerivedItems<TypeInfo>();
+  for_list_(Item, ti, types){
     for(uint i=0;i<ti->keys.N;i++) if(ti->keys(i)==key) return ti;
   }
   return NULL;
 }
 template<class T>
-TypeInfo *reg_findType(){
-  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
-  for_list_(TypeInfo, ti, types){
-    if(ti->type_info()==typeid(T)) return ti;
+Item *reg_findType(){
+  ItemL types = registry().getDerivedItems<TypeInfo>();
+  for_list_(Item, ti, types){
+    if(ti->value<TypeInfo>()->type_info()==typeid(T)) return ti;
   }
   return NULL;
 }
 
 inline Item* readTypeIntoItem(const char* key, std::istream& is){
   TypeInfoL types = registry().getDerivedValues<TypeInfo>();
-  TypeInfo *ti = reg_findType(key);
-  if(ti) return ti->readItem(is);
+  Item *ti = reg_findType(key);
+  if(ti) return ti->value<TypeInfo>()->readItem(is);
   return NULL;
 }
 
 template<class Type, class Base>
 struct TypeInfo_typed:TypeInfo{
   TypeInfo_typed(){}
-  TypeInfo_typed(const char *key1, const char *key2, const char *userBase, TypeInfoL *container ){
-    if(key1) keys.append(MT::String(key1));
-    if(key2) keys.append(MT::String(key2));
-    keys.append(MT::String(typeid(Type).name()));
+  TypeInfo_typed(const char *userBase, TypeInfoL *container ){
     if(userBase){
-      TypeInfo *t=reg_findType<Base>();
-      if(t) parents.append(t);
+      Item *it=reg_findType<Base>();
+      if(it) parents.append(it->value<TypeInfo>());
     }
     if(container){
       container->append(this);
@@ -97,14 +93,14 @@ struct TypeInfo_typed:TypeInfo{
 
 #define KO ,
 #define REGISTER_TYPE(Type) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, type, Type, new TypeInfo_typed<Type KO void>(#Type,NULL,NULL,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, Decl_Type, Type, new TypeInfo_typed<Type KO void>(NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Type, NULL)
 
 #define REGISTER_TYPE_Key(Key, Type) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, type, Key, new TypeInfo_typed<Type KO void>(#Type,#Key,NULL,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, Decl_Type, Key, new TypeInfo_typed<Type KO void>(NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Key, NULL);
 
 #define REGISTER_TYPE_DERIVED(Type, Base) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO Base>, type, Type, new TypeInfo_typed<Type KO Base>(#Type,NULL,#Base,NULL));
+  REGISTER_ITEM2(TypeInfo_typed<Type KO Base>, Decl_Type, Type, new TypeInfo_typed<Type KO Base>(#Base,NULL));
 
 #endif

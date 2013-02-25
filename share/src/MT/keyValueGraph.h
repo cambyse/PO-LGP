@@ -53,6 +53,7 @@ struct KeyValueGraph:ItemL{
 
   //-- get lists of values
   template<class T> MT::Array<T*> getDerivedValues();
+  template<class T> ItemL getDerivedItems();
 
   Item *append(Item* it){ ItemL::append(it); return it; }
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);

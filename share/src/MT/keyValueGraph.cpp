@@ -46,9 +46,9 @@ void Item::write(std::ostream& os) const {
   }else if(valueType()==typeid(double)){     os <<'=' <<*value<double>();
   }else if(valueType()==typeid(bool)){       os <<',';
   }else{
-    TypeInfo *t = reg_findType(valueType().name());
-    if(t && t->keys.N>1){
-      os <<"=<" <<t->keys(1) <<' ';
+    Item *it = reg_findType(valueType().name());
+    if(it && it->keys.N>1){
+      os <<"=<" <<it->keys(1) <<' ';
       writeValue(os);
       os <<'>';
     }else{

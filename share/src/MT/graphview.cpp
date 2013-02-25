@@ -121,8 +121,15 @@ void sGraphView::updateGraphvizGraph(){
   for_list(i, e, (*G)){
     e->index=i;
     CHECK(i==e->index,"");
-    gvNodes(i) = agnode(gvGraph, STRING(e->index <<"_" <<(e->keys.N?e->keys.last():STRING("-")))); //, true);
-    if(e->keys.N) agset(gvNodes(i), STR("label"), (e->keys.N?e->keys.last():STRING("-")));
+    MT::String label;
+    if(e->keys.N){
+      label <<e->keys(0);
+      for(uint j=1;j<e->keys.N;j++) label <<'\n' <<e->keys(j);
+    }else{
+      label <<'-';
+    }
+    gvNodes(i) = agnode(gvGraph, STRING(e->index <<'_' <<label)); //, true);
+    if(e->keys.N) agset(gvNodes(i), STR("label"), label);
     if(e->parents.N){
       agset(gvNodes(i), STR("shape"), STR("box"));
       agset(gvNodes(i), STR("fontsize"), STR("6"));

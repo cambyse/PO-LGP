@@ -1,5 +1,6 @@
 #include "ComputeSum_Module.h"
 #include <perception/perception.h>
+#include <MT/graphview.h>
 
 //===========================================================================
 //
@@ -7,7 +8,7 @@
 //
 
 void testModule(const char* name){
-  Item *modReg = registry().getItem("moduledecl", name);
+  Item *modReg = registry().getItem("Decl_Module", name);
   CHECK(modReg,"");
 
   //create the module
@@ -28,9 +29,9 @@ int main(int argc, char** argv){
 
   testModule("10ComputeSum");
 
-//  cout <<registry() <<endl;
-//  GraphView gv(registry());
-//  gv.watch();
+  cout <<registry() <<endl;
+  GraphView gv(registry());
+  gv.watch();
 
   return 0;
 }
