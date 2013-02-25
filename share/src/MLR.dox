@@ -6,10 +6,162 @@ This is going to become the main page for the mlr documentation.
 The documentation of code modules can be found under "Modules".
 Documentation which is not directly connected to the source code (like howtos, tutorials, etc.) is under "Related Pages"
 
+@note If you're new goto @ref install
 
-\todo convert all guides
+@todo convert all guides
+ - soc guide is incomplete
+ - finish main page.
 
-\todo add overview of the mlr code here. use the guide.(tex|pdf) for this.
+
+@section intro Overview
+
+The most important folders are listed here to give you an overview about the project.
+@verbatim
+.
+├── install               # everything that relates to installing mlr
+├── projects              # TODO obsolete? mv this?
+├── share                 # stuff that is important to everyone
+│   ├── bin               # common binaries and helper scripts belong here
+│   ├── configurations
+│   ├── data
+│   ├── demo
+│   ├── doc               # documentation related stuff
+│   ├── extern            # extern libraries we use in mlr
+│   ├── include
+│   ├── lib               # the libs we compile end up here
+│   ├── src               # the actual code that can be used by everyone lives here.
+│   │   │                 # - each user has its own folder
+│   │   │                 # - each package/lib has its own folder
+│   │   ├── biros
+│   │   ├── devTools
+│   │   ├── DZ
+│   │   ├── hardware
+│   │   ├── JK
+│   │   ├── motion
+│   │   ├── MT            # Marc's stuff: array, ors and much more
+│   │   ├── NJ
+│   │   ├── NP
+│   │   ├── perception
+│   │   ├── relational
+│   │   ├── SD
+│   │   └── views
+│   └── test              # tests (not unittests) of parts of the code
+├── slices                # parts/libs of mlr are distributed as "slices"
+├── tools                 # random stuff that can helpful when working with mlr
+└── usr                   # each user has its folder here to try out stuff
+    ├── ...
+    ├── MT
+    └── ...
+@endverbatim
+
+
+@subsection dev_principal general principle when developing stuff
+We have a tree staged development process:
+-# develop your code isolated under usr/USER
+-# once it works put your code under share/USER, then it can be used by everyone.
+   USER is still responsible for the code.
+-# useful packages can be extracted to share/PACKAGE.
+   Then they belong to everybody.
+
+
+@section misc Misc
+
+@subsection misc_hardware Guide to the robot hardware (Marc)
+@note This is only valid for the Schunk arm.
+
+- Startup hardware
+  - turn on robot
+  - mlrMountHardware
+  - mlrJoystick
+  - mlrJoystick -openArm 1 -openHand 1 -openSkin 1
+- Debugging hardware:
+  - 09-testSchunkBasics
+  - 09-testHandMotion
+  - 09-testHandSense
+- Testing perception:
+  - 10-testEarlyVision
+  - 10-testPerception
+- Learning about the control architecture:
+  - 10-miniExample (launches minimal set of Processes explicitly by hand)
+  - RobotActionInterface (launches Processes using the RobotActionInterface)
+  - 10-planningDemo
+
+
+@subsection misc_perception Guide to the visual perception software
+@todo maybe move this to a doxygen group
+
+The current perception module does a very simple thing:
+- We have a left and right image. 'EarlyVision' is computing the
+  HSV for these images. We assume to know a specific target \f$hsv^*\in[0,255]^3\f$
+  values together standard deviations \f$\sigma_{hsv}\in[0,255]^3\f$. We compute
+  the evidence \f$\theta_i = \exp(- (hsv_i-hsv^*)^2/\sigma_{hsv}^2)\f$ [sorry for
+    sloppy notation] for each pixel \f$i\f$ in the left and right image.
+- Given \f$\theta_i\f$ in an image, we call OpenCV's flood-fill that finds
+  the contour of the highest \f$\theta\f$-value region. Let's call the contour
+  \f$\partial C\f$. (We do this for both images.)
+- Given the contour \f$\partial C\f$ we compute a distance-to-contour
+  field/image: for each pixel \f$i\f$ we compute \f$d_i = \min_{j\in\partial C}
+  \|i-j\|\f$ (using some OpenCV routine). We do this for both images. The
+  image \f$d_i\f$ is a good potential cost function to let 2D contour
+  models converge to the HSV contour.
+- We have three different parametric 2D contour models: 1) for a
+  circle (1 parameter), 2) for a polygon with 6 vertices and parallel
+  opposing edges (a bit like a hexagon, can fit any 2D-projected 3D
+  box), 3) a contour model that corresponds to a 2D projected
+  cylinder.
+  We fit a contour model to the HSV contour by minimizing the sum of
+  \f$d_i\f$ for all points on the contour model. We do this on both
+  images. Fitting is done by gradient descent (RPROP). We get
+  parameters of the 2D contours with sub-pixel accuracy.
+- Given the fitted 2D contours in the right and left image, we
+  triangulate them. Giving us a 2D contour mapped into 3D space. From
+  there it is trivial to fit a 3D ball, cylinder, or box.
+
+@note It is not by accident that we stay 2D for until the last step:
+in our experience it proved more robust to try to fit shapes/contours
+in 2D first with as much accuracy as possible before triangulating.
+
+
+@subsection misc_optimization Optimization Methods (Marc)
+There are quite a bit of generic optimization methods implemented --
+but not well documented/organized yet. Ask Marc.
+
+- Rprop (best gradient descent method)
+- GaussNewton
+- CMA
+- Some Genetic & Evolutionary Algorithms (e.g., similar to CMA)
+
+
+
+@subsection misc_inference Inference and Machine Learning methods (Marc)
+We have probabilistic inference code (infer lib) and also basic
+Machine Learning methods (as introduced in the ML lecture). Ask Marc.
+
+- Gaussian Processes
+- ridge regression, logistic regression, etc
+- MDPs, POMDPs
+
+
+@subsection misc_robotics_stuf Robotics algorithms (Marc)
+
+- RRTs
+- Trajectory Prediction
+- etc
+
+
+@subsection misc_relational Relational RL (Tobias)
+
+- Robot Manipulation Simulator: http://userpage.fu-berlin.de/tlang/RMSim/
+- libPRADA, a library for relational planning and rule learning: http://userpage.fu-berlin.de/tlang/prada/
+
+
+@subsection misc_coding coding utilities
+
+- String class
+- Parameters read from cmd line or config file
+- plotting in opengl & gnuplot
+- opengl using freeglut, fltk or qt
+
 
 */
 // vim: noai:ts=2:sw=2:set expandtab:

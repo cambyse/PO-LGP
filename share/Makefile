@@ -1,14 +1,20 @@
 NAME   = $(shell basename $(PWD))
 
+# The order of the libs matters!
 MLR_LIBS = \
-	src/MT src/JK \
-	src/biros src/views \
-	src/motion src/hardware src/perception \
+	src/views \
+	src/JK \
+	src/biros \
+	src/motion \
+	src/MT \
+	src/hardware \
+	src/perception \
 	src/relational \
 
 EXTERN = \
 	extern/libcolorseg/src \
 	extern/Lewiner \
+	extern/ply \
 	extern/tony_mdp \
 	extern/SWIFT++_1.2/src \
 	extern/SWIFT++_1.2/decomposer/src \
