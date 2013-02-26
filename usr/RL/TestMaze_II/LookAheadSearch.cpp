@@ -18,6 +18,7 @@
 #include "debug.h"
 
 using lemon::INVALID;
+using util::approx;
 
 const double LookAheadSearch::lower_bound_weight = 0.8;
 
@@ -69,7 +70,7 @@ void LookAheadSearch::clear_tree() {
 
 LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     DEBUG_OUT(1,"Determining optimal action");
-    node_t action_node = INVALID;
+    node_vector_t optimal_action_nodes;
     switch(optimal_action_selection_type) {
     case MAX_LOWER_BOUND:
     {
@@ -79,9 +80,12 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
         for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_lower_bound = node_info_map[current_action_node].lower_value_bound;
-            if(current_lower_bound>max_lower_bound) {
+            if(approx(current_lower_bound,max_lower_bound)) {
+                optimal_action_nodes.push_back(current_action_node);
+            } else if(current_lower_bound>max_lower_bound) {
+                optimal_action_nodes.clear();
+                optimal_action_nodes.push_back(current_action_node);
                 max_lower_bound=current_lower_bound;
-                action_node = current_action_node;
             }
         }
         break;
@@ -93,11 +97,15 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
         node_t current_action_node;
         for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
-            current_value = lower_bound_weight * node_info_map[current_action_node].lower_value_bound;
-            current_value = (1-lower_bound_weight) * node_info_map[current_action_node].upper_value_bound;
-            if(current_value>max_value) {
+            current_value = 0;
+            current_value +=    lower_bound_weight  * node_info_map[current_action_node].lower_value_bound;
+            current_value += (1-lower_bound_weight) * node_info_map[current_action_node].upper_value_bound;
+            if(approx(current_value,max_value)) {
+                optimal_action_nodes.push_back(current_action_node);
+            } else if(current_value>max_value) {
+                optimal_action_nodes.clear();
+                optimal_action_nodes.push_back(current_action_node);
                 max_value=current_value;
-                action_node = current_action_node;
             }
         }
         break;
@@ -106,12 +114,19 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
         DEBUG_OUT(0,"Error: Optimal action selection type not implemented");
         break;
     }
-    if(node_info_map[action_node].type!=ACTION) {
+
+    // select action
+    idx_t action_idx = rand()%optimal_action_nodes.size();
+    node_t selected_action_node = optimal_action_nodes[action_idx];
+    DEBUG_OUT(2, "    choosing nr " << action_idx << " from " << optimal_action_nodes.size() << " actions");
+
+    // check
+    if(node_info_map[selected_action_node].type!=ACTION) {
         DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
     }
-    action_t optimal_action = node_info_map[action_node].action;
-    DEBUG_OUT(2,"    Optimal action: " << Data::action_strings[Data::action_from_idx(optimal_action)]);
-    return optimal_action;
+    action_t selected_action = node_info_map[selected_action_node].action;
+    DEBUG_OUT(2,"    Optimal action: " << Data::action_strings[Data::action_from_idx(selected_action)]);
+    return selected_action;
 }
 
 void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const {
@@ -330,15 +345,12 @@ void LookAheadSearch::print_tree_statistics() const {
         value_t lower_bound = node_info_map[action_node].lower_value_bound;
         value_t upper_bound = node_info_map[action_node].upper_value_bound;
         value_t weighted_bound = lower_bound_weight*lower_bound + (1-lower_bound_weight)*upper_bound;
-        lower_bound    -= min_lower_bound;
-        upper_bound    -= min_lower_bound;
-        weighted_bound -= min_lower_bound;
-        lower_bound    /= (max_upper_bound-min_lower_bound);
-        upper_bound    /= (max_upper_bound-min_lower_bound);
-        weighted_bound /= (max_upper_bound-min_lower_bound);
-        int lower_count    = round(width*lower_bound);
-        int upper_count    = round(width*upper_bound);
-        int weighted_count = round(width*weighted_bound);
+        value_t normalized_lower_bound    = (lower_bound    - min_lower_bound)/(max_upper_bound - min_lower_bound);
+        value_t normalized_upper_bound    = (upper_bound    - min_lower_bound)/(max_upper_bound - min_lower_bound);
+        value_t normalized_weighted_bound = (weighted_bound - min_lower_bound)/(max_upper_bound - min_lower_bound);
+        int lower_count    = round(width*normalized_lower_bound);
+        int upper_count    = round(width*normalized_upper_bound);
+        int weighted_count = round(width*normalized_weighted_bound);
         weighted_count = weighted_count==lower_count ? weighted_count+1 : weighted_count;
         upper_count = upper_count==weighted_count ? upper_count+1 : upper_count;
         DEBUG_OUT(0, QString("    %1%2|%3%4%5|%6%7 %8%9")
@@ -357,8 +369,11 @@ void LookAheadSearch::print_tree_statistics() const {
 }
 
 LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_node) {
+
     DEBUG_OUT(1,"Selecting next action");
-    node_t action_node = INVALID;
+
+    // selection action(s)
+    node_vector_t next_action_nodes;
     switch(tree_action_selection_type) {
     case MAX_UPPER_BOUND:
     {
@@ -368,9 +383,12 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[current_action_node].upper_value_bound;
-            if(current_upper_bound>max_upper_bound) { // todo randomize?
+            if(approx(current_upper_bound,max_upper_bound)) {
+                next_action_nodes.push_back(current_action_node);
+            } else if(current_upper_bound>max_upper_bound) {
+                next_action_nodes.clear();
+                next_action_nodes.push_back(current_action_node);
                 max_upper_bound = current_upper_bound;
-                action_node = current_action_node;
             }
         }
         break;
@@ -383,9 +401,12 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_lower_bound = node_info_map[current_action_node].lower_value_bound;
-            if(current_lower_bound>max_lower_bound) { // todo randomize?
+            if(approx(current_lower_bound,max_lower_bound)) {
+                next_action_nodes.push_back(current_action_node);
+            } else if(current_lower_bound>max_lower_bound) {
+                next_action_nodes.clear();
+                next_action_nodes.push_back(current_action_node);
                 max_lower_bound = current_lower_bound;
-                action_node = current_action_node;
             }
         }
         break;
@@ -394,19 +415,26 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         DEBUG_OUT(0,"Error: Action selection type not implemented.");
         break;
     }
-    if(node_info_map[action_node].type!=ACTION) {
+
+    // select action
+    idx_t action_idx = rand()%next_action_nodes.size();
+    node_t selected_action_node = next_action_nodes[action_idx];
+
+    // check
+    if(node_info_map[selected_action_node].type!=ACTION) {
         DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
     }
+
     DEBUG_OUT(2,"    Next action:");
     if(DEBUG_LEVEL>=2) {
-        print_node(action_node);
+        print_node(selected_action_node);
     }
-    return action_node;
+    return selected_action_node;
 }
 
 LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_node) {
     DEBUG_OUT(1,"Selecting next state");
-    node_t state_node = INVALID;
+    node_vector_t next_state_nodes;
     switch(tree_state_selection_type) {
     case MAX_WEIGHTED_UNCERTAINTY:
     {
@@ -415,11 +443,14 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
         node_t current_state_node;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
             current_state_node = graph.target(out_arc);
-            current_uncertainty = node_info_map[current_state_node].upper_value_bound - node_info_map[state_node].lower_value_bound;
+            current_uncertainty = node_info_map[current_state_node].upper_value_bound - node_info_map[current_state_node].lower_value_bound;
             current_uncertainty *= arc_info_map[out_arc].prob;
-            if(current_uncertainty>max_uncertainty) { // todo randomize?
+            if(approx(current_uncertainty,max_uncertainty)) {
+                next_state_nodes.push_back(current_state_node);
+            } else if(current_uncertainty>max_uncertainty) {
+                next_state_nodes.clear();
+                next_state_nodes.push_back(current_state_node);
                 max_uncertainty = current_uncertainty;
-                state_node = current_state_node;
             }
         }
         break;
@@ -428,14 +459,20 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
         DEBUG_OUT(0,"Error: State selection type not implemented.");
         break;
     }
-    if(node_info_map[state_node].type!=STATE) {
+
+    // select state
+    idx_t state_idx = rand()%next_state_nodes.size();
+    node_t selected_state_node = next_state_nodes[state_idx];
+
+    // check
+    if(node_info_map[selected_state_node].type!=STATE) {
         DEBUG_OUT(0,"Error: Next state node is not of type STATE");
     }
     DEBUG_OUT(2,"    Next state:");
     if(DEBUG_LEVEL>=2) {
-        print_node(state_node);
+        print_node(selected_state_node);
     }
-    return state_node;
+    return selected_state_node;
 }
 
 LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) {
@@ -500,7 +537,12 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
             node_t action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[action_node].upper_value_bound;
             current_lower_bound = node_info_map[action_node].lower_value_bound;
-            if(current_upper_bound>max_upper_bound) { // todo randomize?
+            if(
+                    (!approx(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
+                            current_upper_bound>max_upper_bound ) || // primary criterion: upper bound
+                    ( approx(current_upper_bound,max_upper_bound) && // if upper bounds are equal
+                            current_lower_bound>node_info_map[state_node].lower_value_bound ) // secondary criterion: lower bounds
+            ) {
                 max_upper_bound=current_upper_bound;
                 node_info_map[state_node].upper_value_bound = current_upper_bound;
                 node_info_map[state_node].lower_value_bound = current_lower_bound;
@@ -516,7 +558,7 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
             current_upper_bound = node_info_map[action_node].upper_value_bound;
             current_lower_bound = node_info_map[action_node].lower_value_bound;
             current_value = lower_bound_weight*current_lower_bound + (1-lower_bound_weight)*current_upper_bound;
-            if(current_value>max_value) { // todo randomize?
+            if(current_value>max_value) { // no randomization needed for equal values since actual action is not considered
                 max_value=current_value;
                 node_info_map[state_node].upper_value_bound = current_upper_bound;
                 node_info_map[state_node].lower_value_bound = current_lower_bound;
@@ -580,6 +622,13 @@ bool LookAheadSearch::tree_needs_further_expansion() {
     DEBUG_OUT(2,"           max upper: " << max_upper_bound );
     DEBUG_OUT(2,"     max upper lower: " << max_upper_lower_bound );
     DEBUG_OUT(2,"    second max upper: " << second_max_upper_bound );
+    if(max_upper_bound>second_max_upper_bound) {
+        DEBUG_OUT(2,"    " << max_upper_bound << ">" << second_max_upper_bound );
+    } else if(max_upper_bound==second_max_upper_bound) {
+        DEBUG_OUT(2,"    " << max_upper_bound << "==" << second_max_upper_bound );
+    } else {
+        DEBUG_OUT(0,"    " << max_upper_bound << ">" << second_max_upper_bound << " !!!What has happened here???" );
+    }
 
     if(max_upper_bound==-DBL_MAX) {
         DEBUG_OUT(0,"Error: No actions available from root node");

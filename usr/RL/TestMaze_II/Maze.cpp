@@ -8,35 +8,59 @@
 const double Maze::state_size = 0.9;
 const double Maze::wall_width = 0.05;
 const double Maze::reward_start_size = 0.1;
+const double Maze::reward_end_size = 0.2;
+const double Maze::reward_end_ratio = 0.5;
+const double Maze::text_scale = 0.01;
+const double Maze::text_center = 0.3;
 
 using util::min;
 using util::max;
 
 const Maze::idx_t Maze::walls[walls_n][2] = {
-        /* 2x2 Maze */
+        /* 2x2 Maze *
         { 0, 1}
+        /**/
 
-        /* 4x4 Maze */
-//        { 6, 7},
-//        {12,13},
-//        { 4, 5},
-//        { 6,10},
-//        {10,11}
+        /* 3x3 Maze */
+        { 0, 1},
+        { 0, 3},
+        { 2, 1},
+        { 2, 5},
+        { 6, 3},
+        { 6, 7},
+        { 8, 7},
+        { 8, 5}
+        /**/
+
+        /* 4x4 Maze *
+        { 6, 7},
+        {12,13},
+        { 4, 5},
+        { 6,10},
+        {10,11}
+        /**/
 };
 
-const Maze::idx_t Maze::rewards[rewards_n][6] = {
-        /* {  activation state,  receive state, time delay, r, g, b} */
+const Maze::idx_t Maze::rewards[rewards_n][7] = {
+        /* 2x2 Maze *
+        { 3, 0, 2, 1, 0, 0, 200}
+        /**/
 
-        /* 2x2 Maze */
-        { 3, 0, 2, 0, 0, 200}
+        /* 3x3 Maze */
+        { 3, 5, 4, 8,   0, 200,   0},
+        { 5, 3, 6, 8,   0, 200, 200},
+        { 4, 1, 1, 1, 200, 200,   0},
+        { 4, 7, 1, 1, 200,   0,   0}
+        /**/
 
-        /* 4x4 Maze */
-//        {  4,  2,  3, 200,   0,   0},
-//        {  6,  7,  3, 200, 200,   0},
-//        { 11, 14,  2,   0, 200,   0},
-//        { 13,  8,  2,   0, 200, 200},
-//        {  8,  1,  3,   0,   0, 200}
-        //            {  8,  4,  4, 200,   0, 200}
+        /* 4x4 Maze *
+        {  4,  2,  3, 1, 200,   0,   0},
+        {  6,  7,  3, 1, 200, 200,   0},
+        { 11, 14,  2, 1,   0, 200,   0},
+        { 13,  8,  2, 1,   0, 200, 200},
+        {  8,  1,  3, 1,   0,   0, 200}
+//        {  8,  4,  4, 1, 200,   0, 200}
+        /**/
 };
 
 Maze::Maze(const double& eps):
@@ -138,8 +162,8 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // rewards
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
-        MazeState maze_state_1(Data::state_from_idx(rewards[idx][0]));
-        MazeState maze_state_2(Data::state_from_idx(rewards[idx][1]));
+        MazeState maze_state_1(Data::state_from_idx(rewards[idx][ACTIVATION_STATE]));
+        MazeState maze_state_2(Data::state_from_idx(rewards[idx][RECEIVE_STATE]));
         double x_start   = maze_state_1.x();
         double y_start   = maze_state_1.y();
         double x_end     = maze_state_2.x();
@@ -148,26 +172,63 @@ void Maze::render_initialize(QGraphicsView * view) {
         double y_shift   = (x_end-x_start)/5;
         double x_control = (x_start+x_end)/2+x_shift;
         double y_control = (y_start+y_end)/2+y_shift;
-        QColor color(rewards[idx][3],rewards[idx][4],rewards[idx][5]);
-        QPen   pen(   color,0.02,Qt::SolidLine,Qt::RoundCap );
-        QBrush brush( color );
-        QPainterPath path;
-        path.moveTo(x_start, y_start);
-        path.quadTo( x_control, y_control, x_end, y_end );
-        scene->addPath(path,pen,QBrush(QColor(0,0,0,0)));
+        QColor color(   rewards[idx][R],rewards[idx][G],rewards[idx][B]);
+        QPen   arc_pen( color,0.02,Qt::SolidLine,Qt::RoundCap );
+        QPen   end_pen( color,0.02,Qt::SolidLine,Qt::RoundCap,Qt::MiterJoin );
+        QBrush brush(   color );
+
+        // arc
+        QPainterPath arc_path;
+        arc_path.moveTo(x_start, y_start);
+        arc_path.quadTo( x_control, y_control, x_end, y_end );
+        scene->addPath(arc_path,arc_pen,QBrush(QColor(0,0,0,0)));
+
+        // start
         scene->addEllipse(
                 x_start-reward_start_size/2,
                 y_start-reward_start_size/2,
                 reward_start_size,
                 reward_start_size,
-                pen,
+                arc_pen,
                 brush
         );
-        double scale = 0.02;
-        QGraphicsTextItem * txt = scene->addText(QString::number(rewards[idx][2]),QFont("",12));
+
+        // end
+        double end_vector_x = x_end-x_control;
+        double end_vector_y = y_end-y_control;
+        double end_vector_norm = sqrt( pow(end_vector_x,2) + pow(end_vector_y,2) );
+        end_vector_x /= end_vector_norm;
+        end_vector_y /= end_vector_norm;
+        double end_cross_vector_x = +end_vector_y;
+        double end_cross_vector_y = -end_vector_x;
+        QPainterPath end_path;
+        end_path.moveTo(x_end, y_end);
+        end_path.lineTo(
+                x_end-reward_end_size*(end_vector_x+end_cross_vector_x*reward_end_ratio/2),
+                y_end-reward_end_size*(end_vector_y+end_cross_vector_y*reward_end_ratio/2)
+        );
+        end_path.lineTo(
+                x_end-reward_end_size*(end_vector_x-end_cross_vector_x*reward_end_ratio/2),
+                y_end-reward_end_size*(end_vector_y-end_cross_vector_y*reward_end_ratio/2)
+        );
+        end_path.lineTo(x_end, y_end);
+        scene->addPath(end_path,end_pen,QBrush(color));
+
+        // text
+        double mid_point_x = x_start + (x_end - x_start)/2;
+        double mid_point_y = y_start + (y_end - y_start)/2;
+        size_t time_delay = rewards[idx][TIME_DELAY];
+        reward_t reward = Data::min_reward+Data::reward_increment*rewards[idx][REWARD_IDX];
+        QGraphicsTextItem * txt = scene->addText(
+                QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
+                QFont("",12)
+        );
         QRectF box = txt->boundingRect();
-        txt->setPos(x_control-scale*box.width()/2,y_control-scale*box.height()/2);
-        txt->setScale(scale);
+        txt->setPos(
+                x_control+(mid_point_x-x_control)*text_center-text_scale*box.width()/2,
+                y_control+(mid_point_y-y_control)*text_center-text_scale*box.height()/2
+        );
+        txt->setScale(text_scale);
         txt->setDefaultTextColor(color);
     }
 
@@ -270,18 +331,41 @@ Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, 
 //        return 0;
 //    }
 
+    DEBUG_OUT(2,"Getting prediction for:");
+    DEBUG_OUT(2,"    Action: " << Data::action_strings[Data::idx_from_action(action)]);
+    DEBUG_OUT(2,"     State: " << state_to);
+    DEBUG_OUT(2,"    Reward: " << reward);
+
     // check for matching reward
-    reward_t necessary_reward = Data::min_reward;
+    reward_t matching_reward = Data::min_reward;
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
-        state_t activate_state = Data::state_from_idx(rewards[idx][0]);
-        state_t receive_state = Data::state_from_idx(rewards[idx][1]);
-        state_t state_back_then = k_mdp_state_from[rewards[idx][2]-1].state;
+        state_t activate_state = Data::state_from_idx(rewards[idx][ACTIVATION_STATE]);
+        state_t receive_state = Data::state_from_idx(rewards[idx][RECEIVE_STATE]);
+        state_t state_back_then = k_mdp_state_from[rewards[idx][TIME_DELAY]-1].state;
         state_t state_now = state_to;
+        reward_t single_reward = Data::min_reward+Data::reward_increment*rewards[idx][REWARD_IDX];
         if( activate_state==state_back_then && receive_state==state_now) {
-            necessary_reward = Data::max_reward;
+            matching_reward += single_reward;
+            DEBUG_OUT(2,"    Increment matching reward by " << single_reward << " to " << matching_reward);
+        } else {
+            DEBUG_OUT(2,"    rew_idx:" << idx <<
+                    " act.st.:" << activate_state << "/" << state_back_then <<
+                    ", rec.st.:" << receive_state << "/" << state_now <<
+                    ", dt:" << rewards[idx][TIME_DELAY] <<
+                    ", rew:" << single_reward << "/" << reward
+                    );
         }
     }
-    if(necessary_reward!=reward) return 0;
+
+    // crop to max reward
+    if(matching_reward>Data::max_reward) {
+        matching_reward = Data::max_reward;
+        DEBUG_OUT(2,"    Cropping matching reward to " << matching_reward);
+    }
+    if(reward!=matching_reward) {
+        DEBUG_OUT(2,"    Reward does not match: reward=" << reward << ", should be " << matching_reward);
+        return 0;
+    }
 
     // check for matching state
     MazeState maze_state_to( state_to );

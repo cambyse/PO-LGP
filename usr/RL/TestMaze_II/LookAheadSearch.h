@@ -179,10 +179,10 @@ protected:
      * state bounds in back-propagation.
      *
      * Currently LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
-     * LookAheadSearch::MAX_WEIGHTED_BOUNDS, and
-     * SAME_AS_OPTIMAL_SCTION_SELECTION (LookAheadSearch::optimal_action_selection_type
-     * must match) is supported. */
-    static const BOUND_USAGE_TYPE state_back_propagation_type   = MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER;
+     * LookAheadSearch::MAX_WEIGHTED_BOUNDS, and SAME_AS_OPTIMAL_SCTION_SELECTION
+     * are supported (LookAheadSearch::optimal_action_selection_type
+     * must match on of the implemented strategies). */
+    static const BOUND_USAGE_TYPE state_back_propagation_type   = SAME_AS_OPTIMAL_ACTION_SELECTION;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */
     node_t select_next_action_node(node_t state_node);

@@ -100,7 +100,7 @@ private slots:
     void random_action();
     void choose_action();
     void value_iteration();
-    void process_console_input();
+    void process_console_input(QString sequence_input = QString(), bool sequence = false);
     void back_in_history();
     void forward_in_history();
 

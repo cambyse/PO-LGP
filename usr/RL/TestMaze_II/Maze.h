@@ -99,17 +99,22 @@ private:
     static const double state_size;
     static const double wall_width;
     static const double reward_start_size;
+    static const double reward_end_size;
+    static const double reward_end_ratio;
+    static const double text_scale;
+    static const double text_center;
     double epsilon;
     MazeState current_state;
 //    MazeState button_state, smiley_state;
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 1;
+    static const size_t walls_n = 8;
     static const idx_t walls[walls_n][2];
 
-    static const size_t rewards_n = 1;
-    static const idx_t rewards[rewards_n][6];
+    static const size_t rewards_n = 4;
+    static const idx_t rewards[rewards_n][7];
+    enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, R, G, B };
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);

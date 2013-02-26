@@ -12,7 +12,7 @@ using util::arg_string;
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
 //      action_type(NONE),
-      action_type(OPTIMAL_LOOK_AHEAD_TREE), // todo remove
+      action_type(OPTIMAL_LOOK_AHEAD_TREE),
       maze(0.0),
       record(false), plot(false),
       current_k_mdp_state(),
@@ -20,7 +20,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       console_history(1,"END OF HISTORY"),
       history_position(0),
       l1_factor(0),
-      discount(0.5),
+      discount(0.7),
       q_iteration_object(nullptr), q_iteration_available(false),
       iteration_number(0), iteration_threshold(1), iteration_type(INT),
       look_ahead_search(discount),
@@ -184,12 +184,42 @@ void TestMaze_II::value_iteration() {
     }
 }
 
-void TestMaze_II::process_console_input() {
-    QString input = ui._wConsoleInput->text();
-    ui._wConsoleInput->setText("");
-    ui._wConsoleOutput->appendPlainText(input);
-    console_history.push_back(input);
-    history_position = console_history.size();
+void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
+
+    QString input;
+
+    // deal with sequences
+    if(sequence) {
+        input = sequence_input;
+    } else {
+        input = ui._wConsoleInput->text();
+        ui._wConsoleInput->setText("");
+        ui._wConsoleOutput->appendPlainText(input);
+        console_history.push_back(input);
+        history_position = console_history.size();
+
+        // check for sequence
+        QStringList command_list = input.split(";");
+        if(command_list.length()==0) {
+            DEBUG_OUT(0, "Error: Empty command list");
+            return;
+        } else if(command_list.length()>1) {
+            for(int command_idx=0; command_idx<command_list.length(); ++command_idx) {
+                process_console_input(command_list.at(command_idx),true);
+            }
+            return;
+        } else {
+            input = command_list.at(0);
+        }
+    }
+
+    // remove leading and trailing space
+    while(input.startsWith(' ')) {
+        input.remove(0,1);
+    }
+    while(input.endsWith(' ')) {
+        input.chop(1);
+    }
 
     // help strings
     QString headline_s(                         "Available commands:\n    COMMAND . . .  ARGUMENTS . . . . . . . . . . . . . . . . -> ACTION");
