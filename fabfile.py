@@ -51,7 +51,11 @@ def clean_test():
 def make_src():
     """Make share/src/"""
     with lcd("share"):
-        local("make > >(tee ../gcc_stdout.log) 2> >(tee ../gcc_warnings.log >&2)")
+        # somehow sh does not like this. but why is it running in sh anyway?
+        # local("make > >(tee ../gcc_stdout.log) 2> >(tee ../gcc_warnings.log >&2)")
+        # TODO dirty trick: run it twice :(
+        local("make")
+        local("make > ../gcc_stdout.log")
 
 
 def make_test():
