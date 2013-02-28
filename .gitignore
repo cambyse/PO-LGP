@@ -4,6 +4,9 @@
 *.exe
 *.swp
 
+tags
+.cccc
+
 *.kdev4
 vc60.idb
 .*.config
