@@ -227,7 +227,7 @@ void sOpenGL::beginGlContext(){
 
 void sOpenGL::endGlContext(){
   gdk_gl_drawable_gl_end(gldrawable);
-  //glXMakeCurrent(xdisplay, None, NULL);
+  glXMakeCurrent(xdisplay, None, NULL);
   //this is not necessary anymore, since the main loop is running in one thread now
 }
 
