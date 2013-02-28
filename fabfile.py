@@ -86,4 +86,4 @@ def jenkins_stats():
 
     # doxygen
     with lcd('share/doc/'):
-        local('doxygen doxy/MLR.doxy')
+        local('doxygen MLR.doxy')
