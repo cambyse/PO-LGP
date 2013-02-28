@@ -1,23 +1,68 @@
 /**
 @mainpage MLR - Machine Learning and Robotics Lab
 
-This is going to become the main page for the mlr documentation.
+The MLR project consists of lots of little libs that you can use and build your own program.
 
-The documentation of code modules can be found under "Modules".
-Documentation which is not directly connected to the source code (like howtos, tutorials, etc.) is under "Related Pages"
+The documentation of the libs can be found under "Modules".
+Documentation which is not directly connected to the source code (like coding conventions, howtos, tutorials, etc.) is under "Related Pages"
 
-
-@todo convert all guides
-
-@todo add overview of the mlr code here. use the guide.(tex|pdf) for this.
+@note If you're new to the project start reading the @ref page_getting_started and the @ref coding_conventions.
 
 
-@section intro General Intro
 
-@todo add me :)
+@section overview Overview
+Scattered throughout the project there are a few READMEs. Read them!
+
+Here is a overview of the mlr project structure:
+@verbatim
+.
+├── install                 # install scipts to install mlr
+├── projects
+├── share                   # all the stuff that can be used by everybody
+│   ├── bin                 # helpful scripts
+│   ├── configurations
+│   ├── data
+│   ├── demo
+│   ├── doc                 # doxygen docu and more
+│   ├── extern              # external libs live here
+│   ├── include
+│   ├── lib                 # the libs we 'make' live here
+│   ├── src                 # the acutal source code:
+│   │   │                   # - each user has a folder for his projects
+│   │   │                   # - useful projects are extracted to their own folders
+│   │   │                   # - each folder represents a lib that you can use
+│   │   ├── MT
+│   │   ├── <USER_X>
+│   │   ├── ...
+│   │   ├── biros
+│   │   ├── devTools
+│   │   ├── hardware
+│   │   ├── motion
+│   │   ├── perception
+│   │   ├── relational
+│   │   └── views
+│   └── test                # test (not unittest) and example go here
+├── slices                  # extracted libs that are published seperately
+├── tools
+└── usr                     # try out your stuff in your folder.
+    ├── MT
+    ├── ...
+    └── <USER_X>
+@endverbatim
+
+@subsection develop_code How to develop you code
+-# develop you code isolated in usr/USER/
+-# if it's useful put it under share/USER/. Everybody can use it but USER is still responsible for it.
+-# move packages that are useful and a coherent unit to share/PACKAGE. Everybody owns it.
 
 
-@section misc Misc
+@section doxygen Documentation
+
+@todo add me
+
+
+
+@section misc Misc Guides
 
 @subsection misc_hardware Guide to the robot hardware (Marc)
 - Startup hardware
@@ -93,6 +138,7 @@ Machine Learning methods (as introduced in the ML lecture). Ask Marc.
 - MDPs, POMDPs
 
 
+
 @subsection misc_robotics_stuf Robotics algorithms (Marc)
 
 - RRTs
@@ -100,10 +146,12 @@ Machine Learning methods (as introduced in the ML lecture). Ask Marc.
 - etc
 
 
+
 @subsection misc_relational Relational RL (Tobias)
 
 - Robot Manipulation Simulator: http://userpage.fu-berlin.de/tlang/RMSim/
 - libPRADA, a library for relational planning and rule learning: http://userpage.fu-berlin.de/tlang/prada/
+
 
 
 @subsection misc_coding coding utilities
