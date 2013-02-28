@@ -1,70 +1,51 @@
 /** @page page_getting_started Getting Started and Install MLR
 
-@note This does not represent the current install Feb. 2013
-@todo fix install instruction
-
-- Set up an \textbf{account} for redmine
+@section gs_setup Setup
+@subsection gs_prep Preparation
+- Set up an *account* for redmine
    (https://maserati.mi.fu-berlin.de/redmine/projects/mlr).
    Contact Marc for this.
+- Optional: set up your SSH-key for git and redmine. See @ref git for more.
 - Install git :-)
-  \verbatim
-  sudo apt-get install git
-  \endverbatim
-- Optional: set up your SSH-key for git on Maserati via Wiki.
+  \verbatim sudo apt-get install git \endverbatim
 - The default directory layout (Use it! Otherwise it gets tricky!):
-  - |~/git/<dir>| for your git repository (e.g., |~/git/mlr| or |~/git/one|)
-  - |/home/lib| for your external lib installations
+  - <tt>~/git/<dir></tt> for your git repository (e.g., <tt>~/git/mlr</tt> or <tt>~/git/one</tt>)
+  - <tt>/home/lib</tt> for your external lib installations
+
+@subsection gs_install Install MLR
 - <b>Clone MLR git repository</b>
   \verbatim
-  cd ~/git
-  # clone via https
-  git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr
-  # OR clone via ssh
-  git clone git@maserati.mi.fu-berlin.de:mlr
-  \endverbatim
-- Install the Ubuntu dependencies by executing install_dependencies.sh in the 
-  main folder of the MLR project (|~/git/mlr/install_dependencies.sh|).
-- Download the required external libs (|mlrLibs.tgz|) from Maserati into the mlr root folder:\\
-  https://maserati.mi.fu-berlin.de/redmine/documents/29 or
-  Redmine, Documents, mlrLibs.
-  Don't extract it for now!
-- Run the \textbf{INSTALL script} in the repository root folder.
-  It automatically selects the tarball in the root folder.
+cd ~/git
+# clone via https
+git clone https://<user>@maserati.mi.fu-berlin.de/git/mlr
+# OR clone via ssh
+git clone git@maserati.mi.fu-berlin.de:mlr
+\endverbatim
+- enter the mlr project install folder and execute the install scipt
   \verbatim
+cd ~/git/mlr/install
 ./INSTALL
-# or specify the localtion of the file
-FILE_TARBALL=mlrLibs.tar.gz ./INSTALL
-  \endverbatim
-  This script does several things for you:
-  - It makes \textbf{external} libs in a lib-directory and builds
-  symbolic links to them in |git/share/extern|.
-  - Builds a \textbf{make-config} file. Here, you can specify your
-  individual compiler options (e.g., in-/excluding libs).
-  - Makes all \textbf{MLR-libs} in |share/lib/|. These are:
-    \verbatim
-    libmt
-    libnj
-    libsd
-    libnp
-    libdz
-    librelational
-    \endverbatim
-% FIXME the path of the makefile is wrong.
-% If problems occur, try to comment the following lines in the
-% |src/MT/Makefile|:
-% \begin{code}
-% \begin{verbatim}
-% #FREEGLUT = 1
-% #ANN = 1
-% #LAPACK = 1
-% \end{verbatim}
-% \end{code}
-% This reduces functionality of the code, but should at least compile.
-- Makes the \textbf{tests} in |share/test/|
-- Try |test/array/x.exe|
+\endverbatim
+  this install dependencies, downloads external libraries and builds them. See the @a INSTALL file for more details.
+- you're done!
+
+@subsection gs_test Test MLR basics
+- build and test the basics
+  \verbatim
+cd share
+make
+cd ../test/array
+make
+./x.exe
+\endverbatim
 
 
-\section install_makesystem Guide to the Makefile System
+@section gs_makesystem Guide to the Makefile System
+- mlr has predefined compile settings. See share/make-config for all infos.
+  As of 2013-02-28 Thu there are three:
+  - @a mlrlib_ubuntu: (recommended) most of the functionality is given and it's easy to setup (done with the @a INSTALL script) with ubuntu.
+  - @a mlrlib_minimal: less features but should work basically everywhere.
+  - @a mlrlib_full: all features but you need to setup a lot by hand.
 - share/make-generic: central Makefile; should be included by all
   other Makefiles; provides machinery for building executables, libs etc.;
   checks for plenty of flags and includes external and MLR libs as
@@ -73,6 +54,5 @@ FILE_TARBALL=mlrLibs.tar.gz ./INSTALL
   libs, executables in tests etc.); sets local compiler options
 - share/make-config: included by make-generic; allows to set
   individual compiler options for all projects
-
 
 */
