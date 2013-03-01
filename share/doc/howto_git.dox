@@ -15,7 +15,7 @@ man gittutorial
 @endverbatim
 When done with it read on with
 @verbatim
-|man gittutorial-2|
+man gittutorial-2
 @endverbatim
 Depending on your background and experience with other revision control
 systems there might be better approaches to introduce git, but at any
@@ -136,7 +136,7 @@ git update-index --assume-unchanged <files>
     - |git commit -m initial|
     - |ssh my.server.there| go to where my 'central' repos are.
     - |cd ~/gitrepos/; git clone --bare  ssh://my.home.here/home/me/dev/mpcdzen|
-    - everywhere: |git clone ssh://my.home.here/home/me/dev/mpcdzen| \end{enumerate}
+    - everywhere: |git clone ssh://my.home.here/home/me/dev/mpcdzen|
   - when cloning on the same machine:
     - |git clone --bare --no-hardlinks -l ~/dev/mpcdzen|  can be helpful
 - commit
@@ -188,7 +188,7 @@ git update-index --assume-unchanged <files>
            J = F^2  = B^3^2   = A^^3^2
 \endverbatim
 - fork file with history
-  - git doesn't have cp subcommand. The equivalent to \verb+git cp a b+ is
+  - git doesn't have cp subcommand. The equivalent to <tt>git cp a b</tt> is
     \verbatim
     cp a b
     git add b
@@ -201,7 +201,7 @@ git update-index --assume-unchanged <files>
     --find-copies-harder (or so) does the trick)
     http://www.gelato.unsw.edu.au/archives/git/0612/34502.html
 - proxy
-  if you clone via \verb+https+ and happen to be behind a proxy, here is how
+  if you clone via \a https and happen to be behind a proxy, here is how
   you go:
   \verbatim
   git config --global http.proxy http://proxydomain:proxyport
@@ -225,12 +225,12 @@ maserati;
 - GIT-info: dump all possible info (git branch -a, git status, git info etc..)
 
 
-\subsubsection git_workflow Standard git workflows
+\subsection git_workflow Standard git workflows
 
 Merging individual local branch with remote branch
 
-Assume you are in the individual branch \verb+branch123+ on your local machine and want to merge
-with the \verb+master+ branch in the remote repository. Here, \verb+origin+ is a variable
+Assume you are in the individual branch \a branch123 on your local machine and want to merge
+with the \a master branch in the remote repository. Here, \a origin is a variable
 for the remote git repository server (i.e., maserati in our case).
 \verbatim
 // You are in the individual branch branch123 on your local machine.

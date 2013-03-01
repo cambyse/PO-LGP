@@ -9,7 +9,7 @@
 - Install git :-)
   \verbatim sudo apt-get install git \endverbatim
 - The default directory layout (Use it! Otherwise it gets tricky!):
-  - <tt>~/git/<dir></tt> for your git repository (e.g., <tt>~/git/mlr</tt> or <tt>~/git/one</tt>)
+  - <tt>~/git/mlr</tt> for your git repository (e.g., <tt>~/git/mlr</tt> or <tt>~/git/one</tt>)
   - <tt>/home/lib</tt> for your external lib installations
 
 @subsection gs_install Install MLR
