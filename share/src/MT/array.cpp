@@ -404,6 +404,9 @@ void make_grey(byteA &img);
 //! make a grey image and RGA image
 void make_RGB(byteA &img);
 
+//! make a grey image and RGA image
+void make_RGB2BGRA(byteA &img);
+
 
 //===========================================================================
 //
@@ -965,6 +968,19 @@ void make_RGB(byteA &img) {
       tmp(i, j, 0) = img(i, j);
       tmp(i, j, 1) = img(i, j);
       tmp(i, j, 2) = img(i, j);
+    }
+  img=tmp;
+}
+
+void make_RGB2BGRA(byteA &img){
+  CHECK(img.nd==3 && img.d2==3, "make_RGB2RGBA requires color image as input");
+  byteA tmp;
+  tmp.resize(img.d0, img.d1, 4);
+  for(uint i=0; i<img.d0; i++) for(uint j=0; j<img.d1; j++) {
+      tmp(i, j, 0) = img(i, j, 2);
+      tmp(i, j, 1) = img(i, j, 1);
+      tmp(i, j, 2) = img(i, j, 0);
+      tmp(i, j, 3) = 255;
     }
   img=tmp;
 }

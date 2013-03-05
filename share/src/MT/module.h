@@ -32,7 +32,7 @@ struct Module{
   Module(const char *_name):name(_name), reg(NULL){}
   virtual ~Module(){};
   virtual void step() = 0;
-  virtual bool test() = 0;
+  virtual bool test(){ return true; }
   void write(std::ostream& os) const{};
   void read(std::istream& os){};
 };
@@ -102,7 +102,7 @@ struct Access_typed:Access{
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
   virtual void* createOwnData();
-  virtual void setData(void* _data){ data = (T*)_data; }
+  virtual void setData(void* _data);
 };
 
 
@@ -119,15 +119,26 @@ Item* registerItem(T *instance, const char *key1, const char* key2, Item *parent
   return  new Item_typed<TypeInfo>(keys, parents, ti, &registry());
 }
 
+
 template<class T> void* Access_typed<T>::createOwnData(){
-  if(!guard) guard=new AccessGuard(name);
-  if(!data){
-    guard->data = data = new T;
+  if(!guard){
+    guard=new AccessGuard(name);
     guard->reg = registerItem<T, Access_typed<T> >(data,
                                                    "Variable", name,
                                                    reg, NULL);
   }
+  if(!data) guard->data = data = new T;
   return data;
+}
+
+template<class T> void Access_typed<T>::setData(void* _data){
+  if(!guard){
+    guard=new AccessGuard(name);
+    guard->reg = registerItem<T, Access_typed<T> >(data,
+                                                   "Variable", name,
+                                                   reg, NULL);
+  }
+  guard->data = data = (T*)_data;
 }
 
 //===========================================================================

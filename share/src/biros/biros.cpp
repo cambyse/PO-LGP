@@ -341,8 +341,12 @@ void sProcess::main() {
 
   proc->open(); //virtual initialization routine
 
-  CHECK(proc->state.value==tsOPENING,"");
-  proc->state.setValue(tsIDLE);
+  proc->state.lock();
+  if(proc->state.value==tsOPENING)
+    proc->state.value=tsIDLE;
+  //if not =tsOPENING anymore -> the state was set on looping or beating already
+  proc->state.unlock();
+
 
   //s->timer.reset();
   bool waitForTic=false;

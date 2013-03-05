@@ -31,7 +31,7 @@ struct TypeInfo:TypeBase{
   virtual struct Item* readItem(istream&) const {NIY};
   virtual void* newInstance() const {NIY}
   void write(std::ostream& os) const{
-    os <<"Type '" <<type_info().name() <<"'] ";
+    os <<"Type '" <<type_info().name() <<"' ";
     if(parents.N){
       cout <<"parents=[";
       for_list_(TypeInfo, p, parents) cout <<' ' <<p->type_info().name();
