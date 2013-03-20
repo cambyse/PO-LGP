@@ -5,6 +5,9 @@ The simulator toolkit of MLR.
 
 \todo ors::Frame does not exist anymore. Update the doc accordingly.
 
+\note There exists a SWIG interface of ors. Currently only python is tested.
+You can create the python interface with the makefile src/MT/Makefile_ors_for_python
+and then \a import \a ors in python.
 
 \section ors_install Installation and testing
 
