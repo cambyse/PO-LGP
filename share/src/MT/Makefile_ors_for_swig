@@ -1,0 +1,17 @@
+# SILLY makefile to wrap ors with swig.
+#
+# Experimental as of <2013-03-20 Wed>.
+#
+# in python you can use ors simply by importing ors:
+# >>> import ors
+# >>> joint = ors.Joint()
+
+main: python
+
+python:
+	swig -c++ -python ors.i
+	g++ -c -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
+	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -lMT -o _ors.so
+
+clean:
+	rm -f _ors.so ors_wrap.*
