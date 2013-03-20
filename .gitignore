@@ -32,6 +32,10 @@ MT.log
 Makefile.dep
 
 
+%% SWIG
+*_wrap.cxx
+
+
 %% LATEX
 *.aux
 *.dvi
