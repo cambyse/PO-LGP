@@ -35,6 +35,7 @@ make \
 meld \
 realpath \
 regexxer \
+swig \
 tcl8.5-dev \
 tk-dev \
 tk8.5-dev \
