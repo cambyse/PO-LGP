@@ -4,6 +4,9 @@
 *.exe
 *.swp
 
+tags
+.cccc
+
 *.kdev4
 vc60.idb
 .*.config
@@ -18,7 +21,9 @@ vc60.idb
 
 z.*
 
+*.zip
 *_doc
+html
 
 *_moc.cpp
 *_ui.h

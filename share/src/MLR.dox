@@ -1,25 +1,108 @@
 /**
 @mainpage MLR - Machine Learning and Robotics Lab
 
-This is going to become the main page for the mlr documentation.
+The MLR project consists of lots of little libs that you can use and build your own program with simple make files.
 
-The documentation of code modules can be found under "Modules".
-Documentation which is not directly connected to the source code (like howtos, tutorials, etc.) is under "Related Pages"
+@note Feel free to add documentation!
 
+The documentation of the libs can be found under "Modules".
+Documentation which is not directly connected to the source code (like coding conventions, howtos, tutorials, etc.) is under "Related Pages"
 
-@todo convert all guides
-
-@todo add overview of the mlr code here. use the guide.(tex|pdf) for this.
-
-
-@section intro General Intro
-
-@todo add me :)
+@note If you're new to the project start reading the @ref page_getting_started and the @ref coding_conventions.
 
 
-@section misc Misc
+
+@section overview Overview
+Scattered throughout the project there are a few READMEs. Read them!
+
+Here is a overview of the mlr project structure:
+@verbatim
+.
+├── install                 # install scipts to install mlr
+├── projects
+├── share                   # all the stuff that can be used by everybody
+│   ├── bin                 # helpful scripts
+│   ├── configurations
+│   ├── data
+│   ├── demo
+│   ├── doc                 # doxygen docu and more
+│   ├── extern              # external libs live here
+│   ├── include
+│   ├── lib                 # the libs we 'make' live here
+│   ├── src                 # the acutal source code:
+│   │   │                   # - each user has a folder for his projects
+│   │   │                   # - useful projects are extracted to their own folders
+│   │   │                   # - each folder represents a lib that you can use
+│   │   ├── MT
+│   │   ├── <USER_X>
+│   │   ├── ...
+│   │   ├── biros
+│   │   ├── devTools
+│   │   ├── hardware
+│   │   ├── motion
+│   │   ├── perception
+│   │   ├── relational
+│   │   └── views
+│   └── test                # test (not unittest) and example go here
+├── slices                  # extracted libs that are published seperately
+├── tools
+└── usr                     # try out your stuff in your folder.
+    ├── MT
+    ├── ...
+    └── <USER_X>
+@endverbatim
+
+@subsection develop_code How to develop you code
+-# develop you code isolated in usr/USER/
+-# if it's useful put it under share/USER/. Everybody can use it but USER is still responsible for it.
+-# move packages that are useful and a coherent unit to share/PACKAGE. Everybody owns it.
+
+
+
+@section doxygen Documentation
+
+We use Doxygen for our documentation (API and everything else).
+- Modules are defined and documented in @a *.dox files.
+  - A @a *.dox should contain a high level overview of the module.
+  - Everything that belongs to a module should be added to the group.
+  - The API documentation is then generated automatically.
+- Related Pages contain 'HOWTOs' and general tutorials.
+  - they are stored under share/doc/*.dox
+- Use existing modules/pages/etc as blueprint and have a look at:
+  - Doxygen Homepage: http://www.stack.nl/~dimitri/doxygen/
+  - Formulas in Doxygen: http://www.stack.nl/~dimitri/doxygen/manual/formulas.html
+
+
+
+@section jenkins Continuous Integration with Jenkins
+We're trying to make it easy to install the code and keep a it solid.
+Therefore we use a continuous integration server Jenkins which checks out the repository,
+builds it (with different settings), executes some tests,
+collects some statistics and writes angry emails when your commits broke the build.
+
+Here is the web interface:
+http://sully.informatik.uni-stuttgart.de:8080/
+
+If you want to you can add your own tests as well!
+
+More on Jenkins: http://jenkins-ci.org/
+
+
+
+@section misc Misc Guides
+
+@subsection misc_coding coding utilities
+mlr offers quite a few useful features:
+- STRING class
+- Parameter read from cmd line or config file
+- Plotting in opengl & gnuplot
+- opengl using freeglut, fltk or qt
+
+
 
 @subsection misc_hardware Guide to the robot hardware (Marc)
+This is for the Schunk arm in Berlin.
+
 - Startup hardware
   - turn on robot
   - mlrMountHardware
@@ -73,6 +156,7 @@ in our experience it proved more robust to try to fit shapes/contours
 in 2D first with as much accuracy as possible before triangulating.
 
 
+
 @subsection misc_optimization Optimization Methods (Marc)
 There are quite a bit of generic optimization methods implemented --
 but not well documented/organized yet. Ask Marc.
@@ -93,11 +177,13 @@ Machine Learning methods (as introduced in the ML lecture). Ask Marc.
 - MDPs, POMDPs
 
 
+
 @subsection misc_robotics_stuf Robotics algorithms (Marc)
 
 - RRTs
 - Trajectory Prediction
 - etc
+
 
 
 @subsection misc_relational Relational RL (Tobias)
@@ -106,12 +192,6 @@ Machine Learning methods (as introduced in the ML lecture). Ask Marc.
 - libPRADA, a library for relational planning and rule learning: http://userpage.fu-berlin.de/tlang/prada/
 
 
-@subsection misc_coding coding utilities
-
-- String class
-- Parameters read from cmd line or config file
-- plotting in opengl & gnuplot
-- opengl using freeglut, fltk or qt
 
 
 */

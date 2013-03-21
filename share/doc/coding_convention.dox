@@ -7,14 +7,14 @@
   The rules below overwrite Google conventions.
 - Output parameters before input parameters in function declarations.
 - Naming convention <tt>name_of_a_routine(ouput,input)</tt>; is
-  perhaps better than my old <tt>nameOfARoutine(..);</tt> style.
+  perhaps better than my old <tt>nameOfARoutine(..)</tt> style.
 - Make headers as clean and short and concise as possible!
-- Try to avoid #includes in header files as much as possible!!
+- Try to avoid \a \#include in header files as much as possible!!
   In particular, when a class's methods require an external library;
   this external library should be included only in the cpp-file.
-  In particular, try to avoid <tt>#includes <external_lib></tt> in headers!!
+  In particular, try to avoid \a \#include \a "external_lib" in headers!!
   (I tried to get rid of them as much as possible in all my *.h)
-- Try to avoid #includes in header files as much as possible!!
+- Try to avoid \a \#include in header files as much as possible!!
   If you think the class needs to contain members/data structures defined
   in an external library and therefore you need to include its header
   in your header --- that's often not true. Instead, hide all members
@@ -56,7 +56,7 @@ MyClass::MyClass(){
   provide a nice documentation. If people want to read the
   documentation from source directly---it's not much of a hassle to
   find the definition in the cpp file.
-- Never ever use #ifdef directives in a header file if this
+- Never ever use \a \#ifdef directives in a header file if this
   influences definition of classes, especially which members (and
   'size') a class has!
   The following debugging horror may happen: You define a class to
@@ -66,7 +66,7 @@ MyClass::MyClass(){
   fine. But when the user accesses members of the class, he actually
   refers to different memory addesses as your routines in your
   library.
-  Therefore try to avoid #ifdefs in headers as much as possible! Move
+  Therefore try to avoid \a \#ifdefs in headers as much as possible! Move
   them to the cpp file!
 - If you don't have a preferred IDE, use kdevelop.
   - K&R formatting conventions!

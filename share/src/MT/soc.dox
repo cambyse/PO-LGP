@@ -1,9 +1,8 @@
-/**
-@defgroup group_soc soc -- Stochastic Optimal Control
+/** @defgroup group_soc soc -- Stochastic Optimal Control
 
-Stochastic Optimal Control.
+Stochastic Optimal Control lib.
 
-\section Installation 
+\section Installation
 
 The README file has more detailed installation instructions.
 
@@ -58,9 +57,8 @@ typical mathematical notation used for Stochastic Optimal Control
 problems. If you're only interested in the SOC methods and not in the
 ORS simulator, you should start reading from section XXX.
 
-*/
 
-\section soc_programmes_guide Programmer's guide 
+\section soc_programmes_guide Programmer's guide
 There are three headers which, in the end, you should understand:
 - array.h TODO add link to group
 - ors.h TODO add link to group
@@ -74,29 +72,31 @@ ORS, you may skip this section (although it's interesting in
 itself :-) ).
 
 We consider a discrete time stochastic controlled system of the form
-\f$
-P(x_{t po} \mid u_t,x_t) = NN(x_{t po} \mid f_t(x_t,u_t) , Q_t)
-\f$
+\f[
+  P(x_{t + 1} \mid u_t,x_t) = NN(x_{t + 1} \mid f_t(x_t,u_t) , Q_t)
+\f]
 with time step \f$t\f$, state \f$x_t \in  RRR^n\f$, control \f$u_t \in  RRR^m\f$,
 and Gaussian noise \f$\xi\f$ of covariance \f$Q\f$;
- where
-\f$
-NN(x \mid a,A)  propto \exp\{- half (x-a)^T A^{1~} (x-a)\}
-\f$
+where
+\f[
+  NN(x \mid a,A)  propto \exp\{- half (x-a)^T A^{1~} (x-a)\}
+\f]
 is a Gaussian over \f$x\f$ with mean \f$a\f$ and covariance \f$A\f$.
 For a given state-control sequence \f$x_{0:T}, u_{0:T}\f$ we define the
 cost as
-\f$
-  C(x_{0:T},u_{0:T}) = \sum_{t\=0}^T c_t(x_t,u_t) ~.
-\f$
+\f[
+  C(x_{0:T},u_{0:T}) = \sum_{t=0}^T c_t(x_t,u_t) ~.
+\f]
 
 The optimal value function \f$J_t(x)\f$ gives the expected future cost
 when in state \f$x\f$ at time \f$t\f$ for the best controls and obeys the
 Bellman optimality equation
-\f$
-J_t(x)
- &= \min_u \[c_t(x,u) + \int_{x'} P(x' \mid u,x)~ J_{t po}(x') \] ~.
-\f$
+\f[
+  J_t(x) = \min_u
+  [
+    c_t(x,u) + \int_{x'} P(x' \mid u,x) J_{t+1}(x')
+  ]
+\f]
 The closed-loop (feedback) control problem is to find a control policy
 \f$\pi_t^*: x_t \mid u_t\f$
 (that uses the true state observation in each time step and maps it to
@@ -105,21 +105,21 @@ a feedback control signal) that minimizes the expected cost.
 The linear quadratic gaussian (LQG) case plays an important role as a
 local approximation model. LQG is a linear control process with
 Gaussian noise,
-\f$
-P(x_{t po} \mid x_t, u_t ) = NN(x_{t po} \mid A_t x_t + a_t + B_t u_t , Q_t) ~,
-\f$
+\f[
+  P(x_{t + 1} \mid x_t, u_t ) = NN(x_{t + 1} \mid A_t x_t + a_t + B_t u_t , Q_t) ~,
+\f]
 and quadratic costs,
-\f$
-c_t(x_t,u_t) = x_t^\T R_t x_t -2 r^\T_t x_t + u_t^\T H_t u_t ~.
-\f$
+\f[
+  c_t(x_t,u_t) = x_t^T R_t x_t -2 r^T_t x_t + u_t^T H_t u_t.
+\f]
 The LQG process is defined by matrices and vectors \f$A_{0:T}, a_{0:T},
 B_{0:T}, Q_{0:T}, R_{0:T}, r_{0:T}, H_{0:T}\f$. In the LQG case, the
 optimal controller can be computed exactly using the Ricatti
 equation -- and the optimal controller will always be a linear
 controller in the form
-\f$
-u^*_t(x_t) &= G_t~ (x_t-g_t)
-\f$
+\f[
+  u^*_t(x_t) = G_t~ (x_t-g_t)
+\f]
 and we can also compute the most likely trajectory \f$x^*_{0:T}\f$, which
 is also the optimal (cost minimal) trajectory in the zero-noise case
 \f$Q=0\f$.
@@ -129,9 +129,9 @@ approximate the system locally (i.e., around a current robot state) as
 LQG. This is exactly what the robot simulator has to provide and what the
 SocAbstraction defines. In other terms, a simulator needs to provide a
 mapping
-\f$
-x_t \mapsto (A_t, a_t, B_t, Q_t, R_t, r_t, H_t)
-\f$
+\f[
+  x_t \mapsto (A_t, a_t, B_t, Q_t, R_t, r_t, H_t)
+\f]
 which gives the approximate system matrices for a current robot state
 \f$x_t\f$.
 
@@ -147,117 +147,151 @@ robot motion optimization scenarios:
 The robot state is simply the posture
 \f$x_t\equiv q_t \in RRR^n\f$ (not velocities).
 We assume direct motion rate control. The process is simply
-\f$
-q_{t po} = q_t + u_t + \xi
-\f$
+\f[
+  q_{t+1} = q_t + u_t + \xi
+\f]
 and therefore
-\f$
-A_t=1 \comma B_t=1 \comma a_t=0
-\f$
+\f[
+  A_t=1,\; B_t=1,\; a_t=0
+\f]
 
 
 \subsection soc_dynamic Dynamic torque control
 
-The robot state is \f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$.
+The robot state is
+\f$
+x_t \equiv q_t = \begin{pmatrix} q_t\\ \dot q_t \end{pmatrix}
+\f$.
 We assume torque control where the system process is given (approximately) in terms of the local mass
 matrix \f$M\f$ and force vector \f$F\f$,
-\f$
-&P(q_{t po} \| \dot q_t, q_t)
- = NN(q_{t po} \| q_t + \tau \dot q_{t po}, W^1) ~,\\
-&P(\dot q_{t po} \| \dot q_t, u_t)
- = NN(\dot q_{t po} \| \dot q_t + \tau M^1(u_t+F), Q) ~,\\
-%
-&\mat{c}{q_{t po}\\ \dot q_{t po}}
- = \mat{c@{~}c}{1&\tau\\0&1}~ \mat{c}{q_t\\ \dot q_t} +
- \mat{c}{\tau^2\\\tau} M^1 (u_t+F) + \xi
-\feed&\qquad \<d\xi d\xi^\T\> = \mat{c@{~}c}{W^1&0\\0&Q} \\
-%
-& A=\mat{c@{~}c}{1&\tau\\0&1}
-  \comma B=\mat{c}{\tau^2 M^1\\\tau M^1}
-  \comma a=\mat{c}{\tau^2 M^1 F\\\tau M^1 F}
-\f$
+\f{eqnarray*}{
+  P(q_{t + 1} \mid \dot q_t, q_t)
+    &=& NN(q_{t + 1} \mid q_t + \tau \dot q_{t+1}, W^1)
+  \\
+  P(\dot q_{t + 1} \mid \dot q_t, u_t)
+    &=& NN(\dot q_{t + 1} \mid \dot q_t + \tau M^1(u_t+F), Q)
+  \\
+  \begin{pmatrix} q_{t + 1}\\ \dot q_{t + 1} \end{pmatrix}
+    &=&
+    \begin{pmatrix}
+      1 & \tau \\
+      0 & 1
+    \end{pmatrix}
+    \begin{pmatrix} q_t\\ \dot q_t \end{pmatrix}
+    +
+    \begin{pmatrix} \tau^2\\\tau \end{pmatrix}
+    M^1 (u_t+F) + \xi
+  \\
+  \langle d\xi d\xi^T \rangle
+    &=&
+    \begin{pmatrix} W^1&0\\0&Q \end{pmatrix}
+\f}
+\f[
+  A=\begin{pmatrix} 1&\tau\\0&1 \end{pmatrix},\qquad
+  B=\begin{pmatrix} \tau^2 M^1\\\tau M^1 \end{pmatrix},\qquad
+  a=\begin{pmatrix} \tau^2 M^1 F\\\tau M^1 F \end{pmatrix}
+\f]
 
-
-\subsection ors_pdc Pseudo-dynamic control 
+\subsection ors_pdc Pseudo-dynamic control
 A simplification of dynamic control which still yields nice and dynamically
 smooth trajectories is this: The robot state is
-\f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$.
+\f$x_t \equiv q_t=\begin{pmatrix}q_t\\ \dot q_t \end{pmatrix}\f$.
 And we assume the control directly determines accelerations,
-\f$
-&P(q_{t po} \| \dot q_t, q_t)
- = NN(q_{t po} \| q_t + \tau \dot q_{t po}, W^1) ~,\\
-&P(\dot q_{t po} \| \dot q_t, u_t)
- = NN(\dot q_{t po} \| \dot q_t + \tau u_t, Q) ~,\\
-%
-&\mat{c}{q_{t po}\\ \dot q_{t po}}
- = \mat{c@{~}c}{1&\tau\\0&1}~ \mat{c}{q_t\\ \dot q_t} +
- \mat{c}{\tau^2\\\tau} u_t + \xi
-\feed&\qquad \<d\xi d\xi^\T\> = \mat{c@{~}c}{W^1&0\\0&Q} \\
-%
-& A=\mat{c@{~}c}{1&\tau\\0&1}
-  \comma B=\mat{c}{\tau^2 1}
-  \comma a=0
-\f$
+\f{eqnarray*}{
+  P(q_{t + 1} \mid \dot q_t, q_t)
+    &=&
+    NN(q_{t + 1} \mid q_t + \tau \dot q_{t + 1}, W^1)
+  \\
+  P(\dot q_{t + 1} \mid \dot q_t, u_t)
+    &=&
+    NN(\dot q_{t + 1} \mid \dot q_t + \tau u_t, Q)
+  \\
+  \begin{pmatrix} q_{t + 1}\\ \dot q_{t + 1} \end{pmatrix}
+    &=&
+    \begin{pmatrix} 1&\tau\\0&1 \end{pmatrix}
+    \begin{pmatrix} q_t\\ \dot q_t \end{pmatrix}
+    +
+    \begin{pmatrix} \tau^2\\\tau \end{pmatrix}
+    u_t + \xi
+  \\
+  \langle d\xi d\xi^T \rangle
+    &=&
+    \begin{pmatrix} W^1&0\\0&Q \end{pmatrix}
+\f}
+\f[
+  A= \begin{pmatrix} 1&\tau\\0&1 \end{pmatrix}, \qquad
+  B= \begin{pmatrix} \tau^2\\ 1 \end{pmatrix}, \qquad
+  a=0
+\f]
 
 
 \subsection soc_kin_costs Kinematic task costs
-The robot state \f$x_t\equiv q_t\in RRR^n\f$ is kinematic. We have \f$m\f$ task
-variables \f$y_i \in  RRR^{\dim(y_i)}\f$.
+The robot state \f$x_t\equiv q_t\in \mathbb{R}^{dim(y_i)}\f$ is kinematic.
+We have \f$m\f$ task variables \f$y_i \in  \mathbb{R}^{\dim(y_i)}\f$.
 For isntance, these could be the 3D endeffector position, the 2D horizontal
 balance, a 1D collision cost variable, a 1D joint limit cost variable, etc.
 For each we have a kinematic function \f$\phi_i(q) = y_i\f$ and a Jacobian
-\f$J_i(q) = \del_q \phi_i(q)\f$.
+\f$J_i(q) = \partial_q \phi_i(q)\f$.
 We are given task targets \f$y^*_{i,0:T}\f$ and want to follow them with
-(time-dependent) precisions \f$\r_{i,0:T}\f$.
+(time-dependent) precisions \f$r_{i,0:T}\f$.
 We have
-\f$
-&c_t(q_t,u_t)
- = \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2 + u_t^\T H_t u_t \feed
- &\approx \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t - J_iq_t]^2
-  + u_t^\T H_t u_t
- \comma J_i = J_i(\hat q_t) \feed
- &= \sum_{i=1}^m \r_{i,t} [q_t^\T J_i^\T J_i q_t
- - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^\T J_i q_t
- + \text{const}]
-\feed&\quad + u_t^\T H_t u_t \\
-&R_t
- = \sum_{i=1}^m \r_{i,t} J_i^\T J_i \label{Rt}\\
-&r_t
- = - 2 \sum_{i=1}^m \r_{i,t} J_i^\T (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t) \label{rt}
-\f$
-
+\f{eqnarray*}{
+  c_t(q_t,u_t)
+  &=&
+    \sum_{i=1}^m r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2 + u_t^T H_t u_t
+  \\
+  &\approx& \sum_{i=1}^m r_{i,t} [y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t - J_iq_t]^2
+    + u_t^T H_t u_t
+    ,\; J_i = J_i(\hat q_t)
+    \\
+  &=& \sum_{i=1}^m r_{i,t} [q_t^T J_i^T J_i q_t
+    - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^T J_i q_t + \text{const}] + u_t^T H_t u_t \\
+  R_t
+  &=& \sum_{i=1}^m r_{i,t} J_i^T J_i \\
+    r_t
+  &=& - 2 \sum_{i=1}^m r_{i,t} J_i^T (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)
+\f}
 
 \subsection soc_dyn_task_costs Dynamic task costs
-The robot state \f$x_t \equiv \bar q_t=\mat{c}{q_t\\ \dot q_t}\f$ is dynamic.
-We have \f$m\f$ task variables \f$y_i \in  RRR^{\dim(y_i)}\f$ with kinematic
-function \f$\phi_i(q) = y_i\f$ and Jacobian \f$J_i(q) = \del_q \phi_i(q)\f$.
+The robot state \f$x_t \equiv \bar q_t=\begin{pmatrix} q_t\\ \dot q_t \end{pmatrix}\f$ is dynamic.
+We have \f$m\f$ task variables \f$y_i \in  \mathbb{R}^{\dim(y_i)}\f$ with kinematic
+function \f$\phi_i(q) = y_i\f$ and Jacobian \f$J_i(q) = \partial_q \phi_i(q)\f$.
 We are given task targets \f$y^*_{i,0:T}\f$ and \f$\dot y^*_{i,0:T}\f$ and want
-to follow them with (time-dependent) precisions \f$\r_{i,0:T}\f$ and
+to follow them with (time-dependent) precisions \f$r_{i,0:T}\f$ and
 \f$\nu_{i,0:T}\f$.
 We have
-\f$
-&c(q_t,\dot q_t,u_t)
- = \sum_{i=1}^m \r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2
+\f{eqnarray*}{
+  c(q_t,\dot q_t,u_t)
+  &=& \sum_{i=1}^m r_{i,t} [y^*_{i,t} - \phi_i(q_t)]^2
                + \nu_{i,t} [\dot y^*_{i,t} - J_i \dot q_t]^2
-    + u_t^\T H_t u_t \feed
- &\approx
-  \sum_{i=1}^m \r_{i,t} [q_t^\T J_i^\T J_i q_t
- - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^\T J_i q_t + \textit{const}]
-\feed& + \nu_{i,t} [\dot q_t^\T J_i^\T J_i \dot q_t 
- - 2 (\dot y^*_{i,t})^\T J_i \dot q_t + \textit{const}] + u_t^\T H_t u_t\\
-&R_t
- = \sum_{i=1}^m \mat{cc}{\r_{i,t} J_i^\T J_i & 0\\0 & \nu_{i,t} J_i^\T J_i} \label{Rt2}\\
-&r_t
- = - 2 \sum_{i=1}^m
-\mat{c}{ \r_{i,t} J_i^\T (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t) \\
-  \nu_{i,t} J_i^\T \dot y^*_{i,t} } \label{rt2}
-\f$
+    + u_t^T H_t u_t \\
+  &\approx&
+  \sum_{i=1}^m r_{i,t} [q_t^T J_i^T J_i q_t
+    - 2 (y^*_{i,t} - \phi_i(\hat q_t) + J_i \hat q_t)^T J_i q_t + \textit{const}]
+    + \nu_{i,t} [\dot q_t^T J_i^T J_i \dot q_t
+    - 2 (\dot y^*_{i,t})^T J_i \dot q_t + \textit{const}] + u_t^T H_t u_t
+  \\
+  R_t
+  &=& \sum_{i=1}^m
+    \begin{pmatrix}
+      r_{i,t} J_i^T J_i & 0 \\
+      0 & \nu_{i,t} J_i^T J_i
+    \end{pmatrix}
+  \\
+  r_t
+  &=& - 2 \sum_{i=1}^m
+  \begin{pmatrix}
+    r_{i,t} J_i^T (y^*_{i,t}  - \phi_i(\hat q_t) + J_i \hat q_t) \\
+    \nu_{i,t} J_i^T \dot y^*_{i,t}
+  \end{pmatrix}
+\f}
 
 The SocAbstraction should implement exactly these computations of the
 system matrices.
 
 
-\subsection soc_ctlr_variable Control (task) variables 
+
+\subsection soc_ctlr_variable Control (task) variables
 
 \note IT'S ALL ABOUT COUPLED VARIABLES!
 
@@ -290,13 +324,13 @@ ball, and a red obstacle ball. The interesting parts of the code are:
   pos->x_target = arr(ors.getName("ball")->X.p.v,3);
   pos->setInterpolatedTargetTrajectory(T);
   pos->setPrecisionTrajectoryFinal(T,1e-2,1e4);
-  
+
   ControlVariable *col = new ControlVariable(
            "collision",ors, collCVT,0,0,0,0,ARR(.1));
   col->x_target = ARR(0.);
   col->setInterpolatedTargetTrajectory(T);
   col->setPrecisionTrajectoryConstant(T,1e6);
-  
+
   soc.setControlVariables(TUPLE(pos,col));
 
   // [use inverse kinematics or planning to compute the motion]

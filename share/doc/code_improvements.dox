@@ -78,7 +78,5 @@ the most-penetrating two points of convex shapes.
   labels for training discriminative segmentation: few brush strokes
   are enough to define regions of foreground and background see
   frogsegment.jpg, (algorithm implemented by me in matlab)
-\end{enumerate}
-
 
 */
