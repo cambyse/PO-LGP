@@ -18,10 +18,7 @@ void testModule(const char* name){
   mod->test();
 }
 
-//-- this is how the top-level manager should get access
-int main(int argc, char** argv){
-  //Image a("A"),b("B");  newCvtGray(a,b); //only if this is done the OpencvCamera module is registered...
-
+void basicTesting(){
   cout <<"**** ENTER_MAIN" <<endl;
 
   cout <<registry() <<endl;
@@ -31,7 +28,14 @@ int main(int argc, char** argv){
   cout <<registry() <<endl;
   GraphView gv(registry());
   gv.watch();
+}
 
+
+//===========================================================================
+
+//-- this is how the top-level manager should get access
+int main(int argc, char** argv){
+  basicTesting();
   return 0;
 }
 

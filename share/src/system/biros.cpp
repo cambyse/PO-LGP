@@ -7,6 +7,7 @@
  * @{
  */
 #include "biros.h"
+#include "engine.h"
 #include "biros_internal.h"
 #include "views/views.h"
 //#include "views/specificViews.h"
@@ -114,267 +115,8 @@ void setRRscheduling(int priority) {
 
 
 
-//===========================================================================
-//
-// Variable
-//
-
-Variable::Variable(const char *_name): AccessGuard(_name), s(NULL) {
-  s = new sVariable();
-  s->listeners.memMove=true;
-  //MT logValues = false;
-  //MT dbDrivenReplay = false;
-  //MT pthread_mutex_init(&replay_mutex, NULL);
-  if(&(biros()) != NULL) { //-> birosInfo itself will not be registered!
-    biros().writeAccess(NULL);
-    biros().variables.memMove = true;
-    biros().variables.append(this);
-    biros().deAccess(NULL);
-  }
-}
-
-Variable::~Variable() {
-  if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
-    biros().writeAccess(NULL);
-    biros().variables.removeValue(this);
-    biros().deAccess(NULL);
-  }
-  for (uint i=0; i<s->fields.N; i++) delete s->fields(i);
-
-  //MT pthread_mutex_destroy(&replay_mutex);
-
-  delete s;
-}
-
-int Variable::readAccess(Process *p) {
-  biros().acc->queryReadAccess(this, p);
-  rwlock.readLock();
-  biros().acc->logReadAccess(this, p);
-  return revision.getValue();
-}
-
-int Variable::writeAccess(Process *p) {
-  biros().acc->queryWriteAccess(this, p);
-  rwlock.writeLock();
-  int r = revision.incrementValue();
-  biros().acc->logWriteAccess(this, p);
-  uint i; Process *l;
-  for_list(i, l, s->listeners) if(l!=p) l->threadStep();
-  return r;
-}
-
-int Variable::deAccess(Process *p) {
-  if(rwlock.state == -1) { //log a revision after write access
-    //MT logService.logRevision(this);
-    //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
-    biros().acc->logWriteDeAccess(this,p);
-  } else {
-    biros().acc->logReadDeAccess(this,p);
-  }
-  int rev=revision.getValue();
-  rwlock.unlock();
-  return rev;
-}
-
-void Variable::waitForNextWriteAccess(){
-  revision.waitForSignal();
-}
-
-int Variable::waitForRevisionGreaterThan(int rev) {
-  revision.lock();
-  revision.waitForValueGreaterThan(rev, true);
-  rev = revision.value;
-  revision.unlock();
-  return rev;
-}
-
-FieldRegistration& Variable::get_field(uint i) const{
-  return *s->fields(i);
-}
-
-void sVariable::serializeToString(MT::String &string) const {
-  string.clear();
-  MT::String field_string;
-  field_string.clear();
-
-  // go through fields
-  for (uint i=0; i < fields.N; i++) {
-
-    fields(i)->writeValue(field_string);
-
-    // replace every occurence of "\" by "\\"
-    for (uint j=0; j < field_string.N; j++) {
-      char c = field_string(j);
-      if('\\' == c) string << '\\';
-      string << c;
-    }
-
-    // add seperator after field
-    string << "\\,";
-  }
-}
-
-void sVariable::deSerializeFromString(const MT::String &string) {
-  MT::String string_copy(string), field_string;
-  field_string.clear();
-  uint j = 0;
-  for (uint i=0; i< fields.N; i++) {
-    // get field strings from string (seperated by "\\,")
-    bool escaped = false; // true if previous char was '\\'
-    while (j < string_copy.N) {
-      char c = string_copy(j++);
-      if('\\' == c) {
-        escaped = true;
-      } else {
-        if(escaped) {
-          if(',' == c) {
-            break;
-          }
-        }
-        escaped = false;
-        field_string << c;
-      }
-    }
-    fields(i)->readValue(field_string);
-  }
-}
 
 
-//===========================================================================
-//
-// Process
-//
-
-Process::Process(const char *_name): s(NULL), name(_name), state(tsCLOSE), step_count(0U)  {
-  s = new sProcess(this);
-  s->listensTo.memMove=true;
-  biros().writeAccess(this);
-  biros().processes.memMove=true;
-  biros().processes.append(this);
-  biros().deAccess(this);
-}
-
-Process::~Process() {
-  if(s->isOpen() || state.value!=tsCLOSE) threadClose();
-  biros().writeAccess(this);
-  biros().processes.removeValue(this);
-  biros().deAccess(this);
-  delete s;
-}
-
-void Process::threadOpen(int priority) {
-  state.lock();
-  if(s->isOpen()){ state.unlock(); return; } //this is already open -- or has just beend opened (parallel call to threadOpen)
-  s->open(STRING("--"<<name));
-  state.value=tsOPENING;
-  state.unlock();
-}
-
-void Process::threadClose() {
-  state.setValue(tsCLOSE);
-  s->close();
-}
-
-void Process::threadStep(uint steps, bool wait) {
-  if(!s->isOpen()) threadOpen();
-  //CHECK(state.value==tsIDLE, "never step while thread is busy!");
-  state.setValue(steps);
-  if(wait) waitForIdle();
-}
-
-void Process::listenTo(const VariableL &signalingVars) {
-  uint i;  Variable *v;
-  for_list(i, v, signalingVars) listenTo(v);
-}
-
-void Process::listenTo(Variable *v) {
-  v->rwlock.writeLock(); //don't want to increase revision and broadcast!
-  v->s->listeners.setAppend(this);
-  v->rwlock.unlock();
-  s->listensTo.setAppend(v);
-}
-
-void Process::stopListeningTo(Variable *v){
-  v->rwlock.writeLock(); //don't want to increase revision and broadcast!
-  v->s->listeners.removeValue(this);
-  v->rwlock.unlock();
-  s->listensTo.removeValue(v);
-}
-
-bool Process::isIdle() {
-  return state.getValue()==tsIDLE;
-}
-
-bool Process::isClosed() {
-  return state.getValue()==tsCLOSE;
-}
-
-void Process::waitForIdle() {
-  state.waitForValueEq(tsIDLE);
-}
-
-void Process::threadLoop() {
-  if(!s->isOpen()) threadOpen();
-  state.setValue(tsLOOPING);
-}
-
-void Process::threadLoopWithBeat(double sec) {
-  if(!s->metronome)
-    s->metronome=new Metronome("threadTiccer", 1000.*sec);
-  else
-    s->metronome->reset(1000.*sec);
-  if(!s->isOpen()) threadOpen();
-  state.setValue(tsBEATING);
-}
-
-void Process::threadStop() {
-  CHECK(s->isOpen(), "called stop to closed thread");
-  state.setValue(tsIDLE);
-}
-
-void sProcess::main() {
-  tid = syscall(SYS_gettid);
-
-  //http://linux.die.net/man/3/setpriority
-  //if(s->threadPriority) setRRscheduling(s->threadPriority);
-  //if(s->threadPriority) setNice(s->threadPriority);
-
-  proc->open(); //virtual initialization routine
-
-  proc->state.lock();
-  if(proc->state.value==tsOPENING)
-    proc->state.value=tsIDLE;
-  //if not =tsOPENING anymore -> the state was set on looping or beating already
-  proc->state.unlock();
-
-
-  //s->timer.reset();
-  bool waitForTic=false;
-  for(;;){
-    //-- wait for a non-idle state
-    proc->state.lock();
-    proc->state.waitForValueNotEq(tsIDLE, true);
-    if(proc->state.value==tsCLOSE) { proc->state.unlock();  break; }
-    if(proc->state.value==tsBEATING) waitForTic=true; else waitForTic=false;
-    if(proc->state.value>0) proc->state.value--; //count down
-    proc->state.unlock();
-
-    if(waitForTic) metronome->waitForTic();
-
-    //-- make a step
-    biros().acc->logStepBegin(proc);
-    proc->step(); //virtual step routine
-    proc->step_count++;
-    biros().acc->logStepEnd(proc);
-
-    //-- broadcast in case somebody was waiting for a finished step
-    proc->state.lock();
-    proc->state.broadcast();
-    proc->state.unlock();
-  };
-
-  proc->close(); //virtual close routine
-}
 
 
 //===========================================================================
@@ -419,8 +161,8 @@ void loop(const ProcessL& P) {
  * @param P list of processes.
  */
 void stepInSequence(const ProcessL& P) {
-  Process *p; uint i;
-  for_list(i, p, P) p->step();
+  //Process *p; uint i;
+  NIY//for_list(i, p, P) p->step();
 }
 
 /**
@@ -463,19 +205,19 @@ void close(const ProcessL& P) {
 //
 
 Biros::Biros():Variable("Biros") {
-  acc = new sBirosEventController;
+  //acc = new sBirosEventController;
 };
 
 Biros::~Biros(){
   //acc -> dumpEventList();
-  delete acc;
+  //delete acc;
 }
 
 Process *Biros::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
   uint i;  Process *p;
   for_list(i, p, processes) {
-    if(p->s->tid==tid) break;
+    if(p->tid==tid) break;
   }
   if(i>=processes.N) return NULL;
   return p;
@@ -503,7 +245,7 @@ void Biros::dump() {
   }
   cout <<"\n +++ PROCESSES +++" <<endl;
   for_list(i, p, processes) {
-    cout <<"Process " <<p->name <<" {\n  ";
+    cout <<"Process " <<p->module->name <<" {\n  ";
     writeInfo(cout, *p, false, ' ');
     cout <<"\n}" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
@@ -520,7 +262,7 @@ void Biros::dump() {
     cout <<"\n  accessed by=";
     for_list(j, p, par->dependers) {
       if(j) cout <<',';
-      cout <<' ' <<(p?p->name:STRING("NULL"));
+      cout <<' ' <<(p?p->module->name:STRING("NULL"));
     }
     cout <<"\n}" <<endl;
   }
@@ -535,10 +277,10 @@ void Biros::dump() {
 
 void writeInfo(ostream& os, Process& p, bool brief, char nl){
   if(brief){
-    os <<p.step_count <<endl;
+    os <<p.module->step_count <<endl;
   }else{
-    os <<"tid=" <<p.s->tid <<nl
-       <<"steps=" <<p.step_count
+    os <<"tid=" <<p.tid <<nl
+       <<"steps=" <<p.module->step_count
        <<"state=";
     int state=p.state.getValue();
     if (state>0) os <<state; else switch (state) {

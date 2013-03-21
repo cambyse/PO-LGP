@@ -8,7 +8,7 @@
  */
 #include "biros.h"
 
-template<class T> T* Biros::getVariable(const char* name, Process *p, bool required) {
+template<class T> T* Biros::getVariable(const char* name, Module *p, bool required) {
   writeAccess(p);
   Variable *raw = listFindByName(variables, name); // NULL if not found
   T *v = dynamic_cast<T*>(raw); // NULL if cast fails because of RTTI
@@ -22,17 +22,17 @@ template<class T> T* Biros::getVariable(const char* name, Process *p, bool requi
   return v;
 }
 
-template<class T> T* Biros::getOrCreateVariable(const char* name, Process *p){
+template<class T> T* Biros::getOrCreateVariable(const char* name, Module *p){
   T *v = getVariable<T>(name, p, false);
   if(!v) v = new T(name);
   return v;
 }
 
-template<class T> void Biros::getVariable(T*& v, const char* name, Process *p, bool required){
+template<class T> void Biros::getVariable(T*& v, const char* name, Module *p, bool required){
   v = getVariable<T>(name, p, required);
 }
 
-template<class T>  T* Biros::getProcess(const char* name, Process *caller, bool required) {
+template<class T>  T* Biros::getProcess(const char* name, Module *caller, bool required) {
   writeAccess(caller);
   Process *raw = listFindByName(processes, name); // NULL if not found
   T *p = dynamic_cast<T*>(raw); // NULL if cast fails because of RTTI
@@ -45,7 +45,7 @@ template<class T>  T* Biros::getProcess(const char* name, Process *caller, bool 
   return p;
 }
 
-template<class T> T Biros::getParameter(const char *name, const T &_default, Process *p) {
+template<class T> T Biros::getParameter(const char *name, const T &_default, Module *p) {
   Parameter_typed<T> *par;
   writeAccess(p);
   par = (Parameter_typed<T>*)listFindByName(parameters, name);
@@ -55,16 +55,16 @@ template<class T> T Biros::getParameter(const char *name, const T &_default, Pro
   return par->value;
 }
 
-template<class T> T Biros::getParameter(const char *name, Process *p) {
+template<class T> T Biros::getParameter(const char *name, Module *p) {
   return getParameter<T>(name, *((T*)NULL), p);
 }
 
 template<class T> void Biros::setParameter(const char *name, T value) {
   Process *p = getProcessFromPID();
   Parameter_typed<T> *par;
-  writeAccess(p);
+  writeAccess(p->module);
   par = (Parameter_typed<T>*)listFindByName(parameters, name);
-  deAccess(p);
+  deAccess(p->module);
   if (!par) MT_MSG("WARNING: cannot find " <<name
                    <<" in parameters, nothing is changed.");
   par->value = value;

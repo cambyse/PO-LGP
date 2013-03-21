@@ -3,7 +3,8 @@
 
 #include <MT/array.h>
 #include <MT/util.h>
-#include <MT/module.h>
+#include "module.h"
+#include "engine_internal.h"
 
 /**
  * @file
@@ -34,84 +35,7 @@ typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
 
 
-//===========================================================================
-/**
- * A Variable is a dumb data holder which is used to exchange information
- * between processes.
- *
- * Inherit from the class Variable to create your own variable.
- */
-struct Variable:AccessGuard {
-  struct sVariable *s;        ///< private
-//  MT::String name;            ///< Variable name
-//  ConditionVariable revision; ///< revision (= number of write accesses) number
-  RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
 
-  /// @name c'tor/d'tor
-  Variable(const char* name);
-  virtual ~Variable();
-
-  /// @name access control
-  /// to be called by a processes before access, returns the revision
-  int readAccess(Process*);  //might set the caller to sleep
-  int writeAccess(Process*); //might set the caller to sleep
-  int deAccess(Process*);
-
-  /// @name syncing via a variable
-  /// the caller is set to sleep
-  void waitForNextWriteAccess();
-  int  waitForRevisionGreaterThan(int rev); //returns the revision
-
-  /// @name info
-  struct FieldRegistration& get_field(uint i) const;
-};
-
-
-//===========================================================================
-/**
- * A Process does some calculation and shares the result via a Variable.
- *
- * Inherit from the class Process to create your own variable.
- * You need to implement open(), close(), and step().
- * step() should contain the actual calculation.
- */
-struct Process {
-  struct sProcess *s;      ///< private
-  MT::String name;         ///< Process name
-  ConditionVariable state; ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
-  uint step_count;         ///< step count
-
-  /// @name c'tor/d'tor
-  Process(const char* name);
-  virtual ~Process();
-
-  /// @name to be overloaded by the specific implementation
-  // TODO is it really necessary that open() and close() are pure virtual? the implementation normally does nothing.
-  virtual void open() = 0;    ///< is called within the thread when the thread is created
-  virtual void close() = 0;   ///< is called within the thread when the thread is destroyed
-  virtual void step() = 0;    ///< is called within the thread when trigerring a step from outside (or when permanently looping)
-
-  //-- a scalar function which may depend only on the referenced variables
-  //code correctness requires that a call of _step() may only decrease _f() !!
-  //virtual double _f(){ return 0.; }
-
-  /// @name to be called from `outside' (e.g. the main) to start/step/close the thread
-  void threadOpen(int priority=0);      ///< start the thread (in idle mode) (should be positive for changes)
-  void threadClose();                   ///< close the thread (stops looping and waits for idle mode before joining the thread)
-  void threadStep(uint steps=1, bool wait=false);     ///< trigger (multiple) step (idle -> working mode) (wait until idle? otherwise calling during non-idle -> error)
-  void threadLoop();                    ///< loop, stepping forever
-  void threadLoopWithBeat(double sec);  ///< loop with a fixed beat (cycle time)
-  void threadStop();                    ///< stop looping
-
-  void waitForIdle();                   ///< caller waits until step is done (working -> idle mode)
-  bool isIdle();                        ///< check if in idle mode
-  bool isClosed();                      ///< check if closed
-
-  /// @name lisetn to variable
-  void listenTo(Variable *var);
-  void listenTo(const VariableL &signalingVars);
-  void stopListeningTo(Variable *var);
-};
 
 
 //===========================================================================
@@ -154,9 +78,9 @@ void registerField(Variable *v, FieldRegistration* f);
  */
 #define FIELD(type, name) \
   type name; \
-  inline int set_##name(const type& _x, Process *p){ \
+  inline int set_##name(const type& _x, Module *p){ \
     writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
-  inline int get_##name(type& _x, Process *p){ \
+  inline int get_##name(type& _x, Module *p){ \
     readAccess(p);   _x=name;  return deAccess(p); } \
   inline type get_##name(Process *p){ \
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
@@ -235,8 +159,6 @@ struct Parameter_typed:Parameter {
  * Biros reprents the graph of variables and processes.
  */
 struct Biros:Variable {
-  struct sBirosEventController *acc;
-
   VariableL variables;
   ProcessL processes;
   ParameterL parameters;
@@ -247,24 +169,17 @@ struct Biros:Variable {
 
   /// @name access existing processes, variables and parameters.
   Process *getProcessFromPID();
-  template<class T> T* getVariable(const char* name, Process *p, bool required = false);
-  template<class T> T* getOrCreateVariable(const char* name, Process *p);
-  template<class T> void getVariable(T*& v, const char* name, Process *p, bool required = false);
-  template<class T> T* getProcess (const char* name, Process *p, bool required = false);
-  template<class T> T getParameter(const char *name, Process *p=NULL);
-  template<class T> T getParameter(const char *name, const T& _default, Process *p=NULL);
+  template<class T> T* getVariable(const char* name, Module *p, bool required = false);
+  template<class T> T* getOrCreateVariable(const char* name, Module *p);
+  template<class T> void getVariable(T*& v, const char* name, Module *p, bool required = false);
+  template<class T> T* getProcess (const char* name, Module *p, bool required = false);
+  template<class T> T getParameter(const char *name, Module *p=NULL);
+  template<class T> T getParameter(const char *name, const T& _default, Module *p=NULL);
   template<class T> void setParameter(const char *name, T value);
 
   /// @name dump ALL available information
   void dump();
 
-  /// @name system control
-  void enableAccessLog();
-  void dumpAccessLog();
-  void blockAllAccesses();
-  void unblockAllAccesses();
-  void stepToNextAccess();
-  void stepToNextWriteAccess();
 };
 
 Biros& biros();
@@ -292,7 +207,7 @@ struct WorkingCopy {
     copy = *var;
     last_revision = var->revision.getValue();
     var->deAccess(p);
-    copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
+    copy.name <<"_WorkingCopy_" <<(p?p->module->name:STRING("GLOBAL"));
   }
   void init(const char* var_name, Process *_p) {
     T *_v = biros().getVariable<T>(var_name, _p);
@@ -321,22 +236,6 @@ struct WorkingCopy {
 
 //===========================================================================
 /**
- * @name Handle lists of processes
- * @{
- */
-void open(const ProcessL& P);
-void step(const ProcessL& P);
-void stepInSequence(const ProcessL& P);
-void stepInSequenceThreaded(const ProcessL& P);
-void loop(const ProcessL& P);
-void loopWithBeat(const ProcessL& P, double sec);
-void stop(const ProcessL& P);
-void wait(const ProcessL& P);
-void close(const ProcessL& P);
-/**  @} */
-
-//===========================================================================
-/**
  * @name  Helpers to print out information
  * @{
  */
@@ -347,7 +246,6 @@ void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');
 /** @} */
 
 
-#include "biros_views.h"
 #include "biros_t.cxx"
 
 #ifdef  MT_IMPLEMENTATION

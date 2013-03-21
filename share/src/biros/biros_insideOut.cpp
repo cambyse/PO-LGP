@@ -1,4 +1,4 @@
-#include "biros.h"
+#include <system/biros.h>
 
 #ifdef MT_GTK
 /**
@@ -11,7 +11,7 @@
  */
 
 #include "biros_views.h"
-#include "biros_internal.h"
+#include <system/biros_internal.h>
 #include <gtk/gtk.h>
 #include <MT/gtk.h>
 

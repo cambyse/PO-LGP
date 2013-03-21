@@ -17,7 +17,10 @@
 
 struct Access;
 struct Module;
+struct Variable;
 typedef MT::Array<Access*> AccessL;
+typedef MT::Array<Module*> ModuleL;
+typedef MT::Array<Variable*> VariableL;
 
 
 //===========================================================================
@@ -27,9 +30,11 @@ typedef MT::Array<Access*> AccessL;
 
 struct Module{
   const char *name;
+  struct Process *proc;
   AccessL accesses;
   Item *reg;
-  Module(const char *_name):name(_name), reg(NULL){}
+  uint step_count;         ///< step count
+  Module(const char *_name):name(_name), proc(NULL), reg(NULL), step_count(0){}
   virtual ~Module(){};
   virtual void step() = 0;
   virtual bool test(){ return true; }
@@ -40,21 +45,48 @@ stdPipes(Module);
 
 
 //===========================================================================
-//
-// a variable (container) to hold data, potentially handling r/w access
-//
-
-struct AccessGuard{
+/**
+ * A Variable is a container to hold data, potentially handling concurrent r/w
+ * access, which is used to exchange information between processes.
+ */
+struct Variable {
+  struct sVariable *s;        ///< private
+  void *data;                 ///< Variable data
   MT::String name;            ///< Variable name
   ConditionVariable revision; ///< revision (= number of write accesses) number
-  //AccessL accesses;
-  void *data;
+  RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
   Item *reg;
-  AccessGuard(const char* _name):name(_name), revision(0), data(NULL), reg(NULL){}
-  virtual ~AccessGuard(){}
-  virtual int readAccess(struct Process*){ cout <<"R " <<name <<endl; return 0; }
-  virtual int writeAccess(struct Process*){ cout <<"W " <<name <<endl; return 0; }
-  virtual int deAccess(struct Process*){ return 0; }
+  //AccessL accesses;
+
+  /// @name c'tor/d'tor
+  Variable(const char* name);
+  virtual ~Variable();
+
+  /// @name access control
+  /// to be called by a processes before access, returns the revision
+  int readAccess(Module*);  //might set the caller to sleep
+  int writeAccess(Module*); //might set the caller to sleep
+  int deAccess(Module*);
+
+  /// @name syncing via a variable
+  /// the caller is set to sleep
+  void waitForNextWriteAccess();
+  int  waitForRevisionGreaterThan(int rev); //returns the revision
+
+  /// @name info
+  struct FieldRegistration& get_field(uint i) const;
+};
+
+//TODO: hide?
+struct sVariable {
+  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
+  ModuleL listeners;
+  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
+
+  virtual void serializeToString(MT::String &string) const;
+  virtual void deSerializeFromString(const MT::String &string);
+
+  sVariable():loggerData(NULL){}
 };
 
 
@@ -65,18 +97,17 @@ struct AccessGuard{
 
 struct Access{
   Module *module;
-  AccessGuard *guard;
-  struct Process *process; //TODO: this is very very ugly!
+  Variable *variable;
   const char* name;
   Item *reg;
-  Access(const char* _name):module(NULL), guard(NULL), name(_name), reg(NULL) {}
+  Access(const char* _name):module(NULL), variable(NULL), name(_name), reg(NULL) {}
   void write(ostream& os) const{ os <<name; }
   void read(istream&) { NIY; }
   virtual void* createOwnData() = 0;
   virtual void setData(void*) = 0;
-  void readAccess(){ guard->readAccess(process); }
-  void writeAccess(){ guard->writeAccess(process); }
-  void deAccess(){ guard->deAccess(process); }
+  void readAccess(){ variable->readAccess(module); }
+  void writeAccess(){ variable->writeAccess(module); }
+  void deAccess(){ variable->deAccess(module); }
 };
 stdPipes(Access);
 
@@ -101,6 +132,7 @@ struct Access_typed:Access{
   Access_typed(const char* name=NULL):Access(name), data(NULL){}
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
+  T& operator()(){ return *data; } //TODO ensure that it is locked
   virtual void* createOwnData();
   virtual void setData(void* _data);
 };
@@ -121,24 +153,24 @@ Item* registerItem(T *instance, const char *key1, const char* key2, Item *parent
 
 
 template<class T> void* Access_typed<T>::createOwnData(){
-  if(!guard){
-    guard=new AccessGuard(name);
-    guard->reg = registerItem<T, Access_typed<T> >(data,
+  if(!variable){
+    variable=new Variable(name);
+    variable->reg = registerItem<T, Access_typed<T> >(data,
                                                    "Variable", name,
                                                    reg, NULL);
   }
-  if(!data) guard->data = data = new T;
+  if(!data) variable->data = data = new T;
   return data;
 }
 
 template<class T> void Access_typed<T>::setData(void* _data){
-  if(!guard){
-    guard=new AccessGuard(name);
-    guard->reg = registerItem<T, Access_typed<T> >(data,
+  if(!variable){
+    variable=new Variable(name);
+    variable->reg = registerItem<T, Access_typed<T> >(data,
                                                    "Variable", name,
                                                    reg, NULL);
   }
-  guard->data = data = (T*)_data;
+  variable->data = data = (T*)_data;
 }
 
 //===========================================================================
@@ -156,12 +188,12 @@ template<class T, class P> struct Registrator{
     Item *reg;
     StaticRegistrator():reg(NULL){ //called whenever a module/access is DECLARED
       Item *parent = NULL;
-      const char *decltype="Decl_Module";
+      const char *declkey="Decl_Module";
       if(typeid(P)!=typeid(void)){ //dependence registry
         parent = registry().getItem("Decl_Module", typeid(P).name());
-        decltype="Decl_Access";
+        declkey="Decl_Access";
       }
-      reg = registerItem<T,P>(NULL, decltype, typeid(T).name(), parent, NULL);
+      reg = registerItem<T,P>(NULL, declkey, typeid(T).name(), parent, NULL);
       if(parent) parent->parentOf.append(reg);
     }
     void* force(){ return &staticRegistrator; }
@@ -180,12 +212,12 @@ template<class T,class P> typename Registrator<T,P>::StaticRegistrator Registrat
 // and its constructor executed, which does the registration
 
 #define ACCESS(type, name) \
-  struct name##_Access:Access_typed<type>, Registrator<Access_typed<type>, __MODULE_TYPE__>{ \
+  struct name##_Access:Access_typed<type>, Registrator<name##_Access, __MODULE_TYPE__>{ \
   name##_Access():Access_typed<type>(#name){ \
       uint offset = offsetof(__MODULE_TYPE__, name); \
       __MODULE_TYPE__ *thisModule = (__MODULE_TYPE__*)((char*)this - (char*)offset); \
       thisModule->accesses.append(this); \
-      reg = registerItem<Access_typed<type>, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
+      reg = registerItem<name##_Access, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
       module = thisModule; \
     } \
   } name; \

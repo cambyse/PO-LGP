@@ -1,0 +1,55 @@
+
+The porpuse of the *Module Framework* (mof) is to define a programming
+interface for developers of  generic routines. It does not implement midware
+functionality (scheduling, parallelization, communication) itself, but
+only defines a minimalistic programming conventions. Below this, libs
+like biros or ROS can do the actual instantiation of modules,
+variables and their communication. The motivation for mof was (1) that
+the method development interface is independent of the underlying
+process/communication management (mof does not link/include to
+anything), (2) to allow for simpler development and testing of methods
+in direct, non-threaded environments.
+
+The main complication in providing this programming interface is the
+introspection provided by mof: whenever a programmer declares a
+module, a variable, or an access of a moduls to a variable this is
+globally registered in pre-main code. That is, the app knows about all
+moduls that have been declared in the shared object libs (modules
+packages) it links to. (This would even work on-the-fly, when a shared
+lib is dynamically linked to on request, as for plugins.) Given these
+declarations, the app can instantiate the modules as it likes and link
+them via the variables.
+
+A **Module** defines a basic **step** routine, that r/w-accesses some
+variables. Module initialization (e.g. opening of a device/camera/etc)
+and deinitialization are done in the constructor/destructor.
+
+Modules never communicate directly -- they always communicate via
+variables that they jointly access. An **Access** is a member of a
+module that allows access (getter/setter) of a module to a
+variable. As Accesses are registered during declaration of a module
+the mof registry knows for each module which variables it needs to
+access.
+
+In general, access to a variable may involve some mutex affairs (in
+biros) or listening to topics (in ROS). mof wants to be independent of
+this but still allow the underlying framework to do what is
+needed. This is represented by the **AccessGuard**, which declares
+virtual readAccess, writeAccess and deAccess methods that can be
+overloaded.  These are called by on each Access. The Read/WriteTokens
+are simple ehlpers to hold the access (e.g., hold the mutex) during
+the reference-access and release it as soon as the scope of the token
+expires.
+
+**TODO** explicitly distinguish between r/w/rw accesses.
+
+***
+
+All the above is about defining modules and their access possibilities. **Groups** allow you to actually schedule their processing. Processing modes are
+    * sequential in single (group) thread (throws an error if accesses are not top-sortable)
+    * concurrent in separate threads, with each module listening to all read-attached variables (listening means: whenever the revision of that variable is increased by a write access, the listeners will step again (adding another step if they are currently within the step)) Options:
+    - some modules marked as blindly looping with given frequency
+    - some modules with max fequency (reject update steps when too fast; e.g. for views)
+    - some variables artificially trigger a revision increase themselves (trigger variable), which causes all listening modules to step
+
+Modules/accesses must be instantiated within a group, which registers them. The group creates variables as needed.
