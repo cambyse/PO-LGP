@@ -50,6 +50,7 @@ struct KeyValueGraph:ItemL{
   //-- get lists of items
   KeyValueGraph getItems(const char*);
   template<class T> KeyValueGraph getTypedItems(const char*);
+  template<class T> MT::Array<T*> getTypedValues(const char*);
 
   //-- get lists of values
   template<class T> MT::Array<T*> getDerivedValues();

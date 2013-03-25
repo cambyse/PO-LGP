@@ -147,8 +147,8 @@ template<class T, class P>
 Item* registerItem(T *instance, const char *key1, const char* key2, Item *parent1=NULL, Item *parent2=NULL){
   ItemL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
   StringA keys; if(key1) keys.append(MT::String(key1)); if(key2) keys.append(MT::String(key2));
-  TypeInfo *ti = new TypeInfo_typed<T,P>(NULL, NULL);
-  return  new Item_typed<TypeInfo>(keys, parents, ti, &registry());
+  Type *ti = new Type_typed<T,P>(NULL, NULL);
+  return  new Item_typed<Type>(keys, parents, ti, &registry());
 }
 
 
@@ -183,24 +183,36 @@ template<class T> void Access_typed<T>::setData(void* _data){
    code which is called during __static_init... before main. Classes can derive from
    Registrator<classType, void> and somewhere (doesn't matter where) call force();
    In our case we call registerItem */
-template<class T, class P> struct Registrator{
+template<class T, class N, class P> struct Registrator{
   struct StaticRegistrator{
     Item *reg;
     StaticRegistrator():reg(NULL){ //called whenever a module/access is DECLARED
       Item *parent = NULL;
       const char *declkey="Decl_Module";
+      MT::String name;
       if(typeid(P)!=typeid(void)){ //dependence registry
         parent = registry().getItem("Decl_Module", typeid(P).name());
         declkey="Decl_Access";
       }
-      reg = registerItem<T,P>(NULL, declkey, typeid(T).name(), parent, NULL);
+      if(typeid(N)!=typeid(void)){ //extract a name from the type
+        const char *nam=typeid(N).name();
+        uint i;
+        for(i=0;;i++) if(nam[i]=='_' && nam[i+1]=='_') break;
+        nam = &nam[i+2];
+        for(i=strlen(nam);;i--) if(nam[i]=='_' && nam[i+1]=='_') break;
+        name.set(nam,i);
+        cout <<name <<endl;
+      }else{
+        name = typeid(T).name();
+      }
+      reg = registerItem<T,P>(NULL, declkey, name, parent, NULL);
       if(parent) parent->parentOf.append(reg);
     }
     void* force(){ return &staticRegistrator; }
   };
   static StaticRegistrator staticRegistrator;
 };
-template<class T,class P> typename Registrator<T,P>::StaticRegistrator Registrator<T,P>::staticRegistrator;
+template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator Registrator<T,N,P>::staticRegistrator;
 
 
 //===========================================================================
@@ -212,31 +224,34 @@ template<class T,class P> typename Registrator<T,P>::StaticRegistrator Registrat
 // and its constructor executed, which does the registration
 
 #define ACCESS(type, name) \
-  struct name##_Access:Access_typed<type>, Registrator<name##_Access, __MODULE_TYPE__>{ \
-  name##_Access():Access_typed<type>(#name){ \
-      uint offset = offsetof(__MODULE_TYPE__, name); \
-      __MODULE_TYPE__ *thisModule = (__MODULE_TYPE__*)((char*)this - (char*)offset); \
+  struct __##name##__Access:Access_typed<type>, Registrator<type, __##name##__Access, __MODULE_TYPE__>{ \
+  __##name##__Access():Access_typed<type>(#name){ \
+      uint offset = offsetof(__MODULE_BASE_TYPE__, name); \
+      __MODULE_BASE_TYPE__ *thisModule = (__MODULE_BASE_TYPE__*)((char*)this - (char*)offset); \
       thisModule->accesses.append(this); \
-      reg = registerItem<name##_Access, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
+      reg = registerItem<__##name##__Access, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
       module = thisModule; \
     } \
   } name; \
   inline const type& get_##name(){ return name.get(); } \
   inline void  set_##name(const type& _x){ name.set()=_x; }
 
-#define DECLARE_MODULE(name) \
+#define BEGIN_MODULE(name) \
   struct name; \
-  struct name##_Base: Module, Registrator<name, void> { \
+  struct name##_Base: Module, Registrator<name, void, void> { \
     typedef name __MODULE_TYPE__; \
+    typedef name##_Base __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
     name##_Base(): Module(#name) { \
     reg = registerItem<name, void>((name*)this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
-  };
+
+#define END_MODULE() };
 
 #define MODULE(name) \
   struct name: Module, Registrator<name, void> { \
     typedef name __MODULE_TYPE__; \
+    typedef name __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
     name(): Module(#name) { \
       reg = registerItem<name, void>(this, "Module", #name, NULL, staticRegistrator.reg); \

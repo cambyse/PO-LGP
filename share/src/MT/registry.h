@@ -25,31 +25,31 @@ KeyValueGraph& registry();
 // define a type registry
 //
 
-struct TypeInfo:TypeBase{
-  MT::Array<TypeInfo*> parents;
-  virtual const std::type_info& type_info() const {NIY};
-  virtual struct Item* readItem(istream&) const {NIY};
+struct Type:TypeBase{
+  MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
+  virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
+  virtual struct Item* readItem(istream&) const {NIY}; //TODO -> readIntoNewItem
   virtual void* newInstance() const {NIY}
   void write(std::ostream& os) const{
-    os <<"Type '" <<type_info().name() <<"' ";
+    os <<"Type '" <<typeId().name() <<"' ";
     if(parents.N){
       cout <<"parents=[";
-      for_list_(TypeInfo, p, parents) cout <<' ' <<p->type_info().name();
+      for_list_(Type, p, parents) cout <<' ' <<p->typeId().name();
       cout <<" ]";
     }
   }
   void read(std::istream& is) const{ NIY; }
 };
-stdPipes(TypeInfo);
+stdPipes(Type);
 
-typedef MT::Array<TypeInfo*> TypeInfoL;
+typedef MT::Array<Type*> TypeInfoL;
 
 // user interface
 
 //-- query existing types
 template <class T> TypeInfoL reg_findDerived();
 inline Item *reg_findType(const char* key){
-  ItemL types = registry().getDerivedItems<TypeInfo>();
+  ItemL types = registry().getDerivedItems<Type>();
   for_list_(Item, ti, types){
     for(uint i=0;i<ti->keys.N;i++) if(ti->keys(i)==key) return ti;
   }
@@ -57,35 +57,35 @@ inline Item *reg_findType(const char* key){
 }
 template<class T>
 Item *reg_findType(){
-  ItemL types = registry().getDerivedItems<TypeInfo>();
+  ItemL types = registry().getDerivedItems<Type>();
   for_list_(Item, ti, types){
-    if(ti->value<TypeInfo>()->type_info()==typeid(T)) return ti;
+    if(ti->value<Type>()->typeId()==typeid(T)) return ti;
   }
   return NULL;
 }
 
 inline Item* readTypeIntoItem(const char* key, std::istream& is){
-  TypeInfoL types = registry().getDerivedValues<TypeInfo>();
+  TypeInfoL types = registry().getDerivedValues<Type>();
   Item *ti = reg_findType(key);
-  if(ti) return ti->value<TypeInfo>()->readItem(is);
+  if(ti) return ti->value<Type>()->readItem(is);
   return NULL;
 }
 
-template<class Type, class Base>
-struct TypeInfo_typed:TypeInfo{
-  TypeInfo_typed(){}
-  TypeInfo_typed(const char *userBase, TypeInfoL *container ){
+template<class T, class Base>
+struct Type_typed:Type{
+  Type_typed(){}
+  Type_typed(const char *userBase, TypeInfoL *container ){
     if(userBase){
       Item *it=reg_findType<Base>();
-      if(it) parents.append(it->value<TypeInfo>());
+      if(it) parents.append(it->value<Type>());
     }
     if(container){
       container->append(this);
     }
   }
-  virtual const std::type_info& type_info() const { return typeid(Type); }
-  virtual Item* readItem(istream& is) const{ Type *x=new Type(); is >>*x; return new Item_typed<Type>(x); }
-  virtual void* newInstance() const { return new Type(); }
+  virtual const std::type_info& typeId() const { return typeid(T); }
+  virtual Item* readItem(istream& is) const{ T *x=new T(); is >>*x; return new Item_typed<T>(x); }
+  virtual void* newInstance() const { return new T(); }
 };
 
 
@@ -93,14 +93,14 @@ struct TypeInfo_typed:TypeInfo{
 
 #define KO ,
 #define REGISTER_TYPE(Type) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, Decl_Type, Type, new TypeInfo_typed<Type KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type_typed<Type KO void>, Decl_Type, Type, new Type_typed<Type KO void>(NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Type, NULL)
 
 #define REGISTER_TYPE_Key(Key, Type) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO void>, Decl_Type, Key, new TypeInfo_typed<Type KO void>(NULL,NULL));
+  REGISTER_ITEM2(Type_typed<Type KO void>, Decl_Type, Key, new Type_typed<Type KO void>(NULL,NULL));
 //  REGISTER_ITEM2(Type*, type, Key, NULL);
 
 #define REGISTER_TYPE_DERIVED(Type, Base) \
-  REGISTER_ITEM2(TypeInfo_typed<Type KO Base>, Decl_Type, Type, new TypeInfo_typed<Type KO Base>(#Base,NULL));
+  REGISTER_ITEM2(Type_typed<Type KO Base>, Decl_Type, Type, new Type_typed<Type KO Base>(#Base,NULL));
 
 #endif

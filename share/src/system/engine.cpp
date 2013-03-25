@@ -5,49 +5,112 @@
 
 Singleton<Engine> single_systemMonitor;
 
+typedef MT::Array<SystemDescription::ModuleEntry*> ModuleEntryL;
+typedef MT::Array<SystemDescription::VariableEntry*> VariableEntryL;
+
 //===========================================================================
 //
 // SystemDescription
 //
 
-void SystemDescription::newModule(const char *name, const char *dclName, const VariableEntryL& vars){
-  ModuleEntry m;
-  m.name = name;
+void SystemDescription::addModule(const char *dclName, const char *name, const ItemL& vars){
   //find the dcl in the registry
-  Item *reg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
-  if(!reg){
+  Item *modReg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
+  if(!modReg){
     MT_MSG("could not find Decl_Module" <<dclName);
     return;
   }
-  m.dcl = reg->value<TypeInfo>();
+  ModuleEntry *m = new ModuleEntry;
+  m->reg = modReg;
+  m->type = modReg->value<Type>();
+  Item* modIt = system.append<ModuleEntry>(STRINGS("Module", (name?name:modReg->keys(1))), m);
 
-  //find the vars for explicit connecting
-  if(vars.N){
-    CHECK(vars.N == reg->parentOf.N,"");
-    for(uint i=0;i<vars.N;i++){
-      cout <<"linking access " <<m.name <<"->" <<reg->parentOf(i)->keys(1)
-           <<" with Variable " <<vars(i)->name <<" (" <<*(vars(i)->dcl) <<")" <<endl;
-      m.accs.append(vars(i));
+  for_list_(Item, accReg, modReg->parentOf){
+    AccessEntry *a = new AccessEntry;
+    a->reg = accReg;
+    a->type = accReg->value<Type>();
+    if(!vars.N){
+      system.append<AccessEntry>(STRINGS("Access", accReg->keys(1)), ARRAY(modIt), a);
+    }else{
+      Item *varIt = vars(accReg_COUNT);
+      VariableEntry *v = varIt->value<VariableEntry>();
+      cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
+           <<" with Variable (" <<*(v->type) <<")" <<endl;
+      system.append<AccessEntry>(STRINGS("Access", varIt->keys(1)), ARRAY(modIt, varIt), new AccessEntry());
     }
-  }
-
-  modules.append(m);
-}
-
-void SystemDescription::report(){
-  cout <<"** Variables" <<endl;
-  for_list_(VariableEntry, v, variables){
-    cout <<v->name <<": " <<*(v->dcl) <<endl;
-  }
-  cout <<"** Modules" <<endl;
-  for_(ModuleEntry, m, modules){
-    cout <<m->name <<": " <<*(m->dcl) <<" with " <<m->accs.N <<" accesses" <<endl;
   }
 }
 
 void SystemDescription::complete(){
-  //TODO
-  //go through all modules, check if they're linked to variables, create variables as needed
+#if 0
+  ItemL modules = system.getTypedItems<ModuleEntry>("Module");
+  for_list_(Item, it, modules){
+    ModuleEntry *m=it->value<ModuleEntry>();
+    Item *reg=m->reg;
+    if(!m->accs.N && reg->parentOf.N){ //declaration has children but description no accesses...
+      for_list_(Item, acc, reg->parentOf){
+        CHECK(acc->keys(0)=="Decl_Access","");
+        Item* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
+        VariableEntry *v=NULL;
+        if(!varIt){ //we need to add a variable
+          cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
+          v = new SystemDescription::VariableEntry;
+          v->type = acc->value<Type>();
+          varIt = system.append<VariableEntry>(STRINGS("Variable", acc->keys(1)), v);
+        }else{
+          v = varIt->value<VariableEntry>();
+        }
+        cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
+             <<" with Variable (" <<*(v->type) <<")" <<endl;
+        m->accs.append(v);
+        system.append<AccessEntry>(STRINGS("Access", acc->keys(1)), ARRAY(it, varIt), new AccessEntry());
+      }
+    }
+  }
+#else
+  ItemL accesses = system.getTypedItems<AccessEntry>("Access");
+  for_list_(Item, accIt, accesses){
+    AccessEntry *a=accIt->value<AccessEntry>();
+    CHECK(accIt->parents.N==1 || accIt->parents.N==2,"");
+    if(accIt->parents.N==1){ //access has no variable yet...
+      Item* varIt = getVariableEntry(accIt->keys(1), *a->type);
+      VariableEntry *v=NULL;
+      if(!varIt){ //we need to add a variable
+        cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
+        v = new SystemDescription::VariableEntry;
+        v->type = a->type;
+        varIt = system.append<VariableEntry>(STRINGS("Variable", accIt->keys(1)), v);
+      }else{
+        v = varIt->value<VariableEntry>();
+      }
+      cout <<"linking-on-complete access " <<accIt->parents(0)->keys(1) <<"->" <<accIt->keys(1)
+          <<" with Variable (" <<*(v->type) <<")" <<endl;
+      accIt->parents.append(varIt);
+      varIt->parentOf.append(accIt);
+    }
+  }
+#endif
+}
+
+Item* SystemDescription::getVariableEntry(const Access& acc){
+  return getVariableEntry(acc.name, *acc.reg->value<Type>());
+}
+
+Item* SystemDescription::getVariableEntry(const char* name, const Type& type){
+  ItemL variables = system.getTypedItems<VariableEntry>("Variable");
+  for_list_(Item, it, variables){
+    VariableEntry *v = it->value<VariableEntry>();
+    if(it->keys(1)==name){
+      if(v->type->typeId()!=type.typeId())
+        HALT("mist");
+      return it;
+    }
+  }
+  return NULL;
+}
+
+void SystemDescription::report(){
+  cout <<system <<endl;
 }
 
 
@@ -68,30 +131,47 @@ Engine::~Engine(){
 }
 
 void Engine::create(SystemDescription& S){
+  S.complete();
+
   if(mode==none) mode=serial;
-  for_list_(SystemDescription::VariableEntry, v, S.variables){
-    cout <<"creating " <<v->name <<": " <<*(v->dcl) <<endl;
-    v->var = new Variable(v->name);
-    v->var->data = v->dcl->newInstance();
+
+  //create pre-defined variables
+  ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
+  for_list_(Item, varIt, variables){
+    SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
+    cout <<"creating " <<varIt->keys(1) <<": " <<*(v->type) <<endl;
+    v->var = new Variable(varIt->keys(1));
+    v->var->data = v->type->newInstance();
   }
-  for_(SystemDescription::ModuleEntry, m, S.modules){
-    cout <<"creating " <<m->name <<": " <<*(m->dcl) <<endl;
+
+  //create modules
+  ItemL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
+  for_list_(Item, modIt, modules){
+    SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
+    cout <<"creating " <<modIt->keys(1) <<": " <<*(m->type) <<endl;
     if(mode==threaded){
-      Process *proc = new Process(m->dcl);
+      Process *proc = new Process(m->type);
       proc->threadOpen();
       proc->waitForIdle();
       m->mod = proc->module;
-      m->mod->name = m->name;
+      m->mod->name = modIt->keys(1);
     }else{
-      m->mod = (Module*)m->dcl->newInstance();
+      m->mod = (Module*)m->type->newInstance();
     }
 
-    CHECK(m->mod->accesses.N==m->accs.N,"");
-    for(uint i=0;i<m->accs.N;i++){
-      Access *a = m->mod->accesses(i);
-      SystemDescription::VariableEntry *v = m->accs(i);
-      cout <<"linking access " <<m->name <<"->" <<a->name
-          <<" with Variable " <<v->name <<" (" <<*(v->dcl) <<")" <<endl;
+    //accesses have automatically been created as member of a module,
+    //need to link them now
+    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
+    for_list_(Item, accIt, modIt->parentOf){
+      Access *a = m->mod->accesses(accIt_COUNT);
+      //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
+      //CHECK(acc->type == a->type,"");
+      Item *varIt = accIt->parents(1);
+      CHECK(varIt->keys(0)=="Variable","");
+      SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
+      CHECK(v,"");
+      cout <<"linking access " <<modIt->keys(1) <<"->" <<a->name
+          <<" with Variable (" <<*(v->type) <<")" <<endl;
       a->variable = v->var;
       a->setData(v->var->data);
       if(mode==threaded){
@@ -108,7 +188,16 @@ void Engine::step(Module &m){
 }
 
 void Engine::step(SystemDescription& S){
-  for_(SystemDescription::ModuleEntry, m, S.modules) step(*m->mod);
+  ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
+  for_list_(SystemDescription::ModuleEntry, m, modules) step(*m->mod);
+}
+
+void Engine::test(SystemDescription& S){
+  CHECK(mode!=threaded,"");
+  mode=serial;
+  create(S);
+  ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
+  for_list_(SystemDescription::ModuleEntry, m, modules) m->mod->test();
 }
 
 void Engine::enableAccessLog(){
@@ -325,7 +414,7 @@ LoggerVariableData* EventController::getVariableData(const Variable* v){
 // Process
 //
 
-Process::Process(TypeInfo *_moduleDcl): module(NULL), moduleDcl(_moduleDcl), state(tsCLOSE), tid(0), metronome(NULL)  {
+Process::Process(Type *_moduleDcl): module(NULL), moduleDcl(_moduleDcl), state(tsCLOSE), tid(0), metronome(NULL)  {
   listensTo.memMove=true;
 //  biros().writeAccess(module);
 //  biros().processes.memMove=true;

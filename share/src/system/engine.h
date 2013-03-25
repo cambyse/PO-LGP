@@ -4,22 +4,25 @@
 #include "module.h"
 
 struct SystemDescription{
-  struct VariableEntry{ MT::String name; TypeInfo* dcl; Variable *var; };
-  struct ModuleEntry{ MT::String name; TypeInfo* dcl; MT::Array<VariableEntry*> accs; Module *mod; };
-
-  typedef MT::Array<VariableEntry*> VariableEntryL;
-  VariableEntryL variables;
-  MT::Array<ModuleEntry> modules;
+  struct VariableEntry{ Type* type; Variable *var; };
+  struct AccessEntry{ Item* reg; Type* type; Access *acc; };
+  struct ModuleEntry{ Item* reg; Type* type; Module *mod; };
+  KeyValueGraph system;
 
   SystemDescription() {}
-  template<class T> void newVar(const char *name){
-    VariableEntry *v = variables.append(new VariableEntry);
-    v->dcl = new TypeInfo_typed<T, void>();
-    v->name = name;
-  }
-  template<class T> T& getVar(uint i){ return *((T*)variables(i)->var->data); }
 
-  void newModule(const char *name, const char *dclName, const VariableEntryL& vars);
+  template<class T> void addVar(const char *name){
+    VariableEntry *v = new VariableEntry;
+    v->type = new Type_typed<T, void>();
+    system.append<VariableEntry>(STRINGS("Variable", name), v);
+  }
+  Item* getVariableEntry(const Access& acc);
+  Item* getVariableEntry(const char* name, const Type& typeinfo);
+
+  Item* getVar(uint i){ ItemL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
+  template<class T> T& getValue(uint i){ return *((T*)getVar(i)->value<VariableEntry>()->var->data); }
+
+  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=ItemL());
   void report();
   void complete();
 };
@@ -35,6 +38,7 @@ struct Engine{
   void create(SystemDescription& S);
   void step(Module &m);
   void step(SystemDescription& S);
+  void test(SystemDescription& S);
 
   /// @name event control
   void enableAccessLog();
@@ -46,6 +50,11 @@ struct Engine{
 };
 
 Engine& engine();
+
+inline void operator<<(std::ostream& os,const SystemDescription::ModuleEntry& m){ os <<"ModuleEntry"; }
+inline void operator<<(std::ostream& os,const SystemDescription::AccessEntry& a){ os <<"AccessEntry '" <<"'"; }
+inline void operator<<(std::ostream& os,const SystemDescription::VariableEntry& v){ os <<"VariableEntry"; }
+
 
 //===========================================================================
 //

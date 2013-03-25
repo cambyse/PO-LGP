@@ -12,7 +12,7 @@ enum ProcessState { tsIDLE=0, tsCLOSE=-1, tsOPENING=-2, tsLOOPING=-3, tsBEATING=
  */
 struct Process: Thread{
   Module *module;
-  TypeInfo *moduleDcl;
+  Type *moduleDcl;
   ConditionVariable state;       ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
   pid_t tid;                     ///< system thread id
   VariableL listensTo;
@@ -20,7 +20,7 @@ struct Process: Thread{
   Metronome *metronome;          ///< used for beat-looping
 
   /// @name c'tor/d'tor
-  Process(TypeInfo *_moduleDcl=NULL);
+  Process(Type *_moduleDcl=NULL);
   virtual ~Process();
 
   /// @name to be called from `outside' (e.g. the main) to start/step/close the thread

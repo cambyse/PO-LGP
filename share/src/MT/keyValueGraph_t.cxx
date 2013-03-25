@@ -24,6 +24,7 @@ struct Item_typed:Item {
 
   Item_typed():value(NULL){}
   Item_typed(T *_value):value(_value){}
+  //copy value
   Item_typed(const StringA& _keys, const ItemL& _parents, const T& _value, KeyValueGraph *container=NULL):value(NULL){
     value = new T(_value);
     keys=_keys;
@@ -31,6 +32,7 @@ struct Item_typed:Item {
     if(container) container->append(this);
   }
 
+  //directly store pointer to value
   Item_typed(const StringA& _keys, const ItemL& _parents, T *_value=NULL, KeyValueGraph *container=NULL):value(_value){
     keys=_keys;
     parents=_parents;
@@ -78,15 +80,34 @@ template<class T> T* KeyValueGraph::getValue(const char *key){
   return it->value<T>();
 }
 
+template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key){
+  MT::Array<T*> ret;
+  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T)){
+    if(!key) ret.append(it->value<T>());
+    else for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key){
+      ret.append(it->value<T>());
+      break;
+    }
+  }
+  return ret;
+}
+
 template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key){
   KeyValueGraph ret;
-  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T))
-    for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key) ret.append(it);
+  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T)){
+    if(!key) ret.append(it);
+    else for(uint i=0;i<it->keys.N;i++) if(it->keys(i)==key){
+      ret.append(it);
+      break;
+    }
+  }
   return ret;
 }
 
 template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x){
-  return append(new Item_typed<T>(keys, parents, x, NULL));
+  Item *it= ItemL::append(new Item_typed<T>(keys, parents, x, NULL));
+  for_list_(Item, par, parents) par->parentOf.append(it);
+  return it;
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues(){

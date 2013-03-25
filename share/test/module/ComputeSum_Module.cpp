@@ -1,11 +1,11 @@
-#include "ComputeSum_Module.h"
+#include <system/module.h>
 
-DECLARE_MODULE(ComputeSum);
+BEGIN_MODULE(ComputeSum)
+ACCESS(arr, x);    //input
+ACCESS(double, s); //output
+END_MODULE()
 
 struct ComputeSum:ComputeSum_Base {
-  ACCESS(arr, x);    //input
-  ACCESS(double, s); //output
-
   ComputeSum(){}          //replaces old 'open'
   virtual ~ComputeSum(){} //replaces old 'close'
 
@@ -26,6 +26,4 @@ bool ComputeSum::test(){
   return true;
 }
 
-void ComputeSum2::step(){}
-bool ComputeSum2::test(){ return false; }
 

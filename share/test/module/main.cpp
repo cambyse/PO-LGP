@@ -1,5 +1,7 @@
-#include <MT/module.h>
+#include <system/engine.h>
 #include <MT/graphview.h>
+
+//NOTE: ComputeSum is in no way included, still we can create it
 
 //===========================================================================
 //
@@ -11,7 +13,7 @@ void testModule(const char* name){
   CHECK(modReg,"");
 
   //create the module
-  Module *mod = (Module*)modReg->value<TypeInfo>()->newInstance();
+  Module *mod = (Module*)modReg->value<Type>()->newInstance();
   //create the variables
   for_list_(Access, var, mod->accesses) var->createOwnData();
   //test
@@ -23,10 +25,15 @@ void basicTesting(){
 
   cout <<registry() <<endl;
 
-  testModule("10ComputeSum");
+  SystemDescription S;
+  S.addModule("ComputeSum");
+
+  engine().test(S);
+
+  cout <<S.system <<endl;
 
   cout <<registry() <<endl;
-  GraphView gv(registry());
+  GraphView gv(S.system);
   gv.watch();
 }
 
@@ -38,5 +45,3 @@ int main(int argc, char** argv){
   basicTesting();
   return 0;
 }
-
-
