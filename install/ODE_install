@@ -11,10 +11,12 @@ echo "*** Installing" $NAME "into" $MLR_LIBPATH
 echo
 
 ## download file
-wget -O /tmp/$FILE $MLR_URL/$FILE
 if [ ! -f /tmp/$FILE ] ; then
-  echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
-  exit
+  wget -O /tmp/$FILE $MLR_URL/$FILE
+  if [ ! -f /tmp/$FILE ] ; then
+    echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
+    exit
+  fi
 fi
 
 ## check existance of lib path
