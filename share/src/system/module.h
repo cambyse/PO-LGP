@@ -14,6 +14,19 @@
 #include <MT/registry.h>
 #include <stddef.h>
 
+#ifndef FIELD
+#define FIELD(type, name) \
+  type name; \
+  inline int set_##name(const type& _x, Module *p){ \
+    writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
+  inline int get_##name(type& _x, Module *p){ \
+    readAccess(p);   _x=name;  return deAccess(p); } \
+  inline type get_##name(Module *p){ \
+    type _x; readAccess(p); _x=name; deAccess(p);  return _x;  }
+
+//  inline void reg_##name(){
+//    registerField(this, new FieldRegistration_typed<type>(&name,this,#name,#type)); }
+#endif
 
 struct Access;
 struct Module;
@@ -132,7 +145,7 @@ struct Access_typed:Access{
   Access_typed(const char* name=NULL):Access(name), data(NULL){}
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
-  T& operator()(){ return *data; } //TODO ensure that it is locked
+  T& operator()(){ CHECK(variable->rwlock.state==-1,"");  return *data; } //TODO ensure that it is locked
   virtual void* createOwnData();
   virtual void setData(void* _data);
 };

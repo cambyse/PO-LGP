@@ -8,8 +8,8 @@
 #  undef MAX
 #endif
 
-#include <biros/biros.h>
-#include <MT/module.h>
+#include <system/module.h>
+#include <views/views.h>
 #include <MT/ors.h>
 #include <MT/array_t.cxx>
 
@@ -17,6 +17,8 @@
 //
 // fwd declarations
 //
+
+extern void loadPerception();
 
 //-- Variables
 struct Image;
@@ -79,44 +81,52 @@ struct FloatImage:Variable {
   FloatImage(const char* name):Variable(name) {}
 };
 
-struct Colors:Variable {
+struct ColorChoice{
   FIELD(byteA, rgb);
   FIELD(byteA, hsv);
-  Colors(const char* name):Variable(name) {}
 };
 
-struct HoughLines:Variable {
+struct HoughLines {
 #ifdef MT_OPENCV
   std::vector<cv::Vec4i> lines;
 #endif
   FIELD(byteA, display);
-  HoughLines(const char* name):Variable(name) {}
 };
+inline void operator>>(istream& is,HoughLines& hl){}
+inline void operator<<(ostream& os,const HoughLines& hl){}
 
-struct Patching:Variable {
+struct Patching {
   uintA patching;  //for each pixel an integer
   arr pch_cen;     //patch centers
   uintA pch_edges; //patch Delauney edges
   floatA pch_rgb;  //patch mean colors
   FIELD(byteA, display);
-  Patching(const char* name):Variable(name) {}
 };
+inline void operator>>(istream& is,Patching& hl){}
+inline void operator<<(ostream& os,const Patching& hl){}
 
-struct SURFfeatures:Variable {
+struct SURFfeatures {
 #ifdef MT_OPENCV
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
 #endif
   FIELD(byteA, display);
-  SURFfeatures(const char* name):Variable(name) {};
 };
+inline void operator>>(istream& is,SURFfeatures& hl){}
+inline void operator<<(ostream& os,const SURFfeatures& hl){}
 
 /*! The RigidObjectRepresentation List output of perception */
-struct PerceptionOutput:public Variable {
+struct PerceptionOutput {
   MT::Array<RigidObjectRepresentation> objects;
   FIELD(byteA, display);
-  PerceptionOutput():Variable("PerceptionOutput"){};
 };
+
+
+//===========================================================================
+//
+// Modules
+//
+
 
 
 //===========================================================================
@@ -148,24 +158,20 @@ DECLARE_VIEW(PerceptionOutput)
 // PRELIMINARY
 //
 
-struct ColorPicker:Process {
-  Colors *col;
-  
-  ColorPicker(Colors& c):Process(STRING("ColorPicker_"<<c.name)), col(&c) {}
-  void open();
-  void close();
-  void step();
-};
+//BEGIN_MODULE(ColorPicker)
+//  ACCESS(ColorChoice, colorChoice);
+//END_MODULE()
 
 
-ProcessL newPointcloudProcesses();
-VariableL newPointcloudVariables();
+//TODO Johannes ProcessL newPointcloudProcesses();
+//TODO Johannes VariableL newPointcloudVariables();
 
 //TODO: where should this go? maybe ors?
-const int RADIUS = 2;
-const int HEIGHT = 3;
+//TODO Johannes const int RADIUS = 2;
+//TODO Johannes const int HEIGHT = 3;
 
 
+/*TODO Johannes
 struct ObjectBelief {
 
   ObjectBelief() {
@@ -195,7 +201,9 @@ struct ObjectBeliefSet : Variable {
   FIELD(MT::Array<ObjectBelief*>, objects);
   ObjectBeliefSet(const char *name) : Variable(name) { reg_objects(); }
 };
-#endif
+*/
+
+#endif //MT_perception_h
 
 
 

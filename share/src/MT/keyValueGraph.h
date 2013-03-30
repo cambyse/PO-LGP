@@ -8,6 +8,7 @@ struct Item;
 struct KeyValueGraph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
+extern const ItemL& NULLItemL;
 struct TypeBase{ virtual ~TypeBase(){}; }; //if types derive from TypeBase, more tricks are possible
 inline std::istream& operator>>(std::istream&, TypeBase&){ NIY; }
 inline std::ostream& operator<<(std::ostream&, const TypeBase&){ NIY; }

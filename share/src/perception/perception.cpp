@@ -1,11 +1,11 @@
 #include "perception.h"
 #include "pointcloud.h"
-#include <biros/biros_module.h>
 
 #ifdef MT_OPENCV
 
 #include <MT/opencv.h>
 #include <MT/libcolorseg.h>
+#include <system/biros.h>
 
 #undef COUNT
 #include <opencv2/opencv.hpp>
@@ -15,18 +15,71 @@
 #undef MIN
 #undef MAX
 
+extern void loadPerception(){
+  cout <<"LOADING Perception" <<endl;
+}
+
+
+BEGIN_MODULE(OpencvCamera)
+  ACCESS(byteA, rgbImage);
+END_MODULE()
+
+BEGIN_MODULE(CvtGray)
+  ACCESS(byteA, rgbImage)
+  ACCESS(byteA, grayImage)
+END_MODULE()
+
+BEGIN_MODULE(CvtHsv)
+  ACCESS(byteA, rgb)
+  ACCESS(byteA, hsv)
+END_MODULE()
+
+BEGIN_MODULE(HsvFilter)
+  ACCESS(byteA, hsv)
+  ACCESS(floatA, evi)
+  //floatA hsvMean, hsvDeviation;
+END_MODULE()
+
+BEGIN_MODULE(MotionFilter)
+  ACCESS(byteA, rgbImage)
+  ACCESS(byteA, grayImage)
+END_MODULE()
+
+BEGIN_MODULE(DifferenceFilter)
+  ACCESS(byteA, rgbImage1)
+  ACCESS(byteA, rgbImage2)
+  ACCESS(byteA, diffImage)
+END_MODULE()
+
+BEGIN_MODULE(CannyFilter)
+  ACCESS(byteA, grayImage)
+  ACCESS(byteA, cannyImage)
+END_MODULE()
+
+BEGIN_MODULE(Patcher)
+  ACCESS(byteA, rgbImage)
+  ACCESS(Patching, patchImage)
+END_MODULE()
+
+BEGIN_MODULE(SURFer)
+  ACCESS(byteA, grayImage)
+  ACCESS(SURFfeatures, features)
+END_MODULE()
+
+BEGIN_MODULE(HoughLineFilter)
+  ACCESS(byteA, grayImage)
+  ACCESS(HoughLines, houghLines)
+END_MODULE()
+
 
 //===========================================================================
 //
 // Camera
 //
 
-DECLARE_MODULE(OpencvCamera);
 
 struct OpencvCamera:OpencvCamera_Base {
   cv::VideoCapture capture;
-  
-  ACCESS(byteA, cameraOutputRgb);
   
   OpencvCamera(){
     capture.open(0);
@@ -43,7 +96,7 @@ struct OpencvCamera:OpencvCamera_Base {
     capture.read(img);
     if(!img.empty()){
       cv::cvtColor(img, imgRGB, CV_BGR2RGB);
-      cameraOutputRgb.set()=cvtMAT(imgRGB);
+      rgbImage.set()=cvtMAT(imgRGB);
     }
   }
 
@@ -58,19 +111,11 @@ struct OpencvCamera:OpencvCamera_Base {
 // CvtGray
 //
 
-struct CvtGray:Process {
-  Image *rgbImage;
-  Image *grayImage;
-
-  CvtGray(Image &rgb, Image& gray):Process("GrayMaker"), rgbImage(&rgb), grayImage(&gray) {
-    listenTo(rgbImage);
-  }
-
-  void open() {}
-  void close() {}
-  void step() {
+struct CvtGray:CvtGray_Base {
+  CvtGray(){}
+  void step(){
     byteA rgb,gray;
-    rgbImage->get_img(rgb,this);
+    rgb = rgbImage.get();
 
     gray.resize(rgb.d0,rgb.d1);
 
@@ -79,7 +124,7 @@ struct CvtGray:Process {
     cv::Mat src=cvMAT(rgb);
     cv::cvtColor(src, ref, CV_RGB2GRAY);
 
-    grayImage->set_img(gray,this);
+    grayImage.set() = gray;
   }
 };
 
@@ -89,15 +134,11 @@ struct CvtGray:Process {
 // CvtHsv
 //
 
-struct CvtHsv:Process {
-  Image *rgb;
-  Image *hsv;
-
-  CvtHsv(Image& _rgb, Image& _hsv):Process("CvtHsv"), rgb(&_rgb), hsv(&_hsv){}
-  void open() {}
+struct CvtHsv:CvtHsv_Base {
+  CvtHsv() {}
   void step() {
     byteA rgbA,hsvA;
-    rgb->get_img(rgbA,this);
+    rgbA = rgb.get();
 
     hsvA.resizeAs(rgbA);
 
@@ -106,7 +147,7 @@ struct CvtHsv:Process {
     cv::Mat src=cvMAT(rgbA);
     cv::cvtColor(src, ref, CV_RGB2HSV);
 
-    hsv->set_img(hsvA,this);
+    hsv.set() = hsvA;
   }
   void close() {}
 };
@@ -117,27 +158,20 @@ struct CvtHsv:Process {
 // HsvFilter
 //
 
-struct HsvFilter: Process {
-  Image *hsv;
-  FloatImage *evi;
+struct HsvFilter: HsvFilter_Base {
   floatA hsvMean, hsvDeviation;
 
-  HsvFilter(Image& _hsv, FloatImage& _evi): Process("HsvFilter"), hsv(&_hsv), evi(&_evi){
-  }
-
-  void open(){
+  HsvFilter(){
     hsvMean      = biros().getParameter<floatA>("hsvMean", this);
     hsvDeviation = biros().getParameter<floatA>("hsvDeviation", this);
   }
-
-  void close() {}
 
   void step(){
     hsvMean      = biros().getParameter<floatA>("hsvMean", this);
     hsvDeviation = biros().getParameter<floatA>("hsvDeviation", this);
 
     byteA hsvA;
-    hsv->get_img(hsvA,this);
+    hsvA = hsv.get();
     uint w=hsvA.d1, h=hsvA.d0;
 
     floatA evidence;
@@ -152,7 +186,7 @@ struct HsvFilter: Process {
     }
 
     evidence.reshape(1,h,w);
-    evi->set_img(evidence, this);
+    evi.set() = evidence;
   }
 
 
@@ -178,20 +212,14 @@ struct HsvFilter: Process {
 // MotionFilter
 //
 
-struct MotionFilter:Process {
+struct MotionFilter:MotionFilter_Base {
   byteA old_rgb;
 
-  Image *rgbImage;
-  Image *grayImage;
 
-  MotionFilter(Image& rgb, Image& gray):Process("MotionFilter"), rgbImage(&rgb), grayImage(&gray) {
-    listenTo(rgbImage);
-  }
-  void open() {}
-  void close() {}
+  MotionFilter() {}
   void step(){
     byteA rgb,gray;
-    rgbImage->get_img(rgb,this);
+    rgb = rgbImage.get();
     uint H=rgb.d0,W=rgb.d1;
 
     if(old_rgb.N!=rgb.N) {
@@ -213,7 +241,7 @@ struct MotionFilter:Process {
     gray.reshape(H,W);
     old_rgb=rgb;
 
-    grayImage->set_img(gray, this);
+    grayImage.set() = gray;
   }
 };
 
@@ -223,29 +251,19 @@ struct MotionFilter:Process {
 // DifferenceFilter
 //
 
-struct DifferenceFilter:Process {
-  Image *rgbImage1;
-  Image *rgbImage2;
-  Image *diffImage;
+struct DifferenceFilter:DifferenceFilter_Base {
   uint threshold;
 
-  DifferenceFilter(Image& i1, Image& i2, Image& diff)
-  :Process("DifferenceFilter"), rgbImage1(&i1), rgbImage2(&i2), diffImage(&diff) {
-    listenTo(rgbImage1);
-    listenTo(rgbImage2);
-    threshold = 50;
-  }
+  DifferenceFilter():threshold(50){}
 
-  void open() {}
-  void close() {}
   void step() {
     byteA rgb1,rgb2,diff;
-    rgbImage1->get_img(rgb1,this);
-    rgbImage2->get_img(rgb2,this);
+    rgb1 = rgbImage1.get();
+    rgb2 = rgbImage2.get();
 
     if(rgb1.N!=rgb2.N) {
       rgb2=rgb1;
-      rgbImage2->set_img(rgb2,this);
+      rgbImage2.set() = rgb2;
     }
 
     uint d0=rgb1.d0, d1=rgb1.d1;
@@ -260,7 +278,7 @@ struct DifferenceFilter:Process {
     }
 
     diff.reshape(d0,d1,3);
-    diffImage->set_img(diff,this);
+    diffImage.set() = diff;
   }
 };
 
@@ -270,26 +288,19 @@ struct DifferenceFilter:Process {
 // CannyFilter
 //
 
-struct CannyFilter:Process {
-  Image *grayImage;
-  Image *cannyImage;
+struct CannyFilter:CannyFilter_Base {
   float cannyThreshold;
 
-  CannyFilter(Image& gray, Image& canny, float threshold)
-  :Process("CannyFilter"), grayImage(&gray), cannyImage(&canny), cannyThreshold(threshold){
-    listenTo(grayImage);
-  }
+  CannyFilter():cannyThreshold(50.f){}
 
-  void open() {}
-  void close() {}
   void step() {
     byteA gray,canny;
-    grayImage->get_img(gray,this);
+    gray = grayImage.get();
     if(!gray.N) return;
     canny.resizeAs(gray);
     cv::Mat ref = cvMAT(canny);
     cv::Canny(cvMAT(gray), ref, cannyThreshold, 4.f*cannyThreshold, 3);
-    cannyImage->set_img(canny,this);
+    cannyImage.set() = canny;
   }
 };
 
@@ -299,16 +310,9 @@ struct CannyFilter:Process {
 // Patcher
 //
 
-struct Patcher:Process {
-  Image *rgbImage;
-  Patching *patchImage;
+struct Patcher:Patcher_Base {
 
-  Patcher(Image& rgb, Patching& patch)
-  :Process("Patcher"), rgbImage(&rgb), patchImage(&patch) {
-    listenTo(rgbImage);
-  }
-  void open() {}
-  void close() {}
+  Patcher(){}
   void step() {
     byteA rgb,display;
     uintA patching; //for each pixel an integer
@@ -316,7 +320,7 @@ struct Patcher:Process {
     uintA pch_edges; //patch Delauney edges
     floatA pch_rgb; //patch mean colors
 
-    rgbImage->get_img(rgb,this);
+    rgb = rgbImage.get();
     uint np=get_single_color_segmentation(patching,rgb,1.25,100,100);
     np=incremental_patch_ids(patching);
     get_patch_centroids(pch_cen,rgb,patching,np);
@@ -324,13 +328,13 @@ struct Patcher:Process {
     pch2img(display,patching,pch_rgb);
     //getDelaunayEdges(pch_edges, pch_cen);
 
-    patchImage->writeAccess(this);
-    patchImage->patching=patching;
-    patchImage->pch_cen=pch_cen;
-    patchImage->pch_rgb=pch_rgb;
-    patchImage->pch_edges=pch_edges;
-    patchImage->display=display;
-    patchImage->deAccess(this);
+    patchImage.writeAccess();
+    patchImage().patching=patching;
+    patchImage().pch_cen=pch_cen;
+    patchImage().pch_rgb=pch_rgb;
+    patchImage().pch_edges=pch_edges;
+    patchImage().display=display;
+    patchImage.deAccess();
   }
 };
 
@@ -340,21 +344,15 @@ struct Patcher:Process {
 // SURFer
 //
 
-struct SURFer:Process {
-  Image *grayImage;
-  SURFfeatures *features;
+struct SURFer:SURFer_Base {
   cv::SURF *surf;
 
-  SURFer(Image& gray, SURFfeatures& feat)
-  :Process("SURFer"), grayImage(&gray), features(&feat) {
+  SURFer(){
     surf = new cv::SURF(500);
-    listenTo(grayImage);
   }
-  void open() {}
-  void close() {}
   void step() {
     byteA gray,display;
-    grayImage->get_img(gray,this);
+    gray = grayImage.get();
     if(!gray.N) return;
 
     std::vector<cv::KeyPoint> keypoints;
@@ -367,11 +365,11 @@ struct SURFer:Process {
       circle(ref, keypoints[i].pt, 3, cv::Scalar(255));
     }
 
-    features->writeAccess(this);
-    features->keypoints = keypoints;
-    features->descriptors = descriptors;
-    features->display = display;
-    features->deAccess(this);
+    features.writeAccess();
+    features().keypoints = keypoints;
+    features().descriptors = descriptors;
+    features().display = display;
+    features.deAccess();
   }
 };
 
@@ -381,19 +379,12 @@ struct SURFer:Process {
 // HoughLineFilter
 //
 
-struct HoughLineFilter:Process {
-  Image *grayImage;
-  HoughLines *houghLines;
+struct HoughLineFilter:HoughLineFilter_Base{
 
-  HoughLineFilter(Image& gray, HoughLines& hough)
-  :Process("HoughLineFilter"), grayImage(&gray), houghLines(&hough) {
-    listenTo(grayImage);
-  }
-  void open() {}
-  void close() {}
+  HoughLineFilter() {}
   void step() {
     byteA gray,display;
-    grayImage->get_img(gray,this);
+    gray = grayImage.get();
     if(!gray.N) return;
 
     std::vector<cv::Vec4i> lines;
@@ -405,10 +396,10 @@ struct HoughLineFilter:Process {
                cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255), 3);
     }
 
-    houghLines->writeAccess(this);
-    houghLines->lines = lines;
-    houghLines->display = display;
-    houghLines->deAccess(this);
+    houghLines.writeAccess();
+    houghLines().lines = lines;
+    houghLines().display = display;
+    houghLines.deAccess();
   }
 };
 
@@ -476,43 +467,4 @@ VariableL newPointcloudVariables() {
 #endif
 
 
-//===========================================================================
-//
-// process creators
-//
 
-#ifdef MT_OPENCV
-Process *newOpencvCamera(){
-  return new Module_Process("OpencvCamera");
-}
-
-Process* newCvtGray(Image& rgbImage, Image& grayImage){
-  return new CvtGray(rgbImage, grayImage);
-}
-
-Process* newMotionFilter(Image& rgbImage,Image& motion){
-  return new MotionFilter(rgbImage, motion);
-}
-
-Process* newDifferenceFilter(Image& i1,Image& i2, Image& diff){
-  return new DifferenceFilter(i1, i2, diff);
-}
-
-Process* newCannyFilter(Image& grayImage, Image& cannyImage, float cannyThreshold){
-  return new CannyFilter(grayImage, cannyImage, cannyThreshold);
-}
-
-Process* newPatcher(Image& rgbImage, Patching& patchImage){
-  return new Patcher(rgbImage, patchImage);
-}
-
-Process* newSURFer(Image& grayImage, SURFfeatures& features){
-  return new SURFer(grayImage, features);
-}
-
-Process* newHoughLineFilter(Image& grayImage, HoughLines& houghLines){
-  return new HoughLineFilter(grayImage, houghLines);
-}
-
-#else
-#endif

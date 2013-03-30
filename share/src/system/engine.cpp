@@ -13,7 +13,7 @@ typedef MT::Array<SystemDescription::VariableEntry*> VariableEntryL;
 // SystemDescription
 //
 
-void SystemDescription::addModule(const char *dclName, const char *name, const ItemL& vars){
+void SystemDescription::addModule(const char *dclName, const char *name, const ItemL& vars, StepMode mode, double beat){
   //find the dcl in the registry
   Item *modReg = registry().getItem("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
@@ -23,13 +23,15 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
   ModuleEntry *m = new ModuleEntry;
   m->reg = modReg;
   m->type = modReg->value<Type>();
+  m->mode = mode;
+  m->beat = beat;
   Item* modIt = system.append<ModuleEntry>(STRINGS("Module", (name?name:modReg->keys(1))), m);
 
   for_list_(Item, accReg, modReg->parentOf){
     AccessEntry *a = new AccessEntry;
     a->reg = accReg;
     a->type = accReg->value<Type>();
-    if(!vars.N){
+    if(!&vars || !vars.N){
       system.append<AccessEntry>(STRINGS("Access", accReg->keys(1)), ARRAY(modIt), a);
     }else{
       Item *varIt = vars(accReg_COUNT);
@@ -61,7 +63,7 @@ void SystemDescription::complete(){
           v = varIt->value<VariableEntry>();
         }
         cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
-             <<" with Variable (" <<*(v->type) <<")" <<endl;
+             <<" with Variable " <<varIt->keys(1) <<"(" <<*(v->type) <<")" <<endl;
         m->accs.append(v);
         system.append<AccessEntry>(STRINGS("Access", acc->keys(1)), ARRAY(it, varIt), new AccessEntry());
       }
@@ -174,8 +176,20 @@ void Engine::create(SystemDescription& S){
           <<" with Variable (" <<*(v->type) <<")" <<endl;
       a->variable = v->var;
       a->setData(v->var->data);
-      if(mode==threaded){
+      if(m->mod->proc && m->mode==SystemDescription::listenAll){
         m->mod->proc->listenTo(a->variable);
+      }
+    }
+  }
+
+  //start modules modules
+  if(mode==threaded){
+    for_list_(Item, modIt, modules){
+      SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
+      switch(m->mode){
+      case SystemDescription::loopWithBeat:  m->mod->proc->threadLoopWithBeat(m->beat);  break;
+      case SystemDescription::loopFull:  m->mod->proc->threadLoop();  break;
+      default:  break;
       }
     }
   }
@@ -183,7 +197,9 @@ void Engine::create(SystemDescription& S){
 
 void Engine::step(Module &m){
   CHECK(mode!=none,"");
-  if(mode==threaded) m.proc->threadStep();
+  if(mode==threaded){
+    m.proc->threadStep();
+  }
   if(mode==serial)   m.step();
 }
 

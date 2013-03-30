@@ -4,6 +4,8 @@
 #include <MT/ors.h>
 #include <MT/calibration.h>
 
+#if 0
+
 struct ShapeFitter: Process {
   FloatImage *eviL, *eviR;
   PerceptionOutput *percOut;
@@ -751,4 +753,6 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
 
 #ifndef MT_OPENCV
 void ShapeFitter::step(){ NICO }
+#endif
+
 #endif

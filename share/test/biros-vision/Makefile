@@ -1,5 +1,5 @@
 BASE = ../..
 
-LIBS += -lbiros -lperception -lviews
+LIBS += -lperception -lviews -lsystem
 
 include $(BASE)/make-generic

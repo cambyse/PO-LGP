@@ -4,9 +4,10 @@
 #include "module.h"
 
 struct SystemDescription{
+  enum StepMode { listenAll=0, listenRead, loopWithBeat, loopFull };
   struct VariableEntry{ Type* type; Variable *var; };
   struct AccessEntry{ Item* reg; Type* type; Access *acc; };
-  struct ModuleEntry{ Item* reg; Type* type; Module *mod; };
+  struct ModuleEntry{ Item* reg; Type* type; Module *mod; StepMode mode; double beat; };
   KeyValueGraph system;
 
   SystemDescription() {}
@@ -22,7 +23,7 @@ struct SystemDescription{
   Item* getVar(uint i){ ItemL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
   template<class T> T& getValue(uint i){ return *((T*)getVar(i)->value<VariableEntry>()->var->data); }
 
-  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=ItemL());
+  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=NULLItemL, StepMode mode=listenRead, double beat=0.);
   void report();
   void complete();
 };

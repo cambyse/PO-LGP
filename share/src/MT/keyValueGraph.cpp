@@ -3,6 +3,8 @@
 #include "keyValueGraph.h"
 #include "registry.h"
 
+const ItemL& NULLItemL=*((ItemL*)NULL);
+
 /*struct Parser{
   virtual ~Parser(){};
   virtual Item* readItem (std::istream& is) = 0;

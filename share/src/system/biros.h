@@ -76,6 +76,7 @@ void registerField(Variable *v, FieldRegistration* f);
  *
  * Creates setters/getters and a register function.
  */
+#ifndef FIELD
 #define FIELD(type, name) \
   type name; \
   inline int set_##name(const type& _x, Module *p){ \
@@ -86,7 +87,7 @@ void registerField(Variable *v, FieldRegistration* f);
     type _x; readAccess(p); _x=name; deAccess(p);  return _x;  } \
   inline void reg_##name(){ \
     registerField(this, new FieldRegistration_typed<type>(&name,this,#name,#type)); }
-
+#endif
 
 //===========================================================================
 /**
@@ -100,7 +101,7 @@ void registerField(Variable *v, FieldRegistration* f);
 struct Parameter {
   void *pvalue;
   const char* name;
-  ProcessL dependers;
+  ModuleL dependers;
   Parameter();
   virtual void writeValue(ostream& os) const = 0;
   virtual const char* typeName() const = 0;

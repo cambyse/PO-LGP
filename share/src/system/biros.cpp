@@ -260,9 +260,10 @@ void Biros::dump() {
     cout <<"Parameter " <<par->name <<" {\n  ";
     writeInfo(cout, *par, false, ' ');
     cout <<"\n  accessed by=";
-    for_list(j, p, par->dependers) {
+    Module *m;
+    for_list(j, m, par->dependers) {
       if(j) cout <<',';
-      cout <<' ' <<(p?p->module->name:STRING("NULL"));
+      cout <<' ' <<(m?m->name:STRING("NULL"));
     }
     cout <<"\n}" <<endl;
   }
