@@ -4,7 +4,7 @@
 // Note:
 // - There is also a VERY SIMPLE interface for the array class
 // - tested with python.
-// 
+//
 // author: Stefan Otte
 // created: <2013-03-20 Wed>
 
@@ -14,12 +14,14 @@
   #include "ors.h"
   #include "array.h"
   #include "array_t.cxx"
+  #include "opengl.h"
+  #include "algos.h"
 %}
 
 
 //===========================================================================
 // we need to map uint. Otherwise python complains about the uint type
-%inline %{ 
+%inline %{
   typedef unsigned int uint;
 %}
 
@@ -34,10 +36,32 @@ struct Array{
   uint d0,d1,d2;
 
   ::MT::Array<T>& resize(uint D0);
-  // ::MT::Array<T>& operator=(const Array<T>& a);
   T& operator()(uint i) const;
   void clear();
 };
+};
+
+// Overload some operators
+%extend MT::Array {
+  MT::Array<T> __getitem__(int i) {
+    return (*self)[i];
+  };
+  void __setitem__(int i, T value) {
+    (*self)[i] = value;
+  };
+};
+
+// we need to typedef array. Otherwise python complains about arr.
+%inline %{
+  typedef MT::Array<double> arr;
+%}
+
+
+//===========================================================================
+// OpenGL wrapper to be able to visualize the ORS stuctures
+class OpenGL {
+public:
+  int  timedupdate(double sec);
 };
 
 
@@ -513,3 +537,25 @@ struct Graph {
 // some common array templates
 %template(ArrayJoint) MT::Array<ors::Joint*>;
 %template(ArrayInt) MT::Array<int>;
+%template(ArrayDouble) MT::Array<double>;
+
+
+//===========================================================================
+// helper functions
+void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
+
+%inline %{
+// stupid helper function to generate a trajectory for an arm
+// TODO ideally this should be done in python, however the MT::Array and helper
+// class support is not that good yet.
+void generateSequence(arr& X, arr& V, uint n) {
+  uint i;
+  rnd.seed(0);
+  arr P(10, n);
+  //a random spline
+  //a set of random via points with zero start and end:
+  rndUniform(P, -1., 1., false); P[0] = 0.; P[P.d0 - 1] = 0.;
+  //convert into a smooth spline (1/0.03 points per via point):
+  MT::makeSpline(X, V, P, (int)(1 / 0.03));
+};
+%}
