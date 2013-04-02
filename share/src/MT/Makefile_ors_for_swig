@@ -11,7 +11,7 @@ main: python
 python:
 	swig -c++ -python ors.i
 	g++ -c -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
-	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath ../../lib -lMT -o _ors.so
+	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath ../../lib -lMT -o _orspy.so
 
 clean:
 	rm -f _ors.so ors_wrap.*

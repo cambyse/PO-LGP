@@ -9,7 +9,7 @@
 // created: <2013-03-20 Wed>
 
 //===========================================================================
-%module ors
+%module orspy
 %{
   #include "ors.h"
   #include "array.h"

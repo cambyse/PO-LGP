@@ -21,19 +21,19 @@ TODO how to handle python wrappers?
 >>> # ...
 """
 
-import ors
+import orspy
 
 
 if __name__ == '__main__':
-    graph = ors.Graph()
+    graph = orspy.Graph()
     graph.init("arm7.ors")
-    gl = ors.OpenGL()
-    ors.bindOrsToOpenGL(graph, gl)
+    gl = orspy.OpenGL()
+    orspy.bindOrsToOpenGL(graph, gl)
 
     # data
-    X = ors.ArrayDouble()
-    V = ors.ArrayDouble()
-    ors.generateSequence(X, V, graph.getJointStateDimension())
+    X = orspy.ArrayDouble()
+    V = orspy.ArrayDouble()
+    orspy.generateSequence(X, V, graph.getJointStateDimension())
 
     # follow random trajectory
     for t in range(X.d0):
