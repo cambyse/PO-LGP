@@ -303,6 +303,13 @@ void Matrix::setId() {
   m01=m02=m10=m12=m20=m21=0.;
 }
 
+//! set the matrix
+void Matrix::set(double* p) { 
+  m00=p[0]; m01=p[1]; m02=p[2];
+  m10=p[3]; m11=p[4]; m12=p[5];
+  m20=p[6]; m21=p[7]; m22=p[8];
+}
+
 //! assign the matrix to the transformation from unit frame to given XYZ frame
 void Matrix::setFrame(Vector& X, Vector& Y, Vector& Z) {
   m00=X.x; m01=Y.x; m02=Z.x;
