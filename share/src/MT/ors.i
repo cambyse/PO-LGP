@@ -28,7 +28,9 @@ created: <2013-03-20 Wed>
 %enddef
 %module(docstring=DOCSTRING) orspy
 
-%feature("autodoc", "1")
+%feature("autodoc", "1");
+
+
 //===========================================================================
 %module orspy
 %{
