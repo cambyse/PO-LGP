@@ -292,6 +292,14 @@ change the ors data structures and display them easily.
 
 \note Not all classes are properly wrapeed yet (Array, String, and many more need improvements! Feel free to help!).
 
+Try the following to get the inline documentation:
+\code
+import sys
+sys.path.append("path/to/lib/")
+
+import orspy
+help(orspy)
+\endcode
 
 \subsection ors_swig_compile Compile and Test
 - make sure you have all dependencies installed (especially SWIG). See \a install/INSTALL_DEPENDENCIES.sh.
