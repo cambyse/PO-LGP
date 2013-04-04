@@ -345,6 +345,19 @@ struct Body {
   void read(std::istream& is);
 };
 
+%extend Body {
+  void set_name(char* newName) {
+    $self->name = MT::String(newName);
+  };
+
+  char* __str__() {
+    static char tmp[1024];
+    sprintf(tmp,"Body %s:%d", $self->name.p, $self->index);
+    return &tmp[0];
+  }
+}
+
+
 %rename(from_) Joint::from;
 %rename(to_) Joint::to;
 struct Joint {
@@ -406,6 +419,23 @@ struct Shape {
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
+};
+
+%extend Shape {
+  void set_size(double a, double b, double c, double d) {
+    $self->size[0] = a;
+    $self->size[1] = b;
+    $self->size[2] = c;
+    $self->size[3] = d;
+  };
+
+  char* __str__() {
+    // printf("%f %f %f %f\n",
+    //     $self->size[0], $self->size[1], $self->size[2], $self->size[3]);
+    static char tmp[256];
+    sprintf(tmp,"Shape %d", $self->index);
+    return &tmp[0];
+  }
 };
 
 
