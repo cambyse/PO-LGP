@@ -52,6 +52,39 @@ static PxDefaultErrorCallback gDefaultErrorCallback;
 static PxDefaultAllocator gDefaultAllocatorCallback;
 static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterShader;
 
+
+// ============================================================================
+/**
+ * @brief Connect ors with PhysX and add a cmaera.
+ *
+ * See bindOrsToOpenGL for a similar function.
+ *
+ * @param graph the graph PhysX is going to use.
+ * @param gl the gl output.
+ * @param physx the PhyxXInteface which handles the ors graph.
+ */
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
+  physx.G = &graph;
+  physx.create();
+
+  gl.add(glStandardScene, NULL);
+  gl.add(glPhysXInterface, &physx);
+  gl.setClearColors(1., 1., 1., 1.);
+
+  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  if (glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  } else {
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
+    gl.camera.upright();
+  }
+  gl.watch();
+  /* gl.update(); */
+}
+
+
+// ============================================================================
 void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose){
   f.pos.set(pose.p.x, pose.p.y, pose.p.z);
   f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
