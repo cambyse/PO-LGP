@@ -1,22 +1,34 @@
-// This is a simple SWIG wrapper to be able to use the ors datastructures
-// within other languages (primarily python)
-//
-// Note:
-// - There is also a VERY SIMPLE interface for the array class
-// - tested with python.
-//
-// TODO
-// - better MT::Array wrapper (important!)
-// - better MT::String wrapper
-// - some setter don't work properly
-// - memory management sometimes fails
-// - Interfaces for different physics engines are not implemented
-// - can you integrate docstrings into python?
-//
-//
-// author: Stefan Otte
-// created: <2013-03-20 Wed>
+// Read DOCSTRING to get an idea of orspy!
+%define DOCSTRING
+"
+This is a simple SWIG wrapper to be able to use the ors datastructures
+within other languages (primarily python)
 
+Note:
+- There is also a VERY SIMPLE interface for the array class
+- tested with python.
+
+TODO
+- better MT::Array wrapper (important!)
+- better MT::String wrapper
+- some setter don't work properly
+- memory management sometimes fails
+- Interfaces for different physics engines are not implemented
+- integrate some docstrings:
+  http://www.swig.org/Doc1.3/Python.html#Python_nn65
+- pointes sometimes need to be handled differently:
+  http://www.swig.org/Doc1.3/Python.html#Python_nn47
+  http://www.swig.org/Doc1.3/Python.html#Python_nn18
+
+
+author: Stefan Otte
+
+created: <2013-03-20 Wed>
+"
+%enddef
+%module(docstring=DOCSTRING) orspy
+
+%feature("autodoc", "1")
 //===========================================================================
 %module orspy
 %{
