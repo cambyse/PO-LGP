@@ -5,10 +5,6 @@ The simulator toolkit of MLR.
 
 \todo ors::Frame does not exist anymore. Update the doc accordingly.
 
-\note There exists a SWIG interface of ors. Currently only python is tested.
-You can create the python interface with the makefile src/MT/Makefile_ors_for_python
-and then \a import \a ors in python.
-
 \section ors_install Installation and testing
 
 The README file has more detailed installation instructions. The super
@@ -287,6 +283,38 @@ For instance the notation <tt><t(0 0 1) d(90 1 0 0)></tt> means a
 translation along the \f$z\f$-axis followed by a rotation (90 degrees)
 around the \f$x\f$-axis.
 
+
+
+\section ors_swig orspy -- Python interface for ors
+There exists a python interface of ors which uses SWIG. It's called \a orspy.
+\a orspy makes it easy to use ors interactively in the python shell. You can
+change the ors data structures and display them easily.
+
+\note Not all classes are properly wrapeed yet (Array, String, and many more need improvements! Feel free to help!).
+
+
+\subsection ors_swig_compile Compile and Test
+- make sure you have all dependencies installed (especially SWIG). See \a install/INSTALL_DEPENDENCIES.sh.
+- create the python interface (and *.so files) with the makefile src/MT/Makefile_ors_for_python
+  \verbatim
+cd share/src/MT
+make -f Makefile_ors_for_swig
+  \endverbatim
+  It moves the created files to share/lib/.
+- you should be able to run \a orspy. Go to share/test/orspy/ and run
+  \verbatim
+  python ors_test.py
+  \endverbatim
+  The little test should also give you a good idea of how to use \a orspy interactively in the python shell.
+
+\subsection ors_swig_extension Extending orspy
+There are only a couple of files which are important:
+- the SWIG interface file src/MT/ors.i which defines the mapping from C++ to python (and potentially different languages)
+- the makefile share/src/MT/Makefile_ors_for_swig
+
+If you want to extend \a orspy you normally only need to edit ors.i. Todos are kept in the ors.i file.
+
+The SWIG documentation is available under http://www.swig.org/Doc2.0/
 
 */
 // vim: :noai:ts=2:sw=2:set expandtab
