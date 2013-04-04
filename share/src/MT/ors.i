@@ -16,6 +16,7 @@
   #include "array_t.cxx"
   #include "opengl.h"
   #include "algos.h"
+  #include "ors_physx.h"
 %}
 
 
@@ -534,6 +535,20 @@ struct Graph {
 
 
 //===========================================================================
+// physx interface
+struct PhysXInterface {
+  ors::Graph *G;
+  // PhysXInterface();
+  // ~PhysXInterface();
+  void create();
+  void step();
+  void glDraw();
+  // void pushState();
+  // void pullState();
+  // void ShutdownPhysX();
+};
+
+//===========================================================================
 // some common array templates
 %template(ArrayJoint) MT::Array<ors::Joint*>;
 %template(ArrayInt) MT::Array<int>;
@@ -543,6 +558,7 @@ struct Graph {
 //===========================================================================
 // helper functions
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
 
 %inline %{
 // stupid helper function to generate a trajectory for an arm
