@@ -292,16 +292,16 @@ change the ors data structures and display them easily.
 
 \note Not all classes are properly wrapeed yet (Array, String, and many more need improvements! Feel free to help!).
 
-Try the following to get the inline documentation:
-\code
+Try the following to get the inline documentation from within a python shell:
+\verbatim
 import sys
 sys.path.append("path/to/lib/")
 
 import orspy
 help(orspy)
-\endcode
+\endverbatim
 
-\subsection ors_swig_compile Compile and Test
+\subsection ors_swig_compile Compile orspy
 - make sure you have all dependencies installed (especially SWIG). See \a install/INSTALL_DEPENDENCIES.sh.
 - create the python interface (and *.so files) with the makefile src/MT/Makefile_ors_for_python
   \verbatim
@@ -314,6 +314,27 @@ make -f Makefile_ors_for_swig
   python ors_test.py
   \endverbatim
   The little test should also give you a good idea of how to use \a orspy interactively in the python shell.
+
+
+\subsection ors_swig_getting_started Getting Started with orspy
+In general the interface is pretty similar to the pure c++ implementation.
+However, \a orspy offers some additional python features.  There are several ways
+to get familiar with \a orspy:
+
+- run the test under share/test/orspy/
+  \verbatim
+  python ors_test.py
+  \endverbatim
+  and take a look at the code.
+- the unittests under share/unittests/orspy/ document kinda document the API.
+  At least they make it clear how to use certain basic features of \a orspy.
+- use an interactive python shell (ipython or bpython or ...) to explore \a orspy
+  \verbatim
+  >>> import orspy
+  >>> doc(orspy)
+  >>> orspy.<TAB>
+  \endverbatim
+
 
 \subsection ors_swig_extension Extending orspy
 There are only a couple of files which are important:

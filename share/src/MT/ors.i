@@ -10,8 +10,12 @@ Note:
 
 TODO
 - better MT::Array wrapper (important!)
+  - DONE fill with python lists
+  - DONE __getitem__
+  - DONE __setitem__
+  - TODO slicing!
+  - TODO fill with numpy ndarray
 - better MT::String wrapper
-- some setter don't work properly
 - memory management sometimes fails
 - Interfaces for different physics engines are not implemented
 - integrate some docstrings:
@@ -19,6 +23,7 @@ TODO
 - pointes sometimes need to be handled differently:
   http://www.swig.org/Doc1.3/Python.html#Python_nn47
   http://www.swig.org/Doc1.3/Python.html#Python_nn18
+- TODO run unittests with Jenkins
 
 
 author: Stefan Otte
@@ -87,6 +92,22 @@ def setWithList(self, data):
     else:
         print "ERROR: setWithList: the data was not set; it is no list!"
 
+
+# magic function
+def __getitem__(self, pos):
+    if isinstance(pos, tuple):
+        x, y = pos
+        return self.get2D(x, y)
+    else:
+        return self.get1D(pos)
+
+def __setitem__(self, pos, value):
+    if isinstance(pos, tuple):
+        x, y = pos
+        return self.setElem2D(x, y, value)
+    else:
+        return self.setElem1D(pos, value)
+
 %} // end of %pythoncode
 }; // end of struct Array
 }; // end of namespace MT
@@ -94,13 +115,10 @@ def setWithList(self, data):
 // Overload some operators
 %extend MT::Array {
 
-  T get(uint i, uint j) { return (*self)[i](j); };
+  T get1D(uint i) { return (*self).elem(i); };
+  T get2D(uint i, uint j) { return (*self)[i](j); };
   void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
   void setElem1D(uint i, T value) {(*self)(i) = value; };
-  // Overload some operators
-  // TODO move the magic function to python to allow better indexing/slicing
-  MT::Array<T> __getitem__(int i) { return (*self)[i]; };
-  void __setitem__(int i, T value) { (*self)[i] = value; };
 
   const char* __str__() {
     std::stringstream ss;
