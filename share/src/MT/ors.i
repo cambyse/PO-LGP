@@ -29,6 +29,7 @@ created: <2013-03-20 Wed>
 %module(docstring=DOCSTRING) orspy
 
 %feature("autodoc", "1");
+%include "typemaps.i"
 
 
 //===========================================================================
@@ -55,24 +56,80 @@ created: <2013-03-20 Wed>
 namespace MT {
 template <class T>
 struct Array{
+  T *p;     //!< the pointer on the linear memory allocated
   uint N;
   uint nd;
   uint d0,d1,d2;
 
   ::MT::Array<T>& resize(uint D0);
-  T& operator()(uint i) const;
+  ::MT::Array<T>& resize(uint D0, uint D1);
+
   void clear();
-};
-};
+
+  T& operator()(uint i) const;
+  T& operator()(uint i, uint j) const;
+
+%pythoncode %{
+def setWithList(self, data):
+    if isinstance(data, list):
+        # 2D
+        if isinstance(data[0], list):
+            # assume the lists have the same length
+            self.resize(len(data), len(data[0]))
+            for i, row in enumerate(data):
+                for j, value in enumerate(row):
+                    self.setElem2D(i, j, value)
+        # 1D
+        else:
+            self.resize(len(data))
+            for i, value in enumerate(data):
+                self.setElem1D(i, value)
+    else:
+        print "ERROR: setWithList: the data was not set; it is no list!"
+
+%} // end of %pythoncode
+}; // end of struct Array
+}; // end of namespace MT
 
 // Overload some operators
 %extend MT::Array {
-  MT::Array<T> __getitem__(int i) {
-    return (*self)[i];
-  };
-  void __setitem__(int i, T value) {
-    (*self)[i] = value;
-  };
+
+  T get(uint i, uint j) { return (*self)[i](j); };
+  void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
+  void setElem1D(uint i, T value) {(*self)(i) = value; };
+  // Overload some operators
+  // TODO move the magic function to python to allow better indexing/slicing
+  MT::Array<T> __getitem__(int i) { return (*self)[i]; };
+  void __setitem__(int i, T value) { (*self)[i] = value; };
+
+  const char* __str__() {
+    std::stringstream ss;
+    ss << std::fixed;
+    // matrix with dim=2
+    if ($self->nd == 2) {
+      ss << "Array <elems=" << $self->N << ", shape=(" << $self->d0 << "," << $self->d1 <<")>:\n";
+      T* val = $self->p;
+      for (uint row = 0; row < $self->d0; row++) {
+        ss << "  | ";
+        for (uint col = 0; col < $self->d1; col++) {
+          ss << *val << "\t";
+          val++;
+        }
+        ss << "|\n";
+      }
+    }
+    // matrix with dim=1
+    else if ($self->nd == 1) {
+      ss << "Array <elems=" << $self->N << ")>:\n";
+      ss << "  | ";
+      for (uint i = 0; i < $self->d0; i++) {
+        ss << $self->elem(i) << "\t";
+      }
+      ss << "|\n";
+    }
+    ss << endl;
+    return ss.str().c_str();
+  }
 };
 
 // we need to typedef array. Otherwise python complains about arr.
@@ -82,10 +139,24 @@ struct Array{
 
 
 //===========================================================================
+// helper functions for Array
+// matrix of ones
+arr ones(uint n);
+arr ones(uint d0, uint d1);
+// matrix of zeros
+arr zeros(uint n);
+arr zeros(uint d0, uint d1);
+// identity matrix
+arr eye(uint d0, uint d1);
+arr eye(uint n);
+
+//===========================================================================
+//===========================================================================
 // OpenGL wrapper to be able to visualize the ORS stuctures
 class OpenGL {
 public:
   int  timedupdate(double sec);
+  bool update(const char *text=NULL);
 };
 
 
@@ -526,7 +597,7 @@ struct Graph {
 
   //!@name get state
   uint getJointStateDimension(bool internal=false) const;
-  void getJointState(arr& x, arr& v) const;
+  // void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
   uint getFullStateDimension() const;
   void getFullState(arr& x) const;
@@ -550,6 +621,12 @@ struct Graph {
   //!@name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setJointState(const arr& x, bool clearJointErrors=false);
+%pythoncode %{
+def setJointStateList(self, jointState):
+    tmp = ArrayDouble()
+    tmp.setWithList(jointState)
+    self.setJointState(tmp)
+%} //end of %pythoncode
   void setFullState(const arr& x, bool clearJointErrors=false);
   void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
