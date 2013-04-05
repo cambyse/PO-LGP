@@ -33,6 +33,8 @@ libxi-dev \
 libxmu-dev \
 make \
 meld \
+python-nose \
+python-unittest2 \
 realpath \
 regexxer \
 swig \
