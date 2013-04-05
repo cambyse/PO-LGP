@@ -35,6 +35,7 @@ Makefile.dep
 %% SWIG
 *_wrap.cxx
 ors.py
+orspy.py
 
 
 %% LATEX
