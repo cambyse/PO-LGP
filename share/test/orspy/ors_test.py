@@ -18,13 +18,13 @@ if __name__ == '__main__':
 
     # follow random trajectory
     # data
-    X = orspy.ArrayDouble()
-    V = orspy.ArrayDouble()
-    orspy.generateSequence(X, V, graph.getJointStateDimension())
-    for t in range(X.d0):
-        graph.setJointState(X[t])
-        graph.calcBodyFramesFromJoints()
-        gl.timedupdate(0.01)
+    # X = orspy.ArrayDouble()
+    # V = orspy.ArrayDouble()
+    # orspy.generateSequence(X, V, graph.getJointStateDimension())
+    # for t in range(X.d0):
+    #     graph.setJointState(X[t])
+    #     graph.calcBodyFramesFromJoints()
+    #     gl.timedupdate(0.01)
 
     # set joint state directly (with a python list)
     jsd = graph.getJointStateDimension()
