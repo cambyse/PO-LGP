@@ -16,24 +16,29 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-# we need this in order to compile. MLR complains otherwise. No idea why.
-add_definitions(-DMT_IMPLEMENT_TEMPLATES)
-
 #uncomment if you have defined messages
 #rosbuild_genmsg()
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+###########################
+#   MLR
+###########################
+# the the path of the MLR project
+set(MLR_PATH ~/git/mlr)
+# we need this in order to compile. MLR complains otherwise. No idea why.
+add_definitions(-DMT_IMPLEMENT_TEMPLATES)
+
 # Include the MLR source
 include_directories(
 	${PROJECT_SOURCE_DIR}/src
-	/home/stefan/git/mlr/share/src
-	/home/stefan/git/mlr/share/src/MT
-	/home/stefan/git/mlr/share/src/biros
+	${MLR_PATH}/share/src
+	${MLR_PATH}/share/src/MT
+	${MLR_PATH}/share/src/biros
 )
 # Include the MLR libs
 link_directories(
-	/home/stefan/git/mlr/share/lib
+	${MLR_PATH}/share/lib
 )
 
 rosbuild_add_executable(the_curious_robot
