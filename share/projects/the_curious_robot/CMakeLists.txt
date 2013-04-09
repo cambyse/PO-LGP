@@ -36,9 +36,8 @@ link_directories(
 	/home/stefan/git/mlr/share/lib
 )
 
-rosbuild_add_executable(articulated_world
-	src/Processes.cpp
-	src/articulated_world.cpp
+rosbuild_add_executable(the_curious_robot
+	src/main.cpp
 )
 
 # Link against the MLR libs
