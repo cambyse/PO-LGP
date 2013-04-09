@@ -17,7 +17,10 @@ HEADERS += LookAheadSearch.h \
     Maze.h \
     testmaze_ii.h \
     KMarkovCRF.h \
-    Feature.h
+    Feature.h \
+    Representation/Action.h \
+    Representation/State.h \
+    Representation/Reward.h
 SOURCES += LookAheadSearch.cpp \
     LookAheadGraph.cpp \
     LookAheadTree.cpp \
@@ -32,7 +35,10 @@ SOURCES += LookAheadSearch.cpp \
     Maze.cpp \
     testmaze_ii.cpp \
     KMarkovCRF.cpp \
-    Feature.cpp
+    Feature.cpp \
+    Representation/Action.cpp \
+    Representation/State.cpp \
+    Representation/Reward.cpp
 LIBS += -llbfgs \
     -lemon
 FORMS += testmaze_ii.ui

@@ -10,8 +10,27 @@
 #include "debug.h"
 #include "vector"
 
+#include "Representation/Action.h"
+#include "Representation/Reward.h"
+#include "Representation/State.h"
+
 int main(int argc, char *argv[])
 {
+
+    std::cout << "Actions:" << std::endl;
+    for(ActionIt aIt; aIt.is_valid(); ++aIt) {
+        std::cout << aIt << ": " << aIt.action_string() << std::endl;
+    }
+    std::cout << "Rewards:" << std::endl;
+    for(RewardIt rIt; rIt.is_valid(); ++rIt) {
+        std::cout << rIt << std::endl;
+    }
+    std::cout << "States:" << std::endl;
+    for(StateIt sIt; sIt.is_valid(); ++sIt) {
+        std::cout << sIt << std::endl;
+    }
+
+    return 0;
 
     // seed random generator
     srand(time(nullptr));
