@@ -1,13 +1,13 @@
 <package>
-  <description brief="articulated_world">
+  <description brief="the_curious_robot">
 
-     articulated_world
+     the_curious_robot
 
   </description>
-  <author>stefan otte</author>
+  <author>Stefan Otte</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/articulated_world</url>
+  <url>http://ros.org/wiki/the_curious_robot</url>
 
   <depend package="articulation_models"/>
   <depend package="articulation_msgs"/>
@@ -15,5 +15,3 @@
   <depend package="std_msgs"/>
 
 </package>
-
-
