@@ -25,7 +25,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #   MLR
 ###########################
 # the the path of the MLR project
-set(MLR_PATH ~/git/mlr)
+if (DEFINED ENV{MLR_PATH}) 
+  set(MLR_PATH $ENV{MLR_PATH})
+else()
+  set(MLR_PATH ~/mlr/git)
+endif()
 # we need this in order to compile. MLR complains otherwise. No idea why.
 add_definitions(-DMT_IMPLEMENT_TEMPLATES)
 
