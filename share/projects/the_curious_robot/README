@@ -7,9 +7,8 @@ NOTE: it's not running yet :(
 
 
 # Prerequisites & Setup
-TODO complete this section and add links.
+TCR uses ROS and the MLR code. This section explains how to setup everything.
 
-TCR uses ROS and the MLR code.
 
 ## Prerequisites
 
@@ -37,8 +36,11 @@ TCR uses ROS and the MLR code.
 
 ## Setup
 - create a link from ~/git/mlr/share/projects/the_curious_robot/ to ~/fuerte_workspace/sandbox/the_curious_robot
-- add ~/fuerte_workspace/sandbox/the_curious_robot to the ros stack
+- call cmake and in ~/fuerte_workspace/sandbox/the_curious_robot/ to compile
+  the project
 
+    cmake .
+    make
 
 
 <!--
