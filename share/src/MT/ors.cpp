@@ -2688,6 +2688,7 @@ void ors::Shape::parseAts() {
   if(ats.getValue<MT::String>(str, "mesh")) mesh.readFile(str);
   if(ats.getValue<double>(d, "meshscale")) mesh.scale(d);
   if(ats.getValue<bool>("contact"))    cont=true;
+  if(ats.getValue<arr>(x, "submeshsizes")) copy(mesh.subMeshSizes, x);
 }
 
 void ors::Shape::reset() {
