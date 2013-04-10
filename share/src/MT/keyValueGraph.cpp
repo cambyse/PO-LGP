@@ -59,7 +59,7 @@ void Item::write(std::ostream& os) const {
   }
 }
 
-bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=true){
+bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=false){
   MT::String str;
   StringA keys;
   ItemL parents;
