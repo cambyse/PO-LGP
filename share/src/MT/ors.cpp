@@ -2597,26 +2597,6 @@ void ors::Body::parseAts() {
   ats.getValue<Transformation>(X, "X");
   ats.getValue<Transformation>(X, "pose");
 
-  //move shape attributes to shape
-  Shape *s=NULL;
-  Item *it;
-  if(ats.getItem("type")){
-    CHECK(!shapes.N,"");
-    s=new Shape();
-    shapes.append(s);
-    s->body=this;
-    s->ibody=index;
-  }
-  it=ats.getItem("type");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("size");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("color");    if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("rel");      if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("mesh");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("meshscale");if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("contact");  if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("submeshsizes"); if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(s) s->parseAts();
-
   //mass properties
   if(ats.getValue<double>(d, "mass")){
     mass=d;
@@ -2639,6 +2619,27 @@ void ors::Body::parseAts() {
   if(ats.getValue<bool>("fixed"))      type=staticBT;
   if(ats.getValue<bool>("static"))     type=staticBT;
   if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
+
+  // SHAPE handling
+  // move shape attributes to shape
+  Shape *s=NULL;
+  Item *it;
+  if(ats.getItem("type")){
+    CHECK(!shapes.N,"");
+    s=new Shape();
+    shapes.append(s);
+    s->body=this;
+    s->ibody=index;
+  }
+  it=ats.getItem("type");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("size");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("color");        if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("rel");          if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("mesh");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("meshscale");    if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("contact");      if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("submeshsizes"); if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(s) s->parseAts();
 
 }
 
@@ -2682,13 +2683,13 @@ void ors::Shape::parseAts() {
   arr x;
   MT::String str;
   ats.getValue<Transformation>(rel, "rel");
-  if(ats.getValue<arr>(x, "size")) { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.getValue<arr>(x, "color")){ CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
-  if(ats.getValue<double>(d, "type")) type=(ShapeType)d;
-  if(ats.getValue<MT::String>(str, "mesh")) mesh.readFile(str);
-  if(ats.getValue<double>(d, "meshscale")) mesh.scale(d);
-  if(ats.getValue<bool>("contact"))    cont=true;
-  if(ats.getValue<arr>(x, "submeshsizes")) copy(mesh.subMeshSizes, x);
+  if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.getValue<double>(d, "type"))       { type=(ShapeType)d;}
+  if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
+  if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
+  if(ats.getValue<bool>("contact"))         { cont=true; }
+  if(ats.getValue<arr>(x, "submeshsizes"))  { copy(mesh.subMeshSizes, x); }
 }
 
 void ors::Shape::reset() {
