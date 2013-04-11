@@ -242,7 +242,7 @@ struct Matrix {
   Matrix(const arr& m);
   double *p();
 
-  void set(double* m);
+  // void set(double* m);
   void setZero();
   void setRandom(double range=1.);
   void setId();
@@ -256,6 +256,22 @@ struct Matrix {
 
   void write(std::ostream&) const;
   void read(std::istream&);
+%extend {
+  Matrix __add__(const Matrix& other) { return *$self + other; };
+}
+%pythoncode %{
+def set(self, lst):
+    assert(len(lst) >= 9)
+    self.m00 = lst[0]
+    self.m01 = lst[1]
+    self.m02 = lst[2]
+    self.m10 = lst[3]
+    self.m11 = lst[4]
+    self.m12 = lst[5]
+    self.m20 = lst[6]
+    self.m21 = lst[7]
+    self.m22 = lst[8]
+%} // end of %pythoncode
 };
 
 
