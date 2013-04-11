@@ -7,7 +7,7 @@ NOTE: this does not work yet!
 """
 
 import roslib
-roslib.load_manifest('articulation_tutorials')
+roslib.load_manifest('the_curious_robot')
 import rospy
 import numpy as np
 
@@ -81,6 +81,10 @@ class Behavior():
             self.step()
 
     def step(self):
+        self.learn_dof()
+        return
+
+        # TODO this should happen at some point
         if percepts.changed:
             self.learn_dof()
             # TODO add learnend DOF to belief
@@ -125,4 +129,5 @@ class Behavior():
 
 
 if __name__ == '__main__':
-    main()
+    behavior = Behavior()
+    behavior.run()
