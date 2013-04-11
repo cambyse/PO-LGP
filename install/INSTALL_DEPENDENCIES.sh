@@ -37,7 +37,7 @@ python-nose \
 python-unittest2 \
 realpath \
 regexxer \
-swig \
+swig2.0 \
 tcl8.5-dev \
 tk-dev \
 tk8.5-dev \
