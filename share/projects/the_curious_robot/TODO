@@ -1,8 +1,18 @@
-TODO
+# TODO
 - TODO in the code
 - add joint limits in PhysX
 - add friction in PhysX
 - learn limits
+- learn symbols for limits
 - learn properties of joints
 
-DONE
+# WORKING ON
+- orspy & physx @stefan
+
+# DONE
+- ros structure @stefan
+
+
+<!--
+vim: ft=markdown:
+-->
