@@ -70,6 +70,9 @@ struct Array{
   ::MT::Array<T>& resize(uint D0);
   ::MT::Array<T>& resize(uint D0, uint D1);
 
+  T& append(const T& x);
+  void append(const MT::Array<T>& x);
+
   void clear();
 
   T& operator()(uint i) const;
@@ -109,8 +112,28 @@ def __setitem__(self, pos, value):
     else:
         return self.setElem1D(pos, value)
 
+def __iter__(self):
+    return ArrayIter(self)
+
 %} // end of %pythoncode
 }; // end of struct Array
+%pythoncode %{
+class ArrayIter:
+    def __init__(self, array):
+        self.array = array
+        self.pos = -1
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.pos<self.array.N-1:
+            self.pos = self.pos + 1
+            return self.array.get1D(self.pos)
+        else:
+            raise StopIteration
+
+%}
 }; // end of namespace MT
 
 // Overload some operators
@@ -692,6 +715,7 @@ struct PhysXInterface {
 //===========================================================================
 // some common array templates
 %template(ArrayJoint) MT::Array<ors::Joint*>;
+%template(ArrayBody) MT::Array<ors::Body*>;
 %template(ArrayInt) MT::Array<int>;
 %template(ArrayDouble) MT::Array<double>;
 
