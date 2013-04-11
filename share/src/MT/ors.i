@@ -70,6 +70,9 @@ struct Array{
   ::MT::Array<T>& resize(uint D0);
   ::MT::Array<T>& resize(uint D0, uint D1);
 
+  T& append(const T& x);
+  void append(const MT::Array<T>& x);
+
   void clear();
 
   T& operator()(uint i) const;
