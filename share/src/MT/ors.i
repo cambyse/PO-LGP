@@ -225,9 +225,10 @@ struct Vector {
 
 %extend Vector {
   const char* __str__() {
-    std::stringstream ss;
-    ss << "Vector(" << $self->x << "|" << $self->y << "|" << $self->z << ")" << endl;
-    return ss.str().c_str();
+    std::ostringstream oss(std::ostringstream::out);
+    // ss << "Vector;
+    oss << (*$self);
+    return oss.str().c_str();
   }
 
 } // end %extend Vector
@@ -349,13 +350,9 @@ struct Transformation {
 
 %extend Transformation {
   const char* __str__() {
-    std::stringstream ss;
-    ss << "Transformation:" << endl;
-    ss << "  " << $self->pos << endl;
-    // TODO complete me
-    // ...
-    ss << endl;
-    return ss.str().c_str();
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str().c_str();
   }
 } // end %extend Transformation
 
@@ -489,10 +486,10 @@ struct Body {
     $self->name = MT::String(newName);
   };
 
-  char* __str__() {
-    static char tmp[1024];
-    sprintf(tmp,"Body %s:%d", $self->name.p, $self->index);
-    return &tmp[0];
+  const char* __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str().c_str();
   }
 }
 
@@ -567,14 +564,6 @@ struct Shape {
     $self->size[2] = c;
     $self->size[3] = d;
   };
-
-  char* __str__() {
-    // printf("%f %f %f %f\n",
-    //     $self->size[0], $self->size[1], $self->size[2], $self->size[3]);
-    static char tmp[256];
-    sprintf(tmp,"Shape %d", $self->index);
-    return &tmp[0];
-  }
 };
 
 
