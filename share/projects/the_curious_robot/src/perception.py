@@ -31,6 +31,8 @@ class FakePerception():
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
 
+        self.pub = rospy.Publisher('perception_updates', msgs.percept)
+
     def run(self):
         """ the perception loop """
         while True:
@@ -49,6 +51,7 @@ class FakePerception():
                 msg.new_pose.orientation.y = p.X.rot.y
                 msg.new_pose.orientation.z = p.X.rot.z
                 msg.new_pose.orientation.w = p.X.rot.w
+                self.pub.publish(msg)
         self.gl.update()
 
 if __name__ == '__main__':
