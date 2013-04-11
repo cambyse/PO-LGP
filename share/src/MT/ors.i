@@ -187,6 +187,7 @@ enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 
 
+//===========================================================================
 struct Vector {
   double x, y, z;
 
@@ -220,7 +221,17 @@ struct Vector {
   void read(std::istream&);
 };
 
+%extend Vector {
+  const char* __str__() {
+    std::stringstream ss;
+    ss << "Vector(" << $self->x << "|" << $self->y << "|" << $self->z << ")" << endl;
+    return ss.str().c_str();
+  }
 
+} // end %extend Vector
+
+
+//===========================================================================
 struct Matrix {
   double m00, m01, m02, m10, m11, m12, m20, m21, m22;
 
@@ -293,6 +304,7 @@ struct Quaternion {
 };
 
 
+//===========================================================================
 struct Transformation {
   Vector pos;
   Quaternion rot;
@@ -333,7 +345,20 @@ struct Transformation {
   void read(std::istream& is);
 };
 
+%extend Transformation {
+  const char* __str__() {
+    std::stringstream ss;
+    ss << "Transformation:" << endl;
+    ss << "  " << $self->pos << endl;
+    // TODO complete me
+    // ...
+    ss << endl;
+    return ss.str().c_str();
+  }
+} // end %extend Transformation
 
+
+//===========================================================================
 struct Mesh {
   arr V;
   arr Vn;
