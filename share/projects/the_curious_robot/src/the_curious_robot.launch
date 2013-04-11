@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="the_curious_robot" type="behavior.py" name="tcr_behavior" output="screen" />
+	<node pkg="articulation_models" type="model_learner_srv" name="model_learner_srv" output="screen"/>
+</launch>
