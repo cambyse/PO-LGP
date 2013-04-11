@@ -79,8 +79,7 @@ void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
     gl.camera.focus(0, 0, 1.);
     gl.camera.upright();
   }
-  gl.watch();
-  /* gl.update(); */
+  gl.update();
 }
 
 
