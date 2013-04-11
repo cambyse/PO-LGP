@@ -17,10 +17,10 @@ TODO
   - TODO fill with numpy ndarray
 - better MT::String wrapper
 - memory management sometimes fails
-- Interfaces for different physics engines are not implemented
+- DONE Interfaces for PhysX not implemented
 - integrate some docstrings:
   http://www.swig.org/Doc1.3/Python.html#Python_nn65
-- pointes sometimes need to be handled differently:
+- pointers sometimes need to be handled differently:
   http://www.swig.org/Doc1.3/Python.html#Python_nn47
   http://www.swig.org/Doc1.3/Python.html#Python_nn18
 - TODO run unittests with Jenkins
