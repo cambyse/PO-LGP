@@ -1,6 +1,7 @@
 TODO
-- joint limits mit PhysX
-- friction
+- TODO in the code
+- add joint limits in PhysX
+- add friction in PhysX
 - learn limits
 - learn properties of joints
 
