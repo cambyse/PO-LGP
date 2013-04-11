@@ -11,8 +11,8 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import numpy as np
 
-from articulation_msgs.msg import TrackMsg, ModelMsg
-from articulation_msgs.srv import TrackModelSrv
+from articulation_msgs.msg import ModelMsg, TrackMsg
+from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 from geometry_msgs.msg import Pose, Point, Quaternion
 # from sensor_msgs.msg import ChannelFloat32
 # from articulation_msgs.msg import *
@@ -28,7 +28,7 @@ MODELS = {
 }
 
 
-def sample_track(model=PRISMATIC, n=100, noise=0.02):
+def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
     """
     Helper function to create a trajectory for the given `model` with `n`
     samples and the noise of `noise`.
@@ -107,7 +107,7 @@ class Behavior():
 
             try:
                 # here we learn
-                response = dof_learner(request)
+                response = self.dof_learner(request)
 
                 logLH = [entry.value for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
@@ -116,7 +116,7 @@ class Behavior():
                     len(response.model.track.pose),
                     logLH
                 )
-                model_pub.publish(response.model)
+                self.model_pub.publish(response.model)
             except rospy.ServiceException:
                 print "model selection failed"
             if rospy.is_shutdown():
