@@ -16,20 +16,14 @@ if __name__ == '__main__':
 
     openGL = orspy.OpenGL()
     physxGL = orspy.OpenGL()
-    print "gl created"
 
     physX = orspy.PhysXInterface()
-    print "physx created"
     orspy.bindOrsToOpenGL(graph, openGL)
-    print "after bind to gl"
     orspy.bindOrsToPhysX(graph, physxGL, physX)
-    print "after bind to physx"
 
     graph.calcBodyFramesFromJoints()
-    print "after calc"
 
     for i in range(1000):
-        print "in for loop"
         graph.calcBodyFramesFromJoints()
         openGL.update()
         physxGL.update()
