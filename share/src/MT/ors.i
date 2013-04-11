@@ -15,7 +15,6 @@ TODO
   - DONE __setitem__
   - TODO slicing!
   - TODO fill with numpy ndarray
-- better MT::String wrapper
 - memory management sometimes fails
 - DONE Interfaces for PhysX not implemented
 - integrate some docstrings:
@@ -142,8 +141,15 @@ class ArrayIter:
             raise StopIteration
 
 %}
+
 }; // end of namespace MT
 
+%typemap(in) MT::String {
+    $1.p = PyString_AsString($input);
+}
+%typemap(out) MT::String {
+    $result = PyString_FromString($1.p);
+}
 // Overload some operators
 %extend MT::Array {
 
