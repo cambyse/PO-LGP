@@ -46,6 +46,7 @@ created: <2013-03-20 Wed>
   #include "opengl.h"
   #include "algos.h"
   #include "ors_physx.h"
+  #include <sstream>
 %}
 
 
@@ -121,32 +122,10 @@ def __setitem__(self, pos, value):
   void setElem1D(uint i, T value) {(*self)(i) = value; };
 
   const char* __str__() {
-    std::stringstream ss;
-    ss << std::fixed;
-    // matrix with dim=2
-    if ($self->nd == 2) {
-      ss << "Array <elems=" << $self->N << ", shape=(" << $self->d0 << "," << $self->d1 <<")>:\n";
-      T* val = $self->p;
-      for (uint row = 0; row < $self->d0; row++) {
-        ss << "  | ";
-        for (uint col = 0; col < $self->d1; col++) {
-          ss << *val << "\t";
-          val++;
-        }
-        ss << "|\n";
-      }
-    }
-    // matrix with dim=1
-    else if ($self->nd == 1) {
-      ss << "Array <elems=" << $self->N << ")>:\n";
-      ss << "  | ";
-      for (uint i = 0; i < $self->d0; i++) {
-        ss << $self->elem(i) << "\t";
-      }
-      ss << "|\n";
-    }
-    ss << endl;
-    return ss.str().c_str();
+    std::ostringstream oss(std::ostringstream::out);
+    oss << "Array<#elems=" << $self->N << ">";
+    oss << (*$self);
+    return oss.str().c_str();
   }
 };
 
