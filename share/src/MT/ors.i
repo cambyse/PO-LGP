@@ -77,6 +77,9 @@ struct Array{
 
   T& operator()(uint i) const;
   T& operator()(uint i, uint j) const;
+  // Array<T> sub(int i, int I) const;
+  Array<T> sub(int i, int I, int j, int J) const;
+  Array<T> sub(int i, int I) const;
 
 %pythoncode %{
 def setWithList(self, data):
@@ -101,7 +104,12 @@ def setWithList(self, data):
 def __getitem__(self, pos):
     if isinstance(pos, tuple):
         x, y = pos
-        return self.get2D(x, y)
+        if isinstance(x, slice) and isinstance(y, slice):
+            return self.sub(x.start, x.stop, y.start, y.stop)
+        else:
+          return self.get2D(x, y)
+    elif isinstance(pos, slice):
+        return self.sub(pos.start, pos.stop)
     else:
         return self.get1D(pos)
 
