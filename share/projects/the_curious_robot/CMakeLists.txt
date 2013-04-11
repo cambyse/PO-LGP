@@ -28,8 +28,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 if (DEFINED ENV{MLR_PATH}) 
   set(MLR_PATH $ENV{MLR_PATH})
 else()
-  set(MLR_PATH ~/mlr/git)
-  message("WARNING: $MLR_PATH is not set. I assume ~/git/mlr to be your path.")
+  set(MLR_PATH ~/git/mlr)
+  message("WARNING: $MLR_PATH is not set. I assume ${MLR_PATH} to be your path.")
 endif()
 
 # we need this in order to compile. MLR complains otherwise. No idea why.
