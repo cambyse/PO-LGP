@@ -203,11 +203,11 @@ struct Vector {
 %extend Vector {
   const char* __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    // ss << "Vector;
     oss << (*$self);
     return oss.str().c_str();
   }
-
+  Vector __add__(const Vector& other) { return *$self + other; }
+  Vector __sub__(const Vector& other) { return *$self - other; }
 } // end %extend Vector
 
 
