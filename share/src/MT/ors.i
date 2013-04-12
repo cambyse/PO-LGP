@@ -723,6 +723,13 @@ def setJointStateList(self, jointState):
   void read(std::istream& is);
   void writePlyFile(const char* filename) const;
   void glDraw();
+%extend Graph {
+  const char* __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str().c_str();
+  }
+} // end %extend Transformation
 };
 }; // end of namespace: ors
 
