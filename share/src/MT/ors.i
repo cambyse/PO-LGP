@@ -34,6 +34,7 @@ created: <2013-03-20 Wed>
 
 %feature("autodoc", "1");
 %include "typemaps.i"
+%include "std_string.i"
 
 
 //===========================================================================
@@ -158,11 +159,11 @@ class ArrayIter:
   void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
   void setElem1D(uint i, T value) {(*self)(i) = value; };
 
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << "Array<#elems=" << $self->N << ">";
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 };
 
@@ -238,10 +239,10 @@ struct Vector {
 };
 
 %extend Vector {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
   Vector __add__(const Vector& other) { return *$self + other; }
   Vector __sub__(const Vector& other) { return *$self - other; }
@@ -379,10 +380,10 @@ struct Transformation {
 };
 
 %extend Transformation {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 } // end %extend Transformation
 
@@ -516,10 +517,10 @@ struct Body {
     $self->name = MT::String(newName);
   };
 
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 }
 
@@ -721,18 +722,27 @@ def setJointStateList(self, jointState):
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void read(const char* string);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
+
 %extend Graph {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    oss << (*$self);
-    return oss.str().c_str();
+    (*$self).write(oss);
+    return oss.str();
   }
 } // end %extend Graph
+
 }; // end of namespace: ors
 
+%pythoncode %{
+def graphFromString(str):
+    ors_graph = orspy.Graph()
+    ors_graph.read(str)
+    return ors_graph
+%}
 
 
 //===========================================================================
