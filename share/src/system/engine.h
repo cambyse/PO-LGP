@@ -32,6 +32,7 @@ struct SystemDescription{
 struct Engine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
+  KeyValueGraph *system;
 
   Engine();
   ~Engine();

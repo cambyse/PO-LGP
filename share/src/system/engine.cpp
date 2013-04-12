@@ -123,7 +123,7 @@ void SystemDescription::report(){
 
 Engine& engine(){  return single_systemMonitor.obj(); }
 
-Engine::Engine(): mode(none) {
+Engine::Engine(): mode(none), system(NULL) {
   acc = new EventController;
 };
 
@@ -133,6 +133,7 @@ Engine::~Engine(){
 }
 
 void Engine::create(SystemDescription& S){
+  system = &S.system;
   S.complete();
 
   if(mode==none) mode=serial;

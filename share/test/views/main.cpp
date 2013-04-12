@@ -3,7 +3,7 @@
 #include <MT/ors.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
-#include <MT/registry.h>
+
 
 struct ExampleVar:Variable {
   FIELD(int, i);
