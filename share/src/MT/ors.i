@@ -96,7 +96,7 @@ def setWithList(self, data):
             for i, value in enumerate(data):
                 self.setElem1D(i, value)
     else:
-        print "ERROR: setWithList: the data was not set; it is no list!"
+        raise Exception("ERROR: setWithList: the data was not set; it is no list!")
 
 
 # magic function
