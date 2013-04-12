@@ -43,14 +43,7 @@ class FakePerception():
         for p in self.world.bodies:
             if agent.index is not p.index:
                 msg = msgs.percept()
-                msg.obj_name = p.name
-                msg.new_pose.position.x = p.X.pos.x
-                msg.new_pose.position.y = p.X.pos.y
-                msg.new_pose.position.z = p.X.pos.z
-                msg.new_pose.orientation.x = p.X.rot.x
-                msg.new_pose.orientation.y = p.X.rot.y
-                msg.new_pose.orientation.z = p.X.rot.z
-                msg.new_pose.orientation.w = p.X.rot.w
+                msg.body = str(p)
                 self.pub.publish(msg)
         self.gl.update()
 
