@@ -432,7 +432,7 @@ struct Shape {
 struct Proxy {
   int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              //!< index of shape B
-  Vector posA, velA;  //!< contact or closest point position on surface of shape A (in world coordinates)
+  Vector posA, velA;  //!< contact or closest point position on surface of shape A (in world coordinates) TODO: delete velocities!
   Vector posB, velB;  //!< contact or closest point position on surface of shape B (in world coordinates)
   Vector normal;      //!< contact normal, pointing from B to A (proportional to posA-posB)
   double d;           //!< distance (positive) or penetration (negative) between A and B

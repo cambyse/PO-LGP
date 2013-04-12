@@ -3,6 +3,7 @@
 #include <MT/ors.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
+#include <MT/registry.h>
 
 struct ExampleVar:Variable {
   FIELD(int, i);
@@ -14,8 +15,9 @@ struct ExampleVar:Variable {
 
 int main(int argn,char** argv) {
   MT::initCmdLine(argn, argv);
-  
-  dumpViews(); //before anything has been done!
+
+  cout <<registry() <<endl;
+
   //b::openInsideOut();
   engine();
   gtkCheckInitialized();

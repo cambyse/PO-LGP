@@ -9,7 +9,7 @@ MAKEMODE = mlrlib
 #otherwise ask Marc
 
 BUILDS += buildComponent/system
-LIBS += -lsystem -lmotion
+LIBS += -lsystem
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)

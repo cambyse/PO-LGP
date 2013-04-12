@@ -20,8 +20,6 @@
 #include "gtk.h"
 #include <sys/syscall.h>
 
-#include <biros/biros_internal.h>
-
 #ifdef MT_GTK
 
 #include <gtk/gtk.h>

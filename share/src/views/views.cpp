@@ -1,39 +1,5 @@
 #include "views.h"
 
-
-//===========================================================================
-//
-// global singleton ViewPrivateSpace
-//
-
-struct ViewPrivateSpace{
-  ViewRegistrationL viewRegistrations;
-  RWLock lock;
-  MT::Array<View*> views;
-  //MT::Array<GtkWidget*> wins;
-  ViewPrivateSpace(){
-    viewRegistrations.memMove=true;
-    views.memMove=true;
-  }
-};
-
-ViewPrivateSpace *global_viewPrivateSpace=NULL;
-
-ViewPrivateSpace* viewPrivateSpace(){
-  if(!global_viewPrivateSpace) global_viewPrivateSpace = new ViewPrivateSpace();
-  return global_viewPrivateSpace;
-}
-
-ViewRegistrationL& viewRegistrations(){
-  return viewPrivateSpace()->viewRegistrations;
-}
-
-//-- singleton list of view registrations:
-
-void registerView(ViewRegistration* v){
-  viewRegistrations().append(v);
-}
-
 #ifdef MT_GTK
 
 #include <MT/gtk.h>
@@ -57,17 +23,11 @@ int viewTimeout(void *v){
 }
 
 
-View::View():object(NULL), widget(NULL), gl(NULL), info(NULL), objectLock(NULL) {
+View::View():object(NULL), widget(NULL), gl(NULL), reg(NULL), objectLock(NULL) {
   s = new sView;
-  viewPrivateSpace()->lock.writeLock();
-  viewPrivateSpace()->views.append(this);
-  viewPrivateSpace()->lock.unlock();
 }
 
 View::~View(){
-  viewPrivateSpace()->lock.writeLock();
-  viewPrivateSpace()->views.removeValue(this);
-  viewPrivateSpace()->lock.unlock();
   gtkLock();
   if(s->timeoutTag) gtk_timeout_remove(s->timeoutTag);
   if(gl) delete gl;
@@ -131,6 +91,26 @@ void View::gtkNewText(GtkWidget *container){NICO}
 
 #endif
 
+#if 1
+ItemL getViews(const char* appliesOn_sysType){
+  ItemL types = registry().getDerivedItems<Type>();
+  ItemL ret;
+  for_list_(Item, ti, types){
+    if(ti->keys(0)!="View") continue;
+    if(ti->keys(2)==appliesOn_sysType) ret.append(ti);
+  }
+  return ret;
+}
+
+Item* getViewByName(const char *name){
+  ItemL types = registry().getDerivedItems<Type>();
+  for_list_(Item, ti, types){
+    if(ti->keys(0)!="View") continue;
+    if(ti->keys(1)==name || ti->value<Type>()->typeId().name()==name) return ti;
+  }
+  return NULL;
+}
+#else
 ViewRegistrationL getViews(const char* appliesOn_sysType){
   uint i;
   ViewRegistration *vi;
@@ -151,22 +131,10 @@ ViewRegistration* getViewByName(const char *name){
   for_list(i,vi,viewRegistrations()) if(!strcmp(vi->userType, name)) return vi;
   return NULL;
 }
+#endif
 
-void dumpViews(){
-  cout <<"\n +++ VIEWS +++" <<endl;
-  uint i;
-  ViewRegistration *vi;
-  for_list_rev(i,vi,viewRegistrations()){
-    cout
-      <<"View name=" <<vi->userType
-      <<" applies_on=" <<vi->appliesOn_sysType <<endl;
-  }
-}
 
 void deleteView(View* v){
-  viewPrivateSpace()->lock.writeLock();
-  viewPrivateSpace()->views.removeValue(v);
-  viewPrivateSpace()->lock.unlock();
   /*gtkLock();
   if(v->widget) gtk_widget_destroy(v->widget);
   if(v->gl) delete v->gl;

@@ -1,3 +1,4 @@
+%% C++/IDEs
 *.o
 *.a
 *.so
@@ -12,19 +13,22 @@ vc60.idb
 .*.files
 .*.includes
 
-*~
-*.pyc
-*.tgz
-
-z.*
-
-*_doc
-
+Makefile.dep
 *_moc.cpp
 *_ui.h
 
+*.pyc
+
+
+%% backup/temporary files
+*~
+z.*
 MT.log
-Makefile.dep
+
+
+%% PECULIAR ???
+*.tgz
+*_doc
 
 
 %% LATEX
