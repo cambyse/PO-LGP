@@ -3990,6 +3990,11 @@ void ors::Graph::write(std::ostream& os) const {
 
 #define DEBUG(x) //x
 
+void ors::Graph::read(const char* string) {
+  std::istringstream is(string);
+  read(is);  
+}
+
 /*!\brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;

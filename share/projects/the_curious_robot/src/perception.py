@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-The behavior of the curious robot.
+The fake perception of the curious robot.
 
 NOTE: this does not work yet!
 """
@@ -9,6 +9,7 @@ NOTE: this does not work yet!
 import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
+import the_curious_robot.msg as msgs
 import numpy as np
 
 import sys
@@ -30,7 +31,7 @@ class FakePerception():
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
 
-        self.percepts = ors.ArrayDouble()
+        self.pub = rospy.Publisher('perception_updates', msgs.percept)
 
     def run(self):
         """ the perception loop """
@@ -41,9 +42,9 @@ class FakePerception():
         agent = self.world.getBodyByName("robot");
         for p in self.world.bodies:
             if agent.index is not p.index:
-                self.percepts.append(p.X.pos.x)
-                self.percepts.append(p.X.pos.y)
-                self.percepts.append(p.X.pos.z)
+                msg = msgs.percept()
+                msg.body = str(p)
+                self.pub.publish(msg)
         self.gl.update()
 
 if __name__ == '__main__':

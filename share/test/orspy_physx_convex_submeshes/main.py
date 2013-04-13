@@ -7,24 +7,25 @@ import sys
 sys.path.append('../../lib/')
 import orspy
 
-import time
-
 
 if __name__ == '__main__':
     graph = orspy.Graph()
     graph.init("doorSimple.ors")
+    robot = graph.getBodyByName("robot")
 
+    # view and physx
     openGL = orspy.OpenGL()
     physxGL = orspy.OpenGL()
-
     physX = orspy.PhysXInterface()
+
     orspy.bindOrsToOpenGL(graph, openGL)
     orspy.bindOrsToPhysX(graph, physxGL, physX)
 
-    graph.calcBodyFramesFromJoints()
-
-    for i in range(1000):
+    control = orspy.Vector(0., 0.01, 0)
+    for i in range(300):
+        robot.X.pos = robot.X.pos + control
         graph.calcBodyFramesFromJoints()
+
+        physX.step()
         openGL.update()
         physxGL.update()
-        print i

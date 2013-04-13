@@ -13,14 +13,13 @@ TODO
   - DONE fill with python lists
   - DONE __getitem__
   - DONE __setitem__
-  - TODO slicing!
+  - DONE slicing!
   - TODO fill with numpy ndarray
-- better MT::String wrapper
 - memory management sometimes fails
-- Interfaces for different physics engines are not implemented
+- DONE Interfaces for PhysX not implemented
 - integrate some docstrings:
   http://www.swig.org/Doc1.3/Python.html#Python_nn65
-- pointes sometimes need to be handled differently:
+- pointers sometimes need to be handled differently:
   http://www.swig.org/Doc1.3/Python.html#Python_nn47
   http://www.swig.org/Doc1.3/Python.html#Python_nn18
 - TODO run unittests with Jenkins
@@ -77,6 +76,9 @@ struct Array{
 
   T& operator()(uint i) const;
   T& operator()(uint i, uint j) const;
+  // Array<T> sub(int i, int I) const;
+  Array<T> sub(int i, int I, int j, int J) const;
+  Array<T> sub(int i, int I) const;
 
 %pythoncode %{
 def setWithList(self, data):
@@ -94,16 +96,67 @@ def setWithList(self, data):
             for i, value in enumerate(data):
                 self.setElem1D(i, value)
     else:
-        print "ERROR: setWithList: the data was not set; it is no list!"
+        raise Exception("ERROR: setWithList: the data was not set; it is no list!")
 
 
 # magic function
 def __getitem__(self, pos):
-    if isinstance(pos, tuple):
-        x, y = pos
-        return self.get2D(x, y)
+    """
+    pos can be:
+     - 1D:
+       - int
+       - slice
+     - 2D:
+       - (int, int)
+       - (slice|int, slice|int)
+    """
+    if self.nd == 1:
+        if isinstance(pos, int):
+            return self.get1D(pos)
+        elif isinstance(pos, slice):
+            return self.sub(pos.start, pos.stop)
+        else:
+            raise Exception("array.nd==1 bud slicing request for nd>1")
+
+    elif self.nd == 2:
+        try:
+            d0, d1 = pos
+        except:
+            raise Exception("array.nd==2 bud slicing request for nd==1")
+
+        if isinstance(d0, int) and isinstance(d1, int):
+            return self.get2D(d0, d1)
+        else:
+            # determine start and stop for every d0 and d1
+            # which can be:
+            #   d0, d1 == slice|int, slice|int
+            # print "slice|int and slice|int"
+            d0_start, d0_stop = self._get_valid_slice_positions(self.d0, d0)
+            d1_start, d1_stop = self._get_valid_slice_positions(self.d1, d1)
+            return self.sub(d0_start, d0_stop, d1_start, d1_stop)
     else:
-        return self.get1D(pos)
+        raise Exception("Slicing: dimension wrong")
+
+
+def _get_valid_slice_positions(self, d_max, pos):
+    """
+    Return valid start and stop positions for slices for the given
+    dimension.
+    """
+    # print "gvsp", d_max, pos
+    if isinstance(pos, slice):
+        # print "pos is a slice"
+        start =  max([0, pos.start])
+        stop = d_max - 1 if not pos.stop else min([pos.stop, d_max]) - 1
+    elif isinstance(pos, int):
+        # print "pos is an int"
+        start =  max([0, pos])
+        stop = start
+    else:
+        raise Exception("Slicing: something weird happend")
+    # print "new:", start, stop
+    return start, stop
+
 
 def __setitem__(self, pos, value):
     if isinstance(pos, tuple):
@@ -111,6 +164,7 @@ def __setitem__(self, pos, value):
         return self.setElem2D(x, y, value)
     else:
         return self.setElem1D(pos, value)
+
 
 def __iter__(self):
     return ArrayIter(self)
@@ -134,8 +188,15 @@ class ArrayIter:
             raise StopIteration
 
 %}
+
 }; // end of namespace MT
 
+%typemap(in) MT::String {
+    $1.p = PyString_AsString($input);
+}
+%typemap(out) MT::String {
+    $result = PyString_FromString($1.p);
+}
 // Overload some operators
 %extend MT::Array {
 
@@ -242,7 +303,7 @@ struct Matrix {
   Matrix(const arr& m);
   double *p();
 
-  void set(double* m);
+  // void set(double* m);
   void setZero();
   void setRandom(double range=1.);
   void setId();
@@ -256,6 +317,22 @@ struct Matrix {
 
   void write(std::ostream&) const;
   void read(std::istream&);
+%extend {
+  Matrix __add__(const Matrix& other) { return *$self + other; };
+}
+%pythoncode %{
+def set(self, lst):
+    assert(len(lst) >= 9)
+    self.m00 = lst[0]
+    self.m01 = lst[1]
+    self.m02 = lst[2]
+    self.m10 = lst[3]
+    self.m11 = lst[4]
+    self.m12 = lst[5]
+    self.m20 = lst[6]
+    self.m21 = lst[7]
+    self.m22 = lst[8]
+%} // end of %pythoncode
 };
 
 
@@ -694,6 +771,13 @@ def setJointStateList(self, jointState):
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
+%extend Graph {
+  const char* __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str().c_str();
+  }
+} // end %extend Graph
 }; // end of namespace: ors
 
 
