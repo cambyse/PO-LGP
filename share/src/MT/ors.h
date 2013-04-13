@@ -20,7 +20,9 @@
 
 #include "array.h"
 #include "util.h"
+#ifndef MT_ORS_ONLY_BASICS
 #include "keyValueGraph.h"
+#endif
 
 /**
  * @file

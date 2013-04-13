@@ -30,9 +30,9 @@
 #undef abs
 #include <algorithm>
 #include "ors.h"
-#include "registry.h"
 
 #ifndef MT_ORS_ONLY_BASICS
+#  include "registry.h"
 #  include "plot.h"
 #endif
 #ifdef MT_PLY
@@ -46,7 +46,9 @@
 
 #define Qstate
 
+#ifndef MT_ORS_ONLY_BASICS
 REGISTER_TYPE_Key(T, ors::Transformation);
+#endif
 
 const ors::Vector VEC_x(1, 0, 0);
 const ors::Vector VEC_y(0, 1, 0);
@@ -4717,11 +4719,11 @@ template void MT::Parameter<ors::Vector>::initialize();
 template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
-#endif
 
 #include "array_t.cxx"
 template MT::Array<ors::Joint*>::Array();
 inline std::istream& operator>>(std::istream& is, TaskVariable*&){NIY}
 inline std::ostream& operator<<(std::ostream& os, const TaskVariable*&){NIY}
 template struct MT::Array<TaskVariable*>;
+#endif
 /** @} */
