@@ -36,6 +36,15 @@ created: <2013-03-20 Wed>
 %include "typemaps.i"
 %include "std_string.i"
 
+//===========================================================================
+%pythoncode %{
+import os
+def get_mlr_path():
+    if os.environ["MLR_PATH"]:
+        return os.environ["MLR_PATH"]
+    else:
+        return "~/git/mlr"
+%}
 
 //===========================================================================
 %module orspy
