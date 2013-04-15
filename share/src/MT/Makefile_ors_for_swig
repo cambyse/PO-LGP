@@ -18,9 +18,9 @@ main: python
 
 python:
 	swig2.0 -c++ -python ors.i
-	g++ -c -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
-	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib -lMT -o ../../lib/_orspy.so
 	install -D orspy.py ~/.local/lib/python2.7/site-packages/orspy.py
+	g++ -c -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
+	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib -lMT -o ~/.local/lib/python2.7/site-packages/_orspy.so
 	rm orspy.py
 
 clean:
