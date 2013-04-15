@@ -23,7 +23,8 @@ class FakeController():
         rospy.init_node('tcr_controller')
 
         self.world = ors.Graph()
-        self.world.init("/home/johannes/mlr/git/share/projects/the_curious_robot/src/doorSimple.ors")
+        mlr_path = ors.get_mlr_path()
+        self.world.init(mlr_path + "/share/projects/the_curious_robot/src/world.ors")
 
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
