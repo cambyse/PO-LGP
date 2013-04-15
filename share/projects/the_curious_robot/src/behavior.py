@@ -10,10 +10,12 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 import numpy as np
+import random
 
 from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 from geometry_msgs.msg import Pose, Point, Quaternion
+import the_curious_robot.msg as msgs
 # from sensor_msgs.msg import ChannelFloat32
 # from articulation_msgs.msg import *
 # from articulation_msgs.srv import *
@@ -71,6 +73,7 @@ class Behavior():
         # TODO we don't really need the publisher.
         # TODO visualize it with ors.
         self.model_pub = rospy.Publisher('model', ModelMsg)
+        self.control_pub = rospy.Publisher('control', msgs.control)
 
         # this is funny and true
         self.world_belief = None
@@ -82,7 +85,15 @@ class Behavior():
 
     def step(self):
         self.learn_dof()
+        msg = msgs.control()
+        # move randomly
+        msg.pose.position.x = random.randint(-5,5)
+        msg.pose.position.y = random.randint(-5,5)
+        #msg.pose.position.z = random.randint(-5,5)
+        self.control_pub.publish(msg)
+
         return
+
 
         # TODO this should happen at some point
         if percepts.changed:
