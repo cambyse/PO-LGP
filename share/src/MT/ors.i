@@ -293,6 +293,7 @@ struct Vector {
   }
   Vector __add__(const Vector& other) { return *$self + other; }
   Vector __sub__(const Vector& other) { return *$self - other; }
+  Vector __mul__(const double& other) { return *$self * other; }
 } // end %extend Vector
 
 
