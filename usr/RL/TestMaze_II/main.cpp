@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "vector"
 
+#include "util.h"
 #include "Representation/Action.h"
 #include "Representation/Reward.h"
 #include "Representation/State.h"
@@ -17,18 +18,20 @@
 int main(int argc, char *argv[])
 {
 
+    using util::INVALID;
+
     std::cout << "Actions:" << std::endl;
-    for(ActionIt aIt; aIt.is_valid(); ++aIt) {
+    for(ActionIt aIt; aIt!=INVALID; ++aIt) {
         std::cout << aIt << ": " << aIt.action_string() << std::endl;
     }
-    std::cout << "Rewards:" << std::endl;
-    for(RewardIt rIt; rIt.is_valid(); ++rIt) {
-        std::cout << rIt << std::endl;
-    }
-    std::cout << "States:" << std::endl;
-    for(StateIt sIt; sIt.is_valid(); ++sIt) {
-        std::cout << sIt << std::endl;
-    }
+    // std::cout << "Rewards:" << std::endl;
+    // for(RewardIt rIt; rIt.is_valid(); ++rIt) {
+    //     std::cout << rIt << std::endl;
+    // }
+    // std::cout << "States:" << std::endl;
+    // for(StateIt sIt; sIt.is_valid(); ++sIt) {
+    //     std::cout << sIt << std::endl;
+    // }
 
     return 0;
 
