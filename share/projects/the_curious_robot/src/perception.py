@@ -23,7 +23,7 @@ class FakePerception():
         rospy.init_node('tcr_perception')
 
         self.world = ors.Graph()
-        self.world.init("/home/johannes/mlr/git/share/projects/the_curious_robot/src/doorSimple.ors")
+        self.world.init("/home/johannes/mlr/git/share/projects/the_curious_robot/src/world.ors")
 
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
