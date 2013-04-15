@@ -11,9 +11,6 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot.msg as msgs
 import numpy as np
-
-import sys
-sys.path.append('/home/johannes/mlr/git/share/lib/')
 import orspy as ors
 
 
