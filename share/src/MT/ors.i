@@ -13,7 +13,7 @@ TODO
   - DONE fill with python lists
   - DONE __getitem__
   - DONE __setitem__
-  - TODO slicing!
+  - DONE slicing!
   - TODO fill with numpy ndarray
 - memory management sometimes fails
 - DONE Interfaces for PhysX not implemented
@@ -97,21 +97,67 @@ def setWithList(self, data):
             for i, value in enumerate(data):
                 self.setElem1D(i, value)
     else:
-        print "ERROR: setWithList: the data was not set; it is no list!"
+        raise Exception("ERROR: setWithList: the data was not set; it is no list!")
 
 
 # magic function
 def __getitem__(self, pos):
-    if isinstance(pos, tuple):
-        x, y = pos
-        if isinstance(x, slice) and isinstance(y, slice):
-            return self.sub(x.start, x.stop, y.start, y.stop)
+    """
+    pos can be:
+     - 1D:
+       - int
+       - slice
+     - 2D:
+       - (int, int)
+       - (slice|int, slice|int)
+    """
+    if self.nd == 1:
+        if isinstance(pos, int):
+            return self.get1D(pos)
+        elif isinstance(pos, slice):
+            return self.sub(pos.start, pos.stop)
         else:
-          return self.get2D(x, y)
-    elif isinstance(pos, slice):
-        return self.sub(pos.start, pos.stop)
+            raise Exception("array.nd==1 bud slicing request for nd>1")
+
+    elif self.nd == 2:
+        try:
+            d0, d1 = pos
+        except:
+            raise Exception("array.nd==2 bud slicing request for nd==1")
+
+        if isinstance(d0, int) and isinstance(d1, int):
+            return self.get2D(d0, d1)
+        else:
+            # determine start and stop for every d0 and d1
+            # which can be:
+            #   d0, d1 == slice|int, slice|int
+            # print "slice|int and slice|int"
+            d0_start, d0_stop = self._get_valid_slice_positions(self.d0, d0)
+            d1_start, d1_stop = self._get_valid_slice_positions(self.d1, d1)
+            return self.sub(d0_start, d0_stop, d1_start, d1_stop)
     else:
-        return self.get1D(pos)
+        raise Exception("Slicing: dimension wrong")
+
+
+def _get_valid_slice_positions(self, d_max, pos):
+    """
+    Return valid start and stop positions for slices for the given
+    dimension.
+    """
+    # print "gvsp", d_max, pos
+    if isinstance(pos, slice):
+        # print "pos is a slice"
+        start =  max([0, pos.start])
+        stop = d_max - 1 if not pos.stop else min([pos.stop, d_max]) - 1
+    elif isinstance(pos, int):
+        # print "pos is an int"
+        start =  max([0, pos])
+        stop = start
+    else:
+        raise Exception("Slicing: something weird happend")
+    # print "new:", start, stop
+    return start, stop
+
 
 def __setitem__(self, pos, value):
     if isinstance(pos, tuple):
@@ -119,6 +165,7 @@ def __setitem__(self, pos, value):
         return self.setElem2D(x, y, value)
     else:
         return self.setElem1D(pos, value)
+
 
 def __iter__(self):
     return ArrayIter(self)
