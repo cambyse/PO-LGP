@@ -83,17 +83,11 @@ namespace util {
         class ComparableTypeWrapper: public AssignableTypeWrapper<C,T> {
     public:
     ComparableTypeWrapper(T val): AssignableTypeWrapper<C,T>(val) { }
-        bool operator==(const C &other) const { return this->value==other.value; }
         bool operator==(const T &other) const { return this->value==other; }
-        bool operator!=(const C &other) const { return this->value!=other.value; }
         bool operator!=(const T &other) const { return this->value!=other; }
-        bool operator<(const C &other) const { return this->value<other.value; }
         bool operator<(const T &other) const { return this->value<other; }
-        bool operator>(const C &other) const { return this->value>other.value; }
         bool operator>(const T &other) const { return this->value>other; }
-        bool operator<=(const C &other) const { return this->value<=other.value; }
         bool operator<=(const T &other) const { return this->value<=other; }
-        bool operator>=(const C &other) const { return this->value>=other.value; }
         bool operator>=(const T &other) const { return this->value>=other; }
     };
 
@@ -113,21 +107,13 @@ namespace util {
         class NumericTypeWrapper: public ComparableTypeWrapper<C,T> {
     public:
     NumericTypeWrapper(T val): ComparableTypeWrapper<C,T>(val) { }
-        T & operator+=(const C &rhs) { return this->value+=rhs.value; }
         T & operator+=(const T &rhs) { return this->value+=rhs; }
-        T & operator-=(const C &rhs) { return this->value-=rhs.value; }
         T & operator-=(const T &rhs) { return this->value-=rhs; }
-        T & operator*=(const C &rhs) { return this->value*=rhs.value; }
         T & operator*=(const T &rhs) { return this->value*=rhs; }
-        T & operator/=(const C &rhs) { return this->value/=rhs.value; }
         T & operator/=(const T &rhs) { return this->value/=rhs; }
-        const T operator+(const C &rhs) const { return this->value+rhs.value; }
         const T operator+(const T &rhs) const { return this->value+rhs; }
-        const T operator-(const C &rhs) const { return this->value-rhs.value; }
         const T operator-(const T &rhs) const { return this->value-rhs; }
-        const T operator*(const C &rhs) const { return this->value*rhs.value; }
         const T operator*(const T &rhs) const { return this->value*rhs; }
-        const T operator/(const C &rhs) const { return this->value/rhs.value; }
         const T operator/(const T &rhs) const { return this->value/rhs; }
     };
 
