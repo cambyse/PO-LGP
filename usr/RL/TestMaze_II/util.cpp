@@ -31,5 +31,6 @@ bool arg_string(const QString& string_in, const int& n, QString& s_arg_out) {
 }
 
 double approx_equal_tolerance() { return 1e-10; }
+    const InvalidBase INVALID = InvalidBase(true);
 
 } // end namespace util

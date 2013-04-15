@@ -117,6 +117,70 @@ namespace util {
         const T operator/(const T &rhs) const { return this->value/rhs; }
     };
 
+    /** \brief Base for objects that can be invalid.
+     *
+     * The globale constant util::INVALID is of this type. */
+    class InvalidBase {
+    public:
+        /** \brief Default constructor constructs an invalid object. */
+    InvalidBase(const bool& b = true): invalid(b) {}
+        /** \brief Returns whether the object is invalid. */
+        bool is_invalid() const { return invalid; }
+    protected:
+        /** \brief Holds whether the object is invalid. */
+        bool invalid;
+        /** \brief Invalidate this object.
+         *
+         * Sets this->invalid to true but keeps the rest untouched. */
+        void invalidate() {
+            this->invalid=true;
+        }
+    };
+
+    /** \brief Base class to make a derived class comparable and assignable with
+     * the globale util::INVALID object of this class.
+     *
+     * @code
+     * NewClass: public InvalidAdapter<NewClass> {
+     *     // Default constructor constructs an invalid object
+     *     // if not specified differently.
+     *     NewClass(): InvalidAdapter<NewClass>(true) {} // <-- redundant
+     *     NewClass(): InvalidAdapter<NewClass>(false) {} // <-- non-invalid object
+     * }
+     * @endcode */
+    template <class C>
+        class InvalidAdapter: public InvalidBase {
+    protected:
+        /** \brief Default constructor constructs an invalid object. */
+    InvalidAdapter(const bool& b = true): InvalidBase(b) {}
+    public:
+        /** \brief InvalidAdapter objects can be compared to InvalidBase objects.
+         *
+         * Returns true if both objects are valid/invalid and false if one is
+         * valid but the other invalid. */
+        bool operator==(const InvalidBase& i) const { return invalid==i.is_invalid(); }
+        /** \brief InvalidAdapter objects can be compared to InvalidBase objects.
+         *
+         * Returns false if both objects are valid/invalid and true if one is
+         * valid but the other invalid. */
+        bool operator!=(const InvalidBase& i) const { return invalid!=i.is_invalid(); }
+    private:
+        /** \brief Constructing InvalidAdapter objects from derived classes is
+         * not allowed. */
+        InvalidAdapter(const C& c) {}
+        /** \brief Assigning derived classes to invalid objects is not allowed. */
+        InvalidAdapter& operator=(const C& c) {}
+    };
+
+    /** \brief Globale object of Invalid class.
+     *
+     * Use this object to assignment and testing of objects of derived
+     * classes like:
+     * @code
+     * ...
+     * @endcode */
+    extern const InvalidBase INVALID;
+
     //========================================================//
     //              Function Definitions                      //
     //========================================================//
