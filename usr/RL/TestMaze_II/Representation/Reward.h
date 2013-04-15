@@ -3,7 +3,7 @@
 #ifndef REWARD_H_
 #define REWARD_H_
 
-#include "util.h"
+#include "../util.h"
 
 /** \brief Reward objects. */
 class Reward: public util::NumericTypeWrapper<Reward, double>  {

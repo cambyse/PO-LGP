@@ -3,7 +3,7 @@
 #ifndef STATE_H_
 #define STATE_H_
 
-#include "util.h"
+#include "../util.h"
 
 /** \brief State objects. */
 class State: public util::NumericTypeWrapper<State, unsigned long long int>  {
