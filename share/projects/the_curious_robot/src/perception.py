@@ -10,7 +10,7 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot.msg as msgs
-import numpy as np
+# import numpy as np
 import orspy as ors
 
 
@@ -36,13 +36,14 @@ class FakePerception():
             self.step()
 
     def step(self):
-        agent = self.world.getBodyByName("robot");
+        agent = self.world.getBodyByName("robot")
         for p in self.world.bodies:
             if agent.index is not p.index:
                 msg = msgs.percept()
                 msg.body = str(p)
                 self.pub.publish(msg)
         self.gl.update()
+
 
 if __name__ == '__main__':
     perception = FakePerception()
