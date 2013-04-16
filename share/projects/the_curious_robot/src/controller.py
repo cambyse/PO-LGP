@@ -31,14 +31,14 @@ class FakeController():
         self.world.init(worldfile)
 
         self.gl = ors.OpenGL()
-        ors.bindOrsToOpenGL(self.world, self.gl)
+        self.physx = ors.PhysXInterface()
+        ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
         self.pub = rospy.Publisher('geometric_state', msgs.ors)
         self.traj_sub = rospy.Subscriber(name='control',
                                          data_class=msgs.control,
                                          callback=self.control_cb)
-
-        self.goal = None
+        self.goal = ors.Transformation()
 
     def run(self):
         """ the controller loop """
@@ -57,13 +57,12 @@ class FakeController():
         msg = msgs.ors()
         msg.ors = str(self.world)
         self.pub.publish(msg)
+
+        self.physx.step()
         self.gl.update()
 
     def control_cb(self, data):
         print "Got control message."
-        if not self.goal:
-            self.goal = ors.Transformation()
-
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z
