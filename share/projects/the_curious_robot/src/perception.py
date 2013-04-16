@@ -11,6 +11,7 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot.msg as msgs
 # import numpy as np
+import os
 import orspy as ors
 
 
@@ -23,8 +24,11 @@ class FakePerception():
         rospy.init_node('tcr_perception')
 
         self.world = ors.Graph()
-        mlr_path = ors.get_mlr_path()
-        self.world.init(mlr_path + "/share/projects/the_curious_robot/src/world.ors")
+        worldfile = os.path.join(
+            ors.get_mlr_path(),
+            "share/projects/the_curious_robot/src/world.ors"
+        )
+        self.world.init(worldfile)
 
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
