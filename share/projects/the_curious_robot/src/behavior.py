@@ -19,6 +19,7 @@ import the_curious_robot.msg as msgs
 # from sensor_msgs.msg import ChannelFloat32
 # from articulation_msgs.msg import *
 # from articulation_msgs.srv import *
+import orspy as ors
 
 
 # different joint types
@@ -74,9 +75,17 @@ class Behavior():
         # TODO visualize it with ors.
         self.model_pub = rospy.Publisher('model', ModelMsg)
         self.control_pub = rospy.Publisher('control', msgs.control)
+        self.perception_sub = rospy.Subscriber(
+            name='perception_updates',
+            data_class=msgs.percept,
+            callback=self.percept_cb
+        )
 
         # this is funny and true
         self.world_belief = None
+
+        self.percepts = None
+        self.trajectory = []
 
     def run(self):
         """ the behavior loop """
@@ -84,29 +93,46 @@ class Behavior():
             self.step()
 
     def step(self):
+        # tmp
         self.learn_dof()
         msg = msgs.control()
         # move randomly
-        msg.pose.position.x = random.randint(-5,5)
-        msg.pose.position.y = random.randint(-5,5)
+        msg.pose.position.x = random.randint(-5, 5)
+        msg.pose.position.y = random.randint(-5, 5)
         #msg.pose.position.z = random.randint(-5,5)
         self.control_pub.publish(msg)
-
         return
 
+        # Here is the actual behavior
+        # reset control --> don't move
+        msg.pose.position.x = 0.
+        msg.pose.position.y = 0.
+        msg.pose.position.z = 0.
 
-        # TODO this should happen at some point
-        if percepts.changed:
-            self.learn_dof()
+        if self.percepts.world_changed:
+            self.trajectory.append(self.percepts.change)
+            self.prev_change = True
+
+        elif self.prev_change:
+            self.learn_dof(self.trajectory)
             # TODO add learnend DOF to belief
             # TODO explore DOF
             # TODO learn more about DOF
-            # self.learn_limits_of_dof()
+            self.learn_limits_of_dof()
+
+            self.prev_change = False
+            del self.trajectory[:]
+
         else:
             # TODO general exploration
-            pass
+            # move randomly
+            msg.pose.position.x = random.randint(-5, 5)
+            msg.pose.position.y = random.randint(-5, 5)
+            #msg.pose.position.z = random.randint(-5,5)
 
-    def learn_dof(self):
+        self.control_pub.publish(msg)
+
+    def learn_dof(self, trajectory=None):
         """
         Learn DOF
         """
@@ -136,7 +162,15 @@ class Behavior():
             rospy.sleep(0.5)
 
     def learn_limits_of_dof(self):
-        pass
+        # TODO these are not the limits of the joint but he min/max pose
+        #      but the joint value can be inferred
+        print "learning limits:"
+        print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
+        print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
+        print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
+
+    def percept_cb(self, data):
+        self.percepts = data
 
 
 if __name__ == '__main__':
