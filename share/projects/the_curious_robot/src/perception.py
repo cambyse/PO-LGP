@@ -34,6 +34,9 @@ class FakePerception():
         ors.bindOrsToOpenGL(self.world, self.gl)
 
         self.pub = rospy.Publisher('perception_updates', msgs.percept)
+        self.ors_subs = rospy.Subscriber(name='geometric_state',
+                                         data_class=msgs.ors,
+                                         callback=self.ors_cb)
 
     def run(self):
         """ the perception loop """
@@ -48,6 +51,10 @@ class FakePerception():
                 msg.body = str(p)
                 self.pub.publish(msg)
         self.gl.update()
+
+    def ors_cb(self, data):
+        self.world.read(data.ors)
+        self.world.calcBodyFramesFromJoints()
 
 
 if __name__ == '__main__':
