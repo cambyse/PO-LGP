@@ -168,6 +168,9 @@ class Behavior():
         print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
         print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
         print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
+        print "  man x pose:", max(self.trajectory, key=lambda pose: pose.x)
+        print "  man y pose:", max(self.trajectory, key=lambda pose: pose.y)
+        print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
 
     def percept_cb(self, data):
         self.percepts = data
