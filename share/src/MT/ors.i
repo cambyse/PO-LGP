@@ -614,6 +614,14 @@ struct Joint {
   Joint &data();
 };
 
+%extend Joint {
+  std::string __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss<<(*$self);
+    return oss.str(); 
+  }
+}
+
 
 struct Shape {
   uint index;
