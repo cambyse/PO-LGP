@@ -1,13 +1,11 @@
 #include "Action.h"
 
 Action::Action():
-    util::NumericTypeWrapper<Action, unsigned long long int>(NULL_ACTION),
-    util::InvalidAdapter<Action>(true)
+    util::NumericTypeWrapper<Action, value_t>(NULL_ACTION)
 {}
 
 Action::Action(value_t val):
-    util::NumericTypeWrapper<Action, unsigned long long int>(val),
-    util::InvalidAdapter<Action>(false)
+    util::NumericTypeWrapper<Action, value_t>(val)
 {}
 
 const char* Action::action_string(const Action& a) {
@@ -27,7 +25,10 @@ const char* Action::action_strings[END_ACTION] = {
     "STAY "
 };
 
-ActionIt::ActionIt(const Action& a): Action(a) {
+ActionIt::ActionIt(const Action& a):
+    Action(a),
+    util::InvalidAdapter<ActionIt>(false)
+{
     check_for_invalid();
 }
 

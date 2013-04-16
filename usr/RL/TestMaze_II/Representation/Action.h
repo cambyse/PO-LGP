@@ -6,18 +6,9 @@
 #include "util.h"
 
 /** \brief Action objects. */
-class Action:
-    public util::NumericTypeWrapper<Action, unsigned long long int>,
-    public util::InvalidAdapter<Action> {
+class Action: public util::NumericTypeWrapper<Action, unsigned long long int> {
 
 public:
-
-    // Make operator resolution unambiguous.
-    // Try using the Invalid adapter first.
-    using util::InvalidAdapter<Action>::operator!=;
-    using util::NumericTypeWrapper<Action, unsigned long long int>::operator!=;
-    using util::InvalidAdapter<Action>::operator==;
-    using util::NumericTypeWrapper<Action, unsigned long long int>::operator==;
 
     enum ACTION { NULL_ACTION, UP, DOWN, LEFT, RIGHT, STAY, END_ACTION };
 
@@ -38,9 +29,17 @@ protected:
  * ActionIt are iterators over Action objects. They are derived from the Action
  * class and can hence directly be used like Action object without dereferencing
  * them. */
-class ActionIt: public Action  {
+class ActionIt: public Action, public util::InvalidAdapter<ActionIt> {
 
 public:
+
+    // Make operator resolution unambiguous.
+    // Try using the Invalid adapter first.
+    using util::InvalidAdapter<ActionIt>::operator!=;
+    using util::NumericTypeWrapper<Action, value_t>::operator!=;
+    using util::InvalidAdapter<ActionIt>::operator==;
+    using util::NumericTypeWrapper<Action, value_t>::operator==;
+
     ActionIt(const Action& a = Action(NULL_ACTION+1));
     ActionIt & operator++();
     ActionIt & operator--();
