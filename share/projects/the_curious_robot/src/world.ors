@@ -1,4 +1,4 @@
-body robot{ type=1 size=[.03 .03 .03 .03]  rel=<T t(0. -1. 1.)>}
+body robot{ type=1 size=[.03 .03 .03 .03]  rel=<T t(0. -1. 1.)> kinematic}
 
 body door0{ type=3 mesh="plys/door-0_x_hacd.ply" meshscale=.01 submeshsizes=[8 8 8] fixed }
 body door1{ type=3 mesh='plys/door-1_x_hacd.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0]}
