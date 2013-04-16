@@ -455,6 +455,10 @@ struct Graph {
 
   //!@name constructors
   Graph() { sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
+  Graph(const char* filename) {
+    sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
+    init(filename);
+  }
   ~Graph() { clear(); }
   void operator=(const ors::Graph& G);
   Graph* newClone() const;
