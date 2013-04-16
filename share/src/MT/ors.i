@@ -680,6 +680,7 @@ struct Graph {
   bool isLinkTree;
 
   Graph();
+  Graph(const char* filename);
   ~Graph();
   // void operator=(const ors::Graph& G);
   Graph* newClone() const;
