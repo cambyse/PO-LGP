@@ -40,10 +40,12 @@ created: <2013-03-20 Wed>
 %pythoncode %{
 import os
 def get_mlr_path():
-    if os.environ["MLR_PATH"]:
-        return os.environ["MLR_PATH"]
-    else:
-        return "~/git/mlr"
+    """
+    Return the path of the MLR code.
+    The path is used to locate the libs and similar stuff.
+    You can set he env var MLR_PATH if MLR is not in the default location.
+    """
+    return os.environ.get("MLR_PATH", os.path.expanduser("~/git/mlr/"))
 %}
 
 //===========================================================================
