@@ -1,3 +1,4 @@
+CONFIG += debug
 TEMPLATE = app
 TARGET = TestMaze_II
 QT += core \
@@ -20,7 +21,8 @@ HEADERS += LookAheadSearch.h \
     Feature.h \
     Representation/Action.h \
     Representation/State.h \
-    Representation/Reward.h
+    Representation/Reward.h \
+    Representation/Instance.h
 SOURCES += LookAheadSearch.cpp \
     LookAheadGraph.cpp \
     LookAheadTree.cpp \
@@ -38,9 +40,10 @@ SOURCES += LookAheadSearch.cpp \
     Feature.cpp \
     Representation/Action.cpp \
     Representation/State.cpp \
-    Representation/Reward.cpp
+    Representation/Reward.cpp \
+    Representation/Instance.cpp
 LIBS += -llbfgs \
     -lemon
 FORMS += testmaze_ii.ui
-RESOURCES += 
+RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x
