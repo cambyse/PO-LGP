@@ -39,6 +39,7 @@ class FakeController():
                                          data_class=msgs.control,
                                          callback=self.control_cb)
         self.goal = ors.Transformation()
+        self.frame_id = 1
 
     def run(self):
         """ the controller loop """
@@ -50,15 +51,19 @@ class FakeController():
         if self.goal:
             Kp = 10e-2
             agent = self.world.getBodyByName("robot")
-            agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos)*Kp
+            agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
             #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.world.calcBodyFramesFromJoints()
+        self.physx.step()  # this MUST be before serializing!
+
         msg = msgs.ors()
+        msg.header.stamp = rospy.get_rostime()
+        msg.header.frame_id = str(self.frame_id)
+        self.frame_id = self.frame_id + 1
         msg.ors = str(self.world)
         self.pub.publish(msg)
 
-        self.physx.step()
         self.gl.update()
 
     def control_cb(self, data):

@@ -54,7 +54,8 @@ class FakePerception():
 
     def ors_cb(self, data):
         self.world.read(data.ors)
-        self.world.calcBodyFramesFromJoints()
+        self.world.calcShapeFramesFromBodies()  # don't use
+                                                # calcBodyFramesFromJoints here
 
 
 if __name__ == '__main__':
