@@ -48,12 +48,12 @@ class FakeController():
     def step(self):
         # P-Controller
         if self.goal:
-            Kp = 10e-3
+            Kp = 10e-2
             agent = self.world.getBodyByName("robot")
             agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos)*Kp
-            self.world.calcBodyFramesFromJoints()
             #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
+        self.world.calcBodyFramesFromJoints()
         msg = msgs.ors()
         msg.ors = str(self.world)
         self.pub.publish(msg)
