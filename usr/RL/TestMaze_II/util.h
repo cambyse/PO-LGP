@@ -62,7 +62,7 @@ namespace util {
     public:
         typedef T value_t;
     AssignableTypeWrapper(T val): value(val) { }
-        operator T() { return value; }
+        operator T() const { return value; }
         T& operator=(const C &rhs) { return this->value=rhs.value; }
         T& operator=(const T &rhs) { return this->value=rhs; }
     protected:
@@ -111,10 +111,6 @@ namespace util {
         T & operator-=(const T &rhs) { return this->value-=rhs; }
         T & operator*=(const T &rhs) { return this->value*=rhs; }
         T & operator/=(const T &rhs) { return this->value/=rhs; }
-        const T operator+(const T &rhs) const { return this->value+rhs; }
-        const T operator-(const T &rhs) const { return this->value-rhs; }
-        const T operator*(const T &rhs) const { return this->value*rhs; }
-        const T operator/(const T &rhs) const { return this->value/rhs; }
     };
 
     /** \brief Base for objects that can be invalid.
