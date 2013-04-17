@@ -10,6 +10,7 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot.msg as msgs
+import os
 # import numpy as np
 import orspy as ors
 
@@ -23,18 +24,21 @@ class FakeController():
         rospy.init_node('tcr_controller')
 
         self.world = ors.Graph()
-        mlr_path = ors.get_mlr_path()
-        self.world.init(mlr_path + "/share/projects/the_curious_robot/src/world.ors")
+        worldfile = os.path.join(
+            ors.get_mlr_path(),
+            "share/projects/the_curious_robot/src/world.ors"
+        )
+        self.world.init(worldfile)
 
         self.gl = ors.OpenGL()
-        ors.bindOrsToOpenGL(self.world, self.gl)
+        self.physx = ors.PhysXInterface()
+        ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
         self.pub = rospy.Publisher('geometric_state', msgs.ors)
         self.traj_sub = rospy.Subscriber(name='control',
                                          data_class=msgs.control,
                                          callback=self.control_cb)
-
-        self.goal = None
+        self.goal = ors.Transformation()
 
     def run(self):
         """ the controller loop """
@@ -53,13 +57,12 @@ class FakeController():
         msg = msgs.ors()
         msg.ors = str(self.world)
         self.pub.publish(msg)
+
+        self.physx.step()
         self.gl.update()
 
     def control_cb(self, data):
         print "Got control message."
-        if not self.goal:
-            self.goal = ors.Transformation()
-
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z

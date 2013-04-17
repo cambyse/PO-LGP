@@ -11,6 +11,7 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot.msg as msgs
 # import numpy as np
+import os
 import orspy as ors
 
 
@@ -23,13 +24,19 @@ class FakePerception():
         rospy.init_node('tcr_perception')
 
         self.world = ors.Graph()
-        mlr_path = ors.get_mlr_path()
-        self.world.init(mlr_path + "/share/projects/the_curious_robot/src/world.ors")
+        worldfile = os.path.join(
+            ors.get_mlr_path(),
+            "share/projects/the_curious_robot/src/world.ors"
+        )
+        self.world.init(worldfile)
 
         self.gl = ors.OpenGL()
         ors.bindOrsToOpenGL(self.world, self.gl)
 
         self.pub = rospy.Publisher('perception_updates', msgs.percept)
+        self.ors_subs = rospy.Subscriber(name='geometric_state',
+                                         data_class=msgs.ors,
+                                         callback=self.ors_cb)
 
     def run(self):
         """ the perception loop """
@@ -44,6 +51,10 @@ class FakePerception():
                 msg.body = str(p)
                 self.pub.publish(msg)
         self.gl.update()
+
+    def ors_cb(self, data):
+        self.world.read(data.ors)
+        self.world.calcBodyFramesFromJoints()
 
 
 if __name__ == '__main__':
