@@ -46,6 +46,20 @@ class Test_MatrixOperatorOverloading(unittest.TestCase):
         self.assertAlmostEqual(m3.m22, 3.)
 
 
-# run tests
+class Test_Graph_serialization(unittest.TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+    def test_graph_de_serialization(self):
+        graph1 = orspy.Graph("world.ors")
+        serialized1 = str(graph1)
+
+        graph2 = orspy.Graph()
+        graph2.read(serialized1)
+        serialized2 = str(graph2)
+
+        self.assertMultiLineEqual(serialized1, serialized2)
+
+
 if __name__ == '__main__':
     unittest.main()
