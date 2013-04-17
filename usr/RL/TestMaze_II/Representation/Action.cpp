@@ -16,6 +16,11 @@ const char* Action::action_string() const {
     return action_string(*this);
 }
 
+std::ostream& operator<<(std::ostream &out, const Action& a) {
+    out << a.action_string();
+    return out;
+}
+
 const char* Action::action_strings[END_ACTION] = {
     "NULL_ACTION",
     "UP   ",
@@ -24,6 +29,10 @@ const char* Action::action_strings[END_ACTION] = {
     "RIGHT",
     "STAY "
 };
+
+ActionIt::ActionIt() {
+    *this = first();
+}
 
 ActionIt::ActionIt(const Action& a):
     Action(a),
@@ -42,6 +51,14 @@ ActionIt & ActionIt::operator--() {
     --value;
     check_for_invalid();
     return *this;
+}
+
+const ActionIt ActionIt::first() {
+    return ActionIt(NULL_ACTION+1);
+}
+
+const ActionIt ActionIt::last() {
+    return ActionIt(END_ACTION-1);
 }
 
 void ActionIt::check_for_invalid() {

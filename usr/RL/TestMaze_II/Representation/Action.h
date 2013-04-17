@@ -5,6 +5,8 @@
 
 #include "util.h"
 
+#include <ostream>
+
 /** \brief Action objects. */
 class Action: public util::NumericTypeWrapper<Action, unsigned long long int> {
 
@@ -17,6 +19,8 @@ public:
 
     static const char* action_string(const Action& a);
     const char* action_string() const;
+
+    friend std::ostream& operator<<(std::ostream &out, const Action& a);
 
 protected:
 
@@ -40,9 +44,13 @@ public:
     using util::InvalidAdapter<ActionIt>::operator==;
     using util::NumericTypeWrapper<Action, value_t>::operator==;
 
-    ActionIt(const Action& a = Action(NULL_ACTION+1));
+    ActionIt();
+    ActionIt(const Action& a);
     ActionIt & operator++();
     ActionIt & operator--();
+
+    static const ActionIt first();
+    static const ActionIt last();
 
 private:
     void check_for_invalid();

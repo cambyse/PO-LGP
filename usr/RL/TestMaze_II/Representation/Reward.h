@@ -5,13 +5,18 @@
 
 #include "../util.h"
 
+#include <ostream>
+
 /** \brief Reward objects. */
-class Reward: public util::NumericTypeWrapper<Reward, double>  {
+class Reward: public util::NumericTypeWrapper<Reward, int>  {
 public:
     static const value_t min_reward;
     static const value_t max_reward;
     static const value_t reward_increment;
     Reward(value_t val = min_reward);
+    friend std::ostream& operator<<(std::ostream &out, const Reward& r);
+private:
+    int add_width() const;
 };
 
 /** \brief RewardIt objects.
@@ -30,9 +35,13 @@ public:
     using util::InvalidAdapter<RewardIt>::operator==;
     using util::NumericTypeWrapper<Reward, value_t>::operator==;
 
-    RewardIt(const Reward& r = Reward());
+    RewardIt();
+    RewardIt(const Reward& r);
     RewardIt & operator++();
     RewardIt & operator--();
+
+    static const RewardIt first();
+    static const RewardIt last();
 
 private:
     void check_for_invalid();

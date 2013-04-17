@@ -5,12 +5,17 @@
 
 #include "../util.h"
 
+#include <ostream>
+
 /** \brief State objects. */
-class State: public util::NumericTypeWrapper<State, unsigned long long int>  {
+class State: public util::NumericTypeWrapper<State, int>  {
 public:
-    static const value_t min_state = 1;
-    static const value_t max_state = 100;
+    static const value_t min_state = 0;
+    static const value_t max_state = 10;
     State(value_t val = min_state);
+    friend std::ostream& operator<<(std::ostream &out, const State& s);
+private:
+    int add_width() const;
 };
 
 /** \brief StateIt objects.
@@ -28,9 +33,13 @@ public:
     using util::InvalidAdapter<StateIt>::operator==;
     using util::NumericTypeWrapper<State, value_t>::operator==;
 
-    StateIt(const State& a = State());
+    StateIt();
+    StateIt(const State& s);
     StateIt & operator++();
     StateIt & operator--();
+
+    static const StateIt first();
+    static const StateIt last();
 
 private:
     void check_for_invalid();
