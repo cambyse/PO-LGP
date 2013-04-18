@@ -1,0 +1,9 @@
+mplayer -demuxer rawvideo -rawvideo w=1280:h=1024:fps=1:y8 video.raw
+
+mencoder -demuxer rawvideo -rawvideo fps=25:w=1280:h=1024:format=y8  video.raw -o video.avi -ovc copy
+
+mplayer -demuxer rawvideo -rawvideo w=1280:h=1024:fps=1:format=rgb248 video.raw
+
+mencoder -demuxer rawvideo -rawvideo fps=25:w=1280:h=1024:format=rgb24  video.raw -o video.avi -ovc lavc
+
+convert -size 1280x1024 -depth 8 gray:pic_MONO8.raw image.png
