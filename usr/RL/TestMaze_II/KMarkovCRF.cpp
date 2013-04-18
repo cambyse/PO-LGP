@@ -1,10 +1,10 @@
 
 #include "KMarkovCRF.h"
-
-#include "list"
-#include "tuple"
-
 #include "lbfgs_codes.h"
+#include "util.h"
+
+#include <list>
+#include <tuple>
 
 #define DEBUG_STRING "CRF: "
 #define DEBUG_LEVEL 1
@@ -18,6 +18,8 @@ using std::get;
 using std::pair;
 using std::make_pair;
 using std::set;
+
+using util::INVALID;
 
 KMarkovCRF::KMarkovCRF():
         k(Data::k),
@@ -34,19 +36,19 @@ KMarkovCRF::KMarkovCRF():
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-k; --k_idx) {
         // actions
-        for(action_t action=0; action<(idx_t)Data::action_n; ++action) {
+        for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
             basis_features.push_back(action_feature);
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // states
-        for(state_t state=0; state<(idx_t)Data::state_n; ++state) {
+        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
             StateFeature * state_feature = StateFeature::create(state,k_idx);
             basis_features.push_back(state_feature);
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
-        for(reward_t reward = Data::min_reward; reward<=Data::max_reward; reward+=Data::reward_increment) {
+        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
             RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
             basis_features.push_back(reward_feature);
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
@@ -78,7 +80,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         g[i] = 0;
     }
 
-    int number_of_data_points = instance_data.size()-k;
+    int number_of_data_points = instance_data.length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return fx;
@@ -95,9 +97,9 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumFNN; // sumF(x(n),y(n))
     double sumExpN; // normalization Z(x)
     vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F)
-    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
-            instance_iterator!=instance_data.end();
-            ++instance_iterator) {
+    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
+
+        action_t action = instance.action;
 
         sumFNN = 0;
         sumExpN = 0;
@@ -105,25 +107,27 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
         // calculate sumF(x(n),y(n))
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-            sumFNN += x[f_idx]*active_features[f_idx].evaluate(instance_iterator);
+            sumFNN += x[f_idx]*active_features[f_idx].evaluate(instance);
         }
 
         // calculate sumExp(x(n))
-        for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-            // calculate sumF(x(n),y')
-            double sumFN = 0;
-            for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                sumFN += x[f_idx]*active_features[f_idx].evaluate(instance_iterator,*output_iterator);
-            }
+                // calculate sumF(x(n),y')
+                double sumFN = 0;
+                for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                    sumFN += x[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+                }
 
-            // increment sumExp(x(n))
-            sumExpN += exp( sumFN );
+                // increment sumExp(x(n))
+                sumExpN += exp( sumFN );
 
-            // increment sumFExp(x(n),F)
-            for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
-                // in case of parameter binding additionally sum over all features belonging to this parameter
-                sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(instance_iterator,*output_iterator) * exp( sumFN );
+                // increment sumFExp(x(n),F)
+                for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
+                    // in case of parameter binding additionally sum over all features belonging to this parameter
+                    sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(instance,action,state,reward) * exp( sumFN );
+                }
             }
         }
 
@@ -135,7 +139,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter
-            g[lambda_idx] += active_features[lambda_idx].evaluate(instance_iterator);
+            g[lambda_idx] += active_features[lambda_idx].evaluate(instance);
         }
     }
 
@@ -237,7 +241,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const state_t& state,
         const reward_t& reward
 ) {
-    instance_data.push_back(data_point_t(action,state,reward));
+    instance_data.append_instance(action,state,reward);
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
@@ -304,15 +308,16 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 }
 
 void KMarkovCRF::evaluate_features() {
-    int number_of_data_points = instance_data.size()-k;
+    int number_of_data_points = instance_data.length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return;
     }
 
     DEBUG_OUT(0,"Evaluating features:");
+    instance_t ins = instance_data.last();
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(instance_data.end()-1) );
+        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(ins) );
     }
 }
 
@@ -324,7 +329,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     //  Check for Data  //
     //------------------//
 
-    int N = instance_data.size()-k;
+    int N = instance_data.length_to_first()-k;
     if(N<=0) {
         DEBUG_OUT(0,"Not enough data to score features.");
         return;
@@ -345,7 +350,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     // to make the code more readable and comparable to evaluate_model() function
     vector<double> &g = compound_feature_scores;
 
-    int number_of_data_points = instance_data.size()-k;
+    int number_of_data_points = instance_data.length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features.");
         return;
@@ -363,30 +368,32 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of compound features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of compound features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all compound features F
-    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
-            instance_iterator!=instance_data.end();
-            ++instance_iterator) {
+    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
+
+        action_t action = instance.action;
 
         sumExpN = 0.0;
         sumFExpNF.assign(cf_size,0.0);
 
         // calculate sumExp(x(n))
-        for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-            // calculate sumF(x(n),y')
-            sumFN = 0.0;
-            for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance_iterator,*output_iterator);
-                // compound features have zero coefficient (no parameter binding possible)!
-            }
+                // calculate sumF(x(n),y')
+                sumFN = 0.0;
+                for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                    sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+                    // compound features have zero coefficient (no parameter binding possible)!
+                }
 
-            // increment sumExp(x(n))
-            sumExpN += exp( sumFN );
+                // increment sumExp(x(n))
+                sumExpN += exp( sumFN );
 
-            // increment sumFExp(x(n),F)
-            for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all compound features)
-                // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-                sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance_iterator,*output_iterator) * exp( sumFN );
+                // increment sumFExp(x(n),F)
+                for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all compound features)
+                    // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
+                    sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance,action,state,reward) * exp( sumFN );
+                }
             }
         }
 
@@ -395,7 +402,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             g[lambda_cf_idx] -= sumFExpNF[lambda_cf_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-            g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance_iterator);
+            g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance);
         }
     }
 
@@ -542,33 +549,30 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
         const reward_t& reward) const {
 
     // construct input data
-    instance_t instance(state_from.size());
-    for(unsigned int idx=0; idx<state_from.size(); ++idx) {
-        instance[state_from.size()-idx-1] = state_from[idx];
-    }
-    instance.push_back(data_point_t(action,state_to,reward));
-
-    input_data_t input_data = instance.end();
-    --input_data;
+    instance_t instance = state_from;
 
     // calculate sumF(x,y)
     probability_t sumFXY = 0;
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-        sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(input_data);
+        sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(instance);
     }
+
+    // todo what is going on here?!
 
     // calculate sumExp(x)
     probability_t sumExpX = 0;
-    for(OutputIterator output_iterator; !output_iterator.end(); ++output_iterator) {
+    for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-        // calculate sumF(x,y')
-        probability_t sumFXYs = 0;
-        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-            sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(input_data,*output_iterator);
+            // calculate sumF(x,y')
+            probability_t sumFXYs = 0;
+            for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+            }
+
+            // increment sumExp(x(n))
+            sumExpX += exp( sumFXYs );
         }
-
-        // increment sumExp(x(n))
-        sumExpX += exp( sumFXYs );
     }
 
     return exp( sumFXY )/sumExpX;
@@ -587,9 +591,9 @@ const {
 
     if(input_ret==input_set.end()) { // no data for this input
 
-        if(reward==Data::min_reward) {
+        if(reward==reward_t::min_reward) {
             // uniform probability for zero reward
-            return 1./Data::state_n;
+            return 1./(state_t::max_state-state_t::min_state+1);
         } else {
             // zero probability else
             return 0;
@@ -623,27 +627,26 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
     unsigned long counter = 0;
 
     for(Data::instance_idx_t state_from_idx=0;
-            state_from_idx<(idx_t)Data::instance_n;
+            state_from_idx!=INVALID
             ++state_from_idx) {
 
         instance_t state_from = Data::instance_from_idx(state_from_idx);
 
-        for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
+        for(Data::action_t action = 0; action!=INVALID; ++action) {
 
-            for(OutputIterator it; !it.end(); ++it) {
+            for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID; ++state_to) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-                state_t state_to = (*it).state;
-                reward_t reward  = (*it).reward;
-
-                predictions.set_prediction(
+                    predictions.set_prediction(
                         state_from,
                         action,
                         state_to,
                         reward,
                         get_prediction(state_from,action,state_to,reward)
-                );
+                        );
 
-                ++counter;
+                    ++counter;
+                }
             }
 
         }
@@ -653,7 +656,7 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
 
 void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
 
-    int number_of_data_points = instance_data.size()-k;
+    int number_of_data_points = instance_data.length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
     }
@@ -662,17 +665,17 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
     // determine relative frequencies //
     //--------------------------------//
     std::vector<unsigned long> counts(Data::instance_n*Data::action_n*Data::state_n*Data::reward_n,0);
-    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
-            instance_iterator!=instance_data.end();
-            ++instance_iterator) {
+    for(const_instance_t instance=instance_data.begin()+k;
+            instance!=instance_data.end();
+            ++instance) {
 
         instance_t instance(Data::k);
         for(unsigned int idx=0; idx<instance.size(); ++idx) {
-            instance[idx] = *(instance_iterator-idx-1);
+            instance[idx] = *(instance-idx-1);
         }
-        action_t action = instance_iterator->action;
-        state_t state = instance_iterator->state;
-        reward_t reward = instance_iterator->reward;
+        action_t action = instance->action;
+        state_t state = instance->state;
+        reward_t reward = instance->reward;
         counts[Data::prediction_idx(instance,action,state,reward)] += 1;
     }
 
@@ -681,27 +684,26 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
     //-----------------------------//
     unsigned long counter = 0;
     for(Data::instance_idx_t state_from_idx=0;
-            state_from_idx<(idx_t)Data::instance_n;
+            state_from_idx!=INVALID
             ++state_from_idx) {
 
         instance_t state_from = Data::instance_from_idx(state_from_idx);
 
-        for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
+        for(Data::action_t action = 0; action!=INVALID; ++action) {
 
-            for(OutputIterator it; !it.end(); ++it) {
+            for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID; ++state_to) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-                state_t state_to = (*it).state;
-                reward_t reward  = (*it).reward;
-
-                predictions.set_prediction(
+                    predictions.set_prediction(
                         state_from,
                         action,
                         state_to,
                         reward,
                         (probability_t)counts[Data::prediction_idx(state_from,action,state_to,reward)]/number_of_data_points
-                );
+                        );
 
-                ++counter;
+                    ++counter;
+                }
             }
 
         }
@@ -721,17 +723,17 @@ void KMarkovCRF::update_prediction_map() {
     std::map<input_tuple_t, size_t > counts;
 
     // go through instance and count frequencies for transitions
-    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k+1;
-            instance_iterator!=instance_data.end();
-            ++instance_iterator) {
+    for(const_instance_t instance=instance_data.begin()+k+1;
+            instance!=instance_data.end();
+            ++instance) {
 
         // get data
-        action_t action = instance_iterator->action;
-        state_t state = instance_iterator->state;
-        reward_t reward = instance_iterator->reward;
-        --instance_iterator;
-        instance_t instance = Data::instance_from_instance_it(instance_iterator);
-        ++instance_iterator;
+        action_t action = instance->action;
+        state_t state = instance->state;
+        reward_t reward = instance->reward;
+        --instance;
+        instance_t instance = Data::instance_from_instance_it(instance);
+        ++instance;
 
         // increment frequency
         prediction_tuple_t predict_tuple = std::make_tuple(instance, action, state, reward);

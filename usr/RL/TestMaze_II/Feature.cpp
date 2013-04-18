@@ -130,11 +130,7 @@ NullFeature::NullFeature(){
 
 NullFeature::~NullFeature() {}
 
-double NullFeature::evaluate(input_data_t) const {
-    return 0;
-}
-
-double NullFeature::evaluate(input_data_t, output_data_t) const {
+double NullFeature::evaluate(instance_t, action_t action, state_t state, reward_t reward) const {
     return 0;
 }
 
@@ -166,16 +162,16 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-double ActionFeature::evaluate(input_data_t input_data) const {
-    if( (input_data+=delay)->action==action ) {
+double ActionFeature::evaluate(instance_t instance) const {
+    if( (instance+=delay)->action==action ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double ActionFeature::evaluate(input_data_t input_data, output_data_t) const {
-    return evaluate(input_data);
+double ActionFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
+    return evaluate(instance);
 }
 
 string ActionFeature::identifier() const {
@@ -209,15 +205,15 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-double StateFeature::evaluate(input_data_t input_data) const {
-    if( (input_data+=delay)->state==state ) {
+double StateFeature::evaluate(instance_t instance) const {
+    if( (instance+=delay)->state==state ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double StateFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
+double StateFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
     if( delay==0 ) {
         if( output_data.state==state ) {
             return 1;
@@ -225,7 +221,7 @@ double StateFeature::evaluate(input_data_t input_data, output_data_t output_data
             return 0;
         }
     } else {
-        if( (input_data+=delay)->state==state ) {
+        if( (instance+=delay)->state==state ) {
             return 1;
         } else {
             return 0;
@@ -263,15 +259,15 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-double RewardFeature::evaluate(input_data_t input_data) const {
-    if( (input_data+=delay)->reward==reward ) {
+double RewardFeature::evaluate(instance_t instance) const {
+    if( (instance+=delay)->reward==reward ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double RewardFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
+double RewardFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
     if( delay==0 ) {
         if( output_data.reward==reward ) {
             return 1;
@@ -279,7 +275,7 @@ double RewardFeature::evaluate(input_data_t input_data, output_data_t output_dat
             return 0;
         }
     } else {
-        if( (input_data+=delay)->reward==reward ) {
+        if( (instance+=delay)->reward==reward ) {
             return 1;
         } else {
             return 0;
@@ -311,22 +307,22 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
 
 AndFeature::~AndFeature() {}
 
-double AndFeature::evaluate(input_data_t input_data) const {
+double AndFeature::evaluate(instance_t instance) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(input_data);
+        prod *= (*feature_iterator)->evaluate(instance);
     }
     return prod;
 }
 
-double AndFeature::evaluate(input_data_t input_data, output_data_t output_data) const {
+double AndFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(input_data, output_data);
+        prod *= (*feature_iterator)->evaluate(instance, output_data);
     }
     return prod;
 }

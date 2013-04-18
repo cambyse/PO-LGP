@@ -173,6 +173,22 @@ Instance Instance::last() const {
     return *current_instance;
 }
 
+unsigned int Instance::length_to_first() const {
+    unsigned int counter = 0;
+    for(Instance ins=(*this)-1; ins!=INVALID; --ins;) {
+        ++counter;
+    }
+    return counter;
+}
+
+unsigned int Instance::length_to_last() const {
+    unsigned int counter = 0;
+    for(Instance ins=(*this)+1; ins!=INVALID; ++ins;) {
+        ++counter;
+    }
+    return counter;
+}
+
 std::ostream& operator<<(std::ostream &out, const Instance& i) {
     out << "(" <<
         i.action << ", " <<

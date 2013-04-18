@@ -38,9 +38,6 @@ private:
 
     enum ACTION_TYPE {
         NONE,
-        OPTIMAL_Q_ITERATION,
-        SPARSE_Q_ITERATION,
-        KMDP_Q_ITERATION,
         OPTIMAL_LOOK_AHEAD_TREE,
         SPARSE_LOOK_AHEAD_TREE,
         KMDP_LOOK_AHEAD_TREE
@@ -53,7 +50,7 @@ private:
     instance_t current_instance;
     std::ofstream plot_file;
 
-    QTimer * random_timer, * action_timer, * value_iteration_timer;
+    QTimer * random_timer, * action_timer;
 
     std::vector<QString> console_history;
     size_t history_position;
@@ -84,7 +81,6 @@ private slots:
     void render();
     void random_action();
     void choose_action();
-    void value_iteration();
     void process_console_input(QString sequence_input = QString(), bool sequence = false);
     void back_in_history();
     void forward_in_history();

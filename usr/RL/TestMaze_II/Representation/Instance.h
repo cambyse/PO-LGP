@@ -44,6 +44,8 @@ public:
     Instance & get_next_instance() const;
     Instance first() const;
     Instance last() const;
+    unsigned int length_to_first() const;
+    unsigned int length_to_last() const;
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
 protected:
     Instance * previous_instance, * next_instance;

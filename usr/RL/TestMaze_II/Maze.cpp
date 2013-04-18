@@ -305,10 +305,10 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
     // check for matching reward
 //    if(instance_from[time_delay-1].state==button_state.state_idx()
 //            && state_to==smiley_state.state_idx()
-//            && reward!=Data::max_reward ) {
+//            && reward!=reward_t::max_reward ) {
 //        return 0;
 //    } else if( ( instance_from[time_delay-1].state!=button_state.state_idx() || state_to!=smiley_state.state_idx() )
-//            && reward==Data::max_reward ) {
+//            && reward==reward_t::max_reward ) {
 //        return 0;
 //    }
 
@@ -339,8 +339,8 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
     }
 
     // crop to max reward
-    if(matching_reward>Data::max_reward) {
-        matching_reward = Data::max_reward;
+    if(matching_reward>reward_t::max_reward) {
+        matching_reward = reward_t::max_reward;
         DEBUG_OUT(2,"    Cropping matching reward to " << matching_reward);
     }
     if(reward!=matching_reward) {
@@ -350,7 +350,7 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
 
     // check for matching state
     MazeState maze_state_to( state_to );
-    MazeState state_from( instance_from[0].state);
+    MazeState state_from( instance_from.state);
     MazeState state_left( clamp(0,Data::maze_x_size-1,state_from.x()-1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_right(clamp(0,Data::maze_x_size-1,state_from.x()+1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_up(   clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()-1));
@@ -358,8 +358,8 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
 
     // consider walls
     for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
-        MazeState maze_state_1(Data::state_from_idx(walls[idx][0]));
-        MazeState maze_state_2(Data::state_from_idx(walls[idx][1]));
+        MazeState maze_state_1(walls[idx][0]);
+        MazeState maze_state_2(walls[idx][1]);
         if( state_from == maze_state_1 ) {
             if(state_left  == maze_state_2) state_left  = state_from;
             if(state_right == maze_state_2) state_right = state_from;
@@ -385,16 +385,16 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
     case action_t::STAY:
         if(maze_state_to==state_from ) prob += 1-epsilon;
         break;
-    case Data::LEFT:
+    case action_t::LEFT:
         if(maze_state_to==state_left ) prob += 1-epsilon;
         break;
-    case Data::RIGHT:
+    case action_t::RIGHT:
         if(maze_state_to==state_right) prob += 1-epsilon;
         break;
-    case Data::UP:
+    case action_t::UP:
         if(maze_state_to==state_up   ) prob += 1-epsilon;
         break;
-    case Data::DOWN:
+    case action_t::DOWN:
         if(maze_state_to==state_down ) prob += 1-epsilon;
         break;
     default:

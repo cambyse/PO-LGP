@@ -16,13 +16,11 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       maze(0.0),
       record(false), plot(false),
       current_instance(),
-      random_timer(nullptr), action_timer(nullptr), value_iteration_timer(nullptr),
+      random_timer(nullptr), action_timer(nullptr),
       console_history(1,"END OF HISTORY"),
       history_position(0),
       l1_factor(0),
       discount(0.7),
-      q_iteration_object(nullptr), q_iteration_available(false),
-      iteration_number(0), iteration_threshold(1), iteration_type(INT),
       look_ahead_search(discount),
 //      probability_threshold(0),
 //      tree_depth(2*(Data::maze_x_size-1)+2*(Data::maze_y_size-1))
@@ -42,18 +40,6 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     connect(random_timer, SIGNAL(timeout()), this, SLOT(random_action()));
     action_timer = new QTimer(this);
     connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
-    value_iteration_timer = new QTimer(this);
-    connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
-
-    // initialize model for model selection
-    if(Data::maze_x_size<3 && Data::maze_y_size<3) {
-        q_iteration_object = new QIteration();
-        maze.initialize_predictions(*q_iteration_object);
-        q_iteration_object->set_discount(discount);
-        q_iteration_available = true;
-    } else {
-        q_iteration_available = false;
-    }
 
     // initialize display
     maze.render_initialize(ui.graphicsView);
@@ -66,14 +52,12 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 TestMaze_II::~TestMaze_II() {
     delete random_timer;
     delete action_timer;
-    delete value_iteration_timer;
-    delete q_iteration_object;
     plot_file.close();
 }
 
 void TestMaze_II::collect_episode(const int& length) {
     for(int idx=0; idx<length; ++idx) {
-        action_t action = (action_t)(rand()%Data::action_n);
+        action_t action = (action_t)(action_t::random_action());
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
@@ -83,7 +67,7 @@ void TestMaze_II::collect_episode(const int& length) {
 }
 
 void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward) {
-    current_instance.new_state(action,state,reward);
+    current_instance.append_instance(action,state,reward);
     if(plot) {
         plot_file << action << " " << state << " " << reward << std::endl;
     }
@@ -94,7 +78,7 @@ void TestMaze_II::render() {
 }
 
 void TestMaze_II::random_action() {
-    action_t action = (action_t)(rand()%Data::action_n);
+    action_t action = (action_t)(action_t::random_action());
     state_t state_to;
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
@@ -106,16 +90,6 @@ void TestMaze_II::random_action() {
 void TestMaze_II::choose_action() {
     action_t action;
     switch(action_type) {
-    case OPTIMAL_Q_ITERATION:
-    case SPARSE_Q_ITERATION:
-    case KMDP_Q_ITERATION:
-        if(q_iteration_available) {
-            action = q_iteration_object->optimal_action(current_instance.get_instance());
-        } else {
-            DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes --> choosing STAY");
-            action = Data::STAY;
-        }
-        break;
     case OPTIMAL_LOOK_AHEAD_TREE:
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<Maze>(
@@ -148,7 +122,7 @@ void TestMaze_II::choose_action() {
         action = look_ahead_search.get_optimal_action();
         break;
     default:
-        action = Data::STAY;
+        action = action_t::STAY;
         DEBUG_OUT(0,"Error: undefined action type --> choosing STAY");
         break;
     }
@@ -158,30 +132,6 @@ void TestMaze_II::choose_action() {
     update_current_instance(action,state_to,reward);
     if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
-}
-
-void TestMaze_II::value_iteration() {
-    if(q_iteration_available) {
-        reward_t max_value_diff = q_iteration_object->iterate();
-        switch(iteration_type) {
-        case INT:
-            --iteration_number;
-            if(iteration_number<=0) {
-                value_iteration_timer->stop();
-            }
-            break;
-        case DOUBLE:
-            if(max_value_diff<iteration_threshold) {
-                value_iteration_timer->stop();
-            }
-            break;
-        default:
-            DEBUG_OUT(0,"Error: invalid iteration type");
-            break;
-        }
-    } else {
-        DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes.");
-    }
 }
 
 void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
@@ -253,11 +203,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . -> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
-    QString iterate_s(                          "    iterate / i. . . . . . . . [<int>|<double>,stop] . . . . -> run value iteration <int> times / until max diff small than <double> / stop running");
+//    QString iterate_s(                          "    iterate / i. . . . . . . . [<int>|<double>,stop] . . . . -> run value iteration <int> times / until max diff small than <double> / stop running");
     QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . -> get [set] discount");
-    QString optimal_iteration_s(                "    optimal-iteration. . . . . . . . . . . . . . . . . . . . -> use known predictions for value iteration");
-    QString sparse_iteration_s(                 "    sparse-iteration . . . . . . . . . . . . . . . . . . . . -> use sparse model for value iteration");
-    QString kmdp_iteration_s(                   "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . -> use k-MDP model for value iteration");
+//    QString optimal_iteration_s(                "    optimal-iteration. . . . . . . . . . . . . . . . . . . . -> use known predictions for value iteration");
+//    QString sparse_iteration_s(                 "    sparse-iteration . . . . . . . . . . . . . . . . . . . . -> use sparse model for value iteration");
+//    QString kmdp_iteration_s(                   "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . -> use k-MDP model for value iteration");
     QString optimal_look_ahead_tree_s(          "    optimal-look-ahead-tree. . [<int>[<double>]] . . . . . . -> use known predictions for Look-Ahead-Tree [ depth [ threshold ] ]");
     QString sparse_look_ahead_tree_s(           "    sparse-look-ahead-tree . . [<int>[<double>]] . . . . . . -> use sparse model for Look-Ahead-Tree [ depth [ threshold ] ]");
     QString kmdp_look_ahead_tree_s(             "    kmdp-look-ahead-tree . . . [<int>[<double>]] . . . . . . -> use k-MDP model for Look-Ahead-Tree [ depth [ threshold ] ]");
@@ -323,11 +273,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             ui._wConsoleOutput->appendPlainText( validate_s );
             // Planning
             ui._wConsoleOutput->appendPlainText( planning_s );
-            ui._wConsoleOutput->appendPlainText( iterate_s );
+//            ui._wConsoleOutput->appendPlainText( iterate_s );
             ui._wConsoleOutput->appendPlainText( discount_s );
-            ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
-            ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
-            ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
+//            ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
+//            ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
+//            ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
             ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
@@ -335,7 +285,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_statistics_s );
             ui._wConsoleOutput->appendPlainText( max_tree_size_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-            action_t action = Data::LEFT;
+            action_t action = action_t::LEFT;
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
@@ -343,7 +293,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-            action_t action = Data::RIGHT;
+            action_t action = action_t::RIGHT;
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
@@ -351,7 +301,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-            action_t action = Data::UP;
+            action_t action = action_t::UP;
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
@@ -359,7 +309,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-            action_t action = Data::DOWN;
+            action_t action = action_t::DOWN;
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
@@ -367,7 +317,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-            action_t action = Data::STAY;
+            action_t action = action_t::STAY;
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
@@ -407,25 +357,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
                 ui._wConsoleOutput->appendPlainText( delay_s );
             }
-        } else if(str_args[0]=="iterate" || str_args[0]=="i") { // value iteration
-            if(str_args.size()==1) {
-                value_iteration();
-            } else if(str_args[1]=="stop") {
-                value_iteration_timer->stop();
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                value_iteration_timer->stop();
-                iteration_type = INT;
-                iteration_number = int_args[1];
-                value_iteration_timer->start();
-            } else if(double_args_ok[1] && double_args[1]>=0){
-                value_iteration_timer->stop();
-                iteration_type = DOUBLE;
-                iteration_threshold = double_args[1];
-                value_iteration_timer->start();
-            } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( iterate_s );
-            }
         } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
             if(str_args.size()==1) {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
@@ -462,9 +393,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
                 look_ahead_search.set_discount(discount);
-                if(q_iteration_available) {
-                    q_iteration_object->set_discount(discount);
-                }
             } else {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
                 ui._wConsoleOutput->appendPlainText( discount_s );
@@ -578,33 +506,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 //            } else {
 //                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
 //            }
-        } else if(str_args[0]=="optimal-iteration") {
-            if(q_iteration_available) {
-                q_iteration_object->clear();
-                maze.initialize_predictions(*q_iteration_object);
-                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix with true values");
-                action_type = OPTIMAL_Q_ITERATION;
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Q-Iteration only available for 2x2 mazes.");
-            }
-        } else if(str_args[0]=="sparse-iteration") {
-            if(q_iteration_available) {
-                q_iteration_object->clear();
-                crf.initialize_sparse_predictions(*q_iteration_object);
-                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values from sparse model");
-                action_type = SPARSE_Q_ITERATION;
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Q-Iteration only available for 2x2 mazes.");
-            }
-        } else if(str_args[0]=="kmdp-iteration") {
-            if(q_iteration_available) {
-                q_iteration_object->clear();
-                crf.initialize_kmdp_predictions(*q_iteration_object);
-                ui._wConsoleOutput->appendPlainText("    initialized prediction matrix values with relative frequencies");
-                action_type = KMDP_Q_ITERATION;
-            } else {
-                ui._wConsoleOutput->appendPlainText( "    Q-Iteration only available for 2x2 mazes.");
-            }
         } else if(str_args[0]=="print-tree") { // print tree
             look_ahead_search.print_tree(true,true);
         } else if(str_args[0]=="print-tree-statistics") { // print tree statistics

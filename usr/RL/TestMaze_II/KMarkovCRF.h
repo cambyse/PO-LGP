@@ -20,6 +20,7 @@
 #include <lbfgs.h>
 
 #include "Data.h"
+#include "Representation/Representation.h"
 #include "Feature.h"
 
 class KMarkovCRF
@@ -82,8 +83,7 @@ public:
     );
 
     void clear_data() {
-        delete instance_data;
-        instance_data = nullptr;
+        // todo what to do here!?!
     }
 
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
@@ -125,7 +125,7 @@ private:
     typedef std::set<input_tuple_t> input_set_t;
 
     int k, old_active_features_size;
-    instance_t * instance_data;
+    instance_t instance_data;
     lbfgsfloatval_t * lambda;
     std::vector<Feature*> basis_features;
     std::vector<AndFeature> active_features, compound_features;

@@ -163,10 +163,10 @@ Maze::probability_t Maze::validate_model(
         }
         return kl_divergence/samples;
     case EXACT_VALIDATION:
-        for(instanceIt_t instance=0; instance!=util::INVALID; ++instance) {
-            for(actionIt_t action=0; action!=util::INVALID; ++action) {
-                for(stateIt_t state=0; state!=util::INVALID; ++state) {
-                    for(rewardIt_t reward=0; reward!=util::INVALID; ++reward) {
+        for(instanceIt_t instance=instanceIt_t::first(); instance!=util::INVALID; ++instance) {
+            for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    for(rewardIt_t reward=rewardIt_t::first(); reward!=util::INVALID; ++reward) {
                         probability_t p_maze = get_prediction(instance,action,state,reward);
                         probability_t p_model = (model.*prediction)(instance,action,state,reward);
                         if(p_maze>0) {
