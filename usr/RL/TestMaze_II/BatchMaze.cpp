@@ -131,7 +131,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file_name.append(QString::number(rand()));
             log_file_name.append(".txt");
             std::ofstream log_file;
-            log_file.open((const char*)log_file_name.toAscii());
+            log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
             QIteration qiteration(discount);
@@ -211,7 +211,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file_name.append(QString::number(rand()));
             log_file_name.append(".txt");
             std::ofstream log_file;
-            log_file.open((const char*)log_file_name.toAscii());
+            log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
             QIteration qiteration(discount);
@@ -316,7 +316,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file_name.append(QString::number(rand()));
             log_file_name.append(".txt");
             std::ofstream log_file;
-            log_file.open((const char*)log_file_name.toAscii());
+            log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
             QIteration qiteration(discount);
