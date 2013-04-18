@@ -13,12 +13,15 @@ class Action: public util::NumericTypeWrapper<Action, unsigned long long int> {
 public:
 
     enum ACTION { NULL_ACTION, UP, DOWN, LEFT, RIGHT, STAY, END_ACTION };
+    static const value_t min_action = UP;
+    static const value_t max_action = STAY;
 
     Action();
     Action(value_t val);
 
     static const char* action_string(const Action& a);
     const char* action_string() const;
+    static Action random_action();
 
     friend std::ostream& operator<<(std::ostream &out, const Action& a);
 
@@ -48,6 +51,8 @@ public:
     ActionIt(const Action& a);
     ActionIt & operator++();
     ActionIt & operator--();
+    ActionIt & operator+=(const int& c);
+    ActionIt & operator-=(const int& c);
 
     static const ActionIt first();
     static const ActionIt last();

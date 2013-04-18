@@ -1,5 +1,7 @@
 #include "Action.h"
 
+using util::INVALID;
+
 Action::Action():
     util::NumericTypeWrapper<Action, value_t>(NULL_ACTION)
 {}
@@ -16,6 +18,10 @@ const char* Action::action_string() const {
     return action_string(*this);
 }
 
+Action Action::random_action() {
+    return min_action + rand()%(max_action-min_action);
+}
+
 std::ostream& operator<<(std::ostream &out, const Action& a) {
     out << a.action_string();
     return out;
@@ -30,9 +36,7 @@ const char* Action::action_strings[END_ACTION] = {
     "STAY "
 };
 
-ActionIt::ActionIt() {
-    *this = first();
-}
+ActionIt::ActionIt() {}
 
 ActionIt::ActionIt(const Action& a):
     Action(a),
@@ -53,16 +57,38 @@ ActionIt & ActionIt::operator--() {
     return *this;
 }
 
+ActionIt & operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+ActionIt & operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
+}
+
 const ActionIt ActionIt::first() {
-    return ActionIt(NULL_ACTION+1);
+    return ActionIt(min_action);
 }
 
 const ActionIt ActionIt::last() {
-    return ActionIt(END_ACTION-1);
+    return ActionIt(max_action);
 }
 
 void ActionIt::check_for_invalid() {
-    if( value<=NULL_ACTION || value>=END_ACTION ) {
+    if( value<min_action || value>max_action ) {
         this->invalidate();
     }
 }

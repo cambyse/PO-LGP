@@ -31,10 +31,17 @@ public:
     ~Instance();
     Instance & operator++();
     Instance & operator--();
+    Instance & operator+=(const int c);
+    Instance & operator-=(const int c);
+    const Instance operator+(const int c) const;
+    const Instance operator-(const int c) const;
+    bool operator<(const Instance& other) const;
     Instance & insert_instance_after  (const Action& a, const State& s, const Reward& r);
     Instance & insert_instance_before (const Action& a, const State& s, const Reward& r);
     Instance & append_instance        (const Action& a, const State& s, const Reward& r);
     Instance & prepend_instance       (const Action& a, const State& s, const Reward& r);
+    Instance & get_previous_instance() const;
+    Instance & get_next_instance() const;
     Instance first() const;
     Instance last() const;
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
@@ -58,6 +65,8 @@ public:
     InstanceIt(const ActionIt& a, const StateIt& s, const RewardIt& r);
     InstanceIt & operator++();
     InstanceIt & operator--();
+    InstanceIt & operator+=(const int& c);
+    InstanceIt & operator-=(const int& c);
     static const InstanceIt first();
     static const InstanceIt last();
     operator Instance() const { return Instance(action,state,reward); }

@@ -18,7 +18,17 @@ Instance::Instance(
 {}
 
 Instance::~Instance() {
-    // delete instance and also fix previous and next
+    // Call destructor of next and previous instance if they are in a proper chain.
+    if(next_instance!=nullptr && next_instance->previous_instance==this) {
+        next_instance->previous_instance=nullptr;
+        delete next_instance;
+        next_instance=nullptr;
+    }
+    if(previous_instance!=nullptr && previous_instance->next_instance==this) {
+        previous_instance->next_instance=nullptr;
+        delete previous_instance;
+        previous_instance==nullptr;
+    }
 }
 
 Instance & Instance::operator++() {
@@ -37,6 +47,46 @@ Instance & Instance::operator--() {
         (*this) = (*previous_instance);
     }
     return *this;
+}
+
+InstanceIt & operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+InstanceIt & operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
+}
+
+const Instance operator+(const int c) const {
+    return Instance(*this) += c;
+}
+
+const Instance operator-(const int c) const {
+    return Instance(*this) -= c;
+}
+
+bool Instance::operator<(const Instance& other) const {
+    if(action<other.action) return true;
+    else if(action>other.action) return false;
+    else if(state<other.state) return true;
+    else if(state>other.state) return false;
+    else if(reward<other.reward) return true;
+    else if(reward>other.reward) return false;
+    else return false;
 }
 
 Instance & Instance::insert_instance_after(
@@ -99,6 +149,14 @@ Instance & Instance::prepend_instance(
     return current_instance->insert_instance_before(a,s,r);
 }
 
+Instance & Instance::get_previous_instance() const {
+    return (*previous_instance);
+}
+
+Instance & Instance::get_next_instance() const {
+    return (*next_instance);
+}
+
 Instance Instance::first() const {
     const Instance * current_instance = this;
     while(current_instance->previous_instance!=nullptr) {
@@ -123,9 +181,7 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
     return out;
 }
 
-InstanceIt::InstanceIt() {
-    *this = first();
-}
+InstanceIt::InstanceIt() {}
 
 InstanceIt::InstanceIt( const ActionIt& a, const StateIt& s, const RewardIt& r ):
     util::InvalidAdapter<InstanceIt>(false),
@@ -164,6 +220,28 @@ InstanceIt & InstanceIt::operator--() {
         }
     }
     return *this;
+}
+
+InstanceIt & operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+InstanceIt & operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
 }
 
 const InstanceIt InstanceIt::first() {

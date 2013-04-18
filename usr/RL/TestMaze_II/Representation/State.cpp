@@ -1,5 +1,7 @@
 #include "State.h"
 
+using util::INVALID;
+
 State::State(value_t val):
     util::NumericTypeWrapper<State, value_t>(val) {}
 
@@ -12,15 +14,17 @@ std::ostream& operator<<(std::ostream &out, const State& s) {
     return out;
 }
 
+State State::random_state() {
+    return min_state + rand()%(max_state-min_state);
+}
+
 int State::add_width() const {
     int max_width = 1+floor(log10(max_state));
     int this_width = ( value>0 ) ? 1+floor(log10(value)) : 1;
     return max_width-this_width;
 }
 
-StateIt::StateIt() {
-    *this = first();
-}
+StateIt::StateIt() {}
 
 StateIt::StateIt(const State& s):
     State(s),
@@ -37,6 +41,28 @@ StateIt & StateIt::operator--() {
     --value;
     check_for_invalid();
     return *this;
+}
+
+StateIt & operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+StateIt & operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
 }
 
 const StateIt StateIt::first() {

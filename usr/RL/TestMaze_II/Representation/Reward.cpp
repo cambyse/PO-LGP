@@ -25,9 +25,7 @@ int Reward::add_width() const {
 }
 
 
-RewardIt::RewardIt() {
-    *this = first();
-}
+RewardIt::RewardIt() {}
 
 RewardIt::RewardIt(const Reward& r):
     Reward(r),
@@ -46,6 +44,28 @@ RewardIt & RewardIt::operator--() {
     value-=reward_increment;
     check_for_invalid();
     return *this;
+}
+
+RewardIt & operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+RewardIt & operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
 }
 
 const RewardIt RewardIt::first() {

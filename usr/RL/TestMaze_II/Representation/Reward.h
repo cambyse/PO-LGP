@@ -8,7 +8,7 @@
 #include <ostream>
 
 /** \brief Reward objects. */
-class Reward: public util::NumericTypeWrapper<Reward, int>  {
+class Reward: public util::NumericTypeWrapper<Reward, double>  {
 public:
     static const value_t min_reward;
     static const value_t max_reward;
@@ -39,6 +39,8 @@ public:
     RewardIt(const Reward& r);
     RewardIt & operator++();
     RewardIt & operator--();
+    RewardIt & operator+=(const int& c);
+    RewardIt & operator-=(const int& c);
 
     static const RewardIt first();
     static const RewardIt last();
