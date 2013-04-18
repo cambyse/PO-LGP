@@ -1,0 +1,10 @@
+BASE = ../../../share
+
+OPENCV=1
+
+CXXFLAGS += -I/opt/XIMEA/include -DMT_IMPLEMENT_TEMPLATES
+LPATHS += /opt/XIMEA/lib
+
+LIBS += -lXIMEA_GenTL
+
+include $(BASE)/make-generic
