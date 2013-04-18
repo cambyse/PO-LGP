@@ -63,8 +63,10 @@ namespace util {
         typedef T value_t;
     AssignableTypeWrapper(T val): value(val) { }
         operator T() const { return value; }
-        T& operator=(const C &rhs) { return this->value=rhs.value; }
-        T& operator=(const T &rhs) { return this->value=rhs; }
+        C& operator=(const T &rhs) {
+            this->value=rhs;
+            return (*this);
+        }
     protected:
         T value;
     };

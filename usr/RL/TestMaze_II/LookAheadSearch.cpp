@@ -25,8 +25,8 @@ const double LookAheadSearch::lower_bound_weight = 0.8;
 LookAheadSearch::NodeInfo::NodeInfo():
         type(NONE),
         expansion(NOT_DEFINED),
-        state(KMDPState()),
-        action(Data::NULL_ACTION),
+        instance(instance_t()),
+        action(action_t()),
         upper_value_bound(0),
         lower_value_bound(0)
 {}
@@ -34,14 +34,14 @@ LookAheadSearch::NodeInfo::NodeInfo():
 LookAheadSearch::NodeInfo::NodeInfo(
         const NODE_TYPE& t,
         const EXPANSION_TYPE& e,
-        const graph_state_t& s,
+        const instance_t& i,
         const action_t& a,
         const value_t& uv,
         const value_t& lv
 ):
         type(t),
         expansion(e),
-        state(s),
+        instance(i),
         action(a),
         upper_value_bound(uv),
         lower_value_bound(lv)
@@ -68,7 +68,7 @@ void LookAheadSearch::clear_tree() {
     root_node = INVALID;
 }
 
-LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
+action_t LookAheadSearch::get_optimal_action() const {
     DEBUG_OUT(1,"Determining optimal action");
     node_vector_t optimal_action_nodes;
     switch(optimal_action_selection_type) {
@@ -116,16 +116,16 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     }
 
     // select action
-    idx_t action_idx = rand()%optimal_action_nodes.size();
-    node_t selected_action_node = optimal_action_nodes[action_idx];
-    DEBUG_OUT(2, "    choosing nr " << action_idx << " from " << optimal_action_nodes.size() << " actions");
+    idx_t actionIt = rand()%optimal_action_nodes.size();
+    node_t selected_action_node = optimal_action_nodes[actionIt];
+    DEBUG_OUT(2, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
 
     // check
     if(node_info_map[selected_action_node].type!=ACTION) {
         DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
     }
     action_t selected_action = node_info_map[selected_action_node].action;
-    DEBUG_OUT(2,"    Optimal action: " << Data::action_strings[Data::action_from_idx(selected_action)]);
+    DEBUG_OUT(2,"    Optimal action: " << selected_action);
     return selected_action;
 }
 
@@ -180,13 +180,13 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
             lables[node] = QString::number(graph.id(node)).toStdString();
             lables[node] += ": ";
             if(node_info_map[node].type==STATE) {
-                lables[node] += Maze::MazeState(node_info_map[node].state.get_k_mdp_state()[0].state).print();
-                if(node_info_map[node].state.get_k_mdp_state()[0].reward==Data::max_reward) {
+                lables[node] += Maze::MazeState(node_info_map[node].instance.state).print();
+                if(node_info_map[node].instance.reward==reward_t::max_reward) {
                     lables[node] += "*";
                 }
                 shapes[node] = 0;
             } else if(node_info_map[node].type==ACTION) {
-                lables[node] += Data::action_strings[Data::idx_from_action(node_info_map[node].action)];
+                lables[node] += node_info_map[node].action.action_string();
                 shapes[node] = 2;
             } else {
                 lables[node] = "";
@@ -197,7 +197,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         for(graph_t::ArcIt arc(graph); arc!=INVALID; ++arc) {
             if(node_info_map[graph.source(arc)].type==ACTION) {
                 widths[arc] = arc_width*arc_info_map[arc].prob;
-                double color_scale = (arc_info_map[arc].expected_reward-Data::min_reward)/(Data::max_reward-Data::min_reward);
+                double color_scale = (arc_info_map[arc].expected_reward-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
                 arc_colors[arc] = lemon::Color(color_scale,0,0);
             } else {
                 widths[arc] = arc_width*0.5;
@@ -361,7 +361,7 @@ void LookAheadSearch::print_tree_statistics() const {
                 .arg(QString('-').repeated(upper_count-weighted_count-1))
                 .arg(QString(' ').repeated(width-upper_count))
                 .arg(upper_bound,11,'e',5,'0')
-                .arg(Data::action_strings[Data::idx_from_action(node_info_map[action_node].action)])
+                .arg(node_info_map[action_node].action.action_string())
                 .arg(node_info_map[action_node].action==optimal_action ? '*' : ' ')
                 .toStdString()
         );
@@ -417,8 +417,8 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
     }
 
     // select action
-    idx_t action_idx = rand()%next_action_nodes.size();
-    node_t selected_action_node = next_action_nodes[action_idx];
+    idx_t actionIt = rand()%next_action_nodes.size();
+    node_t selected_action_node = next_action_nodes[actionIt];
 
     // check
     if(node_info_map[selected_action_node].type!=ACTION) {
@@ -461,8 +461,8 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
     }
 
     // select state
-    idx_t state_idx = rand()%next_state_nodes.size();
-    node_t selected_state_node = next_state_nodes[state_idx];
+    idx_t stateIt = rand()%next_state_nodes.size();
+    node_t selected_state_node = next_state_nodes[stateIt];
 
     // check
     if(node_info_map[selected_state_node].type!=STATE) {
@@ -616,7 +616,7 @@ bool LookAheadSearch::tree_needs_further_expansion() {
         } else if(current_upper_bound>second_max_upper_bound){
             second_max_upper_bound=current_upper_bound;
         }
-        DEBUG_OUT(2,"    " << Data::action_strings[Data::idx_from_action(node_info_map[current_action_node].action)] <<
+        DEBUG_OUT(2,"    " << node_info_map[current_action_node].action <<
                 ": [" << current_lower_bound << " <--> " << current_upper_bound << "]");
     }
     DEBUG_OUT(2,"           max upper: " << max_upper_bound );
@@ -655,16 +655,16 @@ void LookAheadSearch::print_node(node_t node) const {
     DEBUG_OUT(0, "Node " << graph.id(node) << ":");
     switch(node_info_map[node].type) {
     case NONE:
-        DEBUG_OUT(0, "    type:   " << "NONE" );
+        DEBUG_OUT(0, "    type:    " << "NONE" );
         break;
     case STATE:
-        DEBUG_OUT(0, "    type:   " << "STATE" );
-        DEBUG_OUT(0, "    state:  " << node_info_map[node].state.print() );
+        DEBUG_OUT(0, "    type:    " << "STATE" );
+        DEBUG_OUT(0, "    instance:" << node_info_map[node].instance );
         break;
     case ACTION:
-        DEBUG_OUT(0, "    type:   " << "ACTION" );
-        DEBUG_OUT(0, "    state:  " << node_info_map[node].state.print() );
-        DEBUG_OUT(0, "    action: " << Data::action_strings[node_info_map[node].action] );
+        DEBUG_OUT(0, "    type:    " << "ACTION" );
+        DEBUG_OUT(0, "    instance:" << node_info_map[node].instance );
+        DEBUG_OUT(0, "    action:  " << node_info_map[node].action );
         break;
     }
     switch(node_info_map[node].expansion) {

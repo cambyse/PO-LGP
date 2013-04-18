@@ -15,6 +15,7 @@
 #include <string>
 #include <memory>
 
+#include "Representation/Representation.h"
 #include "Data.h"
 
 class Feature {
@@ -24,18 +25,12 @@ public:
     typedef subfeature_container_t::iterator       subfeature_iterator_t;
     typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
     typedef std::set<std::unique_ptr<Feature> >    basis_feature_container_t;
-    typedef Data::input_data_t                     input_data_t;
-    typedef Data::output_data_t                    output_data_t;
-    typedef Data::action_t                         action_t;
-    typedef Data::state_t                          state_t;
-    typedef Data::reward_t                         reward_t;
     enum TYPE { ABSTRACT, NULL_FEATURE, ACTION, STATE, REWARD, AND };
 
     Feature();
     virtual ~Feature();
 
-    virtual double evaluate(input_data_t) const = 0;
-    virtual double evaluate(input_data_t, output_data_t) const = 0;
+    virtual double evaluate(instance_t, instance_t) const = 0;
     virtual std::string identifier() const;
 
     TYPE get_type() const;
@@ -68,8 +63,7 @@ class NullFeature: public Feature {
 public:
     NullFeature();
     virtual ~NullFeature();
-    virtual double evaluate(input_data_t) const;
-    virtual double evaluate(input_data_t, output_data_t) const;
+    virtual double evaluate(instance_t, instance_t) const;
     virtual std::string identifier() const;
 };
 
@@ -81,8 +75,7 @@ private:
 
 public:
     static ActionFeature * create(const action_t& a, const int& d);
-    virtual double evaluate(input_data_t) const;
-    virtual double evaluate(input_data_t, output_data_t) const;
+    virtual double evaluate(instance_t, instance_t) const;
     virtual std::string identifier() const;
 private:
     action_t action;
@@ -97,8 +90,7 @@ private:
 
 public:
     static StateFeature * create(const state_t& s, const int& d);
-    virtual double evaluate(input_data_t) const;
-    virtual double evaluate(input_data_t, output_data_t data_predict) const;
+    virtual double evaluate(instance_t, instance_t data_predict) const;
     virtual std::string identifier() const;
 private:
     state_t state;
@@ -113,8 +105,7 @@ private:
 
 public:
     static RewardFeature * create(const reward_t& r, const int& d);
-    virtual double evaluate(input_data_t) const;
-    virtual double evaluate(input_data_t, output_data_t) const;
+    virtual double evaluate(instance_t, instance_t) const;
     virtual std::string identifier() const;
 private:
     reward_t reward;
@@ -125,8 +116,7 @@ class AndFeature: public Feature {
 public:
     AndFeature(const Feature& f1 = NullFeature(), const Feature& f2 = NullFeature(), const Feature& f3 = NullFeature(), const Feature& f4 = NullFeature(), const Feature& f5 = NullFeature());
     virtual ~AndFeature();
-    virtual double evaluate(input_data_t) const;
-    virtual double evaluate(input_data_t, output_data_t) const;
+    virtual double evaluate(instance_t, instance_t) const;
     virtual std::string identifier() const;
 };
 

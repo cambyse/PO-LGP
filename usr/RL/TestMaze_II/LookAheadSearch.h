@@ -5,7 +5,7 @@
 #include <lemon/dim2.h>
 
 #include "Data.h"
-#include "KMDPState.h"
+#include "Representation/Representation.h"
 
 #define DEBUG_LEVEL 0
 #include "debug.h"
@@ -16,17 +16,8 @@ public:
 
     typedef Data::size_t        size_t;
     typedef Data::idx_t         idx_t;
-    typedef Data::action_t      action_t;
-    typedef Data::action_idx_t  action_idx_t;
-    typedef Data::state_t       state_t;
-    typedef Data::state_idx_t   state_idx_t;
-    typedef Data::reward_t      reward_t;
-    typedef Data::reward_idx_t  reward_idx_t;
-    typedef Data::value_t       value_t;
     typedef Data::probability_t probability_t;
-    typedef Data::k_mdp_state_t k_mdp_state_t;
-
-    typedef KMDPState graph_state_t;
+    typedef reward_t::value_t   value_t;
 
     enum NODE_TYPE { NONE, STATE, ACTION };
     enum EXPANSION_TYPE { NOT_DEFINED, NOT_EXPANDED, FULLY_EXPANDED };
@@ -36,14 +27,14 @@ public:
         NodeInfo(
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
-                const graph_state_t&,
+                const instance_t&,
                 const action_t&,
                 const value_t&,
                 const value_t&
         );
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        graph_state_t state;
+        instance_t instance;
         action_t action;
         value_t upper_value_bound, lower_value_bound;
     };
@@ -71,9 +62,9 @@ public:
     /*! \brief Build a search tree from the root state. */
     template < class Model >
     void build_tree(
-            const graph_state_t& root,
+            const instance_t& root,
             const Model& model,
-            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
+            probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const,
             const size_t& max_node_counter = 0
     );
 
@@ -83,7 +74,7 @@ public:
     template < class Model >
     bool expand_tree(
             const Model& model,
-            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+            probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
     );
 
     /*! \brief Returns the best action for the root state. */
@@ -195,7 +186,7 @@ protected:
     void expand_leaf_node(
             node_t state_node,
             const Model& model,
-            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+            probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
     );
 
     /*! \brief Expand the action node given a predictive model. */
@@ -203,7 +194,7 @@ protected:
     void expand_action_node(
             node_t action_node,
             const Model& model,
-            probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+            probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
     );
 
     /*! \brief Update the given action node when back-propagating after leaf expansion.
@@ -223,10 +214,10 @@ protected:
     bool tree_needs_further_expansion();
 
     /*! \brief Upper bound for state value without prior knowledge. */
-    value_t get_upper_value_bound() { return Data::max_reward/(1-discount); }
+    value_t get_upper_value_bound() { return reward_t::max_reward/(1-discount); }
 
     /*! \brief Lower bound for state value without prior knowledge. */
-    value_t get_lower_value_bound() { return Data::min_reward/(1-discount); }
+    value_t get_lower_value_bound() { return reward_t::min_reward/(1-discount); }
 
     /*! \brief Print information on node. */
     void print_node(node_t node) const;
@@ -235,11 +226,15 @@ protected:
     double node_energy(node_t node, const graph_t::NodeMap<Point>& coords) const;
 };
 
+//=================================================================//
+//                    Function Definitions                         //
+//=================================================================//
+
 template < class Model >
 void LookAheadSearch::build_tree(
-        const graph_state_t& root,
+        const instance_t& root,
         const Model& model,
-        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const,
+        probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const,
         const size_t& max_node_counter
 ) {
 
@@ -255,7 +250,7 @@ void LookAheadSearch::build_tree(
             STATE,
             NOT_EXPANDED,
             root,
-            Data::NULL_ACTION,
+            action_t::NULL_ACTION,
             get_upper_value_bound(),
             get_lower_value_bound()
     );
@@ -282,7 +277,7 @@ void LookAheadSearch::build_tree(
 template < class Model >
 bool LookAheadSearch::expand_tree(
         const Model& model,
-        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+        probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
 ) {
 
     node_t current_state_node = root_node;
@@ -311,7 +306,7 @@ template < class Model >
 void LookAheadSearch::expand_leaf_node(
         node_t state_node,
         const Model& model,
-        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+        probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
 ) {
 
     DEBUG_OUT(1,"Expanding leaf node");
@@ -326,12 +321,10 @@ void LookAheadSearch::expand_leaf_node(
         DEBUG_OUT(0,"Error: trying to expand state node with expansion other than NOT_EXPANDED");
     }
 
-    graph_state_t graph_state_from = node_info_map[state_node].state;
+    instance_t graph_state_from = node_info_map[state_node].instance;
 
     // create action nodes
-    for(action_idx_t action_idx=Data::NULL_ACTION+1; action_idx<(idx_t)Data::action_n; ++action_idx) {
-
-        action_t action = Data::action_from_idx(action_idx);
+    for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
 
         // create new action node
         node_t action_node = graph.addNode();
@@ -371,7 +364,7 @@ template < class Model >
 void LookAheadSearch::expand_action_node(
         node_t action_node,
         const Model& model,
-        probability_t(Model::*prediction)(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const
+        probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const
 ) {
 
     DEBUG_OUT(1,"Expanding action node");
@@ -386,31 +379,27 @@ void LookAheadSearch::expand_action_node(
         DEBUG_OUT(0,"Error: trying to expand action node with expansion other than NOT_EXPANDED");
     }
 
-    graph_state_t graph_state_from = node_info_map[action_node].state;
-    k_mdp_state_t k_mdp_state_from = graph_state_from.get_k_mdp_state();
+    instance_t instance_from = node_info_map[action_node].instance;
     action_t action = node_info_map[action_node].action;
 
     // add all target states (iteration in terms of MDP-state and reward)
-    for(state_idx_t state_idx(0); state_idx<(idx_t)Data::state_n; ++state_idx) {
+    for(stateIt_t new_state=stateIt_t::first(); new_state!=util::INVALID; ++new_state) {
 
-        state_t new_state = Data::state_from_idx(state_idx);
         node_t new_state_node = lemon::INVALID;
 
-        for(reward_idx_t reward_idx(0); reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
+        for(rewardIt_t new_reward=rewardIt_t::first(); new_reward!=util::INVALID; ++new_reward) {
 
-            reward_t new_reward = Data::reward_from_idx(reward_idx);
-            graph_state_t new_graph_state = graph_state_from;
-            new_graph_state.new_state(action, new_state, new_reward);
+            instance_t new_instance(action, new_state, new_reward, &instance_from, nullptr);
 
-            probability_t prob = (model.*prediction)(k_mdp_state_from, action, new_state, new_reward);
+            probability_t prob = (model.*prediction)(instance_from, action, new_state, new_reward);
             if(prob>0) {
                 new_state_node = graph.addNode();
                 ++number_of_nodes;
                 node_info_map[new_state_node] = NodeInfo(
                         STATE,
                         NOT_EXPANDED,
-                        new_graph_state,
-                        Data::NULL_ACTION, // not defined for state nodes
+                        new_instance,
+                        action_t::NULL_ACTION, // not defined for state nodes
                         get_upper_value_bound(),
                         get_lower_value_bound()
                 );

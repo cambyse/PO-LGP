@@ -7,13 +7,11 @@
 
 #include "BatchMaze.h"
 
-#include "Data.h"
-#include "Maze.h"
-#include "QIteration.h"
-#include "KMDPState.h"
-#include "KMarkovCRF.h"
 #include "util.h"
-#include "MCTS.h"
+#include "Data.h"
+#include "Representation/Representation.h"
+#include "Maze.h"
+#include "KMarkovCRF.h"
 #include "LookAheadSearch.h"
 
 #include <iostream>
@@ -27,10 +25,6 @@
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
-typedef Data::action_t action_t;
-typedef Data::state_t state_t;
-typedef Data::reward_t reward_t;
-
 BatchMaze::BatchMaze() {}
 
 BatchMaze::~BatchMaze() {}
@@ -41,52 +35,23 @@ int BatchMaze::run(int argc, char *argv[]) {
         typedef Data::idx_t idx_t;
 
         Maze maze(0);
-        KMDPState current_k_mdp_state;
+        instance_t current_instance;
         LookAheadSearch look_ahead_search(0.9);
 
-        // random initial history
-//        maze.set_current_state(rand()%Data::state_n);
-//        for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-//            action_t random_action = rand()%Data::action_n;
-//            state_t state;
-//            reward_t reward;
-//            maze.perform_transition(random_action,state,reward);
-//            current_k_mdp_state.new_state(random_action,state,reward);
-//        }
-
-        // specific initial history
-//        state_t state;
-//        reward_t reward;
-//        maze.set_current_state(8);
-//        maze.perform_transition(Data::STAY,state,reward);
-//        current_k_mdp_state.new_state(Data::STAY,state,reward);
-//        maze.perform_transition(Data::STAY,state,reward);
-//        current_k_mdp_state.new_state(Data::STAY,state,reward);
-
         for(int i=0; i<(idx_t)Data::k; ++i) {
-            current_k_mdp_state.new_state(Data::STAY,Data::state_n-1,Data::min_reward);
+            current_instance.append_instance(action_t::STAY,state_t::max_state,reward_t::min_reward);
         }
 
-        look_ahead_search.build_tree<Maze>(current_k_mdp_state, maze, maze.get_prediction_ptr());
-//        look_ahead_tree.print_tree(2,true);
+        look_ahead_search.build_tree<Maze>(current_instance, maze, maze.get_prediction_ptr());
 
         DEBUG_OUT(0, "Action values for state");
-        DEBUG_OUT(0, "    " << current_k_mdp_state.print());
-
-//        for(Data::action_idx_t action_idx=0; action_idx<(idx_t)Data::action_n; ++action_idx) {
-//            action_t action = Data::action_from_idx(action_idx);
-//            DEBUG_OUT(0,
-//                    Data::action_strings[action_idx] << " --> " <<
-//                    look_ahead_search.get_action_value(action)
-//                    );
-//        }
+        DEBUG_OUT(0, "    " << current_instance);
 
         DEBUG_OUT(0,"Best action:");
         for(int i=0; i<10; ++i) {
-            DEBUG_OUT(0, Data::action_strings[look_ahead_search.get_optimal_action()]);
+            DEBUG_OUT(0, look_ahead_search.get_optimal_action());
         }
 
-//        DEBUG_OUT(1, "No arguments, terminating...");
         return 1;
     } else {
 
@@ -134,29 +99,21 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
-            QIteration qiteration(discount);
-            KMDPState current_k_mdp_state;
+            instance_t current_instance;
 
             LOG_COMMENT("------------------------------------");
             LOG_COMMENT("Running episodes with optimal policy");
             LOG_COMMENT("------------------------------------");
             LOG_COMMENT("");
 
-            LOG_COMMENT("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
+            LOG_COMMENT("Maze size: " << Data::maze_x_size << "x" << Data::maze_y_size);
             LOG_COMMENT("epsilon  = " << maze.get_epsilon() );
-            LOG_COMMENT("discount = " << qiteration.get_discount() );
             LOG_COMMENT("");
 
-            double max_change_threshold = 0.0001, max_change;
+            double max_change_threshold = 0.0001;//, max_change;
             LOG_COMMENT("Running Q-Iteration (max change threshold = " << max_change_threshold << ")");
             LOG_COMMENT("");
-            unsigned long iteration_counter = 0;
-            maze.initialize_predictions(qiteration);
-            do {
-                max_change = qiteration.iterate();
-                ++iteration_counter;
-                DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
-            } while (max_change>max_change_threshold);
+            //unsigned long iteration_counter = 0;
 
             unsigned long max_episodes = 100;
             unsigned long max_transition = 1000;
@@ -166,21 +123,21 @@ int BatchMaze::run(int argc, char *argv[]) {
             LOG_COMMENT("");
             for(unsigned long episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
 
-                maze.set_current_state(rand()%Data::state_n);
+                maze.set_current_state(state_t::random_state());
                 for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
 
                 for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
-                    action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
+                    action_t action;
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(action,state,reward);
-                    current_k_mdp_state.new_state(action,state,reward);
+                    current_instance = current_instance.append_instance(action,state,reward);
                     //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                     reward_sum += reward;
                     ++total_transition_counter;
@@ -214,18 +171,16 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
-            QIteration qiteration(discount);
             KMarkovCRF crf;
-            KMDPState current_k_mdp_state;
+            instance_t current_instance;
 
             LOG_COMMENT("-----------------------------------------");
             LOG_COMMENT("Running episodes with optimal kmdp-policy");
             LOG_COMMENT("-----------------------------------------");
             LOG_COMMENT("");
 
-            LOG_COMMENT("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
+            LOG_COMMENT("Maze size: " << Data::maze_x_size << "x" << Data::maze_y_size);
             LOG_COMMENT("epsilon  = " << maze.get_epsilon() );
-            LOG_COMMENT("discount = " << qiteration.get_discount() );
             LOG_COMMENT("");
 
             LOG_COMMENT("epsilon discount learning_length test_length mean_reward");
@@ -238,34 +193,28 @@ int BatchMaze::run(int argc, char *argv[]) {
                 crf.clear_data(); // clear old data
 
                 // random starting state
-                maze.set_current_state(rand()%Data::state_n);
+                maze.set_current_state(state_t::random_state());
                 for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
                 // random transitions
                 for(unsigned long learn_transition_counter=1; learn_transition_counter<=learn_length; ++learn_transition_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
 
-                double max_change_threshold = 0.0001, max_change;
+                double max_change_threshold = 0.0001;//, max_change;
                 LOG_COMMENT("Running Q-Iteration (max change threshold = " << max_change_threshold << ")");
-                unsigned long iteration_counter = 0;
-                crf.initialize_kmdp_predictions(qiteration);
-                do {
-                    max_change = qiteration.iterate();
-                    ++iteration_counter;
-                    DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
-                } while (max_change>max_change_threshold);
+                //unsigned long iteration_counter = 0;
 
                 unsigned long max_transition = 1000;
                 LOG_COMMENT("Running episode of length " << max_transition << " from random starting state with optimal kmdp policy");
@@ -273,21 +222,21 @@ int BatchMaze::run(int argc, char *argv[]) {
                 double reward_sum = 0;
 
                 // random starting state
-                maze.set_current_state(rand()%Data::state_n);
+                maze.set_current_state(state_t::random_state());
                 for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
 
                 for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
-                    action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
+                    action_t action;
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(action,state,reward);
-                    current_k_mdp_state.new_state(action,state,reward);
+                    current_instance = current_instance.append_instance(action,state,reward);
                     //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                     reward_sum += reward;
                     DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
@@ -319,18 +268,16 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
-            QIteration qiteration(discount);
             KMarkovCRF crf;
-            KMDPState current_k_mdp_state;
+            instance_t current_instance;
 
             LOG_COMMENT("-------------------------------------------");
             LOG_COMMENT("Running episodes with optimal sparse policy");
             LOG_COMMENT("-------------------------------------------");
             LOG_COMMENT("");
 
-            LOG_COMMENT("Maze size: " << Data::maze_x_dim << "x" << Data::maze_y_dim);
+            LOG_COMMENT("Maze size: " << Data::maze_x_size << "x" << Data::maze_y_size);
             LOG_COMMENT("epsilon  = " << maze.get_epsilon() );
-            LOG_COMMENT("discount = " << qiteration.get_discount() );
             LOG_COMMENT("");
 
             LOG_COMMENT("epsilon discount learning_length test_length l1-factor number_of_features mean_data_likelihood mean_reward");
@@ -343,23 +290,23 @@ int BatchMaze::run(int argc, char *argv[]) {
                 crf.clear_data(); // clear old data
 
                 // random starting state
-                maze.set_current_state(rand()%Data::state_n);
+                maze.set_current_state(state_t::random_state());
                 for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
                 // random transitions
                 for(unsigned long learn_transition_counter=1; learn_transition_counter<=learn_length; ++learn_transition_counter) {
-                    action_t random_action = rand()%Data::action_n;
+                    action_t random_action = action_t::random_action();
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_k_mdp_state.new_state(random_action,state,reward);
+                    current_instance = current_instance.append_instance(random_action,state,reward);
                 }
 
                 int ret;
@@ -396,15 +343,9 @@ int BatchMaze::run(int argc, char *argv[]) {
                     }
 
                     // evaluate
-                    double max_change_threshold = 0.0001, max_change;
+                    double max_change_threshold = 0.0001;//, max_change;
                     LOG_COMMENT("Running Q-Iteration (max change threshold = " << max_change_threshold << ")");
-                    unsigned long iteration_counter = 0;
-                    crf.initialize_sparse_predictions(qiteration);
-                    do {
-                        max_change = qiteration.iterate();
-                        ++iteration_counter;
-                        DEBUG_OUT(2,"Iteration " << iteration_counter << ": max_change = " << max_change);
-                    } while (max_change>max_change_threshold);
+                    //unsigned long iteration_counter = 0;
 
                     unsigned long max_transition = 1000;
                     LOG_COMMENT("Running episode of length " << max_transition << " from random starting state with optimal sparse policy");
@@ -412,21 +353,21 @@ int BatchMaze::run(int argc, char *argv[]) {
                     double reward_sum = 0;
 
                     // random starting state
-                    maze.set_current_state(rand()%Data::state_n);
+                    maze.set_current_state(state_t::random_state());
                     for(unsigned long state_counter=0; state_counter<Data::k; ++state_counter) {
-                        action_t random_action = rand()%Data::action_n;
+                        action_t random_action = action_t::random_action();
                         state_t state;
                         reward_t reward;
                         maze.perform_transition(random_action,state,reward);
-                        current_k_mdp_state.new_state(random_action,state,reward);
+                        current_instance = current_instance.append_instance(random_action,state,reward);
                     }
 
                     for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
-                        action_t action = qiteration.optimal_action(current_k_mdp_state.get_k_mdp_state());
+                        action_t action;
                         state_t state;
                         reward_t reward;
                         maze.perform_transition(action,state,reward);
-                        current_k_mdp_state.new_state(action,state,reward);
+                        current_instance = current_instance.append_instance(action,state,reward);
                         //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                         reward_sum += reward;
                         DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);

@@ -21,24 +21,14 @@
 
 #include "Data.h"
 #include "Feature.h"
-#include "QIteration.h"
 
 class KMarkovCRF
 {
 public:
 
-    typedef Data::idx_t                    idx_t;
-    typedef Data::size_t                   size_t;
-    typedef Data::action_t                 action_t;
-    typedef Data::state_t                  state_t;
-    typedef Data::reward_t                 reward_t;
-    typedef Data::probability_t            probability_t;
-    typedef Data::episode_t                episode_t;
-    typedef Data::const_episode_iterator_t const_episode_iterator_t;
-    typedef Data::data_point_t             data_point_t;
-    typedef Data::OutputIterator           OutputIterator;
-    typedef Data::k_mdp_state_t            k_mdp_state_t;
-    typedef Data::input_data_t             input_data_t;
+    typedef Data::idx_t         idx_t;
+    typedef Data::size_t        size_t;
+    typedef Data::probability_t probability_t;
 
     KMarkovCRF();
 
@@ -91,13 +81,14 @@ public:
             const reward_t& reward
     );
 
-    void clear_data() { episode_data.clear(); }
+    void clear_data() {
+        delete instance_data;
+        instance_data = nullptr;
+    }
 
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
     void evaluate_features();
-
-//    void score_features_by_mutual_information();
 
     void score_features_by_gradient(const int& n = 1);
 
@@ -113,31 +104,28 @@ public:
 
     unsigned long get_training_data_length();
 
-    probability_t get_prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_prediction_ptr())(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_prediction(const instance_t&, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t&, const action_t&, const state_t&, const reward_t&) const {
         return &KMarkovCRF::get_prediction;
     }
 
-    probability_t get_kmdp_prediction(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const k_mdp_state_t&, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_kmdp_prediction(const instance_t&, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t&, const action_t&, const state_t&, const reward_t&) const {
         return &KMarkovCRF::get_kmdp_prediction;
     }
-
-    void initialize_sparse_predictions(QIteration&);
-    void initialize_kmdp_predictions(QIteration&);
 
     void update_prediction_map();
 
 private:
 
-    typedef std::tuple<k_mdp_state_t, action_t, state_t, reward_t> prediction_tuple_t;
+    typedef std::tuple<instance_t, action_t, state_t, reward_t> prediction_tuple_t;
     typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
-    typedef std::tuple<k_mdp_state_t, action_t> input_tuple_t;
+    typedef std::tuple<instance_t, action_t> input_tuple_t;
     typedef std::set<input_tuple_t> input_set_t;
 
     int k, old_active_features_size;
-    episode_t episode_data;
+    instance_t * instance_data;
     lbfgsfloatval_t * lambda;
     std::vector<Feature*> basis_features;
     std::vector<AndFeature> active_features, compound_features;

@@ -78,7 +78,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         g[i] = 0;
     }
 
-    int number_of_data_points = episode_data.size()-k;
+    int number_of_data_points = instance_data.size()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return fx;
@@ -95,9 +95,9 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumFNN; // sumF(x(n),y(n))
     double sumExpN; // normalization Z(x)
     vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F)
-    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
-            episode_iterator!=episode_data.end();
-            ++episode_iterator) {
+    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
+            instance_iterator!=instance_data.end();
+            ++instance_iterator) {
 
         sumFNN = 0;
         sumExpN = 0;
@@ -105,7 +105,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
         // calculate sumF(x(n),y(n))
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-            sumFNN += x[f_idx]*active_features[f_idx].evaluate(episode_iterator);
+            sumFNN += x[f_idx]*active_features[f_idx].evaluate(instance_iterator);
         }
 
         // calculate sumExp(x(n))
@@ -114,7 +114,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             // calculate sumF(x(n),y')
             double sumFN = 0;
             for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                sumFN += x[f_idx]*active_features[f_idx].evaluate(episode_iterator,*output_iterator);
+                sumFN += x[f_idx]*active_features[f_idx].evaluate(instance_iterator,*output_iterator);
             }
 
             // increment sumExp(x(n))
@@ -123,7 +123,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             // increment sumFExp(x(n),F)
             for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
                 // in case of parameter binding additionally sum over all features belonging to this parameter
-                sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(episode_iterator,*output_iterator) * exp( sumFN );
+                sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(instance_iterator,*output_iterator) * exp( sumFN );
             }
         }
 
@@ -135,7 +135,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter
-            g[lambda_idx] += active_features[lambda_idx].evaluate(episode_iterator);
+            g[lambda_idx] += active_features[lambda_idx].evaluate(instance_iterator);
         }
     }
 
@@ -237,7 +237,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const state_t& state,
         const reward_t& reward
 ) {
-    episode_data.push_back(data_point_t(action,state,reward));
+    instance_data.push_back(data_point_t(action,state,reward));
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
@@ -304,7 +304,7 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 }
 
 void KMarkovCRF::evaluate_features() {
-    int number_of_data_points = episode_data.size()-k;
+    int number_of_data_points = instance_data.size()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return;
@@ -312,129 +312,9 @@ void KMarkovCRF::evaluate_features() {
 
     DEBUG_OUT(0,"Evaluating features:");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(episode_data.end()-1) );
+        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(instance_data.end()-1) );
     }
 }
-
-//void KMarkovCRF::score_features_by_mutual_information() {
-//
-//    DEBUG_OUT(1, "Scoring features by mutual information...");
-//
-//    //------------------//
-//    //  Check for Data  //
-//    //------------------//
-//
-//    int N = episode_data.size()-k;
-//    if(N<=0) {
-//        DEBUG_OUT(0,"Not enough data to score features.");
-//        return;
-//    }
-//
-//    //---------------------//
-//    // Construct Features  //
-//    //---------------------//
-//
-//    construct_compound_features(2);
-//
-//    //---------------------------------//
-//    // Determine Relative Frequencies  //
-//    //---------------------------------//
-//
-//    vector<int>          output_counts (Data::output_n                                      ,0  );
-//    vector<int>          feature_counts(compound_features.size()                            ,0  );
-//    vector<vector<int> > joint_counts  (Data::output_n, vector<int>(compound_features.size(),0) );
-//
-//    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
-//            episode_iterator!=episode_data.end();
-//            ++episode_iterator) {
-//        int output_idx = Data::output_idx(episode_iterator);
-//        output_counts[output_idx] += 1;
-//        for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
-//            if(compound_features[f_idx].evaluate(episode_iterator)) {
-//                feature_counts[f_idx]           += 1;
-//                joint_counts[output_idx][f_idx] += 1;
-//            }
-//        }
-//    }
-//
-//    //----------------------------------------------------------//
-//    // Compute Mutual Information for all Features with Outputs //
-//    //----------------------------------------------------------//
-//
-//    for(uint cf_idx=0; cf_idx<compound_features.size(); ++cf_idx) {
-//        for(int output_idx=0; output_idx<Data::output_n; ++output_idx) {
-//            double po, pof1, pf1, d1, p1, p2, q1, q2, l1, l2;
-//            po = (double)output_counts[output_idx]/N;         // p(o)
-//            pof1 = (double)joint_counts[output_idx][cf_idx]/N; // p(o,f=1)
-//            pf1 = (double)feature_counts[cf_idx]/N;            // p(f=1)
-//            d1 = p1 = p2 = po;
-//            d1 -= pof1;
-//            p1 *= 1 - pf1;
-//            p2 *= pf1;
-//            q1 = d1/p1;
-//            q2 = l2 = pof1;
-//            q2 /= p2;
-//            l1 = d1 * log(q1);
-//            l2 *= log(q2);
-//            if(d1==0) {
-//                l1 = 0;
-//            }
-//            if(pof1==0) {
-//                l2 = 0;
-//            }
-//            compound_feature_scores[cf_idx] += l1 + l2;
-//        }
-//    }
-//
-//    compound_features_sorted = false;
-//
-//    //----------------------//
-//    // Sort Feature Scores  //
-//    //----------------------//
-//
-//    //    typedef list<tuple<double,unsigned int,AndFeature> > score_list;
-//    //    score_list sorted_feature_scores(feature_scores.size());
-//    //    int f_idx = 0;
-//    //    for(score_list::iterator it = sorted_feature_scores.begin();
-//    //            it!=sorted_feature_scores.end();
-//    //            ++it) {
-//    //        unsigned int complexity = compound_features[f_idx].get_complexity();
-//    //        (*it) = make_tuple(feature_scores[f_idx]/complexity,complexity,compound_features[f_idx]); // mutual information divided by feature complexity
-//    //        ++f_idx;
-//    //    }
-//    //    sorted_feature_scores.sort();
-//    //
-//    //    //----------------------//
-//    //    // Print Feature Scores //
-//    //    //----------------------//
-//    //
-//    //    DEBUG_OUT(0,"Feature Scores:");
-//    //    for(score_list::const_iterator it = sorted_feature_scores.begin();
-//    //            it!=sorted_feature_scores.end();
-//    //            ++it) {
-//    //        DEBUG_OUT(0,"    " << QString("%1 (%2) <-- ").arg(get<0>(*it),7,'f',5).arg(get<1>(*it),2).toStdString() << get<2>(*it).identifier() );
-//    //    }
-//    //
-//    //    //------------------------//
-//    //    // Add to Active Features //
-//    //    //------------------------//
-//    //    active_features.clear();
-//    //    lbfgs_free(lambda);
-//    //    lambda = nullptr;
-//    //    old_active_features_size = 0;
-//    //
-//    //    for(uint f_idx=0; f_idx<compound_features.size(); ++f_idx) {
-//    //        if(feature_scores[f_idx]>0) {
-//    //            active_features.push_back(compound_features[f_idx]);
-//    //            DEBUG_OUT(0, "added   (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
-//    //        } else {
-//    //            DEBUG_OUT(0, "ignored (idx = " << f_idx << ", score = " << feature_scores[f_idx] << "): " << compound_features[f_idx].identifier());
-//    //        }
-//    //    }
-//
-//    DEBUG_OUT(1, "DONE");
-//
-//}
 
 void KMarkovCRF::score_features_by_gradient(const int& n) {
 
@@ -444,7 +324,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     //  Check for Data  //
     //------------------//
 
-    int N = episode_data.size()-k;
+    int N = instance_data.size()-k;
     if(N<=0) {
         DEBUG_OUT(0,"Not enough data to score features.");
         return;
@@ -465,7 +345,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     // to make the code more readable and comparable to evaluate_model() function
     vector<double> &g = compound_feature_scores;
 
-    int number_of_data_points = episode_data.size()-k;
+    int number_of_data_points = instance_data.size()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features.");
         return;
@@ -483,9 +363,9 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of compound features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of compound features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all compound features F
-    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
-            episode_iterator!=episode_data.end();
-            ++episode_iterator) {
+    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
+            instance_iterator!=instance_data.end();
+            ++instance_iterator) {
 
         sumExpN = 0.0;
         sumFExpNF.assign(cf_size,0.0);
@@ -496,7 +376,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             // calculate sumF(x(n),y')
             sumFN = 0.0;
             for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                sumFN += lambda[f_idx]*active_features[f_idx].evaluate(episode_iterator,*output_iterator);
+                sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance_iterator,*output_iterator);
                 // compound features have zero coefficient (no parameter binding possible)!
             }
 
@@ -506,7 +386,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             // increment sumFExp(x(n),F)
             for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all compound features)
                 // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-                sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(episode_iterator,*output_iterator) * exp( sumFN );
+                sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance_iterator,*output_iterator) * exp( sumFN );
             }
         }
 
@@ -515,7 +395,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             g[lambda_cf_idx] -= sumFExpNF[lambda_cf_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-            g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(episode_iterator);
+            g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance_iterator);
         }
     }
 
@@ -656,19 +536,19 @@ unsigned long KMarkovCRF::get_number_of_features() {
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_prediction(
-        const k_mdp_state_t& state_from,
+        const instance_t& state_from,
         const action_t& action,
         const state_t& state_to,
         const reward_t& reward) const {
 
     // construct input data
-    episode_t episode(state_from.size());
+    instance_t instance(state_from.size());
     for(unsigned int idx=0; idx<state_from.size(); ++idx) {
-        episode[state_from.size()-idx-1] = state_from[idx];
+        instance[state_from.size()-idx-1] = state_from[idx];
     }
-    episode.push_back(data_point_t(action,state_to,reward));
+    instance.push_back(data_point_t(action,state_to,reward));
 
-    input_data_t input_data = episode.end();
+    input_data_t input_data = instance.end();
     --input_data;
 
     // calculate sumF(x,y)
@@ -695,7 +575,7 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
-        const k_mdp_state_t& state_from,
+        const instance_t& state_from,
         const action_t& action,
         const state_t& state_to,
         const reward_t& reward)
@@ -730,7 +610,7 @@ const {
 }
 
 unsigned long KMarkovCRF::get_training_data_length() {
-    long n = episode_data.size()-k;
+    long n = instance_data.size()-k;
     if(n<=0) {
         return 0;
     } else {
@@ -742,11 +622,11 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
 
     unsigned long counter = 0;
 
-    for(Data::k_mdp_state_idx_t state_from_idx=0;
-            state_from_idx<(idx_t)Data::k_mdp_state_n;
+    for(Data::instance_idx_t state_from_idx=0;
+            state_from_idx<(idx_t)Data::instance_n;
             ++state_from_idx) {
 
-        k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
+        instance_t state_from = Data::instance_from_idx(state_from_idx);
 
         for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
 
@@ -773,7 +653,7 @@ void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
 
 void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
 
-    int number_of_data_points = episode_data.size()-k;
+    int number_of_data_points = instance_data.size()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
     }
@@ -781,30 +661,30 @@ void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
     //--------------------------------//
     // determine relative frequencies //
     //--------------------------------//
-    std::vector<unsigned long> counts(Data::k_mdp_state_n*Data::action_n*Data::state_n*Data::reward_n,0);
-    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k;
-            episode_iterator!=episode_data.end();
-            ++episode_iterator) {
+    std::vector<unsigned long> counts(Data::instance_n*Data::action_n*Data::state_n*Data::reward_n,0);
+    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k;
+            instance_iterator!=instance_data.end();
+            ++instance_iterator) {
 
-        k_mdp_state_t k_mdp_state(Data::k);
-        for(unsigned int idx=0; idx<k_mdp_state.size(); ++idx) {
-            k_mdp_state[idx] = *(episode_iterator-idx-1);
+        instance_t instance(Data::k);
+        for(unsigned int idx=0; idx<instance.size(); ++idx) {
+            instance[idx] = *(instance_iterator-idx-1);
         }
-        action_t action = episode_iterator->action;
-        state_t state = episode_iterator->state;
-        reward_t reward = episode_iterator->reward;
-        counts[Data::prediction_idx(k_mdp_state,action,state,reward)] += 1;
+        action_t action = instance_iterator->action;
+        state_t state = instance_iterator->state;
+        reward_t reward = instance_iterator->reward;
+        counts[Data::prediction_idx(instance,action,state,reward)] += 1;
     }
 
     //-----------------------------//
     // assign relative frequencies //
     //-----------------------------//
     unsigned long counter = 0;
-    for(Data::k_mdp_state_idx_t state_from_idx=0;
-            state_from_idx<(idx_t)Data::k_mdp_state_n;
+    for(Data::instance_idx_t state_from_idx=0;
+            state_from_idx<(idx_t)Data::instance_n;
             ++state_from_idx) {
 
-        k_mdp_state_t state_from = Data::k_mdp_state_from_idx(state_from_idx);
+        instance_t state_from = Data::instance_from_idx(state_from_idx);
 
         for(Data::action_t action = 0; action<(idx_t)Data::action_n; ++action) {
 
@@ -840,28 +720,28 @@ void KMarkovCRF::update_prediction_map() {
     // store count for different inputs for later normalization
     std::map<input_tuple_t, size_t > counts;
 
-    // go through episode and count frequencies for transitions
-    for(const_episode_iterator_t episode_iterator=episode_data.begin()+k+1;
-            episode_iterator!=episode_data.end();
-            ++episode_iterator) {
+    // go through instance and count frequencies for transitions
+    for(const_instance_iterator_t instance_iterator=instance_data.begin()+k+1;
+            instance_iterator!=instance_data.end();
+            ++instance_iterator) {
 
         // get data
-        action_t action = episode_iterator->action;
-        state_t state = episode_iterator->state;
-        reward_t reward = episode_iterator->reward;
-        --episode_iterator;
-        k_mdp_state_t k_mdp_state = Data::k_mdp_state_from_episode_it(episode_iterator);
-        ++episode_iterator;
+        action_t action = instance_iterator->action;
+        state_t state = instance_iterator->state;
+        reward_t reward = instance_iterator->reward;
+        --instance_iterator;
+        instance_t instance = Data::instance_from_instance_it(instance_iterator);
+        ++instance_iterator;
 
         // increment frequency
-        prediction_tuple_t predict_tuple = std::make_tuple(k_mdp_state, action, state, reward);
+        prediction_tuple_t predict_tuple = std::make_tuple(instance, action, state, reward);
         auto ret_predict = prediction_map.insert(std::make_pair(predict_tuple,1)); // initialize with one count
         if(!ret_predict.second) { // if element already existed increment instead
             ret_predict.first->second += 1;
         }
 
         // increment counter for input
-        auto input_tuple = std::make_tuple(k_mdp_state, action);
+        auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.insert(std::make_pair(input_tuple,1)); // initialize with one count
         if(!ret_input.second) { // if element already existed increment instead
             ret_input.first->second += 1;
@@ -874,9 +754,9 @@ void KMarkovCRF::update_prediction_map() {
     // normalize to get a probability distribution
     for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
 
-        k_mdp_state_t k_mdp_state = std::get<0>(it->first);
+        instance_t instance = std::get<0>(it->first);
         action_t action = std::get<1>(it->first);
-        auto input_tuple = std::make_tuple(k_mdp_state, action);
+        auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.find(input_tuple);
         if(ret_input==counts.end()) {
             DEBUG_OUT(0,"Error: Item from prediction map not found within count-map");

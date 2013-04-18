@@ -3,11 +3,10 @@
 
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
-#include "QIteration.h"
 #include "KMarkovCRF.h"
-#include "KMDPState.h"
 #include "LookAheadSearch.h"
-#include "MCTS.h"
+#include "Data.h"
+#include "Representation/Representation.h"
 
 #include <QWidget>
 #include <QTimer>
@@ -31,12 +30,7 @@ private:
     //===============================//
 
     typedef Data::size_t        size_t;
-    typedef Data::action_t      action_t;
-    typedef Data::state_t       state_t;
-    typedef Data::reward_t      reward_t;
     typedef Data::probability_t probability_t;
-    typedef Data::k_mdp_state_t k_mdp_state_t;
-    typedef Data::data_point_t  data_point_t;
 
     //---------------//
     // Maze GUI etc. //
@@ -56,7 +50,7 @@ private:
     Maze maze;
 
     bool record, plot;
-    KMDPState current_k_mdp_state;
+    instance_t current_instance;
     std::ofstream plot_file;
 
     QTimer * random_timer, * action_timer, * value_iteration_timer;
@@ -76,16 +70,7 @@ private:
     //----------//
 
     double discount;
-
-    QIteration * q_iteration_object;
-    bool q_iteration_available;
-    int iteration_number;
-    double iteration_threshold;
-    enum ITERATION_TYPE { INT, DOUBLE } iteration_type;
-
     LookAheadSearch look_ahead_search;
-//    probability_t probability_threshold;
-//    size_t tree_depth;
     size_t max_tree_size;
 
     //==================//
@@ -93,7 +78,7 @@ private:
     //==================//
 
     void collect_episode(const int& length);
-    void update_current_k_mdp_state(action_t,state_t,reward_t);
+    void update_current_instance(action_t,state_t,reward_t);
 
 private slots:
     void render();

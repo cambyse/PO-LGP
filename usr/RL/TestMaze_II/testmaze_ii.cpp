@@ -15,7 +15,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       action_type(OPTIMAL_LOOK_AHEAD_TREE),
       maze(0.0),
       record(false), plot(false),
-      current_k_mdp_state(),
+      current_instance(),
       random_timer(nullptr), action_timer(nullptr), value_iteration_timer(nullptr),
       console_history(1,"END OF HISTORY"),
       history_position(0),
@@ -25,7 +25,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       iteration_number(0), iteration_threshold(1), iteration_type(INT),
       look_ahead_search(discount),
 //      probability_threshold(0),
-//      tree_depth(2*(Data::maze_x_dim-1)+2*(Data::maze_y_dim-1))
+//      tree_depth(2*(Data::maze_x_size-1)+2*(Data::maze_y_size-1))
       max_tree_size(10000)
 {
     // initialize UI
@@ -46,7 +46,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
     connect(value_iteration_timer, SIGNAL(timeout()), this, SLOT(value_iteration()));
 
     // initialize model for model selection
-    if(Data::maze_x_dim<3 && Data::maze_y_dim<3) {
+    if(Data::maze_x_size<3 && Data::maze_y_size<3) {
         q_iteration_object = new QIteration();
         maze.initialize_predictions(*q_iteration_object);
         q_iteration_object->set_discount(discount);
@@ -77,13 +77,13 @@ void TestMaze_II::collect_episode(const int& length) {
         state_t state_to;
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
-        update_current_k_mdp_state(action,state_to,reward);
+        update_current_instance(action,state_to,reward);
         crf.add_action_state_reward_tripel(action,state_to,reward);
     }
 }
 
-void TestMaze_II::update_current_k_mdp_state(action_t action, state_t state, reward_t reward) {
-    current_k_mdp_state.new_state(action,state,reward);
+void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward) {
+    current_instance.new_state(action,state,reward);
     if(plot) {
         plot_file << action << " " << state << " " << reward << std::endl;
     }
@@ -98,7 +98,7 @@ void TestMaze_II::random_action() {
     state_t state_to;
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
-    update_current_k_mdp_state(action,state_to,reward);
+    update_current_instance(action,state_to,reward);
     if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
 }
@@ -110,7 +110,7 @@ void TestMaze_II::choose_action() {
     case SPARSE_Q_ITERATION:
     case KMDP_Q_ITERATION:
         if(q_iteration_available) {
-            action = q_iteration_object->optimal_action(current_k_mdp_state.get_k_mdp_state());
+            action = q_iteration_object->optimal_action(current_instance.get_instance());
         } else {
             DEBUG_OUT(0, "Q-Iteration only available for 2x2 mazes --> choosing STAY");
             action = Data::STAY;
@@ -119,7 +119,7 @@ void TestMaze_II::choose_action() {
     case OPTIMAL_LOOK_AHEAD_TREE:
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<Maze>(
-                current_k_mdp_state,
+                current_instance,
                 maze,
                 maze.get_prediction_ptr(),
                 max_tree_size
@@ -129,7 +129,7 @@ void TestMaze_II::choose_action() {
     case SPARSE_LOOK_AHEAD_TREE:
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<KMarkovCRF>(
-                current_k_mdp_state,
+                current_instance,
                 crf,
                 crf.get_prediction_ptr(),
                 max_tree_size
@@ -140,7 +140,7 @@ void TestMaze_II::choose_action() {
         crf.update_prediction_map();
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<KMarkovCRF>(
-                current_k_mdp_state,
+                current_instance,
                 crf,
                 crf.get_kmdp_prediction_ptr(),
                 max_tree_size
@@ -155,7 +155,7 @@ void TestMaze_II::choose_action() {
     state_t state_to;
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
-    update_current_k_mdp_state(action,state_to,reward);
+    update_current_instance(action,state_to,reward);
     if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
     maze.render_update(ui.graphicsView);
 }
@@ -339,7 +339,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
-            update_current_k_mdp_state(action,state_to,reward);
+            update_current_instance(action,state_to,reward);
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
@@ -347,7 +347,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
-            update_current_k_mdp_state(action,state_to,reward);
+            update_current_instance(action,state_to,reward);
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
@@ -355,7 +355,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
-            update_current_k_mdp_state(action,state_to,reward);
+            update_current_instance(action,state_to,reward);
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
@@ -363,7 +363,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
-            update_current_k_mdp_state(action,state_to,reward);
+            update_current_instance(action,state_to,reward);
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
@@ -371,7 +371,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             state_t state_to;
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
-            update_current_k_mdp_state(action,state_to,reward);
+            update_current_instance(action,state_to,reward);
             if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="move") { // start/stop moving

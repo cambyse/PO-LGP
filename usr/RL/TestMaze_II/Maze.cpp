@@ -15,6 +15,7 @@ const double Maze::text_center = 0.3;
 
 using util::min;
 using util::max;
+using util::INVALID;
 
 const Maze::idx_t Maze::walls[walls_n][2] = {
         /* 2x2 Maze *
@@ -77,16 +78,18 @@ Maze::Maze(const double& eps):
     }
 
     // setting button and smiley state
-//    if(Data::maze_x_dim>0 || Data::maze_y_dim>0) {
-//        button_state = MazeState(Data::maze_x_dim-1,Data::maze_y_dim-1);
+//    if(Data::maze_x_size>0 || Data::maze_y_size>0) {
+//        button_state = MazeState(Data::maze_x_size-1,Data::maze_y_size-1);
 //    } else {
 //        button_state = MazeState(0,0);
 //    }
 //    smiley_state = MazeState(0,0);
 
     // setting current state
-    current_state = MazeState(Data::maze_x_dim/2, Data::maze_y_dim/2);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
+    current_state = MazeState(Data::maze_x_size/2, Data::maze_y_size/2);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+        current_instance.append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    }
 }
 
 
@@ -105,7 +108,7 @@ void Maze::render_initialize(QGraphicsView * view) {
         view->setScene(scene);
     }
 
-    for(state_t state=0; state<(idx_t)Data::state_n; ++state) {
+    for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
         MazeState maze_state(state);
         scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
     }
@@ -135,8 +138,8 @@ void Maze::render_initialize(QGraphicsView * view) {
     // walls
     for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
         QColor color(50,50,50);
-        MazeState maze_state_1(Data::state_from_idx(walls[idx][0]));
-        MazeState maze_state_2(Data::state_from_idx(walls[idx][1]));
+        MazeState maze_state_1(walls[idx][0]);
+        MazeState maze_state_2(walls[idx][1]);
         idx_t x_1 = maze_state_1.x();
         idx_t y_1 = maze_state_1.y();
         idx_t x_2 = maze_state_2.x();
@@ -162,8 +165,8 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // rewards
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
-        MazeState maze_state_1(Data::state_from_idx(rewards[idx][ACTIVATION_STATE]));
-        MazeState maze_state_2(Data::state_from_idx(rewards[idx][RECEIVE_STATE]));
+        MazeState maze_state_1(rewards[idx][ACTIVATION_STATE]);
+        MazeState maze_state_2(rewards[idx][RECEIVE_STATE]);
         double x_start   = maze_state_1.x();
         double y_start   = maze_state_1.y();
         double x_end     = maze_state_2.x();
@@ -218,7 +221,7 @@ void Maze::render_initialize(QGraphicsView * view) {
         double mid_point_x = x_start + (x_end - x_start)/2;
         double mid_point_y = y_start + (y_end - y_start)/2;
         size_t time_delay = rewards[idx][TIME_DELAY];
-        reward_t reward = Data::min_reward+Data::reward_increment*rewards[idx][REWARD_IDX];
+        reward_t reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
         QGraphicsTextItem * txt = scene->addText(
                 QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
                 QFont("",12)
@@ -264,17 +267,14 @@ void Maze::perform_transition(const action_t& action) {
     DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
     probability_t prob_accum = 0;
     bool was_set = false;
-    for(Data::state_idx_t state_idx_to=0; state_idx_to<(idx_t)Data::state_n && !was_set; ++state_idx_to) {
-        state_t state_to = Data::state_from_idx(state_idx_to);
-        for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n && !was_set; ++reward_idx) {
-            reward_t reward = Data::reward_from_idx(reward_idx);
-            probability_t prob = get_prediction(current_k_mdp_state.get_k_mdp_state(), action, state_to, reward);
+    for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID && !was_set; ++state_to) {
+        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID && !was_set; ++reward) {
+            probability_t prob = get_prediction(current_instance, action, state_to, reward);
             DEBUG_OUT(2,"state(" << state_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
-//                reward_active = current_k_mdp_state.get_k_mdp_state()[time_delay-1].state==button_state.state_idx();
-                current_state = state_to;
-                current_k_mdp_state.new_state(action, state_to, reward);
+                current_state = MazeState(state_to);
+                current_instance.append_instance(action, state_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -284,66 +284,47 @@ void Maze::perform_transition(const action_t& action) {
         DEBUG_OUT(0, "Error: Unnormalized probabilities [sum(p)=" << prob_accum << "]--> no transition performed." );
     }
 
-    DEBUG_OUT(1, "(" << old_state.x() << "," << old_state.y() << ") + " << Data::action_strings[action] << " ==> (" << current_state.x() << "," << current_state.y() << ")");
+    DEBUG_OUT(1, "(" <<
+              old_state.x() << "," <<
+              old_state.y() << ") + " <<
+              action << " ==> (" <<
+              current_state.x() << "," <<
+              current_state.y() << ")"
+        );
 }
 
 
-void Maze::perform_transition(const action_t& a, Data::state_t& final_state, reward_t& r) {
+void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t& r) {
     perform_transition(a);
     final_state = current_state.state_idx();
-    r = current_k_mdp_state.get_k_mdp_state()[0].reward;
+    r = current_instance.reward;
 }
 
-void Maze::initialize_predictions(QIteration& predictions) {
-    unsigned long counter = 0;
-    for(Data::k_mdp_state_idx_t k_mdp_state_idx_from=0; k_mdp_state_idx_from<(idx_t)Data::k_mdp_state_n; ++k_mdp_state_idx_from) {
-        Data::k_mdp_state_t k_mdp_state_from = Data::k_mdp_state_from_idx(k_mdp_state_idx_from);
-        for(Data::action_idx_t action_idx = 0; action_idx<(idx_t)Data::action_n; ++action_idx) {
-            action_t action = Data::action_from_idx(action_idx);
-            for(Data::state_idx_t state_to_idx=0; state_to_idx<(idx_t)Data::state_n; ++state_to_idx) {
-                state_t state_to = Data::state_from_idx(state_to_idx);
-                for(Data::reward_idx_t reward_idx=0; reward_idx<(idx_t)Data::reward_n; ++reward_idx) {
-                    reward_t reward = Data::reward_from_idx(reward_idx);
-                    predictions.set_prediction(
-                            k_mdp_state_from,
-                            action,
-                            state_to,
-                            reward,
-                            get_prediction(k_mdp_state_from, action, state_to, reward)
-                    );
-                    ++counter;
-                }
-            }
-        }
-    }
-    DEBUG_OUT(1,"Initialized " << counter << " predictions");
-}
-
-Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
+Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
 
     // check for matching reward
-//    if(k_mdp_state_from[time_delay-1].state==button_state.state_idx()
+//    if(instance_from[time_delay-1].state==button_state.state_idx()
 //            && state_to==smiley_state.state_idx()
 //            && reward!=Data::max_reward ) {
 //        return 0;
-//    } else if( ( k_mdp_state_from[time_delay-1].state!=button_state.state_idx() || state_to!=smiley_state.state_idx() )
+//    } else if( ( instance_from[time_delay-1].state!=button_state.state_idx() || state_to!=smiley_state.state_idx() )
 //            && reward==Data::max_reward ) {
 //        return 0;
 //    }
 
     DEBUG_OUT(2,"Getting prediction for:");
-    DEBUG_OUT(2,"    Action: " << Data::action_strings[Data::idx_from_action(action)]);
+    DEBUG_OUT(2,"    Action: " << action);
     DEBUG_OUT(2,"     State: " << state_to);
     DEBUG_OUT(2,"    Reward: " << reward);
 
     // check for matching reward
-    reward_t matching_reward = Data::min_reward;
+    reward_t matching_reward = reward_t::min_reward;
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
-        state_t activate_state = Data::state_from_idx(rewards[idx][ACTIVATION_STATE]);
-        state_t receive_state = Data::state_from_idx(rewards[idx][RECEIVE_STATE]);
-        state_t state_back_then = k_mdp_state_from[rewards[idx][TIME_DELAY]-1].state;
+        state_t activate_state = rewards[idx][ACTIVATION_STATE];
+        state_t receive_state = rewards[idx][RECEIVE_STATE];
+        state_t state_back_then = (instance_from + (rewards[idx][TIME_DELAY]-1)).state;
         state_t state_now = state_to;
-        reward_t single_reward = Data::min_reward+Data::reward_increment*rewards[idx][REWARD_IDX];
+        reward_t single_reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
         if( activate_state==state_back_then && receive_state==state_now) {
             matching_reward += single_reward;
             DEBUG_OUT(2,"    Increment matching reward by " << single_reward << " to " << matching_reward);
@@ -369,11 +350,11 @@ Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, 
 
     // check for matching state
     MazeState maze_state_to( state_to );
-    MazeState state_from( k_mdp_state_from[0].state);
-    MazeState state_left( clamp(0,Data::maze_x_dim-1,state_from.x()-1),clamp(0,Data::maze_y_dim-1,state_from.y()  ));
-    MazeState state_right(clamp(0,Data::maze_x_dim-1,state_from.x()+1),clamp(0,Data::maze_y_dim-1,state_from.y()  ));
-    MazeState state_up(   clamp(0,Data::maze_x_dim-1,state_from.x()  ),clamp(0,Data::maze_y_dim-1,state_from.y()-1));
-    MazeState state_down( clamp(0,Data::maze_x_dim-1,state_from.x()  ),clamp(0,Data::maze_y_dim-1,state_from.y()+1));
+    MazeState state_from( instance_from[0].state);
+    MazeState state_left( clamp(0,Data::maze_x_size-1,state_from.x()-1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
+    MazeState state_right(clamp(0,Data::maze_x_size-1,state_from.x()+1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
+    MazeState state_up(   clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()-1));
+    MazeState state_down( clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()+1));
 
     // consider walls
     for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
@@ -401,7 +382,7 @@ Maze::probability_t Maze::get_prediction(const k_mdp_state_t& k_mdp_state_from, 
     if(maze_state_to==state_down ) prob += epsilon/5;
 
     switch(action) {
-    case Data::STAY:
+    case action_t::STAY:
         if(maze_state_to==state_from ) prob += 1-epsilon;
         break;
     case Data::LEFT:
@@ -440,7 +421,7 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_k_mdp_state.new_state(Data::STAY, current_state.state_idx(), Data::min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_instance.append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
 
