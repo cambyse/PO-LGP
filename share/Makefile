@@ -60,7 +60,8 @@ cleanProjects::
 	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
 
 doc::
-	$(MAKE) -w -C doc guide doxy
+	#$(MAKE) -w -C doc guide doxy
+	cd doc; doxygen MLR.doxy;
 
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".git" --exclude "*.kdev4" --exclude "xx-*" --exclude "MT.log" --exclude "*solution*" --exclude "course/*/main.cpp"  --exclude "pics" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"
