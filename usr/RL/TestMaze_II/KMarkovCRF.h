@@ -100,17 +100,17 @@ public:
 
     void erase_all_features();
 
-    unsigned long get_number_of_features();
+    unsigned long int get_number_of_features();
 
-    unsigned long get_training_data_length();
+    unsigned long int get_training_data_length();
 
-    probability_t get_prediction(const instance_t&, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t&, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_prediction(const instance_t *, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_t&, const state_t&, const reward_t&) const {
         return &KMarkovCRF::get_prediction;
     }
 
-    probability_t get_kmdp_prediction(const instance_t&, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t&, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_kmdp_prediction(const instance_t *, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t *, const action_t&, const state_t&, const reward_t&) const {
         return &KMarkovCRF::get_kmdp_prediction;
     }
 

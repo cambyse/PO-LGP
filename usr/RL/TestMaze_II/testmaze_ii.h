@@ -47,7 +47,7 @@ private:
     Maze maze;
 
     bool record, plot;
-    instance_t current_instance;
+    instance_t * current_instance;
     std::ofstream plot_file;
 
     QTimer * random_timer, * action_timer;

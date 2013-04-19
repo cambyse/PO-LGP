@@ -13,6 +13,8 @@
 using std::get;
 using std::string;
 
+using util::INVALID;
+
 typedef std::unique_ptr<Feature> unique_f_ptr;
 
 int Feature::field_width[2] = {0,0};
@@ -130,7 +132,11 @@ NullFeature::NullFeature(){
 
 NullFeature::~NullFeature() {}
 
-double NullFeature::evaluate(instance_t, action_t action, state_t state, reward_t reward) const {
+double NullFeature::evaluate(instanceIt_t) const {
+    return 0;
+}
+
+double NullFeature::evaluate(instanceIt_t, action_t, state_t, reward_t) const {
     return 0;
 }
 
@@ -162,26 +168,26 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-double ActionFeature::evaluate(instance_t instance) const {
-    if( (instance+=delay)->action==action ) {
+double ActionFeature::evaluate(instanceIt_t instance) const {
+    if( (instance+=delay)!=INVALID && instance.action==action ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double ActionFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
-    return evaluate(instance);
+double ActionFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
+    return evaluate(instance.append_instance(action,state,reward));
 }
 
 string ActionFeature::identifier() const {
     QString id_string("a("
-            +QString(5-field_width[0],' ')
-            +QString(Data::action_strings[action])
-            +", "
-            +QString("%1").arg(delay,field_width[1])
-            +")"
-    );
+                      +QString(5-field_width[0],' ')
+                      +QString(action_t::action_string(action))
+                      +", "
+                      +QString("%1").arg(delay,field_width[1])
+                      +")"
+        );
     return id_string.toStdString()+Feature::identifier();
 }
 
@@ -205,28 +211,16 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-double StateFeature::evaluate(instance_t instance) const {
-    if( (instance+=delay)->state==state ) {
+double StateFeature::evaluate(instanceIt_t instance) const {
+    if( (instance+=delay)!=INVALID && instance.state==state ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double StateFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
-    if( delay==0 ) {
-        if( output_data.state==state ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    } else {
-        if( (instance+=delay)->state==state ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+double StateFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
+    return evaluate(instance.append_instance(action,state,reward));
 }
 
 string StateFeature::identifier() const {
@@ -259,28 +253,16 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-double RewardFeature::evaluate(instance_t instance) const {
-    if( (instance+=delay)->reward==reward ) {
+double RewardFeature::evaluate(instanceIt_t instance) const {
+    if( (instance+=delay)!=INVALID && instance.reward==reward ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double RewardFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
-    if( delay==0 ) {
-        if( output_data.reward==reward ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    } else {
-        if( (instance+=delay)->reward==reward ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+double RewardFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
+    return evaluate(instance.append_instance(action,state,reward));
 }
 
 string RewardFeature::identifier() const {
@@ -307,7 +289,7 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
 
 AndFeature::~AndFeature() {}
 
-double AndFeature::evaluate(instance_t instance) const {
+double AndFeature::evaluate(instanceIt_t instance) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
@@ -317,12 +299,12 @@ double AndFeature::evaluate(instance_t instance) const {
     return prod;
 }
 
-double AndFeature::evaluate(instance_t instance, action_t action, state_t state, reward_t reward) const {
+double AndFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(instance, output_data);
+        prod *= (*feature_iterator)->evaluate(instance,action,state,reward);
     }
     return prod;
 }

@@ -35,11 +35,11 @@ int BatchMaze::run(int argc, char *argv[]) {
         typedef Data::idx_t idx_t;
 
         Maze maze(0);
-        instance_t current_instance;
+        instance_t * current_instance = instance_t::create(action_t::STAY,state_t::max_state,reward_t::min_reward);
         LookAheadSearch look_ahead_search(0.9);
 
         for(int i=0; i<(idx_t)Data::k; ++i) {
-            current_instance.append_instance(action_t::STAY,state_t::max_state,reward_t::min_reward);
+            current_instance->append_instance(action_t::STAY,state_t::max_state,reward_t::min_reward);
         }
 
         look_ahead_search.build_tree<Maze>(current_instance, maze, maze.get_prediction_ptr());
@@ -51,6 +51,8 @@ int BatchMaze::run(int argc, char *argv[]) {
         for(int i=0; i<10; ++i) {
             DEBUG_OUT(0, look_ahead_search.get_optimal_action());
         }
+
+        delete current_instance;
 
         return 1;
     } else {
@@ -99,7 +101,7 @@ int BatchMaze::run(int argc, char *argv[]) {
             log_file.open((const char*)log_file_name.toLatin1());
 
             Maze maze(epsilon);
-            instance_t current_instance;
+            instance_t * current_instance = instance_t::create(action_t::STAY,state_t::max_state,reward_t::min_reward);
 
             LOG_COMMENT("------------------------------------");
             LOG_COMMENT("Running episodes with optimal policy");
@@ -129,7 +131,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
 
                 for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
@@ -137,7 +139,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(action,state,reward);
-                    current_instance = current_instance.append_instance(action,state,reward);
+                    current_instance = current_instance->append_instance(action,state,reward);
                     //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                     reward_sum += reward;
                     ++total_transition_counter;
@@ -153,6 +155,8 @@ int BatchMaze::run(int argc, char *argv[]) {
             DEBUG_OUT(1,"");
 
             log_file.close();
+
+            delete current_instance;
 
         } else if(arg_1=="kmdp") {
 
@@ -172,7 +176,7 @@ int BatchMaze::run(int argc, char *argv[]) {
 
             Maze maze(epsilon);
             KMarkovCRF crf;
-            instance_t current_instance;
+            instance_t * current_instance = instance_t::create(action_t::STAY,state_t::max_state,reward_t::min_reward);
 
             LOG_COMMENT("-----------------------------------------");
             LOG_COMMENT("Running episodes with optimal kmdp-policy");
@@ -200,7 +204,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
                 // random transitions
                 for(unsigned long learn_transition_counter=1; learn_transition_counter<=learn_length; ++learn_transition_counter) {
@@ -209,7 +213,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
 
                 double max_change_threshold = 0.0001;//, max_change;
@@ -228,7 +232,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
 
                 for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
@@ -236,14 +240,14 @@ int BatchMaze::run(int argc, char *argv[]) {
                     state_t state;
                     reward_t reward;
                     maze.perform_transition(action,state,reward);
-                    current_instance = current_instance.append_instance(action,state,reward);
+                    current_instance = current_instance->append_instance(action,state,reward);
                     //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                     reward_sum += reward;
                     DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
                 }
 
                 LOG( epsilon << " " << discount << " " << " " << crf.get_training_data_length() << " " << max_transition << " " << reward_sum/max_transition );
-
+                delete current_instance;
             }
 
             DEBUG_OUT(1,"");
@@ -269,7 +273,7 @@ int BatchMaze::run(int argc, char *argv[]) {
 
             Maze maze(epsilon);
             KMarkovCRF crf;
-            instance_t current_instance;
+            instance_t * current_instance = instance_t::create(action_t::STAY,state_t::max_state,reward_t::min_reward);
 
             LOG_COMMENT("-------------------------------------------");
             LOG_COMMENT("Running episodes with optimal sparse policy");
@@ -297,7 +301,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
                 // random transitions
                 for(unsigned long learn_transition_counter=1; learn_transition_counter<=learn_length; ++learn_transition_counter) {
@@ -306,7 +310,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                     reward_t reward;
                     maze.perform_transition(random_action,state,reward);
                     crf.add_action_state_reward_tripel(random_action,state,reward);
-                    current_instance = current_instance.append_instance(random_action,state,reward);
+                    current_instance = current_instance->append_instance(random_action,state,reward);
                 }
 
                 int ret;
@@ -359,7 +363,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                         state_t state;
                         reward_t reward;
                         maze.perform_transition(random_action,state,reward);
-                        current_instance = current_instance.append_instance(random_action,state,reward);
+                        current_instance = current_instance->append_instance(random_action,state,reward);
                     }
 
                     for(unsigned long transition_counter=1; transition_counter<=max_transition; ++transition_counter) {
@@ -367,7 +371,7 @@ int BatchMaze::run(int argc, char *argv[]) {
                         state_t state;
                         reward_t reward;
                         maze.perform_transition(action,state,reward);
-                        current_instance = current_instance.append_instance(action,state,reward);
+                        current_instance = current_instance->append_instance(action,state,reward);
                         //                DEBUG_OUT(1,"Transition " << transition_counter+1 << ": " << Data::action_strings[action] << " " << state << " " << reward );
                         reward_sum += reward;
                         DEBUG_OUT(2, "Transition " << transition_counter << ": mean reward = " << reward_sum/transition_counter);
@@ -377,6 +381,7 @@ int BatchMaze::run(int argc, char *argv[]) {
 
                     if(l1==0.0) l1=0.001;
                 }
+                delete current_instance;
             }
 
             DEBUG_OUT(1,"");

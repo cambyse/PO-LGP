@@ -29,8 +29,6 @@ public:
     typedef Data::size_t          size_t;
     typedef Data::probability_t   probability_t;
 
-    enum VALIDATION_TYPE { EXACT_VALIDATION, MONTE_CARLO_VALIDATION };
-
     Maze(const double& eps = 0);
 
     virtual ~Maze();
@@ -60,19 +58,18 @@ public:
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
 
-    probability_t get_prediction(const instance_t&, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (Maze::*get_prediction_ptr())(const instance_t&, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+    probability_t (Maze::*get_prediction_ptr())(const instance_t*, const action_t&, const state_t&, const reward_t&) const {
         return &Maze::get_prediction;
     }
 
     template < class Model >
     probability_t validate_model(
             const Model& model,
-            probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const,
-            VALIDATION_TYPE type,
-            size_t samples = 0,
-            probability_t * mean_model_likelihood = nullptr,
-            probability_t * mean_maze_likelihood = nullptr
+            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
+            size_t samples,
+            probability_t * mean_model_likelihood,
+            probability_t * mean_maze_likelihood
     );
 
     void set_time_delay(const int& new_time_delay);
@@ -87,7 +84,7 @@ private:
 
     int time_delay;
 //    bool reward_active;
-    instance_t current_instance;
+    instance_t * current_instance;
     static const double state_size;
     static const double wall_width;
     static const double reward_start_size;
@@ -101,7 +98,7 @@ private:
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 8;
+    static const size_t walls_n = 0;
     static const idx_t walls[walls_n][2];
 
     static const size_t rewards_n = 4;
@@ -124,62 +121,29 @@ private:
 template < class Model >
 Maze::probability_t Maze::validate_model(
         const Model& model,
-        probability_t(Model::*prediction)(const instance_t&, const action_t&, const state_t&, const reward_t&) const,
-        VALIDATION_TYPE type,
+        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
         size_t samples,
         probability_t * mean_model_likelihood,
         probability_t * mean_maze_likelihood
 ) {
     probability_t kl_divergence = 0;
-    if(mean_model_likelihood!=nullptr) {
-        *mean_model_likelihood = 0;
+    *mean_model_likelihood = 0;
+    *mean_maze_likelihood = 0;
+    for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
+        action_t action = action_t::random_action();
+        state_t state;
+        reward_t reward;
+        instance_t * last_instance = current_instance;
+        perform_transition(action,state,reward);
+        probability_t p_maze = get_prediction(last_instance,action,state,reward);
+        probability_t p_model = (model.*prediction)(last_instance,action,state,reward);
+        kl_divergence += log(p_maze/p_model);
+        *mean_model_likelihood += p_model;
+        *mean_maze_likelihood += p_maze;
     }
-    if(mean_maze_likelihood!=nullptr) {
-        *mean_maze_likelihood = 0;
-    }
-    switch(type) {
-    case MONTE_CARLO_VALIDATION:
-        for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
-            instance_t instance = current_instance;
-            action_t action = action_t::random_action();
-            state_t state;
-            reward_t reward;
-            perform_transition(action,state,reward);
-            probability_t p_maze = get_prediction(instance,action,state,reward);
-            probability_t p_model = (model.*prediction)(instance,action,state,reward);
-            kl_divergence += log(p_maze/p_model);
-            if(mean_model_likelihood!=nullptr) {
-                *mean_model_likelihood += p_model;
-            }
-            if(mean_maze_likelihood!=nullptr) {
-                *mean_maze_likelihood += p_maze;
-            }
-        }
-        if(mean_model_likelihood!=nullptr) {
-            *mean_model_likelihood/=samples;
-        }
-        if(mean_maze_likelihood!=nullptr) {
-            *mean_maze_likelihood/=samples;
-        }
-        return kl_divergence/samples;
-    case EXACT_VALIDATION:
-        for(instanceIt_t instance=instanceIt_t::first(); instance!=util::INVALID; ++instance) {
-            for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
-                    for(rewardIt_t reward=rewardIt_t::first(); reward!=util::INVALID; ++reward) {
-                        probability_t p_maze = get_prediction(instance,action,state,reward);
-                        probability_t p_model = (model.*prediction)(instance,action,state,reward);
-                        if(p_maze>0) {
-                            kl_divergence += p_maze*log(p_maze/p_model);
-                        }
-                    }
-                }
-            }
-        }
-        return kl_divergence;
-    }
-    DEBUG_OUT(0,"Error: Validation method not handled");
-    return 0;
+    *mean_model_likelihood/=samples;
+    *mean_maze_likelihood/=samples;
+    return kl_divergence/samples;
 }
 
 #include "debug_exclude.h"

@@ -25,7 +25,7 @@ const double LookAheadSearch::lower_bound_weight = 0.8;
 LookAheadSearch::NodeInfo::NodeInfo():
         type(NONE),
         expansion(NOT_DEFINED),
-        instance(instance_t()),
+        instance(nullptr),
         action(action_t()),
         upper_value_bound(0),
         lower_value_bound(0)
@@ -41,11 +41,12 @@ LookAheadSearch::NodeInfo::NodeInfo(
 ):
         type(t),
         expansion(e),
-        instance(i),
+        instance(nullptr),
         action(a),
         upper_value_bound(uv),
         lower_value_bound(lv)
 {
+    instance = instance_t::create(i);
     if(lower_value_bound>upper_value_bound) {
         DEBUG_OUT(0,"Error: Lower value bound above upper value bound");
     }
@@ -180,8 +181,8 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
             lables[node] = QString::number(graph.id(node)).toStdString();
             lables[node] += ": ";
             if(node_info_map[node].type==STATE) {
-                lables[node] += Maze::MazeState(node_info_map[node].instance.state).print();
-                if(node_info_map[node].instance.reward==reward_t::max_reward) {
+                lables[node] += Maze::MazeState(node_info_map[node].instance->state).print();
+                if(node_info_map[node].instance->reward==reward_t::max_reward) {
                     lables[node] += "*";
                 }
                 shapes[node] = 0;

@@ -43,7 +43,7 @@ StateIt & StateIt::operator--() {
     return *this;
 }
 
-StateIt & operator+=(const int& c) {
+StateIt & StateIt::operator+=(const int& c) {
     if(c<0) {
         return (*this) -= -c;
     } else {
@@ -54,7 +54,7 @@ StateIt & operator+=(const int& c) {
     }
 }
 
-StateIt & operator-=(const int& c) {
+StateIt & StateIt::operator-=(const int& c) {
     if(c<0) {
         return (*this) += -c;
     } else {

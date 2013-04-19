@@ -57,7 +57,7 @@ ActionIt & ActionIt::operator--() {
     return *this;
 }
 
-ActionIt & operator+=(const int& c) {
+ActionIt & ActionIt::operator+=(const int& c) {
     if(c<0) {
         return (*this) -= -c;
     } else {
@@ -68,7 +68,7 @@ ActionIt & operator+=(const int& c) {
     }
 }
 
-ActionIt & operator-=(const int& c) {
+ActionIt & ActionIt::operator-=(const int& c) {
     if(c<0) {
         return (*this) += -c;
     } else {

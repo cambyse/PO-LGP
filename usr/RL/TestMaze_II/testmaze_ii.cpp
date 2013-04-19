@@ -15,7 +15,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       action_type(OPTIMAL_LOOK_AHEAD_TREE),
       maze(0.0),
       record(false), plot(false),
-      current_instance(),
+      current_instance(nullptr),
       random_timer(nullptr), action_timer(nullptr),
       console_history(1,"END OF HISTORY"),
       history_position(0),
@@ -52,6 +52,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 TestMaze_II::~TestMaze_II() {
     delete random_timer;
     delete action_timer;
+    delete current_instance;
     plot_file.close();
 }
 
@@ -67,7 +68,11 @@ void TestMaze_II::collect_episode(const int& length) {
 }
 
 void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward) {
-    current_instance.append_instance(action,state,reward);
+    if(current_instance==nullptr) {
+        current_instance = instance_t::create(action,state,reward);
+    } else {
+        current_instance->append_instance(action,state,reward);
+    }
     if(plot) {
         plot_file << action << " " << state << " " << reward << std::endl;
     }
@@ -404,20 +409,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
                 ui._wConsoleOutput->appendPlainText( validate_s );
             } else if(str_args[1]=="crf") {
-                if(str_args.size()==2 || str_args[2]=="exact") {
-                    probability_t kl = maze.validate_model<KMarkovCRF>(
-                            crf,
-                            crf.get_prediction_ptr(),
-                            Maze::EXACT_VALIDATION
-                    );
-                    ui._wConsoleOutput->appendPlainText(QString("    Exact KL-Divergence = %1").arg(kl));
-                } else if(str_args[2]=="mc") {
+                if(str_args[2]=="mc") {
                     if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
                         probability_t model_l, maze_l;
                         probability_t kl = maze.validate_model<KMarkovCRF>(
                                 crf,
                                 crf.get_prediction_ptr(),
-                                Maze::MONTE_CARLO_VALIDATION,
                                 int_args[3],
                                 &model_l,
                                 &maze_l

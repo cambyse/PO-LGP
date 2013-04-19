@@ -543,31 +543,26 @@ unsigned long KMarkovCRF::get_number_of_features() {
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_prediction(
-        const instance_t& state_from,
+        const instance_t * instance,
         const action_t& action,
         const state_t& state_to,
         const reward_t& reward) const {
 
-    // construct input data
-    instance_t instance = state_from;
-
     // calculate sumF(x,y)
     probability_t sumFXY = 0;
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-        sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(instance);
+        sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,state_to,reward);
     }
-
-    // todo what is going on here?!
 
     // calculate sumExp(x)
     probability_t sumExpX = 0;
-    for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+    for(stateIt_t sum_state=stateIt_t::first(); sum_state!=INVALID; ++sum_state) {
+        for(rewardIt_t sum_reward=rewardIt_t::first(); sum_reward!=INVALID; ++sum_reward) {
 
             // calculate sumF(x,y')
             probability_t sumFXYs = 0;
             for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+                sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,sum_state,sum_reward);
             }
 
             // increment sumExp(x(n))
@@ -579,14 +574,14 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
-        const instance_t& state_from,
+        const instance_t * instance,
         const action_t& action,
         const state_t& state_to,
         const reward_t& reward)
 const {
 
     // check if data for input exist
-    input_tuple_t input_tuple = std::make_tuple(state_from, action);
+    input_tuple_t input_tuple = std::make_tuple(instance, action);
     auto input_ret = input_set.find(input_tuple);
 
     if(input_ret==input_set.end()) { // no data for this input
@@ -602,7 +597,7 @@ const {
     } else {
 
         // check for counts in prediction map
-        prediction_tuple_t prediction_tuple = std::make_tuple(state_from, action, state_to, reward);
+        prediction_tuple_t prediction_tuple = std::make_tuple(instance, action, state_to, reward);
         auto it = prediction_map.find(prediction_tuple);
         if(it==prediction_map.end()) { // no counts --> zero probability
             return 0;
@@ -613,102 +608,13 @@ const {
     }
 }
 
-unsigned long KMarkovCRF::get_training_data_length() {
-    long n = instance_data.size()-k;
+unsigned long int KMarkovCRF::get_training_data_length() {
+    unsigned long int n = instance_data.length_to_first()-k;
     if(n<=0) {
         return 0;
     } else {
         return n;
     }
-}
-
-void KMarkovCRF::initialize_sparse_predictions(QIteration& predictions) {
-
-    unsigned long counter = 0;
-
-    for(Data::instance_idx_t state_from_idx=0;
-            state_from_idx!=INVALID
-            ++state_from_idx) {
-
-        instance_t state_from = Data::instance_from_idx(state_from_idx);
-
-        for(Data::action_t action = 0; action!=INVALID; ++action) {
-
-            for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID; ++state_to) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-
-                    predictions.set_prediction(
-                        state_from,
-                        action,
-                        state_to,
-                        reward,
-                        get_prediction(state_from,action,state_to,reward)
-                        );
-
-                    ++counter;
-                }
-            }
-
-        }
-    }
-    DEBUG_OUT(1,"Initialized " << counter << " predictions");
-}
-
-void KMarkovCRF::initialize_kmdp_predictions(QIteration& predictions) {
-
-    int number_of_data_points = instance_data.length_to_first()-k;
-    if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model.");
-    }
-
-    //--------------------------------//
-    // determine relative frequencies //
-    //--------------------------------//
-    std::vector<unsigned long> counts(Data::instance_n*Data::action_n*Data::state_n*Data::reward_n,0);
-    for(const_instance_t instance=instance_data.begin()+k;
-            instance!=instance_data.end();
-            ++instance) {
-
-        instance_t instance(Data::k);
-        for(unsigned int idx=0; idx<instance.size(); ++idx) {
-            instance[idx] = *(instance-idx-1);
-        }
-        action_t action = instance->action;
-        state_t state = instance->state;
-        reward_t reward = instance->reward;
-        counts[Data::prediction_idx(instance,action,state,reward)] += 1;
-    }
-
-    //-----------------------------//
-    // assign relative frequencies //
-    //-----------------------------//
-    unsigned long counter = 0;
-    for(Data::instance_idx_t state_from_idx=0;
-            state_from_idx!=INVALID
-            ++state_from_idx) {
-
-        instance_t state_from = Data::instance_from_idx(state_from_idx);
-
-        for(Data::action_t action = 0; action!=INVALID; ++action) {
-
-            for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID; ++state_to) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-
-                    predictions.set_prediction(
-                        state_from,
-                        action,
-                        state_to,
-                        reward,
-                        (probability_t)counts[Data::prediction_idx(state_from,action,state_to,reward)]/number_of_data_points
-                        );
-
-                    ++counter;
-                }
-            }
-
-        }
-    }
-    DEBUG_OUT(1,"Initialized " << counter << " predictions");
 }
 
 void KMarkovCRF::update_prediction_map() {
@@ -723,17 +629,12 @@ void KMarkovCRF::update_prediction_map() {
     std::map<input_tuple_t, size_t > counts;
 
     // go through instance and count frequencies for transitions
-    for(const_instance_t instance=instance_data.begin()+k+1;
-            instance!=instance_data.end();
-            ++instance) {
+    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
 
         // get data
-        action_t action = instance->action;
-        state_t state = instance->state;
-        reward_t reward = instance->reward;
-        --instance;
-        instance_t instance = Data::instance_from_instance_it(instance);
-        ++instance;
+        action_t action = instance.action;
+        state_t state = instance.state;
+        reward_t reward = instance.reward;
 
         // increment frequency
         prediction_tuple_t predict_tuple = std::make_tuple(instance, action, state, reward);

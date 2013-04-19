@@ -23,14 +23,14 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
         /**/
 
         /* 3x3 Maze */
-        { 0, 1},
-        { 0, 3},
-        { 2, 1},
-        { 2, 5},
-        { 6, 3},
-        { 6, 7},
-        { 8, 7},
-        { 8, 5}
+        // { 0, 1},
+        // { 0, 3},
+        // { 2, 1},
+        // { 2, 5},
+        // { 6, 3},
+        // { 6, 7},
+        // { 8, 7},
+        // { 8, 5}
         /**/
 
         /* 4x4 Maze *
@@ -88,7 +88,7 @@ Maze::Maze(const double& eps):
     // setting current state
     current_state = MazeState(Data::maze_x_size/2, Data::maze_y_size/2);
     for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
-        current_instance.append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+        current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     }
 }
 
@@ -108,9 +108,11 @@ void Maze::render_initialize(QGraphicsView * view) {
         view->setScene(scene);
     }
 
+    // Render States
+    QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap);
     for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
         MazeState maze_state(state);
-        scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, QPen(QColor(0,0,0)), QBrush(QColor(230,230,230)) );
+        scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, state_pen, QBrush(QColor(230,230,230)) );
     }
 
     // initialize and render button state
@@ -135,9 +137,10 @@ void Maze::render_initialize(QGraphicsView * view) {
 //    smiley->setElementId( reward_active ? "active" : "passive");
 //    scene->addItem(smiley);
 
-    // walls
+    // Render Walls
+    QPen wall_pen(QColor(50,50,50), 0.02, Qt::SolidLine, Qt::RoundCap);
+    QBrush wall_brush(QColor(50,50,50));
     for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
-        QColor color(50,50,50);
         MazeState maze_state_1(walls[idx][0]);
         MazeState maze_state_2(walls[idx][1]);
         idx_t x_1 = maze_state_1.x();
@@ -147,15 +150,15 @@ void Maze::render_initialize(QGraphicsView * view) {
         if( abs(x_1-x_2)==1 && abs(y_1-y_2)==0 ) {
             idx_t x_min = min<idx_t>(x_1,x_2);
             idx_t y = y_1;
-            scene->addRect( x_min+0.5-wall_width/2, y-0.5, wall_width, 1, QPen(color), QBrush(color) );
-            scene->addEllipse( x_min+0.5-wall_width/2, y-0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
-            scene->addEllipse( x_min+0.5-wall_width/2, y+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+            scene->addRect( x_min+0.5-wall_width/2, y-0.5, wall_width, 1, wall_pen, wall_brush );
+            scene->addEllipse( x_min+0.5-wall_width/2, y-0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
+            scene->addEllipse( x_min+0.5-wall_width/2, y+0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
         } else if( abs(x_1-x_2)==0 && abs(y_1-y_2)==1 ) {
             idx_t x = x_1;
             idx_t y_min = min<idx_t>(y_1,y_2);
-            scene->addRect( x-0.5, y_min+0.5-wall_width/2, 1, wall_width, QPen(color), QBrush(color) );
-            scene->addEllipse( x-0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
-            scene->addEllipse( x+0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, QPen(color), QBrush(color) );
+            scene->addRect( x-0.5, y_min+0.5-wall_width/2, 1, wall_width, wall_pen, wall_brush );
+            scene->addEllipse( x-0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
+            scene->addEllipse( x+0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
         } else {
             DEBUG_OUT(0,"Error: No wall possible between (" <<
                     x_1 << "," << y_1 << ") and (" <<
@@ -274,7 +277,7 @@ void Maze::perform_transition(const action_t& action) {
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
                 current_state = MazeState(state_to);
-                current_instance.append_instance(action, state_to, reward);
+                current_instance->append_instance(action, state_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -297,10 +300,10 @@ void Maze::perform_transition(const action_t& action) {
 void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t& r) {
     perform_transition(a);
     final_state = current_state.state_idx();
-    r = current_instance.reward;
+    r = current_instance->reward;
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
+Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
 
     // check for matching reward
 //    if(instance_from[time_delay-1].state==button_state.state_idx()
@@ -319,10 +322,11 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
 
     // check for matching reward
     reward_t matching_reward = reward_t::min_reward;
+    instanceIt_t instanceIt_from(instance_from);
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
-        state_t state_back_then = (instance_from + (rewards[idx][TIME_DELAY]-1)).state;
+        state_t state_back_then = (instanceIt_from + (rewards[idx][TIME_DELAY]-1))->state;
         state_t state_now = state_to;
         reward_t single_reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
         if( activate_state==state_back_then && receive_state==state_now) {
@@ -350,7 +354,7 @@ Maze::probability_t Maze::get_prediction(const instance_t& instance_from, const 
 
     // check for matching state
     MazeState maze_state_to( state_to );
-    MazeState state_from( instance_from.state);
+    MazeState state_from( instanceIt_from->state);
     MazeState state_left( clamp(0,Data::maze_x_size-1,state_from.x()-1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_right(clamp(0,Data::maze_x_size-1,state_from.x()+1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_up(   clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()-1));
@@ -421,7 +425,7 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_instance.append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
 

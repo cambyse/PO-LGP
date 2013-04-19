@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+using util::INVALID;
+
 const Reward::value_t Reward::min_reward = 0;
 const Reward::value_t Reward::max_reward = 10;
 const Reward::value_t Reward::reward_increment = 1;
@@ -46,7 +48,7 @@ RewardIt & RewardIt::operator--() {
     return *this;
 }
 
-RewardIt & operator+=(const int& c) {
+RewardIt & RewardIt::operator+=(const int& c) {
     if(c<0) {
         return (*this) -= -c;
     } else {
@@ -57,7 +59,7 @@ RewardIt & operator+=(const int& c) {
     }
 }
 
-RewardIt & operator-=(const int& c) {
+RewardIt & RewardIt::operator-=(const int& c) {
     if(c<0) {
         return (*this) += -c;
     } else {

@@ -2,20 +2,19 @@
 
 using util::INVALID;
 
-Instance::Instance(
-    const Action& a,
-    const State& s,
-    const Reward& r,
-    Instance * prev,
-    Instance * next
-    ):
-    util::InvalidAdapter<Instance>(false),
-    action(a),
-    state(s),
-    reward(r),
-    previous_instance(prev),
-    next_instance(next)
-{}
+static Instance * create(const Instance& i) {
+    return new Instance(i);
+}
+
+static Instance * create(
+    const Action& a = Action(),
+    const State& s = State(),
+    const Reward& r = Reward(),
+    const Instance * prev = nullptr,
+    const Instance * next = nullptr
+    ) {
+    return new Instance(a,s,r,prev,next);
+}
 
 Instance::~Instance() {
     // Call destructor of next and previous instance if they are in a proper chain.
@@ -27,56 +26,8 @@ Instance::~Instance() {
     if(previous_instance!=nullptr && previous_instance->next_instance==this) {
         previous_instance->next_instance=nullptr;
         delete previous_instance;
-        previous_instance==nullptr;
+        previous_instance=nullptr;
     }
-}
-
-Instance & Instance::operator++() {
-    if(next_instance==nullptr) {
-        this->invalidate();
-    } else {
-        (*this) = (*next_instance);
-    }
-    return *this;
-}
-
-Instance & Instance::operator--() {
-    if(previous_instance==nullptr) {
-        this->invalidate();
-    } else {
-        (*this) = (*previous_instance);
-    }
-    return *this;
-}
-
-InstanceIt & operator+=(const int& c) {
-    if(c<0) {
-        return (*this) -= -c;
-    } else {
-        for(int i=0; i<c && (*this)!=INVALID; ++i) {
-            ++(*this);
-        }
-        return (*this);
-    }
-}
-
-InstanceIt & operator-=(const int& c) {
-    if(c<0) {
-        return (*this) += -c;
-    } else {
-        for(int i=0; i<c && (*this)!=INVALID; ++i) {
-            --(*this);
-        }
-        return (*this);
-    }
-}
-
-const Instance operator+(const int c) const {
-    return Instance(*this) += c;
-}
-
-const Instance operator-(const int c) const {
-    return Instance(*this) -= c;
 }
 
 bool Instance::operator<(const Instance& other) const {
@@ -89,7 +40,7 @@ bool Instance::operator<(const Instance& other) const {
     else return false;
 }
 
-Instance & Instance::insert_instance_after(
+Instance * Instance::insert_instance_after(
     const Action& a,
     const State& s,
     const Reward& r
@@ -104,10 +55,10 @@ Instance & Instance::insert_instance_after(
     new_instance->previous_instance = this;
     this->next_instance = new_instance;
 
-    return *new_instance;
+    return new_instance;
 }
 
-Instance & Instance::insert_instance_before(
+Instance * Instance::insert_instance_before(
     const Action& a,
     const State& s,
     const Reward& r
@@ -122,10 +73,10 @@ Instance & Instance::insert_instance_before(
     new_instance->next_instance = this;
     this->previous_instance = new_instance;
 
-    return *new_instance;
+    return new_instance;
 }
 
-Instance & Instance::append_instance(
+Instance * Instance::append_instance(
     const Action& a,
     const State& s,
     const Reward& r
@@ -137,7 +88,7 @@ Instance & Instance::append_instance(
     return current_instance->insert_instance_after(a,s,r);
 }
 
-Instance & Instance::prepend_instance(
+Instance * Instance::prepend_instance(
     const Action& a,
     const State& s,
     const Reward& r
@@ -149,44 +100,24 @@ Instance & Instance::prepend_instance(
     return current_instance->insert_instance_before(a,s,r);
 }
 
-Instance & Instance::get_previous_instance() const {
-    return (*previous_instance);
+InstanceIt Instance::it() const {
+    return InstanceIt(this);
 }
 
-Instance & Instance::get_next_instance() const {
-    return (*next_instance);
-}
-
-Instance Instance::first() const {
+InstanceIt Instance::first() const {
     const Instance * current_instance = this;
     while(current_instance->previous_instance!=nullptr) {
         current_instance = current_instance->previous_instance;
     }
-    return *current_instance;
+    return InstanceIt(current_instance);
 }
 
-Instance Instance::last() const {
-    const Instance * current_instance = this;
+InstanceIt Instance::last() const {
+    const InstanceIt * current_instance = this;
     while(current_instance->next_instance!=nullptr) {
         current_instance = current_instance->next_instance;
     }
-    return *current_instance;
-}
-
-unsigned int Instance::length_to_first() const {
-    unsigned int counter = 0;
-    for(Instance ins=(*this)-1; ins!=INVALID; --ins;) {
-        ++counter;
-    }
-    return counter;
-}
-
-unsigned int Instance::length_to_last() const {
-    unsigned int counter = 0;
-    for(Instance ins=(*this)+1; ins!=INVALID; ++ins;) {
-        ++counter;
-    }
-    return counter;
+    return InstanceIt(current_instance);
 }
 
 std::ostream& operator<<(std::ostream &out, const Instance& i) {
@@ -197,48 +128,57 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
     return out;
 }
 
-InstanceIt::InstanceIt() {}
-
-InstanceIt::InstanceIt( const ActionIt& a, const StateIt& s, const RewardIt& r ):
-    util::InvalidAdapter<InstanceIt>(false),
-    action(a), state(s), reward(r)
+Instance::Instance(
+    const Action& a,
+    const State& s,
+    const Reward& r,
+    const Instance * prev,
+    const Instance * next
+    ):
+    action(a),
+    state(s),
+    reward(r),
+    previous_instance(prev),
+    next_instance(next)
 {}
 
+InstanceIt::InstanceIt():
+    util::InvalidAdapter<InstanceIt>(true),
+    this_instance(nullptr)
+{}
+
+InstanceIt::InstanceIt(const Instance * i):
+    util::InvalidAdapter<InstanceIt>(false),
+    this_instance(i)
+{}
+
+InstanceIt::operator Instance() const {
+    return Instance(*this_instance);
+}
+
+const Instance * InstanceIt::operator->() {
+    return this_instance;
+}
+
 InstanceIt & InstanceIt::operator++() {
-    ++reward;
-    if(reward==INVALID) {
-        reward = RewardIt::first();
-        ++state;
-        if(state==INVALID) {
-            state = StateIt::first();
-            ++action;
-            if(action==INVALID) {
-                action = ActionIt::first();
-                this->invalidate();
-            }
-        }
+    if(this_instance==nullptr || this_instance->next_instance==nullptr) {
+        this->invalidate();
+    } else {
+        this_instance = this_instance->next_instance;
     }
     return *this;
 }
 
 InstanceIt & InstanceIt::operator--() {
-    --reward;
-    if(reward==INVALID) {
-        reward = RewardIt::last();
-        --state;
-        if(state==INVALID) {
-            state = StateIt::last();
-            --action;
-            if(action==INVALID) {
-                action = ActionIt::last();
-                this->invalidate();
-            }
-        }
+    if(this_instance==nullptr || this_instance->previous_instance==nullptr) {
+        this->invalidate();
+    } else {
+        this_instance = this_instance->previous_instance;
     }
     return *this;
 }
 
-InstanceIt & operator+=(const int& c) {
+InstanceIt & InstanceIt::operator+=(const int& c) {
     if(c<0) {
         return (*this) -= -c;
     } else {
@@ -249,7 +189,7 @@ InstanceIt & operator+=(const int& c) {
     }
 }
 
-InstanceIt & operator-=(const int& c) {
+InstanceIt & InstanceIt::operator-=(const int& c) {
     if(c<0) {
         return (*this) += -c;
     } else {
@@ -260,15 +200,114 @@ InstanceIt & operator-=(const int& c) {
     }
 }
 
-const InstanceIt InstanceIt::first() {
-    return InstanceIt(ActionIt::first(), StateIt::first(), RewardIt::first());
+InstanceIt operator+(const int& c) {
+    if(c<0) {
+        return (*this)-(-c);
+    } else {
+        InstanceIt ret = *this;
+        for(int i=0; i<c && ret!=INVALID; ++i, ++ret) {}
+        return ret;
+    }
 }
 
-const InstanceIt InstanceIt::last() {
-    return InstanceIt(ActionIt::last(), StateIt::last(), RewardIt::last());
+InstanceIt operator-(const int& c) {
+    if(c<0) {
+        return (*this)+(-c);
+    } else {
+        InstanceIt ret = *this;
+        for(int i=0; i<c && ret!=INVALID; ++i, --ret) {}
+        return ret;
+    }
 }
 
-std::ostream& operator<<(std::ostream &out, const InstanceIt& i) {
-    out << (Instance)i;
-    return out;
+unsigned int InstanceIt::length_to_first() const {
+    unsigned int counter = 0;
+    for(InstanceIt ins=(*this)-1; ins!=INVALID; --ins) {
+        ++counter;
+    }
+    return counter;
 }
+
+unsigned int InstanceIt::length_to_last() const {
+    unsigned int counter = 0;
+    for(InstanceIt ins=(*this)+1; ins!=INVALID; ++ins) {
+        ++counter;
+    }
+    return counter;
+}
+
+// InstanceIt::InstanceIt() {}
+
+// InstanceIt::InstanceIt( const ActionIt& a, const StateIt& s, const RewardIt& r ):
+//     util::InvalidAdapter<InstanceIt>(false),
+//     action(a), state(s), reward(r)
+// {}
+
+// InstanceIt & InstanceIt::operator++() {
+//     ++reward;
+//     if(reward==INVALID) {
+//         reward = RewardIt::first();
+//         ++state;
+//         if(state==INVALID) {
+//             state = StateIt::first();
+//             ++action;
+//             if(action==INVALID) {
+//                 action = ActionIt::first();
+//                 this->invalidate();
+//             }
+//         }
+//     }
+//     return *this;
+// }
+
+// InstanceIt & InstanceIt::operator--() {
+//     --reward;
+//     if(reward==INVALID) {
+//         reward = RewardIt::last();
+//         --state;
+//         if(state==INVALID) {
+//             state = StateIt::last();
+//             --action;
+//             if(action==INVALID) {
+//                 action = ActionIt::last();
+//                 this->invalidate();
+//             }
+//         }
+//     }
+//     return *this;
+// }
+
+// InstanceIt & InstanceIt::operator+=(const int& c) {
+//     if(c<0) {
+//         return (*this) -= -c;
+//     } else {
+//         for(int i=0; i<c && (*this)!=INVALID; ++i) {
+//             ++(*this);
+//         }
+//         return (*this);
+//     }
+// }
+
+// InstanceIt & InstanceIt::operator-=(const int& c) {
+//     if(c<0) {
+//         return (*this) += -c;
+//     } else {
+//         for(int i=0; i<c && (*this)!=INVALID; ++i) {
+//             --(*this);
+//         }
+//         return (*this);
+//     }
+// }
+
+// const InstanceIt InstanceIt::first() {
+//     return InstanceIt(ActionIt::first(), StateIt::first(), RewardIt::first());
+// }
+
+// const InstanceIt InstanceIt::last() {
+//     return InstanceIt(ActionIt::last(), StateIt::last(), RewardIt::last());
+// }
+
+// std::ostream& operator<<(std::ostream &out, const InstanceIt& i) {
+//     out << (Instance)i;
+//     return out;
+// }
