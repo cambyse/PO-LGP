@@ -24,6 +24,7 @@ using util::INVALID;
 KMarkovCRF::KMarkovCRF():
         k(Data::k),
         old_active_features_size(0),
+        instance_data(nullptr),
         lambda(nullptr),
         compound_features_sorted(false),
         kmdp_prediction_up_to_data(false)
@@ -80,7 +81,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         g[i] = 0;
     }
 
-    int number_of_data_points = instance_data.length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return fx;
@@ -97,9 +98,9 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumFNN; // sumF(x(n),y(n))
     double sumExpN; // normalization Z(x)
     vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F)
-    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
+    for(instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance) {
 
-        action_t action = instance.action;
+        action_t action = instance->action;
 
         sumFNN = 0;
         sumExpN = 0;
@@ -241,7 +242,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const state_t& state,
         const reward_t& reward
 ) {
-    instance_data.append_instance(action,state,reward);
+    instance_data->append_instance(action,state,reward);
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
@@ -308,16 +309,15 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 }
 
 void KMarkovCRF::evaluate_features() {
-    int number_of_data_points = instance_data.length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model.");
         return;
     }
 
     DEBUG_OUT(0,"Evaluating features:");
-    instance_t ins = instance_data.last();
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(ins) );
+        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(instance_data) );
     }
 }
 
@@ -329,7 +329,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     //  Check for Data  //
     //------------------//
 
-    int N = instance_data.length_to_first()-k;
+    int N = instance_data->it().length_to_first()-k;
     if(N<=0) {
         DEBUG_OUT(0,"Not enough data to score features.");
         return;
@@ -350,7 +350,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     // to make the code more readable and comparable to evaluate_model() function
     vector<double> &g = compound_feature_scores;
 
-    int number_of_data_points = instance_data.length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features.");
         return;
@@ -368,9 +368,9 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of compound features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of compound features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all compound features F
-    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
+    for(instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance) {
 
-        action_t action = instance.action;
+        action_t action = instance->action;
 
         sumExpN = 0.0;
         sumFExpNF.assign(cf_size,0.0);
@@ -609,7 +609,7 @@ const {
 }
 
 unsigned long int KMarkovCRF::get_training_data_length() {
-    unsigned long int n = instance_data.length_to_first()-k;
+    unsigned long int n = instance_data->it().length_to_first()-k;
     if(n<=0) {
         return 0;
     } else {
@@ -629,12 +629,12 @@ void KMarkovCRF::update_prediction_map() {
     std::map<input_tuple_t, size_t > counts;
 
     // go through instance and count frequencies for transitions
-    for(instance_t instance=instance_data.first()+k; instance!=INVALID; ++instance) {
+    for(instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance) {
 
         // get data
-        action_t action = instance.action;
-        state_t state = instance.state;
-        reward_t reward = instance.reward;
+        action_t action = instance->action;
+        state_t state = instance->state;
+        reward_t reward = instance->reward;
 
         // increment frequency
         prediction_tuple_t predict_tuple = std::make_tuple(instance, action, state, reward);
@@ -657,7 +657,7 @@ void KMarkovCRF::update_prediction_map() {
     // normalize to get a probability distribution
     for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
 
-        instance_t instance = std::get<0>(it->first);
+        const instance_t * instance = std::get<0>(it->first);
         action_t action = std::get<1>(it->first);
         auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.find(input_tuple);

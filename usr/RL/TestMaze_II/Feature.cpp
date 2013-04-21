@@ -132,11 +132,11 @@ NullFeature::NullFeature(){
 
 NullFeature::~NullFeature() {}
 
-double NullFeature::evaluate(instanceIt_t) const {
+double NullFeature::evaluate(const instance_t *) const {
     return 0;
 }
 
-double NullFeature::evaluate(instanceIt_t, action_t, state_t, reward_t) const {
+double NullFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
     return 0;
 }
 
@@ -168,16 +168,20 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-double ActionFeature::evaluate(instanceIt_t instance) const {
-    if( (instance+=delay)!=INVALID && instance.action==action ) {
+double ActionFeature::evaluate(const instance_t * instance) const {
+    instanceIt_t insIt(instance);
+    if( (insIt+=delay)!=INVALID && insIt->action==action ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double ActionFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
-    return evaluate(instance.append_instance(action,state,reward));
+double ActionFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+    instance_t * ins = instance_t::create(action,state,reward,instance);
+    double ret = evaluate(ins);
+    delete ins;
+    return ret;
 }
 
 string ActionFeature::identifier() const {
@@ -211,16 +215,20 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-double StateFeature::evaluate(instanceIt_t instance) const {
-    if( (instance+=delay)!=INVALID && instance.state==state ) {
+double StateFeature::evaluate(const instance_t * instance) const {
+    instanceIt_t insIt(instance);
+    if( (insIt+=delay)!=INVALID && insIt->state==state ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double StateFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
-    return evaluate(instance.append_instance(action,state,reward));
+double StateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+    instance_t * ins = instance_t::create(action,state,reward,instance);
+    double ret = evaluate(ins);
+    delete ins;
+    return ret;
 }
 
 string StateFeature::identifier() const {
@@ -253,16 +261,20 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-double RewardFeature::evaluate(instanceIt_t instance) const {
-    if( (instance+=delay)!=INVALID && instance.reward==reward ) {
+double RewardFeature::evaluate(const instance_t * instance) const {
+    instanceIt_t insIt(instance);
+    if( (insIt+=delay)!=INVALID && insIt->reward==reward ) {
         return 1;
     } else {
         return 0;
     }
 }
 
-double RewardFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
-    return evaluate(instance.append_instance(action,state,reward));
+double RewardFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+    instance_t * ins = instance_t::create(action,state,reward,instance);
+    double ret = evaluate(ins);
+    delete ins;
+    return ret;
 }
 
 string RewardFeature::identifier() const {
@@ -289,7 +301,7 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
 
 AndFeature::~AndFeature() {}
 
-double AndFeature::evaluate(instanceIt_t instance) const {
+double AndFeature::evaluate(const instance_t * instance) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
@@ -299,7 +311,7 @@ double AndFeature::evaluate(instanceIt_t instance) const {
     return prod;
 }
 
-double AndFeature::evaluate(instanceIt_t instance, action_t action, state_t state, reward_t reward) const {
+double AndFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
     double prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();

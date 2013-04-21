@@ -2,18 +2,23 @@
 
 using util::INVALID;
 
-static Instance * create(const Instance& i) {
+Instance * Instance::create(const Instance& i) {
     return new Instance(i);
 }
 
-static Instance * create(
-    const Action& a = Action(),
-    const State& s = State(),
-    const Reward& r = Reward(),
-    const Instance * prev = nullptr,
-    const Instance * next = nullptr
+Instance * Instance::create(
+    const Action& a,
+    const State& s,
+    const Reward& r,
+    const Instance * prev,
+    const Instance * next
     ) {
-    return new Instance(a,s,r,prev,next);
+    Instance * ins = new Instance(a,s,r);
+    ins->previous_const = true;
+    ins->next_const = true;
+    ins->const_previous_instance = prev;
+    ins->const_next_instance = next;
+    return ins;
 }
 
 Instance::~Instance() {
@@ -45,14 +50,26 @@ Instance * Instance::insert_instance_after(
     const State& s,
     const Reward& r
     ) {
-    Instance * new_instance = new Instance(a,s,r);
 
-    new_instance->next_instance = this->next_instance;
+    // create new instance
+    Instance * new_instance = new Instance(*this);
+    new_instance->action = a;
+    new_instance->state = s;
+    new_instance->reward = r;
+
+    // make next instance point back to newly created (if not const)
     if(this->next_instance!=nullptr) {
         this->next_instance->previous_instance = new_instance;
     }
 
+    // make new instance point back to this instance (adjust const settings)
+    new_instance->previous_const = false;
+    new_instance->const_previous_instance = nullptr;
     new_instance->previous_instance = this;
+
+    // make this instance point forward to new instance (adjust const settings)
+    this->next_const = false;
+    this->const_next_instance = nullptr;
     this->next_instance = new_instance;
 
     return new_instance;
@@ -63,14 +80,26 @@ Instance * Instance::insert_instance_before(
     const State& s,
     const Reward& r
     ) {
-    Instance * new_instance = new Instance(a,s,r);
 
-    new_instance->previous_instance = this->previous_instance;
+    // create new instance
+    Instance * new_instance = new Instance(*this);
+    new_instance->action = a;
+    new_instance->state = s;
+    new_instance->reward = r;
+
+    // make previous instance point forward to newly created (if not const)
     if(this->previous_instance!=nullptr) {
         this->previous_instance->next_instance = new_instance;
     }
 
+    // make new instance point forward to this instance (adjust const settings)
+    new_instance->next_const = false;
+    new_instance->const_next_instance = nullptr;
     new_instance->next_instance = this;
+
+    // make this instance point back to new instance (adjust const settings)
+    this->previous_const = false;
+    this->const_previous_instance = nullptr;
     this->previous_instance = new_instance;
 
     return new_instance;
@@ -100,22 +129,30 @@ Instance * Instance::prepend_instance(
     return current_instance->insert_instance_before(a,s,r);
 }
 
+const Instance * Instance::get_previous() const {
+    return (previous_const ? const_previous_instance : previous_instance);
+}
+
+const Instance * Instance::get_next() const {
+    return (next_const ? const_next_instance : next_instance);
+}
+
 InstanceIt Instance::it() const {
     return InstanceIt(this);
 }
 
 InstanceIt Instance::first() const {
     const Instance * current_instance = this;
-    while(current_instance->previous_instance!=nullptr) {
-        current_instance = current_instance->previous_instance;
+    while(current_instance->get_previous()!=nullptr) {
+        current_instance = current_instance->get_previous();
     }
     return InstanceIt(current_instance);
 }
 
 InstanceIt Instance::last() const {
-    const InstanceIt * current_instance = this;
-    while(current_instance->next_instance!=nullptr) {
-        current_instance = current_instance->next_instance;
+    const Instance * current_instance = this;
+    while(current_instance->get_next()!=nullptr) {
+        current_instance = current_instance->get_next();
     }
     return InstanceIt(current_instance);
 }
@@ -131,15 +168,17 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
 Instance::Instance(
     const Action& a,
     const State& s,
-    const Reward& r,
-    const Instance * prev,
-    const Instance * next
+    const Reward& r
     ):
     action(a),
     state(s),
     reward(r),
-    previous_instance(prev),
-    next_instance(next)
+    previous_instance(nullptr),
+    next_instance(nullptr),
+    const_previous_instance(nullptr),
+    const_next_instance(nullptr),
+    previous_const(false),
+    next_const(false)
 {}
 
 InstanceIt::InstanceIt():
@@ -152,8 +191,8 @@ InstanceIt::InstanceIt(const Instance * i):
     this_instance(i)
 {}
 
-InstanceIt::operator Instance() const {
-    return Instance(*this_instance);
+InstanceIt::operator Instance*() const {
+    return this_instance;
 }
 
 const Instance * InstanceIt::operator->() {
@@ -161,19 +200,19 @@ const Instance * InstanceIt::operator->() {
 }
 
 InstanceIt & InstanceIt::operator++() {
-    if(this_instance==nullptr || this_instance->next_instance==nullptr) {
+    if(this_instance==nullptr || this_instance->get_next()==nullptr) {
         this->invalidate();
     } else {
-        this_instance = this_instance->next_instance;
+        this_instance = this_instance->get_next();
     }
     return *this;
 }
 
 InstanceIt & InstanceIt::operator--() {
-    if(this_instance==nullptr || this_instance->previous_instance==nullptr) {
+    if(this_instance==nullptr || this_instance->get_previous()==nullptr) {
         this->invalidate();
     } else {
-        this_instance = this_instance->previous_instance;
+        this_instance = this_instance->get_previous();
     }
     return *this;
 }

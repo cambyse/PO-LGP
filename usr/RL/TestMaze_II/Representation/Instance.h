@@ -32,22 +32,25 @@ public:
         const Instance * next = nullptr
         );
     ~Instance();
+    bool operator<(const Instance& other) const;
     Instance * insert_instance_after  (const Action& a, const State& s, const Reward& r);
     Instance * insert_instance_before (const Action& a, const State& s, const Reward& r);
     Instance * append_instance        (const Action& a, const State& s, const Reward& r);
     Instance * prepend_instance       (const Action& a, const State& s, const Reward& r);
+    const Instance * get_previous() const;
+    const Instance * get_next() const;
     InstanceIt it() const;
     InstanceIt first() const;
     InstanceIt last() const;
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
 protected:
     Instance * previous_instance, * next_instance;
+    const Instance * const_previous_instance, * const_next_instance;
+    bool previous_const, next_const;
     Instance(
         const Action& a = Action(),
         const State& s = State(),
-        const Reward& r = Reward(),
-        const Instance * prev = nullptr,
-        const Instance * next = nullptr
+        const Reward& r = Reward()
         );
     Instance(const Instance&);
     Instance & operator=(const Instance&);
@@ -58,7 +61,7 @@ class InstanceIt: public util::InvalidAdapter<InstanceIt> {
 public:
     InstanceIt();
     InstanceIt(const Instance *);
-    operator Instance() const;
+    operator Instance*() const;
     const Instance * operator->();
     InstanceIt & operator++();
     InstanceIt & operator--();

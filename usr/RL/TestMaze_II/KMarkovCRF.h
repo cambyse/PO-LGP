@@ -118,14 +118,14 @@ public:
 
 private:
 
-    typedef std::tuple<instance_t, action_t, state_t, reward_t> prediction_tuple_t;
+    typedef std::tuple<const instance_t*, action_t, state_t, reward_t> prediction_tuple_t;
     typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
-    typedef std::tuple<instance_t, action_t> input_tuple_t;
+    typedef std::tuple<const instance_t*, action_t> input_tuple_t;
     typedef std::set<input_tuple_t> input_set_t;
 
     int k, old_active_features_size;
-    instance_t instance_data;
+    instance_t * instance_data;
     lbfgsfloatval_t * lambda;
     std::vector<Feature*> basis_features;
     std::vector<AndFeature> active_features, compound_features;
