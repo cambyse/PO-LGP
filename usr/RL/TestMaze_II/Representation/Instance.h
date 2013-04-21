@@ -11,6 +11,7 @@
 #include <ostream>
 
 class InstanceIt;
+class ConstInstanceIt;
 
 /** \brief Instance object.
  *
@@ -39,9 +40,14 @@ public:
     Instance * prepend_instance       (const Action& a, const State& s, const Reward& r);
     const Instance * get_previous() const;
     const Instance * get_next() const;
-    InstanceIt it() const;
-    InstanceIt first() const;
-    InstanceIt last() const;
+    Instance * get_non_const_previous() const;
+    Instance * get_non_const_next() const;
+    InstanceIt it();
+    ConstInstanceIt it() const;
+    InstanceIt first();
+    InstanceIt last();
+    ConstInstanceIt const_first() const;
+    ConstInstanceIt const_last() const;
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
 protected:
     Instance * previous_instance, * next_instance;
@@ -60,9 +66,10 @@ protected:
 class InstanceIt: public util::InvalidAdapter<InstanceIt> {
 public:
     InstanceIt();
-    InstanceIt(const Instance *);
+    InstanceIt(Instance *);
     operator Instance*() const;
-    const Instance * operator->();
+    operator ConstInstanceIt() const;
+    Instance * operator->();
     InstanceIt & operator++();
     InstanceIt & operator--();
     InstanceIt & operator+=(const int& c);
@@ -75,6 +82,27 @@ public:
     friend std::ostream& operator<<(std::ostream &out, const InstanceIt& i);
 protected:
     Instance * this_instance;
+};
+
+/** \brief Const Instance iterator object. */
+class ConstInstanceIt: public util::InvalidAdapter<ConstInstanceIt> {
+public:
+    ConstInstanceIt();
+    ConstInstanceIt(const Instance *);
+    operator const Instance*() const;
+    const Instance * operator->();
+    ConstInstanceIt & operator++();
+    ConstInstanceIt & operator--();
+    ConstInstanceIt & operator+=(const int& c);
+    ConstInstanceIt & operator-=(const int& c);
+    ConstInstanceIt operator+(const int& c);
+    ConstInstanceIt operator-(const int& c);
+    bool operator<(const ConstInstanceIt& other) const;
+    unsigned int length_to_first() const;
+    unsigned int length_to_last() const;
+    friend std::ostream& operator<<(std::ostream &out, const ConstInstanceIt& i);
+protected:
+    const Instance * this_instance;
 };
 
 //========================================================================================//

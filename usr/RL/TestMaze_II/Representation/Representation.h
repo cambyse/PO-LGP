@@ -11,3 +11,4 @@ typedef Reward reward_t;
 typedef RewardIt rewardIt_t;
 typedef Instance instance_t;
 typedef InstanceIt instanceIt_t;
+typedef ConstInstanceIt const_instanceIt_t;

@@ -23,14 +23,14 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
         /**/
 
         /* 3x3 Maze */
-        // { 0, 1},
-        // { 0, 3},
-        // { 2, 1},
-        // { 2, 5},
-        // { 6, 3},
-        // { 6, 7},
-        // { 8, 7},
-        // { 8, 5}
+        { 0, 1},
+        { 0, 3},
+        { 2, 1},
+        { 2, 5},
+        { 6, 3},
+        { 6, 7},
+        { 8, 7},
+        { 8, 5}
         /**/
 
         /* 4x4 Maze *
@@ -66,11 +66,14 @@ const Maze::idx_t Maze::rewards[rewards_n][7] = {
 
 Maze::Maze(const double& eps):
         time_delay(Data::k),
+        current_instance(nullptr),
 //        reward_active(false),
         epsilon(eps),
 //        button(NULL), smiley(NULL),
         agent(NULL)
 {
+
+
 
     if(time_delay<=0) {
         DEBUG_OUT(0,"Error: Time delay must be larger than zero --> setting to one");
@@ -86,15 +89,16 @@ Maze::Maze(const double& eps):
 //    smiley_state = MazeState(0,0);
 
     // setting current state
+    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     current_state = MazeState(Data::maze_x_size/2, Data::maze_y_size/2);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
-        current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
-    }
+    DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
+    set_current_state(current_state.state_idx());
 }
 
 
 Maze::~Maze() {
     delete agent;
+    delete current_instance;
 //    delete button;
 //    delete smiley;
 }
@@ -265,6 +269,13 @@ void Maze::render_update(QGraphicsView * view) {
 void Maze::perform_transition(const action_t& action) {
     MazeState old_state = current_state; // remember current (old) state
 
+    DEBUG_OUT(1,"Current instance: ");
+    const_instanceIt_t insIt = current_instance->it();
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+        DEBUG_OUT(1,"    " << (*insIt) );
+        --insIt;
+    }
+
     // perform transition
     probability_t prob_threshold = drand48();
     DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
@@ -277,7 +288,7 @@ void Maze::perform_transition(const action_t& action) {
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
                 current_state = MazeState(state_to);
-                current_instance->append_instance(action, state_to, reward);
+                current_instance = current_instance->append_instance(action, state_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -322,7 +333,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for matching reward
     reward_t matching_reward = reward_t::min_reward;
-    instanceIt_t instanceIt_from(instance_from);
+    const_instanceIt_t instanceIt_from(instance_from);
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
@@ -425,7 +436,9 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    }
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
 

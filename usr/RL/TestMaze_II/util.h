@@ -61,7 +61,7 @@ namespace util {
         class AssignableTypeWrapper {
     public:
         typedef T value_t;
-    AssignableTypeWrapper(T val): value(val) { }
+    AssignableTypeWrapper(const T& val): value(val) { }
         operator T() const { return value; }
         C& operator=(const T &rhs) {
             this->value=rhs;

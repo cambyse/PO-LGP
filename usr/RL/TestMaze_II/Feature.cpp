@@ -169,7 +169,7 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
 }
 
 double ActionFeature::evaluate(const instance_t * instance) const {
-    instanceIt_t insIt(instance);
+    const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->action==action ) {
         return 1;
     } else {
@@ -216,7 +216,7 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
 }
 
 double StateFeature::evaluate(const instance_t * instance) const {
-    instanceIt_t insIt(instance);
+    const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->state==state ) {
         return 1;
     } else {
@@ -262,7 +262,7 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
 }
 
 double RewardFeature::evaluate(const instance_t * instance) const {
-    instanceIt_t insIt(instance);
+    const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->reward==reward ) {
         return 1;
     } else {

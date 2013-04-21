@@ -137,24 +137,52 @@ const Instance * Instance::get_next() const {
     return (next_const ? const_next_instance : next_instance);
 }
 
-InstanceIt Instance::it() const {
+Instance * Instance::get_non_const_previous() const {
+    return  previous_instance;
+}
+
+Instance * Instance::get_non_const_next() const {
+    return next_instance;
+}
+
+InstanceIt Instance::it() {
     return InstanceIt(this);
 }
 
-InstanceIt Instance::first() const {
+ConstInstanceIt Instance::it() const {
+    return ConstInstanceIt(this);
+}
+
+InstanceIt Instance::first() {
+    Instance * current_instance = this;
+    while(current_instance->get_non_const_previous()!=nullptr) {
+        current_instance = current_instance->get_non_const_previous();
+    }
+    return current_instance->it();
+}
+
+InstanceIt Instance::last() {
+    Instance * current_instance = this;
+    while(current_instance->get_non_const_next()!=nullptr) {
+        current_instance = current_instance->get_non_const_next();
+    }
+    return current_instance->it();
+}
+
+ConstInstanceIt Instance::const_first() const {
     const Instance * current_instance = this;
     while(current_instance->get_previous()!=nullptr) {
         current_instance = current_instance->get_previous();
     }
-    return InstanceIt(current_instance);
+    return current_instance->it();
 }
 
-InstanceIt Instance::last() const {
+ConstInstanceIt Instance::const_last() const {
     const Instance * current_instance = this;
     while(current_instance->get_next()!=nullptr) {
         current_instance = current_instance->get_next();
     }
-    return InstanceIt(current_instance);
+    return current_instance->it();
 }
 
 std::ostream& operator<<(std::ostream &out, const Instance& i) {
@@ -181,12 +209,24 @@ Instance::Instance(
     next_const(false)
 {}
 
+Instance::Instance(const Instance& i):
+    action(i.action),
+    state(i.state),
+    reward(i.reward),
+    previous_instance(i.previous_instance),
+    next_instance(i.next_instance),
+    const_previous_instance(i.const_previous_instance),
+    const_next_instance(i.const_next_instance),
+    previous_const(i.previous_const),
+    next_const(i.next_const)
+{}
+
 InstanceIt::InstanceIt():
     util::InvalidAdapter<InstanceIt>(true),
     this_instance(nullptr)
 {}
 
-InstanceIt::InstanceIt(const Instance * i):
+InstanceIt::InstanceIt(Instance * i):
     util::InvalidAdapter<InstanceIt>(false),
     this_instance(i)
 {}
@@ -195,24 +235,28 @@ InstanceIt::operator Instance*() const {
     return this_instance;
 }
 
-const Instance * InstanceIt::operator->() {
+InstanceIt::operator ConstInstanceIt() const {
+    return ConstInstanceIt(this_instance);
+}
+
+Instance * InstanceIt::operator->() {
     return this_instance;
 }
 
 InstanceIt & InstanceIt::operator++() {
-    if(this_instance==nullptr || this_instance->get_next()==nullptr) {
+    if(this_instance==nullptr || this_instance->get_non_const_next()==nullptr) {
         this->invalidate();
     } else {
-        this_instance = this_instance->get_next();
+        this_instance = this_instance->get_non_const_next();
     }
     return *this;
 }
 
 InstanceIt & InstanceIt::operator--() {
-    if(this_instance==nullptr || this_instance->get_previous()==nullptr) {
+    if(this_instance==nullptr || this_instance->get_non_const_previous()==nullptr) {
         this->invalidate();
     } else {
-        this_instance = this_instance->get_previous();
+        this_instance = this_instance->get_non_const_previous();
     }
     return *this;
 }
@@ -239,7 +283,7 @@ InstanceIt & InstanceIt::operator-=(const int& c) {
     }
 }
 
-InstanceIt operator+(const int& c) {
+InstanceIt InstanceIt::operator+(const int& c) {
     if(c<0) {
         return (*this)-(-c);
     } else {
@@ -249,7 +293,7 @@ InstanceIt operator+(const int& c) {
     }
 }
 
-InstanceIt operator-(const int& c) {
+InstanceIt InstanceIt::operator-(const int& c) {
     if(c<0) {
         return (*this)+(-c);
     } else {
@@ -270,6 +314,100 @@ unsigned int InstanceIt::length_to_first() const {
 unsigned int InstanceIt::length_to_last() const {
     unsigned int counter = 0;
     for(InstanceIt ins=(*this)+1; ins!=INVALID; ++ins) {
+        ++counter;
+    }
+    return counter;
+}
+
+ConstInstanceIt::ConstInstanceIt():
+    util::InvalidAdapter<ConstInstanceIt>(true),
+    this_instance(nullptr)
+{}
+
+ConstInstanceIt::ConstInstanceIt(const Instance * i):
+    util::InvalidAdapter<ConstInstanceIt>(false),
+    this_instance(i)
+{}
+
+ConstInstanceIt::operator const Instance*() const {
+    return this_instance;
+}
+
+const Instance * ConstInstanceIt::operator->() {
+    return this_instance;
+}
+
+ConstInstanceIt & ConstInstanceIt::operator++() {
+    if(this_instance==nullptr || this_instance->get_next()==nullptr) {
+        this->invalidate();
+    } else {
+        this_instance = this_instance->get_next();
+    }
+    return *this;
+}
+
+ConstInstanceIt & ConstInstanceIt::operator--() {
+    if(this_instance==nullptr || this_instance->get_previous()==nullptr) {
+        this->invalidate();
+    } else {
+        this_instance = this_instance->get_previous();
+    }
+    return *this;
+}
+
+ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
+    if(c<0) {
+        return (*this) -= -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            ++(*this);
+        }
+        return (*this);
+    }
+}
+
+ConstInstanceIt & ConstInstanceIt::operator-=(const int& c) {
+    if(c<0) {
+        return (*this) += -c;
+    } else {
+        for(int i=0; i<c && (*this)!=INVALID; ++i) {
+            --(*this);
+        }
+        return (*this);
+    }
+}
+
+ConstInstanceIt ConstInstanceIt::operator+(const int& c) {
+    if(c<0) {
+        return (*this)-(-c);
+    } else {
+        ConstInstanceIt ret = *this;
+        for(int i=0; i<c && ret!=INVALID; ++i, ++ret) {}
+        return ret;
+    }
+}
+
+ConstInstanceIt ConstInstanceIt::operator-(const int& c) {
+    if(c<0) {
+        return (*this)+(-c);
+    } else {
+        ConstInstanceIt ret = *this;
+        for(int i=0; i<c && ret!=INVALID; ++i, --ret) {}
+        return ret;
+    }
+}
+
+unsigned int ConstInstanceIt::length_to_first() const {
+    unsigned int counter = 0;
+    for(ConstInstanceIt ins=(*this)-1; ins!=INVALID; --ins) {
+        ++counter;
+    }
+    return counter;
+}
+
+unsigned int ConstInstanceIt::length_to_last() const {
+    unsigned int counter = 0;
+    for(ConstInstanceIt ins=(*this)+1; ins!=INVALID; ++ins) {
         ++counter;
     }
     return counter;

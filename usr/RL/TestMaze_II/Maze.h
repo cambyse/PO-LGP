@@ -43,10 +43,13 @@ public:
         idx_t state_idx() const { return index; }
         idx_t x() const { return index%Data::maze_x_size; }
         idx_t y() const { return index/Data::maze_x_size; }
-        std::string print() {
+        std::string print() const {
             std::stringstream ss;
             ss << "(" << x() << "," << y() << ")";
             return ss.str();
+        }
+        friend std::ostream& operator<<(std::ostream &out, const MazeState& s) {
+            return (out << s.print());
         }
     private:
         idx_t index;
@@ -98,7 +101,7 @@ private:
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 0;
+    static const size_t walls_n = 8;
     static const idx_t walls[walls_n][2];
 
     static const size_t rewards_n = 4;
