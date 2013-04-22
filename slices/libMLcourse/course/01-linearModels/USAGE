@@ -1,0 +1,19 @@
+
+ -mode { linear=1, 2class=2, multiClass=3, CV=4, exercise=5 }
+
+* Data parameters:
+ -n <int>
+ -d <int>
+ -dataType { linear=1, sinus=2, linearOutlier=3, linearRedundant=4 }
+ -dataFeatureType <as above>
+ -sigma <double>
+ -M <int>   [number of classes]
+ -outlierRate [0,1]
+ -outlierSigma <double>
+
+* Model parameters:
+ -modelFeatureType { linear=1, quadratic, cubic, rbf=4, piecewiseConstant=5, piecewiseLinear=6 }
+ -rbfBias { no=0, yes=1 }
+ -rbfWidth <double>
+ -lambda <double>
+

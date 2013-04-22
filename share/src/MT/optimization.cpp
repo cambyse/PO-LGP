@@ -116,7 +116,7 @@ void sanityCheckUptodatePotentials(const MT::Array<SqrPotential>& R, QuadraticCh
 }
 
 double evaluateSF(ScalarFunction& f, const arr& x) {
-  return f.fs(NoGrad, x);
+  return f.fs(NoGrad, NoArr, x);
 }
 
 double evaluateVF(VectorFunction& f, const arr& x) {
@@ -195,7 +195,7 @@ bool checkGradient(ScalarFunction &f,
                    const arr& x, double tolerance) {
   arr J, dx, JJ;
   double y, dy;
-  y=f.fs(J, x);
+  y=f.fs(J, NoArr, x);
   
   JJ.resize(x.N);
   double eps=CHECK_EPS;
@@ -203,12 +203,12 @@ bool checkGradient(ScalarFunction &f,
   for(i=0; i<x.N; i++) {
     dx=x;
     dx.elem(i) += eps;
-    dy = f.fs(NoGrad, dx);
+    dy = f.fs(NoGrad, NoArr, dx);
     dy = (dy-y)/eps;
     JJ(i)=dy;
   }
   JJ.reshapeAs(J);
-  double md=maxDiff(J, JJ, 0);
+  double md=maxDiff(J, JJ, &i);
 //   MT::save(J, "z.J");
 //   MT::save(JJ, "z.JJ");
   if(md>tolerance) {
@@ -289,7 +289,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
     uint t;
     arr x_ref;
     uint *evals;
-    void fv(arr& y, arr& J, const arr& x) {
+    void fv(arr& y, arr& J, const arr& x) const {
       arr yij,Ji,Jj;
       f->fv_i(y, J, t, x);  (*evals)++;
       if(t>0) {
@@ -632,7 +632,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
   double fx, fy;
   double a=o.initStep;
   
-  fx = f.fs(grad_x, x);  evals++;
+  fx = f.fs(grad_x, NoArr, x);  evals++;
   if(o.verbose>1) cout <<"*** optGradDescent: starting point x=" <<x <<" f(x)=" <<fx <<" a=" <<a <<endl;
   ofstream fil;
   if(o.verbose>0) fil.open("z.grad");
@@ -642,9 +642,9 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
   
   for(;;) {
     y = x - a*grad_x;
-    fy = f.fs(grad_y, y);  evals++;
+    fy = f.fs(grad_y, NoArr, y);  evals++;
     CHECK(fy==fy, "cost seems to be NAN: fy=" <<fy);
-    if(o.verbose>1) cout <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|grad|=" <<norm(grad_x) <<" \ta=" <<a;
+    if(o.verbose>1) cout <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|grad|=" <<norm(grad_y) <<" \ta=" <<a;
     
     if(fy <= fx) {
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
@@ -654,7 +654,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
       grad_x = grad_y/norm(grad_y);
       a *= 1.2;
       if(o.maxStep>0. && a>o.maxStep) a = o.maxStep;
-      if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<endl;
+      if(o.verbose>0) fil <<evals <<' ' <<eval_cost <<' ' <<fx <<' ' <<a <<' ' <<x <<endl;
       if(step<o.stopTolerance) break;
     } else {
       if(o.verbose>1) cout <<" - reject" <<endl;
@@ -704,11 +704,11 @@ uint optMinSumGaussNewton(arr& x, QuadraticChainFunction& f, optOptions o) {
     SqrPotential *S,*V,*R;
     uint *evals;
     bool updateR;
-    double fq(SqrPotential& S_loc, const arr& x) {
+    double fq(SqrPotential& S_loc, const arr& x) const {
       CHECK(&S_loc,"");
       if(updateR) {
         f->fq_i(*R , t, x); (*evals)++;
-      } else updateR = true;
+      } else ((LocalQuadraticFunction*)this)->updateR = true;
       S_loc.A = V->A+S->A+R->A;
       S_loc.a = V->a+S->a+R->a;
       S_loc.c = V->c+S->c+R->c;
@@ -901,7 +901,7 @@ bool sRprop::step(arr& w, const arr& grad, uint *singleI) {
 
 bool Rprop::step(arr& x, ScalarFunction& f) {
   arr grad;
-  f.fs(grad, x);
+  f.fs(grad, NoArr, x);
   return s->step(x, grad, NULL);
 }
 
@@ -927,7 +927,7 @@ uint Rprop::loop(arr& _x,
   for(;;) {
     //checkGradient(p, x, stoppingTolerance);
     //compute value and gradient at x
-    fx = f.fs(J, x);  evals++;
+    fx = f.fs(J, NoArr, x);  evals++;
     
     //update best-so-far
     if(evals<=1) { fxmin= fx; xmin=x; }
