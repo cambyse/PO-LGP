@@ -39,11 +39,11 @@ extern arr& NoGrad;
 extern SqrPotential& NoPot;
 extern PairSqrPotential& NoPairPot;
 
-struct ScalarFunction { virtual double fs(arr& g, arr& H, const arr& x) const = 0; };
+struct ScalarFunction { virtual double fs(arr& g, arr& H, const arr& x) = 0; };
 
-struct VectorFunction { virtual void   fv(arr& y, arr& J, const arr& x) const = 0; };
+struct VectorFunction { virtual void   fv(arr& y, arr& J, const arr& x) = 0; };
 
-struct QuadraticFunction { virtual double fq(SqrPotential& S, const arr& x) const = 0; };
+struct QuadraticFunction { virtual double fq(SqrPotential& S, const arr& x) = 0; };
 
 struct VectorChainFunction {
   virtual uint get_T() = 0;

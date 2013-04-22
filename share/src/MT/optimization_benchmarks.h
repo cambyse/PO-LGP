@@ -52,7 +52,7 @@ struct RastriginFunction:ScalarFunction {
 //===========================================================================
 
 struct SquareFunction:ScalarFunction{
-  virtual double fs(arr& g, arr& H, const arr& x) const{
+  virtual double fs(arr& g, arr& H, const arr& x) {
     double f=sumOfSqr(x);
     if(&g) g=2.*x;
     if(&H) H.setId(x.N);
@@ -63,7 +63,7 @@ struct SquareFunction:ScalarFunction{
 //===========================================================================
 
 struct HoleFunction:ScalarFunction{
-  virtual double fs(arr& g, arr& H, const arr& x) const{
+  virtual double fs(arr& g, arr& H, const arr& x) {
     double f=sumOfSqr(x);
     f = 1.-exp(-f);
     if(&g) g=exp(-f)*2.*x;
@@ -107,8 +107,8 @@ struct SquaredCost:public ScalarFunction,VectorFunction {
   SquaredCost(uint n, double condition=100.);
   void initRandom(uint n, double condition=100.);
   
-  double fs(arr& g, arr& H, const arr& x) const;
-  void fv(arr& y, arr& J,const arr& x) const;
+  double fs(arr& g, arr& H, const arr& x);
+  void fv(arr& y, arr& J,const arr& x);
 };
 
 //===========================================================================
@@ -121,8 +121,8 @@ struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction {
   NonlinearlyWarpedSquaredCost(uint n, double condition=100.);
   void initRandom(uint n, double condition=100.);
   
-  double fs(arr& grad, arr& H, const arr& x) const;
-  void fv(arr& y, arr& J,const arr& x) const;
+  double fs(arr& grad, arr& H, const arr& x);
+  void fv(arr& y, arr& J,const arr& x);
 };
 
 //===========================================================================

@@ -161,16 +161,17 @@ void ors::Camera::setCameraProjectionMatrix(const arr& P) {
   glP *= 1./glP(3, 3);
   cout <<"glP=" <<glP <<endl;
   //glLoadMatrixd(glP.p);
-  fixedProjectionMatrix = glP;
+  //fixedProjectionMatrix = glP;
 }
 
 /*! sets OpenGL's GL_PROJECTION matrix accordingly -- should be
     called in an opengl draw routine */
 void ors::Camera::glSetProjectionMatrix() {
 #ifdef MT_GL
-  if(fixedProjectionMatrix.N) {
-    glLoadMatrixd(fixedProjectionMatrix.p);
-  } else {
+//  if(fixedProjectionMatrix.N) {
+//    glLoadMatrixd(fixedProjectionMatrix.p);
+//  } else {
+  {
     if(heightAngle==0) {
       glOrtho(-whRatio*heightAbs/2, whRatio*heightAbs/2,
               -heightAbs/2, heightAbs/2, zNear, zFar);

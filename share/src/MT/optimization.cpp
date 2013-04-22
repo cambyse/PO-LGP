@@ -289,7 +289,7 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
     uint t;
     arr x_ref;
     uint *evals;
-    void fv(arr& y, arr& J, const arr& x) const {
+    void fv(arr& y, arr& J, const arr& x) {
       arr yij,Ji,Jj;
       f->fv_i(y, J, t, x);  (*evals)++;
       if(t>0) {
@@ -704,11 +704,11 @@ uint optMinSumGaussNewton(arr& x, QuadraticChainFunction& f, optOptions o) {
     SqrPotential *S,*V,*R;
     uint *evals;
     bool updateR;
-    double fq(SqrPotential& S_loc, const arr& x) const {
+    double fq(SqrPotential& S_loc, const arr& x) {
       CHECK(&S_loc,"");
       if(updateR) {
         f->fq_i(*R , t, x); (*evals)++;
-      } else ((LocalQuadraticFunction*)this)->updateR = true;
+      } else updateR = true;
       S_loc.A = V->A+S->A+R->A;
       S_loc.a = V->a+S->a+R->a;
       S_loc.c = V->c+S->c+R->c;
