@@ -923,6 +923,11 @@ void Transformation::appendTransformation(const Transformation& f) {
 }
 //! inverse transform (new = f^{-1} * old) or (old = f * new)
 void Transformation::appendInvTransformation(const Transformation& f) {
+#ifdef ORS_NO_DYNAMICS_IN_FRAMES
+  rot = rot/f.rot;
+  pos -= rot*f.pos;
+#else
+  NIY; //WRONG?
   //s/=f.s;
   rot=rot/f.rot;
   angvel-=rot*f.angvel;
@@ -932,6 +937,7 @@ void Transformation::appendInvTransformation(const Transformation& f) {
   Vector P(rot*f.pos); //frame offset in global coords
   vel-=angvel^P;
   pos-=P;
+#endif
 }
 //! new = old * f
 void Transformation::prependTransformation(const Transformation& f) {
@@ -965,8 +971,7 @@ void Transformation::setAffineMatrix(const double *m) {
 
 //!  to = new * from
 void Transformation::setDifference(const Transformation& from, const Transformation& to) {
-  //rot=Quaternion()/from.rot *to.rot;
-  rot=to.rot / from.rot;
+  rot=Quaternion() / from.rot * to.rot;
   angvel=from.rot/(to.angvel-from.angvel);
   /*v=(1./from.s) * (from.r/(to.v-from.v));
   v-=(1./from.s) * (from.r/(from.w^(to.p-from.p)));
@@ -2888,17 +2893,14 @@ void ors::Graph::calcBodyFramesFromJoints() {
   uint i, j;
   ors::Transformation f;
   for_list(j, n, bodies) {
+    CHECK(n->inLinks.N<=1,"loopy geometry - code missing: check if n->X and f are consistent!");
     for_list(i, e, n->inLinks) {
       f = e->from->X;
       f.appendTransformation(e->A);
       e->Xworld=f;
       f.appendTransformation(e->Q);
       if(!isLinkTree) f.appendTransformation(e->B);
-      if(e==n->inLinks(0))
-        n->X=f;
-      else {
-        MT_MSG("loopy geometry - code missing: check if n->X and f are consistent!");
-      }
+      n->X=f;
     }
   }
   calcShapeFramesFromBodies();

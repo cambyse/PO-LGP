@@ -77,7 +77,7 @@ enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 struct Vector {
   double x, y, z;
 
-  Vector() {}
+  Vector() { setZero(); }
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
   double *p() { return &x; }
@@ -111,7 +111,7 @@ struct Vector {
 struct Matrix {
   double m00, m01, m02, m10, m11, m12, m20, m21, m22;
 
-  Matrix() {};
+  Matrix() { setZero(); };
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
   double *p() { return &m00; }
 
@@ -135,7 +135,7 @@ struct Matrix {
 struct Quaternion {
   double w, x, y, z;
 
-  Quaternion() {};
+  Quaternion() { setZero(); };
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
   double *p() { return &w; }
 

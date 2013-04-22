@@ -7,6 +7,29 @@
 
 //===========================================================================
 //
+// test very basics
+//
+
+void testBasics(){
+  for(uint k=0;k<1;k++){
+    ors::Quaternion A,B,X,AX;
+    A.setRandom();
+    B.setRandom();
+    X = ors::Quaternion() / B * A;
+    cout <<X/A*B <<endl;
+  }
+
+  for(uint k=0;k<10;k++){
+    ors::Transformation A,B,X;
+    A.setRandom();
+    B.setRandom();
+    X.setDifference(A,B);
+    cout <<A*X <<endl <<B <<endl;
+  }
+}
+
+//===========================================================================
+//
 // test laod save
 //
 
@@ -475,6 +498,8 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
+  testBasics();
+  return 0;
   testLoadSave();
   testPlayStateSequence();
   testKinematics();
