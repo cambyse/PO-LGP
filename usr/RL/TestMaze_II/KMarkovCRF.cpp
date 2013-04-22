@@ -55,10 +55,14 @@ KMarkovCRF::KMarkovCRF():
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
     }
+
+    instance_data = instance_t::create();
+
 }
 
 KMarkovCRF::~KMarkovCRF() {
     lbfgs_free(lambda);
+    delete instance_data;
 }
 
 lbfgsfloatval_t KMarkovCRF::static_evaluate_model(
@@ -242,7 +246,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const state_t& state,
         const reward_t& reward
 ) {
-    instance_data->append_instance(action,state,reward);
+    instance_data = instance_data->append_instance(action,state,reward);
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 

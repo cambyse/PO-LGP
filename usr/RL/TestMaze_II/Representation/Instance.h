@@ -77,8 +77,8 @@ public:
     InstanceIt operator+(const int& c);
     InstanceIt operator-(const int& c);
     bool operator<(const InstanceIt& other) const;
-    unsigned int length_to_first() const;
-    unsigned int length_to_last() const;
+    int length_to_first() const;
+    int length_to_last() const;
     friend std::ostream& operator<<(std::ostream &out, const InstanceIt& i);
 protected:
     Instance * this_instance;
@@ -98,8 +98,8 @@ public:
     ConstInstanceIt operator+(const int& c);
     ConstInstanceIt operator-(const int& c);
     bool operator<(const ConstInstanceIt& other) const;
-    unsigned int length_to_first() const;
-    unsigned int length_to_last() const;
+    int length_to_first() const;
+    int length_to_last() const;
     friend std::ostream& operator<<(std::ostream &out, const ConstInstanceIt& i);
 protected:
     const Instance * this_instance;

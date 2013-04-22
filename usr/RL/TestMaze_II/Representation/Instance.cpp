@@ -303,17 +303,17 @@ InstanceIt InstanceIt::operator-(const int& c) {
     }
 }
 
-unsigned int InstanceIt::length_to_first() const {
-    unsigned int counter = 0;
-    for(InstanceIt ins=(*this)-1; ins!=INVALID; --ins) {
+int InstanceIt::length_to_first() const {
+    int counter = -1;
+    for(InstanceIt ins=(*this); ins!=INVALID; --ins) {
         ++counter;
     }
     return counter;
 }
 
-unsigned int InstanceIt::length_to_last() const {
-    unsigned int counter = 0;
-    for(InstanceIt ins=(*this)+1; ins!=INVALID; ++ins) {
+int InstanceIt::length_to_last() const {
+    int counter = -1;
+    for(InstanceIt ins=(*this); ins!=INVALID; ++ins) {
         ++counter;
     }
     return counter;
@@ -397,17 +397,17 @@ ConstInstanceIt ConstInstanceIt::operator-(const int& c) {
     }
 }
 
-unsigned int ConstInstanceIt::length_to_first() const {
-    unsigned int counter = 0;
-    for(ConstInstanceIt ins=(*this)-1; ins!=INVALID; --ins) {
+int ConstInstanceIt::length_to_first() const {
+    int counter = -1;
+    for(ConstInstanceIt ins=(*this); ins!=INVALID; --ins) {
         ++counter;
     }
     return counter;
 }
 
-unsigned int ConstInstanceIt::length_to_last() const {
-    unsigned int counter = 0;
-    for(ConstInstanceIt ins=(*this)+1; ins!=INVALID; ++ins) {
+int ConstInstanceIt::length_to_last() const {
+    int counter = -1;
+    for(ConstInstanceIt ins=(*this); ins!=INVALID; ++ins) {
         ++counter;
     }
     return counter;
