@@ -34,7 +34,19 @@ created: <2013-03-20 Wed>
 
 %feature("autodoc", "1");
 %include "typemaps.i"
+%include "std_string.i"
 
+//===========================================================================
+%pythoncode %{
+import os
+def get_mlr_path():
+    """
+    Return the path of the MLR code.
+    The path is used to locate the libs and similar stuff.
+    You can set he env var MLR_PATH if MLR is not in the default location.
+    """
+    return os.environ.get("MLR_PATH", os.path.expanduser("~/git/mlr/"))
+%}
 
 //===========================================================================
 %module orspy
@@ -205,11 +217,11 @@ class ArrayIter:
   void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
   void setElem1D(uint i, T value) {(*self)(i) = value; };
 
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << "Array<#elems=" << $self->N << ">";
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 };
 
@@ -285,13 +297,14 @@ struct Vector {
 };
 
 %extend Vector {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
   Vector __add__(const Vector& other) { return *$self + other; }
   Vector __sub__(const Vector& other) { return *$self - other; }
+  Vector __mul__(const double& other) { return *$self * other; }
 } // end %extend Vector
 
 
@@ -426,10 +439,10 @@ struct Transformation {
 };
 
 %extend Transformation {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 } // end %extend Transformation
 
@@ -563,10 +576,10 @@ struct Body {
     $self->name = MT::String(newName);
   };
 
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
-    return oss.str().c_str();
+    return oss.str();
   }
 }
 
@@ -600,6 +613,14 @@ struct Joint {
   void read(std::istream& is);
   Joint &data();
 };
+
+%extend Joint {
+  std::string __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss<<(*$self);
+    return oss.str(); 
+  }
+}
 
 
 struct Shape {
@@ -667,6 +688,7 @@ struct Graph {
   bool isLinkTree;
 
   Graph();
+  Graph(const char* filename);
   ~Graph();
   // void operator=(const ors::Graph& G);
   Graph* newClone() const;
@@ -768,18 +790,27 @@ def setJointStateList(self, jointState):
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void read(const char* string);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
+
 %extend Graph {
-  const char* __str__() {
+  std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    oss << (*$self);
-    return oss.str().c_str();
+    (*$self).write(oss);
+    return oss.str();
   }
 } // end %extend Graph
+
 }; // end of namespace: ors
 
+%pythoncode %{
+def graphFromString(str):
+    ors_graph = orspy.Graph()
+    ors_graph.read(str)
+    return ors_graph
+%}
 
 
 //===========================================================================

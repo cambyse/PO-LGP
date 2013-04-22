@@ -33,7 +33,7 @@
 const double pi=4*atan(1);
 
 void testHand();
-void readCSVline(std::ifstream &file,int &id,int &hub, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r);
+void readCSVline(std::ifstream &file,int &id,int &hindex, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r);
 ors::Transformation getRotationT(ors::Transformation t);
 void showTransformation(ors::Transformation t);
 double maxZero(double n);
@@ -45,58 +45,72 @@ int main(int argc,char **argv){
 }
 
 void testHand() {
-    const uint num_tips=5;
-    const char *tips[num_tips]={
+    const uint num_fings=5;
+
+    // tips and knucks represent the body names of the last and first "bodies" of each finger.
+    const char *tips[num_fings]={
         "fing0d",
         "fing1d",
         "fing2d",
         "fing3d",
         "fing4d"
     };
-    const char *knucks[num_tips]={
+    const char *knucks[num_fings]={
         "fing0a",
         "fing1a",
         "fing2a",
         "fing3a",
         "fing4a"
     };
-    int findex,jindex;
-    int fid_to_bid[num_tips];
-    int fid_to_jid[num_tips];
-    int sid_to_fid[num_tips+1]={0,0,1,2,3,4}; // the first one is a dummy offset
 
+    // f -> finger index (defined as 0: Thumb, 1: Index, etc..)
+    // j -> joint index (obtained by the ors model)
+    // s -> sensor index (hardcoded, determined by the HW setup)
+    // h -> hub index (hard coded, determined by the HW setup)
+    int findex,jindex,sindex,hindex;
+    int fid_to_bid[num_fings];
+    int fid_to_jid[num_fings];
+    int sid_to_fid[num_fings+1]={0,0,1,2,3,4}; // the first one is a dummy offset
+
+    // ors objects and related init
     ors::Graph G;
     OpenGL gl;
     init(G,gl,"models/hand.ors");
 
-    for(uint i=0;i<num_tips;i++) {
+    uint n=G.getJointStateDimension();
+    cout << "Joint dimension: " << n << endl;
+
+    // indexes' and translation tables' init
+    for(uint i=0;i<num_fings;i++) {
         fid_to_bid[i]=G.getBodyIndexByName(tips[i]);
         fid_to_jid[i]=G.getBodyByName(knucks[i])->inLinks(0)->index;
         cout << "bid(\"" << tips[i] << "\"): " << fid_to_bid[i] << endl;
         cout << "jid(\"" << knucks[i] << "\"): " << fid_to_jid[i] << endl;
     }
 
-    uint t,n=G.getJointStateDimension();
-    cout << "Joint dimension: " << n << endl;
 
     double m,qi,qlo,qhi,qtmp;
+    // Task-specific loss, and 
     double Lp,Ltot;
     arr q(n);
     arr Phi,PhiJ,PhiV[LOSS_NUM],W;
     arr J,JR,Jtmp;
-    arr y,yR,Y[num_tips];
+    arr y,yR,Y[num_fings];
 
     ors::Body *bStip,*bSorthoP,*bMorthoP,*bSorthoV,*bMorthoV;
 
     std::ifstream file("tracks/individual.csv");
 
-    for(uint N=0;N<num_tips;N++)
+    for(uint N=0;N<num_fings;N++)
         Y[N]=ARR(0,0,0);
 
     ors::Vector p,r,sortho,mortho;
     ors::Vector morthoV(0,.05,0);
-    ors::Transformation T_palm_set,T_set_palm,T_model_palm,T_model_set,T_set_track[num_tips];
-    int sindex,hub,S,JUNK;
+    ors::Transformation T_palm_set,T_set_palm,T_model_palm,T_model_set,T_set_track[num_fings];
+    int S,JUNK;
+
+    // Misc.
+    uint t;
 
     // press a button to start
     //cout << "Press Enter to start." << endl;
@@ -111,7 +125,7 @@ void testHand() {
     gl.text << std::showpos << std::fixed << std::setprecision(2) << std::setw(6);
     bool no_palm=true;
     for(t=0;file.good();t++) {
-        readCSVline(file,sindex,hub,S,JUNK,p,r);
+        readCSVline(file,sindex,hindex,S,JUNK,p,r);
 
         // if palm sensor
         if(sindex==6) {
@@ -156,7 +170,7 @@ void testHand() {
 #endif
 
             // Tracking the finger tips
-            for(uint N=0;N<num_tips;N++) {
+            for(uint N=0;N<num_fings;N++) {
                 // finds current points
                 G.kinematics(y,fid_to_bid[N]);
                 G.jacobian(J,fid_to_bid[N]);
@@ -233,7 +247,7 @@ void testHand() {
 #ifdef LOSS_JOINT_LIMITS
             qtmp=0;
             Jtmp=zeros(1,n);
-            for(uint N=0;N<num_tips;N++) {
+            for(uint N=0;N<num_fings;N++) {
                 jindex=fid_to_jid[N];
                 qi=q(jindex);
                 qtmp+=(maxZero(m-qi+qlo)+maxZero(m+qi-qhi))/m;
@@ -320,16 +334,16 @@ void testHand() {
     return;
 }
 
-void readCSVline(std::ifstream &file,int &sid,int &hub, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r) {
+void readCSVline(std::ifstream &file,int &sindex,int &hindex, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r) {
     std::stringstream line;
     char buff[256];
 
     file.getline(buff,256);
     line << buff;
 
-    line >> sid;
+    line >> sindex;
     line.ignore(100,',');
-    line >> hub;
+    line >> hindex;
     line.ignore(100,',');
     line >> sensor;
     line.ignore(100,',');
