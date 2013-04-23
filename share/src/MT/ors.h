@@ -190,6 +190,7 @@ struct Transformation {
   Quaternion rot; //!< orientation
   Vector vel;     //!< linear velocity
   Vector angvel;  //!< angular velocity
+  bool zeroVels;    //!< velocities are identically zero
 
   Transformation();
 

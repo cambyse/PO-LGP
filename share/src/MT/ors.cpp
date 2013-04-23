@@ -837,11 +837,18 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 //! resets the position to origin, rotation to identity, velocities to zero, scale to unit
 void Transformation::setZero() {
   pos.setZero(); vel.setZero(); rot.setZero(); angvel.setZero(); /*a.setZero(); b.setZero(); s=1.;*/
+  zeroVels = true;
 }
 
 //! randomize the frame
 void Transformation::setRandom() {
-  pos.setRandom(); vel.setRandom(); rot.setRandom(); angvel.setRandom(); /*a.setRandom(); b.setRandom(); s=rnd.uni();*/
+  rot.setRandom();
+  pos.setRandom();
+  if(rnd.uni()<.8){
+    vel.setZero(); angvel.setZero(); zeroVels=true;
+  }else{
+    vel.setRandom(); angvel.setRandom(); zeroVels = false;
+  }
 }
 
 /*!\brief moves the frame according to the current velocities \c v and \c w
@@ -865,94 +872,107 @@ void Transformation::addRelativeTranslation(double x, double y, double z) {
   //X=r*(s*X); //in global coords
   X=rot*X; //in global coords
   pos+=X;
-  vel+=angvel^X;
+  if(!zeroVels) vel+=angvel^X;
 }
+
 //! add a velocity to the turtle's inertial frame
 void Transformation::addRelativeVelocity(double x, double y, double z) {
   Vector X(x, y, z);
   //v+=r*(s*X);
   vel+=rot*X;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityDeg(double degree, double x, double y, double z) {
   Vector W(x, y, z); W.normalize();
   W*=degree*MT_PI/180.;
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityRad(double rad, double x, double y, double z) {
   Vector W(x, y, z); W.normalize();
   W*=rad;
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityRad(double wx, double wy, double wz) {
   Vector W(wx, wy, wz);
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! rotate the turtle orientation by an angle (given in DEGREE) around the vector (x, y, z) (given relative to the current orientation)
 void Transformation::addRelativeRotationDeg(double degree, double x, double y, double z) {
   Quaternion R;
   R.setDeg(degree, x, y, z);
   rot=rot*R;
 }
+
 //! rotate the turtle orientation by an angle (given in radiants) around the vector (x, y, z) (given relative to the current orientation)
 void Transformation::addRelativeRotationRad(double rad, double x, double y, double z) {
   Quaternion R;
   R.setRad(rad, x, y, z);
   rot=rot*R;
 }
+
 //! rotate the turtle orientation as given by a quaternion
 void Transformation::addRelativeRotationQuat(double s, double x, double y, double z) {
   Quaternion R;
   R.w=s; R.x=x; R.y=y; R.z=z;
   rot=rot*R;
 }
+
 /*!\brief transform the turtle into the frame f,
     which is interpreted RELATIVE to the current frame
     (new = f * old) */
 void Transformation::appendTransformation(const Transformation& f) {
-#ifdef ORS_NO_DYNAMICS_IN_FRAMES
-  pos += rot*f.pos;
-  rot = rot*f.rot;
-#else
-  //Vector P(r*(s*f.p)); //relative offset in global coords
-  //Vector V(r*(s*f.v)); //relative vel in global coords
-  Matrix R = rot.getMatrix();
-  Vector P(R*f.pos); //relative offset in global coords
-  Vector V(R*f.vel); //relative vel in global coords
-  Vector W(R*f.angvel); //relative ang vel in global coords
-  pos += P;
-  vel += angvel^P;
-  vel += V;
-  //a += b^P;
-  //a += w^((w^P) + 2.*V);
-  //a += r*(s*f.a);
-  //b += w^W;
-  //b += r*f.b;
-  angvel += W;
-  rot = rot*f.rot;
-  //s*=f.s;
-#endif
+  if(zeroVels && f.zeroVels){
+    pos += rot*f.pos;
+    rot = rot*f.rot;
+  }else{
+    //Vector P(r*(s*f.p)); //relative offset in global coords
+    //Vector V(r*(s*f.v)); //relative vel in global coords
+    Matrix R = rot.getMatrix();
+    Vector P(R*f.pos); //relative offset in global coords
+    Vector V(R*f.vel); //relative vel in global coords
+    Vector W(R*f.angvel); //relative ang vel in global coords
+    pos += P;
+    vel += angvel^P;
+    vel += V;
+    //a += b^P;
+    //a += w^((w^P) + 2.*V);
+    //a += r*(s*f.a);
+    //b += w^W;
+    //b += r*f.b;
+    angvel += W;
+    rot = rot*f.rot;
+    //s*=f.s;
+    zeroVels = false;
+  }
 }
+
 //! inverse transform (new = f^{-1} * old) or (old = f * new)
 void Transformation::appendInvTransformation(const Transformation& f) {
-#ifdef ORS_NO_DYNAMICS_IN_FRAMES
-  rot = rot/f.rot;
-  pos -= rot*f.pos;
-#else
-  NIY; //WRONG?
-  //s/=f.s;
-  rot=rot/f.rot;
-  angvel-=rot*f.angvel;
-  vel-=rot*f.vel;
-  //v-=r*(s*f.v);
-  //Vector P(r*(s*f.p)); //frame offset in global coords
-  Vector P(rot*f.pos); //frame offset in global coords
-  vel-=angvel^P;
-  pos-=P;
-#endif
+  if(zeroVels && f.zeroVels){
+    rot = rot/f.rot;
+    pos -= rot*f.pos;
+  }else{
+    rot=rot/f.rot;
+    Matrix R = rot.getMatrix();
+    Vector P(R*f.pos);
+    angvel -= R*f.angvel;
+    vel -= R*f.vel;
+    vel -= angvel^P;
+    pos -= P;
+    zeroVels = false;
+  }
 }
+
 //! new = old * f
 void Transformation::prependTransformation(const Transformation& f) {
   Transformation newf;
@@ -960,6 +980,7 @@ void Transformation::prependTransformation(const Transformation& f) {
   newf.appendTransformation(*this);
   *this=newf;
 }
+
 //! new = old * f^{-1}
 void Transformation::prependInvTransformation(const Transformation& f) {
   Transformation newf;
@@ -967,8 +988,22 @@ void Transformation::prependInvTransformation(const Transformation& f) {
   newf.appendTransformation(*this);
   *this=newf;
 }
+
 //! this = f^{-1}
-void Transformation::setInverse(const Transformation& f) { setZero(); appendInvTransformation(f); }
+void Transformation::setInverse(const Transformation& f) {
+  if(f.zeroVels){
+    rot = Quaternion_Id / f.rot;
+    pos = - (rot * f.pos);
+    zeroVels = true;
+  }else{
+    rot = Quaternion_Id / f.rot;
+    Matrix R = rot.getMatrix();
+    pos = - (R * f.pos);
+    vel = R * ((f.angvel^f.pos) - f.vel);
+    angvel = - (R * f.angvel);
+    zeroVels = false;
+  }
+}
 
 //! set double[4*4] to Transformation. Matrix needs to be orthogonal
 void Transformation::setAffineMatrix(const double *m) {
@@ -981,18 +1016,23 @@ void Transformation::setAffineMatrix(const double *m) {
   pos.x=m[3];  // set last column as translation
   pos.y=m[7];  // set last column as translation
   pos.z=m[11];  // set last column as translation
+  zeroVels=true;
 }
 
 //!  to = new * from
 void Transformation::setDifference(const Transformation& from, const Transformation& to) {
-  rot = Quaternion_Id / from.rot * to.rot;
-  angvel = from.rot/(to.angvel-from.angvel);
-  /*v=(1./from.s) * (from.r/(to.v-from.v));
-  v-=(1./from.s) * (from.r/(from.w^(to.p-from.p)));
-  p=(1./from.s) * (from.r/(to.p-from.p));*/
-  vel = from.rot/(to.vel-from.vel);
-  vel-= from.rot/(from.angvel^(to.pos-from.pos));
-  pos = from.rot/(to.pos-from.pos);
+  if(from.zeroVels && to.zeroVels){
+    rot = Quaternion_Id / from.rot * to.rot;
+    pos = from.rot/(to.pos-from.pos);
+    zeroVels = true;
+  }else{
+    rot = Quaternion_Id / from.rot * to.rot;
+    angvel = from.rot/(to.angvel-from.angvel);
+    vel = from.rot/(to.vel-from.vel);
+    vel-= from.rot/(from.angvel^(to.pos-from.pos));
+    pos = from.rot/(to.pos-from.pos);
+    zeroVels = false;
+  }
 }
 
 //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
@@ -1043,25 +1083,18 @@ bool Transformation::isZero() const {
 
 //! 1-norm to zero
 double Transformation::diffZero() const{
-  return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.isZero();
+  return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.diffZero();
 }
 
 //! operator<<
 void Transformation::write(std::ostream& os) const {
-  bool space=false;
-  //os <<"<";
-#if 0
-  if(!pos.isZero()) { os <<"t" <<pos;  space=true; }
-  if(!rot.isZero()) { if(space) os <<' ';  os <<"q" <<rot;  space=true; }
-#else
   os <<pos.x <<' ' <<pos.y <<' ' <<pos.z <<' '
      <<rot.w <<' ' <<rot.x <<' ' <<rot.y <<' ' <<rot.z;
-  space=true;
-#endif
-  if(!vel.isZero()) { if(space) os <<' ';  os <<"v" <<vel;  space=true; }
-  if(!angvel.isZero()) { if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
-  //os <<">";
+  if(!zeroVels){
+    os <<" v" <<vel <<" w" <<angvel;
+  }
 }
+
 //! operator>>
 void Transformation::read(std::istream& is) {
   setZero();
@@ -1093,6 +1126,7 @@ void Transformation::read(std::istream& is) {
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");
   }
   if(is.fail()) HALT("could not read Transformation struct");
+  zeroVels = vel.isZero() && angvel.isZero();
 }
 
 Mesh::Mesh() { }
