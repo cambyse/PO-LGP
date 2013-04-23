@@ -102,6 +102,7 @@ class Behavior():
 
         # this is funny and true
         self.world_belief = ors.Graph()
+        self.world_changed = False
 
         self.percepts = None
         self.trajectory = []
@@ -212,7 +213,7 @@ class Behavior():
                 pos = body.X.pos
                 print("pos:", pos)
                 self.trajectory.append(pos)
-        elif self.world_changed:
+        else:
             self.world_changed = False
             self.trajectory_completed = True
 
