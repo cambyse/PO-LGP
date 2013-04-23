@@ -10,7 +10,7 @@ import orspy
 
 if __name__ == '__main__':
     graph = orspy.Graph()
-    graph.init("doorSimple.ors")
+    graph.init("world.ors")
     robot = graph.getBodyByName("robot")
 
     # view and physx
