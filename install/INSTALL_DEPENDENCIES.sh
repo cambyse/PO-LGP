@@ -46,5 +46,5 @@ tk8.5-dev \
 
 # install google test
 cd /usr/src/gtest
-cmake .
+sudo cmake .
 sudo make
