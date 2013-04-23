@@ -59,11 +59,13 @@ class FakePerception():
                                                 # calcBodyFramesFromJoints 
                                                 # here
         agent = self.world.getBodyByName("robot")
+        msg = msgs.percept()
+        msg.changed = False
         for p in self.world.bodies:
             if agent.index is not p.index and self.has_moved(p):
-                msg = msgs.percept()
-                msg.body = p.name
-                self.pub.publish(msg)
+                msg.bodies.append(str(p))
+                msg.changed = True
+        self.pub.publish(msg)
         self.not_published_once = False
         #self.gl.update()
 
