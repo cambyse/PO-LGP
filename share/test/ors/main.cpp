@@ -10,21 +10,26 @@
 // test very basics
 //
 
+#define TEST_DIFF_ZERO(expr) { double e=(expr).diffZero(); CHECK(e<1e-6, " Error="<<e <<" Expression=" <<(expr)); cout <<"Success: " <<e <<endl; }
+
 void testBasics(){
-  for(uint k=0;k<1;k++){
-    ors::Quaternion A,B,X,AX;
+  double e;
+  for(uint k=0;k<10;k++){
+    ors::Quaternion A,B,C;
     A.setRandom();
     B.setRandom();
-    X = ors::Quaternion() / B * A;
-    cout <<X/A*B <<endl;
+    C.setRandom();
+    TEST_DIFF_ZERO(Quaternion_Id);
+    TEST_DIFF_ZERO(A/A);
+    TEST_DIFF_ZERO(A*B/B/A);
   }
 
   for(uint k=0;k<10;k++){
-    ors::Transformation A,B,X;
+    ors::Transformation A,B,C;
     A.setRandom();
     B.setRandom();
-    X.setDifference(A,B);
-    cout <<A*X <<endl <<B <<endl;
+    C.setDifference(A,B);
+    TEST_DIFF_ZERO(A*C/B);
   }
 }
 

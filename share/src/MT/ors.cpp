@@ -53,6 +53,7 @@ REGISTER_TYPE_Key(T, ors::Transformation);
 const ors::Vector VEC_x(1, 0, 0);
 const ors::Vector VEC_y(0, 1, 0);
 const ors::Vector VEC_z(0, 0, 1);
+const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
 //===========================================================================
 /** @brief The ors namespace contains the main data structures of ors.
@@ -151,6 +152,9 @@ void Vector::makeColinear(const Vector& b) {
 
 //! is zero?
 bool Vector::isZero() const { return (x==0. && y==0. && z==0.); }
+
+//! 1-norm to zero
+double Vector::diffZero() const { return fabs(x)+fabs(y)+fabs(z); }
 
 //! is it normalized?
 bool Vector::isNormalized() const { return fabs(lengthSqr()-1.)<1e-6; }
@@ -360,6 +364,13 @@ void Matrix::setTensorProduct(const Vector& b, const Vector& c) {
   m20=b.z*c.x; m21=b.z*c.y; m22=b.z*c.z;
 }
 
+//! 1-norm to zero
+double Matrix::diffZero() const {
+  double d=0.;
+  for(uint i=0;i<9;i++) d += (&m00)[i];
+  return d;
+}
+
 void Matrix::write(std::ostream& os) const {
   os <<"\n " <<m00 <<' ' <<m01 <<' ' <<m02;
   os <<"\n " <<m10 <<' ' <<m11 <<' ' <<m12;
@@ -561,8 +572,11 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
   setRad(phi, axis);
 }
 
-//! is identical
+//! is zero (i.e., identical rotation)
 bool Quaternion::isZero() const { return w==1.; }
+
+//! 1-norm to zero (i.e., identical rotation)
+double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
 
 #ifdef MT_MSVC
 //! double-pointer access
@@ -971,8 +985,8 @@ void Transformation::setAffineMatrix(const double *m) {
 
 //!  to = new * from
 void Transformation::setDifference(const Transformation& from, const Transformation& to) {
-  rot=Quaternion() / from.rot * to.rot;
-  angvel=from.rot/(to.angvel-from.angvel);
+  rot = Quaternion_Id / from.rot * to.rot;
+  angvel = from.rot/(to.angvel-from.angvel);
   /*v=(1./from.s) * (from.r/(to.v-from.v));
   v-=(1./from.s) * (from.r/(from.w^(to.p-from.p)));
   p=(1./from.s) * (from.r/(to.p-from.p));*/
@@ -1021,6 +1035,15 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
   m[2]=M.m02; m[6]=M.m12; m[10]=M.m22; m[14]=-pinv.z;
   m[3]=0.;   m[7]=0.;   m[11]=0.;   m[15]=1.;
   return m;
+}
+
+bool Transformation::isZero() const {
+  return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero();
+}
+
+//! 1-norm to zero
+double Transformation::diffZero() const{
+  return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.isZero();
 }
 
 //! operator<<

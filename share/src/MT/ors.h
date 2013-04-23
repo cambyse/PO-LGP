@@ -94,6 +94,7 @@ struct Vector {
   void makeColinear(const Vector&);
 
   bool isZero() const;
+  double diffZero() const;
   bool isNormalized() const;
   double isColinear(const Vector&) const;
   double length() const;
@@ -127,6 +128,8 @@ struct Matrix {
   void setOdeMatrix(double*);
   void setTensorProduct(const Vector&, const Vector&);
 
+  double diffZero() const;
+
   void write(std::ostream&) const;
   void read(std::istream&);
 };
@@ -136,6 +139,7 @@ struct Quaternion {
   double w, x, y, z;
 
   Quaternion() { setZero(); };
+  Quaternion(double w, double x, double y, double z){ set(w,x,y,z); }
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
   double *p() { return &w; }
 
@@ -160,6 +164,7 @@ struct Quaternion {
   void alignWith(const Vector& v);
 
   bool isZero() const;
+  double diffZero() const;
   bool isNormalized() const;
   double getDeg() const;
   double getRad() const;
@@ -195,7 +200,8 @@ struct Transformation {
   void setDifference(const Transformation& from, const Transformation& to);
   void setAffineMatrix(const double *m);
 
-  bool isZero() const { return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
+  bool isZero() const;
+  double diffZero() const;
 
   void addRelativeTranslation(double x, double y, double z);
   void addRelativeRotationDeg(double degree, double x, double y, double z);
@@ -642,6 +648,7 @@ inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 extern const ors::Vector VEC_x;
 extern const ors::Vector VEC_y;
 extern const ors::Vector VEC_z;
+extern const ors::Quaternion Quaternion_Id;
 
 
 //===========================================================================
