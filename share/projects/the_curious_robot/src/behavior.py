@@ -61,6 +61,25 @@ def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
     return msg
 
 
+class Gaussian():
+    """
+    Represent Gaussians with this class.
+    TODO maybe there is a Gaussian class that we can recycle.
+    """
+    def __init__(self, mu=0, sigma=99999):
+        self.mu = mu
+        self.sigma = sigma
+
+
+class Properties():
+    def __init__(self):
+        self.joint = Gaussian()
+        self.friction = Gaussian()
+        self.weight = Gaussian()
+        self.limit_min = Gaussian()
+        self.limit_max = Gaussian()
+
+
 class Behavior():
     """
     The actual behavior of the robot.
@@ -82,10 +101,13 @@ class Behavior():
         )
 
         # this is funny and true
-        self.world_belief = None
+        self.world_belief = ors.Graph()
 
         self.percepts = None
         self.trajectory = []
+
+        # a list of tuples of (link to ors object, Propererties)
+        self.objects_of_interest = []
 
     def run(self):
         """ the behavior loop """
@@ -99,38 +121,45 @@ class Behavior():
         # move randomly
         msg.pose.position.x = random.randint(-5, 5)
         msg.pose.position.y = random.randint(-5, 5)
-        #msg.pose.position.z = random.randint(-5,5)
+        msg.pose.position.z = 0  # random.randint(-5, 5)
         self.control_pub.publish(msg)
-        return
 
-        # Here is the actual behavior
-        # reset control --> don't move
+    def get_stop_control(self):
+        """return a no-movement control msg"""
+        msg = msgs.control()
         msg.pose.position.x = 0.
         msg.pose.position.y = 0.
         msg.pose.position.z = 0.
+        return msg
 
-        if self.percepts.world_changed:
-            self.trajectory.append(self.percepts.change)
-            self.prev_change = True
+    def step_more_optimal(self):
+        """WiP"""
+        if self.world_changed:
+            # stop moving
+            target = self.get_stop_control()
 
-        elif self.prev_change:
+        elif self.trajectory_completed:
+            # stop moving
+            target = self.get_stop_control()
+
+            # LEARN
             self.learn_dof(self.trajectory)
+            # TODO learn more about DOF
+            self.learn_limits_of_dof(self.trajectory)
             # TODO add learnend DOF to belief
             # TODO explore DOF
-            # TODO learn more about DOF
-            self.learn_limits_of_dof()
+            # TODO update object of interests()
+            self.update_object_of_interests()
 
-            self.prev_change = False
             del self.trajectory[:]
 
         else:
-            # TODO general exploration
-            # move randomly
-            msg.pose.position.x = random.randint(-5, 5)
-            msg.pose.position.y = random.randint(-5, 5)
-            #msg.pose.position.z = random.randint(-5,5)
+            object_of_interest = random.choice(self.objects_of_interest)
+            target = self.get_best_target(object_of_interest)
 
-        self.control_pub.publish(msg)
+        self.control_pub.publish(target)
+
+        pass
 
     def learn_dof(self, trajectory=None):
         """
@@ -173,7 +202,19 @@ class Behavior():
         print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
 
     def percept_cb(self, data):
-        self.percepts = data
+        # save the trajectory if somithing changed
+        if data.changed:
+            self.world_changed = True
+            self.trajectory_completed = False
+            for body_str in data.bodies:
+                body = ors.Body()
+                body.read(body_str)
+                pos = body.X.pos
+                print("pos:", pos)
+                self.trajectory.append(pos)
+        elif self.world_changed:
+            self.world_changed = False
+            self.trajectory_completed = True
 
 
 if __name__ == '__main__':
