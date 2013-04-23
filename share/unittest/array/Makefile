@@ -1,6 +1,5 @@
 BASE = ../..
 
-FREEGLUT = 1
-PHYSX = 1
+LIBS += -lgtest
 
 include $(BASE)/make-generic

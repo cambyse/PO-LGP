@@ -43,6 +43,40 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
     make
 
 
+# Task
+Learn model s.t. I can predict the outcome of my actions.
+
+Behavior must be able to set
+- goal position
+- push vector
+- (additional actions like "grap")
+
+- simulate action in ors
+- do action in the world
+- calculate distance of |sim-world| --> measure for model
+
+
+## How to choose actions (and how to learn)?
+
+- given a list of objects (shapes whatever)
+- take "interesting objects"
+- move towards object
+- each object has a list of popential interesting properties
+  - type=[Fix, dynamic]
+  - joints
+  - limits
+  - weight
+  - friction
+  - etc
+- explore and learn uncertain properties
+
+Note: **uncertainties** probably can be represented as Gaussians.
+
+
+# Random Ideas
+- use learned "model templates" to predict behavior of unknown objects
+
+
 <!--
 vim: ft=markdown
 -->

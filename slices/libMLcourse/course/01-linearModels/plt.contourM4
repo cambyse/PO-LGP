@@ -9,7 +9,8 @@ set table 'z.contour.dat'
 splot [-2:3][-2:3] \
 'z.model1' matrix us ($1/10-2):($2/10-2):3,\
 'z.model2' matrix us ($1/10-2):($2/10-2):3,\
-'z.model3' matrix us ($1/10-2):($2/10-2):3
+'z.model3' matrix us ($1/10-2):($2/10-2):3,\
+'z.model4' matrix us ($1/10-2):($2/10-2):3
 unset table
 
 plot [-2:3][-2:3] \

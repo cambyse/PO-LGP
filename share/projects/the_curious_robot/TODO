@@ -1,16 +1,16 @@
 # TODO
 - TODO in the code
-- add joint limits in PhysX
 - add friction in PhysX
 - learn limits
 - learn symbols for limits
 - learn properties of joints
 
 # WORKING ON
-- orspy & physx @stefan
-- fake perception @johannes
+- add joint limits in PhysX @johannes
 
 # DONE
+- orspy & physx @stefan
+- fake perception @johannes
 - ros structure @stefan
 
 

@@ -11,4 +11,5 @@ unset title
 splot [-2:3][-2:3][0:1] \
 'z.model1' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
 'z.model2' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
-'z.model3' matrix us ($1/10-2):($2/10-2):3 with lines notitle
+'z.model3' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
+'z.model4' matrix us ($1/10-2):($2/10-2):3 with lines notitle
