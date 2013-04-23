@@ -82,7 +82,7 @@ template<class T> void MT::Array<T>::init() {
 //***** constructors
 
 //! standard constructor -- this becomes an empty array
-template<class T> MT::Array<T>::Array() { init(); }
+template<class T> MT::Array<T>::Array():d(&d0) { init(); }
 
 //! copy constructor
 template<class T> MT::Array<T>::Array(const MT::Array<T>& a) { init(); operator=(a); }

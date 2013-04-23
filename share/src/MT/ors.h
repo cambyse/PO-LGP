@@ -20,7 +20,9 @@
 
 #include "array.h"
 #include "util.h"
+#ifndef MT_ORS_ONLY_BASICS
 #include "keyValueGraph.h"
+#endif
 
 /**
  * @file
@@ -75,7 +77,7 @@ enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 struct Vector {
   double x, y, z;
 
-  Vector() {}
+  Vector() { setZero(); }
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
   double *p() { return &x; }
@@ -92,6 +94,7 @@ struct Vector {
   void makeColinear(const Vector&);
 
   bool isZero() const;
+  double diffZero() const;
   bool isNormalized() const;
   double isColinear(const Vector&) const;
   double length() const;
@@ -109,7 +112,7 @@ struct Vector {
 struct Matrix {
   double m00, m01, m02, m10, m11, m12, m20, m21, m22;
 
-  Matrix() {};
+  Matrix() { setZero(); };
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
   double *p() { return &m00; }
 
@@ -125,6 +128,8 @@ struct Matrix {
   void setOdeMatrix(double*);
   void setTensorProduct(const Vector&, const Vector&);
 
+  double diffZero() const;
+
   void write(std::ostream&) const;
   void read(std::istream&);
 };
@@ -133,7 +138,8 @@ struct Matrix {
 struct Quaternion {
   double w, x, y, z;
 
-  Quaternion() {};
+  Quaternion() { setZero(); };
+  Quaternion(double w, double x, double y, double z){ set(w,x,y,z); }
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
   double *p() { return &w; }
 
@@ -158,6 +164,7 @@ struct Quaternion {
   void alignWith(const Vector& v);
 
   bool isZero() const;
+  double diffZero() const;
   bool isNormalized() const;
   double getDeg() const;
   double getRad() const;
@@ -183,6 +190,7 @@ struct Transformation {
   Quaternion rot; //!< orientation
   Vector vel;     //!< linear velocity
   Vector angvel;  //!< angular velocity
+  bool zeroVels;    //!< velocities are identically zero
 
   Transformation();
 
@@ -193,7 +201,8 @@ struct Transformation {
   void setDifference(const Transformation& from, const Transformation& to);
   void setAffineMatrix(const double *m);
 
-  bool isZero() const { return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero(); }
+  bool isZero() const;
+  double diffZero() const;
 
   void addRelativeTranslation(double x, double y, double z);
   void addRelativeRotationDeg(double degree, double x, double y, double z);
@@ -640,6 +649,7 @@ inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 extern const ors::Vector VEC_x;
 extern const ors::Vector VEC_y;
 extern const ors::Vector VEC_z;
+extern const ors::Quaternion Quaternion_Id;
 
 
 //===========================================================================

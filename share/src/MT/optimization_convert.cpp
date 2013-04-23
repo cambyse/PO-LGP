@@ -35,7 +35,7 @@ struct sConvert{
   struct VectorChainFunction_ScalarFunction:ScalarFunction{ //actual converter objects
     VectorChainFunction *f;
     VectorChainFunction_ScalarFunction(VectorChainFunction& _f):f(&_f){}
-    virtual double fs(arr& grad, const arr& x);
+    virtual double fs(arr& grad, arr& H, const arr& x);
   };
 
   struct VectorChainFunction_VectorFunction:VectorFunction{ //actual converter objects
@@ -149,7 +149,7 @@ Convert::operator KOrderMarkovFunction&(){
 // actual convertion routines
 //
 
-double sConvert::VectorChainFunction_ScalarFunction::fs(arr& grad, const arr& x) {
+double sConvert::VectorChainFunction_ScalarFunction::fs(arr& grad, arr& H, const arr& x) {
   uint T=f->get_T();
   arr z;  z.referTo(x);
   z.reshape(T+1,z.N/(T+1)); //x as chain representation (splitted in nodes assuming each has same dimensionality!)
@@ -160,6 +160,7 @@ double sConvert::VectorChainFunction_ScalarFunction::fs(arr& grad, const arr& x)
     grad.resizeAs(x);
     grad.setZero();
   }
+  if(&H) NIY;
   for(uint t=0; t<=T; t++) { //node potentials
     f->fv_i(y, (&grad?J:NoGrad), t, z[t]);
     cost += sumOfSqr(y);

@@ -193,6 +193,8 @@ sOpenGL::~sOpenGL(){
   if(ownWin) gtk_widget_destroy(container);
   gl->s = NULL;
   gl = NULL;
+//  gdk_window_process_updates(gtk_widget_get_window(glArea), false);
+  while (gtk_events_pending())  gtk_main_iteration();
   gtkUnlock();
 }
 

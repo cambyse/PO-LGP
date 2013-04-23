@@ -8,5 +8,6 @@ set surface
 set hidden3d
 unset title
 #set table 'z.contour.dat'
-splot [-2:3][-2:3][0:1] 'z.model2' matrix us ($1/20-2):($2/20-2):3 with lines notitle
+splot [-2:3][-2:3][0:1] \
+ 'z.model' matrix us ($1/10-2):($2/10-2):3 with lines notitle
 
