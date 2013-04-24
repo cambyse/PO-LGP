@@ -14,7 +14,8 @@ import the_curious_robot.msg as msgs
 import os
 import orspy as ors
 import Queue
-from threading import Lock
+# from threading import Lock
+import time
 
 
 class FakePerception():
@@ -56,7 +57,7 @@ class FakePerception():
         self.old_world = self.world             # backup for change detection
         self.world.read(self.worlds.get())
         self.world.calcShapeFramesFromBodies()  # don't use
-                                                # calcBodyFramesFromJoints 
+                                                # calcBodyFramesFromJoints
                                                 # here
         agent = self.world.getBodyByName("robot")
         msg = msgs.percept()
@@ -65,8 +66,12 @@ class FakePerception():
             if agent.index is not p.index and self.has_moved(p):
                 msg.bodies.append(str(p))
                 msg.changed = True
-        self.pub.publish(msg)
+
+        if self.not_published_once:
+            print msg
+
         self.not_published_once = False
+        self.pub.publish(msg)
         #self.gl.update()
 
     def ors_cb(self, data):

@@ -11,6 +11,7 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import numpy as np
 import random
+import sys
 
 from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
@@ -100,16 +101,16 @@ class Behavior():
             callback=self.percept_cb
         )
 
-        # this is funny and true
-        self.world_belief = ors.Graph()
         self.world_changed = False
 
         self.percepts = None
         self.trajectory = []
         self.trajectory_completed = False
 
-        # a list of tuples of (link to ors object, Propererties)
-        self.objects_of_interest = []
+        # this is funny and true
+        self.world_belief = None
+        # a list of tuples of (link to ors object, Properties)
+        self.objects_of_interest = None
 
     def run(self):
         """ the behavior loop """
@@ -136,6 +137,15 @@ class Behavior():
 
     def step_more_optimal(self):
         """WiP"""
+        return
+        print "step more optimal"
+        print "changed?",  self.world_changed
+        print "trajectory completed",  self.trajectory_completed
+        print "trajectory",  self.trajectory
+        print "trajectory",  self.trajectory
+        if self.objects_of_interest is not None:
+            print "OoI ", self.object_of_interest
+
         if self.world_changed:
             # stop moving
             target = self.get_stop_control()
@@ -151,15 +161,18 @@ class Behavior():
             # TODO add learnend DOF to belief
             # TODO explore DOF
             # TODO update object of interests()
-            self.update_object_of_interests()
+            # self.update_object_of_interests()
 
             del self.trajectory[:]
+            self.trajectory_completed = False
 
-        elif len(self.objects_of_interest) > 0:
+        elif self.objects_of_interest is not None:
             object_of_interest = random.choice(self.objects_of_interest)
             target = self.get_best_target(object_of_interest)
+
         else:
             return
+
         self.control_pub.publish(target)
 
     def learn_dof(self, trajectory=None):
@@ -204,15 +217,34 @@ class Behavior():
 
     def percept_cb(self, data):
         # save the trajectory if somithing changed
+        print data
+        return
         if data.changed:
-            self.world_changed = True
-            self.trajectory_completed = False
-            for body_str in data.bodies:
-                body = ors.Body()
-                body.read(body_str)
-                pos = body.X.pos
-                print("pos:", pos)
-                self.trajectory.append(pos)
+            # No belief yet. Initialize belief with first messages
+            if self.world_belief is None:
+                print "initializing world"
+                print data
+                exit()
+                self.objects_of_interest = []
+                self.world_belief = ors.Graph()
+
+                for body_str in data.bodies:
+                    body = ors.Body()
+                    body.read(body_str)
+                    self.world_belief.addObject(body)
+                    self.objects_of_interest.append((body, Properties()))
+
+            # otherwise log trajectory
+            else:
+                self.world_changed = True
+                self.trajectory_completed = False
+                for body_str in data.bodies:
+                    body = ors.Body()
+                    body.read(body_str)
+                    pos = body.X.pos
+                    print("pos:", pos)
+                    self.trajectory.append(pos)
+
         else:
             self.world_changed = False
             self.trajectory_completed = True
