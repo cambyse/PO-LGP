@@ -579,6 +579,7 @@ struct Graph {
 //
 
 namespace ors {
+// VECTOR
 double  operator*(const Vector&, const Vector&);
 Vector  operator^(const Vector&, const Vector&);
 Vector  operator+(const Vector&, const Vector&);
@@ -591,22 +592,37 @@ Vector& operator/=(Vector&, double);
 Vector& operator+=(Vector&, const Vector&);
 Vector& operator-=(Vector&, const Vector&);
 Vector  operator-(const Vector&);
+bool    operator==(const Vector&, const Vector&);
+bool    operator!=(const Vector&, const Vector&);
 
+// MATRIX
 Matrix  operator*(const Matrix& b, const Matrix& c);
 Matrix  operator+(const Matrix& b, const Matrix& c);
 Vector  operator*(const Matrix& b, const Vector& c);
 Matrix& operator*=(Matrix& a, double c);
 Matrix  operator*(double b, const Matrix& c);
 Matrix& operator+=(Matrix& a, const Matrix& b);
+bool    operator==(const Matrix&, const Matrix&);
+bool    operator!=(const Matrix&, const Matrix&);
 
+// QUATERNION
 Quaternion operator*(const Quaternion& b, const Quaternion& c);
 Quaternion operator/(const Quaternion& b, const Quaternion& c);
-Vector operator*(const Quaternion& b, const Vector& c);
-Vector operator/(const Quaternion& b, const Vector& c);
+bool       operator==(const Quaternion&, const Quaternion&);
+bool       operator!=(const Quaternion&, const Quaternion&);
+
+// TRANSFORMATION
 Transformation operator*(const Transformation& b, const Transformation& c);
 Transformation operator/(const Transformation& b, const Transformation& c);
+bool           operator==(const Transformation&, const Transformation&);
+bool           operator!=(const Transformation&, const Transformation&);
+
+// MIXED
+Vector operator*(const Quaternion& b, const Vector& c);
+Vector operator/(const Quaternion& b, const Vector& c);
 Vector operator*(const Transformation& b, const Vector& c);
 Vector operator/(const Transformation& b, const Vector& c);
+
 std::istream& operator>>(std::istream&, Vector&);
 std::istream& operator>>(std::istream&, Matrix&);
 std::istream& operator>>(std::istream&, Quaternion&);
