@@ -24,6 +24,17 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertAlmostEqual(v3.y, 0.)
         self.assertAlmostEqual(v3.z, -1.)
 
+    def test_equals(self):
+        v1 = orspy.Vector(1, 2, 3)
+        v2 = orspy.Vector(2, 2, 2)
+
+        self.assertTrue(v1 == v1)
+        self.assertTrue(v2 == v2)
+        self.assertFalse(v1 == v2)
+
+        v3 = orspy.Vector(2, 2, 2)
+        self.assertTrue(v2 == v3)
+
 
 class Test_MatrixOperatorOverloading(unittest.TestCase):
     def test_add(self):
