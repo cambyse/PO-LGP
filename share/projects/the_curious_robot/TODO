@@ -5,13 +5,11 @@
 - learn symbols for limits
 - learn properties of joints
 
-# WORKING ON
-- add joint limits in PhysX @johannes
-
 # DONE
 - orspy & physx @stefan
 - fake perception @johannes
 - ros structure @stefan
+- add joint limits in PhysX @johannes
 
 
 <!--
