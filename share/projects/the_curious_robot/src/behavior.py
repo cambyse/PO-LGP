@@ -112,7 +112,7 @@ class Behavior():
 
     def run(self):
         """ the behavior loop """
-        while True:
+        while not rospy.is_shutdown():
             self.step()
 
     def step(self):

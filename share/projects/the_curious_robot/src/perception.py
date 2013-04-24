@@ -47,7 +47,7 @@ class FakePerception():
 
     def run(self):
         """ the perception loop """
-        while True:
+        while not rospy.is_shutdown():
             self.step()
 
     def step(self):

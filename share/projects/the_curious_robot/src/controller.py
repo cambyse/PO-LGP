@@ -43,7 +43,7 @@ class FakeController():
 
     def run(self):
         """ the controller loop """
-        while True:
+        while not rospy.is_shutdown():
             self.step()
 
     def step(self):
