@@ -106,6 +106,7 @@ class Behavior():
 
         self.percepts = None
         self.trajectory = []
+        self.trajectory_completed = False
 
         # a list of tuples of (link to ors object, Propererties)
         self.objects_of_interest = []
@@ -113,7 +114,7 @@ class Behavior():
     def run(self):
         """ the behavior loop """
         while not rospy.is_shutdown():
-            self.step()
+            self.step_more_optimal()
 
     def step(self):
         # tmp
@@ -146,7 +147,7 @@ class Behavior():
             # LEARN
             self.learn_dof(self.trajectory)
             # TODO learn more about DOF
-            self.learn_limits_of_dof(self.trajectory)
+            self.learn_limits_of_dof()
             # TODO add learnend DOF to belief
             # TODO explore DOF
             # TODO update object of interests()
@@ -154,13 +155,12 @@ class Behavior():
 
             del self.trajectory[:]
 
-        else:
+        elif len(self.objects_of_interest) > 0:
             object_of_interest = random.choice(self.objects_of_interest)
             target = self.get_best_target(object_of_interest)
-
+        else:
+            return
         self.control_pub.publish(target)
-
-        pass
 
     def learn_dof(self, trajectory=None):
         """
@@ -195,12 +195,12 @@ class Behavior():
         # TODO these are not the limits of the joint but he min/max pose
         #      but the joint value can be inferred
         print "learning limits:"
-        print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
-        print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
-        print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
-        print "  man x pose:", max(self.trajectory, key=lambda pose: pose.x)
-        print "  man y pose:", max(self.trajectory, key=lambda pose: pose.y)
-        print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
+        #print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
+        #print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
+        #print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
+        #print "  man x pose:", max(self.trajectory, key=lambda pose: pose.x)
+        #print "  man y pose:", max(self.trajectory, key=lambda pose: pose.y)
+        #print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
 
     def percept_cb(self, data):
         # save the trajectory if somithing changed
