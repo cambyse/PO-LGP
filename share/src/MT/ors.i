@@ -86,8 +86,8 @@ struct Array{
 
   void clear();
 
-  T& operator()(uint i) const;
-  T& operator()(uint i, uint j) const;
+  // T& operator()(uint i) const;
+  // T& operator()(uint i, uint j) const;
   // Array<T> sub(int i, int I) const;
   Array<T> sub(int i, int I, int j, int J) const;
   Array<T> sub(int i, int I) const;
@@ -305,6 +305,8 @@ struct Vector {
   Vector __add__(const Vector& other) { return *$self + other; }
   Vector __sub__(const Vector& other) { return *$self - other; }
   Vector __mul__(const double& other) { return *$self * other; }
+  bool __eq__(const Vector& other) { return *$self == other; }
+  bool __ne__(const Vector& other) { return *$self != other; }
 } // end %extend Vector
 
 
@@ -332,6 +334,8 @@ struct Matrix {
   void read(std::istream&);
 %extend {
   Matrix __add__(const Matrix& other) { return *$self + other; };
+  bool __eq__(const Matrix& other) { return *$self == other; }
+  bool __ne__(const Matrix& other) { return *$self != other; }
 }
 %pythoncode %{
 def set(self, lst):
@@ -394,6 +398,12 @@ struct Quaternion {
   void writeNice(std::ostream& os) const;
   void write(std::ostream& os) const;
   void read(std::istream& is);
+
+%extend {
+  bool __eq__(const Quaternion& other) { return *$self == other; }
+  bool __ne__(const Quaternion& other) { return *$self != other; }
+}
+
 };
 
 
@@ -444,6 +454,8 @@ struct Transformation {
     oss << (*$self);
     return oss.str();
   }
+  bool __eq__(const Transformation& other) { return *$self == other; }
+  bool __ne__(const Transformation& other) { return *$self != other; }
 } // end %extend Transformation
 
 
