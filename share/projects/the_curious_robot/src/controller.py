@@ -67,7 +67,7 @@ class FakeController():
         self.gl.update()
 
     def control_cb(self, data):
-        print "Got control message."
+        print "Got control message.\n", data.pose.position 
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z

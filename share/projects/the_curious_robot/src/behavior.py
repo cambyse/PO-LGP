@@ -137,22 +137,22 @@ class Behavior():
 
     def step_more_optimal(self):
         """WiP"""
-        return
-        print "step more optimal"
-        print "changed?",  self.world_changed
-        print "trajectory completed",  self.trajectory_completed
-        print "trajectory",  self.trajectory
-        print "trajectory",  self.trajectory
-        if self.objects_of_interest is not None:
-            print "OoI ", self.object_of_interest
+        #print "step more optimal"
+        #print "changed?",  self.world_changed
+        #print "trajectory completed",  self.trajectory_completed
+        #print "trajectory",  self.trajectory
+        #print "trajectory",  self.trajectory
+        #if self.objects_of_interest is not None:
+            #print "OoI ", self.objects_of_interest
 
         if self.world_changed:
             # stop moving
-            target = self.get_stop_control()
+            #target = self.get_stop_control()
+            return;
 
         elif self.trajectory_completed:
             # stop moving
-            target = self.get_stop_control()
+            #target = self.get_stop_control()
 
             # LEARN
             self.learn_dof(self.trajectory)
@@ -165,8 +165,9 @@ class Behavior():
 
             del self.trajectory[:]
             self.trajectory_completed = False
+            return
 
-        elif self.objects_of_interest is not None:
+        elif self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
             object_of_interest = random.choice(self.objects_of_interest)
             target = self.get_best_target(object_of_interest)
 
@@ -174,6 +175,15 @@ class Behavior():
             return
 
         self.control_pub.publish(target)
+
+    def get_best_target(self, object_of_interest):
+        pos = object_of_interest[0].X.pos
+        print "Send control message.\n", pos
+        rot = object_of_interest[0].X.rot
+        msg = msgs.control()
+        msg.pose = Pose(Point(pos.x, pos.y, pos.z),
+                    Quaternion(rot.x, rot.y, rot.z, rot.w))
+        return msg
 
     def learn_dof(self, trajectory=None):
         """
@@ -217,19 +227,18 @@ class Behavior():
 
     def percept_cb(self, data):
         # save the trajectory if somithing changed
-        print data
-        return
+        #print data
         if data.changed:
             # No belief yet. Initialize belief with first messages
             if self.world_belief is None:
                 print "initializing world"
-                print data
-                exit()
                 self.objects_of_interest = []
                 self.world_belief = ors.Graph()
+                print(data.bodies)
 
-                for body_str in data.bodies:
+                for body_ser in data.bodies:
                     body = ors.Body()
+                    (body.name, body_str) = body_ser.split(" ", 1)
                     body.read(body_str)
                     self.world_belief.addObject(body)
                     self.objects_of_interest.append((body, Properties()))
@@ -242,7 +251,6 @@ class Behavior():
                     body = ors.Body()
                     body.read(body_str)
                     pos = body.X.pos
-                    print("pos:", pos)
                     self.trajectory.append(pos)
 
         else:

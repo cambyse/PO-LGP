@@ -14,7 +14,6 @@ import the_curious_robot.msg as msgs
 import os
 import orspy as ors
 import Queue
-# from threading import Lock
 import time
 
 
@@ -64,11 +63,12 @@ class FakePerception():
         msg.changed = False
         for p in self.world.bodies:
             if agent.index is not p.index and self.has_moved(p):
-                msg.bodies.append(str(p))
+
+                msg.bodies.append(p.name + " " + str(p))
                 msg.changed = True
 
-        if self.not_published_once:
-            print msg
+        #if self.not_published_once:
+            #print msg
 
         self.not_published_once = False
         self.pub.publish(msg)
