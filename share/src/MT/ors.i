@@ -582,6 +582,7 @@ struct Body {
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
+  void read(const char* string);
 };
 
 %extend Body {

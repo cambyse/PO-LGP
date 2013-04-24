@@ -2757,6 +2757,10 @@ void ors::Body::read(std::istream& is) {
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   parseAts();
 }
+void ors::Body::read(const char* string) {
+  std::istringstream str(string);
+  read(str);
+}
 
 
 //===========================================================================
