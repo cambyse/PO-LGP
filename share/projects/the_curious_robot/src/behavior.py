@@ -11,6 +11,7 @@ roslib.load_manifest('the_curious_robot')
 import rospy
 import numpy as np
 import random
+import sys
 
 from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
@@ -61,6 +62,25 @@ def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
     return msg
 
 
+class Gaussian():
+    """
+    Represent Gaussians with this class.
+    TODO maybe there is a Gaussian class that we can recycle.
+    """
+    def __init__(self, mu=0, sigma=99999):
+        self.mu = mu
+        self.sigma = sigma
+
+
+class Properties():
+    def __init__(self):
+        self.joint = Gaussian()
+        self.friction = Gaussian()
+        self.weight = Gaussian()
+        self.limit_min = Gaussian()
+        self.limit_max = Gaussian()
+
+
 class Behavior():
     """
     The actual behavior of the robot.
@@ -81,16 +101,21 @@ class Behavior():
             callback=self.percept_cb
         )
 
-        # this is funny and true
-        self.world_belief = None
+        self.world_changed = False
 
         self.percepts = None
         self.trajectory = []
+        self.trajectory_completed = False
+
+        # this is funny and true
+        self.world_belief = None
+        # a list of tuples of (link to ors object, Properties)
+        self.objects_of_interest = None
 
     def run(self):
         """ the behavior loop """
-        while True:
-            self.step()
+        while not rospy.is_shutdown():
+            self.step_more_optimal()
 
     def step(self):
         # tmp
@@ -99,38 +124,66 @@ class Behavior():
         # move randomly
         msg.pose.position.x = random.randint(-5, 5)
         msg.pose.position.y = random.randint(-5, 5)
-        #msg.pose.position.z = random.randint(-5,5)
+        msg.pose.position.z = 0  # random.randint(-5, 5)
         self.control_pub.publish(msg)
-        return
 
-        # Here is the actual behavior
-        # reset control --> don't move
+    def get_stop_control(self):
+        """return a no-movement control msg"""
+        msg = msgs.control()
         msg.pose.position.x = 0.
         msg.pose.position.y = 0.
         msg.pose.position.z = 0.
+        return msg
 
-        if self.percepts.world_changed:
-            self.trajectory.append(self.percepts.change)
-            self.prev_change = True
+    def step_more_optimal(self):
+        """WiP"""
+        #print "step more optimal"
+        #print "changed?",  self.world_changed
+        #print "trajectory completed",  self.trajectory_completed
+        #print "trajectory",  self.trajectory
+        #print "trajectory",  self.trajectory
+        #if self.objects_of_interest is not None:
+            #print "OoI ", self.objects_of_interest
 
-        elif self.prev_change:
+        if self.world_changed:
+            # stop moving
+            #target = self.get_stop_control()
+            return;
+
+        elif self.trajectory_completed:
+            # stop moving
+            #target = self.get_stop_control()
+
+            # LEARN
             self.learn_dof(self.trajectory)
-            # TODO add learnend DOF to belief
-            # TODO explore DOF
             # TODO learn more about DOF
             self.learn_limits_of_dof()
+            # TODO add learnend DOF to belief
+            # TODO explore DOF
+            # TODO update object of interests()
+            # self.update_object_of_interests()
 
-            self.prev_change = False
             del self.trajectory[:]
+            self.trajectory_completed = False
+            return
+
+        elif self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
+            object_of_interest = random.choice(self.objects_of_interest)
+            target = self.get_best_target(object_of_interest)
 
         else:
-            # TODO general exploration
-            # move randomly
-            msg.pose.position.x = random.randint(-5, 5)
-            msg.pose.position.y = random.randint(-5, 5)
-            #msg.pose.position.z = random.randint(-5,5)
+            return
 
-        self.control_pub.publish(msg)
+        self.control_pub.publish(target)
+
+    def get_best_target(self, object_of_interest):
+        pos = object_of_interest[0].X.pos
+        print "Send control message.\n", pos
+        rot = object_of_interest[0].X.rot
+        msg = msgs.control()
+        msg.pose = Pose(Point(pos.x, pos.y, pos.z),
+                    Quaternion(rot.x, rot.y, rot.z, rot.w))
+        return msg
 
     def learn_dof(self, trajectory=None):
         """
@@ -165,15 +218,44 @@ class Behavior():
         # TODO these are not the limits of the joint but he min/max pose
         #      but the joint value can be inferred
         print "learning limits:"
-        print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
-        print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
-        print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
-        print "  man x pose:", max(self.trajectory, key=lambda pose: pose.x)
-        print "  man y pose:", max(self.trajectory, key=lambda pose: pose.y)
-        print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
+        #print "  min x pose:", min(self.trajectory, key=lambda pose: pose.x)
+        #print "  min y pose:", min(self.trajectory, key=lambda pose: pose.y)
+        #print "  min z pose:", min(self.trajectory, key=lambda pose: pose.z)
+        #print "  man x pose:", max(self.trajectory, key=lambda pose: pose.x)
+        #print "  man y pose:", max(self.trajectory, key=lambda pose: pose.y)
+        #print "  man z pose:", max(self.trajectory, key=lambda pose: pose.z)
 
     def percept_cb(self, data):
-        self.percepts = data
+        # save the trajectory if somithing changed
+        #print data
+        if data.changed:
+            # No belief yet. Initialize belief with first messages
+            if self.world_belief is None:
+                print "initializing world"
+                self.objects_of_interest = []
+                self.world_belief = ors.Graph()
+                print(data.bodies)
+
+                for body_ser in data.bodies:
+                    body = ors.Body()
+                    (body.name, body_str) = body_ser.split(" ", 1)
+                    body.read(body_str)
+                    self.world_belief.addObject(body)
+                    self.objects_of_interest.append((body, Properties()))
+
+            # otherwise log trajectory
+            else:
+                self.world_changed = True
+                self.trajectory_completed = False
+                for body_str in data.bodies:
+                    body = ors.Body()
+                    body.read(body_str)
+                    pos = body.X.pos
+                    self.trajectory.append(pos)
+
+        else:
+            self.world_changed = False
+            self.trajectory_completed = True
 
 
 if __name__ == '__main__':

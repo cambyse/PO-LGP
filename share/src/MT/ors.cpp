@@ -283,6 +283,42 @@ Vector operator-(const Vector& b) {
   return a;
 }
 
+// all operator== and operator!=
+bool operator==(const Quaternion& lhs, const Quaternion& rhs) {
+  return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+}
+bool operator!=(const Quaternion& lhs, const Quaternion& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Transformation& lhs, const Transformation& rhs) {
+  bool vel_equal = false;
+  if (lhs.zeroVels == rhs.zeroVels && rhs.zeroVels == false) 
+    vel_equal = lhs.vel == rhs.vel && lhs.angvel == rhs.angvel;
+  else if (lhs.zeroVels == rhs.zeroVels && rhs.zeroVels == true)
+    vel_equal = true;
+  return vel_equal && lhs.pos == rhs.pos && lhs.rot == rhs.rot;
+}
+bool operator!=(const Transformation& lhs, const Transformation& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Matrix& lhs, const Matrix& rhs) {
+  return lhs.m00 == rhs.m00 && lhs.m01 == rhs.m01 && lhs.m02 == rhs.m02 &&
+         lhs.m10 == rhs.m10 && lhs.m11 == rhs.m11 && lhs.m12 == rhs.m12 &&
+         lhs.m20 == rhs.m20 && lhs.m21 == rhs.m21 && lhs.m22 == rhs.m22;
+}
+bool operator!=(const Matrix& lhs, const Matrix& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Vector& lhs, const Vector& rhs) {
+  return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+}
+bool operator!=(const Vector& lhs, const Vector& rhs) {
+  return !(lhs == rhs);
+}
+
 //! const access via two row and column indices
 //const double& Matrix::operator()(int i, int j) const { return p()[i*3+j]; }
 ////! LHS access via two row and column indices
@@ -2720,6 +2756,10 @@ void ors::Body::read(std::istream& is) {
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   parseAts();
+}
+void ors::Body::read(const char* string) {
+  std::istringstream str(string);
+  read(str);
 }
 
 

@@ -307,13 +307,18 @@ void PhysXInterface::create() {
       PxRevoluteJoint* desc;
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
       desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
-      /*
-         PxJointLimitPair limit(0.,1., 0.01f);
-         limit.restitution = 0.5;
+     
+    if(jj->ats.getValue<arr>("limit")) {
+         arr limits = *(jj->ats.getValue<arr>("limit"));
+         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+         limit.restitution = limits(2);
+         limit.spring = limits(3);
+         limit.damping= limits(4);
          desc->setLimit(limit);
          desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
-         desc->setProjectionAngularTolerance(3.14);
-      */
+         //desc->setProjectionAngularTolerance(3.14);
+    }
+      
     }
     break;
     case ors::fixedJT: {
