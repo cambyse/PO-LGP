@@ -24,7 +24,9 @@
 #include "util.h"
 #include <map>
 #include <string>
-#include <unistd.h>
+#ifndef MT_MSVC
+#  include <unistd.h>
+#endif
 
 namespace MT {
   extern std::ifstream cfgFile;

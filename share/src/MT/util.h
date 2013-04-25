@@ -489,6 +489,8 @@ void gnuplotClose();
 // threading: pthread wrappers: Mutex, RWLock, ConditionVariable
 //
 
+#ifndef MT_MSVC
+
 //! a basic mutex lock
 struct Mutex {
   pthread_mutex_t mutex;
@@ -617,6 +619,28 @@ struct CycleTimer {
   void cycleDone();
 };
 
+#else //MT_MSVC
+struct Mutex {
+  int state;
+  Mutex(){};
+  ~Mutex(){};
+  void lock(){ MT_MSG("fake MSVC Mutex"); }
+  void unlock(){ MT_MSG("fake MSVC Mutex"); }
+};
+struct ConditionVariable {
+  int value;
+  ConditionVariable(int initialState=0){}
+  ~ConditionVariable(){}
+
+  void setValue(int i, bool signalOnlyFirstInQueue=false){} ///< sets state and broadcasts
+  int  incrementValue(bool signalOnlyFirstInQueue=false){}   ///< increase value by 1
+  void broadcast(bool signalOnlyFirstInQueue=false){}       ///< just broadcast
+  
+  void lock(){}
+  void unlock(){}
+  
+};
+#endif //MT_MSVC
 
 //===========================================================================
 //

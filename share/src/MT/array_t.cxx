@@ -2970,7 +2970,9 @@ UnaryFunction(floor);
   }
 
 BinaryFunction(atan2);
+#ifndef MT_MSVC
 BinaryFunction(pow);
+#endif
 BinaryFunction(fmod);
 #undef BinaryFunction
 

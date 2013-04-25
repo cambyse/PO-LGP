@@ -35,7 +35,9 @@
 #endif
 
 #include <errno.h>
-#include <sys/syscall.h>
+#ifndef MT_MSVC
+#  include <sys/syscall.h>
+#endif
 
 //===========================================================================
 //
@@ -839,6 +841,7 @@ void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDF
 #endif
 }
 
+#ifndef MT_MSVC
 
 //===========================================================================
 //
@@ -1188,6 +1191,7 @@ void CycleTimer::cycleDone() {
   steps++;
 }
 
+#endif //MT_MSVC
 
 //===========================================================================
 //

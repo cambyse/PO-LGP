@@ -103,7 +103,7 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
     lapack_Ainv_b_sym(beta_update, Xt*diagProduct(w, X) + 2.*I, Xt*(y-p) - 2.*I*beta);   //beta update equation
     beta += alpha*beta_update;
     
-    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
+    //cout <<"logReg iter= " <<k <<" negLogLike= " <<-logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
     
     if(alpha*absMax(beta_update)<1e-5) break;
   }
@@ -172,38 +172,45 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
 
 void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, arr* beta_k_fold, arr* beta_total, double *scoreMean, double *scoreSDV, double *scoreTrain) {
   arr Xtrain, Xtest, ytrain, ytest;
-  uint n=X.d0, blocksize;
-  CHECK(y.N==n, "");
-  CHECK(!(n%k_fold), "data size (" <<n <<") must be multiple of k_fold (" <<k_fold <<")");
-  blocksize = n/k_fold;
-  double cost, costM=0., costD=0.;
+  uint n=X.d0;
+
+  //permute data?
   arr X_perm, y_perm;
-  arr beta;
   if(permute){
     uintA perm;
     perm.setRandomPerm(X.d0);
     X_perm=X;  X_perm.permuteRows(perm);
     y_perm=y;  y_perm.permute(perm);
   }
+  //initialize
+  double cost, costM=0., costD=0.;
+  arr beta;
   if(beta_k_fold) beta_k_fold->clear();
   
+  //determine blocks
+  uintA blockStart(k_fold+1);
+  for(uint k=0;k<=k_fold;k++) blockStart(k) = (k*n)/k_fold;
+  
+  //go
   for(uint k=0; k<k_fold; k++){
     if(!permute){
       Xtrain = X;  ytrain = y;
     } else {
       Xtrain = X_perm;  ytrain = y_perm;
     }
-    Xtrain.delRows(k*blocksize, blocksize);
-    ytrain.remove(k*blocksize, blocksize);
-    Xtest.referToSubRange(X, k*blocksize, (k+1)*blocksize-1);
-    ytest.referToSubRange(y, k*blocksize, (k+1)*blocksize-1);
+    Xtrain.delRows(blockStart(k), blockStart(k+1)-blockStart(k));
+    ytrain.remove(blockStart(k), blockStart(k+1)-blockStart(k));
+    Xtest.referToSubRange(X, blockStart(k), blockStart(k+1)-1);
+    ytest.referToSubRange(y, blockStart(k), blockStart(k+1)-1);
     
+    cout <<k <<": train:";
     train(Xtrain, ytrain, lambda, beta);
     if(beta_k_fold) beta_k_fold->append(beta);
     
     cost = test(Xtest, ytest, beta);
     costM += cost;
     costD += cost*cost;
+    cout <<" test: " <<cost <<endl;
   }
   if(beta_k_fold) beta_k_fold->reshape(k_fold,beta.N);
   
@@ -213,14 +220,20 @@ void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, doub
   costD = sqrt(costD)/sqrt((double)k_fold); //sdv of the mean estimator
   
   //on full training data:
+  cout <<"full: train:";
   train(X, y, lambda, beta);
   double costT = test(X, y, beta);
   if(beta_total) *beta_total = beta;
+  cout <<" test: " <<costT <<endl;
   
   if(scoreMean)  *scoreMean =costM; else scoreMeans =ARR(costM);
   if(scoreSDV)   *scoreSDV  =costD; else scoreSDVs  =ARR(costD);
   if(scoreTrain) *scoreTrain=costT; else scoreTrains=ARR(costT);
   cout <<"CV: lambda=" <<lambda <<" \tmean-on-rest=" <<costM <<" \tsdv=" <<costD <<" \ttrain-on-full=" <<costT <<endl;
+  cout <<"cross validation results:";
+  if(lambda!=-1) cout <<"\n  lambda = " <<lambda;
+  cout <<"\n  test-error  = " <<costM <<" (+- " <<costD <<", lower: " <<costM-costD <<")"
+  <<"\n  train-error = " <<costT <<endl;
 }
 
 void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, const arr& _lambdas, uint k_fold, bool permute) {
@@ -235,7 +248,7 @@ void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, c
 
 void CrossValidation::plot() {
   write(LIST(lambdas, scoreMeans, scoreSDVs, scoreTrains), "z.cv");
-  gnuplot("set log x; set xlabel 'lambda'; set ylabel 'mean squared error'; plot 'cv' us 1:2:3 w errorlines title 'cv error','cv' us 1:4 w l title 'training error'", "z.pdf", true);
+  gnuplot("set log x; set xlabel 'lambda'; set ylabel 'mean squared error'; plot 'z.cv' us 1:2:3 w errorlines title 'cv error','z.cv' us 1:4 w l title 'training error'", "z.pdf", true);
   
 }
 
@@ -359,7 +372,7 @@ void artificialData(arr& X, arr& y, ArtificialDataType dataType) {
       break;
     }
     case linearOutlier: {
-      double rate = MT::getParameter<double>("dutlierRate", .1);
+      double rate = MT::getParameter<double>("outlierRate", .1);
       X = randn(n, d);
       arr Z;
       makeFeatures(Z, X, X, (FeatureType)MT::getParameter<uint>("dataFeatureType", 1));

@@ -21,7 +21,7 @@
 //===========================================================================
 
 struct RosenbrockFunction:ScalarFunction {
-  virtual double fs(arr& g, arr& H, const arr& x) const{
+  virtual double fs(arr& g, arr& H, const arr& x) {
     if(&H) NIY;
     double f=0.;
     for(uint i=1;i<x.N;i++) f += MT::sqr(x(i)-MT::sqr(x(i-1))) + .01*MT::sqr(1-x(i-1));
@@ -33,7 +33,7 @@ struct RosenbrockFunction:ScalarFunction {
 //===========================================================================
 
 struct RastriginFunction:ScalarFunction {
-  virtual double fs(arr& g, arr& H, const arr& x) const{
+  virtual double fs(arr& g, arr& H, const arr& x) {
     if(&H) NIY;
     double A=.5, f=A*x.N;
     for(uint i=0;i<x.N;i++) f += x(i)*x(i) - A*::cos(10.*x(i));
@@ -81,7 +81,7 @@ struct ChoiceFunction:ScalarFunction{
     which = (Which) MT::getParameter<int>("fctChoice");
     condition = MT::getParameter<double>("condition");
   }
-  virtual double fs(arr& g, arr& H, const arr& x) const{
+  virtual double fs(arr& g, arr& H, const arr& x) {
     double f;
     arr c(x.N), y(x);
     for(uint i=0;i<c.N;i++) c(i) = pow(condition,(double)i/(x.N-1));
