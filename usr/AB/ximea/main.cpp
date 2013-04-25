@@ -36,12 +36,12 @@ struct xiRec : OpenGL::GLKeyCall {
 
     // Sample for XIMEA API V2.10
     DWORD ndev;
-    XI_IMG image;
-    HANDLE xiH;
-    XI_RETURN stat;
+    XI_IMG *image;
+    HANDLE *xiH;
+    XI_RETURN *stat;
 
     OpenGL gl;
-    byteA img;
+    byteA *img;
     ofstream file;//("video.raw",std::ios::out|std::ios::binary);
 
     // Also,
@@ -56,11 +56,8 @@ struct xiRec : OpenGL::GLKeyCall {
                 play(true), rec(false), snap(false),
                 quit(false), error(false),
                 open(false),
-                ndev(0), xiH(NULL), stat(XI_OK) {
-        image.size = sizeof(XI_IMG);
-        image.bp = NULL;
-        image.bp_size = 0;
-    };
+                //ndev(0), xiH(NULL), stat(XI_OK) {
+                ndev(0), image(NULL), xiH(NULL), stat(NULL) {};
 
     bool keyCallback(OpenGL &) {
         cout << "Key Pressed: " << gl.pressedkey << endl;
@@ -87,8 +84,15 @@ struct xiRec : OpenGL::GLKeyCall {
             case '9':
                 break;
             case '+':
+                cout << "Pressed +." << endl;
+                gl.resize(100,50);
+                gl.update();
                 break;
             case '-':
+                cout << "Pressed -." << endl;
+                gl.resize(100,100);
+                gl.update();
+                break;
             case 13: // Enter
                 make_snapshot();
                 break;
@@ -99,9 +103,9 @@ struct xiRec : OpenGL::GLKeyCall {
     void openAll() {
         openDir();
         if(!error) {
-            openFile();
-            openCredits();
             openCam();
+            openCredits();
+            //openFile();
 
             // key calls
             gl.addKeyCall(this);
@@ -127,20 +131,44 @@ struct xiRec : OpenGL::GLKeyCall {
     }
 
     void openFile() {
-        file.open("video.raw", std::ios::out | std::ios::binary);
+        //file.open("video.raw", std::ios::out | std::ios::binary);
+    }
+
+    static void nothing(void*) {
     }
 
     void openCredits() {
-        //read_ppm(displayImg,"box.ppm",false);
-        //make_grey(displayImg);
+        /*
+        read_ppm(img,"signal.ppm",false);
         gl.img = &img;
         gl.update();
+
+        gl.addView(0,&nothing,0);
+        gl.addView(1,&nothing,0);
+
+        gl.setViewPort(0,0,1,0,1);
+        gl.setViewPort(0,.5,1,0,1);
+
+        gl.views(0).img = &img;
+        gl.views(1).img = &img;
+        */
+        
+        float fr = (float)1.0/(float)ndev;
+
+        img = new byteA[ndev];
+        for(uint d = 0; d < ndev; d++) {
+            read_ppm(img[d],"signal.ppm",false);
+            gl.addView(d,&nothing,0);
+            gl.setViewPort(d,d*fr,(d+1)*fr,0,1);
+            gl.views(d).img = &img[d];
+        }
     }
 
     void openCam() {
         // Get number of camera devices
-        stat = xiGetNumberDevices(&ndev);
-        checkStatus("xiGetNumberDevices (no camera found)");
+        //stat = xiGetNumberDevices(&ndev);
+        //checkStatus("xiGetNumberDevices (no camera found)");
+        xiGetNumberDevices(&ndev);
 
         if(!ndev) {
             cout << "No camera found" << endl;
@@ -148,35 +176,53 @@ struct xiRec : OpenGL::GLKeyCall {
             quit = true;
         }
         else {
-            stat = xiOpenDevice(0, &xiH);
-            checkStatus("xiOpenDevice");
+            cout << "Cameras found: " << ndev << endl;
+            image = new XI_IMG[ndev];
+            xiH = new HANDLE[ndev];
+            stat = new XI_RETURN[ndev];
+            
+            for(uint d = 0; d < ndev; d++) {
+                // add d parameter to checkStatus
+                stat[d] = xiOpenDevice(d, &xiH[d]);
+                checkStatus(d, "xiOpenDevice");
 
-            stat = xiSetParamInt(xiH, XI_PRM_EXPOSURE, 10000);
-            checkStatus("xiSetParam (exposure set)");
+                stat[d] = xiSetParamInt(xiH[d], XI_PRM_EXPOSURE, 10000);
+                checkStatus(d, "xiSetParam (exposure set)");
 
-            stat = xiSetParamInt(xiH, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
-            checkStatus("xiSetParam (format)");
+                stat[d] = xiSetParamInt(xiH[d], XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
+                checkStatus(d, "xiSetParam (format)");
 
-            stat = xiSetParamInt(xiH, XI_PRM_DOWNSAMPLING, 2);
-            checkStatus("xiSetParam (downsampling)");
+                /*
+                stat[d] = xiSetParamInt(xiH[d], XI_PRM_DOWNSAMPLING, 2);
+                checkStatus(d, "xiSetParam (downsampling)");
+                */
 
-            float min_fps, max_fps;
-            xiGetParamFloat(xiH, XI_PRM_FRAMERATE XI_PRM_INFO_MIN, &min_fps);
-            xiGetParamFloat(xiH, XI_PRM_FRAMERATE XI_PRM_INFO_MAX, &max_fps);
-            cout <<"available frame rates = " << min_fps << '-' << max_fps << endl;
+                float min_fps, max_fps;
+                xiGetParamFloat(xiH[d], XI_PRM_FRAMERATE XI_PRM_INFO_MIN, &min_fps);
+                xiGetParamFloat(xiH[d], XI_PRM_FRAMERATE XI_PRM_INFO_MAX, &max_fps);
+                cout <<"available frame rates = " << min_fps << '-' << max_fps << endl;
 
-            int cfa;
-            xiGetParamInt(xiH, XI_PRM_COLOR_FILTER_ARRAY, &cfa);
-            cout << "buffer format = " << cfa << endl;
+                int cfa;
+                xiGetParamInt(xiH[d], XI_PRM_COLOR_FILTER_ARRAY, &cfa);
+                cout << "buffer format = " << cfa << endl;
 
-            int iscolor;
-            xiGetParamInt(xiH, XI_PRM_IMAGE_IS_COLOR,&iscolor);
-            cout << "color = " << iscolor << endl;
+                int iscolor;
+                xiGetParamInt(xiH[d], XI_PRM_IMAGE_IS_COLOR, &iscolor);
+                cout << "color = " << iscolor << endl;
+
+                image[d].size = sizeof(XI_IMG);
+                image[d].bp = NULL;
+                image[d].bp_size = 0;
+
+                // Log message
+                cout << "Cam " << d << " opened." << endl;
+            }
+            cout << "All Cameras (" << ndev << ") opened." << endl;
         }
     }
 
     void closeAll() {
-        closeFile();
+        //closeFile();
         closeCam();
     }
 
@@ -185,33 +231,42 @@ struct xiRec : OpenGL::GLKeyCall {
     }
 
     void closeCam() {
-        if(xiH)
-            xiCloseDevice(xiH);
-        cout << "Device closed." << endl;
+        for(uint d = 0; d < ndev; d++) {
+            if(xiH[d])
+                xiCloseDevice(xiH[d]);
+            cout << "Device " << d << " closed." << endl;
+        }
+        delete[] image;
+        delete[] xiH;
+        delete[] stat;
     }
 
     void startCam() {
         // Start acquisition
-        stat = xiStartAcquisition(xiH);
-        checkStatus("xiStartAcquisition");
+        for(uint d = 0; d < ndev; d++) {
+            stat[d] = xiStartAcquisition(xiH[d]);
+            checkStatus(d, "xiStartAcquisition");
+        }
     }
 
     void getImage() {
-        stat = xiGetImage(xiH, 5000, &image);
-        checkStatus("xiGetImage");
+        for(uint d = 0; d < ndev; d++) {
+            stat[d] = xiGetImage(xiH[d], 5000, &image[d]);
+            checkStatus(d, "xiGetImage");
 
-        // Transforming to byteA
-        if(image.frm == XI_MONO8) {
-            img.referTo((byte*)image.bp, image.height*image.width);
-            img.reshape(image.height, image.width);
-        }
-        else if(image.frm == XI_RAW8) {
-            img.referTo((byte*)image.bp, image.height*image.width);
-            img.reshape(image.height, image.width);
-        }
-        else if(image.frm == XI_RGB24) {
-            img.referTo((byte*)image.bp, 3*image.height*image.width);
-            img.reshape(image.height, image.width, 3);
+            // Transforming to byteA
+            if(image[d].frm == XI_MONO8) {
+                img[d].referTo((byte*)image[d].bp, image[d].height*image[d].width);
+                img[d].reshape(image[d].height, image[d].width);
+            }
+            else if(image[d].frm == XI_RAW8) {
+                img[d].referTo((byte*)image[d].bp, image[d].height*image[d].width);
+                img[d].reshape(image[d].height, image[d].width);
+            }
+            else if(image[d].frm == XI_RGB24) {
+                img[d].referTo((byte*)image[d].bp, 3*image[d].height*image[d].width);
+                img[d].reshape(image[d].height, image[d].width, 3);
+            }
         }
     }
 
@@ -222,13 +277,15 @@ struct xiRec : OpenGL::GLKeyCall {
 
     void recordStream() {
         if(rec) {
-            //write to raw video
-            if(image.frm == XI_MONO8)
-                file.write((char*)image.bp, image.height*image.width);
-            else if(image.frm == XI_RAW8)
-                file.write((char*)image.bp, image.height*image.width);
-            else if(image.frm == XI_RGB24)
-                file.write((char*)image.bp, 3*image.height*image.width);
+            for(uint d = 0; d < ndev; d++) {
+                //write to raw video
+                if(image[d].frm == XI_MONO8)
+                    file.write((char*)image[d].bp, image[d].height*image[d].width);
+                else if(image[d].frm == XI_RAW8)
+                    file.write((char*)image[d].bp, image[d].height*image[d].width);
+                else if(image[d].frm == XI_RGB24)
+                     file.write((char*)image[d].bp, 3*image[d].height*image[d].width);
+            }
         }
     }
 
@@ -268,10 +325,10 @@ struct xiRec : OpenGL::GLKeyCall {
         */
     }
 
-    void checkStatus(string place) {
-        if(stat != XI_OK) {
+    void checkStatus(int d, string place) {
+        if(stat[d] != XI_OK) {
             cout << "Error after " << place << " (" << stat << ")" << endl;
-            closeFile();
+            //closeFile();
             closeCam();
             error = true;
             quit = true;
@@ -295,16 +352,20 @@ int main(int argc, char** argv){
     if(!cam.error)
         cam.startCam();
 
+    cam.getImage();
+    cout << "cam.image[0].width = " << cam.image[0].width << endl;
+    cout << "cam.image[0].height = " << cam.image[0].height << endl;
     while(!cam.quit) {
         cam.getImage();
         cam.playStream();
-        cam.recordStream();
+        //cam.recordStream();
     }
     cout << "Quitting." << endl;
 
     cout << "Closing All." << endl;
     cam.closeAll();
 
+    // TODO make error dynamic array
     cout << "Error = " << cam.error << endl;
 
     return 0;
