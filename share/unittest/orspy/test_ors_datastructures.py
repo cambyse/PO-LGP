@@ -46,6 +46,7 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         v3 = orspy.Vector(2, 2, 2)
         self.assertFalse(v2 != v3)
 
+
 class Test_MatrixOperatorOverloading(unittest.TestCase):
     def test_add(self):
         m1, m2 = orspy.Matrix(), orspy.Matrix()
@@ -87,7 +88,6 @@ class Test_MatrixOperatorOverloading(unittest.TestCase):
         self.assertFalse(m1 != m1)
         self.assertFalse(m2 != m2)
         self.assertTrue(m1 != m2)
-        
 
         m3 = orspy.Matrix()
         m3.set([2.] * 9)
@@ -122,18 +122,26 @@ class Test_QuaternionOperatorOverload(unittest.TestCase):
 
 
 class Test_Graph_serialization(unittest.TestCase):
-    def setUp(self):
-        self.maxDiff = None
-
     def test_graph_de_serialization(self):
         graph1 = orspy.Graph("world.ors")
-        serialized1 = str(graph1)
+        g1_str = str(graph1)
 
         graph2 = orspy.Graph()
-        graph2.read(serialized1)
-        serialized2 = str(graph2)
+        graph2.read(g1_str)
+        g2_str = str(graph2)
 
-        self.assertMultiLineEqual(serialized1, serialized2)
+        # sadly the string representation is not unambiguous.
+        # sometimes a '-0', and sometimes a '0' is used. Therefore, we
+        # have to split the string representation in words, try to convert
+        # them into float and then compare them.
+        for line_a, line_b in zip(g1_str.split('\n'), g2_str.split('\n')):
+            for a, b in zip(line_a.split(' '), line_b.split(' ')):
+                print a, b
+                try:
+                    a, b = float(a), float(b)
+                    self.assertAlmostEqual(a, b)
+                except:
+                    self.assertEqual(a, b)
 
 
 if __name__ == '__main__':
