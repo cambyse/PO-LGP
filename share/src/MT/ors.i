@@ -86,9 +86,6 @@ struct Array{
 
   void clear();
 
-  // T& operator()(uint i) const;
-  // T& operator()(uint i, uint j) const;
-  // Array<T> sub(int i, int I) const;
   Array<T> sub(int i, int I, int j, int J) const;
   Array<T> sub(int i, int I) const;
 
@@ -579,10 +576,6 @@ struct Body {
   explicit Body(const Body& b);
   explicit Body(Graph& G, const Body *copyBody=NULL);
   ~Body();
-  // void operator=(const Body& b) {
-  //   index=b.index; name=b.name; X=b.X; ats=b.ats;
-  //   type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
@@ -620,11 +613,6 @@ struct Joint {
   explicit Joint(const Joint& j);
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL);
   ~Joint();
-  // void operator=(const Joint& j) {
-  //   index=j.index; ifrom=j.ifrom; ito=j.ito;
-  //   type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
-  //   ats=j.ats;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
@@ -663,12 +651,6 @@ struct Shape {
   explicit Shape(const Shape& s);
   explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL);
   ~Shape();
-  // void operator=(const Shape& s) {
-  //   index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
-  //   memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-  //   mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
-  //   ats=s.ats;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
@@ -714,7 +696,6 @@ struct Graph {
   Graph();
   Graph(const char* filename);
   ~Graph();
-  // void operator=(const ors::Graph& G);
   Graph* newClone() const;
   void copyShapesAndJoints(const Graph& G);
 
