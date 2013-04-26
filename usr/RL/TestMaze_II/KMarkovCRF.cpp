@@ -77,6 +77,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         lbfgsfloatval_t *g,
         const int n
 ) {
+    DEBUG_OUT(1,"Evaluating...");
     lbfgsfloatval_t fx = 0;
     for(int i=0; i<n; i++) {
         g[i] = 0;

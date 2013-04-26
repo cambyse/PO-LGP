@@ -18,8 +18,8 @@ public:
     //----------------------//
     //   Maze Dimensions    //
     //----------------------//
-    static const size_t maze_x_size = 3;
-    static const size_t maze_y_size = 3;
+    static const size_t maze_x_size = 2;
+    static const size_t maze_y_size = 2;
 
     //----------------------//
     //   k-Markov Horizon   //

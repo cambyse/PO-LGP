@@ -101,7 +101,7 @@ private:
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
 
-    static const size_t walls_n = 8;
+    static const size_t walls_n = 0;
     static const idx_t walls[walls_n][2];
 
     static const size_t rewards_n = 4;

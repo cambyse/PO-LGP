@@ -71,7 +71,7 @@ void TestMaze_II::update_current_instance(action_t action, state_t state, reward
     if(current_instance==nullptr) {
         current_instance = instance_t::create(action,state,reward);
     } else {
-        current_instance->append_instance(action,state,reward);
+        current_instance = current_instance->append_instance(action,state,reward);
     }
     if(plot) {
         plot_file << action << " " << state << " " << reward << std::endl;

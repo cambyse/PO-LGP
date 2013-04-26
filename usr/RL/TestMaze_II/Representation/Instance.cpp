@@ -570,7 +570,11 @@ InstanceIt::InstanceIt():
 InstanceIt::InstanceIt(Instance * i):
     util::InvalidAdapter<InstanceIt>(false),
     this_instance(i)
-{}
+{
+    if(this_instance==nullptr) {
+        this->invalidate();
+    }
+}
 
 InstanceIt::operator Instance*() const {
     return this_instance;
@@ -603,18 +607,26 @@ InstanceIt & InstanceIt::operator--() {
 }
 
 InstanceIt & InstanceIt::operator+=(const int& c) {
-    if(c<0) {
+    if(c==0) {
+        return (*this);
+    } else if(c<0) {
         return (*this) -= -c;
+    } else if(this_instance==nullptr) {
+        this->invalidate();
+        return (*this);
     } else {
-        if(this_instance!=nullptr && this_instance->container!=nullptr) { // use container (random access)
+        if(this_instance->container!=nullptr) { // use container (random access)
             if(this_instance->container_idx+c>=(idx_t)this_instance->container->size()) {
                 this->invalidate();
             } else {
                 (*this)=InstanceIt((*(this_instance->container))[this_instance->container_idx+c]);
             }
-        } else {
-            for(int i=0; i<c && (*this)!=INVALID; ++i) { // use standard method (iterative pointer)
-                ++(*this);
+        } else { // use standard method (iterative pointer)
+            ++(*this);
+            if((*this)==INVALID) {
+                return (*this);
+            } else {
+                return (*this)+=(c-1);
             }
         }
         return (*this);
@@ -622,18 +634,26 @@ InstanceIt & InstanceIt::operator+=(const int& c) {
 }
 
 InstanceIt & InstanceIt::operator-=(const int& c) {
-    if(c<0) {
+    if(c==0) {
+        return (*this);
+    } else if(c<0) {
         return (*this) += -c;
+    } else if(this_instance==nullptr) {
+        this->invalidate();
+        return (*this);
     } else {
-        if(this_instance!=nullptr && this_instance->container!=nullptr) { // use container (random access)
+        if(this_instance->container!=nullptr) { // use container (random access)
             if(this_instance->container_idx<c) {
                 this->invalidate();
             } else {
                 (*this)=InstanceIt((*(this_instance->container))[this_instance->container_idx-c]);
             }
-        } else {
-            for(int i=0; i<c && (*this)!=INVALID; ++i) { // use standard method (iterative pointer)
-                --(*this);
+        } else { // use standard method (iterative pointer)
+            --(*this);
+            if((*this)==INVALID) {
+                return (*this);
+            } else {
+                return (*this)-=(c-1);
             }
         }
         return (*this);
@@ -680,7 +700,11 @@ ConstInstanceIt::ConstInstanceIt():
 ConstInstanceIt::ConstInstanceIt(const Instance * i):
     util::InvalidAdapter<ConstInstanceIt>(false),
     this_instance(i)
-{}
+{
+    if(this_instance==nullptr) {
+        this->invalidate();
+    }
+}
 
 ConstInstanceIt::operator const Instance*() const {
     return this_instance;
@@ -709,40 +733,60 @@ ConstInstanceIt & ConstInstanceIt::operator--() {
 }
 
 ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
-    if(c<0) {
+    if(c==0) {
+        return (*this);
+    } else if(c<0) {
         return (*this) -= -c;
+    } else if(this_instance==nullptr) {
+        this->invalidate();
+        return (*this);
     } else {
-        if(this_instance!=nullptr && this_instance->container!=nullptr) { // use container (random access)
+        if(this_instance->container!=nullptr && this_instance->container_idx!=this_instance->container->size()-1) { // use container (random access)
             if(this_instance->container_idx+c>=(idx_t)this_instance->container->size()) {
-                this->invalidate();
+                int rest = c - this_instance->container->size() + this_instance->container_idx + 1;
+                (*this)=ConstInstanceIt(this_instance->container->back());
+                return (*this)+=rest;
             } else {
                 (*this)=ConstInstanceIt((*(this_instance->container))[this_instance->container_idx+c]);
+                return (*this);
             }
-        } else {
-            for(int i=0; i<c && (*this)!=INVALID; ++i) { // use standard method (iterative pointer)
-                ++(*this);
+        } else { // use standard method (iterative pointer)
+            ++(*this);
+            if((*this)==INVALID) {
+                return (*this);
+            } else {
+                return (*this)+=(c-1);
             }
         }
-        return (*this);
     }
 }
 
 ConstInstanceIt & ConstInstanceIt::operator-=(const int& c) {
-    if(c<0) {
+    if(c==0) {
+        return (*this);
+    } else if(c<0) {
         return (*this) += -c;
+    } else if(this_instance==nullptr) {
+        this->invalidate();
+        return (*this);
     } else {
-        if(this_instance!=nullptr && this_instance->container!=nullptr) { // use container (random access)
-            if(this_instance->container_idx<c) {
-                this->invalidate();
+        if(this_instance->container!=nullptr && this_instance->container_idx!=0) { // use container (random access)
+            if(this_instance->container_idx - c < 0) {
+                int rest = c - this_instance->container_idx;
+                (*this)=ConstInstanceIt(this_instance->container->front());
+                return (*this)-=rest;
             } else {
                 (*this)=ConstInstanceIt((*(this_instance->container))[this_instance->container_idx-c]);
+                return (*this);
             }
-        } else {
-            for(int i=0; i<c && (*this)!=INVALID; ++i) { // use standard method (iterative pointer)
-                --(*this);
+        } else { // use standard method (iterative pointer)
+            --(*this);
+            if((*this)==INVALID) {
+                return (*this);
+            } else {
+                return (*this)-=(c-1);
             }
         }
-        return (*this);
     }
 }
 
@@ -755,101 +799,33 @@ ConstInstanceIt ConstInstanceIt::operator-(const int& c) const {
 }
 
 int ConstInstanceIt::length_to_first() const {
-    if(this_instance!=nullptr && this_instance->container!=nullptr) {
-        return this_instance->container_idx;
-    } else {
-        int counter = -1;
-        for(ConstInstanceIt ins=(*this); ins!=INVALID; --ins) {
+    int counter = -1;
+    ConstInstanceIt tmpIt(this_instance); // invalid if this_instance==nullptr
+    while(tmpIt!=INVALID) {
+        if(tmpIt.this_instance->container!=nullptr) { // use container for jumps
+            int steps = tmpIt.this_instance->container_idx+1;
+            counter += steps;
+            tmpIt -= steps;
+        } else { // make single steps
             ++counter;
+            --tmpIt;
         }
-        return counter;
     }
+    return counter;
 }
 
 int ConstInstanceIt::length_to_last() const {
-    if(this_instance!=nullptr && this_instance->container!=nullptr) {
-        return this_instance->container->size() - this_instance->container_idx - 1;
-    } else {
-        int counter = -1;
-        for(ConstInstanceIt ins=(*this); ins!=INVALID; ++ins) {
+    int counter = -1;
+    ConstInstanceIt tmpIt(this_instance); // invalid if this_instance==nullptr
+    while(tmpIt!=INVALID) {
+        if(tmpIt.this_instance->container!=nullptr) { // use container for jumps
+            int steps = tmpIt.this_instance->container->size() - tmpIt.this_instance->container_idx;
+            counter += steps;
+            tmpIt += steps;
+        } else { // make single steps
             ++counter;
+            ++tmpIt;
         }
-        return counter;
     }
+    return counter;
 }
-
-// InstanceIt::InstanceIt() {}
-
-// InstanceIt::InstanceIt( const ActionIt& a, const StateIt& s, const RewardIt& r ):
-//     util::InvalidAdapter<InstanceIt>(false),
-//     action(a), state(s), reward(r)
-// {}
-
-// InstanceIt & InstanceIt::operator++() {
-//     ++reward;
-//     if(reward==INVALID) {
-//         reward = RewardIt::first();
-//         ++state;
-//         if(state==INVALID) {
-//             state = StateIt::first();
-//             ++action;
-//             if(action==INVALID) {
-//                 action = ActionIt::first();
-//                 this->invalidate();
-//             }
-//         }
-//     }
-//     return *this;
-// }
-
-// InstanceIt & InstanceIt::operator--() {
-//     --reward;
-//     if(reward==INVALID) {
-//         reward = RewardIt::last();
-//         --state;
-//         if(state==INVALID) {
-//             state = StateIt::last();
-//             --action;
-//             if(action==INVALID) {
-//                 action = ActionIt::last();
-//                 this->invalidate();
-//             }
-//         }
-//     }
-//     return *this;
-// }
-
-// InstanceIt & InstanceIt::operator+=(const int& c) {
-//     if(c<0) {
-//         return (*this) -= -c;
-//     } else {
-//         for(int i=0; i<c && (*this)!=INVALID; ++i) {
-//             ++(*this);
-//         }
-//         return (*this);
-//     }
-// }
-
-// InstanceIt & InstanceIt::operator-=(const int& c) {
-//     if(c<0) {
-//         return (*this) += -c;
-//     } else {
-//         for(int i=0; i<c && (*this)!=INVALID; ++i) {
-//             --(*this);
-//         }
-//         return (*this);
-//     }
-// }
-
-// const InstanceIt InstanceIt::first() {
-//     return InstanceIt(ActionIt::first(), StateIt::first(), RewardIt::first());
-// }
-
-// const InstanceIt InstanceIt::last() {
-//     return InstanceIt(ActionIt::last(), StateIt::last(), RewardIt::last());
-// }
-
-// std::ostream& operator<<(std::ostream &out, const InstanceIt& i) {
-//     out << (Instance)i;
-//     return out;
-// }

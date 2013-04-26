@@ -136,31 +136,4 @@ protected:
     const Instance * this_instance;
 };
 
-//========================================================================================//
-//    Old InstanceIt class
-
-/** \brief Iterator over Instances.
- *
- * InstanceIt iterate over all possible Instance object by iterating their
- * Action, State, and Reward component. They are much like Instances and can be
- * implicitely converted to Instance objects. As opposed to what happens when
- * iterating Instance objects themselves, InstanceIt objects traverses the space
- * of possible instances, not the sequence of all instances occurred in time. */
-/* class InstanceIt: public util::InvalidAdapter<InstanceIt> { */
-/* public: */
-/*     ActionIt action; */
-/*     StateIt state; */
-/*     RewardIt reward; */
-/*     InstanceIt(); */
-/*     InstanceIt(const ActionIt& a, const StateIt& s, const RewardIt& r); */
-/*     InstanceIt & operator++(); */
-/*     InstanceIt & operator--(); */
-/*     InstanceIt & operator+=(const int& c); */
-/*     InstanceIt & operator-=(const int& c); */
-/*     static const InstanceIt first(); */
-/*     static const InstanceIt last(); */
-/*     operator Instance() const { return Instance(action,state,reward); } */
-/*     friend std::ostream& operator<<(std::ostream &out, const InstanceIt& i); */
-/* }; */
-
-#endif // INSTANCE_H_
+#endif /* INSTANCE_H_ */
