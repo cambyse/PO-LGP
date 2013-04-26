@@ -204,7 +204,7 @@ class ArrayIter:
 }; // end of namespace MT
 
 %typemap(in) MT::String {
-    $1.p = PyString_AsString($input);
+    $1 = PyString_AsString($input);
 }
 %typemap(out) MT::String {
     $result = PyString_FromString($1.p);
@@ -812,7 +812,7 @@ def setJointStateList(self, jointState):
 %extend Graph {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    (*$self).write(oss);
+    oss << (*$self);
     return oss.str();
   }
 } // end %extend Graph
