@@ -45,8 +45,11 @@ class FakePerception():
                                          data_class=msgs.ors,
                                          callback=self.ors_cb)
 
+        self.frame = 0
+
     def run(self):
         """ the perception loop """
+        rospy.sleep(1)
         while not rospy.is_shutdown():
             self.step()
 
@@ -61,8 +64,15 @@ class FakePerception():
         agent = self.world.getBodyByName("robot")
         msg = msgs.percept()
         msg.changed = False
+
+        self.frame = self.frame + 1
         for p in self.world.bodies:
             if agent.index is not p.index and self.has_moved(p):
+
+                print p.name
+
+                msg.header.stamp = rospy.get_rostime()
+                msg.header.seq = self.frame
 
                 msg.bodies.append(p.name + " " + str(p))
                 msg.changed = True
@@ -81,7 +91,7 @@ class FakePerception():
         if self.not_published_once:
             return True
         old_body = self.old_world.getBodyByName(body.name)
-        return body.X == old_body.X
+        return body.X != old_body.X
 
 
 if __name__ == '__main__':

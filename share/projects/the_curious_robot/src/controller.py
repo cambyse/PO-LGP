@@ -49,9 +49,11 @@ class FakeController():
     def step(self):
         # P-Controller
         if self.goal:
-            Kp = 10e-2
+            Kp = 10e-3
+            eps = 10e-3
             agent = self.world.getBodyByName("robot")
-            agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
+            if (agent.X.pos - self.goal.pos).length > eps:
+                agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
             #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.world.calcBodyFramesFromJoints()
@@ -67,7 +69,7 @@ class FakeController():
         self.gl.update()
 
     def control_cb(self, data):
-        print "Got control message.\n", data.pose.position 
+        #print "Got control message.\n", data.pose.position 
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z
