@@ -4,11 +4,13 @@
 #define INSTANCE_H_
 
 #include "../util.h"
+#include "../Data.h"
 #include "Action.h"
 #include "State.h"
 #include "Reward.h"
 
 #include <ostream>
+#include <vector>
 
 class InstanceIt;
 class ConstInstanceIt;
@@ -20,10 +22,17 @@ class ConstInstanceIt;
  * learning process. Additionally every Instance stores pointers to the Instance
  * before and after, so one can iterate through time. */
 class Instance {
+
 public:
+
+    typedef Data::idx_t idx_t;
+
+    friend class InstanceIt;
+    friend class ConstInstanceIt;
     Action action;
     State state;
     Reward reward;
+
     static Instance * create(const Instance&);
     static Instance * create(
         const Action& a = Action(),
@@ -38,21 +47,41 @@ public:
     Instance * insert_instance_before (const Action& a, const State& s, const Reward& r);
     Instance * append_instance        (const Action& a, const State& s, const Reward& r);
     Instance * prepend_instance       (const Action& a, const State& s, const Reward& r);
-    const Instance * get_previous() const;
-    const Instance * get_next() const;
-    Instance * get_non_const_previous() const;
-    Instance * get_non_const_next() const;
     InstanceIt it();
     ConstInstanceIt it() const;
     InstanceIt first();
     InstanceIt last();
     ConstInstanceIt const_first() const;
     ConstInstanceIt const_last() const;
+    void set_container();
+    void unset_container();
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
+    /** \brief This function performs a number of benchmark tests.
+     *
+     * Running this function shows some statistics on the Instance/InstanceIt
+     * class. By redirecting the output to a text file and using a gnuplot
+     * script it is for instance possible to generate graphs like the following:
+     * \image html Instance_Initialization.jpg
+     * \image html Instance_Set-Unset_Container.jpg
+     * \image html Instance_Iteration.jpg
+     * \image html Instance_Random_Access.jpg
+     * */
+    static void check_performance_and_memory(bool memory = false);
+
 protected:
+
+    typedef std::vector<Instance*> container_t;
     Instance * previous_instance, * next_instance;
     const Instance * const_previous_instance, * const_next_instance;
-    bool previous_const, next_const;
+    container_t * container;
+    idx_t container_idx;
+
+    const Instance * get_previous() const;
+    const Instance * get_next() const;
+    Instance * get_non_const_previous() const;
+    Instance * get_non_const_next() const;
+    void  unset_container_elements();
+    void fill_container(Instance *);
     Instance(
         const Action& a = Action(),
         const State& s = State(),
@@ -65,6 +94,7 @@ protected:
 /** \brief Instance iterator object. */
 class InstanceIt: public util::InvalidAdapter<InstanceIt> {
 public:
+    typedef Data::idx_t idx_t;
     InstanceIt();
     InstanceIt(Instance *);
     operator Instance*() const;
@@ -74,8 +104,8 @@ public:
     InstanceIt & operator--();
     InstanceIt & operator+=(const int& c);
     InstanceIt & operator-=(const int& c);
-    InstanceIt operator+(const int& c);
-    InstanceIt operator-(const int& c);
+    InstanceIt operator+(const int& c) const;
+    InstanceIt operator-(const int& c) const;
     bool operator<(const InstanceIt& other) const;
     int length_to_first() const;
     int length_to_last() const;
@@ -87,6 +117,7 @@ protected:
 /** \brief Const Instance iterator object. */
 class ConstInstanceIt: public util::InvalidAdapter<ConstInstanceIt> {
 public:
+    typedef Data::idx_t idx_t;
     ConstInstanceIt();
     ConstInstanceIt(const Instance *);
     operator const Instance*() const;
@@ -95,8 +126,8 @@ public:
     ConstInstanceIt & operator--();
     ConstInstanceIt & operator+=(const int& c);
     ConstInstanceIt & operator-=(const int& c);
-    ConstInstanceIt operator+(const int& c);
-    ConstInstanceIt operator-(const int& c);
+    ConstInstanceIt operator+(const int& c) const;
+    ConstInstanceIt operator-(const int& c) const;
     bool operator<(const ConstInstanceIt& other) const;
     int length_to_first() const;
     int length_to_last() const;

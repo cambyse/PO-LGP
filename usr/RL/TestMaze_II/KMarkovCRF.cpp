@@ -55,9 +55,6 @@ KMarkovCRF::KMarkovCRF():
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
     }
-
-    instance_data = instance_t::create();
-
 }
 
 KMarkovCRF::~KMarkovCRF() {
@@ -87,7 +84,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
     int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model.");
+        DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
         return fx;
     }
 
@@ -246,7 +243,11 @@ void KMarkovCRF::add_action_state_reward_tripel(
         const state_t& state,
         const reward_t& reward
 ) {
-    instance_data = instance_data->append_instance(action,state,reward);
+    if(instance_data==nullptr) {
+        instance_data = instance_t::create(action,state,reward);
+    } else {
+        instance_data = instance_data->append_instance(action,state,reward);
+    }
     DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
@@ -315,7 +316,7 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 void KMarkovCRF::evaluate_features() {
     int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model.");
+        DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
         return;
     }
 
@@ -335,7 +336,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
 
     int N = instance_data->it().length_to_first()-k;
     if(N<=0) {
-        DEBUG_OUT(0,"Not enough data to score features.");
+        DEBUG_OUT(0,"Not enough data to score features (" << N << ").");
         return;
     }
 
@@ -356,7 +357,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
 
     int number_of_data_points = instance_data->it().length_to_first()-k;
     if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate features.");
+        DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
         return;
     }
 
@@ -386,7 +387,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
                 // calculate sumF(x(n),y')
                 sumFN = 0.0;
                 for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                    sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+                    sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance-1,action,state,reward);
                     // compound features have zero coefficient (no parameter binding possible)!
                 }
 
@@ -396,7 +397,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
                 // increment sumFExp(x(n),F)
                 for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all compound features)
                     // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-                    sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance,action,state,reward) * exp( sumFN );
+                    sumFExpNF[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance-1,action,state,reward) * exp( sumFN );
                 }
             }
         }

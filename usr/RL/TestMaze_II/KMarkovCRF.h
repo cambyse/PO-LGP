@@ -83,7 +83,8 @@ public:
     );
 
     void clear_data() {
-        // todo what to do here!?!
+        delete instance_data;
+        instance_data = nullptr;
     }
 
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
