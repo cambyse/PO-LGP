@@ -16,22 +16,30 @@
 #include<MT/array.h>
 #include<MT/opengl.h>
 #include<MT/opencv.h>
+#include<MT/videoWriter.h>
 
 #include<string>
 
 // Default folder names
-#define DEFAULT "default"
-#define SNAP    "snap"
+#define DEFAULT     "default"
+#define REC(r)      "/rec_" << r
+#define SNAPSHOTS   "/snapshots"
+#define CAM(c)      "/cam_" << c
 
 using namespace std;
 
 // Key Callback struct
 struct xiRec : OpenGL::GLKeyCall {
-    string dir_name;
-    bool play, rec, snap;
-    bool quit, error;
+    static const uint width = 1280;
+    static const uint height = 1024;
 
-    // what was this for?
+    string session_dir_name;
+    bool play, rec, snap;
+    bool quit, error, *cam_error;
+    bool show_nframe;
+    int nrec, nframe;
+
+    // TODO what was this for?
     bool open;
 
     // Sample for XIMEA API V2.10
@@ -44,19 +52,23 @@ struct xiRec : OpenGL::GLKeyCall {
     byteA *img;
     ofstream file;//("video.raw",std::ios::out|std::ios::binary);
 
+    VideoWriter *v;
+    VideoWriter v2;
+
     // Also,
     // image.height     -> height
     // image.width      -> width
-    // image.bp         -> NOT SURE
+    // image.bp         -> pointer to data
     // image.bp_size    -> NOT SURE
     // image.nframe     -> number of frame
     // image.frm        -> format
 
-    xiRec():    dir_name(DEFAULT),
+    xiRec():    session_dir_name(DEFAULT),
                 play(true), rec(false), snap(false),
-                quit(false), error(false),
+                quit(false), error(false), cam_error(NULL),
+                show_nframe(false),
+                nrec(-1), nframe(-1),
                 open(false),
-                //ndev(0), xiH(NULL), stat(XI_OK) {
                 ndev(0), image(NULL), xiH(NULL), stat(NULL) {};
 
     bool keyCallback(OpenGL &) {
@@ -64,12 +76,38 @@ struct xiRec : OpenGL::GLKeyCall {
         switch(gl.pressedkey) {
             case 'e': // Snapshot
                 break;
+            case 'f': // show frame numbers
+                show_nframe = !show_nframe;
+                if(!show_nframe)
+                    clearViews();
+                break;
             case 'p': // Play stream
+            case ' ':
                 play = !play;
                 break;
             case 'q': // Quit
             case 27:  // Esc
                 quit = true;
+                break;
+            case 'r': // record
+                rec = !rec;
+                if(rec) {
+                    cout << "Starting Rec.." << endl;
+                    nrec++;
+                    openRecDir();
+                    if(!error)
+                        openRecVids();
+                }
+                else {
+                    cout << "Ending Rec.." << endl;
+                    closeRecVids();
+                }
+                break;
+            case 't': // test/text
+                if(strcmp(gl.views(0).text,"ok") == 0)
+                    gl.views(0).text = "";
+                else
+                    gl.views(0).text = "ok";
                 break;
             case 'w': // Save Recording
                 break;
@@ -94,44 +132,70 @@ struct xiRec : OpenGL::GLKeyCall {
                 gl.update();
                 break;
             case 13: // Enter
-                make_snapshot();
+                recordSnapshot();
                 break;
         }
         return true;
     }
 
     void openAll() {
-        openDir();
-        if(!error) {
-            openCam();
-            openCredits();
-            //openFile();
+        openSessionDir();
+        openCam();
+        openCredits();
 
-            // key calls
-            gl.addKeyCall(this);
-        }
+        // key calls
+        gl.addKeyCall(this);
     }
 
-    void openDir() {
+    void openSessionDir() {
         string dir_name_mod = "";
         int dir_num = 0;
 
         // directory creation
-        while(mkdir(STRING(dir_name << dir_name_mod), 0777) == -1)
+        while(mkdir(STRING(session_dir_name << dir_name_mod), 0777) == -1)
             dir_name_mod = STRING("_" << (++dir_num));
-        dir_name = STRING(dir_name << dir_name_mod);
-        cout << "Directory Created: " << dir_name << endl;
+        session_dir_name = STRING(session_dir_name << dir_name_mod);
+        cout << "===| Session Directory Created: " << session_dir_name << endl;
 
-        if(mkdir(STRING(dir_name << "/" << SNAP), 0777) == -1) {
-            cout << "Error during creation of directory \"" << STRING(dir_name << "/" << SNAP) << "\":" << endl;
+        if(mkdir(STRING(session_dir_name << SNAPSHOTS), 0777) == -1) {
+            cout << "Error during creation of directory \"" << STRING(session_dir_name << SNAPSHOTS) << "\":" << endl;
             cout << " - " << strerror(errno) << endl;
             error = true;
             quit = true;
         }
     }
 
-    void openFile() {
-        //file.open("video.raw", std::ios::out | std::ios::binary);
+    void openRecDir() {
+        // directory creation
+        if(mkdir(STRING(session_dir_name << REC(nrec)), 0777) == -1) {
+            cout << "===| Error during creation of directory \"" << STRING(session_dir_name << REC(nrec)) << "\":" << endl;
+            cout << "===|  - " << strerror(errno) << endl;
+            error = true;
+            quit = true;
+        }
+        if(mkdir(STRING(session_dir_name << REC(nrec) << SNAPSHOTS), 0777) == -1) {
+            cout << "===| Error during creation of directory \"" << STRING(session_dir_name << REC(nrec) << SNAPSHOTS) << "\":" << endl;
+            cout << "===|  - " << strerror(errno) << endl;
+            error = true;
+            quit = true;
+        }
+    }
+
+    void openRecVids() {
+        v = new VideoWriter[ndev];
+        for(uint d = 0; d < ndev; d++)
+            v[d].open(image[d].width, image[d].height, STRING(session_dir_name << REC(nrec) << CAM(d) << ".avi"), 20);
+        //v2.open(2*width,height, "video2.avi", 30);
+    }
+
+    void closeRecVids() {
+        /*
+        for(uint d = 0; d << ndev; d++)
+            v[d].close();
+        */
+        delete[] v;
+        //v.close();
+        //v2.close();
     }
 
     static void nothing(void*) {
@@ -171,16 +235,21 @@ struct xiRec : OpenGL::GLKeyCall {
         xiGetNumberDevices(&ndev);
 
         if(!ndev) {
-            cout << "No camera found" << endl;
+            cout << "===| No camera found" << endl;
             error = true;
             quit = true;
         }
         else {
-            cout << "Cameras found: " << ndev << endl;
+            cout << "===| Cameras found: " << ndev << endl;
             image = new XI_IMG[ndev];
             xiH = new HANDLE[ndev];
             stat = new XI_RETURN[ndev];
-            
+            cam_error = new bool[ndev];
+
+            memset(xiH, 0, ndev*sizeof(HANDLE));
+            memset(stat, XI_OK, ndev*sizeof(XI_RETURN));
+            memset(cam_error, false, ndev*sizeof(bool));
+
             for(uint d = 0; d < ndev; d++) {
                 // add d parameter to checkStatus
                 stat[d] = xiOpenDevice(d, &xiH[d]);
@@ -189,13 +258,8 @@ struct xiRec : OpenGL::GLKeyCall {
                 stat[d] = xiSetParamInt(xiH[d], XI_PRM_EXPOSURE, 10000);
                 checkStatus(d, "xiSetParam (exposure set)");
 
-                stat[d] = xiSetParamInt(xiH[d], XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
+                stat[d] = xiSetParamInt(xiH[d], XI_PRM_IMAGE_DATA_FORMAT, XI_RGB24);
                 checkStatus(d, "xiSetParam (format)");
-
-                /*
-                stat[d] = xiSetParamInt(xiH[d], XI_PRM_DOWNSAMPLING, 2);
-                checkStatus(d, "xiSetParam (downsampling)");
-                */
 
                 float min_fps, max_fps;
                 xiGetParamFloat(xiH[d], XI_PRM_FRAMERATE XI_PRM_INFO_MIN, &min_fps);
@@ -215,19 +279,14 @@ struct xiRec : OpenGL::GLKeyCall {
                 image[d].bp_size = 0;
 
                 // Log message
-                cout << "Cam " << d << " opened." << endl;
+                cout << "===| Cam " << d << " opened." << endl;
             }
-            cout << "All Cameras (" << ndev << ") opened." << endl;
+            cout << "===| All Cameras (" << ndev << ") opened." << endl;
         }
     }
 
     void closeAll() {
-        //closeFile();
         closeCam();
-    }
-
-    void closeFile() {
-        file.close();
     }
 
     void closeCam() {
@@ -250,11 +309,36 @@ struct xiRec : OpenGL::GLKeyCall {
     }
 
     void getImage() {
+        nframe++;
         for(uint d = 0; d < ndev; d++) {
             stat[d] = xiGetImage(xiH[d], 5000, &image[d]);
             checkStatus(d, "xiGetImage");
 
             // Transforming to byteA
+            switch(image[d].frm) {
+                case XI_MONO8:
+                case XI_RAW8:
+                    img[d].referTo((byte*)image[d].bp, image[d].height*image[d].width);
+                    img[d].reshape(image[d].height, image[d].width);
+                    break;
+                case XI_MONO16:
+                case XI_RAW16:
+                    img[d].referTo((byte*)image[d].bp, 2*image[d].height*image[d].width);
+                    img[d].reshape(image[d].height, image[d].width, 2);
+                    break;
+                case XI_RGB24:
+                    img[d].referTo((byte*)image[d].bp, 3*image[d].height*image[d].width);
+                    img[d].reshape(image[d].height, image[d].width, 3);
+                    break;
+                case XI_RGB32:
+                    img[d].referTo((byte*)image[d].bp, 4*image[d].height*image[d].width);
+                    img[d].reshape(image[d].height, image[d].width, 4);
+                    break;
+                case XI_RGB_PLANAR:
+                    cout << "TODO what is RGB PLANAR?!" << endl;
+                    break;
+            }
+            /*
             if(image[d].frm == XI_MONO8) {
                 img[d].referTo((byte*)image[d].bp, image[d].height*image[d].width);
                 img[d].reshape(image[d].height, image[d].width);
@@ -267,29 +351,60 @@ struct xiRec : OpenGL::GLKeyCall {
                 img[d].referTo((byte*)image[d].bp, 3*image[d].height*image[d].width);
                 img[d].reshape(image[d].height, image[d].width, 3);
             }
+            */
         }
     }
 
     void playStream() {
         if(play)
             gl.update();
-    }
-
-    void recordStream() {
-        if(rec) {
+        if(show_nframe) {
             for(uint d = 0; d < ndev; d++) {
-                //write to raw video
-                if(image[d].frm == XI_MONO8)
-                    file.write((char*)image[d].bp, image[d].height*image[d].width);
-                else if(image[d].frm == XI_RAW8)
-                    file.write((char*)image[d].bp, image[d].height*image[d].width);
-                else if(image[d].frm == XI_RGB24)
-                     file.write((char*)image[d].bp, 3*image[d].height*image[d].width);
+                gl.views(d).text << "nframe: " << nframe << endl;
+                gl.views(d).text << "cam_nframe: " << image[d].nframe << endl;
             }
         }
     }
 
-    void make_snapshot() {
+    void recordStream() {
+        if(rec) {
+            for(uint d = 0; d < ndev; d++)
+                v[d].addFrame(img[d]);
+            //v2.addFrameFromOpengl(gl);
+
+            /*
+            for(uint d = 0; d < ndev; d++) {
+                //write to raw video
+                switch(image[d].frm) {
+                    case XI_MONO8:
+                    case XI_RAW8:
+                        file.write((char*)image[d].bp, image[d].height*image[d].width);
+                        break;
+                    case XI_MONO16:
+                    case XI_RAW16:
+                        file.write((char*)image[d].bp, 2*image[d].height*image[d].width);
+                        break;
+                    case XI_RGB24:
+                        file.write((char*)image[d].bp, 3*image[d].height*image[d].width);
+                        break;
+                    case XI_RGB32:
+                        file.write((char*)image[d].bp, 4*image[d].height*image[d].width);
+                        break;
+                    case XI_RGB_PLANAR:
+                        cout << "TODO what is RGB PLANAR?!" << endl;
+                        break;
+                }
+            }
+            */
+        }
+    }
+
+    void clearViews() {
+        for(int d = 0; d < ndev; d++)
+            gl.views(d).text.clear();
+    }
+
+    void recordSnapshot() {
         /*
         //return STRING("snap_"<<frame_num);
         if(cam.snapshot) {
@@ -330,6 +445,7 @@ struct xiRec : OpenGL::GLKeyCall {
             cout << "Error after " << place << " (" << stat << ")" << endl;
             //closeFile();
             closeCam();
+            cam_error[d] = true;
             error = true;
             quit = true;
         }
@@ -344,29 +460,38 @@ int main(int argc, char** argv){
     xiRec cam;
 
     if(argc != 2)
-        cam.dir_name = DEFAULT;
+        cam.session_dir_name = DEFAULT;
     else
-        cam.dir_name = string(argv[1]);
+        cam.session_dir_name = string(argv[1]);
     
     cam.openAll();
-    if(!cam.error)
-        cam.startCam();
+    if(cam.error) {
+        cout << "===| Error Opening Something." << endl;
+        exit(-1);
+    }
 
+    cam.startCam();
     cam.getImage();
-    cout << "cam.image[0].width = " << cam.image[0].width << endl;
-    cout << "cam.image[0].height = " << cam.image[0].height << endl;
+    cout << "===| cam.image[0].width = " << cam.image[0].width << endl;
+    cout << "===| cam.image[0].height = " << cam.image[0].height << endl;
     while(!cam.quit) {
         cam.getImage();
         cam.playStream();
-        //cam.recordStream();
+        cam.recordStream();
     }
-    cout << "Quitting." << endl;
+    cout << "===| Quitting." << endl;
 
-    cout << "Closing All." << endl;
+    cout << "===| Closing All." << endl;
     cam.closeAll();
 
-    // TODO make error dynamic array
-    cout << "Error = " << cam.error << endl;
+    if(cam.error) {
+        cout << "===| Any Cam: Error." << endl;
+        for(uint d = 0; d < cam.ndev; d++)
+            if(cam.cam_error[d])
+                cout << "===| Cam " << d << ": Error." << endl;
+    }
+    else
+        cout << "===| No Cam Error." << endl;
 
     return 0;
 }
