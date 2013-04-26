@@ -322,20 +322,20 @@ dlauum = multiply L'*L
 #include "array.h"
 void blas_MM(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
 void blas_MsymMsym(arr& X, const arr& A, const arr& B) { innerProduct(X, A, B); };
-void blas_A_At(arr& X, const arr& A) {NICO}
-void blas_At_A(arr& X, const arr& A) {NICO}
-void lapack_cholesky(arr& C, const arr& A) {NICO;}
-uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A) {NICO};
-void lapack_LU(arr& LU, const arr& A) {NICO};
-void lapack_RQ(arr& R, arr &Q, const arr& A) {NICO};
-void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {NICO};
-bool lapack_isPositiveSemiDefinite(const arr& symmA) {NICO};
-void lapack_inverseSymPosDef(arr& Ainv, const arr& A) {NICO};
+void blas_A_At(arr& X, const arr& A) { NICO }
+void blas_At_A(arr& X, const arr& A) { NICO }
+void lapack_cholesky(arr& C, const arr& A) { NICO }
+uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A) { NICO };
+void lapack_LU(arr& LU, const arr& A) { NICO };
+void lapack_RQ(arr& R, arr &Q, const arr& A) { NICO };
+void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) { NICO };
+bool lapack_isPositiveSemiDefinite(const arr& symmA) { NICO };
+void lapack_inverseSymPosDef(arr& Ainv, const arr& A) { NICO };
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   arr invA;
   inverse(invA, A);
   x = invA*b;
 };
-double lapack_determinantSymPosDef(const arr& A){NICO};
-void lapack_mldivide(arr& X, const arr& A, const arr& b) {NICO};
+double lapack_determinantSymPosDef(const arr& A){ NICO };
+void lapack_mldivide(arr& X, const arr& A, const arr& b) { NICO };
 #endif

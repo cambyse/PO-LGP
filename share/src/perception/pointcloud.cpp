@@ -67,13 +67,13 @@ struct sObjectFitter{
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_CYLINDER);
     seg.setMethodType (pcl::SAC_RANSAC);
-    double ndw = biros().getParameter<double>("CylNormalDistanceWeight", p, 0.07);
+    double ndw = biros().getParameter<double>("CylNormalDistanceWeight", 0.07, p);
     seg.setNormalDistanceWeight (ndw);
     seg.setMaxIterations (100);
-    double dt = biros().getParameter<double>("CylDistanceThreshold", p, 0.01);
+    double dt = biros().getParameter<double>("CylDistanceThreshold", 0.01, p);
     seg.setDistanceThreshold (dt);
-    double minRadius = biros().getParameter<double>("MinSphereRadius", p, 0.01);
-    double maxRadius = biros().getParameter<double>("MaxSphereRadius", p, 0.1);
+    double minRadius = biros().getParameter<double>("MinSphereRadius", 0.01, p);
+    double maxRadius = biros().getParameter<double>("MaxSphereRadius", 0.1, p);
     seg.setRadiusLimits (minRadius, maxRadius);
     seg.setInputCloud (cloud);
     seg.setInputNormals (normals);
@@ -82,7 +82,7 @@ struct sObjectFitter{
     pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
     seg.segment (*inliers_cylinder, *coefficients_cylinder);
 
-    uint minCloudSize = biros().getParameter<int>("minCloudSize", p, 500);
+    uint minCloudSize = biros().getParameter<int>("minCloudSize", 500, p);
     if (inliers_cylinder->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -101,10 +101,10 @@ struct sObjectFitter{
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_SPHERE);
     seg.setMethodType (pcl::SAC_RANSAC);
-    double ndw = biros().getParameter<double>("SphereNormalDistanceWeight", p, 10);
+    double ndw = biros().getParameter<double>("SphereNormalDistanceWeight", 10, p);
     seg.setNormalDistanceWeight (ndw);
     seg.setMaxIterations (100);
-    double dt = biros().getParameter<double>("SphereDistanceThreshold", p, .0005);
+    double dt = biros().getParameter<double>("SphereDistanceThreshold", .0005, p);
     seg.setDistanceThreshold (dt);
     seg.setRadiusLimits (0.01, 0.1);
     seg.setInputCloud (cloud);
@@ -113,7 +113,7 @@ struct sObjectFitter{
     pcl::PointIndices::Ptr inliers_sphere(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients_sphere(new pcl::ModelCoefficients);
     seg.segment (*inliers_sphere, *coefficients_sphere);
-    uint minCloudSize = biros().getParameter<int>("minCloudSize", p, 500);
+    uint minCloudSize = biros().getParameter<int>("minCloudSize", 500, p);
     if (inliers_sphere->indices.size() < minCloudSize) {
       object.reset();   
       return 0;
@@ -190,7 +190,7 @@ struct sObjectFitter{
     }
     //if rest points are enough create new job
 
-    uint minCloudSize = biros().getParameter<int>("minCloudSize", p, 500);
+    uint minCloudSize = biros().getParameter<int>("minCloudSize", 500, p);
     if (cloud->size() - inliers->indices.size() > minCloudSize) {
       anotherJob = createNewJob(cloud, inliers);
       return true;
@@ -247,7 +247,7 @@ void ObjectClusterer::step() {
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance(0.01);
-  int minCloudSize = biros().getParameter<int>("minCloudSize", this, 500);
+  int minCloudSize = biros().getParameter<int>("minCloudSize", 500, this);
   ec.setMinClusterSize(minCloudSize);
   ec.setMaxClusterSize(25000);
   ec.setSearchMethod(tree);
@@ -480,7 +480,8 @@ void moveObject(intA& used, const ShapeL& objects, const ors::Vector& pos, const
   int max_index = -1;
   for(uint i=0; i<objects.N; ++i) {
     if(used.contains(i)) continue;
-    double diff = norm(arr((objects(i)->X.pos - pos).p, 3));
+    ors::Vector diff_ = objects(i)->X.pos - pos;
+    double diff = norm(ARR(diff_.x, diff_.y, diff_.z));
     if(diff < max) {
       max = diff;
       max_index = i;
@@ -539,4 +540,4 @@ void ObjectTransformator::step() {
 PointCloudVar::PointCloudVar(const char *name) : Variable(name), point_cloud(new pcl::PointCloud<PointT>()) { 
   reg_point_cloud();
 }
-#endif
+#endif // PCL

@@ -357,7 +357,7 @@ struct SURFer:SURFer_Base {
 
     std::vector<cv::KeyPoint> keypoints;
     std::vector<float> descriptors;
-    (*surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
+    //(*surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
 
     display=gray;
     cv::Mat ref = cvMAT(display);

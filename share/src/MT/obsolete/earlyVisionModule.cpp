@@ -241,8 +241,8 @@ void EarlyVisionModule::close(){
 }
 
 #else //def MT_CUDA
-void EarlyVisionModule::step(){ NICO; }
-void EarlyVisionModule::open(){ NICO; }
-void EarlyVisionModule::close(){ NICO; }
+void EarlyVisionModule::step(){ NICO }
+void EarlyVisionModule::open(){ NICO }
+void EarlyVisionModule::close(){ NICO }
 #endif //def MT_CUDA
 

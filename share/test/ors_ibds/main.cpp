@@ -4,8 +4,6 @@
 
 #include "ors_ibds.h"
 
-#include "ors_ibds.cpp"
-
 
 int main(int argc, char **argv) {
   IbdsModule ibds;

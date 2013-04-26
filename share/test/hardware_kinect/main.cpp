@@ -1,3 +1,5 @@
+#ifdef PCL
+
 #include <hardware/kinect.h>
 #include <perception/pointcloud.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -19,3 +21,14 @@ int main(int argc, char **argv) {
   }
 
 }
+
+#else
+
+#include <iostream>
+
+int main(int, char**) {
+  std::cout << "This test needs a working pointcloud library. Abort." << std::endl; 
+  std::cout << "Add PCL = 1 to the app section of your make-config as well as the lib section to activate correct linking against the PCL." << std::endl; 
+}
+
+#endif

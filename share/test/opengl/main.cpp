@@ -98,8 +98,8 @@ void testMesh(){
   for(i=0;i<N;i++) for(j=0;j<N;j++){
     v.x=(double)j-N/2; v.y=(double)i-N/2;
     v.z=-.15*(v.x*v.x+v.y*v.y); //paraboloid
-    //v(2)=((i+j)&1); //up-down surface
-    //v(2)=2.*rnd.uni(); //random surface
+    //v.z=((i+j)&1); //up-down surface
+    //v.z=2.*rnd.uni(); //random surface
     mesh.V(i*N+j,0)=v.x; mesh.V(i*N+j,1)=v.y; mesh.V(i*N+j,2)=v.z; //insert v in the list mesh.V
   }
 

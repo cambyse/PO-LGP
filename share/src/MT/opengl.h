@@ -304,7 +304,6 @@ struct glUI:OpenGL::GLHoverCall,OpenGL::GLClickCall {
   
   bool hoverCallback(OpenGL&);
   bool clickCallback(OpenGL&);
-  
 };
 
 void glDrawUI(void *p);

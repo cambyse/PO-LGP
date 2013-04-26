@@ -84,6 +84,7 @@ template T trace(const MT::Array<T>& v);
 template MT::Array<T> log(const MT::Array<T>& v);
 template MT::Array<T> exp(const MT::Array<T>& v);
 template MT::Array<T> atan(const MT::Array<T>& v);
+template MT::Array<T> pow(const MT::Array<T>& v,T);
 
 template T minDiag(const MT::Array<T>& v);
 

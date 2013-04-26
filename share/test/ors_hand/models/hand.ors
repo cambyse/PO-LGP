@@ -1,0 +1,83 @@
+body effector { type=0 X=<T t(0 0 .5)> size=[.07 .02 .1 .05] }
+
+body fing1a { type=1 size=[0 0 0 .01] color=[0 0 0]}
+joint (effector fing1a) { from=<T t(.03 0 .05) d(90 0 0 1) d(10 1 0 0)> to=<T d(-90 0 0 1)> }
+body fing1b { type=2 size=[0 0 .02 .01] }
+joint (fing1a fing1b) { to=<T t(0 0 .0125)> }
+body fing1c { type=2 size=[0 0 .02 .01] }
+joint (fing1b fing1c) { from=<T t(0 0 .01)> to=<T t(0 0 .01)> }
+body fing1d { type=2 size=[0 0 .02 .01] }
+joint (fing1c fing1d) { from=<T t(0 0 .01)> to=<T t(0 0 .01)> }
+
+body fing2a { type=1 size=[0 0 0 .01] color=[0 0 0]}
+joint (effector fing2a) { from=<T t(.01 0 .05) d(90 0 0 1) d(3.3 1 0 0)> to=<T d(-90 0 0 1)> }
+body fing2b { type=2 size=[0 0 .025 .01] }
+joint (fing2a fing2b) { to=<T t(0 0 .015)> }
+body fing2c { type=2 size=[0 0 .025 .01] }
+joint (fing2b fing2c) { from=<T t(0 0 .0125)> to=<T t(0 0 .0125)> }
+body fing2d { type=2 size=[0 0 .025 .01] }
+joint (fing2c fing2d) { from=<T t(0 0 .0125)> to=<T t(0 0 .0125)> }
+
+body fing3a { type=1 size=[0 0 0 .01] color=[0 0 0]}
+joint (effector fing3a) { from=<T t(-.01 0 .05) d(90 0 0 1) d(-3.3 1 0 0)> to=<T d(-90 0 0 1)> }
+body fing3b { type=2 size=[0 0 .02 .01] }
+joint (fing3a fing3b) { to=<T t(0 0 .0125)> }
+body fing3c { type=2 size=[0 0 .02 .01] }
+joint (fing3b fing3c) { from=<T t(0 0 .01)> to=<T t(0 0 .01)> }
+body fing3d { type=2 size=[0 0 .02 .01] }
+joint (fing3c fing3d) { from=<T t(0 0 .01)> to=<T t(0 0 .01)> }
+
+body fing4a { type=1 size=[0 0 0 .01] color=[0 0 0]}
+joint (effector fing4a) { from=<T t(-.03 0 .05) d(90 0 0 1) d(-10 1 0 0)> to=<T d(-90 0 0 1)> }
+body fing4b { type=2 size=[0 0 .015 .01] }
+joint (fing4a fing4b) { to=<T t(0 0 .009)> }
+body fing4c { type=2 size=[0 0 .015 .01] }
+joint (fing4b fing4c) { from=<T t(0 0 .0075)> to=<T t(0 0 .0075)> }
+body fing4d { type=2 size=[0 0 .015 .01] }
+joint (fing4c fing4d) { from=<T t(0 0 .0075)> to=<T t(0 0 .0075)> }
+
+## thumb
+
+body fing0a { type=1 size=[0 0 0 .01] color=[0 0 0]}
+joint (effector fing0a) { from=<T t(.035 0 -.03) d(90 0 0 1)> to=<T d(-90 0 0 1)> }
+body fing0b { type=2 size=[0 0 .03 .01] }
+joint (fing0a fing0b) { from=<T t(0 0 0) d(-90 0 1 0)> Q=<T d(0 1 0 0)> to=<T d(120 0 1 0) t(0 0 .02)> }
+body fing0c { type=2 size=[0 0 .02 .01] }
+joint (fing0b fing0c) { from=<T t(0 0 .02)> Q=<T d(0 1 0 0)> to=<T t(0 0 .01)> }
+body fing0d { type=2 size=[0 0 .02 .01] }
+joint (fing0c fing0d) { from=<T t(0 0 .01)> Q=<T d(0 1 0 0)> to=<T t(0 0 .01)> }
+
+## other bodies
+
+## sensor bodies
+body stip0 { type=1 size=[0 0 0 .0075] color=[1 0 0]}
+body stip1 { type=1 size=[0 0 0 .0075] color=[1 0 0]}
+body stip2 { type=1 size=[0 0 0 .0075] color=[1 0 0]}
+body stip3 { type=1 size=[0 0 0 .0075] color=[1 0 0]}
+body stip4 { type=1 size=[0 0 0 .0075] color=[1 0 0]}
+
+## orthogonal bodies
+body sorthoP0 { type=1 size=[0 0 0 .003] color=[1 0 0]}
+body sorthoP1 { type=1 size=[0 0 0 .003] color=[1 0 0]}
+body sorthoP2 { type=1 size=[0 0 0 .003] color=[1 0 0]}
+body sorthoP3 { type=1 size=[0 0 0 .003] color=[1 0 0]}
+body sorthoP4 { type=1 size=[0 0 0 .003] color=[1 0 0]}
+
+body morthoP0 { type=1 size=[0 0 0 .005] color=[0 0 1]}
+body morthoP1 { type=1 size=[0 0 0 .005] color=[0 0 1]}
+body morthoP2 { type=1 size=[0 0 0 .005] color=[0 0 1]}
+body morthoP3 { type=1 size=[0 0 0 .005] color=[0 0 1]}
+body morthoP4 { type=1 size=[0 0 0 .005] color=[0 0 1]}
+
+body sorthoV0 { type=2 size=[0 0 .025 .0005] color=[1 0 0]}
+body sorthoV1 { type=2 size=[0 0 .025 .0005] color=[1 0 0]}
+body sorthoV2 { type=2 size=[0 0 .025 .0005] color=[1 0 0]}
+body sorthoV3 { type=2 size=[0 0 .025 .0005] color=[1 0 0]}
+body sorthoV4 { type=2 size=[0 0 .025 .0005] color=[1 0 0]}
+
+body morthoV0 { type=2 size=[0 0 .025 .001] color=[0 0 1]}
+body morthoV1 { type=2 size=[0 0 .025 .001] color=[0 0 1]}
+body morthoV2 { type=2 size=[0 0 .025 .001] color=[0 0 1]}
+body morthoV3 { type=2 size=[0 0 .025 .001] color=[0 0 1]}
+body morthoV4 { type=2 size=[0 0 .025 .001] color=[0 0 1]}
+

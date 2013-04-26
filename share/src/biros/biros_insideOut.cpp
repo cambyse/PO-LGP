@@ -369,10 +369,10 @@ notes:
 
 #else //MT_GTK
 
-InsideOut::InsideOut(GtkWidget* container):View(){NICO}
+InsideOut::InsideOut(GtkWidget* container):View(){ NICO }
 InsideOut::~InsideOut(){}
-void InsideOut::gtkNew(GtkWidget *container){NICO}
-void InsideOut::gtkUpdate(){NICO}
+void InsideOut::gtkNew(GtkWidget *container){ NICO }
+void InsideOut::gtkUpdate(){ NICO }
 
 #endif
 /** @} */

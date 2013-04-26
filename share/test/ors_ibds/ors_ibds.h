@@ -1,9 +1,9 @@
 #ifndef MT_ors_ibds_h
 #define MT_ors_ibds_h
 
-#include <DynamicSimulation/Simulation.h>
-#include <DynamicSimulation/RigidBody.h>
+#include <MT/ors.h>
 
+namespace IBDS{ class Simulation; class RigidBody; }
 
 struct IbdsModule {
   IBDS::Simulation *sim;
@@ -12,11 +12,10 @@ struct IbdsModule {
   
   IBDS::RigidBody *floor;
   
-  ~IbdsModule() { delete sim; }
+  ~IbdsModule();
   
   void create(ors::Graph &C);
   void step();
-
 
 };
 

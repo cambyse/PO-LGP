@@ -1,3 +1,6 @@
+#include "ors_ibds.h"
+
+#ifdef MT_IBDS
 
 #include <DynamicSimulation/Simulation.h>
 #include <DynamicSimulation/RigidBody.h>
@@ -12,8 +15,6 @@
 #include <Math/SimMath.h>
 #include <DynamicSimulation/MeshGeometry.h>
 
-#include "ors_ibds.h"
-
 using namespace IBDS;
 
 //helpers
@@ -21,6 +22,8 @@ static int controllerIndex = Simulation::TIMESTEP_ITERATIVE;
 Geometry* createCubeGeometry (Real sx, Real sy, Real sz, float r, float g, float b, float a);
 void addCollisionCube(RigidBody *b, Real sx, Real sy, Real sz);
 void addCollisionSphere (RigidBody *b, Real radius);
+
+~IbdsModule::IbdsModule() { delete sim; }
 
 
 void IbdsModule::create(ors::Graph& C) {
@@ -325,4 +328,17 @@ void drawEnv(void*) {
   glStandardLight(NULL);
   glDrawFloor(4.,1,1,1);
 }
+
+#endif
+
+
+#else //MT_IBDS
+
+void IbdsModule::create(ors::Graph& C) { NICO }
+void IbdsModule::step(){ NICO }
+
+#include <MT/array_t.cxx>
+template MT::Array<IBDS::RigidBody*>::Array();
+template MT::Array<IBDS::RigidBody*>::~Array();
+
 #endif

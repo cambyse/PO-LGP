@@ -5,6 +5,9 @@
 *.exe
 *.swp
 
+tags
+.cccc
+
 *.kdev4
 vc60.idb
 .*.config
@@ -27,6 +30,9 @@ MT.log
 
 
 %% PECULIAR ???
+*.zip
+*_doc
+html
 *.tgz
 *_doc
 

@@ -171,9 +171,11 @@ void ANN::map(arr& y, const arr& x, const arr& Y) {
 }
 
 #else //MT_ANN
-ANN::ANN() {NICO}
-void ANN::append(const arr& x) {NICO}
-void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) {NICO}
-uint ANN::getNN(const arr& x, double eps, bool verbose) {NICO}
-ANN::~ANN() {NICO}
+ANN::ANN() { NICO }
+void ANN::append(const arr& x) { NICO }
+void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) { NICO }
+uint ANN::getNN(const arr& x, double eps, bool verbose) { NICO }
+void ANN::getNN(arr& xx             , const arr& x, uint k, double eps, bool verbose) { NICO }
+void ANN::setX(const arr& _XX) { NICO }
+ANN::~ANN() { NICO }
 #endif
