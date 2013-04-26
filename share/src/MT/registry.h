@@ -13,11 +13,11 @@
 
 KeyValueGraph& registry();
 
-#define REGISTER_ITEM(Type, key, value) \
-  Item_typed<Type > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
+#define REGISTER_ITEM(T, key, value) \
+  Item_typed<T > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
 
-#define REGISTER_ITEM2(Type, key1, key2, value) \
-  Item_typed<Type > key1##_##key2##_RegistryEntry(ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, &registry());
+#define REGISTER_ITEM2(T, key1, key2, value) \
+  Item_typed<T > key1##_##key2##_RegistryEntry(ARRAY<MT::String>(MT::String(#key1),MT::String(#key2)), ItemL(), value, &registry());
 
 
 //===========================================================================
@@ -92,15 +92,13 @@ struct Type_typed:Type{
 //-- use these macros to register types in cpp files
 
 #define KO ,
-#define REGISTER_TYPE(Type) \
-  REGISTER_ITEM2(Type_typed<Type KO void>, Decl_Type, Type, new Type_typed<Type KO void>(NULL,NULL));
-//  REGISTER_ITEM2(Type*, type, Type, NULL)
+#define REGISTER_TYPE(T) \
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO void>(NULL,NULL));
 
-#define REGISTER_TYPE_Key(Key, Type) \
-  REGISTER_ITEM2(Type_typed<Type KO void>, Decl_Type, Key, new Type_typed<Type KO void>(NULL,NULL));
-//  REGISTER_ITEM2(Type*, type, Key, NULL);
+#define REGISTER_TYPE_Key(Key, T) \
+  REGISTER_ITEM2(Type, Decl_Type, Key, new Type_typed<T KO void>(NULL,NULL));
 
-#define REGISTER_TYPE_DERIVED(Type, Base) \
-  REGISTER_ITEM2(Type_typed<Type KO Base>, Decl_Type, Type, new Type_typed<Type KO Base>(#Base,NULL));
+#define REGISTER_TYPE_DERIVED(T, Base) \
+  REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO Base>(#Base,NULL));
 
 #endif

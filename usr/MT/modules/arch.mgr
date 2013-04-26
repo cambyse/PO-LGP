@@ -1,0 +1,5 @@
+module ImageProducer{ loop=0.05 } %loops with 50msec
+module ImageConsumer{ access rgb=image }
+
+
+group
