@@ -2,7 +2,7 @@
 
 #include <QTime>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 2
 #include "../debug.h"
 
 using util::INVALID;
@@ -162,7 +162,7 @@ InstanceIt Instance::it() {
     return InstanceIt(this);
 }
 
-ConstInstanceIt Instance::it() const {
+ConstInstanceIt Instance::const_it() const {
     return ConstInstanceIt(this);
 }
 
@@ -197,7 +197,7 @@ ConstInstanceIt Instance::const_first() const {
     while(current_instance->get_previous()!=nullptr) {
         current_instance = current_instance->get_previous();
     }
-    return current_instance->it();
+    return current_instance->const_it();
 }
 
 ConstInstanceIt Instance::const_last() const {
@@ -205,7 +205,7 @@ ConstInstanceIt Instance::const_last() const {
     while(current_instance->get_next()!=nullptr) {
         current_instance = current_instance->get_next();
     }
-    return current_instance->it();
+    return current_instance->const_it();
 }
 
 void Instance::set_container() {
@@ -593,6 +593,7 @@ InstanceIt & InstanceIt::operator++() {
         this->invalidate();
     } else {
         this_instance = this_instance->get_non_const_next();
+        DEBUG_OUT(2,"Go forward one step to " << *this_instance);
     }
     return *this;
 }
@@ -602,6 +603,7 @@ InstanceIt & InstanceIt::operator--() {
         this->invalidate();
     } else {
         this_instance = this_instance->get_non_const_previous();
+        DEBUG_OUT(2,"Go backwards one step to " << *this_instance);
     }
     return *this;
 }
@@ -620,6 +622,7 @@ InstanceIt & InstanceIt::operator+=(const int& c) {
                 this->invalidate();
             } else {
                 (*this)=InstanceIt((*(this_instance->container))[this_instance->container_idx+c]);
+                DEBUG_OUT(2,"Jump forward " << c << " steps to " << *this_instance);
             }
         } else { // use standard method (iterative pointer)
             ++(*this);
@@ -647,6 +650,7 @@ InstanceIt & InstanceIt::operator-=(const int& c) {
                 this->invalidate();
             } else {
                 (*this)=InstanceIt((*(this_instance->container))[this_instance->container_idx-c]);
+                DEBUG_OUT(2,"Jump backwards " << c << " steps to " << *this_instance);
             }
         } else { // use standard method (iterative pointer)
             --(*this);
@@ -719,6 +723,7 @@ ConstInstanceIt & ConstInstanceIt::operator++() {
         this->invalidate();
     } else {
         this_instance = this_instance->get_next();
+        DEBUG_OUT(2,"Go forward one step to " << *this_instance);
     }
     return *this;
 }
@@ -728,6 +733,7 @@ ConstInstanceIt & ConstInstanceIt::operator--() {
         this->invalidate();
     } else {
         this_instance = this_instance->get_previous();
+        DEBUG_OUT(2,"Go backwards one step to " << *this_instance);
     }
     return *this;
 }
@@ -741,10 +747,11 @@ ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
         this->invalidate();
         return (*this);
     } else {
-        if(this_instance->container!=nullptr && this_instance->container_idx!=this_instance->container->size()-1) { // use container (random access)
+        if(this_instance->container!=nullptr && this_instance->container_idx!=(idx_t)this_instance->container->size()-1) { // use container (random access)
             if(this_instance->container_idx+c>=(idx_t)this_instance->container->size()) {
                 int rest = c - this_instance->container->size() + this_instance->container_idx + 1;
                 (*this)=ConstInstanceIt(this_instance->container->back());
+                DEBUG_OUT(2,"Jump forward " << rest << " steps to " << *this_instance);
                 return (*this)+=rest;
             } else {
                 (*this)=ConstInstanceIt((*(this_instance->container))[this_instance->container_idx+c]);
@@ -774,6 +781,7 @@ ConstInstanceIt & ConstInstanceIt::operator-=(const int& c) {
             if(this_instance->container_idx - c < 0) {
                 int rest = c - this_instance->container_idx;
                 (*this)=ConstInstanceIt(this_instance->container->front());
+                DEBUG_OUT(2,"Jump backwards " << rest << " steps to " << *this_instance);
                 return (*this)-=rest;
             } else {
                 (*this)=ConstInstanceIt((*(this_instance->container))[this_instance->container_idx-c]);

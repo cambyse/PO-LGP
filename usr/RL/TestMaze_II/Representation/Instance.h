@@ -48,7 +48,7 @@ public:
     Instance * append_instance        (const Action& a, const State& s, const Reward& r);
     Instance * prepend_instance       (const Action& a, const State& s, const Reward& r);
     InstanceIt it();
-    ConstInstanceIt it() const;
+    ConstInstanceIt const_it() const;
     InstanceIt first();
     InstanceIt last();
     ConstInstanceIt const_first() const;
