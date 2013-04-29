@@ -4,7 +4,6 @@ QT += core \
     gui \
     svg
 HEADERS += \
-    TestClass.h \
     ../Representation/Action.h \
     ../Representation/State.h \
     ../Representation/Reward.h \
@@ -12,7 +11,6 @@ HEADERS += \
     ../util.h
 SOURCES += \
     Instance_Example.cpp \
-    TestClass.cpp \
     ../Representation/Action.cpp \
     ../Representation/State.cpp \
     ../Representation/Reward.cpp \
