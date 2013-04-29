@@ -1,5 +1,3 @@
-/** @file This file implements the Instance classe. */
-
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
@@ -33,7 +31,6 @@ public:
     State state;
     Reward reward;
 
-    static Instance * create(const Instance&);
     static Instance * create(
         const Action& a = Action(),
         const State& s = State(),
@@ -90,6 +87,11 @@ protected:
     Instance(const Instance&);
     Instance & operator=(const Instance&);
 };
+
+/** \example Instance_Example.cpp This is an an example of how to use the
+ * Instance class. It shows different ways of generating sequences of instances
+ * and iterating through them. */
+
 
 /** \brief Instance iterator object. */
 class InstanceIt: public util::InvalidAdapter<InstanceIt> {

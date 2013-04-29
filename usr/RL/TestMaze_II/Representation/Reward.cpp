@@ -81,7 +81,7 @@ const RewardIt RewardIt::last() {
 void RewardIt::check_for_invalid() {
     if( value<min_reward ||
         value>max_reward ||
-        std::fmod(value,reward_increment)!=std::fmod(min_reward,reward_increment) ) {
+        fmod(value,reward_increment)!=fmod(min_reward,reward_increment) ) {
         this->invalidate();
     }
 }

@@ -2,16 +2,12 @@
 
 #include <QTime>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "../debug.h"
 
 using util::INVALID;
 using std::cout;
 using std::endl;
-
-Instance * Instance::create(const Instance& i) {
-    return new Instance(i);
-}
 
 Instance * Instance::create(
     const Action& a,
@@ -27,6 +23,7 @@ Instance * Instance::create(
 }
 
 Instance::~Instance() {
+
     container_t garbage;
     Instance *current_instance, *next, *previous;
 
@@ -501,6 +498,8 @@ void Instance::unset_container_elements() {
 }
 
 void Instance::fill_container(Instance * ins) {
+    DEBUG_OUT(2,"Filling container..." );
+
     // get index and container
     idx_t idx = ins->container_idx;
     container_t * used_container = ins->container;

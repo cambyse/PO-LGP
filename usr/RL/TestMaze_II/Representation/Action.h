@@ -1,9 +1,7 @@
-/** @file This file implements the Action and ActionIt classes. */
-
 #ifndef ACTION_H_
 #define ACTION_H_
 
-#include "util.h"
+#include "../util.h"
 
 #include <ostream>
 

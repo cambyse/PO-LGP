@@ -27,17 +27,21 @@ public:
         NodeInfo(
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
-                const instance_t&,
+                const instance_t *,
                 const action_t&,
                 const value_t&,
-                const value_t&
+                const value_t&,
+                const bool& del = false
         );
-        ~NodeInfo() { delete instance; }
+        NodeInfo(const NodeInfo&);
+        ~NodeInfo();
+        NodeInfo& operator=(const NodeInfo&);
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        instance_t * instance;
+        const instance_t * instance;
         action_t action;
         value_t upper_value_bound, lower_value_bound;
+        bool delete_instance;
     };
 
     struct ArcInfo {
@@ -233,7 +237,7 @@ protected:
 
 template < class Model >
 void LookAheadSearch::build_tree(
-        const instance_t * root,
+        const instance_t * root_instance,
         const Model& model,
         probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
         const size_t& max_node_counter
@@ -250,13 +254,12 @@ void LookAheadSearch::build_tree(
     node_info_map[root_node] = NodeInfo(
             STATE,
             NOT_EXPANDED,
-            *root,
+            root_instance,
             action_t::NULL_ACTION,
             get_upper_value_bound(),
             get_lower_value_bound()
     );
 
-    // expand root node
     expand_leaf_node(root_node,model,prediction);
     update_state_node(root_node);
 
@@ -322,7 +325,7 @@ void LookAheadSearch::expand_leaf_node(
         DEBUG_OUT(0,"Error: trying to expand state node with expansion other than NOT_EXPANDED");
     }
 
-    instance_t * graph_state_from = node_info_map[state_node].instance;
+    const instance_t * instance_from = node_info_map[state_node].instance;
 
     // create action nodes
     for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
@@ -333,7 +336,7 @@ void LookAheadSearch::expand_leaf_node(
         node_info_map[action_node] = NodeInfo(
                 ACTION,
                 NOT_EXPANDED,
-                *graph_state_from,
+                instance_from,
                 action,
                 get_upper_value_bound(),
                 get_lower_value_bound()
@@ -399,16 +402,16 @@ void LookAheadSearch::expand_action_node(
                 node_info_map[new_state_node] = NodeInfo(
                         STATE,
                         NOT_EXPANDED,
-                        *new_instance,
+                        new_instance,
                         action_t::NULL_ACTION, // not defined for state nodes
                         get_upper_value_bound(),
-                        get_lower_value_bound()
+                        get_lower_value_bound(),
+                        false // delete with node TODO change to true!!!
                 );
                 arc_t action_to_state_arc = graph.addArc(action_node,new_state_node);
                 arc_info_map[action_to_state_arc].prob = prob;
                 arc_info_map[action_to_state_arc].expected_reward = new_reward;
             }
-            delete new_instance;
         }
 
         if(new_state_node!=lemon::INVALID){

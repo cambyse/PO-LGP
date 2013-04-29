@@ -1,5 +1,3 @@
-/** @file This file implements the Reward and RewardIt classes. */
-
 #ifndef REWARD_H_
 #define REWARD_H_
 

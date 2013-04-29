@@ -248,10 +248,10 @@ void Maze::render_initialize(QGraphicsView * view) {
     // render agent
     if(!agent) {
         agent = new QGraphicsSvgItem("./agent.svg");
-        QSizeF s = agent->boundingRect().size();
-        agent->setTransformOriginPoint(s.width()/2,s.height()/2);
         agent->setScale(0.2);
+        QSizeF s = agent->boundingRect().size();
         agent->setPos(current_state.x()-s.width()/2, current_state.y()-s.height()/2);
+        agent->setElementId("normal");
     }
 
     scene->addItem(agent);
@@ -264,7 +264,8 @@ void Maze::render_update(QGraphicsView * view) {
 //    button->setElementId(current_state==button_state ? "active" : "passive");
 //    smiley->setElementId( reward_active ? "active" : "passive");
     QSizeF s = agent->boundingRect().size();
-    agent->setPos(current_state.x()-s.width()/2, current_state.y()-s.height()/2);
+    agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
+    agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
     rescale_scene(view);
 }
 
@@ -333,6 +334,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     DEBUG_OUT(2,"    Action: " << action);
     DEBUG_OUT(2,"     State: " << state_to);
     DEBUG_OUT(2,"    Reward: " << reward);
+    DEBUG_OUT(2,"    ------------------------------");
 
     // check for matching reward
     reward_t matching_reward = reward_t::min_reward;
@@ -340,19 +342,18 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
-        state_t state_back_then = (instanceIt_from + (rewards[idx][TIME_DELAY]-1))->state;
+        state_t state_back_then = (instanceIt_from - (rewards[idx][TIME_DELAY]-1))->state;
         state_t state_now = state_to;
         reward_t single_reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
+        DEBUG_OUT(2,"    reward index               :" << idx);
+        DEBUG_OUT(2,"    time delay                 :" << rewards[idx][TIME_DELAY]);
+        DEBUG_OUT(2,"    activation  (target/actual):" << activate_state << "/" << state_back_then);
+        DEBUG_OUT(2,"    reception   (target/actual):" << receive_state << "/" << state_now);
+        DEBUG_OUT(2,"    reward (single/accumulated):" << single_reward << "/" << reward);
+        DEBUG_OUT(2,"    ------------------------------");
         if( activate_state==state_back_then && receive_state==state_now) {
             matching_reward += single_reward;
             DEBUG_OUT(2,"    Increment matching reward by " << single_reward << " to " << matching_reward);
-        } else {
-            DEBUG_OUT(2,"    rew_idx:" << idx <<
-                    " act.st.:" << activate_state << "/" << state_back_then <<
-                    ", rec.st.:" << receive_state << "/" << state_now <<
-                    ", dt:" << rewards[idx][TIME_DELAY] <<
-                    ", rew:" << single_reward << "/" << reward
-                    );
         }
     }
 

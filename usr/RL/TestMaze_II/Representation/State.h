@@ -1,5 +1,3 @@
-/** @file This file implements the State and StateIt classes. */
-
 #ifndef STATE_H_
 #define STATE_H_
 

@@ -28,28 +28,57 @@ LookAheadSearch::NodeInfo::NodeInfo():
         instance(nullptr),
         action(action_t()),
         upper_value_bound(0),
-        lower_value_bound(0)
+        lower_value_bound(0),
+        delete_instance(false)
 {}
 
 LookAheadSearch::NodeInfo::NodeInfo(
         const NODE_TYPE& t,
         const EXPANSION_TYPE& e,
-        const instance_t& i,
+        const instance_t * i,
         const action_t& a,
         const value_t& uv,
-        const value_t& lv
+        const value_t& lv,
+        const bool& del
 ):
         type(t),
         expansion(e),
-        instance(nullptr),
+        instance(i),
         action(a),
         upper_value_bound(uv),
-        lower_value_bound(lv)
+        lower_value_bound(lv),
+        delete_instance(del)
 {
-    instance = instance_t::create(i);
     if(lower_value_bound>upper_value_bound) {
         DEBUG_OUT(0,"Error: Lower value bound above upper value bound");
     }
+}
+
+LookAheadSearch::NodeInfo::NodeInfo(const NodeInfo& other):
+    type(other.type),
+    expansion(other.expansion),
+    instance(other.instance),
+    action(other.action),
+    upper_value_bound(other.upper_value_bound),
+    lower_value_bound(other.lower_value_bound),
+    delete_instance(other.delete_instance)
+{}
+
+LookAheadSearch::NodeInfo::~NodeInfo() {
+    if(delete_instance) {
+        delete instance;
+    }
+}
+
+LookAheadSearch::NodeInfo& LookAheadSearch::NodeInfo::operator=(const NodeInfo& other) {
+    type = other.type;
+    expansion = other.expansion;
+    instance = other.instance;
+    action = other.action;
+    upper_value_bound = other.upper_value_bound;
+    lower_value_bound = other.lower_value_bound;
+    delete_instance = other.delete_instance;
+    return (*this);
 }
 
 LookAheadSearch::LookAheadSearch(const double& d):
@@ -660,11 +689,11 @@ void LookAheadSearch::print_node(node_t node) const {
         break;
     case STATE:
         DEBUG_OUT(0, "    type:    " << "STATE" );
-        DEBUG_OUT(0, "    instance:" << node_info_map[node].instance );
+        DEBUG_OUT(0, "    instance:" << *(node_info_map[node].instance) );
         break;
     case ACTION:
         DEBUG_OUT(0, "    type:    " << "ACTION" );
-        DEBUG_OUT(0, "    instance:" << node_info_map[node].instance );
+        DEBUG_OUT(0, "    instance:" << *(node_info_map[node].instance) );
         DEBUG_OUT(0, "    action:  " << node_info_map[node].action );
         break;
     }
