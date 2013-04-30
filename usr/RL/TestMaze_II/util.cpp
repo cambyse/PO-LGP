@@ -7,6 +7,11 @@
 
 #include "util.h"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::flush;
+
 #include <QtCore>
 
 namespace util {
@@ -28,6 +33,32 @@ namespace util {
     bool arg_string(const QString& string_in, const int& n, QString& s_arg_out) {
         s_arg_out = string_in.section(QRegExp("\\s+"),n,n);
         return true;
+    }
+
+    int print_progress(const int& prog, const int& max_prog, const int& width, const char* label, const int& last_prog) {
+        int this_progress = width*prog/max_prog;
+        if(width*prog/max_prog>last_prog) {
+            cout << '\xd' << label << ": |";
+            bool before = true;
+            for(int idx=0; idx<width; ++idx) {
+                if((double)idx/width<(double)prog/max_prog) {
+                    cout << "-";
+                } else {
+                    if(before) {
+                        cout << "o";
+                        before = false;
+                    }
+                    cout << " ";
+                }
+            }
+            if(before) {
+                cout << "o";
+            }
+            cout << "|" << flush;
+            return this_progress;
+        } else {
+            return last_prog;
+        }
     }
 
     double approx_equal_tolerance() { return 1e-10; }

@@ -47,6 +47,8 @@ namespace util {
     template <class T>
         int sgn(T val) { return ( (val < T(0)) ? -1 : ( (val > T(0)) ? 1 : 0 ) ); }
 
+    int print_progress(const int& prog, const int& max_prog, const int& width, const char* label, const int& last_prog = -1);
+
     /** \brief Base class to make a derived class assign-compatible with a type.
      *
      * Overloads assignment and cast operators so that the class can be assigned
