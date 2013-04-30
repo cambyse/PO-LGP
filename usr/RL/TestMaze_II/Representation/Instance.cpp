@@ -22,6 +22,11 @@ Instance * Instance::create(
     return ins;
 }
 
+// Instance * Instance::create(const Instance& i) {
+//     Instance * ins = new Instance(i);
+//     return ins;
+// }
+
 Instance::~Instance() {
 
     container_t garbage;

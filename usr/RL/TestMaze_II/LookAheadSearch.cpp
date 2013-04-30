@@ -93,6 +93,11 @@ LookAheadSearch::~LookAheadSearch() {}
 
 void LookAheadSearch::clear_tree() {
     DEBUG_OUT(1,"Clearing graph");
+    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+        // DEBUG_OUT(0,"Deleting instance of:");
+        // print_node(node);
+        delete node_info_map[node].instance;
+    }
     graph.clear();
     number_of_nodes = 0;
     root_node = INVALID;
@@ -317,13 +322,21 @@ void LookAheadSearch::print_tree_statistics() const {
     // count nodes and arcs
     node_vector_t * current_level = new node_vector_t();
     node_vector_t * next_level = new node_vector_t();
+    NODE_TYPE current_level_type = NONE;
     size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0;
     current_level->push_back(root_node);
+    current_level_type = node_info_map[root_node].type;
     DEBUG_OUT(0,"Printing tree statistics");
     while(current_level->size()>0) {
-        DEBUG_OUT(0,"    Level " << level_counter << ": " << current_level->size() << " nodes");
+        current_level_type=node_info_map[(*current_level)[0]].type;
+        DEBUG_OUT(0,"    Level " << level_counter << ": " <<
+                  current_level->size() << " nodes (" <<
+                  (current_level_type==STATE ? "STATE" : (current_level_type==ACTION ? "ACTION" : "NONE")) << ")");
         for(idx_t idx=0; idx<(idx_t)current_level->size(); ++idx) {
             ++total_node_counter;
+            if(current_level_type!=node_info_map[(*current_level)[idx]].type) {
+                DEBUG_OUT(0,"Error: Level of mixed type");
+            }
             for(graph_t::OutArcIt out_arc(graph,(*current_level)[idx]); out_arc!=INVALID; ++out_arc) {
                 ++total_arc_counter;
                 next_level->push_back(graph.target(out_arc));

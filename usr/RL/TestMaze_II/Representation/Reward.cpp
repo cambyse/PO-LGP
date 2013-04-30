@@ -5,7 +5,7 @@
 using util::INVALID;
 
 const Reward::value_t Reward::min_reward = 0;
-const Reward::value_t Reward::max_reward = 10;
+const Reward::value_t Reward::max_reward = 5;
 const Reward::value_t Reward::reward_increment = 1;
 
 Reward::Reward(value_t val):

@@ -285,24 +285,30 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
             // reset x
             x[x_idx] += dx[x_idx]/2.;
 
-            // print result
+            // numerical gradient
             lbfgsfloatval_t ngrad = (fx_plus-fx_minus)/dx[x_idx];
-            DEBUG_OUT(1,
-                    "    diff[" << x_idx << "] = " << grad[x_idx]-ngrad <<
-                    ", grad["   << x_idx << "] = " << grad[x_idx] <<
-                    ", ngrad["  << x_idx << "] = " << ngrad <<
-                    ", x["      << x_idx << "] = " << x[x_idx] <<
-                    ", dx["     << x_idx << "] = " << dx[x_idx]
-            );
 
             // check for deviations
-            if(fabs(ngrad-grad[x_idx])/fabs(grad[x_idx])>relative_deviation) {
-                relative_deviation=fabs(ngrad-grad[x_idx])/fabs(grad[x_idx]);
+            lbfgsfloatval_t current_relative_deviation = fabs(ngrad-grad[x_idx])/fabs(grad[x_idx]);
+            if(current_relative_deviation>relative_deviation) {
+                relative_deviation=current_relative_deviation;
             }
+
+            // print result
+            DEBUG_OUT(1,
+                      "    diff[" << x_idx << "] = " << grad[x_idx]-ngrad <<
+                      ", grad["   << x_idx << "] = " << grad[x_idx] <<
+                      ", ngrad["  << x_idx << "] = " << ngrad <<
+                      ", x["      << x_idx << "] = " << x[x_idx] <<
+                      ", dx["     << x_idx << "] = " << dx[x_idx] <<
+                      ", rel_dev["     << x_idx << "] = " << current_relative_deviation
+                );
+
+
         }
     }
     if(relative_deviation>max_relative_deviation) {
-        DEBUG_OUT(0, "ERRORS in first derivative found: max relative deviation = " << relative_deviation << "(tolerance = " << max_relative_deviation << ")" );
+        DEBUG_OUT(0, "ERRORS in first derivative found: max relative deviation = " << relative_deviation << " (tolerance = " << max_relative_deviation << ")" );
         DEBUG_OUT(0, "");
     } else {
         DEBUG_OUT(0, "No error in first derivative found (no relative deviations larger that " << max_relative_deviation << ").");

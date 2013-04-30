@@ -254,7 +254,7 @@ void LookAheadSearch::build_tree(
     node_info_map[root_node] = NodeInfo(
             STATE,
             NOT_EXPANDED,
-            root_instance,
+            instance_t::create(root_instance->action, root_instance->state, root_instance->reward, root_instance->const_it()-1),
             action_t::NULL_ACTION,
             get_upper_value_bound(),
             get_lower_value_bound()
@@ -336,7 +336,7 @@ void LookAheadSearch::expand_leaf_node(
         node_info_map[action_node] = NodeInfo(
                 ACTION,
                 NOT_EXPANDED,
-                instance_from,
+                instance_t::create(instance_from->action, instance_from->state, instance_from->reward, instance_from->const_it()-1),
                 action,
                 get_upper_value_bound(),
                 get_lower_value_bound()
@@ -393,8 +393,6 @@ void LookAheadSearch::expand_action_node(
 
         for(rewardIt_t new_reward=rewardIt_t::first(); new_reward!=util::INVALID; ++new_reward) {
 
-            const instance_t * new_instance = instance_t::create(action, new_state, new_reward, instance_from, nullptr);
-
             probability_t prob = (model.*prediction)(instance_from, action, new_state, new_reward);
             if(prob>0) {
                 new_state_node = graph.addNode();
@@ -402,11 +400,10 @@ void LookAheadSearch::expand_action_node(
                 node_info_map[new_state_node] = NodeInfo(
                         STATE,
                         NOT_EXPANDED,
-                        new_instance,
+                        instance_t::create(action, new_state, new_reward, instance_from, nullptr),
                         action_t::NULL_ACTION, // not defined for state nodes
                         get_upper_value_bound(),
-                        get_lower_value_bound(),
-                        false // delete with node TODO change to true!!!
+                        get_lower_value_bound()
                 );
                 arc_t action_to_state_arc = graph.addArc(action_node,new_state_node);
                 arc_info_map[action_to_state_arc].prob = prob;

@@ -38,6 +38,7 @@ public:
         const Instance * prev = nullptr,
         const Instance * next = nullptr
         );
+    /* static Instance * create(const Instance&); */
     ~Instance();
     bool operator<(const Instance& other) const;
     Instance * insert_instance_after  (const Action& a, const State& s, const Reward& r);
