@@ -18,6 +18,8 @@ using std::get;
 using std::pair;
 using std::make_pair;
 using std::set;
+using std::cout;
+using std::endl;
 
 using util::INVALID;
 
@@ -77,7 +79,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         lbfgsfloatval_t *g,
         const int n
 ) {
-    DEBUG_OUT(1,"Evaluating...");
+
     lbfgsfloatval_t fx = 0;
     for(int i=0; i<n; i++) {
         g[i] = 0;
@@ -100,9 +102,14 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumFNN; // sumF(x(n),y(n))
     double sumExpN; // normalization Z(x)
     vector<double> sumFExpNF(n,0.0); // sumFExp(x(n),F)
-    for(instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance) {
+    idx_t data_idx = 1, last_progress = -1;
+    for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++data_idx) {
 
-        action_t action = instance->action;
+        if(DEBUG_LEVEL>0) {
+            last_progress = util::print_progress(data_idx, number_of_data_points, 50, "Evaluating", last_progress);
+        }
+
+        action_t action = insIt->action;
 
         sumFNN = 0;
         sumExpN = 0;
@@ -110,7 +117,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
         // calculate sumF(x(n),y(n))
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-            sumFNN += x[f_idx]*active_features[f_idx].evaluate(instance);
+            sumFNN += x[f_idx]*active_features[f_idx].evaluate(insIt);
         }
 
         // calculate sumExp(x(n))
@@ -120,7 +127,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 // calculate sumF(x(n),y')
                 double sumFN = 0;
                 for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                    sumFN += x[f_idx]*active_features[f_idx].evaluate(instance,action,state,reward);
+                    sumFN += x[f_idx]*active_features[f_idx].evaluate(insIt-1,action,state,reward);
                 }
 
                 // increment sumExp(x(n))
@@ -129,7 +136,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 // increment sumFExp(x(n),F)
                 for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
                     // in case of parameter binding additionally sum over all features belonging to this parameter
-                    sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(instance,action,state,reward) * exp( sumFN );
+                    sumFExpNF[lambda_idx] += active_features[lambda_idx].evaluate(insIt-1,action,state,reward) * exp( sumFN );
                 }
             }
         }
@@ -142,8 +149,11 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
 
             // in case of parameter binding additionally sum over all features belonging to this parameter
-            g[lambda_idx] += active_features[lambda_idx].evaluate(instance);
+            g[lambda_idx] += active_features[lambda_idx].evaluate(insIt);
         }
+    }
+    if(DEBUG_LEVEL>0) {
+        cout << endl;
     }
 
     // use NEGATIVE log likelihood (blfgs minimizes the objective)
@@ -380,7 +390,12 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of compound features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of compound features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all compound features F
-    for(instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance) {
+    idx_t data_idx = 1, last_progress = -1;
+    for(const_instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance, ++data_idx) {
+
+        if(DEBUG_LEVEL>0) {
+            last_progress = util::print_progress(data_idx, number_of_data_points, 50, "Scoring", last_progress);
+        }
 
         action_t action = instance->action;
 
@@ -416,6 +431,9 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
             g[lambda_cf_idx] += compound_features[lambda_cf_idx].evaluate(instance);
         }
+    }
+    if(DEBUG_LEVEL>=1) {
+        std::cout << std::endl;
     }
 
     // use absolute mean value per data point
