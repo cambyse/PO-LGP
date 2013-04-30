@@ -42,28 +42,28 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
     /**/
 };
 
-const Maze::idx_t Maze::rewards[rewards_n][7] = {
+const Maze::idx_t Maze::rewards[rewards_n][8] = {
     /* 2x2 Maze */
-    { 0, 3, 4, 5, 200,   0,   0},
-    { 3, 0, 4, 5, 200, 200,   0},
-    { 0, 1, 1, 1,   0, 200,   0},
-    { 3, 2, 2, 2,   0,   0, 200}
+    { 0, 3, 4, 5, ON_RELEASE, 200,   0,   0},
+    { 3, 0, 4, 5, ON_RELEASE, 200, 200,   0},
+    { 0, 1, 1, 1, ON_RELEASE,   0, 200,   0},
+    { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
     /**/
 
     /* 3x3 Maze *
-    { 3, 5, 4, 8,   0, 200,   0},
-    { 5, 3, 6, 8,   0, 200, 200},
-    { 4, 1, 1, 1, 200, 200,   0},
-    { 4, 7, 1, 1, 200,   0,   0}
+    { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
+    { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
+    { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
+    { 4, 7, 1, 1, ON_RELEASE, 200,   0,   0}
     /**/
 
     /* 4x4 Maze *
-    {  4,  2,  3, 1, 200,   0,   0},
-    {  6,  7,  3, 1, 200, 200,   0},
-    { 11, 14,  2, 1,   0, 200,   0},
-    { 13,  8,  2, 1,   0, 200, 200},
-    {  8,  1,  3, 1,   0,   0, 200}
-    //{  8,  4,  4, 1, 200,   0, 200}
+    {  4,  2,  3, 1, ON_RELEASE, 200,   0,   0},
+    {  6,  7,  3, 1, ON_RELEASE, 200, 200,   0},
+    { 11, 14,  2, 1, ON_RELEASE,   0, 200,   0},
+    { 13,  8,  2, 1, ON_RELEASE,   0, 200, 200},
+    {  8,  1,  3, 1, ON_RELEASE,   0,   0, 200}
+    //{  8,  4,  4, 1, ON_RELEASE, 200,   0, 200}
     /**/
 };
 
@@ -75,9 +75,6 @@ Maze::Maze(const double& eps):
 //        button(NULL), smiley(NULL),
         agent(NULL)
 {
-
-
-
     if(time_delay<=0) {
         DEBUG_OUT(0,"Error: Time delay must be larger than zero --> setting to one");
         time_delay = 1;
@@ -116,7 +113,7 @@ void Maze::render_initialize(QGraphicsView * view) {
     }
 
     // Render States
-    QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap);
+    QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
         MazeState maze_state(state);
         scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, state_pen, QBrush(QColor(230,230,230)) );
@@ -338,23 +335,38 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for matching reward
     reward_t matching_reward = reward_t::min_reward;
-    const_instanceIt_t instanceIt_from(instance_from);
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
-        state_t state_back_then = (instanceIt_from - (rewards[idx][TIME_DELAY]-1))->state;
+        state_t state_back_then = (instance_from->const_it() - (rewards[idx][TIME_DELAY]-1))->state;
         state_t state_now = state_to;
         reward_t single_reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
         DEBUG_OUT(2,"    reward index               :" << idx);
         DEBUG_OUT(2,"    time delay                 :" << rewards[idx][TIME_DELAY]);
         DEBUG_OUT(2,"    activation  (target/actual):" << activate_state << "/" << state_back_then);
         DEBUG_OUT(2,"    reception   (target/actual):" << receive_state << "/" << state_now);
+        DEBUG_OUT(2,"    activation type            :" << (rewards[idx][ACTIVATION_TYPE]==EACH_TIME ? "EACH_TIME" : "ON_RELEASE") );
         DEBUG_OUT(2,"    reward (single/accumulated):" << single_reward << "/" << reward);
-        DEBUG_OUT(2,"    ------------------------------");
         if( activate_state==state_back_then && receive_state==state_now) {
-            matching_reward += single_reward;
-            DEBUG_OUT(2,"    Increment matching reward by " << single_reward << " to " << matching_reward);
+            bool increment = true;
+            if(rewards[idx][ACTIVATION_TYPE]==ON_RELEASE) {
+                idx_t delay_counter = 1;
+                for(const_instanceIt_t insIt = instance_from->const_it();
+                    insIt!=INVALID && delay_counter<rewards[idx][TIME_DELAY];
+                    --insIt, ++delay_counter) {
+                    if(insIt->state==activate_state) {
+                        increment = false;
+                        DEBUG_OUT(2,"    --> Activation type (ON_RELEASE) prohibits reward.");
+                        break;
+                    }
+                }
+            }
+            if(increment) {
+                matching_reward += single_reward;
+                DEBUG_OUT(2,"    --> Increment matching reward by " << single_reward << " to " << matching_reward);
+            }
         }
+        DEBUG_OUT(2,"    ------------------------------");
     }
 
     // crop to max reward
@@ -369,7 +381,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for matching state
     MazeState maze_state_to( state_to );
-    MazeState state_from( instanceIt_from->state);
+    MazeState state_from( instance_from->state);
     MazeState state_left( clamp(0,Data::maze_x_size-1,state_from.x()-1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_right(clamp(0,Data::maze_x_size-1,state_from.x()+1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
     MazeState state_up(   clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()-1));

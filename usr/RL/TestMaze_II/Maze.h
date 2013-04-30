@@ -105,8 +105,9 @@ private:
     static const idx_t walls[walls_n][2];
 
     static const size_t rewards_n = 4;
-    static const idx_t rewards[rewards_n][7];
-    enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, R, G, B };
+    static const idx_t rewards[rewards_n][8];
+    enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, ACTIVATION_TYPE, R, G, B };
+    enum REWARD_ACTIVATION { EACH_TIME, ON_RELEASE };
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);
