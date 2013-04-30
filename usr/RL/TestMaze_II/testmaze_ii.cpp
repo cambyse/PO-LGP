@@ -199,7 +199,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
     QString learning_s(                       "\n    ----------------------Model Learning----------------------");
     QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . -> record length <int> episode or clear data");
-    QString optimize_s(                         "    optimize / o . . . . . . . [check, c]. . . . . . . . . . -> optimize CRF [check derivatives]");
+    QString optimize_s(                         "    optimize / o . . . . . . . [<int>|check, c]. . . . . . . -> optimize CRF [max_iterations | check derivatives]");
     QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . -> score compound features with distance <int> by gradient");
     QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . -> add <int> highest scored compound features to active (0 for all non-zero scored)");
     QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . -> erase features with zero weight");
@@ -375,8 +375,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 ui._wConsoleOutput->appendPlainText( episode_s );
             }
         } else if(str_args[0]=="optimize" || str_args[0]=="o") { // optimize CRF
-            if(str_args.size()==1) {
-                crf.optimize_model(l1_factor);
+            if(str_args.size()==1 || int_args_ok[1] ) {
+                if(int_args_ok[1]) {
+                    crf.optimize_model(l1_factor, int_args[1]);
+                } else {
+                    crf.optimize_model(l1_factor, 0);
+                }
             } else if(str_args[1]=="check" || str_args[1]=="c") {
                 crf.check_derivatives(3,10,1e-6,1e-3);
             } else {
