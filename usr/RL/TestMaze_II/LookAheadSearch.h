@@ -7,7 +7,7 @@
 #include "Data.h"
 #include "Representation/Representation.h"
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 class LookAheadSearch {
@@ -264,13 +264,21 @@ void LookAheadSearch::build_tree(
     update_state_node(root_node);
 
     // fully expand tree
+    idx_t last_progress = -1;
     if(tree_needs_further_expansion()) {
         while(expand_tree(model,prediction)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
                 DEBUG_OUT(0,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
                 break;
+            } else {
+                if(DEBUG_LEVEL==1) {
+                    last_progress = util::print_progress(number_of_nodes, max_node_counter, 50, "Building Tree", last_progress);
+                }
             }
         }
+    }
+    if(DEBUG_LEVEL==1) {
+        std::cout << std::endl;
     }
 
     if(DEBUG_LEVEL>=3) {
@@ -313,7 +321,7 @@ void LookAheadSearch::expand_leaf_node(
         probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
 ) {
 
-    DEBUG_OUT(1,"Expanding leaf node");
+    DEBUG_OUT(2,"Expanding leaf node");
     if(DEBUG_LEVEL>=2) {
         print_node(state_node);
     }
@@ -371,8 +379,8 @@ void LookAheadSearch::expand_action_node(
         probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
 ) {
 
-    DEBUG_OUT(1,"Expanding action node");
-    if(DEBUG_LEVEL>=2) {
+    DEBUG_OUT(2,"Expanding action node");
+    if(DEBUG_LEVEL>=3) {
         print_node(action_node);
     }
 
@@ -412,7 +420,7 @@ void LookAheadSearch::expand_action_node(
         }
 
         if(new_state_node!=lemon::INVALID){
-            DEBUG_OUT(2,"    Added state node");
+            DEBUG_OUT(3,"    Added state node");
             if(DEBUG_LEVEL>=3) {
                 print_node(new_state_node);
             }
