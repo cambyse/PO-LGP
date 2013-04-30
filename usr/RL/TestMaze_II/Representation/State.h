@@ -9,8 +9,8 @@
 /** \brief State objects. */
 class State: public util::NumericTypeWrapper<State, int>  {
 public:
-    static const value_t min_state = 0;
-    static const value_t max_state = Data::maze_x_size*Data::maze_y_size - 1;
+    static const value_t min_state;
+    static const value_t max_state;
     State(value_t val = min_state);
     friend std::ostream& operator<<(std::ostream &out, const State& s);
     static State random_state();

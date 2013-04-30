@@ -2,6 +2,9 @@
 
 using util::INVALID;
 
+const State::value_t State::min_state = 0;
+const State::value_t State::max_state = Data::maze_x_size*Data::maze_y_size - 1;
+
 State::State(value_t val):
     util::NumericTypeWrapper<State, value_t>(val) {}
 

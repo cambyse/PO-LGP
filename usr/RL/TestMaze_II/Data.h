@@ -18,13 +18,13 @@ public:
     //----------------------//
     //   Maze Dimensions    //
     //----------------------//
-    static const size_t maze_x_size = 2;
-    static const size_t maze_y_size = 2;
+    static const size_t maze_x_size;
+    static const size_t maze_y_size;
 
     //----------------------//
     //   k-Markov Horizon   //
     //----------------------//
-    static const size_t k = 6;
+    static const size_t k;
 
     //------------------//
     //   Probability   //

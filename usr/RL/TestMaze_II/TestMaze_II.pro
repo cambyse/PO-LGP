@@ -20,6 +20,7 @@ HEADERS += LookAheadSearch.h \
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
+    Data.cpp \
     main.cpp \
     Maze.cpp \
     testmaze_ii.cpp \
