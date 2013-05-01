@@ -51,6 +51,7 @@ REGISTER_TYPE_Key(T, ors::Transformation);
 const ors::Vector VEC_x(1, 0, 0);
 const ors::Vector VEC_y(0, 1, 0);
 const ors::Vector VEC_z(0, 0, 1);
+const ors::Transformation Transformation_Id(0);
 
 //===========================================================================
 /** @brief The ors namespace contains the main data structures of ors.
@@ -796,6 +797,7 @@ Vector operator/(const Transformation& X, const Vector& c) {
 
 //! constructor
 Transformation::Transformation() { setZero(); }
+Transformation::Transformation(bool noInit) { if(!noInit) setZero(); }
 
 //! copy operator
 //Transformation& Transformation::operator=(const Transformation& f){
@@ -2968,7 +2970,7 @@ void ors::Graph::invertTime() {
   }
 }
 
-void ors::Graph::computeNaturalQmetric(arr& W) {
+arr ors::Graph::naturalQmetric() {
   //compute generic q-metric depending on tree depth
   uint i, j;
   arr BM(bodies.N);
@@ -2981,7 +2983,11 @@ void ors::Graph::computeNaturalQmetric(arr& W) {
   if(!jd) jd = getJointStateDimension(true);
   arr Wdiag(jd);
   for(i=0; i<jd; i++) Wdiag(i)=::pow(BM(joints(i)->to->index), 1.);
-  W.setDiag(Wdiag);
+  return Wdiag;
+}
+
+void ors::Graph::computeNaturalQmetric(arr& W) {
+  W.setDiag(naturalQmetric());
   if(Qlin.N) W = ~Qlin*W*Qlin;
 }
 

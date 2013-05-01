@@ -437,6 +437,21 @@ void ors::Graph::glDraw() {
   glPopMatrix();
 }
 
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag){
+  uint k, t, T=x.d0-1;
+  if(!steps) return;
+  uint num;
+  if(steps==1 || steps==-1) num=T; else num=steps;
+  for(k=0; k<=(uint)num; k++){
+    t = k*T/num;
+    G.setJointState(x[t]);
+    G.calcBodyFramesFromJoints();
+    gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+  }
+  if(steps==1)
+    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+}
+
 /* please don't remove yet: code for displaying edges might be useful...
 
 void glDrawOdeWorld(void *classP){

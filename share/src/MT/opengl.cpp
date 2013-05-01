@@ -937,11 +937,10 @@ void OpenGL::watchImage(const floatA &_img, bool wait, float _zoom) {
 }
 
 void OpenGL::watchImage(const byteA &_img, bool wait, float _zoom) {
-  img=(byteA*)&_img;
-  zoom=_zoom;
+  background=_img;
+  backgroundZoom=_zoom;
   //resize(img->d1*zoom,img->d0*zoom);
   if(wait) watch(); else update();
-  img=NULL;
 }
 
 /*void glWatchImage(const floatA &x, bool wait, float zoom){
@@ -969,25 +968,20 @@ void OpenGL::displayGrey(const arr &x, bool wait, float _zoom) {
   watchImage(img, wait, _zoom);
 }
 
-#ifdef MT_FREEGLUT
-void OpenGL::displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win) {
-  if(!d0) d0=x.d0;
-  if(!d1) d1=x.d1;
-  glutSetWindow(s->windowID);
+void OpenGL::displayRedBlue(const arr &x, bool wait, float _zoom) {
   double mi=x.min(), ma=x.max();
-  text.clear() <<"display" <<win <<" max=" <<ma <<"min=" <<mi <<endl;
-  cout <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
-  byteA img;
-  img.resize(d0*d1, 4);
+  text.clear() <<"max=" <<ma <<"min=" <<mi <<endl;
+//  cout <<"\rdisplay" <<win <<" max=" <<ma <<"min=" <<mi;
+  static byteA img;
+  img.resize(x.d0*x.d1, 3);
   img.setZero();
   for(uint i=0; i<x.N; i++) {
     if(x.elem(i)>0.) img(i, 0)=(byte)(255.*x.elem(i)/ma);
     if(x.elem(i)<0.) img(i, 2)=(byte)(255.*x.elem(i)/mi);
   }
-  img.reshape(d0, d1, 4);
-  watchImage(img, wait, 20);
+  img.reshape(x.d0, x.d1, 3);
+  watchImage(img, wait, _zoom);
 }
-#endif
 
 void glDrawUI(void *p) {
   glPushName(0x10);
@@ -1069,7 +1063,7 @@ void glDrawDots(arr& dots) {
 // OpenGL implementations
 //
 
-OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), reportEvents(false), width(0), height(0), img(NULL) {
+OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), reportEvents(false), width(0), height(0) {
   //MT_MSG("creating OpenGL=" <<this);
   initGlEngine();
   s=new sOpenGL(this,title,w,h,posx,posy); //this might call some callbacks (Reshape/Draw) already!
@@ -1077,7 +1071,7 @@ OpenGL::OpenGL(const char* title,int w,int h,int posx,int posy):s(NULL), reportE
   processEvents();
 }
 
-OpenGL::OpenGL(void *container):s(NULL), reportEvents(false), width(0), height(0), img(NULL) {
+OpenGL::OpenGL(void *container):s(NULL), reportEvents(false), width(0), height(0) {
   initGlEngine();
   s=new sOpenGL(this,container); //this might call some callbacks (Reshape/Draw) already!
   init();
@@ -1118,7 +1112,7 @@ void OpenGL::init() {
   immediateExitLoop=false;
   exitkeys="";
   
-  zoom=1;
+  backgroundZoom=1;
 };
 
 //! add a draw routine
@@ -1199,14 +1193,14 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   //raster an image as background
-  if(img) {
+  if(background.N) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0, 1., 1., 0, -1., 1.); //only affects the offset - the rest is done with raster zooms
     glDisable(GL_DEPTH_TEST);
-    glRasterImage(0, 0, *img, .5*w/img->d1);
+    glRasterImage(0, 0, background, backgroundZoom); //.5*w/background.d1);
   }
   
   //OpenGL initialization
@@ -1316,7 +1310,7 @@ void OpenGL::Draw(int w, int h, ors::Camera *cam) {
     glLoadIdentity();
     if(vi->img) {
       glDisable(GL_DEPTH_TEST);
-      glRasterImage(-1., 1., *vi->img, zoom*(vi->ri-vi->le)*w/vi->img->d1);
+      glRasterImage(-1., 1., *vi->img, backgroundZoom*(vi->ri-vi->le)*w/vi->img->d1);
       glEnable(GL_DEPTH_TEST);
     }
     vi->camera.glSetProjectionMatrix();

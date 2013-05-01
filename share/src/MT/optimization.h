@@ -65,6 +65,7 @@ struct KOrderMarkovFunction {
   virtual uint get_k() = 0;
   virtual uint get_n() = 0; //the dimensionality of $x_t$
   virtual uint get_m(uint t) = 0; //the dimensionality of $\phi_t$
+  virtual arr get_prefix(){ return NoArr; }
 
   //optional: kernel costs
   virtual bool hasKernel(){ return false; }

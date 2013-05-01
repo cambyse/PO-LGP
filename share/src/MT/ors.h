@@ -27,6 +27,10 @@
  * @ingroup group_ors
  */
 
+/* TODO (marc)
+  -- ors::Graph should have an 'arr q' or 'arr state'. The config should ALWAYS be in sync with this state!
+  */
+
 //===========================================================================
 // DEFGROUPS
 /**
@@ -185,6 +189,7 @@ struct Transformation {
   Vector angvel;  //!< angular velocity
 
   Transformation();
+  Transformation(bool noInit);
 
   void setZero();
   Transformation& setText(const char* txt);
@@ -480,6 +485,7 @@ struct Graph {
   void calcJointsFromBodyFrames();
   void clearJointErrors();
   void invertTime();
+  arr naturalQmetric(); //returns diagonal
   void computeNaturalQmetric(arr& W);
   void fillInRelativeTransforms();
 
@@ -635,7 +641,7 @@ inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 extern const ors::Vector VEC_x;
 extern const ors::Vector VEC_y;
 extern const ors::Vector VEC_z;
-
+extern const ors::Transformation Transformation_Id;
 
 //===========================================================================
 //
@@ -929,6 +935,7 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
 void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);

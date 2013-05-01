@@ -286,8 +286,10 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint k=f->get_k();
   uint n=f->get_n();
   uint M=0;
-  for(uint t=0;t<=T-k;t++) M+=f->get_m(t);
+  arr x_pre=f->get_prefix();
+  for(uint t=0;t<=T;t++) M+=f->get_m(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
+  CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
   //resizing things:
   phi.resize(M);   phi.setZero();
@@ -295,18 +297,30 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   if(&J) Jaux = auxRowShifted(J, M, (k+1)*n, x.N);
   M=0;
   uint m_t;
-  for(uint t=0;t<=T-k;t++){
+  for(uint t=0;t<=T;t++){
     m_t = f->get_m(t);
     if(!m_t) continue;
     arr phi_t,J_t;
-    f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t, t+k) );
+    if(t>=k){
+      f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t-k, t) );
+    }else{ //x_bar includes the prefix
+      arr x_bar(k+1,n);
+      for(int i=t-k;i<=(int)t;i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
+      f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
+    }
     CHECK(phi_t.N==m_t,"");
     phi.setVectorBlock(phi_t, M);
     if(&J){
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
       CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
-      J.setMatrixBlock(J_t, M, 0);
-      for(uint i=0;i<J_t.d0;i++) Jaux->rowShift(M+i) = t*n;
+      if(t>=k){
+        J.setMatrixBlock(J_t, M, 0);
+        for(uint i=0;i<J_t.d0;i++) Jaux->rowShift(M+i) = (t-k)*n;
+      }else{ //cut away the Jacobian w.r.t. the prefix
+        J_t.delColumns(0,(k-t)*n);
+        J.setMatrixBlock(J_t, M, 0);
+        for(uint i=0;i<J_t.d0;i++) Jaux->rowShift(M+i) = 0;
+      }
     }
     M += m_t;
   }

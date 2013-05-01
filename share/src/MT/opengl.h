@@ -197,8 +197,8 @@ struct OpenGL {
   GLSelect *topSelection;        //!< top selected object
   bool immediateExitLoop;
   bool drawFocus;
-  byteA *img;
-  double zoom;
+  byteA background;
+  double backgroundZoom;
   arr P; //camera projection matrix
   
   //!@name constructors & destructors
@@ -241,10 +241,10 @@ struct OpenGL {
   void about(std::ostream& os=std::cout);
   
   //!@name to display image data (kind of misuse)
-  void watchImage(const byteA &img, bool wait, float zoom);
-  void watchImage(const floatA &img, bool wait, float zoom);
-  void displayGrey(const arr &x, bool wait, float zoom);
-  void displayRedBlue(const arr &x, uint d0, uint d1, bool wait, uint win);
+  void watchImage(const byteA &img, bool wait, float backgroundZoom);
+  void watchImage(const floatA &img, bool wait, float backgroundZoom);
+  void displayGrey(const arr &x, bool wait, float backgroundZoom);
+  void displayRedBlue(const arr &x, bool wait, float backgroundZoom);
   
   //!@name capture routines
   void capture(byteA &img, int w, int h, ors::Camera *cam=NULL);
