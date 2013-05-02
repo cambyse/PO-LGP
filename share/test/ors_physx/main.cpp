@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   glPh.camera.focus(0,0,1.);
   glPh.watch();
   
-  for(uint t=0; t<1000; t++) {
+  for(uint t=0; t<500; t++) {
     cout <<"\r t=" <<t <<std::flush;
     physx.step();
     glPh.update();

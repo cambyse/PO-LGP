@@ -3,10 +3,23 @@
 # 'make-config' is NOT sync via git - it is your individual setup
 # 'make-config.default' is the default initialization of make-config
 #
-# There are currently 2 make modes:
-# MAKEMODE=mlrlib_full  compile libs with all external dependencies
+# MAKEMODE
+# ========
+# There are currently different make modes which correspond to different
+# feature sets of the implementation:
+#
+# MAKEMODE=mlrlib_ubuntu   compile libs with only ubuntu dependencies (recommended when your running ubuntu)
 # MAKEMODE=mlrlib_minimal  compile libs with no external dependencies
-# MAKEMODE=app  compile settings for standard applications/tests
+# MAKEMODE=mlrlib_full     compile libs with all external dependencies
+# MAKEMODE=app             compile settings for standard applications/tests
+#
+# Different Compilers: gcc & clang
+# ================================
+# MLR compiles with GCC and Clang (and probably more).
+#
+# To enable Clang uncomment the following line:
+# CXX=clang++
+
 
 ### DEFAULT SETTINGS
 

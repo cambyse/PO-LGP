@@ -50,7 +50,7 @@ namespace ors{
 }
 class OdeInterface;
 struct SwiftInterface;
-class OpenGL;
+struct OpenGL;
 struct RevelInterface;
 
 

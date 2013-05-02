@@ -11,10 +11,12 @@ echo "*** Installing" $NAME "into" $MLR_LIBPATH
 echo
 
 ## download file
-wget -O /tmp/$FILE $MLR_URL/$FILE
 if [ ! -f /tmp/$FILE ] ; then
-  echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
-  exit
+  wget -O /tmp/$FILE $MLR_URL/$FILE
+  if [ ! -f /tmp/$FILE ] ; then
+    echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
+    exit
+  fi
 fi
 
 ## check existance of lib path
@@ -39,7 +41,7 @@ make install
 
 ## cp internal includes
 cd $MLR_LIBPATH
-mkdir include/ode/internal include/ode/internal/joints
+mkdir -p include/ode/internal include/ode/internal/joints
 cp ode-0.11/ode/src/*.h include/ode/internal
 cp ode-0.11/ode/src/joints/*.h include/ode/internal/joints
 

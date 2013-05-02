@@ -57,7 +57,7 @@ struct Graph;
 }
 class OdeInterface;
 struct SwiftInterface;
-class OpenGL;
+struct OpenGL;
 
 class ActionInterface {
 public:

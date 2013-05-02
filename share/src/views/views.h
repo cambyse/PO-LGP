@@ -20,7 +20,7 @@ struct View {
   RWLock *objectLock;
   
   View();
-  ~View();
+  virtual ~View();
 
   virtual void write(std::ostream& os) {} //writing into a stream
   virtual void read (std::istream& is) {} //reading from a stream

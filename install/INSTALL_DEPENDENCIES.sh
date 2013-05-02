@@ -21,6 +21,7 @@ libgl1-mesa-dev \
 libgl1-mesa-glx \
 libglu1-mesa \
 libglu1-mesa-dev \
+libgtest-dev\
 libgtkglext1-dev \
 libhighgui-dev \
 liblapack-dev \
@@ -33,8 +34,17 @@ libxi-dev \
 libxmu-dev \
 make \
 meld \
+python-nose \
+python-unittest2 \
 realpath \
 regexxer \
+swig2.0 \
 tcl8.5-dev \
 tk-dev \
 tk8.5-dev \
+
+
+# install google test
+cd /usr/src/gtest
+sudo cmake .
+sudo make

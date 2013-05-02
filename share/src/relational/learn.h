@@ -36,7 +36,7 @@ namespace relational {
  * 
  ************************************************/
 
-class RuleSetContainer;
+struct RuleSetContainer;
 
 namespace learn {
   void learn_rules(RuleSetContainer& rulesC, StateTransitionL& experiences, const char* logfile = "learn.log"); 

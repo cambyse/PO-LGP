@@ -224,11 +224,12 @@ struct ShapeFitProblem:public ScalarFunction {
   bool display;
   double radius; //andreas: dirty radius hack
   
-  double fs(arr& grad, const arr& x){
+  double fs(arr& grad, arr& H, const arr& x){
     double cost=0.;
     arr weights, dfdpoints;
     generateShapePoints(points, weights, &grad, type, N, x);
     if(&grad){ dfdpoints.resizeAs(points);  dfdpoints.setZero();  }
+    if(&H) NIY;
     for(uint i=0; i<points.d0; i++){ //interpolate...
       uint x=points(i, 0), y=points(i, 1);
       if(x>=distImage.d1-1) x=distImage.d1-2;
@@ -517,7 +518,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
     rprop.loop(params, problem, &cost, 1.e-1, 1., 100, 0); //Andreas: was 1.e-1
     // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
-    problem.fs(NoGrad, params);
+    problem.fs(NoGrad, NoArr, params);
     byteA img; copy(img, 10.f*problem.distImage);
     cvDrawPoints(img, problem.points);
     

@@ -52,6 +52,38 @@ static PxDefaultErrorCallback gDefaultErrorCallback;
 static PxDefaultAllocator gDefaultAllocatorCallback;
 static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterShader;
 
+
+// ============================================================================
+/**
+ * @brief Connect ors with PhysX and add a cmaera.
+ *
+ * See bindOrsToOpenGL for a similar function.
+ *
+ * @param graph the graph PhysX is going to use.
+ * @param gl the gl output.
+ * @param physx the PhyxXInteface which handles the ors graph.
+ */
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
+  physx.G = &graph;
+  physx.create();
+
+  gl.add(glStandardScene, NULL);
+  gl.add(glPhysXInterface, &physx);
+  gl.setClearColors(1., 1., 1., 1.);
+
+  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  if (glCamera) {
+    *(gl.camera.X) = glCamera->X;
+  } else {
+    gl.camera.setPosition(10., -15., 8.);
+    gl.camera.focus(0, 0, 1.);
+    gl.camera.upright();
+  }
+  gl.update();
+}
+
+
+// ============================================================================
 void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose){
   f.pos.set(pose.p.x, pose.p.y, pose.p.z);
   f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
@@ -275,13 +307,18 @@ void PhysXInterface::create() {
       PxRevoluteJoint* desc;
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
       desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
-      /*
-         PxJointLimitPair limit(0.,1., 0.01f);
-         limit.restitution = 0.5;
+     
+    if(jj->ats.getValue<arr>("limit")) {
+         arr limits = *(jj->ats.getValue<arr>("limit"));
+         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+         limit.restitution = limits(2);
+         limit.spring = limits(3);
+         limit.damping= limits(4);
          desc->setLimit(limit);
          desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
-         desc->setProjectionAngularTolerance(3.14);
-      */
+         //desc->setProjectionAngularTolerance(3.14);
+    }
+      
     }
     break;
     case ors::fixedJT: {
